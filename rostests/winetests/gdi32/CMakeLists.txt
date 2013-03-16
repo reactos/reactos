@@ -1,7 +1,7 @@
 
 add_definitions(
     -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+    -D__WINESRC__)
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
@@ -22,9 +22,7 @@ list(APPEND SOURCE
     pen.c
     testlist.c)
 
-add_executable(gdi32_winetest
-    ${SOURCE}
-    resource.rc)
+add_executable(gdi32_winetest ${SOURCE} resource.rc)
 
 if(NOT MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998

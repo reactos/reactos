@@ -60,6 +60,20 @@ static void init_function_pointers(void)
     GDI_GET_PROC(SetDCPenColor);
 }
 
+static DWORD rgn_rect_count(HRGN hrgn)
+{
+    DWORD size;
+    RGNDATA *data;
+
+    if (!hrgn) return 0;
+    if (!(size = GetRegionData(hrgn, 0, NULL))) return 0;
+    if (!(data = HeapAlloc(GetProcessHeap(), 0, size))) return 0;
+    GetRegionData(hrgn, size, data);
+    size = data->rdh.nCount;
+    HeapFree(GetProcessHeap(), 0, data);
+    return size;
+}
+
 static int CALLBACK eto_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
     const ENHMETARECORD *emr, int n_objs, LPARAM param)
 {
@@ -2483,19 +2497,183 @@ static void test_emf_clipping(void)
     SetRect(&rc_sclip, 100, 100, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     hrgn = CreateRectRgn(rc_sclip.left, rc_sclip.top, rc_sclip.right, rc_sclip.bottom);
     SelectClipRgn(hdc, hrgn);
+    SetRect(&rc_res, -1, -1, -1, -1);
     ret = GetClipBox(hdc, &rc_res);
-todo_wine
     ok(ret == SIMPLEREGION, "got %d\n", ret);
-    if(ret == SIMPLEREGION)
-        ok(EqualRect(&rc_res, &rc_sclip),
-                 "expected rc_res (%d, %d) - (%d, %d), got (%d, %d) - (%d, %d)\n",
-                 rc_sclip.left, rc_sclip.top, rc_sclip.right, rc_sclip.bottom,
-                 rc_res.left, rc_res.top, rc_res.right, rc_res.bottom);
+    ok(EqualRect(&rc_res, &rc_sclip),
+       "expected (%d,%d)-(%d,%d), got (%d,%d)-(%d,%d)\n",
+       rc_sclip.left, rc_sclip.top, rc_sclip.right, rc_sclip.bottom,
+       rc_res.left, rc_res.top, rc_res.right, rc_res.bottom);
+
+    OffsetRect(&rc_sclip, -100, -100);
+    ret = OffsetClipRgn(hdc, -100, -100);
+    ok(ret == SIMPLEREGION, "got %d\n", ret);
+    SetRect(&rc_res, -1, -1, -1, -1);
+    ret = GetClipBox(hdc, &rc_res);
+    ok(ret == SIMPLEREGION, "got %d\n", ret);
+    ok(EqualRect(&rc_res, &rc_sclip),
+       "expected (%d,%d)-(%d,%d), got (%d,%d)-(%d,%d)\n",
+       rc_sclip.left, rc_sclip.top, rc_sclip.right, rc_sclip.bottom,
+       rc_res.left, rc_res.top, rc_res.right, rc_res.bottom);
+
+    ret = IntersectClipRect(hdc, 0, 0, 100, 100);
+    ok(ret == SIMPLEREGION || broken(ret == COMPLEXREGION) /* XP */, "got %d\n", ret);
+    if (ret == COMPLEXREGION)
+    {
+        /* XP returns COMPLEXREGION although region contains only 1 rect */
+        ret = GetClipRgn(hdc, hrgn);
+        ok(ret == 1, "expected 1, got %d\n", ret);
+        ret = rgn_rect_count(hrgn);
+        ok(ret == 1, "expected 1, got %d\n", ret);
+    }
+    SetRect(&rc_res, -1, -1, -1, -1);
+    ret = GetClipBox(hdc, &rc_res);
+    ok(ret == SIMPLEREGION, "got %d\n", ret);
+    ok(EqualRect(&rc_res, &rc),
+       "expected (%d,%d)-(%d,%d), got (%d,%d)-(%d,%d)\n",
+       rc.left, rc.top, rc.right, rc.bottom,
+       rc_res.left, rc_res.top, rc_res.right, rc_res.bottom);
+
+    SetRect(&rc_sclip, 0, 0, 100, 50);
+    ret = ExcludeClipRect(hdc, 0, 50, 100, 100);
+    ok(ret == SIMPLEREGION || broken(ret == COMPLEXREGION) /* XP */, "got %d\n", ret);
+    if (ret == COMPLEXREGION)
+    {
+        /* XP returns COMPLEXREGION although region contains only 1 rect */
+        ret = GetClipRgn(hdc, hrgn);
+        ok(ret == 1, "expected 1, got %d\n", ret);
+        ret = rgn_rect_count(hrgn);
+        ok(ret == 1, "expected 1, got %d\n", ret);
+    }
+    SetRect(&rc_res, -1, -1, -1, -1);
+    ret = GetClipBox(hdc, &rc_res);
+    ok(ret == SIMPLEREGION, "got %d\n", ret);
+    ok(EqualRect(&rc_res, &rc_sclip),
+       "expected (%d,%d)-(%d,%d), got (%d,%d)-(%d,%d)\n",
+       rc_sclip.left, rc_sclip.top, rc_sclip.right, rc_sclip.bottom,
+       rc_res.left, rc_res.top, rc_res.right, rc_res.bottom);
 
     hemf = CloseEnhMetaFile(hdc);
     DeleteEnhMetaFile(hemf);
     DeleteObject(hrgn);
-    DeleteDC(hdc);
+}
+
+static const unsigned char MF_CLIP_BITS[] = {
+    /* METAHEADER */
+    0x01, 0x00,             /* mtType */
+    0x09, 0x00,             /* mtHeaderSize */
+    0x00, 0x03,             /* mtVersion */
+    0x32, 0x00, 0x00, 0x00, /* mtSize */
+    0x01, 0x00,             /* mtNoObjects */
+    0x14, 0x00, 0x00, 0x00, /* mtMaxRecord (size in words of longest record) */
+    0x00, 0x00,             /* reserved */
+
+    /* METARECORD for CreateRectRgn(0x11, 0x22, 0x33, 0x44) */
+    0x14, 0x00, 0x00, 0x00, /* rdSize in words */
+    0xff, 0x06,             /* META_CREATEREGION */
+    0x00, 0x00, 0x06, 0x00, 0xf6, 0x02, 0x00, 0x00,
+    0x24, 0x00, 0x01, 0x00, 0x02, 0x00, 0x11, 0x00,
+    0x22, 0x00, 0x33, 0x00, 0x44, 0x00, 0x02, 0x00,
+    0x22, 0x00, 0x44, 0x00, 0x11, 0x00, 0x33, 0x00,
+    0x02, 0x00,
+
+    /* METARECORD for SelectObject */
+    0x04, 0x00, 0x00, 0x00,
+    0x2d, 0x01,             /* META_SELECTOBJECT (not META_SELECTCLIPREGION?!) */
+    0x00, 0x00,
+
+    /* METARECORD */
+    0x04, 0x00, 0x00, 0x00,
+    0xf0, 0x01,             /* META_DELETEOBJECT */
+    0x00, 0x00,
+
+    /* METARECORD for MoveTo(1,0x30) */
+    0x05, 0x00, 0x00, 0x00, /* rdSize in words */
+    0x14, 0x02,             /* META_MOVETO */
+    0x30, 0x00,             /* y */
+    0x01, 0x00,             /* x */
+
+    /* METARECORD for LineTo(0x20, 0x30) */
+    0x05, 0x00, 0x00, 0x00, /* rdSize in words */
+    0x13, 0x02,             /* META_LINETO */
+    0x30, 0x00,             /* y */
+    0x20, 0x00,             /* x */
+
+    /* EOF */
+    0x03, 0x00, 0x00, 0x00,
+    0x00, 0x00
+};
+
+static int clip_mf_enum_proc_seen_selectclipregion;
+static int clip_mf_enum_proc_seen_selectobject;
+
+static int CALLBACK clip_mf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
+                                       METARECORD *mr, int n_objs, LPARAM param)
+{
+    switch (mr->rdFunction) {
+    case META_SELECTCLIPREGION:
+        clip_mf_enum_proc_seen_selectclipregion++;
+        break;
+    case META_SELECTOBJECT:
+        clip_mf_enum_proc_seen_selectobject++;
+        break;
+    }
+    return 1;
+}
+
+static void test_mf_clipping(void)
+{
+                          /* left top right bottom */
+    static RECT rc_clip = { 0x11, 0x22, 0x33, 0x44 };
+    HWND hwnd;
+    HDC hdc;
+    HMETAFILE hmf;
+    HRGN hrgn;
+    INT ret;
+
+    SetLastError(0xdeadbeef);
+    hdc = CreateMetaFileA(NULL);
+    ok(hdc != 0, "CreateMetaFileA error %d\n", GetLastError());
+
+    hrgn = CreateRectRgn(rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
+    ret = SelectClipRgn(hdc, hrgn);
+    /* Seems like it should be SIMPLEREGION, but windows returns NULLREGION? */
+    ok(ret == NULLREGION, "expected NULLREGION, got %d\n", ret);
+
+    /* Draw a line that starts off left of the clip region and ends inside it */
+    MoveToEx(hdc, 0x1, 0x30, NULL);
+    LineTo(hdc,  0x20, 0x30);
+
+    SetLastError(0xdeadbeef);
+    hmf = CloseMetaFile(hdc);
+    ok(hmf != 0, "CloseMetaFile error %d\n", GetLastError());
+
+    if (compare_mf_bits(hmf, MF_CLIP_BITS, sizeof(MF_CLIP_BITS),
+        "mf_clipping") != 0)
+    {
+        dump_mf_bits(hmf, "mf_clipping");
+    }
+
+    DeleteObject(hrgn);
+
+    hwnd = CreateWindowExA(0, "static", NULL, WS_POPUP | WS_VISIBLE,
+                           0, 0, 200, 200, 0, 0, 0, NULL);
+    ok(hwnd != 0, "CreateWindowExA error %d\n", GetLastError());
+
+    hdc = GetDC(hwnd);
+
+    ret = EnumMetaFile(hdc, hmf, clip_mf_enum_proc, (LPARAM)&rc_clip);
+    ok(ret, "EnumMetaFile error %d\n", GetLastError());
+
+    /* Oddly, windows doesn't seem to use META_SELECTCLIPREGION */
+    ok(clip_mf_enum_proc_seen_selectclipregion == 0,
+       "expected 0 selectclipregion, saw %d\n", clip_mf_enum_proc_seen_selectclipregion);
+    ok(clip_mf_enum_proc_seen_selectobject == 1,
+       "expected 1 selectobject, saw %d\n", clip_mf_enum_proc_seen_selectobject);
+
+    DeleteMetaFile(hmf);
+    ReleaseDC(hwnd, hdc);
+    DestroyWindow(hwnd);
 }
 
 static INT CALLBACK EmfEnumProc(HDC hdc, HANDLETABLE *lpHTable, const ENHMETARECORD *lpEMFR, INT nObj, LPARAM lpData)
@@ -3211,6 +3389,9 @@ START_TEST(metafile)
     test_SaveDC();
     test_emf_BitBlt();
     test_emf_DCBrush();
+    test_emf_ExtTextOut_on_path();
+    test_emf_clipping();
+    test_emf_polybezier();
 
     /* For win-format metafiles (mfdrv) */
     test_mf_SaveDC();
@@ -3221,9 +3402,7 @@ START_TEST(metafile)
     test_CopyMetaFile();
     test_SetMetaFileBits();
     test_mf_ExtTextOut_on_path();
-    test_emf_ExtTextOut_on_path();
-    test_emf_clipping();
-    test_emf_polybezier();
+    test_mf_clipping();
 
     /* For metafile conversions */
     test_mf_conversions();

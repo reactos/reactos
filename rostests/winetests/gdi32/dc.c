@@ -19,7 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+
 #define WINVER 0x0501 /* request latest DEVMODE */
+#define NONAMELESSSTRUCT
+#define NONAMELESSUNION
 
 #include <assert.h>
 #include <stdio.h>
@@ -30,6 +33,10 @@
 #include "winuser.h"
 #include "winspool.h"
 #include "winerror.h"
+
+#ifndef LAYOUT_LTR
+#define LAYOUT_LTR 0
+#endif
 
 static DWORD (WINAPI *pSetLayout)(HDC hdc, DWORD layout);
 
@@ -58,6 +65,7 @@ static void test_dc_values(void)
 {
     HDC hdc = CreateDCA("DISPLAY", NULL, NULL, NULL);
     COLORREF color;
+    int extra;
 
     ok( hdc != NULL, "CreateDC failed\n" );
     color = SetBkColor( hdc, 0x12345678 );
@@ -85,6 +93,18 @@ static void test_dc_values(void)
     ok( color == 0xffffffff, "wrong color %08x\n", color );
     color = GetTextColor( hdc );
     ok( color == 0, "wrong color %08x\n", color );
+
+    extra = GetTextCharacterExtra( hdc );
+    ok( extra == 0, "initial extra %d\n", extra );
+    SetTextCharacterExtra( hdc, 123 );
+    extra = GetTextCharacterExtra( hdc );
+    ok( extra == 123, "initial extra %d\n", extra );
+    SetMapMode( hdc, MM_LOMETRIC );
+    extra = GetTextCharacterExtra( hdc );
+    ok( extra == 123, "initial extra %d\n", extra );
+    SetMapMode( hdc, MM_TEXT );
+    extra = GetTextCharacterExtra( hdc );
+    ok( extra == 123, "initial extra %d\n", extra );
 
     DeleteDC( hdc );
 }
@@ -124,10 +144,7 @@ static void test_savedc_2(void)
        rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
 
     ret = SaveDC(hdc);
-todo_wine
-{
     ok(ret == 1, "ret = %d\n", ret);
-}
 
     ret = IntersectClipRect(hdc, 0, 0, 50, 50);
     if (ret == COMPLEXREGION)
@@ -298,7 +315,7 @@ static void test_GdiConvertToDevmodeW(void)
     HeapFree(GetProcessHeap(), 0, dmW);
 }
 
-static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr )
+static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr, int scale )
 {
     static const int caps[] =
     {
@@ -374,27 +391,59 @@ static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr )
     else
     {
         for (i = 0; i < sizeof(caps)/sizeof(caps[0]); i++)
-            ok( GetDeviceCaps( hdc, caps[i] ) == GetDeviceCaps( ref_dc, caps[i] ),
-                "mismatched caps on %s for %u: %u/%u\n", descr, caps[i],
-                GetDeviceCaps( hdc, caps[i] ), GetDeviceCaps( ref_dc, caps[i] ) );
+        {
+            INT precision = 0;
+            INT hdc_caps = GetDeviceCaps( hdc, caps[i] );
+
+            switch (caps[i])
+            {
+            case HORZSIZE:
+            case VERTSIZE:
+                hdc_caps /= scale;
+                precision = 1;
+                break;
+            case LOGPIXELSX:
+            case LOGPIXELSY:
+                hdc_caps *= scale;
+                break;
+            }
+
+            ok( abs(hdc_caps - GetDeviceCaps( ref_dc, caps[i] )) <= precision,
+                "mismatched caps on %s for %u: %u/%u (scale %d)\n", descr, caps[i],
+                hdc_caps, GetDeviceCaps( ref_dc, caps[i] ), scale );
+        }
 
         SetLastError( 0xdeadbeef );
         ret = GetDeviceGammaRamp( hdc, &ramp );
-        ok( !ret, "GetDeviceGammaRamp succeeded on %s\n", descr );
-        ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef), /* nt4 */
-            "wrong error %u on %s\n", GetLastError(), descr );
+        if (GetObjectType( hdc ) != OBJ_DC || GetDeviceCaps( hdc, TECHNOLOGY ) == DT_RASPRINTER)
+        {
+            ok( !ret, "GetDeviceGammaRamp succeeded on %s (type %d)\n", descr, GetObjectType( hdc ) );
+            ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(GetLastError() == 0xdeadbeef), /* nt4 */
+                "wrong error %u on %s\n", GetLastError(), descr );
+        }
+        else
+            ok( ret || broken(!ret) /* NT4 */, "GetDeviceGammaRamp failed on %s (type %d), error %u\n", descr, GetObjectType( hdc ), GetLastError() );
         type = GetClipBox( hdc, &rect );
         if (GetObjectType( hdc ) == OBJ_ENHMETADC)
             todo_wine ok( type == SIMPLEREGION, "GetClipBox returned %d on memdc for %s\n", type, descr );
         else
             ok( type == SIMPLEREGION, "GetClipBox returned %d on memdc for %s\n", type, descr );
 
+        type = GetBoundsRect( hdc, &rect, 0 );
+        ok( type == DCB_RESET || broken(type == DCB_SET) /* XP */,
+            "GetBoundsRect returned type %x for %s\n", type, descr );
+        if (type == DCB_RESET)
+            ok( rect.left == 0 && rect.top == 0 && rect.right == 0 && rect.bottom == 0,
+                "GetBoundsRect returned %d,%d,%d,%d type %x for %s\n",
+                rect.left, rect.top, rect.right, rect.bottom, type, descr );
         type = SetBoundsRect( hdc, NULL, DCB_RESET | DCB_ENABLE );
-        ok( type == (DCB_RESET | DCB_DISABLE), "SetBoundsRect returned %x\n", type );
+        ok( type == (DCB_RESET | DCB_DISABLE) || broken(type == (DCB_SET | DCB_ENABLE)) /* XP */,
+            "SetBoundsRect returned %x for %s (hdc type %d)\n", type, descr, GetObjectType( hdc ) );
+
         SetMapMode( hdc, MM_TEXT );
         Rectangle( hdc, 2, 2, 4, 4 );
         type = GetBoundsRect( hdc, &rect, DCB_RESET );
-        if (GetObjectType( hdc ) == OBJ_ENHMETADC)
+        if (GetObjectType( hdc ) == OBJ_ENHMETADC || (GetObjectType( hdc ) == OBJ_DC && GetDeviceCaps( hdc, TECHNOLOGY ) == DT_RASPRINTER))
             todo_wine
             ok( rect.left == 2 && rect.top == 2 && rect.right == 4 && rect.bottom == 4 && type == DCB_SET,
                 "GetBoundsRect returned %d,%d,%d,%d type %x for %s\n",
@@ -406,7 +455,7 @@ static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr )
     }
 
     type = GetClipBox( ref_dc, &rect );
-    if (type != COMPLEXREGION)  /* region can be complex on multi-monitor setups */
+    if (type != COMPLEXREGION && type != ERROR)  /* region can be complex on multi-monitor setups */
     {
         ok( type == SIMPLEREGION, "GetClipBox returned %d on %s\n", type, descr );
         ok( rect.left == 0 && rect.top == 0 &&
@@ -470,6 +519,10 @@ static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr )
         SelectObject( hdc, old );
         DeleteObject( dib );
     }
+
+    /* restore hdc state */
+    SetBoundsRect( hdc, NULL, DCB_RESET | DCB_DISABLE );
+    SetBoundsRect( ref_dc, NULL, DCB_RESET | DCB_DISABLE );
 }
 
 static void test_CreateCompatibleDC(void)
@@ -478,9 +531,21 @@ static void test_CreateCompatibleDC(void)
     HDC hdc, hNewDC, hdcMetafile, screen_dc;
     HBITMAP bitmap;
     INT caps;
+    DEVMODE dm;
+
+    bitmap = CreateBitmap( 10, 10, 1, 1, NULL );
+
+    bRet = EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm);
+    ok(bRet, "EnumDisplaySettingsEx failed\n");
+    dm.u1.s1.dmScale = 200;
+    dm.dmFields |= DM_SCALE;
+    hdc = CreateDC( "DISPLAY", NULL, NULL, &dm );
 
     screen_dc = CreateDC( "DISPLAY", NULL, NULL, NULL );
-    bitmap = CreateBitmap( 10, 10, 1, 1, NULL );
+    test_device_caps( hdc, screen_dc, "display dc", 1 );
+    ResetDC( hdc, &dm );
+    test_device_caps( hdc, screen_dc, "display dc", 1 );
+    DeleteDC( hdc );
 
     /* Create a DC compatible with the screen */
     hdc = CreateCompatibleDC(NULL);
@@ -489,7 +554,7 @@ static void test_CreateCompatibleDC(void)
     caps = GetDeviceCaps( hdc, TECHNOLOGY );
     ok( caps == DT_RASDISPLAY, "wrong caps %u\n", caps );
 
-    test_device_caps( hdc, screen_dc, "display dc" );
+    test_device_caps( hdc, screen_dc, "display dc", 1 );
 
     /* Delete this DC, this should succeed */
     bRet = DeleteDC(hdc);
@@ -507,7 +572,9 @@ static void test_CreateCompatibleDC(void)
     ok( SelectObject( hNewDC, bitmap ) != 0, "SelectObject failed\n" );
     caps = GetDeviceCaps( hdcMetafile, TECHNOLOGY );
     ok( caps == DT_RASDISPLAY, "wrong caps %u\n", caps );
-    test_device_caps( hdcMetafile, hdc, "enhmetafile dc" );
+    test_device_caps( hdcMetafile, hdc, "enhmetafile dc", 1 );
+    ResetDC( hdcMetafile, &dm );
+    test_device_caps( hdcMetafile, hdc, "enhmetafile dc", 1 );
     DeleteDC( hNewDC );
     DeleteEnhMetaFile( CloseEnhMetaFile( hdcMetafile ));
     ReleaseDC( 0, hdc );
@@ -518,7 +585,9 @@ static void test_CreateCompatibleDC(void)
     ok(hNewDC == NULL, "CreateCompatibleDC succeeded\n");
     caps = GetDeviceCaps( hdcMetafile, TECHNOLOGY );
     ok( caps == DT_METAFILE, "wrong caps %u\n", caps );
-    test_device_caps( hdcMetafile, screen_dc, "metafile dc" );
+    test_device_caps( hdcMetafile, screen_dc, "metafile dc", 1 );
+    ResetDC( hdcMetafile, &dm );
+    test_device_caps( hdcMetafile, screen_dc, "metafile dc", 1 );
     DeleteMetaFile( CloseMetaFile( hdcMetafile ));
 
     DeleteObject( bitmap );
@@ -1139,7 +1208,17 @@ done:
     ReleaseDC(NULL, hdc);
 }
 
-static HDC create_printer_dc(void)
+static BOOL is_postscript_printer(HDC hdc)
+{
+    char tech[256];
+
+    if (ExtEscape(hdc, GETTECHNOLOGY, 0, NULL, sizeof(tech), tech) > 0)
+        return strcmp(tech, "PostScript") == 0;
+
+    return FALSE;
+}
+
+static HDC create_printer_dc(int scale, BOOL reset)
 {
     char buffer[260];
     DWORD len;
@@ -1175,9 +1254,15 @@ static HDC create_printer_dc(void)
     dbuf = HeapAlloc( GetProcessHeap(), 0, len );
     if (!pGetPrinterDriverA( hprn, NULL, 3, (LPBYTE)dbuf, len, &len )) goto done;
 
+    pbuf->pDevMode->u1.s1.dmScale = scale;
+    pbuf->pDevMode->dmFields |= DM_SCALE;
+
     hdc = CreateDCA( dbuf->pDriverPath, pbuf->pPrinterName, pbuf->pPortName, pbuf->pDevMode );
-    trace( "hdc %p for driver '%s' printer '%s' port '%s'\n", hdc,
-           dbuf->pDriverPath, pbuf->pPrinterName, pbuf->pPortName );
+    trace( "hdc %p for driver '%s' printer '%s' port '%s' is %sPostScript\n", hdc,
+           dbuf->pDriverPath, pbuf->pPrinterName, pbuf->pPortName,
+           is_postscript_printer(hdc) ? "" : "NOT " );
+
+    if (reset) ResetDC( hdc, pbuf->pDevMode );
 done:
     HeapFree( GetProcessHeap(), 0, dbuf );
     HeapFree( GetProcessHeap(), 0, pbuf );
@@ -1192,9 +1277,19 @@ static void test_printer_dc(void)
     HDC memdc, display_memdc, enhmf_dc;
     HBITMAP orig, bmp;
     DWORD ret;
-    HDC hdc = create_printer_dc();
+    HDC hdc, hdc_200;
 
-    if (!hdc) return;
+    hdc = create_printer_dc(100, FALSE);
+    hdc_200 = create_printer_dc(200, FALSE);
+
+    if (!hdc || !hdc_200) return;
+
+    test_device_caps( hdc, hdc_200, "printer dc", is_postscript_printer(hdc) ? 2 : 1 );
+    DeleteDC( hdc_200 );
+
+    hdc_200 = create_printer_dc(200, TRUE);
+    test_device_caps( hdc, hdc_200, "printer dc", is_postscript_printer(hdc) ? 2 : 1 );
+    DeleteDC( hdc_200 );
 
     memdc = CreateCompatibleDC( hdc );
     display_memdc = CreateCompatibleDC( 0 );
@@ -1216,7 +1311,7 @@ static void test_printer_dc(void)
     ok( orig != NULL, "SelectObject failed\n" );
     ok( BitBlt( hdc, 10, 10, 20, 20, memdc, 0, 0, SRCCOPY ), "BitBlt failed\n" );
 
-    test_device_caps( memdc, hdc, "printer dc" );
+    test_device_caps( memdc, hdc, "printer dc", 1 );
 
     ok( !SelectObject( display_memdc, bmp ), "SelectObject succeeded\n" );
     SelectObject( memdc, orig );
@@ -1235,7 +1330,12 @@ static void test_printer_dc(void)
 
     enhmf_dc = CreateEnhMetaFileA( hdc, NULL, NULL, NULL );
     ok(enhmf_dc != 0, "CreateEnhMetaFileA failed\n");
-    test_device_caps( enhmf_dc, hdc, "enhmetafile printer dc" );
+    test_device_caps( enhmf_dc, hdc, "enhmetafile printer dc", 1 );
+    DeleteEnhMetaFile( CloseEnhMetaFile( enhmf_dc ));
+
+    enhmf_dc = CreateEnhMetaFileA( hdc, NULL, NULL, NULL );
+    ok(enhmf_dc != 0, "CreateEnhMetaFileA failed\n");
+    test_device_caps( enhmf_dc, hdc, "enhmetafile printer dc", 1 );
     DeleteEnhMetaFile( CloseEnhMetaFile( enhmf_dc ));
 
     DeleteDC( memdc );

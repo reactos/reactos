@@ -1312,6 +1312,7 @@ static void compare_hash_broken_todo(HDC hdc, BITMAPINFO *bmi, BYTE *bits, const
         if(current_sha1[i] == NULL)
         {
             ok(current_sha1[i] != NULL, "missing hash, got \"%s\",\n", hash);
+            HeapFree(GetProcessHeap(), 0, hash);
             return;
         }
     }
@@ -1908,6 +1909,7 @@ static void draw_graphics(HDC hdc, BITMAPINFO *bmi, BYTE *bits)
 
     DeleteObject(bmp);
     SelectObject(hdc, orig_brush);
+    DeleteObject( dib_brush );
     SetBrushOrgEx(hdc, 0, 0, NULL);
     SetTextColor(hdc, old_text);
     SetBkColor(hdc, old_bkgnd);
@@ -2660,7 +2662,6 @@ static void draw_graphics(HDC hdc, BITMAPINFO *bmi, BYTE *bits)
 
     SelectObject(hdc, orig_brush);
     SelectObject(hdc, orig_pen);
-    DeleteObject(dib_brush);
     DeleteObject(solid_brush);
     DeleteObject(wide_pen);
     DeleteObject(dashed_pen);

@@ -401,6 +401,14 @@ static void test_memory_dc_clipping(void)
     ok(rc.left == 0 && rc.top == 0 && rc.right == 100 && rc.bottom == 100,
        "expected 0,0-100,100, got %d,%d-%d,%d\n", rc.left, rc.top, rc.right, rc.bottom);
 
+    SetRect( &rc, 10, 10, 20, 20 );
+    ret = RectVisible( hdc, &rc );
+    ok( ret, "RectVisible failed for %d,%d-%d,%d\n", rc.left, rc.top, rc.right, rc.bottom );
+
+    SetRect( &rc, 20, 20, 10, 10 );
+    ret = RectVisible( hdc, &rc );
+    ok( ret, "RectVisible failed for %d,%d-%d,%d\n", rc.left, rc.top, rc.right, rc.bottom );
+
     DeleteDC(hdc);
     DeleteObject(hrgn);
     DeleteObject(hrgn_empty);
@@ -445,6 +453,14 @@ static void test_window_dc_clipping(void)
     ok(rc.left == 0 && rc.top == 0 && rc.right == screen_width && rc.bottom == screen_height,
        "expected 0,0-%d,%d, got %d,%d-%d,%d\n", screen_width, screen_height,
         rc.left, rc.top, rc.right, rc.bottom);
+
+    SetRect( &rc, 10, 10, 20, 20 );
+    ret = RectVisible( hdc, &rc );
+    ok( ret, "RectVisible failed for %d,%d-%d,%d\n", rc.left, rc.top, rc.right, rc.bottom );
+
+    SetRect( &rc, 20, 20, 10, 10 );
+    ret = RectVisible( hdc, &rc );
+    ok( ret, "RectVisible failed for %d,%d-%d,%d\n", rc.left, rc.top, rc.right, rc.bottom );
 
     ret = ExtSelectClipRgn(hdc, 0, RGN_COPY);
     ok(ret == SIMPLEREGION || (ret == COMPLEXREGION && GetSystemMetrics(SM_CMONITORS) > 1),

@@ -20,7 +20,7 @@ OS2Version: 2
 OS2_WeightWidthSlopeOnly: 0
 OS2_UseTypoMetrics: 1
 CreationTime: 1288336343
-ModificationTime: 1288336873
+ModificationTime: 1352483620
 PfmFamily: 17
 TTFWeight: 500
 TTFWidth: 5
@@ -86,7 +86,7 @@ DisplaySize: -24
 AntiAlias: 1
 FitToEm: 1
 WinInfo: 65 65 19
-BeginChars: 65539 4
+BeginChars: 65539 5
 
 StartChar: .notdef
 Encoding: 65536 -1 0
@@ -175,6 +175,31 @@ Encoding: 33 33 3
 Width: 0
 Flags: W
 LayerCount: 2
+EndChar
+
+StartChar: dieresis
+Encoding: 168 168 0
+Width: 1000
+VWidth: 0
+Flags: HW
+LayerCount: 2
+Fore
+SplineSet
+620.215 824.429 m 1,0,1
+ 760.84 777.554 760.84 777.554 713.965 636.929 c 1,2,-1
+ 620.215 824.429 l 1,0,1
+154.883 324.971 m 0,3,-1
+254.492 773.213 m 1,4,5
+ 310.707 834.805 310.707 834.805 374.609 767.354 c 1,6,7
+ 410.471 728.672 410.471 728.672 374.609 691.182 c 0,8,9
+ 308.375 621.934 308.375 621.934 254.492 688.252 c 0,10,11
+ 216.406 735.127 216.406 735.127 254.492 773.213 c 1,4,5
+254.492 773.213 m 1,12,13
+ 216.406 735.127 216.406 735.127 254.492 688.252 c 0,14,15
+ 308.375 621.934 308.375 621.934 374.609 691.182 c 0,16,17
+ 410.471 728.672 410.471 728.672 374.609 767.354 c 1,18,19
+ 310.707 834.805 310.707 834.805 254.492 773.213 c 1,12,13
+EndSplineSet
 EndChar
 EndChars
 EndSplineFont

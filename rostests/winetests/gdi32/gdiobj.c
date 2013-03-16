@@ -319,10 +319,54 @@ static void test_region(void)
     DeleteObject(hrgn);
 }
 
+static void test_handles_on_win64(void)
+{
+    int i;
+    BOOL ret;
+    DWORD type;
+    HRGN hrgn, hrgn_test;
+
+    static const struct
+    {
+        ULONG high;
+        ULONG low;
+        BOOL  ret;
+    } cases[] =
+    {
+        { 0x00000000, 0x00000000, TRUE  },
+        { 0x00000000, 0x0000ffe0, FALSE }, /* just over MAX_LARGE_HANDLES */
+        { 0x00000000, 0x0000ffb0, FALSE }, /* just under MAX_LARGE_HANDLES */
+        { 0xffffffff, 0xffff0000, FALSE },
+        { 0xffffffff, 0x00000000, TRUE  },
+        { 0xdeadbeef, 0x00000000, TRUE  },
+        { 0xcccccccc, 0xcccccccc, FALSE }
+    };
+
+    if (sizeof(void*) != 8)
+        return;
+
+    for (i = 0; i < sizeof(cases)/sizeof(cases[0]); i++)
+    {
+        hrgn = CreateRectRgn(10, 10, 20, 20);
+        hrgn_test = (HRGN)(ULONG_PTR)((ULONG_PTR)hrgn | ((ULONGLONG)cases[i].high << 32) | cases[i].low);
+        type = GetObjectType( hrgn_test );
+        if (cases[i].ret)
+            ok( type == OBJ_REGION, "wrong type %u\n", type );
+        else
+            ok( type == 0, "wrong type %u\n", type );
+        ret = DeleteObject(hrgn_test);
+        ok( cases[i].ret == ret, "DeleteObject should return %s (%p)\n",
+            cases[i].ret ? "TRUE" : "FALSE", hrgn_test);
+        /* actually free it if above is expected to fail */
+        if (!ret) DeleteObject(hrgn);
+    }
+}
+
 START_TEST(gdiobj)
 {
     test_gdi_objects();
     test_thread_objects();
     test_GetCurrentObject();
     test_region();
+    test_handles_on_win64();
 }

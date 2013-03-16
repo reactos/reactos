@@ -339,16 +339,18 @@ static void test_dib_info(HBITMAP hbm, const void *bits, const BITMAPINFOHEADER 
     ok(ret == 0, "%d != 0\n", ret);
 }
 
-#define test_color(hdc, color, exp) \
-{ \
-    COLORREF c; \
-    c = SetPixel(hdc, 0, 0, color); \
-    ok(c == exp, "SetPixel failed: got 0x%06x expected 0x%06x\n", c, (UINT)exp); \
-    c = GetPixel(hdc, 0, 0); \
-    ok(c == exp, "GetPixel failed: got 0x%06x expected 0x%06x\n", c, (UINT)exp); \
-    c = GetNearestColor(hdc, color); \
-    ok(c == exp, "GetNearestColor failed: got 0x%06x expected 0x%06x\n", c, (UINT)exp); \
+static void _test_color( int line, HDC hdc, COLORREF color, COLORREF exp )
+{
+    COLORREF c;
+    c = SetPixel(hdc, 0, 0, color);
+    ok_(__FILE__, line)(c == exp, "SetPixel failed: got 0x%06x expected 0x%06x\n", c, exp);
+    c = GetPixel(hdc, 0, 0);
+    ok_(__FILE__, line)(c == exp, "GetPixel failed: got 0x%06x expected 0x%06x\n", c, exp);
+    c = GetNearestColor(hdc, color);
+    ok_(__FILE__, line)(c == exp, "GetNearestColor failed: got 0x%06x expected 0x%06x\n", c, exp);
 }
+#define test_color(hdc, color, exp) _test_color( __LINE__, hdc, color, exp )
+
 
 static void test_dib_bits_access( HBITMAP hdib, void *bits )
 {
@@ -892,7 +894,7 @@ static void test_dib_formats(void)
 
     memset( data, 0xaa, sizeof(data) );
 
-#if 0 // FIXME: ReactOS Bug 6527
+#if 0 // FIXME: CORE-5922
     for (bpp = 0; bpp <= 64; bpp++)
     {
         for (planes = 0; planes <= 64; planes++)
@@ -1514,6 +1516,189 @@ static void test_bitmap(void)
 
     DeleteObject(hbmp);
     DeleteDC(hdc);
+}
+
+static COLORREF get_nearest( int r, int g, int b )
+{
+    return (r*r + g*g + b*b < (255-r)*(255-r) + (255-g)*(255-g) + (255-b)*(255-b)) ? 0x000000 : 0xffffff;
+}
+
+static int is_black_pen( COLORREF fg, COLORREF bg, int r, int g, int b )
+{
+    if (fg == 0 || bg == 0xffffff) return RGB(r,g,b) != 0xffffff && RGB(r,g,b) != bg;
+    return RGB(r,g,b) == 0x000000 || RGB(r,g,b) == bg;
+}
+
+static void test_bitmap_colors( HDC hdc, COLORREF fg, COLORREF bg, int r, int g, int b )
+{
+    static const WORD pattern_bits[] = { 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa };
+    BITMAPINFO *info;
+    RGBQUAD *colors;
+    WORD bits[16];
+    void *bits_ptr;
+    COLORREF res;
+    HBRUSH old_brush;
+    HPEN old_pen;
+    HBITMAP bitmap;
+    HDC memdc;
+
+    res = SetPixel( hdc, 0, 0, RGB(r,g,b) );
+    ok( res == get_nearest( r, g, b ),
+        "wrong result %06x for %02x,%02x,%02x fg %06x bg %06x\n", res, r, g, b, fg, bg );
+    res = GetPixel( hdc, 0, 0 );
+    ok( res == get_nearest( r, g, b ),
+        "wrong result %06x for %02x,%02x,%02x fg %06x bg %06x\n", res, r, g, b, fg, bg );
+    res = GetNearestColor( hdc, RGB(r,g,b) );
+    ok( res == get_nearest( r, g, b ),
+        "wrong result %06x for %02x,%02x,%02x fg %06x bg %06x\n", res, r, g, b, fg, bg );
+
+    /* solid pen */
+    old_pen = SelectObject( hdc, CreatePen( PS_SOLID, 1, RGB(r,g,b) ));
+    MoveToEx( hdc, 0, 0, NULL );
+    LineTo( hdc, 16, 0 );
+    res = GetPixel( hdc, 0, 0 );
+    ok( res == (is_black_pen( fg, bg, r, g, b ) ? 0 : 0xffffff),
+        "wrong result %06x for %02x,%02x,%02x fg %06x bg %06x\n", res, r, g, b, fg, bg );
+    GetBitmapBits( GetCurrentObject( hdc, OBJ_BITMAP ), sizeof(bits), bits );
+    ok( bits[0] == (is_black_pen( fg, bg, r, g, b ) ? 0x00 : 0xffff),
+        "wrong bits %04x for %02x,%02x,%02x fg %06x bg %06x\n", bits[0], r, g, b, fg, bg );
+    DeleteObject( SelectObject( hdc, old_pen ));
+
+    /* mono DDB pattern brush */
+    bitmap = CreateBitmap( 16, 8, 1, 1, pattern_bits );
+    old_brush = SelectObject( hdc, CreatePatternBrush( bitmap ));
+    PatBlt( hdc, 0, 0, 16, 16, PATCOPY );
+    GetBitmapBits( GetCurrentObject( hdc, OBJ_BITMAP ), sizeof(bits), bits );
+    ok( bits[0] == 0x5555,
+        "wrong bits %04x for %02x,%02x,%02x fg %06x bg %06x\n", bits[0], r, g, b, fg, bg );
+    DeleteObject( SelectObject( hdc, old_brush ));
+
+    /* mono DDB bitmap */
+    memdc = CreateCompatibleDC( hdc );
+    SelectObject( memdc, bitmap );
+    BitBlt( hdc, 0, 0, 16, 8, memdc, 0, 0, SRCCOPY );
+    GetBitmapBits( GetCurrentObject( hdc, OBJ_BITMAP ), sizeof(bits), bits );
+    ok( bits[0] == 0x5555,
+        "wrong bits %04x for %02x,%02x,%02x fg %06x bg %06x\n", bits[0], r, g, b, fg, bg );
+    SetTextColor( memdc, RGB(255,255,255) );
+    SetBkColor( memdc, RGB(0,0,0) );
+    BitBlt( hdc, 0, 0, 16, 8, memdc, 0, 0, SRCCOPY );
+    GetBitmapBits( GetCurrentObject( hdc, OBJ_BITMAP ), sizeof(bits), bits );
+    ok( bits[0] == 0x5555,
+        "wrong bits %04x for %02x,%02x,%02x fg %06x bg %06x\n", bits[0], r, g, b, fg, bg );
+
+    /* mono DIB section */
+    info = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET( BITMAPINFO, bmiColors[256] ) );
+    colors = info->bmiColors;
+    info->bmiHeader.biSize = sizeof(info->bmiHeader);
+    info->bmiHeader.biHeight = -16;
+    info->bmiHeader.biWidth = 16;
+    info->bmiHeader.biBitCount = 1;
+    info->bmiHeader.biPlanes = 1;
+    info->bmiHeader.biCompression = BI_RGB;
+    colors[0].rgbRed = 0xff;
+    colors[0].rgbGreen = 0xff;
+    colors[0].rgbBlue = 0xf0;
+    colors[1].rgbRed = 0x20;
+    colors[1].rgbGreen = 0x0;
+    colors[1].rgbBlue = 0x0;
+    bitmap = CreateDIBSection( 0, info, DIB_RGB_COLORS, &bits_ptr, NULL, 0 );
+    memset( bits_ptr, 0x55, 64 );
+    DeleteObject( SelectObject( memdc, bitmap ));
+    BitBlt( hdc, 0, 0, 16, 8, memdc, 0, 0, SRCCOPY );
+    GetBitmapBits( GetCurrentObject( hdc, OBJ_BITMAP ), sizeof(bits), bits );
+    ok( bits[0] == 0x5555,
+        "wrong bits %04x for %02x,%02x,%02x fg %06x bg %06x\n", bits[0], r, g, b, fg, bg );
+
+    colors[0].rgbRed = 0x0;
+    colors[0].rgbGreen = 0x0;
+    colors[0].rgbBlue = 0x10;
+    colors[1].rgbRed = 0xff;
+    colors[1].rgbGreen = 0xf0;
+    colors[1].rgbBlue = 0xff;
+    bitmap = CreateDIBSection( 0, info, DIB_RGB_COLORS, &bits_ptr, NULL, 0 );
+    memset( bits_ptr, 0x55, 64 );
+    DeleteObject( SelectObject( memdc, bitmap ));
+    BitBlt( hdc, 0, 0, 16, 8, memdc, 0, 0, SRCCOPY );
+    GetBitmapBits( GetCurrentObject( hdc, OBJ_BITMAP ), sizeof(bits), bits );
+    ok( bits[0] == 0xaaaa,
+        "wrong bits %04x for %02x,%02x,%02x fg %06x bg %06x\n", bits[0], r, g, b, fg, bg );
+
+    SetTextColor( memdc, RGB(0,20,0) );
+    SetBkColor( memdc, RGB(240,240,240) );
+    BitBlt( hdc, 0, 0, 16, 8, memdc, 0, 0, SRCCOPY );
+    GetBitmapBits( GetCurrentObject( hdc, OBJ_BITMAP ), sizeof(bits), bits );
+    ok( bits[0] == 0x5555,
+        "wrong bits %04x for %02x,%02x,%02x fg %06x bg %06x\n", bits[0], r, g, b, fg, bg );
+
+    SetTextColor( memdc, RGB(250,250,250) );
+    SetBkColor( memdc, RGB(10,10,10) );
+    BitBlt( hdc, 0, 0, 16, 8, memdc, 0, 0, SRCCOPY );
+    GetBitmapBits( GetCurrentObject( hdc, OBJ_BITMAP ), sizeof(bits), bits );
+    ok( bits[0] == 0xaaaa,
+        "wrong bits %04x for %02x,%02x,%02x fg %06x bg %06x\n", bits[0], r, g, b, fg, bg );
+    DeleteDC( memdc );
+    DeleteObject( bitmap );
+    HeapFree( GetProcessHeap(), 0, info );
+}
+
+static void test_mono_bitmap(void)
+{
+    static const COLORREF colors[][2] =
+    {
+        { RGB(0x00,0x00,0x00), RGB(0xff,0xff,0xff) },
+        { RGB(0xff,0xff,0xff), RGB(0x00,0x00,0x00) },
+        { RGB(0x00,0x00,0x00), RGB(0xff,0xff,0xfe) },
+        { RGB(0x00,0x01,0x00), RGB(0xff,0xff,0xff) },
+        { RGB(0x00,0x00,0x00), RGB(0x80,0x80,0x80) },
+        { RGB(0x80,0x80,0x80), RGB(0xff,0xff,0xff) },
+        { RGB(0x30,0x40,0x50), RGB(0x60,0x70,0x80) },
+        { RGB(0xa0,0xa0,0xa0), RGB(0x20,0x30,0x10) },
+        { PALETTEINDEX(0), PALETTEINDEX(255) },
+        { PALETTEINDEX(1), PALETTEINDEX(2) },
+    };
+
+    HBITMAP hbmp;
+    HDC hdc;
+    DWORD col;
+    int i, r, g, b;
+
+    if (!winetest_interactive)
+    {
+        skip("test_mono_bitmap skipped, CORE-5922\n");
+        return;
+    }
+
+    hdc = CreateCompatibleDC(0);
+    assert(hdc != 0);
+
+    hbmp = CreateBitmap(16, 16, 1, 1, NULL);
+    assert(hbmp != NULL);
+
+    SelectObject( hdc, hbmp );
+
+    for (col = 0; col < sizeof(colors) / sizeof(colors[0]); col++)
+    {
+        SetTextColor( hdc, colors[col][0] );
+        SetBkColor( hdc, colors[col][1] );
+
+        for (i = 0; i < 256; i++)
+        {
+            HPALETTE pal = GetCurrentObject( hdc, OBJ_PAL );
+            PALETTEENTRY ent;
+
+            if (!GetPaletteEntries( pal, i, 1, &ent )) GetPaletteEntries( pal, 0, 1, &ent );
+            test_color( hdc, PALETTEINDEX(i), get_nearest( ent.peRed, ent.peGreen, ent.peBlue ));
+            test_color( hdc, DIBINDEX(i), (i == 1) ? 0xffffff : 0x000000 );
+        }
+        for (r = 0; r < 256; r += 15)
+            for (g = 0; g < 256; g += 15)
+                for (b = 0; b < 256; b += 15)
+                    test_bitmap_colors( hdc, colors[col][0], colors[col][1], r, g, b );
+    }
+
+    DeleteDC(hdc);
+    DeleteObject(hbmp);
 }
 
 static void test_bmBits(void)
@@ -3176,12 +3361,13 @@ static void check_StretchDIBits_pixel(HDC hdcDst, UINT32 *dstBuffer, UINT32 *src
         dwRop, expected, *dstBuffer, line);
 }
 
-static void check_StretchDIBits_stretch(HDC hdcDst, UINT32 *dstBuffer, UINT32 *srcBuffer,
+static INT check_StretchDIBits_stretch( HDC hdcDst, UINT32 *dstBuffer, UINT32 *srcBuffer,
                                         int nXOriginDest, int nYOriginDest, int nWidthDest, int nHeightDest,
                                         int nXOriginSrc, int nYOriginSrc, int nWidthSrc, int nHeightSrc,
                                         UINT32 expected[4], int line)
 {
     BITMAPINFO bitmapInfo;
+    INT ret;
 
     memset(&bitmapInfo, 0, sizeof(BITMAPINFO));
     bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -3192,9 +3378,9 @@ static void check_StretchDIBits_stretch(HDC hdcDst, UINT32 *dstBuffer, UINT32 *s
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
     memset(dstBuffer, 0, 16);
-    StretchDIBits(hdcDst, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest,
-                  nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc,
-                  srcBuffer, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+    ret = StretchDIBits(hdcDst, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest,
+                        nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc,
+                        srcBuffer, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
     ok(memcmp(dstBuffer, expected, 16) == 0,
         "StretchDIBits expected { %08X, %08X, %08X, %08X } got { %08X, %08X, %08X, %08X } "
         "stretching { %d, %d, %d, %d } to { %d, %d, %d, %d } from line %d\n",
@@ -3202,6 +3388,7 @@ static void check_StretchDIBits_stretch(HDC hdcDst, UINT32 *dstBuffer, UINT32 *s
         dstBuffer[0], dstBuffer[1], dstBuffer[2], dstBuffer[3],
         nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc,
         nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, line);
+    return ret;
 }
 
 static void test_StretchDIBits(void)
@@ -3213,6 +3400,7 @@ static void test_StretchDIBits(void)
     HBRUSH hBrush, hOldBrush;
     BITMAPINFO biDst;
     UINT32 expected[4];
+    INT ret;
 
     memset(&biDst, 0, sizeof(BITMAPINFO));
     biDst.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -3258,43 +3446,63 @@ static void test_StretchDIBits(void)
 
     expected[0] = 0xCAFED00D, expected[1] = 0xFEEDFACE;
     expected[2] = 0xFEDCBA98, expected[3] = 0x76543210;
-    check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
-                                0, 0, 2, 2, 0, 0, 2, 2, expected, __LINE__);
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      0, 0, 2, 2, 0, 0, 2, 2, expected, __LINE__);
+    ok( ret == 2, "got ret %d\n", ret );
 
     expected[0] = 0xCAFED00D, expected[1] = 0x00000000;
     expected[2] = 0x00000000, expected[3] = 0x00000000;
-    check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
-                                0, 0, 1, 1, 0, 0, 1, 1, expected, __LINE__);
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      0, 0, 1, 1, 0, 0, 1, 1, expected, __LINE__);
+    todo_wine ok( ret == 1, "got ret %d\n", ret );
 
     expected[0] = 0xFEDCBA98, expected[1] = 0xFEDCBA98;
     expected[2] = 0xFEDCBA98, expected[3] = 0xFEDCBA98;
-    check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
-                                0, 0, 2, 2, 0, 0, 1, 1, expected, __LINE__);
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      0, 0, 2, 2, 0, 0, 1, 1, expected, __LINE__);
+    ok( ret == 2, "got ret %d\n", ret );
 
     expected[0] = 0x42441000, expected[1] = 0x00000000;
     expected[2] = 0x00000000, expected[3] = 0x00000000;
-    check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
-                                0, 0, 1, 1, 0, 0, 2, 2, expected, __LINE__);
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      0, 0, 1, 1, 0, 0, 2, 2, expected, __LINE__);
+    ok( ret == 2, "got ret %d\n", ret );
 
     expected[0] = 0x00000000, expected[1] = 0x00000000;
     expected[2] = 0x00000000, expected[3] = 0x00000000;
-    check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
-                                0, 0, 2, 2, 1, 1, -2, -2, expected, __LINE__);
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      0, 0, 2, 2, 1, 1, -2, -2, expected, __LINE__);
+    ok( ret == 0, "got ret %d\n", ret );
 
     expected[0] = 0x00000000, expected[1] = 0x00000000;
     expected[2] = 0x00000000, expected[3] = 0x00000000;
-    check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
-                                0, 0, 2, 2, 1, 1, -2, -2, expected, __LINE__);
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      0, 0, 2, 2, 1, 1, -2, -2, expected, __LINE__);
+    ok( ret == 0, "got ret %d\n", ret );
 
     expected[0] = 0x00000000, expected[1] = 0x00000000;
     expected[2] = 0x00000000, expected[3] = 0x00000000;
-    check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
-                                1, 1, -2, -2, 1, 1, -2, -2, expected, __LINE__);
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      1, 1, -2, -2, 1, 1, -2, -2, expected, __LINE__);
+    ok( ret == 0, "got ret %d\n", ret );
 
     expected[0] = 0x00000000, expected[1] = 0x00000000;
     expected[2] = 0x00000000, expected[3] = 0xCAFED00D;
-    check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
-                                1, 1, 2, 2, 0, 0, 2, 2, expected, __LINE__);
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      1, 1, 2, 2, 0, 0, 2, 2, expected, __LINE__);
+    ok( ret == 2, "got ret %d\n", ret );
+
+    expected[0] = 0x00000000, expected[1] = 0x00000000;
+    expected[2] = 0x00000000, expected[3] = 0x00000000;
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      2, 2, 4, 4, 0, 0, 2, 2, expected, __LINE__);
+    ok( ret == 2, "got ret %d\n", ret );
+
+    expected[0] = 0x00000000, expected[1] = 0x00000000;
+    expected[2] = 0x00000000, expected[3] = 0x00000000;
+    ret = check_StretchDIBits_stretch(hdcDst, dstBuffer, srcBuffer,
+                                      -4, -4, 4, 4, 0, 0, 4, 4, expected, __LINE__);
+    ok( ret == 2, "got ret %d\n", ret );
 
     SelectObject(hdcDst, oldDst);
     DeleteObject(bmpDst);
@@ -3323,7 +3531,6 @@ static void test_GdiAlphaBlend(void)
     HDC hdcNull;
     HDC hdcDst;
     HBITMAP bmpDst;
-    HBITMAP oldDst;
     BITMAPINFO *bmi;
     HDC hdcSrc;
     HBITMAP bmpSrc;
@@ -3353,7 +3560,7 @@ static void test_GdiAlphaBlend(void)
     bmpSrc = CreateDIBSection(hdcDst, bmi, DIB_RGB_COLORS, &bits, NULL, 0);
     ok(bmpSrc != NULL, "Couldn't create source bitmap\n");
 
-    oldDst = SelectObject(hdcDst, bmpDst);
+    SelectObject(hdcDst, bmpDst);
     oldSrc = SelectObject(hdcSrc, bmpSrc);
 
     blend.BlendOp = AC_SRC_OVER;
@@ -3399,6 +3606,7 @@ static void test_GdiAlphaBlend(void)
     SetViewportExtEx(hdcDst, -1, -1, NULL);
     SetLastError(0xdeadbeef);
     ret = pGdiAlphaBlend(hdcDst, 0, 0, 20, 20, hdcSrc, 0, -1, 50, 50, blend);
+    todo_wine
     ok( ret, "GdiAlphaBlend failed err %u\n", GetLastError() );
     SetLastError(0xdeadbeef);
     ret = pGdiAlphaBlend(hdcDst, -20, -20, 20, 20, hdcSrc, 0, -1, 50, 50, blend);
@@ -3535,15 +3743,13 @@ static void test_GdiAlphaBlend(void)
     ok( !ret, "GdiAlphaBlend succeeded\n" );
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
 
-    SelectObject(hdcDst, oldDst);
-    SelectObject(hdcSrc, oldSrc);
-    DeleteObject(bmpSrc);
-    DeleteObject(bmpDst);
     DeleteDC(hdcDst);
     DeleteDC(hdcSrc);
+    DeleteObject(bmpSrc);
+    DeleteObject(bmpDst);
 
     ReleaseDC(NULL, hdcNull);
-
+    HeapFree(GetProcessHeap(), 0, bmi);
 }
 
 static void test_GdiGradientFill(void)
@@ -3656,6 +3862,7 @@ static void test_GdiGradientFill(void)
 
     DeleteDC( hdc );
     DeleteObject( bmp );
+    HeapFree(GetProcessHeap(), 0, bmi);
 }
 
 static void test_clipping(void)
@@ -5388,6 +5595,7 @@ START_TEST(bitmap)
     test_dib_formats();
     test_mono_dibsection();
     test_bitmap();
+    test_mono_bitmap();
     test_bmBits();
     test_GetDIBits_selected_DIB(1);
     test_GetDIBits_selected_DIB(4);
