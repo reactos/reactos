@@ -991,9 +991,17 @@ TOOLTIPS_CheckTool (const TOOLTIPS_INFO *infoPtr, BOOL bShowTest)
     if (nTool == -1)
 	return -1;
 
-    if (!(GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TTS_ALWAYSTIP) && bShowTest) {
-	if (!TOOLTIPS_IsWindowActive (GetWindow (infoPtr->hwndSelf, GW_OWNER)))
-	    return -1;
+    if (!(GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TTS_ALWAYSTIP) && bShowTest)
+    {
+        TTTOOL_INFO *ti = &infoPtr->tools[nTool];
+        HWND hwnd = (ti->uFlags & TTF_IDISHWND) ? (HWND)ti->uId : ti->hwnd;
+
+        if (!TOOLTIPS_IsWindowActive(hwnd))
+        {
+            TRACE("not active: hwnd %p, parent %p, active %p\n",
+                  hwnd, GetParent(hwnd), GetActiveWindow());
+            return -1;
+        }
     }
 
     TRACE("tool %d\n", nTool);

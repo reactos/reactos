@@ -285,7 +285,6 @@ STATUSBAR_RefreshPart (const STATUS_INFO *infoPtr, HDC hdc, const STATUSWINDOWPA
 static LRESULT
 STATUSBAR_Refresh (STATUS_INFO *infoPtr, HDC hdc)
 {
-    int      i;
     RECT   rect;
     HBRUSH hbrBk;
     HFONT  hOldFont;
@@ -319,6 +318,8 @@ STATUSBAR_Refresh (STATUS_INFO *infoPtr, HDC hdc)
     if (infoPtr->simple) {
 	STATUSBAR_RefreshPart (infoPtr, hdc, &infoPtr->part0, 0);
     } else {
+        unsigned int i;
+
 	for (i = 0; i < infoPtr->numParts; i++) {
 	    STATUSBAR_RefreshPart (infoPtr, hdc, &infoPtr->parts[i], i);
 	}
@@ -336,7 +337,8 @@ STATUSBAR_Refresh (STATUS_INFO *infoPtr, HDC hdc)
 static int
 STATUSBAR_InternalHitTest(const STATUS_INFO *infoPtr, const POINT *pt)
 {
-    int i;
+    unsigned int i;
+
     if (infoPtr->simple)
         return 255;
 
@@ -352,7 +354,7 @@ STATUSBAR_SetPartBounds (STATUS_INFO *infoPtr)
 {
     STATUSWINDOWPART *part;
     RECT rect, *r;
-    int	i;
+    UINT i;
 
     /* get our window size */
     GetClientRect (infoPtr->Self, &rect);
@@ -883,7 +885,7 @@ STATUSBAR_Simple (STATUS_INFO *infoPtr, BOOL simple)
 static LRESULT
 STATUSBAR_WMDestroy (STATUS_INFO *infoPtr)
 {
-    int	i;
+    unsigned int i;
 
     TRACE("\n");
     for (i = 0; i < infoPtr->numParts; i++) {

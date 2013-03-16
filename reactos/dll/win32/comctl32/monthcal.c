@@ -1076,7 +1076,8 @@ static void MONTHCAL_PaintFocusAndCircle(const MONTHCAL_INFO *infoPtr, HDC hdc, 
 /* months before first calendar month and after last calendar month */
 static void MONTHCAL_PaintLeadTrailMonths(const MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps)
 {
-  INT mask, length, index;
+  INT mask, index;
+  UINT length;
   SYSTEMTIME st_max, st;
 
   if (infoPtr->dwStyle & MCS_NOTRAILINGDATES) return;
@@ -1116,7 +1117,8 @@ static void MONTHCAL_PaintLeadTrailMonths(const MONTHCAL_INFO *infoPtr, HDC hdc,
 static void MONTHCAL_PaintCalendar(const MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps, INT calIdx)
 {
   const SYSTEMTIME *date = &infoPtr->calendars[calIdx].month;
-  INT i, j, length;
+  INT i, j;
+  UINT length;
   RECT r, fill_bk_rect;
   SYSTEMTIME st;
   WCHAR buf[80];

@@ -102,6 +102,7 @@ typedef struct tagTREEVIEW_INFO
   BOOL          insertBeforeorAfter; /* flag used by TVM_SETINSERTMARK */
   HIMAGELIST    dragList;       /* Bitmap of dragged item */
   LONG          scrollX;
+  INT           wheelRemainder;
   COLORREF      clrBk;
   COLORREF      clrText;
   COLORREF      clrLine;
@@ -110,6 +111,7 @@ typedef struct tagTREEVIEW_INFO
   HFONT         hDefaultFont;
   HFONT         hBoldFont;
   HFONT         hUnderlineFont;
+  HFONT         hBoldUnderlineFont;
   HCURSOR       hcurHand;
   HWND          hwndToolTip;
 
@@ -303,11 +305,22 @@ TREEVIEW_CreateUnderlineFont(HFONT hOrigFont)
     return CreateFontIndirectW(&font);
 }
 
+static HFONT
+TREEVIEW_CreateBoldUnderlineFont(HFONT hfont)
+{
+    LOGFONTW font;
+
+    GetObjectW(hfont, sizeof(font), &font);
+    font.lfWeight = FW_BOLD;
+    font.lfUnderline = TRUE;
+    return CreateFontIndirectW(&font);
+}
+
 static inline HFONT
 TREEVIEW_FontForItem(const TREEVIEW_INFO *infoPtr, const TREEVIEW_ITEM *item)
 {
     if ((infoPtr->dwStyle & TVS_TRACKSELECT) && (item == infoPtr->hotItem))
-        return infoPtr->hUnderlineFont;
+        return item->state & TVIS_BOLD ? infoPtr->hBoldUnderlineFont : infoPtr->hUnderlineFont;
     if (item->state & TVIS_BOLD)
         return infoPtr->hBoldFont;
     return infoPtr->hFont;
@@ -1562,7 +1575,7 @@ TREEVIEW_DeleteItem(TREEVIEW_INFO *infoPtr, HTREEITEM item)
 	       newFirstVisible = item->prevSibling;
 	    else if (item->parent != infoPtr->root)
 	       newFirstVisible = item->parent;
-	       TREEVIEW_SetFirstVisible(infoPtr, NULL, TRUE);
+	    TREEVIEW_SetFirstVisible(infoPtr, NULL, TRUE);
 	}
 	else
 	    newFirstVisible = infoPtr->firstVisible;
@@ -1903,8 +1916,10 @@ TREEVIEW_SetFont(TREEVIEW_INFO *infoPtr, HFONT hFont, BOOL bRedraw)
 
     DeleteObject(infoPtr->hBoldFont);
     DeleteObject(infoPtr->hUnderlineFont);
+    DeleteObject(infoPtr->hBoldUnderlineFont);
     infoPtr->hBoldFont = TREEVIEW_CreateBoldFont(infoPtr->hFont);
     infoPtr->hUnderlineFont = TREEVIEW_CreateUnderlineFont(infoPtr->hFont);
+    infoPtr->hBoldUnderlineFont = TREEVIEW_CreateBoldUnderlineFont(infoPtr->hFont);
 
     if (!infoPtr->bHeightSet)
 	infoPtr->uItemHeight = TREEVIEW_NaturalHeight(infoPtr);
@@ -3155,10 +3170,10 @@ TREEVIEW_Sort(TREEVIEW_INFO *infoPtr, HTREEITEM parent,
 	{
 	    int visOrder = infoPtr->firstVisible->visibleOrder;
 
-        if (parent == infoPtr->root)
-            TREEVIEW_RecalculateVisibleOrder(infoPtr, NULL);
-        else
-            TREEVIEW_RecalculateVisibleOrder(infoPtr, parent);
+	    if (parent == infoPtr->root)
+	        TREEVIEW_RecalculateVisibleOrder(infoPtr, NULL);
+	    else
+	        TREEVIEW_RecalculateVisibleOrder(infoPtr, parent);
 
 	    if (TREEVIEW_IsChildOf(parent, infoPtr->firstVisible))
 	    {
@@ -4916,7 +4931,7 @@ scroll:
 static LRESULT
 TREEVIEW_MouseWheel(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    short gcWheelDelta;
+    short wheelDelta;
     UINT pulScrollLines = 3;
 
     if (wParam & (MK_SHIFT | MK_CONTROL))
@@ -4927,13 +4942,25 @@ TREEVIEW_MouseWheel(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 
     SystemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, &pulScrollLines, 0);
 
-    gcWheelDelta = -(short)HIWORD(wParam);
-    pulScrollLines *= (gcWheelDelta / WHEEL_DELTA);
+    wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+    /* if scrolling changes direction, ignore left overs */
+    if ((wheelDelta < 0 && infoPtr->wheelRemainder < 0) ||
+        (wheelDelta > 0 && infoPtr->wheelRemainder > 0))
+        infoPtr->wheelRemainder += wheelDelta;
+    else
+        infoPtr->wheelRemainder = wheelDelta;
 
-    if (abs(gcWheelDelta) >= WHEEL_DELTA && pulScrollLines)
+    if (infoPtr->wheelRemainder && pulScrollLines)
     {
-	int newDy = infoPtr->firstVisible->visibleOrder + pulScrollLines;
-	int maxDy = infoPtr->maxVisibleOrder;
+	int newDy;
+	int maxDy;
+	int lineScroll;
+
+	lineScroll = pulScrollLines * (float)infoPtr->wheelRemainder / WHEEL_DELTA;
+	infoPtr->wheelRemainder -= WHEEL_DELTA * lineScroll / (int)pulScrollLines;
+
+	newDy = infoPtr->firstVisible->visibleOrder - lineScroll;
+	maxDy = infoPtr->maxVisibleOrder;
 
 	if (newDy > maxDy)
 	    newDy = maxDy;
@@ -5038,6 +5065,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     /* dragList */
 
     infoPtr->scrollX = 0;
+    infoPtr->wheelRemainder = 0;
 
     infoPtr->clrBk   = CLR_NONE; /* use system color */
     infoPtr->clrText = CLR_NONE; /* use system color */
@@ -5064,6 +5092,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     infoPtr->hFont = infoPtr->hDefaultFont = CreateFontIndirectW(&lf);
     infoPtr->hBoldFont = TREEVIEW_CreateBoldFont(infoPtr->hFont);
     infoPtr->hUnderlineFont = TREEVIEW_CreateUnderlineFont(infoPtr->hFont);
+    infoPtr->hBoldUnderlineFont = TREEVIEW_CreateBoldUnderlineFont(infoPtr->hFont);
     infoPtr->hcurHand = LoadCursorW(NULL, (LPWSTR)IDC_HAND);
 
     infoPtr->uItemHeight = TREEVIEW_NaturalHeight(infoPtr);
@@ -5123,6 +5152,7 @@ TREEVIEW_Destroy(TREEVIEW_INFO *infoPtr)
     DeleteObject(infoPtr->hDefaultFont);
     DeleteObject(infoPtr->hBoldFont);
     DeleteObject(infoPtr->hUnderlineFont);
+    DeleteObject(infoPtr->hBoldUnderlineFont);
     Free(infoPtr);
 
     return 0;

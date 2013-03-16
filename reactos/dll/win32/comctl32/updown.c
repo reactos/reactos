@@ -1026,10 +1026,10 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 
             if (TRACE_ON(updown))
             {
-                INT i;
+                UINT i;
 
                 for (i = 0; i < wParam; i++)
-                    TRACE("%d: nSec %u nInc %u\n", i,
+                    TRACE("%u: nSec %u nInc %u\n", i,
                         infoPtr->AccelVect[i].nSec, infoPtr->AccelVect[i].nInc);
             }
 
