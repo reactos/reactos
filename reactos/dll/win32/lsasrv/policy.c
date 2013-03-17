@@ -824,8 +824,7 @@ LsarSetAuditEvents(PLSA_DB_OBJECT PolicyObject,
                                     AuditData,
                                     AttributeSize);
 
-    if (AuditData != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, AuditData);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, AuditData);
 
     return Status;
 }

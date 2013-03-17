@@ -231,7 +231,7 @@ LsapAddAuthPackage(IN PWSTR ValueName,
     TRACE("Package Name: %s\n", Package->Name->Buffer);
 
     Package->Id = *Id;
-    *Id++;
+    (*Id)++;
 
     InsertTailList(&PackageListHead, &Package->Entry);
 
