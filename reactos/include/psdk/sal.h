@@ -832,7 +832,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Outptr_result_bytebuffer_(size)                            _SAL2_NAME(_Outptr_result_bytebuffer_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElementsConst=1,Notref=1)] [SA_Post(Valid=SA_Yes)] [SA_Post(Deref=1,Null=SA_No,Notref=1,WritableBytes="\n" _SA_SPECSTRIZE(size))])
 //#define _Outptr_result_bytebuffer_all_(size)
 //#define _Outptr_result_bytebuffer_all_maybenull_(size)
-//#define _Outptr_result_bytebuffer_maybenull_(size)
+#define _Outptr_result_bytebuffer_maybenull_(size)                  _SAL2_NAME(_Outptr_result_bytebuffer_maybenull_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElementsConst=1,Notref=1)] [SA_Post(Valid=SA_Yes)] [SA_Post(Deref=1,Null=SA_Maybe,Notref=1,WritableBytes="\n" _SA_SPECSTRIZE(size))])
 #define _Outptr_result_bytebuffer_to_(size, count)                  _SAL2_NAME(_Outptr_result_bytebuffer_to_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElementsConst=1,Notref=1)] [SA_Post(Valid=SA_Yes)] [SA_Post(Deref=1,Null=SA_No,Notref=1,WritableBytes="\n" _SA_SPECSTRIZE(size), ValidBytes="\n" _SA_SPECSTRIZE(count))])
 //#define _Outptr_result_bytebuffer_to_maybenull_(size, count)
 #define _Outptr_result_maybenull_                                   _SAL2_NAME(_Outptr_result_maybenull_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElementsConst=1,Notref=1)] [SA_Post(Valid=SA_Yes)] [SA_Post(Deref=1,Null=SA_Maybe,Notref=1,ValidElements="\n""1")] )
@@ -980,7 +980,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Raises_SEH_exception_
 #define _Maybe_raises_SEH_exception_
 #define _Readable_bytes_(size)                                      _SAL2_NAME(_Readable_bytes_) _Group_(_SA_annotes1(SAL_readableTo, byteCount(size)))
-//#define _Readable_elements_(size)
+#define _Readable_elements_(size)                                   _SAL2_NAME(_Readable_elements_) _Group_([SAL_annotes(Name="SAL_readableTo", p1="elementCount(size)")])
 #define _Reserved_                                                  _SAL2_NAME(_Reserved_) _Group_([SA_Pre(Null=SA_Yes)])
 //#define _Result_nullonfailure_
 //#define _Result_zeroonfailure_
