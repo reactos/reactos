@@ -610,7 +610,7 @@ CUSBQueue::UnlinkQueueHeadChain(
 
         if (Entry == &HeadQueueHead->LinkedQueueHeads)
         {
-            DPRINT1("Warnnig; Only %lu QueueHeads in HeadQueueHead\n", Index);
+            DPRINT1("Warning; Only %lu QueueHeads in HeadQueueHead\n", Index);
             Count = Index + 1;
             break;
         }
