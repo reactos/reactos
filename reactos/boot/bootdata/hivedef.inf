@@ -124,6 +124,8 @@ HKCU,"Control Panel\Desktop\WindowMetrics","MenuWidth",2,"18"
 HKCU,"Control Panel\Desktop\WindowMetrics","MenuHeight",2,"18"
 HKCU,"Control Panel\Desktop\WindowMetrics","BorderWidth",2,"1"
 HKCU,"Control Panel\Desktop\WindowMetrics","Shell Icon Size",2,"32"
+HKCU,"Control Panel\Desktop\WindowMetrics","IconSpacing",2,"75"
+HKCU,"Control Panel\Desktop\WindowMetrics","IconVerticalspacing",2,"75"
 HKCU, "Control Panel\Desktop\WindowMetrics","CaptionFont",0x00000001,f5,ff,ff,ff,00,00,00,\
 00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
 00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
