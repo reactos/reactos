@@ -1676,7 +1676,7 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     assert(m_hPin != INVALID_HANDLE_VALUE);
 
     // get all supported sets
-    if (m_Plugins.size() == 0)
+    if (m_Plugins.empty())
     {
         if (GetSupportedSets(&pGuid, &NumGuids))
         {
