@@ -2895,7 +2895,6 @@ DWORD RStartServiceW(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
-    SC_RPC_LOCK Lock = NULL;
 
 #ifndef NDEBUG
     DWORD i;
@@ -2941,16 +2940,8 @@ DWORD RStartServiceW(
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
-    /* Acquire the service start lock until the service has been started */
-    dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
-    if (dwError != ERROR_SUCCESS)
-        return dwError;
-
     /* Start the service */
     dwError = ScmStartService(lpService, argc, (LPWSTR*)argv);
-
-    /* Release the service start lock */
-    ScmReleaseServiceStartLock(&Lock);
 
     return dwError;
 }
@@ -4171,7 +4162,6 @@ DWORD RStartServiceA(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
-    SC_RPC_LOCK Lock = NULL;
     LPWSTR *lpVector = NULL;
     DWORD i;
     DWORD dwLength;
@@ -4244,16 +4234,8 @@ DWORD RStartServiceA(
         }
     }
 
-    /* Acquire the service start lock until the service has been started */
-    dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
-    if (dwError != ERROR_SUCCESS)
-        goto done;
-
     /* Start the service */
     dwError = ScmStartService(lpService, argc, lpVector);
-
-     /* Release the service start lock */
-     ScmReleaseServiceStartLock(&Lock);
 
 done:
     /* Free the Unicode argument vector */
