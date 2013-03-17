@@ -195,6 +195,9 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     Fiber = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(FIBER));
     if (!Fiber)
     {
+        /* Free the activation context stack */
+        RtlFreeActivationContextStack(ActivationContextStack);
+
         /* Fail */
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
