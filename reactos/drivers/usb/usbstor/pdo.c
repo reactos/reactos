@@ -671,14 +671,14 @@ USBSTOR_PdoHandleQueryInstanceId(
         //
         // using serial number from device
         //
-        swprintf(Buffer, L"%s&%d", FDODeviceExtension->SerialNumber->bString, PDODeviceExtension->LUN);
+        swprintf(Buffer, L"%s&%c", FDODeviceExtension->SerialNumber->bString, PDODeviceExtension->LUN);
     }
     else
     {
         //
         // use instance count and LUN
         //
-        swprintf(Buffer, L"%04d&%d", FDODeviceExtension->InstanceCount, PDODeviceExtension->LUN);
+        swprintf(Buffer, L"%04lu&%c", FDODeviceExtension->InstanceCount, PDODeviceExtension->LUN);
     }
 
     //
@@ -1203,7 +1203,7 @@ USBSTOR_SendInquiryIrp(
     DPRINT1("Version %x\n", Response->Version);
     DPRINT1("Format %x\n", Response->Format);
     DPRINT1("Length %x\n", Response->Length);
-    DPRINT1("Reserved %x\n", Response->Reserved);
+    DPRINT1("Reserved %p\n", Response->Reserved);
     DPRINT1("Vendor %c%c%c%c%c%c%c%c\n", Response->Vendor[0], Response->Vendor[1], Response->Vendor[2], Response->Vendor[3], Response->Vendor[4], Response->Vendor[5], Response->Vendor[6], Response->Vendor[7]);
     DPRINT1("Product %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", Response->Product[0], Response->Product[1], Response->Product[2], Response->Product[3],
                                                           Response->Product[4], Response->Product[5], Response->Product[6], Response->Product[7], 
