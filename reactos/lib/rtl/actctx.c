@@ -2459,7 +2459,7 @@ RtlFreeActivationContextStack(PACTIVATION_CONTEXT_STACK Stack)
 }
 
 VOID
-NTAPI RtlFreeThreadActivationContextStack(void)
+NTAPI RtlFreeThreadActivationContextStack(VOID)
 {
     RtlFreeActivationContextStack(NtCurrentTeb()->ActivationContextStackPointer);
     NtCurrentTeb()->ActivationContextStackPointer = NULL;

@@ -3539,7 +3539,14 @@ RtlDeactivateActivationContext(
 NTSYSAPI
 VOID
 NTAPI
-RtlFreeThreadActivationContextStack(void);
+RtlFreeActivationContextStack(
+    _In_ PACTIVATION_CONTEXT_STACK Stack
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlFreeThreadActivationContextStack(VOID);
 
 NTSYSAPI
 PRTL_ACTIVATION_CONTEXT_STACK_FRAME
