@@ -2429,7 +2429,7 @@ RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 
 VOID
 NTAPI
-RtlFreeActivationContextStack(PACTIVATION_CONTEXT_STACK Stack)
+RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
 {
     PRTL_ACTIVATION_CONTEXT_STACK_FRAME ActiveFrame, PrevFrame;
 
@@ -2775,15 +2775,15 @@ RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG sect
 
 NTSTATUS
 NTAPI
-RtlAllocateActivationContextStack(IN PVOID *Context)
+RtlAllocateActivationContextStack(IN PACTIVATION_CONTEXT_STACK *Stack)
 {
     PACTIVATION_CONTEXT_STACK ContextStack;
 
     /* Check if it's already allocated */
-    if (*Context) return STATUS_SUCCESS;
+    if (*Stack) return STATUS_SUCCESS;
 
     /* Allocate space for the context stack */
-    ContextStack = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (ACTIVATION_CONTEXT_STACK) );
+    ContextStack = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ACTIVATION_CONTEXT_STACK));
     if (!ContextStack)
     {
         return STATUS_NO_MEMORY;
@@ -2796,7 +2796,7 @@ RtlAllocateActivationContextStack(IN PVOID *Context)
     ContextStack->NextCookieSequenceNumber = 1;
     ContextStack->StackId = 1; //TODO: Timer-based
 
-    *Context = ContextStack;
+    *Stack = ContextStack;
 
     return STATUS_SUCCESS;
 }

@@ -3503,7 +3503,7 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAllocateActivationContextStack(
-    _In_ PVOID *Context
+    _In_ PACTIVATION_CONTEXT_STACK *Stack
 );
 
 NTSYSAPI
