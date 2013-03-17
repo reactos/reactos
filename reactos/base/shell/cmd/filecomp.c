@@ -666,6 +666,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	/* aseemble a list of all files names */
 	do
 	{
+		FileName * oldFileList = FileList;
+
  		if(!_tcscmp (file.cFileName, _T(".")) ||
 			!_tcscmp (file.cFileName, _T("..")))
 			continue;
@@ -683,6 +685,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 
 		if(FileList == NULL)
 		{
+			/* Don't leak old buffer */
+			cmd_free(oldFileList);
 			/* Assemble the orginal string and return */
 			_tcscpy(strOut,szOrginal);
 			FindClose(hFile);
