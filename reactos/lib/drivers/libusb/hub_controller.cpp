@@ -321,7 +321,7 @@ CHubController::QueryStatusChageEndpoint(
     {
         m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
 
-        DPRINT1("[%S] Port %d: Status %x, Change %x\n", m_USBType, PortId, PortStatus, PortChange);
+        DPRINT1("[%S] Port %lu: Status %x, Change %x\n", m_USBType, PortId, PortStatus, PortChange);
 
 
         //
@@ -329,7 +329,7 @@ CHubController::QueryStatusChageEndpoint(
         //
         if (PortChange != 0)
         {
-            DPRINT1("[%S] Change state on port %d\n", m_USBType, PortId);
+            DPRINT1("[%S] Change state on port %lu\n", m_USBType, PortId);
             // Set the value for the port number
              *TransferBuffer = 1 << ((PortId + 1) & 7);
             Changed = TRUE;
@@ -1798,8 +1798,8 @@ CHubController::HandleClassEndpoint(
     DPRINT1("URB_FUNCTION_CLASS_ENDPOINT\n");
     DPRINT1("TransferFlags %x\n", Urb->UrbControlVendorClassRequest.TransferFlags);
     DPRINT1("TransferBufferLength %x\n", Urb->UrbControlVendorClassRequest.TransferBufferLength);
-    DPRINT1("TransferBuffer %x\n", Urb->UrbControlVendorClassRequest.TransferBuffer);
-    DPRINT1("TransferBufferMDL %x\n", Urb->UrbControlVendorClassRequest.TransferBufferMDL);
+    DPRINT1("TransferBuffer %p\n", Urb->UrbControlVendorClassRequest.TransferBuffer);
+    DPRINT1("TransferBufferMDL %p\n", Urb->UrbControlVendorClassRequest.TransferBufferMDL);
     DPRINT1("RequestTypeReservedBits %x\n", Urb->UrbControlVendorClassRequest.RequestTypeReservedBits);
     DPRINT1("Request %x\n", Urb->UrbControlVendorClassRequest.Request);
     DPRINT1("Value %x\n", Urb->UrbControlVendorClassRequest.Value);
@@ -2141,8 +2141,8 @@ CHubController::HandleClassInterface(
     DPRINT1("URB_FUNCTION_CLASS_INTERFACE\n");
     DPRINT1("TransferFlags %x\n", Urb->UrbControlVendorClassRequest.TransferFlags);
     DPRINT1("TransferBufferLength %x\n", Urb->UrbControlVendorClassRequest.TransferBufferLength);
-    DPRINT1("TransferBuffer %x\n", Urb->UrbControlVendorClassRequest.TransferBuffer);
-    DPRINT1("TransferBufferMDL %x\n", Urb->UrbControlVendorClassRequest.TransferBufferMDL);
+    DPRINT1("TransferBuffer %p\n", Urb->UrbControlVendorClassRequest.TransferBuffer);
+    DPRINT1("TransferBufferMDL %p\n", Urb->UrbControlVendorClassRequest.TransferBufferMDL);
     DPRINT1("RequestTypeReservedBits %x\n", Urb->UrbControlVendorClassRequest.RequestTypeReservedBits);
     DPRINT1("Request %x\n", Urb->UrbControlVendorClassRequest.Request);
     DPRINT1("Value %x\n", Urb->UrbControlVendorClassRequest.Value);
@@ -3853,7 +3853,7 @@ CHubController::CreatePDO(
         //
         // construct device name
         //
-        swprintf(CharDeviceName, L"\\Device\\USBPDO-%d", UsbDeviceNumber);
+        swprintf(CharDeviceName, L"\\Device\\USBPDO-%lu", UsbDeviceNumber);
 
         //
         // initialize device name

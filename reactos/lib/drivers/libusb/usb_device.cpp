@@ -844,7 +844,7 @@ CUSBDevice::GetConfigurationDescriptorsLength()
 VOID
 CUSBDevice::DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
 {
-    DPRINT1("Dumping Device Descriptor %x\n", DeviceDescriptor);
+    DPRINT1("Dumping Device Descriptor %p\n", DeviceDescriptor);
     DPRINT1("bLength %x\n", DeviceDescriptor->bLength);
     DPRINT1("bDescriptorType %x\n", DeviceDescriptor->bDescriptorType);
     DPRINT1("bcdUSB %x\n", DeviceDescriptor->bcdUSB);
@@ -865,7 +865,7 @@ CUSBDevice::DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
 VOID
 CUSBDevice::DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
 {
-    DPRINT1("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
+    DPRINT1("Dumping ConfigurationDescriptor %p\n", ConfigurationDescriptor);
     DPRINT1("bLength %x\n", ConfigurationDescriptor->bLength);
     DPRINT1("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
     DPRINT1("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
@@ -1247,10 +1247,10 @@ CUSBDevice::SelectInterface(
         // copy pipe handle
         DPRINT1("PipeIndex %lu\n", PipeIndex);
         DPRINT1("EndpointAddress %x\n", InterfaceInfo->Pipes[PipeIndex].EndpointAddress);
-        DPRINT1("Interval %d\n", InterfaceInfo->Pipes[PipeIndex].Interval);
-        DPRINT1("MaximumPacketSize %d\n", InterfaceInfo->Pipes[PipeIndex].MaximumPacketSize);
-        DPRINT1("MaximumTransferSize %d\n", InterfaceInfo->Pipes[PipeIndex].MaximumTransferSize);
-        DPRINT1("PipeFlags %d\n", InterfaceInfo->Pipes[PipeIndex].PipeFlags);
+        DPRINT1("Interval %c\n", InterfaceInfo->Pipes[PipeIndex].Interval);
+        DPRINT1("MaximumPacketSize %hu\n", InterfaceInfo->Pipes[PipeIndex].MaximumPacketSize);
+        DPRINT1("MaximumTransferSize %lu\n", InterfaceInfo->Pipes[PipeIndex].MaximumTransferSize);
+        DPRINT1("PipeFlags %lu\n", InterfaceInfo->Pipes[PipeIndex].PipeFlags);
         DPRINT1("PipeType %d\n", InterfaceInfo->Pipes[PipeIndex].PipeType);
         DPRINT1("UsbEndPoint %x\n", InterfaceInfo->Pipes[PipeIndex].EndpointAddress);
 
