@@ -6179,6 +6179,255 @@ done:
 }
 
 
+static NTSTATUS
+SampQueryUserAll(PSAM_DB_OBJECT UserObject,
+                 PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (UserObject->Access & USER_READ_GENERAL)
+    {
+        /* Get the Name string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"Name",
+                                              &InfoBuffer->All.UserName);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        /* Get the FullName string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"FullName",
+                                              &InfoBuffer->All.FullName);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        /* Get the user ID*/
+        InfoBuffer->All.UserId = FixedData.UserId;
+
+        /* Get the primary group ID */
+        InfoBuffer->All.PrimaryGroupId = FixedData.PrimaryGroupId;
+
+        /* Get the AdminComment string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"AdminComment",
+                                              &InfoBuffer->All.AdminComment);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        /* Get the UserComment string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"UserComment",
+                                              &InfoBuffer->All.UserComment);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        InfoBuffer->All.WhichFields |= USER_ALL_READ_GENERAL_MASK;
+//            USER_ALL_USERNAME |
+//            USER_ALL_FULLNAME |
+//            USER_ALL_USERID |
+//            USER_ALL_PRIMARYGROUPID |
+//            USER_ALL_ADMINCOMMENT |
+//            USER_ALL_USERCOMMENT;
+    }
+
+    if (UserObject->Access & USER_READ_LOGON)
+    {
+        /* Get the HomeDirectory string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"HomeDirectory",
+                                              &InfoBuffer->All.HomeDirectory);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        /* Get the HomeDirectoryDrive string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"HomeDirectoryDrive",
+                                              &InfoBuffer->Home.HomeDirectoryDrive);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        /* Get the ScriptPath string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"ScriptPath",
+                                              &InfoBuffer->All.ScriptPath);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        /* Get the ProfilePath string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"ProfilePath",
+                                              &InfoBuffer->All.ProfilePath);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        /* Get the WorkStations string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"WorkStations",
+                                              &InfoBuffer->All.WorkStations);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        InfoBuffer->All.LastLogon.LowPart = FixedData.LastLogon.LowPart;
+        InfoBuffer->All.LastLogon.HighPart = FixedData.LastLogon.HighPart;
+
+        InfoBuffer->All.LastLogoff.LowPart = FixedData.LastLogoff.LowPart;
+        InfoBuffer->All.LastLogoff.HighPart = FixedData.LastLogoff.HighPart;
+
+// USER_ALL_LOGONHOURS
+
+        InfoBuffer->All.BadPasswordCount = FixedData.BadPasswordCount;
+
+        InfoBuffer->All.LogonCount = FixedData.LogonCount;
+
+// USER_ALL_PASSWORDCANCHANGE
+// USER_ALL_PASSWORDMUSTCHANGE
+
+        InfoBuffer->All. WhichFields |= /* USER_ALL_READ_LOGON_MASK; */
+            USER_ALL_HOMEDIRECTORY |
+            USER_ALL_HOMEDIRECTORYDRIVE |
+            USER_ALL_SCRIPTPATH |
+            USER_ALL_PROFILEPATH |
+            USER_ALL_WORKSTATIONS |
+            USER_ALL_LASTLOGON |
+            USER_ALL_LASTLOGOFF |
+//            USER_ALL_LOGONHOURS |
+            USER_ALL_BADPASSWORDCOUNT |
+            USER_ALL_LOGONCOUNT;
+//            USER_ALL_PASSWORDCANCHANGE |
+//            USER_ALL_PASSWORDMUSTCHANGE;
+    }
+
+    if (UserObject->Access & USER_READ_ACCOUNT)
+    {
+        InfoBuffer->All.PasswordLastSet.LowPart = FixedData.PasswordLastSet.LowPart;
+        InfoBuffer->All.PasswordLastSet.HighPart = FixedData.PasswordLastSet.HighPart;
+
+        InfoBuffer->All.AccountExpires.LowPart = FixedData.AccountExpires.LowPart;
+        InfoBuffer->All.AccountExpires.HighPart = FixedData.AccountExpires.HighPart;
+
+        InfoBuffer->All.UserAccountControl = FixedData.UserAccountControl;
+
+        /* Get the Parameters string */
+        Status = SampGetObjectAttributeString(UserObject,
+                                              L"Parameters",
+                                              &InfoBuffer->All.Parameters);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
+        InfoBuffer->All. WhichFields |= USER_ALL_READ_ACCOUNT_MASK;
+//            USER_ALL_PASSWORDLASTSET |
+//            USER_ALL_ACCOUNTEXPIRES |
+//            USER_ALL_USERACCOUNTCONTROL |
+//            USER_ALL_PARAMETERS;
+    }
+
+    if (UserObject->Access & USER_READ_PREFERENCES)
+    {
+        InfoBuffer->All.CountryCode = FixedData.CountryCode;
+
+        InfoBuffer->All.CodePage = FixedData.CodePage;
+
+        InfoBuffer->All. WhichFields |= USER_ALL_READ_PREFERENCES_MASK;
+//            USER_ALL_COUNTRYCODE |
+//            USER_ALL_CODEPAGE;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->All.UserName.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.UserName.Buffer);
+
+            if (InfoBuffer->All.FullName.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.FullName.Buffer);
+
+            if (InfoBuffer->All.AdminComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.AdminComment.Buffer);
+
+            if (InfoBuffer->All.UserComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.UserComment.Buffer);
+
+            if (InfoBuffer->All.HomeDirectory.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.HomeDirectory.Buffer);
+
+            if (InfoBuffer->All.HomeDirectoryDrive.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.HomeDirectoryDrive.Buffer);
+
+            if (InfoBuffer->All.ScriptPath.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.ScriptPath.Buffer);
+
+            if (InfoBuffer->All.ProfilePath.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.ProfilePath.Buffer);
+
+            if (InfoBuffer->All.WorkStations.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.WorkStations.Buffer);
+
+            if (InfoBuffer->All.LogonHours.LogonHours != NULL)
+                midl_user_free(InfoBuffer->All.LogonHours.LogonHours);
+
+            if (InfoBuffer->All.Parameters.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.Parameters.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
 /* Function 36 */
 NTSTATUS
 NTAPI
@@ -6232,6 +6481,7 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserInternal1Information:
+        case UserAllInformation:
             DesiredAccess = 0;
             break;
 
@@ -6341,7 +6591,11 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
                                              Buffer);
             break;
 
-//        case UserAllInformation:
+        case UserAllInformation:
+            Status = SampQueryUserAll(UserObject,
+                                      Buffer);
+            break;
+
 //        case UserInternal4Information:
 //        case UserInternal5Information:
 //        case UserInternal4InformationNew:
