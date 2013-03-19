@@ -28,17 +28,20 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-BOOL FASTCALL
+#ifdef TUI_CONSOLE
+static BOOL
 DtbgIsDesktopVisible(VOID)
 {
     return !((BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE));
 }
+#endif
 
-VOID FASTCALL
+static ULONG
 ConSrvConsoleCtrlEventTimeout(DWORD Event,
                               PCONSOLE_PROCESS_DATA ProcessData,
                               DWORD Timeout)
 {
+    ULONG Status = ERROR_SUCCESS;
     HANDLE Thread;
 
     DPRINT("ConSrvConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
@@ -50,20 +53,59 @@ ConSrvConsoleCtrlEventTimeout(DWORD Event,
                                     UlongToPtr(Event), 0, NULL);
         if (NULL == Thread)
         {
-            DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
-            return;
+            Status = GetLastError();
+            DPRINT1("Failed thread creation (Error: 0x%x)\n", Status);
         }
-
-        DPRINT("We succeeded at creating ProcessData->CtrlDispatcher remote thread, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
-        WaitForSingleObject(Thread, Timeout);
-        CloseHandle(Thread);
+        else
+        {
+            DPRINT("We succeeded at creating ProcessData->CtrlDispatcher remote thread, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
+            WaitForSingleObject(Thread, Timeout);
+            CloseHandle(Thread);
+        }
     }
+
+    return Status;
 }
 
-VOID FASTCALL
-ConSrvConsoleCtrlEvent(DWORD Event, PCONSOLE_PROCESS_DATA ProcessData)
+static ULONG
+ConSrvConsoleCtrlEvent(DWORD Event,
+                       PCONSOLE_PROCESS_DATA ProcessData)
 {
-    ConSrvConsoleCtrlEventTimeout(Event, ProcessData, 0);
+    return ConSrvConsoleCtrlEventTimeout(Event, ProcessData, 0);
+}
+
+ULONG FASTCALL
+ConSrvConsoleProcessCtrlEvent(PCONSOLE Console,
+                              ULONG ProcessGroupId,
+                              DWORD Event)
+{
+    ULONG Status = ERROR_SUCCESS;
+    PLIST_ENTRY current_entry;
+    PCONSOLE_PROCESS_DATA current;
+
+    /*
+     * Loop through the process list, from the most recent process
+     * (the active one) to the oldest one (the first created, i.e.
+     * the console leader process), and for each, send an event
+     * (new processes are inserted at the head of the console process list).
+     */
+    current_entry = Console->ProcessList.Flink;
+    while (current_entry != &Console->ProcessList)
+    {
+        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
+        current_entry = current_entry->Flink;
+
+        /*
+         * Only processes belonging to the same process group are signaled.
+         * If the process group ID is zero, then all the processes are signaled.
+         */
+        if (ProcessGroupId == 0 || current->Process->ProcessGroupId == ProcessGroupId)
+        {
+            Status = ConSrvConsoleCtrlEvent(Event, current);
+        }
+    }
+
+    return Status;
 }
 
 VOID FASTCALL
@@ -1107,29 +1149,15 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
     NTSTATUS Status;
     PCONSOLE_GENERATECTRLEVENT GenerateCtrlEventRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GenerateCtrlEventRequest;
     PCONSOLE Console;
-    PCONSOLE_PROCESS_DATA current;
-    PLIST_ENTRY current_entry;
-    DWORD Group;
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Group = GenerateCtrlEventRequest->ProcessGroup;
-    Status = STATUS_INVALID_PARAMETER;
-    for (current_entry  = Console->ProcessList.Flink;
-         current_entry != &Console->ProcessList;
-         current_entry  = current_entry->Flink)
-    {
-        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
-        if (Group == 0 || current->Process->ProcessGroupId == Group)
-        {
-            ConSrvConsoleCtrlEvent(GenerateCtrlEventRequest->Event, current);
-            Status = STATUS_SUCCESS;
-        }
-    }
+    Status = ConSrvConsoleProcessCtrlEvent(Console,
+                                           GenerateCtrlEventRequest->ProcessGroup,
+                                           GenerateCtrlEventRequest->Event);
 
     ConSrvReleaseConsole(Console, TRUE);
-
     return Status;
 }
 

@@ -238,10 +238,9 @@ NTSTATUS WINAPI ConSrvInitConsole(OUT PCONSOLE* NewConsole,
                                   IN PCSR_PROCESS ConsoleLeaderProcess);
 VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
-VOID FASTCALL ConSrvConsoleCtrlEvent(DWORD Event, PCONSOLE_PROCESS_DATA ProcessData);
-VOID FASTCALL ConSrvConsoleCtrlEventTimeout(DWORD Event,
-                                            PCONSOLE_PROCESS_DATA ProcessData,
-                                            DWORD Timeout);
+ULONG FASTCALL ConSrvConsoleProcessCtrlEvent(PCONSOLE Console,
+                                             ULONG ProcessGroupId,
+                                             DWORD Event);
 
 /* coninput.c */
 #define ConSrvGetInputBuffer(ProcessData, Handle, Ptr, Access, LockConsole) \

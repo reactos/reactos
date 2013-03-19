@@ -227,18 +227,9 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
              (er.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
             (er.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyState[VK_CONTROL] & 0x80))
     {
-        PCONSOLE_PROCESS_DATA current;
-        PLIST_ENTRY current_entry;
-
         DPRINT1("Console_Api Ctrl-C\n");
+        ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
 
-        current_entry = Console->ProcessList.Flink;
-        while (current_entry != &Console->ProcessList)
-        {
-            current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
-            current_entry = current_entry->Flink;
-            ConSrvConsoleCtrlEvent(CTRL_C_EVENT, current);
-        }
         if (Console->LineBuffer && !Console->LineComplete)
         {
             /* Line input is in progress; end it */

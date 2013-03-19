@@ -1040,29 +1040,15 @@ static VOID
 GuiConsoleHandleClose(PGUI_CONSOLE_DATA GuiData)
 {
     PCONSOLE Console = GuiData->Console;
-    PLIST_ENTRY current_entry;
-    PCONSOLE_PROCESS_DATA current;
 
     /// LOCK /// EnterCriticalSection(&Console->Lock);
 
     /*
-     * Loop through the process list, from the most recent process
-     * (the active one) to the oldest one (the first created,
-     * i.e. the console leader process), and for each, send a
-     * CTRL-CLOSE event (new processes are inserted at the head
-     * of the console process list).
+     * FIXME: Windows will wait up to 5 seconds for the thread to exit.
+     * We shouldn't wait here, though, since the console lock is entered.
+     * A copy of the thread list probably needs to be made.
      */
-    current_entry = Console->ProcessList.Flink;
-    while (current_entry != &Console->ProcessList)
-    {
-        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
-        current_entry = current_entry->Flink;
-
-        /* FIXME: Windows will wait up to 5 seconds for the thread to exit.
-         * We shouldn't wait here, though, since the console lock is entered.
-         * A copy of the thread list probably needs to be made. */
-        ConSrvConsoleCtrlEvent(CTRL_CLOSE_EVENT, current);
-    }
+    ConSrvConsoleProcessCtrlEvent(Console, 0, CTRL_CLOSE_EVENT);
 
     /// LOCK /// LeaveCriticalSection(&Console->Lock);
 }
