@@ -149,13 +149,6 @@ CSR_API(SrvCloseHandle);
 CSR_API(SrvVerifyConsoleIoHandle);
 CSR_API(SrvDuplicateHandle);
 
-NTSTATUS FASTCALL ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
-                                         OUT PHANDLE pInputHandle,
-                                         OUT PHANDLE pOutputHandle,
-                                         OUT PHANDLE pErrorHandle);
-NTSTATUS FASTCALL ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
-                                            IN PCONSOLE_PROCESS_DATA TargetProcessData);
-VOID FASTCALL ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData);
 NTSTATUS FASTCALL ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                                      PHANDLE Handle,
                                      Object_t *Object,

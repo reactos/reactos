@@ -6,7 +6,7 @@
  * PROGRAMMERS:
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -26,7 +26,7 @@
 #include <debug.h>
 
 
-/* FUNCTIONS *****************************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 BOOL FASTCALL
 DtbgIsDesktopVisible(VOID)
@@ -507,6 +507,9 @@ ConSrvDeleteConsole(PCONSOLE Console)
     RtlFreeHeap(ConSrvHeap, 0, Console);
 }
 
+
+/* PUBLIC SERVER APIS *********************************************************/
+
 CSR_API(SrvOpenConsole)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -598,7 +601,6 @@ CSR_API(SrvAllocConsole)
      * and recreate a new one later on.
      */
     ConSrvRemoveConsole(ProcessData);
-    // ConSrvFreeHandlesTable(ProcessData);
 
     /* Initialize a new Console owned by the Console Leader Process */
     Status = ConSrvAllocateConsole(ProcessData,
@@ -689,7 +691,6 @@ CSR_API(SrvAttachConsole)
      * and recreate a new one later on.
      */
     ConSrvRemoveConsole(TargetProcessData);
-    // ConSrvFreeHandlesTable(TargetProcessData);
 
     /*
      * Inherit the console from the parent,

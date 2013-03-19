@@ -593,7 +593,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
 }
 
 
-/* PUBLIC APIS ****************************************************************/
+/* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(SrvReadConsoleOutput)
 {

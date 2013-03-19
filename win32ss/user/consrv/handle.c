@@ -6,7 +6,7 @@
  * PROGRAMMERS:
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "consrv.h"
 #include "conio.h"
@@ -15,7 +15,7 @@
 #include <debug.h>
 
 
-/* PRIVATE FUNCTIONS *********************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 static INT
 AdjustHandleCounts(PCONSOLE_IO_HANDLE Entry, INT Change)
@@ -103,10 +103,10 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
 }
 
 
-/* FUNCTIONS *****************************************************************/
+/* Forward declaration, used in ConSrvInitHandlesTable */
+static VOID ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData);
 
-/* static */ NTSTATUS
-FASTCALL
+static NTSTATUS
 ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
                        OUT PHANDLE pInputHandle,
                        OUT PHANDLE pOutputHandle,
@@ -181,8 +181,7 @@ ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-FASTCALL
+static NTSTATUS
 ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
                           IN PCONSOLE_PROCESS_DATA TargetProcessData)
 {
@@ -234,8 +233,7 @@ Quit:
     return Status;
 }
 
-VOID
-FASTCALL
+static VOID
 ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData)
 {
     DPRINT1("ConSrvFreeHandlesTable\n");
@@ -756,6 +754,7 @@ ConSrvDisconnect(PCSR_PROCESS Process)
 }
 
 
+/* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(SrvCloseHandle)
 {

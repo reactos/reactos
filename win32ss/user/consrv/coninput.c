@@ -673,7 +673,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
 }
 
 
-/* PUBLIC APIS ****************************************************************/
+/* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(SrvReadConsole)
 {
