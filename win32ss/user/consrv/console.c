@@ -1034,7 +1034,7 @@ CSR_API(SrvGetConsoleWindow)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    GetWindowRequest->WindowHandle = Console->TermIFace.Vtbl->GetConsoleWindowHandle(Console);
+    GetWindowRequest->WindowHandle = ConioGetConsoleWindowHandle(Console);
     ConSrvReleaseConsole(Console, TRUE);
 
     return STATUS_SUCCESS;

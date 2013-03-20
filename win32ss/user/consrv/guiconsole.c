@@ -65,6 +65,27 @@ typedef struct _GUI_CONSOLE_DATA
     GUI_CONSOLE_INFO GuiInfo;   /* GUI terminal settings */
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 
+
+/**************************************************************\
+\** Define the Console Leader Process for the console window **/
+#define GWLP_CONSOLEWND_ALLOC  (2 * sizeof(LONG_PTR))
+#define GWLP_CONSOLE_LEADER_PID 0
+#define GWLP_CONSOLE_LEADER_TID 4
+
+#define SetConsoleWndConsoleLeaderCID(GuiData)  \
+do {                                            \
+    PCONSOLE_PROCESS_DATA ProcessData;          \
+    CLIENT_ID ConsoleLeaderCID;                 \
+    ProcessData = CONTAINING_RECORD((GuiData)->Console->ProcessList.Blink,  \
+                                    CONSOLE_PROCESS_DATA,                   \
+                                    ConsoleLink);                           \
+    ConsoleLeaderCID = ProcessData->Process->ClientId;                      \
+    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_PID, (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));  \
+    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_TID, (LONG_PTR)(ConsoleLeaderCID.UniqueThread ));  \
+} while(0)
+/**************************************************************/
+
+
 static BOOL    ConsInitialized = FALSE;
 static HICON   ghDefaultIcon = NULL;
 static HICON   ghDefaultIconSm = NULL;
@@ -1619,8 +1640,6 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 WindowCount++;
                 SetWindowLongW(hWnd, GWL_USERDATA, WindowCount);
 
-                // SetConsoleWndConsoleLeaderCID(Console);
-
                 DPRINT1("Set icons via PM_CREATE_CONSOLE\n");
                 if (GuiData->hIcon == NULL)
                 {
@@ -2066,6 +2085,15 @@ GuiProcessKeyCallback(PCONSOLE Console, MSG* msg, BYTE KeyStateMenu, DWORD Shift
 }
 
 static VOID WINAPI
+GuiRefreshInternalInfo(PCONSOLE Console)
+{
+    PGUI_CONSOLE_DATA GuiData = Console->TermIFace.Data;
+
+    /* Update the console leader information held by the window */
+    SetConsoleWndConsoleLeaderCID(GuiData);
+}
+
+static VOID WINAPI
 GuiChangeTitle(PCONSOLE Console)
 {
     PGUI_CONSOLE_DATA GuiData = Console->TermIFace.Data;
@@ -2133,6 +2161,7 @@ static TERMINAL_VTBL GuiVtbl =
     GuiUpdateScreenInfo,
     GuiResizeBuffer,
     GuiProcessKeyCallback,
+    GuiRefreshInternalInfo,
     GuiChangeTitle,
     GuiChangeIcon,
     GuiGetConsoleWindowHandle

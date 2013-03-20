@@ -449,6 +449,9 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
     /* Add a reference count because the process is tied to the console */
     _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
 
+    /* Update the internal info of the terminal */
+    ConioRefreshInternalInfo(ProcessData->Console);
+
     return STATUS_SUCCESS;
 }
 
@@ -501,6 +504,9 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
     /* Add a reference count because the process is tied to the console */
     _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
 
+    /* Update the internal info of the terminal */
+    ConioRefreshInternalInfo(ProcessData->Console);
+
     return STATUS_SUCCESS;
 }
 
@@ -528,8 +534,8 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
         /* Remove ourselves from the console's list of processes */
         RemoveEntryList(&ProcessData->ConsoleLink);
 
-        /* Update the console leader process */
-        // SetConsoleWndConsoleLeaderCID(Console);
+        /* Update the internal info of the terminal */
+        ConioRefreshInternalInfo(Console);
 
         /* Release the console */
         ConSrvReleaseConsole(Console, TRUE);

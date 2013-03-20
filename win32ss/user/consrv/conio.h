@@ -106,6 +106,7 @@ typedef struct _TERMINAL_VTBL
                                       DWORD ShiftState,
                                       UINT VirtualKeyCode,
                                       BOOL Down);
+    VOID (WINAPI *RefreshInternalInfo)(struct _CONSOLE* Console);
 
     /*
      * External interface (functions corresponding to the Console API)
@@ -132,6 +133,10 @@ typedef struct _TERMINAL_VTBL
 #define ConioResizeBuffer(Console, Buff, Size) (Console)->TermIFace.Vtbl->ResizeBuffer((Console), (Buff), (Size))
 #define ConioProcessKeyCallback(Console, Msg, KeyStateMenu, ShiftState, VirtualKeyCode, Down) \
           (Console)->TermIFace.Vtbl->ProcessKeyCallback((Console), (Msg), (KeyStateMenu), (ShiftState), (VirtualKeyCode), (Down))
+#define ConioGetConsoleWindowHandle(Console) \
+          (Console)->TermIFace.Vtbl->GetConsoleWindowHandle((Console))
+#define ConioRefreshInternalInfo(Console) \
+          (Console)->TermIFace.Vtbl->RefreshInternalInfo((Console))
 
 typedef struct _TERMINAL_IFACE
 {
@@ -194,25 +199,6 @@ typedef struct _CONSOLE
     COLORREF Colors[16];                    /* Colour palette */
 
 } CONSOLE, *PCONSOLE;
-
-/**************************************************************\
-\** Define the Console Leader Process for the console window **/
-#define GWLP_CONSOLEWND_ALLOC  (2 * sizeof(LONG_PTR))
-#define GWLP_CONSOLE_LEADER_PID 0
-#define GWLP_CONSOLE_LEADER_TID 4
-
-#define SetConsoleWndConsoleLeaderCID(GuiData)  \
-do {                                            \
-    PCONSOLE_PROCESS_DATA ProcessData;          \
-    CLIENT_ID ConsoleLeaderCID;                 \
-    ProcessData = CONTAINING_RECORD((GuiData)->Console->ProcessList.Blink,  \
-                                    CONSOLE_PROCESS_DATA,                   \
-                                    ConsoleLink);                           \
-    ConsoleLeaderCID = ProcessData->Process->ClientId;                      \
-    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_PID, (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));  \
-    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_TID, (LONG_PTR)(ConsoleLeaderCID.UniqueThread ));  \
-} while(0)
-/**************************************************************/
 
 /* CONSOLE_SELECTION_INFO dwFlags values */
 #define CONSOLE_NO_SELECTION          0x0
