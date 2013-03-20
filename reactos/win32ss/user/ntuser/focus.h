@@ -19,5 +19,6 @@ HWND FASTCALL UserGetActiveWindow(VOID);
 BOOL FASTCALL co_IntMouseActivateWindow(PWND Window);
 BOOL FASTCALL co_IntSetForegroundWindow(PWND Window);
 BOOL FASTCALL co_IntSetActiveWindow(PWND,HWND *,BOOL,BOOL,BOOL);
+BOOL FASTCALL co_IntSetForegroundWindowMouse(PWND Window);
 BOOL FASTCALL IntLockSetForegroundWindow(UINT uLockCode);
 BOOL FASTCALL IntAllowSetForegroundWindow(DWORD dwProcessId);

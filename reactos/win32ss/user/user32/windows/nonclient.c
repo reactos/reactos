@@ -987,7 +987,8 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case HTCAPTION:
         {
 	        HWND hTopWnd = GetAncestor(hWnd, GA_ROOT);
-	        if (SetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
+	        if ( NtUserCallHwndLock(hTopWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE) ||
+                    GetActiveWindow() == hTopWnd)
 	        {
 	            SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
 	        }

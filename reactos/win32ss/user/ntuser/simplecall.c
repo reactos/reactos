@@ -577,6 +577,12 @@ NtUserCallHwndLock(
          TRACE("co_IntSetForegroundWindow 2 \n");
          break;
 
+      case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE:
+         TRACE("co_IntSetForegroundWindow 1 0x%p\n",hWnd);
+         Ret = co_IntSetForegroundWindowMouse(Window);
+         TRACE("co_IntSetForegroundWindow 2 0x%p\n",hWnd);
+         break;
+
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:
          Ret = co_UserRedrawWindow( Window, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
          break;
