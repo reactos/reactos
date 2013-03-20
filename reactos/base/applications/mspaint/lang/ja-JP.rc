@@ -17,8 +17,8 @@ BEGIN
         MENUITEM "上書き保存(&S)\tCtrl+S", IDM_FILESAVE
         MENUITEM "名前を付けて保存(&A)...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "背景に設定 (並べて表 示)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "背景に設定 (中央に表 示)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "背景に設定 (並べて表示)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "背景に設定 (中央に表示)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "背景に設定 (拡大)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "ペイントの終了(&Q)\tAlt+F4", IDM_FILEEXIT
@@ -31,16 +31,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "切り取り\tCtrl+X", IDM_EDITCUT
         MENUITEM "コピー\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "貼 り付け\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "貼り付け\tCtrl+V", IDM_EDITPASTE
         MENUITEM "選択範囲の削除\tDel", IDM_EDITDELETESELECTION
         MENUITEM "選択範囲の挿入", IDM_EDITINVERTSELECTION
         MENUITEM "すべて選択\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "ファイルへコピー", IDM_EDITCOPYTO
-        MENUITEM "ファイルから貼 り付け", IDM_EDITPASTEFROM
+        MENUITEM "ファイルから貼り付け", IDM_EDITPASTEFROM
     END
 
-    POPUP "表 示(&V)"
+    POPUP "表示(&V)"
     BEGIN
         MENUITEM "ツール ボックス\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
         MENUITEM "カラー パレット\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
@@ -60,10 +60,10 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "グリッドを表 示\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "実寸表 示", IDM_VIEWSHOWMINIATURE
+            MENUITEM "グリッドを表示\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "実寸表示", IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "全画面表 示\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "全画面表示\tCtrl+F", IDM_VIEWFULLSCREEN
     END
 
     POPUP "画像(&I)"
@@ -179,7 +179,7 @@ BEGIN
     IDS_PROGRAMNAME, "ペイント"
     IDS_WINDOWTITLE, "%s - ペイント"
     IDS_INFOTITLE, "ReactOS ペイント"
-    IDS_INFOTEXT, "ReactOS ペイントは GNU Lesser General Public License (LGPL) version 3 (詳細は www.gnu.org)の下で利用可能 です。"
+    IDS_INFOTEXT, "ReactOS ペイントは GNU Lesser General Public License (LGPL) version 3 (詳細は www.gnu.org)の下で利用可能です。"
     IDS_SAVEPROMPTTEXT, "%s の変更内容を保存しますか?"
     IDS_DEFAULTFILENAME, "無題.bmp"
     IDS_MINIATURETITLE, "縮小図"

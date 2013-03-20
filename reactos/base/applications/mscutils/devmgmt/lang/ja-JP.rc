@@ -1,4 +1,4 @@
-﻿LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
@@ -14,12 +14,12 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "ヘルプ",                  IDC_PROGHELP, GRAYED
   END
-  POPUP "表 示"
+  POPUP "表示"
   BEGIN
     MENUITEM "デバイス (種類別)",       IDC_DEVBYTYPE
     MENUITEM "デバイス (接続別)",       IDC_DEVBYCONN
-    MENUITEM "リソ ース (種類別)",      IDC_RESBYTYPE, GRAYED
-    MENUITEM "リソ ース (接続別)",      IDC_RESBYCONN, GRAYED
+    MENUITEM "リソース (種類別)",      IDC_RESBYTYPE, GRAYED
+    MENUITEM "リソース (接続別)",      IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Show hidden devices", IDC_SHOWHIDDEN
   END
@@ -72,8 +72,8 @@ BEGIN
   IDS_HINT_EXIT         " このプログラムを終了します。"
   IDS_HINT_REFRESH      " サービスのリストを更新します。"
   IDS_HINT_PROP         " 現在選択されているシートのプロパティを開きます。"
-  IDS_HINT_HELP         " ヘルプ ウィンドウを表 示します。"
-  IDS_HINT_ABOUT        " ReactOS デバイス マネージャについて表 示します。"
+  IDS_HINT_HELP         " ヘルプ ウィンドウを表示します。"
+  IDS_HINT_ABOUT        " ReactOS デバイス マネージャについて表示します。"
 
   IDS_HINT_SYS_RESTORE  " このウィンドウを通常の大きさに復元します。"
   IDS_HINT_SYS_MOVE     " このウィンドウを移動します。"
