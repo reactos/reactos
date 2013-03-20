@@ -62,6 +62,22 @@ PGENERIC_MAPPING pServerMapping = &ServerMapping;
 
 /* FUNCTIONS *****************************************************************/
 
+static
+LARGE_INTEGER
+SampAddRelativeTimeToTime(IN LARGE_INTEGER AbsoluteTime,
+                          IN LARGE_INTEGER RelativeTime)
+{
+    LARGE_INTEGER NewTime;
+
+    NewTime.QuadPart = AbsoluteTime.QuadPart - RelativeTime.QuadPart;
+
+    if (NewTime.QuadPart < 0)
+        NewTime.QuadPart = 0;
+
+    return NewTime;
+}
+
+
 VOID
 SampStartRpcServer(VOID)
 {
@@ -5269,7 +5285,10 @@ SampQueryUserLogon(PSAM_DB_OBJECT UserObject,
                    PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA DomainFixedData;
     SAM_USER_FIXED_DATA FixedData;
+    LARGE_INTEGER PasswordCanChange;
+    LARGE_INTEGER PasswordMustChange;
     ULONG Length = 0;
     NTSTATUS Status;
 
@@ -5279,6 +5298,17 @@ SampQueryUserLogon(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    /* Get the fixed size domain data */
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject->ParentObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&DomainFixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Get the fixed size user data */
     Length = sizeof(SAM_USER_FIXED_DATA);
     Status = SampGetObjectAttribute(UserObject,
                                     L"F",
@@ -5300,8 +5330,15 @@ SampQueryUserLogon(PSAM_DB_OBJECT UserObject,
     InfoBuffer->Logon.LogonCount = FixedData.LogonCount;
     InfoBuffer->Logon.UserAccountControl = FixedData.UserAccountControl;
 
-//  OLD_LARGE_INTEGER PasswordCanChange;
-//  OLD_LARGE_INTEGER PasswordMustChange;
+    PasswordCanChange = SampAddRelativeTimeToTime(FixedData.PasswordLastSet,
+                                                  DomainFixedData.MinPasswordAge);
+    InfoBuffer->Logon.PasswordCanChange.LowPart = PasswordCanChange.LowPart;
+    InfoBuffer->Logon.PasswordCanChange.HighPart = PasswordCanChange.HighPart;
+
+    PasswordMustChange = SampAddRelativeTimeToTime(FixedData.PasswordLastSet,
+                                                   DomainFixedData.MaxPasswordAge);
+    InfoBuffer->Logon.PasswordMustChange.LowPart = PasswordMustChange.LowPart;
+    InfoBuffer->Logon.PasswordMustChange.HighPart = PasswordMustChange.HighPart;
 
     /* Get the Name string */
     Status = SampGetObjectAttributeString(UserObject,
@@ -6184,7 +6221,10 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
                  PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA DomainFixedData;
     SAM_USER_FIXED_DATA FixedData;
+    LARGE_INTEGER PasswordCanChange;
+    LARGE_INTEGER PasswordMustChange;
     ULONG Length = 0;
     NTSTATUS Status;
 
@@ -6194,6 +6234,17 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    /* Get the fixed size domain data */
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject->ParentObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&DomainFixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Get the fixed size user data */
     Length = sizeof(SAM_USER_FIXED_DATA);
     Status = SampGetObjectAttribute(UserObject,
                                     L"F",
@@ -6324,8 +6375,15 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
 
         InfoBuffer->All.LogonCount = FixedData.LogonCount;
 
-// USER_ALL_PASSWORDCANCHANGE
-// USER_ALL_PASSWORDMUSTCHANGE
+        PasswordCanChange = SampAddRelativeTimeToTime(FixedData.PasswordLastSet,
+                                                      DomainFixedData.MinPasswordAge);
+        InfoBuffer->All.PasswordCanChange.LowPart = PasswordCanChange.LowPart;
+        InfoBuffer->All.PasswordCanChange.HighPart = PasswordCanChange.HighPart;
+
+        PasswordMustChange = SampAddRelativeTimeToTime(FixedData.PasswordLastSet,
+                                                       DomainFixedData.MaxPasswordAge);
+        InfoBuffer->All.PasswordMustChange.LowPart = PasswordMustChange.LowPart;
+        InfoBuffer->All.PasswordMustChange.HighPart = PasswordMustChange.HighPart;
 
         InfoBuffer->All. WhichFields |= /* USER_ALL_READ_LOGON_MASK; */
             USER_ALL_HOMEDIRECTORY |
@@ -6338,8 +6396,8 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
 //            USER_ALL_LOGONHOURS |
             USER_ALL_BADPASSWORDCOUNT |
             USER_ALL_LOGONCOUNT;
-//            USER_ALL_PASSWORDCANCHANGE |
-//            USER_ALL_PASSWORDMUSTCHANGE;
+            USER_ALL_PASSWORDCANCHANGE |
+            USER_ALL_PASSWORDMUSTCHANGE;
     }
 
     if (UserObject->Access & USER_READ_ACCOUNT)
