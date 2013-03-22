@@ -1241,41 +1241,6 @@ rosglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
     return ret;
 }
 
-
-BOOL
-APIENTRY
-rosglUseFontBitmapsA( HDC hdc, DWORD first, DWORD count, DWORD listBase )
-{
-    return IntUseFontBitmapsA(hdc, first, count, listBase);
-}
-
-
-BOOL
-APIENTRY
-rosglUseFontBitmapsW( HDC hdc, DWORD first, DWORD count, DWORD listBase )
-{
-    return IntUseFontBitmapsW(hdc, first, count, listBase);
-}
-
-BOOL
-APIENTRY
-rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
-                       FLOAT deviation, FLOAT extrusion, int format,
-                       GLYPHMETRICSFLOAT *pgmf )
-{
-    return IntUseFontOutlinesA(hdc, first, count, listBase, deviation, extrusion, format, pgmf);
-}
-
-
-BOOL
-APIENTRY
-rosglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
-                       FLOAT deviation, FLOAT extrusion, int format,
-                       GLYPHMETRICSFLOAT *pgmf )
-{
-    return IntUseFontOutlinesW(hdc, first, count, listBase, deviation, extrusion, format, pgmf);
-}
-
 #ifdef __cplusplus
 }; /* extern "C" */
 #endif /* __cplusplus */
