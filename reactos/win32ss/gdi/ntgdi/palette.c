@@ -771,6 +771,12 @@ IntGdiRealizePalette(HDC hDC)
     {
         goto cleanup;
     }
+	
+	if(pdc->dctype == DCTYPE_DIRECT)
+	{
+		UNIMPLEMENTED;
+		goto cleanup;
+	}
 
     ppalSurf = pdc->dclevel.pSurface->ppal;
     ppalDC = pdc->dclevel.ppal;
