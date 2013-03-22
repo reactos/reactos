@@ -18,19 +18,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <wine/test.h>
-#include <stdarg.h>
-#include <stddef.h>
+//#include <stdarg.h>
+//#include <stddef.h>
 
 #define COBJMACROS
 #define CONST_VTABLE
+#define WIN32_LEAN_AND_MEAN
 
-#include "windef.h"
-#include "winbase.h"
-#include "urlmon.h"
-#include "shlwapi.h"
-#include "wininet.h"
-#include "strsafe.h"
+//#include "windef.h"
+//#include "winbase.h"
+#include <winreg.h>
+#include <winnls.h>
+#include <ole2.h>
+//#include "urlmon.h"
+#include <shlwapi.h>
+#include <wininet.h>
+#include <strsafe.h>
+#include <initguid.h>
+
+DEFINE_GUID(CLSID_CUri, 0xDF2FCE13, 0x25EC, 0x45BB, 0x9D,0x4C, 0xCE,0xCD,0x47,0xC2,0x43,0x0C);
 
 #define URI_STR_PROPERTY_COUNT Uri_PROPERTY_STRING_LAST+1
 #define URI_DWORD_PROPERTY_COUNT (Uri_PROPERTY_DWORD_LAST - Uri_PROPERTY_DWORD_START)+1
@@ -71,6 +82,8 @@ static HRESULT (WINAPI *pCoInternetCombineIUri)(IUri*,IUri*,DWORD,IUri**,DWORD_P
 static HRESULT (WINAPI *pCoInternetGetSession)(DWORD,IInternetSession**,DWORD);
 static HRESULT (WINAPI *pCoInternetCombineUrlEx)(IUri*,LPCWSTR,DWORD,IUri**,DWORD_PTR);
 static HRESULT (WINAPI *pCoInternetParseIUri)(IUri*,PARSEACTION,DWORD,LPWSTR,DWORD,DWORD*,DWORD_PTR);
+static HRESULT (WINAPI *pCreateURLMonikerEx)(IMoniker*,LPCWSTR,IMoniker**,DWORD);
+static HRESULT (WINAPI *pCreateURLMonikerEx2)(IMoniker*,IUri*,IMoniker**,DWORD);
 
 static const WCHAR http_urlW[] = { 'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q',
         '.','o','r','g','/',0};
@@ -115,6 +128,7 @@ typedef struct _uri_dword_property {
     DWORD   value;
     HRESULT expected;
     BOOL    todo;
+    BOOL    broken_combine_hres;
 } uri_dword_property;
 
 typedef struct _uri_properties {
@@ -203,6 +217,31 @@ static const uri_properties uri_tests[] = {
             {URLZONE_INVALID,E_NOTIMPL,FALSE},
         }
     },
+    {   "HtTpS://www.winehq.org/tests/..?query=x&return=y", 0, S_OK, FALSE,
+        {
+            {"https://www.winehq.org/?query=x&return=y",S_OK,FALSE},
+            {"www.winehq.org",S_OK,FALSE},
+            {"https://www.winehq.org/?query=x&return=y",S_OK,FALSE},
+            {"winehq.org",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"www.winehq.org",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"/",S_OK,FALSE},
+            {"/?query=x&return=y",S_OK,FALSE},
+            {"?query=x&return=y",S_OK,FALSE},
+            {"HtTpS://www.winehq.org/tests/..?query=x&return=y",S_OK,FALSE},
+            {"https",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_DNS,S_OK,FALSE},
+            {443,S_OK,FALSE},
+            {URL_SCHEME_HTTPS,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE},
+        }
+    },
     {   "hTTp://us%45r%3Ainfo@examp%4CE.com:80/path/a/b/./c/../%2E%2E/Forbidden'<|> Characters", 0, S_OK, FALSE,
         {
             {"http://usEr%3Ainfo@example.com/path/a/Forbidden'%3C%7C%3E%20Characters",S_OK,FALSE},
@@ -265,6 +304,31 @@ static const uri_properties uri_tests[] = {
             {"",S_FALSE,FALSE},
             {"/c:/tests/foo%2520bar.mp3",S_OK,FALSE},
             {"/c:/tests/foo%2520bar.mp3",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"file://c:\\tests\\../tests/foo%20bar.mp3",S_OK,FALSE},
+            {"file",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_FILE,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "file://c:\\tests\\../tests/foo%20bar.mp3", Uri_CREATE_NO_CANONICALIZE, S_OK, FALSE,
+        {
+            {"file:///c:/tests/../tests/foo%2520bar.mp3",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"file:///c:/tests/../tests/foo%2520bar.mp3",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {".mp3",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"/c:/tests/../tests/foo%2520bar.mp3",S_OK,FALSE},
+            {"/c:/tests/../tests/foo%2520bar.mp3",S_OK,FALSE},
             {"",S_FALSE,FALSE},
             {"file://c:\\tests\\../tests/foo%20bar.mp3",S_OK,FALSE},
             {"file",S_OK,FALSE},
@@ -840,7 +904,7 @@ static const uri_properties uri_tests[] = {
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
         }
     },
-    /* Unreserved, percent encoded characters aren't decoded in the userinfo becuase the scheme
+    /* Unreserved, percent encoded characters aren't decoded in the userinfo because the scheme
      * isn't known.
      */
     {   "zip://%2E:%52%53ord@winehq.org/", 0, S_OK, FALSE,
@@ -991,6 +1055,31 @@ static const uri_properties uri_tests[] = {
         {
             {Uri_HOST_IPV4,S_OK,FALSE},
             {80,S_OK,FALSE},
+            {URL_SCHEME_HTTP,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "http://127.0.0.1:8000", 0, S_OK, FALSE,
+        {
+            {"http://127.0.0.1:8000/",S_OK},
+            {"127.0.0.1:8000",S_OK},
+            {"http://127.0.0.1:8000/",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"127.0.0.1",S_OK},
+            {"",S_FALSE},
+            {"/",S_OK},
+            {"/",S_OK},
+            {"",S_FALSE},
+            {"http://127.0.0.1:8000",S_OK},
+            {"http",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_IPV4,S_OK,FALSE},
+            {8000,S_OK,FALSE},
             {URL_SCHEME_HTTP,S_OK,FALSE},
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
         }
@@ -1409,7 +1498,7 @@ static const uri_properties uri_tests[] = {
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
         }
     },
-    /* Hostname get's lower cased for known scheme types. */
+    /* Hostname gets lower-cased for known scheme types. */
     {   "http://WWW.GOOGLE.com/", 0, S_OK, FALSE,
         {
             {"http://www.google.com/",S_OK,FALSE},
@@ -4139,6 +4228,281 @@ static const uri_properties uri_tests[] = {
             {URL_SCHEME_MK,S_OK,FALSE},
             {URLZONE_INVALID,E_NOTIMPL,FALSE}
         }
+    },
+    {   "", Uri_CREATE_ALLOW_RELATIVE, S_OK, FALSE,
+        {
+            {"",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_OK,FALSE},
+            {"",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_UNKNOWN,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   " \t ", Uri_CREATE_ALLOW_RELATIVE, S_OK, FALSE,
+        {
+            {"",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_OK,FALSE},
+            {"",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_UNKNOWN,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "javascript:void", 0, S_OK, FALSE,
+        {
+            {"javascript:void",S_OK},
+            {"",S_FALSE},
+            {"javascript:void",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"void",S_OK},
+            {"void",S_OK},
+            {"",S_FALSE},
+            {"javascript:void",S_OK},
+            {"javascript",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_JAVASCRIPT,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "javascript://undefined", 0, S_OK, FALSE,
+        {
+            {"javascript://undefined",S_OK},
+            {"",S_FALSE},
+            {"javascript://undefined",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"//undefined",S_OK},
+            {"//undefined",S_OK},
+            {"",S_FALSE},
+            {"javascript://undefined",S_OK},
+            {"javascript",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_JAVASCRIPT,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "JavaSCript:escape('/\\?#?')", 0, S_OK, FALSE,
+        {
+            {"javascript:escape('/\\?#?')",S_OK},
+            {"",S_FALSE},
+            {"javascript:escape('/\\?#?')",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"escape('/\\?#?')",S_OK},
+            {"escape('/\\?#?')",S_OK},
+            {"",S_FALSE},
+            {"JavaSCript:escape('/\\?#?')",S_OK},
+            {"javascript",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_JAVASCRIPT,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "*://google.com", 0, S_OK, FALSE,
+        {
+            {"*:google.com/",S_OK,FALSE},
+            {"google.com",S_OK},
+            {"*:google.com/",S_OK,FALSE},
+            {"google.com",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"google.com",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"/",S_OK,FALSE},
+            {"/",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"*://google.com",S_OK,FALSE},
+            {"*",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_DNS,S_OK,FALSE},
+            {0,S_FALSE,FALSE},
+            {URL_SCHEME_WILDCARD,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/file.txt",0,S_OK,FALSE,
+        {
+            {"mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/file.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/file.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/file.txt",S_OK},
+            {"@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/file.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/file.txt",S_OK},
+            {"mk",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_MK,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "gopher://test.winehq.org:151/file.txt",0,S_OK,FALSE,
+        {
+            {"gopher://test.winehq.org:151/file.txt",S_OK},
+            {"test.winehq.org:151",S_OK},
+            {"gopher://test.winehq.org:151/file.txt",S_OK},
+            {"winehq.org",S_OK},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"test.winehq.org",S_OK},
+            {"",S_FALSE},
+            {"/file.txt",S_OK},
+            {"/file.txt",S_OK},
+            {"",S_FALSE},
+            {"gopher://test.winehq.org:151/file.txt",S_OK},
+            {"gopher",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_DNS,S_OK},
+            {151,S_OK},
+            {URL_SCHEME_GOPHER,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "//host.com/path/file.txt?query", Uri_CREATE_ALLOW_RELATIVE, S_OK, FALSE,
+        {
+            {"//host.com/path/file.txt?query",S_OK},
+            {"host.com",S_OK},
+            {"//host.com/path/file.txt?query",S_OK},
+            {"host.com",S_OK},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"host.com",S_OK},
+            {"",S_FALSE},
+            {"/path/file.txt",S_OK},
+            {"/path/file.txt?query",S_OK},
+            {"?query",S_OK},
+            {"//host.com/path/file.txt?query",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+        },
+        {
+            {Uri_HOST_DNS,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_UNKNOWN,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "//host/path/file.txt?query", Uri_CREATE_ALLOW_RELATIVE, S_OK, FALSE,
+        {
+            {"//host/path/file.txt?query",S_OK},
+            {"host",S_OK},
+            {"//host/path/file.txt?query",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"host",S_OK},
+            {"",S_FALSE},
+            {"/path/file.txt",S_OK},
+            {"/path/file.txt?query",S_OK},
+            {"?query",S_OK},
+            {"//host/path/file.txt?query",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+        },
+        {
+            {Uri_HOST_DNS,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_UNKNOWN,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "//host", Uri_CREATE_ALLOW_RELATIVE, S_OK, FALSE,
+        {
+            {"//host/",S_OK},
+            {"host",S_OK},
+            {"//host/",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"host",S_OK},
+            {"",S_FALSE},
+            {"/",S_OK},
+            {"/",S_OK},
+            {"",S_FALSE},
+            {"//host",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+        },
+        {
+            {Uri_HOST_DNS,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_UNKNOWN,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
     }
 };
 
@@ -4216,91 +4580,140 @@ static const invalid_uri invalid_uri_tests[] = {
 typedef struct _uri_equality {
     const char* a;
     DWORD       create_flags_a;
-    BOOL        create_todo_a;
     const char* b;
     DWORD       create_flags_b;
-    BOOL        create_todo_b;
     BOOL        equal;
     BOOL        todo;
 } uri_equality;
 
 static const uri_equality equality_tests[] = {
     {
-        "HTTP://www.winehq.org/test dir/./",0,FALSE,
-        "http://www.winehq.org/test dir/../test dir/",0,FALSE,
-        TRUE, FALSE
+        "HTTP://www.winehq.org/test dir/./",0,
+        "http://www.winehq.org/test dir/../test dir/",0,
+        TRUE
     },
     {
         /* http://www.winehq.org/test%20dir */
-        "http://%77%77%77%2E%77%69%6E%65%68%71%2E%6F%72%67/%74%65%73%74%20%64%69%72",0,FALSE,
-        "http://www.winehq.org/test dir",0,FALSE,
-        TRUE, FALSE
+        "http://%77%77%77%2E%77%69%6E%65%68%71%2E%6F%72%67/%74%65%73%74%20%64%69%72",0,
+        "http://www.winehq.org/test dir",0,
+        TRUE
     },
     {
-        "c:\\test.mp3",Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME,FALSE,
-        "file:///c:/test.mp3",0,FALSE,
-        TRUE, FALSE
+        "c:\\test.mp3",Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME,
+        "file:///c:/test.mp3",0,
+        TRUE
     },
     {
-        "ftp://ftp.winehq.org/",0,FALSE,
-        "ftp://ftp.winehq.org",0,FALSE,
-        TRUE, FALSE
+        "ftp://ftp.winehq.org/",0,
+        "ftp://ftp.winehq.org",0,
+        TRUE
     },
     {
-        "ftp://ftp.winehq.org/test/test2/../../testB/",0,FALSE,
-        "ftp://ftp.winehq.org/t%45stB/",0,FALSE,
-        FALSE, FALSE
+        "ftp://ftp.winehq.org/test/test2/../../testB/",0,
+        "ftp://ftp.winehq.org/t%45stB/",0,
+        FALSE
     },
     {
-        "http://google.com/TEST",0,FALSE,
-        "http://google.com/test",0,FALSE,
-        FALSE, FALSE
+        "http://google.com/TEST",0,
+        "http://google.com/test",0,
+        FALSE
     },
     {
-        "http://GOOGLE.com/",0,FALSE,
-        "http://google.com/",0,FALSE,
-        TRUE, FALSE
+        "http://GOOGLE.com/",0,
+        "http://google.com/",0,
+        TRUE
     },
     /* Performs case insensitive compare of host names (for known scheme types). */
     {
-        "ftp://GOOGLE.com/",Uri_CREATE_NO_CANONICALIZE,FALSE,
-        "ftp://google.com/",0,FALSE,
-        TRUE, FALSE
+        "ftp://GOOGLE.com/",Uri_CREATE_NO_CANONICALIZE,
+        "ftp://google.com/",0,
+        TRUE
     },
     {
-        "zip://GOOGLE.com/",0,FALSE,
-        "zip://google.com/",0,FALSE,
-        FALSE, FALSE
+        "zip://GOOGLE.com/",0,
+        "zip://google.com/",0,
+        FALSE
     },
     {
-        "file:///c:/TEST/TeST/",0,FALSE,
-        "file:///c:/test/test/",0,FALSE,
-        TRUE, FALSE
+        "file:///c:/TEST/TeST/",0,
+        "file:///c:/test/test/",0,
+        TRUE
     },
     {
-        "file:///server/TEST",0,FALSE,
-        "file:///SERVER/TEST",0,FALSE,
-        TRUE, FALSE
+        "file:///server/TEST",0,
+        "file:///SERVER/TEST",0,
+        TRUE
     },
     {
-        "http://google.com",Uri_CREATE_NO_CANONICALIZE,FALSE,
-        "http://google.com/",0,FALSE,
-        TRUE, FALSE
+        "http://google.com",Uri_CREATE_NO_CANONICALIZE,
+        "http://google.com/",0,
+        TRUE
     },
     {
-        "ftp://google.com:21/",0,FALSE,
-        "ftp://google.com/",0,FALSE,
-        TRUE, FALSE
+        "ftp://google.com:21/",0,
+        "ftp://google.com/",0,
+        TRUE
     },
     {
-        "http://google.com:80/",Uri_CREATE_NO_CANONICALIZE,FALSE,
-        "http://google.com/",0,FALSE,
-        TRUE, FALSE
+        "http://google.com:80/",Uri_CREATE_NO_CANONICALIZE,
+        "http://google.com/",0,
+        TRUE
     },
     {
-        "http://google.com:70/",0,FALSE,
-        "http://google.com:71/",0,FALSE,
-        FALSE, FALSE
+        "http://google.com:70/",0,
+        "http://google.com:71/",0,
+        FALSE
+    },
+    {
+        "file:///c:/dir/file.txt", 0,
+        "file:///c:/dir/file.txt", Uri_CREATE_FILE_USE_DOS_PATH,
+        TRUE
+    },
+    {
+        "file:///c:/dir/file.txt", 0,
+        "file:///c:\\dir\\file.txt", Uri_CREATE_NO_CANONICALIZE,
+        TRUE
+    },
+    {
+        "file:///c:/dir/file.txt", 0,
+        "file:///c:\\dir2\\..\\dir\\file.txt", Uri_CREATE_NO_CANONICALIZE,
+        TRUE
+    },
+    {
+        "file:///c:\\dir2\\..\\ dir\\file.txt", Uri_CREATE_NO_CANONICALIZE,
+        "file:///c:/%20dir/file.txt", 0,
+        TRUE
+    },
+    {
+        "file:///c:/Dir/file.txt", 0,
+        "file:///C:/dir/file.TXT", Uri_CREATE_FILE_USE_DOS_PATH,
+        TRUE
+    },
+    {
+        "file:///c:/dir/file.txt", 0,
+        "file:///c:\\dir\\file.txt", Uri_CREATE_FILE_USE_DOS_PATH,
+        TRUE
+    },
+    {
+        "file:///c:/dir/file.txt#a", 0,
+        "file:///c:\\dir\\file.txt#b", Uri_CREATE_FILE_USE_DOS_PATH,
+        FALSE
+    },
+    /* Tests of an empty hash/fragment part */
+    {
+        "http://google.com/test",0,
+        "http://google.com/test#",0,
+        FALSE
+    },
+    {
+        "ftp://ftp.winehq.org/",0,
+        "ftp://ftp.winehq.org/#",0,
+        FALSE
+    },
+    {
+        "file:///c:/dir/file.txt#", 0,
+        "file:///c:\\dir\\file.txt", Uri_CREATE_FILE_USE_DOS_PATH,
+        FALSE
     }
 };
 
@@ -5325,6 +5738,70 @@ static const uri_builder_test uri_builder_tests[] = {
         0,INET_E_INVALID_URL,FALSE,
         0,INET_E_INVALID_URL,FALSE,
         0,0,0,INET_E_INVALID_URL,FALSE
+    },
+    {   "file:///c:/dir/file.html",0,S_OK,FALSE,
+        {
+            {TRUE,NULL,NULL,Uri_PROPERTY_FRAGMENT,S_OK},
+        },
+        {FALSE},
+        0,S_OK,FALSE,
+        0,S_OK,FALSE,
+        0,0,0,S_OK,FALSE,
+        {
+            {"file:///c:/dir/file.html",S_OK},
+            {"",S_FALSE},
+            {"file:///c:/dir/file.html",S_OK},
+            {"",S_FALSE},
+            {".html",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"/c:/dir/file.html",S_OK},
+            {"/c:/dir/file.html",S_OK},
+            {"",S_FALSE},
+            {"file:///c:/dir/file.html",S_OK},
+            {"file",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_FILE,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "file:///c:/dir/file.html",0,S_OK,FALSE,
+        {
+            {TRUE,"#",NULL,Uri_PROPERTY_FRAGMENT,S_OK},
+        },
+        {FALSE},
+        0,S_OK,FALSE,
+        0,S_OK,FALSE,
+        0,0,0,S_OK,FALSE,
+        {
+            {"file:///c:/dir/file.html#",S_OK},
+            {"",S_FALSE},
+            {"file:///c:/dir/file.html#",S_OK},
+            {"",S_FALSE},
+            {".html",S_OK},
+            {"#",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"/c:/dir/file.html",S_OK},
+            {"/c:/dir/file.html",S_OK},
+            {"",S_FALSE},
+            {"file:///c:/dir/file.html#",S_OK},
+            {"file",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_FILE,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
     }
 };
 
@@ -6156,6 +6633,303 @@ static const uri_combine_test uri_combine_tests[] = {
         {
             {Uri_HOST_DNS,S_OK},
             {80,S_OK},
+            {URL_SCHEME_HTTP,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir\\file.txt",0,
+        "relative/path.txt",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"mk",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_MK,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::\\subdir\\file.txt",0,
+        "relative/path.txt",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:\\Some\\Bogus\\Path.chm::/subdir/relative/path.txt",S_OK},
+            {"mk",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_MK,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "mk:@MSITSTORE:C:/Some\\Bogus/Path.chm::/subdir\\file.txt",0,
+        "relative\\path.txt",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"mk:@MSITSTORE:C:/Some\\Bogus/Path.chm::/subdir/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:/Some\\Bogus/Path.chm::/subdir/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"@MSITSTORE:C:/Some\\Bogus/Path.chm::/subdir/relative/path.txt",S_OK},
+            {"@MSITSTORE:C:/Some\\Bogus/Path.chm::/subdir/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:/Some\\Bogus/Path.chm::/subdir/relative/path.txt",S_OK},
+            {"mk",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_MK,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "mk:@MSITSTORE:C:\\dir\\file.chm::/subdir/file.txt",0,
+        "/relative/path.txt",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"mk:@MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"@MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"@MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"mk",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_MK,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "mk:MSITSTORE:C:\\dir\\file.chm::/subdir/file.txt",0,
+        "/relative/path.txt",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"mk:MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:MSITSTORE:C:\\dir\\file.chm::/relative/path.txt",S_OK},
+            {"mk",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_MK,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "mk:@MSITSTORE:C:\\dir\\file.chm::/subdir/../../file.txt",0,
+        "/relative/path.txt",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"mk:@MSITSTORE:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"@MSITSTORE:/relative/path.txt",S_OK},
+            {"@MSITSTORE:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@MSITSTORE:/relative/path.txt",S_OK},
+            {"mk",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_MK,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "mk:@xxx:C:\\dir\\file.chm::/subdir/../../file.txt",0,
+        "/relative/path.txt",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"mk:@xxx:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@xxx:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"@xxx:/relative/path.txt",S_OK},
+            {"@xxx:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:@xxx:/relative/path.txt",S_OK},
+            {"mk",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_MK,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "mk:xxx:C:\\dir\\file.chm::/subdir/../../file.txt",0,
+        "/relative/path.txt",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"mk:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"/relative/path.txt",S_OK},
+            {"/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"mk:/relative/path.txt",S_OK},
+            {"mk",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_MK,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "ml:@MSITSTORE:C:\\dir\\file.chm::/subdir/file.txt",0,
+        "/relative/path.txt",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"ml:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"ml:/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {".txt",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"",S_FALSE},
+            {"/relative/path.txt",S_OK},
+            {"/relative/path.txt",S_OK},
+            {"",S_FALSE},
+            {"ml:/relative/path.txt",S_OK},
+            {"ml",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_UNKNOWN,S_OK},
+            {0,S_FALSE},
+            {URL_SCHEME_UNKNOWN,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "http://winehq.org/dir/test?querystring",0,
+        "//winehq.com/#hash",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"http://winehq.com/#hash",S_OK},
+            {"winehq.com",S_OK},
+            {"http://winehq.com/#hash",S_OK},
+            {"winehq.com",S_OK},
+            {"",S_FALSE},
+            {"#hash",S_OK},
+            {"winehq.com",S_OK},
+            {"",S_FALSE},
+            {"/",S_OK},
+            {"/",S_OK},
+            {"",S_FALSE},
+            {"http://winehq.com/#hash",S_OK},
+            {"http",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_DNS,S_OK},
+            {80,S_OK,FALSE,TRUE},
+            {URL_SCHEME_HTTP,S_OK},
+            {URLZONE_INVALID,E_NOTIMPL}
+        }
+    },
+    {   "http://winehq.org/dir/test?querystring",0,
+        "//winehq.com/dir2/../dir/file.txt?query#hash",Uri_CREATE_ALLOW_RELATIVE,
+        0,S_OK,FALSE,
+        {
+            {"http://winehq.com/dir/file.txt?query#hash",S_OK},
+            {"winehq.com",S_OK},
+            {"http://winehq.com/dir/file.txt?query#hash",S_OK},
+            {"winehq.com",S_OK},
+            {".txt",S_OK},
+            {"#hash",S_OK},
+            {"winehq.com",S_OK},
+            {"",S_FALSE},
+            {"/dir/file.txt",S_OK},
+            {"/dir/file.txt?query",S_OK},
+            {"?query",S_OK},
+            {"http://winehq.com/dir/file.txt?query#hash",S_OK},
+            {"http",S_OK},
+            {"",S_FALSE},
+            {"",S_FALSE}
+        },
+        {
+            {Uri_HOST_DNS,S_OK},
+            {80,S_OK,FALSE,TRUE},
             {URL_SCHEME_HTTP,S_OK},
             {URLZONE_INVALID,E_NOTIMPL}
         }
@@ -7342,27 +8116,28 @@ static void test_IUri_HasProperty(void) {
 
 static void test_IUri_IsEqual(void) {
     IUri *uriA, *uriB;
-    HRESULT hrA, hrB;
+    BOOL equal;
+    HRESULT hres;
     DWORD i;
 
     uriA = uriB = NULL;
 
     /* Make sure IsEqual handles invalid args correctly. */
-    hrA = pCreateUri(http_urlW, 0, 0, &uriA);
-    hrB = pCreateUri(http_urlW, 0, 0, &uriB);
-    ok(hrA == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hrA, S_OK);
-    ok(hrB == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hrB, S_OK);
-    if(SUCCEEDED(hrA) && SUCCEEDED(hrB)) {
-        BOOL equal = -1;
-        hrA = IUri_IsEqual(uriA, NULL, &equal);
-        ok(hrA == S_OK, "Error: IsEqual returned 0x%08x, expected 0x%08x.\n", hrA, S_OK);
-        ok(equal == FALSE, "Error: Expected equal to be FALSE, but was %d instead.\n", equal);
+    hres = pCreateUri(http_urlW, 0, 0, &uriA);
+    ok(hres == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hres, S_OK);
+    hres = pCreateUri(http_urlW, 0, 0, &uriB);
+    ok(hres == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hres, S_OK);
 
-        hrA = IUri_IsEqual(uriA, uriB, NULL);
-        ok(hrA == E_POINTER, "Error: IsEqual returned 0x%08x, expected 0x%08x.\n", hrA, E_POINTER);
-    }
-    if(uriA) IUri_Release(uriA);
-    if(uriB) IUri_Release(uriB);
+    equal = -1;
+    hres = IUri_IsEqual(uriA, NULL, &equal);
+    ok(hres == S_OK, "Error: IsEqual returned 0x%08x, expected 0x%08x.\n", hres, S_OK);
+    ok(!equal, "Error: Expected equal to be FALSE, but was %d instead.\n", equal);
+
+    hres = IUri_IsEqual(uriA, uriB, NULL);
+    ok(hres == E_POINTER, "Error: IsEqual returned 0x%08x, expected 0x%08x.\n", hres, E_POINTER);
+
+    IUri_Release(uriA);
+    IUri_Release(uriB);
 
     for(i = 0; i < sizeof(equality_tests)/sizeof(equality_tests[0]); ++i) {
         uri_equality test = equality_tests[i];
@@ -7373,44 +8148,20 @@ static void test_IUri_IsEqual(void) {
         uriA_W = a2w(test.a);
         uriB_W = a2w(test.b);
 
-        hrA = pCreateUri(uriA_W, test.create_flags_a, 0, &uriA);
-        if(test.create_todo_a) {
-            todo_wine {
-                ok(hrA == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x on equality_tests[%d].a\n",
-                        hrA, S_OK, i);
-            }
+        hres = pCreateUri(uriA_W, test.create_flags_a, 0, &uriA);
+        ok(hres == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x on equality_tests[%d].a\n", hres, S_OK, i);
+
+        hres = pCreateUri(uriB_W, test.create_flags_b, 0, &uriB);
+        ok(hres == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x on equality_tests[%d].b\n", hres, S_OK, i);
+
+        equal = -1;
+        hres = IUri_IsEqual(uriA, uriB, &equal);
+        if(test.todo) todo_wine {
+            ok(hres == S_OK, "Error: IsEqual returned 0x%08x, expected 0x%08x on equality_tests[%d].\n", hres, S_OK, i);
+            ok(equal == test.equal, "Error: Expected the comparison to be %d on equality_tests[%d].\n", test.equal, i);
         } else {
-            ok(hrA == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x on equality_tests[%d].a\n",
-                    hrA, S_OK, i);
-        }
-
-        hrB = pCreateUri(uriB_W, test.create_flags_b, 0, &uriB);
-        if(test.create_todo_b) {
-            todo_wine {
-                ok(hrB == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x on equality_tests[%d].b\n",
-                        hrB, S_OK, i);
-            }
-        } else {
-            ok(hrB == S_OK, "Error: CreateUri returned 0x%08x, expected 0x%08x on equality_tests[%d].b\n",
-                    hrB, S_OK, i);
-        }
-
-        if(SUCCEEDED(hrA) && SUCCEEDED(hrB)) {
-            BOOL equal = -1;
-
-            hrA = IUri_IsEqual(uriA, uriB, &equal);
-            if(test.todo) {
-                todo_wine {
-                    ok(hrA == S_OK, "Error: IsEqual returned 0x%08x, expected 0x%08x on equality_tests[%d].\n",
-                            hrA, S_OK, i);
-                }
-                todo_wine {
-                    ok(equal == test.equal, "Error: Expected the comparison to be %d on equality_tests[%d].\n", test.equal, i);
-                }
-            } else {
-                ok(hrA == S_OK, "Error: IsEqual returned 0x%08x, expected 0x%08x on equality_tests[%d].\n", hrA, S_OK, i);
-                ok(equal == test.equal, "Error: Expected the comparison to be %d on equality_tests[%d].\n", test.equal, i);
-            }
+            ok(hres == S_OK, "Error: IsEqual returned 0x%08x, expected 0x%08x on equality_tests[%d].\n", hres, S_OK, i);
+            ok(equal == test.equal, "Error: Expected the comparison to be %d on equality_tests[%d].\n", test.equal, i);
         }
         if(uriA) IUri_Release(uriA);
         if(uriB) IUri_Release(uriB);
@@ -9524,11 +10275,12 @@ static void test_CoInternetCombineIUri(void) {
                                     prop.value, received, i, j);
                             }
                         } else {
-                            ok(hr == prop.expected,
+                            ok(hr == prop.expected || broken(prop.broken_combine_hres && hr == S_FALSE),
                                 "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].dword_props[%d].\n",
                                 hr, prop.expected, i, j);
-                            ok(prop.value == received, "Error: Expected %d, but got %d instead on uri_combine_tests[%d].dword_props[%d].\n",
-                                prop.value, received, i, j);
+                            if(!prop.broken_combine_hres || hr != S_FALSE)
+                                ok(prop.value == received, "Error: Expected %d, but got %d instead on uri_combine_tests[%d].dword_props[%d].\n",
+                                    prop.value, received, i, j);
                         }
                     }
                 }
@@ -9840,11 +10592,12 @@ static void test_CoInternetCombineUrlEx(void) {
                                 prop.value, received, i, j);
                         }
                     } else {
-                        ok(hr == prop.expected,
+                        ok(hr == prop.expected || broken(prop.broken_combine_hres && hr == S_FALSE),
                             "Error: IUri_GetPropertyDWORD returned 0x%08x, expected 0x%08x on uri_combine_tests[%d].dword_props[%d].\n",
                             hr, prop.expected, i, j);
-                        ok(prop.value == received, "Error: Expected %d, but got %d instead on uri_combine_tests[%d].dword_props[%d].\n",
-                            prop.value, received, i, j);
+                        if(!prop.broken_combine_hres || hr != S_FALSE)
+                            ok(prop.value == received, "Error: Expected %d, but got %d instead on uri_combine_tests[%d].dword_props[%d].\n",
+                                prop.value, received, i, j);
                     }
                 }
             }
@@ -10027,6 +10780,535 @@ static void test_CoInternetParseIUri_Pluggable(void) {
     if(uri) IUri_Release(uri);
 }
 
+typedef struct {
+    const char *url;
+    DWORD uri_flags;
+    const char *base_url;
+    DWORD base_uri_flags;
+    const char *legacy_url;
+    const char *uniform_url;
+    const char *no_canon_url;
+    const char *uri_url;
+} create_urlmon_test_t;
+
+static const create_urlmon_test_t create_urlmon_tests[] = {
+    {
+        "http://www.winehq.org",Uri_CREATE_NO_CANONICALIZE,
+        NULL,0,
+        "http://www.winehq.org/",
+        "http://www.winehq.org/",
+        "http://www.winehq.org",
+        "http://www.winehq.org"
+    },
+    {
+        "file://c:\\dir\\file.txt",Uri_CREATE_NO_CANONICALIZE,
+        NULL,0,
+        "file://c:\\dir\\file.txt",
+        "file:///c:/dir/file.txt",
+        "file:///c:/dir/file.txt",
+        "file:///c:/dir/file.txt"
+    },
+    {
+        "file://c:\\dir\\file.txt",Uri_CREATE_FILE_USE_DOS_PATH,
+        NULL,0,
+        "file://c:\\dir\\file.txt",
+        "file:///c:/dir/file.txt",
+        "file:///c:/dir/file.txt",
+        "file://c:\\dir\\file.txt"
+    },
+    {
+        "dat%61",Uri_CREATE_ALLOW_RELATIVE,
+        "http://www.winehq.org",0,
+        "http://www.winehq.org/data",
+        "http://www.winehq.org/data",
+        "http://www.winehq.org:80/data",
+    },
+    {
+        "file.txt",Uri_CREATE_ALLOW_RELATIVE,
+        "file://c:\\dir\\x.txt",Uri_CREATE_NO_CANONICALIZE,
+        "file://c:\\dir\\file.txt",
+        "file:///c:/dir/file.txt",
+        "file:///c:/dir/file.txt",
+    },
+    {
+        "",Uri_CREATE_ALLOW_RELATIVE,
+        NULL,0,
+        "",
+        "",
+        "",
+        ""
+    },
+    {
+        "test",Uri_CREATE_ALLOW_RELATIVE,
+        NULL,0,
+        "test",
+        "test",
+        "test",
+        "test"
+    },
+    {
+        "c:\\dir\\file.txt",Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME,
+        NULL,0,
+        "file://c:\\dir\\file.txt",
+        "file:///c:/dir/file.txt",
+        "file:///c:/dir/file.txt",
+        "file:///c:/dir/file.txt",
+    }
+};
+
+#define test_urlmon_display_name(a,b) _test_urlmon_display_name(__LINE__,a,b)
+static void _test_urlmon_display_name(unsigned line, IMoniker *mon, const char *exurl)
+{
+    WCHAR *display_name;
+    HRESULT hres;
+
+    hres = IMoniker_GetDisplayName(mon, NULL, NULL, &display_name);
+    ok_(__FILE__,line)(hres == S_OK, "GetDisplayName failed: %08x\n", hres);
+    ok_(__FILE__,line)(!strcmp_aw(exurl, display_name), "unexpected display name: %s, expected %s\n",
+            wine_dbgstr_w(display_name), exurl);
+
+    CoTaskMemFree(display_name);
+}
+
+#define test_display_uri(a,b) _test_display_uri(__LINE__,a,b)
+static void _test_display_uri(unsigned line, IMoniker *mon, const char *exurl)
+{
+    IUriContainer *uri_container;
+    IUri *uri;
+    BSTR display_uri;
+    HRESULT hres;
+
+    hres = IMoniker_QueryInterface(mon, &IID_IUriContainer, (void**)&uri_container);
+    ok(hres == S_OK, "Could not get IUriContainer iface: %08x\n", hres);
+
+    uri = NULL;
+    hres = IUriContainer_GetIUri(uri_container, &uri);
+    IUriContainer_Release(uri_container);
+    ok(hres == S_OK, "GetIUri failed: %08x\n", hres);
+    ok(uri != NULL, "uri == NULL\n");
+
+    hres = IUri_GetDisplayUri(uri, &display_uri);
+    IUri_Release(uri);
+    ok(hres == S_OK, "GetDisplayUri failed: %08x\n", hres);
+    ok_(__FILE__,line)(!strcmp_aw(exurl, display_uri), "unexpected display uri: %s, expected %s\n",
+            wine_dbgstr_w(display_uri), exurl);
+    SysFreeString(display_uri);
+}
+
+static void test_CreateURLMoniker(void)
+{
+    const create_urlmon_test_t *test;
+    IMoniker *mon, *base_mon;
+    WCHAR *url, *base_url;
+    IUri *uri, *base_uri;
+    HRESULT hres;
+
+    for(test = create_urlmon_tests; test < create_urlmon_tests + sizeof(create_urlmon_tests)/sizeof(*create_urlmon_tests); test++) {
+        url = a2w(test->url);
+        base_url = a2w(test->base_url);
+
+        if(base_url) {
+            hres = pCreateUri(base_url, test->base_uri_flags, 0, &base_uri);
+            ok(hres == S_OK, "CreateUri failed: %08x\n", hres);
+
+            hres = pCreateURLMonikerEx2(NULL, base_uri, &base_mon, URL_MK_NO_CANONICALIZE);
+            ok(hres == S_OK, "CreateURLMonikerEx2 failed: %08x\n", hres);
+        }else {
+            base_uri = NULL;
+            base_mon = NULL;
+        }
+
+        hres = CreateURLMoniker(base_mon, url, &mon);
+        ok(hres == S_OK, "CreateURLMoniker failed: %08x\n", hres);
+        test_urlmon_display_name(mon, test->legacy_url);
+        test_display_uri(mon, test->legacy_url);
+        IMoniker_Release(mon);
+
+        hres = pCreateURLMonikerEx(base_mon, url, &mon, URL_MK_LEGACY);
+        ok(hres == S_OK, "CreateURLMoniker failed: %08x\n", hres);
+        test_urlmon_display_name(mon, test->legacy_url);
+        test_display_uri(mon, test->legacy_url);
+        IMoniker_Release(mon);
+
+        hres = pCreateURLMonikerEx(base_mon, url, &mon, URL_MK_UNIFORM);
+        ok(hres == S_OK, "CreateURLMoniker failed: %08x\n", hres);
+        test_urlmon_display_name(mon, test->uniform_url);
+        test_display_uri(mon, test->uniform_url);
+        IMoniker_Release(mon);
+
+        hres = pCreateURLMonikerEx(base_mon, url, &mon, URL_MK_NO_CANONICALIZE);
+        ok(hres == S_OK, "CreateURLMoniker failed: %08x\n", hres);
+        test_urlmon_display_name(mon, test->no_canon_url);
+        test_display_uri(mon, test->no_canon_url);
+        IMoniker_Release(mon);
+
+        hres = pCreateUri(url, test->uri_flags, 0, &uri);
+        ok(hres == S_OK, "CreateUri failed: %08x\n", hres);
+
+        hres = pCreateURLMonikerEx2(base_mon, uri, &mon, URL_MK_LEGACY);
+        ok(hres == S_OK, "CreateURLMonikerEx2 failed: %08x\n", hres);
+        test_urlmon_display_name(mon, base_url ? test->legacy_url : test->uri_url);
+        test_display_uri(mon, base_url ? test->legacy_url : test->uri_url);
+        IMoniker_Release(mon);
+
+        hres = pCreateURLMonikerEx2(base_mon, uri, &mon, URL_MK_UNIFORM);
+        ok(hres == S_OK, "CreateURLMonikerEx2 failed: %08x\n", hres);
+        test_urlmon_display_name(mon, base_url ? test->uniform_url : test->uri_url);
+        test_display_uri(mon, base_url ? test->uniform_url : test->uri_url);
+        IMoniker_Release(mon);
+
+        hres = pCreateURLMonikerEx2(base_mon, uri, &mon, URL_MK_NO_CANONICALIZE);
+        ok(hres == S_OK, "CreateURLMonikerEx2 failed: %08x\n", hres);
+        test_urlmon_display_name(mon, base_url ? test->no_canon_url : test->uri_url);
+        test_display_uri(mon, base_url ? test->no_canon_url : test->uri_url);
+        IMoniker_Release(mon);
+
+        IUri_Release(uri);
+        heap_free(url);
+        heap_free(base_url);
+        if(base_uri)
+            IUri_Release(base_uri);
+        if(base_mon)
+            IMoniker_Release(base_mon);
+    }
+}
+
+static int add_default_flags(DWORD flags) {
+    if(!(flags & Uri_CREATE_NO_CANONICALIZE))
+        flags |= Uri_CREATE_CANONICALIZE;
+    if(!(flags & Uri_CREATE_NO_DECODE_EXTRA_INFO))
+        flags |= Uri_CREATE_DECODE_EXTRA_INFO;
+    if(!(flags & Uri_CREATE_NO_CRACK_UNKNOWN_SCHEMES))
+        flags |= Uri_CREATE_CRACK_UNKNOWN_SCHEMES;
+    if(!(flags & Uri_CREATE_NO_PRE_PROCESS_HTML_URI))
+        flags |= Uri_CREATE_PRE_PROCESS_HTML_URI;
+    if(!(flags & Uri_CREATE_IE_SETTINGS))
+        flags |= Uri_CREATE_NO_IE_SETTINGS;
+
+    return flags;
+}
+
+static void test_IPersistStream(void)
+{
+    int i, props_order[Uri_PROPERTY_DWORD_LAST+1] = { 0 };
+
+    props_order[Uri_PROPERTY_RAW_URI] = 1;
+    props_order[Uri_PROPERTY_FRAGMENT] = 2;
+    props_order[Uri_PROPERTY_HOST] = 3;
+    props_order[Uri_PROPERTY_PASSWORD] = 4;
+    props_order[Uri_PROPERTY_PATH] = 5;
+    props_order[Uri_PROPERTY_PORT] = 6;
+    props_order[Uri_PROPERTY_QUERY] = 7;
+    props_order[Uri_PROPERTY_SCHEME_NAME] = 8;
+    props_order[Uri_PROPERTY_USER_NAME] = 9;
+
+    for(i=0; i<sizeof(uri_tests)/sizeof(*uri_tests); i++) {
+        const uri_properties *test = uri_tests+i;
+        LPWSTR uriW;
+        IUri *uri;
+        IPersistStream *persist_stream;
+        IStream *stream;
+        IMarshal *marshal;
+        DWORD props, props_no, dw_data[6];
+        WCHAR str_data[1024];
+        ULARGE_INTEGER size, max_size;
+        LARGE_INTEGER no_off;
+        CLSID curi;
+        BSTR raw_uri;
+        HRESULT hr;
+
+        if(test->create_todo || test->create_expected!=S_OK)
+            continue;
+
+        uriW = a2w(test->uri);
+        hr = pCreateUri(uriW, test->create_flags, 0, &uri);
+        ok(hr == S_OK, "%d) CreateUri failed 0x%08x, expected S_OK..\n", i, hr);
+
+        hr = IUri_QueryInterface(uri, &IID_IPersistStream, (void**)&persist_stream);
+        ok(hr == S_OK, "%d) QueryInterface failed 0x%08x, expected S_OK.\n", i, hr);
+
+        hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+        ok(hr == S_OK, "CreateStreamOnHGlobal failed 0x%08x.\n", hr);
+        hr = IPersistStream_IsDirty(persist_stream);
+        ok(hr == S_FALSE, "%d) IsDirty returned 0x%08x, expected S_FALSE.\n", i, hr);
+        hr = IPersistStream_Save(persist_stream, stream, FALSE);
+        ok(hr == S_OK, "%d) Save failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IPersistStream_IsDirty(persist_stream);
+        ok(hr == S_FALSE, "%d) IsDirty returned 0x%08x, expected S_FALSE.\n", i, hr);
+        no_off.QuadPart = 0;
+        hr = IStream_Seek(stream, no_off, STREAM_SEEK_CUR, &size);
+        ok(hr == S_OK, "%d) Seek failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IStream_Seek(stream, no_off, STREAM_SEEK_SET, NULL);
+        ok(hr == S_OK, "%d) Seek failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IPersistStream_GetSizeMax(persist_stream, &max_size);
+        ok(hr == S_OK, "%d) GetSizeMax failed 0x%08x, expected S_OK.\n", i, hr);
+        ok(U(size).LowPart+2 == U(max_size).LowPart,
+                "%d) Written data size is %d, max_size %d.\n",
+                i, U(size).LowPart, U(max_size).LowPart);
+
+        hr = IStream_Read(stream, (void*)dw_data, sizeof(DWORD), NULL);
+        ok(hr == S_OK, "%d) Read failed 0x%08x, expected S_OK.\n", i, hr);
+        ok(dw_data[0]-2 == U(size).LowPart, "%d) Structure size is %d, expected %d\n",
+                i, dw_data[0]-2, U(size).LowPart);
+        hr = IStream_Read(stream, (void*)dw_data, 6*sizeof(DWORD), NULL);
+        ok(hr == S_OK, "%d) Read failed 0x%08x, expected S_OK.\n", i, hr);
+        ok(dw_data[0] == 0, "%d) Incorrect value %x, expected 0 (unknown).\n", i, dw_data[0]);
+        ok(dw_data[1] == 0, "%d) Incorrect value %x, expected 0 (unknown).\n", i, dw_data[1]);
+        ok(dw_data[2] == add_default_flags(test->create_flags),
+                "%d) Incorrect value %x, expected %x (creation flags).\n",
+                i, dw_data[2], add_default_flags(test->create_flags));
+        ok(dw_data[3] == 0, "%d) Incorrect value %x, expected 0 (unknown).\n", i, dw_data[3]);
+        ok(dw_data[4] == 0, "%d) Incorrect value %x, expected 0 (unknown).\n", i, dw_data[4]);
+        ok(dw_data[5] == 0, "%d) Incorrect value %x, expected 0 (unknown).\n", i, dw_data[5]);
+
+        props_no = 0;
+        for(props=0; props<=Uri_PROPERTY_DWORD_LAST; props++) {
+            if(!props_order[props])
+                continue;
+
+            if(props <= Uri_PROPERTY_STRING_LAST) {
+                if(test->str_props[props].expected == S_OK)
+                    props_no++;
+            } else {
+                if(test->dword_props[props-Uri_PROPERTY_DWORD_START].expected == S_OK)
+                    props_no++;
+            }
+        }
+        if(test->dword_props[Uri_PROPERTY_SCHEME-Uri_PROPERTY_DWORD_START].value != URL_SCHEME_HTTP
+                && test->dword_props[Uri_PROPERTY_SCHEME-Uri_PROPERTY_DWORD_START].value != URL_SCHEME_FTP
+                && test->dword_props[Uri_PROPERTY_SCHEME-Uri_PROPERTY_DWORD_START].value != URL_SCHEME_HTTPS)
+            props_no = 1;
+
+        hr = IStream_Read(stream, (void*)&props, sizeof(DWORD), NULL);
+        ok(hr == S_OK, "%d) Read failed 0x%08x, expected S_OK.\n", i, hr);
+        ok(props == props_no, "%d) Properties no is %d, expected %d.\n", i, props, props_no);
+
+        dw_data[2] = 0;
+        dw_data[3] = -1;
+        while(props) {
+            hr = IStream_Read(stream, (void*)dw_data, 2*sizeof(DWORD), NULL);
+            ok(hr == S_OK, "%d) Read failed 0x%08x, expected S_OK.\n", i, hr);
+            props--;
+            ok(dw_data[2]<props_order[dw_data[0]],
+                    "%d) Incorrect properties order (%d, %d)\n",
+                    i, dw_data[0], dw_data[3]);
+            dw_data[2] = props_order[dw_data[0]];
+            dw_data[3] = dw_data[0];
+
+            if(dw_data[0]<=Uri_PROPERTY_STRING_LAST) {
+                const uri_str_property *prop = test->str_props+dw_data[0];
+                hr = IStream_Read(stream, (void*)str_data, dw_data[1], NULL);
+                ok(hr == S_OK, "%d) Read failed 0x%08x, expected S_OK.\n", i, hr);
+                ok(!strcmp_aw(prop->value, str_data) || broken(prop->broken_value && !strcmp_aw(prop->broken_value, str_data)),
+                        "%d) Expected %s but got %s (%d).\n", i, prop->value, wine_dbgstr_w(str_data), dw_data[0]);
+            } else if(dw_data[0]>=Uri_PROPERTY_DWORD_START && dw_data[0]<=Uri_PROPERTY_DWORD_LAST) {
+                const uri_dword_property *prop = test->dword_props+dw_data[0]-Uri_PROPERTY_DWORD_START;
+                ok(dw_data[1] == sizeof(DWORD), "%d) Size of dword property is %d (%d)\n", i, dw_data[1], dw_data[0]);
+                hr = IStream_Read(stream, (void*)&dw_data[1], sizeof(DWORD), NULL);
+                ok(hr == S_OK, "%d) Read failed 0x%08x, expected S_OK.\n", i, hr);
+                ok(prop->value == dw_data[1], "%d) Expected %d but got %d (%d).\n", i, prop->value, dw_data[1], dw_data[0]);
+            } else {
+                ok(FALSE, "%d) Incorrect property type (%d)\n", i, dw_data[0]);
+                break;
+            }
+        }
+        ok(props == 0, "%d) Not all properties were processed %d. Next property type: %d\n",
+                i, props, dw_data[0]);
+
+        IPersistStream_Release(persist_stream);
+        IUri_Release(uri);
+
+        hr = IStream_Seek(stream, no_off, STREAM_SEEK_SET, NULL);
+        ok(hr == S_OK, "%d) Seek failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IPersistStream_GetClassID(persist_stream, &curi);
+        ok(hr == S_OK, "%d) GetClassID failed 0x%08x, expected S_OK.\n", i, hr);
+        ok(IsEqualCLSID(&curi, &CLSID_CUri), "%d) GetClassID returned incorrect CLSID.\n", i);
+        hr = CoCreateInstance(&curi, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+                &IID_IUri, (void**)&uri);
+        ok(hr == S_OK, "%d) Error creating uninitialized Uri: 0x%08x.\n", i, hr);
+        hr = IUri_QueryInterface(uri, &IID_IPersistStream, (void**)&persist_stream);
+        ok(hr == S_OK, "%d) QueryInterface failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IPersistStream_Load(persist_stream, stream);
+        ok(hr == S_OK, "%d) Load failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IUri_GetRawUri(uri, &raw_uri);
+        ok(hr == S_OK, "%d) GetRawUri failed 0x%08x, expected S_OK.\n", i, hr);
+        ok(!strcmp_aw(test->str_props[Uri_PROPERTY_RAW_URI].value, raw_uri)
+                || broken(test->str_props[Uri_PROPERTY_RAW_URI].broken_value
+                    && !strcmp_aw(test->str_props[Uri_PROPERTY_RAW_URI].broken_value, raw_uri)),
+                "%d) Expected %s but got %s.\n", i, test->str_props[Uri_PROPERTY_RAW_URI].value,
+                wine_dbgstr_w(raw_uri));
+        SysFreeString(raw_uri);
+
+        hr = IUri_QueryInterface(uri, &IID_IMarshal, (void**)&marshal);
+        ok(hr == S_OK, "%d) QueryInterface(IID_IMarshal) failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IStream_Seek(stream, no_off, STREAM_SEEK_SET, NULL);
+        ok(hr == S_OK, "%d) Seek failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IMarshal_MarshalInterface(marshal, stream, &IID_IUri, (void*)uri,
+                MSHCTX_DIFFERENTMACHINE, NULL, MSHLFLAGS_NORMAL);
+        ok(hr == E_INVALIDARG, "%d) MarshalInterface returned 0x%08x, expected E_INVALIDARG.\n", i, hr);
+        hr = IMarshal_MarshalInterface(marshal, stream, &IID_IUri, (void*)uri,
+                MSHCTX_CROSSCTX, NULL, MSHLFLAGS_NORMAL);
+        ok(hr == E_INVALIDARG, "%d) MarshalInterface returned 0x%08x, expected E_INVALIDARG.\n", i, hr);
+        hr = IMarshal_MarshalInterface(marshal, stream, &IID_IUri, (void*)uri,
+                MSHCTX_LOCAL, NULL, MSHLFLAGS_TABLESTRONG);
+        ok(hr == E_INVALIDARG, "%d) MarshalInterface returned 0x%08x, expected E_INVALIDARG.\n", i, hr);
+        hr = IMarshal_MarshalInterface(marshal, stream, &IID_IUri, (void*)uri,
+                MSHCTX_LOCAL, NULL, MSHLFLAGS_TABLEWEAK);
+        ok(hr == E_INVALIDARG, "%d) MarshalInterface returned 0x%08x, expected E_INVALIDARG.\n", i, hr);
+        hr = IMarshal_MarshalInterface(marshal, stream, &IID_IUri, (void*)uri,
+                MSHCTX_LOCAL, NULL, MSHLFLAGS_NOPING);
+        ok(hr == E_INVALIDARG, "%d) MarshalInterface returned 0x%08x, expected E_INVALIDARG.\n", i, hr);
+        hr = IMarshal_MarshalInterface(marshal, stream, &IID_IUri, (void*)uri,
+                MSHCTX_LOCAL, NULL, MSHLFLAGS_NORMAL);
+        ok(hr == S_OK, "%d) MarshalInterface failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IMarshal_GetUnmarshalClass(marshal, &IID_IUri, (void*)uri,
+                MSHCTX_CROSSCTX, NULL, MSHLFLAGS_NORMAL, &curi);
+        ok(hr == E_INVALIDARG, "%d) GetUnmarshalClass returned 0x%08x, expected E_INVALIDARG.\n", i, hr);
+        hr = IMarshal_GetUnmarshalClass(marshal, &IID_IUri, (void*)uri,
+                MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL, &curi);
+        ok(hr == S_OK, "%d) GetUnmarshalClass failed 0x%08x, expected S_OK.\n", i, hr);
+        ok(IsEqualCLSID(&curi, &CLSID_CUri), "%d) GetUnmarshalClass returned incorrect CLSID.\n", i);
+
+        hr = IStream_Seek(stream, no_off, STREAM_SEEK_CUR, &size);
+        ok(hr == S_OK, "%d) Seek failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IStream_Seek(stream, no_off, STREAM_SEEK_SET, NULL);
+        ok(hr == S_OK, "%d) Seek failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IStream_Read(stream, (void*)dw_data, 3*sizeof(DWORD), NULL);
+        ok(hr == S_OK, "%d) Read failed 0x%08x, expected S_OK.\n", i, hr);
+        ok(dw_data[0]-2 == U(size).LowPart, "%d) Structure size is %d, expected %d\n",
+                i, dw_data[0]-2, U(size).LowPart);
+        ok(dw_data[1] == MSHCTX_LOCAL, "%d) Incorrect value %d, expected MSHCTX_LOCAL.\n",
+                i, dw_data[1]);
+        ok(dw_data[2] == dw_data[0]-8, "%d) Incorrect value %d, expected %d (PersistStream size).\n",
+                i, dw_data[2], dw_data[0]-8);
+        if(!test->str_props[Uri_PROPERTY_PATH].value[0] &&
+                (test->dword_props[Uri_PROPERTY_SCHEME-Uri_PROPERTY_DWORD_START].value == URL_SCHEME_HTTP
+                 || test->dword_props[Uri_PROPERTY_SCHEME-Uri_PROPERTY_DWORD_START].value == URL_SCHEME_FTP
+                 || test->dword_props[Uri_PROPERTY_SCHEME-Uri_PROPERTY_DWORD_START].value == URL_SCHEME_HTTPS))
+            U(max_size).LowPart += 3*sizeof(DWORD);
+        ok(dw_data[2] == U(max_size).LowPart, "%d) Incorrect value %d, expected %d (PersistStream size).\n",
+                i, dw_data[2], U(max_size).LowPart);
+        IMarshal_Release(marshal);
+        IUri_Release(uri);
+
+        hr = IStream_Seek(stream, no_off, STREAM_SEEK_SET, NULL);
+        ok(hr == S_OK, "%d) Seek failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = CoCreateInstance(&curi, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+                &IID_IUri, (void**)&uri);
+        ok(hr == S_OK, "%d) Error creating uninitialized Uri: 0x%08x.\n", i, hr);
+        hr = IUri_QueryInterface(uri, &IID_IMarshal, (void**)&marshal);
+        ok(hr == S_OK, "%d) QueryInterface failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IMarshal_UnmarshalInterface(marshal, stream, &IID_IUri, (void**)&uri);
+        ok(hr == S_OK, "%d) UnmarshalInterface failed 0x%08x, expected S_OK.\n", i, hr);
+        hr = IUri_GetRawUri(uri, &raw_uri);
+        ok(hr == S_OK, "%d) GetRawUri failed 0x%08x, expected S_OK.\n", i, hr);
+        ok(!strcmp_aw(test->str_props[Uri_PROPERTY_RAW_URI].value, raw_uri)
+                || broken(test->str_props[Uri_PROPERTY_RAW_URI].broken_value
+                    && !strcmp_aw(test->str_props[Uri_PROPERTY_RAW_URI].broken_value, raw_uri)),
+                "%d) Expected %s but got %s.\n", i, test->str_props[Uri_PROPERTY_RAW_URI].value,
+                wine_dbgstr_w(raw_uri));
+        SysFreeString(raw_uri);
+
+        IMarshal_Release(marshal);
+        IStream_Release(stream);
+        IPersistStream_Release(persist_stream);
+        IUri_Release(uri);
+        heap_free(uriW);
+    }
+}
+
+static void test_UninitializedUri(void)
+{
+    IUri *uri;
+    IUriBuilderFactory *ubf;
+    IPersistStream *ps;
+    IUriBuilder *ub;
+    BSTR bstr;
+    DWORD dword;
+    BOOL eq;
+    ULARGE_INTEGER ui;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_CUri, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+            &IID_IUri, (void**)&uri);
+    if(FAILED(hr)) {
+        win_skip("Skipping uninitialized Uri tests.\n");
+        return;
+    }
+
+    hr = IUri_QueryInterface(uri, &IID_IUriBuilderFactory, (void**)&ubf);
+    ok(hr == S_OK, "QueryInterface(IID_IUriBuillderFactory) failed: %x.\n", hr);
+    hr = IUri_QueryInterface(uri, &IID_IPersistStream, (void**)&ps);
+    ok(hr == S_OK, "QueryInterface(IID_IPersistStream) failed: %x.\n", hr);
+
+    hr = IUri_GetAbsoluteUri(uri, NULL);
+    ok(hr == E_UNEXPECTED, "GetAbsoluteUri returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetAbsoluteUri(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetAbsoluteUri returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetAuthority(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetAuthority returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetDisplayUri(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetDisplayUri returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetDomain(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetDomain returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetExtension(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetExtension returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetFragment(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetFragment returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetHost(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetHost returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetHostType(uri, &dword);
+    ok(hr == E_UNEXPECTED, "GetHostType returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetPassword(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetPassword returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetPassword(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetPassword returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetPathAndQuery(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetPathAndQuery returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetPort(uri, &dword);
+    ok(hr == E_UNEXPECTED, "GetPort returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetProperties(uri, &dword);
+    ok(hr == E_UNEXPECTED, "GetProperties returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetPropertyBSTR(uri, Uri_PROPERTY_RAW_URI, &bstr, 0);
+    ok(hr == E_UNEXPECTED, "GetPropertyBSTR returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetPropertyDWORD(uri, Uri_PROPERTY_PORT, &dword, 0);
+    ok(hr == E_UNEXPECTED, "GetPropertyDWORD returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetPropertyLength(uri, Uri_PROPERTY_RAW_URI, &dword, 0);
+    ok(hr == E_UNEXPECTED, "GetPropertyLength returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetQuery(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetQuery returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetRawUri(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetRawUri returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetScheme(uri, &dword);
+    ok(hr == E_UNEXPECTED, "GetScheme returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetSchemeName(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetSchemeName returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetUserInfo(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetUserInfo returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetUserName(uri, &bstr);
+    ok(hr == E_UNEXPECTED, "GetUserName returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_GetZone(uri, &dword);
+    ok(hr == E_UNEXPECTED, "GetZone returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUri_IsEqual(uri, uri, &eq);
+    ok(hr == E_UNEXPECTED, "IsEqual returned %x, expected E_UNEXPECTED.\n", hr);
+
+    hr = IUriBuilderFactory_CreateInitializedIUriBuilder(ubf, 0, 0, &ub);
+    ok(hr == E_UNEXPECTED, "CreateInitializedIUriBuilder returned %x, expected E_UNEXPECTED.\n", hr);
+    hr = IUriBuilderFactory_CreateIUriBuilder(ubf, 0, 0, &ub);
+    ok(hr == S_OK, "CreateIUriBuilder returned %x, expected S_OK.\n", hr);
+    IUriBuilder_Release(ub);
+
+    hr = IPersistStream_GetSizeMax(ps, &ui);
+    ok(hr == S_OK, "GetSizeMax returned %x, expected S_OK.\n", hr);
+    ok(ui.u.LowPart == 34, "ui.LowPart = %d, expected 34.\n", ui.u.LowPart);
+    hr = IPersistStream_IsDirty(ps);
+    ok(hr == S_FALSE, "IsDirty returned %x, expected S_FALSE.\n", hr);
+
+    IPersistStream_Release(ps);
+    IUriBuilderFactory_Release(ubf);
+    IUri_Release(uri);
+}
+
 START_TEST(uri) {
     HMODULE hurlmon;
 
@@ -10038,6 +11320,8 @@ START_TEST(uri) {
     pCoInternetCombineIUri = (void*) GetProcAddress(hurlmon, "CoInternetCombineIUri");
     pCoInternetCombineUrlEx = (void*) GetProcAddress(hurlmon, "CoInternetCombineUrlEx");
     pCoInternetParseIUri = (void*) GetProcAddress(hurlmon, "CoInternetParseIUri");
+    pCreateURLMonikerEx = (void*) GetProcAddress(hurlmon, "CreateURLMonikerEx");
+    pCreateURLMonikerEx2 = (void*) GetProcAddress(hurlmon, "CreateURLMonikerEx2");
 
     if(!pCreateUri) {
         win_skip("CreateUri is not present, skipping tests.\n");
@@ -10136,5 +11420,17 @@ START_TEST(uri) {
     trace("test CoInternetParseIUri pluggable...\n");
     test_CoInternetParseIUri_Pluggable();
 
+    trace("test CreateURLMoniker...\n");
+    test_CreateURLMoniker();
+
+    CoInitialize(NULL);
+
+    trace("test IPersistStream...\n");
+    test_IPersistStream();
+
+    trace("test uninitialized Uri...\n");
+    test_UninitializedUri();
+
+    CoUninitialize();
     unregister_protocols();
 }
