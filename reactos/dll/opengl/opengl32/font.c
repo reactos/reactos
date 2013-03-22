@@ -1,1155 +1,565 @@
-/****************************************************************************
-*   Copyright (C) 1991-2004 SciTech Software, Inc. All rights reserved.
-*
-*   Permission is hereby granted, free of charge, to any person obtaining a
-*   copy of this software and associated documentation files (the "Software"),
-*   to deal in the Software without restriction, including without limitation
-*   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-*   and/or sell copies of the Software, and to permit persons to whom the
-*   Software is furnished to do so, subject to the following conditions:
-*
-*   The above copyright notice and this permission notice shall be included
-*   in all copies or substantial portions of the Software.
-*
-*   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-*   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-*   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-*   SCITECH SOFTWARE INC BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-*   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
-*   OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-*   SOFTWARE.
-****************************************************************************/
+/* Window-specific OpenGL functions implementation.
+ *
+ * Copyright (c) 1999 Lionel Ulmer
+ * Copyright (c) 2005 Raphael Junqueira
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
 
-#include "opengl32.h"
+#include <stdarg.h>
 #include <math.h>
+#include <GL/gl.h>
 
-#define LINE_BUF_QUANT 4000
-#define VERT_BUF_QUANT 4000
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
 
-static HFONT    hNewFont, hOldFont;
-static FLOAT    ScaleFactor;
-static FLOAT*   LineBuf;
-static DWORD    LineBufSize;
-static DWORD    LineBufIndex;
-static FLOAT*   VertBuf;
-static DWORD    VertBufSize;
-static DWORD    VertBufIndex;
-static GLenum   TessErrorOccurred;
+#include "wine/debug.h"
 
-/*****************************************************************************
-* AppendToLineBuf
-*
-* Appends one floating-point value to the global LineBuf array.  Return value
-* is non-zero for success, zero for failure.
-*****************************************************************************/
+WINE_DEFAULT_DEBUG_CHANNEL(wgl);
 
-INT AppendToLineBuf(FLOAT value)
+/***********************************************************************
+ *		wglUseFontBitmaps_common
+ */
+static BOOL wglUseFontBitmaps_common( HDC hdc, DWORD first, DWORD count, DWORD listBase, BOOL unicode )
 {
-    if (LineBufIndex >= LineBufSize)
-    {
-        FLOAT* f;
-        LineBufSize += LINE_BUF_QUANT;
-
-        f = (FLOAT*) HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,  LineBuf, (LineBufSize) * sizeof(FLOAT));
-        if (!f)
-            return 0;
-        LineBuf = f;
-    }
-    LineBuf[LineBufIndex++] = value;
-    return 1;
-}
-
-/*****************************************************************************
-* AppendToVertBuf
-*
-* Appends one floating-point value to the global VertBuf array.  Return value
-* is non-zero for success, zero for failure.
-*
-* Note that we can't realloc this one, because the tessellator is using
-* pointers into it.
-*****************************************************************************/
-
-INT AppendToVertBuf(FLOAT value)
-{
-    if (VertBufIndex >= VertBufSize)
-        return 0;
-    VertBuf[VertBufIndex++] = value;
-    return 1;
-}
-
-/*****************************************************************************
-* GetWord
-*
-* Fetch the next 16-bit word from a little-endian byte stream, and increment
-* the stream pointer to the next unscanned byte.
-*****************************************************************************/
-
-LONG GetWord(UCHAR** p)
-{
-    LONG value;
-
-    value = ((*p)[1] << 8) + (*p)[0];
-    *p += 2;
-    return value;
-}
-
-/*****************************************************************************
-* GetDWord
-*
-* Fetch the next 32-bit word from a little-endian byte stream, and increment
-* the stream pointer to the next unscanned byte.
-*****************************************************************************/
-
-LONG GetDWord(UCHAR** p)
-{
-    LONG value;
-
-    value = ((*p)[3] << 24) + ((*p)[2] << 16) + ((*p)[1] << 8) + (*p)[0];
-    *p += 4;
-    return value;
-}
-
-/*****************************************************************************
-* GetFixed
-*
-* Fetch the next 32-bit fixed-point value from a little-endian byte stream,
-* convert it to floating-point, and increment the stream pointer to the next
-* unscanned byte.
-*****************************************************************************/
-double GetFixed(UCHAR** p)
-{
-    LONG hiBits, loBits;
-    double value;
-
-    loBits = GetWord(p);
-    hiBits = GetWord(p);
-    value = (double) ((hiBits << 16) | loBits) / 65536.0;
-
-    return value * ScaleFactor;
-}
-
-
-/*****************************************************************************
-**
-** InvertGlyphBitmap.
-**
-** Invert the bitmap so that it suits OpenGL's representation.
-** Each row starts on a double word boundary.
-**
-*****************************************************************************/
-
-VOID InvertGlyphBitmap(INT w, INT h, DWORD *fptr, DWORD *tptr)
-{
-    INT dWordsInRow = (w+31)/32;
-    INT i, j;
-
-    if (w <= 0 || h <= 0) {
-        return;
-    }
-
-    tptr += ((h-1)*dWordsInRow);
-    for (i = 0; i < h; i++) {
-        for (j = 0; j < dWordsInRow; j++) {
-            *(tptr + j) = *(fptr + j);
-        }
-        tptr -= dWordsInRow;
-        fptr += dWordsInRow;
-    }
-}
-
-/*****************************************************************************
-* CreateHighResolutionFont
-*
-* Gets metrics for the current font and creates an equivalent font
-* scaled to the design units of the font.
-* 
-*****************************************************************************/
-
-HFONT CreateHighResolutionFont(HDC hDC)
-{
-    UINT otmSize;
-    OUTLINETEXTMETRIC *otm;
-    LONG fontHeight, fontWidth, fontUnits;
-    LOGFONTW logFont, logFontFaceName;
-
-    otmSize = GetOutlineTextMetricsW(hDC, 0, NULL);
-    if (!otmSize)
-        return NULL;
-
-    otm = (OUTLINETEXTMETRIC *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, otmSize);
-    if (!otm)
-        return NULL;
-
-    otm->otmSize = otmSize;
-    if (!GetOutlineTextMetricsW(hDC, otmSize, otm)) 
-        return NULL;
-
-    GetObjectW(GetCurrentObject(hDC, OBJ_FONT), sizeof(logFontFaceName), &logFontFaceName);
-
-    fontHeight = otm->otmTextMetrics.tmHeight -
-        otm->otmTextMetrics.tmInternalLeading;
-    fontWidth = otm->otmTextMetrics.tmAveCharWidth;
-    fontUnits = (LONG) otm->otmEMSquare;
-
-    ScaleFactor = 1.0F / (FLOAT) fontUnits;
-
-    logFont.lfHeight = - ((LONG) fontUnits);
-    logFont.lfWidth = (LONG)((FLOAT) (fontWidth * fontUnits) / (FLOAT) fontHeight);
-    logFont.lfEscapement = 0;
-    logFont.lfOrientation = 0;
-    logFont.lfWeight = otm->otmTextMetrics.tmWeight;
-    logFont.lfItalic = otm->otmTextMetrics.tmItalic;
-    logFont.lfUnderline = otm->otmTextMetrics.tmUnderlined;
-    logFont.lfStrikeOut = otm->otmTextMetrics.tmStruckOut;
-    logFont.lfCharSet = otm->otmTextMetrics.tmCharSet;
-    logFont.lfOutPrecision = OUT_OUTLINE_PRECIS;
-    logFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    logFont.lfQuality = DEFAULT_QUALITY;
-    logFont.lfPitchAndFamily =
-        otm->otmTextMetrics.tmPitchAndFamily & 0xf0;
-    wcscpy(logFont.lfFaceName, logFontFaceName.lfFaceName);
-
-    hNewFont = CreateFontIndirectW(&logFont);
-
-    HeapFree(GetProcessHeap(), 0, otm);
-
-    return hNewFont;
-}
-
-/*****************************************************************************
-* MakeLinesFromArc
-*
-* Subdivides one arc of a quadratic spline until the chordal deviation
-* tolerance requirement is met, then places the resulting set of line
-* segments in the global LineBuf.
-*****************************************************************************/
-INT MakeLinesFromArc(FLOAT x0, FLOAT y0, FLOAT x1, FLOAT y1, FLOAT x2, FLOAT y2,
-                     DWORD vertexCountIndex, FLOAT chordalDeviationSquared)
-{
-    FLOAT x01;
-    FLOAT y01;
-    FLOAT x12;
-    FLOAT y12;
-    FLOAT midPointX;
-    FLOAT midPointY;
-    FLOAT deltaX;
-    FLOAT deltaY;
-
-    /*
-    * Calculate midpoint of the curve by de Casteljau:
-    */
-    x01 = 0.5F * (x0 + x1);
-    y01 = 0.5F * (y0 + y1);
-    x12 = 0.5F * (x1 + x2);
-    y12 = 0.5F * (y1 + y2);
-    midPointX = 0.5F * (x01 + x12);
-    midPointY = 0.5F * (y01 + y12);
-
-
-    /*
-    * Estimate chordal deviation by the distance from the midpoint
-    * of the curve to its non-pointpolated control point.  If this
-    * distance is greater than the specified chordal deviation
-    * constraint, then subdivide.  Otherwise, generate polylines
-    * from the three control points.
-    */
-    deltaX = midPointX - x1;
-    deltaY = midPointY - y1;
-
-    if (deltaX * deltaX + deltaY * deltaY > chordalDeviationSquared)
-    {
-        MakeLinesFromArc(	x0, y0,
-            x01, y01,
-            midPointX, midPointY,
-            vertexCountIndex,
-            chordalDeviationSquared);
-
-        MakeLinesFromArc(	midPointX, midPointY,
-            x12, y12,
-            x2, y2,
-            vertexCountIndex,
-            chordalDeviationSquared);
-    }
-    else
-    {
-        /*
-        * The "pen" is already at (x0, y0), so we don't need to
-        * add that point to the LineBuf.
-        */
-        if (!AppendToLineBuf(x1)
-            || !AppendToLineBuf(y1)
-            || !AppendToLineBuf(x2)
-            || !AppendToLineBuf(y2))
-            return 0;
-        LineBuf[vertexCountIndex] += 2.0F;
-    }
-
-    return 1;
-}
-
-/*****************************************************************************
-* MakeLinesFromTTQSpline
-*
-* Converts points from the poly quadratic spline in a TT_PRIM_QSPLINE
-* structure to polyline points in the global LineBuf.
-*****************************************************************************/
-
-INT MakeLinesFromTTQSpline( UCHAR** pp, DWORD vertexCountIndex, WORD pointCount, FLOAT chordalDeviation)
-{
-    FLOAT x0, y0, x1, y1, x2, y2;
-    WORD point;
-
-    /*
-    * Process each of the non-pointpolated points in the outline.
-    * To do this, we need to generate two pointpolated points (the
-    * start and end of the arc) for each non-pointpolated point.
-    * The first pointpolated point is always the one most recently
-    * stored in LineBuf, so we just extract it from there.  The
-    * second pointpolated point is either the average of the next
-    * two points in the QSpline, or the last point in the QSpline
-    * if only one remains.
-    */
-    for (point = 0; point < pointCount - 1; ++point)
-    {
-        x0 = LineBuf[LineBufIndex - 2];
-        y0 = LineBuf[LineBufIndex - 1];
-
-        x1 = (FLOAT) GetFixed(pp);
-        y1 = (FLOAT) GetFixed(pp);
-
-        if (point == pointCount - 2)
-        {
-            /*
-            * This is the last arc in the QSpline.  The final
-            * point is the end of the arc.
-            */
-            x2 = (FLOAT) GetFixed(pp);
-            y2 = (FLOAT) GetFixed(pp);
-        }
-        else
-        {
-            /*
-            * Peek at the next point in the input to compute
-            * the end of the arc:
-            */
-            x2 = 0.5F * (x1 + (FLOAT) GetFixed(pp));
-            y2 = 0.5F * (y1 + (FLOAT) GetFixed(pp));
-            /*
-            * Push the point back onto the input so it will
-            * be reused as the next off-curve point:
-            */
-            *pp -= 8;
-        }
-
-        if (!MakeLinesFromArc(	x0, y0,
-            x1, y1,
-            x2, y2,
-            vertexCountIndex,
-            chordalDeviation * chordalDeviation))
-            return 0;
-    }
-
-    return 1;
-}
-
-/*****************************************************************************
-* MakeLinesFromTTLine
-*
-* Converts points from the polyline in a TT_PRIM_LINE structure to
-* equivalent points in the global LineBuf.
-*****************************************************************************/
-INT MakeLinesFromTTLine(UCHAR** pp, DWORD vertexCountIndex, WORD pointCount)
-{
-    /*
-    * Just copy the line segments into the line buffer (converting
-    * type as we go):
-    */
-    LineBuf[vertexCountIndex] += pointCount;
-    while (pointCount--)
-    {
-        if (!AppendToLineBuf((FLOAT) GetFixed(pp))	/* X coord */
-            || !AppendToLineBuf((FLOAT) GetFixed(pp)))	/* Y coord */
-            return 0;
-    }
-
-    return 1;
-}
-
-/*****************************************************************************
-* MakeLinesFromTTPolyCurve
-*
-* Converts the lines and splines in a single TTPOLYCURVE structure to points
-* in the global LineBuf.
-*****************************************************************************/
-
-INT MakeLinesFromTTPolycurve(UCHAR** pp, DWORD vertexCountIndex, FLOAT chordalDeviation)
-{
-    WORD type;
-    WORD pointCount;
-
-    /*
-    * Pick up the relevant fields of the TTPOLYCURVE structure:
-    */
-    type = (WORD) GetWord(pp);
-    pointCount = (WORD) GetWord(pp);
-
-    /*
-    * Convert the "curve" to line segments:
-    */
-    if (type == TT_PRIM_LINE)
-        return MakeLinesFromTTLine(	pp,
-        vertexCountIndex,
-        pointCount);
-    else if (type == TT_PRIM_QSPLINE)
-        return MakeLinesFromTTQSpline(	pp,
-        vertexCountIndex,
-        pointCount,
-        chordalDeviation);
-    else
-        return 0;
-}
-
-/*****************************************************************************
-* MakeLinesFromTTPolygon
-*
-* Converts a TTPOLYGONHEADER and its associated curve structures into a
-* single polyline loop in the global LineBuf.
-*****************************************************************************/
-
-INT MakeLinesFromTTPolygon(UCHAR** pp, FLOAT chordalDeviation)
-{
-    DWORD polySize;
-    UCHAR* polyStart;
-    DWORD vertexCountIndex;
-
-    /*
-    * Record where the polygon data begins, and where the loop's
-    * vertex count resides:
-    */
-    polyStart = *pp;
-    vertexCountIndex = LineBufIndex;
-    if (!AppendToLineBuf(0.0F))
-        return 0;
-
-    /*
-    * Extract relevant data from the TTPOLYGONHEADER:
-    */
-    polySize = GetDWord(pp);
-    if (GetDWord(pp) != TT_POLYGON_TYPE)	/* polygon type */
-        return 0;
-    if (!AppendToLineBuf((FLOAT) GetFixed(pp)))	/* first X coord */
-        return 0;
-    if (!AppendToLineBuf((FLOAT) GetFixed(pp)))	/* first Y coord */
-        return 0;
-    LineBuf[vertexCountIndex] += 1.0F;
-
-    /*
-    * Process each of the TTPOLYCURVE structures in the polygon:
-    */
-    while (*pp < polyStart + polySize)
-        if (!MakeLinesFromTTPolycurve(	pp,
-            vertexCountIndex,
-            chordalDeviation))
-            return 0;
-
-    return 1;
-}
-
-/*****************************************************************************
-* TessVertexOut
-*
-* Used by tessellator to handle output vertexes.
-*****************************************************************************/
-
-VOID CALLBACK TessVertexOutData(FLOAT p[3], GLfloat *pz)
-{
-    GLfloat v[3];
-    v[0] = (GLfloat) p[0];
-    v[1] = (GLfloat) p[1];
-    v[2] = *pz;
-    glVertex3fv(v);
-}
-
-/*****************************************************************************
-* TessCombine
-*
-* Used by tessellator to handle self-pointsecting contours and degenerate
-* geometry.
-*****************************************************************************/
-VOID CALLBACK TessCombine(double  coords[3], VOID* vertex_data[4], FLOAT weight[4], VOID** outData)
-{
-    if (!AppendToVertBuf((FLOAT) coords[0])
-        || !AppendToVertBuf((FLOAT) coords[1])
-        || !AppendToVertBuf((FLOAT) coords[2]))
-        TessErrorOccurred = GL_OUT_OF_MEMORY;
-
-    *outData = VertBuf + (VertBufIndex - 3);
-}
-
-/*****************************************************************************
-* TessError
-*
-* Saves the last tessellator error code in the global TessErrorOccurred.
-*****************************************************************************/
-
-VOID CALLBACK TessError(GLenum error)
-{
-    TessErrorOccurred = error;
-}
-
-/*****************************************************************************
-* MakeLinesFromGlyph
-* 
-* Converts the outline of a glyph from the TTPOLYGON format to a simple
-* array of floating-point values containing one or more loops.
-*
-* The first element of the output array is a count of the number of loops.
-* The loop data follows this count.  Each loop consists of a count of the
-* number of vertices it contains, followed by the vertices.  Each vertex
-* is an X and Y coordinate.  For example, a single triangle might be
-* described by this array:
-*
-*   1.,	3.,	0., 0.,		1., 0.,		0., 1.
-*       ^	 ^	 ^    ^		 ^    ^		 ^    ^
-*     #loops	#verts	 x1   y1	 x2   y2	 x3   y3
-*
-* A two-loop glyph would look like this:
-*
-*	2.,	3.,  0.,0.,  1.,0.,  0.,1.,	3.,  .2,.2,  .4,.2,  .2,.4
-*
-* Line segments from the TTPOLYGON are transferred to the output array in
-* the obvious way.  Quadratic splines in the TTPOLYGON are converted to
-* collections of line segments
-*****************************************************************************/
-
-INT MakeLinesFromGlyph(UCHAR* glyphBuf, DWORD glyphSize, FLOAT chordalDeviation)
-{
-    UCHAR* p;
-    INT status = 0;
-
-    /*
-    * Pick up all the polygons (aka loops) that make up the glyph:
-    */
-    if (!AppendToLineBuf(0.0F)) /* loop count at LineBuf[0] */
-        goto exit;
-
-    p = glyphBuf;
-    while (p < glyphBuf + glyphSize)
-    {
-        if (!MakeLinesFromTTPolygon(&p, chordalDeviation))
-            goto exit;
-        LineBuf[0] += 1.0F; /* increment loop count */
-    }
-
-    status = 1;
-
-exit:
-    return status;
-}
-
-/*****************************************************************************
-* DrawGlyph
-* 
-* Converts the outline of a glyph to OpenGL drawing primitives, tessellating
-* as needed, and then draws the glyph.  Tessellation of the quadratic splines
-* in the outline is controlled by "chordalDeviation", and the drawing
-* primitives (lines or polygons) are selected by "format".
-*
-* Return value is nonzero for success, zero for failure.
-*
-* Does not check for OpenGL errors, so if the caller needs to know about them,
-* it should call glGetError().
-*****************************************************************************/
-
-INT DrawGlyph(UCHAR* glyphBuf, DWORD glyphSize, FLOAT chordalDeviation, FLOAT extrusion, INT format)
-{
-    INT status = 0;
-    FLOAT* p;
-    DWORD loop;
-    DWORD point;
-    GLUtesselator* tess = NULL;
-
-    /*
-    * Initialize the global buffer into which we place the outlines:
-    */
-    LineBuf = (FLOAT*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (LINE_BUF_QUANT) * sizeof(FLOAT));
-
-    if(!LineBuf)
-        goto exit;
-
-    LineBufSize = LINE_BUF_QUANT;
-    LineBufIndex = 0;
-
-    /*
-    * Convert the glyph outlines to a set of polyline loops.
-    * (See MakeLinesFromGlyph() for the format of the loop data
-    * structure.)
-    */
-    if (!MakeLinesFromGlyph(glyphBuf, glyphSize, chordalDeviation))
-        goto exit;
-    p = LineBuf;
-
-
-    /*
-    * Now draw the loops in the appropriate format:
-    */
-    if (format == WGL_FONT_LINES)
-    {
-        /*
-        * This is the easy case.  Just draw the outlines.
-        */
-        for (loop = (DWORD) *p++; loop; --loop)
-        {
-            glBegin(GL_LINE_LOOP);
-            for (point = (DWORD) *p++; point; --point)
-            {
-                glVertex2fv(p);
-                p += 2;
-            }
-            glEnd();
-        }
-        status = 1;
-    }
-
-    else if (format == WGL_FONT_POLYGONS)
-    {
-        double v[3];
-        FLOAT *save_p = p;
-        GLfloat z_value;
-
-        /*
-        * This is the hard case.  We have to set up a tessellator
-        * to convert the outlines into a set of polygonal
-        * primitives, which the tessellator passes to some
-        * auxiliary routines for drawing.
-        */
-
-        VertBuf = (FLOAT*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (VERT_BUF_QUANT) * sizeof(FLOAT));
-
-        if (!VertBuf)
-            goto exit;
-
-        VertBufSize = VERT_BUF_QUANT;
-        VertBufIndex = 0;
-
-        if (!(tess = gluNewTess()))
-            goto exit;
-
-        gluTessCallback(tess, GLU_BEGIN,	(VOID(CALLBACK *)()) glBegin);
-        gluTessCallback(tess, GLU_TESS_VERTEX_DATA, (VOID(CALLBACK *)()) TessVertexOutData);
-        gluTessCallback(tess, GLU_END,	(VOID(CALLBACK *)()) glEnd);
-        gluTessCallback(tess, GLU_ERROR,	(VOID(CALLBACK *)()) TessError);
-        gluTessCallback(tess, GLU_TESS_COMBINE, (VOID(CALLBACK *)()) TessCombine);
-        gluTessNormal(tess, 0.0F, 0.0F, 1.0F);
-
-        TessErrorOccurred = 0;
-        glNormal3f(0.0f, 0.0f, 1.0f);
-        v[2] = 0.0;
-        z_value = 0.0f;
-
-        gluTessBeginPolygon(tess, &z_value);
-
-        for (loop = (DWORD) *p++; loop; --loop)
-        {
-            gluTessBeginContour(tess);
-
-            for (point = (DWORD) *p++; point; --point)
-            {
-                v[0] = p[0];
-                v[1] = p[1];
-                gluTessVertex(tess, v, p);
-                p += 2;
-            }
-
-            gluTessEndContour(tess);
-        }
-        gluTessEndPolygon(tess);
-
-        status = !TessErrorOccurred;
-
-        /* Extrusion code */
-        if (extrusion) 
-        {
-            DWORD loops;
-            GLfloat thickness = (GLfloat) - extrusion;
-            FLOAT *vert, *vert2;
-            DWORD count;
-
-            p = save_p;
-            loops = (DWORD) *p++;
-
-            for (loop = 0; loop < loops; loop++)
-            {
-                GLfloat dx, dy, len;
-                DWORD last;
-
-                count = (DWORD) *p++;
-                glBegin(GL_QUAD_STRIP);
-
-                /* Check if the first and last vertex are identical
-                * so we don't draw the same quad twice.
-                */
-                vert = p + (count-1)*2;
-                last = (p[0] == vert[0] && p[1] == vert[1]) ? count-1 : count;
-
-                for (point = 0; point <= last; point++)
-                {
-                    vert  = p + 2 * (point % last);
-                    vert2 = p + 2 * ((point+1) % last);
-
-                    dx = vert[0] - vert2[0];
-                    dy = vert[1] - vert2[1];
-                    len = (GLfloat)sqrt(dx * dx + dy * dy);
-
-                    glNormal3f(dy / len, -dx / len, 0.0f);
-                    glVertex3f((GLfloat) vert[0],
-                        (GLfloat) vert[1], thickness);
-                    glVertex3f((GLfloat) vert[0],
-                        (GLfloat) vert[1], 0.0f);
-                }
-
-                glEnd();
-                p += count*2;
-            }
-
-            /* Draw the back face */
-            p = save_p;
-            v[2] = thickness;
-            glNormal3f(0.0f, 0.0f, -1.0f);
-            gluTessNormal(tess, 0.0F, 0.0F, -1.0F);
-
-            gluTessBeginPolygon(tess, &thickness);
-
-            for (loop = (DWORD) *p++; loop; --loop)
-            {
-                count = (DWORD) *p++;
-
-                gluTessBeginContour(tess);
-
-                for (point = 0; point < count; point++)
-                {
-                    vert = p + ((count-point-1)<<1);
-                    v[0] = vert[0];
-                    v[1] = vert[1];
-                    gluTessVertex(tess, v, vert);
-                }
-                p += count*2;
-
-                gluTessEndContour(tess);
-            }
-            gluTessEndPolygon(tess);
-        }
-
-#if !defined(NDEBUG)
-        if (TessErrorOccurred)
-            DBGPRINT("Tessellation error %s\n", gluErrorString(TessErrorOccurred));
-#endif
-    }
-
-
-exit:
-
-    if(LineBuf)
-        HeapFree(GetProcessHeap(), 0, LineBuf);
-
-    if(VertBuf)
-        HeapFree(GetProcessHeap(), 0, VertBuf);
-
-    if (tess)
-        gluDeleteTess(tess);
-
-    return status;
-}
-
-
-/*****************************************************************************
-* MakeDisplayListFromGlyph
-* 
-* Converts the outline of a glyph to an OpenGL display list.
-*
-* Return value is nonzero for success, zero for failure.
-*
-* Does not check for OpenGL errors, so if the caller needs to know about them,
-* it should call glGetError().
-*****************************************************************************/
-
-INT MakeDisplayListFromGlyph(DWORD listName, UCHAR* glyphBuf, DWORD glyphSize, LPGLYPHMETRICSFLOAT glyphMetricsFloat,
-                             FLOAT chordalDeviation, FLOAT extrusion, INT format)
-{
-    INT status;
-
-    glNewList(listName, GL_COMPILE);
-        status = DrawGlyph(glyphBuf, glyphSize, chordalDeviation, extrusion, format);
-        glTranslatef(glyphMetricsFloat->gmfCellIncX, glyphMetricsFloat->gmfCellIncY, 0.0F);
-    glEndList();
-
-    return status;
-}
-
-// ***********************************************************************
-
-/*****************************************************************************
-* IntUseFontBitmaps
-*
-* Converts a subrange of the glyphs in a GDI font to OpenGL display
-* lists.
-*
-* Extended to support any GDI font, not just TrueType fonts. (DaveM)
-*
-*****************************************************************************/
-
-BOOL APIENTRY IntUseFontBitmapsW(HDC hDC, DWORD first, DWORD count, DWORD listBase)
-{
-    INT i, ox, oy, ix, iy;
-    INT w = 0, h = 0;
-    INT iBufSize, iCurBufSize = 0;
-    DWORD *bitmapBuffer = NULL;
-    DWORD *invertedBitmapBuffer = NULL;
-    BOOL bSuccessOrFail = TRUE;
-    BOOL bTrueType = FALSE;
-    TEXTMETRIC tm;
     GLYPHMETRICS gm;
-    RASTERIZER_STATUS rs;
-    MAT2 mat;
-    SIZE size;
-    RECT rect;
-    HDC hDCMem;
-    HBITMAP hBitmap;
-    BITMAPINFO bmi;
-    HFONT hFont;
+    unsigned int glyph, size = 0;
+    void *bitmap = NULL, *gl_bitmap = NULL;
+    int org_alignment;
+    BOOL ret = TRUE;
 
-    // Set up a unity matrix.
-    ZeroMemory(&mat, sizeof(mat));
-    mat.eM11.value = 1;
-    mat.eM22.value = 1;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &org_alignment);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-    // Test to see if selected font is TrueType or not
-    ZeroMemory(&tm, sizeof(tm));
-    if (!GetTextMetrics(hDC, &tm))
-    {
-        DBGPRINT("Font metrics error\n");
-        return FALSE;
-    }
-    bTrueType = (tm.tmPitchAndFamily & TMPF_TRUETYPE) ? TRUE : FALSE;
+    for (glyph = first; glyph < first + count; glyph++) {
+        static const MAT2 identity = { {0,1},{0,0},{0,0},{0,1} };
+        unsigned int needed_size, height, width, width_int;
 
-    // Test to see if TRUE-TYPE capabilities are installed
-    // (only necessary if TrueType font selected)
-    ZeroMemory(&rs, sizeof(rs));
-
-    if (bTrueType)
-    {
-        if (!GetRasterizerCaps (&rs, sizeof (RASTERIZER_STATUS)) || !(rs.wFlags & TT_ENABLED))
-        {
-            DBGPRINT("No TrueType caps\n");
-            bTrueType = FALSE;
-        }
-    }
-
-    // Trick to get the current font handle
-    hFont = SelectObject(hDC, GetStockObject(SYSTEM_FONT));
-    SelectObject(hDC, hFont);
-
-    // Have memory device context available for holding bitmaps of font glyphs
-    hDCMem = CreateCompatibleDC(hDC);
-    SelectObject(hDCMem, hFont);
-    SetTextColor(hDCMem, RGB(0xFF, 0xFF, 0xFF));
-    SetBkColor(hDCMem, 0);
-
-    for (i = first; (DWORD) i < (first + count); i++)
-    {
-        // Find out how much space is needed for the bitmap so we can
-        // Set the buffer size correctly.
-        if (bTrueType)
-        {
-            // Use TrueType support to get bitmap size of glyph
-            iBufSize = GetGlyphOutline(hDC, i, GGO_BITMAP, &gm, 0, NULL, &mat);
-            if (iBufSize == GDI_ERROR)
-            {
-                bSuccessOrFail = FALSE;
-                break;
-            }
-        }
+        if (unicode)
+            needed_size = GetGlyphOutlineW(hdc, glyph, GGO_BITMAP, &gm, 0, NULL, &identity);
         else
-        {
-            // Use generic GDI support to compute bitmap size of glyph
-            w = tm.tmMaxCharWidth;
-            h = tm.tmHeight;
-            if (GetTextExtentPoint32(hDC, (LPCTSTR)&i, 1, &size))
-            {
-                w = size.cx;
-                h = size.cy;
-            }
-            iBufSize = w * h;
-            // Use DWORD multiple for compatibility
-            iBufSize += 3;
-            iBufSize /= 4;
-            iBufSize *= 4;
+            needed_size = GetGlyphOutlineA(hdc, glyph, GGO_BITMAP, &gm, 0, NULL, &identity);
+
+        TRACE("Glyph: %3d / List: %d size %d\n", glyph, listBase, needed_size);
+        if (needed_size == GDI_ERROR) {
+            ret = FALSE;
+            break;
         }
 
-        // If we need to allocate Larger Buffers, then do so - but allocate
-        // An extra 50 % so that we don't do too many mallocs !
-        if (iBufSize > iCurBufSize)
-        {
-            if (bitmapBuffer)
-            {
-                HeapFree(GetProcessHeap(), 0, bitmapBuffer);
-            }
-            if (invertedBitmapBuffer)
-            {
-                HeapFree(GetProcessHeap(), 0, invertedBitmapBuffer);
-            }
-
-            iCurBufSize = iBufSize * 2;
-            bitmapBuffer = (DWORD *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, iCurBufSize);
-            invertedBitmapBuffer = (DWORD *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, iCurBufSize);
-
-            if (bitmapBuffer == NULL || invertedBitmapBuffer == NULL)
-            {
-                bSuccessOrFail = FALSE;
-                break;
-            }
+        if (needed_size > size) {
+            size = needed_size;
+            HeapFree(GetProcessHeap(), 0, bitmap);
+            HeapFree(GetProcessHeap(), 0, gl_bitmap);
+            bitmap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+            gl_bitmap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
         }
-
-        // If we fail to get the Glyph data, delete the display lists
-        // Created so far and return FALSE.
-        if (bTrueType)
-        {
-            // Use TrueType support to get bitmap of glyph
-            if (GetGlyphOutline(hDC, i, GGO_BITMAP, &gm, iBufSize, bitmapBuffer, &mat) == GDI_ERROR)
-            {
-                    bSuccessOrFail = FALSE;
-                    break;
-            }
-
-            // Setup glBitmap parameters for current font glyph
-            w  = gm.gmBlackBoxX;
-            h  = gm.gmBlackBoxY;
-            ox = gm.gmptGlyphOrigin.x;
-            oy = gm.gmptGlyphOrigin.y;
-            ix = gm.gmCellIncX;
-            iy = gm.gmCellIncY;
-        }
+        if (unicode)
+            ret = (GetGlyphOutlineW(hdc, glyph, GGO_BITMAP, &gm, size, bitmap, &identity) != GDI_ERROR);
         else
-        {
-            // Use generic GDI support to create bitmap of glyph
-            ZeroMemory(bitmapBuffer, iBufSize);
+            ret = (GetGlyphOutlineA(hdc, glyph, GGO_BITMAP, &gm, size, bitmap, &identity) != GDI_ERROR);
+        if (!ret) break;
 
-            if (i >= tm.tmFirstChar && i <= tm.tmLastChar)
-            {
-                // Only create bitmaps for actual font glyphs
-                hBitmap = CreateBitmap(w, h, 1, 1, NULL);
-                SelectObject(hDCMem, hBitmap);
-                // Make bitmap of current font glyph
-                SetRect(&rect, 0, 0, w, h);
-                DrawText(hDCMem, (LPCTSTR)&i, 1, &rect,
-                    DT_LEFT | DT_BOTTOM | DT_SINGLELINE | DT_NOCLIP);
-                // Make copy of bitmap in our local buffer
-                ZeroMemory(&bmi, sizeof(bmi));
-                bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-                bmi.bmiHeader.biWidth = w;
-                bmi.bmiHeader.biHeight = -h;
-                bmi.bmiHeader.biPlanes = 1;
-                bmi.bmiHeader.biBitCount = 1;
-                bmi.bmiHeader.biCompression = BI_RGB;
-                GetDIBits(hDCMem, hBitmap, 0, h, bitmapBuffer, &bmi, 0);
-                DeleteObject(hBitmap);
+        if (TRACE_ON(wgl)) {
+            unsigned int bitmask;
+            unsigned char *bitmap_ = bitmap;
+
+            TRACE("  - bbox: %d x %d\n", gm.gmBlackBoxX, gm.gmBlackBoxY);
+            TRACE("  - origin: (%d, %d)\n", gm.gmptGlyphOrigin.x, gm.gmptGlyphOrigin.y);
+            TRACE("  - increment: %d - %d\n", gm.gmCellIncX, gm.gmCellIncY);
+            if (needed_size != 0) {
+                TRACE("  - bitmap:\n");
+                for (height = 0; height < gm.gmBlackBoxY; height++) {
+                    TRACE("      ");
+                    for (width = 0, bitmask = 0x80; width < gm.gmBlackBoxX; width++, bitmask >>= 1) {
+                        if (bitmask == 0) {
+                            bitmap_ += 1;
+                            bitmask = 0x80;
+                        }
+                        if (*bitmap_ & bitmask)
+                            TRACE("*");
+                        else
+                            TRACE(" ");
+                    }
+                bitmap_ += (4 - ((UINT_PTR)bitmap_ & 0x03));
+                TRACE("\n");
+                }
             }
-            else 
-            {
-                // Otherwise use empty display list for non-existing glyph
-                iBufSize = 0;
+        }
+
+        /* In OpenGL, the bitmap is drawn from the bottom to the top... So we need to invert the
+        * glyph for it to be drawn properly.
+        */
+        if (needed_size != 0) {
+            width_int = (gm.gmBlackBoxX + 31) / 32;
+            for (height = 0; height < gm.gmBlackBoxY; height++) {
+                for (width = 0; width < width_int; width++) {
+                    ((int *) gl_bitmap)[(gm.gmBlackBoxY - height - 1) * width_int + width] =
+                    ((int *) bitmap)[height * width_int + width];
+                }
             }
-
-            // Setup glBitmap parameters for current font glyph
-            ox = 0;
-            oy = tm.tmDescent;
-            ix = w;
-            iy = 0;
         }
 
-        // Create an OpenGL display list.
-        glNewList((listBase + i), GL_COMPILE);
-
-        // Some fonts have no data for the space character, yet advertise
-        // a non-zero size.
-        if (0 == iBufSize)
-        {
-            glBitmap(0, 0, 0.0f, 0.0f, (GLfloat) ix, (GLfloat) iy, NULL);
+        glNewList(listBase++, GL_COMPILE);
+        if (needed_size != 0) {
+            glBitmap(gm.gmBlackBoxX, gm.gmBlackBoxY,
+                0 - gm.gmptGlyphOrigin.x, (int) gm.gmBlackBoxY - gm.gmptGlyphOrigin.y,
+                gm.gmCellIncX, gm.gmCellIncY,
+                gl_bitmap);
+        } else {
+            /* This is the case of 'empty' glyphs like the space character */
+            glBitmap(0, 0, 0, 0, gm.gmCellIncX, gm.gmCellIncY, NULL);
         }
-        else
-        {
-            // Invert the Glyph data.
-            InvertGlyphBitmap(w, h, bitmapBuffer, invertedBitmapBuffer);
-
-            // Render an OpenGL bitmap and invert the origin.
-            glBitmap(w, h,
-                (GLfloat) ox, (GLfloat) (h-oy),
-                (GLfloat) ix, (GLfloat) iy,
-                (GLubyte *) invertedBitmapBuffer);
-        }
-
-        // Close this display list.
         glEndList();
     }
 
-    if (bSuccessOrFail == FALSE)
-    {
-        DBGPRINT("DGL_UseFontBitmaps: Get glyph failed\n");
-        glDeleteLists((i+listBase), (i-first));
-    }
-
-    // Release resources used
-    DeleteObject(hFont);
-    DeleteDC(hDCMem);
-
-    if (bitmapBuffer)
-        HeapFree(GetProcessHeap(), 0, bitmapBuffer);
-
-    if (invertedBitmapBuffer)
-        HeapFree(GetProcessHeap(), 0, invertedBitmapBuffer);
-
-    return(bSuccessOrFail);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, org_alignment);
+    HeapFree(GetProcessHeap(), 0, bitmap);
+    HeapFree(GetProcessHeap(), 0, gl_bitmap);
+    return ret;
 }
 
-BOOL APIENTRY IntUseFontBitmapsA(HDC hDC, DWORD first, DWORD count, DWORD listBase)
+/***********************************************************************
+ *		wglUseFontBitmapsA (OPENGL32.@)
+ */
+BOOL WINAPI wglUseFontBitmapsA(HDC hdc, DWORD first, DWORD count, DWORD listBase)
 {
-    /* Just call IntUseFontBitmapsW for now */
-    return IntUseFontBitmapsW(hDC, first, count, listBase);
+    return wglUseFontBitmaps_common( hdc, first, count, listBase, FALSE );
 }
 
-
-
-/*****************************************************************************
-* IntUseFontOutlines
-*
-* Converts a subrange of the glyphs in a TrueType font to OpenGL display
-* lists.
-*****************************************************************************/
-
-BOOL APIENTRY IntUseFontOutlinesW(HDC hDC, DWORD first, DWORD count, DWORD listBase, FLOAT chordalDeviation,
-                                 FLOAT extrusion, INT format, GLYPHMETRICSFLOAT *glyphMetricsFloatArray)
+/***********************************************************************
+ *		wglUseFontBitmapsW (OPENGL32.@)
+ */
+BOOL WINAPI wglUseFontBitmapsW(HDC hdc, DWORD first, DWORD count, DWORD listBase)
 {
-    DWORD  glyphIndex;
-    UCHAR* glyphBuf;
-    DWORD  glyphBufSize;
-
-    /*
-    * Flush any previous OpenGL errors.  This allows us to check for
-    * new errors so they can be reported via the function return value.
-    */
-    while (glGetError() != GL_NO_ERROR);
-
-    /*
-    * Make sure that the current font can be sampled accurately.
-    */
-    hNewFont = CreateHighResolutionFont(hDC);
-
-    if (!hNewFont)
-        return FALSE;
-
-    hOldFont = SelectObject(hDC, hNewFont);
-    if (!hOldFont)
-        return FALSE;
-
-    /*
-    * Preallocate a buffer for the outline data, and track its size:
-    */
-    glyphBuf = (UCHAR*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,  glyphBufSize = 10240);
-
-    if (!glyphBuf)
-        return FALSE; /*WGL_STATUS_NOT_ENOUGH_MEMORY*/
-
-    /*
-    * Process each glyph in the given range:
-    */
-    for (glyphIndex = first; glyphIndex - first < count; ++glyphIndex)
-    {
-        GLYPHMETRICS glyphMetrics;
-        DWORD glyphSize;
-        static MAT2 matrix =
-        {
-            {0, 1},    {0, 0},
-            {0, 0},    {0, 1}
-        };
-        LPGLYPHMETRICSFLOAT glyphMetricsFloat = &glyphMetricsFloatArray[glyphIndex - first];
-
-        /*
-        * Determine how much space is needed to store the glyph's
-        * outlines.  If our glyph buffer isn't large enough,
-        * resize it.
-        */
-
-        glyphSize = GetGlyphOutline(hDC, glyphIndex, GGO_NATIVE, &glyphMetrics, 0, NULL, &matrix);
-
-        if (glyphSize == GDI_ERROR)
-            return FALSE; /*WGL_STATUS_FAILURE*/
-
-        if (glyphSize > glyphBufSize)
-        {
-            HeapFree(GetProcessHeap(), 0, glyphBuf);
-            glyphBuf = (UCHAR*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, glyphBufSize = glyphSize);
-            if (!glyphBuf)
-                return FALSE; /*WGL_STATUS_NOT_ENOUGH_MEMORY*/
-        }
-
-
-        /*
-        * Get the glyph's outlines.
-        */
-        if (GetGlyphOutline(hDC, glyphIndex, GGO_NATIVE, &glyphMetrics, glyphBufSize, glyphBuf, &matrix) == GDI_ERROR)
-        {
-            HeapFree(GetProcessHeap(), 0, glyphBuf);
-            return FALSE; /*WGL_STATUS_FAILURE*/
-        }
-
-        glyphMetricsFloat->gmfBlackBoxX =
-            (FLOAT) glyphMetrics.gmBlackBoxX * ScaleFactor;
-        glyphMetricsFloat->gmfBlackBoxY =
-            (FLOAT) glyphMetrics.gmBlackBoxY * ScaleFactor;
-        glyphMetricsFloat->gmfptGlyphOrigin.x =
-            (FLOAT) glyphMetrics.gmptGlyphOrigin.x * ScaleFactor;
-        glyphMetricsFloat->gmfptGlyphOrigin.y =
-            (FLOAT) glyphMetrics.gmptGlyphOrigin.y * ScaleFactor;
-        glyphMetricsFloat->gmfCellIncX =
-            (FLOAT) glyphMetrics.gmCellIncX * ScaleFactor;
-        glyphMetricsFloat->gmfCellIncY =
-            (FLOAT) glyphMetrics.gmCellIncY * ScaleFactor;
-
-        /*
-        * Turn the glyph into a display list:
-        */
-        if (!MakeDisplayListFromGlyph((glyphIndex - first) + listBase, glyphBuf, glyphSize, glyphMetricsFloat,
-                                       chordalDeviation + ScaleFactor, extrusion, format))
-        {
-            HeapFree(GetProcessHeap(), 0, glyphBuf);
-            return FALSE; /*WGL_STATUS_FAILURE*/
-        }
-    }
-
-    /*
-    * Clean up temporary storage and return.  If an error occurred,
-    * clear all OpenGL error flags and return FAILURE status;
-    * otherwise just return SUCCESS.
-    */
-    HeapFree(GetProcessHeap(), 0, glyphBuf);
-
-    DeleteObject(SelectObject(hDC, hOldFont));
-
-    if (glGetError() == GL_NO_ERROR)
-    {
-        return TRUE; /*WGL_STATUS_SUCCESS*/
-    }
-    else
-    {
-        while (glGetError() != GL_NO_ERROR);
-
-        return FALSE; /*WGL_STATUS_FAILURE*/
-    }
+    return wglUseFontBitmaps_common( hdc, first, count, listBase, TRUE );
 }
 
-BOOL APIENTRY IntUseFontOutlinesA(HDC hDC, DWORD first, DWORD count, DWORD listBase, FLOAT chordalDeviation,
-                                 FLOAT extrusion, INT format, GLYPHMETRICSFLOAT *glyphMetricsFloatArray)
+/* FIXME: should probably have a glu.h header */
+
+typedef struct GLUtesselator GLUtesselator;
+typedef void (WINAPI *_GLUfuncptr)(void);
+
+#define GLU_TESS_BEGIN  100100
+#define GLU_TESS_VERTEX 100101
+#define GLU_TESS_END    100102
+
+static GLUtesselator * (WINAPI *pgluNewTess)(void);
+static void (WINAPI *pgluDeleteTess)(GLUtesselator *tess);
+static void (WINAPI *pgluTessNormal)(GLUtesselator *tess, GLdouble x, GLdouble y, GLdouble z);
+static void (WINAPI *pgluTessBeginPolygon)(GLUtesselator *tess, void *polygon_data);
+static void (WINAPI *pgluTessEndPolygon)(GLUtesselator *tess);
+static void (WINAPI *pgluTessCallback)(GLUtesselator *tess, GLenum which, _GLUfuncptr fn);
+static void (WINAPI *pgluTessBeginContour)(GLUtesselator *tess);
+static void (WINAPI *pgluTessEndContour)(GLUtesselator *tess);
+static void (WINAPI *pgluTessVertex)(GLUtesselator *tess, GLdouble *location, GLvoid* data);
+
+static HMODULE load_libglu(void)
 {
-    /* Just call IntUseFontOutlinesW for now */
-    return IntUseFontOutlinesW(hDC, first, count, listBase, chordalDeviation, extrusion, format, glyphMetricsFloatArray);
+    static const WCHAR glu32W[] = {'g','l','u','3','2','.','d','l','l',0};
+    static int already_loaded;
+    static HMODULE module;
+
+    if (already_loaded) return module;
+    already_loaded = 1;
+
+    TRACE("Trying to load GLU library\n");
+    module = LoadLibraryW( glu32W );
+    if (!module)
+    {
+        WARN("Failed to load glu32\n");
+        return NULL;
+    }
+#define LOAD_FUNCPTR(f) p##f = (void *)GetProcAddress( module, #f )
+    LOAD_FUNCPTR(gluNewTess);
+    LOAD_FUNCPTR(gluDeleteTess);
+    LOAD_FUNCPTR(gluTessBeginContour);
+    LOAD_FUNCPTR(gluTessNormal);
+    LOAD_FUNCPTR(gluTessBeginPolygon);
+    LOAD_FUNCPTR(gluTessCallback);
+    LOAD_FUNCPTR(gluTessEndContour);
+    LOAD_FUNCPTR(gluTessEndPolygon);
+    LOAD_FUNCPTR(gluTessVertex);
+#undef LOAD_FUNCPTR
+    return module;
+}
+
+static void fixed_to_double(POINTFX fixed, UINT em_size, GLdouble vertex[3])
+{
+    vertex[0] = (fixed.x.value + (GLdouble)fixed.x.fract / (1 << 16)) / em_size;  
+    vertex[1] = (fixed.y.value + (GLdouble)fixed.y.fract / (1 << 16)) / em_size;  
+    vertex[2] = 0.0;
+}
+
+static void WINAPI tess_callback_vertex(GLvoid *vertex)
+{
+    GLdouble *dbl = vertex;
+    TRACE("%f, %f, %f\n", dbl[0], dbl[1], dbl[2]);
+    glVertex3dv(vertex);
+}
+
+static void WINAPI tess_callback_begin(GLenum which)
+{
+    TRACE("%d\n", which);
+    glBegin(which);
+}
+
+static void WINAPI tess_callback_end(void)
+{
+    TRACE("\n");
+    glEnd();
+}
+
+typedef struct _bezier_vector {
+    GLdouble x;
+    GLdouble y;
+} bezier_vector;
+
+static double bezier_deviation_squared(const bezier_vector *p)
+{
+    bezier_vector deviation;
+    bezier_vector vertex;
+    bezier_vector base;
+    double base_length;
+    double dot;
+
+    vertex.x = (p[0].x + p[1].x*2 + p[2].x)/4 - p[0].x;
+    vertex.y = (p[0].y + p[1].y*2 + p[2].y)/4 - p[0].y;
+
+    base.x = p[2].x - p[0].x;
+    base.y = p[2].y - p[0].y;
+
+    base_length = sqrt(base.x*base.x + base.y*base.y);
+    base.x /= base_length;
+    base.y /= base_length;
+
+    dot = base.x*vertex.x + base.y*vertex.y;
+    dot = min(max(dot, 0.0), base_length);
+    base.x *= dot;
+    base.y *= dot;
+
+    deviation.x = vertex.x-base.x;
+    deviation.y = vertex.y-base.y;
+
+    return deviation.x*deviation.x + deviation.y*deviation.y;
+}
+
+static int bezier_approximate(const bezier_vector *p, bezier_vector *points, FLOAT deviation)
+{
+    bezier_vector first_curve[3];
+    bezier_vector second_curve[3];
+    bezier_vector vertex;
+    int total_vertices;
+
+    if(bezier_deviation_squared(p) <= deviation*deviation)
+    {
+        if(points)
+            *points = p[2];
+        return 1;
+    }
+
+    vertex.x = (p[0].x + p[1].x*2 + p[2].x)/4;
+    vertex.y = (p[0].y + p[1].y*2 + p[2].y)/4;
+
+    first_curve[0] = p[0];
+    first_curve[1].x = (p[0].x + p[1].x)/2;
+    first_curve[1].y = (p[0].y + p[1].y)/2;
+    first_curve[2] = vertex;
+
+    second_curve[0] = vertex;
+    second_curve[1].x = (p[2].x + p[1].x)/2;
+    second_curve[1].y = (p[2].y + p[1].y)/2;
+    second_curve[2] = p[2];
+
+    total_vertices = bezier_approximate(first_curve, points, deviation);
+    if(points)
+        points += total_vertices;
+    total_vertices += bezier_approximate(second_curve, points, deviation);
+    return total_vertices;
+}
+
+/***********************************************************************
+ *		wglUseFontOutlines_common
+ */
+static BOOL wglUseFontOutlines_common(HDC hdc,
+                                      DWORD first,
+                                      DWORD count,
+                                      DWORD listBase,
+                                      FLOAT deviation,
+                                      FLOAT extrusion,
+                                      int format,
+                                      LPGLYPHMETRICSFLOAT lpgmf,
+                                      BOOL unicode)
+{
+    UINT glyph;
+    const MAT2 identity = {{0,1},{0,0},{0,0},{0,1}};
+    GLUtesselator *tess = NULL;
+    LOGFONTW lf;
+    HFONT old_font, unscaled_font;
+    UINT em_size = 1024;
+    RECT rc;
+
+    TRACE("(%p, %d, %d, %d, %f, %f, %d, %p, %s)\n", hdc, first, count,
+          listBase, deviation, extrusion, format, lpgmf, unicode ? "W" : "A");
+
+    if(deviation <= 0.0)
+        deviation = 1.0/em_size;
+
+    if(format == WGL_FONT_POLYGONS)
+    {
+        if (!load_libglu())
+        {
+            ERR("glu32 is required for this function but isn't available\n");
+            return FALSE;
+        }
+
+        tess = pgluNewTess();
+        if(!tess) return FALSE;
+        pgluTessCallback(tess, GLU_TESS_VERTEX, (_GLUfuncptr)tess_callback_vertex);
+        pgluTessCallback(tess, GLU_TESS_BEGIN, (_GLUfuncptr)tess_callback_begin);
+        pgluTessCallback(tess, GLU_TESS_END, tess_callback_end);
+    }
+
+    GetObjectW(GetCurrentObject(hdc, OBJ_FONT), sizeof(lf), &lf);
+    rc.left = rc.right = rc.bottom = 0;
+    rc.top = em_size;
+    DPtoLP(hdc, (POINT*)&rc, 2);
+    lf.lfHeight = -abs(rc.top - rc.bottom);
+    lf.lfOrientation = lf.lfEscapement = 0;
+    unscaled_font = CreateFontIndirectW(&lf);
+    old_font = SelectObject(hdc, unscaled_font);
+
+    for (glyph = first; glyph < first + count; glyph++)
+    {
+        DWORD needed;
+        GLYPHMETRICS gm;
+        BYTE *buf;
+        TTPOLYGONHEADER *pph;
+        TTPOLYCURVE *ppc;
+        GLdouble *vertices = NULL;
+        int vertex_total = -1;
+
+        if(unicode)
+            needed = GetGlyphOutlineW(hdc, glyph, GGO_NATIVE, &gm, 0, NULL, &identity);
+        else
+            needed = GetGlyphOutlineA(hdc, glyph, GGO_NATIVE, &gm, 0, NULL, &identity);
+
+        if(needed == GDI_ERROR)
+            goto error;
+
+        buf = HeapAlloc(GetProcessHeap(), 0, needed);
+
+        if(unicode)
+            GetGlyphOutlineW(hdc, glyph, GGO_NATIVE, &gm, needed, buf, &identity);
+        else
+            GetGlyphOutlineA(hdc, glyph, GGO_NATIVE, &gm, needed, buf, &identity);
+
+        TRACE("glyph %d\n", glyph);
+
+        if(lpgmf)
+        {
+            lpgmf->gmfBlackBoxX = (float)gm.gmBlackBoxX / em_size;
+            lpgmf->gmfBlackBoxY = (float)gm.gmBlackBoxY / em_size;
+            lpgmf->gmfptGlyphOrigin.x = (float)gm.gmptGlyphOrigin.x / em_size;
+            lpgmf->gmfptGlyphOrigin.y = (float)gm.gmptGlyphOrigin.y / em_size;
+            lpgmf->gmfCellIncX = (float)gm.gmCellIncX / em_size;
+            lpgmf->gmfCellIncY = (float)gm.gmCellIncY / em_size;
+
+            TRACE("%fx%f at %f,%f inc %f,%f\n", lpgmf->gmfBlackBoxX, lpgmf->gmfBlackBoxY,
+                  lpgmf->gmfptGlyphOrigin.x, lpgmf->gmfptGlyphOrigin.y, lpgmf->gmfCellIncX, lpgmf->gmfCellIncY); 
+            lpgmf++;
+        }
+
+        glNewList(listBase++, GL_COMPILE);
+        glFrontFace(GL_CCW);
+        if(format == WGL_FONT_POLYGONS)
+        {
+            glNormal3d(0.0, 0.0, 1.0);
+            pgluTessNormal(tess, 0, 0, 1);
+            pgluTessBeginPolygon(tess, NULL);
+        }
+
+        while(!vertices)
+        {
+            if(vertex_total != -1)
+                vertices = HeapAlloc(GetProcessHeap(), 0, vertex_total * 3 * sizeof(GLdouble));
+            vertex_total = 0;
+
+            pph = (TTPOLYGONHEADER*)buf;
+            while((BYTE*)pph < buf + needed)
+            {
+                GLdouble previous[3];
+                fixed_to_double(pph->pfxStart, em_size, previous);
+
+                if(vertices)
+                    TRACE("\tstart %d, %d\n", pph->pfxStart.x.value, pph->pfxStart.y.value);
+
+                if(format == WGL_FONT_POLYGONS)
+                    pgluTessBeginContour(tess);
+                else
+                    glBegin(GL_LINE_LOOP);
+
+                if(vertices)
+                {
+                    fixed_to_double(pph->pfxStart, em_size, vertices);
+                    if(format == WGL_FONT_POLYGONS)
+                        pgluTessVertex(tess, vertices, vertices);
+                    else
+                        glVertex3d(vertices[0], vertices[1], vertices[2]);
+                    vertices += 3;
+                }
+                vertex_total++;
+
+                ppc = (TTPOLYCURVE*)((char*)pph + sizeof(*pph));
+                while((char*)ppc < (char*)pph + pph->cb)
+                {
+                    int i, j;
+                    int num;
+
+                    switch(ppc->wType) {
+                    case TT_PRIM_LINE:
+                        for(i = 0; i < ppc->cpfx; i++)
+                        {
+                            if(vertices)
+                            {
+                                TRACE("\t\tline to %d, %d\n",
+                                      ppc->apfx[i].x.value, ppc->apfx[i].y.value);
+                                fixed_to_double(ppc->apfx[i], em_size, vertices);
+                                if(format == WGL_FONT_POLYGONS)
+                                    pgluTessVertex(tess, vertices, vertices);
+                                else
+                                    glVertex3d(vertices[0], vertices[1], vertices[2]);
+                                vertices += 3;
+                            }
+                            fixed_to_double(ppc->apfx[i], em_size, previous);
+                            vertex_total++;
+                        }
+                        break;
+
+                    case TT_PRIM_QSPLINE:
+                        for(i = 0; i < ppc->cpfx-1; i++)
+                        {
+                            bezier_vector curve[3];
+                            bezier_vector *points;
+                            GLdouble curve_vertex[3];
+
+                            if(vertices)
+                                TRACE("\t\tcurve  %d,%d %d,%d\n",
+                                      ppc->apfx[i].x.value,     ppc->apfx[i].y.value,
+                                      ppc->apfx[i + 1].x.value, ppc->apfx[i + 1].y.value);
+
+                            curve[0].x = previous[0];
+                            curve[0].y = previous[1];
+                            fixed_to_double(ppc->apfx[i], em_size, curve_vertex);
+                            curve[1].x = curve_vertex[0];
+                            curve[1].y = curve_vertex[1];
+                            fixed_to_double(ppc->apfx[i + 1], em_size, curve_vertex);
+                            curve[2].x = curve_vertex[0];
+                            curve[2].y = curve_vertex[1];
+                            if(i < ppc->cpfx-2)
+                            {
+                                curve[2].x = (curve[1].x + curve[2].x)/2;
+                                curve[2].y = (curve[1].y + curve[2].y)/2;
+                            }
+                            num = bezier_approximate(curve, NULL, deviation);
+                            points = HeapAlloc(GetProcessHeap(), 0, num*sizeof(bezier_vector));
+                            num = bezier_approximate(curve, points, deviation);
+                            vertex_total += num;
+                            if(vertices)
+                            {
+                                for(j=0; j<num; j++)
+                                {
+                                    TRACE("\t\t\tvertex at %f,%f\n", points[j].x, points[j].y);
+                                    vertices[0] = points[j].x;
+                                    vertices[1] = points[j].y;
+                                    vertices[2] = 0.0;
+                                    if(format == WGL_FONT_POLYGONS)
+                                        pgluTessVertex(tess, vertices, vertices);
+                                    else
+                                        glVertex3d(vertices[0], vertices[1], vertices[2]);
+                                    vertices += 3;
+                                }
+                            }
+                            HeapFree(GetProcessHeap(), 0, points);
+                            previous[0] = curve[2].x;
+                            previous[1] = curve[2].y;
+                        }
+                        break;
+                    default:
+                        ERR("\t\tcurve type = %d\n", ppc->wType);
+                        if(format == WGL_FONT_POLYGONS)
+                            pgluTessEndContour(tess);
+                        else
+                            glEnd();
+                        goto error_in_list;
+                    }
+
+                    ppc = (TTPOLYCURVE*)((char*)ppc + sizeof(*ppc) +
+                                         (ppc->cpfx - 1) * sizeof(POINTFX));
+                }
+                if(format == WGL_FONT_POLYGONS)
+                    pgluTessEndContour(tess);
+                else
+                    glEnd();
+                pph = (TTPOLYGONHEADER*)((char*)pph + pph->cb);
+            }
+        }
+
+error_in_list:
+        if(format == WGL_FONT_POLYGONS)
+            pgluTessEndPolygon(tess);
+        glTranslated((GLdouble)gm.gmCellIncX / em_size, (GLdouble)gm.gmCellIncY / em_size, 0.0);
+        glEndList();
+        HeapFree(GetProcessHeap(), 0, buf);
+        HeapFree(GetProcessHeap(), 0, vertices);
+    }
+
+ error:
+    DeleteObject(SelectObject(hdc, old_font));
+    if(format == WGL_FONT_POLYGONS)
+        pgluDeleteTess(tess);
+    return TRUE;
+
+}
+
+/***********************************************************************
+ *		wglUseFontOutlinesA (OPENGL32.@)
+ */
+BOOL WINAPI wglUseFontOutlinesA(HDC hdc,
+				DWORD first,
+				DWORD count,
+				DWORD listBase,
+				FLOAT deviation,
+				FLOAT extrusion,
+				int format,
+				LPGLYPHMETRICSFLOAT lpgmf)
+{
+    return wglUseFontOutlines_common(hdc, first, count, listBase, deviation, extrusion, format, lpgmf, FALSE);
+}
+
+/***********************************************************************
+ *		wglUseFontOutlinesW (OPENGL32.@)
+ */
+BOOL WINAPI wglUseFontOutlinesW(HDC hdc,
+				DWORD first,
+				DWORD count,
+				DWORD listBase,
+				FLOAT deviation,
+				FLOAT extrusion,
+				int format,
+				LPGLYPHMETRICSFLOAT lpgmf)
+{
+    return wglUseFontOutlines_common(hdc, first, count, listBase, deviation, extrusion, format, lpgmf, TRUE);
 }
