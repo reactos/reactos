@@ -103,6 +103,9 @@ typedef struct
 
     MSXML_VERSION version;
     xmlHashTablePtr cache;
+    xmlChar **uris;
+    int allocated;
+    int count;
 
     VARIANT_BOOL validateOnLoad;
     int read_only;
@@ -115,12 +118,6 @@ typedef struct
     xmlDocPtr doc;
     LONG ref;
 } cache_entry;
-
-typedef struct
-{
-    LONG index;
-    BSTR* out;
-} cache_index_data;
 
 /* datatypes lookup stuff
  * generated with help from gperf */
@@ -744,7 +741,7 @@ void schemasInit(void)
         return;
     }
     buf = LockResource(datatypes_handle);
-    datatypes_len = SizeofResource(MSXML_hInstance, datatypes_rsrc) - 1;
+    datatypes_len = SizeofResource(MSXML_hInstance, datatypes_rsrc);
 
     /* Resource is loaded as raw data,
      * need a null-terminated string */
@@ -844,7 +841,7 @@ static BOOL link_datatypes(xmlDocPtr schema)
     xmlNodePtr root, next, child;
     xmlNsPtr ns;
 
-    assert((void*)xmlGetExternalEntityLoader() == (void*)external_entity_loader);
+    assert(xmlGetExternalEntityLoader() == external_entity_loader);
     root = xmlDocGetRootElement(schema);
     if (!root)
         return FALSE;
@@ -985,6 +982,55 @@ static void cache_free(void* data, xmlChar* name /* ignored */)
     cache_entry_release((cache_entry*)data);
 }
 
+/* returns index or -1 if not found */
+static int cache_free_uri(schema_cache *cache, const xmlChar *uri)
+{
+    int i;
+
+    for (i = 0; i < cache->count; i++)
+        if (xmlStrEqual(cache->uris[i], uri))
+        {
+            heap_free(cache->uris[i]);
+            return i;
+        }
+
+    return -1;
+}
+
+static void cache_add_entry(schema_cache *cache, const xmlChar *uri, cache_entry *entry)
+{
+    int i;
+
+    /* meaning no entry found with this name */
+    if (xmlHashRemoveEntry(cache->cache, uri, cache_free))
+    {
+        if (cache->count == cache->allocated)
+        {
+            cache->allocated *= 2;
+            cache->uris = heap_realloc(cache->uris, cache->allocated*sizeof(xmlChar*));
+        }
+        i = cache->count++;
+    }
+    else
+        i = cache_free_uri(cache, uri);
+
+    cache->uris[i] = heap_strdupxmlChar(uri);
+    xmlHashAddEntry(cache->cache, uri, entry);
+}
+
+static void cache_remove_entry(schema_cache *cache, const xmlChar *uri)
+{
+    /* adjust index if entry was really removed */
+    if (xmlHashRemoveEntry(cache->cache, uri, cache_free) == 0)
+    {
+        int i = cache_free_uri(cache, uri);
+        if (i == -1) return;
+        /* shift array */
+        if (i != --cache->count)
+            memmove(&cache->uris[i], &cache->uris[i+1], (cache->count-i)*sizeof(xmlChar*));
+    }
+}
+
 /* This one adds all namespaces defined in document to a cache, without anything
    associated with uri obviously.
    Unfortunately namespace:: axis implementation in libxml2 differs from what we need,
@@ -1033,8 +1079,7 @@ HRESULT cache_from_doc_ns(IXMLDOMSchemaCollection2 *iface, xmlnode *node)
                 entry->schema = NULL;
                 entry->doc = NULL;
 
-                xmlHashRemoveEntry(This->cache, ns->href, cache_free);
-                xmlHashAddEntry(This->cache, ns->href, entry);
+                cache_add_entry(This, ns->href, entry);
             }
             pos++;
         }
@@ -1091,6 +1136,11 @@ static ULONG WINAPI schema_cache_Release(IXMLDOMSchemaCollection2* iface)
 
     if (ref == 0)
     {
+        int i;
+
+        for (i = 0; i < This->count; i++)
+            heap_free(This->uris[i]);
+        heap_free(This->uris);
         xmlHashFree(This->cache, cache_free);
         release_dispex(&This->dispex);
         heap_free(This);
@@ -1146,7 +1196,7 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
     {
         case VT_NULL:
             {
-                xmlHashRemoveEntry(This->cache, name, cache_free);
+                cache_remove_entry(This, name);
             }
             break;
 
@@ -1164,8 +1214,7 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
                     return E_FAIL;
                 }
 
-                xmlHashRemoveEntry(This->cache, name, cache_free);
-                xmlHashAddEntry(This->cache, name, entry);
+                cache_add_entry(This, name, entry);
             }
             break;
 
@@ -1214,8 +1263,7 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
                     return E_FAIL;
                 }
 
-                xmlHashRemoveEntry(This->cache, name, cache_free);
-                xmlHashAddEntry(This->cache, name, entry);
+                cache_add_entry(This, name, entry);
             }
             break;
 
@@ -1263,7 +1311,7 @@ static HRESULT WINAPI schema_cache_remove(IXMLDOMSchemaCollection2* iface, BSTR 
 
     if (This->version == MSXML6) return E_NOTIMPL;
 
-    xmlHashRemoveEntry(This->cache, name, cache_free);
+    cache_remove_entry(This, name);
     heap_free(name);
     return S_OK;
 }
@@ -1275,33 +1323,25 @@ static HRESULT WINAPI schema_cache_get_length(IXMLDOMSchemaCollection2* iface, L
 
     if (!length)
         return E_POINTER;
-    *length = xmlHashSize(This->cache);
+
+    *length = This->count;
     return S_OK;
 }
 
-static void cache_index(void* data /* ignored */, void* index, xmlChar* name)
-{
-    cache_index_data* index_data = (cache_index_data*)index;
-
-    if (index_data->index-- == 0)
-        *index_data->out = bstr_from_xmlChar(name);
-}
-
 static HRESULT WINAPI schema_cache_get_namespaceURI(IXMLDOMSchemaCollection2* iface,
-                                                    LONG index, BSTR* len)
+                                                    LONG index, BSTR* uri)
 {
     schema_cache* This = impl_from_IXMLDOMSchemaCollection2(iface);
-    cache_index_data data = {index, len};
-    TRACE("(%p)->(%i %p)\n", This, index, len);
 
-    if (!len)
+    TRACE("(%p)->(%i %p)\n", This, index, uri);
+
+    if (!uri)
         return E_POINTER;
 
-    if (index >= xmlHashSize(This->cache))
+    if (index >= This->count)
         return E_FAIL;
 
-    *len = NULL;
-    xmlHashScan(This->cache, cache_index, &data);
+    *uri = bstr_from_xmlChar(This->uris[index]);
     return S_OK;
 }
 
@@ -1313,7 +1353,7 @@ static void cache_copy(void* data, void* dest, xmlChar* name)
     if (xmlHashLookup(This->cache, name) == NULL)
     {
         cache_entry_add_ref(entry);
-        xmlHashAddEntry(This->cache, name, entry);
+        cache_add_entry(This, name, entry);
     }
 }
 
@@ -1531,6 +1571,9 @@ HRESULT SchemaCache_create(MSXML_VERSION version, IUnknown* outer, void** obj)
 
     This->IXMLDOMSchemaCollection2_iface.lpVtbl = &XMLDOMSchemaCollection2Vtbl;
     This->cache = xmlHashCreate(DEFAULT_HASHTABLE_SIZE);
+    This->allocated = 10;
+    This->count = 0;
+    This->uris = heap_alloc(This->allocated*sizeof(xmlChar*));
     This->ref = 1;
     This->version = version;
     This->validateOnLoad = VARIANT_TRUE;

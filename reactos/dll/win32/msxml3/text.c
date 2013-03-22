@@ -29,6 +29,7 @@
 //#include <stdarg.h>
 #ifdef HAVE_LIBXML2
 # include <libxml/parser.h>
+# include <libxml/parserInternals.h>
 //# include <libxml/xmlerror.h>
 #endif
 
@@ -56,6 +57,11 @@ typedef struct _domtext
 static inline domtext *impl_from_IXMLDOMText( IXMLDOMText *iface )
 {
     return CONTAINING_RECORD(iface, domtext, IXMLDOMText_iface);
+}
+
+static void domtext_reset_noenc(domtext *This)
+{
+    This->node.node->name = NULL;
 }
 
 static HRESULT WINAPI domtext_QueryInterface(
@@ -185,6 +191,7 @@ static HRESULT WINAPI domtext_put_nodeValue(
 
     TRACE("(%p)->(%s)\n", This, debugstr_variant(&value));
 
+    domtext_reset_noenc(This);
     return node_put_value(&This->node, &value);
 }
 
@@ -374,6 +381,7 @@ static HRESULT WINAPI domtext_put_text(
 {
     domtext *This = impl_from_IXMLDOMText( iface );
     TRACE("(%p)->(%s)\n", This, debugstr_w(p));
+    domtext_reset_noenc(This);
     return node_put_text( &This->node, p );
 }
 
@@ -611,7 +619,14 @@ static HRESULT WINAPI domtext_put_data(
     BSTR data)
 {
     domtext *This = impl_from_IXMLDOMText( iface );
+    static WCHAR rnW[] = {'\r','\n',0};
+
     TRACE("(%p)->(%s)\n", This, debugstr_w(data));
+
+    if (data && !strcmpW(rnW, data))
+        This->node.node->name = xmlStringTextNoenc;
+    else
+        domtext_reset_noenc(This);
     return node_set_content(&This->node, data);
 }
 

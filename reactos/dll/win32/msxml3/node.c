@@ -285,36 +285,48 @@ static HRESULT node_set_content_escaped(xmlnode *This, LPCWSTR value)
 
 HRESULT node_put_value(xmlnode *This, VARIANT *value)
 {
-    VARIANT string_value;
     HRESULT hr;
 
-    VariantInit(&string_value);
-    hr = VariantChangeType(&string_value, value, 0, VT_BSTR);
-    if(FAILED(hr)) {
-        WARN("Couldn't convert to VT_BSTR\n");
-        return hr;
-    }
+    if (V_VT(value) != VT_BSTR)
+    {
+        VARIANT string_value;
 
-    hr = node_set_content(This, V_BSTR(&string_value));
-    VariantClear(&string_value);
+        VariantInit(&string_value);
+        hr = VariantChangeType(&string_value, value, 0, VT_BSTR);
+        if(FAILED(hr)) {
+            WARN("Couldn't convert to VT_BSTR\n");
+            return hr;
+        }
+
+        hr = node_set_content(This, V_BSTR(&string_value));
+        VariantClear(&string_value);
+    }
+    else
+        hr = node_set_content(This, V_BSTR(value));
 
     return hr;
 }
 
 HRESULT node_put_value_escaped(xmlnode *This, VARIANT *value)
 {
-    VARIANT string_value;
     HRESULT hr;
 
-    VariantInit(&string_value);
-    hr = VariantChangeType(&string_value, value, 0, VT_BSTR);
-    if(FAILED(hr)) {
-        WARN("Couldn't convert to VT_BSTR\n");
-        return hr;
-    }
+    if (V_VT(value) != VT_BSTR)
+    {
+       VARIANT string_value;
 
-    hr = node_set_content_escaped(This, V_BSTR(&string_value));
-    VariantClear(&string_value);
+        VariantInit(&string_value);
+        hr = VariantChangeType(&string_value, value, 0, VT_BSTR);
+        if(FAILED(hr)) {
+            WARN("Couldn't convert to VT_BSTR\n");
+            return hr;
+        }
+
+        hr = node_set_content_escaped(This, V_BSTR(&string_value));
+        VariantClear(&string_value);
+    }
+    else
+        hr = node_set_content_escaped(This, V_BSTR(value));
 
     return hr;
 }
@@ -377,11 +389,45 @@ HRESULT node_get_next_sibling(xmlnode *This, IXMLDOMNode **ret)
     return get_node(This, "next", This->node->next, ret);
 }
 
+static int node_get_inst_cnt(xmlNodePtr node)
+{
+    int ret = *(LONG *)&node->_private;
+    xmlNodePtr child;
+
+    /* add attribute counts */
+    if (node->type == XML_ELEMENT_NODE)
+    {
+        xmlAttrPtr prop = node->properties;
+
+        while (prop)
+        {
+            ret += node_get_inst_cnt((xmlNodePtr)prop);
+            prop = prop->next;
+        }
+    }
+
+    /* add children counts */
+    child = node->children;
+    while (child)
+    {
+        ret += node_get_inst_cnt(child);
+        child = child->next;
+    }
+
+    return ret;
+}
+
+int xmlnode_get_inst_cnt(xmlnode *node)
+{
+    return node_get_inst_cnt(node->node);
+}
+
 HRESULT node_insert_before(xmlnode *This, IXMLDOMNode *new_child, const VARIANT *ref_child,
         IXMLDOMNode **ret)
 {
     IXMLDOMNode *before = NULL;
     xmlnode *node_obj;
+    int refcount = 0;
     xmlDocPtr doc;
     HRESULT hr;
 
@@ -417,6 +463,8 @@ HRESULT node_insert_before(xmlnode *This, IXMLDOMNode *new_child, const VARIANT 
         if(xmldoc_remove_orphan(node_obj->node->doc, node_obj->node) != S_OK)
             WARN("%p is not an orphan of %p\n", node_obj->node, node_obj->node->doc);
 
+    refcount = xmlnode_get_inst_cnt(node_obj);
+
     if(before)
     {
         xmlnode *before_node_obj = get_node_obj(before);
@@ -429,10 +477,16 @@ HRESULT node_insert_before(xmlnode *This, IXMLDOMNode *new_child, const VARIANT 
             hr = IXMLDOMNode_removeChild(node_obj->parent, node_obj->iface, NULL);
             if (hr == S_OK) xmldoc_remove_orphan(node_obj->node->doc, node_obj->node);
         }
+
         doc = node_obj->node->doc;
-        xmldoc_add_ref(before_node_obj->node->doc);
+
+        /* refs count including subtree */
+        if (doc != before_node_obj->node->doc)
+            refcount = xmlnode_get_inst_cnt(node_obj);
+
+        if (refcount) xmldoc_add_refs(before_node_obj->node->doc, refcount);
         xmlAddPrevSibling(before_node_obj->node, node_obj->node);
-        xmldoc_release(doc);
+        if (refcount) xmldoc_release_refs(doc, refcount);
         node_obj->parent = This->parent;
     }
     else
@@ -444,11 +498,15 @@ HRESULT node_insert_before(xmlnode *This, IXMLDOMNode *new_child, const VARIANT 
             if (hr == S_OK) xmldoc_remove_orphan(node_obj->node->doc, node_obj->node);
         }
         doc = node_obj->node->doc;
-        xmldoc_add_ref(This->node->doc);
+
+        if (doc != This->node->doc)
+            refcount = xmlnode_get_inst_cnt(node_obj);
+
+        if (refcount) xmldoc_add_refs(This->node->doc, refcount);
         /* xmlAddChild doesn't unlink node from previous parent */
         xmlUnlinkNode(node_obj->node);
         xmlAddChild(This->node, node_obj->node);
-        xmldoc_release(doc);
+        if (refcount) xmldoc_release_refs(doc, refcount);
         node_obj->parent = This->iface;
     }
 
@@ -468,6 +526,7 @@ HRESULT node_replace_child(xmlnode *This, IXMLDOMNode *newChild, IXMLDOMNode *ol
     xmlnode *old_child, *new_child;
     xmlDocPtr leaving_doc;
     xmlNode *my_ancestor;
+    int refcount = 0;
 
     /* Do not believe any documentation telling that newChild == NULL
        means removal. It does certainly *not* apply to msxml3! */
@@ -505,9 +564,13 @@ HRESULT node_replace_child(xmlnode *This, IXMLDOMNode *newChild, IXMLDOMNode *ol
             WARN("%p is not an orphan of %p\n", new_child->node, new_child->node->doc);
 
     leaving_doc = new_child->node->doc;
-    xmldoc_add_ref(old_child->node->doc);
+
+    if (leaving_doc != old_child->node->doc)
+        refcount = xmlnode_get_inst_cnt(new_child);
+
+    if (refcount) xmldoc_add_refs(old_child->node->doc, refcount);
     xmlReplaceNode(old_child->node, new_child->node);
-    xmldoc_release(leaving_doc);
+    if (refcount) xmldoc_release_refs(leaving_doc, refcount);
     new_child->parent = old_child->parent;
     old_child->parent = NULL;
 
@@ -598,7 +661,7 @@ HRESULT node_clone(xmlnode *This, VARIANT_BOOL deep, IXMLDOMNode **cloneNode)
     clone = xmlCopyNode(This->node, deep ? 1 : 2);
     if (clone)
     {
-        clone->doc = This->node->doc;
+        xmlSetTreeDoc(clone, This->node->doc);
         xmldoc_add_orphan(clone->doc, clone);
 
         node = create_node(clone);
@@ -836,6 +899,53 @@ HRESULT node_get_xml(xmlnode *This, BOOL ensure_eol, BSTR *ret)
     return *ret ? S_OK : E_OUTOFMEMORY;
 }
 
+static void htmldtd_dumpcontent(xmlOutputBufferPtr buf, xmlDocPtr doc)
+{
+    xmlDtdPtr cur = doc->intSubset;
+
+    xmlOutputBufferWriteString(buf, "<!DOCTYPE ");
+    xmlOutputBufferWriteString(buf, (const char *)cur->name);
+    if (cur->ExternalID)
+    {
+        xmlOutputBufferWriteString(buf, " PUBLIC ");
+        xmlBufferWriteQuotedString(buf->buffer, cur->ExternalID);
+        if (cur->SystemID)
+        {
+            xmlOutputBufferWriteString(buf, " ");
+            xmlBufferWriteQuotedString(buf->buffer, cur->SystemID);
+	}
+    }
+    else if (cur->SystemID)
+    {
+        xmlOutputBufferWriteString(buf, " SYSTEM ");
+        xmlBufferWriteQuotedString(buf->buffer, cur->SystemID);
+    }
+    xmlOutputBufferWriteString(buf, ">\n");
+}
+
+static void htmldoc_dumpcontent(xmlOutputBufferPtr buf, xmlDocPtr doc)
+{
+    xmlElementType type;
+
+    /* force HTML output */
+    type = doc->type;
+    doc->type = XML_HTML_DOCUMENT_NODE;
+    if (doc->intSubset)
+        htmldtd_dumpcontent(buf, doc);
+    if (doc->children)
+    {
+        xmlNodePtr cur = doc->children;
+
+        while (cur)
+        {
+            htmlNodeDumpFormatOutput(buf, doc, cur, NULL, 1);
+            cur = cur->next;
+        }
+
+    }
+    doc->type = type;
+}
+
 HRESULT node_transform_node(const xmlnode *This, IXMLDOMNode *stylesheet, BSTR *p)
 {
 #ifdef SONAME_LIBXSLT
@@ -863,7 +973,7 @@ HRESULT node_transform_node(const xmlnode *This, IXMLDOMNode *stylesheet, BSTR *
                 xmlOutputBufferPtr output = xmlAllocOutputBuffer(NULL);
                 if (output)
                 {
-                    htmlDocContentDumpOutput(output, result->doc, NULL);
+                    htmldoc_dumpcontent(output, result->doc);
                     content = xmlBufferContent(output->buffer);
                     *p = bstr_from_xmlChar(content);
                     xmlOutputBufferClose(output);
@@ -973,17 +1083,36 @@ HRESULT node_get_base_name(xmlnode *This, BSTR *name)
     return S_OK;
 }
 
+/* _private field holds a number of COM instances spawned from this libxml2 node */
+static void xmlnode_add_ref(xmlNodePtr node)
+{
+    if (node->type == XML_DOCUMENT_NODE) return;
+    InterlockedIncrement((LONG*)&node->_private);
+}
+
+static void xmlnode_release(xmlNodePtr node)
+{
+    if (node->type == XML_DOCUMENT_NODE) return;
+    InterlockedDecrement((LONG*)&node->_private);
+}
+
 void destroy_xmlnode(xmlnode *This)
 {
     if(This->node)
+    {
+        xmlnode_release(This->node);
         xmldoc_release(This->node->doc);
+    }
     release_dispex(&This->dispex);
 }
 
 void init_xmlnode(xmlnode *This, xmlNodePtr node, IXMLDOMNode *node_iface, dispex_static_data_t *dispex_data)
 {
     if(node)
-        xmldoc_add_ref( node->doc );
+    {
+        xmlnode_add_ref(node);
+        xmldoc_add_ref(node->doc);
+    }
 
     This->node = node;
     This->iface = node_iface;

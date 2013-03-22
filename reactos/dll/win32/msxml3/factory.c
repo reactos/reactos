@@ -101,7 +101,7 @@ static const struct clsid_version_t clsid_versions_table[] =
 
 static MSXML_VERSION get_msxml_version(const GUID *clsid)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < sizeof(clsid_versions_table)/sizeof(struct clsid_version_t); i++)
         if (IsEqualGUID(clsid, clsid_versions_table[i].clsid))

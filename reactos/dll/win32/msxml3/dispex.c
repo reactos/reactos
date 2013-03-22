@@ -601,6 +601,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
     hres = IUnknown_QueryInterface(This->outer, get_riid_from_tid(data->funcs[n].tid), (void**)&unk);
     if(FAILED(hres)) {
         ERR("Could not get iface: %08x\n", hres);
+        ITypeInfo_Release(ti);
         return E_FAIL;
     }
 

@@ -135,9 +135,6 @@ struct domdoc
     bsc_t *bsc;
     HRESULT error;
 
-    /* IPersistStream */
-    IStream *stream;
-
     /* IObjectWithSite*/
     IUnknown *site;
 
@@ -559,19 +556,28 @@ void xmldoc_init(xmlDocPtr doc, MSXML_VERSION version)
     priv_from_xmlDocPtr(doc)->properties = create_properties(version);
 }
 
-LONG xmldoc_add_ref(xmlDocPtr doc)
+LONG xmldoc_add_refs(xmlDocPtr doc, LONG refs)
 {
-    LONG ref = InterlockedIncrement(&priv_from_xmlDocPtr(doc)->refs);
+    LONG ref = InterlockedExchangeAdd(&priv_from_xmlDocPtr(doc)->refs, refs) + refs;
     TRACE("(%p)->(%d)\n", doc, ref);
     return ref;
 }
 
-LONG xmldoc_release(xmlDocPtr doc)
+LONG xmldoc_add_ref(xmlDocPtr doc)
+{
+    return xmldoc_add_refs(doc, 1);
+}
+
+LONG xmldoc_release_refs(xmlDocPtr doc, LONG refs)
 {
     xmldoc_priv *priv = priv_from_xmlDocPtr(doc);
-    LONG ref = InterlockedDecrement(&priv->refs);
+    LONG ref = InterlockedExchangeAdd(&priv->refs, -refs) - refs;
     TRACE("(%p)->(%d)\n", doc, ref);
-    if(ref == 0)
+
+    if (ref < 0)
+        WARN("negative refcount, expect troubles\n");
+
+    if (ref == 0)
     {
         orphan_entry *orphan, *orphan2;
         TRACE("freeing docptr %p\n", doc);
@@ -588,6 +594,11 @@ LONG xmldoc_release(xmlDocPtr doc)
     }
 
     return ref;
+}
+
+LONG xmldoc_release(xmlDocPtr doc)
+{
+    return xmldoc_release_refs(doc, 1);
 }
 
 HRESULT xmldoc_add_orphan(xmlDocPtr doc, xmlNodePtr node)
@@ -624,7 +635,7 @@ HRESULT xmldoc_remove_orphan(xmlDocPtr doc, xmlNodePtr node)
 
 static inline xmlDocPtr get_doc( domdoc *This )
 {
-    return (xmlDocPtr)This->node.node;
+    return This->node.node->doc;
 }
 
 static HRESULT attach_xmldoc(domdoc *This, xmlDocPtr xml )
@@ -721,46 +732,42 @@ static HRESULT WINAPI PersistStreamInit_IsDirty(
     return S_FALSE;
 }
 
-static HRESULT WINAPI PersistStreamInit_Load(
-    IPersistStreamInit *iface, LPSTREAM pStm)
+static HRESULT domdoc_load_from_stream(domdoc *doc, ISequentialStream *stream)
 {
-    domdoc *This = impl_from_IPersistStreamInit(iface);
-    HRESULT hr;
-    HGLOBAL hglobal;
     DWORD read, written, len;
-    BYTE buf[4096];
-    char *ptr;
     xmlDocPtr xmldoc = NULL;
+    IStream *hstream;
+    HGLOBAL hglobal;
+    BYTE buf[4096];
+    HRESULT hr;
+    char *ptr;
 
-    TRACE("(%p)->(%p)\n", This, pStm);
-
-    if (!pStm)
-        return E_INVALIDARG;
-
-    hr = CreateStreamOnHGlobal(NULL, TRUE, &This->stream);
+    hstream = NULL;
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &hstream);
     if (FAILED(hr))
         return hr;
 
     do
     {
-        IStream_Read(pStm, buf, sizeof(buf), &read);
-        hr = IStream_Write(This->stream, buf, read, &written);
+        ISequentialStream_Read(stream, buf, sizeof(buf), &read);
+        hr = IStream_Write(hstream, buf, read, &written);
     } while(SUCCEEDED(hr) && written != 0 && read != 0);
 
     if (FAILED(hr))
     {
-        ERR("Failed to copy stream\n");
+        ERR("failed to copy stream 0x%08x\n", hr);
+        IStream_Release(hstream);
         return hr;
     }
 
-    hr = GetHGlobalFromStream(This->stream, &hglobal);
+    hr = GetHGlobalFromStream(hstream, &hglobal);
     if (FAILED(hr))
         return hr;
 
     len = GlobalSize(hglobal);
     ptr = GlobalLock(hglobal);
-    if (len != 0)
-        xmldoc = doparse(This, ptr, len, XML_CHAR_ENCODING_NONE);
+    if (len)
+        xmldoc = doparse(doc, ptr, len, XML_CHAR_ENCODING_NONE);
     GlobalUnlock(hglobal);
 
     if (!xmldoc)
@@ -771,7 +778,19 @@ static HRESULT WINAPI PersistStreamInit_Load(
 
     xmldoc->_private = create_priv();
 
-    return attach_xmldoc(This, xmldoc);
+    return attach_xmldoc(doc, xmldoc);
+}
+
+static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, IStream *stream)
+{
+    domdoc *This = impl_from_IPersistStreamInit(iface);
+
+    TRACE("(%p)->(%p)\n", This, stream);
+
+    if (!stream)
+        return E_INVALIDARG;
+
+    return domdoc_load_from_stream(This, (ISequentialStream*)stream);
 }
 
 static HRESULT WINAPI PersistStreamInit_Save(
@@ -801,7 +820,7 @@ static HRESULT WINAPI PersistStreamInit_GetSizeMax(
     IPersistStreamInit *iface, ULARGE_INTEGER *pcbSize)
 {
     domdoc *This = impl_from_IPersistStreamInit(iface);
-    TRACE("(%p)->(%p): stub!\n", This, pcbSize);
+    TRACE("(%p)->(%p)\n", This, pcbSize);
     return E_NOTIMPL;
 }
 
@@ -914,8 +933,6 @@ static ULONG WINAPI domdoc_Release( IXMLDOMDocument3 *iface )
         if (This->site)
             IUnknown_Release( This->site );
         destroy_xmlnode(&This->node);
-        if (This->stream)
-            IStream_Release(This->stream);
 
         for (eid = 0; eid < EVENTID_LAST; eid++)
             if (This->events[eid]) IDispatch_Release(This->events[eid]);
@@ -1115,12 +1132,26 @@ static HRESULT WINAPI domdoc_insertBefore(
     IXMLDOMNode** outNewChild )
 {
     domdoc *This = impl_from_IXMLDOMDocument3( iface );
+    DOMNodeType type;
+    HRESULT hr;
 
     TRACE("(%p)->(%p %s %p)\n", This, newChild, debugstr_variant(&refChild), outNewChild);
 
-    return node_insert_before(&This->node, newChild, &refChild, outNewChild);
-}
+    hr = IXMLDOMNode_get_nodeType(newChild, &type);
+    if (hr != S_OK) return hr;
 
+    TRACE("new node type %d\n", type);
+    switch (type)
+    {
+        case NODE_ATTRIBUTE:
+        case NODE_DOCUMENT:
+        case NODE_CDATA_SECTION:
+            if (outNewChild) *outNewChild = NULL;
+            return E_FAIL;
+        default:
+            return node_insert_before(&This->node, newChild, &refChild, outNewChild);
+    }
+}
 
 static HRESULT WINAPI domdoc_replaceChild(
     IXMLDOMDocument3 *iface,
@@ -1510,7 +1541,9 @@ static HRESULT WINAPI domdoc_put_documentElement(
     domdoc *This = impl_from_IXMLDOMDocument3( iface );
     IXMLDOMNode *elementNode;
     xmlNodePtr oldRoot;
+    xmlDocPtr old_doc;
     xmlnode *xmlNode;
+    int refcount = 0;
     HRESULT hr;
 
     TRACE("(%p)->(%p)\n", This, DOMElement);
@@ -1526,7 +1559,14 @@ static HRESULT WINAPI domdoc_put_documentElement(
         if(xmldoc_remove_orphan(xmlNode->node->doc, xmlNode->node) != S_OK)
             WARN("%p is not an orphan of %p\n", xmlNode->node->doc, xmlNode->node);
 
+    old_doc = xmlNode->node->doc;
+    if (old_doc != get_doc(This))
+        refcount = xmlnode_get_inst_cnt(xmlNode);
+
+    /* old root is still orphaned by its document, update refcount from new root */
+    if (refcount) xmldoc_add_refs(get_doc(This), refcount);
     oldRoot = xmlDocSetRootElement( get_doc(This), xmlNode->node);
+    if (refcount) xmldoc_release_refs(old_doc, refcount);
     IXMLDOMNode_Release( elementNode );
 
     if(oldRoot)
@@ -2029,8 +2069,6 @@ static HRESULT WINAPI domdoc_load(
     domdoc *This = impl_from_IXMLDOMDocument3( iface );
     LPWSTR filename = NULL;
     HRESULT hr = S_FALSE;
-    IXMLDOMDocument3 *pNewDoc = NULL;
-    IStream *pStream = NULL;
     xmlDocPtr xmldoc;
 
     TRACE("(%p)->(%s)\n", This, debugstr_variant(&source));
@@ -2096,13 +2134,18 @@ static HRESULT WINAPI domdoc_load(
         }
         break;
     case VT_UNKNOWN:
+    {
+        ISequentialStream *stream = NULL;
+        IXMLDOMDocument3 *newdoc = NULL;
+
         if (!V_UNKNOWN(&source)) return E_INVALIDARG;
-        hr = IUnknown_QueryInterface(V_UNKNOWN(&source), &IID_IXMLDOMDocument3, (void**)&pNewDoc);
+
+        hr = IUnknown_QueryInterface(V_UNKNOWN(&source), &IID_IXMLDOMDocument3, (void**)&newdoc);
         if(hr == S_OK)
         {
-            if(pNewDoc)
+            if(newdoc)
             {
-                domdoc *newDoc = impl_from_IXMLDOMDocument3( pNewDoc );
+                domdoc *newDoc = impl_from_IXMLDOMDocument3( newdoc );
 
                 xmldoc = xmlCopyDoc(get_doc(newDoc), 1);
                 xmldoc->_private = create_priv();
@@ -2114,40 +2157,25 @@ static HRESULT WINAPI domdoc_load(
                 return hr;
             }
         }
-        hr = IUnknown_QueryInterface(V_UNKNOWN(&source), &IID_IStream, (void**)&pStream);
-        if(hr == S_OK)
-        {
-            IPersistStream *pDocStream;
-            hr = IXMLDOMDocument3_QueryInterface(iface, &IID_IPersistStream, (void**)&pDocStream);
-            if(hr == S_OK)
-            {
-                hr = IPersistStream_Load(pDocStream, pStream);
-                IStream_Release(pStream);
-                if(hr == S_OK)
-                {
-                    *isSuccessful = VARIANT_TRUE;
 
-                    TRACE("Using IStream to load Document\n");
-                    return S_OK;
-                }
-                else
-                {
-                    ERR("xmldoc_IPersistStream_Load failed (%d)\n", hr);
-                }
-            }
-            else
-            {
-                ERR("QueryInterface IID_IPersistStream failed (%d)\n", hr);
-            }
-        }
-        else
+        hr = IUnknown_QueryInterface(V_UNKNOWN(&source), &IID_IStream, (void**)&stream);
+        if (FAILED(hr))
+            hr = IUnknown_QueryInterface(V_UNKNOWN(&source), &IID_ISequentialStream, (void**)&stream);
+
+        if (hr == S_OK)
         {
-            /* ISequentialStream */
-            FIXME("Unknown type not supported (%d) (%p)(%p)\n", hr, pNewDoc, V_UNKNOWN(&source)->lpVtbl);
+            hr = domdoc_load_from_stream(This, stream);
+            if (hr == S_OK)
+                *isSuccessful = VARIANT_TRUE;
+            ISequentialStream_Release(stream);
+            return hr;
         }
+
+        FIXME("unsupported IUnknown type (0x%08x) (%p)\n", hr, V_UNKNOWN(&source)->lpVtbl);
         break;
-     default:
-            FIXME("VT type not supported (%d)\n", V_VT(&source));
+    }
+    default:
+        FIXME("VT type not supported (%d)\n", V_VT(&source));
     }
 
     if ( filename )
@@ -3251,12 +3279,43 @@ static HRESULT WINAPI ConnectionPoint_GetConnectionPointContainer(IConnectionPoi
     return S_OK;
 }
 
-static HRESULT WINAPI ConnectionPoint_Advise(IConnectionPoint *iface, IUnknown *pUnkSink,
-                                             DWORD *pdwCookie)
+static HRESULT WINAPI ConnectionPoint_Advise(IConnectionPoint *iface, IUnknown *unk_sink,
+                                             DWORD *cookie)
 {
     ConnectionPoint *This = impl_from_IConnectionPoint(iface);
-    FIXME("(%p)->(%p %p): stub\n", This, pUnkSink, pdwCookie);
-    return E_NOTIMPL;
+    IUnknown *sink;
+    HRESULT hr;
+    DWORD i;
+
+    TRACE("(%p)->(%p %p)\n", This, unk_sink, cookie);
+
+    hr = IUnknown_QueryInterface(unk_sink, This->iid, (void**)&sink);
+    if(FAILED(hr) && !IsEqualGUID(&IID_IPropertyNotifySink, This->iid))
+        hr = IUnknown_QueryInterface(unk_sink, &IID_IDispatch, (void**)&sink);
+    if(FAILED(hr))
+        return CONNECT_E_CANNOTCONNECT;
+
+    if(This->sinks)
+    {
+        for (i = 0; i < This->sinks_size; i++)
+            if (!This->sinks[i].unk)
+                break;
+
+        if (i == This->sinks_size)
+            This->sinks = heap_realloc(This->sinks,(++This->sinks_size)*sizeof(*This->sinks));
+    }
+    else
+    {
+        This->sinks = heap_alloc(sizeof(*This->sinks));
+        This->sinks_size = 1;
+        i = 0;
+    }
+
+    This->sinks[i].unk = sink;
+    if (cookie)
+        *cookie = i+1;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ConnectionPoint_Unadvise(IConnectionPoint *iface, DWORD cookie)
@@ -3466,7 +3525,6 @@ HRESULT get_domdoc_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument3 **document)
     doc->resolving = 0;
     doc->properties = properties_from_xmlDocPtr(xmldoc);
     doc->error = S_OK;
-    doc->stream = NULL;
     doc->site = NULL;
     doc->safeopt = 0;
     doc->bsc = NULL;
