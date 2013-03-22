@@ -28,6 +28,7 @@ cpp_quote("#undef SetPort")
 cpp_quote("#endif")
 
 interface IInternetProtocolSink;
+interface IUri;
 
 /*****************************************************************************
  * IInternet interface
@@ -354,7 +355,6 @@ interface IBindStatusCallbackEx : IBindStatusCallback
  * IAuthenticate interface
  */
 [
-    local,
     object,
     uuid(79EAC9D0-BAf9-11CE-8C82-00AA004BA90B),
     pointer_default(unique)
@@ -538,6 +538,39 @@ interface IWindowForBindingUI : IUnknown
     HRESULT GetWindow(
         [in] REFGUID rguidReason,
         [out] HWND *phwnd);
+}
+
+/*****************************************************************************
+ * ICodeInstall interface
+ */
+[
+    local,
+    object,
+    uuid(79eac9d1-baf9-11ce-8c82-00aa004ba90b),
+    pointer_default(unique)
+]
+interface ICodeInstall : IWindowForBindingUI
+{
+    typedef [unique] ICodeInstall *LPCODEINSTALL;
+
+    typedef enum {
+        CIP_DISK_FULL,
+        CIP_ACCESS_DENIED,
+        CIP_NEWER_VERSION_EXISTS,
+        CIP_OLDER_VERSION_EXISTS,
+        CIP_NAME_CONFLICT,
+        CIP_TRUST_VERIFICATION_COMPONENT_MISSING,
+        CIP_EXE_SELF_REGISTERATION_TIMEOUT,
+        CIP_UNSAFE_TO_ABORT,
+        CIP_NEED_REBOOT,
+        CIP_NEED_REBOOT_UI_PERMISSION
+    } CIP_STATUS;
+
+    HRESULT OnCodeInstallProblem(
+            [in] ULONG ulStatusCode,
+            [in, unique] LPCWSTR szDestination,
+            [in, unique] LPCWSTR szSource,
+            [in] DWORD dwReserved);
 }
 
 /*****************************************************************************
@@ -880,7 +913,8 @@ interface IInternetProtocolInfo : IUnknown
         QUERY_USES_CACHE,
         QUERY_IS_SECURE,
         QUERY_IS_SAFE,
-        QUERY_USES_HISTORYFOLDER
+        QUERY_USES_HISTORYFOLDER,
+        QUERY_IS_CACHED_AND_USABLE_OFFLINE
     } QUERYOPTION;
 
     HRESULT ParseUrl(
@@ -1067,6 +1101,76 @@ cpp_quote("#define MAX_SIZE_SECURITY_ID 512")
 }
 
 /*****************************************************************************
+ * IInternetSecurityManagerEx interface
+ */
+cpp_quote("#define SID_SInternetSecurityManagerEx IID_IInternetSecurityManagerEx")
+
+[
+    object,
+    uuid(f164edf1-cc7c-4f0d-9a94-34222625C393),
+    pointer_default(unique)
+]
+interface IInternetSecurityManagerEx : IInternetSecurityManager
+{
+    HRESULT ProcessUrlActionEx(
+        [in] LPCWSTR pwszUrl,
+        [in] DWORD dwAction,
+        [out] BYTE *pPolicy,
+        [in] DWORD cbPolicy,
+        [in] BYTE *pContext,
+        [in] DWORD cbContext,
+        [in] DWORD dwFlags,
+        [in] DWORD dwReserved,
+        [out] DWORD *pdwOutFlags);
+}
+
+/*****************************************************************************
+ * IInternetSecurityManagerEx2 interface
+ */
+cpp_quote("#define SID_SInternetSecurityManagerEx2 IID_IInternetSecurityManagerEx2")
+
+[
+    object,
+    uuid(f1e50292-a795-4117-8e09-2b560a72ac60),
+    pointer_default(unique)
+]
+interface IInternetSecurityManagerEx2 : IInternetSecurityManagerEx
+{
+    HRESULT MapUrlToZoneEx2(
+        [in] IUri *pUri,
+        [out] DWORD *pdwZone,
+        [in] DWORD dwFlags,
+        [out] LPWSTR *ppwszMappedUrl,
+        [out] DWORD *pdwOutFlags);
+
+    HRESULT ProcessUrlActionEx2(
+        [in] IUri *pUri,
+        [in] DWORD dwAction,
+        [out] BYTE *pPolicy,
+        [in] DWORD cbPolicy,
+        [in] BYTE *pContext,
+        [in] DWORD cbContext,
+        [in] DWORD dwFlags,
+        [in] DWORD_PTR dwReserved,
+        [out] DWORD *pdwOutFlags);
+
+    HRESULT GetSecurityIdEx2(
+        [in] IUri *pUri,
+        [out] BYTE *pbSecurityId,
+        [in, out] DWORD *pcbSecurityId,
+        [in] DWORD_PTR dwReserved);
+
+    HRESULT QueryCustomPolicyEx2(
+        [in] IUri *pUri,
+        [in] REFGUID guidKey,
+        [out] BYTE **ppPolicy,
+        [out] DWORD *pcbPolicy,
+        [in] BYTE *pContext,
+        [in] DWORD cbContext,
+        [in] DWORD_PTR dwReserved);
+}
+
+/*****************************************************************************
  * IInternetHostSecurityManager interface
  */
 cpp_quote("#define SID_SInternetHostSecurityManager IID_IInternetHostSecurityManager")
@@ -1190,6 +1294,18 @@ cpp_quote("#define URLPOLICY_CHANNEL_SOFTDIST_PROHIBIT     0x00010000")
 cpp_quote("#define URLPOLICY_CHANNEL_SOFTDIST_PRECACHE     0x00020000")
 cpp_quote("#define URLPOLICY_CHANNEL_SOFTDIST_AUTOINSTALL  0x00030000")
 cpp_quote("#define URLACTION_CHANNEL_SOFTDIST_MAX          0x00001eff")
+
+cpp_quote("#define URLACTION_BEHAVIOR_MIN           0x00002000")
+cpp_quote("#define URLACTION_BEHAVIOR_RUN           0x00002000")
+cpp_quote("#define URLPOLICY_BEHAVIOR_CHECK_LIST    0x00010000")
+
+cpp_quote("#define URLACTION_FEATURE_MIN                        0x00002100")
+cpp_quote("#define URLACTION_FEATURE_MIME_SNIFFING              0x00002100")
+cpp_quote("#define URLACTION_FEATURE_ZONE_ELEVATION             0x00002101")
+cpp_quote("#define URLACTION_FEATURE_WINDOW_RESTRICTIONS        0x00002102")
+cpp_quote("#define URLACTION_FEATURE_SCRIPT_STATUS_BAR          0x00002103")
+cpp_quote("#define URLACTION_FEATURE_FORCE_ADDR_AND_STATUS      0x00002104")
+cpp_quote("#define URLACTION_FEATURE_BLOCK_INPUT_PROMPTS        0x00002105")
 
 cpp_quote("#define URLPOLICY_ALLOW     0x00")
 cpp_quote("#define URLPOLICY_QUERY     0x01")
@@ -1544,7 +1660,6 @@ typedef struct _tagPROTOCOLFILTERDATA {
  * IUri interface
  */
 [
-    local,
     object,
     uuid(a39ee748-6a27-4817-a6f2-13914bef5890),
     pointer_default(unique)
@@ -1883,6 +1998,30 @@ interface IInternetProtocolEx : IInternetProtocol
         [in] HANDLE *dwReserved);
 }
 
+/*****************************************************************************
+ * IGetBindHandle interface
+ */
+[
+    local,
+    object,
+    uuid(AF0FF408-129D-4b20-91F0-02BD23D88352),
+    pointer_default(unique)
+]
+interface IGetBindHandle : IUnknown
+{
+    typedef [unique] IGetBindHandle *LPGETBINDHANDLE;
+
+    typedef enum {
+        BINDHANDLETYPES_APPCACHE    = 0x00000000,
+        BINDHANDLETYPES_DEPENDENCY  = 0x00000001,
+        BINDHANDLETYPES_COUNT
+    } BINDHANDLETYPES;
+
+    HRESULT GetBindHandle(
+            [in] BINDHANDLETYPES enumRequestedHandle,
+            [out] HANDLE *pRetHandle);
+}
+
 cpp_quote("#define CONFIRMSAFETYACTION_LOADOBJECT  0x00000001")
 
 struct CONFIRMSAFETY
@@ -1977,8 +2116,11 @@ cpp_quote("HRESULT WINAPI CoInternetParseUrl(LPCWSTR,PARSEACTION,DWORD,LPWSTR,DW
 cpp_quote("HRESULT WINAPI CoInternetParseIUri(IUri*,PARSEACTION,DWORD,LPWSTR,DWORD,DWORD*,DWORD_PTR);")
 cpp_quote("HRESULT WINAPI CoInternetQueryInfo(LPCWSTR,QUERYOPTION,DWORD,LPVOID,DWORD,DWORD*,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetSetFeatureEnabled(INTERNETFEATURELIST,DWORD,BOOL);")
+cpp_quote("HRESULT WINAPI CoInternetIsFeatureEnabled(INTERNETFEATURELIST,DWORD dwFlags);")
+cpp_quote("HRESULT WINAPI CoInternetIsFeatureEnabledForUrl(INTERNETFEATURELIST,DWORD,LPCWSTR,IInternetSecurityManager*);")
 cpp_quote("HRESULT WINAPI CoInternetGetSecurityUrl(LPCWSTR,LPWSTR*,PSUACTION,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetGetSecurityUrlEx(IUri*,IUri**,PSUACTION,DWORD_PTR);")
+cpp_quote("HRESULT WINAPI AsyncInstallDistributionUnit(LPCWSTR,LPCWSTR,LPCWSTR,DWORD,DWORD,LPCWSTR,IBindCtx*,LPVOID,DWORD);")
 cpp_quote("HRESULT WINAPI CreateFormatEnumerator(UINT,FORMATETC*,IEnumFORMATETC**);")
 cpp_quote("HRESULT WINAPI GetSoftwareUpdateInfo( LPCWSTR szDistUnit, LPSOFTDISTINFO psdi);")
 cpp_quote("HRESULT WINAPI FaultInIEFeature(HWND,uCLSSPEC*,QUERYCONTEXT*,DWORD);")
@@ -1996,6 +2138,7 @@ cpp_quote("HRESULT WINAPI RegisterFormatEnumerator(LPBC,IEnumFORMATETC*,DWORD);"
 cpp_quote("HRESULT WINAPI RevokeFormatEnumerator(LPBC,IEnumFORMATETC*);")
 cpp_quote("HRESULT WINAPI RevokeBindStatusCallback(LPBC,IBindStatusCallback*);")
 cpp_quote("HRESULT WINAPI CopyStgMedium(const STGMEDIUM*,STGMEDIUM*);")
+cpp_quote("HRESULT WINAPI CopyBindInfo(const BINDINFO*,BINDINFO*);")
 cpp_quote("void WINAPI ReleaseBindInfo(BINDINFO*);")
 cpp_quote("HRESULT WINAPI UrlMkGetSessionOption(DWORD,LPVOID,DWORD,DWORD*,DWORD);")
 cpp_quote("HRESULT WINAPI UrlMkSetSessionOption(DWORD,LPVOID,DWORD,DWORD);")
@@ -2017,3 +2160,4 @@ cpp_quote("#define IsLoggingEnabled WINELIB_NAME_AW(IsLoggingEnabled)")
 cpp_quote("#define MKSYS_URLMONIKER 6")
 cpp_quote("#define URL_MK_LEGACY            0")
 cpp_quote("#define URL_MK_UNIFORM           1")
+cpp_quote("#define URL_MK_NO_CANONICALIZE   2")

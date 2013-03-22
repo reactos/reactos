@@ -48,7 +48,7 @@ static HRESULT WINAPI ProxyBindStatusCallback_QueryInterface(IBindStatusCallback
         IsEqualGUID(&IID_IUnknown, riid))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IBindStatusCallback_AddRef(iface);
         return S_OK;
     }
 

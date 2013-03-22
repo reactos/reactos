@@ -10,7 +10,7 @@
 @ stdcall BindAsyncMoniker(ptr long ptr ptr ptr)
 @ stdcall CoGetClassObjectFromURL(ptr wstr long long wstr ptr long ptr ptr ptr)
 @ stub CoInstall
-@ stdcall CoInternetCombineUrl(wstr wstr long wstr long ptr long)
+@ stdcall CoInternetCombineUrl(wstr wstr long ptr long ptr long)
 @ stdcall CoInternetCombineUrlEx(ptr wstr long ptr long)
 @ stdcall CoInternetCompareUrl(wstr wstr long)
 @ stdcall CoInternetCombineIUri(ptr ptr long ptr long)
@@ -21,12 +21,14 @@
 @ stdcall CoInternetGetSecurityUrlEx(ptr ptr long long)
 @ stdcall CoInternetGetSession(long ptr long)
 @ stdcall CoInternetIsFeatureEnabled(long long)
+@ stdcall CoInternetIsFeatureEnabledForUrl(long long wstr ptr)
+@ stdcall CoInternetIsFeatureZoneElevationEnabled(wstr wstr ptr long)
 @ stdcall CoInternetParseUrl(wstr long long wstr long ptr long)
 @ stdcall CoInternetParseIUri(ptr long long wstr long ptr long)
 @ stdcall CoInternetQueryInfo(ptr long long ptr long ptr long)
 @ stdcall CoInternetSetFeatureEnabled(long long long)
-@ stub CompareSecurityIds
-@ stub CopyBindInfo
+@ stdcall CompareSecurityIds(ptr long ptr long long)
+@ stdcall CopyBindInfo(ptr ptr)
 @ stdcall CopyStgMedium(ptr ptr)
 @ stdcall CreateAsyncBindCtx(long ptr ptr ptr)
 @ stdcall CreateAsyncBindCtxEx(ptr long ptr ptr ptr long)
@@ -36,6 +38,7 @@
 @ stdcall CreateUriWithFragment(wstr wstr long long ptr)
 @ stdcall CreateURLMoniker(ptr wstr ptr)
 @ stdcall CreateURLMonikerEx(ptr wstr ptr long)
+@ stdcall CreateURLMonikerEx2(ptr ptr ptr long)
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllInstall(long wstr)
@@ -69,7 +72,7 @@
 @ stdcall RegisterBindStatusCallback(ptr ptr ptr long)
 @ stdcall RegisterFormatEnumerator(ptr ptr long)
 @ stub RegisterMediaTypeClass
-@ stub RegisterMediaTypes
+@ stdcall RegisterMediaTypes(long ptr ptr)
 @ stdcall ReleaseBindInfo(ptr)
 @ stdcall RevokeBindStatusCallback(ptr ptr)
 @ stdcall RevokeFormatEnumerator(ptr ptr)
@@ -92,5 +95,17 @@
 @ stub WriteHitLogging
 @ stub ZonesReInit
 
-410 stdcall @(long long) URLMON_410
-423 stdcall @(long long long long) URLMON_423
+111 stdcall @(wstr) IsProtectedModeURL
+328 stdcall @(ptr ptr) propsys.VariantCompare
+329 stdcall @(ptr ptr) propsys.VariantToGUID
+331 stdcall @(ptr long ptr) propsys.InitPropVariantFromBuffer
+335 stdcall @(ptr long ptr) propsys.InitVariantFromBuffer
+350 stdcall @(ptr ptr) propsys.PropVariantToGUID
+362 stdcall @(ptr ptr) propsys.InitVariantFromGUIDAsString
+363 stdcall @(long long ptr) propsys.InitVariantFromResource
+387 stdcall @(ptr long) propsys.VariantToUInt32WithDefault
+410 stdcall @(long long) LogSqmBits
+423 stdcall @(long long long long) LogSqmUXCommandOffsetInternal
+444 stdcall @(long long long) MapUriToBrowserEmulationState
+445 stdcall @(long long) MapBrowserEmulationModeToUserAgent
+455 stdcall @() FlushUrlmonZonesCache
