@@ -4,7 +4,7 @@
  * Copyright 2005 Mike McCormack for CodeWeavers
  * Copyright 2007-2008 Alistair Leslie-Hughes
  * Copyright 2010-2011 Adam Martinson for CodeWeavers
- * Copyright 2010-2012 Nikolay Sivov for CodeWeavers
+ * Copyright 2010-2013 Nikolay Sivov for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,49 +22,32 @@
  */
 
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 
 #include <stdio.h>
 #include <assert.h>
 
-#include "windows.h"
+//#include "windows.h"
 
-#include "msxml2.h"
-#include "msxml2did.h"
-#include "ole2.h"
-#include "dispex.h"
+#include <wine/test.h>
 
-#include "initguid.h"
-#include "objsafe.h"
-#include "mshtml.h"
-
-#include "wine/test.h"
+#include <winnls.h>
+#include <ole2.h>
+#include <msxml2.h>
+#include <msxml2did.h>
+#include <dispex.h>
+#include <objsafe.h>
+//#include "initguid.h"
 
 /* undef the #define in msxml2 so that we can access all versions */
 #undef CLSID_DOMDocument
 
-DEFINE_GUID(SID_SContainerDispatch, 0xb722be00, 0x4e68, 0x101b, 0xa2, 0xbc, 0x00, 0xaa, 0x00, 0x40, 0x47, 0x70);
-DEFINE_GUID(SID_UnknownSID, 0x75dd09cb, 0x6c40, 0x11d5, 0x85, 0x43, 0x00, 0xc0, 0x4f, 0xa0, 0xfb, 0xa3);
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
-
-#define DEFINE_EXPECT(func) \
-    static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
-
-#define SET_EXPECT(func) \
-    expect_ ## func = TRUE
-
-#define CHECK_EXPECT2(func) \
-    do { \
-        ok(expect_ ##func, "unexpected call " #func "\n"); \
-        called_ ## func = TRUE; \
-    }while(0)
-
-#define CHECK_CALLED(func) \
-    do { \
-        ok(called_ ## func, "expected " #func "\n"); \
-        expect_ ## func = called_ ## func = FALSE; \
-    }while(0)
 
 static const char *debugstr_guid(REFIID riid)
 {
@@ -190,1103 +173,6 @@ static IDispatch* create_dispevent(void)
 
     return (IDispatch*)&event->IDispatch_iface;
 }
-
-/* object site */
-DEFINE_EXPECT(site_qi_IServiceProvider);
-DEFINE_EXPECT(site_qi_IXMLDOMDocument);
-DEFINE_EXPECT(site_qi_IOleClientSite);
-
-DEFINE_EXPECT(sp_queryservice_SID_SBindHost);
-DEFINE_EXPECT(sp_queryservice_SID_SContainerDispatch_htmldoc2);
-DEFINE_EXPECT(sp_queryservice_SID_secmgr_htmldoc2);
-DEFINE_EXPECT(sp_queryservice_SID_secmgr_xmldomdoc);
-DEFINE_EXPECT(sp_queryservice_SID_secmgr_secmgr);
-
-DEFINE_EXPECT(htmldoc2_get_all);
-DEFINE_EXPECT(htmldoc2_get_url);
-DEFINE_EXPECT(collection_get_length);
-
-typedef struct
-{
-    IServiceProvider IServiceProvider_iface;
-} testprov_t;
-
-testprov_t testprov;
-
-static HRESULT WINAPI site_QueryInterface(IUnknown *iface, REFIID riid, void **ppvObject)
-{
-    *ppvObject = NULL;
-
-    if (IsEqualGUID(riid, &IID_IServiceProvider))
-        CHECK_EXPECT2(site_qi_IServiceProvider);
-
-    if (IsEqualGUID(riid, &IID_IXMLDOMDocument))
-        CHECK_EXPECT2(site_qi_IXMLDOMDocument);
-
-    if (IsEqualGUID(riid, &IID_IOleClientSite))
-        CHECK_EXPECT2(site_qi_IOleClientSite);
-
-    if (IsEqualGUID(riid, &IID_IUnknown))
-         *ppvObject = iface;
-    else if (IsEqualGUID(riid, &IID_IServiceProvider))
-         *ppvObject = &testprov.IServiceProvider_iface;
-
-    if (*ppvObject) IUnknown_AddRef(iface);
-
-    return *ppvObject ? S_OK : E_NOINTERFACE;
-}
-
-static ULONG WINAPI site_AddRef(IUnknown *iface)
-{
-    return 2;
-}
-
-static ULONG WINAPI site_Release(IUnknown *iface)
-{
-    return 1;
-}
-
-static const IUnknownVtbl testsiteVtbl =
-{
-    site_QueryInterface,
-    site_AddRef,
-    site_Release
-};
-
-typedef struct
-{
-    IUnknown IUnknown_iface;
-} testsite_t;
-
-static testsite_t testsite = { { &testsiteVtbl } };
-
-/* test IHTMLElementCollection */
-static HRESULT WINAPI htmlecoll_QueryInterface(IHTMLElementCollection *iface, REFIID riid, void **ppvObject)
-{
-    ok(0, "unexpected call\n");
-    *ppvObject = NULL;
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI htmlecoll_AddRef(IHTMLElementCollection *iface)
-{
-    return 2;
-}
-
-static ULONG WINAPI htmlecoll_Release(IHTMLElementCollection *iface)
-{
-    return 1;
-}
-
-static HRESULT WINAPI htmlecoll_GetTypeInfoCount(IHTMLElementCollection *iface, UINT *pctinfo)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmlecoll_GetTypeInfo(IHTMLElementCollection *iface, UINT iTInfo,
-                                                LCID lcid, ITypeInfo **ppTInfo)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmlecoll_GetIDsOfNames(IHTMLElementCollection *iface, REFIID riid,
-                                                LPOLESTR *rgszNames, UINT cNames,
-                                                LCID lcid, DISPID *rgDispId)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmlecoll_Invoke(IHTMLElementCollection *iface, DISPID dispIdMember,
-                            REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
-                            VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmlecoll_toString(IHTMLElementCollection *iface, BSTR *String)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmlecoll_put_length(IHTMLElementCollection *iface, LONG v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmlecoll_get_length(IHTMLElementCollection *iface, LONG *v)
-{
-    CHECK_EXPECT2(collection_get_length);
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmlecoll_get__newEnum(IHTMLElementCollection *iface, IUnknown **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmlecoll_item(IHTMLElementCollection *iface, VARIANT name, VARIANT index, IDispatch **pdisp)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmlecoll_tags(IHTMLElementCollection *iface, VARIANT tagName, IDispatch **pdisp)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static const IHTMLElementCollectionVtbl TestHTMLECollectionVtbl = {
-    htmlecoll_QueryInterface,
-    htmlecoll_AddRef,
-    htmlecoll_Release,
-    htmlecoll_GetTypeInfoCount,
-    htmlecoll_GetTypeInfo,
-    htmlecoll_GetIDsOfNames,
-    htmlecoll_Invoke,
-
-    htmlecoll_toString,
-    htmlecoll_put_length,
-    htmlecoll_get_length,
-    htmlecoll_get__newEnum,
-    htmlecoll_item,
-    htmlecoll_tags
-};
-
-typedef struct
-{
-    IHTMLElementCollection IHTMLElementCollection_iface;
-} testhtmlecoll_t;
-
-static testhtmlecoll_t htmlecoll = { { &TestHTMLECollectionVtbl } };
-
-/* test IHTMLDocument2 */
-static HRESULT WINAPI htmldoc2_QueryInterface(IHTMLDocument2 *iface, REFIID riid, void **ppvObject)
-{
-   trace("\n");
-   *ppvObject = NULL;
-   return E_NOINTERFACE;
-}
-
-static ULONG WINAPI htmldoc2_AddRef(IHTMLDocument2 *iface)
-{
-    return 2;
-}
-
-static ULONG WINAPI htmldoc2_Release(IHTMLDocument2 *iface)
-{
-    return 1;
-}
-
-static HRESULT WINAPI htmldoc2_GetTypeInfoCount(IHTMLDocument2 *iface, UINT *pctinfo)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_GetTypeInfo(IHTMLDocument2 *iface, UINT iTInfo,
-                                                LCID lcid, ITypeInfo **ppTInfo)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_GetIDsOfNames(IHTMLDocument2 *iface, REFIID riid,
-                                                LPOLESTR *rgszNames, UINT cNames,
-                                                LCID lcid, DISPID *rgDispId)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_Invoke(IHTMLDocument2 *iface, DISPID dispIdMember,
-                            REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
-                            VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_Script(IHTMLDocument2 *iface, IDispatch **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_all(IHTMLDocument2 *iface, IHTMLElementCollection **p)
-{
-    CHECK_EXPECT2(htmldoc2_get_all);
-    *p = &htmlecoll.IHTMLElementCollection_iface;
-    return S_OK;
-}
-
-static HRESULT WINAPI htmldoc2_get_body(IHTMLDocument2 *iface, IHTMLElement **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_activeElement(IHTMLDocument2 *iface, IHTMLElement **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_images(IHTMLDocument2 *iface, IHTMLElementCollection **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_applets(IHTMLDocument2 *iface, IHTMLElementCollection **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_links(IHTMLDocument2 *iface, IHTMLElementCollection **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_forms(IHTMLDocument2 *iface, IHTMLElementCollection **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_anchors(IHTMLDocument2 *iface, IHTMLElementCollection **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_title(IHTMLDocument2 *iface, BSTR v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_title(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_scripts(IHTMLDocument2 *iface, IHTMLElementCollection **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_designMode(IHTMLDocument2 *iface, BSTR v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_designMode(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_selection(IHTMLDocument2 *iface, IHTMLSelectionObject **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_readyState(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_frames(IHTMLDocument2 *iface, IHTMLFramesCollection2 **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_embeds(IHTMLDocument2 *iface, IHTMLElementCollection **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_plugins(IHTMLDocument2 *iface, IHTMLElementCollection **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_alinkColor(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_alinkColor(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_bgColor(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_bgColor(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_fgColor(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_fgColor(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_linkColor(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_linkColor(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_vlinkColor(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_vlinkColor(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_referrer(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_location(IHTMLDocument2 *iface, IHTMLLocation **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_lastModified(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_URL(IHTMLDocument2 *iface, BSTR v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_URL(IHTMLDocument2 *iface, BSTR *p)
-{
-    CHECK_EXPECT2(htmldoc2_get_url);
-    *p = SysAllocString(NULL);
-    return S_OK;
-}
-
-static HRESULT WINAPI htmldoc2_put_domain(IHTMLDocument2 *iface, BSTR v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_domain(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_cookie(IHTMLDocument2 *iface, BSTR v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_cookie(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_expando(IHTMLDocument2 *iface, VARIANT_BOOL v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_expando(IHTMLDocument2 *iface, VARIANT_BOOL *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_charset(IHTMLDocument2 *iface, BSTR v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_charset(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_defaultCharset(IHTMLDocument2 *iface, BSTR v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_defaultCharset(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_mimeType(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_fileSize(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_fileCreatedDate(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_fileModifiedDate(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_fileUpdatedDate(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_security(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_protocol(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_nameProp(IHTMLDocument2 *iface, BSTR *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_write(IHTMLDocument2 *iface, SAFEARRAY *psarray)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_writeln(IHTMLDocument2 *iface, SAFEARRAY *psarray)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_open(IHTMLDocument2 *iface, BSTR url, VARIANT name,
-                        VARIANT features, VARIANT replace, IDispatch **pomWindowResult)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_close(IHTMLDocument2 *iface)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_clear(IHTMLDocument2 *iface)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_queryCommandSupported(IHTMLDocument2 *iface, BSTR cmdID,
-                                                        VARIANT_BOOL *pfRet)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_queryCommandEnabled(IHTMLDocument2 *iface, BSTR cmdID,
-                                                        VARIANT_BOOL *pfRet)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_queryCommandState(IHTMLDocument2 *iface, BSTR cmdID,
-                                                        VARIANT_BOOL *pfRet)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_queryCommandIndeterm(IHTMLDocument2 *iface, BSTR cmdID,
-                                                        VARIANT_BOOL *pfRet)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_queryCommandText(IHTMLDocument2 *iface, BSTR cmdID,
-                                                        BSTR *pfRet)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_queryCommandValue(IHTMLDocument2 *iface, BSTR cmdID,
-                                                        VARIANT *pfRet)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_execCommand(IHTMLDocument2 *iface, BSTR cmdID,
-                                VARIANT_BOOL showUI, VARIANT value, VARIANT_BOOL *pfRet)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_execCommandShowHelp(IHTMLDocument2 *iface, BSTR cmdID,
-                                                        VARIANT_BOOL *pfRet)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_createElement(IHTMLDocument2 *iface, BSTR eTag,
-                                                 IHTMLElement **newElem)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onhelp(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onhelp(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onclick(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onclick(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_ondblclick(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_ondblclick(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onkeyup(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onkeyup(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onkeydown(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onkeydown(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onkeypress(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onkeypress(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onmouseup(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onmouseup(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onmousedown(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onmousedown(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onmousemove(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onmousemove(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onmouseout(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onmouseout(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onmouseover(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onmouseover(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onreadystatechange(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onreadystatechange(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onafterupdate(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onafterupdate(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onrowexit(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onrowexit(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onrowenter(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onrowenter(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_ondragstart(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_ondragstart(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onselectstart(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onselectstart(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_elementFromPoint(IHTMLDocument2 *iface, LONG x, LONG y,
-                                                        IHTMLElement **elementHit)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_parentWindow(IHTMLDocument2 *iface, IHTMLWindow2 **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_styleSheets(IHTMLDocument2 *iface,
-                                                   IHTMLStyleSheetsCollection **p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onbeforeupdate(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onbeforeupdate(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_put_onerrorupdate(IHTMLDocument2 *iface, VARIANT v)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_get_onerrorupdate(IHTMLDocument2 *iface, VARIANT *p)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_toString(IHTMLDocument2 *iface, BSTR *String)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI htmldoc2_createStyleSheet(IHTMLDocument2 *iface, BSTR bstrHref,
-                                            LONG lIndex, IHTMLStyleSheet **ppnewStyleSheet)
-{
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
-}
-
-static const IHTMLDocument2Vtbl TestHTMLDocumentVtbl = {
-    htmldoc2_QueryInterface,
-    htmldoc2_AddRef,
-    htmldoc2_Release,
-    htmldoc2_GetTypeInfoCount,
-    htmldoc2_GetTypeInfo,
-    htmldoc2_GetIDsOfNames,
-    htmldoc2_Invoke,
-    htmldoc2_get_Script,
-    htmldoc2_get_all,
-    htmldoc2_get_body,
-    htmldoc2_get_activeElement,
-    htmldoc2_get_images,
-    htmldoc2_get_applets,
-    htmldoc2_get_links,
-    htmldoc2_get_forms,
-    htmldoc2_get_anchors,
-    htmldoc2_put_title,
-    htmldoc2_get_title,
-    htmldoc2_get_scripts,
-    htmldoc2_put_designMode,
-    htmldoc2_get_designMode,
-    htmldoc2_get_selection,
-    htmldoc2_get_readyState,
-    htmldoc2_get_frames,
-    htmldoc2_get_embeds,
-    htmldoc2_get_plugins,
-    htmldoc2_put_alinkColor,
-    htmldoc2_get_alinkColor,
-    htmldoc2_put_bgColor,
-    htmldoc2_get_bgColor,
-    htmldoc2_put_fgColor,
-    htmldoc2_get_fgColor,
-    htmldoc2_put_linkColor,
-    htmldoc2_get_linkColor,
-    htmldoc2_put_vlinkColor,
-    htmldoc2_get_vlinkColor,
-    htmldoc2_get_referrer,
-    htmldoc2_get_location,
-    htmldoc2_get_lastModified,
-    htmldoc2_put_URL,
-    htmldoc2_get_URL,
-    htmldoc2_put_domain,
-    htmldoc2_get_domain,
-    htmldoc2_put_cookie,
-    htmldoc2_get_cookie,
-    htmldoc2_put_expando,
-    htmldoc2_get_expando,
-    htmldoc2_put_charset,
-    htmldoc2_get_charset,
-    htmldoc2_put_defaultCharset,
-    htmldoc2_get_defaultCharset,
-    htmldoc2_get_mimeType,
-    htmldoc2_get_fileSize,
-    htmldoc2_get_fileCreatedDate,
-    htmldoc2_get_fileModifiedDate,
-    htmldoc2_get_fileUpdatedDate,
-    htmldoc2_get_security,
-    htmldoc2_get_protocol,
-    htmldoc2_get_nameProp,
-    htmldoc2_write,
-    htmldoc2_writeln,
-    htmldoc2_open,
-    htmldoc2_close,
-    htmldoc2_clear,
-    htmldoc2_queryCommandSupported,
-    htmldoc2_queryCommandEnabled,
-    htmldoc2_queryCommandState,
-    htmldoc2_queryCommandIndeterm,
-    htmldoc2_queryCommandText,
-    htmldoc2_queryCommandValue,
-    htmldoc2_execCommand,
-    htmldoc2_execCommandShowHelp,
-    htmldoc2_createElement,
-    htmldoc2_put_onhelp,
-    htmldoc2_get_onhelp,
-    htmldoc2_put_onclick,
-    htmldoc2_get_onclick,
-    htmldoc2_put_ondblclick,
-    htmldoc2_get_ondblclick,
-    htmldoc2_put_onkeyup,
-    htmldoc2_get_onkeyup,
-    htmldoc2_put_onkeydown,
-    htmldoc2_get_onkeydown,
-    htmldoc2_put_onkeypress,
-    htmldoc2_get_onkeypress,
-    htmldoc2_put_onmouseup,
-    htmldoc2_get_onmouseup,
-    htmldoc2_put_onmousedown,
-    htmldoc2_get_onmousedown,
-    htmldoc2_put_onmousemove,
-    htmldoc2_get_onmousemove,
-    htmldoc2_put_onmouseout,
-    htmldoc2_get_onmouseout,
-    htmldoc2_put_onmouseover,
-    htmldoc2_get_onmouseover,
-    htmldoc2_put_onreadystatechange,
-    htmldoc2_get_onreadystatechange,
-    htmldoc2_put_onafterupdate,
-    htmldoc2_get_onafterupdate,
-    htmldoc2_put_onrowexit,
-    htmldoc2_get_onrowexit,
-    htmldoc2_put_onrowenter,
-    htmldoc2_get_onrowenter,
-    htmldoc2_put_ondragstart,
-    htmldoc2_get_ondragstart,
-    htmldoc2_put_onselectstart,
-    htmldoc2_get_onselectstart,
-    htmldoc2_elementFromPoint,
-    htmldoc2_get_parentWindow,
-    htmldoc2_get_styleSheets,
-    htmldoc2_put_onbeforeupdate,
-    htmldoc2_get_onbeforeupdate,
-    htmldoc2_put_onerrorupdate,
-    htmldoc2_get_onerrorupdate,
-    htmldoc2_toString,
-    htmldoc2_createStyleSheet
-};
-
-typedef struct
-{
-    IHTMLDocument2 IHTMLDocument2_iface;
-} testhtmldoc2_t;
-
-static testhtmldoc2_t htmldoc2 = { { &TestHTMLDocumentVtbl } };
-
-static HRESULT WINAPI sp_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppvObject)
-{
-    *ppvObject = NULL;
-
-    if (IsEqualGUID(riid, &IID_IUnknown) ||
-        IsEqualGUID(riid, &IID_IServiceProvider))
-    {
-        *ppvObject = iface;
-        IServiceProvider_AddRef(iface);
-        return S_OK;
-    }
-
-    ok(0, "unexpected query interface: %s\n", debugstr_guid(riid));
-
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI sp_AddRef(IServiceProvider *iface)
-{
-    return 2;
-}
-
-static ULONG WINAPI sp_Release(IServiceProvider *iface)
-{
-    return 1;
-}
-
-static HRESULT WINAPI sp_QueryService(IServiceProvider *iface, REFGUID service, REFIID riid, void **obj)
-{
-    *obj = NULL;
-
-    if (IsEqualGUID(service, &SID_SBindHost) &&
-        IsEqualGUID(riid, &IID_IBindHost))
-    {
-        CHECK_EXPECT2(sp_queryservice_SID_SBindHost);
-    }
-    else if (IsEqualGUID(service, &SID_SContainerDispatch) &&
-             IsEqualGUID(riid, &IID_IHTMLDocument2))
-    {
-        CHECK_EXPECT2(sp_queryservice_SID_SContainerDispatch_htmldoc2);
-    }
-    else if (IsEqualGUID(service, &SID_SInternetHostSecurityManager) &&
-             IsEqualGUID(riid, &IID_IHTMLDocument2))
-    {
-        CHECK_EXPECT2(sp_queryservice_SID_secmgr_htmldoc2);
-        *obj = &htmldoc2.IHTMLDocument2_iface;
-        return S_OK;
-    }
-    else if (IsEqualGUID(service, &SID_SInternetHostSecurityManager) &&
-             IsEqualGUID(riid, &IID_IXMLDOMDocument))
-    {
-        CHECK_EXPECT2(sp_queryservice_SID_secmgr_xmldomdoc);
-    }
-    else if (IsEqualGUID(service, &SID_SInternetHostSecurityManager) &&
-             IsEqualGUID(riid, &IID_IInternetHostSecurityManager))
-    {
-        CHECK_EXPECT2(sp_queryservice_SID_secmgr_secmgr);
-    }
-    else if (IsEqualGUID(service, &SID_UnknownSID) &&
-             IsEqualGUID(riid, &IID_IStream))
-    {
-        /* FIXME: unidentified service id */
-    }
-    else
-        ok(0, "unexpected request: sid %s, riid %s\n", debugstr_guid(service), debugstr_guid(riid));
-
-    return E_NOTIMPL;
-}
-
-static const IServiceProviderVtbl testprovVtbl =
-{
-    sp_QueryInterface,
-    sp_AddRef,
-    sp_Release,
-    sp_QueryService
-};
-
-testprov_t testprov = { { &testprovVtbl } };
 
 /* IStream */
 static HRESULT WINAPI istream_QueryInterface(IStream *iface, REFIID riid, void **ppvObject)
@@ -2879,16 +1765,20 @@ static void test_persiststreaminit(void)
 {
     IXMLDOMDocument *doc;
     IPersistStreamInit *streaminit;
+    ULARGE_INTEGER size;
     HRESULT hr;
 
     doc = create_document(&IID_IXMLDOMDocument);
     if (!doc) return;
 
     hr = IXMLDOMDocument_QueryInterface(doc, &IID_IPersistStreamInit, (void**)&streaminit);
-    ok( hr == S_OK, "failed with 0x%08x\n", hr );
+    ok(hr == S_OK, "got 0x%08x\n", hr);
 
     hr = IPersistStreamInit_InitNew(streaminit);
-    ok( hr == S_OK, "failed with 0x%08x\n", hr );
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IPersistStreamInit_GetSizeMax(streaminit, &size);
+    ok(hr == E_NOTIMPL, "got 0x%08x\n", hr);
 
     IXMLDOMDocument_Release(doc);
 }
@@ -4941,386 +3831,6 @@ static void _test_IObjectSafety_common(unsigned line, IObjectSafety *safety)
              "got %08x\n", supported);
 }
 
-static void test_XMLHTTP(void)
-{
-    static const char bodyA[] = "mode=Test";
-    static const char urlA[] = "http://crossover.codeweavers.com/posttest.php";
-    static const char xmltestA[] = "http://crossover.codeweavers.com/xmltest.xml";
-    static const WCHAR wszExpectedResponse[] = {'F','A','I','L','E','D',0};
-    static const CHAR xmltestbodyA[] = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<a>TEST</a>\n";
-
-    IXMLHttpRequest *xhr;
-    IObjectSafety *safety;
-    IObjectWithSite *obj_site, *obj_site2;
-    BSTR bstrResponse, str, str1;
-    VARIANT varbody, varbody_ref;
-    VARIANT dummy;
-    VARIANT async;
-    LONG state, status, bound;
-    IDispatch *event;
-    void *ptr;
-    HRESULT hr;
-    HGLOBAL g;
-
-    hr = CoCreateInstance(&CLSID_XMLHTTPRequest, NULL, CLSCTX_INPROC_SERVER,
-        &IID_IXMLHttpRequest, (void**)&xhr);
-    if (FAILED(hr))
-    {
-        win_skip("IXMLHTTPRequest is not available (0x%08x)\n", hr);
-        return;
-    }
-
-    VariantInit(&dummy);
-    V_VT(&dummy) = VT_ERROR;
-    V_ERROR(&dummy) = DISP_E_MEMBERNOTFOUND;
-    VariantInit(&async);
-    V_VT(&async) = VT_BOOL;
-    V_BOOL(&async) = VARIANT_FALSE;
-
-    hr = IXMLHttpRequest_put_onreadystatechange(xhr, NULL);
-    EXPECT_HR(hr, S_OK);
-
-    hr = IXMLHttpRequest_abort(xhr);
-    EXPECT_HR(hr, S_OK);
-
-    V_VT(&varbody) = VT_I2;
-    V_I2(&varbody) = 1;
-    hr = IXMLHttpRequest_get_responseBody(xhr, &varbody);
-    EXPECT_HR(hr, E_PENDING);
-    ok(V_VT(&varbody) == VT_EMPTY, "got type %d\n", V_VT(&varbody));
-    ok(V_I2(&varbody) == 1, "got %d\n", V_I2(&varbody));
-
-    V_VT(&varbody) = VT_I2;
-    V_I2(&varbody) = 1;
-    hr = IXMLHttpRequest_get_responseStream(xhr, &varbody);
-    EXPECT_HR(hr, E_PENDING);
-    ok(V_VT(&varbody) == VT_EMPTY, "got type %d\n", V_VT(&varbody));
-    ok(V_I2(&varbody) == 1, "got %d\n", V_I2(&varbody));
-
-    /* send before open */
-    hr = IXMLHttpRequest_send(xhr, dummy);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
-
-    /* initial status code */
-    hr = IXMLHttpRequest_get_status(xhr, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    status = 0xdeadbeef;
-    hr = IXMLHttpRequest_get_status(xhr, &status);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
-    ok(status == 0xdeadbeef, "got %d\n", status);
-
-    hr = IXMLHttpRequest_get_statusText(xhr, &str);
-    ok(hr == E_FAIL, "got 0x%08x\n", hr);
-
-    /* invalid parameters */
-    hr = IXMLHttpRequest_open(xhr, NULL, NULL, async, dummy, dummy);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    hr = IXMLHttpRequest_open(xhr, _bstr_("POST"), NULL, async, dummy, dummy);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    hr = IXMLHttpRequest_open(xhr, NULL, _bstr_(urlA), async, dummy, dummy);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    hr = IXMLHttpRequest_setRequestHeader(xhr, NULL, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    hr = IXMLHttpRequest_setRequestHeader(xhr, _bstr_("header1"), NULL);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
-
-    hr = IXMLHttpRequest_setRequestHeader(xhr, NULL, _bstr_("value1"));
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    hr = IXMLHttpRequest_setRequestHeader(xhr, _bstr_("header1"), _bstr_("value1"));
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
-
-    hr = IXMLHttpRequest_get_readyState(xhr, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    state = -1;
-    hr = IXMLHttpRequest_get_readyState(xhr, &state);
-    EXPECT_HR(hr, S_OK);
-    ok(state == READYSTATE_UNINITIALIZED, "got %d, expected READYSTATE_UNINITIALIZED\n", state);
-
-    event = create_dispevent();
-
-    EXPECT_REF(event, 1);
-    hr = IXMLHttpRequest_put_onreadystatechange(xhr, event);
-    EXPECT_HR(hr, S_OK);
-    EXPECT_REF(event, 2);
-
-    g_unexpectedcall = g_expectedcall = 0;
-
-    hr = IXMLHttpRequest_open(xhr, _bstr_("POST"), _bstr_(urlA), async, dummy, dummy);
-    EXPECT_HR(hr, S_OK);
-
-    ok(g_unexpectedcall == 0, "unexpected disp event call\n");
-    ok(g_expectedcall == 1 || broken(g_expectedcall == 0) /* win2k */, "no expected disp event call\n");
-
-    /* status code after ::open() */
-    status = 0xdeadbeef;
-    hr = IXMLHttpRequest_get_status(xhr, &status);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
-    ok(status == 0xdeadbeef, "got %d\n", status);
-
-    state = -1;
-    hr = IXMLHttpRequest_get_readyState(xhr, &state);
-    EXPECT_HR(hr, S_OK);
-    ok(state == READYSTATE_LOADING, "got %d, expected READYSTATE_LOADING\n", state);
-
-    hr = IXMLHttpRequest_abort(xhr);
-    EXPECT_HR(hr, S_OK);
-
-    state = -1;
-    hr = IXMLHttpRequest_get_readyState(xhr, &state);
-    EXPECT_HR(hr, S_OK);
-    ok(state == READYSTATE_UNINITIALIZED || broken(state == READYSTATE_LOADING) /* win2k */,
-        "got %d, expected READYSTATE_UNINITIALIZED\n", state);
-
-    hr = IXMLHttpRequest_open(xhr, _bstr_("POST"), _bstr_(urlA), async, dummy, dummy);
-    EXPECT_HR(hr, S_OK);
-
-    hr = IXMLHttpRequest_setRequestHeader(xhr, _bstr_("header1"), _bstr_("value1"));
-    EXPECT_HR(hr, S_OK);
-
-    hr = IXMLHttpRequest_setRequestHeader(xhr, NULL, _bstr_("value1"));
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    hr = IXMLHttpRequest_setRequestHeader(xhr, _bstr_(""), _bstr_("value1"));
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    V_VT(&varbody) = VT_BSTR;
-    V_BSTR(&varbody) = _bstr_(bodyA);
-
-    hr = IXMLHttpRequest_send(xhr, varbody);
-    if (hr == INET_E_RESOURCE_NOT_FOUND)
-    {
-        skip("No connection could be made with crossover.codeweavers.com\n");
-        IXMLHttpRequest_Release(xhr);
-        return;
-    }
-    EXPECT_HR(hr, S_OK);
-
-    /* response headers */
-    hr = IXMLHttpRequest_getAllResponseHeaders(xhr, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-    hr = IXMLHttpRequest_getAllResponseHeaders(xhr, &str);
-    EXPECT_HR(hr, S_OK);
-    /* status line is stripped already */
-    ok(memcmp(str, _bstr_("HTTP"), 4*sizeof(WCHAR)), "got response headers %s\n", wine_dbgstr_w(str));
-    ok(*str, "got empty headers\n");
-    hr = IXMLHttpRequest_getAllResponseHeaders(xhr, &str1);
-    EXPECT_HR(hr, S_OK);
-    ok(str1 != str, "got %p\n", str1);
-    SysFreeString(str1);
-    SysFreeString(str);
-
-    hr = IXMLHttpRequest_getResponseHeader(xhr, NULL, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-    hr = IXMLHttpRequest_getResponseHeader(xhr, _bstr_("Date"), NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-    hr = IXMLHttpRequest_getResponseHeader(xhr, _bstr_("Date"), &str);
-    EXPECT_HR(hr, S_OK);
-    ok(*str != ' ', "got leading space in header %s\n", wine_dbgstr_w(str));
-    SysFreeString(str);
-
-    /* status code after ::send() */
-    status = 0xdeadbeef;
-    hr = IXMLHttpRequest_get_status(xhr, &status);
-    EXPECT_HR(hr, S_OK);
-    ok(status == 200, "got %d\n", status);
-
-    hr = IXMLHttpRequest_get_statusText(xhr, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    hr = IXMLHttpRequest_get_statusText(xhr, &str);
-    EXPECT_HR(hr, S_OK);
-    ok(!lstrcmpW(str, _bstr_("OK")), "got status %s\n", wine_dbgstr_w(str));
-    SysFreeString(str);
-
-    /* another ::send() after completed request */
-    V_VT(&varbody) = VT_BSTR;
-    V_BSTR(&varbody) = _bstr_(bodyA);
-
-    hr = IXMLHttpRequest_send(xhr, varbody);
-    ok(hr == E_FAIL || broken(hr == E_UNEXPECTED) /* win2k */, "got 0x%08x\n", hr);
-
-    hr = IXMLHttpRequest_get_responseText(xhr, &bstrResponse);
-    EXPECT_HR(hr, S_OK);
-    /* the server currently returns "FAILED" because the Content-Type header is
-     * not what the server expects */
-    if(hr == S_OK)
-    {
-        ok(!memcmp(bstrResponse, wszExpectedResponse, sizeof(wszExpectedResponse)),
-            "expected %s, got %s\n", wine_dbgstr_w(wszExpectedResponse), wine_dbgstr_w(bstrResponse));
-        SysFreeString(bstrResponse);
-    }
-
-    /* POST: VT_VARIANT|VT_BYREF body */
-    V_VT(&varbody_ref) = VT_VARIANT|VT_BYREF;
-    V_VARIANTREF(&varbody_ref) = &varbody;
-    hr = IXMLHttpRequest_open(xhr, _bstr_("POST"), _bstr_(urlA), async, dummy, dummy);
-    EXPECT_HR(hr, S_OK);
-    hr = IXMLHttpRequest_send(xhr, varbody_ref);
-    EXPECT_HR(hr, S_OK);
-
-    /* GET request */
-    hr = IXMLHttpRequest_open(xhr, _bstr_("GET"), _bstr_(xmltestA), async, dummy, dummy);
-    EXPECT_HR(hr, S_OK);
-
-    V_VT(&varbody) = VT_EMPTY;
-
-    hr = IXMLHttpRequest_send(xhr, varbody);
-    if (hr == INET_E_RESOURCE_NOT_FOUND)
-    {
-        skip("No connection could be made with crossover.codeweavers.com\n");
-        IXMLHttpRequest_Release(xhr);
-        return;
-    }
-    EXPECT_HR(hr, S_OK);
-
-    hr = IXMLHttpRequest_get_responseText(xhr, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    hr = IXMLHttpRequest_get_responseText(xhr, &bstrResponse);
-    EXPECT_HR(hr, S_OK);
-    ok(!memcmp(bstrResponse, _bstr_(xmltestbodyA), sizeof(xmltestbodyA)*sizeof(WCHAR)),
-        "expected %s, got %s\n", xmltestbodyA, wine_dbgstr_w(bstrResponse));
-    SysFreeString(bstrResponse);
-
-    hr = IXMLHttpRequest_get_responseBody(xhr, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    V_VT(&varbody) = VT_EMPTY;
-    hr = IXMLHttpRequest_get_responseBody(xhr, &varbody);
-    EXPECT_HR(hr, S_OK);
-    ok(V_VT(&varbody) == (VT_ARRAY|VT_UI1), "got type %d, expected %d\n", V_VT(&varbody), VT_ARRAY|VT_UI1);
-    ok(SafeArrayGetDim(V_ARRAY(&varbody)) == 1, "got %d, expected one dimension\n", SafeArrayGetDim(V_ARRAY(&varbody)));
-
-    bound = -1;
-    hr = SafeArrayGetLBound(V_ARRAY(&varbody), 1, &bound);
-    EXPECT_HR(hr, S_OK);
-    ok(bound == 0, "got %d, expected zero bound\n", bound);
-
-    hr = SafeArrayAccessData(V_ARRAY(&varbody), &ptr);
-    EXPECT_HR(hr, S_OK);
-    ok(memcmp(ptr, xmltestbodyA, sizeof(xmltestbodyA)-1) == 0, "got wrong body data\n");
-    SafeArrayUnaccessData(V_ARRAY(&varbody));
-
-    VariantClear(&varbody);
-
-    /* get_responseStream */
-    hr = IXMLHttpRequest_get_responseStream(xhr, NULL);
-    EXPECT_HR(hr, E_INVALIDARG);
-
-    V_VT(&varbody) = VT_EMPTY;
-    hr = IXMLHttpRequest_get_responseStream(xhr, &varbody);
-    ok(V_VT(&varbody) == VT_UNKNOWN, "got type %d\n", V_VT(&varbody));
-    EXPECT_HR(hr, S_OK);
-    EXPECT_REF(V_UNKNOWN(&varbody), 1);
-
-    g = NULL;
-    hr = GetHGlobalFromStream((IStream*)V_UNKNOWN(&varbody), &g);
-    EXPECT_HR(hr, S_OK);
-    ok(g != NULL, "got %p\n", g);
-
-    hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectSafety, (void**)&safety);
-    EXPECT_HR(hr, S_OK);
-    if(hr == S_OK)
-    {
-        test_IObjectSafety_common(safety);
-        IObjectSafety_Release(safety);
-    }
-
-    IDispatch_Release(event);
-
-    /* interaction with object site */
-    EXPECT_REF(xhr, 1);
-    hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectWithSite, (void**)&obj_site);
-    EXPECT_HR(hr, S_OK);
-todo_wine {
-    EXPECT_REF(xhr, 1);
-    EXPECT_REF(obj_site, 1);
-}
-
-    IObjectWithSite_AddRef(obj_site);
-todo_wine {
-    EXPECT_REF(obj_site, 2);
-    EXPECT_REF(xhr, 1);
-}
-    IObjectWithSite_Release(obj_site);
-
-    hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectWithSite, (void**)&obj_site2);
-    EXPECT_HR(hr, S_OK);
-todo_wine {
-    EXPECT_REF(xhr, 1);
-    EXPECT_REF(obj_site, 1);
-    EXPECT_REF(obj_site2, 1);
-    ok(obj_site != obj_site2, "expected new instance\n");
-}
-    SET_EXPECT(site_qi_IServiceProvider);
-    SET_EXPECT(sp_queryservice_SID_SBindHost);
-    SET_EXPECT(sp_queryservice_SID_SContainerDispatch_htmldoc2);
-    SET_EXPECT(sp_queryservice_SID_secmgr_htmldoc2);
-    SET_EXPECT(sp_queryservice_SID_secmgr_xmldomdoc);
-    SET_EXPECT(sp_queryservice_SID_secmgr_secmgr);
-
-    /* calls to IHTMLDocument2 */
-    SET_EXPECT(htmldoc2_get_all);
-    SET_EXPECT(collection_get_length);
-    SET_EXPECT(htmldoc2_get_url);
-
-    SET_EXPECT(site_qi_IXMLDOMDocument);
-    SET_EXPECT(site_qi_IOleClientSite);
-
-    hr = IObjectWithSite_SetSite(obj_site, &testsite.IUnknown_iface);
-    EXPECT_HR(hr, S_OK);
-
-    CHECK_CALLED(site_qi_IServiceProvider);
-todo_wine
-    CHECK_CALLED(sp_queryservice_SID_SBindHost);
-    CHECK_CALLED(sp_queryservice_SID_SContainerDispatch_htmldoc2);
-todo_wine {
-    CHECK_CALLED(sp_queryservice_SID_secmgr_htmldoc2);
-    CHECK_CALLED(sp_queryservice_SID_secmgr_xmldomdoc);
-    /* this one isn't very reliable
-    CHECK_CALLED(sp_queryservice_SID_secmgr_secmgr); */
-
-    CHECK_CALLED(htmldoc2_get_all);
-    CHECK_CALLED(collection_get_length);
-    CHECK_CALLED(htmldoc2_get_url);
-
-    CHECK_CALLED(site_qi_IXMLDOMDocument);
-    CHECK_CALLED(site_qi_IOleClientSite);
-}
-    IObjectWithSite_Release(obj_site);
-
-    /* try to set site another time */
-
-    /* to be removed once IObjectWithSite is properly separated */
-    SET_EXPECT(site_qi_IServiceProvider);
-    SET_EXPECT(sp_queryservice_SID_SContainerDispatch_htmldoc2);
-
-    hr = IObjectWithSite_SetSite(obj_site2, &testsite.IUnknown_iface);
-    EXPECT_HR(hr, S_OK);
-
-    todo_wine EXPECT_REF(xhr, 1);
-    IXMLHttpRequest_Release(xhr);
-
-    /* still works after request is released */
-
-    /* to be removed once IObjectWithSite is properly separated */
-    SET_EXPECT(site_qi_IServiceProvider);
-    SET_EXPECT(sp_queryservice_SID_SContainerDispatch_htmldoc2);
-
-    hr = IObjectWithSite_SetSite(obj_site2, &testsite.IUnknown_iface);
-    EXPECT_HR(hr, S_OK);
-    IObjectWithSite_Release(obj_site2);
-
-    free_bstrs();
-}
-
 static void test_IXMLDOMDocument2(void)
 {
     static const WCHAR emptyW[] = {0};
@@ -6104,7 +4614,7 @@ static void test_cloneNode(void )
     IXMLDOMNamedNodeMap *mapAttr;
     LONG length, length1;
     LONG attr_cnt, attr_cnt1;
-    IXMLDOMNode *node;
+    IXMLDOMNode *node, *attr;
     IXMLDOMNode *node_clone;
     IXMLDOMNode *node_first;
     HRESULT hr;
@@ -6165,6 +4675,11 @@ static void test_cloneNode(void )
     hr = IXMLDOMNamedNodeMap_get_length(mapAttr, &attr_cnt1);
     ok( hr == S_OK, "ret %08x\n", hr );
     ok(attr_cnt1 == 3, "got %d\n", attr_cnt1);
+    /* now really get some attributes from cloned element */
+    attr = NULL;
+    hr = IXMLDOMNamedNodeMap_getNamedItem(mapAttr, _bstr_("id"), &attr);
+    ok(hr == S_OK, "ret %08x\n", hr);
+    IXMLDOMNode_Release(attr);
     IXMLDOMNamedNodeMap_Release(mapAttr);
 
     ok(length == length1, "wrong Child count (%d, %d)\n", length, length1);
@@ -8098,7 +6613,7 @@ static void test_put_nodeValue(void)
     IXMLDOMDocument_Release(doc);
 }
 
-static void test_document_IObjectSafety(void)
+static void test_IObjectSafety(void)
 {
     IXMLDOMDocument *doc;
     IObjectSafety *safety;
@@ -8113,8 +6628,16 @@ static void test_document_IObjectSafety(void)
     test_IObjectSafety_common(safety);
 
     IObjectSafety_Release(safety);
-
     IXMLDOMDocument_Release(doc);
+
+    hr = CoCreateInstance(&CLSID_XMLHTTPRequest, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IObjectSafety, (void**)&safety);
+    ok(hr == S_OK, "Could not create XMLHTTPRequest instance: %08x\n", hr);
+
+    test_IObjectSafety_common(safety);
+
+    IObjectSafety_Release(safety);
+
 }
 
 typedef struct _property_test_t {
@@ -9561,10 +8084,15 @@ static void test_put_nodeTypedValue(void)
 static void test_get_xml(void)
 {
     static const char xmlA[] = "<?xml version=\"1.0\" encoding=\"UTF-16\"?>\r\n<a>test</a>\r\n";
+    static const char attrA[] = "attr=\"&quot;a &amp; b&quot;\"";
+    static const char attr2A[] = "\"a & b\"";
+    static const char attr3A[] = "attr=\"&amp;quot;a\"";
+    static const char attr4A[] = "&quot;a";
     static const char fooA[] = "<foo/>";
     IXMLDOMProcessingInstruction *pi;
     IXMLDOMNode *first;
     IXMLDOMElement *elem = NULL;
+    IXMLDOMAttribute *attr;
     IXMLDOMDocument *doc;
     VARIANT_BOOL b;
     VARIANT v;
@@ -9620,6 +8148,51 @@ static void test_get_xml(void)
     SysFreeString(xml);
 
     IXMLDOMElement_Release(elem);
+
+    /* attribute node */
+    hr = IXMLDOMDocument_createAttribute(doc, _bstr_("attr"), &attr);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = _bstr_("\"a & b\"");
+    hr = IXMLDOMAttribute_put_value(attr, v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    xml = NULL;
+    hr = IXMLDOMAttribute_get_xml(attr, &xml);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!memcmp(xml, _bstr_(attrA), (sizeof(attrA)-1)*sizeof(WCHAR)), "got %s\n", wine_dbgstr_w(xml));
+    SysFreeString(xml);
+
+    VariantInit(&v);
+    hr = IXMLDOMAttribute_get_value(attr, &v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&v) == VT_BSTR, "got type %d\n", V_VT(&v));
+    ok(!memcmp(V_BSTR(&v), _bstr_(attr2A), (sizeof(attr2A)-1)*sizeof(WCHAR)),
+        "got %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = _bstr_("&quot;a");
+    hr = IXMLDOMAttribute_put_value(attr, v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    xml = NULL;
+    hr = IXMLDOMAttribute_get_xml(attr, &xml);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!memcmp(xml, _bstr_(attr3A), (sizeof(attr3A)-1)*sizeof(WCHAR)), "got %s\n", wine_dbgstr_w(xml));
+    SysFreeString(xml);
+
+    VariantInit(&v);
+    hr = IXMLDOMAttribute_get_value(attr, &v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&v) == VT_BSTR, "got type %d\n", V_VT(&v));
+    ok(!memcmp(V_BSTR(&v), _bstr_(attr4A), (sizeof(attr4A)-1)*sizeof(WCHAR)),
+        "got %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    IXMLDOMAttribute_Release(attr);
+
     IXMLDOMDocument_Release(doc);
 
     free_bstrs();
@@ -9765,8 +8338,7 @@ todo_wine {
     hr = IXSLProcessor_get_output(processor, &v);
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(V_VT(&v) == VT_BSTR, "got type %d\n", V_VT(&v));
-    /* we currently output one '\n' instead of empty string */
-    todo_wine ok(lstrcmpW(V_BSTR(&v), _bstr_("")) == 0, "got %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    ok(lstrcmpW(V_BSTR(&v), _bstr_("")) == 0, "got %s\n", wine_dbgstr_w(V_BSTR(&v)));
     IXMLDOMDocument_Release(doc2);
     VariantClear(&v);
 
@@ -9786,15 +8358,30 @@ todo_wine {
 
 static void test_insertBefore(void)
 {
-    IXMLDOMDocument *doc, *doc2;
+    IXMLDOMDocument *doc, *doc2, *doc3;
     IXMLDOMAttribute *attr;
     IXMLDOMElement *elem1, *elem2, *elem3, *elem4, *elem5;
-    IXMLDOMNode *node, *newnode;
+    IXMLDOMNode *node, *newnode, *cdata;
     HRESULT hr;
     VARIANT v;
     BSTR p;
 
     doc = create_document(&IID_IXMLDOMDocument);
+    doc3 = create_document(&IID_IXMLDOMDocument);
+
+    /* document to document */
+    V_VT(&v) = VT_NULL;
+    node = (void*)0xdeadbeef;
+    hr = IXMLDOMDocument_insertBefore(doc, (IXMLDOMNode*)doc3, v, &node);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(node == NULL, "got %p\n", node);
+
+    /* document to itself */
+    V_VT(&v) = VT_NULL;
+    node = (void*)0xdeadbeef;
+    hr = IXMLDOMDocument_insertBefore(doc, (IXMLDOMNode*)doc, v, &node);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(node == NULL, "got %p\n", node);
 
     /* insertBefore behaviour for attribute node */
     V_VT(&v) = VT_I4;
@@ -9804,6 +8391,47 @@ static void test_insertBefore(void)
     hr = IXMLDOMDocument_createNode(doc, v, _bstr_("attr"), NULL, (IXMLDOMNode**)&attr);
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(attr != NULL, "got %p\n", attr);
+
+    /* attribute to document */
+    V_VT(&v) = VT_NULL;
+    node = (void*)0xdeadbeef;
+    hr = IXMLDOMDocument_insertBefore(doc3, (IXMLDOMNode*)attr, v, &node);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(node == NULL, "got %p\n", node);
+
+    /* cdata to document */
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = NODE_CDATA_SECTION;
+
+    cdata = NULL;
+    hr = IXMLDOMDocument_createNode(doc3, v, _bstr_("cdata"), NULL, &cdata);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(cdata != NULL, "got %p\n", cdata);
+
+    EXPECT_NO_CHILDREN(cdata);
+
+    /* attribute to cdata */
+    V_VT(&v) = VT_NULL;
+    node = (void*)0xdeadbeef;
+    hr = IXMLDOMNode_insertBefore(cdata, (IXMLDOMNode*)attr, v, &node);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(node == NULL, "got %p\n", node);
+
+    /* document to cdata */
+    V_VT(&v) = VT_NULL;
+    node = (void*)0xdeadbeef;
+    hr = IXMLDOMNode_insertBefore(cdata, (IXMLDOMNode*)doc, v, &node);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(node == NULL, "got %p\n", node);
+
+    V_VT(&v) = VT_NULL;
+    node = (void*)0xdeadbeef;
+    hr = IXMLDOMDocument_insertBefore(doc3, cdata, v, &node);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+    ok(node == NULL, "got %p\n", node);
+
+    IXMLDOMNode_Release(cdata);
+    IXMLDOMDocument_Release(doc3);
 
     /* attribute to attribute */
     V_VT(&v) = VT_I4;
@@ -9909,6 +8537,12 @@ static void test_insertBefore(void)
     EXPECT_NO_CHILDREN(elem3);
 
     todo_wine EXPECT_REF(elem2, 2);
+
+    /* document to element */
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = NULL;
+    hr = IXMLDOMElement_insertBefore(elem1, (IXMLDOMNode*)doc, v, NULL);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
 
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = NULL;
@@ -10991,6 +9625,10 @@ static void test_mxnamespacemanager(void)
     hr = IVBMXNamespaceManager_getDeclaredPrefixes(mgr2, &prefixes);
     if (hr == S_OK)
     {
+        IDispatchEx *dispex;
+        VARIANT arg, ret;
+        DISPPARAMS dispparams;
+
         ok(prefixes != NULL, "got %p\n", prefixes);
         EXPECT_REF(nsmgr, 2);
         EXPECT_REF(mgr2, 2);
@@ -11004,6 +9642,25 @@ static void test_mxnamespacemanager(void)
 
         IUnknown_Release(unk1);
         IUnknown_Release(unk2);
+
+        hr = IMXNamespacePrefixes_QueryInterface(prefixes, &IID_IDispatchEx, (void**)&dispex);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        V_VT(&arg) = VT_I4;
+        V_I4(&arg) = 0;
+        dispparams.cArgs = 1;
+        dispparams.cNamedArgs = 0;
+        dispparams.rgdispidNamedArgs = NULL;
+        dispparams.rgvarg = &arg;
+
+        V_VT(&ret) = VT_EMPTY;
+        V_DISPATCH(&ret) = (void*)0x1;
+        hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(V_VT(&ret) == VT_DISPATCH, "got %d\n", V_VT(&ret));
+        ok(V_DISPATCH(&ret) == NULL, "got %p\n", V_DISPATCH(&ret));
+
+        IDispatchEx_Release(dispex);
         IMXNamespacePrefixes_Release(prefixes);
     }
     IVBMXNamespaceManager_Release(mgr2);
@@ -11455,7 +10112,9 @@ static void test_dispex(void)
     IXMLHTTPRequest *req;
     IXMLDOMElement *elem;
     IDispatchEx *dispex;
+    DISPPARAMS dispparams;
     IXMLDOMNode *node;
+    VARIANT arg, ret;
     VARIANT_BOOL b;
     IUnknown *unk;
     HRESULT hr;
@@ -11512,6 +10171,91 @@ static void test_dispex(void)
     ok(did == DISPID_DOM_COLLECTION_BASE+1, "got 0x%08x\n", did);
     IDispatchEx_Release(dispex);
 
+    did = -1;
+    hr = IDispatchEx_GetDispID(dispex, _bstr_("item"), 0, &did);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(did == DISPID_VALUE, "got %d\n", did);
+
+    V_VT(&arg) = VT_I4;
+    V_I4(&arg) = 0;
+    dispparams.cArgs = 0;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = &arg;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+    ok(hr == DISP_E_BADPARAMCOUNT, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == (void*)0x1, "got %p\n", V_DISPATCH(&ret));
+
+    V_VT(&arg) = VT_I4;
+    V_I4(&arg) = 0;
+    dispparams.cArgs = 2;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = &arg;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+    ok(hr == DISP_E_BADPARAMCOUNT, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == (void*)0x1, "got %p\n", V_DISPATCH(&ret));
+
+    V_VT(&arg) = VT_I4;
+    V_I4(&arg) = 0;
+    dispparams.cArgs = 1;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = &arg;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_DISPATCH, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == NULL, "got %p\n", V_DISPATCH(&ret));
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dispparams, &ret, NULL, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_DISPATCH, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == NULL, "got %p\n", V_DISPATCH(&ret));
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET|DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_DISPATCH, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == NULL, "got %p\n", V_DISPATCH(&ret));
+
+    dispparams.cArgs = 0;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = NULL;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_I4(&ret) = 1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_DOM_NODELIST_LENGTH, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dispparams, &ret, NULL, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_I4, "got %d\n", V_VT(&ret));
+    ok(V_I4(&ret) == 0, "got %d\n", V_I4(&ret));
+
+    dispparams.cArgs = 0;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = NULL;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_I4(&ret) = 1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_DOM_NODELIST_LENGTH, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
+    ok(V_I4(&ret) == 1, "got %d\n", V_I4(&ret));
+
     IXMLDOMNodeList_Release(node_list);
 
     /* IXMLDOMParseError */
@@ -11519,6 +10263,26 @@ static void test_dispex(void)
     EXPECT_HR(hr, S_OK);
     IXMLDOMParseError_QueryInterface(error, &IID_IUnknown, (void**)&unk);
     test_domobj_dispex(unk);
+
+    hr = IXMLDOMParseError_QueryInterface(error, &IID_IDispatchEx, (void**)&dispex);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    V_VT(&arg) = VT_I4;
+    V_I4(&arg) = 0;
+    dispparams.cArgs = 1;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = &arg;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == (void*)0x1, "got %p\n", V_DISPATCH(&ret));
+
+    IDispatchEx_Release(dispex);
+
     IUnknown_Release(unk);
     IXMLDOMParseError_Release(error);
 
@@ -11571,6 +10335,95 @@ static void test_dispex(void)
     ok(did == DISPID_DOM_COLLECTION_BASE+1, "got 0x%08x\n", did);
     IDispatchEx_Release(dispex);
 
+    did = -1;
+    hr = IDispatchEx_GetDispID(dispex, _bstr_("item"), 0, &did);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(did == DISPID_VALUE, "got %d\n", did);
+
+    V_VT(&arg) = VT_I4;
+    V_I4(&arg) = 0;
+    dispparams.cArgs = 0;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = &arg;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+todo_wine {
+    ok(hr == DISP_E_BADPARAMCOUNT, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == (void*)0x1, "got %p\n", V_DISPATCH(&ret));
+}
+    V_VT(&arg) = VT_I4;
+    V_I4(&arg) = 0;
+    dispparams.cArgs = 2;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = &arg;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+todo_wine {
+    ok(hr == DISP_E_BADPARAMCOUNT, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == (void*)0x1, "got %p\n", V_DISPATCH(&ret));
+}
+    V_VT(&arg) = VT_I4;
+    V_I4(&arg) = 0;
+    dispparams.cArgs = 1;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = &arg;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+todo_wine
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_DISPATCH, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == NULL, "got %p\n", V_DISPATCH(&ret));
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dispparams, &ret, NULL, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_DISPATCH, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == NULL, "got %p\n", V_DISPATCH(&ret));
+
+    V_VT(&ret) = VT_EMPTY;
+    V_DISPATCH(&ret) = (void*)0x1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, 0, DISPATCH_PROPERTYGET|DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_DISPATCH, "got %d\n", V_VT(&ret));
+    ok(V_DISPATCH(&ret) == NULL, "got %p\n", V_DISPATCH(&ret));
+
+    dispparams.cArgs = 0;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = NULL;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_I4(&ret) = 1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_DOM_NODELIST_LENGTH, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dispparams, &ret, NULL, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&ret) == VT_I4, "got %d\n", V_VT(&ret));
+    ok(V_I4(&ret) == 0, "got %d\n", V_I4(&ret));
+
+    dispparams.cArgs = 0;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = NULL;
+
+    V_VT(&ret) = VT_EMPTY;
+    V_I4(&ret) = 1;
+    hr = IDispatchEx_Invoke(dispex, DISPID_DOM_NODELIST_LENGTH, &IID_NULL, 0, DISPATCH_METHOD, &dispparams, &ret, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "got 0x%08x\n", hr);
+todo_wine {
+    ok(V_VT(&ret) == VT_EMPTY, "got %d\n", V_VT(&ret));
+    ok(V_I4(&ret) == 1, "got %d\n", V_I4(&ret));
+}
     IXMLDOMNamedNodeMap_Release(map);
     IXMLDOMElement_Release(elem);
 
@@ -11939,6 +10792,61 @@ static void test_nodeValue(void)
     IXMLDOMDocument_Release(doc);
 }
 
+static void test_xmlns_attribute(void)
+{
+    BSTR str;
+    IXMLDOMDocument *doc;
+    IXMLDOMElement *root;
+    IXMLDOMAttribute *pAttribute;
+    IXMLDOMElement *elem;
+    HRESULT hr;
+
+    doc = create_document(&IID_IXMLDOMDocument);
+    if (!doc) return;
+
+    hr = IXMLDOMDocument_createElement(doc, _bstr_("Testing"), &root);
+    EXPECT_HR(hr, S_OK);
+
+    hr = IXMLDOMDocument_appendChild(doc, (IXMLDOMNode*)root, NULL);
+    EXPECT_HR(hr, S_OK);
+
+    str = SysAllocString(szAttribute);
+    hr = IXMLDOMDocument_createAttribute(doc, _bstr_("xmlns:dt"), &pAttribute);
+    ok( hr == S_OK, "returns %08x\n", hr );
+    if(hr == S_OK)
+    {
+        VARIANT v;
+
+        V_VT(&v) = VT_BSTR;
+        V_BSTR(&v) = _bstr_("urn:schemas-microsoft-com:datatypes");
+        hr = IXMLDOMAttribute_put_nodeValue(pAttribute, v);
+
+        hr = IXMLDOMElement_setAttributeNode(root, pAttribute, NULL);
+        ok(hr == S_OK, "ret %08x\n", hr );
+
+        hr = IXMLDOMNode_put_dataType((IXMLDOMNode*)root, _bstr_("bin.base64"));
+        ok(hr == S_OK, "ret %08x\n", hr );
+
+        hr = IXMLDOMDocument_get_documentElement(doc, &elem);
+        EXPECT_HR(hr, S_OK);
+
+        hr = IXMLDOMElement_get_xml(elem, &str);
+        ok( hr == S_OK, "got 0x%08x\n", hr);
+        todo_wine ok( lstrcmpW(str, _bstr_("<Testing xmlns:dt=\"urn:schemas-microsoft-com:datatypes\" dt:dt=\"bin.base64\"/>")) == 0,
+        "got %s\n", wine_dbgstr_w(str));
+        SysFreeString(str);
+
+        IXMLDOMElement_Release(elem);
+        IXMLDOMAttribute_Release( pAttribute);
+    }
+
+    SysFreeString(str);
+
+    IXMLDOMDocument_Release(doc);
+
+    free_bstrs();
+}
+
 static const char namespacesA[] =
 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
 "   <ns1:elem1 xmlns:ns1=\"http://blah.org\" b='1' >"
@@ -12219,6 +11127,9 @@ static void test_put_data(void)
     WCHAR buff[100], *data;
     IXMLDOMDocument *doc;
     DOMNodeType *type;
+    IXMLDOMText *text;
+    IXMLDOMNode *node;
+    VARIANT v;
     BSTR get_data;
     HRESULT hr;
 
@@ -12233,9 +11144,6 @@ static void test_put_data(void)
     type = put_data_types;
     while (*type != NODE_INVALID)
     {
-       IXMLDOMNode *node;
-       VARIANT v;
-
        V_VT(&v) = VT_I2;
        V_I2(&v) = *type;
 
@@ -12247,8 +11155,6 @@ static void test_put_data(void)
        {
            case NODE_TEXT:
            {
-              IXMLDOMText *text;
-
               hr = IXMLDOMNode_QueryInterface(node, &IID_IXMLDOMText, (void**)&text);
               EXPECT_HR(hr, S_OK);
               hr = IXMLDOMText_put_data(text, data);
@@ -12317,6 +11223,32 @@ static void test_put_data(void)
        IXMLDOMNode_Release(node);
        type++;
     }
+
+    /* \r\n sequence is never escaped */
+    V_VT(&v) = VT_I2;
+    V_I2(&v) = NODE_TEXT;
+
+    hr = IXMLDOMDocument_createNode(doc, v, _bstr_("name"), NULL, &node);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    IXMLDOMNode_QueryInterface(node, &IID_IXMLDOMText, (void**)&text);
+
+    hr = IXMLDOMText_put_data(text, _bstr_("\r\n"));
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXMLDOMText_get_data(text, &get_data);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+todo_wine
+    ok(!lstrcmpW(get_data, _bstr_("\n")), "got %s\n", wine_dbgstr_w(get_data));
+    SysFreeString(get_data);
+
+    hr = IXMLDOMText_get_xml(text, &get_data);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!lstrcmpW(get_data, _bstr_("\r\n")), "got %s\n", wine_dbgstr_w(get_data));
+    SysFreeString(get_data);
+
+    IXMLDOMText_Release(text);
+    IXMLDOMNode_Release(node);
 
     IXMLDOMDocument_Release(doc);
     free_bstrs();
@@ -12502,6 +11434,47 @@ static void test_namedmap_newenum(void)
     IXMLDOMDocument_Release(doc);
 }
 
+static const char xsltext_xsl[] =
+"<?xml version=\"1.0\"?>"
+"<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" >"
+"<xsl:output method=\"html\" encoding=\"us-ascii\"/>"
+"<xsl:template match=\"/\">"
+"    <xsl:choose>"
+"        <xsl:when test=\"testkey\">"
+"            <xsl:text>testdata</xsl:text>"
+"        </xsl:when>"
+"    </xsl:choose>"
+"</xsl:template>"
+"</xsl:stylesheet>";
+
+static void test_xsltext(void)
+{
+    IXMLDOMDocument *doc, *doc2;
+    VARIANT_BOOL b;
+    HRESULT hr;
+    BSTR ret;
+
+    doc = create_document(&IID_IXMLDOMDocument);
+    if (!doc) return;
+
+    doc2 = create_document(&IID_IXMLDOMDocument);
+
+    hr = IXMLDOMDocument_loadXML(doc, _bstr_(xsltext_xsl), &b);
+    EXPECT_HR(hr, S_OK);
+
+    hr = IXMLDOMDocument_loadXML(doc2, _bstr_("<testkey/>"), &b);
+    EXPECT_HR(hr, S_OK);
+
+    hr = IXMLDOMDocument_transformNode(doc2, (IXMLDOMNode*)doc, &ret);
+    EXPECT_HR(hr, S_OK);
+    ok(!lstrcmpW(ret, _bstr_("testdata")), "transform result %s\n", wine_dbgstr_w(ret));
+    SysFreeString(ret);
+
+    IXMLDOMDocument_Release(doc2);
+    IXMLDOMDocument_Release(doc);
+    free_bstrs();
+}
+
 START_TEST(domdoc)
 {
     IXMLDOMDocument *doc;
@@ -12511,8 +11484,6 @@ START_TEST(domdoc)
     hr = CoInitialize( NULL );
     ok( hr == S_OK, "failed to init com\n");
     if (hr != S_OK) return;
-
-    test_XMLHTTP();
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (void**)&doc );
     if (hr != S_OK)
@@ -12552,7 +11523,7 @@ START_TEST(domdoc)
     test_nodeTypedValue();
     test_TransformWithLoadingLocalFile();
     test_put_nodeValue();
-    test_document_IObjectSafety();
+    test_IObjectSafety();
     test_splitText();
     test_getQualifiedItem();
     test_removeQualifiedItem();
@@ -12585,8 +11556,10 @@ START_TEST(domdoc)
     test_put_data();
     test_putref_schemas();
     test_namedmap_newenum();
+    test_xmlns_attribute();
 
     test_xsltemplate();
+    test_xsltext();
 
     hr = CoCreateInstance(&CLSID_MXNamespaceManager40, NULL, CLSCTX_INPROC_SERVER,
         &IID_IMXNamespaceManager, (void**)&unk);

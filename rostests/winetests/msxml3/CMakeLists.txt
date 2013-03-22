@@ -3,6 +3,7 @@ add_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
     domdoc.c
+    httpreq.c
     saxreader.c
     schema.c
     testlist.c

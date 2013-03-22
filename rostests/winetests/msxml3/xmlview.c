@@ -15,23 +15,30 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include <stdio.h>
-#include <assert.h>
+//#include <stdio.h>
+//#include <assert.h>
 
-#include "windows.h"
-#include "ole2.h"
-#include "mshtml.h"
-#include "mshtmdid.h"
-#include "initguid.h"
-#include "perhist.h"
-#include "docobj.h"
-#include "urlmon.h"
-#include "xmlparser.h"
+#include <wine/test.h>
 
-#include "wine/test.h"
+//#include "windows.h"
+#include <winnls.h>
+#include <wingdi.h>
+#include <ole2.h>
+#include <mshtml.h>
+#include <mshtmdid.h>
+#include <initguid.h>
+#include <perhist.h>
+#include <docobj.h>
+//#include "urlmon.h"
+#include <xmlparser.h>
 
 HRESULT (WINAPI *pCreateURLMoniker)(IMoniker*, LPCWSTR, IMoniker**);
 
@@ -123,9 +130,11 @@ static HRESULT WINAPI HTMLEvents_Invoke(IDispatch *iface, DISPID dispIdMember, R
 {
     if(dispIdMember == DISPID_HTMLDOCUMENTEVENTS2_ONREADYSTATECHANGE) {
         static const WCHAR completeW[] = {'c','o','m','p','l','e','t','e',0};
+        HRESULT hr;
         BSTR state;
 
-        IHTMLDocument2_get_readyState(html_doc, &state);
+        hr = IHTMLDocument2_get_readyState(html_doc, &state);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
         if(!memcmp(state, completeW, sizeof(completeW)))
             loaded = TRUE;
     }
