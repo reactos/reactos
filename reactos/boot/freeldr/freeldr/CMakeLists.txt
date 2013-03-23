@@ -135,6 +135,7 @@ elseif(ARCH STREQUAL "amd64")
         arch/i386/hwapm.c
         arch/i386/hwdisk.c
         arch/i386/hwpci.c
+        arch/i386/i386bug.c
         arch/i386/i386rtl.c
         arch/i386/i386disk.c
         arch/i386/i386vid.c
