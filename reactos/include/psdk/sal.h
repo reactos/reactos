@@ -1090,7 +1090,6 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 
 #define _In_function_class_(x) _In_function_class_(#x)
 #define _Called_from_function_class_(x) _In_function_class_(x)
-#define _Function_class_(x) _SA_annotes1(SAL_functionClassNew, #x)
 
 #else // ] [ !_PREFAST_
 

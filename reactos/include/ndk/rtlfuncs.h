@@ -3259,6 +3259,7 @@ DbgPrompt(
     _In_ ULONG MaximumResponseLength
 );
 
+#undef DbgBreakPoint
 VOID
 NTAPI
 DbgBreakPoint(

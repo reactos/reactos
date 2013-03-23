@@ -117,6 +117,8 @@ void __movsd(unsigned long * Destination, unsigned long const * Source, size_t C
 #pragma intrinsic(__movsd)
 #endif
 #ifdef _M_AMD64
+void __stosq(unsigned __int64 * Dest, unsigned __int64 Data, size_t Count);
+#pragma intrinsic(__stosq)
 void __movsq(unsigned __int64 * Destination, unsigned __int64 const * Source, size_t Count);
 #pragma intrinsic(__movsq)
 #endif
