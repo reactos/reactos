@@ -20,25 +20,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <math.h>
-#include <float.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <math.h>
+//#include <float.h>
 
 #define COBJMACROS
 
 #include <wine/test.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
+//#include <windef.h>
+//#include <winbase.h>
+//#include <winuser.h>
 #include <wingdi.h>
-#include <winnls.h>
-#include <winerror.h>
-#include <winnt.h>
-#include <initguid.h>
-#include <wtypes.h>
+//#include <winnls.h>
+//#include <winerror.h>
+//#include <winnt.h>
+//#include <initguid.h>
+//#include <wtypes.h>
+#include <ole2.h>
 #include <olectl.h>
-#include <ocidl.h>
+//#include <ocidl.h>
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 

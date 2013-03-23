@@ -19,20 +19,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
+#define CONST_VTABLE
 
 #include <wine/test.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "oleauto.h"
-#include "ocidl.h"
-#include "shlwapi.h"
-#include "tmarshal.h"
+//#include "windef.h"
+//#include "winbase.h"
+#include <winnls.h>
+#include <winreg.h>
+#include <objbase.h>
+#include <oleauto.h>
+//#include "ocidl.h"
+//#include "shlwapi.h"
+#include <tmarshal.h>
 
-#include "test_reg.h"
+#include <test_reg.h>
 
 #define expect_eq(expr, value, type, format) { type _ret = (expr); ok((value) == _ret, #expr " expected " format " got " format "\n", value, _ret); }
 #define expect_int(expr, value) expect_eq(expr, (int)(value), int, "%d")
@@ -63,6 +71,74 @@ static WCHAR wszGUID[] = {'G','U','I','D',0};
 static WCHAR wszguid[] = {'g','u','i','d',0};
 
 static const int is_win64 = sizeof(void *) > sizeof(int);
+
+static HRESULT WINAPI invoketest_QueryInterface(IInvokeTest *iface, REFIID riid, void **ret)
+{
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IDispatch) ||
+        IsEqualIID(riid, &IID_IInvokeTest))
+    {
+        *ret = iface;
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI invoketest_AddRef(IInvokeTest *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI invoketest_Release(IInvokeTest *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI invoketest_GetTypeInfoCount(IInvokeTest *iface, UINT *cnt)
+{
+    ok(0, "unexpected call\n");
+    *cnt = 0;
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI invoketest_GetTypeInfo(IInvokeTest *iface, UINT index, LCID lcid, ITypeInfo **ti)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI invoketest_GetIDsOfNames(IInvokeTest *iface, REFIID riid, LPOLESTR *names,
+    UINT cnt, LCID lcid, DISPID *dispid)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI invoketest_Invoke(IInvokeTest *iface, DISPID dispid, REFIID riid,
+    LCID lcid, WORD flags, DISPPARAMS *dispparams, VARIANT *res, EXCEPINFO *ei, UINT *argerr)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static LONG WINAPI invoketest_get_test(IInvokeTest *iface, LONG i)
+{
+    return i+1;
+}
+
+static const IInvokeTestVtbl invoketestvtbl = {
+    invoketest_QueryInterface,
+    invoketest_AddRef,
+    invoketest_Release,
+    invoketest_GetTypeInfoCount,
+    invoketest_GetTypeInfo,
+    invoketest_GetIDsOfNames,
+    invoketest_Invoke,
+    invoketest_get_test
+};
+
+static IInvokeTest invoketest = { &invoketestvtbl };
 
 static void init_function_pointers(void)
 {
@@ -534,6 +610,27 @@ static void test_CreateDispTypeInfo(void)
     SysFreeString(methdata[3].szName);
 }
 
+static const char *create_test_typelib(int res_no)
+{
+    static char filename[MAX_PATH];
+    HANDLE file;
+    HRSRC res;
+    void *ptr;
+    DWORD written;
+
+    GetTempFileNameA( ".", "tlb", 0, filename );
+    file = CreateFile( filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
+    ok( file != INVALID_HANDLE_VALUE, "file creation failed\n" );
+    if (file == INVALID_HANDLE_VALUE) return NULL;
+    res = FindResource( GetModuleHandle(0), MAKEINTRESOURCE(res_no), "TYPELIB" );
+    ok( res != 0, "couldn't find resource\n" );
+    ptr = LockResource( LoadResource( GetModuleHandle(0), res ));
+    WriteFile( file, ptr, SizeofResource( GetModuleHandle(0), res ), &written, NULL );
+    ok( written == SizeofResource( GetModuleHandle(0), res ), "couldn't write resource\n" );
+    CloseHandle( file );
+    return filename;
+}
+
 static void test_TypeInfo(void)
 {
     ITypeLib *pTypeLib;
@@ -549,9 +646,11 @@ static void test_TypeInfo(void)
     DISPID dispidMember;
     DISPPARAMS dispparams;
     GUID bogusguid = {0x806afb4f,0x13f7,0x42d2,{0x89,0x2c,0x6c,0x97,0xc3,0x6a,0x36,0xc1}};
-    VARIANT var;
-    UINT count;
+    VARIANT var, res, args[2];
+    UINT count, i;
     TYPEKIND kind;
+    const char *filenameA;
+    WCHAR filename[MAX_PATH];
 
     hr = LoadTypeLib(wszStdOle2, &pTypeLib);
     ok_ole_success(hr, LoadTypeLib);
@@ -714,6 +813,53 @@ static void test_TypeInfo(void)
 
     ITypeInfo_Release(pTypeInfo);
     ITypeLib_Release(pTypeLib);
+
+    filenameA = create_test_typelib(3);
+    MultiByteToWideChar(CP_ACP, 0, filenameA, -1, filename, MAX_PATH);
+    hr = LoadTypeLib(filename, &pTypeLib);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = ITypeLib_GetTypeInfoOfGuid(pTypeLib, &IID_IInvokeTest, &pTypeInfo);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    dispparams.cArgs = 1;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = args;
+
+    V_VT(&args[0]) = VT_I4;
+    V_I4(&args[0]) = 0;
+
+    V_VT(&res) = VT_EMPTY;
+
+    i = 0;
+    V_VT(&res) = VT_EMPTY;
+    V_I4(&res) = 0;
+    /* call propget with DISPATCH_METHOD|DISPATCH_PROPERTYGET flags */
+    hr = ITypeInfo_Invoke(pTypeInfo, &invoketest, DISPID_VALUE, DISPATCH_METHOD|DISPATCH_PROPERTYGET,
+        &dispparams, &res, NULL, &i);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(V_VT(&res) == VT_I4, "got %d\n", V_VT(&res));
+    ok(V_I4(&res) == 1, "got %d\n", V_I4(&res));
+
+    i = 0;
+    /* call propget with DISPATCH_METHOD flags */
+    hr = ITypeInfo_Invoke(pTypeInfo, &invoketest, DISPID_VALUE, DISPATCH_METHOD,
+        &dispparams, &res, NULL, &i);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "got 0x%08x, %d\n", hr, i);
+
+    i = 0;
+    V_VT(&res) = VT_EMPTY;
+    V_I4(&res) = 0;
+    hr = ITypeInfo_Invoke(pTypeInfo, &invoketest, DISPID_VALUE, DISPATCH_PROPERTYGET,
+        &dispparams, &res, NULL, &i);
+    ok(hr == S_OK, "got 0x%08x, %d\n", hr, i);
+    ok(V_VT(&res) == VT_I4, "got %d\n", V_VT(&res));
+    ok(V_I4(&res) == 1, "got %d\n", V_I4(&res));
+
+    ITypeInfo_Release(pTypeInfo);
+    ITypeLib_Release(pTypeLib);
+    DeleteFileA(filenameA);
 }
 
 static int WINAPI int_func( int a0, int a1, int a2, int a3, int a4 )
@@ -782,6 +928,11 @@ static int WINAPI inst_func( void *inst, int a )
     ok( (*(void ***)inst)[3] == inst_func, "wrong ptr %p\n", inst );
     ok( a == 3, "wrong arg %x\n", a );
     return a * 2;
+}
+
+static HRESULT WINAPI ret_false_func(void)
+{
+    return S_FALSE;
 }
 
 static const void *vtable[] = { NULL, NULL, NULL, inst_func };
@@ -899,6 +1050,17 @@ static void test_DispCallFunc(void)
     ok( res == S_OK, "DispCallFunc failed %x\n", res );
     ok( V_VT(&result) == VT_I4, "wrong result type %d\n", V_VT(&result) );
     ok( V_I4(&result) == 6, "wrong result %08x\n", V_I4(&result) );
+
+    memset( &result, 0xcc, sizeof(result) );
+    res = DispCallFunc(NULL, (ULONG_PTR)ret_false_func, CC_STDCALL, VT_ERROR, 0, NULL, NULL, &result);
+    ok(res == S_OK, "DispCallFunc failed: %08x\n", res);
+    ok(V_VT(&result) == VT_ERROR, "V_VT(result) = %u\n", V_VT(&result));
+    ok(V_ERROR(&result) == S_FALSE, "V_ERROR(result) = %08x\n", V_ERROR(&result));
+
+    memset( &result, 0xcc, sizeof(result) );
+    res = DispCallFunc(NULL, (ULONG_PTR)ret_false_func, CC_STDCALL, VT_HRESULT, 0, NULL, NULL, &result);
+    ok(res == E_INVALIDARG, "DispCallFunc failed: %08x\n", res);
+    ok(V_VT(&result) == 0xcccc, "V_VT(result) = %u\n", V_VT(&result));
 }
 
 /* RegDeleteTreeW from dlls/advapi32/registry.c */
@@ -2722,27 +2884,6 @@ static void test_dump_typelib(const char *name)
 
 #endif
 
-static const char *create_test_typelib(int res_no)
-{
-    static char filename[MAX_PATH];
-    HANDLE file;
-    HRSRC res;
-    void *ptr;
-    DWORD written;
-
-    GetTempFileNameA( ".", "tlb", 0, filename );
-    file = CreateFile( filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
-    ok( file != INVALID_HANDLE_VALUE, "file creation failed\n" );
-    if (file == INVALID_HANDLE_VALUE) return NULL;
-    res = FindResource( GetModuleHandle(0), MAKEINTRESOURCE(res_no), "TYPELIB" );
-    ok( res != 0, "couldn't find resource\n" );
-    ptr = LockResource( LoadResource( GetModuleHandle(0), res ));
-    WriteFile( file, ptr, SizeofResource( GetModuleHandle(0), res ), &written, NULL );
-    ok( written == SizeofResource( GetModuleHandle(0), res ), "couldn't write resource\n" );
-    CloseHandle( file );
-    return filename;
-}
-
 static void test_create_typelib_lcid(LCID lcid)
 {
     char filename[MAX_PATH];
@@ -2813,7 +2954,7 @@ static void test_register_typelib(BOOL system_registration)
     {
         TYPEKIND kind;
         WORD flags;
-    } attrs[11] =
+    } attrs[12] =
     {
         { TKIND_INTERFACE, 0 },
         { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE },
@@ -2825,7 +2966,8 @@ static void test_register_typelib(BOOL system_registration)
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE | TYPEFLAG_FDUAL },
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
-        { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE }
+        { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
+        { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE }
     };
 
     trace("Starting %s typelib registration tests\n",
@@ -2857,7 +2999,7 @@ static void test_register_typelib(BOOL system_registration)
     ok(hr == S_OK, "got %08x\n", hr);
 
     count = ITypeLib_GetTypeInfoCount(typelib);
-    ok(count == 11, "got %d\n", count);
+    ok(count == 12, "got %d\n", count);
 
     for(i = 0; i < count; i++)
     {

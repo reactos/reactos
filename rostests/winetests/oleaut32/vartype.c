@@ -18,10 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define CONST_VTABLE
 
-#include "wine/test.h"
-#include "oleauto.h"
+#include <wine/test.h>
+#include <winnls.h>
+#include <objbase.h>
+#include <oleauto.h>
 #include <math.h>
 
 /* Some Visual C++ versions choke on __uint64 to float conversions.
@@ -4951,7 +4957,8 @@ static void test_VarBstrFromDate(void)
   BSTR_DATE(365.25, "12/30/1900 6:00:00 AM");
   BSTR_DATE(1461.0, "12/31/1903");
   BSTR_DATE(1461.5, "12/31/1903 12:00:00 PM");
-  todo_wine { BSTR_DATE(-657434.0, "1/1/100"); }
+  BSTR_DATE(-49192.24, "4/24/1765 5:45:36 AM");
+  BSTR_DATE(-657434.0, "1/1/100");
   BSTR_DATE(2958465.0, "12/31/9999");
 
 #undef BSTR_DATE
@@ -6072,12 +6079,55 @@ static void test_ChangeType_keep_dst(void)
      SysFreeString(bstr);
 }
 
+/* This tests assumes an empty cache, so it needs to be ran early in the test. */
+static void test_bstr_cache(void)
+{
+    BSTR str, str2, strs[20];
+    unsigned i;
+
+    static const WCHAR testW[] = {'t','e','s','t',0};
+
+    str = SysAllocString(testW);
+    /* This should put the string into cache */
+    SysFreeString(str);
+    /* The string is in cache, this won't touch it */
+    SysFreeString(str);
+
+    ok(SysStringLen(str) == 4, "unexpected len\n");
+    ok(!lstrcmpW(str, testW), "string changed\n");
+
+    str2 = SysAllocString(testW);
+    ok(str == str2, "str != str2\n");
+    SysFreeString(str2);
+
+    /* Fill the bucket with cached entries. */
+    for(i=0; i < sizeof(strs)/sizeof(*strs); i++)
+        strs[i] = SysAllocStringLen(NULL, 24);
+    for(i=0; i < sizeof(strs)/sizeof(*strs); i++)
+        SysFreeString(strs[i]);
+
+    /* Following allocation will be made from cache */
+    str = SysAllocStringLen(NULL, 24);
+    ok(str == strs[0], "str != strs[0]\n");
+
+    /* Smaller buffers may also use larget cached buffers */
+    str2 = SysAllocStringLen(NULL, 16);
+    ok(str2 == strs[1], "str2 != strs[1]\n");
+
+    SysFreeString(str);
+    SysFreeString(str2);
+    SysFreeString(str);
+    SysFreeString(str2);
+}
+
 START_TEST(vartype)
 {
   hOleaut32 = GetModuleHandleA("oleaut32.dll");
 
   trace("LCIDs: System=0x%08x, User=0x%08x\n", GetSystemDefaultLCID(),
         GetUserDefaultLCID());
+
+  test_bstr_cache();
 
   test_VarI1FromI2();
   test_VarI1FromI4();

@@ -19,25 +19,29 @@
  *
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
 #include <stdio.h>
-#include <math.h>
-#include <float.h>
+//#include <math.h>
+//#include <float.h>
 
 #define COBJMACROS
 #define CONST_VTABLE
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "winsock.h"
-#include "winerror.h"
-#include "winnt.h"
-
-#include "wtypes.h"
-#include "oleauto.h"
+#include <wine/test.h>
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "wingdi.h"
+//#include "winnls.h"
+//#include "winsock.h"
+//#include "winerror.h"
+//#include "winnt.h"
+#include <objbase.h>
+//#include "wtypes.h"
+#include <oleauto.h>
 
 static HMODULE hOleaut32;
 
