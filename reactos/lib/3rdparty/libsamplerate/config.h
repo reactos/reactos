@@ -96,10 +96,10 @@
 /* #undef HAVE_LIBM */
 
 /* Define if you have C99's lrint function. */
-#define HAVE_LRINT 1
+/* #undef HAVE_LRINT */
 
 /* Define if you have C99's lrintf function. */
-#define HAVE_LRINTF 1
+/* #undef HAVE_LRINTF */
 
 /* Define to 1 if you have the `malloc' function. */
 #define HAVE_MALLOC 1
