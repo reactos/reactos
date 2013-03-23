@@ -77,9 +77,6 @@ IDC_ZOOM CURSOR "zoom.cur"
 #ifdef LANGUAGE_PL_PL
     #include "Pl.rc"
 #endif
-#ifdef LANGUAGE_TR_TR
-    #include "Tr.rc"
-#endif
 
 /* UTF-8 */
 #ifdef LANGUAGE_DA_DK
@@ -123,6 +120,9 @@ IDC_ZOOM CURSOR "zoom.cur"
 #endif
 #ifdef LANGUAGE_SV_SE
     #include "Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "Uk.rc"

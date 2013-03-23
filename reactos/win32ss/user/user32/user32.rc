@@ -179,9 +179,12 @@ OBM_OLD_CLOSE BITMAP "resources/obm_old_close.bmp"
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif
-#ifdef LANGUAGE_TR_TR
-    #include "lang/tr-TR.rc"
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
 #endif

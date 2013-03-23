@@ -23,7 +23,7 @@
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE BEGIN
-     IDS_APPNAME, "Wine Mayın Tarlası"
+     IDS_APPNAME, "Mayın Tarlası"
      IDS_NOBODY,  "Hiç kimse"
      IDS_ABOUT,   "Telif hakkı: Joshua Thielen, 2000"
 END

@@ -1,0 +1,13 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_INSTALL, "Installa"
+	IDS_PRINT, "Stampa"
+	IDS_STRING, ""
+	IDS_OPEN, "Open Font..."
+	IDS_ERROR, "Errore"
+	IDS_ERROR_NOMEM, "Memoria insufficiente per completare l'operazione."
+	IDS_ERROR_NOFONT, "Il file% 1 non è un file di origine valido."
+	IDS_ERROR_NOCLASS, "Impossibile avviare la classe."
+END
