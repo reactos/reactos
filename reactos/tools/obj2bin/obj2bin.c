@@ -51,7 +51,7 @@ RelocateSection(
                 break;
 
             default:
-                printf("Unknown relocatation type %ld address %ld\n",
+                printf("Unknown relocatation type %d, address 0x%lx\n",
                        pReloc->Type, pReloc->VirtualAddress);
         }
 
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     {
         free(pData);
         fclose(pSourceFile);
-        fprintf(stderr, "Failed to read source file: %ld\n", nFileSize);
+        fprintf(stderr, "Failed to read %ld bytes from source file\n", nFileSize);
         return -4;
     }
 
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     if (!pDestFile)
     {
         free(pData);
-        fprintf(stderr, "Couldn't open dest file '%s'\n", pszDestFile);
+        fprintf(stderr, "Couldn't open destination file '%s'\n", pszDestFile);
         return -5;
     }
 
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < pFileHeader->NumberOfSections; i++)
     {
         /* Check if this is '.text' section */
-        if ((strcmp(pSectionHeader->Name, ".text") == 0) &&
+        if ((strcmp((char*)pSectionHeader->Name, ".text") == 0) &&
             (pSectionHeader->SizeOfRawData != 0))
         {
             RelocateSection(pData,
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
             {
                 free(pData);
                 fclose(pDestFile);
-                fprintf(stderr, "Failed to write data %ld\n",
+                fprintf(stderr, "Failed to write %ld bytes to destination file\n",
                         pSectionHeader->SizeOfRawData);
                 return -6;
             }
@@ -162,4 +162,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-

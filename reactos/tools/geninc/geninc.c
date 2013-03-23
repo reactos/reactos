@@ -1,4 +1,6 @@
-
+/*
+ *  Generates assembly definitions from the target headers.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,7 +106,7 @@ int main(int argc, char* argv[])
     /* Verify the PE signature */
     if (signature != 0x4550)
     {
-        fprintf(stderr, "Invalid signature: 0x%lx.\n", signature);
+        fprintf(stderr, "Invalid signature: 0x%x.\n", signature);
         goto quit;
     }
 

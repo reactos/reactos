@@ -562,6 +562,8 @@ RegQueryValueExA(
 	rc = RegQueryValueExW(hKey, lpValueNameW, lpReserved, lpType, lpData, lpcbData);
 	if (lpValueNameW)
 		free(lpValueNameW);
+	if (rc != ERROR_SUCCESS)
+		return rc;
 	return ERROR_UNSUCCESSFUL;
 }
 

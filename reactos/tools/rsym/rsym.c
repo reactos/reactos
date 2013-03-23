@@ -60,7 +60,7 @@ GetStabInfo(void *FileData, PIMAGE_FILE_HEADER PEFileHeader,
   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
       /* printf("section: '%.08s'\n", PESectionHeaders[Idx].Name); */
-      if ((strncmp((char*)PESectionHeaders[Idx].Name, ".stab", 5) == 0)
+      if ((strncmp((char *) PESectionHeaders[Idx].Name, ".stab", 5) == 0)
         && (PESectionHeaders[Idx].Name[5] == 0))
         {
            /* printf(".stab section found. Size %d\n",
@@ -70,7 +70,7 @@ GetStabInfo(void *FileData, PIMAGE_FILE_HEADER PEFileHeader,
            *StabSymbolsBase = (void *)((char *) FileData + PESectionHeaders[Idx].PointerToRawData);
         }
 
-      if (strncmp((char*)PESectionHeaders[Idx].Name, ".stabstr", 8) == 0)
+      if (strncmp((char *) PESectionHeaders[Idx].Name, ".stabstr", 8) == 0)
         {
            /* printf(".stabstr section found. Size %d\n",
                PESectionHeaders[Idx].SizeOfRawData); */
@@ -528,7 +528,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
       if ((0 == StartOfRawData
            || InSectionHeaders[Section].PointerToRawData < StartOfRawData)
           && 0 != InSectionHeaders[Section].PointerToRawData
-          && 0 != (strncmp(InSectionHeaders[Section].Name, ".stab", 5)))
+          && 0 != (strncmp((char *) InSectionHeaders[Section].Name, ".stab", 5)))
         {
           StartOfRawData = InSectionHeaders[Section].PointerToRawData;
         }
@@ -580,7 +580,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
   OutRelocSection = NULL;
   for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
     {
-      if (0 != (strncmp(InSectionHeaders[Section].Name, ".stab", 5)))
+      if (0 != (strncmp((char *) InSectionHeaders[Section].Name, ".stab", 5)))
         {
           *CurrentSectionHeader = InSectionHeaders[Section];
           CurrentSectionHeader->PointerToLinenumbers = 0;
