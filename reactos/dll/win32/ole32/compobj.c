@@ -818,14 +818,17 @@ static void apartment_freeunusedlibraries(struct apartment *apt, DWORD delay)
                     real_delay = 0;
             }
 
-            if (!real_delay || (entry->unload_time && (entry->unload_time < GetTickCount())))
+            if (!real_delay || (entry->unload_time && ((int)(GetTickCount() - entry->unload_time) > 0)))
             {
                 list_remove(&entry->entry);
                 COMPOBJ_DllList_ReleaseRef(entry->dll, TRUE);
                 HeapFree(GetProcessHeap(), 0, entry);
             }
             else
+            {
                 entry->unload_time = GetTickCount() + real_delay;
+                if (!entry->unload_time) entry->unload_time = 1;
+            }
         }
         else if (entry->unload_time)
             entry->unload_time = 0;
@@ -2035,8 +2038,11 @@ HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *ppszProgID)
       *ppszProgID = CoTaskMemAlloc(progidlen * sizeof(WCHAR));
       if (*ppszProgID)
       {
-        if (RegQueryValueW(hkey, NULL, *ppszProgID, &progidlen))
+        if (RegQueryValueW(hkey, NULL, *ppszProgID, &progidlen)) {
           ret = REGDB_E_CLASSNOTREG;
+          CoTaskMemFree(*ppszProgID);
+          *ppszProgID = NULL;
+        }
       }
       else
         ret = E_OUTOFMEMORY;
@@ -2732,83 +2738,82 @@ HRESULT WINAPI CoResumeClassObjects(void)
  *  CoGetClassObject()
  */
 HRESULT WINAPI CoCreateInstance(
-	REFCLSID rclsid,
-	LPUNKNOWN pUnkOuter,
-	DWORD dwClsContext,
-	REFIID iid,
-	LPVOID *ppv)
+    REFCLSID rclsid,
+    LPUNKNOWN pUnkOuter,
+    DWORD dwClsContext,
+    REFIID iid,
+    LPVOID *ppv)
 {
-  HRESULT hres;
-  LPCLASSFACTORY lpclf = 0;
-  APARTMENT *apt;
+    HRESULT hres;
+    LPCLASSFACTORY lpclf = 0;
+    APARTMENT *apt;
 
-  TRACE("(rclsid=%s, pUnkOuter=%p, dwClsContext=%08x, riid=%s, ppv=%p)\n", debugstr_guid(rclsid),
-        pUnkOuter, dwClsContext, debugstr_guid(iid), ppv);
+    TRACE("(rclsid=%s, pUnkOuter=%p, dwClsContext=%08x, riid=%s, ppv=%p)\n", debugstr_guid(rclsid),
+          pUnkOuter, dwClsContext, debugstr_guid(iid), ppv);
 
-  /*
-   * Sanity check
-   */
-  if (ppv==0)
-    return E_POINTER;
+    if (ppv==0)
+        return E_POINTER;
 
-  /*
-   * Initialize the "out" parameter
-   */
-  *ppv = 0;
+    *ppv = 0;
 
-  if (!(apt = COM_CurrentApt()))
-  {
-    if (!(apt = apartment_find_multi_threaded()))
+    if (!(apt = COM_CurrentApt()))
     {
-      ERR("apartment not initialised\n");
-      return CO_E_NOTINITIALIZED;
-    }
-    apartment_release(apt);
-  }
-
-  /*
-   * The Standard Global Interface Table (GIT) object is a process-wide singleton.
-   * Rather than create a class factory, we can just check for it here
-   */
-  if (IsEqualIID(rclsid, &CLSID_StdGlobalInterfaceTable)) {
-    if (StdGlobalInterfaceTableInstance == NULL)
-      StdGlobalInterfaceTableInstance = StdGlobalInterfaceTable_Construct();
-    hres = IGlobalInterfaceTable_QueryInterface( (IGlobalInterfaceTable*) StdGlobalInterfaceTableInstance, iid, ppv);
-    if (hres) return hres;
-
-    TRACE("Retrieved GIT (%p)\n", *ppv);
-    return S_OK;
-  }
-
-  if (IsEqualCLSID(rclsid, &CLSID_ManualResetEvent))
-      return ManualResetEvent_Construct(pUnkOuter, iid, ppv);
-
-  /*
-   * Get a class factory to construct the object we want.
-   */
-  hres = CoGetClassObject(rclsid,
-			  dwClsContext,
-			  NULL,
-			  &IID_IClassFactory,
-			  (LPVOID)&lpclf);
-
-  if (FAILED(hres))
-    return hres;
-
-  /*
-   * Create the object and don't forget to release the factory
-   */
-	hres = IClassFactory_CreateInstance(lpclf, pUnkOuter, iid, ppv);
-	IClassFactory_Release(lpclf);
-	if(FAILED(hres))
+        if (!(apt = apartment_find_multi_threaded()))
         {
-          if (hres == CLASS_E_NOAGGREGATION && pUnkOuter)
-              FIXME("Class %s does not support aggregation\n", debugstr_guid(rclsid));
-          else
-              FIXME("no instance created for interface %s of class %s, hres is 0x%08x\n", debugstr_guid(iid), debugstr_guid(rclsid),hres);
+            ERR("apartment not initialised\n");
+            return CO_E_NOTINITIALIZED;
         }
+        apartment_release(apt);
+    }
 
-	return hres;
+    /*
+     * The Standard Global Interface Table (GIT) object is a process-wide singleton.
+     * Rather than create a class factory, we can just check for it here
+     */
+    if (IsEqualIID(rclsid, &CLSID_StdGlobalInterfaceTable))
+    {
+        if (StdGlobalInterfaceTableInstance == NULL)
+            StdGlobalInterfaceTableInstance = StdGlobalInterfaceTable_Construct();
+        hres = IGlobalInterfaceTable_QueryInterface((IGlobalInterfaceTable*)StdGlobalInterfaceTableInstance,
+                                                    iid,
+                                                    ppv);
+        if (hres) return hres;
+
+        TRACE("Retrieved GIT (%p)\n", *ppv);
+        return S_OK;
+    }
+
+    if (IsEqualCLSID(rclsid, &CLSID_ManualResetEvent))
+        return ManualResetEvent_Construct(pUnkOuter, iid, ppv);
+
+    /*
+     * Get a class factory to construct the object we want.
+     */
+    hres = CoGetClassObject(rclsid,
+                            dwClsContext,
+                            NULL,
+                            &IID_IClassFactory,
+                            (LPVOID)&lpclf);
+
+    if (FAILED(hres))
+        return hres;
+
+    /*
+     * Create the object and don't forget to release the factory
+     */
+    hres = IClassFactory_CreateInstance(lpclf, pUnkOuter, iid, ppv);
+    IClassFactory_Release(lpclf);
+    if (FAILED(hres))
+    {
+        if (hres == CLASS_E_NOAGGREGATION && pUnkOuter)
+            FIXME("Class %s does not support aggregation\n", debugstr_guid(rclsid));
+        else
+            FIXME("no instance created for interface %s of class %s, hres is 0x%08x\n",
+                  debugstr_guid(iid),
+                  debugstr_guid(rclsid),hres);
+    }
+
+    return hres;
 }
 
 /***********************************************************************
@@ -3876,6 +3881,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
             if (res == WAIT_OBJECT_0 + cHandles)  /* messages available */
             {
                 MSG msg;
+                int count = 0;
 
                 /* call message filter */
 
@@ -3905,7 +3911,9 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
                     }
                 }
 
-                while (COM_PeekMessage(apt, &msg))
+                /* some apps (e.g. Visio 2010) don't handle WM_PAINT properly and loop forever,
+                 * so after processing 100 messages we go back to checking the wait handles */
+                while (count++ < 100 && COM_PeekMessage(apt, &msg))
                 {
                     TRACE("received message whilst waiting for RPC: 0x%04x\n", msg.message);
                     TranslateMessage(&msg);

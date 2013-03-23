@@ -1880,11 +1880,11 @@ HOLEMENU WINAPI OleCreateMenuDescriptor(
  * Destroy the shared menu descriptor
  */
 HRESULT WINAPI OleDestroyMenuDescriptor(
-  HOLEMENU hmenuDescriptor)
+    HOLEMENU hmenuDescriptor)
 {
-  if ( hmenuDescriptor )
-    GlobalFree( hmenuDescriptor );
-	return S_OK;
+    if ( hmenuDescriptor )
+        GlobalFree( hmenuDescriptor );
+    return S_OK;
 }
 
 /***********************************************************************
@@ -1908,72 +1908,73 @@ HRESULT WINAPI OleDestroyMenuDescriptor(
  *      these are non null.
  */
 HRESULT WINAPI OleSetMenuDescriptor(
-  HOLEMENU               hOleMenu,
-  HWND                   hwndFrame,
-  HWND                   hwndActiveObject,
-  LPOLEINPLACEFRAME        lpFrame,
-  LPOLEINPLACEACTIVEOBJECT lpActiveObject)
+    HOLEMENU               hOleMenu,
+    HWND                   hwndFrame,
+    HWND                   hwndActiveObject,
+    LPOLEINPLACEFRAME        lpFrame,
+    LPOLEINPLACEACTIVEOBJECT lpActiveObject)
 {
-  OleMenuDescriptor *pOleMenuDescriptor = NULL;
+    OleMenuDescriptor *pOleMenuDescriptor = NULL;
 
-  /* Check args */
-  if ( !hwndFrame || (hOleMenu && !hwndActiveObject) )
-    return E_INVALIDARG;
+    /* Check args */
+    if ( !hwndFrame || (hOleMenu && !hwndActiveObject) )
+        return E_INVALIDARG;
 
-  if ( lpFrame || lpActiveObject )
-  {
-     FIXME("(%p, %p, %p, %p, %p), Context sensitive help filtering not implemented!\n",
-	hOleMenu,
-	hwndFrame,
-	hwndActiveObject,
-	lpFrame,
-	lpActiveObject);
-  }
+    if ( lpFrame || lpActiveObject )
+    {
+        FIXME("(%p, %p, %p, %p, %p), Context sensitive help filtering not implemented!\n",
+        hOleMenu,
+        hwndFrame,
+        hwndActiveObject,
+        lpFrame,
+        lpActiveObject);
+    }
 
-  /* Set up a message hook to intercept the containers frame window messages.
-   * The message filter is responsible for dispatching menu messages from the
-   * shared menu which are intended for the object.
-   */
+    /* Set up a message hook to intercept the containers frame window messages.
+     * The message filter is responsible for dispatching menu messages from the
+     * shared menu which are intended for the object.
+     */
 
-  if ( hOleMenu )  /* Want to install dispatching code */
-  {
-    /* If OLEMenu hooks are already installed for this thread, fail
-     * Note: This effectively means that OleSetMenuDescriptor cannot
-     * be called twice in succession on the same frame window
-     * without first calling it with a null hOleMenu to uninstall */
-    if ( OLEMenu_IsHookInstalled( GetCurrentThreadId() ) )
-  return E_FAIL;
+    if ( hOleMenu )  /* Want to install dispatching code */
+    {
+        /* If OLEMenu hooks are already installed for this thread, fail
+         * Note: This effectively means that OleSetMenuDescriptor cannot
+         * be called twice in succession on the same frame window
+         * without first calling it with a null hOleMenu to uninstall
+         */
+        if ( OLEMenu_IsHookInstalled( GetCurrentThreadId() ) )
+            return E_FAIL;
 
-    /* Get the menu descriptor */
-    pOleMenuDescriptor = GlobalLock( hOleMenu );
-    if ( !pOleMenuDescriptor )
-      return E_UNEXPECTED;
+        /* Get the menu descriptor */
+        pOleMenuDescriptor = GlobalLock( hOleMenu );
+        if ( !pOleMenuDescriptor )
+            return E_UNEXPECTED;
 
-    /* Update the menu descriptor */
-    pOleMenuDescriptor->hwndFrame = hwndFrame;
-    pOleMenuDescriptor->hwndActiveObject = hwndActiveObject;
+        /* Update the menu descriptor */
+        pOleMenuDescriptor->hwndFrame = hwndFrame;
+        pOleMenuDescriptor->hwndActiveObject = hwndActiveObject;
 
-    GlobalUnlock( hOleMenu );
-    pOleMenuDescriptor = NULL;
+        GlobalUnlock( hOleMenu );
+        pOleMenuDescriptor = NULL;
 
-    /* Add a menu descriptor windows property to the frame window */
-    SetPropW( hwndFrame, prop_olemenuW, hOleMenu );
+        /* Add a menu descriptor windows property to the frame window */
+        SetPropW( hwndFrame, prop_olemenuW, hOleMenu );
 
-    /* Install thread scope message hooks for WH_GETMESSAGE and WH_CALLWNDPROC */
-    if ( !OLEMenu_InstallHooks( GetCurrentThreadId() ) )
-      return E_FAIL;
-  }
-  else  /* Want to uninstall dispatching code */
-  {
-    /* Uninstall the hooks */
-    if ( !OLEMenu_UnInstallHooks( GetCurrentThreadId() ) )
-      return E_FAIL;
+        /* Install thread scope message hooks for WH_GETMESSAGE and WH_CALLWNDPROC */
+        if ( !OLEMenu_InstallHooks( GetCurrentThreadId() ) )
+            return E_FAIL;
+    }
+    else  /* Want to uninstall dispatching code */
+    {
+        /* Uninstall the hooks */
+        if ( !OLEMenu_UnInstallHooks( GetCurrentThreadId() ) )
+            return E_FAIL;
 
-    /* Remove the menu descriptor property from the frame window */
-    RemovePropW( hwndFrame, prop_olemenuW );
-  }
+        /* Remove the menu descriptor property from the frame window */
+        RemovePropW( hwndFrame, prop_olemenuW );
+    }
 
-  return S_OK;
+    return S_OK;
 }
 
 /******************************************************************************

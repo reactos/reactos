@@ -632,7 +632,7 @@ static HRESULT WINAPI PointerMonikerCF_CreateInstance(LPCLASSFACTORY iface,
     if (FAILED(hr))
         return hr;
 
-	hr = IMoniker_QueryInterface(pMoniker, riid, ppv);
+    hr = IMoniker_QueryInterface(pMoniker, riid, ppv);
 
     if (FAILED(hr))
         IMoniker_Release(pMoniker);
