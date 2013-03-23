@@ -2053,8 +2053,10 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddFuncDesc(
         if(This->dual)
             This->dual->typedata = This->typedata;
     } else {
+        unsigned int j;
+
         iter = This->typedata->next;
-        for(i=0; i<index; i++)
+        for (j = 0; j < index; j++)
             iter = iter->next;
 
         insert->next = iter->next;

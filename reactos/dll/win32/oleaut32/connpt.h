@@ -19,6 +19,6 @@
 #ifndef _CONNPT_H
 #define _CONNPT_H
 
-HRESULT CreateConnectionPoint(IUnknown *pUnk, REFIID riid, IConnectionPoint **pCP);
+HRESULT CreateConnectionPoint(IUnknown *pUnk, REFIID riid, IConnectionPoint **pCP) DECLSPEC_HIDDEN;
 
 #endif /* _CONNPT_H */

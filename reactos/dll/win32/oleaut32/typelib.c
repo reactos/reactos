@@ -986,7 +986,7 @@ typedef struct tagTLBImpLib
 /* internal ITypeLib data */
 typedef struct tagITypeLibImpl
 {
-    const ITypeLib2Vtbl *lpVtbl;
+    ITypeLib2 ITypeLib2_iface;
     const ITypeCompVtbl *lpVtblTypeComp;
     LONG ref;
     TLIBATTR LibAttr;            /* guid,lcid,syskind,version,flags */
@@ -2547,9 +2547,10 @@ static HRESULT TLB_PEFile_Open(LPCWSTR path, INT index, LPVOID *ppBase, DWORD *p
                     return S_OK;
                 }
             }
-
-            hr = E_FAIL;
         }
+
+        TRACE("No TYPELIB resource found\n");
+        hr = E_FAIL;
     }
 
     TLB_PEFile_Release((IUnknown *)&This->lpvtbl);
@@ -2918,7 +2919,7 @@ static HRESULT TLB_ReadTypeLib(LPCWSTR pszFileName, LPWSTR pszPath, UINT cchPath
         if (!strcmpiW(entry->path, pszPath) && entry->index == index)
         {
             TRACE("cache hit\n");
-            *ppTypeLib = (ITypeLib2*)entry;
+            *ppTypeLib = &entry->ITypeLib2_iface;
             ITypeLib2_AddRef(*ppTypeLib);
             LeaveCriticalSection(&cache_section);
             return S_OK;
@@ -2952,8 +2953,6 @@ static HRESULT TLB_ReadTypeLib(LPCWSTR pszFileName, LPWSTR pszPath, UINT cchPath
             ret = TYPE_E_CANTLOADLIBRARY;
         IUnknown_Release(pFile);
     }
-    else
-        ret = TYPE_E_CANTLOADLIBRARY;
 
     if(*ppTypeLib) {
 	ITypeLibImpl *impl = (ITypeLibImpl*)*ppTypeLib;
@@ -2969,8 +2968,15 @@ static HRESULT TLB_ReadTypeLib(LPCWSTR pszFileName, LPWSTR pszPath, UINT cchPath
         list_add_head(&tlb_cache, &impl->entry);
         LeaveCriticalSection(&cache_section);
         ret = S_OK;
-    } else
-	ERR("Loading of typelib %s failed with error %d\n", debugstr_w(pszFileName), GetLastError());
+    }
+    else
+    {
+        if(ret != E_FAIL)
+            ERR("Loading of typelib %s failed with error %d\n", debugstr_w(pszFileName), GetLastError());
+
+        ret = TYPE_E_CANTLOADLIBRARY;
+    }
+
 
     return ret;
 }
@@ -2984,7 +2990,7 @@ static ITypeLibImpl* TypeLibImpl_Constructor(void)
     pTypeLibImpl = heap_alloc_zero(sizeof(ITypeLibImpl));
     if (!pTypeLibImpl) return NULL;
 
-    pTypeLibImpl->lpVtbl = &tlbvt;
+    pTypeLibImpl->ITypeLib2_iface.lpVtbl = &tlbvt;
     pTypeLibImpl->lpVtblTypeComp = &tlbtcvt;
     pTypeLibImpl->ref = 1;
 
@@ -3202,7 +3208,7 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
     }
 
     TRACE("(%p)\n", pTypeLibImpl);
-    return (ITypeLib2*) pTypeLibImpl;
+    return &pTypeLibImpl->ITypeLib2_iface;
 }
 
 
@@ -4200,58 +4206,53 @@ static ITypeLib2* ITypeLib2_Constructor_SLTG(LPVOID pLib, DWORD dwTLBLength)
     }
 
     heap_free(pOtherTypeInfoBlks);
-    return (ITypeLib2*)pTypeLibImpl;
+    return &pTypeLibImpl->ITypeLib2_iface;
 }
 
-/* ITypeLib::QueryInterface
- */
-static HRESULT WINAPI ITypeLib2_fnQueryInterface(
-	ITypeLib2 * iface,
-	REFIID riid,
-	VOID **ppvObject)
+static inline ITypeLibImpl *impl_from_ITypeLib2(ITypeLib2 *iface)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    return CONTAINING_RECORD(iface, ITypeLibImpl, ITypeLib2_iface);
+}
+
+static HRESULT WINAPI ITypeLib2_fnQueryInterface(ITypeLib2 *iface, REFIID riid, void **ppv)
+{
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
 
     TRACE("(%p)->(IID: %s)\n",This,debugstr_guid(riid));
 
-    *ppvObject=NULL;
     if(IsEqualIID(riid, &IID_IUnknown) ||
        IsEqualIID(riid,&IID_ITypeLib)||
        IsEqualIID(riid,&IID_ITypeLib2))
     {
-        *ppvObject = This;
+        *ppv = &This->ITypeLib2_iface;
+    }
+    else
+    {
+        *ppv = NULL;
+        TRACE("-- Interface: E_NOINTERFACE\n");
+        return E_NOINTERFACE;
     }
 
-    if(*ppvObject)
-    {
-        ITypeLib2_AddRef(iface);
-        TRACE("-- Interface: (%p)->(%p)\n",ppvObject,*ppvObject);
-        return S_OK;
-    }
-    TRACE("-- Interface: E_NOINTERFACE\n");
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
-/* ITypeLib::AddRef
- */
 static ULONG WINAPI ITypeLib2_fnAddRef( ITypeLib2 *iface)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->ref was %u\n",This, ref - 1);
+    TRACE("(%p) ref=%u\n", This, ref);
 
     return ref;
 }
 
-/* ITypeLib::Release
- */
 static ULONG WINAPI ITypeLib2_fnRelease( ITypeLib2 *iface)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(%u)\n",This, ref);
+    TRACE("(%p) ref=%u\n",This, ref);
 
     if (!ref)
     {
@@ -4295,7 +4296,7 @@ static ULONG WINAPI ITypeLib2_fnRelease( ITypeLib2 *iface)
       LIST_FOR_EACH_ENTRY_SAFE(pImpLib, pImpLibNext, &This->implib_list, TLBImpLib, entry)
       {
           if (pImpLib->pImpTypeLib)
-              ITypeLib_Release((ITypeLib *)pImpLib->pImpTypeLib);
+              ITypeLib2_Release(&pImpLib->pImpTypeLib->ITypeLib2_iface);
           SysFreeString(pImpLib->name);
 
           list_remove(&pImpLib->entry);
@@ -4324,7 +4325,7 @@ static ULONG WINAPI ITypeLib2_fnRelease( ITypeLib2 *iface)
  */
 static UINT WINAPI ITypeLib2_fnGetTypeInfoCount( ITypeLib2 *iface)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
     TRACE("(%p)->count is %d\n",This, This->TypeInfoCount);
     return This->TypeInfoCount;
 }
@@ -4338,7 +4339,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfo(
     UINT index,
     ITypeInfo **ppTInfo)
 {
-    ITypeLibImpl *This = (ITypeLibImpl*)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
 
     TRACE("%p %u %p\n", This, index, ppTInfo);
 
@@ -4364,7 +4365,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfoType(
     UINT index,
     TYPEKIND *pTKind)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
 
     TRACE("(%p, %d, %p)\n", This, index, pTKind);
 
@@ -4389,8 +4390,8 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfoOfGuid(
     REFGUID guid,
     ITypeInfo **ppTInfo)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
-    UINT i;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
+    int i;
 
     TRACE("%p %s %p\n", This, debugstr_guid(guid), ppTInfo);
 
@@ -4414,7 +4415,7 @@ static HRESULT WINAPI ITypeLib2_fnGetLibAttr(
 	ITypeLib2 *iface,
 	LPTLIBATTR *attr)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
 
     TRACE("(%p, %p)\n", This, attr);
 
@@ -4437,7 +4438,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeComp(
 	ITypeLib2 *iface,
 	ITypeComp **ppTComp)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
 
     TRACE("(%p)->(%p)\n",This,ppTComp);
     *ppTComp = (ITypeComp *)&This->lpVtblTypeComp;
@@ -4463,12 +4464,9 @@ static HRESULT WINAPI ITypeLib2_fnGetDocumentation(
     DWORD *pdwHelpContext,
     BSTR *pBstrHelpFile)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
-
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
     HRESULT result = E_INVALIDARG;
-
     ITypeInfo *pTInfo;
-
 
     TRACE("(%p) index %d Name(%p) DocString(%p) HelpContext(%p) HelpFile(%p)\n",
         This, index,
@@ -4557,8 +4555,9 @@ static HRESULT WINAPI ITypeLib2_fnIsName(
 	ULONG lHashVal,
 	BOOL *pfName)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
-    UINT nNameBufLen = (lstrlenW(szNameBuf)+1)*sizeof(WCHAR), tic, fdc, vrc, pc;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
+    int tic;
+    UINT nNameBufLen = (lstrlenW(szNameBuf)+1)*sizeof(WCHAR), fdc, vrc;
 
     TRACE("(%p)->(%s,%08x,%p)\n", This, debugstr_w(szNameBuf), lHashVal,
 	  pfName);
@@ -4569,6 +4568,8 @@ static HRESULT WINAPI ITypeLib2_fnIsName(
         if(!memcmp(szNameBuf,pTInfo->Name, nNameBufLen)) goto ITypeLib2_fnIsName_exit;
         for(fdc = 0; fdc < pTInfo->TypeAttr.cFuncs; ++fdc) {
             TLBFuncDesc *pFInfo = &pTInfo->funcdescs[fdc];
+            int pc;
+
             if(!memcmp(szNameBuf,pFInfo->Name, nNameBufLen)) goto ITypeLib2_fnIsName_exit;
             for(pc=0; pc < pFInfo->funcdesc.cParams; pc++)
                 if(!memcmp(szNameBuf,pFInfo->pParamDesc[pc].Name, nNameBufLen))
@@ -4603,8 +4604,9 @@ static HRESULT WINAPI ITypeLib2_fnFindName(
 	MEMBERID *memid,
 	UINT16 *found)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
-    UINT tic, count = 0;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
+    int tic;
+    UINT count = 0;
     UINT len;
 
     TRACE("(%p)->(%s %u %p %p %p)\n", This, debugstr_w(name), hash, ppTInfo, memid, found);
@@ -4621,7 +4623,7 @@ static HRESULT WINAPI ITypeLib2_fnFindName(
         if(!memcmp(name, pTInfo->Name, len)) goto ITypeLib2_fnFindName_exit;
         for(fdc = 0; fdc < pTInfo->TypeAttr.cFuncs; ++fdc) {
             TLBFuncDesc *func = &pTInfo->funcdescs[fdc];
-            UINT pc;
+            int pc;
 
             if(!memcmp(name, func->Name, len)) goto ITypeLib2_fnFindName_exit;
             for(pc = 0; pc < func->funcdesc.cParams; pc++) {
@@ -4656,10 +4658,9 @@ static VOID WINAPI ITypeLib2_fnReleaseTLibAttr(
 	ITypeLib2 *iface,
 	TLIBATTR *pTLibAttr)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
-    TRACE("freeing (%p)\n",This);
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
+    TRACE("(%p)->(%p)\n", This, pTLibAttr);
     heap_free(pTLibAttr);
-
 }
 
 /* ITypeLib2::GetCustData
@@ -4671,10 +4672,10 @@ static HRESULT WINAPI ITypeLib2_fnGetCustData(
 	REFGUID guid,
         VARIANT *pVarVal)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
     TLBCustData *pCData;
 
-    TRACE("%p %s %p\n", This, debugstr_guid(guid), pVarVal);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(guid), pVarVal);
 
     pCData = TLB_get_custdata_by_guid(&This->custdata_list, guid);
     if(!pCData)
@@ -4697,7 +4698,7 @@ static HRESULT WINAPI ITypeLib2_fnGetLibStatistics(
         ULONG *pcUniqueNames,
 	ULONG *pcchUniqueNames)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
 
     FIXME("(%p): stub!\n", This);
 
@@ -4721,7 +4722,7 @@ static HRESULT WINAPI ITypeLib2_fnGetDocumentation2(
         DWORD *pdwHelpStringContext,
 	BSTR *pbstrHelpStringDll)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
     HRESULT result;
     ITypeInfo *pTInfo;
 
@@ -4807,8 +4808,8 @@ static HRESULT WINAPI ITypeLib2_fnGetAllCustData(
 	ITypeLib2 * iface,
         CUSTDATA *pCustData)
 {
-    ITypeLibImpl *This = (ITypeLibImpl *)iface;
-    TRACE("%p %p\n", iface, pCustData);
+    ITypeLibImpl *This = impl_from_ITypeLib2(iface);
+    TRACE("(%p)->(%p)\n", This, pCustData);
     return TLB_copy_all_custdata(&This->custdata_list, pCustData);
 }
 
@@ -4838,21 +4839,21 @@ static HRESULT WINAPI ITypeLibComp_fnQueryInterface(ITypeComp * iface, REFIID ri
 {
     ITypeLibImpl *This = impl_from_ITypeComp(iface);
 
-    return ITypeLib2_QueryInterface((ITypeLib2 *)This, riid, ppv);
+    return ITypeLib2_QueryInterface(&This->ITypeLib2_iface, riid, ppv);
 }
 
 static ULONG WINAPI ITypeLibComp_fnAddRef(ITypeComp * iface)
 {
     ITypeLibImpl *This = impl_from_ITypeComp(iface);
 
-    return ITypeLib2_AddRef((ITypeLib2 *)This);
+    return ITypeLib2_AddRef(&This->ITypeLib2_iface);
 }
 
 static ULONG WINAPI ITypeLibComp_fnRelease(ITypeComp * iface)
 {
     ITypeLibImpl *This = impl_from_ITypeComp(iface);
 
-    return ITypeLib2_Release((ITypeLib2 *)This);
+    return ITypeLib2_Release(&This->ITypeLib2_iface);
 }
 
 static HRESULT WINAPI ITypeLibComp_fnBind(
@@ -5001,7 +5002,7 @@ static HRESULT WINAPI ITypeLibComp_fnBindType(
     ITypeComp ** ppTComp)
 {
     ITypeLibImpl *This = impl_from_ITypeComp(iface);
-    UINT i;
+    int i;
 
     TRACE("(%s, %x, %p, %p)\n", debugstr_w(szName), lHash, ppTInfo, ppTComp);
 
@@ -5096,14 +5097,14 @@ static ULONG WINAPI ITypeInfo_fnAddRef( ITypeInfo2 *iface)
     TRACE("(%p)->ref is %u\n",This, ref);
 
     if (ref == 1 /* incremented from 0 */)
-        ITypeLib2_AddRef((ITypeLib2*)This->pTypeLib);
+        ITypeLib2_AddRef(&This->pTypeLib->ITypeLib2_iface);
 
     return ref;
 }
 
 static void ITypeInfoImpl_Destroy(ITypeInfoImpl *This)
 {
-    UINT i, j;
+    UINT i;
 
     TRACE("destroying ITypeInfo(%p)\n",This);
 
@@ -5118,6 +5119,7 @@ static void ITypeInfoImpl_Destroy(ITypeInfoImpl *This)
 
     for (i = 0; i < This->TypeAttr.cFuncs; ++i)
     {
+        int j;
         TLBFuncDesc *pFInfo = &This->funcdescs[i];
         for(j = 0; j < pFInfo->funcdesc.cParams; j++)
         {
@@ -5179,7 +5181,7 @@ static ULONG WINAPI ITypeInfo_fnRelease(ITypeInfo2 *iface)
     if (!ref)
     {
         BOOL not_attached_to_typelib = This->not_attached_to_typelib;
-        ITypeLib2_Release((ITypeLib2*)This->pTypeLib);
+        ITypeLib2_Release(&This->pTypeLib->ITypeLib2_iface);
         if (not_attached_to_typelib)
             heap_free(This);
         /* otherwise This will be freed when typelib is freed */
@@ -6191,6 +6193,10 @@ DispCallFunc(
     case VT_CY:
         V_UI8(pvargResult) = call_method( func, argspos - 1, args + 1, &stack_offset );
         break;
+    case VT_HRESULT:
+        WARN("invalid return type %u\n", vtReturn);
+        heap_free( args );
+        return E_INVALIDARG;
     default:
         V_UI4(pvargResult) = call_method( func, argspos - 1, args + 1, &stack_offset );
         break;
@@ -6269,6 +6275,10 @@ DispCallFunc(
         args[0] = (DWORD_PTR)pvargResult;  /* arg 0 is a pointer to the result */
         call_method( func, argspos, args );
         break;
+    case VT_HRESULT:
+        WARN("invalid return type %u\n", vtReturn);
+        heap_free( args );
+        return E_INVALIDARG;
     default:
         V_UI8(pvargResult) = call_method( func, argspos - 1, args + 1 );
         break;
@@ -7053,7 +7063,7 @@ static HRESULT WINAPI ITypeInfo_fnGetRefTypeInfo(
 	    } else {
                 if(ref_type->pImpTLInfo->pImpTypeLib) {
 		    TRACE("typeinfo in imported typelib that is already loaded\n");
-                    pTLib = (ITypeLib*)ref_type->pImpTLInfo->pImpTypeLib;
+                    pTLib = (ITypeLib*)&ref_type->pImpTLInfo->pImpTypeLib->ITypeLib2_iface;
                     ITypeLib_AddRef(pTLib);
 		    result = S_OK;
 		} else {
@@ -7838,7 +7848,7 @@ HRESULT WINAPI CreateDispTypeInfo(
     *pptinfo = (ITypeInfo*)pTIClass;
 
     ITypeInfo_AddRef(*pptinfo);
-    ITypeLib_Release((ITypeLib *)&pTypeLibImpl->lpVtbl);
+    ITypeLib2_Release(&pTypeLibImpl->ITypeLib2_iface);
 
     return S_OK;
 

@@ -3134,9 +3134,9 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
             LOCALE_USER_DEFAULT, 0, &d)))
             hres = VariantChangeType(&varLeft,&varLeft,
             VARIANT_LOCALBOOL, VT_BOOL);
-            if (SUCCEEDED(hres) && V_VT(&varLeft) != resvt)
-                hres = VariantChangeType(&varLeft,&varLeft,0,resvt);
-            if (FAILED(hres)) goto VarAnd_Exit;
+        if (SUCCEEDED(hres) && V_VT(&varLeft) != resvt)
+            hres = VariantChangeType(&varLeft,&varLeft,0,resvt);
+        if (FAILED(hres)) goto VarAnd_Exit;
     }
 
     if (resvt == VT_I4 && V_VT(&varRight) == VT_UI4)

@@ -1911,7 +1911,7 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
       WCHAR fmt_buff[80];
 
       if (!GetLocaleInfoW(lcid, dwFmt, fmt_buff, sizeof(fmt_buff)/sizeof(WCHAR)) ||
-          !GetDateFormatW(lcid, 0, &udate.st, fmt_buff, pBuff,
+          !get_date_format(lcid, 0, &udate.st, fmt_buff, pBuff,
                           sizeof(buff)/sizeof(WCHAR)-(pBuff-buff)))
       {
         hRes = E_INVALIDARG;

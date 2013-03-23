@@ -597,16 +597,16 @@ WORD typeofarray
 #include "poppack.h"
 
 /* heap allocation helpers */
-extern void* heap_alloc_zero(unsigned size);
-extern void* heap_alloc(unsigned size);
-extern void* heap_realloc(void *ptr, unsigned size);
-extern void  heap_free(void *ptr);
+extern void* heap_alloc_zero(unsigned size) DECLSPEC_HIDDEN __WINE_ALLOC_SIZE(1);
+extern void* heap_alloc(unsigned size) DECLSPEC_HIDDEN __WINE_ALLOC_SIZE(1);
+extern void* heap_realloc(void *ptr, unsigned size) DECLSPEC_HIDDEN;
+extern void  heap_free(void *ptr) DECLSPEC_HIDDEN;
 
-HRESULT ITypeInfoImpl_GetInternalFuncDesc( ITypeInfo *iface, UINT index, const FUNCDESC **ppFuncDesc );
+HRESULT ITypeInfoImpl_GetInternalFuncDesc( ITypeInfo *iface, UINT index, const FUNCDESC **ppFuncDesc ) DECLSPEC_HIDDEN;
 
-extern DWORD _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args);
+extern DWORD _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args) DECLSPEC_HIDDEN;
 
-HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv);
+HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
 
 /* The OLE Automation ProxyStub Interface Class (aka Typelib Marshaler) */
 DEFINE_OLEGUID( CLSID_PSDispatch,    0x00020420, 0x0000, 0x0000 );

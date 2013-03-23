@@ -6579,6 +6579,120 @@ HRESULT WINAPI VarBstrFromCy(CY cyIn, LCID lcid, ULONG dwFlags, BSTR *pbstrOut)
   return *pbstrOut ? S_OK : E_OUTOFMEMORY;
 }
 
+static inline int output_int_len(int o, int min_len, WCHAR *date, int date_len)
+{
+    int len, tmp;
+
+    if(min_len >= date_len)
+        return -1;
+
+    for(len=0, tmp=o; tmp; tmp/=10) len++;
+    if(!len) len++;
+    if(len >= date_len)
+        return -1;
+
+    for(tmp=min_len-len; tmp>0; tmp--)
+        *date++ = '0';
+    for(tmp=len; tmp>0; tmp--, o/=10)
+        date[tmp-1] = '0' + o%10;
+    return min_len>len ? min_len : len;
+}
+
+/* format date string, similar to GetDateFormatW function but works on bigger range of dates */
+BOOL get_date_format(LCID lcid, DWORD flags, const SYSTEMTIME *st,
+        const WCHAR *fmt, WCHAR *date, int date_len)
+{
+    static const LCTYPE dayname[] = {
+        LOCALE_SDAYNAME7, LOCALE_SDAYNAME1, LOCALE_SDAYNAME2, LOCALE_SDAYNAME3,
+        LOCALE_SDAYNAME4, LOCALE_SDAYNAME5, LOCALE_SDAYNAME6
+    };
+    static const LCTYPE sdayname[] = {
+        LOCALE_SABBREVDAYNAME7, LOCALE_SABBREVDAYNAME1, LOCALE_SABBREVDAYNAME2,
+        LOCALE_SABBREVDAYNAME3, LOCALE_SABBREVDAYNAME4, LOCALE_SABBREVDAYNAME5,
+        LOCALE_SABBREVDAYNAME6
+    };
+    static const LCTYPE monthname[] = {
+        LOCALE_SMONTHNAME1, LOCALE_SMONTHNAME2, LOCALE_SMONTHNAME3, LOCALE_SMONTHNAME4,
+        LOCALE_SMONTHNAME5, LOCALE_SMONTHNAME6, LOCALE_SMONTHNAME7, LOCALE_SMONTHNAME8,
+        LOCALE_SMONTHNAME9, LOCALE_SMONTHNAME10, LOCALE_SMONTHNAME11, LOCALE_SMONTHNAME12
+    };
+    static const LCTYPE smonthname[] = {
+        LOCALE_SABBREVMONTHNAME1, LOCALE_SABBREVMONTHNAME2, LOCALE_SABBREVMONTHNAME3,
+        LOCALE_SABBREVMONTHNAME4, LOCALE_SABBREVMONTHNAME5, LOCALE_SABBREVMONTHNAME6,
+        LOCALE_SABBREVMONTHNAME7, LOCALE_SABBREVMONTHNAME8, LOCALE_SABBREVMONTHNAME9,
+        LOCALE_SABBREVMONTHNAME10, LOCALE_SABBREVMONTHNAME11, LOCALE_SABBREVMONTHNAME12
+    };
+
+    if(flags & ~(LOCALE_NOUSEROVERRIDE|VAR_DATEVALUEONLY))
+        FIXME("ignoring flags %x\n", flags);
+    flags &= LOCALE_NOUSEROVERRIDE;
+
+    while(*fmt && date_len) {
+        int count = 1;
+
+        switch(*fmt) {
+            case 'd':
+            case 'M':
+            case 'y':
+            case 'g':
+                while(*fmt == *(fmt+count))
+                    count++;
+                fmt += count-1;
+        }
+
+        switch(*fmt) {
+        case 'd':
+            if(count >= 4)
+                count = GetLocaleInfoW(lcid, dayname[st->wDayOfWeek] | flags, date, date_len)-1;
+            else if(count == 3)
+                count = GetLocaleInfoW(lcid, sdayname[st->wDayOfWeek] | flags, date, date_len)-1;
+            else
+                count = output_int_len(st->wDay, count, date, date_len);
+            break;
+        case 'M':
+            if(count >= 4)
+                count = GetLocaleInfoW(lcid, monthname[st->wMonth-1] | flags, date, date_len)-1;
+            else if(count == 3)
+                count = GetLocaleInfoW(lcid, smonthname[st->wMonth-1] | flags, date, date_len)-1;
+            else
+                count = output_int_len(st->wMonth, count, date, date_len);
+            break;
+        case 'y':
+            if(count >= 3)
+                count = output_int_len(st->wYear, 0, date, date_len);
+            else
+                count = output_int_len(st->wYear%100, count, date, date_len);
+            break;
+        case 'g':
+            if(count == 2) {
+                FIXME("Should be using GetCalendarInfo(CAL_SERASTRING), defaulting to 'AD'\n");
+
+                *date++ = 'A';
+                date_len--;
+                if(date_len)
+                    *date = 'D';
+                else
+                    count = -1;
+                break;
+            }
+        /* fall through */
+        default:
+            *date = *fmt;
+        }
+
+        if(count < 0)
+            break;
+        fmt++;
+        date += count;
+        date_len -= count;
+    }
+
+    if(!date_len)
+        return FALSE;
+    *date++ = 0;
+    return TRUE;
+}
+
 /******************************************************************************
  *    VarBstrFromDate    [OLEAUT32.114]
  *
@@ -6599,7 +6713,7 @@ HRESULT WINAPI VarBstrFromDate(DATE dateIn, LCID lcid, ULONG dwFlags, BSTR* pbst
 {
   SYSTEMTIME st;
   DWORD dwFormatFlags = dwFlags & LOCALE_NOUSEROVERRIDE;
-  WCHAR date[128], *time;
+  WCHAR date[128], fmt_buff[80], *time;
 
   TRACE("(%g,0x%08x,0x%08x,%p)\n", dateIn, lcid, dwFlags, pbstrOut);
 
@@ -6622,15 +6736,15 @@ HRESULT WINAPI VarBstrFromDate(DATE dateIn, LCID lcid, ULONG dwFlags, BSTR* pbst
 
     if (whole == 0.0)
       dwFlags |= VAR_TIMEVALUEONLY;
-    else if (partial < 1e-12)
+    else if (partial > -1e-12 && partial < 1e-12)
       dwFlags |= VAR_DATEVALUEONLY;
   }
 
   if (dwFlags & VAR_TIMEVALUEONLY)
     date[0] = '\0';
   else
-    if (!GetDateFormatW(lcid, dwFormatFlags|DATE_SHORTDATE, &st, NULL, date,
-                        sizeof(date)/sizeof(WCHAR)))
+    if (!GetLocaleInfoW(lcid, LOCALE_SSHORTDATE, fmt_buff, sizeof(fmt_buff)/sizeof(WCHAR)) ||
+        !get_date_format(lcid, dwFlags, &st, fmt_buff, date, sizeof(date)/sizeof(WCHAR)))
       return E_INVALIDARG;
 
   if (!(dwFlags & VAR_DATEVALUEONLY))
