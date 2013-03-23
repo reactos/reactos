@@ -29,7 +29,7 @@
 //#include <stdarg.h>
 #include <stdio.h>
 //#include <string.h>
-//#include <setjmp.h>
+#include <setjmp.h>
 
 #ifdef SONAME_LIBJPEG
 /* This is a hack, so jpeglib.h does not redefine INT32 and the like*/
