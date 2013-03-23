@@ -18,17 +18,61 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include <stdarg.h>
+//#include <stdarg.h>
+#include <stdio.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
+#include <windef.h>
+#include <winbase.h>
+#include <ole2.h>
+//#include "objbase.h"
 
-#include "wine/test.h"
+#include <wine/test.h>
 
+#define DEFINE_EXPECT(func) \
+    static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
+
+#define SET_EXPECT(func) \
+    expect_ ## func = TRUE
+
+#define CHECK_EXPECT2(func) \
+    do { \
+        ok(expect_ ##func, "unexpected call " #func "\n"); \
+        called_ ## func = TRUE; \
+    }while(0)
+
+#define CHECK_EXPECT(func) \
+    do { \
+        CHECK_EXPECT2(func); \
+        expect_ ## func = FALSE; \
+    }while(0)
+
+#define CHECK_CALLED(func) \
+    do { \
+        ok(called_ ## func, "expected " #func "\n"); \
+        expect_ ## func = called_ ## func = FALSE; \
+    }while(0)
+
+DEFINE_EXPECT(CF_QueryInterface_ClassFactory);
+DEFINE_EXPECT(CF_CreateInstance);
+
+static const char *debugstr_guid(REFIID riid)
+{
+    static char buf[50];
+
+    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
+            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
+            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
+
+    return buf;
+}
 
 static HRESULT create_storage(IStorage **stg)
 {
@@ -100,11 +144,159 @@ static void test_olestream(void)
     IStorage_Release(stg);
 }
 
+static HRESULT WINAPI test_class_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    if(IsEqualGUID(riid, &IID_IUnknown)) {
+        *ppv = iface;
+        return S_OK;
+    }else if(IsEqualGUID(riid, &IID_IOleObject)) {
+        ok(0, "unexpected query for IOleObject interface\n");
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI test_class_AddRef(IUnknown *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI test_class_Release(IUnknown *iface)
+{
+    return 1;
+}
+
+static IUnknownVtbl test_class_vtbl = {
+    test_class_QueryInterface,
+    test_class_AddRef,
+    test_class_Release,
+};
+
+static IUnknown test_class = { &test_class_vtbl };
+
+static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
+{
+    if(IsEqualGUID(riid, &IID_IUnknown)) {
+        *ppv = iface;
+        return S_OK;
+    }else if(IsEqualGUID(riid, &IID_IMarshal)) {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }else if(IsEqualGUID(riid, &IID_IClassFactory)) {
+        CHECK_EXPECT(CF_QueryInterface_ClassFactory);
+        *ppv = iface;
+        return S_OK;
+    }
+
+    ok(0, "unexpected interface: %s\n", debugstr_guid(riid));
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface,
+        IUnknown *pUnkOuter, REFIID riid, void **ppv)
+{
+    CHECK_EXPECT(CF_CreateInstance);
+
+    ok(pUnkOuter == NULL, "pUnkOuter != NULL\n");
+    todo_wine ok(IsEqualGUID(riid, &IID_IUnknown), "riid = %s\n", debugstr_guid(riid));
+    if(IsEqualGUID(riid, &IID_IOleObject)) {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    *ppv = &test_class;
+    return S_OK;
+}
+
+static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL fLock)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static IClassFactoryVtbl ClassFactoryVtbl = {
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    ClassFactory_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory ClassFactory = { &ClassFactoryVtbl };
+
+static void test_default_handler_run(void)
+{
+    const CLSID test_server_clsid = {0x0f77e570,0x80c3,0x11e2,{0x9e,0x96,0x08,0x00,0x20,0x0c,0x9a,0x66}};
+
+    IUnknown *unk;
+    IRunnableObject *ro;
+    DWORD class_reg;
+    HRESULT hres;
+
+    if(!GetProcAddress(GetModuleHandle("ole32"), "CoRegisterSurrogateEx")) {
+        win_skip("skipping OleCreateDefaultHandler tests\n");
+        return;
+    }
+
+    hres = CoRegisterClassObject(&test_server_clsid, (IUnknown*)&ClassFactory,
+            CLSCTX_INPROC_SERVER, 0, &class_reg);
+    ok(hres == S_OK, "CoRegisterClassObject failed: %x\n", hres);
+
+    hres = OleCreateDefaultHandler(&test_server_clsid, NULL, &IID_IUnknown, (void**)&unk);
+    ok(hres == S_OK, "OleCreateDefaultHandler failed: %x\n", hres);
+
+    hres = IUnknown_QueryInterface(unk, &IID_IRunnableObject, (void**)&ro);
+    ok(hres == S_OK, "QueryInterface(IRunnableObject) failed: %x\n", hres);
+    IUnknown_Release(unk);
+
+    hres = IRunnableObject_Run(ro, NULL);
+    ok(hres == REGDB_E_CLASSNOTREG, "Run returned: %x, expected REGDB_E_CLASSNOTREG\n", hres);
+    IRunnableObject_Release(ro);
+
+    CoRevokeClassObject(class_reg);
+
+    hres = CoRegisterClassObject(&test_server_clsid, (IUnknown*)&ClassFactory,
+            CLSCTX_LOCAL_SERVER, 0, &class_reg);
+    ok(hres == S_OK, "CoRegisterClassObject failed: %x\n", hres);
+
+    hres = OleCreateDefaultHandler(&test_server_clsid, NULL, &IID_IUnknown, (void**)&unk);
+    ok(hres == S_OK, "OleCreateDefaultHandler failed: %x\n", hres);
+
+    hres = IUnknown_QueryInterface(unk, &IID_IRunnableObject, (void**)&ro);
+    ok(hres == S_OK, "QueryInterface(IRunnableObject) failed: %x\n", hres);
+    IUnknown_Release(unk);
+
+    SET_EXPECT(CF_QueryInterface_ClassFactory);
+    SET_EXPECT(CF_CreateInstance);
+    hres = IRunnableObject_Run(ro, NULL);
+    todo_wine ok(hres == S_OK, "Run failed: %x\n", hres);
+    CHECK_CALLED(CF_QueryInterface_ClassFactory);
+    CHECK_CALLED(CF_CreateInstance);
+    IRunnableObject_Release(ro);
+
+    CoRevokeClassObject(class_reg);
+}
+
 START_TEST(defaulthandler)
 {
     OleInitialize(NULL);
 
     test_olestream();
+    test_default_handler_run();
 
     OleUninitialize();
 }

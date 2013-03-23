@@ -18,18 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 #define WIN32_LEAN_AND_MEAN
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
-#include "shlguid.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <wingdi.h>
+#include <ole2.h>
+//#include "objbase.h"
+//#include "shlguid.h"
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 
@@ -1701,6 +1708,9 @@ static void test_default_handler(void)
     hr = IOleObject_GetClientSite(pObject, &pClientSite);
     ok_ole_success(hr, "IOleObject_GetClientSite");
 
+    hr = IOleObject_SetClientSite(pObject, pClientSite);
+    ok_ole_success(hr, "IOleObject_SetClientSite");
+
     hr = IOleObject_GetClipboardData(pObject, 0, &pDataObject);
     ok(hr == OLE_E_NOTRUNNING,
        "IOleObject_GetClipboardData should have returned OLE_E_NOTRUNNING instead of 0x%08x\n",
@@ -1923,6 +1933,14 @@ static const IUnknownVtbl UnknownVtbl =
 
 static IUnknown unknown = { &UnknownVtbl };
 
+static void test_OleRun(void)
+{
+    HRESULT hr;
+
+    hr = OleRun(&unknown);
+    ok(hr == S_OK, "OleRun failed 0x%08x\n", hr);
+}
+
 static void test_OleLockRunning(void)
 {
     HRESULT hr;
@@ -1981,6 +1999,7 @@ START_TEST(ole2)
     test_data_cache();
     test_default_handler();
     test_runnable();
+    test_OleRun();
     test_OleLockRunning();
     test_OleDraw();
 

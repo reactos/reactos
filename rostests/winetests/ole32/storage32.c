@@ -18,16 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdio.h>
 
 #define COBJMACROS
 
-#include <windows.h>
-#include "wine/test.h"
-
-#include "ole2.h"
-#include "objidl.h"
-#include "initguid.h"
+//#include <windows.h>
+#include <wine/test.h>
+#include <winnls.h>
+#include <ole2.h>
+//#include "objidl.h"
+#include <initguid.h>
 
 DEFINE_GUID( test_stg_cls, 0x88888888, 0x0425, 0x0000, 0,0,0,0,0,0,0,0);
 
