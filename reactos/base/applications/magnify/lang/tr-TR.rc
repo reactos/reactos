@@ -13,7 +13,7 @@ BEGIN
     POPUP "&Seçke"
     BEGIN
         MENUITEM "&Çıkış",                     IDM_EXIT
-        MENUITEM "&Ayarlar",                   IDM_OPTIONS
+        MENUITEM "&Ayarlar...",                IDM_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Hakkında",                  IDM_ABOUT
     END

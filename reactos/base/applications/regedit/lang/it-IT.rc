@@ -227,7 +227,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
 CAPTION "Modifica DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Name:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nome:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "&Dati:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
@@ -306,7 +306,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_REGISTRY_MENU        "Contiene i comandi per lavorare su tutto il Registro"
-    ID_EDIT_MENU            "Contiene i comandi per editare valori o chiavi"
+    ID_EDIT_MENU            "Contiene i comandi per modificare valori o chiavi"
     ID_VIEW_MENU            "Contiene i comandi per personalizzare la finestra del Registro"
     ID_FAVOURITES_MENU      "Contiene i comandi per accedere alle chiavi usate frequentemente"
     ID_HELP_MENU            "Contiene i comandi per visualizzare la Guida e informazioni sull'editor del Registro"
@@ -386,7 +386,7 @@ BEGIN
     IDS_IMPORT_REG_FILE     "Importa file di Registro"
     IDS_EXPORT_REG_FILE     "Esporta file di Registro"
     IDS_LOAD_HIVE           "Carica Hive"
-    IDS_UNLOAD_HIVE         "Esplis Hive"
+    IDS_UNLOAD_HIVE         "Scarica Hive"
     IDS_INVALID_DWORD       "(valore DWORD non valido)"
 END
 
@@ -467,8 +467,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PORT_PORT_IO              "Porta"
     IDS_PORT_MEMORY_IO            "Memoria"
-    IDS_INTERRUPT_EDGE_SENSITIVE  "Bordo Sensibile"
-    IDS_INTERRUPT_LEVEL_SENSITIVE "Livello Sensibile"
+    IDS_INTERRUPT_EDGE_SENSITIVE  "Sensibile al fronte"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "Sensibile al livello"
     IDS_MEMORY_READ_ONLY          "Solo lettura"
     IDS_MEMORY_WRITE_ONLY         "Solo scrittura"
     IDS_MEMORY_READ_WRITE         "Leggi / Scrivi"
@@ -524,7 +524,7 @@ FONT 8, "Ms Shell Dlg"
     LTEXT           "&Chiave:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancella", IDCANCEL, 89, 17, 50, 14
+    PUSHBUTTON      "Annulla", IDCANCEL, 89, 17, 50, 14
 }
 
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46

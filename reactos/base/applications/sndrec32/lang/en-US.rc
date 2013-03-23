@@ -36,13 +36,13 @@ BEGIN
     END
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Sound recorder"
     IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_STRPOS              "Position: %.2f s"
     IDS_STRDUR              "Lenght: %.2f s"

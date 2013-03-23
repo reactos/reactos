@@ -27,14 +27,14 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni\tCtrl+N",         ID_FILE_NEW
-        MENUITEM "&Aç\tCtrl+O",           ID_FILE_OPEN
+        MENUITEM "&Yeni...\tCtrl+N",      ID_FILE_NEW
+        MENUITEM "&Aç...\tCtrl+O",        ID_FILE_OPEN
         MENUITEM "&Kaydet\tCtrl+S",       ID_FILE_SAVE
-        MENUITEM "Ay&rı Kaydet",          ID_FILE_SAVEAS
+        MENUITEM "Ay&rı Kaydet...",       ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zdır\tCtrl+P",       ID_PRINT
-        MENUITEM "&Baskı Önizleme",       ID_PREVIEW
-        MENUITEM "&Sayfa Yapısı",         ID_PRINTSETUP
+        MENUITEM "Ya&zdır...\tCtrl+P",    ID_PRINT
+        MENUITEM "&Baskı Önizleme...",    ID_PREVIEW
+        MENUITEM "&Sayfa Yapısı...",      ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                ID_FILE_EXIT
     END
@@ -51,7 +51,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Ara\tCtrl+F",            	ID_FIND
         MENUITEM "S&onrakini Ara\tF3",          ID_FIND_NEXT
-        MENUITEM "&Değiştir\tCtrl+H",         	ID_REPLACE
+        MENUITEM "&Değiştir...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Sa&lt Okunur",                ID_EDIT_READONLY
         MENUITEM "D&eğiştirilmiş",              ID_EDIT_MODIFIED
@@ -72,18 +72,18 @@ BEGIN
         MENUITEM "&Çizgilik",          ID_TOGGLE_RULER
         MENUITEM "&Durum Çubuğu",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "A&yarlar",           ID_VIEWPROPERTIES
+        MENUITEM "A&yarlar...",        ID_VIEWPROPERTIES
     END
     POPUP "&Ekle"
     BEGIN
-        MENUITEM "&Tarih veya Saat",   ID_DATETIME
+        MENUITEM "&Tarih veya Saat...",ID_DATETIME
     END
     POPUP "&Biçim"
     BEGIN
-        MENUITEM "&Yazı türü",         ID_FONTSETTINGS
-        MENUITEM "&Madde imi",         ID_BULLET
-        MENUITEM "&Paragraf",          ID_PARAFORMAT
-        MENUITEM "&Sekmeler",          ID_TABSTOPS
+        MENUITEM "&Yazı Türü...",      ID_FONTSETTINGS
+        MENUITEM "&Madde İmi",         ID_BULLET
+        MENUITEM "&Paragraf...",       ID_PARAFORMAT
+        MENUITEM "&Sekmeler...",       ID_TABSTOPS
         POPUP "&Arkaplan"
         BEGIN
             MENUITEM "&Dizge Rengi\tCtrl+1",    ID_BACK_1
@@ -92,7 +92,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Hakkında",      ID_ABOUT
+        MENUITEM "&Hakkında",          ID_ABOUT
     END
 END
 
@@ -104,8 +104,8 @@ BEGIN
         MENUITEM "&Çoğalt",             ID_EDIT_COPY
         MENUITEM "&Yapıştır",           ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Madde imi",       	ID_BULLET
-        MENUITEM "&Paragraf",        	ID_PARAFORMAT
+        MENUITEM "&Madde İmi",       	ID_BULLET
+        MENUITEM "&Paragraf...",        ID_PARAFORMAT
     END
 END
 

@@ -12,81 +12,81 @@ ID_MENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Yeni\tCtrl+N", IDM_FILENEW
-        MENUITEM "&Aç\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "&Kaydet\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Ay&rı Kaydet", IDM_FILESAVEAS
+        MENUITEM "&Yeni\tCtrl+N",                IDM_FILENEW
+        MENUITEM "&Aç...\tCtrl+O",               IDM_FILEOPEN
+        MENUITEM "&Kaydet\tCtrl+S",              IDM_FILESAVE
+        MENUITEM "Ay&rı Kaydet...",              IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Döşeyerek Duvar Kağıdı Yap", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Döşeyerek Duvar Kağıdı Yap",   IDM_FILEASWALLPAPERPLANE
         MENUITEM "Ortalayarak Duvar Kağıdı Yap", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Uzatarak Duvar Kağıdı Yap", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Uzatarak Duvar Kağıdı Yap",    IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&Çıkış\tAlt+F4",               IDM_FILEEXIT
     END
 
     POPUP "&Düzen"
     BEGIN
-        MENUITEM "Geri Al\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "Yinele\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "Geri Al\tCtrl+Z",              IDM_EDITUNDO
+        MENUITEM "Yinele\tCtrl+Y",               IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "Kes\tCtrl+X", IDM_EDITCUT
-        MENUITEM "Çoğalt\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "Yapıştır\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Seçimi Sil\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Seçimi Evir", IDM_EDITINVERTSELECTION
-        MENUITEM "Hepsini Seç\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Kes\tCtrl+X",                  IDM_EDITCUT
+        MENUITEM "Çoğalt\tCtrl+C",               IDM_EDITCOPY
+        MENUITEM "Yapıştır\tCtrl+V",             IDM_EDITPASTE
+        MENUITEM "Seçimi Sil\tDel",              IDM_EDITDELETESELECTION
+        MENUITEM "Seçimi Evir",                  IDM_EDITINVERTSELECTION
+        MENUITEM "Hepsini Seç\tCtrl+A",          IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Seçimi Şuraya Kopyala", IDM_EDITCOPYTO
-        MENUITEM "Şuradan Yapıştır", IDM_EDITPASTEFROM
+        MENUITEM "Seçimi Şuraya Kopyala...",     IDM_EDITCOPYTO
+        MENUITEM "Şuradan Yapıştır...",          IDM_EDITPASTEFROM
     END
 
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "Araç Çubuğu\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "Renklik\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "Durum Çubuğu", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Metin Çubuğu", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "Araç Çubuğu\tCtrl+T",          IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Renklik\tCtrl+L",              IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Durum Çubuğu",                 IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Metin Çubuğu",                 IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
         POPUP "Büyüt"
         BEGIN
             POPUP "Kullanıcı Tanımlı"
             BEGIN
-                MENUITEM "%12,5", IDM_VIEWZOOM125
-                MENUITEM "%25", IDM_VIEWZOOM25
-                MENUITEM "%50", IDM_VIEWZOOM50
-                MENUITEM "%100", IDM_VIEWZOOM100
-                MENUITEM "%200", IDM_VIEWZOOM200
-                MENUITEM "%400", IDM_VIEWZOOM400
-                MENUITEM "%800", IDM_VIEWZOOM800
+                MENUITEM "%12,5",                IDM_VIEWZOOM125
+                MENUITEM "%25",                  IDM_VIEWZOOM25
+                MENUITEM "%50",                  IDM_VIEWZOOM50
+                MENUITEM "%100",                 IDM_VIEWZOOM100
+                MENUITEM "%200",                 IDM_VIEWZOOM200
+                MENUITEM "%400",                 IDM_VIEWZOOM400
+                MENUITEM "%800",                 IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Kılavuzu Göster\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "Küçüğünü Göster", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Kılavuzu Göster\tCtrl+G",  IDM_VIEWSHOWGRID
+            MENUITEM "Küçüğünü Göster",          IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "Tam Ekran\tCtrl+F", IDM_VIEWFULLSCREEN
+        MENUITEM "Tam Ekran\tCtrl+F",            IDM_VIEWFULLSCREEN
     END
 
     POPUP "G&örüntü"
     BEGIN
-        MENUITEM "Döndür ya da Çevir\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Boyutlandır\tCtrl+W", IDM_IMAGECHANGESIZE
-        MENUITEM "Kırp", IDM_IMAGECROP
-        MENUITEM "Renkleri Evir\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Öznitelikler\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Resmi Temizle\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Donuk Çiz", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "Döndür ya da Çevir...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Boyutlandır...\tCtrl+W",        IDM_IMAGECHANGESIZE
+        MENUITEM "Kırp",                          IDM_IMAGECROP
+        MENUITEM "Renkleri Evir...\tCtrl+I",      IDM_IMAGEINVERTCOLORS
+        MENUITEM "Öznitelikler\tCtrl+E",          IDM_IMAGEATTRIBUTES
+        MENUITEM "Resmi Temizle\tCtrl+Shft+N",    IDM_IMAGEDELETEIMAGE
+        MENUITEM "Donuk Çiz",                     IDM_IMAGEDRAWOPAQUE
     END
 
     POPUP "R&enkler"
     BEGIN
-        MENUITEM "Renkliği Düzenle", IDM_COLORSEDITPALETTE
+        MENUITEM "Renkliği Düzenle...",           IDM_COLORSEDITPALETTE
     END
 
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "Yardım Konuları", IDM_HELPHELPTOPICS
+        MENUITEM "Yardım Konuları",               IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Hakkında", IDM_HELPINFO
+        MENUITEM "Hakkında",                      IDM_HELPINFO
     END
 END
 

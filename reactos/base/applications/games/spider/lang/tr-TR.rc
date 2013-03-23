@@ -64,7 +64,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yeni oyun\tF2",              IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Desteler",                   IDM_GAME_DECK
+        MENUITEM "&Desteler...",                IDM_GAME_DECK
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                      IDM_GAME_EXIT
     END
