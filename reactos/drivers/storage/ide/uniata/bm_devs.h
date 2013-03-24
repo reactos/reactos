@@ -66,7 +66,7 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
     ULONG   nDeviceId;
     ULONG   nRevId;
     ULONG   MaxTransferMode;
-    PCHAR   FullDevName;
+    PVEN_STR FullDevName;
     ULONG   RaidFlags;
     CHAR    VendorIdStr[4];
     CHAR    DeviceIdStr[4];
@@ -665,7 +665,7 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 
 #ifdef USER_MODE
   #define PCI_DEV_HW_SPEC_BM(idhi, idlo, rev, mode, name, flags) \
-    { (PVEN_STR) #idlo, 4, 0x##idlo, (PVEN_STR) #idhi, 4, 0x##idhi, rev, mode, name, flags}
+    { (PVEN_STR) #idlo, 4, 0x##idlo, (PVEN_STR) #idhi, 4, 0x##idhi, rev, mode, (PVEN_STR)name, flags}
 #else
   #define PCI_DEV_HW_SPEC_BM(idhi, idlo, rev, mode, name, flags) \
     { (PVEN_STR) #idlo, 4, 0x##idlo, (PVEN_STR) #idhi, 4, 0x##idhi, rev, mode, NULL, flags}

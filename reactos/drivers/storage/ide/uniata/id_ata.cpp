@@ -1354,7 +1354,7 @@ IssueIdentify(
     ULONG                waitCount = 50000;
     ULONG                j;
     UCHAR                statusByte;
-    UCHAR                statusByte2;
+    //UCHAR                statusByte2;
     UCHAR                signatureLow,
                          signatureHigh;
     BOOLEAN              atapiDev = FALSE;
@@ -1393,7 +1393,7 @@ IssueIdentify(
         AtapiStallExecution(10);
         statusByte = WaitOnBusyLong(chan);
         // Check that the status register makes sense.
-        GetBaseStatus(chan, statusByte2);
+        GetBaseStatus(chan, statusByte);
     }
 
     if (Command == IDE_COMMAND_IDENTIFY) {
@@ -1435,11 +1435,11 @@ IssueIdentify(
                     }
 
                 } while ((statusByte & IDE_STATUS_BUSY) && waitCount--);
-                GetBaseStatus(chan, statusByte2);
+                GetBaseStatus(chan, statusByte);
 
                 SelectDrive(chan, DeviceNumber);
             } else {
-                GetBaseStatus(chan, statusByte2);
+                GetBaseStatus(chan, statusByte);
             }
             // Another check for signature, to deal with one model Atapi that doesn't assert signature after
             // a soft reset.
@@ -3121,7 +3121,7 @@ AtapiHwInitialize__(
         } else if (!(LunExt->DeviceFlags & DFLAGS_CHANGER_INITED)){
 
             ULONG j;
-            BOOLEAN isSanyo = FALSE;
+            //BOOLEAN isSanyo = FALSE;
             CCHAR vendorId[26];
 
             KdPrint2((PRINT_PREFIX "AtapiHwInitialize: ATAPI/Changer branch\n"));
@@ -3142,7 +3142,7 @@ AtapiHwInitialize__(
                     // acting like 1) a multi-lun device and 2) building the 'special' TUR's.
                     LunExt->DeviceFlags |= (DFLAGS_CHANGER_INITED | DFLAGS_SANYO_ATAPI_CHANGER);
                     LunExt->DiscsPresent = 3;
-                    isSanyo = TRUE;
+                    //isSanyo = TRUE;
                 }
             }
         }
@@ -4533,7 +4533,9 @@ AtapiInterrupt__(
 
     BOOLEAN atapiDev = FALSE;
 
+#ifdef DBG
     UCHAR Channel;
+#endif //DBG
     UCHAR lChannel;
     UCHAR DeviceNumber;
     BOOLEAN DmaTransfer = FALSE;
@@ -4564,9 +4566,12 @@ AtapiInterrupt__(
     PHW_LU_EXTENSION LunExt;
 
     lChannel = c;
+
+#ifdef DBG
     Channel = (UCHAR)(deviceExtension->Channel + lChannel);
 
     KdPrint2((PRINT_PREFIX "  cntrlr %#x:%d, irql %#x, c %d\n", deviceExtension->DevIndex, Channel, KeGetCurrentIrql(), c));
+#endif //DBG
 
     if((chan->ChannelCtrlFlags & CTRFLAGS_DMA_ACTIVE) ||
        (AtaReq && (AtaReq->Flags & REQ_FLAG_DMA_OPERATION)) ||
@@ -5525,11 +5530,20 @@ IntrPrepareResetController:
     } else if (interruptReason == (ATAPI_IR_IO_toHost | ATAPI_IR_COD_Cmd) && !(statusByte & IDE_STATUS_DRQ)) {
 
         KdPrint2((PRINT_PREFIX "AtapiInterrupt: interruptReason = CompleteRequest\n"));
-        // Command complete.
+        // Command complete. We exactly know this because os IReason.
+
         if(DmaTransfer) {
             KdPrint2((PRINT_PREFIX "AtapiInterrupt: CompleteRequest, was DmaTransfer\n"));
-            AtaReq->WordsTransfered = AtaReq->WordsLeft;
+            AtaReq->WordsTransfered += AtaReq->WordsLeft;
             AtaReq->WordsLeft = 0;
+        } else {
+            KdPrint2((PRINT_PREFIX "AtapiInterrupt: CompleteRequest, was PIO\n"));
+
+            wordCount = AtaReq->WordsLeft;
+            // Advance data buffer pointer and bytes left.
+            AtaReq->DataBuffer += wordCount;
+            AtaReq->WordsLeft -= wordCount;
+            AtaReq->WordsTransfered += wordCount;
         }
         //if (AtaReq->WordsLeft) {
         //    status = SRB_STATUS_DATA_OVERRUN;
@@ -9905,7 +9919,7 @@ DriverEntry(
     ULONG                  statusToReturn, newStatus;
     PUNICODE_STRING        RegistryPath = (PUNICODE_STRING)Argument2;
     BOOLEAN                ReEnter = FALSE;
-    WCHAR                  a;
+//    WCHAR                  a;
 #ifndef USE_REACTOS_DDK
     NTSTATUS               status;
 #endif
@@ -9918,7 +9932,7 @@ DriverEntry(
 
     Connect_DbgPrint();
     KdPrint2((PRINT_PREFIX "%s", (PCCHAR)ver_string));
-    a = (WCHAR)strlen(ver_string);
+    //a = (WCHAR)strlen(ver_string);
 
     g_opt_Verbose = (BOOLEAN)AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"PrintLogo", 0);
     if(g_opt_Verbose) {
@@ -10752,7 +10766,7 @@ AtapiAdapterControl(
             }
             if(deviceExtension->AdapterInterfaceType == PCIBus) {
                 // we must never get here for non-PCI
-                status = UniataDisconnectIntr2(HwDeviceExtension);
+                /*status =*/ UniataDisconnectIntr2(HwDeviceExtension);
                 BMList[deviceExtension->DevIndex].Isr2Enable = FALSE;
             }
             break;
@@ -10765,15 +10779,17 @@ AtapiAdapterControl(
 
             AtapiChipInit(HwDeviceExtension, DEVNUM_NOT_SPECIFIED, CHAN_NOT_SPECIFIED);
             status = UniataConnectIntr2(HwDeviceExtension);
-            for (c = 0; c < numberChannels; c++) {
-                AtapiChipInit(HwDeviceExtension, DEVNUM_NOT_SPECIFIED, c);
-                FindDevices(HwDeviceExtension, 0, c);
-                AtapiEnableInterrupts(deviceExtension, c);
-                AtapiHwInitialize__(deviceExtension, c);
-            }
-            if(deviceExtension->Isr2DevObj) {
-                // we must never get here for non-PCI
-                BMList[deviceExtension->DevIndex].Isr2Enable = TRUE;
+            if(NT_SUCCESS(status)) {
+                for (c = 0; c < numberChannels; c++) {
+                    AtapiChipInit(HwDeviceExtension, DEVNUM_NOT_SPECIFIED, c);
+                    FindDevices(HwDeviceExtension, 0, c);
+                    AtapiEnableInterrupts(deviceExtension, c);
+                    AtapiHwInitialize__(deviceExtension, c);
+                }
+                if(deviceExtension->Isr2DevObj) {
+                    // we must never get here for non-PCI
+                    BMList[deviceExtension->DevIndex].Isr2Enable = TRUE;
+                }
             }
 
             break;
@@ -10808,13 +10824,13 @@ _PrintNtConsole(
     ...
     )
 {
-    int len;
+    //int len;
     UCHAR dbg_print_tmp_buff[DEBUG_MSG_BUFFER_SIZE];
 //    UNICODE_STRING msgBuff;
     va_list ap;
     va_start(ap, DebugMessage);
 
-    len = _vsnprintf((PCHAR)&dbg_print_tmp_buff[0], DEBUG_MSG_BUFFER_SIZE-1, DebugMessage, ap);
+    /*len =*/ _vsnprintf((PCHAR)&dbg_print_tmp_buff[0], DEBUG_MSG_BUFFER_SIZE-1, DebugMessage, ap);
 
     dbg_print_tmp_buff[DEBUG_MSG_BUFFER_SIZE-1] = 0;
 
