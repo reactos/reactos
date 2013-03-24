@@ -22,6 +22,12 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 #define PIPE_BUFSIZE 1024
 #define PIPE_TIMEOUT 1000
 
+/* Defined in include/reactos/services/services.h */
+// #define SCM_START_EVENT             L"SvcctrlStartEvent_A3752DX"
+#define SCM_AUTOSTARTCOMPLETE_EVENT L"SC_AutoStartComplete"
+#define LSA_RPC_SERVER_ACTIVE       L"LSA_RPC_SERVER_ACTIVE"
+
+BOOL ScmInitialize = FALSE;
 BOOL ScmShutdown = FALSE;
 static HANDLE hScmShutdownEvent = NULL;
 
@@ -77,35 +83,38 @@ ScmLogError(DWORD dwEventId,
 
 
 BOOL
-ScmCreateStartEvent(PHANDLE StartEvent)
+ScmCreateControlEvent(PHANDLE Event,
+                      LPCWSTR Name,
+                      DWORD dwDesiredAccess)
 {
+    /*
+     * This function creates a generic non-inheritable event
+     * and return a handle to the caller. The caller must
+     * close this handle afterwards.
+     */
+
     HANDLE hEvent;
 
-    hEvent = CreateEventW(NULL,
-                          TRUE,
-                          FALSE,
-                          L"SvcctrlStartEvent_A3752DX");
+    hEvent = CreateEventW(NULL, TRUE, FALSE, Name);
     if (hEvent == NULL)
     {
         if (GetLastError() == ERROR_ALREADY_EXISTS)
         {
-            hEvent = OpenEventW(EVENT_ALL_ACCESS,
-                                FALSE,
-                                L"SvcctrlStartEvent_A3752DX");
-            if (hEvent == NULL)
-            {
-                return FALSE;
-            }
-        }
-        else
-        {
-            return FALSE;
+            hEvent = OpenEventW(dwDesiredAccess, FALSE, Name);
         }
     }
 
-    *StartEvent = hEvent;
-
-    return TRUE;
+    if (hEvent)
+    {
+        DPRINT("SERVICES: Created event %S with handle %x\n", Name, hEvent);
+        *Event = hEvent;
+        return TRUE;
+    }
+    else
+    {
+        DPRINT1("SERVICES: Failed to create event %S (Error %lu)\n", Name, GetLastError());
+        return FALSE;
+    }
 }
 
 
@@ -113,35 +122,21 @@ VOID
 ScmWaitForLsa(VOID)
 {
     HANDLE hEvent;
-    DWORD dwError;
 
-    hEvent = CreateEventW(NULL,
-                          TRUE,
-                          FALSE,
-                          L"LSA_RPC_SERVER_ACTIVE");
-    if (hEvent == NULL)
+    if (!ScmCreateControlEvent(&hEvent,
+                               LSA_RPC_SERVER_ACTIVE,
+                               SYNCHRONIZE))
     {
-        dwError = GetLastError();
-        DPRINT1("Failed to create the notication event (Error %lu)\n", dwError);
-
-        if (dwError == ERROR_ALREADY_EXISTS)
-        {
-            hEvent = OpenEventW(SYNCHRONIZE,
-                                FALSE,
-                                L"LSA_RPC_SERVER_ACTIVE");
-            if (hEvent == NULL)
-            {
-               DPRINT1("Could not open the notification event (Error %lu)\n", GetLastError());
-               return;
-            }
-        }
+        DPRINT1("Failed to create the notification event (Error %lu)\n", GetLastError());
     }
+    else
+    {
+        DPRINT("Wait for the LSA server!\n");
+        WaitForSingleObject(hEvent, INFINITE);
+        DPRINT("LSA server running!\n");
 
-    DPRINT("Wait for the LSA server!\n");
-    WaitForSingleObject(hEvent, INFINITE);
-    DPRINT("LSA server running!\n");
-
-    CloseHandle(hEvent);
+        CloseHandle(hEvent);
+    }
 
     DPRINT("ScmWaitForLsa() done\n");
 }
@@ -351,23 +346,38 @@ wWinMain(HINSTANCE hInstance,
          int nShowCmd)
 {
     HANDLE hScmStartEvent = NULL;
+    HANDLE hScmAutoStartCompleteEvent = NULL;
     SC_RPC_LOCK Lock = NULL;
     BOOL bCanDeleteNamedPipeCriticalSection = FALSE;
     DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
 
-    /* Create start event */
-    if (!ScmCreateStartEvent(&hScmStartEvent))
+    /* We are initializing ourselves */
+    ScmInitialize = TRUE;
+
+    /* Create the start event */
+    if (!ScmCreateControlEvent(&hScmStartEvent,
+                               SCM_START_EVENT,
+                               EVENT_ALL_ACCESS))
     {
-        DPRINT1("SERVICES: Failed to create start event\n");
+        DPRINT1("SERVICES: Failed to create the start event\n");
         goto done;
     }
+    DPRINT("SERVICES: Created start event with handle %p.\n", hScmStartEvent);
 
-    DPRINT("SERVICES: created start event with handle %p.\n", hScmStartEvent);
+    /* Create the auto-start complete event */
+    if (!ScmCreateControlEvent(&hScmAutoStartCompleteEvent,
+                               SCM_AUTOSTARTCOMPLETE_EVENT,
+                               EVENT_ALL_ACCESS))
+    {
+        DPRINT1("SERVICES: Failed to create the auto-start complete event\n");
+        goto done;
+    }
+    DPRINT("SERVICES: created auto-start complete event with handle %p.\n", hScmAutoStartCompleteEvent);
 
     /* Create the shutdown event */
-    hScmShutdownEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    hScmShutdownEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     if (hScmShutdownEvent == NULL)
     {
         DPRINT1("SERVICES: Failed to create shutdown event\n");
@@ -385,7 +395,7 @@ wWinMain(HINSTANCE hInstance,
     /* Read the control set values */
     if (!ScmGetControlSetValues())
     {
-        DPRINT1("SERVICES: failed to read the control set values\n");
+        DPRINT1("SERVICES: Failed to read the control set values\n");
         goto done;
     }
 
@@ -393,49 +403,58 @@ wWinMain(HINSTANCE hInstance,
     dwError = ScmCreateServiceDatabase();
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("SERVICES: failed to create SCM database (Error %lu)\n", dwError);
+        DPRINT1("SERVICES: Failed to create SCM database (Error %lu)\n", dwError);
         goto done;
     }
+
+    /* Wait for the LSA server */
+    ScmWaitForLsa();
 
     /* Update the services database */
     ScmGetBootAndSystemDriverState();
 
-    /* Register the Service Control Manager process with CSRSS */
+    /* Register the Service Control Manager process with the ReactOS Subsystem */
     if (!RegisterServicesProcess(GetCurrentProcessId()))
     {
         DPRINT1("SERVICES: Could not register SCM process\n");
         goto done;
     }
 
-    /* Acquire the service start lock until autostart services have been started */
+    /*
+     * Acquire the user service start lock until
+     * auto-start services have been started.
+     */
     dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("SERVICES: failed to acquire the service start lock (Error %lu)\n", dwError);
+        DPRINT1("SERVICES: Failed to acquire the service start lock (Error %lu)\n", dwError);
         goto done;
     }
 
     /* Start the RPC server */
     ScmStartRpcServer();
 
-    DPRINT("SERVICES: Initialized.\n");
-
     /* Signal start event */
     SetEvent(hScmStartEvent);
+
+    DPRINT("SERVICES: Initialized.\n");
 
     /* Register event handler (used for system shutdown) */
     SetConsoleCtrlHandler(ShutdownHandlerRoutine, TRUE);
 
-    /* Wait for the LSA server */
-    ScmWaitForLsa();
-
     /* Start auto-start services */
     ScmAutoStartServices();
+
+    /* Signal auto-start complete event */
+    SetEvent(hScmAutoStartCompleteEvent);
 
     /* FIXME: more to do ? */
 
     /* Release the service start lock */
     ScmReleaseServiceStartLock(&Lock);
+
+    /* Initialization finished */
+    ScmInitialize = FALSE;
 
     DPRINT("SERVICES: Running.\n");
 
@@ -451,6 +470,10 @@ done:
     if (hScmShutdownEvent != NULL)
         CloseHandle(hScmShutdownEvent);
 
+    /* Close the auto-start complete event */
+    if (hScmAutoStartCompleteEvent != NULL)
+        CloseHandle(hScmAutoStartCompleteEvent);
+
     /* Close the start event */
     if (hScmStartEvent != NULL)
         CloseHandle(hScmStartEvent);
@@ -458,7 +481,6 @@ done:
     DPRINT("SERVICES: Finished.\n");
 
     ExitThread(0);
-
     return 0;
 }
 

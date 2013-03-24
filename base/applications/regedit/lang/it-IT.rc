@@ -64,7 +64,7 @@ BEGIN
                         ID_REGISTRY_CONNECTNETWORKREGISTRY
 
         MENUITEM "&Disconnetti da Registro di rete...",
-                        ID_REGISTRY_DISCONNECTNETWORKREGISTRY,GRAYED
+                        ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Stampa\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -227,7 +227,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
 CAPTION "Modifica DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Name:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nome:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "&Dati:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
@@ -242,43 +242,43 @@ END
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
       WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resource List"
+CAPTION "Lista Risorse"
 FONT 8, "MS Shell Dlg"
 {
     CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
-    PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+    PUSHBUTTON "Visualizza...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
 }
 
 
 IDD_EDIT_RESOURCE DIALOGEX  6, 18, 281, 283
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
       WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resources"
+CAPTION "Risorse"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "Interruzione:", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "Memoria:", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
-    LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
+    LTEXT "Porta:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "Dati specifici del dispositivo", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
-    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
-    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
-    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
+    GROUPBOX "Utilizzo", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "Indeterminato", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "Condividi", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "Device esclusivo", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Driver esclusivo", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "Tipo di interfaccia:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
     RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    RTEXT "Versione:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "Revisione:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "OK",IDOK, 92, 263, 40, 14
     PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
@@ -306,7 +306,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_REGISTRY_MENU        "Contiene i comandi per lavorare su tutto il Registro"
-    ID_EDIT_MENU            "Contiene i comandi per editare valori o chiavi"
+    ID_EDIT_MENU            "Contiene i comandi per modificare valori o chiavi"
     ID_VIEW_MENU            "Contiene i comandi per personalizzare la finestra del Registro"
     ID_FAVOURITES_MENU      "Contiene i comandi per accedere alle chiavi usate frequentemente"
     ID_HELP_MENU            "Contiene i comandi per visualizzare la Guida e informazioni sull'editor del Registro"
@@ -324,9 +324,9 @@ BEGIN
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Esporta tutto o parte del Registro in un file di testo"
     ID_REGISTRY_LOADHIVE
-                            "Loads a hive file into the registry"
+                            "Carica un file hive nel Registro di sistema"
     ID_REGISTRY_UNLOADHIVE
-                            "Unloads a hive from the registry"
+                            "Espelle un hive dal Registro di sistema"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "Si connette al Registro di un computer remoto"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
@@ -370,23 +370,23 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Impossibile cancellare tutti i valori indicati!"
     IDS_ERR_RENVAL_CAPTION  "Errore nel rinominare il valore"
     IDS_ERR_RENVAL_TOEMPTY  "Impossibile rinominare %s. Il nome indicato è vuoto. Riprovate con un altro nome."
-    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Conferma ripristino della chiave"
+    IDS_QUERY_IMPORT_HIVE_MSG "Una chiave sarà ripristinata in cima alla chiave correntemente selezionata.\n Tutti i valori e le sottochiavi di questa chiave verranno eliminati.\n Si desidera continuare l'operazione?"
     IDS_NEW_KEY             "Nuova chiave #%d"
     IDS_NEW_VALUE           "Nuovo valore #%d"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(valore binario di lunghezza nulla)"
+    IDS_BINARY_EMPTY        "(valore binario di lunghezza nulla)"
     IDS_DEFAULT_VALUE_NAME  "(predefinito)"
     IDS_VALUE_NOT_SET       "(valore non impostato)"
     IDS_UNKNOWN_TYPE        "Tipo sconosciuto: (0x%lx)"
     IDS_MY_COMPUTER         "Il mio Computer"
     IDS_IMPORT_REG_FILE     "Importa file di Registro"
     IDS_EXPORT_REG_FILE     "Esporta file di Registro"
-    IDS_LOAD_HIVE           "Load Hive"
-    IDS_UNLOAD_HIVE         "Unload Hive"
+    IDS_LOAD_HIVE           "Carica Hive"
+    IDS_UNLOAD_HIVE         "Scarica Hive"
     IDS_INVALID_DWORD       "(valore DWORD non valido)"
 END
 
@@ -436,48 +436,48 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-  IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
-  IDS_IMPORT_ERROR               "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-  IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+   IDS_IMPORT_PROMPT              "Aggiungendo informazioni si possono involontariamente modificare o eliminare i valori e causare il giusto funzionamente dei componenti.\n Se non si considera attendibile la fonte di queste informazioni in '% s', non aggiungere al Registro di sistema.\n\n Si desidera continuare? "
+   IDS_IMPORT_OK                  "Le chiavi e i valori contenuti in '% s' sono stati correttamente aggiunti al Registro di sistema."
+   IDS_IMPORT_ERROR               "Impossibile importare '% s': Errore durante l'apertura del file. Ci può essere un disco, file cdanneggiati o il file non esiste."
+   IDS_EXPORT_ERROR               "Impossibile esportare '% s': Errore durante la creazione o la scrittura del file. Ci può essere un disco o un file di sistema danneggiato."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_BUSNUMBER                 "Bus Number"
-    IDS_INTERFACE                 "Interface"
-    IDS_DMA_CHANNEL               "Channel"
-    IDS_DMA_PORT                  "Port"
-    IDS_INTERRUPT_VECTOR          "Vector"
-    IDS_INTERRUPT_LEVEL           "Level"
-    IDS_INTERRUPT_AFFINITY        "Affinity"
-    IDS_INTERRUPT_TYPE            "Type"
-    IDS_MEMORY_ADDRESS            "Physical Address"
-    IDS_MEMORY_LENGTH             "Length"
-    IDS_MEMORY_ACCESS             "Access"
-    IDS_PORT_ADDRESS              "Physical Address"
-    IDS_PORT_LENGTH               "Length"
-    IDS_PORT_ACCESS               "Access"
-    IDS_SPECIFIC_RESERVED1        "Reserved 1"
-    IDS_SPECIFIC_RESERVED2        "Reserved 2"
-    IDS_SPECIFIC_DATASIZE         "Data Size"
+    IDS_INTERFACE                 "Interfaccia"
+    IDS_DMA_CHANNEL               "Canale"
+    IDS_DMA_PORT                  "Porta"
+    IDS_INTERRUPT_VECTOR          "Vettore"
+    IDS_INTERRUPT_LEVEL           "Livello"
+    IDS_INTERRUPT_AFFINITY        "Affinità"
+    IDS_INTERRUPT_TYPE            "Tipo"
+    IDS_MEMORY_ADDRESS            "Indirizzo fisico"
+    IDS_MEMORY_LENGTH             "Lunghezza"
+    IDS_MEMORY_ACCESS             "Accesso"
+    IDS_PORT_ADDRESS              "Indirizzo fisico"
+    IDS_PORT_LENGTH               "Lunghezza"
+    IDS_PORT_ACCESS               "Accesso"
+    IDS_SPECIFIC_RESERVED1        "Riservato 1"
+    IDS_SPECIFIC_RESERVED2        "Riservato 2"
+    IDS_SPECIFIC_DATASIZE         "Lunghezza dati"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PORT_PORT_IO              "Port"
-    IDS_PORT_MEMORY_IO            "Memory"
-    IDS_INTERRUPT_EDGE_SENSITIVE  "Edge Sensitive"
-    IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY          "Read Only"
-    IDS_MEMORY_WRITE_ONLY         "Write Only"
-    IDS_MEMORY_READ_WRITE         "Read / Write"
+    IDS_PORT_PORT_IO              "Porta"
+    IDS_PORT_MEMORY_IO            "Memoria"
+    IDS_INTERRUPT_EDGE_SENSITIVE  "Sensibile al fronte"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "Sensibile al livello"
+    IDS_MEMORY_READ_ONLY          "Solo lettura"
+    IDS_MEMORY_WRITE_ONLY         "Solo scrittura"
+    IDS_MEMORY_READ_WRITE         "Leggi / Scrivi"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BUS_UNDEFINED             "Undefined"
-    IDS_BUS_INTERNAL              "Internal"
+    IDS_BUS_UNDEFINED             "Indefinito"
+    IDS_BUS_INTERNAL              "Interno"
     IDS_BUS_ISA                   "ISA"
     IDS_BUS_EISA                  "EISA"
     IDS_BUS_MICROCHANNEL          "MicroChannel"
@@ -489,11 +489,11 @@ BEGIN
     IDS_BUS_CBUS                  "C-Bus"
     IDS_BUS_MPIBUS                "MPI-Bus"
     IDS_BUS_MPSABUS               "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL     "Processor Internal"
+    IDS_BUS_PROCESSORINTERNAL     "Processore Interno"
     IDS_BUS_INTERNALPOWERBUS      "Internal Power Bus"
     IDS_BUS_PNPISABUS             "PnP-ISA Bus"
     IDS_BUS_PNPBUS                "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE           "Unknown Interface Type"
+    IDS_BUS_UNKNOWNTYPE           "Tipologia interfaccia sconosciuta"
 END
 
 /*****************************************************************/
@@ -513,15 +513,18 @@ BEGIN
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
+//
+// Dialog resources
+//
 IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
+CAPTION "Carica Hive"
 FONT 8, "Ms Shell Dlg"
 {
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    LTEXT           "&Chiave:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
+    PUSHBUTTON      "Annulla", IDCANCEL, 89, 17, 50, 14
 }
 
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46

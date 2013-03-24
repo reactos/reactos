@@ -26,6 +26,13 @@ EngMapSectionView(
     PVOID pvBaseAddress;
     NTSTATUS Status;
 
+    /* Check if the size is ok (for 64 bit) */
+    if (cjSize > ULONG_MAX)
+    {
+        DPRINT1("chSize out of range: 0x%Id\n", cjSize);
+        return NULL;
+    }
+
     /* Align the offset at allocation granularity and compensate for the size */
     liSectionOffset.QuadPart = cjOffset & ~(MM_ALLOCATION_GRANULARITY - 1);
     cjSize += cjOffset & (MM_ALLOCATION_GRANULARITY - 1);
@@ -48,7 +55,7 @@ EngMapSectionView(
     }
 
     /* Secure the section memory */
-    *phSecure = EngSecureMem(pvBaseAddress, cjSize);
+    *phSecure = EngSecureMem(pvBaseAddress, (ULONG)cjSize);
     if (!*phSecure)
     {
         ZwUnmapViewOfSection(NtCurrentProcess(), pvBaseAddress);
@@ -76,10 +83,7 @@ EngUnmapSectionView(
 
     /* Unmap the section view */
     Status = MmUnmapViewOfSection(PsGetCurrentProcess(), pvBits);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Could not unmap section view!\n");
-    }
+    ASSERT(NT_SUCCESS(Status));
 }
 
 

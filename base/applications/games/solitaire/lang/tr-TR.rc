@@ -71,14 +71,14 @@ BEGIN
     BEGIN
         MENUITEM "&Dağıt\tF2",                  IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "D&esteler",                   IDM_GAME_DECK
-        MENUITEM "&Ayarlar",                    IDM_GAME_OPTIONS
+        MENUITEM "D&esteler...",                IDM_GAME_DECK
+        MENUITEM "&Ayarlar...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                      IDM_GAME_EXIT
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&İçerik\tF1",                 IDM_HELP_CONTENTS
+        MENUITEM "&Yardım Konuları\tF1",        IDM_HELP_CONTENTS
         MENUITEM "&Hakkında",                   IDM_HELP_ABOUT
     END
 END

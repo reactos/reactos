@@ -1325,7 +1325,7 @@ static HRESULT WINAPI DefaultHandler_Run(
 
   release_delegates(This);
 
-  hr = CoCreateInstance(&This->clsid, NULL, CLSCTX_ALL,
+  hr = CoCreateInstance(&This->clsid, NULL, CLSCTX_LOCAL_SERVER | CLSCTX_REMOTE_SERVER,
                         &IID_IOleObject, (void **)&This->pOleDelegate);
   if (FAILED(hr))
     return hr;

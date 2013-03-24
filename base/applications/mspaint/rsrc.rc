@@ -86,6 +86,9 @@
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif

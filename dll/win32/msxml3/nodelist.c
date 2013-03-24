@@ -341,28 +341,62 @@ static HRESULT xmlnodelist_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD fl
 
     TRACE("(%p)->(%x %x %x %p %p %p)\n", This, id, lcid, flags, params, res, ei);
 
-    V_VT(res) = VT_DISPATCH;
-    V_DISPATCH(res) = NULL;
-
-    if (id < DISPID_DOM_COLLECTION_BASE || id > DISPID_DOM_COLLECTION_MAX)
-        return DISP_E_UNKNOWNNAME;
-
-    switch(flags)
+    if (id >= DISPID_DOM_COLLECTION_BASE && id <= DISPID_DOM_COLLECTION_MAX)
     {
-        case INVOKE_PROPERTYGET:
+        switch(flags)
         {
-            IXMLDOMNode *disp = NULL;
+            case DISPATCH_PROPERTYGET:
+            {
+                IXMLDOMNode *disp = NULL;
 
-            IXMLDOMNodeList_get_item(&This->IXMLDOMNodeList_iface, id - DISPID_DOM_COLLECTION_BASE, &disp);
-            V_DISPATCH(res) = (IDispatch*)disp;
-            break;
-        }
-        default:
-        {
-            FIXME("unimplemented flags %x\n", flags);
-            break;
+                V_VT(res) = VT_DISPATCH;
+                IXMLDOMNodeList_get_item(&This->IXMLDOMNodeList_iface, id - DISPID_DOM_COLLECTION_BASE, &disp);
+                V_DISPATCH(res) = (IDispatch*)disp;
+                break;
+            }
+            default:
+            {
+                FIXME("unimplemented flags %x\n", flags);
+                break;
+            }
         }
     }
+    else if (id == DISPID_VALUE)
+    {
+        switch(flags)
+        {
+            case DISPATCH_METHOD|DISPATCH_PROPERTYGET:
+            case DISPATCH_PROPERTYGET:
+            case DISPATCH_METHOD:
+            {
+                IXMLDOMNode *item;
+                VARIANT index;
+                HRESULT hr;
+
+                if (params->cArgs - params->cNamedArgs != 1) return DISP_E_BADPARAMCOUNT;
+
+                VariantInit(&index);
+                hr = VariantChangeType(&index, params->rgvarg, 0, VT_I4);
+                if(FAILED(hr))
+                {
+                    FIXME("failed to convert arg, %s\n", debugstr_variant(params->rgvarg));
+                    return hr;
+                }
+
+                IXMLDOMNodeList_get_item(&This->IXMLDOMNodeList_iface, V_I4(&index), &item);
+                V_VT(res) = VT_DISPATCH;
+                V_DISPATCH(res) = (IDispatch*)item;
+                break;
+            }
+            default:
+            {
+                FIXME("DISPID_VALUE: unimplemented flags %x\n", flags);
+                break;
+            }
+        }
+    }
+    else
+        return DISP_E_UNKNOWNNAME;
 
     TRACE("ret %p\n", V_DISPATCH(res));
 

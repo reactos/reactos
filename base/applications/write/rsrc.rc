@@ -84,6 +84,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_SR_SP
     #include "Sr.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "Tr.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "Uk.rc"
 #endif

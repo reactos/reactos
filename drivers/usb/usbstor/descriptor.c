@@ -331,7 +331,7 @@ USBSTOR_ScanConfigurationDescriptor(
 VOID
 DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
 {
-    DPRINT1("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
+    DPRINT1("Dumping ConfigurationDescriptor %p\n", ConfigurationDescriptor);
     DPRINT1("bLength %x\n", ConfigurationDescriptor->bLength);
     DPRINT1("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
     DPRINT1("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
@@ -535,7 +535,7 @@ USBSTOR_GetPipeHandles(
         //
         // WTF? usb port driver does not give us bulk pipe access
         //
-        DPRINT1("USBSTOR_GetPipeHandles> BulkInFound %d BulkOutFound %d missing!!!\n", BulkInFound, BulkOutFound);
+        DPRINT1("USBSTOR_GetPipeHandles> BulkInFound %c BulkOutFound %c missing!!!\n", BulkInFound, BulkOutFound);
         return STATUS_DEVICE_CONFIGURATION_ERROR;
     }
 

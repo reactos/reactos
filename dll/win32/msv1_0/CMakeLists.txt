@@ -13,6 +13,7 @@ list(APPEND SOURCE
 add_library(msv1_0 SHARED ${SOURCE})
 set_module_type(msv1_0 win32dll UNICODE ENTRYPOINT 0)
 target_link_libraries(msv1_0 wine ${PSEH_LIB})
+add_delay_importlibs(msv1_0 samsrv lsasrv)
 add_importlibs(msv1_0 kernel32 ntdll)
 add_pch(msv1_0 msv1_0.h)
 add_dependencies(msv1_0 psdk)

@@ -58,7 +58,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 %option reentrant bison-bridge
 %option noyywrap
 %option prefix="xslpattern_"
-%option noinput nounput
+%option noinput nounput never-interactive
 
 /* From the w3c XML standard
  * <http://www.w3.org/TR/REC-xml/> */

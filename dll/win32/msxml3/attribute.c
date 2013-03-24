@@ -606,7 +606,7 @@ static HRESULT WINAPI domattr_put_value(
 
     TRACE("(%p)->(%s)\n", This, debugstr_variant(&value));
 
-    return node_put_value(&This->node, &value);
+    return node_put_value_escaped(&This->node, &value);
 }
 
 static const struct IXMLDOMAttributeVtbl domattr_vtbl =

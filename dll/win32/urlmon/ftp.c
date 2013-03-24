@@ -144,7 +144,7 @@ static HRESULT WINAPI FtpProtocol_QueryInterface(IInternetProtocolEx *iface, REF
     }
 
     if(*ppv) {
-        IInternetProtocol_AddRef(iface);
+        IInternetProtocolEx_AddRef(iface);
         return S_OK;
     }
 

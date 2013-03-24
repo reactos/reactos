@@ -1557,7 +1557,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     {
        if (Win32Thread->TIF_flags & TIF_INCLEANUP) RETURN( FALSE);
 
-       ERR("SMWCB: Internal Message!\n");
+       TRACE("SMWCB: Internal Message!\n");
        Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
        if (uResult) *uResult = Result;
        RETURN( TRUE);

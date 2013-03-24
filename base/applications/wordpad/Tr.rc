@@ -1,7 +1,8 @@
 /*
  * Turkish Resources for Wordpad
  *
- * Copyright 2006 Fatih A��c� <fasici@linux-sevenler.org>
+ * Copyright 2006 Fatih Aşıcı <fasici@linux-sevenler.org>
+ * Copyright 2013 Erdem Ersoy (eersoy93)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,78 +21,78 @@
 
 #include "wordpad.h"
 
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 IDM_MAINMENU MENU
 BEGIN
-    POPUP "&Dosya"
+    POPUP "&Kütük"
     BEGIN
         MENUITEM "&Yeni...\tCtrl+N",      ID_FILE_NEW
-        MENUITEM "&A�...\tCtrl+O",        ID_FILE_OPEN
+        MENUITEM "&Aç...\tCtrl+O",        ID_FILE_OPEN
         MENUITEM "&Kaydet\tCtrl+S",       ID_FILE_SAVE
-        MENUITEM "&Farkl� Kaydet...",     ID_FILE_SAVEAS
+        MENUITEM "Ay&rı Kaydet...",       ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Print...\tCtrl+P",     ID_PRINT
-        MENUITEM "Print previe&w...",     ID_PREVIEW
-        MENUITEM "Pag&e setup...",        ID_PRINTSETUP
+        MENUITEM "Ya&zdır...\tCtrl+P",    ID_PRINT
+        MENUITEM "&Baskı Önizleme...",    ID_PREVIEW
+        MENUITEM "&Sayfa Yapısı...",      ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "&��k",          ID_FILE_EXIT
+        MENUITEM "&Çıkış",                ID_FILE_EXIT
     END
-    POPUP "&D�zen"
+    POPUP "&Düzen"
     BEGIN
         MENUITEM "&Geri Al\tCtrl+Z",            ID_EDIT_UNDO
         MENUITEM "&Yinele\tCtrl+Y",             ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "Ke&s\tCtrl+X",                ID_EDIT_CUT
-        MENUITEM "&Kopyala\tCtrl+C",            ID_EDIT_COPY
-        MENUITEM "Ya&p��t�r\tCtrl+V",           ID_EDIT_PASTE
+        MENUITEM "&Kes\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Çoğalt\tCtrl+C",             ID_EDIT_COPY
+        MENUITEM "Ya&pıştır\tCtrl+V",           ID_EDIT_PASTE
         MENUITEM "&Sil\tDel",                   ID_EDIT_CLEAR
-        MENUITEM "&T�m�n� se�\tCtrl+A",         ID_EDIT_SELECTALL
+        MENUITEM "&Tümünü Seç\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Find...\tCtrl+F",            ID_FIND
-        MENUITEM "Find &next\tF3",              ID_FIND_NEXT
-        MENUITEM "&Replace...\tCtrl+H",         ID_REPLACE
+        MENUITEM "&Ara\tCtrl+F",            	ID_FIND
+        MENUITEM "S&onrakini Ara\tF3",          ID_FIND_NEXT
+        MENUITEM "&Değiştir...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "Salt-&okunur",                ID_EDIT_READONLY
-        MENUITEM "&De�i�mi�",                   ID_EDIT_MODIFIED
+        MENUITEM "Sa&lt Okunur",                ID_EDIT_READONLY
+        MENUITEM "D&eğiştirilmiş",              ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
-        POPUP "D&i�erleri"
+        POPUP "D&iğer Seçenekler"
         BEGIN
-            MENUITEM "Se�im &bilgisi",              ID_EDIT_SELECTIONINFO
-            MENUITEM "Karakter bi&�imi",            ID_EDIT_CHARFORMAT
-            MENUITEM "&�ntan�ml� kar. bi�imi",      ID_EDIT_DEFCHARFORMAT
-            MENUITEM "Paragra&f bi�imi",            ID_EDIT_PARAFORMAT
-            MENUITEM "&Metni al",                   ID_EDIT_GETTEXT
+            MENUITEM "&Seçim Bilgisi",              ID_EDIT_SELECTIONINFO
+            MENUITEM "&Damga Biçimi",            	ID_EDIT_CHARFORMAT
+            MENUITEM "&Öntanımlı Damga Biçimi",     ID_EDIT_DEFCHARFORMAT
+            MENUITEM "&Paragraf Biçimi",            ID_EDIT_PARAFORMAT
+            MENUITEM "&Metni Al",                   ID_EDIT_GETTEXT
         END
     END
-    POPUP "&View"
+    POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Toolbar",        ID_TOGGLE_TOOLBAR
-        MENUITEM "&Formatbar",      ID_TOGGLE_FORMATBAR
-        MENUITEM "&Ruler",          ID_TOGGLE_RULER
-        MENUITEM "&Statusbar",      ID_TOGGLE_STATUSBAR
+        MENUITEM "&Araç Çubuğu",       ID_TOGGLE_TOOLBAR
+        MENUITEM "&Biçim Çubuğu",      ID_TOGGLE_FORMATBAR
+        MENUITEM "&Çizgilik",          ID_TOGGLE_RULER
+        MENUITEM "&Durum Çubuğu",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Options...",     ID_VIEWPROPERTIES
+        MENUITEM "A&yarlar...",        ID_VIEWPROPERTIES
     END
-    POPUP "&Insert"
+    POPUP "&Ekle"
     BEGIN
-        MENUITEM "&Date and time...",            ID_DATETIME
+        MENUITEM "&Tarih veya Saat...",ID_DATETIME
     END
-    POPUP "&Bi�im"
+    POPUP "&Biçim"
     BEGIN
-        MENUITEM "&Font...",                     ID_FONTSETTINGS
-        MENUITEM "&Bullet points",               ID_BULLET
-        MENUITEM "&Paragraph...",                ID_PARAFORMAT
-        MENUITEM "&Tabs...",                     ID_TABSTOPS
+        MENUITEM "&Yazı Türü...",      ID_FONTSETTINGS
+        MENUITEM "&Madde İmi",         ID_BULLET
+        MENUITEM "&Paragraf...",       ID_PARAFORMAT
+        MENUITEM "&Sekmeler...",       ID_TABSTOPS
         POPUP "&Arkaplan"
         BEGIN
-            MENUITEM "S&istem\tCtrl+1",         ID_BACK_1
-            MENUITEM "&Sar�mt�rak\tCtrl+2",     ID_BACK_2
+            MENUITEM "&Dizge Rengi\tCtrl+1",    ID_BACK_1
+            MENUITEM "&Sarımtırak\tCtrl+2",     ID_BACK_2
         END
     END
-    POPUP "&Help"
+    POPUP "&Yardım"
     BEGIN
-        MENUITEM "&About Wine Wordpad",      ID_ABOUT
+        MENUITEM "&Hakkında",          ID_ABOUT
     END
 END
 
@@ -99,12 +100,12 @@ IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Ke&s",                 ID_EDIT_CUT
-        MENUITEM "&Kopyala",             ID_EDIT_COPY
-        MENUITEM "Ya&p��t�r",            ID_EDIT_PASTE
+        MENUITEM "&Kes",                ID_EDIT_CUT
+        MENUITEM "&Çoğalt",             ID_EDIT_COPY
+        MENUITEM "&Yapıştır",           ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Bullet points",       ID_BULLET
-        MENUITEM "&Paragraph...",        ID_PARAFORMAT
+        MENUITEM "&Madde İmi",       	ID_BULLET
+        MENUITEM "&Paragraf...",        ID_PARAFORMAT
     END
 END
 
@@ -112,22 +113,154 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Siyah",       ID_COLOR_BLACK
-        MENUITEM "Koyu K�rm�z�",ID_COLOR_MAROON
-        MENUITEM "Ye�il",       ID_COLOR_GREEN
-        MENUITEM "Koyu Sar�",   ID_COLOR_OLIVE
-        MENUITEM "Koyu Mavi",   ID_COLOR_NAVY
-        MENUITEM "Mor",         ID_COLOR_PURPLE
-        MENUITEM "Deniz Mavisi",ID_COLOR_TEAL
-        MENUITEM "Gri",         ID_COLOR_GRAY
-        MENUITEM "G�m��",       ID_COLOR_SILVER
-        MENUITEM "K�rm�z�",     ID_COLOR_RED
-        MENUITEM "Parlak Ye�il",ID_COLOR_LIME
-        MENUITEM "Sar�",        ID_COLOR_YELLOW
-        MENUITEM "Mavi",        ID_COLOR_BLUE
-        MENUITEM "Pembe",       ID_COLOR_FUCHSIA
-        MENUITEM "Turkuaz",     ID_COLOR_AQUA
-        MENUITEM "Beyaz",       ID_COLOR_WHITE
-        MENUITEM "Automatic",   ID_COLOR_AUTOMATIC
+        MENUITEM "Kara",       			ID_COLOR_BLACK
+        MENUITEM "Vişne Çürüğü",		ID_COLOR_MAROON
+        MENUITEM "Yeşil",       		ID_COLOR_GREEN
+        MENUITEM "Zeytinyağı",  		ID_COLOR_OLIVE
+        MENUITEM "Deniz Mavisi",		ID_COLOR_NAVY
+        MENUITEM "Mor",         		ID_COLOR_PURPLE
+        MENUITEM "Çamurcun",			ID_COLOR_TEAL
+        MENUITEM "Kül Rengi",   		ID_COLOR_GRAY
+        MENUITEM "Gümüş",       		ID_COLOR_SILVER
+        MENUITEM "Al",     				ID_COLOR_RED
+        MENUITEM "Misket limonu",		ID_COLOR_LIME
+        MENUITEM "Sarı",        		ID_COLOR_YELLOW
+        MENUITEM "Mavi",        		ID_COLOR_BLUE
+        MENUITEM "Küpe Çiçeği", 		ID_COLOR_FUCHSIA
+        MENUITEM "Turkuaz",     		ID_COLOR_AQUA
+        MENUITEM "Beyaz",       		ID_COLOR_WHITE
+        MENUITEM "Dizge Rengi", 		ID_COLOR_AUTOMATIC
     END
+END
+
+IDD_DATETIME DIALOG 30, 20, 130, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Zaman"
+FONT 10, "MS Sans Serif"
+BEGIN
+    LTEXT        "Var Olan Biçimler:",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    PUSHBUTTON   "&Tamam",IDOK,87,12,40,12
+    PUSHBUTTON   "&Vazgeç",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOG 30, 20, 140, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Yeni"
+FONT 10, "MS Sans Serif"
+BEGIN
+    LTEXT        "Yeni belge türü:",-1,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    PUSHBUTTON   "&Tamam",IDOK,97,12,40,12
+    PUSHBUTTON   "&Vazgeç",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOG 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Paragraf Düzeni"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Pay", -1, 10, 10, 120, 68
+    LTEXT "Sol", -1, 15, 22, 40, 13
+    EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
+    LTEXT "Sağ", -1, 15, 40, 40, 13
+    EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
+    LTEXT "İlk satır", -1, 15, 58, 40, 13
+    EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
+    LTEXT "Hizâlama", -1, 15, 87, 40, 13
+    COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
+    PUSHBUTTON "&Tamam", IDOK, 137, 15, 50, 15
+    PUSHBUTTON "&Vazgeç", IDCANCEL, 137, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOG 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Sekmeler"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Sekme Durakları", -1, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON "&Ekle", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "&Sil", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "&Tamam", IDOK, 137, 15, 50, 15
+    PUSHBUTTON "&Vazgeç", IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON "&Hepsini Sil", ID_TAB_EMPTY, 137, 51, 50, 15
+END
+
+IDD_FORMATOPTS DIALOG 0, 0, 280, 110
+STYLE DS_SYSMODAL
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Satır Kaydırma", -1, 10, 10, 130, 85
+    RADIOBUTTON "&Kaydırma yok", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "&Pencere kenarlığına kadar", IDC_PAGEFMT_WW, 18, 45, 117, 15
+    RADIOBUTTON "&Çizgiliğe kadar", IDC_PAGEFMT_WM, 18, 65, 117, 15
+    GROUPBOX "Çubuklar", -1, 150, 10, 120, 85
+    CHECKBOX "&Araç Çubuğu", IDC_PAGEFMT_TB, 160, 20, 80, 15
+    CHECKBOX "&Biçim Çubuğu", IDC_PAGEFMT_FB, 160, 38, 80, 15
+    CHECKBOX "Ç&izgilik", IDC_PAGEFMT_RU, 160, 56, 80, 15
+    CHECKBOX "&Durum Çubuğu", IDC_PAGEFMT_SB, 160, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALL_FILES,                 "Tüm Kütükler (*.*)"
+    STRING_TEXT_FILES_TXT,            "Metin Belgeleri (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT,    "Unicode Metin Belgeleri (*.txt)"
+    STRING_RICHTEXT_FILES_RTF,        "Zengin Metin Belgeleri (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,          "Zengin Metin Belgesi"
+    STRING_NEWFILE_TXT,               "Metin Belgesi"
+    STRING_NEWFILE_TXT_UNICODE,       "Unicode Metin Belgesi"
+    STRING_PRINTER_FILES_PRN,         "Yazıcı Dosyaları (*.PRN)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_ALIGN_LEFT,                "Sol"
+    STRING_ALIGN_RIGHT,               "Sağ"
+    STRING_ALIGN_CENTER,              "Orta"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_VIEWPROPS_TITLE,           "Ayarlar"
+    STRING_VIEWPROPS_TEXT,            "Metin"
+    STRING_VIEWPROPS_RICHTEXT,        "Zengin Metin"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PREVIEW_PRINT,             "Yazdır"
+    STRING_PREVIEW_NEXTPAGE,          "Sonraki Sayfa"
+    STRING_PREVIEW_PREVPAGE,          "Önceki Sayfa"
+    STRING_PREVIEW_TWOPAGES,          "İkili"
+    STRING_PREVIEW_ONEPAGE,           "Tekli"
+    STRING_PREVIEW_ZOOMIN,            "Yakınlaştır"
+    STRING_PREVIEW_ZOOMOUT,           "Uzaklaştır"
+    STRING_PREVIEW_CLOSE,             "Tamam"
+    STRING_PREVIEW_PAGE,              "Sayfa"
+    STRING_PREVIEW_PAGES,             "Sayfalar"
+    STRING_UNITS_CM,                  "cm"
+    STRING_UNITS_IN,                  "in"
+    STRING_UNITS_INCH,                "inç"
+    STRING_UNITS_PT,                  "pt"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_DEFAULT_FILENAME,          "Adsız"
+    STRING_PROMPT_SAVE_CHANGES,       "'%s' için değişiklikler kaydedilsin mi?"
+    STRING_SEARCH_FINISHED,           "Belge araması tamamlandı."
+    STRING_LOAD_RICHED_FAILED,        "Zengin metin kitaplığının yüklenmesi başarısız oldu."
+    STRING_SAVE_LOSEFORMATTING,       "Eğer düz metin belgesi olarak kaydedilirse yapılan tüm değişiklikler kaybolacak. Devam etmek istiyor musunuz?"
+    STRING_INVALID_NUMBER,            "Geçersiz sayı biçimi."
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE içeren belgeler desteklenmiyor."
+    STRING_WRITE_FAILED,              "Belgenin kaydedilmesi başarısız oldu."
+    STRING_WRITE_ACCESS_DENIED,       "Bu kütüğü kaydetme yetkiniz yok."
+    STRING_OPEN_FAILED,               "Belgenin açılması başarısız oldu."
+    STRING_OPEN_ACCESS_DENIED,        "Bu kütüğü açma yetkiniz yok."
+    STRING_PRINTING_NOT_IMPLEMENTED,  "Yazdırma seçeneği daha tamamlanmadı."
+    STRING_MAX_TAB_STOPS,             "En fazla 32 adet sekme durağı ekleyebilirsiniz."
 END

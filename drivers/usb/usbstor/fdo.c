@@ -14,7 +14,7 @@
 VOID
 USBSTOR_DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
 {
-    DPRINT1("Dumping Device Descriptor %x\n", DeviceDescriptor);
+    DPRINT1("Dumping Device Descriptor %p\n", DeviceDescriptor);
     DPRINT1("bLength %x\n", DeviceDescriptor->bLength);
     DPRINT1("bDescriptorType %x\n", DeviceDescriptor->bDescriptorType);
     DPRINT1("bcdUSB %x\n", DeviceDescriptor->bcdUSB);

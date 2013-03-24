@@ -57,7 +57,7 @@ static HRESULT WINAPI MkProtocol_QueryInterface(IInternetProtocolEx *iface, REFI
     }
 
     if(*ppv) {
-        IInternetProtocol_AddRef(iface);
+        IInternetProtocolEx_AddRef(iface);
         return S_OK;
     }
 

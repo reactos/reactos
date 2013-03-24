@@ -1891,7 +1891,7 @@ HRESULT WINAPI SHStrDupA(LPCSTR lpszStr, LPWSTR * lppszDest)
 
   if (lpszStr)
   {
-    len = MultiByteToWideChar(0, 0, lpszStr, -1, 0, 0) * sizeof(WCHAR);
+    len = MultiByteToWideChar(CP_ACP, 0, lpszStr, -1, NULL, 0) * sizeof(WCHAR);
     *lppszDest = CoTaskMemAlloc(len);
   }
   else
@@ -1899,7 +1899,7 @@ HRESULT WINAPI SHStrDupA(LPCSTR lpszStr, LPWSTR * lppszDest)
 
   if (*lppszDest)
   {
-    MultiByteToWideChar(0, 0, lpszStr, -1, *lppszDest, len/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, lpszStr, -1, *lppszDest, len/sizeof(WCHAR));
     hRet = S_OK;
   }
   else
@@ -2827,4 +2827,29 @@ end:
     if(hmod) FreeLibrary(hmod);
     HeapFree(GetProcessHeap(), 0, dllname);
     return hr;
+}
+
+BOOL WINAPI IsCharSpaceA(CHAR c)
+{
+    WORD CharType;
+    return GetStringTypeA(GetSystemDefaultLCID(), CT_CTYPE1, &c, 1, &CharType) && (CharType & C1_SPACE);
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.29]
+ *
+ * Determine if a Unicode character is a space.
+ *
+ * PARAMS
+ *  wc [I] Character to check.
+ *
+ * RETURNS
+ *  TRUE, if wc is a space,
+ *  FALSE otherwise.
+ */
+BOOL WINAPI IsCharSpaceW(WCHAR wc)
+{
+    WORD CharType;
+
+    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_SPACE);
 }

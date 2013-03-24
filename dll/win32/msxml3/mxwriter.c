@@ -291,7 +291,9 @@ static HRESULT alloc_output_buffer(xml_encoding encoding, output_buffer **buffer
         return hr;
     }
 
-    if (ret->code_page == CP_UTF8) {
+    /* currently we always create a default output buffer that is UTF-16 only,
+       but it's possible to allocate with specific encoding too */
+    if (encoding != XmlEncoding_UTF16) {
         hr = init_encoded_buffer(&ret->encoded);
         if (hr != S_OK) {
             free_encoded_buffer(&ret->utf16);

@@ -107,6 +107,6 @@ add_importlibs(shell32
     kernel32
     ntdll)
 
-add_dependencies(shdocvw shdocvw_v1)
+add_dependencies(shell32 shdocvw_v1)
 add_pch(shell32 precomp.h)
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)

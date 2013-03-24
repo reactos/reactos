@@ -1646,15 +1646,32 @@ ftGdiGetGlyphOutline(
     IntLockFreeType;
 
     /* Scaling transform */
-    if (aveWidth)
+    /*if (aveWidth)*/
     {
-        FT_Matrix scaleMat;
-        DPRINT("Scaling Trans!\n");
-        scaleMat.xx = FT_FixedFromFloat(widthRatio);
-        scaleMat.xy = 0;
-        scaleMat.yx = 0;
-        scaleMat.yy = (1 << 16);
-        FT_Matrix_Multiply(&scaleMat, &transMat);
+
+        FT_Matrix ftmatrix;
+        FLOATOBJ efTemp;
+
+        PMATRIX pmx = DC_pmxWorldToDevice(dc);
+
+        /* Create a freetype matrix, by converting to 16.16 fixpoint format */
+        efTemp = pmx->efM11;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.xx = FLOATOBJ_GetLong(&efTemp);
+
+        efTemp = pmx->efM12;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.xy = FLOATOBJ_GetLong(&efTemp);
+
+        efTemp = pmx->efM21;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.yx = FLOATOBJ_GetLong(&efTemp);
+
+        efTemp = pmx->efM22;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.yy = FLOATOBJ_GetLong(&efTemp);
+
+        FT_Matrix_Multiply(&ftmatrix, &transMat);
         needsTransform = TRUE;
     }
 

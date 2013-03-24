@@ -26,6 +26,10 @@ Author:
 #include <pstypes.h>
 #include <obtypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -575,5 +579,9 @@ ZwWaitForSingleObject(
 );
 
 #endif /* NTOS_MODE_USER */
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif

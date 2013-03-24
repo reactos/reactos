@@ -39,6 +39,9 @@ END
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/lt-LT.rc"
 #endif

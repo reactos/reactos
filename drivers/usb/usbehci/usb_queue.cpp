@@ -610,7 +610,7 @@ CUSBQueue::UnlinkQueueHeadChain(
 
         if (Entry == &HeadQueueHead->LinkedQueueHeads)
         {
-            DPRINT1("Warnnig; Only %d QueueHeads in HeadQueueHead\n", Index);
+            DPRINT1("Warning; Only %lu QueueHeads in HeadQueueHead\n", Index);
             Count = Index + 1;
             break;
         }
@@ -684,7 +684,7 @@ CUSBQueue::QueueHeadInterruptCompletion(
     LastQueueHead->HorizontalLinkPointer = QueueHead->HorizontalLinkPointer;
     LastQueueHead->NextQueueHead = QueueHead->NextQueueHead;
 
-    DPRINT1("Periodic QueueHead %p Addr $x unlinked\n", QueueHead, QueueHead->PhysicalAddr);
+    DPRINT1("Periodic QueueHead %p Addr %x unlinked\n", QueueHead, QueueHead->PhysicalAddr);
 
     // insert into completed list
     InsertTailList(&m_CompletedRequestAsyncList, &QueueHead->LinkedQueueHeads);
@@ -765,7 +765,7 @@ CUSBQueue::ProcessPeriodicSchedule(
         //
         IsQueueHeadComplete = Request->IsQueueHeadComplete(QueueHead);
 
-        DPRINT("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
+        DPRINT("Request %p QueueHead %p Complete %c\n", Request, QueueHead, IsQueueHeadComplete);
 
         //
         // check if queue head is complete
@@ -841,7 +841,7 @@ CUSBQueue::ProcessAsyncList(
         //
         IsQueueHeadComplete = Request->IsQueueHeadComplete(QueueHead);
 
-        DPRINT("Request %p QueueHead %p Complete %d\n", Request, QueueHead, IsQueueHeadComplete);
+        DPRINT("Request %p QueueHead %p Complete %c\n", Request, QueueHead, IsQueueHeadComplete);
 
         //
         // check if queue head is complete

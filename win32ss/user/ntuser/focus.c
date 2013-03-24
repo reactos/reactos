@@ -866,6 +866,17 @@ co_IntSetForegroundWindow(PWND Window)
   API Call
 */
 BOOL FASTCALL
+co_IntSetForegroundWindowMouse(PWND Window)
+{
+   if (Window) ASSERT_REFS_CO(Window);
+
+   return co_IntSetForegroundAndFocusWindow(Window, TRUE);
+}
+
+/*
+  API Call
+*/
+BOOL FASTCALL
 IntLockSetForegroundWindow(UINT uLockCode)
 {
    ULONG Err = ERROR_ACCESS_DENIED;

@@ -1,0 +1,54 @@
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Ses Kaydedicisi Hakkında"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_SNDREC32,-1,19,14,21,20
+    LTEXT           "ReactOS Ses Kaydedicisi, sürüm 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "Tekif Hakkı - 2009",IDC_STATIC,55,25,114,8
+    DEFPUSHBUTTON   "&Tamam",IDOK,139,54,50,14,WS_GROUP
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "&Kütük"
+    BEGIN
+        MENUITEM "&Yeni",                    ID_NEW
+        MENUITEM "&Aç...",                   ID_FILE_OPEN
+        MENUITEM "&Kaydet",                  ID_FILE_SAVE, GRAYED
+        MENUITEM "Ay&rı Kaydet...",          ID_FILE_SAVEAS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Çıkış",                   ID_EXIT
+    END
+    MENUITEM "Yapılacak",                    0
+    MENUITEM "Yapılacak_2",                  0
+    POPUP "&Yardım"
+    BEGIN
+        MENUITEM "&Hakkında",                ID__ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE           "Ses Kaydedicisi"
+    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STRPOS              "Konum: %.2f s"
+    IDS_STRDUR              "Uzunluk: %.2f s"
+    IDS_STRBUF              "Nitelik: %.2f KB"
+    IDS_STRFMT              "%.1f kHz, %u bitlik"
+    IDS_STRMONO             "Tek Yol"
+    IDS_STRSTEREO           "Çift Yol"
+    IDS_STRCHAN             "%s"
+END

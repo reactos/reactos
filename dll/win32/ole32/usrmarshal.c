@@ -2360,8 +2360,8 @@ HRESULT CALLBACK IMoniker_BindToStorage_Proxy(
     REFIID riid,
     void **ppvObj)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p %p %s %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObj);
+    return IMoniker_RemoteBindToStorage_Proxy(This, pbc, pmkToLeft, riid, (IUnknown**)ppvObj);
 }
 
 HRESULT __RPC_STUB IMoniker_BindToStorage_Stub(
@@ -2371,8 +2371,8 @@ HRESULT __RPC_STUB IMoniker_BindToStorage_Stub(
     REFIID riid,
     IUnknown **ppvObj)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p %p %s %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObj);
+    return IMoniker_BindToStorage(This, pbc, pmkToLeft, riid, (void**)ppvObj);
 }
 
 HRESULT CALLBACK IEnumString_Next_Proxy(

@@ -23,7 +23,7 @@
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE BEGIN
-     IDS_APPNAME, "Wine Mayın Tarlası"
+     IDS_APPNAME, "Mayın Tarlası"
      IDS_NOBODY,  "Hiç kimse"
      IDS_ABOUT,   "Telif hakkı: Joshua Thielen, 2000"
 END
@@ -31,20 +31,20 @@ END
 MENU_WINEMINE MENU
 BEGIN
     POPUP "&Seçenekler" BEGIN
-        MENUITEM "&Yeni\tF2",        IDM_NEW
+        MENUITEM "&Yeni\tF2",           IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Soru İmi",        IDM_MARKQ
+        MENUITEM "&Soru İmi",           IDM_MARKQ
         MENUITEM SEPARATOR
-        MENUITEM "&Başlangıç",       IDM_BEGINNER
-        MENUITEM "&Orta",            IDM_ADVANCED
-        MENUITEM "&İleri",           IDM_EXPERT
-        MENUITEM "&Özel",            IDM_CUSTOM
+        MENUITEM "&Başlangıç",          IDM_BEGINNER
+        MENUITEM "&Orta",               IDM_ADVANCED
+        MENUITEM "&İleri",              IDM_EXPERT
+        MENUITEM "&Özel...",            IDM_CUSTOM
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tAlt+X",    IDM_EXIT
+        MENUITEM "&Çıkış\tAlt+X",       IDM_EXIT
     END
     POPUP "&Bilgi" BEGIN
-        MENUITEM "&En Kısa Süreler", IDM_TIMES
-        MENUITEM "&Hakkında",        IDM_ABOUT
+        MENUITEM "&En Kısa Süreler...", IDM_TIMES
+        MENUITEM "&Hakkında",           IDM_ABOUT
     END
 END
 

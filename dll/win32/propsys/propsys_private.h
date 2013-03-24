@@ -1,5 +1,7 @@
 /*
- * Copyright 2005 Jacek Caban
+ * propsys private definitions
+ *
+ * Copyright 2012 Vincent Povirk for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,16 +18,4 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* @makedep: urlmon.rgs */
-1 WINE_REGISTRY urlmon.rgs
-
-/* @makedep: urlmon.inf */
-REGINST REGINST urlmon.inf
-
-#define WINE_FILENAME_STR "urlmon.dll"
-#define WINE_FILEVERSION 6,0,2800,1485
-#define WINE_FILEVERSION_STR "6.0.2800.1485"
-#define WINE_PRODUCTVERSION 6,0,2800,1485
-#define WINE_PRODUCTVERSION_STR "6.0.2800.1485"
-
-#include "wine/wine_common_ver.rc"
+HRESULT PropertyStore_CreateInstance(IUnknown *outer, REFIID riid, void **ppv) DECLSPEC_HIDDEN;

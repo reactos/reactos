@@ -64,13 +64,13 @@ BEGIN
     BEGIN
         MENUITEM "&Yeni oyun\tF2",              IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Desteler",                   IDM_GAME_DECK
+        MENUITEM "&Desteler...",                IDM_GAME_DECK
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                      IDM_GAME_EXIT
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&İçerik\tF1",                 IDM_HELP_CONTENTS
+        MENUITEM "&Yardım Konuları\tF1",        IDM_HELP_CONTENTS
         MENUITEM "&Hakkında",                   IDM_HELP_ABOUT
     END
 END

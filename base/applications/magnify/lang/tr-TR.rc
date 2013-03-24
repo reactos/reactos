@@ -1,0 +1,72 @@
+/*
+ * PROJECT:     ReactOS Magnifier
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/magnify/lang/tr-TR.rc
+ * PURPOSE:     Turkish Language File for Magnifier
+ * TRANSLATOR:  2013 - Erdem Ersoy (eersoy93)
+ */
+ 
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDC_MAGNIFIER MENU
+BEGIN
+    POPUP "&Seçke"
+    BEGIN
+        MENUITEM "&Çıkış",                     IDM_EXIT
+        MENUITEM "&Ayarlar...",                IDM_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Hakkında",                  IDM_ABOUT
+    END
+END
+
+IDC_MAGNIFIER ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Hakkında"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_ICON,IDC_MYICON,14,9,20,20
+    LTEXT           "Büyüteç: Sürüm 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "Telif Hakkı: 2007 - Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
+    PUSHBUTTON      "Tamam",IDOK,162,48,50,14
+END
+
+IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Büyüteç Ayarları"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Çıkış",IDOK,96,161,50,14
+    PUSHBUTTON      "Yardım",IDC_BUTTON_HELP,38,161,50,14
+    LTEXT           "Büyütme düzeyi:",IDC_STATIC,6,8,68,8
+    COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "İzleme",IDC_STATIC,7,25,139,59
+    GROUPBOX        "Sunum",IDC_STATIC,7,87,139,57
+    CONTROL         "Fare imlecini takip et",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
+    CONTROL         "Düğme takımı odağını izle",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
+    CONTROL         "Metin düzenlemesini izle",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
+    CONTROL         "Renkleri ters çevir",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
+    CONTROL         "Simge durumunda başlat",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
+    CONTROL         "Büyüteci göster",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
+END
+
+IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "ReactOS Büyüteç"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Tamam",IDOK,193,76,50,14
+    ICON            IDI_ICON,IDC_STATIC,7,17,20,20
+    LTEXT           "Büyüteç, hafif görme engelli kullanıcıların en az çaba harcamaları için tasarlanmıştır. Görme engelli bir çok kullanıcı, günlük kullanım için bu aracı kullanmaya gereksinim duyacaktır.",IDC_STATIC,36,7,207,33
+    CONTROL         "Bunu bir daha gösterme",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE           "Büyüteç"
+END

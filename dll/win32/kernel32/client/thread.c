@@ -171,7 +171,7 @@ CreateRemoteThread(IN HANDLE hProcess,
     ULONG Dummy;
     PTEB Teb;
     THREAD_BASIC_INFORMATION ThreadBasicInfo;
-    PVOID ActivationContextStack = NULL;
+    PACTIVATION_CONTEXT_STACK ActivationContextStack = NULL;
     ACTIVATION_CONTEXT_BASIC_INFORMATION ActCtxInfo;
     ULONG_PTR Cookie;
     ULONG ReturnLength;
@@ -191,7 +191,7 @@ CreateRemoteThread(IN HANDLE hProcess,
                              dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
                              dwStackSize : 0,
                              &InitialTeb);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return NULL;
@@ -260,7 +260,7 @@ CreateRemoteThread(IN HANDLE hProcess,
         Teb->ActivationContextStackPointer = ActivationContextStack;
 
         /* Query the Context */
-         // WARNING!!! THIS IS USING THE WIN32 FLAG BECAUSE REACTOS CONTINUES TO BE A POS!!! ///
+        // WARNING!!! THIS IS USING THE WIN32 FLAG BECAUSE REACTOS CONTINUES TO BE A POS!!! ///
         Status = RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
                                                       NULL,
                                                       0,
@@ -274,6 +274,11 @@ CreateRemoteThread(IN HANDLE hProcess,
             ERROR_DBGBREAK("SXS: %s - Failing thread create because "
                            "RtlQueryInformationActivationContext() failed with status %08lx\n",
                            __FUNCTION__, Status);
+
+            /* Free the activation context stack */
+            // RtlFreeThreadActivationContextStack();
+            RtlFreeActivationContextStack(Teb->ActivationContextStackPointer);
+
             return NULL;
         }
 
@@ -291,6 +296,11 @@ CreateRemoteThread(IN HANDLE hProcess,
                 ERROR_DBGBREAK("SXS: %s - Failing thread create because "
                                "RtlActivateActivationContextEx() failed with status %08lx\n",
                                __FUNCTION__, Status);
+
+                /* Free the activation context stack */
+                // RtlFreeThreadActivationContextStack();
+                RtlFreeActivationContextStack(Teb->ActivationContextStackPointer);
+
                 return NULL;
             }
         }
@@ -299,7 +309,6 @@ CreateRemoteThread(IN HANDLE hProcess,
     /* Notify CSR */
     if (!BaseRunningInServerProcess)
     {
-        /* Notify CSR */
         Status = BasepNotifyCsrOfThread(hThread, &ClientId);
         ASSERT(NT_SUCCESS(Status));
     }

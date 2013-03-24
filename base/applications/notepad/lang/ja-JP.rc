@@ -61,7 +61,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "切り取り(&T)\tCtrl+X",   CMD_CUT
         MENUITEM "コピー(&C)\tCtrl+C",     CMD_COPY
-        MENUITEM "貼 り付け(&P)\tCtrl+V",  CMD_PASTE
+        MENUITEM "貼り付け(&P)\tCtrl+V",  CMD_PASTE
         MENUITEM "削除(&D)\tDel",          CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "検索(&F)...\tCtrl+F",    CMD_SEARCH
@@ -77,7 +77,7 @@ BEGIN
         MENUITEM "右端で折り返す(&W)", CMD_WRAP
         MENUITEM "フォント(&F)...",    CMD_FONT
     END
-    POPUP "表 示(&V)"
+    POPUP "表示(&V)"
     BEGIN
         MENUITEM "ステータス バー(&B)", CMD_STATUSBAR
     END

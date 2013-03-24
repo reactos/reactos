@@ -1348,7 +1348,7 @@ CUSBRequest::DumpEndpointDescriptor(
     DPRINT1("EndpointDescriptor %p Addr %x\n", Descriptor, Descriptor->PhysicalAddress.LowPart);
     DPRINT1("EndpointDescriptor HeadPhysicalDescriptor %x HeadLogicalDescriptor %p\n", Descriptor->HeadPhysicalDescriptor, Descriptor->HeadLogicalDescriptor);
     DPRINT1("EndpointDescriptor TailPhysicalDescriptor %x\n", Descriptor->TailPhysicalDescriptor);
-    DPRINT1("EndpointDescriptor NextDescriptor %x\n", Descriptor->NextDescriptor);
+    DPRINT1("EndpointDescriptor NextDescriptor %p\n", Descriptor->NextDescriptor);
     DPRINT1("EndpointDescriptor NextPhysicalEndpoint %x\n", Descriptor->NextPhysicalEndpoint);
     DPRINT1("EndpointDescriptor Flags %x\n", Descriptor->Flags);
 
@@ -1356,12 +1356,12 @@ CUSBRequest::DumpEndpointDescriptor(
     GeneralDescriptor = (POHCI_GENERAL_TD)Descriptor->HeadLogicalDescriptor;
     while(GeneralDescriptor)
     {
-        DPRINT1("Descriptor %d Address %p Addr %x\n", Count, GeneralDescriptor, GeneralDescriptor->PhysicalAddress);
-        DPRINT1("Descriptor %d BufferLogical %p BufferPhysical %x\n", Count, GeneralDescriptor->BufferLogical, GeneralDescriptor->BufferPhysical);
-        DPRINT1("Descriptor %d BufferSize %d\n", Count, GeneralDescriptor->BufferSize);
-        DPRINT1("Descriptor %d LastPhysicalByteAddress %x\n", Count, GeneralDescriptor->LastPhysicalByteAddress);
-        DPRINT1("Descriptor %d Flags %x\n", Count, GeneralDescriptor->Flags);
-        DPRINT1("Descriptor %d NextLogicalDescriptor %p NextPhysicalDescriptor %x\n", Count, GeneralDescriptor->NextLogicalDescriptor, GeneralDescriptor->NextPhysicalDescriptor);
+        DPRINT1("Descriptor %lu Address %p Addr %x\n", Count, GeneralDescriptor, GeneralDescriptor->PhysicalAddress);
+        DPRINT1("Descriptor %lu BufferLogical %p BufferPhysical %x\n", Count, GeneralDescriptor->BufferLogical, GeneralDescriptor->BufferPhysical);
+        DPRINT1("Descriptor %lu BufferSize %lu\n", Count, GeneralDescriptor->BufferSize);
+        DPRINT1("Descriptor %lu LastPhysicalByteAddress %x\n", Count, GeneralDescriptor->LastPhysicalByteAddress);
+        DPRINT1("Descriptor %lu Flags %x\n", Count, GeneralDescriptor->Flags);
+        DPRINT1("Descriptor %lu NextLogicalDescriptor %p NextPhysicalDescriptor %x\n", Count, GeneralDescriptor->NextLogicalDescriptor, GeneralDescriptor->NextPhysicalDescriptor);
 
         Count++;
         GeneralDescriptor = (POHCI_GENERAL_TD)GeneralDescriptor->NextLogicalDescriptor;

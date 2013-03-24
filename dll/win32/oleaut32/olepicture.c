@@ -1423,8 +1423,8 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
   } while (!headerisdata);
 
   if (statfailed) { /* we don't know the size ... read all we get */
-      int sizeinc = 4096;
-      int origsize = sizeinc;
+      unsigned int sizeinc = 4096;
+      unsigned int origsize = sizeinc;
       ULONG nread = 42;
 
       TRACE("Reading all data from stream.\n");

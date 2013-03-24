@@ -18,6 +18,15 @@
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
@@ -32,10 +41,4 @@
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/fr-FR.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "lang/es-ES.rc"
 #endif

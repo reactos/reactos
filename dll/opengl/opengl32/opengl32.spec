@@ -363,7 +363,7 @@
 @  stdcall wglSwapBuffers(long) rosglSwapBuffers
 @  stdcall wglSwapLayerBuffers(long long) rosglSwapLayerBuffers
 @ stub wglSwapMultipleBuffers
-@  stdcall wglUseFontBitmapsA(long long long long) rosglUseFontBitmapsA
-@  stdcall wglUseFontBitmapsW(long long long long) rosglUseFontBitmapsW
-@  stdcall wglUseFontOutlinesA(long long long long long long long ptr) rosglUseFontOutlinesA
-@  stdcall wglUseFontOutlinesW(long long long long long long long ptr) rosglUseFontOutlinesW
+@  stdcall wglUseFontBitmapsA(long long long long)
+@  stdcall wglUseFontBitmapsW(long long long long)
+@  stdcall wglUseFontOutlinesA(long long long long long long long ptr)
+@  stdcall wglUseFontOutlinesW(long long long long long long long ptr)

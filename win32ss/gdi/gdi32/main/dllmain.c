@@ -1,10 +1,5 @@
 /*
  * dllmain.c
- *
- * $Revision: 1.11 $
- * $Author: hbelusca $
- * $Date: 2013-01-28 23:45:53 +0100 (lun. 28 janv. 2013) $
- *
  */
 
 #include <precomp.h>

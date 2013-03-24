@@ -85,8 +85,8 @@ typedef struct
     /* request */
     BINDVERB verb;
     BSTR custom;
-    BSTR siteurl;
-    BSTR url;
+    IUri *uri;
+    IUri *base_uri;
     BOOL async;
     struct list reqheaders;
     /* cached resulting custom request headers string length in WCHARs */
@@ -144,8 +144,16 @@ static inline serverhttp *impl_from_IServerXMLHTTPRequest(IServerXMLHTTPRequest 
 static void httprequest_setreadystate(httprequest *This, READYSTATE state)
 {
     READYSTATE last = This->state;
+    static const char* readystates[] = {
+        "READYSTATE_UNINITIALIZED",
+        "READYSTATE_LOADING",
+        "READYSTATE_LOADED",
+        "READYSTATE_INTERACTIVE",
+        "READYSTATE_COMPLETE"};
 
     This->state = state;
+
+    TRACE("state %s\n", readystates[state]);
 
     if (This->sink && last != state)
     {
@@ -209,6 +217,7 @@ static void BindStatusCallback_Detach(BindStatusCallback *bsc)
     if (bsc)
     {
         if (bsc->binding) IBinding_Abort(bsc->binding);
+        bsc->request->bsc = NULL;
         bsc->request = NULL;
         IBindStatusCallback_Release(&bsc->IBindStatusCallback_iface);
     }
@@ -343,7 +352,11 @@ static HRESULT WINAPI BindStatusCallback_OnStopBinding(IBindStatusCallback *ifac
     }
 
     if (hr == S_OK)
+    {
+        BindStatusCallback_Detach(This->request->bsc);
+        This->request->bsc = This;
         httprequest_setreadystate(This->request, READYSTATE_COMPLETE);
+    }
 
     return S_OK;
 }
@@ -688,22 +701,27 @@ static HRESULT BindStatusCallback_create(httprequest* This, BindStatusCallback *
         case VT_ARRAY|VT_UI1:
         {
             sa = V_ARRAY(body);
-            if ((hr = SafeArrayAccessData(sa, (void **)&ptr)) != S_OK) return hr;
+            if ((hr = SafeArrayAccessData(sa, (void **)&ptr)) != S_OK)
+            {
+                heap_free(bsc);
+                return hr;
+            }
             if ((hr = SafeArrayGetUBound(sa, 1, &size) != S_OK))
             {
                 SafeArrayUnaccessData(sa);
+                heap_free(bsc);
                 return hr;
             }
             size++;
             break;
         }
+        default:
+            FIXME("unsupported body data type %d\n", V_VT(body));
+            /* fall through */
         case VT_EMPTY:
         case VT_ERROR:
             ptr = NULL;
             size = 0;
-            break;
-        default:
-            FIXME("unsupported body data type %d\n", V_VT(body));
             break;
         }
 
@@ -734,7 +752,7 @@ static HRESULT BindStatusCallback_create(httprequest* This, BindStatusCallback *
     {
         IMoniker *moniker;
 
-        hr = CreateURLMoniker(NULL, This->url, &moniker);
+        hr = CreateURLMonikerEx2(NULL, This->uri, &moniker, URL_MK_UNIFORM);
         if (hr == S_OK)
         {
             IStream *stream;
@@ -756,6 +774,53 @@ static HRESULT BindStatusCallback_create(httprequest* This, BindStatusCallback *
     return hr;
 }
 
+static HRESULT verify_uri(httprequest *This, IUri *uri)
+{
+    DWORD scheme, base_scheme;
+    BSTR host, base_host;
+    HRESULT hr;
+
+    if(!(This->safeopt & INTERFACESAFE_FOR_UNTRUSTED_DATA))
+        return S_OK;
+
+    if(!This->base_uri)
+        return E_ACCESSDENIED;
+
+    hr = IUri_GetScheme(uri, &scheme);
+    if(FAILED(hr))
+        return hr;
+
+    hr = IUri_GetScheme(This->base_uri, &base_scheme);
+    if(FAILED(hr))
+        return hr;
+
+    if(scheme != base_scheme) {
+        WARN("Schemes don't match\n");
+        return E_ACCESSDENIED;
+    }
+
+    if(scheme == INTERNET_SCHEME_UNKNOWN) {
+        FIXME("Unknown scheme\n");
+        return E_ACCESSDENIED;
+    }
+
+    hr = IUri_GetHost(uri, &host);
+    if(FAILED(hr))
+        return hr;
+
+    hr = IUri_GetHost(This->base_uri, &base_host);
+    if(SUCCEEDED(hr)) {
+        if(strcmpiW(host, base_host)) {
+            WARN("Hosts don't match\n");
+            hr = E_ACCESSDENIED;
+        }
+        SysFreeString(base_host);
+    }
+
+    SysFreeString(host);
+    return hr;
+}
+
 static HRESULT httprequest_open(httprequest *This, BSTR method, BSTR url,
         VARIANT async, VARIANT user, VARIANT password)
 {
@@ -765,15 +830,20 @@ static HRESULT httprequest_open(httprequest *This, BSTR method, BSTR url,
     static const WCHAR MethodDeleteW[] = {'D','E','L','E','T','E',0};
     static const WCHAR MethodPropFindW[] = {'P','R','O','P','F','I','N','D',0};
     VARIANT str, is_async;
+    IUri *uri;
     HRESULT hr;
 
     if (!method || !url) return E_INVALIDARG;
 
     /* free previously set data */
-    SysFreeString(This->url);
+    if(This->uri) {
+        IUri_Release(This->uri);
+        This->uri = NULL;
+    }
+
     SysFreeString(This->user);
     SysFreeString(This->password);
-    This->url = This->user = This->password = NULL;
+    This->user = This->password = NULL;
 
     if (!strcmpiW(method, MethodGetW))
     {
@@ -800,22 +870,22 @@ static HRESULT httprequest_open(httprequest *This, BSTR method, BSTR url,
         return E_FAIL;
     }
 
-    /* try to combine with site url */
-    if (This->siteurl && PathIsRelativeW(url))
-    {
-        DWORD len = INTERNET_MAX_URL_LENGTH;
-        WCHAR *fullW = heap_alloc(len*sizeof(WCHAR));
-
-        hr = UrlCombineW(This->siteurl, url, fullW, &len, 0);
-        if (hr == S_OK)
-        {
-            TRACE("combined url %s\n", debugstr_w(fullW));
-            This->url = SysAllocString(fullW);
-        }
-        heap_free(fullW);
-    }
+    if(This->base_uri)
+        hr = CoInternetCombineUrlEx(This->base_uri, url, 0, &uri, 0);
     else
-        This->url = SysAllocString(url);
+        hr = CreateUri(url, 0, 0, &uri);
+    if(FAILED(hr)) {
+        WARN("Could not create IUri object: %08x\n", hr);
+        return hr;
+    }
+
+    hr = verify_uri(This, uri);
+    if(FAILED(hr)) {
+        IUri_Release(uri);
+        return hr;
+    }
+
+    This->uri = uri;
 
     VariantInit(&is_async);
     hr = VariantChangeType(&is_async, &async, 0, VT_BOOL);
@@ -881,7 +951,8 @@ static HRESULT httprequest_getResponseHeader(httprequest *This, BSTR header, BST
 {
     struct httpheader *entry;
 
-    if (!header || !value) return E_INVALIDARG;
+    if (!header) return E_INVALIDARG;
+    if (!value) return E_POINTER;
 
     if (This->raw_respheaders && list_empty(&This->respheaders))
     {
@@ -915,7 +986,7 @@ static HRESULT httprequest_getResponseHeader(httprequest *This, BSTR header, BST
 
 static HRESULT httprequest_getAllResponseHeaders(httprequest *This, BSTR *respheaders)
 {
-    if (!respheaders) return E_INVALIDARG;
+    if (!respheaders) return E_POINTER;
 
     *respheaders = SysAllocString(This->raw_respheaders);
 
@@ -930,10 +1001,9 @@ static HRESULT httprequest_send(httprequest *This, VARIANT body)
     if (This->state != READYSTATE_LOADING) return E_FAIL;
 
     hr = BindStatusCallback_create(This, &bsc, &body);
-    if (FAILED(hr)) return hr;
-
-    BindStatusCallback_Detach(This->bsc);
-    This->bsc = bsc;
+    if (FAILED(hr))
+        /* success path to detach it is OnStopBinding call */
+        BindStatusCallback_Detach(bsc);
 
     return hr;
 }
@@ -941,7 +1011,6 @@ static HRESULT httprequest_send(httprequest *This, VARIANT body)
 static HRESULT httprequest_abort(httprequest *This)
 {
     BindStatusCallback_Detach(This->bsc);
-    This->bsc = NULL;
 
     httprequest_setreadystate(This, READYSTATE_UNINITIALIZED);
 
@@ -950,17 +1019,16 @@ static HRESULT httprequest_abort(httprequest *This)
 
 static HRESULT httprequest_get_status(httprequest *This, LONG *status)
 {
-    if (!status) return E_INVALIDARG;
-    if (This->state != READYSTATE_COMPLETE) return E_FAIL;
+    if (!status) return E_POINTER;
 
     *status = This->status;
 
-    return S_OK;
+    return This->state == READYSTATE_COMPLETE ? S_OK : E_FAIL;
 }
 
 static HRESULT httprequest_get_statusText(httprequest *This, BSTR *status)
 {
-    if (!status) return E_INVALIDARG;
+    if (!status) return E_POINTER;
     if (This->state != READYSTATE_COMPLETE) return E_FAIL;
 
     *status = SysAllocString(This->status_text);
@@ -973,7 +1041,7 @@ static HRESULT httprequest_get_responseText(httprequest *This, BSTR *body)
     HGLOBAL hglobal;
     HRESULT hr;
 
-    if (!body) return E_INVALIDARG;
+    if (!body) return E_POINTER;
     if (This->state != READYSTATE_COMPLETE) return E_FAIL;
 
     hr = GetHGlobalFromStream(This->bsc->stream, &hglobal);
@@ -1119,7 +1187,7 @@ static HRESULT httprequest_get_responseStream(httprequest *This, VARIANT *body)
 
 static HRESULT httprequest_get_readyState(httprequest *This, LONG *state)
 {
-    if (!state) return E_INVALIDARG;
+    if (!state) return E_POINTER;
 
     *state = This->state;
     return S_OK;
@@ -1139,10 +1207,12 @@ static void httprequest_release(httprequest *This)
 
     if (This->site)
         IUnknown_Release( This->site );
+    if (This->uri)
+        IUri_Release(This->uri);
+    if (This->base_uri)
+        IUri_Release(This->base_uri);
 
     SysFreeString(This->custom);
-    SysFreeString(This->siteurl);
-    SysFreeString(This->url);
     SysFreeString(This->user);
     SysFreeString(This->password);
 
@@ -1442,37 +1512,55 @@ static HRESULT WINAPI httprequest_ObjectWithSite_GetSite( IObjectWithSite *iface
     return IUnknown_QueryInterface( This->site, iid, ppvSite );
 }
 
+static void get_base_uri(httprequest *This)
+{
+    IServiceProvider *provider;
+    IHTMLDocument2 *doc;
+    IUri *uri;
+    BSTR url;
+    HRESULT hr;
+
+    hr = IUnknown_QueryInterface(This->site, &IID_IServiceProvider, (void**)&provider);
+    if(FAILED(hr))
+        return;
+
+    hr = IServiceProvider_QueryService(provider, &SID_SContainerDispatch, &IID_IHTMLDocument2, (void**)&doc);
+    IServiceProvider_Release(provider);
+    if(FAILED(hr))
+        return;
+
+    hr = IHTMLDocument2_get_URL(doc, &url);
+    IHTMLDocument2_Release(doc);
+    if(FAILED(hr) || !url || !*url)
+        return;
+
+    TRACE("host url %s\n", debugstr_w(url));
+
+    hr = CreateUri(url, 0, 0, &uri);
+    SysFreeString(url);
+    if(FAILED(hr))
+        return;
+
+    This->base_uri = uri;
+}
+
 static HRESULT WINAPI httprequest_ObjectWithSite_SetSite( IObjectWithSite *iface, IUnknown *punk )
 {
     httprequest *This = impl_from_IObjectWithSite(iface);
-    IServiceProvider *provider;
-    HRESULT hr;
 
-    TRACE("(%p)->(%p)\n", iface, punk);
-
-    if (punk)
-        IUnknown_AddRef( punk );
+    TRACE("(%p)->(%p)\n", This, punk);
 
     if(This->site)
         IUnknown_Release( This->site );
+    if(This->base_uri)
+        IUri_Release(This->base_uri);
 
     This->site = punk;
 
-    hr = IUnknown_QueryInterface(This->site, &IID_IServiceProvider, (void**)&provider);
-    if (hr == S_OK)
+    if (punk)
     {
-        IHTMLDocument2 *doc;
-
-        hr = IServiceProvider_QueryService(provider, &SID_SContainerDispatch, &IID_IHTMLDocument2, (void**)&doc);
-        if (hr == S_OK)
-        {
-            SysFreeString(This->siteurl);
-
-            hr = IHTMLDocument2_get_URL(doc, &This->siteurl);
-            IHTMLDocument2_Release(doc);
-            TRACE("host url %s, 0x%08x\n", debugstr_w(This->siteurl), hr);
-        }
-        IServiceProvider_Release(provider);
+        IUnknown_AddRef( punk );
+        get_base_uri(This);
     }
 
     return S_OK;
@@ -1826,7 +1914,8 @@ static void init_httprequest(httprequest *req)
     req->async = FALSE;
     req->verb = -1;
     req->custom = NULL;
-    req->url = req->siteurl = req->user = req->password = NULL;
+    req->uri = req->base_uri = NULL;
+    req->user = req->password = NULL;
 
     req->state = READYSTATE_UNINITIALIZED;
     req->sink = NULL;

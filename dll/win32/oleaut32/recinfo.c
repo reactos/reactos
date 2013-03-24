@@ -619,7 +619,7 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
         ret->name = NULL;
     }
 
-    ret->fields = HeapAlloc(GetProcessHeap(), 0, ret->n_vars*sizeof(VARDESC));
+    ret->fields = HeapAlloc(GetProcessHeap(), 0, ret->n_vars*sizeof(fieldstr));
     for(i = 0; i<ret->n_vars; i++) {
         VARDESC *vardesc;
         hres = ITypeInfo_GetVarDesc(pTypeInfo, i, &vardesc);

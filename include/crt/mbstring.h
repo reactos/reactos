@@ -31,100 +31,791 @@ extern "C" {
 
 #ifndef _MBSTRING_DEFINED
 #define _MBSTRING_DEFINED
-  _CRTIMP unsigned char *__cdecl _mbsdup(const unsigned char *_Str);
-  _CRTIMP unsigned int __cdecl _mbbtombc(unsigned int _Ch);
-  _CRTIMP unsigned int __cdecl _mbbtombc_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbbtype(unsigned char _Ch,int _CType);
-  _CRTIMP int __cdecl _mbbtype_l(unsigned char _Ch,int _CType,_locale_t _Locale);
-  _CRTIMP unsigned int __cdecl _mbctombb(unsigned int _Ch);
-  _CRTIMP unsigned int __cdecl _mbctombb_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsbtype(const unsigned char *_Str,size_t _Pos);
-  _CRTIMP int __cdecl _mbsbtype_l(const unsigned char *_Str,size_t _Pos,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbscat(unsigned char *_Dest,const unsigned char *_Source);
-  _CRTIMP unsigned char *_mbscat_l(unsigned char *_Dest,const unsigned char *_Source,_locale_t _Locale);
-  _CRTIMP _CONST_RETURN unsigned char *__cdecl _mbschr(const unsigned char *_Str,unsigned int _Ch);
-  _CRTIMP _CONST_RETURN unsigned char *__cdecl _mbschr_l(const unsigned char *_Str,unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbscmp(const unsigned char *_Str1,const unsigned char *_Str2);
-  _CRTIMP int __cdecl _mbscmp_l(const unsigned char *_Str1,const unsigned char *_Str2,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbscoll(const unsigned char *_Str1,const unsigned char *_Str2);
-  _CRTIMP int __cdecl _mbscoll_l(const unsigned char *_Str1,const unsigned char *_Str2,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbscpy(unsigned char *_Dest,const unsigned char *_Source);
-  _CRTIMP unsigned char *_mbscpy_l(unsigned char *_Dest,const unsigned char *_Source,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _mbscspn(const unsigned char *_Str,const unsigned char *_Control);
-  _CRTIMP size_t __cdecl _mbscspn_l(const unsigned char *_Str,const unsigned char *_Control,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsdec(const unsigned char *_Start,const unsigned char *_Pos);
-  _CRTIMP unsigned char *__cdecl _mbsdec_l(const unsigned char *_Start,const unsigned char *_Pos,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsicmp(const unsigned char *_Str1,const unsigned char *_Str2);
-  _CRTIMP int __cdecl _mbsicmp_l(const unsigned char *_Str1,const unsigned char *_Str2,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsicoll(const unsigned char *_Str1,const unsigned char *_Str2);
-  _CRTIMP int __cdecl _mbsicoll_l(const unsigned char *_Str1,const unsigned char *_Str2,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsinc(const unsigned char *_Ptr);
-  _CRTIMP unsigned char *__cdecl _mbsinc_l(const unsigned char *_Ptr,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _mbslen(const unsigned char *_Str);
-  _CRTIMP size_t __cdecl _mbslen_l(const unsigned char *_Str,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _mbsnlen(const unsigned char *_Str,size_t _MaxCount);
-  _CRTIMP size_t __cdecl _mbsnlen_l(const unsigned char *_Str,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbslwr(unsigned char *_String);
-  _CRTIMP unsigned char *_mbslwr_l(unsigned char *_String,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsnbcat(unsigned char *_Dest,const unsigned char *_Source,size_t _Count);
-  _CRTIMP unsigned char *__cdecl _mbsnbcat_l(unsigned char *_Dest,const unsigned char *_Source,size_t _Count,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsnbcmp(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _mbsnbcmp_l(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsnbcoll(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _mbsnbcoll_l(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _mbsnbcnt(const unsigned char *_Str,size_t _MaxCount);
-  _CRTIMP size_t __cdecl _mbsnbcnt_l(const unsigned char *_Str,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsnbcpy(unsigned char *_Dest,const unsigned char *_Source,size_t _Count);
-  _CRTIMP int __cdecl _mbsnbcpy_s(unsigned char* dst, size_t size, const unsigned char* src, size_t n);
-  _CRTIMP unsigned char *__cdecl _mbsnbcpy_l(unsigned char *_Dest,const unsigned char *_Source,size_t _Count,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsnbicmp(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _mbsnbicmp_l(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsnbicoll(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _mbsnbicoll_l(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsnbset(unsigned char *_Str,unsigned int _Ch,size_t _MaxCount);
-  _CRTIMP unsigned char *__cdecl _mbsnbset_l(unsigned char *_Str,unsigned int _Ch,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsncat(unsigned char *_Dest,const unsigned char *_Source,size_t _Count);
-  _CRTIMP unsigned char *__cdecl _mbsncat_l(unsigned char *_Dest,const unsigned char *_Source,size_t _Count,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _mbsnccnt(const unsigned char *_Str,size_t _MaxCount);
-  _CRTIMP size_t __cdecl _mbsnccnt_l(const unsigned char *_Str,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsncmp(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _mbsncmp_l(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsncoll(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _mbsncoll_l(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsncpy(unsigned char *_Dest,const unsigned char *_Source,size_t _Count);
-  _CRTIMP unsigned char *__cdecl _mbsncpy_l(unsigned char *_Dest,const unsigned char *_Source,size_t _Count,_locale_t _Locale);
-  _CRTIMP unsigned int __cdecl _mbsnextc (const unsigned char *_Str);
-  _CRTIMP unsigned int __cdecl _mbsnextc_l(const unsigned char *_Str,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsnicmp(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _mbsnicmp_l(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _mbsnicoll(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _mbsnicoll_l(const unsigned char *_Str1,const unsigned char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsninc(const unsigned char *_Str,size_t _Count);
-  _CRTIMP unsigned char *__cdecl _mbsninc_l(const unsigned char *_Str,size_t _Count,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsnset(unsigned char *_Dst,unsigned int _Val,size_t _MaxCount);
-  _CRTIMP unsigned char *__cdecl _mbsnset_l(unsigned char *_Dst,unsigned int _Val,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP _CONST_RETURN unsigned char *__cdecl _mbspbrk(const unsigned char *_Str,const unsigned char *_Control);
-  _CRTIMP _CONST_RETURN unsigned char *__cdecl _mbspbrk_l(const unsigned char *_Str,const unsigned char *_Control,_locale_t _Locale);
-  _CRTIMP _CONST_RETURN unsigned char *__cdecl _mbsrchr(const unsigned char *_Str,unsigned int _Ch);
-  _CRTIMP _CONST_RETURN unsigned char *__cdecl _mbsrchr_l(const unsigned char *_Str,unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsrev(unsigned char *_Str);
-  _CRTIMP unsigned char *__cdecl _mbsrev_l(unsigned char *_Str,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsset(unsigned char *_Str,unsigned int _Val);
-  _CRTIMP unsigned char *__cdecl _mbsset_l(unsigned char *_Str,unsigned int _Val,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _mbsspn(const unsigned char *_Str,const unsigned char *_Control);
-  _CRTIMP size_t __cdecl _mbsspn_l(const unsigned char *_Str,const unsigned char *_Control,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsspnp(const unsigned char *_Str1,const unsigned char *_Str2);
-  _CRTIMP unsigned char *__cdecl _mbsspnp_l(const unsigned char *_Str1,const unsigned char *_Str2,_locale_t _Locale);
-  _CRTIMP _CONST_RETURN unsigned char *__cdecl _mbsstr(const unsigned char *_Str,const unsigned char *_Substr);
-  _CRTIMP _CONST_RETURN unsigned char *__cdecl _mbsstr_l(const unsigned char *_Str,const unsigned char *_Substr,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbstok(unsigned char *_Str,const unsigned char *_Delim);
-  _CRTIMP unsigned char *__cdecl _mbstok_l(unsigned char *_Str,const unsigned char *_Delim,_locale_t _Locale);
-  _CRTIMP unsigned char *__cdecl _mbsupr(unsigned char *_String);
-  _CRTIMP unsigned char *_mbsupr_l(unsigned char *_String,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _mbclen(const unsigned char *_Str);
-  _CRTIMP size_t __cdecl _mbclen_l(const unsigned char *_Str,_locale_t _Locale);
-  _CRTIMP void __cdecl _mbccpy(unsigned char *_Dst,const unsigned char *_Src);
-  _CRTIMP void __cdecl _mbccpy_l(unsigned char *_Dst,const unsigned char *_Src,_locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsdup(
+    _In_z_ const unsigned char *_Str);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbbtombc(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbbtombc_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbbtype(
+    _In_ unsigned char _Ch,
+    _In_ int _CType);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbbtype_l(
+    _In_ unsigned char _Ch,
+    _In_ int _CType,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctombb(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctombb_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  int
+  __cdecl
+  _mbsbtype(
+    _In_reads_bytes_(_Pos) _Pre_z_ const unsigned char *_Str,
+    _In_ size_t _Pos);
+
+  _CRTIMP
+  int
+  __cdecl
+  _mbsbtype_l(
+    _In_reads_bytes_(_Pos) _Pre_z_ const unsigned char *_Str,
+    _In_ size_t _Pos,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbscat(
+    _Inout_updates_z_(_String_length_(_Curr_) + _String_length_(_Source) + 1) unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source);
+
+  _CRTIMP
+  unsigned char*
+  _mbscat_l(
+    _Inout_z_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  unsigned char*
+  __cdecl
+  _mbschr(
+    _In_z_ const unsigned char *_Str,
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  unsigned char*
+  __cdecl
+  _mbschr_l(
+    _In_z_ const unsigned char *_Str,
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbscmp(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbscmp_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbscoll(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbscoll_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbscpy(
+    _Out_writes_z_(_String_length_(_Source) + 1) unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source);
+
+  _CRTIMP
+  unsigned char*
+  _mbscpy_l(
+    _Pre_notnull_ _Post_z_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbscspn(
+    _In_z_ const unsigned char *_Str,
+    _In_z_ const unsigned char *_Control);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbscspn_l(
+    _In_z_ const unsigned char *_Str,
+    _In_z_ const unsigned char *_Control,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsdec(
+    _In_reads_z_(_Pos-_Start + 1) const unsigned char *_Start,
+    _In_z_ const unsigned char *_Pos);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsdec_l(
+    _In_reads_z_(_Pos-_Start + 1) const unsigned char *_Start,
+    _In_z_ const unsigned char *_Pos,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsicmp(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsicmp_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsicoll(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsicoll_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsinc(
+    _In_z_ const unsigned char *_Ptr);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsinc_l(
+    _In_z_ const unsigned char *_Ptr,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbslen(
+    _In_z_ const unsigned char *_Str);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbslen_l(
+    _In_z_ const unsigned char *_Str,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbsnlen(
+    _In_z_ const unsigned char *_Str,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbsnlen_l(
+    _In_z_ const unsigned char *_Str,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbslwr(
+    _Inout_z_ unsigned char *_String);
+
+  _CRTIMP
+  unsigned char*
+  _mbslwr_l(
+    _Inout_z_ unsigned char *_String,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsnbcat(
+    _Inout_z_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_ size_t _Count);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsnbcat_l(
+    _Inout_z_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_ size_t _Count,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnbcmp(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnbcmp_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnbcoll(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnbcoll_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbsnbcnt(
+    _In_reads_bytes_(_MaxCount) _Pre_z_ const unsigned char *_Str,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbsnbcnt_l(
+    _In_reads_bytes_(_MaxCount) _Pre_z_ const unsigned char *_Str,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsnbcpy(
+    _Out_writes_(_Count) _Post_maybez_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_ size_t _Count);
+
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnbcpy_s(
+    _Out_writes_z_(size) unsigned char* dst,
+    _In_ size_t size,
+    _In_z_ const unsigned char* src,
+    _In_ size_t n);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsnbcpy_l(
+    _Out_writes_(_Count) _Post_maybez_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_ size_t _Count,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnbicmp(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnbicmp_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnbicoll(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnbicoll_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsnbset(
+    _Inout_updates_z_(_MaxCount) unsigned char *_Str,
+    _In_ unsigned int _Ch,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsnbset_l(
+    _Inout_updates_z_(_MaxCount) unsigned char *_Str,
+    _In_ unsigned int _Ch,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsncat(
+    _Inout_z_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_ size_t _Count);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsncat_l(
+    _Inout_z_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_ size_t _Count,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbsnccnt(
+    _In_reads_bytes_(_MaxCount) _Pre_z_ const unsigned char *_Str,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbsnccnt_l(
+    _In_reads_bytes_(_MaxCount) _Pre_z_ const unsigned char *_Str,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsncmp(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsncmp_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsncoll(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsncoll_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsncpy(
+    _Pre_notnull_ _Out_writes_(2 * _Count) _Post_maybez_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_ size_t _Count);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsncpy_l(
+    _Out_writes_(_Count) _Post_maybez_ unsigned char *_Dest,
+    _In_z_ const unsigned char *_Source,
+    _In_ size_t _Count,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbsnextc(
+    _In_z_ const unsigned char *_Str);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbsnextc_l(
+    _In_z_ const unsigned char *_Str,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnicmp(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnicmp_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnicoll(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _mbsnicoll_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsninc(
+    _In_reads_bytes_(_Count) _Pre_z_ const unsigned char *_Str,
+    _In_ size_t _Count);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsninc_l(
+    _In_reads_bytes_(_Count) _Pre_z_ const unsigned char *_Str,
+    _In_ size_t _Count,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsnset(
+    _Inout_updates_z_(_MaxCount) unsigned char *_Dst,
+    _In_ unsigned int _Val,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsnset_l(
+    _Inout_updates_z_(_MaxCount) unsigned char *_Dst,
+    _In_ unsigned int _Val,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  unsigned char*
+  __cdecl
+  _mbspbrk(
+    _In_z_ const unsigned char *_Str,
+    _In_z_ const unsigned char *_Control);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  unsigned char*
+  __cdecl
+  _mbspbrk_l(
+    _In_z_ const unsigned char *_Str,
+    _In_z_ const unsigned char *_Control,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  unsigned char*
+  __cdecl
+  _mbsrchr(
+    _In_z_ const unsigned char *_Str,
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  unsigned char*
+  __cdecl
+  _mbsrchr_l(
+    _In_z_ const unsigned char *_Str,
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsrev(
+    _Inout_z_ unsigned char *_Str);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsrev_l(
+    _Inout_z_ unsigned char *_Str,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsset(
+    _Inout_z_ unsigned char *_Str,
+    _In_ unsigned int _Val);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsset_l(
+    _Inout_z_ unsigned char *_Str,
+    _In_ unsigned int _Val,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbsspn(
+    _In_z_ const unsigned char *_Str,
+    _In_z_ const unsigned char *_Control);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbsspn_l(
+    _In_z_ const unsigned char *_Str,
+    _In_z_ const unsigned char *_Control,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsspnp(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsspnp_l(
+    _In_z_ const unsigned char *_Str1,
+    _In_z_ const unsigned char *_Str2,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  unsigned char*
+  __cdecl
+  _mbsstr(
+    _In_z_ const unsigned char *_Str,
+    _In_z_ const unsigned char *_Substr);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  unsigned char*
+  __cdecl
+  _mbsstr_l(
+    _In_z_ const unsigned char *_Str,
+    _In_z_ const unsigned char *_Substr,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbstok(
+    _Inout_opt_z_ unsigned char *_Str,
+    _In_z_ const unsigned char *_Delim);
+
+  _Check_return_
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbstok_l(
+    _Inout_opt_z_ unsigned char *_Str,
+    _In_z_ const unsigned char *_Delim,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  unsigned char*
+  __cdecl
+  _mbsupr(
+    _Inout_z_ unsigned char *_String);
+
+  _CRTIMP
+  unsigned char*
+  _mbsupr_l(
+    _Inout_z_ unsigned char *_String,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbclen(
+    _In_z_ const unsigned char *_Str);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _mbclen_l(
+    _In_z_ const unsigned char *_Str,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  void
+  __cdecl
+  _mbccpy(
+    _Out_writes_bytes_(2) unsigned char *_Dst,
+    _In_z_ const unsigned char *_Src);
+
+  _CRTIMP
+  void
+  __cdecl
+  _mbccpy_l(
+    _Out_writes_bytes_(2) unsigned char *_Dst,
+    _In_z_ const unsigned char *_Src,
+    _In_opt_ _locale_t _Locale);
+
 #define _mbccmp(_cpc1,_cpc2) _mbsncmp((_cpc1),(_cpc2),1)
 
 #ifdef __cplusplus
@@ -143,64 +834,406 @@ extern "C" {
 #endif
 #endif
 
-  _CRTIMP int __cdecl _ismbcalnum(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcalnum_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcalpha(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcalpha_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcdigit(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcdigit_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcgraph(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcgraph_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbclegal(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbclegal_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbclower(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbclower_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcprint(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcprint_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcpunct(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcpunct_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcspace(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcspace_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcupper(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcupper_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP unsigned int __cdecl _mbctolower(unsigned int _Ch);
-  _CRTIMP unsigned int __cdecl _mbctolower_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP unsigned int __cdecl _mbctoupper(unsigned int _Ch);
-  _CRTIMP unsigned int __cdecl _mbctoupper_l(unsigned int _Ch,_locale_t _Locale);
-#endif
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcalnum(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcalnum_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcalpha(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcalpha_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcdigit(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcdigit_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcgraph(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcgraph_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbclegal(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbclegal_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbclower(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbclower_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcprint(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcprint_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcpunct(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcpunct_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcspace(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcspace_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcupper(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  __cdecl _ismbcupper_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctolower(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctolower_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctoupper(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctoupper_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+#endif /* _MBSTRING_DEFINED */
 
 #ifndef _MBLEADTRAIL_DEFINED
 #define _MBLEADTRAIL_DEFINED
-  _CRTIMP int __cdecl _ismbblead(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbblead_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbbtrail(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbbtrail_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbslead(const unsigned char *_Str,const unsigned char *_Pos);
-  _CRTIMP int __cdecl _ismbslead_l(const unsigned char *_Str,const unsigned char *_Pos,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbstrail(const unsigned char *_Str,const unsigned char *_Pos);
-  _CRTIMP int __cdecl _ismbstrail_l(const unsigned char *_Str,const unsigned char *_Pos,_locale_t _Locale);
-#endif
 
-  _CRTIMP int __cdecl _ismbchira(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbchira_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbckata(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbckata_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcsymbol(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcsymbol_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcl0(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcl0_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcl1(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcl1_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP int __cdecl _ismbcl2(unsigned int _Ch);
-  _CRTIMP int __cdecl _ismbcl2_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP unsigned int __cdecl _mbcjistojms(unsigned int _Ch);
-  _CRTIMP unsigned int __cdecl _mbcjistojms_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP unsigned int __cdecl _mbcjmstojis(unsigned int _Ch);
-  _CRTIMP unsigned int __cdecl _mbcjmstojis_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP unsigned int __cdecl _mbctohira(unsigned int _Ch);
-  _CRTIMP unsigned int __cdecl _mbctohira_l(unsigned int _Ch,_locale_t _Locale);
-  _CRTIMP unsigned int __cdecl _mbctokata(unsigned int _Ch);
-  _CRTIMP unsigned int __cdecl _mbctokata_l(unsigned int _Ch,_locale_t _Locale);
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbblead(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbblead_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbbtrail(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbbtrail_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbslead(
+    _In_reads_z_(_Pos - _Str + 1) const unsigned char *_Str,
+    _In_z_ const unsigned char *_Pos);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbslead_l(
+    _In_reads_z_(_Pos - _Str + 1) const unsigned char *_Str,
+    _In_z_ const unsigned char *_Pos,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbstrail(
+    _In_reads_z_(_Pos - _Str + 1) const unsigned char *_Str,
+    _In_z_ const unsigned char *_Pos);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbstrail_l(
+    _In_reads_z_(_Pos - _Str + 1) const unsigned char *_Str,
+    _In_z_ const unsigned char *_Pos,
+    _In_opt_ _locale_t _Locale);
+
+#endif /* _MBLEADTRAIL_DEFINED */
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbchira(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbchira_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbckata(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbckata_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcsymbol(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcsymbol_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcl0(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcl0_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcl1(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcl1_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcl2(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _ismbcl2_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbcjistojms(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbcjistojms_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbcjmstojis(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbcjmstojis_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctohira(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctohira_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctokata(
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _mbctokata_l(
+    _In_ unsigned int _Ch,
+    _In_opt_ _locale_t _Locale);
 
 #ifdef __cplusplus
 }
@@ -210,4 +1243,4 @@ extern "C" {
 
 #include <sec_api/mbstring_s.h>
 
-#endif
+#endif /* _INC_MBSTRING */

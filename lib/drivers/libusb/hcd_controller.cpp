@@ -635,7 +635,7 @@ CHCDController::CreateFDO(
         //
         // construct device name
         //
-        swprintf(CharDeviceName, L"\\Device\\USBFDO-%d", UsbDeviceNumber);
+        swprintf(CharDeviceName, L"\\Device\\USBFDO-%lu", UsbDeviceNumber);
 
         //
         // initialize device name
@@ -706,8 +706,8 @@ CHCDController::SetSymbolicLink(
         //
         // create legacy link
         //
-        swprintf(LinkName, L"\\DosDevices\\HCD%d", m_FDODeviceNumber);
-        swprintf(FDOName, L"\\Device\\USBFDO-%d", m_FDODeviceNumber);
+        swprintf(LinkName, L"\\DosDevices\\HCD%lu", m_FDODeviceNumber);
+        swprintf(FDOName, L"\\Device\\USBFDO-%lu", m_FDODeviceNumber);
         RtlInitUnicodeString(&Link, LinkName);
         RtlInitUnicodeString(&FDO, FDOName);
 
@@ -729,7 +729,7 @@ CHCDController::SetSymbolicLink(
         //
         // create legacy link
         //
-        swprintf(LinkName, L"\\DosDevices\\HCD%d", m_FDODeviceNumber);
+        swprintf(LinkName, L"\\DosDevices\\HCD%lu", m_FDODeviceNumber);
         RtlInitUnicodeString(&Link, LinkName);
 
         //

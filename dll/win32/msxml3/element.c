@@ -304,13 +304,29 @@ static HRESULT WINAPI domelem_get_attributes(
 static HRESULT WINAPI domelem_insertBefore(
     IXMLDOMElement *iface,
     IXMLDOMNode* newNode, VARIANT refChild,
-    IXMLDOMNode** outOldNode)
+    IXMLDOMNode** old_node)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
+    DOMNodeType type;
+    HRESULT hr;
 
-    TRACE("(%p)->(%p %s %p)\n", This, newNode, debugstr_variant(&refChild), outOldNode);
+    TRACE("(%p)->(%p %s %p)\n", This, newNode, debugstr_variant(&refChild), old_node);
 
-    return node_insert_before(&This->node, newNode, &refChild, outOldNode);
+    hr = IXMLDOMNode_get_nodeType(newNode, &type);
+    if (hr != S_OK) return hr;
+
+    TRACE("new node type %d\n", type);
+    switch (type)
+    {
+        case NODE_DOCUMENT:
+        case NODE_DOCUMENT_TYPE:
+        case NODE_ENTITY:
+        case NODE_NOTATION:
+            if (old_node) *old_node = NULL;
+            return E_FAIL;
+        default:
+            return node_insert_before(&This->node, newNode, &refChild, old_node);
+    }
 }
 
 static HRESULT WINAPI domelem_replaceChild(
@@ -739,7 +755,7 @@ static HRESULT encode_base64(const BYTE *buf, int len, BSTR *ret)
 {
     static const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     const BYTE *d = buf;
-    int bytes, pad_bytes, div, i;
+    int bytes, pad_bytes, div;
     DWORD needed;
     WCHAR *ptr;
 
@@ -756,7 +772,6 @@ static HRESULT encode_base64(const BYTE *buf, int len, BSTR *ret)
     div = len / 3;
 
     ptr = *ret;
-    i = 0;
     while (div > 0)
     {
         /* first char is the first 6 bits of the first byte*/
@@ -769,7 +784,6 @@ static HRESULT encode_base64(const BYTE *buf, int len, BSTR *ret)
         *ptr++ = b64[ ((d[1] << 2) & 0x3c) | (d[2] >> 6 & 0x03)];
         /* fourth char is the remaining 6 bits of the third byte */
         *ptr++ = b64[   d[2]       & 0x3f];
-        i += 4;
         d += 3;
         div--;
     }
@@ -1232,8 +1246,7 @@ static HRESULT WINAPI domelem_setAttribute(
     domelem *This = impl_from_IXMLDOMElement( iface );
     xmlChar *xml_name, *xml_value, *local, *prefix;
     xmlNodePtr element;
-    HRESULT hr;
-    VARIANT var;
+    HRESULT hr = S_OK;
 
     TRACE("(%p)->(%s %s)\n", This, debugstr_w(name), debugstr_variant(&value));
 
@@ -1241,16 +1254,25 @@ static HRESULT WINAPI domelem_setAttribute(
     if ( !element )
         return E_FAIL;
 
-    VariantInit(&var);
-    hr = VariantChangeType(&var, &value, 0, VT_BSTR);
-    if(hr != S_OK)
+    if (V_VT(&value) != VT_BSTR)
     {
-        FIXME("VariantChangeType failed\n");
-        return hr;
+        VARIANT var;
+
+        VariantInit(&var);
+        hr = VariantChangeType(&var, &value, 0, VT_BSTR);
+        if (hr != S_OK)
+        {
+            FIXME("VariantChangeType failed\n");
+            return hr;
+        }
+
+        xml_value = xmlchar_from_wchar(V_BSTR(&var));
+        VariantClear(&var);
     }
+    else
+        xml_value = xmlchar_from_wchar(V_BSTR(&value));
 
     xml_name = xmlchar_from_wchar( name );
-    xml_value = xmlchar_from_wchar( V_BSTR(&var) );
 
     if ((local = xmlSplitQName2(xml_name, &prefix)))
     {
@@ -1273,7 +1295,6 @@ static HRESULT WINAPI domelem_setAttribute(
 
     heap_free(xml_value);
     heap_free(xml_name);
-    VariantClear(&var);
 
     return hr;
 }

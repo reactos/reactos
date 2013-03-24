@@ -93,13 +93,14 @@ typedef struct {
     } u;
 } bstr_t;
 
+#define BUCKET_SIZE 16
+#define BUCKET_BUFFER_SIZE 6
+
 typedef struct {
     unsigned short head;
     unsigned short cnt;
-    bstr_t *buf[6];
+    bstr_t *buf[BUCKET_BUFFER_SIZE];
 } bstr_cache_entry_t;
-
-#define BUCKET_SIZE 16
 
 #define ARENA_INUSE_FILLER     0x55
 #define ARENA_TAIL_FILLER      0xab
@@ -141,7 +142,7 @@ static bstr_t *alloc_bstr(size_t size)
 
         if(cache_entry) {
             ret = cache_entry->buf[cache_entry->head++];
-            cache_entry->head %= sizeof(cache_entry->buf)/sizeof(*cache_entry->buf);
+            cache_entry->head %= BUCKET_BUFFER_SIZE;
             cache_entry->cnt--;
         }
 
@@ -260,14 +261,26 @@ void WINAPI SysFreeString(BSTR str)
     bstr = bstr_from_str(str);
     cache_entry = get_cache_entry(bstr->size+sizeof(WCHAR));
     if(cache_entry) {
+        unsigned i;
+
         EnterCriticalSection(&cs_bstr_cache);
 
+        /* According to tests, freeing a string that's already in cache doesn't corrupt anything.
+         * For that to work we need to search the cache. */
+        for(i=0; i < cache_entry->cnt; i++) {
+            if(cache_entry->buf[(cache_entry->head+i) % BUCKET_BUFFER_SIZE] == bstr) {
+                WARN_(heap)("String already is in cache!\n");
+                LeaveCriticalSection(&cs_bstr_cache);
+                return;
+            }
+        }
+
         if(cache_entry->cnt < sizeof(cache_entry->buf)/sizeof(*cache_entry->buf)) {
-            cache_entry->buf[(cache_entry->head+cache_entry->cnt)%((sizeof(cache_entry->buf)/sizeof(*cache_entry->buf)))] = bstr;
+            cache_entry->buf[(cache_entry->head+cache_entry->cnt) % BUCKET_BUFFER_SIZE] = bstr;
             cache_entry->cnt++;
 
             if(WARN_ON(heap)) {
-                unsigned i, n = bstr_alloc_size(bstr->size) / sizeof(DWORD) - 1;
+                unsigned n = bstr_alloc_size(bstr->size) / sizeof(DWORD) - 1;
                 bstr->size = ARENA_FREE_FILLER;
                 for(i=0; i<n; i++)
                     bstr->u.dwptr[i] = ARENA_FREE_FILLER;

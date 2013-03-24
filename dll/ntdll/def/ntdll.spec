@@ -442,7 +442,7 @@
 @ stdcall RtlAddVectoredExceptionHandler(long ptr)
 ;@ stdcall RtlAddressInSectionTable
 @ stdcall RtlAdjustPrivilege(long long long ptr)
-@ stdcall RtlAllocateActivationContextStack(ptr) ; CHEKME
+@ stdcall RtlAllocateActivationContextStack(ptr) ; CHECKME
 @ stdcall RtlAllocateAndInitializeSid(ptr long long long long long long long long long ptr)
 @ stdcall RtlAllocateHandle(ptr ptr)
 @ stdcall RtlAllocateHeap(ptr long ptr)
@@ -635,7 +635,7 @@
 @ stdcall RtlFormatCurrentUserKeyPath(ptr)
 @ stdcall RtlFormatMessage(ptr long long long long ptr ptr long)
 ;@ stdcall RtlFormatMessageEx
-;@ stdcall RtlFreeActivationContextStack
+@ stdcall RtlFreeActivationContextStack(ptr)
 @ stdcall RtlFreeAnsiString(long)
 @ stdcall RtlFreeHandle(ptr ptr)
 @ stdcall RtlFreeHeap(long long long)
