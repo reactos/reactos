@@ -566,6 +566,8 @@
 @ stdcall HashData (ptr long ptr long)
 @ stdcall IntlStrEqWorkerA(long str str long) StrIsIntlEqualA
 @ stdcall IntlStrEqWorkerW(long wstr wstr long) StrIsIntlEqualW
+@ stdcall IsCharSpaceA(long)
+@ stdcall IsInternetESCEnabled()
 @ stdcall PathAddBackslashA (str)
 @ stdcall PathAddBackslashW (wstr)
 @ stdcall PathAddExtensionA (str str)
@@ -586,6 +588,7 @@
 @ stdcall PathCompactPathW(long wstr long)
 @ stdcall PathCreateFromUrlA(str ptr ptr long)
 @ stdcall PathCreateFromUrlW(wstr ptr ptr long)
+@ stdcall PathCreateFromUrlAlloc(wstr ptr long)
 @ stdcall PathFileExistsA (str)
 @ stdcall PathFileExistsW (wstr)
 @ stdcall PathFindExtensionA (str)

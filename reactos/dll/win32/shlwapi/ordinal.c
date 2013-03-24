@@ -642,25 +642,6 @@ INT WINAPI SHStringFromGUIDW(REFGUID guid, LPWSTR lpszDest, INT cchMax)
 }
 
 /*************************************************************************
- *      @	[SHLWAPI.29]
- *
- * Determine if a Unicode character is a space.
- *
- * PARAMS
- *  wc [I] Character to check.
- *
- * RETURNS
- *  TRUE, if wc is a space,
- *  FALSE otherwise.
- */
-BOOL WINAPI IsCharSpaceW(WCHAR wc)
-{
-    WORD CharType;
-
-    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_SPACE);
-}
-
-/*************************************************************************
  *      @	[SHLWAPI.30]
  *
  * Determine if a Unicode character is a blank.
@@ -2680,7 +2661,7 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
 	  lpSubKey = strRegistryPolicyW;
 
 	retval = RegOpenKeyW(HKEY_LOCAL_MACHINE, lpSubKey, &hKey);
-    if (retval != ERROR_SUCCESS)
+        if (retval != ERROR_SUCCESS)
 	  retval = RegOpenKeyW(HKEY_CURRENT_USER, lpSubKey, &hKey);
 	if (retval != ERROR_SUCCESS)
 	  return 0;
@@ -2728,7 +2709,7 @@ DWORD WINAPI SHRestrictionLookup(
 	    /* we have a known policy */
 
 	    /* check if this policy has been cached */
-		if (*polArr == SHELL_NO_POLICY)
+            if (*polArr == SHELL_NO_POLICY)
 	      *polArr = SHGetRestriction(initial, polTable->appstr, polTable->keystr);
 	    return *polArr;
 	  }

@@ -2232,7 +2232,7 @@ DWORD WINAPI SHCopyKeyA(HKEY hKeySrc, LPCSTR lpszSrcSubKey, HKEY hKeyDst, DWORD 
   TRACE("(hkey=%p,%s,%p08x,%d)\n", hKeySrc, debugstr_a(lpszSrcSubKey), hKeyDst, dwReserved);
 
   if (lpszSrcSubKey)
-    MultiByteToWideChar(0, 0, lpszSrcSubKey, -1, szSubKeyW, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, lpszSrcSubKey, -1, szSubKeyW, MAX_PATH);
 
   return SHCopyKeyW(hKeySrc, lpszSrcSubKey ? szSubKeyW : NULL, hKeyDst, dwReserved);
 }

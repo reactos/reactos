@@ -531,7 +531,7 @@ HRESULT WINAPI SHCreateStreamOnFileA(LPCSTR lpszPath, DWORD dwMode,
   if (!lpszPath)
     return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
 
-  MultiByteToWideChar(0, 0, lpszPath, -1, szPath, MAX_PATH);
+  MultiByteToWideChar(CP_ACP, 0, lpszPath, -1, szPath, MAX_PATH);
   return SHCreateStreamOnFileW(szPath, dwMode, lppStream);
 }
 

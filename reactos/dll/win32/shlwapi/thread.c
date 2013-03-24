@@ -534,7 +534,7 @@ HANDLE WINAPI SHGlobalCounterCreateNamedA(LPCSTR lpszName, DWORD iInitial)
   TRACE("(%s,%d)\n", debugstr_a(lpszName), iInitial);
 
   if (lpszName)
-    MultiByteToWideChar(0, 0, lpszName, -1, szBuff, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, lpszName, -1, szBuff, MAX_PATH);
   return SHGlobalCounterCreateNamedW(lpszName ? szBuff : NULL, iInitial);
 }
 
