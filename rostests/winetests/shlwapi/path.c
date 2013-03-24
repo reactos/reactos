@@ -17,21 +17,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
 #include <stdio.h>
 
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "wininet.h"
+#include <wine/test.h>
+//#include "windef.h"
+//#include "winbase.h"
+#include <winreg.h>
+#include <winnls.h>
+#include <shlwapi.h>
+#include <wininet.h>
 
 static HRESULT (WINAPI *pPathIsValidCharA)(char,DWORD);
 static HRESULT (WINAPI *pPathIsValidCharW)(WCHAR,DWORD);
 static LPWSTR  (WINAPI *pPathCombineW)(LPWSTR, LPCWSTR, LPCWSTR);
 static HRESULT (WINAPI *pPathCreateFromUrlA)(LPCSTR, LPSTR, LPDWORD, DWORD);
 static HRESULT (WINAPI *pPathCreateFromUrlW)(LPCWSTR, LPWSTR, LPDWORD, DWORD);
+static HRESULT (WINAPI *pPathCreateFromUrlAlloc)(LPCWSTR, LPWSTR*, DWORD);
 static BOOL    (WINAPI *pPathAppendA)(LPSTR, LPCSTR);
 
 /* ################ */
@@ -39,34 +45,88 @@ static BOOL    (WINAPI *pPathAppendA)(LPSTR, LPCSTR);
 static const struct {
     const char *url;
     const char *path;
-    DWORD ret;
+    DWORD ret, todo;
 } TEST_PATHFROMURL[] = {
-    {"file:///c:/foo/ba%5Cr", "c:\\foo\\ba\\r", S_OK},
-    {"file:///c:/foo/../ba%5Cr", "c:\\foo\\..\\ba\\r", S_OK},
-    {"file:///host/c:/foo/bar", "\\host\\c:\\foo\\bar", S_OK},
-    {"file://host/c:/foo/bar", "\\\\hostc:\\foo\\bar", S_OK},
-    {"file://host/c:/foo/bar", "\\\\hostc:\\foo\\bar", S_OK},
-    {"file:\\\\host\\c:\\foo\\bar", "\\\\hostc:\\foo\\bar", S_OK},
-    {"file:\\\\host\\ca\\foo\\bar", "\\\\host\\ca\\foo\\bar", S_OK},
-    {"file:\\\\host\\c|\\foo\\bar", "\\\\hostc|\\foo\\bar", S_OK},
-    {"file:\\%5Chost\\c:\\foo\\bar", "\\\\host\\c:\\foo\\bar", S_OK},
-    {"file:\\\\host\\cx:\\foo\\bar", "\\\\host\\cx:\\foo\\bar", S_OK},
-    {"file://c:/foo/bar", "c:\\foo\\bar", S_OK},
-    {"file://c:/d:/foo/bar", "c:\\d:\\foo\\bar", S_OK},
-    {"file://c|/d|/foo/bar", "c:\\d|\\foo\\bar", S_OK},
-    {"file://host/foo/bar", "\\\\host\\foo\\bar", S_OK},
-    {"file:/foo/bar", "\\foo\\bar", S_OK},
-    {"file:/foo/bar/", "\\foo\\bar\\", S_OK},
-    {"file:foo/bar", "foo\\bar", S_OK},
-    {"file:c:/foo/bar", "c:\\foo\\bar", S_OK},
-    {"file:c|/foo/bar", "c:\\foo\\bar", S_OK},
-    {"file:cx|/foo/bar", "cx|\\foo\\bar", S_OK},
-    {"file:////c:/foo/bar", "c:\\foo\\bar", S_OK},
-/*    {"file:////c:/foo/foo%20bar", "c:\\foo\\foo%20bar", S_OK},*/
+    /* 0 leading slash */
+    {"file:c:/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file:c|/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file:cx|/foo/bar", "cx|\\foo\\bar", S_OK, 0},
+    {"file:c:foo/bar", "c:foo\\bar", S_OK, 0},
+    {"file:c|foo/bar", "c:foo\\bar", S_OK, 0},
+    {"file:c:/foo%20ba%2fr", "c:\\foo ba/r", S_OK, 0},
+    {"file:foo%20ba%2fr", "foo ba/r", S_OK, 0},
+    {"file:foo/bar/", "foo\\bar\\", S_OK, 0},
 
-    {"c:\\foo\\bar", NULL, E_INVALIDARG},
-    {"foo/bar", NULL, E_INVALIDARG},
-    {"http://foo/bar", NULL, E_INVALIDARG},
+    /* 1 leading (back)slash */
+    {"file:/c:/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file:\\c:/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file:/c|/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file:/cx|/foo/bar", "\\cx|\\foo\\bar", S_OK, 0},
+    {"file:/c:foo/bar", "c:foo\\bar", S_OK, 0},
+    {"file:/c|foo/bar", "c:foo\\bar", S_OK, 0},
+    {"file:/c:/foo%20ba%2fr", "c:\\foo ba/r", S_OK, 0},
+    {"file:/foo%20ba%2fr", "\\foo ba/r", S_OK, 0},
+    {"file:/foo/bar/", "\\foo\\bar\\", S_OK, 0},
+
+    /* 2 leading (back)slashes */
+    {"file://c:/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file://c:/d:/foo/bar", "c:\\d:\\foo\\bar", S_OK, 0},
+    {"file://c|/d|/foo/bar", "c:\\d|\\foo\\bar", S_OK, 0},
+    {"file://cx|/foo/bar", "\\\\cx|\\foo\\bar", S_OK, 0},
+    {"file://c:foo/bar", "c:foo\\bar", S_OK, 0},
+    {"file://c|foo/bar", "c:foo\\bar", S_OK, 0},
+    {"file://c:/foo%20ba%2fr", "c:\\foo%20ba%2fr", S_OK, 0},
+    {"file://c%3a/foo/../bar", "\\\\c:\\foo\\..\\bar", S_OK, 0},
+    {"file://c%7c/foo/../bar", "\\\\c|\\foo\\..\\bar", S_OK, 0},
+    {"file://foo%20ba%2fr", "\\\\foo ba/r", S_OK, 0},
+    {"file://localhost/c:/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file://localhost/c:/foo%20ba%5Cr", "c:\\foo ba\\r", S_OK, 0},
+    {"file://LocalHost/c:/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file:\\\\localhost\\c:\\foo\\bar", "c:\\foo\\bar", S_OK, 0},
+    {"file://incomplete", "\\\\incomplete", S_OK, 0},
+
+    /* 3 leading (back)slashes (omitting hostname) */
+    {"file:///c:/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"File:///c:/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file:///c:/foo%20ba%2fr", "c:\\foo ba/r", S_OK, 0},
+    {"file:///foo%20ba%2fr", "\\foo ba/r", S_OK, 0},
+    {"file:///foo/bar/", "\\foo\\bar\\", S_OK, 0},
+    {"file:///localhost/c:/foo/bar", "\\localhost\\c:\\foo\\bar", S_OK, 0},
+
+    /* 4 leading (back)slashes */
+    {"file:////c:/foo/bar", "c:\\foo\\bar", S_OK, 0},
+    {"file:////c:/foo%20ba%2fr", "c:\\foo%20ba%2fr", S_OK, 0},
+    {"file:////foo%20ba%2fr", "\\\\foo%20ba%2fr", S_OK, 0},
+
+    /* 5 and more leading (back)slashes */
+    {"file://///c:/foo/bar", "\\\\c:\\foo\\bar", S_OK, 0},
+    {"file://///c:/foo%20ba%2fr", "\\\\c:\\foo ba/r", S_OK, 0},
+    {"file://///foo%20ba%2fr", "\\\\foo ba/r", S_OK, 0},
+    {"file://////c:/foo/bar", "\\\\c:\\foo\\bar", S_OK, 0},
+
+    /* Leading (back)slashes cannot be escaped */
+    {"file:%2f%2flocalhost%2fc:/foo/bar", "//localhost/c:\\foo\\bar", S_OK, 0},
+    {"file:%5C%5Clocalhost%5Cc:/foo/bar", "\\\\localhost\\c:\\foo\\bar", S_OK, 0},
+
+    /* Hostname handling */
+    {"file://l%6fcalhost/c:/foo/bar", "\\\\localhostc:\\foo\\bar", S_OK, 0},
+    {"file://localhost:80/c:/foo/bar", "\\\\localhost:80c:\\foo\\bar", S_OK, 0},
+    {"file://host/c:/foo/bar", "\\\\hostc:\\foo\\bar", S_OK, 0},
+    {"file://host//c:/foo/bar", "\\\\host\\\\c:\\foo\\bar", S_OK, 0},
+    {"file://host/\\c:/foo/bar", "\\\\host\\\\c:\\foo\\bar", S_OK, 0},
+    {"file://host/c:foo/bar", "\\\\hostc:foo\\bar", S_OK, 0},
+    {"file://host/foo/bar", "\\\\host\\foo\\bar", S_OK, 0},
+    {"file:\\\\host\\c:\\foo\\bar", "\\\\hostc:\\foo\\bar", S_OK, 0},
+    {"file:\\\\host\\ca\\foo\\bar", "\\\\host\\ca\\foo\\bar", S_OK, 0},
+    {"file:\\\\host\\c|\\foo\\bar", "\\\\hostc|\\foo\\bar", S_OK, 0},
+    {"file:\\%5Chost\\c:\\foo\\bar", "\\\\host\\c:\\foo\\bar", S_OK, 0},
+    {"file:\\\\host\\cx:\\foo\\bar", "\\\\host\\cx:\\foo\\bar", S_OK, 0},
+    {"file:///host/c:/foo/bar", "\\host\\c:\\foo\\bar", S_OK, 0},
+
+    /* Not file URLs */
+    {"c:\\foo\\bar", NULL, E_INVALIDARG, 0},
+    {"foo/bar", NULL, E_INVALIDARG, 0},
+    {"http://foo/bar", NULL, E_INVALIDARG, 0},
 
 };
 
@@ -128,7 +188,7 @@ static LPWSTR GetWideString(const char* szString)
 {
   LPWSTR wszString = HeapAlloc(GetProcessHeap(), 0, (2*INTERNET_MAX_URL_LENGTH) * sizeof(WCHAR));
   
-  MultiByteToWideChar(0, 0, szString, -1, wszString, INTERNET_MAX_URL_LENGTH);
+  MultiByteToWideChar(CP_ACP, 0, szString, -1, wszString, INTERNET_MAX_URL_LENGTH);
 
   return wszString;
 }
@@ -203,44 +263,86 @@ static void test_PathCreateFromUrl(void)
 {
     size_t i;
     char ret_path[INTERNET_MAX_URL_LENGTH];
-    DWORD len, ret;
+    DWORD len, len2, ret;
     WCHAR ret_pathW[INTERNET_MAX_URL_LENGTH];
     WCHAR *pathW, *urlW;
-    static const char url[] = "http://www.winehq.org";
 
     if (!pPathCreateFromUrlA) {
         win_skip("PathCreateFromUrlA not found\n");
         return;
     }
 
-    /* Check ret_path = NULL */
-    len = sizeof(url);
-    ret = pPathCreateFromUrlA(url, NULL, &len, 0);
-    ok ( ret == E_INVALIDARG, "got 0x%08x expected E_INVALIDARG\n", ret);
+    /* Won't say how much is needed without a buffer */
+    len = 0xdeca;
+    ret = pPathCreateFromUrlA("file://foo", NULL, &len, 0);
+    ok(ret == E_INVALIDARG, "got 0x%08x expected E_INVALIDARG\n", ret);
+    ok(len == 0xdeca, "got %x expected 0xdeca\n", len);
 
+    /* Test the decoding itself */
     for(i = 0; i < sizeof(TEST_PATHFROMURL) / sizeof(TEST_PATHFROMURL[0]); i++) {
         len = INTERNET_MAX_URL_LENGTH;
         ret = pPathCreateFromUrlA(TEST_PATHFROMURL[i].url, ret_path, &len, 0);
-        ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url %s\n", ret, TEST_PATHFROMURL[i].url);
-        if(TEST_PATHFROMURL[i].path) {
-           ok(!lstrcmpi(ret_path, TEST_PATHFROMURL[i].path), "got %s expected %s from url %s\n", ret_path, TEST_PATHFROMURL[i].path,  TEST_PATHFROMURL[i].url);
-           ok(len == strlen(ret_path), "ret len %d from url %s\n", len, TEST_PATHFROMURL[i].url);
+        if (!(TEST_PATHFROMURL[i].todo & 0x1))
+            ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url %s\n", ret, TEST_PATHFROMURL[i].url);
+        else todo_wine
+            ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url %s\n", ret, TEST_PATHFROMURL[i].url);
+        if(SUCCEEDED(ret) && TEST_PATHFROMURL[i].path) {
+            if(!(TEST_PATHFROMURL[i].todo & 0x2)) {
+                ok(!lstrcmpi(ret_path, TEST_PATHFROMURL[i].path), "got %s expected %s from url %s\n", ret_path, TEST_PATHFROMURL[i].path,  TEST_PATHFROMURL[i].url);
+                ok(len == strlen(ret_path), "ret len %d from url %s\n", len, TEST_PATHFROMURL[i].url);
+            } else todo_wine
+                /* Wrong string, don't bother checking the length */
+                ok(!lstrcmpi(ret_path, TEST_PATHFROMURL[i].path), "got %s expected %s from url %s\n", ret_path, TEST_PATHFROMURL[i].path,  TEST_PATHFROMURL[i].url);
         }
+
         if (pPathCreateFromUrlW) {
             len = INTERNET_MAX_URL_LENGTH;
             pathW = GetWideString(TEST_PATHFROMURL[i].path);
             urlW = GetWideString(TEST_PATHFROMURL[i].url);
             ret = pPathCreateFromUrlW(urlW, ret_pathW, &len, 0);
-            WideCharToMultiByte(CP_ACP, 0, ret_pathW, -1, ret_path, sizeof(ret_path),0,0);
-            ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url L\"%s\"\n", ret, TEST_PATHFROMURL[i].url);
-            if(TEST_PATHFROMURL[i].path) {
-                ok(!lstrcmpiW(ret_pathW, pathW), "got %s expected %s from url L\"%s\"\n",
-                    ret_path, TEST_PATHFROMURL[i].path, TEST_PATHFROMURL[i].url);
-                ok(len == lstrlenW(ret_pathW), "ret len %d from url L\"%s\"\n", len, TEST_PATHFROMURL[i].url);
+            WideCharToMultiByte(CP_ACP, 0, ret_pathW, -1, ret_path, sizeof(ret_path),NULL,NULL);
+            if (!(TEST_PATHFROMURL[i].todo & 0x1))
+                ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url L\"%s\"\n", ret, TEST_PATHFROMURL[i].url);
+            else todo_wine
+                ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url L\"%s\"\n", ret, TEST_PATHFROMURL[i].url);
+            if(SUCCEEDED(ret) && TEST_PATHFROMURL[i].path) {
+                if(!(TEST_PATHFROMURL[i].todo & 0x2)) {
+                    ok(!lstrcmpiW(ret_pathW, pathW), "got %s expected %s from url L\"%s\"\n",
+                       ret_path, TEST_PATHFROMURL[i].path, TEST_PATHFROMURL[i].url);
+                    ok(len == lstrlenW(ret_pathW), "ret len %d from url L\"%s\"\n", len, TEST_PATHFROMURL[i].url);
+                } else todo_wine
+                    /* Wrong string, don't bother checking the length */
+                    ok(!lstrcmpiW(ret_pathW, pathW), "got %s expected %s from url L\"%s\"\n",
+                       ret_path, TEST_PATHFROMURL[i].path, TEST_PATHFROMURL[i].url);
             }
+
+            if (SUCCEEDED(ret))
+            {
+                /* Check what happens if the buffer is too small */
+                len2 = 2;
+                ret = pPathCreateFromUrlW(urlW, ret_pathW, &len2, 0);
+                ok(ret == E_POINTER, "ret %08x, expected E_POINTER from url %s\n", ret, TEST_PATHFROMURL[i].url);
+                if(!(TEST_PATHFROMURL[i].todo & 0x4))
+                    ok(len2 == len + 1, "got len = %d expected %d from url %s\n", len2, len + 1, TEST_PATHFROMURL[i].url);
+                else todo_wine
+                    ok(len2 == len + 1, "got len = %d expected %d from url %s\n", len2, len + 1, TEST_PATHFROMURL[i].url);
+            }
+
             FreeWideString(urlW);
             FreeWideString(pathW);
         }
+    }
+
+    if (pPathCreateFromUrlAlloc)
+    {
+        static const WCHAR fileW[] = {'f','i','l','e',':','/','/','f','o','o',0};
+        static const WCHAR fooW[] = {'\\','\\','f','o','o',0};
+
+        pathW = NULL;
+        ret = pPathCreateFromUrlAlloc(fileW, &pathW, 0);
+        ok(ret == S_OK, "got 0x%08x expected S_OK\n", ret);
+        ok(lstrcmpiW(pathW, fooW) == 0, "got %s expected %s\n", wine_dbgstr_w(pathW), wine_dbgstr_w(fooW));
+        HeapFree(GetProcessHeap(), 0, pathW);
     }
 }
 
@@ -1369,6 +1471,7 @@ START_TEST(path)
 
     pPathCreateFromUrlA = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlA");
     pPathCreateFromUrlW = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlW");
+    pPathCreateFromUrlAlloc = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlAlloc");
     pPathCombineW = (void*)GetProcAddress(hShlwapi, "PathCombineW");
     pPathIsValidCharA = (void*)GetProcAddress(hShlwapi, (LPSTR)455);
     pPathIsValidCharW = (void*)GetProcAddress(hShlwapi, (LPSTR)456);

@@ -18,16 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "wininet.h"
-#include "intshcut.h"
+//#include <stdarg.h>
+//#include <stdio.h>
+
+#include <wine/test.h>
+//#include "windef.h"
+//#include "winbase.h"
+#include <winreg.h>
+#include <winnls.h>
+#include <shlwapi.h>
+#include <wininet.h>
+#include <intshcut.h>
 
 /* ################ */
 static HMODULE hShlwapi;
@@ -450,7 +455,8 @@ static const struct {
     {	"file://e:/b/c",				FALSE,	TRUE	},
     {	"http:partial",					FALSE,	FALSE	},
     {	"mailto://www.winehq.org/test.html",		TRUE,	FALSE	},
-    {	"file:partial",					FALSE,	TRUE	}
+    {	"file:partial",					FALSE,	TRUE	},
+    {	"File:partial",					FALSE,	TRUE	},
 };
 
 /* ########################### */
@@ -459,7 +465,7 @@ static LPWSTR GetWideString(const char* szString)
 {
   LPWSTR wszString = HeapAlloc(GetProcessHeap(), 0, (2*INTERNET_MAX_URL_LENGTH) * sizeof(WCHAR));
 
-  MultiByteToWideChar(0, 0, szString, -1, wszString, INTERNET_MAX_URL_LENGTH);
+  MultiByteToWideChar(CP_ACP, 0, szString, -1, wszString, INTERNET_MAX_URL_LENGTH);
 
   return wszString;
 }
@@ -1062,7 +1068,7 @@ static void test_UrlCanonicalizeW(void)
         BOOL choped;
         int pos;
 
-        MultiByteToWideChar(CP_ACP, 0, "http://www.winehq.org/X", -1, szUrl, 128);
+        MultiByteToWideChar(CP_ACP, 0, "http://www.winehq.org/X", -1, szUrl, sizeof(szUrl)/sizeof(szUrl[0]));
         pos = lstrlenW(szUrl) - 1;
         szUrl[pos] = i;
         urllen = INTERNET_MAX_URL_LENGTH;
@@ -1219,7 +1225,7 @@ static void test_UrlIs(void)
     test_UrlIs_null(URLIS_URL);
 
     for(i = 0; i < sizeof(TEST_PATH_IS_URL) / sizeof(TEST_PATH_IS_URL[0]); i++) {
-	MultiByteToWideChar(CP_ACP, 0, TEST_PATH_IS_URL[i].path, -1, wurl, 80);
+	MultiByteToWideChar(CP_ACP, 0, TEST_PATH_IS_URL[i].path, -1, wurl, sizeof(wurl)/sizeof(*wurl));
 
         ret = pUrlIsA( TEST_PATH_IS_URL[i].path, URLIS_URL );
         ok( ret == TEST_PATH_IS_URL[i].expect,
@@ -1234,7 +1240,7 @@ static void test_UrlIs(void)
         }
     }
     for(i = 0; i < sizeof(TEST_URLIS_ATTRIBS) / sizeof(TEST_URLIS_ATTRIBS[0]); i++) {
-	MultiByteToWideChar(CP_ACP, 0, TEST_URLIS_ATTRIBS[i].url, -1, wurl, 80);
+	MultiByteToWideChar(CP_ACP, 0, TEST_URLIS_ATTRIBS[i].url, -1, wurl, sizeof(wurl)/sizeof(*wurl));
 
         ret = pUrlIsA( TEST_URLIS_ATTRIBS[i].url, URLIS_OPAQUE);
 	ok( ret == TEST_URLIS_ATTRIBS[i].expectOpaque,
@@ -1288,7 +1294,7 @@ static void test_UrlUnescape(void)
         ok(strcmp(szReturnUrl,TEST_URL_UNESCAPE[i].expect)==0, "Expected \"%s\", but got \"%s\" from \"%s\"\n", TEST_URL_UNESCAPE[i].expect, szReturnUrl, TEST_URL_UNESCAPE[i].url);
 
         ZeroMemory(szReturnUrl, sizeof(szReturnUrl));
-        /* if we set the bufferpointer to NULL here UrlUnescape  fails and string gets not converted */
+        /* if we set the buffer pointer to NULL here, UrlUnescape fails and the string is not converted */
         res = pUrlUnescapeA(TEST_URL_UNESCAPE[i].url, szReturnUrl, NULL, 0);
         ok(res == E_INVALIDARG,
             "UrlUnescapeA returned 0x%x (expected E_INVALIDARG) for \"%s\"\n",
@@ -1319,7 +1325,7 @@ static void test_UrlUnescape(void)
     ok(!strcmp(inplace, expected), "got %s expected %s\n", inplace, expected);
     ok(dwEscaped == 27, "got %d expected 27\n", dwEscaped);
 
-    /* if we set the bufferpointer to NULL, the string apparently still gets converted (Google Lively does this)) */
+    /* if we set the buffer pointer to NULL, the string apparently still gets converted (Google Lively does this) */
     res = pUrlUnescapeA(another_inplace, NULL, NULL, URL_UNESCAPE_INPLACE);
     ok(res == S_OK, "UrlUnescapeA returned 0x%x (expected S_OK)\n", res);
     ok(!strcmp(another_inplace, expected), "got %s expected %s\n", another_inplace, expected);
@@ -1330,7 +1336,7 @@ static void test_UrlUnescape(void)
         ok(res == S_OK, "UrlUnescapeW returned 0x%x (expected S_OK)\n", res);
         ok(dwEscaped == 50, "got %d expected 50\n", dwEscaped);
 
-        /* if we set the bufferpointer to NULL, the string apparently still gets converted (Google Lively does this)) */
+        /* if we set the buffer pointer to NULL, the string apparently still gets converted (Google Lively does this) */
         res = pUrlUnescapeW(another_inplaceW, NULL, NULL, URL_UNESCAPE_INPLACE);
         ok(res == S_OK, "UrlUnescapeW returned 0x%x (expected S_OK)\n", res);
 

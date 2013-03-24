@@ -17,19 +17,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdio.h>
 #include <stdarg.h>
 
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "ole2.h"
-#include "shlwapi.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winreg.h"
+//#include "winerror.h"
+#include <ole2.h>
+//#include "shlwapi.h"
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 static HRESULT (WINAPI *pSHCreateThreadRef)(LONG*, IUnknown**);
 static HRESULT (WINAPI *pSHGetThreadRef)(IUnknown**);

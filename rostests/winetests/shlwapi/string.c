@@ -17,18 +17,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "wine/test.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winnls.h"
+//#include <stdio.h>
+
+#include <wine/test.h>
+//#include "winbase.h"
+//#include "winerror.h"
+#include <winnls.h>
+#include <ole2.h>
 #define NO_SHLWAPI_REG
 #define NO_SHLWAPI_PATH
 #define NO_SHLWAPI_GDI
 #define NO_SHLWAPI_STREAM
-#include "shlwapi.h"
-#include "shtypes.h"
+#include <shlwapi.h>
+//#include "shtypes.h"
 
 #define expect_eq(expr, val, type, fmt) do { \
     type ret = expr; \
@@ -411,7 +416,7 @@ static void test_StrCpyW(void)
 
   while(result->value)
   {
-    MultiByteToWideChar(0,0,result->byte_size_64,-1,szSrc,sizeof(szSrc)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP,0,result->byte_size_64,-1,szSrc,sizeof(szSrc)/sizeof(WCHAR));
 
     lpRes = StrCpyW(szBuff, szSrc);
     ok(!StrCmpW(szSrc, szBuff) && lpRes == szBuff, "Copied string %s wrong\n", result->byte_size_64);
@@ -475,7 +480,7 @@ static void test_StrToIntW(void)
 
   while (result->string)
   {
-    MultiByteToWideChar(0,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
     return_val = StrToIntW(szBuff);
     ok(return_val == result->str_to_int, "converted '%s' wrong (%d)\n",
        result->string, return_val);
@@ -525,7 +530,7 @@ static void test_StrToIntExW(void)
   while (result->string)
   {
     return_val = -1;
-    MultiByteToWideChar(0,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
     bRet = StrToIntExW(szBuff, 0, &return_val);
     ok(!bRet || return_val != -1, "No result returned from '%s'\n",
        result->string);
@@ -539,7 +544,7 @@ static void test_StrToIntExW(void)
   while (result->string)
   {
     return_val = -1;
-    MultiByteToWideChar(0,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
     bRet = StrToIntExW(szBuff, STIF_SUPPORT_HEX, &return_val);
     ok(!bRet || return_val != -1, "No result returned from '%s'\n",
        result->string);
@@ -604,7 +609,7 @@ static void test_StrToInt64ExW(void)
   while (result->string)
   {
     return_val = -1;
-    MultiByteToWideChar(0,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
     bRet = pStrToInt64ExW(szBuff, 0, &return_val);
     ok(!bRet || return_val != -1, "No result returned from '%s'\n",
        result->string);
@@ -618,7 +623,7 @@ static void test_StrToInt64ExW(void)
   while (result->string)
   {
     return_val = -1;
-    MultiByteToWideChar(0,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP,0,result->string,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR));
     bRet = pStrToInt64ExW(szBuff, STIF_SUPPORT_HEX, &return_val);
     ok(!bRet || return_val != -1, "No result returned from '%s'\n",
        result->string);
@@ -693,7 +698,7 @@ static void test_StrFormatKBSizeW(void)
   while(result->value)
   {
     pStrFormatKBSizeW(result->value, szBuffW, 256);
-    WideCharToMultiByte(0,0,szBuffW,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR),0,0);
+    WideCharToMultiByte(CP_ACP,0,szBuffW,-1,szBuff,sizeof(szBuff)/sizeof(WCHAR),NULL,NULL);
 
     ok(!strcmp(result->kb_size, szBuff), "Formatted %x%08x wrong: got %s, expected %s\n",
        (LONG)(result->value >> 32), (LONG)result->value, szBuff, result->kb_size);
