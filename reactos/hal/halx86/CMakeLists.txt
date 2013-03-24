@@ -41,6 +41,8 @@ function(add_hal _halname)
     add_cd_file(TARGET ${_halname} DESTINATION reactos/system32 NO_CAB FOR all)
     if(MSVC)
         add_target_link_flags(${_halname} "/ignore:4216 /ignore:4078")
+    else()
+        target_link_libraries(${_halname} -lgcc)
     endif()
 endfunction()
 
