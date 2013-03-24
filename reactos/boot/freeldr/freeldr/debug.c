@@ -24,6 +24,8 @@
 #if DBG && !defined(_M_ARM)
 
 //#define DEBUG_ALL
+//#define DEBUG_WARN
+//#define DEBUG_ERR
 //#define DEBUG_INIFILE
 //#define DEBUG_REACTOS
 //#define DEBUG_CUSTOM
@@ -49,7 +51,12 @@ ULONG		DebugPort = RS232;
 //ULONG		DebugPort = SCREEN;
 //ULONG		DebugPort = BOCHS;
 //ULONG		DebugPort = SCREEN|BOCHS;
+#ifdef _WINKD_
+/* COM1 is the WinDbg port */
+ULONG		ComPort = COM2;
+#else
 ULONG		ComPort = COM1;
+#endif
 //ULONG		BaudRate = 19200;
 ULONG		BaudRate = 115200;
 
@@ -59,6 +66,10 @@ VOID DebugInit(VOID)
 {
 #if defined (DEBUG_ALL)
     memset(DbgChannels, MAX_LEVEL, DBG_CHANNELS_COUNT);
+#elif defined (DEBUG_WARN)
+    memset(DbgChannels, WARN_LEVEL|FIXME_LEVEL|ERR_LEVEL, DBG_CHANNELS_COUNT);
+#elif defined (DEBUG_ERR)
+    memset(DbgChannels, ERR_LEVEL, DBG_CHANNELS_COUNT);
 #else
     memset(DbgChannels, 0, DBG_CHANNELS_COUNT);
 #endif
