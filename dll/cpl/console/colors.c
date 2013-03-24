@@ -8,6 +8,9 @@
 
 #include "console.h"
 
+#define NDEBUG
+#include <debug.h>
+
 static BOOL
 PaintStaticControls(HWND hwndDlg,
                     PCONSOLE_PROPS pConInfo,

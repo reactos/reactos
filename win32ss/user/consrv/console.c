@@ -12,7 +12,9 @@
 #define NONAMELESSUNION
 
 #include "consrv.h"
+#include "conio.h"
 #include "settings.h"
+
 #include "guiconsole.h"
 
 #ifdef TUI_CONSOLE
@@ -141,7 +143,7 @@ ConioUnpause(PCONSOLE Console, UINT Flags)
 
 static BOOL
 LoadShellLinkConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
-                         OUT PCONSOLE_INFO ConsoleInfo,
+                         IN OUT PCONSOLE_INFO ConsoleInfo,
                          OUT LPWSTR IconPath,
                          IN SIZE_T IconPathLength,
                          OUT PINT piIcon)
@@ -207,14 +209,8 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
                     INT ShowCmd = 0;
                     // WORD HotKey = 0;
 
-                    /* Get the name of the shortcut */
-                    Length = min(Length - 4,
-                                 sizeof(ConsoleStartInfo->ConsoleTitle) / sizeof(ConsoleStartInfo->ConsoleTitle[0]) - 1);
-                    wcsncpy(ConsoleStartInfo->ConsoleTitle, LinkName, Length);
-                    ConsoleStartInfo->ConsoleTitle[Length] = L'\0';
-
-                    // HACK: Copy also the name of the shortcut
-                    Length = min(Length,
+                    /* Reset the name of the console with the name of the shortcut */
+                    Length = min(/*Length*/ Length - 4, // 4 == len(".lnk")
                                  sizeof(ConsoleInfo->ConsoleTitle) / sizeof(ConsoleInfo->ConsoleTitle[0]) - 1);
                     wcsncpy(ConsoleInfo->ConsoleTitle, LinkName, Length);
                     ConsoleInfo->ConsoleTitle[Length] = L'\0';
@@ -250,7 +246,6 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
 
 NTSTATUS WINAPI
 ConSrvInitConsole(OUT PCONSOLE* NewConsole,
-                  IN LPCWSTR AppPath,
                   IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
                   IN PCSR_PROCESS ConsoleLeaderProcess)
 {
@@ -293,9 +288,9 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     ConsoleInfo.ConsoleTitle[Length] = L'\0';
 
     /*
-     * 3. Check whether the process creating the
-     *    console was launched via a shell-link
-     *    (ConsoleInfo.ConsoleTitle may be updated).
+     * 3. Check whether the process creating the console was launched
+     *    via a shell-link. ConsoleInfo.ConsoleTitle may be updated by
+     *    the name of the shortcut.
      */
     if (ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME)
     {
@@ -325,6 +320,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
          * Now, update them with the properties the user might gave to us
          * via the STARTUPINFO structure before calling CreateProcess
          * (and which was transmitted via the ConsoleStartInfo structure).
+         * We therefore overwrite the values read in the registry.
          */
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USEFILLATTRIBUTE)
         {
@@ -334,18 +330,9 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
         {
             ConsoleInfo.ScreenBufferSize = ConsoleStartInfo->ScreenBufferSize;
         }
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USESHOWWINDOW)
-        {
-            ConsoleInfo.u.GuiInfo.ShowWindow = ConsoleStartInfo->ShowWindow;
-        }
-        if (ConsoleStartInfo->dwStartupFlags & STARTF_USEPOSITION)
-        {
-            ConsoleInfo.u.GuiInfo.AutoPosition = FALSE;
-            ConsoleInfo.u.GuiInfo.WindowOrigin = ConsoleStartInfo->ConsoleWindowOrigin;
-        }
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USESIZE)
         {
-            // ConsoleInfo.ConsoleSize = ConsoleStartInfo->ConsoleWindowSize;
+            // ConsoleInfo->ConsoleSize = ConsoleStartInfo->ConsoleWindowSize;
             ConsoleInfo.ConsoleSize.X = (SHORT)ConsoleStartInfo->ConsoleWindowSize.cx;
             ConsoleInfo.ConsoleSize.Y = (SHORT)ConsoleStartInfo->ConsoleWindowSize.cy;
         }
@@ -363,7 +350,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     Console->ReferenceCount = 0;
     InitializeListHead(&Console->ProcessList);
     memcpy(Console->Colors, ConsoleInfo.Colors, sizeof(ConsoleInfo.Colors));
-    Console->Size = ConsoleInfo.ConsoleSize;
+    Console->ConsoleSize = ConsoleInfo.ConsoleSize;
 
     /*
      * Initialize the input buffer
@@ -424,8 +411,8 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     Console->HistoryNoDup = ConsoleInfo.HistoryNoDup;
 
     /* Initialize the console title */
-    RtlCreateUnicodeString(&Console->OriginalTitle, ConsoleStartInfo->ConsoleTitle);
-    if (ConsoleStartInfo->ConsoleTitle[0] == L'\0')
+    RtlCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo.ConsoleTitle);
+    if (ConsoleInfo.ConsoleTitle[0] == L'\0')
     {
         if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, Title, sizeof(Title) / sizeof(Title[0])))
         {
@@ -438,7 +425,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     }
     else
     {
-        RtlCreateUnicodeString(&Console->Title, ConsoleStartInfo->ConsoleTitle);
+        RtlCreateUnicodeString(&Console->Title, ConsoleInfo.ConsoleTitle);
     }
 
     /*
@@ -455,7 +442,10 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     if (!GuiMode)
     {
         DPRINT1("CONSRV: Opening text-mode terminal emulator\n");
-        Status = TuiInitConsole(Console, &ConsoleInfo);
+        Status = TuiInitConsole(Console,
+                                ConsoleStartInfo,
+                                &ConsoleInfo,
+                                ProcessId);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to open text-mode terminal emulator, switching to gui-mode, Status = 0x%08lx\n", Status);
@@ -471,15 +461,16 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
      * - We are in text-mode, therefore GuiMode == FALSE, the previous test-case
      *   succeeded BUT we failed at starting text-mode terminal emulator.
      *   Then GuiMode was switched to TRUE in order to try to open the GUI-mode
-     *   terminal emulator (win32k will automatically switch to graphical mode,
+     *   terminal emulator (Win32k will automatically switch to graphical mode,
      *   therefore no additional code is needed).
      */
     if (GuiMode)
     {
         DPRINT1("CONSRV: Opening GUI-mode terminal emulator\n");
         Status = GuiInitConsole(Console,
-                                AppPath,
+                                ConsoleStartInfo,
                                 &ConsoleInfo,
+                                ProcessId,
                                 IconPath,
                                 iIcon);
         if (!NT_SUCCESS(Status))
@@ -620,14 +611,10 @@ CSR_API(SrvAllocConsole)
         return STATUS_ACCESS_DENIED;
     }
 
-    if ( !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&AllocConsoleRequest->ConsoleStartInfo,
-                                   1,
-                                   sizeof(CONSOLE_START_INFO))      ||
-         !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&AllocConsoleRequest->AppPath,
-                                   MAX_PATH + 1,
-                                   sizeof(WCHAR)) )
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&AllocConsoleRequest->ConsoleStartInfo,
+                                  1,
+                                  sizeof(CONSOLE_START_INFO)))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -646,7 +633,6 @@ CSR_API(SrvAllocConsole)
 
     /* Initialize a new Console owned by the Console Leader Process */
     Status = ConSrvAllocateConsole(ProcessData,
-                                   AllocConsoleRequest->AppPath,
                                    &AllocConsoleRequest->InputHandle,
                                    &AllocConsoleRequest->OutputHandle,
                                    &AllocConsoleRequest->ErrorHandle,

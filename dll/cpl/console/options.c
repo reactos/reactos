@@ -8,6 +8,9 @@
 
 #include "console.h"
 
+#define NDEBUG
+#include <debug.h>
+
 static
 void
 UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo);
@@ -37,10 +40,8 @@ OptionsProc(HWND hwndDlg,
         }
         case WM_NOTIFY:
         {
-            if (!pConInfo)
-            {
-                break;
-            }
+            if (!pConInfo) break;
+
             lppsn = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == UDN_DELTAPOS)
             {
@@ -68,10 +69,8 @@ OptionsProc(HWND hwndDlg,
         }
         case WM_COMMAND:
         {
-            if (!pConInfo)
-            {
-                break;
-            }
+            if (!pConInfo) break;
+
             switch (LOWORD(wParam))
             {
                 case IDC_RADIO_SMALL_CURSOR:

@@ -185,7 +185,7 @@ BasepInitConsole(VOID)
         ConnectInfo.ConsoleNeeded = FALSE; // ConsoleNeeded is used for knowing whether or not this is a CUI app.
 
         ConnectInfo.ConsoleStartInfo.ConsoleTitle[0] = L'\0';
-        ConnectInfo.AppPath[0] = L'\0';
+        ConnectInfo.ConsoleStartInfo.AppPath[0] = L'\0';
     }
     else
     {
@@ -194,10 +194,10 @@ BasepInitConsole(VOID)
 
         InitConsoleInfo(&ConnectInfo.ConsoleStartInfo);
 
-        Length = min(sizeof(ConnectInfo.AppPath) / sizeof(ConnectInfo.AppPath[0]) - 1,
+        Length = min(sizeof(ConnectInfo.ConsoleStartInfo.AppPath) / sizeof(ConnectInfo.ConsoleStartInfo.AppPath[0]) - 1,
                      Parameters->ImagePathName.Length / sizeof(WCHAR));
-        wcsncpy(ConnectInfo.AppPath, Parameters->ImagePathName.Buffer, Length);
-        ConnectInfo.AppPath[Length] = L'\0';
+        wcsncpy(ConnectInfo.ConsoleStartInfo.AppPath, Parameters->ImagePathName.Buffer, Length);
+        ConnectInfo.ConsoleStartInfo.AppPath[Length] = L'\0';
 
         /* Initialize Input EXE name */
         ExeName = wcsrchr(Parameters->ImagePathName.Buffer, L'\\');

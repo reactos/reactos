@@ -21,7 +21,8 @@ add_importlibs(console
     user32
     gdi32
     comctl32
-    kernel32)
+    kernel32
+    ntdll)
 
 add_pch(console console.h)
 add_cd_file(TARGET console DESTINATION reactos/system32 FOR all)

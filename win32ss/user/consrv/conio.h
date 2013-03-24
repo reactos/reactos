@@ -13,7 +13,7 @@
 
 /* Default attributes */
 #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
-#define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED | \
+#define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED   | \
                                  BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY)
 
 
@@ -74,7 +74,7 @@ typedef struct ConsoleInput_t
     INPUT_RECORD InputEvent;
 } ConsoleInput;
 
-typedef struct _TERMINAL_VTBL
+typedef struct _FRONTEND_VTBL
 {
     /*
      * Internal interface (functions called by the console server only)
@@ -100,6 +100,7 @@ typedef struct _TERMINAL_VTBL
     NTSTATUS (WINAPI *ResizeBuffer)(struct _CONSOLE* Console,
                                     PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                                     COORD Size);
+    VOID (WINAPI *ResizeTerminal)(struct _CONSOLE* Console);
     BOOL (WINAPI *ProcessKeyCallback)(struct _CONSOLE* Console,
                                       MSG* msg,
                                       BYTE KeyStateMenu,
@@ -116,7 +117,7 @@ typedef struct _TERMINAL_VTBL
                               HICON hWindowIcon);
     HWND (WINAPI *GetConsoleWindowHandle)(struct _CONSOLE* Console);
 
-} TERMINAL_VTBL, *PTERMINAL_VTBL;
+} FRONTEND_VTBL, *PFRONTEND_VTBL;
 
 #define ConioDrawRegion(Console, Region) (Console)->TermIFace.Vtbl->DrawRegion((Console), (Region))
 #define ConioWriteStream(Console, Block, CurStartX, CurStartY, ScrolledLines, Buffer, Length) \
@@ -131,6 +132,7 @@ typedef struct _TERMINAL_VTBL
 #define ConioCleanupConsole(Console) (Console)->TermIFace.Vtbl->CleanupConsole(Console)
 #define ConioChangeIcon(Console, hWindowIcon) (Console)->TermIFace.Vtbl->ChangeIcon((Console), (hWindowIcon))
 #define ConioResizeBuffer(Console, Buff, Size) (Console)->TermIFace.Vtbl->ResizeBuffer((Console), (Buff), (Size))
+#define ConioResizeTerminal(Console) (Console)->TermIFace.Vtbl->ResizeTerminal((Console))
 #define ConioProcessKeyCallback(Console, Msg, KeyStateMenu, ShiftState, VirtualKeyCode, Down) \
           (Console)->TermIFace.Vtbl->ProcessKeyCallback((Console), (Msg), (KeyStateMenu), (ShiftState), (VirtualKeyCode), (Down))
 #define ConioGetConsoleWindowHandle(Console) \
@@ -138,12 +140,12 @@ typedef struct _TERMINAL_VTBL
 #define ConioRefreshInternalInfo(Console) \
           (Console)->TermIFace.Vtbl->RefreshInternalInfo((Console))
 
-typedef struct _TERMINAL_IFACE
+typedef struct _FRONTEND_IFACE
 {
-    PTERMINAL_VTBL Vtbl;    /* Virtual table */
+    PFRONTEND_VTBL Vtbl;    /* Virtual table */
     PVOID Data;             /* Private data  */
     PVOID OldData;          /* Reserved      */
-} TERMINAL_IFACE, *PTERMINAL_IFACE;
+} FRONTEND_IFACE, *PFRONTEND_IFACE;
 
 typedef struct _CONSOLE
 {
@@ -153,7 +155,7 @@ typedef struct _CONSOLE
     struct _CONSOLE *Prev, *Next;           /* Next and Prev consoles in console wheel */
     LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
 
-    TERMINAL_IFACE TermIFace;               /* Terminal-specific interface */
+    FRONTEND_IFACE TermIFace;               /* Frontend-specific interface */
 
 /**************************** Input buffer and data ***************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
@@ -195,7 +197,7 @@ typedef struct _CONSOLE
     UNICODE_STRING OriginalTitle;           /* Original title of console, the one when the console leader is launched. Always NULL-terminated */
     UNICODE_STRING Title;                   /* Title of console. Always NULL-terminated */
 
-    COORD Size;                             /* Size of the console (different of the size of the screen buffer */
+/* SIZE */    COORD   ConsoleSize;          /* The size of the console */
     COLORREF Colors[16];                    /* Colour palette */
 
 } CONSOLE, *PCONSOLE;
@@ -219,7 +221,6 @@ typedef struct _CONSOLE
 VOID WINAPI ConSrvDeleteConsole(PCONSOLE Console);
 VOID WINAPI ConSrvInitConsoleSupport(VOID);
 NTSTATUS WINAPI ConSrvInitConsole(OUT PCONSOLE* NewConsole,
-                                  IN LPCWSTR AppPath,
                                   IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
                                   IN PCSR_PROCESS ConsoleLeaderProcess);
 VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);

@@ -8,6 +8,9 @@
 
 #include "console.h"
 
+#define NDEBUG
+#include <debug.h>
+
 #define NUM_APPLETS 1
 
 LONG APIENTRY InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
@@ -73,12 +76,17 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
 PCONSOLE_PROPS
 AllocConsoleInfo()
 {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CONSOLE_PROPS));
+    /* Adapted for holding GUI terminal information */
+    return HeapAlloc(GetProcessHeap(),
+                     HEAP_ZERO_MEMORY,
+                     sizeof(CONSOLE_PROPS) + sizeof(GUI_CONSOLE_INFO));
 }
 
 VOID
 InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
 {
+    PGUI_CONSOLE_INFO GuiInfo = NULL;
+
     /* Initialize the default properties */
     pConInfo->ci.HistoryBufferSize = 50;
     pConInfo->ci.NumberOfHistoryBuffers = 4;
@@ -88,7 +96,7 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     pConInfo->ci.InsertMode = TRUE;
     // pConInfo->ci.InputBufferSize;
     pConInfo->ci.ScreenBufferSize = (COORD){80, 300};
-    pConInfo->ci.ConsoleSize = (COORD){80, 25};
+    pConInfo->ci.ConsoleSize      = (COORD){80, 25 };
     pConInfo->ci.CursorBlinkOn = TRUE;
     pConInfo->ci.ForceCursorOff = FALSE;
     pConInfo->ci.CursorSize = CSR_DEFAULT_CURSOR_SIZE;
@@ -97,14 +105,17 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     pConInfo->ci.CodePage = 0;
     pConInfo->ci.ConsoleTitle[0] = L'\0';
 
-    pConInfo->ci.u.GuiInfo.FaceName[0] = L'\0';
-    pConInfo->ci.u.GuiInfo.FontFamily = FF_DONTCARE;
-    pConInfo->ci.u.GuiInfo.FontSize = 0;
-    pConInfo->ci.u.GuiInfo.FontWeight = FW_DONTCARE;
-    pConInfo->ci.u.GuiInfo.UseRasterFonts = TRUE;
+    /* Adapted for holding GUI terminal information */
+    pConInfo->TerminalInfo.Size = sizeof(GUI_CONSOLE_INFO);
+    GuiInfo = pConInfo->TerminalInfo.TermInfo = (PGUI_CONSOLE_INFO)(pConInfo + 1);
+    GuiInfo->FaceName[0] = L'\0';
+    GuiInfo->FontFamily = FF_DONTCARE;
+    GuiInfo->FontSize = 0;
+    GuiInfo->FontWeight = FW_DONTCARE;
+    GuiInfo->UseRasterFonts = TRUE;
 
-    pConInfo->ci.u.GuiInfo.AutoPosition = TRUE;
-    pConInfo->ci.u.GuiInfo.WindowOrigin = (POINT){0, 0};
+    GuiInfo->AutoPosition = TRUE;
+    GuiInfo->WindowOrigin = (POINT){0, 0};
 
     memcpy(pConInfo->ci.Colors, s_Colors, sizeof(s_Colors));
 }
@@ -169,23 +180,26 @@ ApplyConsoleInfo(HWND hwndDlg,
         HANDLE hSection;
         PCONSOLE_PROPS pSharedInfo;
 
-        /* Create a memory section to share with the server, and map it */
+        /*
+         * Create a memory section to share with the server, and map it.
+         */
+        /* Holds data for console.dll + console info + terminal-specific info */
         hSection = CreateFileMapping(INVALID_HANDLE_VALUE,
                                      NULL,
                                      PAGE_READWRITE,
                                      0,
-                                     sizeof(CONSOLE_PROPS),
+                                     sizeof(CONSOLE_PROPS) + sizeof(GUI_CONSOLE_INFO),
                                      NULL);
         if (!hSection)
         {
-            // DPRINT1("Error when creating file mapping, error = %d\n", GetLastError());
+            DPRINT1("Error when creating file mapping, error = %d\n", GetLastError());
             return FALSE;
         }
 
         pSharedInfo = MapViewOfFile(hSection, FILE_MAP_ALL_ACCESS, 0, 0, 0);
         if (!pSharedInfo)
         {
-            // DPRINT1("Error when mapping view of file, error = %d\n", GetLastError());
+            DPRINT1("Error when mapping view of file, error = %d\n", GetLastError());
             CloseHandle(hSection);
             return FALSE;
         }
@@ -194,7 +208,9 @@ ApplyConsoleInfo(HWND hwndDlg,
         pConInfo->AppliedConfig = TRUE;
 
         /* Copy the console info into the section */
-        RtlCopyMemory(pSharedInfo, pConInfo, sizeof(CONSOLE_PROPS));
+        RtlCopyMemory(pSharedInfo, pConInfo, sizeof(CONSOLE_PROPS) + sizeof(GUI_CONSOLE_INFO));
+        /* Offsetize */
+        pSharedInfo->TerminalInfo.TermInfo = (PVOID)((ULONG_PTR)pSharedInfo->TerminalInfo.TermInfo - (ULONG_PTR)pSharedInfo);
 
         /* Unmap it */
         UnmapViewOfFile(pSharedInfo);
@@ -219,6 +235,7 @@ LONG APIENTRY
 InitApplet(HWND hWnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
     HANDLE hSection = (HANDLE)wParam;
+    BOOL GuiTermInfo = FALSE;
     PCONSOLE_PROPS pSharedInfo;
     PCONSOLE_PROPS pConInfo;
     WCHAR szTitle[MAX_PATH + 1];
@@ -255,15 +272,23 @@ InitApplet(HWND hWnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     pConInfo->hConsoleWindow    = pSharedInfo->hConsoleWindow;
     pConInfo->ShowDefaultParams = pSharedInfo->ShowDefaultParams;
 
-    if (pConInfo->ShowDefaultParams)
+    /* Check that we are going to modify GUI terminal information */
+    GuiTermInfo = ( pSharedInfo->TerminalInfo.Size == sizeof(GUI_CONSOLE_INFO) &&
+                    pSharedInfo->TerminalInfo.TermInfo != 0 );
+
+    if (pConInfo->ShowDefaultParams || !GuiTermInfo)
     {
         /* Use defaults */
         InitConsoleDefaults(pConInfo);
     }
     else
     {
-        /* Copy the shared data into our allocated buffer */
-        RtlCopyMemory(pConInfo, pSharedInfo, sizeof(CONSOLE_PROPS));
+        /*
+         * Copy the shared data into our allocated buffer, and
+         * de-offsetize the address of terminal-specific information.
+         */
+        RtlCopyMemory(pConInfo, pSharedInfo, sizeof(CONSOLE_PROPS) + sizeof(GUI_CONSOLE_INFO));
+        pConInfo->TerminalInfo.TermInfo = (PVOID)((ULONG_PTR)pConInfo + (ULONG_PTR)pConInfo->TerminalInfo.TermInfo);
     }
 
     /* Close the section */
@@ -314,6 +339,10 @@ CPlApplet(HWND hwndCPl,
     {
         case CPL_INIT:
             return TRUE;
+
+        case CPL_EXIT:
+            // TODO: Free allocated memory
+            break;
 
         case CPL_GETCOUNT:
             return NUM_APPLETS;

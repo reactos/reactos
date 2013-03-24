@@ -116,7 +116,7 @@ OpenUserRegistryPathPerProcessId(DWORD ProcessId,
     return bRet;
 }
 
-BOOL
+/*static*/ BOOL
 ConSrvOpenUserSettings(DWORD ProcessId,
                        LPCWSTR ConsoleTitle,
                        PHKEY hSubKey,
@@ -191,16 +191,17 @@ BOOL
 ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
                        IN DWORD ProcessId)
 {
+    BOOL  RetVal = FALSE;
     HKEY  hKey;
     DWORD dwNumSubKeys = 0;
     DWORD dwIndex;
-    DWORD dwValueName;
-    DWORD dwValue;
     DWORD dwColorIndex = 0;
     DWORD dwType;
     WCHAR szValueName[MAX_PATH];
+    DWORD dwValueName;
     WCHAR szValue[LF_FACESIZE] = L"\0";
     DWORD Value;
+    DWORD dwValue;
 
     if (!ConSrvOpenUserSettings(ProcessId,
                                 ConsoleInfo->ConsoleTitle,
@@ -224,7 +225,7 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
     for (dwIndex = 0; dwIndex < dwNumSubKeys; dwIndex++)
     {
         dwValue = sizeof(Value);
-        dwValueName = MAX_PATH;
+        dwValueName = MAX_PATH; // sizeof(szValueName)/sizeof(szValueName[0])
 
         if (RegEnumValueW(hKey, dwIndex, szValueName, &dwValueName, NULL, &dwType, (BYTE*)&Value, &dwValue) != ERROR_SUCCESS)
         {
@@ -234,7 +235,7 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
                  * Retry in case of string value
                  */
                 dwValue = sizeof(szValue);
-                dwValueName = LF_FACESIZE;
+                dwValueName = MAX_PATH; // sizeof(szValueName)/sizeof(szValueName[0])
                 if (RegEnumValueW(hKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (BYTE*)szValue, &dwValue) != ERROR_SUCCESS)
                     break;
             }
@@ -244,6 +245,7 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
             }
         }
 
+        /* Maybe it is UI-specific ?? */
         if (!wcsncmp(szValueName, L"ColorTable", wcslen(L"ColorTable")))
         {
             dwColorIndex = 0;
@@ -251,80 +253,70 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
             if (dwColorIndex < sizeof(ConsoleInfo->Colors)/sizeof(ConsoleInfo->Colors[0]))
             {
                 ConsoleInfo->Colors[dwColorIndex] = Value;
+                RetVal = TRUE;
             }
         }
         else if (!wcscmp(szValueName, L"HistoryBufferSize"))
         {
             ConsoleInfo->HistoryBufferSize = Value;
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"NumberOfHistoryBuffers"))
         {
             ConsoleInfo->NumberOfHistoryBuffers = Value;
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"HistoryNoDup"))
         {
             ConsoleInfo->HistoryNoDup = Value;
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"FullScreen"))
         {
             ConsoleInfo->FullScreen = Value;
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"QuickEdit"))
         {
             ConsoleInfo->QuickEdit = Value;
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"InsertMode"))
         {
             ConsoleInfo->InsertMode = Value;
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"ScreenBufferSize"))
         {
             ConsoleInfo->ScreenBufferSize.X = LOWORD(Value);
             ConsoleInfo->ScreenBufferSize.Y = HIWORD(Value);
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"WindowSize"))
         {
             ConsoleInfo->ConsoleSize.X = LOWORD(Value);
             ConsoleInfo->ConsoleSize.Y = HIWORD(Value);
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"CursorSize"))
         {
             ConsoleInfo->CursorSize = min(max(Value, 0), 100);
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"ScreenColors"))
         {
             ConsoleInfo->ScreenAttrib = Value;
+            RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"PopupColors"))
         {
             ConsoleInfo->PopupAttrib = Value;
-        }
-        else if (!wcscmp(szValueName, L"FaceName"))
-        {
-            wcsncpy(ConsoleInfo->u.GuiInfo.FaceName, szValue, LF_FACESIZE);
-        }
-        else if (!wcscmp(szValueName, L"FontFamily"))
-        {
-            ConsoleInfo->u.GuiInfo.FontFamily = Value;
-        }
-        else if (!wcscmp(szValueName, L"FontSize"))
-        {
-            ConsoleInfo->u.GuiInfo.FontSize = Value;
-        }
-        else if (!wcscmp(szValueName, L"FontWeight"))
-        {
-            ConsoleInfo->u.GuiInfo.FontWeight = Value;
-        }
-        else if (!wcscmp(szValueName, L"WindowPosition"))
-        {
-            ConsoleInfo->u.GuiInfo.AutoPosition = FALSE;
-            ConsoleInfo->u.GuiInfo.WindowOrigin.x = LOWORD(Value);
-            ConsoleInfo->u.GuiInfo.WindowOrigin.y = HIWORD(Value);
+            RetVal = TRUE;
         }
     }
 
     RegCloseKey(hKey);
-    return TRUE;
+    return RetVal;
 }
 
 BOOL
@@ -398,21 +390,6 @@ do {                                                                            
     Storage = ConsoleInfo->PopupAttrib;
     SetConsoleSetting(L"PopupColors", REG_DWORD, sizeof(DWORD), &Storage, DEFAULT_POPUP_ATTRIB);
 
-    SetConsoleSetting(L"FaceName", REG_SZ, (wcslen(ConsoleInfo->u.GuiInfo.FaceName) + 1) * sizeof(WCHAR), ConsoleInfo->u.GuiInfo.FaceName, L'\0');
-    SetConsoleSetting(L"FontFamily", REG_DWORD, sizeof(DWORD), &ConsoleInfo->u.GuiInfo.FontFamily, FF_DONTCARE);
-    SetConsoleSetting(L"FontSize", REG_DWORD, sizeof(DWORD), &ConsoleInfo->u.GuiInfo.FontSize, 0);
-    SetConsoleSetting(L"FontWeight", REG_DWORD, sizeof(DWORD), &ConsoleInfo->u.GuiInfo.FontWeight, FW_DONTCARE);
-
-    if (ConsoleInfo->u.GuiInfo.AutoPosition == FALSE)
-    {
-        Storage = MAKELONG(ConsoleInfo->u.GuiInfo.WindowOrigin.x, ConsoleInfo->u.GuiInfo.WindowOrigin.y);
-        RegSetValueExW(hKey, L"WindowPosition", 0, REG_DWORD, (PBYTE)&ConsoleInfo->u.GuiInfo.WindowOrigin, sizeof(DWORD));
-    }
-    else
-    {
-        RegDeleteValue(hKey, L"WindowPosition");
-    }
-
     RegCloseKey(hKey);
     return TRUE;
 }
@@ -454,22 +431,6 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
 
     ConsoleInfo->ConsoleTitle[0] = L'\0';
 
-    // wcsncpy(ConsoleInfo->u.GuiInfo.FaceName, L"DejaVu Sans Mono", LF_FACESIZE);
-    // ConsoleInfo->u.GuiInfo.FontSize = MAKELONG(12, 8); // 0x0008000C; // font is 8x12
-    // ConsoleInfo->u.GuiInfo.FontSize = MAKELONG(16, 16); // font is 16x16
-    // ConsoleInfo->u.GuiInfo.FontWeight = FW_NORMAL;
-
-    wcsncpy(ConsoleInfo->u.GuiInfo.FaceName, L"Fixedsys", LF_FACESIZE); // HACK: !!
-    // ConsoleInfo->u.GuiInfo.FaceName[0] = L'\0';
-    ConsoleInfo->u.GuiInfo.FontFamily = FF_DONTCARE;
-    ConsoleInfo->u.GuiInfo.FontSize = 0;
-    ConsoleInfo->u.GuiInfo.FontWeight = FW_DONTCARE;
-    ConsoleInfo->u.GuiInfo.UseRasterFonts = TRUE;
-
-    ConsoleInfo->u.GuiInfo.ShowWindow   = SW_SHOWNORMAL;
-    ConsoleInfo->u.GuiInfo.AutoPosition = TRUE;
-    ConsoleInfo->u.GuiInfo.WindowOrigin = (POINT){0, 0};
-
     /*
      * 2. Overwrite them with the ones stored in HKCU\Console.
      *    If the HKCU\Console key doesn't exist, create it
@@ -479,6 +440,48 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
     {
         ConSrvWriteUserSettings(ConsoleInfo, ProcessId);
     }
+}
+
+VOID
+ConSrvApplyUserSettings(IN PCONSOLE Console,
+                        IN PCONSOLE_INFO ConsoleInfo)
+{
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
+    COORD BufSize;
+    BOOL SizeChanged = FALSE;
+
+    /*
+     * Apply foreground and background colors for both screen and popup
+     * and copy the new palette.
+     */
+    ActiveBuffer->ScreenDefaultAttrib = ConsoleInfo->ScreenAttrib;
+    ActiveBuffer->PopupDefaultAttrib  = ConsoleInfo->PopupAttrib;
+    memcpy(Console->Colors, ConsoleInfo->Colors, sizeof(s_Colors)); // FIXME: Possible buffer overflow if s_colors is bigger than pConInfo->Colors.
+
+    // TODO: Really update the screen attributes as FillConsoleOutputAttribute does.
+
+    /* Apply cursor size */
+    ActiveBuffer->CursorInfo.bVisible = (ConsoleInfo->CursorSize != 0);
+    ActiveBuffer->CursorInfo.dwSize   = min(max(ConsoleInfo->CursorSize, 0), 100);
+
+    /* Resize the console */
+    if (ConsoleInfo->ConsoleSize.X != Console->ConsoleSize.X ||
+        ConsoleInfo->ConsoleSize.Y != Console->ConsoleSize.Y)
+    {
+        Console->ConsoleSize = ConsoleInfo->ConsoleSize;
+        SizeChanged = TRUE;
+    }
+
+    /* Resize its active screen-buffer */
+    BufSize = ConsoleInfo->ScreenBufferSize;
+    if (BufSize.X != ActiveBuffer->ScreenBufferSize.X ||
+        BufSize.Y != ActiveBuffer->ScreenBufferSize.Y)
+    {
+        if (NT_SUCCESS(ConioResizeBuffer(Console, ActiveBuffer, BufSize)))
+            SizeChanged = TRUE;
+    }
+
+    if (SizeChanged) ConioResizeTerminal(Console);
 }
 
 /* EOF */

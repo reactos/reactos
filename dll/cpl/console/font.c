@@ -8,6 +8,9 @@
 
 #include "console.h"
 
+#define NDEBUG
+#include <debug.h>
+
 INT_PTR
 CALLBACK
 FontProc(HWND hwndDlg,

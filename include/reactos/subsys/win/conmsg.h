@@ -120,7 +120,8 @@ typedef struct _CONSOLE_START_INFO
     POINT ConsoleWindowOrigin;
     SIZE  ConsoleWindowSize;
     // UNICODE_STRING ConsoleTitle;
-    WCHAR ConsoleTitle[MAX_PATH + 1];
+    WCHAR ConsoleTitle[MAX_PATH + 1];   // Console title or full path to the startup shortcut
+    WCHAR AppPath[MAX_PATH + 1];        // Full path of the launched app
 } CONSOLE_START_INFO, *PCONSOLE_START_INFO;
 
 typedef struct _CONSOLE_CONNECTION_INFO
@@ -129,7 +130,6 @@ typedef struct _CONSOLE_CONNECTION_INFO
 
     /* Adapted from CONSOLE_ALLOCCONSOLE */
     CONSOLE_START_INFO ConsoleStartInfo;
-    WCHAR AppPath[MAX_PATH + 1];
 
     HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
     HANDLE InputHandle;
@@ -179,7 +179,6 @@ typedef struct
 typedef struct
 {
     PCONSOLE_START_INFO ConsoleStartInfo;
-    LPWSTR AppPath; // Length: MAX_PATH + 1
 
     HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
     HANDLE InputHandle;

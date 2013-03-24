@@ -8,40 +8,34 @@
  * NOTE: Adapted from existing code.
  */
 
-#ifndef WM_APP
-    #define WM_APP 0x8000
-#endif
-#define PM_APPLY_CONSOLE_INFO (WM_APP + 100)
+#pragma once
 
 /* STRUCTURES *****************************************************************/
 
-typedef struct _GUI_CONSOLE_INFO
+/*
+ * Structure used to hold terminal-specific information
+ */
+typedef struct _TERMINAL_INFO
 {
-    // FONTSIGNATURE FontSignature;
-    WCHAR FaceName[LF_FACESIZE];
-    UINT  FontFamily;
-    DWORD FontSize;
-    DWORD FontWeight;
-    BOOL  UseRasterFonts;
+    ULONG Size;     /* Size of the memory buffer pointed by TermInfo */
+    PVOID TermInfo; /* Address (or offset when talking to console.dll) of the memory buffer holding terminal information */
+} TERMINAL_INFO, *PTERMINAL_INFO;
 
-    WORD  ShowWindow;
-    BOOL  AutoPosition;
-    POINT WindowOrigin;
-} GUI_CONSOLE_INFO, *PGUI_CONSOLE_INFO;
-
+/*
+ * Structure used to hold console information
+ */
 typedef struct _CONSOLE_INFO
 {
     ULONG   HistoryBufferSize;
     ULONG   NumberOfHistoryBuffers;
     BOOLEAN HistoryNoDup;
 
-/* BOOLEAN */    ULONG FullScreen; // Give the type of console: GUI (windowed) or TUI (fullscreen)
+/* BOOLEAN */    ULONG FullScreen;  /* Give the type of console: GUI (windowed) or TUI (fullscreen) */
     BOOLEAN QuickEdit;
     BOOLEAN InsertMode;
     ULONG InputBufferSize;
     COORD ScreenBufferSize;
-
-/* SIZE */    COORD   ConsoleSize;  // This is really the size of the console at screen.
+/* SIZE */    COORD   ConsoleSize;          /* The size of the console */
 
     BOOLEAN CursorBlinkOn;
     BOOLEAN ForceCursorOff;
@@ -50,19 +44,11 @@ typedef struct _CONSOLE_INFO
     USHORT ScreenAttrib; // CHAR_INFO ScreenFillAttrib
     USHORT PopupAttrib;
 
-    // Color palette
-    COLORREF Colors[16];
+    COLORREF Colors[16];    /* Color palette */
 
     ULONG CodePage;
 
     WCHAR ConsoleTitle[MAX_PATH + 1];
-
-    // PVOID TerminalInfo;      /* Terminal-specific parameters */
-    union
-    {
-        GUI_CONSOLE_INFO GuiInfo;
-        // TUI_CONSOLE_INFO TuiInfo;
-    } u;
 } CONSOLE_INFO, *PCONSOLE_INFO;
 
 #define RGBFromAttrib(Console, Attribute)   ((Console)->Colors[(Attribute) & 0xF])
@@ -70,8 +56,9 @@ typedef struct _CONSOLE_INFO
 #define BkgdAttribFromAttrib(Attribute)     (((Attribute) >> 4) & 0xF)
 #define MakeAttrib(TextAttrib, BkgdAttrib)  (DWORD)((((BkgdAttrib) & 0xF) << 4) | ((TextAttrib) & 0xF))
 
-
-/* Used to communicate with console.dll */
+/*
+ * Structure used to communicate with console.dll
+ */
 typedef struct _CONSOLE_PROPS
 {
     HWND hConsoleWindow;
@@ -80,10 +67,19 @@ typedef struct _CONSOLE_PROPS
     BOOLEAN AppliedConfig;
     DWORD   ActiveStaticControl;
 
-    CONSOLE_INFO ci;
+    CONSOLE_INFO ci;            /* Console-specific informations */
+    TERMINAL_INFO TerminalInfo; /* Frontend-specific parameters  */
 } CONSOLE_PROPS, *PCONSOLE_PROPS;
 
 /* FUNCTIONS ******************************************************************/
+
+#ifndef CONSOLE_H__ // If we aren't included by console.dll
+
+BOOL ConSrvOpenUserSettings(DWORD ProcessId,
+                            LPCWSTR ConsoleTitle,
+                            PHKEY hSubKey,
+                            REGSAM samDesired,
+                            BOOL bCreate);
 
 BOOL ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
                             IN DWORD ProcessId);
@@ -91,5 +87,9 @@ BOOL ConSrvWriteUserSettings(IN PCONSOLE_INFO ConsoleInfo,
                              IN DWORD ProcessId);
 VOID ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
                               IN DWORD ProcessId);
+VOID ConSrvApplyUserSettings(IN PCONSOLE Console,
+                             IN PCONSOLE_INFO ConsoleInfo);
+
+#endif
 
 /* EOF */

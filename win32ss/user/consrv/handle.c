@@ -399,7 +399,6 @@ ConSrvReleaseObject(Object_t *Object,
 NTSTATUS
 FASTCALL
 ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                      LPCWSTR AppPath,
                       PHANDLE pInputHandle,
                       PHANDLE pOutputHandle,
                       PHANDLE pErrorHandle,
@@ -408,7 +407,7 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Initialize a new Console owned by this process */
-    Status = ConSrvInitConsole(&ProcessData->Console, AppPath, ConsoleStartInfo, ProcessData->Process);
+    Status = ConSrvInitConsole(&ProcessData->Console, ConsoleStartInfo, ProcessData->Process);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console initialization failed\n");
@@ -693,7 +692,6 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
         /* Initialize a new Console owned by the Console Leader Process */
         Status = ConSrvAllocateConsole(ProcessData,
-                                       ConnectInfo->AppPath,
                                        &ConnectInfo->InputHandle,
                                        &ConnectInfo->OutputHandle,
                                        &ConnectInfo->ErrorHandle,

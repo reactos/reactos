@@ -8,6 +8,9 @@
 
 #include "console.h"
 
+#define NDEBUG
+#include <debug.h>
+
 const TCHAR szPreviewText[] =
     _T("C:\\ReactOS> dir                       \n") \
     _T("SYSTEM       <DIR>      03-03-13  5:00a\n") \
@@ -23,6 +26,7 @@ VOID
 PaintConsole(LPDRAWITEMSTRUCT drawItem,
              PCONSOLE_PROPS pConInfo)
 {
+    PGUI_CONSOLE_INFO GuiInfo = pConInfo->TerminalInfo.TermInfo;
     HBRUSH hBrush;
     RECT cRect, fRect;
     DWORD startx, starty;
@@ -34,8 +38,8 @@ PaintConsole(LPDRAWITEMSTRUCT drawItem,
     sizex = drawItem->rcItem.right - drawItem->rcItem.left;
     sizey = drawItem->rcItem.bottom - drawItem->rcItem.top;
 
-    if ( pConInfo->ci.u.GuiInfo.WindowOrigin.x == MAXDWORD &&
-         pConInfo->ci.u.GuiInfo.WindowOrigin.y == MAXDWORD )
+    if ( GuiInfo->WindowOrigin.x == MAXDWORD &&
+         GuiInfo->WindowOrigin.y == MAXDWORD )
     {
         startx = sizex / 3;
         starty = sizey / 3;
@@ -133,6 +137,7 @@ LayoutProc(HWND hwndDlg,
     LPNMUPDOWN lpnmud;
     LPPSHNOTIFY lppsn;
     PCONSOLE_PROPS pConInfo = (PCONSOLE_PROPS)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    PGUI_CONSOLE_INFO GuiInfo = (pConInfo ? pConInfo->TerminalInfo.TermInfo : NULL);
 
     UNREFERENCED_PARAMETER(hwndDlg);
     UNREFERENCED_PARAMETER(wParam);
@@ -144,6 +149,7 @@ LayoutProc(HWND hwndDlg,
             DWORD xres, yres;
             HDC hDC;
             pConInfo = (PCONSOLE_PROPS)((LPPROPSHEETPAGE)lParam)->lParam;
+            GuiInfo  = pConInfo->TerminalInfo.TermInfo;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
 
             SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_SCREEN_BUFFER_HEIGHT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
@@ -162,11 +168,11 @@ LayoutProc(HWND hwndDlg,
             SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(xres, 0));
             SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP), UDM_SETRANGE, 0, (LPARAM)MAKELONG(yres, 0));
 
-            if ( pConInfo->ci.u.GuiInfo.WindowOrigin.x != MAXDWORD &&
-                 pConInfo->ci.u.GuiInfo.WindowOrigin.y != MAXDWORD )
+            if ( GuiInfo->WindowOrigin.x != MAXDWORD &&
+                 GuiInfo->WindowOrigin.y != MAXDWORD )
             {
-                SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, pConInfo->ci.u.GuiInfo.WindowOrigin.x, FALSE);
-                SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, pConInfo->ci.u.GuiInfo.WindowOrigin.y, FALSE);
+                SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, GuiInfo->WindowOrigin.x, FALSE);
+                SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, GuiInfo->WindowOrigin.y, FALSE);
             }
             else
             {
@@ -288,7 +294,7 @@ LayoutProc(HWND hwndDlg,
 
                 pConInfo->ci.ScreenBufferSize = (COORD){swidth, sheight};
                 pConInfo->ci.ConsoleSize = (COORD){wwidth, wheight};
-                pConInfo->ci.u.GuiInfo.WindowOrigin = (POINT){left, top};
+                GuiInfo->WindowOrigin = (POINT){left, top};
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             }
             break;
@@ -335,7 +341,7 @@ LayoutProc(HWND hwndDlg,
 
                         pConInfo->ci.ScreenBufferSize = (COORD){swidth, sheight};
                         pConInfo->ci.ConsoleSize = (COORD){wwidth, wheight};
-                        pConInfo->ci.u.GuiInfo.WindowOrigin = (POINT){left, top};
+                        GuiInfo->WindowOrigin = (POINT){left, top};
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -350,7 +356,7 @@ LayoutProc(HWND hwndDlg,
 
                         left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, FALSE);
                         top = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, NULL, FALSE);
-                        pConInfo->ci.u.GuiInfo.WindowOrigin = (POINT){left, top};
+                        GuiInfo->WindowOrigin = (POINT){left, top};
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), TRUE);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP), TRUE);
@@ -359,7 +365,7 @@ LayoutProc(HWND hwndDlg,
                     }
                     else if (res == BST_UNCHECKED)
                     {
-                        pConInfo->ci.u.GuiInfo.WindowOrigin = (POINT){UINT_MAX, UINT_MAX};
+                        GuiInfo->WindowOrigin = (POINT){UINT_MAX, UINT_MAX};
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), FALSE);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP), FALSE);

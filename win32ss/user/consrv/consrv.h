@@ -167,7 +167,6 @@ NTSTATUS FASTCALL ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
 VOID FASTCALL ConSrvReleaseObject(Object_t *Object,
                                  BOOL IsConsoleLocked);
 NTSTATUS FASTCALL ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                                        LPCWSTR AppPath,
                                         PHANDLE pInputHandle,
                                         PHANDLE pOutputHandle,
                                         PHANDLE pErrorHandle,

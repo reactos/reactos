@@ -16,7 +16,7 @@
 #include "resource.h"
 
 /* Shared header with consrv.dll */
-#include "settings.h"
+#include "consolecpl.h"
 
 typedef struct
 {

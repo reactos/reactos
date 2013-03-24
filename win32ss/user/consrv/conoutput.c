@@ -229,14 +229,14 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                 }
                 continue;
             }
-            /* --- BEL ---*/
-            else if (Buffer[i] == '\a')
-            {
-                // FIXME: This MUST BE moved to the terminal emulator!!
-                DPRINT1("Bell\n");
-                // SendNotifyMessage(Console->hWindow, PM_CONSOLE_BEEP, 0, 0);
-                continue;
-            }
+            // /* --- BEL ---*/
+            // else if (Buffer[i] == '\a')
+            // {
+                // // FIXME: This MUST BE moved to the terminal emulator frontend!!
+                // DPRINT1("Bell\n");
+                // // SendNotifyMessage(Console->hWindow, PM_CONSOLE_BEEP, 0, 0);
+                // continue;
+            // }
         }
         UpdateRect.Left = min(UpdateRect.Left, (LONG)Buff->CursorPosition.X);
         UpdateRect.Right = max(UpdateRect.Right, (LONG)Buff->CursorPosition.X);
@@ -419,7 +419,7 @@ ConioDrawConsole(PCONSOLE Console)
 {
     SMALL_RECT Region;
 
-    ConioInitRect(&Region, 0, 0, Console->Size.Y - 1, Console->Size.X - 1);
+    ConioInitRect(&Region, 0, 0, Console->ConsoleSize.Y - 1, Console->ConsoleSize.X - 1);
     ConioDrawRegion(Console, &Region);
 }
 
@@ -1343,9 +1343,9 @@ CSR_API(SrvGetConsoleScreenBufferInfo)
     pInfo->dwCursorPosition = Buff->CursorPosition;
     pInfo->wAttributes = Buff->ScreenDefaultAttrib;
     pInfo->srWindow.Left = Buff->ShowX;
-    pInfo->srWindow.Right = Buff->ShowX + Console->Size.X - 1;
+    pInfo->srWindow.Right = Buff->ShowX + Console->ConsoleSize.X - 1;
     pInfo->srWindow.Top = Buff->ShowY;
-    pInfo->srWindow.Bottom = Buff->ShowY + Console->Size.Y - 1;
+    pInfo->srWindow.Bottom = Buff->ShowY + Console->ConsoleSize.Y - 1;
     pInfo->dwMaximumWindowSize = Buff->ScreenBufferSize;
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);

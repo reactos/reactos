@@ -11,6 +11,7 @@ list(APPEND SOURCE
     conoutput.c
     console.c
     guiconsole.c
+    guisettings.c
     handle.c
     init.c
     lineinput.c

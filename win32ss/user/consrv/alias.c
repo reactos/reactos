@@ -42,11 +42,8 @@ IntFindAliasHeader(PALIAS_HEADER RootHeader, LPCWSTR lpExeName)
     while(RootHeader)
     {
         INT diff = _wcsicmp(RootHeader->lpExeName, lpExeName);
-        if (!diff)
-            return RootHeader;
-
-        if (diff > 0)
-            break;
+        if (!diff) return RootHeader;
+        if (diff > 0) break;
 
         RootHeader = RootHeader->Next;
     }
@@ -60,8 +57,7 @@ IntCreateAliasHeader(LPCWSTR lpExeName)
     UINT dwLength = wcslen(lpExeName) + 1;
 
     Entry = RtlAllocateHeap(ConSrvHeap, 0, sizeof(ALIAS_HEADER) + sizeof(WCHAR) * dwLength);
-    if (!Entry)
-        return Entry;
+    if (!Entry) return Entry;
 
     Entry->lpExeName = (LPCWSTR)(Entry + 1);
     wcscpy((PWCHAR)Entry->lpExeName, lpExeName);
@@ -79,10 +75,8 @@ IntInsertAliasHeader(PALIAS_HEADER * RootHeader, PALIAS_HEADER NewHeader)
     while ((CurrentHeader = *LastLink) != NULL)
     {
         INT Diff = _wcsicmp(NewHeader->lpExeName, CurrentHeader->lpExeName);
-        if (Diff < 0)
-        {
-            break;
-        }
+        if (Diff < 0) break;
+
         LastLink = &CurrentHeader->Next;
     }
 
@@ -95,8 +89,7 @@ IntGetAliasEntry(PALIAS_HEADER Header, LPCWSTR lpSrcName)
 {
     PALIAS_ENTRY RootHeader;
 
-    if (Header == NULL)
-        return NULL;
+    if (Header == NULL) return NULL;
 
     RootHeader = Header->Data;
     while(RootHeader)
@@ -104,11 +97,8 @@ IntGetAliasEntry(PALIAS_HEADER Header, LPCWSTR lpSrcName)
         INT diff;
         DPRINT("IntGetAliasEntry->lpSource %S\n", RootHeader->lpSource);
         diff = _wcsicmp(RootHeader->lpSource, lpSrcName);
-        if (!diff)
-            return RootHeader;
-
-        if (diff > 0)
-            break;
+        if (!diff) return RootHeader;
+        if (diff > 0) break;
 
         RootHeader = RootHeader->Next;
     }
@@ -124,10 +114,8 @@ IntInsertAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY NewEntry)
     while ((CurrentEntry = *LastLink) != NULL)
     {
         INT Diff = _wcsicmp(NewEntry->lpSource, CurrentEntry->lpSource);
-        if (Diff < 0)
-        {
-            break;
-        }
+        if (Diff < 0) break;
+
         LastLink = &CurrentEntry->Next;
     }
 
@@ -146,8 +134,7 @@ IntCreateAliasEntry(LPCWSTR lpSource, LPCWSTR lpTarget)
     dwTarget = wcslen(lpTarget) + 1;
 
     Entry = RtlAllocateHeap(ConSrvHeap, 0, sizeof(ALIAS_ENTRY) + sizeof(WCHAR) * (dwSource + dwTarget));
-    if (!Entry)
-        return Entry;
+    if (!Entry) return Entry;
 
     Entry->lpSource = (LPCWSTR)(Entry + 1);
     wcscpy((LPWSTR)Entry->lpSource, lpSource);
