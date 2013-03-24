@@ -94,6 +94,7 @@ endif()
 # PSEH
 if(GCC_VERSION VERSION_GREATER 4.7)
     set(USE_PSEH3 1)
+    add_definitions(-D_USE_PSEH3=1)
 endif()
 
 # Other
