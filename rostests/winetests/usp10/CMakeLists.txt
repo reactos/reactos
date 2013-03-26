@@ -1,7 +1,7 @@
 
 add_definitions(
     -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+    -D__WINESRC__)
 
 add_executable(usp10_winetest usp10.c testlist.c)
 target_link_libraries(usp10_winetest wine)

@@ -28,7 +28,10 @@
 #include <stdio.h>
 
 #include <wine/test.h>
-#include <windows.h>
+#include <winnls.h>
+#include <wingdi.h>
+#include <winuser.h>
+//#include <windows.h>
 #include <usp10.h>
 
 typedef struct _itemTest {
@@ -1791,9 +1794,9 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
     ok (hr == S_OK, "ScriptGetCMap should return S_OK not (%08x)\n", hr);
     ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
     ok(pwOutGlyphs3[0] == pwOutGlyphs2[0], "glyph incorrectly altered\n");
-    ok(pwOutGlyphs3[1] == pwOutGlyphs2[1], "glyph incorreclty altered\n");
-    ok(pwOutGlyphs3[2] == pwOutGlyphs2[2], "glyph incorreclty altered\n");
-    ok(pwOutGlyphs3[3] == pwOutGlyphs2[3], "glyph incorreclty altered\n");
+    ok(pwOutGlyphs3[1] == pwOutGlyphs2[1], "glyph incorrectly altered\n");
+    ok(pwOutGlyphs3[2] == pwOutGlyphs2[2], "glyph incorrectly altered\n");
+    ok(pwOutGlyphs3[3] == pwOutGlyphs2[3], "glyph incorrectly altered\n");
     ok(pwOutGlyphs3[4] == pwOutGlyphs2[4], "glyph not mirrored correctly\n");
     ok(pwOutGlyphs3[5] == pwOutGlyphs2[5], "glyph not mirrored correctly\n");
     ok(pwOutGlyphs3[6] == pwOutGlyphs2[6], "glyph not mirrored correctly\n");
@@ -1860,7 +1863,7 @@ static void test_ScriptGetFontProperties(HDC hdc)
     static const WCHAR invalids[] = {0x0020, 0x200B, 0xF71B};
     /* U+0020: numeric space
        U+200B: zero width space
-       U+F71B: unkown, found by black box testing */
+       U+F71B: unknown, found by black box testing */
     BOOL is_terminal, is_arial, is_times_new_roman, is_arabic = (system_lang_id == LANG_ARABIC);
 
     /* Some sanity checks for ScriptGetFontProperties */
@@ -2786,6 +2789,11 @@ static void test_ScriptLayout(void)
 
         { 0, 0, 1, 1, 2, 2, 1, 1, 0, 1 },
         { 1, 0, 1, 2, 2, 1, 2, 1, 0, 1 },
+
+        { 1, 2, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 2, 2, 2, 0, 0, 0, 0, 0, 0, 0 },
+        { 2, 2, 2, 4, 4, 4, 1, 1, 0, 0 },
+        { 1, 2, 3, 0, 3, 2, 1, 0, 0, 0 }
     };
     static const int expect_l2v[][10] =
     {
@@ -2802,6 +2810,11 @@ static void test_ScriptLayout(void)
 
         { 0, 1, 7, 6, 4, 5, 3 ,2 ,8, 9},
 /**/    { 0, 1, 7, 5, 6, 4, 3 ,2 ,8, 9},
+
+        { 1, 0, 2, 3, 4, 5, 6, 7, 8, 9},
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+        { 2, 3, 4, 5, 6, 7, 1, 0, 8, 9},
+        { 2, 0, 1, 3, 5, 6, 4, 7, 8, 9}
     };
     static const int expect_v2l[][10] =
     {
@@ -2818,6 +2831,11 @@ static void test_ScriptLayout(void)
 
         { 0, 1, 7, 6, 4, 5, 3 ,2 ,8, 9},
         { 0, 1, 7, 6, 5, 3, 4 ,2 ,8, 9},
+
+        { 1, 0, 2, 3, 4, 5, 6, 7, 8, 9},
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+        { 7, 6, 0, 1, 2, 3, 4, 5, 8, 9},
+        { 1, 2, 0, 3, 6, 4, 5, 7, 8, 9}
     };
 
     int i, j, vistolog[sizeof(levels[0])], logtovis[sizeof(levels[0])];
