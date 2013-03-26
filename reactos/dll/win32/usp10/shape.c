@@ -931,7 +931,7 @@ static void mark_invalid_combinations(HDC hdc, const WCHAR* pwcChars, INT cChars
        context_type[i] = lex(pwcChars[i]);
 
     GetGlyphIndicesW(hdc, &invalid, 1, &invalid_glyph, 0);
-    for (i = 1, g=1; i < cChars; i++, g++)
+    for (i = 1, g=1; i < cChars - 1; i++, g++)
     {
         if (context_type[i] != 0 && context_type[i+write_dir]==context_type[i])
         {
