@@ -3,6 +3,7 @@ list(APPEND SOURCE
     LdrEnumResources.c
     NtAllocateVirtualMemory.c
     NtFreeVirtualMemory.c
+    NtMapViewOfSection.c
     NtQuerySystemEnvironmentValue.c
     RtlBitmap.c
     RtlDetermineDosPathNameType.c

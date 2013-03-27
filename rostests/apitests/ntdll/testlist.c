@@ -6,6 +6,7 @@
 extern void func_LdrEnumResources(void);
 extern void func_NtAllocateVirtualMemory(void);
 extern void func_NtFreeVirtualMemory(void);
+extern void func_NtMapViewOfSection(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
 extern void func_NtSystemInformation(void);
 extern void func_RtlBitmap(void);
@@ -26,6 +27,7 @@ const struct test winetest_testlist[] =
     { "LdrEnumResources",               func_LdrEnumResources },
     { "NtAllocateVirtualMemory",        func_NtAllocateVirtualMemory },
     { "NtFreeVirtualMemory",            func_NtFreeVirtualMemory },
+    { "NtMapViewOfSection",             func_NtMapViewOfSection },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
     { "NtSystemInformation",            func_NtSystemInformation },
     { "RtlBitmapApi",                   func_RtlBitmap },

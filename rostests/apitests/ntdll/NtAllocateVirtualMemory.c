@@ -9,6 +9,7 @@
 #include <wine/test.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/mmfuncs.h>
+#include <pseh/pseh2.h>
 
 static PVOID Allocations[4096] = { NULL };
 static ULONG CurrentAllocation = 0;
@@ -198,6 +199,275 @@ CheckMemory2(
     return TRUE;
 }
 
+VOID
+CheckSize(ULONG_PTR Base, SIZE_T InSize, SIZE_T ExpectedSize)
+{
+    NTSTATUS Status;
+    PVOID BaseAddress;
+    SIZE_T Size;
+
+    /* Reserve memory */
+    BaseAddress = UlongToPtr(Base);
+    Size = InSize;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_NOACCESS);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+    ok(BaseAddress == UlongToPtr(Base & ~0xFFFF), "Got back wrong base address: %p\n", BaseAddress);
+    ok(Size == ExpectedSize, "Alloc of 0x%Ix: got back wrong size: 0x%Ix, expected 0x%Ix\n", InSize, Size, ExpectedSize);
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed!\n");
+}
+
+VOID
+CheckAlignment()
+{
+    NTSTATUS Status;
+    PVOID BaseAddress;
+    SIZE_T Size;
+
+    CheckSize(0x50000000, 0x0001, 0x1000);
+    CheckSize(0x50008000, 0x0001, 0x9000);
+    CheckSize(0x50000010, 0x1000, 0x2000);
+    CheckSize(0x50010000, 0x2000, 0x2000);
+    CheckSize(0x5000FFFF, 0x3000, 0x13000);
+    CheckSize(0x50001010, 0x7000, 0x9000);
+    CheckSize(0x50001010, 0xC000, 0xe000);
+
+    /* Reserve memory not aligned to allocation granularity */
+    BaseAddress = UlongToPtr(0x50001010);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_NOACCESS);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+    ok(BaseAddress == UlongToPtr(0x50000000), "Got back wrong base address: %p", BaseAddress);
+    ok(Size == 0x3000, "Got back wrong size: 0x%Ix", Size);
+
+    /* Try to reserve again in the same 64k region */
+    BaseAddress = UlongToPtr(0x50008000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_NOACCESS);
+    ok(!NT_SUCCESS(Status), "NtAllocateVirtualMemory should fail!\n");
+
+    /* Commit memory */
+    BaseAddress = UlongToPtr(0x50002000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_NOACCESS);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+    ok(BaseAddress == UlongToPtr(0x50002000), "Got back wrong base address: %p", BaseAddress);
+    ok(Size == 0x1000, "Got back wrong size: 0x%Ix", Size);
+
+    /* Commit memory */
+    BaseAddress = UlongToPtr(0x50003000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_NOACCESS);
+    ok(!NT_SUCCESS(Status), "NtAllocateVirtualMemory should fail!\n");
+
+    /* Try to release memory in a different 64k region */
+    BaseAddress = UlongToPtr(0x50010000);
+    Size = 0x1000;
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(!NT_SUCCESS(Status), "NtFreeVirtualMemory should fail!\n");
+
+    /* Release the memory in the same 64k region at a different address */
+    BaseAddress = UlongToPtr(0x50008000);
+    Size = 0x1000;
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(!NT_SUCCESS(Status), "NtFreeVirtualMemory failed!\n");
+
+    /* Release the memory at the correct address but with wrong size */
+    BaseAddress = UlongToPtr(0x50000000);
+    Size = 0x4000;
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(!NT_SUCCESS(Status), "NtFreeVirtualMemory should fail!\n");
+
+    /* Release the memory */
+    BaseAddress = UlongToPtr(0x50000000);
+    Size = 0x3000;
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed!\n");
+
+    /* Reserve and commit at once */
+    BaseAddress = UlongToPtr(0x50004080);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE | MEM_COMMIT,
+                                     PAGE_READWRITE);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+    ok(BaseAddress == UlongToPtr(0x50000000), "Got back wrong base address: %p", BaseAddress);
+    ok(Size == 0x6000, "Got back wrong size: 0x%Ix", Size);
+
+    _SEH2_TRY
+    {
+        *(int*)UlongToPtr(BaseAddress) = 1;
+        *(int*)UlongToPtr(0x50004080) = 1;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ok(0, "Got exception\n");
+    }
+    _SEH2_END;
+
+    /* Release the memory */
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed!\n");
+
+}
+
+static
+VOID
+CheckAdjacentVADs()
+{
+    NTSTATUS Status;
+    PVOID BaseAddress;
+    SIZE_T Size;
+
+    /* Reserve a full 64k region */
+    BaseAddress = UlongToPtr(0x50000000);
+    Size = 0x10000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_NOACCESS);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+    if (!NT_SUCCESS(Status))
+        return;
+
+    /* Reserve another 64k region, but with 64k between */
+    BaseAddress = UlongToPtr(0x50020000);
+    Size = 0x10000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_NOACCESS);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+    if (!NT_SUCCESS(Status))
+        return;
+
+    /* Try to free the whole at once */
+    BaseAddress = UlongToPtr(0x50000000);
+    Size = 0x30000;
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(!NT_SUCCESS(Status), "NtFreeVirtualMemory should fail!\n");
+
+    /* Reserve the part in the middle */
+    BaseAddress = UlongToPtr(0x50010000);
+    Size = 0x10000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_NOACCESS);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+
+    /* Try to commit memory covering 2 allocations */
+    BaseAddress = UlongToPtr(0x50004000);
+    Size = 0x10000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_NOACCESS);
+    ok(!NT_SUCCESS(Status), "NtAllocateVirtualMemory should fail!\n");
+
+    /* Allocate a page */
+    BaseAddress = UlongToPtr(0x50000000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+
+    /* Allocate another page */
+    BaseAddress = UlongToPtr(0x50002000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_NOACCESS);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+
+    _SEH2_TRY
+    {
+        *(int*)UlongToPtr(0x50000000) = 1;
+        //*(int*)UlongToPtr(0x50002000) = 1;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ok(0, "Got exception\n");
+    }
+    _SEH2_END;
+
+    /* Allocate 3 pages, on top of the previous 2 */
+    BaseAddress = UlongToPtr(0x50000000);
+    Size = 0x3000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_NOACCESS);
+    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+
+    /* Try to free the whole region at once */
+    BaseAddress = UlongToPtr(0x50000000);
+    Size = 0x30000;
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(!NT_SUCCESS(Status), "NtFreeVirtualMemory should fail!\n");
+
+    BaseAddress = UlongToPtr(0x50000000);
+    Size = 0x10000;
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed!\n");
+
+    BaseAddress = UlongToPtr(0x50010000);
+    Size = 0x10000;
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed!\n");
+
+    BaseAddress = UlongToPtr(0x50020000);
+    Size = 0x10000;
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed!\n");
+
+}
+
 #define RUNS 32
 
 START_TEST(NtAllocateVirtualMemory)
@@ -205,6 +475,9 @@ START_TEST(NtAllocateVirtualMemory)
     PVOID Mem1, Mem2;
     SIZE_T Size1, Size2;
     ULONG i;
+
+    CheckAlignment();
+    CheckAdjacentVADs();
 
     Size1 = 32;
     Mem1 = Allocate(Size1);
