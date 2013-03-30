@@ -19,7 +19,7 @@ IDS_WLAN_DISCONNECT, "\nWLAN disconnesso\n"
 /* === */
 IDS_MSG_WEP_ENABLED, "WEP abilitato: %s\n"
 IDS_MSG_NETWORK_MODE, "Modalità di rete: %s\n"
-IDS_MSG_CURRENT_WIRELESS, "\Informazioni correnti per la configurazione wireless:\n\n"
+IDS_MSG_CURRENT_WIRELESS, "\nInformazioni correnti per la configurazione wireless:\n\n"
 IDS_MSG_ENCRYPTED, "Crittografia: %s\n"
 IDS_MSG_NETWORK_TYPE, "Tipologia rete: %s\n"
 IDS_MSG_RSSI, "RSSI: %i dBm\n"
