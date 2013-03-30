@@ -34,6 +34,9 @@
 /* Public Win32K Headers */
 #include <ntuser.h>
 
+/* PSEH for SEH Support */
+#include <pseh/pseh2.h>
+
 /* CSRSS Header */
 #include <csr/csrsrv.h>
 
@@ -91,6 +94,20 @@ typedef struct _CONSOLE_PROCESS_DATA
     LPTHREAD_START_ROUTINE CtrlDispatcher;
     LPTHREAD_START_ROUTINE PropDispatcher; // We hold the property dialog handler there, till all the GUI thingie moves out from CSRSS.
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
+
+
+#if 1 // Temporarily put there.
+/*
+ * WARNING: Change the state of the console ONLY when the console is locked !
+ */
+typedef enum _CONSOLE_STATE
+{
+    CONSOLE_INITIALIZING,   /* Console is initializing */
+    CONSOLE_RUNNING     ,   /* Console running */
+    CONSOLE_TERMINATING ,   /* Console about to be destroyed (but still not) */
+    CONSOLE_IN_DESTRUCTION  /* Console in destruction */
+} CONSOLE_STATE, *PCONSOLE_STATE;
+#endif
 
 
 /* alias.c */
@@ -177,12 +194,12 @@ NTSTATUS FASTCALL ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                        PHANDLE pInputHandle,
                                        PHANDLE pOutputHandle,
                                        PHANDLE pErrorHandle);
-VOID FASTCALL ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData);
 NTSTATUS FASTCALL ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                    struct _CONSOLE** Console,
                                    BOOL LockConsole);
 VOID FASTCALL ConSrvReleaseConsole(struct _CONSOLE* Console,
-                                   BOOL IsConsoleLocked);
+                                   BOOL WasConsoleLocked);
+VOID FASTCALL ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData);
 
 NTSTATUS NTAPI ConSrvNewProcess(PCSR_PROCESS SourceProcess,
                                 PCSR_PROCESS TargetProcess);

@@ -147,12 +147,27 @@ typedef struct _FRONTEND_IFACE
     PVOID OldData;          /* Reserved      */
 } FRONTEND_IFACE, *PFRONTEND_IFACE;
 
+#if 0 // Temporarily put in consrv.h
+/*
+ * WARNING: Change the state of the console ONLY when the console is locked !
+ */
+typedef enum _CONSOLE_STATE
+{
+    CONSOLE_INITIALIZING,   /* Console is initializing */
+    CONSOLE_RUNNING     ,   /* Console running */
+    CONSOLE_TERMINATING ,   /* Console about to be destroyed (but still not) */
+    CONSOLE_IN_DESTRUCTION  /* Console in destruction */
+} CONSOLE_STATE, *PCONSOLE_STATE;
+#endif
+
 typedef struct _CONSOLE
 {
-    LONG ReferenceCount;                    /* Is incremented each time a handle to a screen-buffer or the input buffer of this console gets referenced, or the console gets locked */
+    LONG ReferenceCount;                    /* Is incremented each time a handle to something in the console (a screen-buffer or the input buffer of this console) gets referenced */
     CRITICAL_SECTION Lock;
+    CONSOLE_STATE State;                    /* State of the console */
 
-    struct _CONSOLE *Prev, *Next;           /* Next and Prev consoles in console wheel */
+    // struct _CONSOLE *Prev, *Next;           /* Next and Prev consoles in console wheel */
+    LIST_ENTRY Entry;                       /* Entry in the list of consoles */
     LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
 
     FRONTEND_IFACE TermIFace;               /* Frontend-specific interface */
@@ -218,11 +233,6 @@ typedef struct _CONSOLE
 #define PAUSED_FROM_SELECTION 0x4
 
 /* console.c */
-VOID WINAPI ConSrvDeleteConsole(PCONSOLE Console);
-VOID WINAPI ConSrvInitConsoleSupport(VOID);
-NTSTATUS WINAPI ConSrvInitConsole(OUT PCONSOLE* NewConsole,
-                                  IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
-                                  IN PCSR_PROCESS ConsoleLeaderProcess);
 VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
 ULONG FASTCALL ConSrvConsoleProcessCtrlEvent(PCONSOLE Console,

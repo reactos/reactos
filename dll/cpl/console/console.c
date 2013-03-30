@@ -87,6 +87,8 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
 {
     PGUI_CONSOLE_INFO GuiInfo = NULL;
 
+    /* FIXME: Get also the defaults from the registry */
+
     /* Initialize the default properties */
     pConInfo->ci.HistoryBufferSize = 50;
     pConInfo->ci.NumberOfHistoryBuffers = 4;
@@ -108,7 +110,8 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     /* Adapted for holding GUI terminal information */
     pConInfo->TerminalInfo.Size = sizeof(GUI_CONSOLE_INFO);
     GuiInfo = pConInfo->TerminalInfo.TermInfo = (PGUI_CONSOLE_INFO)(pConInfo + 1);
-    GuiInfo->FaceName[0] = L'\0';
+    wcsncpy(GuiInfo->FaceName, L"Fixedsys", LF_FACESIZE); // HACK: !!
+    // GuiInfo->FaceName[0] = L'\0';
     GuiInfo->FontFamily = FF_DONTCARE;
     GuiInfo->FontSize = 0;
     GuiInfo->FontWeight = FW_DONTCARE;
@@ -166,16 +169,35 @@ BOOL
 ApplyConsoleInfo(HWND hwndDlg,
                  PCONSOLE_PROPS pConInfo)
 {
-    INT_PTR res = 0;
+    BOOL SetParams  = FALSE;
+    BOOL SaveParams = FALSE;
 
-    res = DialogBox(hApplet, MAKEINTRESOURCE(IDD_APPLYOPTIONS), hwndDlg, ApplyProc);
-    if (res == IDCANCEL)
+    /*
+     * If we are setting the default parameters, just save them,
+     * otherwise display the save-confirmation dialog.
+     */
+    if (pConInfo->ShowDefaultParams)
     {
-        /* Don't destroy when user presses cancel */
-        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
-        return TRUE;
+        SetParams  = TRUE;
+        SaveParams = TRUE;
     }
-    else if (res == IDC_RADIO_APPLY_ALL || res == IDC_RADIO_APPLY_CURRENT)
+    else
+    {
+        INT_PTR res = DialogBox(hApplet, MAKEINTRESOURCE(IDD_APPLYOPTIONS), hwndDlg, ApplyProc);
+
+        SetParams  = (res != IDCANCEL);
+        SaveParams = (res == IDC_RADIO_APPLY_ALL);
+
+        if (SetParams == FALSE)
+        {
+            /* Don't destroy when user presses cancel */
+            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+            // return TRUE;
+        }
+    }
+
+    // if (res == IDC_RADIO_APPLY_ALL || res == IDC_RADIO_APPLY_CURRENT)
+    if (SetParams)
     {
         HANDLE hSection;
         PCONSOLE_PROPS pSharedInfo;
@@ -207,10 +229,15 @@ ApplyConsoleInfo(HWND hwndDlg,
         /* We are applying the chosen configuration */
         pConInfo->AppliedConfig = TRUE;
 
-        /* Copy the console info into the section */
+        /*
+         * Copy the console information into the section and
+         * offsetize the address of terminal-specific information.
+         * Do not perform the offsetization in pConInfo as it is
+         * likely to be reused later on. Instead, do it in pSharedInfo
+         * after having copied all the data.
+         */
         RtlCopyMemory(pSharedInfo, pConInfo, sizeof(CONSOLE_PROPS) + sizeof(GUI_CONSOLE_INFO));
-        /* Offsetize */
-        pSharedInfo->TerminalInfo.TermInfo = (PVOID)((ULONG_PTR)pSharedInfo->TerminalInfo.TermInfo - (ULONG_PTR)pSharedInfo);
+        pSharedInfo->TerminalInfo.TermInfo = (PVOID)((ULONG_PTR)pConInfo->TerminalInfo.TermInfo - (ULONG_PTR)pConInfo);
 
         /* Unmap it */
         UnmapViewOfFile(pSharedInfo);
@@ -220,11 +247,10 @@ ApplyConsoleInfo(HWND hwndDlg,
         SendMessage(pConInfo->hConsoleWindow,
                     PM_APPLY_CONSOLE_INFO,
                     (WPARAM)hSection,
-                    (LPARAM)(res == IDC_RADIO_APPLY_ALL));
+                    (LPARAM)SaveParams);
 
         /* Close the section and return */
         CloseHandle(hSection);
-        return TRUE;
     }
 
     return TRUE;

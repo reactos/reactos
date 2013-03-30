@@ -21,11 +21,18 @@
     #include "tuiconsole.h"
 #endif
 
+#include "console.h"
+
 #include <shlwapi.h>
 #include <shlobj.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
+
+/* GLOBALS ********************************************************************/
+
+LIST_ENTRY ConsoleList;  /* The list of all the allocated consoles */
+/*static*/ RTL_RESOURCE ListLock;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -44,26 +51,43 @@ ConSrvConsoleCtrlEventTimeout(DWORD Event,
                               DWORD Timeout)
 {
     ULONG Status = ERROR_SUCCESS;
-    HANDLE Thread;
 
-    DPRINT("ConSrvConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
+    DPRINT("ConSrvConsoleCtrlEventTimeout Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
 
     if (ProcessData->CtrlDispatcher)
     {
-        Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
-                                    ProcessData->CtrlDispatcher,
-                                    UlongToPtr(Event), 0, NULL);
-        if (NULL == Thread)
+        _SEH2_TRY
         {
-            Status = GetLastError();
-            DPRINT1("Failed thread creation (Error: 0x%x)\n", Status);
+            HANDLE Thread = NULL;
+
+            _SEH2_TRY
+            {
+                Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
+                                            ProcessData->CtrlDispatcher,
+                                            UlongToPtr(Event), 0, NULL);
+                if (NULL == Thread)
+                {
+                    Status = GetLastError();
+                    DPRINT1("Failed thread creation (Error: 0x%x)\n", Status);
+                }
+                else
+                {
+                    DPRINT("ProcessData->CtrlDispatcher remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
+                    WaitForSingleObject(Thread, Timeout);
+                }
+            }
+            _SEH2_FINALLY
+            {
+                CloseHandle(Thread);
+            }
+            _SEH2_END;
         }
-        else
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            DPRINT("We succeeded at creating ProcessData->CtrlDispatcher remote thread, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
-            WaitForSingleObject(Thread, Timeout);
-            CloseHandle(Thread);
+            Status = RtlNtStatusToDosError(_SEH2_GetExceptionCode());
+            DPRINT1("ConSrvConsoleCtrlEventTimeout - Caught an exception, Status = %08X\n", Status);
         }
+        _SEH2_END;
     }
 
     return Status;
@@ -84,6 +108,10 @@ ConSrvConsoleProcessCtrlEvent(PCONSOLE Console,
     ULONG Status = ERROR_SUCCESS;
     PLIST_ENTRY current_entry;
     PCONSOLE_PROCESS_DATA current;
+
+    /* If the console is already being destroyed, just return */
+    if (!ConSrvValidateConsole(Console, CONSOLE_RUNNING, FALSE))
+        return STATUS_UNSUCCESSFUL;
 
     /*
      * Loop through the process list, from the most recent process
@@ -139,6 +167,18 @@ ConioUnpause(PCONSOLE Console, UINT Flags)
             CsrDereferenceWait(&Console->WriteWaitQueue);
         }
     }
+}
+
+VOID WINAPI
+ConSrvInitConsoleSupport(VOID)
+{
+    DPRINT("CONSRV: ConSrvInitConsoleSupport()\n");
+
+    /* Initialize the console list and its lock */
+    InitializeListHead(&ConsoleList);
+    RtlInitializeResource(&ListLock);
+
+    /* Should call LoadKeyboardLayout */
 }
 
 static BOOL
@@ -346,6 +386,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     /*
      * Initialize the console
      */
+    Console->State = CONSOLE_INITIALIZING;
     InitializeCriticalSection(&Console->Lock);
     Console->ReferenceCount = 0;
     InitializeListHead(&Console->ProcessList);
@@ -428,6 +469,9 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
         RtlCreateUnicodeString(&Console->Title, ConsoleInfo.ConsoleTitle);
     }
 
+    /* Lock the console until its initialization is finished */
+    // EnterCriticalSection(&Console->Lock);
+
     /*
      * If we are not in GUI-mode, start the text-mode terminal emulator.
      * If we fail, try to start the GUI-mode terminal emulator.
@@ -480,14 +524,33 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
             RtlFreeUnicodeString(&Console->OriginalTitle);
             ConioDeleteScreenBuffer(NewBuffer);
             CloseHandle(Console->InputBuffer.ActiveEvent);
+            // LeaveCriticalSection(&Console->Lock);
             DeleteCriticalSection(&Console->Lock);
             RtlFreeHeap(ConSrvHeap, 0, Console);
             return Status;
         }
     }
 
+    DPRINT1("Terminal initialized\n");
+
+    /* All went right, so add the console to the list */
+    ConSrvLockConsoleListExclusive();
+    DPRINT1("Insert in the list\n");
+    InsertTailList(&ConsoleList, &Console->Entry);
+
+    /* The initialization is finished */
+    DPRINT1("Change state\n");
+    Console->State = CONSOLE_RUNNING;
+
+    /* Unlock the console */
+    // LeaveCriticalSection(&Console->Lock);
+
+    /* Unlock the console list */
+    ConSrvUnlockConsoleList();
+
     /* Copy buffer contents to screen */
     ConioDrawConsole(Console);
+    DPRINT1("Console drawn\n");
 
     /* Return the newly created console to the caller and a success code too */
     *NewConsole = Console;
@@ -495,30 +558,100 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
 }
 
 VOID WINAPI
-ConSrvInitConsoleSupport(VOID)
-{
-    DPRINT("CONSRV: ConSrvInitConsoleSupport()\n");
-
-    /* Should call LoadKeyboardLayout */
-}
-
-VOID WINAPI
 ConSrvDeleteConsole(PCONSOLE Console)
 {
-    ConsoleInput *Event;
+    PLIST_ENTRY CurrentEntry;
+    ConsoleInput* Event;
 
-    DPRINT("ConSrvDeleteConsole\n");
+    DPRINT1("ConSrvDeleteConsole\n");
 
-    /* Drain input event queue */
-    while (Console->InputBuffer.InputEvents.Flink != &Console->InputBuffer.InputEvents)
+    /*
+     * Forbid validation of any console by other threads
+     * during the deletion of this console.
+     */
+    ConSrvLockConsoleListExclusive();
+
+    /* Check the existence of the console, and if it's ok, continue */
+    if (!ConSrvValidatePointer(Console))
     {
-        Event = (ConsoleInput *) Console->InputBuffer.InputEvents.Flink;
-        Console->InputBuffer.InputEvents.Flink = Console->InputBuffer.InputEvents.Flink->Flink;
-        Console->InputBuffer.InputEvents.Flink->Flink->Blink = &Console->InputBuffer.InputEvents;
+        /* Unlock the console list and return */
+        ConSrvUnlockConsoleList();
+        return;
+    }
+
+    /*
+     * If the console is already being destroyed
+     * (thus not running), just return.
+     */
+    if (!ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
+    {
+        /* Unlock the console list and return */
+        ConSrvUnlockConsoleList();
+        return;
+    }
+
+    /*
+     * We are about to be destroyed. Signal it to other people
+     * so that they can terminate what they are doing, and that
+     * they cannot longer validate the console.
+     */
+    Console->State = CONSOLE_TERMINATING;
+
+    /*
+     * Allow other threads to finish their job: basically, unlock
+     * all other calls to EnterCriticalSection(&Console->Lock); by
+     * ConSrvValidateConsole(Unsafe) functions so that they just see
+     * that we are not in CONSOLE_RUNNING state anymore, or unlock
+     * other concurrent calls to ConSrvDeleteConsole so that they
+     * can see that we are in fact already deleting the console.
+     */
+    LeaveCriticalSection(&Console->Lock);
+    ConSrvUnlockConsoleList();
+
+    /* FIXME: Send a terminate message to all the processes owning this console */
+
+    /* Cleanup the UI-oriented part */
+    ConioCleanupConsole(Console);
+
+    /***
+     * Check that the console is in terminating state before continuing
+     * (the cleanup code must not change the state of the console...
+     * ...unless to cancel console deletion ?).
+     ***/
+
+    ConSrvLockConsoleListExclusive();
+
+    /* Re-check the existence of the console, and if it's ok, continue */
+    if (!ConSrvValidatePointer(Console))
+    {
+        /* Unlock the console list and return */
+        ConSrvUnlockConsoleList();
+        return;
+    }
+
+    if (!ConSrvValidateConsoleUnsafe(Console, CONSOLE_TERMINATING, TRUE))
+    {
+        ConSrvUnlockConsoleList();
+        return;
+    }
+
+    /* We are in destruction */
+    Console->State = CONSOLE_IN_DESTRUCTION;
+
+    /* Remove the console from the list */
+    RemoveEntryList(&Console->Entry);
+
+    /* Reset the count to be sure */
+    Console->ReferenceCount = 0;
+
+    /* Discard all entries in the input event queue */
+    while (!IsListEmpty(&Console->InputBuffer.InputEvents))
+    {
+        CurrentEntry = RemoveHeadList(&Console->InputBuffer.InputEvents);
+        Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
         RtlFreeHeap(ConSrvHeap, 0, Event);
     }
 
-    ConioCleanupConsole(Console);
     if (Console->LineBuffer)
         RtlFreeHeap(ConSrvHeap, 0, Console->LineBuffer);
     while (!IsListEmpty(&Console->HistoryBuffers))
@@ -532,12 +665,22 @@ ConSrvDeleteConsole(PCONSOLE Console)
 
     CloseHandle(Console->InputBuffer.ActiveEvent);
     if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
-    DeleteCriticalSection(&Console->Lock);
 
     RtlFreeUnicodeString(&Console->OriginalTitle);
     RtlFreeUnicodeString(&Console->Title);
     IntDeleteAllAliases(Console->Aliases);
+
+    DPRINT1("ConSrvDeleteConsole - Unlocking\n");
+    LeaveCriticalSection(&Console->Lock);
+    DPRINT1("ConSrvDeleteConsole - Destroying lock\n");
+    DeleteCriticalSection(&Console->Lock);
+    DPRINT1("ConSrvDeleteConsole - Lock destroyed ; freeing console\n");
+
     RtlFreeHeap(ConSrvHeap, 0, Console);
+    DPRINT1("ConSrvDeleteConsole - Console freed\n");
+
+    /* Unlock the console list and return */
+    ConSrvUnlockConsoleList();
 }
 
 
@@ -545,56 +688,59 @@ ConSrvDeleteConsole(PCONSOLE Console)
 
 CSR_API(SrvOpenConsole)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PCONSOLE_OPENCONSOLE OpenConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.OpenConsoleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+
+    DWORD DesiredAccess = OpenConsoleRequest->Access;
+    DWORD ShareMode = OpenConsoleRequest->ShareMode;
+    Object_t *Object;
 
     OpenConsoleRequest->ConsoleHandle = INVALID_HANDLE_VALUE;
 
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't get console\n");
+        return Status;
+    }
+
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    if (ProcessData->Console)
+    /*
+     * Open a handle to either the active screen buffer or the input buffer.
+     */
+    if (OpenConsoleRequest->HandleType == HANDLE_OUTPUT)
     {
-        DWORD DesiredAccess = OpenConsoleRequest->Access;
-        DWORD ShareMode = OpenConsoleRequest->ShareMode;
+        Object = &Console->ActiveBuffer->Header;
+    }
+    else // HANDLE_INPUT
+    {
+        Object = &Console->InputBuffer.Header;
+    }
 
-        PCONSOLE Console = ProcessData->Console;
-        Object_t *Object;
-
-        EnterCriticalSection(&Console->Lock);
-
-        if (OpenConsoleRequest->HandleType == HANDLE_OUTPUT)
-        {
-            Object = &Console->ActiveBuffer->Header;
-        }
-        else // HANDLE_INPUT
-        {
-            Object = &Console->InputBuffer.Header;
-        }
-
-        if (((DesiredAccess & GENERIC_READ)  && Object->ExclusiveRead  != 0) ||
-            ((DesiredAccess & GENERIC_WRITE) && Object->ExclusiveWrite != 0) ||
-            (!(ShareMode & FILE_SHARE_READ)  && Object->AccessRead     != 0) ||
-            (!(ShareMode & FILE_SHARE_WRITE) && Object->AccessWrite    != 0))
-        {
-            DPRINT1("Sharing violation\n");
-            Status = STATUS_SHARING_VIOLATION;
-        }
-        else
-        {
-            Status = ConSrvInsertObject(ProcessData,
-                                        &OpenConsoleRequest->ConsoleHandle,
-                                        Object,
-                                        DesiredAccess,
-                                        OpenConsoleRequest->Inheritable,
-                                        ShareMode);
-        }
-
-        LeaveCriticalSection(&Console->Lock);
+    if (((DesiredAccess & GENERIC_READ)  && Object->ExclusiveRead  != 0) ||
+        ((DesiredAccess & GENERIC_WRITE) && Object->ExclusiveWrite != 0) ||
+        (!(ShareMode & FILE_SHARE_READ)  && Object->AccessRead     != 0) ||
+        (!(ShareMode & FILE_SHARE_WRITE) && Object->AccessWrite    != 0))
+    {
+        DPRINT1("Sharing violation\n");
+        Status = STATUS_SHARING_VIOLATION;
+    }
+    else
+    {
+        Status = ConSrvInsertObject(ProcessData,
+                                    &OpenConsoleRequest->ConsoleHandle,
+                                    Object,
+                                    DesiredAccess,
+                                    OpenConsoleRequest->Inheritable,
+                                    ShareMode);
     }
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
+    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
@@ -758,7 +904,6 @@ Quit:
 
 CSR_API(SrvFreeConsole)
 {
-    DPRINT1("SrvFreeConsole\n");
     ConSrvRemoveConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
     return STATUS_SUCCESS;
 }
@@ -798,7 +943,6 @@ CSR_API(SrvSetConsoleMode)
     }
 
     ConSrvReleaseObject(Object, TRUE);
-
     return Status;
 }
 
@@ -831,7 +975,6 @@ CSR_API(SrvGetConsoleMode)
     }
 
     ConSrvReleaseObject(Object, TRUE);
-
     return Status;
 }
 

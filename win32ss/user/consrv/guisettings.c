@@ -86,7 +86,9 @@ GuiConsoleReadUserSettings(IN OUT PGUI_CONSOLE_INFO TermInfo,
 
         if (!wcscmp(szValueName, L"FaceName"))
         {
+            SIZE_T Length = min(wcslen(szValue) + 1, LF_FACESIZE); // wcsnlen
             wcsncpy(TermInfo->FaceName, szValue, LF_FACESIZE);
+            TermInfo->FaceName[Length] = L'\0';
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"FontFamily"))
@@ -150,7 +152,7 @@ do {                                                                            
         return FALSE;
     }
 
-    SetConsoleSetting(L"FaceName", REG_SZ, (wcslen(TermInfo->FaceName) + 1) * sizeof(WCHAR), TermInfo->FaceName, L'\0');
+    SetConsoleSetting(L"FaceName", REG_SZ, (wcslen(TermInfo->FaceName) + 1) * sizeof(WCHAR), TermInfo->FaceName, L'\0'); // wcsnlen
     SetConsoleSetting(L"FontFamily", REG_DWORD, sizeof(DWORD), &TermInfo->FontFamily, FF_DONTCARE);
     SetConsoleSetting(L"FontSize", REG_DWORD, sizeof(DWORD), &TermInfo->FontSize, 0);
     SetConsoleSetting(L"FontWeight", REG_DWORD, sizeof(DWORD), &TermInfo->FontWeight, FW_DONTCARE);
@@ -269,43 +271,59 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     pSharedInfo->hConsoleWindow = GuiData->hWindow;
     pSharedInfo->ShowDefaultParams = Defaults;
 
-    /* Console information */
-    pSharedInfo->ci.HistoryBufferSize = Console->HistoryBufferSize;
-    pSharedInfo->ci.NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
-    pSharedInfo->ci.HistoryNoDup = Console->HistoryNoDup;
-    pSharedInfo->ci.FullScreen = Console->FullScreen;
-    pSharedInfo->ci.QuickEdit = Console->QuickEdit;
-    pSharedInfo->ci.InsertMode = Console->InsertMode;
-    pSharedInfo->ci.InputBufferSize = 0;
-    pSharedInfo->ci.ScreenBufferSize = Console->ActiveBuffer->ScreenBufferSize;
-    pSharedInfo->ci.ConsoleSize = Console->ConsoleSize;
-    pSharedInfo->ci.CursorBlinkOn;
-    pSharedInfo->ci.ForceCursorOff;
-    pSharedInfo->ci.CursorSize = Console->ActiveBuffer->CursorInfo.dwSize;
-    pSharedInfo->ci.ScreenAttrib = Console->ActiveBuffer->ScreenDefaultAttrib;
-    pSharedInfo->ci.PopupAttrib  = Console->ActiveBuffer->PopupDefaultAttrib;
-    pSharedInfo->ci.CodePage;
+    /*
+     * We fill-in the fields only if we display
+     * our properties, not the default ones.
+     */
+    if (!Defaults)
+    {
+        /* Console information */
+        pSharedInfo->ci.HistoryBufferSize = Console->HistoryBufferSize;
+        pSharedInfo->ci.NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
+        pSharedInfo->ci.HistoryNoDup = Console->HistoryNoDup;
+        pSharedInfo->ci.FullScreen = Console->FullScreen;
+        pSharedInfo->ci.QuickEdit = Console->QuickEdit;
+        pSharedInfo->ci.InsertMode = Console->InsertMode;
+        pSharedInfo->ci.InputBufferSize = 0;
+        pSharedInfo->ci.ScreenBufferSize = Console->ActiveBuffer->ScreenBufferSize;
+        pSharedInfo->ci.ConsoleSize = Console->ConsoleSize;
+        pSharedInfo->ci.CursorBlinkOn;
+        pSharedInfo->ci.ForceCursorOff;
+        pSharedInfo->ci.CursorSize = Console->ActiveBuffer->CursorInfo.dwSize;
+        pSharedInfo->ci.ScreenAttrib = Console->ActiveBuffer->ScreenDefaultAttrib;
+        pSharedInfo->ci.PopupAttrib  = Console->ActiveBuffer->PopupDefaultAttrib;
+        pSharedInfo->ci.CodePage;
 
-    /* GUI Information */
-    pSharedInfo->TerminalInfo.Size = sizeof(GUI_CONSOLE_INFO);
-    GuiInfo = pSharedInfo->TerminalInfo.TermInfo = (PGUI_CONSOLE_INFO)(pSharedInfo + 1);
-    wcsncpy(GuiInfo->FaceName, GuiData->GuiInfo.FaceName, LF_FACESIZE);
-    GuiInfo->FontSize = (DWORD)GuiData->GuiInfo.FontSize;
-    GuiInfo->FontWeight = GuiData->GuiInfo.FontWeight;
-    GuiInfo->UseRasterFonts = GuiData->GuiInfo.UseRasterFonts;
-    /// GuiInfo->WindowPosition = GuiData->GuiInfo.WindowPosition;
-    GuiInfo->AutoPosition = GuiData->GuiInfo.AutoPosition;
-    GuiInfo->WindowOrigin = GuiData->GuiInfo.WindowOrigin;
-    /* Offsetize */
-    pSharedInfo->TerminalInfo.TermInfo = (PVOID)((ULONG_PTR)GuiInfo - (ULONG_PTR)pSharedInfo);
+        /* GUI Information */
+        pSharedInfo->TerminalInfo.Size = sizeof(GUI_CONSOLE_INFO);
+        GuiInfo = pSharedInfo->TerminalInfo.TermInfo = (PGUI_CONSOLE_INFO)(pSharedInfo + 1);
+        Length = min(wcslen(GuiData->GuiInfo.FaceName) + 1, LF_FACESIZE); // wcsnlen
+        wcsncpy(GuiInfo->FaceName, GuiData->GuiInfo.FaceName, LF_FACESIZE);
+        GuiInfo->FaceName[Length] = L'\0';
+        GuiInfo->FontFamily = GuiData->GuiInfo.FontFamily;
+        GuiInfo->FontSize = GuiData->GuiInfo.FontSize;
+        GuiInfo->FontWeight = GuiData->GuiInfo.FontWeight;
+        GuiInfo->UseRasterFonts = GuiData->GuiInfo.UseRasterFonts;
+        /// GuiInfo->WindowPosition = GuiData->GuiInfo.WindowPosition;
+        GuiInfo->AutoPosition = GuiData->GuiInfo.AutoPosition;
+        GuiInfo->WindowOrigin = GuiData->GuiInfo.WindowOrigin;
+        /* Offsetize */
+        pSharedInfo->TerminalInfo.TermInfo = (PVOID)((ULONG_PTR)GuiInfo - (ULONG_PTR)pSharedInfo);
 
-    /* Palette */
-    memcpy(pSharedInfo->ci.Colors, Console->Colors, sizeof(Console->Colors));
+        /* Palette */
+        memcpy(pSharedInfo->ci.Colors, Console->Colors, sizeof(Console->Colors));
 
-    /* Title of the console, original one corresponding to the one set by the console leader */
-    Length = min(sizeof(pSharedInfo->ci.ConsoleTitle) / sizeof(pSharedInfo->ci.ConsoleTitle[0]) - 1,
-                 Console->OriginalTitle.Length / sizeof(WCHAR));
-    wcsncpy(pSharedInfo->ci.ConsoleTitle, Console->OriginalTitle.Buffer, Length);
+        /* Title of the console, original one corresponding to the one set by the console leader */
+        Length = min(sizeof(pSharedInfo->ci.ConsoleTitle) / sizeof(pSharedInfo->ci.ConsoleTitle[0]) - 1,
+                     Console->OriginalTitle.Length / sizeof(WCHAR));
+        wcsncpy(pSharedInfo->ci.ConsoleTitle, Console->OriginalTitle.Buffer, Length);
+    }
+    else
+    {
+        Length = 0;
+    }
+
+    /* Null-terminate the title */
     pSharedInfo->ci.ConsoleTitle[Length] = L'\0';
 
 
@@ -326,29 +344,46 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error: Impossible to duplicate section handle for client ; Status = %lu\n", Status);
-        NtClose(hSection);
-        return;
+        goto Quit;
     }
 
     /* Start the properties dialog */
     if (ProcessData->PropDispatcher)
     {
-        HANDLE Thread;
-
-        Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
-                                    ProcessData->PropDispatcher,
-                                    (PVOID)hClientSection, 0, NULL);
-        if (NULL == Thread)
+        _SEH2_TRY
         {
-            DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
-            return;
-        }
+            HANDLE Thread = NULL;
 
-        DPRINT1("We succeeded at creating ProcessData->PropDispatcher remote thread, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
-        /// WaitForSingleObject(Thread, INFINITE);
-        CloseHandle(Thread);
+            _SEH2_TRY
+            {
+                Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
+                                            ProcessData->PropDispatcher,
+                                            (PVOID)hClientSection, 0, NULL);
+                if (NULL == Thread)
+                {
+                    DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
+                }
+                else
+                {
+                    DPRINT("ProcessData->PropDispatcher remote thread creation succeeded, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
+                    /// WaitForSingleObject(Thread, INFINITE);
+                }
+            }
+            _SEH2_FINALLY
+            {
+                CloseHandle(Thread);
+            }
+            _SEH2_END;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+            DPRINT1("GuiConsoleShowConsoleProperties - Caught an exception, Status = %08X\n", Status);
+        }
+        _SEH2_END;
     }
 
+Quit:
     /* We have finished, close the section handle */
     NtClose(hSection);
     return;
@@ -368,8 +403,6 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     PCONSOLE_INFO  ConInfo  = NULL;
     PTERMINAL_INFO TermInfo = NULL;
     PGUI_CONSOLE_INFO GuiInfo = NULL;
-
-    /// LOCK /// EnterCriticalSection(&Console->Lock);
 
     /* Get the console leader process, our client */
     ProcessData = CONTAINING_RECORD(Console->ProcessList.Blink,
@@ -406,51 +439,65 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
         return Status;
     }
 
-    /* Check that the section is well-sized */
-    if ( (ViewSize < sizeof(CONSOLE_PROPS)) ||
-         (pConInfo->TerminalInfo.Size != sizeof(GUI_CONSOLE_INFO)) ||
-         (ViewSize < sizeof(CONSOLE_PROPS) + pConInfo->TerminalInfo.Size) )
+    _SEH2_TRY
     {
-        DPRINT1("Error: section bad-sized: sizeof(Section) < sizeof(CONSOLE_PROPS) + sizeof(Terminal_specific_info)\n");
-        Status = STATUS_INVALID_VIEW_SIZE;
-        goto Quit;
+        /* Check that the section is well-sized */
+        if ( (ViewSize < sizeof(CONSOLE_PROPS)) ||
+             (pConInfo->TerminalInfo.Size != sizeof(GUI_CONSOLE_INFO)) ||
+             (ViewSize < sizeof(CONSOLE_PROPS) + pConInfo->TerminalInfo.Size) )
+        {
+            DPRINT1("Error: section bad-sized: sizeof(Section) < sizeof(CONSOLE_PROPS) + sizeof(Terminal_specific_info)\n");
+            Status = STATUS_INVALID_VIEW_SIZE;
+            _SEH2_YIELD(goto Quit);
+        }
+
+        // TODO: Check that GuiData->hWindow == pConInfo->hConsoleWindow
+
+        /* Retrieve terminal informations */
+        ConInfo  = &pConInfo->ci;
+        TermInfo = &pConInfo->TerminalInfo;
+        GuiInfo  = TermInfo->TermInfo = (PVOID)((ULONG_PTR)pConInfo + (ULONG_PTR)TermInfo->TermInfo);
+
+        /*
+         * If we don't set the default parameters,
+         * apply them, otherwise just save them.
+         */
+        if (pConInfo->ShowDefaultParams == FALSE)
+        {
+            /* Set the console informations */
+            ConSrvApplyUserSettings(Console, ConInfo);
+
+            /* Set the terminal informations */
+
+            // memcpy(&GuiData->GuiInfo, GuiInfo, sizeof(GUI_CONSOLE_INFO));
+
+            /* Move the window to the user's values */
+            GuiData->GuiInfo.AutoPosition = GuiInfo->AutoPosition;
+            GuiData->GuiInfo.WindowOrigin = GuiInfo->WindowOrigin;
+            GuiConsoleMoveWindow(GuiData);
+
+            InvalidateRect(GuiData->hWindow, NULL, TRUE);
+        }
+
+        /*
+         * Save settings if needed
+         */
+        // FIXME: Do it in the console properties applet ??
+        if (SaveSettings)
+        {
+            DWORD ProcessId = HandleToUlong(ProcessData->Process->ClientId.UniqueProcess);
+            ConSrvWriteUserSettings(ConInfo, ProcessId);
+            GuiConsoleWriteUserSettings(GuiInfo, ConInfo->ConsoleTitle, ProcessId);
+        }
+
+        Status = STATUS_SUCCESS;
     }
-
-    // TODO: Check that GuiData->hWindow == pConInfo->hConsoleWindow
-
-    /* Set the console informations */
-    ConInfo = &pConInfo->ci;
-    ConSrvApplyUserSettings(Console, ConInfo);
-
-    /* Set the terminal informations - De-offsetization of the pointer */
-    TermInfo = &pConInfo->TerminalInfo;
-    GuiInfo = TermInfo->TermInfo = (PVOID)((ULONG_PTR)pConInfo + (ULONG_PTR)TermInfo->TermInfo);
-
-    // memcpy(&GuiData->GuiInfo, GuiInfo, sizeof(GUI_CONSOLE_INFO));
-
-    /* Move the window to the user's values */
-    GuiData->GuiInfo.AutoPosition = GuiInfo->AutoPosition;
-    GuiData->GuiInfo.WindowOrigin = GuiInfo->WindowOrigin;
-    GuiConsoleMoveWindow(GuiData);
-
-    InvalidateRect(GuiData->hWindow, NULL, TRUE);
-
-
-    /*
-     * Save settings if needed
-     */
-
-    // FIXME: Do it in the console properties applet ??
-    if (SaveSettings)
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DWORD ProcessId = HandleToUlong(ProcessData->Process->ClientId.UniqueProcess);
-        ConSrvWriteUserSettings(ConInfo, ProcessId);
-        GuiConsoleWriteUserSettings(GuiInfo, ConInfo->ConsoleTitle, ProcessId);
+        Status = _SEH2_GetExceptionCode();
+        DPRINT1("GuiApplyUserSettings - Caught an exception, Status = %08X\n", Status);
     }
-
-    Status = STATUS_SUCCESS;
-
-    /// LOCK /// LeaveCriticalSection(&Console->Lock);
+    _SEH2_END;
 
 Quit:
     /* Finally, close the section and return */

@@ -10,8 +10,9 @@
 
 #include "consrv.h"
 #include "conio.h"
+#include "console.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 
@@ -22,7 +23,7 @@ AdjustHandleCounts(PCONSOLE_IO_HANDLE Entry, INT Change)
 {
     Object_t *Object = Entry->Object;
 
-    DPRINT1("AdjustHandleCounts(0x%p, %d), Object = 0x%p, Object->HandleCount = %d, Object->Type = %lu\n", Entry, Change, Object, Object->HandleCount, Object->Type);
+    DPRINT("AdjustHandleCounts(0x%p, %d), Object = 0x%p, Object->HandleCount = %d, Object->Type = %lu\n", Entry, Change, Object, Object->HandleCount, Object->Type);
 
     if (Entry->Access & GENERIC_READ)           Object->AccessRead += Change;
     if (Entry->Access & GENERIC_WRITE)          Object->AccessWrite += Change;
@@ -236,8 +237,6 @@ Quit:
 static VOID
 ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData)
 {
-    DPRINT1("ConSrvFreeHandlesTable\n");
-
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     if (ProcessData->HandleTable != NULL)
@@ -267,12 +266,13 @@ ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                    BOOL Inheritable,
                    DWORD ShareMode)
 {
-#define IO_HANDLES_INCREMENT    2*3
+#define IO_HANDLES_INCREMENT    2 * 3
 
     ULONG i;
     PCONSOLE_IO_HANDLE Block;
 
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    // NOTE: Commented out because calling code always lock HandleTableLock before.
+    // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     for (i = 0; i < ProcessData->HandleTableSize; i++)
     {
@@ -289,7 +289,7 @@ ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                                     IO_HANDLES_INCREMENT) * sizeof(CONSOLE_IO_HANDLE));
         if (Block == NULL)
         {
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+            // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return STATUS_UNSUCCESSFUL;
         }
         RtlCopyMemory(Block,
@@ -307,7 +307,7 @@ ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
     ConSrvCreateHandleEntry(&ProcessData->HandleTable[i]);
     *Handle = ULongToHandle((i << 2) | 0x3);
 
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
     return STATUS_SUCCESS;
 }
@@ -329,11 +329,9 @@ ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
         return STATUS_INVALID_HANDLE;
     }
 
-    DPRINT1("ConSrvRemoveObject - Process 0x%p, Release 0x%p\n", ProcessData->Process, &ProcessData->HandleTable[h]);
     ConSrvCloseHandleEntry(&ProcessData->HandleTable[h]);
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-
     return STATUS_SUCCESS;
 }
 
@@ -376,16 +374,24 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
         return STATUS_INVALID_HANDLE;
     }
 
-    _InterlockedIncrement(&ObjectEntry->Console->ReferenceCount);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    if (LockConsole) EnterCriticalSection(&ObjectEntry->Console->Lock);
+    if (ConSrvValidateConsole(ObjectEntry->Console, CONSOLE_RUNNING, LockConsole))
+    {
+        _InterlockedIncrement(&ObjectEntry->Console->ReferenceCount);
 
-    /* Return the objects to the caller */
-    *Object = ObjectEntry;
-    if (Entry) *Entry = HandleEntry;
+        /* Return the objects to the caller */
+        *Object = ObjectEntry;
+        if (Entry) *Entry = HandleEntry;
 
-    return STATUS_SUCCESS;
+        // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        return STATUS_INVALID_HANDLE;
+    }
 }
 
 VOID
@@ -465,6 +471,13 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
+    /* Validate and lock the console */
+    if (!ConSrvValidateConsole(Console, CONSOLE_RUNNING, TRUE))
+    {
+        // FIXME: Find another status code
+        return STATUS_UNSUCCESSFUL;
+    }
+
     /* Inherit the console */
     ProcessData->Console = Console;
 
@@ -479,7 +492,7 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
         {
             DPRINT1("Failed to initialize the handles table\n");
             ProcessData->Console = NULL;
-            return Status;
+            goto Quit;
         }
     }
 
@@ -494,7 +507,7 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
         DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
         ConSrvFreeHandlesTable(ProcessData); // NOTE: Always free the handles table.
         ProcessData->Console = NULL;
-        return Status;
+        goto Quit;
     }
 
     /* Insert the process into the processes list of the console */
@@ -506,29 +519,34 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
     /* Update the internal info of the terminal */
     ConioRefreshInternalInfo(ProcessData->Console);
 
-    return STATUS_SUCCESS;
+    Status = STATUS_SUCCESS;
+
+Quit:
+    /* Unlock the console and return */
+    LeaveCriticalSection(&Console->Lock);
+    return Status;
 }
 
 VOID
 FASTCALL
 ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 {
-    PCONSOLE Console;
+    PCONSOLE Console = ProcessData->Console;
 
     DPRINT1("ConSrvRemoveConsole\n");
 
-    /* Close all console handles and free the handle table memory */
-    ConSrvFreeHandlesTable(ProcessData);
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    /* Detach process from console */
-    Console = ProcessData->Console;
-    if (Console != NULL)
+    /* Validate and lock the console */
+    if (ConSrvValidateConsole(Console, CONSOLE_RUNNING, TRUE))
     {
-        DPRINT1("ConSrvRemoveConsole - Console->ReferenceCount = %lu - We are going to decrement it !\n", Console->ReferenceCount);
-        ProcessData->Console = NULL;
-
-        EnterCriticalSection(&Console->Lock);
         DPRINT1("ConSrvRemoveConsole - Locking OK\n");
+
+        /* Close all console handles and free the handles table */
+        ConSrvFreeHandlesTable(ProcessData);
+
+        /* Detach the process from the console */
+        ProcessData->Console = NULL;
 
         /* Remove ourselves from the console's list of processes */
         RemoveEntryList(&ProcessData->ConsoleLink);
@@ -537,10 +555,105 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
         ConioRefreshInternalInfo(Console);
 
         /* Release the console */
+        DPRINT1("ConSrvRemoveConsole - Decrement Console->ReferenceCount = %lu\n", Console->ReferenceCount);
         ConSrvReleaseConsole(Console, TRUE);
         //CloseHandle(ProcessData->ConsoleEvent);
         //ProcessData->ConsoleEvent = NULL;
     }
+
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+}
+
+BOOL
+FASTCALL
+ConSrvValidatePointer(PCONSOLE Console)
+{
+    PLIST_ENTRY ConsoleEntry;
+    PCONSOLE CurrentConsole = NULL;
+
+    if (!Console) return FALSE;
+
+    /* The console list must be locked */
+    // ASSERT(Console_list_locked);
+
+    ConsoleEntry = ConsoleList.Flink;
+    while (ConsoleEntry != &ConsoleList)
+    {
+        CurrentConsole = CONTAINING_RECORD(ConsoleEntry, CONSOLE, Entry);
+        ConsoleEntry = ConsoleEntry->Flink;
+        if (CurrentConsole == Console) return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOL
+FASTCALL
+ConSrvValidateConsoleState(PCONSOLE Console,
+                           CONSOLE_STATE ExpectedState)
+{
+    // if (!Console) return FALSE;
+
+    /* The console must be locked */
+    // ASSERT(Console_locked);
+
+    return (Console->State == ExpectedState);
+}
+
+BOOL
+FASTCALL
+ConSrvValidateConsoleUnsafe(PCONSOLE Console,
+                            CONSOLE_STATE ExpectedState,
+                            BOOL LockConsole)
+{
+    if (!Console) return FALSE;
+
+    /*
+     * Lock the console to forbid possible console's state changes
+     * (which must be done when the console is already locked).
+     * If we don't want to lock it, it's because the lock is already
+     * held. So there must be no problems.
+     */
+    if (LockConsole) EnterCriticalSection(&Console->Lock);
+
+    // ASSERT(Console_locked);
+
+    /* Check whether the console's state is what we expect */
+    if (!ConSrvValidateConsoleState(Console, ExpectedState))
+    {
+        if (LockConsole) LeaveCriticalSection(&Console->Lock);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL
+FASTCALL
+ConSrvValidateConsole(PCONSOLE Console,
+                      CONSOLE_STATE ExpectedState,
+                      BOOL LockConsole)
+{
+    BOOL RetVal = FALSE;
+
+    if (!Console) return FALSE;
+
+    /*
+     * Forbid creation or deletion of consoles when
+     * checking for the existence of a console.
+     */
+    ConSrvLockConsoleListShared();
+
+    if (ConSrvValidatePointer(Console))
+    {
+        RetVal = ConSrvValidateConsoleUnsafe(Console,
+                                             ExpectedState,
+                                             LockConsole);
+    }
+
+    /* Unlock the console list and return */
+    ConSrvUnlockConsoleList();
+    return RetVal;
 }
 
 NTSTATUS
@@ -549,37 +662,53 @@ ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
                  PCONSOLE* Console,
                  BOOL LockConsole)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
     PCONSOLE ProcessConsole;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     ProcessConsole = ProcessData->Console;
 
-    if (!ProcessConsole)
+    if (ConSrvValidateConsole(ProcessConsole, CONSOLE_RUNNING, LockConsole))
+    {
+        InterlockedIncrement(&ProcessConsole->ReferenceCount);
+        *Console = ProcessConsole;
+    }
+    else
     {
         *Console = NULL;
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        return STATUS_INVALID_HANDLE;
+        Status = STATUS_INVALID_HANDLE;
     }
 
-    InterlockedIncrement(&ProcessConsole->ReferenceCount);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-
-    if (LockConsole) EnterCriticalSection(&ProcessConsole->Lock);
-
-    *Console = ProcessConsole;
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 VOID FASTCALL
 ConSrvReleaseConsole(PCONSOLE Console,
-                     BOOL IsConsoleLocked)
+                     BOOL WasConsoleLocked)
 {
-    if (IsConsoleLocked) LeaveCriticalSection(&Console->Lock);
+    LONG RefCount = 0;
 
-    /* Decrement reference count */
-    if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
-        ConSrvDeleteConsole(Console);
+    if (!Console) return;
+    // if (Console->ReferenceCount == 0) return; // This shouldn't happen
+    ASSERT(Console->ReferenceCount > 0);
+
+    /* The console must be locked */
+    // ASSERT(Console_locked);
+
+    /*
+     * Decrement the reference count. Save the new value too,
+     * because Console->ReferenceCount might be modified after
+     * the console gets unlocked but before we check whether we
+     * can destroy it.
+     */
+    RefCount = _InterlockedDecrement(&Console->ReferenceCount);
+
+    /* Unlock the console if needed */
+    if (WasConsoleLocked) LeaveCriticalSection(&Console->Lock);
+
+    /* Delete the console if needed */
+    if (RefCount <= 0) ConSrvDeleteConsole(Console);
 }
 
 NTSTATUS
@@ -745,8 +874,6 @@ ConSrvDisconnect(PCSR_PROCESS Process)
      * This function is called whenever a new process (GUI or CUI) is destroyed.
      **************************************************************************/
 
-    DPRINT1("ConSrvDisconnect\n");
-
     if ( ProcessData->Console     != NULL ||
          ProcessData->HandleTable != NULL )
     {
@@ -828,6 +955,7 @@ CSR_API(SrvDuplicateHandle)
         }
     }
 
+    /* Insert the new handle inside the process handles table */
     ApiMessage->Status = ConSrvInsertObject(ProcessData,
                                             &DuplicateHandleRequest->ConsoleHandle, // Use the new handle value!
                                             Entry->Object,

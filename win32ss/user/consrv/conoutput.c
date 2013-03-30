@@ -1278,15 +1278,18 @@ CSR_API(SrvCreateConsoleScreenBuffer)
 
     DPRINT("SrvCreateConsoleScreenBuffer\n");
 
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return Status;
     }
 
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
+    /*
     if (Console->ActiveBuffer)
     {
         ScreenBufferSize = Console->ActiveBuffer->ScreenBufferSize;
@@ -1299,6 +1302,23 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         IsCursorVisible = Console->ActiveBuffer->CursorInfo.bVisible;
         CursorSize      = Console->ActiveBuffer->CursorInfo.dwSize;
     }
+    */
+
+    // This is Windows' behaviour
+    {
+        ScreenBufferSize = Console->ConsoleSize; // Use the current console size
+        if (ScreenBufferSize.X == 0) ScreenBufferSize.X = 1;
+        if (ScreenBufferSize.Y == 0) ScreenBufferSize.Y = 1;
+
+        if (Console->ActiveBuffer)
+        {
+            ScreenAttrib = Console->ActiveBuffer->ScreenDefaultAttrib;
+            PopupAttrib  = Console->ActiveBuffer->PopupDefaultAttrib;
+
+            IsCursorVisible = Console->ActiveBuffer->CursorInfo.bVisible;
+            CursorSize      = Console->ActiveBuffer->CursorInfo.dwSize;
+        }
+    }
 
     Status = ConSrvCreateScreenBuffer(Console,
                                       &Buff,
@@ -1309,6 +1329,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
                                       CursorSize);
     if (NT_SUCCESS(Status))
     {
+        /* Insert the new handle inside the process handles table */
         Status = ConSrvInsertObject(ProcessData,
                                     &CreateScreenBufferRequest->OutputHandle,
                                     &Buff->Header,
@@ -1317,10 +1338,11 @@ CSR_API(SrvCreateConsoleScreenBuffer)
                                     CreateScreenBufferRequest->ShareMode);
     }
 
-    ConSrvReleaseConsole(Console, TRUE);
+    // ConSrvReleaseConsole(Console, TRUE);
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
+    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 

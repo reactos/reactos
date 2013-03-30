@@ -685,7 +685,6 @@ CSR_API(SrvReadConsole)
         return STATUS_INVALID_PARAMETER;
     }
 
-    // if (Request->Data.ReadConsoleRequest.NrCharactersRead * sizeof(WCHAR) > nNumberOfCharsToRead * CharSize)
     if (ReadConsoleRequest->NrCharactersRead > ReadConsoleRequest->NrCharactersToRead)
     {
         return STATUS_INVALID_PARAMETER;
@@ -808,7 +807,7 @@ CSR_API(SrvFlushConsoleInputBuffer)
     PCONSOLE_FLUSHINPUTBUFFER FlushInputBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FlushInputBufferRequest;
     PLIST_ENTRY CurrentEntry;
     PCONSOLE_INPUT_BUFFER InputBuffer;
-    ConsoleInput* Input;
+    ConsoleInput* Event;
 
     DPRINT("SrvFlushConsoleInputBuffer\n");
 
@@ -823,14 +822,12 @@ CSR_API(SrvFlushConsoleInputBuffer)
     while (!IsListEmpty(&InputBuffer->InputEvents))
     {
         CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
-        Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-        /* Destroy the event */
-        RtlFreeHeap(ConSrvHeap, 0, Input);
+        Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
+        RtlFreeHeap(ConSrvHeap, 0, Event);
     }
     ResetEvent(InputBuffer->ActiveEvent);
 
     ConSrvReleaseInputBuffer(InputBuffer, TRUE);
-
     return STATUS_SUCCESS;
 }
 
