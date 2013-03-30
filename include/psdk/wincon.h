@@ -53,28 +53,46 @@ extern "C" {
 #define ENABLE_PROCESSED_OUTPUT     0x0001
 #define ENABLE_WRAP_AT_EOL_OUTPUT   0x0002
 
-#define KEY_EVENT 1
-#define MOUSE_EVENT 2
-#define WINDOW_BUFFER_SIZE_EVENT 4
-#define MENU_EVENT 8
-#define FOCUS_EVENT 16
-#define CAPSLOCK_ON 128
-#define ENHANCED_KEY 256
-#define RIGHT_ALT_PRESSED 1
-#define LEFT_ALT_PRESSED 2
-#define RIGHT_CTRL_PRESSED 4
-#define LEFT_CTRL_PRESSED 8
-#define SHIFT_PRESSED 16
-#define NUMLOCK_ON 32
-#define SCROLLLOCK_ON 64
-#define FROM_LEFT_1ST_BUTTON_PRESSED 1
-#define RIGHTMOST_BUTTON_PRESSED 2
-#define FROM_LEFT_2ND_BUTTON_PRESSED 4
-#define FROM_LEFT_3RD_BUTTON_PRESSED 8
-#define FROM_LEFT_4TH_BUTTON_PRESSED 16
-#define MOUSE_MOVED	1
-#define DOUBLE_CLICK	2
-#define MOUSE_WHEELED	4
+/*
+ * Event types
+ */
+#define KEY_EVENT                       0x0001
+#define MOUSE_EVENT                     0x0002
+#define WINDOW_BUFFER_SIZE_EVENT        0x0004
+#define MENU_EVENT                      0x0008
+#define FOCUS_EVENT                     0x0010
+
+/*
+ * ControlKeyState flags
+ */
+#define RIGHT_ALT_PRESSED               0x0001
+#define LEFT_ALT_PRESSED                0x0002
+#define RIGHT_CTRL_PRESSED              0x0004
+#define LEFT_CTRL_PRESSED               0x0008
+#define SHIFT_PRESSED                   0x0010
+#define NUMLOCK_ON                      0x0020
+#define SCROLLLOCK_ON                   0x0040
+#define CAPSLOCK_ON                     0x0080
+#define ENHANCED_KEY                    0x0100
+
+/*
+ * ButtonState flags
+ */
+#define FROM_LEFT_1ST_BUTTON_PRESSED    0x0001
+#define RIGHTMOST_BUTTON_PRESSED        0x0002
+#define FROM_LEFT_2ND_BUTTON_PRESSED    0x0004
+#define FROM_LEFT_3RD_BUTTON_PRESSED    0x0008
+#define FROM_LEFT_4TH_BUTTON_PRESSED    0x0010
+
+/*
+ * Mouse event flags
+ */
+#define MOUSE_MOVED                     0x0001
+#define DOUBLE_CLICK                    0x0002
+#define MOUSE_WHEELED                   0x0004
+#if (_WIN32_WINNT >= 0x0600)
+#define MOUSE_HWHEELED                  0x0008
+#endif
 
 typedef struct _CONSOLE_READCONSOLE_CONTROL {
     ULONG nLength;

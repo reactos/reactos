@@ -249,6 +249,8 @@ ULONG FASTCALL ConSrvConsoleProcessCtrlEvent(PCONSOLE Console,
 #define ConSrvReleaseInputBuffer(Buff, IsConsoleLocked) \
     ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
 VOID WINAPI ConioProcessKey(PCONSOLE Console, MSG* msg);
+NTSTATUS FASTCALL ConioProcessInputEvent(PCONSOLE Console,
+                                         PINPUT_RECORD InputEvent);
 
 /* conoutput.c */
 #define ConioRectHeight(Rect) \

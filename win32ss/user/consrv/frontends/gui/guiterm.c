@@ -885,64 +885,148 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
         goto Quit;
     }
 
-    switch (msg)
+    if (Console->QuickEdit)
     {
-        case WM_LBUTTONDOWN:
+        switch (msg)
         {
-            Console->Selection.dwSelectionAnchor = PointToCoord(GuiData, lParam);
-            SetCapture(GuiData->hWindow);
-            Console->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS | CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
-            GuiConsoleUpdateSelection(Console, &Console->Selection.dwSelectionAnchor);
-            break;
-        }
-
-        case WM_LBUTTONUP:
-        {
-            COORD c;
-
-            if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
-
-            c = PointToCoord(GuiData, lParam);
-            Console->Selection.dwFlags &= ~CONSOLE_MOUSE_DOWN;
-            GuiConsoleUpdateSelection(Console, &c);
-            ReleaseCapture();
-
-            break;
-        }
-
-        case WM_RBUTTONDOWN:
-        {
-            if (!(Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY))
+            case WM_LBUTTONDOWN:
             {
-                GuiConsolePaste(GuiData);
-            }
-            else
-            {
-                GuiConsoleCopy(GuiData);
-
-                /* Clear the selection */
-                GuiConsoleUpdateSelection(Console, NULL);
+                Console->Selection.dwSelectionAnchor = PointToCoord(GuiData, lParam);
+                SetCapture(GuiData->hWindow);
+                Console->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS | CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
+                GuiConsoleUpdateSelection(Console, &Console->Selection.dwSelectionAnchor);
+                break;
             }
 
-            break;
-        }
+            case WM_LBUTTONUP:
+            {
+                COORD c;
 
-        case WM_MOUSEMOVE:
+                if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
+
+                c = PointToCoord(GuiData, lParam);
+                Console->Selection.dwFlags &= ~CONSOLE_MOUSE_DOWN;
+                GuiConsoleUpdateSelection(Console, &c);
+                ReleaseCapture();
+
+                break;
+            }
+
+            case WM_RBUTTONDOWN:
+            {
+                if (!(Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY))
+                {
+                    GuiConsolePaste(GuiData);
+                }
+                else
+                {
+                    GuiConsoleCopy(GuiData);
+
+                    /* Clear the selection */
+                    GuiConsoleUpdateSelection(Console, NULL);
+                }
+
+                break;
+            }
+
+            case WM_MOUSEMOVE:
+            {
+                COORD c;
+
+                if (!(wParam & MK_LBUTTON)) break;
+                if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
+
+                c = PointToCoord(GuiData, lParam); /* TODO: Scroll buffer to bring c into view */
+                GuiConsoleUpdateSelection(Console, &c);
+
+                break;
+            }
+
+            default:
+                Ret = FALSE;
+                break;
+        }
+    }
+    else if (Console->InputBuffer.Mode & ENABLE_MOUSE_INPUT)
+    {
+        INPUT_RECORD er;
+        DWORD dwButtonState = 0;
+        DWORD dwEventFlags  = 0;
+
+        switch (msg)
         {
-            COORD c;
+            case WM_LBUTTONDOWN:
+                dwButtonState = FROM_LEFT_1ST_BUTTON_PRESSED;
+                dwEventFlags  = 0;
+                break;
 
-            if (!(wParam & MK_LBUTTON)) break;
-            if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) break;
+            case WM_LBUTTONUP:
+                dwButtonState = 0;
+                dwEventFlags  = 0;
+                break;
 
-            c = PointToCoord(GuiData, lParam); /* TODO: Scroll buffer to bring c into view */
-            GuiConsoleUpdateSelection(Console, &c);
+            case WM_LBUTTONDBLCLK:
+                dwButtonState = FROM_LEFT_1ST_BUTTON_PRESSED;
+                dwEventFlags  = DOUBLE_CLICK;
+                break;
 
-            break;
+            case WM_RBUTTONDOWN:
+                dwButtonState = RIGHTMOST_BUTTON_PRESSED;
+                dwEventFlags  = 0;
+                break;
+
+            case WM_RBUTTONUP:
+                dwButtonState = 0;
+                dwEventFlags  = 0;
+                break;
+
+            case WM_RBUTTONDBLCLK:
+                dwButtonState = RIGHTMOST_BUTTON_PRESSED;
+                dwEventFlags  = DOUBLE_CLICK;
+                break;
+
+            case WM_MBUTTONDOWN:
+                dwButtonState = FROM_LEFT_2ND_BUTTON_PRESSED;
+                dwEventFlags  = 0;
+                break;
+
+            case WM_MBUTTONUP:
+                dwButtonState = 0;
+                dwEventFlags  = 0;
+                break;
+
+            case WM_MBUTTONDBLCLK:
+                dwButtonState = FROM_LEFT_2ND_BUTTON_PRESSED;
+                dwEventFlags  = DOUBLE_CLICK;
+                break;
+
+            case WM_MOUSEMOVE:
+                dwButtonState = 0;
+                dwEventFlags  = MOUSE_MOVED;
+                break;
+
+            case WM_MOUSEWHEEL:
+                dwButtonState = 0;
+                dwEventFlags  = MOUSE_WHEELED;
+                break;
+
+            case WM_MOUSEHWHEEL:
+                dwButtonState = 0;
+                dwEventFlags  = MOUSE_HWHEELED;
+                break;
+
+            default:
+                Ret = FALSE;
+                break;
         }
 
-        default:
-            Ret = FALSE;
-            break;
+        er.EventType = MOUSE_EVENT;
+        er.Event.MouseEvent.dwMousePosition   = PointToCoord(GuiData, lParam);
+        er.Event.MouseEvent.dwButtonState     = dwButtonState;
+        er.Event.MouseEvent.dwControlKeyState = 0;
+        er.Event.MouseEvent.dwEventFlags      = dwEventFlags;
+
+        ConioProcessInputEvent(Console, &er);
     }
 
     LeaveCriticalSection(&Console->Lock);
@@ -1340,7 +1424,6 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             GuiConsoleHandleTimer(GuiData);
             break;
 
-        case WM_MOUSEMOVE:
         case WM_LBUTTONDOWN:
         case WM_LBUTTONUP:
         case WM_LBUTTONDBLCLK:
@@ -1350,7 +1433,9 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_MBUTTONDOWN:
         case WM_MBUTTONUP:
         case WM_MBUTTONDBLCLK:
+        case WM_MOUSEMOVE:
         case WM_MOUSEWHEEL:
+        case WM_MOUSEHWHEEL:
         {
             Result = GuiConsoleHandleMouse(GuiData, msg, wParam, lParam);
             break;

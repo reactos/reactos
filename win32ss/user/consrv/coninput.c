@@ -48,9 +48,9 @@ ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
     }
 }
 
-static NTSTATUS FASTCALL
-ConioProcessChar(PCONSOLE Console,
-                 PINPUT_RECORD InputEvent)
+NTSTATUS FASTCALL
+ConioProcessInputEvent(PCONSOLE Console,
+                       PINPUT_RECORD InputEvent)
 {
     ConsoleInput *ConInRec;
 
@@ -273,7 +273,7 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
         }
         return;
     }
-    ConioProcessChar(Console, &er);
+    ConioProcessInputEvent(Console, &er);
 }
 
 static NTSTATUS
@@ -792,7 +792,7 @@ CSR_API(SrvWriteConsoleInput)
                                               &AsciiChar);
         }
 
-        Status = ConioProcessChar(Console, InputRecord++);
+        Status = ConioProcessInputEvent(Console, InputRecord++);
     }
 
     ConSrvReleaseInputBuffer(InputBuffer, TRUE);
