@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/consrv/tuiconsole.h
- * PURPOSE:         TUI terminal emulator
+ * FILE:            win32ss/user/consrv/frontends/tui/tuiterm.h
+ * PURPOSE:         TUI Terminal Front-End
  * PROGRAMMERS:
  */
 

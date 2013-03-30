@@ -10,14 +10,14 @@ list(APPEND SOURCE
     coninput.c
     conoutput.c
     console.c
-    guiconsole.c
-    guisettings.c
     handle.c
     init.c
     lineinput.c
     settings.c
-    tuiconsole.c
     consrv.rc
+    frontends/gui/guiterm.c
+    frontends/gui/guisettings.c
+    frontends/tui/tuiterm.c
     ${CMAKE_CURRENT_BINARY_DIR}/consrv.def)
 
 add_library(consrv SHARED ${SOURCE})

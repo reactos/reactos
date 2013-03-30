@@ -15,7 +15,7 @@
 
 #include "resource.h"
 
-/* Shared header with consrv.dll */
+/* Shared header with the GUI Terminal Front-End from consrv.dll */
 #include "consolecpl.h"
 
 typedef struct

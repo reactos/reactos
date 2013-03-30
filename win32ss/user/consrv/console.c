@@ -15,10 +15,10 @@
 #include "conio.h"
 #include "settings.h"
 
-#include "guiconsole.h"
+#include "frontends/gui/guiterm.h"
 
 #ifdef TUI_CONSOLE
-    #include "tuiconsole.h"
+    #include "frontends/tui/tuiterm.h"
 #endif
 
 #include "console.h"

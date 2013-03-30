@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/consrv/guisettings.c
- * PURPOSE:         GUI terminal emulator settings management
+ * FILE:            win32ss/user/consrv/frontends/gui/guisettings.c
+ * PURPOSE:         GUI Terminal Front-End Settings Management
  * PROGRAMMERS:     Hermes Belusca - Maito
  */
 
@@ -11,7 +11,7 @@
 #include "consrv.h"
 #include "conio.h"
 #include "settings.h"
-#include "guiconsole.h"
+#include "guiterm.h"
 #include "guisettings.h"
 
 #define NDEBUG

@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/consrv/guiconsole.c
- * PURPOSE:         GUI front-end
+ * FILE:            win32ss/user/consrv/frontends/gui/guiterm.c
+ * PURPOSE:         GUI Terminal Front-End
  * PROGRAMMERS:
  */
 
@@ -12,8 +12,9 @@
 #include "conio.h"
 #include "console.h"
 #include "settings.h"
-#include "guiconsole.h"
+#include "guiterm.h"
 #include "guisettings.h"
+#include "resource.h"
 
 #define NDEBUG
 #include <debug.h>
