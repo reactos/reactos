@@ -44,8 +44,6 @@
 #include <win/console.h>
 #include <win/conmsg.h>
 
-#include "resource.h"
-
 
 extern HINSTANCE ConSrvDllInstance;
 extern HANDLE ConSrvHeap;

@@ -10,6 +10,7 @@
 
 #include "consrv.h"
 #include "conio.h"
+#include "lineinput.h"
 
 #define NDEBUG
 #include <debug.h>

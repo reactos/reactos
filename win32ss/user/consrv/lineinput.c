@@ -138,7 +138,7 @@ HistoryFindBuffer(PCONSOLE Console, PUNICODE_STRING ExeName)
     return NULL;
 }
 
-VOID FASTCALL
+static VOID
 HistoryDeleteBuffer(PHISTORY_BUFFER Hist)
 {
     if (!Hist) return;
@@ -149,6 +149,20 @@ HistoryDeleteBuffer(PHISTORY_BUFFER Hist)
     RtlFreeHeap(ConSrvHeap, 0, Hist->Entries);
     RemoveEntryList(&Hist->ListEntry);
     RtlFreeHeap(ConSrvHeap, 0, Hist);
+}
+
+VOID FASTCALL
+HistoryDeleteBuffers(PCONSOLE Console)
+{
+    PLIST_ENTRY CurrentEntry;
+    PHISTORY_BUFFER HistoryBuffer;
+
+    while (!IsListEmpty(&Console->HistoryBuffers))
+    {
+        CurrentEntry = RemoveHeadList(&Console->HistoryBuffers);
+        HistoryBuffer = CONTAINING_RECORD(CurrentEntry, HISTORY_BUFFER, ListEntry);
+        HistoryDeleteBuffer(HistoryBuffer);
+    }
 }
 
 static VOID

@@ -8,18 +8,6 @@
 
 #pragma once
 
-#define ConSrvLockConsoleListExclusive()    \
-    RtlAcquireResourceExclusive(&ListLock, TRUE)
-
-#define ConSrvLockConsoleListShared()       \
-    RtlAcquireResourceShared(&ListLock, TRUE)
-
-#define ConSrvUnlockConsoleList()           \
-    RtlReleaseResource(&ListLock)
-
-extern LIST_ENTRY ConsoleList;
-extern RTL_RESOURCE ListLock;
-
 #if 0
 /*
  * WARNING: Change the state of the console ONLY when the console is locked !
@@ -39,7 +27,7 @@ NTSTATUS WINAPI ConSrvInitConsole(OUT PCONSOLE* NewConsole,
                                   IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
                                   IN PCSR_PROCESS ConsoleLeaderProcess);
 VOID WINAPI ConSrvDeleteConsole(PCONSOLE Console);
-BOOL FASTCALL ConSrvValidatePointer(PCONSOLE Console);
+BOOL FASTCALL ConSrvValidateConsolePointer(PCONSOLE Console);
 BOOL FASTCALL ConSrvValidateConsoleState(PCONSOLE Console,
                                          CONSOLE_STATE ExpectedState);
 BOOL FASTCALL ConSrvValidateConsoleUnsafe(PCONSOLE Console,

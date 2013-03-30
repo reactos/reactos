@@ -277,12 +277,4 @@ NTSTATUS FASTCALL ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
 VOID WINAPI ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 DWORD FASTCALL ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale);
 
-/* alias.c */
-VOID IntDeleteAllAliases(struct _ALIAS_HEADER *RootHeader);
-
-/* lineinput.c */
-struct _HISTORY_BUFFER;
-VOID FASTCALL HistoryDeleteBuffer(struct _HISTORY_BUFFER *Hist);
-VOID FASTCALL LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent);
-
 /* EOF */

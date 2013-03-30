@@ -13,6 +13,8 @@
 
 #include "consrv.h"
 #include "conio.h"
+#include "alias.h"
+#include "lineinput.h"
 #include "settings.h"
 
 #include "frontends/gui/guiterm.h"
@@ -22,6 +24,7 @@
 #endif
 
 #include "console.h"
+#include "resource.h"
 
 #include <shlwapi.h>
 #include <shlobj.h>
@@ -31,8 +34,17 @@
 
 /* GLOBALS ********************************************************************/
 
-LIST_ENTRY ConsoleList;  /* The list of all the allocated consoles */
-/*static*/ RTL_RESOURCE ListLock;
+static LIST_ENTRY ConsoleList;  /* The list of all the allocated consoles */
+static RTL_RESOURCE ListLock;
+
+#define ConSrvLockConsoleListExclusive()    \
+    RtlAcquireResourceExclusive(&ListLock, TRUE)
+
+#define ConSrvLockConsoleListShared()       \
+    RtlAcquireResourceShared(&ListLock, TRUE)
+
+#define ConSrvUnlockConsoleList()           \
+    RtlReleaseResource(&ListLock)
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -572,7 +584,7 @@ ConSrvDeleteConsole(PCONSOLE Console)
     ConSrvLockConsoleListExclusive();
 
     /* Check the existence of the console, and if it's ok, continue */
-    if (!ConSrvValidatePointer(Console))
+    if (!ConSrvValidateConsolePointer(Console))
     {
         /* Unlock the console list and return */
         ConSrvUnlockConsoleList();
@@ -622,7 +634,7 @@ ConSrvDeleteConsole(PCONSOLE Console)
     ConSrvLockConsoleListExclusive();
 
     /* Re-check the existence of the console, and if it's ok, continue */
-    if (!ConSrvValidatePointer(Console))
+    if (!ConSrvValidateConsolePointer(Console))
     {
         /* Unlock the console list and return */
         ConSrvUnlockConsoleList();
@@ -654,8 +666,8 @@ ConSrvDeleteConsole(PCONSOLE Console)
 
     if (Console->LineBuffer)
         RtlFreeHeap(ConSrvHeap, 0, Console->LineBuffer);
-    while (!IsListEmpty(&Console->HistoryBuffers))
-        HistoryDeleteBuffer((struct _HISTORY_BUFFER *)Console->HistoryBuffers.Flink);
+
+    HistoryDeleteBuffers(Console);
 
     ConioDeleteScreenBuffer(Console->ActiveBuffer);
     if (!IsListEmpty(&Console->BufferList))
@@ -681,6 +693,94 @@ ConSrvDeleteConsole(PCONSOLE Console)
 
     /* Unlock the console list and return */
     ConSrvUnlockConsoleList();
+}
+
+BOOL FASTCALL
+ConSrvValidateConsolePointer(PCONSOLE Console)
+{
+    PLIST_ENTRY ConsoleEntry;
+    PCONSOLE CurrentConsole = NULL;
+
+    if (!Console) return FALSE;
+
+    /* The console list must be locked */
+    // ASSERT(Console_list_locked);
+
+    ConsoleEntry = ConsoleList.Flink;
+    while (ConsoleEntry != &ConsoleList)
+    {
+        CurrentConsole = CONTAINING_RECORD(ConsoleEntry, CONSOLE, Entry);
+        ConsoleEntry = ConsoleEntry->Flink;
+        if (CurrentConsole == Console) return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOL FASTCALL
+ConSrvValidateConsoleState(PCONSOLE Console,
+                           CONSOLE_STATE ExpectedState)
+{
+    // if (!Console) return FALSE;
+
+    /* The console must be locked */
+    // ASSERT(Console_locked);
+
+    return (Console->State == ExpectedState);
+}
+
+BOOL FASTCALL
+ConSrvValidateConsoleUnsafe(PCONSOLE Console,
+                            CONSOLE_STATE ExpectedState,
+                            BOOL LockConsole)
+{
+    if (!Console) return FALSE;
+
+    /*
+     * Lock the console to forbid possible console's state changes
+     * (which must be done when the console is already locked).
+     * If we don't want to lock it, it's because the lock is already
+     * held. So there must be no problems.
+     */
+    if (LockConsole) EnterCriticalSection(&Console->Lock);
+
+    // ASSERT(Console_locked);
+
+    /* Check whether the console's state is what we expect */
+    if (!ConSrvValidateConsoleState(Console, ExpectedState))
+    {
+        if (LockConsole) LeaveCriticalSection(&Console->Lock);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL FASTCALL
+ConSrvValidateConsole(PCONSOLE Console,
+                      CONSOLE_STATE ExpectedState,
+                      BOOL LockConsole)
+{
+    BOOL RetVal = FALSE;
+
+    if (!Console) return FALSE;
+
+    /*
+     * Forbid creation or deletion of consoles when
+     * checking for the existence of a console.
+     */
+    ConSrvLockConsoleListShared();
+
+    if (ConSrvValidateConsolePointer(Console))
+    {
+        RetVal = ConSrvValidateConsoleUnsafe(Console,
+                                             ExpectedState,
+                                             LockConsole);
+    }
+
+    /* Unlock the console list and return */
+    ConSrvUnlockConsoleList();
+    return RetVal;
 }
 
 
