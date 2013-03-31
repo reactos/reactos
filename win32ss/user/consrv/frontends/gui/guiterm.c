@@ -1938,7 +1938,10 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
         return STATUS_INVALID_PARAMETER;
 
     if (Size.X == ScreenBuffer->ScreenBufferSize.X && Size.Y == ScreenBuffer->ScreenBufferSize.Y)
+    {
+        // FIXME: Trigger a buffer resize event ??
         return STATUS_SUCCESS;
+    }
 
     Buffer = RtlAllocateHeap(ConSrvHeap, 0, Size.X * Size.Y * 2);
     if (!Buffer)
@@ -2004,6 +2007,19 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
         ScreenBuffer->ShowX = Size.X - Console->ConsoleSize.X;
     if (ScreenBuffer->ShowY > Size.Y - Console->ConsoleSize.Y)
         ScreenBuffer->ShowY = Size.Y - Console->ConsoleSize.Y;
+
+    /*
+     * Trigger a buffer resize event
+     */
+    if (Console->InputBuffer.Mode & ENABLE_WINDOW_INPUT)
+    {
+        INPUT_RECORD er;
+
+        er.EventType = WINDOW_BUFFER_SIZE_EVENT;
+        er.Event.WindowBufferSizeEvent.dwSize = ScreenBuffer->ScreenBufferSize;
+
+        ConioProcessInputEvent(Console, &er);
+    }
 
     /* TODO: Should update scrollbar, but can't use anything that
      * calls SendMessage or it could cause deadlock --> Use PostMessage */
