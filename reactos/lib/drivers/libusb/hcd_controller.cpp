@@ -60,7 +60,7 @@ protected:
     PUSBHARDWAREDEVICE m_Hardware;
     PHUBCONTROLLER m_HubController;
     ULONG m_FDODeviceNumber;
-    LPCWSTR m_USBType;
+    LPCSTR m_USBType;
 };
 
 //=================================================================================================
@@ -138,7 +138,7 @@ CHCDController::Initialize(
     Status = m_Hardware->Initialize(m_DriverObject, m_FunctionalDeviceObject, m_PhysicalDeviceObject, m_NextDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("[%S] Failed to initialize hardware object %x\n", m_Hardware->GetUSBType(), Status);
+        DPRINT1("[%s] Failed to initialize hardware object %x\n", Status);
 
         //
         // failed to initialize hardware object, detach from device stack
@@ -240,7 +240,7 @@ CHCDController::HandleDeviceControl(
     //
     PC_ASSERT(DeviceExtension->IsFDO);
 
-    DPRINT1("[%S] HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n", m_USBType,
+    DPRINT1("[%s] HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu\n", m_USBType,
         IoStack->Parameters.DeviceIoControl.IoControlCode,
         IoStack->Parameters.DeviceIoControl.InputBufferLength,
         IoStack->Parameters.DeviceIoControl.OutputBufferLength);
@@ -285,7 +285,7 @@ CHCDController::HandleDeviceControl(
                         //
                         // informal debug print
                         //
-                        DPRINT1("[%S] Result %S\n", m_USBType, DriverKey->DriverKeyName);
+                        DPRINT1("[%s] Result %S\n", m_USBType, DriverKey->DriverKeyName);
                     }
                 }
 
@@ -337,7 +337,7 @@ CHCDController::HandleDeviceControl(
                 PC_ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(ULONG) - sizeof(WCHAR) >= ResultLength);
 
                 DriverKey->DriverKeyName[ResultLength / sizeof(WCHAR)] = L'\0';
-                DPRINT1("[%S] Result %S\n", m_USBType, DriverKey->DriverKeyName);
+                DPRINT1("[%s] Result %S\n", m_USBType, DriverKey->DriverKeyName);
             }
 
             //
@@ -400,7 +400,7 @@ CHCDController::HandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            DPRINT("[%S] HandlePnp IRP_MN_START FDO\n", m_USBType);
+            DPRINT("[%s] HandlePnp IRP_MN_START FDO\n", m_USBType);
 
             //
             // first start lower device object
@@ -429,12 +429,12 @@ CHCDController::HandlePnp(
                 Status = SetSymbolicLink(TRUE);
             }
 
-            DPRINT("[%S] HandlePnp IRP_MN_START FDO: Status %x\n", m_USBType ,Status);
+            DPRINT("[%s] HandlePnp IRP_MN_START FDO: Status %x\n", m_USBType ,Status);
             break;
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT("[%S] HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %lx\n", m_USBType, IoStack->Parameters.QueryDeviceRelations.Type);
+            DPRINT("[%s] HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %lx\n", m_USBType, IoStack->Parameters.QueryDeviceRelations.Type);
 
             if (m_HubController == NULL)
             {
@@ -514,7 +514,7 @@ CHCDController::HandlePnp(
         }
         case IRP_MN_STOP_DEVICE:
         {
-            DPRINT("[%S] HandlePnp IRP_MN_STOP_DEVICE\n", m_USBType);
+            DPRINT("[%s] HandlePnp IRP_MN_STOP_DEVICE\n", m_USBType);
 
             if (m_Hardware)
             {
@@ -555,7 +555,7 @@ CHCDController::HandlePnp(
             IoSkipCurrentIrpStackLocation(Irp);
             return IoCallDriver(m_NextDeviceObject, Irp);
 #else
-            DPRINT1("[%S] Denying controller removal due to reinitialization bugs\n", m_USBType);
+            DPRINT1("[%s] Denying controller removal due to reinitialization bugs\n", m_USBType);
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_UNSUCCESSFUL;
@@ -563,7 +563,7 @@ CHCDController::HandlePnp(
         }
         case IRP_MN_REMOVE_DEVICE:
         {
-            DPRINT("[%S] HandlePnp IRP_MN_REMOVE_DEVICE FDO\n", m_USBType);
+            DPRINT("[%s] HandlePnp IRP_MN_REMOVE_DEVICE FDO\n", m_USBType);
 
             //
             // delete the symbolic link
@@ -635,7 +635,7 @@ CHCDController::CreateFDO(
         //
         // construct device name
         //
-        swprintf(CharDeviceName, L"\\Device\\USBFDO-%lu", UsbDeviceNumber);
+        swprintf(CharDeviceName, L"\\Device\\USBFDO-%d", UsbDeviceNumber);
 
         //
         // initialize device name
@@ -676,7 +676,7 @@ CHCDController::CreateFDO(
         //
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("[%S] CreateFDO: Failed to create %wZ, Status %x\n", m_USBType, &DeviceName, Status);
+            DPRINT1("[%s] CreateFDO: Failed to create %wZ, Status %x\n", m_USBType, &DeviceName, Status);
             return Status;
         }
     }
@@ -686,7 +686,7 @@ CHCDController::CreateFDO(
     //
     m_FDODeviceNumber = UsbDeviceNumber;
 
-    DPRINT("[%S] CreateFDO: DeviceName %wZ\n", m_USBType, &DeviceName);
+    DPRINT("[%s] CreateFDO: DeviceName %wZ\n", m_USBType, &DeviceName);
 
     /* done */
     return Status;
@@ -706,8 +706,8 @@ CHCDController::SetSymbolicLink(
         //
         // create legacy link
         //
-        swprintf(LinkName, L"\\DosDevices\\HCD%lu", m_FDODeviceNumber);
-        swprintf(FDOName, L"\\Device\\USBFDO-%lu", m_FDODeviceNumber);
+        swprintf(LinkName, L"\\DosDevices\\HCD%d", m_FDODeviceNumber);
+        swprintf(FDOName, L"\\Device\\USBFDO-%d", m_FDODeviceNumber);
         RtlInitUnicodeString(&Link, LinkName);
         RtlInitUnicodeString(&FDO, FDOName);
 
@@ -729,7 +729,7 @@ CHCDController::SetSymbolicLink(
         //
         // create legacy link
         //
-        swprintf(LinkName, L"\\DosDevices\\HCD%lu", m_FDODeviceNumber);
+        swprintf(LinkName, L"\\DosDevices\\HCD%d", m_FDODeviceNumber);
         RtlInitUnicodeString(&Link, LinkName);
 
         //
