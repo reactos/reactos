@@ -469,8 +469,7 @@ cpp_quote("#endif")
 typedef struct _SAMPR_LOGON_HOURS
 {
     unsigned short UnitsPerWeek;
-//    [size_is(1260), length_is((UnitsPerWeek + 7) / 8)] unsigned char *LogonHours; // FIXME
-    [size_is(1260)] unsigned char *LogonHours;
+    [size_is(1260), length_is((UnitsPerWeek + 7) / 8)] unsigned char *LogonHours; // FIXME
 } SAMPR_LOGON_HOURS, *PSAMPR_LOGON_HOURS;
 
 typedef struct _SAMPR_USER_ALL_INFORMATION

@@ -5410,7 +5410,14 @@ SampQueryUserLogon(PSAM_DB_OBJECT UserObject,
         goto done;
     }
 
-    /* FIXME: LogonHours */
+    /* Get the LogonHours attribute */
+    Status = SampGetLogonHoursAttrbute(UserObject,
+                                       &InfoBuffer->Logon.LogonHours);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
 
     *Buffer = InfoBuffer;
 
@@ -5570,7 +5577,14 @@ SampQueryUserAccount(PSAM_DB_OBJECT UserObject,
         goto done;
     }
 
-    /* FIXME: LogonHours */
+    /* Get the LogonHours attribute */
+    Status = SampGetLogonHoursAttrbute(UserObject,
+                                       &InfoBuffer->Account.LogonHours);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
 
     *Buffer = InfoBuffer;
 
@@ -5613,7 +5627,51 @@ done:
     return Status;
 }
 
-/* FIXME: SampQueryUserLogonHours */
+
+static
+NTSTATUS
+SampQueryUserLogonHours(PSAM_DB_OBJECT UserObject,
+                        PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", UserObject, Buffer);
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+    {
+        TRACE("Failed to allocate InfoBuffer!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = SampGetLogonHoursAttrbute(UserObject,
+                                       &InfoBuffer->LogonHours.LogonHours);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetLogonHoursAttrbute failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->LogonHours.LogonHours.LogonHours != NULL)
+                midl_user_free(InfoBuffer->LogonHours.LogonHours.LogonHours);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
 
 static
 NTSTATUS
@@ -6363,13 +6421,20 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             goto done;
         }
 
+        /* Get the LogonHours attribute */
+        Status = SampGetLogonHoursAttrbute(UserObject,
+                                           &InfoBuffer->All.LogonHours);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
+
         InfoBuffer->All.LastLogon.LowPart = FixedData.LastLogon.LowPart;
         InfoBuffer->All.LastLogon.HighPart = FixedData.LastLogon.HighPart;
 
         InfoBuffer->All.LastLogoff.LowPart = FixedData.LastLogoff.LowPart;
         InfoBuffer->All.LastLogoff.HighPart = FixedData.LastLogoff.HighPart;
-
-// USER_ALL_LOGONHOURS
 
         InfoBuffer->All.BadPasswordCount = FixedData.BadPasswordCount;
 
@@ -6385,7 +6450,8 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
         InfoBuffer->All.PasswordMustChange.LowPart = PasswordMustChange.LowPart;
         InfoBuffer->All.PasswordMustChange.HighPart = PasswordMustChange.HighPart;
 
-        InfoBuffer->All. WhichFields |= /* USER_ALL_READ_LOGON_MASK; */
+        InfoBuffer->All. WhichFields |= USER_ALL_READ_LOGON_MASK;
+/*
             USER_ALL_HOMEDIRECTORY |
             USER_ALL_HOMEDIRECTORYDRIVE |
             USER_ALL_SCRIPTPATH |
@@ -6393,11 +6459,12 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             USER_ALL_WORKSTATIONS |
             USER_ALL_LASTLOGON |
             USER_ALL_LASTLOGOFF |
-//            USER_ALL_LOGONHOURS |
+            USER_ALL_LOGONHOURS |
             USER_ALL_BADPASSWORDCOUNT |
             USER_ALL_LOGONCOUNT;
             USER_ALL_PASSWORDCANCHANGE |
             USER_ALL_PASSWORDMUSTCHANGE;
+*/
     }
 
     if (UserObject->Access & USER_READ_ACCOUNT)
@@ -6575,10 +6642,10 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
                                         Buffer);
             break;
 
-//        case UserLogonHoursInformation:
-//            Status = SampQueryUserLogonHours(UserObject,
-//                                             Buffer);
-//            break;
+        case UserLogonHoursInformation:
+            Status = SampQueryUserLogonHours(UserObject,
+                                             Buffer);
+            break;
 
         case UserAccountInformation:
             Status = SampQueryUserAccount(UserObject,
