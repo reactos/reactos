@@ -1833,17 +1833,24 @@ extern "C" {
 #define WM_APP 32768
 #define WM_GETTITLEBARINFOEX 0x033F
 
-#define XBUTTON1      0x0001
-#define XBUTTON2      0x0002
-
 #if (_WIN32_WINNT >= 0x0400)
 #define WHEEL_DELTA 120
-#define GET_WHEEL_DELTA_WPARAM(wparam) ((short)HIWORD (wparam))
+#define GET_WHEEL_DELTA_WPARAM(wParam)  ((short)HIWORD(wParam))
 #define WHEEL_PAGESCROLL UINT_MAX
 #endif
+
+#if (_WIN32_WINNT >= 0x0500)
+#define GET_KEYSTATE_WPARAM(wParam)     (LOWORD(wParam))
+#define GET_NCHITTEST_WPARAM(wParam)    ((short)LOWORD(wParam))
+#define GET_XBUTTON_WPARAM(wParam)      (HIWORD(wParam))
+#define XBUTTON1    0x0001
+#define XBUTTON2    0x0002
+#endif
+
 #if (_WIN32_WINNT >= 0x0501)
 #define WM_THEMECHANGED 794
 #endif
+
 #define BM_CLICK 245
 #define BM_GETCHECK 240
 #define BM_GETIMAGE 246

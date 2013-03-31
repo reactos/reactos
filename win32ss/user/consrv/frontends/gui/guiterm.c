@@ -950,8 +950,10 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
     else if (Console->InputBuffer.Mode & ENABLE_MOUSE_INPUT)
     {
         INPUT_RECORD er;
-        DWORD dwButtonState = 0;
-        DWORD dwEventFlags  = 0;
+        WORD  wKeyState         = GET_KEYSTATE_WPARAM(wParam);
+        DWORD dwButtonState     = 0;
+        DWORD dwControlKeyState = 0;
+        DWORD dwEventFlags      = 0;
 
         switch (msg)
         {
@@ -960,7 +962,27 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
                 dwEventFlags  = 0;
                 break;
 
+            case WM_MBUTTONDOWN:
+                dwButtonState = FROM_LEFT_2ND_BUTTON_PRESSED;
+                dwEventFlags  = 0;
+                break;
+
+            case WM_RBUTTONDOWN:
+                dwButtonState = RIGHTMOST_BUTTON_PRESSED;
+                dwEventFlags  = 0;
+                break;
+
             case WM_LBUTTONUP:
+                dwButtonState = 0;
+                dwEventFlags  = 0;
+                break;
+
+            case WM_MBUTTONUP:
+                dwButtonState = 0;
+                dwEventFlags  = 0;
+                break;
+
+            case WM_RBUTTONUP:
                 dwButtonState = 0;
                 dwEventFlags  = 0;
                 break;
@@ -970,33 +992,13 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
                 dwEventFlags  = DOUBLE_CLICK;
                 break;
 
-            case WM_RBUTTONDOWN:
-                dwButtonState = RIGHTMOST_BUTTON_PRESSED;
-                dwEventFlags  = 0;
-                break;
-
-            case WM_RBUTTONUP:
-                dwButtonState = 0;
-                dwEventFlags  = 0;
+            case WM_MBUTTONDBLCLK:
+                dwButtonState = FROM_LEFT_2ND_BUTTON_PRESSED;
+                dwEventFlags  = DOUBLE_CLICK;
                 break;
 
             case WM_RBUTTONDBLCLK:
                 dwButtonState = RIGHTMOST_BUTTON_PRESSED;
-                dwEventFlags  = DOUBLE_CLICK;
-                break;
-
-            case WM_MBUTTONDOWN:
-                dwButtonState = FROM_LEFT_2ND_BUTTON_PRESSED;
-                dwEventFlags  = 0;
-                break;
-
-            case WM_MBUTTONUP:
-                dwButtonState = 0;
-                dwEventFlags  = 0;
-                break;
-
-            case WM_MBUTTONDBLCLK:
-                dwButtonState = FROM_LEFT_2ND_BUTTON_PRESSED;
                 dwEventFlags  = DOUBLE_CLICK;
                 break;
 
@@ -1006,12 +1008,12 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
                 break;
 
             case WM_MOUSEWHEEL:
-                dwButtonState = 0;
+                dwButtonState = GET_WHEEL_DELTA_WPARAM(wParam) << 16;
                 dwEventFlags  = MOUSE_WHEELED;
                 break;
 
             case WM_MOUSEHWHEEL:
-                dwButtonState = 0;
+                dwButtonState = GET_WHEEL_DELTA_WPARAM(wParam) << 16;
                 dwEventFlags  = MOUSE_HWHEELED;
                 break;
 
@@ -1020,13 +1022,43 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
                 break;
         }
 
-        er.EventType = MOUSE_EVENT;
-        er.Event.MouseEvent.dwMousePosition   = PointToCoord(GuiData, lParam);
-        er.Event.MouseEvent.dwButtonState     = dwButtonState;
-        er.Event.MouseEvent.dwControlKeyState = 0;
-        er.Event.MouseEvent.dwEventFlags      = dwEventFlags;
+        if (Ret)
+        {
+            if (wKeyState & MK_LBUTTON)
+                dwButtonState |= FROM_LEFT_1ST_BUTTON_PRESSED;
+            if (wKeyState & MK_MBUTTON)
+                dwButtonState |= FROM_LEFT_2ND_BUTTON_PRESSED;
+            if (wKeyState & MK_RBUTTON)
+                dwButtonState |= RIGHTMOST_BUTTON_PRESSED;
 
-        ConioProcessInputEvent(Console, &er);
+            if (GetKeyState(VK_RMENU) & 0x8000)
+                dwControlKeyState |= RIGHT_ALT_PRESSED;
+            if (GetKeyState(VK_LMENU) & 0x8000)
+                dwControlKeyState |= LEFT_ALT_PRESSED;
+            if (GetKeyState(VK_RCONTROL) & 0x8000)
+                dwControlKeyState |= RIGHT_CTRL_PRESSED;
+            if (GetKeyState(VK_LCONTROL) & 0x8000)
+                dwControlKeyState |= LEFT_CTRL_PRESSED;
+            if (GetKeyState(VK_SHIFT) & 0x8000)
+                dwControlKeyState |= SHIFT_PRESSED;
+            if (GetKeyState(VK_NUMLOCK) & 0x0001)
+                dwControlKeyState |= NUMLOCK_ON;
+            if (GetKeyState(VK_SCROLL) & 0x0001)
+                dwControlKeyState |= SCROLLLOCK_ON;
+            if (GetKeyState(VK_CAPITAL) & 0x0001)
+                dwControlKeyState |= CAPSLOCK_ON;
+            /* See WM_CHAR MSDN documentation for instance */
+            if (lParam & 0x01000000)
+                dwControlKeyState |= ENHANCED_KEY;
+
+            er.EventType = MOUSE_EVENT;
+            er.Event.MouseEvent.dwMousePosition   = PointToCoord(GuiData, lParam);
+            er.Event.MouseEvent.dwButtonState     = dwButtonState;
+            er.Event.MouseEvent.dwControlKeyState = dwControlKeyState;
+            er.Event.MouseEvent.dwEventFlags      = dwEventFlags;
+
+            ConioProcessInputEvent(Console, &er);
+        }
     }
 
     LeaveCriticalSection(&Console->Lock);
@@ -1425,14 +1457,14 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_LBUTTONDBLCLK:
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        case WM_RBUTTONDBLCLK:
         case WM_MBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_LBUTTONUP:
         case WM_MBUTTONUP:
+        case WM_RBUTTONUP:
+        case WM_LBUTTONDBLCLK:
         case WM_MBUTTONDBLCLK:
+        case WM_RBUTTONDBLCLK:
         case WM_MOUSEMOVE:
         case WM_MOUSEWHEEL:
         case WM_MOUSEHWHEEL:
@@ -1693,7 +1725,7 @@ GuiInit(VOID)
         wc.cbSize = sizeof(WNDCLASSEXW);
         wc.lpszClassName = GUI_CONSOLE_WINDOW_CLASS;
         wc.lpfnWndProc = GuiConsoleWndProc;
-        wc.style = 0;
+        wc.style = CS_DBLCLKS | CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
         wc.hInstance = ConSrvDllInstance;
         wc.hIcon = ghDefaultIcon;
         wc.hIconSm = ghDefaultIconSm;

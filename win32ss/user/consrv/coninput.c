@@ -102,17 +102,17 @@ ConioProcessInputEvent(PCONSOLE Console,
 }
 
 static DWORD FASTCALL
-ConioGetShiftState(PBYTE KeyState)
+ConioGetShiftState(PBYTE KeyState, LPARAM lParam)
 {
     DWORD ssOut = 0;
 
-    if (KeyState[VK_CAPITAL] & 1)
+    if (KeyState[VK_CAPITAL] & 0x01)
         ssOut |= CAPSLOCK_ON;
 
-    if (KeyState[VK_NUMLOCK] & 1)
+    if (KeyState[VK_NUMLOCK] & 0x01)
         ssOut |= NUMLOCK_ON;
 
-    if (KeyState[VK_SCROLL] & 1)
+    if (KeyState[VK_SCROLL] & 0x01)
         ssOut |= SCROLLLOCK_ON;
 
     if (KeyState[VK_SHIFT] & 0x80)
@@ -127,6 +127,10 @@ ConioGetShiftState(PBYTE KeyState)
         ssOut |= LEFT_ALT_PRESSED;
     if (KeyState[VK_RMENU] & 0x80)
         ssOut |= RIGHT_ALT_PRESSED;
+
+    /* See WM_CHAR MSDN documentation for instance */
+    if (lParam & 0x01000000)
+        ssOut |= ENHANCED_KEY;
 
     return ssOut;
 }
@@ -161,7 +165,7 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
            msg->message == WM_SYSKEYDOWN || msg->message == WM_SYSCHAR;
 
     GetKeyboardState(KeyState);
-    ShiftState = ConioGetShiftState(KeyState);
+    ShiftState = ConioGetShiftState(KeyState, msg->lParam);
 
     if (msg->message == WM_CHAR || msg->message == WM_SYSCHAR)
     {
