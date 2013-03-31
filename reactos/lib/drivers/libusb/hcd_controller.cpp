@@ -138,7 +138,7 @@ CHCDController::Initialize(
     Status = m_Hardware->Initialize(m_DriverObject, m_FunctionalDeviceObject, m_PhysicalDeviceObject, m_NextDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("[%s] Failed to initialize hardware object %x\n", Status);
+        DPRINT1("[%s] Failed to initialize hardware object %x\n", m_Hardware->GetUSBType(), Status);
 
         //
         // failed to initialize hardware object, detach from device stack
