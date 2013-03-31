@@ -7,6 +7,7 @@
  */
 
 /* INCLUDES *******************************************************************/
+/* So long, and Thanks for All the Fish */
 
 #include <ntoskrnl.h>
 #define NDEBUG
