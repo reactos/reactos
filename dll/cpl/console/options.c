@@ -105,48 +105,48 @@ OptionsProc(HWND hwndDlg,
                 }
                 case IDC_CHECK_QUICK_EDIT:
                 {
-                    lResult = SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+                    lResult = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
                     if (lResult == BST_CHECKED)
                     {
                         pConInfo->ci.QuickEdit = FALSE;
-                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
                     }
                     else if (lResult == BST_UNCHECKED)
                     {
                         pConInfo->ci.QuickEdit = TRUE;
-                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                     }
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
                 case IDC_CHECK_INSERT_MODE:
                 {
-                    lResult = SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+                    lResult = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
                     if (lResult == BST_CHECKED)
                     {
                         pConInfo->ci.InsertMode = FALSE;
-                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
                     }
                     else if (lResult == BST_UNCHECKED)
                     {
                         pConInfo->ci.InsertMode = TRUE;
-                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                     }
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
                 case IDC_CHECK_DISCARD_DUPLICATES:
                 {
-                   lResult = SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+                   lResult = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
                     if (lResult == BST_CHECKED)
                     {
                         pConInfo->ci.HistoryNoDup = FALSE;
-                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
                     }
                     else if (lResult == BST_UNCHECKED)
                     {
                         pConInfo->ci.HistoryNoDup = TRUE;
-                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                     }
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;

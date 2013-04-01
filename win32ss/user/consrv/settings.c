@@ -451,6 +451,23 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
     BOOL SizeChanged = FALSE;
 
     /*
+     * Apply full-screen mode.
+     */
+    if (ConsoleInfo->FullScreen)
+        Console->ActiveBuffer->DisplayMode |= CONSOLE_FULLSCREEN_MODE;
+    else
+        Console->ActiveBuffer->DisplayMode &= ~CONSOLE_FULLSCREEN_MODE;
+    // TODO: Apply it really
+
+    /*
+     * Apply terminal-edition settings:
+     * - QuickEdit and Insert modes,
+     * - history settings.
+     */
+    Console->QuickEdit  = ConsoleInfo->QuickEdit;
+    Console->InsertMode = ConsoleInfo->InsertMode;
+
+    /*
      * Apply foreground and background colors for both screen and popup
      * and copy the new palette.
      */

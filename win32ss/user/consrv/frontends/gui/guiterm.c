@@ -1529,6 +1529,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
 
+        case WM_COMMAND:
         case WM_SYSCOMMAND:
         {
             Result = GuiConsoleHandleSysMenuCommand(GuiData, wParam, lParam);
