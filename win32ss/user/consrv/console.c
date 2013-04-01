@@ -391,6 +391,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
         /*
         if (ConsoleStartInfo->dwStartupFlags & STARTF_RUNFULLSCREEN)
         {
+            ConsoleInfo.FullScreen = TRUE;
         }
         */
     }
@@ -422,9 +423,8 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
         return STATUS_UNSUCCESSFUL;
     }
 
-    // TODO: Use the values from ConsoleInfo.
-    Console->InputBuffer.Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT |
-                                ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
+    Console->InputBuffer.Mode = ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT |
+                                ENABLE_ECHO_INPUT      | ENABLE_MOUSE_INPUT;
     Console->QuickEdit  = ConsoleInfo.QuickEdit;
     Console->InsertMode = ConsoleInfo.InsertMode;
     InitializeListHead(&Console->InputBuffer.ReadWaitQueue);
@@ -440,6 +440,8 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
                                       ConsoleInfo.ScreenBufferSize,
                                       ConsoleInfo.ScreenAttrib,
                                       ConsoleInfo.PopupAttrib,
+                                      (ConsoleInfo.FullScreen ? CONSOLE_FULLSCREEN_MODE
+                                                              : CONSOLE_WINDOWED_MODE),
                                       TRUE,
                                       ConsoleInfo.CursorSize);
     if (!NT_SUCCESS(Status))
@@ -452,7 +454,6 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     }
     /* Make the new screen buffer active */
     Console->ActiveBuffer = NewBuffer;
-    Console->FullScreen = ConsoleInfo.FullScreen;
     InitializeListHead(&Console->WriteWaitQueue);
 
     /*
@@ -1010,19 +1011,20 @@ CSR_API(SrvFreeConsole)
 
 CSR_API(SrvSetConsoleMode)
 {
-#define CONSOLE_INPUT_MODE_VALID  ( ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT   | \
-                                    ENABLE_ECHO_INPUT      | ENABLE_WINDOW_INPUT | \
-                                    ENABLE_MOUSE_INPUT | \
-                                    ENABLE_INSERT_MODE | ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS )
-#define CONSOLE_OUTPUT_MODE_VALID ( ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT )
+#define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS   | ENABLE_INSERT_MODE  | ENABLE_QUICK_EDIT_MODE )
+#define CONSOLE_VALID_INPUT_MODES   ( ENABLE_PROCESSED_INPUT  | ENABLE_LINE_INPUT   | \
+                                      ENABLE_ECHO_INPUT       | ENABLE_WINDOW_INPUT | \
+                                      ENABLE_MOUSE_INPUT )
+#define CONSOLE_VALID_OUTPUT_MODES  ( ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT )
 
     NTSTATUS Status;
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
-    Object_t* Object = NULL;
+    DWORD ConsoleMode = ConsoleModeRequest->ConsoleMode;
+    Object_t* Object  = NULL;
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                                ConsoleModeRequest->ConsoleHandle,
-                                &Object, NULL, GENERIC_WRITE, TRUE, 0);
+                             ConsoleModeRequest->ConsoleHandle,
+                             &Object, NULL, GENERIC_WRITE, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = STATUS_SUCCESS;
@@ -1030,18 +1032,62 @@ CSR_API(SrvSetConsoleMode)
     if (CONIO_INPUT_BUFFER_MAGIC == Object->Type)
     {
         PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
-        InputBuffer->Mode = ConsoleModeRequest->ConsoleMode & CONSOLE_INPUT_MODE_VALID;
+        PCONSOLE Console = InputBuffer->Header.Console;
+
+        DPRINT("SetConsoleMode(Input, %d)\n", ConsoleMode);
+
+        /*
+         * 1. Only the presence of valid mode flags is allowed.
+         */
+        if (ConsoleMode & ~(CONSOLE_VALID_INPUT_MODES | CONSOLE_VALID_CONTROL_MODES))
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            goto Quit;
+        }
+
+        /*
+         * 2. If we use control mode flags without ENABLE_EXTENDED_FLAGS,
+         *    then consider the flags invalid.
+         *
+        if ( (ConsoleMode & CONSOLE_VALID_CONTROL_MODES) &&
+             (ConsoleMode & ENABLE_EXTENDED_FLAGS) == 0 )
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            goto Quit;
+        }
+        */
+
+        /*
+         * 3. Now we can continue.
+         */
+        if (ConsoleMode & CONSOLE_VALID_CONTROL_MODES)
+        {
+            Console->QuickEdit  = !!(ConsoleMode & ENABLE_QUICK_EDIT_MODE);
+            Console->InsertMode = !!(ConsoleMode & ENABLE_INSERT_MODE);
+        }
+        InputBuffer->Mode = (ConsoleMode & CONSOLE_VALID_INPUT_MODES);
     }
     else if (CONIO_SCREEN_BUFFER_MAGIC == Object->Type)
     {
         PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
-        Buffer->Mode = ConsoleModeRequest->ConsoleMode & CONSOLE_OUTPUT_MODE_VALID;
+
+        DPRINT("SetConsoleMode(Output, %d)\n", ConsoleMode);
+
+        if (ConsoleMode & ~CONSOLE_VALID_OUTPUT_MODES)
+        {
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            Buffer->Mode = (ConsoleMode & CONSOLE_VALID_OUTPUT_MODES);
+        }
     }
     else
     {
         Status = STATUS_INVALID_HANDLE;
     }
 
+Quit:
     ConSrvReleaseObject(Object, TRUE);
     return Status;
 }
@@ -1053,8 +1099,8 @@ CSR_API(SrvGetConsoleMode)
     Object_t* Object = NULL;
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                                ConsoleModeRequest->ConsoleHandle,
-                                &Object, NULL, GENERIC_READ, TRUE, 0);
+                             ConsoleModeRequest->ConsoleHandle,
+                             &Object, NULL, GENERIC_READ, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = STATUS_SUCCESS;
@@ -1062,7 +1108,19 @@ CSR_API(SrvGetConsoleMode)
     if (CONIO_INPUT_BUFFER_MAGIC == Object->Type)
     {
         PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
-        ConsoleModeRequest->ConsoleMode = InputBuffer->Mode;
+        PCONSOLE Console  = InputBuffer->Header.Console;
+        DWORD ConsoleMode = InputBuffer->Mode;
+
+        if (Console->QuickEdit || Console->InsertMode)
+        {
+            // Windows does this, even if it's not documented on MSDN
+            ConsoleMode |= ENABLE_EXTENDED_FLAGS;
+
+            if (Console->QuickEdit ) ConsoleMode |= ENABLE_QUICK_EDIT_MODE;
+            if (Console->InsertMode) ConsoleMode |= ENABLE_INSERT_MODE;
+        }
+
+        ConsoleModeRequest->ConsoleMode = ConsoleMode;
     }
     else if (CONIO_SCREEN_BUFFER_MAGIC == Object->Type)
     {
@@ -1181,7 +1239,7 @@ CSR_API(SrvGetConsoleTitle)
  *      with NT's, but values are not.
  */
 static NTSTATUS FASTCALL
-SetConsoleHardwareState(PCONSOLE Console, DWORD ConsoleHwState)
+SetConsoleHardwareState(PCONSOLE Console, ULONG ConsoleHwState)
 {
     DPRINT1("Console Hardware State: %d\n", ConsoleHwState);
 
@@ -1223,7 +1281,6 @@ CSR_API(SrvGetConsoleHardwareState)
     HardwareStateRequest->State = Console->HardwareState;
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
-
     return Status;
 }
 
@@ -1237,7 +1294,7 @@ CSR_API(SrvSetConsoleHardwareState)
     Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                   HardwareStateRequest->OutputHandle,
                                   &Buff,
-                                  GENERIC_READ,
+                                  GENERIC_WRITE,
                                   TRUE);
     if (!NT_SUCCESS(Status))
     {
@@ -1250,7 +1307,67 @@ CSR_API(SrvSetConsoleHardwareState)
     Status = SetConsoleHardwareState(Console, HardwareStateRequest->State);
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return Status;
+}
 
+CSR_API(SrvGetConsoleDisplayMode)
+{
+    NTSTATUS Status;
+    PCONSOLE_GETDISPLAYMODE GetDisplayModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetDisplayModeRequest;
+    PCONSOLE Console;
+    ULONG DisplayMode = 0;
+
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get console handle in SrvGetConsoleDisplayMode\n");
+        return Status;
+    }
+
+    if (Console->ActiveBuffer->DisplayMode & CONSOLE_FULLSCREEN_MODE)
+        DisplayMode |= CONSOLE_FULLSCREEN_HARDWARE; // CONSOLE_FULLSCREEN
+    else if (Console->ActiveBuffer->DisplayMode & CONSOLE_WINDOWED_MODE)
+        DisplayMode |= CONSOLE_WINDOWED;
+
+    GetDisplayModeRequest->DisplayMode = DisplayMode;
+    Status = STATUS_SUCCESS;
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
+}
+
+CSR_API(SrvSetConsoleDisplayMode)
+{
+    NTSTATUS Status;
+    PCONSOLE_SETDISPLAYMODE SetDisplayModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetDisplayModeRequest;
+    PCONSOLE_SCREEN_BUFFER Buff;
+
+    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                   SetDisplayModeRequest->OutputHandle,
+                                   &Buff,
+                                   GENERIC_WRITE,
+                                   TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get console handle in SrvSetConsoleDisplayMode\n");
+        return Status;
+    }
+
+    if (SetDisplayModeRequest->DisplayMode & ~(CONSOLE_FULLSCREEN_MODE | CONSOLE_WINDOWED_MODE))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+    }
+    else
+    {
+        Buff->DisplayMode = SetDisplayModeRequest->DisplayMode;
+        // TODO: Change the display mode
+        SetDisplayModeRequest->NewSBDim = Buff->ScreenBufferSize;
+
+        Status = STATUS_SUCCESS;
+    }
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
     return Status;
 }
 

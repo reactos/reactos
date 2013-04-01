@@ -65,6 +65,7 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
                          IN COORD ScreenBufferSize,
                          IN USHORT ScreenAttrib,
                          IN USHORT PopupAttrib,
+                         IN ULONG DisplayMode,
                          IN BOOLEAN IsCursorVisible,
                          IN ULONG CursorSize)
 {
@@ -103,8 +104,10 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
     {
         ClearLineBuffer(*Buffer);
     }
-    (*Buffer)->Mode = ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
     (*Buffer)->CursorPosition = (COORD){0, 0};
+
+    (*Buffer)->Mode = ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
+    (*Buffer)->DisplayMode = DisplayMode;
 
     InsertHeadList(&Console->BufferList, &(*Buffer)->ListEntry);
     return STATUS_SUCCESS;
@@ -1273,6 +1276,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     COORD   ScreenBufferSize = (COORD){80, 25};
     USHORT  ScreenAttrib     = DEFAULT_SCREEN_ATTRIB;
     USHORT  PopupAttrib      = DEFAULT_POPUP_ATTRIB;
+    ULONG   DisplayMode      = CONSOLE_WINDOWED_MODE;
     BOOLEAN IsCursorVisible  = TRUE;
     ULONG   CursorSize       = CSR_DEFAULT_CURSOR_SIZE;
 
@@ -1314,6 +1318,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         {
             ScreenAttrib = Console->ActiveBuffer->ScreenDefaultAttrib;
             PopupAttrib  = Console->ActiveBuffer->PopupDefaultAttrib;
+            DisplayMode  = Console->ActiveBuffer->DisplayMode;
 
             IsCursorVisible = Console->ActiveBuffer->CursorInfo.bVisible;
             CursorSize      = Console->ActiveBuffer->CursorInfo.dwSize;
@@ -1325,6 +1330,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
                                       ScreenBufferSize,
                                       ScreenAttrib,
                                       PopupAttrib,
+                                      DisplayMode,
                                       IsCursorVisible,
                                       CursorSize);
     if (NT_SUCCESS(Status))

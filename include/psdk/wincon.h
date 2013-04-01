@@ -15,16 +15,43 @@ extern "C" {
 #endif
 
 /*
+ * Special PID for parent process for AttachConsole API
+ */
+#if (_WIN32_WINNT >= 0x0501)
+#define ATTACH_PARENT_PROCESS   ((DWORD)-1)
+#endif
+
+/*
+ * Console display modes
+ */
+#define CONSOLE_FULLSCREEN          1
+#define CONSOLE_FULLSCREEN_HARDWARE 2
+#if (_WIN32_WINNT >= 0x0600)
+#define CONSOLE_OVERSTRIKE          1
+#endif
+
+#define CONSOLE_FULLSCREEN_MODE     1
+#define CONSOLE_WINDOWED_MODE       2
+
+/*
  * Color attributes for text and screen background
  */
-#define FOREGROUND_BLUE         0x0001
-#define FOREGROUND_GREEN        0x0002
-#define FOREGROUND_RED          0x0004
-#define FOREGROUND_INTENSITY    0x0008
-#define BACKGROUND_BLUE         0x0010
-#define BACKGROUND_GREEN        0x0020
-#define BACKGROUND_RED          0x0040
-#define BACKGROUND_INTENSITY    0x0080
+#define FOREGROUND_BLUE                 0x0001
+#define FOREGROUND_GREEN                0x0002
+#define FOREGROUND_RED                  0x0004
+#define FOREGROUND_INTENSITY            0x0008
+#define BACKGROUND_BLUE                 0x0010
+#define BACKGROUND_GREEN                0x0020
+#define BACKGROUND_RED                  0x0040
+#define BACKGROUND_INTENSITY            0x0080
+
+#define COMMON_LVB_LEADING_BYTE         0x0100
+#define COMMON_LVB_TRAILING_BYTE        0x0200
+#define COMMON_LVB_GRID_HORIZONTAL      0x0400
+#define COMMON_LVB_GRID_LVERTICAL       0x0800
+#define COMMON_LVB_GRID_RVERTICAL       0x1000
+#define COMMON_LVB_REVERSE_VIDEO        0x4000
+#define COMMON_LVB_UNDERSCORE           0x8000
 
 /*
  * Control handler codes
@@ -38,20 +65,39 @@ extern "C" {
 /*
  * Input mode flags
  */
-#define ENABLE_PROCESSED_INPUT      0x0001
-#define ENABLE_LINE_INPUT           0x0002
-#define ENABLE_ECHO_INPUT           0x0004
-#define ENABLE_WINDOW_INPUT         0x0008
-#define ENABLE_MOUSE_INPUT          0x0010
-#define ENABLE_INSERT_MODE          0x0020
-#define ENABLE_QUICK_EDIT_MODE      0x0040
-#define ENABLE_EXTENDED_FLAGS       0x0080
+#define ENABLE_PROCESSED_INPUT          0x0001
+#define ENABLE_LINE_INPUT               0x0002
+#define ENABLE_ECHO_INPUT               0x0004
+#define ENABLE_WINDOW_INPUT             0x0008
+#define ENABLE_MOUSE_INPUT              0x0010
+#define ENABLE_INSERT_MODE              0x0020
+#define ENABLE_QUICK_EDIT_MODE          0x0040
+#define ENABLE_EXTENDED_FLAGS           0x0080
+#if (_WIN32_WINNT >= 0x0600)
+#define ENABLE_AUTO_POSITION            0x0100
+#endif
 
 /*
  * Output mode flags
  */
-#define ENABLE_PROCESSED_OUTPUT     0x0001
-#define ENABLE_WRAP_AT_EOL_OUTPUT   0x0002
+#define ENABLE_PROCESSED_OUTPUT         0x0001
+#define ENABLE_WRAP_AT_EOL_OUTPUT       0x0002
+
+/*
+ * Console selection flags
+ */
+#define CONSOLE_NO_SELECTION            0x0000
+#define CONSOLE_SELECTION_IN_PROGRESS   0x0001
+#define CONSOLE_SELECTION_NOT_EMPTY     0x0002
+#define CONSOLE_MOUSE_SELECTION         0x0004
+#define CONSOLE_MOUSE_DOWN              0x0008
+
+/*
+ * History duplicate flags
+ */
+#if (_WIN32_WINNT >= 0x0600)
+#define HISTORY_NO_DUP_FLAG             0x0001
+#endif
 
 /*
  * Event types
@@ -102,53 +148,53 @@ typedef struct _CONSOLE_READCONSOLE_CONTROL {
 } CONSOLE_READCONSOLE_CONTROL, *PCONSOLE_READCONSOLE_CONTROL;
 
 typedef struct _CHAR_INFO {
-	union {
-		WCHAR UnicodeChar;
-		CHAR AsciiChar;
-	} Char;
-	WORD Attributes;
+    union {
+        WCHAR UnicodeChar;
+        CHAR AsciiChar;
+    } Char;
+    WORD Attributes;
 } CHAR_INFO,*PCHAR_INFO;
 typedef struct _SMALL_RECT {
-	SHORT Left;
-	SHORT Top;
-	SHORT Right;
-	SHORT Bottom;
+    SHORT Left;
+    SHORT Top;
+    SHORT Right;
+    SHORT Bottom;
 } SMALL_RECT,*PSMALL_RECT;
 typedef struct _CONSOLE_CURSOR_INFO {
-	DWORD	dwSize;
-	BOOL	bVisible;
+    DWORD dwSize;
+    BOOL  bVisible;
 } CONSOLE_CURSOR_INFO,*PCONSOLE_CURSOR_INFO;
 typedef struct _COORD {
-	SHORT X;
-	SHORT Y;
+    SHORT X;
+    SHORT Y;
 } COORD, *PCOORD;
 typedef struct _CONSOLE_SELECTION_INFO {
-  DWORD dwFlags;
-  COORD dwSelectionAnchor;
-  SMALL_RECT srSelection;
+    DWORD dwFlags;
+    COORD dwSelectionAnchor;
+    SMALL_RECT srSelection;
 } CONSOLE_SELECTION_INFO, *PCONSOLE_SELECTION_INFO;
 typedef struct _CONSOLE_FONT_INFO {
-	DWORD nFont;
-	COORD dwFontSize;
+    DWORD nFont;
+    COORD dwFontSize;
 } CONSOLE_FONT_INFO, *PCONSOLE_FONT_INFO;
 typedef struct _CONSOLE_SCREEN_BUFFER_INFO {
-	COORD	dwSize;
-	COORD	dwCursorPosition;
-	WORD	wAttributes;
-	SMALL_RECT srWindow;
-	COORD	dwMaximumWindowSize;
+    COORD      dwSize;
+    COORD      dwCursorPosition;
+    WORD       wAttributes;
+    SMALL_RECT srWindow;
+    COORD      dwMaximumWindowSize;
 } CONSOLE_SCREEN_BUFFER_INFO,*PCONSOLE_SCREEN_BUFFER_INFO;
 typedef BOOL(CALLBACK *PHANDLER_ROUTINE)(_In_ DWORD);
 typedef struct _KEY_EVENT_RECORD {
-	BOOL bKeyDown;
-	WORD wRepeatCount;
-	WORD wVirtualKeyCode;
-	WORD wVirtualScanCode;
-	union {
-		WCHAR UnicodeChar;
-		CHAR AsciiChar;
-	} uChar;
-	DWORD dwControlKeyState;
+    BOOL bKeyDown;
+    WORD wRepeatCount;
+    WORD wVirtualKeyCode;
+    WORD wVirtualScanCode;
+    union {
+        WCHAR UnicodeChar;
+        CHAR AsciiChar;
+    } uChar;
+    DWORD dwControlKeyState;
 }
 #ifdef __GNUC__
 /* gcc's alignment is not what win32 expects */
@@ -156,29 +202,26 @@ typedef struct _KEY_EVENT_RECORD {
 #endif
 KEY_EVENT_RECORD;
 typedef struct _MOUSE_EVENT_RECORD {
-	COORD dwMousePosition;
-	DWORD dwButtonState;
-	DWORD dwControlKeyState;
-	DWORD dwEventFlags;
+    COORD dwMousePosition;
+    DWORD dwButtonState;
+    DWORD dwControlKeyState;
+    DWORD dwEventFlags;
 } MOUSE_EVENT_RECORD;
 typedef struct _WINDOW_BUFFER_SIZE_RECORD {	COORD dwSize; } WINDOW_BUFFER_SIZE_RECORD;
 typedef struct _MENU_EVENT_RECORD {	UINT dwCommandId; } MENU_EVENT_RECORD,*PMENU_EVENT_RECORD;
 typedef struct _FOCUS_EVENT_RECORD { BOOL bSetFocus; } FOCUS_EVENT_RECORD;
 typedef struct _INPUT_RECORD {
-	WORD EventType;
-	union {
-		KEY_EVENT_RECORD KeyEvent;
-		MOUSE_EVENT_RECORD MouseEvent;
-		WINDOW_BUFFER_SIZE_RECORD WindowBufferSizeEvent;
-		MENU_EVENT_RECORD MenuEvent;
-		FOCUS_EVENT_RECORD FocusEvent;
-	} Event;
+    WORD EventType;
+    union {
+        KEY_EVENT_RECORD KeyEvent;
+        MOUSE_EVENT_RECORD MouseEvent;
+        WINDOW_BUFFER_SIZE_RECORD WindowBufferSizeEvent;
+        MENU_EVENT_RECORD MenuEvent;
+        FOCUS_EVENT_RECORD FocusEvent;
+    } Event;
 } INPUT_RECORD,*PINPUT_RECORD;
 
 #if (_WIN32_WINNT >= 0x0600)
-#define HISTORY_NO_DUP_FLAG 0x1
-#define CONSOLE_OVERSTRIKE  0x1
-
 typedef struct _CONSOLE_HISTORY_INFO {
     UINT cbSize;
     UINT HistoryBufferSize;
@@ -212,7 +255,6 @@ typedef struct _CONSOLE_FONT_INFOEX {
 BOOL WINAPI AllocConsole(VOID);
 
 #if (_WIN32_WINNT >= 0x0501)
-#define ATTACH_PARENT_PROCESS (DWORD)-1
 BOOL WINAPI AttachConsole(_In_ DWORD);
 
 BOOL WINAPI AddConsoleAliasA(_In_ LPCSTR, _In_ LPCSTR, _In_ LPCSTR);
@@ -294,7 +336,7 @@ GetConsoleTitleW(
 
 #if (_WIN32_WINNT >= 0x0500)
 HWND WINAPI GetConsoleWindow(VOID);
-WINBASEAPI BOOL APIENTRY GetConsoleDisplayMode(_Out_ LPDWORD lpModeFlags);
+BOOL APIENTRY GetConsoleDisplayMode(_Out_ LPDWORD lpModeFlags);
 BOOL APIENTRY SetConsoleDisplayMode(_In_ HANDLE hConsoleOutput, _In_ DWORD dwFlags, _Out_opt_ PCOORD lpNewScreenBufferDimensions);
 #endif
 COORD WINAPI GetLargestConsoleWindowSize(_In_ HANDLE);
@@ -438,10 +480,6 @@ WriteConsoleOutputCharacterW(
   _In_ COORD dwWriteCoord,
   _Out_ LPDWORD lpNumberOfCharsWritten);
 
-#define CONSOLE_FULLSCREEN 1
-#define CONSOLE_FULLSCREEN_HARDWARE 2
-#define CONSOLE_FULLSCREEN_MODE 1
-#define CONSOLE_WINDOWED_MODE 2
 
 #ifdef UNICODE
 #define AddConsoleAlias AddConsoleAliasW

@@ -54,6 +54,7 @@ typedef struct _CONSOLE_SCREEN_BUFFER
     WORD ScreenDefaultAttrib;       /* Default screen char attribute */
     WORD PopupDefaultAttrib;        /* Default popup char attribute */
     USHORT Mode;
+    ULONG  DisplayMode;
 } CONSOLE_SCREEN_BUFFER, *PCONSOLE_SCREEN_BUFFER;
 
 typedef struct _CONSOLE_INPUT_BUFFER
@@ -198,8 +199,7 @@ typedef struct _CONSOLE
     HANDLE UnpauseEvent;
     LIST_ENTRY WriteWaitQueue;              /* List head for the queue of write wait blocks */
 
-    DWORD HardwareState;                    /* _GDI_MANAGED, _DIRECT */
-/* BOOLEAN */ ULONG FullScreen; // Give the type of console: GUI (windowed) or TUI (fullscreen)
+    ULONG HardwareState;                    /* _GDI_MANAGED, _DIRECT */
 
 /**************************** Aliases and Histories ***************************/
     struct _ALIAS_HEADER *Aliases;
@@ -216,16 +216,6 @@ typedef struct _CONSOLE
     COLORREF Colors[16];                    /* Colour palette */
 
 } CONSOLE, *PCONSOLE;
-
-/* CONSOLE_SELECTION_INFO dwFlags values */
-#define CONSOLE_NO_SELECTION          0x0
-#define CONSOLE_SELECTION_IN_PROGRESS 0x1
-#define CONSOLE_SELECTION_NOT_EMPTY   0x2
-#define CONSOLE_MOUSE_SELECTION       0x4
-#define CONSOLE_MOUSE_DOWN            0x8
-
-/* HistoryFlags values */
-#define HISTORY_NO_DUP_FLAG           0x1
 
 /* PauseFlags values (internal only) */
 #define PAUSED_FROM_KEYBOARD  0x1
@@ -274,6 +264,7 @@ NTSTATUS FASTCALL ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
                                            IN COORD ScreenBufferSize,
                                            IN USHORT ScreenAttrib,
                                            IN USHORT PopupAttrib,
+                                           IN ULONG DisplayMode,
                                            IN BOOLEAN IsCursorVisible,
                                            IN ULONG CursorSize);
 VOID WINAPI ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);

@@ -16,6 +16,8 @@
 #include "guisettings.h"
 #include "resource.h"
 
+#include <windowsx.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -876,12 +878,12 @@ PointToCoord(PGUI_CONSOLE_DATA GuiData, LPARAM lParam)
 static LRESULT
 GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    LRESULT Ret = TRUE;
+    BOOL Err = FALSE;
     PCONSOLE Console = GuiData->Console;
 
     if (!ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
     {
-        Ret = FALSE;
+        Err = TRUE;
         goto Quit;
     }
 
@@ -943,7 +945,7 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
             }
 
             default:
-                Ret = FALSE;
+                Err = TRUE;
                 break;
         }
     }
@@ -958,31 +960,37 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
         switch (msg)
         {
             case WM_LBUTTONDOWN:
+                SetCapture(GuiData->hWindow);
                 dwButtonState = FROM_LEFT_1ST_BUTTON_PRESSED;
                 dwEventFlags  = 0;
                 break;
 
             case WM_MBUTTONDOWN:
+                SetCapture(GuiData->hWindow);
                 dwButtonState = FROM_LEFT_2ND_BUTTON_PRESSED;
                 dwEventFlags  = 0;
                 break;
 
             case WM_RBUTTONDOWN:
+                SetCapture(GuiData->hWindow);
                 dwButtonState = RIGHTMOST_BUTTON_PRESSED;
                 dwEventFlags  = 0;
                 break;
 
             case WM_LBUTTONUP:
+                ReleaseCapture();
                 dwButtonState = 0;
                 dwEventFlags  = 0;
                 break;
 
             case WM_MBUTTONUP:
+                ReleaseCapture();
                 dwButtonState = 0;
                 dwEventFlags  = 0;
                 break;
 
             case WM_RBUTTONUP:
+                ReleaseCapture();
                 dwButtonState = 0;
                 dwEventFlags  = 0;
                 break;
@@ -1018,11 +1026,11 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
                 break;
 
             default:
-                Ret = FALSE;
+                Err = TRUE;
                 break;
         }
 
-        if (Ret)
+        if (!Err)
         {
             if (wKeyState & MK_LBUTTON)
                 dwButtonState |= FROM_LEFT_1ST_BUTTON_PRESSED;
@@ -1060,14 +1068,18 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
             ConioProcessInputEvent(Console, &er);
         }
     }
+    else
+    {
+        Err = TRUE;
+    }
 
     LeaveCriticalSection(&Console->Lock);
 
 Quit:
-    if (!Ret)
-        Ret = DefWindowProcW(GuiData->hWindow, msg, wParam, lParam);
-
-    return Ret;
+    if (Err)
+        return DefWindowProcW(GuiData->hWindow, msg, wParam, lParam);
+    else
+        return 0;
 }
 
 static VOID
@@ -1473,6 +1485,50 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         }
 
+        case WM_NCRBUTTONDOWN:
+        {
+            DPRINT("WM_NCRBUTTONDOWN\n");
+            /*
+             * HACK: !! Because, when we deal with WM_RBUTTON* and we do not
+             * call after that DefWindowProc, on ReactOS, right-clicks on the
+             * (non-client) application title-bar does not display the system
+             * menu and does not trigger a WM_NCRBUTTONUP message too.
+             * See: http://git.reactos.org/?p=reactos.git;a=blob;f=reactos/win32ss/user/user32/windows/defwnd.c;hb=HEAD#l1103
+             * and line 1135 too.
+             */
+            if (DefWindowProcW(hWnd, WM_NCHITTEST, 0, lParam) == HTCAPTION)
+                return DefWindowProcW(hWnd, WM_CONTEXTMENU, wParam, lParam);
+            else
+                goto Default;
+        }
+        // case WM_NCRBUTTONUP:
+            // DPRINT1("WM_NCRBUTTONUP\n");
+            // goto Default;
+
+        case WM_CONTEXTMENU:
+        {
+            if (DefWindowProcW(hWnd /*GuiData->hWindow*/, WM_NCHITTEST, 0, lParam) == HTCLIENT)
+            {
+                HMENU hMenu = CreatePopupMenu();
+                if (hMenu != NULL)
+                {
+                    GuiConsoleAppendMenuItems(hMenu, GuiConsoleEditMenuItems);
+                    TrackPopupMenuEx(hMenu,
+                                     TPM_RIGHTBUTTON,
+                                     GET_X_LPARAM(lParam),
+                                     GET_Y_LPARAM(lParam),
+                                     hWnd,
+                                     NULL);
+                    DestroyMenu(hMenu);
+                }
+                break;
+            }
+            else
+            {
+                goto Default;
+            }
+        }
+
         case WM_SYSCOMMAND:
         {
             Result = GuiConsoleHandleSysMenuCommand(GuiData, wParam, lParam);
@@ -1483,6 +1539,22 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_VSCROLL:
         {
             Result = GuiConsoleHandleScroll(GuiData, msg, wParam);
+            break;
+        }
+
+        case WM_SETFOCUS:
+        case WM_KILLFOCUS:
+        {
+            Console = GuiData->Console; // Not NULL because checked in GuiGetGuiData.
+            if (ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
+            {
+                INPUT_RECORD er;
+                er.EventType = FOCUS_EVENT;
+                er.Event.FocusEvent.bSetFocus = (msg == WM_SETFOCUS);
+                ConioProcessInputEvent(Console, &er);
+
+                LeaveCriticalSection(&Console->Lock);
+            }
             break;
         }
 
@@ -1514,7 +1586,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             // SetWindowText(GuiData->hWindow, GuiData->Console->Title.Buffer);
             // break;
 
-        default:
+        default: Default:
             Result = DefWindowProcW(hWnd, msg, wParam, lParam);
             break;
     }
@@ -1725,7 +1797,7 @@ GuiInit(VOID)
         wc.cbSize = sizeof(WNDCLASSEXW);
         wc.lpszClassName = GUI_CONSOLE_WINDOW_CLASS;
         wc.lpfnWndProc = GuiConsoleWndProc;
-        wc.style = CS_DBLCLKS | CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+        wc.style = CS_DBLCLKS /* | CS_HREDRAW | CS_VREDRAW */;
         wc.hInstance = ConSrvDllInstance;
         wc.hIcon = ghDefaultIcon;
         wc.hIconSm = ghDefaultIconSm;
@@ -2207,6 +2279,7 @@ GuiInitConsole(PCONSOLE Console,
         /*
         if (ConsoleStartInfo->dwStartupFlags & STARTF_RUNFULLSCREEN)
         {
+            ConsoleInfo.FullScreen = TRUE;
         }
         */
     }

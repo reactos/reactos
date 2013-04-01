@@ -66,11 +66,11 @@ typedef enum _CONSRV_API_NUMBER
     // ConsolepShowCursor,
     // ConsolepMenuControl,
     // ConsolepSetPalette,
-    // ConsolepSetDisplayMode,
+    ConsolepSetDisplayMode,
     // ConsolepRegisterVDM,
     ConsolepGetHardwareState,
     ConsolepSetHardwareState,
-    // ConsolepGetDisplayMode,
+    ConsolepGetDisplayMode,
     ConsolepAddAlias,
     ConsolepGetAlias,
     ConsolepGetAliasesLength,
@@ -235,6 +235,34 @@ typedef struct
     HANDLE ConsoleHandle;   /* A valid input or output console handle */
     DWORD ConsoleMode;
 } CONSOLE_GETSETCONSOLEMODE, *PCONSOLE_GETSETCONSOLEMODE;
+
+
+#define CONSOLE_WINDOWED    0 /* Internal console hardware state */
+typedef struct
+{
+    // HANDLE OutputHandle;
+    DWORD  DisplayMode;
+} CONSOLE_GETDISPLAYMODE, *PCONSOLE_GETDISPLAYMODE;
+
+typedef struct
+{
+    HANDLE OutputHandle;
+    DWORD  DisplayMode;
+    COORD  NewSBDim;
+} CONSOLE_SETDISPLAYMODE, *PCONSOLE_SETDISPLAYMODE;
+
+/*
+ * Console hardware states.
+ */
+#define CONSOLE_HARDWARE_STATE_GDI_MANAGED 0
+#define CONSOLE_HARDWARE_STATE_DIRECT      1
+
+typedef struct
+{
+    HANDLE OutputHandle;
+    DWORD  State;
+} CONSOLE_GETSETHWSTATE, *PCONSOLE_GETSETHWSTATE;
+
 
 typedef struct
 {
@@ -425,18 +453,6 @@ typedef struct
 } CONSOLE_OPENCONSOLE, *PCONSOLE_OPENCONSOLE;
 
 
-/*
- * Console hardware states.
- */
-#define CONSOLE_HARDWARE_STATE_GDI_MANAGED 0
-#define CONSOLE_HARDWARE_STATE_DIRECT      1
-
-typedef struct
-{
-    HANDLE OutputHandle;
-    DWORD  State;
-} CONSOLE_GETSETHWSTATE, *PCONSOLE_GETSETHWSTATE;
-
 typedef struct
 {
     HWND    WindowHandle;
@@ -585,6 +601,8 @@ typedef struct _CONSOLE_API_MESSAGE
 
         /* Console mode */
         CONSOLE_GETSETCONSOLEMODE ConsoleModeRequest;
+        CONSOLE_GETDISPLAYMODE GetDisplayModeRequest;
+        CONSOLE_SETDISPLAYMODE SetDisplayModeRequest;
         CONSOLE_GETSETHWSTATE HardwareStateRequest;
 
         /* Console window */

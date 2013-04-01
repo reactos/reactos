@@ -151,6 +151,8 @@ CSR_API(SrvSetConsoleTitle);
 CSR_API(SrvGetConsoleTitle);
 CSR_API(SrvGetConsoleHardwareState);
 CSR_API(SrvSetConsoleHardwareState);
+CSR_API(SrvGetConsoleDisplayMode);
+CSR_API(SrvSetConsoleDisplayMode);
 CSR_API(SrvGetConsoleWindow);
 CSR_API(SrvSetConsoleIcon);
 CSR_API(SrvGetConsoleCP);

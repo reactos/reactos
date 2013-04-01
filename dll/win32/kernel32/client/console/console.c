@@ -296,22 +296,30 @@ DuplicateConsoleHandle(HANDLE hConsole,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-INT
+BOOL
 WINAPI
-GetConsoleDisplayMode(LPDWORD lpdwMode)
-     /*
-      * FUNCTION: Get the console display mode
-      * ARGUMENTS:
-      *      lpdwMode - Address of variable that receives the current value
-      *                 of display mode
-      * STATUS: Undocumented
-      */
+GetConsoleDisplayMode(LPDWORD lpModeFlags)
 {
-    DPRINT1("GetConsoleDisplayMode(0x%x) UNIMPLEMENTED!\n", lpdwMode);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETDISPLAYMODE GetDisplayModeRequest = &ApiMessage.Data.GetDisplayModeRequest;
+
+    // GetDisplayModeRequest->OutputHandle = hConsoleOutput;
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetDisplayMode),
+                                 sizeof(CONSOLE_GETDISPLAYMODE));
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    *lpModeFlags = GetDisplayModeRequest->DisplayMode;
+    return TRUE;
 }
 
 
@@ -358,6 +366,8 @@ GetConsoleHardwareState(HANDLE hConsoleOutput,
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETSETHWSTATE HardwareStateRequest = &ApiMessage.Data.HardwareStateRequest;
+
+    DPRINT1("GetConsoleHardwareState(%d, 0x%p) UNIMPLEMENTED!\n", Flags, State);
 
     HardwareStateRequest->OutputHandle = hConsoleOutput;
 
@@ -499,24 +509,34 @@ SetConsoleCursor(DWORD Unknown0,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-SetConsoleDisplayMode(HANDLE hOut,
-                      DWORD dwNewMode,
-                      PCOORD lpdwOldMode)
-     /*
-      * FUNCTION: Set the console display mode.
-      * ARGUMENTS:
-      *       hOut - Standard output handle.
-      *       dwNewMode - New mode.
-      *       lpdwOldMode - Address of a variable that receives the old mode.
-      */
+SetConsoleDisplayMode(HANDLE hConsoleOutput,
+                      DWORD dwFlags,
+                      PCOORD lpNewScreenBufferDimensions)
 {
-    DPRINT1("SetConsoleDisplayMode(0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n", hOut, dwNewMode, lpdwOldMode);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETDISPLAYMODE SetDisplayModeRequest = &ApiMessage.Data.SetDisplayModeRequest;
+
+    SetDisplayModeRequest->OutputHandle = hConsoleOutput;
+    SetDisplayModeRequest->DisplayMode  = dwFlags;
+    SetDisplayModeRequest->NewSBDim     = (COORD){0,0};
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetDisplayMode),
+                                 sizeof(CONSOLE_SETDISPLAYMODE));
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    *lpNewScreenBufferDimensions = SetDisplayModeRequest->NewSBDim;
+    return TRUE;
 }
 
 
@@ -546,6 +566,8 @@ SetConsoleHardwareState(HANDLE hConsoleOutput,
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETSETHWSTATE HardwareStateRequest = &ApiMessage.Data.HardwareStateRequest;
+
+    DPRINT1("SetConsoleHardwareState(%d, %d) UNIMPLEMENTED!\n", Flags, State);
 
     HardwareStateRequest->OutputHandle = hConsoleOutput;
     HardwareStateRequest->State = State;
@@ -1144,7 +1166,7 @@ SetConsoleMode(HANDLE hConsoleHandle,
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &ApiMessage.Data.ConsoleModeRequest;
 
     ConsoleModeRequest->ConsoleHandle = hConsoleHandle;
-    ConsoleModeRequest->ConsoleMode = dwMode;
+    ConsoleModeRequest->ConsoleMode   = dwMode;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,

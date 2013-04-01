@@ -281,7 +281,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         pSharedInfo->ci.HistoryBufferSize = Console->HistoryBufferSize;
         pSharedInfo->ci.NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
         pSharedInfo->ci.HistoryNoDup = Console->HistoryNoDup;
-        pSharedInfo->ci.FullScreen = Console->FullScreen;
+        pSharedInfo->ci.FullScreen = !!(Console->ActiveBuffer->DisplayMode & CONSOLE_FULLSCREEN_MODE);
         pSharedInfo->ci.QuickEdit = Console->QuickEdit;
         pSharedInfo->ci.InsertMode = Console->InsertMode;
         pSharedInfo->ci.InputBufferSize = 0;
