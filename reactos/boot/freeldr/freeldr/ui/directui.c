@@ -397,7 +397,8 @@ NTAPI
 UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
                            IN UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-    ULONG KeyEvent = 0, Selected, Count;
+    ULONG KeyEvent = 0;
+    ULONG Selected, Count;
 
     /* Check for a keypress */
     if (MachConsKbHit())
@@ -405,9 +406,7 @@ UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
         /* Check if the timeout is not already complete */
         if (MenuInfo->MenuTimeRemaining != -1)
         {
-            //
-            // Cancel it and remove it
-            //
+            /* Cancel it and remove it */
             MenuInfo->MenuTimeRemaining = -1;
             UiDrawMenuBox(MenuInfo);
         }
@@ -418,7 +417,10 @@ UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
         /* Is it extended? Then get the extended key */
         if (!KeyEvent) KeyEvent = MachConsGetCh();
 
-        /* Call the supplied key filter callback function to see if it is going to handle this keypress. */
+        /*
+         * Call the supplied key filter callback function to see
+         * if it is going to handle this keypress.
+         */
         if ((KeyPressFilter) && (KeyPressFilter(KeyEvent)))
         {
             /* It processed the key character, so redraw and exit */
@@ -427,40 +429,55 @@ UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
         }
 
         /* Process the key */
-        if ((KeyEvent == KEY_UP) || (KeyEvent == KEY_DOWN))
+        if ((KeyEvent == KEY_UP  ) || (KeyEvent == KEY_DOWN) ||
+            (KeyEvent == KEY_HOME) || (KeyEvent == KEY_END ))
         {
             /* Get the current selected item and count */
             Selected = MenuInfo->SelectedMenuItem;
             Count = MenuInfo->MenuItemCount - 1;
 
-            /* Check if this was a key up and there's a selected menu item */
-            if ((KeyEvent == KEY_UP) && (Selected))
+            /* Check the key and change the selected menu item */
+            if ((KeyEvent == KEY_UP) && (Selected > 0))
             {
-                /* Update the menu (Deselect previous item) */
+                /* Deselect previous item and go up */
                 MenuInfo->SelectedMenuItem--;
                 UiDrawMenuItem(MenuInfo, Selected);
                 Selected--;
 
-                /* Skip past any separators */
-                if ((Selected) &&
+                // Skip past any separators
+                if ((Selected > 0) &&
                     (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem--;
                 }
             }
+            else if ( ((KeyEvent == KEY_UP) && (Selected == 0)) ||
+                       (KeyEvent == KEY_END) )
+            {
+                /* Go to the end */
+                MenuInfo->SelectedMenuItem = Count;
+                UiDrawMenuItem(MenuInfo, Selected);
+            }
             else if ((KeyEvent == KEY_DOWN) && (Selected < Count))
             {
-                /* Update the menu (deselect previous item) */
+                /* Deselect previous item and go down */
                 MenuInfo->SelectedMenuItem++;
                 UiDrawMenuItem(MenuInfo, Selected);
                 Selected++;
 
-                /* Skip past any separators */
+                // Skip past any separators
                 if ((Selected < Count) &&
                     (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem++;
                 }
+            }
+            else if ( ((KeyEvent == KEY_DOWN) && (Selected == Count)) ||
+                       (KeyEvent == KEY_HOME) )
+            {
+                /* Go to the beginning */
+                MenuInfo->SelectedMenuItem = 0;
+                UiDrawMenuItem(MenuInfo, Selected);
             }
 
             /* Select new item and update video buffer */
