@@ -941,7 +941,8 @@ IntAllowSetForegroundWindow(DWORD dwProcessId)
    }
    else
    {  // Rule #3, last input event in force.
-      ptiLastInput = ppi->ptiList;
+      ERR("Fixme: ptiLastInput is SET!!\n");
+      //ptiLastInput = ppi->ptiList;
       ObDereferenceObject(Process);
    }
    return TRUE;
