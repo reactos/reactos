@@ -421,6 +421,15 @@ extern HRESULT WINAPI DirectSoundFullDuplexCreate(LPCGUID pcGuidCaptureDevice, L
 #define DirectSoundFullDuplexCreate8 DirectSoundFullDuplexCreate
 extern HRESULT WINAPI GetDeviceID(LPCGUID lpGuidSrc, LPGUID lpGuidDest);
 
+#ifdef UNICODE
+#   define DirectSoundEnumerate         DirectSoundEnumerateW
+#   define DirectSoundCaptureEnumerate  DirectSoundCaptureEnumerateW
+#   define LPDSENUMCALLBACK             LPDSENUMCALLBACKW
+#else
+#   define DirectSoundEnumerate         DirectSoundEnumerateA
+#   define DirectSoundCaptureEnumerate  DirectSoundCaptureEnumerateA
+#   define LPDSENUMCALLBACK             LPDSENUMCALLBACKA
+#endif
 
 /*****************************************************************************
  * IDirectSound interface
