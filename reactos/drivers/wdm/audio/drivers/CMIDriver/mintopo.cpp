@@ -29,7 +29,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "mintopo.hpp"
 #include "mintopotables.hpp"
 #define NTSTRSAFE_LIB //for Windows 2000 compatibility
-#include "NtStrsafe.h"
+#include "ntstrsafe.h"
 
 #ifdef _MSC_VER
 #pragma code_seg("PAGE")
