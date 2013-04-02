@@ -4,11 +4,12 @@ add_library(cmicpl SHARED
     cmicpl.rc
 )
 
+set_module_type(cmicpl cpl UNICODE)
+
 add_importlibs(cmicpl
     shell32
     msvcrt
-    kernel32)
-
-set_module_type(cmicpl cpl UNICODE)
+    kernel32
+    ntdll)
 
 add_cd_file(TARGET cmicpl DESTINATION reactos/system32/drivers FOR all)
