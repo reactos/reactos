@@ -143,6 +143,7 @@ const UIVTBL MiniTuiVtbl =
 	TuiDrawShadow,
 	TuiDrawBox,
 	TuiDrawText,
+	TuiDrawText2,
 	TuiDrawCenteredText,
 	MiniTuiDrawStatusText,
 	TuiUpdateDateTime,

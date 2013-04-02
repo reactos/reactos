@@ -61,6 +61,7 @@ VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar,
 VOID	UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
 VOID	UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);	// Draws a box around the area specified
 VOID	UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);	// Draws text at coordinates specified
+VOID	UiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr);	// Draws text at coordinates specified
 VOID	UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
 VOID	UiDrawStatusText(PCSTR StatusText);					// Draws text at the very bottom line on the screen
 VOID	UiUpdateDateTime(VOID);									// Updates the date and time
@@ -123,6 +124,7 @@ typedef struct tagUIVTBL
 	VOID (*DrawShadow)(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);
 	VOID (*DrawBox)(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);
 	VOID (*DrawText)(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);
+	VOID (*DrawText2)(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr);
 	VOID (*DrawCenteredText)(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);
 	VOID (*DrawStatusText)(PCSTR StatusText);
 	VOID (*UpdateDateTime)(VOID);

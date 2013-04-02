@@ -84,11 +84,28 @@ UiDrawText(IN ULONG X,
 {
 	ULONG i, j;
 
-    /* Draw the text character by character, but don't exceed the width */
+	/* Draw the text character by character, but don't exceed the width */
 	for (i = X, j = 0; Text[j] && i < UiScreenWidth; i++, j++)
 	{
-	    /* Write the character */
-        MachVideoPutChar(Text[j], Attr, i, Y);
+		/* Write the character */
+		MachVideoPutChar(Text[j], Attr, i, Y);
+	}
+}
+
+VOID
+UiDrawText2(IN ULONG X,
+            IN ULONG Y,
+            IN ULONG MaxNumChars,
+            IN PCSTR Text,
+            IN UCHAR Attr)
+{
+	ULONG i, j;
+
+	/* Draw the text character by character, but don't exceed the width */
+	for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
+	{
+		/* Write the character */
+		MachVideoPutChar(Text[j], Attr, i, Y);
 	}
 }
 

@@ -62,6 +62,7 @@ UIVTBL UiVtbl =
 	NoUiDrawShadow,
 	NoUiDrawBox,
 	NoUiDrawText,
+	NoUiDrawText2,
 	NoUiDrawCenteredText,
 	NoUiDrawStatusText,
 	NoUiUpdateDateTime,
@@ -258,6 +259,11 @@ VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle
 VOID UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
 	UiVtbl.DrawText(X, Y, Text, Attr);
+}
+
+VOID UiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
+{
+	UiVtbl.DrawText2(X, Y, MaxNumChars, Text, Attr);
 }
 
 VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
