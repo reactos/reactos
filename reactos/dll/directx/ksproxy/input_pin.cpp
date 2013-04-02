@@ -11,11 +11,6 @@
 const GUID IID_IKsPinPipe = {0xe539cd90, 0xa8b4, 0x11d1, {0x81, 0x89, 0x00, 0xa0, 0xc9, 0x06, 0x28, 0x02}};
 const GUID IID_IKsPinEx   = {0x7bb38260L, 0xd19c, 0x11d2, {0xb3, 0x8a, 0x00, 0xa0, 0xc9, 0x5e, 0xc2, 0x2e}};
 
-
-#ifndef _MSC_VER
-
-const GUID KSPROPSETID_Connection = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
-
 KSPIN_INTERFACE StandardPinInterface = 
 {
     {STATIC_KSINTERFACESETID_Standard},
@@ -29,24 +24,6 @@ KSPIN_MEDIUM StandardPinMedium =
     KSMEDIUM_TYPE_ANYINSTANCE,
     0
 };
-
-#else
-
-KSPIN_INTERFACE StandardPinInterface = 
-{
-    STATIC_KSINTERFACESETID_Standard,
-    KSINTERFACE_STANDARD_STREAMING,
-    0
-};
-
-KSPIN_MEDIUM StandardPinMedium =
-{
-    STATIC_KSMEDIUMSETID_Standard,
-    KSMEDIUM_TYPE_ANYINSTANCE,
-    0
-};
-
-#endif
 
 class CInputPin : public IPin,
                   public IKsPropertySet,
