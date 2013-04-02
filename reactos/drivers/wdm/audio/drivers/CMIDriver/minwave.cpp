@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,13 +30,13 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ntddk.h"
 
 #ifdef _MSC_VER
-#pragma code_seg("PAGE") /* warning - ignored by GCC compiler */
+#pragma code_seg("PAGE")
 #endif
 
-HRESULT NTAPI CreateMiniportWaveCMI(PUNKNOWN *Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
+NTSTATUS NTAPI CreateMiniportWaveCMI(PUNKNOWN *Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
 {
-	//PAGED_CODE();
-	//ASSERT(Unknown);
+	PAGED_CODE();
+	ASSERT(Unknown);
 #ifdef WAVERT
 	STD_CREATE_BODY_(CMiniportWaveCMI,Unknown,UnknownOuter,PoolType,PMINIPORTWAVERT);
 #else
@@ -46,8 +46,8 @@ HRESULT NTAPI CreateMiniportWaveCMI(PUNKNOWN *Unknown, REFCLSID, PUNKNOWN Unknow
 
 NTSTATUS CMiniportWaveCMI::processResources(PRESOURCELIST resourceList)
 {
-	//PAGED_CODE();
-	//ASSERT (resourceList);
+	PAGED_CODE();
+	ASSERT (resourceList);
 	DBGPRINT(("CMiniportWaveCMI[%p]::ProcessResources(%p)", this, resourceList));
 
 	if (resourceList->NumberOfInterrupts() < 1) {
@@ -60,8 +60,8 @@ NTSTATUS CMiniportWaveCMI::processResources(PRESOURCELIST resourceList)
 #ifndef WAVERT
 NTSTATUS CMiniportWaveCMI::newDMAChannel(PDMACHANNEL *dmaChannel, UInt32 bufferLength)
 {
-	//PAGED_CODE();
-	//ASSERT(dmaChannel);
+	PAGED_CODE();
+	ASSERT(dmaChannel);
 	DBGPRINT(("CMiniportWaveCMI[%p]::newDMAChannel(%p)", this, dmaChannel));
 
 	NTSTATUS ntStatus;
@@ -70,7 +70,7 @@ NTSTATUS CMiniportWaveCMI::newDMAChannel(PDMACHANNEL *dmaChannel, UInt32 bufferL
 	if (NT_SUCCESS(ntStatus)) {
 		ULONG  lDMABufferLength = bufferLength;
 		do {
-			ntStatus = (*dmaChannel)->AllocateBuffer(lDMABufferLength,NULL);
+			ntStatus = (*dmaChannel)->AllocateBuffer(lDMABufferLength, NULL);
 			lDMABufferLength >>= 1;
 		} while (!NT_SUCCESS(ntStatus) && (lDMABufferLength > (PAGE_SIZE / 2)));
 	}
@@ -79,10 +79,10 @@ NTSTATUS CMiniportWaveCMI::newDMAChannel(PDMACHANNEL *dmaChannel, UInt32 bufferL
 #endif
 
 //generic crap
-STDMETHODIMP CMiniportWaveCMI::QueryInterface(REFIID Interface, PVOID *Object)
+STDMETHODIMP CMiniportWaveCMI::NonDelegatingQueryInterface(REFIID Interface, PVOID *Object)
 {
-	//PAGED_CODE();
-	//ASSERT(Object);
+	PAGED_CODE();
+	ASSERT(Object);
 	DBGPRINT(("CMiniportWaveCMI[%p]::NonDelegatingQueryInterface"));
 
 	if (IsEqualGUIDAligned(Interface,IID_IUnknown)) {
@@ -115,7 +115,7 @@ STDMETHODIMP CMiniportWaveCMI::QueryInterface(REFIID Interface, PVOID *Object)
 
 CMiniportWaveCMI::~CMiniportWaveCMI(void)
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CMiniportWaveCMI[%p]::~CMiniportWaveCMI", this));
 
 	storeChannelConfigToRegistry(); //or not. during system shutdown, this doesn't seem to work.
@@ -132,7 +132,7 @@ CMiniportWaveCMI::~CMiniportWaveCMI(void)
 			DMAChannel[i] = NULL;
 		}
 #endif
-    	if (isStreamRunning[i]) {
+	if (isStreamRunning[i]) {
 			isStreamRunning[i] = false;
 			stream[i]->Release();
 			stream[i] = NULL;
@@ -151,11 +151,11 @@ STDMETHODIMP CMiniportWaveCMI::Init(PUNKNOWN UnknownAdapter, PRESOURCELIST Resou
 STDMETHODIMP CMiniportWaveCMI::Init(PUNKNOWN UnknownAdapter, PRESOURCELIST ResourceList, PPORTWAVECYCLIC Port_)
 #endif
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 
-	//ASSERT(UnknownAdapter);
-	//ASSERT(ResourceList);
-	//ASSERT(Port_);
+	ASSERT(UnknownAdapter);
+	ASSERT(ResourceList);
+	ASSERT(Port_);
 
 	DBGPRINT(("CMiniportWaveCMI[%p]::Init(%p, %p, %p)", this, UnknownAdapter, ResourceList, Port_));
 
@@ -163,7 +163,7 @@ STDMETHODIMP CMiniportWaveCMI::Init(PUNKNOWN UnknownAdapter, PRESOURCELIST Resou
 	Port->AddRef();
 
 	NTSTATUS ntStatus = UnknownAdapter->QueryInterface(IID_ICMIAdapter, (PVOID *) &CMIAdapter);
-    if (!NT_SUCCESS(ntStatus)) {
+	if (!NT_SUCCESS(ntStatus)) {
 	    DBGPRINT(("QueryInterface(CMIAdapter) failed"));
 		return ntStatus;
 	}
@@ -203,8 +203,8 @@ STDMETHODIMP CMiniportWaveCMI::Init(PUNKNOWN UnknownAdapter, PRESOURCELIST Resou
 #ifdef WAVERT
 STDMETHODIMP_(NTSTATUS) CMiniportWaveCMI::GetDeviceDescription(PDEVICE_DESCRIPTION OutDeviceDescriptor)
 {
-	//PAGED_CODE();
-	//ASSERT(OutDeviceDescriptor);
+	PAGED_CODE();
+	ASSERT(OutDeviceDescriptor);
 	DBGPRINT(("CMiniportWaveCMI[%p]::GetDeviceDescription(%p)", this, OutDeviceDescriptor));
 
 	RtlZeroMemory(OutDeviceDescriptor, sizeof(DEVICE_DESCRIPTION));
@@ -220,26 +220,25 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveCMI::GetDeviceDescription(PDEVICE_DESCRIPTI
 
 STDMETHODIMP CMiniportWaveCMI::GetDescription(PPCFILTER_DESCRIPTOR *OutFilterDescriptor)
 {
-    //PAGED_CODE();
-    //ASSERT(OutFilterDescriptor);
-    DBGPRINT(("CMiniportWaveCMI[%p]::GetDescription(%p)", this, OutFilterDescriptor));
+	PAGED_CODE();
+	ASSERT(OutFilterDescriptor);
+	DBGPRINT(("CMiniportWaveCMI[%p]::GetDescription(%p)", this, OutFilterDescriptor));
 
-    *OutFilterDescriptor = &WaveMiniportFilterDescriptor;
+	*OutFilterDescriptor = &WaveMiniportFilterDescriptor;
 
-    return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS CMiniportWaveCMI::loadChannelConfigFromRegistry()
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	PREGISTRYKEY       DriverKey;
 	PREGISTRYKEY       SettingsKey;
-    UNICODE_STRING     KeyName;
-    //DWORD              Value, ResultLength;
-    DWORD              ResultLength;
+	UNICODE_STRING     KeyName;
+	DWORD              ResultLength;
 	PVOID              KeyInfo;
 
-    DBGPRINT(("CMiniportWaveCMI::loadChannelConfigFromRegistry()"));
+	DBGPRINT(("CMiniportWaveCMI::loadChannelConfigFromRegistry()"));
 
 	if ((!CMIAdapter) || (!(CMIAdapter->getDeviceObject()))) {
 		return STATUS_UNSUCCESSFUL;
@@ -265,7 +264,7 @@ NTSTATUS CMiniportWaveCMI::loadChannelConfigFromRegistry()
 		RtlInitUnicodeString(&KeyName, L"ChannelCount");
 		ntStatus = SettingsKey->QueryValueKey(&KeyName, KeyValuePartialInformation, KeyInfo, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(DWORD), &ResultLength);
 		if (NT_SUCCESS (ntStatus)) {
-        	PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)KeyInfo;
+			PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)KeyInfo;
 			if (PartialInfo->DataLength == sizeof(DWORD)) {
 				requestedChannelCount = (*(PLONG)PartialInfo->Data);
 			}
@@ -276,7 +275,7 @@ NTSTATUS CMiniportWaveCMI::loadChannelConfigFromRegistry()
 		RtlInitUnicodeString(&KeyName, L"ChannelMask");
 		ntStatus = SettingsKey->QueryValueKey(&KeyName, KeyValuePartialInformation, KeyInfo, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(DWORD), &ResultLength);
 		if (NT_SUCCESS (ntStatus)) {
-        	PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)KeyInfo;
+			PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)KeyInfo;
 			if (PartialInfo->DataLength == sizeof(DWORD)) {
 				requestedChannelMask = (*(PLONG)PartialInfo->Data);
 			}
@@ -294,12 +293,12 @@ NTSTATUS CMiniportWaveCMI::loadChannelConfigFromRegistry()
 
 NTSTATUS CMiniportWaveCMI::storeChannelConfigToRegistry()
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	PREGISTRYKEY       DriverKey;
 	PREGISTRYKEY       SettingsKey;
-    UNICODE_STRING     KeyName;
-    DWORD              Value;
-    DBGPRINT(("CMiniportWaveCMI::storeChannelConfigToRegistry()"));
+	UNICODE_STRING     KeyName;
+	DWORD              Value;
+	DBGPRINT(("CMiniportWaveCMI::storeChannelConfigToRegistry()"));
 
 	if ((!CMIAdapter) || (!(CMIAdapter->getDeviceObject()))) {
 		return STATUS_UNSUCCESSFUL;
@@ -342,7 +341,7 @@ NTSTATUS CMiniportWaveCMI::storeChannelConfigToRegistry()
 
 STDMETHODIMP_(void) CMiniportWaveCMI::powerUp(void)
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CMiniportWaveCMI[%p]::powerUp()", this));
 	KSSTATE oldState[3];
 
@@ -368,7 +367,7 @@ STDMETHODIMP_(void) CMiniportWaveCMI::powerUp(void)
 
 STDMETHODIMP_(void) CMiniportWaveCMI::powerDown(void)
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CMiniportWaveCMI[%p]::powerDown()", this));
 
 	if (cm->TopoMiniport) {
@@ -380,8 +379,8 @@ STDMETHODIMP_(void) CMiniportWaveCMI::powerDown(void)
 
 NTSTATUS CMiniportWaveCMI::isFormatAllowed(UInt32 sampleRate, BOOLEAN multiChan, BOOLEAN AC3)
 {
-	//PAGED_CODE();
-	//ASSERT(sampleRate);
+	PAGED_CODE();
+	ASSERT(sampleRate);
 	DBGPRINT(("CMiniportWaveCMI[%p]::isFormatAllowed(%d, %d, %d)", this, sampleRate, multiChan, AC3));
 
 	if (multiChan) {
@@ -413,26 +412,26 @@ NTSTATUS CMiniportWaveCMI::isFormatAllowed(UInt32 sampleRate, BOOLEAN multiChan,
 
 NTSTATUS CMiniportWaveCMI::validateFormat(PKSDATAFORMAT format, ULONG PinID, BOOLEAN capture)
 {
-	//PAGED_CODE();
-	//ASSERT(format);
+	PAGED_CODE();
+	ASSERT(format);
 	DBGPRINT(("CMiniportWaveCMI[%p]::validateFormat(%p, %d, %d)", this, format, PinID, capture));
 
 	PWAVEFORMATEX waveFormat = PWAVEFORMATEX(format + 1);
 	DBGPRINT(("---channels: %d, resolution: %d, sample rate: %d, pin: %d, formatMask: %x", waveFormat->nChannels, waveFormat->wBitsPerSample, waveFormat->nSamplesPerSec, PinID, cm->formatMask));
 
 //WaveFormatEx
-	if  ( ( (size_t) format->FormatSize >= sizeof(KSDATAFORMAT_WAVEFORMATEX))
+	if  ( ( format->FormatSize >= sizeof(KSDATAFORMAT_WAVEFORMATEX))
 	  && IsEqualGUIDAligned(format->MajorFormat,KSDATAFORMAT_TYPE_AUDIO)
 	  && IsEqualGUIDAligned(format->Specifier,KSDATAFORMAT_SPECIFIER_WAVEFORMATEX) ) {
 		switch (EXTRACT_WAVEFORMATEX_ID(&format->SubFormat)) {
 			case WAVE_FORMAT_PCM:
-				if ((PinID != PIN_WAVE_RENDER_SINK) && (PinID != PIN_WAVE_CAPTURE_SOURCE) && ((int)PinID != -1)) {
+				if ((PinID != PIN_WAVE_RENDER_SINK) && (PinID != PIN_WAVE_CAPTURE_SOURCE) && (PinID != ((ULONG)-1))) {
 					if ((PinID == PIN_WAVE_AC3_RENDER_SINK) && !IoIsWdmVersionAvailable(6,0)) {
 						return STATUS_INVALID_PARAMETER;
 					}
 				}
 
-				if ( ((waveFormat->wBitsPerSample == 16) || (waveFormat->wBitsPerSample == 24))
+				if ( ((waveFormat->wBitsPerSample == 16) || (waveFormat->wBitsPerSample == 32))
 				  && ((waveFormat->nSamplesPerSec == 44100) || (waveFormat->nSamplesPerSec == 48000) || (waveFormat->nSamplesPerSec == 88200) ||  (waveFormat->nSamplesPerSec == 96000))
 				  && (waveFormat->nChannels == 2) ) {
 					if ((capture) && (waveFormat->nSamplesPerSec > 48000) ) {
@@ -441,10 +440,10 @@ NTSTATUS CMiniportWaveCMI::validateFormat(PKSDATAFORMAT format, ULONG PinID, BOO
 					return isFormatAllowed(waveFormat->nSamplesPerSec, FALSE, FALSE);
 				}
 				if ( (waveFormat->wBitsPerSample == 16)
-				  && ((waveFormat->nChannels >= 4) && (waveFormat->nChannels <= (WORD) cm->maxChannels))
+				  && ((waveFormat->nChannels >= 4) && (waveFormat->nChannels <= cm->maxChannels))
 				  && ((waveFormat->nSamplesPerSec == 44100) || (waveFormat->nSamplesPerSec == 48000)) ) {
 #if OUT_CHANNEL == 1
-					if ((PinID == PIN_WAVE_RENDER_SINK) || ((int)PinID == -1)) {
+					if ((PinID == PIN_WAVE_RENDER_SINK) || (PinID == ((ULONG)-1))) {
 						return isFormatAllowed(waveFormat->nSamplesPerSec, TRUE, FALSE);
 					}
 #else
@@ -453,12 +452,22 @@ NTSTATUS CMiniportWaveCMI::validateFormat(PKSDATAFORMAT format, ULONG PinID, BOO
 				}
 				break;
 			case WAVE_FORMAT_DOLBY_AC3_SPDIF:
-				if ((PinID != PIN_WAVE_AC3_RENDER_SINK) && ((int)PinID != -1)) {
+				if ((PinID != PIN_WAVE_AC3_RENDER_SINK) && (PinID != ((ULONG)-1))) {
 					return STATUS_INVALID_PARAMETER;
 				}
 				if ( ((waveFormat->wBitsPerSample >= MIN_BITS_PER_SAMPLE_AC3) && (waveFormat->wBitsPerSample <= MAX_BITS_PER_SAMPLE_AC3))
 				  && ((waveFormat->nSamplesPerSec >= MIN_SAMPLE_RATE_AC3) && (waveFormat->nSamplesPerSec <= MAX_SAMPLE_RATE_AC3))
 				  && (waveFormat->nChannels == MAX_CHANNELS_AC3) ) {
+					return isFormatAllowed(waveFormat->nSamplesPerSec, FALSE, TRUE);
+				}
+				break;
+			case WAVE_FORMAT_WMA_SPDIF:
+				if ((PinID != PIN_WAVE_AC3_RENDER_SINK) && (PinID != ((ULONG)-1))) {
+					return STATUS_INVALID_PARAMETER;
+				}
+				if ( ((waveFormat->wBitsPerSample >= MIN_BITS_PER_SAMPLE_WMA) && (waveFormat->wBitsPerSample <= MAX_BITS_PER_SAMPLE_WMA))
+				  && ((waveFormat->nSamplesPerSec >= MIN_SAMPLE_RATE_WMA) && (waveFormat->nSamplesPerSec <= MAX_SAMPLE_RATE_WMA))
+				  && (waveFormat->nChannels == MAX_CHANNELS_WMA) ) {
 					return isFormatAllowed(waveFormat->nSamplesPerSec, FALSE, TRUE);
 				}
 				break;
@@ -471,10 +480,7 @@ NTSTATUS CMiniportWaveCMI::validateFormat(PKSDATAFORMAT format, ULONG PinID, BOO
 // Tests a data range intersection
 STDMETHODIMP CMiniportWaveCMI::DataRangeIntersection(ULONG PinId, PKSDATARANGE ClientDataRange, PKSDATARANGE MyDataRange, ULONG OutputBufferLength, PVOID ResultantFormat, PULONG ResultantFormatLength)
 {
-	//PAGED_CODE();
-	static const GUID KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF = {0x00000092L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
-
-
+	PAGED_CODE();
 	DBGPRINT(("CMiniportWaveCMI[%p]::DataRangeIntersection(%d, %p, %p, %d, %p, %p)", this, PinId, ClientDataRange, MyDataRange, OutputBufferLength, ResultantFormat, ResultantFormatLength));
 
 	if (PinId == PIN_WAVE_AC3_RENDER_SINK) {
@@ -489,6 +495,7 @@ STDMETHODIMP CMiniportWaveCMI::DataRangeIntersection(ULONG PinId, PKSDATARANGE C
 
 
 		if (!IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF)
+		  && !IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_WMA_SPDIF)
 		  && !IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_WILDCARD)) {
 			// check for Vista
 			isAC3Pin = false;
@@ -558,8 +565,13 @@ STDMETHODIMP CMiniportWaveCMI::DataRangeIntersection(ULONG PinId, PKSDATARANGE C
 		pWaveFormatEx->wBitsPerSample  = 16; // SPDIF
 		pWaveFormatEx->cbSize          = 0;
 		if (isAC3Pin) {
-			pWaveFormatEx->wFormatTag      = WAVE_FORMAT_DOLBY_AC3_SPDIF;
-			pWaveFormatEx->nSamplesPerSec  = 48000;
+			if (IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_WMA_SPDIF)) {
+				pWaveFormatEx->wFormatTag      = WAVE_FORMAT_WMA_SPDIF;
+				pWaveFormatEx->nSamplesPerSec  = min( ((PKSDATARANGE_AUDIO)ClientDataRange)->MaximumSampleFrequency, MAX_SAMPLE_RATE_WMA);
+			} else {
+				pWaveFormatEx->wFormatTag      = WAVE_FORMAT_DOLBY_AC3_SPDIF;
+				pWaveFormatEx->nSamplesPerSec  = 48000;
+			}
 		} else {
 			pWaveFormatEx->wFormatTag      = WAVE_FORMAT_PCM;
 			pWaveFormatEx->nSamplesPerSec  = min( ((PKSDATARANGE_AUDIO)ClientDataRange)->MaximumSampleFrequency, MAX_SAMPLE_RATE);
@@ -572,12 +584,12 @@ STDMETHODIMP CMiniportWaveCMI::DataRangeIntersection(ULONG PinId, PKSDATARANGE C
 	if ((PinId == PIN_WAVE_RENDER_SINK) || (PinId == PIN_WAVE_CAPTURE_SINK)) {
 
 		if (!IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_PCM) &&
-          !IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_WILDCARD)) {
+		    !IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_WILDCARD)) {
 			return STATUS_NO_MATCH;
 		}
 
 		if (!IsEqualGUIDAligned(ClientDataRange->MajorFormat, KSDATAFORMAT_TYPE_AUDIO) &&
-          !IsEqualGUIDAligned(ClientDataRange->MajorFormat, KSDATAFORMAT_TYPE_WILDCARD)) {
+		    !IsEqualGUIDAligned(ClientDataRange->MajorFormat, KSDATAFORMAT_TYPE_WILDCARD)) {
 			return STATUS_NO_MATCH;
 		}
 
@@ -643,7 +655,7 @@ STDMETHODIMP CMiniportWaveCMI::DataRangeIntersection(ULONG PinId, PKSDATARANGE C
 			}
 
 			PWAVEFORMATPCMEX WaveFormat = (PWAVEFORMATPCMEX)((PKSDATAFORMAT)ResultantFormat + 1);
-    	    if (IsEqualGUIDAligned(ClientDataRange->Specifier, KSDATAFORMAT_SPECIFIER_DSOUND)) {
+			if (IsEqualGUIDAligned(ClientDataRange->Specifier, KSDATAFORMAT_SPECIFIER_DSOUND)) {
 				return STATUS_NOT_SUPPORTED;
 			}
 			*(PKSDATAFORMAT)ResultantFormat = *MyDataRange;
@@ -697,7 +709,7 @@ STDMETHODIMP CMiniportWaveCMI::DataRangeIntersection(ULONG PinId, PKSDATARANGE C
 			resultantFormatWFX->DataFormat.MajorFormat  = KSDATAFORMAT_TYPE_AUDIO;
 			INIT_WAVEFORMATEX_GUID(&resultantFormatWFX->DataFormat.SubFormat, WAVE_FORMAT_PCM);
 
-    	    if (IsEqualGUIDAligned(ClientDataRange->Specifier, KSDATAFORMAT_SPECIFIER_DSOUND)) {
+			if (IsEqualGUIDAligned(ClientDataRange->Specifier, KSDATAFORMAT_SPECIFIER_DSOUND)) {
 				PKSDATAFORMAT_DSOUND resultantFormatDSound;
 				resultantFormatDSound = (PKSDATAFORMAT_DSOUND)ResultantFormat;
 				resultantFormatDSound->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_DSOUND;
@@ -728,14 +740,14 @@ STDMETHODIMP CMiniportWaveCMI::NewStream(PMINIPORTWAVERTSTREAM *OutStream, PPORT
 STDMETHODIMP CMiniportWaveCMI::NewStream(PMINIPORTWAVECYCLICSTREAM *OutStream, PUNKNOWN OuterUnknown, POOL_TYPE PoolType, ULONG PinID, BOOLEAN Capture, PKSDATAFORMAT DataFormat, PDMACHANNEL* OutDmaChannel, PSERVICEGROUP* OutServiceGroup)
 #endif
 {
-	//PAGED_CODE();
-	//ASSERT(OutStream);
-	//ASSERT(DataFormat);
+	PAGED_CODE();
+	ASSERT(OutStream);
+	ASSERT(DataFormat);
 #ifdef WAVERT
 	DBGPRINT(("CMiniportWaveCMI[%p]::NewStream(%p, %p, %d, %d, %p)", this, OutStream, OuterUnknown, PinID, Capture, DataFormat));
 #else
-	//ASSERT(OutDmaChannel);
-	//ASSERT(OutServiceGroup);
+	ASSERT(OutDmaChannel);
+	ASSERT(OutServiceGroup);
 	DBGPRINT(("CMiniportWaveCMI[%p]::NewStream(%p, %p, %p, %d, %d, %p, %p, %p)", this, OutStream, OuterUnknown, PoolType, PinID, Capture, DataFormat, OutDmaChannel, OutServiceGroup));
 #endif
 
@@ -748,12 +760,14 @@ STDMETHODIMP CMiniportWaveCMI::NewStream(PMINIPORTWAVECYCLICSTREAM *OutStream, P
 		DBGPRINT(("invalid stream format"));
 		return STATUS_UNSUCCESSFUL;
 	}
-
-	CMIAdapter->setUInt8Bit(REG_MIXER1, EN_SPDI2DAC);
+	if (cm->enableSPDIFInMonitor) {
+		CMIAdapter->setUInt8Bit(REG_MIXER1, EN_SPDI2DAC);
+	}
 
 	if (Capture) {
 		streamIndex = PCM_IN_STREAM;
-	} else if (WAVE_FORMAT_DOLBY_AC3_SPDIF == EXTRACT_WAVEFORMATEX_ID(&DataFormat->SubFormat)) {
+	} else
+	if ( (WAVE_FORMAT_DOLBY_AC3_SPDIF == EXTRACT_WAVEFORMATEX_ID(&DataFormat->SubFormat)) || (WAVE_FORMAT_WMA_SPDIF == EXTRACT_WAVEFORMATEX_ID(&DataFormat->SubFormat))) {
 		streamIndex = AC3_OUT_STREAM;
 	}
 
@@ -763,7 +777,11 @@ STDMETHODIMP CMiniportWaveCMI::NewStream(PMINIPORTWAVECYCLICSTREAM *OutStream, P
    		return STATUS_UNSUCCESSFUL;
 	}
 	if ((streamIndex == AC3_OUT_STREAM) && isStreamRunning[PCM_OUT_STREAM]) {
+#ifdef WAVERT
+   		stream[PCM_OUT_STREAM]->SetState(KSSTATE_STOP);
+#else
    		stream[PCM_OUT_STREAM]->SetState(KSSTATE_STOP_AC3);
+#endif
 	}
 	if ((streamIndex == PCM_OUT_STREAM) && isStreamRunning[AC3_OUT_STREAM]) {
    		return STATUS_UNSUCCESSFUL;
@@ -771,7 +789,7 @@ STDMETHODIMP CMiniportWaveCMI::NewStream(PMINIPORTWAVECYCLICSTREAM *OutStream, P
 
 	DBGPRINT(("---StreamNo: %d, Bits: %d, Sample Rate: %d, Channels: %d, AC3: %d", streamIndex,
 		waveFormat->wBitsPerSample, waveFormat->nSamplesPerSec, waveFormat->nChannels,
-		(WAVE_FORMAT_DOLBY_AC3_SPDIF == EXTRACT_WAVEFORMATEX_ID(&DataFormat->SubFormat))));
+		(WAVE_FORMAT_DOLBY_AC3_SPDIF == EXTRACT_WAVEFORMATEX_ID(&DataFormat->SubFormat)) || (WAVE_FORMAT_WMA_SPDIF == EXTRACT_WAVEFORMATEX_ID(&DataFormat->SubFormat)) ));
 
 	// the DAC and ADC can only run at the same sample rate simultaneously
 	if ((streamIndex == PCM_IN_STREAM) && isStreamRunning[PCM_OUT_STREAM]) {
@@ -828,8 +846,8 @@ STDMETHODIMP CMiniportWaveCMI::NewStream(PMINIPORTWAVECYCLICSTREAM *OutStream, P
 
 NTSTATUS NTAPI PropertyHandler_ChannelConfig(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	//PAGED_CODE();
-	//ASSERT(PropertyRequest);
+	PAGED_CODE();
+	ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_ChannelConfig]"));
 
 #ifdef WAVERT
@@ -887,7 +905,7 @@ NTSTATUS NTAPI PropertyHandler_ChannelConfig(PPCPROPERTY_REQUEST PropertyRequest
 
 NTSTATUS CreateMiniportWaveStreamCMI(CMiniportWaveStreamCMI  **MiniportWaveStreamCMI, PUNKNOWN pUnknownOuter, POOL_TYPE PoolType)
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CreateMiniportWaveStreamCMI"));
 
 #ifdef WAVERT
@@ -905,12 +923,11 @@ NTSTATUS CreateMiniportWaveStreamCMI(CMiniportWaveStreamCMI  **MiniportWaveStrea
 
 NTSTATUS CMiniportWaveStreamCMI::prepareStream()
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CMiniportWaveStreamCMI[%p]::prepareStream()", this));
 	DBGPRINT(("---streamIndex: %d, channelNumber: %d", streamIndex, channelNumber));
 
 	NTSTATUS ntStatus;
-	//UInt8    reg;
 	UInt32   val;
 
 	if (state == KSSTATE_RUN) {
@@ -923,15 +940,14 @@ NTSTATUS CMiniportWaveStreamCMI::prepareStream()
 	}
 
 	enableSPDIF = ((currentSampleRate == 44100 || currentSampleRate == 48000 || currentSampleRate == 88200 || currentSampleRate == 96000) &&
-		           ((currentResolution == 16) || (currentResolution == 24)) && (currentChannelCount == 2)) &&
+		           ((currentResolution == 16) || (currentResolution == 32)) && (currentChannelCount == 2)) &&
 		           (Miniport->cm->enableSPDIFOut);
 
-	ntStatus = setupSPDIFPlayback(enableSPDIF);
-	if (!NT_SUCCESS(ntStatus)) {
-		return ntStatus;
-	}
-
 	if (!isCaptureStream) {
+		ntStatus = setupSPDIFPlayback(enableSPDIF);
+		if (!NT_SUCCESS(ntStatus)) {
+			return ntStatus;
+		}
 		ntStatus = setDACChannels();
 		if (!NT_SUCCESS(ntStatus)) {
 			return ntStatus;
@@ -988,12 +1004,12 @@ NTSTATUS CMiniportWaveStreamCMI::prepareStream()
 
 NTSTATUS CMiniportWaveStreamCMI::setDACChannels()
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CMiniportWaveStreamCMI[%p]::setDACChannels()", this));
 	NTSTATUS ntStatus = STATUS_SUCCESS;
 
 	if (currentChannelCount > 2) {
-		if ((WORD) Miniport->cm->maxChannels < currentChannelCount ) {
+		if (Miniport->cm->maxChannels < currentChannelCount) {
 			return STATUS_INVALID_DEVICE_REQUEST;
 		}
 		if ((currentResolution != 16) || (currentChannelCount < 2)) {
@@ -1052,10 +1068,8 @@ NTSTATUS CMiniportWaveStreamCMI::setDACChannels()
 
 NTSTATUS CMiniportWaveStreamCMI::setupSPDIFPlayback(bool enableSPDIF)
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CMiniportWaveStreamCMI[%p]::setupSPDIFPlayback(%d)", this, enableSPDIF));
-
-	//NTSTATUS ntStatus;
 
 	KeWaitForSingleObject(&Miniport->mutex, Executive, KernelMode, false, NULL);
 
@@ -1121,8 +1135,8 @@ NTSTATUS CMiniportWaveStreamCMI::setupSPDIFPlayback(bool enableSPDIF)
 
 NTSTATUS CMiniportWaveStreamCMI::setupAC3Passthru()
 {
-	//PAGED_CODE();
-	DBGPRINT(("CMiniportWaveStreamCMI[%p]::setupAC3Passthru()"));
+	PAGED_CODE();
+	DBGPRINT(("CMiniportWaveStreamCMI[%p]::setupAC3Passthru() [enableAC3Passthru: %d]", this, enableAC3Passthru));
 
 	if (enableAC3Passthru) {
 		Miniport->CMIAdapter->writeUInt8(REG_MIXER1, Miniport->CMIAdapter->readUInt8(REG_MIXER1) | MUTE_WAVE);
@@ -1155,7 +1169,9 @@ NTSTATUS CMiniportWaveStreamCMI::setupAC3Passthru()
 			}
 		}
 	} else {
-		Miniport->CMIAdapter->setUInt8Bit(REG_MIXER1, EN_SPDI2DAC);
+		if (Miniport->cm->enableSPDIFInMonitor) {
+			Miniport->CMIAdapter->setUInt8Bit(REG_MIXER1, EN_SPDI2DAC);
+		}
 
 		Miniport->CMIAdapter->clearUInt32Bit(REG_CHFORMAT, EN_SPDO_AC3_1);
 		Miniport->CMIAdapter->clearUInt32Bit(REG_MISCCTRL, EN_SPDO_AC3_2);
@@ -1183,9 +1199,13 @@ NTSTATUS CMiniportWaveStreamCMI::setupAC3Passthru()
 
 CMiniportWaveStreamCMI::~CMiniportWaveStreamCMI(void)
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 
-	DBGPRINT(("CMiniportWaveStreamCMI[%p]::~CMiniportWaveStreamCMI", this));
+	DBGPRINT(("CMiniportWaveStreamCMI[%p]::~CMiniportWaveStreamCMI [streamIndex: %d]", this, streamIndex));
+
+	if (state != KSSTATE_STOP) {
+		SetState(KSSTATE_STOP);
+	}
 
 #ifdef WAVERT
 	if (Port) {
@@ -1218,13 +1238,13 @@ CMiniportWaveStreamCMI::~CMiniportWaveStreamCMI(void)
 	if (Miniport) {
 		Miniport->Release();
 		Miniport = NULL;
-    }
+	}
 }
 
-STDMETHODIMP CMiniportWaveStreamCMI::QueryInterface(REFIID Interface, PVOID *Object)
+STDMETHODIMP CMiniportWaveStreamCMI::NonDelegatingQueryInterface(REFIID Interface, PVOID *Object)
 {
-	//PAGED_CODE();
-	//ASSERT(Object);
+	PAGED_CODE();
+	ASSERT(Object);
 	DBGPRINT(("CMiniportWaveStreamCMI[%p]::NonDelegatingQueryInterface(%p, %p)", this, Interface, Object));
 
 	if (IsEqualGUIDAligned(Interface,IID_IUnknown)) {
@@ -1256,14 +1276,14 @@ NTSTATUS CMiniportWaveStreamCMI::Init(CMiniportWaveCMI* Miniport_, UInt32 stream
 NTSTATUS CMiniportWaveStreamCMI::Init(CMiniportWaveCMI* Miniport_, UInt32 streamIndex_, bool isCaptureStream_, PKSDATAFORMAT DataFormat, PDMACHANNEL DMAChannel_, PSERVICEGROUP* OutServiceGroup)
 #endif
 {
-	//PAGED_CODE();
-	//ASSERT(Miniport_);
-	//ASSERT(DataFormat);
+	PAGED_CODE();
+	ASSERT(Miniport_);
+	ASSERT(DataFormat);
 
 	NTSTATUS ntStatus;
 
 #ifdef WAVERT
-    //ASSERT(Port_);
+	ASSERT(Port_);
 	DBGPRINT(("CMiniportWaveStreamCMI[%p]::Init(%p, %d, %d, %p, %p)", this, Miniport_, streamIndex_, isCaptureStream_, DataFormat, Port_));
 	Port = Port_;
 	Port->AddRef();
@@ -1309,7 +1329,7 @@ NTSTATUS CMiniportWaveStreamCMI::Init(CMiniportWaveCMI* Miniport_, UInt32 stream
 
 NTSTATUS CMiniportWaveStreamCMI::SetFormat(PKSDATAFORMAT Format)
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CMiniportWaveStreamCMI[%p]::SetFormat(%p)", this, Format));
 	PWAVEFORMATEX waveFormat = PWAVEFORMATEX(Format + 1);
 	NTSTATUS ntStatus = Miniport->validateFormat(Format, -1, isCaptureStream);
@@ -1340,7 +1360,7 @@ NTSTATUS CMiniportWaveStreamCMI::SetFormat(PKSDATAFORMAT Format)
 	currentSampleRate   = waveFormat->nSamplesPerSec;
 	currentChannelCount = waveFormat->nChannels;
 	currentResolution   = waveFormat->wBitsPerSample;
-	enableAC3Passthru   = (WAVE_FORMAT_DOLBY_AC3_SPDIF == EXTRACT_WAVEFORMATEX_ID(&Format->SubFormat));
+	enableAC3Passthru   = (WAVE_FORMAT_DOLBY_AC3_SPDIF == EXTRACT_WAVEFORMATEX_ID(&Format->SubFormat)) || (WAVE_FORMAT_WMA_SPDIF == EXTRACT_WAVEFORMATEX_ID(&Format->SubFormat));
 	KeReleaseMutex(&Miniport->mutex, false);
 	ntStatus = prepareStream();
 
@@ -1350,39 +1370,40 @@ NTSTATUS CMiniportWaveStreamCMI::SetFormat(PKSDATAFORMAT Format)
 // DRM crap - we're supposed to disable every digital interface here
 STDMETHODIMP_(NTSTATUS) CMiniportWaveStreamCMI::SetContentId(ULONG contentId, PCDRMRIGHTS drmRights)
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CMiniportWaveStreamCMI[%p]::SetContentId(%d, %p)", this, contentId, drmRights));
 
 	return STATUS_SUCCESS;
 }
 
 #ifdef WAVERT
-
 STDMETHODIMP_(NTSTATUS) CMiniportWaveStreamCMI::AllocateAudioBuffer(ULONG size, PMDL *userModeBuffer, ULONG *bufferSize, ULONG *bufferOffset, MEMORY_CACHING_TYPE *cacheType)
 {
-    //PAGED_CODE();
+	PAGED_CODE();
 
-    PHYSICAL_ADDRESS    low;
-    PHYSICAL_ADDRESS    high;
-    DBGPRINT(("CMiniportWaveStreamCMI[%p]::AllocateAudioBuffer(%x, %p, %p, %p, %p)", this, size, userModeBuffer, bufferSize, bufferOffset, cacheType));
+	PHYSICAL_ADDRESS    low;
+	PHYSICAL_ADDRESS    high;
+	DBGPRINT(("CMiniportWaveStreamCMI[%p]::AllocateAudioBuffer(0x%x, %p, %p, %p, %p)", this, size, userModeBuffer, bufferSize, bufferOffset, cacheType));
 
-    if (size <= size % (currentChannelCount * 2)) {
-        return STATUS_UNSUCCESSFUL;
-    }
-    size -= size % (currentChannelCount * 2);
-
-    if (size == 0) {
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    low.QuadPart = 0;
-    high.HighPart = 0, high.LowPart = MAXULONG;
-
-    audioBufferMDL = Port->AllocateContiguousPagesForMdl(low, high, size);
-
-    if (!audioBufferMDL) {
-		DBGPRINT(("AllocateContiguousPagesForMdl() failed"));
+	if (size <= size % (currentChannelCount * 2)) {
 		return STATUS_UNSUCCESSFUL;
+	}
+	size -= size % (currentChannelCount * 2);
+
+	if (size == 0) {
+		return STATUS_UNSUCCESSFUL;
+	}
+
+	low.HighPart = 0; low.LowPart = 0;
+	high.HighPart = 0; high.LowPart = MAXULONG;
+	if (size <= 4096) {
+		audioBufferMDL = Port->AllocatePagesForMdl(high, size);
+    	} else {
+		audioBufferMDL = Port->AllocateContiguousPagesForMdl(low, high, size);
+    	}
+	if (!audioBufferMDL) {
+		DBGPRINT(("AllocateContiguousPagesForMdl()/AllocatePagesForMdl() failed (size: 0x%x)", size));
+		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
 	dmaAddress = Port->GetPhysicalPageAddress(audioBufferMDL, 0).LowPart;
@@ -1399,8 +1420,8 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveStreamCMI::AllocateAudioBuffer(ULONG size, 
 
 STDMETHODIMP_(VOID) CMiniportWaveStreamCMI::FreeAudioBuffer(PMDL Mdl, ULONG Size)
 {
-	//PAGED_CODE();
-    DBGPRINT(("CMiniportWaveStreamCMI[%p]::FreeAudioBuffer(%p, %x)", this, Mdl, Size));
+	PAGED_CODE();
+	DBGPRINT(("CMiniportWaveStreamCMI[%p]::FreeAudioBuffer(%p, %x)", this, Mdl, Size));
 
 	Port->FreePagesFromMdl(Mdl);
 	audioBufferMDL = NULL;
@@ -1408,9 +1429,10 @@ STDMETHODIMP_(VOID) CMiniportWaveStreamCMI::FreeAudioBuffer(PMDL Mdl, ULONG Size
 	dmaMemorySize  = 0;
 }
 
-STDMETHODIMP_(void) CMiniportWaveStreamCMI::GetHWLatency(PKSRTAUDIO_HWLATENCY hwLatency) {
-    //PAGED_CODE();
-    DBGPRINT(("CMiniportWaveStreamCMI[%p]::GetHWLatency(%p)", this, hwLatency));
+STDMETHODIMP_(void) CMiniportWaveStreamCMI::GetHWLatency(PKSRTAUDIO_HWLATENCY hwLatency)
+{
+	PAGED_CODE();
+	DBGPRINT(("CMiniportWaveStreamCMI[%p]::GetHWLatency(%p)", this, hwLatency));
 	hwLatency->FifoSize     = 32;
 	hwLatency->ChipsetDelay = 0;
 	hwLatency->CodecDelay   = 4;
@@ -1418,18 +1440,18 @@ STDMETHODIMP_(void) CMiniportWaveStreamCMI::GetHWLatency(PKSRTAUDIO_HWLATENCY hw
 
 STDMETHODIMP_(NTSTATUS) CMiniportWaveStreamCMI::GetPositionRegister(PKSRTAUDIO_HWREGISTER hwRegister)
 {
-    //PAGED_CODE();
-    DBGPRINT(("CMiniportWaveStreamCMI[%p]::GetPositionRegister(%p)", this, hwRegister));
+	PAGED_CODE();
+	DBGPRINT(("CMiniportWaveStreamCMI[%p]::GetPositionRegister(%p)", this, hwRegister));
 
-    return STATUS_UNSUCCESSFUL;
+	return STATUS_UNSUCCESSFUL;
 }
 
 STDMETHODIMP_(NTSTATUS) CMiniportWaveStreamCMI::GetClockRegister(PKSRTAUDIO_HWREGISTER hwRegister)
 {
-    //PAGED_CODE();
-    DBGPRINT(("CMiniportWaveStreamCMI[%p]::GetClockRegister(%p)", this, hwRegister));
+	PAGED_CODE();
+	DBGPRINT(("CMiniportWaveStreamCMI[%p]::GetClockRegister(%p)", this, hwRegister));
 
-    return STATUS_UNSUCCESSFUL;
+	return STATUS_UNSUCCESSFUL;
 }
 
 #endif // WAVERT
@@ -1438,12 +1460,12 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveStreamCMI::GetClockRegister(PKSRTAUDIO_HWRE
 ** non-paged code below
 */
 #ifdef _MSC_VER
-#pragma code_seg() /* warning - ignored by GCC compiler */
+#pragma code_seg()
 #endif
 
 STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 {
-	DBGPRINT(("CMiniportWaveStreamCMI[%p]::SetState(%d)", this, NewState));
+	DBGPRINT(("CMiniportWaveStreamCMI[%p]::SetState(%d) [streamIndex: %d, channelNumber: %d]", this, NewState, streamIndex, channelNumber));
 
 	UInt32 inthld, chen, reset, pause;
 	UInt8  reg;
@@ -1466,9 +1488,7 @@ STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 
 	// STOP -> ACQUIRE -> PAUSE -> PLAY -> PAUSE -> ACQUIRE -> STOP
 	if (state != NewState) {
-		switch ((UINT) NewState) {
-			// LN: The cast on NewState is to satisfy the compiler about
-			// KSSTATE_STOP_AC3, which is not in the original enum KSSTATE.
+		switch (NewState) {
 			case KSSTATE_ACQUIRE:
 				DBGPRINT(("---KSSTATE_ACQUIRE: previous state: %d", state));
 				if (state == KSSTATE_PAUSE) {
@@ -1483,13 +1503,12 @@ STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 				periodSize = dmaSize;
 				DBGPRINT(("---dmaAddress: %x, dmaMemorySize: %x, dmaSize: %x", dmaAddress, dmaMemorySize, dmaSize));
 #else
-				if (currentResolution == 24) {
-					dmaSize = (DMAChannel->BufferSize() / (2 * (24 >> 3)) );
+				if (currentResolution == 32) {
+					dmaSize = (DMAChannel->BufferSize() / (2 * (32 >> 3)) );
 				} else {
 					dmaSize = (DMAChannel->BufferSize() / (2 * (currentResolution >> 3)) );
 				}
 #endif
-				DBGPRINT(("---streamIndex: %d, channelNumber: %d", streamIndex, channelNumber));
 				DBGPRINT(("---SampleRate: %d, Resolution: %d, Channels: %d", currentSampleRate, currentResolution, currentChannelCount));
 
 				if (periodSize > dmaSize) {
@@ -1503,18 +1522,27 @@ STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 				Miniport->CMIAdapter->writeUInt32(reg, dmaAddress);
 #else
 				Miniport->CMIAdapter->writeUInt32(reg, DMAChannel->PhysicalAddress().u.LowPart);
+				DBGPRINT(("---DMA Address: HighPart: 0x%08X LowPart: 0x%08X", DMAChannel->PhysicalAddress().u.HighPart, DMAChannel->PhysicalAddress().u.LowPart));
 #endif
 				// count of samples
 				reg = channelNumber ? REG_CH1_FRAME2 : REG_CH0_FRAME2;
 				Miniport->CMIAdapter->writeUInt16(reg, dmaSize-1);
 				Miniport->CMIAdapter->writeUInt16(reg + 2, periodSize-1);
 				DBGPRINT(("---DMA Size:   0x%04X, Period Size: 0x%04X, enableSPDIFIn: %d", dmaSize, periodSize, Miniport->cm->enableSPDIFIn));
-				if (isCaptureStream && (Miniport->cm->enableSPDIFIn)) {
+				if (isCaptureStream) {
+					if (Miniport->cm->enableSPDIFIn) {
 #if OUT_CHANNEL==0
-					Miniport->CMIAdapter->setUInt32Bit(REG_FUNCTRL1, SPDF_1);
+						Miniport->CMIAdapter->setUInt32Bit(REG_FUNCTRL1, SPDF_1);
 #else
-					Miniport->CMIAdapter->setUInt32Bit(REG_FUNCTRL1, SPDF_0);
+						Miniport->CMIAdapter->setUInt32Bit(REG_FUNCTRL1, SPDF_0);
 #endif
+					} else {
+#if OUT_CHANNEL==0
+						Miniport->CMIAdapter->clearUInt32Bit(REG_FUNCTRL1, SPDF_1);
+#else
+						Miniport->CMIAdapter->clearUInt32Bit(REG_FUNCTRL1, SPDF_0);
+#endif
+					}
 				}
 				KeReleaseMutex(&Miniport->mutex, false);
 				break;
@@ -1586,37 +1614,39 @@ STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 }
 
 #ifdef WAVERT
+
 STDMETHODIMP CMiniportWaveStreamCMI::GetPosition(PKSAUDIO_POSITION Position)
 {
-	//ASSERT(Position);
+	ASSERT(Position);
 
 	UInt32 reg;
 
 	if ((state == KSSTATE_RUN) && (dmaAddress)) {
 		reg = (channelNumber) ? REG_CH1_FRAME1 : REG_CH0_FRAME1;
 		Position->PlayOffset = Miniport->CMIAdapter->readUInt32(reg) - dmaAddress;
-        Position->WriteOffset = Position->PlayOffset + currentChannelCount * 2 * 8;
+		Position->WriteOffset = Position->PlayOffset + currentChannelCount * 2 * 8;
 	} else {
-        Position->PlayOffset = 0;
-        Position->WriteOffset = 0;
+		Position->PlayOffset = 0;
+		Position->WriteOffset = 0;
 	}
 
 	return STATUS_SUCCESS;
 }
 
 #else //WaveCyclic
+
 STDMETHODIMP CMiniportWaveStreamCMI::GetPosition(PULONG Position)
 {
-	//ASSERT(Position);
+	ASSERT(Position);
 
 	UInt32 reg;
 
 	if ((DMAChannel) && (state == KSSTATE_RUN)) {
 #if 0
 // this implementation messes with SPDIF-in recording
-        reg = (channelNumber) ? REG_CH1_FRAME2 : REG_CH0_FRAME2;
-        *Position = dmaSize - (Miniport->CMIAdapter->readUInt16(reg)-1);
-        *Position *= 2 * (currentResolution >> 3);
+		reg = (channelNumber) ? REG_CH1_FRAME2 : REG_CH0_FRAME2;
+		*Position = dmaSize - (Miniport->CMIAdapter->readUInt16(reg)-1);
+		*Position *= 2 * (currentResolution >> 3);
 #else
 		reg = (channelNumber) ? REG_CH1_FRAME1 : REG_CH0_FRAME1;
 		*Position = Miniport->CMIAdapter->readUInt32(reg);
@@ -1640,8 +1670,10 @@ STDMETHODIMP_(ULONG) CMiniportWaveStreamCMI::SetNotificationFreq(ULONG Interval,
 	if (state == KSSTATE_RUN) {
 		return 0;
 	}
-	periodSize   = Interval * currentSampleRate/1000;
-	*FramingSize = periodSize*currentChannelCount*(currentResolution >> 3);
+	// periodSize [sample] = interval [ms] * sample rate [Hz] * 1e-3 [milli]
+	periodSize   = Interval * currentSampleRate / 1000;
+	// FramingSize [byte] = periodSize [sample] * #Channels * resolution [byte];
+	*FramingSize = periodSize * currentChannelCount * (currentResolution >> 3);
 
 	KeWaitForSingleObject(&Miniport->mutex, Executive, KernelMode, FALSE, NULL);
 	Miniport->CMIAdapter->writeUInt16((channelNumber ? REG_CH1_FRAME2 : REG_CH0_FRAME2) + 2, periodSize-1);
@@ -1651,9 +1683,10 @@ STDMETHODIMP_(ULONG) CMiniportWaveStreamCMI::SetNotificationFreq(ULONG Interval,
 	return Interval;
 }
 
-STDMETHODIMP CMiniportWaveStreamCMI::NormalizePhysicalPosition(OUT PLONGLONG PhysicalPosition)
+STDMETHODIMP CMiniportWaveStreamCMI::NormalizePhysicalPosition(PLONGLONG PhysicalPosition)
 {
-	*PhysicalPosition = (_100NS_UNITS_PER_SECOND / currentChannelCount * (currentResolution >> 3) * *PhysicalPosition) / currentSampleRate;
+	// time_pos [ns] = byte_pos [byte] / (1e-9 [nano] * #Channels * resolution [byte] * sample rate [Hz])
+	*PhysicalPosition = (*PhysicalPosition * 10000000L) / (currentChannelCount * (currentResolution >> 3) * currentSampleRate);
 	return STATUS_SUCCESS;
 }
 

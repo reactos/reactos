@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,21 +30,13 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "mintopo.hpp"
 
-#if 0
 #ifndef STATIC_KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF
 #define STATIC_KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF\
     DEFINE_WAVEFORMATEX_GUID(WAVE_FORMAT_DOLBY_AC3_SPDIF)
 DEFINE_GUIDSTRUCT("00000092-0000-0010-8000-00aa00389b71", KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF);
-#define KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF  DEFINE_GUIDNAMED( KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF )
-/* Warning - Recursive #define for KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF */
-#endif
+#define KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF DEFINE_GUIDNAMED(KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF)
 #endif
 
-NTSTATUS NTAPI PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest);
-NTSTATUS NTAPI PropertyHandler_CpuResources(PPCPROPERTY_REQUEST PropertyRequest);
-NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest);
-NTSTATUS NTAPI PropertyHandler_ComponentId(PPCPROPERTY_REQUEST PropertyRequest);
-NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest);
 
 static KSDATARANGE PinDataRangesBridge[] =
 {
@@ -54,9 +46,9 @@ static KSDATARANGE PinDataRangesBridge[] =
             0,
             0,
             0,
-            { STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO) },
-            { STATICGUIDOF(KSDATAFORMAT_SUBTYPE_ANALOG) },
-            { STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE) }
+            {STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO)},
+            {STATICGUIDOF(KSDATAFORMAT_SUBTYPE_ANALOG)},
+            {STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)}
         }
     }
 };
@@ -68,15 +60,15 @@ static PKSDATARANGE PinDataRangePointersBridge[] =
 
 static KSDATARANGE WavePinDataRangesAC3Bridge[] =
 {
-    {
+	{
         {
             sizeof(KSDATARANGE),
             0,
             0,
             0,
-            { STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO) },
-            { STATICGUIDOF(KSDATAFORMAT_SUBTYPE_AC3_AUDIO) },
-            { STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE) }
+            {STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO)},
+            {STATICGUIDOF(KSDATAFORMAT_SUBTYPE_AC3_AUDIO)},
+            {STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)}
         }
     }
 };
@@ -103,7 +95,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSCATEGORY_AUDIO,                          // Category
             NULL,                                       // Name
-            { 0 }                                       // Reserved
+            {0}                                         // Reserved
         }
     },
 
@@ -122,7 +114,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSNODETYPE_SPDIF_INTERFACE,                // Category
             NULL,                                       // Name
-            { 0 }                                       // Reserved
+            {0}                                         // Reserved
         }
     },
 
@@ -141,7 +133,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_MICROPHONE,						// Category
 			NULL,										// Name
-            { 0 }                                       // Reserved
+			{0}                                         // Reserved
 		}
 	},
 
@@ -160,7 +152,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_CD_PLAYER,						// Category
 			NULL,										// Name
-            { 0 }                                       // Reserved
+			{0}                                         // Reserved
 		}
 	},
 
@@ -179,7 +171,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_LINE_CONNECTOR,					// Category
 			NULL,										// Name
-            { 0 }                                       // Reserved
+			{0}                                         // Reserved
 		}
 	},
 
@@ -198,7 +190,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_ANALOG_CONNECTOR,				// Category
 			NULL,										// Name
-            { 0 }                                       // Reserved
+			{0}                                         // Reserved
 		}
 	},
 
@@ -217,7 +209,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_ANALOG_CONNECTOR,				// Category
 			&CMINAME_DAC,								// Name
-            { 0 }                                       // Reserved
+			{0}                                         // Reserved
 		}
 	},
 
@@ -236,7 +228,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSNODETYPE_SPEAKER,                        // Category
             NULL,                                       // Name
-            { 0 }                                       // Reserved
+            {0}                                         // Reserved
         }
     },
 
@@ -255,7 +247,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSCATEGORY_AUDIO,                          // Category
             NULL,                                       // Name
-            { 0 }                                       // Reserved
+            {0}                                         // Reserved
         }
     },
 
@@ -274,7 +266,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSCATEGORY_AUDIO,                          // Category
             NULL,                                       // Name
-            { 0 }                                       // Reserved
+            {0}                                         // Reserved
         }
     },
 
@@ -293,10 +285,16 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             NULL,                                       // Category
             NULL,                                       // Name
-            { 0 }                                       // Reserved
+            {0}                                         // Reserved
         }
     }
 };
+
+NTSTATUS NTAPI PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest);
+NTSTATUS NTAPI PropertyHandler_CpuResources(PPCPROPERTY_REQUEST PropertyRequest);
+NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest);
+NTSTATUS NTAPI PropertyHandler_ComponentId(PPCPROPERTY_REQUEST PropertyRequest);
+NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest);
 
 static PCPROPERTY_ITEM PropertiesVolume[] =
 {
@@ -304,16 +302,15 @@ static PCPROPERTY_ITEM PropertiesVolume[] =
         &KSPROPSETID_Audio,
         KSPROPERTY_AUDIO_VOLUMELEVEL,
         KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_BASICSUPPORT,
-        (PCPFNPROPERTY_HANDLER)PropertyHandler_Level
+        PropertyHandler_Level
     },
     {
         &KSPROPSETID_Audio,
         KSPROPERTY_AUDIO_CPU_RESOURCES,
         KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_BASICSUPPORT,
-        (PCPFNPROPERTY_HANDLER)PropertyHandler_CpuResources
+        PropertyHandler_CpuResources
     }
 };
-
 DEFINE_PCAUTOMATION_TABLE_PROP(AutomationVolume,PropertiesVolume);
 
 static PCPROPERTY_ITEM PropertiesLoudness[] =
@@ -322,13 +319,13 @@ static PCPROPERTY_ITEM PropertiesLoudness[] =
         &KSPROPSETID_Audio,
         KSPROPERTY_AUDIO_LOUDNESS,
         KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_BASICSUPPORT,
-        (PCPFNPROPERTY_HANDLER)PropertyHandler_OnOff
+        PropertyHandler_OnOff
     },
     {
         &KSPROPSETID_Audio,
         KSPROPERTY_AUDIO_CPU_RESOURCES,
         KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_BASICSUPPORT,
-        (PCPFNPROPERTY_HANDLER)PropertyHandler_CpuResources
+        PropertyHandler_CpuResources
     }
 };
 DEFINE_PCAUTOMATION_TABLE_PROP(AutomationLoudness,PropertiesLoudness);
@@ -339,13 +336,13 @@ static PCPROPERTY_ITEM PropertiesMute[] =
         &KSPROPSETID_Audio,
         KSPROPERTY_AUDIO_MUTE,
         KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_BASICSUPPORT,
-        (PCPFNPROPERTY_HANDLER)PropertyHandler_OnOff
+        PropertyHandler_OnOff
     },
     {
         &KSPROPSETID_Audio,
         KSPROPERTY_AUDIO_CPU_RESOURCES,
         KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_BASICSUPPORT,
-        (PCPFNPROPERTY_HANDLER)PropertyHandler_CpuResources
+        PropertyHandler_CpuResources
     }
 };
 DEFINE_PCAUTOMATION_TABLE_PROP(AutomationMute,PropertiesMute);
@@ -356,19 +353,19 @@ static PCPROPERTY_ITEM PropertiesFilter[] =
     &KSPROPSETID_General,
     KSPROPERTY_GENERAL_COMPONENTID,
     KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_BASICSUPPORT,
-    (PCPFNPROPERTY_HANDLER)PropertyHandler_ComponentId
+    PropertyHandler_ComponentId
   },
   {
     &KSPROPSETID_CMI,
     KSPROPERTY_CMI_GET,
     KSPROPERTY_TYPE_GET,
-    (PCPFNPROPERTY_HANDLER)PropertyHandler_Private
+    PropertyHandler_Private
   },
   {
     &KSPROPSETID_CMI,
     KSPROPERTY_CMI_SET,
     KSPROPERTY_TYPE_SET,
-    (PCPFNPROPERTY_HANDLER)PropertyHandler_Private
+    PropertyHandler_Private
   }
 };
 DEFINE_PCAUTOMATION_TABLE_PROP(AutomationFilter,PropertiesFilter);
