@@ -14,4 +14,8 @@ add_importlibs(cmicpl
     kernel32
 )
 
+if (NOT MSVC)
+  target_link_libraries(cmicpl -lgcc)
+endif()
+
 add_cd_file(TARGET cmicpl DESTINATION reactos/system32/drivers FOR all)
