@@ -23,6 +23,7 @@ add_library(cmipci SHARED
 target_link_libraries(cmipci
     stdunk
     libcntpr
+    chkstk
 )
 
 set_module_type(cmipci wdmdriver UNICODE ENTRYPOINT 0)
