@@ -112,6 +112,8 @@ function(set_module_type_toolchain MODULE TYPE)
         add_target_link_flags(${MODULE} "/DLL")
     elseif(${TYPE} STREQUAL "kernelmodedriver")
         add_target_link_flags(${MODULE} "/DRIVER")
+    elseif(${TYPE} STREQUAL "wdmdriver")
+        add_target_link_flags(${MODULE} "/DRIVER:WDM")
     endif()
 endfunction()
 

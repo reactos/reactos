@@ -202,8 +202,11 @@ function(set_module_type_toolchain MODULE TYPE)
         target_link_libraries(${MODULE} -lstdc++ -lsupc++ -lgcc -lmingwex)
     endif()
 
-    if(${TYPE} STREQUAL "kernelmodedriver")
+    if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
         add_target_link_flags(${MODULE} "-Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000")
+        if(${TYPE} STREQUAL "wdmdriver")
+            add_target_link_flags(${MODULE} "-Wl,--wdmdriver")
+        endif()
     endif()
 endfunction()
 
