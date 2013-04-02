@@ -199,7 +199,11 @@ endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
     if(IS_CPP)
-        target_link_libraries(${MODULE} -lstdc++ -lsupc++ -lgcc -lmingwex)
+        if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
+            target_link_libraries(${MODULE} -lgcc)
+        else()
+            target_link_libraries(${MODULE} -lstdc++ -lsupc++ -lgcc -lmingwex)
+        endif()
     endif()
 
     if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
