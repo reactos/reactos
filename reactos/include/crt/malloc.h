@@ -228,7 +228,7 @@ extern "C" {
   _msize(
     _In_ void *_Memory);
 
-#if __GNUC__ && 0
+#ifdef __GNUC__
 #undef _alloca
 #define _alloca(x) __builtin_alloca((x))
 #else
