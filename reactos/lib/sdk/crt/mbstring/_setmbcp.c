@@ -89,7 +89,7 @@ int _setmbcp_l(int cp, LCID lcid, MSVCRT_pthreadmbcinfo mbcinfo)
 
   if(lcid == -1) {
     sprintf(bufA, format, newcp);
-    mbcinfo->mblcid = MSVCRT_locale_to_LCID(bufA);
+    mbcinfo->mblcid = MSVCRT_locale_to_LCID(bufA, NULL);
   } else {
     mbcinfo->mblcid = lcid;
   }
