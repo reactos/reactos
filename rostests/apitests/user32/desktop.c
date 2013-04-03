@@ -27,7 +27,8 @@ struct test_info TestResults[] = {{L"WinSta0",L"Default"},
                                   {NULL, NULL},
                                   {NULL, NULL},
                                   {L"WinSta0",L"Default"},
-                                  {L"TestWinsta", L"TestDesktop"}};
+                                  {L"TestWinsta", L"TestDesktop"},
+                                  {NULL, NULL}};
 
 void do_InitialDesktop_child(int i)
 {
@@ -129,7 +130,16 @@ void Test_InitialDesktop(char *argv0)
 
     test_CreateProcessWithDesktop(7, argv0, NULL, 0);
     test_CreateProcessWithDesktop(8, argv0, "TestWinsta\\TestDesktop", 0);
-    test_CreateProcessWithDesktop(8, argv0, "NonExistantWinsta\\NonExistantDesktop", 0);
+    test_CreateProcessWithDesktop(8, argv0, "NonExistantWinsta\\NonExistantDesktop", STATUS_DLL_INIT_FAILED);
+
+    ret = SetProcessWindowStation(hwinstaInitial);
+    ok(ret != 0, "SetProcessWindowStation failed\n");
+
+    ret = CloseDesktop(hdesktop);
+    ok(ret != 0, "CloseDesktop failed\n");
+
+    ret = CloseWindowStation(hwinsta);
+    ok(ret != 0, "CloseWindowStation failed\n");
 }
 
 void Test_OpenInputDesktop()
@@ -137,6 +147,8 @@ void Test_OpenInputDesktop()
     HDESK hDeskInput ,hDeskInput2;
     HDESK hDeskInitial;
     BOOL ret;
+    HWINSTA hwinsta = NULL, hwinstaInitial;
+    DWORD err;
 
     hDeskInput = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
     ok(hDeskInput != NULL, "OpenInputDesktop failed\n");
@@ -157,6 +169,29 @@ void Test_OpenInputDesktop()
     ok(ret == TRUE, "SetThreadDesktop for initial desktop failed\n");
 
     ok(CloseDesktop(hDeskInput) != 0, "CloseDesktop failed\n");
+
+    /* Try calling OpenInputDesktop after switching to a new winsta */
+    hwinstaInitial = GetProcessWindowStation();
+    ok(hwinstaInitial != 0, "GetProcessWindowStation failed\n");
+
+    hwinsta = CreateWindowStationW(L"TestWinsta", 0, WINSTA_ALL_ACCESS, NULL);
+    ok(hwinsta != 0, "CreateWindowStationW failed\n");
+    
+    ret = SetProcessWindowStation(hwinsta);
+    ok(ret != 0, "SetProcessWindowStation failed\n");
+    
+    hDeskInput = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+    ok(hDeskInput == 0, "OpenInputDesktop should fail\n");
+
+    err = GetLastError();
+    ok(err == ERROR_INVALID_FUNCTION, "Got last error: %lu\n", err);
+
+    ret = SetProcessWindowStation(hwinstaInitial);
+    ok(ret != 0, "SetProcessWindowStation failed\n");
+    
+    ret = CloseWindowStation(hwinsta);
+    ok(ret != 0, "CloseWindowStation failed\n");
+
 }
 
 START_TEST(desktop)
