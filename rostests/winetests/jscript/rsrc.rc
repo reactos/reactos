@@ -19,6 +19,9 @@
 /* @makedep: api.js */
 api.js 40 "api.js"
 
+/* @makedep: cc.js */
+cc.js 40 "cc.js"
+
 /* @makedep: lang.js */
 lang.js 40 "lang.js"
 

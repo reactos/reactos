@@ -2,6 +2,7 @@
 add_definitions(-D__ROS_LONG64__)
 list(APPEND SOURCE
     activex.c
+    caller.c
     jscript.c
     run.c
     testlist.c
