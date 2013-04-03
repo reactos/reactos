@@ -33,17 +33,18 @@ if((ARCH STREQUAL "i386") AND (NOT MSVC))
         x86/3dnow_xform3.S
         x86/3dnow_xform4.S
         x86/3dnow_normal.S
-        x86/sse_xform1.S
-        x86/sse_xform2.S
-        x86/sse_xform3.S
-        x86/sse_xform4.S
-        x86/sse_normal.S
+        # x86/sse_xform1.S
+        # x86/sse_xform2.S
+        # x86/sse_xform3.S
+        # x86/sse_xform4.S
+        # x86/sse_normal.S
         x86/read_rgba_span_x86.S)
     add_definitions(
         -DUSE_X86_ASM
         -DUSE_MMX_ASM
         -DUSE_3DNOW_ASM
-        -DUSE_SSE_ASM)
+        # -DUSE_SSE_ASM
+    )
 endif()
 
 list(APPEND SOURCE
