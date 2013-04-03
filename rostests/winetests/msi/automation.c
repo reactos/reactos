@@ -2006,6 +2006,7 @@ static void test_Installer_RegistryValue(void)
     static const WCHAR szFiveHi[] = { 'F','i','v','e','\n','H','i',0 };
     static const WCHAR szSix[] = { 'S','i','x',0 };
     static const WCHAR szREG_[] = { '(','R','E','G','_',']',0 };
+    static const WCHAR szREG_2[] = { '(','R','E','G','_','?','?',')',0 };
     static const WCHAR szSeven[] = { 'S','e','v','e','n',0 };
     static const WCHAR szEight[] = { 'E','i','g','h','t',0 };
     static const WCHAR szBlank[] = { 0 };
@@ -2117,7 +2118,8 @@ static void test_Installer_RegistryValue(void)
     memset(szString, 0, sizeof(szString));
     hr = Installer_RegistryValueW(curr_user, szKey, szSix, szString);
     ok(hr == S_OK, "Installer_RegistryValueW failed, hresult 0x%08x\n", hr);
-    ok_w2("Registry value \"%s\" does not match expected \"%s\"\n", szString, szREG_);
+    ok(!lstrcmpW(szString, szREG_2) || broken(!lstrcmpW(szString, szREG_)),
+       "Registry value does not match\n");
 
     VariantInit(&vararg);
     V_VT(&vararg) = VT_BSTR;

@@ -31,8 +31,14 @@
 
 static BOOL is_wow64;
 static const char msifile[] = "winetest.msi";
+static char CURR_DIR[MAX_PATH];
+static char PROG_FILES_DIR[MAX_PATH];
+static char PROG_FILES_DIR_NATIVE[MAX_PATH];
+static char COMMON_FILES_DIR[MAX_PATH];
+static char WINDOWS_DIR[MAX_PATH];
 
 static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
+static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
@@ -59,6 +65,8 @@ static UINT (WINAPI *pMsiEnumProductsExA)
     (LPCSTR, LPCSTR, DWORD, DWORD, CHAR[39], MSIINSTALLCONTEXT *, LPSTR, LPDWORD);
 static UINT (WINAPI *pMsiEnumComponentsExA)
     (LPCSTR, DWORD, DWORD, CHAR[39], MSIINSTALLCONTEXT *, LPSTR, LPDWORD);
+static UINT (WINAPI *pMsiSetExternalUIRecord)
+    (INSTALLUI_HANDLER_RECORD, DWORD, LPVOID, PINSTALLUI_HANDLER_RECORD);
 
 static void init_functionpointers(void)
 {
@@ -78,16 +86,311 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiOpenPackageExW)
     GET_PROC(hmsi, MsiEnumPatchesExA)
     GET_PROC(hmsi, MsiQueryComponentStateA)
+    GET_PROC(hmsi, MsiSetExternalUIRecord)
     GET_PROC(hmsi, MsiUseFeatureExA)
     GET_PROC(hmsi, MsiGetPatchInfoExA)
     GET_PROC(hmsi, MsiEnumProductsExA)
     GET_PROC(hmsi, MsiEnumComponentsExA)
 
     GET_PROC(hadvapi32, ConvertSidToStringSidA)
+    GET_PROC(hadvapi32, OpenProcessToken);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
 
 #undef GET_PROC
+}
+
+static BOOL get_system_dirs(void)
+{
+    HKEY hkey;
+    DWORD type, size;
+
+    if (RegOpenKey(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", &hkey))
+        return FALSE;
+
+    size = MAX_PATH;
+    if (RegQueryValueExA(hkey, "ProgramFilesDir (x86)", 0, &type, (LPBYTE)PROG_FILES_DIR, &size) &&
+        RegQueryValueExA(hkey, "ProgramFilesDir", 0, &type, (LPBYTE)PROG_FILES_DIR, &size))
+    {
+        RegCloseKey(hkey);
+        return FALSE;
+    }
+    size = MAX_PATH;
+    if (RegQueryValueExA(hkey, "CommonFilesDir (x86)", 0, &type, (LPBYTE)COMMON_FILES_DIR, &size) &&
+        RegQueryValueExA(hkey, "CommonFilesDir", 0, &type, (LPBYTE)COMMON_FILES_DIR, &size))
+    {
+        RegCloseKey(hkey);
+        return FALSE;
+    }
+    size = MAX_PATH;
+    if (RegQueryValueExA(hkey, "ProgramFilesDir", 0, &type, (LPBYTE)PROG_FILES_DIR_NATIVE, &size))
+    {
+        RegCloseKey(hkey);
+        return FALSE;
+    }
+    RegCloseKey(hkey);
+    if (!GetWindowsDirectoryA(WINDOWS_DIR, MAX_PATH)) return FALSE;
+    return TRUE;
+}
+
+static BOOL file_exists(const char *file)
+{
+    return GetFileAttributes(file) != INVALID_FILE_ATTRIBUTES;
+}
+
+static BOOL pf_exists(const char *file)
+{
+    char path[MAX_PATH];
+
+    lstrcpyA(path, PROG_FILES_DIR);
+    lstrcatA(path, "\\");
+    lstrcatA(path, file);
+    return file_exists(path);
+}
+
+static BOOL delete_pf(const char *rel_path, BOOL is_file)
+{
+    char path[MAX_PATH];
+
+    lstrcpyA(path, PROG_FILES_DIR);
+    lstrcatA(path, "\\");
+    lstrcatA(path, rel_path);
+
+    if (is_file)
+        return DeleteFileA(path);
+    else
+        return RemoveDirectoryA(path);
+}
+
+static BOOL is_process_limited(void)
+{
+    HANDLE token;
+    TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
+    DWORD size;
+    BOOL ret;
+
+    if (!pOpenProcessToken) return FALSE;
+    if (!pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) return FALSE;
+    ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
+    CloseHandle(token);
+    return (ret && type == TokenElevationTypeLimited);
+}
+
+/* msi database data */
+
+static const char directory_dat[] =
+    "Directory\tDirectory_Parent\tDefaultDir\n"
+    "s72\tS72\tl255\n"
+    "Directory\tDirectory\n"
+    "MSITESTDIR\tProgramFilesFolder\tmsitest\n"
+    "ProgramFilesFolder\tTARGETDIR\t.\n"
+    "TARGETDIR\t\tSourceDir";
+
+static const char component_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "One\t{8F5BAEEF-DD92-40AC-9397-BE3CF9F97C81}\tMSITESTDIR\t2\tNOT REINSTALL\tone.txt\n";
+
+static const char feature_dat[] =
+    "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
+    "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
+    "Feature\tFeature\n"
+    "One\t\tOne\tOne\t1\t3\tMSITESTDIR\t0\n"
+    "Two\t\t\t\t2\t1\tTARGETDIR\t0\n";
+
+static const char feature_comp_dat[] =
+    "Feature_\tComponent_\n"
+    "s38\ts72\n"
+    "FeatureComponents\tFeature_\tComponent_\n"
+    "One\tOne\n";
+
+static const char file_dat[] =
+    "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
+    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
+    "File\tFile\n"
+    "one.txt\tOne\tone.txt\t1000\t\t\t0\t1\n";
+
+static const char install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "ValidateProductID\t\t700\n"
+    "CostInitialize\t\t800\n"
+    "FileCost\t\t900\n"
+    "CostFinalize\t\t1000\n"
+    "InstallValidate\t\t1400\n"
+    "InstallInitialize\t\t1500\n"
+    "ProcessComponents\t\t1600\n"
+    "UnpublishFeatures\t\t1800\n"
+    "RemoveFiles\t\t3500\n"
+    "InstallFiles\t\t4000\n"
+    "RegisterProduct\t\t6100\n"
+    "PublishFeatures\t\t6300\n"
+    "PublishProduct\t\t6400\n"
+    "InstallFinalize\t\t6600";
+
+static const char media_dat[] =
+    "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
+    "i2\ti4\tL64\tS255\tS32\tS72\n"
+    "Media\tDiskId\n"
+    "1\t1\t\t\tDISK1\t\n";
+
+static const char property_dat[] =
+    "Property\tValue\n"
+    "s72\tl0\n"
+    "Property\tProperty\n"
+    "INSTALLLEVEL\t3\n"
+    "Manufacturer\tWine\n"
+    "ProductCode\t{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}\n"
+    "ProductName\tMSITEST\n"
+    "ProductVersion\t1.1.1\n"
+    "UpgradeCode\t{9574448F-9B86-4E07-B6F6-8D199DA12127}\n"
+    "MSIFASTINSTALL\t1\n";
+
+static const char mcp_component_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "hydrogen\t{C844BD1E-1907-4C00-8BC9-150BD70DF0A1}\tMSITESTDIR\t2\t\thydrogen\n"
+    "helium\t{5AD3C142-CEF8-490D-B569-784D80670685}\tMSITESTDIR\t2\t\thelium\n"
+    "lithium\t{4AF28FFC-71C7-4307-BDE4-B77C5338F56F}\tMSITESTDIR\t2\tPROPVAR=42\tlithium\n";
+
+static const char mcp_feature_dat[] =
+    "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
+    "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
+    "Feature\tFeature\n"
+    "hydroxyl\t\thydroxyl\thydroxyl\t2\t1\tTARGETDIR\t0\n"
+    "heliox\t\theliox\theliox\t2\t5\tTARGETDIR\t0\n"
+    "lithia\t\tlithia\tlithia\t2\t10\tTARGETDIR\t0";
+
+static const char mcp_feature_comp_dat[] =
+    "Feature_\tComponent_\n"
+    "s38\ts72\n"
+    "FeatureComponents\tFeature_\tComponent_\n"
+    "hydroxyl\thydrogen\n"
+    "heliox\thelium\n"
+    "lithia\tlithium";
+
+static const CHAR mcp_file_dat[] =
+    "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
+    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
+    "File\tFile\n"
+    "hydrogen\thydrogen\thydrogen\t0\t\t\t8192\t1\n"
+    "helium\thelium\thelium\t0\t\t\t8192\t1\n"
+    "lithium\tlithium\tlithium\t0\t\t\t8192\t1";
+
+typedef struct _msi_table
+{
+    const CHAR *filename;
+    const CHAR *data;
+    int size;
+} msi_table;
+
+#define ADD_TABLE(x) {#x".idt", x##_dat, sizeof(x##_dat)}
+
+static const msi_table tables[] =
+{
+    ADD_TABLE(directory),
+    ADD_TABLE(component),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(file),
+    ADD_TABLE(install_exec_seq),
+    ADD_TABLE(media),
+    ADD_TABLE(property),
+};
+
+static const msi_table mcp_tables[] =
+{
+    ADD_TABLE(directory),
+    ADD_TABLE(mcp_component),
+    ADD_TABLE(mcp_feature),
+    ADD_TABLE(mcp_feature_comp),
+    ADD_TABLE(mcp_file),
+    ADD_TABLE(install_exec_seq),
+    ADD_TABLE(media),
+    ADD_TABLE(property)
+};
+
+static void write_file(const CHAR *filename, const char *data, int data_size)
+{
+    DWORD size;
+
+    HANDLE hf = CreateFile(filename, GENERIC_WRITE, 0, NULL,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    WriteFile(hf, data, data_size, &size, NULL);
+    CloseHandle(hf);
+}
+
+static void write_msi_summary_info(MSIHANDLE db, INT version, INT wordcount, const char *template)
+{
+    MSIHANDLE summary;
+    UINT r;
+
+    r = MsiGetSummaryInformationA(db, NULL, 5, &summary);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiSummaryInfoSetPropertyA(summary, PID_TEMPLATE, VT_LPSTR, 0, NULL, template);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiSummaryInfoSetPropertyA(summary, PID_REVNUMBER, VT_LPSTR, 0, NULL,
+                                   "{004757CA-5092-49C2-AD20-28E1CE0DF5F2}");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiSummaryInfoSetPropertyA(summary, PID_PAGECOUNT, VT_I4, version, NULL, NULL);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiSummaryInfoSetPropertyA(summary, PID_WORDCOUNT, VT_I4, wordcount, NULL, NULL);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiSummaryInfoSetPropertyA(summary, PID_TITLE, VT_LPSTR, 0, NULL, "MSITEST");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    /* write the summary changes back to the stream */
+    r = MsiSummaryInfoPersist(summary);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    MsiCloseHandle(summary);
+}
+
+#define create_database(name, tables, num_tables) \
+    create_database_wordcount(name, tables, num_tables, 100, 0, ";1033");
+
+#define create_database_template(name, tables, num_tables, version, template) \
+    create_database_wordcount(name, tables, num_tables, version, 0, template);
+
+static void create_database_wordcount(const CHAR *name, const msi_table *tables,
+                                      int num_tables, INT version, INT wordcount,
+                                      const char *template)
+{
+    MSIHANDLE db;
+    UINT r;
+    int j;
+
+    r = MsiOpenDatabaseA(name, MSIDBOPEN_CREATE, &db);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    /* import the tables into the database */
+    for (j = 0; j < num_tables; j++)
+    {
+        const msi_table *table = &tables[j];
+
+        write_file(table->filename, table->data, (table->size - 1) * sizeof(char));
+
+        r = MsiDatabaseImportA(db, CURR_DIR, table->filename);
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+        DeleteFileA(table->filename);
+    }
+
+    write_msi_summary_info(db, version, wordcount, template);
+
+    r = MsiDatabaseCommit(db);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    MsiCloseHandle(db);
 }
 
 static UINT run_query(MSIHANDLE hdb, const char *query)
@@ -2829,6 +3132,9 @@ static void test_MsiGetFileVersion(void)
     DWORD verchecksz, langchecksz;
 
     /* NULL szFilePath */
+    r = MsiGetFileVersionA(NULL, NULL, NULL, NULL, NULL);
+    ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+
     versz = MAX_PATH;
     langsz = MAX_PATH;
     lstrcpyA(version, "version");
@@ -2844,6 +3150,9 @@ static void test_MsiGetFileVersion(void)
     ok(langsz == MAX_PATH, "Expected %d, got %d\n", MAX_PATH, langsz);
 
     /* empty szFilePath */
+    r = MsiGetFileVersionA("", NULL, NULL, NULL, NULL);
+    ok(r == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", r);
+
     versz = MAX_PATH;
     langsz = MAX_PATH;
     lstrcpyA(version, "version");
@@ -2941,6 +3250,9 @@ static void test_MsiGetFileVersion(void)
     create_file("ver.txt", "ver.txt", 20);
 
     /* file exists, no version information */
+    r = MsiGetFileVersionA("ver.txt", NULL, NULL, NULL, NULL);
+    ok(r == ERROR_FILE_INVALID, "Expected ERROR_FILE_INVALID, got %d\n", r);
+
     versz = MAX_PATH;
     langsz = MAX_PATH;
     lstrcpyA(version, "version");
@@ -3041,6 +3353,34 @@ static void test_MsiGetFileVersion(void)
     ok(!strncmp(lang, langcheck, 2),
        "Expected first character of %s, got %s\n", langcheck, lang);
     ok(langsz >= langchecksz, "Expected %d >= %d\n", langsz, langchecksz);
+
+    /* pcchVersionBuf big enough, pcchLangBuf not big enough */
+    versz = MAX_PATH;
+    langsz = 0;
+    lstrcpyA(version, "version");
+    r = MsiGetFileVersionA(path, version, &versz, NULL, &langsz);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(versz == verchecksz, "Expected %d, got %d\n", verchecksz, versz);
+    ok(!lstrcmpA(version, vercheck), "Expected %s, got %s\n", vercheck, version);
+    ok(langsz >= langchecksz && langsz < MAX_PATH, "Expected %d >= %d\n", langsz, langchecksz);
+
+    /* pcchVersionBuf not big enough, pcchLangBuf big enough */
+    versz = 5;
+    langsz = MAX_PATH;
+    lstrcpyA(lang, "lang");
+    r = MsiGetFileVersionA(path, NULL, &versz, lang, &langsz);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(versz == verchecksz, "Expected %d, got %d\n", verchecksz, versz);
+    ok(langsz >= langchecksz && langsz < MAX_PATH, "Expected %d >= %d\n", langsz, langchecksz);
+    ok(lstrcmpA(lang, "lang"), "lang buffer not modified\n");
+
+    /* NULL pcchVersionBuf and pcchLangBuf */
+    r = MsiGetFileVersionA(path, version, NULL, lang, NULL);
+    ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+
+    /* All NULL except szFilePath */
+    r = MsiGetFileVersionA(path, NULL, NULL, NULL, NULL);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     HeapFree(GetProcessHeap(), 0, vercheck);
     HeapFree(GetProcessHeap(), 0, langcheck);
@@ -3194,6 +3534,12 @@ static void test_MsiGetProductInfo(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &localkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip("Not enough rights to perform tests\n");
+        LocalFree(usersid);
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* local user product code exists */
@@ -7308,6 +7654,12 @@ static void test_MsiGetUserInfo(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userprod, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip("Not enough rights to perform tests\n");
+        LocalFree(usersid);
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     res = RegCreateKeyExA(userprod, "InstallProperties", 0, NULL, 0, access, NULL, &props, NULL);
@@ -7784,6 +8136,12 @@ static void test_MsiOpenProduct(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &userkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip("Not enough rights to perform tests\n");
+        LocalFree(usersid);
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* user product key exists */
@@ -8406,6 +8764,11 @@ static void test_MsiEnumPatchesEx_usermanaged(LPCSTR usersid, LPCSTR expectedsid
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &udprod, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip("Not enough rights to perform tests\n");
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* UserData product key exists */
@@ -8864,6 +9227,11 @@ static void test_MsiEnumPatchesEx_userunmanaged(LPCSTR usersid, LPCSTR expecteds
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &udprod, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip("Not enough rights to perform tests\n");
+        goto error;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* UserData product key exists */
@@ -10254,6 +10622,12 @@ static void test_MsiEnumPatches(void)
     lstrcatA(keypath, prod_squashed);
 
     res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, &prodkey, NULL);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip("Not enough rights to perform tests\n");
+        LocalFree(usersid);
+        return;
+    }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* local product key exists */
@@ -12137,12 +12511,555 @@ done:
     LocalFree( usersid );
 }
 
+static void test_MsiConfigureProductEx(void)
+{
+    UINT r;
+    LONG res;
+    DWORD type, size;
+    HKEY props, source;
+    CHAR keypath[MAX_PATH * 2], localpackage[MAX_PATH], packagename[MAX_PATH];
+    REGSAM access = KEY_ALL_ACCESS;
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+
+    CreateDirectoryA("msitest", NULL);
+    create_file("msitest\\hydrogen", "hydrogen", 500);
+    create_file("msitest\\helium", "helium", 500);
+    create_file("msitest\\lithium", "lithium", 500);
+
+    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
+
+    if (is_wow64)
+        access |= KEY_WOW64_64KEY;
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    /* NULL szProduct */
+    r = MsiConfigureProductExA(NULL, INSTALLLEVEL_DEFAULT,
+                               INSTALLSTATE_DEFAULT, "PROPVAR=42");
+    ok(r == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+
+    /* empty szProduct */
+    r = MsiConfigureProductExA("", INSTALLLEVEL_DEFAULT,
+                               INSTALLSTATE_DEFAULT, "PROPVAR=42");
+    ok(r == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+
+    /* garbage szProduct */
+    r = MsiConfigureProductExA("garbage", INSTALLLEVEL_DEFAULT,
+                               INSTALLSTATE_DEFAULT, "PROPVAR=42");
+    ok(r == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+
+    /* guid without brackets */
+    r = MsiConfigureProductExA("6700E8CF-95AB-4D9C-BC2C-15840DEA7A5D",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
+                               "PROPVAR=42");
+    ok(r == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
+
+    /* guid with brackets */
+    r = MsiConfigureProductExA("{6700E8CF-95AB-4D9C-BC2C-15840DEA7A5D}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
+                               "PROPVAR=42");
+    ok(r == ERROR_UNKNOWN_PRODUCT,
+       "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
+
+    /* same length as guid, but random */
+    r = MsiConfigureProductExA("A938G02JF-2NF3N93-VN3-2NNF-3KGKALDNF93",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
+                               "PROPVAR=42");
+    ok(r == ERROR_UNKNOWN_PRODUCT,
+       "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
+
+    /* product not installed yet */
+    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
+                               "PROPVAR=42");
+    ok(r == ERROR_UNKNOWN_PRODUCT,
+       "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
+
+    /* install the product, per-user unmanaged */
+    r = MsiInstallProductA(msifile, "INSTALLLEVEL=10 PROPVAR=42");
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        goto error;
+    }
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
+    ok(pf_exists("msitest\\helium"), "File not installed\n");
+    ok(pf_exists("msitest\\lithium"), "File not installed\n");
+    ok(pf_exists("msitest"), "File not installed\n");
+
+    /* product is installed per-user managed, remove it */
+    r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
+                               "PROPVAR=42");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
+
+    /* product has been removed */
+    r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
+                               "PROPVAR=42");
+    ok(r == ERROR_UNKNOWN_PRODUCT,
+       "Expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
+
+    /* install the product, machine */
+    r = MsiInstallProductA(msifile, "ALLUSERS=1 INSTALLLEVEL=10 PROPVAR=42");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
+    ok(pf_exists("msitest\\helium"), "File not installed\n");
+    ok(pf_exists("msitest\\lithium"), "File not installed\n");
+    ok(pf_exists("msitest"), "File not installed\n");
+
+    /* product is installed machine, remove it */
+    r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
+                               "PROPVAR=42");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
+
+    /* product has been removed */
+    r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
+                               "PROPVAR=42");
+    ok(r == ERROR_UNKNOWN_PRODUCT,
+       "Expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
+
+    /* install the product, machine */
+    r = MsiInstallProductA(msifile, "ALLUSERS=1 INSTALLLEVEL=10 PROPVAR=42");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
+    ok(pf_exists("msitest\\helium"), "File not installed\n");
+    ok(pf_exists("msitest\\lithium"), "File not installed\n");
+    ok(pf_exists("msitest"), "File not installed\n");
+
+    DeleteFileA(msifile);
+
+    /* msifile is removed */
+    r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
+                               "PROPVAR=42");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
+
+    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
+
+    /* install the product, machine */
+    r = MsiInstallProductA(msifile, "ALLUSERS=1 INSTALLLEVEL=10 PROPVAR=42");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
+    ok(pf_exists("msitest\\helium"), "File not installed\n");
+    ok(pf_exists("msitest\\lithium"), "File not installed\n");
+    ok(pf_exists("msitest"), "File not installed\n");
+
+    DeleteFileA(msifile);
+
+    lstrcpyA(keypath, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\");
+    lstrcatA(keypath, "Installer\\UserData\\S-1-5-18\\Products\\");
+    lstrcatA(keypath, "83374883CBB1401418CAF2AA7CCEDDDC\\InstallProperties");
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, access, &props);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    type = REG_SZ;
+    size = MAX_PATH;
+    res = RegQueryValueExA(props, "LocalPackage", NULL, &type,
+                           (LPBYTE)localpackage, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegSetValueExA(props, "LocalPackage", 0, REG_SZ,
+                         (const BYTE *)"C:\\idontexist.msi", 18);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* LocalPackage is used to find the cached msi package */
+    r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
+                               "PROPVAR=42");
+    ok(r == ERROR_INSTALL_SOURCE_ABSENT,
+       "Expected ERROR_INSTALL_SOURCE_ABSENT, got %d\n", r);
+    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
+    ok(pf_exists("msitest\\helium"), "File not installed\n");
+    ok(pf_exists("msitest\\lithium"), "File not installed\n");
+    ok(pf_exists("msitest"), "File not installed\n");
+
+    RegCloseKey(props);
+    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
+
+    /* LastUsedSource can be used as a last resort */
+    r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
+                               "PROPVAR=42");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
+    DeleteFileA( localpackage );
+
+    /* install the product, machine */
+    r = MsiInstallProductA(msifile, "ALLUSERS=1 INSTALLLEVEL=10 PROPVAR=42");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
+    ok(pf_exists("msitest\\helium"), "File not installed\n");
+    ok(pf_exists("msitest\\lithium"), "File not installed\n");
+    ok(pf_exists("msitest"), "File not installed\n");
+
+    lstrcpyA(keypath, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\");
+    lstrcatA(keypath, "Installer\\UserData\\S-1-5-18\\Products\\");
+    lstrcatA(keypath, "83374883CBB1401418CAF2AA7CCEDDDC\\InstallProperties");
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, access, &props);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    type = REG_SZ;
+    size = MAX_PATH;
+    res = RegQueryValueExA(props, "LocalPackage", NULL, &type,
+                           (LPBYTE)localpackage, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegSetValueExA(props, "LocalPackage", 0, REG_SZ,
+                         (const BYTE *)"C:\\idontexist.msi", 18);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    lstrcpyA(keypath, "SOFTWARE\\Classes\\Installer\\Products\\");
+    lstrcatA(keypath, "83374883CBB1401418CAF2AA7CCEDDDC\\SourceList");
+
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, access, &source);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    type = REG_SZ;
+    size = MAX_PATH;
+    res = RegQueryValueExA(source, "PackageName", NULL, &type,
+                           (LPBYTE)packagename, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegSetValueExA(source, "PackageName", 0, REG_SZ,
+                         (const BYTE *)"idontexist.msi", 15);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* SourceList is altered */
+    r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
+                               "PROPVAR=42");
+    ok(r == ERROR_INSTALL_SOURCE_ABSENT,
+       "Expected ERROR_INSTALL_SOURCE_ABSENT, got %d\n", r);
+    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
+    ok(pf_exists("msitest\\helium"), "File not installed\n");
+    ok(pf_exists("msitest\\lithium"), "File not installed\n");
+    ok(pf_exists("msitest"), "File not installed\n");
+
+    /* restore PackageName */
+    res = RegSetValueExA(source, "PackageName", 0, REG_SZ,
+                         (const BYTE *)packagename, lstrlenA(packagename) + 1);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* restore LocalPackage */
+    res = RegSetValueExA(props, "LocalPackage", 0, REG_SZ,
+                         (const BYTE *)localpackage, lstrlenA(localpackage) + 1);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* finally remove the product */
+    r = MsiConfigureProductExA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}",
+                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
+                               "PROPVAR=42");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
+    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
+
+    RegCloseKey(source);
+    RegCloseKey(props);
+
+error:
+    DeleteFileA("msitest\\hydrogen");
+    DeleteFileA("msitest\\helium");
+    DeleteFileA("msitest\\lithium");
+    RemoveDirectoryA("msitest");
+    DeleteFileA(msifile);
+}
+
+static void test_MsiSetFeatureAttributes(void)
+{
+    UINT r;
+    DWORD attrs;
+    char path[MAX_PATH];
+    MSIHANDLE package;
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+    create_database( msifile, tables, sizeof(tables) / sizeof(tables[0]) );
+
+    strcpy( path, CURR_DIR );
+    strcat( path, "\\" );
+    strcat( path, msifile );
+
+    r = MsiOpenPackage( path, &package );
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        DeleteFileA( msifile );
+        return;
+    }
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiSetFeatureAttributesA( package, "One", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
+    ok(r == ERROR_FUNCTION_FAILED, "Expected ERROR_FUNCTION_FAILED, got %u\n", r);
+
+    r = MsiDoAction( package, "CostInitialize" );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiSetFeatureAttributesA( 0, "One", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
+    ok(r == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %u\n", r);
+
+    r = MsiSetFeatureAttributesA( package, "", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
+    ok(r == ERROR_UNKNOWN_FEATURE, "expected ERROR_UNKNOWN_FEATURE, got %u\n", r);
+
+    r = MsiSetFeatureAttributesA( package, NULL, INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
+    ok(r == ERROR_UNKNOWN_FEATURE, "expected ERROR_UNKNOWN_FEATURE, got %u\n", r);
+
+    r = MsiSetFeatureAttributesA( package, "One", 0 );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    attrs = 0xdeadbeef;
+    r = MsiGetFeatureInfoA( package, "One", &attrs, NULL, NULL, NULL, NULL );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORLOCAL,
+       "expected INSTALLFEATUREATTRIBUTE_FAVORLOCAL, got 0x%08x\n", attrs);
+
+    r = MsiSetFeatureAttributesA( package, "One", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    attrs = 0;
+    r = MsiGetFeatureInfoA( package, "One", &attrs, NULL, NULL, NULL, NULL );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORLOCAL,
+       "expected INSTALLFEATUREATTRIBUTE_FAVORLOCAL, got 0x%08x\n", attrs);
+
+    r = MsiDoAction( package, "FileCost" );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiSetFeatureAttributesA( package, "One", INSTALLFEATUREATTRIBUTE_FAVORSOURCE );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    attrs = 0;
+    r = MsiGetFeatureInfoA( package, "One", &attrs, NULL, NULL, NULL, NULL );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORSOURCE,
+       "expected INSTALLFEATUREATTRIBUTE_FAVORSOURCE, got 0x%08x\n", attrs);
+
+    r = MsiDoAction( package, "CostFinalize" );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiSetFeatureAttributesA( package, "One", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
+    ok(r == ERROR_FUNCTION_FAILED, "expected ERROR_FUNCTION_FAILED, got %u\n", r);
+
+    MsiCloseHandle( package );
+    DeleteFileA( msifile );
+}
+
+static void test_MsiGetFeatureInfo(void)
+{
+    UINT r;
+    MSIHANDLE package;
+    char title[32], help[32], path[MAX_PATH];
+    DWORD attrs, title_len, help_len;
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+    create_database( msifile, tables, sizeof(tables) / sizeof(tables[0]) );
+
+    strcpy( path, CURR_DIR );
+    strcat( path, "\\" );
+    strcat( path, msifile );
+
+    r = MsiOpenPackage( path, &package );
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        DeleteFileA( msifile );
+        return;
+    }
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiGetFeatureInfoA( 0, NULL, NULL, NULL, NULL, NULL, NULL );
+    ok(r == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", r);
+
+    r = MsiGetFeatureInfoA( package, NULL, NULL, NULL, NULL, NULL, NULL );
+    ok(r == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", r);
+
+    r = MsiGetFeatureInfoA( package, "", NULL, NULL, NULL, NULL, NULL );
+    ok(r == ERROR_UNKNOWN_FEATURE, "expected ERROR_UNKNOWN_FEATURE, got %u\n", r);
+
+    r = MsiGetFeatureInfoA( package, "One", NULL, NULL, NULL, NULL, NULL );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiGetFeatureInfoA( 0, "One", NULL, NULL, NULL, NULL, NULL );
+    ok(r == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %u\n", r);
+
+    title_len = help_len = 0;
+    r = MsiGetFeatureInfoA( package, "One", NULL, NULL, &title_len, NULL, &help_len );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+    ok(title_len == 3, "expected 3, got %u\n", title_len);
+    ok(help_len == 3, "expected 3, got %u\n", help_len);
+
+    title[0] = help[0] = 0;
+    title_len = help_len = 0;
+    r = MsiGetFeatureInfoA( package, "One", NULL, title, &title_len, help, &help_len );
+    ok(r == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %u\n", r);
+    ok(title_len == 3, "expected 3, got %u\n", title_len);
+    ok(help_len == 3, "expected 3, got %u\n", help_len);
+
+    attrs = 0;
+    title[0] = help[0] = 0;
+    title_len = sizeof(title);
+    help_len = sizeof(help);
+    r = MsiGetFeatureInfoA( package, "One", &attrs, title, &title_len, help, &help_len );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORLOCAL, "expected INSTALLFEATUREATTRIBUTE_FAVORLOCAL, got %u\n", attrs);
+    ok(title_len == 3, "expected 3, got %u\n", title_len);
+    ok(help_len == 3, "expected 3, got %u\n", help_len);
+    ok(!strcmp(title, "One"), "expected \"One\", got \"%s\"\n", title);
+    ok(!strcmp(help, "One"), "expected \"One\", got \"%s\"\n", help);
+
+    attrs = 0;
+    title[0] = help[0] = 0;
+    title_len = sizeof(title);
+    help_len = sizeof(help);
+    r = MsiGetFeatureInfoA( package, "Two", &attrs, title, &title_len, help, &help_len );
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORLOCAL, "expected INSTALLFEATUREATTRIBUTE_FAVORLOCAL, got %u\n", attrs);
+    ok(!title_len, "expected 0, got %u\n", title_len);
+    ok(!help_len, "expected 0, got %u\n", help_len);
+    ok(!title[0], "expected \"\", got \"%s\"\n", title);
+    ok(!help[0], "expected \"\", got \"%s\"\n", help);
+
+    MsiCloseHandle( package );
+    DeleteFileA( msifile );
+}
+
+static INT CALLBACK handler_a(LPVOID context, UINT type, LPCSTR msg)
+{
+    return IDOK;
+}
+
+static INT CALLBACK handler_w(LPVOID context, UINT type, LPCWSTR msg)
+{
+    return IDOK;
+}
+
+static INT CALLBACK handler_record(LPVOID context, UINT type, MSIHANDLE record)
+{
+    return IDOK;
+}
+
+static void test_MsiSetExternalUI(void)
+{
+    INSTALLUI_HANDLERA ret_a;
+    INSTALLUI_HANDLERW ret_w;
+    INSTALLUI_HANDLER_RECORD prev;
+    UINT error;
+
+    ret_a = MsiSetExternalUIA(handler_a, INSTALLLOGMODE_ERROR, NULL);
+    ok(ret_a == NULL, "expected NULL, got %p\n", ret_a);
+
+    ret_a = MsiSetExternalUIA(NULL, 0, NULL);
+    ok(ret_a == handler_a, "expected %p, got %p\n", handler_a, ret_a);
+
+    /* Not present before Installer 3.1 */
+    if (!pMsiSetExternalUIRecord) {
+        win_skip("MsiSetExternalUIRecord is not available\n");
+        return;
+    }
+
+    error = pMsiSetExternalUIRecord(handler_record, INSTALLLOGMODE_ERROR, NULL, &prev);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+    ok(prev == NULL, "expected NULL, got %p\n", prev);
+
+    prev = (INSTALLUI_HANDLER_RECORD)0xdeadbeef;
+    error = pMsiSetExternalUIRecord(NULL, INSTALLLOGMODE_ERROR, NULL, &prev);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+    ok(prev == handler_record, "expected %p, got %p\n", handler_record, prev);
+
+    ret_w = MsiSetExternalUIW(handler_w, INSTALLLOGMODE_ERROR, NULL);
+    ok(ret_w == NULL, "expected NULL, got %p\n", ret_w);
+
+    ret_w = MsiSetExternalUIW(NULL, 0, NULL);
+    ok(ret_w == handler_w, "expected %p, got %p\n", handler_w, ret_w);
+
+    ret_a = MsiSetExternalUIA(handler_a, INSTALLLOGMODE_ERROR, NULL);
+    ok(ret_a == NULL, "expected NULL, got %p\n", ret_a);
+
+    ret_w = MsiSetExternalUIW(handler_w, INSTALLLOGMODE_ERROR, NULL);
+    ok(ret_w == NULL, "expected NULL, got %p\n", ret_w);
+
+    prev = (INSTALLUI_HANDLER_RECORD)0xdeadbeef;
+    error = pMsiSetExternalUIRecord(handler_record, INSTALLLOGMODE_ERROR, NULL, &prev);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+    ok(prev == NULL, "expected NULL, got %p\n", prev);
+
+    ret_a = MsiSetExternalUIA(NULL, 0, NULL);
+    ok(ret_a == NULL, "expected NULL, got %p\n", ret_a);
+
+    ret_w = MsiSetExternalUIW(NULL, 0, NULL);
+    ok(ret_w == NULL, "expected NULL, got %p\n", ret_w);
+
+    prev = (INSTALLUI_HANDLER_RECORD)0xdeadbeef;
+    error = pMsiSetExternalUIRecord(NULL, 0, NULL, &prev);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+    ok(prev == handler_record, "expected %p, got %p\n", handler_record, prev);
+
+    error = pMsiSetExternalUIRecord(handler_record, INSTALLLOGMODE_ERROR, NULL, NULL);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+
+    error = pMsiSetExternalUIRecord(NULL, 0, NULL, NULL);
+    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
+}
+
 START_TEST(msi)
 {
+    DWORD len;
+    char temp_path[MAX_PATH], prev_path[MAX_PATH];
+
     init_functionpointers();
 
     if (pIsWow64Process)
         pIsWow64Process(GetCurrentProcess(), &is_wow64);
+
+    GetCurrentDirectoryA(MAX_PATH, prev_path);
+    GetTempPath(MAX_PATH, temp_path);
+    SetCurrentDirectoryA(temp_path);
+
+    lstrcpyA(CURR_DIR, temp_path);
+    len = lstrlenA(CURR_DIR);
+
+    if(len && (CURR_DIR[len - 1] == '\\'))
+        CURR_DIR[len - 1] = 0;
+
+    ok(get_system_dirs(), "failed to retrieve system dirs\n");
 
     test_usefeature();
     test_null();
@@ -12175,4 +13092,10 @@ START_TEST(msi)
     }
     test_MsiGetFileVersion();
     test_MsiGetFileSignatureInformation();
+    test_MsiConfigureProductEx();
+    test_MsiSetFeatureAttributes();
+    test_MsiGetFeatureInfo();
+    test_MsiSetExternalUI();
+
+    SetCurrentDirectoryA(prev_path);
 }

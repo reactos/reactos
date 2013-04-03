@@ -2250,7 +2250,7 @@ static void test_property_table(void)
 
     sprintf(package, "#%i", hdb);
     r = MsiOpenPackage(package, &hpkg);
-    todo_wine ok(r != ERROR_SUCCESS, "MsiOpenPackage succeeded\n");
+    ok(r != ERROR_SUCCESS, "MsiOpenPackage succeeded\n");
     if (r == ERROR_SUCCESS)
         MsiCloseHandle(hpkg);
 

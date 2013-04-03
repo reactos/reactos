@@ -36,8 +36,6 @@
 
 static UINT (WINAPI *pMsiQueryComponentStateA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE*);
-static UINT (WINAPI *pMsiSetExternalUIRecord)
-    (INSTALLUI_HANDLER_RECORD, DWORD, LPVOID, PINSTALLUI_HANDLER_RECORD);
 static UINT (WINAPI *pMsiSourceListEnumSourcesA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, DWORD, LPSTR, LPDWORD);
 static UINT (WINAPI *pMsiSourceListGetInfoA)
@@ -866,13 +864,13 @@ static const CHAR mcp_feature_comp_dat[] = "Feature_\tComponent_\n"
                                            "heliox\thelium\n"
                                            "lithia\tlithium";
 
-static const CHAR mcomp_file_dat[] = "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
-                                     "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
-                                     "File\tFile\n"
-                                     "hydrogen\thydrogen\thydrogen\t0\t\t\t8192\t1\n"
-                                     "helium\thelium\thelium\t0\t\t\t8192\t1\n"
-                                     "lithium\tlithium\tlithium\t0\t\t\t8192\t1\n"
-                                     "beryllium\tmissingcomp\tberyllium\t0\t\t\t8192\t1";
+static const CHAR mcp_file_dat[] = "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
+                                   "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
+                                   "File\tFile\n"
+                                   "hydrogen\thydrogen\thydrogen\t0\t\t\t8192\t1\n"
+                                   "helium\thelium\thelium\t0\t\t\t8192\t1\n"
+                                   "lithium\tlithium\tlithium\t0\t\t\t8192\t1\n"
+                                   "beryllium\tmissingcomp\tberyllium\t0\t\t\t8192\t1";
 
 static const CHAR ai_file_dat[] = "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
                                   "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
@@ -1766,19 +1764,7 @@ static const msi_table mcp_tables[] =
     ADD_TABLE(directory),
     ADD_TABLE(mcp_feature),
     ADD_TABLE(mcp_feature_comp),
-    ADD_TABLE(rem_file),
-    ADD_TABLE(rem_install_exec_seq),
-    ADD_TABLE(rof_media),
-    ADD_TABLE(property),
-};
-
-static const msi_table mcomp_tables[] =
-{
-    ADD_TABLE(mcp_component),
-    ADD_TABLE(directory),
-    ADD_TABLE(mcp_feature),
-    ADD_TABLE(mcp_feature_comp),
-    ADD_TABLE(mcomp_file),
+    ADD_TABLE(mcp_file),
     ADD_TABLE(rem_install_exec_seq),
     ADD_TABLE(rof_media),
     ADD_TABLE(property),
@@ -2108,7 +2094,6 @@ static void init_functionpointers(void)
       trace("GetProcAddress(%s) failed\n", #func);
 
     GET_PROC(hmsi, MsiQueryComponentStateA);
-    GET_PROC(hmsi, MsiSetExternalUIRecord);
     GET_PROC(hmsi, MsiSourceListEnumSourcesA);
     GET_PROC(hmsi, MsiSourceListGetInfoA);
     GET_PROC(hmsi, MsiGetComponentPathExA);
@@ -4806,291 +4791,6 @@ static void test_sourcepath(void)
     DeleteFileA(msifile);
 }
 
-static void test_MsiConfigureProductEx(void)
-{
-    UINT r;
-    LONG res;
-    DWORD type, size;
-    HKEY props, source;
-    CHAR keypath[MAX_PATH * 2], localpackage[MAX_PATH], packagename[MAX_PATH];
-    REGSAM access = KEY_ALL_ACCESS;
-
-    if (is_process_limited())
-    {
-        skip("process is limited\n");
-        return;
-    }
-
-    CreateDirectoryA("msitest", NULL);
-    create_file("msitest\\hydrogen", 500);
-    create_file("msitest\\helium", 500);
-    create_file("msitest\\lithium", 500);
-
-    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
-
-    if (is_wow64)
-        access |= KEY_WOW64_64KEY;
-
-    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
-
-    /* NULL szProduct */
-    r = MsiConfigureProductExA(NULL, INSTALLLEVEL_DEFAULT,
-                               INSTALLSTATE_DEFAULT, "PROPVAR=42");
-    ok(r == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-
-    /* empty szProduct */
-    r = MsiConfigureProductExA("", INSTALLLEVEL_DEFAULT,
-                               INSTALLSTATE_DEFAULT, "PROPVAR=42");
-    ok(r == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-
-    /* garbage szProduct */
-    r = MsiConfigureProductExA("garbage", INSTALLLEVEL_DEFAULT,
-                               INSTALLSTATE_DEFAULT, "PROPVAR=42");
-    ok(r == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-
-    /* guid without brackets */
-    r = MsiConfigureProductExA("6700E8CF-95AB-4D9C-BC2C-15840DEA7A5D",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
-                               "PROPVAR=42");
-    ok(r == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", r);
-
-    /* guid with brackets */
-    r = MsiConfigureProductExA("{6700E8CF-95AB-4D9C-BC2C-15840DEA7A5D}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
-                               "PROPVAR=42");
-    ok(r == ERROR_UNKNOWN_PRODUCT,
-       "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
-
-    /* same length as guid, but random */
-    r = MsiConfigureProductExA("A938G02JF-2NF3N93-VN3-2NNF-3KGKALDNF93",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
-                               "PROPVAR=42");
-    ok(r == ERROR_UNKNOWN_PRODUCT,
-       "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
-
-    /* product not installed yet */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
-                               "PROPVAR=42");
-    ok(r == ERROR_UNKNOWN_PRODUCT,
-       "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
-
-    /* install the product, per-user unmanaged */
-    r = MsiInstallProductA(msifile, "INSTALLLEVEL=10 PROPVAR=42");
-    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
-    {
-        skip("Not enough rights to perform tests\n");
-        goto error;
-    }
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
-    ok(pf_exists("msitest\\helium"), "File not installed\n");
-    ok(pf_exists("msitest\\lithium"), "File not installed\n");
-    ok(pf_exists("msitest"), "File not installed\n");
-
-    /* product is installed per-user managed, remove it */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
-                               "PROPVAR=42");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
-
-    /* product has been removed */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
-                               "PROPVAR=42");
-    ok(r == ERROR_UNKNOWN_PRODUCT,
-       "Expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
-
-    /* install the product, machine */
-    r = MsiInstallProductA(msifile, "ALLUSERS=1 INSTALLLEVEL=10 PROPVAR=42");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
-    ok(pf_exists("msitest\\helium"), "File not installed\n");
-    ok(pf_exists("msitest\\lithium"), "File not installed\n");
-    ok(pf_exists("msitest"), "File not installed\n");
-
-    /* product is installed machine, remove it */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
-                               "PROPVAR=42");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
-
-    /* product has been removed */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT,
-                               "PROPVAR=42");
-    ok(r == ERROR_UNKNOWN_PRODUCT,
-       "Expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
-
-    /* install the product, machine */
-    r = MsiInstallProductA(msifile, "ALLUSERS=1 INSTALLLEVEL=10 PROPVAR=42");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
-    ok(pf_exists("msitest\\helium"), "File not installed\n");
-    ok(pf_exists("msitest\\lithium"), "File not installed\n");
-    ok(pf_exists("msitest"), "File not installed\n");
-
-    DeleteFileA(msifile);
-
-    /* msifile is removed */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
-                               "PROPVAR=42");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
-
-    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
-
-    /* install the product, machine */
-    r = MsiInstallProductA(msifile, "ALLUSERS=1 INSTALLLEVEL=10 PROPVAR=42");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
-    ok(pf_exists("msitest\\helium"), "File not installed\n");
-    ok(pf_exists("msitest\\lithium"), "File not installed\n");
-    ok(pf_exists("msitest"), "File not installed\n");
-
-    DeleteFileA(msifile);
-
-    lstrcpyA(keypath, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\");
-    lstrcatA(keypath, "Installer\\UserData\\S-1-5-18\\Products\\");
-    lstrcatA(keypath, "84A88FD7F6998CE40A22FB59F6B9C2BB\\InstallProperties");
-
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, access, &props);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    type = REG_SZ;
-    size = MAX_PATH;
-    res = RegQueryValueExA(props, "LocalPackage", NULL, &type,
-                           (LPBYTE)localpackage, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    res = RegSetValueExA(props, "LocalPackage", 0, REG_SZ,
-                         (const BYTE *)"C:\\idontexist.msi", 18);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    /* LocalPackage is used to find the cached msi package */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
-                               "PROPVAR=42");
-    ok(r == ERROR_INSTALL_SOURCE_ABSENT,
-       "Expected ERROR_INSTALL_SOURCE_ABSENT, got %d\n", r);
-    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
-    ok(pf_exists("msitest\\helium"), "File not installed\n");
-    ok(pf_exists("msitest\\lithium"), "File not installed\n");
-    ok(pf_exists("msitest"), "File not installed\n");
-
-    RegCloseKey(props);
-    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
-
-    /* LastUsedSource can be used as a last resort */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
-                               "PROPVAR=42");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
-    DeleteFileA( localpackage );
-
-    /* install the product, machine */
-    r = MsiInstallProductA(msifile, "ALLUSERS=1 INSTALLLEVEL=10 PROPVAR=42");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
-    ok(pf_exists("msitest\\helium"), "File not installed\n");
-    ok(pf_exists("msitest\\lithium"), "File not installed\n");
-    ok(pf_exists("msitest"), "File not installed\n");
-
-    lstrcpyA(keypath, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\");
-    lstrcatA(keypath, "Installer\\UserData\\S-1-5-18\\Products\\");
-    lstrcatA(keypath, "84A88FD7F6998CE40A22FB59F6B9C2BB\\InstallProperties");
-
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, access, &props);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    type = REG_SZ;
-    size = MAX_PATH;
-    res = RegQueryValueExA(props, "LocalPackage", NULL, &type,
-                           (LPBYTE)localpackage, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    res = RegSetValueExA(props, "LocalPackage", 0, REG_SZ,
-                         (const BYTE *)"C:\\idontexist.msi", 18);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    lstrcpyA(keypath, "SOFTWARE\\Classes\\Installer\\Products\\");
-    lstrcatA(keypath, "84A88FD7F6998CE40A22FB59F6B9C2BB\\SourceList");
-
-    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keypath, 0, access, &source);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    type = REG_SZ;
-    size = MAX_PATH;
-    res = RegQueryValueExA(source, "PackageName", NULL, &type,
-                           (LPBYTE)packagename, &size);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    res = RegSetValueExA(source, "PackageName", 0, REG_SZ,
-                         (const BYTE *)"idontexist.msi", 15);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    /* SourceList is altered */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
-                               "PROPVAR=42");
-    ok(r == ERROR_INSTALL_SOURCE_ABSENT,
-       "Expected ERROR_INSTALL_SOURCE_ABSENT, got %d\n", r);
-    ok(pf_exists("msitest\\hydrogen"), "File not installed\n");
-    ok(pf_exists("msitest\\helium"), "File not installed\n");
-    ok(pf_exists("msitest\\lithium"), "File not installed\n");
-    ok(pf_exists("msitest"), "File not installed\n");
-
-    /* restore PackageName */
-    res = RegSetValueExA(source, "PackageName", 0, REG_SZ,
-                         (const BYTE *)packagename, lstrlenA(packagename) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    /* restore LocalPackage */
-    res = RegSetValueExA(props, "LocalPackage", 0, REG_SZ,
-                         (const BYTE *)localpackage, lstrlenA(localpackage) + 1);
-    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-
-    /* finally remove the product */
-    r = MsiConfigureProductExA("{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}",
-                               INSTALLLEVEL_DEFAULT, INSTALLSTATE_ABSENT,
-                               "PROPVAR=42");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!delete_pf("msitest\\hydrogen", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\helium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest\\lithium", TRUE), "File not removed\n");
-    ok(!delete_pf("msitest", FALSE), "Directory not removed\n");
-
-    RegCloseKey(source);
-    RegCloseKey(props);
-
-error:
-    DeleteFileA("msitest\\hydrogen");
-    DeleteFileA("msitest\\helium");
-    DeleteFileA("msitest\\lithium");
-    RemoveDirectoryA("msitest");
-    DeleteFileA(msifile);
-}
-
 static void test_missingcomponent(void)
 {
     UINT r;
@@ -5107,7 +4807,7 @@ static void test_missingcomponent(void)
     create_file("msitest\\lithium", 500);
     create_file("beryllium", 500);
 
-    create_database(msifile, mcomp_tables, sizeof(mcomp_tables) / sizeof(msi_table));
+    create_database(msifile, mcp_tables, sizeof(mcp_tables) / sizeof(msi_table));
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
@@ -5832,84 +5532,6 @@ error:
     DeleteFile(msifile);
 }
 
-static INT CALLBACK handler_a(LPVOID context, UINT type, LPCSTR msg)
-{
-    return IDOK;
-}
-
-static INT CALLBACK handler_w(LPVOID context, UINT type, LPCWSTR msg)
-{
-    return IDOK;
-}
-
-static INT CALLBACK handler_record(LPVOID context, UINT type, MSIHANDLE record)
-{
-    return IDOK;
-}
-
-static void test_MsiSetExternalUI(void)
-{
-    INSTALLUI_HANDLERA ret_a;
-    INSTALLUI_HANDLERW ret_w;
-    INSTALLUI_HANDLER_RECORD prev;
-    UINT error;
-
-    ret_a = MsiSetExternalUIA(handler_a, INSTALLLOGMODE_ERROR, NULL);
-    ok(ret_a == NULL, "expected NULL, got %p\n", ret_a);
-
-    ret_a = MsiSetExternalUIA(NULL, 0, NULL);
-    ok(ret_a == handler_a, "expected %p, got %p\n", handler_a, ret_a);
-
-    /* Not present before Installer 3.1 */
-    if (!pMsiSetExternalUIRecord) {
-        win_skip("MsiSetExternalUIRecord is not available\n");
-        return;
-    }
-
-    error = pMsiSetExternalUIRecord(handler_record, INSTALLLOGMODE_ERROR, NULL, &prev);
-    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
-    ok(prev == NULL, "expected NULL, got %p\n", prev);
-
-    prev = (INSTALLUI_HANDLER_RECORD)0xdeadbeef;
-    error = pMsiSetExternalUIRecord(NULL, INSTALLLOGMODE_ERROR, NULL, &prev);
-    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
-    ok(prev == handler_record, "expected %p, got %p\n", handler_record, prev);
-
-    ret_w = MsiSetExternalUIW(handler_w, INSTALLLOGMODE_ERROR, NULL);
-    ok(ret_w == NULL, "expected NULL, got %p\n", ret_w);
-
-    ret_w = MsiSetExternalUIW(NULL, 0, NULL);
-    ok(ret_w == handler_w, "expected %p, got %p\n", handler_w, ret_w);
-
-    ret_a = MsiSetExternalUIA(handler_a, INSTALLLOGMODE_ERROR, NULL);
-    ok(ret_a == NULL, "expected NULL, got %p\n", ret_a);
-
-    ret_w = MsiSetExternalUIW(handler_w, INSTALLLOGMODE_ERROR, NULL);
-    ok(ret_w == NULL, "expected NULL, got %p\n", ret_w);
-
-    prev = (INSTALLUI_HANDLER_RECORD)0xdeadbeef;
-    error = pMsiSetExternalUIRecord(handler_record, INSTALLLOGMODE_ERROR, NULL, &prev);
-    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
-    ok(prev == NULL, "expected NULL, got %p\n", prev);
-
-    ret_a = MsiSetExternalUIA(NULL, 0, NULL);
-    ok(ret_a == NULL, "expected NULL, got %p\n", ret_a);
-
-    ret_w = MsiSetExternalUIW(NULL, 0, NULL);
-    ok(ret_w == NULL, "expected NULL, got %p\n", ret_w);
-
-    prev = (INSTALLUI_HANDLER_RECORD)0xdeadbeef;
-    error = pMsiSetExternalUIRecord(NULL, 0, NULL, &prev);
-    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
-    ok(prev == handler_record, "expected %p, got %p\n", handler_record, prev);
-
-    error = pMsiSetExternalUIRecord(handler_record, INSTALLLOGMODE_ERROR, NULL, NULL);
-    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
-
-    error = pMsiSetExternalUIRecord(NULL, 0, NULL, NULL);
-    ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
-}
-
 static void test_feature_override(void)
 {
     UINT r;
@@ -6295,6 +5917,14 @@ static void test_package_validation(void)
         ok(delete_pf("msitest", FALSE), "directory does not exist\n");
 
         DeleteFile(msifile);
+        create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "Alpha,Beta,Intel;0");
+
+        r = MsiInstallProductA(msifile, NULL);
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+        ok(delete_pf("msitest\\maximus", TRUE), "file does not exist\n");
+        ok(delete_pf("msitest", FALSE), "directory does not exist\n");
+
+        DeleteFile(msifile);
         create_database_template(msifile, pv_tables, sizeof(pv_tables)/sizeof(msi_table), 100, "x64;0");
 
         r = MsiInstallProductA(msifile, NULL);
@@ -6510,171 +6140,6 @@ static void test_upgrade_code(void)
     DeleteFile(msifile);
 }
 
-static void test_MsiGetFeatureInfo(void)
-{
-    UINT r;
-    MSIHANDLE package;
-    char title[32], help[32], path[MAX_PATH];
-    DWORD attrs, title_len, help_len;
-
-    if (is_process_limited())
-    {
-        skip("process is limited\n");
-        return;
-    }
-    create_database( msifile, tables, sizeof(tables) / sizeof(tables[0]) );
-
-    strcpy( path, CURR_DIR );
-    strcat( path, "\\" );
-    strcat( path, msifile );
-
-    r = MsiOpenPackage( path, &package );
-    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
-    {
-        skip("Not enough rights to perform tests\n");
-        DeleteFileA( msifile );
-        return;
-    }
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiGetFeatureInfoA( 0, NULL, NULL, NULL, NULL, NULL, NULL );
-    ok(r == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", r);
-
-    r = MsiGetFeatureInfoA( package, NULL, NULL, NULL, NULL, NULL, NULL );
-    ok(r == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", r);
-
-    r = MsiGetFeatureInfoA( package, "", NULL, NULL, NULL, NULL, NULL );
-    ok(r == ERROR_UNKNOWN_FEATURE, "expected ERROR_UNKNOWN_FEATURE, got %u\n", r);
-
-    r = MsiGetFeatureInfoA( package, "One", NULL, NULL, NULL, NULL, NULL );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiGetFeatureInfoA( 0, "One", NULL, NULL, NULL, NULL, NULL );
-    ok(r == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %u\n", r);
-
-    title_len = help_len = 0;
-    r = MsiGetFeatureInfoA( package, "One", NULL, NULL, &title_len, NULL, &help_len );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-    ok(title_len == 3, "expected 3, got %u\n", title_len);
-    ok(help_len == 15, "expected 15, got %u\n", help_len);
-
-    title[0] = help[0] = 0;
-    title_len = help_len = 0;
-    r = MsiGetFeatureInfoA( package, "One", NULL, title, &title_len, help, &help_len );
-    ok(r == ERROR_MORE_DATA, "expected ERROR_MORE_DATA, got %u\n", r);
-    ok(title_len == 3, "expected 3, got %u\n", title_len);
-    ok(help_len == 15, "expected 15, got %u\n", help_len);
-
-    attrs = 0;
-    title[0] = help[0] = 0;
-    title_len = sizeof(title);
-    help_len = sizeof(help);
-    r = MsiGetFeatureInfoA( package, "One", &attrs, title, &title_len, help, &help_len );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORLOCAL, "expected INSTALLFEATUREATTRIBUTE_FAVORLOCAL, got %u\n", attrs);
-    ok(title_len == 3, "expected 3, got %u\n", title_len);
-    ok(help_len == 15, "expected 15, got %u\n", help_len);
-    ok(!strcmp(title, "One"), "expected \"One\", got \"%s\"\n", title);
-    ok(!strcmp(help, "The One Feature"), "expected \"The One Feature\", got \"%s\"\n", help);
-
-    attrs = 0;
-    title[0] = help[0] = 0;
-    title_len = sizeof(title);
-    help_len = sizeof(help);
-    r = MsiGetFeatureInfoA( package, "feature", &attrs, title, &title_len, help, &help_len );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORLOCAL, "expected INSTALLFEATUREATTRIBUTE_FAVORLOCAL, got %u\n", attrs);
-    ok(!title_len, "expected 0, got %u\n", title_len);
-    ok(!help_len, "expected 0, got %u\n", help_len);
-    ok(!title[0], "expected \"\", got \"%s\"\n", title);
-    ok(!help[0], "expected \"\", got \"%s\"\n", help);
-
-    MsiCloseHandle( package );
-    DeleteFileA( msifile );
-}
-
-static void test_MsiSetFeatureAttributes(void)
-{
-    UINT r;
-    DWORD attrs;
-    char path[MAX_PATH];
-    MSIHANDLE package;
-
-    if (is_process_limited())
-    {
-        skip("process is limited\n");
-        return;
-    }
-    create_database( msifile, tables, sizeof(tables) / sizeof(tables[0]) );
-
-    strcpy( path, CURR_DIR );
-    strcat( path, "\\" );
-    strcat( path, msifile );
-
-    r = MsiOpenPackage( path, &package );
-    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
-    {
-        skip("Not enough rights to perform tests\n");
-        DeleteFileA( msifile );
-        return;
-    }
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiSetFeatureAttributesA( package, "One", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
-    ok(r == ERROR_FUNCTION_FAILED, "Expected ERROR_FUNCTION_FAILED, got %u\n", r);
-
-    r = MsiDoAction( package, "CostInitialize" );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiSetFeatureAttributesA( 0, "One", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
-    ok(r == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %u\n", r);
-
-    r = MsiSetFeatureAttributesA( package, "", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
-    ok(r == ERROR_UNKNOWN_FEATURE, "expected ERROR_UNKNOWN_FEATURE, got %u\n", r);
-
-    r = MsiSetFeatureAttributesA( package, NULL, INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
-    ok(r == ERROR_UNKNOWN_FEATURE, "expected ERROR_UNKNOWN_FEATURE, got %u\n", r);
-
-    r = MsiSetFeatureAttributesA( package, "One", 0 );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-
-    attrs = 0xdeadbeef;
-    r = MsiGetFeatureInfoA( package, "One", &attrs, NULL, NULL, NULL, NULL );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORLOCAL,
-       "expected INSTALLFEATUREATTRIBUTE_FAVORLOCAL, got 0x%08x\n", attrs);
-
-    r = MsiSetFeatureAttributesA( package, "One", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-
-    attrs = 0;
-    r = MsiGetFeatureInfoA( package, "One", &attrs, NULL, NULL, NULL, NULL );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORLOCAL,
-       "expected INSTALLFEATUREATTRIBUTE_FAVORLOCAL, got 0x%08x\n", attrs);
-
-    r = MsiDoAction( package, "FileCost" );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiSetFeatureAttributesA( package, "One", INSTALLFEATUREATTRIBUTE_FAVORSOURCE );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-
-    attrs = 0;
-    r = MsiGetFeatureInfoA( package, "One", &attrs, NULL, NULL, NULL, NULL );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-    ok(attrs == INSTALLFEATUREATTRIBUTE_FAVORSOURCE,
-       "expected INSTALLFEATUREATTRIBUTE_FAVORSOURCE, got 0x%08x\n", attrs);
-
-    r = MsiDoAction( package, "CostFinalize" );
-    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiSetFeatureAttributesA( package, "One", INSTALLFEATUREATTRIBUTE_FAVORLOCAL );
-    ok(r == ERROR_FUNCTION_FAILED, "expected ERROR_FUNCTION_FAILED, got %u\n", r);
-
-    MsiCloseHandle( package );
-    DeleteFileA( msifile );
-}
-
 static void test_mixed_package(void)
 {
     UINT r;
@@ -6824,7 +6289,6 @@ START_TEST(install)
     test_customaction51();
     test_installstate();
     test_sourcepath();
-    test_MsiConfigureProductEx();
     test_missingcomponent();
     test_sourcedirprop();
     test_adminimage();
@@ -6836,7 +6300,6 @@ START_TEST(install)
     test_installed_prop();
     test_file_in_use();
     test_file_in_use_cab();
-    test_MsiSetExternalUI();
     test_allusers_prop();
     test_feature_override();
     test_icon_table();
@@ -6844,8 +6307,6 @@ START_TEST(install)
     test_package_validation();
     test_command_line_parsing();
     test_upgrade_code();
-    test_MsiGetFeatureInfo();
-    test_MsiSetFeatureAttributes();
     test_mixed_package();
 
     DeleteFileA(log_file);
