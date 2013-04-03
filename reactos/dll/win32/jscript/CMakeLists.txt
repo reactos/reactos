@@ -37,12 +37,17 @@ list(APPEND SOURCE
     regexp.c
     string.c
     vbarray.c
-    rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
 
-add_library(jscript SHARED ${SOURCE})
+add_library(jscript SHARED ${SOURCE} rsrc.rc)
 add_idl_headers(jscript_idlheader jscript_classes.idl)
-allow_warnings(jscript)
+
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(jscript)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+endif()
+
 set_module_type(jscript win32dll)
 target_link_libraries(jscript wine)
 add_importlibs(jscript user32 ole32 oleaut32 advapi32 msvcrt kernel32 ntdll)
