@@ -17,14 +17,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winerror.h>
+//#include <winerror.h>
 #include <wincrypt.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 typedef struct _CertRDNAttrEncoding {
     LPCSTR pszObjId;
@@ -185,32 +185,22 @@ static WCHAR x500SubjectStrSemicolonReverseW[] = {
  'e','a','p','o','l','i','s',';',' ','S','=','M','i','n','n','e','s','o','t','a',
  ';',' ','C','=','U','S',0 };
 
-typedef BOOL (WINAPI *CryptDecodeObjectFunc)(DWORD, LPCSTR, const BYTE *,
- DWORD, DWORD, void *, DWORD *);
-typedef DWORD (WINAPI *CertNameToStrAFunc)(DWORD,LPVOID,DWORD,LPSTR,DWORD);
-typedef DWORD (WINAPI *CertNameToStrWFunc)(DWORD,LPVOID,DWORD,LPWSTR,DWORD);
-typedef DWORD (WINAPI *CertRDNValueToStrAFunc)(DWORD, PCERT_RDN_VALUE_BLOB,
+static HMODULE dll;
+static DWORD (WINAPI *pCertNameToStrA)(DWORD,LPVOID,DWORD,LPSTR,DWORD);
+static DWORD (WINAPI *pCertNameToStrW)(DWORD,LPVOID,DWORD,LPWSTR,DWORD);
+static DWORD (WINAPI *pCertRDNValueToStrA)(DWORD, PCERT_RDN_VALUE_BLOB,
  LPSTR, DWORD);
-typedef DWORD (WINAPI *CertRDNValueToStrWFunc)(DWORD, PCERT_RDN_VALUE_BLOB,
+static DWORD (WINAPI *pCertRDNValueToStrW)(DWORD, PCERT_RDN_VALUE_BLOB,
  LPWSTR, DWORD);
-typedef BOOL (WINAPI *CertStrToNameAFunc)(DWORD dwCertEncodingType,
+static BOOL (WINAPI *pCertStrToNameA)(DWORD dwCertEncodingType,
  LPCSTR pszX500, DWORD dwStrType, void *pvReserved, BYTE *pbEncoded,
  DWORD *pcbEncoded, LPCSTR *ppszError);
-typedef BOOL (WINAPI *CertStrToNameWFunc)(DWORD dwCertEncodingType,
+static BOOL (WINAPI *pCertStrToNameW)(DWORD dwCertEncodingType,
  LPCWSTR pszX500, DWORD dwStrType, void *pvReserved, BYTE *pbEncoded,
  DWORD *pcbEncoded, LPCWSTR *ppszError);
-typedef DWORD (WINAPI *CertGetNameStringAFunc)(PCCERT_CONTEXT cert, DWORD type,
+static DWORD (WINAPI *pCertGetNameStringA)(PCCERT_CONTEXT cert, DWORD type,
  DWORD flags, void *typePara, LPSTR str, DWORD cch);
 
-static HMODULE dll;
-static CertNameToStrAFunc pCertNameToStrA;
-static CertNameToStrWFunc pCertNameToStrW;
-static CryptDecodeObjectFunc pCryptDecodeObject;
-static CertRDNValueToStrAFunc pCertRDNValueToStrA;
-static CertRDNValueToStrWFunc pCertRDNValueToStrW;
-static CertStrToNameAFunc pCertStrToNameA;
-static CertStrToNameWFunc pCertStrToNameW;
-static CertGetNameStringAFunc pCertGetNameStringA;
 
 static void test_CertRDNValueToStrA(void)
 {
@@ -1096,18 +1086,13 @@ START_TEST(str)
 {
     dll = GetModuleHandleA("Crypt32.dll");
 
-    pCertNameToStrA = (CertNameToStrAFunc)GetProcAddress(dll,"CertNameToStrA");
-    pCertNameToStrW = (CertNameToStrWFunc)GetProcAddress(dll,"CertNameToStrW");
-    pCertRDNValueToStrA = (CertRDNValueToStrAFunc)GetProcAddress(dll,
-     "CertRDNValueToStrA");
-    pCertRDNValueToStrW = (CertRDNValueToStrWFunc)GetProcAddress(dll,
-     "CertRDNValueToStrW");
-    pCryptDecodeObject = (CryptDecodeObjectFunc)GetProcAddress(dll,
-     "CryptDecodeObject");
-    pCertStrToNameA = (CertStrToNameAFunc)GetProcAddress(dll,"CertStrToNameA");
-    pCertStrToNameW = (CertStrToNameWFunc)GetProcAddress(dll,"CertStrToNameW");
-    pCertGetNameStringA = (CertGetNameStringAFunc)GetProcAddress(dll,
-     "CertGetNameStringA");
+    pCertNameToStrA = (void*)GetProcAddress(dll,"CertNameToStrA");
+    pCertNameToStrW = (void*)GetProcAddress(dll,"CertNameToStrW");
+    pCertRDNValueToStrA = (void*)GetProcAddress(dll, "CertRDNValueToStrA");
+    pCertRDNValueToStrW = (void*)GetProcAddress(dll, "CertRDNValueToStrW");
+    pCertStrToNameA = (void*)GetProcAddress(dll,"CertStrToNameA");
+    pCertStrToNameW = (void*)GetProcAddress(dll,"CertStrToNameW");
+    pCertGetNameStringA = (void*)GetProcAddress(dll, "CertGetNameStringA");
 
     test_CertRDNValueToStrA();
     test_CertRDNValueToStrW();

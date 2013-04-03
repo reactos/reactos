@@ -20,15 +20,15 @@
  */
 
 #include <stdio.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winerror.h>
+//#include <winerror.h>
 #include <winnls.h>
 #include <wincrypt.h>
 #include <mssip.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 static BOOL (WINAPI * funcCryptSIPGetSignedDataMsg)(SIP_SUBJECTINFO *,DWORD *,DWORD,DWORD *,BYTE *);
 static BOOL (WINAPI * funcCryptSIPPutSignedDataMsg)(SIP_SUBJECTINFO *,DWORD,DWORD *,DWORD,BYTE *);
@@ -101,7 +101,7 @@ static void test_AddRemoveProvider(void)
         skip("Need admin rights\n");
         return;
     }
-    ok ( ret, "CryptSIPAddProvider should have succeeded\n");
+    ok ( ret, "CryptSIPAddProvider should have succeeded, last error %d\n", GetLastError());
 
     /* Dummy provider will be deleted, but the function still fails because
      * pwszIsFunctionName and pwszIsFunctionNameFmt2 are not present in the
@@ -132,12 +132,12 @@ static void test_AddRemoveProvider(void)
     newprov.pwszIsFunctionName = dummyfunction;
     SetLastError(0xdeadbeef);
     ret = CryptSIPAddProvider(&newprov);
-    ok ( ret, "CryptSIPAddProvider should have succeeded\n");
+    ok ( ret, "CryptSIPAddProvider should have succeeded, last error %d\n", GetLastError());
 
     /* Dummy provider should be deleted */
     SetLastError(0xdeadbeef);
     ret = CryptSIPRemoveProvider(&actionid);
-    ok ( ret, "CryptSIPRemoveProvider should have succeeded\n");
+    ok ( ret, "CryptSIPRemoveProvider should have succeeded, last error %d\n", GetLastError());
 }
 
 static const BYTE cabFileData[] = {

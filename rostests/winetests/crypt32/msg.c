@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winerror.h>
+//#include <winerror.h>
 #define CMSG_SIGNER_ENCODE_INFO_HAS_CMS_FIELDS
 #define CMSG_SIGNED_ENCODE_INFO_HAS_CMS_FIELDS
 #include <wincrypt.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 static BOOL have_nt = TRUE;
 static BOOL old_crypt32 = FALSE;
@@ -166,8 +166,6 @@ static void test_msg_get_param(void)
     BOOL ret;
     HCRYPTMSG msg;
     DWORD size, i, value;
-    CMSG_SIGNED_ENCODE_INFO signInfo = { sizeof(signInfo), 0 };
-    CMSG_SIGNER_ENCODE_INFO signer = { sizeof(signer), 0 };
 
     /* Crash
     ret = CryptMsgGetParam(NULL, 0, 0, NULL, NULL);
