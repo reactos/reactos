@@ -842,7 +842,7 @@ static BOOL CRYPT_FormatBits(BYTE bits, const struct BitToString *map,
  DWORD mapEntries, void *pbFormat, DWORD *pcbFormat, BOOL *first)
 {
     DWORD bytesNeeded = sizeof(WCHAR);
-    int i;
+    unsigned int i;
     BOOL ret = TRUE, localFirst = *first;
 
     for (i = 0; i < mapEntries; i++)
@@ -947,7 +947,7 @@ static BOOL WINAPI CRYPT_FormatKeyUsage(DWORD dwCertEncodingType,
         else
         {
             static BOOL stringsLoaded = FALSE;
-            int i;
+            unsigned int i;
             DWORD bitStringLen;
             BOOL first = TRUE;
 
@@ -1866,7 +1866,7 @@ static BOOL CRYPT_FormatReason(DWORD dwFormatStrType,
     static const WCHAR sep[] = { ',',' ',0 };
     static const WCHAR bitsFmt[] = { ' ','(','%','0','2','x',')',0 };
     static BOOL stringsLoaded = FALSE;
-    int i, numReasons = 0;
+    unsigned int i, numReasons = 0;
     BOOL ret = TRUE;
     DWORD bytesNeeded = sizeof(WCHAR);
     WCHAR bits[6];
@@ -2317,7 +2317,7 @@ static BOOL WINAPI CRYPT_FormatNetscapeCertType(DWORD dwCertEncodingType,
         else
         {
             static BOOL stringsLoaded = FALSE;
-            int i;
+            unsigned int i;
             DWORD bitStringLen;
             BOOL first = TRUE;
 

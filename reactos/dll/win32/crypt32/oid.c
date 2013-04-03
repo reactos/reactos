@@ -684,7 +684,7 @@ BOOL WINAPI CryptUnregisterOIDFunction(DWORD dwEncodingType, LPCSTR pszFuncName,
     CryptMemFree(szKey);
     if (rc)
         SetLastError(rc);
-    return rc ? FALSE : TRUE;
+    return !rc;
 }
 
 BOOL WINAPI CryptGetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
@@ -721,7 +721,7 @@ BOOL WINAPI CryptGetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
             SetLastError(rc);
         RegCloseKey(hKey);
     }
-    return rc ? FALSE : TRUE;
+    return !rc;
 }
 
 BOOL WINAPI CryptSetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
@@ -758,7 +758,7 @@ BOOL WINAPI CryptSetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
             SetLastError(rc);
         RegCloseKey(hKey);
     }
-    return rc ? FALSE : TRUE;
+    return !rc;
 }
 
 static LPCWSTR CRYPT_FindStringInMultiString(LPCWSTR multi, LPCWSTR toFind)
@@ -1053,9 +1053,6 @@ static const WCHAR rc2[] = { 'r','c','2',0 };
 static const WCHAR rc4[] = { 'r','c','4',0 };
 static const WCHAR sha[] = { 's','h','a',0 };
 static const WCHAR sha1[] = { 's','h','a','1',0 };
-static const WCHAR sha256[] = { 's','h','a','2','5','6',0 };
-static const WCHAR sha384[] = { 's','h','a','3','8','4',0 };
-static const WCHAR sha512[] = { 's','h','a','5','1','2',0 };
 static const WCHAR RSA[] = { 'R','S','A',0 };
 static const WCHAR RSA_KEYX[] = { 'R','S','A','_','K','E','Y','X',0 };
 static const WCHAR RSA_SIGN[] = { 'R','S','A','_','S','I','G','N',0 };
@@ -1105,6 +1102,9 @@ static const WCHAR Phone[] = { 'P','h','o','n','e',0 };
 static const WCHAR X21Address[] = { 'X','2','1','A','d','d','r','e','s','s',0 };
 static const WCHAR dnQualifier[] =
  { 'd','n','Q','u','a','l','i','f','i','e','r',0 };
+static const WCHAR SpcSpAgencyInfo[] = { 'S','p','c','S','p','A','g','e','n','c','y','I','n','f','o',0 };
+static const WCHAR SpcFinancialCriteria[] = { 'S','p','c','F','i','n','a','n','c','i','a','l','C','r','i','t','e','r','i','a',0 };
+static const WCHAR SpcMinimalCriteria[] = { 'S','p','c','M','i','n','i','m','a','l','C','r','i','t','e','r','i','a',0 };
 static const WCHAR Email[] = { 'E','m','a','i','l',0 };
 static const WCHAR GN[] = { 'G','N',0 };
 
@@ -1273,9 +1273,9 @@ static const struct OIDInfoConstructor {
  { 6, szOID_NETSCAPE_CA_POLICY_URL, 0, (LPCWSTR)IDS_NETSCAPE_CA_POLICY_URL, NULL },
  { 6, szOID_NETSCAPE_SSL_SERVER_NAME, 0, (LPCWSTR)IDS_NETSCAPE_SSL_SERVER_NAME, NULL },
  { 6, szOID_NETSCAPE_COMMENT, 0, (LPCWSTR)IDS_NETSCAPE_COMMENT, NULL },
- { 6, "1.3.6.1.4.1.311.2.1.10", 0, (LPCWSTR)IDS_SPC_SP_AGENCY_INFO, NULL },
- { 6, "1.3.6.1.4.1.311.2.1.27", 0, (LPCWSTR)IDS_SPC_FINANCIAL_CRITERIA, NULL },
- { 6, "1.3.6.1.4.1.311.2.1.26", 0, (LPCWSTR)IDS_SPC_MINIMAL_CRITERIA, NULL },
+ { 6, "1.3.6.1.4.1.311.2.1.10", 0, SpcSpAgencyInfo, NULL },
+ { 6, "1.3.6.1.4.1.311.2.1.27", 0, SpcFinancialCriteria, NULL },
+ { 6, "1.3.6.1.4.1.311.2.1.26", 0, SpcMinimalCriteria, NULL },
  { 6, szOID_COUNTRY_NAME, 0, (LPCWSTR)IDS_COUNTRY, NULL },
  { 6, szOID_ORGANIZATION_NAME, 0, (LPCWSTR)IDS_ORGANIZATION, NULL },
  { 6, szOID_ORGANIZATIONAL_UNIT_NAME, 0, (LPCWSTR)IDS_ORGANIZATIONAL_UNIT, NULL },

@@ -828,7 +828,7 @@ BOOL WINAPI CryptStringToBinaryA(LPCSTR pszString,
     ret = decoder(pszString, cchString, pbBinary, pcbBinary, pdwSkip, pdwFlags);
     if (ret)
         SetLastError(ret);
-    return (ret == ERROR_SUCCESS) ? TRUE : FALSE;
+    return ret == ERROR_SUCCESS;
 }
 
 static LONG decodeBase64BlockW(const WCHAR *in_buf, int in_len,
@@ -1160,5 +1160,5 @@ BOOL WINAPI CryptStringToBinaryW(LPCWSTR pszString,
     ret = decoder(pszString, cchString, pbBinary, pcbBinary, pdwSkip, pdwFlags);
     if (ret)
         SetLastError(ret);
-    return (ret == ERROR_SUCCESS) ? TRUE : FALSE;
+    return ret == ERROR_SUCCESS;
 }
