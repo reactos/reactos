@@ -204,6 +204,7 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
     if (FAILED(hr))
     {
         WARN("failed to open stream: %08x\n", hr);
+        msi_free(stream);
         goto done;
     }
 

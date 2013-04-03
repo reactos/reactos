@@ -696,7 +696,7 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
     else if ( !strcmpW( attribute, szProperty ) )
     {
         MSIFEATURE *feature = msi_seltree_get_selected_feature( ctrl );
-        msi_dialog_set_property( dialog->package, ctrl->property, feature->Directory );
+        if (feature) msi_dialog_set_property( dialog->package, ctrl->property, feature->Directory );
     }
     else if ( !strcmpW( attribute, szSelectionPath ) )
     {
@@ -1139,7 +1139,7 @@ static UINT msi_dialog_line_control( msi_dialog *dialog, MSIRECORD *rec )
 
     msi_dialog_map_events(dialog, name);
 
-    control = msi_alloc( sizeof(*control) + strlenW(name) * sizeof(WCHAR) );
+    control = msi_alloc( FIELD_OFFSET(msi_control, name[strlenW( name ) + 1] ));
     if (!control)
         return ERROR_OUTOFMEMORY;
 
@@ -1808,7 +1808,6 @@ static void msi_mask_control_change( struct msi_maskedit_info *info )
     if( i == info->num_groups )
     {
         TRACE("Set property %s to %s\n", debugstr_w(info->prop), debugstr_w(val));
-        CharUpperBuffW( val, info->num_chars );
         msi_dialog_set_property( info->dialog->package, info->prop, val );
         msi_dialog_evaluate_control_conditions( info->dialog );
     }
@@ -3739,7 +3738,7 @@ msi_dialog *msi_dialog_create( MSIPACKAGE* package,
         msi_dialog_register_class();
 
     /* allocate the structure for the dialog to use */
-    dialog = msi_alloc_zero( sizeof *dialog + sizeof(WCHAR)*strlenW(szDialogName) );
+    dialog = msi_alloc_zero( FIELD_OFFSET( msi_dialog, name[strlenW( szDialogName ) + 1] ));
     if( !dialog )
         return NULL;
     strcpyW( dialog->name, szDialogName );

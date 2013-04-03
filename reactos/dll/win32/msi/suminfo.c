@@ -928,7 +928,7 @@ static UINT parse_prop( LPCWSTR prop, LPCWSTR value, UINT *pid, INT *int_value,
 UINT msi_add_suminfo( MSIDATABASE *db, LPWSTR **records, int num_records, int num_columns )
 {
     UINT r = ERROR_FUNCTION_FAILED;
-    DWORD i, j;
+    int i, j;
     MSISUMMARYINFO *si;
 
     si = MSI_GetSummaryInformationW( db->storage, num_records * (num_columns / 2) );

@@ -83,15 +83,14 @@ void MSI_CloseRecord( MSIOBJECTHDR *arg )
 MSIRECORD *MSI_CreateRecord( UINT cParams )
 {
     MSIRECORD *rec;
-    UINT len;
 
     TRACE("%d\n", cParams);
 
     if( cParams>65535 )
         return NULL;
 
-    len = sizeof (MSIRECORD) + sizeof (MSIFIELD)*cParams;
-    rec = alloc_msiobject( MSIHANDLETYPE_RECORD, len, MSI_CloseRecord );
+    rec = alloc_msiobject( MSIHANDLETYPE_RECORD, FIELD_OFFSET(MSIRECORD, fields[cParams + 1]),
+            MSI_CloseRecord );
     if( rec )
         rec->count = cParams;
     return rec;

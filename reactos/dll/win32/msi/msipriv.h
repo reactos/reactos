@@ -338,6 +338,7 @@ typedef struct msi_dialog_tag msi_dialog;
 
 enum platform
 {
+    PLATFORM_UNKNOWN,
     PLATFORM_INTEL,
     PLATFORM_INTEL64,
     PLATFORM_X64,
@@ -414,6 +415,7 @@ typedef struct tagMSIPACKAGE
     unsigned char need_reboot_at_end : 1;
     unsigned char need_reboot_now : 1;
     unsigned char need_rollback : 1;
+    unsigned char full_reinstall : 1;
 } MSIPACKAGE;
 
 typedef struct tagMSIPREVIEW
@@ -884,10 +886,10 @@ extern UINT MSIREG_OpenUninstallKey(const WCHAR *, enum platform, HKEY *, BOOL) 
 extern UINT MSIREG_DeleteUninstallKey(const WCHAR *, enum platform) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenProductKey(LPCWSTR szProduct, LPCWSTR szUserSid,
                                   MSIINSTALLCONTEXT context, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
-extern UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
+extern UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, LPCWSTR szUserSid, MSIINSTALLCONTEXT context,
                                    HKEY *key, BOOL create) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
-UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
+UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, LPCWSTR szUserSid, MSIINSTALLCONTEXT context,
                                     HKEY *key, BOOL create) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenUserDataComponentKey(LPCWSTR szComponent, LPCWSTR szUserSid,
@@ -1016,7 +1018,6 @@ extern void msi_reset_folders( MSIPACKAGE *package, BOOL source ) DECLSPEC_HIDDE
 extern MSICOMPONENT *msi_get_loaded_component(MSIPACKAGE *package, const WCHAR *Component) DECLSPEC_HIDDEN;
 extern MSIFEATURE *msi_get_loaded_feature(MSIPACKAGE *package, const WCHAR *Feature) DECLSPEC_HIDDEN;
 extern MSIFILE *msi_get_loaded_file(MSIPACKAGE *package, const WCHAR *file) DECLSPEC_HIDDEN;
-extern MSIFILEPATCH *msi_get_loaded_filepatch(MSIPACKAGE* package, const WCHAR *key) DECLSPEC_HIDDEN;
 extern MSIFOLDER *msi_get_loaded_folder(MSIPACKAGE *package, const WCHAR *dir) DECLSPEC_HIDDEN;
 extern int msi_track_tempfile(MSIPACKAGE *package, const WCHAR *path) DECLSPEC_HIDDEN;
 extern void msi_free_action_script(MSIPACKAGE *package, UINT script) DECLSPEC_HIDDEN;
@@ -1040,6 +1041,7 @@ extern BOOL msi_init_assembly_caches(MSIPACKAGE *) DECLSPEC_HIDDEN;
 extern void msi_destroy_assembly_caches(MSIPACKAGE *) DECLSPEC_HIDDEN;
 extern WCHAR *msi_font_version_from_file(const WCHAR *) DECLSPEC_HIDDEN;
 extern WCHAR **msi_split_string(const WCHAR *, WCHAR) DECLSPEC_HIDDEN;
+extern UINT msi_set_original_database_property(MSIDATABASE *, const WCHAR *) DECLSPEC_HIDDEN;
 
 /* media */
 
