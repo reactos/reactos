@@ -416,6 +416,15 @@ typedef DWORD FLONG;
 
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
 
+/* Eliminate Microsoft C/C++ compiler warning 4715 */
+#if defined(_MSC_VER) && (_MSC_VER > 1200)
+# define DEFAULT_UNREACHABLE default: __assume(0)
+#elif defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 5))))
+# define DEFAULT_UNREACHABLE default: __builtin_unreachable()
+#else
+# define DEFAULT_UNREACHABLE default:
+#endif
+
 #include "intrin.h"
 
 #define NTAPI __stdcall
