@@ -34,7 +34,7 @@ IoCheckEaBufferValidityROS(IN PFILE_FULL_EA_INFORMATION EaBuffer,
    ULONG NextEaBufferOffset;
    UINT IntEaLength;
 
-   /* Lenght of the rest. Inital equal to EaLength */
+   /* Length of the rest. Inital equal to EaLength */
    IntEaLength = EaLength;
    /* Inital EaBuffer equal to EaBuffer */
    EaBufferEnd = EaBuffer;
