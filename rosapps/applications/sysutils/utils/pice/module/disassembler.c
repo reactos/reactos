@@ -57,7 +57,7 @@ typedef struct
     UCHAR Codes[20];             // Buffer where to store code UCHARs
 
     UCHAR bAsciiLen;             // Length of the ascii result
-    UCHAR bInstrLen;             // Instruction lenght in UCHARs
+    UCHAR bInstrLen;             // Instruction length in UCHARs
 
     int nDisplacement;          // Scanner: possible constant displacement
     int nScanEnum;              // Scanner: specific flags SCAN_*
