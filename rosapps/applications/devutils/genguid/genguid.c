@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	}
 	if (CoInitialize(NULL) != S_OK)
 	{
-		printf("Unable to initalize OLE libraries\n");
+		printf("Unable to initialize OLE libraries\n");
 		return 1;
 	}
 	result = CoCreateGuid(&m_guid);
