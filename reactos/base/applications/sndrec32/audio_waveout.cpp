@@ -152,7 +152,7 @@ audio_waveout::init_headers_( void )
         
         //
         // Sets the correct base address and 
-        // lenght for the little buffer.
+        // length for the little buffer.
         //
 
         wave_headers[ i ].dwBufferLength = mb_size / buffers;
