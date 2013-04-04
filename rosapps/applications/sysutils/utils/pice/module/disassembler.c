@@ -184,7 +184,7 @@ UCHAR Disassembler( TDisassembler *pDis )
     ULONG   dwULONG;            // Temporary ULONG storage
     USHORT    wUSHORT;              // Temporary USHORT storage
     UCHAR    bUCHAR;              // Temporary UCHAR storage
-    UCHAR    bInstrLen;          // Current instruction lenght in UCHARs
+    UCHAR    bInstrLen;          // Current instruction length in UCHARs
     UCHAR    bOpcode;            // Current opcode that is being disassembled
     UCHAR    bSegOverride;       // 0 default segment. >0, segment index
     UCHAR    bMod=0;             // Mod field of the instruction
@@ -198,7 +198,7 @@ UCHAR Disassembler( TDisassembler *pDis )
     UCHAR    bBase;              // Base field of the s-i-b UCHAR
     LPSTR    pSymbolName;        // used to symbolic name of value
 
-    bInstrLen = 0;              // Reset instruction lenght to zero
+    bInstrLen = 0;              // Reset instruction length to zero
     bSegOverride = 0;           // Set default segment (no override)
     nPos = 0;                   // Reset printing position
     sPtr = NULL;                // Points to no message by default
