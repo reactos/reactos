@@ -2,7 +2,7 @@
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
  * FILE:          hal/halx86/mp/halinit_mp.c
- * PURPOSE:       Initalize the x86 mp hal
+ * PURPOSE:       Initialize the x86 mp hal
  * PROGRAMMER:    David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *              11/06/98: Created

@@ -436,7 +436,7 @@ MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
 /*
  * IopInitializeDriverModule
  *
- * Initalize a loaded driver.
+ * Initialize a loaded driver.
  *
  * Parameters
  *    DeviceNode

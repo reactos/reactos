@@ -316,7 +316,7 @@ RetryRequest()
 Routine Description:
 
     This is a wrapper around the delayed retry DPC routine, RetryRequestDPC.
-    This reinitalizes the necessary fields, queues the request, and sets
+    This reinitializes the necessary fields, queues the request, and sets
     a timer to call the DPC if someone hasn't already done so.
 
 Arguments:

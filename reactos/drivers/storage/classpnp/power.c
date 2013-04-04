@@ -1494,7 +1494,7 @@ RetryPowerRequest()
 
 Routine Description:
 
-    This routine reinitalizes the necessary fields, and sends the request
+    This routine reinitializes the necessary fields, and sends the request
     to the lower driver.
 
 Arguments:

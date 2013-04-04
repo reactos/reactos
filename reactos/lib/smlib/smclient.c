@@ -37,7 +37,7 @@ SmExecPgm(IN HANDLE SmApiPort,
     SmApiMsg.h.u1.s1.DataLength = sizeof(SM_EXEC_PGM_MSG) + 8;
     SmApiMsg.h.u1.s1.TotalLength = sizeof(SmApiMsg);
 
-    /* Initalize this specific API's parameters */
+    /* Initialize this specific API's parameters */
     SmApiMsg.ApiNumber = SmExecPgmApi;
     RtlCopyMemory(&SmApiMsg.u.ExecPgm.ProcessInformation,
                   ProcessInformation,

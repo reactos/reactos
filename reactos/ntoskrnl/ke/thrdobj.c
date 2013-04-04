@@ -772,7 +772,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     PKTIMER Timer;
     NTSTATUS Status;
 
-    /* Initalize the Dispatcher Header */
+    /* Initialize the Dispatcher Header */
     Thread->Header.Type = ThreadObject;
     Thread->Header.ThreadControlFlags = 0;
     Thread->Header.DebugActive = FALSE;
@@ -862,7 +862,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Status = STATUS_SUCCESS;
     _SEH2_TRY
     {
-        /* Initalize the Thread Context */
+        /* Initialize the Thread Context */
         KiInitializeContextThread(Thread,
                                   SystemRoutine,
                                   StartRoutine,
@@ -884,7 +884,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     }
     _SEH2_END;
 
-    /* Set the Thread to initalized */
+    /* Set the Thread to initialized */
     Thread->State = Initialized;
     return Status;
 }

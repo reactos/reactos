@@ -1850,7 +1850,7 @@ IoMapTransfer(IN PADAPTER_OBJECT AdapterObject,
      *             transfer start.
      * PhysicalAddress is physical address corresponding to the transfer
      *                 start page and offset.
-     * TransferLength is the inital length of the transfer, which is reminder
+     * TransferLength is the initial length of the transfer, which is reminder
      *                of the first page. The actual value is calculated below.
      *
      * Note that all the variables can change during the processing which

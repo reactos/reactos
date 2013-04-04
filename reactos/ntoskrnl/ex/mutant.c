@@ -123,7 +123,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
     /* Check for success */
     if(NT_SUCCESS(Status))
     {
-        /* Initalize the Kernel Mutant */
+        /* Initialize the Kernel Mutant */
         DPRINT("Initializing the Mutant\n");
         KeInitializeMutant(Mutant, InitialOwner);
 

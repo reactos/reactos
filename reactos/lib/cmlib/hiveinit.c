@@ -83,7 +83,7 @@ HvpFreeHiveBins(
 /**
  * @name HvpCreateHive
  *
- * Internal helper function to initalize hive descriptor structure for
+ * Internal helper function to initialize hive descriptor structure for
  * newly created hive.
  *
  * @see HvInitialize
@@ -126,7 +126,7 @@ HvpCreateHive(
 /**
  * @name HvpInitializeMemoryHive
  *
- * Internal helper function to initalize hive descriptor structure for
+ * Internal helper function to initialize hive descriptor structure for
  * a hive stored in memory. The data of the hive are copied and it is
  * prepared for read/write access.
  *
@@ -246,7 +246,7 @@ HvpInitializeMemoryHive(
 /**
  * @name HvpInitializeMemoryInplaceHive
  *
- * Internal helper function to initalize hive descriptor structure for
+ * Internal helper function to initialize hive descriptor structure for
  * a hive stored in memory. The in-memory data of the hive are directly
  * used and it is read-only accessible.
  *

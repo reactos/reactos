@@ -90,7 +90,7 @@ ExInterlockedExtendZone(PZONE_HEADER Zone,
 }
 
 /*
- * FUNCTION: Initalizes a zone header
+ * FUNCTION: Initializes a zone header
  * ARGUMENTS:
  *          Zone = zone header to be initialized
  *          BlockSize = Size (in bytes) of the allocation size of the zone

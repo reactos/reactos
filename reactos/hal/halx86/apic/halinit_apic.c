@@ -2,7 +2,7 @@
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
  * FILE:          ntoskrnl/hal/x86/halinit.c
- * PURPOSE:       Initalize the x86 hal
+ * PURPOSE:       Initialize the x86 hal
  * PROGRAMMER:    Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

@@ -101,7 +101,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
     /* Check for Success */
     if (NT_SUCCESS(Status))
     {
-        /* Initalize the Event */
+        /* Initialize the Event */
         DPRINT("Initializing EventPair\n");
         KeInitializeEventPair(EventPair);
 

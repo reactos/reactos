@@ -59,7 +59,7 @@ _KiCallUserMode@8:
     /* load the address of the callout frame into ecx */
     lea ecx, [esp - 12]
 
-    /* Allocate space for the inital stack */
+    /* Allocate space for the initial stack */
     sub esp, 12 + NPX_FRAME_LENGTH + KTRAP_FRAME_LENGTH + 16
 
     call @KiUserModeCallout@4

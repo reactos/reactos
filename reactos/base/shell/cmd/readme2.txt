@@ -1,8 +1,8 @@
-General Overview of How THings Work
+General Overview of How Things Work
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 First it comes into _main in cmd.c(1811).  The command line params are taking in and if it is unicode it uses CommandLineToArgvW.  
 This can cause a problem on older machines and that is why we have our own custom _CommandLineToArgvW to help this along.  
-We pull in the launch directory as the inital dir and set that in _tchdir.  We make a handle to the default console out using CreateFile.  
+We pull in the launch directory as the initial dir and set that in _tchdir.  We make a handle to the default console out using CreateFile.  
 
 Then we call Initialize().  Here we need to load ntdll.dll if it isnt loaded(windows 9x machines). 
 We also setup some global vars like default io handles and nErrorLevel and set %prompt% to $P$G.  

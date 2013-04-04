@@ -181,8 +181,7 @@ SeInitSRM(VOID)
     NTSTATUS Status;
 
     /* Create '\Security' directory */
-    RtlInitUnicodeString(&Name,
-                         L"\\Security");
+    RtlInitUnicodeString(&Name, L"\\Security");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_PERMANENT,
@@ -197,9 +196,8 @@ SeInitSRM(VOID)
         return FALSE;
     }
 
-    /* Create 'LSA_AUTHENTICATION_INITALIZED' event */
-    RtlInitUnicodeString(&Name,
-                         L"\\LSA_AUTHENTICATION_INITALIZED");
+    /* Create 'LSA_AUTHENTICATION_INITIALIZED' event */
+    RtlInitUnicodeString(&Name, L"\\LSA_AUTHENTICATION_INITIALIZED");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_PERMANENT,
@@ -212,7 +210,7 @@ SeInitSRM(VOID)
                            FALSE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create 'LSA_AUTHENTICATION_INITALIZED' event!\n");
+        DPRINT1("Failed to create 'LSA_AUTHENTICATION_INITIALIZED' event!\n");
         NtClose(DirectoryHandle);
         return FALSE;
     }
