@@ -313,7 +313,7 @@ snmp_authfail_trap(void)
  *
  * @param vb_len varbind-list length
  * @param rhl points to returned header lengths
- * @return the required lenght for encoding the response header
+ * @return the required length for encoding the response header
  */
 static u16_t
 snmp_resp_header_sum(struct snmp_msg_pstat *m_stat, u16_t vb_len)
@@ -360,7 +360,7 @@ snmp_resp_header_sum(struct snmp_msg_pstat *m_stat, u16_t vb_len)
  *
  * @param vb_len varbind-list length
  * @param thl points to returned header lengths
- * @return the required lenght for encoding the trap header
+ * @return the required length for encoding the trap header
  */
 static u16_t
 snmp_trap_header_sum(struct snmp_msg_trap *m_trap, u16_t vb_len)
@@ -415,7 +415,7 @@ snmp_trap_header_sum(struct snmp_msg_trap *m_trap, u16_t vb_len)
  * annotates lengths in varbind for second encoding pass.
  *
  * @param root points to the root of the variable binding list
- * @return the required lenght for encoding the variable bindings
+ * @return the required length for encoding the variable bindings
  */
 static u16_t
 snmp_varbind_list_sum(struct snmp_varbind_root *root)
@@ -429,7 +429,7 @@ snmp_varbind_list_sum(struct snmp_varbind_root *root)
   vb = root->tail;
   while ( vb != NULL )
   {
-    /* encoded value lenght depends on type */
+    /* encoded value length depends on type */
     switch (vb->value_type)
     {
       case (SNMP_ASN1_UNIV | SNMP_ASN1_PRIMIT | SNMP_ASN1_INTEG):

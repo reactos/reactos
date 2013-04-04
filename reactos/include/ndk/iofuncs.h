@@ -1029,7 +1029,7 @@ ZwUnlockFile(
     _In_ HANDLE FileHandle,
     _Out_ PIO_STATUS_BLOCK IoStatusBlock,
     _In_ PLARGE_INTEGER ByteOffset,
-    _In_ PLARGE_INTEGER Lenght,
+    _In_ PLARGE_INTEGER Length,
     _In_opt_ ULONG Key
 );
 

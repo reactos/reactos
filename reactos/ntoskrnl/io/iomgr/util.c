@@ -171,7 +171,7 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
 
     PAGED_CODE();
 
-    /* Lenght of the rest. Inital equal to EaLength */
+    /* Length of the rest. Inital equal to EaLength */
     IntEaLength = EaLength;
 
     /* Inital EaBuffer equal to EaBuffer */

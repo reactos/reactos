@@ -449,7 +449,7 @@ BEGIN
     IDS_CONV_CONSUMPTION    "Consumption (engines)"
     IDS_CONV_CURRENCY       "Currencies"
     IDS_CONV_ENERGY         "Energy"
-    IDS_CONV_LENGTH         "Lenghts"
+    IDS_CONV_LENGTH         "Lengths"
     IDS_CONV_POWER          "Power"
     IDS_CONV_PRESSURE       "Pressure"
     IDS_CONV_TEMPERATURE    "Temperature"

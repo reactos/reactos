@@ -229,7 +229,7 @@ class audio_wavein
 
 
             //
-            // Set seconds lenght for each
+            // Set seconds length for each
             // buffer.
             //
 
