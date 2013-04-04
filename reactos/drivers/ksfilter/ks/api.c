@@ -2060,7 +2060,7 @@ KspCopyMethodSets(
     /* set counter */
     Count = AutomationTableA->MethodSetsCount;
 
-    /* now copy entries which arent available in the dominant table */
+    /* now copy entries which aren't available in the dominant table */
     for(Index = 0; Index < AutomationTableB->MethodSetsCount; Index++)
     {
         /* set found to false */
@@ -2200,7 +2200,7 @@ KspCopyPropertySets(
     /* set counter */
     Count = AutomationTableA->PropertySetsCount;
 
-    /* now copy entries which arent available in the dominant table */
+    /* now copy entries which aren't available in the dominant table */
     for(Index = 0; Index < AutomationTableB->PropertySetsCount; Index++)
     {
         /* set found to false */
@@ -2265,7 +2265,7 @@ KspCopyEventSets(
     /* set counter */
     Count = AutomationTableA->EventSetsCount;
 
-    /* now copy entries which arent available in the dominant table */
+    /* now copy entries which aren't available in the dominant table */
     for(Index = 0; Index < AutomationTableB->EventSetsCount; Index++)
     {
         /* set found to false */
