@@ -493,7 +493,7 @@ WelcomeDlgProc(
 			break;
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static void
@@ -656,7 +656,7 @@ CHSourceDlgProc(
 			break;
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static INT_PTR CALLBACK
@@ -751,7 +751,7 @@ SearchDrvDlgProc(
 			break;
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static INT_PTR CALLBACK
@@ -857,7 +857,7 @@ InstallDrvDlgProc(
 			break;
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static INT_PTR CALLBACK
@@ -972,7 +972,7 @@ NoDriverDlgProc(
 			break;
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static INT_PTR CALLBACK
@@ -1051,7 +1051,7 @@ InstallFailedDlgProc(
 			break;
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static INT_PTR CALLBACK
@@ -1130,7 +1130,7 @@ NeedRebootDlgProc(
 			break;
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static INT_PTR CALLBACK
@@ -1209,7 +1209,7 @@ FinishDlgProc(
 			break;
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static HFONT
