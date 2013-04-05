@@ -191,7 +191,7 @@ Test_PageFileSection(void)
     ok(Status == STATUS_UNABLE_TO_DELETE_SECTION,
        "NtFreeVirtualMemory failed with wrong Status %lx\n", Status);
 
-    BaseAddress = (PVOID)0x40000000;
+    BaseAddress = UlongToPtr(0x40000000);
     SectionOffset.QuadPart = 0;
     ViewSize = 0x1000;
     Status = NtMapViewOfSection(SectionHandle,
@@ -208,7 +208,7 @@ Test_PageFileSection(void)
     if (!NT_SUCCESS(Status))
         return;
 
-    ok(BaseAddress == (PVOID)0x40000000, "Invalid BaseAddress: %p", BaseAddress);
+    ok(BaseAddress == UlongToPtr(0x40000000), "Invalid BaseAddress: %p", BaseAddress);
 
     BaseAddress = (PVOID)0x40080000;
     SectionOffset.QuadPart = 0x10000;
@@ -305,13 +305,16 @@ Test_ImageSection(void)
     /* Check the original data */
     ok(*(ULONG*)DataBase == 0x00905a4d, "Header not ok\n");
 
-    /* Now modify the data in the data section */
+    /* Modify the PE header (but do not flush!) */
     *(ULONG*)DataBase = 0xdeadbabe;
-
-    /* Check the data */
     ok(*(ULONG*)DataBase == 0xdeadbabe, "Header not ok\n");
 
-    /* Now try to create an image section */
+    /* Modify data in the .data section (but do not flush!) */
+    ok(*(ULONG*)((PUCHAR)DataBase + 0x800) == 0x12345678,
+       "Data in .data section invalid: 0x%lx!\n", *(ULONG*)((PUCHAR)DataBase + 0x800));
+    *(ULONG*)((PUCHAR)DataBase + 0x800) = 0x87654321;
+
+    /* Now try to create an image section (should fail) */
     Status = NtCreateSection(&ImageSectionHandle,
                              SECTION_ALL_ACCESS, // DesiredAccess
                              NULL, // ObjectAttributes
@@ -321,8 +324,12 @@ Test_ImageSection(void)
                              FileHandle);
     ok(Status == STATUS_INVALID_IMAGE_NOT_MZ, "NtCreateSection failed, Status 0x%lx\n", Status);
 
-    /* Restore the original data */
+    /* Restore the original header */
     *(ULONG*)DataBase = 0x00905a4d;
+
+    /* Modify data in the .data section (but do not flush!) */
+    ok_hex(*(ULONG*)((PUCHAR)DataBase + 0x800), 0x87654321);
+    *(ULONG*)((PUCHAR)DataBase + 0x800) = 0xdeadbabe;
 
     /* Try to create an image section again */
     Status = NtCreateSection(&ImageSectionHandle,
@@ -347,18 +354,31 @@ Test_ImageSection(void)
                                 ViewShare,
                                 0,
                                 PAGE_READONLY);
+#ifdef _M_IX86
     ok(Status == STATUS_SUCCESS, "NtMapViewOfSection failed, Status 0x%lx\n", Status);
+#else
+    ok(Status == STATUS_IMAGE_MACHINE_TYPE_MISMATCH, "NtMapViewOfSection failed, Status 0x%lx\n", Status);
+#endif
 
-    /* Check the data */
+    /* Check the header */
     ok(*(ULONG*)DataBase == 0x00905a4d, "Header not ok\n");
     ok(*(ULONG*)ImageBase == 0x00905a4d, "Header not ok\n");
 
+    /* Check the data section. Either of these can be present! */
+    ok((*(ULONG*)((PUCHAR)ImageBase + 0x80000) == 0x87654321) ||
+       (*(ULONG*)((PUCHAR)ImageBase + 0x80000) == 0x12345678),
+       "Wrong value in data section: 0x%lx!\n", *(ULONG*)((PUCHAR)ImageBase + 0x80000));
+
     /* Now modify the data again */
     *(ULONG*)DataBase = 0xdeadbabe;
+    *(ULONG*)((PUCHAR)DataBase + 0x800) = 0xf00dada;
 
     /* Check the data */
     ok(*(ULONG*)DataBase == 0xdeadbabe, "Header not ok\n");
     ok(*(ULONG*)ImageBase == 0x00905a4d, "Data should not be synced!\n");
+    ok((*(ULONG*)((PUCHAR)ImageBase + 0x80000) == 0x87654321) ||
+       (*(ULONG*)((PUCHAR)ImageBase + 0x80000) == 0x12345678),
+       "Wrong value in data section: 0x%lx!\n", *(ULONG*)((PUCHAR)ImageBase + 0x80000));
 
     /* Flush the view */
     ViewSize = 0x1000;
@@ -370,21 +390,75 @@ Test_ImageSection(void)
 
     /* Check the data again */
     ok(*(ULONG*)ImageBase == 0x00905a4d, "Data should not be synced!\n");
+    ok((*(ULONG*)((PUCHAR)ImageBase + 0x80000) == 0x87654321) ||
+       (*(ULONG*)((PUCHAR)ImageBase + 0x80000) == 0x12345678),
+       "Wrong value in data section: 0x%lx!\n", *(ULONG*)((PUCHAR)ImageBase + 0x80000));
 
-    /* Restore the original data */
+    /* Restore the original header */
     *(ULONG*)DataBase = 0x00905a4d;
     ok(*(ULONG*)DataBase == 0x00905a4d, "Header not ok\n");
 
-    /* Cleanup */
+    /* Close the image mapping */
     NtUnmapViewOfSection(NtCurrentProcess(), ImageBase);
-    NtUnmapViewOfSection(NtCurrentProcess(), DataBase);
     NtClose(ImageSectionHandle);
+
+    /* Create an image section again */
+    Status = NtCreateSection(&ImageSectionHandle,
+                             SECTION_ALL_ACCESS, // DesiredAccess
+                             NULL, // ObjectAttributes
+                             NULL, // MaximumSize
+                             PAGE_READWRITE, // SectionPageProtection
+                             SEC_IMAGE, // AllocationAttributes
+                             FileHandle);
+    ok(Status == STATUS_SUCCESS, "NtCreateSection failed, Status 0x%lx\n", Status);
+
+    /* Map the image section again */
+    ImageBase = NULL;
+    ViewSize = 0;
+    Status = NtMapViewOfSection(ImageSectionHandle,
+                                NtCurrentProcess(),
+                                &ImageBase,
+                                0,
+                                0,
+                                NULL,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_READONLY);
+#ifdef _M_IX86
+    ok(Status == STATUS_SUCCESS, "NtMapViewOfSection failed, Status 0x%lx\n", Status);
+#else
+    ok(Status == STATUS_IMAGE_MACHINE_TYPE_MISMATCH, "NtMapViewOfSection failed, Status 0x%lx\n", Status);
+#endif
+
+    /* Check the .data section again */
+    ok(*(ULONG*)((PUCHAR)ImageBase + 0x80000) == 0xf00dada,
+       "Data should be synced: 0x%lx!\n", *(ULONG*)((PUCHAR)ImageBase + 0x80000));
+
+    /* Restore the original data */
+    *(ULONG*)((PUCHAR)DataBase + 0x800) = 0x12345678;
+
+    /* Close the data mapping */
+    NtUnmapViewOfSection(NtCurrentProcess(), DataBase);
+
     NtClose(DataSectionHandle);
+
+    /* Try to allocate memory inside the image mapping */
+    DataBase = (PUCHAR)ImageBase + 0x20000;
+    ViewSize = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(), &DataBase, 0, &ViewSize, MEM_RESERVE, PAGE_NOACCESS);
+    ok(Status ==  STATUS_CONFLICTING_ADDRESSES, "Wrong Status: 0x%lx\n", Status);
+
+    /* Cleanup */
     NtClose(FileHandle);
+    NtClose(ImageSectionHandle);
+    NtUnmapViewOfSection(NtCurrentProcess(), ImageBase);
 }
+
 
 START_TEST(NtMapViewOfSection)
 {
-    //Test_PageFileSection();
+    Test_PageFileSection();
     Test_ImageSection();
 }
+
