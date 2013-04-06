@@ -108,8 +108,6 @@ VOID TestSSEExceptions(VOID)
         "xorps %%xmm0, %%xmm0\n"
         "movl $1, %0\n"
         : "=r"(supportsSSE)
-        :
-        :
     );
 #endif /* _MSC_VER */
     if(!supportsSSE)
@@ -158,7 +156,7 @@ VOID TestSSEExceptions(VOID)
 
         /* Clean up */
         "addl $16, %%esp\n"
-        : : :);
+    );
 #endif /* _MSC_VER */
 
     /* Restore mxcsr */
