@@ -398,7 +398,7 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
     if (!ConnectInfo->Console ||
          ConnectInfo->Console != ProcessData->ParentConsole)
     {
-        DPRINT1("ConSrvConnect - Allocate a new console\n");
+        DPRINT("ConSrvConnect - Allocate a new console\n");
 
         /*
          * We are about to create a new console. However when ConSrvNewProcess
@@ -426,7 +426,7 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
     }
     else /* We inherit it from the parent */
     {
-        DPRINT1("ConSrvConnect - Reuse current (parent's) console\n");
+        DPRINT("ConSrvConnect - Reuse current (parent's) console\n");
 
         /* Reuse our current console */
         Status = ConSrvInheritConsole(ProcessData,
@@ -470,7 +470,7 @@ ConSrvDisconnect(PCSR_PROCESS Process)
     if ( ProcessData->Console     != NULL ||
          ProcessData->HandleTable != NULL )
     {
-        DPRINT1("ConSrvDisconnect - calling ConSrvRemoveConsole\n");
+        DPRINT("ConSrvDisconnect - calling ConSrvRemoveConsole\n");
         ConSrvRemoveConsole(ProcessData);
     }
 

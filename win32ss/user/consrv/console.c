@@ -544,15 +544,15 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
         }
     }
 
-    DPRINT1("Terminal initialized\n");
+    DPRINT("Terminal initialized\n");
 
     /* All went right, so add the console to the list */
     ConSrvLockConsoleListExclusive();
-    DPRINT1("Insert in the list\n");
+    DPRINT("Insert in the list\n");
     InsertTailList(&ConsoleList, &Console->Entry);
 
     /* The initialization is finished */
-    DPRINT1("Change state\n");
+    DPRINT("Change state\n");
     Console->State = CONSOLE_RUNNING;
 
     /* Unlock the console */
@@ -563,7 +563,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
 
     /* Copy buffer contents to screen */
     ConioDrawConsole(Console);
-    DPRINT1("Console drawn\n");
+    DPRINT("Console drawn\n");
 
     /* Return the newly created console to the caller and a success code too */
     *NewConsole = Console;
@@ -576,7 +576,7 @@ ConSrvDeleteConsole(PCONSOLE Console)
     PLIST_ENTRY CurrentEntry;
     ConsoleInput* Event;
 
-    DPRINT1("ConSrvDeleteConsole\n");
+    DPRINT("ConSrvDeleteConsole\n");
 
     /*
      * Forbid validation of any console by other threads
@@ -683,14 +683,14 @@ ConSrvDeleteConsole(PCONSOLE Console)
     RtlFreeUnicodeString(&Console->Title);
     IntDeleteAllAliases(Console->Aliases);
 
-    DPRINT1("ConSrvDeleteConsole - Unlocking\n");
+    DPRINT("ConSrvDeleteConsole - Unlocking\n");
     LeaveCriticalSection(&Console->Lock);
-    DPRINT1("ConSrvDeleteConsole - Destroying lock\n");
+    DPRINT("ConSrvDeleteConsole - Destroying lock\n");
     DeleteCriticalSection(&Console->Lock);
-    DPRINT1("ConSrvDeleteConsole - Lock destroyed ; freeing console\n");
+    DPRINT("ConSrvDeleteConsole - Lock destroyed ; freeing console\n");
 
     RtlFreeHeap(ConSrvHeap, 0, Console);
-    DPRINT1("ConSrvDeleteConsole - Console freed\n");
+    DPRINT("ConSrvDeleteConsole - Console freed\n");
 
     /* Unlock the console list and return */
     ConSrvUnlockConsoleList();

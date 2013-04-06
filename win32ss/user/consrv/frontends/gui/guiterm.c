@@ -375,7 +375,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     TEXTMETRICW Metrics;
     SIZE CharSize;
 
-    DPRINT1("GuiConsoleHandleNcCreate\n");
+    DPRINT("GuiConsoleHandleNcCreate\n");
 
     if (NULL == GuiData)
     {
@@ -459,7 +459,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
     GuiConsoleCreateSysMenu(GuiData->hWindow);
 
-    DPRINT1("GuiConsoleHandleNcCreate - setting start event\n");
+    DPRINT("GuiConsoleHandleNcCreate - setting start event\n");
     SetEvent(GuiData->hGuiInitEvent);
 
     return (BOOL)DefWindowProcW(GuiData->hWindow, WM_NCCREATE, 0, (LPARAM)Create);
@@ -1767,16 +1767,16 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 WindowCount++;
                 SetWindowLongW(hWnd, GWL_USERDATA, WindowCount);
 
-                DPRINT1("Set icons via PM_CREATE_CONSOLE\n");
+                DPRINT("Set icons via PM_CREATE_CONSOLE\n");
                 if (GuiData->hIcon == NULL)
                 {
-                    DPRINT1("Not really /o\\...\n");
+                    DPRINT("Not really /o\\...\n");
                     GuiData->hIcon   = ghDefaultIcon;
                     GuiData->hIconSm = ghDefaultIconSm;
                 }
                 else if (GuiData->hIcon != ghDefaultIcon)
                 {
-                    DPRINT1("Yes \\o/\n");
+                    DPRINT("Yes \\o/\n");
                     SendMessageW(GuiData->hWindow, WM_SETICON, ICON_BIG, (LPARAM)GuiData->hIcon);
                     SendMessageW(GuiData->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)GuiData->hIconSm);
                 }
@@ -1790,7 +1790,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 // ShowWindow(NewWindow, (int)wParam);
                 ShowWindowAsync(NewWindow, (int)wParam);
-                DPRINT1("Window showed\n");
+                DPRINT("Window showed\n");
             }
 
             return (LRESULT)NewWindow;
@@ -1824,7 +1824,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 {
                     NotifyWnd = NULL;
                     DestroyWindow(hWnd);
-                    DPRINT1("CONSRV: Going to quit the Gui Thread!!\n");
+                    DPRINT("CONSRV: Going to quit the Gui Thread!!\n");
                     PostQuitMessage(0);
                 }
             }
@@ -1876,7 +1876,7 @@ GuiConsoleGuiThread(PVOID Data)
         DispatchMessageW(&msg);
     }
 
-    DPRINT1("CONSRV: Quit the Gui Thread!!\n");
+    DPRINT("CONSRV: Quit the Gui Thread!!\n");
     PrivateCsrssManualGuiCheck(-1);
 
     return 1;
@@ -2004,16 +2004,16 @@ GuiCleanupConsole(PCONSOLE Console)
 
     SendMessageW(NotifyWnd, PM_DESTROY_CONSOLE, 0, (LPARAM)GuiData);
 
-    DPRINT1("Destroying icons !! - GuiData->hIcon = 0x%p ; ghDefaultIcon = 0x%p ; GuiData->hIconSm = 0x%p ; ghDefaultIconSm = 0x%p\n",
+    DPRINT("Destroying icons !! - GuiData->hIcon = 0x%p ; ghDefaultIcon = 0x%p ; GuiData->hIconSm = 0x%p ; ghDefaultIconSm = 0x%p\n",
             GuiData->hIcon, ghDefaultIcon, GuiData->hIconSm, ghDefaultIconSm);
     if (GuiData->hIcon != NULL && GuiData->hIcon != ghDefaultIcon)
     {
-        DPRINT1("Destroy hIcon\n");
+        DPRINT("Destroy hIcon\n");
         DestroyIcon(GuiData->hIcon);
     }
     if (GuiData->hIconSm != NULL && GuiData->hIconSm != ghDefaultIconSm)
     {
-        DPRINT1("Destroy hIconSm\n");
+        DPRINT("Destroy hIconSm\n");
         DestroyIcon(GuiData->hIconSm);
     }
 
@@ -2021,7 +2021,7 @@ GuiCleanupConsole(PCONSOLE Console)
     DeleteCriticalSection(&GuiData->Lock);
     RtlFreeHeap(ConSrvHeap, 0, GuiData);
 
-    DPRINT1("Quit GuiCleanupConsole\n");
+    DPRINT("Quit GuiCleanupConsole\n");
 }
 
 static VOID WINAPI
@@ -2306,7 +2306,7 @@ GuiChangeIcon(PCONSOLE Console, HICON hWindowIcon)
         GuiData->hIcon   = hIcon;
         GuiData->hIconSm = hIconSm;
 
-        DPRINT1("Set icons in GuiChangeIcon\n");
+        DPRINT("Set icons in GuiChangeIcon\n");
         PostMessageW(GuiData->hWindow, WM_SETICON, ICON_BIG, (LPARAM)GuiData->hIcon);
         PostMessageW(GuiData->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)GuiData->hIconSm);
     }
@@ -2439,7 +2439,7 @@ GuiInitConsole(PCONSOLE Console,
         IconPath  = ConsoleStartInfo->AppPath;
         IconIndex = 0;
     }
-    DPRINT1("IconPath = %S ; IconIndex = %lu\n", (IconPath ? IconPath : L"n/a"), IconIndex);
+    DPRINT("IconPath = %S ; IconIndex = %lu\n", (IconPath ? IconPath : L"n/a"), IconIndex);
     if (IconPath)
     {
         HICON hIcon = NULL, hIconSm = NULL;
@@ -2448,10 +2448,10 @@ GuiInitConsole(PCONSOLE Console,
                               &hIcon,
                               &hIconSm,
                               1);
-        DPRINT1("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
+        DPRINT("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
         if (hIcon != NULL)
         {
-            DPRINT1("Effectively set the icons\n");
+            DPRINT("Effectively set the icons\n");
             GuiData->hIcon   = hIcon;
             GuiData->hIconSm = hIconSm;
         }
@@ -2470,14 +2470,14 @@ GuiInitConsole(PCONSOLE Console,
 
     /* Wait until initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
-    DPRINT1("OK we created the console window\n");
+    DPRINT("OK we created the console window\n");
     CloseHandle(GuiData->hGuiInitEvent);
     GuiData->hGuiInitEvent = NULL;
 
     /* Check whether we really succeeded in initializing the terminal window */
     if (GuiData->hWindow == NULL)
     {
-        DPRINT1("GuiInitConsole - We failed at creating a new terminal window\n");
+        DPRINT("GuiInitConsole - We failed at creating a new terminal window\n");
         // ConioCleanupConsole(Console);
         GuiCleanupConsole(Console);
         return STATUS_UNSUCCESSFUL;

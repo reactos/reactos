@@ -94,7 +94,7 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
             }
             else if (Object->Type == CONIO_INPUT_BUFFER_MAGIC)
             {
-                DPRINT1("Closing the input buffer\n");
+                DPRINT("Closing the input buffer\n");
             }
         }
 
@@ -533,14 +533,14 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 {
     PCONSOLE Console = ProcessData->Console;
 
-    DPRINT1("ConSrvRemoveConsole\n");
+    DPRINT("ConSrvRemoveConsole\n");
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     /* Validate and lock the console */
     if (ConSrvValidateConsole(Console, CONSOLE_RUNNING, TRUE))
     {
-        DPRINT1("ConSrvRemoveConsole - Locking OK\n");
+        DPRINT("ConSrvRemoveConsole - Locking OK\n");
 
         /* Close all console handles and free the handles table */
         ConSrvFreeHandlesTable(ProcessData);
@@ -555,7 +555,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
         ConioRefreshInternalInfo(Console);
 
         /* Release the console */
-        DPRINT1("ConSrvRemoveConsole - Decrement Console->ReferenceCount = %lu\n", Console->ReferenceCount);
+        DPRINT("ConSrvRemoveConsole - Decrement Console->ReferenceCount = %lu\n", Console->ReferenceCount);
         ConSrvReleaseConsole(Console, TRUE);
         //CloseHandle(ProcessData->ConsoleEvent);
         //ProcessData->ConsoleEvent = NULL;
