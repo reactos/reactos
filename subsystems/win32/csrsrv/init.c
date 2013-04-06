@@ -734,7 +734,7 @@ CsrInitCsrRootProcess(VOID)
     }
 
     /*
-     * Our Root Process was never officially initalized,
+     * Our Root Process was never officially initialized,
      * so write the data for each Server DLL manually.
      */
 

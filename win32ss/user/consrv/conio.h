@@ -190,7 +190,8 @@ typedef struct _CONSOLE
     UINT CodePage;
     UINT OutputCodePage;
 
-    CONSOLE_SELECTION_INFO Selection;
+    CONSOLE_SELECTION_INFO Selection;       /* Contains information about the selection */
+    COORD dwSelectionCursor;                /* Selection cursor position, most of the time different from Selection.dwSelectionAnchor */
 
 /******************************* Screen buffers *******************************/
     LIST_ENTRY BufferList;                  /* List of all screen buffers for this console */
