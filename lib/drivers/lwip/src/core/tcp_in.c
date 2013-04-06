@@ -1382,7 +1382,7 @@ tcp_receive(struct tcp_pcb *pcb)
                 }
                 break;
               } else {
-                /* Either the lenghts are the same or the incoming
+                /* Either the lengths are the same or the incoming
                    segment was smaller than the old one; in either
                    case, we ditch the incoming segment. */
                 break;

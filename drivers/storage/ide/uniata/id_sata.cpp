@@ -645,7 +645,9 @@ UniataAhciInit(
     PHW_CHANNEL chan;
     ULONG offs;
     ULONG BaseMemAddress;
+#ifdef DBG
     ULONG PI;
+#endif //DBG
     ULONG CAP;
     ULONG GHC;
     BOOLEAN MemIo = FALSE;
@@ -722,9 +724,11 @@ UniataAhciInit(
     if(CAP & AHCI_CAP_SAM) {
         KdPrint2((PRINT_PREFIX "  AHCI legasy SATA\n"));
     }
+#ifdef DBG
     /* get the number of HW channels */
     PI = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_PI);
     KdPrint2((PRINT_PREFIX "  AHCI PI %#x\n", PI));
+#endif //DBG
 
     /* clear interrupts */
     UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_IS,
@@ -837,9 +841,11 @@ UniataAhciDetect(
     ULONG CAP;
     ULONG CAP2;
     ULONG GHC, GHC0;
+#ifdef DBG
     ULONG BOHC;
-    ULONG NumberChannels;
     ULONG v_Mn, v_Mj;
+#endif //DBG
+    ULONG NumberChannels;
     ULONG BaseMemAddress;
     BOOLEAN MemIo = FALSE;
     BOOLEAN found = FALSE;
@@ -905,10 +911,12 @@ UniataAhciDetect(
         KdPrint2((PRINT_PREFIX "  64bit"));
         //deviceExtension->Host64 = TRUE; // this is just DETECT, do not update anything
     }
+#ifdef DBG
     if(CAP2 & AHCI_CAP2_BOH) {
         BOHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_BOHC);
         KdPrint2((PRINT_PREFIX "  BOHC %#x", BOHC));
     }
+#endif //DBG
     if(CAP & AHCI_CAP_NCQ) {
         KdPrint2((PRINT_PREFIX "  NCQ"));
     }
@@ -950,6 +958,7 @@ UniataAhciDetect(
         goto exit_detect;
     }
 
+#ifdef DBG
     v_Mj = ((version >> 20) & 0xf0) + ((version >> 16) & 0x0f);
     v_Mn = ((version >> 4) & 0xf0) + (version & 0x0f);
 
@@ -957,6 +966,7 @@ UniataAhciDetect(
 		  v_Mj, v_Mn,
 		  NumberChannels, PI));
     KdPrint(("  AHCI SATA Gen %d\n", (((CAP & AHCI_CAP_ISS_MASK) >> 20)) ));
+#endif //DBG
 
     if(CAP & AHCI_CAP_SPM) {
         KdPrint2((PRINT_PREFIX "  PM supported\n"));
@@ -2166,11 +2176,11 @@ UniataAhciEndTransaction(
     ULONG tag=0;
     //ULONG i;
     PIDE_AHCI_CMD_LIST AHCI_CL = &(chan->AhciCtlBlock->cmd_list[tag]);
-    PHW_LU_EXTENSION     LunExt;
+    //PHW_LU_EXTENSION     LunExt;
 
     KdPrint2(("UniataAhciEndTransaction: lChan %d\n", chan->lChannel));
 
-    LunExt = chan->lun[DeviceNumber];
+    //LunExt = chan->lun[DeviceNumber];
 
     TFD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_TFD);
     KdPrint2(("  TFD %#x\n", TFD));
@@ -2474,7 +2484,9 @@ IN OUT PATA_REQ AtaReq
         PUCHAR prd_base0;
         ULONGLONG prd_base64_0;
     };
+#ifdef DBG
     ULONG d;
+#endif // DBG
 
     prd_base64_0 = prd_base64 = 0;
     prd_base = (PUCHAR)(&AtaReq->ahci_cmd0);
@@ -2482,8 +2494,10 @@ IN OUT PATA_REQ AtaReq
 
     prd_base64 = (prd_base64 + max(FIELD_OFFSET(ATA_REQ, ahci_cmd0), AHCI_CMD_ALIGNEMENT_MASK+1)) & ~AHCI_CMD_ALIGNEMENT_MASK;
 
+#ifdef DBG
     d = (ULONG)(prd_base64 - prd_base64_0);
     KdPrint2((PRINT_PREFIX "  AtaReq %#x: cmd aligned %I64x, d=%x\n", AtaReq, prd_base64, d));
+#endif // DBG
 
     AtaReq->ahci.ahci_cmd_ptr = (PIDE_AHCI_CMD)prd_base64;
     KdPrint2((PRINT_PREFIX "  ahci_cmd_ptr %#x\n", AtaReq->ahci.ahci_cmd_ptr));

@@ -7,7 +7,7 @@ This is pretty straight forward.  When doing this make sure to take into account
 Not sure what is wrong with it, put probably more then just one thing blocking this.  For sure pipes break when it is compiled as unicode.
 
 *Move.c code clean up
-It works, but it needs to be cleaned up, the code is long and overly complex for what it needs to do.  Also, we can remove the hack to cover for MoveFileEx bug as it isnt a bug anymore.
+It works, but it needs to be cleaned up, the code is long and overly complex for what it needs to do.  Also, we can remove the hack to cover for MoveFileEx bug as it isn't a bug anymore.
 
 *If rewrite
 It works decent but looks _awful_.  Very hard to maintain and/or understand what the hell is going on.

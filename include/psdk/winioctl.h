@@ -14,8 +14,6 @@ extern "C" {
 #define HIST_NO_OF_BUCKETS               24
 #define HISTOGRAM_BUCKET_SIZE            sizeof(HISTOGRAM_BUCKET)
 #define DISK_HISTOGRAM_SIZE              sizeof(DISK_HISTOGRAM)
-#define CTL_CODE(t,f,m,a)                (((t)<<16)|((a)<<14)|((f)<<2)|(m))
-#define DEVICE_TYPE_FROM_CTL_CODE(c)     (((DWORD)((c)&0xffff0000))>>16)
 
 #ifndef _NTDDSTOR_H_
 #define IOCTL_STORAGE_BASE               FILE_DEVICE_MASS_STORAGE
@@ -99,6 +97,10 @@ extern "C" {
 #define FSCTL_SET_REPARSE_POINT      CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 41, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_DELETE_REPARSE_POINT   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 43, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_SET_SPARSE             CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 49, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+
+#ifndef _DEVIOCTL_
+#define _DEVIOCTL_
+
 #define DEVICE_TYPE DWORD
 #define FILE_DEVICE_BEEP              1
 #define FILE_DEVICE_CD_ROM            2
@@ -157,6 +159,23 @@ extern "C" {
 #define FILE_DEVICE_SERENUM           55
 #define FILE_DEVICE_TERMSRV           56
 #define FILE_DEVICE_KSEC              57
+
+/*  Also in ddk/winddk.h */
+#define FILE_ANY_ACCESS        0x00000000
+#define FILE_SPECIAL_ACCESS    FILE_ANY_ACCESS
+#define FILE_READ_ACCESS       0x00000001
+#define FILE_WRITE_ACCESS      0x00000002
+
+#define METHOD_BUFFERED               0
+#define METHOD_IN_DIRECT              1
+#define METHOD_OUT_DIRECT             2
+#define METHOD_NEITHER                3
+
+#define CTL_CODE(t,f,m,a)                (((t)<<16)|((a)<<14)|((f)<<2)|(m))
+#define DEVICE_TYPE_FROM_CTL_CODE(c)     (((DWORD)((c)&0xffff0000))>>16)
+
+#endif /* _DEVIOCTL_ */
+
 #define PARTITION_ENTRY_UNUSED        0
 #define PARTITION_FAT_12              1
 #define PARTITION_XENIX_1             2
@@ -174,10 +193,6 @@ extern "C" {
 #define PARTITION_UNIX                0x63
 #define PARTITION_NTFT                128
 #define VALID_NTFT                    0xC0
-#define METHOD_BUFFERED               0
-#define METHOD_IN_DIRECT              1
-#define METHOD_OUT_DIRECT             2
-#define METHOD_NEITHER                3
 #define SERIAL_LSRMST_ESCAPE          0
 #define SERIAL_LSRMST_LSR_DATA        1
 #define SERIAL_LSRMST_LSR_NODATA      2
@@ -195,12 +210,6 @@ DEFINE_GUID(GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325,
 #define GUID_SERENUM_BUS_ENUMERATOR GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR
 
 #endif /* DEFINE_GUID */
-
-/*  Also in ddk/winddk.h */
-#define FILE_ANY_ACCESS        0x00000000
-#define FILE_SPECIAL_ACCESS    FILE_ANY_ACCESS
-#define FILE_READ_ACCESS       0x00000001
-#define FILE_WRITE_ACCESS      0x00000002
 
 #define DISK_LOGGING_START   0
 #define DISK_LOGGING_STOP    1

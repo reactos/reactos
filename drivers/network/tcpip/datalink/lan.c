@@ -705,7 +705,7 @@ BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
     //NDIS_STATUS NdisStatus;
     IP_ADDRESS DefaultMask;
 
-    /* Initalize the default unspecified address (0.0.0.0) */
+    /* Initialize the default unspecified address (0.0.0.0) */
     AddrInitIPv4(&DefaultMask, 0);
     if (Context->State == LAN_STATE_STARTED &&
         !Context->Adapter->CompletingReset)

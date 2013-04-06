@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@ const ULONG MAX_MINIPORTS = 3;
 const ULONG MAX_MINIPORTS = 2;
 #endif
 
-extern HRESULT NTAPI CreateMiniportWaveCMI
+extern NTSTATUS NTAPI CreateMiniportWaveCMI
 (
     OUT     PUNKNOWN *  Unknown,
     IN      REFCLSID,
@@ -46,7 +46,7 @@ extern HRESULT NTAPI CreateMiniportWaveCMI
     IN      POOL_TYPE   PoolType
 );
 
-extern HRESULT NTAPI CreateMiniportTopologyCMI
+extern NTSTATUS NTAPI CreateMiniportTopologyCMI
 (
     OUT     PUNKNOWN *  Unknown,
     IN      REFCLSID,

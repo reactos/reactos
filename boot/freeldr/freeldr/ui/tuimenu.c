@@ -495,7 +495,8 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
         //
         // Process the key
         //
-        if ((KeyEvent == KEY_UP) || (KeyEvent == KEY_DOWN))
+        if ((KeyEvent == KEY_UP  ) || (KeyEvent == KEY_DOWN) ||
+            (KeyEvent == KEY_HOME) || (KeyEvent == KEY_END ))
         {
             //
             // Get the current selected item and count
@@ -504,28 +505,37 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
             Count = MenuInfo->MenuItemCount - 1;
 
             //
-            // Check if this was a key up and there's a selected menu item
+            // Check the key and change the selected menu item
             //
-            if ((KeyEvent == KEY_UP) && (Selected))
+            if ((KeyEvent == KEY_UP) && (Selected > 0))
             {
                 //
-                // Update the menu (Deselect previous item)
+                // Deselect previous item and go up
                 //
                 MenuInfo->SelectedMenuItem--;
                 TuiDrawMenuItem(MenuInfo, Selected);
                 Selected--;
 
                 // Skip past any separators
-                if ((Selected) &&
+                if ((Selected > 0) &&
                     (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem--;
                 }
             }
+            else if ( ((KeyEvent == KEY_UP) && (Selected == 0)) ||
+                       (KeyEvent == KEY_END) )
+            {
+                //
+                // Go to the end
+                //
+                MenuInfo->SelectedMenuItem = Count;
+                TuiDrawMenuItem(MenuInfo, Selected);
+            }
             else if ((KeyEvent == KEY_DOWN) && (Selected < Count))
             {
                 //
-                // Update the menu (deselect previous item)
+                // Deselect previous item and go down
                 //
                 MenuInfo->SelectedMenuItem++;
                 TuiDrawMenuItem(MenuInfo, Selected);
@@ -537,6 +547,15 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
                 {
                     MenuInfo->SelectedMenuItem++;
                 }
+            }
+            else if ( ((KeyEvent == KEY_DOWN) && (Selected == Count)) ||
+                       (KeyEvent == KEY_HOME) )
+            {
+                //
+                // Go to the beginning
+                //
+                MenuInfo->SelectedMenuItem = 0;
+                TuiDrawMenuItem(MenuInfo, Selected);
             }
 
             //

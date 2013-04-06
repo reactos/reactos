@@ -90,7 +90,7 @@ typedef struct __lc_time_data {
 
 int _setmbcp_l(int, LCID, MSVCRT_pthreadmbcinfo) DECLSPEC_HIDDEN;
 MSVCRT_pthreadmbcinfo get_mbcinfo(void) DECLSPEC_HIDDEN;
-LCID MSVCRT_locale_to_LCID(const char *locale) DECLSPEC_HIDDEN;
+LCID MSVCRT_locale_to_LCID(const char*, unsigned short*) DECLSPEC_HIDDEN;
 
 void __init_global_locale();
 extern MSVCRT__locale_t global_locale;

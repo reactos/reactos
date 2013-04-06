@@ -40,6 +40,10 @@ VOID GuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
 {
 }
 
+VOID GuiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PUCHAR Text, UCHAR Attr)
+{
+}
+
 VOID GuiDrawStatusText(PCSTR StatusText)
 {
 }
@@ -80,13 +84,15 @@ UCHAR GuiTextToFillStyle(PCSTR FillStyleText)
 
 const UIVTBL GuiVtbl =
 {
-	/*GuiInitialize,
+	/*
+	GuiInitialize,
 	GuiUnInitialize,
 	GuiDrawBackdrop,
 	GuiFillArea,
 	GuiDrawShadow,
 	GuiDrawBox,
 	GuiDrawText,
+	GuiDrawText2,
 	GuiDrawCenteredText,
 	GuiDrawStatusText,
 	GuiUpdateDateTime,
@@ -99,9 +105,12 @@ const UIVTBL GuiVtbl =
 	GuiTextToFillStyle,
 	GuiFadeInBackdrop,
 	GuiFadeOut,
-	GuiDisplayMenu,*/
+	GuiDisplayMenu,
+	GuiDrawMenu,
+	*/
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	NULL, NULL, NULL, NULL, NULL, NULL, NULL
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL
 };
 #endif

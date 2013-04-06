@@ -745,7 +745,7 @@ create_bitmap:
     if(!hbmpOld)
         goto end;
     if(!StretchDIBits(hdc, 0, 0, cxDesired, cyDesired,
-                           0, 0, pbmi->bmiHeader.biWidth, pbmi->bmiHeader.biWidth,
+                           0, 0, pbmi->bmiHeader.biWidth, pbmi->bmiHeader.biHeight,
                            pvBits, pbmiCopy, DIB_RGB_COLORS, SRCCOPY))
     {
         ERR("StretchDIBits failed!.\n");

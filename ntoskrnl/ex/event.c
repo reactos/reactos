@@ -142,7 +142,7 @@ NtCreateEvent(OUT PHANDLE EventHandle,
     /* Check for Success */
     if (NT_SUCCESS(Status))
     {
-        /* Initalize the Event */
+        /* Initialize the Event */
         KeInitializeEvent(Event,
                           EventType,
                           InitialState);

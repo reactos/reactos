@@ -1450,6 +1450,7 @@ static HCRYPTMSG CSignedEncodeMsg_Open(DWORD dwFlags,
         if (!ret)
         {
             CSignedEncodeMsg_Close(msg);
+            CryptMemFree(msg);
             msg = NULL;
         }
     }
@@ -2397,16 +2398,16 @@ static BOOL CDecodeMsg_FinalizeSignedContent(CDecodeMsg *msg,
              !strcmp(msg->u.signed_data.info->content.pszObjId,
              szOID_RSA_data))
             {
-                CRYPT_DATA_BLOB *blob;
+                CRYPT_DATA_BLOB *rsa_blob;
 
                 ret = CryptDecodeObjectEx(X509_ASN_ENCODING,
                  X509_OCTET_STRING, content->pbData, content->cbData,
-                 CRYPT_DECODE_ALLOC_FLAG, NULL, &blob, &size);
+                 CRYPT_DECODE_ALLOC_FLAG, NULL, &rsa_blob, &size);
                 if (ret)
                 {
                     ret = CSignedMsgData_Update(&msg->u.signed_data,
-                     blob->pbData, blob->cbData, TRUE, Verify);
-                    LocalFree(blob);
+                     rsa_blob->pbData, rsa_blob->cbData, TRUE, Verify);
+                    LocalFree(rsa_blob);
                 }
             }
             else

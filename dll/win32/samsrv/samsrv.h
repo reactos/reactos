@@ -326,4 +326,8 @@ SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
                     IN PENCRYPTED_LM_OWF_PASSWORD LmPassword,
                     IN BOOLEAN LmPasswordPresent);
 
+NTSTATUS
+SampGetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
+                          IN PSAMPR_LOGON_HOURS LogonHours);
+
 /* EOF */

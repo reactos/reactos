@@ -1437,7 +1437,7 @@ Quickie:
         RtlFreeHeap(RtlGetProcessHeap(), 0, PathString.Buffer);
     }
 
-    /* Return the final result lenght */
+    /* Return the final result length */
     return Result;
 }
 

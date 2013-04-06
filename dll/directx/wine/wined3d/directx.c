@@ -5233,6 +5233,8 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal)
 
 static void wined3d_adapter_init_nogl(struct wined3d_adapter *adapter, UINT ordinal)
 {
+    DISPLAY_DEVICEW display_device;
+
     memset(adapter, 0, sizeof(*adapter));
     adapter->ordinal = ordinal;
     adapter->monitorPoint.x = -1;
@@ -5250,6 +5252,11 @@ static void wined3d_adapter_init_nogl(struct wined3d_adapter *adapter, UINT ordi
     adapter->fragment_pipe = &none_fragment_pipe;
     adapter->shader_backend = &none_shader_backend;
     adapter->blitter = &cpu_blit;
+    
+    display_device.cb = sizeof(display_device);
+    EnumDisplayDevicesW(NULL, ordinal, &display_device, 0);
+    TRACE("DeviceName: %s\n", debugstr_w(display_device.DeviceName));
+    strcpyW(adapter->DeviceName, display_device.DeviceName);
 }
 
 static void STDMETHODCALLTYPE wined3d_null_wined3d_object_destroyed(void *parent) {}

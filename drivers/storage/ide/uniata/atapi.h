@@ -334,6 +334,8 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define         ATA_SA300               0x48 /*0x81*/
 #define         ATA_SA600               0x49 /*0x82*/
 
+#define         ATA_MODE_NOT_SPEC       ((ULONG)(-1)) /*0x82*/
+
 //
 // IDE command definitions
 //

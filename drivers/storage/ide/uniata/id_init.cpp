@@ -359,10 +359,10 @@ unknown_dev:
         };
 
     static BUSMASTER_CONTROLLER_INFORMATION const ViaSouthAdapters[] = {
-        PCI_DEV_HW_SPEC_BM( 3112, 1106, 0x00, -1, "VIA 8361", VIASOUTH ),
-        PCI_DEV_HW_SPEC_BM( 0305, 1106, 0x00, -1, "VIA 8363", VIASOUTH ),
-        PCI_DEV_HW_SPEC_BM( 0391, 1106, 0x00, -1, "VIA 8371", VIASOUTH ),
-        PCI_DEV_HW_SPEC_BM( 3102, 1106, 0x00, -1, "VIA 8662", VIASOUTH ),
+        PCI_DEV_HW_SPEC_BM( 3112, 1106, 0x00, ATA_MODE_NOT_SPEC, "VIA 8361", VIASOUTH ),
+        PCI_DEV_HW_SPEC_BM( 0305, 1106, 0x00, ATA_MODE_NOT_SPEC, "VIA 8363", VIASOUTH ),
+        PCI_DEV_HW_SPEC_BM( 0391, 1106, 0x00, ATA_MODE_NOT_SPEC, "VIA 8371", VIASOUTH ),
+        PCI_DEV_HW_SPEC_BM( 3102, 1106, 0x00, ATA_MODE_NOT_SPEC, "VIA 8662", VIASOUTH ),
         PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, BMLIST_TERMINATOR, NULL      , BMLIST_TERMINATOR )
         };
 
@@ -785,9 +785,9 @@ for_ugly_chips:
             ChangePciConfig1(0x57, (a | 0x80));
         } else {
             static BUSMASTER_CONTROLLER_INFORMATION const SiSSouthAdapters[] = {
-                PCI_DEV_HW_SPEC_BM( 0008, 1039, 0x10, -1, "SiS 961", 0 ),
-//                PCI_DEV_HW_SPEC_BM( 0008, 1039, 0x00, -1, "SiS 961", 0 ),
-                PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, -1, NULL     , -1 )
+                PCI_DEV_HW_SPEC_BM( 0008, 1039, 0x10, ATA_MODE_NOT_SPEC, "SiS 961", 0 ),
+//                PCI_DEV_HW_SPEC_BM( 0008, 1039, 0x00, ATA_MODE_NOT_SPEC, "SiS 961", 0 ),
+                PCI_DEV_HW_SPEC_BM( ffff, ffff, 0xff, ATA_MODE_NOT_SPEC, NULL     , -1 )
                 };
             // Save settings
             GetPciConfig1(0x4a, tmp8);
@@ -798,8 +798,8 @@ for_ugly_chips:
                      -1, HwDeviceExtension, SystemIoBusNumber, PCISLOTNUM_NOT_SPECIFIED, NULL); 
                 if(i != BMLIST_TERMINATOR) {
                     deviceExtension->HwFlags = (deviceExtension->HwFlags & ~CHIPTYPE_MASK) | SIS133OLD;
-                    //deviceExtension->MaxTransferMode = ATA_UDMA6;
-                    deviceExtension->MaxTransferMode = SiSSouthAdapters[i].MaxTransferMode;
+                    deviceExtension->MaxTransferMode = ATA_UDMA6;
+                    //deviceExtension->MaxTransferMode = SiSSouthAdapters[i].MaxTransferMode;
                     if(SiSSouthAdapters[i].RaidFlags & UNIATA_SATA) {
                         deviceExtension->HwFlags |= UNIATA_SATA;
                         if(SiSSouthAdapters[i].nDeviceId == 0x1182) {
@@ -1651,7 +1651,7 @@ AtapiChipInit(
     PHW_CHANNEL chan;
     UCHAR  tmp8;
     USHORT tmp16;
-    ULONG  tmp32;
+    //ULONG  tmp32;
     ULONG  c; // logical channel (for Compatible Mode controllers)
     BOOLEAN CheckCable = FALSE;
     BOOLEAN GlobalInit = FALSE;
@@ -2142,15 +2142,15 @@ AtapiChipInit(
                 chan = &deviceExtension->chan[c];
                 /* dont block interrupts */
                 //ChangePciConfig4(0x48, (a & ~0x03c00000));
-                tmp32 = AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x48);
+                /*tmp32 =*/ AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x48);
                 AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x48, (1 << 22) << c);
                 // flush
-                tmp32 = AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x48);
+                /*tmp32 =*/ AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0),0x48);
 
                 /* Initialize FIFO PCI bus arbitration */
                 GetPciConfig1(offsetof(PCI_COMMON_CONFIG, CacheLineSize), tmp8);
                 if(tmp8) {
-                    KdPrint2((PRINT_PREFIX "SII: CacheLine=%d\n", tmp32));
+                    KdPrint2((PRINT_PREFIX "SII: CacheLine=%d\n", tmp8));
                     tmp8 = (tmp8/8)+1;
                     AtapiWritePort2(chan, IDX_BM_DeviceSpecific1, ((USHORT)tmp8) << 8 | tmp8);
     		} else {

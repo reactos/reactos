@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "common.hpp"
 #include "property.h"
 
-class CCMITopology : public ICMITopology
+class CCMITopology : public ICMITopology,
+                     public CUnknown
 {
 private:
     PCMIADAPTER         CMIAdapter;      // Adapter common object.
@@ -44,24 +45,8 @@ private:
 
     NTSTATUS ProcessResources(PRESOURCELIST ResourceList);
 public:
-    STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
-    CCMITopology(IUnknown * OuterUnknown){}
+    DECLARE_STD_UNKNOWN();
+    DEFINE_STD_CONSTRUCTOR(CCMITopology);
     ~CCMITopology();
 	STDMETHODIMP_(NTSTATUS) loadMixerSettingsFromRegistry();
     STDMETHODIMP_(NTSTATUS) storeMixerSettingsToRegistry();
@@ -86,7 +71,6 @@ public:
         return STATUS_NOT_IMPLEMENTED;
     }
 
-    // public methods
     STDMETHODIMP_(NTSTATUS) Init
     (
         IN      PUNKNOWN        UnknownAdapter,
@@ -102,9 +86,7 @@ public:
     friend NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest);
     friend NTSTATUS NTAPI PropertyHandler_Mux(PPCPROPERTY_REQUEST PropertyRequest);
 
-    static NTSTATUS NTAPI EventHandler(PPCEVENT_REQUEST EventRequest);
-
-    LONG m_Ref;
+    static NTSTATUS EventHandler(PPCEVENT_REQUEST EventRequest);
 };
 
 #endif //_MINTOPO_HPP_

@@ -29,7 +29,7 @@ class CShellItem :
 	public IPersistIDList
 {
 private:
-    LPITEMIDLIST            pidl;
+	LPITEMIDLIST            m_pidl;
 public:
 	CShellItem();
 	~CShellItem();

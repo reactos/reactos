@@ -365,7 +365,7 @@ ApicInitializeLocalApic(ULONG Cpu)
     LvtEntry.Mask = 1;
     LvtEntry.TimerMode = 0;
 
-    /* Initalize and mask LVTs */
+    /* Initialize and mask LVTs */
     ApicWrite(APIC_TMRLVTR, LvtEntry.Long);
     ApicWrite(APIC_THRMLVTR, LvtEntry.Long);
     ApicWrite(APIC_PCLVTR, LvtEntry.Long);

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -47,12 +47,12 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define VER_LEGALCOPYRIGHT_YEARS    ""
 #define VER_LEGALCOPYRIGHT_STR      "BSD-style license"
 
-#include "common.ver"
+/*#include "common.ver"*/
 
 IDI_APP_ICON                ICON    DISCARDABLE     "window.ico"
 
-IDD_MAIN DIALOGEX DISCARDABLE 0, 0, 310, 176
-STYLE DS_SHELLFONT | DS_ABSALIGN | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_MAIN DIALOG DISCARDABLE 0, 0, 310, 176
+STYLE DS_ABSALIGN | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Audio Control Panel (CMI 8738/8768)"
 FONT 8, "MS Shell Dlg"
 CLASS "cmiControlPanel"
@@ -63,38 +63,37 @@ BEGIN
     LTEXT           " ", IDT_SWAPJACKS, 10,162,180,8
 END
 
-IDD_TAB1 DIALOGEX DISCARDABLE  4, 15, 290, 122
-STYLE DS_SHELLFONT | WS_CHILD
+IDD_TAB1 DIALOG DISCARDABLE  4, 15, 290, 122
+STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTOCHECKBOX    "Enable PCM DAC",              IDC_EN_PCMDAC,     4,4,104,10
+	AUTOCHECKBOX    "Enable PCM DAC",              IDC_EN_SPDIMONITOR,4,4,104,10
 	AUTOCHECKBOX    "Exchange Front/Rear Jacks",   IDC_EXCH_FB,       4,16,104,10
-    GROUPBOX        "Line-In Jack",                IDC_STATIC,        4,30,110,54
-	AUTORADIOBUTTON "Route Rear to Line-In",       IDC_EN_REAR2LINE,  8,40,104,10,WS_GROUP
-	AUTORADIOBUTTON "Route Bass to Line-In",       IDC_EN_BASS2LINE,  8,50,104,10
-	AUTORADIOBUTTON "Route Center to Line-In",     IDC_EN_CENTER2LINE,8,60,104,10
+    GROUPBOX        "Line-In Jack",                IDC_STATIC,        4,40,110,44
+	AUTORADIOBUTTON "Route Rear to Line-In",       IDC_EN_REAR2LINE,  8,50,104,10,WS_GROUP
+	AUTORADIOBUTTON "Route C/LFE to Line-In",      IDC_EN_CLFE2LINE,  8,60,104,10
 	AUTORADIOBUTTON "Don't route",                 IDC_NOROUTE_LINE,  8,70,104,10
     GROUPBOX        "Mic-In Jack",                 IDC_STATIC,        4,86,110,34
 	AUTORADIOBUTTON "Route Center to Mic-In",      IDC_EN_CENTER2MIC, 8,96,104,10,WS_GROUP
 	AUTORADIOBUTTON "Don't route",                 IDC_NOROUTE_MIC,   8,106,104,10
     GROUPBOX        "Channel Configuration",       IDC_STATIC,        120,4,160,116
     COMBOBOX                                       IDCB_CHANNELCONFIG,124,14,150,50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX    "L"                            IDC_LEFT,          130,30,20,20
-    AUTOCHECKBOX    "CL"                           IDC_CLEFT,         160,30,20,20
-    AUTOCHECKBOX    "C"                            IDC_CENTER,        190,30,20,20
-    AUTOCHECKBOX    "CR"                           IDC_CRIGHT,        220,30,20,20
-    AUTOCHECKBOX    "R"                            IDC_RIGHT,         250,30,20,20
-    AUTOCHECKBOX    "BL"                           IDC_BLEFT,         130,96,20,20
-    AUTOCHECKBOX    "BR"                           IDC_BRIGHT,        250,96,20,20
-    AUTOCHECKBOX    "Sub"                          IDC_SUB,           240,60,30,20
-    DEFPUSHBUTTON   "&Start"                       IDB_STARTSTOP,     175,98,50,14
+    AUTOCHECKBOX    "L",                           IDC_LEFT,          130,30,24,20
+    AUTOCHECKBOX    "CL",                          IDC_CLEFT,         160,30,24,20
+    AUTOCHECKBOX    "C",                           IDC_CENTER,        190,30,24,20
+    AUTOCHECKBOX    "CR",                          IDC_CRIGHT,        220,30,24,20
+    AUTOCHECKBOX    "R",                           IDC_RIGHT,         250,30,24,20
+    AUTOCHECKBOX    "BL",                          IDC_BLEFT,         130,96,24,20
+    AUTOCHECKBOX    "BR",                          IDC_BRIGHT,        250,96,24,20
+    AUTOCHECKBOX    "Sub",                         IDC_SUB,           240,60,30,20
+    DEFPUSHBUTTON   "&Play test tone",             IDB_STARTSTOP,     175,98,50,14
 END
 
-IDD_TAB2 DIALOGEX DISCARDABLE  4, 15, 290, 122
-STYLE DS_SHELLFONT | WS_CHILD
+IDD_TAB2 DIALOG DISCARDABLE  4, 15, 290, 122
+STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "S/PDIF output"                IDC_STATIC,        4,4,132,116
+    GROUPBOX        "S/PDIF output",               IDC_STATIC,        4,4,132,116
 	AUTOCHECKBOX    "Enable S/PDIF-out",           IDC_EN_SPDO,       8,14,110,10
 	AUTOCHECKBOX    "Enable 5V signal levels",     IDC_EN_SPDO5V,     8,28,110,10
 	AUTOCHECKBOX    "Enable copyright bit",        IDC_EN_SPDCOPYRHT, 8,42,110,10
@@ -107,8 +106,8 @@ BEGIN
 	AUTOCHECKBOX    "Loop S/PDIF-in to S/PDIF-out",IDC_LOOP_SPDF,     150,84,110,10
 END
 
-IDD_TAB3 DIALOGEX DISCARDABLE  4, 15, 290, 122
-STYLE DS_SHELLFONT | WS_CHILD
+IDD_TAB3 DIALOG DISCARDABLE  4, 15, 290, 122
+STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT           "44.1 kHz",          IDC_STATIC, 74,8,40,8
@@ -132,8 +131,8 @@ BEGIN
 	AUTOCHECKBOX    "",                  IDC_FMT_960_DOLBY, 202,44,10,10
 END
 
-IDD_TAB4 DIALOGEX DISCARDABLE  4, 15, 290, 124
-STYLE DS_SHELLFONT | WS_CHILD
+IDD_TAB4 DIALOG DISCARDABLE  4, 15, 290, 124
+STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT        "Driver Version:",      IDC_STATIC, 4,5,100,10
@@ -147,9 +146,9 @@ BEGIN
     LTEXT        "MPU401 Address:",      IDC_STATIC, 4,69,100,8
     LTEXT        "",                     IDC_MPUADR, 80,68,60,10, SS_SUNKEN
 
-	LTEXT        "Application Icon: Copyright (c) Tango Desktop Project,", IDC_STATIC,4,84,176,8
+    LTEXT        "Application Icon: Copyright (c) Tango Desktop Project,", IDC_STATIC,4,84,176,8
     CONTROL      "http://tango.freedesktop.org/",IDC_URL1,"URLLink",SS_NOTIFY, 178,84,100,8
 
-    LTEXT        "Copyright (c) 2006-2007 Dogbert <dogber1@gmail.com>", IDC_STATIC,4,96,202,8
-    CONTROL       "http://cmediadrivers.googlepages.com/",IDC_URL2,"URLLink",SS_NOTIFY,54,110,182,22
+    LTEXT        "Copyright (c) 2006-2008 Dogbert <dogber1@gmail.com>", IDC_STATIC,4,96,202,8
+    CONTROL       "http://code.google.com/p/cmediadrivers/",IDC_URL2,"URLLink",SS_NOTIFY,48,110,192,22
 END

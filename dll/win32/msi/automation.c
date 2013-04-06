@@ -1207,11 +1207,7 @@ static HRESULT view_invoke(
                 V_VT(pVarResult) = VT_DISPATCH;
                 if ((ret = MsiViewFetch(This->msiHandle, &msiHandle)) == ERROR_SUCCESS)
                 {
-                    IDispatch *dispatch = NULL;
-
-                    if (SUCCEEDED(hr = create_record(msiHandle, &dispatch)))
-                        V_DISPATCH(pVarResult) = dispatch;
-                    else
+                    if (FAILED(hr = create_record(msiHandle, &V_DISPATCH(pVarResult))))
                         ERR("Failed to create Record object, hresult 0x%08x\n", hr);
                 }
                 else if (ret == ERROR_NO_MORE_ITEMS)
@@ -1620,7 +1616,7 @@ static HRESULT session_invoke(
 static void variant_from_registry_value(VARIANT *pVarResult, DWORD dwType, LPBYTE lpData, DWORD dwSize)
 {
     static const WCHAR szREG_BINARY[] = { '(','R','E','G','_','B','I','N','A','R','Y',')',0 };
-    static const WCHAR szREG_[] = { '(','R','E','G','_',']',0 };
+    static const WCHAR szREG_[] = { '(','R','E','G','_','?','?',')',0 };
     WCHAR *szString = (WCHAR *)lpData;
     LPWSTR szNewString = NULL;
     DWORD dwNewSize = 0;
@@ -1688,7 +1684,6 @@ static HRESULT InstallerImpl_CreateRecord(WORD wFlags,
     HRESULT hr;
     VARIANTARG varg0;
     MSIHANDLE hrec;
-    IDispatch* dispatch;
 
     if (!(wFlags & DISPATCH_METHOD))
         return DISP_E_MEMBERNOTFOUND;
@@ -1704,11 +1699,7 @@ static HRESULT InstallerImpl_CreateRecord(WORD wFlags,
     if (!hrec)
         return DISP_E_EXCEPTION;
 
-    hr = create_record(hrec, &dispatch);
-    if (SUCCEEDED(hr))
-        V_DISPATCH(pVarResult) = dispatch;
-
-    return hr;
+    return create_record(hrec, &V_DISPATCH(pVarResult));
 }
 
 static HRESULT InstallerImpl_OpenPackage(AutomationObject* This,

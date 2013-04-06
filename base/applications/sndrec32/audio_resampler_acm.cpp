@@ -118,7 +118,7 @@ audio_resampler_acm::open( void )
 
 
     //
-    // Calcs source buffer lenght
+    // Calcs source buffer length
     //
 
     src_buflen = ( unsigned int )
@@ -130,7 +130,7 @@ audio_resampler_acm::open( void )
     
     
     //
-    // Calcs destination source buffer lenght
+    // Calcs destination source buffer length
     // with help of ACM apis
     //
 

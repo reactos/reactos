@@ -774,7 +774,7 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     JOINTABLE *table = wv->tables;
     UINT *rows;
     JOINTABLE **ordered_tables;
-    int i = 0;
+    UINT i = 0;
 
     TRACE("%p %p\n", wv, record);
 
@@ -1056,7 +1056,7 @@ static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
     column_info *column = columns;
     MSIORDERINFO *orderinfo;
     UINT r, count = 0;
-    int i;
+    UINT i;
 
     TRACE("%p %p\n", view, columns);
 
@@ -1072,7 +1072,7 @@ static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
     if (count == 0)
         return ERROR_SUCCESS;
 
-    orderinfo = msi_alloc(sizeof(MSIORDERINFO) + (count - 1) * sizeof(union ext_column));
+    orderinfo = msi_alloc(FIELD_OFFSET(MSIORDERINFO, columns[count]));
     if (!orderinfo)
         return ERROR_OUTOFMEMORY;
 

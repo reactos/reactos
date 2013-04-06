@@ -256,7 +256,7 @@ KeInitializeTimerEx(OUT PKTIMER Timer,
     Timer->Header.SignalState = 0;
     InitializeListHead(&(Timer->Header.WaitListHead));
 
-    /* Initalize the Other data */
+    /* Initialize the Other data */
     Timer->DueTime.QuadPart = 0;
     Timer->Period = 0;
 }

@@ -23,7 +23,7 @@ HWND hwndSAS = NULL;
 /* Full path to WindowStations directory */
 UNICODE_STRING gustrWindowStationsDir;
 
-/* INITALIZATION FUNCTIONS ****************************************************/
+/* INITIALIZATION FUNCTIONS ****************************************************/
 
 INIT_FUNCTION
 NTSTATUS

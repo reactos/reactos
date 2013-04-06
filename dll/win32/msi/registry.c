@@ -566,12 +566,12 @@ UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY *key, BOOL create)
     return RegOpenKeyW(HKEY_CURRENT_USER, keypath, key);
 }
 
-UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context, HKEY *key, BOOL create)
+UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, LPCWSTR szUserSid, MSIINSTALLCONTEXT context,
+                            HKEY *key, BOOL create)
 {
-    LPWSTR usersid;
     HKEY root = HKEY_LOCAL_MACHINE;
     REGSAM access = KEY_WOW64_64KEY | KEY_ALL_ACCESS;
-    WCHAR squished_pc[GUID_SIZE], keypath[MAX_PATH];
+    WCHAR squished_pc[GUID_SIZE], keypath[MAX_PATH], *usersid = NULL;
 
     if (!squash_guid(szProduct, squished_pc)) return ERROR_FUNCTION_FAILED;
     TRACE("%s squished %s\n", debugstr_w(szProduct), debugstr_w(squished_pc));
@@ -589,12 +589,16 @@ UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context, HKEY *
     }
     else
     {
-        if (!(usersid = get_user_sid()))
+        if (!szUserSid)
         {
-            ERR("Failed to retrieve user SID\n");
-            return ERROR_FUNCTION_FAILED;
+            if (!(usersid = get_user_sid()))
+            {
+                ERR("Failed to retrieve user SID\n");
+                return ERROR_FUNCTION_FAILED;
+            }
+            szUserSid = usersid;
         }
-        sprintfW(keypath, szInstaller_LocalManagedFeat_fmt, usersid, squished_pc);
+        sprintfW(keypath, szInstaller_LocalManagedFeat_fmt, szUserSid, squished_pc);
         LocalFree(usersid);
     }
     if (create) return RegCreateKeyExW(root, keypath, 0, NULL, 0, access, NULL, key, NULL);
@@ -628,11 +632,11 @@ static UINT MSIREG_OpenInstallerFeaturesKey(LPCWSTR szProduct, HKEY *key, BOOL c
     return RegOpenKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, access, key);
 }
 
-UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context, HKEY *key, BOOL create)
+UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, LPCWSTR szUserSid, MSIINSTALLCONTEXT context,
+                                    HKEY *key, BOOL create)
 {
-    LPWSTR usersid;
     REGSAM access = KEY_WOW64_64KEY | KEY_ALL_ACCESS;
-    WCHAR squished_pc[GUID_SIZE], keypath[0x200];
+    WCHAR squished_pc[GUID_SIZE], keypath[0x200], *usersid = NULL;
 
     if (!squash_guid(szProduct, squished_pc)) return ERROR_FUNCTION_FAILED;
     TRACE("%s squished %s\n", debugstr_w(szProduct), debugstr_w(squished_pc));
@@ -643,12 +647,16 @@ UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context
     }
     else
     {
-        if (!(usersid = get_user_sid()))
+        if (!szUserSid)
         {
-            ERR("Failed to retrieve user SID\n");
-            return ERROR_FUNCTION_FAILED;
+            if (!(usersid = get_user_sid()))
+            {
+                ERR("Failed to retrieve user SID\n");
+                return ERROR_FUNCTION_FAILED;
+            }
+            szUserSid = usersid;
         }
-        sprintfW(keypath, szUserDataFeatures_fmt, usersid, squished_pc);
+        sprintfW(keypath, szUserDataFeatures_fmt, szUserSid, squished_pc);
         LocalFree(usersid);
     }
     if (create) return RegCreateKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, key, NULL);

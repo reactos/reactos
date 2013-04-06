@@ -444,7 +444,7 @@ BEGIN
     IDS_CONV_CONSUMPTION    "Consumption (engines)"
     IDS_CONV_CURRENCY       "Συνάλλαγμα"
     IDS_CONV_ENERGY         "Ενέργεια"
-    IDS_CONV_LENGTH         "Lenghts"
+    IDS_CONV_LENGTH         "Lengths"
     IDS_CONV_POWER          "Δύναμη"
     IDS_CONV_PRESSURE       "Πίεση"
     IDS_CONV_TEMPERATURE    "Θερμοκρασία"

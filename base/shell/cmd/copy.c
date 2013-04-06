@@ -785,7 +785,7 @@ INT cmd_copy(LPTSTR param)
             _tcscpy(tmpDestPath, szDestPath);
             _tcscat(tmpDestPath, _T("\\"));
 
-            /* Can't put a file into a folder that isnt there */
+            /* Can't put a file into a folder that isn't there */
             if (_tcscmp(tmpDestPath, _T("\\\\.\\")) &&
                 !IsExistingDirectory(tmpDestPath))
             {

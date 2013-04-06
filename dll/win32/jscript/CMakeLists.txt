@@ -16,7 +16,9 @@ list(APPEND SOURCE
     activex.c
     array.c
     bool.c
+    compile.c
     date.c
+    decode.c
     dispex.c
     engine.c
     error.c
@@ -24,6 +26,8 @@ list(APPEND SOURCE
     global.c
     jscript.c
     jscript_main.c
+    jsregexp.c
+    jsstr.c
     jsutils.c
     lex.c
     math.c
@@ -32,15 +36,23 @@ list(APPEND SOURCE
     parser.tab.c
     regexp.c
     string.c
-    rsrc.rc
+    vbarray.c
     ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
 
-add_library(jscript SHARED ${SOURCE})
+add_library(jscript SHARED ${SOURCE} rsrc.rc)
+add_idl_headers(jscript_idlheader jscript_classes.idl)
+
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(jscript)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+endif()
+
 set_module_type(jscript win32dll)
 target_link_libraries(jscript wine)
 add_importlibs(jscript user32 ole32 oleaut32 advapi32 msvcrt kernel32 ntdll)
 add_pch(jscript jscript.h)
 # jsglobal.tlb needs stdole2.tlb
-add_dependencies(jscript stdole2)
+add_dependencies(jscript jscript_idlheader stdole2)
 add_cd_file(TARGET jscript DESTINATION reactos/system32 FOR all)
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/jsglobal.tlb)

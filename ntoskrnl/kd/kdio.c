@@ -31,8 +31,8 @@ KD_PORT_INFORMATION SerialPortInfo = { DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RA
 /* Current Port in use. FIXME: Do we support more then one? */
 ULONG KdpPort;
 
-#define KdpScreenLineLenght 80
-CHAR KdpScreenLineBuffer[KdpScreenLineLenght + 1] = "";
+#define KdpScreenLineLengthDefault 80
+CHAR KdpScreenLineBuffer[KdpScreenLineLengthDefault + 1] = "";
 ULONG KdpScreenLineBufferPos = 0, KdpScreenLineLength = 0;
 
 const ULONG KdpDmesgBufferSize = 128 * 1024; // 512*1024; // 5*1024*1024;
@@ -427,7 +427,7 @@ KdpScreenPrint(LPSTR Message,
             KdpScreenLineBuffer[KdpScreenLineLength] = '\0';
         }
 
-        if(*pch == '\n' || KdpScreenLineLength == KdpScreenLineLenght)
+        if(*pch == '\n' || KdpScreenLineLength == KdpScreenLineLengthDefault)
         {
             /* Print buffered characters */
             if(KdpScreenLineBufferPos != KdpScreenLineLength)

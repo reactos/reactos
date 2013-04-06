@@ -156,7 +156,7 @@ PnpRegMultiSzToUnicodeStrings(IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation
         /* Null-terminate the string ourselves */
         (*UnicodeStringList)[i].Buffer[n / sizeof(WCHAR)] = UNICODE_NULL;
         
-        /* Set the lenghts */
+        /* Set the lengths */
         (*UnicodeStringList)[i].Length = (USHORT)n;
         (*UnicodeStringList)[i].MaximumLength = (USHORT)(n + sizeof(UNICODE_NULL));
     }

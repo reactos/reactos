@@ -688,18 +688,6 @@ MSIFILE *msi_get_loaded_file( MSIPACKAGE *package, const WCHAR *key )
     return NULL;
 }
 
-MSIFILEPATCH *msi_get_loaded_filepatch( MSIPACKAGE *package, const WCHAR *key )
-{
-    MSIFILEPATCH *patch;
-
-    /* FIXME: There might be more than one patch */
-    LIST_FOR_EACH_ENTRY( patch, &package->filepatches, MSIFILEPATCH, entry )
-    {
-        if (!strcmpW( key, patch->File->File )) return patch;
-    }
-    return NULL;
-}
-
 MSIFOLDER *msi_get_loaded_folder( MSIPACKAGE *package, const WCHAR *dir )
 {
     MSIFOLDER *folder;
@@ -1788,7 +1776,7 @@ static BOOL process_overrides( MSIPACKAGE *package, int level )
     ret |= process_state_property( package, level, szReinstall, INSTALLSTATE_UNKNOWN );
     ret |= process_state_property( package, level, szAdvertise, INSTALLSTATE_ADVERTISED );
 
-    if (ret)
+    if (ret && !package->full_reinstall)
         msi_set_property( package->db, szPreselected, szOne, -1 );
 
     return ret;
@@ -4856,12 +4844,12 @@ static UINT ACTION_PublishFeatures(MSIPACKAGE *package)
     if (!msi_check_publish(package))
         return ERROR_SUCCESS;
 
-    rc = MSIREG_OpenFeaturesKey(package->ProductCode, package->Context,
+    rc = MSIREG_OpenFeaturesKey(package->ProductCode, NULL, package->Context,
                                 &hkey, TRUE);
     if (rc != ERROR_SUCCESS)
         goto end;
 
-    rc = MSIREG_OpenUserDataFeaturesKey(package->ProductCode, package->Context,
+    rc = MSIREG_OpenUserDataFeaturesKey(package->ProductCode, NULL, package->Context,
                                         &userdata, TRUE);
     if (rc != ERROR_SUCCESS)
         goto end;
@@ -4961,7 +4949,7 @@ static UINT msi_unpublish_feature(MSIPACKAGE *package, MSIFEATURE *feature)
 
     TRACE("unpublishing feature %s\n", debugstr_w(feature->Feature));
 
-    r = MSIREG_OpenFeaturesKey(package->ProductCode, package->Context,
+    r = MSIREG_OpenFeaturesKey(package->ProductCode, NULL, package->Context,
                                &hkey, FALSE);
     if (r == ERROR_SUCCESS)
     {
@@ -4969,7 +4957,7 @@ static UINT msi_unpublish_feature(MSIPACKAGE *package, MSIFEATURE *feature)
         RegCloseKey(hkey);
     }
 
-    r = MSIREG_OpenUserDataFeaturesKey(package->ProductCode, package->Context,
+    r = MSIREG_OpenUserDataFeaturesKey(package->ProductCode, NULL, package->Context,
                                        &hkey, FALSE);
     if (r == ERROR_SUCCESS)
     {
@@ -7264,12 +7252,14 @@ static UINT ITERATE_RemoveExistingProducts( MSIRECORD *rec, LPVOID param )
         {'m','s','i','e','x','e','c',' ','/','i',' ','%','s',' ','R','E','M','O','V','E','=','%','s',0};
     MSIPACKAGE *package = param;
     const WCHAR *property = MSI_RecordGetString( rec, 7 );
+    int attrs = MSI_RecordGetInteger( rec, 5 );
     UINT len = sizeof(fmtW)/sizeof(fmtW[0]);
     WCHAR *product, *features, *cmd;
     STARTUPINFOW si;
     PROCESS_INFORMATION info;
     BOOL ret;
 
+    if (attrs & msidbUpgradeAttributesOnlyDetect) return ERROR_SUCCESS;
     if (!(product = msi_dup_property( package->db, property ))) return ERROR_SUCCESS;
 
     deformat_string( package, MSI_RecordGetString( rec, 6 ), &features );
@@ -7789,10 +7779,12 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     {
         TRACE("setting REINSTALL property to ALL\n");
         msi_set_property( package->db, szReinstall, szAll, -1 );
+        package->full_reinstall = 1;
     }
 
     /* properties may have been added by a transform */
     msi_clone_properties( package );
+    msi_set_original_database_property( package->db, szPackagePath );
 
     msi_parse_command_line( package, szCommandLine, FALSE );
     msi_adjust_privilege_properties( package );

@@ -581,4 +581,74 @@ done:
     return Status;
 }
 
+
+NTSTATUS
+SampGetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
+                          IN PSAMPR_LOGON_HOURS LogonHours)
+{
+    PUCHAR RawBuffer = NULL;
+    ULONG Length = 0;
+    ULONG BufferLength = 0;
+    NTSTATUS Status;
+
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"LogonHours",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (Status != STATUS_BUFFER_OVERFLOW)
+    {
+        TRACE("SampGetObjectAttribute failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    Status = STATUS_SUCCESS;
+
+    if (Length == 0)
+    {
+        LogonHours->UnitsPerWeek = 0;
+        LogonHours->LogonHours = NULL;
+    }
+    else
+    {
+        RawBuffer = midl_user_allocate(Length);
+        if (RawBuffer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = SampGetObjectAttribute(UserObject,
+                                        L"LogonHours",
+                                        NULL,
+                                        (PVOID)RawBuffer,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        LogonHours->UnitsPerWeek = *((PUSHORT)RawBuffer);
+
+        BufferLength = (((ULONG)LogonHours->UnitsPerWeek) + 7) / 8;
+
+        LogonHours->LogonHours = midl_user_allocate(BufferLength);
+        if (LogonHours->LogonHours == NULL)
+        {
+            TRACE("Failed to allocate LogonHours buffer!\n");
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        memcpy(LogonHours->LogonHours,
+               &(RawBuffer[2]),
+               BufferLength);
+    }
+
+done:
+
+    if (RawBuffer != NULL)
+        midl_user_free(RawBuffer);
+
+    return Status;
+}
+
 /* EOF */

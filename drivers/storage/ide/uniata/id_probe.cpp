@@ -127,6 +127,10 @@ UniataEnableIoPCI(
         // reread config space
         busDataRead = HalGetBusData(PCIConfiguration, busNumber, slotNumber,
                                     pciData, PCI_COMMON_HDR_LENGTH);
+        if(busDataRead < PCI_COMMON_HDR_LENGTH) {
+            KdPrint2((PRINT_PREFIX "HalGetBusData() failed %#x\n", busDataRead));
+            break;
+        }
         KdPrint2((PRINT_PREFIX "New pciData.Command = %#x\n", pciData->Command));
     }
     KdPrint2((PRINT_PREFIX "InterruptLine = %#x\n", pciData->u.type0.InterruptLine));
@@ -287,7 +291,7 @@ UniataEnumBusMasterController__(
     )
 {
 //    PHW_DEVICE_EXTENSION  deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
-    PVOID HwDeviceExtension;
+//    PVOID HwDeviceExtension;
     PHW_DEVICE_EXTENSION  deviceExtension = NULL;
     PCI_SLOT_NUMBER       slotData;
     PCI_COMMON_CONFIG     pciData;
@@ -328,7 +332,7 @@ UniataEnumBusMasterController__(
     deviceStrPtr = deviceString;
     slotData.u.AsULONG = 0;
 
-    HwDeviceExtension =
+    /*HwDeviceExtension =*/
     deviceExtension = (PHW_DEVICE_EXTENSION)ExAllocatePool(NonPagedPool, sizeof(HW_DEVICE_EXTENSION));
     if(!deviceExtension) {
         return(SP_RETURN_NOT_FOUND);
@@ -920,12 +924,13 @@ UniataFindBusMasterController(
     ULONG                 slotNumber;
     ULONG                 busDataRead;
     ULONG                 SystemIoBusNumber;
-
+/*
     UCHAR                 vendorString[5];
     UCHAR                 deviceString[5];
+
     PUCHAR                vendorStrPtr;
     PUCHAR                deviceStrPtr;
-
+*/
     UCHAR   BaseClass;
     UCHAR   SubClass;
     ULONG   VendorID;
@@ -1025,10 +1030,10 @@ UniataFindBusMasterController(
         return SP_RETURN_ERROR;
     }
     RtlZeroMemory(deviceExtension, sizeof(HW_DEVICE_EXTENSION));
-
+/*
     vendorStrPtr = vendorString;
     deviceStrPtr = deviceString;
-
+*/
     slotNumber = BMList[i].slotNumber;
     SystemIoBusNumber = BMList[i].busNumber;
 
@@ -2108,7 +2113,7 @@ AtapiFindController(
     ULONG                irq=0;
     ULONG                portBase;
     ULONG                retryCount;
-    BOOLEAN              atapiOnly;
+//    BOOLEAN              atapiOnly;
     UCHAR                statusByte;
     BOOLEAN              preConfig = FALSE;
     //
@@ -2457,12 +2462,12 @@ not_found:
                     if (AtapiParseArgumentString(ArgumentString, "dump") == 1) {
                         KdPrint2((PRINT_PREFIX
                                    "AtapiFindController: Crash dump\n"));
-                        atapiOnly = FALSE;
+                        //atapiOnly = FALSE;
                         deviceExtension->DriverMustPoll = TRUE;
                     } else {
                         KdPrint2((PRINT_PREFIX
                                    "AtapiFindController: Atapi Only\n"));
-                        atapiOnly = TRUE;
+                        //atapiOnly = TRUE;
                         deviceExtension->DriverMustPoll = FALSE;
                     }
 #endif //UNIATA_CORE
@@ -2470,17 +2475,17 @@ not_found:
 
                     KdPrint2((PRINT_PREFIX
                                "AtapiFindController: Atapi Only (2)\n"));
-                    atapiOnly = TRUE;
+                    //atapiOnly = TRUE;
                     deviceExtension->DriverMustPoll = FALSE;
                 }
 
             } else {
-                atapiOnly = FALSE;
+                //atapiOnly = FALSE;
             }
 
         } else {
 
-            atapiOnly = FALSE;
+            //atapiOnly = FALSE;
             deviceExtension->DriverMustPoll = FALSE;
 
         }// preConfig check

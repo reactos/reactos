@@ -221,7 +221,7 @@ HalPutCharacter (CHAR Character)
 VOID FASTCALL
 HalInitializeDisplay (PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 /*
- * FUNCTION: Initalize the display
+ * FUNCTION: Initialize the display
  * ARGUMENTS:
  *         InitParameters = Parameters setup by the boot loader
  */

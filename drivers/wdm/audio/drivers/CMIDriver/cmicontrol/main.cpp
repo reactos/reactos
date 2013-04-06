@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -139,6 +139,7 @@ UINT findWaveDeviceID()
 BOOL playTestTone()
 {
 	SHORT*               buffer;
+	BOOL                 isChannelChecked;
 #if 1
 	WAVEFORMATEXTENSIBLE wfx;
 
@@ -162,6 +163,18 @@ BOOL playTestTone()
 	wfx.nBlockAlign     = (wfx.wBitsPerSample >> 3) * wfx.nChannels;
 	wfx.cbSize          = 0;
 #endif
+
+	isChannelChecked  = (SendMessage(GetDlgItem(hWndChild[0], IDC_LEFT), BM_GETCHECK, 0, 0) == BST_CHECKED);
+	isChannelChecked |= (SendMessage(GetDlgItem(hWndChild[0], IDC_RIGHT), BM_GETCHECK, 0, 0) == BST_CHECKED);
+	isChannelChecked |= (SendMessage(GetDlgItem(hWndChild[0], IDC_BLEFT), BM_GETCHECK, 0, 0) == BST_CHECKED) && (currentChannelCount > 2);
+	isChannelChecked |= (SendMessage(GetDlgItem(hWndChild[0], IDC_BRIGHT), BM_GETCHECK, 0, 0) == BST_CHECKED) && (currentChannelCount > 2);
+	isChannelChecked |= (SendMessage(GetDlgItem(hWndChild[0], IDC_CENTER), BM_GETCHECK, 0, 0) == BST_CHECKED) && (currentChannelCount > 4);
+	isChannelChecked |= (SendMessage(GetDlgItem(hWndChild[0], IDC_SUB), BM_GETCHECK, 0, 0) == BST_CHECKED) && (currentChannelCount > 4);
+	isChannelChecked |= (SendMessage(GetDlgItem(hWndChild[0], IDC_CLEFT), BM_GETCHECK, 0, 0) == BST_CHECKED) && (currentChannelCount > 6);
+	isChannelChecked |= (SendMessage(GetDlgItem(hWndChild[0], IDC_CRIGHT), BM_GETCHECK, 0, 0) == BST_CHECKED) && (currentChannelCount > 6);
+
+	if (!isChannelChecked)
+		return FALSE;
 
 	if (waveOutOpen(&hWave, findWaveDeviceID(), (WAVEFORMATEX*)&(wfx), 0, 0, CALLBACK_NULL) != MMSYSERR_NOERROR) {
 		PrintLastError("waveOutOpen()");
@@ -236,7 +249,6 @@ BOOL getCurrentChannelConfig()
 	DirectSoundEnumerate((LPDSENUMCALLBACK)DSEnumProc, (VOID*)&guid);
 
 	if (DirectSoundCreate8(guid, &ds, NULL) != S_OK) {
-		PrintLastError("DirectSoundCreate8()");
 		return FALSE;
 	}
 
@@ -285,6 +297,7 @@ BOOL setCurrentChannelConfig()
 		case 4: speakerConfig = DSSPEAKER_QUAD;    break;
 		case 6: speakerConfig = DSSPEAKER_5POINT1; break;
 		case 8: speakerConfig = DSSPEAKER_7POINT1; break;
+        default: speakerConfig = DSSPEAKER_STEREO; break;
 	}
 
 	if (ds->SetSpeakerConfig(speakerConfig) != S_OK) {
@@ -337,13 +350,11 @@ BOOL getDeviceInfo(const GUID* category, CMIDEV* pDev)
 
 BOOL getDeviceInterfaceDetail(const GUID* category, CMIDEV* pDev)
 {
-	SP_DEVICE_INTERFACE_DATA  deviceInterfaceData;
 	DWORD                     dataSize = 0;
 	BOOL                      result;
 	PTSTR                     pnpStr = NULL;
 	HDEVINFO                  hDevInfoWithInterface;
 	SP_DEVICE_INTERFACE_DATA  DeviceInterfaceData;
-	ULONG                     ulDeviceInterfaceDetailDataSize = 0;
 
 	// get the PnP string
 	SetupDiGetDeviceInstanceId(pDev->Info, &(pDev->InfoData), NULL, 0, &dataSize);
@@ -475,15 +486,17 @@ void cleanUp()
 	}
 }
 
-BOOL openDevice()
+BOOL openDevice(bool handleError)
 {
 	if (!getDeviceInfo(&KSCATEGORY_TOPOLOGY, &cmiTopologyDev)) {
-		PrintLastError("getDeviceInfo()");
+		if (handleError)
+			PrintLastError("getDeviceInfo()");
 		return FALSE;
 	}
 
 	if (!getDeviceInterfaceDetail(&KSCATEGORY_TOPOLOGY, &cmiTopologyDev)) {
-		PrintLastError("getDeviceInterfaceDetail()");
+		if (handleError)
+			PrintLastError("getDeviceInterfaceDetail()");
 		return FALSE;
 	}
 
@@ -569,13 +582,19 @@ BOOL setDlgItems(HWND hWnd)
 	if (cmiData.maxChannels >= 8) {
 		SendMessage(hWndItem, CB_ADDSTRING, 0, (LPARAM)"7.1 Surround");
 	}
-	getCurrentChannelConfig();
-	SendMessage(hWndItem, CB_SETCURSEL, (currentChannelCount/2)-1, 0);
-	updateChannelBoxes(hWnd);
+	if (getCurrentChannelConfig()) {
+		EnableWindow(GetDlgItem(hWndChild[0], IDB_STARTSTOP), TRUE);
+		EnableWindow(GetDlgItem(hWndChild[0], IDCB_CHANNELCONFIG), TRUE);
+		SendMessage(hWndItem, CB_SETCURSEL, (currentChannelCount/2)-1, 0);
+		updateChannelBoxes(hWnd);
+	} else {
+		EnableWindow(GetDlgItem(hWndChild[0], IDB_STARTSTOP), FALSE);
+		EnableWindow(GetDlgItem(hWndChild[0], IDCB_CHANNELCONFIG), FALSE);
+	}
 
 	// checkboxes
-	SendMessage(GetDlgItem(hWndChild[0], IDC_EN_PCMDAC),      BM_SETCHECK, (cmiData.enablePCMDAC        ? BST_CHECKED : BST_UNCHECKED), 0);
 	SendMessage(GetDlgItem(hWndChild[0], IDC_EXCH_FB),        BM_SETCHECK, (cmiData.exchangeFrontBack   ? BST_CHECKED : BST_UNCHECKED), 0);
+	SendMessage(GetDlgItem(hWndChild[0], IDC_EN_SPDIMONITOR), BM_SETCHECK, (cmiData.enableSPDIMonitor   ? BST_CHECKED : BST_UNCHECKED), 0);
 
 	SendMessage(GetDlgItem(hWndChild[1], IDC_EN_SPDO),        BM_SETCHECK, (cmiData.enableSPDO          ? BST_CHECKED : BST_UNCHECKED), 0);
 	SendMessage(GetDlgItem(hWndChild[1], IDC_EN_SPDO5V),      BM_SETCHECK, (cmiData.enableSPDO5V        ? BST_CHECKED : BST_UNCHECKED), 0);
@@ -600,9 +619,8 @@ BOOL setDlgItems(HWND hWnd)
 	SendMessage(GetDlgItem(hWndChild[2], IDC_FMT_960_DOLBY),  BM_SETCHECK, ((cmiData.formatMask & FMT_960_DOLBY) ? BST_CHECKED : BST_UNCHECKED), 0);
 
 	// radioboxes
-	SendMessage(GetDlgItem(hWndChild[0], IDC_EN_BASS2LINE),   BM_SETCHECK, (cmiData.enableBass2Line     ? BST_CHECKED : BST_UNCHECKED), 0);
-	SendMessage(GetDlgItem(hWndChild[0], IDC_EN_CENTER2LINE), BM_SETCHECK, (cmiData.enableCenter2Line   ? BST_CHECKED : BST_UNCHECKED), 0);
 	SendMessage(GetDlgItem(hWndChild[0], IDC_EN_REAR2LINE),   BM_SETCHECK, (cmiData.enableRear2Line     ? BST_CHECKED : BST_UNCHECKED), 0);
+	SendMessage(GetDlgItem(hWndChild[0], IDC_EN_CLFE2LINE),   BM_SETCHECK, ((cmiData.enableCenter2Line | cmiData.enableBass2Line) ? BST_CHECKED : BST_UNCHECKED), 0);
 	SendMessage(GetDlgItem(hWndChild[0], IDC_NOROUTE_LINE),   BM_SETCHECK, ((!cmiData.enableCenter2Line && !cmiData.enableBass2Line && !cmiData.enableRear2Line) ? BST_CHECKED : BST_UNCHECKED), 0);
 
 	SendMessage(GetDlgItem(hWndChild[0], IDC_EN_CENTER2MIC),  BM_SETCHECK, (cmiData.enableCenter2Mic    ? BST_CHECKED : BST_UNCHECKED), 0);
@@ -614,12 +632,12 @@ BOOL setDlgItems(HWND hWnd)
 
 BOOL applySettings()
 {
-	cmiData.enablePCMDAC        = (SendMessage(GetDlgItem(hWndChild[0], IDC_EN_PCMDAC),      BM_GETCHECK, 0, 0) == BST_CHECKED);
 	cmiData.exchangeFrontBack   = (SendMessage(GetDlgItem(hWndChild[0], IDC_EXCH_FB),        BM_GETCHECK, 0, 0) == BST_CHECKED);
-	cmiData.enableBass2Line     = (SendMessage(GetDlgItem(hWndChild[0], IDC_EN_BASS2LINE),   BM_GETCHECK, 0, 0) == BST_CHECKED);
-	cmiData.enableCenter2Line   = (SendMessage(GetDlgItem(hWndChild[0], IDC_EN_CENTER2LINE), BM_GETCHECK, 0, 0) == BST_CHECKED);
+	cmiData.enableBass2Line     = (SendMessage(GetDlgItem(hWndChild[0], IDC_EN_CLFE2LINE),   BM_GETCHECK, 0, 0) == BST_CHECKED);
+	cmiData.enableCenter2Line   = (SendMessage(GetDlgItem(hWndChild[0], IDC_EN_CLFE2LINE),   BM_GETCHECK, 0, 0) == BST_CHECKED);
 	cmiData.enableRear2Line     = (SendMessage(GetDlgItem(hWndChild[0], IDC_EN_REAR2LINE),   BM_GETCHECK, 0, 0) == BST_CHECKED);
-	cmiData.enableCenter2Mic    = (SendMessage(GetDlgItem(hWndChild[0], IDC_EN_CENTER2MIC),  BM_GETCHECK, 0, 0) == BST_CHECKED);
+	cmiData.enableCenter2Mic    = (SendMessage(GetDlgItem(hWndChild[0], IDC_EN_CENTER2MIC),   BM_GETCHECK, 0, 0) == BST_CHECKED);
+	cmiData.enableSPDIMonitor   = (SendMessage(GetDlgItem(hWndChild[0], IDC_EN_SPDIMONITOR), BM_GETCHECK, 0, 0) == BST_CHECKED);
 
 	cmiData.enableSPDO          = (SendMessage(GetDlgItem(hWndChild[1], IDC_EN_SPDO),        BM_GETCHECK, 0, 0) == BST_CHECKED);
 	cmiData.enableSPDO5V        = (SendMessage(GetDlgItem(hWndChild[1], IDC_EN_SPDO5V),      BM_GETCHECK, 0, 0) == BST_CHECKED);
@@ -678,7 +696,7 @@ BOOL initDialog(HWND hWnd)
 	currentTab = 0;
 	ShowWindow(hWndChild[0], SW_SHOWDEFAULT);
 
-	if (!openDevice()) {
+	if (!openDevice(TRUE)) {
 		PrintLastError("openDevice()");
 		return FALSE;
 	}
@@ -742,7 +760,7 @@ LRESULT CALLBACK TabDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			switch (LOWORD(wParam)) {
 				case IDB_STARTSTOP:
 					if (stopTestTone()) {
-						SetDlgItemText(hWndChild[0], IDB_STARTSTOP, "&Start");
+						SetDlgItemText(hWndChild[0], IDB_STARTSTOP, "&Play test tone");
 						return TRUE;
 					}
 					if (playTestTone()) {
@@ -776,7 +794,9 @@ void printUsage()
 	                        "/enableSPDIFo - enable SPDIF-out\r\n" \
 	                        "/disableSPDIFo - disable SPDIF-out\r\n"\
 	                        "/enableSPDIFi - enable SPDIF-in recording\r\n" \
-	                        "/disableSPDIFi - disable SPDIF-in recording\r\n";
+	                        "/disableSPDIFi - disable SPDIF-in recording\r\n" \
+	                        "/enableLoopThru - enable loop-through from SPDIF-in to SPDIF-out\r\n" \
+	                        "/disableLoopThru - disable loop-through from SPDIF-in to SPDIF-out\r\n";
 
 	MessageBox(NULL, (LPCSTR)usage, TEXT("Usage Help"), MB_ICONINFORMATION | MB_OK);
 	return;
@@ -807,7 +827,7 @@ void deleteDriverFiles() {
 void performUninstall() {
 	deleteDriverFiles();
 	RegDeleteKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\CMIDriver");
-	MessageBox(NULL, "The CMI driver applications were successfully removed from your computer!", "CMIDriver", MB_ICONINFORMATION);
+	MessageBox(NULL, "The CMI driver applications have been successfully removed from your computer!", "CMIDriver", MB_ICONINFORMATION);
 	ExitProcess(0);
 }
 
@@ -840,6 +860,12 @@ bool checkToken(char* token) {
 	if (strcmp(token, "DISABLESPDIFI")==0) {
 		cmiData.enableSPDI = FALSE;
 	} else
+	if ((strcmp(token, "ENABLELOOPTHRU")==0) || (strcmp(token, "ENABLELOOPTHROUGH")==0) || (strcmp(token, "ENABLELOOP")==0) ) {
+		cmiData.loopSPDI = TRUE;
+	} else
+	if ((strcmp(token, "DISABLELOOPTHRU")==0) || (strcmp(token, "DISABLELOOPTHROUGH")==0) || (strcmp(token, "DISABLELOOP")==0) ) {
+		cmiData.loopSPDI = FALSE;
+	} else
 	if (strcmp(token, "UNINSTALL")==0) {
 		performUninstall();
 	}
@@ -847,21 +873,13 @@ bool checkToken(char* token) {
 }
 
 int parseArguments(LPSTR szCmdLine) {
-	BOOL inToken = false;
-	int  i = 0, j;
+	BOOL inToken = false, result;
+	int  i = 0, j=0;
 	char token[MAX_TOKEN_SIZE];
 
-	if (!openDevice()) {
-		return FALSE;
-	}
-
-	if (!getDriverData(&cmiTopologyDev)) {
-		PrintLastError("getDriverData()");
-		return FALSE;
-	}
-	if (!getCurrentChannelConfig()) {
-		PrintLastError("getCurrentChannelConfig()");
-		return FALSE;
+	if (openDevice(FALSE)) {
+		getDriverData(&cmiTopologyDev);
+		currentChannelCount = -1;
 	}
 
 	while (szCmdLine[i]) {
@@ -889,7 +907,11 @@ int parseArguments(LPSTR szCmdLine) {
 	}
 	token[j] = 0;
 	checkToken(token);
-	return (setDriverData(&cmiTopologyDev) && setCurrentChannelConfig());
+
+	result = setDriverData(&cmiTopologyDev);
+	if (currentChannelCount != -1)
+		result |= setCurrentChannelConfig();
+	return result;
 }
 
 void InitURLControl()
@@ -929,7 +951,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 		}
 	}
 
-	if (hWndMain = FindWindow("cmiControlPanel", NULL)) {
+	if ((hWndMain = FindWindow("cmiControlPanel", NULL))) {
 		SetForegroundWindow(hWndMain);
 		return FALSE;
 	}

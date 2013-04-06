@@ -229,6 +229,7 @@ SampCreateUserAccount(HKEY hDomainKey,
                       ULONG UserAccountControl)
 {
     SAM_USER_FIXED_DATA FixedUserData;
+    UCHAR LogonHours[23];
     LPWSTR lpEmptyString = L"";
     DWORD dwDisposition;
     WCHAR szAccountKeyName[32];
@@ -343,7 +344,17 @@ SampCreateUserAccount(HKEY hDomainKey,
                       (LPVOID)lpEmptyString,
                       sizeof(WCHAR));
 
-        /* FIXME: Set LogonHours attribute*/
+        /* Set LogonHours attribute */
+        *((PUSHORT)LogonHours) = 168;
+        memset(&(LogonHours[2]), 0xff, 21);
+
+        RegSetValueEx(hAccountKey,
+                      L"LogonHours",
+                      0,
+                      REG_BINARY,
+                      (LPVOID)LogonHours,
+                      sizeof(LogonHours));
+
         /* FIXME: Set Groups attribute*/
 
         /* Set LMPwd attribute*/

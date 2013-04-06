@@ -189,7 +189,7 @@ static const char *trust_status_to_str(DWORD status)
          "\n\tbad name constraints");
     if (status & CERT_TRUST_HAS_NOT_SUPPORTED_NAME_CONSTRAINT)
         pos += snprintf(buf + pos, sizeof(buf) - pos,
-         "\n\tunsuported name constraint");
+         "\n\tunsupported name constraint");
     if (status & CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT)
         pos += snprintf(buf + pos, sizeof(buf) - pos,
          "\n\tundefined name constraint");

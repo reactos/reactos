@@ -37,6 +37,10 @@ VOID NoUiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
 }
 
+VOID NoUiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
+{
+}
+
 VOID NoUiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
 {
 }

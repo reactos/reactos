@@ -1017,13 +1017,14 @@ HRESULT WINAPI ScriptFreeCache(SCRIPT_CACHE *psc)
     if (psc && *psc)
     {
         unsigned int i;
+        INT n;
         for (i = 0; i < GLYPH_MAX / GLYPH_BLOCK_SIZE; i++)
         {
             heap_free(((ScriptCache *)*psc)->widths[i]);
         }
         for (i = 0; i < 0x10; i++)
         {
-            int j;
+            unsigned int j;
             if (((ScriptCache *)*psc)->page[i])
                 for (j = 0; j < GLYPH_MAX / GLYPH_BLOCK_SIZE; j++)
                     heap_free(((ScriptCache *)*psc)->page[i]->glyphs[j]);
@@ -1033,20 +1034,20 @@ HRESULT WINAPI ScriptFreeCache(SCRIPT_CACHE *psc)
         heap_free(((ScriptCache *)*psc)->GDEF_Table);
         heap_free(((ScriptCache *)*psc)->CMAP_Table);
         heap_free(((ScriptCache *)*psc)->GPOS_Table);
-        for (i = 0; i < ((ScriptCache *)*psc)->script_count; i++)
+        for (n = 0; n < ((ScriptCache *)*psc)->script_count; n++)
         {
             int j;
-            for (j = 0; j < ((ScriptCache *)*psc)->scripts[i].language_count; j++)
+            for (j = 0; j < ((ScriptCache *)*psc)->scripts[n].language_count; j++)
             {
                 int k;
-                for (k = 0; k < ((ScriptCache *)*psc)->scripts[i].languages[j].feature_count; k++)
-                    heap_free(((ScriptCache *)*psc)->scripts[i].languages[j].features[k].lookups);
-                heap_free(((ScriptCache *)*psc)->scripts[i].languages[j].features);
+                for (k = 0; k < ((ScriptCache *)*psc)->scripts[n].languages[j].feature_count; k++)
+                    heap_free(((ScriptCache *)*psc)->scripts[n].languages[j].features[k].lookups);
+                heap_free(((ScriptCache *)*psc)->scripts[n].languages[j].features);
             }
-            for (j = 0; j < ((ScriptCache *)*psc)->scripts[i].default_language.feature_count; j++)
-                heap_free(((ScriptCache *)*psc)->scripts[i].default_language.features[j].lookups);
-            heap_free(((ScriptCache *)*psc)->scripts[i].default_language.features);
-            heap_free(((ScriptCache *)*psc)->scripts[i].languages);
+            for (j = 0; j < ((ScriptCache *)*psc)->scripts[n].default_language.feature_count; j++)
+                heap_free(((ScriptCache *)*psc)->scripts[n].default_language.features[j].lookups);
+            heap_free(((ScriptCache *)*psc)->scripts[n].default_language.features);
+            heap_free(((ScriptCache *)*psc)->scripts[n].languages);
         }
         heap_free(((ScriptCache *)*psc)->scripts);
         heap_free(((ScriptCache *)*psc)->otm);
@@ -2534,8 +2535,9 @@ HRESULT WINAPI ScriptCPtoX(int iCP,
 
             if (check >= cChars && !iMaxPos)
             {
-                for (check = clust; check < cChars; check++)
-                    special_size += get_glyph_cluster_advance(piAdvance, psva, pwLogClust, cGlyphs, cChars, check, 1);
+                int glyph;
+                for (glyph = clust; glyph < cGlyphs; glyph++)
+                    special_size += get_glyph_cluster_advance(piAdvance, psva, pwLogClust, cGlyphs, cChars, glyph, 1);
                 iSpecial = item;
                 special_size /= (cChars - item);
                 iPosX += special_size;
@@ -2666,8 +2668,9 @@ HRESULT WINAPI ScriptXtoCP(int iX,
 
             if (check >= cChars && direction > 0)
             {
-                for (check = clust; check < cChars; check++)
-                    special_size += get_glyph_cluster_advance(piAdvance, psva, pwLogClust, cGlyphs, cChars, check, direction);
+                int glyph;
+                for (glyph = clust; glyph < cGlyphs; glyph++)
+                    special_size += get_glyph_cluster_advance(piAdvance, psva, pwLogClust, cGlyphs, cChars, glyph, direction);
                 iSpecial = item;
                 special_size /= (cChars - item);
                 iPosX += special_size;
@@ -2841,7 +2844,8 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
                                     SCRIPT_GLYPHPROP *pOutGlyphProps, int *pcGlyphs)
 {
     HRESULT hr;
-    unsigned int i,g;
+    int i;
+    unsigned int g;
     BOOL rtl;
     int cluster;
 

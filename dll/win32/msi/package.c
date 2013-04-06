@@ -158,7 +158,6 @@ void msi_free_action_script( MSIPACKAGE *package, UINT script )
 
 static void free_package_structures( MSIPACKAGE *package )
 {
-    INT i;
     struct list *item, *cursor;
 
     LIST_FOR_EACH_SAFE( item, cursor, &package->features )
@@ -287,11 +286,14 @@ static void free_package_structures( MSIPACKAGE *package )
 
     if (package->script)
     {
+        INT i;
+        UINT j;
+
         for (i = 0; i < SCRIPT_MAX; i++)
             msi_free_action_script( package, i );
 
-        for (i = 0; i < package->script->UniqueActionsCount; i++)
-            msi_free( package->script->UniqueActions[i] );
+        for (j = 0; j < package->script->UniqueActionsCount; j++)
+            msi_free( package->script->UniqueActions[j] );
 
         msi_free( package->script->UniqueActions );
         msi_free( package->script );
@@ -753,6 +755,8 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szPrintHoodFolder[] = {'P','r','i','n','t','H','o','o','d','F','o','l','d','e','r',0};
     static const WCHAR szRecentFolder[] = {'R','e','c','e','n','t','F','o','l','d','e','r',0};
     static const WCHAR szComputerName[] = {'C','o','m','p','u','t','e','r','N','a','m','e',0};
+    static const WCHAR szBrowseProperty[] = {'_','B','r','o','w','s','e','P','r','o','p','e','r','t','y',0};
+    static const WCHAR szInstallDir[] = {'I','N','S','T','A','L','L','D','I','R',0};
 
     /*
      * Other things that probably should be set:
@@ -1024,6 +1028,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
             msi_free( computername );
         }
     }
+    msi_set_property( package->db, szBrowseProperty, szInstallDir, -1 );
 }
 
 static UINT msi_load_summary_properties( MSIPACKAGE *package )
@@ -1270,9 +1275,18 @@ UINT msi_create_empty_local_file( LPWSTR path, LPCWSTR suffix )
     return ERROR_SUCCESS;
 }
 
+static enum platform parse_platform( WCHAR *str )
+{
+    if (!str[0] || !strcmpW( str, szIntel )) return PLATFORM_INTEL;
+    else if (!strcmpW( str, szIntel64 )) return PLATFORM_INTEL64;
+    else if (!strcmpW( str, szX64 ) || !strcmpW( str, szAMD64 )) return PLATFORM_X64;
+    else if (!strcmpW( str, szARM )) return PLATFORM_ARM;
+    return PLATFORM_UNKNOWN;
+}
+
 static UINT msi_parse_summary( MSISUMMARYINFO *si, MSIPACKAGE *package )
 {
-    WCHAR *template, *p, *q;
+    WCHAR *template, *p, *q, *platform;
     DWORD i, count;
 
     package->version = msi_suminfo_get_int32( si, PID_PAGECOUNT );
@@ -1292,16 +1306,16 @@ static UINT msi_parse_summary( MSISUMMARYINFO *si, MSIPACKAGE *package )
         return ERROR_PATCH_PACKAGE_INVALID;
     }
     *p = 0;
-    if ((q = strchrW( template, ',' ))) *q = 0;
-    if (!template[0] || !strcmpW( template, szIntel ))
-        package->platform = PLATFORM_INTEL;
-    else if (!strcmpW( template, szIntel64 ))
-        package->platform = PLATFORM_INTEL64;
-    else if (!strcmpW( template, szX64 ) || !strcmpW( template, szAMD64 ))
-        package->platform = PLATFORM_X64;
-    else if (!strcmpW( template, szARM ))
-        package->platform = PLATFORM_ARM;
-    else
+    platform = template;
+    if ((q = strchrW( platform, ',' ))) *q = 0;
+    package->platform = parse_platform( platform );
+    while (package->platform == PLATFORM_UNKNOWN && q)
+    {
+        platform = q + 1;
+        if ((q = strchrW( platform, ',' ))) *q = 0;
+        package->platform = parse_platform( platform );
+    }
+    if (package->platform == PLATFORM_UNKNOWN)
     {
         WARN("unknown platform %s\n", debugstr_w(template));
         msi_free( template );
@@ -1514,6 +1528,28 @@ static UINT get_local_package( const WCHAR *filename, WCHAR *localfile )
     return r;
 }
 
+UINT msi_set_original_database_property( MSIDATABASE *db, const WCHAR *package )
+{
+    UINT r;
+
+    if (UrlIsW( package, URLIS_URL ))
+        r = msi_set_property( db, szOriginalDatabase, package, -1 );
+    else if (package[0] == '#')
+        r = msi_set_property( db, szOriginalDatabase, db->path, -1 );
+    else
+    {
+        DWORD len;
+        WCHAR *path;
+
+        if (!(len = GetFullPathNameW( package, 0, NULL, NULL ))) return GetLastError();
+        if (!(path = msi_alloc( len * sizeof(WCHAR) ))) return ERROR_OUTOFMEMORY;
+        len = GetFullPathNameW( package, len, path, NULL );
+        r = msi_set_property( db, szOriginalDatabase, path, len );
+        msi_free( path );
+    }
+    return r;
+}
+
 UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
 {
     static const WCHAR dotmsi[] = {'.','m','s','i',0};
@@ -1623,17 +1659,6 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         return r;
     }
     msi_set_property( package->db, szDatabase, db->path, -1 );
-
-    if( UrlIsW( szPackage, URLIS_URL ) )
-        msi_set_property( package->db, szOriginalDatabase, szPackage, -1 );
-    else if( szPackage[0] == '#' )
-        msi_set_property( package->db, szOriginalDatabase, db->path, -1 );
-    else
-    {
-        WCHAR fullpath[MAX_PATH];
-        DWORD len = GetFullPathNameW( szPackage, MAX_PATH, fullpath, NULL );
-        msi_set_property( package->db, szOriginalDatabase, fullpath, len );
-    }
     msi_set_context( package );
 
     while (1)
@@ -1659,6 +1684,12 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     {
         msi_clone_properties( package );
         msi_adjust_privilege_properties( package );
+    }
+    r = msi_set_original_database_property( package->db, szPackage );
+    if (r != ERROR_SUCCESS)
+    {
+        msiobj_release( &package->hdr );
+        return r;
     }
     if (gszLogFile)
         package->log_file = CreateFileW( gszLogFile, GENERIC_WRITE, FILE_SHARE_WRITE, NULL,

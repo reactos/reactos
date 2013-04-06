@@ -6,5 +6,5 @@
 #define UNIATA_VER_SUB_MN      1
 #define UNIATA_VER_DOT_COMMA   0,44,2,1
 #define UNIATA_VER_DOT_STR     "0.44.2.1"
-#define UNIATA_VER_YEAR        2012
-#define UNIATA_VER_YEAR_STR    "2012"
+#define UNIATA_VER_YEAR        2013
+#define UNIATA_VER_YEAR_STR    "2013"

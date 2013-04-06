@@ -700,6 +700,15 @@ typedef struct _GROUP_AFFINITY {
 /* C_ASSERT Definition */
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
 
+/* Eliminate Microsoft C/C++ compiler warning 4715 */
+#if defined(_MSC_VER) && (_MSC_VER > 1200)
+# define DEFAULT_UNREACHABLE default: __assume(0)
+#elif defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 5))))
+# define DEFAULT_UNREACHABLE default: __builtin_unreachable()
+#else
+# define DEFAULT_UNREACHABLE default: break
+#endif
+
 #define VER_WORKSTATION_NT                  0x40000000
 #define VER_SERVER_NT                       0x80000000
 #define VER_SUITE_SMALLBUSINESS             0x00000001
