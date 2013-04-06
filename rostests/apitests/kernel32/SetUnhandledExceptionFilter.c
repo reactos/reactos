@@ -156,6 +156,7 @@ VOID TestSSEExceptions(VOID)
 
         /* Clean up */
         "addl $16, %%esp\n"
+        :
     );
 #endif /* _MSC_VER */
 
