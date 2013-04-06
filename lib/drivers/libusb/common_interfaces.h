@@ -184,7 +184,7 @@ struct IUSBQueue;
         IN PVOID CallBack,                                                  \
         IN PVOID Context) PURE;                                             \
                                                                             \
-     STDMETHOD_(LPCWSTR, GetUSBType)(THIS) PURE;
+     STDMETHOD_(LPCSTR, GetUSBType)(THIS) PURE;
 
 
 #define IMP_IUSBHARDWAREDEVICE                                              \
@@ -232,7 +232,7 @@ struct IUSBQueue;
         IN PVOID CallBack,                                                  \
         IN PVOID Context);                                                  \
                                                                             \
-     STDMETHODIMP_(LPCWSTR) GetUSBType();
+     STDMETHODIMP_(LPCSTR) GetUSBType();
 
 DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 {
