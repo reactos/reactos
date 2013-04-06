@@ -85,21 +85,9 @@ typedef PVOID PKSWORKER;
         #define DEFINE_GUIDSTRUCT(guid, name) struct __declspec(uuid(guid)) name
         #define DEFINE_GUIDNAMED(name) __uuidof(struct name)
     #else
-        extern "C++" {
-            template<typename T> const GUID &__mingw_uuidof(); 
-        }
-        #define DEFINE_GUIDSTRUCT(guid, name)                                   \
-            struct __guid ## name;                                              \
-            extern "C++" {                                                      \
-            template<> inline const GUID &__mingw_uuidof<__guid ## name>() {    \
-                static const IID iid = {STATICGUIDOF(name)};                    \
-                return iid;                                                     \
-            }                                                                   \
-            template<> inline const GUID &__mingw_uuidof<__guid ## name *>() {  \
-                return __mingw_uuidof<__guid ## name>();                        \
-            }                                                                   \
-            }
-        #define DEFINE_GUIDNAMED(name) __mingw_uuidof<__guid ## name>()
+        #define DEFINE_GUIDSTRUCT(guid, name)          \
+            extern const DECLSPEC_SELECTANY GUID __uuid__##name={STATIC_##name};
+        #define DEFINE_GUIDNAMED(name) __uuid__##name
     #endif
 #else
     #define DEFINE_GUIDSTRUCT(guid, name) DEFINE_GUIDEX(name)
