@@ -23,7 +23,7 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 #define PIPE_TIMEOUT 1000
 
 /* Defined in include/reactos/services/services.h */
-// #define SCM_START_EVENT             L"SvcctrlStartEvent_A3752DX"
+#define SCM_START_EVENT             L"SvcctrlStartEvent_A3752DX"
 #define SCM_AUTOSTARTCOMPLETE_EVENT L"SC_AutoStartComplete"
 #define LSA_RPC_SERVER_ACTIVE       L"LSA_RPC_SERVER_ACTIVE"
 
