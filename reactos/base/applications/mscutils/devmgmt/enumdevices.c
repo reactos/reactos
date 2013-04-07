@@ -472,7 +472,7 @@ AddDeviceToTree(HWND hTreeView,
     TCHAR ClassGuidString[MAX_GUID_STRING_LEN];
     GUID ClassGuid;
     ULONG ulLength;
-    LPTSTR DeviceID;
+    LPTSTR DeviceID = NULL;
     INT ClassImage = 24;
     CONFIGRET cr;
 
