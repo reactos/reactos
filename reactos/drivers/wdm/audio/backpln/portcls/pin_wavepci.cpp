@@ -501,8 +501,6 @@ CPortPinWavePci::HandleKsProperty(
     //UNICODE_STRING GuidString;
     PIO_STACK_LOCATION IoStack;
 
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
     //DPRINT("IPortPinWave_HandleKsProperty entered\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
