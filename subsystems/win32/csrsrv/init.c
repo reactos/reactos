@@ -350,10 +350,10 @@ GetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
 /* FIXME: semi-failure cases! Quickie: */
 Quickie:
     /* Free the SIDs */
-    RtlFreeSid(SystemSid);
-    RtlFreeSid(WorldSid);
-    RtlFreeSid(AdminSid);
     RtlFreeSid(CreatorSid);
+    RtlFreeSid(AdminSid);
+    RtlFreeSid(WorldSid);
+    RtlFreeSid(SystemSid);
 
     /* Return */
     return Status;
@@ -820,32 +820,24 @@ CsrCreateLocalSystemSD(OUT PSECURITY_DESCRIPTOR *LocalSystemSd)
 
     /* Now create the SD itself */
     Status = RtlCreateSecurityDescriptor(SystemSd, SECURITY_DESCRIPTOR_REVISION);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Fail */
-        RtlFreeHeap(CsrHeap, 0, SystemSd);
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) goto Quit;
 
     /* Create the DACL for it */
     RtlCreateAcl(Dacl, Length, ACL_REVISION2);
 
     /* Create the ACE */
     Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, PORT_ALL_ACCESS, SystemSid);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Fail */
-        RtlFreeHeap(CsrHeap, 0, SystemSd);
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) goto Quit;
 
     /* Clear the DACL in the SD */
     Status = RtlSetDaclSecurityDescriptor(SystemSd, TRUE, Dacl, FALSE);
+    if (!NT_SUCCESS(Status)) goto Quit;
+
+Quit:
     if (!NT_SUCCESS(Status))
     {
-        /* Fail */
         RtlFreeHeap(CsrHeap, 0, SystemSd);
-        return Status;
+        SystemSd = NULL;
     }
 
     /* Free the SID and return*/

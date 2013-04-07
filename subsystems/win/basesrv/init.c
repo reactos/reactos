@@ -202,9 +202,9 @@ CreateBaseAcls(OUT PACL* Dacl,
 
     /* Allocate one ACL with 3 ACEs each for one SID */
     AclLength = sizeof(ACL) + 3 * sizeof(ACCESS_ALLOWED_ACE) +
-                RtlLengthSid(SystemSid) +
-                RtlLengthSid(RestrictedSid) +
-                RtlLengthSid(WorldSid);
+                    RtlLengthSid(SystemSid) +
+                    RtlLengthSid(WorldSid)  +
+                    RtlLengthSid(RestrictedSid);
     *Dacl = RtlAllocateHeap(BaseSrvHeap, 0, AclLength);
     ASSERT(*Dacl != NULL);
 
@@ -239,9 +239,9 @@ CreateBaseAcls(OUT PACL* Dacl,
     ASSERT(NT_SUCCESS(Status));
 
     /* The SIDs are captured, can free them now */
-    RtlFreeHeap(BaseSrvHeap, 0, SystemSid);
-    RtlFreeHeap(BaseSrvHeap, 0, WorldSid);
-    RtlFreeHeap(BaseSrvHeap, 0, RestrictedSid);
+    RtlFreeSid(RestrictedSid);
+    RtlFreeSid(WorldSid);
+    RtlFreeSid(SystemSid);
     return Status;
 }
 

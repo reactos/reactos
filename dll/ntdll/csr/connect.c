@@ -221,7 +221,7 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
                              NULL,
                              &CsrSectionViewSize,
                              PAGE_READWRITE,
-                             SEC_COMMIT,
+                             SEC_RESERVE,
                              NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -250,16 +250,16 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
 
     /* Create a SID for us */
     Status = RtlAllocateAndInitializeSid(&NtSidAuthority,
-                                          1,
-                                          SECURITY_LOCAL_SYSTEM_RID,
-                                          0,
-                                          0,
-                                          0,
-                                          0,
-                                          0,
-                                          0,
-                                          0,
-                                          &SystemSid);
+                                         1,
+                                         SECURITY_LOCAL_SYSTEM_RID,
+                                         0,
+                                         0,
+                                         0,
+                                         0,
+                                         0,
+                                         0,
+                                         0,
+                                         &SystemSid);
     if (!NT_SUCCESS(Status))
     {
         /* Failure */
@@ -278,6 +278,7 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
                                  NULL,
                                  &ConnectionInfo,
                                  &ConnectionInfoLength);
+    RtlFreeSid(SystemSid);
     NtClose(CsrSectionHandle);
     if (!NT_SUCCESS(Status))
     {

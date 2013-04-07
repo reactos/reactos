@@ -420,8 +420,8 @@ CSR_API(BaseSrvDefineDosDevice)
                                     &AdminSid);
 
         SidLength = RtlLengthSid(SystemSid) +
-            RtlLengthSid(AdminSid) +
-            RtlLengthSid(WorldSid);
+                    RtlLengthSid(AdminSid) +
+                    RtlLengthSid(WorldSid);
         Length = sizeof(ACL) + SidLength + 3 * sizeof(ACCESS_ALLOWED_ACE);
 
         SecurityDescriptor = RtlAllocateHeap(BaseSrvHeap,
