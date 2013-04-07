@@ -54,7 +54,8 @@ INT cmd_path (LPTSTR param)
 		dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
 		{
-		    ConOutResPrintf(STRING_VOL_HELP2, _T("PATH"));
+			cmd_free(pszBuffer);
+			ConOutResPrintf(STRING_VOL_HELP2, _T("PATH"));
 			return 0;
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)
