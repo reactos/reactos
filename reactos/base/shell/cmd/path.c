@@ -61,7 +61,7 @@ INT cmd_path (LPTSTR param)
 		else if (dwBuffer > ENV_BUFFER_SIZE)
 		{
 			pszBuffer = (LPTSTR)cmd_realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
-			GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
+			GetEnvironmentVariable (_T("PATH"), pszBuffer, dwBuffer);
 		}
 
 		ConOutPrintf (_T("PATH=%s\n"), pszBuffer);
