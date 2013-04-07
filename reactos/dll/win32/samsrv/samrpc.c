@@ -2349,7 +2349,18 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* FIXME: Set LogonHours attribute*/
+    /* Set LogonHours attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LogonHours",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
     /* FIXME: Set Groups attribute*/
 
     /* Set LMPwd attribute*/
@@ -7098,6 +7109,16 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
                                         REG_SZ,
                                         Buffer->All.Parameters.Buffer,
                                         Buffer->All.Parameters.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_LOGONHOURS)
+    {
+        Status = SampSetLogonHoursAttrbute(UserObject,
+                                           &Buffer->All.LogonHours);
+        if (!NT_SUCCESS(Status))
+            goto done;
     }
 
     if (WhichFields & (USER_ALL_PRIMARYGROUPID |
@@ -7144,7 +7165,6 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
 
 /*
 FIXME:
-    USER_ALL_LOGONHOURS
     USER_ALL_NTPASSWORDPRESENT
     USER_ALL_LMPASSWORDPRESENT
     USER_ALL_PASSWORDEXPIRED
@@ -7232,12 +7252,12 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             Status = SampSetUserPreferences(UserObject,
                                             Buffer);
             break;
-/*
+
         case UserLogonHoursInformation:
-            Status = SampSetUserLogonHours(UserObject,
-                                           Buffer);
+            Status = SampSetLogonHoursAttrbute(UserObject,
+                                               &Buffer->LogonHours.LogonHours);
             break;
-*/
+
         case UserNameInformation:
             Status = SampSetObjectAttribute(UserObject,
                                             L"Name",

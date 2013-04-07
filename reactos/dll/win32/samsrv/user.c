@@ -584,7 +584,7 @@ done:
 
 NTSTATUS
 SampGetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
-                          IN PSAMPR_LOGON_HOURS LogonHours)
+                          IN OUT PSAMPR_LOGON_HOURS LogonHours)
 {
     PUCHAR RawBuffer = NULL;
     ULONG Length = 0;
@@ -645,6 +645,49 @@ SampGetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
 
 done:
 
+    if (RawBuffer != NULL)
+        midl_user_free(RawBuffer);
+
+    return Status;
+}
+
+
+NTSTATUS
+SampSetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
+                          IN PSAMPR_LOGON_HOURS LogonHours)
+{
+    PUCHAR RawBuffer = NULL;
+    ULONG BufferLength;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    if (LogonHours->UnitsPerWeek > 0)
+    {
+        BufferLength = (((ULONG)LogonHours->UnitsPerWeek) + 7) / 8;
+
+        Length = BufferLength + sizeof(USHORT);
+
+        RawBuffer = midl_user_allocate(Length);
+        if (RawBuffer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        *((PUSHORT)RawBuffer) = LogonHours->UnitsPerWeek;
+
+        memcpy(&(RawBuffer[2]),
+               LogonHours->LogonHours,
+               BufferLength);
+    }
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LogonHours",
+                                    REG_BINARY,
+                                    RawBuffer,
+                                    Length);
+
+done:
     if (RawBuffer != NULL)
         midl_user_free(RawBuffer);
 
