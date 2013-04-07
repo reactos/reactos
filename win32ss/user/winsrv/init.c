@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "winsrv.h"
+#include "api.h"
 
 #define NDEBUG
 #include <debug.h>

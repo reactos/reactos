@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS/Win32 Base enviroment Subsystem Server
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            subsystems/win/basesrv/sndsntry.c
  * PURPOSE:         Sound Sentry Notifications
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

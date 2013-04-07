@@ -446,39 +446,6 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
 
 /* PUBLIC SERVER APIS *********************************************************/
 
-CSR_API(SrvGetConsoleCommandHistoryLength)
-{
-    PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLengthRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-    NTSTATUS Status;
-    PHISTORY_BUFFER Hist;
-    ULONG Length = 0;
-    INT i;
-
-    if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&GetCommandHistoryLengthRequest->ExeName.Buffer,
-                                  GetCommandHistoryLengthRequest->ExeName.Length,
-                                  sizeof(BYTE)))
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (NT_SUCCESS(Status))
-    {
-        Hist = HistoryFindBuffer(Console, &GetCommandHistoryLengthRequest->ExeName);
-        if (Hist)
-        {
-            for (i = 0; i < Hist->NumEntries; i++)
-                Length += Hist->Entries[i].Length + sizeof(WCHAR);
-        }
-        GetCommandHistoryLengthRequest->Length = Length;
-        ConSrvReleaseConsole(Console, TRUE);
-    }
-    return Status;
-}
-
 CSR_API(SrvGetConsoleCommandHistory)
 {
     PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryRequest;
@@ -522,6 +489,39 @@ CSR_API(SrvGetConsoleCommandHistory)
             }
         }
         GetCommandHistoryRequest->Length = Buffer - (PBYTE)GetCommandHistoryRequest->History;
+        ConSrvReleaseConsole(Console, TRUE);
+    }
+    return Status;
+}
+
+CSR_API(SrvGetConsoleCommandHistoryLength)
+{
+    PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLengthRequest;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+    NTSTATUS Status;
+    PHISTORY_BUFFER Hist;
+    ULONG Length = 0;
+    INT i;
+
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&GetCommandHistoryLengthRequest->ExeName.Buffer,
+                                  GetCommandHistoryLengthRequest->ExeName.Length,
+                                  sizeof(BYTE)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        Hist = HistoryFindBuffer(Console, &GetCommandHistoryLengthRequest->ExeName);
+        if (Hist)
+        {
+            for (i = 0; i < Hist->NumEntries; i++)
+                Length += Hist->Entries[i].Length + sizeof(WCHAR);
+        }
+        GetCommandHistoryLengthRequest->Length = Length;
         ConSrvReleaseConsole(Console, TRUE);
     }
     return Status;

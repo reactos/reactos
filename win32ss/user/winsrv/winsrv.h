@@ -51,24 +51,10 @@
 #include "resource.h"
 
 
+/* Globals */
 extern HINSTANCE UserServerDllInstance;
 extern HANDLE UserServerHeap;
-
 extern ULONG_PTR LogonProcessId;
-
-/* init.c */
-BOOL WINAPI _UserSoundSentry(VOID);
-
-/* harderror.c */
-VOID WINAPI UserServerHardError(IN PCSR_THREAD ThreadData,
-                                IN PHARDERROR_MSG Message);
-
-/* register.c */
-CSR_API(SrvRegisterServicesProcess);
-CSR_API(SrvRegisterLogonProcess);
-
-/* shutdown.c */
-CSR_API(SrvExitWindowsEx);
 
 #endif // __WINSRV_H__
 

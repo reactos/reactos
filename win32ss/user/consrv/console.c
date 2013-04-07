@@ -1003,6 +1003,50 @@ CSR_API(SrvFreeConsole)
     return STATUS_SUCCESS;
 }
 
+CSR_API(SrvGetConsoleMode)
+{
+    NTSTATUS Status;
+    PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
+    PCONSOLE_IO_OBJECT Object = NULL;
+
+    Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                             ConsoleModeRequest->ConsoleHandle,
+                             &Object, NULL, GENERIC_READ, TRUE, 0);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Status = STATUS_SUCCESS;
+
+    if (INPUT_BUFFER == Object->Type)
+    {
+        PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
+        PCONSOLE Console  = InputBuffer->Header.Console;
+        DWORD ConsoleMode = InputBuffer->Mode;
+
+        if (Console->QuickEdit || Console->InsertMode)
+        {
+            // Windows does this, even if it's not documented on MSDN
+            ConsoleMode |= ENABLE_EXTENDED_FLAGS;
+
+            if (Console->QuickEdit ) ConsoleMode |= ENABLE_QUICK_EDIT_MODE;
+            if (Console->InsertMode) ConsoleMode |= ENABLE_INSERT_MODE;
+        }
+
+        ConsoleModeRequest->ConsoleMode = ConsoleMode;
+    }
+    else if (SCREEN_BUFFER == Object->Type)
+    {
+        PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
+        ConsoleModeRequest->ConsoleMode = Buffer->Mode;
+    }
+    else
+    {
+        Status = STATUS_INVALID_HANDLE;
+    }
+
+    ConSrvReleaseObject(Object, TRUE);
+    return Status;
+}
+
 CSR_API(SrvSetConsoleMode)
 {
 #define CONSOLE_VALID_CONTROL_MODES ( ENABLE_EXTENDED_FLAGS   | ENABLE_INSERT_MODE  | ENABLE_QUICK_EDIT_MODE )
@@ -1086,48 +1130,41 @@ Quit:
     return Status;
 }
 
-CSR_API(SrvGetConsoleMode)
+CSR_API(SrvGetConsoleTitle)
 {
     NTSTATUS Status;
-    PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
-    PCONSOLE_IO_OBJECT Object = NULL;
+    PCONSOLE_GETSETCONSOLETITLE TitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.TitleRequest;
+    // PCSR_PROCESS Process = CsrGetClientThread()->Process;
+    PCONSOLE Console;
+    DWORD Length;
 
-    Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                             ConsoleModeRequest->ConsoleHandle,
-                             &Object, NULL, GENERIC_READ, TRUE, 0);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Status = STATUS_SUCCESS;
-
-    if (INPUT_BUFFER == Object->Type)
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID)&TitleRequest->Title,
+                                  TitleRequest->Length,
+                                  sizeof(BYTE)))
     {
-        PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
-        PCONSOLE Console  = InputBuffer->Header.Console;
-        DWORD ConsoleMode = InputBuffer->Mode;
-
-        if (Console->QuickEdit || Console->InsertMode)
-        {
-            // Windows does this, even if it's not documented on MSDN
-            ConsoleMode |= ENABLE_EXTENDED_FLAGS;
-
-            if (Console->QuickEdit ) ConsoleMode |= ENABLE_QUICK_EDIT_MODE;
-            if (Console->InsertMode) ConsoleMode |= ENABLE_INSERT_MODE;
-        }
-
-        ConsoleModeRequest->ConsoleMode = ConsoleMode;
-    }
-    else if (SCREEN_BUFFER == Object->Type)
-    {
-        PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
-        ConsoleModeRequest->ConsoleMode = Buffer->Mode;
-    }
-    else
-    {
-        Status = STATUS_INVALID_HANDLE;
+        return STATUS_INVALID_PARAMETER;
     }
 
-    ConSrvReleaseObject(Object, TRUE);
-    return Status;
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't get console\n");
+        return Status;
+    }
+
+    /* Copy title of the console to the user title buffer */
+    if (TitleRequest->Length >= sizeof(WCHAR))
+    {
+        Length = min(TitleRequest->Length - sizeof(WCHAR), Console->Title.Length);
+        memcpy(TitleRequest->Title, Console->Title.Buffer, Length);
+        TitleRequest->Title[Length / sizeof(WCHAR)] = L'\0';
+    }
+
+    TitleRequest->Length = Console->Title.Length;
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(SrvSetConsoleTitle)
@@ -1179,43 +1216,6 @@ CSR_API(SrvSetConsoleTitle)
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;
-}
-
-CSR_API(SrvGetConsoleTitle)
-{
-    NTSTATUS Status;
-    PCONSOLE_GETSETCONSOLETITLE TitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.TitleRequest;
-    // PCSR_PROCESS Process = CsrGetClientThread()->Process;
-    PCONSOLE Console;
-    DWORD Length;
-
-    if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID)&TitleRequest->Title,
-                                  TitleRequest->Length,
-                                  sizeof(BYTE)))
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console\n");
-        return Status;
-    }
-
-    /* Copy title of the console to the user title buffer */
-    if (TitleRequest->Length >= sizeof(WCHAR))
-    {
-        Length = min(TitleRequest->Length - sizeof(WCHAR), Console->Title.Length);
-        memcpy(TitleRequest->Title, Console->Title.Buffer, Length);
-        TitleRequest->Title[Length / sizeof(WCHAR)] = L'\0';
-    }
-
-    TitleRequest->Length = Console->Title.Length;
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return STATUS_SUCCESS;
 }
 
 /**********************************************************************

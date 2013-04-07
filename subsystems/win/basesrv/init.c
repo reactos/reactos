@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS/Win32 Base enviroment Subsystem Server
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            subsystems/win/basesrv/init.c
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "basesrv.h"
+#include "api.h"
 
 #define NDEBUG
 #include <debug.h>

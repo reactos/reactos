@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS/Win32 Base enviroment Subsystem Server
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            subsystems/win/basesrv/basesrv.h
  * PURPOSE:         Main header - Definitions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -25,26 +25,10 @@
 #include <win/base.h>
 
 
+/* Globals */
 extern HANDLE BaseSrvHeap;
 extern HANDLE BaseSrvSharedHeap;
 extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
-
-/* dosdev.c */
-VOID BaseInitDefineDosDevice(VOID);
-VOID BaseCleanupDefineDosDevice(VOID);
-
-CSR_API(BaseSrvDefineDosDevice);
-
-/* proc.c */
-CSR_API(BaseSrvGetTempFile);
-CSR_API(BaseSrvCreateProcess);
-CSR_API(BaseSrvCreateThread);
-CSR_API(BaseSrvExitProcess);
-CSR_API(BaseSrvGetProcessShutdownParam);
-CSR_API(BaseSrvSetProcessShutdownParam);
-
-/* sndsntry.c */
-CSR_API(BaseSrvSoundSentryNotification);
 
 #endif // __BASESRV_H__
 
