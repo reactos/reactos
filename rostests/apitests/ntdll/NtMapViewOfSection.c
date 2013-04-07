@@ -103,7 +103,9 @@ Test_PageFileSection(void)
                                      MEM_COMMIT,
                                      PAGE_READWRITE);
     ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed with Status %lx\n", Status);
-
+#ifndef CORE_7065_FIXED
+    ok(0, "Committing a range larger than the section crashes. See CORE-7065\n");
+#else
     /* Try to commit a range larger than the section */
     BaseAddress = (PVOID)0x30000000;
     ViewSize = 0x3000;
@@ -115,7 +117,7 @@ Test_PageFileSection(void)
                                      PAGE_READWRITE);
     ok(Status == STATUS_CONFLICTING_ADDRESSES,
        "NtAllocateVirtualMemory failed with wrong Status %lx\n", Status);
-
+#endif
     /* Try to commit a page after the section */
     BaseAddress = (PVOID)0x30002000;
     ViewSize = 0x1000;
