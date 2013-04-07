@@ -559,7 +559,7 @@ CPortPinWavePci::HandleKsStream(
         if (m_Capture)
             m_Position.WriteOffset += Data;
         else
-            m_Position.WriteOffset += Data;
+            m_Position.PlayOffset += Data;
 
         if (bFailed)
         {
