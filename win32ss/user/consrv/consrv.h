@@ -45,32 +45,13 @@
 #include <win/conmsg.h>
 
 
+/* Globals */
 extern HINSTANCE ConSrvDllInstance;
 extern HANDLE ConSrvHeap;
 
-/* Object type magic numbers */
-#define CONIO_INPUT_BUFFER_MAGIC    0x00000001  // -->  Input-type handles
-#define CONIO_SCREEN_BUFFER_MAGIC   0x00000002  // --> Output-type handles
-
-/* Common things to input/output/console objects */
-typedef struct Object_tt
-{
-    ULONG Type;
-    struct _CONSOLE *Console;
-    LONG AccessRead, AccessWrite;
-    LONG ExclusiveRead, ExclusiveWrite;
-    LONG HandleCount;
-} Object_t;
-
-
-typedef struct _CONSOLE_IO_HANDLE
-{
-    Object_t *Object;   /* The object on which the handle points to */
-    DWORD Access;
-    BOOL Inheritable;
-    DWORD ShareMode;
-} CONSOLE_IO_HANDLE, *PCONSOLE_IO_HANDLE;
-
+/* Opaque pointers */
+typedef struct _CONSOLE_IO_HANDLE *PCONSOLE_IO_HANDLE;
+typedef struct _CONSOLE *PCONSOLE;
 
 #define ConsoleGetPerProcessData(Process)   \
     ((PCONSOLE_PROCESS_DATA)((Process)->ServerData[CONSRV_SERVERDLL_INDEX]))
@@ -80,8 +61,8 @@ typedef struct _CONSOLE_PROCESS_DATA
     LIST_ENTRY ConsoleLink;
     PCSR_PROCESS Process;   // Process owning this structure.
     HANDLE ConsoleEvent;
-    /* PCONSOLE */ struct _CONSOLE* Console;
-    /* PCONSOLE */ struct _CONSOLE* ParentConsole;
+    PCONSOLE Console;
+    PCONSOLE ParentConsole;
 
     BOOL ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
 
@@ -92,129 +73,6 @@ typedef struct _CONSOLE_PROCESS_DATA
     LPTHREAD_START_ROUTINE CtrlDispatcher;
     LPTHREAD_START_ROUTINE PropDispatcher; // We hold the property dialog handler there, till all the GUI thingie moves out from CSRSS.
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
-
-
-#if 1 // Temporarily put there.
-/*
- * WARNING: Change the state of the console ONLY when the console is locked !
- */
-typedef enum _CONSOLE_STATE
-{
-    CONSOLE_INITIALIZING,   /* Console is initializing */
-    CONSOLE_RUNNING     ,   /* Console running */
-    CONSOLE_TERMINATING ,   /* Console about to be destroyed (but still not) */
-    CONSOLE_IN_DESTRUCTION  /* Console in destruction */
-} CONSOLE_STATE, *PCONSOLE_STATE;
-#endif
-
-
-/* alias.c */
-CSR_API(SrvAddConsoleAlias);
-CSR_API(SrvGetConsoleAlias);
-CSR_API(SrvGetConsoleAliases);
-CSR_API(SrvGetConsoleAliasesLength);
-CSR_API(SrvGetConsoleAliasExes);
-CSR_API(SrvGetConsoleAliasExesLength);
-
-/* coninput.c */
-CSR_API(SrvGetConsoleInput);
-CSR_API(SrvWriteConsoleInput);
-CSR_API(SrvReadConsole);
-CSR_API(SrvFlushConsoleInputBuffer);
-CSR_API(SrvGetConsoleNumberOfInputEvents);
-
-/* conoutput.c */
-CSR_API(SrvReadConsoleOutput);
-CSR_API(SrvWriteConsoleOutput);
-CSR_API(SrvReadConsoleOutputString);
-CSR_API(SrvWriteConsoleOutputString);
-CSR_API(SrvFillConsoleOutput);
-CSR_API(SrvWriteConsole);
-CSR_API(SrvSetConsoleCursorPosition);
-CSR_API(SrvGetConsoleCursorInfo);
-CSR_API(SrvSetConsoleCursorInfo);
-CSR_API(SrvSetConsoleTextAttribute);
-CSR_API(SrvCreateConsoleScreenBuffer);
-CSR_API(SrvGetConsoleScreenBufferInfo);
-CSR_API(SrvSetConsoleActiveScreenBuffer);
-CSR_API(SrvScrollConsoleScreenBuffer);
-CSR_API(SrvSetConsoleScreenBufferSize);
-
-/* console.c */
-CSR_API(SrvOpenConsole);
-CSR_API(SrvAllocConsole);
-CSR_API(SrvAttachConsole);
-CSR_API(SrvFreeConsole);
-CSR_API(SrvSetConsoleMode);
-CSR_API(SrvGetConsoleMode);
-CSR_API(SrvSetConsoleTitle);
-CSR_API(SrvGetConsoleTitle);
-CSR_API(SrvGetConsoleHardwareState);
-CSR_API(SrvSetConsoleHardwareState);
-CSR_API(SrvGetConsoleDisplayMode);
-CSR_API(SrvSetConsoleDisplayMode);
-CSR_API(SrvGetConsoleWindow);
-CSR_API(SrvSetConsoleIcon);
-CSR_API(SrvGetConsoleCP);
-CSR_API(SrvSetConsoleCP);
-CSR_API(SrvGetConsoleProcessList);
-CSR_API(SrvGenerateConsoleCtrlEvent);
-CSR_API(SrvGetConsoleSelectionInfo);
-
-/* handle.c */
-CSR_API(SrvCloseHandle);
-CSR_API(SrvVerifyConsoleIoHandle);
-CSR_API(SrvDuplicateHandle);
-
-NTSTATUS FASTCALL ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
-                                     PHANDLE Handle,
-                                     Object_t *Object,
-                                     DWORD Access,
-                                     BOOL Inheritable,
-                                     DWORD ShareMode);
-NTSTATUS FASTCALL ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
-                                     HANDLE Handle);
-NTSTATUS FASTCALL ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
-                                  HANDLE Handle,
-                                  Object_t** Object,
-                                  PCONSOLE_IO_HANDLE* Entry OPTIONAL,
-                                  DWORD Access,
-                                  BOOL LockConsole,
-                                  ULONG Type);
-VOID FASTCALL ConSrvReleaseObject(Object_t *Object,
-                                 BOOL IsConsoleLocked);
-NTSTATUS FASTCALL ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                                        PHANDLE pInputHandle,
-                                        PHANDLE pOutputHandle,
-                                        PHANDLE pErrorHandle,
-                                        PCONSOLE_START_INFO ConsoleStartInfo);
-NTSTATUS FASTCALL ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                                       struct _CONSOLE* Console,
-                                       BOOL CreateNewHandlesTable,
-                                       PHANDLE pInputHandle,
-                                       PHANDLE pOutputHandle,
-                                       PHANDLE pErrorHandle);
-NTSTATUS FASTCALL ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                                   struct _CONSOLE** Console,
-                                   BOOL LockConsole);
-VOID FASTCALL ConSrvReleaseConsole(struct _CONSOLE* Console,
-                                   BOOL WasConsoleLocked);
-VOID FASTCALL ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData);
-
-NTSTATUS NTAPI ConSrvNewProcess(PCSR_PROCESS SourceProcess,
-                                PCSR_PROCESS TargetProcess);
-NTSTATUS NTAPI ConSrvConnect(IN PCSR_PROCESS CsrProcess,
-                             IN OUT PVOID ConnectionInfo,
-                             IN OUT PULONG ConnectionInfoLength);
-VOID NTAPI ConSrvDisconnect(PCSR_PROCESS Process);
-
-/* lineinput.c */
-CSR_API(SrvGetConsoleCommandHistoryLength);
-CSR_API(SrvGetConsoleCommandHistory);
-CSR_API(SrvExpungeConsoleCommandHistory);
-CSR_API(SrvSetConsoleNumberOfCommands);
-CSR_API(SrvGetConsoleHistory);
-CSR_API(SrvSetConsoleHistory);
 
 #endif // __CONSRV_H__
 

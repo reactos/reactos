@@ -3,14 +3,12 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/guisettings.h
  * PURPOSE:         GUI front-end settings management
- * PROGRAMMERS:     Hermes Belusca - Maito
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *
  * NOTE: Also used by console.dll
  */
 
 #pragma once
-
-// #include "guiconsole.h"
 
 #ifndef WM_APP
     #define WM_APP 0x8000

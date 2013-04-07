@@ -3,15 +3,14 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/frontends/gui/guisettings.c
  * PURPOSE:         GUI Terminal Front-End Settings Management
- * PROGRAMMERS:     Hermes Belusca - Maito
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
-#include "conio.h"
-#include "settings.h"
-#include "guiterm.h"
+#include "include/conio.h"
+#include "include/settings.h"
 #include "guisettings.h"
 
 #define NDEBUG

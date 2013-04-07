@@ -3,17 +3,32 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/handle.c
  * PURPOSE:         Console I/O Handles functions
- * PROGRAMMERS:
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "include/conio.h"
 #include "conio.h"
+#include "handle.h"
+#include "include/console.h"
 #include "console.h"
+#include "conoutput.h"
 
 #define NDEBUG
 #include <debug.h>
+
+
+/* GLOBALS ********************************************************************/
+
+typedef struct _CONSOLE_IO_HANDLE
+{
+    PCONSOLE_IO_OBJECT Object;   /* The object on which the handle points to */
+    DWORD Access;
+    BOOL Inheritable;
+    DWORD ShareMode;
+} CONSOLE_IO_HANDLE, *PCONSOLE_IO_HANDLE;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -21,7 +36,7 @@
 static INT
 AdjustHandleCounts(PCONSOLE_IO_HANDLE Entry, INT Change)
 {
-    Object_t *Object = Entry->Object;
+    PCONSOLE_IO_OBJECT Object = Entry->Object;
 
     DPRINT("AdjustHandleCounts(0x%p, %d), Object = 0x%p, Object->HandleCount = %d, Object->Type = %lu\n", Entry, Change, Object, Object->HandleCount, Object->Type);
 
@@ -38,7 +53,7 @@ AdjustHandleCounts(PCONSOLE_IO_HANDLE Entry, INT Change)
 static VOID
 ConSrvCreateHandleEntry(PCONSOLE_IO_HANDLE Entry)
 {
-    /// LOCK /// Object_t *Object = Entry->Object;
+    /// LOCK /// PCONSOLE_IO_OBJECT Object = Entry->Object;
     /// LOCK /// EnterCriticalSection(&Object->Console->Lock);
     AdjustHandleCounts(Entry, +1);
     /// LOCK /// LeaveCriticalSection(&Object->Console->Lock);
@@ -47,7 +62,7 @@ ConSrvCreateHandleEntry(PCONSOLE_IO_HANDLE Entry)
 static VOID
 ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
 {
-    Object_t *Object = Entry->Object;
+    PCONSOLE_IO_OBJECT Object = Entry->Object;
     if (Object != NULL)
     {
         /// LOCK /// PCONSOLE Console = Object->Console;
@@ -57,7 +72,7 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
          * If this is a input handle, notify and dereference
          * all the waits related to this handle.
          */
-        if (Object->Type == CONIO_INPUT_BUFFER_MAGIC)
+        if (Object->Type == INPUT_BUFFER)
         {
             PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
 
@@ -83,7 +98,7 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
         /* If the last handle to a screen buffer is closed, delete it... */
         if (AdjustHandleCounts(Entry, -1) == 0)
         {
-            if (Object->Type == CONIO_SCREEN_BUFFER_MAGIC)
+            if (Object->Type == SCREEN_BUFFER)
             {
                 PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
                 /* ...unless it's the only buffer left. Windows allows deletion
@@ -92,7 +107,7 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
                 if (Buffer->ListEntry.Flink != Buffer->ListEntry.Blink)
                     ConioDeleteScreenBuffer(Buffer);
             }
-            else if (Object->Type == CONIO_INPUT_BUFFER_MAGIC)
+            else if (Object->Type == INPUT_BUFFER)
             {
                 DPRINT("Closing the input buffer\n");
             }
@@ -261,7 +276,7 @@ NTSTATUS
 FASTCALL
 ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                    PHANDLE Handle,
-                   Object_t *Object,
+                   PCONSOLE_IO_OBJECT Object,
                    DWORD Access,
                    BOOL Inheritable,
                    DWORD ShareMode)
@@ -318,7 +333,7 @@ ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
                    HANDLE Handle)
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
-    Object_t *Object;
+    PCONSOLE_IO_OBJECT Object;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -339,15 +354,15 @@ NTSTATUS
 FASTCALL
 ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
                 HANDLE Handle,
-                Object_t** Object,
-                PCONSOLE_IO_HANDLE* Entry OPTIONAL,
+                PCONSOLE_IO_OBJECT* Object,
+                PVOID* Entry OPTIONAL,
                 DWORD Access,
                 BOOL LockConsole,
-                ULONG Type)
+                CONSOLE_IO_OBJECT_TYPE Type)
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
     PCONSOLE_IO_HANDLE HandleEntry = NULL;
-    Object_t* ObjectEntry = NULL;
+    PCONSOLE_IO_OBJECT ObjectEntry = NULL;
 
     ASSERT(Object);
     if (Entry) *Entry = NULL;
@@ -396,7 +411,7 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
 
 VOID
 FASTCALL
-ConSrvReleaseObject(Object_t *Object,
+ConSrvReleaseObject(PCONSOLE_IO_OBJECT Object,
                     BOOL IsConsoleLocked)
 {
     ConSrvReleaseConsole(Object->Console, IsConsoleLocked);
@@ -564,63 +579,71 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 }
 
-NTSTATUS
-FASTCALL
-ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                 PCONSOLE* Console,
-                 BOOL LockConsole)
+
+/* PUBLIC SERVER APIS *********************************************************/
+
+CSR_API(SrvOpenConsole)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE ProcessConsole;
+    /*
+     * This API opens a handle to either the input buffer or to
+     * a screen-buffer of the console of the current process.
+     */
+
+    NTSTATUS Status;
+    PCONSOLE_OPENCONSOLE OpenConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.OpenConsoleRequest;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+
+    DWORD DesiredAccess = OpenConsoleRequest->Access;
+    DWORD ShareMode = OpenConsoleRequest->ShareMode;
+    PCONSOLE_IO_OBJECT Object;
+
+    OpenConsoleRequest->ConsoleHandle = INVALID_HANDLE_VALUE;
+
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't get console\n");
+        return Status;
+    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    ProcessConsole = ProcessData->Console;
 
-    if (ConSrvValidateConsole(ProcessConsole, CONSOLE_RUNNING, LockConsole))
+    /*
+     * Open a handle to either the active screen buffer or the input buffer.
+     */
+    if (OpenConsoleRequest->HandleType == HANDLE_OUTPUT)
     {
-        InterlockedIncrement(&ProcessConsole->ReferenceCount);
-        *Console = ProcessConsole;
+        Object = &Console->ActiveBuffer->Header;
+    }
+    else // HANDLE_INPUT
+    {
+        Object = &Console->InputBuffer.Header;
+    }
+
+    if (((DesiredAccess & GENERIC_READ)  && Object->ExclusiveRead  != 0) ||
+        ((DesiredAccess & GENERIC_WRITE) && Object->ExclusiveWrite != 0) ||
+        (!(ShareMode & FILE_SHARE_READ)  && Object->AccessRead     != 0) ||
+        (!(ShareMode & FILE_SHARE_WRITE) && Object->AccessWrite    != 0))
+    {
+        DPRINT1("Sharing violation\n");
+        Status = STATUS_SHARING_VIOLATION;
     }
     else
     {
-        *Console = NULL;
-        Status = STATUS_INVALID_HANDLE;
+        Status = ConSrvInsertObject(ProcessData,
+                                    &OpenConsoleRequest->ConsoleHandle,
+                                    Object,
+                                    DesiredAccess,
+                                    OpenConsoleRequest->Inheritable,
+                                    ShareMode);
     }
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+
+    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
-
-VOID FASTCALL
-ConSrvReleaseConsole(PCONSOLE Console,
-                     BOOL WasConsoleLocked)
-{
-    LONG RefCount = 0;
-
-    if (!Console) return;
-    // if (Console->ReferenceCount == 0) return; // This shouldn't happen
-    ASSERT(Console->ReferenceCount > 0);
-
-    /* The console must be locked */
-    // ASSERT(Console_locked);
-
-    /*
-     * Decrement the reference count. Save the new value too,
-     * because Console->ReferenceCount might be modified after
-     * the console gets unlocked but before we check whether we
-     * can destroy it.
-     */
-    RefCount = _InterlockedDecrement(&Console->ReferenceCount);
-
-    /* Unlock the console if needed */
-    if (WasConsoleLocked) LeaveCriticalSection(&Console->Lock);
-
-    /* Delete the console if needed */
-    if (RefCount <= 0) ConSrvDeleteConsole(Console);
-}
-
-
-/* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(SrvCloseHandle)
 {

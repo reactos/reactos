@@ -9,6 +9,8 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "console.h"
+#include "include/conio.h"
 #include "conio.h"
 
 #define NDEBUG

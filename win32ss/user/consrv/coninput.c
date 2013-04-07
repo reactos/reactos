@@ -2,14 +2,16 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/coninput.c
- * PURPOSE:         Console I/O functions
- * PROGRAMMERS:
+ * PURPOSE:         Console Input functions
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "include/conio.h"
 #include "conio.h"
+#include "handle.h"
 #include "lineinput.h"
 
 #define NDEBUG
@@ -18,17 +20,32 @@
 
 /* GLOBALS ********************************************************************/
 
+#define ConSrvGetInputBuffer(ProcessData, Handle, Ptr, Access, LockConsole)     \
+    ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), NULL,  \
+                    (Access), (LockConsole), INPUT_BUFFER)
+#define ConSrvGetInputBufferAndHandleEntry(ProcessData, Handle, Ptr, Entry, Access, LockConsole)    \
+    ConSrvGetObject((ProcessData), (Handle), (PCONSOLE_IO_OBJECT*)(Ptr), (Entry),                   \
+                    (Access), (LockConsole), INPUT_BUFFER)
+#define ConSrvReleaseInputBuffer(Buff, IsConsoleLocked) \
+    ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
+
+
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
     WideCharToMultiByte((Console)->CodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
 #define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
     MultiByteToWideChar((Console)->CodePage, 0, (sChar), 1, (dWChar), 1)
 
+typedef struct ConsoleInput_t
+{
+    LIST_ENTRY ListEntry;
+    INPUT_RECORD InputEvent;
+} ConsoleInput;
 
 typedef struct _GET_INPUT_INFO
 {
     PCSR_THREAD           CallingThread;    // The thread which called the input API.
-    PCONSOLE_IO_HANDLE    HandleEntry;      // The handle data associated with the wait thread.
+    PVOID                 HandleEntry;      // The handle data associated with the wait thread.
     PCONSOLE_INPUT_BUFFER InputBuffer;      // The input buffer corresponding to the handle.
 } GET_INPUT_INFO, *PGET_INPUT_INFO;
 
@@ -99,6 +116,22 @@ ConioProcessInputEvent(PCONSOLE Console,
     }
 
     return STATUS_SUCCESS;
+}
+
+VOID FASTCALL
+PurgeInputBuffer(PCONSOLE Console)
+{
+    PLIST_ENTRY CurrentEntry;
+    ConsoleInput* Event;
+
+    while (!IsListEmpty(&Console->InputBuffer.InputEvents))
+    {
+        CurrentEntry = RemoveHeadList(&Console->InputBuffer.InputEvents);
+        Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
+        RtlFreeHeap(ConSrvHeap, 0, Event);
+    }
+
+    CloseHandle(Console->InputBuffer.ActiveEvent);
 }
 
 static DWORD FASTCALL
@@ -331,7 +364,7 @@ ReadInputBufferThread(IN PLIST_ENTRY WaitList,
     PCONSOLE_GETINPUT GetInputRequest = &((PCONSOLE_API_MESSAGE)WaitApiMessage)->Data.GetInputRequest;
     PGET_INPUT_INFO InputInfo = (PGET_INPUT_INFO)WaitContext;
 
-    PCONSOLE_IO_HANDLE InputHandle = (PCONSOLE_IO_HANDLE)WaitArgument2;
+    PVOID InputHandle = WaitArgument2;
 
     DPRINT1("ReadInputBufferThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
 
@@ -464,7 +497,7 @@ ReadCharsThread(IN PLIST_ENTRY WaitList,
     NTSTATUS Status;
     PGET_INPUT_INFO InputInfo = (PGET_INPUT_INFO)WaitContext;
 
-    PCONSOLE_IO_HANDLE InputHandle = (PCONSOLE_IO_HANDLE)WaitArgument2;
+    PVOID InputHandle = WaitArgument2;
 
     DPRINT1("ReadCharsThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
 
@@ -676,7 +709,7 @@ CSR_API(SrvReadConsole)
     NTSTATUS Status;
     PCONSOLE_READCONSOLE ReadConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE_IO_HANDLE HandleEntry;
+    PVOID HandleEntry;
     PCONSOLE_INPUT_BUFFER InputBuffer;
     GET_INPUT_INFO InputInfo;
 
@@ -721,7 +754,7 @@ CSR_API(SrvGetConsoleInput)
     NTSTATUS Status;
     PCONSOLE_GETINPUT GetInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetInputRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE_IO_HANDLE HandleEntry;
+    PVOID HandleEntry;
     PCONSOLE_INPUT_BUFFER InputBuffer;
     GET_INPUT_INFO InputInfo;
 

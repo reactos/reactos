@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/consrv/settings.h
- * PURPOSE:         Consoles settings management
- * PROGRAMMERS:     Hermes Belusca - Maito
+ * FILE:            win32ss/user/consrv/include/settings.h
+ * PURPOSE:         Public Console Settings Management Interface
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *
  * NOTE: Adapted from existing code.
  */

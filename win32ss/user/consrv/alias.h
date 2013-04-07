@@ -9,6 +9,6 @@
 
 #pragma once
 
-VOID IntDeleteAllAliases(struct _ALIAS_HEADER *RootHeader);
+VOID IntDeleteAllAliases(PCONSOLE Console);
 
 /* EOF */

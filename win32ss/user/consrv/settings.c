@@ -2,8 +2,8 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/settings.c
- * PURPOSE:         Consoles settings management
- * PROGRAMMERS:     Hermes Belusca - Maito
+ * PURPOSE:         Console settings management
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *
  * NOTE: Adapted from existing code.
  */
@@ -11,8 +11,9 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "include/conio.h"
 #include "conio.h"
-#include "settings.h"
+#include "include/settings.h"
 
 #include <stdio.h> // for swprintf
 

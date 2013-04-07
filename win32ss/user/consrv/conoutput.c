@@ -2,14 +2,18 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/conoutput.c
- * PURPOSE:         Console I/O functions
- * PROGRAMMERS:
+ * PURPOSE:         Console Output functions
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
+#include "console.h"
+#include "include/conio.h"
 #include "conio.h"
+#include "conoutput.h"
+#include "handle.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -78,7 +82,7 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    (*Buffer)->Header.Type = CONIO_SCREEN_BUFFER_MAGIC;
+    (*Buffer)->Header.Type = SCREEN_BUFFER;
     (*Buffer)->Header.Console = Console;
     (*Buffer)->Header.HandleCount = 0;
     (*Buffer)->ScreenBufferSize = ScreenBufferSize;
@@ -1282,16 +1286,8 @@ CSR_API(SrvCreateConsoleScreenBuffer)
 
     DPRINT("SrvCreateConsoleScreenBuffer\n");
 
-    // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        return Status;
-    }
-
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /*
     if (Console->ActiveBuffer)
@@ -1335,6 +1331,8 @@ CSR_API(SrvCreateConsoleScreenBuffer)
                                       CursorSize);
     if (NT_SUCCESS(Status))
     {
+        RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
         /* Insert the new handle inside the process handles table */
         Status = ConSrvInsertObject(ProcessData,
                                     &CreateScreenBufferRequest->OutputHandle,
@@ -1342,11 +1340,9 @@ CSR_API(SrvCreateConsoleScreenBuffer)
                                     CreateScreenBufferRequest->Access,
                                     CreateScreenBufferRequest->Inheritable,
                                     CreateScreenBufferRequest->ShareMode);
+
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     }
-
-    // ConSrvReleaseConsole(Console, TRUE);
-
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
     ConSrvReleaseConsole(Console, TRUE);
     return Status;

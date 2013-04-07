@@ -2,8 +2,8 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/console.c
- * PURPOSE:         Console I/O functions
- * PROGRAMMERS:
+ * PURPOSE:         Console Management Functions
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
@@ -12,10 +12,15 @@
 #define NONAMELESSUNION
 
 #include "consrv.h"
+#include "include/conio.h"
 #include "conio.h"
+#include "handle.h"
+#include "procinit.h"
 #include "alias.h"
+#include "coninput.h"
+#include "conoutput.h"
 #include "lineinput.h"
-#include "settings.h"
+#include "include/settings.h"
 
 #include "frontends/gui/guiterm.h"
 
@@ -23,6 +28,7 @@
     #include "frontends/tui/tuiterm.h"
 #endif
 
+#include "include/console.h"
 #include "console.h"
 #include "resource.h"
 
@@ -179,6 +185,149 @@ ConioUnpause(PCONSOLE Console, UINT Flags)
             CsrDereferenceWait(&Console->WriteWaitQueue);
         }
     }
+}
+
+BOOL FASTCALL
+ConSrvValidateConsolePointer(PCONSOLE Console)
+{
+    PLIST_ENTRY ConsoleEntry;
+    PCONSOLE CurrentConsole = NULL;
+
+    if (!Console) return FALSE;
+
+    /* The console list must be locked */
+    // ASSERT(Console_list_locked);
+
+    ConsoleEntry = ConsoleList.Flink;
+    while (ConsoleEntry != &ConsoleList)
+    {
+        CurrentConsole = CONTAINING_RECORD(ConsoleEntry, CONSOLE, Entry);
+        ConsoleEntry = ConsoleEntry->Flink;
+        if (CurrentConsole == Console) return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOL FASTCALL
+ConSrvValidateConsoleState(PCONSOLE Console,
+                           CONSOLE_STATE ExpectedState)
+{
+    // if (!Console) return FALSE;
+
+    /* The console must be locked */
+    // ASSERT(Console_locked);
+
+    return (Console->State == ExpectedState);
+}
+
+BOOL FASTCALL
+ConSrvValidateConsoleUnsafe(PCONSOLE Console,
+                            CONSOLE_STATE ExpectedState,
+                            BOOL LockConsole)
+{
+    if (!Console) return FALSE;
+
+    /*
+     * Lock the console to forbid possible console's state changes
+     * (which must be done when the console is already locked).
+     * If we don't want to lock it, it's because the lock is already
+     * held. So there must be no problems.
+     */
+    if (LockConsole) EnterCriticalSection(&Console->Lock);
+
+    // ASSERT(Console_locked);
+
+    /* Check whether the console's state is what we expect */
+    if (!ConSrvValidateConsoleState(Console, ExpectedState))
+    {
+        if (LockConsole) LeaveCriticalSection(&Console->Lock);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL FASTCALL
+ConSrvValidateConsole(PCONSOLE Console,
+                      CONSOLE_STATE ExpectedState,
+                      BOOL LockConsole)
+{
+    BOOL RetVal = FALSE;
+
+    if (!Console) return FALSE;
+
+    /*
+     * Forbid creation or deletion of consoles when
+     * checking for the existence of a console.
+     */
+    ConSrvLockConsoleListShared();
+
+    if (ConSrvValidateConsolePointer(Console))
+    {
+        RetVal = ConSrvValidateConsoleUnsafe(Console,
+                                             ExpectedState,
+                                             LockConsole);
+    }
+
+    /* Unlock the console list and return */
+    ConSrvUnlockConsoleList();
+    return RetVal;
+}
+
+NTSTATUS
+FASTCALL
+ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
+                 PCONSOLE* Console,
+                 BOOL LockConsole)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCONSOLE ProcessConsole;
+
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    ProcessConsole = ProcessData->Console;
+
+    if (ConSrvValidateConsole(ProcessConsole, CONSOLE_RUNNING, LockConsole))
+    {
+        InterlockedIncrement(&ProcessConsole->ReferenceCount);
+        *Console = ProcessConsole;
+    }
+    else
+    {
+        *Console = NULL;
+        Status = STATUS_INVALID_HANDLE;
+    }
+
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    return Status;
+}
+
+VOID FASTCALL
+ConSrvReleaseConsole(PCONSOLE Console,
+                     BOOL WasConsoleLocked)
+{
+    LONG RefCount = 0;
+
+    if (!Console) return;
+    // if (Console->ReferenceCount == 0) return; // This shouldn't happen
+    ASSERT(Console->ReferenceCount > 0);
+
+    /* The console must be locked */
+    // ASSERT(Console_locked);
+
+    /*
+     * Decrement the reference count. Save the new value too,
+     * because Console->ReferenceCount might be modified after
+     * the console gets unlocked but before we check whether we
+     * can destroy it.
+     */
+    RefCount = _InterlockedDecrement(&Console->ReferenceCount);
+
+    /* Unlock the console if needed */
+    if (WasConsoleLocked) LeaveCriticalSection(&Console->Lock);
+
+    /* Delete the console if needed */
+    if (RefCount <= 0) ConSrvDeleteConsole(Console);
 }
 
 VOID WINAPI
@@ -409,7 +558,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     /*
      * Initialize the input buffer
      */
-    Console->InputBuffer.Header.Type = CONIO_INPUT_BUFFER_MAGIC;
+    Console->InputBuffer.Header.Type = INPUT_BUFFER;
     Console->InputBuffer.Header.Console = Console;
 
     SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -573,9 +722,6 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
 VOID WINAPI
 ConSrvDeleteConsole(PCONSOLE Console)
 {
-    PLIST_ENTRY CurrentEntry;
-    ConsoleInput* Event;
-
     DPRINT("ConSrvDeleteConsole\n");
 
     /*
@@ -658,16 +804,11 @@ ConSrvDeleteConsole(PCONSOLE Console)
     Console->ReferenceCount = 0;
 
     /* Discard all entries in the input event queue */
-    while (!IsListEmpty(&Console->InputBuffer.InputEvents))
-    {
-        CurrentEntry = RemoveHeadList(&Console->InputBuffer.InputEvents);
-        Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-        RtlFreeHeap(ConSrvHeap, 0, Event);
-    }
+    PurgeInputBuffer(Console);
 
-    if (Console->LineBuffer)
-        RtlFreeHeap(ConSrvHeap, 0, Console->LineBuffer);
+    if (Console->LineBuffer) RtlFreeHeap(ConSrvHeap, 0, Console->LineBuffer);
 
+    IntDeleteAllAliases(Console);
     HistoryDeleteBuffers(Console);
 
     ConioDeleteScreenBuffer(Console->ActiveBuffer);
@@ -676,12 +817,11 @@ ConSrvDeleteConsole(PCONSOLE Console)
         DPRINT1("BUG: screen buffer list not empty\n");
     }
 
-    CloseHandle(Console->InputBuffer.ActiveEvent);
+    // CloseHandle(Console->InputBuffer.ActiveEvent);
     if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
 
     RtlFreeUnicodeString(&Console->OriginalTitle);
     RtlFreeUnicodeString(&Console->Title);
-    IntDeleteAllAliases(Console->Aliases);
 
     DPRINT("ConSrvDeleteConsole - Unlocking\n");
     LeaveCriticalSection(&Console->Lock);
@@ -696,154 +836,8 @@ ConSrvDeleteConsole(PCONSOLE Console)
     ConSrvUnlockConsoleList();
 }
 
-BOOL FASTCALL
-ConSrvValidateConsolePointer(PCONSOLE Console)
-{
-    PLIST_ENTRY ConsoleEntry;
-    PCONSOLE CurrentConsole = NULL;
-
-    if (!Console) return FALSE;
-
-    /* The console list must be locked */
-    // ASSERT(Console_list_locked);
-
-    ConsoleEntry = ConsoleList.Flink;
-    while (ConsoleEntry != &ConsoleList)
-    {
-        CurrentConsole = CONTAINING_RECORD(ConsoleEntry, CONSOLE, Entry);
-        ConsoleEntry = ConsoleEntry->Flink;
-        if (CurrentConsole == Console) return TRUE;
-    }
-
-    return FALSE;
-}
-
-BOOL FASTCALL
-ConSrvValidateConsoleState(PCONSOLE Console,
-                           CONSOLE_STATE ExpectedState)
-{
-    // if (!Console) return FALSE;
-
-    /* The console must be locked */
-    // ASSERT(Console_locked);
-
-    return (Console->State == ExpectedState);
-}
-
-BOOL FASTCALL
-ConSrvValidateConsoleUnsafe(PCONSOLE Console,
-                            CONSOLE_STATE ExpectedState,
-                            BOOL LockConsole)
-{
-    if (!Console) return FALSE;
-
-    /*
-     * Lock the console to forbid possible console's state changes
-     * (which must be done when the console is already locked).
-     * If we don't want to lock it, it's because the lock is already
-     * held. So there must be no problems.
-     */
-    if (LockConsole) EnterCriticalSection(&Console->Lock);
-
-    // ASSERT(Console_locked);
-
-    /* Check whether the console's state is what we expect */
-    if (!ConSrvValidateConsoleState(Console, ExpectedState))
-    {
-        if (LockConsole) LeaveCriticalSection(&Console->Lock);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-BOOL FASTCALL
-ConSrvValidateConsole(PCONSOLE Console,
-                      CONSOLE_STATE ExpectedState,
-                      BOOL LockConsole)
-{
-    BOOL RetVal = FALSE;
-
-    if (!Console) return FALSE;
-
-    /*
-     * Forbid creation or deletion of consoles when
-     * checking for the existence of a console.
-     */
-    ConSrvLockConsoleListShared();
-
-    if (ConSrvValidateConsolePointer(Console))
-    {
-        RetVal = ConSrvValidateConsoleUnsafe(Console,
-                                             ExpectedState,
-                                             LockConsole);
-    }
-
-    /* Unlock the console list and return */
-    ConSrvUnlockConsoleList();
-    return RetVal;
-}
-
 
 /* PUBLIC SERVER APIS *********************************************************/
-
-CSR_API(SrvOpenConsole)
-{
-    NTSTATUS Status;
-    PCONSOLE_OPENCONSOLE OpenConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.OpenConsoleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
-
-    DWORD DesiredAccess = OpenConsoleRequest->Access;
-    DWORD ShareMode = OpenConsoleRequest->ShareMode;
-    Object_t *Object;
-
-    OpenConsoleRequest->ConsoleHandle = INVALID_HANDLE_VALUE;
-
-    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't get console\n");
-        return Status;
-    }
-
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
-    /*
-     * Open a handle to either the active screen buffer or the input buffer.
-     */
-    if (OpenConsoleRequest->HandleType == HANDLE_OUTPUT)
-    {
-        Object = &Console->ActiveBuffer->Header;
-    }
-    else // HANDLE_INPUT
-    {
-        Object = &Console->InputBuffer.Header;
-    }
-
-    if (((DesiredAccess & GENERIC_READ)  && Object->ExclusiveRead  != 0) ||
-        ((DesiredAccess & GENERIC_WRITE) && Object->ExclusiveWrite != 0) ||
-        (!(ShareMode & FILE_SHARE_READ)  && Object->AccessRead     != 0) ||
-        (!(ShareMode & FILE_SHARE_WRITE) && Object->AccessWrite    != 0))
-    {
-        DPRINT1("Sharing violation\n");
-        Status = STATUS_SHARING_VIOLATION;
-    }
-    else
-    {
-        Status = ConSrvInsertObject(ProcessData,
-                                    &OpenConsoleRequest->ConsoleHandle,
-                                    Object,
-                                    DesiredAccess,
-                                    OpenConsoleRequest->Inheritable,
-                                    ShareMode);
-    }
-
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-
-    ConSrvReleaseConsole(Console, TRUE);
-    return Status;
-}
 
 CSR_API(SrvAllocConsole)
 {
@@ -1020,7 +1014,7 @@ CSR_API(SrvSetConsoleMode)
     NTSTATUS Status;
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
     DWORD ConsoleMode = ConsoleModeRequest->ConsoleMode;
-    Object_t* Object  = NULL;
+    PCONSOLE_IO_OBJECT Object  = NULL;
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                              ConsoleModeRequest->ConsoleHandle,
@@ -1029,7 +1023,7 @@ CSR_API(SrvSetConsoleMode)
 
     Status = STATUS_SUCCESS;
 
-    if (CONIO_INPUT_BUFFER_MAGIC == Object->Type)
+    if (INPUT_BUFFER == Object->Type)
     {
         PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
         PCONSOLE Console = InputBuffer->Header.Console;
@@ -1067,7 +1061,7 @@ CSR_API(SrvSetConsoleMode)
         }
         InputBuffer->Mode = (ConsoleMode & CONSOLE_VALID_INPUT_MODES);
     }
-    else if (CONIO_SCREEN_BUFFER_MAGIC == Object->Type)
+    else if (SCREEN_BUFFER == Object->Type)
     {
         PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
 
@@ -1096,7 +1090,7 @@ CSR_API(SrvGetConsoleMode)
 {
     NTSTATUS Status;
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
-    Object_t* Object = NULL;
+    PCONSOLE_IO_OBJECT Object = NULL;
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                              ConsoleModeRequest->ConsoleHandle,
@@ -1105,7 +1099,7 @@ CSR_API(SrvGetConsoleMode)
 
     Status = STATUS_SUCCESS;
 
-    if (CONIO_INPUT_BUFFER_MAGIC == Object->Type)
+    if (INPUT_BUFFER == Object->Type)
     {
         PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
         PCONSOLE Console  = InputBuffer->Header.Console;
@@ -1122,7 +1116,7 @@ CSR_API(SrvGetConsoleMode)
 
         ConsoleModeRequest->ConsoleMode = ConsoleMode;
     }
-    else if (CONIO_SCREEN_BUFFER_MAGIC == Object->Type)
+    else if (SCREEN_BUFFER == Object->Type)
     {
         PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
         ConsoleModeRequest->ConsoleMode = Buffer->Mode;

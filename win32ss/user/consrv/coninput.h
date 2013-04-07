@@ -1,14 +1,13 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/consrv/consolecpl.h
- * PURPOSE:         GUI front-end settings management - Header for console.dll
+ * FILE:            win32ss/user/consrv/coninput.h
+ * PURPOSE:         Console Input functions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once
 
-#include "include/settings.h"
-#include "guisettings.h"
+VOID FASTCALL PurgeInputBuffer(PCONSOLE Console);
 
 /* EOF */

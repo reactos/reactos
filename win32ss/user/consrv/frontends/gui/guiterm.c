@@ -3,15 +3,15 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/frontends/gui/guiterm.c
  * PURPOSE:         GUI Terminal Front-End
- * PROGRAMMERS:
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
-#include "conio.h"
-#include "console.h"
-#include "settings.h"
+#include "include/conio.h"
+#include "include/console.h"
+#include "include/settings.h"
 #include "guiterm.h"
 #include "guisettings.h"
 #include "resource.h"

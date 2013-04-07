@@ -10,7 +10,8 @@
 /* INCLUDES *******************************************************************/
 
 #include "consrv.h"
-#include "conio.h"
+#include "console.h"
+#include "include/conio.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -254,12 +255,12 @@ IntDeleteAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY Entry)
 }
 
 VOID
-IntDeleteAllAliases(PALIAS_HEADER RootHeader)
+IntDeleteAllAliases(PCONSOLE Console)
 {
     PALIAS_HEADER Header, NextHeader;
     PALIAS_ENTRY Entry, NextEntry;
 
-    for (Header = RootHeader; Header; Header = NextHeader)
+    for (Header = Console->Aliases; Header; Header = NextHeader)
     {
         NextHeader = Header->Next;
         for (Entry = Header->Data; Entry; Entry = NextEntry)
