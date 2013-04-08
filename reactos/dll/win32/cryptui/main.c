@@ -299,7 +299,7 @@ static CERT_ENHKEY_USAGE *convert_usages_str_to_usage(LPSTR usageStr)
         {
             if (comma)
                 *comma = 0;
-            add_oid_to_usage(usage, ptr);
+            usage = add_oid_to_usage(usage, ptr);
         }
     }
     return usage;
@@ -327,7 +327,7 @@ static CERT_ENHKEY_USAGE *create_advanced_filter(void)
                 {
                     PCCRYPT_OID_INFO *ptr;
 
-                    for (ptr = usages; *ptr; ptr++)
+                    for (ptr = usages; advancedUsage && *ptr; ptr++)
                     {
                         DWORD i;
                         BOOL disabled = FALSE;
@@ -338,7 +338,7 @@ static CERT_ENHKEY_USAGE *create_advanced_filter(void)
                              (*ptr)->pszOID))
                                 disabled = TRUE;
                         if (!disabled)
-                            add_oid_to_usage(advancedUsage,
+                            advancedUsage = add_oid_to_usage(advancedUsage,
                              (LPSTR)(*ptr)->pszOID);
                     }
                     /* The individual strings are pointers to disabledUsagesStr,
@@ -1808,7 +1808,6 @@ static void add_icon_to_control(HWND hwnd, int id)
     DWORD conn;
     LPDATAOBJECT dataObject = NULL;
     HBITMAP bitmap = NULL;
-    RECT rect;
     STGMEDIUM stgm;
     LPOLECLIENTSITE clientSite = NULL;
     REOBJECT reObject;
@@ -1847,9 +1846,6 @@ static void add_icon_to_control(HWND hwnd, int id)
      LR_DEFAULTSIZE | LR_LOADTRANSPARENT);
     if (!bitmap)
         goto end;
-    rect.left = rect.top = 0;
-    rect.right = GetSystemMetrics(SM_CXICON);
-    rect.bottom = GetSystemMetrics(SM_CYICON);
     stgm.tymed = TYMED_GDI;
     stgm.u.hBitmap = bitmap;
     stgm.pUnkForRelease = NULL;
@@ -2844,7 +2840,7 @@ static const struct v1_field v1_fields[] = {
 
 static void add_v1_fields(HWND hwnd, struct detail_data *data)
 {
-    int i;
+    unsigned int i;
     PCCERT_CONTEXT cert = data->pCertViewInfo->pCertContext;
 
     /* The last item in v1_fields is the public key, which is not in the loop
@@ -3776,7 +3772,7 @@ static void show_edit_cert_properties_dialog(HWND parent,
 
 static void free_detail_fields(struct detail_data *data)
 {
-    DWORD i;
+    int i;
 
     for (i = 0; i < data->cFields; i++)
         HeapFree(GetProcessHeap(), 0, data->fields[i].detailed_value);
