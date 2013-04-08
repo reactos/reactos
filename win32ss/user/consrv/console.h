@@ -10,14 +10,14 @@
 
 VOID WINAPI ConSrvInitConsoleSupport(VOID);
 
-NTSTATUS WINAPI ConSrvInitConsole(OUT PCONSOLE* NewConsole,
+NTSTATUS WINAPI ConSrvInitConsole(OUT struct _CONSOLE** /* PCONSOLE* */ NewConsole,
                                   IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
                                   IN PCSR_PROCESS ConsoleLeaderProcess);
-VOID WINAPI ConSrvDeleteConsole(PCONSOLE Console);
+VOID WINAPI ConSrvDeleteConsole(struct _CONSOLE* /* PCONSOLE */ Console);
 NTSTATUS FASTCALL ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                                   PCONSOLE* Console,
+                                   struct _CONSOLE** /* PCONSOLE* */ Console,
                                    BOOL LockConsole);
-VOID FASTCALL ConSrvReleaseConsole(PCONSOLE Console,
+VOID FASTCALL ConSrvReleaseConsole(struct _CONSOLE* /* PCONSOLE */ Console,
                                    BOOL WasConsoleLocked);
 
 /* EOF */

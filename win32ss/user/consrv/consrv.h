@@ -49,10 +49,6 @@
 extern HINSTANCE ConSrvDllInstance;
 extern HANDLE ConSrvHeap;
 
-/* Opaque pointers */
-typedef struct _CONSOLE_IO_HANDLE *PCONSOLE_IO_HANDLE;
-typedef struct _CONSOLE *PCONSOLE;
-
 #define ConsoleGetPerProcessData(Process)   \
     ((PCONSOLE_PROCESS_DATA)((Process)->ServerData[CONSRV_SERVERDLL_INDEX]))
 
@@ -61,14 +57,14 @@ typedef struct _CONSOLE_PROCESS_DATA
     LIST_ENTRY ConsoleLink;
     PCSR_PROCESS Process;   // Process owning this structure.
     HANDLE ConsoleEvent;
-    PCONSOLE Console;
-    PCONSOLE ParentConsole;
+    struct _CONSOLE* /* PCONSOLE */ Console;
+    struct _CONSOLE* /* PCONSOLE */ ParentConsole;
 
     BOOL ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
 
     RTL_CRITICAL_SECTION HandleTableLock;
     ULONG HandleTableSize;
-    PCONSOLE_IO_HANDLE HandleTable; // Length-varying table
+    struct _CONSOLE_IO_HANDLE* /* PCONSOLE_IO_HANDLE */ HandleTable; // Length-varying table
 
     LPTHREAD_START_ROUTINE CtrlDispatcher;
     LPTHREAD_START_ROUTINE PropDispatcher; // We hold the property dialog handler there, till all the GUI thingie moves out from CSRSS.

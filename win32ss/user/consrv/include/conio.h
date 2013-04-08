@@ -25,7 +25,7 @@ typedef enum _CONSOLE_IO_OBJECT_TYPE
 typedef struct _CONSOLE_IO_OBJECT
 {
     CONSOLE_IO_OBJECT_TYPE Type;
-    PCONSOLE Console;
+    struct _CONSOLE* /* PCONSOLE */ Console;
     LONG AccessRead, AccessWrite;
     LONG ExclusiveRead, ExclusiveWrite;
     LONG HandleCount;
@@ -88,43 +88,43 @@ typedef struct _FRONTEND_VTBL
     /*
      * Internal interface (functions called by the console server only)
      */
-    VOID (WINAPI *CleanupConsole)(PCONSOLE Console);
-    VOID (WINAPI *WriteStream)(PCONSOLE Console,
+    VOID (WINAPI *CleanupConsole)(struct _CONSOLE* Console);
+    VOID (WINAPI *WriteStream)(struct _CONSOLE* Console,
                                SMALL_RECT* Block,
                                LONG CursorStartX,
                                LONG CursorStartY,
                                UINT ScrolledLines,
                                CHAR *Buffer,
                                UINT Length);
-    VOID (WINAPI *DrawRegion)(PCONSOLE Console,
+    VOID (WINAPI *DrawRegion)(struct _CONSOLE* Console,
                               SMALL_RECT* Region);
-    BOOL (WINAPI *SetCursorInfo)(PCONSOLE Console,
+    BOOL (WINAPI *SetCursorInfo)(struct _CONSOLE* Console,
                                  PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (WINAPI *SetScreenInfo)(PCONSOLE Console,
+    BOOL (WINAPI *SetScreenInfo)(struct _CONSOLE* Console,
                                  PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                                  UINT OldCursorX,
                                  UINT OldCursorY);
-    BOOL (WINAPI *UpdateScreenInfo)(PCONSOLE Console,
+    BOOL (WINAPI *UpdateScreenInfo)(struct _CONSOLE* Console,
                                     PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    NTSTATUS (WINAPI *ResizeBuffer)(PCONSOLE Console,
+    NTSTATUS (WINAPI *ResizeBuffer)(struct _CONSOLE* Console,
                                     PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                                     COORD Size);
-    VOID (WINAPI *ResizeTerminal)(PCONSOLE Console);
-    BOOL (WINAPI *ProcessKeyCallback)(PCONSOLE Console,
+    VOID (WINAPI *ResizeTerminal)(struct _CONSOLE* Console);
+    BOOL (WINAPI *ProcessKeyCallback)(struct _CONSOLE* Console,
                                       MSG* msg,
                                       BYTE KeyStateMenu,
                                       DWORD ShiftState,
                                       UINT VirtualKeyCode,
                                       BOOL Down);
-    VOID (WINAPI *RefreshInternalInfo)(PCONSOLE Console);
+    VOID (WINAPI *RefreshInternalInfo)(struct _CONSOLE* Console);
 
     /*
      * External interface (functions corresponding to the Console API)
      */
-    VOID (WINAPI *ChangeTitle)(PCONSOLE Console);
-    BOOL (WINAPI *ChangeIcon)(PCONSOLE Console,
+    VOID (WINAPI *ChangeTitle)(struct _CONSOLE* Console);
+    BOOL (WINAPI *ChangeIcon)(struct _CONSOLE* Console,
                               HICON hWindowIcon);
-    HWND (WINAPI *GetConsoleWindowHandle)(PCONSOLE Console);
+    HWND (WINAPI *GetConsoleWindowHandle)(struct _CONSOLE* Console);
 
 } FRONTEND_VTBL, *PFRONTEND_VTBL;
 
