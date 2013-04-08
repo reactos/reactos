@@ -40,7 +40,7 @@ void strbuf_free(strbuf_t *buf)
     heap_free(buf->buf);
 }
 
-void strbuf_append(strbuf_t *buf, const char *data, int len)
+static void strbuf_append(strbuf_t *buf, const char *data, int len)
 {
     if(buf->len+len > buf->size) {
         buf->size = buf->len+len;
@@ -57,7 +57,7 @@ void stream_init(stream_t *stream, IStream *str)
     stream->str = str;
 }
 
-BOOL stream_chr(stream_t *stream, strbuf_t *buf, char c)
+static BOOL stream_chr(stream_t *stream, strbuf_t *buf, char c)
 {
     BOOL b = TRUE;
     ULONG i;

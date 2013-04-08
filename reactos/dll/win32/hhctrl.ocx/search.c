@@ -193,6 +193,7 @@ static SearchItem *SearchCHM_Storage(SearchItem *item, IStorage *pStorage,
             FIXME("Unhandled IStorage stream element.\n");
         }
     }
+    IEnumSTATSTG_Release(elem);
     return item;
 }
 
