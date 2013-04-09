@@ -4081,7 +4081,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     //
     // Make sure that this address range actually fits within the VAD for it
     //
-    if (((StartingAddress >> PAGE_SHIFT) < FoundVad->StartingVpn) &&
+    if (((StartingAddress >> PAGE_SHIFT) < FoundVad->StartingVpn) ||
         ((EndingAddress >> PAGE_SHIFT) > FoundVad->EndingVpn))
     {
         DPRINT1("Address range does not fit into the VAD\n");
