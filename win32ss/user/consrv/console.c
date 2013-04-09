@@ -1261,10 +1261,10 @@ CSR_API(SrvGetConsoleHardwareState)
     PCONSOLE Console;
 
     Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                                  HardwareStateRequest->OutputHandle,
-                                  &Buff,
-                                  GENERIC_READ,
-                                  TRUE);
+                                   HardwareStateRequest->OutputHandle,
+                                   &Buff,
+                                   GENERIC_READ,
+                                   TRUE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get console handle in SrvGetConsoleHardwareState\n");
@@ -1286,10 +1286,10 @@ CSR_API(SrvSetConsoleHardwareState)
     PCONSOLE Console;
 
     Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                                  HardwareStateRequest->OutputHandle,
-                                  &Buff,
-                                  GENERIC_WRITE,
-                                  TRUE);
+                                   HardwareStateRequest->OutputHandle,
+                                   &Buff,
+                                   GENERIC_WRITE,
+                                   TRUE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get console handle in SrvSetConsoleHardwareState\n");
@@ -1365,6 +1365,87 @@ CSR_API(SrvSetConsoleDisplayMode)
     return Status;
 }
 
+CSR_API(SrvGetLargestConsoleWindowSize)
+{
+    NTSTATUS Status;
+    PCONSOLE_GETLARGESTWINDOWSIZE GetLargestWindowSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetLargestWindowSizeRequest;
+    PCONSOLE_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+
+    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                   GetLargestWindowSizeRequest->OutputHandle,
+                                   &Buff,
+                                   GENERIC_READ,
+                                   TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Console = Buff->Header.Console;
+    ConioGetLargestConsoleWindowSize(Console, &GetLargestWindowSizeRequest->Size);
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return STATUS_SUCCESS;
+}
+
+CSR_API(SrvSetConsoleWindowInfo)
+{
+#if 0
+    NTSTATUS Status;
+#endif
+    PCONSOLE_SETWINDOWINFO SetWindowInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetWindowInfoRequest;
+#if 0
+    PCONSOLE_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+#endif
+    SMALL_RECT WindowRect = SetWindowInfoRequest->WindowRect;
+
+#if 0
+    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                   SetWindowInfoRequest->OutputHandle,
+                                   &Buff,
+                                   GENERIC_READ,
+                                   TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Console = Buff->Header.Console;
+
+    if (SetWindowInfoRequest->Absolute == FALSE)
+    {
+        /* Relative positions given. Transform them to absolute ones */
+        WindowRect.Left   += Buff->ShowX;
+        WindowRect.Top    += Buff->ShowY;
+        WindowRect.Right  += Buff->ShowX + Console->ConsoleSize.X - 1;
+        WindowRect.Bottom += Buff->ShowY + Console->ConsoleSize.Y - 1;
+    }
+
+    if ( (WindowRect.Left < 0) || (WindowRect.Top < 0) ||
+         (WindowRect.Right  > ScreenBufferSize.X)      ||
+         (WindowRect.Bottom > ScreenBufferSize.Y)      ||
+         (WindowRect.Right  <= WindowRect.Left)        ||
+         (WindowRect.Bottom <= WindowRect.Top) )
+    {
+        ConSrvReleaseScreenBuffer(Buff, TRUE);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Buff->ShowX = WindowRect.Left;
+    Buff->ShowY = WindowRect.Top;
+
+    // These two lines are frontend-specific.
+    Console->ConsoleSize.X = WindowRect.Right - WindowRect.Left + 1;
+    Console->ConsoleSize.Y = WindowRect.Bottom - WindowRect.Top + 1;
+
+    // ConioGetLargestConsoleWindowSize(Console, &GetLargestWindowSizeRequest->Size);
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return STATUS_SUCCESS;
+#else
+    DPRINT1("SrvSetConsoleWindowInfo(0x%08x, %d, {L%d, T%d, R%d, B%d}) UNIMPLEMENTED\n",
+            SetWindowInfoRequest->OutputHandle, SetWindowInfoRequest->Absolute,
+            WindowRect.Left, WindowRect.Top, WindowRect.Right, WindowRect.Bottom);
+    return STATUS_NOT_IMPLEMENTED;
+#endif
+}
+
 CSR_API(SrvGetConsoleWindow)
 {
     NTSTATUS Status;
@@ -1375,8 +1456,8 @@ CSR_API(SrvGetConsoleWindow)
     if (!NT_SUCCESS(Status)) return Status;
 
     GetWindowRequest->WindowHandle = ConioGetConsoleWindowHandle(Console);
-    ConSrvReleaseConsole(Console, TRUE);
 
+    ConSrvReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -1394,7 +1475,6 @@ CSR_API(SrvSetConsoleIcon)
                 : STATUS_UNSUCCESSFUL);
 
     ConSrvReleaseConsole(Console, TRUE);
-
     return Status;
 }
 

@@ -125,6 +125,8 @@ typedef struct _FRONTEND_VTBL
     BOOL (WINAPI *ChangeIcon)(struct _CONSOLE* Console,
                               HICON hWindowIcon);
     HWND (WINAPI *GetConsoleWindowHandle)(struct _CONSOLE* Console);
+    VOID (WINAPI *GetLargestConsoleWindowSize)(struct _CONSOLE* Console,
+                                               PCOORD pSize);
 
 } FRONTEND_VTBL, *PFRONTEND_VTBL;
 

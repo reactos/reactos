@@ -1326,7 +1326,7 @@ GuiConsoleGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
 
     if (!ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
-    windx = CONGUI_MIN_WIDTH * GuiData->CharWidth + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
+    windx = CONGUI_MIN_WIDTH  * GuiData->CharWidth  + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
     windy = CONGUI_MIN_HEIGHT * GuiData->CharHeight + 2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
 
     minMaxInfo->ptMinTrackSize.x = windx;
@@ -2321,6 +2321,39 @@ GuiGetConsoleWindowHandle(PCONSOLE Console)
     return GuiData->hWindow;
 }
 
+static VOID WINAPI
+GuiGetLargestConsoleWindowSize(PCONSOLE Console, PCOORD pSize)
+{
+    PGUI_CONSOLE_DATA GuiData = Console->TermIFace.Data;
+    HWND hDesktop;
+    RECT desktop;
+    LONG width, height;
+
+    if (!pSize) return;
+
+    /*
+     * This is one solution. Surely better solutions exist :
+     * http://stackoverflow.com/questions/4631292/how-detect-current-screen-resolution
+     * http://www.clearevo.com/blog/programming/2011/08/30/windows_c_c++_-_get_monitor_display_screen_size_in_pixels.html
+     */
+    hDesktop = GetDesktopWindow();
+    if (!hDesktop) return;
+
+    GetWindowRect(hDesktop, &desktop);
+
+    width  = desktop.right;
+    height = desktop.bottom;
+
+    width  -= (2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE)));
+    height -= (2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION));
+
+    if (width  < 0) width  = 0;
+    if (height < 0) height = 0;
+
+    pSize->X = (SHORT)(width  / GuiData->CharWidth );
+    pSize->Y = (SHORT)(height / GuiData->CharHeight);
+}
+
 static FRONTEND_VTBL GuiVtbl =
 {
     GuiCleanupConsole,
@@ -2335,7 +2368,8 @@ static FRONTEND_VTBL GuiVtbl =
     GuiRefreshInternalInfo,
     GuiChangeTitle,
     GuiChangeIcon,
-    GuiGetConsoleWindowHandle
+    GuiGetConsoleWindowHandle,
+    GuiGetLargestConsoleWindowSize
 };
 
 NTSTATUS FASTCALL

@@ -39,11 +39,11 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepSetMode,
     ConsolepSetActiveScreenBuffer,
     ConsolepFlushInputBuffer,
-    // ConsolepGetLargestWindowSize,
+    ConsolepGetLargestWindowSize,
     ConsolepSetScreenBufferSize,
     ConsolepSetCursorPosition,
     ConsolepSetCursorInfo,
-    // ConsolepSetWindowInfo,
+    ConsolepSetWindowInfo,
     ConsolepScrollScreenBuffer,
     ConsolepSetTextAttribute,
     // ConsolepSetFont,
@@ -455,6 +455,20 @@ typedef struct
 
 typedef struct
 {
+    HANDLE OutputHandle;
+    COORD  Size;
+} CONSOLE_GETLARGESTWINDOWSIZE, *PCONSOLE_GETLARGESTWINDOWSIZE;
+
+typedef struct
+{
+    HANDLE OutputHandle;
+    BOOL   Absolute;
+    SMALL_RECT WindowRect; // New console window position in the screen-buffer frame (Absolute == TRUE)
+                           // or in the old window position frame (Absolute == FALSE).
+} CONSOLE_SETWINDOWINFO, *PCONSOLE_SETWINDOWINFO;
+
+typedef struct
+{
     HWND    WindowHandle;
 } CONSOLE_GETWINDOW, *PCONSOLE_GETWINDOW;
 
@@ -575,9 +589,13 @@ typedef struct _CONSOLE_API_MESSAGE
     ULONG Reserved;
     union
     {
+        /* Console initialization and uninitialization */
         CONSOLE_ALLOCCONSOLE AllocConsoleRequest;
         CONSOLE_ATTACHCONSOLE AttachConsoleRequest;
         CONSOLE_FREECONSOLE FreeConsoleRequest;
+
+        /* Process list */
+        CONSOLE_GETPROCESSLIST GetProcessListRequest;
 
         /* Handles */
         CONSOLE_OPENCONSOLE OpenConsoleRequest;
@@ -589,7 +607,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETSETCURSORINFO CursorInfoRequest;
         CONSOLE_SETCURSORPOSITION SetCursorPositionRequest;
 
-        /* Screen buffer */
+        /* Screen-buffer */
         CONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest;
         CONSOLE_SETACTIVESCREENBUFFER SetScreenBufferRequest;
         CONSOLE_GETSCREENBUFFERINFO ScreenBufferInfoRequest;
@@ -607,6 +625,8 @@ typedef struct _CONSOLE_API_MESSAGE
 
         /* Console window */
         CONSOLE_GETSETCONSOLETITLE TitleRequest;
+        CONSOLE_GETLARGESTWINDOWSIZE GetLargestWindowSizeRequest;
+        CONSOLE_SETWINDOWINFO SetWindowInfoRequest;
         CONSOLE_GETWINDOW GetWindowRequest;
         CONSOLE_SETICON SetIconRequest;
 
@@ -644,8 +664,6 @@ typedef struct _CONSOLE_API_MESSAGE
 
         /* Input and Output Code Pages */
         CONSOLE_GETSETINPUTOUTPUTCP ConsoleCPRequest;
-
-        CONSOLE_GETPROCESSLIST GetProcessListRequest;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 

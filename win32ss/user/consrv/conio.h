@@ -25,6 +25,8 @@
 #define ConioResizeTerminal(Console) (Console)->TermIFace.Vtbl->ResizeTerminal((Console))
 #define ConioProcessKeyCallback(Console, Msg, KeyStateMenu, ShiftState, VirtualKeyCode, Down) \
           (Console)->TermIFace.Vtbl->ProcessKeyCallback((Console), (Msg), (KeyStateMenu), (ShiftState), (VirtualKeyCode), (Down))
+#define ConioGetLargestConsoleWindowSize(Console, pSize) \
+          (Console)->TermIFace.Vtbl->GetLargestConsoleWindowSize((Console), (pSize))
 #define ConioGetConsoleWindowHandle(Console) \
           (Console)->TermIFace.Vtbl->GetConsoleWindowHandle((Console))
 #define ConioRefreshInternalInfo(Console) \

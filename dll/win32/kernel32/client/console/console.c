@@ -306,6 +306,12 @@ GetConsoleDisplayMode(LPDWORD lpModeFlags)
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETDISPLAYMODE GetDisplayModeRequest = &ApiMessage.Data.GetDisplayModeRequest;
 
+    if (lpModeFlags == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     // GetDisplayModeRequest->OutputHandle = hConsoleOutput;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -357,7 +363,7 @@ GetConsoleFontSize(HANDLE hConsoleOutput,
 /*
  * @implemented (Undocumented)
  */
-DWORD
+BOOL
 WINAPI
 GetConsoleHardwareState(HANDLE hConsoleOutput,
                         DWORD Flags,
@@ -368,6 +374,12 @@ GetConsoleHardwareState(HANDLE hConsoleOutput,
     PCONSOLE_GETSETHWSTATE HardwareStateRequest = &ApiMessage.Data.HardwareStateRequest;
 
     DPRINT1("GetConsoleHardwareState(%d, 0x%p) UNIMPLEMENTED!\n", Flags, State);
+
+    if (State == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     HardwareStateRequest->OutputHandle = hConsoleOutput;
 
@@ -523,7 +535,7 @@ SetConsoleDisplayMode(HANDLE hConsoleOutput,
 
     SetDisplayModeRequest->OutputHandle = hConsoleOutput;
     SetDisplayModeRequest->DisplayMode  = dwFlags;
-    SetDisplayModeRequest->NewSBDim     = (COORD){0,0};
+    SetDisplayModeRequest->NewSBDim     = (COORD){0, 0};
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
@@ -535,7 +547,9 @@ SetConsoleDisplayMode(HANDLE hConsoleOutput,
         return FALSE;
     }
 
-    *lpNewScreenBufferDimensions = SetDisplayModeRequest->NewSBDim;
+    if (lpNewScreenBufferDimensions)
+        *lpNewScreenBufferDimensions = SetDisplayModeRequest->NewSBDim;
+
     return TRUE;
 }
 
@@ -1022,6 +1036,12 @@ GetConsoleMode(HANDLE hConsoleHandle,
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &ApiMessage.Data.ConsoleModeRequest;
 
+    if (lpMode == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     ConsoleModeRequest->ConsoleHandle = hConsoleHandle;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -1082,16 +1102,30 @@ GetNumberOfConsoleInputEvents(HANDLE hConsoleInput,
 /*--------------------------------------------------------------
  *     GetLargestConsoleWindowSize
  *
- * @unimplemented
+ * @implemented
  */
 COORD
 WINAPI
 GetLargestConsoleWindowSize(HANDLE hConsoleOutput)
 {
-    COORD Coord = {80,25};
-    DPRINT1("GetLargestConsoleWindowSize(0x%x) UNIMPLEMENTED!\n", hConsoleOutput);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return Coord;
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETLARGESTWINDOWSIZE GetLargestWindowSizeRequest = &ApiMessage.Data.GetLargestWindowSizeRequest;
+
+    GetLargestWindowSizeRequest->OutputHandle = hConsoleOutput;
+    GetLargestWindowSizeRequest->Size = (COORD){0, 0};
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetLargestWindowSize),
+                                 sizeof(CONSOLE_GETLARGESTWINDOWSIZE));
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+    }
+
+    DPRINT1("GetLargestConsoleWindowSize, X = %d, Y = %d\n", GetLargestWindowSizeRequest->Size.X, GetLargestWindowSizeRequest->Size.Y);
+    return GetLargestWindowSizeRequest->Size;
 }
 
 
@@ -1390,7 +1424,7 @@ ScrollConsoleScreenBufferW(HANDLE hConsoleOutput,
 /*--------------------------------------------------------------
  *     SetConsoleWindowInfo
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1398,9 +1432,31 @@ SetConsoleWindowInfo(HANDLE hConsoleOutput,
                      BOOL bAbsolute,
                      CONST SMALL_RECT *lpConsoleWindow)
 {
-    DPRINT1("SetConsoleWindowInfo(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", hConsoleOutput, bAbsolute, lpConsoleWindow);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETWINDOWINFO SetWindowInfoRequest = &ApiMessage.Data.SetWindowInfoRequest;
+
+    if (lpConsoleWindow == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    SetWindowInfoRequest->OutputHandle = hConsoleOutput;
+    SetWindowInfoRequest->Absolute = bAbsolute;
+    SetWindowInfoRequest->WindowRect = *lpConsoleWindow;
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetWindowInfo),
+                                 sizeof(CONSOLE_SETWINDOWINFO));
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
