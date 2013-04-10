@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/guisettings.h
  * PURPOSE:         GUI front-end settings management
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROGRAMMERS:     Johannes Anderwald
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *
  * NOTE: Also used by console.dll
  */

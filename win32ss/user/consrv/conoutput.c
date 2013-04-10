@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/conoutput.c
  * PURPOSE:         Console Output functions
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROGRAMMERS:     Jeffrey Morlan
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/

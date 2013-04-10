@@ -9,6 +9,7 @@
 #pragma once
 
 /* Macros used to call functions in the FRONTEND_VTBL virtual table */
+
 #define ConioDrawRegion(Console, Region) (Console)->TermIFace.Vtbl->DrawRegion((Console), (Region))
 #define ConioWriteStream(Console, Block, CurStartX, CurStartY, ScrolledLines, Buffer, Length) \
           (Console)->TermIFace.Vtbl->WriteStream((Console), (Block), (CurStartX), (CurStartY), \

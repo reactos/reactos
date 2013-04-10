@@ -3,7 +3,9 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/include/conio.h
  * PURPOSE:         Public Console I/O Interface
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROGRAMMERS:     Gé van Geldorp
+ *                  Jeffrey Morlan
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once

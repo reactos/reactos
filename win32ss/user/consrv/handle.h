@@ -3,7 +3,9 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/handle.h
  * PURPOSE:         Console I/O Handles functions
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROGRAMMERS:     David Welch
+ *                  Jeffrey Morlan
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once

@@ -3,7 +3,10 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/frontends/gui/guiterm.h
  * PURPOSE:         GUI Terminal Front-End
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROGRAMMERS:     Gé van Geldorp
+ *                  Johannes Anderwald
+ *                  Jeffrey Morlan
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once

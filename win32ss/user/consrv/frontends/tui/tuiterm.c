@@ -3,7 +3,10 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/frontends/tui/tuiterm.c
  * PURPOSE:         TUI Terminal Front-End
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROGRAMMERS:     David Welch
+ *                  Gé van Geldorp
+ *                  Jeffrey Morlan
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #ifdef TUI_CONSOLE

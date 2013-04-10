@@ -3,9 +3,8 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/settings.c
  * PURPOSE:         Console settings management
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
- *
- * NOTE: Adapted from existing code.
+ * PROGRAMMERS:     Johannes Anderwald
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *******************************************************************/

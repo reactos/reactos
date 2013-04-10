@@ -3,9 +3,8 @@
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/include/settings.h
  * PURPOSE:         Public Console Settings Management Interface
- * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
- *
- * NOTE: Adapted from existing code.
+ * PROGRAMMERS:     Johannes Anderwald
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once
