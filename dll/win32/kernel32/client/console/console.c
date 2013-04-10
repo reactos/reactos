@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/console/console.c
  * PURPOSE:         Win32 server console functions
- * PROGRAMMER:      James Tabor
+ * PROGRAMMERS:     James Tabor
  *                  <jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
  */
 

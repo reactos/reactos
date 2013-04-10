@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Vista functions
- * PROGRAMMER:      Thomas Weidenmueller (w3seek@reactos.com)
+ * PROGRAMMERS:     Thomas Weidenmueller (w3seek@reactos.com)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
