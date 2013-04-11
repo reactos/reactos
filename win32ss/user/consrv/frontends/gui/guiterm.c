@@ -70,7 +70,7 @@ do {                                            \
     ConsoleLeaderCID = ProcessData->Process->ClientId;                      \
     SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_PID, (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));  \
     SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_TID, (LONG_PTR)(ConsoleLeaderCID.UniqueThread ));  \
-} while(0)
+} while (0)
 /**************************************************************/
 
 static BOOL    ConsInitialized = FALSE;
@@ -185,7 +185,7 @@ GuiConsoleAppendMenuItems(HMENU hMenu,
                         NULL);
         }
         i++;
-    } while(!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
+    } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
 }
 
 static VOID
@@ -209,8 +209,6 @@ static VOID
 GuiConsoleUpdateSelection(PCONSOLE Console, PCOORD coord);
 static VOID WINAPI
 GuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region);
-static NTSTATUS WINAPI
-GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size);
 static VOID
 GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData);
 
@@ -510,7 +508,7 @@ GuiConsoleUpdateSelection(PCONSOLE Console, PCOORD coord)
                 {
                     if ((rgn2 = CreateRectRgnIndirect(&newRect)))
                     {
-                        if(CombineRgn(rgn1, rgn2, rgn1, RGN_XOR) != ERROR)
+                        if (CombineRgn(rgn1, rgn2, rgn1, RGN_XOR) != ERROR)
                         {
                             InvalidateRgn(GuiData->hWindow, rgn1, FALSE);
                         }
@@ -861,7 +859,7 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
     GuiInvalidateCell(Console, Buff->CursorPosition.X, Buff->CursorPosition.Y);
     Buff->CursorBlinkOn = !Buff->CursorBlinkOn;
 
-    if((GuiData->OldCursor.x != Buff->CursorPosition.X) || (GuiData->OldCursor.y != Buff->CursorPosition.Y))
+    if ((GuiData->OldCursor.x != Buff->CursorPosition.X) || (GuiData->OldCursor.y != Buff->CursorPosition.Y))
     {
         SCROLLINFO xScroll;
         int OldScrollX = -1, OldScrollY = -1;
@@ -870,16 +868,16 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
         xScroll.cbSize = sizeof(SCROLLINFO);
         xScroll.fMask = SIF_POS;
         // Capture the original position of the scroll bars and save them.
-        if(GetScrollInfo(GuiData->hWindow, SB_HORZ, &xScroll))OldScrollX = xScroll.nPos;
-        if(GetScrollInfo(GuiData->hWindow, SB_VERT, &xScroll))OldScrollY = xScroll.nPos;
+        if (GetScrollInfo(GuiData->hWindow, SB_HORZ, &xScroll))OldScrollX = xScroll.nPos;
+        if (GetScrollInfo(GuiData->hWindow, SB_VERT, &xScroll))OldScrollY = xScroll.nPos;
 
         // If we successfully got the info for the horizontal scrollbar
-        if(OldScrollX >= 0)
+        if (OldScrollX >= 0)
         {
-            if((Buff->CursorPosition.X < Buff->ShowX)||(Buff->CursorPosition.X >= (Buff->ShowX + Console->ConsoleSize.X)))
+            if ((Buff->CursorPosition.X < Buff->ShowX)||(Buff->CursorPosition.X >= (Buff->ShowX + Console->ConsoleSize.X)))
             {
                 // Handle the horizontal scroll bar
-                if(Buff->CursorPosition.X >= Console->ConsoleSize.X) NewScrollX = Buff->CursorPosition.X - Console->ConsoleSize.X + 1;
+                if (Buff->CursorPosition.X >= Console->ConsoleSize.X) NewScrollX = Buff->CursorPosition.X - Console->ConsoleSize.X + 1;
                 else NewScrollX = 0;
             }
             else
@@ -888,12 +886,12 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
             }
         }
         // If we successfully got the info for the vertical scrollbar
-        if(OldScrollY >= 0)
+        if (OldScrollY >= 0)
         {
-            if((Buff->CursorPosition.Y < Buff->ShowY) || (Buff->CursorPosition.Y >= (Buff->ShowY + Console->ConsoleSize.Y)))
+            if ((Buff->CursorPosition.Y < Buff->ShowY) || (Buff->CursorPosition.Y >= (Buff->ShowY + Console->ConsoleSize.Y)))
             {
                 // Handle the vertical scroll bar
-                if(Buff->CursorPosition.Y >= Console->ConsoleSize.Y) NewScrollY = Buff->CursorPosition.Y - Console->ConsoleSize.Y + 1;
+                if (Buff->CursorPosition.Y >= Console->ConsoleSize.Y) NewScrollY = Buff->CursorPosition.Y - Console->ConsoleSize.Y + 1;
                 else NewScrollY = 0;
             }
             else
@@ -906,7 +904,7 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
         // NOTE: OldScroll# and NewScroll# will both be -1 (initial value) if the info for the respective scrollbar
         //       was not obtained successfully in the previous steps. This means their difference is 0 (no scrolling)
         //       and their associated scrollbar is left alone.
-        if((OldScrollX != NewScrollX) || (OldScrollY != NewScrollY))
+        if ((OldScrollX != NewScrollX) || (OldScrollY != NewScrollY))
         {
             Buff->ShowX = NewScrollX;
             Buff->ShowY = NewScrollY;
@@ -918,12 +916,12 @@ GuiConsoleHandleTimer(PGUI_CONSOLE_DATA GuiData)
                            NULL,
                            NULL,
                            SW_INVALIDATE);
-            if(NewScrollX >= 0)
+            if (NewScrollX >= 0)
             {
                 xScroll.nPos = NewScrollX;
                 SetScrollInfo(GuiData->hWindow, SB_HORZ, &xScroll, TRUE);
             }
-            if(NewScrollY >= 0)
+            if (NewScrollY >= 0)
             {
                 xScroll.nPos = NewScrollY;
                 SetScrollInfo(GuiData->hWindow, SB_VERT, &xScroll, TRUE);
@@ -1338,8 +1336,8 @@ GuiConsoleGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
     windx = (Console->ActiveBuffer->ScreenBufferSize.X) * GuiData->CharWidth  + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
     windy = (Console->ActiveBuffer->ScreenBufferSize.Y) * GuiData->CharHeight + 2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
 
-    if(Console->ConsoleSize.X < Console->ActiveBuffer->ScreenBufferSize.X) windy += GetSystemMetrics(SM_CYHSCROLL);    // window currently has a horizontal scrollbar
-    if(Console->ConsoleSize.Y < Console->ActiveBuffer->ScreenBufferSize.Y) windx += GetSystemMetrics(SM_CXVSCROLL);    // window currently has a vertical scrollbar
+    if (Console->ConsoleSize.X < Console->ActiveBuffer->ScreenBufferSize.X) windy += GetSystemMetrics(SM_CYHSCROLL);    // window currently has a horizontal scrollbar
+    if (Console->ConsoleSize.Y < Console->ActiveBuffer->ScreenBufferSize.Y) windx += GetSystemMetrics(SM_CXVSCROLL);    // window currently has a vertical scrollbar
 
     minMaxInfo->ptMaxTrackSize.x = windx;
     minMaxInfo->ptMaxTrackSize.y = windy;
@@ -1366,29 +1364,29 @@ GuiConsoleResize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         windy = HIWORD(lParam);
 
         // Compensate for existing scroll bars (because lParam values do not accommodate scroll bar)
-        if(Console->ConsoleSize.X < Buff->ScreenBufferSize.X) windy += GetSystemMetrics(SM_CYHSCROLL);    // window currently has a horizontal scrollbar
-        if(Console->ConsoleSize.Y < Buff->ScreenBufferSize.Y) windx += GetSystemMetrics(SM_CXVSCROLL);    // window currently has a vertical scrollbar
+        if (Console->ConsoleSize.X < Buff->ScreenBufferSize.X) windy += GetSystemMetrics(SM_CYHSCROLL);    // window currently has a horizontal scrollbar
+        if (Console->ConsoleSize.Y < Buff->ScreenBufferSize.Y) windx += GetSystemMetrics(SM_CXVSCROLL);    // window currently has a vertical scrollbar
 
         charx = windx / GuiData->CharWidth;
         chary = windy / GuiData->CharHeight;
 
         // Character alignment (round size up or down)
-        if((windx % GuiData->CharWidth) >= (GuiData->CharWidth / 2)) ++charx;
-        if((windy % GuiData->CharHeight) >= (GuiData->CharHeight / 2)) ++chary;
+        if ((windx % GuiData->CharWidth) >= (GuiData->CharWidth / 2)) ++charx;
+        if ((windy % GuiData->CharHeight) >= (GuiData->CharHeight / 2)) ++chary;
 
         // Compensate for added scroll bars in new window
-        if(charx < Buff->ScreenBufferSize.X)windy -= GetSystemMetrics(SM_CYHSCROLL);    // new window will have a horizontal scroll bar
-        if(chary < Buff->ScreenBufferSize.Y)windx -= GetSystemMetrics(SM_CXVSCROLL);    // new window will have a vertical scroll bar
+        if (charx < Buff->ScreenBufferSize.X)windy -= GetSystemMetrics(SM_CYHSCROLL);    // new window will have a horizontal scroll bar
+        if (chary < Buff->ScreenBufferSize.Y)windx -= GetSystemMetrics(SM_CXVSCROLL);    // new window will have a vertical scroll bar
 
         charx = windx / GuiData->CharWidth;
         chary = windy / GuiData->CharHeight;
 
         // Character alignment (round size up or down)
-        if((windx % GuiData->CharWidth) >= (GuiData->CharWidth / 2)) ++charx;
-        if((windy % GuiData->CharHeight) >= (GuiData->CharHeight / 2)) ++chary;
+        if ((windx % GuiData->CharWidth) >= (GuiData->CharWidth / 2)) ++charx;
+        if ((windy % GuiData->CharHeight) >= (GuiData->CharHeight / 2)) ++chary;
 
         // Resize window
-        if((charx != Console->ConsoleSize.X) || (chary != Console->ConsoleSize.Y))
+        if ((charx != Console->ConsoleSize.X) || (chary != Console->ConsoleSize.Y))
         {
             Console->ConsoleSize.X = (charx <= Buff->ScreenBufferSize.X) ? charx : Buff->ScreenBufferSize.X;
             Console->ConsoleSize.Y = (chary <= Buff->ScreenBufferSize.Y) ? chary : Buff->ScreenBufferSize.Y;
@@ -1397,8 +1395,8 @@ GuiConsoleResize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         GuiConsoleResizeWindow(GuiData);
 
         // Adjust the start of the visible area if we are attempting to show nonexistent areas
-        if((Buff->ScreenBufferSize.X - Buff->ShowX) < Console->ConsoleSize.X) Buff->ShowX = Buff->ScreenBufferSize.X - Console->ConsoleSize.X;
-        if((Buff->ScreenBufferSize.Y - Buff->ShowY) < Console->ConsoleSize.Y) Buff->ShowY = Buff->ScreenBufferSize.Y - Console->ConsoleSize.Y;
+        if ((Buff->ScreenBufferSize.X - Buff->ShowX) < Console->ConsoleSize.X) Buff->ShowX = Buff->ScreenBufferSize.X - Console->ConsoleSize.X;
+        if ((Buff->ScreenBufferSize.Y - Buff->ShowY) < Console->ConsoleSize.Y) Buff->ShowY = Buff->ScreenBufferSize.Y - Console->ConsoleSize.Y;
         InvalidateRect(GuiData->hWindow, NULL, TRUE);
 
         GuiData->WindowSizeLock = FALSE;
@@ -1809,7 +1807,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
              * So first empty the message queue.
              */
             /*
-            while(PeekMessageW(&Msg, NULL, 0, 0, PM_REMOVE))
+            while (PeekMessageW(&Msg, NULL, 0, 0, PM_REMOVE))
             {
                 TranslateMessage(&Msg);
                 DispatchMessageW(&Msg);
@@ -1873,7 +1871,7 @@ GuiConsoleGuiThread(PVOID Data)
 
     SetEvent(*GraphicsStartupEvent);
 
-    while(GetMessageW(&msg, NULL, 0, 0))
+    while (GetMessageW(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
@@ -2122,114 +2120,10 @@ GuiUpdateScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
     return TRUE;
 }
 
-static NTSTATUS WINAPI
-GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size)
+static BOOL WINAPI
+GuiIsBufferResizeSupported(PCONSOLE Console)
 {
-    BYTE * Buffer;
-    DWORD Offset = 0;
-    BYTE * OldPtr;
-    USHORT CurrentY;
-    BYTE * OldBuffer;
-#ifdef HAVE_WMEMSET
-    USHORT value = MAKEWORD(' ', ScreenBuffer->ScreenDefaultAttrib);
-#else
-    DWORD i;
-#endif
-    DWORD diff;
-
-    /* Buffer size is not allowed to be smaller than window size */
-    if (Size.X < Console->ConsoleSize.X || Size.Y < Console->ConsoleSize.Y)
-        return STATUS_INVALID_PARAMETER;
-
-    if (Size.X == ScreenBuffer->ScreenBufferSize.X && Size.Y == ScreenBuffer->ScreenBufferSize.Y)
-    {
-        // FIXME: Trigger a buffer resize event ??
-        return STATUS_SUCCESS;
-    }
-
-    Buffer = RtlAllocateHeap(ConSrvHeap, 0, Size.X * Size.Y * 2);
-    if (!Buffer)
-        return STATUS_NO_MEMORY;
-
-    DPRINT1("Resizing (%d,%d) to (%d,%d)\n", ScreenBuffer->ScreenBufferSize.X, ScreenBuffer->ScreenBufferSize.Y, Size.X, Size.Y);
-    OldBuffer = ScreenBuffer->Buffer;
-
-    for (CurrentY = 0; CurrentY < ScreenBuffer->ScreenBufferSize.Y && CurrentY < Size.Y; CurrentY++)
-    {
-        OldPtr = ConioCoordToPointer(ScreenBuffer, 0, CurrentY);
-        if (Size.X <= ScreenBuffer->ScreenBufferSize.X)
-        {
-            /* reduce size */
-            RtlCopyMemory(&Buffer[Offset], OldPtr, Size.X * 2);
-            Offset += (Size.X * 2);
-        }
-        else
-        {
-            /* enlarge size */
-            RtlCopyMemory(&Buffer[Offset], OldPtr, ScreenBuffer->ScreenBufferSize.X * 2);
-            Offset += (ScreenBuffer->ScreenBufferSize.X * 2);
-
-            diff = Size.X - ScreenBuffer->ScreenBufferSize.X;
-            /* zero new part of it */
-#ifdef HAVE_WMEMSET
-            wmemset((PWCHAR)&Buffer[Offset], value, diff);
-#else
-            for (i = 0; i < diff; i++)
-            {
-                Buffer[Offset++] = ' ';
-                Buffer[Offset++] = ScreenBuffer->ScreenDefaultAttrib;
-            }
-#endif
-        }
-    }
-
-    if (Size.Y > ScreenBuffer->ScreenBufferSize.Y)
-    {
-        diff = Size.X * (Size.Y - ScreenBuffer->ScreenBufferSize.Y);
-#ifdef HAVE_WMEMSET
-        wmemset((PWCHAR)&Buffer[Offset], value, diff);
-#else
-        for (i = 0; i < diff; i++)
-        {
-            Buffer[Offset++] = ' ';
-            Buffer[Offset++] = ScreenBuffer->ScreenDefaultAttrib;
-        }
-#endif
-    }
-
-    (void)InterlockedExchangePointer((PVOID volatile*)&ScreenBuffer->Buffer, Buffer);
-    RtlFreeHeap(ConSrvHeap, 0, OldBuffer);
-    ScreenBuffer->ScreenBufferSize = Size;
-    ScreenBuffer->VirtualY = 0;
-
-    /* Ensure cursor and window are within buffer */
-    if (ScreenBuffer->CursorPosition.X >= Size.X)
-        ScreenBuffer->CursorPosition.X = Size.X - 1;
-    if (ScreenBuffer->CursorPosition.Y >= Size.Y)
-        ScreenBuffer->CursorPosition.Y = Size.Y - 1;
-    if (ScreenBuffer->ShowX > Size.X - Console->ConsoleSize.X)
-        ScreenBuffer->ShowX = Size.X - Console->ConsoleSize.X;
-    if (ScreenBuffer->ShowY > Size.Y - Console->ConsoleSize.Y)
-        ScreenBuffer->ShowY = Size.Y - Console->ConsoleSize.Y;
-
-    /*
-     * Trigger a buffer resize event
-     */
-    if (Console->InputBuffer.Mode & ENABLE_WINDOW_INPUT)
-    {
-        INPUT_RECORD er;
-
-        er.EventType = WINDOW_BUFFER_SIZE_EVENT;
-        er.Event.WindowBufferSizeEvent.dwSize = ScreenBuffer->ScreenBufferSize;
-
-        ConioProcessInputEvent(Console, &er);
-    }
-
-    /* TODO: Should update scrollbar, but can't use anything that
-     * calls SendMessage or it could cause deadlock --> Use PostMessage */
-    // TODO: Tell the terminal to resize its scrollbars.
-
-    return STATUS_SUCCESS;
+    return TRUE;
 }
 
 static VOID WINAPI
@@ -2365,7 +2259,7 @@ static FRONTEND_VTBL GuiVtbl =
     GuiSetCursorInfo,
     GuiSetScreenInfo,
     GuiUpdateScreenInfo,
-    GuiResizeBuffer,
+    GuiIsBufferResizeSupported,
     GuiResizeTerminal,
     GuiProcessKeyCallback,
     GuiRefreshInternalInfo,

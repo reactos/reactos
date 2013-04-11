@@ -1566,7 +1566,7 @@ NtUserCloseWindowStation(
 typedef enum _CONSOLECONTROL
 {
     GuiConsoleWndClassAtom,
-    TuiConsoleWndClassAtom,
+    ConsoleAcquireDisplayOwnership,
 } CONSOLECONTROL, *PCONSOLECONTROL;
 
 NTSTATUS

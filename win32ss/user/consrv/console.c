@@ -25,10 +25,7 @@
 #include "include/settings.h"
 
 #include "frontends/gui/guiterm.h"
-
-#ifdef TUI_CONSOLE
-    #include "frontends/tui/tuiterm.h"
-#endif
+#include "frontends/tui/tuiterm.h"
 
 #include "include/console.h"
 #include "console.h"
@@ -57,13 +54,11 @@ static RTL_RESOURCE ListLock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-#ifdef TUI_CONSOLE
 static BOOL
 DtbgIsDesktopVisible(VOID)
 {
     return !((BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE));
 }
-#endif
 
 static ULONG
 ConSrvConsoleCtrlEventTimeout(DWORD Event,
@@ -640,13 +635,8 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
      * If we are not in GUI-mode, start the text-mode terminal emulator.
      * If we fail, try to start the GUI-mode terminal emulator.
      */
-#ifdef TUI_CONSOLE
     GuiMode = DtbgIsDesktopVisible();
-#else
-    GuiMode = TRUE;
-#endif
 
-#ifdef TUI_CONSOLE
     if (!GuiMode)
     {
         DPRINT1("CONSRV: Opening text-mode terminal emulator\n");
@@ -660,7 +650,6 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
             GuiMode = TRUE;
         }
     }
-#endif
 
     /*
      * Try to open the GUI-mode terminal emulator. Two cases are possible:

@@ -9,10 +9,11 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#include "conio.h"
+#pragma once
 
 NTSTATUS FASTCALL TuiInitConsole(PCONSOLE Console,
-                                 PCONSOLE_INFO ConsoleInfo);
-PCONSOLE FASTCALL TuiGetFocusConsole(VOID);
+                                 /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,
+                                 PCONSOLE_INFO ConsoleInfo,
+                                 DWORD ProcessId);
 
 /* EOF */

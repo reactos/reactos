@@ -2,18 +2,18 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/frontends/tui/tuiterm.c
- * PURPOSE:         TUI Terminal Front-End
+ * PURPOSE:         TUI Terminal Front-End - Virtual Consoles...
  * PROGRAMMERS:     David Welch
  *                  Gé van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#ifdef TUI_CONSOLE
-
 #include "consrv.h"
-#include "settings.h"
-#include "tuiconsole.h"
+#include "include/conio.h"
+// #include "include/console.h"
+#include "include/settings.h"
+#include "tuiterm.h"
 #include <drivers/blue/ntddblue.h>
 
 #define NDEBUG
@@ -22,24 +22,35 @@
 
 /* GLOBALS ********************************************************************/
 
+#define GetNextConsole(Console) \
+    CONTAINING_RECORD(Console->Entry.Flink, TUI_CONSOLE_DATA, Entry)
+
+#define GetPrevConsole(Console) \
+    CONTAINING_RECORD(Console->Entry.Blink, TUI_CONSOLE_DATA, Entry)
+
+
 /* TUI Console Window Class name */
 #define TUI_CONSOLE_WINDOW_CLASS L"TuiConsoleWindowClass"
 
 typedef struct _TUI_CONSOLE_DATA
 {
     CRITICAL_SECTION Lock;
+    LIST_ENTRY Entry;           /* Entry in the list of virtual consoles */
     // HANDLE hTuiInitEvent;
 
-    HWND hWindow;
+    HWND hWindow;               /* Handle to the console's window (used for the window's procedure */
 
-    PCONSOLE Console;
-    // TUI_CONSOLE_INFO TuiInfo;
+    PCONSOLE Console;           /* Pointer to the owned console */
+    // TUI_CONSOLE_INFO TuiInfo;   /* TUI terminal settings */
 } TUI_CONSOLE_DATA, *PTUI_CONSOLE_DATA;
 
-CRITICAL_SECTION ActiveConsoleLock;
+/* List of the maintained virtual consoles and its lock */
+static LIST_ENTRY VirtConsList;
+static PTUI_CONSOLE_DATA ActiveConsole; /* The active console on screen */
+static CRITICAL_SECTION ActiveVirtConsLock;
+
 static COORD PhysicalConsoleSize;
 static HANDLE ConsoleDeviceHandle;
-static PCONSOLE ActiveConsole;
 
 static BOOL ConsInitialized = FALSE;
 
@@ -153,24 +164,10 @@ done:
 /**\
 \******************************************************************************/
 
-static LRESULT CALLBACK
-TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    if (msg == WM_ACTIVATE)
-    {
-        if (LOWORD(wParam) != WA_INACTIVE)
-        {
-            SetFocus(hWnd);
-            ConioDrawConsole(ActiveConsole);
-        }
-    }
-    return DefWindowProcW(hWnd, msg, wParam, lParam);
-}
-
 static BOOL FASTCALL
 TuiSwapConsole(INT Next)
 {
-    static PCONSOLE SwapConsole = NULL; /* console we are thinking about swapping with */
+    static PTUI_CONSOLE_DATA SwapConsole = NULL; /* Console we are thinking about swapping with */
     DWORD BytesReturned;
     ANSI_STRING Title;
     PVOID Buffer;
@@ -178,28 +175,26 @@ TuiSwapConsole(INT Next)
 
     if (0 != Next)
     {
-        /* alt-tab, swap consoles */
-        /* move SwapConsole to next console, and print its title */
-        EnterCriticalSection(&ActiveConsoleLock);
-        if (!SwapConsole)
-        {
-            SwapConsole = ActiveConsole;
-        }
+        /*
+         * Alt-Tab, swap consoles.
+         * move SwapConsole to next console, and print its title.
+         */
+        EnterCriticalSection(&ActiveVirtConsLock);
+        if (!SwapConsole) SwapConsole = ActiveConsole;
 
-        SwapConsole = (0 < Next ? SwapConsole->Next : SwapConsole->Prev);
-        Title.MaximumLength = RtlUnicodeStringToAnsiSize(&SwapConsole->Title);
+        SwapConsole = (0 < Next ? GetNextConsole(SwapConsole) : GetPrevConsole(SwapConsole));
+        Title.MaximumLength = RtlUnicodeStringToAnsiSize(&SwapConsole->Console->Title);
         Title.Length = 0;
-        Buffer = RtlAllocateHeap(ConSrvHeap,
-                           0,
-                           sizeof(COORD) + Title.MaximumLength);
-        pos = (PCOORD )Buffer;
-        Title.Buffer = (PVOID)((ULONG_PTR)Buffer + sizeof( COORD ));
+        Buffer = RtlAllocateHeap(ConSrvHeap, 0,
+                                 sizeof(COORD) + Title.MaximumLength);
+        pos = (PCOORD)Buffer;
+        Title.Buffer = (PVOID)((ULONG_PTR)Buffer + sizeof(COORD));
 
-        RtlUnicodeStringToAnsiString(&Title, &SwapConsole->Title, FALSE);
-        pos->Y = PhysicalConsoleSize.Y / 2;
+        RtlUnicodeStringToAnsiString(&Title, &SwapConsole->Console->Title, FALSE);
         pos->X = (PhysicalConsoleSize.X - Title.Length) / 2;
-        /* redraw the console to clear off old title */
-        ConioDrawConsole(ActiveConsole);
+        pos->Y = PhysicalConsoleSize.Y / 2;
+        /* Redraw the console to clear off old title */
+        ConioDrawConsole(ActiveConsole->Console);
         if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
                              NULL, 0, Buffer, sizeof(COORD) + Title.Length,
                              &BytesReturned, NULL))
@@ -207,120 +202,34 @@ TuiSwapConsole(INT Next)
             DPRINT1( "Error writing to console\n" );
         }
         RtlFreeHeap(ConSrvHeap, 0, Buffer);
-        LeaveCriticalSection(&ActiveConsoleLock);
+        LeaveCriticalSection(&ActiveVirtConsLock);
 
         return TRUE;
     }
     else if (NULL != SwapConsole)
     {
-        EnterCriticalSection(&ActiveConsoleLock);
+        EnterCriticalSection(&ActiveVirtConsLock);
         if (SwapConsole != ActiveConsole)
         {
-            /* first remove swapconsole from the list */
-            SwapConsole->Prev->Next = SwapConsole->Next;
-            SwapConsole->Next->Prev = SwapConsole->Prev;
-            /* now insert before activeconsole */
-            SwapConsole->Next = ActiveConsole;
-            SwapConsole->Prev = ActiveConsole->Prev;
-            ActiveConsole->Prev->Next = SwapConsole;
-            ActiveConsole->Prev = SwapConsole;
+            /* First remove swapconsole from the list */
+            SwapConsole->Entry.Blink->Flink = SwapConsole->Entry.Flink;
+            SwapConsole->Entry.Flink->Blink = SwapConsole->Entry.Blink;
+            /* Now insert before activeconsole */
+            SwapConsole->Entry.Flink = &ActiveConsole->Entry;
+            SwapConsole->Entry.Blink = ActiveConsole->Entry.Blink;
+            ActiveConsole->Entry.Blink->Flink = &SwapConsole->Entry;
+            ActiveConsole->Entry.Blink = &SwapConsole->Entry;
         }
         ActiveConsole = SwapConsole;
         SwapConsole = NULL;
-        ConioDrawConsole(ActiveConsole);
-        LeaveCriticalSection(&ActiveConsoleLock);
+        ConioDrawConsole(ActiveConsole->Console);
+        LeaveCriticalSection(&ActiveVirtConsLock);
         return TRUE;
     }
     else
     {
         return FALSE;
     }
-}
-
-static BOOL WINAPI
-TuiProcessKeyCallback(PCONSOLE Console, MSG* msg, BYTE KeyStateMenu, DWORD ShiftState, UINT VirtualKeyCode, BOOL Down)
-{
-    if (0 != (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) &&
-        VK_TAB == VirtualKeyCode)
-    {
-        if (Down)
-        {
-            TuiSwapConsole(ShiftState & SHIFT_PRESSED ? -1 : 1);
-        }
-
-        return TRUE;
-    }
-    else if (VK_MENU == VirtualKeyCode && !Down)
-    {
-        return TuiSwapConsole(0);
-    }
-
-    return FALSE;
-}
-
-static BOOL FASTCALL
-TuiInit(DWORD OemCP)
-{
-    CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
-    DWORD BytesReturned;
-    WNDCLASSEXW wc;
-    ATOM ConsoleClassAtom;
-    USHORT TextAttribute = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
-
-    ScmLoadDriver(L"Blue");
-
-    ConsoleDeviceHandle = CreateFileW(L"\\\\.\\BlueScreen", FILE_ALL_ACCESS, 0, NULL,
-                                      OPEN_EXISTING, 0, NULL);
-    if (INVALID_HANDLE_VALUE == ConsoleDeviceHandle)
-    {
-        DPRINT1("Failed to open BlueScreen.\n");
-        return FALSE;
-    }
-
-    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_LOADFONT,
-                         &OemCP, sizeof(OemCP), NULL, 0,
-                         &BytesReturned, NULL))
-    {
-        DPRINT1("Failed to load the font for codepage %d\n", OemCP);
-        /* Let's suppose the font is good enough to continue */
-    }
-
-    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE,
-                         &TextAttribute, sizeof(TextAttribute), NULL, 0,
-                         &BytesReturned, NULL))
-    {
-        DPRINT1("Failed to set text attribute\n");
-    }
-
-    ActiveConsole = NULL;
-    InitializeCriticalSection(&ActiveConsoleLock);
-    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
-                         NULL, 0, &ScrInfo, sizeof(ScrInfo), &BytesReturned, NULL))
-    {
-        DPRINT1("Failed to get console info\n");
-        return FALSE;
-    }
-    PhysicalConsoleSize = ScrInfo.dwSize;
-
-    RtlZeroMemory(&wc, sizeof(WNDCLASSEXW));
-    wc.cbSize = sizeof(WNDCLASSEXW);
-    wc.lpszClassName = TUI_CONSOLE_WINDOW_CLASS;
-    wc.lpfnWndProc = TuiConsoleWndProc;
-    wc.cbWndExtra = GWLP_CONSOLEWND_ALLOC;
-    wc.hInstance = ConSrvDllInstance;
-
-    ConsoleClassAtom = RegisterClassExW(&wc);
-    if (ConsoleClassAtom == 0)
-    {
-        DPRINT1("Failed to register TUI console wndproc\n");
-        return FALSE;
-    }
-    else
-    {
-        NtUserConsoleControl(TuiConsoleWndClassAtom, &ConsoleClassAtom, sizeof(ATOM));
-    }
-
-    return TRUE;
 }
 
 static VOID FASTCALL
@@ -346,6 +255,211 @@ TuiCopyRect(char *Dest, PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
     }
 }
 
+static LRESULT CALLBACK
+TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == WM_ACTIVATE)
+    {
+        if (LOWORD(wParam) != WA_INACTIVE)
+        {
+            SetFocus(hWnd);
+            ConioDrawConsole(ActiveConsole->Console);
+        }
+    }
+    return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+static DWORD WINAPI
+TuiConsoleThread(PVOID Data)
+{
+    PTUI_CONSOLE_DATA TuiData = (PTUI_CONSOLE_DATA)Data;
+    PCONSOLE Console = TuiData->Console;
+    HWND NewWindow;
+    MSG msg;
+
+    NewWindow = CreateWindowW(TUI_CONSOLE_WINDOW_CLASS,
+                              Console->Title.Buffer,
+                              0,
+                              -32000, -32000, 0, 0,
+                              NULL, NULL,
+                              ConSrvDllInstance,
+                              (PVOID)Console);
+    if (NULL == NewWindow)
+    {
+        DPRINT1("CONSRV: Unable to create console window\n");
+        return 1;
+    }
+    TuiData->hWindow = NewWindow;
+
+    SetForegroundWindow(TuiData->hWindow);
+    NtUserConsoleControl(ConsoleAcquireDisplayOwnership, NULL, 0);
+
+    while (GetMessageW(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+
+        if (msg.message == WM_CHAR    || msg.message == WM_SYSCHAR    ||
+            msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN ||
+            msg.message == WM_KEYUP   || msg.message == WM_SYSKEYUP)
+        {
+            ConioProcessKey(Console, &msg);
+        }
+    }
+
+    return 0;
+}
+
+static BOOL
+TuiInit(DWORD OemCP)
+{
+    BOOL Ret = FALSE;
+    CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
+    DWORD BytesReturned;
+    WNDCLASSEXW wc;
+    ATOM ConsoleClassAtom;
+    USHORT TextAttribute = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+
+    /* Exit if we were already initialized */
+    if (ConsInitialized) return TRUE;
+
+    /*
+     * Initialize the TUI front-end:
+     * - load the console driver,
+     * - set default screen attributes,
+     * - grab the console size.
+     */
+    ScmLoadDriver(L"Blue");
+
+    ConsoleDeviceHandle = CreateFileW(L"\\\\.\\BlueScreen",
+                                      FILE_ALL_ACCESS,
+                                      0, NULL,
+                                      OPEN_EXISTING,
+                                      0, NULL);
+    if (INVALID_HANDLE_VALUE == ConsoleDeviceHandle)
+    {
+        DPRINT1("Failed to open BlueScreen.\n");
+        return FALSE;
+    }
+
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_LOADFONT,
+                         &OemCP, sizeof(OemCP), NULL, 0,
+                         &BytesReturned, NULL))
+    {
+        DPRINT1("Failed to load the font for codepage %d\n", OemCP);
+        /* Let's suppose the font is good enough to continue */
+    }
+
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE,
+                         &TextAttribute, sizeof(TextAttribute), NULL, 0,
+                         &BytesReturned, NULL))
+    {
+        DPRINT1("Failed to set text attribute\n");
+    }
+
+    ActiveConsole = NULL;
+    InitializeListHead(&VirtConsList);
+    InitializeCriticalSection(&ActiveVirtConsLock);
+
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
+                         NULL, 0, &ScrInfo, sizeof(ScrInfo), &BytesReturned, NULL))
+    {
+        DPRINT1("Failed to get console info\n");
+        Ret = FALSE;
+        goto Quit;
+    }
+    PhysicalConsoleSize = ScrInfo.dwSize;
+
+    /* Register the TUI notification window class */
+    RtlZeroMemory(&wc, sizeof(WNDCLASSEXW));
+    wc.cbSize = sizeof(WNDCLASSEXW);
+    wc.lpszClassName = TUI_CONSOLE_WINDOW_CLASS;
+    wc.lpfnWndProc = TuiConsoleWndProc;
+    wc.cbWndExtra = 0;
+    wc.hInstance = ConSrvDllInstance;
+
+    ConsoleClassAtom = RegisterClassExW(&wc);
+    if (ConsoleClassAtom == 0)
+    {
+        DPRINT1("Failed to register TUI console wndproc\n");
+        Ret = FALSE;
+    }
+    else
+    {
+        Ret = TRUE;
+    }
+
+Quit:
+    if (Ret == FALSE)
+    {
+        DeleteCriticalSection(&ActiveVirtConsLock);
+        CloseHandle(ConsoleDeviceHandle);
+    }
+
+    ConsInitialized = Ret;
+    return Ret;
+}
+
+
+
+/******************************************************************************
+ *                             TUI Console Driver                             *
+ ******************************************************************************/
+
+static VOID WINAPI
+TuiCleanupConsole(PCONSOLE Console)
+{
+    PTUI_CONSOLE_DATA TuiData = Console->TermIFace.Data;
+
+    /* Close the notification window */
+    DestroyWindow(TuiData->hWindow);
+
+    /*
+     * Set the active console to the next one
+     * and remove the console from the list.
+     */
+    EnterCriticalSection(&ActiveVirtConsLock);
+    ActiveConsole = GetNextConsole(TuiData);
+    RemoveEntryList(&TuiData->Entry);
+
+    // /* Switch to next console */
+    // if (ActiveConsole == TuiData)
+    // if (ActiveConsole->Console == Console)
+    // {
+        // ActiveConsole = (TuiData->Entry.Flink != TuiData->Entry ? GetNextConsole(TuiData) : NULL);
+    // }
+
+    // if (GetNextConsole(TuiData) != TuiData)
+    // {
+        // TuiData->Entry.Blink->Flink = TuiData->Entry.Flink;
+        // TuiData->Entry.Flink->Blink = TuiData->Entry.Blink;
+    // }
+
+    LeaveCriticalSection(&ActiveVirtConsLock);
+
+    /* Switch to the next console */
+    if (NULL != ActiveConsole) ConioDrawConsole(ActiveConsole->Console);
+
+    Console->TermIFace.Data = NULL;
+    DeleteCriticalSection(&TuiData->Lock);
+    RtlFreeHeap(ConSrvHeap, 0, TuiData);
+}
+
+static VOID WINAPI
+TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, LONG CursorStartX, LONG CursorStartY,
+               UINT ScrolledLines, CHAR *Buffer, UINT Length)
+{
+    DWORD BytesWritten;
+    PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
+
+    if (ActiveConsole->Console->ActiveBuffer != Buff) return;
+
+    if (!WriteFile(ConsoleDeviceHandle, Buffer, Length, &BytesWritten, NULL))
+    {
+        DPRINT1("Error writing to BlueScreen\n");
+    }
+}
+
 static VOID WINAPI
 TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
 {
@@ -354,10 +468,7 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
     PCONSOLE_DRAW ConsoleDraw;
     UINT ConsoleDrawSize;
 
-    if (ActiveConsole != Console)
-    {
-        return;
-    }
+    if (ActiveConsole->Console != Console) return;
 
     ConsoleDrawSize = sizeof(CONSOLE_DRAW) +
                       (ConioRectWidth(Region) * ConioRectHeight(Region)) * 2;
@@ -387,34 +498,13 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
     RtlFreeHeap(ConSrvHeap, 0, ConsoleDraw);
 }
 
-static VOID WINAPI
-TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, LONG CursorStartX, LONG CursorStartY,
-               UINT ScrolledLines, CHAR *Buffer, UINT Length)
-{
-    DWORD BytesWritten;
-    PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
-
-    if (ActiveConsole->ActiveBuffer != Buff)
-    {
-        return;
-    }
-
-    if (!WriteFile(ConsoleDeviceHandle, Buffer, Length, &BytesWritten, NULL))
-    {
-        DPRINT1("Error writing to BlueScreen\n");
-    }
-}
-
 static BOOL WINAPI
 TuiSetCursorInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
 {
     CONSOLE_CURSOR_INFO Info;
     DWORD BytesReturned;
 
-    if (ActiveConsole->ActiveBuffer != Buff)
-    {
-        return TRUE;
-    }
+    if (ActiveConsole->Console->ActiveBuffer != Buff) return TRUE;
 
     Info.dwSize = ConioEffectiveCursorSize(Console, 100);
     Info.bVisible = Buff->CursorInfo.bVisible;
@@ -435,10 +525,7 @@ TuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, UINT OldCursorX,
     CONSOLE_SCREEN_BUFFER_INFO Info;
     DWORD BytesReturned;
 
-    if (ActiveConsole->ActiveBuffer != Buff)
-    {
-        return TRUE;
-    }
+    if (ActiveConsole->Console->ActiveBuffer != Buff) return TRUE;
 
     Info.dwCursorPosition = Buff->CursorPosition;
     Info.wAttributes = Buff->ScreenDefaultAttrib;
@@ -460,35 +547,46 @@ TuiUpdateScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
     return TRUE;
 }
 
+static BOOL WINAPI
+TuiIsBufferResizeSupported(PCONSOLE Console)
+{
+    return (Console && Console->State == CONSOLE_INITIALIZING ? TRUE : FALSE);
+}
+
 static VOID WINAPI
-TuiChangeTitle(PCONSOLE Console)
+TuiResizeTerminal(PCONSOLE Console)
+{
+}
+
+static BOOL WINAPI
+TuiProcessKeyCallback(PCONSOLE Console, MSG* msg, BYTE KeyStateMenu, DWORD ShiftState, UINT VirtualKeyCode, BOOL Down)
+{
+    if (0 != (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) &&
+        VK_TAB == VirtualKeyCode)
+    {
+        if (Down)
+        {
+            TuiSwapConsole(ShiftState & SHIFT_PRESSED ? -1 : 1);
+        }
+
+        return TRUE;
+    }
+    else if (VK_MENU == VirtualKeyCode && !Down)
+    {
+        return TuiSwapConsole(0);
+    }
+
+    return FALSE;
+}
+
+static VOID WINAPI
+TuiRefreshInternalInfo(PCONSOLE Console)
 {
 }
 
 static VOID WINAPI
-TuiCleanupConsole(PCONSOLE Console)
+TuiChangeTitle(PCONSOLE Console)
 {
-    DestroyWindow(Console->hWindow);
-
-    EnterCriticalSection(&ActiveConsoleLock);
-
-    /* Switch to next console */
-    if (ActiveConsole == Console)
-    {
-        ActiveConsole = Console->Next != Console ? Console->Next : NULL;
-    }
-
-    if (Console->Next != Console)
-    {
-        Console->Prev->Next = Console->Next;
-        Console->Next->Prev = Console->Prev;
-    }
-    LeaveCriticalSection(&ActiveConsoleLock);
-
-    if (NULL != ActiveConsole)
-    {
-        ConioDrawConsole(ActiveConsole);
-    }
 }
 
 static BOOL WINAPI
@@ -500,57 +598,18 @@ TuiChangeIcon(PCONSOLE Console, HICON hWindowIcon)
 static HWND WINAPI
 TuiGetConsoleWindowHandle(PCONSOLE Console)
 {
-    return Console->hWindow;
+    PTUI_CONSOLE_DATA TuiData = Console->TermIFace.Data;
+    return TuiData->hWindow;
 }
 
-static NTSTATUS WINAPI
-TuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size)
+static VOID WINAPI
+TuiGetLargestConsoleWindowSize(PCONSOLE Console, PCOORD pSize)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    if (!pSize) return;
+    *pSize = PhysicalConsoleSize;
 }
 
-static DWORD WINAPI
-TuiConsoleThread(PVOID Data)
-{
-    PCONSOLE Console = (PCONSOLE) Data;
-    HWND NewWindow;
-    MSG msg;
-
-    NewWindow = CreateWindowW(TUI_CONSOLE_WINDOW_CLASS,
-                              Console->Title.Buffer,
-                              0,
-                              -32000, -32000, 0, 0,
-                              NULL, NULL,
-                              ConSrvDllInstance,
-                              (PVOID)Console);
-    if (NULL == NewWindow)
-    {
-        DPRINT1("CONSRV: Unable to create console window\n");
-        return 1;
-    }
-    Console->hWindow = NewWindow;
-
-    SetForegroundWindow(Console->hWindow);
-
-    while (TRUE)
-    {
-        GetMessageW(&msg, 0, 0, 0);
-        DispatchMessage(&msg);
-        TranslateMessage(&msg);
-
-        if (msg.message == WM_CHAR    || msg.message == WM_SYSCHAR    ||
-            msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN ||
-            msg.message == WM_KEYUP   || msg.message == WM_SYSKEYUP)
-        {
-            ConioProcessKey(Console, &msg);
-        }
-    }
-
-    return 0;
-}
-
-static TERMINAL_VTBL TuiVtbl =
+static FRONTEND_VTBL TuiVtbl =
 {
     TuiCleanupConsole,
     TuiWriteStream,
@@ -558,72 +617,86 @@ static TERMINAL_VTBL TuiVtbl =
     TuiSetCursorInfo,
     TuiSetScreenInfo,
     TuiUpdateScreenInfo,
+    TuiIsBufferResizeSupported,
+    TuiResizeTerminal,
+    TuiProcessKeyCallback,
+    TuiRefreshInternalInfo,
     TuiChangeTitle,
     TuiChangeIcon,
     TuiGetConsoleWindowHandle,
-    TuiResizeBuffer,
-    TuiProcessKeyCallback
+    TuiGetLargestConsoleWindowSize
 };
 
 NTSTATUS FASTCALL
 TuiInitConsole(PCONSOLE Console,
-               PCONSOLE_INFO ConsoleInfo)
+               /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,
+               PCONSOLE_INFO ConsoleInfo,
+               DWORD ProcessId)
 {
+    PTUI_CONSOLE_DATA TuiData;
     HANDLE ThreadHandle;
 
-    if (!ConsInitialized)
-    {
-        ConsInitialized = TRUE;
-        if (!TuiInit(Console->CodePage))
-        {
-            ConsInitialized = FALSE;
-            return STATUS_UNSUCCESSFUL;
-        }
-    }
+    if (Console == NULL || ConsoleInfo == NULL)
+        return STATUS_INVALID_PARAMETER;
 
+    /* Initialize the TUI terminal emulator */
+    if (!TuiInit(Console->CodePage)) return STATUS_UNSUCCESSFUL;
+
+    /* Initialize the console */
     Console->TermIFace.Vtbl = &TuiVtbl;
-    Console->hWindow = NULL;
-    Console->Size = PhysicalConsoleSize;
-    Console->ActiveBuffer->ScreenBufferSize = PhysicalConsoleSize;
 
+    TuiData = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY,
+                              sizeof(TUI_CONSOLE_DATA));
+    if (!TuiData)
+    {
+        DPRINT1("CONSRV: Failed to create TUI_CONSOLE_DATA\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+    Console->TermIFace.Data = (PVOID)TuiData;
+    TuiData->Console = Console;
+    TuiData->hWindow = NULL;
+
+    InitializeCriticalSection(&TuiData->Lock);
+
+    /*
+     * HACK: Resize the console since we don't support for now changing
+     * the console size when we display it with the hardware.
+     */
+    Console->ConsoleSize = PhysicalConsoleSize;
+    ConioResizeBuffer(Console, Console->ActiveBuffer, PhysicalConsoleSize);
+    Console->ActiveBuffer->DisplayMode |= CONSOLE_FULLSCREEN_MODE;
+    // ConioResizeTerminal(Console);
+
+    /*
+     * Contrary to what we do in the GUI front-end, here we create
+     * an input thread for each console. It will dispatch all the
+     * input messages to the proper console (on the GUI it is done
+     * via the default GUI dispatch thread).
+     */
     ThreadHandle = CreateThread(NULL,
                                 0,
                                 TuiConsoleThread,
-                                (PVOID)Console,
+                                (PVOID)TuiData,
                                 0,
                                 NULL);
     if (NULL == ThreadHandle)
     {
         DPRINT1("CONSRV: Unable to create console thread\n");
+        TuiCleanupConsole(Console);
         return STATUS_UNSUCCESSFUL;
     }
     CloseHandle(ThreadHandle);
 
-    EnterCriticalSection(&ActiveConsoleLock);
-    if (NULL != ActiveConsole)
-    {
-        Console->Prev = ActiveConsole;
-        Console->Next = ActiveConsole->Next;
-        ActiveConsole->Next->Prev = Console;
-        ActiveConsole->Next = Console;
-    }
-    else
-    {
-        Console->Prev = Console;
-        Console->Next = Console;
-    }
-    ActiveConsole = Console;
-    LeaveCriticalSection(&ActiveConsoleLock);
+    /*
+     * Insert the newly created console in the list of virtual consoles
+     * and activate it (give it the focus).
+     */
+    EnterCriticalSection(&ActiveVirtConsLock);
+    InsertTailList(&VirtConsList, &TuiData->Entry);
+    ActiveConsole = TuiData;
+    LeaveCriticalSection(&ActiveVirtConsLock);
 
     return STATUS_SUCCESS;
 }
-
-PCONSOLE FASTCALL
-TuiGetFocusConsole(VOID)
-{
-    return ActiveConsole;
-}
-
-#endif
 
 /* EOF */

@@ -30,7 +30,7 @@ do {    \
     ((Rect)->Left) = left;  \
     ((Rect)->Bottom) = bottom;  \
     ((Rect)->Right) = right;    \
-} while(0)
+} while (0)
 
 #define ConioIsRectEmpty(Rect) \
     (((Rect)->Left > (Rect)->Right) || ((Rect)->Top > (Rect)->Bottom))
@@ -399,6 +399,119 @@ ConioMoveRegion(PCONSOLE_SCREEN_BUFFER ScreenBuffer,
         SY += YDelta;
         DY += YDelta;
     }
+}
+
+NTSTATUS FASTCALL
+ConioResizeBuffer(PCONSOLE Console,
+                  PCONSOLE_SCREEN_BUFFER ScreenBuffer,
+                  COORD Size)
+{
+    BYTE * Buffer;
+    DWORD Offset = 0;
+    BYTE * OldPtr;
+    USHORT CurrentY;
+    BYTE * OldBuffer;
+#ifdef HAVE_WMEMSET
+    USHORT value = MAKEWORD(' ', ScreenBuffer->ScreenDefaultAttrib);
+#else
+    DWORD i;
+#endif
+    DWORD diff;
+
+    /* Buffer size is not allowed to be smaller than window size */
+    if (Size.X < Console->ConsoleSize.X || Size.Y < Console->ConsoleSize.Y)
+        return STATUS_INVALID_PARAMETER;
+
+    if (Size.X == ScreenBuffer->ScreenBufferSize.X && Size.Y == ScreenBuffer->ScreenBufferSize.Y)
+    {
+        // FIXME: Trigger a buffer resize event ??
+        return STATUS_SUCCESS;
+    }
+
+    if (!ConioIsBufferResizeSupported(Console)) return STATUS_NOT_SUPPORTED;
+
+    Buffer = RtlAllocateHeap(ConSrvHeap, 0, Size.X * Size.Y * 2);
+    if (!Buffer) return STATUS_NO_MEMORY;
+
+    DPRINT1("Resizing (%d,%d) to (%d,%d)\n", ScreenBuffer->ScreenBufferSize.X, ScreenBuffer->ScreenBufferSize.Y, Size.X, Size.Y);
+    OldBuffer = ScreenBuffer->Buffer;
+
+    for (CurrentY = 0; CurrentY < ScreenBuffer->ScreenBufferSize.Y && CurrentY < Size.Y; CurrentY++)
+    {
+        OldPtr = ConioCoordToPointer(ScreenBuffer, 0, CurrentY);
+        if (Size.X <= ScreenBuffer->ScreenBufferSize.X)
+        {
+            /* reduce size */
+            RtlCopyMemory(&Buffer[Offset], OldPtr, Size.X * 2);
+            Offset += (Size.X * 2);
+        }
+        else
+        {
+            /* enlarge size */
+            RtlCopyMemory(&Buffer[Offset], OldPtr, ScreenBuffer->ScreenBufferSize.X * 2);
+            Offset += (ScreenBuffer->ScreenBufferSize.X * 2);
+
+            diff = Size.X - ScreenBuffer->ScreenBufferSize.X;
+            /* zero new part of it */
+#ifdef HAVE_WMEMSET
+            wmemset((PWCHAR)&Buffer[Offset], value, diff);
+#else
+            for (i = 0; i < diff; i++)
+            {
+                Buffer[Offset++] = ' ';
+                Buffer[Offset++] = ScreenBuffer->ScreenDefaultAttrib;
+            }
+#endif
+        }
+    }
+
+    if (Size.Y > ScreenBuffer->ScreenBufferSize.Y)
+    {
+        diff = Size.X * (Size.Y - ScreenBuffer->ScreenBufferSize.Y);
+#ifdef HAVE_WMEMSET
+        wmemset((PWCHAR)&Buffer[Offset], value, diff);
+#else
+        for (i = 0; i < diff; i++)
+        {
+            Buffer[Offset++] = ' ';
+            Buffer[Offset++] = ScreenBuffer->ScreenDefaultAttrib;
+        }
+#endif
+    }
+
+    (void)InterlockedExchangePointer((PVOID volatile*)&ScreenBuffer->Buffer, Buffer);
+    RtlFreeHeap(ConSrvHeap, 0, OldBuffer);
+    ScreenBuffer->ScreenBufferSize = Size;
+    ScreenBuffer->VirtualY = 0;
+
+    /* Ensure cursor and window are within buffer */
+    if (ScreenBuffer->CursorPosition.X >= Size.X)
+        ScreenBuffer->CursorPosition.X = Size.X - 1;
+    if (ScreenBuffer->CursorPosition.Y >= Size.Y)
+        ScreenBuffer->CursorPosition.Y = Size.Y - 1;
+    if (ScreenBuffer->ShowX > Size.X - Console->ConsoleSize.X)
+        ScreenBuffer->ShowX = Size.X - Console->ConsoleSize.X;
+    if (ScreenBuffer->ShowY > Size.Y - Console->ConsoleSize.Y)
+        ScreenBuffer->ShowY = Size.Y - Console->ConsoleSize.Y;
+
+    /*
+     * Trigger a buffer resize event
+     */
+    if (Console->InputBuffer.Mode & ENABLE_WINDOW_INPUT)
+    {
+        INPUT_RECORD er;
+
+        er.EventType = WINDOW_BUFFER_SIZE_EVENT;
+        er.Event.WindowBufferSizeEvent.dwSize = ScreenBuffer->ScreenBufferSize;
+
+        ConioProcessInputEvent(Console, &er);
+    }
+
+    /* TODO: Should update scrollbar, but can't use anything that
+     * calls SendMessage or it could cause deadlock --> Use PostMessage */
+    // TODO: Tell the terminal to resize its scrollbars.
+
+    return STATUS_SUCCESS;
 }
 
 VOID WINAPI
@@ -1148,8 +1261,8 @@ CSR_API(SrvGetConsoleCursorInfo)
 
     CursorInfoRequest->Info.bVisible = Buff->CursorInfo.bVisible;
     CursorInfoRequest->Info.dwSize = Buff->CursorInfo.dwSize;
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
 
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -1195,7 +1308,6 @@ CSR_API(SrvSetConsoleCursorInfo)
     }
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
-
     return STATUS_SUCCESS;
 }
 
@@ -1237,7 +1349,6 @@ CSR_API(SrvSetConsoleCursorPosition)
     }
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
-
     return STATUS_SUCCESS;
 }
 
@@ -1266,7 +1377,6 @@ CSR_API(SrvSetConsoleTextAttribute)
     }
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
-
     return STATUS_SUCCESS;
 }
 
@@ -1374,7 +1484,6 @@ CSR_API(SrvGetConsoleScreenBufferInfo)
     pInfo->dwMaximumWindowSize = Buff->ScreenBufferSize;
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
-
     return STATUS_SUCCESS;
 }
 
@@ -1411,7 +1520,6 @@ CSR_API(SrvSetConsoleActiveScreenBuffer)
     ConioDrawConsole(Console);
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
-
     return STATUS_SUCCESS;
 }
 
@@ -1503,7 +1611,6 @@ CSR_API(SrvScrollConsoleScreenBuffer)
     }
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
-
     return STATUS_SUCCESS;
 }
 
@@ -1517,8 +1624,8 @@ CSR_API(SrvSetConsoleScreenBufferSize)
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConioResizeBuffer(Buff->Header.Console, Buff, SetScreenBufferSizeRequest->Size);
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
 
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
     return Status;
 }
 

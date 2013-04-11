@@ -108,9 +108,7 @@ typedef struct _FRONTEND_VTBL
                                  UINT OldCursorY);
     BOOL (WINAPI *UpdateScreenInfo)(struct _CONSOLE* Console,
                                     PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    NTSTATUS (WINAPI *ResizeBuffer)(struct _CONSOLE* Console,
-                                    PCONSOLE_SCREEN_BUFFER ScreenBuffer,
-                                    COORD Size);
+    BOOL (WINAPI *IsBufferResizeSupported)(struct _CONSOLE* Console);
     VOID (WINAPI *ResizeTerminal)(struct _CONSOLE* Console);
     BOOL (WINAPI *ProcessKeyCallback)(struct _CONSOLE* Console,
                                       MSG* msg,
@@ -156,7 +154,6 @@ typedef struct _CONSOLE
     CRITICAL_SECTION Lock;
     CONSOLE_STATE State;                    /* State of the console */
 
-    // struct _CONSOLE *Prev, *Next;           /* Next and Prev consoles in console wheel */
     LIST_ENTRY Entry;                       /* Entry in the list of consoles */
     LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
 
@@ -230,10 +227,19 @@ NTSTATUS FASTCALL ConioProcessInputEvent(PCONSOLE Console,
 #define ConioRectWidth(Rect) \
     (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
 
-PBYTE FASTCALL ConioCoordToPointer(PCONSOLE_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
+PBYTE FASTCALL ConioCoordToPointer(PCONSOLE_SCREEN_BUFFER Buf,
+                                   ULONG X,
+                                   ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCONSOLE Console);
-NTSTATUS FASTCALL ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
-                                    CHAR *Buffer, DWORD Length, BOOL Attrib);
-DWORD FASTCALL ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale);
+NTSTATUS FASTCALL ConioResizeBuffer(PCONSOLE Console,
+                                    PCONSOLE_SCREEN_BUFFER ScreenBuffer,
+                                    COORD Size);
+NTSTATUS FASTCALL ConioWriteConsole(PCONSOLE Console,
+                                    PCONSOLE_SCREEN_BUFFER Buff,
+                                    CHAR *Buffer,
+                                    DWORD Length,
+                                    BOOL Attrib);
+DWORD FASTCALL ConioEffectiveCursorSize(PCONSOLE Console,
+                                        DWORD Scale);
 
 /* EOF */

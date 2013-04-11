@@ -772,7 +772,7 @@ CSR_API(SrvGetConsoleInput)
     GetInputRequest->InputsRead = 0;
 
     Status = ConSrvGetInputBufferAndHandleEntry(ProcessData, GetInputRequest->InputHandle, &InputBuffer, &HandleEntry, GENERIC_READ, TRUE);
-    if(!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status)) return Status;
 
     InputInfo.CallingThread = CsrGetClientThread();
     InputInfo.HandleEntry   = HandleEntry;
@@ -855,7 +855,7 @@ CSR_API(SrvFlushConsoleInputBuffer)
                                  &InputBuffer,
                                  GENERIC_WRITE,
                                  TRUE);
-    if(!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Discard all entries in the input event queue */
     while (!IsListEmpty(&InputBuffer->InputEvents))

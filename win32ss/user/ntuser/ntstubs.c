@@ -584,20 +584,8 @@ NtUserConsoleControl(
             break;
         }
 
-        case TuiConsoleWndClassAtom:
+        case ConsoleAcquireDisplayOwnership:
         {
-            _SEH2_TRY
-            {
-                ProbeForRead(ConsoleCtrlInfo, ConsoleCtrlInfoLength, 1);
-                ASSERT(ConsoleCtrlInfoLength == sizeof(ATOM));
-                gaTuiConsoleWndClass = *(ATOM*)ConsoleCtrlInfo;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-
             break;
         }
 

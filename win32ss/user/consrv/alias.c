@@ -40,7 +40,7 @@ static
 PALIAS_HEADER
 IntFindAliasHeader(PALIAS_HEADER RootHeader, LPCWSTR lpExeName)
 {
-    while(RootHeader)
+    while (RootHeader)
     {
         INT diff = _wcsicmp(RootHeader->lpExeName, lpExeName);
         if (!diff) return RootHeader;
@@ -93,7 +93,7 @@ IntGetAliasEntry(PALIAS_HEADER Header, LPCWSTR lpSrcName)
     if (Header == NULL) return NULL;
 
     RootHeader = Header->Data;
-    while(RootHeader)
+    while (RootHeader)
     {
         INT diff;
         DPRINT("IntGetAliasEntry->lpSource %S\n", RootHeader->lpSource);
@@ -151,7 +151,7 @@ IntGetConsoleAliasesExesLength(PALIAS_HEADER RootHeader)
 {
     UINT length = 0;
 
-    while(RootHeader)
+    while (RootHeader)
     {
         length += (wcslen(RootHeader->lpExeName) + 1) * sizeof(WCHAR);
         RootHeader = RootHeader->Next;
@@ -169,7 +169,7 @@ IntGetConsoleAliasesExes(PALIAS_HEADER RootHeader, LPWSTR TargetBuffer, UINT Tar
     UINT Length;
 
     TargetBufferSize /= sizeof(WCHAR);
-    while(RootHeader)
+    while (RootHeader)
     {
         Length = wcslen(RootHeader->lpExeName) + 1;
         if (TargetBufferSize > Offset + Length)
@@ -194,7 +194,7 @@ IntGetAllConsoleAliasesLength(PALIAS_HEADER Header)
     UINT Length = 0;
     PALIAS_ENTRY CurEntry = Header->Data;
 
-    while(CurEntry)
+    while (CurEntry)
     {
         Length += wcslen(CurEntry->lpSource);
         Length += wcslen(CurEntry->lpTarget);
@@ -217,7 +217,7 @@ IntGetAllConsoleAliases(PALIAS_HEADER Header, LPWSTR TargetBuffer, UINT TargetBu
     UINT SrcLength, TargetLength;
 
     TargetBufferLength /= sizeof(WCHAR);
-    while(CurEntry)
+    while (CurEntry)
     {
         SrcLength = wcslen(CurEntry->lpSource) + 1;
         TargetLength = wcslen(CurEntry->lpTarget) + 1;

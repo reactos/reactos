@@ -22,7 +22,6 @@ HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
 PEPROCESS gpepCSRSS = NULL;
 ATOM gaGuiConsoleWndClass;
-ATOM gaTuiConsoleWndClass;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
