@@ -81,7 +81,7 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
                     ServerDll->ValidTable[ApiId],
                     ((ServerDll->NameTable) && (ServerDll->NameTable[ApiId])) ?
                     ServerDll->NameTable[ApiId] : "*** UNKNOWN ***", &ServerDll->Name);
-            DbgBreakPoint();
+            // DbgBreakPoint();
             ReplyMsg->Status = (ULONG)STATUS_ILLEGAL_FUNCTION;
             return STATUS_ILLEGAL_FUNCTION;
         }
@@ -547,7 +547,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     /* We are beyond the Maximum Server ID */
                     DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n",
                             ServerId, ServerDll);
-                    DbgBreakPoint();
+                    // DbgBreakPoint();
 
                     ReplyMsg = NULL;
                     ReplyPort = CsrApiPort;
@@ -747,7 +747,7 @@ CsrApiRequestThread(IN PVOID Parameter)
             /* We are beyond the Maximum Server ID */
             DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n",
                     ServerId, ServerDll);
-            DbgBreakPoint();
+            // DbgBreakPoint();
 
             ReplyPort = CsrApiPort;
             ReplyMsg = &ReceiveMsg;
