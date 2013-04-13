@@ -206,10 +206,12 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     SAMPR_HANDLE ServerHandle = NULL;
     SAMPR_HANDLE DomainHandle = NULL;
+    SAMPR_HANDLE UserHandle = NULL;
     PRPC_SID AccountDomainSid = NULL;
     RPC_UNICODE_STRING Names[1];
     SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
     SAMPR_ULONG_ARRAY Use = {0, NULL};
+    PSAMPR_USER_INFO_BUFFER UserInfo = NULL;
     NTSTATUS Status;
 
     TRACE("()\n");
@@ -302,9 +304,38 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         goto done;
     }
 
+    /* Open the user object */
+    Status = SamrOpenUser(DomainHandle,
+                          USER_READ_GENERAL | USER_READ_LOGON |
+                          USER_READ_ACCOUNT | USER_READ_PREFERENCES, /* FIXME */
+                          RelativeIds.Element[0],
+                          &UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrOpenUser failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrQueryInformationUser(UserHandle,
+                                      UserAllInformation,
+                                      &UserInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrQueryInformationUser failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+
+    TRACE("UserName: %S\n", UserInfo->All.UserName.Buffer);
+
 
 
 done:
+    if (UserHandle != NULL)
+        SamrCloseHandle(&UserHandle);
+
+    SamIFree_SAMPR_USER_INFO_BUFFER(UserInfo,
+                                    UserAllInformation);
     SamIFree_SAMPR_ULONG_ARRAY(&RelativeIds);
     SamIFree_SAMPR_ULONG_ARRAY(&Use);
 

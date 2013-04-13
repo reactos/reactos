@@ -53,11 +53,111 @@ typedef struct _RPC_UNICODE_STRING
 typedef wchar_t *PSAMPR_SERVER_NAME;
 typedef void *SAMPR_HANDLE;
 
+typedef struct _OLD_LARGE_INTEGER
+{
+    unsigned long LowPart;
+    long HighPart;
+} OLD_LARGE_INTEGER, *POLD_LARGE_INTEGER;
+
+typedef struct RPC_SHORT_BLOB
+{
+    unsigned short Length;
+    unsigned short MaximumLength;
+    unsigned short *Buffer;
+} RPC_SHORT_BLOB, *PRPC_SHORT_BLOB;
+
+typedef struct _SAMPR_SR_SECURITY_DESCRIPTOR
+{
+    unsigned long Length;
+    unsigned char *SecurityDescriptor;
+} SAMPR_SR_SECURITY_DESCRIPTOR, *PSAMPR_SR_SECURITY_DESCRIPTOR;
+
+typedef struct _ENCRYPTED_LM_OWF_PASSWORD
+{
+    char data[16];
+} ENCRYPTED_LM_OWF_PASSWORD, *PENCRYPTED_LM_OWF_PASSWORD, ENCRYPTED_NT_OWF_PASSWORD, *PENCRYPTED_NT_OWF_PASSWORD;
+
 typedef struct _SAMPR_ULONG_ARRAY
 {
     ULONG Count;
     PULONG Element;
 } SAMPR_ULONG_ARRAY, *PSAMPR_ULONG_ARRAY;
+
+typedef struct _SAMPR_LOGON_HOURS
+{
+    unsigned short UnitsPerWeek;
+    unsigned char *LogonHours;
+} SAMPR_LOGON_HOURS, *PSAMPR_LOGON_HOURS;
+
+typedef struct _SAMPR_USER_ALL_INFORMATION
+{
+    OLD_LARGE_INTEGER LastLogon;
+    OLD_LARGE_INTEGER LastLogoff;
+    OLD_LARGE_INTEGER PasswordLastSet;
+    OLD_LARGE_INTEGER AccountExpires;
+    OLD_LARGE_INTEGER PasswordCanChange;
+    OLD_LARGE_INTEGER PasswordMustChange;
+    RPC_UNICODE_STRING UserName;
+    RPC_UNICODE_STRING FullName;
+    RPC_UNICODE_STRING HomeDirectory;
+    RPC_UNICODE_STRING HomeDirectoryDrive;
+    RPC_UNICODE_STRING ScriptPath;
+    RPC_UNICODE_STRING ProfilePath;
+    RPC_UNICODE_STRING AdminComment;
+    RPC_UNICODE_STRING WorkStations;
+    RPC_UNICODE_STRING UserComment;
+    RPC_UNICODE_STRING Parameters;
+    RPC_SHORT_BLOB LmOwfPassword;
+    RPC_SHORT_BLOB NtOwfPassword;
+    RPC_UNICODE_STRING PrivateData;
+    SAMPR_SR_SECURITY_DESCRIPTOR SecurityDescriptor;
+    unsigned long UserId;
+    unsigned long PrimaryGroupId;
+    unsigned long UserAccountControl;
+    unsigned long WhichFields;
+    SAMPR_LOGON_HOURS LogonHours;
+    unsigned short BadPasswordCount;
+    unsigned short LogonCount;
+    unsigned short CountryCode;
+    unsigned short CodePage;
+    unsigned char LmPasswordPresent;
+    unsigned char NtPasswordPresent;
+    unsigned char PasswordExpired;
+    unsigned char PrivateDataSensitive;
+} SAMPR_USER_ALL_INFORMATION, *PSAMPR_USER_ALL_INFORMATION;
+
+typedef union _SAMPR_USER_INFO_BUFFER
+{
+#if 0
+    SAMPR_USER_GENERAL_INFORMATION General;
+    SAMPR_USER_PREFERENCES_INFORMATION Preferences;
+    SAMPR_USER_LOGON_INFORMATION Logon;
+    SAMPR_USER_LOGON_HOURS_INFORMATION LogonHours;
+    SAMPR_USER_ACCOUNT_INFORMATION Account;
+    SAMPR_USER_NAME_INFORMATION Name;
+    SAMPR_USER_A_NAME_INFORMATION AccountName;
+    SAMPR_USER_F_NAME_INFORMATION FullName;
+    USER_PRIMARY_GROUP_INFORMATION PrimaryGroup;
+    SAMPR_USER_HOME_INFORMATION Home;
+    SAMPR_USER_SCRIPT_INFORMATION Script;
+    SAMPR_USER_PROFILE_INFORMATION Profile;
+    SAMPR_USER_ADMIN_COMMENT_INFORMATION AdminComment;
+    SAMPR_USER_WORKSTATIONS_INFORMATION WorkStations;
+    SAMPR_USER_SET_PASSWORD_INFORMATION SetPassword;
+    USER_CONTROL_INFORMATION Control;
+    USER_EXPIRES_INFORMATION Expires;
+    SAMPR_USER_INTERNAL1_INFORMATION Internal1;
+    SAMPR_USER_PARAMETERS_INFORMATION Parameters;
+#endif
+    SAMPR_USER_ALL_INFORMATION All;
+#if 0
+    SAMPR_USER_INTERNAL4_INFORMATION Internal4;
+    SAMPR_USER_INTERNAL5_INFORMATION Internal5;
+    SAMPR_USER_INTERNAL4_INFORMATION_NEW Internal4New;
+    SAMPR_USER_INTERNAL5_INFORMATION_NEW Internal5New;
+#endif
+} SAMPR_USER_INFO_BUFFER, *PSAMPR_USER_INFO_BUFFER;
+
 
 NTSTATUS
 NTAPI
@@ -70,9 +170,22 @@ VOID
 NTAPI
 SamIFree_SAMPR_ULONG_ARRAY(PSAMPR_ULONG_ARRAY Ptr);
 
+VOID
+NTAPI
+SamIFree_SAMPR_USER_INFO_BUFFER(PSAMPR_USER_INFO_BUFFER Ptr,
+                                USER_INFORMATION_CLASS InformationClass);
+
 NTSTATUS
 NTAPI
 SamrCloseHandle(IN OUT SAMPR_HANDLE *SamHandle);
+
+NTSTATUS
+NTAPI
+SamrLookupNamesInDomain(IN SAMPR_HANDLE DomainHandle,
+                        IN ULONG Count,
+                        IN RPC_UNICODE_STRING Names[],
+                        OUT PSAMPR_ULONG_ARRAY RelativeIds,
+                        OUT PSAMPR_ULONG_ARRAY Use);
 
 NTSTATUS
 NTAPI
@@ -83,11 +196,17 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
 
 NTSTATUS
 NTAPI
-SamrLookupNamesInDomain(IN SAMPR_HANDLE DomainHandle,
-                        IN ULONG Count,
-                        IN RPC_UNICODE_STRING Names[],
-                        OUT PSAMPR_ULONG_ARRAY RelativeIds,
-                        OUT PSAMPR_ULONG_ARRAY Use);
+SamrOpenUser(IN SAMPR_HANDLE DomainHandle,
+             IN ACCESS_MASK DesiredAccess,
+             IN ULONG UserId,
+             OUT SAMPR_HANDLE *UserHandle);
+
+NTSTATUS
+NTAPI
+SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
+                         IN USER_INFORMATION_CLASS UserInformationClass,
+                         OUT PSAMPR_USER_INFO_BUFFER *Buffer);
+
 
 typedef PVOID LSAPR_HANDLE;
 
