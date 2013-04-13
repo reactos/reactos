@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2003-2004 Rok Mandeljc <rok.mandeljc@gimb.org>
+ * COM Classes for dmusic
+ *
+ * Copyright 2010 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,14 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-1 WINE_REGISTRY dmusic.rgs
+[
+    threading(both),
+    progid("Microsoft.DirectMusic.1"),
+    vi_progid("Microsoft.DirectMusic"),
+    uuid(636b9f10-0c7d-11d1-95b2-0020afdc7421)
+]
+coclass DirectMusic { interface IDirectMusic; }
 
-#define WINE_FILEDESCRIPTION_STR "Wine DirectMusic"
-#define WINE_FILENAME_STR "dmusic.dll"
-#define WINE_FILEVERSION 5,3,1,904
-#define WINE_FILEVERSION_STR "5.3.1.904"
-#define WINE_PRODUCTVERSION 5,3,1,904
-#define WINE_PRODUCTVERSION_STR "5.3.1.904"
-#define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
-
-#include <wine/wine_common_ver.rc>
+[
+    threading(both),
+    progid("Microsoft.DirectMusicCollection.1"),
+    vi_progid("Microsoft.DirectMusicCollection"),
+    uuid(480ff4b0-28b2-11d1-bef7-00c04fbf8fef)
+]
+coclass DirectMusicCollection { interface IDirectMusicCollection; }
