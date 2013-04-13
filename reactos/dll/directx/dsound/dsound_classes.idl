@@ -1,0 +1,61 @@
+/*
+ * COM Classes for dsound
+ *
+ * Copyright 2010 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+[
+    helpstring("DirectSound Object"),
+    threading(both),
+    uuid(47d4d946-62e8-11cf-93bc-444553540000)
+]
+coclass DirectSound { interface IDirectSound; }
+
+[
+    helpstring("DirectSound 8.0 Object"),
+    threading(both),
+    uuid(3901cc3f-84b5-4fa4-ba35-aa8172b8a09b)
+]
+coclass DirectSound8 { interface IDirectSound8; }
+
+[
+    helpstring("DirectSoundBufferConfig Object"),
+    threading(both),
+    uuid(b2f586d4-5558-49d1-a07b-3249dbbb33c2)
+]
+coclass DirectSoundBufferConfig { interface IDirectSoundBufferConfig; }
+
+[
+    helpstring("DirectSoundCapture Object"),
+    threading(both),
+    uuid(b0210780-89cd-11d0-af08-00a0c925cd16)
+]
+coclass DirectSoundCapture { interface IDirectSoundCapture; }
+
+[
+    helpstring("DirectSoundCapture 8.0 Object"),
+    threading(both),
+    uuid(e4bcac13-7f99-4908-9a8e-74e3bf24b6e1)
+]
+coclass DirectSoundCapture8 { interface IDirectSoundCapture8; }
+
+[
+    helpstring("DirectSoundFullDuplex Object"),
+    threading(both),
+    uuid(fea4300c-7959-4147-b26a-2377b9e7a91d)
+]
+coclass DirectSoundFullDuplex { interface IDirectSoundFullDuplex; }

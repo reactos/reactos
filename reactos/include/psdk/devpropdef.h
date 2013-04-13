@@ -77,9 +77,10 @@ typedef struct _DEVPROPKEY {
   DEVPROPID pid;
 } DEVPROPKEY, *PDEVPROPKEY;
 
-#endif /* DEVPROPKEY_DEFINED */
 
 #define DEVPROPID_FIRST_USABLE 2
+
+#endif /* DEVPROPKEY_DEFINED */
 
 #endif /* _DEVPROPDEF_H_ */
 
@@ -87,9 +88,16 @@ typedef struct _DEVPROPKEY {
 #undef DEFINE_DEVPROPKEY
 #endif
 #ifdef INITGUID
-#define DEFINE_DEVPROPKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) EXTERN_C const DEVPROPKEY DECLSPEC_SELECTANY name = {{ l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}, pid}
+#ifdef __cplusplus
+#define DEFINE_DEVPROPKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) \
+        EXTERN_C const DEVPROPKEY DECLSPEC_HIDDEN DECLSPEC_SELECTANY name = { { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }, pid }
 #else
-#define DEFINE_DEVPROPKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) EXTERN_C const DEVPROPKEY name
+#define DEFINE_DEVPROPKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) \
+        const DEVPROPKEY DECLSPEC_HIDDEN DECLSPEC_SELECTANY name = { { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }, pid }
+#endif
+#else
+#define DEFINE_DEVPROPKEY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8, pid) \
+    EXTERN_C const DEVPROPKEY DECLSPEC_HIDDEN DECLSPEC_SELECTANY name
 #endif /* INITGUID */
 
 #ifndef IsEqualDevPropKey

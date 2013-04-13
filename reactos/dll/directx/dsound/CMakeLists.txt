@@ -1,7 +1,8 @@
 
 add_definitions(
     -D_WINE
-    -D_USE_MATH_DEFINES)
+    -D_USE_MATH_DEFINES
+    -D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -17,26 +18,11 @@ add_library(dsound SHARED
     mixer.c
     primary.c
     propset.c
-    regsvr.c
     sound3d.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dsound.def)
 
 set_module_type(dsound win32dll)
-
-target_link_libraries(dsound
-    dxguid
-    uuid
-    wine)
-
-add_importlibs(dsound
-    msvcrt
-    user32
-    advapi32
-    ole32
-    winmm
-    kernel32
-    ntdll)
-
+target_link_libraries(dsound dxguid uuid wine)
+add_importlibs(dsound winmm ole32 advapi32 user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET dsound DESTINATION reactos/system32 FOR all)
-
