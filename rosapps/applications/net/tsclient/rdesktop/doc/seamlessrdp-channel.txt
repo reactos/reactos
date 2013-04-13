@@ -280,5 +280,5 @@ Sets which window has input focus.
 Syntax:
 	FOCUS,<SERIAL>,<ID>,<FLAGS>
 
-Changes which window that will recieve the keyboard events. Note that this
+Changes which window that will receive the keyboard events. Note that this
 might cause the window to change z order.
