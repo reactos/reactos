@@ -11,7 +11,7 @@
 
 #include "consrv.h"
 #include "include/conio.h"
-// #include "include/console.h"
+#include "include/console.h"
 #include "include/settings.h"
 #include "tuiterm.h"
 #include <drivers/blue/ntddblue.h>
@@ -258,14 +258,55 @@ TuiCopyRect(char *Dest, PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
 static LRESULT CALLBACK
 TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    if (msg == WM_ACTIVATE)
+/*
+    PTUI_CONSOLE_DATA TuiData = NULL;
+    PCONSOLE Console = NULL;
+
+    TuiData = TuiGetGuiData(hWnd);
+    if (TuiData == NULL) return 0;
+*/
+
+    switch (msg)
     {
-        if (LOWORD(wParam) != WA_INACTIVE)
+        case WM_CHAR:
+        case WM_SYSCHAR:
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
         {
-            SetFocus(hWnd);
-            ConioDrawConsole(ActiveConsole->Console);
+            if (ConSrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
+            {
+                MSG Message;
+                Message.hwnd = hWnd;
+                Message.message = msg;
+                Message.wParam = wParam;
+                Message.lParam = lParam;
+
+                ConioProcessKey(ActiveConsole->Console, &Message);
+                LeaveCriticalSection(&ActiveConsole->Console->Lock);
+            }
+            break;
         }
+
+        case WM_ACTIVATE:
+        {
+            if (ConSrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
+            {
+                if (LOWORD(wParam) != WA_INACTIVE)
+                {
+                    SetFocus(hWnd);
+                    ConioDrawConsole(ActiveConsole->Console);
+                }
+                LeaveCriticalSection(&ActiveConsole->Console->Lock);
+            }
+            break;
+        }
+
+        default:
+            break;
     }
+
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
@@ -298,13 +339,6 @@ TuiConsoleThread(PVOID Data)
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
-
-        if (msg.message == WM_CHAR    || msg.message == WM_SYSCHAR    ||
-            msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN ||
-            msg.message == WM_KEYUP   || msg.message == WM_SYSKEYUP)
-        {
-            ConioProcessKey(Console, &msg);
-        }
     }
 
     return 0;
