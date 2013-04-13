@@ -1,5 +1,7 @@
 /*
- * Copyright 1999, 2000 Peter Hunnisett
+ * COM Classes for dmusic
+ *
+ * Copyright 2010 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,22 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_DPINIT_H
-#define __WINE_DPINIT_H
+[
+    threading(both),
+    progid("Microsoft.DirectMusic.1"),
+    vi_progid("Microsoft.DirectMusic"),
+    uuid(636b9f10-0c7d-11d1-95b2-0020afdc7421)
+]
+coclass DirectMusic { interface IDirectMusic; }
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-//#include "winbase.h"
-//#include "wtypes.h"
-#include "dplay_global.h"
-
-extern HRESULT DP_CreateInterface( REFIID riid, LPVOID* ppvObj ) DECLSPEC_HIDDEN;
-extern HRESULT DPL_CreateInterface( REFIID riid, LPVOID* ppvObj ) DECLSPEC_HIDDEN;
-extern HRESULT DPSP_CreateInterface( REFIID riid, LPVOID* ppvObj,
-                                     IDirectPlay2Impl* dp ) DECLSPEC_HIDDEN;
-extern HRESULT DPLSP_CreateInterface( REFIID riid, LPVOID* ppvObj,
-                                      IDirectPlay2Impl* dp ) DECLSPEC_HIDDEN;
-
-
-#endif
+[
+    threading(both),
+    progid("Microsoft.DirectMusicCollection.1"),
+    vi_progid("Microsoft.DirectMusicCollection"),
+    uuid(480ff4b0-28b2-11d1-bef7-00c04fbf8fef)
+]
+coclass DirectMusicCollection { interface IDirectMusicCollection; }

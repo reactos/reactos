@@ -787,7 +787,7 @@ static BOOL parse_expect_no_attr(xmlbuf_t* xmlbuf, BOOL* end)
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, end))
     {
         attr_nameU = xmlstr2unicode(&attr_name);
-        attr_valueU = xmlstr2unicode(&attr_name);
+        attr_valueU = xmlstr2unicode(&attr_value);
         DPRINT1( "unexpected attr %wZ=%wZ\n", &attr_nameU,
              &attr_valueU);
     }

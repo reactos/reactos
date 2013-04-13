@@ -35,7 +35,7 @@ _assert (
         (msvcrt_error_mode == _OUT_TO_STDERR))
     {
         /* Print 'Assertion failed: x<y, file foo.c, line 45' to stderr */
-        fprintf(stderr, "Assertion failed: %s, file %s, line %d\n", exp, file, line);
+        fprintf(stderr, "Assertion failed: %s, file %s, line %u\n", exp, file, line);
         abort();
     }
 

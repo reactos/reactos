@@ -103,7 +103,7 @@ IntGetScrollBarRect (PWND Wnd, INT nBar, RECTL *lprect)
       case SB_VERT:
          if(Wnd->ExStyle & WS_EX_LEFTSCROLLBAR)
          {
-            lprect->right = lprect->right;;
+            lprect->right = lprect->left;
             lprect->left -= UserGetSystemMetrics(SM_CXVSCROLL);
          }
          else

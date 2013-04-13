@@ -27,8 +27,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptdll);
 
-static HMODULE CRYPTDLL_hModule;
-
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     TRACE("%p,%x,%p\n", hinstDLL, fdwReason, lpvReserved);
@@ -39,7 +37,6 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
         {
             DisableThreadLibraryCalls(hinstDLL);
-            CRYPTDLL_hModule = hinstDLL;
             break;
         }
         case DLL_PROCESS_DETACH:

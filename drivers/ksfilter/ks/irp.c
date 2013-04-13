@@ -1177,7 +1177,8 @@ KsDefaultDeviceIoCompletion(
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY &&
         IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_METHOD &&
-        IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
+        IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_ENABLE_EVENT &&
+        IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_DISABLE_EVENT)
     {
         if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_RESET_STATE)
         {

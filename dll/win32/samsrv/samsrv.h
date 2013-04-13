@@ -328,6 +328,10 @@ SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
 
 NTSTATUS
 SampGetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
+                          IN OUT PSAMPR_LOGON_HOURS LogonHours);
+
+NTSTATUS
+SampSetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
                           IN PSAMPR_LOGON_HOURS LogonHours);
 
 /* EOF */

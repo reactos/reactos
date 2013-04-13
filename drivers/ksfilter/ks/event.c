@@ -421,17 +421,17 @@ KspDisableEvent(
     PKSEVENT_ENTRY EventEntry;
     PLIST_ENTRY Entry;
 
-    /* get current irp stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Ctx->Irp);
-
-    /* get event data */
-    EventData = (PKSEVENTDATA)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-
     if (!Ctx || !Ctx->List || !Ctx->FileObject || !Ctx->Irp)
     {
         /* invalid parameter */
         return FALSE;
     }
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Ctx->Irp);
+
+    /* get event data */
+    EventData = (PKSEVENTDATA)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
     /* point to first entry */
     Entry = Ctx->List->Flink;

@@ -78,6 +78,7 @@ BaseExitThreadPoolThread(IN NTSTATUS ExitStatus)
 {
     /* Exit the thread */
     ExitThread(ExitStatus);
+    return STATUS_SUCCESS;
 }
 
 BOOL

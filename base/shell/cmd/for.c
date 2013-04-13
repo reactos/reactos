@@ -105,9 +105,13 @@ static LPTSTR ReadFileContents(FILE *InputFile, TCHAR *Buffer)
 		ULONG_PTR CharsRead = _tcslen(Buffer);
 		while (Len + CharsRead >= AllocLen)
 		{
+			LPTSTR OldContents = Contents;
 			Contents = cmd_realloc(Contents, (AllocLen *= 2) * sizeof(TCHAR));
 			if (!Contents)
+			{
+				cmd_free(OldContents);
 				return NULL;
+			}
 		}
 		_tcscpy(&Contents[Len], Buffer);
 		Len += CharsRead;

@@ -103,6 +103,30 @@ SampInitializeRegistry(VOID)
 
 VOID
 NTAPI
+SamIFree_SAMPR_ENUMERATION_BUFFER(PSAMPR_ENUMERATION_BUFFER Ptr)
+{
+    ULONG i;
+
+    if (Ptr != NULL)
+    {
+        if (Ptr->Buffer != NULL)
+        {
+            for (i = 0; i < Ptr->EntriesRead; i++)
+            {
+                if (Ptr->Buffer[i].Name.Buffer != NULL)
+                    MIDL_user_free(Ptr->Buffer[i].Name.Buffer);
+            }
+
+            MIDL_user_free(Ptr->Buffer);
+        }
+
+        MIDL_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
 SamIFree_SAMPR_PSID_ARRAY(PSAMPR_PSID_ARRAY Ptr)
 {
     if (Ptr != NULL)

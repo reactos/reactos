@@ -13,23 +13,19 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_DIRECT_PLAY_SP_H
 #define __WINE_DIRECT_PLAY_SP_H
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
+#include <stdarg.h>
 
-//#include <stdarg.h>
-
-//#include "windef.h"
-#include <winbase.h>
-//#include "winuser.h"
-//#include "dplay.h"
-#include <dplobby.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "dplay.h"
+#include "dplobby.h"
 
 /* GUID for IDirectPlaySP  {0C9F6360-CC61-11cf-ACEC-00AA006886E3} */
 DEFINE_GUID(IID_IDirectPlaySP, 0xc9f6360, 0xcc61, 0x11cf, 0xac, 0xec, 0x0, 0xaa, 0x0, 0x68, 0x86, 0xe3);

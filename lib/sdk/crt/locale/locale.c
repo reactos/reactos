@@ -322,7 +322,7 @@ static BOOL update_threadlocinfo_category(LCID lcid, unsigned short cp,
     len += GetLocaleInfoA(lcid, LOCALE_SENGCOUNTRY
             |LOCALE_NOUSEROVERRIDE, &buf[len], 256-len);
     buf[len-1] = '.';
-    sprintf(buf+len, "%d", cp);
+    sprintf(buf+len, "%u", cp);
     len += strlen(buf+len)+1;
 
     loc->locinfo->lc_category[category].locale = MSVCRT_malloc(len);

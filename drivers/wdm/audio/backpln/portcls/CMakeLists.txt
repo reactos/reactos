@@ -20,7 +20,6 @@ list(APPEND SOURCE
     filter_wavecyclic.cpp
     filter_wavepci.cpp
     filter_wavert.cpp
-    guids.cpp
     interrupt.cpp
     irp.cpp
     irpstream.cpp
