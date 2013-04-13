@@ -92,6 +92,7 @@ typedef const struct _WAVEFORMATEX *LPCWAVEFORMATEX;
 /* WAVE form wFormatTag IDs */
 #define  WAVE_FORMAT_UNKNOWN			0x0000	/*  Microsoft Corporation  */
 #define  WAVE_FORMAT_ADPCM			0x0002	/*  Microsoft Corporation  */
+#define  WAVE_FORMAT_IEEE_FLOAT			0x0003	/*  Microsoft Corporation  */
 #define  WAVE_FORMAT_IBM_CVSD			0x0005	/*  IBM Corporation  */
 #define  WAVE_FORMAT_ALAW			0x0006	/*  Microsoft Corporation  */
 #define  WAVE_FORMAT_MULAW			0x0007	/*  Microsoft Corporation  */
