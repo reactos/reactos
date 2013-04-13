@@ -45,36 +45,38 @@ $if (_WDMDDK_)
 
 /* ULONG
  * BYTE_OFFSET(
- *   IN PVOID Va)
+ *     _In_ PVOID Va)
  */
 #define BYTE_OFFSET(Va) \
   ((ULONG) ((ULONG_PTR) (Va) & (PAGE_SIZE - 1)))
 
 /* ULONG
  * BYTES_TO_PAGES(
- *   IN ULONG Size)
+ *     _In_ ULONG Size)
+ *
+ * Note: This needs to be like this to avoid overflows!
  */
 #define BYTES_TO_PAGES(Size) \
-  (((Size) + PAGE_SIZE - 1) >> PAGE_SHIFT)
+  (((Size) >> PAGE_SHIFT) + (((Size) & (PAGE_SIZE - 1)) != 0))
 
 /* PVOID
  * PAGE_ALIGN(
- *   IN PVOID Va)
+ *     _In_ PVOID Va)
  */
 #define PAGE_ALIGN(Va) \
   ((PVOID) ((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
 
 /* ULONG_PTR
  * ROUND_TO_PAGES(
- *   IN ULONG_PTR Size)
+ *     _In_ ULONG_PTR Size)
  */
 #define ROUND_TO_PAGES(Size) \
   (((ULONG_PTR) (Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 
 /* ULONG
  * ADDRESS_AND_SIZE_TO_SPAN_PAGES(
- *   IN PVOID Va,
- *   IN ULONG Size)
+ *     _In_ PVOID Va,
+ *     _In_ ULONG Size)
  */
 #define ADDRESS_AND_SIZE_TO_SPAN_PAGES(_Va, _Size) \
   ((ULONG) ((((ULONG_PTR) (_Va) & (PAGE_SIZE - 1)) \
@@ -86,7 +88,7 @@ $if (_WDMDDK_)
 /*
  * ULONG
  * MmGetMdlByteCount(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL  Mdl)
  */
 #define MmGetMdlByteCount(_Mdl) \
   ((_Mdl)->ByteCount)
@@ -104,7 +106,7 @@ $if (_WDMDDK_)
 /*
  * PPFN_NUMBER
  * MmGetMdlPfnArray(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL  Mdl)
  */
 #define MmGetMdlPfnArray(_Mdl) \
   ((PPFN_NUMBER) ((_Mdl) + 1))
@@ -112,7 +114,7 @@ $if (_WDMDDK_)
 /*
  * PVOID
  * MmGetMdlVirtualAddress(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL  Mdl)
  */
 #define MmGetMdlVirtualAddress(_Mdl) \
   ((PVOID) ((PCHAR) ((_Mdl)->StartVa) + (_Mdl)->ByteOffset))
@@ -121,7 +123,7 @@ $if (_WDMDDK_)
 #define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
 
 /* PVOID MmGetSystemAddressForMdl(
- *     IN PMDL Mdl);
+ *     _In_ PMDL Mdl);
  */
 #define MmGetSystemAddressForMdl(Mdl) \
   (((Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | \
@@ -131,8 +133,8 @@ $if (_WDMDDK_)
 
 /* PVOID
  * MmGetSystemAddressForMdlSafe(
- *     IN PMDL Mdl,
- *     IN MM_PAGE_PRIORITY Priority)
+ *     _In_ PMDL Mdl,
+ *     _In_ MM_PAGE_PRIORITY Priority)
  */
 #define MmGetSystemAddressForMdlSafe(_Mdl, _Priority) \
   (((_Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA \
@@ -144,9 +146,9 @@ $if (_WDMDDK_)
 /*
  * VOID
  * MmInitializeMdl(
- *   IN PMDL  MemoryDescriptorList,
- *   IN PVOID  BaseVa,
- *   IN SIZE_T  Length)
+ *     _In_ PMDL MemoryDescriptorList,
+ *     _In_ PVOID BaseVa,
+ *     _In_ SIZE_T Length)
  */
 #define MmInitializeMdl(_MemoryDescriptorList, \
                         _BaseVa, \
@@ -164,7 +166,7 @@ $if (_WDMDDK_)
 /*
  * VOID
  * MmPrepareMdlForReuse(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL Mdl)
  */
 #define MmPrepareMdlForReuse(_Mdl) \
 { \
