@@ -300,7 +300,7 @@
 #endif /* DECLSPEC_ALIGN */
 
 #ifndef DECLSPEC_SELECTANY
-#if (_MSC_VER >= 1100)
+#if (_MSC_VER >= 1100) || defined(__GNUC__)
 #define DECLSPEC_SELECTANY  __declspec(selectany)
 #else
 #define DECLSPEC_SELECTANY
