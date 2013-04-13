@@ -217,6 +217,14 @@ extern "C" {
 # endif
 #endif
 
+#ifndef DECLSPEC_SELECTANY
+#if (_MSC_VER >= 1100)
+#define DECLSPEC_SELECTANY __declspec(selectany)
+#else
+#define DECLSPEC_SELECTANY
+#endif
+#endif
+
 #ifndef DECLSPEC_ADDRSAFE
 #if (_MSC_VER >= 1200) && (defined(_M_ALPHA) || defined(_M_AXP64))
 #define DECLSPEC_ADDRSAFE __declspec(address_safe)

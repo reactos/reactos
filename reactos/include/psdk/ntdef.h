@@ -299,6 +299,14 @@
 #endif
 #endif /* DECLSPEC_ALIGN */
 
+#ifndef DECLSPEC_SELECTANY
+#if (_MSC_VER >= 1100)
+#define DECLSPEC_SELECTANY  __declspec(selectany)
+#else
+#define DECLSPEC_SELECTANY
+#endif
+#endif
+
 /* Use to silence unused variable warnings when it is intentional */
 #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
 #define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
