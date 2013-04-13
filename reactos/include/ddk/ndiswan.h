@@ -228,10 +228,10 @@ typedef struct _NDIS_WAN_GET_STATS_INFO {
   OUT ULONG BytesReceivedUncompressed;
   OUT ULONG BytesTransmittedCompressed;
   OUT ULONG BytesReceivedCompressed;
-  OUT ULONG TunnelPacketsRecieved;
-  OUT ULONG TunnelRecievePacketsPending;
+  OUT ULONG TunnelPacketsReceived;
+  OUT ULONG TunnelReceivePacketsPending;
   OUT ULONG TunnelPacketsIndicatedUp;
-  OUT ULONG TunnelRecievePacketsRejected;
+  OUT ULONG TunnelReceivePacketsRejected;
   OUT ULONG TunnelPacketsSent;
   OUT ULONG TunnelPacketsSentComplete;
   OUT ULONG TunnelTransmitPacketsPending;
@@ -317,10 +317,10 @@ typedef struct _NDIS_WAN_CO_GET_STATS_INFO {
   OUT ULONG BytesReceivedUncompressed;
   OUT ULONG BytesTransmittedCompressed;
   OUT ULONG BytesReceivedCompressed;
-  OUT ULONG TunnelPacketsRecieved;
-  OUT ULONG TunnelRecievePacketsPending;
+  OUT ULONG TunnelPacketsReceived;
+  OUT ULONG TunnelReceivePacketsPending;
   OUT ULONG TunnelPacketsIndicatedUp;
-  OUT ULONG TunnelRecievePacketsRejected;
+  OUT ULONG TunnelReceivePacketsRejected;
   OUT ULONG TunnelPacketsSent;
   OUT ULONG TunnelPacketsSentComplete;
   OUT ULONG TunnelTransmitPacketsPending;

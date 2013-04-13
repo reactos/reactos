@@ -548,14 +548,14 @@ ScServiceDispatcher(HANDLE hPipe,
             {
                 case SERVICE_CONTROL_START_SHARE:
                 case SERVICE_CONTROL_START_OWN:
-                    TRACE("Start command - recieved SERVICE_CONTROL_START\n");
+                    TRACE("Start command - received SERVICE_CONTROL_START\n");
                     dwError = ScStartService(lpService, ControlPacket);
                     if (dwError == ERROR_SUCCESS)
                         dwRunningServices++;
                     break;
 
                 case SERVICE_CONTROL_STOP:
-                    TRACE("Stop command - recieved SERVICE_CONTROL_STOP\n");
+                    TRACE("Stop command - received SERVICE_CONTROL_STOP\n");
                     dwError = ScControlService(lpService, ControlPacket);
                     if (dwError == ERROR_SUCCESS)
                         dwRunningServices--;

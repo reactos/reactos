@@ -42,13 +42,13 @@ KdPortInitializeEx(
 BOOLEAN
 NTAPI
 KdPortGetByte(
-    PUCHAR ByteRecieved);
+    PUCHAR ByteReceived);
 
 BOOLEAN
 NTAPI
 KdPortGetByteEx(
     PKD_PORT_INFORMATION PortInformation,
-    PUCHAR ByteRecieved);
+    PUCHAR ByteReceived);
 
 VOID
 NTAPI

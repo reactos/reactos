@@ -369,7 +369,7 @@ CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
                 /* Don't do anything, but this is strange since it's already removed */
                 Status = STATUS_SUCCESS;
                 if (CmBattDebug & 4)
-                    DbgPrint("CmBattPnpDispatch: Recieved two consecutive QUERY_REMOVE requests.\n");
+                    DbgPrint("CmBattPnpDispatch: Received two consecutive QUERY_REMOVE requests.\n");
             }
             else
             {

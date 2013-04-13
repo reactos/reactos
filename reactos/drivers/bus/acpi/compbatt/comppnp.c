@@ -18,7 +18,7 @@ CompBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
                       IN PIRP Irp)
 {
     PCOMPBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-    if (CompBattDebug & 1) DbgPrint("CompBatt: PowerDispatch recieved power IRP.\n");
+    if (CompBattDebug & 1) DbgPrint("CompBatt: PowerDispatch received power IRP.\n");
      
     /* Start the next IRP */
     PoStartNextPowerIrp(Irp);

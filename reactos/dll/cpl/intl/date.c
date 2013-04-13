@@ -79,7 +79,7 @@ FindDateSep(const TCHAR *szSourceStr)
     return pszFoundSep;
 }
 
-/* Replace given template in source string with string to replace and return recieved string */
+/* Replace given template in source string with string to replace and return received string */
 
 
 /* Setted up short date separator to registry */

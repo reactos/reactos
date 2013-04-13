@@ -31,7 +31,7 @@ KdpSendBuffer(
 
 /******************************************************************************
  * \name KdpReceiveBuffer
- * \brief Recieves data from the KD port and fills a buffer.
+ * \brief Receives data from the KD port and fills a buffer.
  * \param Buffer Pointer to a buffer that receives the data.
  * \param Size Size of data to receive in bytes.
  * \return KDP_PACKET_RECEIVED if successful. 
@@ -64,7 +64,7 @@ KdpReceiveBuffer(
 
 /******************************************************************************
  * \name KdpReceivePacketLeader
- * \brief Recieves a packet leadr from the KD port.
+ * \brief Receives a packet leadr from the KD port.
  * \param PacketLeader Pointer to an ULONG that receives the packet leader.
  * \return KDP_PACKET_RECEIVED if successful. 
  *         KDP_PACKET_TIMEOUT if the receive timed out.

@@ -343,7 +343,7 @@ ReceivePacket(PAPPINFO pInfo)
 
         if (iSockRet != SOCKET_ERROR)
         {
-            /* get time packet was recieved */
+            /* get time packet was received */
             pInfo->lTimeEnd = GetTime(pInfo);
             DebugPrint(_T("reveived %d bytes\n"), iSockRet);
             bRet = TRUE;
@@ -362,7 +362,7 @@ DecodeResponse(PAPPINFO pInfo)
 {
     unsigned short header_len = pInfo->RecvPacket->h_len * 4;
 
-    /* cast the recieved packet into an ECHO reply and a TTL Exceed and check the ID*/
+    /* cast the received packet into an ECHO reply and a TTL Exceed and check the ID*/
     ECHO_REPLY_HEADER *IcmpHdr = (ECHO_REPLY_HEADER *)((char*)pInfo->RecvPacket + header_len);
 
     /* Make sure the reply is ok */
@@ -426,7 +426,7 @@ Driver(PAPPINFO pInfo)
 {
     INT iHopCount = 1;              // hop counter. default max is 30
     BOOL bFoundTarget = FALSE;      // Have we reached our destination yet
-    INT iRecieveReturn;             // RecieveReturn return value
+    INT iReceiveReturn;             // ReceiveReturn return value
     PECHO_REPLY_HEADER icmphdr;
     INT iTTL = 1;
 
@@ -470,14 +470,14 @@ Driver(PAPPINFO pInfo)
 
                 if (SendPacket(pInfo) != SOCKET_ERROR)
                 {
-                    BOOL bAwaitPacket = FALSE; // indicates whether we have recieved a good packet
+                    BOOL bAwaitPacket = FALSE; // indicates whether we have received a good packet
 
                     do
                     {
                         /* Receive replies until we get a successful read, or a fatal error */
-                        if ((iRecieveReturn = ReceivePacket(pInfo)) < 0)
+                        if ((iReceiveReturn = ReceivePacket(pInfo)) < 0)
                         {
-                            /* FIXME: consider moving this into RecievePacket */
+                            /* FIXME: consider moving this into ReceivePacket */
                             /* check the seq num in the packet, if it's bad wait for another */
                             WORD hdrLen = pInfo->RecvPacket->h_len * 4;
                             icmphdr = (ECHO_REPLY_HEADER *)((char*)&pInfo->RecvPacket + hdrLen);
@@ -488,7 +488,7 @@ Driver(PAPPINFO pInfo)
                             }
                         }
 
-                        if (iRecieveReturn)
+                        if (iReceiveReturn)
                         {
                             if (DecodeResponse(pInfo) < 0)
                                 bAwaitPacket = TRUE;

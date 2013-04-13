@@ -75,7 +75,7 @@ GLvoid BuildFont(GLvoid)
                        0.0f,                    // Deviation From The True Outlines
                        0.2f,                    // Font Thickness In The Z Direction
                        WGL_FONT_POLYGONS,       // Use Polygons, Not Lines
-                       gmf);                    // Address Of Buffer To Recieve Data
+                       gmf);                    // Address Of Buffer To Receive Data
 
     // Calculate the string extent
     for (i = 0; i < _tcslen(m_Text); i++)

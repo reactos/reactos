@@ -8,8 +8,8 @@
 
 /*
  * FIXME: Hotkey notifications are triggered by keyboard input (physical or programatically)
- * and since only desktops on WinSta0 can recieve input in seems very wrong to allow
- * windows/threads on destops not belonging to WinSta0 to set hotkeys (recieve notifications).
+ * and since only desktops on WinSta0 can receive input in seems very wrong to allow
+ * windows/threads on destops not belonging to WinSta0 to set hotkeys (receive notifications).
  *     -- Gunnar
  */
 

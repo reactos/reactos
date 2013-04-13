@@ -673,7 +673,7 @@ cleanup:
  *      from MONITORINFO will be filled.
  *
  *   pDevice
- *      Pointer to a UNICODE_STRING which will recieve the device's name. The
+ *      Pointer to a UNICODE_STRING which will receive the device's name. The
  *      length should be CCHDEVICENAME
  *      Can be NULL
  *

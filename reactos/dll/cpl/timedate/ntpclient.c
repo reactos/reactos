@@ -99,7 +99,7 @@ SendData(PINFO pInfo)
 
 
 static ULONG
-RecieveData(PINFO pInfo)
+ReceiveData(PINFO pInfo)
 {
     TIMEVAL timeVal;
     FD_SET readFDS;
@@ -164,7 +164,7 @@ GetServerTime(LPWSTR lpAddress)
             {
                 if (SendData(pInfo))
                 {
-                    ulTime = RecieveData(pInfo);
+                    ulTime = ReceiveData(pInfo);
                 }
             }
 
