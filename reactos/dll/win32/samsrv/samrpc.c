@@ -2096,6 +2096,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     SAM_USER_FIXED_DATA FixedUserData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT UserObject;
+    UCHAR LogonHours[23];
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
@@ -2350,11 +2351,14 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set LogonHours attribute*/
+    *((PUSHORT)LogonHours) = 168;
+    memset(&(LogonHours[2]), 0xff, 21);
+
     Status = SampSetObjectAttribute(UserObject,
                                     L"LogonHours",
                                     REG_BINARY,
-                                    NULL,
-                                    0);
+                                    &LogonHours,
+                                    sizeof(LogonHours));
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
