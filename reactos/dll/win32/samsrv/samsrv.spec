@@ -20,7 +20,7 @@
 @ stub SamIFree_SAMPR_ALIAS_INFO_BUFFER
 @ stub SamIFree_SAMPR_DISPLAY_INFO_BUFFER
 @ stub SamIFree_SAMPR_DOMAIN_INFO_BUFFER
-@ stub SamIFree_SAMPR_ENUMERATION_BUFFER
+@ stdcall SamIFree_SAMPR_ENUMERATION_BUFFER(ptr)
 @ stub SamIFree_SAMPR_GET_GROUPS_BUFFER
 @ stub SamIFree_SAMPR_GET_MEMBERS_BUFFER
 @ stub SamIFree_SAMPR_GROUP_INFO_BUFFER
@@ -36,13 +36,13 @@
 @ stub SamIGetBootKeyInformation
 @ stub SamIGetDefaultAdministratorName
 @ stub SamIGetFixedAttributes
-@ stub SamIGetinterdomainTrustAccountPasswordsForUpgrade
+@ stub SamIGetInterdomainTrustAccountPasswordsForUpgrade
 @ stub SamIGetPrivateData
 @ stub SamIGetResourceGroupmembershipsTransitive
 @ stub SamIGetSerialNumberDomain
-@ stub SamIGetuserLogonInformation
-@ stub SamIGetuserLogonInformation2
-@ stub SamIGetuserLogonInformationEx
+@ stub SamIGetUserLogonInformation
+@ stub SamIGetUserLogonInformation2
+@ stub SamIGetUserLogonInformationEx
 @ stub SamIImpersonateNullSession
 @ stub SamIIncrementPerformanceCounter
 @ stdcall SamIInitialize()
