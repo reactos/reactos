@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_DPLAY_H
@@ -192,17 +192,15 @@ typedef struct tagDPNAME
     {
         LPWSTR  lpszShortName;
         LPSTR   lpszShortNameA;
-    };
+    } DUMMYUNIONNAME1;
 
     union /*playerLongName */       /* Player's formal/real name */
     {
         LPWSTR  lpszLongName;
         LPSTR   lpszLongNameA;
-    };
+    } DUMMYUNIONNAME2;
 
 } DPNAME, *LPDPNAME;
-
-
 
 #define DPLONGNAMELEN     52
 #define DPSHORTNAMELEN    20
@@ -244,13 +242,13 @@ typedef struct tagDPSESSIONDESC2
     {
         LPWSTR  lpszSessionName;
         LPSTR   lpszSessionNameA;
-    };
+    } DUMMYUNIONNAME1;
 
     union  /* Optional password */
     {
         LPWSTR  lpszPassword;
         LPSTR   lpszPasswordA;
-    };
+    } DUMMYUNIONNAME2;
 
     DWORD   dwReserved1;
     DWORD   dwReserved2;
@@ -260,8 +258,6 @@ typedef struct tagDPSESSIONDESC2
     DWORD   dwUser3;
     DWORD   dwUser4;
 } DPSESSIONDESC2, *LPDPSESSIONDESC2;
-
-
 typedef const DPSESSIONDESC2* LPCDPSESSIONDESC2;
 
 #define DPOPEN_JOIN                     0x00000001
@@ -279,6 +275,9 @@ typedef const DPSESSIONDESC2* LPCDPSESSIONDESC2;
 #define DPSESSION_PASSWORDREQUIRED      0x00000400
 #define DPSESSION_MULTICASTSERVER       0x00000800
 #define DPSESSION_CLIENTSERVER          0x00001000
+#define DPSESSION_DIRECTPLAYPROTOCOL    0x00002000
+#define DPSESSION_NOPRESERVEORDER       0x00004000
+#define DPSESSION_OPTIMIZELATENCY       0x00008000
 
 typedef struct tagDPLCONNECTION
 {
@@ -396,7 +395,7 @@ typedef BOOL (CALLBACK *LPDPENUMSESSIONSCALLBACK)(
 
 extern HRESULT WINAPI DirectPlayEnumerateA( LPDPENUMDPCALLBACKA, LPVOID );
 extern HRESULT WINAPI DirectPlayEnumerateW( LPDPENUMDPCALLBACKW, LPVOID );
-extern HRESULT WINAPI DirectPlayCreate( LPGUID lpGUID, LPDIRECTPLAY2 *lplpDP, IUnknown *pUnk);
+extern HRESULT WINAPI DirectPlayCreate( LPGUID lpGUID, LPDIRECTPLAY *lplpDP, IUnknown *pUnk );
 
 typedef BOOL (CALLBACK *LPDPENUMPLAYERSCALLBACK)(
     DPID   dpId,
@@ -1065,6 +1064,20 @@ DECLARE_INTERFACE_(IDirectPlay4,IDirectPlay3)
 /* DirectPlay::Connect */
 #define DPCONNECT_RETURNSTATUS  (DPENUMSESSIONS_RETURNSTATUS)
 
+/* DirectPlay::GetCaps and DirectPlay::GetPlayerCaps */
+#define DPCAPS_ISHOST                  0x00000002
+#define DPCAPS_GROUPOPTIMIZED          0x00000008
+#define DPCAPS_KEEPALIVEOPTIMIZED      0x00000010
+#define DPCAPS_GUARANTEEDOPTIMIZED     0x00000020
+#define DPCAPS_GUARANTEEDSUPPORTED     0x00000040
+#define DPCAPS_SIGNINGSUPPORTED        0x00000080
+#define DPCAPS_ENCRYPTIONSUPPORTED     0x00000100
+#define DPPLAYERCAPS_LOCAL             0x00000800
+#define DPCAPS_ASYNCCANCELSUPPORTED    0x00001000
+#define DPCAPS_ASYNCCANCELALLSUPPORTED 0x00002000
+#define DPCAPS_SENDTIMEOUTSUPPORTED    0x00004000
+#define DPCAPS_SENDPRIORITYSUPPORTED   0x00008000
+#define DPCAPS_ASYNCSUPPORTED          0x00010000
 
 /** DirectPlay system messages **/
 
