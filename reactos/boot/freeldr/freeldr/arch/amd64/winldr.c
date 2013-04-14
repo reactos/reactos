@@ -183,13 +183,16 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
     }
 
     /* Kernel mapping */
-    if (MempMapRangeOfPages(StartPage * PAGE_SIZE + KSEG0_BASE,
-                            StartPage * PAGE_SIZE,
-                            NumberOfPages) != NumberOfPages)
+    if (KernelMapping)
     {
-        ERR("Failed to map pages %ld, %ld\n",
-                StartPage, NumberOfPages);
-        return FALSE;
+        if (MempMapRangeOfPages(StartPage * PAGE_SIZE + KSEG0_BASE,
+                                StartPage * PAGE_SIZE,
+                                NumberOfPages) != NumberOfPages)
+        {
+            ERR("Failed to map pages %ld, %ld\n",
+                    StartPage, NumberOfPages);
+            return FALSE;
+        }
     }
 
 	return TRUE;
@@ -343,7 +346,7 @@ WinLdrSetProcessorContext(void)
 	/* Disable Interrupts */
 	_disable();
 
-	/* Re-initialize EFLAGS */
+	/* Re-initalize EFLAGS */
 	__writeeflags(0);
 
 	/* Set the new PML4 */
