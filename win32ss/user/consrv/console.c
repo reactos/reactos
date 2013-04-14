@@ -348,9 +348,10 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
 {
 #define PATH_SEPARATOR L'\\'
 
-    BOOL   RetVal = FALSE;
-    LPWSTR LinkName = NULL;
-    SIZE_T Length = 0;
+    BOOL    RetVal   = FALSE;
+    HRESULT hRes     = S_OK;
+    LPWSTR  LinkName = NULL;
+    SIZE_T  Length   = 0;
 
     if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
         return FALSE;
@@ -379,7 +380,7 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
         return FALSE;
 
     /* 3- It may be a link. Try to retrieve some properties */
-    HRESULT hRes = CoInitialize(NULL);
+    hRes = CoInitialize(NULL);
     if (SUCCEEDED(hRes))
     {
         /* Get a pointer to the IShellLink interface */

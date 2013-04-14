@@ -292,9 +292,12 @@ LayoutProc(HWND hwndDlg,
                     }
                 }
 
-                pConInfo->ci.ScreenBufferSize = (COORD){swidth, sheight};
-                pConInfo->ci.ConsoleSize = (COORD){wwidth, wheight};
-                GuiInfo->WindowOrigin = (POINT){left, top};
+                pConInfo->ci.ScreenBufferSize.X = swidth;
+                pConInfo->ci.ScreenBufferSize.Y = sheight;
+                pConInfo->ci.ConsoleSize.X = wwidth;
+                pConInfo->ci.ConsoleSize.Y = wheight;
+                GuiInfo->WindowOrigin.x = left;
+                GuiInfo->WindowOrigin.y = top;
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             }
             break;
@@ -339,9 +342,12 @@ LayoutProc(HWND hwndDlg,
                             wheight = sheight;
                         }
 
-                        pConInfo->ci.ScreenBufferSize = (COORD){swidth, sheight};
-                        pConInfo->ci.ConsoleSize = (COORD){wwidth, wheight};
-                        GuiInfo->WindowOrigin = (POINT){left, top};
+                        pConInfo->ci.ScreenBufferSize.X = swidth;
+                        pConInfo->ci.ScreenBufferSize.Y = sheight;
+                        pConInfo->ci.ConsoleSize.X = wwidth;
+                        pConInfo->ci.ConsoleSize.Y = wheight;
+                        GuiInfo->WindowOrigin.x = left;
+                        GuiInfo->WindowOrigin.y = top;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -356,7 +362,8 @@ LayoutProc(HWND hwndDlg,
 
                         left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, FALSE);
                         top = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, NULL, FALSE);
-                        GuiInfo->WindowOrigin = (POINT){left, top};
+                        GuiInfo->WindowOrigin.x = left;
+                        GuiInfo->WindowOrigin.y = top;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), TRUE);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP), TRUE);
@@ -365,7 +372,8 @@ LayoutProc(HWND hwndDlg,
                     }
                     else if (res == BST_UNCHECKED)
                     {
-                        GuiInfo->WindowOrigin = (POINT){UINT_MAX, UINT_MAX};
+                        GuiInfo->WindowOrigin.x = UINT_MAX;
+                        GuiInfo->WindowOrigin.y = UINT_MAX;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), FALSE);
                         EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP), FALSE);

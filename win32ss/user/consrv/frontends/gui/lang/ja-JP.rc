@@ -11,6 +11,8 @@ BEGIN
     IDS_FIND            "検索..."
     IDS_DEFAULTS        "規定値"
     IDS_PROPERTIES      "プロパティ"
+
+/*
     IDS_SCROLLHERE      "ここにスクロール"
     IDS_SCROLLTOP       "一番上にスクロール"
     IDS_SCROLLBOTTOM    "一番下にスクロール"
@@ -18,6 +20,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "Page down"
     IDS_SCROLLUP        "上にスクロール"
     IDS_SCROLLDOWN      "下にスクロール"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

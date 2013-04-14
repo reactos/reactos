@@ -11,6 +11,8 @@ BEGIN
     IDS_FIND "מצא..."
     IDS_DEFAULTS "ברירת מחדל"
     IDS_PROPERTIES "מאפיינים"
+
+/*
     IDS_SCROLLHERE "גלול לכאן"
     IDS_SCROLLTOP "גלול למעלה"
     IDS_SCROLLBOTTOM "גלול למטה"
@@ -18,6 +20,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "עמוד מטה"
     IDS_SCROLLUP "גלול מעלה"
     IDS_SCROLLDOWN "גלול מטה"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

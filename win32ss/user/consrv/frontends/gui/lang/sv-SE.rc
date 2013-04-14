@@ -18,6 +18,8 @@ BEGIN
     IDS_FIND            "Sök..."
     IDS_DEFAULTS        "Ursprunglig"
     IDS_PROPERTIES      "Egenskaper"
+
+/*
     IDS_SCROLLHERE      "Skrolla hit"
     IDS_SCROLLTOP       "Skrolla till topp"
     IDS_SCROLLBOTTOM    "Skrolla till botten"
@@ -25,6 +27,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "Sida ner"
     IDS_SCROLLUP        "Skrolla upp"
     IDS_SCROLLDOWN      "Skrolla ner"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

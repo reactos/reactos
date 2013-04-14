@@ -18,6 +18,8 @@ BEGIN
     IDS_FIND            "Găsire…"
     IDS_DEFAULTS        "Implicite"
     IDS_PROPERTIES      "Proprietăți"
+
+/*
     IDS_SCROLLHERE      "Derulează aici"
     IDS_SCROLLTOP       "Derulează la început"
     IDS_SCROLLBOTTOM    "Derulează la sfârșit"
@@ -25,6 +27,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "Pagina următoare"
     IDS_SCROLLUP        "Derulează în sus"
     IDS_SCROLLDOWN      "Derulează în jos"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

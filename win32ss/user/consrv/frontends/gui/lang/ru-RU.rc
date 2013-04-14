@@ -11,6 +11,8 @@ BEGIN
     IDS_FIND            "Искать..."
     IDS_DEFAULTS        "Умолчания"
     IDS_PROPERTIES      "Свойства"
+
+/*
     IDS_SCROLLHERE      "Scroll Here"
     IDS_SCROLLTOP       "Scroll Top"
     IDS_SCROLLBOTTOM    "Прокрутить вниз"
@@ -18,6 +20,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "Вниз страницы"
     IDS_SCROLLUP        "Прокрутить вверх"
     IDS_SCROLLDOWN      "Scroll Down"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

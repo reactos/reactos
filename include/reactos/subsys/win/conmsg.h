@@ -143,7 +143,7 @@ typedef struct _CONSOLE_CONNECTION_INFO
 
 typedef struct
 {
-    USHORT nMaxIds;
+    ULONG  nMaxIds;
     ULONG  nProcessIdsTotal;
     PDWORD pProcessIds;
 } CONSOLE_GETPROCESSLIST, *PCONSOLE_GETPROCESSLIST;

@@ -20,6 +20,8 @@ BEGIN
     IDS_FIND            "Trova..."
     IDS_DEFAULTS        "Impostazioni predefinite"
     IDS_PROPERTIES      "Proprietà"
+
+/*
     IDS_SCROLLHERE      "Scorri qui"
     IDS_SCROLLTOP       "Scorri in cima"
     IDS_SCROLLBOTTOM    "Scorri in fondo"
@@ -27,6 +29,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "Pagina giù"
     IDS_SCROLLUP        "Scorri sù"
     IDS_SCROLLDOWN      "Scorri giù"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

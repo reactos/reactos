@@ -11,6 +11,8 @@ BEGIN
     IDS_FIND            "Finn..."
     IDS_DEFAULTS        "Standard"
     IDS_PROPERTIES      "Egenskaper"
+
+/*
     IDS_SCROLLHERE      "Rull her"
     IDS_SCROLLTOP       "Rull til toppen"
     IDS_SCROLLBOTTOM    "Rull knapp"
@@ -18,6 +20,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "Side ned"
     IDS_SCROLLUP        "Rull opp"
     IDS_SCROLLDOWN      "Rull ned"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

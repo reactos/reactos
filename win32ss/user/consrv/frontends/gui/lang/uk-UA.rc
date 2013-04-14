@@ -19,6 +19,8 @@ BEGIN
     IDS_FIND            "Знайти..."
     IDS_DEFAULTS        "Замовчування"
     IDS_PROPERTIES      "Властивості"
+
+/*
     IDS_SCROLLHERE      "Прокрутити сюди"
     IDS_SCROLLTOP       "Прокрутити на початок"
     IDS_SCROLLBOTTOM    "Прокрутити на кінець"
@@ -26,6 +28,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "Наступна сторінка"
     IDS_SCROLLUP        "Прокрутити догори"
     IDS_SCROLLDOWN      "Прокрутити донизу"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

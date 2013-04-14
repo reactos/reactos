@@ -226,7 +226,8 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
             LPWSTR WindowTitle = NULL;
             SIZE_T Length = 0;
 
-            Console->dwSelectionCursor = (COORD){0, 0};
+            Console->dwSelectionCursor.X = 0;
+            Console->dwSelectionCursor.Y = 0;
             Console->Selection.dwSelectionAnchor = Console->dwSelectionCursor;
             Console->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS;
             GuiConsoleUpdateSelection(Console, &Console->Selection.dwSelectionAnchor);
@@ -251,7 +252,8 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
 
         case ID_SYSTEM_EDIT_SELECTALL:
         {
-            Console->Selection.dwSelectionAnchor = (COORD){0, 0};
+            Console->Selection.dwSelectionAnchor.X = 0;
+            Console->Selection.dwSelectionAnchor.Y = 0;
             Console->dwSelectionCursor.X = Console->ConsoleSize.X - 1;
             Console->dwSelectionCursor.Y = Console->ConsoleSize.Y - 1;
             GuiConsoleUpdateSelection(Console, &Console->dwSelectionCursor);
@@ -768,7 +770,8 @@ GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM l
                 case VK_HOME:
                 {
                     Interpreted = TRUE;
-                    Console->dwSelectionCursor = (COORD){0, 0};
+                    Console->dwSelectionCursor.X = 0;
+                    Console->dwSelectionCursor.Y = 0;
                     break;
                 }
 
@@ -1911,11 +1914,17 @@ GuiInit(VOID)
         }
 
         /* Initialize the console window class */
-        ghDefaultIcon = LoadImageW(ConSrvDllInstance, MAKEINTRESOURCEW(IDI_CONSOLE), IMAGE_ICON,
-                                   GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON),
-                                   LR_SHARED);
-        ghDefaultIconSm = LoadImageW(ConSrvDllInstance, MAKEINTRESOURCEW(IDI_CONSOLE), IMAGE_ICON,
-                                     GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+        ghDefaultIcon   = LoadImageW(ConSrvDllInstance,
+                                     MAKEINTRESOURCEW(IDI_TERMINAL),
+                                     IMAGE_ICON,
+                                     GetSystemMetrics(SM_CXICON),
+                                     GetSystemMetrics(SM_CYICON),
+                                     LR_SHARED);
+        ghDefaultIconSm = LoadImageW(ConSrvDllInstance,
+                                     MAKEINTRESOURCEW(IDI_TERMINAL),
+                                     IMAGE_ICON,
+                                     GetSystemMetrics(SM_CXSMICON),
+                                     GetSystemMetrics(SM_CYSMICON),
                                      LR_SHARED);
         ghDefaultCursor = LoadCursorW(NULL, IDC_ARROW);
         wc.cbSize = sizeof(WNDCLASSEXW);
@@ -2042,7 +2051,7 @@ GuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, LONG CursorStartX, LONG Cur
 
         ScrollWindowEx(GuiData->hWindow,
                        0,
-                       -(ScrolledLines * GuiData->CharHeight),
+                       -(int)(ScrolledLines * GuiData->CharHeight),
                        &ScrollRect,
                        NULL,
                        NULL,

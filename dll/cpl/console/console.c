@@ -97,8 +97,10 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     pConInfo->ci.QuickEdit = FALSE;
     pConInfo->ci.InsertMode = TRUE;
     // pConInfo->ci.InputBufferSize;
-    pConInfo->ci.ScreenBufferSize = (COORD){80, 300};
-    pConInfo->ci.ConsoleSize      = (COORD){80, 25 };
+    pConInfo->ci.ScreenBufferSize.X = 80;
+    pConInfo->ci.ScreenBufferSize.Y = 300;
+    pConInfo->ci.ConsoleSize.X = 80;
+    pConInfo->ci.ConsoleSize.Y = 25;
     pConInfo->ci.CursorBlinkOn = TRUE;
     pConInfo->ci.ForceCursorOff = FALSE;
     pConInfo->ci.CursorSize = CSR_DEFAULT_CURSOR_SIZE;
@@ -118,7 +120,8 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     GuiInfo->UseRasterFonts = TRUE;
 
     GuiInfo->AutoPosition = TRUE;
-    GuiInfo->WindowOrigin = (POINT){0, 0};
+    GuiInfo->WindowOrigin.x = 0;
+    GuiInfo->WindowOrigin.y = 0;
 
     memcpy(pConInfo->ci.Colors, s_Colors, sizeof(s_Colors));
 }

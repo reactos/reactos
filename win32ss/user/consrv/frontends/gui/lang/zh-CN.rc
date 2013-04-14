@@ -11,6 +11,8 @@ BEGIN
     IDS_FIND            "查找..."
     IDS_DEFAULTS        "默认"
     IDS_PROPERTIES      "属性"
+
+/*
     IDS_SCROLLHERE      "滚动到此"
     IDS_SCROLLTOP       "滚动至顶端"
     IDS_SCROLLBOTTOM    "滚动至末端"
@@ -18,6 +20,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "下一页"
     IDS_SCROLLUP        "向上滚动"
     IDS_SCROLLDOWN      "向下滚动"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

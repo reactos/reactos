@@ -198,7 +198,8 @@ GuiConsoleGetDefaultSettings(IN OUT PGUI_CONSOLE_INFO TermInfo,
 
     TermInfo->ShowWindow   = SW_SHOWNORMAL;
     TermInfo->AutoPosition = TRUE;
-    TermInfo->WindowOrigin = (POINT){0, 0};
+    TermInfo->WindowOrigin.x = 0;
+    TermInfo->WindowOrigin.y = 0;
 
     /*
      * 2. Overwrite them with the ones stored in HKCU\Console.

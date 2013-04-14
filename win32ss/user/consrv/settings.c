@@ -415,8 +415,10 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
     ConsoleInfo->QuickEdit  = FALSE;
     ConsoleInfo->InsertMode = TRUE;
     // ConsoleInfo->InputBufferSize;
-    ConsoleInfo->ScreenBufferSize = (COORD){80, 300};
-    ConsoleInfo->ConsoleSize      = (COORD){80, 25 };
+    ConsoleInfo->ScreenBufferSize.X = 80;
+    ConsoleInfo->ScreenBufferSize.Y = 300;
+    ConsoleInfo->ConsoleSize.X = 80;
+    ConsoleInfo->ConsoleSize.Y = 25;
 
     ConsoleInfo->CursorBlinkOn;
     ConsoleInfo->ForceCursorOff;

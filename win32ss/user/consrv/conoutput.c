@@ -115,7 +115,8 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
     {
         ClearLineBuffer(*Buffer);
     }
-    (*Buffer)->CursorPosition = (COORD){0, 0};
+    (*Buffer)->CursorPosition.X = 0;
+    (*Buffer)->CursorPosition.Y = 0;
 
     (*Buffer)->Mode = ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
     (*Buffer)->DisplayMode = DisplayMode;
@@ -1394,7 +1395,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    COORD   ScreenBufferSize = (COORD){80, 25};
+    COORD   ScreenBufferSize = {80, 25};
     USHORT  ScreenAttrib     = DEFAULT_SCREEN_ATTRIB;
     USHORT  PopupAttrib      = DEFAULT_POPUP_ATTRIB;
     ULONG   DisplayMode      = CONSOLE_WINDOWED_MODE;

@@ -535,7 +535,8 @@ SetConsoleDisplayMode(HANDLE hConsoleOutput,
 
     SetDisplayModeRequest->OutputHandle = hConsoleOutput;
     SetDisplayModeRequest->DisplayMode  = dwFlags;
-    SetDisplayModeRequest->NewSBDim     = (COORD){0, 0};
+    SetDisplayModeRequest->NewSBDim.X   = 0;
+    SetDisplayModeRequest->NewSBDim.Y   = 0;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
@@ -1113,7 +1114,8 @@ GetLargestConsoleWindowSize(HANDLE hConsoleOutput)
     PCONSOLE_GETLARGESTWINDOWSIZE GetLargestWindowSizeRequest = &ApiMessage.Data.GetLargestWindowSizeRequest;
 
     GetLargestWindowSizeRequest->OutputHandle = hConsoleOutput;
-    GetLargestWindowSizeRequest->Size = (COORD){0, 0};
+    GetLargestWindowSizeRequest->Size.X = 0;
+    GetLargestWindowSizeRequest->Size.Y = 0;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
@@ -2238,7 +2240,7 @@ DWORD
 WINAPI
 GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
-    int lenName = lstrlenW(InputExeName);
+    ULONG lenName = lstrlenW(InputExeName);
 
     if (nBufferLength == 0)
     {

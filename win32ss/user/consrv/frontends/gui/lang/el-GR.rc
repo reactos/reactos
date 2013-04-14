@@ -11,6 +11,8 @@ BEGIN
     IDS_FIND            "Εύρεση..."
     IDS_DEFAULTS        "Προεπιλογή"
     IDS_PROPERTIES      "Ιδιότητες"
+
+/*
     IDS_SCROLLHERE      "Κύλιση εδώ"
     IDS_SCROLLTOP       "Αρχή"
     IDS_SCROLLBOTTOM    "Τέλος"
@@ -18,6 +20,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "Επόμενη σελίδα"
     IDS_SCROLLUP        "Κύλιση πάνω"
     IDS_SCROLLDOWN      "Κύλιση κάτω"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END

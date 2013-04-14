@@ -17,6 +17,8 @@ BEGIN
     IDS_FIND            "Търсене..."
     IDS_DEFAULTS        "Подразбирани"
     IDS_PROPERTIES      "Свойства"
+
+/*
     IDS_SCROLLHERE      "Прелистване тук"
     IDS_SCROLLTOP       "Прелистване до горе"
     IDS_SCROLLBOTTOM    "Прелистване до долу"
@@ -24,6 +26,7 @@ BEGIN
     IDS_SCROLLPAGE_DOWN "Долна страница"
     IDS_SCROLLUP        "Прелистване нагоре"
     IDS_SCROLLDOWN      "Прелистване надолу"
+*/
 
-    IDS_CONSOLE_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Console"
 END
