@@ -137,5 +137,7 @@ extern LIST_ENTRY CmiHiveListHead;
 #include <string.h>
 #endif//_WIN32
 
+#define _In_
+#define _Out_
 
 /* EOF */
