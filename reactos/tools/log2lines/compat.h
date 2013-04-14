@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined (__DJGPP__) || defined (__WIN32__)
+#if defined(_WIN32)
 
 #include <direct.h>
 
@@ -15,8 +15,7 @@
 #define CP_CMD          "copy /Y "
 #define DIR_FMT         "dir /a:-d /s /b %s > %s"
 
-#else /* not defined (__DJGPP__) || defined (__WIN32__) */
-
+#else /* not defined (_WIN32) */
 #include <limits.h>
 #include <sys/stat.h>
 
@@ -32,6 +31,6 @@
 #define CP_CMD          "cp -f "
 #define DIR_FMT         "find %s -type f > %s"
 
-#endif /* not defined (__DJGPP__) || defined (__WIN32__) */
+#endif /* not defined (_WIN32) */
 
 /* EOF */
