@@ -16,10 +16,8 @@
 #define DIR_FMT         "dir /a:-d /s /b %s > %s"
 
 #else /* not defined (_WIN32) */
-#include <limits.h>
 #include <sys/stat.h>
 
-#define MAX_PATH        PATH_MAX
 #define POPEN           popen
 #define PCLOSE          pclose
 #define MKDIR(d)        mkdir(d, S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH)
