@@ -14,6 +14,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Hack for host tools */
+#ifndef _SAL_VERSION
+#include "../ndk/no_sal2.h"
+#endif
+
 // FIXME: hack
 #undef ASSERT
 #define ASSERT(...)
