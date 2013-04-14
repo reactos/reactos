@@ -195,4 +195,17 @@ extern HANDLE TimerThreadHandle;
 NTSTATUS
 RtlpInitializeTimerThread(VOID);
 
+/* bitmap64.c */
+typedef struct _RTL_BITMAP64
+{
+    ULONG64 SizeOfBitMap;
+    PULONG64 Buffer;
+} RTL_BITMAP64, *PRTL_BITMAP64;
+
+typedef struct _RTL_BITMAP_RUN64
+{
+    ULONG64 StartingIndex;
+    ULONG64 NumberOfBits;
+} RTL_BITMAP_RUN64, *PRTL_BITMAP_RUN64;
+
 /* EOF */

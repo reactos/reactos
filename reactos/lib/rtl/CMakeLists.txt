@@ -82,6 +82,7 @@ elseif(ARCH STREQUAL "amd64")
         amd64/except_asm.S
         amd64/slist.S)
     list(APPEND SOURCE
+        bitmap64.c
         byteswap.c
         amd64/unwind.c
         amd64/stubs.c
