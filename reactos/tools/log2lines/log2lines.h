@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <limits.h>
 #include <rsym.h>
 
 #include "config.h"
@@ -11,7 +12,7 @@
 
 struct lineinfo_struct
 {
-    int     valid; 
+    int     valid;
     char    file1[LINESIZE];
     char    func1[NAMESIZE];
     int     nr1;
