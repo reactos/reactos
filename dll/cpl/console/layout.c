@@ -13,13 +13,13 @@
 
 const TCHAR szPreviewText[] =
     _T("C:\\ReactOS> dir                       \n") \
-    _T("SYSTEM       <DIR>      03-04-15  5:00a\n") \
-    _T("SYSTEM32     <DIR>      03-04-15  5:00a\n") \
-    _T("readme   txt       1739 03-04-15  5:00a\n") \
-    _T("explorer exe    3329536 03-04-15  5:00a\n") \
-    _T("vgafonts cab      18736 03-04-15  5:00a\n") \
-    _T("setuplog txt        313 03-04-15  5:00a\n") \
-    _T("win      ini       7005 03-04-15  5:00a\n");
+    _T("SYSTEM       <DIR>      13-04-15  5:00a\n") \
+    _T("SYSTEM32     <DIR>      13-04-15  5:00a\n") \
+    _T("readme   txt       1739 13-04-15  5:00a\n") \
+    _T("explorer exe    3329536 13-04-15  5:00a\n") \
+    _T("vgafonts cab      18736 13-04-15  5:00a\n") \
+    _T("setuplog txt        313 13-04-15  5:00a\n") \
+    _T("win      ini       7005 13-04-15  5:00a\n");
 
 
 VOID
