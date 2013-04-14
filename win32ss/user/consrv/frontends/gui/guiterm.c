@@ -595,11 +595,7 @@ GuiConsolePaint(PCONSOLE Console,
             }
 
             MultiByteToWideChar(Console->OutputCodePage,
-                                0,
-                                (PCHAR)From,
-                                1,
-                                To,
-                                1);
+                                0, (PCHAR)From, 1, To, 1);
             To++;
             From += 2;
         }
@@ -611,13 +607,14 @@ GuiConsolePaint(PCONSOLE Console,
                  RightChar - Start + 1);
     }
 
-    if (Buff->CursorInfo.bVisible && Buff->CursorBlinkOn &&
-            !Buff->ForceCursorOff)
+    if (Buff->CursorInfo.bVisible &&
+        Buff->CursorBlinkOn &&
+        !Buff->ForceCursorOff)
     {
         CursorX = Buff->CursorPosition.X;
         CursorY = Buff->CursorPosition.Y;
         if (LeftChar <= CursorX && CursorX <= RightChar &&
-                TopLine <= CursorY && CursorY <= BottomLine)
+            TopLine  <= CursorY && CursorY <= BottomLine)
         {
             CursorHeight = ConioEffectiveCursorSize(Console, GuiData->CharHeight);
             From = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y) + 1;
@@ -836,7 +833,7 @@ GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM l
 }
 
 static VOID
-GuiInvalidateCell(PCONSOLE Console, UINT x, UINT y)
+GuiInvalidateCell(PCONSOLE Console, SHORT x, SHORT y)
 {
     SMALL_RECT CellRect = { x, y, x, y };
     GuiDrawRegion(Console, &CellRect);
@@ -971,8 +968,8 @@ PointToCoord(PGUI_CONSOLE_DATA GuiData, LPARAM lParam)
     PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
     COORD Coord;
 
-    Coord.X = Buffer->ShowX + ((short)LOWORD(lParam) / (int)GuiData->CharWidth);
-    Coord.Y = Buffer->ShowY + ((short)HIWORD(lParam) / (int)GuiData->CharHeight);
+    Coord.X = Buffer->ShowX + ((SHORT)LOWORD(lParam) / (int)GuiData->CharWidth);
+    Coord.Y = Buffer->ShowY + ((SHORT)HIWORD(lParam) / (int)GuiData->CharHeight);
 
     /* Clip coordinate to ensure it's inside buffer */
     if (Coord.X < 0)
@@ -2029,12 +2026,12 @@ GuiCleanupConsole(PCONSOLE Console)
 }
 
 static VOID WINAPI
-GuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, LONG CursorStartX, LONG CursorStartY,
+GuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, SHORT CursorStartX, SHORT CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
     PGUI_CONSOLE_DATA GuiData = Console->TermIFace.Data;
     PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
-    LONG CursorEndX, CursorEndY;
+    SHORT CursorEndX, CursorEndY;
     RECT ScrollRect;
 
     if (NULL == GuiData || NULL == GuiData->hWindow)
@@ -2104,7 +2101,7 @@ GuiSetCursorInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
 }
 
 static BOOL WINAPI
-GuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, UINT OldCursorX, UINT OldCursorY)
+GuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, SHORT OldCursorX, SHORT OldCursorY)
 {
     if (Console->ActiveBuffer == Buff)
     {

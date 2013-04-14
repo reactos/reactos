@@ -268,7 +268,7 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
         }
         else if (!wcscmp(szValueName, L"HistoryNoDup"))
         {
-            ConsoleInfo->HistoryNoDup = Value;
+            ConsoleInfo->HistoryNoDup = (BOOLEAN)Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"FullScreen"))
@@ -278,12 +278,12 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
         }
         else if (!wcscmp(szValueName, L"QuickEdit"))
         {
-            ConsoleInfo->QuickEdit = Value;
+            ConsoleInfo->QuickEdit = (BOOLEAN)Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"InsertMode"))
         {
-            ConsoleInfo->InsertMode = Value;
+            ConsoleInfo->InsertMode = (BOOLEAN)Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"ScreenBufferSize"))
@@ -305,12 +305,12 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
         }
         else if (!wcscmp(szValueName, L"ScreenColors"))
         {
-            ConsoleInfo->ScreenAttrib = Value;
+            ConsoleInfo->ScreenAttrib = (USHORT)Value;
             RetVal = TRUE;
         }
         else if (!wcscmp(szValueName, L"PopupColors"))
         {
-            ConsoleInfo->PopupAttrib = Value;
+            ConsoleInfo->PopupAttrib = (USHORT)Value;
             RetVal = TRUE;
         }
     }

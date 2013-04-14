@@ -456,7 +456,7 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
                                        sizeof(LuidEnabled),
                                        NULL);
     ASSERT(NT_SUCCESS(Status));
-    BaseStaticServerData->LUIDDeviceMapsEnabled = LuidEnabled;
+    BaseStaticServerData->LUIDDeviceMapsEnabled = (BOOLEAN)LuidEnabled;
     if (!BaseStaticServerData->LUIDDeviceMapsEnabled)
     {
         /* Make Global point back to BNO */

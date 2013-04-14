@@ -480,7 +480,7 @@ TuiCleanupConsole(PCONSOLE Console)
 }
 
 static VOID WINAPI
-TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, LONG CursorStartX, LONG CursorStartY,
+TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, SHORT CursorStartX, SHORT CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
     DWORD BytesWritten;
@@ -554,7 +554,7 @@ TuiSetCursorInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
 }
 
 static BOOL WINAPI
-TuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, UINT OldCursorX, UINT OldCursorY)
+TuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, SHORT OldCursorX, SHORT OldCursorY)
 {
     CONSOLE_SCREEN_BUFFER_INFO Info;
     DWORD BytesReturned;

@@ -523,7 +523,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
          */
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USEFILLATTRIBUTE)
         {
-            ConsoleInfo.ScreenAttrib = ConsoleStartInfo->FillAttribute;
+            ConsoleInfo.ScreenAttrib = (USHORT)ConsoleStartInfo->FillAttribute;
         }
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USECOUNTCHARS)
         {

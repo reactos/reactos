@@ -60,13 +60,13 @@ static VOID FASTCALL
 ClearLineBuffer(PCONSOLE_SCREEN_BUFFER Buff)
 {
     PBYTE Ptr = ConioCoordToPointer(Buff, 0, Buff->CursorPosition.Y);
-    UINT Pos;
+    SHORT Pos;
 
     for (Pos = 0; Pos < Buff->ScreenBufferSize.X; Pos++)
     {
         /* Fill the cell */
         *Ptr++ = ' ';
-        *Ptr++ = Buff->ScreenDefaultAttrib;
+        *Ptr++ = (BYTE)Buff->ScreenDefaultAttrib;
     }
 }
 
@@ -155,7 +155,7 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
     UINT i;
     PBYTE Ptr;
     SMALL_RECT UpdateRect;
-    LONG CursorStartX, CursorStartY;
+    SHORT CursorStartX, CursorStartY;
     UINT ScrolledLines;
 
     CursorStartX = Buff->CursorPosition.X;
@@ -178,8 +178,8 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
             if (Buffer[i] == '\r')
             {
                 Buff->CursorPosition.X = 0;
-                UpdateRect.Left = min(UpdateRect.Left, (LONG)Buff->CursorPosition.X);
-                UpdateRect.Right = max(UpdateRect.Right, (LONG)Buff->CursorPosition.X);
+                UpdateRect.Left = min(UpdateRect.Left, Buff->CursorPosition.X);
+                UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
                 continue;
             }
             /* --- LF --- */
@@ -200,7 +200,7 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                         /* slide virtual position up */
                         Buff->CursorPosition.X = Buff->ScreenBufferSize.X - 1;
                         Buff->CursorPosition.Y--;
-                        UpdateRect.Top = min(UpdateRect.Top, (LONG)Buff->CursorPosition.Y);
+                        UpdateRect.Top = min(UpdateRect.Top, Buff->CursorPosition.Y);
                     }
                     else
                     {
@@ -208,9 +208,9 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                     }
                     Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
                     Ptr[0] = ' ';
-                    Ptr[1] = Buff->ScreenDefaultAttrib;
-                    UpdateRect.Left = min(UpdateRect.Left, (LONG)Buff->CursorPosition.X);
-                    UpdateRect.Right = max(UpdateRect.Right, (LONG)Buff->CursorPosition.X);
+                    Ptr[1] = (BYTE)Buff->ScreenDefaultAttrib;
+                    UpdateRect.Left = min(UpdateRect.Left, Buff->CursorPosition.X);
+                    UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
                 }
                 continue;
             }
@@ -219,17 +219,17 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
             {
                 UINT EndX;
 
-                UpdateRect.Left = min(UpdateRect.Left, (LONG)Buff->CursorPosition.X);
+                UpdateRect.Left = min(UpdateRect.Left, Buff->CursorPosition.X);
                 EndX = (Buff->CursorPosition.X + TAB_WIDTH) & ~(TAB_WIDTH - 1);
-                EndX = min(EndX, Buff->ScreenBufferSize.X);
+                EndX = min(EndX, (UINT)Buff->ScreenBufferSize.X);
                 Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
                 while (Buff->CursorPosition.X < EndX)
                 {
                     *Ptr++ = ' ';
-                    *Ptr++ = Buff->ScreenDefaultAttrib;
+                    *Ptr++ = (BYTE)Buff->ScreenDefaultAttrib;
                     Buff->CursorPosition.X++;
                 }
-                UpdateRect.Right = max(UpdateRect.Right, (LONG)Buff->CursorPosition.X - 1);
+                UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X - 1);
                 if (Buff->CursorPosition.X == Buff->ScreenBufferSize.X)
                 {
                     if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
@@ -253,13 +253,13 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                 // continue;
             // }
         }
-        UpdateRect.Left = min(UpdateRect.Left, (LONG)Buff->CursorPosition.X);
-        UpdateRect.Right = max(UpdateRect.Right, (LONG)Buff->CursorPosition.X);
+        UpdateRect.Left = min(UpdateRect.Left, Buff->CursorPosition.X);
+        UpdateRect.Right = max(UpdateRect.Right, Buff->CursorPosition.X);
         Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
         Ptr[0] = Buffer[i];
         if (Attrib)
         {
-            Ptr[1] = Buff->ScreenDefaultAttrib;
+            Ptr[1] = (BYTE)Buff->ScreenDefaultAttrib;
         }
         Buff->CursorPosition.X++;
         if (Buff->CursorPosition.X == Buff->ScreenBufferSize.X)
@@ -278,8 +278,8 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
 
     if (!ConioIsRectEmpty(&UpdateRect) && Buff == Console->ActiveBuffer)
     {
-        ConioWriteStream(Console, &UpdateRect, CursorStartX, CursorStartY, ScrolledLines,
-                         Buffer, Length);
+        ConioWriteStream(Console, &UpdateRect, CursorStartX, CursorStartY,
+                         ScrolledLines, Buffer, Length);
     }
 
     return STATUS_SUCCESS;
@@ -466,7 +466,7 @@ ConioResizeBuffer(PCONSOLE Console,
             for (i = 0; i < diff; i++)
             {
                 Buffer[Offset++] = ' ';
-                Buffer[Offset++] = ScreenBuffer->ScreenDefaultAttrib;
+                Buffer[Offset++] = (BYTE)ScreenBuffer->ScreenDefaultAttrib;
             }
 #endif
         }
@@ -481,7 +481,7 @@ ConioResizeBuffer(PCONSOLE Console,
         for (i = 0; i < diff; i++)
         {
             Buffer[Offset++] = ' ';
-            Buffer[Offset++] = ScreenBuffer->ScreenDefaultAttrib;
+            Buffer[Offset++] = (BYTE)ScreenBuffer->ScreenDefaultAttrib;
         }
 #endif
     }
@@ -730,7 +730,7 @@ CSR_API(SrvReadConsoleOutput)
     PCHAR_INFO CharInfo;
     PCHAR_INFO CurCharInfo;
     PCONSOLE_SCREEN_BUFFER Buff;
-    DWORD SizeX, SizeY;
+    SHORT SizeX, SizeY;
     NTSTATUS Status;
     COORD BufferSize;
     COORD BufferCoord;
@@ -905,7 +905,7 @@ CSR_API(SrvWriteConsoleOutput)
                 AsciiChar = CurCharInfo->Char.AsciiChar;
             }
             *Ptr++ = AsciiChar;
-            *Ptr++ = CurCharInfo->Attributes;
+            *Ptr++ = (BYTE)CurCharInfo->Attributes;
             CurCharInfo++;
         }
     }
@@ -929,7 +929,7 @@ CSR_API(SrvReadConsoleOutputString)
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
     USHORT CodeType;
-    DWORD Xpos, Ypos;
+    SHORT Xpos, Ypos;
     PVOID ReadBuffer;
     DWORD i;
     ULONG CodeSize;
@@ -1324,8 +1324,8 @@ CSR_API(SrvSetConsoleCursorPosition)
     PCONSOLE_SETCURSORPOSITION SetCursorPositionRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetCursorPositionRequest;
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
-    LONG OldCursorX, OldCursorY;
-    LONG NewCursorX, NewCursorY;
+    SHORT OldCursorX, OldCursorY;
+    SHORT NewCursorX, NewCursorY;
 
     DPRINT("SrvSetConsoleCursorPosition\n");
 

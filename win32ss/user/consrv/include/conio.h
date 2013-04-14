@@ -93,8 +93,8 @@ typedef struct _FRONTEND_VTBL
     VOID (WINAPI *CleanupConsole)(struct _CONSOLE* Console);
     VOID (WINAPI *WriteStream)(struct _CONSOLE* Console,
                                SMALL_RECT* Block,
-                               LONG CursorStartX,
-                               LONG CursorStartY,
+                               SHORT CursorStartX,
+                               SHORT CursorStartY,
                                UINT ScrolledLines,
                                CHAR *Buffer,
                                UINT Length);
@@ -104,8 +104,8 @@ typedef struct _FRONTEND_VTBL
                                  PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     BOOL (WINAPI *SetScreenInfo)(struct _CONSOLE* Console,
                                  PCONSOLE_SCREEN_BUFFER ScreenBuffer,
-                                 UINT OldCursorX,
-                                 UINT OldCursorY);
+                                 SHORT OldCursorX,
+                                 SHORT OldCursorY);
     BOOL (WINAPI *UpdateScreenInfo)(struct _CONSOLE* Console,
                                     PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     BOOL (WINAPI *IsBufferResizeSupported)(struct _CONSOLE* Console);

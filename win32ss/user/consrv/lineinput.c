@@ -67,14 +67,13 @@ static VOID
 HistoryAddEntry(PCONSOLE Console)
 {
     UNICODE_STRING NewEntry;
-    PHISTORY_BUFFER Hist;
+    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console);
     INT i;
+
+    if (!Hist) return;
 
     NewEntry.Length = NewEntry.MaximumLength = Console->LineSize * sizeof(WCHAR);
     NewEntry.Buffer = Console->LineBuffer;
-
-    if (!(Hist = HistoryCurrentBuffer(Console)))
-        return;
 
     /* Don't add blank or duplicate entries */
     if (NewEntry.Length == 0 || Hist->MaxEntries == 0 ||
@@ -118,8 +117,9 @@ HistoryAddEntry(PCONSOLE Console)
 static VOID
 HistoryGetCurrentEntry(PCONSOLE Console, PUNICODE_STRING Entry)
 {
-    PHISTORY_BUFFER Hist;
-    if (!(Hist = HistoryCurrentBuffer(Console)) || Hist->NumEntries == 0)
+    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console);
+
+    if (!Hist || Hist->NumEntries == 0)
         Entry->Length = 0;
     else
         *Entry = Hist->Entries[Hist->Position];
@@ -173,8 +173,8 @@ LineInputSetPos(PCONSOLE Console, UINT Pos)
     if (Pos != Console->LinePos && Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
     {
         PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
-        UINT OldCursorX = Buffer->CursorPosition.X;
-        UINT OldCursorY = Buffer->CursorPosition.Y;
+        SHORT OldCursorX = Buffer->CursorPosition.X;
+        SHORT OldCursorY = Buffer->CursorPosition.Y;
         INT XY = OldCursorY * Buffer->ScreenBufferSize.X + OldCursorX;
 
         XY += (Pos - Console->LinePos);
@@ -196,7 +196,7 @@ LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR *Inser
 {
     UINT Pos = Console->LinePos;
     UINT NewSize = Console->LineSize - NumToDelete + NumToInsert;
-    INT i;
+    UINT i;
 
     /* Make sure there's always enough room for ending \r\n */
     if (NewSize + 2 > Console->LineMaxSize)
@@ -231,20 +231,19 @@ LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR *Inser
 static VOID
 LineInputRecallHistory(PCONSOLE Console, INT Offset)
 {
-    PHISTORY_BUFFER Hist;
+    PHISTORY_BUFFER Hist = HistoryCurrentBuffer(Console);
+    UINT Position = 0;
 
-    if (!(Hist = HistoryCurrentBuffer(Console)) || Hist->NumEntries == 0)
-        return;
+    if (!Hist || Hist->NumEntries == 0) return;
 
-    Offset += Hist->Position;
-    Offset = max(Offset, 0);
-    Offset = min(Offset, Hist->NumEntries - 1);
-    Hist->Position = Offset;
+    Position = Hist->Position + Offset;
+    Position = min(max(Position, 0), Hist->NumEntries - 1);
+    Hist->Position = Position;
 
     LineInputSetPos(Console, 0);
     LineInputEdit(Console, Console->LineSize,
-                  Hist->Entries[Offset].Length / sizeof(WCHAR),
-                  Hist->Entries[Offset].Buffer);
+                  Hist->Entries[Hist->Position].Length / sizeof(WCHAR),
+                  Hist->Entries[Hist->Position].Buffer);
 }
 
 VOID FASTCALL
@@ -357,8 +356,8 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         return;
     case VK_F8:
         /* Search for history entries starting with input. */
-        if (!(Hist = HistoryCurrentBuffer(Console)) || Hist->NumEntries == 0)
-            return;
+        Hist = HistoryCurrentBuffer(Console);
+        if (!Hist || Hist->NumEntries == 0) return;
 
         /* Like Up/F5, on first time start from current (usually last) entry,
          * but on subsequent times start at previous entry. */
@@ -455,7 +454,7 @@ CSR_API(SrvGetConsoleCommandHistory)
     PHISTORY_BUFFER Hist;
     PBYTE Buffer = (PBYTE)GetCommandHistoryRequest->History;
     ULONG BufferSize = GetCommandHistoryRequest->Length;
-    INT i;
+    UINT  i;
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
                                    (PVOID*)&GetCommandHistoryRequest->History,
@@ -502,7 +501,7 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
     NTSTATUS Status;
     PHISTORY_BUFFER Hist;
     ULONG Length = 0;
-    INT i;
+    UINT  i;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID*)&GetCommandHistoryLengthRequest->ExeName.Buffer,

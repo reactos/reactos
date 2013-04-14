@@ -568,7 +568,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
         if (Console->LineBuffer == NULL)
         {
             /* Starting a new line */
-            Console->LineMaxSize = max(256, nNumberOfCharsToRead);
+            Console->LineMaxSize = (WORD)max(256, nNumberOfCharsToRead);
             Console->LineBuffer = RtlAllocateHeap(ConSrvHeap, 0, Console->LineMaxSize * sizeof(WCHAR));
             if (Console->LineBuffer == NULL)
             {
