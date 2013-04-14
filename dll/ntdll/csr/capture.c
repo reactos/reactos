@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/csr/capture.c
+ * FILE:            dll/ntdll/csr/capture.c
  * PURPOSE:         Routines for probing and capturing CSR API Messages
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
@@ -94,7 +94,8 @@ CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
     if (BufferSize >= MAXLONG) return NULL;
 
     /* Add the size of the header and for each offset to the pointers */
-    BufferSize += FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) + (ArgumentCount * sizeof(ULONG_PTR));
+    BufferSize += FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
+                    (ArgumentCount * sizeof(ULONG_PTR));
 
     /* Align it to a 4-byte boundary */
     BufferSize = (BufferSize + 3) & ~3;

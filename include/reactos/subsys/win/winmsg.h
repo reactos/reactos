@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * PROJECT:         ReactOS User API Server DLL
  * FILE:            include/reactos/subsys/win/winmsg.h
  * PURPOSE:         Public definitions for communication
  *                  between User-Mode API Clients and Servers
@@ -40,18 +40,18 @@ typedef struct
 {
     UINT Flags;
     DWORD Reserved;
-} CSRSS_EXIT_REACTOS, *PCSRSS_EXIT_REACTOS;
+} USER_EXIT_REACTOS, *PUSER_EXIT_REACTOS;
 
 typedef struct
 {
     ULONG_PTR ProcessId;
-} CSRSS_REGISTER_SERVICES_PROCESS, *PCSRSS_REGISTER_SERVICES_PROCESS;
+} USER_REGISTER_SERVICES_PROCESS, *PUSER_REGISTER_SERVICES_PROCESS;
 
 typedef struct
 {
     ULONG_PTR ProcessId;
     BOOL Register;
-} CSRSS_REGISTER_LOGON_PROCESS, *PCSRSS_REGISTER_LOGON_PROCESS;
+} USER_REGISTER_LOGON_PROCESS, *PUSER_REGISTER_LOGON_PROCESS;
 
 
 typedef struct _USER_API_MESSAGE
@@ -60,13 +60,13 @@ typedef struct _USER_API_MESSAGE
 
     PCSR_CAPTURE_BUFFER CsrCaptureData;
     CSR_API_NUMBER ApiNumber;
-    NTSTATUS Status; // ReturnValue;
+    NTSTATUS Status;
     ULONG Reserved;
     union
     {
-        CSRSS_EXIT_REACTOS ExitReactosRequest;
-        CSRSS_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
-        CSRSS_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
+        USER_EXIT_REACTOS ExitReactosRequest;
+        USER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
+        USER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
     } Data;
 } USER_API_MESSAGE, *PUSER_API_MESSAGE;
 

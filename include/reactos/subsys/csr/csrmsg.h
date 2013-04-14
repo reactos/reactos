@@ -33,7 +33,7 @@ typedef enum _CSRSRV_API_NUMBER
 
 
 /*
-typedef union _CSR_API_NUMBER
+typedef struct _CSR_API_NUMBER
 {
     WORD Index;
     WORD Subsystem;

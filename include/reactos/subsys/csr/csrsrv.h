@@ -10,15 +10,6 @@
 #ifndef _CSRSRV_H
 #define _CSRSRV_H
 
-// see http://code.google.com/p/ontl/source/browse/branches/x64/ntl/nt/csr.hxx?r=67
-
-/*
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning (disable:4201)
-#endif
-*/
-
 #include "csrmsg.h"
 
 
@@ -213,6 +204,7 @@ ULONG
     IN BOOLEAN FirstPhase
 );
 
+// See http://redplait.blogspot.fr/2011/07/csrserverdll.html
 typedef struct _CSR_SERVER_DLL
 {
     ULONG Length;
@@ -221,8 +213,8 @@ typedef struct _CSR_SERVER_DLL
     HANDLE ServerHandle;
     ULONG ServerId;
     ULONG Unknown;
-    ULONG ApiBase; // ApiNumberBase
-    ULONG HighestApiSupported; // MaxApiNumber
+    ULONG ApiBase;
+    ULONG HighestApiSupported;
     PCSR_API_ROUTINE *DispatchTable;
     PBOOLEAN ValidTable; // Table of booleans which describe whether or not a server function call is valid when it is called via CsrCallServerFromServer.
     PCHAR *NameTable;
@@ -230,7 +222,7 @@ typedef struct _CSR_SERVER_DLL
     PCSR_CONNECT_CALLBACK ConnectCallback;
     PCSR_DISCONNECT_CALLBACK DisconnectCallback;
     PCSR_HARDERROR_CALLBACK HardErrorCallback;
-    PVOID SharedSection; // SharedStaticServerData
+    PVOID SharedSection;
     PCSR_NEWPROCESS_CALLBACK NewProcessCallback;
     PCSR_SHUTDOWNPROCESS_CALLBACK ShutdownProcessCallback;
     ULONG Unknown2[3];
@@ -418,12 +410,6 @@ BOOLEAN
 NTAPI
 CsrValidateMessageString(IN PCSR_API_MESSAGE ApiMessage,
                          IN LPWSTR *MessageString);
-
-/*
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-*/
 
 #endif // _CSRSRV_H
 

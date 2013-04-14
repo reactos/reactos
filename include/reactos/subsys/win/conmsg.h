@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            include/reactos/subsys/win/conmsg.h
  * PURPOSE:         Public definitions for communication
  *                  between Console API Clients and Servers
@@ -131,7 +131,7 @@ typedef struct _CONSOLE_CONNECTION_INFO
     /* Adapted from CONSOLE_ALLOCCONSOLE */
     CONSOLE_START_INFO ConsoleStartInfo;
 
-    HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
+    HANDLE Console; // ConsoleHandle // On ReactOS, it is a PCSRSS_CONSOLE
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;
@@ -180,7 +180,7 @@ typedef struct
 {
     PCONSOLE_START_INFO ConsoleStartInfo;
 
-    HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
+    HANDLE Console; // ConsoleHandle // On ReactOS, it is a PCSRSS_CONSOLE
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;
@@ -192,7 +192,7 @@ typedef struct
 typedef struct
 {
     DWORD ProcessId; // If ProcessId == ATTACH_PARENT_PROCESS == -1, then attach the current process to its parent process console.
-    HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
+    HANDLE Console; // ConsoleHandle // On ReactOS, it is a PCSRSS_CONSOLE
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;
@@ -585,7 +585,7 @@ typedef struct _CONSOLE_API_MESSAGE
 
     PCSR_CAPTURE_BUFFER CsrCaptureData;
     CSR_API_NUMBER ApiNumber;
-    NTSTATUS Status; // ReturnValue;
+    NTSTATUS Status;
     ULONG Reserved;
     union
     {

@@ -4,6 +4,8 @@
  * FILE:            win32ss/user/winsrv/shutdown.c
  * PURPOSE:         Logout/shutdown
  * PROGRAMMERS:
+ *
+ * NOTE: The shutdown code must be rewritten completely. (hbelusca)
  */
 
 /* INCLUDES *******************************************************************/
@@ -915,7 +917,7 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
 
 CSR_API(SrvExitWindowsEx)
 {
-    PCSRSS_EXIT_REACTOS ExitReactosRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.ExitReactosRequest;
+    PUSER_EXIT_REACTOS ExitReactosRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.ExitReactosRequest;
 
     if (0 == (ExitReactosRequest->Flags & EWX_INTERNAL_FLAG))
     {

@@ -196,7 +196,6 @@ ApplyConsoleInfo(HWND hwndDlg,
         }
     }
 
-    // if (res == IDC_RADIO_APPLY_ALL || res == IDC_RADIO_APPLY_CURRENT)
     if (SetParams)
     {
         HANDLE hSection;
@@ -289,10 +288,6 @@ InitApplet(HWND hWnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         HeapFree(GetProcessHeap(), 0, pConInfo);
         return 0;
     }
-
-    // if (IsBadReadPtr((PVOID)pSharedInfo, sizeof(CONSOLE_PROPS)))
-    // {
-    // }
 
     /* Find the console window and whether we must use default parameters */
     pConInfo->hConsoleWindow    = pSharedInfo->hConsoleWindow;

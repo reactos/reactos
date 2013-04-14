@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/csr/api.c
+ * FILE:            dll/ntdll/csr/api.c
  * PURPOSE:         CSR APIs exported through NTDLL
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */

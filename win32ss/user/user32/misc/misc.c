@@ -55,7 +55,7 @@ RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
         Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                      NULL,
                                      CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterLogonProcess),
-                                     sizeof(CSRSS_REGISTER_LOGON_PROCESS));
+                                     sizeof(USER_REGISTER_LOGON_PROCESS));
         if (!NT_SUCCESS(Status))
         {
             ERR("Failed to register logon process with CSRSS\n");

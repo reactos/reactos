@@ -134,7 +134,6 @@ DllMain(HANDLE hDll,
             }
 
             /* Connect to the base server */
-            DPRINT("Connecting to CSR in DllMain...\n");
             Status = CsrClientConnectToServer(SessionDir,
                                               BASESRV_SERVERDLL_INDEX,
                                               &Dummy,
@@ -146,7 +145,6 @@ DllMain(HANDLE hDll,
                 NtTerminateProcess(NtCurrentProcess(), Status);
                 return FALSE;
             }
-            DPRINT("kernel32 DllMain - OK, connection succeeded\n");
 
             /* Get the server data */
             ASSERT(Peb->ReadOnlyStaticServerData);
@@ -214,13 +212,11 @@ DllMain(HANDLE hDll,
 
             /* Insert more dll attach stuff here! */
             DllInitialized = TRUE;
-            DPRINT("Initialization complete\n");
             break;
         }
 
         case DLL_PROCESS_DETACH:
         {
-            DPRINT("DLL_PROCESS_DETACH\n");
             if (DllInitialized == TRUE)
             {
                 /* Insert more dll detach stuff here! */

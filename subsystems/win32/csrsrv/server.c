@@ -603,6 +603,8 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
     ULONG_PTR ErrorParameters[4];
     ULONG Response;
 
+    DPRINT1("CsrUnhandledExceptionFilter called\n");
+
     /* Check if a debugger is installed */
     Status = NtQuerySystemInformation(SystemKernelDebuggerInformation,
                                       &DebuggerInfo,

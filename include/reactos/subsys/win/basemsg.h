@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            include/reactos/subsys/win/basemsg.h
  * PURPOSE:         Public definitions for communication
  *                  between Base API Clients and Servers
@@ -184,7 +184,7 @@ typedef struct _BASE_API_MESSAGE
 
     PCSR_CAPTURE_BUFFER CsrCaptureData;
     CSR_API_NUMBER ApiNumber;
-    NTSTATUS Status; // ReturnValue;
+    NTSTATUS Status;
     ULONG Reserved;
     union
     {

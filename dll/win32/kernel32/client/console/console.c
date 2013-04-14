@@ -2227,8 +2227,8 @@ SetConsoleInputExeNameA(LPCSTR lpInputExeName)
  * \name GetConsoleInputExeNameW
  * \brief Retrieves the console input file name as unicode string.
  * \param nBufferLength Length of the buffer in WCHARs.
- *        Specify 0 to recieve the needed buffer length.
- * \param lpBuffer Pointer to a buffer that recieves the string.
+ *        Specify 0 to receive the needed buffer length.
+ * \param lpBuffer Pointer to a buffer that receives the string.
  * \return Needed buffer size if \p nBufferLength is 0.
  *         Otherwise 1 if successful, 2 if buffer is too small.
  * \remarks Sets last error value to ERROR_BUFFER_OVERFLOW if the buffer
@@ -2274,10 +2274,10 @@ GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
  * \name GetConsoleInputExeNameA
  * \brief Retrieves the console input file name as ansi string.
  * \param nBufferLength Length of the buffer in CHARs.
- * \param lpBuffer Pointer to a buffer that recieves the string.
+ * \param lpBuffer Pointer to a buffer that receives the string.
  * \return 1 if successful, 2 if buffer is too small.
  * \remarks Sets last error value to ERROR_BUFFER_OVERFLOW if the buffer
- *          is not big enough. The buffer recieves as much characters as fit.
+ *          is not big enough. The buffer receives as much characters as fit.
  */
 DWORD
 WINAPI

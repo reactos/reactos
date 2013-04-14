@@ -233,7 +233,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR Reserved,
     }
     else
     {
-        /* Non-DOS, build the stirng for it without the task ID */
+        /* Non-DOS, build the string for it without the task ID */
         _snwprintf(CommandLine,
                    sizeof(CommandLine),
                    L"\"%s\\ntvdm.exe\"  %s%c",

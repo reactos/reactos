@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            include/reactos/subsys/win/base.h
  * PURPOSE:         Public definitions for Base API Clients
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

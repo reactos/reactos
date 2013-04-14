@@ -24,12 +24,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/*
-// Define wmemset(...)
-#include <wchar.h>
-#define HAVE_WMEMSET
-*/
-
 /* GUI Console Window Class name */
 #define GUI_CONSOLE_WINDOW_CLASS L"ConsoleWindowClass"
 

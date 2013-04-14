@@ -581,7 +581,7 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
 
     /*
      * For GUI applications we turn on the 2nd bit. This also allows
-     * us to know whether or not the application is a GUI or CUI app.
+     * us to know whether or not this is a GUI or a TUI application.
      */
     if (IMAGE_SUBSYSTEM_WINDOWS_GUI == SectionImageInfo->SubSystemType)
     {
@@ -1856,7 +1856,7 @@ FatalAppExitW(IN UINT uAction,
     ULONG Response;
     NTSTATUS Status;
 
-    /* Setup the stirng to print out */
+    /* Setup the string to print out */
     RtlInitUnicodeString(&UnicodeString, lpMessageText);
 
     /* Display the hard error no matter what */

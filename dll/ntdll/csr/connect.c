@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/csr/connect.c
+ * FILE:            dll/ntdll/csr/connect.c
  * PURPOSE:         Routines for connecting and calling CSR
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
@@ -54,14 +54,14 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     ULONG PointerCount;
     PULONG_PTR OffsetPointer;
 
-    /* Fill out the Port Message Header. */
+    /* Fill out the Port Message Header */
     ApiMessage->Header.u2.ZeroInit = 0;
     ApiMessage->Header.u1.s1.TotalLength =
         FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
     ApiMessage->Header.u1.s1.DataLength =
         ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
 
-    /* Fill out the CSR Header. */
+    /* Fill out the CSR Header */
     ApiMessage->ApiNumber = ApiNumber;
     ApiMessage->CsrCaptureData = NULL;
 
@@ -70,10 +70,10 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
            ApiMessage->Header.u1.s1.DataLength,
            ApiMessage->Header.u1.s1.TotalLength);
                 
-    /* Check if we are already inside a CSR Server. */
+    /* Check if we are already inside a CSR Server */
     if (!InsideCsrProcess)
     {
-        /* Check if we got a Capture Buffer. */
+        /* Check if we got a Capture Buffer */
         if (CaptureBuffer)
         {
             /*
@@ -104,12 +104,12 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
             }
         }
 
-        /* Send the LPC Message. */
+        /* Send the LPC Message */
         Status = NtRequestWaitReplyPort(CsrApiPort,
                                         &ApiMessage->Header,
                                         &ApiMessage->Header);
 
-        /* Check if we got a Capture Buffer. */
+        /* Check if we got a Capture Buffer */
         if (CaptureBuffer)
         {
             /*
@@ -137,7 +137,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
             }
         }
 
-        /* Check for success. */
+        /* Check for success */
         if (!NT_SUCCESS(Status))
         {
             /* We failed. Overwrite the return value with the failure. */
@@ -150,13 +150,13 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
         /* This is a server-to-server call. Save our CID and do a direct call. */
         DPRINT1("Next gen server-to-server call\n");
 
-        /* We check this equality inside CsrValidateMessageBuffer. */
+        /* We check this equality inside CsrValidateMessageBuffer */
         ApiMessage->Header.ClientId = NtCurrentTeb()->ClientId;
 
         Status = CsrServerApiRoutine(&ApiMessage->Header,
                                      &ApiMessage->Header);
 
-        /* Check for success. */
+        /* Check for success */
         if (!NT_SUCCESS(Status))
         {
             /* We failed. Overwrite the return value with the failure. */
@@ -164,7 +164,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
         }
     }
 
-    /* Return the CSR Result. */
+    /* Return the CSR Result */
     DPRINT("Got back: 0x%lx\n", ApiMessage->Status);
     return ApiMessage->Status;
 }
@@ -404,7 +404,8 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
         if (!CsrApiPort)
         {
             /* No, set it up now */
-            if (!NT_SUCCESS(Status = CsrpConnectToServer(ObjectDirectory)))
+            Status = CsrpConnectToServer(ObjectDirectory);
+            if (!NT_SUCCESS(Status))
             {
                 /* Failed */
                 DPRINT1("Failure to connect to CSR\n");

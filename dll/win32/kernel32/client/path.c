@@ -1430,7 +1430,7 @@ SearchPathW(IN LPCWSTR lpPath,
     }
 
 Quickie:
-    /* Check if there was a dynamic path stirng to free */
+    /* Check if there was a dynamic path string to free */
     if ((PathString.Buffer != lpPath) && (PathString.Buffer))
     {
         /* And free it */

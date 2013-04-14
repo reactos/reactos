@@ -367,7 +367,7 @@ ReadInputBufferThread(IN PLIST_ENTRY WaitList,
 
     PVOID InputHandle = WaitArgument2;
 
-    DPRINT1("ReadInputBufferThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
+    DPRINT("ReadInputBufferThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
 
     /*
      * If we are notified of the process termination via a call
@@ -500,7 +500,7 @@ ReadCharsThread(IN PLIST_ENTRY WaitList,
 
     PVOID InputHandle = WaitArgument2;
 
-    DPRINT1("ReadCharsThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
+    DPRINT("ReadCharsThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
 
     /*
      * If we are notified of the process termination via a call

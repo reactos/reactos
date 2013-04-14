@@ -138,16 +138,19 @@ CreateBaseAcls(OUT PACL* Dacl,
     SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
     SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
     NTSTATUS Status;
-    // UCHAR KeyValueBuffer[0x40];
-    // PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
-    // UNICODE_STRING KeyName;
-    // ULONG ProtectionMode = 0;
-    ULONG AclLength; // , ResultLength;
-    // HANDLE hKey;
-    // OBJECT_ATTRIBUTES ObjectAttributes;
+#if 0 // Unused code
+    UCHAR KeyValueBuffer[0x40];
+    PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
+    UNICODE_STRING KeyName;
+    ULONG ProtectionMode = 0;
+#endif
+    ULONG AclLength;
+#if 0 // Unused code
+    ULONG ResultLength;
+    HANDLE hKey;
+    OBJECT_ATTRIBUTES ObjectAttributes;
 
     /* Open the Session Manager Key */
-    /*
     RtlInitUnicodeString(&KeyName, SM_REG_KEY);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -157,7 +160,7 @@ CreateBaseAcls(OUT PACL* Dacl,
     Status = NtOpenKey(&hKey, KEY_READ, &ObjectAttributes);
     if (NT_SUCCESS(Status))
     {
-        /\* Read the key value *\/
+        /* Read the key value */
         RtlInitUnicodeString(&KeyName, L"ProtectionMode");
         Status = NtQueryValueKey(hKey,
                                  &KeyName,
@@ -166,19 +169,19 @@ CreateBaseAcls(OUT PACL* Dacl,
                                  sizeof(KeyValueBuffer),
                                  &ResultLength);
 
-        /\* Make sure it's what we expect it to be *\/
+        /* Make sure it's what we expect it to be */
         KeyValuePartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)KeyValueBuffer;
         if ((NT_SUCCESS(Status)) && (KeyValuePartialInfo->Type == REG_DWORD) &&
             (*(PULONG)KeyValuePartialInfo->Data))
         {
-            /\* Save the Protection Mode *\/
-            // ProtectionMode = *(PULONG)KeyValuePartialInfo->Data;
+            /* Save the Protection Mode */
+            ProtectionMode = *(PULONG)KeyValuePartialInfo->Data;
         }
 
-        /\* Close the handle *\/
+        /* Close the handle */
         NtClose(hKey);
     }
-    */
+#endif
 
     /* Allocate the System SID */
     Status = RtlAllocateAndInitializeSid(&NtAuthority,
@@ -520,8 +523,8 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
 CSR_SERVER_DLL_INIT(ServerDllInitialization)
 {
     /* Setup the DLL Object */
-    LoadedServerDll->ApiBase = BASESRV_FIRST_API_NUMBER; // ApiNumberBase
-    LoadedServerDll->HighestApiSupported = BasepMaxApiNumber; // MaxApiNumber
+    LoadedServerDll->ApiBase = BASESRV_FIRST_API_NUMBER;
+    LoadedServerDll->HighestApiSupported = BasepMaxApiNumber;
     LoadedServerDll->DispatchTable = BaseServerApiDispatchTable;
     LoadedServerDll->ValidTable = BaseServerApiServerValidTable;
     LoadedServerDll->NameTable = BaseServerApiNameTable;

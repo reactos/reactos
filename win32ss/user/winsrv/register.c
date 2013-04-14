@@ -25,7 +25,7 @@ ULONG_PTR LogonProcessId = 0;
 
 CSR_API(SrvRegisterLogonProcess)
 {
-    PCSRSS_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterLogonProcessRequest;
+    PUSER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterLogonProcessRequest;
 
     if (RegisterLogonProcessRequest->Register)
     {
@@ -51,7 +51,7 @@ CSR_API(SrvRegisterLogonProcess)
 
 CSR_API(SrvRegisterServicesProcess)
 {
-    PCSRSS_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterServicesProcessRequest;
+    PUSER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterServicesProcessRequest;
 
     if (ServicesProcessIdValid == TRUE)
     {

@@ -191,13 +191,13 @@ InitializeVideoAddressSpace(VOID)
 }
 
 /**********************************************************************
- * CsrpInitVideo/3
+ * UserpInitVideo
  *
  * TODO: we need a virtual device for sessions other than
  * TODO: the console one
  */
 NTSTATUS
-CsrpInitVideo(VOID)
+UserpInitVideo(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\??\\DISPLAY1");
@@ -270,7 +270,7 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     UserServerHeap = RtlGetProcessHeap();
 
     /* Initialize the video */
-    CsrpInitVideo();
+    UserpInitVideo();
     NtUserInitialize(0, NULL, NULL);
     PrivateCsrssManualGuiCheck(0);
 

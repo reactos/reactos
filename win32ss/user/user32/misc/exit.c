@@ -76,7 +76,7 @@ ExitWindowsEx(UINT uFlags,
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpExitWindowsEx),
-                                 sizeof(CSRSS_EXIT_REACTOS));
+                                 sizeof(USER_EXIT_REACTOS));
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -101,7 +101,7 @@ RegisterServicesProcess(DWORD ServicesProcessId)
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterServicesProcess),
-                                 sizeof(CSRSS_REGISTER_SERVICES_PROCESS));
+                                 sizeof(USER_REGISTER_SERVICES_PROCESS));
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));

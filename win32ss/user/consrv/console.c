@@ -639,7 +639,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
 
     if (!GuiMode)
     {
-        DPRINT1("CONSRV: Opening text-mode terminal emulator\n");
+        DPRINT("CONSRV: Opening text-mode terminal emulator\n");
         Status = TuiInitConsole(Console,
                                 ConsoleStartInfo,
                                 &ConsoleInfo,
@@ -663,7 +663,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
      */
     if (GuiMode)
     {
-        DPRINT1("CONSRV: Opening GUI-mode terminal emulator\n");
+        DPRINT("CONSRV: Opening GUI-mode terminal emulator\n");
         Status = GuiInitConsole(Console,
                                 ConsoleStartInfo,
                                 &ConsoleInfo,

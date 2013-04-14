@@ -19,6 +19,12 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+// Define wmemset(...)
+#include <wchar.h>
+#define HAVE_WMEMSET
+*/
+
 
 /* GLOBALS ********************************************************************/
 
@@ -598,7 +604,7 @@ WriteConsoleThread(IN PLIST_ENTRY WaitList,
 {
     NTSTATUS Status;
 
-    DPRINT1("WriteConsoleThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
+    DPRINT("WriteConsoleThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
 
     /*
      * If we are notified of the process termination via a call

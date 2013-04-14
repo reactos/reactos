@@ -23,7 +23,7 @@
 
 static
 NTSTATUS
-CsrpGetClientFileName(
+UserpGetClientFileName(
     OUT PUNICODE_STRING ClientFileNameU,
     HANDLE hProcess)
 {
@@ -110,7 +110,7 @@ CsrpGetClientFileName(
 
 static
 VOID
-CsrpFreeStringParameters(
+UserpFreeStringParameters(
     IN OUT PULONG_PTR Parameters,
     IN PHARDERROR_MSG HardErrorMessage)
 {
@@ -130,7 +130,7 @@ CsrpFreeStringParameters(
 
 static
 NTSTATUS
-CsrpCaptureStringParameters(
+UserpCaptureStringParameters(
     OUT PULONG_PTR Parameters,
     OUT PULONG SizeOfAllUnicodeStrings,
     IN PHARDERROR_MSG HardErrorMessage,
@@ -226,7 +226,7 @@ CsrpCaptureStringParameters(
 
     if (!NT_SUCCESS(Status))
     {
-        CsrpFreeStringParameters(Parameters, HardErrorMessage);
+        UserpFreeStringParameters(Parameters, HardErrorMessage);
         return Status;
     }
 
@@ -238,7 +238,7 @@ CsrpCaptureStringParameters(
 
 static
 NTSTATUS
-CsrpFormatMessages(
+UserpFormatMessages(
     OUT PUNICODE_STRING TextStringU,
     OUT PUNICODE_STRING CaptionStringU,
     IN  PULONG_PTR Parameters,
@@ -254,7 +254,7 @@ CsrpFormatMessages(
     ULONG Size, ExceptionCode;
 
     /* Get the file name of the client process */
-    CsrpGetClientFileName(&FileNameU, hProcess);
+    UserpGetClientFileName(&FileNameU, hProcess);
 
     /* Check if we have a file name */
     if (!FileNameU.Buffer)
@@ -440,7 +440,7 @@ CsrpFormatMessages(
 
 static
 ULONG
-CsrpMessageBox(
+UserpMessageBox(
     PWSTR Text,
     PWSTR Caption,
     ULONG ValidResponseOptions,
@@ -547,7 +547,7 @@ UserServerHardError(
     }
 
     /* Capture all string parameters from the process memory */
-    Status = CsrpCaptureStringParameters(Parameters, &Size, Message, hProcess);
+    Status = UserpCaptureStringParameters(Parameters, &Size, Message, hProcess);
     if (!NT_SUCCESS(Status))
     {
         NtClose(hProcess);
@@ -555,15 +555,15 @@ UserServerHardError(
     }
 
     /* Format the caption and message box text */
-    Status = CsrpFormatMessages(&TextU,
-                                &CaptionU,
-                                Parameters,
-                                Size,
-                                Message,
-                                hProcess);
+    Status = UserpFormatMessages(&TextU,
+                                 &CaptionU,
+                                 Parameters,
+                                 Size,
+                                 Message,
+                                 hProcess);
 
     /* Cleanup */
-    CsrpFreeStringParameters(Parameters, Message);
+    UserpFreeStringParameters(Parameters, Message);
     NtClose(hProcess);
 
     if (!NT_SUCCESS(Status))
@@ -572,10 +572,10 @@ UserServerHardError(
     }
 
     /* Display the message box */
-    Message->Response = CsrpMessageBox(TextU.Buffer,
-                                       CaptionU.Buffer,
-                                       Message->ValidResponseOptions,
-                                       (ULONG)Message->Status >> 30);
+    Message->Response = UserpMessageBox(TextU.Buffer,
+                                        CaptionU.Buffer,
+                                        Message->ValidResponseOptions,
+                                        (ULONG)Message->Status >> 30);
 
     RtlFreeUnicodeString(&TextU);
     RtlFreeUnicodeString(&CaptionU);
