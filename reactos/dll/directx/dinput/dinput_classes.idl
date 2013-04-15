@@ -1,5 +1,7 @@
 /*
- * Copyright 2001 Ove Kaaven
+ * COM Classes for dinput
+ *
+ * Copyright 2010 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,11 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WINE_FILEDESCRIPTION_STR "Wine DirectInput"
-#define WINE_FILENAME_STR "dinput.dll"
-#define WINE_FILEVERSION 5,1,2600,881
-#define WINE_FILEVERSION_STR "5.1.2600.881"
-#define WINE_PRODUCTVERSION 5,1,2600,881
-#define WINE_PRODUCTVERSION_STR "5.1"
+[
+    helpstring("DirectInput Object"),
+    threading(both),
+    uuid(25e609e0-b259-11cf-bfc7-444553540000)
+]
+coclass DirectInput { interface IDirectInput; }
 
-#include "wine/wine_common_ver.rc"
+[
+    helpstring("DirectInputDevice Object"),
+    threading(both),
+    uuid(25e609e1-b259-11cf-bfc7-444553540000)
+]
+coclass DirectInputDevice { interface IDirectInputDevice; }
