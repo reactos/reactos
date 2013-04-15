@@ -94,7 +94,7 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
 
     ERR("IntHookModuleUnloaded: iHookID=%d\n", iHookID);
 
-    ppiCsr = PsGetProcessWin32Process(CsrProcess);
+    ppiCsr = PsGetProcessWin32Process(gpepCSRSS);
 
     ListEntry = pdesk->PtiList.Flink;
     while(ListEntry != &pdesk->PtiList)
@@ -147,7 +147,7 @@ UserRegisterUserApiHook(
     PPROCESSINFO ppiCsr;
 
     pti = PsGetCurrentThreadWin32Thread();
-    ppiCsr = PsGetProcessWin32Process(CsrProcess);
+    ppiCsr = PsGetProcessWin32Process(gpepCSRSS);
 
     /* Fail if the api hook is already registered */
     if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)

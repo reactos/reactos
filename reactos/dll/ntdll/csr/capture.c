@@ -1,21 +1,22 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/csr/capture.c
+ * FILE:            dll/ntdll/csr/capture.c
  * PURPOSE:         Routines for probing and capturing CSR API Messages
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntdll.h>
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
+
 extern HANDLE CsrPortHeap;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
@@ -82,34 +83,38 @@ CsrProbeForWrite(IN PVOID Address,
 /*
  * @implemented
  */
-PVOID
+PCSR_CAPTURE_BUFFER
 NTAPI
-CsrAllocateCaptureBuffer(ULONG ArgumentCount,
-                         ULONG BufferSize)
+CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
+                         IN ULONG BufferSize)
 {
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     /* Validate size */
     if (BufferSize >= MAXLONG) return NULL;
 
-    /* Add the size of the header and for each pointer to the pointers */
-    BufferSize += sizeof(CSR_CAPTURE_BUFFER) + (ArgumentCount * sizeof(PVOID));
+    /* Add the size of the header and for each offset to the pointers */
+    BufferSize += FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
+                    (ArgumentCount * sizeof(ULONG_PTR));
+
+    /* Align it to a 4-byte boundary */
+    BufferSize = (BufferSize + 3) & ~3;
 
     /* Allocate memory from the port heap */
-    CaptureBuffer = RtlAllocateHeap(CsrPortHeap, 0, BufferSize);
+    CaptureBuffer = RtlAllocateHeap(CsrPortHeap, HEAP_ZERO_MEMORY, BufferSize);
     if (CaptureBuffer == NULL) return NULL;
 
     /* Initialize the header */
     CaptureBuffer->Size = BufferSize;
     CaptureBuffer->PointerCount = 0;
 
-    /* Initialize all the pointers */
-    RtlZeroMemory(CaptureBuffer->PointerArray,
+    /* Initialize all the offsets */
+    RtlZeroMemory(CaptureBuffer->PointerOffsetsArray,
                   ArgumentCount * sizeof(ULONG_PTR));
 
-    /* Point the start of the free buffer */
-    CaptureBuffer->BufferEnd = (ULONG_PTR)CaptureBuffer->PointerArray +
-                               ArgumentCount * sizeof(ULONG_PTR);
+    /* Point to the start of the free buffer */
+    CaptureBuffer->BufferEnd = (PVOID)((ULONG_PTR)CaptureBuffer->PointerOffsetsArray +
+                                       ArgumentCount * sizeof(ULONG_PTR));
 
     /* Return the address of the buffer */
     return CaptureBuffer;
@@ -120,20 +125,19 @@ CsrAllocateCaptureBuffer(ULONG ArgumentCount,
  */
 ULONG
 NTAPI
-CsrAllocateMessagePointer(PCSR_CAPTURE_BUFFER CaptureBuffer,
-                          ULONG MessageLength,
-                          PVOID *CaptureData)
+CsrAllocateMessagePointer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
+                          IN ULONG MessageLength,
+                          OUT PVOID *CapturedData)
 {
-    /* If there's no data, our job is easy. */
     if (MessageLength == 0)
     {
-        *CaptureData = NULL;
-        CaptureData = NULL;
+        *CapturedData = NULL;
+        CapturedData = NULL;
     }
     else
     {
         /* Set the capture data at our current available buffer */
-        *CaptureData = (PVOID)CaptureBuffer->BufferEnd;
+        *CapturedData = CaptureBuffer->BufferEnd;
 
         /* Validate the size */
         if (MessageLength >= MAXLONG) return 0;
@@ -142,14 +146,11 @@ CsrAllocateMessagePointer(PCSR_CAPTURE_BUFFER CaptureBuffer,
         MessageLength = (MessageLength + 3) & ~3;
 
         /* Move our available buffer beyond this space */
-        CaptureBuffer->BufferEnd += MessageLength;
+        CaptureBuffer->BufferEnd = (PVOID)((ULONG_PTR)CaptureBuffer->BufferEnd + MessageLength);
     }
 
-    /* Write down this pointer in the array */
-    CaptureBuffer->PointerArray[CaptureBuffer->PointerCount] = (ULONG_PTR)CaptureData;
-
-    /* Increase the pointer count */
-    CaptureBuffer->PointerCount++;
+    /* Write down this pointer in the array and increase the count */
+    CaptureBuffer->PointerOffsetsArray[CaptureBuffer->PointerCount++] = (ULONG_PTR)CapturedData;
 
     /* Return the aligned length */
     return MessageLength;
@@ -160,19 +161,19 @@ CsrAllocateMessagePointer(PCSR_CAPTURE_BUFFER CaptureBuffer,
  */
 VOID
 NTAPI
-CsrCaptureMessageBuffer(PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        PVOID MessageString,
-                        ULONG StringLength,
-                        PVOID *CapturedData)
+CsrCaptureMessageBuffer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
+                        IN PVOID MessageBuffer OPTIONAL,
+                        IN ULONG MessageLength,
+                        OUT PVOID *CapturedData)
 {
     /* Simply allocate a message pointer in the buffer */
-    CsrAllocateMessagePointer(CaptureBuffer, StringLength, CapturedData);
+    CsrAllocateMessagePointer(CaptureBuffer, MessageLength, CapturedData);
 
     /* Check if there was any data */
-    if (!MessageString || !StringLength) return;
+    if (!MessageBuffer || !MessageLength) return;
 
     /* Copy the data into the buffer */
-    RtlMoveMemory(*CapturedData, MessageString, StringLength);
+    RtlMoveMemory(*CapturedData, MessageBuffer, MessageLength);
 }
 
 /*
@@ -180,14 +181,14 @@ CsrCaptureMessageBuffer(PCSR_CAPTURE_BUFFER CaptureBuffer,
  */
 VOID
 NTAPI
-CsrFreeCaptureBuffer(PCSR_CAPTURE_BUFFER CaptureBuffer)
+CsrFreeCaptureBuffer(IN PCSR_CAPTURE_BUFFER CaptureBuffer)
 {
     /* Free it from the heap */
     RtlFreeHeap(CsrPortHeap, 0, CaptureBuffer);
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 NTSTATUS
 NTAPI
@@ -206,8 +207,8 @@ CsrCaptureMessageMultiUnicodeStringsInPlace(IN PCSR_CAPTURE_BUFFER *CaptureBuffe
  */
 VOID
 NTAPI
-CsrCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        LPSTR String,
+CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
+                        IN LPSTR String OPTIONAL,
                         IN ULONG StringLength,
                         IN ULONG MaximumLength,
                         OUT PANSI_STRING CapturedString)
@@ -256,14 +257,14 @@ CsrCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
  */
 PLARGE_INTEGER
 NTAPI
-CsrCaptureTimeout(LONG Milliseconds,
-                  PLARGE_INTEGER Timeout)
+CsrCaptureTimeout(IN ULONG Milliseconds,
+                  OUT PLARGE_INTEGER Timeout)
 {
     /* Validate the time */
     if (Milliseconds == -1) return NULL;
 
     /* Convert to relative ticks */
-    Timeout->QuadPart = Milliseconds * -100000;
+    Timeout->QuadPart = Int32x32To64(Milliseconds, -10000);
     return Timeout;
 }
 

@@ -20,7 +20,8 @@ ATOM AtomFlashWndState; // Window Flash State atom.
 BOOL gbInitialized;
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
-PEPROCESS gpepCSRSS;
+PEPROCESS gpepCSRSS = NULL;
+ATOM gaGuiConsoleWndClass;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -105,7 +106,7 @@ UserInitialize(
 // Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
 // Create Event for Diconnect Desktop.
 
-    Status = UserCreateWinstaDirectoy();
+    Status = UserCreateWinstaDirectory();
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Initialize Video. */
@@ -121,7 +122,9 @@ UserInitialize(
 // Create ThreadInfo for this Thread!
 // {
 
-    GetW32ThreadInfo();
+    /* Initialize the current thread. */
+    Status = UserCreateThreadInfo(PsGetCurrentThread());
+    if (!NT_SUCCESS(Status)) return Status;
 
 //    Callback to User32 Client Thread Setup
 
@@ -132,8 +135,6 @@ UserInitialize(
 // Load Resources.
 
     NtUserUpdatePerUserSystemParameters(0, TRUE);
-
-    CsrInit();
 
     if (gpsi->hbrGray == NULL)
     {

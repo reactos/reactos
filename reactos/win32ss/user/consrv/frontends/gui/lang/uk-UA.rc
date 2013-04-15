@@ -1,0 +1,34 @@
+/*
+ * PROJECT:         ReactOS CSRSS subsystem
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            win32ss/user/consrv/lang/uk-UA.rc
+ * PURPOSE:         Ukraianian resource file
+ * TRANSLATOR:      Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT            "Редагувати"
+    IDS_MARK            "Виділити"
+    IDS_COPY            "Копіювати\tEnter"
+    IDS_PASTE           "Вставити"
+    IDS_SELECTALL       "Виділити все"
+    IDS_SCROLL          "Прокрутити"
+    IDS_FIND            "Знайти..."
+    IDS_DEFAULTS        "Замовчування"
+    IDS_PROPERTIES      "Властивості"
+
+/*
+    IDS_SCROLLHERE      "Прокрутити сюди"
+    IDS_SCROLLTOP       "Прокрутити на початок"
+    IDS_SCROLLBOTTOM    "Прокрутити на кінець"
+    IDS_SCROLLPAGE_UP   "Попередня сотрінка"
+    IDS_SCROLLPAGE_DOWN "Наступна сторінка"
+    IDS_SCROLLUP        "Прокрутити догори"
+    IDS_SCROLLDOWN      "Прокрутити донизу"
+*/
+
+    IDS_TERMINAL_TITLE   "ReactOS Console"
+END

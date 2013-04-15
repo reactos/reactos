@@ -15,9 +15,8 @@ PPROCESSINFO LogonProcess = NULL;
 BOOL FASTCALL
 co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 {
-   PEPROCESS Process;
    NTSTATUS Status;
-   CSR_API_MESSAGE Request;
+   PEPROCESS Process;
 
    Status = PsLookupProcessByProcessId(ProcessId,
                                        &Process);
@@ -51,17 +50,6 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
    }
 
    ObDereferenceObject(Process);
-
-   Request.Type = MAKE_CSR_API(REGISTER_LOGON_PROCESS, CSR_GUI);
-   Request.Data.RegisterLogonProcessRequest.ProcessId = ProcessId;
-   Request.Data.RegisterLogonProcessRequest.Register = Register;
-
-   Status = co_CsrNotify(&Request);
-   if (! NT_SUCCESS(Status))
-   {
-      ERR("Failed to register logon process with CSRSS\n");
-      return FALSE;
-   }
 
    return TRUE;
 }
@@ -350,7 +338,7 @@ NtUserCallOneParam(
           BOOL Ret = TRUE;
           PPROCESSINFO ppi;
           PDWORD pdwLayout;
-          if ( PsGetCurrentProcess() == CsrProcess)
+          if ( PsGetCurrentProcess() == gpepCSRSS)
           {
              EngSetLastError(ERROR_INVALID_ACCESS);
              RETURN(FALSE);

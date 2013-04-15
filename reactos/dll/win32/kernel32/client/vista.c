@@ -1,8 +1,11 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Vista functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  */
+
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 
@@ -101,8 +104,8 @@ SleepConditionVariableSRW(IN OUT PCONDITION_VARIABLE ConditionVariable,
  * @implemented
  */
 BOOL WINAPI InitializeCriticalSectionEx(OUT LPCRITICAL_SECTION lpCriticalSection,
-                                       IN DWORD dwSpinCount,
-                                       IN DWORD flags )
+                                        IN DWORD dwSpinCount,
+                                        IN DWORD flags)
 {
     NTSTATUS Status;
 
@@ -122,7 +125,6 @@ BOOL WINAPI InitializeCriticalSectionEx(OUT LPCRITICAL_SECTION lpCriticalSection
     /* Success */
     return TRUE;
 }
-
 
 
 /*
@@ -228,6 +230,7 @@ QueryFullProcessImageNameA(HANDLE hProcess,
     return Result;
 }
 
+
 /*
  * @unimplemented
  */
@@ -307,146 +310,6 @@ RegisterApplicationRestart(IN PCWSTR pwzCommandline  OPTIONAL,
 {
     UNIMPLEMENTED;
     return E_FAIL;
-}
-
-/*--------------------------------------------------------------
- *  GetConsoleHistoryInfo
- *
- * @implemented
- */
-BOOL
-WINAPI
-GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
-{
-    CSR_API_MESSAGE Request;
-    ULONG CsrRequest = MAKE_CSR_API(GET_HISTORY_INFO, CSR_CONSOLE);
-    NTSTATUS Status;
-    if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-    lpConsoleHistoryInfo->HistoryBufferSize      = Request.Data.GetHistoryInfo.HistoryBufferSize;
-    lpConsoleHistoryInfo->NumberOfHistoryBuffers = Request.Data.GetHistoryInfo.NumberOfHistoryBuffers;
-    lpConsoleHistoryInfo->dwFlags                = Request.Data.GetHistoryInfo.dwFlags;
-    return TRUE;
-}
-
-
-/*--------------------------------------------------------------
- *  SetConsoleHistoryInfo
- *
- * @implemented
- */
-BOOL
-WINAPI
-SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
-{
-    CSR_API_MESSAGE Request;
-    ULONG CsrRequest = MAKE_CSR_API(GET_HISTORY_INFO, CSR_CONSOLE);
-    NTSTATUS Status;
-    if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    Request.Data.SetHistoryInfo.HistoryBufferSize      = lpConsoleHistoryInfo->HistoryBufferSize;
-    Request.Data.SetHistoryInfo.NumberOfHistoryBuffers = lpConsoleHistoryInfo->NumberOfHistoryBuffers;
-    Request.Data.SetHistoryInfo.dwFlags                = lpConsoleHistoryInfo->dwFlags;
-    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-    return TRUE;
-}
-
-
-/*--------------------------------------------------------------
- *  GetConsoleOriginalTitleW
- *
- * @unimplemented
- */
-DWORD
-WINAPI
-GetConsoleOriginalTitleW(OUT LPWSTR lpConsoleTitle,
-                         IN DWORD nSize)
-{
-    DPRINT1("GetConsoleOriginalTitleW(0x%p, 0x%x) UNIMPLEMENTED!\n", lpConsoleTitle, nSize);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-/*--------------------------------------------------------------
- *  GetConsoleOriginalTitleA
- *
- * @unimplemented
- */
-DWORD
-WINAPI
-GetConsoleOriginalTitleA(OUT LPSTR lpConsoleTitle,
-                         IN DWORD nSize)
-{
-    DPRINT1("GetConsoleOriginalTitleA(0x%p, 0x%x) UNIMPLEMENTED!\n", lpConsoleTitle, nSize);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-/*--------------------------------------------------------------
- *  GetConsoleScreenBufferInfoEx
- *
- * @unimplemented
- */
-BOOL
-WINAPI
-GetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
-                             OUT PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
-{
-    DPRINT1("GetConsoleScreenBufferInfoEx(0x%p, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, lpConsoleScreenBufferInfoEx);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/*--------------------------------------------------------------
- *  SetConsoleScreenBufferInfoEx
- *
- * @unimplemented
- */
-BOOL
-WINAPI
-SetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
-                             IN PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
-{
-    DPRINT1("SetConsoleScreenBufferInfoEx(0x%p, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, lpConsoleScreenBufferInfoEx);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/*--------------------------------------------------------------
- *  GetCurrentConsoleFontEx
- *
- * @unimplemented
- */
-BOOL
-WINAPI
-GetCurrentConsoleFontEx(IN HANDLE hConsoleOutput,
-                        IN BOOL bMaximumWindow,
-                        OUT PCONSOLE_FONT_INFOEX lpConsoleCurrentFontEx)
-{
-    DPRINT1("GetCurrentConsoleFontEx(0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, bMaximumWindow, lpConsoleCurrentFontEx);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
 }
 
 
@@ -687,6 +550,7 @@ CreateSymbolicLinkA(IN LPCSTR lpSymlinkFileName,
     return Ret;
 }
 
+
 /*
  * @unimplemented
  */
@@ -707,6 +571,7 @@ GetFinalPathNameByHandleW(IN HANDLE hFile,
     UNIMPLEMENTED;
     return 0;
 }
+
 
 /*
  * @implemented
@@ -774,6 +639,7 @@ GetFinalPathNameByHandleA(IN HANDLE hFile,
 
     return Ret;
 }
+
 
 /*
  * @unimplemented

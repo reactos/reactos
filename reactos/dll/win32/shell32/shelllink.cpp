@@ -1825,10 +1825,10 @@ HRESULT WINAPI CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     else
         path = strdupW(sPath);
 
-    if (lpici->cbSize == sizeof (CMINVOKECOMMANDINFOEX) &&
-            (lpici->fMask & CMIC_MASK_UNICODE))
+    if ( lpici->cbSize == sizeof(CMINVOKECOMMANDINFOEX) &&
+        (lpici->fMask & CMIC_MASK_UNICODE) )
     {
-        LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX) lpici;
+        LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
         DWORD len = 2;
 
         if (sArgs)
@@ -1854,8 +1854,10 @@ HRESULT WINAPI CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     SHELLEXECUTEINFOW sei;
     memset(&sei, 0, sizeof sei);
     sei.cbSize = sizeof sei;
-    sei.fMask = SEE_MASK_UNICODE | (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE |
+               (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
     sei.lpFile = path;
+    sei.lpClass = sLinkPath;
     sei.nShow = iShowCmd;
     sei.lpDirectory = sWorkDir;
     sei.lpParameters = args;

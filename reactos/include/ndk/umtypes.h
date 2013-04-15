@@ -114,13 +114,6 @@ Author:
 #define MAXULONG                        0xffffffff
 
 //
-// CSR Macros
-//
-#define CSR_MAKE_OPCODE(s,m)            ((s) << 16) | (m)
-#define CSR_API_ID_FROM_OPCODE(n)       ((ULONG)((USHORT)(n)))
-#define CSR_SERVER_ID_FROM_OPCODE(n)    (ULONG)((n) >> 16)
-
-//
 // Basic Types that aren't defined in User-Mode Headers
 //
 typedef CONST int CINT;

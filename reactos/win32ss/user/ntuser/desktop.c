@@ -2069,7 +2069,7 @@ NtUserSetThreadDesktop(HDESK hDesktop)
    // FIXME: IntSetThreadDesktop validates the desktop handle, it should happen
    // here too and set the NT error level. Q. Is it necessary to have the validation
    // in IntSetThreadDesktop? Is it needed there too?
-   if (hDesktop || (!hDesktop && CsrProcess == PsGetCurrentProcess()))
+   if (hDesktop || (!hDesktop && PsGetCurrentProcess() == gpepCSRSS))
       ret = IntSetThreadDesktop(hDesktop, FALSE);
 
    UserLeave();

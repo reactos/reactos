@@ -17,8 +17,9 @@ endif()
 
 add_subdirectory(gdi/gdi32)
 add_subdirectory(reactx)
+add_subdirectory(user/consrv)
 add_subdirectory(user/user32)
-add_subdirectory(user/win32csr)
+add_subdirectory(user/winsrv)
 
 spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
 
@@ -105,7 +106,6 @@ list(APPEND SOURCE
     user/ntuser/caret.c
     user/ntuser/class.c
     user/ntuser/clipboard.c
-    user/ntuser/csr.c
     user/ntuser/defwnd.c
     user/ntuser/desktop.c
     user/ntuser/display.c

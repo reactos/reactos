@@ -1562,12 +1562,19 @@ NTAPI
 NtUserCloseWindowStation(
   HWINSTA hWinSta);
 
-DWORD
-NTAPI
+/* Console commands for NtUserConsoleControl */
+typedef enum _CONSOLECONTROL
+{
+    GuiConsoleWndClassAtom,
+    ConsoleAcquireDisplayOwnership,
+} CONSOLECONTROL, *PCONSOLECONTROL;
+
+NTSTATUS
+APIENTRY
 NtUserConsoleControl(
-  DWORD dwUnknown1,
-  DWORD dwUnknown2,
-  DWORD dwUnknown3);
+    IN CONSOLECONTROL ConsoleCtrl,
+    IN PVOID ConsoleCtrlInfo,
+    IN DWORD ConsoleCtrlInfoLength);
 
 HANDLE
 NTAPI

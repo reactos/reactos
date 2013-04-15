@@ -1527,14 +1527,13 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
    NTSTATUS Status;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
-   if (CsrProcess != CurrentProcess)
+   if (gpepCSRSS != CurrentProcess)
    {
       /*
-       * CsrProcess does not have a Win32WindowStation
-	   *
-	   */
+       * gpepCSRSS does not have a Win32WindowStation
+       */
 
-      Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
+      Status = IntValidateWindowStationHandle(CurrentProcess->Win32WindowStation,
                      KernelMode,
                      0,
                      &WinStaObject);

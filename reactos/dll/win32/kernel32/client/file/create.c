@@ -98,6 +98,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    OBJECT_ATTRIBUTES ObjectAttributes;
    IO_STATUS_BLOCK IoStatusBlock;
    UNICODE_STRING NtPathU;
+   LPCWSTR pszConsoleFileName;
    HANDLE FileHandle;
    NTSTATUS Status;
    ULONG FileAttributes, Flags = 0;
@@ -141,10 +142,10 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
      }
 
    /* check for console input/output */
-   if (0 == _wcsicmp(L"CONOUT$", lpFileName)
-       || 0 == _wcsicmp(L"CONIN$", lpFileName))
+   pszConsoleFileName = IntCheckForConsoleFileName(lpFileName, dwDesiredAccess);
+   if (pszConsoleFileName)
    {
-      return OpenConsoleW(lpFileName,
+      return OpenConsoleW(pszConsoleFileName,
                           dwDesiredAccess,
                           lpSecurityAttributes ? lpSecurityAttributes->bInheritHandle : FALSE,
                           FILE_SHARE_READ | FILE_SHARE_WRITE);

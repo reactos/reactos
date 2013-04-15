@@ -38,8 +38,9 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/umfuncs.h>
 
-/* CSRSS Headers */
-#include <csrss/csrss.h>
+/* CSRSS Header */
+#include <csr/csr.h>
+#include <win/winmsg.h>
 
 /* Public Win32K Headers */
 #include <ntusrtyp.h>

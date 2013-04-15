@@ -550,15 +550,54 @@ NtUserCheckImeHotKey(
     return 0;
 }
 
-DWORD
+NTSTATUS
 APIENTRY
 NtUserConsoleControl(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    IN CONSOLECONTROL ConsoleCtrl,
+    IN PVOID ConsoleCtrlInfo,
+    IN DWORD ConsoleCtrlInfoLength)
 {
-    STUB;
-    return 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Allow only Console Server to perform this operation (via CSRSS) */
+    if (gpepCSRSS != PsGetCurrentProcess())
+        return STATUS_ACCESS_DENIED;
+
+    UserEnterExclusive();
+
+    switch (ConsoleCtrl)
+    {
+        case GuiConsoleWndClassAtom:
+        {
+            _SEH2_TRY
+            {
+                ProbeForRead(ConsoleCtrlInfo, ConsoleCtrlInfoLength, 1);
+                ASSERT(ConsoleCtrlInfoLength == sizeof(ATOM));
+                gaGuiConsoleWndClass = *(ATOM*)ConsoleCtrlInfo;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            break;
+        }
+
+        case ConsoleAcquireDisplayOwnership:
+        {
+            break;
+        }
+
+        default:
+            ERR("Calling invalid control %lu in NtUserConsoleControl\n", ConsoleCtrl);
+            Status = STATUS_INVALID_INFO_CLASS;
+            break;
+    }
+
+    UserLeave();
+
+    return Status;
 }
 
 DWORD

@@ -42,7 +42,29 @@ BOOL
 WINAPI
 RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
-  return NtUserxRegisterLogonProcess(dwProcessId,bRegister);
+    gfLogonProcess = NtUserxRegisterLogonProcess(dwProcessId, bRegister);
+
+    if (gfLogonProcess)
+    {
+        NTSTATUS Status;
+        USER_API_MESSAGE ApiMessage;
+
+        ApiMessage.Data.RegisterLogonProcessRequest.ProcessId = dwProcessId;
+        ApiMessage.Data.RegisterLogonProcessRequest.Register = bRegister;
+
+        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                     NULL,
+                                     CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterLogonProcess),
+                                     sizeof(USER_REGISTER_LOGON_PROCESS));
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Failed to register logon process with CSRSS\n");
+            SetLastError(RtlNtStatusToDosError(Status));
+            // return FALSE;
+        }
+    }
+
+    return gfLogonProcess;
 }
 
 /*
@@ -50,27 +72,9 @@ RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
  */
 BOOL
 WINAPI
-SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
+SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta)
 {
-  /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
-  CSR_API_MESSAGE Request;
-  ULONG CsrRequest;
-  NTSTATUS Status;
-
-  CsrRequest = MAKE_CSR_API(SET_LOGON_NOTIFY_WINDOW, CSR_GUI);
-  Request.Data.SetLogonNotifyWindowRequest.LogonNotifyWindow = Wnd;
-
-  Status = CsrClientCallServer(&Request,
-			       NULL,
-                   CsrRequest,
-			       sizeof(CSR_API_MESSAGE));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
-    {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
-    }
-
-  return NtUserSetLogonNotifyWindow(Wnd);
+    return NtUserSetLogonNotifyWindow(Wnd);
 }
 
 /*
@@ -78,10 +82,10 @@ SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
  */
 BOOL WINAPI
 UpdatePerUserSystemParameters(
-   DWORD dwReserved,
-   BOOL bEnable)
+    DWORD dwReserved,
+    BOOL bEnable)
 {
-   return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
+    return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
 }
 
 PTHREADINFO

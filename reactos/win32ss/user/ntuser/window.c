@@ -3720,6 +3720,10 @@ CLEANUP:
 DWORD APIENTRY
 NtUserQueryWindow(HWND hWnd, DWORD Index)
 {
+/* Console Leader Process CID Window offsets */
+#define GWLP_CONSOLE_LEADER_PID 0
+#define GWLP_CONSOLE_LEADER_TID 4
+
    PWND pWnd;
    DWORD Result;
    DECLARE_RETURN(UINT);
@@ -3735,12 +3739,34 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
    switch(Index)
    {
       case QUERY_WINDOW_UNIQUE_PROCESS_ID:
-         Result = (DWORD)IntGetWndProcessId(pWnd);
+      {
+         if ( (pWnd->head.pti->TIF_flags & TIF_CSRSSTHREAD) &&
+              (pWnd->pcls->atomClassName == gaGuiConsoleWndClass) )
+         {
+            // IntGetWindowLong(offset == GWLP_CONSOLE_LEADER_PID)
+            Result = (DWORD)(*((LONG_PTR*)((PCHAR)(pWnd + 1) + GWLP_CONSOLE_LEADER_PID)));
+         }
+         else
+         {
+            Result = (DWORD)IntGetWndProcessId(pWnd);
+         }
          break;
+      }
 
       case QUERY_WINDOW_UNIQUE_THREAD_ID:
-         Result = (DWORD)IntGetWndThreadId(pWnd);
+      {
+         if ( (pWnd->head.pti->TIF_flags & TIF_CSRSSTHREAD) &&
+              (pWnd->pcls->atomClassName == gaGuiConsoleWndClass) )
+         {
+            // IntGetWindowLong(offset == GWLP_CONSOLE_LEADER_TID)
+            Result = (DWORD)(*((LONG_PTR*)((PCHAR)(pWnd + 1) + GWLP_CONSOLE_LEADER_TID)));
+         }
+         else
+         {
+            Result = (DWORD)IntGetWndThreadId(pWnd);
+         }
          break;
+      }
 
       case QUERY_WINDOW_ACTIVE:
          Result = (DWORD)(pWnd->head.pti->MessageQueue->spwndActive ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndActive) : 0);

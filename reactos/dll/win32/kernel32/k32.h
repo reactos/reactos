@@ -43,7 +43,12 @@
 #include <ndk/umfuncs.h>
 
 /* CSRSS Header */
-#include <csrss/csrss.h>
+#include <csr/csr.h>
+#include <win/base.h>
+#include <win/basemsg.h>
+#include <win/console.h>
+#include <win/conmsg.h>
+#include <win/winmsg.h>
 
 /* C Headers */
 //#include <ctype.h>
@@ -64,5 +69,8 @@
 
 /* Base Macros */
 #include "include/base_x.h"
+
+/* Console API Client Definitions */
+#include "include/console.h"
 
 #endif

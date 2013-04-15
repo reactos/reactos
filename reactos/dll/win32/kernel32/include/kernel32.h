@@ -61,13 +61,6 @@
 #define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
 #endif
 
-#define IsConsoleHandle(h) \
-  (((((ULONG_PTR)h) & 0x10000003) == 0x3) ? TRUE : FALSE)
-
-#define HANDLE_DETACHED_PROCESS    (HANDLE)-2
-#define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-3
-#define HANDLE_CREATE_NO_WINDOW    (HANDLE)-4
-
 //
 // This stuff maybe should go in a vdm.h?
 //
@@ -109,19 +102,20 @@ typedef enum _VDM_ENTRY_CODE
 
 typedef struct _CODEPAGE_ENTRY
 {
-   LIST_ENTRY Entry;
-   UINT CodePage;
-   HANDLE SectionHandle;
-   PBYTE SectionMapping;
-   CPTABLEINFO CodePageTable;
+    LIST_ENTRY Entry;
+    UINT CodePage;
+    HANDLE SectionHandle;
+    PBYTE SectionMapping;
+    CPTABLEINFO CodePageTable;
 } CODEPAGE_ENTRY, *PCODEPAGE_ENTRY;
 
-typedef struct tagLOADPARMS32 {
-  LPSTR lpEnvAddress;
-  LPSTR lpCmdLine;
-  WORD  wMagicValue;
-  WORD  wCmdShow;
-  DWORD dwReserved;
+typedef struct tagLOADPARMS32
+{
+    LPSTR lpEnvAddress;
+    LPSTR lpCmdLine;
+    WORD  wMagicValue;
+    WORD  wCmdShow;
+    DWORD dwReserved;
 } LOADPARMS32;
 
 typedef enum _BASE_SEARCH_PATH_TYPE
@@ -155,7 +149,6 @@ typedef struct _BASEP_ACTCTX_BLOCK
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE 3
 
-
 extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 typedef
@@ -164,8 +157,6 @@ DWORD
     HANDLE hProcess,
     DWORD dwMilliseconds);
 
-
-extern BOOLEAN InWindows;
 extern WaitForInputIdleType UserWaitForInputIdleRoutine;
 
 /* GLOBAL VARIABLES **********************************************************/
@@ -192,23 +183,7 @@ VOID
 NTAPI
 BaseDllInitializeMemoryManager(VOID);
 
-BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);
-
-BOOL WINAPI CloseConsoleHandle(HANDLE Handle);
-
-HANDLE WINAPI
-GetConsoleInputWaitHandle (VOID);
-
-HANDLE WINAPI OpenConsoleW (LPCWSTR wsName,
-			     DWORD  dwDesiredAccess,
-			     BOOL   bInheritHandle,
-			     DWORD  dwShareMode);
-
-BOOL WINAPI SetConsoleInputExeNameW(LPCWSTR lpInputExeName);
-
 PTEB GetTeb(VOID);
-
-HANDLE FASTCALL TranslateStdHandle(HANDLE hHandle);
 
 PWCHAR FilenameA2W(LPCSTR NameA, BOOL alloc);
 DWORD FilenameW2A_N(LPSTR dest, INT destlen, LPCWSTR src, INT srclen);
@@ -426,13 +401,6 @@ BaseSetLastNTError(IN NTSTATUS Status);
 
 /* FIXME */
 WCHAR WINAPI RtlAnsiCharToUnicodeChar(LPSTR *);
-
-HANDLE
-WINAPI
-DuplicateConsoleHandle(HANDLE hConsole,
-                       DWORD dwDesiredAccess,
-                       BOOL	bInheritHandle,
-                       DWORD dwOptions);
 
 VOID
 NTAPI

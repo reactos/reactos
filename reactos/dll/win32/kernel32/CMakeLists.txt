@@ -4,40 +4,45 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-	client/appcache.c
-	client/atom.c
-	client/compname.c
+    client/appcache.c
+    client/atom.c
+    client/compname.c
     client/debugger.c
     client/dosdev.c
-	client/dllmain.c
-	client/environ.c
+    client/dllmain.c
+    client/environ.c
     client/except.c
     client/fiber.c
-	client/handle.c
+    client/handle.c
     client/heapmem.c
     client/job.c
-	client/loader.c
-	client/path.c
-	client/perfcnt.c
-	client/power.c
+    client/loader.c
+    client/path.c
+    client/perfcnt.c
+    client/power.c
     client/proc.c
-	client/resntfy.c
+    client/resntfy.c
     client/session.c
     client/synch.c
-	client/sysinfo.c
-	client/time.c
-	client/timerqueue.c
-	client/toolhelp.c
-	client/utils.c
+    client/sysinfo.c
+    client/time.c
+    client/timerqueue.c
+    client/toolhelp.c
+    client/utils.c
     client/thread.c
-	client/vdm.c
-	client/version.c
+    client/vdm.c
+    client/version.c
     client/virtmem.c
     client/vista.c
+    client/console/alias.c
+    client/console/console.c
+    client/console/history.c
+    client/console/init.c
+    client/console/readwrite.c
+    client/console/vista.c
     client/file/backup.c
     client/file/cnotify.c
     client/file/copy.c
-    client/file/console.c
     client/file/create.c
     client/file/delete.c
     client/file/deviceio.c

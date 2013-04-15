@@ -72,8 +72,9 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
-/* CSRSS header */
-#include <csrss/csrss.h>
+/* CSRSS Header */
+#include <csr/csr.h>
+#include <win/winmsg.h>
 
 /* Public Win32K headers */
 #include <include/callback.h>

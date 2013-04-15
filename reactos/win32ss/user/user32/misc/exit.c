@@ -65,27 +65,25 @@
  */
 BOOL WINAPI
 ExitWindowsEx(UINT uFlags,
-	      DWORD dwReserved)
+              DWORD dwReserved)
 {
-  CSR_API_MESSAGE Request;
-  ULONG CsrRequest;
-  NTSTATUS Status;
+    NTSTATUS Status;
+    USER_API_MESSAGE ApiMessage;
 
-  CsrRequest = MAKE_CSR_API(EXIT_REACTOS, CSR_GUI);
-  Request.Data.ExitReactosRequest.Flags = uFlags;
-  Request.Data.ExitReactosRequest.Reserved = dwReserved;
+    ApiMessage.Data.ExitReactosRequest.Flags = uFlags;
+    ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
 
-  Status = CsrClientCallServer(&Request,
-			       NULL,
-                   CsrRequest,
-			       sizeof(CSR_API_MESSAGE));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpExitWindowsEx),
+                                 sizeof(USER_EXIT_REACTOS));
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  return(TRUE);
+    return TRUE;
 }
 
 
@@ -95,24 +93,22 @@ ExitWindowsEx(UINT uFlags,
 BOOL WINAPI
 RegisterServicesProcess(DWORD ServicesProcessId)
 {
-  CSR_API_MESSAGE Request;
-  ULONG CsrRequest;
-  NTSTATUS Status;
+    NTSTATUS Status;
+    USER_API_MESSAGE ApiMessage;
 
-  CsrRequest = MAKE_CSR_API(REGISTER_SERVICES_PROCESS, CSR_GUI);
-  Request.Data.RegisterServicesProcessRequest.ProcessId = UlongToHandle(ServicesProcessId);
+    ApiMessage.Data.RegisterServicesProcessRequest.ProcessId = ServicesProcessId;
 
-  Status = CsrClientCallServer(&Request,
-                   NULL,
-			       CsrRequest,
-			       sizeof(CSR_API_MESSAGE));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterServicesProcess),
+                                 sizeof(USER_REGISTER_SERVICES_PROCESS));
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  return(TRUE);
+    return TRUE;
 }
 
 /* EOF */

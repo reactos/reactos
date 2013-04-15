@@ -304,6 +304,8 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     if (ptiCurrent->KeyboardLayout)
         UserReferenceObject(ptiCurrent->KeyboardLayout);
     ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
+    if (Process == gpepCSRSS) /* If this thread is owned by CSRSS, mark it as such */
+        ptiCurrent->TIF_flags |= TIF_CSRSSTHREAD;
     ptiCurrent->pcti = &ptiCurrent->cti;
 
     /* Initialize the CLIENTINFO */

@@ -166,7 +166,7 @@ SmpStopCsr(IN PSM_API_MSG SmApiMsg,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-PSM_API_HANDLER SmpApiDispatch[SmMaxApiNumber] =
+PSM_API_HANDLER SmpApiDispatch[SmpMaxApiNumber - SmpCreateForeignSessionApi] =
 {
     SmpCreateForeignSession,
     SmpSessionComplete,
@@ -401,13 +401,13 @@ SmpApiLoop(IN PVOID Parameter)
                 RequestMsg.ReturnValue = STATUS_PENDING;
 
                 /* Check if the API is valid */
-                if (RequestMsg.ApiNumber >= SmMaxApiNumber)
+                if (RequestMsg.ApiNumber >= SmpMaxApiNumber)
                 {
                     /* It isn't, fail */
                     DPRINT1("Invalid API: %lx\n", RequestMsg.ApiNumber);
                     Status = STATUS_NOT_IMPLEMENTED;
                 }
-                else if ((RequestMsg.ApiNumber <= SmTerminateForeignSessionApi) &&
+                else if ((RequestMsg.ApiNumber <= SmpTerminateForeignSessionApi) &&
                          !(ClientContext->Subsystem))
                 {
                     /* It's valid, but doesn't have a subsystem with it */

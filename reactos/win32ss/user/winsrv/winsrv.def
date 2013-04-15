@@ -1,6 +1,0 @@
-
-LIBRARY winsrv.dll
-EXPORTS
-ConServerDllInitialization@8
-UserServerDllInitialization@8
-; EOF

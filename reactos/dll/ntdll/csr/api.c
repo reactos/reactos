@@ -1,21 +1,22 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/csr/api.c
+ * FILE:            dll/ntdll/csr/api.c
  * PURPOSE:         CSR APIs exported through NTDLL
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntdll.h>
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
+
 extern HANDLE CsrApiPort;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
@@ -37,8 +38,8 @@ CsrSetPriorityClass(HANDLE hProcess,
                     PULONG PriorityClass)
 {
     NTSTATUS Status;
-    CSR_API_MESSAGE2 ApiMessage; /* <- Remove the "2" when CSR is commited */
-    PCSR_SET_PRIORITY_CLASS SetPriorityClass = &ApiMessage.SetPriorityClass;
+    CSR_API_MESSAGE ApiMessage;
+    PCSR_SET_PRIORITY_CLASS SetPriorityClass = &ApiMessage.Data.SetPriorityClass;
 
     /* Set up the data for CSR */
     DbgBreakPoint();
@@ -46,12 +47,11 @@ CsrSetPriorityClass(HANDLE hProcess,
     SetPriorityClass->PriorityClass = *PriorityClass;
 
     /* Call it */
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+    Status = CsrClientCallServer(&ApiMessage,
                                  NULL,
-                                 CSR_MAKE_OPCODE(CsrpSetPriorityClass,
-                                                 CSR_SRV_SERVER),
+                                 CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpSetPriorityClass),
                                  sizeof(CSR_SET_PRIORITY_CLASS));
-    
+
     /* Return what we got, if requested */
     if (*PriorityClass) *PriorityClass = SetPriorityClass->PriorityClass;
 
@@ -64,23 +64,22 @@ CsrSetPriorityClass(HANDLE hProcess,
  */
 NTSTATUS
 NTAPI
-CsrIdentifyAlertableThread (VOID)
+CsrIdentifyAlertableThread(VOID)
 {
     NTSTATUS Status;
-    CSR_API_MESSAGE2 ApiMessage; /* <- Remove the "2" when CSR is commited */
+    CSR_API_MESSAGE ApiMessage;
     PCSR_IDENTIFY_ALTERTABLE_THREAD IdentifyAlertableThread;
-    
+
     /* Set up the data for CSR */
     DbgBreakPoint();
-    IdentifyAlertableThread = &ApiMessage.IdentifyAlertableThread;
+    IdentifyAlertableThread = &ApiMessage.Data.IdentifyAlertableThread;
     IdentifyAlertableThread->Cid = NtCurrentTeb()->ClientId;
 
     /* Call it */
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+    Status = CsrClientCallServer(&ApiMessage,
                                  NULL,
-                                 CSR_MAKE_OPCODE(CsrpIdentifyAlertable,
-                                                 CSR_SRV_SERVER),
-                                 sizeof(CSR_SET_PRIORITY_CLASS));
+                                 CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpIdentifyAlertable),
+                                 sizeof(CSR_IDENTIFY_ALTERTABLE_THREAD));
 
     /* Return to caller */
     return Status;
