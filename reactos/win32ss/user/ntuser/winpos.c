@@ -139,6 +139,34 @@ IntMapWindowPoints(PWND FromWnd, PWND ToWnd, LPPOINT lpPoints, UINT cPoints)
     return MAKELONG(LOWORD(Delta.x), LOWORD(Delta.y));
 }
 
+BOOL FASTCALL
+IntClientToScreen(PWND Wnd, LPPOINT lpPoint)
+{
+   if (Wnd && Wnd->fnid != FNID_DESKTOP )
+   {
+      if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
+         lpPoint->x = Wnd->rcClient.right - lpPoint->x;
+      else
+         lpPoint->x += Wnd->rcClient.left;
+      lpPoint->y += Wnd->rcClient.top;
+   }
+   return TRUE;
+}
+
+BOOL FASTCALL
+IntScreenToClient(PWND Wnd, LPPOINT lpPoint)
+{
+    if (Wnd && Wnd->fnid != FNID_DESKTOP )
+    {
+       if (Wnd->ExStyle & WS_EX_LAYOUTRTL)
+          lpPoint->x = Wnd->rcClient.right - lpPoint->x;
+       else
+          lpPoint->x -= Wnd->rcClient.left;
+       lpPoint->y -= Wnd->rcClient.top;
+    }
+    return TRUE;
+}
+
 BOOL FASTCALL IsChildVisible(PWND pWnd)
 {
     do

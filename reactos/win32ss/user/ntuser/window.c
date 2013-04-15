@@ -1214,6 +1214,8 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
       pt.x = Wnd->rcWindow.left;
    pt.y = Wnd->rcWindow.top;
 
+   IntScreenToClient(WndOldParent, &pt);
+
    if (WndOldParent) UserReferenceObject(WndOldParent); /* Caller must deref */
 
    if (WndNewParent != WndOldParent)
