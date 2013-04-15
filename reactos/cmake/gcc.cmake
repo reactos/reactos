@@ -91,12 +91,6 @@ elseif(ARCH STREQUAL "amd64")
     add_compile_flags("-mpreferred-stack-boundary=4")
 endif()
 
-# PSEH
-if(GCC_VERSION VERSION_GREATER 4.7)
-    set(USE_PSEH3 1)
-    add_definitions(-D_USE_PSEH3=1)
-endif()
-
 # Other
 if(ARCH STREQUAL "amd64")
     add_definitions(-U_X86_ -UWIN32)
