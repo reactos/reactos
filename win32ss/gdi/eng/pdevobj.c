@@ -163,6 +163,15 @@ PDEVOBJ_bEnablePDEV(
     if (ppdev->gdiinfo.ulLogPixelsY == 0)
         ppdev->gdiinfo.ulLogPixelsY = 96;
 
+    /* Set raster caps */
+    ppdev->gdiinfo.flRaster = RC_OP_DX_OUTPUT | RC_GDI20_OUTPUT | RC_BIGFONT;
+    if ((ppdev->gdiinfo.ulTechnology != DT_PLOTTER) && (ppdev->gdiinfo.ulTechnology != DT_CHARSTREAM))
+        ppdev->gdiinfo.flRaster |= RC_STRETCHDIB | RC_STRETCHBLT | RC_DIBTODEV | RC_DI_BITMAP | RC_BITMAP64 | RC_BITBLT;
+    if (ppdev->gdiinfo.ulTechnology == DT_RASDISPLAY)
+        ppdev->gdiinfo.flRaster |= RC_FLOODFILL;
+    if (ppdev->devinfo.flGraphicsCaps & GCAPS_PALMANAGED)
+        ppdev->gdiinfo.flRaster |= RC_PALETTE;
+
     /* Setup Palette */
     ppdev->ppalSurf = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
