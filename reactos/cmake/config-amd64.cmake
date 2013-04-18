@@ -28,7 +28,7 @@ set(KDBG FALSE CACHE BOOL
 
 set(GDB FALSE CACHE BOOL
 "Whether to compile for debugging with GDB.
-If you don't use GDB, don't	enable this.")
+If you don't use GDB, don't enable this.")
 
 set(_WINKD_ TRUE CACHE BOOL
 "Whether to compile with the KD protocol.")

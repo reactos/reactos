@@ -26,7 +26,7 @@ set(LTCG FALSE CACHE BOOL
 
 set(GDB FALSE CACHE BOOL
 "Whether to compile for debugging with GDB.
-If you don't use GDB, don't	enable this.")
+If you don't use GDB, don't enable this.")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(DBG FALSE CACHE BOOL

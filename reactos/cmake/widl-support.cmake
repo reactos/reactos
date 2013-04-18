@@ -108,7 +108,7 @@ function(add_iid_library TARGET)
         list(APPEND IID_SOURCES ${NAME}_i.c)
     endforeach()
     add_library(${TARGET} ${IID_SOURCES})
-	add_dependencies(${TARGET} psdk)
+    add_dependencies(${TARGET} psdk)
     set_target_properties(${TARGET} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
 

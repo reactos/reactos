@@ -107,7 +107,7 @@ function(add_iid_library _target)
     add_library(${_target} ${_iid_sources})
 
     # for wtypes.h
-	add_dependencies(${_target} psdk)
+    add_dependencies(${_target} psdk)
 
     set_target_properties(${_target} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
