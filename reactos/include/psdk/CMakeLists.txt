@@ -36,11 +36,13 @@ list(APPEND SOURCE
     dimm.idl
     dispex.idl
     docobj.idl
+    docobjectservice.idl
     downloadmgr.idl
 #   dyngraph.idl
     exdisp.idl
     fusion.idl
     hlink.idl
+    htiface.idl
     htiframe.idl
     httprequest.idl
     iads.idl

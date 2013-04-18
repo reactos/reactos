@@ -1,0 +1,42 @@
+
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+add_definitions(-D__WINESRC__)
+
+spec2def(ieframe.dll ieframe.spec ADD_IMPORTLIB)
+
+list(APPEND SOURCE
+    classinfo.c
+    client.c
+    dochost.c
+    events.c
+    frame.c
+    ie.c
+    ieframe_main.c
+    iehtmlwnd.c
+    iexplore.c
+    intshcut.c
+    navigate.c
+    oleobject.c
+    persist.c
+    shellbrowser.c
+    shelluihelper.c
+    urlhist.c
+    view.c
+    webbrowser.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ieframe_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ieframe.def)
+
+add_library(ieframe SHARED ${SOURCE} ieframe.rc)
+
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(aclui)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+endif()
+
+add_typelib(ieframe_v1.idl)
+set_source_files_properties(ieframe.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/ieframe_v1.tlb)
+set_module_type(ieframe win32dll)
+target_link_libraries(ieframe uuid wine)
+add_importlibs(ieframe urlmon shell32 comctl32 shlwapi oleaut32 ole32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
+add_cd_file(TARGET ieframe DESTINATION reactos/system32 FOR all)

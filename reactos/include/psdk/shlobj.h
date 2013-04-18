@@ -1727,6 +1727,23 @@ BOOL         WINAPI DAD_DragLeave(void);
 BOOL         WINAPI DAD_AutoScroll(HWND,AUTO_SCROLL_DATA*,const POINT*);
 HRESULT      WINAPI SHDoDragDrop(HWND,IDataObject*,IDropSource*,DWORD,LPDWORD);
 
+/****************************************************************************
+ * Internet shortcut properties
+ */
+
+#define PID_IS_URL         2
+#define PID_IS_NAME        4
+#define PID_IS_WORKINGDIR  5
+#define PID_IS_HOTKEY      6
+#define PID_IS_SHOWCMD     7
+#define PID_IS_ICONINDEX   8
+#define PID_IS_ICONFILE    9
+#define PID_IS_WHATSNEW    10
+#define PID_IS_AUTHOR      11
+#define PID_IS_DESCRIPTION 12
+#define PID_IS_COMMENT     13
+
+
 LPITEMIDLIST WINAPI ILAppendID(LPITEMIDLIST,LPCSHITEMID,BOOL);
 LPITEMIDLIST WINAPI ILClone(LPCITEMIDLIST);
 LPITEMIDLIST WINAPI ILCloneFirst(LPCITEMIDLIST);
