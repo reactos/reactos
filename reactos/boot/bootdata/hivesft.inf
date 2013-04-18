@@ -104,7 +104,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\SharedDlls",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions",,0x00000012
 
 ; FIXME - usetup doesn't handle extra paths
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","",0x00000000,"cmd /c md ""%programfiles%\Internet Explorer\"" && move %windir%\system32\iexplore.exe ""%programfiles%\Internet Explorer\"""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","",0x00000000,"cmd /c md ""%programfiles%\Internet Explorer\"" && move %windir%\iexplore.exe ""%programfiles%\Internet Explorer\"""
 ; Create .NET Framework InstallRoot key, reg_sz & full path
 ;HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","InstallRoot.NET",0x00000000,"cmd /c reg add HKLM\SOFTWARE\Microsoft\.NETFramework /v InstallRoot /t REG_SZ /d %SystemRoot%\Microsoft.NET\Framework\"
 
