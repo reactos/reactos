@@ -90,7 +90,7 @@ typedef struct
 
 typedef struct
 {
-    LOGFONT                     LogFont;
+    LOGFONTA                    LogFont;
     HFONT                       hFont;
     COLORREF                    color;
 } HLPFILE_FONT;

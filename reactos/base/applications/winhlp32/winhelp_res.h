@@ -36,6 +36,7 @@
 
 #define MAIN_MENU		0xF000
 #define CONTEXT_MENU            0xF001
+#define MAIN_ACCEL              0xF002
 
 #define STID_WINE_HELP		0x120
 #define STID_WHERROR		0x121

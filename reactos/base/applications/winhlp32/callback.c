@@ -45,7 +45,7 @@ static HANDLE CALLBACK WHD_Open(LPSTR name, BYTE flags)
     case 2: mode = GENERIC_READ; break;
     default: WINE_FIXME("Undocumented flags %x\n", flags);
     }
-    return CreateFile(name, mode, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+    return CreateFileA(name, mode, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
