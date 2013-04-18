@@ -1125,12 +1125,6 @@ CreateWindowStationAndDesktops(
 		goto cleanup;
 	}
 
-	/* FIXME: big HACK */
-	CloseDesktop(Session->WinlogonDesktop);
-	CloseDesktop(Session->ScreenSaverDesktop);
-	Session->WinlogonDesktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
-	Session->ScreenSaverDesktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
-
 	/*
 	 * Switch to winlogon desktop
 	*/
