@@ -8,8 +8,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windef.h>
-#include <winsvc.h>
+#include <windows.h>
+#include <uxtheme.h>
 #include <uxundoc.h>
 #include <wine/debug.h>
 
