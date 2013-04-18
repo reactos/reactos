@@ -657,6 +657,11 @@ HTHEME WINAPI OpenThemeDataEx(HWND hwnd, LPCWSTR pszClassList, DWORD flags)
     return hTheme;
 }
 
+HTHEME WINAPI OpenThemeDataFromFile(HTHEMEFILE hThemeFile, HWND hwnd, LPCWSTR pszClassList, DWORD flags)
+{
+    return S_OK;
+}
+
 /***********************************************************************
  *      OpenThemeData                                       (UXTHEME.@)
  */
@@ -1214,3 +1219,16 @@ HRESULT WINAPI CheckThemeSignature(LPCWSTR pszThemeFileName)
     MSSTYLES_CloseThemeFile(pt);
     return S_OK;
 }
+
+HRESULT WINAPI DrawNCPreview(HDC hDC, 
+                             DWORD DNCP_Flag,
+                             LPRECT prcPreview, 
+                             LPCWSTR pszThemeFileName, 
+                             LPCWSTR pszColorName,
+                             LPCWSTR pszSizeName,
+                             PNONCLIENTMETRICSW pncMetrics,
+                             COLORREF* lpaRgbValues)
+{
+    return S_OK;
+}
+
