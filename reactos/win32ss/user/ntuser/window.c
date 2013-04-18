@@ -2022,12 +2022,12 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Now find the parent and the owner window */
-   hWndParent = IntGetDesktopWindow();
+   hWndParent = pti->rpdesk->pDeskInfo->spwnd->head.h;
    hWndOwner = NULL;
 
     if (Cs->hwndParent == HWND_MESSAGE)
     {
-        Cs->hwndParent = hWndParent = IntGetMessageWindow();
+        Cs->hwndParent = hWndParent = pti->rpdesk->spwndMessage->head.h;
     }
     else if (Cs->hwndParent)
     {
