@@ -431,7 +431,7 @@ NotifyTopLevelWindows(PNOTIFY_CONTEXT Context)
 }
 
 /*** Taken from win32ss/user/consrv/console.c ***/
-BOOL FASTCALL
+static BOOL
 DtbgIsDesktopVisible(VOID)
 {
     return !((BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE));
