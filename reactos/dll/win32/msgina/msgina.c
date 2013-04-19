@@ -268,14 +268,14 @@ WlxStartApplication(
 	len = GetWindowsDirectoryW(CurrentDirectory, MAX_PATH);
 	if (len == 0 || len > MAX_PATH)
 	{
-		WARN("GetWindowsDirectoryW() failed\n");
+		ERR("GetWindowsDirectoryW() failed\n");
 		return FALSE;
 	}
 
 	ret = DuplicateTokenEx(pgContext->UserToken, MAXIMUM_ALLOWED, NULL, SecurityImpersonation, TokenPrimary, &hAppToken);
 	if (!ret)
 	{
-		WARN("DuplicateTokenEx() failed with error %lu\n", GetLastError());
+		ERR("DuplicateTokenEx() failed with error %lu\n", GetLastError());
 		return FALSE;
 	}
 
@@ -290,7 +290,7 @@ WlxStartApplication(
 	len = GetWindowsDirectoryW(CurrentDirectory, MAX_PATH);
 	if (len == 0 || len > MAX_PATH)
 	{
-		WARN("GetWindowsDirectoryW() failed\n");
+		ERR("GetWindowsDirectoryW() failed\n");
 		return FALSE;
 	}
 	ret = CreateProcessAsUserW(
@@ -309,7 +309,7 @@ WlxStartApplication(
 	CloseHandle(ProcessInformation.hThread);
 	CloseHandle(hAppToken);
 	if (!ret)
-		WARN("CreateProcessAsUserW() failed with error %lu\n", GetLastError());
+		ERR("CreateProcessAsUserW() failed with error %lu\n", GetLastError());
 	return ret;
 }
 
