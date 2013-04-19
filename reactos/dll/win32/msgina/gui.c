@@ -322,6 +322,9 @@ GUILoggedOnSAS(
 		return WLX_SAS_ACTION_NONE;
 	}
 
+	result = pgContext->pWlxFuncs->WlxSwitchDesktopToWinlogon(
+		pgContext->hWlx);
+
 	result = pgContext->pWlxFuncs->WlxDialogBoxParam(
 		pgContext->hWlx,
 		pgContext->hDllInstance,
@@ -329,12 +332,20 @@ GUILoggedOnSAS(
 		GetDesktopWindow(),
 		LoggedOnWindowProc,
 		(LPARAM)pgContext);
-	if (result >= WLX_SAS_ACTION_LOGON &&
-	    result <= WLX_SAS_ACTION_SWITCH_CONSOLE)
+
+	if (result < WLX_SAS_ACTION_LOGON ||
+		result > WLX_SAS_ACTION_SWITCH_CONSOLE)
 	{
-		return result;
+		result = WLX_SAS_ACTION_NONE;
 	}
-	return WLX_SAS_ACTION_NONE;
+
+	if (result == WLX_SAS_ACTION_NONE)
+	{
+		result = pgContext->pWlxFuncs->WlxSwitchDesktopToUser(
+			pgContext->hWlx);
+	}
+
+	return result;
 }
 
 static INT_PTR CALLBACK
