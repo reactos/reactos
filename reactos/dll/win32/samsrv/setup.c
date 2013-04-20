@@ -23,6 +23,53 @@ SID_IDENTIFIER_AUTHORITY SecurityNtAuthority = {SECURITY_NT_AUTHORITY};
 
 /* FUNCTIONS ***************************************************************/
 
+static INT
+SampLoadString(HINSTANCE hInstance,
+               UINT uId,
+               LPWSTR lpBuffer,
+               INT nBufferMax)
+{
+    HGLOBAL hmem;
+    HRSRC hrsrc;
+    WCHAR *p;
+    int string_num;
+    int i;
+
+    /* Use loword (incremented by 1) as resourceid */
+    hrsrc = FindResourceW(hInstance,
+                          MAKEINTRESOURCEW((LOWORD(uId) >> 4) + 1),
+                          (LPWSTR)RT_STRING);
+    if (!hrsrc)
+        return 0;
+
+    hmem = LoadResource(hInstance, hrsrc);
+    if (!hmem)
+        return 0;
+
+    p = LockResource(hmem);
+    string_num = uId & 0x000f;
+    for (i = 0; i < string_num; i++)
+        p += *p + 1;
+
+    i = min(nBufferMax - 1, *p);
+    if (i > 0)
+    {
+        memcpy(lpBuffer, p + 1, i * sizeof(WCHAR));
+        lpBuffer[i] = 0;
+    }
+    else
+    {
+        if (nBufferMax > 1)
+        {
+            lpBuffer[0] = 0;
+            return 0;
+        }
+    }
+
+    return i;
+}
+
+
 BOOL
 SampIsSetupRunning(VOID)
 {
@@ -222,9 +269,22 @@ SampCreateAliasAccount(HKEY hDomainKey,
 }
 
 
+#if 0
+static BOOL
+SampCreateGroupAccount(HKEY hDomainKey,
+                       LPCWSTR lpAccountName,
+                       ULONG ulRelativeId)
+{
+
+    return FALSE;
+}
+#endif
+
+
 static BOOL
 SampCreateUserAccount(HKEY hDomainKey,
                       LPCWSTR lpAccountName,
+                      LPCWSTR lpComment,
                       ULONG ulRelativeId,
                       ULONG UserAccountControl)
 {
@@ -320,8 +380,8 @@ SampCreateUserAccount(HKEY hDomainKey,
                       L"AdminComment",
                       0,
                       REG_SZ,
-                      (LPVOID)lpEmptyString,
-                      sizeof(WCHAR));
+                      (LPVOID)lpComment,
+                      (wcslen(lpComment) + 1) * sizeof(WCHAR));
 
         RegSetValueEx(hAccountKey,
                       L"UserComment",
@@ -344,7 +404,7 @@ SampCreateUserAccount(HKEY hDomainKey,
                       (LPVOID)lpEmptyString,
                       sizeof(WCHAR));
 
-        /* Set LogonHours attribute */
+        /* Set LogonHours attribute*/
         *((PUSHORT)LogonHours) = 168;
         memset(&(LogonHours[2]), 0xff, 21);
 
@@ -630,9 +690,14 @@ SampInitializeSAM(VOID)
     PSID pBuiltinSid = NULL;
     BOOL bResult = TRUE;
     PSID pSid;
+    HINSTANCE hInstance;
+    WCHAR szComment[256];
+    WCHAR szName[80];
     NTSTATUS Status;
 
     TRACE("SampInitializeSAM() called\n");
+
+    hInstance = GetModuleHandleW(L"samsrv.dll");
 
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                         L"SAM\\SAM",
@@ -687,31 +752,45 @@ SampInitializeSAM(VOID)
         goto done;
     }
 
+    SampLoadString(hInstance, IDS_DOMAIN_BUILTIN_NAME, szName, 80);
+
     /* Create the Builtin domain */
     if (SampCreateDomain(hDomainsKey,
                          L"Builtin",
-                         L"Builtin",
+                         szName, //L"Builtin", // SampGetResourceString(hInstance, IDS_DOMAIN_BUILTIN_NAME),
                          pBuiltinSid,
                          &hDomainKey))
     {
+        SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_COMMENT, szComment, 256);
+
         SampCreateAliasAccount(hDomainKey,
-                               L"Administrators",
-                               L"Testabc1234567890",
+                               szName,
+                               szComment,
                                DOMAIN_ALIAS_RID_ADMINS);
 
+        SampLoadString(hInstance, IDS_ALIAS_USERS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_USERS_COMMENT, szComment, 256);
+
         SampCreateAliasAccount(hDomainKey,
-                               L"Users",
-                               L"Users Group",
+                               szName,
+                               szComment,
                                DOMAIN_ALIAS_RID_USERS);
 
-        SampCreateAliasAccount(hDomainKey,
-                               L"Guests",
-                               L"Guests Group",
-                               DOMAIN_ALIAS_RID_GUESTS);
+        SampLoadString(hInstance, IDS_ALIAS_GUESTS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_GUESTS_COMMENT, szComment, 256);
 
         SampCreateAliasAccount(hDomainKey,
-                               L"Power Users",
-                               L"Power Users Group",
+                               szName,
+                               szComment,
+                               DOMAIN_ALIAS_RID_GUESTS);
+
+        SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_COMMENT, szComment, 256);
+
+        SampCreateAliasAccount(hDomainKey,
+                               szName,
+                               szComment,
                                DOMAIN_ALIAS_RID_POWER_USERS);
 
 
@@ -737,13 +816,21 @@ SampInitializeSAM(VOID)
                          AccountDomainInfo->DomainSid,
                          &hDomainKey))
     {
+        SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_COMMENT, szComment, 256);
+
         SampCreateUserAccount(hDomainKey,
-                              L"Administrator",
+                              szName,
+                              szComment,
                               DOMAIN_USER_RID_ADMIN,
                               USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
+        SampLoadString(hInstance, IDS_USER_GUEST_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_USER_GUEST_COMMENT, szComment, 256);
+
         SampCreateUserAccount(hDomainKey,
-                              L"Guest",
+                              szName,
+                              szComment,
                               DOMAIN_USER_RID_GUEST,
                               USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 

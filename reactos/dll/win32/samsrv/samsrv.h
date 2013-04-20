@@ -15,6 +15,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <winuser.h>
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/kefuncs.h>
@@ -29,6 +30,8 @@
 #include <sam_s.h>
 
 #include <wine/debug.h>
+
+#include "resources.h"
 
 typedef enum _SAM_DB_OBJECT_TYPE
 {
