@@ -1683,6 +1683,17 @@ TrayNotify_NotifyMsg(IN HWND hwnd,
     }
 }
 
+BOOL
+TrayNotify_GetClockRect(IN HWND hwnd,
+                        OUT PRECT rcClock)
+{
+    PTRAY_NOTIFY_WND_DATA This = (PTRAY_NOTIFY_WND_DATA)GetWindowLongPtr(hwnd, 0);
+    if (!IsWindowVisible(This->hWndTrayClock))
+        return FALSE;
+
+    return GetWindowRect(This->hWndTrayClock, rcClock);
+}
+
 static LRESULT CALLBACK
 TrayNotifyWndProc(IN HWND hwnd,
                   IN UINT uMsg,

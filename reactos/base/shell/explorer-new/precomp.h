@@ -424,6 +424,10 @@ TrayNotify_NotifyMsg(IN HWND hwnd,
                      IN WPARAM wParam,
                      IN LPARAM lParam);
 
+BOOL
+TrayNotify_GetClockRect(IN HWND hwnd,
+                        OUT PRECT rcClock);
+
 /*
  * taskswnd.c
  */

@@ -2494,9 +2494,23 @@ HandleTrayContextMenu:
             }
 
             case WM_NCLBUTTONDBLCLK:
+            {
                 /* We "handle" this message so users can't cause a weird maximize/restore
                    window animation when double-clicking the tray window! */
+
+                /* We should forward mouse messages to child windows here.
+                   Right now, this is only clock double-click */
+                RECT rcClock;
+                if (TrayNotify_GetClockRect(This->hwndTrayNotify, &rcClock))
+                {
+                    POINT ptClick;
+                    ptClick.x = MAKEPOINTS(lParam).x;
+                    ptClick.y = MAKEPOINTS(lParam).y;
+                    if (PtInRect(&rcClock, ptClick))
+                        LaunchCPanel(NULL, TEXT("timedate.cpl"));
+                }
                 break;
+            }
 
             case WM_NCCREATE:
             {
