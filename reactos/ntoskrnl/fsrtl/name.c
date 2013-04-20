@@ -143,7 +143,9 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 NamePosition = Name->Length / sizeof(WCHAR);
                 break;
             }
-            else if (Expression->Buffer[ExpressionPosition] != L'?')
+            /* Allow null matching */
+            else if (Expression->Buffer[ExpressionPosition] != L'?' &&
+                     Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
             {
                 NamePosition++;
             }

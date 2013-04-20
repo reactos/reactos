@@ -207,7 +207,9 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                 NamePosition = Name->Length;
                 break;
             }
-            else if (Expression->Buffer[ExpressionPosition] != '?')
+            /* Allow null matching */
+            else if (Expression->Buffer[ExpressionPosition] != '?' &&
+                     Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
             {
                 NamePosition++;
             }
