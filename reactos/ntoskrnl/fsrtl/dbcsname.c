@@ -248,7 +248,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         }
     }
     if (ExpressionPosition + 1 == Expression->Length && NamePosition == Name->Length &&
-        Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT)
+        (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT || Expression->Buffer[ExpressionPosition] == '*'))
     {
         ExpressionPosition++;
     }

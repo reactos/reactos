@@ -185,7 +185,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         }
     }
     if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR) &&
-        Expression->Buffer[ExpressionPosition] == DOS_DOT)
+        (Expression->Buffer[ExpressionPosition] == DOS_DOT || Expression->Buffer[ExpressionPosition] == L'*'))
     {
         ExpressionPosition++;
     }
