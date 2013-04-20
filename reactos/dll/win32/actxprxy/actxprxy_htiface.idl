@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Alexandre Julliard
+ * Copyright 2011 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* just a wrapper for activscp.idl */
+/* just a wrapper for htiface.idl */
 
-#include "activscp.idl"
+#include "htiface.idl"
 
 [
     threading(both),
