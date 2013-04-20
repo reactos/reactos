@@ -475,8 +475,12 @@ static VOID FsRtlIsDbcsInExpressionTest()
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
     RtlInitAnsiString(&Name, " ");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
+
+    if (!KmtIsCheckedBuild)
+    {
+        RtlInitAnsiString(&Name, "");
+        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
+    }
     RtlInitAnsiString(&Name, ".");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n"); 
     RtlInitAnsiString(&Name, "1.txt");
