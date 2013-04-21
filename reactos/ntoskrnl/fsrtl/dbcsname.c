@@ -218,14 +218,47 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         /* Check DOS_STAR */
         else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_STAR)
         {
-            MatchingChars = NamePosition;
-            while (MatchingChars < Name->Length)
+            /* We can only consume dot if that's not the last one
+             * Otherwise, we null match
+             */
+            if (Name->Buffer[NamePosition] == '.')
             {
-                if (Name->Buffer[MatchingChars] == '.')
+                MatchingChars = NamePosition + 1;
+                while (MatchingChars < Name->Length)
                 {
-                    NamePosition = MatchingChars;
+                    if (Name->Buffer[MatchingChars] == '.')
+                    {
+                        NamePosition++;
+                        break;
+                    }
+                    MatchingChars++;
                 }
-                MatchingChars++;
+            }
+            else
+            {
+                /* XXX: Eat everything till the end */
+                if (ExpressionPosition + 1 == Expression->Length)
+                {
+                    NamePosition = Name->Length;
+                }
+
+                /* Try to eat till the next matching char or . */
+                MatchingChars = NamePosition;
+                while (MatchingChars < Name->Length)
+                {
+                    if (ExpressionPosition + 1 < Expression->Length &&
+                        Name->Buffer[MatchingChars] == Expression->Buffer[ExpressionPosition + 1])
+                    {
+                        NamePosition = MatchingChars;
+                        break;
+                    }
+                    else if (Name->Buffer[MatchingChars] == '.')
+                    {
+                        NamePosition = MatchingChars + 1;
+                        break;
+                    }
+                    MatchingChars++;
+                }
             }
             ExpressionPosition++;
         }

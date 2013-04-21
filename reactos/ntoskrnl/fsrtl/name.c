@@ -153,14 +153,47 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         /* Check DOS_STAR */
         else if (Expression->Buffer[ExpressionPosition] == DOS_STAR)
         {
-            MatchingChars = NamePosition;
-            while (MatchingChars < Name->Length / sizeof(WCHAR))
+            /* We can only consume dot if that's not the last one
+             * Otherwise, we null match
+             */
+            if (Name->Buffer[NamePosition] == L'.')
             {
-                if (Name->Buffer[MatchingChars] == L'.')
+                MatchingChars = NamePosition + 1;
+                while (MatchingChars < Name->Length / sizeof(WCHAR))
                 {
-                    NamePosition = MatchingChars;
+                    if (Name->Buffer[MatchingChars] == L'.')
+                    {
+                        NamePosition++;
+                        break;
+                    }
+                    MatchingChars++;
                 }
-                MatchingChars++;
+            }
+            else
+            {
+                /* XXX: Eat everything till the end */
+                if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR))
+                {
+                    NamePosition = Name->Length;
+                }
+
+                /* Try to eat till the next matching char or . */
+                MatchingChars = NamePosition;
+                while (MatchingChars < Name->Length / sizeof(WCHAR))
+                {
+                    if (ExpressionPosition + 1 < Expression->Length / sizeof(WCHAR) &&
+                        Name->Buffer[MatchingChars] == Expression->Buffer[ExpressionPosition + 1])
+                    {
+                        NamePosition = MatchingChars;
+                        break;
+                    }
+                    else if (Name->Buffer[MatchingChars] == L'.')
+                    {
+                        NamePosition = MatchingChars + 1;
+                        break;
+                    }
+                    MatchingChars++;
+                }
             }
             ExpressionPosition++;
         }
