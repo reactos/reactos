@@ -12,9 +12,7 @@
 
 PFNDBGPRNT KdpDbgPrint = NULL;
 ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
-ULONG RemotePacketId = 0;
-BOOLEAN KdpPhase1Complete = FALSE;
-ULONG KdpStallScaleFactor = 10000;
+ULONG RemotePacketId = INITIAL_PACKET_ID;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -89,9 +87,6 @@ NTAPI
 KdDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
-    KdpStallScaleFactor = KeGetPcr()->StallScaleFactor * 100;
-    KdpPhase1Complete = TRUE;
-
     return STATUS_SUCCESS;
 }
 

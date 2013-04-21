@@ -176,52 +176,33 @@ KDP_STATUS
 NTAPI
 KdpPollByte(OUT PBYTE OutByte)
 {
-    /* Get the byte */
-    if (CpGetByte(&KdDebugComPort, OutByte, FALSE) == CP_GET_SUCCESS)
-    {
-        /* Yes, return the byte */
-        return KDP_PACKET_RECEIVED;
-    }
-    else
-    {
-        /* Timed out */
-        return KDP_PACKET_TIMEOUT;
-    }
+    /* Poll the byte */
+    return (CpGetByte(&KdDebugComPort, OutByte, FALSE) == CP_GET_SUCCESS
+                                                        ? KDP_PACKET_RECEIVED
+                                                        : KDP_PACKET_TIMEOUT);
 }
 
 KDP_STATUS
 NTAPI
 KdpReceiveByte(OUT PBYTE OutByte)
 {
-    // TODO: Use CpGetByte(&KdDebugComPort, OutByte, TRUE);
-
-    ULONG Repeats = KdpStallScaleFactor * 100;
-
-    while (Repeats--)
-    {
-        /* Check if data is available */
-        if (KdpPollByte(OutByte) == KDP_PACKET_RECEIVED)
-        {
-            /* We successfully got a byte */
-            return KDP_PACKET_RECEIVED;
-        }
-    }
-
-    /* Timed out */
-    return KDP_PACKET_TIMEOUT;
+    /* Get the byte */
+    return (CpGetByte(&KdDebugComPort, OutByte, TRUE) == CP_GET_SUCCESS
+                                                       ? KDP_PACKET_RECEIVED
+                                                       : KDP_PACKET_TIMEOUT);
 }
 
 KDP_STATUS
 NTAPI
 KdpPollBreakIn(VOID)
 {
+    KDP_STATUS KdStatus;
     UCHAR Byte;
-    if (KdpPollByte(&Byte) == KDP_PACKET_RECEIVED)
+
+    KdStatus = KdpPollByte(&Byte);
+    if ((KdStatus == KDP_PACKET_RECEIVED) && (Byte == BREAKIN_PACKET_BYTE))
     {
-        if (Byte == BREAKIN_PACKET_BYTE)
-        {
-            return KDP_PACKET_RECEIVED;
-        }
+        return KDP_PACKET_RECEIVED;
     }
     return KDP_PACKET_TIMEOUT;
 }

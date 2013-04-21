@@ -28,8 +28,6 @@ typedef UCHAR BYTE, *PBYTE;
 
 typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);
 extern PFNDBGPRNT KdpDbgPrint;
-extern BOOLEAN KdpPhase1Complete;
-extern ULONG KdpStallScaleFactor;
 
 typedef enum
 {

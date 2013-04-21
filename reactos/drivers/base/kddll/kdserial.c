@@ -22,7 +22,7 @@ KdpSendBuffer(
     IN PVOID Buffer,
     IN ULONG Size)
 {
-    INT i;
+    ULONG i;
     for (i = 0; i < Size; i++)
     {
         KdpSendByte(((PUCHAR)Buffer)[i]);
@@ -51,11 +51,7 @@ KdpReceiveBuffer(
     {
         /* Try to get a byte from the port */
         Status = KdpReceiveByte(&ByteBuffer[i]);
-
-        if (Status != KDP_PACKET_RECEIVED)
-        {
-            return Status;
-        }
+        if (Status != KDP_PACKET_RECEIVED) return Status;
     }
 
     return KDP_PACKET_RECEIVED;
