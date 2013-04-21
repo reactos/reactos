@@ -14,6 +14,8 @@
 #include <cpl.h>
 #include <tchar.h>
 #include <setupapi.h>
+#include <assert.h>
+#include <shlwapi.h>
 #include <shlobj.h>
 #include <regstr.h>
 #include <cplext.h>
@@ -21,6 +23,7 @@
 #include <cfgmgr32.h>
 #include <uxtheme.h>
 #include <uxundoc.h>
+#include <vssym32.h>
 
 #include "appearance.h"
 #include "preview.h"
@@ -105,6 +108,7 @@ typedef struct _GLOBAL_DATA
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 extern GLOBAL_DATA g_GlobalData;
+extern HWND hCPLWindow;
 
 BOOL
 DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice);
@@ -116,3 +120,13 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
 
 INT_PTR CALLBACK
 AdvGeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+LONG 
+RegLoadMUIStringW(IN HKEY hKey,
+                  IN LPCWSTR pszValue  OPTIONAL,
+                  OUT LPWSTR pszOutBuf,
+                  IN DWORD cbOutBuf,
+                  OUT LPDWORD pcbData OPTIONAL,
+                  IN DWORD Flags,
+                  IN LPCWSTR pszDirectory  OPTIONAL);
+

@@ -24,30 +24,30 @@ typedef struct
 
 /* This const assigns the color and metric numbers to the elements from the elements list */
 
-/* Size 1 (width)    Size 2 (height)  Color 1                Color 2                        Font            Fontcolor */
+/* Size 1 (width)          Size 2 (height)     Color 1                  Color 2                         Font             Fontcolor */
 const ASSIGNMENT g_Assignment[NUM_ELEMENTS] =
-{ {-1,               -1,              COLOR_DESKTOP,         -1,                            -1,             -1},                  /* -Desktop */
-  {SIZE_CAPTION_Y,   -1,              COLOR_INACTIVECAPTION, COLOR_GRADIENTINACTIVECAPTION, FONT_CAPTION,   -1},                  /* inactive window caption */
-  {SIZE_BORDER_X,    SIZE_BORDER_Y,   COLOR_INACTIVEBORDER,  -1,                            -1,             -1},                  /* inactive window border */
-  {SIZE_CAPTION_Y,   -1,              COLOR_ACTIVECAPTION,   COLOR_GRADIENTACTIVECAPTION,   FONT_CAPTION,   COLOR_CAPTIONTEXT},   /* -active window caption */
-  {SIZE_BORDER_X,    SIZE_BORDER_Y,   COLOR_ACTIVEBORDER,    -1,                            -1,             -1},                  /* active window border */
-  {SIZE_MENU_SIZE_X, SIZE_MENU_Y,     COLOR_MENU,            -1,                            FONT_MENU,      COLOR_MENUTEXT},      /* menu */
-  {SIZE_MENU_SIZE_X, SIZE_MENU_Y,     COLOR_HIGHLIGHT,       -1,                            FONT_HILIGHT,   COLOR_HIGHLIGHTTEXT}, /* marked element */
-  {-1,               -1,              COLOR_WINDOW,          -1 /*COLOR_WINDOWFRAME*/,      -1,             COLOR_WINDOWTEXT},    /* window */
-  {SIZE_SCROLL_X,    SIZE_SCROLL_Y,   COLOR_SCROLLBAR,       -1,                            -1,             -1},                  /* scroll bar */
-  {-1,               -1,              COLOR_3DFACE,          -1,                            -1,             COLOR_BTNTEXT},       /* 3d objects */
-  {SIZE_SMCAPTION_Y, -1,              -1,                    -1,                            FONT_SMCAPTION, -1},                  /* palette window caption */
-  {-1,               -1,              -1,                    -1,                            -1,             -1},                  /* symbol caption FIXME: Access? */
-  {SIZE_CAPTION_Y,   -1,              -1,                    -1,                            -1,             -1},                  /* caption bar */
-  {-1,               -1,              -1,                    -1,                            -1,             COLOR_GRAYTEXT},      /* inactive menu item FIXME: Access? */
-  {-1,               -1,              -1,                    -1,                            FONT_DIALOG,    COLOR_WINDOWTEXT},    /* dialog */
-  {-1,               -1,              -1,                    -1,                            -1,             -1},                  /* scrollbar controls FIXME: Access? */
-  {-1,               -1,              COLOR_APPWORKSPACE,    -1,                            -1,             -1},                  /* application background */
-  {-1,               -1,              -1,                    -1,                            -1,             -1},                  /* small caption bar FIXME: Access? */
-  {SIZE_ICON_SPC_X,  -1,              -1,                    -1,                            -1,             -1},                  /* symbol distance horiz. */
-  {SIZE_ICON_SPC_Y,  -1,              -1,                    -1,                            -1,             -1},                  /* symbol distance vert. */
-  {-1,               -1,              COLOR_INFOBK,          -1,                            FONT_INFO,      COLOR_INFOTEXT},      /* quickinfo */
-  {SIZE_ICON_X,      SIZE_ICON_Y,     -1,                    -1,                            FONT_ICON,      -1}};                 /* symbol */
+{ {-1,                     -1,                 COLOR_DESKTOP,           -1,                             -1,              -1},                /* -Desktop */
+  {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_INACTIVECAPTION,   COLOR_GRADIENTINACTIVECAPTION,  FONT_CAPTION,    -1},                /* inactive window caption */
+  {SIZE_BORDER_WIDTH,      -1,                 COLOR_INACTIVEBORDER,    -1,                             -1,              -1},                  /* inactive window border */
+  {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_ACTIVECAPTION,     COLOR_GRADIENTACTIVECAPTION,    FONT_CAPTION,    COLOR_CAPTIONTEXT},    /* -active window caption */
+  {SIZE_BORDER_WIDTH,      -1,                 COLOR_ACTIVEBORDER,      -1,                             -1,              -1},                /* active window border */
+  {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_MENU,              -1,                             FONT_MENU,       COLOR_MENUTEXT},    /* menu */
+  {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_HIGHLIGHT,         -1,                             -1,              COLOR_HIGHLIGHTTEXT},/* marked element */
+  {-1,                     -1,                 COLOR_WINDOW,            -1 /*COLOR_WINDOWFRAME*/,       -1,              COLOR_WINDOWTEXT},    /* window */
+  {SIZE_SCROLL_WIDTH,      SIZE_SCROLL_HEIGHT, COLOR_SCROLLBAR,         -1,                             -1,              -1},                /* scroll bar */
+  {-1,                     -1,                 COLOR_3DFACE,            -1,                             -1,              COLOR_BTNTEXT},        /* 3d objects */
+  {SIZE_SM_CAPTION_HEIGHT, -1,                 -1,                      -1,                             FONT_SMCAPTION,  -1},                /* palette window caption */
+  {-1,                     -1,                 -1,                      -1,                             -1,              -1},                /* symbol caption FIXME: Access? */
+  {SIZE_CAPTION_HEIGHT,    -1,                 -1,                      -1,                             -1,              -1},                /* caption bar */
+  {-1,                     -1,                 -1,                      -1,                             -1,              COLOR_GRAYTEXT},    /* inactive menu item FIXME: Access? */
+  {-1,                     -1,                 -1,                      -1,                             FONT_MESSAGE,    COLOR_WINDOWTEXT},    /* dialog */
+  {-1,                     -1,                 -1,                      -1,                             -1,              -1},                /* scrollbar controls FIXME: Access? */
+  {-1,                     -1,                 COLOR_APPWORKSPACE,      -1,                             -1,              -1},                /* application background */
+  {-1,                     -1,                 -1,                      -1,                             -1,              -1},                /* small caption bar FIXME: Access? */
+  {SIZE_ICON_SPACE_X,      -1,                 -1,                      -1,                             -1,              -1},                /* symbol distance horiz. */
+  {SIZE_ICON_SPACE_Y,      -1,                 -1,                      -1,                             -1,              -1},                /* symbol distance vert. */
+  {-1,                     -1,                 COLOR_INFOBK,            -1,                             FONT_STATUS,     COLOR_INFOTEXT},    /* quickinfo */
+  {SIZE_ICON,              -1,                 -1,                      -1,                             FONT_ICON,       -1}};                /* symbol */
 
 /******************************************************************************/
 
@@ -231,20 +231,20 @@ UpdateControls(HWND hwndDlg, GLOBALS *g)
     UpdateButtonColor(hwndDlg, g, IDC_ADVAPPEARANCE_FONTCOLOR_B, 2, g_Assignment[iElement].FontColor);
 
     if (g_Assignment[iElement].Size != -1)
-        SetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_SIZE_E, g->SchemeAdv.Size[g_Assignment[iElement].Size], FALSE);
+        SetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_SIZE_E,  SchemeGetMetric(&g->SchemeAdv, g_Assignment[iElement].Size), FALSE);
     else
         SetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_SIZE_E, TEXT(""));
 
     hdcDlg = GetDC(hwndDlg);
     if (g_Assignment[iElement].Font != -1)
     {
-        LOGFONT lfFont = g->SchemeAdv.lfFont[g_Assignment[iElement].Font];
+        PLOGFONTW plfFont = SchemeGetFont(&g->SchemeAdv, g_Assignment[iElement].Font);
 
-        SetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, lfFont.lfFaceName);
-        SetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, -MulDiv(g->SchemeAdv.lfFont[g_Assignment[iElement].Font].lfHeight, 72, GetDeviceCaps(hdcDlg, LOGPIXELSY)),FALSE);
-        SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, CB_FINDSTRINGEXACT, -1, (WPARAM)lfFont.lfFaceName);
-        SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_SETCHECK, g->SchemeAdv.lfFont[g_Assignment[iElement].Font].lfWeight == FW_BOLD?1:0, 0);
-        SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_SETCHECK, g->SchemeAdv.lfFont[g_Assignment[iElement].Font].lfItalic, 0);
+        SetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, plfFont->lfFaceName);
+        SetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, -MulDiv(plfFont->lfHeight, 72, GetDeviceCaps(hdcDlg, LOGPIXELSY)),FALSE);
+        SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, CB_FINDSTRINGEXACT, -1, (WPARAM)plfFont->lfFaceName);
+        SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_SETCHECK, plfFont->lfWeight == FW_BOLD?1:0, 0);
+        SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_SETCHECK, plfFont->lfItalic, 0);
     }
     else
     {
@@ -266,15 +266,16 @@ SaveCurrentValues(HWND hwndDlg, GLOBALS *g)
 
     if (g_Assignment[g->CurrentElement].Size != -1)
     {
-        g->SchemeAdv.Size[g_Assignment[g->CurrentElement].Size] = GetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_SIZE_E, &bTranslated, FALSE);
+        SchemeSetMetric(&g->SchemeAdv, g_Assignment[g->CurrentElement].Size, GetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_SIZE_E, &bTranslated, FALSE));
     }
 
     if (g_Assignment[g->CurrentElement].Font != -1)
     {
-        g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight = -MulDiv(GetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, &bTranslated, FALSE), GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
-        g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfWeight = (SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_GETCHECK, 0, 0) == 1) ? FW_BOLD : FW_NORMAL;
-        g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfItalic = (BYTE)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_GETCHECK, 0, 0);
-        GetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfFaceName, LF_FACESIZE * sizeof(TCHAR));
+        PLOGFONTW plfFont = SchemeGetFont(&g->SchemeAdv, g_Assignment[g->CurrentElement].Font);
+        plfFont->lfHeight = -MulDiv(GetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, &bTranslated, FALSE), GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
+        plfFont->lfWeight = (SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_GETCHECK, 0, 0) == 1) ? FW_BOLD : FW_NORMAL;
+        plfFont->lfItalic = (BYTE)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_GETCHECK, 0, 0);
+        GetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, plfFont->lfFaceName, LF_FACESIZE * sizeof(TCHAR));
     }
 
     ReleaseDC(hwndDlg, hdcDlg);
@@ -379,7 +380,7 @@ AdvAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
     SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, CB_SETCURSEL, iDeskIndex, 0);
 
     /* Create font for bold button */
-    lfButtonFont = g->Scheme.lfFont[FONT_DIALOG];
+    lfButtonFont = g->Scheme.ncMetrics.lfMessageFont;
     lfButtonFont.lfWeight = FW_BOLD;
     lfButtonFont.lfItalic = FALSE;
     hMyFont = CreateFontIndirect(&lfButtonFont);
@@ -501,27 +502,12 @@ GetSelectedComboInt(HWND hwnd, INT id)
     return _ttoi(szBuffer);
 }
 
-
-static INT
-GetEditedComboInt(HWND hwnd, INT id)
-{
-    INT nCount;
-    BOOL bTranslated;
-
-    nCount = GetDlgItemInt(hwnd, id, &bTranslated, FALSE);
-    if (bTranslated == FALSE)
-        return 12;
-
-    return nCount;
-}
-
-
-
 INT_PTR CALLBACK
 AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    INT iListIndex;
+    INT iSelection, iProperty;
     GLOBALS* g;
+    PLOGFONTW plfFont;
 
     g = (GLOBALS*)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -538,6 +524,9 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
+            if(g == NULL)
+                return TRUE;
+
             switch(LOWORD(wParam))
             {
                 case IDOK:
@@ -561,197 +550,87 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         SaveCurrentValues(hwndDlg, g);
-                        iListIndex = SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, CB_GETCURSEL, 0, 0);
-                        g->CurrentElement = SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, CB_GETITEMDATA, (WPARAM)iListIndex, 0);
+                        iSelection = SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, CB_GETCURSEL, 0, 0);
+                        g->CurrentElement = SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, CB_GETITEMDATA, iSelection, 0);
                         UpdateControls(hwndDlg, g);
                     }
                     break;
 
                 case IDC_ADVAPPEARANCE_SIZE_E:
-                    if (g && HIWORD(wParam) == EN_CHANGE)
+                    if (HIWORD(wParam) == EN_CHANGE)
                     {
-                        INT i = (INT)LOWORD(SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_SIZE_UD, UDM_GETPOS,0,0L));
+                        iProperty = g_Assignment[g->CurrentElement].Size;
+                        if(iProperty == -1)
+                            return TRUE;
 
-                        switch (g->CurrentElement)
-                        {
-                            case IDX_INACTIVE_CAPTION:
-                            case IDX_ACTIVE_CAPTION:
-                            case IDX_CAPTION_BUTTON:
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCYCAPTION, 0, i);
-                                break;
+                        iSelection = LOWORD(SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_SIZE_UD, UDM_GETPOS,0,0L));
+                        SchemeSetMetric(&g->SchemeAdv, iProperty, iSelection);
+                        SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETSIZE, iProperty, iSelection);
 
-                            case IDX_MENU:
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCYMENU, 0, i);
-                                break;
-
-                            case IDX_SCROLLBAR:
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCXSCROLLBAR, 0, i);
-                                break;
-
-                            case IDX_INACTIVE_BORDER:
-                            case IDX_ACTIVE_BORDER:
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETCYSIZEFRAME, 0, i);
-                                break;
-                        }
+                        iProperty = g_Assignment[g->CurrentElement].Size2;
+                        if(iProperty != -1)
+                            SchemeSetMetric(&g->SchemeAdv, iProperty, iSelection);
                     }
                     break;
 
                 case IDC_ADVAPPEARANCE_FONT_C:
-                    if (g && HIWORD(wParam) == CBN_SELCHANGE)
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        switch (g->CurrentElement)
-                        {
-                            case IDX_INACTIVE_CAPTION:
-                            case IDX_ACTIVE_CAPTION:
-                                GetSelectedComboText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C,
-                                    g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfFaceName);
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
+                        iProperty = g_Assignment[g->CurrentElement].Font;
+                        if(iProperty == -1)
+                            return TRUE;
 
-                            case IDX_MENU:
-                                GetSelectedComboText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C,
-                                    g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfFaceName);
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-
-                            case IDX_DIALOG:
-                                GetSelectedComboText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C,
-                                    g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfFaceName);
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-                        }
+                        plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);
+                        GetSelectedComboText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, plfFont->lfFaceName);
+                        SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETFONT, iProperty, (LPARAM)plfFont);
                     }
                     break;
 
                 case IDC_ADVAPPEARANCE_FONTSIZE_E:
-                    if (g && HIWORD(wParam) == CBN_SELCHANGE)
+                    if ((HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_EDITCHANGE))
                     {
-                        HDC hdcDlg = GetDC(hwndDlg);
-                        INT i;
+                        HDC hdcDlg;
 
-                        switch (g->CurrentElement)
-                        {
-                            case IDX_INACTIVE_CAPTION:
-                            case IDX_ACTIVE_CAPTION:
-                                i = GetSelectedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
-                                    -MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
+                        iProperty =  g_Assignment[g->CurrentElement].Font;
+                        if(iProperty == -1)
+                            return TRUE;
 
-                            case IDX_MENU:
-                                i = GetSelectedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
-                                    -MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
+                        hdcDlg = GetDC(hwndDlg);
 
-                            case IDX_DIALOG:
-                                i = GetSelectedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
-                                    -MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-                        }
-
-                        ReleaseDC(hwndDlg, hdcDlg);
-                    }
-                    else if (g && HIWORD(wParam) == CBN_EDITCHANGE)
-                    {
-                        HDC hdcDlg = GetDC(hwndDlg);
-                        INT i;
-
-                        switch (g->CurrentElement)
-                        {
-                            case IDX_INACTIVE_CAPTION:
-                            case IDX_ACTIVE_CAPTION:
-                                i = GetEditedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
-                                    -MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-
-                            case IDX_MENU:
-                                i = GetEditedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
-                                    -MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-
-                            case IDX_DIALOG:
-                                i = GetEditedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfHeight =
-                                    -MulDiv(i , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-                        }
+                        plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);
+                        iSelection = GetSelectedComboInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E);
+                        plfFont->lfHeight = -MulDiv(iSelection , GetDeviceCaps(hdcDlg, LOGPIXELSY), 72);
+                        SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
 
                         ReleaseDC(hwndDlg, hdcDlg);
                     }
                     break;
 
                 case IDC_ADVAPPEARANCE_FONTBOLD:
-                    if (g && HIWORD(wParam) == BN_CLICKED)
+                    if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        INT i;
+                        iProperty = g_Assignment[g->CurrentElement].Font;
+                        if(iProperty == -1)
+                            return TRUE;
 
-                        switch (g->CurrentElement)
-                        {
-                            case IDX_INACTIVE_CAPTION:
-                            case IDX_ACTIVE_CAPTION:
-                                i = (INT)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_GETCHECK, 0, 0);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfWeight =
-                                    (i == BST_CHECKED) ? FW_BOLD : FW_NORMAL;
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-
-                            case IDX_MENU:
-                                i = (INT)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_GETCHECK, 0, 0);
-
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfWeight =
-                                    (i == BST_CHECKED) ? FW_BOLD : FW_NORMAL;
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-
-                            case IDX_DIALOG:
-                                i = (INT)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_GETCHECK, 0, 0);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfWeight =
-                                    (i == BST_CHECKED) ? FW_BOLD : FW_NORMAL;
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-                        }
+                        plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);
+                        iSelection = (INT)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_GETCHECK, 0, 0);
+                        plfFont->lfWeight = (iSelection == BST_CHECKED) ? FW_BOLD : FW_NORMAL;
+                        SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETFONT, iProperty, (LPARAM)plfFont);
                     }
                     break;
 
                 case IDC_ADVAPPEARANCE_FONTITALIC:
-                    if (g && HIWORD(wParam) == BN_CLICKED)
+                    if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        INT i;
+                        iProperty = g_Assignment[g->CurrentElement].Font;
+                        if(iProperty == -1)
+                            return TRUE;
 
-                        switch (g->CurrentElement)
-                        {
-                            case IDX_INACTIVE_CAPTION:
-                            case IDX_ACTIVE_CAPTION:
-                                i = (INT)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_GETCHECK, 0, 0);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfItalic =
-                                    (i == BST_CHECKED) ? TRUE : FALSE;
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-
-                            case IDX_MENU:
-                                i = (INT)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_GETCHECK, 0, 0);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfItalic =
-                                    (i == BST_CHECKED) ? TRUE : FALSE;
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-
-                            case IDX_DIALOG:
-                                i = (INT)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_GETCHECK, 0, 0);
-                                g->SchemeAdv.lfFont[g_Assignment[g->CurrentElement].Font].lfItalic =
-                                    (i == BST_CHECKED) ? TRUE : FALSE;
-                                SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
-                                break;
-                        }
+                        plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);
+                        iSelection = (INT)SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_GETCHECK, 0, 0);
+                        plfFont->lfItalic = (iSelection == BST_CHECKED) ? TRUE : FALSE;
+                        SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETFONT, iProperty, (LPARAM)plfFont);
                     }
                     break;
 

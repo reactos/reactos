@@ -97,6 +97,7 @@
 #define IDC_APPEARANCE_EFFECTS          1503
 #define IDC_APPEARANCE_ADVANCED         1504
 #define IDC_APPEARANCE_VISUAL_STYLE     1505
+#define IDC_APPEARANCE_SIZE             1506
 
 #define IDS_INACTWIN                    1510
 #define IDS_ACTWIN                      1511
@@ -104,6 +105,7 @@
 #define IDS_MESSBOX                     1513
 #define IDS_MESSTEXT                    1514
 #define IDS_BUTTEXT                     1515
+#define IDS_CLASSIC_THEME               1516
 
 /* Update these IDs when you change the string id list */
 #define IDS_ITEM_FIRST                  (IDS_ITEM_3D_OBJECTS)

@@ -22,6 +22,7 @@ add_library(desk SHARED
     desk.rc
     draw.c
     theme.c
+    muireg.c
     ${CMAKE_CURRENT_BINARY_DIR}/desk.def)
 
 set_module_type(desk cpl UNICODE)
@@ -37,6 +38,7 @@ add_importlibs(desk
     ole32
     setupapi
     shell32
+    shlwapi
     uxtheme
     kernel32
     ntdll)

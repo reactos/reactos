@@ -98,7 +98,11 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, COLOR_SCHEME *sch
         RBOuterPen = GetStockObject(DC_PEN);
     {
         HBRUSH hbr;
-        hbr = CreateSolidBrush(scheme->crColor[COLOR_BTNFACE]);
+
+        if((uFlags & MY_BF_ACTIVEBORDER))
+            hbr = CreateSolidBrush(scheme->crColor[COLOR_ACTIVEBORDER]);
+        else
+            hbr = CreateSolidBrush(scheme->crColor[COLOR_BTNFACE]);
         FillRect(hdc, &InnerRect, hbr);
         DeleteObject(hbr);
     }
