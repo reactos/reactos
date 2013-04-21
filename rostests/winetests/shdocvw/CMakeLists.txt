@@ -1,13 +1,9 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
-    intshcut.c
     shdocvw.c
     shortcut.c
-    webbrowser.c
     testlist.c)
 
 add_executable(shdocvw_winetest ${SOURCE})

@@ -21,13 +21,13 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wininet.h"
-#include "winnls.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wininet.h>
+#include <winnls.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 /* ################ */
 
@@ -133,7 +133,7 @@ static void test_URLSubRegQueryA(void)
             "got 0x%x and %d (expected S_OK and %d)\n", hr, used, len - 2);
     }
 
-    /* only space for the terminating 0: function still succeded */
+    /* only space for the terminating 0: function still succeeded */
     memset(buffer, '#', sizeof(buffer)-1);
     buffer[sizeof(buffer)-1] = '\0';
     hr = pURLSubRegQueryA(regpath_iemain, start_page, REG_SZ, buffer, 1, -1);
@@ -268,7 +268,7 @@ static void test_ParseURLFromOutsideSourceA(void)
 
         if (0) {
             /* that test crash on native shdocvw */
-            res = pParseURLFromOutsideSourceA(ParseURL_table[i].url, buffer, NULL, &dummy);
+            pParseURLFromOutsideSourceA(ParseURL_table[i].url, buffer, NULL, &dummy);
         }
 
         memset(buffer, '#', sizeof(buffer)-1);
