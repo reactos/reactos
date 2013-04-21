@@ -371,6 +371,16 @@ KdSendPacket(
 
     do
     {
+        if (Retries == 0)
+        {
+            /* PACKET_TYPE_KD_DEBUG_IO is allowed to instantly timeout */
+            if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
+            {
+                /* No response, silently fail. */
+                return;
+            }
+        }
+
         /* Set the packet id */
         Packet.PacketId = CurrentPacketId;
 
@@ -381,10 +391,7 @@ KdSendPacket(
         KdpSendBuffer(MessageHeader->Buffer, MessageHeader->Length);
 
         /* If we have meesage data, also send it */
-        if (MessageData)
-        {
-            KdpSendBuffer(MessageData->Buffer, MessageData->Length);
-        }
+        if (MessageData) KdpSendBuffer(MessageData->Buffer, MessageData->Length);
 
         /* Finalize with a trailing byte */
         KdpSendByte(PACKET_TRAILING_BYTE);
@@ -393,31 +400,18 @@ KdSendPacket(
         KdStatus = KdReceivePacket(PACKET_TYPE_KD_ACKNOWLEDGE,
                                    NULL,
                                    NULL,
-                                   0,
+                                   NULL,
                                    KdContext);
-
-        /* Did we succeed? */
-        if (KdStatus == KDP_PACKET_RECEIVED)
-        {
-            CurrentPacketId &= ~SYNC_PACKET_ID;
-            break;
-        }
-
-        /* PACKET_TYPE_KD_DEBUG_IO is allowed to instantly timeout */
-        if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
-        {
-            /* No response, silently fail. */
-            return;
-        }
-
         if (KdStatus == KDP_PACKET_TIMEOUT)
         {
-            Retries--;
+            if (Retries > 0) Retries--;
         }
 
         /* Packet timed out, send it again */
         KDDBGPRINT("KdSendPacket got KdStatus 0x%x\n", KdStatus);
-    }
-    while (Retries > 0);
+
+    } while (KdStatus != KDP_PACKET_RECEIVED);
+
+    CurrentPacketId &= ~SYNC_PACKET_ID;
 }
 
