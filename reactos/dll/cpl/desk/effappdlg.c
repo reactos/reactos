@@ -82,61 +82,61 @@ EffAppearanceDlg_CleanUp(HWND hwndDlg, GLOBALS* g)
 INT_PTR CALLBACK
 EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	GLOBALS* g;
+    GLOBALS* g;
 
-	g = (GLOBALS*)GetWindowLongPtr(hwndDlg, DWLP_USER);
+    g = (GLOBALS*)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
-	switch (uMsg)
-	{
-		case WM_INITDIALOG:
-			g = (GLOBALS*)lParam;
-			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)g);
-			EffAppearanceDlg_Init(hwndDlg, g);
-			break;
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            g = (GLOBALS*)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)g);
+            EffAppearanceDlg_Init(hwndDlg, g);
+            break;
 
-		case WM_DESTROY:
-			EffAppearanceDlg_CleanUp(hwndDlg, g);
-			break;
+        case WM_DESTROY:
+            EffAppearanceDlg_CleanUp(hwndDlg, g);
+            break;
 
-		case WM_COMMAND:
-			switch(LOWORD(wParam))
-			{
-				case IDOK:
-					SaveCurrentValues(hwndDlg, g);
-					EndDialog(hwndDlg, IDOK);
-					break;
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    SaveCurrentValues(hwndDlg, g);
+                    EndDialog(hwndDlg, IDOK);
+                    break;
 
-				case IDCANCEL:
-					g->SchemeAdv = g->Scheme;
-					EndDialog(hwndDlg, IDCANCEL);
-					break;
+                case IDCANCEL:
+                    g->SchemeAdv = g->Scheme;
+                    EndDialog(hwndDlg, IDCANCEL);
+                    break;
 
-				case IDC_EFFAPPEARANCE_ANIMATION:
-				case IDC_EFFAPPEARANCE_KEYBOARDCUES:
-				case IDC_EFFAPPEARANCE_DRAGFULLWINDOWS:
+                case IDC_EFFAPPEARANCE_ANIMATION:
+                case IDC_EFFAPPEARANCE_KEYBOARDCUES:
+                case IDC_EFFAPPEARANCE_DRAGFULLWINDOWS:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-						UpdateControls(hwndDlg, g);
+                        UpdateControls(hwndDlg, g);
                     }
-					break;
+                    break;
 
-				case IDC_EFFAPPEARANCE_ANIMATIONTYPE:
-					if (HIWORD(wParam) == CBN_SELCHANGE)
-					{
-						SaveCurrentValues(hwndDlg, g);
-						g->SchemeAdv.Effects.bMenuFade = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_GETCURSEL, 0, 0);
-						UpdateControls(hwndDlg, g);
-					}
-					break;
+                case IDC_EFFAPPEARANCE_ANIMATIONTYPE:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        SaveCurrentValues(hwndDlg, g);
+                        g->SchemeAdv.Effects.bMenuFade = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_GETCURSEL, 0, 0);
+                        UpdateControls(hwndDlg, g);
+                    }
+                    break;
 
-				default:
-					return FALSE;
-			}
-			break;
+                default:
+                    return FALSE;
+            }
+            break;
 
-		default:
-			return FALSE;
-	}
+        default:
+            return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }

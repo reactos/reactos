@@ -40,57 +40,57 @@
 /* Most (but not all) fields below correspond to HKCU\Control Panel\Desktop\UserPreferencesMask */
 typedef struct
 {
-	BOOL bActiveWindowTracking;
-	BOOL bMenuAnimation;
-	BOOL bComboBoxAnimation;
-	BOOL bListBoxSmoothScrolling;
-	BOOL bGradientCaptions;
-	BOOL bKeyboardCues;
-	BOOL bActiveWndTrkZorder;
-	BOOL bHotTracking;
-	BOOL bMenuFade;
-	BOOL bSelectionFade;
-	BOOL bTooltipAnimation;
-	BOOL bTooltipFade;
-	BOOL bCursorShadow;
-	BOOL bUiEffects;
-	BOOL bFontSmoothing;
-	BOOL bDragFullWindows;
-	UINT uiFontSmoothingType;
+    BOOL bActiveWindowTracking;
+    BOOL bMenuAnimation;
+    BOOL bComboBoxAnimation;
+    BOOL bListBoxSmoothScrolling;
+    BOOL bGradientCaptions;
+    BOOL bKeyboardCues;
+    BOOL bActiveWndTrkZorder;
+    BOOL bHotTracking;
+    BOOL bMenuFade;
+    BOOL bSelectionFade;
+    BOOL bTooltipAnimation;
+    BOOL bTooltipFade;
+    BOOL bCursorShadow;
+    BOOL bUiEffects;
+    BOOL bFontSmoothing;
+    BOOL bDragFullWindows;
+    UINT uiFontSmoothingType;
 } EFFECTS;
 
 typedef struct
 {
-	COLORREF crColor[NUM_COLORS];
-	LOGFONT lfFont[NUM_FONTS];
-	INT Size[NUM_SIZES];
-	BOOL bFlatMenus;
-	EFFECTS Effects;
+    COLORREF crColor[NUM_COLORS];
+    LOGFONT lfFont[NUM_FONTS];
+    INT Size[NUM_SIZES];
+    BOOL bFlatMenus;
+    EFFECTS Effects;
 } COLOR_SCHEME;
 
 typedef struct
 {
-	TCHAR strKeyName[4];
-	TCHAR strSizeName[4];
-	TCHAR strDisplayName[MAX_TEMPLATENAMELENTGH];
-	TCHAR strLegacyName[MAX_TEMPLATENAMELENTGH];
+    TCHAR strKeyName[4];
+    TCHAR strSizeName[4];
+    TCHAR strDisplayName[MAX_TEMPLATENAMELENTGH];
+    TCHAR strLegacyName[MAX_TEMPLATENAMELENTGH];
 } SCHEME_PRESET;
 
 /* struct for holding theme colors and sizes */
 typedef struct _THEME_STYLE
 {
-	WCHAR* StlyeName;
-	WCHAR* DisplayName;
+    WCHAR* StlyeName;
+    WCHAR* DisplayName;
 } THEME_STYLE, *PTHEME_STYLE;
 
 typedef struct _THEME
 {
-	WCHAR* themeFileName;
-	WCHAR* displayName;
-	HDSA Colors;
-	int ColorsCount;
-	HDSA Sizes;
-	int SizesCount;
+    WCHAR* themeFileName;
+    WCHAR* displayName;
+    HDSA Colors;
+    int ColorsCount;
+    HDSA Sizes;
+    int SizesCount;
 
 } THEME, *PTHEME;
 
@@ -99,27 +99,27 @@ typedef struct _THEME
    or by passing hwnd and getting the pointer by GetWindowLongPtr */
 typedef struct tagGLOBALS
 {
-	HDSA Themes;
-	int ThemesCount;
-	BOOL bThemeActive;
+    HDSA Themes;
+    int ThemesCount;
+    BOOL bThemeActive;
 
-	INT ThemeId;
-	INT SchemeId;	/* Theme is customized if SchemeId == -1 */
-	INT SizeID;
-	TCHAR strSelectedStyle[4];
+    INT ThemeId;
+    INT SchemeId;    /* Theme is customized if SchemeId == -1 */
+    INT SizeID;
+    TCHAR strSelectedStyle[4];
 
-	LPWSTR pszThemeFileName;
-	LPWSTR pszColorName;
-	LPWSTR pszSizeName;
+    LPWSTR pszThemeFileName;
+    LPWSTR pszColorName;
+    LPWSTR pszSizeName;
 
-	COLOR_SCHEME Scheme;
-	COLOR_SCHEME SchemeAdv;
-	BOOL bThemeChanged;
-	BOOL bSchemeChanged;
-	HBITMAP hbmpColor[3];
-	INT CurrentElement;
-	HFONT hBoldFont;
-	HFONT hItalicFont;
+    COLOR_SCHEME Scheme;
+    COLOR_SCHEME SchemeAdv;
+    BOOL bThemeChanged;
+    BOOL bSchemeChanged;
+    HBITMAP hbmpColor[3];
+    INT CurrentElement;
+    HFONT hBoldFont;
+    HFONT hItalicFont;
     BOOL bInitializing;
 } GLOBALS;
 

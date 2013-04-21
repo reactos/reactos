@@ -9,7 +9,7 @@
 
 #include "desk.h"
 
-#define NUM_APPLETS	(1)
+#define NUM_APPLETS    (1)
 
 static LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 

@@ -69,39 +69,39 @@ ULONG __cdecl DbgPrint(PCCH Format,...);
  */
 typedef struct _RESOLUTION_INFO
 {
-	DWORD dmPelsWidth;
-	DWORD dmPelsHeight;
+    DWORD dmPelsWidth;
+    DWORD dmPelsHeight;
 } RESOLUTION_INFO, *PRESOLUTION_INFO;
 
 typedef struct _SETTINGS_ENTRY
 {
-	struct _SETTINGS_ENTRY *Blink;
-	struct _SETTINGS_ENTRY *Flink;
-	DWORD dmBitsPerPel;
-	DWORD dmPelsWidth;
-	DWORD dmPelsHeight;
-	DWORD dmDisplayFrequency;
+    struct _SETTINGS_ENTRY *Blink;
+    struct _SETTINGS_ENTRY *Flink;
+    DWORD dmBitsPerPel;
+    DWORD dmPelsWidth;
+    DWORD dmPelsHeight;
+    DWORD dmDisplayFrequency;
 } SETTINGS_ENTRY, *PSETTINGS_ENTRY;
 
 typedef struct _DISPLAY_DEVICE_ENTRY
 {
-	struct _DISPLAY_DEVICE_ENTRY *Flink;
-	LPTSTR DeviceDescription;
-	LPTSTR DeviceName;
-	LPTSTR DeviceKey;
-	LPTSTR DeviceID;
-	DWORD DeviceStateFlags;
-	PSETTINGS_ENTRY Settings; /* Sorted by increasing dmPelsHeight, BPP */
-	DWORD SettingsCount;
-	PRESOLUTION_INFO Resolutions;
-	DWORD ResolutionsCount;
-	PSETTINGS_ENTRY CurrentSettings; /* Points into Settings list */
-	SETTINGS_ENTRY InitialSettings;
+    struct _DISPLAY_DEVICE_ENTRY *Flink;
+    LPTSTR DeviceDescription;
+    LPTSTR DeviceName;
+    LPTSTR DeviceKey;
+    LPTSTR DeviceID;
+    DWORD DeviceStateFlags;
+    PSETTINGS_ENTRY Settings; /* Sorted by increasing dmPelsHeight, BPP */
+    DWORD SettingsCount;
+    PRESOLUTION_INFO Resolutions;
+    DWORD ResolutionsCount;
+    PSETTINGS_ENTRY CurrentSettings; /* Points into Settings list */
+    SETTINGS_ENTRY InitialSettings;
 } DISPLAY_DEVICE_ENTRY, *PDISPLAY_DEVICE_ENTRY;
 
 typedef struct _GLOBAL_DATA
 {
-	COLORREF desktop_color;
+    COLORREF desktop_color;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 extern GLOBAL_DATA g_GlobalData;

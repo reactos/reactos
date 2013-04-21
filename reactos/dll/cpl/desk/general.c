@@ -123,21 +123,21 @@ AdvGeneralPageProc(HWND hwndDlg,
             Ret = TRUE;
             break;
         case WM_COMMAND:
-			switch (LOWORD(wParam))
-			{
-				case IDC_FONTSIZE_COMBO:
-					if (HIWORD(wParam) == CBN_SELCHANGE)
-					{
-						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-					}
-					break;
-				case IDC_RESTART_RB:
-				case IDC_WITHOUTREBOOT_RB:
-				case IDC_ASKME_RB:
-					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-				break;
-			}
-			break;
+            switch (LOWORD(wParam))
+            {
+                case IDC_FONTSIZE_COMBO:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+                case IDC_RESTART_RB:
+                case IDC_WITHOUTREBOOT_RB:
+                case IDC_ASKME_RB:
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                break;
+            }
+            break;
     }
 
     return Ret;
