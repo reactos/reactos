@@ -20,7 +20,7 @@
 123 stdcall -noname StopWatchAFORWARD(long str long long long)
 124 stdcall -noname StopWatchWFORWARD(long wstr long long long)
 125 stdcall -noname RunInstallUninstallStubs()
-130 stub -noname RunInstallUninstallStubs2
+130 stdcall -noname RunInstallUninstallStubs2()
 131 stub -noname SHCreateSplashScreen
 135 stub -noname IsFileUrl
 136 stub -noname IsFileUrlW
@@ -122,7 +122,7 @@
 @ stub IEWriteErrorLog
 @ stdcall ImportPrivacySettings(wstr ptr ptr)
 @ stub InstallReg_RunDLL
-@ stdcall OpenURL(long long str long)
+@ stdcall OpenURL(long long str long) ieframe.OpenURL
 @ stub SHGetIDispatchForFolder
 @ stdcall SetQueryNetSessionCount(long)
 @ stub SoftwareUpdateMessageBox
