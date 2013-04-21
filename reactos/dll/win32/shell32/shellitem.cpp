@@ -27,9 +27,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 EXTERN_C HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
     IShellFolder *psfParent, LPCITEMIDLIST pidl, IShellItem **ppsi);
 
-CShellItem::CShellItem()
+CShellItem::CShellItem() :
+    m_pidl(NULL)
 {
-    m_pidl = NULL;
 }
 
 CShellItem::~CShellItem()
@@ -60,16 +60,16 @@ HRESULT CShellItem::get_parent_pidl(LPITEMIDLIST *parent_pidl)
 
 HRESULT CShellItem::get_parent_shellfolder(IShellFolder **ppsf)
 {
+    HRESULT hr;
     LPITEMIDLIST parent_pidl;
     CComPtr<IShellFolder>        desktop;
-    HRESULT hr;
 
     hr = get_parent_pidl(&parent_pidl);
     if (SUCCEEDED(hr))
     {
         hr = SHGetDesktopFolder(&desktop);
         if (SUCCEEDED(hr))
-            hr = desktop->BindToObject(parent_pidl, NULL, IID_IShellFolder, (void**)ppsf);
+            hr = desktop->BindToObject(parent_pidl, NULL, IID_IShellFolder, reinterpret_cast<void **>(ppsf));
         ILFree(parent_pidl);
     }
 
@@ -87,8 +87,8 @@ HRESULT WINAPI CShellItem::BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID ri
 
 HRESULT WINAPI CShellItem::GetParent(IShellItem **ppsi)
 {
-    LPITEMIDLIST parent_pidl;
     HRESULT hr;
+    LPITEMIDLIST parent_pidl;
 
     TRACE("(%p,%p)\n", this, ppsi);
 
@@ -104,8 +104,8 @@ HRESULT WINAPI CShellItem::GetParent(IShellItem **ppsi)
 
 HRESULT WINAPI CShellItem::GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName)
 {
-    CComPtr<IShellFolder>        parent_folder;
     HRESULT hr;
+    CComPtr<IShellFolder>        parent_folder;
     STRRET name;
     DWORD uFlags;
 
@@ -151,7 +151,7 @@ HRESULT WINAPI CShellItem::GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName)
 HRESULT WINAPI CShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs)
 {
     CComPtr<IShellFolder>        parent_folder;
-    LPITEMIDLIST child_pidl;
+    LPCITEMIDLIST child_pidl;
     HRESULT hr;
 
     TRACE("(%p,%x,%p)\n", this, sfgaoMask, psfgaoAttribs);
@@ -161,7 +161,7 @@ HRESULT WINAPI CShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs
     {
         child_pidl = ILFindLastID(m_pidl);
         *psfgaoAttribs = sfgaoMask;
-        hr = parent_folder->GetAttributesOf(1, (LPCITEMIDLIST*)&child_pidl, psfgaoAttribs);
+        hr = parent_folder->GetAttributesOf(1, &child_pidl, psfgaoAttribs);
     }
 
     return hr;
@@ -169,9 +169,9 @@ HRESULT WINAPI CShellItem::GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs
 
 HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
 {
-    CComPtr<IShellFolder>        parent_folder;
-    CComPtr<IPersistIDList>      pIDList;
     HRESULT hr;
+    CComPtr<IPersistIDList>      pIDList;
+    CComPtr<IShellFolder>        parent_folder;
     LPITEMIDLIST pidl;
 
     TRACE("(%p,%p,%x,%p)\n", this, oth, hint, piOrder);
@@ -179,7 +179,7 @@ HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
     if (piOrder == NULL || oth == NULL)
         return E_POINTER;
 
-    hr = oth->QueryInterface(IID_IPersistIDList, (void **)&pIDList);
+    hr = oth->QueryInterface(IID_IPersistIDList, reinterpret_cast<void **>(&pIDList));
     if (SUCCEEDED(hr))
     {
         hr = pIDList->GetIDList(&pidl);
@@ -189,7 +189,7 @@ HRESULT WINAPI CShellItem::Compare(IShellItem *oth, SICHINTF hint, int *piOrder)
             if (SUCCEEDED(hr))
             {
                 hr = parent_folder->CompareIDs(hint, m_pidl, pidl);
-                *piOrder = (int)SCODE_CODE(hr);
+                *piOrder = static_cast<int>(SCODE_CODE(hr));
             }
             ILFree(pidl);
         }
@@ -239,20 +239,19 @@ HRESULT WINAPI CShellItem::GetIDList(LPITEMIDLIST *ppidl)
 HRESULT WINAPI SHCreateShellItem(LPCITEMIDLIST pidlParent,
     IShellFolder *psfParent, LPCITEMIDLIST pidl, IShellItem **ppsi)
 {
+    HRESULT hr;
     IShellItem *newShellItem;
     LPITEMIDLIST new_pidl;
     CComPtr<IPersistIDList>            newPersistIDList;
-    HRESULT hr;
 
     TRACE("(%p,%p,%p,%p)\n", pidlParent, psfParent, pidl, ppsi);
 
     if (!pidl)
-    {
         return E_INVALIDARG;
-    }
-    else if (pidlParent || psfParent)
+
+    if (pidlParent || psfParent)
     {
-        LPITEMIDLIST temp_parent=NULL;
+        LPITEMIDLIST temp_parent = NULL;
         if (!pidlParent)
         {
             CComPtr<IPersistFolder2>    ppf2Parent;
