@@ -8,26 +8,27 @@
 
 #pragma once
 
-//#define KDDEBUG /* uncomment to enable debugging this dll */
-
 #define NOEXTAPI
 #include <ntifs.h>
+#include <arc/arc.h>
 #include <halfuncs.h>
-#include "arc/arc.h"
-#include "windbgkd.h"
-
+#include <windbgkd.h>
 #include <wdbgexts.h>
 #include <ioaccess.h> /* port intrinsics */
 
 #define NDEBUG
 #include <debug.h>
 
-long atol(const char *str);
-
-typedef UCHAR BYTE, *PBYTE;
+//#define KDDEBUG /* uncomment to enable debugging this dll */
 
 typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);
 extern PFNDBGPRNT KdpDbgPrint;
+
+#ifndef KDDEBUG
+#define KDDBGPRINT(...)
+#else
+#define KDDBGPRINT KdpDbgPrint
+#endif
 
 typedef enum
 {
@@ -35,12 +36,6 @@ typedef enum
     KDP_PACKET_TIMEOUT = 1,
     KDP_PACKET_RESEND = 2
 } KDP_STATUS;
-
-#ifndef KDDEBUG
-#define KDDBGPRINT(...)
-#else
-#define KDDBGPRINT KdpDbgPrint
-#endif
 
 VOID
 NTAPI
@@ -61,24 +56,18 @@ KdpReceivePacketLeader(
 
 VOID
 NTAPI
-KdpSendByte(IN BYTE Byte);
+KdpSendByte(IN UCHAR Byte);
 
 KDP_STATUS
 NTAPI
-KdpPollByte(OUT PBYTE OutByte);
+KdpPollByte(OUT PUCHAR OutByte);
 
 KDP_STATUS
 NTAPI
-KdpReceiveByte(OUT PBYTE OutByte);
+KdpReceiveByte(OUT PUCHAR OutByte);
 
 KDP_STATUS
 NTAPI
 KdpPollBreakIn(VOID);
 
-
-#if 0
-NTSTATUS
-NTAPI
-KdDebuggerInitialize0(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL);
-#endif
+/* EOF */

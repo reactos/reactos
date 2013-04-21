@@ -9,6 +9,9 @@
 #include "kddll.h"
 #include <cportlib/cportlib.h>
 
+long atol(const char *str);
+
+
 /* Serial debug connection */
 #define DEFAULT_DEBUG_PORT      2 /* COM2 */
 #define DEFAULT_DEBUG_COM1_IRQ  4 /* COM1 IRQ */
@@ -166,7 +169,7 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 
 VOID
 NTAPI
-KdpSendByte(IN BYTE Byte)
+KdpSendByte(IN UCHAR Byte)
 {
     /* Send the byte */
     CpPutByte(&KdDebugComPort, Byte);
@@ -174,7 +177,7 @@ KdpSendByte(IN BYTE Byte)
 
 KDP_STATUS
 NTAPI
-KdpPollByte(OUT PBYTE OutByte)
+KdpPollByte(OUT PUCHAR OutByte)
 {
     /* Poll the byte */
     return (CpGetByte(&KdDebugComPort, OutByte, FALSE) == CP_GET_SUCCESS
@@ -184,7 +187,7 @@ KdpPollByte(OUT PBYTE OutByte)
 
 KDP_STATUS
 NTAPI
-KdpReceiveByte(OUT PBYTE OutByte)
+KdpReceiveByte(OUT PUCHAR OutByte)
 {
     /* Get the byte */
     return (CpGetByte(&KdDebugComPort, OutByte, TRUE) == CP_GET_SUCCESS
