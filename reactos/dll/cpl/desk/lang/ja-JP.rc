@@ -14,7 +14,7 @@ BEGIN
                     IDC_STATIC, 8, 103, 180, 9
     PUSHBUTTON      "参照(&B)...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
     PUSHBUTTON      "色(&C)...", IDC_COLOR_BUTTON, 188, 177, 50, 15
-    LTEXT           "表\示位置:", IDC_STATIC, 188, 138, 36, 9
+    LTEXT           "表示位置:", IDC_STATIC, 188, 138, 36, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
@@ -38,7 +38,7 @@ BEGIN
     LTEXT           "分間", IDC_MINTEXT, 70, 125, 26, 9
     CONTROL         "レジューム時にパスワードを確認する(&P)",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX        "モニタの省電力機能\(&E)", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    GROUPBOX        "モニタの省電力機能(&E)", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "モニタの電源設定を変更するには、[電源] を クリックしてください。",
                     IDC_STATIC, 14, 166, 146, 20
     PUSHBUTTON      "電源(&O)...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
@@ -111,9 +111,9 @@ BEGIN
     COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     CONTROL         "大きいアイコンを使用する(&E)",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
-    CONTROL         "メニューの下に影を表\示する(&A)",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+    CONTROL         "メニューの下に影を表示する(&A)",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
-    CONTROL         "ドラッグ中にウィンドウの内容を表\示する(&W)",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+    CONTROL         "ドラッグ中にウィンドウの内容を表示する(&W)",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
     CONTROL         "Alt キーを押すまでキーボード ナビゲーションの下線を隠しておく(&H)",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
@@ -148,7 +148,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "全般"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "表\示", -1, 7, 6, 237, 56, WS_GROUP
+    GROUPBOX "表示", -1, 7, 6, 237, 56, WS_GROUP
     LTEXT "フォント サイズ:", -1, 14, 20, 222, 8
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
@@ -202,9 +202,9 @@ BEGIN
     IDS_CPLNAME "画面"
     IDS_CPLDESCRIPTION "デスクトップ画面やスクリーン セーバーをカスタマイズします。"
     IDS_NONE "(なし)"
-    IDS_CENTER "中央に表\示"
-    IDS_STRETCH "拡大して表\示"
-    IDS_TILE "並べて表\示"
+    IDS_CENTER "中央に表示"
+    IDS_STRETCH "拡大して表示"
+    IDS_TILE "並べて表示"
 END
 
 STRINGTABLE DISCARDABLE
@@ -261,7 +261,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "表\示設定"
+    IDS_DISPLAY_SETTINGS "表示設定"
     IDS_APPLY_FAILED "新しい設定の適用に失敗しました..."
     IDS_APPLY_NEEDS_RESTART "変更を反映するにはコンピュータを再起動する必要があります。"
 END
