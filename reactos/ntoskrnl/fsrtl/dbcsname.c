@@ -163,6 +163,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
     SHORT StarFound = -1;
     PUSHORT BackTracking = NULL;
     USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
+    BOOLEAN BeyondName;
     PAGED_CODE();
 
     ASSERT(Name->Length);
@@ -227,6 +228,41 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                 MatchingChars++;
             }
             ExpressionPosition++;
+        }
+        /* Check DOS_DOT */
+        else if (Expression->Buffer[ExpressionPosition] == DOS_DOT)
+        {
+            /* First try to find whether we are beyond last dot (beyond name) */
+            BeyondName = TRUE;
+            MatchingChars = NamePosition + 1;
+            while (MatchingChars < Name->Length)
+            {
+                if (Name->Buffer[MatchingChars] == '.')
+                {
+                    BeyondName = FALSE;
+                    break;
+                }
+                MatchingChars++;
+            }
+
+            /* If we are beyond name, we null match */
+            if (BeyondName)
+            {
+                ExpressionPosition++;
+                continue;
+            }
+            /* If not, we only match a dot */
+            else if (Name->Buffer[NamePosition] == '.')
+            {
+                NamePosition++;
+                ExpressionPosition++;
+                continue;
+            }
+            /* Otherwise, fail */
+            else
+            {
+                break;
+            }
         }
         /* If nothing match, try to backtrack */
         else if (StarFound >= 0)

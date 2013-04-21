@@ -28,6 +28,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     UNICODE_STRING IntExpression;
     USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
     WCHAR CompareChar;
+    BOOLEAN BeyondName;
     PAGED_CODE();
 
     /* Check if we were given strings at all */
@@ -112,8 +113,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             ExpressionPosition++;
         }
         /* Check cases that eat one char */
-        else if (Expression->Buffer[ExpressionPosition] == L'?' || (Expression->Buffer[ExpressionPosition] == DOS_QM) ||
-                 (Expression->Buffer[ExpressionPosition] == DOS_DOT && Name->Buffer[NamePosition] == L'.'))
+        else if (Expression->Buffer[ExpressionPosition] == L'?' || (Expression->Buffer[ExpressionPosition] == DOS_QM))
         {
             NamePosition++;
             ExpressionPosition++;
@@ -163,6 +163,41 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 MatchingChars++;
             }
             ExpressionPosition++;
+        }
+        /* Check DOS_DOT */
+        else if (Expression->Buffer[ExpressionPosition] == DOS_DOT)
+        {
+            /* First try to find whether we are beyond last dot (beyond name) */
+            BeyondName = TRUE;
+            MatchingChars = NamePosition + 1;
+            while (MatchingChars < Name->Length / sizeof(WCHAR))
+            {
+                if (Name->Buffer[MatchingChars] == L'.')
+                {
+                    BeyondName = FALSE;
+                    break;
+                }
+                MatchingChars++;
+            }
+
+            /* If we are beyond name, we null match */
+            if (BeyondName)
+            {
+                ExpressionPosition++;
+                continue;
+            }
+            /* If not, we only match a dot */
+            else if (Name->Buffer[NamePosition] == L'.')
+            {
+                NamePosition++;
+                ExpressionPosition++;
+                continue;
+            }
+            /* Otherwise, fail */
+            else
+            {
+                break;
+            }
         }
         /* If nothing match, try to backtrack */
         else if (StarFound >= 0)
