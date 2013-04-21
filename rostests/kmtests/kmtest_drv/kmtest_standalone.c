@@ -122,7 +122,8 @@ DriverEntry(
         Status = IoCreateDevice(DriverObject, 0, &DeviceName,
                                 FILE_DEVICE_UNKNOWN,
                                 FILE_DEVICE_SECURE_OPEN | FILE_READ_ONLY_DEVICE,
-                                TRUE, &TestDeviceObject);
+                                Flags & TESTENTRY_NO_EXCLUSIVE_DEVICE ? FALSE : TRUE,
+                                &TestDeviceObject);
 
         if (!NT_SUCCESS(Status))
         {

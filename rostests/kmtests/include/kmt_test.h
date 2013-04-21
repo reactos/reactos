@@ -66,6 +66,7 @@ typedef enum
     TESTENTRY_NO_CREATE_DEVICE = 1,
     TESTENTRY_NO_REGISTER_DISPATCH = 2,
     TESTENTRY_NO_REGISTER_UNLOAD = 4,
+    TESTENTRY_NO_EXCLUSIVE_DEVICE = 8,
 } KMT_TESTENTRY_FLAGS;
 
 NTSTATUS TestEntry(IN PDRIVER_OBJECT DriverObject, IN PCUNICODE_STRING RegistryPath, OUT PCWSTR *DeviceName, IN OUT INT *Flags);
@@ -98,6 +99,7 @@ VOID KmtCloseDriver(VOID);
 
 DWORD KmtSendToDriver(IN DWORD ControlCode);
 DWORD KmtSendStringToDriver(IN DWORD ControlCode, IN PCSTR String);
+DWORD KmtSendWStringToDriver(IN DWORD ControlCode, IN PCWSTR String);
 DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, IN DWORD InLength, IN OUT PDWORD OutLength);
 #else /* if !defined KMT_KERNEL_MODE && !defined KMT_USER_MODE */
 #error either KMT_KERNEL_MODE or KMT_USER_MODE must be defined

@@ -188,6 +188,31 @@ KmtSendStringToDriver(
 }
 
 /**
+ * @name KmtSendStringToDriver
+ *
+ * Unload special-purpose driver (stop the service)
+ *
+ * @param ControlCode
+ * @param String
+ *
+ * @return Win32 error code as returned by DeviceIoControl
+ */
+DWORD
+KmtSendWStringToDriver(
+    IN DWORD ControlCode,
+    IN PCWSTR String)
+{
+    DWORD BytesRead;
+
+    assert(ControlCode < 0x400);
+
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, (DWORD)wcslen(String) * sizeof(WCHAR), NULL, 0, &BytesRead, NULL))
+        return GetLastError();
+
+    return ERROR_SUCCESS;
+}
+
+/**
  * @name KmtSendBufferToDriver
  *
  * @param ControlCode
