@@ -247,10 +247,19 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             ExpressionPosition = BackTracking[StarFound--];
         }
     }
-    if (ExpressionPosition + 1 == Expression->Length && NamePosition == Name->Length &&
-        (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT || Expression->Buffer[ExpressionPosition] == '*'))
+    /* If we have nullable matching wc at the end of the string, eat them */
+    if (ExpressionPosition != Expression->Length && NamePosition == Name->Length)
     {
-        ExpressionPosition++;
+        while (ExpressionPosition < Expression->Length)
+        {
+            if (Expression->Buffer[ExpressionPosition] != ANSI_DOS_DOT &&
+                Expression->Buffer[ExpressionPosition] != '*' &&
+                Expression->Buffer[ExpressionPosition] != ANSI_DOS_STAR)
+            {
+                break;
+            }
+            ExpressionPosition++;
+        }
     }
 
     if (BackTracking)

@@ -184,10 +184,19 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             ExpressionPosition = BackTracking[StarFound--];
         }
     }
-    if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR) &&
-        (Expression->Buffer[ExpressionPosition] == DOS_DOT || Expression->Buffer[ExpressionPosition] == L'*'))
+    /* If we have nullable matching wc at the end of the string, eat them */
+    if (ExpressionPosition != Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR))
     {
-        ExpressionPosition++;
+        while (ExpressionPosition < Expression->Length / sizeof(WCHAR))
+        {
+            if (Expression->Buffer[ExpressionPosition] != DOS_DOT &&
+                Expression->Buffer[ExpressionPosition] != L'*' &&
+                Expression->Buffer[ExpressionPosition] != DOS_STAR)
+            {
+                break;
+            }
+            ExpressionPosition++;
+        }
     }
 
     if (BackTracking)
