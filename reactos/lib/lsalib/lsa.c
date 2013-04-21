@@ -11,6 +11,7 @@
 
 #include <ndk/lpctypes.h>
 #include <ndk/lpcfuncs.h>
+#include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/obfuncs.h>
 #include <psdk/ntsecapi.h>
@@ -37,7 +38,7 @@ LsaDeregisterLogonProcess(HANDLE LsaHandle)
     DPRINT1("LsaDeregisterLogonProcess()\n");
 
     ApiMessage.ApiNumber = LSASS_REQUEST_DEREGISTER_LOGON_PROCESS;
-    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.DeregisterLogonProcess.Request);
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.DeregisterLogonProcess);
     ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
     ApiMessage.h.u2.ZeroInit = 0;
 
@@ -93,7 +94,7 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
     DPRINT1("LsaCallAuthenticationPackage()\n");
 
     ApiMessage.ApiNumber = LSASS_REQUEST_CALL_AUTHENTICATION_PACKAGE;
-    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.CallAuthenticationPackage.Request);
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.CallAuthenticationPackage);
     ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
     ApiMessage.h.u2.ZeroInit = 0;
 
@@ -180,7 +181,12 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
 NTSTATUS WINAPI
 LsaFreeReturnBuffer(PVOID Buffer)
 {
-    return RtlFreeHeap(Secur32Heap, 0, Buffer);
+    ULONG Length = 0;
+
+    return ZwFreeVirtualMemory(NtCurrentProcess(),
+                               &Buffer,
+                               &Length,
+                               MEM_RELEASE);
 }
 
 
@@ -202,7 +208,7 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
     }
 
     ApiMessage.ApiNumber = LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE;
-    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.LookupAuthenticationPackage.Request);
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.LookupAuthenticationPackage);
     ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
     ApiMessage.h.u2.ZeroInit = 0;
 
@@ -254,7 +260,7 @@ LsaLogonUser(HANDLE LsaHandle,
     NTSTATUS Status;
 
     ApiMessage.ApiNumber = LSASS_REQUEST_LOGON_USER;
-    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.LogonUser.Request);
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.LogonUser);
     ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
     ApiMessage.h.u2.ZeroInit = 0;
 
@@ -267,7 +273,7 @@ LsaLogonUser(HANDLE LsaHandle,
     if (LocalGroups != NULL)
         ApiMessage.LogonUser.Request.LocalGroupsCount = LocalGroups->GroupCount;
     else
-        ApiMessage.LogonUser.Request.LocalGroups = 0;
+        ApiMessage.LogonUser.Request.LocalGroupsCount = 0;
     ApiMessage.LogonUser.Request.SourceContext = *SourceContext;
 
     Status = ZwRequestWaitReplyPort(LsaHandle,
