@@ -69,6 +69,145 @@ done:
 }
 
 
+static
+NTSTATUS
+BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
+                              IN PSAMPR_USER_INFO_BUFFER UserInfo,
+                              IN PUNICODE_STRING LogonServer,
+                              OUT PMSV1_0_INTERACTIVE_PROFILE *ProfileBuffer,
+                              OUT PULONG ProfileBufferLength)
+{
+    PMSV1_0_INTERACTIVE_PROFILE LocalBuffer = NULL;
+    PVOID ClientBaseAddress = NULL;
+    LPWSTR Ptr;
+    ULONG BufferLength;
+    NTSTATUS Status;
+
+    *ProfileBuffer = NULL;
+    *ProfileBufferLength = 0;
+
+    BufferLength = sizeof(MSV1_0_INTERACTIVE_PROFILE) +
+                   UserInfo->All.FullName.Length + sizeof(WCHAR) +
+                   UserInfo->All.HomeDirectory.Length + sizeof(WCHAR) +
+                   UserInfo->All.HomeDirectoryDrive.Length + sizeof(WCHAR) +
+                   UserInfo->All.ScriptPath.Length + sizeof(WCHAR) +
+                   UserInfo->All.ProfilePath.Length + sizeof(WCHAR) +
+                   LogonServer->Length + sizeof(WCHAR);
+
+    LocalBuffer = DispatchTable.AllocateLsaHeap(BufferLength);
+    if (LocalBuffer == NULL)
+    {
+        TRACE("Failed to allocate the local buffer!\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = DispatchTable.AllocateClientBuffer(ClientRequest,
+                                                BufferLength,
+                                                &ClientBaseAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("DispatchTable.AllocateClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("ClientBaseAddress: %p\n", ClientBaseAddress);
+
+    Ptr = (LPWSTR)((ULONG_PTR)LocalBuffer + sizeof(MSV1_0_INTERACTIVE_PROFILE));
+
+    LocalBuffer->MessageType = MsV1_0InteractiveProfile;
+    LocalBuffer->LogonCount = UserInfo->All.LogonCount;
+    LocalBuffer->BadPasswordCount = UserInfo->All.BadPasswordCount;
+//  LARGE_INTEGER              LogonTime;
+//  LARGE_INTEGER              LogoffTime;
+//  LARGE_INTEGER              KickOffTime;
+//  LARGE_INTEGER              PasswordLastSet;
+//  LARGE_INTEGER              PasswordCanChange;
+//  LARGE_INTEGER              PasswordMustChange;
+
+    LocalBuffer->LogonScript.Length = UserInfo->All.ScriptPath.Length;
+    LocalBuffer->LogonScript.MaximumLength = UserInfo->All.ScriptPath.Length + sizeof(WCHAR);
+    LocalBuffer->LogonScript.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);
+    memcpy(Ptr,
+           UserInfo->All.ScriptPath.Buffer,
+           UserInfo->All.ScriptPath.Length);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + LocalBuffer->LogonScript.MaximumLength);
+
+    LocalBuffer->HomeDirectory.Length = UserInfo->All.HomeDirectory.Length;
+    LocalBuffer->HomeDirectory.MaximumLength = UserInfo->All.HomeDirectory.Length + sizeof(WCHAR);
+    LocalBuffer->HomeDirectory.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);
+    memcpy(Ptr,
+           UserInfo->All.HomeDirectory.Buffer,
+           UserInfo->All.HomeDirectory.Length);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + LocalBuffer->HomeDirectory.MaximumLength);
+
+    LocalBuffer->FullName.Length = UserInfo->All.FullName.Length;
+    LocalBuffer->FullName.MaximumLength = UserInfo->All.FullName.Length + sizeof(WCHAR);
+    LocalBuffer->FullName.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);
+    memcpy(Ptr,
+           UserInfo->All.FullName.Buffer,
+           UserInfo->All.FullName.Length);
+    TRACE("FullName.Buffer: %p\n", LocalBuffer->FullName.Buffer);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + LocalBuffer->FullName.MaximumLength);
+
+    LocalBuffer->ProfilePath.Length = UserInfo->All.ProfilePath.Length;
+    LocalBuffer->ProfilePath.MaximumLength = UserInfo->All.ProfilePath.Length + sizeof(WCHAR);
+    LocalBuffer->ProfilePath.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);
+    memcpy(Ptr,
+           UserInfo->All.ProfilePath.Buffer,
+           UserInfo->All.ProfilePath.Length);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + LocalBuffer->ProfilePath.MaximumLength);
+
+    LocalBuffer->HomeDirectoryDrive.Length = UserInfo->All.HomeDirectoryDrive.Length;
+    LocalBuffer->HomeDirectoryDrive.MaximumLength = UserInfo->All.HomeDirectoryDrive.Length + sizeof(WCHAR);
+    LocalBuffer->HomeDirectoryDrive.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);
+    memcpy(Ptr,
+           UserInfo->All.HomeDirectoryDrive.Buffer,
+           UserInfo->All.HomeDirectoryDrive.Length);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + LocalBuffer->HomeDirectoryDrive.MaximumLength);
+
+    LocalBuffer->LogonServer.Length = LogonServer->Length;
+    LocalBuffer->LogonServer.MaximumLength = LogonServer->Length + sizeof(WCHAR);
+    LocalBuffer->LogonServer.Buffer = (LPWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)Ptr - (ULONG_PTR)LocalBuffer);;
+    memcpy(Ptr,
+           LogonServer->Buffer,
+           LogonServer->Length);
+
+    LocalBuffer->UserFlags = 0;
+
+    Status = DispatchTable.CopyToClientBuffer(ClientRequest,
+                                              BufferLength,
+                                              ClientBaseAddress,
+                                              LocalBuffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("DispatchTable.CopyToClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    *ProfileBuffer = (PMSV1_0_INTERACTIVE_PROFILE)ClientBaseAddress;
+    *ProfileBufferLength = BufferLength;
+
+done:
+    if (LocalBuffer != NULL)
+        DispatchTable.FreeLsaHeap(LocalBuffer);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (ClientBaseAddress != NULL)
+            DispatchTable.FreeClientBuffer(ClientRequest,
+                                           ClientBaseAddress);
+    }
+
+    return Status;
+}
+
+
 /*
  * @unimplemented
  */
@@ -212,6 +351,7 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
     SAMPR_ULONG_ARRAY Use = {0, NULL};
     PSAMPR_USER_INFO_BUFFER UserInfo = NULL;
+    UNICODE_STRING LogonServer;
     NTSTATUS Status;
 
     TRACE("()\n");
@@ -243,6 +383,8 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         TRACE("Domain: %S\n", LogonInfo->LogonDomainName.Buffer);
         TRACE("User: %S\n", LogonInfo->UserName.Buffer);
         TRACE("Password: %S\n", LogonInfo->Password.Buffer);
+
+        RtlInitUnicodeString(&LogonServer, L"Testserver");
     }
     else
     {
@@ -328,9 +470,51 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     TRACE("UserName: %S\n", UserInfo->All.UserName.Buffer);
 
+    /* FIXME: Check restrictions */
 
+    /* FIXME: Check the password */
+    if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
+    {
+        FIXME("Must check the password!\n");
+
+    }
+
+    /* Return logon information */
+
+    /* Create and return a new logon id */
+    Status = NtAllocateLocallyUniqueId(LogonId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("NtAllocateLocallyUniqueId failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    /* Build and fill the interactve profile buffer */
+    Status = BuildInteractiveProfileBuffer(ClientRequest,
+                                           UserInfo,
+                                           &LogonServer,
+                                           (PMSV1_0_INTERACTIVE_PROFILE*)ProfileBuffer,
+                                           ProfileBufferLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("BuildInteractiveProfileBuffer failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    /* Return the token information type */
+    *TokenInformationType = LsaTokenInformationV1;
 
 done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (*ProfileBuffer != NULL)
+        {
+            DispatchTable.FreeClientBuffer(ClientRequest,
+                                           *ProfileBuffer);
+            *ProfileBuffer = NULL;
+        }
+    }
+
     if (UserHandle != NULL)
         SamrCloseHandle(&UserHandle);
 

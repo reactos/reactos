@@ -23,6 +23,7 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
+#include <ndk/sefuncs.h>
 
 #include <sspi.h>
 #include <ntsecapi.h>
