@@ -59,7 +59,7 @@ LsapCheckLogonProcess(PLSA_API_MSG RequestMsg,
                                NULL);
 
     Status = NtOpenProcess(&ProcessHandle,
-                           PROCESS_VM_READ,
+                           PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION,
                            &ObjectAttributes,
                            &RequestMsg->h.ClientId);
     if (!NT_SUCCESS(Status))
