@@ -12,7 +12,7 @@
 #define KMT_DEFINE_TEST_FUNCTIONS
 #include <kmt_test.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include <kmt_public.h>

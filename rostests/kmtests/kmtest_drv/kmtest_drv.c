@@ -12,7 +12,7 @@
 #include <limits.h>
 #include <pseh/pseh2.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include <kmt_public.h>
