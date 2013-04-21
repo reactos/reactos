@@ -366,7 +366,7 @@ KdInitSystem(IN ULONG BootPhase,
             }
         }
 
-        /* Check for incoming breakin and break on symbol load if we have it*/
+        /* Check for incoming breakin and break on symbol load if we have it */
         KdBreakAfterSymbolLoad = KdPollBreakIn();
     }
     else
