@@ -158,7 +158,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             {
                 if (Name->Buffer[MatchingChars] == L'.')
                 {
-                    NamePosition = MatchingChars + 1;
+                    NamePosition = MatchingChars;
                 }
                 MatchingChars++;
             }
