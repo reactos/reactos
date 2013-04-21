@@ -5,6 +5,7 @@ include_directories(
 # subdirectories containing special-purpose drivers
 #
 add_subdirectory(example)
+add_subdirectory(kernel32)
 add_subdirectory(ntos_io)
 
 list(APPEND COMMON_SOURCE
@@ -87,6 +88,7 @@ list(APPEND KMTEST_SOURCE
     kmtest/testlist.c
 
     example/Example_user.c
+    kernel32/FindFile_user.c
     ntos_io/IoDeviceObject_user.c
     ${COMMON_SOURCE}
 
