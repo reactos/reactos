@@ -817,6 +817,46 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
         {
             FilePattern.Length = 2;
         }
+        else
+        {
+            /* Translate wildcard from "real" world to DOS world for lower interpretation */
+            USHORT PatternIndex = 0;
+            while (PatternIndex < FilePattern.Length / sizeof(WCHAR))
+            {
+                if (PatternIndex > 0)
+                {
+                    if (FilePattern.Buffer[PatternIndex] == L'.' &&
+                        FilePattern.Buffer[PatternIndex - 1] == L'*')
+                    {
+                        FilePattern.Buffer[PatternIndex - 1] = L'<';
+                    }
+                }
+
+                if (FilePattern.Buffer[PatternIndex] == L'?')
+                {
+                    FilePattern.Buffer[PatternIndex] = L'>';
+                    if (PatternIndex > 0)
+                    {
+                        if (FilePattern.Buffer[PatternIndex - 1] == L'.')
+                        {
+                            FilePattern.Buffer[PatternIndex - 1] = L'\"';
+                        }
+                    }
+                }
+                else if (FilePattern.Buffer[PatternIndex] == L'*')
+                {
+                    if (PatternIndex > 0)
+                    {
+                        if (FilePattern.Buffer[PatternIndex - 1] == L'.')
+                        {
+                            FilePattern.Buffer[PatternIndex - 1] = L'\"';
+                        }
+                    }
+                }
+
+                PatternIndex++;
+            }
+        }
 
         Status = NtQueryDirectoryFile(hDirectory,
                                       NULL, NULL, NULL,
