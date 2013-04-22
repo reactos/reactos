@@ -359,6 +359,10 @@ static VOID FsRtlIsNameInExpressionTest()
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
     RtlInitUnicodeString(&Name, L"ac.exe");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
+
+    RtlInitUnicodeString(&Expression, L"<.exe");
+    RtlInitUnicodeString(&Name, L"test.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
 }
 
 static VOID FsRtlIsDbcsInExpressionTest()
@@ -674,6 +678,10 @@ static VOID FsRtlIsDbcsInExpressionTest()
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
     RtlInitAnsiString(&Name, "ac.exe");
     ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
+
+    RtlInitAnsiString(&Expression, "<.exe");
+    RtlInitAnsiString(&Name, "test.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
 }
 
 START_TEST(FsRtlExpression)
