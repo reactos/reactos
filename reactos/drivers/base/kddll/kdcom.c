@@ -43,6 +43,36 @@ ULONG  KdDebugComPortIrq = 0; // Not used at the moment.
 
 NTSTATUS
 NTAPI
+KdD0Transition(VOID)
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdD3Transition(VOID)
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdSave(IN BOOLEAN SleepTransition)
+{
+    /* Nothing to do on COM ports */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdRestore(IN BOOLEAN SleepTransition)
+{
+    /* Nothing to do on COM ports */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 KdpPortInitialize(IN ULONG ComPortNumber,
                   IN ULONG ComPortBaudRate)
 {
@@ -167,6 +197,20 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
     return KdpPortInitialize(ComPortNumber, ComPortBaudRate);
 }
 
+/******************************************************************************
+ * \name KdDebuggerInitialize1
+ * \brief Phase 1 initialization.
+ * \param [opt] LoaderBlock Pointer to the Loader parameter block. Can be NULL.
+ * \return Status
+ */
+NTSTATUS
+NTAPI
+KdDebuggerInitialize1(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+{
+    return STATUS_SUCCESS;
+}
+
+
 VOID
 NTAPI
 KdpSendByte(IN UCHAR Byte)
@@ -208,22 +252,6 @@ KdpPollBreakIn(VOID)
         return KDP_PACKET_RECEIVED;
     }
     return KDP_PACKET_TIMEOUT;
-}
-
-NTSTATUS
-NTAPI
-KdSave(IN BOOLEAN SleepTransition)
-{
-    /* Nothing to do on COM ports */
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-KdRestore(IN BOOLEAN SleepTransition)
-{
-    /* Nothing to do on COM ports */
-    return STATUS_SUCCESS;
 }
 
 /* EOF */

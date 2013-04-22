@@ -31,13 +31,10 @@ KdpCalculateChecksum(
     IN PVOID Buffer,
     IN ULONG Length)
 {
-    ULONG i, Checksum = 0;
+    PUCHAR ByteBuffer = Buffer;
+    ULONG Checksum = 0;
 
-    for (i = 0; i < Length; i++)
-    {
-        Checksum += ((PUCHAR)Buffer)[i];
-    }
-
+    while (Length-- > 0) Checksum += (ULONG)*ByteBuffer++;
     return Checksum;
 }
 
@@ -60,36 +57,6 @@ KdpSendControlPacket(
 
 
 /* PUBLIC FUNCTIONS ***********************************************************/
-
-NTSTATUS
-NTAPI
-KdD0Transition(VOID)
-{
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-KdD3Transition(VOID)
-{
-    return STATUS_SUCCESS;
-}
-
-
-/******************************************************************************
- * \name KdDebuggerInitialize1
- * \brief Phase 1 initialization.
- * \param [opt] LoaderBlock Pointer to the Loader parameter block. Can be NULL.
- * \return Status
- */
-NTSTATUS
-NTAPI
-KdDebuggerInitialize1(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
-{
-    return STATUS_SUCCESS;
-}
-
 
 /******************************************************************************
  * \name KdReceivePacket
@@ -338,7 +305,6 @@ KdReceivePacket(
 
     return KDP_PACKET_RECEIVED;
 }
-
 
 VOID
 NTAPI

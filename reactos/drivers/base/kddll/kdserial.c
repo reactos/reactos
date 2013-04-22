@@ -8,7 +8,7 @@
 
 #include "kddll.h"
 
-
+/* FUNCTIONS ******************************************************************/
 
 /******************************************************************************
  * \name KdpSendBuffer
@@ -22,11 +22,9 @@ KdpSendBuffer(
     IN PVOID Buffer,
     IN ULONG Size)
 {
-    ULONG i;
-    for (i = 0; i < Size; i++)
-    {
-        KdpSendByte(((PUCHAR)Buffer)[i]);
-    }
+    PUCHAR ByteBuffer = Buffer;
+
+    while (Size-- > 0) KdpSendByte(*ByteBuffer++);
 }
 
 /******************************************************************************
@@ -43,15 +41,16 @@ KdpReceiveBuffer(
     OUT PVOID Buffer,
     IN  ULONG Size)
 {
-    ULONG i;
     PUCHAR ByteBuffer = Buffer;
+    UCHAR Byte;
     KDP_STATUS Status;
 
-    for (i = 0; i < Size; i++)
+    while (Size-- > 0)
     {
         /* Try to get a byte from the port */
-        Status = KdpReceiveByte(&ByteBuffer[i]);
+        Status = KdpReceiveByte(&Byte);
         if (Status != KDP_PACKET_RECEIVED) return Status;
+        *ByteBuffer++ = Byte;
     }
 
     return KDP_PACKET_RECEIVED;
