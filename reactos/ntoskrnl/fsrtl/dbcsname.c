@@ -179,8 +179,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             ExpressionPosition++;
         }
         /* Check cases that eat one char */
-        else if ((Expression->Buffer[ExpressionPosition] == '?') || (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM) ||
-                 (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT && Name->Buffer[NamePosition] == '.'))
+        else if ((Expression->Buffer[ExpressionPosition] == '?') || (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM))
         {
             NamePosition++;
             ExpressionPosition++;
