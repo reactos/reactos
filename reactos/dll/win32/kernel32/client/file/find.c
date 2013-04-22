@@ -669,7 +669,7 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
         PFIND_DATA_HANDLE FindDataHandle;
         PFIND_FILE_DATA FindFileData;
 
-        UNICODE_STRING NtPath, FilePattern;
+        UNICODE_STRING NtPath, FilePattern, FileName;
         PWSTR NtPathBuffer;
         RTL_RELATIVE_NAME_U RelativePath;
         ULONG DeviceNameInfo = 0;
@@ -678,6 +678,8 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
         OBJECT_ATTRIBUTES ObjectAttributes;
         IO_STATUS_BLOCK IoStatusBlock;
         HANDLE hDirectory = NULL;
+
+        BOOLEAN HadADot = FALSE;
 
         /*
          * May represent many FILE_BOTH_DIR_INFORMATION
@@ -691,6 +693,12 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             return INVALID_HANDLE_VALUE;
+        }
+
+        RtlInitUnicodeString(&FileName, lpFileName);
+        if (FileName.Length != 0 && FileName.Buffer[FileName.Length / sizeof(WCHAR) - 1] == L'.')
+        {
+            HadADot = TRUE;
         }
 
         if (!RtlDosPathNameToNtPathName_U(lpFileName,
@@ -855,6 +863,15 @@ FindFirstFileExW(IN LPCWSTR lpFileName,
                 }
 
                 PatternIndex++;
+            }
+
+            /* Handle partial wc if our last dot was eaten */
+            if (HadADot)
+            {
+                if (FilePattern.Buffer[FilePattern.Length / sizeof(WCHAR) - 1] == L'*')
+                {
+                    FilePattern.Buffer[FilePattern.Length / sizeof(WCHAR) - 1] = L'<';
+                }
             }
         }
 
