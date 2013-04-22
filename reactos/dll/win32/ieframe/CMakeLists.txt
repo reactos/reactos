@@ -36,6 +36,10 @@ endif()
 
 add_typelib(ieframe_v1.idl)
 set_source_files_properties(ieframe.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/ieframe_v1.tlb)
+
+# ieframe_v1.tlb needs stdole2.tlb
+add_dependencies(ieframe stdole2)
+
 set_module_type(ieframe win32dll)
 target_link_libraries(ieframe uuid wine)
 add_importlibs(ieframe urlmon shell32 comctl32 shlwapi oleaut32 ole32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)

@@ -20,6 +20,10 @@ add_library(hhctrl SHARED
 
 add_typelib(hhctrl_tlb.idl)
 set_source_files_properties(hhctrl.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hhctrl_tlb.tlb)
+
+# hhctrl_tlb.tlb needs stdole2.tlb
+add_dependencies(hhctrl stdole2)
+
 set_module_type(hhctrl win32ocx)
 target_link_libraries(hhctrl uuid wine itss_guid)
 add_importlibs(hhctrl advapi32 comctl32 shlwapi ole32 oleaut32 user32 gdi32 msvcrt kernel32 ntdll)
