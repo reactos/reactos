@@ -395,6 +395,9 @@ int main()
 	test(PREP0 "C:\\foo\\..\\" , "C:\\"            , NULL);
 	test(PREP1 "C:\\foo\\..\\" , "C:\\"            , NULL);
 	test(PREP2 "C:\\foo\\..\\" , "C:\\foo\\..\\"   , NULL);
+	test(PREP0 "C:\\foo."      , "C:\\foo"         , "foo");
+	test(PREP1 "C:\\foo."      , "C:\\foo"         , "foo");
+	test(PREP2 "C:\\foo."      , "C:\\foo."        , "foo.");
 
 	test(PREP0 "C:\\f\\b\\.."  , "C:\\f"           , "f");
 	test(PREP1 "C:\\f\\b\\.."  , "C:\\f"           , "f");
