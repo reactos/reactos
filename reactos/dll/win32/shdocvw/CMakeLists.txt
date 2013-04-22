@@ -12,7 +12,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
 
-
 add_typelib(shdocvw_v1.idl)
 set_source_files_properties(shdocvw.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_v1.tlb)
 add_library(shdocvw SHARED ${SOURCE} shdocvw.rc)

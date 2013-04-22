@@ -18,6 +18,10 @@
 
 #include <windef.h>
 
+1 WINE_REGISTRY shdocvw_v1.rgs
+
+1 TYPELIB shdocvw_v1.tlb
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #define WINE_FILEDESCRIPTION_STR "Wine core dll"
