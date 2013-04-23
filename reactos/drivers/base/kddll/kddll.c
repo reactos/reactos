@@ -34,7 +34,10 @@ KdpCalculateChecksum(
     PUCHAR ByteBuffer = Buffer;
     ULONG Checksum = 0;
 
-    while (Length-- > 0) Checksum += (ULONG)*ByteBuffer++;
+    while (Length-- > 0)
+    {
+        Checksum += (ULONG)*ByteBuffer++;
+    }
     return Checksum;
 }
 
@@ -335,18 +338,8 @@ KdSendPacket(
 
     Retries = KdContext->KdpDefaultRetries;
 
-    do
+    for (;;)
     {
-        if (Retries == 0)
-        {
-            /* PACKET_TYPE_KD_DEBUG_IO is allowed to instantly timeout */
-            if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
-            {
-                /* No response, silently fail. */
-                return;
-            }
-        }
-
         /* Set the packet id */
         Packet.PacketId = CurrentPacketId;
 
@@ -357,7 +350,10 @@ KdSendPacket(
         KdpSendBuffer(MessageHeader->Buffer, MessageHeader->Length);
 
         /* If we have meesage data, also send it */
-        if (MessageData) KdpSendBuffer(MessageData->Buffer, MessageData->Length);
+        if (MessageData)
+        {
+            KdpSendBuffer(MessageData->Buffer, MessageData->Length);
+        }
 
         /* Finalize with a trailing byte */
         KdpSendByte(PACKET_TRAILING_BYTE);
@@ -368,17 +364,37 @@ KdSendPacket(
                                    NULL,
                                    NULL,
                                    KdContext);
-        if (KdStatus == KDP_PACKET_TIMEOUT)
+
+        /* Did we succeed? */
+        if (KdStatus == KDP_PACKET_RECEIVED)
         {
-            if (Retries > 0) Retries--;
+            /* Packet received, we can quit the loop */
+            CurrentPacketId &= ~SYNC_PACKET_ID;
+            break;
         }
+        else if (KdStatus == KDP_PACKET_TIMEOUT)
+        {
+            /* Timeout, decrement the retry count */
+            if (Retries > 0)
+                Retries--;
+
+            /*
+             * If the retry count reaches zero, bail out
+             * for packet types allowed to timeout.
+             */
+            if (Retries == 0)
+            {
+                if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
+                {
+                    return;
+                }
+            }
+        }
+        // else (KdStatus == KDP_PACKET_RESEND) /* Resend the packet */
 
         /* Packet timed out, send it again */
         KDDBGPRINT("KdSendPacket got KdStatus 0x%x\n", KdStatus);
-
-    } while (KdStatus != KDP_PACKET_RECEIVED);
-
-    CurrentPacketId &= ~SYNC_PACKET_ID;
+    }
 }
 
 /* EOF */

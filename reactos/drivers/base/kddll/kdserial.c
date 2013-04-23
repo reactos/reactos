@@ -24,7 +24,10 @@ KdpSendBuffer(
 {
     PUCHAR ByteBuffer = Buffer;
 
-    while (Size-- > 0) KdpSendByte(*ByteBuffer++);
+    while (Size-- > 0)
+    {
+        KdpSendByte(*ByteBuffer++);
+    }
 }
 
 /******************************************************************************
@@ -49,7 +52,9 @@ KdpReceiveBuffer(
     {
         /* Try to get a byte from the port */
         Status = KdpReceiveByte(&Byte);
-        if (Status != KDP_PACKET_RECEIVED) return Status;
+        if (Status != KDP_PACKET_RECEIVED)
+            return Status;
+
         *ByteBuffer++ = Byte;
     }
 

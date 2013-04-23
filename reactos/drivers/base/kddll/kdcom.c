@@ -8,8 +8,7 @@
 
 #include "kddll.h"
 #include <cportlib/cportlib.h>
-
-long atol(const char *str);
+#include <stdlib.h>
 
 
 /* Serial debug connection */
