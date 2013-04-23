@@ -35,7 +35,13 @@ if(NOT MSVC)
 endif()
 
 add_typelib(ieframe_v1.idl)
-set_source_files_properties(ieframe.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/ieframe_v1.tlb)
+
+list(APPEND ieframe_rc_deps
+    ${CMAKE_CURRENT_SOURCE_DIR}/ieframe.rgs
+    ${CMAKE_CURRENT_SOURCE_DIR}/ieframe_v1.rgs
+    ${CMAKE_CURRENT_BINARY_DIR}/ieframe_v1.tlb)
+
+set_source_files_properties(ieframe.rc PROPERTIES OBJECT_DEPENDS "${ieframe_rc_deps}")
 
 # ieframe_v1.tlb needs stdole2.tlb
 add_dependencies(ieframe stdole2)
