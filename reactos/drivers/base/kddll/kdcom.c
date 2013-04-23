@@ -223,9 +223,14 @@ NTAPI
 KdpPollByte(OUT PUCHAR OutByte)
 {
     /* Poll the byte */
-    return (CpGetByte(&KdDebugComPort, OutByte, FALSE) == CP_GET_SUCCESS
-                                                        ? KDP_PACKET_RECEIVED
-                                                        : KDP_PACKET_TIMEOUT);
+    if (CpGetByte(&KdDebugComPort, OutByte, FALSE) == CP_GET_SUCCESS)
+    {
+        return KDP_PACKET_RECEIVED;
+    }
+    else
+    {
+        return KDP_PACKET_TIMEOUT;
+    }
 }
 
 KDP_STATUS
@@ -233,9 +238,14 @@ NTAPI
 KdpReceiveByte(OUT PUCHAR OutByte)
 {
     /* Get the byte */
-    return (CpGetByte(&KdDebugComPort, OutByte, TRUE) == CP_GET_SUCCESS
-                                                       ? KDP_PACKET_RECEIVED
-                                                       : KDP_PACKET_TIMEOUT);
+    if (CpGetByte(&KdDebugComPort, OutByte, TRUE) == CP_GET_SUCCESS)
+    {
+        return KDP_PACKET_RECEIVED;
+    }
+    else
+    {
+        return KDP_PACKET_TIMEOUT;
+    }
 }
 
 KDP_STATUS
