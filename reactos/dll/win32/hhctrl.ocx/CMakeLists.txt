@@ -19,7 +19,12 @@ add_library(hhctrl SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/hhctrl.def)
 
 add_typelib(hhctrl_tlb.idl)
-set_source_files_properties(hhctrl.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hhctrl_tlb.tlb)
+
+list(APPEND hhctrl_rc_deps
+    ${CMAKE_CURRENT_SOURCE_DIR}/hhctrl_tlb.rgs
+    ${CMAKE_CURRENT_BINARY_DIR}/hhctrl_tlb.tlb)
+
+set_source_files_properties(hhctrl.rc PROPERTIES OBJECT_DEPENDS "${hhctrl_rc_deps}")
 
 # hhctrl_tlb.tlb needs stdole2.tlb
 add_dependencies(hhctrl stdole2)

@@ -115,6 +115,8 @@ IDB_HHTREEVIEW BITMAP hhtreeview.bmp
 
 1 TYPELIB hhctrl_tlb.tlb
 
+1 WINE_REGISTRY hhctrl_tlb.rgs
+
 #define WINE_FILEDESCRIPTION_STR "Wine htmlhelp OCX"
 #define WINE_FILENAME_STR "hhctrl.ocx"
 #define WINE_FILEVERSION 5,2,3790,2744
