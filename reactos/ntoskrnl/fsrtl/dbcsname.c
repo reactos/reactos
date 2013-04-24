@@ -237,6 +237,12 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                     }
                     MatchingChars++;
                 }
+
+                /* In case we were already at last dot, simply accept it */
+                if (MatchingChars == Name->Length)
+                {
+                    NamePosition++;
+                }
             }
             else
             {
