@@ -170,6 +170,11 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
     ASSERT(Expression->Length);
     ASSERT(!FsRtlDoesDbcsContainWildCards(Name));
 
+    if (Name->Length == 0)
+    {
+        return (Expression->Length == 0);
+    }
+
     while (NamePosition < Name->Length && ExpressionPosition < Expression->Length)
     {
         /* Basic check to test if chars are equal */
