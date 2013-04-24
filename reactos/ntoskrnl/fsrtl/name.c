@@ -113,7 +113,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             ExpressionPosition++;
         }
         /* Check cases that eat one char */
-        else if (Expression->Buffer[ExpressionPosition] == L'?' || (Expression->Buffer[ExpressionPosition] == DOS_QM))
+        else if (Expression->Buffer[ExpressionPosition] == L'?')
         {
             NamePosition++;
             ExpressionPosition++;
@@ -240,6 +240,36 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             else
             {
                 break;
+            }
+        }
+        /* Check DOS_QM */
+        else if (Expression->Buffer[ExpressionPosition] == DOS_QM)
+        {
+            /* Check whether we are upon a dot */
+            MatchingChars = 0;
+            while (MatchingChars < NamePosition)
+            {
+                if (Name->Buffer[MatchingChars] == L'.')
+                {
+                    break;
+                }
+                MatchingChars++;
+            }
+
+            /* If not, we match a single char */
+            if (MatchingChars == NamePosition && Name->Buffer[NamePosition] != L'.')
+            {
+                NamePosition++;
+                ExpressionPosition++;
+            }
+            else
+            {
+                /* If we are, we just go through QMs */
+                while (ExpressionPosition < Expression->Length / sizeof(WCHAR) &&
+                       Expression->Buffer[ExpressionPosition] == DOS_QM)
+                {
+                    ExpressionPosition++;
+                }
             }
         }
         /* If nothing match, try to backtrack */

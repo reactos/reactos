@@ -184,7 +184,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             ExpressionPosition++;
         }
         /* Check cases that eat one char */
-        else if ((Expression->Buffer[ExpressionPosition] == '?') || (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM))
+        else if (Expression->Buffer[ExpressionPosition] == '?')
         {
             NamePosition++;
             ExpressionPosition++;
@@ -309,6 +309,36 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             else
             {
                 break;
+            }
+        }
+        /* Check DOS_QM */
+        else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM)
+        {
+            /* Check whether we are upon a dot */
+            MatchingChars = 0;
+            while (MatchingChars < NamePosition)
+            {
+                if (Name->Buffer[MatchingChars] == '.')
+                {
+                    break;
+                }
+                MatchingChars++;
+            }
+
+            /* If not, we match a single char */
+            if (MatchingChars == NamePosition && Name->Buffer[NamePosition] != '.')
+            {
+                NamePosition++;
+                ExpressionPosition++;
+            }
+            else
+            {
+                /* If we are, we just go through QMs */
+                while (ExpressionPosition < Expression->Length &&
+                       Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM)
+                {
+                    ExpressionPosition++;
+                }
             }
         }
         /* If nothing match, try to backtrack */
