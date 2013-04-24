@@ -96,6 +96,7 @@ AddReg=Classes
 11,,wininet.dll,2
 11,,wintrust.dll,1
 11,,wuapi.dll,1
+11,,ieframe.dll,1
 
 [Strings]
 MciExtStr="Software\Microsoft\Windows NT\CurrentVersion\MCI Extensions"
