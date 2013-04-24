@@ -34,7 +34,6 @@ RtlpFindGenericTableNodeOrParent(IN PRTL_GENERIC_TABLE Table,
     /* Quick check to see if the table is empty */
     if (RtlIsGenericTableEmpty(Table))
     {
-        *NodeOrParent = NULL;
         return TableEmptyTree;
     }
 
@@ -338,11 +337,11 @@ RtlEnumerateGenericTable(IN PRTL_GENERIC_TABLE Table,
     {
         /* Then find the leftmost element */
         FoundNode = Table->TableRoot;
-        do
+        while(RtlLeftChild(FoundNode))
         {
             /* Get the left child */
             FoundNode = RtlLeftChild(FoundNode);
-        } while(RtlLeftChild(FoundNode));
+        }
 
         /* Splay it */
         _Analysis_assume_(FoundNode != NULL);
@@ -377,11 +376,11 @@ RtlEnumerateGenericTableWithoutSplaying(IN PRTL_GENERIC_TABLE Table,
     {
         /* Then find the leftmost element */
         FoundNode = Table->TableRoot;
-        do
+        while(RtlLeftChild(FoundNode))
         {
             /* Get the left child */
             FoundNode = RtlLeftChild(FoundNode);
-        } while(RtlLeftChild(FoundNode));
+        }
 
         /* Splay it */
         *RestartKey = FoundNode;
