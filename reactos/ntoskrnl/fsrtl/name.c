@@ -216,6 +216,10 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             /* If we are beyond name, we null match */
             if (BeyondName)
             {
+                if (Name->Buffer[NamePosition] == L'.')
+                {
+                    NamePosition++;
+                }
                 ExpressionPosition++;
                 continue;
             }

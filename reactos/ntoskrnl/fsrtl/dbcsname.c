@@ -285,6 +285,10 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             /* If we are beyond name, we null match */
             if (BeyondName)
             {
+                if (Name->Buffer[NamePosition] == '.')
+                {
+                    NamePosition++;
+                }
                 ExpressionPosition++;
                 continue;
             }
