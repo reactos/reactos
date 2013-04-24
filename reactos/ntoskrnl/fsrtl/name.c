@@ -23,12 +23,11 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN BOOLEAN IgnoreCase,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
-    SHORT StarFound = -1;
-    PUSHORT BackTracking = NULL;
+    SHORT StarFound = -1, DosStarFound = -1;
+    PUSHORT BackTracking = NULL, DosBackTracking = NULL;
     UNICODE_STRING IntExpression;
-    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, LastDot;
     WCHAR CompareChar;
-    BOOLEAN BeyondName;
     PAGED_CODE();
 
     /* Check if we were given strings at all */
@@ -153,129 +152,85 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         /* Check DOS_STAR */
         else if (Expression->Buffer[ExpressionPosition] == DOS_STAR)
         {
-            /* We can only consume dot if that's not the last one
-             * Otherwise, we null match
-             */
-            if (Name->Buffer[NamePosition] == L'.')
+            /* Skip contigous stars */
+            while ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) &&
+                   (Expression->Buffer[ExpressionPosition + 1] == DOS_STAR))
             {
-                MatchingChars = NamePosition + 1;
-                while (MatchingChars < Name->Length / sizeof(WCHAR))
-                {
-                    if (Name->Buffer[MatchingChars] == L'.')
-                    {
-                        NamePosition++;
-                        break;
-                    }
-                    MatchingChars++;
-                }
-
-                /* In case we were already at last dot, simply accept it */
-                if (MatchingChars == Name->Length / sizeof(WCHAR))
-                {
-                    NamePosition++;
-                }
+                ExpressionPosition++;
             }
-            else
-            {
-                /* XXX: Eat everything till the end */
-                if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR))
-                {
-                    NamePosition = Name->Length;
-                }
 
-                /* Try to eat till the next matching char or . */
-                MatchingChars = NamePosition;
-                while (MatchingChars < Name->Length / sizeof(WCHAR))
-                {
-                    if (ExpressionPosition + 1 < Expression->Length / sizeof(WCHAR) &&
-                        Name->Buffer[MatchingChars] == Expression->Buffer[ExpressionPosition + 1])
-                    {
-                        NamePosition = MatchingChars;
-                        break;
-                    }
-                    else if (Name->Buffer[MatchingChars] == L'.')
-                    {
-                        NamePosition = MatchingChars + 1;
-                        break;
-                    }
-                    MatchingChars++;
-                }
-            }
-            ExpressionPosition++;
-        }
-        /* Check DOS_DOT */
-        else if (Expression->Buffer[ExpressionPosition] == DOS_DOT)
-        {
-            /* First try to find whether we are beyond last dot (beyond name) */
-            BeyondName = TRUE;
-            MatchingChars = NamePosition + 1;
+            /* Look for last dot */
+            MatchingChars = 0;
+            LastDot = (USHORT)-1;
             while (MatchingChars < Name->Length / sizeof(WCHAR))
             {
                 if (Name->Buffer[MatchingChars] == L'.')
                 {
-                    BeyondName = FALSE;
-                    break;
+                    LastDot = MatchingChars;
+                    if (LastDot > NamePosition)
+                        break;
                 }
+
                 MatchingChars++;
             }
 
-            /* If we are beyond name, we null match */
-            if (BeyondName)
+            /* If we don't have dots or we didn't find last yet
+             * start eating everything
+             */
+            if (MatchingChars != Name->Length || LastDot == (USHORT)-1)
             {
-                if (Name->Buffer[NamePosition] == L'.')
-                {
+                if (!DosBackTracking) DosBackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                                              (Expression->Length / sizeof(WCHAR)) * sizeof(USHORT),
+                                                                              'nrSF');
+                DosBackTracking[++DosStarFound] = ExpressionPosition++;
+
+                /* Not the same char, start exploring */
+                if (Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
                     NamePosition++;
-                }
-                ExpressionPosition++;
-                continue;
             }
-            /* If not, we only match a dot */
-            else if (Name->Buffer[NamePosition] == L'.')
-            {
-                NamePosition++;
-                ExpressionPosition++;
-                continue;
-            }
-            /* Otherwise, fail */
             else
             {
-                break;
+                /* Else, if we are at last dot, eat it - otherwise, null match */
+                if (Name->Buffer[NamePosition] == '.')
+                    NamePosition++;
+
+                 ExpressionPosition++;
             }
+        }
+        /* Check DOS_DOT */
+        else if (Expression->Buffer[ExpressionPosition] == DOS_DOT)
+        {
+            /* We only match dots */
+            if (Name->Buffer[NamePosition] == L'.')
+            {
+                NamePosition++;
+            }
+            /* Try to explore later on for null matching */
+            else if ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) && 
+                     (Name->Buffer[NamePosition] == Expression->Buffer[ExpressionPosition + 1]))
+            {
+                NamePosition++;
+            }
+            ExpressionPosition++;
         }
         /* Check DOS_QM */
         else if (Expression->Buffer[ExpressionPosition] == DOS_QM)
         {
-            /* Check whether we are upon a dot */
-            MatchingChars = 0;
-            while (MatchingChars < NamePosition)
-            {
-                if (Name->Buffer[MatchingChars] == L'.')
-                {
-                    break;
-                }
-                MatchingChars++;
-            }
-
-            /* If not, we match a single char */
-            if (MatchingChars == NamePosition && Name->Buffer[NamePosition] != L'.')
+            /* We match everything except dots */
+            if (Name->Buffer[NamePosition] != L'.')
             {
                 NamePosition++;
-                ExpressionPosition++;
             }
-            else
-            {
-                /* If we are, we just go through QMs */
-                while (ExpressionPosition < Expression->Length / sizeof(WCHAR) &&
-                       Expression->Buffer[ExpressionPosition] == DOS_QM)
-                {
-                    ExpressionPosition++;
-                }
-            }
+            ExpressionPosition++;
         }
         /* If nothing match, try to backtrack */
         else if (StarFound >= 0)
         {
             ExpressionPosition = BackTracking[StarFound--];
+        }
+        else if (DosStarFound >= 0)
+        {
+            ExpressionPosition = DosBackTracking[DosStarFound--];
         }
         /* Otherwise, fail */
         else
@@ -310,6 +265,10 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     if (BackTracking)
     {
         ExFreePoolWithTag(BackTracking, 'nrSF');
+    }
+    if (DosBackTracking)
+    {
+        ExFreePoolWithTag(DosBackTracking, 'nrSF');
     }
 
     return (ExpressionPosition == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR));
