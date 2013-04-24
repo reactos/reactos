@@ -442,7 +442,7 @@ IntVideoPortFindAdapter(
          }
          else
          {
-            WARN_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
+            ERR_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
             RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
             if (DeviceExtension->NextDeviceObject)
                 IoDetachDevice(DeviceExtension->NextDeviceObject);
@@ -465,7 +465,7 @@ IntVideoPortFindAdapter(
 
    if (Status != NO_ERROR)
    {
-      WARN_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
+      ERR_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
       RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
       if (DeviceExtension->NextDeviceObject)
           IoDetachDevice(DeviceExtension->NextDeviceObject);
@@ -532,7 +532,7 @@ IntVideoPortFindAdapter(
           IoDetachDevice(DeviceExtension->NextDeviceObject);
       RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
       IoDeleteDevice(DeviceObject);
-      WARN_(VIDEOPRT, "STATUS_INSUFFICIENT_RESOURCES\n");
+      ERR_(VIDEOPRT, "IntVideoPortSetupTimer failed\n");
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
@@ -591,6 +591,7 @@ VideoPortInitialize(
 
    if (HwInitializationData->HwInitDataSize > sizeof(VIDEO_HW_INITIALIZATION_DATA))
    {
+      ERR_(VIDEOPRT, "Invalid HwInitializationData\n");
       return STATUS_REVISION_MISMATCH;
    }
 
@@ -598,6 +599,7 @@ VideoPortInitialize(
        HwInitializationData->HwInitialize == NULL ||
        HwInitializationData->HwStartIO == NULL)
    {
+      ERR_(VIDEOPRT, "Invalid HwInitializationData\n");
       return STATUS_INVALID_PARAMETER;
    }
 
@@ -621,7 +623,7 @@ VideoPortInitialize(
          break;
 
       default:
-         WARN_(VIDEOPRT, "Invalid HwInitializationData size.\n");
+         ERR_(VIDEOPRT, "Invalid HwInitializationData size.\n");
          return STATUS_UNSUCCESSFUL;
    }
 
@@ -677,6 +679,7 @@ VideoPortInitialize(
 
       if (!NT_SUCCESS(Status))
       {
+         ERR_(VIDEOPRT, "IoAllocateDriverObjectExtension failed 0x%x\n", Status);
          return Status;
       }
 
@@ -744,13 +747,18 @@ VideoPortInitialize(
       }
       Status = IntVideoPortCreateAdapterDeviceObject(DriverObject, DriverExtension,
                                                      NULL, &DeviceObject);
-      INFO_(VIDEOPRT, "IntVideoPortCreateAdapterDeviceObject returned 0x%x\n", Status);
       if (!NT_SUCCESS(Status))
+      {
+         ERR_(VIDEOPRT, "IntVideoPortCreateAdapterDeviceObject returned 0x%x\n", Status);
          return Status;
+      }
+
       Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, DeviceObject);
-      INFO_(VIDEOPRT, "IntVideoPortFindAdapter returned 0x%x\n", Status);
       if (NT_SUCCESS(Status))
          VideoPortDeviceNumber++;
+      else
+         ERR_(VIDEOPRT, "IntVideoPortFindAdapter returned 0x%x\n", Status);
+
       return Status;
    }
    else
