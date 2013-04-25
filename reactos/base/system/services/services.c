@@ -327,7 +327,7 @@ wWinMain(HINSTANCE hInstance,
 
     /* Create the auto-start complete event */
     hScmAutoStartCompleteEvent = CreateEventW(NULL, TRUE, FALSE, SCM_AUTOSTARTCOMPLETE_EVENT);
-    if (hScmAutoStartCompleteEvent = NULL)
+    if (hScmAutoStartCompleteEvent == NULL)
     {
         DPRINT1("SERVICES: Failed to create the auto-start complete event\n");
         goto done;
