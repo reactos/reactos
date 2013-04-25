@@ -1492,11 +1492,41 @@ EXTERN_C BOOL WINAPI SHValidateUNC (HWND hwndOwner, LPWSTR pszFile, UINT fConnec
 }
 
 /************************************************************************
- *    DoEnvironmentSubstA            [SHELL32.@]
+ * DoEnvironmentSubstA [SHELL32.@]
  *
- * Replace %KEYWORD% in the str with the value of variable KEYWORD
- * from environment. If it is not found the %KEYWORD% is left
- * intact. If the buffer is too small, str is not modified.
+ * See DoEnvironmentSubstW.
+ */
+EXTERN_C DWORD WINAPI DoEnvironmentSubstA(LPSTR pszString, UINT cchString)
+{
+    LPSTR dst;
+    BOOL res = FALSE;
+    DWORD len = cchString;
+
+    TRACE("(%s, %d)\n", debugstr_a(pszString), cchString);
+    if (pszString == NULL) /* Really return 0? */
+        return 0;
+    if ((dst = (LPSTR)HeapAlloc(GetProcessHeap(), 0, cchString * sizeof(CHAR))))
+    {
+        len = ExpandEnvironmentStringsA(pszString, dst, cchString);
+        /* len includes the terminating 0 */
+        if (len && len < cchString)
+        {
+            res = TRUE;
+            memcpy(pszString, dst, len);
+        }
+        else
+            len = cchString;
+
+        HeapFree(GetProcessHeap(), 0, dst);
+    }
+    return MAKELONG(len, res);
+}
+
+/************************************************************************
+ * DoEnvironmentSubstW [SHELL32.@]
+ *
+ * Replace all %KEYWORD% in the string with the value of the named
+ * environment variable. If the buffer is too small, the string is not modified.
  *
  * PARAMS
  *  pszString  [I] '\0' terminated string with %keyword%.
@@ -1504,51 +1534,36 @@ EXTERN_C BOOL WINAPI SHValidateUNC (HWND hwndOwner, LPWSTR pszFile, UINT fConnec
  *  cchString  [I] size of str.
  *
  * RETURNS
- *     cchString length in the HIWORD;
- *     TRUE in LOWORD if subst was successful and FALSE in other case
- */
-EXTERN_C DWORD WINAPI DoEnvironmentSubstA(LPSTR pszString, UINT cchString)
-{
-    LPSTR dst;
-    BOOL res = FALSE;
-    FIXME("(%s, %d) stub\n", debugstr_a(pszString), cchString);
-    if (pszString == NULL) /* Really return 0? */
-        return 0;
-    if ((dst = (LPSTR)HeapAlloc(GetProcessHeap(), 0, cchString * sizeof(CHAR))))
-    {
-        DWORD num = ExpandEnvironmentStringsA(pszString, dst, cchString);
-        if (num && num < cchString) /* dest buffer is too small */
-        {
-            res = TRUE;
-            memcpy(pszString, dst, num);
-        }
-        HeapFree(GetProcessHeap(), 0, dst);
-    }
-    return MAKELONG(res,cchString); /* Always cchString? */
-}
-
-/************************************************************************
- *    DoEnvironmentSubstW            [SHELL32.@]
- *
- * See DoEnvironmentSubstA.
+ *  Success:  The string in the buffer is updated
+ *            HIWORD: TRUE
+ *            LOWORD: characters used in the buffer, including space for the terminating 0
+ *  Failure:  buffer too small. The string is not modified.
+ *            HIWORD: FALSE
+ *            LOWORD: provided size of the buffer in characters
  */
 EXTERN_C DWORD WINAPI DoEnvironmentSubstW(LPWSTR pszString, UINT cchString)
 {
     LPWSTR dst;
     BOOL res = FALSE;
-    FIXME("(%s, %d): stub\n", debugstr_w(pszString), cchString);
-    if ((dst = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cchString * sizeof(WCHAR))))
+    DWORD len = cchString;
+
+    TRACE("(%s, %d)\n", debugstr_w(pszString), cchString);
+
+    if ((cchString < MAXLONG) && (dst = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cchString * sizeof(WCHAR))))
     {
-        DWORD num = ExpandEnvironmentStringsW(pszString, dst, cchString);
-        if (num)
+        len = ExpandEnvironmentStringsW(pszString, dst, cchString);
+        /* len includes the terminating 0 */
+        if (len && len <= cchString)
         {
             res = TRUE;
-            wcscpy(pszString, dst);
+            memcpy(pszString, dst, len * sizeof(WCHAR));
         }
+        else
+            len = cchString;
+
         HeapFree(GetProcessHeap(), 0, dst);
     }
-
-    return MAKELONG(res,cchString);
+    return MAKELONG(len, res);
 }
 
 /************************************************************************
