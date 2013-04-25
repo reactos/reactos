@@ -145,6 +145,7 @@ ScmGetDriverStatus(PSERVICE lpService,
     }
     else // if (lpService->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER)
     {
+        ASSERT(lpService->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER);
         RtlInitUnicodeString(&DirName, L"\\FileSystem");
     }
 

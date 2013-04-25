@@ -38,7 +38,7 @@ LIST_ENTRY ServiceListHead;
 static RTL_RESOURCE DatabaseLock;
 static DWORD ResumeCount = 1;
 
-/* The critical section synchronizes service controls commands */
+/* The critical section synchronizes service control requests */
 static CRITICAL_SECTION ControlServiceCriticalSection;
 static DWORD PipeTimeout = 30000; /* 30 Seconds */
 
@@ -777,6 +777,7 @@ ScmCheckDriver(PSERVICE Service)
     }
     else // if (Service->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER)
     {
+        ASSERT(Service->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER);
         RtlInitUnicodeString(&DirName, L"\\FileSystem");
     }
 
@@ -897,6 +898,7 @@ ScmControlService(PSERVICE Service,
 
     DPRINT("ScmControlService() called\n");
 
+    /* Acquire the service control critical section, to synchronize requests */
     EnterCriticalSection(&ControlServiceCriticalSection);
 
     /* Calculate the total length of the start command line */
@@ -1715,8 +1717,6 @@ VOID
 ScmAutoStartServices(VOID)
 {
     DWORD dwError = ERROR_SUCCESS;
-    SC_RPC_LOCK Lock = NULL;
-
     PLIST_ENTRY GroupEntry;
     PLIST_ENTRY ServiceEntry;
     PSERVICE_GROUP CurrentGroup;
@@ -1725,26 +1725,14 @@ ScmAutoStartServices(VOID)
     HKEY hKey;
     ULONG i;
 
+    /*
+     * This function MUST be called ONLY at initialization time.
+     * Therefore, no need to acquire the user service start lock.
+     */
+    ASSERT(ScmInitialize);
+
     /* Acquire the service control critical section, to synchronize starts */
     EnterCriticalSection(&ControlServiceCriticalSection);
-
-    /*
-     * Acquire the user service start lock while the service is starting, if
-     * needed (i.e. if we are not starting it during the initialization phase).
-     * If we don't success, bail out.
-     */
-    if (!ScmInitialize)
-    {
-        /*
-         * Actually this code is never executed since we are called
-         * at initialization time, so that ScmInitialize == TRUE.
-         * But keep the code here if someday we are called later on
-         * for whatever reason...
-         */
-        dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
-        if (dwError != ERROR_SUCCESS) goto done;
-    }
-
 
     /* Clear 'ServiceVisited' flag (or set if not to start in Safe Mode) */
     ServiceEntry = ServiceListHead.Flink;
@@ -1906,11 +1894,7 @@ ScmAutoStartServices(VOID)
         ServiceEntry = ServiceEntry->Flink;
     }
 
-
-    /* Release the service start lock, if needed, and the critical section */
-    if (Lock) ScmReleaseServiceStartLock(&Lock);
-
-done:
+    /* Release the critical section */
     LeaveCriticalSection(&ControlServiceCriticalSection);
 }
 

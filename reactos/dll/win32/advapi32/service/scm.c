@@ -1673,28 +1673,14 @@ WaitForSCManager(VOID)
     TRACE("WaitForSCManager() called\n");
 
     /* Try to open the existing event */
-    hEvent = OpenEventW(SYNCHRONIZE,
-                        FALSE,
-                        SCM_START_EVENT);
+    hEvent = OpenEventW(SYNCHRONIZE, FALSE, SCM_START_EVENT);
     if (hEvent == NULL)
     {
-        if (GetLastError() != ERROR_FILE_NOT_FOUND)
-            return;
+        if (GetLastError() != ERROR_FILE_NOT_FOUND) return;
 
         /* Try to create a new event */
-        hEvent = CreateEventW(NULL,
-                              TRUE,
-                              FALSE,
-                              SCM_START_EVENT);
-        if (hEvent == NULL)
-        {
-            /* Try to open the existing event again */
-            hEvent = OpenEventW(SYNCHRONIZE,
-                                FALSE,
-                                SCM_START_EVENT);
-            if (hEvent == NULL)
-                return;
-        }
+        hEvent = CreateEventW(NULL, TRUE, FALSE, SCM_START_EVENT);
+        if (hEvent == NULL) return;
     }
 
     /* Wait for 3 minutes */

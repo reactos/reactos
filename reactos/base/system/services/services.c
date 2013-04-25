@@ -82,50 +82,11 @@ ScmLogError(DWORD dwEventId,
 }
 
 
-BOOL
-ScmCreateControlEvent(PHANDLE Event,
-                      LPCWSTR Name,
-                      DWORD dwDesiredAccess)
-{
-    /*
-     * This function creates a generic non-inheritable event
-     * and return a handle to the caller. The caller must
-     * close this handle afterwards.
-     */
-
-    HANDLE hEvent;
-
-    hEvent = CreateEventW(NULL, TRUE, FALSE, Name);
-    if (hEvent == NULL)
-    {
-        if (GetLastError() == ERROR_ALREADY_EXISTS)
-        {
-            hEvent = OpenEventW(dwDesiredAccess, FALSE, Name);
-        }
-    }
-
-    if (hEvent)
-    {
-        DPRINT("SERVICES: Created event %S with handle %x\n", Name, hEvent);
-        *Event = hEvent;
-        return TRUE;
-    }
-    else
-    {
-        DPRINT1("SERVICES: Failed to create event %S (Error %lu)\n", Name, GetLastError());
-        return FALSE;
-    }
-}
-
-
 VOID
 ScmWaitForLsa(VOID)
 {
-    HANDLE hEvent;
-
-    if (!ScmCreateControlEvent(&hEvent,
-                               LSA_RPC_SERVER_ACTIVE,
-                               SYNCHRONIZE))
+    HANDLE hEvent = CreateEventW(NULL, TRUE, FALSE, LSA_RPC_SERVER_ACTIVE);
+    if (hEvent == NULL)
     {
         DPRINT1("Failed to create the notification event (Error %lu)\n", GetLastError());
     }
@@ -134,7 +95,6 @@ ScmWaitForLsa(VOID)
         DPRINT("Wait for the LSA server!\n");
         WaitForSingleObject(hEvent, INFINITE);
         DPRINT("LSA server running!\n");
-
         CloseHandle(hEvent);
     }
 
@@ -357,9 +317,8 @@ wWinMain(HINSTANCE hInstance,
     ScmInitialize = TRUE;
 
     /* Create the start event */
-    if (!ScmCreateControlEvent(&hScmStartEvent,
-                               SCM_START_EVENT,
-                               EVENT_ALL_ACCESS))
+    hScmStartEvent = CreateEventW(NULL, TRUE, FALSE, SCM_START_EVENT);
+    if (hScmStartEvent == NULL)
     {
         DPRINT1("SERVICES: Failed to create the start event\n");
         goto done;
@@ -367,9 +326,8 @@ wWinMain(HINSTANCE hInstance,
     DPRINT("SERVICES: Created start event with handle %p.\n", hScmStartEvent);
 
     /* Create the auto-start complete event */
-    if (!ScmCreateControlEvent(&hScmAutoStartCompleteEvent,
-                               SCM_AUTOSTARTCOMPLETE_EVENT,
-                               EVENT_ALL_ACCESS))
+    hScmAutoStartCompleteEvent = CreateEventW(NULL, TRUE, FALSE, SCM_AUTOSTARTCOMPLETE_EVENT);
+    if (hScmAutoStartCompleteEvent = NULL)
     {
         DPRINT1("SERVICES: Failed to create the auto-start complete event\n");
         goto done;
@@ -380,7 +338,7 @@ wWinMain(HINSTANCE hInstance,
     hScmShutdownEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     if (hScmShutdownEvent == NULL)
     {
-        DPRINT1("SERVICES: Failed to create shutdown event\n");
+        DPRINT1("SERVICES: Failed to create the shutdown event\n");
         goto done;
     }
 
