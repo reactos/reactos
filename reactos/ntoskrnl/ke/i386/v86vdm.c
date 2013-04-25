@@ -53,16 +53,22 @@ KiVdmOpcodePUSHF(IN PKTRAP_FRAME TrapFrame,
 {
     ULONG Esp, V86EFlags, TrapEFlags;
 
-    /* Check for VME support */
-    ASSERT(KeI386VirtualIntExtensions == FALSE);
-
     /* Get current V8086 flags and mask out interrupt flag */
     V86EFlags = *KiNtVdmState;
     V86EFlags &= ~EFLAGS_INTERRUPT_MASK;
 
-    /* Get trap frame EFLags and leave only align, nested task and interrupt */
+    /* Get trap frame EFLags */
     TrapEFlags = TrapFrame->EFlags;
-    V86EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
+    /* Check for VME support */
+    if(KeI386VirtualIntExtensions)
+    {
+        /* Copy the virtual interrupt flag to the interrupt flag */
+        TrapEFlags &= ~EFLAGS_INTERRUPT_MASK;
+        if(TrapEFlags & EFLAGS_VIF)
+            TrapEFlags |= EFLAGS_INTERRUPT_MASK;
+    }
+    /* Leave only align, nested task and interrupt */
+    TrapEFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
 
     /* Add in those flags if they exist, and add in the IOPL flag */
     V86EFlags |= TrapEFlags;
@@ -133,10 +139,20 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
     TrapEFlags = TrapFrame->EFlags;
 
     /* Check for VME support */
-    ASSERT(KeI386VirtualIntExtensions == FALSE);
+    if(KeI386VirtualIntExtensions)
+    {
+        /* Copy the IF flag into the VIF one */
+        V86EFlags &= ~EFLAGS_VIF;
+        if(V86EFlags & EFLAGS_INTERRUPT_MASK)
+        {
+            V86EFlags |= EFLAGS_VIF;
+            /* Don't set the interrupt flag */
+            V86EFlags &= ~EFLAGS_INTERRUPT_MASK;
+        }
+    }
 
-    /* Add V86 and Interrupt flag */
-    V86EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
+    /* Add V86 flag */
+    V86EFlags |= EFLAGS_V86_MASK;
 
     /* Update EFlags in trap frame */
     TrapFrame->EFlags = V86EFlags;
