@@ -405,13 +405,14 @@ EXTERN_C int WINAPI ShellMessageBoxA(
 }
 
 /*************************************************************************
- * SHRegisterDragDrop                [SHELL32.86]
+ * SHRegisterDragDrop				[SHELL32.86]
  *
  * Probably equivalent to RegisterDragDrop but under Windows 95 it could use the
  * shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
  * for details. Under Windows 98 this function initializes the true OLE when called
  * the first time, on XP always returns E_OUTOFMEMORY and it got removed from Vista.
  *
+ * We follow Windows 98 behaviour.
  *
  * NOTES
  *     exported by ordinal
@@ -420,19 +421,33 @@ EXTERN_C int WINAPI ShellMessageBoxA(
  *     RegisterDragDrop, SHLoadOLE
  */
 HRESULT WINAPI SHRegisterDragDrop(
-    HWND hWnd,
-    LPDROPTARGET pDropTarget)
+	HWND hWnd,
+	LPDROPTARGET pDropTarget)
 {
-    FIXME("(%p,%p):stub.\n", hWnd, pDropTarget);
-    return RegisterDragDrop(hWnd, pDropTarget);
+        static BOOL ole_initialized = FALSE;
+        HRESULT hr;
+
+        TRACE("(%p,%p)\n", hWnd, pDropTarget);
+
+        if (!ole_initialized)
+        {
+            hr = OleInitialize(NULL);
+            if (FAILED(hr))
+                return hr;
+            ole_initialized = TRUE;
+        }
+	return RegisterDragDrop(hWnd, pDropTarget);
 }
 
 /*************************************************************************
- * SHRevokeDragDrop                [SHELL32.87]
+ * SHRevokeDragDrop				[SHELL32.87]
  *
- * Probably equivalent to RevokeDragDrop but under Windows 9x it could use the
+ * Probably equivalent to RevokeDragDrop but under Windows 95 it could use the
  * shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
  * for details. Function removed from Windows Vista.
+ *
+ * We call ole32 RevokeDragDrop which seems to work even if OleInitialize was
+ * not called.
  *
  * NOTES
  *     exported by ordinal
@@ -442,7 +457,7 @@ HRESULT WINAPI SHRegisterDragDrop(
  */
 HRESULT WINAPI SHRevokeDragDrop(HWND hWnd)
 {
-    FIXME("(%p):stub.\n",hWnd);
+    TRACE("(%p)\n", hWnd);
     return RevokeDragDrop(hWnd);
 }
 
