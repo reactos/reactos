@@ -239,19 +239,19 @@ typedef LONG HRESULT;
 
 #ifndef NOMINMAX
 #ifndef max
-#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define max(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 #ifndef min
-#define min(a,b) (((a) < (b)) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 #endif
 
-#define MAKEWORD(a,b) ((WORD)(((BYTE)((DWORD_PTR)(a) & 0xff)) | (((WORD)((BYTE)((DWORD_PTR)(b) & 0xff))) << 8)))
-#define MAKELONG(a,b) ((LONG)(((WORD)((DWORD_PTR)(a) & 0xffff)) | (((DWORD)((WORD)((DWORD_PTR)(b) & 0xffff))) << 16)))
-#define LOWORD(l) ((WORD)((DWORD_PTR)(l) & 0xffff))
-#define HIWORD(l) ((WORD)((DWORD_PTR)(l) >> 16))
-#define LOBYTE(w) ((BYTE)((DWORD_PTR)(w) & 0xff))
-#define HIBYTE(w) ((BYTE)((DWORD_PTR)(w) >> 8))
+#define MAKEWORD(bLow, bHigh)   ((WORD)(((BYTE)((DWORD_PTR)(bLow) & 0xff  )) |  (((WORD)((BYTE)((DWORD_PTR)(bHigh) & 0xff)))   << 8 )))
+#define MAKELONG(wLow, wHigh)   ((LONG)(((WORD)((DWORD_PTR)(wLow) & 0xffff)) | (((DWORD)((WORD)((DWORD_PTR)(wHigh) & 0xffff))) << 16)))
+#define LOWORD(l)               ((WORD)((DWORD_PTR)(l) & 0xffff))
+#define HIWORD(l)               ((WORD)(((DWORD_PTR)(l) >> 16) & 0xffff))
+#define LOBYTE(w)               ((BYTE)((DWORD_PTR)(w) & 0xff))
+#define HIBYTE(w)               ((BYTE)(((DWORD_PTR)(w) >> 8) & 0xff))
 
 #ifndef WIN_INTERNAL
 DECLARE_HANDLE (HWND);
