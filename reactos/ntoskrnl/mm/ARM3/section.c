@@ -3040,6 +3040,13 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         return STATUS_INVALID_PAGE_PROTECTION;
     }
 
+    /* Check for non-allocation-granularity-aligned BaseAddress */
+    if (BaseAddress && (*BaseAddress != ALIGN_DOWN_POINTER_BY(*BaseAddress, MM_VIRTMEM_GRANULARITY)))
+    {
+       DPRINT("BaseAddress is not at 64-kilobyte address boundary.");
+       return STATUS_MAPPED_ALIGNMENT;
+    }
+
     /* Now convert the protection mask into desired section access mask */
     DesiredAccess = MmMakeSectionAccess[ProtectionMask & 0x7];
 
