@@ -62,7 +62,8 @@ const KMT_TEST TestList[] =
     { "-ExTimer",                           Test_ExTimer },
     { "Example",                            Test_Example },
     { "FsRtlExpression",                    Test_FsRtlExpression },
-//    { "FsRtlMcb",                           Test_FsRtlMcb },
+    /* Skipped on testman. See ROSTESTS-106. */
+    { "-FsRtlMcb",                          Test_FsRtlMcb },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },
     { "IoEvent",                            Test_IoEvent },
     { "IoInterrupt",                        Test_IoInterrupt },
