@@ -80,5 +80,3 @@ elseif(ARCH STREQUAL "amd64")
     add_hal(hal SOURCES ${HAL_SOURCE} COMPONENTS generic acpi apic)
 
 endif()
-
-

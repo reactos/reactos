@@ -10,5 +10,6 @@ list(APPEND HAL_APIC_SOURCE
     apic/rtctimer.c
     apic/tsc.c)
 
-add_object_library(lib_hal_apic ${HAL_APIC_SOURCE} ${HAL_APIC_ASM_SOURCE})
+add_asm_files(lib_hal_apic_asm ${HAL_APIC_ASM_SOURCE})
+add_object_library(lib_hal_apic ${HAL_APIC_SOURCE} ${lib_hal_apic_asm})
 add_dependencies(lib_hal_apic asm)

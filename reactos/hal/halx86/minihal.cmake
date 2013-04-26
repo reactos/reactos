@@ -1,8 +1,6 @@
 
-
 list(APPEND MINI_HAL_SOURCE
     generic/portio.c
-    generic/systimer.S
     legacy/bus/bushndlr.c
     legacy/bus/cmosbus.c
     legacy/bus/isabus.c
@@ -27,6 +25,7 @@ list(APPEND MINI_HAL_SOURCE
     up/processor.c)
 
 # mini_hal
-add_library(mini_hal ${MINI_HAL_SOURCE})
+add_asm_files(mini_hal_asm generic/systimer.S)
+add_library(mini_hal ${MINI_HAL_SOURCE} ${mini_hal_asm})
 add_target_compile_definitions(mini_hal _BLDR_ _MINIHAL_)
 add_dependencies(mini_hal psdk bugcodes asm)
