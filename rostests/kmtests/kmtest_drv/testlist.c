@@ -62,7 +62,7 @@ const KMT_TEST TestList[] =
     { "-ExTimer",                           Test_ExTimer },
     { "Example",                            Test_Example },
     { "FsRtlExpression",                    Test_FsRtlExpression },
-    { "FsRtlMcb",                           Test_FsRtlMcb },
+//    { "FsRtlMcb",                           Test_FsRtlMcb },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },
     { "IoEvent",                            Test_IoEvent },
     { "IoInterrupt",                        Test_IoInterrupt },
