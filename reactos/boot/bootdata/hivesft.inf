@@ -19,19 +19,28 @@ HKLM,"SOFTWARE\Classes\ftp\shell\open\command","",0x00000000,"""%programfiles%\I
 HKLM,"SOFTWARE\Classes\gopher","",0x00000000,"URL:Gopher Protocol"
 HKLM,"SOFTWARE\Classes\gopher\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\gopher\URL Protocol","",0x00000000,""
-HKLM,"SOFTWARE\Classes\gopher\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
+;see http
+;HKLM,"SOFTWARE\Classes\gopher\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
+HKLM,"SOFTWARE\Classes\gopher\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
 HKLM,"SOFTWARE\Classes\http","",0x00000000,"URL:HyperText Transfer Protocol"
 HKLM,"SOFTWARE\Classes\http\DefaultIcon","",0x00000000,"%systemroot%\system32\url.dll,0"
 HKLM,"SOFTWARE\Classes\http\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\http\URL Protocol","",0x00000000,""
-HKLM,"SOFTWARE\Classes\http\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
+HKLM,"SOFTWARE\Classes\http\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
+;TODO : iexplore should use DDE
+;HKLM,"SOFTWARE\Classes\http\shell\open\ddeexec","",0x00000000,"""%1"",,-1,0,,,,"
+;HKLM,"SOFTWARE\Classes\http\shell\open\ddeexec","NoActivateHandler",0x00000000,""
+;HKLM,"SOFTWARE\Classes\http\shell\open\ddeexec\Application","",0x00000000,"IExplore"
+;HKLM,"SOFTWARE\Classes\http\shell\open\ddeexec\Topic","",0x00000000,"WWW_OpenURL"
 
 HKLM,"SOFTWARE\Classes\https","",0x00000000,"URL:HyperText Transfer Protocol with Privacy"
 HKLM,"SOFTWARE\Classes\https\DefaultIcon","",0x00000000,"%systemroot%\system32\url.dll,0"
 HKLM,"SOFTWARE\Classes\https\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\https\URL Protocol","",0x00000000,""
-HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
+;see http
+;HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
+HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; Register system default web browser
 HKLM,"SOFTWARE\Clients\StartMenuInternet","",0x00000000,"IEXPLORE.EXE"
