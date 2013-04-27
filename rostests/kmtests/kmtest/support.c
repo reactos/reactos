@@ -11,8 +11,73 @@
 #include <kmt_public.h>
 
 #include <assert.h>
+#include <debug.h>
 
 extern HANDLE KmtestHandle;
+
+/**
+ * @name KmtUserCallbackThread
+ *
+ * Thread routine which awaits callback requests from kernel-mode
+ *
+ * @return Win32 error code
+ */
+DWORD
+WINAPI
+KmtUserCallbackThread(
+    PVOID Parameter)
+{
+    DWORD Error = ERROR_SUCCESS;
+    /* TODO: RequestPacket? */
+    KMT_CALLBACK_REQUEST_PACKET RequestPacket;
+    KMT_RESPONSE Response;
+    DWORD BytesReturned;
+    HANDLE LocalKmtHandle;
+
+    UNREFERENCED_PARAMETER(Parameter);
+
+    /* concurrent IoCtls on the same (non-overlapped) handle aren't possible,
+     * so open a separate one.
+     * For more info http://www.osronline.com/showthread.cfm?link=230782 */
+    LocalKmtHandle = CreateFile(KMTEST_DEVICE_PATH, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (LocalKmtHandle == INVALID_HANDLE_VALUE)
+        error_goto(Error, cleanup);
+
+    while (1)
+    {
+        if (!DeviceIoControl(LocalKmtHandle, IOCTL_KMTEST_USERMODE_AWAIT_REQ, NULL, 0, &RequestPacket, sizeof(RequestPacket), &BytesReturned, NULL))
+            error_goto(Error, cleanup);
+        ASSERT(BytesReturned == sizeof(RequestPacket));
+
+        switch (RequestPacket.OperationClass)
+        {
+            case QueryVirtualMemory:
+            {
+                SIZE_T InfoBufferSize = VirtualQuery(RequestPacket.Parameters, &Response.MemInfo, sizeof(Response.MemInfo));
+                /* FIXME: an error is a valid result. That should go as a response to kernel mode instead of terminating the thread */
+                if (InfoBufferSize == 0)
+                    error_goto(Error, cleanup);
+
+                if (!DeviceIoControl(LocalKmtHandle, IOCTL_KMTEST_USERMODE_SEND_RESPONSE, &RequestPacket.RequestId, sizeof(RequestPacket.RequestId), &Response, sizeof(Response), &BytesReturned, NULL))
+                    error_goto(Error, cleanup);
+                ASSERT(BytesReturned == 0);
+
+                break;
+            }
+            default:
+                DPRINT1("Unrecognized user-mode callback request\n");
+                break;
+        }
+    }
+
+cleanup:
+    if (LocalKmtHandle != INVALID_HANDLE_VALUE)
+        CloseHandle(LocalKmtHandle);
+
+    DPRINT("Callback handler dying! Error code %lu", Error);
+    return Error;
+}
+
 
 /**
  * @name KmtRunKernelTest
@@ -28,11 +93,17 @@ DWORD
 KmtRunKernelTest(
     IN PCSTR TestName)
 {
+    HANDLE CallbackThread;
     DWORD Error = ERROR_SUCCESS;
     DWORD BytesRead;
 
+    CallbackThread = CreateThread(NULL, 0, KmtUserCallbackThread, NULL, 0, NULL);
+
     if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_RUN_TEST, (PVOID)TestName, (DWORD)strlen(TestName), NULL, 0, &BytesRead, NULL))
         error(Error);
+
+    if (CallbackThread != NULL)
+         CloseHandle(CallbackThread);
 
     return Error;
 }

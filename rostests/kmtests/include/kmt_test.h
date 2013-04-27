@@ -38,6 +38,48 @@ typedef struct
     CHAR LogBuffer[ANYSIZE_ARRAY];
 } KMT_RESULTBUFFER, *PKMT_RESULTBUFFER;
 
+#ifndef KMT_STANDALONE_DRIVER
+
+/* usermode call-back mechanism */
+
+/* list of supported operations */
+typedef enum _KMT_CALLBACK_INFORMATION_CLASS
+{
+    QueryVirtualMemory
+} KMT_CALLBACK_INFORMATION_CLASS, *PKMT_CALLBACK_INFORMATION_CLASS;
+
+/* TODO: "response" is a little generic */
+typedef union _KMT_RESPONSE
+{
+    MEMORY_BASIC_INFORMATION MemInfo;
+} KMT_RESPONSE, *PKMT_RESPONSE;
+
+/* this struct is sent from driver to usermode */
+typedef struct _KMT_CALLBACK_REQUEST_PACKET
+{
+    ULONG RequestId;
+    KMT_CALLBACK_INFORMATION_CLASS OperationClass;
+    PVOID Parameters;
+} KMT_CALLBACK_REQUEST_PACKET, *PKMT_CALLBACK_REQUEST_PACKET;
+
+PKMT_RESPONSE KmtUserModeCallback(KMT_CALLBACK_INFORMATION_CLASS Operation, PVOID Parameters);
+VOID KmtFreeCallbackResponse(PKMT_RESPONSE Response);
+
+//macro to simplify using the mechanism
+#define Test_NtQueryVirtualMemory(BaseAddress, Size, AllocationType, ProtectionType)            \
+    do {                                                                                        \
+    PKMT_RESPONSE NtQueryTest = KmtUserModeCallback(QueryVirtualMemory, BaseAddress);           \
+    if (NtQueryTest != NULL)                                                                    \
+    {                                                                                           \
+        ok_eq_hex(NtQueryTest->MemInfo.Protect, ProtectionType);                                \
+        ok_eq_hex(NtQueryTest->MemInfo.State, AllocationType);                                  \
+        ok_eq_size(NtQueryTest->MemInfo.RegionSize, Size);                                      \
+        KmtFreeCallbackResponse(NtQueryTest);                                                   \
+    }                                                                                           \
+    } while (0)                                                                                 \
+
+#endif
+
 #ifdef KMT_STANDALONE_DRIVER
 #define KMT_KERNEL_MODE
 
