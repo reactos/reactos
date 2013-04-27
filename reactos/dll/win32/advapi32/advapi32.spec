@@ -553,13 +553,13 @@
 @ stdcall ReportEventA(long long long long ptr long long str ptr)
 @ stdcall ReportEventW(long long long long ptr long long wstr ptr)
 @ stdcall RevertToSelf()
-@ stub SaferCloseLevel
-@ stub SaferComputeTokenFromLevel
+@ stdcall SaferCloseLevel(ptr)
+@ stdcall SaferComputeTokenFromLevel(ptr ptr ptr long ptr)
 @ stdcall SaferCreateLevel(long long long ptr ptr)
 @ stub SaferGetLevelInformation
 @ stdcall SaferGetPolicyInformation(long long long ptr ptr ptr)
-@ stub SaferIdentifyLevel
-@ stub SaferRecordEventLogEntry
+@ stdcall SaferIdentifyLevel(long ptr ptr ptr)
+@ stdcall SaferRecordEventLogEntry(ptr wstr ptr)
 @ stub SaferSetLevelInformation
 @ stub SaferSetPolicyInformation
 @ stub SaferiChangeRegistryScope
