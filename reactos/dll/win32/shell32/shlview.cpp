@@ -2408,7 +2408,7 @@ HRESULT STDMETHODCALLTYPE CDefView::SetCurrentViewMode(UINT ViewMode)
     TRACE("(%p)->(%u), stub\n", this, ViewMode);
 
     /* It's not redundant to check FVM_AUTO because it's a (UINT)-1 */
-    if ((ViewMode < FVM_FIRST || ViewMode > FVM_LAST) && (ViewMode != FVM_AUTO))
+    if ((ViewMode < FVM_FIRST || ViewMode > FVM_LAST) && (ViewMode != (UINT)FVM_AUTO))
         return E_INVALIDARG;
 
     /* Windows before Vista uses LVM_SETVIEW and possibly
