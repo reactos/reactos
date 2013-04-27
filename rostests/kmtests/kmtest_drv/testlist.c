@@ -46,6 +46,9 @@ KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlException;
 KMT_TESTFUNC Test_RtlMemory;
 KMT_TESTFUNC Test_RtlSplayTree;
+KMT_TESTFUNC Test_ZwAllocateVirtualMemory;
+KMT_TESTFUNC Test_ZwCreateSection;
+KMT_TESTFUNC Test_ZwMapViewOfSection;
 
 const KMT_TEST TestList[] =
 {
@@ -89,5 +92,8 @@ const KMT_TEST TestList[] =
     { "RtlExceptionKM",                     Test_RtlException },
     { "RtlMemoryKM",                        Test_RtlMemory },
     { "RtlSplayTreeKM",                     Test_RtlSplayTree },
+    { "ZwAllocateVirtualMemory",            Test_ZwAllocateVirtualMemory },
+    { "ZwCreateSection",                    Test_ZwCreateSection },
+    { "ZwMapViewOfSection",                 Test_ZwMapViewOfSection },
     { NULL,                                 NULL }
 };

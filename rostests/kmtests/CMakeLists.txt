@@ -52,6 +52,9 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ke/KeSpinLock.c
     ntos_ke/KeTimer.c
     ntos_mm/MmSection.c
+    ntos_mm/ZwAllocateVirtualMemory.c
+    ntos_mm/ZwCreateSection.c
+    ntos_mm/ZwMapViewOfSection.c
     ntos_ob/ObReference.c
     ntos_ob/ObType.c
     ntos_ob/ObTypes.c
@@ -65,6 +68,7 @@ add_library(kmtest_drv SHARED ${KMTEST_DRV_SOURCE})
 set_module_type(kmtest_drv kernelmodedriver)
 target_link_libraries(kmtest_drv kmtest_printf chkstk ${PSEH_LIB})
 add_importlibs(kmtest_drv ntoskrnl hal)
+add_dependencies(kmtest_drv bugcodes)
 add_target_compile_definitions(kmtest_drv KMT_KERNEL_MODE NTDDI_VERSION=NTDDI_WS03SP1)
 #add_pch(kmtest_drv include/kmt_test.h)
 
