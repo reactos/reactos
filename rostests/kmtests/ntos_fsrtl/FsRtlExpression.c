@@ -1,687 +1,238 @@
 /*
  * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         LGPLv2+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite FsRtl Test
+ * PURPOSE:         Test for FsRtlIsNameInExpression/FsRtlIsDbcsInExpression
  * PROGRAMMER:      Pierre Schweitzer <pierre.schweitzer@reactos.org>
+ *                  Víctor Martínez Calvo <vmartinez@reactos.org>
  */
-
-/* TODO: most of these calls fail the Windows checked build's !islower assertion and others */
 
 #include <kmt_test.h>
 
 #define NDEBUG
 #include <debug.h>
 
+struct
+{   /* API parameters */
+    PCWSTR Expression;
+    PCWSTR Name;
+    BOOLEAN IgnoreCase;
+    /* Flag for tests which shouldn't be tested in checked builds */
+    BOOLEAN AssertsInChecked;
+    /* Expected test result */
+    BOOLEAN Expected;
+} Tests[] =
+{
+    /* TODO: reorganize AssertsInChecked. This needs to be separate for *Name* and *Dbcs* or something.
+     * We currently fail a lot of them in Windows despite AssertsInChecked.
+     * E.g. *Dbcs* asserts !islower(Expression[i]) and FsRtlDoesDbcsContainWildCards(Expression) for some reason.
+     */
+    { L"",                      L"",                            FALSE,  TRUE,   TRUE },
+    { L"",                      L"a",                           FALSE,  TRUE,   FALSE },
+    { L"*",                     L"a",                           FALSE,  TRUE,   TRUE },
+    { L"*",                     L"",                            FALSE,  TRUE,   FALSE },
+    { L"**",                    L"",                            FALSE,  TRUE,   FALSE },
+    { L"**",                    L"a",                           FALSE,  FALSE,  TRUE },
+    { L"ntdll.dll",             L".",                           FALSE,  TRUE,   FALSE },
+    { L"ntdll.dll",             L"~1",                          FALSE,  TRUE,   FALSE },
+    { L"ntdll.dll",             L"..",                          FALSE,  TRUE,   FALSE },
+    { L"ntdll.dll",             L"ntdll.dll",                   FALSE,  TRUE,   TRUE },
+    { L"smss.exe",              L".",                           FALSE,  TRUE,   FALSE },
+    { L"smss.exe",              L"~1",                          FALSE,  TRUE,   FALSE },
+    { L"smss.exe",              L"..",                          FALSE,  TRUE,   FALSE },
+    { L"smss.exe",              L"ntdll.dll",                   FALSE,  TRUE,   FALSE },
+    { L"smss.exe",              L"NTDLL.DLL",                   FALSE,  TRUE,   FALSE },
+    { L"nt??krnl.???",          L"ntoskrnl.exe",                FALSE,  FALSE,  TRUE },
+    { L"he*o",                  L"hello",                       FALSE,  FALSE,  TRUE },
+    { L"he*o",                  L"helo",                        FALSE,  FALSE,  TRUE },
+    { L"he*o",                  L"hella",                       FALSE,  FALSE,  FALSE },
+    { L"he*",                   L"hello",                       FALSE,  FALSE,  TRUE },
+    { L"he*",                   L"helo",                        FALSE,  FALSE,  TRUE },
+    { L"he*",                   L"hella",                       FALSE,  FALSE,  TRUE },
+    { L"*.cpl",                 L"kdcom.dll",                   FALSE,  FALSE,  FALSE },
+    { L"*.cpl",                 L"bootvid.dll",                 FALSE,  FALSE,  FALSE },
+    { L"*.cpl",                 L"ntoskrnl.exe",                FALSE,  FALSE,  FALSE },
+    { L".",                     L"NTDLL.DLL",                   FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L".",                           FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L"..",                          FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L"SETUP.EXE",                   FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L"f0_",                         FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L"f0_",                         TRUE,   FALSE,  FALSE },
+    { L"F0_*.*",                L"F0_",                         FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L"f0_.",                        FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L"f0_.",                        TRUE,   FALSE,  TRUE },
+    { L"F0_*.*",                L"F0_.",                        FALSE,  FALSE,  TRUE },
+    { L"F0_*.*",                L"F0_001",                      FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L"F0_001",                      TRUE,   FALSE,  FALSE },
+    { L"F0_*.*",                L"f0_001",                      FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L"f0_001",                      TRUE,   FALSE,  FALSE },
+    { L"F0_*.*",                L"F0_001.",                     FALSE,  FALSE,  TRUE },
+    { L"F0_*.*",                L"f0_001.txt",                  FALSE,  FALSE,  FALSE },
+    { L"F0_*.*",                L"f0_001.txt",                  TRUE,   FALSE,  TRUE },
+    { L"F0_*.*",                L"F0_001.txt",                  FALSE,  FALSE,  TRUE },
+    { L"F0_*.*",                L"F0_001.txt",                  TRUE,   FALSE,  TRUE },
+    { L"F0_*.",                 L".",                           FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"..",                          FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"SETUP.EXE",                   FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"f0_",                         FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"f0_",                         TRUE,   FALSE,  FALSE },
+    { L"F0_*.",                 L"F0_",                         FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"f0_.",                        FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"f0_.",                        TRUE,   FALSE,  TRUE },
+    { L"F0_*.",                 L"F0_.",                        FALSE,  FALSE,  TRUE },
+    { L"F0_*.",                 L"F0_001",                      FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"F0_001",                      TRUE,   FALSE,  FALSE },
+    { L"F0_*.",                 L"f0_001",                      FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"f0_001",                      TRUE,   FALSE,  FALSE },
+    { L"F0_*.",                 L"F0_001.",                     FALSE,  FALSE,  TRUE },
+    { L"F0_*.",                 L"f0_001.txt",                  FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"f0_001.txt",                  TRUE,   FALSE,  FALSE },
+    { L"F0_*.",                 L"F0_001.txt",                  FALSE,  FALSE,  FALSE },
+    { L"F0_*.",                 L"F0_001.txt",                  TRUE,   FALSE,  FALSE },
+    { L"F0_<\"*",               L".",                           FALSE,  FALSE,  FALSE },
+    { L"F0_<\"*",               L"..",                          FALSE,  FALSE,  FALSE },
+    { L"F0_<\"*",               L"SETUP.EXE",                   FALSE,  FALSE,  FALSE },
+    { L"F0_<\"*",               L"f0_",                         TRUE,   FALSE,  TRUE },
+    { L"F0_<\"*",               L"F0_",                         FALSE,  FALSE,  TRUE },
+    { L"F0_<\"*",               L"f0_.",                        FALSE,  FALSE,  FALSE },
+    { L"F0_<\"*",               L"f0_.",                        TRUE,   FALSE,  TRUE },
+    { L"F0_<\"*",               L"F0_.",                        FALSE,  FALSE,  TRUE },
+    { L"F0_<\"*",               L"F0_001",                      FALSE,  FALSE,  TRUE },
+    { L"F0_<\"*",               L"F0_001",                      TRUE,   FALSE,  TRUE },
+    { L"F0_<\"*",               L"f0_001",                      FALSE,  FALSE,  FALSE },
+    { L"F0_<\"*",               L"f0_001",                      TRUE,   FALSE,  TRUE },
+    { L"F0_<\"*",               L"F0_001.",                     FALSE,  FALSE,  TRUE },
+    { L"F0_<\"*",               L"f0_001.txt",                  FALSE,  FALSE,  FALSE },
+    { L"F0_<\"*",               L"f0_001.txt",                  TRUE,   FALSE,  TRUE },
+    { L"F0_<\"*",               L"F0_001.txt",                  FALSE,  FALSE,  TRUE },
+    { L"F0_<\"*",               L"F0_001.txt",                  TRUE,   FALSE,  TRUE },
+    { L"*.TTF",                 L".",                           FALSE,  FALSE,  FALSE },
+    { L"*.TTF",                 L"..",                          FALSE,  FALSE,  FALSE },
+    { L"*.TTF",                 L"SETUP.INI",                   FALSE,  FALSE,  FALSE },
+    { L"*",                     L".",                           FALSE,  FALSE,  TRUE },
+    { L"*",                     L"..",                          FALSE,  FALSE,  TRUE },
+    { L"*",                     L"SETUP.INI",                   FALSE,  FALSE,  TRUE },
+    { L".*",                    L"1",                           FALSE,  FALSE,  FALSE },
+    { L".*",                    L"01",                          FALSE,  FALSE,  FALSE },
+    { L".*",                    L" ",                           FALSE,  FALSE,  FALSE },
+    { L".*",                    L"",                            FALSE,  TRUE,   FALSE },
+    { L".*",                    L".",                           FALSE,  FALSE,  TRUE },
+    { L".*",                    L"1.txt",                       FALSE,  FALSE,  FALSE },
+    { L".*",                    L" .txt",                       FALSE,  FALSE,  FALSE },
+    { L".*",                    L".txt",                        FALSE,  FALSE,  TRUE },
+    { L"\"ntoskrnl.exe",        L"ntoskrnl.exe",                FALSE,  FALSE,  FALSE },
+    { L"ntoskrnl\"exe",         L"ntoskrnl.exe",                FALSE,  FALSE,  TRUE },
+    { L"ntoskrn\".exe",         L"ntoskrnl.exe",                FALSE,  FALSE,  FALSE },
+    { L"ntoskrn\"\"exe",        L"ntoskrnl.exe",                FALSE,  FALSE,  FALSE },
+    { L"ntoskrnl.\"exe",        L"ntoskrnl.exe",                FALSE,  FALSE,  FALSE },
+    { L"ntoskrnl.exe\"",        L"ntoskrnl.exe",                FALSE,  FALSE,  TRUE },
+    { L"ntoskrnl.exe",          L"ntoskrnl.exe",                FALSE,  FALSE,  TRUE },
+    { L"*.c.d",                 L"a.b.c.d",                     FALSE,  FALSE,  TRUE },
+    { L"*.?.c.d",               L"a.b.c.d",                     FALSE,  FALSE,  TRUE },
+    { L"**.?.c.d",              L"a.b.c.d",                     FALSE,  FALSE,  TRUE },
+    { L"a.**.c.d",              L"a.b.c.d",                     FALSE,  FALSE,  TRUE },
+    { L"a.b.??.d",              L"a.b.c1.d",                    FALSE,  FALSE,  TRUE },
+    { L"a.b.??.d",              L"a.b.c.d",                     FALSE,  FALSE,  FALSE },
+    { L"a.b.*?.d",              L"a.b.c.d",                     FALSE,  FALSE,  TRUE },
+    { L"a.b.*??.d",             L"a.b.ccc.d",                   FALSE,  FALSE,  TRUE },
+    { L"a.b.*??.d",             L"a.b.cc.d",                    FALSE,  FALSE,  TRUE },
+    { L"a.b.*??.d",             L"a.b.c.d",                     FALSE,  FALSE,  FALSE },
+    { L"a.b.*?*.d",             L"a.b.c.d",                     FALSE,  FALSE,  TRUE },
+    { L"*?",                    L"",                            FALSE,  TRUE,   FALSE },
+    { L"*?",                    L"a",                           FALSE,  FALSE,  TRUE },
+    { L"*?",                    L"aa",                          FALSE,  FALSE,  TRUE },
+    { L"*?",                    L"aaa",                         FALSE,  FALSE,  TRUE },
+    { L"?*?",                   L"",                            FALSE,  TRUE,   FALSE },
+    { L"?*?",                   L"a",                           FALSE,  FALSE,  FALSE },
+    { L"?*?",                   L"aa",                          FALSE,  FALSE,  TRUE },
+    { L"?*?",                   L"aaa",                         FALSE,  FALSE,  TRUE },
+    { L"?*?",                   L"aaaa",                        FALSE,  FALSE,  TRUE },
+    { L"C:\\ReactOS\\**",       L"C:\\ReactOS\\dings.bmp",      FALSE,  FALSE,  TRUE },
+    { L"C:\\ReactOS\\***",      L"C:\\ReactOS\\dings.bmp",      FALSE,  FALSE,  TRUE },
+    { L"C:\\Windows\\*a*",      L"C:\\ReactOS\\dings.bmp",      FALSE,  FALSE,  FALSE },
+    { L"C:\\ReactOS\\*.bmp",    L"C:\\Windows\\explorer.exe",   FALSE,  FALSE,  FALSE },
+    { L"*.bmp;*.dib",           L"winhlp32.exe",                FALSE,  FALSE,  FALSE },
+    { L"*.*.*.*",               L"127.0.0.1",                   FALSE,  FALSE,  TRUE },
+    { L"*?*?*?*",               L"1.0.0.1",                     FALSE,  FALSE,  TRUE },
+    { L"?*?*?*?",               L"1.0.0.1",                     FALSE,  FALSE,  TRUE },
+    { L"?.?.?.?",               L"1.0.0.1",                     FALSE,  FALSE,  TRUE },
+    { L"*a*ab*abc",             L"aabaabcdadabdabc",            FALSE,  FALSE,  TRUE },
+    { L"ab<exe",                L"abcd.exe",                    FALSE,  FALSE,  TRUE },
+    { L"ab<exe",                L"ab.exe",                      FALSE,  FALSE,  TRUE },
+    { L"ab<exe",                L"abcdexe",                     FALSE,  FALSE,  TRUE },
+    { L"ab<exe",                L"acd.exe",                     FALSE,  FALSE,  FALSE },
+    { L"a.b<exe",               L"a.bcd.exe",                   FALSE,  FALSE,  TRUE },
+    { L"a<b.exe",               L"a.bcd.exe",                   FALSE,  FALSE,  FALSE },
+    { L"a.b.exe",               L"a.bcd.exe",                   FALSE,  FALSE,  FALSE },
+    { L"abc.exe",               L"abc.exe",                     FALSE,  FALSE,  TRUE },
+    { L"abc.exe",               L"abc.exe.",                    FALSE,  FALSE,  FALSE },
+    { L"abc.exe",               L"abc.exe.back",                FALSE,  FALSE,  FALSE },
+    { L"abc.exe",               L"abc.exes",                    FALSE,  FALSE,  FALSE },
+    { L"a>c.exe",               L"abc.exe",                     FALSE,  FALSE,  TRUE },
+    { L"a>c.exe",               L"ac.exe",                      FALSE,  FALSE,  FALSE },
+    { L"a>>>exe",               L"abc.exe",                     FALSE,  FALSE,  FALSE },
+    { L"a>>>exe",               L"ac.exe",                      FALSE,  FALSE,  FALSE },
+    { L"<.exe",                 L"test.exe",                    FALSE,  FALSE,  TRUE },
+    { L"<.EXE",                 L"test.exe",                    TRUE,   FALSE,  TRUE },
+};
+
 static VOID FsRtlIsNameInExpressionTest()
 {
-    UNICODE_STRING Expression, Name;
-
-    /* !Name->Length || !Expression->Length asserts */
-    if (!KmtIsCheckedBuild)
+    ULONG i;
+    for (i = 0; i < sizeof(Tests) / sizeof(Tests[0]); i++)
     {
-        RtlInitUnicodeString(&Expression, L"*");
-        RtlInitUnicodeString(&Name, L"");
-        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-        RtlInitUnicodeString(&Expression, L"");
-        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
+        BOOLEAN TestResult;
+        UNICODE_STRING Expression;
+        UNICODE_STRING Name;
+
+        /* Don't run Tests which are known to assert in checked builds */
+        if (KmtIsCheckedBuild && Tests[i].AssertsInChecked)
+            continue;
+
+        RtlInitUnicodeString(&Expression, Tests[i].Expression);
+        RtlInitUnicodeString(&Name, Tests[i].Name);
+
+        TestResult = FsRtlIsNameInExpression(&Expression, &Name, Tests[i].IgnoreCase, NULL);
+
+        ok(TestResult == Tests[i].Expected, "FsRtlIsNameInExpression(%wZ,%wZ,%s,NULL): Expected %s, got %s\n",
+           &Expression, &Name, Tests[i].IgnoreCase ? "TRUE" : "FALSE", Tests[i].Expected ? "TRUE" : "FALSE", TestResult ? "TRUE" : "FALSE");
     }
 
-    RtlInitUnicodeString(&Expression, L"**");
-    if (!KmtIsCheckedBuild)
-    {
-        RtlInitUnicodeString(&Name, L"");
-        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    }
-    RtlInitUnicodeString(&Name, L"a");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"ntdll.dll");
-    RtlInitUnicodeString(&Name, L".");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"~1");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"..");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"ntdll.dll");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"smss.exe");
-    RtlInitUnicodeString(&Name, L".");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"~1");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"..");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"ntdll.dll");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"NTDLL.dll");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitUnicodeString(&Expression, L"nt??krnl.???");
-    RtlInitUnicodeString(&Name, L"ntoskrnl.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"he*o");
-    RtlInitUnicodeString(&Name, L"hello");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"helo");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"hella");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitUnicodeString(&Expression, L"he*");
-    RtlInitUnicodeString(&Name, L"hello");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"helo");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"hella");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"*.cpl");
-    RtlInitUnicodeString(&Name, L"kdcom.dll");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"bootvid.dll");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"ntoskrnl.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitUnicodeString(&Expression, L".");
-    RtlInitUnicodeString(&Name, L"NTDLL.DLL");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitUnicodeString(&Expression, L"F0_*.*");
-    RtlInitUnicodeString(&Name, L".");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"..");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"SETUP.EXE");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"F0_");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"F0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"F0_001.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"f0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"F0_*.");
-    RtlInitUnicodeString(&Name, L".");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"..");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"SETUP.EXE");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"F0_");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"F0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"F0_OO1.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"f0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"F0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"F0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitUnicodeString(&Expression, L"F0_<\"*");
-    RtlInitUnicodeString(&Name, L".");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"..");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"SETUP.EXE");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"f0_.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"f0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_001");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_OO1.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"f0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"f0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"F0_001.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, TRUE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"*.TTF");
-    RtlInitUnicodeString(&Name, L".");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"..");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"SETUP.INI");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitUnicodeString(&Expression, L"*");
-    RtlInitUnicodeString(&Name, L".");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"..");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"SETUP.INI");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L".*");
-    RtlInitUnicodeString(&Name, L"1");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"01");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L" ");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L".");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n"); 
-    RtlInitUnicodeString(&Name, L"1.txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n"); 
-    RtlInitUnicodeString(&Name, L" .txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n"); 
-    RtlInitUnicodeString(&Name, L".txt");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n"); 
-
-    RtlInitUnicodeString(&Expression, L"\"ntoskrnl.exe");
-    RtlInitUnicodeString(&Name, L"ntoskrnl.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Expression, L"ntoskrnl\"exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Expression, L"ntoskrn\".exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Expression, L"ntoskrn\"\"exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Expression, L"ntoskrnl.\"exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Expression, L"ntoskrnl.exe\"");
-    RtlInitUnicodeString(&Name, L"ntoskrnl.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"ntoskrnl.exe.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"*.c.d");
-    RtlInitUnicodeString(&Name, L"a.b.c.d");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Expression, L"*.?.c.d");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Expression, L"*?");
-    if (!KmtIsCheckedBuild)
-    {
-        RtlInitUnicodeString(&Name, L"");
-        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    }
-    RtlInitUnicodeString(&Name, L"a");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"aa");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"aaa");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Expression, L"?*?");
-    if (!KmtIsCheckedBuild)
-    {
-        RtlInitUnicodeString(&Name, L"");
-        ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    }
-    RtlInitUnicodeString(&Name, L"a");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"aa");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"aaa");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"aaaa");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    /* Tests from #5923 */
-    RtlInitUnicodeString(&Expression, L"C:\\ReactOS\\**");
-    RtlInitUnicodeString(&Name, L"C:\\ReactOS\\dings.bmp");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Expression, L"C:\\ReactOS\\***");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Expression, L"C:\\Windows\\*a*");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitUnicodeString(&Expression, L"C:\\ReactOS\\*.bmp");
-    RtlInitUnicodeString(&Name, L"C:\\Windows\\explorer.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Expression, L"*.bmp;*.dib");
-    RtlInitUnicodeString(&Name, L"winhlp32.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    /* Backtracking tests */
-    RtlInitUnicodeString(&Expression, L"*.*.*.*");
-    RtlInitUnicodeString(&Name, L"127.0.0.1");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"*?*?*?*");
-    RtlInitUnicodeString(&Name, L"1.0.0.1");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Expression, L"?*?*?*?");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Expression, L"?.?.?.?");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"*a*ab*abc");
-    RtlInitUnicodeString(&Name, L"aabaabcdadabdabc");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    /* Tests for extra wildcards */
-    RtlInitUnicodeString(&Expression, L"ab<exe");
-    RtlInitUnicodeString(&Name, L"abcd.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"ab.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"abcdexe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"acd.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Expression, L"a.b<exe");
-    RtlInitUnicodeString(&Name, L"a.bcd.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Expression, L"a<b.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"a.b.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitUnicodeString(&Expression, L"abc.exe\"");
-    RtlInitUnicodeString(&Name, L"abc.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"abc.exe.");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"abc.exe.back");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"abc.exes");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitUnicodeString(&Expression, L"a>c.exe");
-    RtlInitUnicodeString(&Name, L"abc.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitUnicodeString(&Name, L"ac.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Expression, L"a>>>exe");
-    RtlInitUnicodeString(&Name, L"abc.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitUnicodeString(&Name, L"ac.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitUnicodeString(&Expression, L"<.exe");
-    RtlInitUnicodeString(&Name, L"test.exe");
-    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE\n");
+    /* TODO: test UpcaseTable */
 }
 
 static VOID FsRtlIsDbcsInExpressionTest()
 {
-    ANSI_STRING Expression, Name;
-
-    if (!KmtIsCheckedBuild)
+    ULONG i;
+    for (i = 0; i < sizeof(Tests) / sizeof(Tests[0]); i++)
     {
-        RtlInitAnsiString(&Expression, "*");
-        RtlInitAnsiString(&Name, "");
-        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-        RtlInitAnsiString(&Expression, "");
-        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
+        BOOLEAN TestResult;
+        UNICODE_STRING UExpression;
+        UNICODE_STRING UName;
+        ANSI_STRING Expression;
+        ANSI_STRING Name;
+
+        /* Don't run Tests which are known to assert in checked builds */
+        if (KmtIsCheckedBuild && Tests[i].AssertsInChecked)
+            continue;
+
+        /* Ignore Tests flagged IgnoreCase==TRUE to avoid duplicated testing */
+        if (Tests[i].IgnoreCase)
+            continue;
+
+        RtlInitUnicodeString(&UExpression, Tests[i].Expression);
+        RtlInitUnicodeString(&UName, Tests[i].Name);
+
+        RtlUnicodeStringToAnsiString(&Expression, &UExpression, TRUE);
+        RtlUnicodeStringToAnsiString(&Name, &UName, TRUE);
+
+        TestResult = FsRtlIsDbcsInExpression(&Expression, &Name);
+
+        ok(TestResult == Tests[i].Expected, "FsRtlIsDbcsInExpression(%Z,%Z): Expected %s, got %s\n",
+           &Expression, &Name, Tests[i].Expected ? "TRUE" : "FALSE", TestResult ? "TRUE" : "FALSE");
+
+        RtlFreeAnsiString(&Expression);
+        RtlFreeAnsiString(&Name);
     }
-
-    RtlInitAnsiString(&Expression, "**");
-    if (!KmtIsCheckedBuild)
-    {
-        RtlInitAnsiString(&Name, "");
-        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    }
-    RtlInitAnsiString(&Name, "a");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, "ntdll.dll");
-    RtlInitAnsiString(&Name, ".");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "~1");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "..");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "ntdll.dll");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, "smss.exe");
-    RtlInitAnsiString(&Name, ".");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "~1");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "..");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "ntdll.dll");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "NTDLL.dll");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Expression, "nt??krnl.???");
-    RtlInitAnsiString(&Name, "ntoskrnl.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, "he*o");
-    RtlInitAnsiString(&Name, "hello");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "helo");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "hella");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Expression, "he*");
-    RtlInitAnsiString(&Name, "hello");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "helo");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "hella");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, "*.cpl");
-    RtlInitAnsiString(&Name, "kdcom.dll");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "bootvid.dll");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "ntoskrnl.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Expression, ".");
-    RtlInitAnsiString(&Name, "NTDLL.DLL");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Expression, "F0_*.*");
-    RtlInitAnsiString(&Name, ".");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "..");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "SETUP.EXE");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "f0_");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "f0_.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "F0_001");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Name, "f0_001");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_001.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "f0_001.txt");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_001.txt");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
- 
-    RtlInitAnsiString(&Expression, "F0_*.");
-    RtlInitAnsiString(&Name, ".");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "..");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "SETUP.EXE");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "f0_");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "f0_.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "F0_001");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "f0_001");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_OO1.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "f0_001.txt");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_001.txt");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Expression, "F0_<\"*");
-    RtlInitAnsiString(&Name, ".");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "..");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "SETUP.EXE");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "f0_");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "f0_.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "F0_001");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "f0_001");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_OO1.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "f0_001.txt");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "F0_001.txt");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, "*.TTF");
-    RtlInitAnsiString(&Name, ".");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "..");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "SETUP.INI");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Expression, "*");
-    RtlInitAnsiString(&Name, ".");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "..");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "SETUP.INI");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, ".*");
-    RtlInitAnsiString(&Name, "1");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "01");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, " ");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    if (!KmtIsCheckedBuild)
-    {
-        RtlInitAnsiString(&Name, "");
-        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    }
-    RtlInitAnsiString(&Name, ".");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n"); 
-    RtlInitAnsiString(&Name, "1.txt");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n"); 
-    RtlInitAnsiString(&Name, " .txt");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n"); 
-    RtlInitAnsiString(&Name, ".txt");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n"); 
-
-    RtlInitAnsiString(&Expression, "\"ntoskrnl.exe");
-    RtlInitAnsiString(&Name, "ntoskrnl.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Expression, "ntoskrnl\"exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Expression, "ntoskrn\".exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Expression, "ntoskrn\"\"exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Expression, "ntoskrnl.\"exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Expression, "ntoskrnl.exe\"");
-    RtlInitAnsiString(&Name, "ntoskrnl.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "ntoskrnl.exe.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, "*.c.d");
-    RtlInitAnsiString(&Name, "a.b.c.d");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Expression, "*.?.c.d");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Expression, "*?");
-    if (!KmtIsCheckedBuild)
-    {
-        RtlInitAnsiString(&Name, "");
-        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    }
-    RtlInitAnsiString(&Name, "a");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "aa");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "aaa");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Expression, "?*?");
-    if (!KmtIsCheckedBuild)
-    {
-        RtlInitAnsiString(&Name, "");
-        ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    }
-    RtlInitAnsiString(&Name, "a");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "aa");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "aaa");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "aaaa");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    /* Tests from #5923 */
-    RtlInitAnsiString(&Expression, "C:\\ReactOS\\**");
-    RtlInitAnsiString(&Name, "C:\\ReactOS\\dings.bmp");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Expression, "C:\\ReactOS\\***");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Expression, "C:\\Windows\\*a*");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Expression, "C:\\ReactOS\\*.bmp");
-    RtlInitAnsiString(&Name, "C:\\Windows\\explorer.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Expression, "*.bmp;*.dib");
-    RtlInitAnsiString(&Name, "winhlp32.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    /* Backtracking tests */
-    RtlInitAnsiString(&Expression, "*.*.*.*");
-    RtlInitAnsiString(&Name, "127.0.0.1");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, "*?*?*?*");
-    RtlInitAnsiString(&Name, "1.0.0.1");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Expression, "?*?*?*?");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Expression, "?.?.?.?");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, "*a*ab*abc");
-    RtlInitAnsiString(&Name, "aabaabcdadabdabc");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    /* Tests for extra wildcards */
-    RtlInitAnsiString(&Expression, "ab<exe");
-    RtlInitAnsiString(&Name, "abcd.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "ab.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "abcdexe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "acd.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Expression, "a.b<exe");
-    RtlInitAnsiString(&Name, "a.bcd.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Expression, "a<b.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "a.b.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-
-    RtlInitAnsiString(&Expression, "abc.exe\"");
-    RtlInitAnsiString(&Name, "abc.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "abc.exe.");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "abc.exe.back");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "abc.exes");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Expression, "a>c.exe");
-    RtlInitAnsiString(&Name, "abc.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
-    RtlInitAnsiString(&Name, "ac.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Expression, "a>>>exe");
-    RtlInitAnsiString(&Name, "abc.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-    RtlInitAnsiString(&Name, "ac.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE\n");
-
-    RtlInitAnsiString(&Expression, "<.exe");
-    RtlInitAnsiString(&Name, "test.exe");
-    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE\n");
 }
 
 START_TEST(FsRtlExpression)
