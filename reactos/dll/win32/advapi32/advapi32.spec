@@ -113,10 +113,10 @@
 @ stdcall CredGetSessionTypes(long ptr)
 @ stub CredGetTargetInfoA
 @ stub CredGetTargetInfoW
-@ stub CredIsMarshaledCredentialA
-@ stub CredIsMarshaledCredentialW
-@ stub CredMarshalCredentialA
-@ stub CredMarshalCredentialW
+@ stdcall CredIsMarshaledCredentialA(str)
+@ stdcall CredIsMarshaledCredentialW(wstr)
+@ stdcall CredMarshalCredentialA(long ptr str)
+@ stdcall CredMarshalCredentialW(long ptr wstr)
 @ stub CredProfileLoaded
 @ stdcall CredReadA(str long long ptr)
 @ stdcall CredReadDomainCredentialsA(ptr long ptr ptr)
