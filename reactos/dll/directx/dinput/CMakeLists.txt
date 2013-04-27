@@ -23,6 +23,7 @@ add_library(dinput SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/dinput.def)
 
 add_library(dinput_data_formats data_formats.c)
+add_dependencies(dinput_data_formats psdk)
 set_module_type(dinput win32dll UNICODE)
 target_link_libraries(dinput dxguid uuid wine)
 add_importlibs(dinput comctl32 ole32 user32 advapi32 msvcrt kernel32 ntdll)
