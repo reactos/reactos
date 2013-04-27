@@ -8,7 +8,9 @@ elseif(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE arm/kdbg.c)
 endif(ARCH STREQUAL "i386")
-list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
+list(APPEND SOURCE
+    kdcom.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
 
 add_library(kdcom SHARED ${SOURCE})
 

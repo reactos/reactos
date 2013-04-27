@@ -5,6 +5,7 @@ add_library(kdcom SHARED
     kdcom.c
     kddll.c
     kdserial.c
+    kdcom.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
 
 set_entrypoint(kdcom 0)
