@@ -55,7 +55,7 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Append(IUnknown *punk)
     if (punk == NULL)
         return E_FAIL;
 
-    fObjects = reinterpret_cast<ACLMultiSublist *>(
+    fObjects = static_cast<ACLMultiSublist *>(
         CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * (fObjectCount + 1)));
     fObjects[fObjectCount].punk = punk;
     punk->AddRef();
@@ -78,7 +78,7 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Remove(IUnknown *punk)
             release_obj(&fObjects[i]);
             MoveMemory(&fObjects[i], &fObjects[i + 1], (fObjectCount - i - 1) * sizeof(ACLMultiSublist));
             fObjectCount--;
-            fObjects = reinterpret_cast<ACLMultiSublist *>(
+            fObjects = static_cast<ACLMultiSublist *>(
                 CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * fObjectCount));
             return S_OK;
         }

@@ -326,7 +326,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
         }
 
 
-        NewBand = reinterpret_cast<struct BandObject *>(CoTaskMemAlloc(NewAllocated * sizeof(struct BandObject)));
+        NewBand = static_cast<struct BandObject *>(CoTaskMemAlloc(NewAllocated * sizeof(struct BandObject)));
         if (NewBand == NULL)
         {
             hRet = E_OUTOFMEMORY;
@@ -351,7 +351,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
         ASSERT(fBandsCount == 0);
 
         /* Allocate new array */
-        fBands = reinterpret_cast<struct BandObject *>(CoTaskMemAlloc(8 * sizeof(struct BandObject)));
+        fBands = static_cast<struct BandObject *>(CoTaskMemAlloc(8 * sizeof(struct BandObject)));
         if (fBands == NULL)
         {
             hRet = E_OUTOFMEMORY;

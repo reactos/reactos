@@ -60,7 +60,7 @@ TODO:
     Refactor drop down menu code to use a common function since code is so similar
 */
 
-extern HRESULT WINAPI SHBindToFolder(LPITEMIDLIST path, IShellFolder **newFolder);
+extern HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder);
 extern HRESULT CreateToolsBar(REFIID riid, void **ppv);
 extern HRESULT CreateBrandBand(REFIID riid, void **ppv);
 extern HRESULT CreateBandProxy(REFIID riid, void **ppv);

@@ -130,29 +130,10 @@ BOOL                                        createNewStuff = false;
 extern HRESULT CreateTravelLog(REFIID riid, void **ppv);
 extern HRESULT CreateBaseBar(REFIID riid, void **ppv);
 extern HRESULT CreateBaseBarSite(REFIID riid, void **ppv);
-#ifndef ROS_Headers
-SHSTDAPI_(void *) SHAlloc(SIZE_T cb);
-#endif
 
 // temporary
 extern HRESULT CreateInternetToolbar(REFIID riid, void **ppv);
 
-
-#ifdef SetWindowLongPtr
-#undef SetWindowLongPtr
-inline LONG_PTR SetWindowLongPtr(HWND hWnd, int nIndex, LONG_PTR dwNewLong)
-{
-	return SetWindowLong(hWnd, nIndex, (LONG)dwNewLong);
-}
-#endif
-
-#ifdef GetWindowLongPtr
-#undef GetWindowLongPtr
-inline LONG_PTR GetWindowLongPtr(HWND hWnd, int nIndex)
-{
-	return (LONG_PTR)GetWindowLong(hWnd, nIndex);
-}
-#endif
 
 HMENU SHGetMenuFromID(HMENU topMenu, int theID)
 {
@@ -204,7 +185,7 @@ void DeleteMenuItems(HMENU theMenu, unsigned int firstIDToDelete, unsigned int l
     }
 }
 
-HRESULT WINAPI SHBindToFolder(LPITEMIDLIST path, IShellFolder **newFolder)
+HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder)
 {
     CComPtr<IShellFolder>                   desktop;
 
@@ -359,7 +340,7 @@ public:
     HRESULT Initialize(LPITEMIDLIST pidl, long b, long c, long d);
 public:
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
-    HRESULT BrowseToPath(IShellFolder *newShellFolder, LPITEMIDLIST absolutePIDL,
+    HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
         FOLDERSETTINGS *folderSettings, long flags);
     HRESULT GetMenuBand(REFIID riid, void **shellMenu);
     HRESULT GetBaseBar(bool vertical, IUnknown **theBaseBar);
@@ -880,10 +861,10 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
 
     // called by shell view to browse to new folder
     // also called by explorer band to navigate to new folder
-    hResult = SHBindToFolder(const_cast<LPITEMIDLIST>(pidl), &newFolder);
+    hResult = SHBindToFolder(pidl, &newFolder);
     newFolderSettings.ViewMode = FVM_LIST;
     newFolderSettings.fFlags = 0;
-    hResult = BrowseToPath(newFolder, const_cast<LPITEMIDLIST>(pidl), &newFolderSettings, flags);
+    hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
     if (FAILED(hResult))
         return hResult;
     return S_OK;
@@ -974,7 +955,7 @@ long IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT cch
 }
 
 HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
-    LPITEMIDLIST absolutePIDL, FOLDERSETTINGS *folderSettings, long flags)
+    LPCITEMIDLIST absolutePIDL, FOLDERSETTINGS *folderSettings, long flags)
 {
     CComPtr<IOleCommandTarget>              oleCommandTarget;
     CComPtr<IObjectWithSite>                objectWithSite;
@@ -1890,7 +1871,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::TranslateAcceleratorSB(MSG *pmsg, WORD 
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
 {
-    return BrowseToPIDL(const_cast<LPITEMIDLIST>(pidl), BTP_UPDATE_CUR_HISTORY | BTP_UPDATE_NEXT_HISTORY);
+    return BrowseToPIDL(pidl, BTP_UPDATE_CUR_HISTORY | BTP_UPDATE_NEXT_HISTORY);
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetViewStateStream(DWORD grfMode, IStream **ppStrm)
@@ -2949,7 +2930,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::LoadHistory(IStream *pStream, IBindCtx 
         return E_FAIL;
     if (oldState.browseType != 2)
         return E_FAIL;
-    pidl = (LPITEMIDLIST)SHAlloc(oldState.pidlSize);
+    pidl = static_cast<LPITEMIDLIST>(CoTaskMemAlloc(oldState.pidlSize));
     if (pidl == NULL)
         return E_OUTOFMEMORY;
     hResult = pStream->Read(pidl, oldState.pidlSize, &numRead);
@@ -3090,17 +3071,17 @@ LRESULT CShellBrowser::OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl,
 
 LRESULT CShellBrowser::OnMapNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-#ifndef ROS_Headers
+#ifndef __REACTOS__
     WNetConnectionDialog(m_hWnd, RESOURCETYPE_DISK);
-#endif
+#endif /* __REACTOS__ */
     return 0;
 }
 
 LRESULT CShellBrowser::OnDisconnectNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-#ifndef ROS_Headers
+#ifndef __REACTOS__
     WNetDisconnectDialog(m_hWnd, RESOURCETYPE_DISK);
-#endif
+#endif /* __REACTOS__ */
     return 0;
 }
 

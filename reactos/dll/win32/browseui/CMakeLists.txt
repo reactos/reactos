@@ -2,8 +2,7 @@
 set_cpp()
 
 add_definitions(
-    -D__WINESRC__
-    -DROS_Headers)
+    -D__WINESRC__)
 
 if (MSVC)
     add_compile_flags("/EHa-")
