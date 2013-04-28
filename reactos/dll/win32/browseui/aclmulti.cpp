@@ -1,8 +1,8 @@
 /*
- *	Multisource AutoComplete list
+ *  Multisource AutoComplete list
  *
- *	Copyright 2007	Mikolaj Zalewski
- *	Copyright 2009	Andrew Hill
+ *  Copyright 2007  Mikolaj Zalewski
+ *  Copyright 2009  Andrew Hill
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,7 @@ CACLMulti::CACLMulti()
 
 CACLMulti::~CACLMulti()
 {
-    int										i;
+    int                                     i;
 
     TRACE("destroying %p\n", this);
     for (i = 0; i < fObjectCount; i++)
@@ -69,7 +69,7 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Append(IUnknown *punk)
 
 HRESULT STDMETHODCALLTYPE CACLMulti::Remove(IUnknown *punk)
 {
-    int										i;
+    int                                     i;
 
     TRACE("(%p, %p)\n", this, punk);
     for (i = 0; i < fObjectCount; i++)
@@ -109,7 +109,7 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pc
 
 HRESULT STDMETHODCALLTYPE CACLMulti::Reset()
 {
-    int										i;
+    int                                     i;
 
     fCurrentObject = 0;
     for (i = 0; i < fObjectCount; i++)
@@ -135,8 +135,8 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Clone(IEnumString **ppOut)
 
 HRESULT STDMETHODCALLTYPE CACLMulti::Expand(LPCWSTR wstr)
 {
-    HRESULT									res = S_OK;
-    int										i;
+    HRESULT                                 res = S_OK;
+    int                                     i;
 
     for (i = 0; i < fObjectCount; i++)
     {

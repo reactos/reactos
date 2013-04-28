@@ -324,7 +324,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
             hRet = E_OUTOFMEMORY;
             goto Cleanup;
         }
-        
+
 
         NewBand = reinterpret_cast<struct BandObject *>(CoTaskMemAlloc(NewAllocated * sizeof(struct BandObject)));
         if (NewBand == NULL)
@@ -680,7 +680,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetModeDBC(DWORD dwMode)
     {
         SetWindowLongPtr(fRebarWindow, GWL_STYLE, dwPrevStyle);
     }
-    
+
     return S_OK;
 }
 
