@@ -98,6 +98,7 @@ Abstract:
 #define NTDDI_WS08SP3                       NTDDI_WIN6SP3
 #define NTDDI_WS08SP4                       NTDDI_WIN6SP4
 #define NTDDI_WIN7                          0x06010000
+#define NTDDI_WIN8                          0x06020000
 
 /* Version Fields in NTDDI_VERSION */
 #define OSVERSION_MASK                      0xFFFF0000UL

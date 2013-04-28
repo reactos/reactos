@@ -836,6 +836,39 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
 #define SHCreateWorkerWindow SHCreateWorkerWindowA
 #endif
 
+/*****************************************************************************
+ * Shell Link
+ */
+#include <pshpack1.h>
+
+typedef struct tagSHELL_LINK_HEADER
+{
+    /* The size of this structure (always 0x0000004C) */
+    DWORD dwSize;
+    /* CLSID = class identifier (always 00021401-0000-0000-C000-000000000046) */
+    CLSID clsid;
+    /* Flags (SHELL_LINK_DATA_FLAGS) */
+    DWORD dwFlags;
+    /* Informations about the link target: */
+    DWORD dwFileAttributes;
+    FILETIME ftCreationTime;
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD nFileSizeLow; /* only the least significant 32 bits */
+    /* The index of an icon (signed?) */
+    DWORD nIconIndex;
+    /* The expected window state of an application launched by the link */
+    DWORD nShowCommand;
+    /* The keystrokes used to launch the application */
+    WORD wHotKey;
+    /* Reserved (must be zero) */
+    WORD wReserved1;
+    DWORD dwReserved2;
+    DWORD dwReserved3;
+} SHELL_LINK_HEADER, *LPSHELL_LINK_HEADER;
+
+#include <poppack.h>
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
