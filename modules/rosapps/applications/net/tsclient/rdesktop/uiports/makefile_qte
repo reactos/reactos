@@ -1,0 +1,24 @@
+#
+# qterdesktop makefile
+# qt should be installed in /usr/local/qt
+#
+CC = g++
+CPPFLAGS = -DQWS -fno-exceptions -fno-rtti -Wall -Os -Wall -I/usr/local/qt/include -DWITH_RDPSND -DNO_DEBUG
+RESTOBJ = ../tcp.o ../iso.o ../mcs.o ../secure.o ../rdp.o ../rdp5.o ../orders.o ../cache.o ../mppc.o ../licence.o ../bitmap.o ../channels.o ../pstcache.o ../rdpsnd.o ../rdpsnd_oss.o
+LD2FLAGS = -L/usr/local/qt/lib
+LDFLAGS = -lcrypto -lqte
+MOCFILE = /usr/local/qt/bin/moc
+
+all: qtrd
+
+qtrd: $(RESTOBJ) qtewin.o
+	$(MOCFILE) qtewin.h > moc_qtewin.cpp
+	$(CC) $(CPPFLAGS) -c moc_qtewin.cpp
+	$(CC) -o qterdesktop $(LD2FLAGS) qtewin.o moc_qtewin.o $(RESTOBJ) $(LDFLAGS)
+	strip qterdesktop
+
+clean:
+	rm -f qterdesktop
+	rm -f *.o
+	rm -f ../*.o
+	rm -f moc_qtewin.cpp

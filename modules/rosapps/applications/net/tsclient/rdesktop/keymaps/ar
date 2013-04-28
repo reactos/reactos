@@ -1,0 +1,98 @@
+# generated from XKB map ar
+include common
+map 0x401
+exclam 0x02 shift
+at 0x03 shift
+numbersign 0x04 shift
+dollar 0x05 shift
+percent 0x06 shift
+asciicircum 0x07 shift
+ampersand 0x08 shift
+asterisk 0x09 shift
+parenleft 0x0a shift
+parenright 0x0b shift
+minus 0x0c
+underscore 0x0c shift
+equal 0x0d
+plus 0x0d shift
+Arabic_dad 0x10 altgr
+Arabic_fatha 0x10 shift altgr
+Arabic_sad 0x11 altgr
+Arabic_fathatan 0x11 shift altgr
+Arabic_theh 0x12 altgr
+Arabic_damma 0x12 shift altgr
+Arabic_qaf 0x13 altgr
+Arabic_dammatan 0x13 shift altgr
+Arabic_feh 0x14 altgr
+UFEF9 0x14 shift altgr
+Arabic_ghain 0x15 altgr
+Arabic_hamzaunderalef 0x15 shift altgr
+Arabic_ain 0x16 altgr
+grave 0x16 shift altgr
+Arabic_ha 0x17 altgr
+division 0x17 shift altgr
+Arabic_khah 0x18 altgr
+multiply 0x18 shift altgr
+Arabic_hah 0x19 altgr
+Arabic_semicolon 0x19 shift altgr
+bracketleft 0x1a
+braceleft 0x1a shift
+Arabic_jeem 0x1a altgr
+bracketright 0x1b
+braceright 0x1b shift
+Arabic_dal 0x1b altgr
+Arabic_sheen 0x1e altgr
+backslash 0x1e shift altgr
+Arabic_seen 0x1f altgr
+Arabic_yeh 0x20 altgr
+bracketleft 0x20 shift altgr
+Arabic_beh 0x21 altgr
+bracketright 0x21 shift altgr
+Arabic_lam 0x22 altgr
+UFEF7 0x22 shift altgr
+Arabic_alef 0x23 altgr
+Arabic_hamzaonalef 0x23 shift altgr
+Arabic_teh 0x24 altgr
+Arabic_tatweel 0x24 shift altgr
+Arabic_noon 0x25 altgr
+Arabic_comma 0x25 shift altgr
+Arabic_meem 0x26 altgr
+slash 0x26 shift altgr
+semicolon 0x27
+colon 0x27 shift
+Arabic_kaf 0x27 altgr
+apostrophe 0x28
+quotedbl 0x28 shift
+Arabic_tah 0x28 altgr
+grave 0x29
+asciitilde 0x29 shift
+Arabic_thal 0x29 altgr
+Arabic_shadda 0x29 shift altgr
+backslash 0x2b
+bar 0x2b shift
+less 0x2b altgr
+greater 0x2b shift altgr
+Arabic_hamzaonyeh 0x2c altgr
+asciitilde 0x2c shift altgr
+Arabic_hamza 0x2d altgr
+Arabic_sukun 0x2d shift altgr
+Arabic_hamzaonwaw 0x2e altgr
+Arabic_kasra 0x2e shift altgr
+Arabic_ra 0x2f altgr
+Arabic_kasratan 0x2f shift altgr
+UFEFB 0x30 altgr
+UFEF5 0x30 shift altgr
+Arabic_alefmaksura 0x31 altgr
+Arabic_maddaonalef 0x31 shift altgr
+Arabic_tehmarbuta 0x32 altgr
+apostrophe 0x32 shift altgr
+comma 0x33
+less 0x33 shift
+Arabic_waw 0x33 altgr
+period 0x34
+greater 0x34 shift
+Arabic_zain 0x34 altgr
+slash 0x35
+question 0x35 shift
+Arabic_zah 0x35 altgr
+Arabic_question_mark 0x35 shift altgr

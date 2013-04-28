@@ -1,0 +1,32 @@
+// French (France) resources
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_APP_TITLE           "Console TaskManager v0.1 par Aleksey Bragin <aleksey@studiocerebral.com>"
+
+   IDS_COLUMN_NUMBER       "# "
+   IDS_COLUMN_IMAGENAME    "Image name                "
+   IDS_COLUMN_PID          "PID  "
+   IDS_COLUMN_CPU          "CPU"
+   IDS_COLUMN_MEM          "Util. mém"
+   IDS_COLUMN_MEM_UNIT		"KO"
+   IDS_COLUMN_PF           "Défauts de page"
+
+   IDS_IDLE_PROCESS        "Processus inactif du système"
+   IDS_YES                 "O"
+   IDS_NO                  "N"
+
+   IDS_MENU                "Menu: Quitter (q), Tuer processus (t)"
+   IDS_MENU_QUIT           "Q"
+   IDS_MENU_KILL_PROCESS   "T"
+
+   IDS_KILL_PROCESS        "Etes-vous sûr de vouloir tuer ce processus (o/n) ?"
+   IDS_KILL_PROCESS_ERR1   "Impossible de terminer ce processus..."
+   IDS_KILL_PROCESS_ERR2   "Impossible de terminer le processus %d (erreur lors de OpenProcess)"
+
+   IDS_CTM_GENERAL_ERR1    "ctm: impossible d'utiliser la console."
+   IDS_CTM_GENERAL_ERR2    "ctm: impossible de récupérer les paramètres de la console d'entrée."
+   IDS_CTM_GENERAL_ERR3    "ctm: impossible de récupérer les paramètres de la console de sortie."
+END

@@ -1,0 +1,169 @@
+# rdesktop Swiss-German (de-ch) keymap file 
+# 2003-06-03 by noldi@tristar.ch 
+#
+include common
+map 0x00000807
+#
+# Scan Code 1
+section 0x29
+degree 0x29 shift
+notsign 0x29 altgr inhibit
+#
+# Scan Code 2
+plus 0x2 shift
+brokenbar 0x02 altgr
+#
+# Scan Code 3
+quotedbl 0x03 shift
+at 0x03 altgr
+#
+# Scan Code 4
+asterisk 0x04 shift
+numbersign 0x04 altgr
+#
+# Scan Code 5
+ccedilla 0x05 shift
+onequarter 0x05 altgr inhibit
+#
+# Scan Code 6
+percent 0x06 shift
+onehalf 0x06 altgr inhibit
+#
+# Scan Code 7
+ampersand 0x07 shift
+notsign 0x07 altgr
+#
+# Scan Code 8
+slash 0x08 shift
+bar 0x08 altgr
+#
+# Scan Code 9
+parenleft 0x09 shift
+cent 0x09 altgr
+# 
+# Scan Code 10
+parenright 0x0a shift
+#
+# Scan Code 11
+equal 0x0b shift
+braceright 0x0b altgr inhibit
+#
+# Scan Code 12
+apostrophe 0x0c 
+question 0x0c shift
+dead_acute 0x0c altgr
+#
+# Scan Code 13
+dead_circumflex 0x0d
+dead_grave 0x0d shift
+dead_tilde 0x0d altgr
+#
+# Scan Code 19
+EuroSign 0x12 altgr
+#
+# Scan Code 22
+z 0x15 addupper
+#
+# Scan Code 27
+udiaeresis 0x1a
+egrave 0x1a shift
+bracketleft 0x1a altgr
+# 
+# Scan Code 28
+dead_diaeresis 0x1b
+exclam 0x1b shift 
+bracketright 0x1b altgr
+#
+# Scan Code 40
+odiaeresis 0x27
+eacute 0x27 shift
+#
+# Scan Code 41
+adiaeresis 0x28
+agrave 0x28 shift
+braceleft 0x28 altgr
+#
+# Scan Code 42 (only on international keyboards)
+dollar 0x2b
+sterling 0x2b shift
+braceright 0x2b altgr
+#
+# Scan Code 45 (only on international keyboards)
+backslash 0x56 altgr
+#
+# Scan Code 46
+y 0x2c addupper
+# 
+# Scan Code 53
+comma 0x33
+semicolon 0x33 shift
+# 
+# Scan Code 54
+period 0x34
+colon 0x34 shift
+#
+# Scan Code 55
+minus 0x35 
+underscore 0x35 shift
+#
+# Suppress Windows unsupported AltGr keys
+#
+# Scan Code 17
+paragraph 0x10 altgr inhibit
+#
+# Scan Code 21
+tslash 0x14 altgr inhibit
+#
+# Scan Code 22
+leftarrow 0x15 altgr inhibit
+#
+# Scan Code 23
+downarrow 0x16 altgr inhibit
+#
+# Scan Code 24
+rightarrow 0x17 altgr inhibit
+#
+# Scan Code 25
+oslash 0x18 altgr inhibit
+#
+# Scan Code 26
+thorn 0x19 altgr inhibit
+#
+# Scan Code 31
+ae 0x1e altgr inhibit
+#
+# Scan Code 32
+ssharp 0x1f altgr inhibit
+#
+# Scan Code 33
+eth 0x20 altgr inhibit
+#
+# Scan Code 34
+dstroke 0x21 altgr inhibit
+#
+# Scan Code 35
+eng 0x22 altgr inhibit
+#
+# Scan Code 36
+hstroke 0x23 altgr inhibit
+#
+# Scan Code 38
+kra 0x25 altgr inhibit
+#
+# Scan Code 39
+lstroke 0x26 altgr inhibit
+#
+# Scan Code 46
+guillemotleft 0x2c altgr inhibit
+#
+# Scan Code 47
+guillemotright 0x2d altgr inhibit
+#
+# Scan Code 49
+leftdoublequotemark 0x2f altgr inhibit
+#
+# Scan Code 50
+rightdoublequotemark 0x30 altgr inhibit
+#
+# Scan Code 52
+mu 0x32 altgr inhibit

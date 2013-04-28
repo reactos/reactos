@@ -1,0 +1,8 @@
+[]===============================[chklib.exe]================================[]
+
+ Purpose: Check a Dynamic Link Library (DLL) for loading
+ Author:  Emanuele Aliberti
+ License: GPL
+ 
+ Usage: chklib.exe module [symbol [, ...]]
+
