@@ -97,7 +97,8 @@ extern "C" long WINAPI IDataObject_GetDeskBandState(long param8)
 /*************************************************************************
  * SHCreateIETHREADPARAM		[BROWSEUI.123]
  */
-extern "C" IEThreadParamBlock *WINAPI SHCreateIETHREADPARAM(long param8, long paramC, IUnknown *param10, IUnknown *param14)
+extern "C" IEThreadParamBlock *WINAPI SHCreateIETHREADPARAM(
+	long param8, long paramC, IUnknown *param10, IUnknown *param14)
 {
 	IEThreadParamBlock						*result;
 
@@ -250,7 +251,8 @@ extern "C" HRESULT WINAPI SHEnumClassesOfCategories(long param8, long paramC, lo
 /*************************************************************************
  * SHWriteClassesOfCategories	[BROWSEUI.137]
  */
-extern "C" HRESULT WINAPI SHWriteClassesOfCategories(long param8, long paramC, long param10, long param14, long param18, long param1C, long param20)
+extern "C" HRESULT WINAPI SHWriteClassesOfCategories(long param8, long paramC, long param10,
+	long param14, long param18, long param1C, long param20)
 {
 	return E_NOTIMPL;
 }

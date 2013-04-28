@@ -141,7 +141,7 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Invoke(IUnknown *punk)
 	CComPtr<IStream>						globalStream;
 	HRESULT									hResult;
 
-	hResult = punk->QueryInterface(IID_IPersistHistory, (void **)&persistHistory);
+	hResult = punk->QueryInterface(IID_IPersistHistory, reinterpret_cast<void **>(&persistHistory));
 	if (FAILED(hResult))
 		return hResult;
 	hResult = CreateStreamOnHGlobal(fPersistState, FALSE, &globalStream);
@@ -166,7 +166,7 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
 	fPIDL = NULL;
 	GlobalFree(fPersistState);
 	fPersistState = NULL;
-	hResult = punk->QueryInterface(IID_ITravelLogClient, (void **)&travelLogClient);
+	hResult = punk->QueryInterface(IID_ITravelLogClient, reinterpret_cast<void **>(&travelLogClient));
 	if (FAILED(hResult))
 		return hResult;
 	hResult = travelLogClient->GetWindowData(&windowData);
@@ -174,7 +174,7 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
 		return hResult;
 	fPIDL = windowData.pidl;
 	// TODO: Properly free the windowData
-	hResult = punk->QueryInterface(IID_IPersistHistory, (void **)&persistHistory);
+	hResult = punk->QueryInterface(IID_IPersistHistory, reinterpret_cast<void **>(&persistHistory));
 	if (FAILED(hResult))
 		return hResult;
 	globalStorage = GlobalAlloc(GMEM_FIXED, 0);
@@ -363,7 +363,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::GetTravelEntry(IUnknown *punk, int iOffset
 	hResult = FindRelativeEntry(iOffset, &destinationEntry);
 	if (FAILED(hResult))
 		return hResult;
-	return destinationEntry->QueryInterface(IID_ITravelEntry, (void **)ppte);
+	return destinationEntry->QueryInterface(IID_ITravelEntry, reinterpret_cast<void **>(ppte));
 }
 
 HRESULT STDMETHODCALLTYPE CTravelLog::FindTravelEntry(IUnknown *punk, LPCITEMIDLIST pidl, ITravelEntry **ppte)
@@ -424,7 +424,8 @@ static void FixAmpersands(wchar_t *buffer)
 	wcscpy(buffer, tempBuffer);
 }
 
-HRESULT STDMETHODCALLTYPE CTravelLog::InsertMenuEntries(IUnknown *punk, HMENU hmenu, int nPos, int idFirst, int idLast, DWORD dwFlags)
+HRESULT STDMETHODCALLTYPE CTravelLog::InsertMenuEntries(IUnknown *punk, HMENU hmenu,
+	int nPos, int idFirst, int idLast, DWORD dwFlags)
 {
 	CTravelEntry							*currentItem;
 	MENUITEMINFO							menuItemInfo;
@@ -570,8 +571,8 @@ HRESULT CreateTravelLog(REFIID riid, void **ppv)
 	ATLTRY (theTravelLog = new CComObject<CTravelLog>);
 	if (theTravelLog == NULL)
 		return E_OUTOFMEMORY;
-	hResult = theTravelLog->QueryInterface (riid, (void **)ppv);
-	if (FAILED (hResult))
+	hResult = theTravelLog->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+	if (FAILED(hResult))
 	{
 		delete theTravelLog;
 		return hResult;

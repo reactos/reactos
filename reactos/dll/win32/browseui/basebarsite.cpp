@@ -83,11 +83,12 @@ private:
 	virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
 
 	// *** IWinEventHandler methods ***
-	virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
+	virtual HRESULT STDMETHODCALLTYPE OnWinEvent(
+		HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
 	virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
 
 	// *** IInputObjectSite specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS (IUnknown *punkObj, BOOL fSetFocus);
+    virtual HRESULT STDMETHODCALLTYPE OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus);
 
     // *** IDeskBarClient methods ***
     virtual HRESULT STDMETHODCALLTYPE SetDeskBarSite(IUnknown *punkSite);
@@ -96,13 +97,16 @@ private:
     virtual HRESULT STDMETHODCALLTYPE GetSize(DWORD dwWhich, LPRECT prc);
 
 	// *** IOleCommandTarget methods ***
-	virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-	virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+	virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
+		OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
+	virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
+		DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 
 	// *** IBandSite specific methods ***
 	virtual HRESULT STDMETHODCALLTYPE AddBand(IUnknown *punk);
 	virtual HRESULT STDMETHODCALLTYPE EnumBands(UINT uBand, DWORD *pdwBandID);
-	virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName);
+	virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState,
+		LPWSTR pszName, int cchName);
 	virtual HRESULT STDMETHODCALLTYPE SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState);
 	virtual HRESULT STDMETHODCALLTYPE RemoveBand(DWORD dwBandID);
 	virtual HRESULT STDMETHODCALLTYPE GetBandObject(DWORD dwBandID, REFIID riid, void **ppv);
@@ -165,37 +169,44 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
 	DWORD									thisBandID;
 	HRESULT									hResult;
 
-	hResult = newBar->QueryInterface(IID_IPersist, (void **)&persist);
+	hResult = newBar->QueryInterface(IID_IPersist, reinterpret_cast<void **>(&persist));
 	if (FAILED(hResult))
 		return hResult;
-	hResult = newBar->QueryInterface(IID_IObjectWithSite, (void **)&site);
+	hResult = newBar->QueryInterface(IID_IObjectWithSite, reinterpret_cast<void **>(&site));
 	if (FAILED(hResult))
 		return hResult;
-	hResult = newBar->QueryInterface(IID_IOleWindow, (void **)&oleWindow);
+	hResult = newBar->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
 	if (FAILED(hResult))
 		return hResult;
-	hResult = newBar->QueryInterface(IID_IDeskBand, (void **)&deskBand);
+	hResult = newBar->QueryInterface(IID_IDeskBand, reinterpret_cast<void **>(&deskBand));
 	if (FAILED(hResult))
 		return hResult;
-	hResult = newBar->QueryInterface(IID_IDockingWindow, (void **)&dockingWindow);
+	hResult = newBar->QueryInterface(IID_IDockingWindow, reinterpret_cast<void **>(&dockingWindow));
 	if (FAILED(hResult))
 		return hResult;
-	hResult = site->SetSite((IOleWindow *)this);
+	hResult = site->SetSite(static_cast<IOleWindow *>(this));
 	if (FAILED(hResult))
 		return hResult;
-	newInfo = new CBarInfo;
+	ATLTRY(newInfo = new CBarInfo);
 	if (newInfo == NULL)
 		return E_OUTOFMEMORY;
+
+	// set new bar info
 	thisBandID = fNextBandID++;
 	newInfo->fTheBar = newBar;
 	newInfo->fBandID = thisBandID;
 	hResult = persist->GetClassID(&newInfo->fBarClass);
+
+	// get band info
 	deskBandInfo.dwMask = DBIM_MINSIZE | DBIM_ACTUAL | DBIM_TITLE;
 	deskBandInfo.wszTitle[0] = 0;
 	hResult = deskBand->GetBandInfo(0, 0, &deskBandInfo);
+
+	// insert band
 	memset(&bandInfo, 0, sizeof(bandInfo));
 	bandInfo.cbSize = sizeof(bandInfo);
-	bandInfo.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_IDEALSIZE | RBBIM_TEXT | RBBIM_LPARAM | RBBIM_ID;
+	bandInfo.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_IDEALSIZE | RBBIM_TEXT |
+		RBBIM_LPARAM | RBBIM_ID;
 	bandInfo.fStyle = RBBS_NOGRIPPER | RBBS_VARIABLEHEIGHT;
 	bandInfo.lpText = deskBandInfo.wszTitle;
 	hResult = oleWindow->GetWindow(&bandInfo.hwndChild);
@@ -207,9 +218,11 @@ HRESULT CBaseBarSite::InsertBar(IUnknown *newBar)
 	bandInfo.cyMaxChild = 32000;
 	bandInfo.cyIntegral = 1;
 	bandInfo.cxIdeal = 0; //deskBandInfo.ptActual.x;
-	bandInfo.lParam = (LPARAM)newInfo;
-	SendMessage(RB_INSERTBANDW, -1, (LPARAM)&bandInfo);
-	hResult = dockingWindow->ShowDW(TRUE);		// this call is what makes the tree fill with contents
+	bandInfo.lParam = reinterpret_cast<LPARAM>(newInfo);
+	SendMessage(RB_INSERTBANDW, -1, reinterpret_cast<LPARAM>(&bandInfo));
+
+	// this call is what makes the tree fill with contents
+	hResult = dockingWindow->ShowDW(TRUE);
 	if (FAILED(hResult))
 		return hResult;
 	// for now
@@ -252,7 +265,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryService(REFGUID guidService, REFIID
 
 	if (fDeskBarSite == NULL)
 		return E_FAIL;
-	hResult = fDeskBarSite->QueryInterface(IID_IServiceProvider, (void **)&serviceProvider);
+	hResult = fDeskBarSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
 	if (FAILED(hResult))
 		return hResult;
 	// called for SID_STopLevelBrowser, IID_IBrowserService to find top level browser
@@ -261,7 +274,8 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryService(REFGUID guidService, REFIID
 	return serviceProvider->QueryService(guidService, riid, ppvObject);
 }
 
-HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(
+	HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
 	CComPtr<IDeskBar>						deskBar;
 	CComPtr<IWinEventHandler>				winEventHandler;
@@ -275,14 +289,15 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM 
 		notifyHeader = (NMHDR *)lParam;
 		if (notifyHeader->hwndFrom == m_hWnd && notifyHeader->code == RBN_AUTOSIZE)
 		{
-			hResult = fDeskBarSite->QueryInterface(IID_IDeskBar, (void **)&deskBar);
+			hResult = fDeskBarSite->QueryInterface(IID_IDeskBar, reinterpret_cast<void **>(&deskBar));
 			GetClientRect(&newBounds);
 			hResult = deskBar->OnPosRectChangeDB(&newBounds);
 		}
 	}
 	if (fCurrentActiveBar != NULL)
 	{
-		hResult = fCurrentActiveBar->fTheBar->QueryInterface(IID_IWinEventHandler, (void **)&winEventHandler);
+		hResult = fCurrentActiveBar->fTheBar->QueryInterface(
+			IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
 		if (SUCCEEDED(hResult) && winEventHandler.p != NULL)
 			hResult = winEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
 	}
@@ -309,16 +324,16 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
 		fDeskBarSite.Release();
 	else
 	{
-		hResult = punkSite->QueryInterface(IID_IOleWindow, (void **)&oleWindow);
+		hResult = punkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
 		if (FAILED(hResult))
 			return hResult;
-		hResult = punkSite->QueryInterface(IID_IUnknown, (void **)&fDeskBarSite);
+		hResult = punkSite->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(&fDeskBarSite));
 		if (FAILED(hResult))
 			return hResult;
 		hResult = oleWindow->GetWindow(&ownerWindow);
 		if (FAILED(hResult))
 			return hResult;
-		m_hWnd = CreateWindow(REBARCLASSNAMEW, _T(""), WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS |
+		m_hWnd = CreateWindow(REBARCLASSNAMEW, NULL, WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS |
 					WS_CLIPCHILDREN |
 					RBS_VARHEIGHT | RBS_REGISTERDROP | RBS_AUTOSIZE | RBS_VERTICALGRIPPER | RBS_DBLCLKTOGGLE |
 					CCS_LEFT | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE, 0, 0, 0, 0, ownerWindow, NULL,
@@ -344,12 +359,14 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::GetSize(DWORD dwWhich, LPRECT prc)
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
+HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryStatus(const GUID *pguidCmdGroup,
+	ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBaseBarSite::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+HRESULT STDMETHODCALLTYPE CBaseBarSite::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
+	DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
 	if (IsEqualIID(*pguidCmdGroup, IID_IDeskBand))
 	{
@@ -379,7 +396,8 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::EnumBands(UINT uBand, DWORD *pdwBandID)
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName)
+HRESULT STDMETHODCALLTYPE CBaseBarSite::QueryBand(DWORD dwBandID, IDeskBand **ppstb,
+	DWORD *pdwState, LPWSTR pszName, int cchName)
 {
 	return E_NOTIMPL;
 }
@@ -449,7 +467,7 @@ LRESULT CBaseBarSite::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 {
 	NMHDR						*notifyHeader;
 
-	notifyHeader = (NMHDR *)lParam;
+	notifyHeader = reinterpret_cast<NMHDR *>(lParam);
 	if (notifyHeader->hwndFrom == m_hWnd)
 	{
 	}
@@ -467,8 +485,8 @@ HRESULT CreateBaseBarSite(REFIID riid, void **ppv)
 	ATLTRY (theBaseBarSite = new CComObject<CBaseBarSite>);
 	if (theBaseBarSite == NULL)
 		return E_OUTOFMEMORY;
-	hResult = theBaseBarSite->QueryInterface (riid, (void **)ppv);
-	if (FAILED (hResult))
+	hResult = theBaseBarSite->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+	if (FAILED(hResult))
 	{
 		delete theBaseBarSite;
 		return hResult;

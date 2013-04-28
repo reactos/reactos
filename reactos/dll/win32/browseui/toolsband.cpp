@@ -228,11 +228,11 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
 		fDockSite->Release();
 	if (pUnkSite == NULL)
 		return S_OK;
-	hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, (void **)&fDockSite);
+	hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&fDockSite));
 	if (FAILED(hResult))
 		return hResult;
 	parentWindow = NULL;
-	hResult = pUnkSite->QueryInterface(IID_IOleWindow, (void **)&oleWindow);
+	hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
 	if (SUCCEEDED(hResult))
 	{
 		oleWindow->GetWindow(&parentWindow);
@@ -241,7 +241,7 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
 	if (!::IsWindow(parentWindow))
 		return E_FAIL;
 
-	toolbar = CreateWindowEx(TBSTYLE_EX_DOUBLEBUFFER, TOOLBARCLASSNAMEW, _T(""), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+	toolbar = CreateWindowEx(TBSTYLE_EX_DOUBLEBUFFER, TOOLBARCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
 					WS_CLIPCHILDREN | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
 					CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP, 0, 0, 500, 20, parentWindow, NULL,
 					_AtlBaseModule.GetModuleInstance(), 0);
@@ -252,10 +252,13 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
 	SendMessage(WM_USER + 100, GetSystemMetrics(SM_CXEDGE) / 2, 0);
 	SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
 	SendMessage(TB_SETMAXTEXTROWS, 1, 0);
-	SendMessage(TB_SETEXTENDEDSTYLE, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
+	SendMessage(TB_SETEXTENDEDSTYLE, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS,
+		TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
 
 	HINSTANCE shell32Instance = GetModuleHandle(_T("shell32.dll"));
-	HBITMAP imageBitmap = (HBITMAP)LoadImage(shell32Instance, MAKEINTRESOURCE(214), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION);
+	HBITMAP imageBitmap = reinterpret_cast<HBITMAP>(
+		LoadImage(shell32Instance, MAKEINTRESOURCE(214),
+			IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION));
 
 	DIBSECTION bitmapInfo;
 	GetObjectW(imageBitmap, sizeof(bitmapInfo), &bitmapInfo);
@@ -363,7 +366,7 @@ HRESULT STDMETHODCALLTYPE CToolsBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
 
 LRESULT CToolsBand::OnGetButtonInfo(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled)
 {
-	TBNOTIFYW *pTBntf = (TBNOTIFYW *)pNMHDR;
+	TBNOTIFYW *pTBntf = reinterpret_cast<TBNOTIFYW *>(pNMHDR);
 
 	if (pTBntf->iItem >= 0 && pTBntf->iItem < (numShownButtons + numHiddenButtons))
 	{
@@ -386,8 +389,8 @@ HRESULT CreateToolsBar(REFIID riid, void **ppv)
 	ATLTRY (theMenuBar = new CComObject<CToolsBand>);
 	if (theMenuBar == NULL)
 		return E_OUTOFMEMORY;
-	hResult = theMenuBar->QueryInterface (riid, (void **)ppv);
-	if (FAILED (hResult))
+	hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+	if (FAILED(hResult))
 	{
 		delete theMenuBar;
 		return hResult;

@@ -64,7 +64,7 @@ public:
 			*pdwCookie = 0;
 		if (pUnkSink == NULL || pdwCookie == NULL)
 			return E_POINTER;
-		hResult = pUnkSink->QueryInterface(IID_IDispatch, (void **)&adviseSink);
+		hResult = pUnkSink->QueryInterface(IID_IDispatch, reinterpret_cast<void **>(&adviseSink));
 		if (FAILED(hResult))
 		{
 			if (hResult == E_NOINTERFACE)

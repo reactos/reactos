@@ -167,30 +167,40 @@ HRESULT STDMETHODCALLTYPE CBrandBand::SetSite(IUnknown* pUnkSite)
 		// TODO: revoke brand band service
 		return S_OK;
 	}
-	hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, (void **)&fSite);
+
+	// get window handle of parent
+	hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&fSite));
 	if (FAILED(hResult))
 		return hResult;
 	parentWindow = NULL;
-	hResult = pUnkSite->QueryInterface(IID_IOleWindow, (void **)&oleWindow);
+	hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
 	if (SUCCEEDED(hResult))
 		hResult = oleWindow->GetWindow(&parentWindow);
 	if (!::IsWindow(parentWindow))
 		return E_FAIL;
 
-	hwnd = SHCreateWorkerWindowW(0, parentWindow, 0, WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, NULL, 0);
+	// create worker window in parent window
+	hwnd = SHCreateWorkerWindowW(0, parentWindow, 0,
+		WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, NULL, 0);
 	if (hwnd == NULL)
 		return E_FAIL;
 	SubclassWindow(hwnd);
-	hResult = pUnkSite->QueryInterface(IID_IServiceProvider, (void **)&serviceProvider);
+
+	// take advice to watch events
+	hResult = pUnkSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
 	if (SUCCEEDED(hResult))
 	{
-		hResult = serviceProvider->QueryService(SID_SBrandBand, IID_IProfferService, (void **)&profferService);
+		hResult = serviceProvider->QueryService(
+			SID_SBrandBand, IID_IProfferService, reinterpret_cast<void **>(&profferService));
 		if (SUCCEEDED(hResult))
-			hResult = profferService->ProfferService(SID_SBrandBand, (IServiceProvider *)this, &fProfferCookie);
-		hResult = serviceProvider->QueryService(SID_SShellBrowser, IID_IBrowserService, (void **)&browserService);
+			hResult = profferService->ProfferService(SID_SBrandBand,
+				static_cast<IServiceProvider *>(this), &fProfferCookie);
+		hResult = serviceProvider->QueryService(SID_SShellBrowser,
+			IID_IBrowserService, reinterpret_cast<void **>(&browserService));
 		if (SUCCEEDED(hResult))
-			hResult = AtlAdvise(browserService, (IDispatch *)this, DIID_DWebBrowserEvents, &fAdviseCookie);
+			hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
 	}
+
 	// ignore any hResult errors up to here - they are nonfatal
 	hResult = S_OK;
 	SelectImage();
@@ -234,7 +244,8 @@ HRESULT STDMETHODCALLTYPE CBrandBand::CloseDW(DWORD dwReserved)
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CBrandBand::ResizeBorderDW(const RECT* prcBorder, IUnknown* punkToolbarSite, BOOL fReserved)
+HRESULT STDMETHODCALLTYPE CBrandBand::ResizeBorderDW(
+	const RECT* prcBorder, IUnknown* punkToolbarSite, BOOL fReserved)
 {
 	return E_NOTIMPL;
 }
@@ -296,7 +307,8 @@ HRESULT STDMETHODCALLTYPE CBrandBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBrandBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+HRESULT STDMETHODCALLTYPE CBrandBand::OnWinEvent(
+	HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
 	return E_NOTIMPL;
 }
@@ -308,12 +320,14 @@ HRESULT STDMETHODCALLTYPE CBrandBand::IsWindowOwner(HWND hWnd)
 	return S_FALSE;
 }
 
-HRESULT STDMETHODCALLTYPE CBrandBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
+HRESULT STDMETHODCALLTYPE CBrandBand::QueryStatus(
+	const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBrandBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+HRESULT STDMETHODCALLTYPE CBrandBand::Exec(const GUID *pguidCmdGroup,
+	DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
 	if (IsEqualIID(*pguidCmdGroup, CGID_PrivCITCommands))
 	{
@@ -340,8 +354,8 @@ HRESULT STDMETHODCALLTYPE CBrandBand::QueryService(REFGUID guidService, REFIID r
 
 	if (IsEqualIID(guidService, SID_SBrandBand))
 		return this->QueryInterface(riid, ppvObject);
-	hResult = fSite->QueryInterface(IID_IServiceProvider, (void **)&serviceProvider);
-	if (FAILED (hResult))
+	hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
+	if (FAILED(hResult))
 		return hResult;
 	return serviceProvider->QueryService(guidService, riid, ppvObject);
 }
@@ -356,12 +370,14 @@ HRESULT STDMETHODCALLTYPE CBrandBand::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeI
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBrandBand::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+HRESULT STDMETHODCALLTYPE CBrandBand::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames,
+	LCID lcid, DISPID *rgDispId)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBrandBand::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+HRESULT STDMETHODCALLTYPE CBrandBand::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags,
+	DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
 	if (pDispParams == NULL)
 		return E_INVALIDARG;
@@ -431,7 +447,7 @@ LRESULT CBrandBand::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 	FillSolidRect(dc, &paintInfo.rcPaint, RGB(255, 255, 255));
 
 	sourceDC = CreateCompatibleDC(dc);
-	oldBitmap = (HBITMAP)SelectObject(sourceDC, fImageBitmap);
+	oldBitmap = reinterpret_cast<HBITMAP>(SelectObject(sourceDC, fImageBitmap));
 
 	BitBlt(dc, destinationPoint.x, destinationPoint.y, fBitmapSize, fBitmapSize, sourceDC, 0, fCurrentFrame * fBitmapSize, SRCCOPY);
 
@@ -462,8 +478,8 @@ HRESULT CreateBrandBand(REFIID riid, void **ppv)
 	ATLTRY (theMenuBar = new CComObject<CBrandBand>);
 	if (theMenuBar == NULL)
 		return E_OUTOFMEMORY;
-	hResult = theMenuBar->QueryInterface (riid, (void **)ppv);
-	if (FAILED (hResult))
+	hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+	if (FAILED(hResult))
 	{
 		delete theMenuBar;
 		return hResult;

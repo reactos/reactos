@@ -186,22 +186,22 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE DragLeave();
 	virtual HRESULT STDMETHODCALLTYPE Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
 
-DECLARE_REGISTRY_RESOURCEID(IDR_COMMONBROWSER)
+	DECLARE_REGISTRY_RESOURCEID(IDR_COMMONBROWSER)
 
-DECLARE_PROTECT_FINAL_CONSTRUCT()
+	DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(CCommonBrowser)
-	COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
-	COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
-	COM_INTERFACE_ENTRY_IID(IID_IBrowserService, IBrowserService)
-	COM_INTERFACE_ENTRY_IID(IID_IBrowserService2, IBrowserService2)
-	COM_INTERFACE_ENTRY_IID(IID_IBrowserService3, IBrowserService3)
-	COM_INTERFACE_ENTRY_IID(IID_IShellBrowser, IShellBrowser)
-	COM_INTERFACE_ENTRY_IID(IID_IShellBrowserService, IShellBrowserService)
-	COM_INTERFACE_ENTRY2_IID(IID_IOleWindow, IOleWindow, IDockingWindowSite)
-	COM_INTERFACE_ENTRY_IID(IID_IDockingWindowSite, IDockingWindowSite)
-	COM_INTERFACE_ENTRY_IID(IID_IDockingWindowFrame, IDockingWindowFrame)
-	COM_INTERFACE_ENTRY_IID(IID_IInputObjectSite, IInputObjectSite)
-	COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
-END_COM_MAP()
+	BEGIN_COM_MAP(CCommonBrowser)
+		COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+		COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
+		COM_INTERFACE_ENTRY_IID(IID_IBrowserService, IBrowserService)
+		COM_INTERFACE_ENTRY_IID(IID_IBrowserService2, IBrowserService2)
+		COM_INTERFACE_ENTRY_IID(IID_IBrowserService3, IBrowserService3)
+		COM_INTERFACE_ENTRY_IID(IID_IShellBrowser, IShellBrowser)
+		COM_INTERFACE_ENTRY_IID(IID_IShellBrowserService, IShellBrowserService)
+		COM_INTERFACE_ENTRY2_IID(IID_IOleWindow, IOleWindow, IDockingWindowSite)
+		COM_INTERFACE_ENTRY_IID(IID_IDockingWindowSite, IDockingWindowSite)
+		COM_INTERFACE_ENTRY_IID(IID_IDockingWindowFrame, IDockingWindowFrame)
+		COM_INTERFACE_ENTRY_IID(IID_IInputObjectSite, IInputObjectSite)
+		COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
+	END_COM_MAP()
 };

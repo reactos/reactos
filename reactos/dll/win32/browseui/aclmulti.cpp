@@ -55,12 +55,13 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Append(IUnknown *punk)
     if (punk == NULL)
         return E_FAIL;
 
-    fObjects = reinterpret_cast<struct ACLMultiSublist *>(CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * (fObjectCount + 1)));
+    fObjects = reinterpret_cast<ACLMultiSublist *>(
+        CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * (fObjectCount + 1)));
     fObjects[fObjectCount].punk = punk;
     punk->AddRef();
-    if (FAILED(punk->QueryInterface(IID_IEnumString, (void **)&fObjects[fObjectCount].pEnum)))
+    if (FAILED(punk->QueryInterface(IID_IEnumString, reinterpret_cast<void **>(&fObjects[fObjectCount].pEnum))))
         fObjects[fObjectCount].pEnum = NULL;
-    if (FAILED(punk->QueryInterface(IID_IACList, (void **)&fObjects[fObjectCount].pACL)))
+    if (FAILED(punk->QueryInterface(IID_IACList, reinterpret_cast<void **>(&fObjects[fObjectCount].pACL))))
         fObjects[fObjectCount].pACL = NULL;
     fObjectCount++;
     return S_OK;
@@ -75,9 +76,10 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Remove(IUnknown *punk)
         if (fObjects[i].punk == punk)
         {
             release_obj(&fObjects[i]);
-            memmove(&fObjects[i], &fObjects[i + 1], (fObjectCount - i - 1) * sizeof(struct ACLMultiSublist));
+            MoveMemory(&fObjects[i], &fObjects[i + 1], (fObjectCount - i - 1) * sizeof(ACLMultiSublist));
             fObjectCount--;
-            fObjects = reinterpret_cast<struct ACLMultiSublist *>(CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * fObjectCount));
+            fObjects = reinterpret_cast<ACLMultiSublist *>(
+                CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * fObjectCount));
             return S_OK;
         }
 

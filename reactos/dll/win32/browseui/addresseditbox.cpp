@@ -90,7 +90,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Save(long paramC)
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
+	HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
 	// handle fill of listbox here
 	return E_NOTIMPL;
@@ -101,12 +102,14 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::IsWindowOwner(HWND hWnd)
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CAddressEditBox::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
+HRESULT STDMETHODCALLTYPE CAddressEditBox::QueryStatus(
+	const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CAddressEditBox::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+HRESULT STDMETHODCALLTYPE CAddressEditBox::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
+	DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
 	return E_NOTIMPL;
 }
@@ -121,12 +124,14 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::GetTypeInfo(UINT iTInfo, LCID lcid, I
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CAddressEditBox::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+HRESULT STDMETHODCALLTYPE CAddressEditBox::GetIDsOfNames(
+	REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
+	WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
 	// on navigate complete, change edit section of combobox
 	return E_NOTIMPL;
@@ -171,8 +176,8 @@ HRESULT CreateAddressEditBox(REFIID riid, void **ppv)
 	ATLTRY (theMenuBar = new CComObject<CAddressEditBox>);
 	if (theMenuBar == NULL)
 		return E_OUTOFMEMORY;
-	hResult = theMenuBar->QueryInterface (riid, (void **)ppv);
-	if (FAILED (hResult))
+	hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+	if (FAILED(hResult))
 	{
 		delete theMenuBar;
 		return hResult;

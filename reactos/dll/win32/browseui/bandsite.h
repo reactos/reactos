@@ -121,20 +121,20 @@ private:
 	HRESULT UpdateBand(DWORD dwBandID);
 	struct BandObject *GetBandFromHwnd(HWND hwnd);
 
-BEGIN_COM_MAP(CBandSiteBase)
-	COM_INTERFACE_ENTRY_IID(IID_IBandSite, IBandSite)
-	COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
-	COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
-	COM_INTERFACE_ENTRY_IID(IID_IDeskBarClient, IDeskBarClient)
-	COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
-	COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
-	COM_INTERFACE_ENTRY_IID(IID_IInputObjectSite, IInputObjectSite)
-	COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
-	COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-	COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
-	COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
-	COM_INTERFACE_ENTRY_IID(IID_IBandSiteHelper, IBandSiteHelper)
-END_COM_MAP()
+	BEGIN_COM_MAP(CBandSiteBase)
+		COM_INTERFACE_ENTRY_IID(IID_IBandSite, IBandSite)
+		COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
+		COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+		COM_INTERFACE_ENTRY_IID(IID_IDeskBarClient, IDeskBarClient)
+		COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
+		COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
+		COM_INTERFACE_ENTRY_IID(IID_IInputObjectSite, IInputObjectSite)
+		COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+		COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+		COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
+		COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
+		COM_INTERFACE_ENTRY_IID(IID_IBandSiteHelper, IBandSiteHelper)
+	END_COM_MAP()
 };
 
 class CBandSite :
@@ -143,9 +143,8 @@ class CBandSite :
 {
 public:
 
-DECLARE_REGISTRY_RESOURCEID(IDR_BANDSITE)
-DECLARE_NOT_AGGREGATABLE(CBandSite)
+	DECLARE_REGISTRY_RESOURCEID(IDR_BANDSITE)
+	DECLARE_NOT_AGGREGATABLE(CBandSite)
 
-DECLARE_PROTECT_FINAL_CONSTRUCT()
-
+	DECLARE_PROTECT_FINAL_CONSTRUCT()
 };

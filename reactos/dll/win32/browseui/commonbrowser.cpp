@@ -33,12 +33,14 @@ HRESULT STDMETHODCALLTYPE CCommonBrowser::QueryService(REFGUID guidService, REFI
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
+	OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
+	DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
 	return E_NOTIMPL;
 }
@@ -253,7 +255,8 @@ HRESULT STDMETHODCALLTYPE CCommonBrowser::ActivatePendingView()
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::CreateViewWindow(IShellView *psvNew, IShellView *psvOld, LPRECT prcView, HWND *phwnd)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::CreateViewWindow(
+	IShellView *psvNew, IShellView *psvOld, LPRECT prcView, HWND *phwnd)
 {
 	return E_NOTIMPL;
 }
@@ -363,12 +366,14 @@ HRESULT STDMETHODCALLTYPE CCommonBrowser::_SwitchActivationNow()
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::_ExecChildren(IUnknown *punkBar, BOOL fBroadcast, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANTARG *pvarargIn, VARIANTARG *pvarargOut)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::_ExecChildren(IUnknown *punkBar, BOOL fBroadcast,
+	const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANTARG *pvarargIn, VARIANTARG *pvarargOut)
 {
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::_SendChildren(HWND hwndBar, BOOL fBroadcast, UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::_SendChildren(
+	HWND hwndBar, BOOL fBroadcast, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	return E_NOTIMPL;
 }
@@ -468,7 +473,8 @@ HRESULT STDMETHODCALLTYPE CCommonBrowser::_CloseAndReleaseToolbars(BOOL fClose)
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::v_MayGetNextToolbarFocus(LPMSG lpMsg, UINT itbNext, int citb, LPTOOLBARITEM *pptbi, HWND *phwnd)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::v_MayGetNextToolbarFocus(LPMSG lpMsg, UINT itbNext,
+	int citb, LPTOOLBARITEM *pptbi, HWND *phwnd)
 {
 	return E_NOTIMPL;
 }
@@ -508,7 +514,8 @@ HRESULT STDMETHODCALLTYPE CCommonBrowser::_PositionViewWindow(HWND *, RECT *)
 	return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::IEParseDisplayNameEx(unsigned int, const unsigned short *, DWORD, LPITEMIDLIST *)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::IEParseDisplayNameEx(
+	unsigned int, const unsigned short *, DWORD, LPITEMIDLIST *)
 {
 	return E_NOTIMPL;
 }
