@@ -180,7 +180,7 @@ STRING_ERROR,                                   "ERRORE"
 STRING_WARNING,                                 "ATTENZIONE"
 STRING_INFO,                                    "Info"
 
-STRING_UNTITLED,                                "(senza nome)"
+STRING_UNTITLED,                                "Senza nome"
 
 STRING_ALL_FILES,                               "Tutti i file (*.*)"
 STRING_TEXT_FILES_TXT,                  "File di testo (*.txt)"

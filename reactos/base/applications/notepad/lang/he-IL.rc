@@ -178,7 +178,7 @@ STRING_ERROR,                                   "שגיאה"
 STRING_WARNING,                                 "אזהרה"
 STRING_INFO,                                    "מידע"
 
-STRING_UNTITLED,                                "(ללא שם)"
+STRING_UNTITLED,                                "ללא שם"
 
 STRING_ALL_FILES,                               "כל הקבצים (*.*)"
 STRING_TEXT_FILES_TXT,                          "קבצי טקסט (*.txt)"

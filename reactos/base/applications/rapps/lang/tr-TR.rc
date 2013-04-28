@@ -1,0 +1,193 @@
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Kütük"
+	BEGIN
+		MENUITEM "&Ayarlar...",      ID_SETTINGS
+		MENUITEM SEPARATOR
+		MENUITEM "&Çıkış",           ID_EXIT
+	END
+	POPUP "&Yazılım"
+	BEGIN
+		MENUITEM "&Kur",             ID_INSTALL
+		MENUITEM "K&aldır",          ID_UNINSTALL
+		MENUITEM "&Değiştir",        ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&Bu Bilgiyi Değer Defteri'nden Kaldır.", ID_REGREMOVE
+		MENUITEM SEPARATOR
+		MENUITEM "&Yenile",          ID_REFRESH
+	END
+	POPUP "Y&ardım"
+	BEGIN
+		MENUITEM "&Yardım Konuları", ID_HELP, GRAYED
+		MENUITEM "&Hakkında",        ID_ABOUT
+	END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+	POPUP "popup"
+	BEGIN
+		MENUITEM "&Tarayıcıda Aç",   ID_OPEN_LINK
+		MENUITEM "&Panoya Çoğalt",   ID_COPY_LINK
+	END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+	POPUP "popup"
+	BEGIN
+		MENUITEM "&Kur",   ID_INSTALL
+		MENUITEM "K&aldır", ID_UNINSTALL
+		MENUITEM "&Değiştir",    ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&Bu Bilgiyi Değer Defteri'nden Kaldır", ID_REGREMOVE
+		MENUITEM SEPARATOR
+		MENUITEM "&Yenile",   ID_REFRESH
+	END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Ayarlar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Genel", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Pencere Konumunu Kaydet", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Her Başlangıçta Erişilebilir Yazılım Dizelgesini Güncelle", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+	AUTOCHECKBOX "&Yazılımların Kuruluş ve Kaldırılışlarını Kaydet", IDC_LOG_ENABLED, 15, 46, 219, 12
+
+	GROUPBOX "İndirme", -1, 4, 65, 240, 51
+	LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
+	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
+	PUSHBUTTON "&Seç", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&Kurulumdan Sonra Yazılımın Kurulum Kütüğünü Sil", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+
+	PUSHBUTTON "Ön Tanımlılar", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "Tamam", IDOK, 116, 124, 60, 14
+	PUSHBUTTON "Vazgeç", IDCANCEL, 181, 124, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Yazılım Kurulumu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+
+	AUTORADIOBUTTON "&Bir Diskten Kur", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&İndir ve Kur", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+
+	PUSHBUTTON "Tamam", IDOK, 86, 78, 60, 14
+	PUSHBUTTON "Vazgeç", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "İndiriliyor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    LTEXT "", IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
+    PUSHBUTTON "Vazgeç", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "Hakkında"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "ReactOS Yazılım Yöneticisi\nTelif Hakkı: 2009\nDmitry Chapyshev (dmitry@reactos.org) tarafından yazılmıştır.", IDC_STATIC, 48, 7, 130, 39
+	PUSHBUTTON "Tamam", IDOK, 133, 46, 50, 14
+	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_TOOLTIP_INSTALL "Kur"
+	IDS_TOOLTIP_UNINSTALL "Kaldır"
+	IDS_TOOLTIP_MODIFY "Değiştir"
+	IDS_TOOLTIP_SETTINGS "Ayarlar"
+	IDS_TOOLTIP_REFRESH "Yenile"
+	IDS_TOOLTIP_EXIT "Çıkış"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_APP_NAME "Yazılımın Adı"
+	IDS_APP_INST_VERSION "Sürüm"
+	IDS_APP_DESCRIPTION "Ek Bilgi"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_INFO_VERSION "\nSürüm: "
+	IDS_INFO_DESCRIPTION "\nEk Bilgi: "
+	IDS_INFO_PUBLISHER "\nYayımcı: "
+	IDS_INFO_HELPLINK "\nYardım Bağlantısı: "
+	IDS_INFO_HELPPHONE "\nYardım Telefonu: "
+	IDS_INFO_README "\nBenioku: "
+	IDS_INFO_REGOWNER "\nKayıtlı Olduğu Kullanıcısı: "
+	IDS_INFO_PRODUCTID "\nÜrün Kimliği: "
+	IDS_INFO_CONTACT "\nİletişim: "
+	IDS_INFO_UPDATEINFO "\nGücnelleme Bilgisi: "
+	IDS_INFO_INFOABOUT "\nHakkında Bilgi: "
+	IDS_INFO_COMMENTS "\nYorumlar: "
+	IDS_INFO_INSTLOCATION "\nKurulum Konumu: "
+	IDS_INFO_INSTALLSRC "\nKurulum Kaynağı: "
+	IDS_INFO_UNINSTALLSTR "\nKaldırma Dizgisi: "
+	IDS_INFO_MODIFYPATH "\nDeğiştirme Yolu: "
+	IDS_INFO_INSTALLDATE "\nKurulum Zamanı: "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_AINFO_VERSION "\nSürüm: "
+	IDS_AINFO_DESCRIPTION "\nEk Bilgi: "
+	IDS_AINFO_SIZE "\nBoyut: "
+	IDS_AINFO_URLSITE "\nAna Sayfa: "
+	IDS_AINFO_LICENCE "\nLisans: "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_CAT_AUDIO "Ses"
+	IDS_CAT_DEVEL "Geliştirme"
+	IDS_CAT_DRIVERS "Sürücüler"
+	IDS_CAT_EDU "Eğitim"
+	IDS_CAT_ENGINEER "Mühendislik"
+	IDS_CAT_FINANCE "Mâli"
+	IDS_CAT_GAMES "Oyun ve Eğlence"
+	IDS_CAT_GRAPHICS "Çizge"
+	IDS_CAT_INTERNET "Ağ"
+	IDS_CAT_LIBS "Kitaplıklar"
+	IDS_CAT_OFFICE "Büro"
+	IDS_CAT_OTHER "Diğer"
+	IDS_CAT_SCIENCE "Bilim"
+	IDS_CAT_TOOLS "Araçlar"
+	IDS_CAT_VIDEO "Vidyo"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_APPTITLE "ReactOS Yazılım Yöneticisi"
+	IDS_SEARCH_TEXT "Ara"
+	IDS_INSTALL "Kur"
+	IDS_UNINSTALL "Kaldır"
+	IDS_MODIFY "Değiştir"
+	IDS_APPS_COUNT "Yazılım Sayısı: %d"
+	IDS_WELCOME_TITLE "ReactOS Yazılım Yöneticisi'ne hoşgeldiniz.\n\n"
+	IDS_WELCOME_TEXT "Soldaki herhangi bir ulamı seçip ulamdaki herhangi bir yazılımı kaldırabilir veya kurabilrisiniz.\nReactOS'un genelağ sitesi: "
+	IDS_WELCOME_URL "http://www.reactos.org"
+	IDS_INSTALLED "Kurulanlar"
+	IDS_AVAILABLEFORINST "Kurulabilenler"
+	IDS_UPDATES "Güncellemeler"
+	IDS_APPLICATIONS "Yazılımlar"
+	IDS_CHOOSE_FOLDER_TEXT "İndirme dizinini seçiniz:"
+	IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
+	IDS_USER_NOT_ADMIN "ReactOS Yazılım Yöneticisi'ni yönetici olarak çalıştırmalısınız."
+	IDS_APP_REG_REMOVE "Bu yazılımın bilgilerini Değer Defteri'nden kaldırmaya emin misiniz?"
+	IDS_INFORMATION "Bilgi"
+	IDS_UNABLE_TO_REMOVE "Bu yazılımın bilgileri Değer Defteri'nden kaldırılamıyor."
+END

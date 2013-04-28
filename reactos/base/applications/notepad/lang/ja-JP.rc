@@ -177,7 +177,7 @@ STRING_ERROR,                         "エラー"
 STRING_WARNING,                       "警告"
 STRING_INFO,                          "情報"
 
-STRING_UNTITLED,                      "(無題)"
+STRING_UNTITLED,                      "無題"
 
 STRING_ALL_FILES,                     "すべてのファイル (*.*)"
 STRING_TEXT_FILES_TXT,                "テキスト ファイル (*.txt)"

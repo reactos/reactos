@@ -176,7 +176,7 @@ STRING_ERROR,                "EROARE"
 STRING_WARNING,              "ATENțIONARE"
 STRING_INFO,                 "Informație"
 
-STRING_UNTITLED,             "(neintitulat)"
+STRING_UNTITLED,             "Neintitulat"
 
 STRING_ALL_FILES,            "Orice fișier (*.*)"
 STRING_TEXT_FILES_TXT,       "Fișiere text (*.txt)"

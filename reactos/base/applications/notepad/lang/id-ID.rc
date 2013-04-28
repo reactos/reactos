@@ -178,7 +178,7 @@ STRING_ERROR,                                   "SALAH"
 STRING_WARNING,                                 "PERINGATAN"
 STRING_INFO,                                    "Informasi"
 
-STRING_UNTITLED,                                "(tanpa judul)"
+STRING_UNTITLED,                                "Tanpa judul"
 
 STRING_ALL_FILES,                               "Semua file (*.*)"
 STRING_TEXT_FILES_TXT,                          "File teks (*.txt)"

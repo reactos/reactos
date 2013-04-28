@@ -11,6 +11,9 @@ URLSite = http://http://cnt.lakefolks.com
 URLDownload = http://svn.reactos.org/packages/CNTzip.exe
 CDPath = none
 
+[Section.0415]
+Description = Wirtualna klawiatura ekranowa
+
 [Section.0418]
 Licence = Gratuită
 Description = Aplicație gratuită pentru simularea unei tastaturi fizice.

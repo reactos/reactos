@@ -159,7 +159,7 @@ STRING_ERROR,                                   "ՍԽԱԼ"
 STRING_WARNING,                                 "ՈԻՇԱԴՐՈՒԹՅՈՒՆ"
 STRING_INFO,                                    "Տողեկություն"
 
-STRING_UNTITLED,                                "(Առանց վերնագրի)"
+STRING_UNTITLED,                                "Առանց վերնագրի"
 
 STRING_ALL_FILES,                               "Բոլոր ֆայլերը (*.*)"
 STRING_TEXT_FILES_TXT,                          "Տեքստային ֆայլերը (*.txt)"

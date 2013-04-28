@@ -179,7 +179,7 @@ STRING_ERROR,                                   "KLAIDA"
 STRING_WARNING,                                 "ĮSPĖJIMAS"
 STRING_INFO,                                    "Informacija"
 
-STRING_UNTITLED,                                "(bevardis)"
+STRING_UNTITLED,                                "Bevardis"
 
 STRING_ALL_FILES,                               "Visos bylos (*.*)"
 STRING_TEXT_FILES_TXT,                  "Tekstinės bylos (*.txt)"

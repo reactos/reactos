@@ -1,9 +1,9 @@
 /*
- * PROJECT:      Spider Solitaire
- * LICENSE:      See COPYING in top level directory
- * FILE:         base/applications/games/spider/lang/tr-TR.rc
- * PURPOSE:      Turkish Language File for Spider Solitaire
- * TRANSLATOR:   Erdem Ersoy (eersoy93)
+ * PROJECT:    Spider Solitaire
+ * LICENSE:    See COPYING in top level directory
+ * FILE:       base/applications/games/spider/lang/tr-TR.rc
+ * PURPOSE:    Turkish Language File for Spider Solitaire
+ * TRANSLATOR: Erdem Ersoy (eersoy93)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -36,9 +36,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Zorluk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Kolay: &Tek renk", IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Orta: &İki renk",  IDC_DIF_TWOCOLORS,  8, 23, 80, 10
-    AUTORADIOBUTTON "Zor: &Dört Renk",  IDC_DIF_FOURCOLORS, 8, 36, 80, 10
+    AUTORADIOBUTTON "&Kolay: Tek renk", IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Orta: İki renk", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
+    AUTORADIOBUTTON "&Zor: Dört Renk", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
 
     DEFPUSHBUTTON   "Tamam", IDOK, 8, 58, 40, 14
     PUSHBUTTON      "Vazgeç", IDCANCEL, 58, 58, 40, 14
@@ -48,8 +48,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "Spider"
-    IDS_SPI_ABOUT   "Spider Solitaire Gregor Schneider tarafından yapılmıştır.\n\nCardLib sürümü: 1.0"
+    IDS_SPI_NAME    "Örümcek Solitaire"
+    IDS_SPI_ABOUT   "Örümcek Solitaire Gregor Schneider tarafından yapılmıştır.\n\nCardLib sürümü: 1.0"
     IDS_SPI_QUIT    "Bu oyundan çıkmak ister misiniz?"
     IDS_SPI_WIN     "Tebrikler, kazandınız!"
     IDS_SPI_DEAL    "Tekrar dağıtılsın mı?"
@@ -62,9 +62,9 @@ IDR_MENU1 MENU DISCARDABLE
 BEGIN
     POPUP "&Oyun"
     BEGIN
-        MENUITEM "&Yeni oyun\tF2",              IDM_GAME_NEW
+        MENUITEM "&Dağıt\tF2",                  IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Desteler...",                IDM_GAME_DECK
+        MENUITEM "D&esteler...",                IDM_GAME_DECK
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                      IDM_GAME_EXIT
     END

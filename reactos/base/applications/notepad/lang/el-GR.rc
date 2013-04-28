@@ -175,7 +175,7 @@ STRING_ERROR,                                   "ERROR"
 STRING_WARNING,                                 "WARNING"
 STRING_INFO,                                    "Πληροφορίες"
 
-STRING_UNTITLED,                                "(Χωρίς τίτλο)"
+STRING_UNTITLED,                                "Χωρίς τίτλο"
 
 STRING_ALL_FILES,                               "Όλα τα αρχεία (*.*)"
 STRING_TEXT_FILES_TXT,                  "Αρχεία κειμένου (*.txt)"

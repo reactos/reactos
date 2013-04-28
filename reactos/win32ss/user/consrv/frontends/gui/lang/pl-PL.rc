@@ -30,5 +30,5 @@ BEGIN
     IDS_SCROLLDOWN      "Przewiń na dół"
 */
 
-    IDS_TERMINAL_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "Konsola ReactOS"
 END

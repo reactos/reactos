@@ -155,7 +155,7 @@ STRING_ERROR,                   "ERROREA"
 STRING_WARNING,                 "OHARRA"
 STRING_INFO,                    "Informazioa"
 
-STRING_UNTITLED,                "(izenbururik gabe)"
+STRING_UNTITLED,                "Izenbururik gabe"
 
 STRING_ALL_FILES,               "Fitxategi guztiak (*.*)"
 STRING_TEXT_FILES_TXT,          "Testu dokumentuak (*.txt)"

@@ -8,13 +8,13 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Ses Kaydedicisi Hakkında"
+CAPTION "Ses Kaydedicisi Hakkında"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDI_SNDREC32,-1,19,14,21,20
-    LTEXT           "ReactOS Ses Kaydedicisi, sürüm 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "Ses Kaydedicisi: Sürüm 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
     LTEXT           "Tekif Hakkı - 2009",IDC_STATIC,55,25,114,8
-    DEFPUSHBUTTON   "&Tamam",IDOK,139,54,50,14,WS_GROUP
+    DEFPUSHBUTTON   "Tamam",IDOK,139,54,50,14,WS_GROUP
 END
 
 IDR_MENU1 MENU
@@ -46,9 +46,9 @@ STRINGTABLE
 BEGIN
     IDS_STRPOS              "Konum: %.2f s"
     IDS_STRDUR              "Uzunluk: %.2f s"
-    IDS_STRBUF              "Nitelik: %.2f KB"
+    IDS_STRBUF              "Ara Bellek: %.2f KB"
     IDS_STRFMT              "%.1f kHz, %u bitlik"
-    IDS_STRMONO             "Tek Yol"
-    IDS_STRSTEREO           "Çift Yol"
+    IDS_STRMONO             "Tek Yollu"
+    IDS_STRSTEREO           "Çift Yollu"
     IDS_STRCHAN             "%s"
 END

@@ -178,7 +178,7 @@ STRING_ERROR,                                   "ГРЕШКА"
 STRING_WARNING,                                 "ПРЕДУПРЕЖДЕНИЕ"
 STRING_INFO,                                    "Сведение"
 
-STRING_UNTITLED,                                "(без име)"
+STRING_UNTITLED,                                "Без име"
 
 STRING_ALL_FILES,                               "Всички файлове (*.*)"
 STRING_TEXT_FILES_TXT,                  "Словесни файлове (*.txt)"
