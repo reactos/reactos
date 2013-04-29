@@ -23,38 +23,52 @@
  * PROGRAMMER: Emanuele Aliberti (ea@reactos.com)
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-//#include <string.h>
+#include <conio.h>
 
 #include <windef.h>
 #include <winbase.h>
+#include <winuser.h>
 
-int main (int argc, char ** argv)
+#include "resource.h"
+
+int wmain(int argc, WCHAR* argv[])
 {
-	if (1 == argc)
-	{
-		TCHAR ComputerName [MAX_COMPUTERNAME_LENGTH + 1];
-		DWORD ComputerNameSize = sizeof ComputerName / sizeof ComputerName[0];
+    WCHAR Msg[100];
 
-		ZeroMemory (ComputerName, sizeof ComputerName );
-		if (GetComputerName(ComputerName, & ComputerNameSize))
-		{
-			printf ("%s\n", ComputerName);
-			return EXIT_SUCCESS;
-		}
-		fprintf (stderr, "%s: Win32 error %lu.\n",
-			argv[0], GetLastError());
-		return EXIT_FAILURE;
-	}else{
-		if (0 == strcmp(argv[1],"-s"))
-		{
-			fprintf(stderr,"%s: -s not supported.\n",argv[0]);
-			return EXIT_FAILURE;
-		}else{
-			printf("Print the current host's name.\n\nhostname\n");
-		}
-	}
-	return EXIT_SUCCESS;
+    if (1 == argc)
+    {
+        WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1] = L"";
+        DWORD ComputerNameSize = sizeof(ComputerName) / sizeof(ComputerName[0]);
+
+        if (!GetComputerName(ComputerName, &ComputerNameSize))
+        {
+            /* Fail in case of error */
+            LoadStringW(GetModuleHandle(NULL), IDS_ERROR, Msg, 100);
+            _cwprintf(L"%s %lu.\n", Msg, GetLastError());
+            return 1;
+        }
+
+        /* Print out the computer's name */
+        _cwprintf(L"%s\n", ComputerName);
+    }
+    else
+    {
+        if ((wcsicmp(argv[1], L"-s") == 0) || (wcsicmp(argv[1], L"/s") == 0))
+        {
+            /* The program doesn't allow the user to set the computer's name */
+            LoadStringW(GetModuleHandle(NULL), IDS_NOSET, Msg, 100);
+            _cwprintf(L"%s\n", Msg);
+            return 1;
+        }
+        else
+        {
+            /* Let the user know what the program does */
+            LoadStringW(GetModuleHandle(NULL), IDS_USAGE, Msg, 100);
+            _cwprintf(L"\n%s\n\n", Msg);
+        }
+    }
+
+    return 0;
 }
+
 /* EOF */
