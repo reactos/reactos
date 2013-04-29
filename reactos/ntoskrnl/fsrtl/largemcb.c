@@ -16,8 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define GET_LIST_HEAD(x) ((PLIST_ENTRY)(&((PRTL_GENERIC_TABLE)x)[1]))
-
 PAGED_LOOKASIDE_LIST FsRtlFirstMappingLookasideList;
 NPAGED_LOOKASIDE_LIST FsRtlFastMutexLookasideList;
 
@@ -28,6 +26,21 @@ typedef struct _LARGE_MCB_MAPPING_ENTRY
 	LARGE_INTEGER StartingLbn;
 	LIST_ENTRY Sequence;
 } LARGE_MCB_MAPPING_ENTRY, *PLARGE_MCB_MAPPING_ENTRY;
+
+typedef struct _LARGE_MCB_MAPPING
+{
+    RTL_GENERIC_TABLE Table;
+    LIST_ENTRY SequenceList;
+} LARGE_MCB_MAPPING, *PLARGE_MCB_MAPPING;
+
+typedef struct _BASE_MCB_INTERNAL {
+    ULONG MaximumPairCount;
+    ULONG PairCount;
+    USHORT PoolType;
+    USHORT Flags;
+    PLARGE_MCB_MAPPING Mapping;
+} BASE_MCB_INTERNAL, *PBASE_MCB_INTERNAL;
+
 
 static PVOID NTAPI McbMappingAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
@@ -63,11 +76,12 @@ static RTL_GENERIC_COMPARE_RESULTS NTAPI McbMappingCompare
  */
 BOOLEAN
 NTAPI
-FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
+FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
                      IN LONGLONG Vbn,
                      IN LONGLONG Lbn,
                      IN LONGLONG SectorCount)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
 	LARGE_MCB_MAPPING_ENTRY Node;
 	PLARGE_MCB_MAPPING_ENTRY Existing = NULL;
 	BOOLEAN NewElement = FALSE;
@@ -79,8 +93,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 	while (!NewElement)
 	{
 		DPRINT("Inserting %x:%x\n", Node.RunStartVbn.LowPart, Node.SectorCount.LowPart);
-		Existing = RtlInsertElementGenericTable
-			(Mcb->Mapping, &Node, sizeof(Node), &NewElement);
+		Existing = RtlInsertElementGenericTable(&Mcb->Mapping->Table, &Node, sizeof(Node), &NewElement);
 		DPRINT("Existing %x\n", Existing);
 		if (!Existing) break;
 
@@ -89,8 +102,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 		{
 			// We merge the existing runs
 			LARGE_INTEGER StartVbn, FinalVbn;
-			DPRINT("Existing: %x:%x\n", 
-				   Existing->RunStartVbn.LowPart, Node.SectorCount.LowPart);
+			DPRINT("Existing: %x:%x\n", Existing->RunStartVbn.LowPart, Node.SectorCount.LowPart);
 			if (Existing->RunStartVbn.QuadPart < Node.RunStartVbn.QuadPart)
 			{
 				StartVbn = Existing->RunStartVbn;
@@ -116,7 +128,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 			Node.RunStartVbn.QuadPart = StartVbn.QuadPart;
 			Node.SectorCount.QuadPart = FinalVbn.QuadPart - StartVbn.QuadPart;
 			RemoveHeadList(&Existing->Sequence);
-			RtlDeleteElementGenericTable(Mcb->Mapping, Existing);
+			RtlDeleteElementGenericTable(&Mcb->Mapping->Table, Existing);
 			Mcb->PairCount--;
 		}
 		else
@@ -124,7 +136,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
 			DPRINT("Mapping added %x\n", Existing);
 			Mcb->MaximumPairCount++;
 			Mcb->PairCount++;
-			InsertHeadList(GET_LIST_HEAD(Mcb->Mapping), &Existing->Sequence);
+			InsertHeadList(&Mcb->Mapping->SequenceList, &Existing->Sequence);
 		}
 	}
 
@@ -163,20 +175,21 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
  */
 BOOLEAN
 NTAPI
-FsRtlGetNextBaseMcbEntry(IN PBASE_MCB Mcb,
+FsRtlGetNextBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
                          IN ULONG RunIndex,
                          OUT PLONGLONG Vbn,
                          OUT PLONGLONG Lbn,
                          OUT PLONGLONG SectorCount)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
 	ULONG i = 0;
 	BOOLEAN Result = FALSE;
 	PLARGE_MCB_MAPPING_ENTRY Entry;
 	for (Entry = (PLARGE_MCB_MAPPING_ENTRY)
-			 RtlEnumerateGenericTable(Mcb->Mapping, TRUE);
+			 RtlEnumerateGenericTable(&Mcb->Mapping->Table, TRUE);
 		 Entry && i < RunIndex;
 		 Entry = (PLARGE_MCB_MAPPING_ENTRY)
-			 RtlEnumerateGenericTable(Mcb->Mapping, FALSE), i++);
+			 RtlEnumerateGenericTable(&Mcb->Mapping->Table, FALSE), i++);
 	if (Entry)
 	{
 		Result = TRUE;
@@ -224,9 +237,10 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
  */
 VOID
 NTAPI
-FsRtlInitializeBaseMcb(IN PBASE_MCB Mcb,
+FsRtlInitializeBaseMcb(IN PBASE_MCB OpaqueMcb,
                        IN POOL_TYPE PoolType)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
     Mcb->PairCount = 0;
 
     if (PoolType == PagedPool)
@@ -236,19 +250,19 @@ FsRtlInitializeBaseMcb(IN PBASE_MCB Mcb,
     else
     {
         Mcb->Mapping = ExAllocatePoolWithTag(PoolType | POOL_RAISE_IF_ALLOCATION_FAILURE,
-											 sizeof(RTL_GENERIC_TABLE) + sizeof(LIST_ENTRY),
+											 sizeof(LARGE_MCB_MAPPING),
                                              'FSBC');
     }
 
     Mcb->PoolType = PoolType;
     Mcb->MaximumPairCount = MAXIMUM_PAIR_COUNT;
 	RtlInitializeGenericTable
-		(Mcb->Mapping,
+		(&Mcb->Mapping->Table,
 		 (PRTL_GENERIC_COMPARE_ROUTINE)McbMappingCompare,
 		 McbMappingAllocate,
 		 McbMappingFree,
 		 Mcb);
-	InitializeListHead(GET_LIST_HEAD(Mcb->Mapping));
+	InitializeListHead(&Mcb->Mapping->SequenceList);
 }
 
 /*
@@ -288,7 +302,7 @@ FsRtlInitializeLargeMcbs(VOID)
                                    NULL,
                                    NULL,
                                    POOL_RAISE_IF_ALLOCATION_FAILURE,
-								   sizeof(RTL_GENERIC_TABLE) + sizeof(LIST_ENTRY),
+								   sizeof(LARGE_MCB_MAPPING),
                                    IFS_POOL_TAG,
                                    0); /* FIXME: Should be 4 */
 
@@ -307,7 +321,7 @@ FsRtlInitializeLargeMcbs(VOID)
  */
 BOOLEAN
 NTAPI
-FsRtlLookupBaseMcbEntry(IN PBASE_MCB Mcb,
+FsRtlLookupBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
                         IN LONGLONG Vbn,
                         OUT PLONGLONG Lbn OPTIONAL,
                         OUT PLONGLONG SectorCountFromLbn OPTIONAL,
@@ -315,6 +329,7 @@ FsRtlLookupBaseMcbEntry(IN PBASE_MCB Mcb,
                         OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
                         OUT PULONG Index OPTIONAL)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
 	BOOLEAN Result = FALSE;
 	LARGE_MCB_MAPPING_ENTRY ToLookup;
 	PLARGE_MCB_MAPPING_ENTRY Entry;
@@ -322,13 +337,15 @@ FsRtlLookupBaseMcbEntry(IN PBASE_MCB Mcb,
 	ToLookup.RunStartVbn.QuadPart = Vbn;
 	ToLookup.SectorCount.QuadPart = 1;
 
-	Entry = RtlLookupElementGenericTable(Mcb->Mapping, &ToLookup);
+	Entry = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &ToLookup);
+    DPRINT("Entry %p\n", Entry);
 	if (!Entry)
 	{
 		// Find out if we have a following entry.  The spec says we should return
 		// found with Lbn == -1 when we're beneath the largest map.
 		ToLookup.SectorCount.QuadPart = (1ull<<62) - ToLookup.RunStartVbn.QuadPart;
-		Entry = RtlLookupElementGenericTable(Mcb->Mapping, &ToLookup);
+		Entry = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &ToLookup);
+        DPRINT("Entry %p\n", Entry);
 		if (Entry)
 		{
 			Result = TRUE;
@@ -349,7 +366,7 @@ FsRtlLookupBaseMcbEntry(IN PBASE_MCB Mcb,
 		if (StartingLbn) *StartingLbn = Entry->StartingLbn.QuadPart;
 		if (SectorCountFromStartingLbn) *SectorCountFromStartingLbn = Entry->SectorCount.QuadPart;
 	}
-	
+	DPRINT("Done\n");
     return Result;
 }
 
@@ -395,13 +412,14 @@ FsRtlLookupLastBaseMcbEntryAndIndex(IN PBASE_MCB OpaqueMcb,
                                     IN OUT PLONGLONG LargeLbn,
                                     IN OUT PULONG Index)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
 	ULONG i = 0;
 	BOOLEAN Result = FALSE;
 	PLIST_ENTRY ListEntry;
 	PLARGE_MCB_MAPPING_ENTRY Entry;
 	PLARGE_MCB_MAPPING_ENTRY CountEntry;
 
-	ListEntry = GET_LIST_HEAD(OpaqueMcb->Mapping);
+	ListEntry = &Mcb->Mapping->SequenceList;
 	if (!IsListEmpty(ListEntry))
 	{
 		Entry = CONTAINING_RECORD(ListEntry->Flink, LARGE_MCB_MAPPING_ENTRY, Sequence);
@@ -409,10 +427,10 @@ FsRtlLookupLastBaseMcbEntryAndIndex(IN PBASE_MCB OpaqueMcb,
 		*LargeVbn = Entry->RunStartVbn.QuadPart;
 		*LargeLbn = Entry->StartingLbn.QuadPart;
 
-		for (i = 0, CountEntry = RtlEnumerateGenericTable(OpaqueMcb->Mapping, TRUE);
+		for (i = 0, CountEntry = RtlEnumerateGenericTable(&Mcb->Mapping->Table, TRUE);
 			 CountEntry != Entry;
-			 CountEntry = RtlEnumerateGenericTable(OpaqueMcb->Mapping, FALSE));
-
+			 CountEntry = RtlEnumerateGenericTable(&Mcb->Mapping->Table, FALSE));
+        DPRINT1("Most probably we are returning shit now\n");
 		*Index = i;
 	}
 
@@ -450,15 +468,16 @@ FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
  */
 BOOLEAN
 NTAPI
-FsRtlLookupLastBaseMcbEntry(IN PBASE_MCB Mcb,
+FsRtlLookupLastBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
                             OUT PLONGLONG Vbn,
                             OUT PLONGLONG Lbn)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
 	BOOLEAN Result = FALSE;
 	PLIST_ENTRY ListEntry;
 	PLARGE_MCB_MAPPING_ENTRY Entry;
 
-	ListEntry = GET_LIST_HEAD(Mcb->Mapping);
+	ListEntry = &Mcb->Mapping->SequenceList;
 	if (!IsListEmpty(ListEntry))
 	{
 		Entry = CONTAINING_RECORD(ListEntry->Flink, LARGE_MCB_MAPPING_ENTRY, Sequence);
@@ -532,27 +551,32 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
  */
 BOOLEAN
 NTAPI
-FsRtlRemoveBaseMcbEntry(IN PBASE_MCB Mcb,
+FsRtlRemoveBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
                         IN LONGLONG Vbn,
                         IN LONGLONG SectorCount)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
 	LARGE_MCB_MAPPING_ENTRY Node;
+	LARGE_MCB_MAPPING_ENTRY NewElement;
 	PLARGE_MCB_MAPPING_ENTRY Element;
+	PLARGE_MCB_MAPPING_ENTRY Reinserted, Inserted;
+	LARGE_INTEGER StartHole, EndHole, EndRun;
 
 	Node.RunStartVbn.QuadPart = Vbn;
 	Node.SectorCount.QuadPart = SectorCount;
 
-	while ((Element = RtlLookupElementGenericTable(Mcb->Mapping, &Node)))
+	while ((Element = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &Node)))
 	{
+        DPRINT1("Node.RunStartVbn %I64d, Node.SectorCount %I64d\n", Node.RunStartVbn.QuadPart, Node.SectorCount.QuadPart);
+        DPRINT1("Element %p, .RunStartVbn %I64d, .SectorCount %I64d\n", Element, Element->RunStartVbn.QuadPart, Element->SectorCount.QuadPart);
 		// Must split
 		if (Element->RunStartVbn.QuadPart < Node.RunStartVbn.QuadPart &&
 			Element->SectorCount.QuadPart > Node.SectorCount.QuadPart)
 		{
 			LARGE_MCB_MAPPING_ENTRY Upper, Reinsert;
-			PLARGE_MCB_MAPPING_ENTRY Reinserted, Inserted;
-			LARGE_INTEGER StartHole = Node.RunStartVbn;
-			LARGE_INTEGER EndHole;
+			StartHole = Node.RunStartVbn;
 			EndHole.QuadPart = Node.RunStartVbn.QuadPart + Node.SectorCount.QuadPart;
+
 			Upper.RunStartVbn.QuadPart = EndHole.QuadPart;
 			Upper.StartingLbn.QuadPart = 
 				Element->StartingLbn.QuadPart + 
@@ -565,57 +589,50 @@ FsRtlRemoveBaseMcbEntry(IN PBASE_MCB Mcb,
 			Reinsert.SectorCount.QuadPart = 
 				Element->RunStartVbn.QuadPart - StartHole.QuadPart;
 			RemoveEntryList(&Element->Sequence);
-			RtlDeleteElementGenericTable(Mcb->Mapping, Element);
+			RtlDeleteElementGenericTable(&Mcb->Mapping->Table, Element);
 			Mcb->PairCount--;
 
-			Reinserted = RtlInsertElementGenericTable
-				(Mcb->Mapping, &Reinsert, sizeof(Reinsert), NULL);
-			InsertHeadList(GET_LIST_HEAD(Mcb->Mapping), &Reinserted->Sequence);
+			Reinserted = RtlInsertElementGenericTable(&Mcb->Mapping->Table, &Reinsert, sizeof(Reinsert), NULL);
+			InsertHeadList(&Mcb->Mapping->SequenceList, &Reinserted->Sequence);
 			Mcb->PairCount++;
 			
-			Inserted = RtlInsertElementGenericTable
-				(Mcb->Mapping, &Upper, sizeof(Upper), NULL);
-			InsertHeadList(GET_LIST_HEAD(Mcb->Mapping), &Inserted->Sequence);
+			Inserted = RtlInsertElementGenericTable(&Mcb->Mapping->Table, &Upper, sizeof(Upper), NULL);
+			InsertHeadList(&Mcb->Mapping->SequenceList, &Inserted->Sequence);
 			Mcb->PairCount++;
 		}
 		else if (Element->RunStartVbn.QuadPart < Node.RunStartVbn.QuadPart)
 		{
-			LARGE_MCB_MAPPING_ENTRY NewElement;
-			PLARGE_MCB_MAPPING_ENTRY Reinserted;
-			LARGE_INTEGER StartHole = Node.RunStartVbn;
+			StartHole = Node.RunStartVbn;
 			NewElement.RunStartVbn = Element->RunStartVbn;
 			NewElement.StartingLbn = Element->StartingLbn;
 			NewElement.SectorCount.QuadPart = StartHole.QuadPart - Element->StartingLbn.QuadPart;
 
 			RemoveEntryList(&Element->Sequence);
-			RtlDeleteElementGenericTable(Mcb->Mapping, Element);
+			RtlDeleteElementGenericTable(&Mcb->Mapping->Table, Element);
 			Mcb->PairCount--;
 			
-			Reinserted = RtlInsertElementGenericTable
-				(Mcb->Mapping, &NewElement, sizeof(NewElement), NULL);
-			InsertHeadList(GET_LIST_HEAD(Mcb->Mapping), &Reinserted->Sequence);
-			Mcb->PairCount++;			
+			Reinserted = RtlInsertElementGenericTable(&Mcb->Mapping->Table, &NewElement, sizeof(NewElement), NULL);
+			InsertHeadList(&Mcb->Mapping->SequenceList, &Reinserted->Sequence);
+			Mcb->PairCount++;
 		}
 		else
 		{
-			LARGE_MCB_MAPPING_ENTRY NewElement;
-			PLARGE_MCB_MAPPING_ENTRY Reinserted;
-			LARGE_INTEGER EndHole = Element->RunStartVbn;
-			LARGE_INTEGER EndRun;
+			EndHole = Element->RunStartVbn;
 			EndRun.QuadPart = Element->RunStartVbn.QuadPart + Element->SectorCount.QuadPart;
 			NewElement.RunStartVbn = EndHole;
-			NewElement.StartingLbn.QuadPart = Element->StartingLbn.QuadPart + 
-				(EndHole.QuadPart - Element->RunStartVbn.QuadPart);
+			NewElement.StartingLbn.QuadPart = Element->StartingLbn.QuadPart + (EndHole.QuadPart - Element->RunStartVbn.QuadPart);
 			NewElement.SectorCount.QuadPart = EndRun.QuadPart - EndHole.QuadPart;
 
 			RemoveEntryList(&Element->Sequence);
-			RtlDeleteElementGenericTable(Mcb->Mapping, Element);
+			RtlDeleteElementGenericTable(&Mcb->Mapping->Table, Element);
 			Mcb->PairCount--;
 			
-			Reinserted = RtlInsertElementGenericTable
-				(Mcb->Mapping, &NewElement, sizeof(NewElement), NULL);
-			InsertHeadList(GET_LIST_HEAD(Mcb->Mapping), &Reinserted->Sequence);
-			Mcb->PairCount++;			
+			Reinserted = RtlInsertElementGenericTable(&Mcb->Mapping->Table, &NewElement, sizeof(NewElement), NULL);
+			InsertHeadList(&Mcb->Mapping->SequenceList, &Reinserted->Sequence);
+			Mcb->PairCount++;
+
+            DPRINT1("Reinserted %p, .RunStartVbn %I64d, .SectorCount %I64d\n", Reinserted, Reinserted->RunStartVbn.QuadPart, Reinserted->SectorCount.QuadPart);
+            DPRINT1("NewElement .RunStartVbn %I64d, .SectorCount %I64d\n", NewElement.RunStartVbn.QuadPart, NewElement.SectorCount.QuadPart);
 		}
 	}
 
@@ -631,7 +648,7 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
                          IN LONGLONG Vbn,
                          IN LONGLONG SectorCount)
 {
-	DPRINT("FsRtlRemoveLargeMcbEntry Mcb %x, Vbn %x, SectorCount %x\n", Mcb, (ULONG)Vbn, (ULONG)SectorCount);
+	DPRINT("FsRtlRemoveLargeMcbEntry Mcb %x, Vbn %I64d, SectorCount %I64d\n", Mcb, (ULONG)Vbn, (ULONG)SectorCount);
 
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     FsRtlRemoveBaseMcbEntry(&(Mcb->BaseMcb),
@@ -647,14 +664,15 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
  */
 VOID
 NTAPI
-FsRtlResetBaseMcb(IN PBASE_MCB Mcb)
+FsRtlResetBaseMcb(IN PBASE_MCB OpaqueMcb)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
 	PLARGE_MCB_MAPPING_ENTRY Element;
 
-	while (RtlNumberGenericTableElements(Mcb->Mapping) &&
-		   (Element = (PLARGE_MCB_MAPPING_ENTRY)RtlGetElementGenericTable(Mcb->Mapping, 0)))
+	while (RtlNumberGenericTableElements(&Mcb->Mapping->Table) &&
+		   (Element = (PLARGE_MCB_MAPPING_ENTRY)RtlGetElementGenericTable(&Mcb->Mapping->Table, 0)))
 	{
-		RtlDeleteElementGenericTable(Mcb->Mapping, Element);
+		RtlDeleteElementGenericTable(&Mcb->Mapping->Table, Element);
 	}
 
 	Mcb->PairCount = 0;
@@ -686,7 +704,7 @@ FsRtlResetLargeMcb(IN PLARGE_MCB Mcb,
 #define MCB_BUMP_NO_MORE 0
 #define MCB_BUMP_AGAIN   1
 
-static ULONG NTAPI McbBump(PBASE_MCB Mcb, PLARGE_MCB_MAPPING_ENTRY FixedPart)
+static ULONG NTAPI McbBump(PBASE_MCB_INTERNAL Mcb, PLARGE_MCB_MAPPING_ENTRY FixedPart)
 {
 	LARGE_MCB_MAPPING_ENTRY Reimagined;
 	PLARGE_MCB_MAPPING_ENTRY Found = NULL;
@@ -694,7 +712,7 @@ static ULONG NTAPI McbBump(PBASE_MCB Mcb, PLARGE_MCB_MAPPING_ENTRY FixedPart)
 	DPRINT("McbBump %x (%x:%x)\n", Mcb, FixedPart->RunStartVbn.LowPart, FixedPart->SectorCount.LowPart);
 
 	Reimagined = *FixedPart;
-	while ((Found = RtlLookupElementGenericTable(Mcb->Mapping, &Reimagined)))
+	while ((Found = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &Reimagined)))
 	{
 		Reimagined = *Found;
 		Reimagined.RunStartVbn.QuadPart = 
@@ -723,10 +741,11 @@ static ULONG NTAPI McbBump(PBASE_MCB Mcb, PLARGE_MCB_MAPPING_ENTRY FixedPart)
  */
 BOOLEAN
 NTAPI
-FsRtlSplitBaseMcb(IN PBASE_MCB Mcb,
+FsRtlSplitBaseMcb(IN PBASE_MCB OpaqueMcb,
                   IN LONGLONG Vbn,
                   IN LONGLONG Amount)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
 	ULONG Result;
 	LARGE_MCB_MAPPING_ENTRY Node;
 	PLARGE_MCB_MAPPING_ENTRY Existing = NULL;
@@ -734,7 +753,7 @@ FsRtlSplitBaseMcb(IN PBASE_MCB Mcb,
 	Node.RunStartVbn.QuadPart = Vbn;
 	Node.SectorCount.QuadPart = 0;
 	
-	Existing = RtlLookupElementGenericTable(Mcb->Mapping, &Node);
+	Existing = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &Node);
 
 	if (Existing)
 	{
@@ -765,21 +784,20 @@ FsRtlSplitBaseMcb(IN PBASE_MCB Mcb,
 		{
 			Node = *Existing;
 			RemoveHeadList(&Existing->Sequence);
-			RtlDeleteElementGenericTable(Mcb->Mapping, Existing);
+			RtlDeleteElementGenericTable(&Mcb->Mapping->Table, Existing);
 			Mcb->PairCount--;
 			
 			// Adjust the element we found.
 			Existing->SectorCount = LowerPart.SectorCount;
 
-			InsertedUpper = RtlInsertElementGenericTable
-				(Mcb->Mapping, &UpperPart, sizeof(UpperPart), NULL);
+			InsertedUpper = RtlInsertElementGenericTable(&Mcb->Mapping->Table, &UpperPart, sizeof(UpperPart), NULL);
 			if (!InsertedUpper)
 			{
 				// Just make it like it was
 				Existing->SectorCount = Node.SectorCount;
 				return FALSE;
 			}
-			InsertHeadList(GET_LIST_HEAD(Mcb->Mapping), &InsertedUpper->Sequence);
+			InsertHeadList(&Mcb->Mapping->SequenceList, &InsertedUpper->Sequence);
 			Mcb->PairCount++;
 		}
 		else
@@ -825,12 +843,13 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
  */
 VOID
 NTAPI
-FsRtlTruncateBaseMcb(IN PBASE_MCB Mcb,
+FsRtlTruncateBaseMcb(IN PBASE_MCB OpaqueMcb,
                      IN LONGLONG Vbn)
 {
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
 	if (!Vbn)
 	{
-		FsRtlResetBaseMcb(Mcb);
+		FsRtlResetBaseMcb(OpaqueMcb);
 	}
 	else
 	{
@@ -838,10 +857,10 @@ FsRtlTruncateBaseMcb(IN PBASE_MCB Mcb,
 		PLARGE_MCB_MAPPING_ENTRY Found;
 		Truncate.RunStartVbn.QuadPart = Vbn;
 		Truncate.SectorCount.QuadPart = (1ull<<62) - Truncate.RunStartVbn.QuadPart;
-		while ((Found = RtlLookupElementGenericTable(Mcb->Mapping, &Truncate)))
+		while ((Found = RtlLookupElementGenericTable(&Mcb->Mapping->Table, &Truncate)))
 		{
 			RemoveEntryList(&Found->Sequence);
-			RtlDeleteElementGenericTable(Mcb->Mapping, Found);
+			RtlDeleteElementGenericTable(&Mcb->Mapping->Table, Found);
 			Mcb->PairCount--;
 		}
 	}
