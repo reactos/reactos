@@ -155,7 +155,7 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
     V86EFlags |= EFLAGS_V86_MASK;
 
     /* Update EFlags in trap frame */
-    TrapFrame->EFlags = V86EFlags;
+    TrapFrame->EFlags |= V86EFlags;
 
     /* Check if ESP0 needs to be fixed up */
     if (TrapEFlags & EFLAGS_V86_MASK) Ki386AdjustEsp0(TrapFrame);
