@@ -78,9 +78,10 @@
 void *
 mem_malloc(mem_size_t size)
 {
+  void *ret;
   struct memp_malloc_helper *element;
   memp_t poolnr;
-  mem_size_t required_size = size + sizeof(struct memp_malloc_helper);
+  mem_size_t required_size = size + LWIP_MEM_ALIGN_SIZE(sizeof(struct memp_malloc_helper));
 
   for (poolnr = MEMP_POOL_FIRST; poolnr <= MEMP_POOL_LAST; poolnr = (memp_t)(poolnr + 1)) {
 #if MEM_USE_POOLS_TRY_BIGGER_POOL
@@ -113,9 +114,9 @@ again:
   /* save the pool number this element came from */
   element->poolnr = poolnr;
   /* and return a pointer to the memory directly after the struct memp_malloc_helper */
-  element++;
+  ret = (u8_t*)element + LWIP_MEM_ALIGN_SIZE(sizeof(struct memp_malloc_helper));
 
-  return element;
+  return ret;
 }
 
 /**
@@ -128,13 +129,13 @@ again:
 void
 mem_free(void *rmem)
 {
-  struct memp_malloc_helper *hmem = (struct memp_malloc_helper*)rmem;
+  struct memp_malloc_helper *hmem;
 
   LWIP_ASSERT("rmem != NULL", (rmem != NULL));
   LWIP_ASSERT("rmem == MEM_ALIGN(rmem)", (rmem == LWIP_MEM_ALIGN(rmem)));
 
   /* get the original struct memp_malloc_helper */
-  hmem--;
+  hmem = (struct memp_malloc_helper*)(void*)((u8_t*)rmem - LWIP_MEM_ALIGN_SIZE(sizeof(struct memp_malloc_helper)));
 
   LWIP_ASSERT("hmem != NULL", (hmem != NULL));
   LWIP_ASSERT("hmem == MEM_ALIGN(hmem)", (hmem == LWIP_MEM_ALIGN(hmem)));
@@ -190,7 +191,9 @@ static struct mem *ram_end;
 static struct mem *lfree;
 
 /** concurrent access protection */
+#if !NO_SYS
 static sys_mutex_t mem_mutex;
+#endif
 
 #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
 
@@ -518,7 +521,7 @@ mem_malloc(mem_size_t size)
   sys_mutex_lock(&mem_mutex);
   LWIP_MEM_ALLOC_PROTECT();
 #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
-  /* run as long as a mem_free disturbed mem_malloc */
+  /* run as long as a mem_free disturbed mem_malloc or mem_trim */
   do {
     local_mem_free_count = 0;
 #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
@@ -532,12 +535,14 @@ mem_malloc(mem_size_t size)
 #if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
       mem_free_count = 0;
       LWIP_MEM_ALLOC_UNPROTECT();
-      /* allow mem_free to run */
+      /* allow mem_free or mem_trim to run */
       LWIP_MEM_ALLOC_PROTECT();
       if (mem_free_count != 0) {
-        local_mem_free_count = mem_free_count;
+        /* If mem_free or mem_trim have run, we have to restart since they
+           could have altered our current struct mem. */
+        local_mem_free_count = 1;
+        break;
       }
-      mem_free_count = 0;
 #endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
 
       if ((!mem->used) &&
@@ -581,15 +586,27 @@ mem_malloc(mem_size_t size)
           mem->used = 1;
           MEM_STATS_INC_USED(used, mem->next - (mem_size_t)((u8_t *)mem - ram));
         }
-
+#if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+mem_malloc_adjust_lfree:
+#endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
         if (mem == lfree) {
+          struct mem *cur = lfree;
           /* Find next free block after mem and update lowest free pointer */
-          while (lfree->used && lfree != ram_end) {
+          while (cur->used && cur != ram_end) {
+#if LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT
+            mem_free_count = 0;
             LWIP_MEM_ALLOC_UNPROTECT();
             /* prevent high interrupt latency... */
             LWIP_MEM_ALLOC_PROTECT();
-            lfree = (struct mem *)(void *)&ram[lfree->next];
+            if (mem_free_count != 0) {
+              /* If mem_free or mem_trim have run, we have to restart since they
+                 could have altered our current struct mem or lfree. */
+              goto mem_malloc_adjust_lfree;
+            }
+#endif /* LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT */
+            cur = (struct mem *)(void *)&ram[cur->next];
           }
+          lfree = cur;
           LWIP_ASSERT("mem_malloc: !lfree->used", ((lfree == ram_end) || (!lfree->used)));
         }
         LWIP_MEM_ALLOC_UNPROTECT();

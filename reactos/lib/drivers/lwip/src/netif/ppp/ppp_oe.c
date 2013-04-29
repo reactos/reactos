@@ -74,7 +74,7 @@
 
 #include "netif/ppp_oe.h"
 
-#include "ppp.h"
+#include "ppp_impl.h"
 #include "pppdebug.h"
 
 #include "lwip/timers.h"

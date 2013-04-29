@@ -95,7 +95,7 @@ raw_input(struct pbuf *p, struct netif *inp)
          ip_addr_cmp(&(pcb->local_ip), &current_iphdr_dest))) {
 #if IP_SOF_BROADCAST_RECV
       /* broadcast filter? */
-      if ((pcb->so_options & SOF_BROADCAST) || !ip_addr_isbroadcast(&current_iphdr_dest, inp))
+      if (ip_get_option(pcb, SOF_BROADCAST) || !ip_addr_isbroadcast(&current_iphdr_dest, inp))
 #endif /* IP_SOF_BROADCAST_RECV */
       {
         /* receive callback function available? */
@@ -245,7 +245,7 @@ raw_sendto(struct raw_pcb *pcb, struct pbuf *p, ip_addr_t *ipaddr)
 
 #if IP_SOF_BROADCAST
   /* broadcast filter? */
-  if (((pcb->so_options & SOF_BROADCAST) == 0) && ip_addr_isbroadcast(ipaddr, netif)) {
+  if (!ip_get_option(pcb, SOF_BROADCAST) && ip_addr_isbroadcast(ipaddr, netif)) {
     LWIP_DEBUGF(RAW_DEBUG | LWIP_DBG_LEVEL_WARNING, ("raw_sendto: SOF_BROADCAST not enabled on pcb %p\n", (void *)pcb));
     /* free any temporary header pbuf allocated by pbuf_header() */
     if (q != p) {
@@ -263,13 +263,9 @@ raw_sendto(struct raw_pcb *pcb, struct pbuf *p, ip_addr_t *ipaddr)
     src_ip = &(pcb->local_ip);
   }
 
-#if LWIP_NETIF_HWADDRHINT
-  netif->addr_hint = &(pcb->addr_hint);
-#endif /* LWIP_NETIF_HWADDRHINT*/
+  NETIF_SET_HWADDRHINT(netif, &pcb->addr_hint);
   err = ip_output_if (q, src_ip, ipaddr, pcb->ttl, pcb->tos, pcb->protocol, netif);
-#if LWIP_NETIF_HWADDRHINT
-  netif->addr_hint = NULL;
-#endif /* LWIP_NETIF_HWADDRHINT*/
+  NETIF_SET_HWADDRHINT(netif, NULL);
 
   /* did we chain a header earlier? */
   if (q != p) {

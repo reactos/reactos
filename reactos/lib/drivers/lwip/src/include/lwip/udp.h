@@ -154,7 +154,7 @@ err_t            udp_send_chksum(struct udp_pcb *pcb, struct pbuf *p,
 /* The following functions are the lower layer interface to UDP. */
 void             udp_input      (struct pbuf *p, struct netif *inp);
 
-#define udp_init() /* Compatibility define, not init needed. */
+void             udp_init       (void);
 
 #if UDP_DEBUG
 void udp_debug_print(struct udp_hdr *udphdr);

@@ -1,4 +1,5 @@
 #include "lwip/sys.h"
+#include "lwip/netif.h"
 #include "lwip/tcpip.h"
 
 #include "rosip.h"

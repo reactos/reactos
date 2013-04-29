@@ -50,7 +50,6 @@
 #include "lwip/def.h"
 #include "lwip/mem.h"
 #include "lwip/pbuf.h"
-#include "lwip/sys.h"
 #include <lwip/stats.h>
 #include <lwip/snmp.h>
 #include "netif/etharp.h"

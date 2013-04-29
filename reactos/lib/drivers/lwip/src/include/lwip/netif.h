@@ -163,6 +163,10 @@ struct netif {
    */
   netif_status_callback_fn link_callback;
 #endif /* LWIP_NETIF_LINK_CALLBACK */
+#if LWIP_NETIF_REMOVE_CALLBACK
+  /** This function is called when the netif has been removed */
+  netif_status_callback_fn remove_callback;
+#endif /* LWIP_NETIF_REMOVE_CALLBACK */
   /** This field can be set by the device driver and could point
    *  to state information for the device. */
   void *state;
@@ -280,6 +284,9 @@ void netif_set_down(struct netif *netif);
 #if LWIP_NETIF_STATUS_CALLBACK
 void netif_set_status_callback(struct netif *netif, netif_status_callback_fn status_callback);
 #endif /* LWIP_NETIF_STATUS_CALLBACK */
+#if LWIP_NETIF_REMOVE_CALLBACK
+void netif_set_remove_callback(struct netif *netif, netif_status_callback_fn remove_callback);
+#endif /* LWIP_NETIF_REMOVE_CALLBACK */
 
 void netif_set_link_up(struct netif *netif);
 void netif_set_link_down(struct netif *netif);
@@ -307,6 +314,12 @@ void netif_poll(struct netif *netif);
 void netif_poll_all(void);
 #endif /* !LWIP_NETIF_LOOPBACK_MULTITHREADING */
 #endif /* ENABLE_LOOPBACK */
+
+#if LWIP_NETIF_HWADDRHINT
+#define NETIF_SET_HWADDRHINT(netif, hint) ((netif)->addr_hint = (hint))
+#else /* LWIP_NETIF_HWADDRHINT */
+#define NETIF_SET_HWADDRHINT(netif, hint)
+#endif /* LWIP_NETIF_HWADDRHINT */
 
 #ifdef __cplusplus
 }

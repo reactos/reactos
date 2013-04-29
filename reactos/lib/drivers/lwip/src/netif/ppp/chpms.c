@@ -75,7 +75,7 @@
 
 #if MSCHAP_SUPPORT /* don't build if not configured for use in lwipopts.h */
 
-#include "ppp.h"
+#include "ppp_impl.h"
 #include "pppdebug.h"
 
 #include "md4.h"
