@@ -424,6 +424,10 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
                 NdisStatus = NDIS_STATUS_PENDING;
             }
         }
+        
+        if (NdisStatus != NDIS_STATUS_PENDING) {
+            MiniWorkItemComplete(Adapter, NdisWorkItemSend);
+        }
 
         return NdisStatus;
    } else {
@@ -446,6 +450,10 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
                 MiniQueueWorkItem(Adapter, NdisWorkItemSend, Packet, TRUE);
                 NdisStatus = NDIS_STATUS_PENDING;
             }
+        }
+        
+        if (NdisStatus != NDIS_STATUS_PENDING) {
+            MiniWorkItemComplete(Adapter, NdisWorkItemSend);
         }
 
         return NdisStatus;
