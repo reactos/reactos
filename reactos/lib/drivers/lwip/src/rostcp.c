@@ -631,7 +631,14 @@ LibTCPShutdownCallback(void *arg)
         goto done;
     }
 
-    msg->Output.Shutdown.Error = tcp_shutdown(pcb, msg->Input.Shutdown.shut_rx, msg->Input.Shutdown.shut_tx);
+    /* These need to be called separately, otherwise we get a tcp_close() */
+    if (msg->Input.Shutdown.shut_rx) {
+        msg->Output.Shutdown.Error = tcp_shutdown(pcb, TRUE, FALSE);
+    }
+    if (msg->Input.Shutdown.shut_tx) {
+        msg->Output.Shutdown.Error = tcp_shutdown(pcb, FALSE, TRUE);
+    }
+
     if (!msg->Output.Shutdown.Error)
     {
         if (msg->Input.Shutdown.shut_rx)
@@ -642,10 +649,6 @@ LibTCPShutdownCallback(void *arg)
 
         if (msg->Input.Shutdown.shut_tx)
             msg->Input.Shutdown.Connection->SendShutdown = TRUE;
-            
-        /* Shutting down both sides is like a close to LwIP, so clear the context */
-        if (msg->Input.Shutdown.shut_rx && msg->Input.Shutdown.shut_tx)
-            msg->Input.Shutdown.Connection->SocketContext = NULL;
     }
 
 done:
@@ -706,7 +709,6 @@ LibTCPCloseCallback(void *arg)
         case CLOSED:
         case LISTEN:
         case SYN_SENT:
-        case CLOSE_WAIT:
            msg->Output.Close.Error = tcp_close(pcb);
 
            if (!msg->Output.Close.Error && msg->Input.Close.Callback)
@@ -714,8 +716,9 @@ LibTCPCloseCallback(void *arg)
            break;
 
         default:
-           /* Start the graceful close process (or send RST for pending data) */
-           msg->Output.Close.Error = tcp_close(pcb);
+           /* Abort the socket */
+           tcp_abort(pcb);
+           msg->Output.Close.Error = ERR_OK;
            break;
     }
 
