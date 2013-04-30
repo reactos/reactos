@@ -631,18 +631,8 @@ LibTCPShutdownCallback(void *arg)
         goto done;
     }
 
-    if (pcb->state == CLOSE_WAIT)
-    {
-        /* This case actually results in a socket closure later (lwIP bug?) */
-        msg->Input.Shutdown.Connection->SocketContext = NULL;
-    }
-
     msg->Output.Shutdown.Error = tcp_shutdown(pcb, msg->Input.Shutdown.shut_rx, msg->Input.Shutdown.shut_tx);
-    if (msg->Output.Shutdown.Error)
-    {
-        msg->Input.Shutdown.Connection->SocketContext = pcb;
-    }
-    else
+    if (!msg->Output.Shutdown.Error)
     {
         if (msg->Input.Shutdown.shut_rx)
         {
@@ -652,6 +642,10 @@ LibTCPShutdownCallback(void *arg)
 
         if (msg->Input.Shutdown.shut_tx)
             msg->Input.Shutdown.Connection->SendShutdown = TRUE;
+            
+        /* Shutting down both sides is like a close to LwIP, so clear the context */
+        if (msg->Input.Shutdown.shut_rx && msg->Input.Shutdown.shut_tx)
+            msg->Input.Shutdown.Connection->SocketContext = NULL;
     }
 
 done:
@@ -712,6 +706,7 @@ LibTCPCloseCallback(void *arg)
         case CLOSED:
         case LISTEN:
         case SYN_SENT:
+        case CLOSE_WAIT:
            msg->Output.Close.Error = tcp_close(pcb);
 
            if (!msg->Output.Close.Error && msg->Input.Close.Callback)
@@ -719,20 +714,8 @@ LibTCPCloseCallback(void *arg)
            break;
 
         default:
-           if (msg->Input.Close.Connection->SendShutdown &&
-               msg->Input.Close.Connection->ReceiveShutdown)
-           {
-               /* Abort the connection */
-               tcp_abort(pcb);
-
-               /* Aborts always succeed */
-               msg->Output.Close.Error = ERR_OK;
-           }
-           else
-           {
-               /* Start the graceful close process (or send RST for pending data) */
-               msg->Output.Close.Error = tcp_close(pcb);
-           }
+           /* Start the graceful close process (or send RST for pending data) */
+           msg->Output.Close.Error = tcp_close(pcb);
            break;
     }
 
