@@ -19,3 +19,6 @@ INT unimplemented(INT argc, WCHAR **argv);
 INT cmdHelp(INT argc, WCHAR **argv);
 INT cmdStart(INT argc, WCHAR **argv);
 INT cmdStop(INT argc, WCHAR **argv);
+int cmdHelpMsg(int argc, wchar_t *argv[]);
+int cmdPause(int argc, wchar_t *argv[]);
+int cmdContinue(int argc, wchar_t *argv[]);
