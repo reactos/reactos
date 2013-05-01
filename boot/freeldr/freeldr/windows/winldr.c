@@ -126,9 +126,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	do
 	{
-		while (*LoadOptions == '/')
-			++LoadOptions;
-
+		while (*LoadOptions == '/') ++LoadOptions;
 		*NewLoadOptions++ = *LoadOptions;
 	} while (*LoadOptions++);
 
@@ -227,7 +225,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 static BOOLEAN
 WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
-                       LPSTR BootPath,
+                       LPCSTR BootPath,
                        PUNICODE_STRING FilePath,
                        ULONG Flags,
                        PLDR_DATA_TABLE_ENTRY *DriverDTE)
@@ -299,7 +297,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 
 BOOLEAN
 WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                      LPSTR BootPath)
+                      LPCSTR BootPath)
 {
 	PLIST_ENTRY NextBd;
 	PBOOT_DRIVER_LIST_ENTRY BootDriver;
@@ -318,8 +316,11 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		// Paths are relative (FIXME: Are they always relative?)
 
 		// Load it
-		Status = WinLdrLoadDeviceDriver(&LoaderBlock->LoadOrderListHead, BootPath, &BootDriver->FilePath,
-			0, &BootDriver->LdrEntry);
+		Status = WinLdrLoadDeviceDriver(&LoaderBlock->LoadOrderListHead,
+		                                BootPath,
+		                                &BootDriver->FilePath,
+		                                0,
+		                                &BootDriver->LdrEntry);
 
 		// If loading failed - cry loudly
 		//FIXME: Maybe remove it from the list and try to continue?
@@ -340,8 +341,10 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	return TRUE;
 }
 
-PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
-					   TYPE_OF_MEMORY MemoryType)
+PVOID
+WinLdrLoadModule(PCSTR ModuleName,
+                 ULONG *Size,
+                 TYPE_OF_MEMORY MemoryType)
 {
 	ULONG FileId;
 	PVOID PhysicalBase;
@@ -398,7 +401,6 @@ PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
 	return PhysicalBase;
 }
 
-
 USHORT
 WinLdrDetectVersion()
 {
@@ -427,6 +429,7 @@ LoadModule(
     PCCH File,
     TYPE_OF_MEMORY MemoryType,
     PLDR_DATA_TABLE_ENTRY *Dte,
+    BOOLEAN IsKdTransportDll,
     ULONG Percentage)
 {
 	CHAR FullFileName[MAX_PATH];
@@ -448,10 +451,137 @@ LoadModule(
 
 	strcpy(FullFileName, "WINDOWS\\SYSTEM32\\");
 	strcat(FullFileName, File);
-	WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead, File,
-		FullFileName, BaseAdress, Dte);
+	/*
+	 * Cheat about the base DLL name if we are loading
+	 * the Kernel Debugger Transport DLL, to make the
+	 * PE loader happy.
+	 */
+	WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
+	                             (IsKdTransportDll ? "KDCOM.DLL" : File),
+	                             FullFileName,
+	                             BaseAdress,
+	                             Dte);
 
 	return BaseAdress;
+}
+
+static
+BOOLEAN
+LoadWindowsCore(IN USHORT OperatingSystemVersion,
+                IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                IN LPCSTR BootOptions,
+                IN LPCSTR BootPath,
+                IN OUT PLDR_DATA_TABLE_ENTRY* KernelDTE)
+{
+	BOOLEAN Status;
+	CHAR DirPath[MAX_PATH];
+	CHAR KdTransportDllName[MAX_PATH];
+	PLDR_DATA_TABLE_ENTRY HalDTE, KdComDTE = NULL;
+
+	if (!KernelDTE) return FALSE;
+
+	/* Load the Kernel */
+	LoadModule(LoaderBlock, BootPath, "NTOSKRNL.EXE", LoaderSystemCode, KernelDTE, FALSE, 30);
+
+	/* Load the HAL */
+	LoadModule(LoaderBlock, BootPath, "HAL.DLL", LoaderHalCode, &HalDTE, FALSE, 45);
+
+	/* Load the Kernel Debugger Transport DLL */
+	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
+	{
+		/*
+		 * According to http://www.nynaeve.net/?p=173 :
+		 * "[...] Another enhancement that could be done Microsoft-side would be
+		 * a better interface for replacing KD transport modules. Right now, due
+		 * to the fact that ntoskrnl is static linked to KDCOM.DLL, the OS loader
+		 * has a hardcoded hack that interprets the KD type in the OS loader options,
+		 * loads one of the (hardcoded filenames) "kdcom.dll", "kd1394.dll", or
+		 * "kdusb2.dll" modules, and inserts them into the loaded module list under
+		 * the name "kdcom.dll". [...]"
+		 */
+
+		/*
+		 * This loop replaces a dumb call to strstr(..., "DEBUGPORT=").
+		 * Indeed I want it to be case-insensitive to allow "debugport="
+		 * or "DeBuGpOrT=" or... , and I don't want it to match malformed
+		 * command-line options, such as:
+		 *
+		 * "...foo DEBUGPORT=xxx bar..."
+		 * "...foo/DEBUGPORT=xxx bar..."
+		 * "...foo/DEBUGPORT=bar..."
+		 *
+		 * i.e. the "DEBUGPORT=" switch must start with a slash and be separated
+		 * from the rest by whitespace, unless it begins the command-line, e.g.:
+		 *
+		 * "/DEBUGPORT=COM1 foo...bar..."
+		 * "...foo /DEBUGPORT=USB bar..."
+		 * or:
+		 * "...foo /DEBUGPORT= bar..."
+		 * (in that case, we default the port to COM).
+		 */
+		while (BootOptions)
+		{
+			/* Skip possible initial whitespace */
+			BootOptions += strspn(BootOptions, " \t");
+
+			/* Check whether a new commutator starts and it is the DEBUGPORT one */
+			if (*BootOptions != '/' || _strnicmp(++BootOptions, "DEBUGPORT=", 10) != 0)
+			{
+				/* Search for another whitespace */
+				BootOptions = strpbrk(BootOptions, " \t");
+				continue;
+			}
+			else
+			{
+				/* We found the DEBUGPORT commutator. Move to the port name. */
+				BootOptions += 10;
+				break;
+			}
+		}
+
+		if (BootOptions)
+		{
+			/*
+			 * We have found the DEBUGPORT commutator. Parse the port name.
+			 * Format: /DEBUGPORT=COM1 or /DEBUGPORT=FILE:\Device\HarddiskX\PartitionY\debug.log or /DEBUGPORT=FOO
+			 * If we only have /DEBUGPORT= (i.e. without any port name), defaults it to "COM".
+			 */
+			strcpy(KdTransportDllName, "KD");
+			if (_strnicmp(BootOptions, "COM", 3) == 0 && '0' <= BootOptions[3] && BootOptions[3] <= '9')
+			{
+				strncat(KdTransportDllName, BootOptions, 3);
+			}
+			else
+			{
+				size_t i = strcspn(BootOptions, " \t:"); /* Skip valid separators: whitespace or colon */
+				if (i == 0)
+					strcat(KdTransportDllName, "COM");
+				else
+					strncat(KdTransportDllName, BootOptions, i);
+			}
+			strcat(KdTransportDllName, ".DLL");
+			_strupr(KdTransportDllName);
+
+			/*
+			 * Load the transport DLL. Specify it to LoadModule so that it can
+			 * change the base DLL name of the loaded transport DLL to the default
+			 * "KDCOM.DLL" name, to make the PE loader happy.
+			 */
+			LoadModule(LoaderBlock, BootPath, KdTransportDllName, LoaderSystemCode, &KdComDTE, TRUE, 60);
+		}
+	}
+
+	/* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
+	strcpy(DirPath, BootPath);
+	strcat(DirPath, "system32\\");
+	Status  = WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
+	Status &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, HalDTE);
+	if (KdComDTE)
+	{
+		Status &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, KdComDTE);
+	}
+
+	return Status;
 }
 
 VOID
@@ -496,7 +626,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
 		strcat(BootPath, FileName);
 	}
 
-	/* append a backslash */
+	/* Append a backslash */
 	if ((strlen(BootPath)==0) || BootPath[strlen(BootPath)] != '\\')
 		strcat(BootPath, "\\");
 
@@ -553,7 +683,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
 	Status = WinLdrScanSystemHive(LoaderBlock, BootPath);
 	TRACE("SYSTEM hive scanned with status %d\n", Status);
 
-
+	/* Finish loading */
 	LoadAndBootWindowsCommon(OperatingSystemVersion,
 	                         LoaderBlock,
 	                         BootOptions,
@@ -571,8 +701,7 @@ LoadAndBootWindowsCommon(
 {
 	PLOADER_PARAMETER_BLOCK LoaderBlockVA;
 	BOOLEAN Status;
-	CHAR FileName[MAX_PATH];
-	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;
+	PLDR_DATA_TABLE_ENTRY KernelDTE;
 	KERNEL_ENTRY_POINT KiSystemStartup;
 	LPCSTR SystemRoot;
 	TRACE("LoadAndBootWindowsCommon()\n");
@@ -586,40 +715,30 @@ LoadAndBootWindowsCommon(
 	if (OperatingSystemVersion == 0)
 		OperatingSystemVersion = WinLdrDetectVersion();
 
-	/* Load kernel */
-	LoadModule(LoaderBlock, BootPath, "NTOSKRNL.EXE", LoaderSystemCode, &KernelDTE, 30);
-
-	/* Load HAL */
-	LoadModule(LoaderBlock, BootPath, "HAL.DLL", LoaderHalCode, &HalDTE, 45);
-
-	/* Load kernel-debugger support dll */
-	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
-	{
-		LoadModule(LoaderBlock, BootPath, "KDCOM.DLL", LoaderSystemCode, &KdComDTE, 60);
-	}
-
-	/* Load all referenced DLLs for kernel, HAL and kdcom.dll */
-	strcpy(FileName, BootPath);
-	strcat(FileName, "system32\\");
-	Status = WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, FileName, KernelDTE);
-	Status &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, FileName, HalDTE);
-	if (KdComDTE)
-		Status &= WinLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, FileName, KdComDTE);
-
+	/* Load the operating system core: the Kernel, the HAL and the Kernel Debugger Transport DLL */
+	Status = LoadWindowsCore(OperatingSystemVersion,
+	                         LoaderBlock,
+	                         BootOptions,
+	                         BootPath,
+	                         &KernelDTE);
 	if (!Status)
 	{
-		UiMessageBox("Error loading imported dll.");
+		UiMessageBox("Error loading NTOS core.");
 		return;
 	}
 
 	/* Load boot drivers */
 	UiDrawBackdrop();
 	UiDrawProgressBarCenter(100, 100, "Loading boot drivers...");
-	Status = WinLdrLoadBootDrivers(LoaderBlock, (PCHAR)BootPath);
+	Status = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
 	TRACE("Boot drivers loaded with status %d\n", Status);
 
 	/* Initialize Phase 1 - no drivers loading anymore */
-	WinLdrInitializePhase1(LoaderBlock, BootOptions, SystemRoot, BootPath, OperatingSystemVersion);
+	WinLdrInitializePhase1(LoaderBlock,
+	                       BootOptions,
+	                       SystemRoot,
+	                       BootPath,
+	                       OperatingSystemVersion);
 
 	/* Save entry-point pointer and Loader block VAs */
 	KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
@@ -644,7 +763,7 @@ LoadAndBootWindowsCommon(
 	LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
 
 	TRACE("Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
-		KiSystemStartup, LoaderBlockVA);
+	      KiSystemStartup, LoaderBlockVA);
 
 	// Zero KI_USER_SHARED_DATA page
 	memset((PVOID)KI_USER_SHARED_DATA, 0, MM_PAGE_SIZE);
@@ -722,5 +841,3 @@ WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock)
 		NextBd = ArcDisk->ListEntry.Flink;
 	}
 }
-
-
