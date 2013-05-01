@@ -12,6 +12,18 @@
 #define NDEBUG
 #include <debug.h>
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+FsRtlpPostStackOverflow(IN PVOID Context,
+                        IN PKEVENT Event,
+                        IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine,
+                        IN BOOLEAN IsPaging)
+{
+    UNIMPLEMENTED;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
@@ -37,7 +49,7 @@ FsRtlPostPagingFileStackOverflow(IN PVOID Context,
                                  IN PKEVENT Event,
                                  IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine)
 {
-    UNIMPLEMENTED;
+    FsRtlpPostStackOverflow(Context, Event, StackOverflowRoutine, TRUE);
 }
 
 /*++
@@ -63,7 +75,7 @@ FsRtlPostStackOverflow(IN PVOID Context,
                        IN PKEVENT Event,
                        IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine)
 {
-    KeBugCheck(FILE_SYSTEM);
+    FsRtlpPostStackOverflow(Context, Event, StackOverflowRoutine, FALSE);
 }
 
 /* EOF */
