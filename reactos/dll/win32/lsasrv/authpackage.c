@@ -18,6 +18,17 @@ typedef enum _LSA_TOKEN_INFORMATION_TYPE
     LsaTokenInformationV1
 } LSA_TOKEN_INFORMATION_TYPE, *PLSA_TOKEN_INFORMATION_TYPE;
 
+typedef struct _LSA_TOKEN_INFORMATION_V1
+{
+    LARGE_INTEGER ExpirationTime;
+    TOKEN_USER User;
+    PTOKEN_GROUPS Groups;
+    TOKEN_PRIMARY_GROUP PrimaryGroup;
+    PTOKEN_PRIVILEGES Privileges;
+    TOKEN_OWNER Owner;
+    TOKEN_DEFAULT_DACL DefaultDacl;
+} LSA_TOKEN_INFORMATION_V1, *PLSA_TOKEN_INFORMATION_V1;
+
 typedef PVOID PLSA_CLIENT_REQUEST;
 
 typedef PVOID (NTAPI *PLSA_ALLOCATE_LSA_HEAP)(ULONG);
@@ -284,6 +295,26 @@ LsapGetAuthenticationPackage(IN ULONG PackageId)
 
 
 static
+NTSTATUS
+NTAPI
+LsapCreateLogonSession(IN PLUID LogonId)
+{
+    TRACE("()\n");
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+NTAPI
+LsapDeleteLogonSession(IN PLUID LogonId)
+{
+    TRACE("()\n");
+    return STATUS_SUCCESS;
+}
+
+
+static
 PVOID
 NTAPI
 LsapAllocateHeap(IN ULONG Length)
@@ -404,8 +435,8 @@ LsapInitAuthPackages(VOID)
     PackageId = 0;
 
     /* Initialize the dispatch table */
-    DispatchTable.CreateLogonSession = NULL;
-    DispatchTable.DeleteLogonSession = NULL;
+    DispatchTable.CreateLogonSession = &LsapCreateLogonSession;
+    DispatchTable.DeleteLogonSession = &LsapDeleteLogonSession;
     DispatchTable.AddCredential = NULL;
     DispatchTable.GetCredentials = NULL;
     DispatchTable.DeleteCredential = NULL;
@@ -531,16 +562,19 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
               PLSAP_LOGON_CONTEXT LogonContext)
 {
     PAUTH_PACKAGE Package;
-    ULONG PackageId;
-    NTSTATUS Status;
-
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    SECURITY_QUALITY_OF_SERVICE Qos;
     LSA_TOKEN_INFORMATION_TYPE TokenInformationType;
     PVOID TokenInformation = NULL;
+    PLSA_TOKEN_INFORMATION_V1 TokenInfo1 = NULL;
     PUNICODE_STRING AccountName = NULL;
     PUNICODE_STRING AuthenticatingAuthority = NULL;
     PUNICODE_STRING MachineName = NULL;
-
     PVOID LocalAuthInfo = NULL;
+    HANDLE TokenHandle = NULL;
+    ULONG i;
+    ULONG PackageId;
+    NTSTATUS Status;
 
     TRACE("(%p %p)\n", RequestMsg, LogonContext);
 
@@ -556,7 +590,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
 
     if (RequestMsg->LogonUser.Request.AuthenticationInformationLength > 0)
     {
-        /* Allocat the local authentication info buffer */
+        /* Allocate the local authentication info buffer */
         LocalAuthInfo = RtlAllocateHeap(RtlGetProcessHeap(),
                                         HEAP_ZERO_MEMORY,
                                         RequestMsg->LogonUser.Request.AuthenticationInformationLength);
@@ -633,21 +667,131 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                          &AuthenticatingAuthority);
     }
 
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("LsaApLogonUser/Ex/2 failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (TokenInformationType == LsaTokenInformationV1)
+    {
+        TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
+
+        Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+        Qos.ImpersonationLevel = SecurityImpersonation;
+        Qos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+        Qos.EffectiveOnly = FALSE;
+
+        ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+        ObjectAttributes.RootDirectory = NULL;
+        ObjectAttributes.ObjectName = NULL;
+        ObjectAttributes.Attributes = 0;
+        ObjectAttributes.SecurityDescriptor = NULL;
+        ObjectAttributes.SecurityQualityOfService = &Qos;
+
+        /* Create the logon token */
+        Status = NtCreateToken(&TokenHandle,
+                               TOKEN_ALL_ACCESS,
+                               &ObjectAttributes,
+                               TokenPrimary,
+                               &RequestMsg->LogonUser.Reply.LogonId,
+                               &TokenInfo1->ExpirationTime,
+                               &TokenInfo1->User,
+                               TokenInfo1->Groups,
+                               TokenInfo1->Privileges,
+                               &TokenInfo1->Owner,
+                               &TokenInfo1->PrimaryGroup,
+                               &TokenInfo1->DefaultDacl,
+                               &RequestMsg->LogonUser.Request.SourceContext);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("NtCreateToken failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+    }
+    else
+    {
+        FIXME("TokenInformationType %d is not supported!\n", TokenInformationType);
+        Status = STATUS_NOT_IMPLEMENTED;
+        goto done;
+    }
+
+    /* Duplicate the token handle into the client process */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               TokenHandle,
+                               LogonContext->ClientProcessHandle,
+                               &RequestMsg->LogonUser.Reply.Token,
+                               0,
+                               0,
+                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_CLOSE_SOURCE);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("NtDuplicateObject failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    TokenHandle = NULL;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (TokenHandle != NULL)
+            NtClose(TokenHandle);
+    }
+
     /* Free the local authentication info buffer */
     if (LocalAuthInfo != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, LocalAuthInfo);
 
     if (TokenInformation != NULL)
     {
+        if (TokenInformationType == LsaTokenInformationV1)
+        {
+            TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
 
+            if (TokenInfo1 != NULL)
+            {
+                if (TokenInfo1->User.User.Sid != NULL)
+                    LsapFreeHeap(TokenInfo1->User.User.Sid);
+
+                if (TokenInfo1->Groups != NULL)
+                {
+                    for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
+                    {
+                        if (TokenInfo1->Groups->Groups[i].Sid != NULL)
+                            LsapFreeHeap(TokenInfo1->Groups->Groups[i].Sid);
+                    }
+
+                    LsapFreeHeap(TokenInfo1->Groups);
+                }
+
+                if (TokenInfo1->PrimaryGroup.PrimaryGroup != NULL)
+                    LsapFreeHeap(TokenInfo1->PrimaryGroup.PrimaryGroup);
+
+                if (TokenInfo1->Privileges != NULL)
+                    LsapFreeHeap(TokenInfo1->Privileges);
+
+                if (TokenInfo1->Owner.Owner != NULL)
+                    LsapFreeHeap(TokenInfo1->Owner.Owner);
+
+                if (TokenInfo1->DefaultDacl.DefaultDacl != NULL)
+                    LsapFreeHeap(TokenInfo1->DefaultDacl.DefaultDacl);
+
+                LsapFreeHeap(TokenInfo1);
+            }
+        }
+        else
+        {
+            FIXME("TokenInformationType %d is not supported!\n", TokenInformationType);
+        }
     }
 
-    if (AuthenticatingAuthority != NULL)
+    if (AccountName != NULL)
     {
 
     }
 
-    if (AccountName != NULL)
+    if (AuthenticatingAuthority != NULL)
     {
 
     }
