@@ -60,6 +60,23 @@ typedef enum _SECPKG_NAME_TYPE {
 } SECPKG_NAME_TYPE;
 
 /* struct definitions for SSP/AP */
+typedef struct _LSA_TOKEN_INFORMATION_NULL
+{
+    LARGE_INTEGER ExpirationTime;
+    PTOKEN_GROUPS Groups;
+} LSA_TOKEN_INFORMATION_NULL, *PLSA_TOKEN_INFORMATION_NULL;
+
+typedef struct _LSA_TOKEN_INFORMATION_V1
+{
+    LARGE_INTEGER ExpirationTime;
+    TOKEN_USER User;
+    PTOKEN_GROUPS Groups;
+    TOKEN_PRIMARY_GROUP PrimaryGroup;
+    PTOKEN_PRIVILEGES Privileges;
+    TOKEN_OWNER Owner;
+    TOKEN_DEFAULT_DACL DefaultDacl;
+} LSA_TOKEN_INFORMATION_V1, *PLSA_TOKEN_INFORMATION_V1;
+
 typedef struct _SECPKG_PRIMARY_CRED {
     LUID LogonId;
     UNICODE_STRING DownlevelName;
