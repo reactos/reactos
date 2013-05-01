@@ -3,7 +3,7 @@ add_subdirectory(beep)
 add_subdirectory(bootvid)
 
 if(_WINKD_)
-add_subdirectory(kddll)
+add_subdirectory(kdcom)
 else()
 add_subdirectory(kdrosdbg)
 endif()
