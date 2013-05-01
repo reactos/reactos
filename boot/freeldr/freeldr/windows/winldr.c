@@ -126,7 +126,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	do
 	{
-		while (*LoadOptions == '/') ++LoadOptions;
+		while (*LoadOptions == '/')
+			++LoadOptions;
+
 		*NewLoadOptions++ = *LoadOptions;
 	} while (*LoadOptions++);
 
