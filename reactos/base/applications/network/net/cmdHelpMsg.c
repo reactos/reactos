@@ -10,38 +10,42 @@
 #include "net.h"
 #include "stdlib.h"
 
-int cmdHelpMsg(int argc, wchar_t *argv[])
+INT cmdHelpMsg(INT argc, WCHAR **argv)
 {
-    wchar_t *endptr;
-    LPSTR lpBuffer;
-    long errNum;
+    LPWSTR endptr;
+    LPWSTR lpBuffer;
+    LONG errNum;
 
-    if(argc<3)
+    if (argc < 3)
     {
         puts("Usage: NET HELPMSG <Error Code>");
         return 1;
     }
+
     errNum = wcstol(argv[2], &endptr, 10);
-    if(*endptr != 0)
+    if (*endptr != 0)
     {
         puts("Usage: NET HELPMSG <Error Code>");
         return 1;
     }
 
     /* Unicode printing is not supported in ReactOS yet */
-    if(FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                      NULL,
-                      errNum,
-                      LANG_USER_DEFAULT,
-                      (LPSTR)&lpBuffer,
-                      0,
-                      NULL))
+    if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                       NULL,
+                       errNum,
+                       LANG_USER_DEFAULT,
+                       (LPWSTR)&lpBuffer,
+                       0,
+                       NULL))
     {
-        printf("\n%s\n", lpBuffer);
+        printf("\n%S\n", lpBuffer);
         LocalFree(lpBuffer);
     }
-    else printf("Unrecognized error code: %ld\n", errNum);
-    
+    else
+    {
+        printf("Unrecognized error code: %ld\n", errNum);
+    }
+
     return 0;
 }
 

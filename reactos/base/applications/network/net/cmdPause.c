@@ -9,41 +9,48 @@
 
 #include "net.h"
 
-int cmdPause(int argc, wchar_t *argv[])
+INT cmdPause(INT argc, WCHAR **argv)
 {
-    int errorCode=0;
-    SC_HANDLE hManager, hService;
+    SC_HANDLE hManager = NULL;
+    SC_HANDLE hService = NULL;
     SERVICE_STATUS status;
-    if(argc != 3)
+    INT nError = 0;
+
+    if (argc != 3)
     {
         puts("Usage: NET PAUSE <Service Name>");
         return 1;
     }
 
     hManager = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_ENUMERATE_SERVICE);
-    if(hManager == NULL)
+    if (hManager == NULL)
     {
-        printf("[OpenSCManager] Error: %d\n", errorCode=GetLastError());
-        return errorCode;
+        printf("[OpenSCManager] Error: %ld\n", GetLastError());
+        nError = 1;
+        goto done;
     }
-    
-    hService=OpenService(hManager, argv[2], SERVICE_PAUSE_CONTINUE);
-    if(hService == NULL)
+
+    hService = OpenService(hManager, argv[2], SERVICE_PAUSE_CONTINUE);
+    if (hService == NULL)
     {
-        printf("[OpenService] Error: %d\n", errorCode=GetLastError());
+        printf("[OpenService] Error: %ld\n", GetLastError());
+        nError = 1;
+        goto done;
+    }
+
+    if (!ControlService(hService, SERVICE_CONTROL_PAUSE, &status))
+    {
+        printf("[ControlService] Error: %ld\n", GetLastError());
+    }
+
+done:
+    if (hService != NULL)
+        CloseServiceHandle(hService);
+
+    if (hManager != NULL)
         CloseServiceHandle(hManager);
-        return errorCode;
-    }
-    
-    if(!ControlService(hService, SERVICE_CONTROL_PAUSE, &status))
-    {
-        printf("[ControlService] Error: %d\n", errorCode=GetLastError());
-    }
 
-    CloseServiceHandle(hService);
-    CloseServiceHandle(hManager);
-
-    return errorCode;
+    return nError;
 }
 
 /* EOF */
