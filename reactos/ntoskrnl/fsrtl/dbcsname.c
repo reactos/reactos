@@ -169,9 +169,67 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
     ASSERT(Expression->Length);
     ASSERT(!FsRtlDoesDbcsContainWildCards(Name));
 
-    if (Name->Length == 0)
+    /* Check if we were given strings at all */
+    if (!Name->Length || !Expression->Length)
     {
-        return (Expression->Length == 0);
+        /* Return TRUE if both strings are empty, otherwise FALSE */
+        if (Name->Length == 0 && Expression->Length == 0)
+            return TRUE;
+        else
+            return FALSE;
+    }
+
+    /* Check for a shortcut: just one wildcard */
+    if (Expression->Length == sizeof(CHAR))
+    {
+        if (Expression->Buffer[0] == '*')
+            return TRUE;
+    }
+
+    //ASSERT(FsRtlDoesDbcsContainWildCards(Expression));
+
+    /* Another shortcut, wildcard followed by some string */
+    if (Expression->Buffer[0] == '*')
+    {
+        /* Copy Expression to our local variable */
+        ANSI_STRING IntExpression = *Expression;
+
+        /* Skip the first char */
+        IntExpression.Buffer++;
+        IntExpression.Length -= sizeof(CHAR);
+
+        /* Continue only if the rest of the expression does NOT contain
+           any more wildcards */
+        if (!FsRtlDoesDbcsContainWildCards(&IntExpression))
+        {
+            /* Check for a degenerate case */
+            if (Name->Length < (Expression->Length - sizeof(CHAR)))
+                return FALSE;
+
+            /* Calculate position */
+            NamePosition = (Name->Length - IntExpression.Length) / sizeof(CHAR);
+
+            /* Check whether we are breaking a two chars char (DBCS) */
+            if (NlsMbOemCodePageTag)
+            {
+                MatchingChars = 0;
+
+                while (MatchingChars < NamePosition)
+                {
+                    /* Check if current char is DBCS lead char, if so, jump by two chars */
+                    MatchingChars += FsRtlIsLeadDbcsCharacter(Name->Buffer[MatchingChars]) ? 2 : 1;
+                }
+
+                /* If so, deny */
+                if (MatchingChars > NamePosition)
+                    return FALSE;
+            }
+
+            /* Compare */
+            return RtlEqualMemory(IntExpression.Buffer,
+                                  (Name->Buffer + NamePosition),
+                                  IntExpression.Length);
+        }
     }
 
     while (NamePosition < Name->Length && ExpressionPosition < Expression->Length)
