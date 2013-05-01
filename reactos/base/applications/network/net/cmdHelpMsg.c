@@ -14,12 +14,14 @@ int cmdHelpMsg(int argc, wchar_t *argv[])
 {
     wchar_t *endptr;
     LPSTR lpBuffer;
+    long errNum;
+
     if(argc<3)
     {
         puts("Usage: NET HELPMSG <Error Code>");
         return 1;
     }
-    long errNum=wcstol(argv[2], &endptr, 10);
+    errNum = wcstol(argv[2], &endptr, 10);
     if(*endptr != 0)
     {
         puts("Usage: NET HELPMSG <Error Code>");
