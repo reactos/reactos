@@ -147,7 +147,7 @@ FsRtlWorkerThread(IN PVOID StartContext)
 NTSTATUS
 NTAPI
 INIT_FUNCTION
-FsRtlInitializeWorkerThread()
+FsRtlInitializeWorkerThread(VOID)
 {
     ULONG i;
     NTSTATUS Status;
