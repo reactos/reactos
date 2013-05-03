@@ -5836,6 +5836,33 @@ FsRtlIsTotalDeviceFailure(
   _In_ NTSTATUS Status);
 #endif
 
+/* Output parameters of ZwQueryKey */
+
+typedef struct _KEY_NAME_INFORMATION {
+  ULONG NameLength;
+  WCHAR Name[1];
+} KEY_NAME_INFORMATION, *PKEY_NAME_INFORMATION;
+
+typedef struct _KEY_CACHED_INFORMATION {
+  LARGE_INTEGER LastWriteTime;
+  ULONG         TitleIndex;
+  ULONG         SubKeys;
+  ULONG         MaxNameLen;
+  ULONG         Values;
+  ULONG         MaxValueNameLen;
+  ULONG         MaxValueDataLen;
+  ULONG         NameLength;
+} KEY_CACHED_INFORMATION, *PKEY_CACHED_INFORMATION;
+
+typedef struct _KEY_VIRTUALIZATION_INFORMATION {
+  ULONG VirtualizationCandidate  :1;
+  ULONG VirtualizationEnabled  :1;
+  ULONG VirtualTarget  :1;
+  ULONG VirtualStore  :1;
+  ULONG VirtualSource  :1;
+  ULONG Reserved  :27;
+} KEY_VIRTUALIZATION_INFORMATION, *PKEY_VIRTUALIZATION_INFORMATION;
+
 #ifdef __cplusplus
 }
 #endif
