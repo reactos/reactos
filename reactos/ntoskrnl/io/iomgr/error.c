@@ -367,7 +367,11 @@ IopLogWorker(IN PVOID Parameter)
         DeviceNameLength += sizeof(WCHAR);
 
         /* Free the buffer if we had one */
-        if (PoolObjectNameInfo) ExFreePool(PoolObjectNameInfo);
+        if (PoolObjectNameInfo)
+        {
+            ExFreePool(PoolObjectNameInfo);
+            PoolObjectNameInfo = NULL;
+        }
 
         /* Go to the next string buffer position */
         ErrorMessage->EntryData.NumberOfStrings++;
@@ -428,7 +432,7 @@ IopLogWorker(IN PVOID Parameter)
             break;
         }
 
-        /* Derefernece the device object */
+        /* Dereference the device object */
         if (LogEntry->DeviceObject) ObDereferenceObject(LogEntry->DeviceObject);
         if (DriverObject) ObDereferenceObject(LogEntry->DriverObject);
 
