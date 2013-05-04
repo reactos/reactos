@@ -627,7 +627,7 @@ BasepIsRealtimeAllowed(IN BOOLEAN Keep)
     PVOID State;
     NTSTATUS Status;
 
-    Status = RtlAcquirePrivilege(&Privilege, TRUE, FALSE, &State);
+    Status = RtlAcquirePrivilege(&Privilege, 1, 0, &State);
     if (!NT_SUCCESS(Status)) return NULL;
 
     if (Keep)
