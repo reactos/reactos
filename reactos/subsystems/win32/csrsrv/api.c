@@ -63,7 +63,7 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
     {
         /* We are beyond the Maximum Server ID */
         DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n", ServerId, ServerDll);
-        ReplyMsg->Status = (ULONG)STATUS_ILLEGAL_FUNCTION;
+        ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
         return STATUS_ILLEGAL_FUNCTION;
     }
     else
@@ -82,7 +82,7 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
                     ((ServerDll->NameTable) && (ServerDll->NameTable[ApiId])) ?
                     ServerDll->NameTable[ApiId] : "*** UNKNOWN ***", &ServerDll->Name);
             // DbgBreakPoint();
-            ReplyMsg->Status = (ULONG)STATUS_ILLEGAL_FUNCTION;
+            ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
             return STATUS_ILLEGAL_FUNCTION;
         }
     }
@@ -155,7 +155,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
         if (CsrProcess)
         {
             /* Reference the Process */
-            CsrLockedReferenceProcess(CsrThread->Process);
+            CsrLockedReferenceProcess(CsrProcess);
 
             /* Release the lock */
             CsrReleaseProcessLock();
@@ -432,7 +432,7 @@ CsrApiRequestThread(IN PVOID Parameter)
             }
             else
             {
-                /* A bizare "success" code, just try again */
+                /* A strange "success" code, just try again */
                 DPRINT1("NtReplyWaitReceivePort returned \"success\" status 0x%x\n", Status);
                 continue;
             }
