@@ -4,6 +4,7 @@ list(APPEND SOURCE
     NtAllocateVirtualMemory.c
     NtFreeVirtualMemory.c
     NtMapViewOfSection.c
+    NtProtectVirtualMemory.c
     NtQuerySystemEnvironmentValue.c
     RtlBitmap.c
     RtlDetermineDosPathNameType.c
