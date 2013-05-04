@@ -481,7 +481,11 @@ ConSrvDisconnect(PCSR_PROCESS Process)
 CSR_SERVER_DLL_INIT(ConServerDllInitialization)
 {
     /* Initialize the memory */
-    ConSrvHeap = RtlGetProcessHeap();
+    // HACK: To try to uncover a heap corruption in CONSRV, use our own heap
+    // instead of the CSR heap, so that we won't corrupt it.
+    // ConSrvHeap = RtlGetProcessHeap();
+    ConSrvHeap = RtlCreateHeap(HEAP_GROWABLE, NULL, 0, 0, NULL, NULL);
+    if (!ConSrvHeap) return STATUS_NO_MEMORY;
 
     ConSrvInitConsoleSupport();
 
