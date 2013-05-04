@@ -7,6 +7,7 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <wincon.h>
 #include <commdlg.h>
 #include <cplext.h>
 #include <tchar.h>

@@ -1449,7 +1449,7 @@ typedef struct {
 
 typedef struct {
     DWORD cbSize;
-    DWORD cbSignature;
+    DWORD dwSignature;
     CHAR szTarget[MAX_PATH];
     WCHAR szwTarget[MAX_PATH];
 } EXP_SZ_LINK, *LPEXP_SZ_LINK;
@@ -1467,14 +1467,45 @@ typedef struct {
     BYTE abPropertyStorage[1];
 } EXP_PROPERTYSTORAGE;
 
-#define EXP_SZ_LINK_SIG         0xa0000001
-#define NT_CONSOLE_PROPS_SIG    0xa0000002
-#define NT_FE_CONSOLE_PROPS_SIG 0xa0000004
-#define EXP_SPECIAL_FOLDER_SIG  0xa0000005
-#define EXP_DARWIN_ID_SIG       0xa0000006
-#define EXP_SZ_ICON_SIG         0xa0000007
+#ifdef LF_FACESIZE
+typedef struct {
+    DATABLOCK_HEADER dbh;
+    WORD wFillAttribute;
+    WORD wPopupFillAttribute;
+    COORD dwScreenBufferSize;
+    COORD dwWindowSize;
+    COORD dwWindowOrigin;
+    DWORD nFont;
+    DWORD nInputBufferSize;
+    COORD dwFontSize;
+    UINT uFontFamily;
+    UINT uFontWeight;
+    WCHAR FaceName[LF_FACESIZE];
+    UINT uCursorSize;
+    BOOL bFullScreen;
+    BOOL bQuickEdit;
+    BOOL bInsertMode;
+    BOOL bAutoPosition;
+    UINT uHistoryBufferSize;
+    UINT uNumberOfHistoryBuffers;
+    BOOL bHistoryNoDup;
+    COLORREF ColorTable[16];
+} NT_CONSOLE_PROPS, *LPNT_CONSOLE_PROPS;
+#endif
+
+typedef struct {
+    DATABLOCK_HEADER dbh;
+    UINT uCodePage;
+} NT_FE_CONSOLE_PROPS, *LPNT_FE_CONSOLE_PROPS;
+
+#define EXP_SZ_LINK_SIG         0xa0000001 /* EXP_SZ_LINK */
+#define NT_CONSOLE_PROPS_SIG    0xa0000002 /* NT_CONSOLE_PROPS */
+#define NT_FE_CONSOLE_PROPS_SIG 0xa0000004 /* NT_FE_CONSOLE_PROPS */
+#define EXP_SPECIAL_FOLDER_SIG  0xa0000005 /* EXP_SPECIAL_FOLDER */
+#define EXP_DARWIN_ID_SIG       0xa0000006 /* EXP_DARWIN_LINK */
+#define EXP_SZ_ICON_SIG         0xa0000007 /* EXP_SZ_LINK */
 #define EXP_LOGO3_ID_SIG        EXP_SZ_ICON_SIG /* Old SDKs only */
-#define EXP_PROPERTYSTORAGE_SIG 0xa0000009
+#define EXP_PROPERTYSTORAGE_SIG 0xa0000009 /* EXP_PROPERTYSTORAGE */
 
 typedef struct _SHChangeDWORDAsIDList {
     USHORT   cb;

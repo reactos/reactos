@@ -33,6 +33,7 @@
 //#include "winnls.h"
 #include <shlwapi.h>
 #include <wingdi.h>
+#include <wincon.h>
 #include <wine/debug.h>
 //#include "msi.h"
 //#include "msiquery.h"

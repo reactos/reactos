@@ -11,6 +11,7 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <winnls.h>
+#include <wincon.h>
 #include <powrprof.h>
 #include <tchar.h>
 #include <cpl.h>

@@ -9,6 +9,7 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <wincon.h>
 #include <shellapi.h>
 #include <commdlg.h>
 #include <cpl.h>

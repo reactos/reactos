@@ -11,6 +11,7 @@
 #include <winsvc.h>
 #include <winuser.h>
 #include <windowsx.h> /* GET_X/Y_LPARAM */
+#include <wincon.h>
 #include <tchar.h>
 #include <commdlg.h>
 #include <cderr.h>
