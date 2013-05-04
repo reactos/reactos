@@ -1,7 +1,6 @@
-/*
- * FILE:        dll/win32/msgina/lang/cs-CZ.rc
+/* FILE:        dll/win32/msgina/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-06-24
+ * UPDATED:     2013-02-17
  */
  
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -45,9 +44,9 @@ CAPTION "Bezpečnost"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
-    GROUPBOX        "Logon Information",IDC_STATIC,7,61,261,52
-    LTEXT           "<Message>",IDC_LOGONMSG,15,73,245,18
-    LTEXT           "<Logon date>",IDC_LOGONDATE,15,94,245,8
+    GROUPBOX        "Přihlašovací údaje",IDC_STATIC,7,61,261,52
+    LTEXT           "<Zpráva>",IDC_LOGONMSG,15,73,245,18
+    LTEXT           "<Datum přihlášení>",IDC_LOGONDATE,15,94,245,8
     CTEXT           "Co chcete udělat?",IDC_STATIC,10,119,255,8
     PUSHBUTTON      "Uzamknout počítač",IDC_LOCK,10,135,70,14
     PUSHBUTTON      "Odhlásit",IDC_LOGOFF,90,135,70,14
@@ -58,31 +57,31 @@ END
 
 IDD_LOCKED_DLG DIALOGEX 0,0,275,121
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Computer Locked"
+CAPTION "Počítač je uzamčen"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
     ICON            IDI_LOCKICON,-1,7,59,20,20
-    LTEXT           "This computer is in use and has been locked.",IDC_STATIC,37,61,231,8
-    LTEXT           "Message",IDC_LOCKMSG,37,75,231,26
-    LTEXT           "Press Ctrl-Alt-Del to unlock this computer.",IDC_STATIC,37,106,231,8
+    LTEXT           "Tento počítač je momentálně používán a byl uzamčen.",IDC_STATIC,37,61,231,8
+    LTEXT           "Zpráva",IDC_LOCKMSG,37,75,231,26
+    LTEXT           "Stisknutím kláves Ctrl-Alt-Del odemknete počítač.",IDC_STATIC,37,106,231,8
 END
 
 IDD_UNLOCK_DLG DIALOGEX 0,0,275,179
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Unlock Computer"
+CAPTION "Odemknout počítač"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
     ICON            IDI_LOCKICON,-1,7,59,20,20
-    LTEXT           "This computer is in use and has been locked.",IDC_STATIC,36,61,232,8
-    LTEXT           "Message",IDC_LOCKMSG,36,75,232,26
-    LTEXT           "Username:",IDC_STATIC,36,107,40,8
+    LTEXT           "Tento počítač je momentálně používán a byl uzamčen.",IDC_STATIC,36,61,232,8
+    LTEXT           "Zpráva",IDC_LOCKMSG,36,75,232,26
+    LTEXT           "Uživatelské jméno:",IDC_STATIC,36,107,40,8
     EDITTEXT        IDC_USERNAME,84,104,119,14,ES_AUTOHSCROLL
-    LTEXT           "Password:",IDC_STATIC,36,125,42,8
+    LTEXT           "Heslo:",IDC_STATIC,36,125,42,8
     EDITTEXT        IDC_PASSWORD,84,123,119,14,ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON      "OK",IDOK,80,154,50,14,BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Cancel",IDCANCEL,144,154,50,14
+    PUSHBUTTON      "Storno",IDCANCEL,144,154,50,14
 END
 
 STRINGTABLE
@@ -93,6 +92,7 @@ BEGIN
     IDS_ASKFORUSER "Uživatelské jméno: "
     IDS_ASKFORPASSWORD "Heslo: "
     IDS_FORCELOGOFF "Současný uživatel bude odhlášen a všechna jeho neuložená data ztracena. Pokračovat?"
-    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
-    IDS_LOGONDATE "Logon date: %s %s"
+    IDS_LOCKMSG "Pouze %s nebo Administrátor může odemknout tento počítač."
+    IDS_LOGONMSG "Jste přihlášeni jako %s."
+    IDS_LOGONDATE "Datum přihlášení: %s %s"
 END

@@ -3,6 +3,9 @@
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DA_DK
     #include "lang/da-DK.rc"
 #endif
