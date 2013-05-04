@@ -484,7 +484,12 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     // HACK: To try to uncover a heap corruption in CONSRV, use our own heap
     // instead of the CSR heap, so that we won't corrupt it.
     // ConSrvHeap = RtlGetProcessHeap();
-    ConSrvHeap = RtlCreateHeap(HEAP_GROWABLE, NULL, 0, 0, NULL, NULL);
+    ConSrvHeap = RtlCreateHeap(HEAP_GROWABLE                |
+                               HEAP_PROTECTION_ENABLED      |
+                               HEAP_FREE_CHECKING_ENABLED   |
+                               HEAP_TAIL_CHECKING_ENABLED   |
+                               HEAP_VALIDATE_ALL_ENABLED,
+                               NULL, 0, 0, NULL, NULL);
     if (!ConSrvHeap) return STATUS_NO_MEMORY;
 
     ConSrvInitConsoleSupport();
