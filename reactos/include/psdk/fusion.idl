@@ -28,7 +28,8 @@ typedef enum
     ASM_CACHE_ZAP       = 0x1,
     ASM_CACHE_GAC       = 0x2,
     ASM_CACHE_DOWNLOAD  = 0x4,
-    ASM_CACHE_ROOT      = 0x8
+    ASM_CACHE_ROOT      = 0x8,
+    ASM_CACHE_ROOT_EX   = 0x80
 } ASM_CACHE_FLAGS;
 
 typedef enum
@@ -38,6 +39,7 @@ typedef enum
     peI386      = 0x00000002,
     peIA64      = 0x00000003,
     peAMD64     = 0x00000004,
+    peARM       = 0x00000005,
     peInvalid   = 0xffffffff
 } PEKIND;
 

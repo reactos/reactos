@@ -36,6 +36,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
+
+/******************************************************************
+ *  InitializeFusion   (FUSION.@)
+ */
+HRESULT WINAPI InitializeFusion(void)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
 /******************************************************************
  *  ClearDownloadCache   (FUSION.@)
  */
@@ -80,9 +90,9 @@ static HRESULT get_corversion(LPWSTR version, DWORD size)
 
     pGetCORVersion = (void *)GetProcAddress(hmscoree, "GetCORVersion");
     if (!pGetCORVersion)
-        return E_FAIL;
-
-    hr = pGetCORVersion(version, size, &len);
+        hr = E_FAIL;
+    else
+        hr = pGetCORVersion(version, size, &len);
 
     FreeLibrary(hmscoree);
     return hr;
@@ -94,32 +104,26 @@ static HRESULT get_corversion(LPWSTR version, DWORD size)
 HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS dwCacheFlags, LPWSTR pwzCachePath,
                             PDWORD pcchPath)
 {
-    WCHAR path[MAX_PATH];
-    WCHAR windir[MAX_PATH];
-    WCHAR version[MAX_PATH];
-    DWORD len;
-    HRESULT hr = S_OK;
-
-    static const WCHAR backslash[] = {'\\',0};
-    static const WCHAR assembly[] = {'a','s','s','e','m','b','l','y',0};
-    static const WCHAR gac[] = {'G','A','C',0};
-    static const WCHAR nativeimg[] = {
-        'N','a','t','i','v','e','I','m','a','g','e','s','_',0};
+    static const WCHAR assembly[] = {'\\','a','s','s','e','m','b','l','y',0};
+    static const WCHAR gac[] = {'\\','G','A','C',0};
+    static const WCHAR nativeimg[] = {'N','a','t','i','v','e','I','m','a','g','e','s','_',0};
+    static const WCHAR dotnet[] = {'\\','M','i','c','r','o','s','o','f','t','.','N','E','T',0};
 #ifdef _WIN64
     static const WCHAR zapfmt[] = {'%','s','\\','%','s','\\','%','s','%','s','_','6','4',0};
 #else
     static const WCHAR zapfmt[] = {'%','s','\\','%','s','\\','%','s','%','s','_','3','2',0};
 #endif
+    WCHAR path[MAX_PATH], windir[MAX_PATH], version[MAX_PATH];
+    DWORD len;
+    HRESULT hr = S_OK;
 
     TRACE("(%08x, %p, %p)\n", dwCacheFlags, pwzCachePath, pcchPath);
 
     if (!pcchPath)
         return E_INVALIDARG;
 
-    GetWindowsDirectoryW(windir, MAX_PATH);
-    lstrcpyW(path, windir);
-    lstrcatW(path, backslash);
-    lstrcatW(path, assembly);
+    len = GetWindowsDirectoryW(windir, MAX_PATH);
+    strcpyW(path, windir);
 
     switch (dwCacheFlags)
     {
@@ -129,37 +133,42 @@ HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS dwCacheFlags, LPWSTR pwzCachePath,
             if (FAILED(hr))
                 return hr;
 
-            sprintfW(path, zapfmt, windir, assembly, nativeimg, version);
+            len = sprintfW(path, zapfmt, windir, assembly + 1, nativeimg, version);
             break;
         }
-
         case ASM_CACHE_GAC:
         {
-            lstrcatW(path, backslash);
-            lstrcatW(path, gac);
+            strcpyW(path + len, assembly);
+            len += sizeof(assembly)/sizeof(WCHAR) - 1;
+            strcpyW(path + len, gac);
+            len += sizeof(gac)/sizeof(WCHAR) - 1;
             break;
         }
-
         case ASM_CACHE_DOWNLOAD:
         {
             FIXME("Download cache not implemented\n");
             return E_FAIL;
         }
-
         case ASM_CACHE_ROOT:
-            break; /* already set */
-
+            strcpyW(path + len, assembly);
+            len += sizeof(assembly)/sizeof(WCHAR) - 1;
+            break;
+        case ASM_CACHE_ROOT_EX:
+            strcpyW(path + len, dotnet);
+            len += sizeof(dotnet)/sizeof(WCHAR) - 1;
+            strcpyW(path + len, assembly);
+            len += sizeof(assembly)/sizeof(WCHAR) - 1;
+            break;
         default:
             return E_INVALIDARG;
     }
 
-    len = lstrlenW(path) + 1;
+    len++;
     if (*pcchPath <= len || !pwzCachePath)
         hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
     else if (pwzCachePath)
-        lstrcpyW(pwzCachePath, path);
+        strcpyW(pwzCachePath, path);
 
     *pcchPath = len;
-
     return hr;
 }

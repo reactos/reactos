@@ -8,7 +8,7 @@
 @ stdcall CreateInstallReferenceEnum(ptr ptr long ptr)
 @ stdcall GetCachePath(long wstr ptr)
 @ stub GetHistoryFileDirectory
-@ stub InitializeFusion
+@ stdcall InitializeFusion()
 @ stub InstallCustomAssembly
 @ stub InstallCustomModule
 @ stub LookupHistoryAssembly
