@@ -127,16 +127,23 @@ static BOOLEAN PortInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
-/* HAL.KdPortInitialize */
+/* ReactOS-specific */
 BOOLEAN
 NTAPI
-KdPortInitialize(
+KdPortInitializeEx(
     IN PKD_PORT_INFORMATION PortInformation,
     IN ULONG Unknown1,
     IN ULONG Unknown2)
 {
     SIZE_T i;
+    ULONG ComPortBase;
     CHAR buffer[80];
+    ULONG divisor;
+    UCHAR lcr;
+
+    /*
+     * Find the port if needed
+     */
 
     if (!PortInitialized)
     {
@@ -171,34 +178,9 @@ KdPortInitialize(
         PortInitialized = TRUE;
     }
 
-    /* initialize port */
-    if (!KdPortInitializeEx(&DefaultPort, Unknown1, Unknown2))
-        return FALSE;
-
-    /* set global info */
-    KdComPortInUse = (PUCHAR)DefaultPort.BaseAddress;
-
-    return TRUE;
-}
-
-
-/* HAL.KdPortInitializeEx ; ReactOS-specific */
-BOOLEAN
-NTAPI
-KdPortInitializeEx(
-    IN PKD_PORT_INFORMATION PortInformation,
-    IN ULONG Unknown1,
-    IN ULONG Unknown2)
-{
-    ULONG ComPortBase;
-    CHAR buffer[80];
-    ULONG divisor;
-    UCHAR lcr;
-
-#ifdef _ARM_
-    UNIMPLEMENTED;
-    return FALSE;
-#endif
+    /*
+     * Initialize the port
+     */
 
     if (PortInformation->BaudRate == 0)
         PortInformation->BaudRate = DEFAULT_BAUD_RATE;
@@ -264,11 +246,14 @@ KdPortInitializeEx(
     HalDisplayString(buffer);
 #endif /* NDEBUG */
 
+    /* set global info */
+    KdComPortInUse = (PUCHAR)DefaultPort.BaseAddress;
+
     return TRUE;
 }
 
 
-/* HAL.KdPortGetByteEx ; ReactOS-specific */
+/* ReactOS-specific */
 BOOLEAN
 NTAPI
 KdPortGetByteEx(
@@ -297,7 +282,7 @@ KdPortPutByte(
     KdPortPutByteEx(&DefaultPort, ByteToSend);
 }
 
-/* HAL.KdPortPutByteEx ; ReactOS-specific */
+/* ReactOS-specific */
 VOID
 NTAPI
 KdPortPutByteEx(

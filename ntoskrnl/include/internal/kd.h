@@ -25,14 +25,6 @@ extern BOOLEAN KdIgnoreUmExceptions;
 
 BOOLEAN
 NTAPI
-KdPortInitialize(
-    PKD_PORT_INFORMATION PortInformation,
-    ULONG Unknown1,
-    ULONG Unknown2
-);
-
-BOOLEAN
-NTAPI
 KdPortInitializeEx(
     PKD_PORT_INFORMATION PortInformation,
     ULONG Unknown1,
@@ -44,12 +36,6 @@ NTAPI
 KdPortGetByteEx(
     PKD_PORT_INFORMATION PortInformation,
     PUCHAR ByteReceived);
-
-VOID
-NTAPI
-KdPortPutByte(
-    UCHAR ByteToSend
-);
 
 VOID
 NTAPI

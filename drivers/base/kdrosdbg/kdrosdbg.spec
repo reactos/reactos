@@ -1,11 +1,3 @@
-; Old KD
-@ stdcall KdPortGetByteEx(ptr ptr)
-@ stdcall KdPortInitialize(ptr long long)
-@ stdcall KdPortInitializeEx(ptr long long)
-@ stdcall KdPortPutByte(long)
-@ stdcall KdPortPutByteEx(ptr long)
-
-; New KD
 @ stdcall KdD0Transition()
 @ stdcall KdD3Transition()
 @ stdcall KdDebuggerInitialize0(ptr)
@@ -14,3 +6,8 @@
 @ stdcall KdRestore(long)
 @ stdcall KdSave(long)
 @ stdcall KdSendPacket(long ptr ptr ptr)
+
+; Legacy KD
+@ stdcall KdPortGetByteEx(ptr ptr)
+@ stdcall KdPortInitializeEx(ptr long long)
+@ stdcall KdPortPutByteEx(ptr long)

@@ -93,18 +93,6 @@ KdPortInitializeEx(IN PKD_PORT_INFORMATION PortInformation,
 
 BOOLEAN
 NTAPI
-KdPortInitialize(IN PKD_PORT_INFORMATION PortInformation,
-                 IN ULONG Unknown1,
-                 IN ULONG Unknown2)
-{
-    //
-    // Call the extended version
-    //
-    return KdPortInitializeEx(PortInformation, Unknown1, Unknown2);
-}
-
-BOOLEAN
-NTAPI
 KdPortGetByteEx(IN PKD_PORT_INFORMATION PortInformation,
                 OUT PUCHAR ByteReceived)
 {
@@ -127,16 +115,6 @@ KdPortPutByteEx(IN PKD_PORT_INFORMATION PortInformation,
     // Send the character
     //
     WRITE_REGISTER_ULONG(UART_PL01x_DR, ByteToSend);
-}
-
-VOID
-NTAPI
-KdPortPutByte(IN UCHAR ByteToSend)
-{
-    //
-    // Call the extended version
-    //
-    KdPortPutByteEx(&DefaultPort, ByteToSend);
 }
 
 /* WINDOWS FUNCTIONS **********************************************************/
