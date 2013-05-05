@@ -314,8 +314,9 @@ RtlAcquirePrivilege(IN PULONG Privilege,
         else
         {
             *ReturnedState = State;
+            break;
         }
-    } while (FALSE);
+    } while (TRUE);
 
     DPRINT("RtlAcquirePrivilege succeed!\n");
 
