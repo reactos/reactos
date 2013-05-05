@@ -279,14 +279,6 @@ CHCDController::HandleDeviceControl(
                     // it does
                     //
                     Status = IoGetDeviceProperty(m_PhysicalDeviceObject, DevicePropertyDriverKeyName, IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(ULONG), DriverKey->DriverKeyName, &ResultLength);
-
-                    if (NT_SUCCESS(Status))
-                    {
-                        //
-                        // informal debug print
-                        //
-                        DPRINT1("[%s] Result %S\n", m_USBType, DriverKey->DriverKeyName);
-                    }
                 }
 
                 //
@@ -337,7 +329,6 @@ CHCDController::HandleDeviceControl(
                 PC_ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(ULONG) - sizeof(WCHAR) >= ResultLength);
 
                 DriverKey->DriverKeyName[ResultLength / sizeof(WCHAR)] = L'\0';
-                DPRINT1("[%s] Result %S\n", m_USBType, DriverKey->DriverKeyName);
             }
 
             //
