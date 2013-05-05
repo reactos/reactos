@@ -355,70 +355,6 @@ KdPortPutByteEx(
     WRITE_PORT_UCHAR(SER_THR(ComPortBase), ByteToSend);
 }
 
-
-/* HAL.KdPortRestore */
-VOID
-NTAPI
-KdPortRestore(VOID)
-{
-    UNIMPLEMENTED;
-}
-
-
-/* HAL.KdPortSave */
-VOID
-NTAPI
-KdPortSave(VOID)
-{
-    UNIMPLEMENTED;
-}
-
-
-/* HAL.KdPortDisableInterrupts */
-BOOLEAN
-NTAPI
-KdPortDisableInterrupts(VOID)
-{
-    UCHAR ch;
-
-    if (!PortInitialized)
-        return FALSE;
-
-    ch = READ_PORT_UCHAR(SER_MCR(DefaultPort.BaseAddress));
-    ch &= (~(SR_MCR_OUT1 | SR_MCR_OUT2));
-    WRITE_PORT_UCHAR(SER_MCR(DefaultPort.BaseAddress), ch);
-
-    ch = READ_PORT_UCHAR(SER_IER(DefaultPort.BaseAddress));
-    ch &= (~SR_IER_ALL);
-    WRITE_PORT_UCHAR(SER_IER(DefaultPort.BaseAddress), ch);
-
-    return TRUE;
-}
-
-
-/* HAL.KdPortEnableInterrupts */
-BOOLEAN
-NTAPI
-KdPortEnableInterrupts(VOID)
-{
-    UCHAR ch;
-
-    if (PortInitialized == FALSE)
-        return FALSE;
-
-    ch = READ_PORT_UCHAR(SER_IER(DefaultPort.BaseAddress));
-    ch &= (~SR_IER_ALL);
-    ch |= SR_IER_ERDA;
-    WRITE_PORT_UCHAR(SER_IER(DefaultPort.BaseAddress), ch);
-
-    ch = READ_PORT_UCHAR(SER_MCR(DefaultPort.BaseAddress));
-    ch &= (~SR_MCR_LOOP);
-    ch |= (SR_MCR_OUT1 | SR_MCR_OUT2);
-    WRITE_PORT_UCHAR(SER_MCR(DefaultPort.BaseAddress), ch);
-
-    return TRUE;
-}
-
 /*
  * @unimplemented
  */
@@ -439,6 +375,20 @@ KdDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
     return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+KdD0Transition(VOID)
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdD3Transition(VOID)
+{
+    return STATUS_SUCCESS;
 }
 
 /*

@@ -169,40 +169,6 @@ KdPortPutByte(IN UCHAR ByteToSend)
     KdPortPutByteEx(&DefaultPort, ByteToSend);
 }
 
-VOID
-NTAPI
-KdPortRestore(VOID)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-}
-
-VOID
-NTAPI
-KdPortSave(VOID)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-}
-
-BOOLEAN
-NTAPI
-KdPortDisableInterrupts(VOID)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return TRUE;
-}
-
-BOOLEAN
-NTAPI
-KdPortEnableInterrupts(VOID)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return TRUE;
-}
-
 /* WINDOWS FUNCTIONS **********************************************************/
 
 NTSTATUS
@@ -219,6 +185,20 @@ KdDebuggerInitialize1(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+KdD0Transition(VOID)
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KdD3Transition(VOID)
+{
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
