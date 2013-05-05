@@ -11,7 +11,7 @@
 
 #include <rtl.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
@@ -112,7 +112,6 @@ RtlAcquirePrivilege(IN PULONG Privilege,
                     IN ULONG Flags,
                     OUT PVOID *ReturnedState)
 {
-#if 0
     PRTL_ACQUIRE_STATE State;
     NTSTATUS Status, IntStatus;
     ULONG ReturnLength, i, OldSize;
@@ -354,10 +353,6 @@ Cleanup:
     DPRINT("RtlAcquirePrivilege() failed with status: %lx\n", Status);
 
     return Status;
-#else
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 /*
@@ -367,7 +362,6 @@ VOID
 NTAPI
 RtlReleasePrivilege(IN PVOID ReturnedState)
 {
-#if 0
     NTSTATUS Status;
     PRTL_ACQUIRE_STATE State = (PRTL_ACQUIRE_STATE)ReturnedState;
 
@@ -408,9 +402,6 @@ RtlReleasePrivilege(IN PVOID ReturnedState)
     /* Release token and free state */
     ZwClose(State->Token);
     RtlFreeHeap(RtlGetProcessHeap(), 0, State);
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*
