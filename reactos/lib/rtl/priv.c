@@ -11,7 +11,7 @@
 
 #include <rtl.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
@@ -138,7 +138,7 @@ RtlAcquirePrivilege(IN PULONG Privilege,
      *                                 new privileges (big enough, after old privileges memory area)
      */
     State = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(RTL_ACQUIRE_STATE) + sizeof(TOKEN_PRIVILEGES) +
-                                                    NumPriv * sizeof(LUID_AND_ATTRIBUTES));
+                                                    (NumPriv - ANYSIZE_ARRAY) * sizeof(LUID_AND_ATTRIBUTES));
     if (!State)
     {
         return STATUS_NO_MEMORY;
