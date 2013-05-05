@@ -112,6 +112,25 @@ RtlFillMemoryUlong(PVOID Destination,
     }
 }
 
+#ifdef _WIN64
+VOID
+NTAPI
+RtlFillMemoryUlonglong(
+    PVOID Destination,
+    SIZE_T Length,
+    ULONGLONG Fill)
+{
+    PULONGLONG Dest  = Destination;
+    SIZE_T Count = Length / sizeof(ULONGLONG);
+
+    while (Count > 0)
+    {
+        *Dest = Fill;
+        Dest++;
+        Count--;
+    }
+}
+#endif
 
 #undef RtlMoveMemory
 /*
