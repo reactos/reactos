@@ -458,7 +458,7 @@ HidClass_ReadCompleteIrp(
     // copy result status
     //
     IrpContext->OriginalIrp->IoStatus.Status = Irp->IoStatus.Status;
-    Irp->IoStatus.Information = Irp->IoStatus.Information;
+    IrpContext->OriginalIrp->IoStatus.Information = Irp->IoStatus.Information;
 
     //
     // free input report buffer
