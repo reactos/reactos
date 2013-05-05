@@ -743,6 +743,7 @@ done:
     if (LocalAuthInfo != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, LocalAuthInfo);
 
+    /* Free the token information */
     if (TokenInformation != NULL)
     {
         if (TokenInformationType == LsaTokenInformationV1)
@@ -786,19 +787,31 @@ done:
         }
     }
 
+    /* Free the account name */
     if (AccountName != NULL)
     {
+        if (AccountName->Buffer != NULL)
+            LsapFreeHeap(AccountName->Buffer);
 
+        LsapFreeHeap(AccountName);
     }
 
+    /* Free the authentication authority */
     if (AuthenticatingAuthority != NULL)
     {
+        if (AuthenticatingAuthority != NULL)
+            LsapFreeHeap(AuthenticatingAuthority->Buffer);
 
+        LsapFreeHeap(AuthenticatingAuthority);
     }
 
+    /* Free the machine name */
     if (MachineName != NULL)
     {
+        if (MachineName->Buffer != NULL)
+            LsapFreeHeap(MachineName->Buffer);
 
+        LsapFreeHeap(MachineName);
     }
 
     return Status;
