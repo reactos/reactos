@@ -30,31 +30,6 @@ typedef struct _KD_PORT_INFORMATION
     ULONG BaseAddress;
 } KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
 
-BOOLEAN
-NTAPI
-KdPortInitializeEx(
-    IN PKD_PORT_INFORMATION PortInformation,
-    IN ULONG Unknown1,
-    IN ULONG Unknown2);
-
-BOOLEAN
-NTAPI
-KdPortGetByteEx(
-    IN PKD_PORT_INFORMATION PortInformation,
-    OUT PUCHAR ByteReceived);
-
-BOOLEAN
-NTAPI
-KdPortPollByteEx(
-    IN PKD_PORT_INFORMATION PortInformation,
-    OUT PUCHAR ByteReceived);
-
-VOID
-NTAPI
-KdPortPutByteEx(
-    IN PKD_PORT_INFORMATION PortInformation,
-    IN UCHAR ByteToSend);
-
 #define DEFAULT_BAUD_RATE    19200
 
 #if defined(_M_IX86) || defined(_M_AMD64)
@@ -114,8 +89,6 @@ const ULONG BaseArray[] = {0, 0xF1012000};
 #define     SR_MSR_DSR 0x20
 #define   SER_SCR(x)   ((PUCHAR)(x)+7)
 
-
-/* GLOBAL VARIABLES *********************************************************/
 
 /* STATIC VARIABLES *********************************************************/
 
