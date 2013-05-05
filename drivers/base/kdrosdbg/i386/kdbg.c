@@ -92,7 +92,7 @@ const ULONG BaseArray[] = {0, 0xF1012000};
 
 /* STATIC VARIABLES *********************************************************/
 
-static KD_PORT_INFORMATION DefaultPort = { 0, 0, 0 };
+// static KD_PORT_INFORMATION DefaultPort = { 0, 0, 0 };
 
 /* The com port must only be initialized once! */
 // static BOOLEAN PortInitialized = FALSE;
@@ -221,8 +221,10 @@ KdPortInitializeEx(
     HalDisplayString(buffer);
 #endif /* NDEBUG */
 
+#if 0
     /* set global info */
     KdComPortInUse = (PUCHAR)DefaultPort.BaseAddress;
+#endif
 
     return TRUE;
 }
