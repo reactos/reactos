@@ -286,48 +286,6 @@ KdPortGetByteEx(
     return FALSE;
 }
 
-#if 0
-/* HAL.KdPortGetByte */
-BOOLEAN
-NTAPI
-KdPortGetByte(
-    OUT PUCHAR ByteReceived)
-{
-    if (!PortInitialized)
-        return FALSE;
-    return KdPortGetByteEx(&DefaultPort, ByteReceived);
-}
-
-/* HAL.KdPortPollByte */
-BOOLEAN
-NTAPI
-KdPortPollByte(
-    OUT PUCHAR ByteReceived)
-{
-    if (!PortInitialized)
-        return FALSE;
-    return KdPortPollByteEx(&DefaultPort, ByteReceived);
-}
-
-
-/* HAL.KdPortPollByteEx ; ReactOS-specific */
-BOOLEAN
-NTAPI
-KdPortPollByteEx(
-    IN PKD_PORT_INFORMATION PortInformation,
-    OUT PUCHAR ByteReceived)
-{
-    PUCHAR ComPortBase = (PUCHAR)PortInformation->BaseAddress;
-
-    while ((READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DR) == 0)
-        ;
-
-    *ByteReceived = READ_PORT_UCHAR(SER_RBR(ComPortBase));
-
-    return TRUE;
-}
-#endif
-
 /* HAL.KdPortPutByte */
 VOID
 NTAPI

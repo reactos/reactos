@@ -113,38 +113,6 @@ KdPortGetByteEx(IN PKD_PORT_INFORMATION PortInformation,
     return FALSE;
 }
 
-#if 0
-BOOLEAN
-NTAPI
-KdPortGetByte(OUT PUCHAR ByteReceived)
-{
-    //
-    // Call the extended version
-    //
-    return KdPortGetByteEx(&DefaultPort, ByteReceived); 
-}
-
-BOOLEAN
-NTAPI
-KdPortPollByteEx(IN PKD_PORT_INFORMATION PortInformation,
-                 OUT PUCHAR ByteReceived)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return TRUE;
-}
-
-BOOLEAN
-NTAPI
-KdPortPollByte(OUT PUCHAR ByteReceived)
-{
-    //
-    // Call the extended version
-    //
-    return KdPortPollByteEx(&DefaultPort, ByteReceived);
-}
-#endif
-
 VOID
 NTAPI
 KdPortPutByteEx(IN PKD_PORT_INFORMATION PortInformation,
