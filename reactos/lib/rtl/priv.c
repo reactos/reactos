@@ -113,12 +113,14 @@ RtlAcquirePrivilege(IN PULONG Privilege,
                     OUT PVOID *ReturnedState)
 {
 #if 0
-    NTSTATUS Status;
     PRTL_ACQUIRE_STATE State;
+    NTSTATUS Status, IntStatus;
     ULONG ReturnLength, i, OldSize;
     SECURITY_QUALITY_OF_SERVICE Sqos;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE ImpersonationToken = 0, ProcessToken;
+
+    DPRINT("RtlAcquirePrivilege(%p, %u, %u, %p)\n", Privilege, NumPriv, Flags, ReturnedState);
 
     /* Validate flags */
     if (Flags & ~(RTL_ACQUIRE_PRIVILEGE_PROCESS | RTL_ACQUIRE_PRIVILEGE_IMPERSONATE))
@@ -283,6 +285,7 @@ RtlAcquirePrivilege(IN PULONG Privilege,
             State->OldPrivileges = RtlAllocateHeap(RtlGetProcessHeap(), 0, ReturnLength);
             if (State->OldPrivileges)
             {
+                DPRINT("Allocated old privileges: %p\n", State->OldPrivileges);
                 OldSize = ReturnLength;
                 continue;
             }
@@ -314,6 +317,8 @@ RtlAcquirePrivilege(IN PULONG Privilege,
         }
     } while (FALSE);
 
+    DPRINT("RtlAcquirePrivilege succeed!\n");
+
     return Status;
 
 Cleanup:
@@ -326,12 +331,12 @@ Cleanup:
     /* Do we have to restore previously active impersonation? */
     if (State->Flags & RTL_ACQUIRE_PRIVILEGE_IMPERSONATE)
     {
-        Status = ZwSetInformationThread(NtCurrentThread(), ThreadImpersonationToken,
-                                        &State->OldImpersonationToken, sizeof(HANDLE));
+        IntStatus = ZwSetInformationThread(NtCurrentThread(), ThreadImpersonationToken,
+                                           &State->OldImpersonationToken, sizeof(HANDLE));
         /* If this ever happens, we're in a really bad situation... */
-        if (!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(IntStatus))
         {
-            RtlRaiseStatus(Status);
+            RtlRaiseStatus(IntStatus);
         }
     }
 
@@ -343,6 +348,8 @@ Cleanup:
 
     /* And free our state buffer */
     RtlFreeHeap(RtlGetProcessHeap(), 0, State);
+
+    DPRINT("RtlAcquirePrivilege() failed with status: %lx\n", Status);
 
     return Status;
 #else
@@ -361,6 +368,8 @@ RtlReleasePrivilege(IN PVOID ReturnedState)
 #if 0
     NTSTATUS Status;
     PRTL_ACQUIRE_STATE State = (PRTL_ACQUIRE_STATE)ReturnedState;
+
+    DPRINT("RtlReleasePrivilege(%p)\n", ReturnedState);
 
     /* If we had an active impersonation before we acquired privileges */
     if (State->Flags & RTL_ACQUIRE_PRIVILEGE_IMPERSONATE)
@@ -388,6 +397,7 @@ RtlReleasePrivilege(IN PVOID ReturnedState)
     /* If we used a different buffer for old privileges, just free it */
     if ((PVOID)State->OldPrivBuffer != (PVOID)State->OldPrivileges)
     {
+        DPRINT("Releasing old privileges: %p\n", State->OldPrivileges);
         RtlFreeHeap(RtlGetProcessHeap(), 0, State->OldPrivileges);
     }
 
