@@ -1,10 +1,10 @@
 ; Old KD
-@ stdcall KdPortGetByte(ptr)
+;;@ stdcall KdPortGetByte(ptr)
 @ stdcall KdPortGetByteEx(ptr ptr)
 @ stdcall KdPortInitialize(ptr long long)
 @ stdcall KdPortInitializeEx(ptr long long)
-@ stdcall KdPortPollByte(ptr)
-@ stdcall KdPortPollByteEx(ptr ptr)
+;;@ stdcall KdPortPollByte(ptr)
+;;@ stdcall KdPortPollByteEx(ptr ptr)
 @ stdcall KdPortPutByte(long)
 @ stdcall KdPortPutByteEx(ptr long)
 

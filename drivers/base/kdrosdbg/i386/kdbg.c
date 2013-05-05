@@ -268,18 +268,6 @@ KdPortInitializeEx(
 }
 
 
-/* HAL.KdPortGetByte */
-BOOLEAN
-NTAPI
-KdPortGetByte(
-    OUT PUCHAR ByteReceived)
-{
-    if (!PortInitialized)
-        return FALSE;
-    return KdPortGetByteEx(&DefaultPort, ByteReceived);
-}
-
-
 /* HAL.KdPortGetByteEx ; ReactOS-specific */
 BOOLEAN
 NTAPI
@@ -298,6 +286,17 @@ KdPortGetByteEx(
     return FALSE;
 }
 
+#if 0
+/* HAL.KdPortGetByte */
+BOOLEAN
+NTAPI
+KdPortGetByte(
+    OUT PUCHAR ByteReceived)
+{
+    if (!PortInitialized)
+        return FALSE;
+    return KdPortGetByteEx(&DefaultPort, ByteReceived);
+}
 
 /* HAL.KdPortPollByte */
 BOOLEAN
@@ -327,7 +326,7 @@ KdPortPollByteEx(
 
     return TRUE;
 }
-
+#endif
 
 /* HAL.KdPortPutByte */
 VOID

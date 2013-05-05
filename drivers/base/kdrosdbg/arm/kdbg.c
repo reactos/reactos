@@ -113,6 +113,7 @@ KdPortGetByteEx(IN PKD_PORT_INFORMATION PortInformation,
     return FALSE;
 }
 
+#if 0
 BOOLEAN
 NTAPI
 KdPortGetByte(OUT PUCHAR ByteReceived)
@@ -142,6 +143,7 @@ KdPortPollByte(OUT PUCHAR ByteReceived)
     //
     return KdPortPollByteEx(&DefaultPort, ByteReceived);
 }
+#endif
 
 VOID
 NTAPI

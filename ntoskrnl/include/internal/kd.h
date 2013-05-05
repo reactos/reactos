@@ -39,10 +39,12 @@ KdPortInitializeEx(
     ULONG Unknown2
 );
 
+#if 0
 BOOLEAN
 NTAPI
 KdPortGetByte(
     PUCHAR ByteReceived);
+#endif
 
 BOOLEAN
 NTAPI
