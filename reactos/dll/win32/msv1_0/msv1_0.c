@@ -81,7 +81,7 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
     PVOID ClientBaseAddress = NULL;
     LPWSTR Ptr;
     ULONG BufferLength;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     *ProfileBuffer = NULL;
     *ProfileBufferLength = 0;
@@ -118,12 +118,24 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
     LocalBuffer->MessageType = MsV1_0InteractiveProfile;
     LocalBuffer->LogonCount = UserInfo->All.LogonCount;
     LocalBuffer->BadPasswordCount = UserInfo->All.BadPasswordCount;
-//  LARGE_INTEGER              LogonTime;
-//  LARGE_INTEGER              LogoffTime;
-//  LARGE_INTEGER              KickOffTime;
-//  LARGE_INTEGER              PasswordLastSet;
-//  LARGE_INTEGER              PasswordCanChange;
-//  LARGE_INTEGER              PasswordMustChange;
+
+    LocalBuffer->LogonTime.LowPart = UserInfo->All.LastLogon.LowPart;
+    LocalBuffer->LogonTime.HighPart = UserInfo->All.LastLogon.HighPart;
+
+//    LocalBuffer->LogoffTime.LowPart =
+//    LocalBuffer->LogoffTime.HighPart =
+
+//    LocalBuffer->KickOffTime.LowPart =
+//    LocalBuffer->KickOffTime.HighPart =
+
+    LocalBuffer->PasswordLastSet.LowPart = UserInfo->All.PasswordLastSet.LowPart;
+    LocalBuffer->PasswordLastSet.HighPart = UserInfo->All.PasswordLastSet.HighPart;
+
+    LocalBuffer->PasswordCanChange.LowPart = UserInfo->All.PasswordCanChange.LowPart;
+    LocalBuffer->PasswordCanChange.HighPart = UserInfo->All.PasswordCanChange.HighPart;
+
+    LocalBuffer->PasswordMustChange.LowPart = UserInfo->All.PasswordMustChange.LowPart;
+    LocalBuffer->PasswordMustChange.HighPart = UserInfo->All.PasswordMustChange.HighPart;
 
     LocalBuffer->LogonScript.Length = UserInfo->All.ScriptPath.Length;
     LocalBuffer->LogonScript.MaximumLength = UserInfo->All.ScriptPath.Length + sizeof(WCHAR);
@@ -202,6 +214,511 @@ done:
         if (ClientBaseAddress != NULL)
             DispatchTable.FreeClientBuffer(ClientRequest,
                                            ClientBaseAddress);
+    }
+
+    return Status;
+}
+
+
+static
+PSID
+AppendRidToSid(PSID SrcSid,
+               ULONG Rid)
+{
+    PSID DstSid = NULL;
+    UCHAR RidCount;
+    ULONG Size;
+    ULONG i;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    if (RidCount >= 8)
+        return NULL;
+
+    Size = RtlLengthRequiredSid(RidCount + 1);
+
+    DstSid = DispatchTable.AllocateLsaHeap(Size);
+    if (DstSid == NULL)
+        return NULL;
+
+    for (i = 0; i < RidCount; i++)
+        *RtlSubAuthoritySid(DstSid, i) = *RtlSubAuthoritySid(SrcSid, i);
+
+    *RtlSubAuthoritySid(DstSid, RidCount) = Rid;
+
+    return DstSid;
+}
+
+static
+NTSTATUS
+BuildTokenUser(OUT PTOKEN_USER User,
+               IN PSID AccountDomainSid,
+               IN ULONG RelativeId)
+{
+    User->User.Sid = AppendRidToSid(AccountDomainSid,
+                                    RelativeId);
+    User->User.Attributes = 0;
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+BuildTokenGroups(IN PSID AccountDomainSid,
+                 IN PLUID LogonId,
+                 OUT PTOKEN_GROUPS *Groups,
+                 OUT PSID *PrimaryGroupSid,
+                 OUT PSID *OwnerSid)
+{
+    SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY LocalAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
+    PTOKEN_GROUPS TokenGroups;
+#define MAX_GROUPS 8
+    DWORD GroupCount = 0;
+    PSID Sid;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TokenGroups = DispatchTable.AllocateLsaHeap(sizeof(TOKEN_GROUPS) +
+                                                MAX_GROUPS * sizeof(SID_AND_ATTRIBUTES));
+    if (TokenGroups == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Sid = AppendRidToSid(AccountDomainSid, DOMAIN_GROUP_RID_USERS);
+    if (Sid == NULL)
+    {
+
+    }
+
+    /* Member of the domain */
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes =
+        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    *PrimaryGroupSid = Sid;
+    GroupCount++;
+
+    /* Member of 'Everyone' */
+    RtlAllocateAndInitializeSid(&WorldAuthority,
+                                1,
+                                SECURITY_WORLD_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes =
+        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
+
+#if 1
+    /* Member of 'Administrators' */
+    RtlAllocateAndInitializeSid(&SystemAuthority,
+                                2,
+                                SECURITY_BUILTIN_DOMAIN_RID,
+                                DOMAIN_ALIAS_RID_ADMINS,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes =
+        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
+#else
+    TRACE("Not adding user to Administrators group\n");
+#endif
+
+    /* Member of 'Users' */
+    RtlAllocateAndInitializeSid(&SystemAuthority,
+                                2,
+                                SECURITY_BUILTIN_DOMAIN_RID,
+                                DOMAIN_ALIAS_RID_USERS,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes =
+        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
+
+    /* Logon SID */
+    RtlAllocateAndInitializeSid(&SystemAuthority,
+                                SECURITY_LOGON_IDS_RID_COUNT,
+                                SECURITY_LOGON_IDS_RID,
+                                LogonId->HighPart,
+                                LogonId->LowPart,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes =
+        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY | SE_GROUP_LOGON_ID;
+    GroupCount++;
+    *OwnerSid = Sid;
+
+    /* Member of 'Local users */
+    RtlAllocateAndInitializeSid(&LocalAuthority,
+                                1,
+                                SECURITY_LOCAL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes =
+        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
+
+    /* Member of 'Interactive users' */
+    RtlAllocateAndInitializeSid(&SystemAuthority,
+                                1,
+                                SECURITY_INTERACTIVE_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes =
+        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
+
+    /* Member of 'Authenticated users' */
+    RtlAllocateAndInitializeSid(&SystemAuthority,
+                                1,
+                                SECURITY_AUTHENTICATED_USER_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes =
+        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
+
+    TokenGroups->GroupCount = GroupCount;
+    ASSERT(TokenGroups->GroupCount <= MAX_GROUPS);
+
+    *Groups = TokenGroups;
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+BuildTokenPrimaryGroup(PTOKEN_PRIMARY_GROUP PrimaryGroup,
+                       PSID PrimaryGroupSid)
+{
+    ULONG RidCount;
+    ULONG Size;
+
+    RidCount = *RtlSubAuthorityCountSid(PrimaryGroupSid);
+    Size = RtlLengthRequiredSid(RidCount);
+
+    PrimaryGroup->PrimaryGroup = DispatchTable.AllocateLsaHeap(Size);
+    if (PrimaryGroup->PrimaryGroup == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlCopyMemory(PrimaryGroup->PrimaryGroup,
+                  PrimaryGroupSid,
+                  Size);
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
+BuildTokenPrivileges(PTOKEN_PRIVILEGES *TokenPrivileges)
+{
+    /* FIXME shouldn't use hard-coded list of privileges */
+    static struct
+    {
+      LPCWSTR PrivName;
+      DWORD Attributes;
+    }
+    DefaultPrivs[] =
+    {
+      { L"SeMachineAccountPrivilege", 0 },
+      { L"SeSecurityPrivilege", 0 },
+      { L"SeTakeOwnershipPrivilege", 0 },
+      { L"SeLoadDriverPrivilege", 0 },
+      { L"SeSystemProfilePrivilege", 0 },
+      { L"SeSystemtimePrivilege", 0 },
+      { L"SeProfileSingleProcessPrivilege", 0 },
+      { L"SeIncreaseBasePriorityPrivilege", 0 },
+      { L"SeCreatePagefilePrivilege", 0 },
+      { L"SeBackupPrivilege", 0 },
+      { L"SeRestorePrivilege", 0 },
+      { L"SeShutdownPrivilege", 0 },
+      { L"SeDebugPrivilege", 0 },
+      { L"SeSystemEnvironmentPrivilege", 0 },
+      { L"SeChangeNotifyPrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT },
+      { L"SeRemoteShutdownPrivilege", 0 },
+      { L"SeUndockPrivilege", 0 },
+      { L"SeEnableDelegationPrivilege", 0 },
+      { L"SeImpersonatePrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT },
+      { L"SeCreateGlobalPrivilege", SE_PRIVILEGE_ENABLED | SE_PRIVILEGE_ENABLED_BY_DEFAULT }
+    };
+    PTOKEN_PRIVILEGES Privileges = NULL;
+    ULONG i;
+    RPC_UNICODE_STRING PrivilegeName;
+    LSAPR_HANDLE PolicyHandle = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Status = LsaIOpenPolicyTrusted(&PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
+
+    /* Allocate and initialize token privileges */
+    Privileges = DispatchTable.AllocateLsaHeap(sizeof(TOKEN_PRIVILEGES) +
+                                               sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0]) *
+                                               sizeof(LUID_AND_ATTRIBUTES));
+    if (Privileges == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Privileges->PrivilegeCount = 0;
+    for (i = 0; i < sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0]); i++)
+    {
+        PrivilegeName.Length = wcslen(DefaultPrivs[i].PrivName) * sizeof(WCHAR);
+        PrivilegeName.MaximumLength = PrivilegeName.Length + sizeof(WCHAR);
+        PrivilegeName.Buffer = (LPWSTR)DefaultPrivs[i].PrivName;
+
+        Status = LsarLookupPrivilegeValue(PolicyHandle,
+                                          &PrivilegeName,
+                                          &Privileges->Privileges[Privileges->PrivilegeCount].Luid);
+        if (!NT_SUCCESS(Status))
+        {
+            WARN("Can't set privilege %S\n", DefaultPrivs[i].PrivName);
+        }
+        else
+        {
+            Privileges->Privileges[Privileges->PrivilegeCount].Attributes = DefaultPrivs[i].Attributes;
+            Privileges->PrivilegeCount++;
+        }
+    }
+
+    *TokenPrivileges = Privileges;
+
+done:
+    if (PolicyHandle != NULL)
+        LsarClose(PolicyHandle);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+BuildTokenOwner(PTOKEN_OWNER Owner,
+                PSID OwnerSid)
+{
+    ULONG RidCount;
+    ULONG Size;
+
+    RidCount = *RtlSubAuthorityCountSid(OwnerSid);
+    Size = RtlLengthRequiredSid(RidCount);
+
+    Owner->Owner = DispatchTable.AllocateLsaHeap(Size);
+    if (Owner->Owner == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlCopyMemory(Owner->Owner,
+                  OwnerSid,
+                  Size);
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+BuildTokenDefaultDacl(PTOKEN_DEFAULT_DACL DefaultDacl,
+                      PSID OwnerSid)
+{
+    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
+    PSID LocalSystemSid = NULL;
+    PACL Dacl = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    RtlAllocateAndInitializeSid(&SystemAuthority,
+                                1,
+                                SECURITY_LOCAL_SYSTEM_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                &LocalSystemSid);
+
+    Dacl = DispatchTable.AllocateLsaHeap(1024);
+    if (Dacl == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = RtlCreateAcl(Dacl, 1024, ACL_REVISION);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    RtlAddAccessAllowedAce(Dacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           OwnerSid);
+
+    /* SID: S-1-5-18 */
+    RtlAddAccessAllowedAce(Dacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           LocalSystemSid);
+
+    DefaultDacl->DefaultDacl = Dacl;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (Dacl != NULL)
+            DispatchTable.FreeLsaHeap(Dacl);
+    }
+
+    if (LocalSystemSid != NULL)
+        RtlFreeSid(LocalSystemSid);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
+                            PRPC_SID AccountDomainSid,
+                            ULONG RelativeId,
+                            PLUID LogonId)
+{
+    PLSA_TOKEN_INFORMATION_V1 Buffer = NULL;
+    PSID OwnerSid = NULL;
+    PSID PrimaryGroupSid = NULL;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Buffer = DispatchTable.AllocateLsaHeap(sizeof(LSA_TOKEN_INFORMATION_V1));
+    if (Buffer == NULL)
+    {
+        TRACE("Failed to allocate the local buffer!\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* FIXME: */
+    Buffer->ExpirationTime.QuadPart = -1;
+
+    Status = BuildTokenUser(&Buffer->User,
+                            (PSID)AccountDomainSid,
+                            RelativeId);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = BuildTokenGroups((PSID)AccountDomainSid,
+                              LogonId,
+                              &Buffer->Groups,
+                              &PrimaryGroupSid,
+                              &OwnerSid);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = BuildTokenPrimaryGroup(&Buffer->PrimaryGroup,
+                                    PrimaryGroupSid);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = BuildTokenPrivileges(&Buffer->Privileges);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = BuildTokenOwner(&Buffer->Owner,
+                             OwnerSid);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = BuildTokenDefaultDacl(&Buffer->DefaultDacl,
+                                   OwnerSid);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *TokenInformation = Buffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (Buffer != NULL)
+        {
+            if (Buffer->User.User.Sid != NULL)
+                DispatchTable.FreeLsaHeap(Buffer->User.User.Sid);
+
+            if (Buffer->Groups != NULL)
+            {
+                for (i = 0; i < Buffer->Groups->GroupCount; i++)
+                {
+                    if (Buffer->Groups->Groups[i].Sid != NULL)
+                        DispatchTable.FreeLsaHeap(Buffer->Groups->Groups[i].Sid);
+                }
+
+                DispatchTable.FreeLsaHeap(Buffer->Groups);
+            }
+
+            if (Buffer->PrimaryGroup.PrimaryGroup != NULL)
+                DispatchTable.FreeLsaHeap(Buffer->PrimaryGroup.PrimaryGroup);
+
+            if (Buffer->Privileges != NULL)
+                DispatchTable.FreeLsaHeap(Buffer->Privileges);
+
+            if (Buffer->Owner.Owner != NULL)
+                DispatchTable.FreeLsaHeap(Buffer->Owner.Owner);
+
+            if (Buffer->DefaultDacl.DefaultDacl != NULL)
+                DispatchTable.FreeLsaHeap(Buffer->DefaultDacl.DefaultDacl);
+
+            DispatchTable.FreeLsaHeap(Buffer);
+        }
     }
 
     return Status;
@@ -504,7 +1021,34 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     /* Return the token information type */
     *TokenInformationType = LsaTokenInformationV1;
 
+    /* Build and fill the token information buffer */
+    Status = BuildTokenInformationBuffer((PLSA_TOKEN_INFORMATION_V1*)TokenInformation,
+                                         AccountDomainSid,
+                                         RelativeIds.Element[0],
+                                         LogonId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("BuildTokenInformationBuffer failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    *SubStatus = STATUS_SUCCESS;
+
 done:
+    /* Return the account name */
+    *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
+    if (*AccountName != NULL)
+    {
+        (*AccountName)->Buffer = DispatchTable.AllocateLsaHeap(LogonInfo->UserName.Length +
+                                                               sizeof(UNICODE_NULL));
+        if ((*AccountName)->Buffer != NULL)
+        {
+            (*AccountName)->MaximumLength = LogonInfo->UserName.Length +
+                                            sizeof(UNICODE_NULL);
+            RtlCopyUnicodeString(*AccountName, &LogonInfo->UserName);
+        }
+    }
+
     if (!NT_SUCCESS(Status))
     {
         if (*ProfileBuffer != NULL)

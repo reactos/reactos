@@ -283,9 +283,14 @@ LsarClose(IN OUT LSAPR_HANDLE *ObjectHandle);
 
 NTSTATUS
 WINAPI
+LsarLookupPrivilegeValue(IN LSAPR_HANDLE PolicyHandle,
+                         IN PRPC_UNICODE_STRING Name,
+                         OUT PLUID Value);
+
+NTSTATUS
+WINAPI
 LsarQueryInformationPolicy(IN LSAPR_HANDLE PolicyHandle,
                            IN POLICY_INFORMATION_CLASS InformationClass,
                            OUT PLSAPR_POLICY_INFORMATION *PolicyInformation);
-
 
 /* EOF */
