@@ -9,6 +9,7 @@ elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE arm/kdbg.c)
 endif(ARCH STREQUAL "i386")
 list(APPEND SOURCE
+    kdrosdbg.c
     kdrosdbg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
 

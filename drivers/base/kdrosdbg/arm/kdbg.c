@@ -10,15 +10,16 @@
 
 #define NOEXTAPI
 #include <ntifs.h>
-#define NDEBUG
 #include <halfuncs.h>
 #include <stdio.h>
-#include <debug.h>
-#include "arc/arc.h"
-#include "windbgkd.h"
+#include <arc/arc.h>
+#include <windbgkd.h>
 #include <kddll.h>
 #include <ioaccess.h>
 #include <arm/peripherals/pl011.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -115,81 +116,6 @@ KdPortPutByteEx(IN PKD_PORT_INFORMATION PortInformation,
     // Send the character
     //
     WRITE_REGISTER_ULONG(UART_PL01x_DR, ByteToSend);
-}
-
-/* WINDOWS FUNCTIONS **********************************************************/
-
-NTSTATUS
-NTAPI
-KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-KdDebuggerInitialize1(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-KdD0Transition(VOID)
-{
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-KdD3Transition(VOID)
-{
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-KdSave(IN BOOLEAN SleepTransition)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-KdRestore(IN BOOLEAN SleepTransition)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
-}
-
-VOID
-NTAPI
-KdSendPacket(IN ULONG PacketType,
-             IN PSTRING MessageHeader,
-             IN PSTRING MessageData,
-             IN OUT PKD_CONTEXT Context)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return;
-}
-
-KDSTATUS
-NTAPI
-KdReceivePacket(IN ULONG PacketType,
-                OUT PSTRING MessageHeader,
-                OUT PSTRING MessageData,
-                OUT PULONG DataLength,
-                IN OUT PKD_CONTEXT Context)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
 }
 
 /* EOF */
