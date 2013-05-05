@@ -247,8 +247,9 @@ RtlAcquirePrivilege(IN PULONG Privilege,
                 goto Cleanup;
             }
 
-            /* Save said token */
+            /* Save said token and the fact we have impersonated */
             State->Token = ImpersonationToken;
+            State->Flags |= RTL_ACQUIRE_PRIVILEGE_IMPERSONATE;
 
             ZwClose(ProcessToken);
         }
@@ -372,7 +373,9 @@ RtlReleasePrivilege(IN PVOID ReturnedState)
 
     DPRINT("RtlReleasePrivilege(%p)\n", ReturnedState);
 
-    /* If we had an active impersonation before we acquired privileges */
+    /* If we had an active impersonation before we acquired privileges
+     * Or if we have impersonated, quit it
+     */
     if (State->Flags & RTL_ACQUIRE_PRIVILEGE_IMPERSONATE)
     {
         /* Restore it for the current thread */
