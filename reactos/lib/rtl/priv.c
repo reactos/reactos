@@ -112,6 +112,7 @@ RtlAcquirePrivilege(IN PULONG Privilege,
                     IN ULONG Flags,
                     OUT PVOID *ReturnedState)
 {
+#if 0
     NTSTATUS Status;
     PRTL_ACQUIRE_STATE State;
     ULONG ReturnLength, i, OldSize;
@@ -344,6 +345,10 @@ Cleanup:
     RtlFreeHeap(RtlGetProcessHeap(), 0, State);
 
     return Status;
+#else
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 /*
@@ -353,6 +358,7 @@ VOID
 NTAPI
 RtlReleasePrivilege(IN PVOID ReturnedState)
 {
+#if 0
     NTSTATUS Status;
     PRTL_ACQUIRE_STATE State = (PRTL_ACQUIRE_STATE)ReturnedState;
 
@@ -388,6 +394,9 @@ RtlReleasePrivilege(IN PVOID ReturnedState)
     /* Release token and free state */
     ZwClose(State->Token);
     RtlFreeHeap(RtlGetProcessHeap(), 0, State);
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 /*
