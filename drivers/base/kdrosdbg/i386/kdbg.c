@@ -122,7 +122,7 @@ const ULONG BaseArray[] = {0, 0xF1012000};
 static KD_PORT_INFORMATION DefaultPort = { 0, 0, 0 };
 
 /* The com port must only be initialized once! */
-static BOOLEAN PortInitialized = FALSE;
+// static BOOLEAN PortInitialized = FALSE;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -135,15 +135,16 @@ KdPortInitializeEx(
     IN ULONG Unknown1,
     IN ULONG Unknown2)
 {
-    SIZE_T i;
     ULONG ComPortBase;
     CHAR buffer[80];
     ULONG divisor;
     UCHAR lcr;
 
+#if 0 // Deactivated because never used in fact (was in KdPortInitialize but we use KdPortInitializeEx)
     /*
      * Find the port if needed
      */
+    SIZE_T i;
 
     if (!PortInitialized)
     {
@@ -177,6 +178,7 @@ KdPortInitializeEx(
 
         PortInitialized = TRUE;
     }
+#endif
 
     /*
      * Initialize the port
@@ -269,17 +271,6 @@ KdPortGetByteEx(
     }
 
     return FALSE;
-}
-
-/* HAL.KdPortPutByte */
-VOID
-NTAPI
-KdPortPutByte(
-    IN UCHAR ByteToSend)
-{
-    if (!PortInitialized)
-        return;
-    KdPortPutByteEx(&DefaultPort, ByteToSend);
 }
 
 /* ReactOS-specific */
