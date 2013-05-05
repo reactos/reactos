@@ -386,7 +386,7 @@ SetLocalTime(IN CONST SYSTEMTIME *lpSystemTime)
     }
     else
     {
-        DPRINT1("Workaround RtlAcquirePrivilege failure!\n");
+        DPRINT1("HACK: Workaround RtlAcquirePrivilege failure! Remove me once RAP is fine\n");
         Status = NtSetSystemTime(&NewSystemTime, NULL);
     }
 
@@ -427,11 +427,15 @@ SetSystemTime(IN CONST SYSTEMTIME *lpSystemTime)
     }
 
     Status = RtlAcquirePrivilege(&Privilege, 1, 0, &State);
-    Status = STATUS_SUCCESS;
     if (NT_SUCCESS(Status))
     {
         Status = NtSetSystemTime(&NewSystemTime, NULL);
         RtlReleasePrivilege(State);
+    }
+    else
+    {
+        DPRINT1("HACK: Workaround RtlAcquirePrivilege failure! Remove me once RAP is fine\n");
+        Status = NtSetSystemTime(&NewSystemTime, NULL);
     }
 
     if (!NT_SUCCESS(Status))
