@@ -16,7 +16,7 @@ static UNICODE_STRING NtosImgPath = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32
 static UNICODE_STRING WritableFilePath = RTL_CONSTANT_STRING(L"\\SystemRoot\\kmtest-MmSection.txt");
 static UNICODE_STRING SharedSectionName = RTL_CONSTANT_STRING(L"\\BaseNamedObjects\\kmtest-SharedSection");
 extern const char TestString[];
-extern const SIZE_T TestStringSize;
+extern const ULONG TestStringSize;
 static OBJECT_ATTRIBUTES NtdllObject;
 static OBJECT_ATTRIBUTES KmtestFileObject;
 static OBJECT_ATTRIBUTES NtoskrnlFileObject;
@@ -266,7 +266,7 @@ AdvancedErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
 
 static
 SIZE_T
-CompareFileContents(HANDLE FileHandle, SIZE_T BufferLength, PVOID Buffer)
+CompareFileContents(HANDLE FileHandle, ULONG BufferLength, PVOID Buffer)
 {
     NTSTATUS Status;
     LARGE_INTEGER ByteOffset;

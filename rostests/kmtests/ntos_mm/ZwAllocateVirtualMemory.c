@@ -14,14 +14,14 @@
 
 /* These are being used in ZwMapViewOfSection as well */
 const char TestString[] = "TheLongBrownFoxJumpedTheWhiteRabbitTheLongBrownFoxJumpedTheWhiteRabbitTheLongBrownFoxJumpedTheWhiteRabbitTheLongBrownFoxJumpedTheWhiteRabbitTheLongBrownFoxJumpedTheWhiteRabbitTheLongBrownFoxJumpedThe";
-const SIZE_T TestStringSize = sizeof(TestString);
+const ULONG TestStringSize = sizeof(TestString);
 
 VOID Test_ZwAllocateVirtualMemory(VOID);
 
 typedef struct _TEST_CONTEXT
 {
     HANDLE ProcessHandle;
-    ULONG RegionSize;
+    SIZE_T RegionSize;
     ULONG AllocationType;
     ULONG Protect;
     PVOID Bases[1024];

@@ -11,7 +11,7 @@
 #define NO_HANDLE_CLOSE -998
 #define _4mb 4194304
 extern const char TestString[];
-extern const SIZE_T TestStringSize;
+extern const ULONG TestStringSize;
 static UNICODE_STRING FileReadOnlyPath = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
 static UNICODE_STRING WritableFilePath = RTL_CONSTANT_STRING(L"\\SystemRoot\\kmtest-MmSection.txt");
 static UNICODE_STRING CalcImgPath = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\calc.exe");
