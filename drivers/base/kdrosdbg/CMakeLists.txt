@@ -1,5 +1,5 @@
 
-spec2def(kdcom.dll kdcom.spec ADD_IMPORTLIB)
+spec2def(kdcom.dll kdrosdbg.spec ADD_IMPORTLIB)
 
 if(ARCH STREQUAL "i386")
     list(APPEND SOURCE i386/kdbg.c)
@@ -9,8 +9,8 @@ elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE arm/kdbg.c)
 endif(ARCH STREQUAL "i386")
 list(APPEND SOURCE
-    kdcom.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
+    kdrosdbg.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/kdrosdbg.def)
 
 add_library(kdcom SHARED ${SOURCE})
 
