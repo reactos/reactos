@@ -1165,9 +1165,9 @@ static void pass(void)
   write_byte(0);
   write_string(timestring);  // most recent modification
   write_byte(0);
-  write_string(timestring);  // volume expires
+  write_string("0000000000000000");  // volume expires
   write_byte(0);
-  write_string(timestring);  // volume is effective
+  write_string("0000000000000000");  // volume is effective
   write_byte(0);
   write_byte(1);
   write_byte(0);
@@ -1221,13 +1221,13 @@ static void pass(void)
     write_block(37, ' ');       // abstract file identifier
     write_block(37, ' ');       // bibliographic file identifier
     write_string(timestring);  // volume creation
-    write_byte(48);
+    write_byte(0);
     write_string(timestring);  // most recent modification
-    write_byte(48);
-    write_string(timestring);  // volume expires
-    write_byte(48);
-    write_string(timestring);  // volume is effective
-    write_byte(48);
+    write_byte(0);
+    write_string("0000000000000000");  // volume expires
+    write_byte(0);
+    write_string("0000000000000000");  // volume is effective
+    write_byte(0);
     write_byte(1);
     write_byte(0);
     fill_sector();
