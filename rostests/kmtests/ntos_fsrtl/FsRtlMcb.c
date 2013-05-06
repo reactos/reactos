@@ -146,6 +146,10 @@ static VOID FsRtlLargeMcbTest()
     NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
     ok(NbRuns == 0, "Expected 0 runs, got: %lu\n", NbRuns);
 
+    /* Create a mapping with three holes between each mapping
+     * It looks like that:
+     * ----//////-----/////-----///////
+     */
     ok(FsRtlAddLargeMcbEntry(&LargeMcb, 1024, 1024, 1024) == TRUE, "expected TRUE, got FALSE\n");
     ok(FsRtlAddLargeMcbEntry(&LargeMcb, 3072, 3072, 1024) == TRUE, "expected TRUE, got FALSE\n");
     ok(FsRtlAddLargeMcbEntry(&LargeMcb, 5120, 5120, 1024) == TRUE, "expected TRUE, got FALSE\n");
@@ -183,6 +187,7 @@ static VOID FsRtlLargeMcbTest()
     ok(Lbn == 5120, "Expected Lbn 5120, got: %I64d\n", Lbn);
     ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
 
+    /* Fill first hole */
     ok(FsRtlAddLargeMcbEntry(&LargeMcb, 0, 0, 1024) == TRUE, "expected TRUE, got FALSE\n");
 
     NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
@@ -208,6 +213,7 @@ static VOID FsRtlLargeMcbTest()
     ok(Lbn == 5120, "Expected Lbn 5120, got: %I64d\n", Lbn);
     ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
 
+    /* Fill half of the last hole and overlap */
     ok(FsRtlAddLargeMcbEntry(&LargeMcb, 4608, 4608, 1024) == TRUE, "expected TRUE, got FALSE\n");
 
     NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
