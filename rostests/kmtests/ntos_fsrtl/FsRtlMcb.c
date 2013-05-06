@@ -141,6 +141,99 @@ static VOID FsRtlLargeMcbTest()
     ok(Index == 1, "Expected Index 1, got: %lu\n", Index);
 
     FsRtlUninitializeLargeMcb(&LargeMcb);
+
+    FsRtlInitializeLargeMcb(&LargeMcb, PagedPool);
+    NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
+    ok(NbRuns == 0, "Expected 0 runs, got: %lu\n", NbRuns);
+
+    ok(FsRtlAddLargeMcbEntry(&LargeMcb, 1024, 1024, 1024) == TRUE, "expected TRUE, got FALSE\n");
+    ok(FsRtlAddLargeMcbEntry(&LargeMcb, 3072, 3072, 1024) == TRUE, "expected TRUE, got FALSE\n");
+    ok(FsRtlAddLargeMcbEntry(&LargeMcb, 5120, 5120, 1024) == TRUE, "expected TRUE, got FALSE\n");
+
+    NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
+    ok(NbRuns == 6, "Expected 6 runs, got: %lu\n", NbRuns);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 0, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 0, "Expected Vbn 0, got: %I64d\n", Vbn);
+    ok(Lbn == -1, "Expected Lbn -1, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 1, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 1024, "Expected Vbn 1024, got: %I64d\n", Vbn);
+    ok(Lbn == 1024, "Expected Lbn 1024, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 2, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 2048, "Expected Vbn 2048, got: %I64d\n", Vbn);
+    ok(Lbn == -1, "Expected Lbn -1, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 3, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 3072, "Expected Vbn 3072, got: %I64d\n", Vbn);
+    ok(Lbn == 3072, "Expected Lbn 3072, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 4, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 4096, "Expected Vbn 4096, got: %I64d\n", Vbn);
+    ok(Lbn == -1, "Expected Lbn -1, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 5, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 5120, "Expected Vbn 5120, got: %I64d\n", Vbn);
+    ok(Lbn == 5120, "Expected Lbn 5120, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlAddLargeMcbEntry(&LargeMcb, 0, 0, 1024) == TRUE, "expected TRUE, got FALSE\n");
+
+    NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
+    ok(NbRuns == 4, "Expected 4 runs, got: %lu\n", NbRuns);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 0, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 0, "Expected Vbn 0, got: %I64d\n", Vbn);
+    ok(Lbn == -1, "Expected Lbn -1, got: %I64d\n", Lbn);
+    ok(SectorCount == 3072, "Expected SectorCount 3072, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 1, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 3072, "Expected Vbn 3072, got: %I64d\n", Vbn);
+    ok(Lbn == 3072, "Expected Lbn 3072, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 2, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 4096, "Expected Vbn 4096, got: %I64d\n", Vbn);
+    ok(Lbn == -1, "Expected Lbn -1, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 3, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 5120, "Expected Vbn 5120, got: %I64d\n", Vbn);
+    ok(Lbn == 5120, "Expected Lbn 5120, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlAddLargeMcbEntry(&LargeMcb, 4608, 4608, 1024) == TRUE, "expected TRUE, got FALSE\n");
+
+    NbRuns = FsRtlNumberOfRunsInLargeMcb(&LargeMcb);
+    ok(NbRuns == 4, "Expected 4 runs, got: %lu\n", NbRuns);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 0, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 0, "Expected Vbn 0, got: %I64d\n", Vbn);
+    ok(Lbn == -1, "Expected Lbn -1, got: %I64d\n", Lbn);
+    ok(SectorCount == 3072, "Expected SectorCount 3072, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 1, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 3072, "Expected Vbn 3072, got: %I64d\n", Vbn);
+    ok(Lbn == 3072, "Expected Lbn 3072, got: %I64d\n", Lbn);
+    ok(SectorCount == 1024, "Expected SectorCount 1024, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 2, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 4096, "Expected Vbn 4096, got: %I64d\n", Vbn);
+    ok(Lbn == -1, "Expected Lbn -1, got: %I64d\n", Lbn);
+    ok(SectorCount == 512, "Expected SectorCount 512, got: %I64d\n", SectorCount);
+
+    ok(FsRtlGetNextLargeMcbEntry(&LargeMcb, 3, &Vbn, &Lbn, &SectorCount) == TRUE, "expected TRUE, got FALSE\n");
+    ok(Vbn == 4608, "Expected Vbn 4608, got: %I64d\n", Vbn);
+    ok(Lbn == 4608, "Expected Lbn 4608, got: %I64d\n", Lbn);
+    ok(SectorCount == 1536, "Expected SectorCount 1536, got: %I64d\n", SectorCount);
+
+    FsRtlUninitializeLargeMcb(&LargeMcb);
 }
 
 START_TEST(FsRtlMcb)
