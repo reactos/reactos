@@ -8,6 +8,6 @@
 8 stdcall KdSendPacket(long ptr ptr ptr)
 
 ; Legacy KD
-@ stdcall KdPortInitializeEx(ptr long long)
+@ stdcall KdPortInitializeEx(ptr long)
 @ stdcall KdPortGetByteEx(ptr ptr)
 @ stdcall KdPortPutByteEx(ptr long)

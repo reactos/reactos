@@ -10,27 +10,20 @@
 
 #define NOEXTAPI
 #include <ntifs.h>
-#include <halfuncs.h>
-#include <stdio.h>
 #include <arc/arc.h>
+#include <halfuncs.h>
 #include <windbgkd.h>
-#include <kddll.h>
-#include <ioaccess.h>
+#include <ioaccess.h> /* port intrinsics */
+#include <cportlib/cportlib.h>
 #include <arm/peripherals/pl011.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
-typedef struct _KD_PORT_INFORMATION
-{
-    ULONG ComPort;
-    ULONG BaudRate;
-    ULONG BaseAddress;
-} KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
-
-KD_PORT_INFORMATION DefaultPort = {0, 0, 0};
+CPPORT DefaultPort = {0, 0, 0};
 
 //
 // We need to build this in the configuration root and use KeFindConfigurationEntry
@@ -42,42 +35,41 @@ KD_PORT_INFORMATION DefaultPort = {0, 0, 0};
 
 BOOLEAN
 NTAPI
-KdPortInitializeEx(IN PKD_PORT_INFORMATION PortInformation,
-                   IN ULONG Unknown1,
-                   IN ULONG Unknown2)
+KdPortInitializeEx(IN PCPPORT PortInformation,
+                   IN ULONG ComPortNumber)
 {
     ULONG Divider, Remainder, Fraction;
     ULONG Baudrate = PortInformation->BaudRate;
-    
+
     //
     // Calculate baudrate clock divider and remainder
     //
     Divider   = HACK / (16 * Baudrate);
     Remainder = HACK % (16 * Baudrate);
-    
+
     //
     // Calculate the fractional part
     //
     Fraction  = (8 * Remainder / Baudrate) >> 1;
     Fraction += (8 * Remainder / Baudrate) & 1;
-    
+
     //
     // Disable interrupts
     //
     WRITE_REGISTER_ULONG(UART_PL011_CR, 0);
-    
+
     //
     // Set the baud rate
     //
     WRITE_REGISTER_ULONG(UART_PL011_IBRD, Divider);
     WRITE_REGISTER_ULONG(UART_PL011_FBRD, Fraction);
-    
+
     //
     // Set 8 bits for data, 1 stop bit, no parity, FIFO enabled
     //
     WRITE_REGISTER_ULONG(UART_PL011_LCRH,
                          UART_PL011_LCRH_WLEN_8 | UART_PL011_LCRH_FEN);
-    
+
     //
     // Clear and enable FIFO
     //
@@ -85,7 +77,7 @@ KdPortInitializeEx(IN PKD_PORT_INFORMATION PortInformation,
                          UART_PL011_CR_UARTEN |
                          UART_PL011_CR_TXE |
                          UART_PL011_CR_RXE);
-    
+
     //
     // Done
     //
@@ -94,7 +86,7 @@ KdPortInitializeEx(IN PKD_PORT_INFORMATION PortInformation,
 
 BOOLEAN
 NTAPI
-KdPortGetByteEx(IN PKD_PORT_INFORMATION PortInformation,
+KdPortGetByteEx(IN PCPPORT PortInformation,
                 OUT PUCHAR ByteReceived)
 {
     UNIMPLEMENTED;
@@ -104,7 +96,7 @@ KdPortGetByteEx(IN PKD_PORT_INFORMATION PortInformation,
 
 VOID
 NTAPI
-KdPortPutByteEx(IN PKD_PORT_INFORMATION PortInformation,
+KdPortPutByteEx(IN PCPPORT PortInformation,
                 IN UCHAR ByteToSend)
 {
     //

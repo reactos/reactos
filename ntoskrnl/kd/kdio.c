@@ -26,7 +26,8 @@ HANDLE KdpLogFileHandle;
 ANSI_STRING KdpLogFileName = RTL_CONSTANT_STRING("\\SystemRoot\\debug.log");
 
 KSPIN_LOCK KdpSerialSpinLock;
-KD_PORT_INFORMATION SerialPortInfo = { DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0 };
+ULONG  SerialPortNumber = DEFAULT_DEBUG_PORT;
+CPPORT SerialPortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
 
 /* Current Port in use. FIXME: Do we support more then one? */
 ULONG KdpPort;
@@ -358,12 +359,12 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
         DispatchTable->KdpPrintRoutine = KdpSerialDebugPrint;
 
         /* Initialize the Port */
-        if (!KdPortInitializeEx(&SerialPortInfo, 0, 0))
+        if (!KdPortInitializeEx(&SerialPortInfo, SerialPortNumber))
         {
             KdpDebugMode.Serial = FALSE;
             return;
         }
-        KdComPortInUse = (PUCHAR)(ULONG_PTR)SerialPortInfo.BaseAddress;
+        KdComPortInUse = SerialPortInfo.Address;
 
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpSerialSpinLock);
