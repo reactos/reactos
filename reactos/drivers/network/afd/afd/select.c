@@ -91,7 +91,8 @@ VOID SignalSocket(
     AFD_DbgPrint(MID_TRACE,("Done\n"));
 }
 
-static VOID SelectTimeout( PKDPC Dpc,
+static KDEFERRED_ROUTINE SelectTimeout;
+static VOID NTAPI SelectTimeout( PKDPC Dpc,
                            PVOID DeferredContext,
                            PVOID SystemArgument1,
                            PVOID SystemArgument2 ) {
@@ -235,9 +236,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
           KeInitializeTimerEx( &Poll->Timer, NotificationTimer );
 
-          KeInitializeDpc( (PRKDPC)&Poll->TimeoutDpc,
-             (PKDEFERRED_ROUTINE)SelectTimeout,
-             Poll );
+          KeInitializeDpc( (PRKDPC)&Poll->TimeoutDpc, SelectTimeout, Poll );
 
           InsertTailList( &DeviceExt->Polls, &Poll->ListEntry );
 
