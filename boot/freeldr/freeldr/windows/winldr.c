@@ -237,7 +237,7 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 	CHAR DllName[1024];
 	PCHAR DriverNamePos;
 	BOOLEAN Status;
-	PVOID DriverBase;
+	PVOID DriverBase = NULL;
 
 	// Separate the path to file name and directory path
 	_snprintf(DriverPath, sizeof(DriverPath), "%wZ", FilePath);
@@ -258,7 +258,6 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
 	}
 
 	TRACE("DriverPath: %s, DllName: %s, LPB\n", DriverPath, DllName);
-
 
 	// Check if driver is already loaded
 	Status = WinLdrCheckForLoadedDll(LoadOrderListHead, DllName, DriverDTE);
@@ -424,7 +423,7 @@ WinLdrDetectVersion()
 }
 
 static
-PVOID
+BOOLEAN
 LoadModule(
     PLOADER_PARAMETER_BLOCK LoaderBlock,
     PCCH Path,
@@ -434,10 +433,10 @@ LoadModule(
     BOOLEAN IsKdTransportDll,
     ULONG Percentage)
 {
+	BOOLEAN Status;
 	CHAR FullFileName[MAX_PATH];
 	CHAR ProgressString[256];
-	NTSTATUS Status;
-	PVOID BaseAdress;
+	PVOID BaseAdress = NULL;
 
 	UiDrawBackdrop();
 	sprintf(ProgressString, "Loading %s...", File);
@@ -448,8 +447,12 @@ LoadModule(
 	strcat(FullFileName, File);
 
 	Status = WinLdrLoadImage(FullFileName, MemoryType, &BaseAdress);
-	TRACE("%s loaded with status %d at %p\n",
-	        File, Status, BaseAdress);
+	if (!Status)
+	{
+		TRACE("Loading %s failed\n", File);
+		return FALSE;
+	}
+	TRACE("%s loaded successfully at %p\n", File, BaseAdress);
 
 	strcpy(FullFileName, "WINDOWS\\SYSTEM32\\");
 	strcat(FullFileName, File);
@@ -458,13 +461,13 @@ LoadModule(
 	 * the Kernel Debugger Transport DLL, to make the
 	 * PE loader happy.
 	 */
-	WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
-	                             (IsKdTransportDll ? "KDCOM.DLL" : File),
-	                             FullFileName,
-	                             BaseAdress,
-	                             Dte);
+	Status = WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
+	                                      (IsKdTransportDll ? "KDCOM.DLL" : File),
+	                                      FullFileName,
+	                                      BaseAdress,
+	                                      Dte);
 
-	return BaseAdress;
+	return Status;
 }
 
 static
@@ -679,11 +682,11 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
 	UiDrawBackdrop();
 	UiDrawProgressBarCenter(15, 100, "Loading system hive...");
 	Status = WinLdrInitSystemHive(LoaderBlock, BootPath);
-	TRACE("SYSTEM hive loaded with status %d\n", Status);
+	TRACE("SYSTEM hive %s\n", (Status ? "loaded" : "not loaded"));
 
 	/* Load NLS data, OEM font, and prepare boot drivers list */
 	Status = WinLdrScanSystemHive(LoaderBlock, BootPath);
-	TRACE("SYSTEM hive scanned with status %d\n", Status);
+	TRACE("SYSTEM hive %s\n", (Status ? "scanned" : "not scanned"));
 
 	/* Finish loading */
 	LoadAndBootWindowsCommon(OperatingSystemVersion,
