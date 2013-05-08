@@ -363,6 +363,7 @@ endif()
 if(NOT _WINKD_)
     if(ARCH STREQUAL "i386")
         list(APPEND SOURCE
+            kd/i386/kdbg.c
             kd/i386/kdmemsup.c
             kd/wrappers/gdbstub.c)
         if(KDBG)
@@ -372,6 +373,7 @@ if(NOT _WINKD_)
     elseif(ARCH STREQUAL "amd64")
         list(APPEND SOURCE
             kd/amd64/kd.c
+            kd/i386/kdbg.c  # Use the x86 file
             kd/amd64/kdmemsup.c)
         if(KDBG)
             list(APPEND ASM_SOURCE kdbg/amd64/kdb_help.S)
@@ -379,6 +381,8 @@ if(NOT _WINKD_)
                 kdbg/amd64/i386-dis.c
                 kdbg/amd64/kdb.c)
         endif()
+    elseif(ARCH STREQUAL "arm")
+        list(APPEND SOURCE kd/arm/kdbg.c)
     elseif(ARCH STREQUAL "powerpc")
         list(APPEND SOURCE kd/wrappers/gdbstub_powerpc.c)
     endif()

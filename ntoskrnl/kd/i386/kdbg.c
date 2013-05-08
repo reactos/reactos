@@ -9,15 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NOEXTAPI
-#include <ntifs.h>
-#include <arc/arc.h>
-#include <halfuncs.h>
-#include <windbgkd.h>
-#include <ioaccess.h> /* port intrinsics */
-#include <cportlib/cportlib.h>
-#include <stdio.h>
-
+#include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -45,6 +37,14 @@ const ULONG BaseArray[] = {0, 0xF1012000};
 
 
 /* REACTOS FUNCTIONS **********************************************************/
+
+NTSTATUS
+NTAPI
+KdDebuggerInitialize1(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 BOOLEAN
 NTAPI

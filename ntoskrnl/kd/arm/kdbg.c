@@ -8,16 +8,8 @@
 
 /* INCLUDES *******************************************************************/
 
-#define NOEXTAPI
-#include <ntifs.h>
-#include <arc/arc.h>
-#include <halfuncs.h>
-#include <windbgkd.h>
-#include <ioaccess.h> /* port intrinsics */
-#include <cportlib/cportlib.h>
+#include <ntoskrnl.h>
 #include <arm/peripherals/pl011.h>
-#include <stdio.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -32,6 +24,13 @@ CPPORT DefaultPort = {0, 0, 0};
 #define HACK 24000000
 
 /* REACTOS FUNCTIONS **********************************************************/
+
+NTSTATUS
+NTAPI
+KdDebuggerInitialize1(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 BOOLEAN
 NTAPI

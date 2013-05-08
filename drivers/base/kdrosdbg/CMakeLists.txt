@@ -1,13 +1,6 @@
 
 spec2def(kdcom.dll kdrosdbg.spec ADD_IMPORTLIB)
 
-if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE i386/kdbg.c)
-elseif(ARCH STREQUAL "amd64")
-    list(APPEND SOURCE i386/kdbg.c)
-elseif(ARCH STREQUAL "arm")
-    list(APPEND SOURCE arm/kdbg.c)
-endif(ARCH STREQUAL "i386")
 list(APPEND SOURCE
     kdrosdbg.c
     kdrosdbg.rc
