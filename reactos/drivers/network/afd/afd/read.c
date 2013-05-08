@@ -101,15 +101,14 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     *TotalBytesCopied = 0;
 
 
-    AFD_DbgPrint(MID_TRACE,("Called, BytesAvailable = %d\n",
-                            BytesAvailable));
+    AFD_DbgPrint(MID_TRACE,("Called, BytesAvailable = %u\n", BytesAvailable));
 
     if( CantReadMore(FCB) ) return STATUS_SUCCESS;
     if( !BytesAvailable ) return STATUS_PENDING;
 
     Map = (PAFD_MAPBUF)(RecvReq->BufferArray + RecvReq->BufferCount);
 
-    AFD_DbgPrint(MID_TRACE,("Buffer Count: %d @ %x\n",
+    AFD_DbgPrint(MID_TRACE,("Buffer Count: %u @ %p\n",
                             RecvReq->BufferCount,
                             RecvReq->BufferArray));
     for( i = 0;
@@ -123,7 +122,7 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
         if( Map[i].Mdl ) {
             Map[i].BufferAddress = MmMapLockedPages( Map[i].Mdl, KernelMode );
 
-            AFD_DbgPrint(MID_TRACE,("Buffer %d: %x:%d\n",
+            AFD_DbgPrint(MID_TRACE,("Buffer %u: %p:%u\n",
                                     i,
                                     Map[i].BufferAddress,
                                     BytesToCopy));
@@ -157,9 +156,9 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
     UINT TotalBytesCopied = 0, RetBytesCopied = 0;
     NTSTATUS Status = STATUS_SUCCESS, RetStatus = STATUS_PENDING;
 
-    AFD_DbgPrint(MID_TRACE,("%x %x\n", FCB, Irp));
+    AFD_DbgPrint(MID_TRACE,("%p %p\n", FCB, Irp));
 
-    AFD_DbgPrint(MID_TRACE,("FCB %x Receive data waiting %d\n",
+    AFD_DbgPrint(MID_TRACE,("FCB %p Receive data waiting %u\n",
                             FCB, FCB->Recv.Content));
 
     if( CantReadMore( FCB ) ) {
@@ -172,7 +171,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
             NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
             RecvReq = GetLockedData(NextIrp, NextIrpSp);
 
-            AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
+            AFD_DbgPrint(MID_TRACE,("Completing recv %p (%u)\n", NextIrp,
                                     TotalBytesCopied));
             UnlockBuffers( RecvReq->BufferArray,
                            RecvReq->BufferCount, FALSE );
@@ -198,7 +197,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
         /* Kick the user that receive would be possible now */
         /* XXX Not implemented yet */
 
-        AFD_DbgPrint(MID_TRACE,("FCB %x Receive data waiting %d\n",
+        AFD_DbgPrint(MID_TRACE,("FCB %p Receive data waiting %u\n",
                                 FCB, FCB->Recv.Content));
         /*OskitDumpBuffer( FCB->Recv.Window, FCB->Recv.Content );*/
 
@@ -209,18 +208,18 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
             NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
             RecvReq = GetLockedData(NextIrp, NextIrpSp);
 
-            AFD_DbgPrint(MID_TRACE,("RecvReq @ %x\n", RecvReq));
+            AFD_DbgPrint(MID_TRACE,("RecvReq @ %p\n", RecvReq));
 
             Status = TryToSatisfyRecvRequestFromBuffer
             ( FCB, RecvReq, &TotalBytesCopied );
 
             if( Status == STATUS_PENDING ) {
-                AFD_DbgPrint(MID_TRACE,("Ran out of data for %x\n", NextIrp));
+                AFD_DbgPrint(MID_TRACE,("Ran out of data for %p\n", NextIrp));
                 InsertHeadList(&FCB->PendingIrpList[FUNCTION_RECV],
                                &NextIrp->Tail.Overlay.ListEntry);
                 break;
             } else {
-                AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
+                AFD_DbgPrint(MID_TRACE,("Completing recv %p (%u)\n", NextIrp,
                                         TotalBytesCopied));
                 UnlockBuffers( RecvReq->BufferArray,
                                RecvReq->BufferCount, FALSE );
@@ -263,7 +262,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
         PollReeval(FCB->DeviceExt, FCB->FileObject);
     }
 
-    AFD_DbgPrint(MID_TRACE,("RetStatus for irp %x is %x\n", Irp, RetStatus));
+    AFD_DbgPrint(MID_TRACE,("RetStatus for irp %p is %x\n", Irp, RetStatus));
 
     /* Sometimes we're called with a NULL Irp */
     if( Irp ) {
@@ -283,6 +282,8 @@ NTSTATUS NTAPI ReceiveComplete
     PIRP NextIrp;
     PAFD_RECV_INFO RecvReq;
     PIO_STACK_LOCATION NextIrpSp;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
@@ -341,7 +342,7 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
 
     BytesToCopy = MIN( RecvReq->BufferArray[0].len, BytesAvailable );
 
-    AFD_DbgPrint(MID_TRACE,("BytesToCopy: %d len %d\n", BytesToCopy,
+    AFD_DbgPrint(MID_TRACE,("BytesToCopy: %u len %u\n", BytesToCopy,
                             RecvReq->BufferArray[0].len));
 
     if( Map[0].Mdl ) {
@@ -362,7 +363,7 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
                           sizeof(USHORT),
                           RecvReq->BufferArray[1].len);
 
-            AFD_DbgPrint(MID_TRACE,("Copying %d bytes of address\n", AddrLen));
+            AFD_DbgPrint(MID_TRACE,("Copying %u bytes of address\n", AddrLen));
 
             Map[1].BufferAddress = MmMapLockedPages( Map[1].Mdl, KernelMode );
 
@@ -385,7 +386,7 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
 
         Map[0].BufferAddress = MmMapLockedPages( Map[0].Mdl, KernelMode );
 
-        AFD_DbgPrint(MID_TRACE,("Buffer %d: %x:%d\n",
+        AFD_DbgPrint(MID_TRACE,("Buffer %d: %p:%u\n",
                                 0,
                                 Map[0].BufferAddress,
                                 BytesToCopy));
@@ -436,7 +437,10 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PLIST_ENTRY ListEntry;
     KPROCESSOR_MODE LockMode;
 
-    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Short);
+
+    AFD_DbgPrint(MID_TRACE,("Called on %p\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
@@ -558,7 +562,9 @@ PacketSocketRecvComplete(
     UINT DGSize = Irp->IoStatus.Information + sizeof( AFD_STORED_DATAGRAM );
     PLIST_ENTRY NextIrpEntry, DatagramRecvEntry;
 
-    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    AFD_DbgPrint(MID_TRACE,("Called on %p\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
@@ -611,7 +617,7 @@ PacketSocketRecvComplete(
         DatagramRecv->Len = Irp->IoStatus.Information;
         RtlCopyMemory( DatagramRecv->Buffer, FCB->Recv.Window,
                        DatagramRecv->Len );
-        AFD_DbgPrint(MID_TRACE,("Received (A %x)\n",
+        AFD_DbgPrint(MID_TRACE,("Received (A %p)\n",
                                 FCB->AddressFrom->RemoteAddress));
         DatagramRecv->Address =
             TaCopyTransportAddress( FCB->AddressFrom->RemoteAddress );
@@ -642,7 +648,7 @@ PacketSocketRecvComplete(
         NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
         RecvReq = GetLockedData(NextIrp, NextIrpSp);
 
-        AFD_DbgPrint(MID_TRACE,("RecvReq: %x, DatagramRecv: %x\n",
+        AFD_DbgPrint(MID_TRACE,("RecvReq: %p, DatagramRecv: %p\n",
                                 RecvReq, DatagramRecv));
 
         AFD_DbgPrint(MID_TRACE,("Satisfying\n"));
@@ -705,7 +711,9 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_STORED_DATAGRAM DatagramRecv;
     KPROCESSOR_MODE LockMode;
 
-    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    AFD_DbgPrint(MID_TRACE,("Called on %p\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 

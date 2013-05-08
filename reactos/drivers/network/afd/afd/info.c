@@ -18,7 +18,9 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     PLIST_ENTRY CurrentEntry;
 
-    AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq,
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    AFD_DbgPrint(MID_TRACE,("Called %p %x\n", InfoReq,
                             InfoReq ? InfoReq->InformationClass : 0));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
@@ -34,13 +36,13 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
         case AFD_INFO_SEND_WINDOW_SIZE:
             InfoReq->Information.Ulong = FCB->Send.Size;
-            AFD_DbgPrint(MID_TRACE,("Send window size %d\n", FCB->Send.Size));
+            AFD_DbgPrint(MID_TRACE,("Send window size %u\n", FCB->Send.Size));
             break;
 
         case AFD_INFO_GROUP_ID_TYPE:
             InfoReq->Information.LargeInteger.u.HighPart = FCB->GroupType;
             InfoReq->Information.LargeInteger.u.LowPart = FCB->GroupID;
-            AFD_DbgPrint(MID_TRACE, ("Group ID: %d Group Type: %d\n", FCB->GroupID, FCB->GroupType));
+            AFD_DbgPrint(MID_TRACE, ("Group ID: %u Group Type: %u\n", FCB->GroupID, FCB->GroupType));
             break;
 
         case AFD_INFO_BLOCKING_MODE:
@@ -103,6 +105,8 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PCHAR NewBuffer;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
@@ -171,7 +175,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 }
                 break;
             default:
-                AFD_DbgPrint(MIN_TRACE,("Unknown request %d\n", InfoReq->InformationClass));
+                AFD_DbgPrint(MIN_TRACE,("Unknown request %u\n", InfoReq->InformationClass));
                 break;
         }
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
@@ -191,6 +195,8 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PMDL Mdl = NULL;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
@@ -232,6 +238,7 @@ AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 

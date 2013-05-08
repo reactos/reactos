@@ -13,7 +13,7 @@
 NTSTATUS WarmSocketForBind( PAFD_FCB FCB, ULONG ShareType ) {
     NTSTATUS Status;
 
-    AFD_DbgPrint(MID_TRACE,("Called (AF %d)\n",
+    AFD_DbgPrint(MID_TRACE,("Called (AF %u)\n",
                             FCB->LocalAddress->Address[0].AddressType));
 
     if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
@@ -77,6 +77,8 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_BIND_DATA BindReq;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 

@@ -14,6 +14,8 @@ PVOID GetLockedData(PIRP Irp, PIO_STACK_LOCATION IrpSp)
     ASSERT(Irp->MdlAddress);
     ASSERT(Irp->Tail.Overlay.DriverContext[0]);
 
+    UNREFERENCED_PARAMETER(IrpSp);
+
     return Irp->Tail.Overlay.DriverContext[0];
 }
 
@@ -173,6 +175,8 @@ VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp )
     ASSERT(Irp->MdlAddress);
     ASSERT(Irp->Tail.Overlay.DriverContext[0]);
 
+    UNREFERENCED_PARAMETER(IrpSp);
+
     /* Check if we need to copy stuff back */
     if (Irp->Tail.Overlay.DriverContext[1] != NULL)
     {
@@ -203,7 +207,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     BOOLEAN LockFailed = FALSE;
     PAFD_MAPBUF MapBuf;
 
-    AFD_DbgPrint(MID_TRACE,("Called(%08x)\n", NewBuf));
+    AFD_DbgPrint(MID_TRACE,("Called(%p)\n", NewBuf));
 
     if( NewBuf ) {
         RtlZeroMemory(NewBuf, Size);
@@ -223,14 +227,14 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
             }
         } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
-                                    "from userland (%x %x)\n",
+                                    "from userland (%p %p)\n",
                                     Buf, AddressLen));
             ExFreePool( NewBuf );
             _SEH2_YIELD(return NULL);
         } _SEH2_END;
 
         for( i = 0; i < Count; i++ ) {
-            AFD_DbgPrint(MID_TRACE,("Locking buffer %d (%x:%d)\n",
+            AFD_DbgPrint(MID_TRACE,("Locking buffer %u (%p:%u)\n",
                                     i, NewBuf[i].buf, NewBuf[i].len));
 
             if( NewBuf[i].buf && NewBuf[i].len ) {
@@ -244,7 +248,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
                 continue;
             }
 
-            AFD_DbgPrint(MID_TRACE,("NewMdl @ %x\n", MapBuf[i].Mdl));
+            AFD_DbgPrint(MID_TRACE,("NewMdl @ %p\n", MapBuf[i].Mdl));
 
             if( MapBuf[i].Mdl ) {
                 AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
