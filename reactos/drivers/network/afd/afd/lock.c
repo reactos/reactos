@@ -274,7 +274,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
         }
     }
 
-    AFD_DbgPrint(MID_TRACE,("Leaving %x\n", NewBuf));
+    AFD_DbgPrint(MID_TRACE,("Leaving %p\n", NewBuf));
 
     return NewBuf;
 }

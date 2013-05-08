@@ -116,7 +116,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     _SEH2_TRY {
         switch (InfoReq->InformationClass) {
             case AFD_INFO_BLOCKING_MODE:
-                AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Boolean));
+                AFD_DbgPrint(MID_TRACE,("Blocking mode set to %c\n", InfoReq->Information.Boolean));
                 FCB->NonBlocking = InfoReq->Information.Boolean;
                 break;
             case AFD_INFO_INLINING_MODE:

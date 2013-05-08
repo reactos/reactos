@@ -144,7 +144,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
         HandleArray = AFD_HANDLES(PollReq);
 
         for( i = 0; i < PollReq->HandleCount; i++ ) {
-            AFD_DbgPrint(MAX_TRACE,("Req: %p, This %p\n",
+            AFD_DbgPrint(MAX_TRACE,("Req: %u, This %p\n",
                                     HandleArray[i].Handle, FileObject));
             if( (PVOID)HandleArray[i].Handle == FileObject &&
                 (!OnlyExclusive || (OnlyExclusive && Poll->Exclusive)) ) {
@@ -278,7 +278,7 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
          return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
                                         0 );
     }
-    AFD_DbgPrint(MID_TRACE,("Called (Event %p Triggers %d)\n",
+    AFD_DbgPrint(MID_TRACE,("Called (Event %p Triggers %u)\n",
                             EventSelectInfo->EventObject,
                             EventSelectInfo->Events));
 
