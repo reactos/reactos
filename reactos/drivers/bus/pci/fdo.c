@@ -456,6 +456,7 @@ FdoSetPower(
 {
   NTSTATUS Status;
 
+  UNREFERENCED_PARAMETER(DeviceObject);
   UNREFERENCED_PARAMETER(Irp);
 
   DPRINT("Called\n");
