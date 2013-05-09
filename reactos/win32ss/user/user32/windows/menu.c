@@ -2641,7 +2641,7 @@ MenuButtonDown(MTRACKER* Mt, HMENU PtMenu, UINT Flags)
 static INT FASTCALL
 MenuButtonUp(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
 {
-  UINT Id;
+  INT Id;
   ROSMENUINFO MenuInfo;
   ROSMENUITEMINFO ItemInfo;
 
@@ -2754,7 +2754,7 @@ MenuPtMenu(HMENU Menu, POINT Pt)
 static BOOL FASTCALL
 MenuMouseMove(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
 {
-  UINT Index;
+  INT Index;
   ROSMENUINFO MenuInfo;
   ROSMENUITEMINFO ItemInfo;
 
