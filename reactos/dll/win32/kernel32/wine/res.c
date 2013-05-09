@@ -833,7 +833,6 @@ static IMAGE_NT_HEADERS *get_nt_header( void *base, DWORD mapping_size )
 static IMAGE_SECTION_HEADER *get_section_header( void *base, DWORD mapping_size, DWORD *num_sections )
 {
     IMAGE_NT_HEADERS *nt;
-    IMAGE_SECTION_HEADER *sec;
     DWORD section_ofs;
 
     nt = get_nt_header( base, mapping_size );
@@ -842,7 +841,7 @@ static IMAGE_SECTION_HEADER *get_section_header( void *base, DWORD mapping_size,
 
     /* check that we don't go over the end of the file accessing the sections */
     section_ofs = FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) + nt->FileHeader.SizeOfOptionalHeader;
-    if ((nt->FileHeader.NumberOfSections * sizeof (*sec) + section_ofs) > mapping_size)
+    if ((nt->FileHeader.NumberOfSections * sizeof (IMAGE_SECTION_HEADER) + section_ofs) > mapping_size)
         return NULL;
 
     if (num_sections)
