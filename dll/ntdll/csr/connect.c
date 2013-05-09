@@ -30,145 +30,6 @@ PCSR_SERVER_API_ROUTINE CsrServerApiRoutine;
 
 /* FUNCTIONS ******************************************************************/
 
-/*
- * @implemented
- */
-HANDLE
-NTAPI
-CsrGetProcessId(VOID)
-{
-    return CsrProcessId;
-}
-
-/*
- * @implemented
- */
-NTSTATUS 
-NTAPI
-CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
-                    IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer OPTIONAL,
-                    IN CSR_API_NUMBER ApiNumber,
-                    IN ULONG DataLength)
-{
-    NTSTATUS Status;
-    ULONG PointerCount;
-    PULONG_PTR OffsetPointer;
-
-    /* Fill out the Port Message Header */
-    ApiMessage->Header.u2.ZeroInit = 0;
-    ApiMessage->Header.u1.s1.TotalLength =
-        FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
-    ApiMessage->Header.u1.s1.DataLength =
-        ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
-
-    /* Fill out the CSR Header */
-    ApiMessage->ApiNumber = ApiNumber;
-    ApiMessage->CsrCaptureData = NULL;
-
-    DPRINT("API: %lx, u1.s1.DataLength: %x, u1.s1.TotalLength: %x\n",
-           ApiNumber,
-           ApiMessage->Header.u1.s1.DataLength,
-           ApiMessage->Header.u1.s1.TotalLength);
-                
-    /* Check if we are already inside a CSR Server */
-    if (!InsideCsrProcess)
-    {
-        /* Check if we got a Capture Buffer */
-        if (CaptureBuffer)
-        {
-            /*
-             * We have to convert from our local (client) view
-             * to the remote (server) view.
-             */
-            ApiMessage->CsrCaptureData = (PCSR_CAPTURE_BUFFER)
-                ((ULONG_PTR)CaptureBuffer + CsrPortMemoryDelta);
-
-            /* Lock the buffer. */
-            CaptureBuffer->BufferEnd = NULL;
-
-            /*
-             * Each client pointer inside the CSR message is converted into
-             * a server pointer, and each pointer to these message pointers
-             * is converted into an offset.
-             */
-            PointerCount  = CaptureBuffer->PointerCount;
-            OffsetPointer = CaptureBuffer->PointerOffsetsArray;
-            while (PointerCount--)
-            {
-                if (*OffsetPointer != 0)
-                {
-                    *(PULONG_PTR)*OffsetPointer += CsrPortMemoryDelta;
-                    *OffsetPointer -= (ULONG_PTR)ApiMessage;
-                }
-                ++OffsetPointer;
-            }
-        }
-
-        /* Send the LPC Message */
-        Status = NtRequestWaitReplyPort(CsrApiPort,
-                                        &ApiMessage->Header,
-                                        &ApiMessage->Header);
-
-        /* Check if we got a Capture Buffer */
-        if (CaptureBuffer)
-        {
-            /*
-             * We have to convert back from the remote (server) view
-             * to our local (client) view.
-             */
-            ApiMessage->CsrCaptureData = (PCSR_CAPTURE_BUFFER)
-                ((ULONG_PTR)ApiMessage->CsrCaptureData - CsrPortMemoryDelta);
-
-            /*
-             * Convert back the offsets into pointers to CSR message
-             * pointers, and convert back these message server pointers
-             * into client pointers.
-             */
-            PointerCount  = CaptureBuffer->PointerCount;
-            OffsetPointer = CaptureBuffer->PointerOffsetsArray;
-            while (PointerCount--)
-            {
-                if (*OffsetPointer != 0)
-                {
-                    *OffsetPointer += (ULONG_PTR)ApiMessage;
-                    *(PULONG_PTR)*OffsetPointer -= CsrPortMemoryDelta;
-                }
-                ++OffsetPointer;
-            }
-        }
-
-        /* Check for success */
-        if (!NT_SUCCESS(Status))
-        {
-            /* We failed. Overwrite the return value with the failure. */
-            DPRINT1("LPC Failed: %lx\n", Status);
-            ApiMessage->Status = Status;
-        }
-    }
-    else
-    {
-        /* This is a server-to-server call. Save our CID and do a direct call. */
-        DPRINT1("Next gen server-to-server call\n");
-
-        /* We check this equality inside CsrValidateMessageBuffer */
-        ApiMessage->Header.ClientId = NtCurrentTeb()->ClientId;
-
-        Status = CsrServerApiRoutine(&ApiMessage->Header,
-                                     &ApiMessage->Header);
-
-        /* Check for success */
-        if (!NT_SUCCESS(Status))
-        {
-            /* We failed. Overwrite the return value with the failure. */
-            ApiMessage->Status = Status;
-        }
-    }
-
-    /* Return the CSR Result */
-    DPRINT("Got back: 0x%lx\n", ApiMessage->Status);
-    return ApiMessage->Status;
-}
-
 NTSTATUS
 NTAPI
 CsrpConnectToServer(IN PWSTR ObjectDirectory)
@@ -458,6 +319,145 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     if (ServerToServerCall) *ServerToServerCall = InsideCsrProcess;
 
     return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS 
+NTAPI
+CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
+                    IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer OPTIONAL,
+                    IN CSR_API_NUMBER ApiNumber,
+                    IN ULONG DataLength)
+{
+    NTSTATUS Status;
+    ULONG PointerCount;
+    PULONG_PTR OffsetPointer;
+
+    /* Fill out the Port Message Header */
+    ApiMessage->Header.u2.ZeroInit = 0;
+    ApiMessage->Header.u1.s1.TotalLength =
+        FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
+    ApiMessage->Header.u1.s1.DataLength =
+        ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
+
+    /* Fill out the CSR Header */
+    ApiMessage->ApiNumber = ApiNumber;
+    ApiMessage->CsrCaptureData = NULL;
+
+    DPRINT("API: %lx, u1.s1.DataLength: %x, u1.s1.TotalLength: %x\n",
+           ApiNumber,
+           ApiMessage->Header.u1.s1.DataLength,
+           ApiMessage->Header.u1.s1.TotalLength);
+                
+    /* Check if we are already inside a CSR Server */
+    if (!InsideCsrProcess)
+    {
+        /* Check if we got a Capture Buffer */
+        if (CaptureBuffer)
+        {
+            /*
+             * We have to convert from our local (client) view
+             * to the remote (server) view.
+             */
+            ApiMessage->CsrCaptureData = (PCSR_CAPTURE_BUFFER)
+                ((ULONG_PTR)CaptureBuffer + CsrPortMemoryDelta);
+
+            /* Lock the buffer. */
+            CaptureBuffer->BufferEnd = NULL;
+
+            /*
+             * Each client pointer inside the CSR message is converted into
+             * a server pointer, and each pointer to these message pointers
+             * is converted into an offset.
+             */
+            PointerCount  = CaptureBuffer->PointerCount;
+            OffsetPointer = CaptureBuffer->PointerOffsetsArray;
+            while (PointerCount--)
+            {
+                if (*OffsetPointer != 0)
+                {
+                    *(PULONG_PTR)*OffsetPointer += CsrPortMemoryDelta;
+                    *OffsetPointer -= (ULONG_PTR)ApiMessage;
+                }
+                ++OffsetPointer;
+            }
+        }
+
+        /* Send the LPC Message */
+        Status = NtRequestWaitReplyPort(CsrApiPort,
+                                        &ApiMessage->Header,
+                                        &ApiMessage->Header);
+
+        /* Check if we got a Capture Buffer */
+        if (CaptureBuffer)
+        {
+            /*
+             * We have to convert back from the remote (server) view
+             * to our local (client) view.
+             */
+            ApiMessage->CsrCaptureData = (PCSR_CAPTURE_BUFFER)
+                ((ULONG_PTR)ApiMessage->CsrCaptureData - CsrPortMemoryDelta);
+
+            /*
+             * Convert back the offsets into pointers to CSR message
+             * pointers, and convert back these message server pointers
+             * into client pointers.
+             */
+            PointerCount  = CaptureBuffer->PointerCount;
+            OffsetPointer = CaptureBuffer->PointerOffsetsArray;
+            while (PointerCount--)
+            {
+                if (*OffsetPointer != 0)
+                {
+                    *OffsetPointer += (ULONG_PTR)ApiMessage;
+                    *(PULONG_PTR)*OffsetPointer -= CsrPortMemoryDelta;
+                }
+                ++OffsetPointer;
+            }
+        }
+
+        /* Check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed. Overwrite the return value with the failure. */
+            DPRINT1("LPC Failed: %lx\n", Status);
+            ApiMessage->Status = Status;
+        }
+    }
+    else
+    {
+        /* This is a server-to-server call. Save our CID and do a direct call. */
+        DPRINT1("Next gen server-to-server call\n");
+
+        /* We check this equality inside CsrValidateMessageBuffer */
+        ApiMessage->Header.ClientId = NtCurrentTeb()->ClientId;
+
+        Status = CsrServerApiRoutine(&ApiMessage->Header,
+                                     &ApiMessage->Header);
+
+        /* Check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed. Overwrite the return value with the failure. */
+            ApiMessage->Status = Status;
+        }
+    }
+
+    /* Return the CSR Result */
+    DPRINT("Got back: 0x%lx\n", ApiMessage->Status);
+    return ApiMessage->Status;
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+NTAPI
+CsrGetProcessId(VOID)
+{
+    return CsrProcessId;
 }
 
 /* EOF */

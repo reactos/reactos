@@ -346,7 +346,8 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Could not map file: %wZ\n", FileName);
-        return Status;
+        ObDereferenceObject(SectionObject);
+        return 0;
     }
 
     IntLockFreeType;
@@ -357,6 +358,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
                 0,
                 &Face);
     IntUnLockFreeType;
+    ObDereferenceObject(SectionObject);
 
     if (Error)
     {
@@ -364,7 +366,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
             DPRINT("Unknown font file format\n");
         else
             DPRINT("Error reading font file (error code: %u)\n", Error);
-        ObDereferenceObject(SectionObject);
         return 0;
     }
 
@@ -372,7 +373,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     if (!Entry)
     {
         FT_Done_Face(Face);
-        ObDereferenceObject(SectionObject);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
@@ -381,7 +381,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     if (FontGDI == NULL)
     {
         FT_Done_Face(Face);
-        ObDereferenceObject(SectionObject);
         ExFreePoolWithTag(Entry, TAG_FONT);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
@@ -392,7 +391,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     {
         EngFreeMem(FontGDI);
         FT_Done_Face(Face);
-        ObDereferenceObject(SectionObject);
         ExFreePoolWithTag(Entry, TAG_FONT);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;

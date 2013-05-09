@@ -38,7 +38,7 @@ extern "C" {
   };
 #endif
 
-#ifndef	NO_OLDNAMES
+#ifndef NO_OLDNAMES
   struct utimbuf {
     time_t actime;
     time_t modtime;
@@ -49,19 +49,75 @@ extern "C" {
     __time32_t modtime;
   };
 #endif
+
 #endif /* !_UTIMBUF_DEFINED */
 
-  _CRTIMP int __cdecl _utime(const char *_Filename,struct _utimbuf *_Time);
-  _CRTIMP int __cdecl _utime32(const char *_Filename,struct __utimbuf32 *_Time);
-  _CRTIMP int __cdecl _futime(int _FileDes,struct _utimbuf *_Time);
-  _CRTIMP int __cdecl _futime32(int _FileDes,struct __utimbuf32 *_Time);
-  _CRTIMP int __cdecl _wutime(const wchar_t *_Filename,struct _utimbuf *_Time);
-  _CRTIMP int __cdecl _wutime32(const wchar_t *_Filename,struct __utimbuf32 *_Time);
+  _CRTIMP
+  int
+  __cdecl
+  _utime(
+    _In_z_ const char *_Filename,
+    _In_opt_ struct _utimbuf *_Time);
+
+  _CRTIMP
+  int
+  __cdecl
+  _utime32(
+    _In_z_ const char *_Filename,
+    _In_opt_ struct __utimbuf32 *_Time);
+
+  _CRTIMP
+  int
+  __cdecl
+  _futime(
+    _In_ int _FileDes,
+    _In_opt_ struct _utimbuf *_Time);
+
+  _CRTIMP
+  int
+  __cdecl
+  _futime32(
+    _In_ int _FileDes,
+    _In_opt_ struct __utimbuf32 *_Time);
+
+  _CRTIMP
+  int
+  __cdecl
+  _wutime(
+    _In_z_ const wchar_t *_Filename,
+    _In_opt_ struct _utimbuf *_Time);
+
+  _CRTIMP
+  int
+  __cdecl
+  _wutime32(
+    _In_z_ const wchar_t *_Filename,
+    _In_opt_ struct __utimbuf32 *_Time);
+
 #if _INTEGRAL_MAX_BITS >= 64
-  _CRTIMP int __cdecl _utime64(const char *_Filename,struct __utimbuf64 *_Time);
-  _CRTIMP int __cdecl _futime64(int _FileDes,struct __utimbuf64 *_Time);
-  _CRTIMP int __cdecl _wutime64(const wchar_t *_Filename,struct __utimbuf64 *_Time);
-#endif
+
+  _CRTIMP
+  int
+  __cdecl
+  _utime64(
+    _In_z_ const char *_Filename,
+    _In_opt_ struct __utimbuf64 *_Time);
+
+  _CRTIMP
+  int
+  __cdecl
+  _futime64(
+    _In_ int _FileDes,
+    _In_opt_ struct __utimbuf64 *_Time);
+
+  _CRTIMP
+  int
+  __cdecl
+  _wutime64(
+    _In_z_ const wchar_t *_Filename,
+    _In_opt_ struct __utimbuf64 *_Time);
+
+#endif /* _INTEGRAL_MAX_BITS >= 64 */
 
 #ifndef RC_INVOKED
 #ifdef _USE_32BIT_TIME_T
@@ -76,7 +132,7 @@ __CRT_INLINE int __cdecl _wutime32(const wchar_t *_Filename,struct __utimbuf32 *
 }
 #endif
 
-#ifndef	NO_OLDNAMES
+#ifndef NO_OLDNAMES
 __CRT_INLINE int __cdecl utime(const char *_Filename,struct utimbuf *_Utimbuf) {
   return _utime(_Filename,(struct _utimbuf *)_Utimbuf);
 }

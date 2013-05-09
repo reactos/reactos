@@ -7,6 +7,7 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <winnls.h>
+#include <wincon.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlobj_undoc.h>

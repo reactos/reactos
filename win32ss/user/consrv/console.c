@@ -51,6 +51,35 @@ static RTL_RESOURCE ListLock;
 #define ConSrvUnlockConsoleList()           \
     RtlReleaseResource(&ListLock)
 
+// Adapted from reactos/lib/rtl/unicode.c, RtlCreateUnicodeString line 2180
+BOOLEAN
+ConsoleCreateUnicodeString(IN OUT PUNICODE_STRING UniDest,
+                           IN PCWSTR Source)
+{
+    SIZE_T Size = (wcslen(Source) + 1) * sizeof(WCHAR);
+    if (Size > MAXUSHORT) return FALSE;
+
+    UniDest->Buffer = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, Size);
+    if (UniDest->Buffer == NULL) return FALSE;
+
+    RtlCopyMemory(UniDest->Buffer, Source, Size);
+    UniDest->MaximumLength = (USHORT)Size;
+    UniDest->Length = (USHORT)Size - sizeof(WCHAR);
+
+    return TRUE;
+}
+
+// Adapted from reactos/lib/rtl/unicode.c, RtlFreeUnicodeString line 431
+VOID
+ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
+{
+    if (UnicodeString->Buffer)
+    {
+        RtlFreeHeap(ConSrvHeap, 0, UnicodeString->Buffer);
+        RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
+    }
+}
+
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -612,21 +641,21 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     Console->HistoryNoDup = ConsoleInfo.HistoryNoDup;
 
     /* Initialize the console title */
-    RtlCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo.ConsoleTitle);
+    ConsoleCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo.ConsoleTitle);
     if (ConsoleInfo.ConsoleTitle[0] == L'\0')
     {
         if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, Title, sizeof(Title) / sizeof(Title[0])))
         {
-            RtlCreateUnicodeString(&Console->Title, Title);
+            ConsoleCreateUnicodeString(&Console->Title, Title);
         }
         else
         {
-            RtlCreateUnicodeString(&Console->Title, L"ReactOS Console");
+            ConsoleCreateUnicodeString(&Console->Title, L"ReactOS Console");
         }
     }
     else
     {
-        RtlCreateUnicodeString(&Console->Title, ConsoleInfo.ConsoleTitle);
+        ConsoleCreateUnicodeString(&Console->Title, ConsoleInfo.ConsoleTitle);
     }
 
     /* Lock the console until its initialization is finished */
@@ -674,8 +703,8 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("GuiInitConsole: failed, Status = 0x%08lx\n", Status);
-            RtlFreeUnicodeString(&Console->Title);
-            RtlFreeUnicodeString(&Console->OriginalTitle);
+            ConsoleFreeUnicodeString(&Console->OriginalTitle);
+            ConsoleFreeUnicodeString(&Console->Title);
             ConioDeleteScreenBuffer(NewBuffer);
             CloseHandle(Console->InputBuffer.ActiveEvent);
             // LeaveCriticalSection(&Console->Lock);
@@ -812,8 +841,8 @@ ConSrvDeleteConsole(PCONSOLE Console)
     // CloseHandle(Console->InputBuffer.ActiveEvent);
     if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
 
-    RtlFreeUnicodeString(&Console->OriginalTitle);
-    RtlFreeUnicodeString(&Console->Title);
+    ConsoleFreeUnicodeString(&Console->OriginalTitle);
+    ConsoleFreeUnicodeString(&Console->Title);
 
     DPRINT("ConSrvDeleteConsole - Unlocking\n");
     LeaveCriticalSection(&Console->Lock);
@@ -1183,11 +1212,11 @@ CSR_API(SrvSetConsoleTitle)
     }
 
     /* Allocate a new buffer to hold the new title (NULL-terminated) */
-    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, TitleRequest->Length + sizeof(WCHAR));
+    Buffer = RtlAllocateHeap(ConSrvHeap, 0, TitleRequest->Length + sizeof(WCHAR));
     if (Buffer)
     {
         /* Free the old title */
-        RtlFreeUnicodeString(&Console->Title);
+        ConsoleFreeUnicodeString(&Console->Title);
 
         /* Copy title to console */
         Console->Title.Buffer = Buffer;

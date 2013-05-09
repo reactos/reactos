@@ -458,7 +458,7 @@ HidClass_ReadCompleteIrp(
     // copy result status
     //
     IrpContext->OriginalIrp->IoStatus.Status = Irp->IoStatus.Status;
-    Irp->IoStatus.Information = Irp->IoStatus.Information;
+    IrpContext->OriginalIrp->IoStatus.Information = Irp->IoStatus.Information;
 
     //
     // free input report buffer
@@ -864,7 +864,7 @@ HidClass_DeviceControl(
         // invalid request
         //
         DPRINT1("[HIDCLASS] DeviceControl Irp for FDO arrived\n");
-        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER_1;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_INVALID_PARAMETER_1;
     }

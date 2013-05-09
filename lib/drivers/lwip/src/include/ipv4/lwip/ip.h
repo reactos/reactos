@@ -94,16 +94,16 @@ struct ip_pcb {
 /*
  * Option flags per-socket. These are the same like SO_XXX.
  */
-/*#define SOF_DEBUG       (u8_t)0x01U     Unimplemented: turn on debugging info recording */
-#define SOF_ACCEPTCONN    (u8_t)0x02U  /* socket has had listen() */
-#define SOF_REUSEADDR     (u8_t)0x04U  /* allow local address reuse */
-#define SOF_KEEPALIVE     (u8_t)0x08U  /* keep connections alive */
-/*#define SOF_DONTROUTE   (u8_t)0x10U     Unimplemented: just use interface addresses */
-#define SOF_BROADCAST     (u8_t)0x20U  /* permit to send and to receive broadcast messages (see IP_SOF_BROADCAST option) */
-/*#define SOF_USELOOPBACK (u8_t)0x40U     Unimplemented: bypass hardware when possible */
-#define SOF_LINGER        (u8_t)0x80U  /* linger on close if data present */
-/*#define SOF_OOBINLINE   (u16_t)0x0100U     Unimplemented: leave received OOB data in line */
-/*#define SOF_REUSEPORT   (u16_t)0x0200U     Unimplemented: allow local address & port reuse */
+/*#define SOF_DEBUG       0x01U     Unimplemented: turn on debugging info recording */
+#define SOF_ACCEPTCONN    0x02U  /* socket has had listen() */
+#define SOF_REUSEADDR     0x04U  /* allow local address reuse */
+#define SOF_KEEPALIVE     0x08U  /* keep connections alive */
+/*#define SOF_DONTROUTE   0x10U     Unimplemented: just use interface addresses */
+#define SOF_BROADCAST     0x20U  /* permit to send and to receive broadcast messages (see IP_SOF_BROADCAST option) */
+/*#define SOF_USELOOPBACK 0x40U     Unimplemented: bypass hardware when possible */
+#define SOF_LINGER        0x80U  /* linger on close if data present */
+/*#define SOF_OOBINLINE   0x0100U   Unimplemented: leave received OOB data in line */
+/*#define SOF_REUSEPORT   0x0200U   Unimplemented: allow local address & port reuse */
 
 /* These flags are inherited (e.g. from a listen-pcb to a connection-pcb): */
 #define SOF_INHERITED   (SOF_REUSEADDR|SOF_KEEPALIVE|SOF_LINGER/*|SOF_DEBUG|SOF_DONTROUTE|SOF_OOBINLINE*/)
@@ -114,8 +114,10 @@ struct ip_pcb {
 #endif
 PACK_STRUCT_BEGIN
 struct ip_hdr {
-  /* version / header length / type of service */
-  PACK_STRUCT_FIELD(u16_t _v_hl_tos);
+  /* version / header length */
+  PACK_STRUCT_FIELD(u8_t _v_hl);
+  /* type of service */
+  PACK_STRUCT_FIELD(u8_t _tos);
   /* total length */
   PACK_STRUCT_FIELD(u16_t _len);
   /* identification */
@@ -141,9 +143,9 @@ PACK_STRUCT_END
 #  include "arch/epstruct.h"
 #endif
 
-#define IPH_V(hdr)  (ntohs((hdr)->_v_hl_tos) >> 12)
-#define IPH_HL(hdr) ((ntohs((hdr)->_v_hl_tos) >> 8) & 0x0f)
-#define IPH_TOS(hdr) (ntohs((hdr)->_v_hl_tos) & 0xff)
+#define IPH_V(hdr)  ((hdr)->_v_hl >> 4)
+#define IPH_HL(hdr) ((hdr)->_v_hl & 0x0f)
+#define IPH_TOS(hdr) ((hdr)->_tos)
 #define IPH_LEN(hdr) ((hdr)->_len)
 #define IPH_ID(hdr) ((hdr)->_id)
 #define IPH_OFFSET(hdr) ((hdr)->_offset)
@@ -151,7 +153,8 @@ PACK_STRUCT_END
 #define IPH_PROTO(hdr) ((hdr)->_proto)
 #define IPH_CHKSUM(hdr) ((hdr)->_chksum)
 
-#define IPH_VHLTOS_SET(hdr, v, hl, tos) (hdr)->_v_hl_tos = (htons(((v) << 12) | ((hl) << 8) | (tos)))
+#define IPH_VHL_SET(hdr, v, hl) (hdr)->_v_hl = (((v) << 4) | (hl))
+#define IPH_TOS_SET(hdr, tos) (hdr)->_tos = (tos)
 #define IPH_LEN_SET(hdr, len) (hdr)->_len = (len)
 #define IPH_ID_SET(hdr, id) (hdr)->_id = (id)
 #define IPH_OFFSET_SET(hdr, off) (hdr)->_offset = (off)
@@ -197,6 +200,13 @@ err_t ip_output_if_opt(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
 #define ip_current_src_addr()  (&current_iphdr_src)
 /** Destination IP address of current_header */
 #define ip_current_dest_addr() (&current_iphdr_dest)
+
+/** Gets an IP pcb option (SOF_* flags) */
+#define ip_get_option(pcb, opt)   ((pcb)->so_options & (opt))
+/** Sets an IP pcb option (SOF_* flags) */
+#define ip_set_option(pcb, opt)   ((pcb)->so_options |= (opt))
+/** Resets an IP pcb option (SOF_* flags) */
+#define ip_reset_option(pcb, opt) ((pcb)->so_options &= ~(opt))
 
 #if IP_DEBUG
 void ip_debug_print(struct pbuf *p);

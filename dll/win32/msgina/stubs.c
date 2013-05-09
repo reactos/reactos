@@ -22,20 +22,20 @@ ShellShutdownDialog(
     DWORD Unknown,
     BOOL  bHideLogoff)
 {
-  UNREFERENCED_PARAMETER(hParent);
-  UNREFERENCED_PARAMETER(Unknown);
-  UNREFERENCED_PARAMETER(bHideLogoff);
+    UNREFERENCED_PARAMETER(hParent);
+    UNREFERENCED_PARAMETER(Unknown);
+    UNREFERENCED_PARAMETER(bHideLogoff);
 
-  /* Return values:
-   * 0x00: Cancelled/Help
-   * 0x01: Log off user
-   * 0x02: Shutdown
-   * 0x04: Reboot
-   * 0x10: Standby
-   * 0x40: Hibernate
-   */
-  UNIMPLEMENTED;
-  return FALSE;
+    /* Return values:
+     * 0x00: Cancelled/Help
+     * 0x01: Log off user
+     * 0x02: Shutdown
+     * 0x04: Reboot
+     * 0x10: Standby
+     * 0x40: Hibernate
+     */
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
@@ -44,12 +44,12 @@ ShellShutdownDialog(
  */
 BOOL WINAPI
 WlxIsLockOk(
-	PVOID pWlxContext)
+    PVOID pWlxContext)
 {
-  UNREFERENCED_PARAMETER(pWlxContext);
+    UNREFERENCED_PARAMETER(pWlxContext);
 
-  UNIMPLEMENTED;
-  return TRUE;
+    UNIMPLEMENTED;
+    return TRUE;
 }
 
 
@@ -58,11 +58,11 @@ WlxIsLockOk(
  */
 VOID WINAPI
 WlxLogoff(
-	PVOID pWlxContext)
+    PVOID pWlxContext)
 {
-  UNREFERENCED_PARAMETER(pWlxContext);
+    UNREFERENCED_PARAMETER(pWlxContext);
 
-  UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 
@@ -71,13 +71,13 @@ WlxLogoff(
  */
 VOID WINAPI
 WlxShutdown(
-	PVOID pWlxContext,
-	DWORD ShutdownType)
+    PVOID pWlxContext,
+    DWORD ShutdownType)
 {
-  UNREFERENCED_PARAMETER(pWlxContext);
-  UNREFERENCED_PARAMETER(ShutdownType);
+    UNREFERENCED_PARAMETER(pWlxContext);
+    UNREFERENCED_PARAMETER(ShutdownType);
 
-  UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 
@@ -86,18 +86,18 @@ WlxShutdown(
  */
 BOOL WINAPI
 WlxGetStatusMessage(
-	PVOID pWlxContext,
-	DWORD *pdwOptions,
-	PWSTR pMessage,
-	DWORD dwBufferSize)
+    PVOID pWlxContext,
+    DWORD *pdwOptions,
+    PWSTR pMessage,
+    DWORD dwBufferSize)
 {
-  UNREFERENCED_PARAMETER(pWlxContext);
-  UNREFERENCED_PARAMETER(pdwOptions);
-  UNREFERENCED_PARAMETER(pMessage);
-  UNREFERENCED_PARAMETER(dwBufferSize);
+    UNREFERENCED_PARAMETER(pWlxContext);
+    UNREFERENCED_PARAMETER(pdwOptions);
+    UNREFERENCED_PARAMETER(pMessage);
+    UNREFERENCED_PARAMETER(dwBufferSize);
 
-  UNIMPLEMENTED;
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
@@ -106,14 +106,14 @@ WlxGetStatusMessage(
  */
 BOOL WINAPI
 WlxNetworkProviderLoad(
-	PVOID                pWlxContext,
-	PWLX_MPR_NOTIFY_INFO pNprNotifyInfo)
+    PVOID pWlxContext,
+    PWLX_MPR_NOTIFY_INFO pNprNotifyInfo)
 {
-  UNREFERENCED_PARAMETER(pWlxContext);
-  UNREFERENCED_PARAMETER(pNprNotifyInfo);
+    UNREFERENCED_PARAMETER(pWlxContext);
+    UNREFERENCED_PARAMETER(pNprNotifyInfo);
 
-  UNIMPLEMENTED;
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 
@@ -122,11 +122,11 @@ WlxNetworkProviderLoad(
  */
 VOID WINAPI
 WlxDisconnectNotify(
-	PVOID pWlxContext)
+    PVOID pWlxContext)
 {
-  UNREFERENCED_PARAMETER(pWlxContext);
+    UNREFERENCED_PARAMETER(pWlxContext);
 
-  UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 
@@ -135,13 +135,13 @@ WlxDisconnectNotify(
  */
 BOOL WINAPI
 WlxGetConsoleSwitchCredentials(
-	PVOID pWlxContext,
-	PVOID pCredInfo)
+    PVOID pWlxContext,
+    PVOID pCredInfo)
 {
-  UNREFERENCED_PARAMETER(pWlxContext);
-  UNREFERENCED_PARAMETER(pCredInfo);
+    UNREFERENCED_PARAMETER(pWlxContext);
+    UNREFERENCED_PARAMETER(pCredInfo);
 
-  UNIMPLEMENTED;
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 

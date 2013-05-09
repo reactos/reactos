@@ -958,10 +958,10 @@ CsrLockThreadByClientId(IN HANDLE Tid,
     /* Start Loop */
     while (NextEntry != &CsrThreadHashTable[i])
     {
-        /* Get the Process */
+        /* Get the Thread */
         CurrentThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, HashLinks);
 
-        /* Check for PID Match */
+        /* Check for TID Match */
         if ((CurrentThread->ClientId.UniqueThread == Tid) &&
             (CurrentThread->Flags & CsrThreadTerminated) == 0)
         {

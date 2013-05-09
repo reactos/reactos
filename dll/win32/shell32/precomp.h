@@ -15,6 +15,7 @@
 #include <wingdi.h>
 #include <winreg.h>
 #include <winuser.h>
+#include <wincon.h>
 #include <shellapi.h>
 #include <commdlg.h>
 #include <ddeml.h>

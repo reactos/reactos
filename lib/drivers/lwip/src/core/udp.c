@@ -64,9 +64,76 @@
 
 #include <string.h>
 
+#ifndef UDP_LOCAL_PORT_RANGE_START
+/* From http://www.iana.org/assignments/port-numbers:
+   "The Dynamic and/or Private Ports are those from 49152 through 65535" */
+#define UDP_LOCAL_PORT_RANGE_START  0xc000
+#define UDP_LOCAL_PORT_RANGE_END    0xffff
+#define UDP_ENSURE_LOCAL_PORT_RANGE(port) (((port) & ~UDP_LOCAL_PORT_RANGE_START) + UDP_LOCAL_PORT_RANGE_START)
+#endif
+
+/* last local UDP port */
+static u16_t udp_port = UDP_LOCAL_PORT_RANGE_START;
+
 /* The list of UDP PCBs */
 /* exported in udp.h (was static) */
 struct udp_pcb *udp_pcbs;
+
+/**
+ * Initialize this module.
+ */
+void
+udp_init(void)
+{
+#if LWIP_RANDOMIZE_INITIAL_LOCAL_PORTS && defined(LWIP_RAND)
+  udp_port = UDP_ENSURE_LOCAL_PORT_RANGE(LWIP_RAND());
+#endif /* LWIP_RANDOMIZE_INITIAL_LOCAL_PORTS && defined(LWIP_RAND) */
+}
+
+/**
+ * Allocate a new local UDP port.
+ *
+ * @return a new (free) local UDP port number
+ */
+static u16_t
+udp_new_port(void)
+{
+  u16_t n = 0;
+  struct udp_pcb *pcb;
+  
+again:
+  if (udp_port++ == UDP_LOCAL_PORT_RANGE_END) {
+    udp_port = UDP_LOCAL_PORT_RANGE_START;
+  }
+  /* Check all PCBs. */
+  for(pcb = udp_pcbs; pcb != NULL; pcb = pcb->next) {
+    if (pcb->local_port == udp_port) {
+      if (++n > (UDP_LOCAL_PORT_RANGE_END - UDP_LOCAL_PORT_RANGE_START)) {
+        return 0;
+      }
+      goto again;
+    }
+  }
+  return udp_port;
+#if 0
+  struct udp_pcb *ipcb = udp_pcbs;
+  while ((ipcb != NULL) && (udp_port != UDP_LOCAL_PORT_RANGE_END)) {
+    if (ipcb->local_port == udp_port) {
+      /* port is already used by another udp_pcb */
+      udp_port++;
+      /* restart scanning all udp pcbs */
+      ipcb = udp_pcbs;
+    } else {
+      /* go on with next udp pcb */
+      ipcb = ipcb->next;
+    }
+  }
+  if (ipcb != NULL) {
+    return 0;
+  }
+  return udp_port;
+#endif
+}
 
 /**
  * Process an incoming UDP datagram.
@@ -171,22 +238,28 @@ udp_input(struct pbuf *p, struct netif *inp)
                    ip4_addr3_16(&pcb->remote_ip), ip4_addr4_16(&pcb->remote_ip), pcb->remote_port));
 
       /* compare PCB local addr+port to UDP destination addr+port */
-      if ((pcb->local_port == dest) &&
-          ((!broadcast && ip_addr_isany(&pcb->local_ip)) ||
+      if (pcb->local_port == dest) {
+        if (
+           (!broadcast && ip_addr_isany(&pcb->local_ip)) ||
            ip_addr_cmp(&(pcb->local_ip), &current_iphdr_dest) ||
 #if LWIP_IGMP
            ip_addr_ismulticast(&current_iphdr_dest) ||
 #endif /* LWIP_IGMP */
 #if IP_SOF_BROADCAST_RECV
-           (broadcast && (pcb->so_options & SOF_BROADCAST)))) {
-#else  /* IP_SOF_BROADCAST_RECV */
-           (broadcast))) {
-#endif /* IP_SOF_BROADCAST_RECV */
-        local_match = 1;
-        if ((uncon_pcb == NULL) && 
-            ((pcb->flags & UDP_FLAGS_CONNECTED) == 0)) {
-          /* the first unconnected matching PCB */
-          uncon_pcb = pcb;
+            (broadcast && ip_get_option(pcb, SOF_BROADCAST) &&
+             (ip_addr_isany(&pcb->local_ip) ||
+              ip_addr_netcmp(&pcb->local_ip, ip_current_dest_addr(), &inp->netmask)))) {
+#else /* IP_SOF_BROADCAST_RECV */
+            (broadcast &&
+             (ip_addr_isany(&pcb->local_ip) ||
+              ip_addr_netcmp(&pcb->local_ip, ip_current_dest_addr(), &inp->netmask)))) {
+#endif /* IP_SOF_BROADCAST_RECV */ 
+          local_match = 1;
+          if ((uncon_pcb == NULL) && 
+              ((pcb->flags & UDP_FLAGS_CONNECTED) == 0)) {
+            /* the first unconnected matching PCB */
+            uncon_pcb = pcb;
+          }
         }
       }
       /* compare PCB remote addr+port to UDP source addr+port */
@@ -278,7 +351,7 @@ udp_input(struct pbuf *p, struct netif *inp)
       snmp_inc_udpindatagrams();
 #if SO_REUSE && SO_REUSE_RXTOALL
       if ((broadcast || ip_addr_ismulticast(&current_iphdr_dest)) &&
-          ((pcb->so_options & SOF_REUSEADDR) != 0)) {
+          ip_get_option(pcb, SOF_REUSEADDR)) {
         /* pass broadcast- or multicast packets to all multicast pcbs
            if SOF_REUSEADDR is set on the first match */
         struct udp_pcb *mpcb;
@@ -293,7 +366,7 @@ udp_input(struct pbuf *p, struct netif *inp)
                  ip_addr_ismulticast(&current_iphdr_dest) ||
 #endif /* LWIP_IGMP */
 #if IP_SOF_BROADCAST_RECV
-                 (broadcast && (mpcb->so_options & SOF_BROADCAST)))) {
+                 (broadcast && ip_get_option(mpcb, SOF_BROADCAST)))) {
 #else  /* IP_SOF_BROADCAST_RECV */
                  (broadcast))) {
 #endif /* IP_SOF_BROADCAST_RECV */
@@ -494,7 +567,7 @@ udp_sendto_if_chksum(struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *dst_ip,
 
 #if IP_SOF_BROADCAST
   /* broadcast filter? */
-  if ( ((pcb->so_options & SOF_BROADCAST) == 0) && ip_addr_isbroadcast(dst_ip, netif) ) {
+  if (!ip_get_option(pcb, SOF_BROADCAST) && ip_addr_isbroadcast(dst_ip, netif)) {
     LWIP_DEBUGF(UDP_DEBUG | LWIP_DBG_LEVEL_SERIOUS,
       ("udp_sendto_if: SOF_BROADCAST not enabled on pcb %p\n", (void *)pcb));
     return ERR_VAL;
@@ -616,13 +689,9 @@ udp_sendto_if_chksum(struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *dst_ip,
 #endif /* CHECKSUM_GEN_UDP */
     /* output to IP */
     LWIP_DEBUGF(UDP_DEBUG, ("udp_send: ip_output_if (,,,,IP_PROTO_UDPLITE,)\n"));
-#if LWIP_NETIF_HWADDRHINT
-    netif->addr_hint = &(pcb->addr_hint);
-#endif /* LWIP_NETIF_HWADDRHINT*/
+    NETIF_SET_HWADDRHINT(netif, &pcb->addr_hint);
     err = ip_output_if(q, src_ip, dst_ip, pcb->ttl, pcb->tos, IP_PROTO_UDPLITE, netif);
-#if LWIP_NETIF_HWADDRHINT
-    netif->addr_hint = NULL;
-#endif /* LWIP_NETIF_HWADDRHINT*/
+    NETIF_SET_HWADDRHINT(netif, NULL);
   } else
 #endif /* LWIP_UDPLITE */
   {      /* UDP */
@@ -655,13 +724,9 @@ udp_sendto_if_chksum(struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *dst_ip,
     LWIP_DEBUGF(UDP_DEBUG, ("udp_send: UDP checksum 0x%04"X16_F"\n", udphdr->chksum));
     LWIP_DEBUGF(UDP_DEBUG, ("udp_send: ip_output_if (,,,,IP_PROTO_UDP,)\n"));
     /* output to IP */
-#if LWIP_NETIF_HWADDRHINT
-    netif->addr_hint = &(pcb->addr_hint);
-#endif /* LWIP_NETIF_HWADDRHINT*/
+    NETIF_SET_HWADDRHINT(netif, &pcb->addr_hint);
     err = ip_output_if(q, src_ip, dst_ip, pcb->ttl, pcb->tos, IP_PROTO_UDP, netif);
-#if LWIP_NETIF_HWADDRHINT
-    netif->addr_hint = NULL;
-#endif /* LWIP_NETIF_HWADDRHINT*/
+    NETIF_SET_HWADDRHINT(netif, NULL);
   }
   /* TODO: must this be increased even if error occured? */
   snmp_inc_udpoutdatagrams();
@@ -722,8 +787,8 @@ udp_bind(struct udp_pcb *pcb, ip_addr_t *ipaddr, u16_t port)
        PCB is alread bound to, unless *all* PCBs with that port have tha
        REUSEADDR flag set. */
 #if SO_REUSE
-    else if (((pcb->so_options & SOF_REUSEADDR) == 0) &&
-             ((ipcb->so_options & SOF_REUSEADDR) == 0)) {
+    else if (!ip_get_option(pcb, SOF_REUSEADDR) &&
+             !ip_get_option(ipcb, SOF_REUSEADDR)) {
 #else /* SO_REUSE */
     /* port matches that of PCB in list and REUSEADDR not set -> reject */
     else {
@@ -745,26 +810,8 @@ udp_bind(struct udp_pcb *pcb, ip_addr_t *ipaddr, u16_t port)
 
   /* no port specified? */
   if (port == 0) {
-#ifndef UDP_LOCAL_PORT_RANGE_START
-/* From http://www.iana.org/assignments/port-numbers:
-   "The Dynamic and/or Private Ports are those from 49152 through 65535" */
-#define UDP_LOCAL_PORT_RANGE_START  0xc000
-#define UDP_LOCAL_PORT_RANGE_END    0xffff
-#endif
-    port = UDP_LOCAL_PORT_RANGE_START;
-    ipcb = udp_pcbs;
-    while ((ipcb != NULL) && (port != UDP_LOCAL_PORT_RANGE_END)) {
-      if (ipcb->local_port == port) {
-        /* port is already used by another udp_pcb */
-        port++;
-        /* restart scanning all udp pcbs */
-        ipcb = udp_pcbs;
-      } else {
-        /* go on with next udp pcb */
-        ipcb = ipcb->next;
-      }
-    }
-    if (ipcb != NULL) {
+    port = udp_new_port();
+    if (port == 0) {
       /* no more ports available in local range */
       LWIP_DEBUGF(UDP_DEBUG, ("udp_bind: out of free UDP ports\n"));
       return ERR_USE;

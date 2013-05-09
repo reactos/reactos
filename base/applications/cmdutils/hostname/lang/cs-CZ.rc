@@ -1,0 +1,13 @@
+/* FILE:        base/applications/cmdutils/hostname/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2013-05-01
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE, "Vypíše současný název hostitele.\n\nhostname"
+    IDS_NOSET, "hostname -s není podporováno."
+    IDS_ERROR, "Win32 chyba"
+END

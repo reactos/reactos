@@ -9,6 +9,7 @@
  */
 #include "afd.h"
 
+static IO_COMPLETION_ROUTINE SendComplete;
 static NTSTATUS NTAPI SendComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
@@ -24,6 +25,8 @@ static NTSTATUS NTAPI SendComplete
     UINT SendLength, BytesCopied;
     BOOLEAN HaltSendQueue;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     /*
      * The Irp parameter passed in is the IRP of the stream between AFD and
      * TDI driver. It's not very usefull to us. We need the IRPs of the stream
@@ -33,7 +36,7 @@ static NTSTATUS NTAPI SendComplete
      * processed).
      */
 
-    AFD_DbgPrint(MID_TRACE,("Called, status %x, %d bytes used\n",
+    AFD_DbgPrint(MID_TRACE,("Called, status %x, %u bytes used\n",
                             Irp->IoStatus.Status,
                             Irp->IoStatus.Information));
 
@@ -159,7 +162,7 @@ static NTSTATUS NTAPI SendComplete
         SendReq = GetLockedData(NextIrp, NextIrpSp);
         Map = (PAFD_MAPBUF)(SendReq->BufferArray + SendReq->BufferCount);
 
-        AFD_DbgPrint(MID_TRACE,("SendReq @ %x\n", SendReq));
+        AFD_DbgPrint(MID_TRACE,("SendReq @ %p\n", SendReq));
 
         SpaceAvail = FCB->Send.Size - FCB->Send.BytesUsed;
         TotalBytesCopied = 0;
@@ -254,6 +257,7 @@ static NTSTATUS NTAPI SendComplete
     return STATUS_SUCCESS;
 }
 
+static IO_COMPLETION_ROUTINE PacketSocketSendComplete;
 static NTSTATUS NTAPI PacketSocketSendComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
@@ -263,7 +267,9 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     PIRP NextIrp;
     PAFD_SEND_INFO SendReq;
 
-    AFD_DbgPrint(MID_TRACE,("Called, status %x, %d bytes used\n",
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    AFD_DbgPrint(MID_TRACE,("Called, status %x, %u bytes used\n",
                             Irp->IoStatus.Status,
                             Irp->IoStatus.Information));
 
@@ -329,7 +335,10 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     UINT TotalBytesCopied = 0, i, SpaceAvail = 0, BytesCopied, SendLength;
     KPROCESSOR_MODE LockMode;
 
-    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Short);
+
+    AFD_DbgPrint(MID_TRACE,("Called on %p\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
@@ -431,7 +440,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                        Irp, 0 );
     }
 
-    AFD_DbgPrint(MID_TRACE,("Socket state %d\n", FCB->State));
+    AFD_DbgPrint(MID_TRACE,("Socket state %u\n", FCB->State));
 
     if( FCB->State != SOCKET_STATE_CONNECTED ) {
         if (!(SendReq->AfdFlags & AFD_OVERLAPPED) && 
@@ -445,12 +454,12 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         }
     }
 
-    AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n",
+    AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %u\n",
                             FCB->Send.BytesUsed));
 
     SpaceAvail = FCB->Send.Size - FCB->Send.BytesUsed;
 
-    AFD_DbgPrint(MID_TRACE,("We can accept %d bytes\n",
+    AFD_DbgPrint(MID_TRACE,("We can accept %u bytes\n",
                             SpaceAvail));
 
     /* Count the total transfer size */
@@ -493,7 +502,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     {
         BytesCopied = MIN(SendReq->BufferArray[i].len, SpaceAvail);
 
-        AFD_DbgPrint(MID_TRACE,("Copying Buffer %d, %x:%d to %x\n",
+        AFD_DbgPrint(MID_TRACE,("Copying Buffer %u, %p:%u to %p\n",
                                 i,
                                 SendReq->BufferArray[i].buf,
                                 BytesCopied,
@@ -559,7 +568,9 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_SEND_INFO_UDP SendReq;
     KPROCESSOR_MODE LockMode;
 
-    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    AFD_DbgPrint(MID_TRACE,("Called on %p\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
@@ -611,7 +622,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                        Irp, 0 );
 
     AFD_DbgPrint
-        (MID_TRACE,("RemoteAddress #%d Type %d\n",
+        (MID_TRACE,("RemoteAddress #%d Type %u\n",
                     ((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->
                     TAAddressCount,
                     ((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->

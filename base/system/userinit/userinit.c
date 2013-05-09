@@ -32,6 +32,7 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <wingdi.h>
+#include <wincon.h>
 #include <shellapi.h>
 #include <regstr.h>
 #include <shlobj.h>

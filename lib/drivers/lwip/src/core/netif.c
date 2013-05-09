@@ -75,6 +75,8 @@
 struct netif *netif_list;
 struct netif *netif_default;
 
+static u8_t netif_num;
+
 #if LWIP_HAVE_LOOPIF
 static struct netif loop_netif;
 
@@ -137,7 +139,6 @@ struct netif *
 netif_add(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask,
   ip_addr_t *gw, void *state, netif_init_fn init, netif_input_fn input)
 {
-  static u8_t netifnum = 0;
 
   LWIP_ASSERT("No init function given", init != NULL);
 
@@ -170,11 +171,9 @@ netif_add(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask,
 
   /* remember netif specific state information data */
   netif->state = state;
-  netif->num = netifnum++;
+  netif->num = netif_num++;
   netif->input = input;
-#if LWIP_NETIF_HWADDRHINT
-  netif->addr_hint = NULL;
-#endif /* LWIP_NETIF_HWADDRHINT*/
+  NETIF_SET_HWADDRHINT(netif, NULL);
 #if ENABLE_LOOPBACK && LWIP_LOOPBACK_MAX_PBUFS
   netif->loop_cnt_current = 0;
 #endif /* ENABLE_LOOPBACK && LWIP_LOOPBACK_MAX_PBUFS */
@@ -273,6 +272,11 @@ netif_remove(struct netif *netif)
     /* reset default netif */
     netif_set_default(NULL);
   }
+#if LWIP_NETIF_REMOVE_CALLBACK
+  if (netif->remove_callback) {
+    netif->remove_callback(netif);
+  }
+#endif /* LWIP_NETIF_REMOVE_CALLBACK */
   LWIP_DEBUGF( NETIF_DEBUG, ("netif_remove: removed netif\n") );
 }
 
@@ -325,7 +329,7 @@ netif_set_ipaddr(struct netif *netif, ip_addr_t *ipaddr)
   struct tcp_pcb_listen *lpcb;
 
   /* address is actually being changed? */
-  if ((ip_addr_cmp(ipaddr, &(netif->ip_addr))) == 0) {
+  if (ipaddr && (ip_addr_cmp(ipaddr, &(netif->ip_addr))) == 0) {
     /* extern struct tcp_pcb *tcp_active_pcbs; defined by tcp.h */
     LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_STATE, ("netif_set_ipaddr: netif address being changed\n"));
     pcb = tcp_active_pcbs;
@@ -491,6 +495,11 @@ void netif_set_down(struct netif *netif)
     snmp_get_sysuptime(&netif->ts);
 #endif
 
+#if LWIP_ARP
+    if (netif->flags & NETIF_FLAG_ETHARP) {
+      etharp_cleanup_netif(netif);
+    }
+#endif /* LWIP_ARP */
     NETIF_STATUS_CALLBACK(netif);
   }
 }
@@ -506,6 +515,19 @@ void netif_set_status_callback(struct netif *netif, netif_status_callback_fn sta
   }
 }
 #endif /* LWIP_NETIF_STATUS_CALLBACK */
+
+#if LWIP_NETIF_REMOVE_CALLBACK
+/**
+ * Set callback to be called when the interface has been removed
+ */
+void
+netif_set_remove_callback(struct netif *netif, netif_status_callback_fn remove_callback)
+{
+  if (netif) {
+    netif->remove_callback = remove_callback;
+  }
+}
+#endif /* LWIP_NETIF_REMOVE_CALLBACK */
 
 /**
  * Called by a driver when its link goes up

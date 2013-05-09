@@ -37,6 +37,7 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <winnls.h>
+#include <wincon.h>
 #include <ole2.h>
 #include <shlwapi.h>
 

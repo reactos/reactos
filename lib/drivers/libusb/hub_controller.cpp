@@ -476,8 +476,6 @@ CHubController::HandlePnp(
                         swprintf(Buffer, L"USB\\ROOT_HUB");
                     }
 
-                    DPRINT("Name %S\n", Buffer);
-
                     //
                     // calculate length
                     //
@@ -549,11 +547,8 @@ CHubController::HandlePnp(
                         Index += swprintf(&Buffer[Index], L"USB\\ROOT_HUB") + 1;
                     }
 
-                   Buffer[Index] = UNICODE_NULL;
-                   Index++;
-
-
-                    DPRINT1("[%s] Name %S\n", m_USBType, Buffer);
+                    Buffer[Index] = UNICODE_NULL;
+                    Index++;
 
                     //
                     // allocate buffer

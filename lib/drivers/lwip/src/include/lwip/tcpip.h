@@ -77,6 +77,9 @@ typedef void (*tcpip_init_done_fn)(void *arg);
 /** Function prototype for functions passed to tcpip_callback() */
 typedef void (*tcpip_callback_fn)(void *ctx);
 
+/* Forward declarations */
+struct tcpip_callback_msg;
+
 void tcpip_init(tcpip_init_done_fn tcpip_init_done, void *arg);
 
 #if LWIP_NETCONN
@@ -97,6 +100,10 @@ err_t tcpip_netifapi_lock(struct netifapi_msg *netifapimsg);
 
 err_t tcpip_callback_with_block(tcpip_callback_fn function, void *ctx, u8_t block);
 #define tcpip_callback(f, ctx)              tcpip_callback_with_block(f, ctx, 1)
+
+struct tcpip_callback_msg* tcpip_callbackmsg_new(tcpip_callback_fn function, void *ctx);
+void   tcpip_callbackmsg_delete(struct tcpip_callback_msg* msg);
+err_t  tcpip_trycallback(struct tcpip_callback_msg* msg);
 
 /* free pbufs or heap memory from another context without blocking */
 err_t pbuf_free_callback(struct pbuf *p);
@@ -119,7 +126,8 @@ enum tcpip_msg_type {
   TCPIP_MSG_TIMEOUT,
   TCPIP_MSG_UNTIMEOUT,
 #endif /* LWIP_TCPIP_TIMEOUT */
-  TCPIP_MSG_CALLBACK
+  TCPIP_MSG_CALLBACK,
+  TCPIP_MSG_CALLBACK_STATIC
 };
 
 struct tcpip_msg {

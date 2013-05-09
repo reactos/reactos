@@ -5,6 +5,9 @@ list(APPEND SOURCE
     main.c
     cmdstart.c
     cmdStop.c
+    cmdHelpMsg.c
+    cmdPause.c
+    cmdContinue.c
     help.c)
 
 add_executable(net ${SOURCE})

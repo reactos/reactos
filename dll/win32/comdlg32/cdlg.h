@@ -165,6 +165,7 @@ typedef struct {
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
+#include "wincon.h"
 #include "commctrl.h"
 #include "shlobj.h"
 #include "shellapi.h"

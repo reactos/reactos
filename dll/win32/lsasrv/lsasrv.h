@@ -24,6 +24,7 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
+#include <ndk/sefuncs.h>
 #include <ndk/umfuncs.h>
 
 #include <ntsam.h>

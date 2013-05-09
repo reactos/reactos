@@ -64,7 +64,7 @@ static NTSTATUS TdiCall(
 
     AFD_DbgPrint(MID_TRACE, ("Called\n"));
 
-    AFD_DbgPrint(MID_TRACE, ("Irp->UserEvent = %x\n", Irp->UserEvent));
+    AFD_DbgPrint(MID_TRACE, ("Irp->UserEvent = %p\n", Irp->UserEvent));
 
     Status = IoCallDriver(DeviceObject, Irp);
     AFD_DbgPrint(MID_TRACE, ("IoCallDriver: %08x\n", Status));
@@ -109,7 +109,7 @@ static NTSTATUS TdiOpenDevice(
     NTSTATUS Status;
     ULONG ShareAccess;
 
-    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ, %d)\n", DeviceName, ShareType));
+    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ, %u)\n", DeviceName, ShareType));
 
     /* Determine the share access */
     if (ShareType != AFD_SHARE_REUSE)
@@ -152,7 +152,7 @@ static NTSTATUS TdiOpenDevice(
             AFD_DbgPrint(MIN_TRACE, ("ObReferenceObjectByHandle() failed with status (0x%X).\n", Status));
             ZwClose(*Handle);
         } else {
-            AFD_DbgPrint(MAX_TRACE, ("Got handle (0x%X)  Object (0x%X)\n",
+            AFD_DbgPrint(MAX_TRACE, ("Got handle (%p)  Object (%p)\n",
                                      *Handle, *Object));
         }
     } else {
@@ -189,7 +189,7 @@ NTSTATUS TdiOpenAddressFile(
     ULONG EaLength;
     PTRANSPORT_ADDRESS Address;
 
-    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ)  Name (0x%X)\n",
+    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ)  Name (%p)\n",
                              DeviceName, Name));
 
     /* EaName must be 0-terminated, even though TDI_TRANSPORT_ADDRESS_LENGTH does *not* include the 0 */
@@ -399,7 +399,7 @@ NTSTATUS TdiAssociateAddressFile(
     KEVENT Event;
     PIRP Irp;
 
-    AFD_DbgPrint(MAX_TRACE, ("Called. AddressHandle (0x%X)  ConnectionObject (0x%X)\n",
+    AFD_DbgPrint(MAX_TRACE, ("Called. AddressHandle (%p)  ConnectionObject (%p)\n",
                              AddressHandle, ConnectionObject));
 
     if (!ConnectionObject) {
@@ -448,7 +448,7 @@ NTSTATUS TdiDisassociateAddressFile(
     KEVENT Event;
     PIRP Irp;
 
-    AFD_DbgPrint(MAX_TRACE, ("Called. ConnectionObject (0x%X)\n", ConnectionObject));
+    AFD_DbgPrint(MAX_TRACE, ("Called. ConnectionObject (%p)\n", ConnectionObject));
 
     if (!ConnectionObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
@@ -803,7 +803,7 @@ NTSTATUS TdiQueryAddress(
     /* Locate an IP entity */
     EntityCount = BufferSize / sizeof(TDIEntityID);
 
-    AFD_DbgPrint(MAX_TRACE, ("EntityCount = %d\n", EntityCount));
+    AFD_DbgPrint(MAX_TRACE, ("EntityCount = %u\n", EntityCount));
 
     for (i = 0; i < EntityCount; i++) {
         if (Entities[i].tei_entity == CL_NL_ENTITY) {
@@ -923,7 +923,7 @@ NTSTATUS TdiSend(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %x:%d\n", Buffer,BufferLength));
+    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %p:%u\n", Buffer,BufferLength));
 
     Mdl = IoAllocateMdl(Buffer,         /* Virtual address */
                         BufferLength,   /* Length of buffer */
@@ -947,7 +947,7 @@ NTSTATUS TdiSend(
         _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH2_END;
 
-    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
+    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %p\n", Mdl));
 
     TdiBuildSend(*Irp,                   /* I/O Request Packet */
                  DeviceObject,           /* Device object */
@@ -1002,7 +1002,7 @@ NTSTATUS TdiReceive(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %x:%d\n", Buffer,BufferLength));
+    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %p:%u\n", Buffer,BufferLength));
 
     Mdl = IoAllocateMdl(Buffer,         /* Virtual address */
                         BufferLength,   /* Length of buffer */
@@ -1028,7 +1028,7 @@ NTSTATUS TdiReceive(
         _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH2_END;
 
-    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
+    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %p\n", Mdl));
 
     TdiBuildReceive(*Irp,                   /* I/O Request Packet */
                     DeviceObject,           /* Device object */
@@ -1097,7 +1097,7 @@ NTSTATUS TdiReceiveDatagram(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %x:%d\n", Buffer,BufferLength));
+    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %p:%u\n", Buffer,BufferLength));
 
     Mdl = IoAllocateMdl(Buffer,         /* Virtual address */
                         BufferLength,   /* Length of buffer */
@@ -1121,7 +1121,7 @@ NTSTATUS TdiReceiveDatagram(
         _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH2_END;
 
-    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
+    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %p\n", Mdl));
 
     TdiBuildReceiveDatagram(*Irp,                   /* I/O Request Packet */
                             DeviceObject,           /* Device object */
@@ -1173,7 +1173,7 @@ NTSTATUS TdiSendDatagram(
         return STATUS_INVALID_PARAMETER;
     }
 
-    AFD_DbgPrint(MID_TRACE,("Called(TransportObject %x)\n", TransportObject));
+    AFD_DbgPrint(MID_TRACE,("Called(TransportObject %p)\n", TransportObject));
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
@@ -1192,7 +1192,7 @@ NTSTATUS TdiSendDatagram(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %x:%d\n", Buffer,BufferLength));
+    AFD_DbgPrint(MID_TRACE, ("Allocating irp for %p:%u\n", Buffer,BufferLength));
 
     Mdl = IoAllocateMdl(Buffer,         /* Virtual address */
                         BufferLength,   /* Length of buffer */
@@ -1217,7 +1217,7 @@ NTSTATUS TdiSendDatagram(
         _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH2_END;
 
-    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %x\n", Mdl));
+    AFD_DbgPrint(MID_TRACE,("AFD>>> Got an MDL: %p\n", Mdl));
 
     TdiBuildSendDatagram(*Irp,                   /* I/O Request Packet */
                          DeviceObject,           /* Device object */
@@ -1252,7 +1252,7 @@ NTSTATUS TdiDisconnect(
         return STATUS_INVALID_PARAMETER;
     }
 
-    AFD_DbgPrint(MID_TRACE,("Called(TransportObject %x)\n", TransportObject));
+    AFD_DbgPrint(MID_TRACE,("Called(TransportObject %p)\n", TransportObject));
 
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {

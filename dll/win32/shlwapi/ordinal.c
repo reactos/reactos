@@ -43,6 +43,7 @@
 //#include "winuser.h"
 #include <winver.h>
 #include <winnetwk.h>
+#include <wincon.h>
 #include <mmsystem.h>
 //#include "objbase.h"
 //#include "exdisp.h"

@@ -14,6 +14,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <advapi32.h>
+#include <pseh/pseh2.h>
 WINE_DEFAULT_DEBUG_CHANNEL(reg);
 
 /* DEFINES ******************************************************************/
@@ -4952,9 +4953,28 @@ RegSetValueExW(HKEY hKey,
                DWORD cbData)
 {
     UNICODE_STRING ValueName;
-    PUNICODE_STRING pValueName;
     HANDLE KeyHandle;
     NTSTATUS Status;
+
+    if (is_string(dwType) && (cbData != 0))
+    {
+        PWSTR pwsData = (PWSTR)lpData;
+
+        _SEH2_TRY
+        {
+            if((pwsData[cbData / sizeof(WCHAR) - 1] != L'\0') &&
+                (pwsData[cbData / sizeof(WCHAR)] == L'\0'))
+            {
+                /* Increment length if last character is not zero and next is zero */
+                cbData += sizeof(WCHAR);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return ERROR_NOACCESS);
+        }
+        _SEH2_END;
+    }
 
     Status = MapDefaultKey(&KeyHandle,
                            hKey);
@@ -4964,22 +4984,9 @@ RegSetValueExW(HKEY hKey,
     }
 
     RtlInitUnicodeString(&ValueName, lpValueName);
-    pValueName = &ValueName;
-
-    if (is_string(dwType) && (cbData != 0))
-    {
-        PWSTR pwsData = (PWSTR)lpData;
-
-        if((pwsData[cbData / sizeof(WCHAR) - 1] != L'\0') &&
-            (pwsData[cbData / sizeof(WCHAR)] == L'\0'))
-        {
-            /* Increment length if last character is not zero and next is zero */
-            cbData += sizeof(WCHAR);
-        }
-    }
 
     Status = NtSetValueKey(KeyHandle,
-                           pValueName,
+                           &ValueName,
                            0,
                            dwType,
                            (PVOID)lpData,

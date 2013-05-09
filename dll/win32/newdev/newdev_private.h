@@ -15,6 +15,7 @@
 #include <winuser.h>
 #include <winnls.h>
 #include <windowsx.h>
+#include <wincon.h>
 #include <newdev.h>
 #include <regstr.h>
 #include <cfgmgr32.h>

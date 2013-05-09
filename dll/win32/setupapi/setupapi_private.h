@@ -34,6 +34,7 @@
 #include <winsvc.h>
 #include <winver.h>
 #include <wingdi.h>
+#include <wincon.h>
 #include <objbase.h>
 #include <lzexpand.h>
 #include <cfgmgr32.h>

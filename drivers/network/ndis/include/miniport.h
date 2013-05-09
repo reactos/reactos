@@ -197,4 +197,9 @@ VOID
 MiniDoAddressingReset(
     PLOGICAL_ADAPTER Adapter);
 
+VOID
+MiniWorkItemComplete(
+    PLOGICAL_ADAPTER     Adapter,
+    NDIS_WORK_ITEM_TYPE  WorkItemType);
+
 /* EOF */

@@ -855,65 +855,489 @@ extern "C" {
 
 #else /* !_MB_MAP_DIRECT */
 
-  _CRTIMP _CONST_RETURN char *__cdecl _tcschr(const char *_Str,unsigned int _Val);
-  _CRTIMP size_t __cdecl _tcscspn(const char *_Str,const char *_Control);
-  _CRTIMP char *__cdecl _tcsncat(char *_Dst,const char *_Src,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsncat_l(char *_Dst,const char *_Src,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsncpy(char *_Dst,const char *_Src,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsncpy_l(char *_Dst,const char *_Src,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP _CONST_RETURN char *__cdecl _tcspbrk(const char *_Str,const char *_Control);
-  _CRTIMP _CONST_RETURN char *__cdecl _tcsrchr(const char *_Str,unsigned int _Ch);
-  _CRTIMP size_t __cdecl _tcsspn(const char *_Str,const char *_Control);
-  _CRTIMP _CONST_RETURN char *__cdecl _tcsstr(const char *_Str,const char *_Substr);
-  _CRTIMP char *__cdecl _tcstok(char *_Str,const char *_Delim);
-  _CRTIMP char *__cdecl _tcstok_l(char *_Str,const char *_Delim,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsnset(char *_Str,unsigned int _Val,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsrev(char *_Str);
-  _CRTIMP char *__cdecl _tcsset(char *_Str,unsigned int _Val);
-  _CRTIMP char *__cdecl _tcsset_l(char *_Str,unsigned int _Val,_locale_t _Locale);
-  _CRTIMP int __cdecl _tcscmp(const char *_Str1,const char *_Str);
-  _CRTIMP int __cdecl _tcsicmp(const char *_Str1,const char *_Str2);
-  _CRTIMP int __cdecl _tcsicmp_l(const char *_Str1,const char *_Str2,_locale_t _Locale);
-  _CRTIMP int __cdecl _tcsnccmp(const char *_Str1,const char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _tcsncmp(const char *_Str1,const char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _tcsncicmp(const char *_Str1,const char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _tcsncicmp_l(const char *_Str1,const char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _tcsnicmp(const char *_Str1,const char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _tcsnicmp_l(const char *_Str1,const char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _tcscoll(const char *_Str1,const char *_Str2);
-  _CRTIMP int __cdecl _tcscoll_l(const char *_Str1,const char *_Str2,_locale_t _Locale);
-  _CRTIMP int __cdecl _tcsicoll(const char *_Str1,const char *_Str2);
-  _CRTIMP int __cdecl _tcsicoll_l(const char *_Str1,const char *_Str2,_locale_t _Locale);
-  _CRTIMP int __cdecl _tcsnccoll(const char *_Str1,const char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _tcsnccoll_l(const char *_Str1,const char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _tcsncoll(const char *_Str1,const char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _tcsncoll_l(const char *_Str1,const char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _tcsncicoll(const char *_Str1,const char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _tcsncicoll_l(const char *_Str1,const char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP int __cdecl _tcsnicoll(const char *_Str1,const char *_Str2,size_t _MaxCount);
-  _CRTIMP int __cdecl _tcsnicoll_l(const char *_Str1,const char *_Str2,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _tcsclen(const char *_Str);
-  _CRTIMP size_t __cdecl _tcscnlen(const char *_Str,size_t _MaxCount);
-  _CRTIMP size_t __cdecl _tcsclen_l(const char *_Str,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _tcscnlen_l(const char *_Str,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsnccat(char *_Dst,const char *_Src,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsnccat_l(char *_Dst,const char *_Src,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsnccpy(char *_Dst,const char *_Src,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsnccpy_l(char *_Dst,const char *_Src,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsncset(char *_Str,unsigned int _Val,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsdec(const char *_Start,const char *_Pos);
-  _CRTIMP char *__cdecl _tcsinc(const char *_Ptr);
-  _CRTIMP size_t __cdecl _tcsnbcnt(const char *_Str,size_t _MaxCount);
-  _CRTIMP size_t __cdecl _tcsnccnt(const char *_Str,size_t _MaxCount);
-  _CRTIMP unsigned int __cdecl _tcsnextc (const char *_Str);
-  _CRTIMP char *__cdecl _tcsninc(const char *_Ptr,size_t _Count);
-  _CRTIMP char *__cdecl _tcsspnp(const char *_Str1,const char *_Str2);
-  _CRTIMP char *__cdecl _tcslwr(char *_Str);
-  _CRTIMP char *__cdecl _tcslwr_l(char *_Str,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsupr(char *_Str);
-  _CRTIMP char *__cdecl _tcsupr_l(char *_Str,_locale_t _Locale);
-  _CRTIMP size_t __cdecl _tclen(const char *_Str);
-  _CRTIMP void __cdecl _tccpy(char *_DstCh,const char *_SrcCh);
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  char*
+  __cdecl
+  _tcschr(
+    _In_z_ const char *_Str,
+    _In_ unsigned int _Val);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _tcscspn(
+    _In_z_ const char *_Str,
+    _In_z_ const char *_Control);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsncat(
+    _Inout_updates_z_(_MaxCount) char *_Dst,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsncat_l(
+    _Inout_updates_z_(_MaxCount) char *_Dst,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsncpy(
+    _Out_writes_(_MaxCount) _Post_maybez_ char *_Dst,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsncpy_l(
+    _Out_writes_(_MaxCount) _Post_maybez_ char *_Dst,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  char*
+  __cdecl
+  _tcspbrk(
+    _In_z_ const char *_Str,
+    _In_z_ const char *_Control);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  char*
+  __cdecl
+  _tcsrchr(
+    _In_z_ const char *_Str,
+    _In_ unsigned int _Ch);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _tcsspn(
+    _In_z_ const char *_Str,
+    _In_z_ const char *_Control);
+
+  _Check_return_
+  _CRTIMP
+  _CONST_RETURN
+  char*
+  __cdecl
+  _tcsstr(
+    _In_z_ const char *_Str,
+    _In_z_ const char *_Substr);
+
+  _Check_return_
+  _CRTIMP
+  char*
+  __cdecl
+  _tcstok(
+    _Inout_opt_ char *_Str,
+    _In_z_ const char *_Delim);
+
+  _Check_return_
+  _CRTIMP
+  char*
+  __cdecl
+  _tcstok_l(
+    _Inout_opt_ char *_Str,
+    _In_z_ const char *_Delim,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsnset(
+    _Inout_z_ char *_Str,
+    _In_ unsigned int _Val,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsrev(
+    _Inout_z_ char *_Str);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsset(
+    _Inout_z_ char *_Str,
+    _In_ unsigned int _Val);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsset_l(
+    _Inout_z_ char *_Str,
+    _In_ unsigned int _Val,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcscmp(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsicmp(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsicmp_l(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsnccmp(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsncmp(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsncicmp(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsncicmp_l(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsnicmp(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsnicmp_l(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcscoll(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcscoll_l(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsicoll(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsicoll_l(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsnccoll(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsnccoll_l(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsncoll(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsncoll_l(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsncicoll(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsncicoll_l(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsnicoll(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _tcsnicoll_l(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _tcsclen(
+    _In_z_ const char *_Str);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _tcscnlen(
+    _In_z_ const char *_Str,
+    _In_ size_t _MaxCount);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _tcsclen_l(
+    _In_z_ const char *_Str,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _tcscnlen_l(
+    _In_z_ const char *_Str,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsnccat(
+    _Inout_ char *_Dst,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsnccat_l(
+    _Inout_ char *_Dst,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsnccpy(
+    _Out_writes_(_MaxCount) _Post_maybez_ char *_Dst,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsnccpy_l(
+    _Out_writes_(_MaxCount) _Post_maybez_ char *_Dst,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsncset(
+    _Inout_updates_z_(_MaxCount) char *_Str,
+    _In_ unsigned int _Val,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsdec(
+    _In_reads_z_(_Pos-_Start + 1) const char *_Start,
+    _In_z_ const char *_Pos);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsinc(
+    _In_z_ const char *_Ptr);
+
+  _CRTIMP
+  size_t
+  __cdecl
+  _tcsnbcnt(
+    _In_reads_(_MaxCount) _Pre_z_ const char *_Str,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  size_t
+  __cdecl
+  _tcsnccnt(
+    _In_reads_(_MaxCount) _Pre_z_ const char *_Str,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  unsigned int
+  __cdecl
+  _tcsnextc(
+    _In_z_ const char *_Str);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsninc(
+    _In_reads_(_Count) _Pre_z_ const char *_Ptr,
+    _In_ size_t _Count);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsspnp(
+    _In_z_ const char *_Str1,
+    _In_z_ const char *_Str2);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcslwr(
+    _Inout_ char *_Str);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcslwr_l(
+    _Inout_ char *_Str,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsupr(
+    _Inout_ char *_Str);
+
+  _CRTIMP
+  char*
+  __cdecl
+  _tcsupr_l(
+    _Inout_ char *_Str,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _tclen(
+    _In_z_ const char *_Str);
+
+  _CRTIMP
+  void
+  __cdecl
+  _tccpy(
+    _Pre_notnull_ _Post_z_ char *_DstCh,
+    _In_z_ const char *_SrcCh);
 
 #ifdef __cplusplus
 #ifndef _CPP_TCHAR_INLINES_DEFINED

@@ -5,6 +5,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <wincon.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <tchar.h>

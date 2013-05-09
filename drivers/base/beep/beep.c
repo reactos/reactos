@@ -38,6 +38,10 @@ BeepDPC(IN PKDPC Dpc,
 {
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
     /* Stop the beep */
     HalMakeBeep(0);
 
@@ -367,6 +371,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PDEVICE_OBJECT DeviceObject;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Beep");
     NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(RegistryPath);
 
     /* Create the device */
     Status = IoCreateDevice(DriverObject,

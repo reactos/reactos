@@ -8,6 +8,7 @@
 #include <wingdi.h>
 #include <winnls.h>
 #include <winuser.h>
+#include <wincon.h>
 #include <richedit.h>
 #include <shellapi.h>
 #include <shlwapi.h>

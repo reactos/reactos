@@ -21,14 +21,15 @@ COMMAND cmds[] =
     {L"accounts",   unimplemented},
     {L"computer",   unimplemented},
     {L"config",     unimplemented},
-    {L"continue",   unimplemented},
+    {L"continue",   cmdContinue},
     {L"file",       unimplemented},
     {L"group",      unimplemented},
     {L"help",       cmdHelp},
-    {L"helpmsg",    unimplemented},
+    {L"helpmsg",    cmdHelpMsg},
     {L"localgroup", unimplemented},
     {L"name",       unimplemented},
     {L"print",      unimplemented},
+    {L"pause",      cmdPause},
     {L"send",       unimplemented},
     {L"session",    unimplemented},
     {L"share",      unimplemented},
@@ -39,7 +40,7 @@ COMMAND cmds[] =
     {L"use",        unimplemented},
     {L"user",       unimplemented},
     {L"view",       unimplemented},
-
+    {NULL,          NULL}
 };
 
 int wmain(int argc, WCHAR **argv)

@@ -12,6 +12,7 @@
 #include <wingdi.h>
 #include <winnls.h>
 #include <winver.h>
+#include <wincon.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlobj_undoc.h>

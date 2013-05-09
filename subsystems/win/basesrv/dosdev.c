@@ -137,9 +137,9 @@ CSR_API(BaseSrvDefineDosDevice)
             _SEH2_LEAVE;
 
         RequestLinkTarget = &DefineDosDeviceRequest->TargetName;
-        lpBuffer = (PWSTR) RtlAllocateHeap(BaseSrvHeap,
-                                           HEAP_ZERO_MEMORY,
-                                           RequestDeviceName.MaximumLength + 5 * sizeof(WCHAR));
+        lpBuffer = (PWSTR)RtlAllocateHeap(BaseSrvHeap,
+                                          HEAP_ZERO_MEMORY,
+                                          RequestDeviceName.MaximumLength + 5 * sizeof(WCHAR));
         if (!lpBuffer)
         {
             DPRINT1("Failed to allocate memory\n");

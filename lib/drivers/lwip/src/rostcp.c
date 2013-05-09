@@ -1,4 +1,5 @@
 #include "lwip/sys.h"
+#include "lwip/netif.h"
 #include "lwip/tcpip.h"
 
 #include "rosip.h"
@@ -630,18 +631,15 @@ LibTCPShutdownCallback(void *arg)
         goto done;
     }
 
-    if (pcb->state == CLOSE_WAIT)
-    {
-        /* This case actually results in a socket closure later (lwIP bug?) */
-        msg->Input.Shutdown.Connection->SocketContext = NULL;
+    /* These need to be called separately, otherwise we get a tcp_close() */
+    if (msg->Input.Shutdown.shut_rx) {
+        msg->Output.Shutdown.Error = tcp_shutdown(pcb, TRUE, FALSE);
+    }
+    if (msg->Input.Shutdown.shut_tx) {
+        msg->Output.Shutdown.Error = tcp_shutdown(pcb, FALSE, TRUE);
     }
 
-    msg->Output.Shutdown.Error = tcp_shutdown(pcb, msg->Input.Shutdown.shut_rx, msg->Input.Shutdown.shut_tx);
-    if (msg->Output.Shutdown.Error)
-    {
-        msg->Input.Shutdown.Connection->SocketContext = pcb;
-    }
-    else
+    if (!msg->Output.Shutdown.Error)
     {
         if (msg->Input.Shutdown.shut_rx)
         {
@@ -718,20 +716,9 @@ LibTCPCloseCallback(void *arg)
            break;
 
         default:
-           if (msg->Input.Close.Connection->SendShutdown &&
-               msg->Input.Close.Connection->ReceiveShutdown)
-           {
-               /* Abort the connection */
-               tcp_abort(pcb);
-
-               /* Aborts always succeed */
-               msg->Output.Close.Error = ERR_OK;
-           }
-           else
-           {
-               /* Start the graceful close process (or send RST for pending data) */
-               msg->Output.Close.Error = tcp_close(pcb);
-           }
+           /* Abort the socket */
+           tcp_abort(pcb);
+           msg->Output.Close.Error = ERR_OK;
            break;
     }
 

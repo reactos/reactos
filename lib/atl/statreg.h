@@ -63,6 +63,7 @@ public:
 
 		hResult = ClearReplacements();
 		ATLASSERT(SUCCEEDED(hResult));
+		(void)hResult;
 	}
 
 	HRESULT STDMETHODCALLTYPE QueryInterface(const IID & /* riid */, void ** /* ppvObject */ )

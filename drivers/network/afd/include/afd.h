@@ -319,26 +319,18 @@ NTSTATUS QueueUserModeIrp(PAFD_FCB FCB, PIRP Irp, UINT Function);
 
 VOID OskitDumpBuffer( PCHAR Buffer, UINT Len );
 VOID DestroySocket( PAFD_FCB FCB );
-VOID NTAPI AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
-                 PIRP Irp);
+DRIVER_CANCEL AfdCancelHandler;
 VOID RetryDisconnectCompletion(PAFD_FCB FCB);
 BOOLEAN CheckUnlockExtraBuffers(PAFD_FCB FCB, PIO_STACK_LOCATION IrpSp);
 
 /* read.c */
 
-NTSTATUS NTAPI ReceiveComplete
-( PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  PVOID Context );
+IO_COMPLETION_ROUTINE ReceiveComplete;
 
-NTSTATUS NTAPI PacketSocketRecvComplete
-( PDEVICE_OBJECT DeviceObject,
-  PIRP Irp,
-  PVOID Context );
+IO_COMPLETION_ROUTINE PacketSocketRecvComplete;
 
 NTSTATUS NTAPI
-AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-			   PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
+AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
 NTSTATUS NTAPI
 AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			PIO_STACK_LOCATION IrpSp );

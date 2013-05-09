@@ -73,7 +73,7 @@
 #endif
 
 #ifndef SNMP_GET_SYSUPTIME
-#define SNMP_GET_SYSUPTIME(sysuptime)
+#define SNMP_GET_SYSUPTIME(sysuptime)  (sysuptime = (sys_now() / 10))
 #endif
 
 static void system_get_object_def(u8_t ident_len, s32_t *ident, struct obj_def *od);

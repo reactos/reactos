@@ -33,6 +33,7 @@
 //#include "windef.h"
 //#include "winbase.h"
 //#include "winuser.h"
+#include "wincon.h"
 #include <shlobj.h>
 //#include "objbase.h"
 //#include "commdlg.h"

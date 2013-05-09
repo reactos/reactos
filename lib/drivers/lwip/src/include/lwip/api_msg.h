@@ -89,6 +89,9 @@ struct api_msg_msg {
       const void *dataptr;
       size_t len;
       u8_t apiflags;
+#if LWIP_SO_SNDTIMEO
+      u32_t time_started;
+#endif /* LWIP_SO_SNDTIMEO */
     } w;
     /** used for do_recv */
     struct {

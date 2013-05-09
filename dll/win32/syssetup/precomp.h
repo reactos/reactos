@@ -12,6 +12,7 @@
 #include <winnls.h>
 #include <winuser.h>
 #include <windowsx.h>
+#include <wincon.h>
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/rtlfuncs.h>

@@ -376,7 +376,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(binární položka nulové hodnoty)"
+    IDS_BINARY_EMPTY        "(binární položka nulové hodnoty)"
     IDS_DEFAULT_VALUE_NAME  "(Výchozí)"
     IDS_VALUE_NOT_SET       "(Hodnota nezadána)"
     IDS_UNKNOWN_TYPE        "Neznámý typ: (0x%lx)"
@@ -434,10 +434,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-  IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
-  IDS_IMPORT_ERROR               "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-  IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+  IDS_IMPORT_PROMPT              "Přidáváním informací můžete neúmyslně změnit nebo odstranit hodnoty a způsobit, že komponenty přestanou správně fungovat\nPokud nevěříte zdroji těchto informací v '%s', nepřidávejte je do registru.\n\nOpravdu chcete pokračovat?"
+  IDS_IMPORT_OK                  "Klíče a hodnoty z '%s' byly úspěšně přidány do registru."
+  IDS_IMPORT_ERROR               "Nelze importovat '%s': Chyba při otevírání souboru. Došlo k chybě disku nebo souborového systému, nebo soubor neexistuje."
+  IDS_EXPORT_ERROR               "Nelze exportovat '%s': Chyba při vytváření či psaní do souboru. Došlo k chybě disku nebo souborového systému."
 END
 
 STRINGTABLE DISCARDABLE
