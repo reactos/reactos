@@ -19,6 +19,9 @@ IsaFdoStartDevice(
   NTSTATUS Status;
   KIRQL OldIrql;
 
+  UNREFERENCED_PARAMETER(Irp);
+  UNREFERENCED_PARAMETER(IrpSp);
+
   KeAcquireSpinLock(&FdoExt->Lock, &OldIrql);
 
   Status = IsaHwDetectReadDataPort(FdoExt);

@@ -40,6 +40,9 @@ typedef struct _ISAPNP_LOGICAL_DEVICE {
 } ISAPNP_LOGICAL_DEVICE, *PISAPNP_LOGICAL_DEVICE;
 
 /* isapnp.c */
+
+DRIVER_INITIALIZE DriverEntry;
+
 NTSTATUS
 NTAPI
 DriverEntry(

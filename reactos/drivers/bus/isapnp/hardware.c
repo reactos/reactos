@@ -319,7 +319,7 @@ TryIsolate(PUCHAR ReadDataPort)
   INT Csn = 0;
   USHORT Byte, Data;
 
-  DPRINT("Setting read data port: 0x%x\n", ReadDataPort);
+  DPRINT("Setting read data port: 0x%p\n", ReadDataPort);
 
   WaitForKey();
   SendKey();
@@ -408,7 +408,7 @@ TryIsolate(PUCHAR ReadDataPort)
 
   if (Csn > 0)
   {
-    DPRINT("Found %d cards at read port 0x%x\n", Csn, ReadDataPort);
+    DPRINT("Found %d cards at read port 0x%p\n", Csn, ReadDataPort);
   }
 
   return Csn;
@@ -543,7 +543,7 @@ IsaHwDetectReadDataPort(
       return STATUS_UNSUCCESSFUL;
   }
 
-  DPRINT1("Detected read data port at 0x%x\n", FdoExt->ReadDataPort);
+  DPRINT1("Detected read data port at 0x%p\n", FdoExt->ReadDataPort);
 
   return STATUS_SUCCESS;
 }
