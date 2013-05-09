@@ -1568,7 +1568,7 @@ LoadBootDeviceDriver(VOID)
     ULONG ImportTableSize;
     PLDR_DATA_TABLE_ENTRY BootDdDTE, FreeldrDTE;
     CHAR NtBootDdPath[MAX_PATH];
-    PVOID ImageBase;
+    PVOID ImageBase = NULL;
     ULONG (NTAPI *EntryPoint)(IN PVOID DriverObject, IN PVOID RegistryPath);
     BOOLEAN Status;
 

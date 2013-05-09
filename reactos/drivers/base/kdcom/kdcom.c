@@ -17,8 +17,7 @@
 #define DEFAULT_DEBUG_COM2_IRQ  3 /* COM2 IRQ */
 #define DEFAULT_DEBUG_BAUD_RATE 115200 /* 115200 Baud */
 
-#define DEFAULT_BAUD_RATE    19200
-
+#define DEFAULT_BAUD_RATE   19200
 
 #if defined(_M_IX86) || defined(_M_AMD64)
 const ULONG BaseArray[] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};

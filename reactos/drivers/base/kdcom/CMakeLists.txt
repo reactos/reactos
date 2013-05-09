@@ -1,18 +1,12 @@
 
 spec2def(kdcom.dll kdcom.spec ADD_IMPORTLIB)
 
-if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE i386/kdbg.c)
-elseif(ARCH STREQUAL "amd64")
-    list(APPEND SOURCE i386/kdbg.c)
-elseif(ARCH STREQUAL "arm")
-    list(APPEND SOURCE arm/kdbg.c)
-endif(ARCH STREQUAL "i386")
-list(APPEND SOURCE
+add_library(kdcom SHARED
+    kdcom.c
+    kddll.c
+    kdserial.c
     kdcom.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
-
-add_library(kdcom SHARED ${SOURCE})
 
 set_entrypoint(kdcom 0)
 set_subsystem(kdcom native)

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cportlib/cportlib.h>
+
 #ifdef _M_PPC
 #define KdDebuggerEnabled _KdDebuggerEnabled
 #define KdDebuggerNotPresent _KdDebuggerNotPresent
@@ -8,15 +10,8 @@
 //
 // Kernel Debugger Port Definition
 //
-typedef struct _KD_PORT_INFORMATION
-{
-    ULONG ComPort;
-    ULONG BaudRate;
-    ULONG BaseAddress;
-} KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
-
 struct _KD_DISPATCH_TABLE;
-extern KD_PORT_INFORMATION GdbPortInfo;
+extern CPPORT GdbPortInfo;
 extern BOOLEAN _KdDebuggerEnabled;
 extern BOOLEAN _KdDebuggerNotPresent;
 extern BOOLEAN KdBreakAfterSymbolLoad;
@@ -25,41 +20,21 @@ extern BOOLEAN KdIgnoreUmExceptions;
 
 BOOLEAN
 NTAPI
-KdPortInitialize(
-    PKD_PORT_INFORMATION PortInformation,
-    ULONG Unknown1,
-    ULONG Unknown2
-);
-
-BOOLEAN
-NTAPI
 KdPortInitializeEx(
-    PKD_PORT_INFORMATION PortInformation,
-    ULONG Unknown1,
-    ULONG Unknown2
+    PCPPORT PortInformation,
+    ULONG ComPortNumber
 );
-
-BOOLEAN
-NTAPI
-KdPortGetByte(
-    PUCHAR ByteReceived);
 
 BOOLEAN
 NTAPI
 KdPortGetByteEx(
-    PKD_PORT_INFORMATION PortInformation,
+    PCPPORT PortInformation,
     PUCHAR ByteReceived);
 
 VOID
 NTAPI
-KdPortPutByte(
-    UCHAR ByteToSend
-);
-
-VOID
-NTAPI
 KdPortPutByteEx(
-    PKD_PORT_INFORMATION PortInformation,
+    PCPPORT PortInformation,
     UCHAR ByteToSend
 );
 
@@ -359,7 +334,8 @@ extern ULONG KdpPortIrq;
 extern ULONG KdpPort;
 
 /* Port Information for the Serial Native Mode */
-extern KD_PORT_INFORMATION SerialPortInfo;
+extern ULONG  SerialPortNumber;
+extern CPPORT SerialPortInfo;
 
 /* Init Functions for Native Providers */
 extern PKDP_INIT_ROUTINE InitRoutines[KdMax];

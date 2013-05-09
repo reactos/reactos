@@ -16,7 +16,8 @@
 
 /* VARIABLES ***************************************************************/
 
-KD_PORT_INFORMATION PortInfo = {DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RATE, 0};
+ULONG  PortNumber = DEFAULT_DEBUG_PORT;
+CPPORT PortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
 ULONG KdpPortIrq;
 #ifdef AUTO_ENABLE_BOCHS
 KDP_DEBUG_MODE KdpDebugMode = {{{.Bochs=TRUE}}};
@@ -68,7 +69,7 @@ KdpGetDebugMode(PCHAR Currentp2)
                 KdpDebugMode.Serial = TRUE;
 
                 /* Set the port to use */
-                SerialPortInfo.ComPort = Value;
+                SerialPortNumber = Value;
                 KdpPort = Value;
             }
         }
@@ -78,8 +79,8 @@ KdpGetDebugMode(PCHAR Currentp2)
             if (Value)
             {
                 KdpDebugMode.Serial = TRUE;
-                SerialPortInfo.BaseAddress = Value;
-                SerialPortInfo.ComPort = 0;
+                SerialPortInfo.Address = UlongToPtr(Value);
+                SerialPortNumber = 0;
                 KdpPort = 0;
             }
         }

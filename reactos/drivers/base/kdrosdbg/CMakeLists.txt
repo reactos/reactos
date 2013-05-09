@@ -1,12 +1,12 @@
 
-spec2def(kdcom.dll kdcom.spec ADD_IMPORTLIB)
+spec2def(kdcom.dll kdrosdbg.spec ADD_IMPORTLIB)
 
-add_library(kdcom SHARED
-    kdcom.c
-    kddll.c
-    kdserial.c
-    kdcom.rc
+list(APPEND SOURCE
+    kdrosdbg.c
+    kdrosdbg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
+
+add_library(kdcom SHARED ${SOURCE})
 
 set_entrypoint(kdcom 0)
 set_subsystem(kdcom native)

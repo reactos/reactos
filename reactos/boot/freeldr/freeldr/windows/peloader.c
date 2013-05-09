@@ -255,11 +255,12 @@ WinLdrAllocateDataTableEntry(IN OUT PLIST_ENTRY ModuleListHead,
 	return TRUE;
 }
 
-/* WinLdrLoadImage loads the specified image from the file (it doesn't
-   perform any additional operations on the filename, just directly
-   calls the file I/O routines), and relocates it so that it's ready
-   to be used when paging is enabled.
-   Addressing mode: physical
+/*
+ * WinLdrLoadImage loads the specified image from the file (it doesn't
+ * perform any additional operations on the filename, just directly
+ * calls the file I/O routines), and relocates it so that it's ready
+ * to be used when paging is enabled.
+ * Addressing mode: physical
  */
 BOOLEAN
 WinLdrLoadImage(IN PCHAR FileName,
@@ -429,7 +430,6 @@ WinLdrLoadImage(IN PCHAR FileName,
 	/* If loading failed - return right now */
 	if (Status != ESUCCESS)
 		return FALSE;
-
 
 	/* Relocate the image, if it needs it */
 	if (NtHeaders->OptionalHeader.ImageBase != (ULONG_PTR)VirtualBase)
@@ -756,7 +756,7 @@ WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
 {
 	CHAR FullDllName[256];
 	BOOLEAN Status;
-	PVOID BasePA;
+	PVOID BasePA = NULL;
 
 	/* Prepare the full path to the file to be loaded */
 	strcpy(FullDllName, DirectoryPath);
@@ -781,7 +781,7 @@ WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
 		DataTableEntry);
 	if (!Status)
 	{
-		ERR("WinLdrAllocateDataTableEntry() failed with Status=0x%X\n", Status);
+		ERR("WinLdrAllocateDataTableEntry() failed\n");
 		return Status;
 	}
 
@@ -791,7 +791,7 @@ WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
 	Status = WinLdrScanImportDescriptorTable(ModuleListHead, DirectoryPath, *DataTableEntry);
 	if (!Status)
 	{
-		ERR("WinLdrScanImportDescriptorTable() failed with Status=0x%X\n", Status);
+		ERR("WinLdrScanImportDescriptorTable() failed\n");
 		return Status;
 	}
 
