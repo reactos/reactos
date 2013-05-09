@@ -820,10 +820,10 @@ static BOOL PROFILE_Open( LPCWSTR filename, BOOL write_access )
                     CurProfile->LastWriteTime = LastWriteTime;
                 }
                 CloseHandle(hFile);
+                return TRUE;
             }
             else TRACE("(%s): already opened, not yet created (mru=%d)\n",
                        debugstr_w(buffer), i);
-            return TRUE;
         }
     }
 
