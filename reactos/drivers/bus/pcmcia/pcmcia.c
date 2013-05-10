@@ -13,11 +13,15 @@
 
 BOOLEAN IoctlEnabled;
 
+DRIVER_DISPATCH PcmciaCreateClose;
+
 NTSTATUS
 NTAPI
 PcmciaCreateClose(PDEVICE_OBJECT DeviceObject,
                   PIRP Irp)
 {
+  UNREFERENCED_PARAMETER(DeviceObject);
+
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = 0;
 
@@ -28,6 +32,8 @@ PcmciaCreateClose(PDEVICE_OBJECT DeviceObject,
   return STATUS_SUCCESS;
 }
 
+DRIVER_DISPATCH PcmciaDeviceControl;
+
 NTSTATUS
 NTAPI
 PcmciaDeviceControl(PDEVICE_OBJECT DeviceObject,
@@ -35,6 +41,8 @@ PcmciaDeviceControl(PDEVICE_OBJECT DeviceObject,
 {
   PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
   NTSTATUS Status;
+
+  UNREFERENCED_PARAMETER(DeviceObject);
 
   DPRINT("PCMCIA: DeviceIoControl\n");
 
@@ -54,12 +62,17 @@ PcmciaDeviceControl(PDEVICE_OBJECT DeviceObject,
   return Status;
 }
 
+DRIVER_UNLOAD PcmciaUnload;
+
 VOID
 NTAPI
 PcmciaUnload(PDRIVER_OBJECT DriverObject)
 {
+  UNREFERENCED_PARAMETER(DriverObject);
   DPRINT("PCMCIA: Unload\n");
 }
+
+DRIVER_DISPATCH PcmciaPlugPlay;
 
 NTSTATUS
 NTAPI
@@ -80,6 +93,8 @@ PcmciaPlugPlay(PDEVICE_OBJECT DeviceObject,
                               Irp);
   }
 }
+
+DRIVER_DISPATCH PcmciaPower;
 
 NTSTATUS
 NTAPI
@@ -160,6 +175,8 @@ PcmciaPower(PDEVICE_OBJECT DeviceObject,
   return Status;
 }
 
+DRIVER_ADD_DEVICE PcmciaAddDevice;
+
 NTSTATUS
 NTAPI
 PcmciaAddDevice(PDRIVER_OBJECT DriverObject,
@@ -206,6 +223,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   NTSTATUS Status;
+
+  UNREFERENCED_PARAMETER(RegistryPath);
 
   DPRINT1("PCMCIA: DriverEntry\n");
 
