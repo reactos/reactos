@@ -763,6 +763,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 {
     WORD wSimpleVk = 0, wFixedVk, wVk2;
     PUSER_MESSAGE_QUEUE pFocusQueue;
+    PTHREADINFO pti;
     BOOL bExt = (dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
     BOOL bIsDown = (dwFlags & KEYEVENTF_KEYUP) ? FALSE : TRUE;
     BOOL bPacket = (dwFlags & KEYEVENTF_UNICODE) ? TRUE : FALSE;
@@ -873,6 +874,14 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
            Wnd = pFocusQueue->spwndActive;
         }
 
+        if ( !Wnd || Wnd->state2 & WNDS2_INDESTROY || Wnd->state & WNDS_DESTROYED )
+        {
+           ERR("ProcessKeyEvent Active Focus window is dead!\n");
+           return FALSE;
+        }
+ 
+        pti = Wnd->head.pti;
+
         /* Init message */
         Msg.hwnd = UserHMGetHandle(Wnd);
         Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
@@ -900,7 +909,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
         /* Post a keyboard message */
         TRACE("Posting keyboard msg %u wParam 0x%x lParam 0x%x\n", Msg.message, Msg.wParam, Msg.lParam);
-        MsqPostMessage(pFocusQueue, &Msg, TRUE, QS_KEY, 0);
+        MsqPostMessage(pti, &Msg, TRUE, QS_KEY, 0);
     }
 
     return TRUE;
@@ -913,7 +922,6 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     PKL pKl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
-    struct _ETHREAD *pFocusThread;
     LARGE_INTEGER LargeTickCount;
     DWORD dwTime;
     BOOL bExt = (pKbdInput->dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
@@ -923,11 +931,9 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     /* Find the target thread whose locale is in effect */
     pFocusQueue = IntGetFocusMessageQueue();
 
-    if (pFocusQueue)
+    if (pFocusQueue && pFocusQueue->ptiOwner)
     {
-        pFocusThread = pFocusQueue->Thread;
-        if (pFocusThread && pFocusThread->Tcb.Win32Thread)
-            pKl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
+        pKl = pFocusQueue->ptiOwner->KeyboardLayout;
     }
 
     if (!pKl)
@@ -997,7 +1003,6 @@ UserProcessKeyboardInput(
     PKL pKl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
-    struct _ETHREAD *pFocusThread;
 
     /* Calculate scan code with prefix */
     wScanCode = pKbdInputData->MakeCode & 0x7F;
@@ -1009,11 +1014,9 @@ UserProcessKeyboardInput(
     /* Find the target thread whose locale is in effect */
     pFocusQueue = IntGetFocusMessageQueue();
 
-    if (pFocusQueue)
+    if (pFocusQueue && pFocusQueue->ptiOwner)
     {
-        pFocusThread = pFocusQueue->Thread;
-        if (pFocusThread && pFocusThread->Tcb.Win32Thread)
-            pKl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
+        pKl = pFocusQueue->ptiOwner->KeyboardLayout;
     }
 
     if (!pKl)
@@ -1121,7 +1124,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
         NewMsg.wParam = HIWORD(lpMsg->lParam);
         NewMsg.lParam = LOWORD(lpMsg->lParam);
-        MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY, 0);
+        MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0);
         return TRUE;
     }
 
@@ -1150,7 +1153,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         {
             TRACE("Msg: %x '%lc' (%04x) %08x\n", NewMsg.message, wch[i], wch[i], NewMsg.lParam);
             NewMsg.wParam = wch[i];
-            MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY, 0);
+            MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0);
         }
         bResult = TRUE;
     }

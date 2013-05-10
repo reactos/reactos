@@ -97,13 +97,12 @@ IntValidateParent(PWND Child, HRGN hValidateRgn, BOOL Recurse)
 VOID FASTCALL
 IntSendSyncPaint(PWND Wnd, ULONG Flags)
 {
-   PTHREADINFO ptiCur;
-   PUSER_MESSAGE_QUEUE MessageQueue;
+   PTHREADINFO ptiCur, ptiWnd;
    PUSER_SENT_MESSAGE Message;
    PLIST_ENTRY Entry;
    BOOL bSend = TRUE;
 
-   MessageQueue = Wnd->head.pti->MessageQueue;
+   ptiWnd = Wnd->head.pti;
    ptiCur = PsGetCurrentThreadWin32Thread();
    /*
       Not the current thread, Wnd is in send Nonclient paint also in send erase background and it is visiable.
@@ -115,10 +114,10 @@ IntSendSyncPaint(PWND Wnd, ULONG Flags)
    {
       // For testing, if you see this, break out the Champagne and have a party!
       ERR("SendSyncPaint Wnd in State!\n");
-      if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
+      if (!IsListEmpty(&ptiWnd->SentMessagesListHead))
       {
          // Scan sent queue messages to see if we received sync paint messages.
-         Entry = MessageQueue->SentMessagesListHead.Flink;
+         Entry = ptiWnd->SentMessagesListHead.Flink;
          Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
          do
          {
@@ -133,7 +132,7 @@ IntSendSyncPaint(PWND Wnd, ULONG Flags)
             Entry = Message->ListEntry.Flink;
             Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
          }
-         while (Entry != &MessageQueue->SentMessagesListHead);
+         while (Entry != &ptiWnd->SentMessagesListHead);
       }
       if (bSend)
       {
@@ -270,7 +269,7 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
             Window->state &= ~WNDS_UPDATEDIRTY;
             Window->hrgnUpdate = NULL;
             if (!(Window->state & WNDS_INTERNALPAINT))
-               MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
+               MsqDecPaintCountQueue(Window->head.pti);
          }
       }
 
@@ -557,9 +556,9 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
    if (HadPaintMessage != IntIsWindowDirty(Wnd))
    {
       if (HadPaintMessage)
-         MsqDecPaintCountQueue(Wnd->head.pti->MessageQueue);
+         MsqDecPaintCountQueue(Wnd->head.pti);
       else
-         MsqIncPaintCountQueue(Wnd->head.pti->MessageQueue);
+         MsqIncPaintCountQueue(Wnd->head.pti);
    }
    TRACE("IntInvalidateWindows exit\n");
 }
@@ -781,7 +780,7 @@ IntGetPaintMessage(
    {
       PaintWnd->state &= ~WNDS_INTERNALPAINT;
       if (!PaintWnd->hrgnUpdate)
-         MsqDecPaintCountQueue(Thread->MessageQueue);
+         MsqDecPaintCountQueue(Thread);
    }
    PaintWnd->state2 &= ~WNDS2_WMPAINTSENT;
    PaintWnd->state &= ~WNDS_UPDATEDIRTY;
@@ -955,7 +954,7 @@ IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
 
    if (Window->hrgnUpdate != NULL)
    {
-      MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
+      MsqDecPaintCountQueue(Window->head.pti);
       GdiGetClipBox(Ps->hdc, &Ps->rcPaint);
       IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
       /* The region is part of the dc now and belongs to the process! */
@@ -964,7 +963,7 @@ IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
    else
    {
       if (Window->state & WNDS_INTERNALPAINT)
-         MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
+         MsqDecPaintCountQueue(Window->head.pti);
 
       IntGetClientRect(Window, &Ps->rcPaint);
    }

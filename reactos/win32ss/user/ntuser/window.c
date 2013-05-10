@@ -3779,7 +3779,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_ISHUNG:
-         Result = (DWORD)MsqIsHung(pWnd->head.pti->MessageQueue);
+         Result = (DWORD)MsqIsHung(pWnd->head.pti);
          break;
 
       case QUERY_WINDOW_REAL_ID:

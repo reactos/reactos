@@ -296,18 +296,18 @@ IntFindChildWindowToOwner(PWND Root, PWND Owner)
 VOID FASTCALL
 FindRemoveAsyncMsg(PWND Wnd)
 {
-   PUSER_MESSAGE_QUEUE MessageQueue;
+   PTHREADINFO pti;
    PUSER_SENT_MESSAGE Message;
    PLIST_ENTRY Entry;
 
    if (!Wnd) return;
 
-   MessageQueue = Wnd->head.pti->MessageQueue;
+   pti = Wnd->head.pti;
 
-   if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
+   if (!IsListEmpty(&pti->SentMessagesListHead))
    {
       // Scan sent queue messages to see if we received async messages.
-      Entry = MessageQueue->SentMessagesListHead.Flink;
+      Entry = pti->SentMessagesListHead.Flink;
       Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
       do
       {
@@ -321,7 +321,7 @@ FindRemoveAsyncMsg(PWND Wnd)
          Entry = Message->ListEntry.Flink;
          Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
       }
-      while (Entry != &MessageQueue->SentMessagesListHead);
+      while (Entry != &pti->SentMessagesListHead);
    }
 }
 
@@ -787,7 +787,7 @@ co_UserSetCapture(HWND hWnd)
       }
    }
 
-   hWndPrev = MsqSetStateWindow(ThreadQueue, MSQ_STATE_CAPTURE, hWnd);
+   hWndPrev = MsqSetStateWindow(pti, MSQ_STATE_CAPTURE, hWnd);
 
    if (hWndPrev)
    {
@@ -815,8 +815,8 @@ co_UserSetCapture(HWND hWnd)
       MOUSEINPUT mi;
    /// These are HACKS!
       /* Also remove other windows if not capturing anymore */
-      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
-      MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
+      MsqSetStateWindow(pti, MSQ_STATE_MENUOWNER, NULL);
+      MsqSetStateWindow(pti, MSQ_STATE_MOVESIZE, NULL);
    ///
       /* Somebody may have missed some mouse movements */
       mi.dx = 0;

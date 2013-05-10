@@ -409,7 +409,7 @@ PostTimerMessages(PWND Window)
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
 
-           MsqPostMessage(ThreadQueue, &Msg, FALSE, QS_TIMER, 0);
+           MsqPostMessage(pti, &Msg, FALSE, QS_TIMER, 0);
            pTmr->flags &= ~TMRF_READY;
            pti->cTimersReady++;
            Hit = TRUE;
@@ -484,8 +484,8 @@ ProcessTimers(VOID)
                 // Set thread message queue for this timer.
                 if (pTmr->pti->MessageQueue)
                 {  // Wakeup thread
-                   ASSERT(pTmr->pti->MessageQueue->NewMessages != NULL);
-                   KeSetEvent(pTmr->pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+                   ASSERT(pTmr->pti->pEventQueueServer != NULL);
+                   KeSetEvent(pTmr->pti->pEventQueueServer, IO_NO_INCREMENT, FALSE);
                 }
              }
           }

@@ -76,6 +76,10 @@
 
 /* Non SDK Queue state flags. */
 #define QS_SMRESULT 0x8000 /* see "Undoc. Windows" */
+//
+#define QS_EVENT          0x2000
+#define QS_SYSEVENT       (QS_EVENT|QS_SENDMESSAGE)
+//
 
 //
 // Definitions used by WM_CLIENTSHUTDOWN

@@ -156,7 +156,7 @@ NtUserCallOneParam(
           {
                 PTHREADINFO pti;
                 pti = PsGetCurrentThreadWin32Thread();
-                MsqPostQuitMessage(pti->MessageQueue, Param);
+                MsqPostQuitMessage(pti, Param);
                 RETURN(TRUE);
           }
 
@@ -419,10 +419,9 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
          {
-            PUSER_MESSAGE_QUEUE MsgQueue = ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->MessageQueue;
-
-            ASSERT(MsgQueue);
-            RETURN( (DWORD_PTR)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2));
+            PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+            ASSERT(pti->MessageQueue);
+            RETURN( (DWORD_PTR)MsqSetStateWindow(pti, (ULONG)Param1, (HWND)Param2));
          }
 
       case TWOPARAM_ROUTINE_ENABLEWINDOW:

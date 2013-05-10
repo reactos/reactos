@@ -254,6 +254,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     int i;
     NTSTATUS Status = STATUS_SUCCESS;
     PTEB pTeb;
+    LARGE_INTEGER LargeTickCount;
 
     Process = Thread->ThreadsProcess;
 
@@ -281,8 +282,13 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     TRACE_CH(UserThread, "Allocated pti 0x%p for TID %p\n", ptiCurrent, Thread->Cid.UniqueThread);
 
     /* Initialize the THREADINFO */
+    IntReferenceThreadInfo(ptiCurrent);
     InitializeListHead(&ptiCurrent->WindowListHead);
     InitializeListHead(&ptiCurrent->W32CallbackListHead);
+    InitializeListHead(&ptiCurrent->PostedMessagesListHead);
+    InitializeListHead(&ptiCurrent->SentMessagesListHead);
+    InitializeListHead(&ptiCurrent->DispatchingMessagesHead);
+    InitializeListHead(&ptiCurrent->LocalDispatchingMessagesHead);
     InitializeListHead(&ptiCurrent->PtiLink);
     for (i = 0; i < NB_HOOKS; i++)
     {
@@ -293,6 +299,27 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     ptiCurrent->ptiSibling = ptiCurrent->ppi->ptiList;
     ptiCurrent->ppi->ptiList = ptiCurrent;
     ptiCurrent->ppi->cThreads++;
+
+    ptiCurrent->hEventQueueClient = NULL;
+    Status = ZwCreateEvent(&ptiCurrent->hEventQueueClient, EVENT_ALL_ACCESS,
+                            NULL, SynchronizationEvent, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+       goto error;
+    }
+   Status = ObReferenceObjectByHandle(ptiCurrent->hEventQueueClient, 0,
+                                       ExEventObjectType, KernelMode,
+                                       (PVOID*)&ptiCurrent->pEventQueueServer, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+       ZwClose(ptiCurrent->hEventQueueClient);
+       ptiCurrent->hEventQueueClient = NULL;
+       goto error;
+    }
+
+    KeQueryTickCount(&LargeTickCount);
+    ptiCurrent->timeLast = LargeTickCount.u.LowPart;
+    
     ptiCurrent->MessageQueue = MsqCreateMessageQueue(ptiCurrent);
     if(ptiCurrent->MessageQueue == NULL)
     {
@@ -402,6 +429,35 @@ error:
     return Status;
 }
 
+/*
+  Called from IntDereferenceThreadInfo.
+ */
+VOID
+FASTCALL
+UserDeleteW32Thread(PTHREADINFO pti)
+{
+    if (!pti->RefCount)
+    {
+       ERR_CH(UserThread,"UserDeleteW32Thread pti 0x%p\n",pti);
+       if (pti->hEventQueueClient != NULL)
+          ZwClose(pti->hEventQueueClient);
+       pti->hEventQueueClient = NULL;
+
+       /* Free the message queue */
+       if (pti->MessageQueue)
+       {
+          MsqDestroyMessageQueue(pti);
+       }
+
+       MsqCleanupThreadMsgs(pti);
+
+       IntSetThreadDesktop(NULL, TRUE);
+
+       PsSetThreadWin32Thread(pti->pEThread, NULL);
+       ExFreePoolWithTag(pti, USERTAG_THREADINFO);
+    }
+}
+
 NTSTATUS
 NTAPI
 UserDestroyThreadInfo(struct _ETHREAD *Thread)
@@ -439,7 +495,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
     if (ptiCurrent->pqAttach && ptiCurrent->MessageQueue)
     {
        PTHREADINFO ptiTo;
-       ptiTo = PsGetThreadWin32Thread(ptiCurrent->MessageQueue->Thread);
+       ptiTo = ptiCurrent->MessageQueue->ptiOwner;
        TRACE_CH(UserThread,"Attached Thread ptiFrom is getting switched!\n");
        if (ptiTo) UserAttachThreadInput( ptiCurrent, ptiTo, FALSE);
        else
@@ -487,7 +543,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         HOOK_DestroyThreadHooks(Thread);
         EVENT_DestroyThreadEvents(Thread);
         DestroyTimersForThread(ptiCurrent);
-        KeSetEvent(ptiCurrent->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+        KeSetEvent(ptiCurrent->pEventQueueServer, IO_NO_INCREMENT, FALSE);
         UnregisterThreadHotKeys(Thread);
 /*
         if (IsListEmpty(&ptiCurrent->WindowListHead))
@@ -520,12 +576,6 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         }
     }
 
-    /* Free the message queue */
-    if (ptiCurrent->MessageQueue)
-    {
-       MsqDestroyMessageQueue(ptiCurrent);
-    }
-
     /* Find the THREADINFO in the PROCESSINFO's list */
     ppti = &ppiCurrent->ptiList;
     while (*ppti != NULL && *ppti != ptiCurrent)
@@ -547,8 +597,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
     TRACE_CH(UserThread,"Freeing pti 0x%p\n", ptiCurrent);
 
     /* Free the THREADINFO */
-    PsSetThreadWin32Thread(Thread, NULL);
-    ExFreePoolWithTag(ptiCurrent, USERTAG_THREADINFO);
+    IntDereferenceThreadInfo(ptiCurrent);
 
     return STATUS_SUCCESS;
 }

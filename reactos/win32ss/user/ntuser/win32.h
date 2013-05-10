@@ -32,8 +32,8 @@
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
 #define W32PF_APIHOOKLOADED          (0x08000000)
-/*
-#define QSIDCOUNTS 6
+
+#define QSIDCOUNTS 7
 
 typedef enum _QS_ROS_TYPES
 {
@@ -43,8 +43,9 @@ typedef enum _QS_ROS_TYPES
     QSRosPostMessage,
     QSRosSendMessage,
     QSRosHotKey,
+    QSRosEvent,
 }QS_ROS_TYPES,*PQS_ROS_TYPES;
-*/
+
 extern BOOL ClientPfnInit;
 extern HINSTANCE hModClient;
 extern HANDLE hModuleWin;    // This Win32k Instance.
@@ -65,7 +66,7 @@ typedef struct _TL
 typedef struct _W32THREAD
 {
     PETHREAD pEThread;
-    ULONG RefCount;
+    LONG RefCount;
     PTL ptlW32;
     PVOID pgdiDcattr;
     PVOID pgdiBrushAttr;
@@ -89,13 +90,18 @@ typedef struct _THREADINFO
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
     PUNICODE_STRING     pstrAppName;
-    LIST_ENTRY          psmsSent;        // DispatchingMessagesHead
+    /* Messages that are currently dispatched to other threads */
+    LIST_ENTRY          DispatchingMessagesHead; // psmsSent
     struct _USER_SENT_MESSAGE *pusmCurrent;
-    LIST_ENTRY          psmsReceiveList; // SentMessagesListHead
+    /* Queue of messages sent to the queue. */
+    LIST_ENTRY          SentMessagesListHead;    // psmsReceiveList
+    /* Last time PeekMessage() was called. */
     LONG                timeLast;
     ULONG_PTR           idLast;
+    /* True if a WM_QUIT message is pending. */
     BOOLEAN             QuitPosted;
-    INT                 exitCode;     // QuitExitCode
+    /* The quit exit code. */
+    INT                 exitCode;
     HDESK               hdesk;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
@@ -109,26 +115,32 @@ typedef struct _THREADINFO
     LPARAM              lParamHkCurrent;
     WPARAM              wParamHkCurrent;
     struct tagSBTRACK*  pSBTrack;
-    HANDLE              hEventQueueClient; // NewMessagesHandle
-    PKEVENT             pEventQueueServer; // NewMessages
+    /* Set if there are new messages specified by WakeMask in any of the queues. */
+    HANDLE              hEventQueueClient;
+    /* Handle for the above event (in the context of the process owning the queue). */
+    PKEVENT             pEventQueueServer;
     LIST_ENTRY          PtiLink;
     INT                 iCursorLevel;
     POINT               ptLast;
 
-    LIST_ENTRY          mlPost; // PostedMessagesListHead
+    /* Queue of messages posted to the queue. */
+    LIST_ENTRY          PostedMessagesListHead; // mlPost
 
+    UINT                cWindows;
+    UINT                cVisWindows;
     LIST_ENTRY          aphkStart[NB_HOOKS];
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
 
     /* ReactOS */
 
-    /* Queue state tracking */
+    /* Thread Queue state tracking */
     // Send list QS_SENDMESSAGE
     // Post list QS_POSTMESSAGE|QS_HOTKEY|QS_PAINT|QS_TIMER|QS_KEY
     // Hard list QS_MOUSE|QS_KEY only
     // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
-    //DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
+    DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
 
+    /* Messages that are currently dispatched by this message queue, required for cleanup */
     LIST_ENTRY LocalDispatchingMessagesHead;
     LIST_ENTRY WindowListHead;
     LIST_ENTRY W32CallbackListHead;
@@ -141,6 +153,22 @@ typedef struct _THREADINFO
 } THREADINFO;
 
 #include <poppack.h>
+
+
+#define IntReferenceThreadInfo(pti) \
+  InterlockedIncrement(&(pti)->RefCount)
+
+VOID FASTCALL UserDeleteW32Thread(PTHREADINFO);
+
+#define IntDereferenceThreadInfo(pti) \
+  do { \
+    if(InterlockedDecrement(&(pti)->RefCount) == 0) \
+    { \
+      ASSERT(pti->TIF_flags &= (TIF_INCLEANUP|TIF_DONTATTACHQUEUE) == (TIF_INCLEANUP|TIF_DONTATTACHQUEUE)); \
+      UserDeleteW32Thread(pti); \
+    } \
+  } while(0)
+
 
 typedef struct _W32HEAP_USER_MAPPING
 {
@@ -195,9 +223,9 @@ typedef struct _PROCESSINFO
   PTHREADINFO ptiList;
   PTHREADINFO ptiMainThread;
   struct _DESKTOP* rpdeskStartup;
-  PPROCESSINFO ppiNext;
   PCLS pclsPrivateList;
   PCLS pclsPublicList;
+  PPROCESSINFO ppiNext;
   INT cThreads;
   HDESK hdeskStartup;
   DWORD dwhmodLibLoadedMask;

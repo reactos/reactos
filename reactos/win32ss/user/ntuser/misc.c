@@ -188,7 +188,7 @@ NtUserGetThreadState(
            ret = ISMEX_NOSEND;
            if (Message)
            {
-             if (Message->SenderQueue)
+             if (Message->ptiSender)
                 ret = ISMEX_SEND;
              else
              {
@@ -213,7 +213,7 @@ NtUserGetThreadState(
            LARGE_INTEGER LargeTickCount;
            pti = PsGetCurrentThreadWin32Thread();
            KeQueryTickCount(&LargeTickCount);
-           pti->MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
+           pti->timeLast = LargeTickCount.u.LowPart;
            pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
          }
          break;

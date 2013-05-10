@@ -295,7 +295,7 @@ co_IntCallLowLevelHook(PHOOK Hook,
 
     /* FIXME: Should get timeout from
      * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-    Status = co_MsqSendMessage( pti->MessageQueue,
+    Status = co_MsqSendMessage( pti,
                                 IntToPtr(Code), // hWnd
                                 Hook->HookId,   // Msg
                                 wParam,

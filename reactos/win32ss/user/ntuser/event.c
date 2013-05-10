@@ -113,7 +113,7 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
 
    /* FIXME: Should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage( pEH->head.pti->MessageQueue,
+   Status = co_MsqSendMessage( pEH->head.pti,
                                hwnd,
                                event,
                                0,

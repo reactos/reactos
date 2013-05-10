@@ -508,7 +508,7 @@ IdlePing(VOID)
    ForegroundQueue = IntGetFocusMessageQueue();
 
    if (ForegroundQueue)
-      ptiForeground = ForegroundQueue->Thread->Tcb.Win32Thread;
+       ptiForeground = ForegroundQueue->ptiOwner;
 
    pti = PsGetCurrentThreadWin32Thread();
 
@@ -762,22 +762,15 @@ co_IntPeekMessage( PMSG Msg,
 {
     PTHREADINFO pti;
     LARGE_INTEGER LargeTickCount;
-    PUSER_MESSAGE_QUEUE ThreadQueue;
     BOOL RemoveMessages;
     UINT ProcessMask;
     BOOL Hit = FALSE;
 
     pti = PsGetCurrentThreadWin32Thread();
-    ThreadQueue = pti->MessageQueue;
 
     RemoveMessages = RemoveMsg & PM_REMOVE;
     ProcessMask = HIWORD(RemoveMsg);
-
-    if (ThreadQueue->ptiSysLock && ThreadQueue->ptiSysLock != pti)
-    {
-       ERR("PeekMessage: Thread Q 0x%p is locked 0x%p to another pti 0x%p!\n", ThreadQueue, ThreadQueue->ptiSysLock, pti );
-    }
-
+    
  /* Hint, "If wMsgFilterMin and wMsgFilterMax are both zero, PeekMessage returns
     all available messages (that is, no range filtering is performed)".        */
     if (!ProcessMask) ProcessMask = (QS_ALLPOSTMESSAGE|QS_ALLINPUT);
@@ -787,11 +780,11 @@ co_IntPeekMessage( PMSG Msg,
     do
     {
         KeQueryTickCount(&LargeTickCount);
-        ThreadQueue->LastMsgRead = LargeTickCount.u.LowPart;
+        pti->timeLast = LargeTickCount.u.LowPart;
         pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
 
         /* Dispatch sent messages here. */
-        while ( co_MsqDispatchOneSentMessage(ThreadQueue) )
+        while ( co_MsqDispatchOneSentMessage(pti) )
         {
            /* if some PM_QS* flags were specified, only handle sent messages from now on */
            if (HIWORD(RemoveMsg) && !bGMSG) Hit = TRUE; // wine does this; ProcessMask = QS_SENDMESSAGE;
@@ -816,7 +809,7 @@ co_IntPeekMessage( PMSG Msg,
         /* Now check for normal messages. */
         if (( (ProcessMask & QS_POSTMESSAGE) ||
               (ProcessMask & QS_HOTKEY) ) &&
-            MsqPeekMessage( ThreadQueue,
+            MsqPeekMessage( pti,
                             RemoveMessages,
                             Window,
                             MsgFilterMin,
@@ -828,18 +821,18 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Now look for a quit message. */
-        if (ThreadQueue->QuitPosted)
+        if (pti->QuitPosted)
         {
             /* According to the PSDK, WM_QUIT messages are always returned, regardless
                of the filter specified */
             Msg->hwnd = NULL;
             Msg->message = WM_QUIT;
-            Msg->wParam = ThreadQueue->QuitExitCode;
+            Msg->wParam = pti->exitCode;
             Msg->lParam = 0;
             if (RemoveMessages)
             {
-                ThreadQueue->QuitPosted = FALSE;
-                ClearMsgBitsMask(ThreadQueue, QS_POSTMESSAGE);
+                pti->QuitPosted = FALSE;
+                ClearMsgBitsMask(pti, QS_POSTMESSAGE);
                 pti->pcti->fsWakeBits &= ~QS_ALLPOSTMESSAGE;
                 pti->pcti->fsChangeBits &= ~QS_ALLPOSTMESSAGE;
             }
@@ -848,7 +841,7 @@ co_IntPeekMessage( PMSG Msg,
 
         /* Check for hardware events. */
         if ((ProcessMask & QS_MOUSE) &&
-            co_MsqPeekMouseMove( ThreadQueue,
+            co_MsqPeekMouseMove( pti,
                                  RemoveMessages,
                                  Window,
                                  MsgFilterMin,
@@ -859,7 +852,7 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         if ((ProcessMask & QS_INPUT) &&
-            co_MsqPeekHardwareMessage( ThreadQueue,
+            co_MsqPeekHardwareMessage( pti,
                                        RemoveMessages,
                                        Window,
                                        MsgFilterMin,
@@ -871,7 +864,7 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Check for sent messages again. */
-        while ( co_MsqDispatchOneSentMessage(ThreadQueue) )
+        while ( co_MsqDispatchOneSentMessage(pti) )
         {
            if (HIWORD(RemoveMsg) && !bGMSG) Hit = TRUE;
         }
@@ -912,12 +905,10 @@ co_IntWaitMessage( PWND Window,
                    UINT MsgFilterMax )
 {
     PTHREADINFO pti;
-    PUSER_MESSAGE_QUEUE ThreadQueue;
     NTSTATUS Status = STATUS_SUCCESS;
     MSG Msg;
 
     pti = PsGetCurrentThreadWin32Thread();
-    ThreadQueue = pti->MessageQueue;
 
     do
     {
@@ -932,7 +923,7 @@ co_IntWaitMessage( PWND Window,
         }
 
         /* Nothing found. Wait for new messages. */
-        Status = co_MsqWaitForNewMessages( ThreadQueue,
+        Status = co_MsqWaitForNewMessages( pti,
                                            Window,
                                            MsgFilterMin,
                                            MsgFilterMax);
@@ -1027,7 +1018,7 @@ co_IntGetPeekMessage( PMSG pMsg,
 
         if ( bGMSG )
         {
-            Status = co_MsqWaitForNewMessages( pti->MessageQueue,
+            Status = co_MsqWaitForNewMessages( pti,
                                                Window,
                                                MsgFilterMin,
                                                MsgFilterMax);
@@ -1105,7 +1096,7 @@ UserPostThreadMessage( DWORD idThread,
 
         KeQueryTickCount(&LargeTickCount);
         Message.time = MsqCalculateMessageTime(&LargeTickCount);
-        MsqPostMessage(pThread->MessageQueue, &Message, FALSE, QS_POSTMESSAGE, 0);
+        MsqPostMessage(pThread, &Message, FALSE, QS_POSTMESSAGE, 0);
         ObDereferenceObject( peThread );
         return TRUE;
     }
@@ -1224,11 +1215,11 @@ UserPostMessage( HWND Wnd,
 
         if (WM_QUIT == Msg)
         {
-            MsqPostQuitMessage(Window->head.pti->MessageQueue, wParam);
+            MsqPostQuitMessage(Window->head.pti, wParam);
         }
         else
         {
-            MsqPostMessage(Window->head.pti->MessageQueue, &Message, FALSE, QS_POSTMESSAGE, 0);
+            MsqPostMessage(Window->head.pti, &Message, FALSE, QS_POSTMESSAGE, 0);
         }
     }
     return TRUE;
@@ -1279,7 +1270,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
     if ( Win32Thread &&
-         Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
+         Window->head.pti == Win32Thread)
     {
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
         {
@@ -1365,7 +1356,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
         RETURN( TRUE);
     }
 
-    if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->head.pti->MessageQueue))
+    if (uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->head.pti))
     {
         // FIXME: Set window hung and add to a list.
         /* FIXME: Set a LastError? */
@@ -1381,7 +1372,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     do
     {
-        Status = co_MsqSendMessage( Window->head.pti->MessageQueue,
+        Status = co_MsqSendMessage( Window->head.pti,
                                     hWnd,
                                     Msg,
                                     wParam,
@@ -1393,7 +1384,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     }
     while ((STATUS_TIMEOUT == Status) &&
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
-           !MsqIsHung(Window->head.pti->MessageQueue)); // FIXME: Set window hung and add to a list.
+           !MsqIsHung(Window->head.pti)); // FIXME: Set window hung and add to a list.
 
     if (STATUS_TIMEOUT == Status)
     {
@@ -1553,7 +1544,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     }
 
     if (Msg & 0x80000000 &&
-        Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
+        Window->head.pti == Win32Thread)
     {
        if (Win32Thread->TIF_flags & TIF_INCLEANUP) RETURN( FALSE);
 
@@ -1574,14 +1565,14 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
     }
 
-    if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, Window->head.pti->MessageQueue != Win32Thread->MessageQueue)))
+    if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, Window->head.pti != Win32Thread)))
     {
         ERR("Failed to pack message parameters\n");
         RETURN( FALSE);
     }
 
     /* If it can be sent now, then send it. */
-    if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
+    if (Window->head.pti == Win32Thread)
     {
         if (Win32Thread->TIF_flags & TIF_INCLEANUP)
         {
@@ -1631,7 +1622,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         }
     }
 
-    if (Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
+    if (Window->head.pti == Win32Thread)
     {
         if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
         {
@@ -1646,12 +1637,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         RETURN( FALSE);
     }
 
-    IntReferenceMessageQueue(Window->head.pti->MessageQueue);
-    /* Take reference on this MessageQueue if its a callback. It will be released
-       when message is processed or removed from target hwnd MessageQueue */
-    if (CompletionCallback)
-       IntReferenceMessageQueue(Win32Thread->MessageQueue);
-
     Message->Msg.hwnd = hWnd;
     Message->Msg.message = Msg;
     Message->Msg.wParam = wParam;
@@ -1660,8 +1645,9 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->Result = 0;
     Message->lResult = 0;
     Message->QS_Flags = 0;
-    Message->SenderQueue = NULL; // mjmartin, you are right! This is null.
-    Message->CallBackSenderQueue = Win32Thread->MessageQueue;
+    Message->ptiReceiver = Window->head.pti;
+    Message->ptiSender = NULL; // mjmartin, you are right! This is null.
+    Message->ptiCallBackSender = Win32Thread;
     Message->DispatchingListEntry.Flink = NULL;
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
@@ -1669,9 +1655,11 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->HasPackedLParam = (lParamBufferSize > 0);
     Message->QS_Flags = QS_SENDMESSAGE;
 
-    InsertTailList(&Window->head.pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
-    MsqWakeQueue(Window->head.pti->MessageQueue, QS_SENDMESSAGE, TRUE);
-    IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
+    if (Msg & 0x80000000) // Higher priority event message!
+       InsertHeadList(&Window->head.pti->SentMessagesListHead, &Message->ListEntry);
+    else
+       InsertTailList(&Window->head.pti->SentMessagesListHead, &Message->ListEntry);
+    MsqWakeQueue(Window->head.pti, QS_SENDMESSAGE, TRUE);
 
     RETURN(TRUE);
 
@@ -2351,7 +2339,7 @@ NtUserMessageCall( HWND hWnd,
 
                            if ( parm.flags & BSF_IGNORECURRENTTASK )
                            {
-                              if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                              if ( pwnd->head.pti == gptiCurrent )
                                  continue;
                            }
                            co_IntSendMessageTimeout( List[i],
@@ -2406,7 +2394,7 @@ NtUserMessageCall( HWND hWnd,
 
                            if ( parm.flags & BSF_IGNORECURRENTTASK )
                            {
-                              if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                              if ( pwnd->head.pti == gptiCurrent )
                                  continue;
                            }
                            UserPostMessage(List[i], Msg, wParam, lParam);
@@ -2432,7 +2420,7 @@ NtUserMessageCall( HWND hWnd,
 
                            if ( parm.flags & BSF_IGNORECURRENTTASK )
                            {
-                              if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                              if ( pwnd->head.pti == gptiCurrent )
                                  continue;
                            }
                            UserSendNotifyMessage(List[i], Msg, wParam, lParam);
@@ -2489,7 +2477,7 @@ NtUserMessageCall( HWND hWnd,
 
                         if ( parm.flags & BSF_IGNORECURRENTTASK )
                         {
-                           if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                           if ( pwnd->head.pti == gptiCurrent )
                               continue;
                         }
                         co_IntSendMessageTimeout( List[i],
@@ -2543,7 +2531,7 @@ NtUserMessageCall( HWND hWnd,
 
                         if ( parm.flags & BSF_IGNORECURRENTTASK )
                         {
-                           if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                           if ( pwnd->head.pti == gptiCurrent )
                               continue;
                         }
                         UserPostMessage(List[i], Msg, wParam, lParam);
@@ -2569,7 +2557,7 @@ NtUserMessageCall( HWND hWnd,
 
                         if ( parm.flags & BSF_IGNORECURRENTTASK )
                         {
-                           if ( pwnd->head.pti->MessageQueue == gptiCurrent->MessageQueue )
+                           if ( pwnd->head.pti == gptiCurrent )
                               continue;
                         }
                         UserSendNotifyMessage(List[i], Msg, wParam, lParam);
@@ -2812,7 +2800,7 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
 
     Handles[0] = Process;
     Handles[1] = W32Process->InputIdleEvent;
-    Handles[2] = pti->MessageQueue->NewMessages; // pEventQueueServer; IntMsqSetWakeMask returns hEventQueueClient
+    Handles[2] = pti->pEventQueueServer; // IntMsqSetWakeMask returns hEventQueueClient
 
     if (!Handles[1])
     {
