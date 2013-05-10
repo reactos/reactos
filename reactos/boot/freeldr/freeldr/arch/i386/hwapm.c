@@ -69,7 +69,7 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     {
         /* Create 'Configuration Data' value */
         PartialResourceList = MmHeapAlloc(Size);
-        memset(&PartialResourceList, 0, Size);
+        memset(PartialResourceList, 0, Size);
         PartialResourceList->Version = 0;
         PartialResourceList->Revision = 0;
         PartialResourceList->Count = 0;
