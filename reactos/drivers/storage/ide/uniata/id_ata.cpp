@@ -10671,8 +10671,8 @@ AtapiRegCheckParameterValue(
 //    KdPrint(( "AtapiCheckRegValue: RegistryPath %ws\n", RegistryPath->Buffer));
 
     paramPath.Length = 0;
-    paramPath.MaximumLength = RegistryPath->Length +
-        (wcslen(PathSuffix)+2)*sizeof(WCHAR);
+    paramPath.MaximumLength = (USHORT)(RegistryPath->Length +
+        (wcslen(PathSuffix)+2)*sizeof(WCHAR));
     paramPath.Buffer = (PWCHAR)ExAllocatePool(NonPagedPool, paramPath.MaximumLength);
     if(!paramPath.Buffer) {
         KdPrint(("AtapiCheckRegValue: couldn't allocate paramPath\n"));
