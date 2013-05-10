@@ -190,7 +190,7 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
         }
 
         /* For an FDO, just dump the extension pointer and IRP string */
-        DPRINT1("FDO(%x)<-%s\n", DeviceExtension, IrpString);
+        DPRINT1("FDO(%p)<-%s\n", DeviceExtension, IrpString);
     }
 
     /* If the function is illegal for this extension, complain */
@@ -222,17 +222,17 @@ PciDebugDumpQueryCapabilities(IN PDEVICE_CAPABILITIES DeviceCaps)
     ULONG i;
 
     /* Dump the capabilities */
-    DPRINT1("Capabilities\n  Lock:%d, Eject:%d, Remove:%d, Dock:%d, UniqueId:%d\n",
+    DPRINT1("Capabilities\n  Lock:%u, Eject:%u, Remove:%u, Dock:%u, UniqueId:%u\n",
             DeviceCaps->LockSupported,
             DeviceCaps->EjectSupported,
             DeviceCaps->Removable,
             DeviceCaps->DockDevice,
             DeviceCaps->UniqueID);
-    DbgPrint("  SilentInstall:%d, RawOk:%d, SurpriseOk:%d\n",
+    DbgPrint("  SilentInstall:%u, RawOk:%u, SurpriseOk:%u\n",
              DeviceCaps->SilentInstall,
              DeviceCaps->RawDeviceOK,
              DeviceCaps->SurpriseRemovalOK);
-    DbgPrint("  Address %08x, UINumber %08x, Latencies D1 %d, D2 %d, D3 %d\n",
+    DbgPrint("  Address %08x, UINumber %08x, Latencies D1 %u, D2 %u, D3 %u\n",
              DeviceCaps->Address,
              DeviceCaps->UINumber,
              DeviceCaps->D1Latency,
@@ -281,10 +281,10 @@ PciDebugPrintIoResource(IN PIO_RESOURCE_DESCRIPTOR Descriptor)
     PULONG Data;
 
     /* Print out the header */
-    DPRINT1("     IoResource Descriptor dump:  Descriptor @0x%x\n", Descriptor);
+    DPRINT1("     IoResource Descriptor dump:  Descriptor @0x%p\n", Descriptor);
     DPRINT1("        Option           = 0x%x\n", Descriptor->Option);
-    DPRINT1("        Type             = %d (%s)\n", Descriptor->Type, PciDebugCmResourceTypeToText(Descriptor->Type));
-    DPRINT1("        ShareDisposition = %d\n", Descriptor->ShareDisposition);
+    DPRINT1("        Type             = %u (%s)\n", Descriptor->Type, PciDebugCmResourceTypeToText(Descriptor->Type));
+    DPRINT1("        ShareDisposition = %u\n", Descriptor->ShareDisposition);
     DPRINT1("        Flags            = 0x%04X\n", Descriptor->Flags);
 
     /* Loop private data */
@@ -292,7 +292,7 @@ PciDebugPrintIoResource(IN PIO_RESOURCE_DESCRIPTOR Descriptor)
     for (i = 0; i < 6; i += 3)
     {
         /* Dump it in 32-bit triplets */
-        DPRINT1("        Data[%d] = %08x  %08x  %08x\n", i, Data[0], Data[1], Data[2]);
+        DPRINT1("        Data[%u] = %08x  %08x  %08x\n", i, Data[0], Data[1], Data[2]);
     }
 }
 
@@ -321,7 +321,7 @@ PciDebugPrintIoResReqList(IN PIO_RESOURCE_REQUIREMENTS_LIST Requirements)
             Requirements->SlotNumber,
             ((PCI_SLOT_NUMBER*)&Requirements->SlotNumber)->u.bits.DeviceNumber,
             ((PCI_SLOT_NUMBER*)&Requirements->SlotNumber)->u.bits.FunctionNumber);
-    DPRINT1("     AlternativeLists     %d\n", AlternativeLists);
+    DPRINT1("     AlternativeLists     %u\n", AlternativeLists);
 
     /* Scan alternative lists */
     while (AlternativeLists--)
@@ -331,7 +331,7 @@ PciDebugPrintIoResReqList(IN PIO_RESOURCE_REQUIREMENTS_LIST Requirements)
         Count = List->Count;
 
         /* Print out each descriptor */
-        DPRINT1("\n     List[%d].Count = %d\n", AlternativeLists, Count);
+        DPRINT1("\n     List[%u].Count = %u\n", AlternativeLists, Count);
         while (Count--) PciDebugPrintIoResource(Descriptor++);
 
         /* Should've reached a new list now */
@@ -347,9 +347,9 @@ NTAPI
 PciDebugPrintPartialResource(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialResource)
 {
     /* Dump all the data in the partial */
-    DPRINT1("     Partial Resource Descriptor @0x%x\n", PartialResource);
-    DPRINT1("        Type             = %d (%s)\n", PartialResource->Type, PciDebugCmResourceTypeToText(PartialResource->Type));
-    DPRINT1("        ShareDisposition = %d\n", PartialResource->ShareDisposition);
+    DPRINT1("     Partial Resource Descriptor @0x%p\n", PartialResource);
+    DPRINT1("        Type             = %u (%s)\n", PartialResource->Type, PciDebugCmResourceTypeToText(PartialResource->Type));
+    DPRINT1("        ShareDisposition = %u\n", PartialResource->ShareDisposition);
     DPRINT1("        Flags            = 0x%04X\n", PartialResource->Flags);
     DPRINT1("        Data[%d] = %08x  %08x  %08x\n",
             0,
@@ -372,7 +372,7 @@ PciDebugPrintCmResList(IN PCM_RESOURCE_LIST PartialList)
     /* Get the full list count */
     ListCount = PartialList->Count;
     FullDescriptor = PartialList->List;
-    DPRINT1("  CM_RESOURCE_LIST (PCI Bus Driver) (List Count = %d)\n", PartialList->Count);
+    DPRINT1("  CM_RESOURCE_LIST (PCI Bus Driver) (List Count = %u)\n", PartialList->Count);
     
     /* Loop full list */
     for (i = 0; i < ListCount; i++)

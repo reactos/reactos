@@ -16,6 +16,8 @@
 
 /* FUNCTIONS ******************************************************************/
 
+IO_COMPLETION_ROUTINE PciSetEventCompletion;
+
 NTSTATUS
 NTAPI
 PciSetEventCompletion(IN PDEVICE_OBJECT DeviceObject,
@@ -24,6 +26,9 @@ PciSetEventCompletion(IN PDEVICE_OBJECT DeviceObject,
 {
     PKEVENT Event = (PVOID)Context;
     ASSERT(Event);
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Irp);
 
     /* Set the event and return the appropriate status code */
     KeSetEvent(Event, FALSE, IO_NO_INCREMENT);
@@ -258,6 +263,10 @@ PciIrpNotSupported(IN PIRP Irp,
                    IN PIO_STACK_LOCATION IoStackLocation,
                    IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     /* Not supported */
     DPRINT1("WARNING: PCI received unsupported IRP!\n");
     //DbgBreakPoint();
@@ -270,6 +279,10 @@ PciIrpInvalidDeviceRequest(IN PIRP Irp,
                            IN PIO_STACK_LOCATION IoStackLocation,
                            IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     /* Not supported */
     return STATUS_INVALID_DEVICE_REQUEST;
 }

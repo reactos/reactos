@@ -56,7 +56,7 @@ PciQueryInterface(IN PPCI_FDO_EXTENSION DeviceExtension,
     RtlStringFromGUID(InterfaceType, &GuidString);
     DPRINT1("PCI - PciQueryInterface TYPE = %wZ\n", &GuidString);
     RtlFreeUnicodeString(&GuidString);
-    DPRINT1("      Size = %d, Version = %d, InterfaceData = %x, LastChance = %s\n",
+    DPRINT1("      Size = %u, Version = %u, InterfaceData = %p, LastChance = %s\n",
             Size,
             Version,
             InterfaceData,
@@ -130,7 +130,7 @@ PciQueryInterface(IN PPCI_FDO_EXTENSION DeviceExtension,
             if (!NT_SUCCESS(Status))
             {
                 /* This interface was not initialized correctly, skip it */
-                DPRINT1("PCI - PciQueryInterface - Contructor %08lx = %08lx\n",
+                DPRINT1("PCI - PciQueryInterface - Contructor %p = %08lx\n",
                         PciInterface->Constructor, Status);
                 continue;
             }

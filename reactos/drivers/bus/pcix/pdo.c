@@ -79,6 +79,10 @@ PciPdoWaitWake(IN PIRP Irp,
                IN PIO_STACK_LOCATION IoStackLocation,
                IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -89,6 +93,10 @@ PciPdoSetPowerState(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
@@ -99,6 +107,10 @@ PciPdoIrpQueryPower(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -113,6 +125,8 @@ PciPdoIrpStartDevice(IN PIRP Irp,
     BOOLEAN Changed, DoReset;
     POWER_STATE PowerState;
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(Irp);
 
     DoReset = FALSE;
 
@@ -206,6 +220,10 @@ PciPdoIrpQueryRemoveDevice(IN PIRP Irp,
                            IN PIO_STACK_LOCATION IoStackLocation,
                            IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
@@ -216,6 +234,10 @@ PciPdoIrpRemoveDevice(IN PIRP Irp,
                       IN PIO_STACK_LOCATION IoStackLocation,
                       IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -226,6 +248,10 @@ PciPdoIrpCancelRemoveDevice(IN PIRP Irp,
                             IN PIO_STACK_LOCATION IoStackLocation,
                             IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -236,6 +262,10 @@ PciPdoIrpStopDevice(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -246,6 +276,10 @@ PciPdoIrpQueryStopDevice(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -256,6 +290,10 @@ PciPdoIrpCancelStopDevice(IN PIRP Irp,
                           IN PIO_STACK_LOCATION IoStackLocation,
                           IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -266,6 +304,10 @@ PciPdoIrpQueryInterface(IN PIRP Irp,
                         IN PIO_STACK_LOCATION IoStackLocation,
                         IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -312,6 +354,8 @@ PciPdoIrpQueryCapabilities(IN PIRP Irp,
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER(Irp);
+
     /* Call the worker function */
     return PciQueryCapabilities(DeviceExtension,
                                 IoStackLocation->
@@ -326,6 +370,8 @@ PciPdoIrpQueryResources(IN PIRP Irp,
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER(IoStackLocation);
+
     /* Call the worker function */
     return PciQueryResources(DeviceExtension,
                             (PCM_RESOURCE_LIST*)&Irp->IoStatus.Information);
@@ -338,6 +384,8 @@ PciPdoIrpQueryResourceRequirements(IN PIRP Irp,
                                    IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(IoStackLocation);
 
     /* Call the worker function */
     return PciQueryRequirements(DeviceExtension,
@@ -384,6 +432,8 @@ PciPdoIrpQueryBusInformation(IN PIRP Irp,
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER(IoStackLocation);
+
     /* Call the worker function */
     return PciQueryBusInformation(DeviceExtension,
                                   (PPNP_BUS_INFORMATION*)&Irp->
@@ -396,6 +446,10 @@ PciPdoIrpReadConfig(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -406,6 +460,10 @@ PciPdoIrpWriteConfig(IN PIRP Irp,
                      IN PIO_STACK_LOCATION IoStackLocation,
                      IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -416,6 +474,10 @@ PciPdoIrpQueryDeviceState(IN PIRP Irp,
                           IN PIO_STACK_LOCATION IoStackLocation,
                           IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
@@ -426,6 +488,10 @@ PciPdoIrpDeviceUsageNotification(IN PIRP Irp,
                                  IN PIO_STACK_LOCATION IoStackLocation,
                                  IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -436,6 +502,10 @@ PciPdoIrpSurpriseRemoval(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
@@ -446,6 +516,10 @@ PciPdoIrpQueryLegacyBusInformation(IN PIRP Irp,
                                    IN PIO_STACK_LOCATION IoStackLocation,
                                    IN PPCI_PDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }

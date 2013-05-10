@@ -535,6 +535,9 @@ typedef struct _PCI_LEGACY_DEVICE
 //
 // IRP Dispatch Routines
 //
+
+DRIVER_DISPATCH PciDispatchIrp;
+
 NTSTATUS
 NTAPI
 PciDispatchIrp(
@@ -610,6 +613,9 @@ PciSetPowerManagedDevicePowerState(
 //
 // Bus FDO Routines
 //
+
+DRIVER_ADD_DEVICE PciAddDevice;
+
 NTSTATUS
 NTAPI
 PciAddDevice(
@@ -1120,6 +1126,8 @@ NTAPI
 PciClassifyDeviceType(
     IN PPCI_PDO_EXTENSION PdoExtension
 );
+
+KIPI_BROADCAST_WORKER PciExecuteCriticalSystemRoutine;
 
 ULONG_PTR
 NTAPI
