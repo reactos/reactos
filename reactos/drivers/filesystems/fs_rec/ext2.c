@@ -18,6 +18,7 @@ BOOLEAN
 NTAPI
 FsRecIsExt2Volume(IN PVOID PackedBootSector)
 {
+    UNREFERENCED_PARAMETER(PackedBootSector);
     /* For now, always return failure... */
     return FALSE;
 }
