@@ -559,9 +559,9 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
-         TRACE("co_IntSetForegroundWindow 1 %p\n",hWnd);
+         TRACE("co_IntSetForegroundWindow 1 0x%p\n",hWnd);
          Ret = co_IntSetForegroundWindow(Window);
-         TRACE("co_IntSetForegroundWindow 2 \n");
+         TRACE("co_IntSetForegroundWindow 2 0x%p\n",hWnd);
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE:

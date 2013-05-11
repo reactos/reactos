@@ -47,8 +47,6 @@ typedef struct _USER_MESSAGE_QUEUE
   struct _DESKTOP *Desktop;
 
   PTHREADINFO ptiSysLock;
-  /* Owner of the message queue */
-//  struct _ETHREAD *Thread;
   PTHREADINFO ptiMouse;
   PTHREADINFO ptiKeyboard;
 

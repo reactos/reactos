@@ -386,14 +386,12 @@ FASTCALL
 PostTimerMessages(PWND Window)
 {
   PLIST_ENTRY pLE;
-  PUSER_MESSAGE_QUEUE ThreadQueue;
   MSG Msg;
   PTHREADINFO pti;
   BOOL Hit = FALSE;
   PTIMER pTmr;
 
   pti = PsGetCurrentThreadWin32Thread();
-  ThreadQueue = pti->MessageQueue;
 
   TimerEnterExclusive();
   pLE = TimersListHead.Flink;

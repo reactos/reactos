@@ -475,7 +475,7 @@ UserObjectInDestroy(HANDLE h)
   if (!(entry = handle_to_entry( gHandleTable, h )))
   {
      SetLastNtError( STATUS_INVALID_HANDLE );
-     return FALSE;
+     return TRUE;
   }
   return (entry->flags & HANDLEENTRY_INDESTROY);
 }
