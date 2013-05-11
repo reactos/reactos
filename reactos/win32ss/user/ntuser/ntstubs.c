@@ -29,30 +29,21 @@ NtUserAttachThreadInput(
     IN BOOL fAttach)
 {
   NTSTATUS Status;
-  PETHREAD Thread, ThreadTo;
   PTHREADINFO pti, ptiTo;
   BOOL Ret = FALSE;
 
   UserEnterExclusive();
   ERR("Enter NtUserAttachThreadInput %s\n",(fAttach ? "TRUE" : "FALSE" ));
-  Status = PsLookupThreadByThreadId((HANDLE)idAttach, &Thread);
-  if (!NT_SUCCESS(Status))
-  {
-     EngSetLastError(ERROR_INVALID_PARAMETER);
-     goto Exit;
-  }
-  Status = PsLookupThreadByThreadId((HANDLE)idAttachTo, &ThreadTo);
-  if (!NT_SUCCESS(Status))
-  {
-     EngSetLastError(ERROR_INVALID_PARAMETER);
-     ObDereferenceObject(Thread);
-     goto Exit;
-  }
 
-  pti = PsGetThreadWin32Thread(Thread);
-  ptiTo = PsGetThreadWin32Thread(ThreadTo);
-  ObDereferenceObject(Thread);
-  ObDereferenceObject(ThreadTo);
+  pti = IntTID2PTI((HANDLE)idAttach);
+  ptiTo = IntTID2PTI((HANDLE)idAttachTo);
+
+  if ( !pti || !ptiTo )
+  {
+     ERR("AttachThreadInput pti or ptiTo NULL.\n");
+     EngSetLastError(ERROR_INVALID_PARAMETER);
+     goto Exit;
+  }
 
   Status = UserAttachThreadInput( pti, ptiTo, fAttach);
   if (!NT_SUCCESS(Status))

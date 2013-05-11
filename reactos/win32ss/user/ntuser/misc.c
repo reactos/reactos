@@ -2,12 +2,54 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Miscellaneous User functions
- * FILE:             subsystems/win32/win32k/ntuser/misc.c
+ * FILE:             win32ss/user/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  */
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
+
+/*
+ * Test the Thread to verify and validate it. Hard to the core tests are required.
+ */
+PTHREADINFO
+FASTCALL
+IntTID2PTI(HANDLE id)
+{
+   NTSTATUS Status;
+   PETHREAD Thread;
+   PTHREADINFO pti;
+   Status = PsLookupThreadByThreadId(id, &Thread);
+   if (!NT_SUCCESS(Status))
+   {
+      return NULL;
+   }
+   if (PsIsThreadTerminating(Thread))
+   {
+      ObDereferenceObject(Thread);
+      return NULL;
+   }
+   pti = PsGetThreadWin32Thread(Thread);
+   if (!pti)
+   {
+      ObDereferenceObject(Thread);
+      return NULL;
+   }
+   // Validate and verify!
+   _SEH2_TRY
+   {
+      if (pti->TIF_flags & TIF_INCLEANUP) pti = NULL;
+      if (pti && !(pti->TIF_flags & TIF_GUITHREADINITIALIZED)) pti = NULL;
+      if (PsGetThreadId(Thread) != id) pti = NULL;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      pti = NULL;
+   }
+   _SEH2_END
+   ObDereferenceObject(Thread);
+   return pti;
+}
 
 SHORT
 FASTCALL

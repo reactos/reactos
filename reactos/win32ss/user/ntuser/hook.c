@@ -1456,7 +1456,6 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     UNICODE_STRING ModuleName;
     NTSTATUS Status;
     HHOOK Handle;
-    PETHREAD Thread = NULL;
     PTHREADINFO pti, ptiHook = NULL;
     DECLARE_RETURN(HHOOK);
 
@@ -1491,14 +1490,12 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
            RETURN( NULL);
        }
 
-       if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)(DWORD_PTR) ThreadId, &Thread)))
+       if ( !(ptiHook = IntTID2PTI( (HANDLE)ThreadId )))
        {
           ERR("Invalid thread id 0x%x\n", ThreadId);
           EngSetLastError(ERROR_INVALID_PARAMETER);
           RETURN( NULL);
        }
-
-       ptiHook = Thread->Tcb.Win32Thread;
 
        if ( ptiHook->rpdesk != pti->rpdesk) // gptiCurrent->rpdesk)
        {
@@ -1507,7 +1504,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
           RETURN( NULL);
        }
 
-       if (Thread->ThreadsProcess != PsGetCurrentProcess())
+       if (ptiHook->ppi != pti->ppi)
        {
           if ( !Mod &&
               (HookId == WH_GETMESSAGE ||
@@ -1674,6 +1671,9 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        }
 
        Hook->ModuleName.Length = ModuleName.Length;
+       //// FIXME: Need to load from user32 to verify hMod before calling hook with hMod set!!!!
+       //// Mod + offPfn == new HookProc Justin Case module is from another process.
+       FIXME("NtUserSetWindowsHookEx Setting process hMod instance addressing.\n");
        /* Make proc relative to the module base */
        Hook->offPfn = (ULONG_PTR)((char *)HookProc - (char *)Mod);
     }
@@ -1685,7 +1685,6 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
 CLEANUP:
     TRACE("Leave NtUserSetWindowsHookEx, ret=%i\n",_ret_);
-    if (Thread) ObDereferenceObject(Thread);
     UserLeave();
     END_CLEANUP;
 }

@@ -87,6 +87,7 @@ UserSystemParametersInfo(
 
 VOID FASTCALL IntSetWindowState(PWND, UINT);
 VOID FASTCALL IntClearWindowState(PWND, UINT);
+PTHREADINFO FASTCALL IntTID2PTI(HANDLE);
 
 /*************** MESSAGE.C ***************/
 
