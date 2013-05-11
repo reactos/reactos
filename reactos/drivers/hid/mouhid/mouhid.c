@@ -904,6 +904,47 @@ MouHid_StartDeviceCompletion(
 
 NTSTATUS
 NTAPI
+MouHid_FreeResources(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    /* free resources */
+    if (DeviceExtension->PreparsedData)
+    {
+        ExFreePool(DeviceExtension->PreparsedData);
+        DeviceExtension->PreparsedData = NULL;
+    }
+
+    if (DeviceExtension->CurrentUsageList)
+    {
+        ExFreePool(DeviceExtension->CurrentUsageList);
+        DeviceExtension->CurrentUsageList = NULL;
+        DeviceExtension->PreviousUsageList = NULL;
+        DeviceExtension->MakeUsageList = NULL;
+        DeviceExtension->BreakUsageList = NULL;
+    }
+
+    if (DeviceExtension->ReportMDL)
+    {
+        IoFreeMdl(DeviceExtension->ReportMDL);
+        DeviceExtension->ReportMDL = NULL;
+    }
+
+    if (DeviceExtension->Report)
+    {
+        ExFreePool(DeviceExtension->Report);
+        DeviceExtension->Report = NULL;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 MouHid_Flush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
@@ -949,6 +990,9 @@ MouHid_Pnp(
     switch (IoStack->MinorFunction)
     {
     case IRP_MN_STOP_DEVICE:
+    case IRP_MN_SURPRISE_REMOVAL:
+        /* free resources */
+        MouHid_FreeResources(DeviceObject);
     case IRP_MN_CANCEL_REMOVE_DEVICE:
     case IRP_MN_QUERY_STOP_DEVICE:
     case IRP_MN_CANCEL_STOP_DEVICE:
@@ -970,6 +1014,9 @@ MouHid_Pnp(
 
         /* cancel irp */
         IoCancelIrp(DeviceExtension->Irp);
+
+        /* free resources */
+        MouHid_FreeResources(DeviceObject);
 
         /* indicate success */
         Irp->IoStatus.Status = STATUS_SUCCESS;

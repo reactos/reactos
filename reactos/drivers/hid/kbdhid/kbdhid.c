@@ -773,6 +773,47 @@ KbdHid_StartDeviceCompletion(
 
 NTSTATUS
 NTAPI
+KbdHid_FreeResources(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PKBDHID_DEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    /* free resources */
+    if (DeviceExtension->PreparsedData)
+    {
+        ExFreePool(DeviceExtension->PreparsedData);
+        DeviceExtension->PreparsedData = NULL;
+    }
+
+    if (DeviceExtension->CurrentUsageList)
+    {
+        ExFreePool(DeviceExtension->CurrentUsageList);
+        DeviceExtension->CurrentUsageList = NULL;
+        DeviceExtension->PreviousUsageList = NULL;
+        DeviceExtension->MakeUsageList = NULL;
+        DeviceExtension->BreakUsageList = NULL;
+    }
+
+    if (DeviceExtension->ReportMDL)
+    {
+        IoFreeMdl(DeviceExtension->ReportMDL);
+        DeviceExtension->ReportMDL = NULL;
+    }
+
+    if (DeviceExtension->Report)
+    {
+        ExFreePool(DeviceExtension->Report);
+        DeviceExtension->Report = NULL;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 KbdHid_Flush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
@@ -818,6 +859,10 @@ KbdHid_Pnp(
     switch (IoStack->MinorFunction)
     {
     case IRP_MN_STOP_DEVICE:
+    case IRP_MN_SURPRISE_REMOVAL:
+        /* free resources */
+        KbdHid_FreeResources(DeviceObject);
+        /* fall through */
     case IRP_MN_CANCEL_REMOVE_DEVICE:
     case IRP_MN_QUERY_STOP_DEVICE:
     case IRP_MN_CANCEL_STOP_DEVICE:
@@ -836,6 +881,9 @@ KbdHid_Pnp(
 
         /* cancel irp */
         IoCancelIrp(DeviceExtension->Irp);
+
+        /* free resources */
+        KbdHid_FreeResources(DeviceObject);
 
         /* indicate success */
         Irp->IoStatus.Status = STATUS_SUCCESS;
