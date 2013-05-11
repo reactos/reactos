@@ -532,6 +532,8 @@ vfatAttachFCBToFileObject (
 {
 	PVFATCCB  newCCB;
 
+	UNREFERENCED_PARAMETER(vcb);
+
 	newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
 	if (newCCB == NULL)
 	{
@@ -601,7 +603,7 @@ vfatDirFindFile (
 			return status;
 		}
 
-		DPRINT ("  Index:%d  longName:%wZ\n",
+		DPRINT ("  Index:%u  longName:%wZ\n",
 			DirContext.DirIndex,
 			&DirContext.LongNameU);
 

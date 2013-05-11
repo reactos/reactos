@@ -37,7 +37,7 @@ VfatUpdateEntry(
         dirIndex = pFcb->dirIndex;
     }
 
-    DPRINT("updEntry dirIndex %d, PathName \'%wZ\'\n", dirIndex, &pFcb->PathNameU);
+    DPRINT("updEntry dirIndex %u, PathName \'%wZ\'\n", dirIndex, &pFcb->PathNameU);
 
     if (vfatFCBIsRoot(pFcb) || (pFcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)))
     {
@@ -184,7 +184,7 @@ vfatFindDirSpace(
             CcUnpinData(Context);
         }
     }
-    DPRINT("nbSlots %d nbFree %d, entry number %d\n", nbSlots, nbFree, *start);
+    DPRINT("nbSlots %u nbFree %u, entry number %u\n", nbSlots, nbFree, *start);
     return TRUE;
 }
 
@@ -228,7 +228,7 @@ FATAddEntry(
 
     /* nb of entry needed for long name+normal entry */
     nbSlots = (DirContext.LongNameU.Length / sizeof(WCHAR) + 12) / 13 + 1;
-    DPRINT("NameLen= %d, nbSlots =%d\n", DirContext.LongNameU.Length / sizeof(WCHAR), nbSlots);
+    DPRINT("NameLen= %u, nbSlots =%u\n", DirContext.LongNameU.Length / sizeof(WCHAR), nbSlots);
     Buffer = ExAllocatePoolWithTag(NonPagedPool, (nbSlots - 1) * sizeof(FAT_DIR_ENTRY), TAG_VFAT);
     if (Buffer == NULL)
     {
@@ -326,7 +326,7 @@ FATAddEntry(
             needLong = TRUE;
         }
     }
-    DPRINT("'%s', '%wZ', needTilde=%d, needLong=%d\n",
+    DPRINT("'%s', '%wZ', needTilde=%u, needLong=%u\n",
            aName, &DirContext.LongNameU, needTilde, needLong);
     memset(DirContext.DirEntry.Fat.ShortName, ' ', 11);
     for (i = 0; i < 8 && aName[i] && aName[i] != '.'; i++)
@@ -653,7 +653,7 @@ FATDelEntry(
     ASSERT(pFcb->parentFcb);
 
     DPRINT("delEntry PathName \'%wZ\'\n", &pFcb->PathNameU);
-    DPRINT("delete entry: %d to %d\n", pFcb->startIndex, pFcb->dirIndex);
+    DPRINT("delete entry: %u to %u\n", pFcb->startIndex, pFcb->dirIndex);
     Offset.u.HighPart = 0;
     for (i = pFcb->startIndex; i <= pFcb->dirIndex; i++)
     {
@@ -716,7 +716,7 @@ FATXDelEntry(
     StartIndex = pFcb->startIndex;
 
     DPRINT("delEntry PathName \'%wZ\'\n", &pFcb->PathNameU);
-    DPRINT("delete entry: %d\n", StartIndex);
+    DPRINT("delete entry: %u\n", StartIndex);
     Offset.u.HighPart = 0;
     Offset.u.LowPart = (StartIndex * sizeof(FATX_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
     if (!CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FATX_DIR_ENTRY), TRUE,

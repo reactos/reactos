@@ -74,8 +74,8 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 again:
   KeInitializeEvent (&event, NotificationEvent, FALSE);
 
-  DPRINT ("VfatReadDisk(pDeviceObject %p, Offset %I64x, Length %d, Buffer %p)\n",
-	  pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
+  DPRINT("VfatReadDisk(pDeviceObject %p, Offset %I64x, Length %u, Buffer %p)\n",
+         pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
 
   DPRINT ("Building synchronous FSD Request...\n");
   Irp = IoBuildSynchronousFsdRequest (IRP_MJ_READ,
@@ -130,9 +130,9 @@ again:
 
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("IO failed!!! VfatReadDisk : Error code: %x\n", Status);
-      DPRINT ("(pDeviceObject %p, Offset %I64x, Size %d, Buffer %p\n",
-	      pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
+      DPRINT("IO failed!!! VfatReadDisk : Error code: %x\n", Status);
+      DPRINT("(pDeviceObject %p, Offset %I64x, Size %u, Buffer %p\n",
+             pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
       return (Status);
     }
   DPRINT ("Block request succeeded for %p\n", Irp);
@@ -151,8 +151,8 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
   NTSTATUS Status;
   PVOID Buffer;
 
-  DPRINT ("VfatReadDiskPartial(IrpContext %p, ReadOffset %I64x, ReadLength %d, BufferOffset %x, Wait %d)\n",
-	  IrpContext, ReadOffset->QuadPart, ReadLength, BufferOffset, Wait);
+  DPRINT("VfatReadDiskPartial(IrpContext %p, ReadOffset %I64x, ReadLength %u, BufferOffset %u, Wait %u)\n",
+         IrpContext, ReadOffset->QuadPart, ReadLength, BufferOffset, Wait);
 
   DPRINT ("Building asynchronous FSD Request...\n");
 
@@ -251,8 +251,8 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
   NTSTATUS Status;
   PVOID Buffer;
 
-  DPRINT ("VfatWriteDiskPartial(IrpContext %p, WriteOffset %I64x, WriteLength %d, BufferOffset %x, Wait %d)\n",
-	  IrpContext, WriteOffset->QuadPart, WriteLength, BufferOffset, Wait);
+  DPRINT("VfatWriteDiskPartial(IrpContext %p, WriteOffset %I64x, WriteLength %u, BufferOffset %x, Wait %u)\n",
+         IrpContext, WriteOffset->QuadPart, WriteLength, BufferOffset, Wait);
 
   Buffer = (PCHAR)MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
 

@@ -49,6 +49,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Fat");
    NTSTATUS Status;
 
+   UNREFERENCED_PARAMETER(RegistryPath);
+
    Status = IoCreateDevice(DriverObject,
 			   sizeof(VFAT_GLOBAL_DATA),
 			   &DeviceName,

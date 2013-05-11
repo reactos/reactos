@@ -85,8 +85,8 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
       }
       PartitionInfoIsValid = TRUE;
       DPRINT("Partition Information:\n");
-      DPRINT("StartingOffset      %I64u\n", PartitionInfo.StartingOffset.QuadPart  / 512);
-      DPRINT("PartitionLength     %I64u\n", PartitionInfo.PartitionLength.QuadPart / 512);
+      DPRINT("StartingOffset      %I64x\n", PartitionInfo.StartingOffset.QuadPart  / 512);
+      DPRINT("PartitionLength     %I64x\n", PartitionInfo.PartitionLength.QuadPart / 512);
       DPRINT("HiddenSectors       %u\n", PartitionInfo.HiddenSectors);
       DPRINT("PartitionNumber     %u\n", PartitionInfo.PartitionNumber);
       DPRINT("PartitionType       %u\n", PartitionInfo.PartitionType);
@@ -153,7 +153,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
              Boot->BytesPerSector != 2048 &&
          Boot->BytesPerSector != 4096)
          {
-            DPRINT1("BytesPerSector %d\n", Boot->BytesPerSector);
+            DPRINT1("BytesPerSector %u\n", Boot->BytesPerSector);
             *RecognizedFS = FALSE;
          }
 
@@ -161,7 +161,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
              Boot->FATCount != 1 &&
              Boot->FATCount != 2)
          {
-            DPRINT1("FATCount %d\n", Boot->FATCount);
+            DPRINT1("FATCount %u\n", Boot->FATCount);
             *RecognizedFS = FALSE;
          }
 
@@ -349,7 +349,7 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
    {
       return(Status);
    }
-   DPRINT("MountVfatdev %d, PAGE_SIZE = %d\n", DeviceExt->FatInfo.BytesPerCluster, PAGE_SIZE);
+   DPRINT("MountVfatdev %u, PAGE_SIZE = %d\n", DeviceExt->FatInfo.BytesPerCluster, PAGE_SIZE);
 
 
    return(STATUS_SUCCESS);
@@ -448,15 +448,15 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
 
-   DPRINT("BytesPerSector:     %d\n", DeviceExt->FatInfo.BytesPerSector);
-   DPRINT("SectorsPerCluster:  %d\n", DeviceExt->FatInfo.SectorsPerCluster);
-   DPRINT("FATCount:           %d\n", DeviceExt->FatInfo.FATCount);
-   DPRINT("FATSectors:         %d\n", DeviceExt->FatInfo.FATSectors);
-   DPRINT("RootStart:          %d\n", DeviceExt->FatInfo.rootStart);
-   DPRINT("DataStart:          %d\n", DeviceExt->FatInfo.dataStart);
+   DPRINT("BytesPerSector:     %u\n", DeviceExt->FatInfo.BytesPerSector);
+   DPRINT("SectorsPerCluster:  %u\n", DeviceExt->FatInfo.SectorsPerCluster);
+   DPRINT("FATCount:           %u\n", DeviceExt->FatInfo.FATCount);
+   DPRINT("FATSectors:         %u\n", DeviceExt->FatInfo.FATSectors);
+   DPRINT("RootStart:          %u\n", DeviceExt->FatInfo.rootStart);
+   DPRINT("DataStart:          %u\n", DeviceExt->FatInfo.dataStart);
    if (DeviceExt->FatInfo.FatType == FAT32)
    {
-      DPRINT("RootCluster:        %d\n", DeviceExt->FatInfo.RootCluster);
+      DPRINT("RootCluster:        %u\n", DeviceExt->FatInfo.RootCluster);
    }
 
    switch (DeviceExt->FatInfo.FatType)
@@ -875,7 +875,7 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
          break;
 
       default:
-           DPRINT("VFAT FSC: MinorFunction %d\n", IrpContext->MinorFunction);
+           DPRINT("VFAT FSC: MinorFunction %u\n", IrpContext->MinorFunction);
            Status = STATUS_INVALID_DEVICE_REQUEST;
            break;
    }

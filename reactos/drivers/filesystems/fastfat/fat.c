@@ -148,7 +148,7 @@ FAT16FindAndMarkAvailableCluster(PDEVICE_EXTENSION DeviceExt,
       Offset.QuadPart = ROUND_DOWN(i * 2, ChunkSize);
       if(!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
       {
-        DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
+        DPRINT1("CcMapData(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
         return STATUS_UNSUCCESSFUL;
       }
       Block = (PUSHORT)((ULONG_PTR)BaseAddress + (i * 2) % ChunkSize);
@@ -202,7 +202,7 @@ FAT12FindAndMarkAvailableCluster(PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   Offset.QuadPart = 0;
   if(!CcPinRead(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
   {
-    DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector);
+    DPRINT1("CcMapData(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector);
     return STATUS_UNSUCCESSFUL;
   }
 
@@ -269,7 +269,7 @@ FAT32FindAndMarkAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
       Offset.QuadPart = ROUND_DOWN(i * 4, ChunkSize);
       if(!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
       {
-        DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
+        DPRINT1("CcMapData(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
         return STATUS_UNSUCCESSFUL;
       }
       Block = (PULONG)((ULONG_PTR)BaseAddress + (i * 4) % ChunkSize);
@@ -420,7 +420,7 @@ FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
     Offset.QuadPart = ROUND_DOWN(i * 4, ChunkSize);
     if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
     {
-      DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
+      DPRINT1("CcMapData(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
       return STATUS_UNSUCCESSFUL;
     }
     Block = (PULONG)((ULONG_PTR)BaseAddress + (i * 4) % ChunkSize);

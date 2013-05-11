@@ -105,7 +105,7 @@ VfatSetPositionInformation(PFILE_OBJECT FileObject,
   DPRINT ("FsdSetPositionInformation()\n");
 
   DPRINT ("PositionInfo %p\n", PositionInfo);
-  DPRINT ("Setting position %d\n", PositionInfo->CurrentByteOffset.u.LowPart);
+  DPRINT ("Setting position %u\n", PositionInfo->CurrentByteOffset.u.LowPart);
 
   FileObject->CurrentByteOffset.QuadPart =
     PositionInfo->CurrentByteOffset.QuadPart;
@@ -303,7 +303,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
 #endif
 
-   DPRINT ("FsdSetDispositionInformation(<%wZ>, Delete %d)\n", &FCB->PathNameU, DispositionInfo->DeleteFile);
+   DPRINT ("FsdSetDispositionInformation(<%wZ>, Delete %u)\n", &FCB->PathNameU, DispositionInfo->DeleteFile);
 
    ASSERT(DeviceExt != NULL);
    ASSERT(DeviceExt->FatInfo.BytesPerCluster != 0);
@@ -605,7 +605,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   ULONG NCluster;
   BOOLEAN AllocSizeChanged = FALSE;
 
-  DPRINT("VfatSetAllocationSizeInformation(File <%wZ>, AllocationSize %d %d)\n", &Fcb->PathNameU,
+  DPRINT("VfatSetAllocationSizeInformation(File <%wZ>, AllocationSize %d %u)\n", &Fcb->PathNameU,
       AllocationSize->HighPart, AllocationSize->LowPart);
 
   if (Fcb->Flags & FCB_IS_FATX_ENTRY)
