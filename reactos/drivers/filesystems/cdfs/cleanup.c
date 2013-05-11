@@ -42,7 +42,7 @@ CdfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
                 */
 {
 
-    DPRINT("CdfsCleanupFile(DeviceExt %x, FileObject %x)\n",
+    DPRINT("CdfsCleanupFile(DeviceExt %p, FileObject %p)\n",
         DeviceExt,
         FileObject);
 

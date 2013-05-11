@@ -145,7 +145,7 @@ CdfsShortNameCacheGet
     PCDFS_SHORT_NAME ShortNameEntry;
     GENERATE_NAME_CONTEXT Context = { 0 };
 
-    DPRINT("CdfsShortNameCacheGet(%I64u,%wZ)\n", StreamOffset->QuadPart, LongName);
+    DPRINT("CdfsShortNameCacheGet(%I64d,%wZ)\n", StreamOffset->QuadPart, LongName);
 
     /* Get the name list resource */
     ExAcquireResourceExclusiveLite(&DirectoryFcb->NameListResource, TRUE);

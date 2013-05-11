@@ -243,16 +243,22 @@ extern PCDFS_GLOBAL_DATA CdfsGlobalData;
 
 /* cleanup.c */
 
-NTSTATUS NTAPI
+DRIVER_DISPATCH CdfsCleanup;
+
+NTSTATUS
+NTAPI
 CdfsCleanup(PDEVICE_OBJECT DeviceObject,
-	    PIRP Irp);
+            PIRP Irp);
 
 
 /* close.c */
 
-NTSTATUS NTAPI
+DRIVER_DISPATCH CdfsClose;
+
+NTSTATUS
+NTAPI
 CdfsClose(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp);
+          PIRP Irp);
 
 NTSTATUS
 CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
@@ -279,11 +285,16 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
 /* create.c */
 
-NTSTATUS NTAPI
+DRIVER_DISPATCH CdfsCreate;
+
+NTSTATUS
+NTAPI
 CdfsCreate(PDEVICE_OBJECT DeviceObject,
-	   PIRP Irp);
+           PIRP Irp);
 
 /* devctrl.c */
+
+DRIVER_DISPATCH CdfsDeviceControl;
 
 NTSTATUS NTAPI
 CdfsDeviceControl(PDEVICE_OBJECT DeviceObject,
@@ -291,9 +302,12 @@ CdfsDeviceControl(PDEVICE_OBJECT DeviceObject,
 
 /* dirctl.c */
 
-NTSTATUS NTAPI
+DRIVER_DISPATCH CdfsDirectoryControl;
+
+NTSTATUS
+NTAPI
 CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
-		     PIRP Irp);
+                     PIRP Irp);
 
 
 /* fcb.c */
@@ -366,20 +380,28 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 
 /* finfo.c */
 
-NTSTATUS NTAPI
-CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
-		     PIRP Irp);
+DRIVER_DISPATCH CdfsQueryInformation;
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
+CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
+                     PIRP Irp);
+
+DRIVER_DISPATCH CdfsSetInformation;
+
+NTSTATUS
+NTAPI
 CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
-		   PIRP Irp);
+                   PIRP Irp);
 
 
 /* fsctl.c */
 
+DRIVER_DISPATCH CdfsFileSystemControl;
+
 NTSTATUS NTAPI
 CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp);
+                      PIRP Irp);
 
 
 /* misc.c */
@@ -406,24 +428,36 @@ CdfsShortNameCacheGet
 
 /* rw.c */
 
-NTSTATUS NTAPI
-CdfsRead(PDEVICE_OBJECT DeviceObject,
-	PIRP Irp);
+DRIVER_DISPATCH CdfsRead;
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
+CdfsRead(PDEVICE_OBJECT DeviceObject,
+         PIRP Irp);
+
+DRIVER_DISPATCH CdfsWrite;
+
+NTSTATUS
+NTAPI
 CdfsWrite(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp);
+          PIRP Irp);
 
 
 /* volinfo.c */
 
-NTSTATUS NTAPI
-CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
-			   PIRP Irp);
+DRIVER_DISPATCH CdfsQueryVolumeInformation;
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
+CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
+                           PIRP Irp);
+
+DRIVER_DISPATCH CdfsSetVolumeInformation;
+
+NTSTATUS
+NTAPI
 CdfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
-			 PIRP Irp);
+                         PIRP Irp);
 
 /* cdfs.c */
 

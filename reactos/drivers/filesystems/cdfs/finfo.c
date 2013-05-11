@@ -46,6 +46,8 @@ CdfsGetStandardInformation(PFCB Fcb,
 {
     DPRINT("CdfsGetStandardInformation() called\n");
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
@@ -112,6 +114,9 @@ CdfsGetBasicInformation(PFILE_OBJECT FileObject,
 {
     DPRINT("CdfsGetBasicInformation() called\n");
 
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
@@ -150,6 +155,9 @@ CdfsGetNameInformation(PFILE_OBJECT FileObject,
 
     ASSERT(NameInfo != NULL);
     ASSERT(Fcb != NULL);
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     /* If buffer can't hold at least the file name length, bail out */
     if (*BufferLength < (ULONG)FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
@@ -403,7 +411,7 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
         break;
 
     default:
-        DPRINT("Unimplemented information class %u\n", FileInformationClass);
+        DPRINT("Unimplemented information class %x\n", FileInformationClass);
         Status = STATUS_INVALID_PARAMETER;
         break;
     }
@@ -430,8 +438,8 @@ CdfsSetPositionInformation(PFILE_OBJECT FileObject,
 {
     DPRINT ("CdfsSetPositionInformation()\n");
 
-    DPRINT ("PositionInfo %x\n", PositionInfo);
-    DPRINT ("Setting position %I64u\n", PositionInfo->CurrentByteOffset.QuadPart);
+    DPRINT ("PositionInfo %p\n", PositionInfo);
+    DPRINT ("Setting position %I64d\n", PositionInfo->CurrentByteOffset.QuadPart);
 
     FileObject->CurrentByteOffset.QuadPart =
         PositionInfo->CurrentByteOffset.QuadPart;
@@ -453,6 +461,8 @@ CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
     PVOID SystemBuffer;
 
     NTSTATUS Status = STATUS_SUCCESS;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     DPRINT("CdfsSetInformation() called\n");
 

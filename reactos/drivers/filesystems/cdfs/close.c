@@ -43,13 +43,13 @@ CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
 {
     PCCB Ccb;
 
-    DPRINT("CdfsCloseFile(DeviceExt %x, FileObject %x)\n",
+    DPRINT("CdfsCloseFile(DeviceExt %p, FileObject %p)\n",
         DeviceExt,
         FileObject);
 
     Ccb = (PCCB)(FileObject->FsContext2);
 
-    DPRINT("Ccb %x\n", Ccb);
+    DPRINT("Ccb %p\n", Ccb);
     if (Ccb == NULL)
     {
         return(STATUS_SUCCESS);

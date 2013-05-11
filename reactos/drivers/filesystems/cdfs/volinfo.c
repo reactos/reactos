@@ -86,6 +86,8 @@ CdfsGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
     DPRINT("BufferLength %lu\n", *BufferLength);
     DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8));
 
+    UNREFERENCED_PARAMETER(DeviceExt);
+
     if (*BufferLength < sizeof (FILE_FS_ATTRIBUTE_INFORMATION))
         return STATUS_INFO_LENGTH_MISMATCH;
 
@@ -183,7 +185,7 @@ CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 
     DPRINT("FsInformationClass %d\n", FsInformationClass);
-    DPRINT("SystemBuffer %x\n", SystemBuffer);
+    DPRINT("SystemBuffer %p\n", SystemBuffer);
 
     switch (FsInformationClass)
     {
@@ -232,6 +234,8 @@ CdfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
                          PIRP Irp)
 {
     DPRINT("CdfsSetVolumeInformation() called\n");
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;

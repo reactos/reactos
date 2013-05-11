@@ -71,7 +71,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     if (ReadOffset + Length > Fcb->Entry.DataLengthL)
         ToRead = Fcb->Entry.DataLengthL - ReadOffset;
 
-    DPRINT("Reading %d bytes at %d\n", Length, ReadOffset);
+    DPRINT("Reading %u bytes at %u\n", Length, ReadOffset);
 
     if (!(IrpFlags & (IRP_NOCACHE|IRP_PAGING_IO)))
     {
@@ -168,7 +168,7 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
     ULONG ReturnedReadLength = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("CdfsRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+    DPRINT("CdfsRead(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
     DeviceExt = DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -210,7 +210,7 @@ NTSTATUS NTAPI
 CdfsWrite(PDEVICE_OBJECT DeviceObject,
           PIRP Irp)
 {
-    DPRINT("CdfsWrite(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
+    DPRINT("CdfsWrite(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;

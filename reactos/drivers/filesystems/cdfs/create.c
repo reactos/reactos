@@ -113,7 +113,7 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     UNICODE_STRING AbsFileName;
 
-    DPRINT("CdfsOpenFile(%08lx, %08lx, %wZ)\n", DeviceExt, FileObject, FileName);
+    DPRINT("CdfsOpenFile(%p, %p, %wZ)\n", DeviceExt, FileObject, FileName);
 
     if (FileObject->RelatedFileObject)
     {

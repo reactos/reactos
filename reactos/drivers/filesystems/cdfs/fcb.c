@@ -139,7 +139,7 @@ CdfsGrabFCB(PDEVICE_EXTENSION Vcb,
 {
     KIRQL  oldIrql;
 
-    DPRINT("grabbing FCB at %x: %S, refCount:%d\n",
+    DPRINT("grabbing FCB at %p: %S, refCount:%d\n",
         Fcb,
         Fcb->PathName,
         Fcb->RefCount);
@@ -156,7 +156,7 @@ CdfsReleaseFCB(PDEVICE_EXTENSION Vcb,
 {
     KIRQL  oldIrql;
 
-    DPRINT("releasing FCB at %x: %S, refCount:%d\n",
+    DPRINT("releasing FCB at %p: %S, refCount:%d\n",
         Fcb,
         Fcb->PathName,
         Fcb->RefCount);
@@ -450,7 +450,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
         Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
 
-    DPRINT("file open: fcb:%x file size: %d\n", Fcb, Fcb->Entry.DataLengthL);
+    DPRINT("file open: fcb:%p file size: %u\n", Fcb, Fcb->Entry.DataLengthL);
 
     return(STATUS_SUCCESS);
 }
@@ -616,7 +616,7 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
     PFCB  FCB;
     PFCB  parentFCB;
 
-    DPRINT("CdfsGetFCBForFile(%x, %x, %x, '%wZ')\n",
+    DPRINT("CdfsGetFCBForFile(%p, %p, %p, '%wZ')\n",
         Vcb,
         pParentFCB,
         pFCB,
@@ -652,7 +652,7 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
         }
 
         DPRINT("Parsing, currentElement:%S\n", currentElement);
-        DPRINT("  parentFCB:%x FCB:%x\n", parentFCB, FCB);
+        DPRINT("  parentFCB:%p FCB:%p\n", parentFCB, FCB);
 
         /* Descend to next directory level */
         if (parentFCB)

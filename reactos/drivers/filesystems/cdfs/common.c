@@ -60,9 +60,9 @@ again:
 
     BlockSize = BLOCKSIZE * SectorCount;
 
-    DPRINT("CdfsReadSectors(DeviceObject %x, DiskSector %d, Buffer %x)\n",
+    DPRINT("CdfsReadSectors(DeviceObject %p, DiskSector %u, Buffer %p)\n",
         DeviceObject, DiskSector, Buffer);
-    DPRINT("Offset %I64x BlockSize %ld\n",
+    DPRINT("Offset %I64x BlockSize %u\n",
         Offset.QuadPart,
         BlockSize);
 
@@ -86,15 +86,15 @@ again:
         Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
-    DPRINT("Calling IO Driver... with irp %x\n", Irp);
+    DPRINT("Calling IO Driver... with irp %p\n", Irp);
     Status = IoCallDriver(DeviceObject, Irp);
 
-    DPRINT("Waiting for IO Operation for %x\n", Irp);
+    DPRINT("Waiting for IO Operation for %p\n", Irp);
     if (Status == STATUS_PENDING)
     {
         DPRINT("Operation pending\n");
         KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-        DPRINT("Getting IO Status... for %x\n", Irp);
+        DPRINT("Getting IO Status... for %p\n", Irp);
         Status = IoStatus.Status;
     }
 
@@ -127,13 +127,13 @@ again:
         }
 
         DPRINT("CdfsReadSectors() failed (Status %x)\n", Status);
-        DPRINT("(DeviceObject %x, DiskSector %x, Buffer %x, Offset 0x%I64x)\n",
+        DPRINT("(DeviceObject %p, DiskSector %u, Buffer %p, Offset 0x%I64x)\n",
             DeviceObject, DiskSector, Buffer,
             Offset.QuadPart);
         return(Status);
     }
 
-    DPRINT("Block request succeeded for %x\n", Irp);
+    DPRINT("Block request succeeded for %p\n", Irp);
 
     return(STATUS_SUCCESS);
 }
@@ -155,9 +155,9 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     BOOLEAN LastChance = FALSE;
 
-    DPRINT("CdfsDeviceIoControl(DeviceObject %x, CtlCode %x, "
-        "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, "
-        "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode,
+    DPRINT("CdfsDeviceIoControl(DeviceObject %p, CtlCode %u, "
+        "InputBuffer %p, InputBufferSize %u, OutputBuffer %p, "
+        "POutputBufferSize %p (%x)\n", DeviceObject, CtlCode,
         InputBuffer, InputBufferSize, OutputBuffer, OutputBufferSize,
         OutputBufferSize ? *OutputBufferSize : 0);
 
@@ -186,15 +186,15 @@ again:
         Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
-    DPRINT ("Calling IO Driver... with irp %x\n", Irp);
+    DPRINT ("Calling IO Driver... with irp %p\n", Irp);
     Status = IoCallDriver(DeviceObject, Irp);
 
-    DPRINT ("Waiting for IO Operation for %x\n", Irp);
+    DPRINT ("Waiting for IO Operation for %p\n", Irp);
     if (Status == STATUS_PENDING)
     {
         DPRINT ("Operation pending\n");
         KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
-        DPRINT ("Getting IO Status... for %x\n", Irp);
+        DPRINT ("Getting IO Status... for %p\n", Irp);
 
         Status = IoStatus.Status;
     }

@@ -177,9 +177,9 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
     PDIR_RECORD Record;
     LARGE_INTEGER StreamOffset, OffsetOfEntry;
 
-    DPRINT("FindFile(Parent %x, FileToFind '%wZ', DirIndex: %d)\n",
+    DPRINT("FindFile(Parent %p, FileToFind '%wZ', DirIndex: %u)\n",
         Parent, FileToFind, pDirIndex ? *pDirIndex : 0);
-    DPRINT("FindFile: old Pathname %x, old Objectname %x)\n",
+    DPRINT("FindFile: old Pathname %p, old Objectname %p)\n",
         Fcb->PathName, Fcb->ObjectName);
 
     IsRoot = FALSE;
@@ -236,7 +236,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         DirSize = Parent->Entry.DataLengthL;
     }
 
-    DPRINT("StreamOffset %I64u  DirSize %lu\n", StreamOffset.QuadPart, DirSize);
+    DPRINT("StreamOffset %I64d  DirSize %u\n", StreamOffset.QuadPart, DirSize);
 
     if (pDirIndex && (*pDirIndex))
         DirIndex = *pDirIndex;
@@ -338,7 +338,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             if (pOffset)
                 *pOffset = Offset;
 
-            DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %d\n",
+            DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %u\n",
                 Fcb->PathName, Fcb->ObjectName, DirIndex);
 
             RtlFreeUnicodeString(&FileToFindUpcase);
@@ -375,6 +375,8 @@ CdfsGetNameInformation(PFCB Fcb,
 
     DPRINT("CdfsGetNameInformation() called\n");
 
+    UNREFERENCED_PARAMETER(DeviceExt);
+
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
     if ((sizeof(FILE_NAMES_INFORMATION) + Length) > BufferLength)
         return(STATUS_BUFFER_OVERFLOW);
@@ -399,6 +401,8 @@ CdfsGetDirectoryInformation(PFCB Fcb,
     ULONG Length;
 
     DPRINT("CdfsGetDirectoryInformation() called\n");
+
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
     if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
@@ -446,6 +450,8 @@ CdfsGetFullDirectoryInformation(PFCB Fcb,
     ULONG Length;
 
     DPRINT("CdfsGetFullDirectoryInformation() called\n");
+
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
     if ((sizeof (FILE_FULL_DIR_INFORMATION) + Length) > BufferLength)
@@ -495,6 +501,8 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
     ULONG Length;
 
     DPRINT("CdfsGetBothDirectoryInformation() called\n");
+
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
     if ((sizeof (FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
@@ -764,7 +772,7 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
         break;
 
     default:
-        DPRINT1("CDFS: MinorFunction %d\n", Stack->MinorFunction);
+        DPRINT1("CDFS: MinorFunction %u\n", Stack->MinorFunction);
         Status = STATUS_INVALID_DEVICE_REQUEST;
         break;
     }
