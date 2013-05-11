@@ -179,7 +179,7 @@ MouHid_GetButtonFlags(
 
             /* move to next index*/
             Index++;
-        } while (Index < DeviceExtension->UsageListLength);
+        }while(Index < DeviceExtension->UsageListLength);
     }
 
     if (DeviceExtension->UsageListLength)
@@ -200,7 +200,7 @@ MouHid_GetButtonFlags(
 
             /* move to next index*/
             Index++;
-        } while (Index < DeviceExtension->UsageListLength);
+        }while(Index < DeviceExtension->UsageListLength);
     }
 
     /* now switch the previous list with current list */
@@ -636,8 +636,25 @@ MouHid_Power(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    return PoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+}
+
+NTSTATUS
+NTAPI
+MouHid_SystemControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PMOUHID_DEVICE_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    IoSkipCurrentIrpStackLocation(Irp);
+    return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 }
 
 NTSTATUS
@@ -843,7 +860,7 @@ MouHid_StartDevice(
                                        &ValueCaps,
                                        &ValueCapsLength,
                                        PreparsedData);
-    if (Status == HIDP_STATUS_SUCCESS)
+    if (Status == HIDP_STATUS_SUCCESS )
     {
         /* mouse has wheel support */
         DeviceExtension->MouseIdentifier = WHEELMOUSE_HID_HARDWARE;
@@ -931,97 +948,97 @@ MouHid_Pnp(
 
     switch (IoStack->MinorFunction)
     {
-        case IRP_MN_STOP_DEVICE:
-        case IRP_MN_CANCEL_REMOVE_DEVICE:
-        case IRP_MN_QUERY_STOP_DEVICE:
-        case IRP_MN_CANCEL_STOP_DEVICE:
-        case IRP_MN_QUERY_REMOVE_DEVICE:
-            /* indicate success */
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+    case IRP_MN_STOP_DEVICE:
+    case IRP_MN_CANCEL_REMOVE_DEVICE:
+    case IRP_MN_QUERY_STOP_DEVICE:
+    case IRP_MN_CANCEL_STOP_DEVICE:
+    case IRP_MN_QUERY_REMOVE_DEVICE:
+        /* indicate success */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
 
-            /* skip irp stack location */
-            IoSkipCurrentIrpStackLocation(Irp);
+        /* skip irp stack location */
+        IoSkipCurrentIrpStackLocation(Irp);
 
-            /* dispatch to lower device */
-            return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+        /* dispatch to lower device */
+        return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 
-        case IRP_MN_REMOVE_DEVICE:
-            /* FIXME synchronization */
+    case IRP_MN_REMOVE_DEVICE:
+        /* FIXME synchronization */
 
-            /* request stop */
-            DeviceExtension->StopReadReport = TRUE;
+        /* request stop */
+        DeviceExtension->StopReadReport = TRUE;
 
-            /* cancel irp */
-            IoCancelIrp(DeviceExtension->Irp);
+        /* cancel irp */
+        IoCancelIrp(DeviceExtension->Irp);
 
-            /* indicate success */
-            Irp->IoStatus.Status = STATUS_SUCCESS;
+        /* indicate success */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
 
-            /* skip irp stack location */
-            IoSkipCurrentIrpStackLocation(Irp);
+        /* skip irp stack location */
+        IoSkipCurrentIrpStackLocation(Irp);
 
-            /* dispatch to lower device */
-            Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+        /* dispatch to lower device */
+        Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 
-            /* wait for completion of stop event */
-            KeWaitForSingleObject(&DeviceExtension->ReadCompletionEvent, Executive, KernelMode, FALSE, NULL);
+        /* wait for completion of stop event */
+        KeWaitForSingleObject(&DeviceExtension->ReadCompletionEvent, Executive, KernelMode, FALSE, NULL);
 
-            /* free irp */
-            IoFreeIrp(DeviceExtension->Irp);
+        /* free irp */
+        IoFreeIrp(DeviceExtension->Irp);
 
-            /* detach device */
-            IoDetachDevice(DeviceExtension->NextDeviceObject);
+        /* detach device */
+        IoDetachDevice(DeviceExtension->NextDeviceObject);
 
-            /* delete device */
-            IoDeleteDevice(DeviceObject);
+        /* delete device */
+        IoDeleteDevice(DeviceObject);
 
-            /* done */
-            return Status;
+        /* done */
+        return Status;
 
-        case IRP_MN_START_DEVICE:
-            /* init event */
-            KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    case IRP_MN_START_DEVICE:
+        /* init event */
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-            /* copy stack location */
-            IoCopyCurrentIrpStackLocationToNext (Irp);
+        /* copy stack location */
+        IoCopyCurrentIrpStackLocationToNext (Irp);
 
-            /* set completion routine */
-            IoSetCompletionRoutine(Irp, MouHid_StartDeviceCompletion, &Event, TRUE, TRUE, TRUE);
-            Irp->IoStatus.Status = 0;
+        /* set completion routine */
+        IoSetCompletionRoutine(Irp, MouHid_StartDeviceCompletion, &Event, TRUE, TRUE, TRUE);
+        Irp->IoStatus.Status = 0;
 
-            /* pass request */
-            Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
-            if (Status == STATUS_PENDING)
-            {
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status = Irp->IoStatus.Status;
-            }
+        /* pass request */
+        Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            Status = Irp->IoStatus.Status;
+        }
 
-            if (!NT_SUCCESS(Status))
-            {
-                /* failed */
-                Irp->IoStatus.Status = Status;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return Status;
-            }
-
-            /* lets start the device */
-            Status = MouHid_StartDevice(DeviceObject);
-            DPRINT("MouHid_StartDevice %x\n", Status);
-
-            /* complete request */
+        if (!NT_SUCCESS(Status))
+        {
+            /* failed */
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-            /* done */
             return Status;
+        }
 
-        default:
-            /* skip irp stack location */
-            IoSkipCurrentIrpStackLocation(Irp);
+        /* lets start the device */
+        Status = MouHid_StartDevice(DeviceObject);
+        DPRINT("MouHid_StartDevice %x\n", Status);
 
-            /* dispatch to lower device */
-            return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+        /* complete request */
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        /* done */
+        return Status;
+
+    default:
+        /* skip irp stack location */
+        IoSkipCurrentIrpStackLocation(Irp);
+
+        /* dispatch to lower device */
+        return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
     }
 }
 
@@ -1116,6 +1133,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = MouHid_InternalDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_POWER] = MouHid_Power;
     DriverObject->MajorFunction[IRP_MJ_PNP] = MouHid_Pnp;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = MouHid_SystemControl;
     DriverObject->DriverUnload = MouHid_Unload;
     DriverObject->DriverExtension->AddDevice = MouHid_AddDevice;
 
