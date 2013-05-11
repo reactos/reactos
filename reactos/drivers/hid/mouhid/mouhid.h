@@ -25,7 +25,7 @@ typedef struct
     PIRP Irp;
 
     //
-    // event 
+    // event
     //
     KEVENT ReadCompletionEvent;
 
