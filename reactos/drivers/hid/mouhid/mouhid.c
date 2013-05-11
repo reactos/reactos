@@ -256,7 +256,7 @@ MouHid_ReadCompletion(
     USHORT Flags;
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)Context;
+    DeviceExtension = Context;
 
     if (Irp->IoStatus.Status == STATUS_PRIVILEGE_NOT_HELD ||
         Irp->IoStatus.Status == STATUS_DEVICE_NOT_CONNECTED ||
@@ -397,7 +397,7 @@ MouHid_Create(
     DPRINT("MOUHID: IRP_MJ_CREATE\n");
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* get stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -468,7 +468,7 @@ MouHid_Close(
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     DPRINT("[MOUHID] IRP_MJ_CLOSE ReadReportActive %x\n", DeviceExtension->ReadReportActive);
 
@@ -513,7 +513,7 @@ MouHid_InternalDeviceControl(
     DPRINT("[MOUHID] InternalDeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* handle requests */
     switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
@@ -530,7 +530,7 @@ MouHid_InternalDeviceControl(
          }
 
          /* get output buffer */
-         Attributes = (PMOUSE_ATTRIBUTES)Irp->AssociatedIrp.SystemBuffer;
+         Attributes = Irp->AssociatedIrp.SystemBuffer;
 
          /* type of mouse */
          Attributes->MouseIdentifier = DeviceExtension->MouseIdentifier;
@@ -575,7 +575,7 @@ MouHid_InternalDeviceControl(
          }
 
          /* get connect data */
-         Data = (PCONNECT_DATA)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+         Data = IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
          /* store connect details */
          DeviceExtension->ClassDeviceObject = Data->ClassDeviceObject;
@@ -621,7 +621,7 @@ MouHid_DeviceControl(
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* skip stack location */
     IoSkipCurrentIrpStackLocation(Irp);
@@ -673,7 +673,7 @@ MouHid_SubmitRequest(
     IO_STATUS_BLOCK IoStatus;
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* init event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -723,7 +723,7 @@ MouHid_StartDevice(
     PUSHORT Buffer;
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* query collection information */
     Status = MouHid_SubmitRequest(DeviceObject,
@@ -740,7 +740,7 @@ MouHid_StartDevice(
     }
 
     /* lets allocate space for preparsed data */
-    PreparsedData = ExAllocatePool(NonPagedPool, Information.DescriptorSize);
+    PreparsedData = ExAllocatePoolWithTag(NonPagedPool, Information.DescriptorSize, MOUHID_TAG);
     if (!PreparsedData)
     {
         /* no memory */
@@ -759,7 +759,7 @@ MouHid_StartDevice(
     {
         /* failed to get preparsed data */
         DPRINT1("[MOUHID] failed to obtain collection information with %x\n", Status);
-        ExFreePool(PreparsedData);
+        ExFreePoolWithTag(PreparsedData, MOUHID_TAG);
         return Status;
     }
 
@@ -769,7 +769,7 @@ MouHid_StartDevice(
     {
         /* failed to get capabilities */
         DPRINT1("[MOUHID] failed to obtain caps with %x\n", Status);
-        ExFreePool(PreparsedData);
+        ExFreePoolWithTag(PreparsedData, MOUHID_TAG);
         return Status;
     }
 
@@ -779,14 +779,14 @@ MouHid_StartDevice(
     if ((Capabilities.Usage != HID_USAGE_GENERIC_POINTER && Capabilities.Usage != HID_USAGE_GENERIC_MOUSE) || Capabilities.UsagePage != HID_USAGE_PAGE_GENERIC)
     {
         /* not supported */
-        ExFreePool(PreparsedData);
+        ExFreePoolWithTag(PreparsedData, MOUHID_TAG);
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* init input report*/
+    /* init input report */
     DeviceExtension->ReportLength = Capabilities.InputReportByteLength;
     ASSERT(DeviceExtension->ReportLength);
-    DeviceExtension->Report = (PCHAR)ExAllocatePool(NonPagedPool, DeviceExtension->ReportLength);
+    DeviceExtension->Report = ExAllocatePoolWithTag(NonPagedPool, DeviceExtension->ReportLength, MOUHID_TAG);
     ASSERT(DeviceExtension->Report);
     RtlZeroMemory(DeviceExtension->Report, DeviceExtension->ReportLength);
 
@@ -809,11 +809,11 @@ MouHid_StartDevice(
     ASSERT(Buttons > 0);
 
     /* now allocate an array for those buttons */
-    Buffer = ExAllocatePool(NonPagedPool, sizeof(USAGE) * 4 * Buttons);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, sizeof(USAGE) * 4 * Buttons, MOUHID_TAG);
     if (!Buffer)
     {
         /* no memory */
-        ExFreePool(PreparsedData);
+        ExFreePoolWithTag(PreparsedData, MOUHID_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -898,7 +898,7 @@ MouHid_StartDeviceCompletion(
     IN PIRP  Irp,
     IN PVOID  Context)
 {
-    KeSetEvent((PKEVENT)Context, 0, FALSE);
+    KeSetEvent(Context, 0, FALSE);
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
@@ -915,13 +915,13 @@ MouHid_FreeResources(
     /* free resources */
     if (DeviceExtension->PreparsedData)
     {
-        ExFreePool(DeviceExtension->PreparsedData);
+        ExFreePoolWithTag(DeviceExtension->PreparsedData, MOUHID_TAG);
         DeviceExtension->PreparsedData = NULL;
     }
 
     if (DeviceExtension->CurrentUsageList)
     {
-        ExFreePool(DeviceExtension->CurrentUsageList);
+        ExFreePoolWithTag(DeviceExtension->CurrentUsageList, MOUHID_TAG);
         DeviceExtension->CurrentUsageList = NULL;
         DeviceExtension->PreviousUsageList = NULL;
         DeviceExtension->MakeUsageList = NULL;
@@ -936,7 +936,7 @@ MouHid_FreeResources(
 
     if (DeviceExtension->Report)
     {
-        ExFreePool(DeviceExtension->Report);
+        ExFreePoolWithTag(DeviceExtension->Report, MOUHID_TAG);
         DeviceExtension->Report = NULL;
     }
 
@@ -953,7 +953,7 @@ MouHid_Flush(
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* skip current stack location */
     IoSkipCurrentIrpStackLocation(Irp);
@@ -981,7 +981,7 @@ MouHid_Pnp(
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1124,7 +1124,7 @@ MouHid_AddDevice(
     }
 
     /* get device extension */
-    DeviceExtension = (PMOUHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* zero extension */
     RtlZeroMemory(DeviceExtension, sizeof(MOUHID_DEVICE_EXTENSION));

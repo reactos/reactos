@@ -48,7 +48,7 @@ KbdHid_InsertScanCodes(
     CHAR Prefix = 0;
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)Context;
+    DeviceExtension = Context;
 
     for(Index = 0; Index < Length; Index++)
     {
@@ -104,7 +104,7 @@ KbdHid_ReadCompletion(
     ULONG ButtonLength;
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)Context;
+    DeviceExtension = Context;
 
     if (Irp->IoStatus.Status == STATUS_PRIVILEGE_NOT_HELD ||
         Irp->IoStatus.Status == STATUS_DEVICE_NOT_CONNECTED ||
@@ -247,7 +247,7 @@ KbdHid_Create(
     DPRINT("[KBDHID]: IRP_MJ_CREATE\n");
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* get stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -318,7 +318,7 @@ KbdHid_Close(
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     DPRINT("[KBDHID] IRP_MJ_CLOSE ReadReportActive %x\n", DeviceExtension->ReadReportActive);
 
@@ -363,7 +363,7 @@ KbdHid_InternalDeviceControl(
     DPRINT("[KBDHID] InternalDeviceControl %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
@@ -379,7 +379,7 @@ KbdHid_InternalDeviceControl(
         }
 
         /* get output buffer */
-        Attributes = (PKEYBOARD_ATTRIBUTES)Irp->AssociatedIrp.SystemBuffer;
+        Attributes = Irp->AssociatedIrp.SystemBuffer;
 
         /* copy attributes */
             RtlCopyMemory(Attributes,
@@ -412,7 +412,7 @@ KbdHid_InternalDeviceControl(
          }
 
          /* get connect data */
-         Data = (PCONNECT_DATA)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+         Data = IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
          /* store connect details */
          DeviceExtension->ClassDeviceObject = Data->ClassDeviceObject;
@@ -546,7 +546,7 @@ KbdHid_DeviceControl(
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* skip stack location */
     IoSkipCurrentIrpStackLocation(Irp);
@@ -598,7 +598,7 @@ KbdHid_SubmitRequest(
     IO_STATUS_BLOCK IoStatus;
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* init event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -646,7 +646,7 @@ KbdHid_StartDevice(
     PUSAGE_AND_PAGE Buffer;
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* query collection information */
     Status = KbdHid_SubmitRequest(DeviceObject,
@@ -663,7 +663,7 @@ KbdHid_StartDevice(
     }
 
     /* lets allocate space for preparsed data */
-    PreparsedData = (PHIDP_PREPARSED_DATA)ExAllocatePool(NonPagedPool, Information.DescriptorSize);
+    PreparsedData = ExAllocatePoolWithTag(NonPagedPool, Information.DescriptorSize, KBDHID_TAG);
     if (!PreparsedData)
     {
         /* no memory */
@@ -682,7 +682,7 @@ KbdHid_StartDevice(
     {
         /* failed to get preparsed data */
         DPRINT1("[KBDHID] failed to obtain collection information with %x\n", Status);
-        ExFreePool(PreparsedData);
+        ExFreePoolWithTag(PreparsedData, KBDHID_TAG);
         return Status;
     }
 
@@ -692,7 +692,7 @@ KbdHid_StartDevice(
     {
         /* failed to get capabilities */
         DPRINT1("[KBDHID] failed to obtain caps with %x\n", Status);
-        ExFreePool(PreparsedData);
+        ExFreePoolWithTag(PreparsedData, KBDHID_TAG);
         return Status;
     }
 
@@ -701,7 +701,7 @@ KbdHid_StartDevice(
     /* init input report */
     DeviceExtension->ReportLength = Capabilities.InputReportByteLength;
     ASSERT(DeviceExtension->ReportLength);
-    DeviceExtension->Report = (PCHAR)ExAllocatePool(NonPagedPool, DeviceExtension->ReportLength);
+    DeviceExtension->Report = ExAllocatePoolWithTag(NonPagedPool, DeviceExtension->ReportLength, KBDHID_TAG);
     ASSERT(DeviceExtension->Report);
     RtlZeroMemory(DeviceExtension->Report, DeviceExtension->ReportLength);
 
@@ -722,11 +722,11 @@ KbdHid_StartDevice(
     ASSERT(Buttons > 0);
 
     /* now allocate an array for those buttons */
-    Buffer = (PUSAGE_AND_PAGE)ExAllocatePool(NonPagedPool, sizeof(USAGE_AND_PAGE) * 4 * Buttons);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, sizeof(USAGE_AND_PAGE) * 4 * Buttons, KBDHID_TAG);
     if (!Buffer)
     {
         /* no memory */
-        ExFreePool(PreparsedData);
+        ExFreePoolWithTag(PreparsedData, KBDHID_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -784,13 +784,13 @@ KbdHid_FreeResources(
     /* free resources */
     if (DeviceExtension->PreparsedData)
     {
-        ExFreePool(DeviceExtension->PreparsedData);
+        ExFreePoolWithTag(DeviceExtension->PreparsedData, KBDHID_TAG);
         DeviceExtension->PreparsedData = NULL;
     }
 
     if (DeviceExtension->CurrentUsageList)
     {
-        ExFreePool(DeviceExtension->CurrentUsageList);
+        ExFreePoolWithTag(DeviceExtension->CurrentUsageList, KBDHID_TAG);
         DeviceExtension->CurrentUsageList = NULL;
         DeviceExtension->PreviousUsageList = NULL;
         DeviceExtension->MakeUsageList = NULL;
@@ -805,7 +805,7 @@ KbdHid_FreeResources(
 
     if (DeviceExtension->Report)
     {
-        ExFreePool(DeviceExtension->Report);
+        ExFreePoolWithTag(DeviceExtension->Report, KBDHID_TAG);
         DeviceExtension->Report = NULL;
     }
 
@@ -822,7 +822,7 @@ KbdHid_Flush(
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* skip current stack location */
     IoSkipCurrentIrpStackLocation(Irp);
@@ -850,7 +850,7 @@ KbdHid_Pnp(
     PKBDHID_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -981,7 +981,7 @@ KbdHid_AddDevice(
     }
 
     /* get device extension */
-    DeviceExtension = (PKBDHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     /* zero extension */
     RtlZeroMemory(DeviceExtension, sizeof(KBDHID_DEVICE_EXTENSION));

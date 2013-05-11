@@ -120,9 +120,7 @@ typedef struct
     //
     KEYBOARD_TYPEMATIC_PARAMETERS KeyboardTypematic;
 
-
-
-}KBDHID_DEVICE_EXTENSION, *PKBDHID_DEVICE_EXTENSION;
+} KBDHID_DEVICE_EXTENSION, *PKBDHID_DEVICE_EXTENSION;
 
 /* defaults from kbfiltr.h */
 #define KEYBOARD_TYPEMATIC_RATE_MINIMUM 2
@@ -138,8 +136,8 @@ typedef struct
 #define MICROSOFT_KBD_101_TYPE           0
 
 
-
-
 NTSTATUS
 KbdHid_InitiateRead(
     IN PKBDHID_DEVICE_EXTENSION DeviceExtension);
+
+#define KBDHID_TAG 'diHK'
