@@ -205,7 +205,7 @@ HidParser_FreeCollectionDescription(
     //
     // free report description
     //
-    ExFreePool(DeviceDescription->ReportIDs);
+    Parser->Free(DeviceDescription->ReportIDs);
 }
 
 HIDAPI
