@@ -15,7 +15,7 @@ NTAPI
 AllocFunction(
     IN ULONG ItemSize)
 {
-    PVOID Item = ExAllocatePool(NonPagedPool, ItemSize);
+    PVOID Item = ExAllocatePoolWithTag(NonPagedPool, ItemSize, HIDPARSE_TAG);
     if (Item)
     {
         //
@@ -38,7 +38,7 @@ FreeFunction(
     //
     // free item
     //
-    ExFreePool(Item);
+    ExFreePoolWithTag(Item, HIDPARSE_TAG);
 }
 
 VOID
@@ -259,7 +259,7 @@ HidP_GetUsagesEx(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    return HidP_GetUsages(ReportType, HID_USAGE_PAGE_UNDEFINED, LinkCollection, (PUSAGE)ButtonList, UsageLength, PreparsedData, Report, ReportLength);
+    return HidP_GetUsages(ReportType, HID_USAGE_PAGE_UNDEFINED, LinkCollection, &ButtonList->Usage, UsageLength, PreparsedData, Report, ReportLength);
 }
 
 HIDAPI
