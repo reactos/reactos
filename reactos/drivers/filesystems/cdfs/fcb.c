@@ -363,8 +363,9 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
     PFCB rcFCB;
     ULONG Size;
 
-    if (LongName [0] != 0 && wcslen (DirectoryFCB->PathName) +
-        sizeof(WCHAR) + wcslen (LongName) > MAX_PATH)
+    /* Check if the full string would overflow the pathName buffer (the additional characters are for '\\' and '\0') */
+    if ((LongName[0] != 0) &&
+        (wcslen(DirectoryFCB->PathName) + 1 + wcslen(LongName) + 1 > MAX_PATH))
     {
         return(STATUS_OBJECT_NAME_INVALID);
     }
@@ -411,7 +412,7 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
     CdfsAddFCBToTable(Vcb, rcFCB);
     *fileFCB = rcFCB;
 
-    DPRINT("%S %d %I64d\n", LongName, Size, rcFCB->RFCB.AllocationSize.QuadPart);
+    DPRINT("%S %u %I64d\n", LongName, Size, rcFCB->RFCB.AllocationSize.QuadPart);
 
     return(STATUS_SUCCESS);
 }
