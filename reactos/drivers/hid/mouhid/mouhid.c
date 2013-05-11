@@ -720,7 +720,7 @@ MouHid_StartDevice(
     ULONG ValueCapsLength;
     HIDP_VALUE_CAPS ValueCaps;
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
-    PUSHORT Buffer;
+    PUSAGE Buffer;
 
     /* get device extension */
     DeviceExtension = DeviceObject->DeviceExtension;
@@ -816,6 +816,7 @@ MouHid_StartDevice(
         ExFreePoolWithTag(PreparsedData, MOUHID_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    DeviceExtension->UsageListBuffer = Buffer;
 
     /* init usage lists */
     RtlZeroMemory(Buffer, sizeof(USAGE) * 4 * Buttons);
@@ -919,9 +920,10 @@ MouHid_FreeResources(
         DeviceExtension->PreparsedData = NULL;
     }
 
-    if (DeviceExtension->CurrentUsageList)
+    if (DeviceExtension->UsageListBuffer)
     {
-        ExFreePoolWithTag(DeviceExtension->CurrentUsageList, MOUHID_TAG);
+        ExFreePoolWithTag(DeviceExtension->UsageListBuffer, MOUHID_TAG);
+        DeviceExtension->UsageListBuffer = NULL;
         DeviceExtension->CurrentUsageList = NULL;
         DeviceExtension->PreviousUsageList = NULL;
         DeviceExtension->MakeUsageList = NULL;

@@ -729,6 +729,7 @@ KbdHid_StartDevice(
         ExFreePoolWithTag(PreparsedData, KBDHID_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    DeviceExtension->UsageListBuffer = Buffer;
 
     /* init usage lists */
     RtlZeroMemory(Buffer, sizeof(USAGE_AND_PAGE) * 4 * Buttons);
@@ -788,9 +789,10 @@ KbdHid_FreeResources(
         DeviceExtension->PreparsedData = NULL;
     }
 
-    if (DeviceExtension->CurrentUsageList)
+    if (DeviceExtension->UsageListBuffer)
     {
-        ExFreePoolWithTag(DeviceExtension->CurrentUsageList, KBDHID_TAG);
+        ExFreePoolWithTag(DeviceExtension->UsageListBuffer, KBDHID_TAG);
+        DeviceExtension->UsageListBuffer = NULL;
         DeviceExtension->CurrentUsageList = NULL;
         DeviceExtension->PreviousUsageList = NULL;
         DeviceExtension->MakeUsageList = NULL;

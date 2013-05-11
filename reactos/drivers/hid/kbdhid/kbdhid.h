@@ -41,6 +41,11 @@ typedef struct
     PVOID ClassService;
 
     //
+    // buffer for the four usage lists below
+    //
+    PVOID UsageListBuffer;
+
+    //
     // usage list length
     //
     USHORT UsageListLength;
