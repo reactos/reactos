@@ -312,16 +312,16 @@ HidCreate(
     ASSERT(IoStack->MajorFunction == IRP_MJ_CREATE || IoStack->MajorFunction == IRP_MJ_CLOSE);
 
     //
+    // informational debug print
+    //
+    DPRINT("HIDUSB Request: %x\n", IoStack->MajorFunction);
+
+    //
     // complete request
     //
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    //
-    // informal debug print
-    //
-    DPRINT("HIDUSB Request: %x\n", IoStack->MajorFunction);
 
     //
     // done
@@ -715,6 +715,11 @@ HidUsb_GetReportDescriptor(
     Irp->IoStatus.Information = Length;
 
     //
+    // free the report buffer
+    //
+    ExFreePoolWithTag(Report, HIDUSB_TAG);
+
+    //
     // done
     //
     return Status;
@@ -909,9 +914,12 @@ HidPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    PHID_DEVICE_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    return PoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 }
 
 NTSTATUS
@@ -928,9 +936,9 @@ HidSystemControl(
     DeviceExtension = DeviceObject->DeviceExtension;
 
     //
-    // copy stack location
+    // skip stack location
     //
-    IoCopyCurrentIrpStackLocationToNext(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
 
     //
     // submit request
@@ -1718,15 +1726,6 @@ HidPnp(
             {
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
                 Status = Irp->IoStatus.Status;
-            }
-
-            //
-            // free resources
-            //
-            if (HidDeviceExtension->HidDescriptor)
-            {
-                ExFreePoolWithTag(HidDeviceExtension->HidDescriptor, HIDUSB_TAG);
-                HidDeviceExtension->HidDescriptor = NULL;
             }
 
             //
