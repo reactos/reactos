@@ -13,18 +13,19 @@
 static LPWSTR ClientIdentificationAddress = L"HIDCLASS";
 static ULONG HidClassDeviceNumber = 0;
 
-ULONG
+NTSTATUS
 NTAPI
-DllInitialize(ULONG Unknown)
+DllInitialize(
+    IN PUNICODE_STRING RegistryPath)
 {
-    return 0;
+    return STATUS_SUCCESS;
 }
 
-ULONG
+NTSTATUS
 NTAPI
-DllUnload()
+DllUnload(VOID)
 {
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -51,7 +52,7 @@ HidClassAddDevice(
     RtlInitUnicodeString(&DeviceName, CharDeviceName);
 
     /* get driver object extension */
-    DriverExtension = (PHIDCLASS_DRIVER_EXTENSION) IoGetDriverObjectExtension(DriverObject, ClientIdentificationAddress);
+    DriverExtension = IoGetDriverObjectExtension(DriverObject, ClientIdentificationAddress);
     if (!DriverExtension)
     {
         /* device removed */
@@ -72,7 +73,7 @@ HidClassAddDevice(
     }
 
     /* get device extension */
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)NewDeviceObject->DeviceExtension;
+    FDODeviceExtension = NewDeviceObject->DeviceExtension;
 
     /* zero device extension */
     RtlZeroMemory(FDODeviceExtension, sizeof(HIDCLASS_FDO_EXTENSION));
@@ -139,7 +140,7 @@ HidClass_Create(
     //
     // get device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
     if (CommonDeviceExtension->IsFDO)
     {
 #ifndef __REACTOS__
@@ -169,7 +170,7 @@ HidClass_Create(
     //
     // get device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)CommonDeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // get stack location
@@ -208,7 +209,7 @@ HidClass_Create(
     // store context
     //
     ASSERT(IoStack->FileObject);
-    IoStack->FileObject->FsContext = (PVOID)Context;
+    IoStack->FileObject->FsContext = Context;
 
     //
     // done
@@ -235,7 +236,7 @@ HidClass_Close(
     //
     // get device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // is it a FDO request
@@ -264,7 +265,7 @@ HidClass_Close(
     //
     // get irp context
     //
-    IrpContext = (PHIDCLASS_FILEOP_CONTEXT)IoStack->FileObject->FsContext;
+    IrpContext = IoStack->FileObject->FsContext;
     ASSERT(IrpContext);
 
     //
@@ -322,7 +323,7 @@ HidClass_Close(
         //
         // get irp
         //
-        ListIrp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
+        ListIrp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
 
         //
         // free the irp
@@ -396,7 +397,7 @@ HidClass_ReadCompleteIrp(
     //
     // get irp context
     //
-    IrpContext = (PHIDCLASS_IRP_CONTEXT)Ctx;
+    IrpContext = Ctx;
 
     DPRINT("HidClass_ReadCompleteIrp Irql %lu\n", KeGetCurrentIrql());
     DPRINT("HidClass_ReadCompleteIrp Status %lx\n", Irp->IoStatus.Status);
@@ -414,7 +415,7 @@ HidClass_ReadCompleteIrp(
         //
         // get address
         //
-        Address = (PUCHAR)HidClass_GetSystemAddress(IrpContext->OriginalIrp->MdlAddress);
+        Address = HidClass_GetSystemAddress(IrpContext->OriginalIrp->MdlAddress);
         if (Address)
         {
             //
@@ -550,7 +551,7 @@ HidClass_GetIrp(
         //
         // get irp
         //
-        Irp = (PIRP)CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.ListEntry);
+        Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.ListEntry);
     }
 
     //
@@ -610,7 +611,7 @@ HidClass_BuildIrp(
     //
     // allocate completion context
     //
-    IrpContext = (PHIDCLASS_IRP_CONTEXT)ExAllocatePool(NonPagedPool, sizeof(HIDCLASS_IRP_CONTEXT));
+    IrpContext = ExAllocatePool(NonPagedPool, sizeof(HIDCLASS_IRP_CONTEXT));
     if (!IrpContext)
     {
         //
@@ -623,7 +624,7 @@ HidClass_BuildIrp(
     //
     // get device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
@@ -733,7 +734,7 @@ HidClass_Read(
     //
     // get device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(CommonDeviceExtension->IsFDO == FALSE);
 
     //
@@ -745,7 +746,7 @@ HidClass_Read(
     //
     // get context
     //
-    Context = (PHIDCLASS_FILEOP_CONTEXT)IoStack->FileObject->FsContext;
+    Context = IoStack->FileObject->FsContext;
     ASSERT(Context);
 
     //
@@ -855,7 +856,7 @@ HidClass_DeviceControl(
     //
     // get device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // only PDO are supported
@@ -876,7 +877,7 @@ HidClass_DeviceControl(
     //
     // get pdo device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // get stack location
@@ -903,7 +904,7 @@ HidClass_DeviceControl(
             //
             // get output buffer
             //
-            CollectionInformation = (PHID_COLLECTION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+            CollectionInformation = Irp->AssociatedIrp.SystemBuffer;
             ASSERT(CollectionInformation);
 
             //
@@ -1010,7 +1011,7 @@ HidClass_PnP(
     //
     // get common device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // check type of device object
@@ -1042,7 +1043,7 @@ HidClass_DispatchDefault(
     //
     // get common device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // FIXME: support PDO

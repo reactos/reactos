@@ -152,7 +152,7 @@ HidClassPDO_HandleQueryHardwareId(
     //
     // get device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
@@ -288,7 +288,7 @@ HidClassPDO_HandleQueryInstanceId(
     //
     // get device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
@@ -359,7 +359,7 @@ HidClassPDO_PnP(
     //
     // get device extension
     //
-    PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    PDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     //
@@ -406,7 +406,7 @@ HidClassPDO_PnP(
                 Status = HidClassPDO_HandleQueryCompatibleId(DeviceObject, Irp);
                 break;
             }
-           
+
             DPRINT1("[HIDCLASS]: IRP_MN_QUERY_ID IdType %x unimplemented\n", IoStack->Parameters.QueryId.IdType);
             Status = STATUS_NOT_SUPPORTED;
             Irp->IoStatus.Information = 0;
@@ -642,7 +642,7 @@ HidClassPDO_CreatePDO(
     //
     // get device extension
     //
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
@@ -696,7 +696,7 @@ HidClassPDO_CreatePDO(
         //
         // get device extension
         //
-        PDODeviceExtension = (PHIDCLASS_PDO_DEVICE_EXTENSION)PDODeviceObject->DeviceExtension;
+        PDODeviceExtension = PDODeviceObject->DeviceExtension;
 
         //
         // init device extension

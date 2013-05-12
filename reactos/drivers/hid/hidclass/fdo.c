@@ -42,7 +42,7 @@ HidClassFDO_QueryCapabilities(
     //
     // get device extension
     //
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
@@ -77,7 +77,7 @@ HidClassFDO_QueryCapabilities(
     //
     // set completion routine
     //
-    IoSetCompletionRoutine(Irp, HidClassFDO_QueryCapabilitiesCompletionRoutine, (PVOID)&Event, TRUE, TRUE, TRUE);
+    IoSetCompletionRoutine(Irp, HidClassFDO_QueryCapabilitiesCompletionRoutine, &Event, TRUE, TRUE, TRUE);
 
     //
     // init capabilities
@@ -158,7 +158,7 @@ HidClassFDO_DispatchRequestSynchronous(
     //
     // get device extension
     //
-    CommonDeviceExtension = (PHIDCLASS_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // set completion routine
@@ -218,7 +218,7 @@ HidClassFDO_GetDescriptors(
     //
     // get device extension
     //
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
@@ -343,7 +343,7 @@ HidClassFDO_StartDevice(
     //
     // get device extension
     //
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
@@ -438,7 +438,7 @@ HidClassFDO_CopyDeviceRelations(
     //
     // get device extension
     //
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
@@ -495,7 +495,7 @@ HidClassFDO_DeviceRelations(
     //
     // get device extension
     //
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
@@ -566,7 +566,7 @@ HidClassFDO_PnP(
     //
     // get device extension
     //
-    FDODeviceExtension = (PHIDCLASS_FDO_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = DeviceObject->DeviceExtension;
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
