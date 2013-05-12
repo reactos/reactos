@@ -20,7 +20,7 @@ HidClassFDO_QueryCapabilitiesCompletionRoutine(
     //
     // set event
     //
-    KeSetEvent((PRKEVENT)Context, 0, FALSE);
+    KeSetEvent(Context, 0, FALSE);
 
     //
     // completion is done in the HidClassFDO_QueryCapabilities routine
@@ -131,7 +131,7 @@ HidClassFDO_DispatchRequestSynchronousCompletion(
     //
     // signal event
     //
-    KeSetEvent((PRKEVENT)Context, 0, FALSE);
+    KeSetEvent(Context, 0, FALSE);
 
     //
     // done
@@ -447,7 +447,7 @@ HidClassFDO_CopyDeviceRelations(
     // allocate result
     //
     DeviceRelations = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(DEVICE_RELATIONS) + (FDODeviceExtension->DeviceRelations->Count-1) * sizeof(PDEVICE_OBJECT),
+                                            sizeof(DEVICE_RELATIONS) + (FDODeviceExtension->DeviceRelations->Count - 1) * sizeof(PDEVICE_OBJECT),
                                             HIDCLASS_TAG);
     if (!DeviceRelations)
     {

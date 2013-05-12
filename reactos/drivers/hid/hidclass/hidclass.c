@@ -354,31 +354,6 @@ HidClass_Close(
     return STATUS_SUCCESS;
 }
 
-PVOID
-HidClass_GetSystemAddress(
-    IN PMDL ReportMDL)
-{
-    //
-    // sanity check
-    //
-    ASSERT(ReportMDL);
-
-    if (ReportMDL->MdlFlags & (MDL_SOURCE_IS_NONPAGED_POOL | MDL_MAPPED_TO_SYSTEM_VA))
-    {
-       //
-       // buffer is non paged pool
-       //
-       return ReportMDL->MappedSystemVa;
-    }
-    else
-    {
-       //
-       // map mdl
-       //
-       return MmMapLockedPages(ReportMDL, KernelMode);
-    }
-}
-
 NTSTATUS
 NTAPI
 HidClass_ReadCompleteIrp(
@@ -415,7 +390,7 @@ HidClass_ReadCompleteIrp(
         //
         // get address
         //
-        Address = HidClass_GetSystemAddress(IrpContext->OriginalIrp->MdlAddress);
+        Address = MmGetSystemAddressForMdlSafe(IrpContext->OriginalIrp->MdlAddress, NormalPagePriority);
         if (Address)
         {
             //
@@ -1061,7 +1036,6 @@ HidClass_DispatchDefault(
     return IoCallDriver(CommonDeviceExtension->HidDeviceExtension.NextDeviceObject, Irp);
 }
 
-
 NTSTATUS
 NTAPI
 HidClassDispatch(
@@ -1119,7 +1093,10 @@ HidRegisterMinidriver(
     }
 
     /* now allocate the driver object extension */
-    Status = IoAllocateDriverObjectExtension(MinidriverRegistration->DriverObject, (PVOID)ClientIdentificationAddress, sizeof(HIDCLASS_DRIVER_EXTENSION), (PVOID*)&DriverExtension);
+    Status = IoAllocateDriverObjectExtension(MinidriverRegistration->DriverObject,
+                                             ClientIdentificationAddress,
+                                             sizeof(HIDCLASS_DRIVER_EXTENSION),
+                                             (PVOID *)&DriverExtension);
     if (!NT_SUCCESS(Status))
     {
         /* failed to allocate driver extension */
@@ -1140,7 +1117,7 @@ HidRegisterMinidriver(
     /* copy driver dispatch routines */
     RtlCopyMemory(DriverExtension->MajorFunction,
                   MinidriverRegistration->DriverObject->MajorFunction,
-                  sizeof(PDRIVER_DISPATCH) * (IRP_MJ_MAXIMUM_FUNCTION+1));
+                  sizeof(PDRIVER_DISPATCH) * (IRP_MJ_MAXIMUM_FUNCTION + 1));
 
     /* initialize lock */
     KeInitializeSpinLock(&DriverExtension->Lock);
