@@ -294,7 +294,9 @@ HidClassFDO_GetDescriptors(
     //
     // now allocate space for the report descriptor
     //
-    FDODeviceExtension->ReportDescriptor = (PUCHAR)ExAllocatePool(NonPagedPool, FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength);
+    FDODeviceExtension->ReportDescriptor = ExAllocatePoolWithTag(NonPagedPool,
+                                                                 FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength,
+                                                                 HIDCLASS_TAG);
     if (!FDODeviceExtension->ReportDescriptor)
     {
         //
@@ -444,7 +446,9 @@ HidClassFDO_CopyDeviceRelations(
     //
     // allocate result
     //
-    DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, sizeof(DEVICE_RELATIONS) + (FDODeviceExtension->DeviceRelations->Count-1) * sizeof(PDEVICE_OBJECT));
+    DeviceRelations = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(DEVICE_RELATIONS) + (FDODeviceExtension->DeviceRelations->Count-1) * sizeof(PDEVICE_OBJECT),
+                                            HIDCLASS_TAG);
     if (!DeviceRelations)
     {
         //

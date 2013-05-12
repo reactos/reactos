@@ -10,6 +10,8 @@
 #include <wdmguid.h>
 #include <debug.h>
 
+#define HIDCLASS_TAG 'CdiH'
+
 typedef struct
 {
     PDRIVER_OBJECT DriverObject;

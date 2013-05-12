@@ -98,7 +98,7 @@ HidClassPDO_HandleQueryDeviceId(
     //
     // allocate new buffer
     //
-    NewBuffer = (LPWSTR)ExAllocatePool(NonPagedPool, (Length + 1) * sizeof(WCHAR));
+    NewBuffer = ExAllocatePoolWithTag(NonPagedPool, (Length + 1) * sizeof(WCHAR), HIDCLASS_TAG);
     if (!NewBuffer)
     {
         //
@@ -127,7 +127,7 @@ HidClassPDO_HandleQueryDeviceId(
     //
     // free old buffer
     //
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, 0);
 
     //
     // store result
@@ -249,12 +249,12 @@ HidClassPDO_HandleQueryHardwareId(
     //
     // free old buffer
     //
-    ExFreePool((PVOID)Irp->IoStatus.Information);
+    ExFreePoolWithTag((PVOID)Irp->IoStatus.Information, 0);
 
     //
     // allocate buffer
     //
-    Ptr = (LPWSTR)ExAllocatePool(NonPagedPool, (Offset + 1) * sizeof(WCHAR));
+    Ptr = ExAllocatePoolWithTag(NonPagedPool, (Offset + 1) * sizeof(WCHAR), HIDCLASS_TAG);
     if (!Ptr)
     {
         //
@@ -294,7 +294,7 @@ HidClassPDO_HandleQueryInstanceId(
     //
     // allocate buffer
     //
-    Buffer = ExAllocatePool(NonPagedPool, 5 * sizeof(WCHAR));
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, 5 * sizeof(WCHAR), HIDCLASS_TAG);
     if (!Buffer)
     {
         //
@@ -322,7 +322,7 @@ HidClassPDO_HandleQueryCompatibleId(
 {
     LPWSTR Buffer;
 
-    Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), HIDCLASS_TAG);
     if (!Buffer)
     {
         //
@@ -437,7 +437,7 @@ HidClassPDO_PnP(
             //
             //
             //
-            BusInformation = (PPNP_BUS_INFORMATION)ExAllocatePool(NonPagedPool, sizeof(PNP_BUS_INFORMATION));
+            BusInformation = ExAllocatePoolWithTag(NonPagedPool, sizeof(PNP_BUS_INFORMATION), HIDCLASS_TAG);
 
             //
             // fill in result
@@ -478,7 +478,7 @@ HidClassPDO_PnP(
             //
             // allocate device relations
             //
-            DeviceRelation = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, sizeof(DEVICE_RELATIONS));
+            DeviceRelation = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_RELATIONS), HIDCLASS_TAG);
             if (!DeviceRelation)
             {
                 //
@@ -649,7 +649,7 @@ HidClassPDO_CreatePDO(
     // first allocate device relations
     //
     Length = sizeof(DEVICE_RELATIONS) + sizeof(PDEVICE_OBJECT) * FDODeviceExtension->Common.DeviceDescription.CollectionDescLength;
-    DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, Length);
+    DeviceRelations = ExAllocatePoolWithTag(NonPagedPool, Length, HIDCLASS_TAG);
     if (!DeviceRelations)
     {
         //
@@ -760,7 +760,7 @@ HidClassPDO_CreatePDO(
         //
         // free device relations
         //
-        ExFreePool(DeviceRelations);
+        ExFreePoolWithTag(DeviceRelations, HIDCLASS_TAG);
         return Status;
     }
 

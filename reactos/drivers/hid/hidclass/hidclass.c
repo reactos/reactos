@@ -184,7 +184,7 @@ HidClass_Create(
     //
     // allocate context
     //
-    Context = (PHIDCLASS_FILEOP_CONTEXT)ExAllocatePool(NonPagedPool, sizeof(HIDCLASS_FILEOP_CONTEXT));
+    Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(HIDCLASS_FILEOP_CONTEXT), HIDCLASS_TAG);
     if (!Context)
     {
         //
@@ -344,7 +344,7 @@ HidClass_Close(
     //
     // free context
     //
-    ExFreePool(IrpContext);
+    ExFreePoolWithTag(IrpContext, HIDCLASS_TAG);
 
     //
     // complete request
@@ -462,7 +462,7 @@ HidClass_ReadCompleteIrp(
     //
     // free input report buffer
     //
-    ExFreePool(IrpContext->InputReportBuffer);
+    ExFreePoolWithTag(IrpContext->InputReportBuffer, HIDCLASS_TAG);
 
     //
     // remove us from pending list
@@ -517,7 +517,7 @@ HidClass_ReadCompleteIrp(
     //
     // free irp context
     //
-    ExFreePool(IrpContext);
+    ExFreePoolWithTag(IrpContext, HIDCLASS_TAG);
 
     //
     // done
@@ -611,7 +611,7 @@ HidClass_BuildIrp(
     //
     // allocate completion context
     //
-    IrpContext = ExAllocatePool(NonPagedPool, sizeof(HIDCLASS_IRP_CONTEXT));
+    IrpContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(HIDCLASS_IRP_CONTEXT), HIDCLASS_TAG);
     if (!IrpContext)
     {
         //
@@ -673,14 +673,14 @@ HidClass_BuildIrp(
     //
     // allocate buffer
     //
-    IrpContext->InputReportBuffer = ExAllocatePool(NonPagedPool, IrpContext->InputReportBufferLength);
+    IrpContext->InputReportBuffer = ExAllocatePoolWithTag(NonPagedPool, IrpContext->InputReportBufferLength, HIDCLASS_TAG);
     if (!IrpContext->InputReportBuffer)
     {
         //
         // no memory
         //
         IoFreeIrp(Irp);
-        ExFreePool(IrpContext);
+        ExFreePoolWithTag(IrpContext, HIDCLASS_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
