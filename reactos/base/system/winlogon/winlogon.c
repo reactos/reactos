@@ -363,6 +363,9 @@ WinMain(IN HINSTANCE hInstance,
         ExitProcess(1);
     }
 
+    /* Wait for the LSA server */
+    WaitForLsass();
+
     /* Load and initialize gina */
     if (!GinaInit(WLSession))
     {
@@ -373,9 +376,6 @@ WinMain(IN HINSTANCE hInstance,
     }
 
     DisplayStatusMessage(WLSession, WLSession->WinlogonDesktop, IDS_REACTOSISSTARTINGUP);
-
-    /* Wait for the LSA server */
-    WaitForLsass();
 
 #if 0
     /* Connect to NetLogon service (lsass.exe) */
