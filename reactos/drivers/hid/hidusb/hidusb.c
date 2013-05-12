@@ -54,7 +54,7 @@ HidUsb_GetPortStatus(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // init result
@@ -94,7 +94,7 @@ HidUsb_GetPortStatus(
     //
     // store result buffer
     //
-   IoStack->Parameters.Others.Argument1 = (PVOID)PortStatus;
+    IoStack->Parameters.Others.Argument1 = PortStatus;
 
     //
     // call driver
@@ -128,8 +128,8 @@ HidUsb_ResetInterruptPipe(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get interrupt pipe handle
@@ -188,8 +188,8 @@ HidUsb_AbortPipe(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // allocate urb
@@ -247,7 +247,7 @@ HidUsb_ResetPort(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // init event
@@ -345,12 +345,12 @@ HidUsb_ResetWorkerRoutine(
     //
     // get context
     //
-    ResetContext = (PHID_USB_RESET_CONTEXT)Ctx;
+    ResetContext = Ctx;
 
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)ResetContext->DeviceObject->DeviceExtension;
+    DeviceExtension = ResetContext->DeviceObject->DeviceExtension;
 
     //
     // get port status
@@ -429,7 +429,7 @@ HidUsb_ReadReportCompletion(
     //
     // get urb
     //
-    Urb = (PURB)Context;
+    Urb = Context;
     ASSERT(Urb);
 
     DPRINT("[HIDUSB] HidUsb_ReadReportCompletion %p Status %x Urb Status %x\n", Irp, Irp->IoStatus, Urb->UrbHeader.Status);
@@ -471,8 +471,8 @@ HidUsb_ReadReportCompletion(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // allocate reset context
@@ -540,8 +540,8 @@ HidUsb_ReadReport(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get current stack location
@@ -615,13 +615,13 @@ HidUsb_ReadReport(
     IoStack->Parameters.DeviceIoControl.InputBufferLength = 0;
     IoStack->Parameters.DeviceIoControl.OutputBufferLength = 0;
     IoStack->Parameters.DeviceIoControl.Type3InputBuffer = NULL;
-    IoStack->Parameters.Others.Argument1 = (PVOID)Urb;
+    IoStack->Parameters.Others.Argument1 = Urb;
 
 
     //
     // set completion routine
     //
-    IoSetCompletionRoutine(Irp, HidUsb_ReadReportCompletion, (PVOID)Urb, TRUE, TRUE, TRUE);
+    IoSetCompletionRoutine(Irp, HidUsb_ReadReportCompletion, Urb, TRUE, TRUE, TRUE);
 
     //
     // call driver
@@ -646,8 +646,8 @@ HidUsb_GetReportDescriptor(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // sanity checks
@@ -737,8 +737,8 @@ HidInternalDeviceControl(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get current stack location
@@ -765,7 +765,7 @@ HidInternalDeviceControl(
             DPRINT("[HIDUSB] IOCTL_HID_GET_DEVICE_ATTRIBUTES\n");
             ASSERT(HidDeviceExtension->DeviceDescriptor);
             Irp->IoStatus.Information = sizeof(HID_DESCRIPTOR);
-            Attributes = (PHID_DEVICE_ATTRIBUTES)Irp->UserBuffer;
+            Attributes = Irp->UserBuffer;
             Attributes->Size = sizeof(HID_DEVICE_ATTRIBUTES);
             Attributes->VendorID = HidDeviceExtension->DeviceDescriptor->idVendor;
             Attributes->ProductID = HidDeviceExtension->DeviceDescriptor->idProduct;
@@ -925,7 +925,7 @@ HidSystemControl(
     //
     // get hid device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
     //
     // copy stack location
@@ -948,7 +948,7 @@ Hid_PnpCompletion(
     //
     // signal event
     //
-    KeSetEvent((PRKEVENT)Context, 0, FALSE);
+    KeSetEvent(Context, 0, FALSE);
 
     //
     // done
@@ -977,8 +977,8 @@ Hid_DispatchUrb(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // build irp
@@ -1008,12 +1008,12 @@ Hid_DispatchUrb(
     //
     // store urb
     //
-    IoStack->Parameters.Others.Argument1 = (PVOID)Urb;
+    IoStack->Parameters.Others.Argument1 = Urb;
 
     //
     // set completion routine
     //
-    IoSetCompletionRoutine(Irp, Hid_PnpCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+    IoSetCompletionRoutine(Irp, Hid_PnpCompletion, &Event, TRUE, TRUE, TRUE);
 
     //
     // call driver
@@ -1196,8 +1196,8 @@ Hid_SelectConfiguration(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // now parse the descriptors
@@ -1290,8 +1290,8 @@ Hid_SetIdle(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // allocate urb
@@ -1357,8 +1357,8 @@ Hid_GetProtocol(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
     ASSERT(HidDeviceExtension->InterfaceInfo);
 
     if (HidDeviceExtension->InterfaceInfo->SubClass != 0x1)
@@ -1442,8 +1442,8 @@ Hid_PnpStart(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get device descriptor
@@ -1621,8 +1621,8 @@ HidPnp(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get current stack location
@@ -1708,7 +1708,7 @@ HidPnp(
             //
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
             IoCopyCurrentIrpStackLocationToNext(Irp);
-            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, &Event, TRUE, TRUE, TRUE);
 
             //
             // send irp and wait for completion
@@ -1742,7 +1742,7 @@ HidPnp(
             //
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
             IoCopyCurrentIrpStackLocationToNext(Irp);
-            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, &Event, TRUE, TRUE, TRUE);
 
             //
             // send irp and wait for completion
@@ -1775,7 +1775,7 @@ HidPnp(
             //
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
             IoCopyCurrentIrpStackLocationToNext(Irp);
-            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+            IoSetCompletionRoutine(Irp, Hid_PnpCompletion, &Event, TRUE, TRUE, TRUE);
 
             //
             // send irp and wait for completion
@@ -1836,8 +1836,8 @@ HidAddDevice(
     //
     // get device extension
     //
-    DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // init event
