@@ -16,21 +16,21 @@ HidUsb_GetInputInterruptInterfaceHandle(
 {
     ULONG Index;
 
-     //
-     // sanity check
-     //
-     ASSERT(InterfaceInformation->NumberOfPipes);
+    //
+    // sanity check
+    //
+    ASSERT(InterfaceInformation->NumberOfPipes);
 
-     for(Index = 0; Index < InterfaceInformation->NumberOfPipes; Index++)
-     {
-         //DPRINT1("[HIDUSB] EndpointAddress %x PipeType %x PipeHandle %x\n", InterfaceInformation->Pipes[Index].EndpointAddress, InterfaceInformation->Pipes[Index].PipeType, InterfaceInformation->Pipes[Index].PipeHandle);
-         if (InterfaceInformation->Pipes[Index].PipeType == UsbdPipeTypeInterrupt && (InterfaceInformation->Pipes[Index].EndpointAddress & USB_ENDPOINT_DIRECTION_MASK))
-         {
-             //
-             // found handle
-             //
-             return &InterfaceInformation->Pipes[Index];
-         }
+    for (Index = 0; Index < InterfaceInformation->NumberOfPipes; Index++)
+    {
+        //DPRINT1("[HIDUSB] EndpointAddress %x PipeType %x PipeHandle %x\n", InterfaceInformation->Pipes[Index].EndpointAddress, InterfaceInformation->Pipes[Index].PipeType, InterfaceInformation->Pipes[Index].PipeHandle);
+        if (InterfaceInformation->Pipes[Index].PipeType == UsbdPipeTypeInterrupt && (InterfaceInformation->Pipes[Index].EndpointAddress & USB_ENDPOINT_DIRECTION_MASK))
+        {
+            //
+            // found handle
+            //
+            return &InterfaceInformation->Pipes[Index];
+        }
     }
 
     //
@@ -69,7 +69,15 @@ HidUsb_GetPortStatus(
     //
     // build irp
     //
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_GET_PORT_STATUS, DeviceExtension->NextDeviceObject, NULL, 0, NULL, 0, TRUE, &Event, &IoStatus);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_GET_PORT_STATUS,
+                                        DeviceExtension->NextDeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        0,
+                                        TRUE,
+                                        &Event,
+                                        &IoStatus);
     if (!Irp)
     {
         //
@@ -88,23 +96,23 @@ HidUsb_GetPortStatus(
     //
    IoStack->Parameters.Others.Argument1 = (PVOID)PortStatus;
 
-   //
-   // call driver
-   //
-   Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
-   if (Status == STATUS_PENDING)
-   {
-       //
-       // wait for completion
-       //
-       KeWaitForSingleObject(&Event, Executive, KernelMode, 0, NULL);
-       return IoStatus.Status;
-   }
+    //
+    // call driver
+    //
+    Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        //
+        // wait for completion
+        //
+        KeWaitForSingleObject(&Event, Executive, KernelMode, 0, NULL);
+        return IoStatus.Status;
+    }
 
-   //
-   // done
-   //
-   return Status;
+    //
+    // done
+    //
+    return Status;
 }
 
 NTSTATUS
@@ -249,7 +257,15 @@ HidUsb_ResetPort(
     //
     // build irp
     //
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_RESET_PORT, DeviceExtension->NextDeviceObject, NULL, 0, NULL, 0, TRUE, &Event, &IoStatusBlock);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_RESET_PORT,
+                                        DeviceExtension->NextDeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        0,
+                                        TRUE,
+                                        &Event,
+                                        &IoStatusBlock);
     if (!Irp)
     {
         //
@@ -646,7 +662,14 @@ HidUsb_GetReportDescriptor(
     // FIXME: support old hid version
     //
     BufferLength = HidDeviceExtension->HidDescriptor->DescriptorList[0].wReportLength;
-    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), &Report, &BufferLength, HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType, 0, HidDeviceExtension->InterfaceInfo->InterfaceNumber);
+    Status = Hid_GetDescriptor(DeviceObject,
+                               URB_FUNCTION_GET_DESCRIPTOR_FROM_INTERFACE,
+                               sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                               &Report,
+                               &BufferLength,
+                               HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType,
+                               0,
+                               HidDeviceExtension->InterfaceInfo->InterfaceNumber);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -654,7 +677,14 @@ HidUsb_GetReportDescriptor(
         // try with old hid version
         //
         BufferLength = HidDeviceExtension->HidDescriptor->DescriptorList[0].wReportLength;
-        Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), &Report, &BufferLength, HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType, 0, 0 /* FIXME*/);
+        Status = Hid_GetDescriptor(DeviceObject,
+                                   URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT,
+                                   sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                                   &Report,
+                                   &BufferLength,
+                                   HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType,
+                                   0,
+                                   0 /* FIXME*/);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("[HIDUSB] failed to get report descriptor with %x\n", Status);
@@ -715,7 +745,7 @@ HidInternalDeviceControl(
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    switch(IoStack->Parameters.DeviceIoControl.IoControlCode)
+    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
         case IOCTL_HID_GET_DEVICE_ATTRIBUTES:
         {
@@ -926,7 +956,6 @@ Hid_PnpCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
 NTSTATUS
 Hid_DispatchUrb(
     IN PDEVICE_OBJECT DeviceObject,
@@ -951,11 +980,18 @@ Hid_DispatchUrb(
     DeviceExtension = (PHID_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     HidDeviceExtension = (PHID_USB_DEVICE_EXTENSION)DeviceExtension->MiniDeviceExtension;
 
-
     //
     // build irp
     //
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_SUBMIT_URB, DeviceExtension->NextDeviceObject, NULL, 0, NULL, 0, TRUE, &Event, &IoStatus);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_SUBMIT_URB,
+                                        DeviceExtension->NextDeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        0,
+                                        TRUE,
+                                        &Event,
+                                        &IoStatus);
     if (!Irp)
     {
         //
@@ -1021,7 +1057,7 @@ Hid_GetDescriptor(
     IN USHORT UrbLength,
     IN OUT PVOID *UrbBuffer,
     IN OUT PULONG UrbBufferLength,
-    IN UCHAR DescriptorType, 
+    IN UCHAR DescriptorType,
     IN UCHAR Index,
     IN USHORT LanguageIndex)
 {
@@ -1079,7 +1115,7 @@ Hid_GetDescriptor(
     //
     // set urb function
     //
-   Urb->UrbHeader.Function = UrbFunction;
+    Urb->UrbHeader.Function = UrbFunction;
 
     //
     // dispatch urb
@@ -1278,7 +1314,7 @@ Hid_SetIdle(
     // format urb
     //
     UsbBuildVendorRequest(Urb,
-                          URB_FUNCTION_CLASS_INTERFACE, 
+                          URB_FUNCTION_CLASS_INTERFACE,
                           sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
                           0,
                           0,
@@ -1333,7 +1369,6 @@ Hid_GetProtocol(
         return;
     }
 
-
     //
     // allocate urb
     //
@@ -1355,7 +1390,7 @@ Hid_GetProtocol(
     // format urb
     //
     UsbBuildVendorRequest(Urb,
-                          URB_FUNCTION_CLASS_INTERFACE, 
+                          URB_FUNCTION_CLASS_INTERFACE,
                           sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
                           USBD_TRANSFER_DIRECTION_IN,
                           0,
@@ -1414,7 +1449,14 @@ Hid_PnpStart(
     // get device descriptor
     //
     DescriptorLength = sizeof(USB_DEVICE_DESCRIPTOR);
-    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), (PVOID*)&HidDeviceExtension->DeviceDescriptor, &DescriptorLength, USB_DEVICE_DESCRIPTOR_TYPE, 0, 0);
+    Status = Hid_GetDescriptor(DeviceObject,
+                               URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE,
+                               sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                               (PVOID *)&HidDeviceExtension->DeviceDescriptor,
+                               &DescriptorLength,
+                               USB_DEVICE_DESCRIPTOR_TYPE,
+                               0,
+                               0);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -1428,7 +1470,14 @@ Hid_PnpStart(
     // now get the configuration descriptor
     //
     DescriptorLength = sizeof(USB_CONFIGURATION_DESCRIPTOR);
-    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), (PVOID*)&HidDeviceExtension->ConfigurationDescriptor, &DescriptorLength, USB_CONFIGURATION_DESCRIPTOR_TYPE, 0, 0);
+    Status = Hid_GetDescriptor(DeviceObject,
+                               URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE,
+                               sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                               (PVOID *)&HidDeviceExtension->ConfigurationDescriptor,
+                               &DescriptorLength,
+                               USB_CONFIGURATION_DESCRIPTOR_TYPE,
+                               0,
+                               0);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -1459,7 +1508,14 @@ Hid_PnpStart(
     //
     // get full configuration descriptor
     //
-    Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), (PVOID*)&HidDeviceExtension->ConfigurationDescriptor, &DescriptorLength, USB_CONFIGURATION_DESCRIPTOR_TYPE, 0, 0);
+    Status = Hid_GetDescriptor(DeviceObject,
+                               URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE,
+                               sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
+                               (PVOID *)&HidDeviceExtension->ConfigurationDescriptor,
+                               &DescriptorLength,
+                               USB_CONFIGURATION_DESCRIPTOR_TYPE,
+                               0,
+                               0);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -1577,7 +1633,7 @@ HidPnp(
     //
     // handle requests based on request type
     //
-    switch(IoStack->MinorFunction)
+    switch (IoStack->MinorFunction)
     {
         case IRP_MN_REMOVE_DEVICE:
         {
@@ -1586,7 +1642,7 @@ HidPnp(
             //
             IoSkipCurrentIrpStackLocation(Irp);
             Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
- 
+
             //
             // free resources
             //
