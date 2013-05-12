@@ -1660,12 +1660,6 @@ HidPnp(
                 HidDeviceExtension->ConfigurationDescriptor = NULL;
             }
 
-            //
-            // delete and detach device
-            //
-            IoDetachDevice(DeviceExtension->NextDeviceObject);
-            IoDeleteDevice(DeviceObject);
-
             return Status;
         }
         case IRP_MN_QUERY_PNP_DEVICE_STATE:

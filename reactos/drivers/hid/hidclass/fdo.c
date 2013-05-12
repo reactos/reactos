@@ -411,6 +411,13 @@ HidClassFDO_RemoveDevice(
     IN PIRP Irp)
 {
     NTSTATUS Status;
+    PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = DeviceObject->DeviceExtension;
+    ASSERT(FDODeviceExtension->Common.IsFDO);
 
     /* FIXME cleanup */
 
@@ -425,6 +432,13 @@ HidClassFDO_RemoveDevice(
     //
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    //
+    // detach and delete device
+    //
+    IoDetachDevice(FDODeviceExtension->Common.HidDeviceExtension.NextDeviceObject);
+    IoDeleteDevice(DeviceObject);
+
     return Status;
 }
 
