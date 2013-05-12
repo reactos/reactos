@@ -1287,6 +1287,90 @@ Hid_SelectConfiguration(
 }
 
 NTSTATUS
+Hid_DisableConfiguration(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    PHID_DEVICE_EXTENSION DeviceExtension;
+    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
+    NTSTATUS Status;
+    PURB Urb;
+
+    //
+    // get device extension
+    //
+    DeviceExtension = DeviceObject->DeviceExtension;
+    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
+
+    //
+    // build urb
+    //
+    Urb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(struct _URB_SELECT_CONFIGURATION),
+                                HIDUSB_URB_TAG);
+    if (!Urb)
+    {
+        //
+        // no memory
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // format urb
+    //
+    UsbBuildSelectConfigurationRequest(Urb,
+                                       sizeof(struct _URB_SELECT_CONFIGURATION),
+                                       NULL);
+
+    //
+    // dispatch request
+    //
+    Status = Hid_DispatchUrb(DeviceObject, Urb);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[HIDUSB] Dispatching unconfigure URB failed with %lx\n", Status);
+    }
+    else if (!USBD_SUCCESS(Urb->UrbHeader.Status))
+    {
+        DPRINT("[HIDUSB] Unconfigure URB failed with %lx\n", Status);
+    }
+
+    //
+    // free urb
+    //
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
+
+    //
+    // free resources
+    //
+    HidDeviceExtension->ConfigurationHandle = NULL;
+
+    if (HidDeviceExtension->InterfaceInfo)
+    {
+        ExFreePoolWithTag(HidDeviceExtension->InterfaceInfo, HIDUSB_TAG);
+        HidDeviceExtension->InterfaceInfo = NULL;
+    }
+
+    if (HidDeviceExtension->ConfigurationDescriptor)
+    {
+        ExFreePoolWithTag(HidDeviceExtension->ConfigurationDescriptor, HIDUSB_TAG);
+        HidDeviceExtension->ConfigurationDescriptor = NULL;
+        HidDeviceExtension->HidDescriptor = NULL;
+    }
+
+    if (HidDeviceExtension->DeviceDescriptor)
+    {
+        ExFreePoolWithTag(HidDeviceExtension->DeviceDescriptor, HIDUSB_TAG);
+        HidDeviceExtension->DeviceDescriptor = NULL;
+    }
+
+    //
+    // done
+    //
+    return Status;
+}
+
+NTSTATUS
 Hid_SetIdle(
     IN PDEVICE_OBJECT DeviceObject)
 {
@@ -1646,19 +1730,17 @@ HidPnp(
         case IRP_MN_REMOVE_DEVICE:
         {
             //
+            // unconfigure device
+            // FIXME: Call this on IRP_MN_SURPRISE_REMOVAL, but don't send URBs
+            // FIXME: Don't call this after we've already seen a surprise removal or stop
+            //
+            Hid_DisableConfiguration(DeviceObject);
+
+            //
             // pass request onto lower driver
             //
             IoSkipCurrentIrpStackLocation(Irp);
             Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
-
-            //
-            // free resources
-            //
-            if (HidDeviceExtension->ConfigurationDescriptor)
-            {
-                ExFreePoolWithTag(HidDeviceExtension->ConfigurationDescriptor, HIDUSB_TAG);
-                HidDeviceExtension->ConfigurationDescriptor = NULL;
-            }
 
             return Status;
         }
@@ -1702,8 +1784,9 @@ HidPnp(
         case IRP_MN_STOP_DEVICE:
         {
             //
-            // FIXME: unconfigure the device
+            // unconfigure device
             //
+            Hid_DisableConfiguration(DeviceObject);
 
             //
             // prepare irp
