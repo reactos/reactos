@@ -64,7 +64,7 @@ typedef struct _CONSOLE_SCREEN_BUFFER
 
     BOOLEAN CursorBlinkOn;
     BOOLEAN ForceCursorOff;
-    ULONG   CursorSize;
+    // ULONG   CursorSize;
     CONSOLE_CURSOR_INFO CursorInfo; // FIXME: Keep this member or not ??
 
     WORD ScreenDefaultAttrib;       /* Default screen char attribute */

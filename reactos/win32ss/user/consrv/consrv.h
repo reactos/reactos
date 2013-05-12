@@ -45,9 +45,11 @@
 #include <win/conmsg.h>
 
 
+/* Heap Helpers */
+#include "heap.h"
+
 /* Globals */
 extern HINSTANCE ConSrvDllInstance;
-extern HANDLE ConSrvHeap;
 
 #define ConsoleGetPerProcessData(Process)   \
     ((PCONSOLE_PROCESS_DATA)((Process)->ServerData[CONSRV_SERVERDLL_INDEX]))

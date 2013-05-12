@@ -40,7 +40,8 @@ AdjustHandleCounts(PCONSOLE_IO_HANDLE Entry, INT Change)
 {
     PCONSOLE_IO_OBJECT Object = Entry->Object;
 
-    DPRINT("AdjustHandleCounts(0x%p, %d), Object = 0x%p, Object->HandleCount = %d, Object->Type = %lu\n", Entry, Change, Object, Object->HandleCount, Object->Type);
+    DPRINT("AdjustHandleCounts(0x%p, %d), Object = 0x%p\n", Entry, Change, Object);
+    DPRINT("\tAdjustHandleCounts(0x%p, %d), Object = 0x%p, Object->HandleCount = %d, Object->Type = %lu\n", Entry, Change, Object, Object->HandleCount, Object->Type);
 
     if (Entry->Access & GENERIC_READ)           Object->AccessRead += Change;
     if (Entry->Access & GENERIC_WRITE)          Object->AccessWrite += Change;
@@ -116,8 +117,12 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
         }
 
         /// LOCK /// LeaveCriticalSection(&Console->Lock);
-        Entry->Object = NULL;
+
+        /* Invalidate (zero-out) this handle entry */
+        // Entry->Object = NULL;
+        // RtlZeroMemory(Entry, sizeof(*Entry));
     }
+    RtlZeroMemory(Entry, sizeof(*Entry)); // Be sure the whole entry is invalidated.
 }
 
 
@@ -204,22 +209,21 @@ ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
                           IN PCONSOLE_PROCESS_DATA TargetProcessData)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG i;
+    ULONG i, j;
 
     RtlEnterCriticalSection(&SourceProcessData->HandleTableLock);
 
     /* Inherit a handles table only if there is no already */
     if (TargetProcessData->HandleTable != NULL /* || TargetProcessData->HandleTableSize != 0 */)
     {
-        Status = STATUS_UNSUCCESSFUL; /* STATUS_INVALID_PARAMETER */
+        Status = STATUS_UNSUCCESSFUL;
         goto Quit;
     }
 
     /* Allocate a new handle table for the child process */
-    TargetProcessData->HandleTable = RtlAllocateHeap(ConSrvHeap,
-                                                     HEAP_ZERO_MEMORY,
-                                                     SourceProcessData->HandleTableSize
-                                                             * sizeof(CONSOLE_IO_HANDLE));
+    TargetProcessData->HandleTable = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
+                                                      SourceProcessData->HandleTableSize
+                                                        * sizeof(CONSOLE_IO_HANDLE));
     if (TargetProcessData->HandleTable == NULL)
     {
         Status = STATUS_NO_MEMORY;
@@ -232,7 +236,7 @@ ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
      * Parse the parent process' handles table and, for each handle,
      * do a copy of it and reference it, if the handle is inheritable.
      */
-    for (i = 0; i < SourceProcessData->HandleTableSize; i++)
+    for (i = 0, j = 0; i < SourceProcessData->HandleTableSize; i++)
     {
         if (SourceProcessData->HandleTable[i].Object != NULL &&
             SourceProcessData->HandleTable[i].Inheritable)
@@ -241,8 +245,9 @@ ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
              * Copy the handle data and increment the reference count of the
              * pointed object (via the call to ConSrvCreateHandleEntry).
              */
-            TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
-            ConSrvCreateHandleEntry(&TargetProcessData->HandleTable[i]);
+            TargetProcessData->HandleTable[j] = SourceProcessData->HandleTable[i];
+            ConSrvCreateHandleEntry(&TargetProcessData->HandleTable[j]);
+            ++j;
         }
     }
 
@@ -260,18 +265,44 @@ ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData)
     {
         ULONG i;
 
-        /* Close all console handles and free the handle table memory */
-        for (i = 0; i < ProcessData->HandleTableSize; i++)
+        /*
+         * ProcessData->Console is NULL (and the assertion fails) when
+         * ConSrvFreeHandlesTable is called in ConSrvConnect during the
+         * allocation of a new console.
+         */
+        // ASSERT(ProcessData->Console);
+        if (ProcessData->Console != NULL)
         {
-            ConSrvCloseHandleEntry(&ProcessData->HandleTable[i]);
+            /* Close all the console handles */
+            for (i = 0; i < ProcessData->HandleTableSize; i++)
+            {
+                ConSrvCloseHandleEntry(&ProcessData->HandleTable[i]);
+            }
         }
-        RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
+        /* Free the handles table memory */
+        ConsoleFreeHeap(ProcessData->HandleTable);
         ProcessData->HandleTable = NULL;
     }
 
     ProcessData->HandleTableSize = 0;
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+}
+
+VOID
+FASTCALL
+ConSrvInitObject(IN OUT PCONSOLE_IO_OBJECT Object,
+                 IN CONSOLE_IO_OBJECT_TYPE Type,
+                 IN PCONSOLE Console)
+{
+    ASSERT(Object);
+    // if (!Object) return;
+
+    Object->Type    = Type;
+    Object->Console = Console;
+    Object->AccessRead    = Object->AccessWrite    = 0;
+    Object->ExclusiveRead = Object->ExclusiveWrite = 0;
+    Object->HandleCount   = 0;
 }
 
 NTSTATUS
@@ -285,34 +316,45 @@ ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
 {
 #define IO_HANDLES_INCREMENT    2 * 3
 
-    ULONG i;
+    ULONG i = 0;
     PCONSOLE_IO_HANDLE Block;
 
     // NOTE: Commented out because calling code always lock HandleTableLock before.
     // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    for (i = 0; i < ProcessData->HandleTableSize; i++)
+    ASSERT( (ProcessData->HandleTable == NULL && ProcessData->HandleTableSize == 0) ||
+            (ProcessData->HandleTable != NULL && ProcessData->HandleTableSize != 0) );
+
+    if (ProcessData->HandleTable)
     {
-        if (ProcessData->HandleTable[i].Object == NULL)
+        for (i = 0; i < ProcessData->HandleTableSize; i++)
         {
-            break;
+            if (ProcessData->HandleTable[i].Object == NULL)
+                break;
         }
     }
+
     if (i >= ProcessData->HandleTableSize)
     {
-        Block = RtlAllocateHeap(ConSrvHeap,
-                                HEAP_ZERO_MEMORY,
-                                (ProcessData->HandleTableSize +
+        /* Allocate a new handles table */
+        Block = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
+                                 (ProcessData->HandleTableSize +
                                     IO_HANDLES_INCREMENT) * sizeof(CONSOLE_IO_HANDLE));
         if (Block == NULL)
         {
             // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return STATUS_UNSUCCESSFUL;
         }
-        RtlCopyMemory(Block,
-                      ProcessData->HandleTable,
-                      ProcessData->HandleTableSize * sizeof(CONSOLE_IO_HANDLE));
-        RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
+
+        /* If we previously had a handles table, free it and use the new one */
+        if (ProcessData->HandleTable)
+        {
+            /* Copy the handles from the old table to the new one */
+            RtlCopyMemory(Block,
+                          ProcessData->HandleTable,
+                          ProcessData->HandleTableSize * sizeof(CONSOLE_IO_HANDLE));
+            ConsoleFreeHeap(ProcessData->HandleTable);
+        }
         ProcessData->HandleTable = Block;
         ProcessData->HandleTableSize += IO_HANDLES_INCREMENT;
     }
@@ -339,6 +381,8 @@ ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
+    ASSERT(ProcessData->HandleTable);
+
     if (h >= ProcessData->HandleTableSize ||
         (Object = ProcessData->HandleTable[h].Object) == NULL)
     {
@@ -346,6 +390,7 @@ ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
         return STATUS_INVALID_HANDLE;
     }
 
+    ASSERT(ProcessData->Console);
     ConSrvCloseHandleEntry(&ProcessData->HandleTable[h]);
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -429,6 +474,18 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
+    /*
+     * We are about to create a new console. However when ConSrvNewProcess
+     * was called, we didn't know that we wanted to create a new console and
+     * therefore, we by default inherited the handles table from our parent
+     * process. It's only now that we notice that in fact we do not need
+     * them, because we've created a new console and thus we must use it.
+     *
+     * Therefore, free the handles table so that we can recreate
+     * a new one later on.
+     */
+    ConSrvFreeHandlesTable(ProcessData);
+
     /* Initialize a new Console owned by this process */
     Status = ConSrvInitConsole(&ProcessData->Console, ConsoleStartInfo, ProcessData->Process);
     if (!NT_SUCCESS(Status))
@@ -500,6 +557,18 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
 
     if (CreateNewHandlesTable)
     {
+        /*
+         * We are about to create a new console. However when ConSrvNewProcess
+         * was called, we didn't know that we wanted to create a new console and
+         * therefore, we by default inherited the handles table from our parent
+         * process. It's only now that we notice that in fact we do not need
+         * them, because we've created a new console and thus we must use it.
+         *
+         * Therefore, free the handles table so that we can recreate
+         * a new one later on.
+         */
+        ConSrvFreeHandlesTable(ProcessData);
+
         /* Initialize the handles table */
         Status = ConSrvInitHandlesTable(ProcessData,
                                         pInputHandle,
@@ -552,7 +621,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 
     DPRINT("ConSrvRemoveConsole\n");
 
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     /* Validate and lock the console */
     if (ConSrvValidateConsole(Console, CONSOLE_RUNNING, TRUE))
@@ -578,7 +647,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
         //ProcessData->ConsoleEvent = NULL;
     }
 
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 }
 
 
@@ -649,19 +718,40 @@ CSR_API(SrvOpenConsole)
 
 CSR_API(SrvCloseHandle)
 {
+    NTSTATUS Status;
     PCONSOLE_CLOSEHANDLE CloseHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CloseHandleRequest;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
 
-    return ConSrvRemoveObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                                 CloseHandleRequest->ConsoleHandle);
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't get console\n");
+        return Status;
+    }
+
+    Status = ConSrvRemoveObject(ProcessData, CloseHandleRequest->ConsoleHandle);
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
 }
 
 CSR_API(SrvVerifyConsoleIoHandle)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PCONSOLE_VERIFYHANDLE VerifyHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.VerifyHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+
     HANDLE ConsoleHandle = VerifyHandleRequest->ConsoleHandle;
     ULONG_PTR Index = (ULONG_PTR)ConsoleHandle >> 2;
+
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't get console\n");
+        return Status;
+    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -675,17 +765,28 @@ CSR_API(SrvVerifyConsoleIoHandle)
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
+    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 
 CSR_API(SrvDuplicateHandle)
 {
-    PCONSOLE_IO_HANDLE Entry;
-    DWORD DesiredAccess;
+    NTSTATUS Status;
     PCONSOLE_DUPLICATEHANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE Console;
+
     HANDLE ConsoleHandle = DuplicateHandleRequest->ConsoleHandle;
     ULONG_PTR Index = (ULONG_PTR)ConsoleHandle >> 2;
+    PCONSOLE_IO_HANDLE Entry;
+    DWORD DesiredAccess;
+
+    Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Can't get console\n");
+        return Status;
+    }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -694,8 +795,8 @@ CSR_API(SrvDuplicateHandle)
         (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
     {
         DPRINT1("Couldn't duplicate invalid handle %p\n", ConsoleHandle);
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        return STATUS_INVALID_HANDLE;
+        Status = STATUS_INVALID_HANDLE;
+        goto Quit;
     }
 
     if (DuplicateHandleRequest->Options & DUPLICATE_SAME_ACCESS)
@@ -709,27 +810,31 @@ CSR_API(SrvDuplicateHandle)
         if ((Entry->Access & DesiredAccess) == 0)
         {
             DPRINT1("Handle %p only has access %X; requested %X\n",
-                ConsoleHandle, Entry->Access, DesiredAccess);
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            return STATUS_INVALID_PARAMETER;
+                    ConsoleHandle, Entry->Access, DesiredAccess);
+            Status = STATUS_INVALID_PARAMETER;
+            goto Quit;
         }
     }
 
     /* Insert the new handle inside the process handles table */
-    ApiMessage->Status = ConSrvInsertObject(ProcessData,
-                                            &DuplicateHandleRequest->ConsoleHandle, // Use the new handle value!
-                                            Entry->Object,
-                                            DesiredAccess,
-                                            DuplicateHandleRequest->Inheritable,
-                                            Entry->ShareMode);
-    if (NT_SUCCESS(ApiMessage->Status) &&
-        DuplicateHandleRequest->Options & DUPLICATE_CLOSE_SOURCE)
+    Status = ConSrvInsertObject(ProcessData,
+                                &DuplicateHandleRequest->ConsoleHandle, // Use the new handle value!
+                                Entry->Object,
+                                DesiredAccess,
+                                DuplicateHandleRequest->Inheritable,
+                                Entry->ShareMode);
+    if (NT_SUCCESS(Status) &&
+        (DuplicateHandleRequest->Options & DUPLICATE_CLOSE_SOURCE))
     {
+        /* Close the original handle if needed */
         ConSrvCloseHandleEntry(Entry);
     }
 
+Quit:
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    return ApiMessage->Status;
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return Status;
 }
 
 /* EOF */

@@ -100,7 +100,7 @@ ConioProcessInputEvent(PCONSOLE Console,
     }
 
     /* add event to the queue */
-    ConInRec = RtlAllocateHeap(ConSrvHeap, 0, sizeof(ConsoleInput));
+    ConInRec = ConsoleAllocHeap(0, sizeof(ConsoleInput));
     if (ConInRec == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
     ConInRec->InputEvent = *InputEvent;
@@ -129,7 +129,7 @@ PurgeInputBuffer(PCONSOLE Console)
     {
         CurrentEntry = RemoveHeadList(&Console->InputBuffer.InputEvents);
         Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-        RtlFreeHeap(ConSrvHeap, 0, Event);
+        ConsoleFreeHeap(Event);
     }
 
     CloseHandle(Console->InputBuffer.ActiveEvent);
@@ -324,7 +324,7 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
     {
         PGET_INPUT_INFO CapturedInputInfo;
 
-        CapturedInputInfo = RtlAllocateHeap(ConSrvHeap, 0, sizeof(GET_INPUT_INFO));
+        CapturedInputInfo = ConsoleAllocHeap(0, sizeof(GET_INPUT_INFO));
         if (!CapturedInputInfo) return STATUS_NO_MEMORY;
 
         RtlMoveMemory(CapturedInputInfo, InputInfo, sizeof(GET_INPUT_INFO));
@@ -336,7 +336,7 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
                            CapturedInputInfo,
                            NULL))
         {
-            RtlFreeHeap(ConSrvHeap, 0, CapturedInputInfo);
+            ConsoleFreeHeap(CapturedInputInfo);
             return STATUS_NO_MEMORY;
         }
     }
@@ -407,7 +407,7 @@ Quit:
     if (Status != STATUS_PENDING)
     {
         WaitApiMessage->Status = Status;
-        RtlFreeHeap(ConSrvHeap, 0, InputInfo);
+        ConsoleFreeHeap(InputInfo);
     }
 
     return (Status == STATUS_PENDING ? FALSE : TRUE);
@@ -466,7 +466,7 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
             if (Wait) // TRUE --> Read, we remove inputs from the buffer ; FALSE --> Peek, we keep inputs.
             {
                 RemoveEntryList(&Input->ListEntry);
-                RtlFreeHeap(ConSrvHeap, 0, Input);
+                ConsoleFreeHeap(Input);
             }
         }
 
@@ -539,7 +539,7 @@ Quit:
     if (Status != STATUS_PENDING)
     {
         WaitApiMessage->Status = Status;
-        RtlFreeHeap(ConSrvHeap, 0, InputInfo);
+        ConsoleFreeHeap(InputInfo);
     }
 
     return (Status == STATUS_PENDING ? FALSE : TRUE);
@@ -569,7 +569,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
         {
             /* Starting a new line */
             Console->LineMaxSize = (WORD)max(256, nNumberOfCharsToRead);
-            Console->LineBuffer = RtlAllocateHeap(ConSrvHeap, 0, Console->LineMaxSize * sizeof(WCHAR));
+            Console->LineBuffer = ConsoleAllocHeap(0, Console->LineMaxSize * sizeof(WCHAR));
             if (Console->LineBuffer == NULL)
             {
                 return STATUS_NO_MEMORY;
@@ -612,7 +612,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
                 LineInputKeyDown(Console, &Input->InputEvent.Event.KeyEvent);
                 ReadConsoleRequest->ControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
             }
-            RtlFreeHeap(ConSrvHeap, 0, Input);
+            ConsoleFreeHeap(Input);
         }
 
         /* Check if we have a complete line to read from */
@@ -640,7 +640,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
             if (Console->LinePos == Console->LineSize)
             {
                 /* Entire line has been read */
-                RtlFreeHeap(ConSrvHeap, 0, Console->LineBuffer);
+                ConsoleFreeHeap(Console->LineBuffer);
                 Console->LineBuffer = NULL;
             }
 
@@ -684,7 +684,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
                 /* Did read something */
                 WaitForMoreToRead = FALSE;
             }
-            RtlFreeHeap(ConSrvHeap, 0, Input);
+            ConsoleFreeHeap(Input);
         }
     }
 
@@ -862,7 +862,7 @@ CSR_API(SrvFlushConsoleInputBuffer)
     {
         CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
         Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-        RtlFreeHeap(ConSrvHeap, 0, Event);
+        ConsoleFreeHeap(Event);
     }
     ResetEvent(InputBuffer->ActiveEvent);
 

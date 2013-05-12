@@ -83,21 +83,19 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
     if (Console == NULL || Buffer == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    *Buffer = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE_SCREEN_BUFFER));
+    *Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(CONSOLE_SCREEN_BUFFER));
     if (NULL == *Buffer)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    (*Buffer)->Header.Type = SCREEN_BUFFER;
-    (*Buffer)->Header.Console = Console;
-    (*Buffer)->Header.HandleCount = 0;
+    ConSrvInitObject(&(*Buffer)->Header, SCREEN_BUFFER, Console);
     (*Buffer)->ScreenBufferSize = ScreenBufferSize;
 
-    (*Buffer)->Buffer = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, (*Buffer)->ScreenBufferSize.X * (*Buffer)->ScreenBufferSize.Y * 2);
+    (*Buffer)->Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, (*Buffer)->ScreenBufferSize.X * (*Buffer)->ScreenBufferSize.Y * 2);
     if (NULL == (*Buffer)->Buffer)
     {
-        RtlFreeHeap(ConSrvHeap, 0, *Buffer);
+        ConsoleFreeHeap(*Buffer);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -105,6 +103,7 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
     (*Buffer)->ShowY = 0;
     (*Buffer)->VirtualY = 0;
 
+    (*Buffer)->CursorBlinkOn = (*Buffer)->ForceCursorOff = FALSE;
     (*Buffer)->CursorInfo.bVisible = (IsCursorVisible && (CursorSize != 0));
     (*Buffer)->CursorInfo.dwSize   = min(max(CursorSize, 0), 100);
 
@@ -437,7 +436,7 @@ ConioResizeBuffer(PCONSOLE Console,
 
     if (!ConioIsBufferResizeSupported(Console)) return STATUS_NOT_SUPPORTED;
 
-    Buffer = RtlAllocateHeap(ConSrvHeap, 0, Size.X * Size.Y * 2);
+    Buffer = ConsoleAllocHeap(0, Size.X * Size.Y * 2);
     if (!Buffer) return STATUS_NO_MEMORY;
 
     DPRINT1("Resizing (%d,%d) to (%d,%d)\n", ScreenBuffer->ScreenBufferSize.X, ScreenBuffer->ScreenBufferSize.Y, Size.X, Size.Y);
@@ -487,7 +486,7 @@ ConioResizeBuffer(PCONSOLE Console,
     }
 
     (void)InterlockedExchangePointer((PVOID volatile*)&ScreenBuffer->Buffer, Buffer);
-    RtlFreeHeap(ConSrvHeap, 0, OldBuffer);
+    ConsoleFreeHeap(OldBuffer);
     ScreenBuffer->ScreenBufferSize = Size;
     ScreenBuffer->VirtualY = 0;
 
@@ -538,8 +537,8 @@ ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
         }
     }
 
-    RtlFreeHeap(ConSrvHeap, 0, Buffer->Buffer);
-    RtlFreeHeap(ConSrvHeap, 0, Buffer);
+    ConsoleFreeHeap(Buffer->Buffer);
+    ConsoleFreeHeap(Buffer);
 }
 
 VOID FASTCALL
@@ -986,7 +985,7 @@ CSR_API(SrvReadConsoleOutputString)
      * TODO: Do NOT loop up to NumCodesToRead, but stop before
      * if we are going to overflow...
      */
-    for (i = 0; i < ReadOutputCodeRequest->NumCodesToRead; ++i)
+    for (i = 0; i < min(ReadOutputCodeRequest->NumCodesToRead, Buff->ScreenBufferSize.X * Buff->ScreenBufferSize.Y * 2); ++i)
     {
         Code = Buff->Buffer[2 * (Xpos + Ypos * Buff->ScreenBufferSize.X) + (CodeType == CODE_ATTRIBUTE ? 1 : 0)];
 

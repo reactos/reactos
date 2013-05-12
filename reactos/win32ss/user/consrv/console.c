@@ -59,7 +59,7 @@ ConsoleCreateUnicodeString(IN OUT PUNICODE_STRING UniDest,
     SIZE_T Size = (wcslen(Source) + 1) * sizeof(WCHAR);
     if (Size > MAXUSHORT) return FALSE;
 
-    UniDest->Buffer = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, Size);
+    UniDest->Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Size);
     if (UniDest->Buffer == NULL) return FALSE;
 
     RtlCopyMemory(UniDest->Buffer, Source, Size);
@@ -75,7 +75,7 @@ ConsoleFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 {
     if (UnicodeString->Buffer)
     {
-        RtlFreeHeap(ConSrvHeap, 0, UnicodeString->Buffer);
+        ConsoleFreeHeap(UnicodeString->Buffer);
         RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
     }
 }
@@ -310,7 +310,7 @@ ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
     NTSTATUS Status = STATUS_SUCCESS;
     PCONSOLE ProcessConsole;
 
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     ProcessConsole = ProcessData->Console;
 
     if (ConSrvValidateConsole(ProcessConsole, CONSOLE_RUNNING, LockConsole))
@@ -324,7 +324,7 @@ ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
         Status = STATUS_INVALID_HANDLE;
     }
 
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return Status;
 }
 
@@ -485,7 +485,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
     BOOL GuiMode;
-    WCHAR Title[128];
+    WCHAR DefaultTitle[128];
     WCHAR IconPath[MAX_PATH + 1] = L"";
     INT iIcon = 0;
 
@@ -495,7 +495,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     /*
      * Allocate a console structure
      */
-    Console = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE));
+    Console = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(CONSOLE));
     if (NULL == Console)
     {
         DPRINT1("Not enough memory for console creation.\n");
@@ -576,17 +576,18 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
      * Initialize the console
      */
     Console->State = CONSOLE_INITIALIZING;
-    InitializeCriticalSection(&Console->Lock);
     Console->ReferenceCount = 0;
+    InitializeCriticalSection(&Console->Lock);
     InitializeListHead(&Console->ProcessList);
+    RtlZeroMemory(&Console->TermIFace, sizeof(Console->TermIFace));
+
     memcpy(Console->Colors, ConsoleInfo.Colors, sizeof(ConsoleInfo.Colors));
     Console->ConsoleSize = ConsoleInfo.ConsoleSize;
 
     /*
      * Initialize the input buffer
      */
-    Console->InputBuffer.Header.Type = INPUT_BUFFER;
-    Console->InputBuffer.Header.Console = Console;
+    ConSrvInitObject(&Console->InputBuffer.Header, INPUT_BUFFER, Console);
 
     SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
     SecurityAttributes.lpSecurityDescriptor = NULL;
@@ -595,17 +596,25 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     if (NULL == Console->InputBuffer.ActiveEvent)
     {
         DeleteCriticalSection(&Console->Lock);
-        RtlFreeHeap(ConSrvHeap, 0, Console);
+        ConsoleFreeHeap(Console);
         return STATUS_UNSUCCESSFUL;
     }
 
+    Console->InputBuffer.InputBufferSize = 0; // FIXME!
+    InitializeListHead(&Console->InputBuffer.InputEvents);
+    InitializeListHead(&Console->InputBuffer.ReadWaitQueue);
     Console->InputBuffer.Mode = ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT |
                                 ENABLE_ECHO_INPUT      | ENABLE_MOUSE_INPUT;
+
     Console->QuickEdit  = ConsoleInfo.QuickEdit;
     Console->InsertMode = ConsoleInfo.InsertMode;
-    InitializeListHead(&Console->InputBuffer.ReadWaitQueue);
-    InitializeListHead(&Console->InputBuffer.InputEvents);
     Console->LineBuffer = NULL;
+    Console->LineMaxSize = Console->LineSize = Console->LinePos = 0;
+    Console->LineComplete = Console->LineUpPressed = Console->LineInsertToggle = FALSE;
+    // LineWakeupMask
+    // Selection
+    // dwSelectionCursor
+
     Console->CodePage = GetOEMCP();
     Console->OutputCodePage = GetOEMCP();
 
@@ -625,16 +634,20 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
         DPRINT1("ConSrvCreateScreenBuffer: failed, Status = 0x%08lx\n", Status);
         CloseHandle(Console->InputBuffer.ActiveEvent);
         DeleteCriticalSection(&Console->Lock);
-        RtlFreeHeap(ConSrvHeap, 0, Console);
+        ConsoleFreeHeap(Console);
         return Status;
     }
     /* Make the new screen buffer active */
     Console->ActiveBuffer = NewBuffer;
     InitializeListHead(&Console->WriteWaitQueue);
+    Console->PauseFlags = 0;
+    Console->UnpauseEvent = NULL;
+    // HardwareState
 
     /*
-     * Initialize the history buffers
+     * Initialize the alias and history buffers
      */
+    Console->Aliases = NULL;
     InitializeListHead(&Console->HistoryBuffers);
     Console->HistoryBufferSize = ConsoleInfo.HistoryBufferSize;
     Console->NumberOfHistoryBuffers = ConsoleInfo.NumberOfHistoryBuffers;
@@ -644,9 +657,9 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     ConsoleCreateUnicodeString(&Console->OriginalTitle, ConsoleInfo.ConsoleTitle);
     if (ConsoleInfo.ConsoleTitle[0] == L'\0')
     {
-        if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, Title, sizeof(Title) / sizeof(Title[0])))
+        if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, DefaultTitle, sizeof(DefaultTitle) / sizeof(DefaultTitle[0])))
         {
-            ConsoleCreateUnicodeString(&Console->Title, Title);
+            ConsoleCreateUnicodeString(&Console->Title, DefaultTitle);
         }
         else
         {
@@ -709,7 +722,7 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
             CloseHandle(Console->InputBuffer.ActiveEvent);
             // LeaveCriticalSection(&Console->Lock);
             DeleteCriticalSection(&Console->Lock);
-            RtlFreeHeap(ConSrvHeap, 0, Console);
+            ConsoleFreeHeap(Console);
             return Status;
         }
     }
@@ -827,7 +840,7 @@ ConSrvDeleteConsole(PCONSOLE Console)
     /* Discard all entries in the input event queue */
     PurgeInputBuffer(Console);
 
-    if (Console->LineBuffer) RtlFreeHeap(ConSrvHeap, 0, Console->LineBuffer);
+    if (Console->LineBuffer) ConsoleFreeHeap(Console->LineBuffer);
 
     IntDeleteAllAliases(Console);
     HistoryDeleteBuffers(Console);
@@ -850,7 +863,7 @@ ConSrvDeleteConsole(PCONSOLE Console)
     DeleteCriticalSection(&Console->Lock);
     DPRINT("ConSrvDeleteConsole - Lock destroyed ; freeing console\n");
 
-    RtlFreeHeap(ConSrvHeap, 0, Console);
+    ConsoleFreeHeap(Console);
     DPRINT("ConSrvDeleteConsole - Console freed\n");
 
     /* Unlock the console list and return */
@@ -880,18 +893,6 @@ CSR_API(SrvAllocConsole)
     {
         return STATUS_INVALID_PARAMETER;
     }
-
-    /*
-     * We are about to create a new console. However when ConSrvNewProcess
-     * was called, we didn't know that we wanted to create a new console and
-     * therefore, we by default inherited the handles table from our parent
-     * process. It's only now that we notice that in fact we do not need
-     * them, because we've created a new console and thus we must use it.
-     *
-     * Therefore, free the console we can have and our handles table,
-     * and recreate a new one later on.
-     */
-    ConSrvRemoveConsole(ProcessData);
 
     /* Initialize a new Console owned by the Console Leader Process */
     Status = ConSrvAllocateConsole(ProcessData,
@@ -969,18 +970,6 @@ CSR_API(SrvAttachConsole)
         Status = STATUS_INVALID_HANDLE;
         goto Quit;
     }
-
-    /*
-     * We are about to create a new console. However when ConSrvNewProcess
-     * was called, we didn't know that we wanted to create a new console and
-     * therefore, we by default inherited the handles table from our parent
-     * process. It's only now that we notice that in fact we do not need
-     * them, because we've created a new console and thus we must use it.
-     *
-     * Therefore, free the console we can have and our handles table,
-     * and recreate a new one later on.
-     */
-    ConSrvRemoveConsole(TargetProcessData);
 
     /*
      * Inherit the console from the parent,
@@ -1212,7 +1201,7 @@ CSR_API(SrvSetConsoleTitle)
     }
 
     /* Allocate a new buffer to hold the new title (NULL-terminated) */
-    Buffer = RtlAllocateHeap(ConSrvHeap, 0, TitleRequest->Length + sizeof(WCHAR));
+    Buffer = ConsoleAllocHeap(0, TitleRequest->Length + sizeof(WCHAR));
     if (Buffer)
     {
         /* Free the old title */

@@ -10,6 +10,9 @@
 
 #pragma once
 
+VOID FASTCALL ConSrvInitObject(IN OUT PCONSOLE_IO_OBJECT Object,
+                               IN CONSOLE_IO_OBJECT_TYPE Type,
+                               IN PCONSOLE Console);
 NTSTATUS FASTCALL ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                                      PHANDLE Handle,
                                      PCONSOLE_IO_OBJECT Object,

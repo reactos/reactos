@@ -45,15 +45,15 @@ HistoryCurrentBuffer(PCONSOLE Console)
     }
 
     /* Couldn't find the buffer, create a new one */
-    Hist = RtlAllocateHeap(ConSrvHeap, 0, sizeof(HISTORY_BUFFER) + ExeName.Length);
+    Hist = ConsoleAllocHeap(0, sizeof(HISTORY_BUFFER) + ExeName.Length);
     if (!Hist)
         return NULL;
     Hist->MaxEntries = Console->HistoryBufferSize;
     Hist->NumEntries = 0;
-    Hist->Entries = RtlAllocateHeap(ConSrvHeap, 0, Hist->MaxEntries * sizeof(UNICODE_STRING));
+    Hist->Entries = ConsoleAllocHeap(0, Hist->MaxEntries * sizeof(UNICODE_STRING));
     if (!Hist->Entries)
     {
-        RtlFreeHeap(ConSrvHeap, 0, Hist);
+        ConsoleFreeHeap(Hist);
         return NULL;
     }
     Hist->ExeName.Length = Hist->ExeName.MaximumLength = ExeName.Length;
@@ -148,9 +148,9 @@ HistoryDeleteBuffer(PHISTORY_BUFFER Hist)
     while (Hist->NumEntries != 0)
         RtlFreeUnicodeString(&Hist->Entries[--Hist->NumEntries]);
 
-    RtlFreeHeap(ConSrvHeap, 0, Hist->Entries);
+    ConsoleFreeHeap(Hist->Entries);
     RemoveEntryList(&Hist->ListEntry);
-    RtlFreeHeap(ConSrvHeap, 0, Hist);
+    ConsoleFreeHeap(Hist);
 }
 
 VOID FASTCALL
@@ -577,8 +577,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
         if (Hist)
         {
             OldEntryList = Hist->Entries;
-            NewEntryList = RtlAllocateHeap(ConSrvHeap, 0,
-                                           MaxEntries * sizeof(UNICODE_STRING));
+            NewEntryList = ConsoleAllocHeap(0, MaxEntries * sizeof(UNICODE_STRING));
             if (!NewEntryList)
             {
                 Status = STATUS_NO_MEMORY;
@@ -595,7 +594,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
                 Hist->MaxEntries = MaxEntries;
                 Hist->Entries = memcpy(NewEntryList, Hist->Entries,
                                        Hist->NumEntries * sizeof(UNICODE_STRING));
-                RtlFreeHeap(ConSrvHeap, 0, OldEntryList);
+                ConsoleFreeHeap(OldEntryList);
             }
         }
         ConSrvReleaseConsole(Console, TRUE);

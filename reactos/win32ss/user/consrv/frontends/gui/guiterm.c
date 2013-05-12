@@ -233,11 +233,11 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
             GuiConsoleUpdateSelection(Console, &Console->Selection.dwSelectionAnchor);
 
             Length = Console->Title.Length + sizeof(L"Mark - ")/sizeof(WCHAR) + 1;
-            WindowTitle = RtlAllocateHeap(ConSrvHeap, 0, Length * sizeof(WCHAR));
+            WindowTitle = ConsoleAllocHeap(0, Length * sizeof(WCHAR));
             wcscpy(WindowTitle, L"Mark - ");
             wcscat(WindowTitle, Console->Title.Buffer);
             SetWindowText(GuiData->hWindow, WindowTitle);
-            RtlFreeHeap(ConSrvHeap, 0, WindowTitle);
+            ConsoleFreeHeap(WindowTitle);
 
             break;
         }
@@ -1013,11 +1013,11 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
                 GuiConsoleUpdateSelection(Console, &Console->Selection.dwSelectionAnchor);
 
                 Length = Console->Title.Length + sizeof(L"Selection - ")/sizeof(WCHAR) + 1;
-                WindowTitle = RtlAllocateHeap(ConSrvHeap, 0, Length * sizeof(WCHAR));
+                WindowTitle = ConsoleAllocHeap(0, Length * sizeof(WCHAR));
                 wcscpy(WindowTitle, L"Selection - ");
                 wcscat(WindowTitle, Console->Title.Buffer);
                 SetWindowText(GuiData->hWindow, WindowTitle);
-                RtlFreeHeap(ConSrvHeap, 0, WindowTitle);
+                ConsoleFreeHeap(WindowTitle);
 
                 break;
             }
@@ -2020,7 +2020,7 @@ GuiCleanupConsole(PCONSOLE Console)
 
     Console->TermIFace.Data = NULL;
     DeleteCriticalSection(&GuiData->Lock);
-    RtlFreeHeap(ConSrvHeap, 0, GuiData);
+    ConsoleFreeHeap(GuiData);
 
     DPRINT("Quit GuiCleanupConsole\n");
 }
@@ -2290,8 +2290,7 @@ GuiInitConsole(PCONSOLE Console,
     /* Initialize the console */
     Console->TermIFace.Vtbl = &GuiVtbl;
 
-    GuiData = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY,
-                              sizeof(GUI_CONSOLE_DATA));
+    GuiData = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(GUI_CONSOLE_DATA));
     if (!GuiData)
     {
         DPRINT1("CONSRV: Failed to create GUI_CONSOLE_DATA\n");

@@ -11,6 +11,8 @@
 #include "consrv.h"
 #include "api.h"
 #include "procinit.h"
+#include "include/conio.h"
+#include "include/console.h"
 #include "console.h"
 
 #define NDEBUG
@@ -301,6 +303,7 @@ PCHAR ConsoleServerApiNameTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] 
 
 /* FUNCTIONS ******************************************************************/
 
+/* See handle.c */
 NTSTATUS
 ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
                           IN PCONSOLE_PROCESS_DATA TargetProcessData);
@@ -322,22 +325,25 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
      * ConSrvConnect we don't have any reference to the parent process anymore.
      **************************************************************************/
 
-    PCONSOLE_PROCESS_DATA SourceProcessData, TargetProcessData;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCONSOLE_PROCESS_DATA /* SourceProcessData, */ TargetProcessData;
 
     /* An empty target process is invalid */
     if (!TargetProcess) return STATUS_INVALID_PARAMETER;
 
     TargetProcessData = ConsoleGetPerProcessData(TargetProcess);
 
-    /**** HACK !!!! ****/ RtlZeroMemory(TargetProcessData, sizeof(*TargetProcessData));
-
     /* Initialize the new (target) process */
+    RtlZeroMemory(TargetProcessData, sizeof(*TargetProcessData));
     TargetProcessData->Process = TargetProcess;
     TargetProcessData->ConsoleEvent = NULL;
     TargetProcessData->Console = TargetProcessData->ParentConsole = NULL;
     TargetProcessData->ConsoleApp = ((TargetProcess->Flags & CsrProcessIsConsoleApp) ? TRUE : FALSE);
 
-    // Testing
+    /*
+     * The handles table gets initialized either when inheriting from
+     * another console process, or when creating a new console.
+     */
     TargetProcessData->HandleTableSize = 0;
     TargetProcessData->HandleTable = NULL;
 
@@ -346,25 +352,35 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     /* Do nothing if the source process is NULL */
     if (!SourceProcess) return STATUS_SUCCESS;
 
-    SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
+    // SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
 
     /*
-     * If both of the processes (parent and new child) are console applications,
-     * then try to inherit handles from the parent process.
+     * If the child process is a console application and the parent process is
+     * either a console application or just has a valid console (with a valid
+     * handles table: this can happen if it is a GUI application having called
+     * AllocConsole), then try to inherit handles from the parent process.
      */
-    if ( SourceProcessData->Console != NULL && /* SourceProcessData->ConsoleApp */
-         TargetProcessData->ConsoleApp )
+    if (TargetProcessData->ConsoleApp /* && SourceProcessData->ConsoleApp */)
     {
-        NTSTATUS Status;
+        PCONSOLE_PROCESS_DATA SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
 
-        Status = ConSrvInheritHandlesTable(SourceProcessData, TargetProcessData);
-        if (!NT_SUCCESS(Status)) return Status;
+        /* Validate and lock the parent's console */
+        if (ConSrvValidateConsole(SourceProcessData->Console, CONSOLE_RUNNING, TRUE))
+        {
+            /* Inherit the parent's handles table */
+            Status = ConSrvInheritHandlesTable(SourceProcessData, TargetProcessData);
+            if (NT_SUCCESS(Status))
+            {
+                /* Temporary save the parent's console too */
+                TargetProcessData->ParentConsole = SourceProcessData->Console;
+            }
 
-        /* Temporary save the parent's console */
-        TargetProcessData->ParentConsole = SourceProcessData->Console;
+            /* Unlock the parent's console */
+            LeaveCriticalSection(&SourceProcessData->Console->Lock);
+        }
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
@@ -408,10 +424,9 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
          * process. It's only now that we notice that in fact we do not need
          * them, because we've created a new console and thus we must use it.
          *
-         * Therefore, free the console we can have and our handles table,
-         * and recreate a new one later on.
+         * ConSrvAllocateConsole will free our old handles table
+         * and recreate a new valid one.
          */
-        ConSrvRemoveConsole(ProcessData);
 
         /* Initialize a new Console owned by the Console Leader Process */
         Status = ConSrvAllocateConsole(ProcessData,
@@ -481,9 +496,9 @@ ConSrvDisconnect(PCSR_PROCESS Process)
 CSR_SERVER_DLL_INIT(ConServerDllInitialization)
 {
     /* Initialize the memory */
-    // HACK: To try to uncover a heap corruption in CONSRV, use our own heap
-    // instead of the CSR heap, so that we won't corrupt it.
-    // ConSrvHeap = RtlGetProcessHeap();
+    ConSrvHeap = RtlGetProcessHeap();
+/*
+    // We can use our own heap instead of the CSR heap to investigate heap corruptions :)
     ConSrvHeap = RtlCreateHeap(HEAP_GROWABLE                |
                                HEAP_PROTECTION_ENABLED      |
                                HEAP_FREE_CHECKING_ENABLED   |
@@ -491,6 +506,7 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
                                HEAP_VALIDATE_ALL_ENABLED,
                                NULL, 0, 0, NULL, NULL);
     if (!ConSrvHeap) return STATUS_NO_MEMORY;
+*/
 
     ConSrvInitConsoleSupport();
 

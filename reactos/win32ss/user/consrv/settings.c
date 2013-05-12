@@ -74,20 +74,20 @@ OpenUserRegistryPathPerProcessId(DWORD ProcessId,
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | READ_CONTROL, FALSE, ProcessId);
     if (!hProcess)
     {
-        DPRINT("Error: OpenProcess failed(0x%x)\n", GetLastError());
+        DPRINT1("Error: OpenProcess failed(0x%x)\n", GetLastError());
         return FALSE;
     }
 
     if (!OpenProcessToken(hProcess, TOKEN_QUERY, &hProcessToken))
     {
-        DPRINT("Error: OpenProcessToken failed(0x%x)\n", GetLastError());
+        DPRINT1("Error: OpenProcessToken failed(0x%x)\n", GetLastError());
         CloseHandle(hProcess);
         return FALSE;
     }
 
     if (!GetTokenInformation(hProcessToken, TokenUser, (PVOID)Buffer, sizeof(Buffer), &Length))
     {
-        DPRINT("Error: GetTokenInformation failed(0x%x)\n",GetLastError());
+        DPRINT1("Error: GetTokenInformation failed(0x%x)\n",GetLastError());
         CloseHandle(hProcessToken);
         CloseHandle(hProcess);
         return FALSE;
@@ -96,12 +96,15 @@ OpenUserRegistryPathPerProcessId(DWORD ProcessId,
     TokUser = ((PTOKEN_USER)Buffer)->User.Sid;
     if (!NT_SUCCESS(RtlConvertSidToUnicodeString(&SidName, TokUser, TRUE)))
     {
-        DPRINT("Error: RtlConvertSidToUnicodeString failed(0x%x)\n", GetLastError());
+        DPRINT1("Error: RtlConvertSidToUnicodeString failed(0x%x)\n", GetLastError());
         CloseHandle(hProcessToken);
         CloseHandle(hProcess);
         return FALSE;
     }
 
+    /*
+     * Might fail for LiveCD... Why ? Because only HKU\.DEFAULT exists.
+     */
     bRet = (RegOpenKeyExW(HKEY_USERS,
                           SidName.Buffer,
                           0,

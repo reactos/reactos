@@ -68,9 +68,8 @@ ScmLoadDriver(LPCWSTR lpServiceName)
 
     /* Build the driver path */
     /* 52 = wcslen(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") */
-    pszDriverPath = RtlAllocateHeap(ConSrvHeap,
-                                    HEAP_ZERO_MEMORY,
-                                    (52 + wcslen(lpServiceName) + 1) * sizeof(WCHAR));
+    pszDriverPath = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
+                                     (52 + wcslen(lpServiceName) + 1) * sizeof(WCHAR));
     if (pszDriverPath == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -105,7 +104,7 @@ ScmLoadDriver(LPCWSTR lpServiceName)
                        &WasPrivilegeEnabled);
 
 done:
-    RtlFreeHeap(ConSrvHeap, 0, pszDriverPath);
+    ConsoleFreeHeap(pszDriverPath);
     return RtlNtStatusToDosError(Status);
 }
 
@@ -120,9 +119,8 @@ ScmUnloadDriver(LPCWSTR lpServiceName)
 
     /* Build the driver path */
     /* 52 = wcslen(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") */
-    pszDriverPath = RtlAllocateHeap(ConSrvHeap,
-                                    HEAP_ZERO_MEMORY,
-                                    (52 + wcslen(lpServiceName) + 1) * sizeof(WCHAR));
+    pszDriverPath = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
+                                     (52 + wcslen(lpServiceName) + 1) * sizeof(WCHAR));
     if (pszDriverPath == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -157,7 +155,7 @@ ScmUnloadDriver(LPCWSTR lpServiceName)
                        &WasPrivilegeEnabled);
 
 done:
-    RtlFreeHeap(ConSrvHeap, 0, pszDriverPath);
+    ConsoleFreeHeap(pszDriverPath);
     return RtlNtStatusToDosError(Status);
 }
 #endif
@@ -185,8 +183,7 @@ TuiSwapConsole(INT Next)
         SwapConsole = (0 < Next ? GetNextConsole(SwapConsole) : GetPrevConsole(SwapConsole));
         Title.MaximumLength = RtlUnicodeStringToAnsiSize(&SwapConsole->Console->Title);
         Title.Length = 0;
-        Buffer = RtlAllocateHeap(ConSrvHeap, 0,
-                                 sizeof(COORD) + Title.MaximumLength);
+        Buffer = ConsoleAllocHeap(0, sizeof(COORD) + Title.MaximumLength);
         pos = (PCOORD)Buffer;
         Title.Buffer = (PVOID)((ULONG_PTR)Buffer + sizeof(COORD));
 
@@ -201,7 +198,7 @@ TuiSwapConsole(INT Next)
         {
             DPRINT1( "Error writing to console\n" );
         }
-        RtlFreeHeap(ConSrvHeap, 0, Buffer);
+        ConsoleFreeHeap(Buffer);
         LeaveCriticalSection(&ActiveVirtConsLock);
 
         return TRUE;
@@ -476,7 +473,7 @@ TuiCleanupConsole(PCONSOLE Console)
 
     Console->TermIFace.Data = NULL;
     DeleteCriticalSection(&TuiData->Lock);
-    RtlFreeHeap(ConSrvHeap, 0, TuiData);
+    ConsoleFreeHeap(TuiData);
 }
 
 static VOID WINAPI
@@ -506,10 +503,10 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
 
     ConsoleDrawSize = sizeof(CONSOLE_DRAW) +
                       (ConioRectWidth(Region) * ConioRectHeight(Region)) * 2;
-    ConsoleDraw = RtlAllocateHeap(ConSrvHeap, 0, ConsoleDrawSize);
+    ConsoleDraw = ConsoleAllocHeap(0, ConsoleDrawSize);
     if (NULL == ConsoleDraw)
     {
-        DPRINT1("RtlAllocateHeap failed\n");
+        DPRINT1("ConsoleAllocHeap failed\n");
         return;
     }
     ConsoleDraw->X = Region->Left;
@@ -525,11 +522,11 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
                          NULL, 0, ConsoleDraw, ConsoleDrawSize, &BytesReturned, NULL))
     {
         DPRINT1("Failed to draw console\n");
-        RtlFreeHeap(ConSrvHeap, 0, ConsoleDraw);
+        ConsoleFreeHeap(ConsoleDraw);
         return;
     }
 
-    RtlFreeHeap(ConSrvHeap, 0, ConsoleDraw);
+    ConsoleFreeHeap(ConsoleDraw);
 }
 
 static BOOL WINAPI
@@ -679,8 +676,7 @@ TuiInitConsole(PCONSOLE Console,
     /* Initialize the console */
     Console->TermIFace.Vtbl = &TuiVtbl;
 
-    TuiData = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY,
-                              sizeof(TUI_CONSOLE_DATA));
+    TuiData = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(TUI_CONSOLE_DATA));
     if (!TuiData)
     {
         DPRINT1("CONSRV: Failed to create TUI_CONSOLE_DATA\n");

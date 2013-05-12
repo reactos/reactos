@@ -57,7 +57,7 @@ IntCreateAliasHeader(LPCWSTR lpExeName)
     PALIAS_HEADER Entry;
     UINT dwLength = wcslen(lpExeName) + 1;
 
-    Entry = RtlAllocateHeap(ConSrvHeap, 0, sizeof(ALIAS_HEADER) + sizeof(WCHAR) * dwLength);
+    Entry = ConsoleAllocHeap(0, sizeof(ALIAS_HEADER) + sizeof(WCHAR) * dwLength);
     if (!Entry) return Entry;
 
     Entry->lpExeName = (LPCWSTR)(Entry + 1);
@@ -134,7 +134,7 @@ IntCreateAliasEntry(LPCWSTR lpSource, LPCWSTR lpTarget)
     dwSource = wcslen(lpSource) + 1;
     dwTarget = wcslen(lpTarget) + 1;
 
-    Entry = RtlAllocateHeap(ConSrvHeap, 0, sizeof(ALIAS_ENTRY) + sizeof(WCHAR) * (dwSource + dwTarget));
+    Entry = ConsoleAllocHeap(0, sizeof(ALIAS_ENTRY) + sizeof(WCHAR) * (dwSource + dwTarget));
     if (!Entry) return Entry;
 
     Entry->lpSource = (LPCWSTR)(Entry + 1);
@@ -247,7 +247,7 @@ IntDeleteAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY Entry)
         if (CurEntry == Entry)
         {
             *LastLink = Entry->Next;
-            RtlFreeHeap(ConSrvHeap, 0, Entry);
+            ConsoleFreeHeap(Entry);
             return;
         }
         LastLink = &CurEntry->Next;
@@ -266,9 +266,9 @@ IntDeleteAllAliases(PCONSOLE Console)
         for (Entry = Header->Data; Entry; Entry = NextEntry)
         {
             NextEntry = Entry->Next;
-            RtlFreeHeap(ConSrvHeap, 0, Entry);
+            ConsoleFreeHeap(Entry);
         }
-        RtlFreeHeap(ConSrvHeap, 0, Header);
+        ConsoleFreeHeap(Header);
     }
 }
 
