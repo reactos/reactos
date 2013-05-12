@@ -7,6 +7,7 @@
  *              Michael Martin (michael.martin@reactos.org)
  *              Johannes Anderwald (johannes.anderwald@reactos.org)
  */
+
 #include "precomp.h"
 
 NTSTATUS
@@ -221,7 +222,7 @@ HidClassFDO_GetDescriptors(
     ASSERT(FDODeviceExtension->Common.IsFDO);
 
     //
-    // lets allocate irp
+    // let's allocate irp
     //
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
     if (!Irp)
@@ -262,7 +263,7 @@ HidClassFDO_GetDescriptors(
     }
 
     //
-    // lets get device attributes
+    // let's get device attributes
     //
     IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_HID_GET_DEVICE_ATTRIBUTES;
     IoStack->Parameters.DeviceIoControl.OutputBufferLength = sizeof(HID_DEVICE_ATTRIBUTES);
@@ -289,7 +290,6 @@ HidClassFDO_GetDescriptors(
     ASSERT(FDODeviceExtension->HidDescriptor.bNumDescriptors > 0);
     ASSERT(FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength > 0);
     ASSERT(FDODeviceExtension->HidDescriptor.DescriptorList[0].bReportType == HID_REPORT_DESCRIPTOR_TYPE);
-
 
     //
     // now allocate space for the report descriptor
@@ -359,7 +359,7 @@ HidClassFDO_StartDevice(
     }
 
     //
-    // lets start the lower device too
+    // let's start the lower device too
     //
     IoSkipCurrentIrpStackLocation(Irp);
     Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
@@ -372,7 +372,7 @@ HidClassFDO_StartDevice(
     }
 
     //
-    // lets get the descriptors
+    // let's get the descriptors
     //
     Status = HidClassFDO_GetDescriptors(DeviceObject);
     if (!NT_SUCCESS(Status))
@@ -457,7 +457,7 @@ HidClassFDO_CopyDeviceRelations(
     //
     // copy device objects
     //
-    for(Index = 0; Index < FDODeviceExtension->DeviceRelations->Count; Index++)
+    for (Index = 0; Index < FDODeviceExtension->DeviceRelations->Count; Index++)
     {
         //
         // reference pdo
@@ -573,7 +573,7 @@ HidClassFDO_PnP(
     // get current irp stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    switch(IoStack->MinorFunction)
+    switch (IoStack->MinorFunction)
     {
         case IRP_MN_START_DEVICE:
         {
@@ -596,7 +596,7 @@ HidClassFDO_PnP(
             // set status to success and fall through
             //
             Irp->IoStatus.Status = STATUS_SUCCESS;
-         }
+        }
         default:
         {
             //
