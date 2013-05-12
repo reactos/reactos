@@ -142,7 +142,7 @@ HidUsb_ResetInterruptPipe(
     //
     // allocate urb
     //
-    Urb = ExAllocatePool(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -167,7 +167,7 @@ HidUsb_ResetInterruptPipe(
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // done
@@ -194,7 +194,7 @@ HidUsb_AbortPipe(
     //
     // allocate urb
     //
-    Urb = ExAllocatePool(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -226,7 +226,7 @@ HidUsb_AbortPipe(
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // done
@@ -410,7 +410,7 @@ HidUsb_ResetWorkerRoutine(
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     IoFreeWorkItem(ResetContext->WorkItem);
     IoCompleteRequest(ResetContext->Irp, IO_NO_INCREMENT);
-    ExFreePool(ResetContext);
+    ExFreePoolWithTag(ResetContext, HIDUSB_TAG);
 }
 
 
@@ -460,7 +460,7 @@ HidUsb_ReadReportCompletion(
         //
         // free the urb
         //
-        ExFreePool(Context);
+        ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
         //
         // finish completion
@@ -477,7 +477,7 @@ HidUsb_ReadReportCompletion(
     //
     // allocate reset context
     //
-    ResetContext = (PHID_USB_RESET_CONTEXT)ExAllocatePool(NonPagedPool, sizeof(HID_USB_RESET_CONTEXT));
+    ResetContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(HID_USB_RESET_CONTEXT), HIDUSB_TAG);
     if (ResetContext)
     {
         //
@@ -500,7 +500,7 @@ HidUsb_ReadReportCompletion(
             //
             // free urb
             //
-            ExFreePool(Urb);
+            ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
             //
             // defer completion
@@ -510,13 +510,13 @@ HidUsb_ReadReportCompletion(
         //
         // free context
         //
-        ExFreePool(ResetContext);
+        ExFreePoolWithTag(ResetContext, HIDUSB_TAG);
     }
 
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // complete request
@@ -564,7 +564,7 @@ HidUsb_ReadReport(
     //
     // lets allocate urb
     //
-    Urb = (PURB)ExAllocatePool(NonPagedPool, sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_BULK_OR_INTERRUPT_TRANSFER), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -1068,7 +1068,7 @@ Hid_GetDescriptor(
     //
     // allocate urb
     //
-    Urb = (PURB)ExAllocatePool(NonPagedPool, UrbLength);
+    Urb = ExAllocatePoolWithTag(NonPagedPool, UrbLength, HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -1085,13 +1085,13 @@ Hid_GetDescriptor(
         //
         // allocate buffer
         //
-        *UrbBuffer = ExAllocatePool(NonPagedPool, *UrbBufferLength);
+        *UrbBuffer = ExAllocatePoolWithTag(NonPagedPool, *UrbBufferLength, HIDUSB_TAG);
         if (!*UrbBuffer)
         {
             //
             // no memory
             //
-            ExFreePool(Urb);
+            ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -1132,14 +1132,14 @@ Hid_GetDescriptor(
             //
             // free allocated buffer
             //
-            ExFreePool(*UrbBuffer);
+            ExFreePoolWithTag(*UrbBuffer, HIDUSB_TAG);
             *UrbBuffer = NULL;
         }
 
         //
         // free urb
         //
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
         *UrbBufferLength = 0;
         return Status;
     }
@@ -1154,14 +1154,14 @@ Hid_GetDescriptor(
             //
             // free allocated buffer
             //
-            ExFreePool(*UrbBuffer);
+            ExFreePoolWithTag(*UrbBuffer, HIDUSB_TAG);
             *UrbBuffer = NULL;
         }
 
         //
         // free urb
         //
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
         *UrbBufferLength = 0;
         return STATUS_UNSUCCESSFUL;
     }
@@ -1174,7 +1174,7 @@ Hid_GetDescriptor(
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // completed successfully
@@ -1257,7 +1257,7 @@ Hid_SelectConfiguration(
         //
         // copy interface info
         //
-        HidDeviceExtension->InterfaceInfo = (PUSBD_INTERFACE_INFORMATION)ExAllocatePool(NonPagedPool, Urb->UrbSelectConfiguration.Interface.Length);
+        HidDeviceExtension->InterfaceInfo = ExAllocatePoolWithTag(NonPagedPool, Urb->UrbSelectConfiguration.Interface.Length, HIDUSB_TAG);
         if (HidDeviceExtension->InterfaceInfo)
         {
             //
@@ -1270,7 +1270,7 @@ Hid_SelectConfiguration(
     //
     // free urb request
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, 0);
 
     //
     // done
@@ -1296,7 +1296,7 @@ Hid_SetIdle(
     //
     // allocate urb
     //
-    Urb = ExAllocatePool(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -1334,7 +1334,7 @@ Hid_SetIdle(
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // print status
@@ -1372,7 +1372,7 @@ Hid_GetProtocol(
     //
     // allocate urb
     //
-    Urb = ExAllocatePool(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST), HIDUSB_URB_TAG);
     if (!Urb)
     {
         //
@@ -1410,7 +1410,7 @@ Hid_GetProtocol(
     //
     // free urb
     //
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, HIDUSB_URB_TAG);
 
     //
     // boot protocol active 0x00 disabled 0x1
@@ -1502,7 +1502,7 @@ Hid_PnpStart(
     //
     // delete partial configuration descriptor
     //
-    ExFreePool(HidDeviceExtension->ConfigurationDescriptor);
+    ExFreePoolWithTag(HidDeviceExtension->ConfigurationDescriptor, HIDUSB_TAG);
     HidDeviceExtension->ConfigurationDescriptor = NULL;
 
     //
@@ -1648,7 +1648,7 @@ HidPnp(
             //
             if (HidDeviceExtension->ConfigurationDescriptor)
             {
-                ExFreePool(HidDeviceExtension->ConfigurationDescriptor);
+                ExFreePoolWithTag(HidDeviceExtension->ConfigurationDescriptor, HIDUSB_TAG);
                 HidDeviceExtension->ConfigurationDescriptor = NULL;
             }
 
@@ -1725,7 +1725,7 @@ HidPnp(
             //
             if (HidDeviceExtension->HidDescriptor)
             {
-                ExFreePool(HidDeviceExtension->HidDescriptor);
+                ExFreePoolWithTag(HidDeviceExtension->HidDescriptor, HIDUSB_TAG);
                 HidDeviceExtension->HidDescriptor = NULL;
             }
 

@@ -86,3 +86,6 @@ Hid_DispatchUrb(
 
 #define USB_SET_IDLE_REQUEST 0xA
 #define USB_GET_PROTOCOL_REQUEST 0x3
+
+#define HIDUSB_TAG 'UdiH'
+#define HIDUSB_URB_TAG 'rUiH'
