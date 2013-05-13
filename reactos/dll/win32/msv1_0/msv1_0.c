@@ -227,22 +227,20 @@ AppendRidToSid(PSID SrcSid,
 {
     PSID DstSid = NULL;
     UCHAR RidCount;
-    ULONG Size;
-    ULONG i;
 
     RidCount = *RtlSubAuthorityCountSid(SrcSid);
     if (RidCount >= 8)
         return NULL;
 
-    Size = RtlLengthRequiredSid(RidCount + 1);
-
-    DstSid = DispatchTable.AllocateLsaHeap(Size);
+    DstSid = DispatchTable.AllocateLsaHeap(RtlLengthRequiredSid(RidCount + 1));
     if (DstSid == NULL)
         return NULL;
 
-    for (i = 0; i < RidCount; i++)
-        *RtlSubAuthoritySid(DstSid, i) = *RtlSubAuthoritySid(SrcSid, i);
+    RtlCopyMemory(DstSid,
+                  SrcSid,
+                  RtlLengthRequiredSid(RidCount));
 
+    *RtlSubAuthorityCountSid(DstSid) = RidCount + 1;
     *RtlSubAuthoritySid(DstSid, RidCount) = Rid;
 
     return DstSid;
@@ -256,6 +254,12 @@ BuildTokenUser(OUT PTOKEN_USER User,
 {
     User->User.Sid = AppendRidToSid(AccountDomainSid,
                                     RelativeId);
+    if (User->User.Sid == NULL)
+    {
+        ERR("Could not create the user SID\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
     User->User.Attributes = 0;
 
     return STATUS_SUCCESS;
