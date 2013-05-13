@@ -59,7 +59,7 @@ LsapCheckLogonProcess(PLSA_API_MSG RequestMsg,
                                NULL);
 
     Status = NtOpenProcess(&ProcessHandle,
-                           PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION,
+                           PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_DUP_HANDLE,
                            &ObjectAttributes,
                            &RequestMsg->h.ClientId);
     if (!NT_SUCCESS(Status))
@@ -163,10 +163,11 @@ AuthPortThreadRoutine(PVOID Param)
 
     for (;;)
     {
+        TRACE("Reply: %p\n", ReplyMsg);
         Status = NtReplyWaitReceivePort(AuthPortHandle,
                                         (PVOID*)&LogonContext,
-                                        &ReplyMsg->h,
-                                        &RequestMsg.h);
+                                        (PPORT_MESSAGE)ReplyMsg,
+                                        (PPORT_MESSAGE)&RequestMsg);
         if (!NT_SUCCESS(Status))
         {
             TRACE("NtReplyWaitReceivePort() failed (Status %lx)\n", Status);
@@ -208,8 +209,8 @@ AuthPortThreadRoutine(PVOID Param)
 
                         ReplyMsg = &RequestMsg;
                         RequestMsg.Status = STATUS_SUCCESS;
-                        Status = NtReplyPort(AuthPortHandle,
-                                             &ReplyMsg->h);
+                        NtReplyPort(AuthPortHandle,
+                                    &ReplyMsg->h);
 
                         LsapDeregisterLogonProcess(&RequestMsg,
                                                    LogonContext);
@@ -230,7 +231,7 @@ AuthPortThreadRoutine(PVOID Param)
                         break;
 
                     default:
-                        RequestMsg.Status = STATUS_SUCCESS; /* FIXME */
+                        RequestMsg.Status = STATUS_INVALID_SYSTEM_SERVICE;
                         ReplyMsg = &RequestMsg;
                         break;
                 }
