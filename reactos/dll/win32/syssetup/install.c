@@ -915,11 +915,14 @@ InstallReactOS(HINSTANCE hInstance)
         return 0;
     }
 
-    SetPrivilege(SE_RESTORE_NAME, SE_PRIVILEGE_ENABLED);
-
     /* ROS HACK, as long as NtUnloadKey is not implemented */
     {
-        NTSTATUS Status = NtUnloadKey(NULL);
+        NTSTATUS Status;
+
+        SetPrivilege(SE_RESTORE_NAME, SE_PRIVILEGE_ENABLED);
+        Status = NtUnloadKey(NULL);
+        SetPrivilege(SE_RESTORE_NAME, 0);
+
         if (Status == STATUS_NOT_IMPLEMENTED)
         {
             /* Create the Administrator profile */
@@ -946,8 +949,6 @@ InstallReactOS(HINSTANCE hInstance)
         }
     }
     /* END OF ROS HACK */
-
-    SetPrivilege(SE_RESTORE_NAME, 0);
 
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
