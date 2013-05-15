@@ -431,8 +431,8 @@ static void Control_DoLaunch(CPanel *pPanel, HWND hWnd, LPCWSTR pwszCmd)
         {
             /* Start the applet */
             TRACE("Starting applet %d\n", i);
-            if (!pApplet->proc(pApplet->hWnd, CPL_DBLCLK, i, pApplet->info[i].lData))
-                pApplet->proc(pApplet->hWnd, CPL_STARTWPARMSW, i, (LPARAM)pwszArg);
+            if (!pApplet->proc(pApplet->hWnd, CPL_STARTWPARMSW, i, (LPARAM)pwszArg))
+                pApplet->proc(pApplet->hWnd, CPL_DBLCLK, i, pApplet->info[i].lData);
         } else
             ERR("Applet not found: %ls\n", pwszArg ? pwszArg : L"NULL");
 
