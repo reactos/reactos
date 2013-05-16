@@ -426,6 +426,7 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 	BOOLEAN Dots;
 	UNICODE_STRING FileNameU;
         UNICODE_STRING PathNameU;
+	ULONG Attributes;
 
 	/* Unpack the various parameters. */
 	Stack = IoGetCurrentIrpStackLocation (Irp);
@@ -435,6 +436,9 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 	PagingFileCreate = (Stack->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE;
 	FileObject = Stack->FileObject;
 	DeviceExt = DeviceObject->DeviceExtension;
+
+	Attributes = Stack->Parameters.Create.FileAttributes;
+	Attributes &= (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE);
 
 	/* Check their validity. */
 	if (RequestedOptions & FILE_DIRECTORY_FILE &&
@@ -544,10 +548,6 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		    RequestedDisposition == FILE_OVERWRITE_IF ||
 		    RequestedDisposition == FILE_SUPERSEDE)
 		{
-			ULONG Attributes;
-			Attributes = Stack->Parameters.Create.FileAttributes;
-			Attributes &= (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE);
-
 			vfatSplitPathName(&PathNameU, NULL, &FileNameU);
 			Status = VfatAddEntry (DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions,
 				(UCHAR)(Attributes | FILE_ATTRIBUTE_ARCHIVE));
@@ -690,6 +690,8 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		    RequestedDisposition == FILE_SUPERSEDE)
 		{
                         ExAcquireResourceExclusiveLite(&(pFcb->MainResource), TRUE);
+			*pFcb->Attributes = Attributes | FILE_ATTRIBUTE_ARCHIVE;
+
 			Status = VfatSetAllocationSizeInformation (FileObject,
 				                                   pFcb,
 				                                   DeviceExt,
