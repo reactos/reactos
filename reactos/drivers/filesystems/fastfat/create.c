@@ -690,7 +690,11 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		    RequestedDisposition == FILE_SUPERSEDE)
 		{
                         ExAcquireResourceExclusiveLite(&(pFcb->MainResource), TRUE);
-			*pFcb->Attributes = Attributes | FILE_ATTRIBUTE_ARCHIVE;
+			if (RequestedDisposition == FILE_OVERWRITE ||
+			    RequestedDisposition == FILE_OVERWRITE_IF)
+				*pFcb->Attributes |= (Attributes | FILE_ATTRIBUTE_ARCHIVE);
+			else
+				*pFcb->Attributes = (Attributes | FILE_ATTRIBUTE_ARCHIVE);
 
 			Status = VfatSetAllocationSizeInformation (FileObject,
 				                                   pFcb,
