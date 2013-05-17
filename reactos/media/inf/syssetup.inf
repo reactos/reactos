@@ -98,6 +98,11 @@ AddReg=Classes
 11,,wuapi.dll,1
 11,,ieframe.dll,1
 
+[TypeLibraries]
+stdole2.tlb
+stdole32.tlb
+mshtml.tlb
+
 [Strings]
 MciExtStr="Software\Microsoft\Windows NT\CurrentVersion\MCI Extensions"
 Mci32Str="Software\Microsoft\Windows NT\CurrentVersion\MCI32"
