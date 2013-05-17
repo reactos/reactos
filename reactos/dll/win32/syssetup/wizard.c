@@ -1685,6 +1685,8 @@ RegistrationProc(LPVOID Parameter)
     SetupTermDefaultQueueCallback(RegistrationData->DefaultContext);
     HeapFree(GetProcessHeap(), 0, RegistrationData);
 
+    RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
+
     // FIXME: Move this call to a separate cleanup page!
     RtlCreateBootStatusDataFile();
 

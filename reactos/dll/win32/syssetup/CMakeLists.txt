@@ -15,7 +15,7 @@ list(APPEND SOURCE
 add_library(syssetup SHARED ${SOURCE})
 add_pch(syssetup precomp.h)
 set_module_type(syssetup win32dll UNICODE)
-target_link_libraries(syssetup uuid ${PSEH_LIB})
+target_link_libraries(syssetup uuid wine ${PSEH_LIB})
 
 add_importlibs(syssetup
     msvcrt

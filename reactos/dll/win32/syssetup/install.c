@@ -28,6 +28,8 @@
 
 #include "precomp.h"
 
+#include <rpcproxy.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -393,6 +395,61 @@ InstallSysSetupInfComponents(VOID)
     return TRUE;
 }
 
+
+
+
+BOOL
+RegisterTypeLibraries (HINF hinf, LPCWSTR szSection)
+{
+    INFCONTEXT InfContext;
+    BOOL res;
+    WCHAR szName[MAX_PATH];
+    WCHAR szPath[MAX_PATH];
+    INT csidl;
+    LPWSTR p;
+    HMODULE hmod;
+    HRESULT hret;
+
+    /* Begin iterating the entries in the inf section */
+    res = SetupFindFirstLine(hinf, szSection, NULL, &InfContext);
+    if (!res) return FALSE;
+
+    do
+    {
+        /* Get the name of the current type library */
+        if (!SetupGetStringFieldW(&InfContext, 1, szName, MAX_PATH, NULL))
+        {
+            FatalError("SetupGetStringFieldW failed\n");
+            continue;
+        }
+
+        if (!SetupGetIntField(&InfContext, 2, &csidl))
+            csidl = CSIDL_SYSTEM;
+
+        hret = SHGetFolderPathW(NULL, csidl, NULL, 0, szPath);
+        if (FAILED(hret))
+        {
+            FatalError("SHGetSpecialFolderPathW failed hret=0x%d\n", hret);
+            continue;
+        }
+
+        p = PathAddBackslash(szPath);
+        _tcscpy(p, szName);
+
+        hmod = LoadLibraryW(szName);
+        if (hmod == NULL)
+        {
+            FatalError("LoadLibraryW failed\n");
+            continue;
+        }
+
+        __wine_register_resources(hmod);
+
+    }while (SetupFindNextLine(&InfContext, &InfContext));
+
+    return TRUE;
+}
+
 static BOOL
 EnableUserModePnpManager(VOID)
 {
@@ -668,6 +725,8 @@ InstallLiveCD(IN HINSTANCE hInstance)
         {
             DPRINT1("SetupInstallFromInfSectionW failed!\n");
         }
+
+        RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
