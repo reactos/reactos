@@ -169,11 +169,6 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
     hResult = punk->QueryInterface(IID_ITravelLogClient, reinterpret_cast<void **>(&travelLogClient));
     if (FAILED(hResult))
         return hResult;
-    hResult = travelLogClient->GetWindowData(&windowData);
-    if (FAILED(hResult))
-        return hResult;
-    fPIDL = windowData.pidl;
-    // TODO: Properly free the windowData
     hResult = punk->QueryInterface(IID_IPersistHistory, reinterpret_cast<void **>(&persistHistory));
     if (FAILED(hResult))
         return hResult;
@@ -184,6 +179,11 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
     hResult = persistHistory->SaveHistory(globalStream);
     if (FAILED(hResult))
         return hResult;
+    hResult = travelLogClient->GetWindowData(globalStream, &windowData);
+    if (FAILED(hResult))
+        return hResult;
+    fPIDL = windowData.pidl;
+    // TODO: Properly free the windowData
     hResult = GetHGlobalFromStream(globalStream, &fPersistState);
     if (FAILED(hResult))
         return hResult;

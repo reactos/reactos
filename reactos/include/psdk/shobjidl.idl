@@ -2364,20 +2364,6 @@ interface IShellMenu : IUnknown
 }
 
 
-typedef struct _WINDOWDATA
-{
-    DWORD     dwWindowID;
-    UINT      uiCP;
-    LPITEMIDLIST  pidl;
-    [string]  LPWSTR lpszUrl;
-    [string]  LPWSTR lpszUrlLocation;
-    [string]  LPWSTR lpszTitle;
-} WINDOWDATA;
-
-typedef WINDOWDATA *LPWINDOWDATA;
-typedef const WINDOWDATA *LPCWINDOWDATA;
-
-
 /*****************************************************************************
  * ITravelEntry interface
  */
@@ -2398,30 +2384,6 @@ interface ITravelEntry : IUnknown
 
     HRESULT GetPidl(
 		[in] LPITEMIDLIST *ppidl);
-};
-
-
-/*****************************************************************************
- * ITravelLogClient interface
- */
-[
-    uuid(241c033e-e659-43da-aa4d-4086dbc4758d),
-    object,
-    pointer_default(unique),
-    local
-]
-interface ITravelLogClient : IUnknown
-{
-    HRESULT FindWindowByIndex(
-        [in] DWORD dwID,
-        [out] IUnknown **ppunk);
-    
-    HRESULT GetWindowData(
-        [out] LPWINDOWDATA pWinData);
-
-    HRESULT LoadHistoryPosition(
-        [in] LPWSTR pszUrlLocation,
-        [in] DWORD dwPosition);
 };
 
 

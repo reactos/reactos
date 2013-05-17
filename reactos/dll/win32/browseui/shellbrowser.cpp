@@ -601,7 +601,7 @@ public:
 
     // *** ITravelLogClient methods ***
     virtual HRESULT STDMETHODCALLTYPE FindWindowByIndex(DWORD dwID, IUnknown **ppunk);
-    virtual HRESULT STDMETHODCALLTYPE GetWindowData(LPWINDOWDATA pWinData);
+    virtual HRESULT STDMETHODCALLTYPE GetWindowData(IStream *pStream, LPWINDOWDATA pWinData);
     virtual HRESULT STDMETHODCALLTYPE LoadHistoryPosition(LPWSTR pszUrlLocation, DWORD dwPosition);
 
     // *** IPersist methods ***
@@ -2890,7 +2890,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::FindWindowByIndex(DWORD dwID, IUnknown 
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::GetWindowData(LPWINDOWDATA pWinData)
+HRESULT STDMETHODCALLTYPE CShellBrowser::GetWindowData(IStream *pStream, LPWINDOWDATA pWinData)
 {
     if (pWinData == NULL)
         return E_POINTER;

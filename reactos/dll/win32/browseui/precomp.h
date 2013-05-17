@@ -10,6 +10,7 @@
 #include <wincon.h>
 #include <shellapi.h>
 #include <shlobj.h>
+#include <tlogstg.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <tchar.h>

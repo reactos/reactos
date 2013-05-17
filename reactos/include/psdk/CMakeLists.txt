@@ -99,6 +99,7 @@ list(APPEND SOURCE
     strmif.idl
     structuredquerycondition.idl
     textstor.idl
+    tlogstg.idl
     tom.idl
     tuner.idl
     unknwn.idl
