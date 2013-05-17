@@ -434,10 +434,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-  IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
-  IDS_IMPORT_ERROR               "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-  IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+  IDS_IMPORT_PROMPT              "Das Hinzufügen von Informationen kann zu einer unbeabsichtigten Änderung oder Löschung vorhandener Werte führen.\n Einige Komponenten könnten dann möglicherweise nicht mehr ordnungsgemäß funktionieren.\nWenn Sie der Quelle von '%s' nicht trauen, sollten Sie die Informationen nicht einfügen.\n\nMöchten Sie fortfahren?"
+  IDS_IMPORT_OK                  "Die Schlüssel und Werte aus '%s' wurden erfolgreich hinzugefügt."
+  IDS_IMPORT_ERROR               "Fehler beim Öffnen der Datei '%s': Datei kann nicht gefunden werden."
+  IDS_EXPORT_ERROR               "Fehler beim Speichern der Datei '%s': Datei kann nicht am angegebenen Ort gespeichert werden."
 END
 
 STRINGTABLE DISCARDABLE

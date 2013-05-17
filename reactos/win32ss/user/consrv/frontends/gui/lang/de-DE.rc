@@ -22,5 +22,5 @@ BEGIN
     IDS_SCROLLDOWN      "Nach unten scrollen"
 */
 
-    IDS_TERMINAL_TITLE   "ReactOS Console"
+    IDS_TERMINAL_TITLE   "ReactOS Eingabeaufforderung"
 END

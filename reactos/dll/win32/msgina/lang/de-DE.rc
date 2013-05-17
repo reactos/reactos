@@ -15,7 +15,7 @@ CAPTION "Willkommen bei ReactOS"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     ICON            IDI_LOCKICON, -1, 7, 5, 32, 32
-    LTEXT           "Drücken Sie Strg-Alt-Entf Kombination",IDC_STATIC, 38, 10, 144, 14
+    LTEXT           "Drücken Sie Strg+Alt+Entf",IDC_STATIC, 38, 10, 144, 14
 END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0,0,275,147

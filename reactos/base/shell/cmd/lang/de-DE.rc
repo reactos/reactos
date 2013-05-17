@@ -1,6 +1,5 @@
 /*
  *  German language file by Klemens Friedl <frik85> 2005-06-03
- *  Update: frik85 2005-06-06
  */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
@@ -89,31 +88,36 @@ STRING_CMD_HELP6,"  [directory stack]"
 STRING_CMD_HELP7,"  [redirections and piping]"
 
 STRING_CMD_HELP8, "Startet eine neue Instanz des ReactOS-Befehlsinterpreters.\n\n\
-CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
-  /C command  Führt den Befehl in der Zeichenfolge aus und schließt sich.\n\
-  /K command  Führt den Befehl in der Zeichenfolge aus und läuft weiter.\n\
-  /P          CMD wird permanent und führt autoexec.bat aus\n\
-              (kann nicht beendet werden).\n\
-  /T:bf       Setzt die Hintergrund- und Vordergrund-Farbe (siehe COLOR Befehl)."
+CMD [/[C|K] Befehl][/P][/Q][/T:bf]\n\n\
+  /C Befehl   	Führt den Befehl in der Zeichenfolge aus. Anschließend\n\
+				wird diese Instanz beendet.\n\
+  /K Befehl   	Führt den Befehl in der Zeichenfolge aus und läuft weiter.\n\
+  /P          	CMD wird permanent und führt autoexec.bat aus\n\
+				(kann nicht beendet werden).\n\
+  /T:bf       	Ändert die Hintergrund- und Vordergrund-Farbe (siehe COLOR Befehl)."
 
 STRING_COLOR_HELP1, "Legt die Standardhinter- und Vordergrundfarben für die Konsole fest.\n\n\
 COLOR [attr [/F]] \n\n\
   attr        Gibt die Farbattribute für die Konsolenausgabe an.\n\
   /F          Füllt die Konsolenausgabe mit dem Farbattribut\n\n\
-Es gibt 3 Möglichkeiten, um die Farbe festzulegen:\n\
-1) [bright] name on [bright] name  (Nur die 4 ersten Buchstaben sind nötig)\n\
-2) decimal on decimal\n\
-3) two hex digits\n\n\
+Es gibt 2 Möglichkeiten, die Farben festzulegen:\n\
+2) Zwei Dezimalzahlen\n\
+3) Zwei Hexadezimalziffern\n\n\
+Die jeweils erste Angabe bezieht sich auf den Hintergrund, die zweite\n\
+auf den Vordergrund. \n\
+Es müssen jeweils zwei Werte angegeben werden. \n\
 Farben:\n\
-dec  hex  name       dec  hex  name\n\
-0    0    Black       8   8    Gray (Bright black)\n\
-1    1    Blue        9   9    Bright Blue\n\
-2    2    Green      10   A    Bright Green\n\
-3    3    Cyan       11   B    Bright Cyan\n\
-4    4    Red        12   C    Bright Red\n\
-5    5    Magenta    13   D    Bright Magenta\n\
-6    6    Yellow     14   E    Bright Yellow\n\
-7    7    White      15   F    Bright White"
+Dez  Hex  Name       		dec  hex  name\n\
+0    0    Schwarz      		8    8    Dunkelgrau\n\
+1    1    Dunkelblau        9    9    Blau\n\
+2    2    Dunkelgrün     	10   A    Grün\n\
+3    3    Blaugrün       	11   B    Zyan\n\
+4    4    Dunkelrot        	12   C    Rot\n\
+5    5    Lila   			13   D    Magenta\n\
+6    6    Ocker     		14   E    Gelb\n\
+7    7    Hellgrau      	15   F    Weiß\n\
+Beispiel: ""COLOR fc"" legt Rot als Text- und Weiß als Hintergrund-\n\
+farbe fest"
 
 STRING_COPY_HELP1,  " %s überschreiben (Ja/Nein/Alle)? "
 
@@ -374,7 +378,7 @@ STRING_REM_HELP, "Leitet Kommentare in einer Batchdatei ein.\n\nREM [Kommentar]"
 
 STRING_RMDIR_HELP,   "Löscht ein Verzeichnis.\n\n\
 RMDIR [Laufwerk:]Pfad\nRD [Laufwerk:]Pfad"
-STRING_RMDIR_HELP2,  "Directory is not empty!\n"//FIXME
+STRING_RMDIR_HELP2,  "Verzeichnis ist nicht leer!\n"//FIXME
 
 STRING_REN_HELP1, "Benennt Dateien und Verzeichnisse um.\n\n\
 RENAME [/E /N /P /Q /S /T] alter_Name ... neuer_Name\n\
@@ -681,7 +685,7 @@ STRING_REPLACE_ERROR4,             "Ungültige Parameterkombination\n"
 STRING_REPLACE_ERROR5,             "Zugriff verweigert - %s\n"
 STRING_REPLACE_ERROR6,             "Keine Dateien gefunden - %s\n"
 STRING_REPLACE_ERROR7,             "Erweiterter Fehler 32\n"
-STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
+STRING_REACTOS_VERSION,            "ReactOS Betriebssystem [Version %s-%s]\n"
 STRING_CMD_SHELLINFO,              "\nReactOS-Befehlszeileninterpreter\nVersion %s %s"
 STRING_VERSION_RUNVER,             " läuft in %s"
 STRING_COPY_FILE ,                 "        %d Datei(en) kopiert\n"

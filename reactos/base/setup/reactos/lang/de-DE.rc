@@ -90,7 +90,7 @@ BEGIN
     CONTROL "Bootloader-Installation", IDC_STATIC, "Button", BS_GROUPBOX, 4,36,298,52
 
     CONTROL "Installiere Bootloader auf Festplatte (MBR und VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,46,278,11
-    CONTROL "Installiere Bootloader auf Festplatte (VBR nur)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
+    CONTROL "Installiere Bootloader auf Festplatte (nur VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10,57,278,11
     CONTROL "Keine Bootloader-Installation", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED , 10,68,278,11
     PUSHBUTTON "&OK", IDOK, 180,94,50,15, WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Abbrechen", IDCANCEL, 240,94,50,15, WS_TABSTOP | WS_VISIBLE
