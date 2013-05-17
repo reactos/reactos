@@ -865,58 +865,12 @@ SetSetupType(DWORD dwSetupType)
     return TRUE;
 }
 
-
-static
-BOOL
-SetPrivilege(IN LPTSTR lpPrivilegeName,
-             IN DWORD dwAttribute)
-{
-    TOKEN_PRIVILEGES privs;
-    HANDLE hToken = NULL;
-    BOOL bResult = TRUE;
-
-    if (!OpenProcessToken(GetCurrentProcess(),
-                          TOKEN_ADJUST_PRIVILEGES,
-                          &hToken))
-    {
-        FatalError("OpenProcessToken() failed!");
-        return FALSE;
-    }
-
-    if (!LookupPrivilegeValue(NULL,
-                              lpPrivilegeName,
-                              &privs.Privileges[0].Luid))
-    {
-        FatalError("LookupPrivilegeValue() failed!");
-        bResult = FALSE;
-        goto done;
-    }
-
-    privs.PrivilegeCount = 1;
-    privs.Privileges[0].Attributes = dwAttribute;
-    if (AdjustTokenPrivileges(hToken,
-                              FALSE,
-                              &privs,
-                              0,
-                              (PTOKEN_PRIVILEGES)NULL,
-                              NULL) == 0)
-    {
-        FatalError("AdjustTokenPrivileges() failed!");
-        bResult = FALSE;
-    }
-
-done:
-    if (hToken != NULL)
-        CloseHandle(hToken);
-
-    return bResult;
-}
-
-
 DWORD WINAPI
 InstallReactOS(HINSTANCE hInstance)
 {
     TCHAR szBuffer[MAX_PATH];
+    HANDLE token;
+    TOKEN_PRIVILEGES privs;
     HKEY hKey;
 
     InitializeSetupActionLog(FALSE);
@@ -976,12 +930,7 @@ InstallReactOS(HINSTANCE hInstance)
 
     /* ROS HACK, as long as NtUnloadKey is not implemented */
     {
-        NTSTATUS Status;
-
-        SetPrivilege(SE_RESTORE_NAME, SE_PRIVILEGE_ENABLED);
-        Status = NtUnloadKey(NULL);
-        SetPrivilege(SE_RESTORE_NAME, 0);
-
+        NTSTATUS Status = NtUnloadKey(NULL);
         if (Status == STATUS_NOT_IMPLEMENTED)
         {
             /* Create the Administrator profile */
@@ -1015,7 +964,33 @@ InstallReactOS(HINSTANCE hInstance)
     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS done");
     TerminateSetupActionLog();
 
-    SetPrivilege(SE_SHUTDOWN_NAME, SE_PRIVILEGE_ENABLED);
+    /* Get shutdown privilege */
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
+    {
+         FatalError("OpenProcessToken() failed!");
+        return 0;
+    }
+    if (!LookupPrivilegeValue(
+        NULL,
+        SE_SHUTDOWN_NAME,
+        &privs.Privileges[0].Luid))
+    {
+        FatalError("LookupPrivilegeValue() failed!");
+        return 0;
+    }
+    privs.PrivilegeCount = 1;
+    privs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    if (AdjustTokenPrivileges(
+        token,
+        FALSE,
+        &privs,
+        0,
+        (PTOKEN_PRIVILEGES)NULL,
+        NULL) == 0)
+    {
+        FatalError("AdjustTokenPrivileges() failed!");
+        return 0;
+    }
 
     ExitWindowsEx(EWX_REBOOT, 0);
     return 0;
