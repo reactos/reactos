@@ -7,7 +7,11 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_library(mshtml.tlb SHARED rsrc.rc)
 
-set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/mshtml_tlb.tlb)
+list(APPEND mshtml_tlb_rc_deps
+    ${CMAKE_CURRENT_BINARY_DIR}/mshtml_tlb.tlb
+    ${CMAKE_CURRENT_SOURCE_DIR}/mshtml_tlb.rgs)
+
+set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${mshtml_tlb_rc_deps}")
 
 set_module_type(mshtml.tlb module)
 set_target_properties(mshtml.tlb PROPERTIES SUFFIX "")

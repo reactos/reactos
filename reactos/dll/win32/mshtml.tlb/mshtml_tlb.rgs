@@ -1,0 +1,1176 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}'
+        {
+            '4.0' = s 'MSHTML'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{3051049B-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMConstructor'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F3EE-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLFiltersCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F25E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyle'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4A2-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyle2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F3CF-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLRuleStyle'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F55A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLStyle'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F656-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyle3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F816-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyle4'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F33A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyle5'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510480-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyle6'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F6AE-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLRenderStyle'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F3DB-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLCurrentStyle'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F658-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLCurrentStyle2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F818-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLCurrentStyle3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F33B-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLCurrentStyle4'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F557-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLCurrentStyle'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4A3-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLRect'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4A4-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLRectCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F5DA-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMNode'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F80B-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMNode2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4B0-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMAttribute'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F810-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMAttribute2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4B1-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMTextNode'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F809-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMTextNode2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F80D-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMImplementation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F564-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLDOMAttribute'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3051041A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDocumentCompatibleInfo'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510418-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDocumentCompatibleInfoCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F565-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLDOMTextNode'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4C3-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLAttributeCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F80A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLAttributeCollection2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510469-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLAttributeCollection3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F56C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLAttributeCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F5AB-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMChildrenCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F577-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispDOMChildrenCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F1FF-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F434-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F673-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLElement3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F80F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLElement4'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4D0-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLUniqueName'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F3F2-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDatabinding'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4B7-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLGenericElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F563-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLGenericElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F357-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyleSheetRule'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F50E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLStyleSheetRule'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F2E5-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyleSheetRulesCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F52F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLStyleSheetRulesCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F7EE-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyleSheetPage'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F540-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLStyleSheetPage'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F7F0-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyleSheetPagesCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F543-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLStyleSheetPagesCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F2E3-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyleSheet'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F3D1-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyleSheet2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F58D-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLStyleSheet'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F37E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyleSheetsCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F547-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLStyleSheetsCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F205-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLLinkElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4E5-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLLinkElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F81E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLLinkElement3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3051043A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLLinkElement4'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F524-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLLinkElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F220-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTxtRange'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F1F7-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLFormElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F510-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLFormElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F364-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLFormElementEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F614-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLFormElementEvents2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F230-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTextContainer'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F240-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLImgElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F38E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLImageElementFactory'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F51C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLImg'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3051040A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLXMLHttpRequest'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510482-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLXMLHttpRequest2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3051040C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLXMLHttpRequestFactory'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F596-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLXMLHttpRequest'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4E9-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLControlElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F1D8-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLBodyElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F5C5-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLBodyElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F507-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLBody'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F1DA-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLAnchorElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F502-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLAnchorElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F32A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLLabelElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F832-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLLabelElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F522-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLLabelElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F21F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLElementCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F56B-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLElementCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F244-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLSelectElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F531-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLSelectElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F25A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLSelectionObject'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F211-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLOptionElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F820-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLOptionElement3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F38C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLOptionElementFactory'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F52B-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLOptionElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F5D2-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLInputElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F2A6-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLInputTextElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F57D-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLInputElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F2AA-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTextAreaElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F521-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLTextAreaElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F2BB-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLButtonElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F51F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLButtonElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F81D-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLHeadElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3051042F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLHeadElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F322-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTitleElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F203-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLMetaElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F81F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLMetaElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510495-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLMetaElement3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F561-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLHeadElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F516-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLTitleElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F517-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLMetaElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F539-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLUnknownElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{FECEAAA2-8405-11CF-8BA1-00AA00476DA6}' = s 'IOmHistory'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F3FC-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLMimeTypesCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F3FD-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLPluginsCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F54A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispCPlugins'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F401-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLOpsProfile'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{FECEAAA5-8405-11CF-8BA1-00AA00476DA6}' = s 'IOmNavigator'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F54C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLNavigator'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{163BB1E0-6E00-11CF-837A-48DC04C10000}' = s 'IHTMLLocation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F549-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLHistory'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F54E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLLocation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4CE-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLBookmarkCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4B3-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDataTransfer'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F32D-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLEventObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F558-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispCEventObj'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{332C4426-26CB-11D0-B483-00C04FD90119}' = s 'IHTMLFramesCollection2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F35C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLScreen'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{332C4427-26CB-11D0-B483-00C04FD90119}' = s 'IHTMLWindow2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4AE-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLWindow3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F6CF-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLWindow4'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3051040E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLWindow5'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510453-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLWindow6'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F591-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLScreen'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F55D-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLWindow2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F55E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLWindowProxy'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{96A0A4E0-D062-11CF-94B6-00AA0060275C}' = s 'HTMLWindowEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F625-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLWindowEvents2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F613-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLDocumentEvents2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F260-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLDocumentEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{1FF6AA72-5842-11CF-A707-00AA00C0098D}' = s 'HTMLTextContainerEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F624-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLTextContainerEvents2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{626FC520-A41E-11CF-A731-00A0C9082637}' = s 'IHTMLDocument'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{332C4425-26CB-11D0-B483-00C04FD90119}' = s 'IHTMLDocument2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F485-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDocument3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F69A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDocument4'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F80C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDocument5'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510417-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDocument6'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F55F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLDocument'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{A6D897FF-0A95-11D1-B0BA-006008166E11}' = s 'DWebBridgeEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{AE24FDAD-03C6-11D1-8B76-0080C744F389}' = s 'IWebBridge'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F25F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLEmbedElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F52E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLEmbed'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F20C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLCommentElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F813-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLCommentElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F50A-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLCommentElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F60F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLElementEvents2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F33C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLElementEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F407-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLTableEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F623-98B5-11CF-BB82-00AA00BDCE0B}' = s 'HTMLTableEvents2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F2EB-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTableCaption'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F21E-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTable'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4AD-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTable2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F829-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTable3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F23B-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTableSection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F23C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTableRow'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F23D-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLTableCell'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F532-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLTable'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F535-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLTableRow'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F536-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLTableCell'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F28B-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLScriptElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F828-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLScriptElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F530-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLScriptElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F24F-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLObjectElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4CD-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLObjectElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F83D-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLParamElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510444-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLParamElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F529-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLObjectElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F590-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLParamElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F311-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLFrameBase'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F6DB-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLFrameBase2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3051042D-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLFrameElement3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F513-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLFrameElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F315-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLIFrameElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F4E6-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLIFrameElement2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510433-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLIFrameElement3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F51B-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLIFrame'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F375-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStyleElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3050F511-98B5-11CF-BB82-00AA00BDCE0B}' = s 'DispHTMLStyleElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{30510474-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLStorage'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{305104B9-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IEventTarget'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{305104BA-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IDOMEvent'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+        '{3051049C-98B5-11CF-BB82-00AA00BDCE0B}' = s 'IHTMLDOMConstructorCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}' { val Version = s '4.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{AE24FDAE-03C6-11D1-8B76-0080C744F389}' = s 'Microsoft Scriptlet Component'
+        {
+            ProgId = s 'ScriptBridge.ScriptBridge.1'
+            TypeLib = s '{3050F1C5-98B5-11CF-BB82-00AA00BDCE0B}'
+            Version = s '4.0'
+            VersionIndependentProgId = s 'ScriptBridge.ScriptBridge'
+        }
+    }
+    'ScriptBridge.ScriptBridge.1' = s 'Microsoft Scriptlet Component'
+    {
+        CLSID = s '{AE24FDAE-03C6-11D1-8B76-0080C744F389}'
+    }
+    'ScriptBridge.ScriptBridge' = s 'Microsoft Scriptlet Component'
+    {
+        CLSID = s '{AE24FDAE-03C6-11D1-8B76-0080C744F389}'
+        CurVer = s 'ScriptBridge.ScriptBridge.1'
+    }
+}
