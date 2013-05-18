@@ -101,6 +101,7 @@ protected:
     HD_INIT_CALLBACK* m_SCECallBack;                                                   // status change callback routine
     PVOID m_SCEContext;                                                                // status change callback routine context
     WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
+    volatile LONG m_StatusChangeWorkItemStatus;                                        // work item active status
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
     ULONG m_IntervalValue;                                                             // periodic interval value
 };
@@ -1523,10 +1524,13 @@ OhciDefferedRoutine(
         //
         if (QueueSCEWorkItem && This->m_SCECallBack != NULL)
         {
-            //
-            // queue work item for processing
-            //
-            ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
+            if (InterlockedCompareExchange(&This->m_StatusChangeWorkItemStatus, 1, 0) == 0)
+            {
+                //
+                // queue work item for processing
+                //
+                ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
+            }
         }
     }
 }
@@ -1552,6 +1556,10 @@ StatusChangeWorkItemRoutine(
         This->m_SCECallBack(This->m_SCEContext);
     }
 
+    //
+    // reset active status
+    //
+    InterlockedDecrement(&This->m_StatusChangeWorkItemStatus);
 }
 
 NTSTATUS

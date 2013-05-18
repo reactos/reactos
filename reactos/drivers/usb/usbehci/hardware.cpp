@@ -96,7 +96,7 @@ protected:
     PVOID m_SCEContext;                                                                // status change callback routine context
     BOOLEAN m_DoorBellRingInProgress;                                                  // door bell ring in progress
     WORK_QUEUE_ITEM m_StatusChangeWorkItem;                                            // work item for status change callback
-    ULONG m_WorkItemActive;                                                            // work item status
+    volatile LONG m_StatusChangeWorkItemStatus;                                        // work item status
     ULONG m_SyncFramePhysAddr;                                                         // periodic frame list physical address
     BUS_INTERFACE_STANDARD m_BusInterface;                                             // pci bus interface
     BOOLEAN m_PortResetInProgress[0xF];                                                // stores reset in progress (vbox hack)
@@ -1433,13 +1433,13 @@ EhciDefferedRoutine(
         //
         if (QueueSCEWorkItem && This->m_SCECallBack != NULL)
         {
-            // work item is now active
-            This->m_WorkItemActive = TRUE;
-
-            //
-            // queue work item for processing
-            //
-            ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
+            if (InterlockedCompareExchange(&This->m_StatusChangeWorkItemStatus, 1, 0) == 0)
+            {
+                //
+                // queue work item for processing
+                //
+                ExQueueWorkItem(&This->m_StatusChangeWorkItem, DelayedWorkQueue);
+            }
         }
     }
     return;
@@ -1466,8 +1466,10 @@ StatusChangeWorkItemRoutine(
         This->m_SCECallBack(This->m_SCEContext);
     }
 
-    // work item is completed
-    This->m_WorkItemActive = FALSE;
+    //
+    // reset active status
+    //
+    InterlockedDecrement(&This->m_StatusChangeWorkItemStatus);
 }
 
 NTSTATUS
