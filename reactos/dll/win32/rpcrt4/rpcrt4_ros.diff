@@ -15,6 +15,24 @@ Index: ndr_marshall.c
 ===================================================================
 --- ndr_marshall.c	(working copy)
 +++ ndr_marshall.c	(working copy)
+@@ -1210,7 +1210,7 @@
+         unsigned char *bufptr = bufbase + *(const SHORT*)&info[2];
+         unsigned char *saved_memory = pStubMsg->Memory;
+ 
+-        pStubMsg->Memory = pMemory;
++        pStubMsg->Memory = membase;
+         PointerMarshall(pStubMsg, bufptr, *(unsigned char**)memptr, info+4);
+         pStubMsg->Memory = saved_memory;
+       }
+@@ -1362,7 +1362,7 @@
+         unsigned char *memptr = membase + *(const SHORT*)&info[0];
+         unsigned char *saved_memory = pStubMsg->Memory;
+ 
+-        pStubMsg->Memory = pMemory;
++        pStubMsg->Memory = membase;
+         PointerBufferSize(pStubMsg, *(unsigned char**)memptr, info+4);
+         pStubMsg->Memory = saved_memory;
+       }
 @@ -6159,6 +6159,7 @@ static LONG unmarshall_discriminant(PMID
      case RPC_FC_WCHAR:
      case RPC_FC_SHORT:

@@ -1210,7 +1210,7 @@ static unsigned char * EmbeddedPointerMarshall(PMIDL_STUB_MESSAGE pStubMsg,
         unsigned char *bufptr = bufbase + *(const SHORT*)&info[2];
         unsigned char *saved_memory = pStubMsg->Memory;
 
-        pStubMsg->Memory = pMemory;
+        pStubMsg->Memory = membase;
         PointerMarshall(pStubMsg, bufptr, *(unsigned char**)memptr, info+4);
         pStubMsg->Memory = saved_memory;
       }
@@ -1362,7 +1362,7 @@ static void EmbeddedPointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
         unsigned char *memptr = membase + *(const SHORT*)&info[0];
         unsigned char *saved_memory = pStubMsg->Memory;
 
-        pStubMsg->Memory = pMemory;
+        pStubMsg->Memory = membase;
         PointerBufferSize(pStubMsg, *(unsigned char**)memptr, info+4);
         pStubMsg->Memory = saved_memory;
       }
