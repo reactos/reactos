@@ -28,6 +28,8 @@ Signature = "$ReactOS$"
 12 = Microsoft.NET\Framework\v1.0.3705
 13 = Microsoft.NET\Framework\v1.1.4322
 14 = Microsoft.NET\Framework\v2.0.50727
+15 = Resources
+16 = Resources\Themes
 
 .InfEnd
 
