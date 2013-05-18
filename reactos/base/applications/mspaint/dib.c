@@ -131,7 +131,10 @@ LoadDIBFromFile(HBITMAP * hBitmap, LPTSTR name, LPSYSTEMTIME time, int *size, in
 
     bi = HeapAlloc(GetProcessHeap(), 0, bfh.bfOffBits - sizeof(BITMAPFILEHEADER));
     if (!bi)
+    {
+        CloseHandle(hFile);
         return;
+    }
 
     ReadFile(hFile, bi, bfh.bfOffBits - sizeof(BITMAPFILEHEADER), &dwBytesRead, NULL);
     *hBitmap = CreateDIBSection(NULL, bi, DIB_RGB_COLORS, &pvBits, NULL, 0);
