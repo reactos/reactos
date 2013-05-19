@@ -570,7 +570,6 @@ HidClassPDO_PnP(
         case IRP_MN_QUERY_INTERFACE:
         {
             DPRINT1("[HIDCLASS] PDO IRP_MN_QUERY_INTERFACE not implemented\n");
-            ASSERT(FALSE);
 
             //
             // do nothing
