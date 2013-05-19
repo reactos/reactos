@@ -52,6 +52,7 @@ AddReg=Classes
 11,,hhctrl.ocx,1
 11,,hlink.dll,1
 11,,hnetcfg.dll,1
+11,,ieframe.dll,1
 11,,inetcomm.dll,1
 11,,inseng.dll,1
 11,,itss.dll,1
@@ -91,12 +92,12 @@ AddReg=Classes
 11,,softpub.dll,1
 11,,sti.dll,1
 11,,urlmon.dll,3
+11,,vbscript.dll,1
 11,,windowscodecs.dll,1
 11,,winhttp.dll,1
 11,,wininet.dll,2
 11,,wintrust.dll,1
 11,,wuapi.dll,1
-11,,ieframe.dll,1
 
 [TypeLibraries]
 stdole2.tlb
