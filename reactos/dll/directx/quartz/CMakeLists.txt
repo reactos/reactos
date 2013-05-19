@@ -43,34 +43,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/quartz_strmif_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/quartz.def)
 
-add_library(quartz SHARED
-    ${SOURCE}
-    version.rc)
-
+add_library(quartz SHARED ${SOURCE} version.rc)
 set_module_type(quartz win32dll)
-
-target_link_libraries(quartz
-    strmiids
-    uuid
-    wine
-    ${PSEH_LIB})
-
-add_importlibs(quartz
-    msvcrt
-    advapi32
-    dsound
-    ole32
-    oleaut32
-    shlwapi
-    user32
-    gdi32
-    advapi32
-    msvfw32
-    msacm32
-    rpcrt4
-    kernel32
-    ntdll)
-
+target_link_libraries(quartz strmiids uuid wine ${PSEH_LIB})
+add_importlibs(quartz dsound ole32 oleaut32 shlwapi user32 gdi32 advapi32 msvfw32 msacm32 rpcrt4 msvcrt kernel32 ntdll)
+add_dependencies(quartz dxsdk)
 add_pch(quartz quartz_private.h)
 add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)
 
