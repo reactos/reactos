@@ -19,16 +19,16 @@
 #define COBJMACROS
 
 #include <wine/test.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "ole2.h"
-#include "urlmon.h"
-#include "shlwapi.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "ole2.h"
+//#include "urlmon.h"
+#include <shlwapi.h>
 
-#include "initguid.h"
+#include <initguid.h>
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
@@ -315,6 +315,8 @@ static void test_res_protocol(void)
         {'r','e','s',':','/','/','x','x','.','d','l','l','/','b','l','a','n','k','.','h','t','m',0};
     static const WCHAR wrong_url5[] =
         {'r','e','s',':','/','/','s','h','t','m','l','.','d','l','l','/','b','l','a','n','k','.','h','t','m',0};
+    static const WCHAR wrong_url6[] =
+        {'r','e','s',':','/','/','c',':','\\','d','i','r','\\','f','i','l','e','.','d','l','l','/','b','l','a','n','k','.','h','t','m',0};
     static const WCHAR mshtml_dllW[] = {'m','s','h','t','m','l','.','d','l','l',0};
 
     hres = CoGetClassObject(&CLSID_ResProtocol, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void**)&unk);
@@ -326,7 +328,7 @@ static void test_res_protocol(void)
     ok(hres == S_OK, "Could not get IInternetProtocolInfo interface: %08x\n", hres);
     if(SUCCEEDED(hres)) {
         WCHAR buf[128];
-        DWORD size;
+        DWORD size, expected_size;
         int i;
 
         for(i = PARSE_CANONICALIZE; i <= PARSE_UNESCAPE; i++) {
@@ -342,12 +344,20 @@ static void test_res_protocol(void)
                 sizeof(buf)/sizeof(buf[0]), &size, 0);
         ok(hres == S_OK, "ParseUrl failed: %08x\n", hres);
         res_sec_url_cmp(buf, size, mshtml_dllW);
+        ok(size == lstrlenW(buf)+1, "size = %d\n", size);
+        expected_size = size;
+
+        hres = IInternetProtocolInfo_ParseUrl(protocol_info, blank_url, PARSE_SECURITY_URL, 0, buf,
+                expected_size, &size, 0);
+        ok(hres == S_OK, "ParseUrl failed: %08x\n", hres);
+        res_sec_url_cmp(buf, size, mshtml_dllW);
+        ok(size == expected_size, "size = %d\n", size);
 
         size = 0;
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, blank_url, PARSE_SECURITY_URL, 0, buf,
                 3, &size, 0);
         ok(hres == S_FALSE, "ParseUrl failed: %08x, expected S_FALSE\n", hres);
-        ok(size, "size=0\n");
+        ok(size == expected_size, "size = %d\n", size);
 
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, wrong_url1, PARSE_SECURITY_URL, 0, buf,
                 sizeof(buf)/sizeof(buf[0]), &size, 0);
@@ -355,6 +365,10 @@ static void test_res_protocol(void)
            "ParseUrl failed: %08x, expected MK_E_SYNTAX\n", hres);
 
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, wrong_url5, PARSE_SECURITY_URL, 0, buf,
+                sizeof(buf)/sizeof(buf[0]), &size, 0);
+        ok(hres == MK_E_SYNTAX, "ParseUrl failed: %08x, expected MK_E_SYNTAX\n", hres);
+
+        hres = IInternetProtocolInfo_ParseUrl(protocol_info, wrong_url6, PARSE_SECURITY_URL, 0, buf,
                 sizeof(buf)/sizeof(buf[0]), &size, 0);
         ok(hres == MK_E_SYNTAX, "ParseUrl failed: %08x, expected MK_E_SYNTAX\n", hres);
 
@@ -379,7 +393,7 @@ static void test_res_protocol(void)
 
         if (0)
         {
-        /* Crashes on win9x */
+        /* Crashes on windows */
         size = 0xdeadbeef;
         buf[0] = '?';
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, NULL, PARSE_DOMAIN, 0, buf,
@@ -464,7 +478,6 @@ static void test_res_protocol(void)
         memset(buf, '?', sizeof(buf));
         hres = IInternetProtocolInfo_QueryInfo(protocol_info, NULL, QUERY_USES_NETWORK, 0,
                                                buf, sizeof(buf), &size, 0);
-        ok(hres == S_OK, "QueryInfo(QUERY_USES_NETWORK) failed: %08x, expected E_FAIL\n", hres);
         ok(hres == S_OK, "QueryInfo(QUERY_USES_NETWORK) failed: %08x\n", hres);
         ok(size == sizeof(DWORD), "size=%d\n", size);
         ok(!*(DWORD*)buf, "buf=%d\n", *(DWORD*)buf);
@@ -656,14 +669,17 @@ static void test_about_protocol(void)
         ok(hres == S_OK, "ParseUrl failed: %08x\n", hres);
         ok(!lstrcmpW(about_blank_url, buf), "buf != blank_url\n");
 
+        size = 0xdeadbeef;
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, about_blank_url, PARSE_SECURITY_URL, 0, buf,
                 3, &size, 0);
         ok(hres == S_FALSE, "ParseUrl failed: %08x, expected S_FALSE\n", hres);
+        ok(size == 12, "size = %d\n", size);
 
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, about_test_url, PARSE_SECURITY_URL, 0, buf,
                 sizeof(buf)/sizeof(buf[0]), &size, 0);
         ok(hres == S_OK, "ParseUrl failed: %08x\n", hres);
         ok(!lstrcmpW(about_test_url, buf), "buf != test_url\n");
+        ok(size == 11, "size = %d\n", size);
 
         size = 0xdeadbeef;
         buf[0] = '?';
@@ -677,7 +693,7 @@ static void test_about_protocol(void)
 
         if (0)
         {
-        /* Crashes on win9x */
+        /* Crashes on windows */
         size = 0xdeadbeef;
         buf[0] = '?';
         hres = IInternetProtocolInfo_ParseUrl(protocol_info, NULL, PARSE_DOMAIN, 0, buf,
@@ -738,6 +754,7 @@ static void test_about_protocol(void)
             case QUERY_IS_SECURE:
             case QUERY_IS_SAFE:
             case QUERY_USES_HISTORYFOLDER:
+            case QUERY_IS_CACHED_AND_USABLE_OFFLINE:
                 break;
             default:
                 hres = IInternetProtocolInfo_QueryInfo(protocol_info, about_blank_url, i, 0,

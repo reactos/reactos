@@ -16,5 +16,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* @makedep: exectest.html */
+exectest.html HTML "exectest.html"
+
 /* @makedep: jstest.html */
 jstest.html HTML "jstest.html"
+
+/* @makedep: vbtest.html */
+vbtest.html HTML "vbtest.html"
+
+/* @makedep: events.html */
+events.html HTML "events.html"
+
+/* @makedep: externscr.js */
+externscr.js HTML "externscr.js"
+
+/* @makedep: test_tlb.tlb */
+1 TYPELIB test_tlb.tlb
