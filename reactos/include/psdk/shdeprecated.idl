@@ -19,13 +19,114 @@
  */
 
 import "objidl.idl";
+import "ocidl.idl";
+import "shtypes.idl";
+import "shobjidl.idl";
+import "hlink.idl";
+import "exdisp.idl";
+
+cpp_quote("#define TLOG_BACK    -1")
+cpp_quote("#define TLOG_FORE    1")
+
+cpp_quote("#define TLMENUF_INCLUDECURRENT   0x00000001")
+cpp_quote("#define TLMENUF_CHECKCURRENT     (TLMENUF_INCLUDECURRENT | 0x00000002)")
+cpp_quote("#define TLMENUF_BACK             0x00000010")
+cpp_quote("#define TLMENUF_FORE             0x00000020")
+cpp_quote("#define TLMENUF_BACKANDFORTH     (TLMENUF_BACK | TLMENUF_FORE | TLMENUF_INCLUDECURRENT)")
+
+typedef void *CIE4ConnectionPoint;
 
 [
-    object,
     local,
-    uuid(5836fb00-8187-11cf-a12b-00aa004ae837)
+    object,
+    uuid(0D7D1D00-6FC0-11D0-A974-00C04FD705A2)
 ]
-interface IShellService : IUnknown
+interface IExpDispSupport : IUnknown
 {
-    HRESULT SetOwner( [in] IUnknown *pUnk );
-}
+    HRESULT FindCIE4ConnectionPoint(
+        REFIID riid,
+        CIE4ConnectionPoint **ppccp);
+
+    HRESULT OnTranslateAccelerator(
+        MSG  *pMsg,
+        DWORD grfModifiers);
+
+    HRESULT OnInvoke(
+        DISPID dispidMember,
+        REFIID iid,
+        LCID lcid,
+        WORD wFlags,
+        DISPPARAMS *pdispparams,
+        VARIANT *pVarResult,
+        EXCEPINFO *pexcepinfo,
+        UINT *puArgErr);
+};
+
+
+enum {
+    SBSC_HIDE = 0,
+    SBSC_SHOW = 1,
+    SBSC_TOGGLE = 2,
+    SBSC_QUERY =  3
+};
+
+cpp_quote("#define BSF_REGISTERASDROPTARGET     0x00000001")
+cpp_quote("#define BSF_THEATERMODE              0x00000002")
+cpp_quote("#define BSF_NOLOCALFILEWARNING       0x00000010")
+cpp_quote("#define BSF_UISETBYAUTOMATION        0x00000100")
+cpp_quote("#define BSF_RESIZABLE                0x00000200")
+cpp_quote("#define BSF_CANMAXIMIZE              0x00000400")
+cpp_quote("#define BSF_TOPBROWSER               0x00000800")
+cpp_quote("#define BSF_NAVNOHISTORY             0x00001000")
+cpp_quote("#define BSF_HTMLNAVCANCELED          0x00002000")
+cpp_quote("#define BSF_DONTSHOWNAVCANCELPAGE    0x00004000")
+cpp_quote("#define BSF_SETNAVIGATABLECODEPAGE   0x00008000")
+cpp_quote("#define BSF_DELEGATEDNAVIGATION      0x00010000")
+cpp_quote("#define BSF_TRUSTEDFORACTIVEX        0x00020000")
+
+cpp_quote("#define HLNF_CALLERUNTRUSTED             0x00200000")
+cpp_quote("#define HLNF_TRUSTEDFORACTIVEX           0x00400000")
+cpp_quote("#define HLNF_DISABLEWINDOWRESTRICTIONS   0x00800000")
+cpp_quote("#define HLNF_TRUSTFIRSTDOWNLOAD          0x01000000")
+cpp_quote("#define HLNF_UNTRUSTEDFORDOWNLOAD        0x02000000")
+cpp_quote("#define SHHLNF_NOAUTOSELECT              0x04000000")
+cpp_quote("#define SHHLNF_WRITENOHISTORY            0x08000000")
+cpp_quote("#define HLNF_EXTERNALNAVIGATE            0x10000000")
+cpp_quote("#define HLNF_ALLOW_AUTONAVIGATE          0x20000000")
+cpp_quote("#define HLNF_NEWWINDOWSMANAGED           0x80000000")
+
+
+enum {
+    SECURELOCK_NOCHANGE                 = -1,
+    SECURELOCK_SET_UNSECURE             = 0,
+    SECURELOCK_SET_MIXED                = 1,
+    SECURELOCK_SET_SECUREUNKNOWNBIT     = 2,
+    SECURELOCK_SET_SECURE40BIT          = 3,
+    SECURELOCK_SET_SECURE56BIT          = 4,
+    SECURELOCK_SET_FORTEZZA             = 5,
+    SECURELOCK_SET_SECURE128BIT         = 6,
+    SECURELOCK_FIRSTSUGGEST             = 7,
+    SECURELOCK_SUGGEST_UNSECURE         = SECURELOCK_FIRSTSUGGEST,
+    SECURELOCK_SUGGEST_MIXED            = 8,
+    SECURELOCK_SUGGEST_SECUREUNKNOWNBIT = 9,
+    SECURELOCK_SUGGEST_SECURE40BIT      = 10,
+    SECURELOCK_SUGGEST_SECURE56BIT      = 11,
+    SECURELOCK_SUGGEST_FORTEZZA         = 12,
+    SECURELOCK_SUGGEST_SECURE128BIT     = 13,
+};
+
+
+
+cpp_quote("#define VIEW_PRIORITY_RESTRICTED         0x00000070")
+cpp_quote("#define VIEW_PRIORITY_CACHEHIT           0x00000050")
+cpp_quote("#define VIEW_PRIORITY_STALECACHEHIT      0x00000045")
+cpp_quote("#define VIEW_PRIORITY_USEASDEFAULT       0x00000043")
+cpp_quote("#define VIEW_PRIORITY_SHELLEXT           0x00000040")
+cpp_quote("#define VIEW_PRIORITY_CACHEMISS          0x00000030")
+cpp_quote("#define VIEW_PRIORITY_INHERIT            0x00000020")
+cpp_quote("#define VIEW_PRIORITY_SHELLEXT_ASBACKUP  0x0015")
+cpp_quote("#define VIEW_PRIORITY_DESPERATE          0x00000010")
+cpp_quote("#define VIEW_PRIORITY_NONE               0x00000000")
+
+
+cpp_quote("#define ITB_VIEW        ((UINT)-1)")
