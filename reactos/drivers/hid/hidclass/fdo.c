@@ -182,9 +182,13 @@ HidClassFDO_DispatchRequestSynchronous(
     IoStack->DeviceObject = DeviceObject;
 
     //
-    // call driver
+    // sanity check
     //
-    DPRINT("IoStack MajorFunction %x MinorFunction %x\n", IoStack->MajorFunction, IoStack->MinorFunction);
+    ASSERT(CommonDeviceExtension->DriverExtension->MajorFunction[IoStack->MajorFunction] != NULL);
+
+    //
+    // call minidriver (hidusb)
+    //
     Status = CommonDeviceExtension->DriverExtension->MajorFunction[IoStack->MajorFunction](DeviceObject, Irp);
 
     //
@@ -199,6 +203,53 @@ HidClassFDO_DispatchRequestSynchronous(
         //
         Status = Irp->IoStatus.Status;
     }
+
+    //
+    // done
+    //
+    return Status;
+}
+
+NTSTATUS
+HidClassFDO_DispatchRequest(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+
+    //
+    // get device extension
+    //
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
+
+    ASSERT(Irp->CurrentLocation > 0);
+
+    //
+    // create stack location
+    //
+    IoSetNextIrpStackLocation(Irp);
+
+    //
+    // get next stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // store device object
+    //
+    IoStack->DeviceObject = DeviceObject;
+
+    //
+    // sanity check
+    //
+    ASSERT(CommonDeviceExtension->DriverExtension->MajorFunction[IoStack->MajorFunction] != NULL);
+
+    //
+    // call driver
+    //
+    Status = CommonDeviceExtension->DriverExtension->MajorFunction[IoStack->MajorFunction](DeviceObject, Irp);
 
     //
     // done
@@ -620,14 +671,8 @@ HidClassFDO_PnP(
             //
             // dispatch to mini driver
             //
-           IoSkipCurrentIrpStackLocation(Irp);
-           Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
-
-           //
-           // complete request
-           //
-           Irp->IoStatus.Status = Status;
-           IoCompleteRequest(Irp, IO_NO_INCREMENT);
+           IoCopyCurrentIrpStackLocationToNext(Irp);
+           Status = HidClassFDO_DispatchRequest(DeviceObject, Irp);
            return Status;
         }
     }
