@@ -23,13 +23,13 @@
 
 #include "resource.h"
 
-#define WINE_OLESELFREGISTER
 #define WINE_FILEDESCRIPTION_STR "Wine HTML Viewer"
 #define WINE_FILENAME_STR "mshtml.dll"
 #define WINE_FILEVERSION 6,0,2800,1106
 #define WINE_FILEVERSION_STR "6.0.2800.1106"
 #define WINE_PRODUCTVERSION 6,0,2800,1106
 #define WINE_PRODUCTVERSION_STR "6.0.2800.1106"
+#define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
 #include <wine/wine_common_ver.rc>
 
@@ -115,3 +115,5 @@ REGINST REGINST mshtml.inf
 
 /* @makedep: blank.htm */
 blank.htm HTML "blank.htm"
+
+1 WINE_REGISTRY mshtml_classes.rgs

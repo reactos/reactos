@@ -24,24 +24,13 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    IDS_HTMLDISABLED    "El renderizado HTML está actualmente deshabilitado."
-    IDS_HTMLDOCUMENT    "Documento HTML"
-    IDS_DOWNLOADING     "Descargando..."
-    IDS_INSTALLING      "Instalando..."
+    IDS_STATUS_DONE            "Done"
+    IDS_STATUS_DOWNLOADINGFROM "Downloading from %s..."
 }
 
-ID_DWL_DIALOG DIALOG  0, 0, 260, 95
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalador de Gecko de Wine"
-FONT 8, "MS Shell Dlg"
+STRINGTABLE
 {
-    LTEXT "Wine could not find a Gecko package which is needed for applications embedding HTML to work correctly. Wine can automatically download and install it for you.\n\
-\n\
-Note: it's recommended to use distro packages instead. See http://wiki.winehq.org/Gecko for details.",
-          ID_DWL_STATUS, 10, 10, 240, 50, SS_LEFT
-    CONTROL "Progreso", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 50, 240, 12
-    DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 140, 70, 50, 15, WS_GROUP | WS_TABSTOP
+    IDS_HTMLDOCUMENT    "Documento HTML"
 }
 
 IDD_HYPERLINK DIALOG 0, 0, 250, 65
@@ -60,7 +49,6 @@ FONT 8, "MS Shell Dlg"
 
 ID_PROMPT_DIALOG DIALOG 0, 0, 200, 90
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION ""
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "", ID_PROMPT_PROMPT, 10, 10, 180, 30

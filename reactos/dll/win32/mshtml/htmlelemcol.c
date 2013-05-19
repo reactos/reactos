@@ -18,7 +18,6 @@
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 #include <stdarg.h>
 
@@ -37,16 +36,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct {
     DispatchEx dispex;
-    const IHTMLElementCollectionVtbl *lpHTMLElementCollectionVtbl;
+    IHTMLElementCollection IHTMLElementCollection_iface;
 
-    IUnknown *ref_unk;
     HTMLElement **elems;
     DWORD len;
 
     LONG ref;
 } HTMLElementCollection;
-
-#define HTMLELEMCOL(x)  ((IHTMLElementCollection*) &(x)->lpHTMLElementCollectionVtbl)
 
 typedef struct {
     HTMLElement **buf;
@@ -54,14 +50,19 @@ typedef struct {
     DWORD size;
 } elem_vector_t;
 
-static IHTMLElementCollection *HTMLElementCollection_Create(IUnknown *ref_unk,
-                                                            HTMLElement **elems, DWORD len);
+/* FIXME: Handle it better way */
+static inline HTMLElement *elem_from_HTMLDOMNode(HTMLDOMNode *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLElement, node);
+}
+
+static IHTMLElementCollection *HTMLElementCollection_Create(HTMLElement **elems, DWORD len);
 
 static void elem_vector_add(elem_vector_t *buf, HTMLElement *elem)
 {
     if(buf->len == buf->size) {
         buf->size <<= 1;
-        buf->buf = heap_realloc(buf->buf, buf->size*sizeof(HTMLElement**));
+        buf->buf = heap_realloc(buf->buf, buf->size*sizeof(HTMLElement*));
     }
 
     buf->buf[buf->len++] = elem;
@@ -73,7 +74,7 @@ static void elem_vector_normalize(elem_vector_t *buf)
         heap_free(buf->buf);
         buf->buf = NULL;
     }else if(buf->size > buf->len) {
-        buf->buf = heap_realloc(buf->buf, buf->len*sizeof(HTMLElement**));
+        buf->buf = heap_realloc(buf->buf, buf->len*sizeof(HTMLElement*));
     }
 
     buf->size = buf->len;
@@ -81,35 +82,37 @@ static void elem_vector_normalize(elem_vector_t *buf)
 
 static inline BOOL is_elem_node(nsIDOMNode *node)
 {
-    PRUint16 type=0;
+    UINT16 type=0;
 
     nsIDOMNode_GetNodeType(node, &type);
 
     return type == ELEMENT_NODE || type == COMMENT_NODE;
 }
 
-#define ELEMCOL_THIS(iface) DEFINE_THIS(HTMLElementCollection, HTMLElementCollection, iface)
-#define HTMLELEM_NODE_THIS(iface) DEFINE_THIS2(HTMLElement, node, iface)
+static inline HTMLElementCollection *impl_from_IHTMLElementCollection(IHTMLElementCollection *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLElementCollection, IHTMLElementCollection_iface);
+}
 
 static HRESULT WINAPI HTMLElementCollection_QueryInterface(IHTMLElementCollection *iface,
                                                            REFIID riid, void **ppv)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
 
     *ppv = NULL;
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = HTMLELEMCOL(This);
+        *ppv = &This->IHTMLElementCollection_iface;
     }else if(IsEqualGUID(&IID_IHTMLElementCollection, riid)) {
         TRACE("(%p)->(IID_IHTMLElementCollection %p)\n", This, ppv);
-        *ppv = HTMLELEMCOL(This);
+        *ppv = &This->IHTMLElementCollection_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
     }
 
     if(*ppv) {
-        IHTMLElementCollection_AddRef(HTMLELEMCOL(This));
+        IHTMLElementCollection_AddRef(&This->IHTMLElementCollection_iface);
         return S_OK;
     }
 
@@ -119,7 +122,7 @@ static HRESULT WINAPI HTMLElementCollection_QueryInterface(IHTMLElementCollectio
 
 static ULONG WINAPI HTMLElementCollection_AddRef(IHTMLElementCollection *iface)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -129,15 +132,19 @@ static ULONG WINAPI HTMLElementCollection_AddRef(IHTMLElementCollection *iface)
 
 static ULONG WINAPI HTMLElementCollection_Release(IHTMLElementCollection *iface)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
-        IUnknown_Release(This->ref_unk);
-        release_dispex(&This->dispex);
+        unsigned i;
+
+        for(i=0; i < This->len; i++)
+            node_release(&This->elems[i]->node);
         heap_free(This->elems);
+
+        release_dispex(&This->dispex);
         heap_free(This);
     }
 
@@ -147,37 +154,38 @@ static ULONG WINAPI HTMLElementCollection_Release(IHTMLElementCollection *iface)
 static HRESULT WINAPI HTMLElementCollection_GetTypeInfoCount(IHTMLElementCollection *iface,
                                                              UINT *pctinfo)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
-    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->dispex), pctinfo);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
+    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLElementCollection_GetTypeInfo(IHTMLElementCollection *iface,
         UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
-    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
+    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLElementCollection_GetIDsOfNames(IHTMLElementCollection *iface,
         REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
-    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
+    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface, riid, rgszNames, cNames,
+            lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLElementCollection_Invoke(IHTMLElementCollection *iface,
         DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
-    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid,
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
+    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLElementCollection_toString(IHTMLElementCollection *iface,
                                                      BSTR *String)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
     FIXME("(%p)->(%p)\n", This, String);
     return E_NOTIMPL;
 }
@@ -185,7 +193,7 @@ static HRESULT WINAPI HTMLElementCollection_toString(IHTMLElementCollection *ifa
 static HRESULT WINAPI HTMLElementCollection_put_length(IHTMLElementCollection *iface,
                                                        LONG v)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
     FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
@@ -193,7 +201,7 @@ static HRESULT WINAPI HTMLElementCollection_put_length(IHTMLElementCollection *i
 static HRESULT WINAPI HTMLElementCollection_get_length(IHTMLElementCollection *iface,
                                                        LONG *p)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
 
     TRACE("(%p)->(%p)\n", This, p);
 
@@ -204,7 +212,7 @@ static HRESULT WINAPI HTMLElementCollection_get_length(IHTMLElementCollection *i
 static HRESULT WINAPI HTMLElementCollection_get__newEnum(IHTMLElementCollection *iface,
                                                          IUnknown **p)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
@@ -214,7 +222,7 @@ static BOOL is_elem_id(HTMLElement *elem, LPCWSTR name)
     BSTR elem_id;
     HRESULT hres;
 
-    hres = IHTMLElement_get_id(HTMLELEM(elem), &elem_id);
+    hres = IHTMLElement_get_id(&elem->IHTMLElement_iface, &elem_id);
     if(FAILED(hres)){
         WARN("IHTMLElement_get_id failed: 0x%08x\n", hres);
         return FALSE;
@@ -274,7 +282,7 @@ static HRESULT get_item_idx(HTMLElementCollection *This, UINT idx, IDispatch **r
 static HRESULT WINAPI HTMLElementCollection_item(IHTMLElementCollection *iface,
         VARIANT name, VARIANT index, IDispatch **pdisp)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
     HRESULT hres = S_OK;
 
     TRACE("(%p)->(%s %s %p)\n", This, debugstr_variant(&name), debugstr_variant(&index), pdisp);
@@ -307,7 +315,7 @@ static HRESULT WINAPI HTMLElementCollection_item(IHTMLElementCollection *iface,
             }
 
             if(i != This->len) {
-                *pdisp = (IDispatch*)HTMLELEM(This->elems[i]);
+                *pdisp = (IDispatch*)&This->elems[i]->IHTMLElement_iface;
                 IDispatch_AddRef(*pdisp);
             }
         }else {
@@ -316,17 +324,19 @@ static HRESULT WINAPI HTMLElementCollection_item(IHTMLElementCollection *iface,
             buf.buf = heap_alloc(buf.size*sizeof(HTMLElement*));
 
             for(i=0; i<This->len; i++) {
-                if(is_elem_name(This->elems[i], V_BSTR(&name)))
+                if(is_elem_name(This->elems[i], V_BSTR(&name))) {
+                    node_addref(&This->elems[i]->node);
                     elem_vector_add(&buf, This->elems[i]);
+                }
             }
 
             if(buf.len > 1) {
                 elem_vector_normalize(&buf);
-                *pdisp = (IDispatch*)HTMLElementCollection_Create(This->ref_unk, buf.buf, buf.len);
+                *pdisp = (IDispatch*)HTMLElementCollection_Create(buf.buf, buf.len);
             }else {
                 if(buf.len == 1) {
-                    *pdisp = (IDispatch*)HTMLELEM(buf.buf[0]);
-                    IDispatch_AddRef(*pdisp);
+                    /* Already AddRef-ed */
+                    *pdisp = (IDispatch*)&buf.buf[0]->IHTMLElement_iface;
                 }
 
                 heap_free(buf.buf);
@@ -348,7 +358,7 @@ static HRESULT WINAPI HTMLElementCollection_item(IHTMLElementCollection *iface,
 static HRESULT WINAPI HTMLElementCollection_tags(IHTMLElementCollection *iface,
                                                  VARIANT tagName, IDispatch **pdisp)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
     DWORD i;
     nsAString tag_str;
     const PRUnichar *tag;
@@ -369,12 +379,14 @@ static HRESULT WINAPI HTMLElementCollection_tags(IHTMLElementCollection *iface,
         if(!This->elems[i]->nselem)
             continue;
 
-        nsIDOMElement_GetTagName(This->elems[i]->nselem, &tag_str);
+        nsIDOMHTMLElement_GetTagName(This->elems[i]->nselem, &tag_str);
         nsAString_GetData(&tag_str, &tag);
 
         if(CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, tag, -1,
-                          V_BSTR(&tagName), -1) == CSTR_EQUAL)
+                          V_BSTR(&tagName), -1) == CSTR_EQUAL) {
+            node_addref(&This->elems[i]->node);
             elem_vector_add(&buf, This->elems[i]);
+        }
     }
 
     nsAString_Finish(&tag_str);
@@ -382,15 +394,36 @@ static HRESULT WINAPI HTMLElementCollection_tags(IHTMLElementCollection *iface,
 
     TRACE("fount %d tags\n", buf.len);
 
-    *pdisp = (IDispatch*)HTMLElementCollection_Create(This->ref_unk, buf.buf, buf.len);
+    *pdisp = (IDispatch*)HTMLElementCollection_Create(buf.buf, buf.len);
     return S_OK;
+}
+
+static const IHTMLElementCollectionVtbl HTMLElementCollectionVtbl = {
+    HTMLElementCollection_QueryInterface,
+    HTMLElementCollection_AddRef,
+    HTMLElementCollection_Release,
+    HTMLElementCollection_GetTypeInfoCount,
+    HTMLElementCollection_GetTypeInfo,
+    HTMLElementCollection_GetIDsOfNames,
+    HTMLElementCollection_Invoke,
+    HTMLElementCollection_toString,
+    HTMLElementCollection_put_length,
+    HTMLElementCollection_get_length,
+    HTMLElementCollection_get__newEnum,
+    HTMLElementCollection_item,
+    HTMLElementCollection_tags
+};
+
+static inline HTMLElementCollection *impl_from_DispatchEx(DispatchEx *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLElementCollection, dispex);
 }
 
 #define DISPID_ELEMCOL_0 MSHTML_DISPID_CUSTOM_MIN
 
-static HRESULT HTMLElementCollection_get_dispid(IUnknown *iface, BSTR name, DWORD flags, DISPID *dispid)
+static HRESULT HTMLElementCollection_get_dispid(DispatchEx *dispex, BSTR name, DWORD flags, DISPID *dispid)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_DispatchEx(dispex);
     WCHAR *ptr;
     DWORD idx=0;
 
@@ -417,10 +450,10 @@ static HRESULT HTMLElementCollection_get_dispid(IUnknown *iface, BSTR name, DWOR
     return S_OK;
 }
 
-static HRESULT HTMLElementCollection_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD flags, DISPPARAMS *params,
+static HRESULT HTMLElementCollection_invoke(DispatchEx *dispex, DISPID id, LCID lcid, WORD flags, DISPPARAMS *params,
         VARIANT *res, EXCEPINFO *ei, IServiceProvider *caller)
 {
-    HTMLElementCollection *This = ELEMCOL_THIS(iface);
+    HTMLElementCollection *This = impl_from_DispatchEx(dispex);
     DWORD idx;
 
     TRACE("(%p)->(%x %x %x %p %p %p %p)\n", This, id, lcid, flags, params, res, ei, caller);
@@ -432,8 +465,8 @@ static HRESULT HTMLElementCollection_invoke(IUnknown *iface, DISPID id, LCID lci
     switch(flags) {
     case DISPATCH_PROPERTYGET:
         V_VT(res) = VT_DISPATCH;
-        V_DISPATCH(res) = (IDispatch*)HTMLELEM(This->elems[idx]);
-        IHTMLElement_AddRef(HTMLELEM(This->elems[idx]));
+        V_DISPATCH(res) = (IDispatch*)&This->elems[idx]->IHTMLElement_iface;
+        IHTMLElement_AddRef(&This->elems[idx]->IHTMLElement_iface);
         break;
     default:
         FIXME("unimplemented flags %x\n", flags);
@@ -443,34 +476,18 @@ static HRESULT HTMLElementCollection_invoke(IUnknown *iface, DISPID id, LCID lci
     return S_OK;
 }
 
-#undef ELEMCOL_THIS
-
-static const IHTMLElementCollectionVtbl HTMLElementCollectionVtbl = {
-    HTMLElementCollection_QueryInterface,
-    HTMLElementCollection_AddRef,
-    HTMLElementCollection_Release,
-    HTMLElementCollection_GetTypeInfoCount,
-    HTMLElementCollection_GetTypeInfo,
-    HTMLElementCollection_GetIDsOfNames,
-    HTMLElementCollection_Invoke,
-    HTMLElementCollection_toString,
-    HTMLElementCollection_put_length,
-    HTMLElementCollection_get_length,
-    HTMLElementCollection_get__newEnum,
-    HTMLElementCollection_item,
-    HTMLElementCollection_tags
-};
-
 static const dispex_static_data_vtbl_t HTMLElementColection_dispex_vtbl = {
     NULL,
     HTMLElementCollection_get_dispid,
-    HTMLElementCollection_invoke
+    HTMLElementCollection_invoke,
+    NULL
 };
 
 static const tid_t HTMLElementCollection_iface_tids[] = {
     IHTMLElementCollection_tid,
     0
 };
+
 static dispex_static_data_t HTMLElementCollection_dispex = {
     &HTMLElementColection_dispex_vtbl,
     DispHTMLElementCollection_tid,
@@ -482,8 +499,9 @@ static void create_all_list(HTMLDocumentNode *doc, HTMLDOMNode *elem, elem_vecto
 {
     nsIDOMNodeList *nsnode_list;
     nsIDOMNode *iter;
-    PRUint32 list_len = 0, i;
+    UINT32 list_len = 0, i;
     nsresult nsres;
+    HRESULT hres;
 
     nsres = nsIDOMNode_GetChildNodes(elem->nsnode, &nsnode_list);
     if(NS_FAILED(nsres)) {
@@ -503,9 +521,15 @@ static void create_all_list(HTMLDocumentNode *doc, HTMLDOMNode *elem, elem_vecto
         }
 
         if(is_elem_node(iter)) {
-            HTMLDOMNode *node = get_node(doc, iter, TRUE);
+            HTMLDOMNode *node;
 
-            elem_vector_add(buf, HTMLELEM_NODE_THIS(node));
+            hres = get_node(doc, iter, TRUE, &node);
+            if(FAILED(hres)) {
+                FIXME("get_node failed: %08x\n", hres);
+                continue;
+            }
+
+            elem_vector_add(buf, elem_from_HTMLDOMNode(node));
             create_all_list(doc, node, buf);
         }
     }
@@ -515,20 +539,24 @@ IHTMLElementCollection *create_all_collection(HTMLDOMNode *node, BOOL include_ro
 {
     elem_vector_t buf = {NULL, 0, 8};
 
-    buf.buf = heap_alloc(buf.size*sizeof(HTMLElement**));
+    buf.buf = heap_alloc(buf.size*sizeof(HTMLElement*));
 
-    if(include_root)
-        elem_vector_add(&buf, HTMLELEM_NODE_THIS(node));
+    if(include_root) {
+        node_addref(node);
+        elem_vector_add(&buf, elem_from_HTMLDOMNode(node));
+    }
     create_all_list(node->doc, node, &buf);
     elem_vector_normalize(&buf);
 
-    return HTMLElementCollection_Create((IUnknown*)HTMLDOMNODE(node), buf.buf, buf.len);
+    return HTMLElementCollection_Create(buf.buf, buf.len);
 }
 
-IHTMLElementCollection *create_collection_from_nodelist(HTMLDocumentNode *doc, IUnknown *unk, nsIDOMNodeList *nslist)
+IHTMLElementCollection *create_collection_from_nodelist(HTMLDocumentNode *doc, nsIDOMNodeList *nslist)
 {
-    PRUint32 length = 0, i;
+    UINT32 length = 0, i;
+    HTMLDOMNode *node;
     elem_vector_t buf;
+    HRESULT hres;
 
     nsIDOMNodeList_GetLength(nslist, &length);
 
@@ -541,8 +569,12 @@ IHTMLElementCollection *create_collection_from_nodelist(HTMLDocumentNode *doc, I
 
         for(i=0; i<length; i++) {
             nsIDOMNodeList_Item(nslist, i, &nsnode);
-            if(is_elem_node(nsnode))
-                buf.buf[buf.len++] = HTMLELEM_NODE_THIS(get_node(doc, nsnode, TRUE));
+            if(is_elem_node(nsnode)) {
+                hres = get_node(doc, nsnode, TRUE, &node);
+                if(FAILED(hres))
+                    continue;
+                buf.buf[buf.len++] = elem_from_HTMLDOMNode(node);
+            }
             nsIDOMNode_Release(nsnode);
         }
 
@@ -551,13 +583,15 @@ IHTMLElementCollection *create_collection_from_nodelist(HTMLDocumentNode *doc, I
         buf.buf = NULL;
     }
 
-    return HTMLElementCollection_Create(unk, buf.buf, buf.len);
+    return HTMLElementCollection_Create(buf.buf, buf.len);
 }
 
-IHTMLElementCollection *create_collection_from_htmlcol(HTMLDocumentNode *doc, IUnknown *unk, nsIDOMHTMLCollection *nscol)
+IHTMLElementCollection *create_collection_from_htmlcol(HTMLDocumentNode *doc, nsIDOMHTMLCollection *nscol)
 {
-    PRUint32 length = 0, i;
+    UINT32 length = 0, i;
     elem_vector_t buf;
+    HTMLDOMNode *node;
+    HRESULT hres = S_OK;
 
     nsIDOMHTMLCollection_GetLength(nscol, &length);
 
@@ -569,32 +603,37 @@ IHTMLElementCollection *create_collection_from_htmlcol(HTMLDocumentNode *doc, IU
 
         for(i=0; i<length; i++) {
             nsIDOMHTMLCollection_Item(nscol, i, &nsnode);
-            buf.buf[i] = HTMLELEM_NODE_THIS(get_node(doc, nsnode, TRUE));
+            hres = get_node(doc, nsnode, TRUE, &node);
             nsIDOMNode_Release(nsnode);
+            if(FAILED(hres))
+                break;
+            buf.buf[i] = elem_from_HTMLDOMNode(node);
         }
     }else {
         buf.buf = NULL;
     }
 
-    return HTMLElementCollection_Create(unk, buf.buf, buf.len);
+    if(FAILED(hres)) {
+        heap_free(buf.buf);
+        return NULL;
+    }
+
+    return HTMLElementCollection_Create(buf.buf, buf.len);
 }
 
-static IHTMLElementCollection *HTMLElementCollection_Create(IUnknown *ref_unk,
-            HTMLElement **elems, DWORD len)
+static IHTMLElementCollection *HTMLElementCollection_Create(HTMLElement **elems, DWORD len)
 {
     HTMLElementCollection *ret = heap_alloc_zero(sizeof(HTMLElementCollection));
 
-    ret->lpHTMLElementCollectionVtbl = &HTMLElementCollectionVtbl;
+    ret->IHTMLElementCollection_iface.lpVtbl = &HTMLElementCollectionVtbl;
     ret->ref = 1;
     ret->elems = elems;
     ret->len = len;
 
-    init_dispex(&ret->dispex, (IUnknown*)HTMLELEMCOL(ret), &HTMLElementCollection_dispex);
-
-    IUnknown_AddRef(ref_unk);
-    ret->ref_unk = ref_unk;
+    init_dispex(&ret->dispex, (IUnknown*)&ret->IHTMLElementCollection_iface,
+            &HTMLElementCollection_dispex);
 
     TRACE("ret=%p len=%d\n", ret, len);
 
-    return HTMLELEMCOL(ret);
+    return &ret->IHTMLElementCollection_iface;
 }

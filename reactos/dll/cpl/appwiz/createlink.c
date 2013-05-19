@@ -81,7 +81,7 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
 
     if (IsExtensionAShortcut(lpExtension))
     {
-        hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLink, (void**)&pSourceShellLink);
+        hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLinkW, (void**)&pSourceShellLink);
 
         if (hr != S_OK)
             return FALSE;
@@ -116,7 +116,7 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
     }
 
     hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL,
-                   &IID_IShellLink, (void**)&pShellLink);
+                   &IID_IShellLinkW, (void**)&pShellLink);
 
     if (hr != S_OK)
         return FALSE;
@@ -189,11 +189,11 @@ WelcomeDlgProc(HWND hwndDlg,
                     brws.pszDisplayName = szPath;
                     brws.ulFlags = BIF_BROWSEINCLUDEFILES;
                     brws.lpfn = NULL;
-                    pidllist = SHBrowseForFolder(&brws);
+                    pidllist = SHBrowseForFolderW(&brws);
                     if (!pidllist)
                         break;
 
-                    if (SHGetPathFromIDList(pidllist, szPath))
+                    if (SHGetPathFromIDListW(pidllist, szPath))
                         SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, WM_SETTEXT, 0, (LPARAM)szPath);
 
                     /* Free memory, if possible */

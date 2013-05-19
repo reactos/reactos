@@ -18,7 +18,6 @@
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 #include <stdarg.h>
 
@@ -30,14 +29,13 @@
 #include <ole2.h>
 
 #include <wine/debug.h>
-//#include "wine/unicode.h"
 
 #include "mshtml_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 typedef struct {
-    const IHTMLSelectionObjectVtbl *lpHTMLSelectionObjectVtbl;
+    IHTMLSelectionObject IHTMLSelectionObject_iface;
 
     LONG ref;
 
@@ -47,26 +45,27 @@ typedef struct {
     struct list entry;
 } HTMLSelectionObject;
 
-#define HTMLSELOBJ(x)  ((IHTMLSelectionObject*) &(x)->lpHTMLSelectionObjectVtbl)
-
-#define HTMLSELOBJ_THIS(iface) DEFINE_THIS(HTMLSelectionObject, HTMLSelectionObject, iface)
+static inline HTMLSelectionObject *impl_from_IHTMLSelectionObject(IHTMLSelectionObject *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLSelectionObject, IHTMLSelectionObject_iface);
+}
 
 static HRESULT WINAPI HTMLSelectionObject_QueryInterface(IHTMLSelectionObject *iface,
                                                          REFIID riid, void **ppv)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
 
     *ppv = NULL;
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = HTMLSELOBJ(This);
+        *ppv = &This->IHTMLSelectionObject_iface;
     }else if(IsEqualGUID(&IID_IDispatch, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = HTMLSELOBJ(This);
+        *ppv = &This->IHTMLSelectionObject_iface;
     }else if(IsEqualGUID(&IID_IHTMLSelectionObject, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = HTMLSELOBJ(This);
+        *ppv = &This->IHTMLSelectionObject_iface;
     }
 
     if(*ppv) {
@@ -80,7 +79,7 @@ static HRESULT WINAPI HTMLSelectionObject_QueryInterface(IHTMLSelectionObject *i
 
 static ULONG WINAPI HTMLSelectionObject_AddRef(IHTMLSelectionObject *iface)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
     LONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -90,7 +89,7 @@ static ULONG WINAPI HTMLSelectionObject_AddRef(IHTMLSelectionObject *iface)
 
 static ULONG WINAPI HTMLSelectionObject_Release(IHTMLSelectionObject *iface)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -108,7 +107,7 @@ static ULONG WINAPI HTMLSelectionObject_Release(IHTMLSelectionObject *iface)
 
 static HRESULT WINAPI HTMLSelectionObject_GetTypeInfoCount(IHTMLSelectionObject *iface, UINT *pctinfo)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
     FIXME("(%p)->(%p)\n", This, pctinfo);
     return E_NOTIMPL;
 }
@@ -116,7 +115,7 @@ static HRESULT WINAPI HTMLSelectionObject_GetTypeInfoCount(IHTMLSelectionObject 
 static HRESULT WINAPI HTMLSelectionObject_GetTypeInfo(IHTMLSelectionObject *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
     FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
     return E_NOTIMPL;
 }
@@ -125,7 +124,7 @@ static HRESULT WINAPI HTMLSelectionObject_GetIDsOfNames(IHTMLSelectionObject *if
                                                 LPOLESTR *rgszNames, UINT cNames,
                                                 LCID lcid, DISPID *rgDispId)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
     FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
           lcid, rgDispId);
     return E_NOTIMPL;
@@ -135,7 +134,7 @@ static HRESULT WINAPI HTMLSelectionObject_Invoke(IHTMLSelectionObject *iface, DI
                             REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
     FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
     return E_NOTIMPL;
@@ -143,7 +142,7 @@ static HRESULT WINAPI HTMLSelectionObject_Invoke(IHTMLSelectionObject *iface, DI
 
 static HRESULT WINAPI HTMLSelectionObject_createRange(IHTMLSelectionObject *iface, IDispatch **range)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
     IHTMLTxtRange *range_obj = NULL;
     nsIDOMRange *nsrange = NULL;
     HRESULT hres;
@@ -151,7 +150,7 @@ static HRESULT WINAPI HTMLSelectionObject_createRange(IHTMLSelectionObject *ifac
     TRACE("(%p)->(%p)\n", This, range);
 
     if(This->nsselection) {
-        PRInt32 nsrange_cnt = 0;
+        LONG nsrange_cnt = 0;
         nsresult nsres;
 
         nsISelection_GetRangeCount(This->nsselection, &nsrange_cnt);
@@ -193,22 +192,22 @@ static HRESULT WINAPI HTMLSelectionObject_createRange(IHTMLSelectionObject *ifac
 
 static HRESULT WINAPI HTMLSelectionObject_empty(IHTMLSelectionObject *iface)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLSelectionObject_clear(IHTMLSelectionObject *iface)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
     FIXME("(%p)\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLSelectionObject_get_type(IHTMLSelectionObject *iface, BSTR *p)
 {
-    HTMLSelectionObject *This = HTMLSELOBJ_THIS(iface);
-    PRBool collapsed = TRUE;
+    HTMLSelectionObject *This = impl_from_IHTMLSelectionObject(iface);
+    cpp_bool collapsed = TRUE;
 
     static const WCHAR wszNone[] = {'N','o','n','e',0};
     static const WCHAR wszText[] = {'T','e','x','t',0};
@@ -222,8 +221,6 @@ static HRESULT WINAPI HTMLSelectionObject_get_type(IHTMLSelectionObject *iface, 
     TRACE("ret %s\n", debugstr_w(*p));
     return S_OK;
 }
-
-#undef HTMLSELOBJ_THIS
 
 static const IHTMLSelectionObjectVtbl HTMLSelectionObjectVtbl = {
     HTMLSelectionObject_QueryInterface,
@@ -247,14 +244,14 @@ HRESULT HTMLSelectionObject_Create(HTMLDocumentNode *doc, nsISelection *nsselect
     if(!selection)
         return E_OUTOFMEMORY;
 
-    selection->lpHTMLSelectionObjectVtbl = &HTMLSelectionObjectVtbl;
+    selection->IHTMLSelectionObject_iface.lpVtbl = &HTMLSelectionObjectVtbl;
     selection->ref = 1;
     selection->nsselection = nsselection; /* We shouldn't call AddRef here */
 
     selection->doc = doc;
     list_add_head(&doc->selection_list, &selection->entry);
 
-    *ret = HTMLSELOBJ(selection);
+    *ret = &selection->IHTMLSelectionObject_iface;
     return S_OK;
 }
 

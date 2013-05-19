@@ -18,9 +18,9 @@
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 #include <stdarg.h>
+#include <assert.h>
 
 #define COBJMACROS
 
@@ -32,132 +32,219 @@
 #include <wine/debug.h>
 
 #include "mshtml_private.h"
+#include "htmlscript.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-typedef struct {
-    HTMLElement element;
-
-    const IHTMLScriptElementVtbl *lpHTMLScriptElementVtbl;
-
-    nsIDOMHTMLScriptElement *nsscript;
-} HTMLScriptElement;
-
-#define HTMLSCRIPT(x)  ((IHTMLScriptElement*)  &(x)->lpHTMLScriptElementVtbl)
-
-#define HTMLSCRIPT_THIS(iface) DEFINE_THIS(HTMLScriptElement, HTMLScriptElement, iface)
+static inline HTMLScriptElement *impl_from_IHTMLScriptElement(IHTMLScriptElement *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLScriptElement, IHTMLScriptElement_iface);
+}
 
 static HRESULT WINAPI HTMLScriptElement_QueryInterface(IHTMLScriptElement *iface,
         REFIID riid, void **ppv)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
 
-    return IHTMLDOMNode_QueryInterface(HTMLDOMNODE(&This->element.node), riid, ppv);
+    return IHTMLDOMNode_QueryInterface(&This->element.node.IHTMLDOMNode_iface, riid, ppv);
 }
 
 static ULONG WINAPI HTMLScriptElement_AddRef(IHTMLScriptElement *iface)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
 
-    return IHTMLDOMNode_AddRef(HTMLDOMNODE(&This->element.node));
+    return IHTMLDOMNode_AddRef(&This->element.node.IHTMLDOMNode_iface);
 }
 
 static ULONG WINAPI HTMLScriptElement_Release(IHTMLScriptElement *iface)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
 
-    return IHTMLDOMNode_Release(HTMLDOMNODE(&This->element.node));
+    return IHTMLDOMNode_Release(&This->element.node.IHTMLDOMNode_iface);
 }
 
 static HRESULT WINAPI HTMLScriptElement_GetTypeInfoCount(IHTMLScriptElement *iface, UINT *pctinfo)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->element.node.dispex), pctinfo);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    return IDispatchEx_GetTypeInfoCount(&This->element.node.dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLScriptElement_GetTypeInfo(IHTMLScriptElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->element.node.dispex), iTInfo, lcid, ppTInfo);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    return IDispatchEx_GetTypeInfo(&This->element.node.dispex.IDispatchEx_iface, iTInfo, lcid,
+            ppTInfo);
 }
 
 static HRESULT WINAPI HTMLScriptElement_GetIDsOfNames(IHTMLScriptElement *iface, REFIID riid,
                                                 LPOLESTR *rgszNames, UINT cNames,
                                                 LCID lcid, DISPID *rgDispId)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->element.node.dispex), riid, rgszNames, cNames, lcid, rgDispId);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    return IDispatchEx_GetIDsOfNames(&This->element.node.dispex.IDispatchEx_iface, riid, rgszNames,
+            cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLScriptElement_Invoke(IHTMLScriptElement *iface, DISPID dispIdMember,
                             REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    return IDispatchEx_Invoke(DISPATCHEX(&This->element.node.dispex), dispIdMember, riid, lcid, wFlags, pDispParams,
-            pVarResult, pExcepInfo, puArgErr);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    return IDispatchEx_Invoke(&This->element.node.dispex.IDispatchEx_iface, dispIdMember, riid,
+            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLScriptElement_put_src(IHTMLScriptElement *iface, BSTR v)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    HTMLInnerWindow *window;
+    nsIDOMNode *parent;
+    nsAString src_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    if(!This->element.node.doc || !This->element.node.doc->window) {
+        WARN("no windoow\n");
+        return E_UNEXPECTED;
+    }
+
+    window = This->element.node.doc->window;
+
+    nsAString_InitDepend(&src_str, v);
+    nsres = nsIDOMHTMLScriptElement_SetSrc(This->nsscript, &src_str);
+    nsAString_Finish(&src_str);
+    if(NS_FAILED(nsres)) {
+        ERR("SetSrc failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    if(This->parsed) {
+        WARN("already parsed\n");
+        return S_OK;
+    }
+
+    if(window->parser_callback_cnt) {
+        script_queue_entry_t *queue;
+
+        queue = heap_alloc(sizeof(*queue));
+        if(!queue)
+            return E_OUTOFMEMORY;
+
+        IHTMLScriptElement_AddRef(&This->IHTMLScriptElement_iface);
+        queue->script = This;
+
+        list_add_tail(&window->script_queue, &queue->entry);
+        return S_OK;
+    }
+
+    nsres = nsIDOMHTMLScriptElement_GetParentNode(This->nsscript, &parent);
+    if(NS_FAILED(nsres) || !parent) {
+        TRACE("No parent, not executing\n");
+        This->parse_on_bind = TRUE;
+        return S_OK;
+    }
+
+    nsIDOMNode_Release(parent);
+    doc_insert_script(window, This);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLScriptElement_get_src(IHTMLScriptElement *iface, BSTR *p)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    nsAString src_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&src_str, NULL);
+    nsres = nsIDOMHTMLScriptElement_GetSrc(This->nsscript, &src_str);
+    return return_nsstr(nsres, &src_str, p);
 }
 
 static HRESULT WINAPI HTMLScriptElement_put_htmlFor(IHTMLScriptElement *iface, BSTR v)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(v));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLScriptElement_get_htmlFor(IHTMLScriptElement *iface, BSTR *p)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLScriptElement_put_event(IHTMLScriptElement *iface, BSTR v)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(v));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLScriptElement_get_event(IHTMLScriptElement *iface, BSTR *p)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLScriptElement_put_text(IHTMLScriptElement *iface, BSTR v)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    HTMLInnerWindow *window;
+    nsIDOMNode *parent;
+    nsAString text_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    if(!This->element.node.doc || !This->element.node.doc->window) {
+        WARN("no windoow\n");
+        return E_UNEXPECTED;
+    }
+
+    window = This->element.node.doc->window;
+
+    nsAString_InitDepend(&text_str, v);
+    nsres = nsIDOMHTMLScriptElement_SetText(This->nsscript, &text_str);
+    nsAString_Finish(&text_str);
+    if(NS_FAILED(nsres)) {
+        ERR("SetSrc failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMHTMLScriptElement_GetParentNode(This->nsscript, &parent);
+    if(NS_FAILED(nsres) || !parent) {
+        TRACE("No parent, not executing\n");
+        This->parse_on_bind = TRUE;
+        return S_OK;
+    }
+
+    nsIDOMNode_Release(parent);
+    doc_insert_script(window, This);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLScriptElement_get_text(IHTMLScriptElement *iface, BSTR *p)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&nsstr, NULL);
+    nsres = nsIDOMHTMLScriptElement_GetText(This->nsscript, &nsstr);
+    return return_nsstr(nsres, &nsstr, p);
 }
 
 static HRESULT WINAPI HTMLScriptElement_put_defer(IHTMLScriptElement *iface, VARIANT_BOOL v)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
     HRESULT hr = S_OK;
     nsresult nsres;
 
@@ -174,8 +261,8 @@ static HRESULT WINAPI HTMLScriptElement_put_defer(IHTMLScriptElement *iface, VAR
 
 static HRESULT WINAPI HTMLScriptElement_get_defer(IHTMLScriptElement *iface, VARIANT_BOOL *p)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    PRBool defer = FALSE;
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    cpp_bool defer = FALSE;
     nsresult nsres;
 
     TRACE("(%p)->(%p)\n", This, p);
@@ -196,28 +283,28 @@ static HRESULT WINAPI HTMLScriptElement_get_defer(IHTMLScriptElement *iface, VAR
 
 static HRESULT WINAPI HTMLScriptElement_get_readyState(IHTMLScriptElement *iface, BSTR *p)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLScriptElement_put_onerror(IHTMLScriptElement *iface, VARIANT v)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    FIXME("(%p)->(v(%d))\n", This, V_VT(&v));
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLScriptElement_get_onerror(IHTMLScriptElement *iface, VARIANT *p)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLScriptElement_put_type(IHTMLScriptElement *iface, BSTR v)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
     nsAString nstype_str;
     nsresult nsres;
 
@@ -234,8 +321,7 @@ static HRESULT WINAPI HTMLScriptElement_put_type(IHTMLScriptElement *iface, BSTR
 
 static HRESULT WINAPI HTMLScriptElement_get_type(IHTMLScriptElement *iface, BSTR *p)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    const PRUnichar *nstype;
+    HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
     nsAString nstype_str;
     nsresult nsres;
 
@@ -243,14 +329,7 @@ static HRESULT WINAPI HTMLScriptElement_get_type(IHTMLScriptElement *iface, BSTR
 
     nsAString_Init(&nstype_str, NULL);
     nsres = nsIDOMHTMLScriptElement_GetType(This->nsscript, &nstype_str);
-    if(NS_FAILED(nsres))
-        ERR("GetType failed: %08x\n", nsres);
-
-    nsAString_GetData(&nstype_str, &nstype);
-    *p = *nstype ? SysAllocString(nstype) : NULL;
-    nsAString_Finish(&nstype_str);
-
-    return S_OK;
+    return return_nsstr(nsres, &nstype_str, p);
 }
 
 static const IHTMLScriptElementVtbl HTMLScriptElementVtbl = {
@@ -278,25 +357,26 @@ static const IHTMLScriptElementVtbl HTMLScriptElementVtbl = {
     HTMLScriptElement_get_type
 };
 
-#undef HTMLSCRIPT_THIS
-
-#define HTMLSCRIPT_NODE_THIS(iface) DEFINE_THIS2(HTMLScriptElement, element.node, iface)
+static inline HTMLScriptElement *impl_from_HTMLDOMNode(HTMLDOMNode *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLScriptElement, element.node);
+}
 
 static HRESULT HTMLScriptElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_NODE_THIS(iface);
+    HTMLScriptElement *This = impl_from_HTMLDOMNode(iface);
 
     *ppv = NULL;
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = HTMLSCRIPT(This);
+        *ppv = &This->IHTMLScriptElement_iface;
     }else if(IsEqualGUID(&IID_IDispatch, riid)) {
         TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
-        *ppv = HTMLSCRIPT(This);
+        *ppv = &This->IHTMLScriptElement_iface;
     }else if(IsEqualGUID(&IID_IHTMLScriptElement, riid)) {
         TRACE("(%p)->(IID_IHTMLScriptElement %p)\n", This, ppv);
-        *ppv = HTMLSCRIPT(This);
+        *ppv = &This->IHTMLScriptElement_iface;
     }
 
     if(*ppv) {
@@ -307,24 +387,20 @@ static HRESULT HTMLScriptElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
     return HTMLElement_QI(&This->element.node, riid, ppv);
 }
 
-static void HTMLScriptElement_destructor(HTMLDOMNode *iface)
-{
-    HTMLScriptElement *This = HTMLSCRIPT_NODE_THIS(iface);
-    HTMLElement_destructor(&This->element.node);
-}
-
 static HRESULT HTMLScriptElement_get_readystate(HTMLDOMNode *iface, BSTR *p)
 {
-    HTMLScriptElement *This = HTMLSCRIPT_NODE_THIS(iface);
+    HTMLScriptElement *This = impl_from_HTMLDOMNode(iface);
 
-    return IHTMLScriptElement_get_readyState(HTMLSCRIPT(This), p);
+    return IHTMLScriptElement_get_readyState(&This->IHTMLScriptElement_iface, p);
 }
-
-#undef HTMLSCRIPT_NODE_THIS
 
 static const NodeImplVtbl HTMLScriptElementImplVtbl = {
     HTMLScriptElement_QI,
-    HTMLScriptElement_destructor,
+    HTMLElement_destructor,
+    HTMLElement_cpc,
+    HTMLElement_clone,
+    HTMLElement_handle_event,
+    HTMLElement_get_attr_col,
     NULL,
     NULL,
     NULL,
@@ -332,6 +408,20 @@ static const NodeImplVtbl HTMLScriptElementImplVtbl = {
     NULL,
     HTMLScriptElement_get_readystate
 };
+
+HRESULT script_elem_from_nsscript(HTMLDocumentNode *doc, nsIDOMHTMLScriptElement *nsscript, HTMLScriptElement **ret)
+{
+    HTMLDOMNode *node;
+    HRESULT hres;
+
+    hres = get_node(doc, (nsIDOMNode*)nsscript, TRUE, &node);
+    if(FAILED(hres))
+        return hres;
+
+    assert(node->vtbl == &HTMLScriptElementImplVtbl);
+    *ret = impl_from_HTMLDOMNode(node);
+    return S_OK;
+}
 
 static const tid_t HTMLScriptElement_iface_tids[] = {
     HTMLELEMENT_TIDS,
@@ -346,19 +436,26 @@ static dispex_static_data_t HTMLScriptElement_dispex = {
     HTMLScriptElement_iface_tids
 };
 
-HTMLElement *HTMLScriptElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
+HRESULT HTMLScriptElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)
 {
-    HTMLScriptElement *ret = heap_alloc_zero(sizeof(HTMLScriptElement));
+    HTMLScriptElement *ret;
     nsresult nsres;
 
-    ret->lpHTMLScriptElementVtbl = &HTMLScriptElementVtbl;
+    ret = heap_alloc_zero(sizeof(HTMLScriptElement));
+    if(!ret)
+        return E_OUTOFMEMORY;
+
+    ret->IHTMLScriptElement_iface.lpVtbl = &HTMLScriptElementVtbl;
     ret->element.node.vtbl = &HTMLScriptElementImplVtbl;
 
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLScriptElement_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLScriptElement, (void**)&ret->nsscript);
-    if(NS_FAILED(nsres))
-        ERR("Could not get nsIDOMHTMLScriptElement: %08x\n", nsres);
 
-    return &ret->element;
+    /* Share nsscript reference with nsnode */
+    assert(nsres == NS_OK && (nsIDOMNode*)ret->nsscript == ret->element.node.nsnode);
+    nsIDOMNode_Release(ret->element.node.nsnode);
+
+    *elem = &ret->element;
+    return S_OK;
 }

@@ -18,26 +18,25 @@
 
 struct HTMLStyle {
     DispatchEx dispex;
-    const IHTMLStyleVtbl    *lpHTMLStyleVtbl;
-    const IHTMLStyle2Vtbl   *lpHTMLStyle2Vtbl;
-    const IHTMLStyle3Vtbl   *lpHTMLStyle3Vtbl;
-    const IHTMLStyle4Vtbl   *lpHTMLStyle4Vtbl;
+    IHTMLStyle  IHTMLStyle_iface;
+    IHTMLStyle2 IHTMLStyle2_iface;
+    IHTMLStyle3 IHTMLStyle3_iface;
+    IHTMLStyle4 IHTMLStyle4_iface;
+    IHTMLStyle5 IHTMLStyle5_iface;
+    IHTMLStyle6 IHTMLStyle6_iface;
 
     LONG ref;
 
     nsIDOMCSSStyleDeclaration *nsstyle;
+    HTMLElement *elem;
 };
-
-#define HTMLSTYLE(x)     ((IHTMLStyle*)                   &(x)->lpHTMLStyleVtbl)
-#define HTMLSTYLE2(x)    ((IHTMLStyle2*)                  &(x)->lpHTMLStyle2Vtbl)
-#define HTMLSTYLE3(x)    ((IHTMLStyle3*)                  &(x)->lpHTMLStyle3Vtbl)
-#define HTMLSTYLE4(x)    ((IHTMLStyle4*)                  &(x)->lpHTMLStyle4Vtbl)
 
 /* NOTE: Make sure to keep in sync with style_tbl in htmlstyle.c */
 typedef enum {
     STYLEID_BACKGROUND,
     STYLEID_BACKGROUND_COLOR,
     STYLEID_BACKGROUND_IMAGE,
+    STYLEID_BACKGROUND_POSITION,
     STYLEID_BACKGROUND_POSITION_X,
     STYLEID_BACKGROUND_POSITION_Y,
     STYLEID_BACKGROUND_REPEAT,
@@ -62,8 +61,11 @@ typedef enum {
     STYLEID_BORDER_TOP_WIDTH,
     STYLEID_BORDER_WIDTH,
     STYLEID_BOTTOM,
+    STYLEID_CLEAR,
+    STYLEID_CLIP,
     STYLEID_COLOR,
     STYLEID_CURSOR,
+    STYLEID_DIRECTION,
     STYLEID_DISPLAY,
     STYLEID_FILTER,
     STYLEID_FONT_FAMILY,
@@ -82,10 +84,15 @@ typedef enum {
     STYLEID_MARGIN_TOP,
     STYLEID_MIN_HEIGHT,
     STYLEID_OVERFLOW,
+    STYLEID_OVERFLOW_X,
+    STYLEID_OVERFLOW_Y,
+    STYLEID_PADDING,
     STYLEID_PADDING_BOTTOM,
     STYLEID_PADDING_LEFT,
     STYLEID_PADDING_RIGHT,
     STYLEID_PADDING_TOP,
+    STYLEID_PAGE_BREAK_AFTER,
+    STYLEID_PAGE_BREAK_BEFORE,
     STYLEID_POSITION,
     STYLEID_RIGHT,
     STYLEID_TEXT_ALIGN,
@@ -100,15 +107,18 @@ typedef enum {
     STYLEID_Z_INDEX
 } styleid_t;
 
-void HTMLStyle2_Init(HTMLStyle*);
-void HTMLStyle3_Init(HTMLStyle*);
+HRESULT HTMLStyle_Create(HTMLElement*,HTMLStyle**) DECLSPEC_HIDDEN;
+void HTMLStyle2_Init(HTMLStyle*) DECLSPEC_HIDDEN;
+void HTMLStyle3_Init(HTMLStyle*) DECLSPEC_HIDDEN;
 
-HRESULT get_nsstyle_attr(nsIDOMCSSStyleDeclaration*,styleid_t,BSTR*);
-HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration*,styleid_t,LPCWSTR,DWORD);
+HRESULT get_nsstyle_attr(nsIDOMCSSStyleDeclaration*,styleid_t,BSTR*,DWORD) DECLSPEC_HIDDEN;
+HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration*,styleid_t,LPCWSTR,DWORD) DECLSPEC_HIDDEN;
 
-HRESULT set_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *value, DWORD flags);
-HRESULT get_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *p, DWORD flags);
+HRESULT set_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *value, DWORD flags) DECLSPEC_HIDDEN;
+HRESULT get_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *p, DWORD flags) DECLSPEC_HIDDEN;
 
-#define ATTR_FIX_PX      1
-#define ATTR_FIX_URL     2
-#define ATTR_STR_TO_INT  4
+#define ATTR_FIX_PX         0x0001
+#define ATTR_FIX_URL        0x0002
+#define ATTR_STR_TO_INT     0x0004
+#define ATTR_HEX_INT        0x0008
+#define ATTR_REMOVE_COMMA   0x0010

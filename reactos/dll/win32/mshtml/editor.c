@@ -18,7 +18,6 @@
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 //#include <stdarg.h>
 #include <stdio.h>
@@ -32,7 +31,6 @@
 #include <mshtmcid.h>
 
 #include <wine/debug.h>
-//#include "wine/unicode.h"
 
 #include "mshtml_private.h"
 #include "resource.h"
@@ -152,7 +150,7 @@ static nsresult get_ns_command_state(NSContainer *This, const char *cmd, nsIComm
 static DWORD query_ns_edit_status(HTMLDocument *This, const char *nscmd)
 {
     nsICommandParams *nsparam;
-    PRBool b = FALSE;
+    cpp_bool b = FALSE;
 
     if(This->doc_obj->usermode != EDITMODE || This->window->readystate < READYSTATE_INTERACTIVE)
         return OLECMDF_SUPPORTED;
@@ -184,25 +182,23 @@ static void set_ns_align(HTMLDocument *This, const char *align_str)
     nsICommandParams_Release(nsparam);
 }
 
-static DWORD query_align_status(HTMLDocument *This, const char *align_str)
+static DWORD query_align_status(HTMLDocument *This, const WCHAR *align)
 {
-    nsICommandParams *nsparam;
-    char *align = NULL;
+    DWORD ret = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+    nsAString justify_str;
+    cpp_bool b;
+    nsresult nsres;
 
     if(This->doc_obj->usermode != EDITMODE || This->window->readystate < READYSTATE_INTERACTIVE)
         return OLECMDF_SUPPORTED;
 
-    if(This->doc_obj->nscontainer) {
-        nsparam = create_nscommand_params();
-        get_ns_command_state(This->doc_obj->nscontainer, NSCMD_ALIGN, nsparam);
+    nsAString_Init(&justify_str, align);
+    nsres = nsIDOMHTMLDocument_QueryCommandState(This->doc_node->nsdoc, &justify_str, &b);
+    nsAString_Finish(&justify_str);
+    if(NS_SUCCEEDED(nsres) && b)
+        ret |= OLECMDF_LATCHED;
 
-        nsICommandParams_GetCStringValue(nsparam, NSSTATE_ATTRIBUTE, &align);
-
-        nsICommandParams_Release(nsparam);
-    }
-
-    return OLECMDF_SUPPORTED | OLECMDF_ENABLED
-        | (align && !strcmp(align_str, align) ? OLECMDF_LATCHED : 0);
+    return ret;
 }
 
 
@@ -221,11 +217,11 @@ static nsISelection *get_ns_selection(HTMLDocument *This)
 
 static void remove_child_attr(nsIDOMElement *elem, LPCWSTR tag, nsAString *attr_str)
 {
-    PRBool has_children;
-    PRUint32 child_cnt, i;
+    cpp_bool has_children;
+    UINT32 child_cnt, i;
     nsIDOMNode *child_node;
     nsIDOMNodeList *node_list;
-    PRUint16 node_type;
+    UINT16 node_type;
 
     nsIDOMElement_HasChildNodes(elem, &has_children);
     if(!has_children)
@@ -257,7 +253,7 @@ static void remove_child_attr(nsIDOMElement *elem, LPCWSTR tag, nsAString *attr_
 
             remove_child_attr(child_elem, tag, attr_str);
 
-            nsIDOMNode_Release(child_elem);
+            nsIDOMElement_Release(child_elem);
         }
 
         nsIDOMNode_Release(child_node);
@@ -273,7 +269,7 @@ static void get_font_size(HTMLDocument *This, WCHAR *ret)
     nsIDOMNode *node = NULL, *tmp_node;
     nsAString tag_str;
     LPCWSTR tag;
-    PRUint16 node_type;
+    UINT16 node_type;
     nsresult nsres;
 
     *ret = 0;
@@ -337,10 +333,10 @@ static void get_font_size(HTMLDocument *This, WCHAR *ret)
 static void set_font_size(HTMLDocument *This, LPCWSTR size)
 {
     nsISelection *nsselection;
-    PRBool collapsed;
+    cpp_bool collapsed;
     nsIDOMHTMLElement *elem;
     nsIDOMRange *range;
-    PRInt32 range_cnt = 0;
+    LONG range_cnt = 0;
     nsAString size_str;
     nsAString val_str;
 
@@ -367,7 +363,7 @@ static void set_font_size(HTMLDocument *This, LPCWSTR size)
     nsAString_InitDepend(&size_str, sizeW);
     nsAString_InitDepend(&val_str, size);
 
-    nsIDOMElement_SetAttribute(elem, &size_str, &val_str);
+    nsIDOMHTMLElement_SetAttribute(elem, &size_str, &val_str);
     nsAString_Finish(&val_str);
 
     nsISelection_GetRangeAt(nsselection, 0, &range);
@@ -386,7 +382,7 @@ static void set_font_size(HTMLDocument *This, LPCWSTR size)
 
     nsISelection_Release(nsselection);
     nsIDOMRange_Release(range);
-    nsIDOMElement_Release(elem);
+    nsIDOMHTMLElement_Release(elem);
 
     nsAString_Finish(&size_str);
 
@@ -396,7 +392,7 @@ static void set_font_size(HTMLDocument *This, LPCWSTR size)
 static void handle_arrow_key(HTMLDocument *This, nsIDOMKeyEvent *event, const char * const cmds[4])
 {
     int i=0;
-    PRBool b;
+    cpp_bool b;
 
     nsIDOMKeyEvent_GetCtrlKey(event, &b);
     if(b)
@@ -415,7 +411,7 @@ static void handle_arrow_key(HTMLDocument *This, nsIDOMKeyEvent *event, const ch
 void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
 {
     nsIDOMKeyEvent *key_event;
-    PRUint32 code;
+    UINT32 code;
 
     nsIDOMEvent_QueryInterface(event, &IID_nsIDOMKeyEvent, (void**)&key_event);
 
@@ -548,7 +544,7 @@ static HRESULT exec_fontname(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
         char *stra;
 
         if(V_VT(in) != VT_BSTR) {
-            FIXME("Unsupported vt=%d\n", V_VT(out));
+            FIXME("Unsupported fontname %s\n", debugstr_variant(out));
             return E_INVALIDARG;
         }
 
@@ -609,7 +605,7 @@ static HRESULT exec_forecolor(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
 
             nsICommandParams_Release(nsparam);
         }else {
-            FIXME("unsupported in vt=%d\n", V_VT(in));
+            FIXME("unsupported forecolor %s\n", debugstr_variant(in));
         }
 
         update_doc(This, UPDATE_UI);
@@ -648,7 +644,7 @@ static HRESULT exec_fontsize(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
             set_font_size(This, V_BSTR(in));
             break;
         default:
-            FIXME("unsupported vt %d\n", V_VT(in));
+            FIXME("unsupported fontsize %s\n", debugstr_variant(in));
         }
 
         update_doc(This, UPDATE_UI);
@@ -708,10 +704,13 @@ static HRESULT exec_italic(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VA
 
 static HRESULT query_justify(HTMLDocument *This, OLECMD *cmd)
 {
+    static const PRUnichar justifycenterW[] = {'j','u','s','t','i','f','y','c','e','n','t','e','r',0};
+    static const PRUnichar justifyrightW[] = {'j','u','s','t','i','f','y','r','i','g','h','t',0};
+
     switch(cmd->cmdID) {
     case IDM_JUSTIFYCENTER:
         TRACE("(%p) IDM_JUSTIFYCENTER\n", This);
-        cmd->cmdf = query_align_status(This, NSALIGN_CENTER);
+        cmd->cmdf = query_align_status(This, justifycenterW);
         break;
     case IDM_JUSTIFYLEFT:
         TRACE("(%p) IDM_JUSTIFYLEFT\n", This);
@@ -723,7 +722,7 @@ static HRESULT query_justify(HTMLDocument *This, OLECMD *cmd)
         break;
     case IDM_JUSTIFYRIGHT:
         TRACE("(%p) IDM_JUSTIFYRIGHT\n", This);
-        cmd->cmdf = query_align_status(This, NSALIGN_RIGHT);
+        cmd->cmdf = query_align_status(This, justifyrightW);
         break;
     }
 
@@ -843,7 +842,7 @@ static HRESULT exec_composesettings(HTMLDocument *This, DWORD cmdexecopt, VARIAN
     WCHAR *ptr;
 
     if(out || !in || V_VT(in) != VT_BSTR) {
-        WARN("invalid arg\n");
+        WARN("invalid arg %s\n", debugstr_variant(in));
         return E_INVALIDARG;
     }
 
@@ -952,7 +951,7 @@ static HRESULT exec_setdirty(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
     if(V_VT(in) == VT_BOOL)
         set_dirty(This, V_BOOL(in));
     else
-        FIXME("unsupported vt=%d\n", V_VT(in));
+        FIXME("unsupported arg %s\n", debugstr_variant(in));
 
     return S_OK;
 }
@@ -1131,7 +1130,7 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
     nsAString href_str, ns_url;
     nsIHTMLEditor *html_editor;
     nsIDOMHTMLElement *anchor_elem;
-    PRBool insert_link_at_caret;
+    cpp_bool insert_link_at_caret;
     nsISelection *nsselection;
     BSTR url = NULL;
     INT ret;
@@ -1172,7 +1171,7 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
 
     nsAString_InitDepend(&href_str, hrefW);
     nsAString_InitDepend(&ns_url, url);
-    nsIDOMElement_SetAttribute(anchor_elem, &href_str, &ns_url);
+    nsIDOMHTMLElement_SetAttribute(anchor_elem, &href_str, &ns_url);
     nsAString_Finish(&href_str);
 
     nsISelection_GetIsCollapsed(nsselection, &insert_link_at_caret);
@@ -1181,10 +1180,10 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
     if (insert_link_at_caret) {
         nsIDOMNode *text_node, *unused_node;
 
-        nsIDOMDocument_CreateTextNode(This->doc_node->nsdoc, &ns_url, (nsIDOMText **)&text_node);
+        nsIDOMHTMLDocument_CreateTextNode(This->doc_node->nsdoc, &ns_url, (nsIDOMText **)&text_node);
 
         /* wrap the <a> tags around the text element */
-        nsIDOMElement_AppendChild(anchor_elem, text_node, &unused_node);
+        nsIDOMHTMLElement_AppendChild(anchor_elem, text_node, &unused_node);
         nsIDOMNode_Release(text_node);
         nsIDOMNode_Release(unused_node);
     }
@@ -1207,7 +1206,7 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
     }
 
     nsISelection_Release(nsselection);
-    nsIDOMElement_Release(anchor_elem);
+    nsIDOMHTMLElement_Release(anchor_elem);
 
     if (cmdexecopt != OLECMDEXECOPT_DONTPROMPTUSER)
         SysFreeString(url);
@@ -1257,7 +1256,7 @@ void init_editor(HTMLDocument *This)
 
 HRESULT editor_is_dirty(HTMLDocument *This)
 {
-    PRBool modified;
+    cpp_bool modified;
 
     if(!This->doc_obj->nscontainer || !This->doc_obj->nscontainer->editor)
         return S_FALSE;

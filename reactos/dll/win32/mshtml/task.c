@@ -18,12 +18,12 @@
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 #include <config.h>
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <assert.h>
 
 #define COBJMACROS
 
@@ -42,7 +42,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 #define TIMER_ID 0x3000
 
 typedef struct {
-    HTMLDocument *doc;
+    HTMLInnerWindow *window;
     DWORD id;
     DWORD time;
     DWORD interval;
@@ -51,12 +51,27 @@ typedef struct {
     struct list entry;
 } task_timer_t;
 
-void push_task(task_t *task, task_proc_t proc, LONG magic)
+static void default_task_destr(task_t *task)
 {
-    thread_data_t *thread_data = get_thread_data(TRUE);
+    heap_free(task);
+}
+
+HRESULT push_task(task_t *task, task_proc_t proc, task_proc_t destr, LONG magic)
+{
+    thread_data_t *thread_data;
+
+    thread_data = get_thread_data(TRUE);
+    if(!thread_data) {
+        if(destr)
+            destr(task);
+        else
+            heap_free(task);
+        return E_OUTOFMEMORY;
+    }
 
     task->target_magic = magic;
     task->proc = proc;
+    task->destr = destr ? destr : default_task_destr;
     task->next = NULL;
 
     if(thread_data->task_queue_tail)
@@ -67,13 +82,19 @@ void push_task(task_t *task, task_proc_t proc, LONG magic)
     thread_data->task_queue_tail = task;
 
     PostMessageW(thread_data->thread_hwnd, WM_PROCESSTASK, 0, 0);
+    return S_OK;
 }
 
 static task_t *pop_task(void)
 {
-    thread_data_t *thread_data = get_thread_data(TRUE);
-    task_t *task = thread_data->task_queue_head;
+    thread_data_t *thread_data;
+    task_t *task;
 
+    thread_data = get_thread_data(FALSE);
+    if(!thread_data)
+        return NULL;
+
+    task = thread_data->task_queue_head;
     if(!task)
         return NULL;
 
@@ -105,7 +126,7 @@ void remove_target_tasks(LONG target)
 
     LIST_FOR_EACH_SAFE(liter, ltmp, &thread_data->timer_list) {
         timer = LIST_ENTRY(liter, task_timer_t, entry);
-        if(timer->doc->task_magic == target)
+        if(timer->window->task_magic == target)
             release_task_timer(thread_data->thread_hwnd, timer);
     }
 
@@ -114,15 +135,16 @@ void remove_target_tasks(LONG target)
         SetTimer(thread_data->thread_hwnd, TIMER_ID, timer->time - GetTickCount(), NULL);
     }
 
-    while(thread_data->task_queue_head
-          && thread_data->task_queue_head->target_magic == target)
-        pop_task();
+    while(thread_data->task_queue_head && thread_data->task_queue_head->target_magic == target) {
+        iter = pop_task();
+        iter->destr(iter);
+    }
 
     for(iter = thread_data->task_queue_head; iter; iter = iter->next) {
         while(iter->next && iter->next->target_magic == target) {
             tmp = iter->next;
             iter->next = tmp->next;
-            heap_free(tmp);
+            tmp->destr(tmp);
         }
 
         if(!iter->next)
@@ -160,17 +182,24 @@ static BOOL queue_timer(thread_data_t *thread_data, task_timer_t *timer)
     return FALSE;
 }
 
-DWORD set_task_timer(HTMLDocument *doc, DWORD msec, BOOL interval, IDispatch *disp)
+HRESULT set_task_timer(HTMLInnerWindow *window, DWORD msec, BOOL interval, IDispatch *disp, LONG *id)
 {
-    thread_data_t *thread_data = get_thread_data(TRUE);
+    thread_data_t *thread_data;
     task_timer_t *timer;
     DWORD tc = GetTickCount();
 
     static DWORD id_cnt = 0x20000000;
 
+    thread_data = get_thread_data(TRUE);
+    if(!thread_data)
+        return E_OUTOFMEMORY;
+
     timer = heap_alloc(sizeof(task_timer_t));
+    if(!timer)
+        return E_OUTOFMEMORY;
+
     timer->id = id_cnt++;
-    timer->doc = doc;
+    timer->window = window;
     timer->time = tc + msec;
     timer->interval = interval ? msec : 0;
     list_init(&timer->entry);
@@ -181,10 +210,11 @@ DWORD set_task_timer(HTMLDocument *doc, DWORD msec, BOOL interval, IDispatch *di
     if(queue_timer(thread_data, timer))
         SetTimer(thread_data->thread_hwnd, TIMER_ID, msec, NULL);
 
-    return timer->id;
+    *id = timer->id;
+    return S_OK;
 }
 
-HRESULT clear_task_timer(HTMLDocument *doc, BOOL interval, DWORD id)
+HRESULT clear_task_timer(HTMLInnerWindow *window, BOOL interval, DWORD id)
 {
     thread_data_t *thread_data = get_thread_data(FALSE);
     task_timer_t *iter;
@@ -193,7 +223,7 @@ HRESULT clear_task_timer(HTMLDocument *doc, BOOL interval, DWORD id)
         return S_OK;
 
     LIST_FOR_EACH_ENTRY(iter, &thread_data->timer_list, task_timer_t, entry) {
-        if(iter->id == id && iter->doc == doc && (iter->interval == 0) == !interval) {
+        if(iter->id == id && iter->window == window && !iter->interval == !interval) {
             release_task_timer(thread_data->thread_hwnd, iter);
             return S_OK;
         }
@@ -225,12 +255,15 @@ static void call_timer_disp(IDispatch *disp)
 
 static LRESULT process_timer(void)
 {
-    thread_data_t *thread_data = get_thread_data(TRUE);
+    thread_data_t *thread_data;
     IDispatch *disp;
     DWORD tc;
     task_timer_t *timer;
 
     TRACE("\n");
+
+    thread_data = get_thread_data(FALSE);
+    assert(thread_data != NULL);
 
     while(!list_empty(&thread_data->timer_list)) {
         timer = LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry);
@@ -270,7 +303,7 @@ static LRESULT WINAPI hidden_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 break;
 
             task->proc(task);
-            heap_free(task);
+            task->destr(task);
         }
 
         return 0;
@@ -308,7 +341,11 @@ static HWND create_thread_hwnd(void)
 
 HWND get_thread_hwnd(void)
 {
-    thread_data_t *thread_data = get_thread_data(TRUE);
+    thread_data_t *thread_data;
+
+    thread_data = get_thread_data(TRUE);
+    if(!thread_data)
+        return NULL;
 
     if(!thread_data->thread_hwnd)
         thread_data->thread_hwnd = create_thread_hwnd();
@@ -338,6 +375,9 @@ thread_data_t *get_thread_data(BOOL create)
     thread_data = TlsGetValue(mshtml_tls);
     if(!thread_data && create) {
         thread_data = heap_alloc_zero(sizeof(thread_data_t));
+        if(!thread_data)
+            return NULL;
+
         TlsSetValue(mshtml_tls, thread_data);
         list_init(&thread_data->timer_list);
     }

@@ -22,7 +22,6 @@
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
 
 //#include <stdarg.h>
 #include <stdio.h>
@@ -37,13 +36,14 @@
 #include <advpub.h>
 //#include "shlwapi.h"
 #include <optary.h>
+#include "rpcproxy.h"
 #include <shlguid.h>
 
-//#include "wine/unicode.h"
 #include <wine/debug.h>
 
 #define INIT_GUID
 #include "mshtml_private.h"
+#include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
@@ -52,6 +52,7 @@ DWORD mshtml_tls = TLS_OUT_OF_INDEXES;
 
 static HINSTANCE shdoclc = NULL;
 static HDC display_dc;
+static WCHAR *status_strings[IDS_STATUS_LAST-IDS_STATUS_FIRST+1];
 
 static void thread_detach(void)
 {
@@ -67,6 +68,13 @@ static void thread_detach(void)
     heap_free(thread_data);
 }
 
+static void free_strings(void)
+{
+    unsigned int i;
+    for(i = 0; i < sizeof(status_strings)/sizeof(*status_strings); i++)
+        heap_free(status_strings[i]);
+}
+
 static void process_detach(void)
 {
     close_gecko();
@@ -78,6 +86,59 @@ static void process_detach(void)
         TlsFree(mshtml_tls);
     if(display_dc)
         DeleteObject(display_dc);
+
+    free_strings();
+}
+
+void set_statustext(HTMLDocumentObj* doc, INT id, LPCWSTR arg)
+{
+    int index = id - IDS_STATUS_FIRST;
+    WCHAR *p = status_strings[index];
+    DWORD len;
+
+    if(!doc->frame)
+        return;
+
+    if(!p) {
+        len = 255;
+        p = heap_alloc(len * sizeof(WCHAR));
+        len = LoadStringW(hInst, id, p, len) + 1;
+        p = heap_realloc(p, len * sizeof(WCHAR));
+        if(InterlockedCompareExchangePointer((void**)&status_strings[index], p, NULL)) {
+            heap_free(p);
+            p = status_strings[index];
+        }
+    }
+
+    if(arg) {
+        WCHAR *buf;
+
+        len = lstrlenW(p) + lstrlenW(arg) - 1;
+        buf = heap_alloc(len * sizeof(WCHAR));
+
+        snprintfW(buf, len, p, arg);
+
+        p = buf;
+    }
+
+    IOleInPlaceFrame_SetStatusText(doc->frame, p);
+
+    if(arg)
+        heap_free(p);
+}
+
+HRESULT do_query_service(IUnknown *unk, REFGUID guid_service, REFIID riid, void **ppv)
+{
+    IServiceProvider *sp;
+    HRESULT hres;
+
+    hres = IUnknown_QueryInterface(unk, &IID_IServiceProvider, (void**)&sp);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IServiceProvider_QueryService(sp, guid_service, riid, ppv);
+    IServiceProvider_Release(sp);
+    return hres;
 }
 
 HINSTANCE get_shdoclc(void)
@@ -127,10 +188,15 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
  */
 typedef HRESULT (*CreateInstanceFunc)(IUnknown*,REFIID,void**);
 typedef struct {
-    const IClassFactoryVtbl *lpVtbl;
+    IClassFactory IClassFactory_iface;
     LONG ref;
     CreateInstanceFunc fnCreateInstance;
 } ClassFactory;
+
+static inline ClassFactory *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, ClassFactory, IClassFactory_iface);
+}
 
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFGUID riid, void **ppvObject)
 {
@@ -147,7 +213,7 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFGUID 
 
 static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
 {
-    ClassFactory *This = (ClassFactory*)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref = %u\n", This, ref);
     return ref;
@@ -155,7 +221,7 @@ static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
 
 static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 {
-    ClassFactory *This = (ClassFactory*)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref = %u\n", This, ref);
@@ -170,7 +236,7 @@ static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown *pUnkOuter,
         REFIID riid, void **ppvObject)
 {
-    ClassFactory *This = (ClassFactory*)iface;
+    ClassFactory *This = impl_from_IClassFactory(iface);
     return This->fnCreateInstance(pUnkOuter, riid, ppvObject);
 }
 
@@ -195,11 +261,11 @@ static HRESULT ClassFactory_Create(REFIID riid, void **ppv, CreateInstanceFunc f
     ClassFactory *ret = heap_alloc(sizeof(ClassFactory));
     HRESULT hres;
 
-    ret->lpVtbl = &HTMLClassFactoryVtbl;
+    ret->IClassFactory_iface.lpVtbl = &HTMLClassFactoryVtbl;
     ret->ref = 0;
     ret->fnCreateInstance = fnCreateInstance;
 
-    hres = IClassFactory_QueryInterface((IClassFactory*)ret, riid, ppv);
+    hres = IClassFactory_QueryInterface(&ret->IClassFactory_iface, riid, ppv);
     if(FAILED(hres)) {
         heap_free(ret);
         *ppv = NULL;
@@ -289,6 +355,14 @@ HRESULT WINAPI ShowHTMLDialog(HWND hwndParent, IMoniker *pMk, VARIANT *pvarArgIn
     return E_NOTIMPL;
 }
 
+/***********************************************************************
+ *          PrintHTML (MSHTML.@)
+ */
+void WINAPI PrintHTML(HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show)
+{
+    FIXME("(%p %p %s %x)\n", hwnd, handle, debugstr_a(cmdline), show);
+}
+
 DEFINE_GUID(CLSID_CBackgroundPropertyPage, 0x3050F232, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_CCDAnchorPropertyPage, 0x3050F1FC, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_CCDGenericPropertyPage, 0x3050F17F, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
@@ -310,7 +384,6 @@ DEFINE_GUID(CLSID_IImageDecodeFilter, 0x607FD4E8, 0x0A03, 0x11D1, 0xAB,0x1D, 0x0
 DEFINE_GUID(CLSID_IImgCtx, 0x3050F3D6, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_IntDitherer, 0x05F6FE1A, 0xECEF, 0x11D0, 0xAA,0xE7, 0x00,0xC0,0x4F,0xC9,0xB3,0x04);
 DEFINE_GUID(CLSID_MHTMLDocument, 0x3050F3D9, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
-DEFINE_GUID(CLSID_Scriptlet, 0xAE24FDAE, 0x03C6, 0x11D1, 0x8B,0x76, 0x00,0x80,0xC7,0x44,0xF3,0x89);
 DEFINE_GUID(CLSID_TridentAPI, 0x429AF92C, 0xA51F, 0x11D2, 0x86,0x1E, 0x00,0xC0,0x4F,0xA3,0x5C,0x89);
 
 #define INF_SET_ID(id)            \
@@ -426,9 +499,11 @@ HRESULT WINAPI DllRegisterServer(void)
 {
     HRESULT hres;
 
-    hres = register_server(TRUE);
+    hres = __wine_register_resources( hInst );
     if(SUCCEEDED(hres))
-        load_gecko(FALSE);
+        hres = register_server(TRUE);
+    if(SUCCEEDED(hres))
+        load_gecko();
 
     return hres;
 }
@@ -438,7 +513,9 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    return register_server(FALSE);
+    HRESULT hres = __wine_unregister_resources( hInst );
+    if(SUCCEEDED(hres)) hres = register_server(FALSE);
+    return hres;
 }
 
 const char *debugstr_variant(const VARIANT *v)
@@ -451,6 +528,8 @@ const char *debugstr_variant(const VARIANT *v)
         return "{VT_EMPTY}";
     case VT_NULL:
         return "{VT_NULL}";
+    case VT_I2:
+        return wine_dbg_sprintf("{VT_I2: %d}", V_I2(v));
     case VT_I4:
         return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
     case VT_R8:
@@ -459,6 +538,8 @@ const char *debugstr_variant(const VARIANT *v)
         return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
     case VT_DISPATCH:
         return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
+    case VT_ERROR:
+        return wine_dbg_sprintf("{VT_ERROR: %08x}", V_ERROR(v));
     case VT_BOOL:
         return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
     case VT_UINT:

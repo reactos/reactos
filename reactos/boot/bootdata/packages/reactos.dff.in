@@ -59,7 +59,7 @@ modules\optional\vmx_fb.dll                         1  optional
 modules\optional\vmx_mode.dll                       1  optional
 modules\optional\vmx_svga.inf                       6  optional
 modules\optional\vmx_svga.sys                       2  optional
-modules\optional\wine_gecko-1.0.0-x86.cab           4  optional
+modules\optional\wine_gecko-1.9-x86.msi             4  optional
 boot\bootdata\bootcdregtest\AHKAppTests.cmd         7  optional
 
 modules\wallpaper\Angelus_02_ROSWP.bmp              4   optional

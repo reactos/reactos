@@ -2,7 +2,10 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-add_definitions(-D__WINESRC__)
+add_definitions(
+    -D__WINESRC__
+    -DCOM_NO_WINDOWS_H)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_idl_Headers(mshtml_nsiface_header nsiface.idl)
 spec2def(mshtml.dll mshtml.spec)
@@ -13,6 +16,7 @@ list(APPEND SOURCE
     editor.c
     hlink.c
     htmlanchor.c
+    htmlattr.c
     htmlbody.c
     htmlcomment.c
     htmlcurstyle.c
@@ -23,35 +27,45 @@ list(APPEND SOURCE
     htmlelem2.c
     htmlelem3.c
     htmlelemcol.c
+    htmlembed.c
     htmlevent.c
     htmlform.c
     htmlframe.c
     htmlframebase.c
     htmlgeneric.c
+    htmlhead.c
     htmliframe.c
     htmlimg.c
     htmlinput.c
+    htmllink.c
     htmllocation.c
+    htmlmeta.c
     htmlnode.c
+    htmlobject.c
     htmloption.c
     htmlscreen.c
     htmlscript.c
     htmlselect.c
+    htmlstorage.c
     htmlstyle.c
     htmlstyle2.c
     htmlstyle3.c
+    htmlstyleelem.c
     htmlstylesheet.c
     htmltable.c
+    htmltablecell.c
     htmltablerow.c
     htmltextarea.c
     htmltextcont.c
     htmltextnode.c
     htmlwindow.c
-    install.c
+    ifacewrap.c
+    ipwindow.c
     loadopts.c
     main.c
     mutation.c
     navigate.c
+    npplugin.c
     nsembed.c
     nsevents.c
     nsio.c
@@ -61,6 +75,8 @@ list(APPEND SOURCE
     olewnd.c
     omnavigator.c
     persist.c
+    pluginhost.c
+    propbag.c
     protocol.c
     script.c
     secmgr.c
@@ -74,21 +90,17 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
 
 add_library(mshtml SHARED ${SOURCE})
+
+list(APPEND mshtml_rc_deps
+    ${CMAKE_CURRENT_SOURCE_DIR}/blank.htm
+    ${CMAKE_CURRENT_SOURCE_DIR}/mshtml.inf
+    ${CMAKE_CURRENT_SOURCE_DIR}/mshtml_classes.rgs)
+
+set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${mshtml_rc_deps}")
+
 set_module_type(mshtml win32dll)
 target_link_libraries(mshtml uuid wine strmiids oldnames)
 add_delay_importlibs(mshtml wininet)
-
-add_importlibs(mshtml
-    urlmon
-    shlwapi
-    ole32
-    oleaut32
-    user32
-    gdi32
-    advapi32
-    msvcrt
-    kernel32
-    ntdll)
-
+add_importlibs(mshtml urlmon shlwapi shell32 ole32 oleaut32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(mshtml mshtml_nsiface_header)
 add_cd_file(TARGET mshtml DESTINATION reactos/system32 FOR all)
