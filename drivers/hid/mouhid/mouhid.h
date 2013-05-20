@@ -25,7 +25,7 @@ typedef struct
     PIRP Irp;
 
     //
-    // event 
+    // event
     //
     KEVENT ReadCompletionEvent;
 
@@ -128,6 +128,8 @@ typedef struct
 }MOUHID_DEVICE_EXTENSION, *PMOUHID_DEVICE_EXTENSION;
 
 #define WHEEL_DELTA 120
+#define VIRTUAL_SCREEN_SIZE_X (65536)
+#define VIRTUAL_SCREEN_SIZE_Y (65536)
 
 NTSTATUS
 MouHid_InitiateRead(
