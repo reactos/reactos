@@ -47,6 +47,8 @@
 #define ioctlsocket ioctl
 #endif /* __MINGW32__ */
 
+#include <winineti.h>
+
 extern HMODULE WININET_hModule DECLSPEC_HIDDEN;
 
 #ifndef INET6_ADDRSTRLEN
@@ -56,12 +58,19 @@ extern HMODULE WININET_hModule DECLSPEC_HIDDEN;
 typedef struct {
     WCHAR *name;
     INTERNET_PORT port;
+    BOOL is_https;
     struct sockaddr_storage addr;
     socklen_t addr_len;
     char addr_str[INET6_ADDRSTRLEN];
 
+    WCHAR *scheme_host_port;
+    const WCHAR *host_port;
+    const WCHAR *canon_host_port;
+
     LONG ref;
-    DWORD64 keep_until;
+
+    DWORD security_flags;
+    const CERT_CHAIN_CONTEXT *cert_chain;
 
     struct list entry;
     struct list conn_pool;
@@ -69,16 +78,23 @@ typedef struct {
 
 void server_addref(server_t*) DECLSPEC_HIDDEN;
 void server_release(server_t*) DECLSPEC_HIDDEN;
-BOOL collect_connections(BOOL) DECLSPEC_HIDDEN;
+
+typedef enum {
+    COLLECT_TIMEOUT,
+    COLLECT_CONNECTIONS,
+    COLLECT_CLEANUP
+} collect_type_t;
+BOOL collect_connections(collect_type_t) DECLSPEC_HIDDEN;
 
 /* used for netconnection.c stuff */
 typedef struct
 {
-    BOOL useSSL;
-    int socketFD;
+    int socket;
+    BOOL secure;
     void *ssl_s;
     server_t *server;
     DWORD security_flags;
+    BOOL mask_errors;
 
     BOOL keep_alive;
     DWORD64 keep_until;
@@ -217,8 +233,7 @@ typedef struct {
     DWORD (*QueryOption)(object_header_t*,DWORD,void*,DWORD*,BOOL);
     DWORD (*SetOption)(object_header_t*,DWORD,void*,DWORD);
     DWORD (*ReadFile)(object_header_t*,void*,DWORD,DWORD*);
-    DWORD (*ReadFileExA)(object_header_t*,INTERNET_BUFFERSA*,DWORD,DWORD_PTR);
-    DWORD (*ReadFileExW)(object_header_t*,INTERNET_BUFFERSW*,DWORD,DWORD_PTR);
+    DWORD (*ReadFileEx)(object_header_t*,void*,DWORD,DWORD*,DWORD,DWORD_PTR);
     DWORD (*WriteFile)(object_header_t*,const void*,DWORD,DWORD*);
     DWORD (*QueryDataAvailable)(object_header_t*,DWORD*,DWORD,DWORD_PTR);
     DWORD (*FindNextFileW)(object_header_t*,void*);
@@ -253,6 +268,7 @@ typedef struct
     LPWSTR  proxyUsername;
     LPWSTR  proxyPassword;
     DWORD   accessType;
+    DWORD   connect_timeout;
 } appinfo_t;
 
 typedef struct
@@ -260,11 +276,9 @@ typedef struct
     object_header_t hdr;
     appinfo_t *appInfo;
     LPWSTR  hostName; /* the final destination of the request */
-    LPWSTR  serverName; /* the name of the server we directly connect to */
     LPWSTR  userName;
     LPWSTR  password;
     INTERNET_PORT hostPort; /* the final destination port of the request */
-    INTERNET_PORT serverPort; /* the port of the server we directly connect to */
     DWORD connect_timeout;
     DWORD send_timeout;
     DWORD receive_timeout;
@@ -303,6 +317,8 @@ typedef struct
 {
     object_header_t hdr;
     http_session_t *session;
+    server_t *server;
+    server_t *proxy;
     LPWSTR path;
     LPWSTR verb;
     LPWSTR rawHeaders;
@@ -338,149 +354,16 @@ typedef struct
     netconn_stream_t netconn_stream;
 } http_request_t;
 
+typedef struct task_header_t task_header_t;
+typedef void (*async_task_proc_t)(task_header_t*);
 
-
-struct WORKREQ_FTPPUTFILEW
+struct task_header_t
 {
-    LPWSTR lpszLocalFile;
-    LPWSTR lpszNewRemoteFile;
-    DWORD  dwFlags;
-    DWORD_PTR dwContext;
-};
-
-struct WORKREQ_FTPSETCURRENTDIRECTORYW
-{
-    LPWSTR lpszDirectory;
-};
-
-struct WORKREQ_FTPCREATEDIRECTORYW
-{
-    LPWSTR lpszDirectory;
-};
-
-struct WORKREQ_FTPFINDFIRSTFILEW
-{
-    LPWSTR lpszSearchFile;
-    LPWIN32_FIND_DATAW lpFindFileData;
-    DWORD  dwFlags;
-    DWORD_PTR dwContext;
-};
-
-struct WORKREQ_FTPGETCURRENTDIRECTORYW
-{
-    LPWSTR lpszDirectory;
-    DWORD *lpdwDirectory;
-};
-
-struct WORKREQ_FTPOPENFILEW
-{
-    LPWSTR lpszFilename;
-    DWORD  dwAccess;
-    DWORD  dwFlags;
-    DWORD_PTR dwContext;
-};
-
-struct WORKREQ_FTPGETFILEW
-{
-    LPWSTR lpszRemoteFile;
-    LPWSTR lpszNewFile;
-    BOOL   fFailIfExists;
-    DWORD  dwLocalFlagsAttribute;
-    DWORD  dwFlags;
-    DWORD_PTR dwContext;
-};
-
-struct WORKREQ_FTPDELETEFILEW
-{
-    LPWSTR lpszFilename;
-};
-
-struct WORKREQ_FTPREMOVEDIRECTORYW
-{
-    LPWSTR lpszDirectory;
-};
-
-struct WORKREQ_FTPRENAMEFILEW
-{
-    LPWSTR lpszSrcFile;
-    LPWSTR lpszDestFile;
-};
-
-struct WORKREQ_FTPFINDNEXTW
-{
-    LPWIN32_FIND_DATAW lpFindFileData;
-};
-
-struct WORKREQ_HTTPSENDREQUESTW
-{
-    LPWSTR lpszHeader;
-    DWORD  dwHeaderLength;
-    LPVOID lpOptional;
-    DWORD  dwOptionalLength;
-    DWORD  dwContentLength;
-    BOOL   bEndRequest;
-};
-
-struct WORKREQ_HTTPENDREQUESTW
-{
-    DWORD     dwFlags;
-    DWORD_PTR dwContext;
-};
-
-struct WORKREQ_SENDCALLBACK
-{
-    DWORD_PTR dwContext;
-    DWORD     dwInternetStatus;
-    LPVOID    lpvStatusInfo;
-    DWORD     dwStatusInfoLength;
-};
-
-struct WORKREQ_INTERNETOPENURLW
-{
-    HINTERNET hInternet;
-    LPWSTR     lpszUrl;
-    LPWSTR     lpszHeaders;
-    DWORD     dwHeadersLength;
-    DWORD     dwFlags;
-    DWORD_PTR dwContext;
-};
-
-struct WORKREQ_INTERNETREADFILEEXA
-{
-    LPINTERNET_BUFFERSA lpBuffersOut;
-};
-
-struct WORKREQ_INTERNETREADFILEEXW
-{
-    LPINTERNET_BUFFERSW lpBuffersOut;
-};
-
-typedef struct WORKREQ
-{
-    void (*asyncproc)(struct WORKREQ*);
+    async_task_proc_t proc;
     object_header_t *hdr;
+};
 
-    union {
-        struct WORKREQ_FTPPUTFILEW              FtpPutFileW;
-        struct WORKREQ_FTPSETCURRENTDIRECTORYW  FtpSetCurrentDirectoryW;
-        struct WORKREQ_FTPCREATEDIRECTORYW      FtpCreateDirectoryW;
-        struct WORKREQ_FTPFINDFIRSTFILEW        FtpFindFirstFileW;
-        struct WORKREQ_FTPGETCURRENTDIRECTORYW  FtpGetCurrentDirectoryW;
-        struct WORKREQ_FTPOPENFILEW             FtpOpenFileW;
-        struct WORKREQ_FTPGETFILEW              FtpGetFileW;
-        struct WORKREQ_FTPDELETEFILEW           FtpDeleteFileW;
-        struct WORKREQ_FTPREMOVEDIRECTORYW      FtpRemoveDirectoryW;
-        struct WORKREQ_FTPRENAMEFILEW           FtpRenameFileW;
-        struct WORKREQ_FTPFINDNEXTW             FtpFindNextW;
-        struct WORKREQ_HTTPSENDREQUESTW         HttpSendRequestW;
-        struct WORKREQ_HTTPENDREQUESTW          HttpEndRequestW;
-        struct WORKREQ_SENDCALLBACK             SendCallback;
-        struct WORKREQ_INTERNETOPENURLW         InternetOpenUrlW;
-        struct WORKREQ_INTERNETREADFILEEXA      InternetReadFileExA;
-        struct WORKREQ_INTERNETREADFILEEXW      InternetReadFileExW;
-    } u;
-
-} WORKREQUEST, *LPWORKREQUEST;
+void *alloc_async_task(object_header_t*,async_task_proc_t,size_t) DECLSPEC_HIDDEN;
 
 void *alloc_object(object_header_t*,const object_vtbl_t*,size_t) DECLSPEC_HIDDEN;
 object_header_t *get_handle_object( HINTERNET hinternet ) DECLSPEC_HIDDEN;
@@ -505,12 +388,12 @@ DWORD HTTP_Connect(appinfo_t*,LPCWSTR,
 BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
 	struct sockaddr *psa, socklen_t *sa_len) DECLSPEC_HIDDEN;
 
-BOOL get_cookie(const WCHAR*,const WCHAR*,WCHAR*,DWORD*) DECLSPEC_HIDDEN;
+DWORD get_cookie(const WCHAR*,const WCHAR*,WCHAR*,DWORD*) DECLSPEC_HIDDEN;
 BOOL set_cookie(const WCHAR*,const WCHAR*,const WCHAR*,const WCHAR*) DECLSPEC_HIDDEN;
 
 void INTERNET_SetLastError(DWORD dwError) DECLSPEC_HIDDEN;
 DWORD INTERNET_GetLastError(void) DECLSPEC_HIDDEN;
-DWORD INTERNET_AsyncCall(LPWORKREQUEST lpWorkRequest) DECLSPEC_HIDDEN;
+DWORD INTERNET_AsyncCall(task_header_t*) DECLSPEC_HIDDEN;
 LPSTR INTERNET_GetResponseBuffer(void) DECLSPEC_HIDDEN;
 LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen) DECLSPEC_HIDDEN;
 
@@ -523,10 +406,10 @@ VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
                            DWORD dwStatusInfoLength) DECLSPEC_HIDDEN;
 BOOL INTERNET_FindProxyForProtocol(LPCWSTR szProxy, LPCWSTR proto, WCHAR *foundProxy, DWORD *foundProxyLen) DECLSPEC_HIDDEN;
 
-DWORD create_netconn(BOOL, server_t *, DWORD, DWORD, netconn_t **) DECLSPEC_HIDDEN;
+DWORD create_netconn(BOOL,server_t*,DWORD,BOOL,DWORD,netconn_t**) DECLSPEC_HIDDEN;
 void free_netconn(netconn_t*) DECLSPEC_HIDDEN;
 void NETCON_unload(void) DECLSPEC_HIDDEN;
-DWORD NETCON_secure_connect(netconn_t *connection) DECLSPEC_HIDDEN;
+DWORD NETCON_secure_connect(netconn_t*,server_t*) DECLSPEC_HIDDEN;
 DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
 		int *sent /* out */) DECLSPEC_HIDDEN;
 DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, int flags,
@@ -561,8 +444,11 @@ static inline int unix_getsockopt(int socket, int level, int option_name, void *
 #define getsockopt unix_getsockopt
 #endif
 
-extern void URLCacheContainers_CreateDefaults(void) DECLSPEC_HIDDEN;
-extern void URLCacheContainers_DeleteAll(void) DECLSPEC_HIDDEN;
+server_t *get_server(const WCHAR*,INTERNET_PORT,BOOL,BOOL);
+
+BOOL init_urlcache(void) DECLSPEC_HIDDEN;
+void free_urlcache(void) DECLSPEC_HIDDEN;
+void free_cookie(void) DECLSPEC_HIDDEN;
 
 #define MAX_REPLY_LEN	 	0x5B4
 
@@ -572,5 +458,17 @@ typedef struct
     DWORD val;
     const char* name;
 } wininet_flag_info;
+
+/* Undocumented security flags */
+#define _SECURITY_FLAG_CERT_REV_FAILED    0x00800000
+#define _SECURITY_FLAG_CERT_INVALID_CA    0x01000000
+#define _SECURITY_FLAG_CERT_INVALID_CN    0x02000000
+#define _SECURITY_FLAG_CERT_INVALID_DATE  0x04000000
+
+#define _SECURITY_ERROR_FLAGS_MASK              \
+    (_SECURITY_FLAG_CERT_REV_FAILED             \
+    |_SECURITY_FLAG_CERT_INVALID_CA             \
+    |_SECURITY_FLAG_CERT_INVALID_CN             \
+    |_SECURITY_FLAG_CERT_INVALID_DATE)
 
 #endif /* _WINE_INTERNET_H_ */

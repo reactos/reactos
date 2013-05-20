@@ -129,8 +129,10 @@ MAKE_FUNCPTR(SSL_load_error_strings);
 MAKE_FUNCPTR(SSLv23_method);
 MAKE_FUNCPTR(SSL_CTX_free);
 MAKE_FUNCPTR(SSL_CTX_new);
+MAKE_FUNCPTR(SSL_CTX_ctrl);
 MAKE_FUNCPTR(SSL_new);
 MAKE_FUNCPTR(SSL_free);
+MAKE_FUNCPTR(SSL_ctrl);
 MAKE_FUNCPTR(SSL_set_fd);
 MAKE_FUNCPTR(SSL_connect);
 MAKE_FUNCPTR(SSL_shutdown);
@@ -218,95 +220,161 @@ static PCCERT_CONTEXT X509_to_cert_context(X509 *cert)
     return ret;
 }
 
-static DWORD netconn_verify_cert(PCCERT_CONTEXT cert, HCERTSTORE store,
-    WCHAR *server, DWORD security_flags)
+static DWORD netconn_verify_cert(netconn_t *conn, PCCERT_CONTEXT cert, HCERTSTORE store)
 {
     BOOL ret;
     CERT_CHAIN_PARA chainPara = { sizeof(chainPara), { 0 } };
     PCCERT_CHAIN_CONTEXT chain;
     char oid_server_auth[] = szOID_PKIX_KP_SERVER_AUTH;
     char *server_auth[] = { oid_server_auth };
-    DWORD err = ERROR_SUCCESS, chainFlags = 0;
+    DWORD err = ERROR_SUCCESS, errors;
 
-    TRACE("verifying %s\n", debugstr_w(server));
+    static const DWORD supportedErrors =
+        CERT_TRUST_IS_NOT_TIME_VALID |
+        CERT_TRUST_IS_UNTRUSTED_ROOT |
+        CERT_TRUST_IS_PARTIAL_CHAIN |
+        CERT_TRUST_IS_NOT_VALID_FOR_USAGE;
+
+    TRACE("verifying %s\n", debugstr_w(conn->server->name));
+
     chainPara.RequestedUsage.Usage.cUsageIdentifier = 1;
     chainPara.RequestedUsage.Usage.rgpszUsageIdentifier = server_auth;
-    if (!(security_flags & SECURITY_FLAG_IGNORE_REVOCATION))
-        chainFlags |= CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT;
-    if ((ret = CertGetCertificateChain(NULL, cert, NULL, store, &chainPara,
-        chainFlags, NULL, &chain)))
-    {
-        if (chain->TrustStatus.dwErrorStatus)
-        {
-            static const DWORD supportedErrors =
-                CERT_TRUST_IS_NOT_TIME_VALID |
-                CERT_TRUST_IS_UNTRUSTED_ROOT |
-                CERT_TRUST_IS_PARTIAL_CHAIN |
-                CERT_TRUST_IS_OFFLINE_REVOCATION |
-                CERT_TRUST_REVOCATION_STATUS_UNKNOWN |
-                CERT_TRUST_IS_REVOKED |
-                CERT_TRUST_IS_NOT_VALID_FOR_USAGE;
-
-            if (chain->TrustStatus.dwErrorStatus & CERT_TRUST_IS_NOT_TIME_VALID &&
-                !(security_flags & SECURITY_FLAG_IGNORE_CERT_DATE_INVALID))
-                err = ERROR_INTERNET_SEC_CERT_DATE_INVALID;
-            else if (chain->TrustStatus.dwErrorStatus &
-                     (CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_PARTIAL_CHAIN) &&
-                     !(security_flags & SECURITY_FLAG_IGNORE_UNKNOWN_CA))
-                err = ERROR_INTERNET_INVALID_CA;
-            else if (!(security_flags & SECURITY_FLAG_IGNORE_REVOCATION) &&
-                     ((chain->TrustStatus.dwErrorStatus &
-                      CERT_TRUST_IS_OFFLINE_REVOCATION) ||
-                      (chain->TrustStatus.dwErrorStatus &
-                       CERT_TRUST_REVOCATION_STATUS_UNKNOWN)))
-                err = ERROR_INTERNET_SEC_CERT_NO_REV;
-            else if (!(security_flags & SECURITY_FLAG_IGNORE_REVOCATION) &&
-                     (chain->TrustStatus.dwErrorStatus & CERT_TRUST_IS_REVOKED))
-                err = ERROR_INTERNET_SEC_CERT_REVOKED;
-            else if (!(security_flags & SECURITY_FLAG_IGNORE_WRONG_USAGE) &&
-                     (chain->TrustStatus.dwErrorStatus &
-                      CERT_TRUST_IS_NOT_VALID_FOR_USAGE))
-                err = ERROR_INTERNET_SEC_INVALID_CERT;
-            else if (chain->TrustStatus.dwErrorStatus & ~supportedErrors)
-                err = ERROR_INTERNET_SEC_INVALID_CERT;
-        }
-        if (!err)
-        {
-            CERT_CHAIN_POLICY_PARA policyPara;
-            SSL_EXTRA_CERT_CHAIN_POLICY_PARA sslExtraPolicyPara;
-            CERT_CHAIN_POLICY_STATUS policyStatus;
-            CERT_CHAIN_CONTEXT chainCopy;
-
-            /* Clear chain->TrustStatus.dwErrorStatus so
-             * CertVerifyCertificateChainPolicy will verify additional checks
-             * rather than stopping with an existing, ignored error.
-             */
-            memcpy(&chainCopy, chain, sizeof(chainCopy));
-            chainCopy.TrustStatus.dwErrorStatus = 0;
-            sslExtraPolicyPara.u.cbSize = sizeof(sslExtraPolicyPara);
-            sslExtraPolicyPara.dwAuthType = AUTHTYPE_SERVER;
-            sslExtraPolicyPara.pwszServerName = server;
-            sslExtraPolicyPara.fdwChecks = security_flags;
-            policyPara.cbSize = sizeof(policyPara);
-            policyPara.dwFlags = 0;
-            policyPara.pvExtraPolicyPara = &sslExtraPolicyPara;
-            ret = CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_SSL,
-                &chainCopy, &policyPara, &policyStatus);
-            /* Any error in the policy status indicates that the
-             * policy couldn't be verified.
-             */
-            if (ret && policyStatus.dwError)
-            {
-                if (policyStatus.dwError == CERT_E_CN_NO_MATCH)
-                    err = ERROR_INTERNET_SEC_CERT_CN_INVALID;
-                else
-                    err = ERROR_INTERNET_SEC_INVALID_CERT;
-            }
-        }
-        CertFreeCertificateChain(chain);
+    if (!(ret = CertGetCertificateChain(NULL, cert, NULL, store, &chainPara, 0, NULL, &chain))) {
+        TRACE("failed\n");
+        return GetLastError();
     }
-    TRACE("returning %08x\n", err);
-    return err;
+
+    errors = chain->TrustStatus.dwErrorStatus;
+
+    do {
+        /* This seems strange, but that's what tests show */
+        if(errors & CERT_TRUST_IS_PARTIAL_CHAIN) {
+            WARN("ERROR_INTERNET_SEC_CERT_REV_FAILED\n");
+            err = ERROR_INTERNET_SEC_CERT_REV_FAILED;
+            if(conn->mask_errors)
+                conn->security_flags |= _SECURITY_FLAG_CERT_REV_FAILED;
+            if(!(conn->security_flags & SECURITY_FLAG_IGNORE_REVOCATION))
+                break;
+        }
+
+        if (chain->TrustStatus.dwErrorStatus & ~supportedErrors) {
+            WARN("error status %x\n", chain->TrustStatus.dwErrorStatus & ~supportedErrors);
+            err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_SEC_INVALID_CERT;
+            errors &= supportedErrors;
+            if(!conn->mask_errors)
+                break;
+            WARN("unknown error flags\n");
+        }
+
+        if(errors & CERT_TRUST_IS_NOT_TIME_VALID) {
+            WARN("CERT_TRUST_IS_NOT_TIME_VALID\n");
+            if(!(conn->security_flags & SECURITY_FLAG_IGNORE_CERT_DATE_INVALID)) {
+                err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_SEC_CERT_DATE_INVALID;
+                if(!conn->mask_errors)
+                    break;
+                conn->security_flags |= _SECURITY_FLAG_CERT_INVALID_DATE;
+            }
+            errors &= ~CERT_TRUST_IS_NOT_TIME_VALID;
+        }
+
+        if(errors & CERT_TRUST_IS_UNTRUSTED_ROOT) {
+            WARN("CERT_TRUST_IS_UNTRUSTED_ROOT\n");
+            if(!(conn->security_flags & SECURITY_FLAG_IGNORE_UNKNOWN_CA)) {
+                err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_INVALID_CA;
+                if(!conn->mask_errors)
+                    break;
+                conn->security_flags |= _SECURITY_FLAG_CERT_INVALID_CA;
+            }
+            errors &= ~CERT_TRUST_IS_UNTRUSTED_ROOT;
+        }
+
+        if(errors & CERT_TRUST_IS_PARTIAL_CHAIN) {
+            WARN("CERT_TRUST_IS_PARTIAL_CHAIN\n");
+            if(!(conn->security_flags & SECURITY_FLAG_IGNORE_UNKNOWN_CA)) {
+                err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_INVALID_CA;
+                if(!conn->mask_errors)
+                    break;
+                conn->security_flags |= _SECURITY_FLAG_CERT_INVALID_CA;
+            }
+            errors &= ~CERT_TRUST_IS_PARTIAL_CHAIN;
+        }
+
+        if(errors & CERT_TRUST_IS_NOT_VALID_FOR_USAGE) {
+            WARN("CERT_TRUST_IS_NOT_VALID_FOR_USAGE\n");
+            if(!(conn->security_flags & SECURITY_FLAG_IGNORE_WRONG_USAGE)) {
+                err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_SEC_INVALID_CERT;
+                if(!conn->mask_errors)
+                    break;
+                WARN("CERT_TRUST_IS_NOT_VALID_FOR_USAGE, unknown error flags\n");
+            }
+            errors &= ~CERT_TRUST_IS_NOT_VALID_FOR_USAGE;
+        }
+
+        if(err == ERROR_INTERNET_SEC_CERT_REV_FAILED) {
+            assert(conn->security_flags & SECURITY_FLAG_IGNORE_REVOCATION);
+            err = ERROR_SUCCESS;
+        }
+    }while(0);
+
+    if(!err || conn->mask_errors) {
+        CERT_CHAIN_POLICY_PARA policyPara;
+        SSL_EXTRA_CERT_CHAIN_POLICY_PARA sslExtraPolicyPara;
+        CERT_CHAIN_POLICY_STATUS policyStatus;
+        CERT_CHAIN_CONTEXT chainCopy;
+
+        /* Clear chain->TrustStatus.dwErrorStatus so
+         * CertVerifyCertificateChainPolicy will verify additional checks
+         * rather than stopping with an existing, ignored error.
+         */
+        memcpy(&chainCopy, chain, sizeof(chainCopy));
+        chainCopy.TrustStatus.dwErrorStatus = 0;
+        sslExtraPolicyPara.u.cbSize = sizeof(sslExtraPolicyPara);
+        sslExtraPolicyPara.dwAuthType = AUTHTYPE_SERVER;
+        sslExtraPolicyPara.pwszServerName = conn->server->name;
+        sslExtraPolicyPara.fdwChecks = conn->security_flags;
+        policyPara.cbSize = sizeof(policyPara);
+        policyPara.dwFlags = 0;
+        policyPara.pvExtraPolicyPara = &sslExtraPolicyPara;
+        ret = CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_SSL,
+                &chainCopy, &policyPara, &policyStatus);
+        /* Any error in the policy status indicates that the
+         * policy couldn't be verified.
+         */
+        if(ret) {
+            if(policyStatus.dwError == CERT_E_CN_NO_MATCH) {
+                WARN("CERT_E_CN_NO_MATCH\n");
+                if(conn->mask_errors)
+                    conn->security_flags |= _SECURITY_FLAG_CERT_INVALID_CN;
+                err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_SEC_CERT_CN_INVALID;
+            }else if(policyStatus.dwError) {
+                WARN("policyStatus.dwError %x\n", policyStatus.dwError);
+                if(conn->mask_errors)
+                    WARN("unknown error flags for policy status %x\n", policyStatus.dwError);
+                err = conn->mask_errors && err ? ERROR_INTERNET_SEC_CERT_ERRORS : ERROR_INTERNET_SEC_INVALID_CERT;
+            }
+        }else {
+            err = GetLastError();
+        }
+    }
+
+    if(err) {
+        WARN("failed %u\n", err);
+        CertFreeCertificateChain(chain);
+        if(conn->server->cert_chain) {
+            CertFreeCertificateChain(conn->server->cert_chain);
+            conn->server->cert_chain = NULL;
+        }
+        if(conn->mask_errors)
+            conn->server->security_flags |= conn->security_flags & _SECURITY_ERROR_FLAGS_MASK;
+        return err;
+    }
+
+    /* FIXME: Reuse cached chain */
+    if(conn->server->cert_chain)
+        CertFreeCertificateChain(chain);
+    else
+        conn->server->cert_chain = chain;
+    return ERROR_SUCCESS;
 }
 
 static int netconn_secure_verify(int preverify_ok, X509_STORE_CTX *ctx)
@@ -343,8 +411,7 @@ static int netconn_secure_verify(int preverify_ok, X509_STORE_CTX *ctx)
         if (!endCert) ret = FALSE;
         if (ret)
         {
-            DWORD_PTR err = netconn_verify_cert(endCert, store, conn->server->name,
-                                                conn->security_flags);
+            DWORD_PTR err = netconn_verify_cert(conn, endCert, store);
 
             if (err)
             {
@@ -358,7 +425,49 @@ static int netconn_secure_verify(int preverify_ok, X509_STORE_CTX *ctx)
     return ret;
 }
 
+static long get_tls_option(void) {
+    long tls_option = SSL_OP_NO_SSLv2; /* disable SSLv2 for security reason, secur32/Schannel(GnuTLS) don't support it */
+#ifdef SSL_OP_NO_TLSv1_2
+    DWORD type, val, size;
+    HKEY hkey,tls12_client,tls11_client;
+    LONG res;
+    const WCHAR Schannel_Prot[] = {  /* SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCANNEL\\Protocols */
+              'S','Y','S','T','E','M','\\',
+              'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+              'C','o','n','t','r','o','l','\\',
+              'S','e','c','u','r','i','t','y','P','r','o','v','i','d','e','r','s','\\',
+              'S','C','H','A','N','N','E','L','\\',
+              'P','r','o','t','o','c','o','l','s',0 };
+     const WCHAR TLS12_Client[] = {'T','L','S',' ','1','.','2','\\','C','l','i','e','n','t',0};
+     const WCHAR TLS11_Client[] = {'T','L','S',' ','1','.','1','\\','C','l','i','e','n','t',0};
+     const WCHAR DisabledByDefault[] = {'D','i','s','a','b','l','e','d','B','y','D','e','f','a','u','l','t',0};
+
+    res = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+          Schannel_Prot,
+          0, KEY_READ, &hkey);
+    if (res != ERROR_SUCCESS) { /* enabled TLSv1.1/1.2 when no registry entry */
+        return tls_option;
+    }
+    if (RegOpenKeyExW(hkey, TLS12_Client, 0, KEY_READ, &tls12_client) == ERROR_SUCCESS) {
+        size = sizeof(DWORD);
+        if (RegQueryValueExW(tls12_client, DisabledByDefault, NULL, &type,  (LPBYTE) &val, &size) == ERROR_SUCCESS
+            && type == REG_DWORD) {
+            tls_option |= val?SSL_OP_NO_TLSv1_2:0;
+        }
+        RegCloseKey(tls12_client);
+    }
+    if (RegOpenKeyExW(hkey, TLS11_Client, 0, KEY_READ, &tls11_client) == ERROR_SUCCESS) {
+        size = sizeof(DWORD);
+        if (RegQueryValueExW(tls11_client, DisabledByDefault, NULL, &type,  (LPBYTE) &val, &size) == ERROR_SUCCESS
+            && type == REG_DWORD) {
+            tls_option |= val?SSL_OP_NO_TLSv1_1:0;
+        }
+        RegCloseKey(tls11_client);
+    }
+    RegCloseKey(hkey);
 #endif
+    return tls_option;
+}
 
 static CRITICAL_SECTION init_ssl_cs;
 static CRITICAL_SECTION_DEBUG init_ssl_cs_debug =
@@ -372,8 +481,8 @@ static CRITICAL_SECTION init_ssl_cs = { &init_ssl_cs_debug, -1, 0, 0, 0, 0 };
 
 static DWORD init_openssl(void)
 {
-#if defined(SONAME_LIBSSL) && defined(SONAME_LIBCRYPTO)
-    int i;
+#ifdef SONAME_LIBCRYPTO
+    unsigned int i;
 
     if(OpenSSL_ssl_handle)
         return ERROR_SUCCESS;
@@ -403,8 +512,10 @@ static DWORD init_openssl(void)
     DYNSSL(SSLv23_method);
     DYNSSL(SSL_CTX_free);
     DYNSSL(SSL_CTX_new);
+    DYNSSL(SSL_CTX_ctrl);
     DYNSSL(SSL_new);
     DYNSSL(SSL_free);
+    DYNSSL(SSL_ctrl);
     DYNSSL(SSL_set_fd);
     DYNSSL(SSL_connect);
     DYNSSL(SSL_shutdown);
@@ -446,12 +557,18 @@ static DWORD init_openssl(void)
     DYNCRYPTO(sk_value);
 #undef DYNCRYPTO
 
+#define pSSL_CTX_set_options(ctx,op) \
+       pSSL_CTX_ctrl((ctx),SSL_CTRL_OPTIONS,(op),NULL)
+#define pSSL_set_options(ssl,op) \
+       pSSL_ctrl((ssl),SSL_CTRL_OPTIONS,(op),NULL)
+
     pSSL_library_init();
     pSSL_load_error_strings();
     pBIO_new_fp(stderr, BIO_NOCLOSE); /* FIXME: should use winedebug stuff */
 
     meth = pSSLv23_method();
     ctx = pSSL_CTX_new(meth);
+    pSSL_CTX_set_options(ctx, get_tls_option());
     if(!pSSL_CTX_set_default_verify_paths(ctx)) {
         ERR("SSL_CTX_set_default_verify_paths failed: %s\n",
             pERR_error_string(pERR_get_error(), 0));
@@ -487,16 +604,76 @@ static DWORD init_openssl(void)
 
     return ERROR_SUCCESS;
 #else
-    FIXME("can't use SSL, not compiled in.\n");
+    FIXME("can't use SSL, libcrypto not compiled in.\n");
     return ERROR_INTERNET_SECURITY_CHANNEL_ERROR;
 #endif
 }
+#endif /* SONAME_LIBSSL */
 
-DWORD create_netconn(BOOL useSSL, server_t *server, DWORD security_flags, DWORD timeout, netconn_t **ret)
+static DWORD create_netconn_socket(server_t *server, netconn_t *netconn, DWORD timeout)
+{
+    int result;
+    ULONG flag;
+
+    assert(server->addr_len);
+    result = netconn->socket = socket(server->addr.ss_family, SOCK_STREAM, 0);
+    if(result != -1) {
+        flag = 1;
+        ioctlsocket(netconn->socket, FIONBIO, &flag);
+        result = connect(netconn->socket, (struct sockaddr*)&server->addr, server->addr_len);
+        if(result == -1)
+        {
+            if (sock_get_error(errno) == WSAEINPROGRESS) {
+                // ReactOS: use select instead of poll
+                fd_set outfd;
+                struct timeval tv;
+                int res;
+
+                FD_ZERO(&outfd);
+                FD_SET(netconn->socket, &outfd);
+                tv.tv_sec = timeout / 1000;
+                tv.tv_usec = (timeout % 1000) * 1000;
+                res = select(0, NULL, &outfd, NULL, &tv);
+                if (!res)
+                {
+                    closesocket(netconn->socket);
+                    return ERROR_INTERNET_CANNOT_CONNECT;
+                }
+                else if (res > 0)
+                {
+                    int err;
+                    socklen_t len = sizeof(err);
+                    if (!getsockopt(netconn->socket, SOL_SOCKET, SO_ERROR, (void *)&err, &len) && !err)
+                        result = 0;
+                }
+            }
+        }
+        if(result == -1)
+            closesocket(netconn->socket);
+        else {
+            flag = 0;
+            ioctlsocket(netconn->socket, FIONBIO, &flag);
+        }
+    }
+    if(result == -1)
+        return ERROR_INTERNET_CANNOT_CONNECT;
+
+#ifdef TCP_NODELAY
+    flag = 1;
+    result = setsockopt(netconn->socket, IPPROTO_TCP, TCP_NODELAY, (void*)&flag, sizeof(flag));
+    if(result < 0)
+        WARN("setsockopt(TCP_NODELAY) failed\n");
+#endif
+
+    return ERROR_SUCCESS;
+}
+
+DWORD create_netconn(BOOL useSSL, server_t *server, DWORD security_flags, BOOL mask_errors, DWORD timeout, netconn_t **ret)
 {
     netconn_t *netconn;
-    int result, flag;
+    int result;
 
+#ifdef SONAME_LIBSSL
     if(useSSL) {
         DWORD res;
 
@@ -508,88 +685,41 @@ DWORD create_netconn(BOOL useSSL, server_t *server, DWORD security_flags, DWORD 
         if(res != ERROR_SUCCESS)
             return res;
     }
+#endif
 
     netconn = heap_alloc_zero(sizeof(*netconn));
     if(!netconn)
         return ERROR_OUTOFMEMORY;
 
-    netconn->useSSL = useSSL;
-    netconn->socketFD = -1;
-    netconn->security_flags = security_flags;
+    netconn->socket = -1;
+    netconn->security_flags = security_flags | server->security_flags;
+    netconn->mask_errors = mask_errors;
     list_init(&netconn->pool_entry);
 
-    assert(server->addr_len);
-    result = netconn->socketFD = socket(server->addr.ss_family, SOCK_STREAM, 0);
-    if(result != -1) {
-        flag = 1;
-        ioctlsocket(netconn->socketFD, FIONBIO, &flag);
-        result = connect(netconn->socketFD, (struct sockaddr*)&server->addr, server->addr_len);
-        if(result == -1)
-        {
-            if (sock_get_error(errno) == WSAEINPROGRESS) {
-                // ReactOS: use select instead of poll
-                fd_set outfd;
-                struct timeval tv;
-                int res;
-
-                FD_ZERO(&outfd);
-                FD_SET(netconn->socketFD, &outfd);
-                tv.tv_sec = timeout / 1000;
-                tv.tv_usec = (timeout % 1000) * 1000;
-                res = select(0, NULL, &outfd, NULL, &tv);
-                if (!res)
-                {
-                    closesocket(netconn->socketFD);
-                    heap_free(netconn);
-                    return ERROR_INTERNET_CANNOT_CONNECT;
-                }
-                else if (res > 0)
-                {
-                    int err;
-                    socklen_t len = sizeof(err);
-                    if (!getsockopt(netconn->socketFD, SOL_SOCKET, SO_ERROR, &err, &len) && !err)
-                        result = 0;
-                }
-            }
-        }
-        if(result == -1)
-            closesocket(netconn->socketFD);
-        else {
-            flag = 0;
-            ioctlsocket(netconn->socketFD, FIONBIO, &flag);
-        }
-    }
-    if(result == -1) {
+    result = create_netconn_socket(server, netconn, timeout);
+    if (result != ERROR_SUCCESS) {
         heap_free(netconn);
-        return sock_get_error(errno);
+        return result;
     }
-
-#ifdef TCP_NODELAY
-    flag = 1;
-    result = setsockopt(netconn->socketFD, IPPROTO_TCP, TCP_NODELAY, (void*)&flag, sizeof(flag));
-    if(result < 0)
-        WARN("setsockopt(TCP_NODELAY) failed\n");
-#endif
 
     server_addref(server);
     netconn->server = server;
-
     *ret = netconn;
-    return ERROR_SUCCESS;
+    return result;
 }
 
 void free_netconn(netconn_t *netconn)
 {
     server_release(netconn->server);
 
+    if (netconn->secure) {
 #ifdef SONAME_LIBSSL
-    if (netconn->ssl_s) {
         pSSL_shutdown(netconn->ssl_s);
         pSSL_free(netconn->ssl_s);
-    }
 #endif
+    }
 
-    closesocket(netconn->socketFD);
+    closesocket(netconn->socket);
     heap_free(netconn);
 }
 
@@ -609,7 +739,7 @@ void NETCON_unload(void)
     }
     if (ssl_locks)
     {
-        int i;
+        unsigned int i;
         for (i = 0; i < num_ssl_locks; i++)
         {
             ssl_locks[i].DebugInfo->Spare[0] = 0;
@@ -689,22 +819,12 @@ int sock_get_error( int err )
 }
 #endif
 
-/******************************************************************************
- * NETCON_secure_connect
- * Initiates a secure connection over an existing plaintext connection.
- */
-DWORD NETCON_secure_connect(netconn_t *connection)
-{
-    DWORD res = ERROR_NOT_SUPPORTED;
 #ifdef SONAME_LIBSSL
+static DWORD netcon_secure_connect_setup(netconn_t *connection, long tls_option)
+{
     void *ssl_s;
-
-    /* can't connect if we are already connected */
-    if (connection->ssl_s)
-    {
-        ERR("already connected\n");
-        return ERROR_INTERNET_CANNOT_CONNECT;
-    }
+    DWORD res;
+    int bits;
 
     ssl_s = pSSL_new(ctx);
     if (!ssl_s)
@@ -714,7 +834,8 @@ DWORD NETCON_secure_connect(netconn_t *connection)
         return ERROR_OUTOFMEMORY;
     }
 
-    if (!pSSL_set_fd(ssl_s, connection->socketFD))
+    pSSL_set_options(ssl_s, tls_option);
+    if (!pSSL_set_fd(ssl_s, connection->socket))
     {
         ERR("SSL_set_fd failed: %s\n",
             pERR_error_string(pERR_get_error(), 0));
@@ -739,6 +860,19 @@ DWORD NETCON_secure_connect(netconn_t *connection)
     }
 
     connection->ssl_s = ssl_s;
+    connection->secure = TRUE;
+
+    bits = NETCON_GetCipherStrength(connection);
+    if (bits >= 128)
+        connection->security_flags |= SECURITY_FLAG_STRENGTH_STRONG;
+    else if (bits >= 56)
+        connection->security_flags |= SECURITY_FLAG_STRENGTH_MEDIUM;
+    else
+        connection->security_flags |= SECURITY_FLAG_STRENGTH_WEAK;
+    connection->security_flags |= SECURITY_FLAG_SECURE;
+
+    if(connection->mask_errors)
+        connection->server->security_flags = connection->security_flags;
     return ERROR_SUCCESS;
 
 fail:
@@ -747,6 +881,51 @@ fail:
         pSSL_shutdown(ssl_s);
         pSSL_free(ssl_s);
     }
+    return res;
+}
+#endif
+
+/******************************************************************************
+ * NETCON_secure_connect
+ * Initiates a secure connection over an existing plaintext connection.
+ */
+DWORD NETCON_secure_connect(netconn_t *connection, server_t *server)
+{
+    DWORD res = ERROR_NOT_SUPPORTED;
+
+    /* can't connect if we are already connected */
+    if(connection->secure) {
+        ERR("already connected\n");
+        return ERROR_INTERNET_CANNOT_CONNECT;
+    }
+
+    if(server != connection->server) {
+        server_release(connection->server);
+        server_addref(server);
+        connection->server = server;
+    }
+
+#ifdef SONAME_LIBSSL
+    /* connect with given TLS options */
+    res = netcon_secure_connect_setup(connection, get_tls_option());
+    if (res == ERROR_SUCCESS)
+        return res;
+
+#ifdef SSL_OP_NO_TLSv1_2
+    /* FIXME: when got version alert and FIN from server */
+    /* fallback to connect without TLSv1.1/TLSv1.2        */
+    if (res == ERROR_INTERNET_SECURITY_CHANNEL_ERROR)
+    {
+        closesocket(connection->socket);
+        pSSL_CTX_set_options(ctx,SSL_OP_NO_TLSv1_1|SSL_OP_NO_TLSv1_2);
+        res = create_netconn_socket(connection->server, connection, 500);
+        if (res != ERROR_SUCCESS)
+            return res;
+        res = netcon_secure_connect_setup(connection, get_tls_option()|SSL_OP_NO_TLSv1_1|SSL_OP_NO_TLSv1_2);
+    }
+#endif
+#else
+    FIXME("Cannot connect, OpenSSL not available.\n");
 #endif
     return res;
 }
@@ -759,9 +938,9 @@ fail:
 DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
 		int *sent /* out */)
 {
-    if (!connection->useSSL)
+    if(!connection->secure)
     {
-	*sent = send(connection->socketFD, msg, len, flags);
+	*sent = send(connection->socket, msg, len, flags);
 	if (*sent == -1)
 	    return sock_get_error(errno);
         return ERROR_SUCCESS;
@@ -769,7 +948,7 @@ DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
     else
     {
 #ifdef SONAME_LIBSSL
-        if(!connection->ssl_s) {
+        if(!connection->secure) {
             FIXME("not connected\n");
             return ERROR_NOT_SUPPORTED;
         }
@@ -780,6 +959,7 @@ DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
 	    return ERROR_INTERNET_CONNECTION_ABORTED;
         return ERROR_SUCCESS;
 #else
+        FIXME("not supported on this platform\n");
 	return ERROR_NOT_SUPPORTED;
 #endif
     }
@@ -790,21 +970,21 @@ DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
  * Basically calls 'recv()' unless we should use SSL
  * number of chars received is put in *recvd
  */
-DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, int flags,
-		int *recvd /* out */)
+DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, int flags, int *recvd)
 {
     *recvd = 0;
     if (!len)
         return ERROR_SUCCESS;
-    if (!connection->useSSL)
+
+    if (!connection->secure)
     {
-	*recvd = recv(connection->socketFD, buf, len, flags);
+	*recvd = recv(connection->socket, buf, len, flags);
 	return *recvd == -1 ? sock_get_error(errno) :  ERROR_SUCCESS;
     }
     else
     {
 #ifdef SONAME_LIBSSL
-        if(!connection->ssl_s) {
+        if(!connection->secure) {
             FIXME("not connected\n");
             return ERROR_NOT_SUPPORTED;
         }
@@ -817,6 +997,7 @@ DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, int flags,
 
         return *recvd > 0 ? ERROR_SUCCESS : ERROR_INTERNET_CONNECTION_ABORTED;
 #else
+        FIXME("not supported on this platform\n");
 	return ERROR_NOT_SUPPORTED;
 #endif
     }
@@ -831,11 +1012,11 @@ BOOL NETCON_query_data_available(netconn_t *connection, DWORD *available)
 {
     *available = 0;
 
-    if (!connection->useSSL)
+    if(!connection->secure)
     {
 #ifdef FIONREAD
-        int unread;
-        int retval = ioctlsocket(connection->socketFD, FIONREAD, &unread);
+        ULONG unread;
+        int retval = ioctlsocket(connection->socket, FIONREAD, &unread);
         if (!retval)
         {
             TRACE("%d bytes of queued, but unread data\n", unread);
@@ -846,7 +1027,10 @@ BOOL NETCON_query_data_available(netconn_t *connection, DWORD *available)
     else
     {
 #ifdef SONAME_LIBSSL
-        *available = connection->ssl_s ? pSSL_pending(connection->ssl_s) : 0;
+        *available = pSSL_pending(connection->ssl_s);
+#else
+        FIXME("not supported on this platform\n");
+        return FALSE;
 #endif
     }
     return TRUE;
@@ -858,7 +1042,7 @@ BOOL NETCON_is_alive(netconn_t *netconn)
     ssize_t len;
     BYTE b;
 
-    len = recv(netconn->socketFD, &b, 1, MSG_PEEK|MSG_DONTWAIT);
+    len = recv(netconn->socket, &b, 1, MSG_PEEK|MSG_DONTWAIT);
     return len == 1 || (len == -1 && errno == EWOULDBLOCK);
 #elif defined(__MINGW32__) || defined(_MSC_VER)
     ULONG mode;
@@ -866,13 +1050,13 @@ BOOL NETCON_is_alive(netconn_t *netconn)
     char b;
 
     mode = 1;
-    if(!ioctlsocket(netconn->socketFD, FIONBIO, &mode))
+    if(!ioctlsocket(netconn->socket, FIONBIO, &mode))
         return FALSE;
 
-    len = recv(netconn->socketFD, &b, 1, MSG_PEEK);
+    len = recv(netconn->socket, &b, 1, MSG_PEEK);
 
     mode = 0;
-    if(!ioctlsocket(netconn->socketFD, FIONBIO, &mode))
+    if(!ioctlsocket(netconn->socket, FIONBIO, &mode))
         return FALSE;
 
     return len == 1 || (len == -1 && errno == WSAEWOULDBLOCK);
@@ -888,13 +1072,14 @@ LPCVOID NETCON_GetCert(netconn_t *connection)
     X509* cert;
     LPCVOID r = NULL;
 
-    if (!connection->ssl_s)
+    if (!connection->secure)
         return NULL;
 
     cert = pSSL_get_peer_certificate(connection->ssl_s);
     r = X509_to_cert_context(cert);
     return r;
 #else
+    FIXME("not supported on this platform\n");
     return NULL;
 #endif
 }
@@ -909,7 +1094,7 @@ int NETCON_GetCipherStrength(netconn_t *connection)
 #endif
     int bits = 0;
 
-    if (!connection->ssl_s)
+    if (!connection->secure)
         return 0;
     cipher = pSSL_get_current_cipher(connection->ssl_s);
     if (!cipher)
@@ -917,6 +1102,7 @@ int NETCON_GetCipherStrength(netconn_t *connection)
     pSSL_CIPHER_get_bits(cipher, &bits);
     return bits;
 #else
+    FIXME("not supported on this platform\n");
     return 0;
 #endif
 }
@@ -937,7 +1123,7 @@ DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, DWORD value)
         tv.tv_sec = value / 1000;
         tv.tv_usec = (value % 1000) * 1000;
     }
-    result = setsockopt(connection->socketFD, SOL_SOCKET,
+    result = setsockopt(connection->socket, SOL_SOCKET,
                         send ? SO_SNDTIMEO : SO_RCVTIMEO, (void*)&tv,
                         sizeof(tv));
     if (result == -1)

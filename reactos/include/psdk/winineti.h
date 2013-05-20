@@ -123,6 +123,9 @@ BOOL        WINAPI IsUrlCacheEntryExpiredW(LPCWSTR,DWORD,FILETIME*);
 BOOL        WINAPI SetUrlCacheConfigInfoA(LPINTERNET_CACHE_CONFIG_INFOA,DWORD);
 BOOL        WINAPI SetUrlCacheConfigInfoW(LPINTERNET_CACHE_CONFIG_INFOW,DWORD);
 #define     SetUrlCacheConfigInfo WINELIB_NAME_AW(SetUrlCacheConfigInfo)
+BOOL        WINAPI InternetGetSecurityInfoByURLA(LPSTR,PCCERT_CHAIN_CONTEXT*,DWORD*);
+BOOL        WINAPI InternetGetSecurityInfoByURLW(LPCWSTR,PCCERT_CHAIN_CONTEXT*,DWORD*);
+#define     InternetGetSecurityInfoByURL WINELIB_NAME_AW(InternetGetSecurityInfoByURL)
 
 #ifdef __cplusplus
 }

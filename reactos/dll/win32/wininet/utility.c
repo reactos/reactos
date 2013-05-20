@@ -290,76 +290,80 @@ static const char *get_callback_name(DWORD dwInternetStatus) {
     return "Unknown";
 }
 
-VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
-                           DWORD dwInternetStatus, LPVOID lpvStatusInfo,
-                           DWORD dwStatusInfoLength)
+static const char *debugstr_status_info(DWORD status, void *info)
 {
-    LPVOID lpvNewInfo = NULL;
+    switch(status) {
+    case INTERNET_STATUS_REQUEST_COMPLETE: {
+        INTERNET_ASYNC_RESULT *iar = info;
+        return wine_dbg_sprintf("{%s, %d}", wine_dbgstr_longlong(iar->dwResult), iar->dwError);
+    }
+    default:
+        return wine_dbg_sprintf("%p", info);
+    }
+}
+
+void INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR context, DWORD status, void *info, DWORD info_len)
+{
+    void *new_info = info;
 
     if( !hdr->lpfnStatusCB )
         return;
 
     /* the IE5 version of wininet does not
        send callbacks if dwContext is zero */
-    if( !dwContext )
+    if(!context)
         return;
 
-    lpvNewInfo = lpvStatusInfo;
-    if(hdr->dwInternalFlags & INET_CALLBACKW) {
-        switch(dwInternetStatus) {
-        case INTERNET_STATUS_NAME_RESOLVED:
-        case INTERNET_STATUS_CONNECTING_TO_SERVER:
-        case INTERNET_STATUS_CONNECTED_TO_SERVER:
-            lpvNewInfo = heap_strdupAtoW(lpvStatusInfo);
-            dwStatusInfoLength *= sizeof(WCHAR);
+    switch(status) {
+    case INTERNET_STATUS_NAME_RESOLVED:
+    case INTERNET_STATUS_CONNECTING_TO_SERVER:
+    case INTERNET_STATUS_CONNECTED_TO_SERVER:
+        new_info = heap_alloc(info_len);
+        if(new_info)
+            memcpy(new_info, info, info_len);
+        break;
+    case INTERNET_STATUS_RESOLVING_NAME:
+    case INTERNET_STATUS_REDIRECT:
+        if(hdr->dwInternalFlags & INET_CALLBACKW) {
+            new_info = heap_strdupW(info);
             break;
-        case INTERNET_STATUS_RESOLVING_NAME:
-        case INTERNET_STATUS_REDIRECT:
-            lpvNewInfo = heap_strdupW(lpvStatusInfo);
-            break;
-        }
-    }else {
-        switch(dwInternetStatus)
-        {
-        case INTERNET_STATUS_NAME_RESOLVED:
-        case INTERNET_STATUS_CONNECTING_TO_SERVER:
-        case INTERNET_STATUS_CONNECTED_TO_SERVER:
-            lpvNewInfo = heap_alloc(strlen(lpvStatusInfo) + 1);
-            if (lpvNewInfo) strcpy(lpvNewInfo, lpvStatusInfo);
-            break;
-        case INTERNET_STATUS_RESOLVING_NAME:
-        case INTERNET_STATUS_REDIRECT:
-            lpvNewInfo = heap_strdupWtoA(lpvStatusInfo);
-            dwStatusInfoLength /= sizeof(WCHAR);
+        }else {
+            new_info = heap_strdupWtoA(info);
+            info_len = strlen(new_info)+1;
             break;
         }
     }
     
-    TRACE(" callback(%p) (%p (%p), %08lx, %d (%s), %p, %d)\n",
-	  hdr->lpfnStatusCB, hdr->hInternet, hdr, dwContext, dwInternetStatus, get_callback_name(dwInternetStatus),
-	  lpvNewInfo, dwStatusInfoLength);
+    TRACE(" callback(%p) (%p (%p), %08lx, %d (%s), %s, %d)\n",
+	  hdr->lpfnStatusCB, hdr->hInternet, hdr, context, status, get_callback_name(status),
+	  debugstr_status_info(status, new_info), info_len);
     
-    hdr->lpfnStatusCB(hdr->hInternet, dwContext, dwInternetStatus,
-                      lpvNewInfo, dwStatusInfoLength);
+    hdr->lpfnStatusCB(hdr->hInternet, context, status, new_info, info_len);
 
     TRACE(" end callback().\n");
 
-    if(lpvNewInfo != lpvStatusInfo)
-        heap_free(lpvNewInfo);
+    if(new_info != info)
+        heap_free(new_info);
 }
 
-static void SendAsyncCallbackProc(WORKREQUEST *workRequest)
+typedef struct {
+    task_header_t hdr;
+    DWORD_PTR context;
+    DWORD     status;
+    LPVOID    status_info;
+    DWORD     status_info_len;
+} send_callback_task_t;
+
+static void SendAsyncCallbackProc(task_header_t *hdr)
 {
-    struct WORKREQ_SENDCALLBACK const *req = &workRequest->u.SendCallback;
+    send_callback_task_t *task = (send_callback_task_t*)hdr;
 
-    TRACE("%p\n", workRequest->hdr);
+    TRACE("%p\n", task->hdr.hdr);
 
-    INTERNET_SendCallback(workRequest->hdr,
-                          req->dwContext, req->dwInternetStatus, req->lpvStatusInfo,
-                          req->dwStatusInfoLength);
+    INTERNET_SendCallback(task->hdr.hdr, task->context, task->status, task->status_info, task->status_info_len);
 
     /* And frees the copy of the status info */
-    heap_free(req->lpvStatusInfo);
+    heap_free(task->status_info);
 }
 
 void SendAsyncCallback(object_header_t *hdr, DWORD_PTR dwContext,
@@ -377,25 +381,22 @@ void SendAsyncCallback(object_header_t *hdr, DWORD_PTR dwContext,
     
     if (hdr->dwFlags & INTERNET_FLAG_ASYNC)
     {
-	WORKREQUEST workRequest;
-	struct WORKREQ_SENDCALLBACK *req;
-	void *lpvStatusInfo_copy = lpvStatusInfo;
+        send_callback_task_t *task;
+        void *lpvStatusInfo_copy = lpvStatusInfo;
 
-	if (lpvStatusInfo)
-	{
-	    lpvStatusInfo_copy = heap_alloc(dwStatusInfoLength);
-	    memcpy(lpvStatusInfo_copy, lpvStatusInfo, dwStatusInfoLength);
-	}
+        if (lpvStatusInfo)
+        {
+            lpvStatusInfo_copy = heap_alloc(dwStatusInfoLength);
+            memcpy(lpvStatusInfo_copy, lpvStatusInfo, dwStatusInfoLength);
+        }
 
-	workRequest.asyncproc = SendAsyncCallbackProc;
-	workRequest.hdr = WININET_AddRef( hdr );
-	req = &workRequest.u.SendCallback;
-	req->dwContext = dwContext;
-	req->dwInternetStatus = dwInternetStatus;
-	req->lpvStatusInfo = lpvStatusInfo_copy;
-	req->dwStatusInfoLength = dwStatusInfoLength;
+        task = alloc_async_task(hdr, SendAsyncCallbackProc, sizeof(*task));
+        task->context = dwContext;
+        task->status = dwInternetStatus;
+        task->status_info = lpvStatusInfo_copy;
+        task->status_info_len = dwStatusInfoLength;
 	
-	INTERNET_AsyncCall(&workRequest);
+        INTERNET_AsyncCall(&task->hdr);
     }
     else
 	INTERNET_SendCallback(hdr, dwContext, dwInternetStatus,
