@@ -675,14 +675,17 @@ UsersPageProc(HWND hwndDlg,
                     break;
 
                 case IDM_USER_NEW:
+                case IDC_USERS_ADD:
                     UserNew(hwndDlg);
                     break;
 
                 case IDM_USER_DELETE:
+                case IDC_USERS_REMOVE:
                     UserDelete(hwndDlg);
                     break;
 
                 case IDM_USER_PROPERTIES:
+                case IDC_USERS_PROPERTIES:
                     if (UserProperties(hwndDlg))
                     {
                         UpdateUserProperties(hwndDlg);

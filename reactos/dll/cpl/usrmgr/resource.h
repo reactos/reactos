@@ -42,6 +42,16 @@
 #define IDC_USER_GENERAL_DISABLED      317
 #define IDC_USER_GENERAL_LOCKED        318
 
+#define IDC_USERS_ADD                  319
+#define IDC_USERS_REMOVE               320
+#define IDC_USERS_PROPERTIES           321
+#define IDC_USERS_STARTUP_REQUIRE      322
+#define IDC_USERS_ADMIN_RESET          323
+
+#define IDC_GROUPS_ADD                 324
+#define IDC_GROUPS_REMOVE              325
+#define IDC_GROUPS_PROPERTIES          326
+
 #define IDD_GROUP_GENERAL              340
 #define IDC_GROUP_GENERAL_NAME         341
 #define IDC_GROUP_GENERAL_DESCRIPTION  342

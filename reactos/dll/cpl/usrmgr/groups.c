@@ -477,6 +477,7 @@ GroupsPageProc(HWND hwndDlg,
             switch (LOWORD(wParam))
             {
                 case IDM_GROUP_NEW:
+                case IDC_GROUPS_ADD:
                     GroupNew(hwndDlg);
                     break;
 
@@ -485,10 +486,12 @@ GroupsPageProc(HWND hwndDlg,
                     break;
 
                 case IDM_GROUP_DELETE:
+                case IDC_GROUPS_REMOVE:
                     GroupDelete(hwndDlg);
                     break;
 
                 case IDM_GROUP_PROPERTIES:
+                case IDC_GROUPS_PROPERTIES:
                     if (GroupProperties(hwndDlg) == IDOK)
                         UpdateGroupProperties(hwndDlg);
                     break;
