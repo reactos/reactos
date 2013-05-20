@@ -12,7 +12,6 @@ BEGIN
 //    IDS_CHECKTEXT           "הראה חלון זה שוב"
 //    IDS_CLOSETEXT           "יציאה"
 END
-/* The topic pane needs to be in the right side because Hebrew is written in opposite of english */
 
 /* Topic buttons */
 STRINGTABLE DISCARDABLE

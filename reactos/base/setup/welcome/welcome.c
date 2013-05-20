@@ -36,6 +36,7 @@
 #include <winuser.h>
 #include <reactos/version.h>
 #include <tchar.h>
+#include <winnls.h>
 
 #include "resource.h"
 
@@ -115,6 +116,16 @@ _tWinMain(HINSTANCE hInst,
 
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpszCmdLine);
+
+  switch (GetUserDefaultUILanguage())
+  {
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+      SetProcessDefaultLayout(LAYOUT_RTL);
+      break;
+
+    default:
+      break;
+  }
 
   hInstance = hInst;
 
