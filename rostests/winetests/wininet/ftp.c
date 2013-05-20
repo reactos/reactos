@@ -30,15 +30,18 @@
  */
 
 #include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wininet.h"
-#include "winsock.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
 
-#include "wine/test.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wininet.h>
+//#include "winsock.h"
+
+#include <wine/test.h>
 
 
 static BOOL (WINAPI *pFtpCommandA)(HINTERNET,BOOL,DWORD,LPCSTR,DWORD_PTR,HINTERNET*);
@@ -257,10 +260,8 @@ static void test_getfile(HINTERNET hFtp, HINTERNET hConnect)
         "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     /* Zero attributes */
-    SetLastError(0xdeadbeef);
     bRet = FtpGetFileA(hFtp, "welcome.msg", "should_be_existing_non_deadbeef", FALSE, 0, FTP_TRANSFER_TYPE_UNKNOWN, 0);
     ok ( bRet == TRUE, "Expected FtpGetFileA to succeed\n");
-    ok (GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok (GetFileAttributesA("should_be_existing_non_deadbeef") != INVALID_FILE_ATTRIBUTES,
         "Local file should have been created\n");
     DeleteFileA("should_be_existing_non_deadbeef");
