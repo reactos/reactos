@@ -116,7 +116,7 @@ macro(dir_to_num dir var)
     elseif(${dir} STREQUAL reactos/Resources/Themes)
         set(${var} 16)
     else()
-        message(ERROR "Wrong destination: ${dir}")
+        message(FATAL_ERROR "Wrong destination: ${dir}")
     endif()
 endmacro()
 

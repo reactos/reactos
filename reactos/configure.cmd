@@ -188,7 +188,7 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
 
 cd..
 
-echo Configure script complete! Enter directories and execute appropriate build commands(ex: make, nmake, jom, etc...).
+echo Configure script complete! Enter directories and execute appropriate build commands(ex: ninja, make, nmake, etc...).
 exit /b
 
 :cmake_notfound
