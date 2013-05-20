@@ -10,10 +10,12 @@
  *
  */
 
-/*only
-BOOL StringToColor(LPWORD lpColor, LPTSTR*str)
-is to be called
-other are internal service functions*/
+/*
+ * Only
+ * BOOL StringToColor(LPWORD lpColor, LPTSTR*str)
+ * has to be called.
+ * Other are internal service functions.
+ */
 
 #include "precomp.h"
 
@@ -23,14 +25,14 @@ other are internal service functions*/
 #define _I FOREGROUND_INTENSITY
 
 
-/*return values for chop_blank*/
-#define CP_OK				0
-#define CP_BLANK_NOT_FOUND	1
-#define CP_END_OF_STRING	2
+/* Return values for chop_blank */
+#define CP_OK               0
+#define CP_BLANK_NOT_FOUND  1
+#define CP_END_OF_STRING    2
 
+/* NOTE: See the description for these flags in the StringToColor()'s description */
 #define SC_HEX 0x0100
 #define SC_TXT 0x0200
-
 
 
 typedef struct _CLRTABLE
@@ -42,58 +44,55 @@ typedef struct _CLRTABLE
 
 CLRTABLE clrtable[] =
 {
-	{_T("bla")	,0		},
-	{_T("blu")	,_B		},
-	{_T("gre")	,_G		},
-	{_T("cya")	,_B|_G		},
-	{_T("red")	,_R		},
-	{_T("mag")	,_B|_R		},
-	{_T("yel")	,_R|_G		},
-	{_T("whi")	,_R|_G|_B	},
-	{_T("gra")	,_I		},
+	{_T("bla"), 0           },
+	{_T("blu"), _B          },
+	{_T("gre"), _G          },
+	{_T("cya"), _B|_G       },
+	{_T("red"), _R          },
+	{_T("mag"), _B|_R       },
+	{_T("yel"), _R|_G       },
+	{_T("whi"), _R|_G|_B    },
+	{_T("gra"), _I          },
 
+	{_T("0")  , 0           },
+	{_T("2")  , _G          },
+	{_T("3")  , _B|_G       },
+	{_T("4")  , _R          },
+	{_T("5")  , _B|_R       },
+	{_T("6")  , _R|_G       },
+	{_T("7")  , _R|_G|_B    },
 
-	{_T("0")	,0		},
-	{_T("2")	,_G		},
-	{_T("3")	,_B|_G		},
-	{_T("4")	,_R		},
-	{_T("5")	,_B|_R		},
-	{_T("6")	,_R|_G		},
-	{_T("7")	,_R|_G|_B	},
+	{_T("8")  , _I          },
+	{_T("9")  , _I|_B       },
+	{_T("10") , _I|_G       },
+	{_T("11") , _I|_B|_G    },
+	{_T("12") , _I|_R       },
+	{_T("13") , _I|_B|_R    },
+	{_T("14") , _I|_R|_G    },
+	{_T("15") , _I|_R|_G|_B },
 
-	{_T("8")	,_I		},
-	{_T("9")	,_I|_B		},
-	{_T("10")	,_I|_G		},
-	{_T("11")	,_I|_B|_G	},
-	{_T("12")	,_I|_R		},
-	{_T("13")	,_I|_B|_R	},
-	{_T("14")	,_I|_R|_G	},
-	{_T("15")	,_I|_R|_G|_B	},
+	/*
+     * Note that 1 is at the end of list
+	 * to avoid to confuse it with 10-15
+     */
+	{_T("1")  , _B          },
 
-
-	/* note that 1 is at the end of list
-	to avoid to confuse it with 10-15*/
-	{_T("1")	,_B		},
-
-	/*cyan synonimous*/
-	{_T("aqu")	,_B|_G		},
-	/*magenta synonimous*/
-	{_T("pur")	,_B|_R		},
-
+	/* Cyan synonym */
+	{_T("aqu"), _B|_G       },
+	/* Magenta synonym */
+	{_T("pur"), _B|_R       },
 
 	{_T("")   ,0},
 };
 
 
-
 /*
-move string pointer to next word (skip all spaces)
-on erro retunr nonzero value
-*/
+ * Move string pointer to next word (skip all spaces).
+ * On error return nonzero value.
+ */
 static
 INT chop_blank(LPTSTR *arg_str)
 {
-
 	LPTSTR str;
 	str = _tcschr(*arg_str,_T(' '));
 	if(!str)
@@ -103,8 +102,6 @@ INT chop_blank(LPTSTR *arg_str)
 			*arg_str=str;
 		return CP_BLANK_NOT_FOUND;
 	}
-
-
 
 	while(_istspace(*str))
 		str++;
@@ -121,11 +118,10 @@ INT chop_blank(LPTSTR *arg_str)
 }
 
 
-
 /*
-read a color value in hex (like win nt's cmd syntax)
-if an error occurs return -1
-*/
+ * Read a color value in hex (like win nt's cmd syntax).
+ * If an error occurs return -1.
+ */
 static
 WORD hex_clr(LPTSTR str)
 {
@@ -146,7 +142,6 @@ WORD hex_clr(LPTSTR str)
 			return (WORD)-1;
 	}
 
-
 	ch = str[0];
 
 	if(_istdigit(ch))
@@ -166,9 +161,9 @@ WORD hex_clr(LPTSTR str)
 
 
 /*
-read a color value from a string (like 4nt's syntax)
-if an error occurs return -1
-*/
+ * Read a color value from a string (like 4nt's syntax).
+ * If an error occurs return -1.
+ */
 static
 WORD txt_clr(LPTSTR str)
 {
@@ -182,8 +177,7 @@ WORD txt_clr(LPTSTR str)
 }
 
 
-
-/*search for x on y*/
+/* Search for "x on y" */
 static
 WORD str_to_color(LPTSTR* arg_str)
 {
@@ -197,8 +191,7 @@ WORD str_to_color(LPTSTR* arg_str)
 	if (!(*str))
 		return (WORD)-1;
 
-
-	/*foreground*/
+	/* foreground */
 	bBri = FALSE;
 
 	if (_tcsnicmp(str,_T("bri"),3) == 0)
@@ -214,13 +207,13 @@ WORD str_to_color(LPTSTR* arg_str)
 		return (WORD)-1;
 	}
 
-	/*skip spaces and "on"*/
+	/* skip spaces and "on" keyword */
 	if (chop_blank(&str) || chop_blank(&str))
 		return (WORD)-1;
 
 	ret_clr = tmp_clr | (bBri << 3);
 
-	/*background*/
+	/* background */
 	bBri = FALSE;
 
 	if(_tcsnicmp(str,_T("bri"),3) == 0 )
@@ -231,7 +224,6 @@ WORD str_to_color(LPTSTR* arg_str)
 			return (WORD)-1;
 	}
 
-
 	if( (tmp_clr = txt_clr(str)) == (WORD)-1 )
 		return (WORD)-1;
 
@@ -239,29 +231,28 @@ WORD str_to_color(LPTSTR* arg_str)
 
 	*arg_str = str;
 
-	return SC_HEX | ret_clr | tmp_clr << 4 | bBri << 7;
+	/* NOTE: See the note on SC_HEX in the StringToColor()'s description */
+	return /* SC_HEX | */ ret_clr | tmp_clr << 4 | bBri << 7;
 }
 
 
-
-/****main function****/
+/**** Main function ****/
 /*
-the only parameter is arg_str, a pointer to a string.
-the string is modified so it will begin to first word after
-color specification
-(only the char* is moved, no chars in the string are modfied)
-
-
-it returns the color in the l.o. byte, plus two flags in the
-h.o. byte, they are:
-SC_HEX win nt's cmd syntax (for exampl a0)
-SC_TXT 4nt's syntax ( "bri gre on bla" or "10 on 0")
-
-if succedes also move the LPTSTR to end of
-string that specify color
-*/
-
-
+ * The only parameter is arg_str, a pointer to a string.
+ * The string is modified so it will begin to first word after
+ * color specification
+ * (only the char* is moved, no chars in the string are modfied).
+ *
+ * **** NOTE: The following functionality is deactivated ****
+ * it returns the color in the l.o. byte, plus two flags in the
+ * h.o. byte, they are:
+ * SC_HEX win nt's cmd syntax (for exampl a0)
+ * SC_TXT 4nt's syntax ( "bri gre on bla" or "10 on 0")
+ * **********************************************************
+ *
+ * If succedes also move the LPTSTR to end of
+ * string that specify color.
+ */
 BOOL StringToColor(LPWORD lpColor, LPTSTR*str)
 {
 	WORD wRet;

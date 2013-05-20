@@ -144,7 +144,7 @@ VOID PrintCommandListDetail (VOID);
 LPCTSTR GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA );
 
 /* Prototypes for COLOR.C */
-VOID SetScreenColor(WORD wArgColor, BOOL bFill);
+BOOL SetScreenColor(WORD wColor, BOOL bNoFill);
 INT CommandColor (LPTSTR);
 
 VOID ConInDummy (VOID);

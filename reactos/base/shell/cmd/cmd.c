@@ -1733,9 +1733,9 @@ Initialize()
 #ifdef INCLUDE_CMD_COLOR
 			else if (!_tcsnicmp(ptr, _T("/T:"), 3))
 			{
-				/* process /t (color) argument */
+				/* process /T (color) argument */
 				wDefColor = (WORD)_tcstoul(&ptr[3], &ptr, 16);
-				SetScreenColor(wDefColor, TRUE);
+				SetScreenColor(wDefColor, FALSE);
 			}
 #endif
 			else if (option == _T('U'))
