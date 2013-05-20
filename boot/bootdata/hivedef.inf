@@ -86,7 +86,7 @@ HKCU,"Control Panel\Desktop","CoolSwitch",2,"1"
 HKCU,"Control Panel\Desktop","CoolSwitchColumns",2,"7"
 HKCU,"Control Panel\Desktop","CoolSwitchRows",2,"3"
 HKCU,"Control Panel\Desktop","CursorBlinkRate",2,"530"
-HKCU,"Control Panel\Desktop","DragFullWindows",2,"0"
+HKCU,"Control Panel\Desktop","DragFullWindows",2,"1"
 HKCU,"Control Panel\Desktop","DragHeight",0x00000000,"4"
 HKCU,"Control Panel\Desktop","DragWidth",0x00000000,"4"
 HKCU,"Control Panel\Desktop","PaintDesktopVersion",0x00010001,"0"
@@ -1613,6 +1613,116 @@ HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","Contrast",0x00010001,0x0
 HKCU,"Control Panel\Appearance\New Schemes\21\Sizes\0","LegacyName",0x00020000,"%DESKTOP_SCHEME_21%"
 HKCU,"Control Panel\Sound","Beep",2,"yes"
 HKCU,"Control Panel\Sound","ExtendedSounds",2,"yes"
+
+; Lautus Theme
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager","FlatMenu",0x00010001,0x00000000
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager","GradientCaption",0x00010001,0x00000001
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager","NonClientMetrics",0x00000001,f4,01,\
+00,00,01,00,00,00,10,00,00,00,10,00,00,00,12,00,00,00,12,00,00,00,f5,ff,ff,ff,00,00,00,00,00,00,\
+00,00,00,00,00,00,bc,02,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,0d,00,00,00,0f,00,00,00,f5,ff,ff,ff,00,00,\
+00,00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,\
+61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,12,00,00,00,12,00,00,00,f5,ff,\
+ff,ff,00,00,00,00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,\
+6f,00,6d,00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,f5,ff,ff,ff,00,00,\
+00,00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,\
+61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,f5,ff,ff,ff,00,00,00,00,00,00,\
+00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager","IconTitleFont",0x00000001,f5,ff,ff,\
+ff,00,00,00,00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,\
+00,6d,00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager","ThemeActive",0x00000000,"1"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager","ColorName",0x00000000,"Normal Color"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager","SizeName",0x00000000,"Normal Size"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager","DllName",0x00020000,"%SystemRoot%\Resources\Themes\Lautus\Lautus.msstyles"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors",,0x00000012
+; Theme Colors
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","Scrollbar",0x00000000,"212 208 200"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","Background",0x00000000,"58 110 165"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","ActiveTitle",0x00000000,"10 36 106"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","InactiveTitle",0x00000000,"128 128 128"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","Menu",0x00000000,"212 208 200"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","Window",0x00000000,"255 255 255"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","WindowFrame",0x00000000,"0 0 0"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","MenuText",0x00000000,"0 0 0"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","WindowText",0x00000000,"0 0 0"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","TitleText",0x00000000,"255 255 255"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","ActiveBorder",0x00000000,"212 208 200"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","InactiveBorder",0x00000000,"212 208 200"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","AppWorkSpace",0x00000000,"128 128 128"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","Hilight",0x00000000,"10 36 106"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","HilightText",0x00000000,"255 255 255"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","ButtonFace",0x00000000,"212 208 200"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","ButtonShadow",0x00000000,"128 128 128"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","GrayText",0x00000000,"128 128 128"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","ButtonText",0x00000000,"0 0 0"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","InactiveTitleText",0x00000000,"212 208 200"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","ButtonHilight",0x00000000,"255 255 255"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","ButtonDkShadow",0x00000000,"64 64 64"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","ButtonLight",0x00000000,"212 208 200"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","InfoText",0x00000000,"0 0 0"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","InfoWindow",0x00000000,"255 255 225"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","ButtonAlternateFace",0x00000000,"181 181 181"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","HotTrackingColor",0x00000000,"0 0 128"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","GradientActiveTitle",0x00000000,"166 202 240"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","GradientInactiveTitle",0x00000000,"192 192 192"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","MenuHilight",0x00000000,"49 106 197"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\ThemeManager\Control Panel\Colors","MenuBar",0x00000000,"236 233 216"
+; Color/WindowMetric overrides
+HKCU,"Control Panel\Colors","Scrollbar",0x00000000,"212 208 200"
+HKCU,"Control Panel\Colors","Background",0x00000000,"73 73 73"
+HKCU,"Control Panel\Colors","ActiveTitle",0x00000000,"21 21 21"
+HKCU,"Control Panel\Colors","InactiveTitle",0x00000000,"65 65 65"
+HKCU,"Control Panel\Colors","Menu",0x00000000,"255 255 255"
+HKCU,"Control Panel\Colors","Window",0x00000000,"255 255 255"
+HKCU,"Control Panel\Colors","WindowFrame",0x00000000,"0 0 0"
+HKCU,"Control Panel\Colors","MenuText",0x00000000,"75 75 75"
+HKCU,"Control Panel\Colors","WindowText",0x00000000,"0 0 0"
+HKCU,"Control Panel\Colors","TitleText",0x00000000,"255 255 255"
+HKCU,"Control Panel\Colors","ActiveBorder",0x00000000,"212 208 200"
+HKCU,"Control Panel\Colors","InactiveBorder",0x00000000,"212 208 200"
+HKCU,"Control Panel\Colors","AppWorkSpace",0x00000000,"128 128 128"
+HKCU,"Control Panel\Colors","Hilight",0x00000000,"75 75 75"
+HKCU,"Control Panel\Colors","HilightText",0x00000000,"255 255 255"
+HKCU,"Control Panel\Colors","ButtonFace",0x00000000,"225 225 225"
+HKCU,"Control Panel\Colors","ButtonShadow",0x00000000,"162 162 162"
+HKCU,"Control Panel\Colors","GrayText",0x00000000,"172 168 153"
+HKCU,"Control Panel\Colors","ButtonText",0x00000000,"0 0 0"
+HKCU,"Control Panel\Colors","InactiveTitleText",0x00000000,"180 180 180"
+HKCU,"Control Panel\Colors","ButtonHilight",0x00000000,"255 255 255"
+HKCU,"Control Panel\Colors","ButtonDkShadow",0x00000000,"162 162 162"
+HKCU,"Control Panel\Colors","ButtonLight",0x00000000,"241 239 226"
+HKCU,"Control Panel\Colors","InfoText",0x00000000,"0 0 0"
+HKCU,"Control Panel\Colors","InfoWindow",0x00000000,"255 255 225"
+HKCU,"Control Panel\Colors","ButtonAlternateFace",0x00000000,"181 181 181"
+HKCU,"Control Panel\Colors","HotTrackingColor",0x00000000,"0 0 128"
+HKCU,"Control Panel\Colors","GradientActiveTitle",0x00000000,"58 58 58"
+HKCU,"Control Panel\Colors","GradientInactiveTitle",0x00000000,"81 81 81"
+HKCU,"Control Panel\Colors","MenuHilight",0x00000000,"100 100 100"
+HKCU,"Control Panel\Colors","MenuBar",0x00000000,"225 225 225"
+HKCU,"Control Panel\Desktop\WindowMetrics","ScrollWidth",0x00000000,"-225"
+HKCU,"Control Panel\Desktop\WindowMetrics","ScrollHeight",0x00000000,"-225"
+HKCU,"Control Panel\Desktop\WindowMetrics","CaptionWidth",0x00000000,"-270"
+HKCU,"Control Panel\Desktop\WindowMetrics","CaptionHeight",0x00000000,"-360"
+HKCU,"Control Panel\Desktop\WindowMetrics","SmCaptionWidth",0x00000000,"-315"
+HKCU,"Control Panel\Desktop\WindowMetrics","SmCaptionHeight",0x00000000,"-285"
+HKCU,"Control Panel\Desktop\WindowMetrics","MenuWidth",0x00000000,"-270"
+HKCU,"Control Panel\Desktop\WindowMetrics","MenuHeight",0x00000000,"-270"
+HKCU,"Control Panel\Desktop\WindowMetrics","BorderWidth",0x00000000,"-15"
+HKCU,"Control Panel\Desktop\WindowMetrics","Shell Icon Size",0x00000000,"32"
+HKCU,"Control Panel\Desktop\WindowMetrics","CaptionFont",0x00000001,f5,ff,ff,ff,00,00,00,00,00,00,\
+00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,61,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
 HKCU,"Environment",,0x00000012
 HKCU,"Environment","TEMP",0x00020000,"%TEMP_DIR%"
