@@ -262,6 +262,7 @@ list(APPEND CRT_SOURCE
     string/_mbstrnlen.c
     string/_splitpath.c
     string/_splitpath_s.c
+    string/_wcslwr_s.c
     string/_wsplitpath.c
     string/_wsplitpath_s.c
     string/atof.c
