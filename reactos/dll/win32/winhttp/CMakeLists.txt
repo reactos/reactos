@@ -25,7 +25,7 @@ add_library(winhttp SHARED ${SOURCE})
 
 set_module_type(winhttp win32dll)
 target_link_libraries(winhttp uuid wine)
-add_delay_importlibs(winhttp oleaut32 ole32 crypt32)
+add_delay_importlibs(winhttp oleaut32 ole32 crypt32 secur32)
 add_importlibs(winhttp user32 advapi32 ws2_32 msvcrt kernel32 ntdll)
 
 # wininet_tlb.tlb needs stdole2.tlb

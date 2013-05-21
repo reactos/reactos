@@ -19,6 +19,12 @@
 #ifndef __WINE_WINHTTP_H
 #define __WINE_WINHTTP_H
 
+#ifdef _WIN64
+#include <pshpack8.h>
+#else
+#include <pshpack4.h>
+#endif
+
 #define WINHTTPAPI
 #define BOOLAPI WINHTTPAPI BOOL WINAPI
 
@@ -487,8 +493,8 @@ typedef struct
 typedef struct
 {
     DWORD dwAccessType;
-    LPCWSTR lpszProxy;
-    LPCWSTR lpszProxyBypass;
+    LPWSTR lpszProxy;
+    LPWSTR lpszProxyBypass;
 } WINHTTP_PROXY_INFO, *LPWINHTTP_PROXY_INFO;
 typedef WINHTTP_PROXY_INFO WINHTTP_PROXY_INFOW;
 typedef LPWINHTTP_PROXY_INFO LPWINHTTP_PROXY_INFOW;
@@ -527,6 +533,14 @@ typedef struct
     DWORD dwMinorVersion;
 } HTTP_VERSION_INFO, *LPHTTP_VERSION_INFO;
 
+#ifdef _WS2DEF_
+typedef struct
+{
+    DWORD cbSize;
+    SOCKADDR_STORAGE LocalAddress;
+    SOCKADDR_STORAGE RemoteAddress;
+} WINHTTP_CONNECTION_INFO;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -564,5 +578,7 @@ BOOL        WINAPI WinHttpWriteData(HINTERNET,LPCVOID,DWORD,LPDWORD);
 #ifdef __cplusplus
 }
 #endif
+
+#include <poppack.h>
 
 #endif  /* __WINE_WINHTTP_H */

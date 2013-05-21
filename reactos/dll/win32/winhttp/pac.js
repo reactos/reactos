@@ -134,7 +134,7 @@ function dateRange() {
     if (isGMT) {
         argc--;
     }
-    // function will work even without explict handling of this case
+    // function will work even without explicit handling of this case
     if (argc == 1) {
         var tmp = parseInt(arguments[0]);
         if (isNaN(tmp)) {

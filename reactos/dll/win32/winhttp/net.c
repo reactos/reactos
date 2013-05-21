@@ -1,5 +1,6 @@
 /*
  * Copyright 2008 Hans Leidekker for CodeWeavers
+ * Copyright 2013 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,11 +22,12 @@
 #define COM_NO_WINDOWS_H
 
 #include <config.h>
-//#include "wine/port.h"
+//#include <wine/port.h>
 
 //#include <stdarg.h>
 //#include <stdio.h>
 //#include <errno.h>
+#include <assert.h>
 
 //#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
@@ -40,12 +42,6 @@
 #ifdef HAVE_POLL_H
 # include <poll.h>
 #endif
-#ifdef HAVE_OPENSSL_SSL_H
-# include <openssl/ssl.h>
-# include <openssl/opensslv.h>
-#undef FAR
-#undef DSA
-#endif
 
 #define NONAMELESSUNION
 
@@ -56,6 +52,7 @@
 //#include "winbase.h"
 #include <winhttp.h>
 //#include "wincrypt.h"
+#include <schannel.h>
 
 #include "winhttp_private.h"
 
@@ -76,90 +73,6 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": cs_gethostbyname") }
 };
 static CRITICAL_SECTION cs_gethostbyname = { &critsect_debug, -1, 0, 0, 0, 0 };
-
-#endif
-
-#ifdef SONAME_LIBSSL
-
-#include <openssl/err.h>
-
-static CRITICAL_SECTION init_ssl_cs;
-static CRITICAL_SECTION_DEBUG init_ssl_cs_debug =
-{
-    0, 0, &init_ssl_cs,
-    { &init_ssl_cs_debug.ProcessLocksList,
-      &init_ssl_cs_debug.ProcessLocksList },
-    0, 0, { (DWORD_PTR)(__FILE__ ": init_ssl_cs") }
-};
-static CRITICAL_SECTION init_ssl_cs = { &init_ssl_cs_debug, -1, 0, 0, 0, 0 };
-
-static void *libssl_handle;
-static void *libcrypto_handle;
-
-#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER > 0x10000000)
-static const SSL_METHOD *method;
-#else
-static SSL_METHOD *method;
-#endif
-static SSL_CTX *ctx;
-static int hostname_idx;
-static int error_idx;
-static int conn_idx;
-
-#define MAKE_FUNCPTR(f) static typeof(f) * p##f
-
-MAKE_FUNCPTR( SSL_library_init );
-MAKE_FUNCPTR( SSL_load_error_strings );
-MAKE_FUNCPTR( SSLv23_method );
-MAKE_FUNCPTR( SSL_CTX_free );
-MAKE_FUNCPTR( SSL_CTX_new );
-MAKE_FUNCPTR( SSL_new );
-MAKE_FUNCPTR( SSL_free );
-MAKE_FUNCPTR( SSL_set_fd );
-MAKE_FUNCPTR( SSL_connect );
-MAKE_FUNCPTR( SSL_shutdown );
-MAKE_FUNCPTR( SSL_write );
-MAKE_FUNCPTR( SSL_read );
-MAKE_FUNCPTR( SSL_pending );
-MAKE_FUNCPTR( SSL_get_error );
-MAKE_FUNCPTR( SSL_get_ex_new_index );
-MAKE_FUNCPTR( SSL_get_ex_data );
-MAKE_FUNCPTR( SSL_set_ex_data );
-MAKE_FUNCPTR( SSL_get_ex_data_X509_STORE_CTX_idx );
-MAKE_FUNCPTR( SSL_get_peer_certificate );
-MAKE_FUNCPTR( SSL_CTX_set_default_verify_paths );
-MAKE_FUNCPTR( SSL_CTX_set_verify );
-MAKE_FUNCPTR( SSL_get_current_cipher );
-MAKE_FUNCPTR( SSL_CIPHER_get_bits );
-
-MAKE_FUNCPTR( CRYPTO_num_locks );
-MAKE_FUNCPTR( CRYPTO_set_id_callback );
-MAKE_FUNCPTR( CRYPTO_set_locking_callback );
-MAKE_FUNCPTR( ERR_free_strings );
-MAKE_FUNCPTR( ERR_get_error );
-MAKE_FUNCPTR( ERR_error_string );
-MAKE_FUNCPTR( X509_STORE_CTX_get_ex_data );
-MAKE_FUNCPTR( X509_STORE_CTX_get_chain );
-MAKE_FUNCPTR( i2d_X509 );
-MAKE_FUNCPTR( sk_value );
-MAKE_FUNCPTR( sk_num );
-#undef MAKE_FUNCPTR
-
-static CRITICAL_SECTION *ssl_locks;
-static unsigned int num_ssl_locks;
-
-static unsigned long ssl_thread_id(void)
-{
-    return GetCurrentThreadId();
-}
-
-static void ssl_lock_callback(int mode, int type, const char *file, int line)
-{
-    if (mode & CRYPTO_LOCK)
-        EnterCriticalSection( &ssl_locks[type] );
-    else
-        LeaveCriticalSection( &ssl_locks[type] );
-}
 
 #endif
 
@@ -240,45 +153,9 @@ static inline int unix_ioctl(int filedes, long request, void *arg)
 #define ioctlsocket unix_ioctl
 #endif
 
-#ifdef SONAME_LIBSSL
-static PCCERT_CONTEXT X509_to_cert_context(X509 *cert)
+static DWORD netconn_verify_cert( PCCERT_CONTEXT cert, WCHAR *server, DWORD security_flags )
 {
-    unsigned char *buffer, *p;
-    int len;
-    BOOL malloc = FALSE;
-    PCCERT_CONTEXT ret;
-
-    p = NULL;
-    if ((len = pi2d_X509( cert, &p )) < 0) return NULL;
-    /*
-     * SSL 0.9.7 and above malloc the buffer if it is null.
-     * however earlier version do not and so we would need to alloc the buffer.
-     *
-     * see the i2d_X509 man page for more details.
-     */
-    if (!p)
-    {
-        if (!(buffer = heap_alloc( len ))) return NULL;
-        p = buffer;
-        len = pi2d_X509( cert, &p );
-    }
-    else
-    {
-        buffer = p;
-        malloc = TRUE;
-    }
-
-    ret = CertCreateCertificateContext( X509_ASN_ENCODING, buffer, len );
-
-    if (malloc) free( buffer );
-    else heap_free( buffer );
-
-    return ret;
-}
-
-static DWORD netconn_verify_cert( PCCERT_CONTEXT cert, HCERTSTORE store,
-                                  WCHAR *server, DWORD security_flags )
-{
+    HCERTSTORE store = cert->hCertStore;
     BOOL ret;
     CERT_CHAIN_PARA chainPara = { sizeof(chainPara), { 0 } };
     PCCERT_CHAIN_CONTEXT chain;
@@ -369,234 +246,53 @@ static DWORD netconn_verify_cert( PCCERT_CONTEXT cert, HCERTSTORE store,
     return err;
 }
 
-static int netconn_secure_verify( int preverify_ok, X509_STORE_CTX *ctx )
+static SecHandle cred_handle;
+static BOOL cred_handle_initialized;
+
+static CRITICAL_SECTION init_sechandle_cs;
+static CRITICAL_SECTION_DEBUG init_sechandle_cs_debug = {
+    0, 0, &init_sechandle_cs,
+    { &init_sechandle_cs_debug.ProcessLocksList,
+      &init_sechandle_cs_debug.ProcessLocksList },
+    0, 0, { (DWORD_PTR)(__FILE__ ": init_sechandle_cs") }
+};
+static CRITICAL_SECTION init_sechandle_cs = { &init_sechandle_cs_debug, -1, 0, 0, 0, 0 };
+
+static BOOL ensure_cred_handle(void)
 {
-    SSL *ssl;
-    WCHAR *server;
-    BOOL ret = FALSE;
-    netconn_t *conn;
-    HCERTSTORE store = CertOpenStore( CERT_STORE_PROV_MEMORY, 0, 0,
-     CERT_STORE_CREATE_NEW_FLAG, NULL );
+    BOOL ret = TRUE;
 
-    ssl = pX509_STORE_CTX_get_ex_data( ctx, pSSL_get_ex_data_X509_STORE_CTX_idx() );
-    server = pSSL_get_ex_data( ssl, hostname_idx );
-    conn = pSSL_get_ex_data( ssl, conn_idx );
-    if (store)
-    {
-        X509 *cert;
-        int i;
-        PCCERT_CONTEXT endCert = NULL;
-        struct stack_st *chain = (struct stack_st *)pX509_STORE_CTX_get_chain( ctx );
+    EnterCriticalSection(&init_sechandle_cs);
 
-        ret = TRUE;
-        for (i = 0; ret && i < psk_num(chain); i++)
-        {
-            PCCERT_CONTEXT context;
+    if(!cred_handle_initialized) {
+        SECURITY_STATUS res;
 
-            cert = (X509 *)psk_value(chain, i);
-            if ((context = X509_to_cert_context( cert )))
-            {
-                if (i == 0)
-                    ret = CertAddCertificateContextToStore( store, context,
-                        CERT_STORE_ADD_ALWAYS, &endCert );
-                else
-                    ret = CertAddCertificateContextToStore( store, context,
-                        CERT_STORE_ADD_ALWAYS, NULL );
-                CertFreeCertificateContext( context );
-            }
+        res = AcquireCredentialsHandleW(NULL, (WCHAR*)UNISP_NAME_W, SECPKG_CRED_OUTBOUND, NULL, NULL,
+                NULL, NULL, &cred_handle, NULL);
+        if(res == SEC_E_OK) {
+            cred_handle_initialized = TRUE;
+        }else {
+            WARN("AcquireCredentialsHandleW failed: %u\n", res);
+            ret = FALSE;
         }
-        if (!endCert) ret = FALSE;
-        if (ret)
-        {
-            DWORD_PTR err = netconn_verify_cert( endCert, store, server,
-                                                 conn->security_flags );
-
-            if (err)
-            {
-                pSSL_set_ex_data( ssl, error_idx, (void *)err );
-                ret = FALSE;
-            }
-        }
-        CertFreeCertificateContext( endCert );
-        CertCloseStore( store, 0 );
     }
+
+    LeaveCriticalSection(&init_sechandle_cs);
     return ret;
 }
-#endif
 
-BOOL netconn_init( netconn_t *conn, BOOL secure )
+BOOL netconn_init( netconn_t *conn )
 {
-#if defined(SONAME_LIBSSL) && defined(SONAME_LIBCRYPTO)
-    int i;
-#endif
-
+    memset(conn, 0, sizeof(*conn));
     conn->socket = -1;
-    if (!secure) return TRUE;
-
-#if defined(SONAME_LIBSSL) && defined(SONAME_LIBCRYPTO)
-    EnterCriticalSection( &init_ssl_cs );
-    if (libssl_handle)
-    {
-        LeaveCriticalSection( &init_ssl_cs );
-        return TRUE;
-    }
-    if (!(libssl_handle = wine_dlopen( SONAME_LIBSSL, RTLD_NOW, NULL, 0 )))
-    {
-        ERR("Trying to use SSL but couldn't load %s. Expect trouble.\n", SONAME_LIBSSL);
-        set_last_error( ERROR_WINHTTP_SECURE_CHANNEL_ERROR );
-        LeaveCriticalSection( &init_ssl_cs );
-        return FALSE;
-    }
-    if (!(libcrypto_handle = wine_dlopen( SONAME_LIBCRYPTO, RTLD_NOW, NULL, 0 )))
-    {
-        ERR("Trying to use SSL but couldn't load %s. Expect trouble.\n", SONAME_LIBCRYPTO);
-        set_last_error( ERROR_WINHTTP_SECURE_CHANNEL_ERROR );
-        LeaveCriticalSection( &init_ssl_cs );
-        return FALSE;
-    }
-#define LOAD_FUNCPTR(x) \
-    if (!(p##x = wine_dlsym( libssl_handle, #x, NULL, 0 ))) \
-    { \
-        ERR("Failed to load symbol %s\n", #x); \
-        set_last_error( ERROR_WINHTTP_SECURE_CHANNEL_ERROR ); \
-        LeaveCriticalSection( &init_ssl_cs ); \
-        return FALSE; \
-    }
-    LOAD_FUNCPTR( SSL_library_init );
-    LOAD_FUNCPTR( SSL_load_error_strings );
-    LOAD_FUNCPTR( SSLv23_method );
-    LOAD_FUNCPTR( SSL_CTX_free );
-    LOAD_FUNCPTR( SSL_CTX_new );
-    LOAD_FUNCPTR( SSL_new );
-    LOAD_FUNCPTR( SSL_free );
-    LOAD_FUNCPTR( SSL_set_fd );
-    LOAD_FUNCPTR( SSL_connect );
-    LOAD_FUNCPTR( SSL_shutdown );
-    LOAD_FUNCPTR( SSL_write );
-    LOAD_FUNCPTR( SSL_read );
-    LOAD_FUNCPTR( SSL_pending );
-    LOAD_FUNCPTR( SSL_get_error );
-    LOAD_FUNCPTR( SSL_get_ex_new_index );
-    LOAD_FUNCPTR( SSL_get_ex_data );
-    LOAD_FUNCPTR( SSL_set_ex_data );
-    LOAD_FUNCPTR( SSL_get_ex_data_X509_STORE_CTX_idx );
-    LOAD_FUNCPTR( SSL_get_peer_certificate );
-    LOAD_FUNCPTR( SSL_CTX_set_default_verify_paths );
-    LOAD_FUNCPTR( SSL_CTX_set_verify );
-    LOAD_FUNCPTR( SSL_get_current_cipher );
-    LOAD_FUNCPTR( SSL_CIPHER_get_bits );
-#undef LOAD_FUNCPTR
-
-#define LOAD_FUNCPTR(x) \
-    if (!(p##x = wine_dlsym( libcrypto_handle, #x, NULL, 0 ))) \
-    { \
-        ERR("Failed to load symbol %s\n", #x); \
-        set_last_error( ERROR_WINHTTP_SECURE_CHANNEL_ERROR ); \
-        LeaveCriticalSection( &init_ssl_cs ); \
-        return FALSE; \
-    }
-    LOAD_FUNCPTR( CRYPTO_num_locks );
-    LOAD_FUNCPTR( CRYPTO_set_id_callback );
-    LOAD_FUNCPTR( CRYPTO_set_locking_callback );
-    LOAD_FUNCPTR( ERR_free_strings );
-    LOAD_FUNCPTR( ERR_get_error );
-    LOAD_FUNCPTR( ERR_error_string );
-    LOAD_FUNCPTR( X509_STORE_CTX_get_ex_data );
-    LOAD_FUNCPTR( X509_STORE_CTX_get_chain );
-    LOAD_FUNCPTR( i2d_X509 );
-    LOAD_FUNCPTR( sk_value );
-    LOAD_FUNCPTR( sk_num );
-#undef LOAD_FUNCPTR
-
-    pSSL_library_init();
-    pSSL_load_error_strings();
-
-    method = pSSLv23_method();
-    ctx = pSSL_CTX_new( method );
-    if (!pSSL_CTX_set_default_verify_paths( ctx ))
-    {
-        ERR("SSL_CTX_set_default_verify_paths failed: %s\n", pERR_error_string( pERR_get_error(), 0 ));
-        set_last_error( ERROR_OUTOFMEMORY );
-        LeaveCriticalSection( &init_ssl_cs );
-        return FALSE;
-    }
-    hostname_idx = pSSL_get_ex_new_index( 0, (void *)"hostname index", NULL, NULL, NULL );
-    if (hostname_idx == -1)
-    {
-        ERR("SSL_get_ex_new_index failed: %s\n", pERR_error_string( pERR_get_error(), 0 ));
-        set_last_error( ERROR_OUTOFMEMORY );
-        LeaveCriticalSection( &init_ssl_cs );
-        return FALSE;
-    }
-    error_idx = pSSL_get_ex_new_index( 0, (void *)"error index", NULL, NULL, NULL );
-    if (error_idx == -1)
-    {
-        ERR("SSL_get_ex_new_index failed: %s\n", pERR_error_string( pERR_get_error(), 0 ));
-        set_last_error( ERROR_OUTOFMEMORY );
-        LeaveCriticalSection( &init_ssl_cs );
-        return FALSE;
-    }
-    conn_idx = pSSL_get_ex_new_index( 0, (void *)"netconn index", NULL, NULL, NULL );
-    if (conn_idx == -1)
-    {
-        ERR("SSL_get_ex_new_index failed: %s\n", pERR_error_string( pERR_get_error(), 0 ));
-        set_last_error( ERROR_OUTOFMEMORY );
-        LeaveCriticalSection( &init_ssl_cs );
-        return FALSE;
-    }
-    pSSL_CTX_set_verify( ctx, SSL_VERIFY_PEER, netconn_secure_verify );
-
-    pCRYPTO_set_id_callback(ssl_thread_id);
-    num_ssl_locks = pCRYPTO_num_locks();
-    ssl_locks = heap_alloc(num_ssl_locks * sizeof(CRITICAL_SECTION));
-    if (!ssl_locks)
-    {
-        set_last_error( ERROR_OUTOFMEMORY );
-        LeaveCriticalSection( &init_ssl_cs );
-        return FALSE;
-    }
-    for (i = 0; i < num_ssl_locks; i++)
-    {
-        InitializeCriticalSection( &ssl_locks[i] );
-        ssl_locks[i].DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": ssl_locks");
-    }
-    pCRYPTO_set_locking_callback(ssl_lock_callback);
-
-    LeaveCriticalSection( &init_ssl_cs );
-#else
-    WARN("SSL support not compiled in.\n");
-    set_last_error( ERROR_WINHTTP_SECURE_CHANNEL_ERROR );
-    return FALSE;
-#endif
     return TRUE;
 }
 
 void netconn_unload( void )
 {
-#if defined(SONAME_LIBSSL) && defined(SONAME_LIBCRYPTO)
-    if (libcrypto_handle)
-    {
-        pERR_free_strings();
-        wine_dlclose( libcrypto_handle, NULL, 0 );
-    }
-    if (libssl_handle)
-    {
-        if (ctx)
-            pSSL_CTX_free( ctx );
-        wine_dlclose( libssl_handle, NULL, 0 );
-    }
-    if (ssl_locks)
-    {
-        int i;
-        for (i = 0; i < num_ssl_locks; i++)
-        {
-            ssl_locks[i].DebugInfo->Spare[0] = 0;
-            DeleteCriticalSection( &ssl_locks[i] );
-        }
-        heap_free( ssl_locks );
-    }
-    DeleteCriticalSection(&init_ssl_cs);
-#endif
+    if(cred_handle_initialized)
+        FreeCredentialsHandle(&cred_handle);
+    DeleteCriticalSection(&init_sechandle_cs);
 #ifndef HAVE_GETADDRINFO
     DeleteCriticalSection(&cs_gethostbyname);
 #endif
@@ -622,21 +318,20 @@ BOOL netconn_close( netconn_t *conn )
 {
     int res;
 
-#ifdef SONAME_LIBSSL
     if (conn->secure)
     {
         heap_free( conn->peek_msg_mem );
         conn->peek_msg_mem = NULL;
         conn->peek_msg = NULL;
         conn->peek_len = 0;
-
-        pSSL_shutdown( conn->ssl_conn );
-        pSSL_free( conn->ssl_conn );
-
-        conn->ssl_conn = NULL;
+        heap_free(conn->ssl_buf);
+        conn->ssl_buf = NULL;
+        heap_free(conn->extra_buf);
+        conn->extra_buf = NULL;
+        conn->extra_len = 0;
+        DeleteSecurityContext(&conn->ssl_ctx);
         conn->secure = FALSE;
     }
-#endif
     res = closesocket( conn->socket );
     conn->socket = -1;
     if (res == -1)
@@ -650,7 +345,8 @@ BOOL netconn_close( netconn_t *conn )
 BOOL netconn_connect( netconn_t *conn, const struct sockaddr *sockaddr, unsigned int addr_len, int timeout )
 {
     BOOL ret = FALSE;
-    int res = 0, state;
+    int res = 0;
+    ULONG state;
 
     if (timeout > 0)
     {
@@ -695,54 +391,164 @@ BOOL netconn_connect( netconn_t *conn, const struct sockaddr *sockaddr, unsigned
 
 BOOL netconn_secure_connect( netconn_t *conn, WCHAR *hostname )
 {
-#ifdef SONAME_LIBSSL
-    if (!(conn->ssl_conn = pSSL_new( ctx )))
-    {
-        ERR("SSL_new failed: %s\n", pERR_error_string( pERR_get_error(), 0 ));
-        set_last_error( ERROR_OUTOFMEMORY );
-        goto fail;
+    SecBuffer out_buf = {0, SECBUFFER_TOKEN, NULL}, in_bufs[2] = {{0, SECBUFFER_TOKEN}, {0, SECBUFFER_EMPTY}};
+    SecBufferDesc out_desc = {SECBUFFER_VERSION, 1, &out_buf}, in_desc = {SECBUFFER_VERSION, 2, in_bufs};
+    BYTE *read_buf;
+    SIZE_T read_buf_size = 2048;
+    ULONG attrs = 0;
+    CtxtHandle ctx;
+    SSIZE_T size;
+    const CERT_CONTEXT *cert;
+    SECURITY_STATUS status;
+    DWORD res = ERROR_SUCCESS;
+
+    const DWORD isc_req_flags = ISC_REQ_ALLOCATE_MEMORY|ISC_REQ_USE_SESSION_KEY|ISC_REQ_CONFIDENTIALITY
+        |ISC_REQ_SEQUENCE_DETECT|ISC_REQ_REPLAY_DETECT|ISC_REQ_MANUAL_CRED_VALIDATION;
+
+    if(!ensure_cred_handle())
+        return FALSE;
+
+    read_buf = heap_alloc(read_buf_size);
+    if(!read_buf)
+        return FALSE;
+
+    status = InitializeSecurityContextW(&cred_handle, NULL, hostname, isc_req_flags, 0, 0, NULL, 0,
+            &ctx, &out_desc, &attrs, NULL);
+
+    assert(status != SEC_E_OK);
+
+    while(status == SEC_I_CONTINUE_NEEDED || status == SEC_E_INCOMPLETE_MESSAGE) {
+        if(out_buf.cbBuffer) {
+            assert(status == SEC_I_CONTINUE_NEEDED);
+
+            TRACE("sending %u bytes\n", out_buf.cbBuffer);
+
+            size = send(conn->socket, out_buf.pvBuffer, out_buf.cbBuffer, 0);
+            if(size != out_buf.cbBuffer) {
+                ERR("send failed\n");
+                status = ERROR_WINHTTP_SECURE_CHANNEL_ERROR;
+                break;
+            }
+
+            FreeContextBuffer(out_buf.pvBuffer);
+            out_buf.pvBuffer = NULL;
+            out_buf.cbBuffer = 0;
+        }
+
+        if(status == SEC_I_CONTINUE_NEEDED) {
+            assert(in_bufs[1].cbBuffer < read_buf_size);
+
+            memmove(read_buf, (BYTE*)in_bufs[0].pvBuffer+in_bufs[0].cbBuffer-in_bufs[1].cbBuffer, in_bufs[1].cbBuffer);
+            in_bufs[0].cbBuffer = in_bufs[1].cbBuffer;
+
+            in_bufs[1].BufferType = SECBUFFER_EMPTY;
+            in_bufs[1].cbBuffer = 0;
+            in_bufs[1].pvBuffer = NULL;
+        }
+
+        assert(in_bufs[0].BufferType == SECBUFFER_TOKEN);
+        assert(in_bufs[1].BufferType == SECBUFFER_EMPTY);
+
+        if(in_bufs[0].cbBuffer + 1024 > read_buf_size) {
+            BYTE *new_read_buf;
+
+            new_read_buf = heap_realloc(read_buf, read_buf_size + 1024);
+            if(!new_read_buf) {
+                status = E_OUTOFMEMORY;
+                break;
+            }
+
+            in_bufs[0].pvBuffer = read_buf = new_read_buf;
+            read_buf_size += 1024;
+        }
+
+        size = recv(conn->socket, (char *)(read_buf+in_bufs[0].cbBuffer), read_buf_size-in_bufs[0].cbBuffer, 0);
+        if(size < 1) {
+            WARN("recv error\n");
+            status = ERROR_WINHTTP_SECURE_CHANNEL_ERROR;
+            break;
+        }
+
+        TRACE("recv %lu bytes\n", size);
+
+        in_bufs[0].cbBuffer += size;
+        in_bufs[0].pvBuffer = read_buf;
+        status = InitializeSecurityContextW(&cred_handle, &ctx, hostname,  isc_req_flags, 0, 0, &in_desc,
+                0, NULL, &out_desc, &attrs, NULL);
+        TRACE("InitializeSecurityContext ret %08x\n", status);
+
+        if(status == SEC_E_OK) {
+            if(in_bufs[1].BufferType == SECBUFFER_EXTRA)
+                FIXME("SECBUFFER_EXTRA not supported\n");
+
+            status = QueryContextAttributesW(&ctx, SECPKG_ATTR_STREAM_SIZES, &conn->ssl_sizes);
+            if(status != SEC_E_OK) {
+                WARN("Could not get sizes\n");
+                break;
+            }
+
+            status = QueryContextAttributesW(&ctx, SECPKG_ATTR_REMOTE_CERT_CONTEXT, (void*)&cert);
+            if(status == SEC_E_OK) {
+                res = netconn_verify_cert(cert, hostname, conn->security_flags);
+                CertFreeCertificateContext(cert);
+                if(res != ERROR_SUCCESS) {
+                    WARN("cert verify failed: %u\n", res);
+                    break;
+                }
+            }else {
+                WARN("Could not get cert\n");
+                break;
+            }
+
+            conn->ssl_buf = heap_alloc(conn->ssl_sizes.cbHeader + conn->ssl_sizes.cbMaximumMessage + conn->ssl_sizes.cbTrailer);
+            if(!conn->ssl_buf) {
+                res = GetLastError();
+                break;
+            }
+        }
     }
-    if (!pSSL_set_ex_data( conn->ssl_conn, hostname_idx, hostname ))
-    {
-        ERR("SSL_set_ex_data failed: %s\n", pERR_error_string( pERR_get_error(), 0 ));
-        set_last_error( ERROR_WINHTTP_SECURE_CHANNEL_ERROR );
-        goto fail;
-    }
-    if (!pSSL_set_ex_data( conn->ssl_conn, conn_idx, conn ))
-    {
-        ERR("SSL_set_ex_data failed: %s\n", pERR_error_string( pERR_get_error(), 0 ));
-        set_last_error( ERROR_WINHTTP_SECURE_CHANNEL_ERROR );
+
+
+    if(status != SEC_E_OK || res != ERROR_SUCCESS) {
+        WARN("Failed to initialize security context failed: %08x\n", status);
+        heap_free(conn->ssl_buf);
+        conn->ssl_buf = NULL;
+        DeleteSecurityContext(&ctx);
+        set_last_error(res ? res : ERROR_WINHTTP_SECURE_CHANNEL_ERROR);
         return FALSE;
     }
-    if (!pSSL_set_fd( conn->ssl_conn, conn->socket ))
-    {
-        ERR("SSL_set_fd failed: %s\n", pERR_error_string( pERR_get_error(), 0 ));
-        set_last_error( ERROR_WINHTTP_SECURE_CHANNEL_ERROR );
-        goto fail;
-    }
-    if (pSSL_connect( conn->ssl_conn ) <= 0)
-    {
-        DWORD err;
 
-        err = (DWORD_PTR)pSSL_get_ex_data( conn->ssl_conn, error_idx );
-        if (!err) err = ERROR_WINHTTP_SECURE_CHANNEL_ERROR;
-        ERR("couldn't verify server certificate (%d)\n", err);
-        set_last_error( err );
-        goto fail;
-    }
+
     TRACE("established SSL connection\n");
     conn->secure = TRUE;
+    conn->ssl_ctx = ctx;
     return TRUE;
+}
 
-fail:
-    if (conn->ssl_conn)
-    {
-        pSSL_shutdown( conn->ssl_conn );
-        pSSL_free( conn->ssl_conn );
-        conn->ssl_conn = NULL;
+static BOOL send_ssl_chunk(netconn_t *conn, const void *msg, size_t size)
+{
+    SecBuffer bufs[4] = {
+        {conn->ssl_sizes.cbHeader, SECBUFFER_STREAM_HEADER, conn->ssl_buf},
+        {size,  SECBUFFER_DATA, conn->ssl_buf+conn->ssl_sizes.cbHeader},
+        {conn->ssl_sizes.cbTrailer, SECBUFFER_STREAM_TRAILER, conn->ssl_buf+conn->ssl_sizes.cbHeader+size},
+        {0, SECBUFFER_EMPTY, NULL}
+    };
+    SecBufferDesc buf_desc = {SECBUFFER_VERSION, sizeof(bufs)/sizeof(*bufs), bufs};
+    SECURITY_STATUS res;
+
+    memcpy(bufs[1].pvBuffer, msg, size);
+    res = EncryptMessage(&conn->ssl_ctx, 0, &buf_desc, 0);
+    if(res != SEC_E_OK) {
+        WARN("EncryptMessage failed\n");
+        return FALSE;
     }
-#endif
-    return FALSE;
+
+    if(send(conn->socket, conn->ssl_buf, bufs[0].cbBuffer+bufs[1].cbBuffer+bufs[2].cbBuffer, 0) < 1) {
+        WARN("send failed\n");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 BOOL netconn_send( netconn_t *conn, const void *msg, size_t len, int flags, int *sent )
@@ -750,20 +556,123 @@ BOOL netconn_send( netconn_t *conn, const void *msg, size_t len, int flags, int 
     if (!netconn_connected( conn )) return FALSE;
     if (conn->secure)
     {
-#ifdef SONAME_LIBSSL
-        if (flags) FIXME("SSL_write doesn't support any flags (%08x)\n", flags);
-        *sent = pSSL_write( conn->ssl_conn, msg, len );
-        if (*sent < 1 && len) return FALSE;
+        const BYTE *ptr = msg;
+        size_t chunk_size;
+
+        if (flags) FIXME("flags %08x not supported in SSL\n", flags);
+
+        *sent = 0;
+
+        while(len) {
+            chunk_size = min(len, conn->ssl_sizes.cbMaximumMessage);
+            if(!send_ssl_chunk(conn, ptr, chunk_size))
+                return FALSE;
+
+            *sent += chunk_size;
+            ptr += chunk_size;
+            len -= chunk_size;
+        }
+
         return TRUE;
-#else
-        return FALSE;
-#endif
     }
     if ((*sent = send( conn->socket, msg, len, flags )) == -1)
     {
         set_last_error( sock_get_error( errno ) );
         return FALSE;
     }
+    return TRUE;
+}
+
+static BOOL read_ssl_chunk(netconn_t *conn, void *buf, SIZE_T buf_size, SIZE_T *ret_size, BOOL *eof)
+{
+    const SIZE_T ssl_buf_size = conn->ssl_sizes.cbHeader+conn->ssl_sizes.cbMaximumMessage+conn->ssl_sizes.cbTrailer;
+    SecBuffer bufs[4];
+    SecBufferDesc buf_desc = {SECBUFFER_VERSION, sizeof(bufs)/sizeof(*bufs), bufs};
+    SSIZE_T size, buf_len;
+    unsigned int i;
+    SECURITY_STATUS res;
+
+    assert(conn->extra_len < ssl_buf_size);
+
+    if(conn->extra_len) {
+        memcpy(conn->ssl_buf, conn->extra_buf, conn->extra_len);
+        buf_len = conn->extra_len;
+        conn->extra_len = 0;
+        heap_free(conn->extra_buf);
+        conn->extra_buf = NULL;
+    }else {
+        buf_len = recv(conn->socket, conn->ssl_buf+conn->extra_len, ssl_buf_size-conn->extra_len, 0);
+        if(buf_len < 0) {
+            WARN("recv failed\n");
+            return FALSE;
+        }
+
+        if(!buf_len) {
+            *eof = TRUE;
+            return TRUE;
+        }
+    }
+
+    *ret_size = 0;
+    *eof = FALSE;
+
+    do {
+        memset(bufs, 0, sizeof(bufs));
+        bufs[0].BufferType = SECBUFFER_DATA;
+        bufs[0].cbBuffer = buf_len;
+        bufs[0].pvBuffer = conn->ssl_buf;
+
+        res = DecryptMessage(&conn->ssl_ctx, &buf_desc, 0, NULL);
+        switch(res) {
+        case SEC_E_OK:
+            break;
+        case SEC_I_CONTEXT_EXPIRED:
+            TRACE("context expired\n");
+            *eof = TRUE;
+            return TRUE;
+        case SEC_E_INCOMPLETE_MESSAGE:
+            assert(buf_len < ssl_buf_size);
+
+            size = recv(conn->socket, conn->ssl_buf+buf_len, ssl_buf_size-buf_len, 0);
+            if(size < 1)
+                return FALSE;
+
+            buf_len += size;
+            continue;
+        default:
+            WARN("failed: %08x\n", res);
+            return FALSE;
+        }
+    } while(res != SEC_E_OK);
+
+    for(i=0; i < sizeof(bufs)/sizeof(*bufs); i++) {
+        if(bufs[i].BufferType == SECBUFFER_DATA) {
+            size = min(buf_size, bufs[i].cbBuffer);
+            memcpy(buf, bufs[i].pvBuffer, size);
+            if(size < bufs[i].cbBuffer) {
+                assert(!conn->peek_len);
+                conn->peek_msg_mem = conn->peek_msg = heap_alloc(bufs[i].cbBuffer - size);
+                if(!conn->peek_msg)
+                    return FALSE;
+                conn->peek_len = bufs[i].cbBuffer-size;
+                memcpy(conn->peek_msg, (char*)bufs[i].pvBuffer+size, conn->peek_len);
+            }
+
+            *ret_size = size;
+        }
+    }
+
+    for(i=0; i < sizeof(bufs)/sizeof(*bufs); i++) {
+        if(bufs[i].BufferType == SECBUFFER_EXTRA) {
+            conn->extra_buf = heap_alloc(bufs[i].cbBuffer);
+            if(!conn->extra_buf)
+                return FALSE;
+
+            conn->extra_len = bufs[i].cbBuffer;
+            memcpy(conn->extra_buf, bufs[i].pvBuffer, conn->extra_len);
+        }
+    }
+
     return TRUE;
 }
 
@@ -775,18 +684,13 @@ BOOL netconn_recv( netconn_t *conn, void *buf, size_t len, int flags, int *recvd
 
     if (conn->secure)
     {
-#ifdef SONAME_LIBSSL
-        int ret;
+        SIZE_T size, cread;
+        BOOL res, eof;
 
         if (flags & ~(MSG_PEEK | MSG_WAITALL))
             FIXME("SSL_read does not support the following flags: %08x\n", flags);
 
-        /* this ugly hack is all for MSG_PEEK */
-        if (flags & MSG_PEEK && !conn->peek_msg)
-        {
-            if (!(conn->peek_msg = conn->peek_msg_mem = heap_alloc( len + 1 ))) return FALSE;
-        }
-        else if (flags & MSG_PEEK && conn->peek_msg)
+        if (flags & MSG_PEEK && conn->peek_msg)
         {
             if (len < conn->peek_len) FIXME("buffer isn't big enough, should we wrap?\n");
             *recvd = min( len, conn->peek_len );
@@ -809,33 +713,36 @@ BOOL netconn_recv( netconn_t *conn, void *buf, size_t len, int flags, int *recvd
             /* check if we have enough data from the peek buffer */
             if (!(flags & MSG_WAITALL) || (*recvd == len)) return TRUE;
         }
-        ret = pSSL_read( conn->ssl_conn, (char *)buf + *recvd, len - *recvd );
-        if (ret < 0)
-            return FALSE;
+        size = *recvd;
 
-        /* check if EOF was received */
-        if (!ret && (pSSL_get_error( conn->ssl_conn, ret ) == SSL_ERROR_ZERO_RETURN ||
-                     pSSL_get_error( conn->ssl_conn, ret ) == SSL_ERROR_SYSCALL ))
-        {
-            netconn_close( conn );
-            return TRUE;
-        }
-        if (flags & MSG_PEEK) /* must copy into buffer */
-        {
-            conn->peek_len = ret;
-            if (!ret)
-            {
-                heap_free( conn->peek_msg_mem );
-                conn->peek_msg_mem = NULL;
-                conn->peek_msg = NULL;
+        do {
+            res = read_ssl_chunk(conn, (BYTE*)buf+size, len-size, &cread, &eof);
+            if(!res) {
+                WARN("read_ssl_chunk failed\n");
+                if(!size)
+                    return FALSE;
+                break;
             }
-            else memcpy( conn->peek_msg, buf, ret );
+
+            if(eof) {
+                TRACE("EOF\n");
+                break;
+            }
+
+            size += cread;
+        }while(!size || ((flags & MSG_WAITALL) && size < len));
+
+        if(size && (flags & MSG_PEEK)) {
+            conn->peek_msg_mem = conn->peek_msg = heap_alloc(size);
+            if(!conn->peek_msg)
+                return FALSE;
+
+            memcpy(conn->peek_msg, buf, size);
         }
-        *recvd += ret;
+
+        TRACE("received %ld bytes\n", size);
+        *recvd = size;
         return TRUE;
-#else
-        return FALSE;
-#endif
     }
     if ((*recvd = recv( conn->socket, buf, len, flags )) == -1)
     {
@@ -848,16 +755,15 @@ BOOL netconn_recv( netconn_t *conn, void *buf, size_t len, int flags, int *recvd
 BOOL netconn_query_data_available( netconn_t *conn, DWORD *available )
 {
 #ifdef FIONREAD
-    int ret, unread;
+    int ret;
+    ULONG unread;
 #endif
     *available = 0;
     if (!netconn_connected( conn )) return FALSE;
 
     if (conn->secure)
     {
-#ifdef SONAME_LIBSSL
-        *available = pSSL_pending( conn->ssl_conn ) + conn->peek_len;
-#endif
+        *available = conn->peek_len;
         return TRUE;
     }
 #ifdef FIONREAD
@@ -877,7 +783,6 @@ BOOL netconn_get_next_line( netconn_t *conn, char *buffer, DWORD *buflen )
 
     if (conn->secure)
     {
-#ifdef SONAME_LIBSSL
         while (recvd < *buflen)
         {
             int dummy;
@@ -900,9 +805,6 @@ BOOL netconn_get_next_line( netconn_t *conn, char *buffer, DWORD *buflen )
             TRACE("received line %s\n", debugstr_a(buffer));
         }
         return ret;
-#else
-        return FALSE;
-#endif
     }
 
     FD_ZERO(&infd);
@@ -950,14 +852,13 @@ BOOL netconn_get_next_line( netconn_t *conn, char *buffer, DWORD *buflen )
 
 DWORD netconn_set_timeout( netconn_t *netconn, BOOL send, int value )
 {
-    int res;
     struct timeval tv;
 
     /* value is in milliseconds, convert to struct timeval */
     tv.tv_sec = value / 1000;
     tv.tv_usec = (value % 1000) * 1000;
 
-    if ((res = setsockopt( netconn->socket, SOL_SOCKET, send ? SO_SNDTIMEO : SO_RCVTIMEO, (void*)&tv, sizeof(tv) ) == -1))
+    if (setsockopt( netconn->socket, SOL_SOCKET, send ? SO_SNDTIMEO : SO_RCVTIMEO, (void*)&tv, sizeof(tv) ) == -1)
     {
         WARN("setsockopt failed (%s)\n", strerror( errno ));
         return sock_get_error( errno );
@@ -965,7 +866,7 @@ DWORD netconn_set_timeout( netconn_t *netconn, BOOL send, int value )
     return ERROR_SUCCESS;
 }
 
-static DWORD resolve_hostname( WCHAR *hostnameW, INTERNET_PORT port, struct sockaddr *sa, socklen_t *sa_len )
+static DWORD resolve_hostname( const WCHAR *hostnameW, INTERNET_PORT port, struct sockaddr *sa, socklen_t *sa_len )
 {
     char *hostname;
 #ifdef HAVE_GETADDRINFO
@@ -1050,7 +951,7 @@ static DWORD resolve_hostname( WCHAR *hostnameW, INTERNET_PORT port, struct sock
 
 struct resolve_args
 {
-    WCHAR           *hostname;
+    const WCHAR     *hostname;
     INTERNET_PORT    port;
     struct sockaddr *sa;
     socklen_t       *sa_len;
@@ -1097,35 +998,22 @@ BOOL netconn_resolve( WCHAR *hostname, INTERNET_PORT port, struct sockaddr *sa, 
 
 const void *netconn_get_certificate( netconn_t *conn )
 {
-#ifdef SONAME_LIBSSL
-    X509 *cert;
     const CERT_CONTEXT *ret;
+    SECURITY_STATUS res;
 
     if (!conn->secure) return NULL;
-
-    if (!(cert = pSSL_get_peer_certificate( conn->ssl_conn ))) return NULL;
-    ret = X509_to_cert_context( cert );
-    return ret;
-#else
-    return NULL;
-#endif
+    res = QueryContextAttributesW(&conn->ssl_ctx, SECPKG_ATTR_REMOTE_CERT_CONTEXT, (void*)&ret);
+    return res == SEC_E_OK ? ret : NULL;
 }
 
 int netconn_get_cipher_strength( netconn_t *conn )
 {
-#ifdef SONAME_LIBSSL
-#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER >= 0x0090707f)
-    const SSL_CIPHER *cipher;
-#else
-    SSL_CIPHER *cipher;
-#endif
-    int bits = 0;
+    SecPkgContext_ConnectionInfo conn_info;
+    SECURITY_STATUS res;
 
     if (!conn->secure) return 0;
-    if (!(cipher = pSSL_get_current_cipher( conn->ssl_conn ))) return 0;
-    pSSL_CIPHER_get_bits( cipher, &bits );
-    return bits;
-#else
-    return 0;
-#endif
+    res = QueryContextAttributesW(&conn->ssl_ctx, SECPKG_ATTR_CONNECTION_INFO, (void*)&conn_info);
+    if(res != SEC_E_OK)
+        WARN("QueryContextAttributesW failed: %08x\n", res);
+    return res == SEC_E_OK ? conn_info.dwCipherStrength : 0;
 }
