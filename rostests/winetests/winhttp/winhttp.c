@@ -18,19 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #include <stdarg.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
+#include <ole2.h>
+#include <winsock2.h>
+//#include <ws2tcpip.h>
 #include <winhttp.h>
 #include <wincrypt.h>
 #include <winreg.h>
-#include <winsock.h>
-#include "initguid.h"
+//#include <winsock.h>
+//#include "initguid.h"
 #include <httprequest.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 static const WCHAR test_useragent[] =
     {'W','i','n','e',' ','R','e','g','r','e','s','s','i','o','n',' ','T','e','s','t',0};
@@ -46,9 +53,9 @@ static BOOL proxy_active(void)
     {
         active = (proxy_info.lpszProxy != NULL);
         if (active)
-            GlobalFree((HGLOBAL) proxy_info.lpszProxy);
+            GlobalFree(proxy_info.lpszProxy);
         if (proxy_info.lpszProxyBypass != NULL)
-            GlobalFree((HGLOBAL) proxy_info.lpszProxyBypass);
+            GlobalFree(proxy_info.lpszProxyBypass);
     }
     else
        active = FALSE;
@@ -792,7 +799,7 @@ static void test_secure_connection(void)
     static const WCHAR google[] = {'w','w','w','.','g','o','o','g','l','e','.','c','o','m',0};
 
     HINTERNET ses, con, req;
-    DWORD size, status, policy, bitness;
+    DWORD size, status, policy, bitness, read_size;
     BOOL ret;
     CERT_CONTEXT *cert;
     WINHTTP_CERTIFICATE_INFO info;
@@ -873,13 +880,16 @@ static void test_secure_connection(void)
     ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_RAW_HEADERS_CRLF, NULL, NULL, &size, NULL);
     ok(!ret, "succeeded unexpectedly\n");
 
+    read_size = 0;
     for (;;)
     {
         size = 0;
         ret = WinHttpReadData(req, buffer, sizeof(buffer), &size);
         ok(ret == TRUE, "WinHttpReadData failed: %u.\n", GetLastError());
         if (!size) break;
+        read_size += size;
     }
+    ok(read_size > 2014, "read_size = %u\n", read_size);
 
 cleanup:
     WinHttpCloseHandle(req);
@@ -1005,8 +1015,8 @@ static void set_default_proxy_reg_value( BYTE *buf, DWORD len, DWORD type )
 
 static void test_set_default_proxy_config(void)
 {
-    static const WCHAR wideString[] = { 0x226f, 0x575b, 0 };
-    static const WCHAR normalString[] = { 'f','o','o',0 };
+    static WCHAR wideString[] = { 0x226f, 0x575b, 0 };
+    static WCHAR normalString[] = { 'f','o','o',0 };
     DWORD type, len;
     BYTE *saved_proxy_settings = NULL;
     WINHTTP_PROXY_INFO info;
@@ -1070,23 +1080,23 @@ static void test_set_default_proxy_config(void)
     info.lpszProxy = wideString;
     SetLastError(0xdeadbeef);
     ret = WinHttpSetDefaultProxyConfiguration(&info);
-    ok((!ret && GetLastError() == ERROR_INVALID_PARAMETER) ||
-        broken(ret), /* Earlier winhttp versions on W2K/XP */
-        "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
+        skip("couldn't set default proxy configuration: access denied\n");
+    else
+        ok((!ret && GetLastError() == ERROR_INVALID_PARAMETER) ||
+           broken(ret), /* Earlier winhttp versions on W2K/XP */
+           "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     info.lpszProxy = normalString;
     SetLastError(0xdeadbeef);
     ret = WinHttpSetDefaultProxyConfiguration(&info);
-    if (ret)
-    {
-        ok(ret, "always true\n");
-        set_default_proxy_reg_value( saved_proxy_settings, len, type );
-    }
-    else if (GetLastError() == ERROR_ACCESS_DENIED)
+    if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
         skip("couldn't set default proxy configuration: access denied\n");
     else
         ok(ret, "WinHttpSetDefaultProxyConfiguration failed: %d\n",
            GetLastError());
+
+    set_default_proxy_reg_value( saved_proxy_settings, len, type );
 }
 
 static void test_Timeouts (void)
@@ -2016,6 +2026,65 @@ static void test_bad_header( int port )
     WinHttpCloseHandle( ses );
 }
 
+static void test_connection_info( int port )
+{
+    static const WCHAR basicW[] = {'/','b','a','s','i','c',0};
+    HINTERNET ses, con, req;
+    WINHTTP_CONNECTION_INFO info;
+    DWORD size, error;
+    BOOL ret;
+
+    ses = WinHttpOpen( test_useragent, 0, NULL, NULL, 0 );
+    ok( ses != NULL, "failed to open session %u\n", GetLastError() );
+
+    con = WinHttpConnect( ses, localhostW, port, 0 );
+    ok( con != NULL, "failed to open a connection %u\n", GetLastError() );
+
+    req = WinHttpOpenRequest( con, NULL, basicW, NULL, NULL, NULL, 0 );
+    ok( req != NULL, "failed to open a request %u\n", GetLastError() );
+
+    size = sizeof(info);
+    SetLastError( 0xdeadbeef );
+    ret = WinHttpQueryOption( req, WINHTTP_OPTION_CONNECTION_INFO, &info, &size );
+    error = GetLastError();
+    if (!ret && error == ERROR_INVALID_PARAMETER)
+    {
+        win_skip( "WINHTTP_OPTION_CONNECTION_INFO not supported\n" );
+        return;
+    }
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_WINHTTP_INCORRECT_HANDLE_STATE, "got %u\n", error );
+
+    ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
+    ok( ret, "failed to send request %u\n", GetLastError() );
+
+    size = 0;
+    SetLastError( 0xdeadbeef );
+    ret = WinHttpQueryOption( req, WINHTTP_OPTION_CONNECTION_INFO, &info, &size );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INSUFFICIENT_BUFFER, "got %u\n", error );
+
+    size = sizeof(info);
+    memset( &info, 0, sizeof(info) );
+    ret = WinHttpQueryOption( req, WINHTTP_OPTION_CONNECTION_INFO, &info, &size );
+    ok( ret, "failed to retrieve connection info %u\n", GetLastError() );
+    ok( info.cbSize == sizeof(info), "wrong size %u\n", info.cbSize );
+
+    ret = WinHttpReceiveResponse( req, NULL );
+    ok( ret, "failed to receive response %u\n", GetLastError() );
+
+    size = sizeof(info);
+    memset( &info, 0, sizeof(info) );
+    ret = WinHttpQueryOption( req, WINHTTP_OPTION_CONNECTION_INFO, &info, &size );
+    ok( ret, "failed to retrieve connection info %u\n", GetLastError() );
+    ok( info.cbSize == sizeof(info), "wrong size %u\n", info.cbSize );
+
+    WinHttpCloseHandle( req );
+    WinHttpCloseHandle( con );
+    WinHttpCloseHandle( ses );
+}
+
 static void test_credentials(void)
 {
     static WCHAR userW[] = {'u','s','e','r',0};
@@ -2417,14 +2486,14 @@ static void test_IWinHttpRequest(void)
     status = 0;
     hr = IWinHttpRequest_get_Status( req, &status );
     ok( hr == S_OK, "got %08x\n", hr );
-    trace("%d\n", status);
+    trace("Status=%d\n", status);
 
     hr = IWinHttpRequest_get_StatusText( req, NULL );
     ok( hr == E_INVALIDARG, "got %08x\n", hr );
 
     hr = IWinHttpRequest_get_StatusText( req, &status_text );
     ok( hr == S_OK, "got %08x\n", hr );
-    trace("%s\n", wine_dbgstr_w(status_text));
+    trace("StatusText=%s\n", wine_dbgstr_w(status_text));
     SysFreeString( status_text );
 
     hr = IWinHttpRequest_get_ResponseBody( req, NULL );
@@ -2608,10 +2677,10 @@ static void test_WinHttpGetIEProxyConfigForCurrentUser(void)
 
     ret = WinHttpGetIEProxyConfigForCurrentUser( &cfg );
     ok( ret, "expected success\n" );
-    trace("%d\n", cfg.fAutoDetect);
-    trace("%s\n", wine_dbgstr_w(cfg.lpszAutoConfigUrl));
-    trace("%s\n", wine_dbgstr_w(cfg.lpszProxy));
-    trace("%s\n", wine_dbgstr_w(cfg.lpszProxyBypass));
+    trace("IEProxy.AutoDetect=%d\n", cfg.fAutoDetect);
+    trace("IEProxy.AutoConfigUrl=%s\n", wine_dbgstr_w(cfg.lpszAutoConfigUrl));
+    trace("IEProxy.Proxy=%s\n", wine_dbgstr_w(cfg.lpszProxy));
+    trace("IEProxy.ProxyBypass=%s\n", wine_dbgstr_w(cfg.lpszProxyBypass));
     GlobalFree( cfg.lpszAutoConfigUrl );
     GlobalFree( cfg.lpszProxy );
     GlobalFree( cfg.lpszProxyBypass );
@@ -2620,6 +2689,7 @@ static void test_WinHttpGetIEProxyConfigForCurrentUser(void)
 static void test_WinHttpGetProxyForUrl(void)
 {
     static const WCHAR urlW[] = {'h','t','t','p',':','/','/','w','i','n','e','h','q','.','o','r','g',0};
+    static const WCHAR wpadW[] = {'h','t','t','p',':','/','/','w','p','a','d','/','w','p','a','d','.','d','a','t',0};
     static const WCHAR emptyW[] = {0};
     BOOL ret;
     DWORD error;
@@ -2693,14 +2763,36 @@ static void test_WinHttpGetProxyForUrl(void)
     options.dwAutoDetectFlags = WINHTTP_AUTO_DETECT_TYPE_DNS_A;
 
     memset( &info, 0, sizeof(info) );
+    SetLastError(0xdeadbeef);
     ret = WinHttpGetProxyForUrl( session, urlW, &options, &info );
-    if (ret)
+    error = GetLastError();
+    if (!ret) ok( error == ERROR_WINHTTP_AUTODETECTION_FAILED ||
+                  error == ERROR_WINHTTP_UNABLE_TO_DOWNLOAD_SCRIPT, "got %u\n", error );
+    else
     {
-        trace("%u\n", info.dwAccessType);
-        trace("%s\n", wine_dbgstr_w(info.lpszProxy));
-        trace("%s\n", wine_dbgstr_w(info.lpszProxyBypass));
-        GlobalFree( (WCHAR *)info.lpszProxy );
-        GlobalFree( (WCHAR *)info.lpszProxyBypass );
+        trace("Proxy.AccessType=%u\n", info.dwAccessType);
+        trace("Proxy.Proxy=%s\n", wine_dbgstr_w(info.lpszProxy));
+        trace("Proxy.ProxyBypass=%s\n", wine_dbgstr_w(info.lpszProxyBypass));
+        GlobalFree( info.lpszProxy );
+        GlobalFree( info.lpszProxyBypass );
+    }
+
+    options.dwFlags = WINHTTP_AUTOPROXY_CONFIG_URL;
+    options.dwAutoDetectFlags = 0;
+    options.lpszAutoConfigUrl = wpadW;
+
+    memset( &info, 0, sizeof(info) );
+    SetLastError(0xdeadbeef);
+    ret = WinHttpGetProxyForUrl( session, urlW, &options, &info );
+    error = GetLastError();
+    if (!ret) ok( error == ERROR_WINHTTP_UNABLE_TO_DOWNLOAD_SCRIPT, "got %u\n", error );
+    else
+    {
+        trace("Proxy.AccessType=%u\n", info.dwAccessType);
+        trace("Proxy.Proxy=%s\n", wine_dbgstr_w(info.lpszProxy));
+        trace("Proxy.ProxyBypass=%s\n", wine_dbgstr_w(info.lpszProxyBypass));
+        GlobalFree( info.lpszProxy );
+        GlobalFree( info.lpszProxyBypass );
     }
     WinHttpCloseHandle( session );
 }
@@ -2742,6 +2834,7 @@ START_TEST (winhttp)
     if (ret != WAIT_OBJECT_0)
         return;
 
+    test_connection_info(si.port);
     test_basic_request(si.port, NULL, basicW);
     test_no_headers(si.port);
     test_basic_authentication(si.port);

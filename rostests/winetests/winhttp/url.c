@@ -142,7 +142,6 @@ static void WinHttpCreateUrl_test( void )
     ret = WinHttpCreateUrl( &uc, 0, NULL, NULL );
     ok( !ret, "expected failure\n" );
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %u\n", GetLastError() );
-    ok( len == ~0u, "expected len ~0u got %u\n", len );
 
     /* valid components, NULL url */
     SetLastError( 0xdeadbeef );

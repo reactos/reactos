@@ -68,9 +68,9 @@ static BOOL proxy_active(void)
     {
         active = (proxy_info.lpszProxy != NULL);
         if (active)
-            GlobalFree((HGLOBAL) proxy_info.lpszProxy);
+            GlobalFree(proxy_info.lpszProxy);
         if (proxy_info.lpszProxyBypass != NULL)
-            GlobalFree((HGLOBAL) proxy_info.lpszProxyBypass);
+            GlobalFree(proxy_info.lpszProxyBypass);
     }
     else
        active = FALSE;
@@ -292,6 +292,8 @@ static void test_connection_cache( void )
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
     WinHttpCloseHandle( ses );
+
+    Sleep(2000); /* make sure connection is evicted from cache */
 }
 
 static const struct notification redirect_test[] =
