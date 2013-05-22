@@ -59,34 +59,6 @@ SampInitDatabase(VOID)
         return Status;
     }
 
-#if 0
-    if (!LsapIsDatabaseInstalled())
-    {
-        Status = LsapCreateDatabaseKeys();
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("Failed to create the LSA database keys (Status: 0x%08lx)\n", Status);
-            return Status;
-        }
-
-        Status = LsapCreateDatabaseObjects();
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("Failed to create the LSA database objects (Status: 0x%08lx)\n", Status);
-            return Status;
-        }
-    }
-    else
-    {
-        Status = LsapUpdateDatabase();
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("Failed to update the LSA database (Status: 0x%08lx)\n", Status);
-            return Status;
-        }
-    }
-#endif
-
     TRACE("SampInitDatabase() done\n");
 
     return STATUS_SUCCESS;
@@ -102,9 +74,7 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
                    IN ACCESS_MASK DesiredAccess,
                    OUT PSAM_DB_OBJECT *DbObject)
 {
-    PSAM_DB_OBJECT NewObject;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
+    PSAM_DB_OBJECT NewObject = NULL;
     HANDLE ParentKeyHandle;
     HANDLE ContainerKeyHandle = NULL;
     HANDLE ObjectKeyHandle = NULL;
@@ -114,6 +84,8 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     if (DbObject == NULL)
         return STATUS_INVALID_PARAMETER;
 
+    *DbObject = NULL;
+
     if (ParentObject == NULL)
         ParentKeyHandle = SamKeyHandle;
     else
@@ -122,90 +94,48 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     if (ContainerName != NULL)
     {
         /* Open the container key */
-        RtlInitUnicodeString(&KeyName,
-                             ContainerName);
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   ParentKeyHandle,
-                                   NULL);
-
-        Status = NtOpenKey(&ContainerKeyHandle,
-                           KEY_ALL_ACCESS,
-                           &ObjectAttributes);
+        Status = SampRegOpenKey(ParentKeyHandle,
+                                ContainerName,
+                                KEY_ALL_ACCESS,
+                                &ContainerKeyHandle);
         if (!NT_SUCCESS(Status))
         {
-            return Status;
+            goto done;
         }
 
-        /* Open the object key */
-        RtlInitUnicodeString(&KeyName,
-                             ObjectName);
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   ContainerKeyHandle,
-                                   NULL);
-
-        Status = NtCreateKey(&ObjectKeyHandle,
-                             KEY_ALL_ACCESS,
-                             &ObjectAttributes,
-                             0,
-                             NULL,
-                             0,
-                             NULL);
+        /* Create the object key */
+        Status = SampRegCreateKey(ContainerKeyHandle,
+                                  ObjectName,
+                                  KEY_ALL_ACCESS,
+                                  &ObjectKeyHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            goto done;
+        }
 
         if (ObjectType == SamDbAliasObject)
         {
-            /* Open the object key */
-            RtlInitUnicodeString(&KeyName,
-                                 L"Members");
-
-            InitializeObjectAttributes(&ObjectAttributes,
-                                       &KeyName,
-                                       OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-                                       ContainerKeyHandle,
-                                       NULL);
-
-            Status = NtCreateKey(&MembersKeyHandle,
-                                 KEY_ALL_ACCESS,
-                                 &ObjectAttributes,
-                                 0,
-                                 NULL,
-                                 0,
-                                 NULL);
-        }
-
-        NtClose(ContainerKeyHandle);
-
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
+            /* Create the object key */
+            Status = SampRegCreateKey(ContainerKeyHandle,
+                                      L"Members",
+                                      KEY_ALL_ACCESS,
+                                      &MembersKeyHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                goto done;
+            }
         }
     }
     else
     {
-        RtlInitUnicodeString(&KeyName,
-                             ObjectName);
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   ParentKeyHandle,
-                                   NULL);
-
-        Status = NtCreateKey(&ObjectKeyHandle,
-                             KEY_ALL_ACCESS,
-                             &ObjectAttributes,
-                             0,
-                             NULL,
-                             0,
-                             NULL);
+        /* Create the object key */
+        Status = SampRegCreateKey(ParentKeyHandle,
+                                  ObjectName,
+                                  KEY_ALL_ACCESS,
+                                  &ObjectKeyHandle);
         if (!NT_SUCCESS(Status))
         {
-            return Status;
+            goto done;
         }
     }
 
@@ -214,10 +144,8 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
                                 sizeof(SAM_DB_OBJECT));
     if (NewObject == NULL)
     {
-        if (MembersKeyHandle != NULL)
-            NtClose(MembersKeyHandle);
-        NtClose(ObjectKeyHandle);
-        return STATUS_NO_MEMORY;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     NewObject->Name = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -225,11 +153,8 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
                                       (wcslen(ObjectName) + 1) * sizeof(WCHAR));
     if (NewObject->Name == NULL)
     {
-        if (MembersKeyHandle != NULL)
-            NtClose(MembersKeyHandle);
-        NtClose(ObjectKeyHandle);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NewObject);
-        return STATUS_NO_MEMORY;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     wcscpy(NewObject->Name, ObjectName);
@@ -248,7 +173,28 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
 
     *DbObject = NewObject;
 
-    return STATUS_SUCCESS;
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (NewObject != NULL)
+        {
+            if (NewObject->Name != NULL)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, NewObject->Name);
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, NewObject);
+        }
+
+        if (MembersKeyHandle != NULL)
+            SampRegCloseKey(MembersKeyHandle);
+
+        if (ObjectKeyHandle != NULL)
+            SampRegCloseKey(ObjectKeyHandle);
+    }
+
+    if (ContainerKeyHandle != NULL)
+        SampRegCloseKey(ContainerKeyHandle);
+
+    return Status;
 }
 
 
@@ -261,9 +207,7 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
                  IN ACCESS_MASK DesiredAccess,
                  OUT PSAM_DB_OBJECT *DbObject)
 {
-    PSAM_DB_OBJECT NewObject;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
+    PSAM_DB_OBJECT NewObject = NULL;
     HANDLE ParentKeyHandle;
     HANDLE ContainerKeyHandle = NULL;
     HANDLE ObjectKeyHandle = NULL;
@@ -273,6 +217,8 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
     if (DbObject == NULL)
         return STATUS_INVALID_PARAMETER;
 
+    *DbObject = NULL;
+
     if (ParentObject == NULL)
         ParentKeyHandle = SamKeyHandle;
     else
@@ -281,83 +227,48 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
     if (ContainerName != NULL)
     {
         /* Open the container key */
-        RtlInitUnicodeString(&KeyName,
-                             ContainerName);
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   ParentKeyHandle,
-                                   NULL);
-
-        Status = NtOpenKey(&ContainerKeyHandle,
-                           KEY_ALL_ACCESS,
-                           &ObjectAttributes);
+        Status = SampRegOpenKey(ParentKeyHandle,
+                                ContainerName,
+                                KEY_ALL_ACCESS,
+                                &ContainerKeyHandle);
         if (!NT_SUCCESS(Status))
         {
-            return Status;
+            goto done;
         }
 
         /* Open the object key */
-        RtlInitUnicodeString(&KeyName,
-                             ObjectName);
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   ContainerKeyHandle,
-                                   NULL);
-
-        Status = NtOpenKey(&ObjectKeyHandle,
-                           KEY_ALL_ACCESS,
-                           &ObjectAttributes);
+        Status = SampRegOpenKey(ContainerKeyHandle,
+                                ObjectName,
+                                KEY_ALL_ACCESS,
+                                &ObjectKeyHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            goto done;
+        }
 
         if (ObjectType == SamDbAliasObject)
         {
             /* Open the object key */
-            RtlInitUnicodeString(&KeyName,
-                                 L"Members");
-
-            InitializeObjectAttributes(&ObjectAttributes,
-                                       &KeyName,
-                                       OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-                                       ContainerKeyHandle,
-                                       NULL);
-
-            Status = NtCreateKey(&MembersKeyHandle,
-                                 KEY_ALL_ACCESS,
-                                 &ObjectAttributes,
-                                 0,
-                                 NULL,
-                                 0,
-                                 NULL);
-        }
-
-        NtClose(ContainerKeyHandle);
-
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
+            Status = SampRegOpenKey(ContainerKeyHandle,
+                                    L"Members",
+                                    KEY_ALL_ACCESS,
+                                    &MembersKeyHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                goto done;
+            }
         }
     }
     else
     {
         /* Open the object key */
-        RtlInitUnicodeString(&KeyName,
-                             ObjectName);
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   ParentKeyHandle,
-                                   NULL);
-
-        Status = NtOpenKey(&ObjectKeyHandle,
-                           KEY_ALL_ACCESS,
-                           &ObjectAttributes);
+        Status = SampRegOpenKey(ParentKeyHandle,
+                                ObjectName,
+                                KEY_ALL_ACCESS,
+                                &ObjectKeyHandle);
         if (!NT_SUCCESS(Status))
         {
-            return Status;
+            goto done;
         }
     }
 
@@ -366,10 +277,8 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
                                 sizeof(SAM_DB_OBJECT));
     if (NewObject == NULL)
     {
-        if (MembersKeyHandle != NULL)
-            NtClose(MembersKeyHandle);
-        NtClose(ObjectKeyHandle);
-        return STATUS_NO_MEMORY;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     NewObject->Name = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -377,11 +286,8 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
                                       (wcslen(ObjectName) + 1) * sizeof(WCHAR));
     if (NewObject->Name == NULL)
     {
-        if (MembersKeyHandle != NULL)
-            NtClose(MembersKeyHandle);
-        NtClose(ObjectKeyHandle);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, NewObject);
-        return STATUS_NO_MEMORY;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     wcscpy(NewObject->Name, ObjectName);
@@ -399,7 +305,28 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
 
     *DbObject = NewObject;
 
-    return STATUS_SUCCESS;
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (NewObject != NULL)
+        {
+            if (NewObject->Name != NULL)
+                RtlFreeHeap(RtlGetProcessHeap(), 0, NewObject->Name);
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, NewObject);
+        }
+
+        if (MembersKeyHandle != NULL)
+            SampRegCloseKey(MembersKeyHandle);
+
+        if (ObjectKeyHandle != NULL)
+            SampRegCloseKey(ObjectKeyHandle);
+    }
+
+    if (ContainerKeyHandle != NULL)
+        SampRegCloseKey(ContainerKeyHandle);
+
+    return Status;
 }
 
 
@@ -460,10 +387,10 @@ SampCloseDbObject(PSAM_DB_OBJECT DbObject)
         return STATUS_SUCCESS;
 
     if (DbObject->KeyHandle != NULL)
-        NtClose(DbObject->KeyHandle);
+        SampRegCloseKey(DbObject->KeyHandle);
 
     if (DbObject->MembersKeyHandle != NULL)
-        NtClose(DbObject->MembersKeyHandle);
+        SampRegCloseKey(DbObject->MembersKeyHandle);
 
     if (DbObject->ParentObject != NULL)
         ParentObject = DbObject->ParentObject;
@@ -541,12 +468,12 @@ SampDeleteAccountDbObject(PSAM_DB_OBJECT DbObject)
     }
 
     if (DbObject->KeyHandle != NULL)
-        NtClose(DbObject->KeyHandle);
+        SampRegCloseKey(DbObject->KeyHandle);
 
     if (DbObject->ObjectType == SamDbAliasObject)
     {
         if (DbObject->MembersKeyHandle != NULL)
-            NtClose(DbObject->MembersKeyHandle);
+            SampRegCloseKey(DbObject->MembersKeyHandle);
 
         SampRegDeleteKey(DbObject->KeyHandle,
                          L"Members");
@@ -622,17 +549,11 @@ SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPVOID AttributeData,
                        ULONG AttributeSize)
 {
-    UNICODE_STRING ValueName;
-
-    RtlInitUnicodeString(&ValueName,
-                         AttributeName);
-
-    return ZwSetValueKey(DbObject->KeyHandle,
-                         &ValueName,
-                         0,
-                         AttributeType,
-                         AttributeData,
-                         AttributeSize);
+    return SampRegSetValue(DbObject->KeyHandle,
+                           AttributeName,
+                           AttributeType,
+                           AttributeData,
+                           AttributeSize);
 }
 
 
@@ -643,53 +564,11 @@ SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPVOID AttributeData,
                        PULONG AttributeSize)
 {
-    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
-    UNICODE_STRING ValueName;
-    ULONG BufferLength = 0;
-    NTSTATUS Status;
-
-    RtlInitUnicodeString(&ValueName,
-                         AttributeName);
-
-    if (AttributeSize != NULL)
-        BufferLength = *AttributeSize;
-
-    BufferLength += FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
-
-    /* Allocate memory for the value */
-    ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
-    if (ValueInfo == NULL)
-        return STATUS_NO_MEMORY;
-
-    /* Query the value */
-    Status = ZwQueryValueKey(DbObject->KeyHandle,
-                             &ValueName,
-                             KeyValuePartialInformation,
-                             ValueInfo,
-                             BufferLength,
-                             &BufferLength);
-    if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
-    {
-        if (AttributeType != NULL)
-            *AttributeType = ValueInfo->Type;
-
-        if (AttributeSize != NULL)
-            *AttributeSize = ValueInfo->DataLength;
-    }
-
-    /* Check if the caller wanted data back, and we got it */
-    if ((NT_SUCCESS(Status)) && (AttributeData != NULL))
-    {
-        /* Copy it */
-        RtlMoveMemory(AttributeData,
-                      ValueInfo->Data,
-                      ValueInfo->DataLength);
-    }
-
-    /* Free the memory and return status */
-    RtlFreeHeap(RtlGetProcessHeap(), 0, ValueInfo);
-
-    return Status;
+    return SampRegQueryValue(DbObject->KeyHandle,
+                             AttributeName,
+                             AttributeType,
+                             AttributeData,
+                             AttributeSize);
 }
 
 
