@@ -256,4 +256,93 @@ SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
     return Status;
 }
 
+
+NTSTATUS
+SampRemoveMemberFromAllAliases(IN PSAM_DB_OBJECT DomainObject,
+                               IN PRPC_SID MemberSid)
+{
+    WCHAR AliasKeyName[64];
+    LPWSTR MemberSidString = NULL;
+    HANDLE AliasesKey;
+    HANDLE MembersKey;
+    HANDLE AliasKey;
+    ULONG Index;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", DomainObject, MemberSid);
+
+    ConvertSidToStringSidW(MemberSid, &MemberSidString);
+    TRACE("Member SID: %S\n", MemberSidString);
+
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            L"Aliases",
+                            KEY_READ,
+                            &AliasesKey);
+    if (NT_SUCCESS(Status))
+    {
+        Index = 0;
+        while (TRUE)
+        {
+            Status = SampRegEnumerateSubKey(AliasesKey,
+                                            Index,
+                                            64,
+                                            AliasKeyName);
+            if (!NT_SUCCESS(Status))
+            {
+                if (Status == STATUS_NO_MORE_ENTRIES)
+                    Status = STATUS_SUCCESS;
+                break;
+            }
+
+            TRACE("Alias key name: %S\n", AliasKeyName);
+
+            Status = SampRegOpenKey(AliasesKey,
+                                    AliasKeyName,
+                                    KEY_READ,
+                                    &AliasKey);
+            if (NT_SUCCESS(Status))
+            {
+                Status = SampRegOpenKey(AliasKey,
+                                        L"Members",
+                                        KEY_WRITE,
+                                        &MembersKey);
+                if (NT_SUCCESS(Status))
+                {
+                    Status = SampRegDeleteValue(AliasKey,
+                                                MemberSidString);
+
+                    SampRegCloseKey(MembersKey);
+                }
+                else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+                    Status = STATUS_SUCCESS;
+
+                SampRegCloseKey(AliasKey);
+            }
+
+            Index++;
+        }
+
+        Status = SampRegOpenKey(AliasesKey,
+                                L"Members",
+                                KEY_WRITE,
+                                &MembersKey);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegDeleteKey(MembersKey,
+                                      MemberSidString);
+            if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+                Status = STATUS_SUCCESS;
+
+            SampRegCloseKey(MembersKey);
+        }
+
+        SampRegCloseKey(AliasesKey);
+    }
+
+    if (MemberSidString != NULL)
+        LocalFree(MemberSidString);
+
+    return Status;
+}
+
 /* EOF */

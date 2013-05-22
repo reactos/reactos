@@ -7648,8 +7648,49 @@ NTAPI
 SamrRemoveMemberFromForeignDomain(IN SAMPR_HANDLE DomainHandle,
                                   IN PRPC_SID MemberSid)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    ULONG Rid = 0;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n",
+          DomainHandle, MemberSid);
+
+    /* Validate the domain object */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LOOKUP,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Retrieve the RID from the MemberSID */
+    Status = SampGetRidFromSid((PSID)MemberSid,
+                               &Rid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetRidFromSid failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Fail, if the RID represents a special account */
+    if (Rid < 1000)
+    {
+        TRACE("Cannot remove a special account (RID: %lu)\n", Rid);
+        return STATUS_SPECIAL_ACCOUNT;
+    }
+
+    /* Remove the member from all aliases in the domain */
+    Status = SampRemoveMemberFromAllAliases(DomainObject,
+                                            MemberSid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRemoveMemberFromAllAliases failed with status 0x%08lx\n", Status);
+    }
+
+    return Status;
 }
 
 

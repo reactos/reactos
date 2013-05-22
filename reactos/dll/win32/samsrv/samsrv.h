@@ -201,6 +201,10 @@ NTSTATUS
 SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
                              IN LPCWSTR lpAccountName);
 
+NTSTATUS
+SampRemoveMemberFromAllAliases(IN PSAM_DB_OBJECT DomainObject,
+                               IN PRPC_SID MemberSid);
+
 
 /* group.h */
 
@@ -281,13 +285,14 @@ SampRegSetValue(IN HANDLE KeyHandle,
 
 /* samspc.c */
 
-VOID SampStartRpcServer(VOID);
+VOID
+SampStartRpcServer(VOID);
 
 
 /* setup.c */
 
-BOOL SampIsSetupRunning(VOID);
-BOOL SampInitializeSAM(VOID);
+BOOL
+SampInitializeSAM(VOID);
 
 
 /* user.c */
@@ -336,5 +341,25 @@ SampGetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
 NTSTATUS
 SampSetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
                           IN PSAMPR_LOGON_HOURS LogonHours);
+
+
+/* utils.c */
+
+INT
+SampLoadString(HINSTANCE hInstance,
+               UINT uId,
+               LPWSTR lpBuffer,
+               INT nBufferMax);
+
+BOOL
+SampIsSetupRunning(VOID);
+
+PSID
+AppendRidToSid(PSID SrcSid,
+               ULONG Rid);
+
+NTSTATUS
+SampGetRidFromSid(IN PSID Sid,
+                  OUT PULONG Rid);
 
 /* EOF */
