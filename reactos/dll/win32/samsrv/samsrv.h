@@ -128,6 +128,15 @@ SampOpenAliasObject(IN PSAM_DB_OBJECT DomainObject,
                     IN ACCESS_MASK DesiredAccess,
                     OUT PSAM_DB_OBJECT *AliasObject);
 
+NTSTATUS
+SampAddMemberToAlias(IN PSAM_DB_OBJECT AliasObject,
+                     IN PRPC_SID MemberId);
+
+NTSTATUS
+NTAPI
+SampRemoveMemberFromAlias(IN PSAM_DB_OBJECT AliasObject,
+                          IN PRPC_SID MemberId);
+
 
 /* database.c */
 
