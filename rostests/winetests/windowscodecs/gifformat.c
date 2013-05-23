@@ -19,11 +19,17 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
-#include "windef.h"
-#include "wincodec.h"
-#include "wine/test.h"
+#include <windef.h>
+#include <winbase.h>
+#include <ole2.h>
+#include <wincodec.h>
+#include <wine/test.h>
 
 static const char gif_global_palette[] = {
 /* LSD */'G','I','F','8','7','a',0x01,0x00,0x01,0x00,0xa1,0x02,0x00,

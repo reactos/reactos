@@ -17,14 +17,19 @@
  */
 
 #include <stdarg.h>
-#include <math.h>
+//#include <math.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "objbase.h"
-#include "wincodec.h"
-#include "wine/test.h"
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <wincodec.h>
+#include <wine/test.h>
 
 static unsigned char testico_bad_icondirentry_size[] = {
     /* ICONDIR */
@@ -133,17 +138,24 @@ static void test_bad_icondirentry_size(void)
 
             if (SUCCEEDED(hr))
             {
-                UINT width = 0, height = 0;
-                IWICBitmapSource *thumbnail = NULL;
+                UINT width, height;
+                IWICBitmapSource *thumbnail;
 
+                width = height = 0;
                 hr = IWICBitmapFrameDecode_GetSize(framedecode, &width, &height);
                 ok(hr == S_OK, "GetFrameSize failed, hr=%x\n", hr);
                 ok(width == 16 && height == 16, "framesize=%ux%u\n", width, height);
 
                 hr = IWICBitmapFrameDecode_GetThumbnail(framedecode, &thumbnail);
-                todo_wine ok(hr == S_OK, "GetThumbnail failed, hr=%x\n", hr);
-
-                if (thumbnail) IWICBitmapSource_Release(thumbnail);
+                ok(hr == S_OK, "GetThumbnail failed, hr=%x\n", hr);
+                if (hr == S_OK)
+                {
+                    width = height = 0;
+                    hr = IWICBitmapSource_GetSize(thumbnail, &width, &height);
+                    ok(hr == S_OK, "GetFrameSize failed, hr=%x\n", hr);
+                    ok(width == 16 && height == 16, "framesize=%ux%u\n", width, height);
+                    IWICBitmapSource_Release(thumbnail);
+                }
                 IWICBitmapFrameDecode_Release(framedecode);
             }
 

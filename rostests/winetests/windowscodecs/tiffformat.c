@@ -16,14 +16,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "wincodec.h"
-#include "wine/test.h"
+#include <windef.h>
+#include <winbase.h>
+#include <ole2.h>
+#include <wincodec.h>
+#include <wine/test.h>
 
 #define IFD_BYTE 1
 #define IFD_ASCII 2
@@ -38,7 +44,7 @@
 #define IFD_FLOAT 11
 #define IFD_DOUBLE 12
 
-#include "pshpack2.h"
+#include <pshpack2.h>
 struct IFD_entry
 {
     SHORT id;
@@ -92,7 +98,7 @@ static const struct tiff_1bpp_data
     { 900, 3 },
     { 0x11, 0x22, 0x33, 0 }
 };
-#include "poppack.h"
+#include <poppack.h>
 
 static IWICImagingFactory *factory;
 

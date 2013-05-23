@@ -19,13 +19,18 @@
 #include <stdarg.h>
 #include <math.h>
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include "windef.h"
-#include "objbase.h"
-#include "wincodec.h"
-#include "wine/test.h"
+#include <windef.h>
+#include <winbase.h>
+#include <ole2.h>
+#include <wincodec.h>
+#include <wine/test.h>
 
 typedef struct bitmap_data {
     const WICPixelFormatGUID *format;
@@ -277,6 +282,12 @@ static const BYTE bits_24bppBGR[] = {
 static const struct bitmap_data testdata_24bppBGR = {
     &GUID_WICPixelFormat24bppBGR, 24, bits_24bppBGR, 4, 2, 96.0, 96.0};
 
+static const BYTE bits_24bppRGB[] = {
+    0,0,255, 0,255,0, 255,0,0, 0,0,0,
+    255,255,0, 255,0,255, 0,255,255, 255,255,255};
+static const struct bitmap_data testdata_24bppRGB = {
+    &GUID_WICPixelFormat24bppRGB, 24, bits_24bppRGB, 4, 2, 96.0, 96.0};
+
 static const BYTE bits_32bppBGR[] = {
     255,0,0,80, 0,255,0,80, 0,0,255,80, 0,0,0,80,
     0,255,255,80, 255,0,255,80, 255,255,0,80, 255,255,255,80};
@@ -499,6 +510,16 @@ START_TEST(converter)
     test_conversion(&testdata_32bppBGRA, &testdata_32bppBGR, "BGRA -> BGR", 0);
     test_conversion(&testdata_32bppBGR, &testdata_32bppBGRA, "BGR -> BGRA", 0);
     test_conversion(&testdata_32bppBGRA, &testdata_32bppBGRA, "BGRA -> BGRA", 0);
+
+    test_conversion(&testdata_24bppBGR, &testdata_24bppBGR, "24bppBGR -> 24bppBGR", 0);
+    test_conversion(&testdata_24bppBGR, &testdata_24bppRGB, "24bppBGR -> 24bppRGB", 0);
+
+    test_conversion(&testdata_24bppRGB, &testdata_24bppRGB, "24bppRGB -> 24bppRGB", 0);
+    test_conversion(&testdata_24bppRGB, &testdata_24bppBGR, "24bppRGB -> 24bppBGR", 0);
+
+    test_conversion(&testdata_32bppBGR, &testdata_24bppRGB, "32bppBGR -> 24bppRGB", 0);
+    test_conversion(&testdata_24bppRGB, &testdata_32bppBGR, "24bppRGB -> 32bppBGR", 0);
+
     test_invalid_conversion();
     test_default_converter();
 

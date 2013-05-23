@@ -11,6 +11,7 @@ list(APPEND SOURCE
     metadata.c
     palette.c
     pngformat.c
+    propertybag.c
     stream.c
     testlist.c
     tiffformat.c)
@@ -18,5 +19,5 @@ list(APPEND SOURCE
 add_executable(windowscodecs_winetest ${SOURCE})
 target_link_libraries(windowscodecs_winetest wine)
 set_module_type(windowscodecs_winetest win32cui)
-add_importlibs(windowscodecs_winetest windowscodecs ole32 msvcrt kernel32 ntdll)
-add_cd_file(TARGET version_winetest DESTINATION reactos/bin FOR all)
+add_importlibs(windowscodecs_winetest windowscodecs oleaut32 ole32 user32 gdi32 msvcrt kernel32 ntdll)
+add_cd_file(TARGET windowscodecs_winetest DESTINATION reactos/bin FOR all)

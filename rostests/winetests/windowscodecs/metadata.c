@@ -18,17 +18,22 @@
  */
 
 #include <stdio.h>
-#include <stdarg.h>
-#include <math.h>
+//#include <stdarg.h>
+//#include <math.h>
 #include <assert.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "objbase.h"
-#include "wincodec.h"
-#include "wincodecsdk.h"
-#include "wine/test.h"
+#include <windef.h>
+#include <winbase.h>
+#include <ole2.h>
+//#include "wincodec.h"
+#include <wincodecsdk.h>
+#include <wine/test.h>
 
 #define expect_blob(propvar, data, length) do { \
     ok((propvar).vt == VT_BLOB, "unexpected vt: %i\n", (propvar).vt); \

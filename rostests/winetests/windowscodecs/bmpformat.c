@@ -19,27 +19,38 @@
 #include <stdarg.h>
 #include <math.h>
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
-#include "windef.h"
-#include "initguid.h"
-#include "objbase.h"
-#include "wincodec.h"
-#include "wincodecsdk.h"
-#include "wine/test.h"
+#include <windef.h>
+#include <winbase.h>
+#include <initguid.h>
+#include <ole2.h>
+//#include "wincodec.h"
+#include <wincodecsdk.h>
+#include <wine/test.h>
 
 static const char testbmp_24bpp[] = {
     /* BITMAPFILEHEADER */
     66,77, /* "BM" */
-    50,0,0,0, /* file size */
+    78,0,0,0, /* file size */
     0,0,0,0, /* reserved */
-    26,0,0,0, /* offset to bits */
-    /* BITMAPCOREHEADER */
-    12,0,0,0, /* header size */
-    2,0, /* width */
-    3,0, /* height */
+    54,0,0,0, /* offset to bits */
+    /* BITMAPINFOHEADER */
+    40,0,0,0, /* header size */
+    2,0,0,0, /* width */
+    3,0,0,0, /* height */
     1,0, /* planes */
     24,0, /* bit count */
+    0,0,0,0, /* compression */
+    0,0,0,0, /* image size */
+    0x74,0x12,0,0, /* X pels per meter => 120 dpi */
+    0,0,0,0, /* Y pels per meter */
+    0,0,0,0, /* colors used */
+    0,0,0,0, /* colors important */
     /* bits */
     0,0,0,     0,255,0,     0,0,
     255,0,0,   255,255,0,   0,0,
@@ -86,7 +97,14 @@ static void test_decode_24bpp(void)
         if (SUCCEEDED(hr))
         {
             hr = IWICBitmapDecoder_Initialize(decoder, bmpstream, WICDecodeMetadataCacheOnLoad);
-            ok(hr == S_OK, "Initialize failed, hr=%x\n", hr);
+            ok(hr == S_OK || broken(hr == WINCODEC_ERR_BADIMAGE) /* XP */, "Initialize failed, hr=%x\n", hr);
+            if (FAILED(hr))
+            {
+                win_skip("BMP decoder failed to initialize\n");
+                GlobalFree(hbmpdata);
+                IWICBitmapDecoder_Release(decoder);
+                return;
+            }
 
             hr = IWICBitmapDecoder_GetContainerFormat(decoder, &guidresult);
             ok(SUCCEEDED(hr), "GetContainerFormat failed, hr=%x\n", hr);

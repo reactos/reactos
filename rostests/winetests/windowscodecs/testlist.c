@@ -1,8 +1,5 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #define STANDALONE
 #include "wine/test.h"
 
@@ -15,6 +12,7 @@ extern void func_info(void);
 extern void func_metadata(void);
 extern void func_palette(void);
 extern void func_pngformat(void);
+extern void func_propertybag(void);
 extern void func_stream(void);
 extern void func_tiffformat(void);
 
@@ -29,6 +27,7 @@ const struct test winetest_testlist[] =
     { "metadata", func_metadata },
     { "palette", func_palette },
     { "pngformat", func_pngformat },
+    { "propertybag", func_propertybag },
     { "stream", func_stream },
     { "tiffformat", func_tiffformat },
     { 0, 0 }
