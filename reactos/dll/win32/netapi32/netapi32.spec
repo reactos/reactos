@@ -94,15 +94,15 @@
 @ stdcall NetGetDCName(wstr wstr ptr)
 @ stub NetGetDisplayInformationIndex
 @ stdcall NetGetJoinInformation(wstr ptr ptr)
-@ stub NetGroupAdd
-@ stub NetGroupAddUser
-@ stub NetGroupDel
-@ stub NetGroupDelUser
+@ stdcall NetGroupAdd(wstr long ptr ptr)
+@ stdcall NetGroupAddUser(wstr wstr wstr)
+@ stdcall NetGroupDel(wstr wstr)
+@ stdcall NetGroupDelUser(wstr wstr wstr)
 @ stdcall NetGroupEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetGroupGetInfo(wstr wstr long ptr)
-@ stub NetGroupGetUsers
-@ stub NetGroupSetInfo
-@ stub NetGroupSetUsers
+@ stdcall NetGroupGetUsers(wstr wstr long ptr long ptr ptr ptr)
+@ stdcall NetGroupSetInfo(wstr wstr long ptr ptr)
+@ stdcall NetGroupSetUsers(wstr wstr long ptr long)
 @ stdcall NetLocalGroupAdd(wstr long ptr ptr)
 @ stdcall NetLocalGroupAddMember(wstr wstr ptr)
 @ stdcall NetLocalGroupAddMembers(wstr wstr long ptr long)
