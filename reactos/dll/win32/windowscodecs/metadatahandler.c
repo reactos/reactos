@@ -64,7 +64,7 @@ static inline MetadataHandler *impl_from_IWICPersistStream(IWICPersistStream *if
 
 static void MetadataHandler_FreeItems(MetadataHandler *This)
 {
-    int i;
+    DWORD i;
 
     for (i=0; i<This->item_count; i++)
     {
@@ -559,7 +559,7 @@ static HRESULT WINAPI MetadataHandlerEnum_Next(IWICEnumMetadataItem *iface,
     MetadataHandlerEnum *This = impl_from_IWICEnumMetadataItem(iface);
     ULONG new_index;
     HRESULT hr=S_FALSE;
-    int i;
+    ULONG i;
 
     TRACE("(%p,%i)\n", iface, celt);
 

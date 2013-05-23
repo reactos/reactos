@@ -596,7 +596,7 @@ static HRESULT WINAPI PaletteImpl_IsGrayscale(IWICPalette *iface, BOOL *pfIsGray
 static HRESULT WINAPI PaletteImpl_HasAlpha(IWICPalette *iface, BOOL *pfHasAlpha)
 {
     PaletteImpl *This = impl_from_IWICPalette(iface);
-    int i;
+    UINT i;
 
     TRACE("(%p,%p)\n", iface, pfHasAlpha);
 

@@ -1145,7 +1145,7 @@ static HRESULT WINAPI GifDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
 
     seek.QuadPart = 0;
     IStream_Seek(pIStream, seek, STREAM_SEEK_SET, NULL);
-    IStream_Read(pIStream, &This->LSD_data, sizeof(This->LSD_data), NULL);
+    IStream_Read(pIStream, This->LSD_data, sizeof(This->LSD_data), NULL);
 
     This->initialized = TRUE;
 

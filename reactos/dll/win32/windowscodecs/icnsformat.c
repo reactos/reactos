@@ -667,7 +667,7 @@ static HRESULT WINAPI IcnsEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
         goto end;
     }
 
-    hr = CreatePropertyBag2(ppIEncoderOptions);
+    hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
     if (FAILED(hr))
         goto end;
 

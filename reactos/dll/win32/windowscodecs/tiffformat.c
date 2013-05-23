@@ -1109,8 +1109,34 @@ static HRESULT WINAPI TiffFrameDecode_GetMetadataQueryReader(IWICBitmapFrameDeco
 static HRESULT WINAPI TiffFrameDecode_GetColorContexts(IWICBitmapFrameDecode *iface,
     UINT cCount, IWICColorContext **ppIColorContexts, UINT *pcActualCount)
 {
-    FIXME("(%p,%u,%p,%p): stub\n", iface, cCount, ppIColorContexts, pcActualCount);
-    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+    TiffFrameDecode *This = impl_from_IWICBitmapFrameDecode(iface);
+    const BYTE *profile;
+    UINT len;
+    HRESULT hr;
+
+    TRACE("(%p,%u,%p,%p)\n", iface, cCount, ppIColorContexts, pcActualCount);
+
+    EnterCriticalSection(&This->parent->lock);
+
+    if (pTIFFGetField(This->parent->tiff, TIFFTAG_ICCPROFILE, &len, &profile))
+    {
+        if (cCount && ppIColorContexts)
+        {
+            hr = IWICColorContext_InitializeFromMemory(*ppIColorContexts, profile, len);
+            if (FAILED(hr))
+            {
+                LeaveCriticalSection(&This->parent->lock);
+                return hr;
+            }
+        }
+        *pcActualCount = 1;
+    }
+    else
+        *pcActualCount = 0;
+
+    LeaveCriticalSection(&This->parent->lock);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI TiffFrameDecode_GetThumbnail(IWICBitmapFrameDecode *iface,
@@ -1308,6 +1334,7 @@ struct tiff_encode_format {
 
 static const struct tiff_encode_format formats[] = {
     {&GUID_WICPixelFormat24bppBGR, 2, 8, 3, 24, 0, 0, 1},
+    {&GUID_WICPixelFormat24bppRGB, 2, 8, 3, 24, 0, 0, 0},
     {&GUID_WICPixelFormatBlackWhite, 1, 1, 1, 1, 0, 0, 0},
     {&GUID_WICPixelFormat4bppGray, 1, 4, 1, 4, 0, 0, 0},
     {&GUID_WICPixelFormat8bppGray, 1, 8, 1, 8, 0, 0, 0},
@@ -1886,7 +1913,7 @@ static HRESULT WINAPI TiffEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 
     if (SUCCEEDED(hr))
     {
-        hr = CreatePropertyBag2(ppIEncoderOptions);
+        hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
     }
 
     if (SUCCEEDED(hr))

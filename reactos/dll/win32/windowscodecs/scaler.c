@@ -182,7 +182,7 @@ static void NearestNeighbor_CopyScanline(BitmapScaler *This,
     UINT dst_x, UINT dst_y, UINT dst_width,
     BYTE **src_data, UINT src_data_x, UINT src_data_y, BYTE *pbBuffer)
 {
-    int i;
+    UINT i;
     UINT bytesperpixel = This->bpp/8;
     UINT src_x, src_y;
 

@@ -29,6 +29,7 @@ list(APPEND SOURCE
     bmpencode.c
     clsfactory.c
     colorcontext.c
+    colortransform.c
     converter.c
     fliprotate.c
     gifformat.c
@@ -63,5 +64,5 @@ endif()
 add_library(windowscodecs SHARED ${SOURCE} version.rc)
 set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid ${PSEH_LIB})
-add_importlibs(windowscodecs ole32 oleaut32 shlwapi advapi32 rpcrt4 msvcrt kernel32 ntdll)
+add_importlibs(windowscodecs ole32 oleaut32 rpcrt4 shlwapi user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)

@@ -1,5 +1,6 @@
 /*
  * Copyright 2009 Vincent Povirk for CodeWeavers
+ * Copyright 2012 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,6 +29,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <wingdi.h>
 //#include "winreg.h"
 #include <objbase.h>
 //#include "shellapi.h"
@@ -241,9 +243,24 @@ static HRESULT WINAPI ComponentFactory_CreateDecoderFromFileHandle(
     IWICComponentFactory *iface, ULONG_PTR hFile, const GUID *pguidVendor,
     WICDecodeOptions metadataOptions, IWICBitmapDecoder **ppIDecoder)
 {
-    FIXME("(%p,%lx,%s,%u,%p): stub\n", iface, hFile, debugstr_guid(pguidVendor),
+    IWICStream *stream;
+    HRESULT hr;
+
+    TRACE("(%p,%lx,%s,%u,%p)\n", iface, hFile, debugstr_guid(pguidVendor),
         metadataOptions, ppIDecoder);
-    return E_NOTIMPL;
+
+    hr = StreamImpl_Create(&stream);
+    if (SUCCEEDED(hr))
+    {
+        hr = stream_initialize_from_filehandle(stream, (HANDLE)hFile);
+        if (SUCCEEDED(hr))
+        {
+            hr = IWICComponentFactory_CreateDecoderFromStream(iface, (IStream*)stream,
+                pguidVendor, metadataOptions, ppIDecoder);
+        }
+        IWICStream_Release(stream);
+    }
+    return hr;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateComponentInfo(IWICComponentFactory *iface,
@@ -453,8 +470,8 @@ static HRESULT WINAPI ComponentFactory_CreateColorContext(IWICComponentFactory *
 static HRESULT WINAPI ComponentFactory_CreateColorTransformer(IWICComponentFactory *iface,
     IWICColorTransform **ppIColorTransform)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIColorTransform);
-    return E_NOTIMPL;
+    TRACE("(%p,%p)\n", iface, ppIColorTransform);
+    return ColorTransform_Create(ppIColorTransform);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmap(IWICComponentFactory *iface,
@@ -463,7 +480,7 @@ static HRESULT WINAPI ComponentFactory_CreateBitmap(IWICComponentFactory *iface,
 {
     TRACE("(%p,%u,%u,%s,%u,%p)\n", iface, uiWidth, uiHeight,
         debugstr_guid(pixelFormat), option, ppIBitmap);
-    return BitmapImpl_Create(uiWidth, uiHeight, pixelFormat, option, ppIBitmap);
+    return BitmapImpl_Create(uiWidth, uiHeight, 0, 0, NULL, pixelFormat, option, ppIBitmap);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFromSource(IWICComponentFactory *iface,
@@ -510,7 +527,7 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromSource(IWICComponentFacto
     }
 
     if (SUCCEEDED(hr))
-        hr = BitmapImpl_Create(width, height, &pixelformat, option, &result);
+        hr = BitmapImpl_Create(width, height, 0, 0, NULL, &pixelformat, option, &result);
 
     if (SUCCEEDED(hr))
     {
@@ -580,12 +597,15 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromSourceRect(IWICComponentF
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFromMemory(IWICComponentFactory *iface,
-    UINT uiWidth, UINT uiHeight, REFWICPixelFormatGUID pixelFormat, UINT cbStride,
-    UINT cbBufferSize, BYTE *pbBuffer, IWICBitmap **ppIBitmap)
+    UINT width, UINT height, REFWICPixelFormatGUID format, UINT stride,
+    UINT size, BYTE *buffer, IWICBitmap **bitmap)
 {
-    FIXME("(%p,%u,%u,%s,%u,%u,%p,%p): stub\n", iface, uiWidth, uiHeight,
-        debugstr_guid(pixelFormat), cbStride, cbBufferSize, pbBuffer, ppIBitmap);
-    return E_NOTIMPL;
+    TRACE("(%p,%u,%u,%s,%u,%u,%p,%p\n", iface, width, height,
+        debugstr_guid(format), stride, size, buffer, bitmap);
+
+    if (!stride || !size || !buffer || !bitmap) return E_INVALIDARG;
+
+    return BitmapImpl_Create(width, height, stride, size, buffer, format, WICBitmapCacheOnLoad, bitmap);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFromHBITMAP(IWICComponentFactory *iface,
@@ -597,10 +617,140 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromHBITMAP(IWICComponentFact
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFromHICON(IWICComponentFactory *iface,
-    HICON hIcon, IWICBitmap **ppIBitmap)
+    HICON hicon, IWICBitmap **bitmap)
 {
-    FIXME("(%p,%p,%p): stub\n", iface, hIcon, ppIBitmap);
-    return E_NOTIMPL;
+    IWICBitmapLock *lock;
+    ICONINFO info;
+    BITMAP bm;
+    int width, height, x, y;
+    UINT stride, size;
+    BYTE *buffer;
+    DWORD *bits;
+    BITMAPINFO bi;
+    HDC hdc;
+    BOOL has_alpha;
+    HRESULT hr;
+
+    TRACE("(%p,%p,%p)\n", iface, hicon, bitmap);
+
+    if (!bitmap) return E_INVALIDARG;
+
+    if (!GetIconInfo(hicon, &info))
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    GetObjectW(info.hbmColor ? info.hbmColor : info.hbmMask, sizeof(bm), &bm);
+
+    width = bm.bmWidth;
+    height = info.hbmColor ? abs(bm.bmHeight) : abs(bm.bmHeight) / 2;
+    stride = width * 4;
+    size = stride * height;
+
+    hr = BitmapImpl_Create(width, height, stride, size, NULL,
+                           &GUID_WICPixelFormat32bppBGRA, WICBitmapCacheOnLoad, bitmap);
+    if (hr != S_OK) goto failed;
+
+    hr = IWICBitmap_Lock(*bitmap, NULL, WICBitmapLockWrite, &lock);
+    if (hr != S_OK)
+    {
+        IWICBitmap_Release(*bitmap);
+        goto failed;
+    }
+    IWICBitmapLock_GetDataPointer(lock, &size, &buffer);
+
+    hdc = CreateCompatibleDC(0);
+
+    memset(&bi, 0, sizeof(bi));
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+    bi.bmiHeader.biWidth = width;
+    bi.bmiHeader.biHeight = info.hbmColor ? -height: -height * 2;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+
+    has_alpha = FALSE;
+
+    if (info.hbmColor)
+    {
+        GetDIBits(hdc, info.hbmColor, 0, height, buffer, &bi, DIB_RGB_COLORS);
+
+        if (bm.bmBitsPixel == 32)
+        {
+            /* If any pixel has a non-zero alpha, ignore hbmMask */
+            bits = (DWORD *)buffer;
+            for (x = 0; x < width && !has_alpha; x++, bits++)
+            {
+                for (y = 0; y < height; y++)
+                {
+                    if (*bits & 0xff000000)
+                    {
+                        has_alpha = TRUE;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    else
+        GetDIBits(hdc, info.hbmMask, 0, height, buffer, &bi, DIB_RGB_COLORS);
+
+    if (!has_alpha)
+    {
+        DWORD *rgba;
+
+        if (info.hbmMask)
+        {
+            BYTE *mask;
+
+            mask = HeapAlloc(GetProcessHeap(), 0, size);
+            if (!mask)
+            {
+                IWICBitmapLock_Release(lock);
+                IWICBitmap_Release(*bitmap);
+                DeleteDC(hdc);
+                hr = E_OUTOFMEMORY;
+                goto failed;
+            }
+
+            /* read alpha data from the mask */
+            GetDIBits(hdc, info.hbmMask, info.hbmColor ? 0 : height, height, mask, &bi, DIB_RGB_COLORS);
+
+            for (y = 0; y < height; y++)
+            {
+                rgba = (DWORD *)(buffer + y * stride);
+                bits = (DWORD *)(mask + y * stride);
+
+                for (x = 0; x < width; x++, rgba++, bits++)
+                {
+                    if (*bits)
+                        *rgba = 0;
+                    else
+                        *rgba |= 0xff000000;
+                }
+            }
+
+            HeapFree(GetProcessHeap(), 0, mask);
+        }
+        else
+        {
+            /* set constant alpha of 255 */
+            for (y = 0; y < height; y++)
+            {
+                rgba = (DWORD *)(buffer + y * stride);
+                for (x = 0; x < width; x++, rgba++)
+                    *rgba |= 0xff000000;
+            }
+        }
+
+    }
+
+    IWICBitmapLock_Release(lock);
+    DeleteDC(hdc);
+
+failed:
+    DeleteObject(info.hbmColor);
+    DeleteObject(info.hbmMask);
+
+    return hr;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateComponentEnumerator(IWICComponentFactory *iface,
@@ -691,8 +841,8 @@ static HRESULT WINAPI ComponentFactory_CreateQueryWriterFromBlockWriter(IWICComp
 static HRESULT WINAPI ComponentFactory_CreateEncoderPropertyBag(IWICComponentFactory *iface,
         PROPBAG2 *options, UINT count, IPropertyBag2 **property)
 {
-    FIXME("%p,%p,%u,%p: stub\n", iface, options, count, property);
-    return E_NOTIMPL;
+    TRACE("(%p,%p,%u,%p)\n", iface, options, count, property);
+    return CreatePropertyBag2(options, count, property);
 }
 
 static const IWICComponentFactoryVtbl ComponentFactory_Vtbl = {

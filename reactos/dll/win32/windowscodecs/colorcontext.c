@@ -100,27 +100,82 @@ static ULONG WINAPI ColorContext_Release(IWICColorContext *iface)
     return ref;
 }
 
+static HRESULT load_profile(const WCHAR *filename, BYTE **profile, UINT *len)
+{
+    HANDLE handle;
+    DWORD count;
+    LARGE_INTEGER size;
+    BOOL ret;
+
+    *len = 0;
+    *profile = NULL;
+    handle = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (handle == INVALID_HANDLE_VALUE) return HRESULT_FROM_WIN32(GetLastError());
+
+    if (!(GetFileSizeEx(handle, &size)))
+    {
+        CloseHandle(handle);
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+    if (size.u.HighPart)
+    {
+        WARN("file too large\n");
+        CloseHandle(handle);
+        return E_FAIL;
+    }
+    if (!(*profile = HeapAlloc(GetProcessHeap(), 0, size.u.LowPart)))
+    {
+        CloseHandle(handle);
+        return E_OUTOFMEMORY;
+    }
+    ret = ReadFile(handle, *profile, size.u.LowPart, &count, NULL);
+    CloseHandle(handle);
+    if (!ret) return HRESULT_FROM_WIN32(GetLastError());
+    if (count != size.u.LowPart) return E_FAIL;
+    *len = count;
+    return S_OK;
+}
+
 static HRESULT WINAPI ColorContext_InitializeFromFilename(IWICColorContext *iface,
     LPCWSTR wzFilename)
 {
-    FIXME("(%p,%s)\n", iface, debugstr_w(wzFilename));
-    return E_NOTIMPL;
+    ColorContext *This = impl_from_IWICColorContext(iface);
+    BYTE *profile;
+    UINT len;
+    HRESULT hr;
+    TRACE("(%p,%s)\n", iface, debugstr_w(wzFilename));
+
+    if (This->type != WICColorContextUninitialized && This->type != WICColorContextProfile)
+        return WINCODEC_ERR_WRONGSTATE;
+
+    if (!wzFilename) return E_INVALIDARG;
+
+    hr = load_profile(wzFilename, &profile, &len);
+    if (FAILED(hr)) return hr;
+
+    HeapFree(GetProcessHeap(), 0, This->profile);
+    This->profile = profile;
+    This->profile_len = len;
+    This->type = WICColorContextProfile;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ColorContext_InitializeFromMemory(IWICColorContext *iface,
     const BYTE *pbBuffer, UINT cbBufferSize)
 {
     ColorContext *This = impl_from_IWICColorContext(iface);
+    BYTE *profile;
     TRACE("(%p,%p,%u)\n", iface, pbBuffer, cbBufferSize);
 
-    if (This->type != WICColorContextUninitialized)
+    if (This->type != WICColorContextUninitialized && This->type != WICColorContextProfile)
         return WINCODEC_ERR_WRONGSTATE;
 
-    HeapFree(GetProcessHeap(), 0, This->profile);
-    if (!(This->profile = HeapAlloc(GetProcessHeap(), 0, cbBufferSize)))
-        return E_OUTOFMEMORY;
+    if (!(profile = HeapAlloc(GetProcessHeap(), 0, cbBufferSize))) return E_OUTOFMEMORY;
+    memcpy(profile, pbBuffer, cbBufferSize);
 
-    memcpy(This->profile, pbBuffer, cbBufferSize);
+    HeapFree(GetProcessHeap(), 0, This->profile);
+    This->profile = profile;
     This->profile_len = cbBufferSize;
     This->type = WICColorContextProfile;
 

@@ -167,22 +167,35 @@ static HRESULT WINAPI BmpFrameDecode_GetPixelFormat(IWICBitmapFrameDecode *iface
 
 static HRESULT BmpHeader_GetResolution(BITMAPV5HEADER *bih, double *pDpiX, double *pDpiY)
 {
+    LONG resx = 0, resy = 0;
+
     switch (bih->bV5Size)
     {
+    default:
     case sizeof(BITMAPCOREHEADER):
-        *pDpiX = 96.0;
-        *pDpiY = 96.0;
-        return S_OK;
+        break;
+
     case sizeof(BITMAPCOREHEADER2):
     case sizeof(BITMAPINFOHEADER):
     case sizeof(BITMAPV4HEADER):
     case sizeof(BITMAPV5HEADER):
-        *pDpiX = bih->bV5XPelsPerMeter * 0.0254;
-        *pDpiY = bih->bV5YPelsPerMeter * 0.0254;
-        return S_OK;
-    default:
-        return E_FAIL;
+        resx = bih->bV5XPelsPerMeter;
+        resy = bih->bV5YPelsPerMeter;
+        break;
     }
+
+    if (!resx || !resy)
+    {
+        *pDpiX = 96.0;
+        *pDpiY = 96.0;
+    }
+    else
+    {
+        *pDpiX = resx * 0.0254;
+        *pDpiY = resy * 0.0254;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI BmpFrameDecode_GetResolution(IWICBitmapFrameDecode *iface,

@@ -45,6 +45,7 @@ extern HRESULT IcnsEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void*
 extern HRESULT TgaDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv) DECLSPEC_HIDDEN;
 
 extern HRESULT BitmapImpl_Create(UINT uiWidth, UINT uiHeight,
+    UINT stride, UINT datasize, BYTE *bits,
     REFWICPixelFormatGUID pixelFormat, WICBitmapCreateCacheOption option,
     IWICBitmap **ppIBitmap) DECLSPEC_HIDDEN;
 extern HRESULT BitmapScaler_Create(IWICBitmapScaler **scaler) DECLSPEC_HIDDEN;
@@ -52,6 +53,7 @@ extern HRESULT FlipRotator_Create(IWICBitmapFlipRotator **fliprotator) DECLSPEC_
 extern HRESULT PaletteImpl_Create(IWICPalette **palette) DECLSPEC_HIDDEN;
 extern HRESULT StreamImpl_Create(IWICStream **stream) DECLSPEC_HIDDEN;
 extern HRESULT ColorContext_Create(IWICColorContext **context) DECLSPEC_HIDDEN;
+extern HRESULT ColorTransform_Create(IWICColorTransform **transform) DECLSPEC_HIDDEN;
 
 extern HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
     UINT srcwidth, UINT srcheight, INT srcstride,
@@ -61,7 +63,8 @@ extern void reverse_bgr8(UINT bytesperpixel, LPBYTE bits, UINT width, UINT heigh
 
 extern HRESULT get_pixelformat_bpp(const GUID *pixelformat, UINT *bpp) DECLSPEC_HIDDEN;
 
-extern HRESULT CreatePropertyBag2(IPropertyBag2 **ppPropertyBag2) DECLSPEC_HIDDEN;
+extern HRESULT CreatePropertyBag2(PROPBAG2 *options, UINT count,
+                                  IPropertyBag2 **property) DECLSPEC_HIDDEN;
 
 extern HRESULT CreateComponentInfo(REFCLSID clsid, IWICComponentInfo **ppIInfo) DECLSPEC_HIDDEN;
 extern HRESULT CreateComponentEnumerator(DWORD componentTypes, DWORD options, IEnumUnknown **ppIEnumUnknown) DECLSPEC_HIDDEN;
@@ -101,5 +104,7 @@ extern HRESULT IMDReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **
 extern HRESULT GCEReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv) DECLSPEC_HIDDEN;
 extern HRESULT APEReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv) DECLSPEC_HIDDEN;
 extern HRESULT GifCommentReader_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void **ppv) DECLSPEC_HIDDEN;
+
+extern HRESULT stream_initialize_from_filehandle(IWICStream *iface, HANDLE hfile) DECLSPEC_HIDDEN;
 
 #endif /* WINCODECS_PRIVATE_H */

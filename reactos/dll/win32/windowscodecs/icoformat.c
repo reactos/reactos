@@ -203,8 +203,8 @@ static HRESULT WINAPI IcoFrameDecode_GetColorContexts(IWICBitmapFrameDecode *ifa
 static HRESULT WINAPI IcoFrameDecode_GetThumbnail(IWICBitmapFrameDecode *iface,
     IWICBitmapSource **ppIThumbnail)
 {
-    FIXME("(%p,%p)\n", iface, ppIThumbnail);
-    return E_NOTIMPL;
+    TRACE("(%p,%p)\n", iface, ppIThumbnail);
+    return IWICBitmapFrameDecode_QueryInterface(iface, &IID_IWICBitmapSource, (void **)ppIThumbnail);
 }
 
 static const IWICBitmapFrameDecodeVtbl IcoFrameDecode_Vtbl = {
@@ -296,7 +296,7 @@ static HRESULT ReadIcoDib(IStream *stream, IcoFrameDecode *result)
         {
             /* If the alpha channel is fully transparent, we should ignore it. */
             int nonzero_alpha = 0;
-            int i;
+            UINT i;
 
             for (i=0; i<(result->height*result->width); i++)
             {
