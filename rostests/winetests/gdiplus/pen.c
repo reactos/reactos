@@ -20,9 +20,15 @@
 
 #include <math.h>
 
-#include "windows.h"
-#include "gdiplus.h"
-#include "wine/test.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include "windows.h"
+#include <wine/test.h>
+#include <wingdi.h>
+#include <objbase.h>
+#include <gdiplus.h>
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 #define expectf(expected, got) ok(fabs(got - expected) < 0.1, "Expected %.2f, got %.2f\n", expected, got)

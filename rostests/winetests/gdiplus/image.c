@@ -25,10 +25,17 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "initguid.h"
-#include "windows.h"
-#include "gdiplus.h"
-#include "wine/test.h"
+#include <initguid.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include "windows.h"
+#include <wine/test.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <ole2.h>
+#include <gdiplus.h>
 
 #define expect(expected, got) ok((got) == (expected), "Expected %d, got %d\n", (UINT)(expected), (UINT)(got))
 #define expectf(expected, got) ok(fabs((expected) - (got)) < 0.0001, "Expected %f, got %f\n", (expected), (got))
@@ -3106,8 +3113,11 @@ static void test_tiff_properties(void)
     PropertyItem *prop_item;
 
     image = load_image((const BYTE *)&TIFF_data, sizeof(TIFF_data));
-    ok(image != 0, "Failed to load TIFF image data\n");
-    if (!image) return;
+    if (!image)
+    {
+        win_skip("Failed to load TIFF image data. Might not be supported. Skipping.\n");
+        return;
+    }
 
     status = GdipImageGetFrameDimensionsCount(image, &dim_count);
     expect(Ok, status);
@@ -3361,8 +3371,11 @@ static void test_tiff_palette(void)
 
     /* 1bpp TIFF without palette */
     image = load_image((const BYTE *)&TIFF_data, sizeof(TIFF_data));
-    ok(image != 0, "Failed to load TIFF image data\n");
-    if (!image) return;
+    if (!image)
+    {
+        win_skip("Failed to load TIFF image data. Might not be supported. Skipping.\n");
+        return;
+    }
 
     status = GdipGetImagePixelFormat(image, &format);
     expect(Ok, status);
@@ -4108,6 +4121,76 @@ static void test_gif_properties(void)
     GdipDisposeImage(image);
 }
 
+static void test_ARGB_conversion(void)
+{
+    BYTE argb[8] = { 0x11,0x22,0x33,0x80, 0xff,0xff,0xff,0 };
+    BYTE pargb[8] = { 0x09,0x11,0x1a,0x80, 0,0,0,0 };
+    BYTE rgb32_xp[8] = { 0x11,0x22,0x33,0xff, 0xff,0xff,0xff,0xff };
+    BYTE rgb24[6] = { 0x11,0x22,0x33, 0xff,0xff,0xff };
+    BYTE *bits;
+    GpBitmap *bitmap;
+    BitmapData data;
+    GpStatus status;
+    int match;
+
+    status = GdipCreateBitmapFromScan0(2, 1, 8, PixelFormat32bppARGB, argb, &bitmap);
+    expect(Ok, status);
+
+    status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat32bppPARGB, &data);
+    expect(Ok, status);
+    ok(data.Width == 2, "expected 2, got %d\n", data.Width);
+    ok(data.Height == 1, "expected 1, got %d\n", data.Height);
+    ok(data.Stride == 8, "expected 8, got %d\n", data.Stride);
+    ok(data.PixelFormat == PixelFormat32bppPARGB, "expected PixelFormat32bppPARGB, got %d\n", data.PixelFormat);
+    match = !memcmp(data.Scan0, pargb, sizeof(pargb));
+    ok(match, "bits don't match\n");
+    if (!match)
+    {
+        bits = data.Scan0;
+        trace("format %#x, bits %02x,%02x,%02x,%02x %02x,%02x,%02x,%02x\n", PixelFormat32bppPARGB,
+               bits[0], bits[1], bits[2], bits[3], bits[4], bits[5], bits[6], bits[7]);
+    }
+    status = GdipBitmapUnlockBits(bitmap, &data);
+    expect(Ok, status);
+
+    status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat32bppRGB, &data);
+    expect(Ok, status);
+    ok(data.Width == 2, "expected 2, got %d\n", data.Width);
+    ok(data.Height == 1, "expected 1, got %d\n", data.Height);
+    ok(data.Stride == 8, "expected 8, got %d\n", data.Stride);
+    ok(data.PixelFormat == PixelFormat32bppRGB, "expected PixelFormat32bppRGB, got %d\n", data.PixelFormat);
+    match = !memcmp(data.Scan0, argb, sizeof(argb)) ||
+            !memcmp(data.Scan0, rgb32_xp, sizeof(rgb32_xp));
+    ok(match, "bits don't match\n");
+    if (!match)
+    {
+        bits = data.Scan0;
+        trace("format %#x, bits %02x,%02x,%02x,%02x %02x,%02x,%02x,%02x\n", PixelFormat32bppRGB,
+               bits[0], bits[1], bits[2], bits[3], bits[4], bits[5], bits[6], bits[7]);
+    }
+    status = GdipBitmapUnlockBits(bitmap, &data);
+    expect(Ok, status);
+
+    status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat24bppRGB, &data);
+    expect(Ok, status);
+    ok(data.Width == 2, "expected 2, got %d\n", data.Width);
+    ok(data.Height == 1, "expected 1, got %d\n", data.Height);
+    ok(data.Stride == 8, "expected 8, got %d\n", data.Stride);
+    ok(data.PixelFormat == PixelFormat24bppRGB, "expected PixelFormat24bppRGB, got %d\n", data.PixelFormat);
+    match = !memcmp(data.Scan0, rgb24, sizeof(rgb24));
+    ok(match, "bits don't match\n");
+    if (!match)
+    {
+        bits = data.Scan0;
+        trace("format %#x, bits %02x,%02x,%02x,%02x %02x,%02x,%02x,%02x\n", PixelFormat24bppRGB,
+               bits[0], bits[1], bits[2], bits[3], bits[4], bits[5], bits[6], bits[7]);
+    }
+    status = GdipBitmapUnlockBits(bitmap, &data);
+    expect(Ok, status);
+
+    GdipDisposeImage((GpImage *)bitmap);
+}
+
 START_TEST(image)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -4120,6 +4203,7 @@ START_TEST(image)
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    test_ARGB_conversion();
     test_DrawImage_scale();
     test_image_format();
     test_DrawImage();

@@ -18,10 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windows.h"
-#include "gdiplus.h"
-#include "wingdi.h"
-#include "wine/test.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include "windows.h"
+#include <wine/test.h>
+#include <wingdi.h>
+#include <objbase.h>
+#include <gdiplus.h>
 #include <math.h>
 
 #define RGNDATA_RECT            0x10000000
