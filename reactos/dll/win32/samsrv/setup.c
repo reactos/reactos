@@ -24,9 +24,9 @@ SID_IDENTIFIER_AUTHORITY SecurityNtAuthority = {SECURITY_NT_AUTHORITY};
 /* FUNCTIONS ***************************************************************/
 
 static BOOL
-SampAddMemberToAlias(HKEY hDomainKey,
-                     ULONG AliasId,
-                     PSID MemberSid)
+SampSetupAddMemberToAlias(HKEY hDomainKey,
+                          ULONG AliasId,
+                          PSID MemberSid)
 {
     DWORD dwDisposition;
     LPWSTR MemberSidString = NULL;
@@ -89,10 +89,10 @@ SampAddMemberToAlias(HKEY hDomainKey,
 
 
 static BOOL
-SampCreateAliasAccount(HKEY hDomainKey,
-                       LPCWSTR lpAccountName,
-                       LPCWSTR lpDescription,
-                       ULONG ulRelativeId)
+SampSetupCreateAliasAccount(HKEY hDomainKey,
+                            LPCWSTR lpAccountName,
+                            LPCWSTR lpDescription,
+                            ULONG ulRelativeId)
 {
     DWORD dwDisposition;
     WCHAR szAccountKeyName[32];
@@ -150,9 +150,9 @@ SampCreateAliasAccount(HKEY hDomainKey,
 
 #if 0
 static BOOL
-SampCreateGroupAccount(HKEY hDomainKey,
-                       LPCWSTR lpAccountName,
-                       ULONG ulRelativeId)
+SampSetupCreateGroupAccount(HKEY hDomainKey,
+                            LPCWSTR lpAccountName,
+                            ULONG ulRelativeId)
 {
 
     return FALSE;
@@ -161,11 +161,11 @@ SampCreateGroupAccount(HKEY hDomainKey,
 
 
 static BOOL
-SampCreateUserAccount(HKEY hDomainKey,
-                      LPCWSTR lpAccountName,
-                      LPCWSTR lpComment,
-                      ULONG ulRelativeId,
-                      ULONG UserAccountControl)
+SampSetupCreateUserAccount(HKEY hDomainKey,
+                           LPCWSTR lpAccountName,
+                           LPCWSTR lpComment,
+                           ULONG ulRelativeId,
+                           ULONG UserAccountControl)
 {
     SAM_USER_FIXED_DATA FixedUserData;
     UCHAR LogonHours[23];
@@ -354,11 +354,11 @@ SampCreateUserAccount(HKEY hDomainKey,
 
 
 static BOOL
-SampCreateDomain(IN HKEY hDomainsKey,
-                 IN LPCWSTR lpKeyName,
-                 IN LPCWSTR lpDomainName,
-                 IN PSID lpDomainSid,
-                 OUT PHKEY lpDomainKey)
+SampSetupCreateDomain(IN HKEY hDomainsKey,
+                      IN LPCWSTR lpKeyName,
+                      IN LPCWSTR lpDomainName,
+                      IN PSID lpDomainSid,
+                      OUT PHKEY lpDomainKey)
 {
     SAM_DOMAIN_FIXED_DATA FixedData;
     LPWSTR lpEmptyString = L"";
@@ -634,52 +634,52 @@ SampInitializeSAM(VOID)
     SampLoadString(hInstance, IDS_DOMAIN_BUILTIN_NAME, szName, 80);
 
     /* Create the Builtin domain */
-    if (SampCreateDomain(hDomainsKey,
-                         L"Builtin",
-                         szName,
-                         pBuiltinSid,
-                         &hDomainKey))
+    if (SampSetupCreateDomain(hDomainsKey,
+                              L"Builtin",
+                              szName,
+                              pBuiltinSid,
+                              &hDomainKey))
     {
         SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_NAME, szName, 80);
         SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_COMMENT, szComment, 256);
 
-        SampCreateAliasAccount(hDomainKey,
-                               szName,
-                               szComment,
-                               DOMAIN_ALIAS_RID_ADMINS);
+        SampSetupCreateAliasAccount(hDomainKey,
+                                    szName,
+                                    szComment,
+                                    DOMAIN_ALIAS_RID_ADMINS);
 
         SampLoadString(hInstance, IDS_ALIAS_USERS_NAME, szName, 80);
         SampLoadString(hInstance, IDS_ALIAS_USERS_COMMENT, szComment, 256);
 
-        SampCreateAliasAccount(hDomainKey,
-                               szName,
-                               szComment,
-                               DOMAIN_ALIAS_RID_USERS);
+        SampSetupCreateAliasAccount(hDomainKey,
+                                    szName,
+                                    szComment,
+                                    DOMAIN_ALIAS_RID_USERS);
 
         SampLoadString(hInstance, IDS_ALIAS_GUESTS_NAME, szName, 80);
         SampLoadString(hInstance, IDS_ALIAS_GUESTS_COMMENT, szComment, 256);
 
-        SampCreateAliasAccount(hDomainKey,
-                               szName,
-                               szComment,
-                               DOMAIN_ALIAS_RID_GUESTS);
+        SampSetupCreateAliasAccount(hDomainKey,
+                                    szName,
+                                    szComment,
+                                    DOMAIN_ALIAS_RID_GUESTS);
 
         SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_NAME, szName, 80);
         SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_COMMENT, szComment, 256);
 
-        SampCreateAliasAccount(hDomainKey,
-                               szName,
-                               szComment,
-                               DOMAIN_ALIAS_RID_POWER_USERS);
+        SampSetupCreateAliasAccount(hDomainKey,
+                                    szName,
+                                    szComment,
+                                    DOMAIN_ALIAS_RID_POWER_USERS);
 
 
         pSid = AppendRidToSid(AccountDomainInfo->DomainSid,
                               DOMAIN_USER_RID_ADMIN);
         if (pSid != NULL)
         {
-            SampAddMemberToAlias(hDomainKey,
-                                 DOMAIN_ALIAS_RID_ADMINS,
-                                 pSid);
+            SampSetupAddMemberToAlias(hDomainKey,
+                                      DOMAIN_ALIAS_RID_ADMINS,
+                                      pSid);
 
             RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
         }
@@ -689,29 +689,29 @@ SampInitializeSAM(VOID)
     }
 
     /* Create the Account domain */
-    if (SampCreateDomain(hDomainsKey,
-                         L"Account",
-                         L"",
-                         AccountDomainInfo->DomainSid,
-                         &hDomainKey))
+    if (SampSetupCreateDomain(hDomainsKey,
+                              L"Account",
+                              L"",
+                              AccountDomainInfo->DomainSid,
+                              &hDomainKey))
     {
         SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_NAME, szName, 80);
         SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_COMMENT, szComment, 256);
 
-        SampCreateUserAccount(hDomainKey,
-                              szName,
-                              szComment,
-                              DOMAIN_USER_RID_ADMIN,
-                              USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
+        SampSetupCreateUserAccount(hDomainKey,
+                                   szName,
+                                   szComment,
+                                   DOMAIN_USER_RID_ADMIN,
+                                   USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
         SampLoadString(hInstance, IDS_USER_GUEST_NAME, szName, 80);
         SampLoadString(hInstance, IDS_USER_GUEST_COMMENT, szComment, 256);
 
-        SampCreateUserAccount(hDomainKey,
-                              szName,
-                              szComment,
-                              DOMAIN_USER_RID_GUEST,
-                              USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
+        SampSetupCreateUserAccount(hDomainKey,
+                                   szName,
+                                   szComment,
+                                   DOMAIN_USER_RID_GUEST,
+                                   USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
         RegCloseKey(hDomainKey);
     }
