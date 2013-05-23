@@ -187,7 +187,7 @@
 187 stdcall GdipDrawRectangleI(ptr ptr long long long long)
 188 stdcall GdipDrawRectangles(ptr ptr ptr long)
 189 stdcall GdipDrawRectanglesI(ptr ptr ptr long)
-190 stdcall GdipDrawString(ptr ptr long ptr ptr ptr ptr)
+190 stdcall GdipDrawString(ptr wstr long ptr ptr ptr ptr)
 191 stdcall GdipEmfToWmfBits(ptr long ptr long long)
 192 stdcall GdipEndContainer(ptr ptr)
 193 stub GdipEnumerateMetafileDestPoint

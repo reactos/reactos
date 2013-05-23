@@ -410,7 +410,7 @@ GpStatus WINGDIPAPI GdipPlayMetafileRecord(GDIPCONST GpMetafile *metafile,
             if (record)
             {
                 record->iType = recordType;
-                record->nSize = dataSize;
+                record->nSize = dataSize + 8;
                 memcpy(record->dParm, data, dataSize);
 
                 PlayEnhMetaFileRecord(metafile->playback_dc, metafile->handle_table,
@@ -536,7 +536,9 @@ GpStatus WINGDIPAPI GdipEnumerateMetafileSrcRectDestPoints(GpGraphics *graphics,
     memcpy(real_metafile->playback_points, destPoints, sizeof(PointF) * 3);
     stat = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, real_metafile->playback_points, 3);
 
-    if (stat == Ok && metafile->metafile_type == MetafileTypeEmf)
+    if (stat == Ok && (metafile->metafile_type == MetafileTypeEmf ||
+        metafile->metafile_type == MetafileTypeWmfPlaceable ||
+        metafile->metafile_type == MetafileTypeWmf))
         stat = METAFILE_PlaybackGetDC((GpMetafile*)metafile);
 
     if (stat == Ok)

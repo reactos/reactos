@@ -1009,7 +1009,8 @@ GpStatus WINGDIPAPI GdipAddPathString(GpPath* path, GDIPCONST WCHAR* string, INT
     args.maxY = 0;
     args.scale = emSize / native_height;
     args.ascent = textmetric.tmAscent * args.scale;
-    status = gdip_format_string(dc, string, length, NULL, &scaled_layout_rect, format, format_string_callback, &args);
+    status = gdip_format_string(dc, string, length, NULL, &scaled_layout_rect,
+                                format, TRUE, format_string_callback, &args);
 
     DeleteDC(dc);
     DeleteObject(hfont);
@@ -1701,6 +1702,13 @@ static void add_bevel_point(const GpPointF *endpoint, const GpPointF *nextpoint,
     REAL segment_length = sqrtf(segment_dy*segment_dy + segment_dx*segment_dx);
     REAL distance = pen->width/2.0;
     REAL bevel_dx, bevel_dy;
+
+    if (segment_length == 0.0)
+    {
+        *last_point = add_path_list_node(*last_point, endpoint->X,
+            endpoint->Y, PathPointTypeLine);
+        return;
+    }
 
     if (right_side)
     {

@@ -282,7 +282,7 @@ GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *region,
     region_element *left, *right = NULL;
     GpStatus stat;
 
-    TRACE("%p %p %d\n", region, rect, mode);
+    TRACE("%p %s %d\n", region, debugstr_rectf(rect), mode);
 
     if (!(region && rect))
         return InvalidParameter;
@@ -588,7 +588,7 @@ GpStatus WINGDIPAPI GdipCreateRegionHrgn(HRGN hrgn, GpRegion **region)
     GpStatus stat;
     GpPath* path;
     GpRegion* local;
-    int i;
+    DWORD i;
 
     TRACE("(%p, %p)\n", hrgn, region);
 
@@ -894,7 +894,7 @@ static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
 
     if (!graphics)
     {
-        new_hdc = GetDC(0);
+        new_hdc = CreateCompatibleDC(0);
         if (!new_hdc)
             return OutOfMemory;
 
@@ -902,13 +902,13 @@ static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
         graphics = new_graphics;
         if (stat != Ok)
         {
-            ReleaseDC(0, new_hdc);
+            DeleteDC(new_hdc);
             return stat;
         }
     }
     else if (!graphics->hdc)
     {
-        graphics->hdc = new_hdc = GetDC(0);
+        graphics->hdc = new_hdc = CreateCompatibleDC(0);
         if (!new_hdc)
             return OutOfMemory;
     }
@@ -929,7 +929,7 @@ static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
     RestoreDC(graphics->hdc, save_state);
     if (new_hdc)
     {
-        ReleaseDC(0, new_hdc);
+        DeleteDC(new_hdc);
         if (new_graphics)
             GdipDeleteGraphics(new_graphics);
         else
@@ -1467,7 +1467,7 @@ GpStatus WINGDIPAPI GdipGetRegionScansCount(GpRegion *region, UINT *count, GpMat
 GpStatus WINGDIPAPI GdipGetRegionScansI(GpRegion *region, GpRect *scans, INT *count, GpMatrix *matrix)
 {
     GpStatus stat;
-    INT i;
+    DWORD i;
     LPRGNDATA data;
     RECT *rects;
 
@@ -1501,7 +1501,7 @@ GpStatus WINGDIPAPI GdipGetRegionScansI(GpRegion *region, GpRect *scans, INT *co
 GpStatus WINGDIPAPI GdipGetRegionScans(GpRegion *region, GpRectF *scans, INT *count, GpMatrix *matrix)
 {
     GpStatus stat;
-    INT i;
+    DWORD i;
     LPRGNDATA data;
     RECT *rects;
 

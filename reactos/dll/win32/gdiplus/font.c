@@ -979,12 +979,12 @@ GpStatus WINGDIPAPI GdipIsStyleAvailable(GDIPCONST GpFontFamily* family,
 
     *IsStyleAvailable = FALSE;
 
-    hdc = GetDC(0);
+    hdc = CreateCompatibleDC(0);
 
     if(!EnumFontFamiliesW(hdc, family->FamilyName, font_has_style_proc, (LPARAM)style))
         *IsStyleAvailable = TRUE;
 
-    ReleaseDC(0, hdc);
+    DeleteDC(hdc);
 
     return Ok;
 }
@@ -1276,7 +1276,7 @@ GpStatus WINGDIPAPI GdipPrivateAddMemoryFont(GpFontCollection* fontCollection,
         HDC hdc;
         LOGFONTW lfw;
 
-        hdc = GetDC(0);
+        hdc = CreateCompatibleDC(0);
 
         lfw.lfCharSet = DEFAULT_CHARSET;
         lstrcpyW(lfw.lfFaceName, name);
@@ -1288,7 +1288,7 @@ GpStatus WINGDIPAPI GdipPrivateAddMemoryFont(GpFontCollection* fontCollection,
             return OutOfMemory;
         }
 
-        ReleaseDC(0, hdc);
+        DeleteDC(hdc);
     }
     return Ok;
 }
@@ -1403,7 +1403,7 @@ GpStatus WINGDIPAPI GdipNewInstalledFontCollection(
         HDC hdc;
         LOGFONTW lfw;
 
-        hdc = GetDC(0);
+        hdc = CreateCompatibleDC(0);
 
         lfw.lfCharSet = DEFAULT_CHARSET;
         lfw.lfFaceName[0] = 0;
@@ -1416,7 +1416,7 @@ GpStatus WINGDIPAPI GdipNewInstalledFontCollection(
             return OutOfMemory;
         }
 
-        ReleaseDC(0, hdc);
+        DeleteDC(hdc);
     }
 
     *fontCollection = &installedFontCollection;

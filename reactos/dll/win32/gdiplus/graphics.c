@@ -68,18 +68,6 @@ static GpStatus draw_driver_string(GpGraphics *graphics, GDIPCONST UINT16 *text,
                                    GDIPCONST GpBrush *brush, GDIPCONST PointF *positions,
                                    INT flags, GDIPCONST GpMatrix *matrix);
 
-/* Converts angle (in degrees) to x/y coordinates */
-static void deg2xy(REAL angle, REAL x_0, REAL y_0, REAL *x, REAL *y)
-{
-    REAL radAngle, hypotenuse;
-
-    radAngle = deg2rad(angle);
-    hypotenuse = 50.0; /* arbitrary */
-
-    *x = x_0 + cos(radAngle) * hypotenuse;
-    *y = y_0 + sin(radAngle) * hypotenuse;
-}
-
 /* Converts from gdiplus path point type to gdi path point type. */
 static BYTE convert_path_point_type(BYTE type)
 {
@@ -378,7 +366,7 @@ static void gdi_alpha_blend(GpGraphics *graphics, INT dst_x, INT dst_y, INT dst_
 
 static GpStatus get_clip_hrgn(GpGraphics *graphics, HRGN *hrgn)
 {
-    return GdipGetRegionHRgn(graphics->clip, graphics, hrgn);
+    return GdipGetRegionHRgn(graphics->clip, NULL, hrgn);
 }
 
 /* Draw non-premultiplied ARGB data to the given graphics object */
@@ -427,8 +415,11 @@ static GpStatus alpha_blend_hdc_pixels(GpGraphics *graphics, INT dst_x, INT dst_
     hbitmap = CreateDIBSection(hdc, (BITMAPINFO*)&bih, DIB_RGB_COLORS,
         (void**)&temp_bits, NULL, 0);
 
-    convert_32bppARGB_to_32bppPARGB(src_width, src_height, temp_bits,
-        4 * src_width, src, src_stride);
+    if (GetDeviceCaps(graphics->hdc, SHADEBLENDCAPS) == SB_NONE)
+        memcpy(temp_bits, src, src_width * src_height * 4);
+    else
+        convert_32bppARGB_to_32bppPARGB(src_width, src_height, temp_bits,
+                                        4 * src_width, src, src_stride);
 
     SelectObject(hdc, hbitmap);
     gdi_alpha_blend(graphics, dst_x, dst_y, src_width, src_height,
@@ -446,7 +437,8 @@ static GpStatus alpha_blend_pixels_hrgn(GpGraphics *graphics, INT dst_x, INT dst
 
     if (graphics->image && graphics->image->type == ImageTypeBitmap)
     {
-        int i, size;
+        DWORD i;
+        int size;
         RGNDATA *rgndata;
         RECT *rects;
         HRGN hrgn, visible_rgn;
@@ -659,7 +651,8 @@ static int color_is_gray(ARGB color)
 static void apply_image_attributes(const GpImageAttributes *attributes, LPBYTE data,
     UINT width, UINT height, INT stride, ColorAdjustType type)
 {
-    UINT x, y, i;
+    UINT x, y;
+    INT i;
 
     if (attributes->colorkeys[type].enabled ||
         attributes->colorkeys[ColorAdjustTypeDefault].enabled)
@@ -1471,27 +1464,6 @@ static GpStatus brush_fill_pixels(GpGraphics *graphics, GpBrush *brush,
     }
 }
 
-/* GdipDrawPie/GdipFillPie helper function */
-static void draw_pie(GpGraphics *graphics, REAL x, REAL y, REAL width,
-    REAL height, REAL startAngle, REAL sweepAngle)
-{
-    GpPointF ptf[4];
-    POINT pti[4];
-
-    ptf[0].X = x;
-    ptf[0].Y = y;
-    ptf[1].X = x + width;
-    ptf[1].Y = y + height;
-
-    deg2xy(startAngle+sweepAngle, x + width / 2.0, y + width / 2.0, &ptf[2].X, &ptf[2].Y);
-    deg2xy(startAngle, x + width / 2.0, y + width / 2.0, &ptf[3].X, &ptf[3].Y);
-
-    transform_and_round_points(graphics, pti, ptf, 4);
-
-    Pie(graphics->hdc, pti[0].x, pti[0].y, pti[1].x, pti[1].y, pti[2].x,
-        pti[2].y, pti[3].x, pti[3].y);
-}
-
 /* Draws the linecap the specified color and size on the hdc.  The linecap is in
  * direction of the line from x1, y1 to x2, y2 and is anchored on x2, y2. Probably
  * should not be called on an hdc that has a path you care about. */
@@ -1728,63 +1700,6 @@ static void shorten_line_amt(REAL x1, REAL y1, REAL *x2, REAL *y2, REAL amt)
     shorten_line_percent(x1, y1, x2, y2, percent);
 }
 
-/* Draws lines between the given points, and if caps is true then draws an endcap
- * at the end of the last line. */
-static GpStatus draw_polyline(GpGraphics *graphics, GpPen *pen,
-    GDIPCONST GpPointF * pt, INT count, BOOL caps)
-{
-    POINT *pti = NULL;
-    GpPointF *ptcopy = NULL;
-    GpStatus status = GenericError;
-
-    if(!count)
-        return Ok;
-
-    pti = GdipAlloc(count * sizeof(POINT));
-    ptcopy = GdipAlloc(count * sizeof(GpPointF));
-
-    if(!pti || !ptcopy){
-        status = OutOfMemory;
-        goto end;
-    }
-
-    memcpy(ptcopy, pt, count * sizeof(GpPointF));
-
-    if(caps){
-        if(pen->endcap == LineCapArrowAnchor)
-            shorten_line_amt(ptcopy[count-2].X, ptcopy[count-2].Y,
-                             &ptcopy[count-1].X, &ptcopy[count-1].Y, pen->width);
-        else if((pen->endcap == LineCapCustom) && pen->customend)
-            shorten_line_amt(ptcopy[count-2].X, ptcopy[count-2].Y,
-                             &ptcopy[count-1].X, &ptcopy[count-1].Y,
-                             pen->customend->inset * pen->width);
-
-        if(pen->startcap == LineCapArrowAnchor)
-            shorten_line_amt(ptcopy[1].X, ptcopy[1].Y,
-                             &ptcopy[0].X, &ptcopy[0].Y, pen->width);
-        else if((pen->startcap == LineCapCustom) && pen->customstart)
-            shorten_line_amt(ptcopy[1].X, ptcopy[1].Y,
-                             &ptcopy[0].X, &ptcopy[0].Y,
-                             pen->customstart->inset * pen->width);
-
-        draw_cap(graphics, get_gdi_brush_color(pen->brush), pen->endcap, pen->width, pen->customend,
-                 pt[count - 2].X, pt[count - 2].Y, pt[count - 1].X, pt[count - 1].Y);
-        draw_cap(graphics, get_gdi_brush_color(pen->brush), pen->startcap, pen->width, pen->customstart,
-                         pt[1].X, pt[1].Y, pt[0].X, pt[0].Y);
-    }
-
-    transform_and_round_points(graphics, pti, ptcopy, count);
-
-    if(Polyline(graphics->hdc, pti, count))
-        status = Ok;
-
-end:
-    GdipFree(pti);
-    GdipFree(ptcopy);
-
-    return status;
-}
-
 /* Conducts a linear search to find the bezier points that will back off
  * the endpoint of the curve by a distance of amt. Linear search works
  * better than binary in this case because there are multiple solutions,
@@ -1826,66 +1741,6 @@ static void shorten_bezier_amt(GpPointF * pt, REAL amt, BOOL rev)
         diff = sqrt(dx * dx + dy * dy);
         percent += 0.0005 * amt;
     }
-}
-
-/* Draws bezier curves between given points, and if caps is true then draws an
- * endcap at the end of the last line. */
-static GpStatus draw_polybezier(GpGraphics *graphics, GpPen *pen,
-    GDIPCONST GpPointF * pt, INT count, BOOL caps)
-{
-    POINT *pti;
-    GpPointF *ptcopy;
-    GpStatus status = GenericError;
-
-    if(!count)
-        return Ok;
-
-    pti = GdipAlloc(count * sizeof(POINT));
-    ptcopy = GdipAlloc(count * sizeof(GpPointF));
-
-    if(!pti || !ptcopy){
-        status = OutOfMemory;
-        goto end;
-    }
-
-    memcpy(ptcopy, pt, count * sizeof(GpPointF));
-
-    if(caps){
-        if(pen->endcap == LineCapArrowAnchor)
-            shorten_bezier_amt(&ptcopy[count-4], pen->width, FALSE);
-        else if((pen->endcap == LineCapCustom) && pen->customend)
-            shorten_bezier_amt(&ptcopy[count-4], pen->width * pen->customend->inset,
-                               FALSE);
-
-        if(pen->startcap == LineCapArrowAnchor)
-            shorten_bezier_amt(ptcopy, pen->width, TRUE);
-        else if((pen->startcap == LineCapCustom) && pen->customstart)
-            shorten_bezier_amt(ptcopy, pen->width * pen->customstart->inset, TRUE);
-
-        /* the direction of the line cap is parallel to the direction at the
-         * end of the bezier (which, if it has been shortened, is not the same
-         * as the direction from pt[count-2] to pt[count-1]) */
-        draw_cap(graphics, get_gdi_brush_color(pen->brush), pen->endcap, pen->width, pen->customend,
-            pt[count - 1].X - (ptcopy[count - 1].X - ptcopy[count - 2].X),
-            pt[count - 1].Y - (ptcopy[count - 1].Y - ptcopy[count - 2].Y),
-            pt[count - 1].X, pt[count - 1].Y);
-
-        draw_cap(graphics, get_gdi_brush_color(pen->brush), pen->startcap, pen->width, pen->customstart,
-            pt[0].X - (ptcopy[0].X - ptcopy[1].X),
-            pt[0].Y - (ptcopy[0].Y - ptcopy[1].Y), pt[0].X, pt[0].Y);
-    }
-
-    transform_and_round_points(graphics, pti, ptcopy, count);
-
-    PolyBezier(graphics->hdc, pti, count);
-
-    status = Ok;
-
-end:
-    GdipFree(pti);
-    GdipFree(ptcopy);
-
-    return status;
 }
 
 /* Draws a combination of bezier curves and lines between points. */
@@ -2291,10 +2146,8 @@ GpStatus WINGDIPAPI GdipCreateFromHDC2(HDC hdc, HANDLE hDevice, GpGraphics **gra
 
     TRACE("(%p, %p, %p)\n", hdc, hDevice, graphics);
 
-    if(hDevice != NULL) {
+    if(hDevice != NULL)
         FIXME("Don't know how to handle parameter hDevice\n");
-        return NotImplemented;
-    }
 
     if(hdc == NULL)
         return OutOfMemory;
@@ -2359,6 +2212,9 @@ GpStatus graphics_from_image(GpImage *image, GpGraphics **graphics)
     (*graphics)->hwnd = NULL;
     (*graphics)->owndc = FALSE;
     (*graphics)->image = image;
+    /* We have to store the image type here because the image may be freed
+     * before GdipDeleteGraphics is called, and metafiles need special treatment. */
+    (*graphics)->image_type = image->type;
     (*graphics)->smoothing = SmoothingModeDefault;
     (*graphics)->compqual = CompositingQualityDefault;
     (*graphics)->interpolation = InterpolationModeBilinear;
@@ -2553,7 +2409,7 @@ GpStatus WINGDIPAPI GdipDeleteGraphics(GpGraphics *graphics)
     if(!graphics) return InvalidParameter;
     if(graphics->busy) return ObjectBusy;
 
-    if (graphics->image && graphics->image->type == ImageTypeMetafile)
+    if (graphics->image && graphics->image_type == ImageTypeMetafile)
     {
         stat = METAFILE_GraphicsDeleted((GpMetafile*)graphics->image);
         if (stat != Ok)
@@ -2577,9 +2433,8 @@ GpStatus WINGDIPAPI GdipDeleteGraphics(GpGraphics *graphics)
 GpStatus WINGDIPAPI GdipDrawArc(GpGraphics *graphics, GpPen *pen, REAL x,
     REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
 {
-    INT save_state, num_pts;
-    GpPointF points[MAX_ARC_PTS];
-    GpStatus retval;
+    GpStatus status;
+    GpPath *path;
 
     TRACE("(%p, %p, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f)\n", graphics, pen, x, y,
           width, height, startAngle, sweepAngle);
@@ -2590,21 +2445,15 @@ GpStatus WINGDIPAPI GdipDrawArc(GpGraphics *graphics, GpPen *pen, REAL x,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    num_pts = arc2polybezier(points, x, y, width, height, startAngle, sweepAngle);
+    status = GdipAddPathArc(path, x, y, width, height, startAngle, sweepAngle);
+    if (status == Ok)
+        status = GdipDrawPath(graphics, pen, path);
 
-    save_state = prepare_dc(graphics, pen);
-
-    retval = draw_polybezier(graphics, pen, points, num_pts, TRUE);
-
-    restore_dc(graphics, save_state);
-
-    return retval;
+    GdipDeletePath(path);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipDrawArcI(GpGraphics *graphics, GpPen *pen, INT x,
@@ -2619,9 +2468,7 @@ GpStatus WINGDIPAPI GdipDrawArcI(GpGraphics *graphics, GpPen *pen, INT x,
 GpStatus WINGDIPAPI GdipDrawBezier(GpGraphics *graphics, GpPen *pen, REAL x1,
     REAL y1, REAL x2, REAL y2, REAL x3, REAL y3, REAL x4, REAL y4)
 {
-    INT save_state;
     GpPointF pt[4];
-    GpStatus retval;
 
     TRACE("(%p, %p, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f)\n", graphics, pen, x1, y1,
           x2, y2, x3, y3, x4, y4);
@@ -2632,12 +2479,6 @@ GpStatus WINGDIPAPI GdipDrawBezier(GpGraphics *graphics, GpPen *pen, REAL x1,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     pt[0].X = x1;
     pt[0].Y = y1;
     pt[1].X = x2;
@@ -2646,61 +2487,23 @@ GpStatus WINGDIPAPI GdipDrawBezier(GpGraphics *graphics, GpPen *pen, REAL x1,
     pt[2].Y = y3;
     pt[3].X = x4;
     pt[3].Y = y4;
-
-    save_state = prepare_dc(graphics, pen);
-
-    retval = draw_polybezier(graphics, pen, pt, 4, TRUE);
-
-    restore_dc(graphics, save_state);
-
-    return retval;
+    return GdipDrawBeziers(graphics, pen, pt, 4);
 }
 
 GpStatus WINGDIPAPI GdipDrawBezierI(GpGraphics *graphics, GpPen *pen, INT x1,
     INT y1, INT x2, INT y2, INT x3, INT y3, INT x4, INT y4)
 {
-    INT save_state;
-    GpPointF pt[4];
-    GpStatus retval;
-
     TRACE("(%p, %p, %d, %d, %d, %d, %d, %d, %d, %d)\n", graphics, pen, x1, y1,
           x2, y2, x3, y3, x4, y4);
 
-    if(!graphics || !pen)
-        return InvalidParameter;
-
-    if(graphics->busy)
-        return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
-    pt[0].X = x1;
-    pt[0].Y = y1;
-    pt[1].X = x2;
-    pt[1].Y = y2;
-    pt[2].X = x3;
-    pt[2].Y = y3;
-    pt[3].X = x4;
-    pt[3].Y = y4;
-
-    save_state = prepare_dc(graphics, pen);
-
-    retval = draw_polybezier(graphics, pen, pt, 4, TRUE);
-
-    restore_dc(graphics, save_state);
-
-    return retval;
+    return GdipDrawBezier(graphics, pen, (REAL)x1, (REAL)y1, (REAL)x2, (REAL)y2, (REAL)x3, (REAL)y3, (REAL)x4, (REAL)y4);
 }
 
 GpStatus WINGDIPAPI GdipDrawBeziers(GpGraphics *graphics, GpPen *pen,
     GDIPCONST GpPointF *points, INT count)
 {
-    INT i;
-    GpStatus ret;
+    GpStatus status;
+    GpPath *path;
 
     TRACE("(%p, %p, %p, %d)\n", graphics, pen, points, count);
 
@@ -2710,17 +2513,15 @@ GpStatus WINGDIPAPI GdipDrawBeziers(GpGraphics *graphics, GpPen *pen,
     if(graphics->busy)
         return ObjectBusy;
 
-    for(i = 0; i < floor(count / 4); i++){
-        ret = GdipDrawBezier(graphics, pen,
-                             points[4*i].X, points[4*i].Y,
-                             points[4*i + 1].X, points[4*i + 1].Y,
-                             points[4*i + 2].X, points[4*i + 2].Y,
-                             points[4*i + 3].X, points[4*i + 3].Y);
-        if(ret != Ok)
-            return ret;
-    }
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    return Ok;
+    status = GdipAddPathBeziers(path, points, count);
+    if (status == Ok)
+        status = GdipDrawPath(graphics, pen, path);
+
+    GdipDeletePath(path);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipDrawBeziersI(GpGraphics *graphics, GpPen *pen,
@@ -2774,7 +2575,7 @@ GpStatus WINGDIPAPI GdipDrawClosedCurve2(GpGraphics *graphics, GpPen *pen,
     GDIPCONST GpPointF *points, INT count, REAL tension)
 {
     GpPath *path;
-    GpStatus stat;
+    GpStatus status;
 
     TRACE("(%p, %p, %p, %d, %.2f)\n", graphics, pen, points, count, tension);
 
@@ -2784,20 +2585,16 @@ GpStatus WINGDIPAPI GdipDrawClosedCurve2(GpGraphics *graphics, GpPen *pen,
     if(graphics->busy)
         return ObjectBusy;
 
-    if((stat = GdipCreatePath(FillModeAlternate, &path)) != Ok)
-        return stat;
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    stat = GdipAddPathClosedCurve2(path, points, count, tension);
-    if(stat != Ok){
-        GdipDeletePath(path);
-        return stat;
-    }
-
-    stat = GdipDrawPath(graphics, pen, path);
+    status = GdipAddPathClosedCurve2(path, points, count, tension);
+    if (status == Ok)
+        status = GdipDrawPath(graphics, pen, path);
 
     GdipDeletePath(path);
 
-    return stat;
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipDrawClosedCurve2I(GpGraphics *graphics, GpPen *pen,
@@ -2867,11 +2664,8 @@ GpStatus WINGDIPAPI GdipDrawCurveI(GpGraphics *graphics, GpPen *pen,
 GpStatus WINGDIPAPI GdipDrawCurve2(GpGraphics *graphics, GpPen *pen,
     GDIPCONST GpPointF *points, INT count, REAL tension)
 {
-    /* PolyBezier expects count*3-2 points. */
-    INT i, len_pt = count*3-2, save_state;
-    GpPointF *pt;
-    REAL x1, x2, y1, y2;
-    GpStatus retval;
+    GpPath *path;
+    GpStatus status;
 
     TRACE("(%p, %p, %p, %d, %.2f)\n", graphics, pen, points, count, tension);
 
@@ -2884,53 +2678,15 @@ GpStatus WINGDIPAPI GdipDrawCurve2(GpGraphics *graphics, GpPen *pen,
     if(count < 2)
         return InvalidParameter;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    pt = GdipAlloc(len_pt * sizeof(GpPointF));
-    if(!pt)
-        return OutOfMemory;
+    status = GdipAddPathCurve2(path, points, count, tension);
+    if (status == Ok)
+        status = GdipDrawPath(graphics, pen, path);
 
-    tension = tension * TENSION_CONST;
-
-    calc_curve_bezier_endp(points[0].X, points[0].Y, points[1].X, points[1].Y,
-        tension, &x1, &y1);
-
-    pt[0].X = points[0].X;
-    pt[0].Y = points[0].Y;
-    pt[1].X = x1;
-    pt[1].Y = y1;
-
-    for(i = 0; i < count-2; i++){
-        calc_curve_bezier(&(points[i]), tension, &x1, &y1, &x2, &y2);
-
-        pt[3*i+2].X = x1;
-        pt[3*i+2].Y = y1;
-        pt[3*i+3].X = points[i+1].X;
-        pt[3*i+3].Y = points[i+1].Y;
-        pt[3*i+4].X = x2;
-        pt[3*i+4].Y = y2;
-    }
-
-    calc_curve_bezier_endp(points[count-1].X, points[count-1].Y,
-        points[count-2].X, points[count-2].Y, tension, &x1, &y1);
-
-    pt[len_pt-2].X = x1;
-    pt[len_pt-2].Y = y1;
-    pt[len_pt-1].X = points[count-1].X;
-    pt[len_pt-1].Y = points[count-1].Y;
-
-    save_state = prepare_dc(graphics, pen);
-
-    retval = draw_polybezier(graphics, pen, pt, len_pt, TRUE);
-
-    GdipFree(pt);
-    restore_dc(graphics, save_state);
-
-    return retval;
+    GdipDeletePath(path);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipDrawCurve2I(GpGraphics *graphics, GpPen *pen,
@@ -2993,9 +2749,8 @@ GpStatus WINGDIPAPI GdipDrawCurve3I(GpGraphics *graphics, GpPen *pen,
 GpStatus WINGDIPAPI GdipDrawEllipse(GpGraphics *graphics, GpPen *pen, REAL x,
     REAL y, REAL width, REAL height)
 {
-    INT save_state;
-    GpPointF ptf[2];
-    POINT pti[2];
+    GpPath *path;
+    GpStatus status;
 
     TRACE("(%p, %p, %.2f, %.2f, %.2f, %.2f)\n", graphics, pen, x, y, width, height);
 
@@ -3005,27 +2760,15 @@ GpStatus WINGDIPAPI GdipDrawEllipse(GpGraphics *graphics, GpPen *pen, REAL x,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    ptf[0].X = x;
-    ptf[0].Y = y;
-    ptf[1].X = x + width;
-    ptf[1].Y = y + height;
+    status = GdipAddPathEllipse(path, x, y, width, height);
+    if (status == Ok)
+        status = GdipDrawPath(graphics, pen, path);
 
-    save_state = prepare_dc(graphics, pen);
-    SelectObject(graphics->hdc, GetStockObject(NULL_BRUSH));
-
-    transform_and_round_points(graphics, pti, ptf, 2);
-
-    Ellipse(graphics->hdc, pti[0].x, pti[0].y, pti[1].x, pti[1].y);
-
-    restore_dc(graphics, save_state);
-
-    return Ok;
+    GdipDeletePath(path);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipDrawEllipseI(GpGraphics *graphics, GpPen *pen, INT x,
@@ -3069,6 +2812,8 @@ GpStatus WINGDIPAPI GdipDrawImagePointRect(GpGraphics *graphics, GpImage *image,
     REAL scale_x, scale_y, width, height;
 
     TRACE("(%p, %p, %f, %f, %f, %f, %f, %f, %d)\n", graphics, image, x, y, srcx, srcy, srcwidth, srcheight, srcUnit);
+
+    if (!graphics || !image) return InvalidParameter;
 
     scale_x = units_scale(srcUnit, graphics->unit, graphics->xres);
     scale_x *= graphics->xres / image->xres;
@@ -3542,78 +3287,30 @@ GpStatus WINGDIPAPI GdipDrawImageRectI(GpGraphics *graphics, GpImage *image,
 GpStatus WINGDIPAPI GdipDrawLine(GpGraphics *graphics, GpPen *pen, REAL x1,
     REAL y1, REAL x2, REAL y2)
 {
-    INT save_state;
     GpPointF pt[2];
-    GpStatus retval;
 
     TRACE("(%p, %p, %.2f, %.2f, %.2f, %.2f)\n", graphics, pen, x1, y1, x2, y2);
-
-    if(!pen || !graphics)
-        return InvalidParameter;
-
-    if(graphics->busy)
-        return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     pt[0].X = x1;
     pt[0].Y = y1;
     pt[1].X = x2;
     pt[1].Y = y2;
-
-    save_state = prepare_dc(graphics, pen);
-
-    retval = draw_polyline(graphics, pen, pt, 2, TRUE);
-
-    restore_dc(graphics, save_state);
-
-    return retval;
+    return GdipDrawLines(graphics, pen, pt, 2);
 }
 
 GpStatus WINGDIPAPI GdipDrawLineI(GpGraphics *graphics, GpPen *pen, INT x1,
     INT y1, INT x2, INT y2)
 {
-    INT save_state;
-    GpPointF pt[2];
-    GpStatus retval;
-
     TRACE("(%p, %p, %d, %d, %d, %d)\n", graphics, pen, x1, y1, x2, y2);
 
-    if(!pen || !graphics)
-        return InvalidParameter;
-
-    if(graphics->busy)
-        return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
-    pt[0].X = (REAL)x1;
-    pt[0].Y = (REAL)y1;
-    pt[1].X = (REAL)x2;
-    pt[1].Y = (REAL)y2;
-
-    save_state = prepare_dc(graphics, pen);
-
-    retval = draw_polyline(graphics, pen, pt, 2, TRUE);
-
-    restore_dc(graphics, save_state);
-
-    return retval;
+    return GdipDrawLine(graphics, pen, (REAL)x1, (REAL)y1, (REAL)x2, (REAL)y2);
 }
 
 GpStatus WINGDIPAPI GdipDrawLines(GpGraphics *graphics, GpPen *pen, GDIPCONST
     GpPointF *points, INT count)
 {
-    INT save_state;
-    GpStatus retval;
+    GpStatus status;
+    GpPath *path;
 
     TRACE("(%p, %p, %p, %d)\n", graphics, pen, points, count);
 
@@ -3623,42 +3320,25 @@ GpStatus WINGDIPAPI GdipDrawLines(GpGraphics *graphics, GpPen *pen, GDIPCONST
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    save_state = prepare_dc(graphics, pen);
+    status = GdipAddPathLine2(path, points, count);
+    if (status == Ok)
+        status = GdipDrawPath(graphics, pen, path);
 
-    retval = draw_polyline(graphics, pen, points, count, TRUE);
-
-    restore_dc(graphics, save_state);
-
-    return retval;
+    GdipDeletePath(path);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipDrawLinesI(GpGraphics *graphics, GpPen *pen, GDIPCONST
     GpPoint *points, INT count)
 {
-    INT save_state;
     GpStatus retval;
-    GpPointF *ptf = NULL;
+    GpPointF *ptf;
     int i;
 
     TRACE("(%p, %p, %p, %d)\n", graphics, pen, points, count);
-
-    if(!pen || !graphics || (count < 2))
-        return InvalidParameter;
-
-    if(graphics->busy)
-        return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     ptf = GdipAlloc(count * sizeof(GpPointF));
     if(!ptf) return OutOfMemory;
@@ -3668,11 +3348,7 @@ GpStatus WINGDIPAPI GdipDrawLinesI(GpGraphics *graphics, GpPen *pen, GDIPCONST
         ptf[i].Y = (REAL) points[i].Y;
     }
 
-    save_state = prepare_dc(graphics, pen);
-
-    retval = draw_polyline(graphics, pen, ptf, count, TRUE);
-
-    restore_dc(graphics, save_state);
+    retval = GdipDrawLines(graphics, pen, ptf, count);
 
     GdipFree(ptf);
     return retval;
@@ -3710,7 +3386,8 @@ GpStatus WINGDIPAPI GdipDrawPath(GpGraphics *graphics, GpPen *pen, GpPath *path)
 GpStatus WINGDIPAPI GdipDrawPie(GpGraphics *graphics, GpPen *pen, REAL x,
     REAL y, REAL width, REAL height, REAL startAngle, REAL sweepAngle)
 {
-    INT save_state;
+    GpStatus status;
+    GpPath *path;
 
     TRACE("(%p, %p, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f)\n", graphics, pen, x, y,
             width, height, startAngle, sweepAngle);
@@ -3721,20 +3398,15 @@ GpStatus WINGDIPAPI GdipDrawPie(GpGraphics *graphics, GpPen *pen, REAL x,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    save_state = prepare_dc(graphics, pen);
-    SelectObject(graphics->hdc, GetStockObject(NULL_BRUSH));
+    status = GdipAddPathPie(path, x, y, width, height, startAngle, sweepAngle);
+    if (status == Ok)
+        status = GdipDrawPath(graphics, pen, path);
 
-    draw_pie(graphics, x, y, width, height, startAngle, sweepAngle);
-
-    restore_dc(graphics, save_state);
-
-    return Ok;
+    GdipDeletePath(path);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipDrawPieI(GpGraphics *graphics, GpPen *pen, INT x,
@@ -3749,9 +3421,8 @@ GpStatus WINGDIPAPI GdipDrawPieI(GpGraphics *graphics, GpPen *pen, INT x,
 GpStatus WINGDIPAPI GdipDrawRectangle(GpGraphics *graphics, GpPen *pen, REAL x,
     REAL y, REAL width, REAL height)
 {
-    INT save_state;
-    GpPointF ptf[4];
-    POINT pti[4];
+    GpStatus status;
+    GpPath *path;
 
     TRACE("(%p, %p, %.2f, %.2f, %.2f, %.2f)\n", graphics, pen, x, y, width, height);
 
@@ -3761,30 +3432,15 @@ GpStatus WINGDIPAPI GdipDrawRectangle(GpGraphics *graphics, GpPen *pen, REAL x,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    ptf[0].X = x;
-    ptf[0].Y = y;
-    ptf[1].X = x + width;
-    ptf[1].Y = y;
-    ptf[2].X = x + width;
-    ptf[2].Y = y + height;
-    ptf[3].X = x;
-    ptf[3].Y = y + height;
+    status = GdipAddPathRectangle(path, x, y, width, height);
+    if (status == Ok)
+        status = GdipDrawPath(graphics, pen, path);
 
-    save_state = prepare_dc(graphics, pen);
-    SelectObject(graphics->hdc, GetStockObject(NULL_BRUSH));
-
-    transform_and_round_points(graphics, pti, ptf, 4);
-    Polygon(graphics->hdc, pti, 4);
-
-    restore_dc(graphics, save_state);
-
-    return Ok;
+    GdipDeletePath(path);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipDrawRectangleI(GpGraphics *graphics, GpPen *pen, INT x,
@@ -3798,9 +3454,8 @@ GpStatus WINGDIPAPI GdipDrawRectangleI(GpGraphics *graphics, GpPen *pen, INT x,
 GpStatus WINGDIPAPI GdipDrawRectangles(GpGraphics *graphics, GpPen *pen,
     GDIPCONST GpRectF* rects, INT count)
 {
-    GpPointF *ptf;
-    POINT *pti;
-    INT save_state, i;
+    GpStatus status;
+    GpPath *path;
 
     TRACE("(%p, %p, %p, %d)\n", graphics, pen, rects, count);
 
@@ -3810,42 +3465,15 @@ GpStatus WINGDIPAPI GdipDrawRectangles(GpGraphics *graphics, GpPen *pen,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    ptf = GdipAlloc(4 * count * sizeof(GpPointF));
-    pti = GdipAlloc(4 * count * sizeof(POINT));
+    status = GdipAddPathRectangles(path, rects, count);
+    if (status == Ok)
+        status = GdipDrawPath(graphics, pen, path);
 
-    if(!ptf || !pti){
-        GdipFree(ptf);
-        GdipFree(pti);
-        return OutOfMemory;
-    }
-
-    for(i = 0; i < count; i++){
-        ptf[4 * i + 3].X = ptf[4 * i].X = rects[i].X;
-        ptf[4 * i + 1].Y = ptf[4 * i].Y = rects[i].Y;
-        ptf[4 * i + 2].X = ptf[4 * i + 1].X = rects[i].X + rects[i].Width;
-        ptf[4 * i + 3].Y = ptf[4 * i + 2].Y = rects[i].Y + rects[i].Height;
-    }
-
-    save_state = prepare_dc(graphics, pen);
-    SelectObject(graphics->hdc, GetStockObject(NULL_BRUSH));
-
-    transform_and_round_points(graphics, pti, ptf, 4 * count);
-
-    for(i = 0; i < count; i++)
-        Polygon(graphics->hdc, &pti[4 * i], 4);
-
-    restore_dc(graphics, save_state);
-
-    GdipFree(ptf);
-    GdipFree(pti);
-
-    return Ok;
+    GdipDeletePath(path);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipDrawRectanglesI(GpGraphics *graphics, GpPen *pen,
@@ -3881,7 +3509,7 @@ GpStatus WINGDIPAPI GdipFillClosedCurve2(GpGraphics *graphics, GpBrush *brush,
     GDIPCONST GpPointF *points, INT count, REAL tension, GpFillMode fill)
 {
     GpPath *path;
-    GpStatus stat;
+    GpStatus status;
 
     TRACE("(%p, %p, %p, %d, %.2f, %d)\n", graphics, brush, points,
             count, tension, fill);
@@ -3895,25 +3523,15 @@ GpStatus WINGDIPAPI GdipFillClosedCurve2(GpGraphics *graphics, GpBrush *brush,
     if(count == 1)    /* Do nothing */
         return Ok;
 
-    stat = GdipCreatePath(fill, &path);
-    if(stat != Ok)
-        return stat;
+    status = GdipCreatePath(fill, &path);
+    if (status != Ok) return status;
 
-    stat = GdipAddPathClosedCurve2(path, points, count, tension);
-    if(stat != Ok){
-        GdipDeletePath(path);
-        return stat;
-    }
-
-    stat = GdipFillPath(graphics, brush, path);
-    if(stat != Ok){
-        GdipDeletePath(path);
-        return stat;
-    }
+    status = GdipAddPathClosedCurve2(path, points, count, tension);
+    if (status == Ok)
+        status = GdipFillPath(graphics, brush, path);
 
     GdipDeletePath(path);
-
-    return Ok;
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipFillClosedCurve2I(GpGraphics *graphics, GpBrush *brush,
@@ -4234,20 +3852,23 @@ GpStatus WINGDIPAPI GdipFillRectangleI(GpGraphics *graphics, GpBrush *brush,
 GpStatus WINGDIPAPI GdipFillRectangles(GpGraphics *graphics, GpBrush *brush, GDIPCONST GpRectF *rects,
     INT count)
 {
-    GpStatus ret;
-    INT i;
+    GpStatus status;
+    GpPath *path;
 
     TRACE("(%p, %p, %p, %d)\n", graphics, brush, rects, count);
 
     if(!rects)
         return InvalidParameter;
 
-    for(i = 0; i < count; i++){
-        ret = GdipFillRectangle(graphics, brush, rects[i].X, rects[i].Y, rects[i].Width, rects[i].Height);
-        if(ret != Ok)   return ret;
-    }
+    status = GdipCreatePath(FillModeAlternate, &path);
+    if (status != Ok) return status;
 
-    return Ok;
+    status = GdipAddPathRectangles(path, rects, count);
+    if (status == Ok)
+        status = GdipFillPath(graphics, brush, path);
+
+    GdipDeletePath(path);
+    return status;
 }
 
 GpStatus WINGDIPAPI GdipFillRectanglesI(GpGraphics *graphics, GpBrush *brush, GDIPCONST GpRect *rects,
@@ -4814,7 +4435,7 @@ GpStatus WINGDIPAPI GdipIsVisibleRectI(GpGraphics *graphics, INT x, INT y, INT w
 
 GpStatus gdip_format_string(HDC hdc,
     GDIPCONST WCHAR *string, INT length, GDIPCONST GpFont *font,
-    GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
+    GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format, int ignore_empty_clip,
     gdip_format_string_callback callback, void *user_data)
 {
     WCHAR* stringdup;
@@ -4837,6 +4458,11 @@ GpStatus gdip_format_string(HDC hdc,
 
     nwidth = rect->Width;
     nheight = rect->Height;
+    if (ignore_empty_clip)
+    {
+        if (!nwidth) nwidth = INT_MAX;
+        if (!nheight) nheight = INT_MAX;
+    }
 
     if (format)
         hkprefix = format->hkprefix;
@@ -5078,21 +4704,8 @@ GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
 
     scaled_rect.X = (layoutRect->X + margin_x) * args.rel_width;
     scaled_rect.Y = layoutRect->Y * args.rel_height;
-    if (stringFormat->attr & StringFormatFlagsNoClip)
-    {
-        scaled_rect.Width = (REAL)(1 << 23);
-        scaled_rect.Height = (REAL)(1 << 23);
-    }
-    else
-    {
-        scaled_rect.Width = layoutRect->Width * args.rel_width;
-        scaled_rect.Height = layoutRect->Height * args.rel_height;
-    }
-    if (scaled_rect.Width >= 0.5)
-    {
-        scaled_rect.Width -= margin_x * 2.0 * args.rel_width;
-        if (scaled_rect.Width < 0.5) return Ok; /* doesn't fit */
-    }
+    scaled_rect.Width = layoutRect->Width * args.rel_width;
+    scaled_rect.Height = layoutRect->Height * args.rel_height;
 
     get_font_hfont(graphics, font, stringFormat, &gdifont, NULL);
     oldfont = SelectObject(hdc, gdifont);
@@ -5107,7 +4720,7 @@ GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
     args.regions = regions;
 
     stat = gdip_format_string(hdc, string, length, font, &scaled_rect, stringFormat,
-        measure_ranges_callback, &args);
+        (stringFormat->attr & StringFormatFlagsNoClip) != 0, measure_ranges_callback, &args);
 
     SelectObject(hdc, oldfont);
     DeleteObject(gdifont);
@@ -5167,7 +4780,7 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
     GpPointF pt[3];
     RectF scaled_rect;
     REAL margin_x;
-    INT lines, glyphs, format_flags = format ? format->attr : 0;
+    INT lines, glyphs;
 
     TRACE("(%p, %s, %i, %p, %s, %p, %p, %p, %p)\n", graphics,
         debugstr_wn(string, length), length, font, debugstr_rectf(rect), format,
@@ -5209,20 +4822,14 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
     scaled_rect.Y = rect->Y * args.rel_height;
     scaled_rect.Width = rect->Width * args.rel_width;
     scaled_rect.Height = rect->Height * args.rel_height;
-
-    if ((format_flags & StringFormatFlagsNoClip) ||
-        scaled_rect.Width >= 1 << 23 || scaled_rect.Width < 0.5) scaled_rect.Width = 1 << 23;
-    if ((format_flags & StringFormatFlagsNoClip) ||
-        scaled_rect.Height >= 1 << 23 || scaled_rect.Height < 0.5) scaled_rect.Height = 1 << 23;
-
     if (scaled_rect.Width >= 0.5)
     {
         scaled_rect.Width -= margin_x * 2.0 * args.rel_width;
         if (scaled_rect.Width < 0.5) return Ok; /* doesn't fit */
     }
 
-    if (scaled_rect.Width >= 1 << 23 || scaled_rect.Width < 0.5) scaled_rect.Width = 1 << 23;
-    if (scaled_rect.Height >= 1 << 23 || scaled_rect.Height < 0.5) scaled_rect.Height = 1 << 23;
+    if (scaled_rect.Width >= 1 << 23) scaled_rect.Width = 1 << 23;
+    if (scaled_rect.Height >= 1 << 23) scaled_rect.Height = 1 << 23;
 
     get_font_hfont(graphics, font, format, &gdifont, NULL);
     oldfont = SelectObject(hdc, gdifont);
@@ -5237,7 +4844,7 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
     args.linesfilled = &lines;
     lines = glyphs = 0;
 
-    gdip_format_string(hdc, string, length, font, &scaled_rect, format,
+    gdip_format_string(hdc, string, length, font, &scaled_rect, format, TRUE,
         measure_string_callback, &args);
 
     if (linesfilled) *linesfilled = lines;
@@ -5388,20 +4995,14 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     scaled_rect.Y = 0.0;
     scaled_rect.Width = rel_width * rect->Width;
     scaled_rect.Height = rel_height * rect->Height;
-
-    if ((format_flags & StringFormatFlagsNoClip) ||
-        scaled_rect.Width >= 1 << 23 || scaled_rect.Width < 0.5) scaled_rect.Width = 1 << 23;
-    if ((format_flags & StringFormatFlagsNoClip) ||
-        scaled_rect.Height >= 1 << 23 || scaled_rect.Height < 0.5) scaled_rect.Height = 1 << 23;
-
     if (scaled_rect.Width >= 0.5)
     {
         scaled_rect.Width -= margin_x * 2.0 * rel_width;
         if (scaled_rect.Width < 0.5) return Ok; /* doesn't fit */
     }
 
-    if (scaled_rect.Width >= 1 << 23 || scaled_rect.Width < 0.5) scaled_rect.Width = 1 << 23;
-    if (scaled_rect.Height >= 1 << 23 || scaled_rect.Height < 0.5) scaled_rect.Height = 1 << 23;
+    if (scaled_rect.Width >= 1 << 23) scaled_rect.Width = 1 << 23;
+    if (scaled_rect.Height >= 1 << 23) scaled_rect.Height = 1 << 23;
 
     if (!(format_flags & StringFormatFlagsNoClip) &&
         scaled_rect.Width != 1 << 23 && scaled_rect.Height != 1 << 23)
@@ -5426,7 +5027,7 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     GetTextMetricsW(hdc, &textmetric);
     args.ascent = textmetric.tmAscent / rel_height;
 
-    gdip_format_string(hdc, string, length, font, &scaled_rect, format,
+    gdip_format_string(hdc, string, length, font, &scaled_rect, format, TRUE,
         draw_string_callback, &args);
 
     DeleteObject(rgn);
