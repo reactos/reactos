@@ -1249,6 +1249,52 @@ USBSTOR_SendTestUnit(
     return USBSTOR_SendRequest(DeviceObject, Irp, UFI_TEST_UNIT_CMD_LEN, (PUCHAR)&Cmd, 0, NULL, RetryCount);
 }
 
+NTSTATUS
+USBSTOR_SendUnknownRequest(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp,
+    IN ULONG RetryCount)
+{
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Request;
+    UFI_TEST_UNIT_CMD Cmd;
+
+    //
+    // get current stack location
+    //
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // get request block
+    //
+    Request = IoStack->Parameters.Others.Argument1;
+
+    //
+    // get PDO device extension
+    //
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    //
+    // check that we're sending to the right LUN
+    //
+    ASSERT(Request->Cdb[1] == (PDODeviceExtension->LUN & MAX_LUN));
+
+    //
+    // sanity check
+    //
+    ASSERT(Request->CdbLength == sizeof(UFI_TEST_UNIT_CMD));
+
+    //
+    // initialize test unit cmd
+    //
+    RtlCopyMemory(&Cmd, Request->Cdb, Request->CdbLength);
+
+    //
+    // send the request
+    //
+    return USBSTOR_SendRequest(DeviceObject, Irp, Request->CdbLength, (PUCHAR)&Cmd, Request->DataTransferLength, Request->DataBuffer, RetryCount);
+}
 
 NTSTATUS
 USBSTOR_HandleExecuteSCSI(
@@ -1366,12 +1412,28 @@ USBSTOR_HandleExecuteSCSI(
         //
         Status = USBSTOR_SendTestUnit(DeviceObject, Irp, RetryCount);
     }
+#if 0
+    else if (pCDB->AsByte[0] == SCSIOP_MECHANISM_STATUS)
+    {
+        DPRINT1("SCSIOP_MECHANISM_STATUS\n");
+
+        //
+        // Just send it the way it is
+        //
+        Status = USBSTOR_SendUnknownRequest(DeviceObject, Irp, RetryCount);
+    }
+#endif
     else
     {
+        // unsupported request
         DPRINT1("UNIMPLEMENTED Operation Code %x\n", pCDB->AsByte[0]);
-        Request->SrbStatus = SRB_STATUS_ERROR;
         Status = STATUS_NOT_SUPPORTED;
-        DbgBreakPoint();
+
+        Request->SrbStatus = SRB_STATUS_ERROR;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        USBSTOR_QueueTerminateRequest(PDODeviceExtension->LowerDeviceObject, Irp);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     return Status;
