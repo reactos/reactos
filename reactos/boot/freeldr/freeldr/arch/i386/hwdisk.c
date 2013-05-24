@@ -313,8 +313,6 @@ HwInitializeBiosDisks(VOID)
         memset((PVOID) DISKREADBUFFER, 0xcd, 512);
     }
     DiskReportError(TRUE);
-    TRACE("BIOS reports %d harddisk%s\n",
-          (int)DiskCount, (DiskCount == 1) ? "": "s");
 
     /* Get the drive we're booting from */
     MachDiskGetBootPath(BootPath, sizeof(BootPath));
@@ -349,8 +347,12 @@ HwInitializeBiosDisks(VOID)
         reactos_disk_count++;
 
         FsRegisterDevice(BootPath, &DiskVtbl);
+        DiskCount++;
     }
 
     PcBiosDiskCount = DiskCount;
+    TRACE("BIOS reports %d harddisk%s\n",
+          (int)DiskCount, (DiskCount == 1) ? "": "s");
+
     return DiskCount != 0;
 }
