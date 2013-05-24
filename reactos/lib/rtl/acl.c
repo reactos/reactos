@@ -889,8 +889,7 @@ RtlValidAcl(IN PACL Acl)
             }
 
             /* Check what kind of ACE this is */
-            if ((Ace->AceType >= ACCESS_MIN_MS_ACE_TYPE) ||
-                (Ace->AceType <= ACCESS_MAX_MS_V2_ACE_TYPE))
+            if (Ace->AceType <= ACCESS_MAX_MS_V2_ACE_TYPE)
             {
                 /* Validate the length of this ACE */
                 if (ROUND_DOWN(Ace->AceSize, sizeof(ULONG)) != Ace->AceSize)
@@ -932,7 +931,7 @@ RtlValidAcl(IN PACL Acl)
             {
                 DPRINT1("Unsupported ACE in ReactOS, assuming valid\n");
             }
-            else if ((Ace->AceType >= ACCESS_MIN_MS_OBJECT_ACE_TYPE) ||
+            else if ((Ace->AceType >= ACCESS_MIN_MS_OBJECT_ACE_TYPE) &&
                      (Ace->AceType <= ACCESS_MAX_MS_OBJECT_ACE_TYPE))
             {
                 DPRINT1("Unsupported ACE in ReactOS, assuming valid\n");
