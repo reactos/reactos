@@ -1076,6 +1076,11 @@ PDO_Dispatch(
             return PDO_HandlePnp(DeviceObject, Irp);
         case IRP_MJ_INTERNAL_DEVICE_CONTROL:
             return PDO_HandleInternalDeviceControl(DeviceObject, Irp);
+        case IRP_MJ_POWER:
+            PoStartNextPowerIrp(Irp);
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
         default:
             DPRINT1("PDO_Dispatch Function %x not implemented\n", IoStack->MajorFunction);
             Status = Irp->IoStatus.Status;

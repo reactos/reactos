@@ -186,6 +186,11 @@ HidClassFDO_PnP(
     IN PIRP Irp);
 
 NTSTATUS
+HidClassFDO_DispatchRequest(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+NTSTATUS
 HidClassFDO_DispatchRequestSynchronous(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);

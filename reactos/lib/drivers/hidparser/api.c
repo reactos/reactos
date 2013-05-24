@@ -757,7 +757,7 @@ HidParser_GetScaledUsageValueWithReport(
         }
         else
         {
-            // HACK: logical boundaries are absolute values
+            // logical boundaries are absolute values
             return HIDPARSER_STATUS_BAD_LOG_PHY_VALUES;
         }
 

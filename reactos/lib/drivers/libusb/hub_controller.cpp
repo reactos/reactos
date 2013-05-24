@@ -839,7 +839,7 @@ CHubController::HandleBulkOrInterruptTransfer(
     //
     // Is the Request for the root hub
     //
-    if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
+    if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this)  || Urb->UrbHeader.UsbdDeviceHandle == NULL)
     {
         ASSERT(m_PendingSCEIrp == NULL);
         if (QueryStatusChageEndpoint(Irp))
@@ -1189,7 +1189,7 @@ CHubController::HandleGetStatusFromDevice(
     DeviceStatus = (PUSHORT)Urb->UrbControlGetStatusRequest.TransferBuffer;
 
 
-    if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
+    if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this) || Urb->UrbHeader.UsbdDeviceHandle == NULL)
     {
         //
         // FIXME need more flags ?
@@ -1319,7 +1319,7 @@ CHubController::HandleClassDevice(
                 case USB_DEVICE_CLASS_RESERVED: // FALL THROUGH
                 case USB_DEVICE_CLASS_HUB:
                 {
-                    if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
+                    if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this)  || Urb->UrbHeader.UsbdDeviceHandle == NULL)
                     {
                         //
                         // sanity checks
@@ -1525,7 +1525,7 @@ CHubController::HandleGetDescriptor(
             PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBufferLength >= sizeof(USB_DEVICE_DESCRIPTOR));
             PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
 
-            if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
+            if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this) || Urb->UrbHeader.UsbdDeviceHandle == NULL)
             {
                 //
                 // copy root hub device descriptor
@@ -1578,7 +1578,7 @@ CHubController::HandleGetDescriptor(
             BufferLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
             Buffer = (PUCHAR) Urb->UrbControlDescriptorRequest.TransferBuffer;
 
-            if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
+            if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this) || Urb->UrbHeader.UsbdDeviceHandle == NULL)
             {
                 //
                 // request is for the root bus controller

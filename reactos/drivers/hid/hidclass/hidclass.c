@@ -971,8 +971,21 @@ HidClass_Power(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PHIDCLASS_COMMON_DEVICE_EXTENSION CommonDeviceExtension;
+    CommonDeviceExtension = DeviceObject->DeviceExtension;
+ 
+    if (CommonDeviceExtension->IsFDO)
+    {
+        IoCopyCurrentIrpStackLocationToNext(Irp);
+        return HidClassFDO_DispatchRequest(DeviceObject, Irp);
+    }
+    else
+    {
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        PoStartNextPowerIrp(Irp);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
 }
 
 NTSTATUS
