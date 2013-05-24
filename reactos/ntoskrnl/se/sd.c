@@ -1088,7 +1088,7 @@ SeValidSecurityDescriptor(IN ULONG Length,
         }
 
         Acl = (PACL)((ULONG_PTR)SecurityDescriptor + SecurityDescriptor->Dacl);
-        if ((Acl->AclRevision < MIN_ACL_REVISION) &&
+        if ((Acl->AclRevision < MIN_ACL_REVISION) ||
             (Acl->AclRevision > MAX_ACL_REVISION))
         {
             DPRINT1("Invalid DACL revision\n");
