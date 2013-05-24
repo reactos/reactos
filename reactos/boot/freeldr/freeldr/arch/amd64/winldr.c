@@ -35,92 +35,92 @@ MempAllocatePageTables()
 {
     TRACE(">>> MempAllocatePageTables\n");
 
-	/* Allocate a page for the PML4 */
-	PxeBase = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
+    /* Allocate a page for the PML4 */
+    PxeBase = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
     if (!PxeBase)
     {
         ERR("failed to allocate PML4\n");
         return FALSE;
     }
 
-	// FIXME: Physical PTEs = FirmwareTemporary ?
+    // FIXME: Physical PTEs = FirmwareTemporary ?
 
-	/* Zero the PML4 */
-	RtlZeroMemory(PxeBase, PAGE_SIZE);
+    /* Zero the PML4 */
+    RtlZeroMemory(PxeBase, PAGE_SIZE);
 
-	/* The page tables are located at 0xfffff68000000000
-	 * We create a recursive self mapping through all 4 levels at
-	 * virtual address 0xfffff6fb7dbedf68 */
-	PxeBase[VAtoPXI(PXE_BASE)].Valid = 1;
-	PxeBase[VAtoPXI(PXE_BASE)].Write = 1;
-	PxeBase[VAtoPXI(PXE_BASE)].PageFrameNumber = PtrToPfn(PxeBase);
+    /* The page tables are located at 0xfffff68000000000
+     * We create a recursive self mapping through all 4 levels at
+     * virtual address 0xfffff6fb7dbedf68 */
+    PxeBase[VAtoPXI(PXE_BASE)].Valid = 1;
+    PxeBase[VAtoPXI(PXE_BASE)].Write = 1;
+    PxeBase[VAtoPXI(PXE_BASE)].PageFrameNumber = PtrToPfn(PxeBase);
 
     // FIXME: map PDE's for hals memory mapping
 
     TRACE(">>> leave MempAllocatePageTables\n");
 
-	return TRUE;
+    return TRUE;
 }
 
 PHARDWARE_PTE
 MempGetOrCreatePageDir(PHARDWARE_PTE PdeBase, ULONG Index)
 {
-	PHARDWARE_PTE SubDir;
+    PHARDWARE_PTE SubDir;
 
-	if (!PdeBase)
-		return NULL;
+    if (!PdeBase)
+        return NULL;
 
-	if (!PdeBase[Index].Valid)
-	{
-		SubDir = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
-		if (!SubDir)
-			return NULL;
-		RtlZeroMemory(SubDir, PAGE_SIZE);
-		PdeBase[Index].PageFrameNumber = PtrToPfn(SubDir);
-		PdeBase[Index].Valid = 1;
-		PdeBase[Index].Write = 1;
-	}
-	else
-	{
-		SubDir = (PVOID)((ULONG64)(PdeBase[Index].PageFrameNumber) * PAGE_SIZE);
-	}
-	return SubDir;
+    if (!PdeBase[Index].Valid)
+    {
+        SubDir = MmAllocateMemoryWithType(PAGE_SIZE, LoaderMemoryData);
+        if (!SubDir)
+            return NULL;
+        RtlZeroMemory(SubDir, PAGE_SIZE);
+        PdeBase[Index].PageFrameNumber = PtrToPfn(SubDir);
+        PdeBase[Index].Valid = 1;
+        PdeBase[Index].Write = 1;
+    }
+    else
+    {
+        SubDir = (PVOID)((ULONG64)(PdeBase[Index].PageFrameNumber) * PAGE_SIZE);
+    }
+    return SubDir;
 }
 
 BOOLEAN
 MempMapSinglePage(ULONG64 VirtualAddress, ULONG64 PhysicalAddress)
 {
-	PHARDWARE_PTE PpeBase, PdeBase, PteBase;
-	ULONG Index;
+    PHARDWARE_PTE PpeBase, PdeBase, PteBase;
+    ULONG Index;
 
-	PpeBase = MempGetOrCreatePageDir(PxeBase, VAtoPXI(VirtualAddress));
-	PdeBase = MempGetOrCreatePageDir(PpeBase, VAtoPPI(VirtualAddress));
-	PteBase = MempGetOrCreatePageDir(PdeBase, VAtoPDI(VirtualAddress));
+    PpeBase = MempGetOrCreatePageDir(PxeBase, VAtoPXI(VirtualAddress));
+    PdeBase = MempGetOrCreatePageDir(PpeBase, VAtoPPI(VirtualAddress));
+    PteBase = MempGetOrCreatePageDir(PdeBase, VAtoPDI(VirtualAddress));
 
-	if (!PteBase)
-	{
+    if (!PteBase)
+    {
         ERR("!!!No Dir %p, %p, %p, %p\n", PxeBase, PpeBase, PdeBase, PteBase);
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	Index = VAtoPTI(VirtualAddress);
-	if (PteBase[Index].Valid)
-	{
+    Index = VAtoPTI(VirtualAddress);
+    if (PteBase[Index].Valid)
+    {
         ERR("!!!Already mapped %ld\n", Index);
-		return FALSE;
-	}
+        return FALSE;
+    }
 
-	PteBase[Index].Valid = 1;
-	PteBase[Index].Write = 1;
-	PteBase[Index].PageFrameNumber = PhysicalAddress / PAGE_SIZE;
+    PteBase[Index].Valid = 1;
+    PteBase[Index].Write = 1;
+    PteBase[Index].PageFrameNumber = PhysicalAddress / PAGE_SIZE;
 
-	return TRUE;
+    return TRUE;
 }
 
 BOOLEAN
 MempIsPageMapped(PVOID VirtualAddress)
 {
-	PHARDWARE_PTE PpeBase, PdeBase, PteBase;
+    PHARDWARE_PTE PpeBase, PdeBase, PteBase;
     ULONG Index;
 
     Index = VAtoPXI(VirtualAddress);
@@ -148,26 +148,26 @@ MempIsPageMapped(PVOID VirtualAddress)
 PFN_NUMBER
 MempMapRangeOfPages(ULONG64 VirtualAddress, ULONG64 PhysicalAddress, PFN_NUMBER cPages)
 {
-	PFN_NUMBER i;
+    PFN_NUMBER i;
 
-	for (i = 0; i < cPages; i++)
-	{
-		if (!MempMapSinglePage(VirtualAddress, PhysicalAddress))
-		{
-		    ERR("Failed to map page %ld from %p to %p\n",
+    for (i = 0; i < cPages; i++)
+    {
+        if (!MempMapSinglePage(VirtualAddress, PhysicalAddress))
+        {
+            ERR("Failed to map page %ld from %p to %p\n",
                     i, (PVOID)VirtualAddress, (PVOID)PhysicalAddress);
-			return i;
-		}
-		VirtualAddress += PAGE_SIZE;
-		PhysicalAddress += PAGE_SIZE;
-	}
-	return i;
+            return i;
+        }
+        VirtualAddress += PAGE_SIZE;
+        PhysicalAddress += PAGE_SIZE;
+    }
+    return i;
 }
 
 BOOLEAN
 MempSetupPaging(IN PFN_NUMBER StartPage,
-				IN PFN_NUMBER NumberOfPages,
-				IN BOOLEAN KernelMapping)
+                IN PFN_NUMBER NumberOfPages,
+                IN BOOLEAN KernelMapping)
 {
     TRACE(">>> MempSetupPaging(0x%lx, %ld, %p)\n",
             StartPage, NumberOfPages, StartPage * PAGE_SIZE + KSEG0_BASE);
@@ -195,7 +195,7 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
         }
     }
 
-	return TRUE;
+    return TRUE;
 }
 
 VOID
@@ -207,62 +207,62 @@ MempUnmapPage(PFN_NUMBER Page)
 VOID
 WinLdrpMapApic()
 {
-	BOOLEAN LocalAPIC;
-	LARGE_INTEGER MsrValue;
-	ULONG CpuInfo[4];
-	ULONG64 APICAddress;
+    BOOLEAN LocalAPIC;
+    LARGE_INTEGER MsrValue;
+    ULONG CpuInfo[4];
+    ULONG64 APICAddress;
 
     TRACE(">>> WinLdrpMapApic\n");
 
-	/* Check if we have a local APIC */
-	__cpuid((int*)CpuInfo, 1);
-	LocalAPIC = (((CpuInfo[3] >> 9) & 1) != 0);
+    /* Check if we have a local APIC */
+    __cpuid((int*)CpuInfo, 1);
+    LocalAPIC = (((CpuInfo[3] >> 9) & 1) != 0);
 
-	/* If there is no APIC, just return */
-	if (!LocalAPIC)
-	{
+    /* If there is no APIC, just return */
+    if (!LocalAPIC)
+    {
         WARN("No APIC found.\n");
-		return;
-	}
+        return;
+    }
 
-	/* Read the APIC Address */
-	MsrValue.QuadPart = __readmsr(0x1B);
-	APICAddress = (MsrValue.LowPart & 0xFFFFF000);
+    /* Read the APIC Address */
+    MsrValue.QuadPart = __readmsr(0x1B);
+    APICAddress = (MsrValue.LowPart & 0xFFFFF000);
 
-	TRACE("Local APIC detected at address 0x%x\n",
-		APICAddress);
+    TRACE("Local APIC detected at address 0x%x\n",
+        APICAddress);
 
-	/* Map it */
-	MempMapSinglePage(APIC_BASE, APICAddress);
+    /* Map it */
+    MempMapSinglePage(APIC_BASE, APICAddress);
 }
 
 BOOLEAN
 WinLdrMapSpecialPages()
 {
-	PHARDWARE_PTE PpeBase, PdeBase;
+    PHARDWARE_PTE PpeBase, PdeBase;
 
-	/* Map the PCR page */
-	if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
-	{
-		ERR("Could not map PCR @ %lx\n", PcrBasePage);
-		return FALSE;
-	}
+    /* Map the PCR page */
+    if (!MempMapSinglePage(KIP0PCRADDRESS, PcrBasePage * PAGE_SIZE))
+    {
+        ERR("Could not map PCR @ %lx\n", PcrBasePage);
+        return FALSE;
+    }
 
-	/* Map KI_USER_SHARED_DATA */
-	if (!MempMapSinglePage(KI_USER_SHARED_DATA, (PcrBasePage+1) * PAGE_SIZE))
-	{
-		ERR("Could not map KI_USER_SHARED_DATA\n");
-		return FALSE;
-	}
+    /* Map KI_USER_SHARED_DATA */
+    if (!MempMapSinglePage(KI_USER_SHARED_DATA, (PcrBasePage+1) * PAGE_SIZE))
+    {
+        ERR("Could not map KI_USER_SHARED_DATA\n");
+        return FALSE;
+    }
 
-	/* Map the APIC page */
-	WinLdrpMapApic();
+    /* Map the APIC page */
+    WinLdrpMapApic();
 
-	/* Map the page tables for 4 MB HAL address space. */
-	PpeBase = MempGetOrCreatePageDir(PxeBase, VAtoPXI(MM_HAL_VA_START));
-	PdeBase = MempGetOrCreatePageDir(PpeBase, VAtoPPI(MM_HAL_VA_START));
-	MempGetOrCreatePageDir(PdeBase, VAtoPDI(MM_HAL_VA_START));
-	MempGetOrCreatePageDir(PdeBase, VAtoPDI(MM_HAL_VA_START + 2 * 1024 * 1024));
+    /* Map the page tables for 4 MB HAL address space. */
+    PpeBase = MempGetOrCreatePageDir(PxeBase, VAtoPXI(MM_HAL_VA_START));
+    PdeBase = MempGetOrCreatePageDir(PpeBase, VAtoPPI(MM_HAL_VA_START));
+    MempGetOrCreatePageDir(PdeBase, VAtoPDI(MM_HAL_VA_START));
+    MempGetOrCreatePageDir(PdeBase, VAtoPDI(MM_HAL_VA_START + 2 * 1024 * 1024));
 
     return TRUE;
 }
@@ -270,72 +270,72 @@ WinLdrMapSpecialPages()
 VOID
 Amd64SetupGdt(PVOID GdtBase, ULONG64 TssBase)
 {
-	PKGDTENTRY64 Entry;
-	KDESCRIPTOR GdtDesc;
-	TRACE("Amd64SetupGdt(GdtBase = %p, TssBase = %p)\n", GdtBase, TssBase);
+    PKGDTENTRY64 Entry;
+    KDESCRIPTOR GdtDesc;
+    TRACE("Amd64SetupGdt(GdtBase = %p, TssBase = %p)\n", GdtBase, TssBase);
 
-	/* Setup KGDT64_NULL */
-	Entry = KiGetGdtEntry(GdtBase, KGDT64_NULL);
-	*(PULONG64)Entry = 0x0000000000000000ULL;
+    /* Setup KGDT64_NULL */
+    Entry = KiGetGdtEntry(GdtBase, KGDT64_NULL);
+    *(PULONG64)Entry = 0x0000000000000000ULL;
 
-	/* Setup KGDT64_R0_CODE */
-	Entry = KiGetGdtEntry(GdtBase, KGDT64_R0_CODE);
-	*(PULONG64)Entry = 0x00209b0000000000ULL;
+    /* Setup KGDT64_R0_CODE */
+    Entry = KiGetGdtEntry(GdtBase, KGDT64_R0_CODE);
+    *(PULONG64)Entry = 0x00209b0000000000ULL;
 
-	/* Setup KGDT64_R0_DATA */
-	Entry = KiGetGdtEntry(GdtBase, KGDT64_R0_DATA);
-	*(PULONG64)Entry = 0x00cf93000000ffffULL;
+    /* Setup KGDT64_R0_DATA */
+    Entry = KiGetGdtEntry(GdtBase, KGDT64_R0_DATA);
+    *(PULONG64)Entry = 0x00cf93000000ffffULL;
 
-	/* Setup KGDT64_R3_CMCODE */
-	Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_CMCODE);
-	*(PULONG64)Entry = 0x00cffb000000ffffULL;
+    /* Setup KGDT64_R3_CMCODE */
+    Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_CMCODE);
+    *(PULONG64)Entry = 0x00cffb000000ffffULL;
 
-	/* Setup KGDT64_R3_DATA */
-	Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_DATA);
-	*(PULONG64)Entry = 0x00cff3000000ffffULL;
+    /* Setup KGDT64_R3_DATA */
+    Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_DATA);
+    *(PULONG64)Entry = 0x00cff3000000ffffULL;
 
-	/* Setup KGDT64_R3_CODE */
-	Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_CODE);
-	*(PULONG64)Entry = 0x0020fb0000000000ULL;
+    /* Setup KGDT64_R3_CODE */
+    Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_CODE);
+    *(PULONG64)Entry = 0x0020fb0000000000ULL;
 
-	/* Setup KGDT64_R3_CMTEB */
-	Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_CMTEB);
-	*(PULONG64)Entry = 0xff40f3fd50003c00ULL;
+    /* Setup KGDT64_R3_CMTEB */
+    Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_CMTEB);
+    *(PULONG64)Entry = 0xff40f3fd50003c00ULL;
 
-	/* Setup TSS entry */
-	Entry = KiGetGdtEntry(GdtBase, KGDT64_SYS_TSS);
-	KiInitGdtEntry(Entry, TssBase, sizeof(KTSS), I386_TSS, 0);
+    /* Setup TSS entry */
+    Entry = KiGetGdtEntry(GdtBase, KGDT64_SYS_TSS);
+    KiInitGdtEntry(Entry, TssBase, sizeof(KTSS), I386_TSS, 0);
 
     /* Setup GDT descriptor */
-	GdtDesc.Base  = GdtBase;
-	GdtDesc.Limit = NUM_GDT * sizeof(KGDTENTRY) - 1;
+    GdtDesc.Base  = GdtBase;
+    GdtDesc.Limit = NUM_GDT * sizeof(KGDTENTRY) - 1;
 
-	/* Set the new Gdt */
-	__lgdt(&GdtDesc.Limit);
-	TRACE("Leave Amd64SetupGdt()\n");
+    /* Set the new Gdt */
+    __lgdt(&GdtDesc.Limit);
+    TRACE("Leave Amd64SetupGdt()\n");
 }
 
 VOID
 Amd64SetupIdt(PVOID IdtBase)
 {
-	KDESCRIPTOR IdtDesc, OldIdt;
-	ULONG Size;
-	TRACE("Amd64SetupIdt(IdtBase = %p)\n", IdtBase);
+    KDESCRIPTOR IdtDesc, OldIdt;
+    ULONG Size;
+    TRACE("Amd64SetupIdt(IdtBase = %p)\n", IdtBase);
 
     /* Get old IDT */
-	__sidt(&OldIdt.Limit);
+    __sidt(&OldIdt.Limit);
 
-	/* Copy the old IDT */
-	Size =  min(OldIdt.Limit + 1, NUM_IDT * sizeof(KIDTENTRY));
-	//RtlCopyMemory(IdtBase, (PVOID)OldIdt.Base, Size);
+    /* Copy the old IDT */
+    Size =  min(OldIdt.Limit + 1, NUM_IDT * sizeof(KIDTENTRY));
+    //RtlCopyMemory(IdtBase, (PVOID)OldIdt.Base, Size);
 
-	/* Setup the new IDT descriptor */
-	IdtDesc.Base = IdtBase;
-	IdtDesc.Limit = NUM_IDT * sizeof(KIDTENTRY) - 1;
+    /* Setup the new IDT descriptor */
+    IdtDesc.Base = IdtBase;
+    IdtDesc.Limit = NUM_IDT * sizeof(KIDTENTRY) - 1;
 
-	/* Set the new IDT */
-	__lidt(&IdtDesc.Limit);
-	TRACE("Leave Amd64SetupIdt()\n");
+    /* Set the new IDT */
+    __lidt(&IdtDesc.Limit);
+    TRACE("Leave Amd64SetupIdt()\n");
 }
 
 VOID
@@ -343,17 +343,17 @@ WinLdrSetProcessorContext(void)
 {
     TRACE("WinLdrSetProcessorContext\n");
 
-	/* Disable Interrupts */
-	_disable();
+    /* Disable Interrupts */
+    _disable();
 
-	/* Re-initalize EFLAGS */
-	__writeeflags(0);
+    /* Re-initalize EFLAGS */
+    __writeeflags(0);
 
-	/* Set the new PML4 */
-	__writecr3((ULONG64)PxeBase);
+    /* Set the new PML4 */
+    __writecr3((ULONG64)PxeBase);
 
     /* Get kernel mode address of gdt / idt */
-	GdtIdt = (PVOID)((ULONG64)GdtIdt + KSEG0_BASE);
+    GdtIdt = (PVOID)((ULONG64)GdtIdt + KSEG0_BASE);
 
     /* Create gdt entries and load gdtr */
     Amd64SetupGdt(GdtIdt, KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
@@ -364,57 +364,57 @@ WinLdrSetProcessorContext(void)
     /* LDT is unused */
 //    __lldt(0);
 
-	/* Load TSR */
-	__ltr(KGDT64_SYS_TSS);
+    /* Load TSR */
+    __ltr(KGDT64_SYS_TSS);
 
     TRACE("leave WinLdrSetProcessorContext\n");
 }
 
 void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	ULONG_PTR Pcr = 0;
-	ULONG_PTR Tss = 0;
-	ULONG BlockSize, NumPages;
+    ULONG_PTR Pcr = 0;
+    ULONG_PTR Tss = 0;
+    ULONG BlockSize, NumPages;
 
-	LoaderBlock->u.I386.CommonDataArea = (PVOID)DbgPrint; // HACK
-	LoaderBlock->u.I386.MachineType = MACHINE_TYPE_ISA;
+    LoaderBlock->u.I386.CommonDataArea = (PVOID)DbgPrint; // HACK
+    LoaderBlock->u.I386.MachineType = MACHINE_TYPE_ISA;
 
-	/* Allocate 2 pages for PCR */
-	Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
-	PcrBasePage = Pcr >> MM_PAGE_SHIFT;
-	if (Pcr == 0)
-	{
-		UiMessageBox("Can't allocate PCR\n");
-		return;
-	}
-	RtlZeroMemory((PVOID)Pcr, 2 * MM_PAGE_SIZE);
+    /* Allocate 2 pages for PCR */
+    Pcr = (ULONG_PTR)MmAllocateMemoryWithType(2 * MM_PAGE_SIZE, LoaderStartupPcrPage);
+    PcrBasePage = Pcr >> MM_PAGE_SHIFT;
+    if (Pcr == 0)
+    {
+        UiMessageBox("Can't allocate PCR\n");
+        return;
+    }
+    RtlZeroMemory((PVOID)Pcr, 2 * MM_PAGE_SIZE);
 
-	/* Allocate TSS */
-	BlockSize = (sizeof(KTSS) + MM_PAGE_SIZE) & ~(MM_PAGE_SIZE - 1);
-	Tss = (ULONG_PTR)MmAllocateMemoryWithType(BlockSize, LoaderMemoryData);
-	TssBasePage = Tss >> MM_PAGE_SHIFT;
+    /* Allocate TSS */
+    BlockSize = (sizeof(KTSS) + MM_PAGE_SIZE) & ~(MM_PAGE_SIZE - 1);
+    Tss = (ULONG_PTR)MmAllocateMemoryWithType(BlockSize, LoaderMemoryData);
+    TssBasePage = Tss >> MM_PAGE_SHIFT;
 
-	/* Allocate space for new GDT + IDT */
-	BlockSize = NUM_GDT * sizeof(KGDTENTRY) + NUM_IDT * sizeof(KIDTENTRY);
-	NumPages = (BlockSize + MM_PAGE_SIZE - 1) >> MM_PAGE_SHIFT;
-	GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
-	if (GdtIdt == NULL)
-	{
-		UiMessageBox("Can't allocate pages for GDT+IDT!\n");
-		return;
-	}
+    /* Allocate space for new GDT + IDT */
+    BlockSize = NUM_GDT * sizeof(KGDTENTRY) + NUM_IDT * sizeof(KIDTENTRY);
+    NumPages = (BlockSize + MM_PAGE_SIZE - 1) >> MM_PAGE_SHIFT;
+    GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
+    if (GdtIdt == NULL)
+    {
+        UiMessageBox("Can't allocate pages for GDT+IDT!\n");
+        return;
+    }
 
-	/* Zero newly prepared GDT+IDT */
-	RtlZeroMemory(GdtIdt, NumPages << MM_PAGE_SHIFT);
+    /* Zero newly prepared GDT+IDT */
+    RtlZeroMemory(GdtIdt, NumPages << MM_PAGE_SHIFT);
 
-	// Before we start mapping pages, create a block of memory, which will contain
-	// PDE and PTEs
-	if (MempAllocatePageTables() == FALSE)
-	{
-	    // FIXME: bugcheck
-	}
+    // Before we start mapping pages, create a block of memory, which will contain
+    // PDE and PTEs
+    if (MempAllocatePageTables() == FALSE)
+    {
+        // FIXME: bugcheck
+    }
 
-	/* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
+    /* Map stuff like PCR, KI_USER_SHARED_DATA and Apic */
     WinLdrMapSpecialPages();
 }
 

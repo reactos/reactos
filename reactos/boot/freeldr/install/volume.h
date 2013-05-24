@@ -20,7 +20,7 @@
 
 #pragma once
 
-BOOL	OpenVolume(LPCTSTR lpszVolumeName);
-void	CloseVolume(void);
-BOOL	ReadVolumeSector(ULONG SectorNumber, PVOID SectorBuffer);
-BOOL	WriteVolumeSector(ULONG SectorNumber, PVOID SectorBuffer);
+BOOL    OpenVolume(LPCTSTR lpszVolumeName);
+void    CloseVolume(void);
+BOOL    ReadVolumeSector(ULONG SectorNumber, PVOID SectorBuffer);
+BOOL    WriteVolumeSector(ULONG SectorNumber, PVOID SectorBuffer);

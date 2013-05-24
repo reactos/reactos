@@ -30,12 +30,12 @@ extern "C" {
 // Function prototypes for RS232 communication under Win32
 //
 //////////////////////////////////////////////////////////////////////////////////////////
-BOOL	Rs232OpenPortWin32(TCHAR* CommPort);
-BOOL	Rs232ClosePortWin32(VOID);
-BOOL	Rs232ConfigurePortWin32(TCHAR* DeviceControlString);
-BOOL	Rs232SetCommunicationTimeoutsWin32(DWORD ReadIntervalTimeout, DWORD ReadTotalTimeoutMultiplier, DWORD ReadTotalTimeoutConstant, DWORD WriteTotalTimeoutMultiplier, DWORD WriteTotalTimeoutConstant);
-BOOL	Rs232ReadByteWin32(BYTE* DataByte);
-BOOL	Rs232WriteByteWin32(BYTE DataByte);
+BOOL    Rs232OpenPortWin32(TCHAR* CommPort);
+BOOL    Rs232ClosePortWin32(VOID);
+BOOL    Rs232ConfigurePortWin32(TCHAR* DeviceControlString);
+BOOL    Rs232SetCommunicationTimeoutsWin32(DWORD ReadIntervalTimeout, DWORD ReadTotalTimeoutMultiplier, DWORD ReadTotalTimeoutConstant, DWORD WriteTotalTimeoutMultiplier, DWORD WriteTotalTimeoutConstant);
+BOOL    Rs232ReadByteWin32(BYTE* DataByte);
+BOOL    Rs232WriteByteWin32(BYTE DataByte);
 
 #ifdef __cplusplus
 }

@@ -22,11 +22,11 @@
 #define HAS_OPTION_MENU_CUSTOM_BOOT
 #define HAS_OPTION_MENU_REBOOT
 
-VOID	OptionMenuReboot(VOID);
+VOID    OptionMenuReboot(VOID);
 
-VOID	OptionMenuCustomBoot(VOID);
-VOID	OptionMenuCustomBootDisk(VOID);
-VOID	OptionMenuCustomBootPartition(VOID);
-VOID	OptionMenuCustomBootBootSectorFile(VOID);
-VOID	OptionMenuCustomBootReactOS(VOID);
-VOID	OptionMenuCustomBootLinux(VOID);
+VOID    OptionMenuCustomBoot(VOID);
+VOID    OptionMenuCustomBootDisk(VOID);
+VOID    OptionMenuCustomBootPartition(VOID);
+VOID    OptionMenuCustomBootBootSectorFile(VOID);
+VOID    OptionMenuCustomBootReactOS(VOID);
+VOID    OptionMenuCustomBootLinux(VOID);

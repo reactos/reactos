@@ -65,51 +65,51 @@ RegInitCurrentControlSet(BOOLEAN LastKnownGood);
 
 LONG
 RegCreateKey(FRLDRHKEY ParentKey,
-	     PCWSTR KeyName,
-	     PFRLDRHKEY Key);
+         PCWSTR KeyName,
+         PFRLDRHKEY Key);
 
 LONG
 RegDeleteKey(FRLDRHKEY Key,
-	     PCWSTR Name);
+         PCWSTR Name);
 
 LONG
 RegEnumKey(FRLDRHKEY Key,
-	   ULONG Index,
-	   PWCHAR Name,
-	   ULONG* NameSize);
+       ULONG Index,
+       PWCHAR Name,
+       ULONG* NameSize);
 
 LONG
 RegOpenKey(FRLDRHKEY ParentKey,
-	   PCWSTR KeyName,
-	   PFRLDRHKEY Key);
+       PCWSTR KeyName,
+       PFRLDRHKEY Key);
 
 
 LONG
 RegSetValue(FRLDRHKEY Key,
-	    PCWSTR ValueName,
-	    ULONG Type,
-	    PCSTR Data,
-	    ULONG DataSize);
+        PCWSTR ValueName,
+        ULONG Type,
+        PCSTR Data,
+        ULONG DataSize);
 
 LONG
 RegQueryValue(FRLDRHKEY Key,
-	      PCWSTR ValueName,
-	      ULONG* Type,
-	      PUCHAR Data,
-	      ULONG* DataSize);
+          PCWSTR ValueName,
+          ULONG* Type,
+          PUCHAR Data,
+          ULONG* DataSize);
 
 LONG
 RegDeleteValue(FRLDRHKEY Key,
-	       PCWSTR ValueName);
+           PCWSTR ValueName);
 
 LONG
 RegEnumValue(FRLDRHKEY Key,
-	     ULONG Index,
-	     PWCHAR ValueName,
-	     ULONG* NameSize,
-	     ULONG* Type,
-	     PUCHAR Data,
-	     ULONG* DataSize);
+         ULONG Index,
+         PWCHAR ValueName,
+         ULONG* NameSize,
+         ULONG* Type,
+         PUCHAR Data,
+         ULONG* DataSize);
 
 ULONG
 RegGetSubKeyCount (FRLDRHKEY Key);
@@ -120,12 +120,12 @@ RegGetValueCount (FRLDRHKEY Key);
 
 BOOLEAN
 RegImportBinaryHive (PCHAR ChunkBase,
-		     ULONG ChunkSize);
+             ULONG ChunkSize);
 
 BOOLEAN
 RegExportBinaryHive (PCWSTR KeyName,
-		     PCHAR ChunkBase,
-		     ULONG* ChunkSize);
+             PCHAR ChunkBase,
+             ULONG* ChunkSize);
 
 
 #endif /* __REGISTRY_H */

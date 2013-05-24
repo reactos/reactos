@@ -21,9 +21,9 @@
 
 typedef struct tagOperatingSystemItem
 {
-	PCSTR SystemPartition;
-	PCSTR LoadIdentifier;
-	PCSTR OsLoadOptions;
+    PCSTR SystemPartition;
+    PCSTR LoadIdentifier;
+    PCSTR OsLoadOptions;
 } OperatingSystemItem;
 
 OperatingSystemItem* InitOperatingSystemList(ULONG* OperatingSystemCountPointer);

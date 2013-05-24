@@ -31,55 +31,55 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 VOID FileSystemError(PCSTR ErrorString)
 {
-	ERR("%s\n", ErrorString);
+    ERR("%s\n", ErrorString);
 
-	UiMessageBox(ErrorString);
+    UiMessageBox(ErrorString);
 }
 
 PFILE FsOpenFile(PCSTR FileName)
 {
-	CHAR FullPath[MAX_PATH];
-	ULONG FileId;
-	LONG ret;
+    CHAR FullPath[MAX_PATH];
+    ULONG FileId;
+    LONG ret;
 
-	//
-	// Print status message
-	//
-	TRACE("Opening file '%s'...\n", FileName);
+    //
+    // Print status message
+    //
+    TRACE("Opening file '%s'...\n", FileName);
 
-	//
-	// Create full file name
-	//
-	MachDiskGetBootPath(FullPath, sizeof(FullPath));
-	strcat(FullPath, FileName);
+    //
+    // Create full file name
+    //
+    MachDiskGetBootPath(FullPath, sizeof(FullPath));
+    strcat(FullPath, FileName);
 
-	//
-	// Open the file
-	//
-	ret = ArcOpen(FullPath, OpenReadOnly, &FileId);
+    //
+    // Open the file
+    //
+    ret = ArcOpen(FullPath, OpenReadOnly, &FileId);
 
-	//
-	// Check for success
-	//
-	if (ret == ESUCCESS)
-		return (PFILE)FileId;
-	else
-		return (PFILE)0;
+    //
+    // Check for success
+    //
+    if (ret == ESUCCESS)
+        return (PFILE)FileId;
+    else
+        return (PFILE)0;
 }
 
 VOID FsCloseFile(PFILE FileHandle)
 {
-	ULONG FileId = (ULONG)FileHandle;
+    ULONG FileId = (ULONG)FileHandle;
 
-	//
-	// Close the handle
-	//
-	ArcClose(FileId);
+    //
+    // Close the handle
+    //
+    ArcClose(FileId);
 
-	//
-	// Do not check for error; this function is
-	// supposed to always succeed
-	//
+    //
+    // Do not check for error; this function is
+    // supposed to always succeed
+    //
 }
 
 /*
@@ -88,62 +88,62 @@ VOID FsCloseFile(PFILE FileHandle)
  */
 BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
-	ULONG FileId = (ULONG)FileHandle;
-	LONG ret;
+    ULONG FileId = (ULONG)FileHandle;
+    LONG ret;
 
-	//
-	// Read the file
-	//
-	ret = ArcRead(FileId, Buffer, BytesToRead, BytesRead);
+    //
+    // Read the file
+    //
+    ret = ArcRead(FileId, Buffer, BytesToRead, BytesRead);
 
-	//
-	// Check for success
-	//
-	if (ret == ESUCCESS)
-		return TRUE;
-	else
-		return FALSE;
+    //
+    // Check for success
+    //
+    if (ret == ESUCCESS)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 ULONG FsGetFileSize(PFILE FileHandle)
 {
-	ULONG FileId = (ULONG)FileHandle;
-	FILEINFORMATION Information;
-	LONG ret;
+    ULONG FileId = (ULONG)FileHandle;
+    FILEINFORMATION Information;
+    LONG ret;
 
-	//
-	// Query file informations
-	//
-	ret = ArcGetFileInformation(FileId, &Information);
+    //
+    // Query file informations
+    //
+    ret = ArcGetFileInformation(FileId, &Information);
 
-	//
-	// Check for error
-	//
-	if (ret != ESUCCESS || Information.EndingAddress.HighPart != 0)
-		return 0;
+    //
+    // Check for error
+    //
+    if (ret != ESUCCESS || Information.EndingAddress.HighPart != 0)
+        return 0;
 
-	//
-	// Return file size
-	//
-	return Information.EndingAddress.LowPart;
+    //
+    // Return file size
+    //
+    return Information.EndingAddress.LowPart;
 }
 
 VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
 {
-	ULONG FileId = (ULONG)FileHandle;
-	LARGE_INTEGER Position;
+    ULONG FileId = (ULONG)FileHandle;
+    LARGE_INTEGER Position;
 
-	//
-	// Set file position
-	//
-	Position.HighPart = 0;
-	Position.LowPart = NewFilePointer;
-	ArcSeek(FileId, &Position, SeekAbsolute);
+    //
+    // Set file position
+    //
+    Position.HighPart = 0;
+    Position.LowPart = NewFilePointer;
+    ArcSeek(FileId, &Position, SeekAbsolute);
 
-	//
-	// Do not check for error; this function is
-	// supposed to always succeed
-	//
+    //
+    // Do not check for error; this function is
+    // supposed to always succeed
+    //
 }
 
 /*
@@ -153,21 +153,21 @@ VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
  */
 ULONG FsGetNumPathParts(PCSTR Path)
 {
-	size_t		i;
-	ULONG		num;
+    size_t        i;
+    ULONG        num;
 
-	for (i=0,num=0; i<strlen(Path); i++)
-	{
-		if ((Path[i] == '\\') || (Path[i] == '/'))
-		{
-			num++;
-		}
-	}
-	num++;
+    for (i=0,num=0; i<strlen(Path); i++)
+    {
+        if ((Path[i] == '\\') || (Path[i] == '/'))
+        {
+            num++;
+        }
+    }
+    num++;
 
-	TRACE("FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
+    TRACE("FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
 
-	return num;
+    return num;
 }
 
 /*
@@ -178,26 +178,26 @@ ULONG FsGetNumPathParts(PCSTR Path)
  */
 VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 {
-	size_t		i;
+    size_t        i;
 
-	// Copy all the characters up to the end of the
-	// string or until we hit a '\' character
-	// and put them in Buffer
-	for (i=0; i<strlen(Path); i++)
-	{
-		if ((Path[i] == '\\') || (Path[i] == '/'))
-		{
-			break;
-		}
-		else
-		{
-			Buffer[i] = Path[i];
-		}
-	}
+    // Copy all the characters up to the end of the
+    // string or until we hit a '\' character
+    // and put them in Buffer
+    for (i=0; i<strlen(Path); i++)
+    {
+        if ((Path[i] == '\\') || (Path[i] == '/'))
+        {
+            break;
+        }
+        else
+        {
+            Buffer[i] = Path[i];
+        }
+    }
 
-	Buffer[i] = 0;
+    Buffer[i] = 0;
 
-	TRACE("FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
+    TRACE("FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }
 
 typedef struct tagFILEDATA

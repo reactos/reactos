@@ -30,32 +30,32 @@ pci_desc pci1_desc = { (void *)0x80000cf8 };
 #define pci_cfg_addr(bus,dev,fn,reg) pci_addr(bus,dev,fn,reg)
 #endif
     unsigned long pci_read( pci_desc *desc, int bus, int dev, int fn, int reg, int len ) {
-	sync();
-	unsigned long save_state = desc->cfg->addr, ret = 0;
-	unsigned long addr = pci_cfg_addr(bus,dev,fn,reg);
-	unsigned long offset = reg & 3;
-	desc->cfg->addr = rev32(addr);
-	sync();
-	switch( len ) {
-	case 4:
-	    ret = desc->cfg->data;
-	    break;
-	case 2:
-	    ret = desc->cfg->data;
-	    ret = (ret >> (offset << 3)) & 0xffff;
-	    break;
-	case 1:
-	    ret = desc->cfg->data;
-	    ret = (ret >> (offset << 3)) & 0xff;
-	    break;
-	}
-	desc->cfg->addr = save_state;
-	sync();
-	return ret;
+    sync();
+    unsigned long save_state = desc->cfg->addr, ret = 0;
+    unsigned long addr = pci_cfg_addr(bus,dev,fn,reg);
+    unsigned long offset = reg & 3;
+    desc->cfg->addr = rev32(addr);
+    sync();
+    switch( len ) {
+    case 4:
+        ret = desc->cfg->data;
+        break;
+    case 2:
+        ret = desc->cfg->data;
+        ret = (ret >> (offset << 3)) & 0xffff;
+        break;
+    case 1:
+        ret = desc->cfg->data;
+        ret = (ret >> (offset << 3)) & 0xff;
+        break;
+    }
+    desc->cfg->addr = save_state;
+    sync();
+    return ret;
     }
 
 void pci_read_bar( pci_desc *desc, int bus, int dev, int fn, int bar,
-		   struct _pci_bar *bar_data ) {
+           struct _pci_bar *bar_data ) {
     bar_data->data = pci_read( desc, bus, dev, fn, 0x10 + (bar * 4), 4 );
 }
 
@@ -112,13 +112,13 @@ void pci_setup( PCONFIGURATION_COMPONENT_DATA pcibus, pci_desc *desc ) {
 
             for( fn = 0; fn < funcs; fn++ ) {
                 devclass = pci_read(desc,bus,dev,fn,PCI_BASECLASS,1);
-		printf(" %d:%d -> vendor:device:class %x:%x:%x\n",
-		       bus, dev, vendor, device, devclass);
+        printf(" %d:%d -> vendor:device:class %x:%x:%x\n",
+               bus, dev, vendor, device, devclass);
 
                 if( devclass == 3 ) {
-		    printf("Setting up vga...\n");
+            printf("Setting up vga...\n");
                     vga_setup(pcibus,desc,&vga1_desc,bus,dev,fn);
-		    printf("Done with vga\n");
+            printf("Done with vga\n");
                 }
             }
         }

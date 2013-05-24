@@ -29,12 +29,12 @@ typedef struct tagDEVVTBL
   LPCWSTR ServiceName;
 } DEVVTBL;
 
-#define	FS_FAT			1
-#define	FS_NTFS			2
-#define	FS_EXT2			3
-#define FS_ISO9660		5
+#define    FS_FAT            1
+#define    FS_NTFS            2
+#define    FS_EXT2            3
+#define FS_ISO9660        5
 
-#define PFILE			ULONG
+#define PFILE            ULONG
 
 VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
 LPCWSTR FsGetServiceName(ULONG FileId);
@@ -49,13 +49,13 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
 LONG ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count);
 LONG ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
 
-VOID	FileSystemError(PCSTR ErrorString);
-PFILE	FsOpenFile(PCSTR FileName);
-VOID	FsCloseFile(PFILE FileHandle);
-BOOLEAN	FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-ULONG		FsGetFileSize(PFILE FileHandle);
-VOID	FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
-ULONG		FsGetNumPathParts(PCSTR Path);
-VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
+VOID    FileSystemError(PCSTR ErrorString);
+PFILE    FsOpenFile(PCSTR FileName);
+VOID    FsCloseFile(PFILE FileHandle);
+BOOLEAN    FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+ULONG        FsGetFileSize(PFILE FileHandle);
+VOID    FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
+ULONG        FsGetNumPathParts(PCSTR Path);
+VOID    FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 
 #define MAX_FDS 60

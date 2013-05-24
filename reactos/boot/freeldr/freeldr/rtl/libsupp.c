@@ -24,7 +24,7 @@
 VOID FASTCALL
 CHECK_PAGED_CODE_RTL(char *file, int line)
 {
-	// boot-code is always ok
+    // boot-code is always ok
 }
 #endif
 
@@ -33,7 +33,7 @@ NTAPI
 RtlpAllocateMemory(ULONG Bytes,
                    ULONG Tag)
 {
-	return MmHeapAlloc(Bytes);
+    return MmHeapAlloc(Bytes);
 }
 
 
@@ -42,7 +42,7 @@ NTAPI
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {
-	MmHeapFree(Mem);
+    MmHeapFree(Mem);
 }
 
 NTSTATUS

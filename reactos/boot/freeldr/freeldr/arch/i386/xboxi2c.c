@@ -53,7 +53,7 @@ WriteToSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG Data_to_smbus)
       case 2:
         WRITE_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 6), Data_to_smbus&0xffff);
         break;
-      default:	// 1
+      default:    // 1
         WRITE_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 6), Data_to_smbus&0xff);
         break;
     }
@@ -65,13 +65,13 @@ WriteToSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG Data_to_smbus)
     switch (Size)
     {
       case 4:
-        WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x1d);	// DWORD modus
+        WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x1d);    // DWORD modus
         break;
       case 2:
-        WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x1b);	// WORD modus
+        WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x1b);    // WORD modus
         break;
-      default:	// 1
-        WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x1a);	// BYTE modus
+      default:    // 1
+        WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x1a);    // BYTE modus
         break;
     }
 
@@ -196,28 +196,28 @@ I2cSetFrontpanelLed(UCHAR b)
 // This func is taken from cromwell, all credits goes for them
 void
 XboxSetLED(PCSTR pattern) {
-	const char *x = pattern;
-	int r, g;
+    const char *x = pattern;
+    int r, g;
 
-	if(strlen(pattern) == 4) {
-		r = g = 0;
-		while (*x) {
-			r *= 2;
-			g *= 2;
-			switch (*x) {
-				case 'r':
-					r++;
-					break;
-				case 'g':
-					g++;
-					break;
-				case 'o':
-					r++;
-					g++;
-					break;
-			}
-			x++;
-		}
-		I2cSetFrontpanelLed(((r<<4) & 0xF0) + (g & 0xF));
-	}
+    if(strlen(pattern) == 4) {
+        r = g = 0;
+        while (*x) {
+            r *= 2;
+            g *= 2;
+            switch (*x) {
+                case 'r':
+                    r++;
+                    break;
+                case 'g':
+                    g++;
+                    break;
+                case 'o':
+                    r++;
+                    g++;
+                    break;
+            }
+            x++;
+        }
+        I2cSetFrontpanelLed(((r<<4) & 0xF0) + (g & 0xF));
+    }
 }

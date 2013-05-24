@@ -52,7 +52,7 @@ FREELDR_MEMORY_TYPE MemoryTypeArray[] =
 ULONG MemoryTypeCount = sizeof(MemoryTypeArray) / sizeof(MemoryTypeArray[0]);
 #endif
 
-PVOID	PageLookupTableAddress = NULL;
+PVOID    PageLookupTableAddress = NULL;
 PFN_NUMBER TotalPagesInLookupTable = 0;
 PFN_NUMBER FreePagesInLookupTable = 0;
 PFN_NUMBER LastFreePageHint = 0;
@@ -62,8 +62,8 @@ PFN_NUMBER MmHighestPhysicalPage = 0;
 PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
 ULONG BiosMemoryMapEntryCount;
 
-extern ULONG_PTR	MmHeapPointer;
-extern ULONG_PTR	MmHeapStart;
+extern ULONG_PTR    MmHeapPointer;
+extern ULONG_PTR    MmHeapStart;
 
 ULONG
 AddMemoryDescriptor(
@@ -218,81 +218,81 @@ MmCheckFreeldrImageFile()
 BOOLEAN MmInitializeMemoryManager(VOID)
 {
 #if DBG
-	const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
+    const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
 #endif
 
-	TRACE("Initializing Memory Manager.\n");
+    TRACE("Initializing Memory Manager.\n");
 
-	/* Check the freeldr binary */
-	if (!MmCheckFreeldrImageFile())
-	{
-		FrLdrBugCheck(FREELDR_IMAGE_CORRUPTION);
-	}
+    /* Check the freeldr binary */
+    if (!MmCheckFreeldrImageFile())
+    {
+        FrLdrBugCheck(FREELDR_IMAGE_CORRUPTION);
+    }
 
     BiosMemoryMap = MachVtbl.GetMemoryMap(&BiosMemoryMapEntryCount);
 
 #if DBG
-	// Dump the system memory map
-	TRACE("System Memory Map (Base Address, Length, Type):\n");
-	while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
-	{
-		TRACE("%x\t %x\t %s\n",
-			MemoryDescriptor->BasePage * MM_PAGE_SIZE,
-			MemoryDescriptor->PageCount * MM_PAGE_SIZE,
-			MmGetSystemMemoryMapTypeString(MemoryDescriptor->MemoryType));
-	}
+    // Dump the system memory map
+    TRACE("System Memory Map (Base Address, Length, Type):\n");
+    while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
+    {
+        TRACE("%x\t %x\t %s\n",
+            MemoryDescriptor->BasePage * MM_PAGE_SIZE,
+            MemoryDescriptor->PageCount * MM_PAGE_SIZE,
+            MmGetSystemMemoryMapTypeString(MemoryDescriptor->MemoryType));
+    }
 #endif
 
-	// Find address for the page lookup table
-	TotalPagesInLookupTable = MmGetAddressablePageCountIncludingHoles();
-	PageLookupTableAddress = MmFindLocationForPageLookupTable(TotalPagesInLookupTable);
-	LastFreePageHint = MmHighestPhysicalPage;
+    // Find address for the page lookup table
+    TotalPagesInLookupTable = MmGetAddressablePageCountIncludingHoles();
+    PageLookupTableAddress = MmFindLocationForPageLookupTable(TotalPagesInLookupTable);
+    LastFreePageHint = MmHighestPhysicalPage;
 
-	if (PageLookupTableAddress == 0)
-	{
-		// If we get here then we probably couldn't
-		// find a contiguous chunk of memory big
-		// enough to hold the page lookup table
-		printf("Error initializing memory manager!\n");
-		return FALSE;
-	}
+    if (PageLookupTableAddress == 0)
+    {
+        // If we get here then we probably couldn't
+        // find a contiguous chunk of memory big
+        // enough to hold the page lookup table
+        printf("Error initializing memory manager!\n");
+        return FALSE;
+    }
 
-	// Initialize the page lookup table
-	MmInitPageLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
+    // Initialize the page lookup table
+    MmInitPageLookupTable(PageLookupTableAddress, TotalPagesInLookupTable);
 
-	MmUpdateLastFreePageHint(PageLookupTableAddress, TotalPagesInLookupTable);
+    MmUpdateLastFreePageHint(PageLookupTableAddress, TotalPagesInLookupTable);
 
-	FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress,
+    FreePagesInLookupTable = MmCountFreePagesInLookupTable(PageLookupTableAddress,
                                                         TotalPagesInLookupTable);
 
-	MmInitializeHeap(PageLookupTableAddress);
+    MmInitializeHeap(PageLookupTableAddress);
 
-	TRACE("Memory Manager initialized. 0x%x pages available.\n", FreePagesInLookupTable);
+    TRACE("Memory Manager initialized. 0x%x pages available.\n", FreePagesInLookupTable);
 
 
-	return TRUE;
+    return TRUE;
 }
 
 #if DBG
 PCSTR MmGetSystemMemoryMapTypeString(TYPE_OF_MEMORY Type)
 {
-	ULONG		Index;
+    ULONG        Index;
 
-	for (Index=1; Index<MemoryTypeCount; Index++)
-	{
-		if (MemoryTypeArray[Index].Type == Type)
-		{
-			return MemoryTypeArray[Index].TypeString;
-		}
-	}
+    for (Index=1; Index<MemoryTypeCount; Index++)
+    {
+        if (MemoryTypeArray[Index].Type == Type)
+        {
+            return MemoryTypeArray[Index].TypeString;
+        }
+    }
 
-	return MemoryTypeArray[0].TypeString;
+    return MemoryTypeArray[0].TypeString;
 }
 #endif
 
 PFN_NUMBER MmGetPageNumberFromAddress(PVOID Address)
 {
-	return ((ULONG_PTR)Address) / MM_PAGE_SIZE;
+    return ((ULONG_PTR)Address) / MM_PAGE_SIZE;
 }
 
 PFN_NUMBER MmGetAddressablePageCountIncludingHoles(VOID)
@@ -419,9 +419,9 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
 
 VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER StartPage, PFN_NUMBER PageCount, TYPE_OF_MEMORY PageAllocated)
 {
-	PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	PFN_NUMBER Index;
-	TRACE("MmMarkPagesInLookupTable()\n");
+    PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+    PFN_NUMBER Index;
+    TRACE("MmMarkPagesInLookupTable()\n");
 
     /* Validate the range */
     if ((StartPage < MmLowestPhysicalPage) ||
@@ -433,186 +433,186 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER StartPage, PFN_N
     }
 
     StartPage -= MmLowestPhysicalPage;
-	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
-	{
+    for (Index=StartPage; Index<(StartPage+PageCount); Index++)
+    {
 #if 0
-		if ((Index <= (StartPage + 16)) || (Index >= (StartPage+PageCount-16)))
-		{
-			TRACE("Index = 0x%x StartPage = 0x%x PageCount = 0x%x\n", Index, StartPage, PageCount);
-		}
+        if ((Index <= (StartPage + 16)) || (Index >= (StartPage+PageCount-16)))
+        {
+            TRACE("Index = 0x%x StartPage = 0x%x PageCount = 0x%x\n", Index, StartPage, PageCount);
+        }
 #endif
-		RealPageLookupTable[Index].PageAllocated = PageAllocated;
-		RealPageLookupTable[Index].PageAllocationLength = (PageAllocated != LoaderFree) ? 1 : 0;
-	}
-	TRACE("MmMarkPagesInLookupTable() Done\n");
+        RealPageLookupTable[Index].PageAllocated = PageAllocated;
+        RealPageLookupTable[Index].PageAllocationLength = (PageAllocated != LoaderFree) ? 1 : 0;
+    }
+    TRACE("MmMarkPagesInLookupTable() Done\n");
 }
 
 VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER StartPage, PFN_NUMBER PageCount, TYPE_OF_MEMORY MemoryType)
 {
-	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	PFN_NUMBER					Index;
+    PPAGE_LOOKUP_TABLE_ITEM        RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+    PFN_NUMBER                    Index;
 
     StartPage -= MmLowestPhysicalPage;
-	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
-	{
-		RealPageLookupTable[Index].PageAllocated = MemoryType;
-		RealPageLookupTable[Index].PageAllocationLength = (Index == StartPage) ? PageCount : 0;
-	}
+    for (Index=StartPage; Index<(StartPage+PageCount); Index++)
+    {
+        RealPageLookupTable[Index].PageAllocated = MemoryType;
+        RealPageLookupTable[Index].PageAllocationLength = (Index == StartPage) ? PageCount : 0;
+    }
 }
 
 PFN_NUMBER MmCountFreePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
 {
-	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	PFN_NUMBER							Index;
-	PFN_NUMBER							FreePageCount;
+    PPAGE_LOOKUP_TABLE_ITEM        RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+    PFN_NUMBER                            Index;
+    PFN_NUMBER                            FreePageCount;
 
-	FreePageCount = 0;
-	for (Index=0; Index<TotalPageCount; Index++)
-	{
-		if (RealPageLookupTable[Index].PageAllocated == LoaderFree)
-		{
-			FreePageCount++;
-		}
-	}
+    FreePageCount = 0;
+    for (Index=0; Index<TotalPageCount; Index++)
+    {
+        if (RealPageLookupTable[Index].PageAllocated == LoaderFree)
+        {
+            FreePageCount++;
+        }
+    }
 
-	return FreePageCount;
+    return FreePageCount;
 }
 
 PFN_NUMBER MmFindAvailablePages(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PFN_NUMBER PagesNeeded, BOOLEAN FromEnd)
 {
-	PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	PFN_NUMBER AvailablePagesSoFar;
-	PFN_NUMBER Index;
+    PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+    PFN_NUMBER AvailablePagesSoFar;
+    PFN_NUMBER Index;
 
-	if (LastFreePageHint > TotalPageCount)
-	{
-		LastFreePageHint = TotalPageCount;
-	}
+    if (LastFreePageHint > TotalPageCount)
+    {
+        LastFreePageHint = TotalPageCount;
+    }
 
-	AvailablePagesSoFar = 0;
-	if (FromEnd)
-	{
-		/* Allocate "high" (from end) pages */
-		for (Index=LastFreePageHint-1; Index>0; Index--)
-		{
-			if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
-			{
-				AvailablePagesSoFar = 0;
-				continue;
-			}
-			else
-			{
-				AvailablePagesSoFar++;
-			}
+    AvailablePagesSoFar = 0;
+    if (FromEnd)
+    {
+        /* Allocate "high" (from end) pages */
+        for (Index=LastFreePageHint-1; Index>0; Index--)
+        {
+            if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
+            {
+                AvailablePagesSoFar = 0;
+                continue;
+            }
+            else
+            {
+                AvailablePagesSoFar++;
+            }
 
-			if (AvailablePagesSoFar >= PagesNeeded)
-			{
-				return Index + MmLowestPhysicalPage;
-			}
-		}
-	}
-	else
-	{
-		TRACE("Alloc low memory, LastFreePageHint 0x%x, TPC 0x%x\n", LastFreePageHint, TotalPageCount);
-		/* Allocate "low" pages */
-		for (Index=1; Index < LastFreePageHint; Index++)
-		{
-			if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
-			{
-				AvailablePagesSoFar = 0;
-				continue;
-			}
-			else
-			{
-				AvailablePagesSoFar++;
-			}
+            if (AvailablePagesSoFar >= PagesNeeded)
+            {
+                return Index + MmLowestPhysicalPage;
+            }
+        }
+    }
+    else
+    {
+        TRACE("Alloc low memory, LastFreePageHint 0x%x, TPC 0x%x\n", LastFreePageHint, TotalPageCount);
+        /* Allocate "low" pages */
+        for (Index=1; Index < LastFreePageHint; Index++)
+        {
+            if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
+            {
+                AvailablePagesSoFar = 0;
+                continue;
+            }
+            else
+            {
+                AvailablePagesSoFar++;
+            }
 
-			if (AvailablePagesSoFar >= PagesNeeded)
-			{
-				return Index - AvailablePagesSoFar + 1 + MmLowestPhysicalPage;
-			}
-		}
-	}
+            if (AvailablePagesSoFar >= PagesNeeded)
+            {
+                return Index - AvailablePagesSoFar + 1 + MmLowestPhysicalPage;
+            }
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
 PFN_NUMBER MmFindAvailablePagesBeforePage(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PFN_NUMBER PagesNeeded, PFN_NUMBER LastPage)
 {
-	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	PFN_NUMBER					AvailablePagesSoFar;
-	PFN_NUMBER					Index;
+    PPAGE_LOOKUP_TABLE_ITEM        RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+    PFN_NUMBER                    AvailablePagesSoFar;
+    PFN_NUMBER                    Index;
 
-	if (LastPage > TotalPageCount)
-	{
-		return MmFindAvailablePages(PageLookupTable, TotalPageCount, PagesNeeded, TRUE);
-	}
+    if (LastPage > TotalPageCount)
+    {
+        return MmFindAvailablePages(PageLookupTable, TotalPageCount, PagesNeeded, TRUE);
+    }
 
-	AvailablePagesSoFar = 0;
-	for (Index=LastPage-1; Index>0; Index--)
-	{
-		if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
-		{
-			AvailablePagesSoFar = 0;
-			continue;
-		}
-		else
-		{
-			AvailablePagesSoFar++;
-		}
+    AvailablePagesSoFar = 0;
+    for (Index=LastPage-1; Index>0; Index--)
+    {
+        if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
+        {
+            AvailablePagesSoFar = 0;
+            continue;
+        }
+        else
+        {
+            AvailablePagesSoFar++;
+        }
 
-		if (AvailablePagesSoFar >= PagesNeeded)
-		{
-			return Index + MmLowestPhysicalPage;
-		}
-	}
+        if (AvailablePagesSoFar >= PagesNeeded)
+        {
+            return Index + MmLowestPhysicalPage;
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
 VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
 {
-	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	PFN_NUMBER							Index;
+    PPAGE_LOOKUP_TABLE_ITEM        RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+    PFN_NUMBER                            Index;
 
-	for (Index=TotalPageCount-1; Index>0; Index--)
-	{
-		if (RealPageLookupTable[Index].PageAllocated == LoaderFree)
-		{
-			LastFreePageHint = Index + 1 + MmLowestPhysicalPage;
-			break;
-		}
-	}
+    for (Index=TotalPageCount-1; Index>0; Index--)
+    {
+        if (RealPageLookupTable[Index].PageAllocated == LoaderFree)
+        {
+            LastFreePageHint = Index + 1 + MmLowestPhysicalPage;
+            break;
+        }
+    }
 }
 
 BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PVOID PageAddress, PFN_NUMBER PageCount)
 {
-	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	PFN_NUMBER							StartPage;
-	PFN_NUMBER							Index;
+    PPAGE_LOOKUP_TABLE_ITEM        RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+    PFN_NUMBER                            StartPage;
+    PFN_NUMBER                            Index;
 
-	StartPage = MmGetPageNumberFromAddress(PageAddress);
+    StartPage = MmGetPageNumberFromAddress(PageAddress);
 
-	if (StartPage < MmLowestPhysicalPage) return FALSE;
+    if (StartPage < MmLowestPhysicalPage) return FALSE;
 
     StartPage -= MmLowestPhysicalPage;
 
-	// Make sure they aren't trying to go past the
-	// end of availabe memory
-	if ((StartPage + PageCount) > TotalPageCount)
-	{
-		return FALSE;
-	}
+    // Make sure they aren't trying to go past the
+    // end of availabe memory
+    if ((StartPage + PageCount) > TotalPageCount)
+    {
+        return FALSE;
+    }
 
-	for (Index = StartPage; Index < (StartPage + PageCount); Index++)
-	{
-		// If this page is allocated then there obviously isn't
-		// memory availabe so return FALSE
-		if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
-		{
-			return FALSE;
-		}
-	}
+    for (Index = StartPage; Index < (StartPage + PageCount); Index++)
+    {
+        // If this page is allocated then there obviously isn't
+        // memory availabe so return FALSE
+        if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
+        {
+            return FALSE;
+        }
+    }
 
-	return TRUE;
+    return TRUE;
 }

@@ -22,34 +22,34 @@
 #define NDEBUG
 #include <debug.h>
 
-#define VIDEOPORT_PALETTE_READ		0x03C7
-#define VIDEOPORT_PALETTE_WRITE		0x03C8
-#define VIDEOPORT_PALETTE_DATA		0x03C9
-#define VIDEOPORT_VERTICAL_RETRACE	0x03DA
+#define VIDEOPORT_PALETTE_READ        0x03C7
+#define VIDEOPORT_PALETTE_WRITE        0x03C8
+#define VIDEOPORT_PALETTE_DATA        0x03C9
+#define VIDEOPORT_VERTICAL_RETRACE    0x03DA
 
 #define VIDEOVGA_MEM_ADDRESS  0xA0000
 #define VIDEOTEXT_MEM_ADDRESS 0xB8000
 #define VIDEOTEXT_MEM_SIZE    0x8000
 
-#define	VIDEOCARD_CGA_OR_OTHER 0
+#define    VIDEOCARD_CGA_OR_OTHER 0
 #define VIDEOCARD_EGA          1
 #define VIDEOCARD_VGA          2
 
 #define VIDEOMODE_NORMAL_TEXT   0
 #define VIDEOMODE_EXTENDED_TEXT 1
-#define	VIDEOMODE_80X28         0x501C
-#define	VIDEOMODE_80X30         0x501E
-#define	VIDEOMODE_80X34         0x5022
-#define	VIDEOMODE_80X43         0x502B
-#define	VIDEOMODE_80X60         0x503C
-#define	VIDEOMODE_132X25        0x8419
-#define	VIDEOMODE_132X43        0x842B
-#define	VIDEOMODE_132X50        0x8432
-#define	VIDEOMODE_132X60        0x843C
+#define    VIDEOMODE_80X28         0x501C
+#define    VIDEOMODE_80X30         0x501E
+#define    VIDEOMODE_80X34         0x5022
+#define    VIDEOMODE_80X43         0x502B
+#define    VIDEOMODE_80X60         0x503C
+#define    VIDEOMODE_132X25        0x8419
+#define    VIDEOMODE_132X43        0x842B
+#define    VIDEOMODE_132X50        0x8432
+#define    VIDEOMODE_132X60        0x843C
 
-#define VERTRES_200_SCANLINES		0x00
-#define VERTRES_350_SCANLINES		0x01
-#define VERTRES_400_SCANLINES		0x02
+#define VERTRES_200_SCANLINES        0x00
+#define VERTRES_350_SCANLINES        0x01
+#define VERTRES_400_SCANLINES        0x02
 
 DBG_DEFAULT_CHANNEL(UI);
 
@@ -111,7 +111,7 @@ typedef struct
 #include <poppack.h>
 
 static USHORT BiosVideoMode;                             /* Current video mode as known by BIOS */
-static ULONG ScreenWidth = 80;	                       /* Screen Width in characters */
+static ULONG ScreenWidth = 80;                           /* Screen Width in characters */
 static ULONG ScreenHeight = 25;                          /* Screen Height in characters */
 static ULONG BytesPerScanLine = 160;                     /* Number of bytes per scanline (delta) */
 static VIDEODISPLAYMODE DisplayMode = VideoTextMode;   /* Current display mode */
@@ -422,7 +422,7 @@ PcVideoSet480ScanLines(VOID)
 static VOID
 PcVideoSetDisplayEnd(VOID)
 {
-  INT_PTR	CRTC;
+  INT_PTR    CRTC;
 
   /* Read CRTC port */
   CRTC = READ_PORT_UCHAR((PUCHAR)0x03CC);
@@ -866,7 +866,7 @@ PcVideoSetMemoryBank(USHORT BankNumber)
       if (0x004F == Regs.w.ax)
         {
           CurrentMemoryBank = BankNumber;
-	}
+    }
     }
 }
 

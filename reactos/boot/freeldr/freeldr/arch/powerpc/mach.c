@@ -66,16 +66,16 @@ int PpcFindDevice( int depth, int parent, char *devname, int *nth ) {
     for( i = 0; i < depth; i++ ) PpcOfwPutChar( ' ' );
 
     if( depth == 1 ) {
-	if( gotname > 0 ) {
-	    printf( "%c Name: %s\n", match ? '*' : ' ', buf );
-	} else {
-	    printf( "- No name attribute for %x\n", parent );
-	}
+    if( gotname > 0 ) {
+        printf( "%c Name: %s\n", match ? '*' : ' ', buf );
+    } else {
+        printf( "- No name attribute for %x\n", parent );
+    }
     }
 
     while( !match && next ) {
         i = PpcFindDevice( depth+1, next, devname, nth );
-	if( i ) return i;
+    if( i ) return i;
         next = ofw_peer( next );
     }
 
@@ -110,7 +110,7 @@ ULONG PpcVideoGetBufferSize() {
 VIDEODISPLAYMODE PpcVideoSetDisplayMode( char *DisplayMode, BOOLEAN Init ) {
     //printf( "DisplayMode: %s %s\n", DisplayMode, Init ? "true" : "false" );
     if( Init && !video_mem ) {
-	video_mem = MmAllocateMemory( PpcVideoGetBufferSize() );
+    video_mem = MmAllocateMemory( PpcVideoGetBufferSize() );
     }
     return VideoTextMode;
 }
@@ -136,13 +136,13 @@ VOID PpcVideoCopyOffScreenBufferToVRAM( PVOID Buffer ) {
     MachVideoGetDisplaySize( &w, &h, &d );
 
     for( i = 0; i < h; i++ ) {
-	for( j = 0; j < w; j++ ) {
-	    offset = (j * 2) + (i * w * 2);
-	    if( ChBuf[offset] != video_mem[offset] ) {
-		video_mem[offset] = ChBuf[offset];
-		MachVideoPutChar(ChBuf[offset],0,j+1,i+1);
-	    }
-	}
+    for( j = 0; j < w; j++ ) {
+        offset = (j * 2) + (i * w * 2);
+        if( ChBuf[offset] != video_mem[offset] ) {
+        video_mem[offset] = ChBuf[offset];
+        MachVideoPutChar(ChBuf[offset],0,j+1,i+1);
+        }
+    }
     }
 }
 
@@ -170,11 +170,11 @@ VOID PpcInitializeMmu()
 {
     if(!mmu_initialized)
     {
-	MmuInit();
-	MmuDbgInit(0, 0x800003f8);
+    MmuInit();
+    MmuDbgInit(0, 0x800003f8);
         MmuSetMemorySize(mem_range_end);
         //MmuDbgEnter(0x20);
-	mmu_initialized = 1;
+    mmu_initialized = 1;
     }
 }
 
@@ -253,28 +253,28 @@ BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {
 }
 
 BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
-				   ULONG SectorCount, PVOID Buffer ) {
+                   ULONG SectorCount, PVOID Buffer ) {
     int rlen = 0;
 
     if( part_handle == -1 ) {
-	part_handle = ofw_open( BootPart );
+    part_handle = ofw_open( BootPart );
 
-	if( part_handle == -1 ) {
-	    printf("Could not open any disk devices we know about\n");
-	    return FALSE;
-	}
+    if( part_handle == -1 ) {
+        printf("Could not open any disk devices we know about\n");
+        return FALSE;
+    }
     }
 
     if( part_handle == -1 ) {
-	printf("Got partition handle %x\n", part_handle);
-	return FALSE;
+    printf("Got partition handle %x\n", part_handle);
+    return FALSE;
     }
 
     if( ofw_seek( part_handle,
-		   (ULONG)(SectorNumber >> 25),
-		   (ULONG)((SectorNumber * 512) & 0xffffffff) ) ) {
-	printf("Seek to %x failed\n", (ULONG)(SectorNumber * 512));
-	return FALSE;
+           (ULONG)(SectorNumber >> 25),
+           (ULONG)((SectorNumber * 512) & 0xffffffff) ) ) {
+    printf("Seek to %x failed\n", (ULONG)(SectorNumber * 512));
+    return FALSE;
     }
 
     rlen = ofw_read( part_handle, Buffer, (ULONG)(SectorCount * 512) );
@@ -462,21 +462,21 @@ void PpcOfwInit()
     chosen_package = ofw_finddevice( "/chosen" );
 
     ofw_getprop(chosen_package, "bootargs",
-		CmdLine, sizeof(CmdLine));
+        CmdLine, sizeof(CmdLine));
     ofw_getprop( chosen_package, "stdin",
-		 (char *)&stdin_handle, sizeof(stdin_handle) );
+         (char *)&stdin_handle, sizeof(stdin_handle) );
     ofw_getprop( chosen_package, "stdout",
-		 (char *)&stdout_handle, sizeof(stdout_handle) );
+         (char *)&stdout_handle, sizeof(stdout_handle) );
     ofw_getprop( chosen_package, "mmu",
-		 (char *)&mmu_handle, sizeof(mmu_handle) );
+         (char *)&mmu_handle, sizeof(mmu_handle) );
 
     // Allow forcing prep for broken OFW
     if(!strncmp(CmdLine, "bootprep", 8))
     {
-	printf("Going to PREP init...\n");
+    printf("Going to PREP init...\n");
         ofproxy = NULL;
-	PpcPrepInit();
-	return;
+    PpcPrepInit();
+    return;
     }
 
     printf( "FreeLDR version [%s]\n", GetFreeLoaderVersionString() );
@@ -504,31 +504,31 @@ void MachInit(const char *CmdLine) {
 
     sep = NULL;
     for( i = 0; i < strlen(CmdLine); i++ ) {
-	if( strncmp(CmdLine + i, "boot=", 5) == 0) {
-	    strcpy(BootPart, CmdLine + i + 5);
-	    sep = strchr(BootPart, ',');
-	    if( sep )
-		*sep = 0;
-	    while(CmdLine[i] && CmdLine[i]!=',') i++;
-	}
+    if( strncmp(CmdLine + i, "boot=", 5) == 0) {
+        strcpy(BootPart, CmdLine + i + 5);
+        sep = strchr(BootPart, ',');
+        if( sep )
+        *sep = 0;
+        while(CmdLine[i] && CmdLine[i]!=',') i++;
+    }
     }
 
     if( strlen(BootPart) == 0 ) {
-	if (ofproxy)
+    if (ofproxy)
             len = ofw_getprop(chosen_package, "bootpath",
                               BootPath, sizeof(BootPath));
-	else
+    else
             len = 0;
-	if( len < 0 ) len = 0;
-	BootPath[len] = 0;
-	printf( "Boot Path: %s\n", BootPath );
+    if( len < 0 ) len = 0;
+    BootPath[len] = 0;
+    printf( "Boot Path: %s\n", BootPath );
 
-	sep = strrchr(BootPath, ',');
+    sep = strrchr(BootPath, ',');
 
-	strcpy(BootPart, BootPath);
-	if( sep ) {
-	    BootPart[sep - BootPath] = 0;
-	}
+    strcpy(BootPart, BootPath);
+    if( sep ) {
+        BootPart[sep - BootPath] = 0;
+    }
     }
 
     printf( "FreeLDR starting (boot partition: %s)\n", BootPart );

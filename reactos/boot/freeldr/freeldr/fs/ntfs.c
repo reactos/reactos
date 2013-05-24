@@ -102,8 +102,8 @@ static PNTFS_ATTR_CONTEXT NtfsPrepareAttributeContext(PNTFS_ATTR_RECORD AttrReco
     RtlCopyMemory(&Context->Record, AttrRecord, AttrRecord->Length);
     if (AttrRecord->IsNonResident)
     {
-    	LONGLONG DataRunOffset;
-    	ULONGLONG DataRunLength;
+        LONGLONG DataRunOffset;
+        ULONGLONG DataRunLength;
 
         Context->CacheRun = (PUCHAR)&Context->Record + Context->Record.NonResident.MappingPairsOffset;
         Context->CacheRunOffset = 0;
@@ -594,7 +594,7 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
                 MmHeapFree(MftRecord);
                 return TRUE;
             }
-	    IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)IndexEntry + IndexEntry->Length);
+        IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)IndexEntry + IndexEntry->Length);
         }
 
         if (IndexRoot->IndexHeader.Flags & NTFS_LARGE_INDEX)
@@ -665,7 +665,7 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
 
                 /* FIXME */
                 IndexEntry = (PNTFS_INDEX_ENTRY)(IndexRecord + 0x18 + *(USHORT *)(IndexRecord + 0x18));
-	        IndexEntryEnd = (PNTFS_INDEX_ENTRY)(IndexRecord + IndexBlockSize);
+            IndexEntryEnd = (PNTFS_INDEX_ENTRY)(IndexRecord + IndexBlockSize);
 
                 while (IndexEntry < IndexEntryEnd &&
                        !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))

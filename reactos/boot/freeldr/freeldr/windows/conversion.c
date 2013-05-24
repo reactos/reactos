@@ -22,13 +22,13 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 PVOID
 VaToPa(PVOID Va)
 {
-	return (PVOID)((ULONG_PTR)Va & ~KSEG0_BASE);
+    return (PVOID)((ULONG_PTR)Va & ~KSEG0_BASE);
 }
 
 PVOID
 PaToVa(PVOID Pa)
 {
-	return (PVOID)((ULONG_PTR)Pa | KSEG0_BASE);
+    return (PVOID)((ULONG_PTR)Pa | KSEG0_BASE);
 }
 #else
 PVOID
@@ -47,92 +47,92 @@ PaToVa(PVOID Pa)
 VOID
 List_PaToVa(_In_ PLIST_ENTRY ListHeadPa)
 {
-	PLIST_ENTRY EntryPa, NextPa;
+    PLIST_ENTRY EntryPa, NextPa;
 
-	/* List must be properly initialized */
-	ASSERT(ListHeadPa->Flink != 0);
-	ASSERT(ListHeadPa->Blink != 0);
+    /* List must be properly initialized */
+    ASSERT(ListHeadPa->Flink != 0);
+    ASSERT(ListHeadPa->Blink != 0);
 
-	/* Loop the list in physical address space */
-	EntryPa = ListHeadPa->Flink;
-	while (EntryPa != ListHeadPa)
-	{
-		/* Save the physical address of the next entry */
-		NextPa = EntryPa->Flink;
+    /* Loop the list in physical address space */
+    EntryPa = ListHeadPa->Flink;
+    while (EntryPa != ListHeadPa)
+    {
+        /* Save the physical address of the next entry */
+        NextPa = EntryPa->Flink;
 
-		/* Convert the addresses of this entry */
-		EntryPa->Flink = PaToVa(EntryPa->Flink);
-		EntryPa->Blink = PaToVa(EntryPa->Blink);
+        /* Convert the addresses of this entry */
+        EntryPa->Flink = PaToVa(EntryPa->Flink);
+        EntryPa->Blink = PaToVa(EntryPa->Blink);
 
-		/* Go to the next entry */
-		EntryPa = NextPa;
-	}
+        /* Go to the next entry */
+        EntryPa = NextPa;
+    }
 
-	/* Finally convert the list head */
-	ListHeadPa->Flink = PaToVa(ListHeadPa->Flink);
-	ListHeadPa->Blink = PaToVa(ListHeadPa->Blink);
+    /* Finally convert the list head */
+    ListHeadPa->Flink = PaToVa(ListHeadPa->Flink);
+    ListHeadPa->Blink = PaToVa(ListHeadPa->Blink);
 }
 
 // This function converts only Child->Child, and calls itself for each Sibling
 VOID
 ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start)
 {
-	PCONFIGURATION_COMPONENT_DATA Child;
-	PCONFIGURATION_COMPONENT_DATA Sibling;
+    PCONFIGURATION_COMPONENT_DATA Child;
+    PCONFIGURATION_COMPONENT_DATA Sibling;
 
-	TRACE("ConvertConfigToVA(Start 0x%X)\n", Start);
-	Child = Start;
+    TRACE("ConvertConfigToVA(Start 0x%X)\n", Start);
+    Child = Start;
 
-	while (Child != NULL)
-	{
-		if (Child->ConfigurationData)
-			Child->ConfigurationData = PaToVa(Child->ConfigurationData);
+    while (Child != NULL)
+    {
+        if (Child->ConfigurationData)
+            Child->ConfigurationData = PaToVa(Child->ConfigurationData);
 
-		if (Child->Child)
-			Child->Child = PaToVa(Child->Child);
+        if (Child->Child)
+            Child->Child = PaToVa(Child->Child);
 
-		if (Child->Parent)
-			Child->Parent = PaToVa(Child->Parent);
+        if (Child->Parent)
+            Child->Parent = PaToVa(Child->Parent);
 
-		if (Child->Sibling)
-			Child->Sibling = PaToVa(Child->Sibling);
+        if (Child->Sibling)
+            Child->Sibling = PaToVa(Child->Sibling);
 
-		if (Child->ComponentEntry.Identifier)
-			Child->ComponentEntry.Identifier = PaToVa(Child->ComponentEntry.Identifier);
+        if (Child->ComponentEntry.Identifier)
+            Child->ComponentEntry.Identifier = PaToVa(Child->ComponentEntry.Identifier);
 
-		TRACE("Device 0x%X class %d type %d id '%s', parent %p\n", Child,
-			Child->ComponentEntry.Class, Child->ComponentEntry.Type, VaToPa(Child->ComponentEntry.Identifier), Child->Parent);
+        TRACE("Device 0x%X class %d type %d id '%s', parent %p\n", Child,
+            Child->ComponentEntry.Class, Child->ComponentEntry.Type, VaToPa(Child->ComponentEntry.Identifier), Child->Parent);
 
-		// Go through siblings list
-		Sibling = VaToPa(Child->Sibling);
-		while (Sibling != NULL)
-		{
-			if (Sibling->ConfigurationData)
-				Sibling->ConfigurationData = PaToVa(Sibling->ConfigurationData);
+        // Go through siblings list
+        Sibling = VaToPa(Child->Sibling);
+        while (Sibling != NULL)
+        {
+            if (Sibling->ConfigurationData)
+                Sibling->ConfigurationData = PaToVa(Sibling->ConfigurationData);
 
-			if (Sibling->Child)
-				Sibling->Child = PaToVa(Sibling->Child);
+            if (Sibling->Child)
+                Sibling->Child = PaToVa(Sibling->Child);
 
-			if (Sibling->Parent)
-				Sibling->Parent = PaToVa(Sibling->Parent);
+            if (Sibling->Parent)
+                Sibling->Parent = PaToVa(Sibling->Parent);
 
-			if (Sibling->Sibling)
-				Sibling->Sibling = PaToVa(Sibling->Sibling);
+            if (Sibling->Sibling)
+                Sibling->Sibling = PaToVa(Sibling->Sibling);
 
-			if (Sibling->ComponentEntry.Identifier)
-				Sibling->ComponentEntry.Identifier = PaToVa(Sibling->ComponentEntry.Identifier);
+            if (Sibling->ComponentEntry.Identifier)
+                Sibling->ComponentEntry.Identifier = PaToVa(Sibling->ComponentEntry.Identifier);
 
-			TRACE("Device 0x%X class %d type %d id '%s', parent %p\n", Sibling,
-				Sibling->ComponentEntry.Class, Sibling->ComponentEntry.Type, VaToPa(Sibling->ComponentEntry.Identifier), Sibling->Parent);
+            TRACE("Device 0x%X class %d type %d id '%s', parent %p\n", Sibling,
+                Sibling->ComponentEntry.Class, Sibling->ComponentEntry.Type, VaToPa(Sibling->ComponentEntry.Identifier), Sibling->Parent);
 
-			// Recurse into the Child tree
-			if (VaToPa(Sibling->Child) != NULL)
-				ConvertConfigToVA(VaToPa(Sibling->Child));
+            // Recurse into the Child tree
+            if (VaToPa(Sibling->Child) != NULL)
+                ConvertConfigToVA(VaToPa(Sibling->Child));
 
-			Sibling = VaToPa(Sibling->Sibling);
-		}
+            Sibling = VaToPa(Sibling->Sibling);
+        }
 
-		// Go to the next child
-		Child = VaToPa(Child->Child);
-	}
+        // Go to the next child
+        Child = VaToPa(Child->Child);
+    }
 }

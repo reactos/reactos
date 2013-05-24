@@ -12,7 +12,7 @@ struct _vga_desc vga1_desc = { (char *)0x800003c0 };
 
 void vga_setup( PCONFIGURATION_COMPONENT_DATA pcibus, 
                 struct _pci_desc *desc, struct _vga_desc *vga_desc,
-		int bus, int dev, int fn ) {
+        int bus, int dev, int fn ) {
     struct _pci_bar bar_data;
     int i;
 
@@ -21,7 +21,7 @@ void vga_setup( PCONFIGURATION_COMPONENT_DATA pcibus,
         print_bar( &bar_data );
         if( (bar_data.data > 0x10000) || ((bar_data.data&1) == 1) ) {
             vga_desc->addr = (char *)(0xc0000000 + (bar_data.data & ~0x7ff));
-//	    BootInfo.dispDeviceBase = vga_desc->addr;
+//        BootInfo.dispDeviceBase = vga_desc->addr;
             break;
         }
     }

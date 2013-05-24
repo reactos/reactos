@@ -81,7 +81,7 @@ PKPDR_PAGE PdrPage;
 
 BOOLEAN
 MempSetupPaging(IN PFN_NUMBER StartPage,
-		        IN PFN_COUNT NumberOfPages)
+                IN PFN_COUNT NumberOfPages)
 {
     return TRUE;
 }
@@ -249,7 +249,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt,
                           IN ULONG Pcr,
                           IN ULONG Tss)
 {    
-	ARM_CONTROL_REGISTER ControlRegister;
+    ARM_CONTROL_REGISTER ControlRegister;
     ARM_TTB_REGISTER TtbRegister;
     ARM_DOMAIN_REGISTER DomainRegister;
     

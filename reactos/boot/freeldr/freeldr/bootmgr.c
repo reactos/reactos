@@ -108,189 +108,189 @@ VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem)
 
 ULONG GetDefaultOperatingSystem(OperatingSystemItem* OperatingSystemList, ULONG OperatingSystemCount)
 {
-	CHAR	DefaultOSText[80];
-	PCSTR	DefaultOSName;
-	ULONG_PTR	SectionId;
-	ULONG	DefaultOS = 0;
-	ULONG	Idx;
+    CHAR    DefaultOSText[80];
+    PCSTR    DefaultOSName;
+    ULONG_PTR    SectionId;
+    ULONG    DefaultOS = 0;
+    ULONG    Idx;
 
-	if (!IniOpenSection("FreeLoader", &SectionId))
-	{
-		return 0;
-	}
+    if (!IniOpenSection("FreeLoader", &SectionId))
+    {
+        return 0;
+    }
 
-	DefaultOSName = CmdLineGetDefaultOS();
-	if (NULL == DefaultOSName)
-	{
-		if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, sizeof(DefaultOSText)))
-		{
-			DefaultOSName = DefaultOSText;
-		}
-	}
+    DefaultOSName = CmdLineGetDefaultOS();
+    if (NULL == DefaultOSName)
+    {
+        if (IniReadSettingByName(SectionId, "DefaultOS", DefaultOSText, sizeof(DefaultOSText)))
+        {
+            DefaultOSName = DefaultOSText;
+        }
+    }
 
-	if (NULL != DefaultOSName)
-	{
-		for (Idx=0; Idx<OperatingSystemCount; Idx++)
-		{
-			if (_stricmp(DefaultOSName, OperatingSystemList[Idx].SystemPartition) == 0)
-			{
-				DefaultOS = Idx;
-				break;
-			}
-		}
-	}
+    if (NULL != DefaultOSName)
+    {
+        for (Idx=0; Idx<OperatingSystemCount; Idx++)
+        {
+            if (_stricmp(DefaultOSName, OperatingSystemList[Idx].SystemPartition) == 0)
+            {
+                DefaultOS = Idx;
+                break;
+            }
+        }
+    }
 
-	return DefaultOS;
+    return DefaultOS;
 }
 
 LONG GetTimeOut(VOID)
 {
-	CHAR	TimeOutText[20];
-	LONG		TimeOut;
-	ULONG_PTR	SectionId;
+    CHAR    TimeOutText[20];
+    LONG        TimeOut;
+    ULONG_PTR    SectionId;
 
-	TimeOut = CmdLineGetTimeOut();
-	if (0 <= TimeOut)
-	{
-		return TimeOut;
-	}
+    TimeOut = CmdLineGetTimeOut();
+    if (0 <= TimeOut)
+    {
+        return TimeOut;
+    }
 
-	if (!IniOpenSection("FreeLoader", &SectionId))
-	{
-		return -1;
-	}
+    if (!IniOpenSection("FreeLoader", &SectionId))
+    {
+        return -1;
+    }
 
-	if (IniReadSettingByName(SectionId, "TimeOut", TimeOutText, sizeof(TimeOutText)))
-	{
-		TimeOut = atoi(TimeOutText);
-	}
-	else
-	{
-		TimeOut = -1;
-	}
+    if (IniReadSettingByName(SectionId, "TimeOut", TimeOutText, sizeof(TimeOutText)))
+    {
+        TimeOut = atoi(TimeOutText);
+    }
+    else
+    {
+        TimeOut = -1;
+    }
 
-	return TimeOut;
+    return TimeOut;
 }
 
 BOOLEAN MainBootMenuKeyPressFilter(ULONG KeyPress)
 {
-	if (KeyPress == KEY_F8)
-	{
-		DoOptionsMenu();
+    if (KeyPress == KEY_F8)
+    {
+        DoOptionsMenu();
 
-		return TRUE;
-	}
+        return TRUE;
+    }
 
-	// We didn't handle the key
-	return FALSE;
+    // We didn't handle the key
+    return FALSE;
 }
 
 VOID RunLoader(VOID)
 {
-	ULONG_PTR	SectionId;
-	ULONG		OperatingSystemCount;
-	OperatingSystemItem*	OperatingSystemList;
-	PCSTR*		OperatingSystemDisplayNames;
-	ULONG		DefaultOperatingSystem;
-	LONG		TimeOut;
-	ULONG		SelectedOperatingSystem;
-	ULONG	i;
+    ULONG_PTR    SectionId;
+    ULONG        OperatingSystemCount;
+    OperatingSystemItem*    OperatingSystemList;
+    PCSTR*        OperatingSystemDisplayNames;
+    ULONG        DefaultOperatingSystem;
+    LONG        TimeOut;
+    ULONG        SelectedOperatingSystem;
+    ULONG    i;
 
-	if (!MachInitializeBootDevices())
-	{
-		UiMessageBoxCritical("Error when detecting hardware");
-		return;
-	}
+    if (!MachInitializeBootDevices())
+    {
+        UiMessageBoxCritical("Error when detecting hardware");
+        return;
+    }
 
 #ifdef _M_IX86
-	// Load additional SCSI driver (if any)
-	if (LoadBootDeviceDriver() != ESUCCESS)
-	{
-		UiMessageBoxCritical("Unable to load additional boot device driver");
-	}
+    // Load additional SCSI driver (if any)
+    if (LoadBootDeviceDriver() != ESUCCESS)
+    {
+        UiMessageBoxCritical("Unable to load additional boot device driver");
+    }
 #endif
 
-	if (!IniFileInitialize())
-	{
-		UiMessageBoxCritical("Error initializing .ini file");
-		return;
-	}
+    if (!IniFileInitialize())
+    {
+        UiMessageBoxCritical("Error initializing .ini file");
+        return;
+    }
 
-	if (!IniOpenSection("FreeLoader", &SectionId))
-	{
-		UiMessageBoxCritical("Section [FreeLoader] not found in freeldr.ini.");
-		return;
-	}
-	TimeOut = GetTimeOut();
+    if (!IniOpenSection("FreeLoader", &SectionId))
+    {
+        UiMessageBoxCritical("Section [FreeLoader] not found in freeldr.ini.");
+        return;
+    }
+    TimeOut = GetTimeOut();
 
-	if (!UiInitialize(TRUE))
-	{
-		UiMessageBoxCritical("Unable to initialize UI.");
-		return;
-	}
+    if (!UiInitialize(TRUE))
+    {
+        UiMessageBoxCritical("Unable to initialize UI.");
+        return;
+    }
 
-	OperatingSystemList = InitOperatingSystemList(&OperatingSystemCount);
-	if (!OperatingSystemList)
-	{
-		UiMessageBox("Unable to read operating systems section in freeldr.ini.\nPress ENTER to reboot.");
-		goto reboot;
-	}
+    OperatingSystemList = InitOperatingSystemList(&OperatingSystemCount);
+    if (!OperatingSystemList)
+    {
+        UiMessageBox("Unable to read operating systems section in freeldr.ini.\nPress ENTER to reboot.");
+        goto reboot;
+    }
 
-	if (OperatingSystemCount == 0)
-	{
-		UiMessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
-		goto reboot;
-	}
+    if (OperatingSystemCount == 0)
+    {
+        UiMessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
+        goto reboot;
+    }
 
-	DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemList, OperatingSystemCount);
+    DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemList, OperatingSystemCount);
 
-	//
-	// Create list of display names
-	//
-	OperatingSystemDisplayNames = MmHeapAlloc(sizeof(PCSTR) * OperatingSystemCount);
-	if (!OperatingSystemDisplayNames)
-	{
-		goto reboot;
-	}
-	for (i = 0; i < OperatingSystemCount; i++)
-	{
-		OperatingSystemDisplayNames[i] = OperatingSystemList[i].LoadIdentifier;
-	}
+    //
+    // Create list of display names
+    //
+    OperatingSystemDisplayNames = MmHeapAlloc(sizeof(PCSTR) * OperatingSystemCount);
+    if (!OperatingSystemDisplayNames)
+    {
+        goto reboot;
+    }
+    for (i = 0; i < OperatingSystemCount; i++)
+    {
+        OperatingSystemDisplayNames[i] = OperatingSystemList[i].LoadIdentifier;
+    }
 
-	//
-	// Find all the message box settings and run them
-	//
-	UiShowMessageBoxesInSection("FreeLoader");
+    //
+    // Find all the message box settings and run them
+    //
+    UiShowMessageBoxesInSection("FreeLoader");
 
-	for (;;)
-	{
-		// Redraw the backdrop
-		UiDrawBackdrop();
+    for (;;)
+    {
+        // Redraw the backdrop
+        UiDrawBackdrop();
 
-		// Show the operating system list menu
-		if (!UiDisplayMenu("Please select the operating system to start:",
-		                   "For troubleshooting and advanced startup options for "
-		                       "ReactOS, press F8.",
-		                   TRUE,
-		                   OperatingSystemDisplayNames,
-		                   OperatingSystemCount,
-		                   DefaultOperatingSystem,
-		                   TimeOut,
-		                   &SelectedOperatingSystem,
-		                   FALSE,
-		                   MainBootMenuKeyPressFilter))
-		{
-			UiMessageBox("Press ENTER to reboot.");
-			goto reboot;
-		}
+        // Show the operating system list menu
+        if (!UiDisplayMenu("Please select the operating system to start:",
+                           "For troubleshooting and advanced startup options for "
+                               "ReactOS, press F8.",
+                           TRUE,
+                           OperatingSystemDisplayNames,
+                           OperatingSystemCount,
+                           DefaultOperatingSystem,
+                           TimeOut,
+                           &SelectedOperatingSystem,
+                           FALSE,
+                           MainBootMenuKeyPressFilter))
+        {
+            UiMessageBox("Press ENTER to reboot.");
+            goto reboot;
+        }
 
-		TimeOut = -1;
+        TimeOut = -1;
 
-		// Load the chosen operating system
-		LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
-	}
+        // Load the chosen operating system
+        LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
+    }
 
 reboot:
-	UiUnInitialize("Rebooting...");
-	return;
+    UiUnInitialize("Rebooting...");
+    return;
 }

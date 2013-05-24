@@ -12,8 +12,8 @@ void sync() { __asm__("eieio\n\tsync"); }
 
 void PpcPrepPutChar( int ch ) {
     if( ch == 0x0a ) {
-	SetPhysByte(prep_serial, 0x0d);
-	sync();
+    SetPhysByte(prep_serial, 0x0d);
+    sync();
     }
     SetPhysByte(prep_serial, ch);
     sync();
@@ -26,8 +26,8 @@ BOOLEAN PpcPrepDiskReadLogicalSectors
 
     for(secct = 0; secct < SectorCount; secct++)
     {
-	ide_seek(&ide1_desc, SectorNumber + secct, 0);
-	ide_read(&ide1_desc, ((PCHAR)Buffer) + secct * 512, 512);
+    ide_seek(&ide1_desc, SectorNumber + secct, 0);
+    ide_read(&ide1_desc, ((PCHAR)Buffer) + secct * 512, 512);
     }
     /* Never give up! */
     return TRUE;
@@ -69,7 +69,7 @@ void PpcPrepVideoPrepareForReactOS(BOOLEAN setup)
 VOID PpcInitializeMmu(int max);
 
 ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
-			   ULONG MaxMemoryMapSize )
+               ULONG MaxMemoryMapSize )
 {
     // Probe memory
     paddr_t physAddr;

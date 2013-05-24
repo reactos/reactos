@@ -27,38 +27,38 @@ VOID NTAPI HalpInitBusHandler(VOID);
 
 VOID BootMain(LPSTR CmdLine)
 {
-	CmdLineParse(CmdLine);
+    CmdLineParse(CmdLine);
 
-	MachInit(CmdLine);
+    MachInit(CmdLine);
 
-	FsInit();
+    FsInit();
 
-	DebugInit();
+    DebugInit();
 
-	TRACE("BootMain() called.\n");
+    TRACE("BootMain() called.\n");
 
-	if (!UiInitialize(FALSE))
-	{
-		UiMessageBoxCritical("Unable to initialize UI.\n");
-		goto quit;
-	}
+    if (!UiInitialize(FALSE))
+    {
+        UiMessageBoxCritical("Unable to initialize UI.\n");
+        goto quit;
+    }
 
-	if (!MmInitializeMemoryManager())
-	{
-		UiMessageBoxCritical("Unable to initialize memory manager");
-		goto quit;
-	}
+    if (!MmInitializeMemoryManager())
+    {
+        UiMessageBoxCritical("Unable to initialize memory manager");
+        goto quit;
+    }
 
 #ifdef _M_IX86
-	HalpInitializePciStubs();
-	HalpInitBusHandler();
+    HalpInitializePciStubs();
+    HalpInitBusHandler();
 #endif
-	RunLoader();
+    RunLoader();
 
 quit:
-	/* If we reach this point, something went wrong before, therefore reboot */
-	DiskStopFloppyMotor();
-	Reboot();
+    /* If we reach this point, something went wrong before, therefore reboot */
+    DiskStopFloppyMotor();
+    Reboot();
 }
 
 // We need to emulate these, because the original ones don't work in freeldr

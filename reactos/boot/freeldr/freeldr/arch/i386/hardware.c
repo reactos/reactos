@@ -38,15 +38,15 @@
 #define MAX_LPT_PORTS   3
 
 /* No Mouse */
-#define MOUSE_TYPE_NONE			0
+#define MOUSE_TYPE_NONE            0
 /* Microsoft Mouse with 2 buttons */
-#define MOUSE_TYPE_MICROSOFT	1
+#define MOUSE_TYPE_MICROSOFT       1
 /* Logitech Mouse with 3 buttons */
-#define MOUSE_TYPE_LOGITECH		2
+#define MOUSE_TYPE_LOGITECH        2
 /* Microsoft Wheel Mouse (aka Z Mouse) */
-#define MOUSE_TYPE_WHEELZ		3
+#define MOUSE_TYPE_WHEELZ          3
 /* Mouse Systems Mouse */
-#define MOUSE_TYPE_MOUSESYSTEMS	4
+#define MOUSE_TYPE_MOUSESYSTEMS    4
 
 
 /* PS2 stuff */
@@ -808,8 +808,8 @@ DetectSerialMouse(PUCHAR Port)
         if (Buffer[i] == 'B')
         {
             /* Sign for Microsoft Ballpoint */
-//	  DbgPrint("Microsoft Ballpoint device detected\n");
-//	  DbgPrint("THIS DEVICE IS NOT SUPPORTED, YET\n");
+//      DbgPrint("Microsoft Ballpoint device detected\n");
+//      DbgPrint("THIS DEVICE IS NOT SUPPORTED, YET\n");
             return MOUSE_TYPE_NONE;
         }
         else if (Buffer[i] == 'M')

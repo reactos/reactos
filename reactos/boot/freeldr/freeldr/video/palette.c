@@ -20,23 +20,23 @@
 #include <freeldr.h>
 VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {
-	ULONG		Color;
+    ULONG        Color;
 
-	for (Color=0; Color<ColorCount; Color++)
-	{
-		MachVideoGetPaletteColor((UCHAR)Color, &Palette[Color].Red, &Palette[Color].Green, &Palette[Color].Blue);
-	}
+    for (Color=0; Color<ColorCount; Color++)
+    {
+        MachVideoGetPaletteColor((UCHAR)Color, &Palette[Color].Red, &Palette[Color].Green, &Palette[Color].Blue);
+    }
 }
 
 VOID VideoRestorePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {
-	ULONG		Color;
+    ULONG        Color;
 
-	MachVideoSync();
+    MachVideoSync();
 
-	for (Color=0; Color<ColorCount; Color++)
-	{
-		MachVideoSetPaletteColor((UCHAR)Color, Palette[Color].Red, Palette[Color].Green, Palette[Color].Blue);
-	}
+    for (Color=0; Color<ColorCount; Color++)
+    {
+        MachVideoSetPaletteColor((UCHAR)Color, Palette[Color].Red, Palette[Color].Green, Palette[Color].Blue);
+    }
 }
 #endif

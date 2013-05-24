@@ -23,85 +23,85 @@
 
 BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* BootPartition)
 {
-	char *p;
+    char *p;
 
-	//
-	// Detect ramdisk path
-	//
-	if (_strnicmp(ArcPath, "ramdisk(0)", 10) == 0)
-	{
-		//
-		// Magic value for ramdisks
-		//
-		*BootDrive = 0x49;
-		*BootPartition = 1;
+    //
+    // Detect ramdisk path
+    //
+    if (_strnicmp(ArcPath, "ramdisk(0)", 10) == 0)
+    {
+        //
+        // Magic value for ramdisks
+        //
+        *BootDrive = 0x49;
+        *BootPartition = 1;
 
-		//
-		// Get the path
-		//
-		p = ArcPath + 11;
-		strcpy(BootPath, p);
-		return TRUE;
-	}
+        //
+        // Get the path
+        //
+        p = ArcPath + 11;
+        strcpy(BootPath, p);
+        return TRUE;
+    }
 
-	if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
-		return FALSE;
+    if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
+        return FALSE;
 
-	p = ArcPath + 15;
-	if (_strnicmp(p, "fdisk(", 6) == 0)
-	{
-		/*
-		 * floppy disk path:
-		 *  multi(0)disk(0)fdisk(x)\path
-		 */
-		p = p + 6;
-		*BootDrive = atoi(p);
-		p = strchr(p, ')');
-		if (p == NULL)
-			return FALSE;
-		p++;
-		*BootPartition = 0;
-	}
-	else if (_strnicmp(p, "cdrom(", 6) == 0)
-	{
-		/*
-		 * cdrom path:
-		 *  multi(0)disk(0)cdrom(x)\path
-		 */
-		p = p + 6;
-		*BootDrive = atoi(p) + 0x80;
-		p = strchr(p, ')');
-		if (p == NULL)
-			return FALSE;
-		p++;
-		*BootPartition = 0xff;
-	}
-	else if (_strnicmp(p, "rdisk(", 6) == 0)
-	{
-		/*
-		 * hard disk path:
-		 *  multi(0)disk(0)rdisk(x)partition(y)\path
-		 */
-		p = p + 6;
-		*BootDrive = atoi(p) + 0x80;
-		p = strchr(p, ')');
-		if ((p == NULL) || (_strnicmp(p, ")partition(", 11) != 0))
-			return FALSE;
-		p = p + 11;
-		*BootPartition = atoi(p);
-		p = strchr(p, ')');
-		if (p == NULL)
-			return FALSE;
-		p++;
-	}
-	else
-	{
-		return FALSE;
-	}
+    p = ArcPath + 15;
+    if (_strnicmp(p, "fdisk(", 6) == 0)
+    {
+        /*
+         * floppy disk path:
+         *  multi(0)disk(0)fdisk(x)\path
+         */
+        p = p + 6;
+        *BootDrive = atoi(p);
+        p = strchr(p, ')');
+        if (p == NULL)
+            return FALSE;
+        p++;
+        *BootPartition = 0;
+    }
+    else if (_strnicmp(p, "cdrom(", 6) == 0)
+    {
+        /*
+         * cdrom path:
+         *  multi(0)disk(0)cdrom(x)\path
+         */
+        p = p + 6;
+        *BootDrive = atoi(p) + 0x80;
+        p = strchr(p, ')');
+        if (p == NULL)
+            return FALSE;
+        p++;
+        *BootPartition = 0xff;
+    }
+    else if (_strnicmp(p, "rdisk(", 6) == 0)
+    {
+        /*
+         * hard disk path:
+         *  multi(0)disk(0)rdisk(x)partition(y)\path
+         */
+        p = p + 6;
+        *BootDrive = atoi(p) + 0x80;
+        p = strchr(p, ')');
+        if ((p == NULL) || (_strnicmp(p, ")partition(", 11) != 0))
+            return FALSE;
+        p = p + 11;
+        *BootPartition = atoi(p);
+        p = strchr(p, ')');
+        if (p == NULL)
+            return FALSE;
+        p++;
+    }
+    else
+    {
+        return FALSE;
+    }
 
-	strcpy(BootPath, p);
+    strcpy(BootPath, p);
 
-	return TRUE;
+    return TRUE;
 }
 
 /* PathSyntax: scsi() = 0, multi() = 1, ramdisk() = 2 */
@@ -162,69 +162,69 @@ DissectArcPath2(
 
 VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, UCHAR Disk, ULONG Partition)
 {
-	char	tmp[50];
+    char    tmp[50];
 
-	strcpy(ArcPath, "multi(0)disk(0)");
+    strcpy(ArcPath, "multi(0)disk(0)");
 
-	if (Disk < 0x80)
-	{
-		/*
-		 * floppy disk path:
-		 *  multi(0)disk(0)fdisk(x)\path
-		 */
-		sprintf(tmp, "fdisk(%d)", (int) Disk);
-		strcat(ArcPath, tmp);
-	}
-	else
-	{
-		/*
-		 * hard disk path:
-		 *  multi(0)disk(0)rdisk(x)partition(y)\path
-		 */
-		sprintf(tmp, "rdisk(%d)partition(%d)", (int) (Disk - 0x80), (int) Partition);
-		strcat(ArcPath, tmp);
-	}
+    if (Disk < 0x80)
+    {
+        /*
+         * floppy disk path:
+         *  multi(0)disk(0)fdisk(x)\path
+         */
+        sprintf(tmp, "fdisk(%d)", (int) Disk);
+        strcat(ArcPath, tmp);
+    }
+    else
+    {
+        /*
+         * hard disk path:
+         *  multi(0)disk(0)rdisk(x)partition(y)\path
+         */
+        sprintf(tmp, "rdisk(%d)partition(%d)", (int) (Disk - 0x80), (int) Partition);
+        strcat(ArcPath, tmp);
+    }
 
-	if (SystemFolder[0] == '\\' || SystemFolder[0] == '/')
-	{
-		strcat(ArcPath, SystemFolder);
-	}
-	else
-	{
-		strcat(ArcPath, "\\");
-		strcat(ArcPath, SystemFolder);
-	}
+    if (SystemFolder[0] == '\\' || SystemFolder[0] == '/')
+    {
+        strcat(ArcPath, SystemFolder);
+    }
+    else
+    {
+        strcat(ArcPath, "\\");
+        strcat(ArcPath, SystemFolder);
+    }
 }
 
 #if 0
 UCHAR ConvertArcNameToBiosDriveNumber(PCHAR ArcPath)
 {
-	char *	p;
-	UCHAR		DriveNumber = 0;
+    char *    p;
+    UCHAR        DriveNumber = 0;
 
-	if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
-		return 0;
+    if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
+        return 0;
 
-	p = ArcPath + 15;
-	if (_strnicmp(p, "fdisk(", 6) == 0)
-	{
-		/*
-		 * floppy disk path:
-		 *  multi(0)disk(0)fdisk(x)\path
-		 */
-		p = p + 6;
-		DriveNumber = atoi(p);
-	}
-	else if (_strnicmp(p, "rdisk(", 6) == 0)
-	{
-		/*
-		 * hard disk path:
-		 *  multi(0)disk(0)rdisk(x)partition(y)\path
-		 */
-		p = p + 6;
-		DriveNumber = atoi(p) + 0x80;
-	}
+    p = ArcPath + 15;
+    if (_strnicmp(p, "fdisk(", 6) == 0)
+    {
+        /*
+         * floppy disk path:
+         *  multi(0)disk(0)fdisk(x)\path
+         */
+        p = p + 6;
+        DriveNumber = atoi(p);
+    }
+    else if (_strnicmp(p, "rdisk(", 6) == 0)
+    {
+        /*
+         * hard disk path:
+         *  multi(0)disk(0)rdisk(x)partition(y)\path
+         */
+        p = p + 6;
+        DriveNumber = atoi(p) + 0x80;
+    }
 
-	return DriveNumber;
+    return DriveNumber;
 }
 #endif

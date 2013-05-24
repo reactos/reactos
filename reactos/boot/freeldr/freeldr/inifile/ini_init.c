@@ -23,85 +23,85 @@ DBG_DEFAULT_CHANNEL(INIFILE);
 
 static LONG IniOpenIniFile(ULONG* FileId)
 {
-	CHAR FreeldrPath[MAX_PATH];
-	LONG ret;
+    CHAR FreeldrPath[MAX_PATH];
+    LONG ret;
 
-	//
-	// Create full freeldr.ini path
-	//
-	MachDiskGetBootPath(FreeldrPath, sizeof(FreeldrPath));
-	strcat(FreeldrPath, "\\freeldr.ini");
+    //
+    // Create full freeldr.ini path
+    //
+    MachDiskGetBootPath(FreeldrPath, sizeof(FreeldrPath));
+    strcat(FreeldrPath, "\\freeldr.ini");
 
-	// Try to open freeldr.ini
-	ret = ArcOpen(FreeldrPath, OpenReadOnly, FileId);
+    // Try to open freeldr.ini
+    ret = ArcOpen(FreeldrPath, OpenReadOnly, FileId);
 
-	return ret;
+    return ret;
 }
 
 BOOLEAN IniFileInitialize(VOID)
 {
-	FILEINFORMATION FileInformation;
-	ULONG FileId; // File handle for freeldr.ini
-	PCHAR FreeLoaderIniFileData;
-	ULONG FreeLoaderIniFileSize, Count;
-	LONG ret;
-	BOOLEAN Success;
-	TRACE("IniFileInitialize()\n");
+    FILEINFORMATION FileInformation;
+    ULONG FileId; // File handle for freeldr.ini
+    PCHAR FreeLoaderIniFileData;
+    ULONG FreeLoaderIniFileSize, Count;
+    LONG ret;
+    BOOLEAN Success;
+    TRACE("IniFileInitialize()\n");
 
-	//
-	// Open freeldr.ini
-	//
-	ret = IniOpenIniFile(&FileId);
-	if (ret != ESUCCESS)
-	{
-		UiMessageBoxCritical("Error opening freeldr.ini or file not found.\nYou need to re-install FreeLoader.");
-		return FALSE;
-	}
+    //
+    // Open freeldr.ini
+    //
+    ret = IniOpenIniFile(&FileId);
+    if (ret != ESUCCESS)
+    {
+        UiMessageBoxCritical("Error opening freeldr.ini or file not found.\nYou need to re-install FreeLoader.");
+        return FALSE;
+    }
 
-	//
-	// Get the file size
-	//
-	ret = ArcGetFileInformation(FileId, &FileInformation);
-	if (ret != ESUCCESS || FileInformation.EndingAddress.HighPart != 0)
-	{
-		UiMessageBoxCritical("Error while getting informations about freeldr.ini.\nYou need to re-install FreeLoader.");
-		return FALSE;
-	}
-	FreeLoaderIniFileSize = FileInformation.EndingAddress.LowPart;
+    //
+    // Get the file size
+    //
+    ret = ArcGetFileInformation(FileId, &FileInformation);
+    if (ret != ESUCCESS || FileInformation.EndingAddress.HighPart != 0)
+    {
+        UiMessageBoxCritical("Error while getting informations about freeldr.ini.\nYou need to re-install FreeLoader.");
+        return FALSE;
+    }
+    FreeLoaderIniFileSize = FileInformation.EndingAddress.LowPart;
 
-	//
-	// Allocate memory to cache the whole freeldr.ini
-	//
-	FreeLoaderIniFileData = MmHeapAlloc(FreeLoaderIniFileSize);
-	if (!FreeLoaderIniFileData)
-	{
-		UiMessageBoxCritical("Out of memory while loading freeldr.ini.");
-		ArcClose(FileId);
-		return FALSE;
-	}
+    //
+    // Allocate memory to cache the whole freeldr.ini
+    //
+    FreeLoaderIniFileData = MmHeapAlloc(FreeLoaderIniFileSize);
+    if (!FreeLoaderIniFileData)
+    {
+        UiMessageBoxCritical("Out of memory while loading freeldr.ini.");
+        ArcClose(FileId);
+        return FALSE;
+    }
 
-	//
-	// Read freeldr.ini off the disk
-	//
-	ret = ArcRead(FileId, FreeLoaderIniFileData, FreeLoaderIniFileSize, &Count);
-	if (ret != ESUCCESS || Count != FreeLoaderIniFileSize)
-	{
-		UiMessageBoxCritical("Error while reading freeldr.ini.");
-		ArcClose(FileId);
-		MmHeapFree(FreeLoaderIniFileData);
-		return FALSE;
-	}
+    //
+    // Read freeldr.ini off the disk
+    //
+    ret = ArcRead(FileId, FreeLoaderIniFileData, FreeLoaderIniFileSize, &Count);
+    if (ret != ESUCCESS || Count != FreeLoaderIniFileSize)
+    {
+        UiMessageBoxCritical("Error while reading freeldr.ini.");
+        ArcClose(FileId);
+        MmHeapFree(FreeLoaderIniFileData);
+        return FALSE;
+    }
 
-	//
-	// Parse the .ini file data
-	//
-	Success = IniParseFile(FreeLoaderIniFileData, FreeLoaderIniFileSize);
+    //
+    // Parse the .ini file data
+    //
+    Success = IniParseFile(FreeLoaderIniFileData, FreeLoaderIniFileSize);
 
-	//
-	// Do some cleanup, and return
-	//
-	ArcClose(FileId);
-	MmHeapFree(FreeLoaderIniFileData);
+    //
+    // Do some cleanup, and return
+    //
+    ArcClose(FileId);
+    MmHeapFree(FreeLoaderIniFileData);
 
-	return Success;
+    return Success;
 }

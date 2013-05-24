@@ -25,7 +25,7 @@
 #endif
 
 #define CONFIG_CMD(bus, dev_fn, where) \
-	(0x80000000 | (((ULONG)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
+    (0x80000000 | (((ULONG)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
 
 //
 // ARC Component Configuration Routines
