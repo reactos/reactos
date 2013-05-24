@@ -308,9 +308,6 @@ LdrpCompareResourceNames_U(
     }
     else
     {
-        /* Fail if ResourceName2 is an ID */
-        if (Entry->Id <= USHRT_MAX) return -1;
-
         /* Get the resource string */
         ResourceString = (PIMAGE_RESOURCE_DIR_STRING_U)(ResourceData +
                                                         Entry->NameOffset);
