@@ -129,7 +129,7 @@ GetSerialPortNumber(IN HDEVINFO DeviceInfoSet,
                         TRACE("Port: Start: %I64x  Length: %lu\n",
                               lpResDes->u.Port.Start.QuadPart,
                               lpResDes->u.Port.Length);
-                        if (lpResDes->u.Port.Start.HighPart == 0)
+                        if ((lpResDes->u.Port.Start.HighPart == 0) && (dwBaseAddress == 0))
                             dwBaseAddress = (DWORD)lpResDes->u.Port.Start.LowPart;
                         break;
 
@@ -201,7 +201,7 @@ GetParallelPortNumber(IN HDEVINFO DeviceInfoSet,
                         TRACE("Port: Start: %I64x  Length: %lu\n",
                               lpResDes->u.Port.Start.QuadPart,
                               lpResDes->u.Port.Length);
-                        if (lpResDes->u.Port.Start.HighPart == 0)
+                        if ((lpResDes->u.Port.Start.HighPart == 0) && (dwBaseAddress == 0))
                             dwBaseAddress = (DWORD)lpResDes->u.Port.Start.LowPart;
                         break;
 
@@ -416,12 +416,16 @@ InstallParallelPort(IN HDEVINFO DeviceInfoSet,
 
     /* ... try to determine the port number from its resources */
     if (dwPortNumber == 0)
+    {
         dwPortNumber = GetParallelPortNumber(DeviceInfoSet,
                                              DeviceInfoData);
+        TRACE("GetParallelPortNumber() returned port number: %lu\n", dwPortNumber);
+    }
 
     if (dwPortNumber == 0)
     {
         /* FIXME */
+        FIXME("Got no valid port numer!\n");
     }
 
     if (dwPortNumber != 0)
@@ -485,6 +489,8 @@ InstallParallelPort(IN HDEVINFO DeviceInfoSet,
                  L"Parallel Port (%s)",
                  szPortName);
     }
+
+    TRACE("Friendly name: %S\n", szFriendlyName);
 
     /* Set the friendly name for the device */
     SetupDiSetDeviceRegistryPropertyW(DeviceInfoSet,
