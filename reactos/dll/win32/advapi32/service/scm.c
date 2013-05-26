@@ -2123,6 +2123,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
     if (bUseTempBuffer == TRUE)
     {
         TRACE("RQueryServiceConfig2A() returns ERROR_INSUFFICIENT_BUFFER\n");
+        *pcbBytesNeeded = dwBufferSize;
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }
@@ -2240,6 +2241,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
     if (bUseTempBuffer == TRUE)
     {
         TRACE("RQueryServiceConfig2W() returns ERROR_INSUFFICIENT_BUFFER\n");
+        *pcbBytesNeeded = dwBufferSize;
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }
