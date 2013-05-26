@@ -301,16 +301,16 @@ SampSetupCreateUserAccount(HKEY hDomainKey,
                       L"LMPwd",
                       0,
                       REG_BINARY,
-                      NULL,
-                      0);
+                      (LPVOID)&EmptyLmHash,
+                      sizeof(ENCRYPTED_LM_OWF_PASSWORD));
 
         /* Set NTPwd attribute*/
         RegSetValueEx(hAccountKey,
                       L"NTPwd",
                       0,
                       REG_BINARY,
-                      NULL,
-                      0);
+                      (LPVOID)&EmptyNtHash,
+                      sizeof(ENCRYPTED_NT_OWF_PASSWORD));
 
         /* Set LMPwdHistory attribute*/
         RegSetValueEx(hAccountKey,

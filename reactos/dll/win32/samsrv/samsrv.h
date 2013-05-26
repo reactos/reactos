@@ -118,6 +118,8 @@ typedef struct _SAM_USER_FIXED_DATA
 
 
 extern PGENERIC_MAPPING pServerMapping;
+extern ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
+extern ENCRYPTED_LM_OWF_PASSWORD EmptyLmHash;
 
 
 /* alias.c */
@@ -370,5 +372,18 @@ AppendRidToSid(PSID SrcSid,
 NTSTATUS
 SampGetRidFromSid(IN PSID Sid,
                   OUT PULONG Rid);
+
+
+/* Undocumented advapi32 functions */
+
+NTSTATUS
+WINAPI
+SystemFunction006(LPCSTR password,
+                  LPSTR hash);
+
+NTSTATUS
+WINAPI
+SystemFunction007(PUNICODE_STRING string,
+                  LPBYTE hash);
 
 /* EOF */

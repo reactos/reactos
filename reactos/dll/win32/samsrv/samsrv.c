@@ -23,7 +23,43 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
-/* FUNCTIONS ****************************************************************/
+
+/* GLOBALS *******************************************************************/
+
+ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
+ENCRYPTED_LM_OWF_PASSWORD EmptyLmHash;
+
+
+/* FUNCTIONS *****************************************************************/
+
+static
+NTSTATUS
+SampInitHashes(VOID)
+{
+    UNICODE_STRING EmptyNtPassword = {0, 0, NULL};
+    CHAR EmptyLmPassword[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,};
+    NTSTATUS Status;
+
+    /* Calculate the NT hash value of the empty password */
+    Status = SystemFunction007(&EmptyNtPassword,
+                               (LPBYTE)&EmptyNtHash);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Calculation of the empty NT hash failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Calculate the LM hash value of the empty password */
+    Status = SystemFunction006(EmptyLmPassword,
+                               (LPSTR)&EmptyLmHash);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Calculation of the empty LM hash failed (Status 0x%08lx)\n", Status);
+    }
+
+    return Status;
+}
+
 
 NTSTATUS
 NTAPI
@@ -69,6 +105,10 @@ SamIInitialize(VOID)
     NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("SamIInitialize() called\n");
+
+    Status = SampInitHashes();
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     if (SampIsSetupRunning())
     {

@@ -2371,8 +2371,8 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     Status = SampSetObjectAttribute(UserObject,
                                     L"LMPwd",
                                     REG_BINARY,
-                                    NULL,
-                                    0);
+                                    &EmptyLmHash,
+                                    sizeof(ENCRYPTED_LM_OWF_PASSWORD));
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2383,8 +2383,8 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     Status = SampSetObjectAttribute(UserObject,
                                     L"NTPwd",
                                     REG_BINARY,
-                                    NULL,
-                                    0);
+                                    &EmptyNtHash,
+                                    sizeof(ENCRYPTED_NT_OWF_PASSWORD));
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
