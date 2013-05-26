@@ -212,12 +212,24 @@ USBSTOR_DispatchPower(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    UNIMPLEMENTED
+    PFDO_DEVICE_EXTENSION DeviceExtension;
 
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    // get common device extension
+    DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    if (DeviceExtension->Common.IsFDO)
+    {
+        PoStartNextPowerIrp(Irp);
+        IoSkipCurrentIrpStackLocation(Irp);
+        return PoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+    }
+    else
+    {
+        PoStartNextPowerIrp(Irp);
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
 }
 
 
