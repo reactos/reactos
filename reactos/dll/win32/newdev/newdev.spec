@@ -9,3 +9,4 @@
 @ stub RollbackDriver
 @ stdcall UpdateDriverForPlugAndPlayDevicesA(ptr str str long ptr)
 @ stdcall UpdateDriverForPlugAndPlayDevicesW(ptr wstr wstr long ptr)
+@ stdcall DiShowUpdateDevice(ptr ptr ptr long ptr)
