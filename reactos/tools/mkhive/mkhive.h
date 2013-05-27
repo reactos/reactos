@@ -137,7 +137,12 @@ extern LIST_ENTRY CmiHiveListHead;
 #include <string.h>
 #endif//_WIN32
 
+#ifndef _MSC_VER
 #define _In_
 #define _Out_
+#define _In_opt_
+#define _In_range_(x, y)
+#endif
+#define __drv_aliasesMem
 
 /* EOF */
