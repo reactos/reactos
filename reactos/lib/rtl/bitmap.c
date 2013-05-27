@@ -28,7 +28,8 @@ typedef ULONG64 BITMAP_BUFFER, *PBITMAP_BUFFER;
 #define RTL_BITMAP_RUN RTL_BITMAP_RUN64
 #define PRTL_BITMAP_RUN PRTL_BITMAP_RUN64
 #undef BitScanForward
-#define BitScanForward BitScanForward64
+#define BitScanForward(Index, Mask) \
+    do { unsigned long tmp; BitScanForward64(&tmp, Mask); *Index = tmp; } while (0)
 #define RtlFillMemoryUlong RtlFillMemoryUlonglong
 
 #define RtlInitializeBitMap RtlInitializeBitMap64
@@ -245,8 +246,8 @@ VOID
 NTAPI
 RtlInitializeBitMap(
     _Out_ PRTL_BITMAP BitMapHeader,
-    _In_ PBITMAP_BUFFER BitMapBuffer,
-    _In_ BITMAP_INDEX SizeOfBitMap)
+    _In_opt_ __drv_aliasesMem PBITMAP_BUFFER BitMapBuffer,
+    _In_opt_ ULONG SizeOfBitMap)
 {
     /* Setup the bitmap header */
     BitMapHeader->SizeOfBitMap = SizeOfBitMap;
@@ -289,7 +290,7 @@ VOID
 NTAPI
 RtlSetBit(
     _In_ PRTL_BITMAP BitMapHeader,
-    _In_ BITMAP_INDEX BitNumber)
+    _In_range_(<, BitMapHeader->SizeOfBitMap) BITMAP_INDEX BitNumber)
 {
     ASSERT(BitNumber <= BitMapHeader->SizeOfBitMap);
     BitMapHeader->Buffer[BitNumber / _BITCOUNT] |= ((BITMAP_INDEX)1 << (BitNumber & (_BITCOUNT - 1)));
@@ -299,8 +300,8 @@ VOID
 NTAPI
 RtlClearBits(
     _In_ PRTL_BITMAP BitMapHeader,
-    _In_ BITMAP_INDEX StartingIndex,
-    _In_ BITMAP_INDEX NumberToClear)
+    _In_range_(0, BitMapHeader->SizeOfBitMap - NumberToClear) BITMAP_INDEX StartingIndex,
+    _In_range_(0, BitMapHeader->SizeOfBitMap - StartingIndex) BITMAP_INDEX NumberToClear)
 {
     BITMAP_INDEX Bits, Mask;
     PBITMAP_BUFFER Buffer;
@@ -356,8 +357,8 @@ VOID
 NTAPI
 RtlSetBits(
     _In_ PRTL_BITMAP BitMapHeader,
-    _In_ BITMAP_INDEX StartingIndex,
-    _In_ BITMAP_INDEX NumberToSet)
+    _In_range_(0, BitMapHeader->SizeOfBitMap - NumberToSet) BITMAP_INDEX StartingIndex,
+    _In_range_(0, BitMapHeader->SizeOfBitMap - StartingIndex) BITMAP_INDEX NumberToSet)
 {
     BITMAP_INDEX Bits, Mask;
     PBITMAP_BUFFER Buffer;
@@ -413,7 +414,7 @@ BOOLEAN
 NTAPI
 RtlTestBit(
     _In_ PRTL_BITMAP BitMapHeader,
-    _In_ BITMAP_INDEX BitNumber)
+    _In_range_(<, BitMapHeader->SizeOfBitMap) BITMAP_INDEX BitNumber)
 {
     ASSERT(BitNumber < BitMapHeader->SizeOfBitMap);
     return (BitMapHeader->Buffer[BitNumber / _BITCOUNT] >> (BitNumber & (_BITCOUNT - 1))) & 1;
