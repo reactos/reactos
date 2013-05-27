@@ -379,7 +379,7 @@ typedef struct _SecBuffer
 #ifdef MIDL_PASS
     MIDL_PROP([size_is(cbBuffer)]) PCHAR pvBuffer;
 #else
-    __field_bcount(cbBuffer) void SEC_FAR *pvBuffer;
+    _Field_size_bytes_(cbBuffer) void SEC_FAR *pvBuffer;
 #endif
 } SecBuffer, *PSecBuffer;
 
@@ -387,7 +387,7 @@ typedef struct _SecBufferDesc
 {
     ULONG ulVersion;
     ULONG cBuffers;
-    MIDL_PROP([size_is(cBuffers)]) __field_ecount(cBuffers) PSecBuffer pBuffers;
+    MIDL_PROP([size_is(cBuffers)]) _Field_size_(cBuffers) PSecBuffer pBuffers;
 } SecBufferDesc, SEC_FAR *PSecBufferDesc;
 
 typedef struct _SecPkgInfoW
@@ -498,17 +498,17 @@ typedef struct _SecPkgContext_KeyInfoW
 typedef struct _SecPkgContext_SessionKey
 {
     ULONG SessionKeyLength;
-    __field_bcount(SessionKeyLength) PUCHAR SessionKey;
+    _Field_size_bytes_(SessionKeyLength) PUCHAR SessionKey;
 } SecPkgContext_SessionKey, *PSecPkgContext_SessionKey;
 
 typedef struct _SecPkgContext_NegoKeys
 {
     ULONG KeyType;
     USHORT KeyLength;
-    __field_bcount(KeyLength) PUCHAR KeyValue;
+    _Field_size_bytes_(KeyLength) PUCHAR KeyValue;
     ULONG  VerifyKeyType;
     USHORT VerifyKeyLength;
-    __field_bcount(VerifyKeyLength) PUCHAR VerifyKeyValue;
+    _Field_size_bytes_(VerifyKeyLength) PUCHAR VerifyKeyValue;
 } SecPkgContext_NegoKeys, *PSecPkgContext_NegoKeys;
 
 typedef struct _SecPkgContext_DceInfo

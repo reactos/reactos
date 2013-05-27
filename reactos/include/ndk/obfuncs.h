@@ -74,7 +74,7 @@ NTAPI
 ObCreateObjectType(
     _In_ PUNICODE_STRING TypeName,
     _In_ POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
-    _In_ PVOID Reserved,
+    _Reserved_ PVOID Reserved,
     _Out_ POBJECT_TYPE *ObjectType
 );
 
@@ -111,7 +111,7 @@ ObOpenObjectByName(
     _In_ KPROCESSOR_MODE AccessMode,
     _In_opt_ PACCESS_STATE PassedAccessState,
     _In_ ACCESS_MASK DesiredAccess,
-    _Inout_ PVOID ParseContext,
+    _Inout_opt_ PVOID ParseContext,
     _Out_ PHANDLE Handle
 );
 

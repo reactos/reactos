@@ -340,7 +340,7 @@ INTSAFE_NAME(_Name)( \
     _In_ _TypeFrom Input, \
     _Out_ _Deref_out_range_(==, Input) _TypeTo *pOutput) \
 { \
-    if ((Input >= 0) && (Input <= _TypeTo ## _MAX)) \
+    if ((Input >= 0) && ((_TypeTo)Input <= _TypeTo ## _MAX)) \
     { \
         *pOutput = (_TypeTo)Input; \
         return INTSAFE_SUCCESS; \
@@ -694,7 +694,7 @@ INTSAFE_NAME(ULongLongMult)(
 
 
 #define DEFINE_SAFE_MULT_U32(_Name, _Type, _Convert) \
-__checkReturn \
+_Must_inspect_result_ \
 __forceinline \
 INTSAFE_RESULT \
 INTSAFE_NAME(_Name)( \
