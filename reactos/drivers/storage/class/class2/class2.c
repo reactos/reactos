@@ -137,6 +137,7 @@ DriverEntry(
 /* The following hack to assign drive letters with a non-PnP storage stack */
 
 typedef struct _CLASS_DEVICE_INFO {
+  ULONG DeviceType;
   ULONG Partitions;
   ULONG DeviceNumber;
   ULONG DriveNumber;
@@ -205,7 +206,15 @@ ScsiClassAssignDriveLetter(PCLASS_DEVICE_INFO DeviceInfo)
     do
     {
         /* Check that the disk exists */
-        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\HardDisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
+        if (DeviceInfo->DeviceType == FILE_DEVICE_DISK)
+        {
+            PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\HardDisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
+        }
+        else if (DeviceInfo->DeviceType == FILE_DEVICE_CD_ROM)
+        {
+            PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\CdRom%d", DeviceNumber) * sizeof(WCHAR);
+        }
+
         InitializeObjectAttributes(&ObjectAttributes,
                                    &PartitionU,
                                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
@@ -233,7 +242,14 @@ ScsiClassAssignDriveLetter(PCLASS_DEVICE_INFO DeviceInfo)
     do
     {
         /* Check that the drive exists */
-        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\??\\PhysicalDrive%d", DriveNumber) * sizeof(WCHAR);
+        if (DeviceInfo->DeviceType == FILE_DEVICE_DISK)
+        {
+            PartitionU.Length = swprintf(PartitionU.Buffer, L"\\??\\PhysicalDrive%d", DriveNumber) * sizeof(WCHAR);
+        }
+        else if (DeviceInfo->DeviceType == FILE_DEVICE_CD_ROM)
+        {
+            PartitionU.Length = swprintf(PartitionU.Buffer, L"\\??\\%C:", ('C' + DriveNumber)) * sizeof(WCHAR);
+        }
         InitializeObjectAttributes(&ObjectAttributes,
                                    &PartitionU,
                                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
@@ -252,18 +268,36 @@ ScsiClassAssignDriveLetter(PCLASS_DEVICE_INFO DeviceInfo)
         }
     } while (Status == STATUS_SUCCESS);
 
-    /* Create the symbolic link to PhysicalDriveX */
-    PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\Harddisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
-    DriveLetterU.Length = swprintf(DriveLetterU.Buffer, L"\\??\\PhysicalDrive%d", DriveNumber) * sizeof(WCHAR);
+    if (DeviceInfo->DeviceType == FILE_DEVICE_DISK)
+    {
+        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\Harddisk%d\\Partition0", DeviceNumber) * sizeof(WCHAR);
+        DriveLetterU.Length = swprintf(DriveLetterU.Buffer, L"\\??\\PhysicalDrive%d", DriveNumber) * sizeof(WCHAR);
+    }
+    else if (DeviceInfo->DeviceType == FILE_DEVICE_CD_ROM)
+    {
+        PartitionU.Length = swprintf(PartitionU.Buffer, L"\\Device\\CdRom%d", DeviceNumber) * sizeof(WCHAR);
+        DriveLetterU.Length = swprintf(DriveLetterU.Buffer, L"\\??\\%C:", ('C' + DriveNumber)) * sizeof(WCHAR);
+    }
 
+    /* Create the symbolic link to PhysicalDriveX */
     Status = IoCreateSymbolicLink(&DriveLetterU, &PartitionU);
     if (!NT_SUCCESS(Status))
     {
         /* Failed to create symbolic link */
+        DbgPrint("Failed to create symbolic link %wZ -> %wZ with %lx\n", &PartitionU, &DriveLetterU, Status);
         return Status;
     }
 
     DbgPrint("HACK: Created symbolic link %wZ -> %wZ\n", &PartitionU, &DriveLetterU);
+
+    DeviceInfo->DeviceNumber = DeviceNumber;
+    DeviceInfo->DriveNumber = DriveNumber;
+
+    if (DeviceInfo->DeviceType == FILE_DEVICE_CD_ROM)
+    {
+        /* done for cdroms */
+        return STATUS_SUCCESS;
+    }
 
     while (TRUE)
     {
@@ -302,9 +336,6 @@ ScsiClassAssignDriveLetter(PCLASS_DEVICE_INFO DeviceInfo)
             PartitionNumber++;
         }
     }
-
-    DeviceInfo->DeviceNumber = DeviceNumber;
-    DeviceInfo->DriveNumber = DriveNumber;
 
     return STATUS_SUCCESS;
 }
@@ -361,7 +392,7 @@ ScsiClassAddDevice(
         Status = IoCreateDevice(DriverObject,
                                 sizeof(CLASS_DEVICE_INFO),
                                 NULL,
-                                FILE_DEVICE_DISK,
+                                DriverExtension->InitializationData.DeviceType,
                                 0,
                                 FALSE,
                                 &DeviceObject);
@@ -375,6 +406,7 @@ ScsiClassAddDevice(
 
         /* Attach it to the PDO */
         DeviceInfo->LowerDevice = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+        DeviceInfo->DeviceType = DriverExtension->InitializationData.DeviceType;
 
         /* Check that the kernel has already assigned drive letters */
         if (KeLoaderBlock == NULL)

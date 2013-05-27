@@ -317,6 +317,12 @@ C_ASSERT(sizeof(UFI_TEST_UNIT_CMD) == 12);
 
 #define UFI_TEST_UNIT_CMD_LEN (6)
 
+//-------------------------------------------------------------------------------------------------------------------------------------------
+typedef struct
+{
+    UCHAR Bytes[16];
+}UFI_UNKNOWN_CMD, *PUFI_UNKNOWN_CMD;
+
 typedef struct
 {
     union
@@ -385,7 +391,7 @@ USBSTOR_GetBusInterface(
 
 PVOID
 AllocateItem(
-    IN POOL_TYPE PoolType, 
+    IN POOL_TYPE PoolType,
     IN ULONG ItemSize);
 
 VOID
@@ -406,7 +412,7 @@ NTSTATUS
 NTAPI
 USBSTOR_SyncForwardIrpCompletionRoutine(
     PDEVICE_OBJECT DeviceObject,
-    PIRP Irp, 
+    PIRP Irp,
     PVOID Context);
 
 NTSTATUS
@@ -452,7 +458,7 @@ NTSTATUS
 NTAPI
 USBSTOR_CSWCompletionRoutine(
     PDEVICE_OBJECT DeviceObject,
-    PIRP Irp, 
+    PIRP Irp,
     PVOID Ctx);
 
 NTSTATUS
