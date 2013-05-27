@@ -8,6 +8,9 @@
 #include <regstr.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
+#undef WINVER
+#define WINVER _WIN32_WINNT_VISTA
+#include <newdev.h>
 #include <dll/devmgr/devmgr.h>
 
 #include "resource.h"

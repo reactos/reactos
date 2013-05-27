@@ -18,6 +18,7 @@ target_link_libraries(devmgr uuid wine)
 add_importlibs(devmgr
     setupapi
     advapi32
+    newdev
     user32
     version
     msvcrt

@@ -558,6 +558,56 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
                                        (ULONG_PTR)dap);
                         break;
                     }
+                    case IDC_UPDATEDRIVER:
+                    {
+                        if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+                        {
+                            BOOL NeedReboot;
+                            if (DiShowUpdateDevice(hwndDlg, dap->CurrentDeviceInfoSet, &dap->CurrentDeviceInfoData, 0, &NeedReboot))
+                            {
+                                if (NeedReboot)
+                                {                              
+                                    //FIXME: load text from resource file
+                                    if(MessageBoxW(hwndDlg, L"Reboot now?", L"Reboot required", MB_YESNO | MB_ICONQUESTION) == IDYES)
+                                    {
+                                        HANDLE hToken;
+                                        TOKEN_PRIVILEGES Privileges;
+
+                                        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+                                        {
+                                            DPRINT("OpenProcessToken failed\n");
+                                            break;
+                                        }
+
+                                        /* Get the LUID for the Shutdown privilege */
+                                        if (!LookupPrivilegeValueW(NULL, SE_SHUTDOWN_NAME, &Privileges.Privileges[0].Luid))
+                                        {
+                                            DPRINT("LookupPrivilegeValue failed\n");
+                                            break;
+                                        }
+
+                                        /* Assign the Shutdown privilege to our process */
+                                        Privileges.PrivilegeCount = 1;
+                                        Privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+                                        if (!AdjustTokenPrivileges(hToken, FALSE, &Privileges, 0, NULL, NULL))
+                                        {
+                                            DPRINT("AdjustTokenPrivileges failed\n");
+                                            break;
+                                        }
+
+                                        /* Finally shut down the system */
+                                        if(!ExitWindowsEx(EWX_POWEROFF, SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED))
+                                        {
+                                            DPRINT("ExitWindowsEx failed\n");
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
                 }
                 break;
             }
