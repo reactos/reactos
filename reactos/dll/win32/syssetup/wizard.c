@@ -709,7 +709,8 @@ ComputerPageDlgProc(HWND hwndDlg,
                         Password++;
                     }
 
-                    /* FIXME: Set admin password */
+                    /* Set admin password */
+                    SetAdministratorPassword(Password1);
                     break;
 
                 case PSN_WIZBACK:

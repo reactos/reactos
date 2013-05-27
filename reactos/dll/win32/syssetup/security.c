@@ -311,3 +311,106 @@ InstallSecurity(VOID)
     InstallBuiltinAccounts();
     InstallPrivileges();
 }
+
+
+NTSTATUS
+SetAdministratorPassword(LPCWSTR Password)
+{
+    PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
+    USER_SET_PASSWORD_INFORMATION PasswordInfo;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle = NULL;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE UserHandle = NULL;
+    NTSTATUS Status;
+
+    DPRINT1("SYSSETUP: SetAdministratorPassword(%S)\n", Password);
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION | POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("LsaOpenPolicy() failed (Status: 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)&OrigInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaQueryInformationPolicy() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamConnect(NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamConnect() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_LOOKUP,
+                           OrigInfo->DomainSid,
+                           &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenDomain() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamOpenUser(DomainHandle,
+                         USER_FORCE_PASSWORD_CHANGE,
+                         DOMAIN_USER_RID_ADMIN, /* 500 */
+                         &UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenUser() failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    RtlInitUnicodeString(&PasswordInfo.Password, Password);
+    PasswordInfo.PasswordExpired = FALSE;
+
+    Status = SamSetInformationUser(UserHandle,
+                                   UserSetPasswordInformation,
+                                   (PVOID)&PasswordInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamSetInformationUser() failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+done:
+    if (OrigInfo != NULL)
+        LsaFreeMemory(OrigInfo);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    DPRINT1("SYSSETUP: SetAdministratorPassword() done (Status %08lx)\n", Status);
+
+    return Status;
+}
+
+/* EOF */
+

@@ -67,6 +67,8 @@ BOOL RegisterTypeLibraries (HINF hinf, LPCWSTR szSection);
 NTSTATUS SetAccountDomain(LPCWSTR DomainName,
                           PSID DomainSid);
 VOID InstallSecurity(VOID);
+NTSTATUS
+SetAdministratorPassword(LPCWSTR Password);
 
 /* wizard.c */
 VOID InstallWizard (VOID);
