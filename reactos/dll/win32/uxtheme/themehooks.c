@@ -11,16 +11,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
-
-
-extern HINSTANCE hDllInst;
-
-LRESULT CALLBACK ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc);
-
 USERAPIHOOK user32ApiHook;
 BYTE gabDWPmessages[UAHOWP_MAX_SIZE];
 BYTE gabMSGPmessages[UAHOWP_MAX_SIZE];
-
+BOOL gbThemeHooksActive = FALSE;
 
 PWND_CONTEXT ThemeGetWndContext(HWND hWnd)
 {
@@ -266,13 +260,15 @@ int WINAPI ThemeSetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw)
 BOOL CALLBACK 
 ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
 {
-    /* Sanity checks for the caller */
     if (!puah || State != uahLoadInit)
     {
         UXTHEME_LoadTheme(FALSE);
         ThemeCleanupWndContext(NULL, 0);
+        gbThemeHooksActive = FALSE;
         return TRUE;
     }
+
+    gbThemeHooksActive = TRUE;
 
     /* Store the original functions from user32 */
     user32ApiHook = *puah;

@@ -81,6 +81,9 @@ HRESULT MSSTYLES_OpenThemeFile(LPCWSTR lpThemeFile, LPCWSTR pszColorName, LPCWST
     LPWSTR pszSelectedSize = NULL;
     LPWSTR tmp;
 
+    if (!gbThemeHooksActive)
+        return E_FAIL;
+
     TRACE("Opening %s\n", debugstr_w(lpThemeFile));
 
     hTheme = LoadLibraryExW(lpThemeFile, NULL, LOAD_LIBRARY_AS_DATAFILE);
@@ -168,6 +171,9 @@ HRESULT MSSTYLES_OpenThemeFile(LPCWSTR lpThemeFile, LPCWSTR pszColorName, LPCWST
     (*tf)->pszSelectedColor = pszSelectedColor;
     (*tf)->pszSelectedSize = pszSelectedSize;
     (*tf)->dwRefCount = 1;
+
+    TRACE("Theme %p refcount: %d\n", *tf, (*tf)->dwRefCount);
+
     return S_OK;
 
 invalid_theme:
@@ -183,7 +189,10 @@ invalid_theme:
 void MSSTYLES_CloseThemeFile(PTHEME_FILE tf)
 {
     if(tf) {
+
         tf->dwRefCount--;
+        TRACE("Theme %p refcount: %d\n", tf, tf->dwRefCount);
+
         if(!tf->dwRefCount) {
             if(tf->hTheme) FreeLibrary(tf->hTheme);
             if(tf->classes) {
@@ -218,6 +227,7 @@ void MSSTYLES_CloseThemeFile(PTHEME_FILE tf)
 HRESULT MSSTYLES_ReferenceTheme(PTHEME_FILE tf)
 {
     tf->dwRefCount++;
+    TRACE("Theme %p refcount: %d\n", tf, tf->dwRefCount);
     return S_OK;
 }
 
@@ -774,6 +784,7 @@ PTHEME_CLASS MSSTYLES_OpenThemeClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR
         TRACE("Opened app %s, class %s from list %s\n", debugstr_w(cls->szAppName), debugstr_w(cls->szClassName), debugstr_w(pszClassList));
 	cls->tf = tf;
 	cls->tf->dwRefCount++;
+    TRACE("Theme %p refcount: %d\n", tf, tf->dwRefCount);
     }
     return cls;
 }

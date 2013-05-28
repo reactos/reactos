@@ -199,14 +199,17 @@ enum SCROLL_HITTEST
 /* Minimum size of the rectangle between the arrows */
 #define SCROLL_MIN_RECT  4
 
+LRESULT CALLBACK ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc);
 void  ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT Bar, POINT* pt);
 VOID NC_TrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt);
 void ThemeInitDrawContext(PDRAW_CONTEXT pcontext, HWND hWnd, HRGN hRgn);
 void ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext);
 PWND_CONTEXT ThemeGetWndContext(HWND hWnd);
 
+extern HINSTANCE hDllInst;
 extern ATOM atWindowTheme;
 extern ATOM atWndContrext;
+extern BOOL gbThemeHooksActive;
 
 void UXTHEME_InitSystem(HINSTANCE hInst);
 void UXTHEME_LoadTheme(BOOL bLoad);
