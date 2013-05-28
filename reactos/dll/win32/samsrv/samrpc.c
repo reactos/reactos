@@ -7638,6 +7638,7 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     SAM_USER_FIXED_DATA FixedUserData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT UserObject;
+    UCHAR LogonHours[23];
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
@@ -7898,7 +7899,21 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* FIXME: Set LogonHours attribute*/
+    /* Set LogonHours attribute*/
+    *((PUSHORT)LogonHours) = 168;
+    memset(&(LogonHours[2]), 0xff, 21);
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LogonHours",
+                                    REG_BINARY,
+                                    &LogonHours,
+                                    sizeof(LogonHours));
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
     /* FIXME: Set Groups attribute*/
 
     /* Set LMPwd attribute*/
@@ -8088,6 +8103,7 @@ SamrGetDomainPasswordInformation(IN handle_t BindingHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 57 */
 NTSTATUS
 NTAPI
@@ -8095,8 +8111,11 @@ SamrConnect2(IN PSAMPR_SERVER_NAME ServerName,
              OUT SAMPR_HANDLE *ServerHandle,
              IN ACCESS_MASK DesiredAccess)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %p %lx)\n", ServerName, ServerHandle, DesiredAccess);
+
+    return SamrConnect(ServerName,
+                       ServerHandle,
+                       DesiredAccess);
 }
 
 
