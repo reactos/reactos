@@ -710,6 +710,8 @@ HRESULT WINAPI ExtractFilesA(LPCSTR CabName, LPCSTR ExpandDir, DWORD Flags,
     if (!hCabinet)
         return E_FAIL;
 
+    ZeroMemory(&session, sizeof(SESSION));
+
     pExtract = (void *)GetProcAddress(hCabinet, "Extract");
     if (!pExtract)
     {
@@ -717,7 +719,6 @@ HRESULT WINAPI ExtractFilesA(LPCSTR CabName, LPCSTR ExpandDir, DWORD Flags,
         goto done;
     }
 
-    ZeroMemory(&session, sizeof(SESSION));
     lstrcpyA(session.Destination, ExpandDir);
 
     if (FileList)
