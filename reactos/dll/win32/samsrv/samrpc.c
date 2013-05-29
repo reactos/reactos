@@ -2096,6 +2096,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     SAM_USER_FIXED_DATA FixedUserData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT UserObject;
+    GROUP_MEMBERSHIP GroupMembership;
     UCHAR LogonHours[23];
     ULONG ulSize;
     ULONG ulRid;
@@ -2365,7 +2366,22 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* FIXME: Set Groups attribute*/
+    /* Set Groups attribute*/
+    GroupMembership.RelativeId = DOMAIN_GROUP_RID_USERS;
+    GroupMembership.Attributes = SE_GROUP_MANDATORY |
+                                 SE_GROUP_ENABLED |
+                                 SE_GROUP_ENABLED_BY_DEFAULT;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Groups",
+                                    REG_BINARY,
+                                    &GroupMembership,
+                                    sizeof(GROUP_MEMBERSHIP));
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
 
     /* Set LMPwd attribute*/
     Status = SampSetObjectAttribute(UserObject,
@@ -7638,6 +7654,7 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     SAM_USER_FIXED_DATA FixedUserData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT UserObject;
+    GROUP_MEMBERSHIP GroupMembership;
     UCHAR LogonHours[23];
     ULONG ulSize;
     ULONG ulRid;
@@ -7914,7 +7931,22 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* FIXME: Set Groups attribute*/
+    /* Set Groups attribute*/
+    GroupMembership.RelativeId = DOMAIN_GROUP_RID_USERS;
+    GroupMembership.Attributes = SE_GROUP_MANDATORY |
+                                 SE_GROUP_ENABLED |
+                                 SE_GROUP_ENABLED_BY_DEFAULT;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Groups",
+                                    REG_BINARY,
+                                    &GroupMembership,
+                                    sizeof(GROUP_MEMBERSHIP));
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
 
     /* Set LMPwd attribute*/
     Status = SampSetObjectAttribute(UserObject,

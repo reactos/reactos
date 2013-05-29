@@ -168,6 +168,7 @@ SampSetupCreateUserAccount(HKEY hDomainKey,
                            ULONG UserAccountControl)
 {
     SAM_USER_FIXED_DATA FixedUserData;
+    GROUP_MEMBERSHIP GroupMembership;
     UCHAR LogonHours[23];
     LPWSTR lpEmptyString = L"";
     DWORD dwDisposition;
@@ -294,7 +295,18 @@ SampSetupCreateUserAccount(HKEY hDomainKey,
                       (LPVOID)LogonHours,
                       sizeof(LogonHours));
 
-        /* FIXME: Set Groups attribute*/
+        /* Set Groups attribute*/
+        GroupMembership.RelativeId = DOMAIN_GROUP_RID_USERS;
+        GroupMembership.Attributes = SE_GROUP_MANDATORY |
+                                     SE_GROUP_ENABLED |
+                                     SE_GROUP_ENABLED_BY_DEFAULT;
+
+        RegSetValueEx(hAccountKey,
+                      L"Groups",
+                      0,
+                      REG_BINARY,
+                      (LPVOID)&GroupMembership,
+                      sizeof(GROUP_MEMBERSHIP));
 
         /* Set LMPwd attribute*/
         RegSetValueEx(hAccountKey,
