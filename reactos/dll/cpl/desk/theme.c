@@ -573,6 +573,16 @@ LoadClassicColorSchemes(VOID)
                                    NULL, 
                                    0, 
                                    NULL);
+        if (Result != ERROR_SUCCESS)
+        {
+            Result = RegLoadMUIStringW(hkScheme, 
+                                       L"LegacyName", 
+                                       wstrDisplayName, 
+                                       sizeof(wstrDisplayName), 
+                                       NULL, 
+                                       0, 
+                                       NULL);
+        }
 
         if (Result == ERROR_SUCCESS)
             pCurrentStyle = CreateStyle(wstrStyleName, wstrDisplayName);
