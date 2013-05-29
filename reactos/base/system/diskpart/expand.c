@@ -8,13 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL expand_main(INT argc, WCHAR **argv)
+BOOL expand_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_expand(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_EXPAND);
 }

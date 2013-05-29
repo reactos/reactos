@@ -9,6 +9,7 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
+#define IDS_NONE                        -1
 #define IDS_APP_HEADER                  0
 #define IDS_APP_USAGE                   1
 #define IDS_APP_LICENSE                 2
@@ -16,24 +17,24 @@
 #define IDS_APP_LEAVING                 4
 #define IDS_APP_PROMPT                  5
 
-#define IDS_DETAIL_INFO_DISK_ID         6
-#define IDS_DETAIL_INFO_TYPE            7
-#define IDS_DETAIL_INFO_STATUS          8
-#define IDS_DETAIL_INFO_PATH            9
-#define IDS_DETAIL_INFO_TARGET          10
-#define IDS_DETAIL_INFO_LUN_ID          11
-#define IDS_DETAIL_INFO_LOC_PATH        12
-#define IDS_DETAIL_INFO_CURR_RO_STATE   13
-#define IDS_DETAIL_INFO_RO              14
-#define IDS_DETAIL_INFO_BOOT_DSK        15
-#define IDS_DETAIL_INFO_PAGE_FILE_DSK   16
-#define IDS_DETAIL_INFO_HIBER_FILE_DSK  17
-#define IDS_DETAIL_INFO_CRASH_DSK       18
-#define IDS_DETAIL_INFO_CLST_DSK        19
+#define IDS_DETAIL_INFO_DISK_ID         7
+#define IDS_DETAIL_INFO_TYPE            8
+#define IDS_DETAIL_INFO_STATUS          9
+#define IDS_DETAIL_INFO_PATH            10
+#define IDS_DETAIL_INFO_TARGET          11
+#define IDS_DETAIL_INFO_LUN_ID          12
+#define IDS_DETAIL_INFO_LOC_PATH        13
+#define IDS_DETAIL_INFO_CURR_RO_STATE   14
+#define IDS_DETAIL_INFO_RO              15
+#define IDS_DETAIL_INFO_BOOT_DSK        16
+#define IDS_DETAIL_INFO_PAGE_FILE_DSK   17
+#define IDS_DETAIL_INFO_HIBER_FILE_DSK  18
+#define IDS_DETAIL_INFO_CRASH_DSK       19
+#define IDS_DETAIL_INFO_CLST_DSK        20
 
-#define IDS_LIST_DISK_HEAD              20
-#define IDS_LIST_DISK_LINE              21
-#define IDS_LIST_VOLUME_HEAD            22
+#define IDS_LIST_DISK_HEAD              21
+#define IDS_LIST_DISK_LINE              22
+#define IDS_LIST_VOLUME_HEAD            23
 
 #define IDS_STATUS_YES                  31
 #define IDS_STATUS_NO                   32

@@ -8,17 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL compact_main(INT argc, WCHAR **argv)
+BOOL compact_main(INT argc, LPWSTR *argv)
 {
     return 0;
-}
-
-
-/*
- * help_compact():
- * Shows the description and explains each argument type of the compact command
- */
-VOID help_compact(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_COMPACT);
 }

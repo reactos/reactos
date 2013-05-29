@@ -32,42 +32,26 @@ static VOID list_vdisk(VOID)
     printf("List VDisk!!\n");
 }
 
-BOOL list_main(INT argc, WCHAR **argv)
+BOOL list_main(INT argc, LPWSTR *argv)
 {
     /* gets the first word from the string */
     if (argc == 1)
     {
-        help_list(0, NULL);
+        PrintResourceString(IDS_HELP_CMD_LIST);
         return TRUE;
     }
 
     /* determines which to list (disk, partition, etc.) */
     if(!wcsicmp(argv[1], L"disk"))
-    {
         list_disk();
-    }
     else if(!wcsicmp(argv[1], L"partition"))
-    {
         list_partition();
-    }
     else if(!wcsicmp(argv[1], L"volume"))
-    {
         list_volume();
-    }
     else if(!wcsicmp(argv[1], L"vdisk"))
-    {
         list_vdisk();
-    }
     else
-    {
-        help_list(0, NULL);
-    }
+        PrintResourceString(IDS_HELP_CMD_LIST);
 
     return TRUE;
-}
-
-
-VOID help_list(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_LIST);
 }

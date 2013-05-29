@@ -13,7 +13,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 /* Basic application information */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_HEADER, "\nReactOS DiskPart\n"
+    IDS_APP_HEADER, "ReactOS DiskPart"
     IDS_APP_USAGE, "\nDisk Partitioning Interpreter.\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /S filename\tRuns the given script.\n\
@@ -196,11 +196,25 @@ BEGIN
 <Add convert command help text here>\n\n"
 END
 
+/* Convert help description */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HELP_CMD_CREATE "\n\
+<Add create command help text here>\n\n"
+END
+
 /* Delete help description */
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_HELP_CMD_DELETE "\n\
 <Add delete command help text here>\n\n"
+END
+
+/* Delete help description */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HELP_CMD_DETAIL "\n\
+<Add detail command help text here>\n\n"
 END
 
 /* Detach help description */

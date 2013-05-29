@@ -8,12 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL import_main(INT argc, WCHAR **argv)
+BOOL import_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-VOID help_import(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_IMPORT);
 }

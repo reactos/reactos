@@ -8,13 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL retain_main(INT argc, WCHAR **argv)
+BOOL retain_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_retain(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_RETAIN);
 }

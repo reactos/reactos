@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
+#include <wincon.h>
 #include <winuser.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,9 +26,10 @@
 
 typedef struct _COMMAND
 {
-    WCHAR *name;
+    LPWSTR name;
     BOOL (*func)(INT, WCHAR**);
-    VOID (*help)(INT, WCHAR**);
+    INT help;
+    INT help_desc;
 } COMMAND, *PCOMMAND;
 
 extern COMMAND cmds[];
@@ -40,165 +42,126 @@ extern COMMAND cmds[];
 #define ERROR_SERVICE   4
 #define ERROR_SYNTAX    5
 
-#define DISKPART_VERSION     L"0.0.019"
-
 #define MAX_STRING_SIZE 1024
 #define MAX_ARGS_COUNT 256
 
 /* PROTOTYPES *****************************************************************/
 
 /* active.c */
-BOOL active_main(INT argc, WCHAR **argv);
-VOID help_active(INT argc, WCHAR **argv);
+BOOL active_main(INT argc, LPWSTR *argv);
 
 /* add.c */
-BOOL add_main(INT argc, WCHAR **argv);
-VOID help_add(INT argc, WCHAR **argv);
+BOOL add_main(INT argc, LPWSTR *argv);
 
 /* assign.c */
-BOOL assign_main(INT argc, WCHAR **argv);
-VOID help_assign(INT argc, WCHAR **argv);
+BOOL assign_main(INT argc, LPWSTR *argv);
 
 /* attach.c */
-BOOL attach_main(INT argc, WCHAR **argv);
-VOID help_attach(INT argc, WCHAR **argv);
+BOOL attach_main(INT argc, LPWSTR *argv);
 
 /* attributes.h */
-VOID help_attributes(INT argc, WCHAR **argv);
-BOOL attributes_main(INT argc, WCHAR **argv);
+BOOL attributes_main(INT argc, LPWSTR *argv);
 
 /* automount.c */
-BOOL automount_main(INT argc, WCHAR **argv);
-VOID help_automount(INT argc, WCHAR **argv);
+BOOL automount_main(INT argc, LPWSTR *argv);
 
 /* break.c */
-BOOL break_main(INT argc, WCHAR **argv);
-VOID help_break(INT argc, WCHAR **argv);
+BOOL break_main(INT argc, LPWSTR *argv);
 
 /* clean.c */
-BOOL clean_main(INT argc, WCHAR **argv);
-VOID help_clean(INT argc, WCHAR **argv);
+BOOL clean_main(INT argc, LPWSTR *argv);
 
 /* compact.c */
-BOOL compact_main(INT argc, WCHAR **argv);
-VOID help_compact(INT argc, WCHAR **argv);
+BOOL compact_main(INT argc, LPWSTR *argv);
 
 /* convert.c */
-BOOL convert_main(INT argc, WCHAR **argv);
-VOID help_convert(INT argc, WCHAR **argv);
+BOOL convert_main(INT argc, LPWSTR *argv);
 
 /* create.c */
-BOOL create_main(INT argc, WCHAR **argv);
-VOID help_create(INT argc, WCHAR **argv);
+BOOL create_main(INT argc, LPWSTR *argv);
 
 /* delete.c */
-BOOL delete_main(INT argc, WCHAR **argv);
-VOID help_delete(INT argc, WCHAR **argv);
+BOOL delete_main(INT argc, LPWSTR *argv);
 
 /* detach.c */
-BOOL detach_main(INT argc, WCHAR **argv);
-VOID help_detach(INT argc, WCHAR **argv);
+BOOL detach_main(INT argc, LPWSTR *argv);
 
 /* detail.c */
-BOOL detail_main(INT argc, WCHAR **argv);
-VOID help_detail(INT argc, WCHAR **argv);
+BOOL detail_main(INT argc, LPWSTR *argv);
 
 /* diskpart.c */
 VOID PrintResourceString(INT resID, ...);
 
 /* expand.c */
-BOOL expand_main(INT argc, WCHAR **argv);
-VOID help_expand(INT argc, WCHAR **argv);
+BOOL expand_main(INT argc, LPWSTR *argv);
 
 /* extend.c */
-BOOL extend_main(INT argc, WCHAR **argv);
-VOID help_extend(INT argc, WCHAR **argv);
+BOOL extend_main(INT argc, LPWSTR *argv);
 
 /* filesystem.c */
-BOOL filesystems_main(INT argc, WCHAR **argv);
-VOID help_filesystems(INT argc, WCHAR **argv);
+BOOL filesystems_main(INT argc, LPWSTR *argv);
 
 /* format.c */
-BOOL format_main(INT argc, WCHAR **argv);
-VOID help_format(INT argc, WCHAR **argv);
+BOOL format_main(INT argc, LPWSTR *argv);
 
 /* gpt.c */
-BOOL gpt_main(INT argc, WCHAR **argv);
-VOID help_gpt(INT argc, WCHAR **argv);
+BOOL gpt_main(INT argc, LPWSTR *argv);
 
 /* help.c */
-BOOL help_main(INT argc, WCHAR **argv);
-VOID help_help(INT argc, WCHAR **argv);
+BOOL help_main(INT argc, LPWSTR *argv);
 VOID help_cmdlist(VOID);
-VOID help_print_noerr(VOID);
 
 /* import. c */
-BOOL import_main(INT argc, WCHAR **argv);
-VOID help_import(INT argc, WCHAR **argv);
+BOOL import_main(INT argc, LPWSTR *argv);
 
 /* inactive.c */
-BOOL inactive_main(INT argc, WCHAR **argv);
-VOID help_inactive(INT argc, WCHAR **argv);
+BOOL inactive_main(INT argc, LPWSTR *argv);
 
 /* interpreter.c */
-BOOL InterpretScript(WCHAR *line);
-BOOL InterpretCmd(INT argc, WCHAR **argv);
+BOOL InterpretScript(LPWSTR line);
+BOOL InterpretCmd(INT argc, LPWSTR *argv);
 VOID InterpretMain(VOID);
 
 /* list.c */
-BOOL list_main(INT argc, WCHAR **argv);
-VOID help_list(INT argc, WCHAR **argv);
+BOOL list_main(INT argc, LPWSTR *argv);
 
 /* merge.c */
-BOOL merge_main(INT argc, WCHAR **argv);
-VOID help_merge(INT argc, WCHAR **argv);
+BOOL merge_main(INT argc, LPWSTR *argv);
 
 /* offline.c */
-BOOL offline_main(INT argc, WCHAR **argv);
-VOID help_offline(INT argc, WCHAR **argv);
+BOOL offline_main(INT argc, LPWSTR *argv);
 
 /* online.c */
-BOOL online_main(INT argc, WCHAR **argv);
-VOID help_online(INT argc, WCHAR **argv);
+BOOL online_main(INT argc, LPWSTR *argv);
 
 /* recover.c */
-BOOL recover_main(INT argc, WCHAR **argv);
-VOID help_recover(INT argc, WCHAR **argv);
+BOOL recover_main(INT argc, LPWSTR *argv);
 
 /* remove.c */
-BOOL remove_main(INT argc, WCHAR **argv);
-VOID help_remove(INT argc, WCHAR **argv);
+BOOL remove_main(INT argc, LPWSTR *argv);
 
 /* repair.c */
-BOOL repair_main(INT argc, WCHAR **argv);
-VOID help_repair(INT argc, WCHAR **argv);
+BOOL repair_main(INT argc, LPWSTR *argv);
 
 /* rescan.c */
-BOOL rescan_main(INT argc, WCHAR **argv);
-VOID help_rescan(INT argc, WCHAR **argv);
+BOOL rescan_main(INT argc, LPWSTR *argv);
 
 /* retain.c */
-BOOL retain_main(INT argc, WCHAR **argv);
-VOID help_retain(INT argc, WCHAR **argv);
+BOOL retain_main(INT argc, LPWSTR *argv);
 
 /* san.c */
-BOOL san_main(INT argc, WCHAR **argv);
-VOID help_san(INT argc, WCHAR **argv);
+BOOL san_main(INT argc, LPWSTR *argv);
 
 /* select.c */
-BOOL select_main(INT argc, WCHAR **argv);
-VOID help_select(INT argc, WCHAR **argv);
+BOOL select_main(INT argc, LPWSTR *argv);
 
 /* setid.c */
-BOOL setid_main(INT argc, WCHAR **argv);
-VOID help_setid(INT argc, WCHAR **argv);
+BOOL setid_main(INT argc, LPWSTR *argv);
 
 /* shrink.c */
-BOOL shrink_main(INT argc, WCHAR **argv);
-VOID help_shrink(INT argc, WCHAR **argv);
+BOOL shrink_main(INT argc, LPWSTR *argv);
 
 /* uniqueid.c */
-BOOL uniqueid_main(INT argc, WCHAR **argv);
-VOID help_uniqueid(INT argc, WCHAR **argv);
+BOOL uniqueid_main(INT argc, LPWSTR *argv);
 
 #endif /* DISKPART_H */

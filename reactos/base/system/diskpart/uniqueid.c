@@ -8,13 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL uniqueid_main(INT argc, WCHAR **argv)
+BOOL uniqueid_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_uniqueid(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_UNIQUEID);
 }

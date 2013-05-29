@@ -8,13 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL inactive_main(INT argc, WCHAR **argv)
+BOOL inactive_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_inactive(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_INACTIVE);
 }

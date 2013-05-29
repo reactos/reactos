@@ -41,7 +41,7 @@ add_executable(diskpart
 	diskpart.rc)
 
 set_module_type(diskpart win32cui UNICODE)
-add_importlibs(diskpart user32 msvcrt kernel32)
+add_importlibs(diskpart user32 msvcrt advapi32 kernel32)
 if(MSVC)
 	add_importlibs(diskpart ntdll)
 endif()

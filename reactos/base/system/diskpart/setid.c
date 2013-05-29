@@ -8,13 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL setid_main(INT argc, WCHAR **argv)
+BOOL setid_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_setid(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_SETID);
 }

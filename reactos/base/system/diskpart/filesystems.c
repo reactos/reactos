@@ -8,13 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL filesystems_main(INT argc, WCHAR **argv)
+BOOL filesystems_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_filesystems(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_FILESYSTEMS);
 }

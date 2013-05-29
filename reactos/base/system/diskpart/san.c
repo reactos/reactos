@@ -8,13 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL san_main(INT argc, WCHAR **argv)
+BOOL san_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_san(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_SAN);
 }

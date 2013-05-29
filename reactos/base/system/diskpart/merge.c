@@ -8,13 +8,7 @@
  */
 #include "diskpart.h"
 
-BOOL merge_main(INT argc, WCHAR **argv)
+BOOL merge_main(INT argc, LPWSTR *argv)
 {
     return TRUE;
-}
-
-
-VOID help_merge(INT argc, WCHAR **argv)
-{
-    PrintResourceString(IDS_HELP_CMD_MERGE);
 }

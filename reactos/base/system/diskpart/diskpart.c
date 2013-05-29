@@ -11,7 +11,6 @@
 #include "diskpart.h"
 
 /* FUNCTIONS ******************************************************************/
-
 VOID
 PrintResourceString(INT resID, ...)
 {
@@ -37,7 +36,9 @@ ShowHeader(VOID)
     wprintf(L"\n*WARNING*: This program is incomplete and may not work properly.\n");
 
     /* Print the header information */
+    wprintf(L"\n");
     PrintResourceString(IDS_APP_HEADER);
+    wprintf(L"\n");
     PrintResourceString(IDS_APP_LICENSE);
     PrintResourceString(IDS_APP_CURR_COMPUTER, szComputerName);
 }
@@ -79,14 +80,21 @@ RunScript(LPCWSTR filename)
  * wmain():
  * Main entry point of the application.
  */
-int wmain(int argc, const WCHAR *argv[])
+int wmain(int argc, const LPWSTR argv[])
 {
     LPCWSTR script = NULL;
     LPCWSTR tmpBuffer = NULL;
+    WCHAR appTitle[50];
     int index, timeout;
 
+    /* Sets the title of the program so the user will have an easier time
+    determining the current program, especially if diskpart is running a
+    script */
+    LoadStringW(GetModuleHandle(NULL), IDS_APP_HEADER, (LPWSTR)appTitle, 50);
+    SetConsoleTitleW(appTitle);
+    
     /* Sets the timeout value to 0 just in case the user doesn't
-    specify a value. */
+    specify a value */
     timeout = 0;
 
     /* If there are no command arguments, then go straight to the interpreter */
