@@ -46,7 +46,7 @@ IntCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
         Size = MultiByteToWideChar(CP_ACP, 0, String, Size, RequestString->Buffer, Size * sizeof(WCHAR))
                * sizeof(WCHAR);
     }
-    RequestString->Length = RequestString->MaximumLength = Size;
+    RequestString->Length = RequestString->MaximumLength = (USHORT)Size;
 }
 
 

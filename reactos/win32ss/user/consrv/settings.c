@@ -274,11 +274,6 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
             ConsoleInfo->HistoryNoDup = (BOOLEAN)Value;
             RetVal = TRUE;
         }
-        else if (!wcscmp(szValueName, L"FullScreen"))
-        {
-            ConsoleInfo->FullScreen = Value;
-            RetVal = TRUE;
-        }
         else if (!wcscmp(szValueName, L"QuickEdit"))
         {
             ConsoleInfo->QuickEdit = (BOOLEAN)Value;
@@ -370,9 +365,6 @@ do {                                                                            
     Storage = ConsoleInfo->HistoryNoDup;
     SetConsoleSetting(L"HistoryNoDup", REG_DWORD, sizeof(DWORD), &Storage, FALSE);
 
-    Storage = ConsoleInfo->FullScreen;
-    SetConsoleSetting(L"FullScreen", REG_DWORD, sizeof(DWORD), &Storage, FALSE);
-
     Storage = ConsoleInfo->QuickEdit;
     SetConsoleSetting(L"QuickEdit", REG_DWORD, sizeof(DWORD), &Storage, FALSE);
 
@@ -414,10 +406,11 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
     ConsoleInfo->NumberOfHistoryBuffers = 4;
     ConsoleInfo->HistoryNoDup = FALSE;
 
-    ConsoleInfo->FullScreen = FALSE;
     ConsoleInfo->QuickEdit  = FALSE;
     ConsoleInfo->InsertMode = TRUE;
     // ConsoleInfo->InputBufferSize;
+
+    // Rule: ScreenBufferSize >= ConsoleSize
     ConsoleInfo->ScreenBufferSize.X = 80;
     ConsoleInfo->ScreenBufferSize.Y = 300;
     ConsoleInfo->ConsoleSize.X = 80;
@@ -452,17 +445,6 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
                         IN PCONSOLE_INFO ConsoleInfo)
 {
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
-    COORD BufSize;
-    BOOL SizeChanged = FALSE;
-
-    /*
-     * Apply full-screen mode.
-     */
-    if (ConsoleInfo->FullScreen)
-        Console->ActiveBuffer->DisplayMode |= CONSOLE_FULLSCREEN_MODE;
-    else
-        Console->ActiveBuffer->DisplayMode &= ~CONSOLE_FULLSCREEN_MODE;
-    // TODO: Apply it really
 
     /*
      * Apply terminal-edition settings:
@@ -476,9 +458,19 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
      * Apply foreground and background colors for both screen and popup
      * and copy the new palette.
      */
-    ActiveBuffer->ScreenDefaultAttrib = ConsoleInfo->ScreenAttrib;
-    ActiveBuffer->PopupDefaultAttrib  = ConsoleInfo->PopupAttrib;
-    memcpy(Console->Colors, ConsoleInfo->Colors, sizeof(s_Colors)); // FIXME: Possible buffer overflow if s_colors is bigger than pConInfo->Colors.
+    if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
+    {
+        PTEXTMODE_SCREEN_BUFFER Buffer = (PTEXTMODE_SCREEN_BUFFER)ActiveBuffer;
+
+        Buffer->ScreenDefaultAttrib = ConsoleInfo->ScreenAttrib;
+        Buffer->PopupDefaultAttrib  = ConsoleInfo->PopupAttrib;
+    }
+    else // if (Console->ActiveBuffer->Header.Type == GRAPHICS_BUFFER)
+    {
+    }
+
+    // FIXME: Possible buffer overflow if s_colors is bigger than pConInfo->Colors.
+    memcpy(Console->Colors, ConsoleInfo->Colors, sizeof(s_Colors));
 
     // TODO: Really update the screen attributes as FillConsoleOutputAttribute does.
 
@@ -486,24 +478,99 @@ ConSrvApplyUserSettings(IN PCONSOLE Console,
     ActiveBuffer->CursorInfo.bVisible = (ConsoleInfo->CursorSize != 0);
     ActiveBuffer->CursorInfo.dwSize   = min(max(ConsoleInfo->CursorSize, 0), 100);
 
-    /* Resize the console */
-    if (ConsoleInfo->ConsoleSize.X != Console->ConsoleSize.X ||
-        ConsoleInfo->ConsoleSize.Y != Console->ConsoleSize.Y)
+    if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
     {
-        Console->ConsoleSize = ConsoleInfo->ConsoleSize;
-        SizeChanged = TRUE;
-    }
+        PTEXTMODE_SCREEN_BUFFER Buffer = (PTEXTMODE_SCREEN_BUFFER)ActiveBuffer;
+        COORD BufSize;
 
-    /* Resize its active screen-buffer */
-    BufSize = ConsoleInfo->ScreenBufferSize;
-    if (BufSize.X != ActiveBuffer->ScreenBufferSize.X ||
-        BufSize.Y != ActiveBuffer->ScreenBufferSize.Y)
+        /* Resize its active screen-buffer */
+        BufSize = ConsoleInfo->ScreenBufferSize;
+
+        if (Console->FixedSize)
+        {
+            /*
+             * The console is in fixed-size mode, so we cannot resize anything
+             * at the moment. However, keep those settings somewhere so that
+             * we can try to set them up when we will be allowed to do so.
+             */
+            if (ConsoleInfo->ConsoleSize.X != Buffer->OldViewSize.X ||
+                ConsoleInfo->ConsoleSize.Y != Buffer->OldViewSize.Y)
+            {
+                Buffer->OldViewSize = ConsoleInfo->ConsoleSize;
+            }
+
+            /* Buffer size is not allowed to be smaller than the view size */
+            if (BufSize.X >= Buffer->OldViewSize.X && BufSize.Y >= Buffer->OldViewSize.Y)
+            {
+                if (BufSize.X != Buffer->OldScreenBufferSize.X ||
+                    BufSize.Y != Buffer->OldScreenBufferSize.Y)
+                {
+                    /*
+                     * The console is in fixed-size mode, so we cannot resize anything
+                     * at the moment. However, keep those settings somewhere so that
+                     * we can try to set them up when we will be allowed to do so.
+                     */
+                    Buffer->OldScreenBufferSize = BufSize;
+                }
+            }
+        }
+        else
+        {
+            BOOL SizeChanged = FALSE;
+
+            /* Resize the console */
+            if (ConsoleInfo->ConsoleSize.X != Buffer->ViewSize.X ||
+                ConsoleInfo->ConsoleSize.Y != Buffer->ViewSize.Y)
+            {
+                Buffer->ViewSize = ConsoleInfo->ConsoleSize;
+                SizeChanged = TRUE;
+            }
+
+            /* Resize the screen-buffer */
+            if (BufSize.X != Buffer->ScreenBufferSize.X ||
+                BufSize.Y != Buffer->ScreenBufferSize.Y)
+            {
+                if (NT_SUCCESS(ConioResizeBuffer(Console, Buffer, BufSize)))
+                    SizeChanged = TRUE;
+            }
+
+            if (SizeChanged) ConioResizeTerminal(Console);
+        }
+    }
+    else // if (GetType(ActiveBuffer) == GRAPHICS_BUFFER)
     {
-        if (NT_SUCCESS(ConioResizeBuffer(Console, ActiveBuffer, BufSize)))
-            SizeChanged = TRUE;
-    }
+        PGRAPHICS_SCREEN_BUFFER Buffer = (PGRAPHICS_SCREEN_BUFFER)ActiveBuffer;
 
-    if (SizeChanged) ConioResizeTerminal(Console);
+        /*
+         * In any case we do NOT modify the size of the graphics screen-buffer.
+         * We just allow resizing the view only if the new size is smaller
+         * than the older one.
+         */
+
+        if (Console->FixedSize)
+        {
+            /*
+             * The console is in fixed-size mode, so we cannot resize anything
+             * at the moment. However, keep those settings somewhere so that
+             * we can try to set them up when we will be allowed to do so.
+             */
+            if (ConsoleInfo->ConsoleSize.X <= Buffer->ViewSize.X ||
+                ConsoleInfo->ConsoleSize.Y <= Buffer->ViewSize.Y)
+            {
+                Buffer->OldViewSize = ConsoleInfo->ConsoleSize;
+            }
+        }
+        else
+        {
+            /* Resize the view if its size is bigger than the specified size */
+            if (ConsoleInfo->ConsoleSize.X <= Buffer->ViewSize.X ||
+                ConsoleInfo->ConsoleSize.Y <= Buffer->ViewSize.Y)
+            {
+                Buffer->ViewSize = ConsoleInfo->ConsoleSize;
+                // SizeChanged = TRUE;
+            }
+        }
+    }
 }
 
 /* EOF */

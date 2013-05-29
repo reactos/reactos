@@ -82,7 +82,7 @@ ConioProcessInputEvent(PCONSOLE Console,
             if (Console->InputBuffer.Mode & ENABLE_LINE_INPUT &&
                 (vk == VK_PAUSE || (vk == 'S' &&
                                     (cks & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) &&
-                                    !(cks & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)))))
+                                   !(cks & (LEFT_ALT_PRESSED  | RIGHT_ALT_PRESSED)))))
             {
                 ConioPause(Console, PAUSED_FROM_KEYBOARD);
                 return STATUS_SUCCESS;
@@ -101,8 +101,8 @@ ConioProcessInputEvent(PCONSOLE Console,
 
     /* add event to the queue */
     ConInRec = ConsoleAllocHeap(0, sizeof(ConsoleInput));
-    if (ConInRec == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
+    if (ConInRec == NULL) return STATUS_INSUFFICIENT_RESOURCES;
+
     ConInRec->InputEvent = *InputEvent;
     InsertTailList(&Console->InputBuffer.InputEvents, &ConInRec->ListEntry);
 
@@ -178,7 +178,6 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
      * or translated keys may be involved. */
     static UINT LastVirtualKey = 0;
     DWORD ShiftState;
-    UINT RepeatCount;
     WCHAR UnicodeChar;
     UINT VirtualKeyCode;
     UINT VirtualScanCode;
@@ -193,8 +192,7 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
         return;
     }
 
-    RepeatCount = 1;
-    VirtualScanCode = (msg->lParam >> 16) & 0xff;
+    VirtualScanCode = HIWORD(msg->lParam) & 0xFF;
     Down = msg->message == WM_KEYDOWN || msg->message == WM_CHAR ||
            msg->message == WM_SYSKEYDOWN || msg->message == WM_SYSCHAR;
 
@@ -218,17 +216,17 @@ ConioProcessKey(PCONSOLE Console, MSG* msg)
                                Chars,
                                2,
                                0,
-                               0);
+                               NULL);
         UnicodeChar = (1 == RetChars ? Chars[0] : 0);
     }
 
     er.EventType = KEY_EVENT;
     er.Event.KeyEvent.bKeyDown = Down;
-    er.Event.KeyEvent.wRepeatCount = RepeatCount;
-    er.Event.KeyEvent.uChar.UnicodeChar = UnicodeChar;
-    er.Event.KeyEvent.dwControlKeyState = ShiftState;
+    er.Event.KeyEvent.wRepeatCount = 1;
     er.Event.KeyEvent.wVirtualKeyCode = VirtualKeyCode;
     er.Event.KeyEvent.wVirtualScanCode = VirtualScanCode;
+    er.Event.KeyEvent.uChar.UnicodeChar = UnicodeChar;
+    er.Event.KeyEvent.dwControlKeyState = ShiftState;
 
     if (ConioProcessKeyCallback(Console,
                                 msg,

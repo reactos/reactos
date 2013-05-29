@@ -24,6 +24,7 @@
 #include <wincon.h>
 #include <winuser.h>
 #define NTOS_MODE_USER
+#include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>

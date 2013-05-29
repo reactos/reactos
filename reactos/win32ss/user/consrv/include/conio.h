@@ -20,8 +20,11 @@
 /* Object type magic numbers */
 typedef enum _CONSOLE_IO_OBJECT_TYPE
 {
-    INPUT_BUFFER  = 0x01,   // -->  Input-type handles
-    SCREEN_BUFFER = 0x02    // --> Output-type handles
+//  ANY_TYPE_BUFFER = 0x00, // --> Match any types of IO handles
+    TEXTMODE_BUFFER = 0x01, // --> Output-type handles for text SBs
+    GRAPHICS_BUFFER = 0x02, // --> Output-type handles for graphics SBs
+    SCREEN_BUFFER   = 0x03, // --> Any SB type
+    INPUT_BUFFER    = 0x04  // --> Input-type handles
 } CONSOLE_IO_OBJECT_TYPE;
 
 typedef struct _CONSOLE_IO_OBJECT
@@ -32,6 +35,69 @@ typedef struct _CONSOLE_IO_OBJECT
     LONG ExclusiveRead, ExclusiveWrite;
     LONG HandleCount;
 } CONSOLE_IO_OBJECT, *PCONSOLE_IO_OBJECT;
+
+
+/******************************************************************************\
+|*                                                                            *|
+|*     Abstract "class" for screen-buffers, be they text-mode or graphics     *|
+|*                                                                            *|
+\******************************************************************************/
+
+/*
+ * See conoutput.c for the implementation
+ */
+
+typedef struct _CONSOLE_SCREEN_BUFFER CONSOLE_SCREEN_BUFFER,
+                                    *PCONSOLE_SCREEN_BUFFER;
+
+typedef struct _CONSOLE_SCREEN_BUFFER_VTBL
+{
+    CONSOLE_IO_OBJECT_TYPE (*GetType)(PCONSOLE_SCREEN_BUFFER This);
+} CONSOLE_SCREEN_BUFFER_VTBL, *PCONSOLE_SCREEN_BUFFER_VTBL;
+
+#define GetType(This)   (This)->Vtbl->GetType(This)
+
+struct _CONSOLE_SCREEN_BUFFER
+{
+    CONSOLE_IO_OBJECT Header;           /* Object header - MUST BE IN FIRST PLACE */
+    PCONSOLE_SCREEN_BUFFER_VTBL Vtbl;   /* Virtual table */
+
+    LIST_ENTRY ListEntry;               /* Entry in console's list of buffers */
+
+    COORD   ScreenBufferSize;           /* Size of this screen buffer. (Rows, Columns) for text-mode and (Width, Height) for graphics */
+    COORD   ViewSize;                   /* Associated "view" (i.e. console) size */
+
+    COORD   OldScreenBufferSize;        /* Old size of this screen buffer */
+    COORD   OldViewSize;                /* Old associated view size */
+
+    COORD  ViewOrigin;                  /* Beginning offset for the actual display area */
+
+/***** Put that VV in TEXTMODE_SCREEN_BUFFER ?? *****/
+    USHORT  VirtualY;                   /* Top row of buffer being displayed, reported to callers */
+
+    COORD   CursorPosition;             /* Current cursor position */
+    BOOLEAN CursorBlinkOn;
+    BOOLEAN ForceCursorOff;
+//  ULONG   CursorSize;
+    CONSOLE_CURSOR_INFO CursorInfo; // FIXME: Keep this member or not ??
+/*********************************************/
+
+//  WORD   ScreenDefaultAttrib;         /* Default screen char attribute */
+//  WORD   PopupDefaultAttrib;          /* Default popup char attribute */
+    USHORT Mode;                        /* Output buffer modes */
+};
+
+
+
+/******************************************************************************\
+|*                                                                            *|
+|*           Text-mode and graphics-mode screen-buffer "classes"              *|
+|*                                                                            *|
+\******************************************************************************/
+
+/*
+ * See text.c for the implementation
+ */
 
 /************************************************************************
  * Screen buffer structure represents the win32 screen buffer object.   *
@@ -49,40 +115,62 @@ typedef struct _CONSOLE_IO_OBJECT
  * internally, I just wrap back to the top of the buffer.               *
  ************************************************************************/
 
-typedef struct _CONSOLE_SCREEN_BUFFER
+typedef struct _TEXTMODE_BUFFER_INFO
 {
-    CONSOLE_IO_OBJECT Header;       /* Object header */
-    LIST_ENTRY ListEntry;           /* Entry in console's list of buffers */
+    COORD   ScreenBufferSize;
+    USHORT  ScreenAttrib;
+    USHORT  PopupAttrib;
+    BOOLEAN IsCursorVisible;
+    ULONG   CursorSize;
+} TEXTMODE_BUFFER_INFO, *PTEXTMODE_BUFFER_INFO;
+
+typedef struct _TEXTMODE_SCREEN_BUFFER
+{
+    CONSOLE_SCREEN_BUFFER;          /* Screen buffer base class - MUST BE IN FIRST PLACE */
 
     BYTE *Buffer; /* CHAR_INFO */   /* Pointer to screen buffer */
 
-    COORD ScreenBufferSize;         /* Size of this screen buffer */
-    COORD CursorPosition;           /* Current cursor position */
-
-    USHORT ShowX, ShowY;            /* Beginning offset for the actual display area */
-    USHORT VirtualY;                /* Top row of buffer being displayed, reported to callers */
-
-    BOOLEAN CursorBlinkOn;
-    BOOLEAN ForceCursorOff;
-    // ULONG   CursorSize;
-    CONSOLE_CURSOR_INFO CursorInfo; // FIXME: Keep this member or not ??
-
     WORD ScreenDefaultAttrib;       /* Default screen char attribute */
     WORD PopupDefaultAttrib;        /* Default popup char attribute */
-    USHORT Mode;
-    ULONG  DisplayMode;
-} CONSOLE_SCREEN_BUFFER, *PCONSOLE_SCREEN_BUFFER;
+} TEXTMODE_SCREEN_BUFFER, *PTEXTMODE_SCREEN_BUFFER;
+
+
+/*
+ * See graphics.c for the implementation
+ */
+
+typedef struct _GRAPHICS_BUFFER_INFO
+{
+    CONSOLE_GRAPHICS_BUFFER_INFO Info;
+} GRAPHICS_BUFFER_INFO, *PGRAPHICS_BUFFER_INFO;
+
+typedef struct _GRAPHICS_SCREEN_BUFFER
+{
+    CONSOLE_SCREEN_BUFFER;          /* Screen buffer base class - MUST BE IN FIRST PLACE */
+
+    ULONG   BitMapInfoLength;       /* Real size of the structure pointed by BitMapInfo */
+    LPBITMAPINFO BitMapInfo;        /* Information on the bitmap buffer */
+    ULONG   BitMapUsage;            /* See the uUsage parameter of GetDIBits */
+    HANDLE  hSection;               /* Handle to the memory shared section for the bitmap buffer */
+    PVOID   BitMap;                 /* Our bitmap buffer */
+    PVOID   ClientBitMap;           /* A copy of the client view of our bitmap buffer */
+    HANDLE  Mutex;                  /* Our mutex, used to synchronize read / writes to the bitmap buffer */
+    HANDLE  ClientMutex;            /* A copy of the client handle to our mutex */
+    HANDLE  ClientProcess;          /* Handle to the client process who opened the buffer, to unmap the view */
+} GRAPHICS_SCREEN_BUFFER, *PGRAPHICS_SCREEN_BUFFER;
+
+
 
 typedef struct _CONSOLE_INPUT_BUFFER
 {
-    CONSOLE_IO_OBJECT Header;       /* Object header */
+    CONSOLE_IO_OBJECT Header;       /* Object header - MUST BE IN FIRST PLACE */
 
-    ULONG InputBufferSize;          /* Size of this input buffer */
-    LIST_ENTRY InputEvents;         /* List head for input event queue */
-    HANDLE ActiveEvent;             /* Event set when an input event is added in its queue */
-    LIST_ENTRY ReadWaitQueue;       /* List head for the queue of read wait blocks */
+    ULONG       InputBufferSize;    /* Size of this input buffer */
+    LIST_ENTRY  InputEvents;        /* List head for input event queue */
+    HANDLE      ActiveEvent;        /* Event set when an input event is added in its queue */
+    LIST_ENTRY  ReadWaitQueue;      /* List head for the queue of read wait blocks */
 
-    USHORT Mode;                    /* Console Input Buffer mode flags */
+    USHORT      Mode;               /* Input buffer modes */
 } CONSOLE_INPUT_BUFFER, *PCONSOLE_INPUT_BUFFER;
 
 typedef struct _FRONTEND_VTBL
@@ -90,7 +178,12 @@ typedef struct _FRONTEND_VTBL
     /*
      * Internal interface (functions called by the console server only)
      */
+    // BOOL (WINAPI *Init)();
     VOID (WINAPI *CleanupConsole)(struct _CONSOLE* Console);
+    /* Interface used for both text-mode and graphics screen buffers */
+    VOID (WINAPI *DrawRegion)(struct _CONSOLE* Console,
+                              SMALL_RECT* Region);
+    /* Interface used only for text-mode screen buffers */
     VOID (WINAPI *WriteStream)(struct _CONSOLE* Console,
                                SMALL_RECT* Block,
                                SHORT CursorStartX,
@@ -98,17 +191,12 @@ typedef struct _FRONTEND_VTBL
                                UINT ScrolledLines,
                                CHAR *Buffer,
                                UINT Length);
-    VOID (WINAPI *DrawRegion)(struct _CONSOLE* Console,
-                              SMALL_RECT* Region);
     BOOL (WINAPI *SetCursorInfo)(struct _CONSOLE* Console,
                                  PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     BOOL (WINAPI *SetScreenInfo)(struct _CONSOLE* Console,
                                  PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                                  SHORT OldCursorX,
                                  SHORT OldCursorY);
-    BOOL (WINAPI *UpdateScreenInfo)(struct _CONSOLE* Console,
-                                    PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (WINAPI *IsBufferResizeSupported)(struct _CONSOLE* Console);
     VOID (WINAPI *ResizeTerminal)(struct _CONSOLE* Console);
     BOOL (WINAPI *ProcessKeyCallback)(struct _CONSOLE* Console,
                                       MSG* msg,
@@ -127,7 +215,20 @@ typedef struct _FRONTEND_VTBL
     HWND (WINAPI *GetConsoleWindowHandle)(struct _CONSOLE* Console);
     VOID (WINAPI *GetLargestConsoleWindowSize)(struct _CONSOLE* Console,
                                                PCOORD pSize);
+    ULONG (WINAPI *GetDisplayMode)(struct _CONSOLE* Console);
+    BOOL  (WINAPI *SetDisplayMode)(struct _CONSOLE* Console,
+                                   ULONG NewMode);
 
+#if 0 // Possible future front-end interface
+    BOOL (WINAPI *GetFrontEndProperty)(struct _CONSOLE* Console,
+                                       ULONG Flag,
+                                       PVOID Info,
+                                       ULONG Size);
+    BOOL (WINAPI *SetFrontEndProperty)(struct _CONSOLE* Console,
+                                       ULONG Flag,
+                                       PVOID Info /*,
+                                       ULONG Size */);
+#endif
 } FRONTEND_VTBL, *PFRONTEND_VTBL;
 
 typedef struct _FRONTEND_IFACE
@@ -160,8 +261,9 @@ typedef struct _CONSOLE
     FRONTEND_IFACE TermIFace;               /* Frontend-specific interface */
 
 /**************************** Input buffer and data ***************************/
-    CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
+    CONSOLE_INPUT_BUFFER InputBuffer;               /* Input buffer of the console */
 
+    /** Put those things in TEXTMODE_SCREEN_BUFFER ?? **/
     PWCHAR LineBuffer;                      /* Current line being input, in line buffered mode */
     WORD LineMaxSize;                       /* Maximum size of line in characters (including CR+LF) */
     WORD LineSize;                          /* Current size of line */
@@ -170,6 +272,7 @@ typedef struct _CONSOLE
     BOOLEAN LineUpPressed;
     BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */
     ULONG LineWakeupMask;                   /* Bitmap of which control characters will end line input */
+    /***************************************************/
 
     BOOLEAN QuickEdit;
     BOOLEAN InsertMode;
@@ -186,8 +289,6 @@ typedef struct _CONSOLE
     HANDLE UnpauseEvent;
     LIST_ENTRY WriteWaitQueue;              /* List head for the queue of write wait blocks */
 
-    ULONG HardwareState;                    /* _GDI_MANAGED, _DIRECT */
-
 /**************************** Aliases and Histories ***************************/
     struct _ALIAS_HEADER *Aliases;
     LIST_ENTRY HistoryBuffers;
@@ -196,10 +297,12 @@ typedef struct _CONSOLE
     BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
 /****************************** Other properties ******************************/
-    UNICODE_STRING OriginalTitle;           /* Original title of console, the one when the console leader is launched. Always NULL-terminated */
+    UNICODE_STRING OriginalTitle;           /* Original title of console, the one defined when the console leader is launched; it never changes. Always NULL-terminated */
     UNICODE_STRING Title;                   /* Title of console. Always NULL-terminated */
 
-/* SIZE */    COORD   ConsoleSize;          /* The size of the console */
+    COORD   ConsoleSize;                    /* The current size of the console, for text-mode only */
+    BOOLEAN FixedSize;                      /* TRUE if the console is of fixed size */
+
     COLORREF Colors[16];                    /* Colour palette */
 
 } CONSOLE, *PCONSOLE;
@@ -222,23 +325,30 @@ NTSTATUS FASTCALL ConioProcessInputEvent(PCONSOLE Console,
                                          PINPUT_RECORD InputEvent);
 
 /* conoutput.c */
+#define ConioInitRect(Rect, top, left, bottom, right) \
+do {    \
+    ((Rect)->Top) = top;    \
+    ((Rect)->Left) = left;  \
+    ((Rect)->Bottom) = bottom;  \
+    ((Rect)->Right) = right;    \
+} while (0)
+#define ConioIsRectEmpty(Rect) \
+    (((Rect)->Left > (Rect)->Right) || ((Rect)->Top > (Rect)->Bottom))
 #define ConioRectHeight(Rect) \
     (((Rect)->Top) > ((Rect)->Bottom) ? 0 : ((Rect)->Bottom) - ((Rect)->Top) + 1)
 #define ConioRectWidth(Rect) \
     (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
 
-PBYTE FASTCALL ConioCoordToPointer(PCONSOLE_SCREEN_BUFFER Buf,
-                                   ULONG X,
-                                   ULONG Y);
+PBYTE ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCONSOLE Console);
-NTSTATUS FASTCALL ConioResizeBuffer(PCONSOLE Console,
-                                    PCONSOLE_SCREEN_BUFFER ScreenBuffer,
-                                    COORD Size);
-NTSTATUS FASTCALL ConioWriteConsole(PCONSOLE Console,
-                                    PCONSOLE_SCREEN_BUFFER Buff,
-                                    CHAR *Buffer,
-                                    DWORD Length,
-                                    BOOL Attrib);
+NTSTATUS ConioResizeBuffer(PCONSOLE Console,
+                           PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
+                           COORD Size);
+NTSTATUS ConioWriteConsole(PCONSOLE Console,
+                           PTEXTMODE_SCREEN_BUFFER Buff,
+                           CHAR *Buffer,
+                           DWORD Length,
+                           BOOL Attrib);
 DWORD FASTCALL ConioEffectiveCursorSize(PCONSOLE Console,
                                         DWORD Scale);
 

@@ -273,8 +273,8 @@ LayoutProc(HWND hwndDlg,
                         sheight = wheight;
                     }
                 }
-                swidth = max(swidth, 1);
-                sheight = max(sheight, 1);
+                swidth  = min(max(swidth , 1), 0xFFFF);
+                sheight = min(max(sheight, 1), 0xFFFF);
 
                 if (lppsn->hdr.idFrom == IDC_UPDOWN_SCREEN_BUFFER_WIDTH || lppsn->hdr.idFrom == IDC_UPDOWN_SCREEN_BUFFER_HEIGHT)
                 {
@@ -292,10 +292,10 @@ LayoutProc(HWND hwndDlg,
                     }
                 }
 
-                pConInfo->ci.ScreenBufferSize.X = swidth;
-                pConInfo->ci.ScreenBufferSize.Y = sheight;
-                pConInfo->ci.ConsoleSize.X = wwidth;
-                pConInfo->ci.ConsoleSize.Y = wheight;
+                pConInfo->ci.ScreenBufferSize.X = (SHORT)swidth;
+                pConInfo->ci.ScreenBufferSize.Y = (SHORT)sheight;
+                pConInfo->ci.ConsoleSize.X = (SHORT)wwidth;
+                pConInfo->ci.ConsoleSize.Y = (SHORT)wheight;
                 GuiInfo->WindowOrigin.x = left;
                 GuiInfo->WindowOrigin.y = top;
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -319,15 +319,15 @@ LayoutProc(HWND hwndDlg,
                         DWORD sheight, swidth;
                         DWORD left, top;
 
-                        wwidth = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, NULL, FALSE);
+                        wwidth  = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, NULL, FALSE);
                         wheight = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, NULL, FALSE);
-                        swidth = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
+                        swidth  = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
                         sheight = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
-                        left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, FALSE);
-                        top = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, NULL, FALSE);
+                        left    = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, FALSE);
+                        top     = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, NULL, FALSE);
 
-                        swidth = max(swidth, 1);
-                        sheight = max(sheight, 1);
+                        swidth  = min(max(swidth , 1), 0xFFFF);
+                        sheight = min(max(sheight, 1), 0xFFFF);
 
                         /* Automatically adjust window size when screen buffer decreases */
                         if (wwidth > swidth)
@@ -342,10 +342,10 @@ LayoutProc(HWND hwndDlg,
                             wheight = sheight;
                         }
 
-                        pConInfo->ci.ScreenBufferSize.X = swidth;
-                        pConInfo->ci.ScreenBufferSize.Y = sheight;
-                        pConInfo->ci.ConsoleSize.X = wwidth;
-                        pConInfo->ci.ConsoleSize.Y = wheight;
+                        pConInfo->ci.ScreenBufferSize.X = (SHORT)swidth;
+                        pConInfo->ci.ScreenBufferSize.Y = (SHORT)sheight;
+                        pConInfo->ci.ConsoleSize.X = (SHORT)wwidth;
+                        pConInfo->ci.ConsoleSize.Y = (SHORT)wheight;
                         GuiInfo->WindowOrigin.x = left;
                         GuiInfo->WindowOrigin.y = top;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);

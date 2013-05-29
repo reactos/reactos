@@ -60,7 +60,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepGetTitle,
     ConsolepSetTitle,
     ConsolepCreateScreenBuffer,
-    // ConsolepInvalidateBitMapRect,
+    ConsolepInvalidateBitMapRect,
     // ConsolepVDMOperation,
     // ConsolepSetCursor,
     // ConsolepShowCursor,
@@ -236,8 +236,6 @@ typedef struct
     DWORD ConsoleMode;
 } CONSOLE_GETSETCONSOLEMODE, *PCONSOLE_GETSETCONSOLEMODE;
 
-
-#define CONSOLE_WINDOWED    0 /* Internal console hardware state */
 typedef struct
 {
     // HANDLE OutputHandle;
@@ -266,17 +264,29 @@ typedef struct
 
 typedef struct
 {
-    HANDLE OutputHandle;  /* Handle to newly created screen buffer */
+    HANDLE OutputHandle;     /* Handle to newly created screen buffer */
+    DWORD  ScreenBufferType; /* Type of the screen buffer: CONSOLE_TEXTMODE_BUFFER or CONSOLE_GRAPHICS_BUFFER */
+    /*
+     * If we are creating a graphics screen buffer,
+     * this structure holds the initialization information.
+     */
+    CONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo;
 
     DWORD Access;
     DWORD ShareMode;
-    BOOL Inheritable;
+    BOOL  Inheritable;
 } CONSOLE_CREATESCREENBUFFER, *PCONSOLE_CREATESCREENBUFFER;
 
 typedef struct
 {
     HANDLE OutputHandle;  /* Handle to screen buffer to switch to */
 } CONSOLE_SETACTIVESCREENBUFFER, *PCONSOLE_SETACTIVESCREENBUFFER;
+
+typedef struct
+{
+    HANDLE OutputHandle;
+    SMALL_RECT Region;
+} CONSOLE_INVALIDATEDIBITS, *PCONSOLE_INVALIDATEDIBITS;
 
 typedef struct
 {
@@ -624,6 +634,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_GETSETHWSTATE HardwareStateRequest;
 
         /* Console window */
+        CONSOLE_INVALIDATEDIBITS InvalidateDIBitsRequest;
         CONSOLE_GETSETCONSOLETITLE TitleRequest;
         CONSOLE_GETLARGESTWINDOWSIZE GetLargestWindowSizeRequest;
         CONSOLE_SETWINDOWINFO SetWindowInfoRequest;

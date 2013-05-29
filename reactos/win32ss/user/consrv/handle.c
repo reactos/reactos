@@ -101,7 +101,7 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
         /* If the last handle to a screen buffer is closed, delete it... */
         if (AdjustHandleCounts(Entry, -1) == 0)
         {
-            if (Object->Type == SCREEN_BUFFER)
+            if (Object->Type == TEXTMODE_BUFFER || Object->Type == GRAPHICS_BUFFER)
             {
                 PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
                 /* ...unless it's the only buffer left. Windows allows deletion
@@ -113,6 +113,10 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
             else if (Object->Type == INPUT_BUFFER)
             {
                 DPRINT("Closing the input buffer\n");
+            }
+            else
+            {
+                DPRINT1("Invalid object type %d\n", Object->Type);
             }
         }
 
@@ -429,9 +433,10 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
     if ( HandleEntry == NULL ||
          ObjectEntry == NULL ||
          (HandleEntry->Access & Access) == 0 ||
-         (Type != 0 && ObjectEntry->Type != Type) )
+         /*(Type != 0 && ObjectEntry->Type != Type)*/
+         (Type != 0 && (ObjectEntry->Type & Type) == 0) )
     {
-        DPRINT1("ConSrvGetObject returning invalid handle (%x) of type %lu with access %lu\n", Handle, Type, Access);
+        DPRINT1("ConSrvGetObject returning invalid handle (%x) of type %lu with access %lu ; wanted type %lu with access %lu\n", Handle, ObjectEntry->Type, HandleEntry->Access, Type, Access);
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }

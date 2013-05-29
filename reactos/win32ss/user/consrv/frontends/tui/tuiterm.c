@@ -230,7 +230,7 @@ TuiSwapConsole(INT Next)
 }
 
 static VOID FASTCALL
-TuiCopyRect(char *Dest, PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
+TuiCopyRect(char *Dest, PTEXTMODE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
 {
     UINT SrcDelta, DestDelta;
     LONG i;
@@ -477,21 +477,6 @@ TuiCleanupConsole(PCONSOLE Console)
 }
 
 static VOID WINAPI
-TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, SHORT CursorStartX, SHORT CursorStartY,
-               UINT ScrolledLines, CHAR *Buffer, UINT Length)
-{
-    DWORD BytesWritten;
-    PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
-
-    if (ActiveConsole->Console->ActiveBuffer != Buff) return;
-
-    if (!WriteFile(ConsoleDeviceHandle, Buffer, Length, &BytesWritten, NULL))
-    {
-        DPRINT1("Error writing to BlueScreen\n");
-    }
-}
-
-static VOID WINAPI
 TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
 {
     DWORD BytesReturned;
@@ -499,7 +484,7 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
     PCONSOLE_DRAW ConsoleDraw;
     UINT ConsoleDrawSize;
 
-    if (ActiveConsole->Console != Console) return;
+    if (ActiveConsole->Console != Console || GetType(Buff) != TEXTMODE_BUFFER) return;
 
     ConsoleDrawSize = sizeof(CONSOLE_DRAW) +
                       (ConioRectWidth(Region) * ConioRectHeight(Region)) * 2;
@@ -516,7 +501,7 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
     ConsoleDraw->CursorX = Buff->CursorPosition.X;
     ConsoleDraw->CursorY = Buff->CursorPosition.Y;
 
-    TuiCopyRect((char *) (ConsoleDraw + 1), Buff, Region);
+    TuiCopyRect((char*)(ConsoleDraw + 1), (PTEXTMODE_SCREEN_BUFFER)Buff, Region);
 
     if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_DRAW,
                          NULL, 0, ConsoleDraw, ConsoleDrawSize, &BytesReturned, NULL))
@@ -527,6 +512,21 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
     }
 
     ConsoleFreeHeap(ConsoleDraw);
+}
+
+static VOID WINAPI
+TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, SHORT CursorStartX, SHORT CursorStartY,
+               UINT ScrolledLines, CHAR *Buffer, UINT Length)
+{
+    DWORD BytesWritten;
+    PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
+
+    if (ActiveConsole->Console->ActiveBuffer != Buff) return;
+
+    if (!WriteFile(ConsoleDeviceHandle, Buffer, Length, &BytesWritten, NULL))
+    {
+        DPRINT1("Error writing to BlueScreen\n");
+    }
 }
 
 static BOOL WINAPI
@@ -557,9 +557,10 @@ TuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, SHORT OldCursorX
     DWORD BytesReturned;
 
     if (ActiveConsole->Console->ActiveBuffer != Buff) return TRUE;
+    if (GetType(Buff) != TEXTMODE_BUFFER) return FALSE;
 
     Info.dwCursorPosition = Buff->CursorPosition;
-    Info.wAttributes = Buff->ScreenDefaultAttrib;
+    Info.wAttributes = ((PTEXTMODE_SCREEN_BUFFER)Buff)->ScreenDefaultAttrib;
 
     if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
                          &Info, sizeof(CONSOLE_SCREEN_BUFFER_INFO), NULL, 0,
@@ -570,18 +571,6 @@ TuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, SHORT OldCursorX
     }
 
     return TRUE;
-}
-
-static BOOL WINAPI
-TuiUpdateScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
-{
-    return TRUE;
-}
-
-static BOOL WINAPI
-TuiIsBufferResizeSupported(PCONSOLE Console)
-{
-    return (Console && Console->State == CONSOLE_INITIALIZING ? TRUE : FALSE);
 }
 
 static VOID WINAPI
@@ -640,22 +629,36 @@ TuiGetLargestConsoleWindowSize(PCONSOLE Console, PCOORD pSize)
     *pSize = PhysicalConsoleSize;
 }
 
+static ULONG WINAPI
+TuiGetDisplayMode(PCONSOLE Console)
+{
+    return CONSOLE_FULLSCREEN_HARDWARE; // CONSOLE_FULLSCREEN;
+}
+
+static BOOL WINAPI
+TuiSetDisplayMode(PCONSOLE Console, ULONG NewMode)
+{
+    // if (NewMode & ~(CONSOLE_FULLSCREEN_MODE | CONSOLE_WINDOWED_MODE))
+    //     return FALSE;
+    return TRUE;
+}
+
 static FRONTEND_VTBL TuiVtbl =
 {
     TuiCleanupConsole,
-    TuiWriteStream,
     TuiDrawRegion,
+    TuiWriteStream,
     TuiSetCursorInfo,
     TuiSetScreenInfo,
-    TuiUpdateScreenInfo,
-    TuiIsBufferResizeSupported,
     TuiResizeTerminal,
     TuiProcessKeyCallback,
     TuiRefreshInternalInfo,
     TuiChangeTitle,
     TuiChangeIcon,
     TuiGetConsoleWindowHandle,
-    TuiGetLargestConsoleWindowSize
+    TuiGetLargestConsoleWindowSize,
+    TuiGetDisplayMode,
+    TuiSetDisplayMode,
 };
 
 NTSTATUS FASTCALL
@@ -668,6 +671,9 @@ TuiInitConsole(PCONSOLE Console,
     HANDLE ThreadHandle;
 
     if (Console == NULL || ConsoleInfo == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER)
         return STATUS_INVALID_PARAMETER;
 
     /* Initialize the TUI terminal emulator */
@@ -693,8 +699,10 @@ TuiInitConsole(PCONSOLE Console,
      * the console size when we display it with the hardware.
      */
     Console->ConsoleSize = PhysicalConsoleSize;
-    ConioResizeBuffer(Console, Console->ActiveBuffer, PhysicalConsoleSize);
-    Console->ActiveBuffer->DisplayMode |= CONSOLE_FULLSCREEN_MODE;
+    ConioResizeBuffer(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), PhysicalConsoleSize);
+
+    /* The console cannot be resized anymore */
+    Console->FixedSize = TRUE; // MUST be placed AFTER the call to ConioResizeBuffer !!
     // ConioResizeTerminal(Console);
 
     /*

@@ -12,18 +12,36 @@ list(APPEND SOURCE
     alias.c
     coninput.c
     conoutput.c
+    graphics.c
+    text.c
     console.c
     handle.c
     init.c
     lineinput.c
     settings.c
-    consrv.rc
     frontends/gui/guiterm.c
     frontends/gui/guisettings.c
+    frontends/gui/graphics.c
+    frontends/gui/text.c
     frontends/tui/tuiterm.c
     ${CMAKE_CURRENT_BINARY_DIR}/consrv.def)
 
-add_library(consrv SHARED ${SOURCE})
+add_library(consrv SHARED
+    ${SOURCE}
+    consrv.rc)
+
+#
+# Explicitely enable MS extensions to be able to use unnamed (anonymous) nested structs.
+#
+# FIXME: http://www.cmake.org/Bug/view.php?id=12998
+if(MSVC)
+    ## NOTE: No need to specify it as we use MSVC :)
+    #add_target_compile_flags(consrv "/Ze")
+    ##set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/Ze")
+else()
+    add_target_compile_flags(consrv "-fms-extensions")
+    #set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fms-extensions")
+endif()
 
 target_link_libraries(consrv win32ksys ${PSEH_LIB} uuid) # win32ksys because of NtUser...()
 

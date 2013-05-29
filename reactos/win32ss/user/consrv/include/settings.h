@@ -29,12 +29,11 @@ typedef struct _CONSOLE_INFO
     ULONG   NumberOfHistoryBuffers;
     BOOLEAN HistoryNoDup;
 
-/* BOOLEAN */    ULONG FullScreen;  /* Give the type of console: GUI (windowed) or TUI (fullscreen) */
     BOOLEAN QuickEdit;
     BOOLEAN InsertMode;
-    ULONG InputBufferSize;
-    COORD ScreenBufferSize;
-/* SIZE */    COORD   ConsoleSize;          /* The size of the console */
+    ULONG   InputBufferSize;
+    COORD   ScreenBufferSize;
+    COORD   ConsoleSize;          /* The size of the console */
 
     BOOLEAN CursorBlinkOn;
     BOOLEAN ForceCursorOff;
@@ -66,7 +65,7 @@ typedef struct _CONSOLE_PROPS
     BOOLEAN AppliedConfig;
     DWORD   ActiveStaticControl;
 
-    CONSOLE_INFO ci;            /* Console-specific informations */
+    CONSOLE_INFO  ci;           /* Console-specific informations */
     TERMINAL_INFO TerminalInfo; /* Frontend-specific parameters  */
 } CONSOLE_PROPS, *PCONSOLE_PROPS;
 

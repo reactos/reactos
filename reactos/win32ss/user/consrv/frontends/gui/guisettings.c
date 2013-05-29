@@ -106,6 +106,11 @@ GuiConsoleReadUserSettings(IN OUT PGUI_CONSOLE_INFO TermInfo,
             TermInfo->FontWeight = Value;
             RetVal = TRUE;
         }
+        else if (!wcscmp(szValueName, L"FullScreen"))
+        {
+            TermInfo->FullScreen = Value;
+            RetVal = TRUE;
+        }
         else if (!wcscmp(szValueName, L"WindowPosition"))
         {
             TermInfo->AutoPosition = FALSE;
@@ -157,6 +162,9 @@ do {                                                                            
     SetConsoleSetting(L"FontSize", REG_DWORD, sizeof(DWORD), &TermInfo->FontSize, 0);
     SetConsoleSetting(L"FontWeight", REG_DWORD, sizeof(DWORD), &TermInfo->FontWeight, FW_DONTCARE);
 
+    Storage = TermInfo->FullScreen;
+    SetConsoleSetting(L"FullScreen", REG_DWORD, sizeof(DWORD), &Storage, FALSE);
+
     if (TermInfo->AutoPosition == FALSE)
     {
         Storage = MAKELONG(TermInfo->WindowOrigin.x, TermInfo->WindowOrigin.y);
@@ -192,10 +200,11 @@ GuiConsoleGetDefaultSettings(IN OUT PGUI_CONSOLE_INFO TermInfo,
     wcsncpy(TermInfo->FaceName, L"Fixedsys", LF_FACESIZE); // HACK: !!
     // TermInfo->FaceName[0] = L'\0';
     TermInfo->FontFamily = FF_DONTCARE;
-    TermInfo->FontSize = 0;
+    TermInfo->FontSize   = 0;
     TermInfo->FontWeight = FW_DONTCARE;
     TermInfo->UseRasterFonts = TRUE;
 
+    TermInfo->FullScreen   = FALSE;
     TermInfo->ShowWindow   = SW_SHOWNORMAL;
     TermInfo->AutoPosition = TRUE;
     TermInfo->WindowOrigin.x = 0;
@@ -218,6 +227,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
 {
     NTSTATUS Status;
     PCONSOLE Console = GuiData->Console;
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
     PCONSOLE_PROCESS_DATA ProcessData;
     HANDLE hSection = NULL, hClientSection = NULL;
     LARGE_INTEGER SectionSize;
@@ -282,17 +292,30 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         pSharedInfo->ci.HistoryBufferSize = Console->HistoryBufferSize;
         pSharedInfo->ci.NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
         pSharedInfo->ci.HistoryNoDup = Console->HistoryNoDup;
-        pSharedInfo->ci.FullScreen = !!(Console->ActiveBuffer->DisplayMode & CONSOLE_FULLSCREEN_MODE);
         pSharedInfo->ci.QuickEdit = Console->QuickEdit;
         pSharedInfo->ci.InsertMode = Console->InsertMode;
         pSharedInfo->ci.InputBufferSize = 0;
-        pSharedInfo->ci.ScreenBufferSize = Console->ActiveBuffer->ScreenBufferSize;
-        pSharedInfo->ci.ConsoleSize = Console->ConsoleSize;
+        pSharedInfo->ci.ScreenBufferSize = ActiveBuffer->ScreenBufferSize;
+        pSharedInfo->ci.ConsoleSize = ActiveBuffer->ViewSize;
         pSharedInfo->ci.CursorBlinkOn;
         pSharedInfo->ci.ForceCursorOff;
-        pSharedInfo->ci.CursorSize = Console->ActiveBuffer->CursorInfo.dwSize;
-        pSharedInfo->ci.ScreenAttrib = Console->ActiveBuffer->ScreenDefaultAttrib;
-        pSharedInfo->ci.PopupAttrib  = Console->ActiveBuffer->PopupDefaultAttrib;
+        pSharedInfo->ci.CursorSize = ActiveBuffer->CursorInfo.dwSize;
+        if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
+        {
+            PTEXTMODE_SCREEN_BUFFER Buffer = (PTEXTMODE_SCREEN_BUFFER)ActiveBuffer;
+
+            pSharedInfo->ci.ScreenAttrib = Buffer->ScreenDefaultAttrib;
+            pSharedInfo->ci.PopupAttrib  = Buffer->PopupDefaultAttrib;
+        }
+        else // if (GetType(ActiveBuffer) == GRAPHICS_BUFFER)
+        {
+            // PGRAPHICS_SCREEN_BUFFER Buffer = (PGRAPHICS_SCREEN_BUFFER)ActiveBuffer;
+            DPRINT1("GuiConsoleShowConsoleProperties - Graphics buffer\n");
+
+            // FIXME: Gather defaults from the registry ?
+            pSharedInfo->ci.ScreenAttrib = DEFAULT_SCREEN_ATTRIB;
+            pSharedInfo->ci.PopupAttrib  = DEFAULT_POPUP_ATTRIB ;
+        }
         pSharedInfo->ci.CodePage;
 
         /* GUI Information */
@@ -302,9 +325,10 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         wcsncpy(GuiInfo->FaceName, GuiData->GuiInfo.FaceName, LF_FACESIZE);
         GuiInfo->FaceName[Length] = L'\0';
         GuiInfo->FontFamily = GuiData->GuiInfo.FontFamily;
-        GuiInfo->FontSize = GuiData->GuiInfo.FontSize;
+        GuiInfo->FontSize   = GuiData->GuiInfo.FontSize;
         GuiInfo->FontWeight = GuiData->GuiInfo.FontWeight;
         GuiInfo->UseRasterFonts = GuiData->GuiInfo.UseRasterFonts;
+        GuiInfo->FullScreen = GuiData->GuiInfo.FullScreen;
         /// GuiInfo->WindowPosition = GuiData->GuiInfo.WindowPosition;
         GuiInfo->AutoPosition = GuiData->GuiInfo.AutoPosition;
         GuiInfo->WindowOrigin = GuiData->GuiInfo.WindowOrigin;
@@ -322,6 +346,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
     else
     {
         Length = 0;
+        // FIXME: Load the default parameters from the registry.
     }
 
     /* Null-terminate the title */
@@ -478,6 +503,12 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
             GuiConsoleMoveWindow(GuiData);
 
             InvalidateRect(GuiData->hWindow, NULL, TRUE);
+
+            /*
+             * Apply full-screen mode.
+             */
+            GuiData->GuiInfo.FullScreen = GuiInfo->FullScreen;
+            // TODO: Apply it really
         }
 
         /*

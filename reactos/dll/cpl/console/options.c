@@ -23,6 +23,7 @@ OptionsProc(HWND hwndDlg,
             LPARAM lParam)
 {
     PCONSOLE_PROPS pConInfo;
+    PGUI_CONSOLE_INFO GuiInfo;
     LRESULT lResult;
     HWND hDlgCtrl;
     LPPSHNOTIFY lppsn;
@@ -70,6 +71,7 @@ OptionsProc(HWND hwndDlg,
         case WM_COMMAND:
         {
             if (!pConInfo) break;
+            GuiInfo = pConInfo->TerminalInfo.TermInfo;
 
             switch (LOWORD(wParam))
             {
@@ -93,13 +95,13 @@ OptionsProc(HWND hwndDlg,
                 }
                 case IDC_RADIO_DISPLAY_WINDOW:
                 {
-                    pConInfo->ci.FullScreen = FALSE;
+                    GuiInfo->FullScreen = FALSE;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
                 case IDC_RADIO_DISPLAY_FULL:
                 {
-                    pConInfo->ci.FullScreen = TRUE;
+                    GuiInfo->FullScreen = TRUE;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
@@ -167,6 +169,7 @@ static
 void
 UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
 {
+    PGUI_CONSOLE_INFO GuiInfo = pConInfo->TerminalInfo.TermInfo;
     HWND hDlgCtrl;
     TCHAR szBuffer[MAX_PATH];
 
@@ -225,7 +228,7 @@ UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
         SendMessage(hDlgCtrl, BM_SETCHECK, (LPARAM)BST_UNCHECKED, 0);
 
     /* Update full/window screen */
-    if (pConInfo->ci.FullScreen)
+    if (GuiInfo->FullScreen)
     {
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_DISPLAY_FULL);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);

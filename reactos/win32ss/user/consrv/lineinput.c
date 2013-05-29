@@ -46,8 +46,7 @@ HistoryCurrentBuffer(PCONSOLE Console)
 
     /* Couldn't find the buffer, create a new one */
     Hist = ConsoleAllocHeap(0, sizeof(HISTORY_BUFFER) + ExeName.Length);
-    if (!Hist)
-        return NULL;
+    if (!Hist) return NULL;
     Hist->MaxEntries = Console->HistoryBufferSize;
     Hist->NumEntries = 0;
     Hist->Entries = ConsoleAllocHeap(0, Hist->MaxEntries * sizeof(UNICODE_STRING));
@@ -194,9 +193,13 @@ LineInputSetPos(PCONSOLE Console, UINT Pos)
 static VOID
 LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR *Insertion)
 {
+    PTEXTMODE_SCREEN_BUFFER ActiveBuffer;
     UINT Pos = Console->LinePos;
     UINT NewSize = Console->LineSize - NumToDelete + NumToInsert;
     UINT i;
+
+    if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER) return;
+    ActiveBuffer = (PTEXTMODE_SCREEN_BUFFER)Console->ActiveBuffer;
 
     /* Make sure there's always enough room for ending \r\n */
     if (NewSize + 2 > Console->LineMaxSize)
@@ -215,11 +218,11 @@ LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR *Inser
             WideCharToMultiByte(Console->OutputCodePage, 0,
                                 &Console->LineBuffer[i], 1,
                                 &AsciiChar, 1, NULL, NULL);
-            ConioWriteConsole(Console, Console->ActiveBuffer, &AsciiChar, 1, TRUE);
+            ConioWriteConsole(Console, ActiveBuffer, &AsciiChar, 1, TRUE);
         }
         for (; i < Console->LineSize; i++)
         {
-            ConioWriteConsole(Console, Console->ActiveBuffer, " ", 1, TRUE);
+            ConioWriteConsole(Console, ActiveBuffer, " ", 1, TRUE);
         }
         Console->LinePos = i;
     }
@@ -407,7 +410,12 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         LineInputSetPos(Console, Console->LineSize);
         Console->LineBuffer[Console->LineSize++] = L'\r';
         if (Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
-            ConioWriteConsole(Console, Console->ActiveBuffer, "\r", 1, TRUE);
+        {
+            if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
+            {
+                ConioWriteConsole(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), "\r", 1, TRUE);
+            }
+        }
 
         /* Add \n if processed input. There should usually be room for it,
          * but an exception to the rule exists: the buffer could have been 
@@ -417,7 +425,12 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         {
             Console->LineBuffer[Console->LineSize++] = L'\n';
             if (Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
-                ConioWriteConsole(Console, Console->ActiveBuffer, "\n", 1, TRUE);
+            {
+                if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
+                {
+                    ConioWriteConsole(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), "\n", 1, TRUE);
+                }
+            }
         }
         Console->LineComplete = TRUE;
         Console->LinePos = 0;

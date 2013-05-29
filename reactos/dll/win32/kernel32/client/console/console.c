@@ -438,16 +438,38 @@ GetNumberOfConsoleFonts(VOID)
 
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
+ * @note See http://blog.airesoft.co.uk/2012/10/things-ms-can-do-that-they-dont-tell-you-about-console-graphics/
  */
-DWORD
+BOOL
 WINAPI
-InvalidateConsoleDIBits(DWORD Unknown0,
-                        DWORD Unknown1)
+InvalidateConsoleDIBits(IN HANDLE hConsoleOutput,
+                        IN PSMALL_RECT lpRect)
 {
-    DPRINT1("InvalidateConsoleDIBits(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_INVALIDATEDIBITS InvalidateDIBitsRequest = &ApiMessage.Data.InvalidateDIBitsRequest;
+
+    if (lpRect == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    InvalidateDIBitsRequest->OutputHandle = hConsoleOutput;
+    InvalidateDIBitsRequest->Region       = *lpRect;
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepInvalidateBitMapRect),
+                                 sizeof(CONSOLE_INVALIDATEDIBITS));
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -1445,8 +1467,8 @@ SetConsoleWindowInfo(HANDLE hConsoleOutput,
     }
 
     SetWindowInfoRequest->OutputHandle = hConsoleOutput;
-    SetWindowInfoRequest->Absolute = bAbsolute;
-    SetWindowInfoRequest->WindowRect = *lpConsoleWindow;
+    SetWindowInfoRequest->Absolute     = bAbsolute;
+    SetWindowInfoRequest->WindowRect   = *lpConsoleWindow;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
@@ -1803,31 +1825,68 @@ CreateConsoleScreenBuffer(DWORD dwDesiredAccess,
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest = &ApiMessage.Data.CreateScreenBufferRequest;
+    PCSR_CAPTURE_BUFFER CaptureBuffer = NULL;
+    PCONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo = /*(PCONSOLE_GRAPHICS_BUFFER_INFO)*/lpScreenBufferData;
 
     if ( (dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE))    ||
          (dwShareMode & ~(FILE_SHARE_READ | FILE_SHARE_WRITE))  ||
-         (dwFlags != CONSOLE_TEXTMODE_BUFFER) )
+         (dwFlags != CONSOLE_TEXTMODE_BUFFER && dwFlags != CONSOLE_GRAPHICS_BUFFER) )
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return INVALID_HANDLE_VALUE;
     }
 
-    ApiMessage.Data.CreateScreenBufferRequest.Access = dwDesiredAccess;
-    ApiMessage.Data.CreateScreenBufferRequest.ShareMode = dwShareMode;
-    ApiMessage.Data.CreateScreenBufferRequest.Inheritable =
+    CreateScreenBufferRequest->ScreenBufferType = dwFlags;
+    CreateScreenBufferRequest->Access      = dwDesiredAccess;
+    CreateScreenBufferRequest->ShareMode   = dwShareMode;
+    CreateScreenBufferRequest->Inheritable =
         (lpSecurityAttributes ? lpSecurityAttributes->bInheritHandle : FALSE);
 
+    if (dwFlags == CONSOLE_GRAPHICS_BUFFER)
+    {
+        if (CreateScreenBufferRequest->Inheritable || GraphicsBufferInfo == NULL)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        CreateScreenBufferRequest->GraphicsBufferInfo = *GraphicsBufferInfo;
+
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, GraphicsBufferInfo->dwBitMapInfoLength);
+        if (CaptureBuffer == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        CsrCaptureMessageBuffer(CaptureBuffer,
+                                (PVOID)GraphicsBufferInfo->lpBitMapInfo,
+                                GraphicsBufferInfo->dwBitMapInfoLength,
+                                (PVOID*)&CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMapInfo);
+    }
+
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
+                                 CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepCreateScreenBuffer),
                                  sizeof(CONSOLE_CREATESCREENBUFFER));
+
+     if (CaptureBuffer)
+        CsrFreeCaptureBuffer(CaptureBuffer);
+
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return INVALID_HANDLE_VALUE;
     }
 
-    return ApiMessage.Data.CreateScreenBufferRequest.OutputHandle;
+    if (dwFlags == CONSOLE_GRAPHICS_BUFFER && GraphicsBufferInfo)
+    {
+        GraphicsBufferInfo->hMutex   = CreateScreenBufferRequest->GraphicsBufferInfo.hMutex  ;
+        GraphicsBufferInfo->lpBitMap = CreateScreenBufferRequest->GraphicsBufferInfo.lpBitMap;
+    }
+
+    return CreateScreenBufferRequest->OutputHandle;
 }
 
 
@@ -2296,7 +2355,7 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
     /* Initialize strings for conversion */
     RtlInitUnicodeString(&BufferU, Buffer);
     BufferA.Length = 0;
-    BufferA.MaximumLength = nBufferLength;
+    BufferA.MaximumLength = (USHORT)nBufferLength;
     BufferA.Buffer = lpBuffer;
 
     /* Convert unicode name to ansi, copying as much chars as fit */

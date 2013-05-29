@@ -93,7 +93,6 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     pConInfo->ci.HistoryBufferSize = 50;
     pConInfo->ci.NumberOfHistoryBuffers = 4;
     pConInfo->ci.HistoryNoDup = FALSE;
-    pConInfo->ci.FullScreen = FALSE;
     pConInfo->ci.QuickEdit = FALSE;
     pConInfo->ci.InsertMode = TRUE;
     // pConInfo->ci.InputBufferSize;
@@ -119,6 +118,8 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     GuiInfo->FontWeight = FW_DONTCARE;
     GuiInfo->UseRasterFonts = TRUE;
 
+    GuiInfo->FullScreen   = FALSE;
+    GuiInfo->ShowWindow   = SW_SHOWNORMAL;
     GuiInfo->AutoPosition = TRUE;
     GuiInfo->WindowOrigin.x = 0;
     GuiInfo->WindowOrigin.y = 0;
