@@ -127,19 +127,15 @@ CreateShellLink(
 
 static BOOL
 CreateShortcut(
-    int csidl,
     LPCTSTR pszFolder,
-    UINT nIdName,
+    LPCTSTR pszName,
     LPCTSTR pszCommand,
-    UINT nIdTitle,
-    BOOL bCheckExistence,
+    LPCTSTR pszDescription,
     INT iIconNr)
 {
     TCHAR szPath[MAX_PATH];
     TCHAR szExeName[MAX_PATH];
-    TCHAR szTitle[256];
-    TCHAR szName[256];
-    LPTSTR Ptr = szPath;
+    LPTSTR Ptr;
     TCHAR szWorkingDirBuf[MAX_PATH];
     LPTSTR pszWorkingDir = NULL;
     LPTSTR lpFilePart;
@@ -152,12 +148,9 @@ CreateShortcut(
         _tcscpy(szPath, pszCommand);
     }
 
-    if (bCheckExistence)
-    {
-        if ((_taccess(szPath, 0 )) == -1)
-            /* Expected error, don't return FALSE */
-            return TRUE;
-    }
+    if ((_taccess(szPath, 0 )) == -1)
+        /* Expected error, don't return FALSE */
+        return TRUE;
 
     dwLen = GetFullPathName(szPath,
                             sizeof(szWorkingDirBuf) / sizeof(szWorkingDirBuf[0]),
@@ -185,47 +178,104 @@ CreateShortcut(
         pszWorkingDir = szWorkingDirBuf;
     }
 
+    _tcscpy(szPath, pszFolder);
 
-    if (!SHGetSpecialFolderPath(0, szPath, csidl, TRUE))
-        return FALSE;
+    Ptr = PathAddBackslash(szPath);
 
-    if (pszFolder)
-    {
-        Ptr = PathAddBackslash(Ptr);
-        _tcscpy(Ptr, pszFolder);
-    }
-
-    Ptr = PathAddBackslash(Ptr);
-
-    if (!LoadString(hDllInstance, nIdName, szName, sizeof(szName)/sizeof(szName[0])))
-        return FALSE;
-    _tcscpy(Ptr, szName);
-
-    if (!LoadString(hDllInstance, nIdTitle, szTitle, sizeof(szTitle)/sizeof(szTitle[0])))
-        return FALSE;
+    _tcscpy(Ptr, pszName);
 
     // FIXME: we should pass 'command' straight in here, but shell32 doesn't expand it
-    return SUCCEEDED(CreateShellLink(szPath, szExeName, _T(""), pszWorkingDir, szExeName, iIconNr, szTitle));
+    return SUCCEEDED(CreateShellLink(szPath, szExeName, _T(""), pszWorkingDir, szExeName, iIconNr, pszDescription));
 }
 
-static BOOL
-CreateShortcutFolder(int csidl, UINT nID, LPTSTR pszName, int cchNameLen)
+
+static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR  pszSection, LPCWSTR pszFolder)
 {
-    TCHAR szPath[MAX_PATH];
-    LPTSTR p;
+    INFCONTEXT Context;
+    WCHAR szCommand[MAX_PATH];
+    WCHAR szName[MAX_PATH];
+    WCHAR szDescription[MAX_PATH];
+    INT iIconNr;
 
-    if (!SHGetSpecialFolderPath(0, szPath, csidl, TRUE))
+    if (!SetupFindFirstLine(hinf, pszSection, NULL, &Context))
         return FALSE;
 
-    if (!LoadString(hDllInstance, nID, pszName, cchNameLen))
-        return FALSE;
+    do
+    {
+        if (SetupGetFieldCount(&Context) < 4)
+            continue;
 
-    p = PathAddBackslash(szPath);
-    _tcscpy(p, pszName);
+        if (!SetupGetStringFieldW(&Context, 1, szCommand, MAX_PATH, NULL))
+            continue;
 
-    return CreateDirectory(szPath, NULL) || GetLastError()==ERROR_ALREADY_EXISTS;
+        if (!SetupGetStringFieldW(&Context, 2, szName, MAX_PATH, NULL))
+            continue;
+
+        if (!SetupGetStringFieldW(&Context, 3, szDescription, MAX_PATH, NULL))
+            continue;
+
+        if (!SetupGetIntField(&Context, 4, &iIconNr))
+            continue;
+
+        _tcscat(szName, L".lnk");
+
+        CreateShortcut(pszFolder, szName, szCommand, szDescription, iIconNr);
+
+    }while (SetupFindNextLine(&Context, &Context));
+
+    return TRUE;
 }
 
+static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
+{
+    INFCONTEXT Context;
+    WCHAR szPath[MAX_PATH];
+    WCHAR szFolder[MAX_PATH];
+    WCHAR szFolderSection[MAX_PATH];
+    INT csidl;
+    LPWSTR p;
+
+    CoInitialize(NULL);
+
+    if (!SetupFindFirstLine(hinf, szSection, NULL, &Context))
+        return FALSE;
+
+    do
+    {
+        if (SetupGetFieldCount(&Context) < 2)
+            continue;
+
+        if (!SetupGetStringFieldW(&Context, 0, szFolderSection, MAX_PATH, NULL))
+            continue;
+
+        if (!SetupGetIntField(&Context, 1, &csidl))
+            continue;
+
+        if (!SetupGetStringFieldW(&Context, 2, szFolder, MAX_PATH, NULL))
+            continue;
+
+        if (!SHGetSpecialFolderPathW(0, szPath, csidl, TRUE))
+            continue;
+
+        p = PathAddBackslash(szPath);
+        _tcscpy(p, szFolder);
+
+        if (!CreateDirectory(szPath, NULL))
+        {
+            if (GetLastError() != ERROR_ALREADY_EXISTS) 
+            {
+                continue;
+            }
+        }
+
+        CreateShortcutsFromSection(hinf, szFolderSection, szPath);
+
+    }while (SetupFindNextLine(&Context, &Context));
+
+    CoUninitialize();
+
+    return TRUE;
+}
 
 static VOID
 CreateTempDir(
@@ -769,74 +819,6 @@ error:
 
 
 static BOOL
-CreateShortcuts(VOID)
-{
-    TCHAR szFolder[256];
-
-    CoInitialize(NULL);
-
-    /* Create desktop shortcuts */
-    CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, TRUE, 0);
-
-    /* Create program startmenu shortcuts */
-    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("%SystemRoot%\\explorer.exe"), IDS_CMT_EXPLORER, TRUE, 1);
-    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_DOWNLOADER, _T("%SystemRoot%\\system32\\rapps.exe"), IDS_CMT_DOWNLOADER, TRUE, 0);
-
-    /* Create administrative tools startmenu shortcuts */
-    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_SERVICE, _T("%SystemRoot%\\system32\\servman.exe"), IDS_CMT_SERVMAN, TRUE, 0);
-    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_DEVICE, _T("%SystemRoot%\\system32\\devmgmt.exe"), IDS_CMT_DEVMGMT, TRUE, 0);
-    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_EVENTVIEW, _T("%SystemRoot%\\system32\\eventvwr.exe"), IDS_CMT_EVENTVIEW, TRUE, 0);
-    CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_MSCONFIG, _T("%SystemRoot%\\system32\\msconfig.exe"), IDS_CMT_MSCONFIG, TRUE, 0);
-
-    /* Create and fill Accessories subfolder */
-    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
-    {
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CALC, _T("%SystemRoot%\\system32\\calc.exe"), IDS_CMT_CALC, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_NOTEPAD, _T("%SystemRoot%\\system32\\notepad.exe"), IDS_CMT_NOTEPAD, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_RDESKTOP, _T("%SystemRoot%\\system32\\mstsc.exe"), IDS_CMT_RDESKTOP, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_PAINT, _T("%SystemRoot%\\system32\\mspaint.exe"), IDS_CMT_PAINT, TRUE, 0);
-    }
-
-    /* Create System Tools subfolder and fill if the exe is available */
-    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_TOOLS, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
-    {
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CHARMAP, _T("%SystemRoot%\\system32\\charmap.exe"), IDS_CMT_CHARMAP, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_KBSWITCH, _T("%SystemRoot%\\system32\\kbswitch.exe"), IDS_CMT_KBSWITCH, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_REGEDIT, _T("%SystemRoot%\\regedit.exe"), IDS_CMT_REGEDIT, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_DXDIAG, _T("%SystemRoot%\\system32\\dxdiag.exe"), IDS_CMT_DXDIAG, TRUE, 0);
-    }
-
-    /* Create Accessibility subfolder and fill if the exe is available */
-    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_ACCESSIBILITY, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
-    {
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MAGNIFY, _T("%SystemRoot%\\system32\\magnify.exe"), IDS_CMT_MAGNIFY, TRUE, 0);
-    }
-
-    /* Create Entertainment subfolder and fill if the exe is available */
-    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_ENTERTAINMENT, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
-    {
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MPLAY32, _T("%SystemRoot%\\system32\\mplay32.exe"), IDS_CMT_MPLAY32, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNDVOL32, _T("%SystemRoot%\\system32\\sndvol32.exe"), IDS_CMT_SNDVOL32, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNDREC32, _T("%SystemRoot%\\system32\\sndrec32.exe"), IDS_CMT_SNDREC32, TRUE, 0);
-    }
-
-    /* Create Games subfolder and fill if the exe is available */
-    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
-    {
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SOLITAIRE, _T("%SystemRoot%\\system32\\sol.exe"), IDS_CMT_SOLITAIRE, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WINEMINE, _T("%SystemRoot%\\system32\\winmine.exe"), IDS_CMT_WINEMINE, TRUE, 0);
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SPIDER, _T("%SystemRoot%\\system32\\spider.exe"), IDS_CMT_SPIDER, TRUE, 0);
-    }
-
-    CoUninitialize();
-
-    return TRUE;
-}
-
-static BOOL
 SetSetupType(DWORD dwSetupType)
 {
     DWORD dwError;
@@ -872,6 +854,7 @@ InstallReactOS(HINSTANCE hInstance)
     HANDLE token;
     TOKEN_PRIVILEGES privs;
     HKEY hKey;
+    HINF hShortcutsInf;
 
     InitializeSetupActionLog(FALSE);
     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS");
@@ -922,11 +905,23 @@ InstallReactOS(HINSTANCE hInstance)
 
     InstallSecurity();
 
-    if (!CreateShortcuts())
+    hShortcutsInf = SetupOpenInfFileW(L"shortcuts.inf",
+                                      NULL,
+                                      INF_STYLE_WIN4,
+                                      NULL);
+    if (hShortcutsInf == INVALID_HANDLE_VALUE) 
+    {
+        FatalError("Failed to open shortcuts.inf");
+        return 0;
+    }
+
+    if (!CreateShortcuts(hShortcutsInf, L"ShortcutFolders"))
     {
         FatalError("CreateShortcuts() failed");
         return 0;
     }
+
+    SetupCloseInfFile(hShortcutsInf);
 
     /* ROS HACK, as long as NtUnloadKey is not implemented */
     {
@@ -967,7 +962,7 @@ InstallReactOS(HINSTANCE hInstance)
     /* Get shutdown privilege */
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
     {
-         FatalError("OpenProcessToken() failed!");
+        FatalError("OpenProcessToken() failed!");
         return 0;
     }
     if (!LookupPrivilegeValue(
