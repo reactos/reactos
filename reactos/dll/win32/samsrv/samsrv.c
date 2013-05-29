@@ -167,6 +167,20 @@ SamIFree_SAMPR_ENUMERATION_BUFFER(PSAMPR_ENUMERATION_BUFFER Ptr)
 
 VOID
 NTAPI
+SamIFree_SAMPR_GET_GROUPS_BUFFER(PSAMPR_GET_GROUPS_BUFFER Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->Groups != NULL)
+            MIDL_user_free(Ptr->Groups);
+
+        MIDL_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
 SamIFree_SAMPR_PSID_ARRAY(PSAMPR_PSID_ARRAY Ptr)
 {
     if (Ptr != NULL)
