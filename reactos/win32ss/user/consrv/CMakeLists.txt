@@ -36,11 +36,11 @@ add_library(consrv SHARED
 # FIXME: http://www.cmake.org/Bug/view.php?id=12998
 if(MSVC)
     ## NOTE: No need to specify it as we use MSVC :)
-    #add_target_compile_flags(consrv "/Ze")
-    ##set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/Ze")
+    ##add_target_compile_flags(consrv "/Ze")
+    #set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/Ze")
 else()
-    add_target_compile_flags(consrv "-fms-extensions")
-    #set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fms-extensions")
+    #add_target_compile_flags(consrv "-fms-extensions")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fms-extensions")
 endif()
 
 target_link_libraries(consrv win32ksys ${PSEH_LIB} uuid) # win32ksys because of NtUser...()
