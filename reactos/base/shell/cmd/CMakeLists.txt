@@ -38,7 +38,6 @@ list(APPEND SOURCE
     internal.c
     label.c
     locale.c
-    main.c
     memory.c
     misc.c
     mklink.c

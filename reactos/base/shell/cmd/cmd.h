@@ -114,7 +114,6 @@ BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
 LPTSTR DoDelayedExpansion(LPTSTR Line);
 INT DoCommand(LPTSTR first, LPTSTR rest, struct _PARSED_COMMAND *Cmd);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);
-int cmd_main (int argc, const TCHAR *argv[]);
 
 extern HANDLE CMD_ModuleHandle;
 
