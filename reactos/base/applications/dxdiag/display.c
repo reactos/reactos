@@ -213,7 +213,7 @@ InitializeDialog(HWND hwndDlg, PDISPLAY_DEVICEW pDispDevice)
     HKEY hKey;
     HWND hDlgCtrls[5];
     DWORD dwMemory;
-    DEVMODE DevMode;
+    DEVMODEW DevMode;
     IDirect3D9 * ppObj;
     D3DADAPTER_IDENTIFIER9 Identifier;
     HRESULT hResult;
@@ -276,7 +276,7 @@ InitializeDialog(HWND hwndDlg, PDISPLAY_DEVICEW pDispDevice)
     }
 
     /* retrieve current display mode */
-    DevMode.dmSize = sizeof(DEVMODE);
+    DevMode.dmSize = sizeof(DEVMODEW);
     if (EnumDisplaySettingsW(pDispDevice->DeviceName, ENUM_CURRENT_SETTINGS, &DevMode))
     {
         szFormat[0] = L'\0';

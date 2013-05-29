@@ -50,7 +50,7 @@ InsertTabCtrlItem(HWND hDlgCtrl, INT Position, LPWSTR uId)
     TCITEMW item;
 
     /* setup item info */
-    memset(&item, 0, sizeof(TCITEM));
+    memset(&item, 0, sizeof(TCITEMW));
     item.mask = TCIF_TEXT;
 
     /* load item name */
