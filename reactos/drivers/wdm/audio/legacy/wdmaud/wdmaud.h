@@ -67,8 +67,13 @@ typedef struct
     LIST_ENTRY SysAudioDeviceList;
     HANDLE hSysAudio;
     PFILE_OBJECT FileObject;
-
     LIST_ENTRY WdmAudClientList;
+
+    ULONG SysAudioDeviceCount;
+    PIO_WORKITEM WorkItem;
+    KEVENT InitializationCompletionEvent;
+    ULONG WorkItemActive;
+
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 
 typedef struct

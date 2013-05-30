@@ -11,6 +11,63 @@
 const GUID KSCATEGORY_SYSAUDIO = {0xA7C7A5B1L, 0x5AF3, 0x11D1, {0x9C, 0xED, 0x00, 0xA0, 0x24, 0xBF, 0x04, 0x07}};
 const GUID KSCATEGORY_WDMAUD   = {0x3E227E76L, 0x690D, 0x11D2, {0x81, 0x61, 0x00, 0x00, 0xF8, 0x77, 0x5B, 0xF1}};
 
+IO_WORKITEM_ROUTINE WdmAudInitWorkerRoutine;
+IO_TIMER_ROUTINE WdmAudTimerRoutine;
+
+VOID
+NTAPI
+WdmAudInitWorkerRoutine(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID Context)
+{
+    NTSTATUS Status;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    ULONG DeviceCount;
+
+    /* get device extension */
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* get device count */
+    DeviceCount = GetSysAudioDeviceCount(DeviceObject);
+
+    DPRINT("WdmAudInitWorkerRoutine SysAudioDeviceCount %ld\n", DeviceCount);
+
+    /* was a device added / removed */
+    if (DeviceCount != DeviceExtension->SysAudioDeviceCount)
+    {
+        /* init mmixer library */
+        Status = WdmAudMixerInitialize(DeviceObject);
+        DPRINT("WdmAudMixerInitialize Status %x WaveIn %lu WaveOut %lu Mixer %lu\n", Status, WdmAudGetWaveInDeviceCount(), WdmAudGetWaveOutDeviceCount(), WdmAudGetMixerDeviceCount());
+
+        /* store sysaudio device count */
+        DeviceExtension->SysAudioDeviceCount = DeviceCount;
+    }
+
+    /* signal completion */
+    KeSetEvent(&DeviceExtension->InitializationCompletionEvent, IO_NO_INCREMENT, FALSE);
+
+    /* reset work item status indicator */
+    InterlockedDecrement((volatile long *)&DeviceExtension->WorkItemActive);
+}
+
+VOID
+NTAPI
+WdmAudTimerRoutine(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID Context)
+{
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    if (InterlockedCompareExchange((volatile long *)&DeviceExtension->WorkItemActive, 1, 0) == 0)
+    {
+        /* queue work item */
+        IoQueueWorkItem(DeviceExtension->WorkItem, WdmAudInitWorkerRoutine, DelayedWorkQueue, (PVOID)DeviceExtension);
+    }
+}
+
 NTSTATUS
 NTAPI
 WdmAudInstallDevice(
@@ -38,9 +95,18 @@ WdmAudInstallDevice(
         return Status;
     }
 
-    /* clear device extension */
+    /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     RtlZeroMemory(DeviceExtension, sizeof(WDMAUD_DEVICE_EXTENSION));
+
+    /* allocate work item */
+    DeviceExtension->WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (!DeviceExtension->WorkItem)
+    {
+        /* failed to allocate work item */
+        IoDeleteDevice(DeviceObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* register device interfaces */
     Status = WdmAudRegisterDeviceInterface(DeviceObject, DeviceExtension);
@@ -60,6 +126,12 @@ WdmAudInstallDevice(
     /* initialize spinlock */
     KeInitializeSpinLock(&DeviceExtension->Lock);
 
+    /* initialization completion event */
+    KeInitializeEvent(&DeviceExtension->InitializationCompletionEvent, NotificationEvent, FALSE);
+
+    /* initialize timer */
+    IoInitializeTimer(DeviceObject, WdmAudTimerRoutine, (PVOID)WdmAudTimerRoutine);
+
     /* find available sysaudio devices */
     Status = WdmAudOpenSysAudioDevices(DeviceObject, DeviceExtension);
     if (!NT_SUCCESS(Status))
@@ -69,6 +141,7 @@ WdmAudInstallDevice(
         IoDeleteDevice(DeviceObject);
         return Status;
     }
+
     /* allocate ks device header */
     Status = KsAllocateDeviceHeader(&DeviceExtension->DeviceHeader, 0, NULL);
     if (!NT_SUCCESS(Status))
@@ -79,8 +152,8 @@ WdmAudInstallDevice(
         return Status;
     }
 
-    Status = WdmAudMixerInitialize(DeviceObject);
-    DPRINT("WdmAudMixerInitialize Status %x WaveIn %lu WaveOut %lu Mixer %lu\n", Status, WdmAudGetWaveInDeviceCount(), WdmAudGetWaveOutDeviceCount(), WdmAudGetMixerDeviceCount());
+    /* start the timer */
+    IoStartTimer(DeviceObject);
 
     DeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
     DeviceObject->Flags &= ~ DO_DEVICE_INITIALIZING;

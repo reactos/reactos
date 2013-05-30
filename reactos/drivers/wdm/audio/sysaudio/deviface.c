@@ -92,15 +92,27 @@ InsertAudioDevice(
         goto cleanup;
     }
 
-    RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\??\\");
-    RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, DeviceName);
+    /* open device */
+    Status = OpenDevice(DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
+    if (NT_SUCCESS(Status))
+    {
+        /* copy device name */
+        RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, DeviceName);
+    }
+    else
+    {
+        /* the device name needs to be prefixed */
+        RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\??\\");
+        RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, DeviceName);
 
-    Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
+        /* open device */
+        Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
+    }
 
-     if (!NT_SUCCESS(Status))
-     {
-         goto cleanup;
-     }
+    if (!NT_SUCCESS(Status))
+    {
+        goto cleanup;
+    }
 
     /* fetch device extension */
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
