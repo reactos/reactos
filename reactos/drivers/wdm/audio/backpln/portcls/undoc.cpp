@@ -258,7 +258,7 @@ PropertyItemDispatch(
                         {
                             // found match
                             PropertyRequest->PropertyItem = PropertyItem;
-                            DPRINT1("Using property item %p\n", PropertyItem);
+                            DPRINT("Using property item %p\n", PropertyItem);
                             // done
                             break;
                         }
@@ -276,12 +276,12 @@ PropertyItemDispatch(
         // now call the handler
         UNICODE_STRING GuidBuffer;
         RtlStringFromGUID(Property->Set, &GuidBuffer);
-        DPRINT1("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
+        DPRINT("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
                 PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
                 PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
         RtlFreeUnicodeString(&GuidBuffer);
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
-        DPRINT1("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
+        DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
         Irp->IoStatus.Information = PropertyRequest->ValueSize;
 
         if (Status != STATUS_PENDING)
