@@ -119,11 +119,11 @@ InitializeTabCtrl(HWND hwndDlg, PDXDIAG_CONTEXT pContext)
     pContext->hTabCtrl = hTabCtrlWnd;
 
     /* create the dialogs */
-    pContext->hDialogs[0] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SYSTEM_DIALOG), hTabCtrlWnd, SystemPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), hTabCtrlWnd, MusicPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), hTabCtrlWnd, InputPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), hTabCtrlWnd, NetworkPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), hTabCtrlWnd, HelpPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[0] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SYSTEM_DIALOG), pContext->hMainDialog, SystemPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), pContext->hMainDialog, MusicPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), pContext->hMainDialog, InputPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), pContext->hMainDialog, NetworkPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), pContext->hMainDialog, HelpPageWndProc, (LPARAM)pContext);
 
     /* insert tab ctrl items */
     InsertTabCtrlItem(hTabCtrlWnd, 0, MAKEINTRESOURCEW(IDS_SYSTEM_DIALOG));
@@ -197,9 +197,11 @@ DxDiagWndProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
                EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NEXT), 
                             (CurSel != TabCtrl_GetItemCount(hTabCtrlWnd) - 1));
                
-               /* switch to next page */
+               /* switch to next tab */
                SendMessageW(hTabCtrlWnd, TCM_SETCURSEL, CurSel, 0L);
-                
+
+               /* show next page */
+               TabCtrl_OnSelChange(pContext);
                return TRUE;
             }
 

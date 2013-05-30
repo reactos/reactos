@@ -244,8 +244,6 @@ BOOL CALLBACK DSEnumCallback(LPGUID lpGuid, LPCWSTR lpcstrDescription, LPCWSTR l
     /* set further device details */
     SetDeviceDetails(hwndDlg, &GUID_DEVCLASS_MEDIA, lpcstrDescription);
 
-
-
     /* load sound resource string */
     szSound[0] = L'\0';
     LoadStringW(hInst, IDS_SOUND_DIALOG, szSound, sizeof(szSound)/sizeof(WCHAR));
