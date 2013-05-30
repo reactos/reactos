@@ -23,9 +23,17 @@
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
 
+typedef enum _ENUM_PHASE
+{
+    BuiltinPhase,
+    AccountPhase,
+    DonePhase
+} ENUM_PHASE;
+
 typedef struct _ENUM_CONTEXT
 {
     SAM_HANDLE ServerHandle;
+    SAM_HANDLE DomainHandle;
     SAM_HANDLE BuiltinDomainHandle;
     SAM_HANDLE AccountDomainHandle;
 
@@ -33,7 +41,7 @@ typedef struct _ENUM_CONTEXT
     PSAM_RID_ENUMERATION Buffer;
     ULONG Returned;
     ULONG Index;
-    BOOLEAN BuiltinDone;
+    ENUM_PHASE Phase;
 
 } ENUM_CONTEXT, *PENUM_CONTEXT;
 
@@ -462,7 +470,6 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
         EnumContext->Buffer = NULL;
         EnumContext->Returned = 0;
         EnumContext->Index = 0;
-        EnumContext->BuiltinDone = FALSE;
 
         Status = SamConnect((servername != NULL) ? &ServerName : NULL,
                             &EnumContext->ServerHandle,
@@ -495,6 +502,9 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
+
+        EnumContext->Phase = BuiltinPhase;
+        EnumContext->DomainHandle = EnumContext->BuiltinDomainHandle;
     }
 
 
@@ -505,15 +515,9 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
 
         if (EnumContext->Index >= EnumContext->Returned)
         {
-//            if (EnumContext->BuiltinDone == TRUE)
-//            {
-//                ApiStatus = NERR_Success;
-//                goto done;
-//            }
-
             TRACE("Calling SamEnumerateAliasesInDomain\n");
 
-            Status = SamEnumerateAliasesInDomain(EnumContext->BuiltinDomainHandle,
+            Status = SamEnumerateAliasesInDomain(EnumContext->DomainHandle,
                                                  &EnumContext->EnumerationContext,
                                                  (PVOID *)&EnumContext->Buffer,
                                                  prefmaxlen,
@@ -532,10 +536,6 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
                 ApiStatus = NERR_BufTooSmall;
                 goto done;
             }
-            else
-            {
-                EnumContext->BuiltinDone = TRUE;
-            }
         }
 
         TRACE("EnumContext: %lu\n", EnumContext);
@@ -547,7 +547,7 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
 
         TRACE("RID: %lu\n", CurrentAlias->RelativeId);
 
-        Status = SamOpenAlias(EnumContext->BuiltinDomainHandle,
+        Status = SamOpenAlias(EnumContext->DomainHandle,
                               ALIAS_READ_INFORMATION,
                               CurrentAlias->RelativeId,
                               &AliasHandle);
@@ -590,10 +590,39 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
 
         (*entriesread)++;
 
+        if (EnumContext->Index == EnumContext->Returned)
+        {
+            switch (EnumContext->Phase)
+            {
+                case BuiltinPhase:
+                    EnumContext->Phase = AccountPhase;
+                    EnumContext->DomainHandle = EnumContext->AccountDomainHandle;
+                    EnumContext->EnumerationContext = 0;
+                    EnumContext->Index = 0;
+                    EnumContext->Returned = 0;
+
+                    if (EnumContext->Buffer != NULL)
+                    {
+                        for (i = 0; i < EnumContext->Returned; i++)
+                        {
+                            SamFreeMemory(EnumContext->Buffer[i].Name.Buffer);
+                        }
+
+                        SamFreeMemory(EnumContext->Buffer);
+                        EnumContext->Buffer = NULL;
+                    }
+                    break;
+
+                case AccountPhase:
+                case DonePhase:
+                    EnumContext->Phase = DonePhase;
+                    break;
+            }
+        }
 //    }
 
 done:
-    if (ApiStatus == NERR_Success && EnumContext->Index < EnumContext->Returned)
+    if (ApiStatus == NERR_Success && EnumContext->Phase != DonePhase)
         ApiStatus = ERROR_MORE_DATA;
 
     if (EnumContext != NULL)
