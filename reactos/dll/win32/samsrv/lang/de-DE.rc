@@ -4,6 +4,9 @@ STRINGTABLE
 BEGIN
     IDS_DOMAIN_BUILTIN_NAME "Builtin"
 
+    IDS_GROUP_NONE_NAME "Kein"
+    IDS_GROUP_NONE_COMMENT "Gewöhnliche Benutzer"
+
     IDS_ALIAS_ADMINISTRATORS_NAME "Administratoren"
     IDS_ALIAS_ADMINISTRATORS_COMMENT "Administratoren haben unbeschränkten Zugriff auf den Computer oder die Domäne."
 

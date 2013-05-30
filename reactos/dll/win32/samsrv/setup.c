@@ -148,16 +148,166 @@ SampSetupCreateAliasAccount(HKEY hDomainKey,
 }
 
 
-#if 0
-static BOOL
-SampSetupCreateGroupAccount(HKEY hDomainKey,
+static
+NTSTATUS
+SampSetupAddMemberToGroup(IN HANDLE hDomainKey,
+                          IN ULONG GroupId,
+                          IN ULONG MemberId)
+{
+    WCHAR szKeyName[256];
+    HANDLE hGroupKey = NULL;
+    PULONG MembersBuffer = NULL;
+    ULONG MembersCount = 0;
+    ULONG Length = 0;
+    ULONG i;
+    NTSTATUS Status;
+
+    swprintf(szKeyName, L"Groups\\%08lX", GroupId);
+
+    Status = SampRegOpenKey(hDomainKey,
+                            szKeyName,
+                            KEY_ALL_ACCESS,
+                            &hGroupKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegQueryValue(hGroupKey,
+                               L"Members",
+                               NULL,
+                               NULL,
+                               &Length);
+    if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+        goto done;
+
+    MembersBuffer = midl_user_allocate(Length + sizeof(ULONG));
+    if (MembersBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        Status = SampRegQueryValue(hGroupKey,
+                                   L"Members",
+                                   NULL,
+                                   MembersBuffer,
+                                   &Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        MembersCount = Length / sizeof(ULONG);
+    }
+
+    for (i = 0; i < MembersCount; i++)
+    {
+        if (MembersBuffer[i] == MemberId)
+        {
+            Status = STATUS_MEMBER_IN_GROUP;
+            goto done;
+        }
+    }
+
+    MembersBuffer[MembersCount] = MemberId;
+    Length += sizeof(ULONG);
+
+    Status = SampRegSetValue(hGroupKey,
+                             L"Members",
+                             REG_BINARY,
+                             MembersBuffer,
+                             Length);
+
+done:
+    if (MembersBuffer != NULL)
+        midl_user_free(MembersBuffer);
+
+    if (hGroupKey != NULL)
+        SampRegCloseKey(hGroupKey);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+SampSetupCreateGroupAccount(HANDLE hDomainKey,
                             LPCWSTR lpAccountName,
+                            LPCWSTR lpComment,
                             ULONG ulRelativeId)
 {
+    SAM_GROUP_FIXED_DATA FixedGroupData;
+    WCHAR szAccountKeyName[32];
+    HANDLE hAccountKey = NULL;
+    HANDLE hNamesKey = NULL;
+    NTSTATUS Status;
 
-    return FALSE;
+    /* Initialize fixed group data */
+    FixedGroupData.Version = 1;
+    FixedGroupData.Reserved = 0;
+    FixedGroupData.GroupId = ulRelativeId;
+    FixedGroupData.Attributes = 0;
+
+    swprintf(szAccountKeyName, L"Groups\\%08lX", ulRelativeId);
+
+    Status = SampRegCreateKey(hDomainKey,
+                              szAccountKeyName,
+                              KEY_ALL_ACCESS,
+                              &hAccountKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"F",
+                             REG_BINARY,
+                             (LPVOID)&FixedGroupData,
+                             sizeof(SAM_GROUP_FIXED_DATA));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"Name",
+                             REG_SZ,
+                             (LPVOID)lpAccountName,
+                             (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"AdminComment",
+                             REG_SZ,
+                             (LPVOID)lpComment,
+                             (wcslen(lpComment) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegOpenKey(hDomainKey,
+                            L"Groups\\Names",
+                            KEY_ALL_ACCESS,
+                            &hNamesKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hNamesKey,
+                            lpAccountName,
+                            REG_DWORD,
+                            (LPVOID)&ulRelativeId,
+                            sizeof(ULONG));
+
+done:
+    if (hNamesKey != NULL)
+        SampRegCloseKey(hNamesKey);
+
+    if (hAccountKey != NULL)
+    {
+        SampRegCloseKey(hAccountKey);
+
+        if (!NT_SUCCESS(Status))
+            SampRegDeleteKey(hDomainKey,
+                             szAccountKeyName);
+    }
+
+    return Status;
 }
-#endif
 
 
 static BOOL
@@ -684,7 +834,7 @@ SampInitializeSAM(VOID)
                                     szComment,
                                     DOMAIN_ALIAS_RID_POWER_USERS);
 
-
+        /* Add the Administrator user to the Administrators alias */
         pSid = AppendRidToSid(AccountDomainInfo->DomainSid,
                               DOMAIN_USER_RID_ADMIN);
         if (pSid != NULL)
@@ -696,6 +846,17 @@ SampInitializeSAM(VOID)
             RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
         }
 
+        /* Add the Guest user to the Guests alias */
+        pSid = AppendRidToSid(AccountDomainInfo->DomainSid,
+                              DOMAIN_USER_RID_GUEST);
+        if (pSid != NULL)
+        {
+            SampSetupAddMemberToAlias(hDomainKey,
+                                      DOMAIN_ALIAS_RID_GUESTS,
+                                      pSid);
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
+        }
 
         RegCloseKey(hDomainKey);
     }
@@ -707,6 +868,14 @@ SampInitializeSAM(VOID)
                               AccountDomainInfo->DomainSid,
                               &hDomainKey))
     {
+        SampLoadString(hInstance, IDS_GROUP_NONE_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_GROUP_NONE_COMMENT, szComment, 256);
+
+        SampSetupCreateGroupAccount(hDomainKey,
+                                    szName,
+                                    szComment,
+                                    DOMAIN_GROUP_RID_USERS);
+
         SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_NAME, szName, 80);
         SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_COMMENT, szComment, 256);
 
@@ -716,6 +885,10 @@ SampInitializeSAM(VOID)
                                    DOMAIN_USER_RID_ADMIN,
                                    USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
+        SampSetupAddMemberToGroup(hDomainKey,
+                                  DOMAIN_GROUP_RID_USERS,
+                                  DOMAIN_USER_RID_ADMIN);
+
         SampLoadString(hInstance, IDS_USER_GUEST_NAME, szName, 80);
         SampLoadString(hInstance, IDS_USER_GUEST_COMMENT, szComment, 256);
 
@@ -724,6 +897,10 @@ SampInitializeSAM(VOID)
                                    szComment,
                                    DOMAIN_USER_RID_GUEST,
                                    USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
+
+        SampSetupAddMemberToGroup(hDomainKey,
+                                  DOMAIN_GROUP_RID_USERS,
+                                  DOMAIN_USER_RID_GUEST);
 
         RegCloseKey(hDomainKey);
     }
