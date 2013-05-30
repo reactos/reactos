@@ -48,6 +48,11 @@ typedef struct _GUI_CONSOLE_DATA
     HICON hIcon;                /* Handle to the console's icon (big)   */
     HICON hIconSm;              /* Handle to the console's icon (small) */
     BOOL IgnoreNextMouseSignal; /* Used in cases where we don't want to treat a mouse signal */
+
+    BOOL IsCloseButtonEnabled;  /* TRUE if the Close button and the corresponding system menu item are enabled, FALSE otherwise */
+    UINT cmdIdLow ;             /* Lowest menu id of the user-reserved menu id range */
+    UINT cmdIdHigh;             /* Highest menu id of the user-reserved menu id range */
+
 //  COLORREF Colors[16];
 
 //  PVOID   ScreenBuffer;       /* Hardware screen buffer */

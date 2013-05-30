@@ -451,6 +451,12 @@ BOOL WINAPI SetConsoleTextAttribute(_In_ HANDLE, _In_ WORD);
 BOOL WINAPI SetConsoleTitleA(_In_ LPCSTR);
 BOOL WINAPI SetConsoleTitleW(_In_ LPCWSTR);
 BOOL WINAPI SetConsoleWindowInfo(_In_ HANDLE, _In_ BOOL, _In_ const SMALL_RECT*);
+
+/* Undocumented, see http://undoc.airesoft.co.uk/kernel32.dll/ConsoleMenuControl.php */
+HMENU WINAPI ConsoleMenuControl(_In_ HANDLE, _In_ DWORD, _In_ DWORD);
+/* Undocumented */
+BOOL WINAPI SetConsoleMenuClose(_In_ BOOL);
+
 BOOL WINAPI WriteConsoleA(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);
 BOOL WINAPI WriteConsoleW(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);
 

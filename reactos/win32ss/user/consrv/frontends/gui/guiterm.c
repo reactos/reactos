@@ -83,21 +83,21 @@ typedef struct _GUICONSOLE_MENUITEM
 
 static const GUICONSOLE_MENUITEM GuiConsoleEditMenuItems[] =
 {
-    { IDS_MARK, NULL, ID_SYSTEM_EDIT_MARK },
-    { IDS_COPY, NULL, ID_SYSTEM_EDIT_COPY },
-    { IDS_PASTE, NULL, ID_SYSTEM_EDIT_PASTE },
-    { IDS_SELECTALL, NULL, ID_SYSTEM_EDIT_SELECTALL },
-    { IDS_SCROLL, NULL, ID_SYSTEM_EDIT_SCROLL },
-    { IDS_FIND, NULL, ID_SYSTEM_EDIT_FIND },
+    { IDS_MARK,         NULL, ID_SYSTEM_EDIT_MARK       },
+    { IDS_COPY,         NULL, ID_SYSTEM_EDIT_COPY       },
+    { IDS_PASTE,        NULL, ID_SYSTEM_EDIT_PASTE      },
+    { IDS_SELECTALL,    NULL, ID_SYSTEM_EDIT_SELECTALL  },
+    { IDS_SCROLL,       NULL, ID_SYSTEM_EDIT_SCROLL     },
+    { IDS_FIND,         NULL, ID_SYSTEM_EDIT_FIND       },
 
     { 0, NULL, 0 } /* End of list */
 };
 
 static const GUICONSOLE_MENUITEM GuiConsoleMainMenuItems[] =
 {
-    { IDS_EDIT, GuiConsoleEditMenuItems, 0 },
-    { IDS_DEFAULTS, NULL, ID_SYSTEM_DEFAULTS },
-    { IDS_PROPERTIES, NULL, ID_SYSTEM_PROPERTIES },
+    { IDS_EDIT,         GuiConsoleEditMenuItems, 0 },
+    { IDS_DEFAULTS,     NULL, ID_SYSTEM_DEFAULTS   },
+    { IDS_PROPERTIES,   NULL, ID_SYSTEM_PROPERTIES },
 
     { 0, NULL, 0 } /* End of list */
 };
@@ -186,8 +186,7 @@ GuiConsoleAppendMenuItems(HMENU hMenu,
 static VOID
 GuiConsoleCreateSysMenu(HWND hWnd)
 {
-    HMENU hMenu;
-    hMenu = GetSystemMenu(hWnd, FALSE);
+    HMENU hMenu = GetSystemMenu(hWnd, FALSE);
     if (hMenu != NULL)
     {
         GuiConsoleAppendMenuItems(hMenu, GuiConsoleMainMenuItems);
@@ -195,6 +194,16 @@ GuiConsoleCreateSysMenu(HWND hWnd)
     }
 }
 
+static VOID
+GuiSendMenuEvent(PCONSOLE Console, UINT CmdId)
+{
+    INPUT_RECORD er;
+
+    er.EventType = MENU_EVENT;
+    er.Event.MenuEvent.dwCommandId = CmdId;
+
+    ConioProcessInputEvent(Console, &er);
+}
 
 static VOID
 GuiConsoleCopy(PGUI_CONSOLE_DATA GuiData);
@@ -222,6 +231,18 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
     }
     ActiveBuffer = Console->ActiveBuffer;
 
+    /*
+     * In case the selected menu item belongs to the user-reserved menu id range,
+     * send to him a menu event and return directly. The user must handle those
+     * reserved menu commands...
+     */
+    if (GuiData->cmdIdLow <= (UINT)wParam && (UINT)wParam <= GuiData->cmdIdHigh)
+    {
+        GuiSendMenuEvent(Console, (UINT)wParam);
+        goto Unlock_Quit;
+    }
+
+    /* ... otherwise, perform actions. */
     switch (wParam)
     {
         case ID_SYSTEM_EDIT_MARK:
@@ -284,8 +305,8 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
             break;
     }
 
+Unlock_Quit:
     LeaveCriticalSection(&Console->Lock);
-
 Quit:
     if (!Ret)
         Ret = DefWindowProcW(GuiData->hWindow, WM_SYSCOMMAND, wParam, lParam);
@@ -1570,9 +1591,11 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     if (GuiData == NULL) return 0;
 
     /*
-     * Each helper function which needs the console
-     * has to validate and lock it.
+     * Just retrieve a pointer to the console in case somebody needs it.
+     * It is not NULL because it was checked in GuiGetGuiData.
+     * Each helper function which needs the console has to validate and lock it.
      */
+    Console = GuiData->Console;
 
     /* We have a console, start message dispatching */
     switch (msg)
@@ -1683,6 +1706,36 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
 
+        case WM_INITMENU:
+        {
+            HMENU hMenu = (HMENU)wParam;
+            if (hMenu != NULL)
+            {
+                /* Enables or disables the Close menu item */
+                EnableMenuItem(hMenu, SC_CLOSE, MF_BYCOMMAND | (GuiData->IsCloseButtonEnabled ? MF_ENABLED : MF_GRAYED));
+            }
+
+            if (ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
+            {
+                GuiSendMenuEvent(Console, WM_INITMENU);
+                LeaveCriticalSection(&Console->Lock);
+            }
+            break;
+        }
+
+        case WM_MENUSELECT:
+        {
+            if (HIWORD(wParam) == 0xFFFF) // Allow all the menu flags
+            {
+                if (ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
+                {
+                    GuiSendMenuEvent(Console, WM_MENUSELECT);
+                    LeaveCriticalSection(&Console->Lock);
+                }
+            }
+            break;
+        }
+
         case WM_COMMAND:
         case WM_SYSCOMMAND:
         {
@@ -1693,7 +1746,6 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_SETFOCUS:
         case WM_KILLFOCUS:
         {
-            Console = GuiData->Console; // Not NULL because checked in GuiGetGuiData.
             if (ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
             {
                 INPUT_RECORD er;
@@ -1730,7 +1782,6 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case PM_APPLY_CONSOLE_INFO:
         {
-            Console = GuiData->Console; // Not NULL because checked in GuiGetGuiData.
             if (ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
             {
                 GuiApplyUserSettings(GuiData, (HANDLE)wParam, (BOOL)lParam);
@@ -2322,6 +2373,37 @@ GuiSetDisplayMode(PCONSOLE Console, ULONG NewMode)
     return TRUE;
 }
 
+static HMENU WINAPI
+GuiMenuControl(PCONSOLE Console, UINT cmdIdLow, UINT cmdIdHigh)
+{
+    PGUI_CONSOLE_DATA GuiData = Console->TermIFace.Data;
+
+    GuiData->cmdIdLow  = cmdIdLow ;
+    GuiData->cmdIdHigh = cmdIdHigh;
+
+    return GetSystemMenu(GuiData->hWindow, FALSE);
+}
+
+static BOOL WINAPI
+GuiSetMenuClose(PCONSOLE Console, BOOL Enable)
+{
+    /*
+     * NOTE: See http://www.mail-archive.com/harbour@harbour-project.org/msg27509.html
+     * or http://harbour-devel.1590103.n2.nabble.com/Question-about-hb-gt-win-CtrlHandler-usage-td4670862i20.html
+     * for more information.
+     */
+
+    PGUI_CONSOLE_DATA GuiData = Console->TermIFace.Data;
+    HMENU hSysMenu = GetSystemMenu(GuiData->hWindow, FALSE);
+
+    if (hSysMenu == NULL) return FALSE;
+
+    GuiData->IsCloseButtonEnabled = Enable;
+    EnableMenuItem(hSysMenu, SC_CLOSE, MF_BYCOMMAND | (Enable ? MF_ENABLED : MF_GRAYED));
+
+    return TRUE;
+}
+
 static FRONTEND_VTBL GuiVtbl =
 {
     GuiCleanupConsole,
@@ -2338,6 +2420,8 @@ static FRONTEND_VTBL GuiVtbl =
     GuiGetLargestConsoleWindowSize,
     GuiGetDisplayMode,
     GuiSetDisplayMode,
+    GuiMenuControl,
+    GuiSetMenuClose,
 };
 
 NTSTATUS FASTCALL
@@ -2459,6 +2543,12 @@ GuiInitConsole(PCONSOLE Console,
             GuiData->hIconSm = hIconSm;
         }
     }
+
+    /* Close button and the corresponding system menu item are enabled by default */
+    GuiData->IsCloseButtonEnabled = TRUE;
+
+    /* There is no user-reserved menu id range by default */
+    GuiData->cmdIdLow = GuiData->cmdIdHigh = 0;
 
     /*
      * We need to wait until the GUI has been fully initialized

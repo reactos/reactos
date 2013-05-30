@@ -40,5 +40,9 @@
     (Console)->TermIFace.Vtbl->GetDisplayMode(Console)
 #define ConioSetDisplayMode(Console, NewMode) \
     (Console)->TermIFace.Vtbl->SetDisplayMode((Console), (NewMode))
+#define ConioMenuControl(Console, CmdIdLow, CmdIdHigh) \
+    (Console)->TermIFace.Vtbl->MenuControl((Console), (CmdIdLow), (CmdIdHigh))
+#define ConioSetMenuClose(Console, Enable) \
+    (Console)->TermIFace.Vtbl->SetMenuClose((Console), (Enable))
 
 /* EOF */

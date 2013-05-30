@@ -64,7 +64,7 @@ typedef enum _CONSRV_API_NUMBER
     // ConsolepVDMOperation,
     // ConsolepSetCursor,
     // ConsolepShowCursor,
-    // ConsolepMenuControl,
+    ConsolepMenuControl,
     // ConsolepSetPalette,
     ConsolepSetDisplayMode,
     // ConsolepRegisterVDM,
@@ -85,7 +85,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepGetCP,
     ConsolepSetCP,
     // ConsolepSetKeyShortcuts,
-    // ConsolepSetMenuClose,
+    ConsolepSetMenuClose,
     // ConsolepNotifyLastClose,
     ConsolepGenerateCtrlEvent,
     // ConsolepGetKeyboardLayoutName,
@@ -472,6 +472,19 @@ typedef struct
 typedef struct
 {
     HANDLE OutputHandle;
+    DWORD  dwCmdIdLow;
+    DWORD  dwCmdIdHigh;
+    HMENU  hMenu;
+} CONSOLE_MENUCONTROL, *PCONSOLE_MENUCONTROL;
+
+typedef struct
+{
+    BOOL Enable;
+} CONSOLE_SETMENUCLOSE, *PCONSOLE_SETMENUCLOSE;
+
+typedef struct
+{
+    HANDLE OutputHandle;
     BOOL   Absolute;
     SMALL_RECT WindowRect; // New console window position in the screen-buffer frame (Absolute == TRUE)
                            // or in the old window position frame (Absolute == FALSE).
@@ -479,12 +492,12 @@ typedef struct
 
 typedef struct
 {
-    HWND    WindowHandle;
+    HWND WindowHandle;
 } CONSOLE_GETWINDOW, *PCONSOLE_GETWINDOW;
 
 typedef struct
 {
-    HICON   WindowIcon;
+    HICON WindowIcon;
 } CONSOLE_SETICON, *PCONSOLE_SETICON;
 
 
@@ -637,6 +650,8 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_INVALIDATEDIBITS InvalidateDIBitsRequest;
         CONSOLE_GETSETCONSOLETITLE TitleRequest;
         CONSOLE_GETLARGESTWINDOWSIZE GetLargestWindowSizeRequest;
+        CONSOLE_MENUCONTROL MenuControlRequest;
+        CONSOLE_SETMENUCLOSE SetMenuCloseRequest;
         CONSOLE_SETWINDOWINFO SetWindowInfoRequest;
         CONSOLE_GETWINDOW GetWindowRequest;
         CONSOLE_SETICON SetIconRequest;

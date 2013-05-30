@@ -643,6 +643,18 @@ TuiSetDisplayMode(PCONSOLE Console, ULONG NewMode)
     return TRUE;
 }
 
+static HMENU WINAPI
+TuiMenuControl(PCONSOLE Console, UINT cmdIdLow, UINT cmdIdHigh)
+{
+    return NULL;
+}
+
+static BOOL WINAPI
+TuiSetMenuClose(PCONSOLE Console, BOOL Enable)
+{
+    return FALSE;
+}
+
 static FRONTEND_VTBL TuiVtbl =
 {
     TuiCleanupConsole,
@@ -659,6 +671,8 @@ static FRONTEND_VTBL TuiVtbl =
     TuiGetLargestConsoleWindowSize,
     TuiGetDisplayMode,
     TuiSetDisplayMode,
+    TuiMenuControl,
+    TuiSetMenuClose,
 };
 
 NTSTATUS FASTCALL

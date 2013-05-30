@@ -240,17 +240,29 @@ IntCheckForConsoleFileName(IN LPCWSTR pszName,
 
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
+ * @note See http://undoc.airesoft.co.uk/kernel32.dll/ConsoleMenuControl.php
  */
-BOOL
+HMENU
 WINAPI
-ConsoleMenuControl(HANDLE hConsole,
-                   DWORD Unknown1,
-                   DWORD Unknown2)
+ConsoleMenuControl(HANDLE hConsoleOutput,
+                   DWORD dwCmdIdLow,
+                   DWORD dwCmdIdHigh)
 {
-    DPRINT1("ConsoleMenuControl(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", hConsole, Unknown1, Unknown2);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_MENUCONTROL MenuControlRequest = &ApiMessage.Data.MenuControlRequest;
+
+    MenuControlRequest->OutputHandle = hConsoleOutput;
+    MenuControlRequest->dwCmdIdLow   = dwCmdIdLow;
+    MenuControlRequest->dwCmdIdHigh  = dwCmdIdHigh;
+    MenuControlRequest->hMenu        = NULL;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepMenuControl),
+                        sizeof(CONSOLE_MENUCONTROL));
+
+    return MenuControlRequest->hMenu;
 }
 
 
@@ -654,15 +666,29 @@ SetConsoleMaximumWindowSize(DWORD Unknown0,
 
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
  */
 BOOL
 WINAPI
-SetConsoleMenuClose(DWORD Unknown0)
+SetConsoleMenuClose(BOOL bEnable)
 {
-    DPRINT1("SetConsoleMenuClose(0x%x) UNIMPLEMENTED!\n", Unknown0);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETMENUCLOSE SetMenuCloseRequest = &ApiMessage.Data.SetMenuCloseRequest;
+
+    SetMenuCloseRequest->Enable = bEnable;
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetMenuClose),
+                                 sizeof(CONSOLE_SETMENUCLOSE));
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 

@@ -1339,11 +1339,7 @@ CSR_API(SrvGetConsoleDisplayMode)
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                               &Console, TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to get console handle in SrvGetConsoleDisplayMode\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     GetDisplayModeRequest->DisplayMode = ConioGetDisplayMode(Console);
 
@@ -1363,11 +1359,7 @@ CSR_API(SrvSetConsoleDisplayMode)
                                    &Buff,
                                    GENERIC_WRITE,
                                    TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to get console handle in SrvSetConsoleDisplayMode\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
 
@@ -1404,6 +1396,47 @@ CSR_API(SrvGetLargestConsoleWindowSize)
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
     return STATUS_SUCCESS;
+}
+
+CSR_API(SrvConsoleMenuControl)
+{
+    NTSTATUS Status;
+    PCONSOLE_MENUCONTROL MenuControlRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.MenuControlRequest;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
+
+    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                   MenuControlRequest->OutputHandle,
+                                   &Buff,
+                                   GENERIC_WRITE,
+                                   TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Console = Buff->Header.Console;
+
+    MenuControlRequest->hMenu = ConioMenuControl(Console,
+                                                 MenuControlRequest->dwCmdIdLow,
+                                                 MenuControlRequest->dwCmdIdHigh);
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return STATUS_SUCCESS;
+}
+
+CSR_API(SrvSetConsoleMenuClose)
+{
+    NTSTATUS Status;
+    BOOL Success;
+    PCONSOLE_SETMENUCLOSE SetMenuCloseRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetMenuCloseRequest;
+    PCONSOLE Console;
+
+    Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                              &Console, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Success = ConioSetMenuClose(Console, SetMenuCloseRequest->Enable);
+
+    ConSrvReleaseConsole(Console, TRUE);
+    return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 CSR_API(SrvSetConsoleWindowInfo)

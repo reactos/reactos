@@ -218,6 +218,11 @@ typedef struct _FRONTEND_VTBL
     ULONG (WINAPI *GetDisplayMode)(struct _CONSOLE* Console);
     BOOL  (WINAPI *SetDisplayMode)(struct _CONSOLE* Console,
                                    ULONG NewMode);
+    HMENU (WINAPI *MenuControl)(struct _CONSOLE* Console,
+                                UINT cmdIdLow,
+                                UINT cmdIdHigh);
+    BOOL  (WINAPI *SetMenuClose)(struct _CONSOLE* Console,
+                                 BOOL Enable);
 
 #if 0 // Possible future front-end interface
     BOOL (WINAPI *GetFrontEndProperty)(struct _CONSOLE* Console,
