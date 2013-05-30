@@ -421,6 +421,7 @@ LANStatusUiDetailsDlg(
     PIP_PER_ADAPTER_INFO pPerAdapter;
     DWORD dwSize;
     HWND hDlgCtrl;
+    RECT rect;
 
     switch(uMsg)
     {
@@ -428,8 +429,15 @@ LANStatusUiDetailsDlg(
             pContext = (LANSTATUSUI_CONTEXT*)lParam;
 
             hDlgCtrl = GetDlgItem(hwndDlg, IDC_DETAILS);
-            InsertColumnToListView(hDlgCtrl, IDS_PROPERTY, 0, 80);
-            InsertColumnToListView(hDlgCtrl, IDS_VALUE, 1, 80);
+
+            /* get client rect */
+            GetClientRect(hDlgCtrl, &rect);
+
+            /* calculate column width */
+            dwSize = rect.right / 2;
+
+            InsertColumnToListView(hDlgCtrl, IDS_PROPERTY, 0, dwSize);
+            InsertColumnToListView(hDlgCtrl, IDS_VALUE, 1, dwSize);
 
             dwSize = 0;
             pCurAdapter = NULL;
