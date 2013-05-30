@@ -203,14 +203,10 @@ GroupNew(HWND hwndDlg)
                        NewGroupDlgProc,
                        (LPARAM)&group) == IDOK)
     {
-#if 0
         status = NetLocalGroupAdd(NULL,
                                   1,
                                   (LPBYTE)&group,
                                   NULL);
-#else
-        status = NERR_Success;
-#endif
         if (status != NERR_Success)
         {
             TCHAR szText[256];
