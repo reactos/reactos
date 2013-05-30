@@ -20,31 +20,6 @@ static HANDLE SamKeyHandle = NULL;
 
 /* FUNCTIONS ***************************************************************/
 
-static NTSTATUS
-SampOpenSamKey(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    NTSTATUS Status;
-
-    RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\Machine\\SAM");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = RtlpNtOpenKey(&SamKeyHandle,
-                           KEY_READ | KEY_CREATE_SUB_KEY | KEY_ENUMERATE_SUB_KEYS,
-                           &ObjectAttributes,
-                           0);
-
-    return Status;
-}
-
-
 NTSTATUS
 SampInitDatabase(VOID)
 {
@@ -52,7 +27,10 @@ SampInitDatabase(VOID)
 
     TRACE("SampInitDatabase()\n");
 
-    Status = SampOpenSamKey();
+    Status = SampRegOpenKey(NULL,
+                            L"\\Registry\\Machine\\SAM",
+                            KEY_READ | KEY_CREATE_SUB_KEY | KEY_ENUMERATE_SUB_KEYS,
+                            &SamKeyHandle);
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to open the SAM key (Status: 0x%08lx)\n", Status);
