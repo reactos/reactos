@@ -185,62 +185,6 @@ BEGIN
     IDS_PROCESSSUBTITLE  "Почакайте..."
 END
 
-
-
-STRINGTABLE
-BEGIN
-    IDS_CMT_DOWNLOADER  "Сваляне и слагане на различни приложения"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Принадлежности"
-    IDS_CMT_CALC        "Пускане на изчислителя"
-    IDS_CMT_CMD         "Отваряне на командния прозорец"
-    IDS_CMT_EXPLORER    "Пускане на изследователя"
-    IDS_CMT_NOTEPAD     "Пускане на текстообратващата"
-    IDS_CMT_REGEDIT     "Пускане на регистрообработващата"
-    IDS_CMT_WORDPAD     "Пускане на документната обработваща"
-    IDS_CMT_SCREENSHOT  "Заснемане на екрана"
-    IDS_CMT_DEVMGMT     "Пускане на управителя на устройствата"
-    IDS_CMT_SERVMAN     "Пускане на управителя на услугите"
-    IDS_CMT_RDESKTOP    "Пускане на отдалечената работна площ"
-    IDS_CMT_EVENTVIEW   "Пускане на прегледника на събития"
-    IDS_CMT_MSCONFIG    "Пускане на приложението за настройка на уредбата"
-    IDS_CMT_PAINT       "Пускане на приложението за рисуване"
-END
-
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES		"Игри"
-    IDS_CMT_SOLITAIRE	"Пасианс"
-    IDS_CMT_WINEMINE	"Минички"
-	IDS_CMT_SPIDER      "Пасианс „Паяк“"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "Системни средства"
-	IDS_CMT_CHARMAP      "Знакова таблица"
-	IDS_CMT_KBSWITCH     "Превключвател на клавиатурните подредби"
-	IDS_CMT_DXDIAG       "Пускане на приложението за преглеждане на РеактХ"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Достъпност"
-	IDS_CMT_MAGNIFY      	     "Лупа"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Забавление"
-    IDS_CMT_MPLAY32             "Пускане на мултимедийния възпроизводител"
-    IDS_CMT_SNDVOL32            "Пускане на упрвлението на силата на звука"
-    IDS_CMT_SNDREC32            "Пускане на Звукозаписвача"
-END
-
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP		"Настройка на РеактОС"
@@ -253,35 +197,6 @@ BEGIN
     IDS_TIMEOUT			"Просрочване на рагистрирането"
     IDS_REASON_UNKNOWN          ""
 END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Команден прозорец.lnk"
-    IDS_SHORT_EXPLORER   "Изследователят на РеактОС.lnk"
-    IDS_SHORT_DOWNLOADER "Управител на приложенията за РеактОС.lnk"
-    IDS_SHORT_SERVICE    "Управител на услугите.lnk"
-    IDS_SHORT_DEVICE     "Управител на устройствата.lnk"
-    IDS_SHORT_MPLAY32    "Мултимедиен възпроизводител.lnk"
-    IDS_SHORT_CALC       "Изчислител.lnk"
-    IDS_SHORT_REGEDIT    "Обработка на регистъра.lnk"
-    IDS_SHORT_NOTEPAD    "Бележник.lnk"
-    IDS_SHORT_WORDPAD    "Тетрадка.lnk"
-    IDS_SHORT_SNAP       "Снимка.lnk"
-    IDS_SHORT_SOLITAIRE  "Пасианс.lnk"
-    IDS_SHORT_WINEMINE   "Минички.lnk"
-    IDS_SHORT_CHARMAP    "Знакова таблица.lnk"
-    IDS_SHORT_MAGNIFY    "Лупа.lnk"
-    IDS_SHORT_RDESKTOP   "Далечна работна площ.lnk"
-    IDS_SHORT_KBSWITCH   "Превключвател на клавиатурните подредби.lnk"
-    IDS_SHORT_EVENTVIEW  "Преглед на събития.lnk"
-    IDS_SHORT_MSCONFIG   "Настройка на уредбата.lnk"
-    IDS_SHORT_SNDVOL32   "Сила на звука.lnk"
-    IDS_SHORT_SNDREC32   "Звукозаписвач.lnk"
-    IDS_SHORT_DXDIAG     "Преглеждане на РеактХ.lnk"
-    IDS_SHORT_PAINT      "Рисунък.lnk"
-    IDS_SHORT_SPIDER     "Пасианс „Паяк“.lnk"
-END
-
 
 STRINGTABLE
 BEGIN

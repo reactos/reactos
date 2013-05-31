@@ -184,59 +184,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Descărcare și instalare diverse programe."
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Accesorii"
-    IDS_CMT_CALC        "Deschide Minicalculator"
-    IDS_CMT_CMD         "Deschide Linia de comandă"
-    IDS_CMT_DEVMGMT     "Deschide Gestionar de dispozitive"
-    IDS_CMT_EVENTVIEW   "Deschide Gestionar de evenimente"
-    IDS_CMT_EXPLORER    "Deschide Explorator ReactOS"
-    IDS_CMT_MSCONFIG    "Deschide Configurator de sistem"
-    IDS_CMT_NOTEPAD     "Deschide Carnețel"
-    IDS_CMT_RDESKTOP    "Deschide Birou la distanță"
-    IDS_CMT_REGEDIT     "Deschide Editor de registru"
-    IDS_CMT_SCREENSHOT  "Execută Captură de ecran"
-    IDS_CMT_SERVMAN     "Deschide Gestionar de servicii"
-    IDS_CMT_WORDPAD     "Deschide Editor de documente"
-    IDS_CMT_PAINT       "Deschide Pictare"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES           "Jocuri"
-    IDS_CMT_SOLITAIRE   "Pasiență"
-    IDS_CMT_WINEMINE    "Genist"
-    IDS_CMT_SPIDER      "Pasiență-păianjen"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_TOOLS       "Instrumente de sistem"
-    IDS_CMT_CHARMAP     "Deschide harta caracterelor"
-    IDS_CMT_DXDIAG      "Deschide instrumentul de diagnostic React-X"
-    IDS_CMT_KBSWITCH    "Comutatorul aranjamentelor de tastatură"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ACCESSIBILITY       "Accesibilitate"
-    IDS_CMT_MAGNIFY             "Lupă"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Distracție"
-    IDS_CMT_MPLAY32             "Deschide lectorul multimedia"
-    IDS_CMT_SNDVOL32            "Deschide reglajele de volum"
-    IDS_CMT_SNDREC32            "Deschide înregistratorul audio"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP           "Instalare ReactOS"
     IDS_UNKNOWN_ERROR           "Eroare necunoscută"
     IDS_REGISTERING_COMPONENTS  "Înregistrarea componentelor…"
@@ -246,34 +193,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED       "DllInstall a eșuat: "
     IDS_TIMEOUT                 "Timp expirat în timpul înregistrării"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CALC       "Minicalculator.lnk"
-    IDS_SHORT_CHARMAP    "Harta caracterelor.lnk"
-    IDS_SHORT_CMD        "Linie de comandă.lnk"
-    IDS_SHORT_DEVICE     "Gestionar de dispozitive.lnk"
-    IDS_SHORT_DOWNLOADER "Gestionar de aplicații.lnk"
-    IDS_SHORT_DXDIAG     "Diagnostic ReactX.lnk"
-    IDS_SHORT_EVENTVIEW  "Observator de evenimente.lnk"
-    IDS_SHORT_EXPLORER   "Explorator ReactOS.lnk"
-    IDS_SHORT_KBSWITCH   "Comutator aranjamente de tastatură.lnk"
-    IDS_SHORT_MAGNIFY    "Lupă.lnk"
-    IDS_SHORT_MPLAY32    "Lector multimedia.lnk"
-    IDS_SHORT_MSCONFIG   "Configurator de sistem.lnk"
-    IDS_SHORT_NOTEPAD    "Carnețel.lnk"
-    IDS_SHORT_RDESKTOP   "Birou la distanță.lnk"
-    IDS_SHORT_REGEDIT    "Editor de registru.lnk"
-    IDS_SHORT_SERVICE    "Gestionar de servicii.lnk"
-    IDS_SHORT_SNAP       "Captură de ecran.lnk"
-    IDS_SHORT_SNDVOL32   "Reglaj de volum.lnk"
-    IDS_SHORT_SNDREC32   "Înregistrator audio.lnk"
-    IDS_SHORT_SOLITAIRE  "Pasiență.lnk"
-    IDS_SHORT_WINEMINE   "Genist.lnk"
-    IDS_SHORT_WORDPAD    "Editor de documente.lnk"
-    IDS_SHORT_PAINT      "Pictare.lnk"
-    IDS_SHORT_SPIDER     "Pasiență-păianjen.lnk"
 END
 
 STRINGTABLE

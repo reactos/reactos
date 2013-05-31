@@ -175,59 +175,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Scarica e installa varie applicazioni"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Accessori"
-    IDS_CMT_CALC        "Calcolatrice"
-    IDS_CMT_CMD         "Apri la finestra dei comandi"
-    IDS_CMT_EXPLORER    "Lancia Explorer"
-    IDS_CMT_NOTEPAD     "Lancia l'editor dei testi"
-    IDS_CMT_REGEDIT     "Lancia l'editor del registro"
-    IDS_CMT_WORDPAD     "Lancia l'editor dei documenti"
-    IDS_CMT_SCREENSHOT  "Salva una schermata"
-    IDS_CMT_DEVMGMT     "Lancia la Gestione periferiche"
-    IDS_CMT_SERVMAN     "Lancia la Gestione dei servizi"
-    IDS_CMT_RDESKTOP    "Avvia il Desktop remoto"
-    IDS_CMT_EVENTVIEW   "Lancia il visualizzatore degli eventi"
-    IDS_CMT_MSCONFIG    "Lancia il programma di configurazione del sistema"
-    IDS_CMT_PAINT       "Lancia Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES           "Giochi"
-    IDS_CMT_SOLITAIRE   "Solitario"
-    IDS_CMT_WINEMINE    "Campo minato"
-	IDS_CMT_SPIDER      "Spider"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "Strumenti di sistema"
-	IDS_CMT_CHARMAP      "Mappa dei caratteri"
-	IDS_CMT_KBSWITCH     "Cambia il layout di tastiera"
-    IDS_CMT_DXDIAG       "Esegui il programma di diagnostica ReactX-"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibilità"
-	IDS_CMT_MAGNIFY      	     "Ingrandisci"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Divertimento"
-    IDS_CMT_MPLAY32             "Esegui Multimedia Player"
-    IDS_CMT_SNDVOL32            "Esegui Controllo Volume"
-    IDS_CMT_SNDREC32            "Esegui il Registratore di suonoi"
-END
-
-STRINGTABLE
-BEGIN
 IDS_REACTOS_SETUP               "Installazione di ReactOS"
     IDS_UNKNOWN_ERROR           "Errore sconosciuto"
     IDS_REGISTERING_COMPONENTS  "Registrazione dei componenti..."
@@ -237,34 +184,6 @@ IDS_REACTOS_SETUP               "Installazione di ReactOS"
     IDS_DLLINSTALL_FAILED       "DllInstall fallito: "
     IDS_TIMEOUT	                "Tempo scaduto durante la registrazione"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Prompt dei comandi.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS gestione applicazioni.lnk"
-    IDS_SHORT_SERVICE    "Service Manager.lnk"
-    IDS_SHORT_DEVICE     "Device Manager.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
-    IDS_SHORT_CALC       "Calcolatrice.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitario.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_CHARMAP    "CharMap.lnk"
-    IDS_SHORT_MAGNIFY    "Magnify.lnk"
-    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-    IDS_SHORT_KBSWITCH   "Layout di tastiera.lnk"
-    IDS_SHORT_EVENTVIEW  "Visualizzatore Eventi.lnk"
-    IDS_SHORT_MSCONFIG   "Configurazione del sistema.lnk"
-    IDS_SHORT_SNDVOL32   "Controllo Volume.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostica.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Spider.lnk"
 END
 
 STRINGTABLE

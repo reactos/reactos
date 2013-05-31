@@ -187,59 +187,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Laadi alla ja paigalda erinevaid rakendusi"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Tarvikud"
-    IDS_CMT_CALC        "Ava Kalkulaator"
-    IDS_CMT_CMD         "Ava käsurida"
-    IDS_CMT_DEVMGMT     "Ava Seadmehaldur"
-    IDS_CMT_EVENTVIEW   "Ava Sündmuste logi"
-    IDS_CMT_EXPLORER    "Ava sirvija"
-    IDS_CMT_MSCONFIG    "Ava süsteemi seadistamise programm"
-    IDS_CMT_NOTEPAD     "Ava Tekstiredaktor"
-    IDS_CMT_RDESKTOP    "Ava Kaugarvuti"
-    IDS_CMT_REGEDIT     "Ava Registriredaktor"
-    IDS_CMT_SCREENSHOT  "Tee ekraanitõmmis"
-    IDS_CMT_SERVMAN     "Ava Teenustehaldur"
-    IDS_CMT_WORDPAD     "Ava Dokumendiredaktor"
-    IDS_CMT_PAINT       "Ava Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES           "Mängud"
-    IDS_CMT_SOLITAIRE   "Solitaire"
-    IDS_CMT_WINEMINE    "WineMine"
-	IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_TOOLS       "Süsteemi tööriistad"
-    IDS_CMT_CHARMAP     "Kirjamärkide Tabel"
-    IDS_CMT_DXDIAG      "Ava ReactX-Diagnostika programm"
-    IDS_CMT_KBSWITCH    "Klaviatuuriasetuse Muutmine"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ACCESSIBILITY       "Ligipääsetavus"
-    IDS_CMT_MAGNIFY             "Suurenda"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Meelelahutus"
-    IDS_CMT_MPLAY32             "Ava Meediamängija"
-    IDS_CMT_SNDVOL32            "Ava Helitugevuse Kontroll"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP           "ReactOSi paigaldamine"
     IDS_UNKNOWN_ERROR           "Tundmatu viga"
     IDS_REGISTERING_COMPONENTS  "Komponentide registreerimine..."
@@ -249,34 +196,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED       "DllInstall ebaõnnestus: "
     IDS_TIMEOUT                 "Aeg sai registreerimise käigus otsa"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CALC       "Calculator.lnk"
-    IDS_SHORT_CHARMAP    "Character Map.lnk"
-    IDS_SHORT_CMD        "Command Prompt.lnk"
-    IDS_SHORT_DEVICE     "Device Manager.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
-    IDS_SHORT_MAGNIFY    "Magnify.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
-    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_SERVICE    "Service Manager.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

@@ -194,60 +194,6 @@ END
 
 STRINGTABLE
 BEGIN
-   IDS_CMT_DOWNLOADER  "Ściągnij i zainstaluj inne aplikacje"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Akcesoria"
-    IDS_CMT_CALC        "Uruchom Kalkulator"
-    IDS_CMT_CMD         "Uruchom konsolę"
-    IDS_CMT_EXPLORER    "Uruchom Eksplorator"
-    IDS_CMT_NOTEPAD     "Uruchom Edytor tekstu"
-    IDS_CMT_REGEDIT     "Uruchom Edytor rejestru"
-    IDS_CMT_WORDPAD     "Uruchom WordPada"
-    IDS_CMT_SCREENSHOT  "Zrzut ekranu"
-    IDS_CMT_DEVMGMT     "Uruchom Menedżer urządzeń"
-    IDS_CMT_SERVMAN     "Uruchom Menedżer usług"
-    IDS_CMT_RDESKTOP    "Uruchom Zdalny pulpit"
-    IDS_CMT_EVENTVIEW   "Uruchom Podgląd Zdarzeń"
-    IDS_CMT_MSCONFIG    "Uruchom Narzędzie konfiguracji systemu"
-    IDS_CMT_PAINT       "Uruchom Paint"
-END
-
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Ułatwienia Dostępu"
-	IDS_CMT_MAGNIFY      	     "Lupa"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Rozrywka"
-    IDS_CMT_MPLAY32             "Uruchom Odtwarzacz multimedialny"
-    IDS_CMT_SNDVOL32            "Uruchom regulację głośności"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "Narzędzia systemowe"
-	IDS_CMT_CHARMAP      "Tablica znaków"
-	IDS_CMT_KBSWITCH     "Zmiana układu klawiatury"
-    IDS_CMT_DXDIAG       "Uruchom program diagnostyczny ReactX"
-END
-
-STRINGTABLE
-BEGIN
-   IDS_GAMES           "Gry"
-   IDS_CMT_SOLITAIRE   "Pasjans"
-   IDS_CMT_WINEMINE    "Saper"
-   IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
    IDS_REACTOS_SETUP               "Ustawienia ReactOS"
    IDS_UNKNOWN_ERROR           "Nieznany błąd"
    IDS_REGISTERING_COMPONENTS  "Rejestracja składników..."
@@ -257,33 +203,6 @@ BEGIN
    IDS_DLLINSTALL_FAILED           "Nieudane DllInstall: "
    IDS_TIMEOUT                         "Upłynął czas rejestracji"
    IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Wiersz poleceń.lnk"
-    IDS_SHORT_EXPLORER   "Eksplorator ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "Menedżer aplikacji ReactOS.lnk"
-    IDS_SHORT_SERVICE    "Menedżer usług.lnk"
-    IDS_SHORT_DEVICE     "Menedżer urządzeń.lnk"
-    IDS_SHORT_MPLAY32    "Odtwarzacz multimedialny.lnk"
-    IDS_SHORT_CALC       "Kalkulator.lnk"
-    IDS_SHORT_REGEDIT    "Edytor rejestru.lnk"
-    IDS_SHORT_NOTEPAD    "Notatnik.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "Zrzut ekranu.lnk"
-    IDS_SHORT_SOLITAIRE  "Pasjans.lnk"
-    IDS_SHORT_WINEMINE   "Saper.lnk"
-    IDS_SHORT_MAGNIFY    "Lupa.lnk"
-    IDS_SHORT_RDESKTOP   "Dostęp zdalny.lnk"
-    IDS_SHORT_KBSWITCH   "Zmiana układu klawiatury.lnk"
-    IDS_SHORT_EVENTVIEW  "Podgląd zdarzeń.lnk"
-    IDS_SHORT_MSCONFIG   "Konfiguracja systemowa.lnk"
-    IDS_SHORT_SNDVOL32   "Regulacja głośności.lnk"
-    IDS_SHORT_SNDREC32   "Rejestrator dźwięku.lnk"
-    IDS_SHORT_DXDIAG     "Program diagnostyczny ReactX.lnk"
-    IDS_SHORT_PAINT      "MSPaint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

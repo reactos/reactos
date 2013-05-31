@@ -186,59 +186,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "様々なアプリケーションのダウンロードとインストールを行います"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "アクセサリ"
-    IDS_CMT_CALC        "電卓を起動します"
-    IDS_CMT_CMD         "コマンド プロンプトを開きます"
-    IDS_CMT_DEVMGMT     "デバイス マネージャを起動します"
-    IDS_CMT_EVENTVIEW   "イベント ビューアを起動します"
-    IDS_CMT_EXPLORER    "エクスプローラを起動します"
-    IDS_CMT_MSCONFIG    "システムの構成プログラムを開きます"
-    IDS_CMT_NOTEPAD     "テキストエディタを起動します"
-    IDS_CMT_RDESKTOP    "リモート デスクトップを起動します"
-    IDS_CMT_REGEDIT     "レジストリ エディタを起動します"
-    IDS_CMT_SCREENSHOT  "スクリーンショットを撮ります"
-    IDS_CMT_SERVMAN     "サービス マネージャを起動します"
-    IDS_CMT_WORDPAD     "ドキュメントエディタを起動します"
-    IDS_CMT_PAINT       "ペイントを起動します"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES           "ゲーム"
-    IDS_CMT_SOLITAIRE   "ソリティア"
-    IDS_CMT_WINEMINE    "WineMine"
-	IDS_CMT_SPIDER      "スパイダ ソリティア"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_TOOLS       "システムツール"
-    IDS_CMT_CHARMAP     "文字コード表"
-    IDS_CMT_DXDIAG      "ReactX 診断 プログラムを起動します"
-    IDS_CMT_KBSWITCH    "キーボードレイアウト切替器"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ACCESSIBILITY       "アクセシビリティ"
-    IDS_CMT_MAGNIFY             "拡大鏡"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "エンターテイメント"
-    IDS_CMT_MPLAY32             "マルチメディア プレーヤーを起動します"
-    IDS_CMT_SNDVOL32            "ボリューム コントロールを起動します"
-    IDS_CMT_SNDREC32            "サウンド レコーダを起動します"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP           "ReactOS セットアップ"
     IDS_UNKNOWN_ERROR           "不明なエラー"
     IDS_REGISTERING_COMPONENTS  "コンポーネントを登録しています..."
@@ -248,34 +195,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED       "DllInstallに失敗: "
     IDS_TIMEOUT                 "登録中にタイムアウトしました"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CALC       "電卓.lnk"
-    IDS_SHORT_CHARMAP    "文字コード表.lnk"
-    IDS_SHORT_CMD        "コマンド プロンプト.lnk"
-    IDS_SHORT_DEVICE     "デバイス マネージャ.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS アプリケーション マネージャ.lnk"
-    IDS_SHORT_DXDIAG     "ReactX 診断.lnk"
-    IDS_SHORT_EVENTVIEW  "イベント ビューア.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_KBSWITCH   "キーボード レイアウト 切替器.lnk"
-    IDS_SHORT_MAGNIFY    "拡大鏡.lnk"
-    IDS_SHORT_MPLAY32    "マルチメディア プレーヤ.lnk"
-    IDS_SHORT_MSCONFIG   "システムの構成.lnk"
-    IDS_SHORT_NOTEPAD    "メモ帳.lnk"
-    IDS_SHORT_RDESKTOP   "リモート デスクトップ接続.lnk"
-    IDS_SHORT_REGEDIT    "レジストリ エディタ.lnk"
-    IDS_SHORT_SERVICE    "サービス マネージャ.lnk"
-    IDS_SHORT_SNAP       "スナップショット.lnk"
-    IDS_SHORT_SNDVOL32   "ボリューム コントロール.lnk"
-    IDS_SHORT_SNDREC32   "オーディオレコーダ.lnk"
-    IDS_SHORT_SOLITAIRE  "ソリティア.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_WORDPAD    "ワードパッド.lnk"
-    IDS_SHORT_PAINT      "ペイント.lnk"
-	IDS_SHORT_SPIDER     "スパイダ ソリティア.lnk"
 END
 
 STRINGTABLE

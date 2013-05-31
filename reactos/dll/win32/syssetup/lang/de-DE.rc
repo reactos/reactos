@@ -185,60 +185,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Herunterladen und Installieren verschiedener Anwendungen"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Zubehör"
-    IDS_CMT_CALC        "Starte Taschenrechner"
-    IDS_CMT_CMD         "Öffne Kommandozeilenfenster"
-    IDS_CMT_EXPLORER    "Starte Explorer"
-    IDS_CMT_NOTEPAD     "Starte Texteditor"
-    IDS_CMT_REGEDIT     "Starte Registrierungseditor"
-    IDS_CMT_WORDPAD     "Starte Dokumenteneditor"
-    IDS_CMT_SCREENSHOT  "Screenshot erstellen"
-    IDS_CMT_DEVMGMT     "Starte Gerätemanager"
-    IDS_CMT_SERVMAN     "Starte Dienstmanager"
-    IDS_CMT_RDESKTOP    "Starte Remote Desktop"
-    IDS_CMT_EVENTVIEW   "Starte Ereignisanzeige"
-    IDS_CMT_MSCONFIG    "Starte Systemkonfigurationsprogramm"
-    IDS_CMT_PAINT       "Starte Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES		"Spiele"
-    IDS_CMT_SOLITAIRE	"Solitär"
-    IDS_CMT_WINEMINE	"WineMine"
-	IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "Systemprogramme"
-	IDS_CMT_CHARMAP      "Zeichentabelle"
-	IDS_CMT_KBSWITCH     "Tastaturlayout-Umschalter"
-    IDS_CMT_DXDIAG       "Starte ReactX-Diagnoseprogramm"
-END
-
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Eingabehilfen"
-	IDS_CMT_MAGNIFY      	     "Bildschirmlupe"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Unterhaltung"
-    IDS_CMT_MPLAY32             "Starte Multimedia-Player"
-    IDS_CMT_SNDVOL32            "Starte Lautstärkeregelung"
-    IDS_CMT_SNDREC32            "Starte Audiorekorder"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP		"ReactOS-Setup"
     IDS_UNKNOWN_ERROR           "Unbekannter Fehler"
     IDS_REGISTERING_COMPONENTS  "Registriere Komponenten..."
@@ -248,34 +194,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED	"DllInstall fehlgeschlagen: "
     IDS_TIMEOUT			"Zeitüberschreitung während der Registrierung"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Eingabeaufforderung.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Anwendungsmanager.lnk"
-    IDS_SHORT_SERVICE    "Dienste-Manager.lnk"
-    IDS_SHORT_DEVICE     "Geräte-Manager.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia-Player.lnk"
-    IDS_SHORT_CALC       "Rechner.lnk"
-    IDS_SHORT_REGEDIT    "Registrierungseditor.lnk"
-    IDS_SHORT_NOTEPAD    "Editor.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitär.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_CHARMAP    "Zeichentabelle.lnk"
-    IDS_SHORT_MAGNIFY    "Bildschirmlupe.lnk"
-    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-    IDS_SHORT_KBSWITCH   "Tastaturlayout-Umschalter.lnk"
-    IDS_SHORT_EVENTVIEW  "Ereignisanzeige.lnk"
-    IDS_SHORT_MSCONFIG   "Systemkonfiguration.lnk"
-    IDS_SHORT_SNDVOL32   "Lautstärkeregelung.lnk"
-    IDS_SHORT_SNDREC32   "Audiorekorder.lnk"
-    IDS_SHORT_DXDIAG     "ReactX-Diagnose.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

@@ -169,60 +169,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Скачать и установить другие приложения"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Стандартные"
-    IDS_CMT_CALC        "Запустить калькулятор"
-    IDS_CMT_CMD         "Открыть командную строку"
-    IDS_CMT_EXPLORER    "Запустить Проводник"
-    IDS_CMT_NOTEPAD     "Запустить текстовый редактор"
-    IDS_CMT_REGEDIT     "Запустить редактор реестра"
-    IDS_CMT_WORDPAD     "Запустить редактор документов"
-    IDS_CMT_SCREENSHOT  "Сделать снимок экрана"
-    IDS_CMT_DEVMGMT     "Запустить диспетчер устройств"
-    IDS_CMT_SERVMAN     "Запустить диспетчер служб"
-    IDS_CMT_RDESKTOP    "Запустить удаленный рабочий стол"
-    IDS_CMT_EVENTVIEW   "Запустить программу просмотра событий"
-    IDS_CMT_MSCONFIG    "Запустить программу настройки системы"
-    IDS_CMT_PAINT       "Запустить Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES			"Игры"
-    IDS_CMT_SOLITAIRE	"Пасьянс Косынка"
-    IDS_CMT_WINEMINE	"Сапер"
-	IDS_CMT_SPIDER      "Пасьянс Паук"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "Служебные"
-	IDS_CMT_CHARMAP      "Таблица символов"
-	IDS_CMT_KBSWITCH     "Переключатель раскладки клавиатуры"
-    IDS_CMT_DXDIAG       "Запустить программу диагностики ReactX"
-END
-
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Специальные возможности"
-	IDS_CMT_MAGNIFY      	     "Экранная лупа"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Развлечения"
-    IDS_CMT_MPLAY32             "Запустить проигрыватель"
-    IDS_CMT_SNDVOL32            "Запустить регулятор громкости"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP			"Установка ReactOS"
     IDS_UNKNOWN_ERROR           "Неизвестная ошибка"
     IDS_REGISTERING_COMPONENTS  "Регистрация компонентов..."
@@ -232,34 +178,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED		"Ошибка DllInstall: "
     IDS_TIMEOUT					"Таймаут в ходе регистрации"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Командная строка.lnk"
-    IDS_SHORT_EXPLORER   "Проводник ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "Менеджер приложений ReactOS.lnk"
-    IDS_SHORT_SERVICE    "Диспетчер служб.lnk"
-    IDS_SHORT_DEVICE     "Диспетчер устройств.lnk"
-    IDS_SHORT_MPLAY32    "Проигрыватель.lnk"
-    IDS_SHORT_CALC       "Калькулятор.lnk"
-    IDS_SHORT_REGEDIT    "Редактор реестра.lnk"
-    IDS_SHORT_NOTEPAD    "Блокнот.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Пасьянс Косынка.lnk"
-    IDS_SHORT_WINEMINE   "Сапер.lnk"
-    IDS_SHORT_CHARMAP    "Таблица символов.lnk"
-    IDS_SHORT_MAGNIFY    "Экранная лупа.lnk"
-    IDS_SHORT_RDESKTOP   "Удаленный рабочий стол.lnk"
-    IDS_SHORT_KBSWITCH   "Переключатель раскладки клавиатуры.lnk"
-    IDS_SHORT_EVENTVIEW  "Просмотр событий.lnk"
-    IDS_SHORT_MSCONFIG   "Параметры системы.lnk"
-    IDS_SHORT_SNDVOL32   "Громкость.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
-    IDS_SHORT_DXDIAG     "Средство диагностики ReactX.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Пасьянс Паук.lnk"
 END
 
 STRINGTABLE

@@ -186,59 +186,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Télécharger et installer diverses applications"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Accessoires"
-    IDS_CMT_CALC        "Lancer la Calculatrice"
-    IDS_CMT_CMD         "Ouvrir l'invite de commandes"
-    IDS_CMT_EXPLORER    "Lancer Explorer"
-    IDS_CMT_NOTEPAD     "Lancer l'Éditeur de Texte"
-    IDS_CMT_REGEDIT     "Lancer l'Éditeur de Registre"
-    IDS_CMT_WORDPAD     "Lancer l'Éditeur de Documents"
-    IDS_CMT_SCREENSHOT  "Faire une capture d'écran"
-    IDS_CMT_DEVMGMT     "Lancer le gestionnaire de périphériques"
-    IDS_CMT_SERVMAN     "Lancer le gestionnaire de services"
-    IDS_CMT_RDESKTOP    "Lancer le bureau distant"
-    IDS_CMT_EVENTVIEW   "Lancer la visionneuse des événements"
-    IDS_CMT_MSCONFIG    "Lancer le programme de configuration système"
-    IDS_CMT_PAINT       "Lancer Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES           "Jeux"
-    IDS_CMT_SOLITAIRE   "Solitaire"
-    IDS_CMT_WINEMINE    "WineMine"
-    IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_TOOLS        "Outils système"
-    IDS_CMT_CHARMAP      "Table des Caractères"
-    IDS_CMT_KBSWITCH     "Sélecteur de configuration clavier"
-    IDS_CMT_DXDIAG       "Lancer le prorgramme de diagnostic ReactX"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ACCESSIBILITY        "Accessibilité"
-    IDS_CMT_MAGNIFY              "Loupe"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Divertissement"
-    IDS_CMT_MPLAY32             "Lancer le lecteur multimédia"
-    IDS_CMT_SNDVOL32            "Lancer le contrôleur de volume"
-    IDS_CMT_SNDREC32            "Lancer l'enregistreur de son"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP           "Installation de ReactOS"
     IDS_UNKNOWN_ERROR           "Erreur inconnue"
     IDS_REGISTERING_COMPONENTS  "Enregistrement des composants..."
@@ -248,34 +195,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED       "Échec de DllInstall : "
     IDS_TIMEOUT                 "Délai dépassé lors de l'enregistrement"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Invite de commandes.lnk"
-    IDS_SHORT_EXPLORER   "Explorateur ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
-    IDS_SHORT_SERVICE    "Gestionnaire de services.lnk"
-    IDS_SHORT_DEVICE     "Gestionnaire de périphériques.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
-    IDS_SHORT_CALC       "Calculatrice.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "Capture d'écran.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_CHARMAP    "Table des Caractères.lnk"
-    IDS_SHORT_MAGNIFY    "Loupe.lnk"
-    IDS_SHORT_RDESKTOP   "Bureau Distant.lnk"
-    IDS_SHORT_KBSWITCH   "Sélecteur de configuration clavier.lnk"
-    IDS_SHORT_EVENTVIEW  "Visionneuse des événements.lnk"
-    IDS_SHORT_MSCONFIG   "Configuration système.lnk"
-    IDS_SHORT_SNDVOL32   "Contrôleur de volume.lnk"
-    IDS_SHORT_SNDREC32   "Enregistreur de son.lnk"
-    IDS_SHORT_DXDIAG     "Diagnostic ReactX.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

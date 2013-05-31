@@ -175,60 +175,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "下载并安装其他应用软件"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "附件"
-    IDS_CMT_CALC        "计算器"
-    IDS_CMT_CMD         "命令提示符"
-    IDS_CMT_EXPLORER    "ReactOS 资源管理器"
-    IDS_CMT_NOTEPAD     "记事本"
-    IDS_CMT_REGEDIT     "注册表编辑器"
-    IDS_CMT_WORDPAD     "写字板"
-    IDS_CMT_SCREENSHOT  "屏幕截图"
-    IDS_CMT_DEVMGMT     "设备管理"
-    IDS_CMT_SERVMAN     "服务"
-    IDS_CMT_RDESKTOP    "远程桌面连接"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
-    IDS_CMT_PAINT       "Launch Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES            "游戏"
-    IDS_CMT_SOLITAIRE    "纸牌"
-    IDS_CMT_WINEMINE     "扫雷"
-	IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "系统工具"
-	IDS_CMT_CHARMAP      "字符映射表"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
-END
-
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "放大镜"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Entertainment"
-    IDS_CMT_MPLAY32             "Launch Multimedia Player"
-    IDS_CMT_SNDVOL32            "Launch Volume Control"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP		    "ReactOS 安装程序"
     IDS_UNKNOWN_ERROR           "Unknown error"
     IDS_REGISTERING_COMPONENTS  "请稍候，安装程序正在安装组件。"
@@ -238,34 +184,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED	    "DllInstall 失败: "
     IDS_TIMEOUT			        "Timeout during registration"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "命令提示符.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS 资源管理器.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
-    IDS_SHORT_SERVICE    "服务.lnk"
-    IDS_SHORT_DEVICE     "设备管理.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
-    IDS_SHORT_CALC       "计算器.lnk"
-    IDS_SHORT_REGEDIT    "注册表编辑器.lnk"
-    IDS_SHORT_NOTEPAD    "记事本.lnk"
-    IDS_SHORT_WORDPAD    "写字板.lnk"
-    IDS_SHORT_SNAP       "屏幕截图.lnk"
-    IDS_SHORT_SOLITAIRE  "纸牌.lnk"
-    IDS_SHORT_WINEMINE   "扫雷.lnk"
-    IDS_SHORT_CHARMAP    "字符映射表.lnk"
-    IDS_SHORT_MAGNIFY    "放大镜.lnk"
-    IDS_SHORT_RDESKTOP   "远程桌面连接.lnk"
-    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

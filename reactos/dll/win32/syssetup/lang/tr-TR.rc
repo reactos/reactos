@@ -187,59 +187,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Çeşitli uygulamaları indir ve kur"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Donatılar"
-    IDS_CMT_CALC        "Hesap Makinesi'ni başlat"
-    IDS_CMT_CMD         "Komut istemini aç"
-    IDS_CMT_DEVMGMT     "Aygıt Yöneticisi'ni başlat"
-    IDS_CMT_EVENTVIEW   "Olay Görüntüleyici'yi başlat"
-    IDS_CMT_EXPLORER    "Gezgin'i başlat"
-    IDS_CMT_MSCONFIG    "Sistem Konfigürasyon uygulaması'nı başlat"
-    IDS_CMT_NOTEPAD     "Metin Düzenleyicisi'ni başlat"
-    IDS_CMT_RDESKTOP    "Uzak Masaüstü'nü başlat"
-    IDS_CMT_REGEDIT     "Kayıt Düzenleyicisi'ni başlat"
-    IDS_CMT_SCREENSHOT  "Ekran görüntüsü al"
-    IDS_CMT_SERVMAN     "Hizmet Yöneticisi'ni başlat"
-    IDS_CMT_WORDPAD     "Belge Düzenleyicisi'ni başlat"
-    IDS_CMT_PAINT       "Paint'i başlat"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES           "Oyunlar"
-    IDS_CMT_SOLITAIRE   "Solitaire"
-    IDS_CMT_WINEMINE    "WineMine"
-	IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_TOOLS       "Sistem Araçları"
-    IDS_CMT_CHARMAP     "Karakter Eşlem'i Başlat"
-    IDS_CMT_DXDIAG      "ReactX Tanı Aracı'nı Başlat"
-    IDS_CMT_KBSWITCH    "Klavye Giriş Aracısı'nı Başlat"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ACCESSIBILITY       "Erişilebilirlik"
-    IDS_CMT_MAGNIFY             "Büyüteç"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Eğlence"
-    IDS_CMT_MPLAY32             "Çoklu Ortam Oynatıcısı'nı Başlat"
-    IDS_CMT_SNDVOL32            "Ses Denetimi'ni Başlat"
-    IDS_CMT_SNDREC32            "Ses Kaydedicisi'ni Başlat"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP           "ReactOS Kur"
     IDS_UNKNOWN_ERROR           "Bilinmeyen hata"
     IDS_REGISTERING_COMPONENTS  "Bileşenler kaydediliyor..."
@@ -249,34 +196,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED       "Dll Kurulumu başarısız oldu: "
     IDS_TIMEOUT                 "Kayıt zaman aşımına uğradı"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CALC       "Hesap Makinesi.lnk"
-    IDS_SHORT_CHARMAP    "Karakter Eşlem.lnk"
-    IDS_SHORT_CMD        "Komut İstemi.lnk"
-    IDS_SHORT_DEVICE     "Aygıt Yöneticisi.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Uygulama Yöneticisi.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Tanı Aracı.lnk"
-    IDS_SHORT_EVENTVIEW  "Olay Görüntüleyicisi.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Gezgini.lnk"
-    IDS_SHORT_KBSWITCH   "Klavye Giriş Değiştirici.lnk"
-    IDS_SHORT_MAGNIFY    "Büyüteç.lnk"
-    IDS_SHORT_MPLAY32    "Çoklu Ortam Oynatıcısı.lnk"
-    IDS_SHORT_MSCONFIG   "Sistem Konfigürasyonu.lnk"
-    IDS_SHORT_NOTEPAD    "Not Defteri.lnk"
-    IDS_SHORT_RDESKTOP   "Uzak Masaüstü Bağlantısı.lnk"
-    IDS_SHORT_REGEDIT    "Kayıt Düzenleyicisi.lnk"
-    IDS_SHORT_SERVICE    "Hizmet Yöneticisi.lnk"
-    IDS_SHORT_SNAP       "Ekran Görüntüsü.lnk"
-    IDS_SHORT_SNDVOL32   "Ses Denetimi.lnk"
-    IDS_SHORT_SNDREC32   "Ses Kaydedicisi.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_PAINT      "MSPaint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

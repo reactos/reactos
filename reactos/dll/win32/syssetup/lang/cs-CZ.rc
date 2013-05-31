@@ -171,60 +171,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Stáhnout a nainstalovat další aplikace"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Příslušenství"
-    IDS_CMT_CALC        "Spustit Kalkulačku"
-    IDS_CMT_CMD         "Otevřít Příkazový řádek"
-    IDS_CMT_DEVMGMT     "Spustit Správce zařízení"
-    IDS_CMT_EVENTVIEW   "Spustit Prohlížeč událostí"
-    IDS_CMT_EXPLORER    "Spustit Průzkumníka"
-    IDS_CMT_MSCONFIG    "Spustit Nástroj pro konfiguraci systému"
-    IDS_CMT_NOTEPAD     "Spustit Textový editor"
-    IDS_CMT_PAINT       "Spustit Malování"
-    IDS_CMT_RDESKTOP    "Spustit Vzdálenou plochu"
-    IDS_CMT_REGEDIT     "Spustit Editor registru"
-    IDS_CMT_SCREENSHOT  "Sejmout obrazovku"
-    IDS_CMT_SERVMAN     "Spustit Správce služeb"
-    IDS_CMT_WORDPAD     "Spustit WordPad"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES           "Hry"
-    IDS_CMT_SOLITAIRE   "Solitaire"
-    IDS_CMT_WINEMINE    "WineMine"
-	IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_TOOLS      "Systémové nástroje"
-    IDS_CMT_CHARMAP    "Mapa znaků"
-    IDS_CMT_KBSWITCH   "Přepínač rozložení klávesnice"
-    IDS_CMT_DXDIAG     "Spustit Nástroj pro diagnostiku ReactX"
-END
-
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ACCESSIBILITY      "Usnadnění"
-    IDS_CMT_MAGNIFY            "Lupa"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Zábava"
-    IDS_CMT_MPLAY32             "Spustit Přehrávač multimédií"
-    IDS_CMT_SNDVOL32            "Spustit Ovládání hlasitosti"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP           "ReactOS Instalátor"
     IDS_UNKNOWN_ERROR           "Neznámá chyba"
     IDS_REGISTERING_COMPONENTS  "Registruji součásti..."
@@ -234,34 +180,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED       "DllInstall failed: "
     IDS_TIMEOUT                 "Vypršel časový limit registrace"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CALC       "Kalkulačka.lnk"
-    IDS_SHORT_CHARMAP    "Mapa znaků.lnk"
-    IDS_SHORT_CMD        "Příkazový řádek.lnk"
-    IDS_SHORT_DEVICE     "Správce zařízení.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
-    IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
-    IDS_SHORT_EVENTVIEW  "Prohlížeč událostí.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Průzkumník.lnk"
-    IDS_SHORT_KBSWITCH   "Přepínač rozložení klávesnice.lnk"
-    IDS_SHORT_MAGNIFY    "Lupa.lnk"
-    IDS_SHORT_MPLAY32    "Přehrávač multimédií.lnk"
-    IDS_SHORT_MSCONFIG   "Nastavení systému.lnk"
-    IDS_SHORT_NOTEPAD    "Poznámkový blok.lnk"
-    IDS_SHORT_PAINT      "Malování.lnk"
-    IDS_SHORT_RDESKTOP   "Vzdálená plocha.lnk"
-    IDS_SHORT_REGEDIT    "Editor registru.lnk"
-    IDS_SHORT_SERVICE    "Správce služeb.lnk"
-    IDS_SHORT_SNAP       "Sejmout obrazovku.lnk"
-    IDS_SHORT_SNDVOL32   "Ovládání hlasitosti.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

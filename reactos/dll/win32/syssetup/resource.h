@@ -93,37 +93,6 @@
 
 #define IDS_ACKPROJECTS                 3100
 
-#define IDS_ACCESSORIES                 3200
-#define IDS_GAMES                       3201
-#define IDS_SYS_TOOLS                   3202
-#define IDS_SYS_ACCESSIBILITY           3203
-#define IDS_SYS_ENTERTAINMENT           3204
-
-#define IDS_CMT_CALC                    3210
-#define IDS_CMT_CHARMAP                 3211
-#define IDS_CMT_CMD                     3212
-#define IDS_CMT_DEVMGMT                 3213
-#define IDS_CMT_DOWNLOADER              3214
-#define IDS_CMT_EVENTVIEW               3215
-#define IDS_CMT_EXPLORER                3216
-#define IDS_CMT_KBSWITCH                3217
-#define IDS_CMT_MAGNIFY                 3218
-#define IDS_CMT_MPLAY32                 3219
-#define IDS_CMT_MSCONFIG                3220
-#define IDS_CMT_NOTEPAD                 3221
-#define IDS_CMT_RDESKTOP                3222
-#define IDS_CMT_REGEDIT                 3223
-#define IDS_CMT_SERVMAN                 3224
-#define IDS_CMT_SCREENSHOT              3225
-#define IDS_CMT_SOLITAIRE               3226
-#define IDS_CMT_WINEMINE                3227
-#define IDS_CMT_WORDPAD                 3228
-#define IDS_CMT_SNDVOL32                3229
-#define IDS_CMT_DXDIAG                  3230
-#define IDS_CMT_PAINT                   3231
-#define IDS_CMT_SPIDER                  3232
-#define IDS_CMT_SNDREC32                3233
-
 #define IDS_REACTOS_SETUP               3300
 #define IDS_UNKNOWN_ERROR               3301
 #define IDS_REGISTERING_COMPONENTS      3302
@@ -133,31 +102,6 @@
 #define IDS_DLLINSTALL_FAILED           3306
 #define IDS_TIMEOUT                     3307
 #define IDS_REASON_UNKNOWN              3308
-
-#define IDS_SHORT_CALC          3400
-#define IDS_SHORT_CHARMAP       3401
-#define IDS_SHORT_CMD           3402
-#define IDS_SHORT_DEVICE        3403
-#define IDS_SHORT_DOWNLOADER    3404
-#define IDS_SHORT_EVENTVIEW     3405
-#define IDS_SHORT_EXPLORER      3406
-#define IDS_SHORT_KBSWITCH      3407
-#define IDS_SHORT_MAGNIFY       3408
-#define IDS_SHORT_MPLAY32       3409
-#define IDS_SHORT_MSCONFIG      3410
-#define IDS_SHORT_NOTEPAD       3411
-#define IDS_SHORT_RDESKTOP      3412
-#define IDS_SHORT_REGEDIT       3413
-#define IDS_SHORT_SERVICE       3414
-#define IDS_SHORT_SNAP          3415
-#define IDS_SHORT_SOLITAIRE     3416
-#define IDS_SHORT_WINEMINE      3417
-#define IDS_SHORT_WORDPAD       3418
-#define IDS_SHORT_SNDVOL32      3419
-#define IDS_SHORT_DXDIAG        3420
-#define IDS_SHORT_PAINT         3421
-#define IDS_SHORT_SPIDER        3422
-#define IDS_SHORT_SNDREC32      3423
 
 #define IDS_WZD_NAME            3450
 #define IDS_WZD_SETCOMPUTERNAME 3451

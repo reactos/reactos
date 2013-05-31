@@ -186,60 +186,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Download and install various applications"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "Accessories"
-    IDS_CMT_CALC        "Launch Calculator"
-    IDS_CMT_CMD         "Open command prompt"
-    IDS_CMT_EXPLORER    "Launch Explorer"
-    IDS_CMT_NOTEPAD     "Launch Text Editor"
-    IDS_CMT_REGEDIT     "Launch Registry Editor"
-    IDS_CMT_WORDPAD     "Launch Document Editor"
-    IDS_CMT_SCREENSHOT  "Take screenshot"
-    IDS_CMT_DEVMGMT     "Launch Device Manager"
-    IDS_CMT_SERVMAN     "Launch Service Manager"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
-    IDS_CMT_PAINT       "Launch Paint"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES		    "Games"
-    IDS_CMT_SOLITAIRE	"Solitaire"
-    IDS_CMT_WINEMINE	"WineMine"
-	IDS_CMT_SPIDER      "Spider Solitaire"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "CharMap"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
-END
-
-STRINGTABLE
-BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "Entertainment"
-    IDS_CMT_MPLAY32             "Launch Multimedia Player"
-    IDS_CMT_SNDVOL32            "Launch Volume Control"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
-
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP		    "ReactOS Setup"
     IDS_UNKNOWN_ERROR           "Unknown error"
     IDS_REGISTERING_COMPONENTS  "Registering components..."
@@ -249,34 +195,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED	    "DllInstall failed: "
     IDS_TIMEOUT			        "Timeout during registration"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CMD        "Command Prompt.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
-    IDS_SHORT_SERVICE    "Service Manager.lnk"
-    IDS_SHORT_DEVICE     "Device Manager.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
-    IDS_SHORT_CALC       "Calculator.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_CHARMAP    "CharMap.lnk"
-    IDS_SHORT_MAGNIFY    "Magnify.lnk"
-    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
-    IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

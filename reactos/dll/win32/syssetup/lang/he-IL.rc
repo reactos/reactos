@@ -188,59 +188,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "הורד והתקן תכניות"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ACCESSORIES     "עזרים"
-    IDS_CMT_CALC        "מחשבון"
-    IDS_CMT_CMD         "שורת הפקודה"
-    IDS_CMT_DEVMGMT     "מנהל ההתקנים"
-    IDS_CMT_EVENTVIEW   "מציג האירועים"
-    IDS_CMT_EXPLORER    "סייר"
-    IDS_CMT_MSCONFIG    "תכנית הגדרת המערכת"
-    IDS_CMT_NOTEPAD     "עורך טקסט"
-    IDS_CMT_RDESKTOP    "שולחן עבודה מרוחק"
-    IDS_CMT_REGEDIT     "עורך הרישום"
-    IDS_CMT_SCREENSHOT  "צילום מסך"
-    IDS_CMT_SERVMAN     "מנהל השירותים"
-    IDS_CMT_WORDPAD     "עורך המסמכים"
-    IDS_CMT_PAINT       "צייר"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_GAMES           "משחקים"
-    IDS_CMT_SOLITAIRE   "סוליטייר"
-    IDS_CMT_WINEMINE    "שולה המוקשים"
-	IDS_CMT_SPIDER      "סוליטייר עכביש"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_TOOLS       "כלי מערכת"
-    IDS_CMT_CHARMAP     "מפת התווים"
-    IDS_CMT_DXDIAG      "Launch ReactX-Diagnostic program"
-    IDS_CMT_KBSWITCH    "Keyboard Layout Switcher"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ACCESSIBILITY       "נגישות"
-    IDS_CMT_MAGNIFY             "זכוכית מגדלת"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SYS_ENTERTAINMENT       "בידור"
-    IDS_CMT_MPLAY32             "נגן המולטימדיה"
-    IDS_CMT_SNDVOL32            "בקרת עוצמה"
-    IDS_CMT_SNDREC32            "רשמקול"
-END
-
-STRINGTABLE
-BEGIN
     IDS_REACTOS_SETUP           "ReactOS התקנת"
     IDS_UNKNOWN_ERROR           "שגיאה לא ידועה"
     IDS_REGISTERING_COMPONENTS  "רושם רכיבים..."
@@ -250,34 +197,6 @@ BEGIN
     IDS_DLLINSTALL_FAILED       "DllInstall נכשל: "
     IDS_TIMEOUT                 "Timeout during registration"
     IDS_REASON_UNKNOWN          ""
-END
-
-STRINGTABLE
-BEGIN
-    IDS_SHORT_CALC       "מחשבון.lnk"
-    IDS_SHORT_CHARMAP    "מפת תווים.lnk"
-    IDS_SHORT_CMD        "שורת הפקודה.lnk"
-    IDS_SHORT_DEVICE     "מנהל ההתקנים.lnk"
-    IDS_SHORT_DOWNLOADER "מנהל היישומים של ReactOS.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
-    IDS_SHORT_EVENTVIEW  "מציג האירועים.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS סייר.lnk"
-    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
-    IDS_SHORT_MAGNIFY    "זכוכית מגדלת.lnk"
-    IDS_SHORT_MPLAY32    "נגן מולטימדיה.lnk"
-    IDS_SHORT_MSCONFIG   "הגדרת המערכת.lnk"
-    IDS_SHORT_NOTEPAD    "פנקס הרשימות.lnk"
-    IDS_SHORT_RDESKTOP   "שולחן עבודה מרוחק.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_SERVICE    "מנהל השירותים.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SNDVOL32   "בקרת עוצמה.lnk"
-    IDS_SHORT_SNDREC32   "רשמקול.lnk"
-    IDS_SHORT_SOLITAIRE  "סוליטייר.lnk"
-    IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_WORDPAD    "כתבן.lnk"
-    IDS_SHORT_PAINT      "צייר.lnk"
-	IDS_SHORT_SPIDER     "סוליטייר עכביש.lnk"
 END
 
 STRINGTABLE
