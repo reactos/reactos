@@ -311,8 +311,7 @@ static HRESULT WINAPI IGetFrame_fnSetFormat(IGetFrame *iface,
   if (sInfo.fccType != streamtypeVIDEO)
     return AVIERR_UNSUPPORTED;
 
-  This->bFormatChanges =
-    (sInfo.dwFlags & AVISTREAMINFO_FORMATCHANGES ? TRUE : FALSE );
+  This->bFormatChanges = (sInfo.dwFlags & AVISTREAMINFO_FORMATCHANGES) != 0;
   This->dwFormatChangeCount = sInfo.dwFormatChangeCount;
   This->dwEditCount         = sInfo.dwEditCount;
   This->lCurrentFrame       = -1;
@@ -434,7 +433,7 @@ static HRESULT WINAPI IGetFrame_fnSetFormat(IGetFrame *iface,
     }
 
     if (lpBits == NULL) {
-      register DWORD size = This->lpOutFormat->biClrUsed * sizeof(RGBQUAD);
+      DWORD size = This->lpOutFormat->biClrUsed * sizeof(RGBQUAD);
 
       size += This->lpOutFormat->biSize + This->lpOutFormat->biSizeImage;
       This->lpOutFormat = HeapReAlloc(GetProcessHeap(), 0, This->lpOutFormat, size);

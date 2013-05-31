@@ -32,7 +32,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 
-/* reads a chunk outof the extrachunk-structure */
+/* reads a chunk out of the extrachunk-structure */
 HRESULT ReadExtraChunk(const EXTRACHUNKS *extra,FOURCC ckid,LPVOID lpData,LPLONG size)
 {
   LPBYTE lp;
@@ -102,7 +102,7 @@ HRESULT WriteExtraChunk(LPEXTRACHUNKS extra,FOURCC ckid,LPCVOID lpData, LONG siz
   return AVIERR_OK;
 }
 
-/* reads a chunk fomr the HMMIO into the extrachunk-structure */
+/* reads a chunk from the HMMIO into the extrachunk-structure */
 HRESULT ReadChunkIntoExtra(LPEXTRACHUNKS extra,HMMIO hmmio,const MMCKINFO *lpck)
 {
   LPDWORD lp;

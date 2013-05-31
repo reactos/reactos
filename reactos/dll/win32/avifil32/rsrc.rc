@@ -28,6 +28,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* @makedep: avifile.rgs */
 1 WINE_REGISTRY avifile.rgs
 
+2 WINE_REGISTRY avifil32_idl.rgs
+
 #define WINE_FILEDESCRIPTION_STR "Wine AVI file support library"
 #define WINE_FILENAME_STR "avifil32.dll"
 #define WINE_FILEVERSION 4,0,3,1998

@@ -262,7 +262,7 @@ PAVIFILE AVIFILE_CreateAVITempFile(int nStreams, const PAVISTREAM *ppStreams)
       tmpFile->fInfo.dwSuggestedBufferSize = sInfo.dwSuggestedBufferSize;
 
     {
-      register DWORD tmp;
+      DWORD tmp;
 
       tmp = MulDiv(AVIStreamSampleToTime(ppStreams[i], sInfo.dwLength),
                    tmpFile->fInfo.dwScale, tmpFile->fInfo.dwRate * 1000);

@@ -1248,7 +1248,7 @@ static BOOL AVISaveOptionsFmtChoose(HWND hWnd)
       pOptions->dwFlags |= AVICOMPRESSF_VALID;
 
     HeapFree(GetProcessHeap(), 0, afmtc.pwfxEnum);
-    return (ret == S_OK ? TRUE : FALSE);
+    return ret == S_OK;
   } else {
     ERR(": unknown streamtype 0x%08X\n", sInfo.fccType);
     return FALSE;

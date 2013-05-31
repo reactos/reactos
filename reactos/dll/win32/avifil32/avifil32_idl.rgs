@@ -1,0 +1,29 @@
+HKCR
+{
+    NoRemove Interface
+    {
+    }
+    NoRemove CLSID
+    {
+        '{00020000-0000-0000-C000-000000000046}' = s 'Microsoft AVI Files'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
+        '{00020001-0000-0000-C000-000000000046}' = s 'AVI Compressed Stream'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
+        '{00020003-0000-0000-C000-000000000046}' = s 'Microsoft Wave File'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
+        '{0002000D-0000-0000-C000-000000000046}' = s 'IAVIStream & IAVIFile Proxy'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
+        '{0002000F-0000-0000-C000-000000000046}' = s 'ACM Compressed Audio Stream'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+        }
+    }
+}

@@ -34,6 +34,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
+#define COBJMACROS
 #include <assert.h>
 #include <stdarg.h>
 
@@ -57,54 +58,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 #ifndef IDX_PER_BLOCK
 #define IDX_PER_BLOCK 2730
 #endif
-
-/***********************************************************************/
-
-static HRESULT WINAPI IAVIFile_fnQueryInterface(IAVIFile* iface,REFIID refiid,LPVOID *obj);
-static ULONG   WINAPI IAVIFile_fnAddRef(IAVIFile* iface);
-static ULONG   WINAPI IAVIFile_fnRelease(IAVIFile* iface);
-static HRESULT WINAPI IAVIFile_fnInfo(IAVIFile*iface,AVIFILEINFOW*afi,LONG size);
-static HRESULT WINAPI IAVIFile_fnGetStream(IAVIFile*iface,PAVISTREAM*avis,DWORD fccType,LONG lParam);
-static HRESULT WINAPI IAVIFile_fnCreateStream(IAVIFile*iface,PAVISTREAM*avis,AVISTREAMINFOW*asi);
-static HRESULT WINAPI IAVIFile_fnWriteData(IAVIFile*iface,DWORD ckid,LPVOID lpData,LONG size);
-static HRESULT WINAPI IAVIFile_fnReadData(IAVIFile*iface,DWORD ckid,LPVOID lpData,LONG *size);
-static HRESULT WINAPI IAVIFile_fnEndRecord(IAVIFile*iface);
-static HRESULT WINAPI IAVIFile_fnDeleteStream(IAVIFile*iface,DWORD fccType,LONG lParam);
-
-static const struct IAVIFileVtbl iavift = {
-  IAVIFile_fnQueryInterface,
-  IAVIFile_fnAddRef,
-  IAVIFile_fnRelease,
-  IAVIFile_fnInfo,
-  IAVIFile_fnGetStream,
-  IAVIFile_fnCreateStream,
-  IAVIFile_fnWriteData,
-  IAVIFile_fnReadData,
-  IAVIFile_fnEndRecord,
-  IAVIFile_fnDeleteStream
-};
-
-static HRESULT WINAPI IPersistFile_fnQueryInterface(IPersistFile*iface,REFIID refiid,LPVOID*obj);
-static ULONG   WINAPI IPersistFile_fnAddRef(IPersistFile*iface);
-static ULONG   WINAPI IPersistFile_fnRelease(IPersistFile*iface);
-static HRESULT WINAPI IPersistFile_fnGetClassID(IPersistFile*iface,CLSID*pClassID);
-static HRESULT WINAPI IPersistFile_fnIsDirty(IPersistFile*iface);
-static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile*iface,LPCOLESTR pszFileName,DWORD dwMode);
-static HRESULT WINAPI IPersistFile_fnSave(IPersistFile*iface,LPCOLESTR pszFileName,BOOL fRemember);
-static HRESULT WINAPI IPersistFile_fnSaveCompleted(IPersistFile*iface,LPCOLESTR pszFileName);
-static HRESULT WINAPI IPersistFile_fnGetCurFile(IPersistFile*iface,LPOLESTR*ppszFileName);
-
-static const struct IPersistFileVtbl ipersistft = {
-  IPersistFile_fnQueryInterface,
-  IPersistFile_fnAddRef,
-  IPersistFile_fnRelease,
-  IPersistFile_fnGetClassID,
-  IPersistFile_fnIsDirty,
-  IPersistFile_fnLoad,
-  IPersistFile_fnSave,
-  IPersistFile_fnSaveCompleted,
-  IPersistFile_fnGetCurFile
-};
 
 static HRESULT WINAPI IAVIStream_fnQueryInterface(IAVIStream*iface,REFIID refiid,LPVOID *obj);
 static ULONG   WINAPI IAVIStream_fnAddRef(IAVIStream*iface);
@@ -140,14 +93,6 @@ static const struct IAVIStreamVtbl iavist = {
 
 typedef struct _IAVIFileImpl IAVIFileImpl;
 
-typedef struct _IPersistFileImpl {
-  /* IUnknown stuff */
-  const IPersistFileVtbl *lpVtbl;
-
-  /* IPersistFile stuff */
-  IAVIFileImpl     *paf;
-} IPersistFileImpl;
-
 typedef struct _IAVIStreamImpl {
   /* IUnknown stuff */
   const IAVIStreamVtbl *lpVtbl;
@@ -178,12 +123,11 @@ typedef struct _IAVIStreamImpl {
 } IAVIStreamImpl;
 
 struct _IAVIFileImpl {
-  /* IUnknown stuff */
-  const IAVIFileVtbl     *lpVtbl;
-  LONG		    ref;
-
-  /* IAVIFile stuff... */
-  IPersistFileImpl  iPersistFile;
+  IUnknown          IUnknown_inner;
+  IAVIFile          IAVIFile_iface;
+  IPersistFile      IPersistFile_iface;
+  IUnknown         *outer_unk;
+  LONG              ref;
 
   AVIFILEINFOW      fInfo;
   IAVIStreamImpl   *ppStreams[MAX_AVISTREAMS];
@@ -206,6 +150,21 @@ struct _IAVIFileImpl {
   UINT              uMode;
   BOOL              fDirty;
 };
+
+static inline IAVIFileImpl *impl_from_IUnknown(IUnknown *iface)
+{
+  return CONTAINING_RECORD(iface, IAVIFileImpl, IUnknown_inner);
+}
+
+static inline IAVIFileImpl *impl_from_IAVIFile(IAVIFile *iface)
+{
+  return CONTAINING_RECORD(iface, IAVIFileImpl, IAVIFile_iface);
+}
+
+static inline IAVIFileImpl *impl_from_IPersistFile(IPersistFile *iface)
+{
+  return CONTAINING_RECORD(iface, IAVIFileImpl, IPersistFile_iface);
+}
 
 /***********************************************************************/
 
@@ -233,87 +192,64 @@ static HRESULT AVIFILE_WriteBlock(IAVIStreamImpl *This, DWORD block,
 				  FOURCC ckid, DWORD flags, LPCVOID buffer,
 				  LONG size);
 
-HRESULT AVIFILE_CreateAVIFile(REFIID riid, LPVOID *ppv)
+static HRESULT WINAPI IUnknown_fnQueryInterface(IUnknown *iface, REFIID riid, void **ppv)
 {
-  IAVIFileImpl *pfile;
-  HRESULT       hr;
+  IAVIFileImpl *This = impl_from_IUnknown(iface);
 
-  assert(riid != NULL && ppv != NULL);
+  TRACE("(%p,%s,%p)\n", This, debugstr_guid(riid), ppv);
 
+  if (!ppv) {
+    WARN("invalid parameter\n");
+    return E_INVALIDARG;
+  }
   *ppv = NULL;
 
-  pfile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIFileImpl));
-  if (pfile == NULL)
-    return AVIERR_MEMORY;
-
-  pfile->lpVtbl = &iavift;
-  pfile->ref = 0;
-  pfile->iPersistFile.lpVtbl = &ipersistft;
-  pfile->iPersistFile.paf = pfile;
-
-  hr = IAVIFile_QueryInterface((IAVIFile*)pfile, riid, ppv);
-  if (FAILED(hr))
-    HeapFree(GetProcessHeap(), 0, pfile);
-
-  return hr;
-}
-
-static HRESULT WINAPI IAVIFile_fnQueryInterface(IAVIFile *iface, REFIID refiid,
-						LPVOID *obj)
-{
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
-
-  TRACE("(%p,%s,%p)\n", This, debugstr_guid(refiid), obj);
-
-  if (IsEqualGUID(&IID_IUnknown, refiid) ||
-      IsEqualGUID(&IID_IAVIFile, refiid)) {
-    *obj = iface;
-    IAVIFile_AddRef(iface);
-
-    return S_OK;
-  } else if (IsEqualGUID(&IID_IPersistFile, refiid)) {
-    *obj = &This->iPersistFile;
-    IAVIFile_AddRef(iface);
-
-    return S_OK;
+  if (IsEqualIID(riid, &IID_IUnknown))
+    *ppv = &This->IUnknown_inner;
+  else if (IsEqualIID(riid, &IID_IAVIFile))
+    *ppv = &This->IAVIFile_iface;
+  else if (IsEqualGUID(riid, &IID_IPersistFile))
+    *ppv = &This->IPersistFile_iface;
+  else {
+    WARN("unknown IID %s\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
   }
 
-  return OLE_E_ENUM_NOMORE;
+  /* Violation of the COM aggregation ref counting rule */
+  IUnknown_AddRef(&This->IUnknown_inner);
+  return S_OK;
 }
 
-static ULONG WINAPI IAVIFile_fnAddRef(IAVIFile *iface)
+static ULONG WINAPI IUnknown_fnAddRef(IUnknown *iface)
 {
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
+  IAVIFileImpl *This = impl_from_IUnknown(iface);
   ULONG ref = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p) -> %d\n", iface, ref);
+  TRACE("(%p) ref=%d\n", This, ref);
 
   return ref;
 }
 
-static ULONG WINAPI IAVIFile_fnRelease(IAVIFile *iface)
+static ULONG WINAPI IUnknown_fnRelease(IUnknown *iface)
 {
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
-  UINT i;
+  IAVIFileImpl *This = impl_from_IUnknown(iface);
   ULONG ref = InterlockedDecrement(&This->ref);
+  UINT i;
 
-  TRACE("(%p) -> %d\n", iface, ref);
+  TRACE("(%p) ref=%d\n", This, ref);
 
   if (!ref) {
-    if (This->fDirty) {
-      /* need to write headers to file */
+    if (This->fDirty)
       AVIFILE_SaveFile(This);
-    }
 
     for (i = 0; i < This->fInfo.dwStreams; i++) {
       if (This->ppStreams[i] != NULL) {
-	if (This->ppStreams[i]->ref != 0) {
+        if (This->ppStreams[i]->ref != 0)
           ERR(": someone has still %u reference to stream %u (%p)!\n",
-	       This->ppStreams[i]->ref, i, This->ppStreams[i]);
-	}
-	AVIFILE_DestructAVIStream(This->ppStreams[i]);
-	HeapFree(GetProcessHeap(), 0, This->ppStreams[i]);
-	This->ppStreams[i] = NULL;
+              This->ppStreams[i]->ref, i, This->ppStreams[i]);
+        AVIFILE_DestructAVIStream(This->ppStreams[i]);
+        HeapFree(GetProcessHeap(), 0, This->ppStreams[i]);
+        This->ppStreams[i] = NULL;
       }
     }
 
@@ -342,10 +278,37 @@ static ULONG WINAPI IAVIFile_fnRelease(IAVIFile *iface)
   return ref;
 }
 
-static HRESULT WINAPI IAVIFile_fnInfo(IAVIFile *iface, LPAVIFILEINFOW afi,
-				      LONG size)
+static const IUnknownVtbl unk_vtbl =
 {
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
+  IUnknown_fnQueryInterface,
+  IUnknown_fnAddRef,
+  IUnknown_fnRelease
+};
+
+static HRESULT WINAPI IAVIFile_fnQueryInterface(IAVIFile *iface, REFIID riid, void **ppv)
+{
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
+
+  return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
+}
+
+static ULONG WINAPI IAVIFile_fnAddRef(IAVIFile *iface)
+{
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
+
+  return IUnknown_AddRef(This->outer_unk);
+}
+
+static ULONG WINAPI IAVIFile_fnRelease(IAVIFile *iface)
+{
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
+
+  return IUnknown_Release(This->outer_unk);
+}
+
+static HRESULT WINAPI IAVIFile_fnInfo(IAVIFile *iface, AVIFILEINFOW *afi, LONG size)
+{
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
 
   TRACE("(%p,%p,%d)\n",iface,afi,size);
 
@@ -363,11 +326,10 @@ static HRESULT WINAPI IAVIFile_fnInfo(IAVIFile *iface, LPAVIFILEINFOW afi,
   return AVIERR_OK;
 }
 
-static HRESULT WINAPI IAVIFile_fnGetStream(IAVIFile *iface, PAVISTREAM *avis,
-					   DWORD fccType, LONG lParam)
+static HRESULT WINAPI IAVIFile_fnGetStream(IAVIFile *iface, IAVIStream **avis, DWORD fccType,
+    LONG lParam)
 {
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
-
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
   ULONG nStream;
 
   TRACE("(%p,%p,0x%08X,%d)\n", iface, avis, fccType, lParam);
@@ -390,11 +352,10 @@ static HRESULT WINAPI IAVIFile_fnGetStream(IAVIFile *iface, PAVISTREAM *avis,
   return AVIERR_NODATA;
 }
 
-static HRESULT WINAPI IAVIFile_fnCreateStream(IAVIFile *iface,PAVISTREAM *avis,
-					      LPAVISTREAMINFOW asi)
+static HRESULT WINAPI IAVIFile_fnCreateStream(IAVIFile *iface, IAVIStream **avis,
+    AVISTREAMINFOW *asi)
 {
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
-
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
   DWORD n;
 
   TRACE("(%p,%p,%p)\n", iface, avis, asi);
@@ -444,10 +405,9 @@ static HRESULT WINAPI IAVIFile_fnCreateStream(IAVIFile *iface,PAVISTREAM *avis,
   return AVIERR_OK;
 }
 
-static HRESULT WINAPI IAVIFile_fnWriteData(IAVIFile *iface, DWORD ckid,
-					   LPVOID lpData, LONG size)
+static HRESULT WINAPI IAVIFile_fnWriteData(IAVIFile *iface, DWORD ckid, void *lpData, LONG size)
 {
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
 
   TRACE("(%p,0x%08X,%p,%d)\n", iface, ckid, lpData, size);
 
@@ -466,10 +426,9 @@ static HRESULT WINAPI IAVIFile_fnWriteData(IAVIFile *iface, DWORD ckid,
   return WriteExtraChunk(&This->fileextra, ckid, lpData, size);
 }
 
-static HRESULT WINAPI IAVIFile_fnReadData(IAVIFile *iface, DWORD ckid,
-					  LPVOID lpData, LONG *size)
+static HRESULT WINAPI IAVIFile_fnReadData(IAVIFile *iface, DWORD ckid, void *lpData, LONG *size)
 {
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
 
   TRACE("(%p,0x%08X,%p,%p)\n", iface, ckid, lpData, size);
 
@@ -478,7 +437,7 @@ static HRESULT WINAPI IAVIFile_fnReadData(IAVIFile *iface, DWORD ckid,
 
 static HRESULT WINAPI IAVIFile_fnEndRecord(IAVIFile *iface)
 {
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
 
   TRACE("(%p)\n",iface);
 
@@ -517,11 +476,9 @@ static HRESULT WINAPI IAVIFile_fnEndRecord(IAVIFile *iface)
   return AVIERR_OK;
 }
 
-static HRESULT WINAPI IAVIFile_fnDeleteStream(IAVIFile *iface, DWORD fccType,
-					      LONG lParam)
+static HRESULT WINAPI IAVIFile_fnDeleteStream(IAVIFile *iface, DWORD fccType, LONG lParam)
 {
-  IAVIFileImpl *This = (IAVIFileImpl *)iface;
-
+  IAVIFileImpl *This = impl_from_IAVIFile(iface);
   ULONG nStream;
 
   TRACE("(%p,0x%08X,%d)\n", iface, fccType, lParam);
@@ -556,38 +513,42 @@ static HRESULT WINAPI IAVIFile_fnDeleteStream(IAVIFile *iface, DWORD fccType,
     return AVIERR_NODATA;
 }
 
-/***********************************************************************/
+static const struct IAVIFileVtbl avif_vt = {
+  IAVIFile_fnQueryInterface,
+  IAVIFile_fnAddRef,
+  IAVIFile_fnRelease,
+  IAVIFile_fnInfo,
+  IAVIFile_fnGetStream,
+  IAVIFile_fnCreateStream,
+  IAVIFile_fnWriteData,
+  IAVIFile_fnReadData,
+  IAVIFile_fnEndRecord,
+  IAVIFile_fnDeleteStream
+};
 
-static HRESULT WINAPI IPersistFile_fnQueryInterface(IPersistFile *iface,
-						    REFIID refiid, LPVOID *obj)
+
+static HRESULT WINAPI IPersistFile_fnQueryInterface(IPersistFile *iface, REFIID riid, void **ppv)
 {
-  IPersistFileImpl *This = (IPersistFileImpl *)iface;
+  IAVIFileImpl *This = impl_from_IPersistFile(iface);
 
-  assert(This->paf != NULL);
-
-  return IAVIFile_QueryInterface((PAVIFILE)This->paf, refiid, obj);
+  return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
 }
 
-static ULONG   WINAPI IPersistFile_fnAddRef(IPersistFile *iface)
+static ULONG WINAPI IPersistFile_fnAddRef(IPersistFile *iface)
 {
-  IPersistFileImpl *This = (IPersistFileImpl *)iface;
+  IAVIFileImpl *This = impl_from_IPersistFile(iface);
 
-  assert(This->paf != NULL);
-
-  return IAVIFile_AddRef((PAVIFILE)This->paf);
+  return IUnknown_AddRef(This->outer_unk);
 }
 
-static ULONG   WINAPI IPersistFile_fnRelease(IPersistFile *iface)
+static ULONG WINAPI IPersistFile_fnRelease(IPersistFile *iface)
 {
-  IPersistFileImpl *This = (IPersistFileImpl *)iface;
+  IAVIFileImpl *This = impl_from_IPersistFile(iface);
 
-  assert(This->paf != NULL);
-
-  return IAVIFile_Release((PAVIFILE)This->paf);
+  return IUnknown_Release(This->outer_unk);
 }
 
-static HRESULT WINAPI IPersistFile_fnGetClassID(IPersistFile *iface,
-						LPCLSID pClassID)
+static HRESULT WINAPI IPersistFile_fnGetClassID(IPersistFile *iface, LPCLSID pClassID)
 {
   TRACE("(%p,%p)\n", iface, pClassID);
 
@@ -601,20 +562,16 @@ static HRESULT WINAPI IPersistFile_fnGetClassID(IPersistFile *iface,
 
 static HRESULT WINAPI IPersistFile_fnIsDirty(IPersistFile *iface)
 {
-  IPersistFileImpl *This = (IPersistFileImpl *)iface;
+  IAVIFileImpl *This = impl_from_IPersistFile(iface);
 
   TRACE("(%p)\n", iface);
 
-  assert(This->paf != NULL);
-
-  return (This->paf->fDirty ? S_OK : S_FALSE);
+  return (This->fDirty ? S_OK : S_FALSE);
 }
 
-static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile *iface,
-					  LPCOLESTR pszFileName, DWORD dwMode)
+static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile *iface, LPCOLESTR pszFileName, DWORD dwMode)
 {
-  IPersistFileImpl *This = (IPersistFileImpl *)iface;
-
+  IAVIFileImpl *This = impl_from_IPersistFile(iface);
   int len;
 
   TRACE("(%p,%s,0x%08X)\n", iface, debugstr_w(pszFileName), dwMode);
@@ -623,53 +580,49 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile *iface,
   if (pszFileName == NULL)
     return AVIERR_BADPARAM;
 
-  assert(This->paf != NULL);
-  if (This->paf->hmmio != NULL)
+  if (This->hmmio != NULL)
     return AVIERR_ERROR; /* No reuse of this object for another file! */
 
   /* remember mode and name */
-  This->paf->uMode = dwMode;
+  This->uMode = dwMode;
 
   len = lstrlenW(pszFileName) + 1;
-  This->paf->szFileName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-  if (This->paf->szFileName == NULL)
+  This->szFileName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+  if (This->szFileName == NULL)
     return AVIERR_MEMORY;
-  lstrcpyW(This->paf->szFileName, pszFileName);
+  lstrcpyW(This->szFileName, pszFileName);
 
   /* try to open the file */
-  This->paf->hmmio = mmioOpenW(This->paf->szFileName, NULL,
-			       MMIO_ALLOCBUF | dwMode);
-  if (This->paf->hmmio == NULL) {
+  This->hmmio = mmioOpenW(This->szFileName, NULL, MMIO_ALLOCBUF | dwMode);
+  if (This->hmmio == NULL) {
     /* mmioOpenW not in native DLLs of Win9x -- try mmioOpenA */
     LPSTR szFileName;
 
-    len = WideCharToMultiByte(CP_ACP, 0, This->paf->szFileName, -1,
-                               NULL, 0, NULL, NULL);
+    len = WideCharToMultiByte(CP_ACP, 0, This->szFileName, -1, NULL, 0, NULL, NULL);
     szFileName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(CHAR));
     if (szFileName == NULL)
       return AVIERR_MEMORY;
 
-    WideCharToMultiByte(CP_ACP, 0, This->paf->szFileName, -1, szFileName,
-			len, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, This->szFileName, -1, szFileName, len, NULL, NULL);
 
-    This->paf->hmmio = mmioOpenA(szFileName, NULL, MMIO_ALLOCBUF | dwMode);
+    This->hmmio = mmioOpenA(szFileName, NULL, MMIO_ALLOCBUF | dwMode);
     HeapFree(GetProcessHeap(), 0, szFileName);
-    if (This->paf->hmmio == NULL)
+    if (This->hmmio == NULL)
       return AVIERR_FILEOPEN;
   }
 
   /* should we create a new file? */
   if (dwMode & OF_CREATE) {
-    memset(& This->paf->fInfo, 0, sizeof(This->paf->fInfo));
-    This->paf->fInfo.dwFlags = AVIFILEINFO_HASINDEX | AVIFILEINFO_TRUSTCKTYPE;
+    memset(& This->fInfo, 0, sizeof(This->fInfo));
+    This->fInfo.dwFlags = AVIFILEINFO_HASINDEX | AVIFILEINFO_TRUSTCKTYPE;
 
     return AVIERR_OK;
   } else
-    return AVIFILE_LoadFile(This->paf);
+    return AVIFILE_LoadFile(This);
 }
 
-static HRESULT WINAPI IPersistFile_fnSave(IPersistFile *iface,
-					  LPCOLESTR pszFileName,BOOL fRemember)
+static HRESULT WINAPI IPersistFile_fnSave(IPersistFile *iface, LPCOLESTR pszFileName,
+    BOOL fRemember)
 {
   TRACE("(%p,%s,%d)\n", iface, debugstr_w(pszFileName), fRemember);
 
@@ -678,8 +631,7 @@ static HRESULT WINAPI IPersistFile_fnSave(IPersistFile *iface,
   return AVIERR_OK;
 }
 
-static HRESULT WINAPI IPersistFile_fnSaveCompleted(IPersistFile *iface,
-						   LPCOLESTR pszFileName)
+static HRESULT WINAPI IPersistFile_fnSaveCompleted(IPersistFile *iface, LPCOLESTR pszFileName)
 {
   TRACE("(%p,%s)\n", iface, debugstr_w(pszFileName));
 
@@ -688,10 +640,9 @@ static HRESULT WINAPI IPersistFile_fnSaveCompleted(IPersistFile *iface,
   return AVIERR_OK;
 }
 
-static HRESULT WINAPI IPersistFile_fnGetCurFile(IPersistFile *iface,
-						LPOLESTR *ppszFileName)
+static HRESULT WINAPI IPersistFile_fnGetCurFile(IPersistFile *iface, LPOLESTR *ppszFileName)
 {
-  IPersistFileImpl *This = (IPersistFileImpl *)iface;
+  IAVIFileImpl *This = impl_from_IPersistFile(iface);
 
   TRACE("(%p,%p)\n", iface, ppszFileName);
 
@@ -700,22 +651,56 @@ static HRESULT WINAPI IPersistFile_fnGetCurFile(IPersistFile *iface,
 
   *ppszFileName = NULL;
 
-  assert(This->paf != NULL);
-
-  if (This->paf->szFileName != NULL) {
-    int len = lstrlenW(This->paf->szFileName) + 1;
+  if (This->szFileName != NULL) {
+    int len = lstrlenW(This->szFileName) + 1;
 
     *ppszFileName = CoTaskMemAlloc(len * sizeof(WCHAR));
     if (*ppszFileName == NULL)
       return AVIERR_MEMORY;
 
-    strcpyW(*ppszFileName, This->paf->szFileName);
+    strcpyW(*ppszFileName, This->szFileName);
   }
 
   return AVIERR_OK;
 }
 
-/***********************************************************************/
+static const struct IPersistFileVtbl pf_vt = {
+  IPersistFile_fnQueryInterface,
+  IPersistFile_fnAddRef,
+  IPersistFile_fnRelease,
+  IPersistFile_fnGetClassID,
+  IPersistFile_fnIsDirty,
+  IPersistFile_fnLoad,
+  IPersistFile_fnSave,
+  IPersistFile_fnSaveCompleted,
+  IPersistFile_fnGetCurFile
+};
+
+HRESULT AVIFILE_CreateAVIFile(IUnknown *pUnkOuter, REFIID riid, void **ppv)
+{
+  IAVIFileImpl *obj;
+  HRESULT hr;
+
+  *ppv = NULL;
+  obj = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIFileImpl));
+  if (!obj)
+    return AVIERR_MEMORY;
+
+  obj->IUnknown_inner.lpVtbl = &unk_vtbl;
+  obj->IAVIFile_iface.lpVtbl = &avif_vt;
+  obj->IPersistFile_iface.lpVtbl = &pf_vt;
+  obj->ref = 1;
+  if (pUnkOuter)
+    obj->outer_unk = pUnkOuter;
+  else
+    obj->outer_unk = &obj->IUnknown_inner;
+
+  hr = IUnknown_QueryInterface(&obj->IUnknown_inner, riid, ppv);
+  IUnknown_Release(&obj->IUnknown_inner);
+
+  return hr;
+}
+
 
 static HRESULT WINAPI IAVIStream_fnQueryInterface(IAVIStream *iface,
 						  REFIID refiid, LPVOID *obj)
@@ -745,7 +730,7 @@ static ULONG WINAPI IAVIStream_fnAddRef(IAVIStream *iface)
 
   /* also add ref to parent, so that it doesn't kill us */
   if (This->paf != NULL)
-    IAVIFile_AddRef((PAVIFILE)This->paf);
+    IAVIFile_AddRef(&This->paf->IAVIFile_iface);
 
   return ref;
 }
@@ -758,7 +743,7 @@ static ULONG WINAPI IAVIStream_fnRelease(IAVIStream* iface)
   TRACE("(%p) -> %d\n", iface, ref);
 
   if (This->paf != NULL)
-    IAVIFile_Release((PAVIFILE)This->paf);
+    IAVIFile_Release(&This->paf->IAVIFile_iface);
 
   return ref;
 }

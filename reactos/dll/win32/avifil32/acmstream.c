@@ -228,7 +228,7 @@ static HRESULT WINAPI ACMStream_fnCreate(IAVIStream *iface, LPARAM lParam1,
   /* check for swapped parameters */
   if ((LPVOID)lParam1 != NULL &&
       ((LPAVICOMPRESSOPTIONS)lParam1)->fccType == streamtypeAUDIO) {
-    register LPARAM tmp = lParam1;
+    LPARAM tmp = lParam1;
 
     lParam1 = lParam2;
     lParam2 = tmp;
