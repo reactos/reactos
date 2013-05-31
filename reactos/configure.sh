@@ -9,10 +9,10 @@ BUILD_ENVIRONMENT=MinGW
 ARCH=$ROS_ARCH
 REACTOS_SOURCE_DIR=$(cd `dirname $0` && pwd)
 REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
-if [ "$1" = "ninja" ]; then
-CMAKE_GENERATOR="Ninja"
-else
+if [ ("$1" = "Makefiles") -o ("$1" = "makefiles") ]; then
 CMAKE_GENERATOR="Unix Makefiles"
+else
+CMAKE_GENERATOR="Ninja"
 fi
 
 if [ "$REACTOS_SOURCE_DIR" = "$PWD" ]; then

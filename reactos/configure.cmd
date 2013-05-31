@@ -35,10 +35,10 @@ if defined ROS_ARCH (
         set CMAKE_GENERATOR="CodeBlocks - MinGW Makefiles"
     ) else if /I "%1" == "Eclipse" (
         set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
-    ) else if /I "%1" == "Ninja" (
-        set CMAKE_GENERATOR="Ninja"
-    ) else (
+    ) else if /I "%1" == "Makefiles" (
         set CMAKE_GENERATOR="MinGW Makefiles"
+    ) else (
+        set CMAKE_GENERATOR="Ninja"
     )
 
 ) else if defined DDK_TARGET_OS (
@@ -128,12 +128,10 @@ if %USE_NMAKE% == 1 (
         set CMAKE_GENERATOR="CodeBlocks - NMake Makefiles"
     ) else if /I "%1" == "Eclipse" (
         set CMAKE_GENERATOR="Eclipse CDT4 - NMake Makefiles"
-    ) else if /I "%1" == "JOM" (
-        set CMAKE_GENERATOR="NMake Makefiles JOM"
-    ) else if /I "%1" == "Ninja" (
-        set CMAKE_GENERATOR="Ninja"
-    ) else (
+    ) else if /I "%1" == "Makefiles" (
         set CMAKE_GENERATOR="NMake Makefiles"
+    ) else (
+        set CMAKE_GENERATOR="Ninja"
     )
 )
 
