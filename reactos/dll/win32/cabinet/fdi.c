@@ -2041,7 +2041,7 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
       /* outlen=0 means this block was the last contiguous part
          of a split block, continued in the next cabinet */
       if (outlen == 0) {
-        int pathlen, filenamelen, i;
+        int pathlen, filenamelen;
         INT_PTR cabhf;
         char fullpath[MAX_PATH], userpath[256];
         FDINOTIFICATION fdin;
@@ -2056,6 +2056,8 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
 
         /* set up the next decomp_state... */
         if (!(cab->next)) {
+          unsigned int i;
+
           if (!cab->mii.hasnext) return DECR_INPUT;
 
           if (!((cab->next = CAB(fdi)->alloc(sizeof(fdi_decomp_state)))))
@@ -2695,13 +2697,13 @@ BOOL __cdecl FDICopy(
 
     /* find the folder for this file if necc. */
     if (filehf) {
-      int i2;
-
       fol = CAB(firstfol);
       if ((file->index & cffileCONTINUED_TO_NEXT) == cffileCONTINUED_TO_NEXT) {
         /* pick the last folder */
         while (fol->next) fol = fol->next;
       } else {
+        unsigned int i2;
+
         for (i2 = 0; (i2 < file->index); i2++)
           if (fol->next) /* bug resistance, should always be true */
             fol = fol->next;
