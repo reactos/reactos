@@ -385,16 +385,121 @@ NET_API_STATUS WINAPI NetLocalGroupAddMembers(
     return NERR_Success;
 }
 
+
 /************************************************************
  *                NetLocalGroupDel  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupDel(
+NET_API_STATUS
+WINAPI
+NetLocalGroupDel(
     LPCWSTR servername,
     LPCWSTR groupname)
 {
-    FIXME("(%s %s) stub!\n", debugstr_w(servername), debugstr_w(groupname));
-    return NERR_Success;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE AliasHandle = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s)\n", debugstr_w(servername), debugstr_w(groupname));
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&GroupName, groupname);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the alias account in the builtin domain */
+    ApiStatus = OpenAliasByName(DomainHandle,
+                                &GroupName,
+                                DELETE,
+                                &AliasHandle);
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+    {
+        TRACE("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+        goto done;
+    }
+
+    if (AliasHandle == NULL)
+    {
+        if (DomainHandle != NULL)
+        {
+            SamCloseHandle(DomainHandle);
+            DomainHandle = NULL;
+        }
+
+        /* Open the Acount Domain */
+        Status = OpenAccountDomain(ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the alias account in the account domain */
+        ApiStatus = OpenAliasByName(DomainHandle,
+                                    &GroupName,
+                                    DELETE,
+                                    &AliasHandle);
+        if (ApiStatus != NERR_Success)
+        {
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
+            goto done;
+        }
+    }
+
+    /* Delete the alias */
+    Status = SamDeleteAlias(AliasHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamDeleteAlias failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+done:
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
+
 
 /************************************************************
  *                NetLocalGroupDelMember  (NETAPI32.@)
@@ -424,10 +529,13 @@ NET_API_STATUS WINAPI NetLocalGroupDelMembers(
     return NERR_Success;
 }
 
+
 /************************************************************
  *                NetLocalGroupEnum  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupEnum(
+NET_API_STATUS
+WINAPI
+NetLocalGroupEnum(
     LPCWSTR servername,
     DWORD level,
     LPBYTE* bufptr,
@@ -881,3 +989,5 @@ NET_API_STATUS WINAPI NetLocalGroupSetMembers(
             debugstr_w(groupname), level, buf, totalentries);
     return NERR_Success;
 }
+
+/* EOF */
