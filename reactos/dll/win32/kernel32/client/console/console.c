@@ -541,16 +541,32 @@ OpenConsoleW(LPCWSTR wsName,
 
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
+ * @note See http://undoc.airesoft.co.uk/kernel32.dll/SetConsoleCursor.php
  */
 BOOL
 WINAPI
-SetConsoleCursor(DWORD Unknown0,
-                 DWORD Unknown1)
+SetConsoleCursor(HANDLE hConsoleOutput,
+                 HCURSOR hCursor)
 {
-    DPRINT1("SetConsoleCursor(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SETCURSOR SetCursorRequest = &ApiMessage.Data.SetCursorRequest;
+
+    SetCursorRequest->OutputHandle = hConsoleOutput;
+    SetCursorRequest->hCursor      = hCursor;
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCursor),
+                                 sizeof(CONSOLE_SETCURSOR));
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -652,16 +668,18 @@ SetConsoleKeyShortcuts(DWORD Unknown0,
 
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
+ * @note See http://undoc.airesoft.co.uk/kernel32.dll/SetConsoleMaximumWindowSize.php
+ *       Does nothing, returns TRUE only. Checked on Windows Server 2003.
  */
 BOOL
 WINAPI
-SetConsoleMaximumWindowSize(DWORD Unknown0,
-                            DWORD Unknown1)
+SetConsoleMaximumWindowSize(HANDLE hConsoleOutput,
+                            COORD dwMaximumSize)
 {
-    DPRINT1("SetConsoleMaximumWindowSize(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DPRINT1("SetConsoleMaximumWindowSize(0x%x, {%d, %d}) does nothing\n",
+            hConsoleOutput, dwMaximumSize.X, dwMaximumSize.Y);
+    return TRUE;
 }
 
 
@@ -707,16 +725,27 @@ SetConsolePalette(DWORD Unknown0,
 }
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
+ * @note See http://undoc.airesoft.co.uk/kernel32.dll/ShowConsoleCursor.php
  */
-DWORD
+INT
 WINAPI
-ShowConsoleCursor(DWORD Unknown0,
-                  DWORD Unknown1)
+ShowConsoleCursor(HANDLE hConsoleOutput,
+                  BOOL bShow)
 {
-    DPRINT1("ShowConsoleCursor(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_SHOWCURSOR ShowCursorRequest = &ApiMessage.Data.ShowCursorRequest;
+
+    ShowCursorRequest->OutputHandle = hConsoleOutput;
+    ShowCursorRequest->Show         = bShow;
+    ShowCursorRequest->RefCount     = 0;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepShowCursor),
+                        sizeof(CONSOLE_SHOWCURSOR));
+
+    return ShowCursorRequest->RefCount;
 }
 
 

@@ -617,7 +617,8 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     Console->LineMaxSize = Console->LineSize = Console->LinePos = 0;
     Console->LineComplete = Console->LineUpPressed = Console->LineInsertToggle = FALSE;
     // LineWakeupMask
-    // Selection
+    RtlZeroMemory(&Console->Selection, sizeof(CONSOLE_SELECTION_INFO));
+    Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
     // dwSelectionCursor
 
     Console->CodePage = GetOEMCP();
@@ -1396,6 +1397,54 @@ CSR_API(SrvGetLargestConsoleWindowSize)
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);
     return STATUS_SUCCESS;
+}
+
+CSR_API(SrvShowConsoleCursor)
+{
+    NTSTATUS Status;
+    PCONSOLE_SHOWCURSOR ShowCursorRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ShowCursorRequest;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
+
+    Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                   ShowCursorRequest->OutputHandle,
+                                   &Buff,
+                                   GENERIC_WRITE,
+                                   TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Console = Buff->Header.Console;
+
+    ShowCursorRequest->RefCount = ConioShowMouseCursor(Console, ShowCursorRequest->Show);
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return STATUS_SUCCESS;
+}
+
+CSR_API(SrvSetConsoleCursor)
+{
+    NTSTATUS Status;
+    BOOL Success;
+    PCONSOLE_SETCURSOR SetCursorRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetCursorRequest;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
+
+    // FIXME: Tests show that this function is used only for graphics screen buffers
+    // and otherwise it returns false + set last error to invalid handle.
+    // NOTE: I find that behaviour is ridiculous but ok, let's accept that at the moment...
+    Status = ConSrvGetGraphicsBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                     SetCursorRequest->OutputHandle,
+                                     &Buff,
+                                     GENERIC_WRITE,
+                                     TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Console = Buff->Header.Console;
+
+    Success = ConioSetMouseCursor(Console, SetCursorRequest->hCursor);
+
+    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 CSR_API(SrvConsoleMenuControl)

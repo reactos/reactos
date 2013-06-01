@@ -276,11 +276,23 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
 
         case ID_SYSTEM_EDIT_SELECTALL:
         {
+            LPWSTR WindowTitle = NULL;
+            SIZE_T Length = 0;
+
             Console->Selection.dwSelectionAnchor.X = 0;
             Console->Selection.dwSelectionAnchor.Y = 0;
             Console->dwSelectionCursor.X = ActiveBuffer->ViewSize.X - 1;
             Console->dwSelectionCursor.Y = ActiveBuffer->ViewSize.Y - 1;
+            Console->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS | CONSOLE_MOUSE_SELECTION;
             GuiConsoleUpdateSelection(Console, &Console->dwSelectionCursor);
+
+            Length = Console->Title.Length + sizeof(L"Selection - ")/sizeof(WCHAR) + 1;
+            WindowTitle = ConsoleAllocHeap(0, Length * sizeof(WCHAR));
+            wcscpy(WindowTitle, L"Selection - ");
+            wcscat(WindowTitle, Console->Title.Buffer);
+            SetWindowText(GuiData->hWindow, WindowTitle);
+            ConsoleFreeHeap(WindowTitle);
+
             break;
         }
 
@@ -1636,6 +1648,54 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             GuiConsoleHandleTimer(GuiData);
             break;
 
+        case WM_SETCURSOR:
+        {
+            /*
+             * The message was sent because we are manually triggering a change.
+             * Check whether the mouse is indeed present on this console window
+             * and take appropriate decisions.
+             */
+            if (wParam == -1 && lParam == -1)
+            {
+                POINT mouseCoords;
+                HWND  hWndHit;
+
+                /* Get the placement of the mouse */
+                GetCursorPos(&mouseCoords);
+
+                /* On which window is placed the mouse ? */
+                hWndHit = WindowFromPoint(mouseCoords);
+
+                /* It's our window. Perform the hit-test to be used later on. */
+                if (hWndHit == hWnd)
+                {
+                    wParam = (WPARAM)hWnd;
+                    lParam = DefWindowProcW(hWndHit, WM_NCHITTEST, 0,
+                                            MAKELPARAM(mouseCoords.x, mouseCoords.y));
+                }
+            }
+
+            /* Set the mouse cursor only when we are in the client area */
+            if ((HWND)wParam == hWnd && LOWORD(lParam) == HTCLIENT)
+            {
+                if (GuiData->MouseCursorRefCount >= 0)
+                {
+                    /* Show the cursor */
+                    SetCursor(GuiData->hCursor);
+                }
+                else
+                {
+                    /* Hide the cursor if the reference count is negative */
+                    SetCursor(NULL);
+                }
+                return TRUE;
+            }
+            else
+            {
+                goto Default;
+            }
+        }
+
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
@@ -1711,8 +1771,17 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             HMENU hMenu = (HMENU)wParam;
             if (hMenu != NULL)
             {
-                /* Enables or disables the Close menu item */
-                EnableMenuItem(hMenu, SC_CLOSE, MF_BYCOMMAND | (GuiData->IsCloseButtonEnabled ? MF_ENABLED : MF_GRAYED));
+                /* Enable or disable the Close menu item */
+                EnableMenuItem(hMenu, SC_CLOSE, MF_BYCOMMAND |
+                               (GuiData->IsCloseButtonEnabled ? MF_ENABLED : MF_GRAYED));
+
+                /* Enable or disable the Copy and Paste items */
+                EnableMenuItem(hMenu, ID_SYSTEM_EDIT_COPY , MF_BYCOMMAND |
+                               ((Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) &&
+                                (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY) ? MF_ENABLED : MF_GRAYED));
+                EnableMenuItem(hMenu, ID_SYSTEM_EDIT_PASTE, MF_BYCOMMAND |
+                               (!(Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) &&
+                                IsClipboardFormatAvailable(CF_UNICODETEXT) ? MF_ENABLED : MF_GRAYED));
             }
 
             if (ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
@@ -2229,6 +2298,9 @@ GuiProcessKeyCallback(PCONSOLE Console, MSG* msg, BYTE KeyStateMenu, DWORD Shift
     return FALSE;
 }
 
+static BOOL WINAPI
+GuiSetMouseCursor(PCONSOLE Console, HCURSOR hCursor);
+
 static VOID WINAPI
 GuiRefreshInternalInfo(PCONSOLE Console)
 {
@@ -2236,6 +2308,19 @@ GuiRefreshInternalInfo(PCONSOLE Console)
 
     /* Update the console leader information held by the window */
     SetConsoleWndConsoleLeaderCID(GuiData);
+
+    /*
+     * HACK:
+     * We reset the cursor here so that, when a console app quits, we reset
+     * the cursor to the default one. It's quite a hack since it doesn't proceed
+     * per - console process... This must be fixed.
+     *
+     * See GuiInitConsole(...) for more information.
+     */
+
+    /* Mouse is shown by default with its default cursor shape */
+    GuiData->MouseCursorRefCount = 0; // Reinitialize the reference counter
+    GuiSetMouseCursor(Console, NULL);
 }
 
 static VOID WINAPI
@@ -2373,6 +2458,38 @@ GuiSetDisplayMode(PCONSOLE Console, ULONG NewMode)
     return TRUE;
 }
 
+static INT WINAPI
+GuiShowMouseCursor(PCONSOLE Console, BOOL Show)
+{
+    PGUI_CONSOLE_DATA GuiData = Console->TermIFace.Data;
+
+    /* Set the reference count */
+    if (Show) ++GuiData->MouseCursorRefCount;
+    else      --GuiData->MouseCursorRefCount;
+
+    /* Effectively show (or hide) the cursor (use special values for (w|l)Param) */
+    PostMessageW(GuiData->hWindow, WM_SETCURSOR, -1, -1);
+
+    return GuiData->MouseCursorRefCount;
+}
+
+static BOOL WINAPI
+GuiSetMouseCursor(PCONSOLE Console, HCURSOR hCursor)
+{
+    PGUI_CONSOLE_DATA GuiData = Console->TermIFace.Data;
+
+    /*
+     * Set the cursor's handle. If the given handle is NULL,
+     * then restore the default cursor.
+     */
+    GuiData->hCursor = (hCursor ? hCursor : ghDefaultCursor);
+
+    /* Effectively modify the shape of the cursor (use special values for (w|l)Param) */
+    PostMessageW(GuiData->hWindow, WM_SETCURSOR, -1, -1);
+
+    return TRUE;
+}
+
 static HMENU WINAPI
 GuiMenuControl(PCONSOLE Console, UINT cmdIdLow, UINT cmdIdHigh)
 {
@@ -2420,6 +2537,8 @@ static FRONTEND_VTBL GuiVtbl =
     GuiGetLargestConsoleWindowSize,
     GuiGetDisplayMode,
     GuiSetDisplayMode,
+    GuiShowMouseCursor,
+    GuiSetMouseCursor,
     GuiMenuControl,
     GuiSetMenuClose,
 };
@@ -2543,6 +2662,13 @@ GuiInitConsole(PCONSOLE Console,
             GuiData->hIconSm = hIconSm;
         }
     }
+
+    /* Mouse is shown by default with its default cursor shape */
+    GuiData->hCursor = ghDefaultCursor;
+    GuiData->MouseCursorRefCount = 0;
+
+    /* A priori don't ignore mouse signals */
+    GuiData->IgnoreNextMouseSignal = FALSE;
 
     /* Close button and the corresponding system menu item are enabled by default */
     GuiData->IsCloseButtonEnabled = TRUE;

@@ -643,6 +643,18 @@ TuiSetDisplayMode(PCONSOLE Console, ULONG NewMode)
     return TRUE;
 }
 
+static INT WINAPI
+TuiShowMouseCursor(PCONSOLE Console, BOOL Show)
+{
+    return 0;
+}
+
+static BOOL WINAPI
+TuiSetMouseCursor(PCONSOLE Console, HCURSOR hCursor)
+{
+    return TRUE;
+}
+
 static HMENU WINAPI
 TuiMenuControl(PCONSOLE Console, UINT cmdIdLow, UINT cmdIdHigh)
 {
@@ -652,7 +664,7 @@ TuiMenuControl(PCONSOLE Console, UINT cmdIdLow, UINT cmdIdHigh)
 static BOOL WINAPI
 TuiSetMenuClose(PCONSOLE Console, BOOL Enable)
 {
-    return FALSE;
+    return TRUE;
 }
 
 static FRONTEND_VTBL TuiVtbl =
@@ -671,6 +683,8 @@ static FRONTEND_VTBL TuiVtbl =
     TuiGetLargestConsoleWindowSize,
     TuiGetDisplayMode,
     TuiSetDisplayMode,
+    TuiShowMouseCursor,
+    TuiSetMouseCursor,
     TuiMenuControl,
     TuiSetMenuClose,
 };

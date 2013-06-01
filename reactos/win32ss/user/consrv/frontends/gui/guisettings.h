@@ -47,9 +47,12 @@ typedef struct _GUI_CONSOLE_DATA
     HWND hWindow;               /* Handle to the console's window       */
     HICON hIcon;                /* Handle to the console's icon (big)   */
     HICON hIconSm;              /* Handle to the console's icon (small) */
+
+    HCURSOR hCursor;            /* Handle to the mouse cursor */
+    INT  MouseCursorRefCount;   /* The reference counter associated with the mouse cursor. >= 0 and the cursor is shown; < 0 and the cursor is hidden. */
     BOOL IgnoreNextMouseSignal; /* Used in cases where we don't want to treat a mouse signal */
 
-    BOOL IsCloseButtonEnabled;  /* TRUE if the Close button and the corresponding system menu item are enabled, FALSE otherwise */
+    BOOL IsCloseButtonEnabled;  /* TRUE if the Close button and the corresponding system menu item are enabled (default), FALSE otherwise */
     UINT cmdIdLow ;             /* Lowest menu id of the user-reserved menu id range */
     UINT cmdIdHigh;             /* Highest menu id of the user-reserved menu id range */
 

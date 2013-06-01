@@ -456,6 +456,10 @@ BOOL WINAPI SetConsoleWindowInfo(_In_ HANDLE, _In_ BOOL, _In_ const SMALL_RECT*)
 HMENU WINAPI ConsoleMenuControl(_In_ HANDLE, _In_ DWORD, _In_ DWORD);
 /* Undocumented */
 BOOL WINAPI SetConsoleMenuClose(_In_ BOOL);
+/* Undocumented, see http://undoc.airesoft.co.uk/kernel32.dll/SetConsoleCursor.php */
+BOOL WINAPI SetConsoleCursor(_In_ HANDLE, _In_ HCURSOR);
+/* Undocumented, see http://undoc.airesoft.co.uk/kernel32.dll/ShowConsoleCursor.php */
+INT WINAPI ShowConsoleCursor(_In_ HANDLE, _In_ BOOL);
 
 BOOL WINAPI WriteConsoleA(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);
 BOOL WINAPI WriteConsoleW(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);

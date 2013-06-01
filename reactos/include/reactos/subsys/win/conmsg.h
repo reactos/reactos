@@ -62,8 +62,8 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepCreateScreenBuffer,
     ConsolepInvalidateBitMapRect,
     // ConsolepVDMOperation,
-    // ConsolepSetCursor,
-    // ConsolepShowCursor,
+    ConsolepSetCursor,
+    ConsolepShowCursor,
     ConsolepMenuControl,
     // ConsolepSetPalette,
     ConsolepSetDisplayMode,
@@ -217,6 +217,19 @@ typedef struct
     HANDLE OutputHandle;
     COORD Position;
 } CONSOLE_SETCURSORPOSITION, *PCONSOLE_SETCURSORPOSITION;
+
+typedef struct
+{
+    HANDLE OutputHandle;
+    BOOL   Show;
+    INT    RefCount;
+} CONSOLE_SHOWCURSOR, *PCONSOLE_SHOWCURSOR;
+
+typedef struct
+{
+    HANDLE  OutputHandle;
+    HCURSOR hCursor;
+} CONSOLE_SETCURSOR, *PCONSOLE_SETCURSOR;
 
 typedef struct
 {
@@ -627,6 +640,8 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_DUPLICATEHANDLE DuplicateHandleRequest;
 
         /* Cursor */
+        CONSOLE_SHOWCURSOR ShowCursorRequest;
+        CONSOLE_SETCURSOR SetCursorRequest;
         CONSOLE_GETSETCURSORINFO CursorInfoRequest;
         CONSOLE_SETCURSORPOSITION SetCursorPositionRequest;
 

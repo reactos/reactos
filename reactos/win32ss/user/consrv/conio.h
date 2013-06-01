@@ -40,6 +40,10 @@
     (Console)->TermIFace.Vtbl->GetDisplayMode(Console)
 #define ConioSetDisplayMode(Console, NewMode) \
     (Console)->TermIFace.Vtbl->SetDisplayMode((Console), (NewMode))
+#define ConioShowMouseCursor(Console, Show) \
+    (Console)->TermIFace.Vtbl->ShowMouseCursor((Console), (Show))
+#define ConioSetMouseCursor(Console, hCursor) \
+    (Console)->TermIFace.Vtbl->SetMouseCursor((Console), (hCursor))
 #define ConioMenuControl(Console, CmdIdLow, CmdIdHigh) \
     (Console)->TermIFace.Vtbl->MenuControl((Console), (CmdIdLow), (CmdIdHigh))
 #define ConioSetMenuClose(Console, Enable) \

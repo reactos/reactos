@@ -218,6 +218,10 @@ typedef struct _FRONTEND_VTBL
     ULONG (WINAPI *GetDisplayMode)(struct _CONSOLE* Console);
     BOOL  (WINAPI *SetDisplayMode)(struct _CONSOLE* Console,
                                    ULONG NewMode);
+    INT   (WINAPI *ShowMouseCursor)(struct _CONSOLE* Console,
+                                    BOOL Show);
+    BOOL  (WINAPI *SetMouseCursor)(struct _CONSOLE* Console,
+                                   HCURSOR hCursor);
     HMENU (WINAPI *MenuControl)(struct _CONSOLE* Console,
                                 UINT cmdIdLow,
                                 UINT cmdIdHigh);
