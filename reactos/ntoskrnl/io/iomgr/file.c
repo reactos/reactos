@@ -1761,7 +1761,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 SystemEaBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                                        EaLength,
                                                        TAG_EA);
-                if(!SystemEaBuffer)
+                if (!SystemEaBuffer)
                 {
                     _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
                 }
@@ -1840,7 +1840,6 @@ IoCreateFile(OUT PHANDLE FileHandle,
     RtlZeroMemory(&OpenPacket, sizeof(OPEN_PACKET));
     OpenPacket.Type = IO_TYPE_OPEN_PACKET;
     OpenPacket.Size = sizeof(OPEN_PACKET);
-    OpenPacket.OriginalAttributes = *ObjectAttributes;
     OpenPacket.AllocationSize = SafeAllocationSize;
     OpenPacket.CreateOptions = CreateOptions;
     OpenPacket.FileAttributes = (USHORT)FileAttributes;
