@@ -838,7 +838,7 @@ NetLocalGroupGetInfo(
                                 &GroupName,
                                 ALIAS_READ_INFORMATION,
                                 &AliasHandle);
-    if (ApiStatus != NERR_Success)
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
     {
         ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
         goto done;
@@ -869,6 +869,8 @@ NetLocalGroupGetInfo(
         if (ApiStatus != NERR_Success)
         {
             ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
             goto done;
         }
     }
