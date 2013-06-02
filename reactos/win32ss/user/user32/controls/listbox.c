@@ -27,8 +27,6 @@
  * If you discover missing features, or bugs, please note them below.
  *
  * TODO:
- *    - GetListBoxInfo()  ReactOS
- *    - LB_GETLISTBOXINFO ReactOS
  *    - LBS_NODATA        ReactOS
  */
 
@@ -81,6 +79,7 @@ typedef struct
     INT         nb_tabs;        /* Number of tabs in array */
     INT        *tabs;           /* Array of tabs */
     INT         avg_char_width; /* Average width of characters */
+    INT         wheel_remain;   /* Left over scroll amount */
     BOOL        caret_on;       /* Is caret on? */
     BOOL        captured;       /* Is mouse captured? */
     BOOL	in_focus;
@@ -291,20 +290,12 @@ static LRESULT LISTBOX_SetTopItem( LB_DESCR *descr, INT index, BOOL scroll )
     if (index < 0) index = 0;
     if (descr->style & LBS_MULTICOLUMN) index -= index % descr->page_size;
     if (descr->top_item == index) return LB_OKAY;
-    if (descr->style & LBS_MULTICOLUMN)
-    {
-        INT diff = (descr->top_item - index) / descr->page_size * descr->column_width;
-        if (scroll && (abs(diff) < descr->width))
-            ScrollWindowEx( descr->self, diff, 0, NULL, NULL, 0, NULL,
-                              SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
-
-        else
-            scroll = FALSE;
-    }
-    else if (scroll)
+    if (scroll)
     {
         INT diff;
-        if (descr->style & LBS_OWNERDRAWVARIABLE)
+        if (descr->style & LBS_MULTICOLUMN)
+            diff = (descr->top_item - index) / descr->page_size * descr->column_width;
+        else if (descr->style & LBS_OWNERDRAWVARIABLE)
         {
             INT i;
             diff = 0;
@@ -322,11 +313,8 @@ static LRESULT LISTBOX_SetTopItem( LB_DESCR *descr, INT index, BOOL scroll )
         else
             diff = (descr->top_item - index) * descr->item_height;
 
-        if (abs(diff) < descr->height)
-            ScrollWindowEx( descr->self, 0, diff, NULL, NULL, 0, NULL,
-                            SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
-        else
-            scroll = FALSE;
+        ScrollWindowEx( descr->self, 0, diff, NULL, NULL, 0, NULL,
+                        SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
     }
     if (!scroll) InvalidateRect( descr->self, NULL, TRUE );
     descr->top_item = index;
@@ -1774,6 +1762,8 @@ static LRESULT LISTBOX_SetCount( LB_DESCR *descr, INT count )
             if ((ret = LISTBOX_RemoveItem( descr, (descr->nb_items - 1) )) < 0)
                 return ret;
     }
+
+    InvalidateRect( descr->self, NULL, TRUE );
     return LB_OKAY;
 }
 
@@ -1996,18 +1986,24 @@ static LRESULT LISTBOX_HandleHScroll( LB_DESCR *descr, WORD scrollReq, WORD pos 
 
 static LRESULT LISTBOX_HandleMouseWheel(LB_DESCR *descr, SHORT delta )
 {
-    short gcWheelDelta = 0;
     UINT pulScrollLines = 3;
 
     SystemParametersInfoW(SPI_GETWHEELSCROLLLINES,0, &pulScrollLines, 0);
 
-    gcWheelDelta -= delta;
+    /* if scrolling changes direction, ignore left overs */
+    if ((delta < 0 && descr->wheel_remain < 0) ||
+        (delta > 0 && descr->wheel_remain > 0))
+        descr->wheel_remain += delta;
+    else
+        descr->wheel_remain = delta;
 
-    if (abs(gcWheelDelta) >= WHEEL_DELTA && pulScrollLines)
+    if (descr->wheel_remain && pulScrollLines)
     {
-        int cLineScroll = (int) min((UINT) descr->page_size, pulScrollLines);
-        cLineScroll *= (gcWheelDelta / WHEEL_DELTA);
-        LISTBOX_SetTopItem( descr, descr->top_item + cLineScroll, TRUE );
+        int cLineScroll;
+        pulScrollLines = min((UINT) descr->page_size, pulScrollLines);
+        cLineScroll = pulScrollLines * (float)descr->wheel_remain / WHEEL_DELTA;
+        descr->wheel_remain -= WHEEL_DELTA * cLineScroll / (int)pulScrollLines;
+        LISTBOX_SetTopItem( descr, descr->top_item - cLineScroll, TRUE );
     }
     return 0;
 }
@@ -2500,6 +2496,7 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     descr->horz_pos      = 0;
     descr->nb_tabs       = 0;
     descr->tabs          = NULL;
+    descr->wheel_remain  = 0;
     descr->caret_on      = lphc ? FALSE : TRUE;
     if (descr->style & LBS_NOSEL) descr->caret_on = FALSE;
     descr->in_focus 	 = FALSE;
@@ -3009,11 +3006,11 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             LISTBOX_RepaintItem( descr, descr->focus_item, ODA_FOCUS );
         return LB_OKAY;
 
-    case LB_GETLISTBOXINFO: //// ReactOS
-        if (descr->style & LBS_MULTICOLUMN)
-           return descr->column_width;
+    case LB_GETLISTBOXINFO:
+        if (descr->style & LBS_MULTICOLUMN) //// ReactOS
+           return descr->page_size * descr->column_width;
         else
-           return descr->nb_items;
+           return descr->page_size;
 
     case WM_DESTROY:
         return LISTBOX_Destroy( descr );
@@ -3056,6 +3053,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return 0;
     case WM_KILLFOCUS:
         descr->in_focus = FALSE;
+        descr->wheel_remain = 0;
         if ((descr->focus_item != -1) && descr->caret_on)
             LISTBOX_RepaintItem( descr, descr->focus_item, ODA_FOCUS );
         SEND_NOTIFICATION( descr, LBN_KILLFOCUS );
