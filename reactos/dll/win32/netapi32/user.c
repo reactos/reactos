@@ -21,7 +21,6 @@
 /*
  *  TODO:
  *    Implement NetUserChangePassword
- *    Implement NetUserDel
  *    Implement NetUserGetGroups
  *    Implement NetUserSetGroups
  *    Implement NetUserSetInfo
@@ -48,75 +47,6 @@ typedef struct _ENUM_CONTEXT
     BOOLEAN BuiltinDone;
 
 } ENUM_CONTEXT, *PENUM_CONTEXT;
-
-
-/* NOTE: So far, this is implemented to support tests that require user logins,
- *       but not designed to handle real user databases. Those should probably
- *       be synced with either the host's user database or with Samba.
- *
- * FIXME: The user database should hold all the information the USER_INFO_4 struct
- * needs, but for the first try, I will just implement the USER_INFO_1 fields.
- */
-
-struct sam_user
-{
-    struct list entry;
-    WCHAR user_name[LM20_UNLEN+1];
-    WCHAR user_password[PWLEN + 1];
-    DWORD sec_since_passwd_change;
-    DWORD user_priv;
-    LPWSTR home_dir;
-    LPWSTR user_comment;
-    DWORD user_flags;
-    LPWSTR user_logon_script_path;
-};
-
-static struct list user_list = LIST_INIT( user_list );
-
-BOOL NETAPI_IsLocalComputer(LPCWSTR ServerName);
-
-/************************************************************
- *                NETAPI_ValidateServername
- *
- * Validates server name
- */
-static NET_API_STATUS NETAPI_ValidateServername(LPCWSTR ServerName)
-{
-    if (ServerName)
-    {
-        if (ServerName[0] == 0)
-            return ERROR_BAD_NETPATH;
-        else if (
-            ((ServerName[0] == '\\') &&
-             (ServerName[1] != '\\'))
-            ||
-            ((ServerName[0] == '\\') &&
-             (ServerName[1] == '\\') &&
-             (ServerName[2] == 0))
-            )
-            return ERROR_INVALID_NAME;
-    }
-    return NERR_Success;
-}
-
-/************************************************************
- *                NETAPI_FindUser
- *
- * Looks for a user in the user database.
- * Returns a pointer to the entry in the user list when the user
- * is found, NULL otherwise.
- */
-static struct sam_user* NETAPI_FindUser(LPCWSTR UserName)
-{
-    struct sam_user *user;
-
-    LIST_FOR_EACH_ENTRY(user, &user_list, struct sam_user, entry)
-    {
-        if(lstrcmpW(user->user_name, UserName) == 0)
-            return user;
-    }
-    return NULL;
-}
 
 
 static PSID
@@ -992,6 +922,61 @@ done:
 }
 
 
+static
+NET_API_STATUS
+OpenUserByName(SAM_HANDLE DomainHandle,
+               PUNICODE_STRING UserName,
+               ULONG DesiredAccess,
+               PSAM_HANDLE UserHandle)
+{
+    PULONG RelativeIds = NULL;
+    PSID_NAME_USE Use = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Get the RID for the given user name */
+    Status = SamLookupNamesInDomain(DomainHandle,
+                                    1,
+                                    UserName,
+                                    &RelativeIds,
+                                    &Use);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        return NetpNtStatusToApiStatus(Status);
+    }
+
+    /* Fail, if it is not an alias account */
+    if (Use[0] != SidTypeUser)
+    {
+        ERR("Object is not a user!\n");
+        ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    /* Open the alias account */
+    Status = SamOpenUser(DomainHandle,
+                         DesiredAccess,
+                         RelativeIds[0],
+                         UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenUser failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+done:
+    if (RelativeIds != NULL)
+        SamFreeMemory(RelativeIds);
+
+    if (Use != NULL)
+        SamFreeMemory(Use);
+
+    return ApiStatus;
+}
+
+
 /************************************************************
  * NetUserAdd (NETAPI32.@)
  */
@@ -1110,24 +1095,7 @@ NetUserChangePassword(LPCWSTR domainname,
                       LPCWSTR oldpassword,
                       LPCWSTR newpassword)
 {
-    struct sam_user *user;
-
     TRACE("(%s, %s, ..., ...)\n", debugstr_w(domainname), debugstr_w(username));
-
-    if(domainname)
-        FIXME("Ignoring domainname %s.\n", debugstr_w(domainname));
-
-    if((user = NETAPI_FindUser(username)) == NULL)
-        return NERR_UserNotFound;
-
-    if(lstrcmpW(user->user_password, oldpassword) != 0)
-        return ERROR_INVALID_PASSWORD;
-
-    if(lstrlenW(newpassword) > PWLEN)
-        return ERROR_PASSWORD_RESTRICTION;
-
-    lstrcpyW(user->user_password, newpassword);
-
     return NERR_Success;
 }
 
@@ -1140,25 +1108,109 @@ WINAPI
 NetUserDel(LPCWSTR servername,
            LPCWSTR username)
 {
-    NET_API_STATUS status;
-    struct sam_user *user;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING UserName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE UserHandle = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("(%s, %s)\n", debugstr_w(servername), debugstr_w(username));
 
-    if((status = NETAPI_ValidateServername(servername))!= NERR_Success)
-        return status;
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
 
-    if ((user = NETAPI_FindUser(username)) == NULL)
-        return NERR_UserNotFound;
+    RtlInitUnicodeString(&UserName, username);
 
-    list_remove(&user->entry);
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
 
-    HeapFree(GetProcessHeap(), 0, user->home_dir);
-    HeapFree(GetProcessHeap(), 0, user->user_comment);
-    HeapFree(GetProcessHeap(), 0, user->user_logon_script_path);
-    HeapFree(GetProcessHeap(), 0, user);
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
 
-    return NERR_Success;
+    /* Open the user account in the builtin domain */
+    ApiStatus = OpenUserByName(DomainHandle,
+                               &UserName,
+                               DELETE,
+                               &UserHandle);
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+    {
+        TRACE("OpenUserByName failed (ApiStatus %lu)\n", ApiStatus);
+        goto done;
+    }
+
+    if (UserHandle == NULL)
+    {
+        if (DomainHandle != NULL)
+        {
+            SamCloseHandle(DomainHandle);
+            DomainHandle = NULL;
+        }
+
+        /* Open the Acount Domain */
+        Status = OpenAccountDomain(ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the user account in the account domain */
+        ApiStatus = OpenUserByName(DomainHandle,
+                                   &UserName,
+                                   DELETE,
+                                   &UserHandle);
+        if (ApiStatus != NERR_Success)
+        {
+            ERR("OpenUserByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
+            goto done;
+        }
+    }
+
+    /* Delete the user */
+    Status = SamDeleteUser(UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamDeleteUser failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+done:
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
 
 
