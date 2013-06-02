@@ -875,24 +875,24 @@ NTAPI
 RtlPrefixUnicodeString(
     PCUNICODE_STRING String1,
     PCUNICODE_STRING String2,
-    BOOLEAN  CaseInsensitive)
+    BOOLEAN CaseInsensitive)
 {
     PWCHAR pc1;
     PWCHAR pc2;
-    ULONG Length;
+    ULONG NumChars;
 
     if (String2->Length < String1->Length)
         return FALSE;
 
-    Length = String1->Length / 2;
+    NumChars = String1->Length / sizeof(WCHAR);
     pc1 = String1->Buffer;
-    pc2  = String2->Buffer;
+    pc2 = String2->Buffer;
 
     if (pc1 && pc2)
     {
         if (CaseInsensitive)
         {
-            while (Length--)
+            while (NumChars--)
             {
                 if (RtlUpcaseUnicodeChar(*pc1++) !=
                     RtlUpcaseUnicodeChar(*pc2++))
@@ -901,9 +901,9 @@ RtlPrefixUnicodeString(
         }
         else
         {
-            while (Length--)
+            while (NumChars--)
             {
-                if( *pc1++ != *pc2++ )
+                if (*pc1++ != *pc2++)
                     return FALSE;
             }
         }
