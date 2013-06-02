@@ -819,7 +819,11 @@ MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
            MmGetAddressSpaceOwner(AddressSpace),
            MemoryArea->StartingAddress);
 
+    MmLockAddressSpace(AddressSpace);
+
     MmFreeMemoryArea(AddressSpace, MemoryArea, MmFreeCacheSectionPage, Context);
+
+    MmUnlockAddressSpace(AddressSpace);
 
     MmUnlockSectionSegment(Segment);
 
