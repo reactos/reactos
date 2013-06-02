@@ -706,6 +706,7 @@ RtlCreateBootStatusDataFile(VOID)
                                NULL);
 
     AllocationSize.QuadPart = 0x800;
+    DBG_UNREFERENCED_LOCAL_VARIABLE(AllocationSize);
 
     /* Create the boot status data file */
     Status = ZwCreateFile(&FileHandle,
