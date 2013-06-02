@@ -3599,6 +3599,8 @@ NtGdiExtCreateRegion(
     DWORD nCount = 0;
     DWORD iType = 0;
     DWORD dwSize = 0;
+	UINT i;
+	RECT* rects;
     NTSTATUS Status = STATUS_SUCCESS;
     MATRIX matrix;
     XFORMOBJ xo;
@@ -3610,6 +3612,7 @@ NtGdiExtCreateRegion(
         nCount = RgnData->rdh.nCount;
         iType = RgnData->rdh.iType;
         dwSize = RgnData->rdh.dwSize;
+		rects = (RECT*)RgnData->Buffer;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -3641,6 +3644,11 @@ NtGdiExtCreateRegion(
 
     _SEH2_TRY
     {
+		/* Insert the rectangles one by one */
+		for(i=0; i<nCount; i++)
+		{
+			REGION_UnionRectWithRgn(Region, &rects[i]);
+		}
         if (Xform)
         {
             ULONG ret;
@@ -3656,20 +3664,13 @@ NtGdiExtCreateRegion(
                 /* Apply the coordinate transformation on the rects */
                 if (XFORMOBJ_bApplyXform(&xo,
                                          XF_LTOL,
-                                         nCount * 2,
-                                         RgnData->Buffer,
+                                         Region->rdh.nCount * 2,
+                                         Region->Buffer,
                                          Region->Buffer))
                 {
                     Status = STATUS_SUCCESS;
                 }
             }
-        }
-        else
-        {
-            /* Copy rect coordinates */
-            RtlCopyMemory(Region->Buffer,
-                          RgnData->Buffer,
-                          nCount * sizeof(RECT));
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
