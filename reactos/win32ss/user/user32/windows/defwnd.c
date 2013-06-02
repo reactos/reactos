@@ -1893,6 +1893,17 @@ RealDefWindowProcA(HWND hWnd,
     {
         case WM_NCCREATE:
         {
+            if ( Wnd &&
+                 Wnd->style & (WS_HSCROLL | WS_VSCROLL) )
+            {
+               if (!Wnd->pSBInfo)
+               {
+                  SCROLLINFO si = {sizeof si, SIF_ALL, 0, 100, 0, 0, 0};
+                  SetScrollInfo( hWnd, SB_HORZ, &si, FALSE );
+                  SetScrollInfo( hWnd, SB_VERT, &si, FALSE );
+               }
+            }
+
             if (lParam)
             {
                 LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
@@ -2060,6 +2071,17 @@ RealDefWindowProcW(HWND hWnd,
     {
         case WM_NCCREATE:
         {
+            if ( Wnd &&
+                 Wnd->style & (WS_HSCROLL | WS_VSCROLL) )
+            {
+               if (!Wnd->pSBInfo)
+               {
+                  SCROLLINFO si = {sizeof si, SIF_ALL, 0, 100, 0, 0, 0};
+                  SetScrollInfo( hWnd, SB_HORZ, &si, FALSE );
+                  SetScrollInfo( hWnd, SB_VERT, &si, FALSE );
+               }
+            }
+
             if (lParam)
             {
                 LPCREATESTRUCTW cs = (LPCREATESTRUCTW)lParam;
