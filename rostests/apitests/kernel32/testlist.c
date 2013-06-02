@@ -3,6 +3,7 @@
 #define STANDALONE
 #include <wine/test.h>
 
+extern void func_FindFiles(void);
 extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
@@ -13,6 +14,7 @@ extern void func_SetUnhandledExceptionFilter(void);
 
 const struct test winetest_testlist[] =
 {
+    { "FindFiles",                   func_FindFiles },
     { "GetCurrentDirectory",         func_GetCurrentDirectory },
     { "GetDriveType",                func_GetDriveType },
     { "GetModuleFileName",           func_GetModuleFileName },

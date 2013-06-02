@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    FindFiles.c
     GetCurrentDirectory.c
     GetDriveType.c
     GetModuleFileName.c
