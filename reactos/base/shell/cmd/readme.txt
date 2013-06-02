@@ -51,5 +51,5 @@ ReactOS developers:
 Bugs
 ~~~~
 There is still many bugs ;)
-Please report bugs to ReactOS team <ros-dev@reactos.org> or to bugzilla at www.reactos.org
+Please report bugs to ReactOS team <ros-dev@reactos.org> or to JIRA at www.reactos.org
 
