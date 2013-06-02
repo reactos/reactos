@@ -1995,7 +1995,7 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
                    IN PCONTROL_AREA ControlArea,
                    IN PMMSUPPORT Ws)
 {
-    PMMPTE PointerPte, FirstPte;
+    PMMPTE PointerPte;//, FirstPte;
     PMMPDE PointerPde, SystemMapPde;
     PMMPFN Pfn1, Pfn2;
     MMPTE PteContents;
@@ -2004,7 +2004,7 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
 
     /* Get the PTE and loop each one */
     PointerPte = MiAddressToPte(BaseAddress);
-    FirstPte = PointerPte;
+    //FirstPte = PointerPte;
     while (NumberOfPtes)
     {
         /* Check if the PTE is already valid */
@@ -2041,6 +2041,7 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
             /* Dereference the PDE and the PTE */
             Pfn2 = MiGetPfnEntry(PFN_FROM_PTE(PointerPde));
             //MiDecrementShareCount(Pfn2, PFN_FROM_PTE(PointerPde));
+            DBG_UNREFERENCED_LOCAL_VARIABLE(Pfn2);
             MiDecrementShareCount(Pfn1, PFN_FROM_PTE(&PteContents));
 
             /* Release the PFN lock */

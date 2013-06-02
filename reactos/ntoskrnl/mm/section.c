@@ -2287,9 +2287,9 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     */
    if (DirectMapped && !Private)
    {
-      LARGE_INTEGER SOffset;
+      //LARGE_INTEGER SOffset;
       ASSERT(SwapEntry == 0);
-      SOffset.QuadPart = Offset.QuadPart + Segment->Image.FileOffset;
+      //SOffset.QuadPart = Offset.QuadPart + Segment->Image.FileOffset;
 #ifndef NEWCC
       CcRosMarkDirtyCacheSegment(Bcb, Offset.LowPart);
 #endif
@@ -4116,12 +4116,14 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
                                  ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
 
             Status = MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
+            NT_ASSERT(NT_SUCCESS(Status));
          }
       }
    }
    else
    {
       Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
+      NT_ASSERT(NT_SUCCESS(Status));
    }
 
    MmUnlockAddressSpace(AddressSpace);

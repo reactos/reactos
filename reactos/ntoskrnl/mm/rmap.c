@@ -451,10 +451,10 @@ NTAPI
 MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
 {
    PCACHE_SECTION_PAGE_TABLE Result = NULL;
-   PMM_RMAP_ENTRY current_entry, previous_entry;
+   PMM_RMAP_ENTRY current_entry;//, previous_entry;
 
    ExAcquireFastMutex(&RmapListLock);
-   previous_entry = NULL;
+   //previous_entry = NULL;
    current_entry = MmGetRmapListHeadPage(Page);
    while (current_entry != NULL)
    {
@@ -466,7 +466,7 @@ MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
          ExReleaseFastMutex(&RmapListLock);
          return Result;
       }
-      previous_entry = current_entry;
+      //previous_entry = current_entry;
       current_entry = current_entry->Next;
    }
    ExReleaseFastMutex(&RmapListLock);

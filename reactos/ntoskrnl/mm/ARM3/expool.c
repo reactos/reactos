@@ -615,6 +615,7 @@ ExpRemovePoolTracker(IN ULONG Key,
     Table = PoolTrackTable;
     TableMask = PoolTrackTableMask;
     TableSize = PoolTrackTableSize;
+    DBG_UNREFERENCED_LOCAL_VARIABLE(TableSize);
 
     //
     // Compute the hash for this key, and loop all the possible buckets
@@ -717,6 +718,7 @@ ExpInsertPoolTracker(IN ULONG Key,
     Table = PoolTrackTable;
     TableMask = PoolTrackTableMask;
     TableSize = PoolTrackTableSize;
+    DBG_UNREFERENCED_LOCAL_VARIABLE(TableSize);
 
     //
     // Compute the hash for this key, and loop all the possible buckets

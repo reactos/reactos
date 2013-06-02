@@ -1559,7 +1559,6 @@ MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     ULONG i;
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER Section, DiscardSection;
-    ULONG PagesDeleted;
 
     /* Get the base address and the page count */
     DllBase = LdrEntry->DllBase;
@@ -1604,7 +1603,7 @@ MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     if (!PageCount) return;
 
     /* Delete this many PTEs */
-    PagesDeleted = MiDeleteSystemPageableVm(StartPte, PageCount, 0, NULL);
+    MiDeleteSystemPageableVm(StartPte, PageCount, 0, NULL);
 }
 
 VOID

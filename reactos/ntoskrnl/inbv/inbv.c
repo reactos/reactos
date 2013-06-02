@@ -815,6 +815,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #ifdef CORE_6781_resolved
         /* Draw the SKU text if it exits */
         if (Text) InbvBitBlt(Text, 180, 121);
+#else
+        DBG_UNREFERENCED_LOCAL_VARIABLE(Text);
 #endif
 
         /* Draw the progress bar bit */

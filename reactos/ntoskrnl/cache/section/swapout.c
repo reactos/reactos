@@ -298,6 +298,7 @@ MmPageOutCacheSection(PMMSUPPORT AddressSpace,
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     Entry = MmGetPageEntrySectionSegment(Segment, &TotalOffset);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(Entry);
 
     if (MmIsPageSwapEntry(Process, PAddress))
     {

@@ -252,11 +252,11 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
         {
             PMMPDE PdeBase;
             ULONG PdeOffset = MiGetPdeOffset(Address);
-            
+
             /* Nobody but page fault should ask for creating the PDE,
              * Which imples that Process is the current one */
             ASSERT(Create == FALSE);
-            
+
             PdeBase = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
             if (PdeBase == NULL)
             {
@@ -301,6 +301,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                                      PsGetCurrentProcess(),
                                      NULL,
                                      NULL);
+            DBG_UNREFERENCED_LOCAL_VARIABLE(Status);
             ASSERT(KeAreAllApcsDisabled() == TRUE);
             ASSERT(PointerPde->u.Hard.Valid == 1);
         }
@@ -575,7 +576,7 @@ Mmi386MakeKernelPageTableGlobal(PVOID Address)
 {
     PMMPDE PointerPde = MiAddressToPde(Address);
     PMMPTE PointerPte = MiAddressToPte(Address);
-    
+
     if (PointerPde->u.Hard.Valid == 0)
     {
         if(!MiSynchronizeSystemPde(PointerPde))

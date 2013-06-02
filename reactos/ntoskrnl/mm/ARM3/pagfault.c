@@ -529,6 +529,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     PageTablePte = MiAddressToPte(PointerPte);
     Pfn2 = MiGetPfnEntry(PageTablePte->u.Hard.PageFrameNumber);
     //Pfn2->u2.ShareCount++;
+    DBG_UNREFERENCED_LOCAL_VARIABLE(Pfn2);
 
     /* Check where we should be getting the protection information from */
     if (PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)
@@ -986,19 +987,19 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                     DPRINT("oooh, shiny, a soft fault! 0x%lx\n", PageFrameIndex);
                     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
                     ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
-                    
+
                     /* Should not yet happen in ReactOS */
                     ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
                     ASSERT(Pfn1->u4.InPageError == 0);
-                    
+
                     /* Get the page */
                     MiUnlinkPageFromList(Pfn1);
-                    
+
                     /* Bump its reference count */
                     ASSERT(Pfn1->u2.ShareCount == 0);
                     InterlockedIncrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
                     Pfn1->u2.ShareCount++;
-                    
+
                     /* Make it valid again */
                     /* This looks like another macro.... */
                     Pfn1->u3.e1.PageLocation = ActiveAndValid;
@@ -1009,7 +1010,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                                      MmProtectToPteMask[PointerProtoPte->u.Trans.Protection];
                     TempPte.u.Hard.Valid = 1;
                     TempPte.u.Hard.Accessed = 1;
-                    
+
                     /* Is the PTE writeable? */
                     if (((Pfn1->u3.e1.Modified) && (TempPte.u.Hard.Write)) &&
                         (TempPte.u.Hard.CopyOnWrite == 0))
