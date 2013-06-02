@@ -35,9 +35,9 @@ static const WCHAR DeviceRootW[] = L"\\\\.\\";
 const UNICODE_STRING DeviceRootString = RTL_CONSTANT_STRING(L"\\\\.\\");
 
 const UNICODE_STRING RtlpDosDevicesUncPrefix = RTL_CONSTANT_STRING(L"\\??\\UNC\\");
-const UNICODE_STRING RtlpWin32NtRootSlash =   RTL_CONSTANT_STRING(L"\\\\?\\");
-const UNICODE_STRING RtlpDosSlashCONDevice =  RTL_CONSTANT_STRING(L"\\\\.\\CON");
-const UNICODE_STRING RtlpDosDevicesPrefix  =  RTL_CONSTANT_STRING(L"\\??\\");
+const UNICODE_STRING RtlpWin32NtRootSlash    = RTL_CONSTANT_STRING(L"\\\\?\\");
+const UNICODE_STRING RtlpDosSlashCONDevice   = RTL_CONSTANT_STRING(L"\\\\.\\CON");
+const UNICODE_STRING RtlpDosDevicesPrefix    = RTL_CONSTANT_STRING(L"\\??\\");
 
 const UNICODE_STRING RtlpDosLPTDevice = RTL_CONSTANT_STRING(L"LPT");
 const UNICODE_STRING RtlpDosCOMDevice = RTL_CONSTANT_STRING(L"COM");
@@ -164,7 +164,7 @@ RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
             {
                 /* Get the next lower case character */
                 End++;
-                c = *End | ' '; // ' ' == ('z' - 'Z')
+                c = towlower(*End);
 
                 /* Check if it's a DOS device (LPT, COM, PRN, AUX, or NUL) */
                 if ((End < &PathCopy.Buffer[OriginalLength / sizeof(WCHAR)]) &&
@@ -190,7 +190,7 @@ RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
         }
 
         /* Get the next lower case character and check if it's a DOS device */
-        c = *PathCopy.Buffer | ' '; // ' ' == ('z' - 'Z')
+        c = towlower(*PathCopy.Buffer);
         if ((c != 'l') && (c != 'c') && (c != 'p') && (c != 'a') && (c != 'n'))
         {
             /* Not LPT, COM, PRN, AUX, or NUL */
@@ -469,7 +469,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
     PCURDIR CurrentDirectory;
 
     /* Assume MAX_PATH for now */
-    DPRINT("Relative: %lx DosName: %wZ NtName: %wZ, PartName: %p, RelativeName: %p\n",
+    DPRINT("Relative: %lx DosName: %wZ NtName: %p, PartName: %p, RelativeName: %p\n",
             HaveRelative, DosName, NtName, PartName, RelativeName);
     MaxLength = sizeof(BigBuffer);
 
@@ -479,7 +479,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
     /* Capture input string */
     CapturedDosName = *DosName;
 
-    /* Check for \\?\\ form */
+    /* Check for \\?\ form */
     if ((CapturedDosName.Length <= RtlpWin32NtRootSlash.Length) ||
         (CapturedDosName.Buffer[0] != RtlpWin32NtRootSlash.Buffer[0]) ||
         (CapturedDosName.Buffer[1] != RtlpWin32NtRootSlash.Buffer[1]) ||
@@ -495,7 +495,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
 
         /* Allocate a buffer to hold the path */
         NewBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, MaxLength);
-        DPRINT("Length: %lx\n", MaxLength);
+        DPRINT("MaxLength: %lx\n", MaxLength);
         if (!NewBuffer) return STATUS_NO_MEMORY;
     }
     else
@@ -575,11 +575,11 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
     /* Now copy the prefix and the buffer */
     RtlCopyMemory(NewBuffer, PrefixBuffer, PrefixLength);
     RtlCopyMemory((PCHAR)NewBuffer + PrefixLength,
-                  &Buffer[PrefixCut],
+                  Buffer + PrefixCut,
                   PathLength - (PrefixCut * sizeof(WCHAR)));
 
     /* Compute the length */
-    Length = PathLength - PrefixCut * sizeof(WCHAR) + PrefixLength;
+    Length = PathLength + PrefixLength - PrefixCut * sizeof(WCHAR);
     LengthChars = Length / sizeof(WCHAR);
 
     /* Setup the actual NT path string and terminate it */
@@ -643,12 +643,12 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
                 if (RtlEqualUnicodeString(&FullPath, &CurrentDirectory->DosPath, TRUE))
                 {
                     /* Make relative name string */
-                    RelativeName->RelativeName.Buffer = (PWSTR)((ULONG_PTR)NewBuffer + FullPath.Length - PrefixCut);
+                    RelativeName->RelativeName.Buffer = (PWSTR)((ULONG_PTR)NewBuffer + PrefixLength + FullPath.Length - PrefixCut * sizeof(WCHAR));
                     RelativeName->RelativeName.Length = (USHORT)(PathLength - FullPath.Length);
                     /* If relative name starts with \, skip it */
                     if (RelativeName->RelativeName.Buffer[0] == L'\\')
                     {
-                        RelativeName->RelativeName.Buffer = (PWSTR)((ULONG_PTR)RelativeName->RelativeName.Buffer + sizeof(WCHAR));
+                        RelativeName->RelativeName.Buffer++;
                         RelativeName->RelativeName.Length -= sizeof(WCHAR);
                     }
                     RelativeName->RelativeName.MaximumLength = RelativeName->RelativeName.Length;
