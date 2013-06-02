@@ -68,9 +68,7 @@ WINE_DECLARE_DEBUG_CHANNEL(relay);
 #define EF_AFTER_WRAP		0x0080	/* the caret is displayed after the last character of a
 					   wrapped line, instead of in front of the next character */
 #define EF_USE_SOFTBRK		0x0100	/* Enable soft breaks in text. */
-#define EF_APP_HAS_HANDLE       0x0200  /* Set when an app sends EM_[G|S]ETHANDLE.  We are in sole control of
-                                           the text buffer if this is clear. */
-#define EF_DIALOGMODE           0x0400  /* Indicates that we are inside a dialog window */
+#define EF_DIALOGMODE           0x0200  /* Indicates that we are inside a dialog window */
 
 typedef enum
 {
@@ -129,6 +127,7 @@ typedef struct
 				           Even if parent will change, EN_* messages
 					   should be sent to the first parent. */
 	HWND hwndListBox;		/* handle of ComboBox's listbox or NULL */
+	INT wheelDeltaRemainder;        /* scroll wheel delta left over after scrolling whole lines */
 	/*
 	 *	only for multi line controls
 	 */
@@ -139,6 +138,7 @@ typedef struct
 	HLOCAL hloc32W;			/* our unicode local memory block */
 	HLOCAL hloc32A;			/* alias for ANSI control receiving EM_GETHANDLE
 				   	   or EM_SETHANDLE */
+        HLOCAL hlocapp;                 /* The text buffer handle belongs to the app */
 	/*
 	 * IME Data
 	 */
@@ -391,6 +391,7 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData_linedef(EDITSTATE *es, HD
 		HFONT old_font = NULL;
 		HDC udc = dc;
 		SCRIPT_TABDEF tabdef;
+		HRESULT hr;
 
 		if (!udc)
 			udc = GetDC(es->hwndSelf);
@@ -401,10 +402,19 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData_linedef(EDITSTATE *es, HD
 		tabdef.iScale = 0;
 		tabdef.pTabStops = es->tabs;
 		tabdef.iTabOrigin = 0;
-
-		ScriptStringAnalyse(udc, &es->text[index], line_def->net_length, (3*line_def->net_length/2+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_TAB, -1, NULL, NULL, NULL, &tabdef, NULL, &line_def->ssa);
-
-		if (es->font)
+                //// ReactOS r57679
+		hr = ScriptStringAnalyse(udc, &es->text[index], line_def->net_length,
+		                         (3*line_def->net_length/2+16), -1,
+		                         SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_TAB, -1,
+		                         NULL, NULL, NULL, &tabdef, NULL, &line_def->ssa);
+                ////
+		if (FAILED(hr))
+		{
+                       WARN("ScriptStringAnalyse failed (%x)\n",hr);
+                       line_def->ssa = NULL;
+                }
+                                                                                
+    		if (es->font)
 			SelectObject(udc, old_font);
 		if (udc != dc)
 			ReleaseDC(es->hwndSelf, udc);
@@ -435,12 +445,12 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData(EDITSTATE *es, HDC dc, IN
 				udc = GetDC(es->hwndSelf);
 			if (es->font)
 				old_font = SelectObject(udc, es->font);
-
+                        //// ReactOS r57677
 			if (es->style & ES_PASSWORD)
 				ScriptStringAnalyse(udc, &es->password_char, length, (3*length/2+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_PASSWORD, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
 			else
 				ScriptStringAnalyse(udc, es->text, length, (3*length/2+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
-
+                        ////
 			if (es->font)
 				SelectObject(udc, old_font);
 			if (udc != dc)
@@ -562,9 +572,9 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		cp = current_position;
 		while (*cp) {
                     if (*cp == '\n') break;
-			if ((*cp == '\r') && (*(cp + 1) == '\n'))
-				break;
-			cp++;
+                    if ((*cp == '\r') && (*(cp + 1) == '\n'))
+			break;
+                    cp++;
 		}
 
 		/* Mark type of line termination */
@@ -587,9 +597,13 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 			const SIZE *sz;
 			EDIT_InvalidateUniscribeData_linedef(current_line);
 			EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
-			sz = ScriptString_pSize(current_line->ssa);
-			/* Calculate line width */
-			current_line->width = sz->cx;
+			if (current_line->ssa)
+                        {
+                                sz = ScriptString_pSize(current_line->ssa);
+                                /* Calculate line width */
+                                current_line->width = sz->cx;
+                        }
+                        else current_line->width = es->char_width * current_line->net_length;
 		}
 		else current_line->width = 0;
 
@@ -617,7 +631,9 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 				current_line->net_length = prev;
 				EDIT_InvalidateUniscribeData_linedef(current_line);
 				EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
-				sz = ScriptString_pSize(current_line->ssa);
+				if (current_line->ssa)
+					sz = ScriptString_pSize(current_line->ssa);
+				else sz = 0;
 				if (sz)
 					current_line->width = sz->cx;
 				else
@@ -633,18 +649,23 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 				EDIT_InvalidateUniscribeData_linedef(current_line);
 				EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
 
-				count = ScriptString_pcOutChars(current_line->ssa);
-				piDx = HeapAlloc(GetProcessHeap(),0,sizeof(INT) * (*count));
-				ScriptStringGetLogicalWidths(current_line->ssa,piDx);
+                                if (current_line->ssa)
+                                {
+				        count = ScriptString_pcOutChars(current_line->ssa);
+				        piDx = HeapAlloc(GetProcessHeap(),0,sizeof(INT) * (*count));
+				        ScriptStringGetLogicalWidths(current_line->ssa,piDx);
 
-				prev = current_line->net_length-1;
-				do {
-					current_line->width -= piDx[prev];
-					prev--;
-				} while ( prev > 0 && current_line->width > fw);
-				if (prev<=0)
-					prev = 1;
-				HeapFree(GetProcessHeap(),0,piDx);
+				        prev = current_line->net_length-1;
+				        do {
+					        current_line->width -= piDx[prev];
+					        prev--;
+                                        } while ( prev > 0 && current_line->width > fw);
+                                        if (prev<=0)
+					        prev = 1;
+                                        HeapFree(GetProcessHeap(),0,piDx);
+                                }
+                                else
+                                        prev = (fw / es->char_width);
 			}
 
 			/* If the first line we are calculating, wrapped before istart, we must
@@ -669,8 +690,13 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 			if (current_line->net_length > 0)
 			{
 				EDIT_UpdateUniscribeData_linedef(es, NULL, current_line);
-				sz = ScriptString_pSize(current_line->ssa);
-				current_line->width = sz->cx;
+				if (current_line->ssa)
+				{
+					sz = ScriptString_pSize(current_line->ssa);
+					current_line->width = sz->cx;
+				}
+				else
+					current_line->width = 0;
 			}
 			else current_line->width = 0;
 		    }
@@ -1228,6 +1254,8 @@ static inline void text_buffer_changed(EDITSTATE *es)
  */
 static void EDIT_LockBuffer(EDITSTATE *es)
 {
+        if (es->hlocapp) return;
+
 	if (!es->text) {
 
 	    CHAR *textA = NULL; // ReactOS Hacked! r45670
@@ -1247,7 +1275,7 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 		return;
 	    }
 
-	    if(textA)
+	    if (textA) //// ReactOS
 	    {
 		HLOCAL hloc32W_new;
 		UINT countW_new = MultiByteToWideChar(CP_ACP, 0, textA, -1, NULL, 0);
@@ -1271,7 +1299,6 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 	    }
 	    else es->text = LocalLock(es->hloc32W);
 	}
-        if(es->flags & EF_APP_HAS_HANDLE) text_buffer_changed(es);
 	es->lock_count++;
 }
 
@@ -2463,7 +2490,11 @@ static HLOCAL EDIT_EM_GetHandle(EDITSTATE *es)
 	    hLocal = es->hloc32A;
 	}
 
-        es->flags |= EF_APP_HAS_HANDLE;
+        EDIT_UnlockBuffer(es, TRUE);
+
+        /* The text buffer handle belongs to the app */
+        es->hlocapp = hLocal;
+
 	TRACE("Returning %p, LocalSize() = %ld\n", hLocal, LocalSize(hLocal));
 	return hLocal;
 }
@@ -2804,8 +2835,11 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
 
 	es->buffer_size = LocalSize(es->hloc32W)/sizeof(WCHAR) - 1;
 
-        es->flags |= EF_APP_HAS_HANDLE;
+	/* The text buffer handle belongs to the control */
+        es->hlocapp = NULL;
+
 	EDIT_LockBuffer(es);
+	text_buffer_changed(es);
 
 	es->x_offset = es->y_offset = 0;
 	es->selection_start = es->selection_end = 0;
@@ -3575,6 +3609,8 @@ static LRESULT EDIT_WM_KillFocus(EDITSTATE *es)
 	if(!(es->style & ES_NOHIDESEL))
 		EDIT_InvalidateText(es, es->selection_start, es->selection_end);
 	EDIT_NOTIFY_PARENT(es, EN_KILLFOCUS);
+        /* throw away left over scroll when we lose focus */
+        es->wheelDeltaRemainder = 0;
 	return 0;
 }
 
@@ -4618,12 +4654,14 @@ static LRESULT EDIT_WM_NCDestroy(EDITSTATE *es)
 {
 	LINEDEF *pc, *pp;
 
-	if (es->hloc32W) {
-		LocalFree(es->hloc32W);
-	}
-	if (es->hloc32A) {
-		LocalFree(es->hloc32A);
-	}
+        /* The app can own the text buffer handle */
+        if (es->hloc32W && (es->hloc32W != es->hlocapp)) {
+                LocalFree(es->hloc32W);
+        }
+        if (es->hloc32A && (es->hloc32A != es->hlocapp)) {
+                LocalFree(es->hloc32A);
+        }
+        EDIT_InvalidateUniscribeData(es);
 	pc = es->first_line_def;
 	while (pc)
 	{
@@ -4632,7 +4670,6 @@ static LRESULT EDIT_WM_NCDestroy(EDITSTATE *es)
 		pc = pp;
 	}
 
-	EDIT_InvalidateUniscribeData(es);
 	SetWindowLongPtrW( es->hwndSelf, 0, 0 );
 	HeapFree(GetProcessHeap(), 0, es->undo_text);
 	HeapFree(GetProcessHeap(), 0, es);
@@ -5155,7 +5192,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
         case WM_MOUSEWHEEL:
                 {
-                    int gcWheelDelta = 0;
+                    int wheelDelta;
                     UINT pulScrollLines = 3;
                     SystemParametersInfoW(SPI_GETWHEELSCROLLLINES,0, &pulScrollLines, 0);
 
@@ -5163,12 +5200,20 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
                         result = DefWindowProcW(hwnd, msg, wParam, lParam);
                         break;
                     }
-                    gcWheelDelta -= GET_WHEEL_DELTA_WPARAM(wParam);
-                    if (abs(gcWheelDelta) >= WHEEL_DELTA && pulScrollLines)
+                    wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+                    /* if scrolling changes direction, ignore left overs */
+                    if ((wheelDelta < 0 && es->wheelDeltaRemainder < 0) ||
+                        (wheelDelta > 0 && es->wheelDeltaRemainder > 0))
+                        es->wheelDeltaRemainder += wheelDelta;
+                    else
+                        es->wheelDeltaRemainder = wheelDelta;
+                    if (es->wheelDeltaRemainder && pulScrollLines)
                     {
-                        int cLineScroll= (int) min((UINT) es->line_count, pulScrollLines);
-                        cLineScroll *= (gcWheelDelta / WHEEL_DELTA);
-			result = EDIT_EM_LineScroll(es, 0, cLineScroll);
+                        int cLineScroll;
+                        pulScrollLines = (int) min((UINT) es->line_count, pulScrollLines);
+                        cLineScroll = pulScrollLines * (float)es->wheelDeltaRemainder / WHEEL_DELTA;
+                        es->wheelDeltaRemainder -= WHEEL_DELTA * cLineScroll / (int)pulScrollLines;
+                        result = EDIT_EM_LineScroll(es, 0, -cLineScroll);
                     }
                 }
                 break;
@@ -5204,6 +5249,28 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 	case WM_IME_CONTROL:
 		break;
+
+	case WM_IME_REQUEST:
+		switch (wParam)
+		{
+                    case IMR_QUERYCHARPOSITION:
+                    {
+                        LRESULT pos;
+                        IMECHARPOSITION *chpos = (IMECHARPOSITION *)lParam;
+
+                        pos = EDIT_EM_PosFromChar(es, es->selection_start + chpos->dwCharPos, FALSE);
+                        chpos->pt.x = LOWORD(pos);
+                        chpos->pt.y = HIWORD(pos);
+                        chpos->cLineHeight = es->line_height;
+                        chpos->rcDocument = es->format_rect;
+                        MapWindowPoints(hwnd, 0, &chpos->pt, 1);
+                        MapWindowPoints(hwnd, 0, (POINT*)&chpos->rcDocument, 2);
+                        result = 1;
+                        break;
+                    }
+		}
+		break;
+
 
 	default:
 		result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
