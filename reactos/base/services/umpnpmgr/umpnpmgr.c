@@ -2886,8 +2886,11 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     /* Wait for the function to connect to our pipe */
     if(!ConnectNamedPipe(hPipe, NULL))
     {
-        DPRINT1("ConnectNamedPipe failed with error %u\n", GetLastError());
-        goto cleanup;
+        if (GetLastError() != ERROR_PIPE_CONNECTED)
+        {
+            DPRINT1("ConnectNamedPipe failed with error %u\n", GetLastError());
+            goto cleanup;
+        }
     }
 
     /* Pass the data. The following output is partly compatible to Windows XP SP2 (researched using a modified newdev.dll to log this stuff) */
