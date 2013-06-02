@@ -228,7 +228,11 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
                         &Count);
 
         /* Spin until the other processors are ready */
-        while ((volatile ULONG)Count != 1) YieldProcessor();
+        while (Count != 1)
+        {
+            YieldProcessor();
+            KeMemoryBarrierWithoutFence();
+        }
     }
 #endif
 
@@ -248,7 +252,7 @@ KeIpiGenericCall(IN PKIPI_BROADCAST_WORKER Function,
     if (Affinity)
     {
         /* Sanity check */
-        ASSERT(Prcb == (volatile PKPRCB)KeGetCurrentPrcb());
+        ASSERT(Prcb == KeGetCurrentPrcb());
 
         /* FIXME: TODO */
         ASSERTMSG("Not yet implemented\n", FALSE);
