@@ -4679,7 +4679,7 @@ SamrDeleteAlias(IN OUT SAMPR_HANDLE *AliasHandle)
     NTSTATUS Status;
 
     /* Validate the alias handle */
-    Status = SampValidateDbObject(AliasHandle,
+    Status = SampValidateDbObject(*AliasHandle,
                                   SamDbAliasObject,
                                   DELETE,
                                   &AliasObject);
