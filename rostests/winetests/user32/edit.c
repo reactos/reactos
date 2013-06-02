@@ -2530,6 +2530,120 @@ static void test_dialogmode(void)
     destroy_child_editcontrol(hwEdit);
 }
 
+static void test_EM_GETHANDLE(void)
+{
+    static const char str0[] = "untouched";
+    static const char str1[] = "1111+1111+1111#";
+    static const char str2[] = "2222-2222-2222-2222#";
+    static const char str3[] = "3333*3333*3333*3333*3333#";
+    CHAR    current[42];
+    HWND    hEdit;
+    HLOCAL  hmem;
+    HLOCAL  hmem2;
+    HLOCAL  halloc;
+    char    *buffer;
+    int     len;
+    int     r;
+
+    trace("EDIT: EM_GETHANDLE\n");
+
+    /* EM_GETHANDLE is not supported for a single line edit control */
+    hEdit = create_editcontrol(WS_BORDER, 0);
+    ok(hEdit != NULL, "got %p (expected != NULL)\n", hEdit);
+
+    hmem = (HGLOBAL) SendMessage(hEdit, EM_GETHANDLE, 0, 0);
+    ok(hmem == NULL, "got %p (expected NULL)\n", hmem);
+    DestroyWindow(hEdit);
+
+
+    /* EM_GETHANDLE needs a multiline edit control */
+    hEdit = create_editcontrol(WS_BORDER | ES_MULTILINE, 0);
+    ok(hEdit != NULL, "got %p (expected != NULL)\n", hEdit);
+
+    /* set some text */
+    r = SendMessageA(hEdit, WM_SETTEXT, 0, (LPARAM)str1);
+    len = SendMessageA(hEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok((r == 1) && (len == lstrlenA(str1)), "got %d and %d (expected 1 and %d)\n", r, len, lstrlenA(str1));
+
+    lstrcpyA(current, str0);
+    r = SendMessageA(hEdit, WM_GETTEXT, sizeof(current), (LPARAM)current);
+    ok((r == lstrlenA(str1)) && !lstrcmpA(current, str1),
+        "got %d and \"%s\" (expected %d and \"%s\")\n", r, current, lstrlenA(str1), str1);
+
+    hmem = (HGLOBAL) SendMessage(hEdit, EM_GETHANDLE, 0, 0);
+    ok(hmem != NULL, "got %p (expected != NULL)\n", hmem);
+    /* The buffer belongs to the app now. According to MSDN, the app has to LocalFree the
+       buffer, LocalAlloc a new buffer and pass it to the edit control with EM_SETHANDLE. */
+
+    buffer = LocalLock(hmem);
+    ok(buffer != NULL, "got %p (expected != NULL)\n", buffer);
+    len = lstrlenA(buffer);
+    ok((len == lstrlenA(str1)) && !lstrcmpA(buffer, str1),
+        "got %d and \"%s\" (expected %d and \"%s\")\n", len, buffer, lstrlenA(str1), str1);
+    LocalUnlock(hmem);
+
+    /* use LocalAlloc first to get a different handle */
+    halloc = LocalAlloc(LMEM_MOVEABLE, 42);
+    ok(halloc != NULL, "got %p (expected != NULL)\n", halloc);
+    /* prepare our new memory */
+    buffer = LocalLock(halloc);
+    ok(buffer != NULL, "got %p (expected != NULL)\n", buffer);
+    lstrcpyA(buffer, str2);
+    LocalUnlock(halloc);
+
+    /* LocalFree the old memory handle before EM_SETHANDLE the new handle */
+    LocalFree(hmem);
+    /* use LocalAlloc after the LocalFree to likely consume the handle */
+    hmem2 = LocalAlloc(LMEM_MOVEABLE, 42);
+    ok(hmem2 != NULL, "got %p (expected != NULL)\n", hmem2);
+
+    SendMessage(hEdit, EM_SETHANDLE, (WPARAM)halloc, 0);
+
+    len = SendMessageA(hEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok(len == lstrlenA(str2), "got %d (expected %d)\n", len, lstrlenA(str2));
+
+    lstrcpyA(current, str0);
+    r = SendMessageA(hEdit, WM_GETTEXT, sizeof(current), (LPARAM)current);
+    ok((r == lstrlenA(str2)) && !lstrcmpA(current, str2),
+        "got %d and \"%s\" (expected %d and \"%s\")\n", r, current, lstrlenA(str2), str2);
+
+    /* set a different text */
+    r = SendMessageA(hEdit, WM_SETTEXT, 0, (LPARAM)str3);
+    len = SendMessageA(hEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok((r == 1) && (len == lstrlenA(str3)), "got %d and %d (expected 1 and %d)\n", r, len, lstrlenA(str3));
+
+    lstrcpyA(current, str0);
+    r = SendMessageA(hEdit, WM_GETTEXT, sizeof(current), (LPARAM)current);
+    ok((r == lstrlenA(str3)) && !lstrcmpA(current, str3),
+        "got %d and \"%s\" (expected %d and \"%s\")\n", r, current, lstrlenA(str3), str3);
+
+    LocalFree(hmem2);
+    DestroyWindow(hEdit);
+
+    /* Some apps have bugs ... */
+    hEdit = create_editcontrol(WS_BORDER | ES_MULTILINE, 0);
+
+    /* set some text */
+    r = SendMessageA(hEdit, WM_SETTEXT, 0, (LPARAM)str1);
+    len = SendMessageA(hEdit, WM_GETTEXTLENGTH, 0, 0);
+    ok((r == 1) && (len == lstrlenA(str1)), "got %d and %d (expected 1 and %d)\n", r, len, lstrlenA(str1));
+
+    /* everything is normal upto EM_GETHANDLE */
+    hmem = (HGLOBAL) SendMessage(hEdit, EM_GETHANDLE, 0, 0);
+    /* Some messages still work while other messages fail.
+       After LocalFree the memory handle, messages can crash the app */
+
+    /* A buggy editor used EM_GETHANDLE twice */
+    hmem2 = (HGLOBAL) SendMessage(hEdit, EM_GETHANDLE, 0, 0);
+    ok(hmem2 == hmem, "got %p (expected %p)\n", hmem2, hmem);
+
+    /* Let the edit control free the memory handle */
+    SendMessage(hEdit, EM_SETHANDLE, (WPARAM)hmem2, 0);
+
+    DestroyWindow(hEdit);
+}
+
+
 START_TEST(edit)
 {
     BOOL b;
@@ -2567,6 +2681,8 @@ START_TEST(edit)
         test_contextmenu();
     else
         win_skip("EndMenu is not available\n");
+
+    test_EM_GETHANDLE();
 
     UnregisterWindowClasses();
 }
