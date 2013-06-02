@@ -419,9 +419,9 @@ SampDeleteAccountDbObject(PSAM_DB_OBJECT DbObject)
                                     NULL,
                                     NULL,
                                     &Length);
-    if (Status != STATUS_BUFFER_OVERFLOW)
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
     {
-        TRACE("Status 0x%08lx\n", Status);
+        TRACE("SampGetObjectAttribute failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
