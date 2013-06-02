@@ -3859,13 +3859,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         DPRINT1("MEM_TOP_DOWN not supported\n");
         AllocationType &= ~MEM_TOP_DOWN;
     }
-    if ((AllocationType & MEM_RESET) == MEM_RESET)
-    {
-        /// @todo HACK: pretend success
-        DPRINT("MEM_RESET not supported\n");
-        Status = STATUS_SUCCESS;
-        goto FailPathNoLock;
-    }
+
     if (Process->VmTopDown == 1)
     {
         DPRINT1("VmTopDown not supported\n");
@@ -4062,6 +4056,14 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     {
         DPRINT1("Could not find a VAD for this allocation\n");
         Status = STATUS_CONFLICTING_ADDRESSES;
+        goto FailPath;
+    }
+	
+	if ((AllocationType & MEM_RESET) == MEM_RESET)
+    {
+        /// @todo HACK: pretend success
+        DPRINT("MEM_RESET not supported\n");
+        Status = STATUS_SUCCESS;
         goto FailPath;
     }
 
