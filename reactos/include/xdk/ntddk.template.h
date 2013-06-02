@@ -93,6 +93,7 @@ typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
 
 $define (_NTDDK_)
 $include (extypes.h)
+$include (cmtypes.h)
 $include (iotypes.h)
 $include (haltypes.h)
 $include (ketypes.h)

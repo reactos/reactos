@@ -74,7 +74,7 @@ FORCEINLINE
 VOID
 KeLowerIrql(IN KIRQL NewIrql)
 {
-  ASSERT((KIRQL)__readcr8() >= NewIrql);
+  //ASSERT((KIRQL)__readcr8() >= NewIrql);
   __writecr8(NewIrql);
 }
 
@@ -85,7 +85,7 @@ KfRaiseIrql(IN KIRQL NewIrql)
   KIRQL OldIrql;
 
   OldIrql = (KIRQL)__readcr8();
-  ASSERT(OldIrql <= NewIrql);
+  //ASSERT(OldIrql <= NewIrql);
   __writecr8(NewIrql);
   return OldIrql;
 }
