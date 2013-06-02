@@ -8,7 +8,7 @@ Description = The most popular client for the Internet Relay Chat (IRC).
 Size = 1.67MB
 Category = 5
 URLSite = http://www.mirc.com/
-URLDownload = http://download.mirc.com/3/mirc635.exe
+URLDownload = http://svn.reactos.org/packages/mirc635.exe
 CDPath = none
 
 [Section.0407]

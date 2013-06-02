@@ -34,7 +34,7 @@ URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/loca
 URLSite = http://nl.openoffice.org/
 Description = Open-bron Office Pakket.
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/nl/2.4.2/OOo_2.4.2_Win32Intel_install_nl.exe
-Size = 113.92MB
+Size = 113.8MB
 
 [Section.0415]
 URLSite = http://pl.openoffice.org/
@@ -56,4 +56,4 @@ Size = 114.76MB
 URLSite = http://nl.openoffice.org/
 Description = Open-bron Office Pakket.
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/nl/2.4.2/OOo_2.4.2_Win32Intel_install_nl.exe
-Size = 113.92MB
+Size = 113.8MB

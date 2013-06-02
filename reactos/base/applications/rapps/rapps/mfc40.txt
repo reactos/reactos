@@ -8,7 +8,7 @@ Description = MFC 4 is needed by some applications. Contains: mfc40.dll, msvcrt4
 Size = 865.04kB
 Category = 14
 URLSite = http://support.microsoft.com/kb/122244/
-URLDownload = http://download.microsoft.com/download/ole/ole2v/3.5/w351/en-us/ole2v.exe
+URLDownload = http://svn.reactos.org/packages/ole2v.exe
 CDPath = none
 
 [Section.0407]

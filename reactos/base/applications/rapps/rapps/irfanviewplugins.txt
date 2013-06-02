@@ -5,7 +5,7 @@ Name = IrfanView Plugins
 Version = 4.35
 Licence = Freeware (for personal use)
 Description = Additional Plugins for supporting more file types.
-Size = 8.92MB
+Size = 9.85MB
 Category = 3
 URLSite = http://www.irfanview.com/
 URLDownload = http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_435_setup.exe
@@ -34,7 +34,7 @@ Description = Wtyczki otwierające dodatkowe typy plików w Irfanview.
 [Section.0418]
 Licence = Gratuită (pentru uz personal)
 Description = Extensii adiționale pentru a spori numărul de formate de fișiere recunoscute.
-Size = 8,92 Mo
+Size = 9,85 Mo
 
 [Section.0422]
 Licence = Freeware (для домашнього використання)

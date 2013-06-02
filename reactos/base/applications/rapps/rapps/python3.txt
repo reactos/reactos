@@ -2,13 +2,13 @@
 
 [Section]
 Name = Python 3
-Version = 3.2.3
+Version = 3.3.2
 Licence = GPL/LGPL
 Description = A remarkably powerful dynamic programming language.
-Size = 17.0MB
+Size = 19.3MB
 Category = 7
 URLSite = http://www.python.org/
-URLDownload = http://www.python.org/ftp/python/3.2.3/python-3.2.3.msi
+URLDownload = http://www.python.org/ftp/python/3.3.2/python-3.3.2.msi
 CDPath = none
 
 [Section.0407]
@@ -28,7 +28,7 @@ Description = Potęży i dynamiczny język programowania.
 
 [Section.0418]
 Description = Un limbaj de programare dinamic și puternic.
-Size = 17,0 Mo
+Size = 19,3 Mo
 
 [Section.0422]
 Description = Дуже потужна динамічна мова програмування.
