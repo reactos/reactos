@@ -164,7 +164,7 @@ RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
             {
                 /* Get the next lower case character */
                 End++;
-                c = towlower(*End);
+                c = RtlDowncaseUnicodeChar(*End);
 
                 /* Check if it's a DOS device (LPT, COM, PRN, AUX, or NUL) */
                 if ((End < &PathCopy.Buffer[OriginalLength / sizeof(WCHAR)]) &&
@@ -190,7 +190,7 @@ RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
         }
 
         /* Get the next lower case character and check if it's a DOS device */
-        c = towlower(*PathCopy.Buffer);
+        c = RtlDowncaseUnicodeChar(*PathCopy.Buffer);
         if ((c != 'l') && (c != 'c') && (c != 'p') && (c != 'a') && (c != 'n'))
         {
             /* Not LPT, COM, PRN, AUX, or NUL */
