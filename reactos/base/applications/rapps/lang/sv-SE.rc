@@ -13,22 +13,24 @@ BEGIN
 	BEGIN
 		MENUITEM "&Inställningar", ID_SETTINGS
 		MENUITEM SEPARATOR
-		MENUITEM "A&vsluta",     ID_EXIT
+		MENUITEM "A&vsluta",       ID_EXIT
 	END
 	POPUP "&Program"
 	BEGIN
-		MENUITEM "&Installera",  ID_INSTALL
-		MENUITEM "&Avinstallera",ID_UNINSTALL
-		MENUITEM "&Ändra",   ID_MODIFY
+		MENUITEM "&Installera",   ID_INSTALL
+		MENUITEM "&Avinstallera", ID_UNINSTALL
+		MENUITEM "&Ändra",        ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Uppdatera",  ID_REFRESH
+		MENUITEM "&Uppdatera",    ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",        ID_RESETDB
 	END
 	POPUP "Hjälp"
 	BEGIN
-		MENUITEM "Hjälp",      ID_HELP, GRAYED
-		MENUITEM "Om...",     ID_ABOUT
+		MENUITEM "Hjälp", ID_HELP, GRAYED
+		MENUITEM "Om...", ID_ABOUT
 	END
 END
 
@@ -36,7 +38,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Öppna länk i webläsare", ID_OPEN_LINK
+		MENUITEM "&Öppna länk i webläsare",    ID_OPEN_LINK
 		MENUITEM "&Kopiera länk till urklipp", ID_COPY_LINK
 	END
 END
@@ -47,11 +49,13 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installera",   ID_INSTALL
 		MENUITEM "&Avinstallera", ID_UNINSTALL
-		MENUITEM "&Ändra",    ID_MODIFY
+		MENUITEM "&Ändra",        ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Ta bort från Registret", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Uppdatera",   ID_REFRESH
+		MENUITEM "&Uppdatera",    ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",        ID_RESETDB
 	END
 END
 

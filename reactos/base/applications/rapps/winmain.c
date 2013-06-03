@@ -423,6 +423,11 @@ MainWndOnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
             UpdateApplicationsList(-1);
             break;
 
+        case ID_RESETDB:
+            UpdateAppsDB();
+            UpdateApplicationsList(-1);
+            break;
+
         case ID_HELP:
             MessageBoxW(hwnd, L"Help not implemented yet", NULL, MB_OK);
             break;

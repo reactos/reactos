@@ -14,22 +14,24 @@ BEGIN
 	BEGIN
 		MENUITEM "&Налаштування", ID_SETTINGS
 		MENUITEM SEPARATOR
-		MENUITEM "В&ихід",     ID_EXIT
+		MENUITEM "В&ихід",        ID_EXIT
 	END
 	POPUP "&Програми"
 	BEGIN
-		MENUITEM "&Встановити",  ID_INSTALL
-		MENUITEM "Вид&алити",ID_UNINSTALL
-		MENUITEM "&Змінити",   ID_MODIFY
+		MENUITEM "&Встановити", ID_INSTALL
+		MENUITEM "Вид&алити",   ID_UNINSTALL
+		MENUITEM "&Змінити",    ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "Вида&лити з реєстру", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Оновити",  ID_REFRESH
+		MENUITEM "&Оновити",    ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",    ID_RESETDB
 	END
 	POPUP "&Довідка"
 	BEGIN
-		MENUITEM "Дов&ідка",      ID_HELP, GRAYED
-		MENUITEM "Про про&граму...",     ID_ABOUT
+		MENUITEM "Дов&ідка",         ID_HELP, GRAYED
+		MENUITEM "Про про&граму...", ID_ABOUT
 	END
 END
 
@@ -37,7 +39,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Відкрити посилання в браузері", ID_OPEN_LINK
+		MENUITEM "&Відкрити посилання в браузері",      ID_OPEN_LINK
 		MENUITEM "&Копіювати посилання в буфер обміну", ID_COPY_LINK
 	END
 END
@@ -46,13 +48,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Встановити",   ID_INSTALL
-		MENUITEM "В&идалити", ID_UNINSTALL
+		MENUITEM "&Встановити", ID_INSTALL
+		MENUITEM "В&идалити",   ID_UNINSTALL
 		MENUITEM "&Змінити",    ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "Вид&алити з реєстру", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Оновити",   ID_REFRESH
+		MENUITEM "&Оновити",    ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",    ID_RESETDB
 	END
 END
 

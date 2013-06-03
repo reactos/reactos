@@ -6,22 +6,24 @@ BEGIN
 	BEGIN
 		MENUITEM "&Preferenze", ID_SETTINGS
 		MENUITEM SEPARATOR
-		MENUITEM "E&sci",     ID_EXIT
+		MENUITEM "E&sci",       ID_EXIT
 	END
 	POPUP "&Programmi"
 	BEGIN
-		MENUITEM "&Installa",  ID_INSTALL
-		MENUITEM "&Disinstalla",ID_UNINSTALL
-		MENUITEM "&Modifica",   ID_MODIFY
+		MENUITEM "&Installa",    ID_INSTALL
+		MENUITEM "&Disinstalla", ID_UNINSTALL
+		MENUITEM "&Modifica",    ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Remuovi da Registry", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Aggiorna",  ID_REFRESH
+		MENUITEM "&Aggiorna",    ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",     ID_RESETDB
 	END
 	POPUP "?"
 	BEGIN
-		MENUITEM "Guida",      ID_HELP, GRAYED
-		MENUITEM "Informazioni",     ID_ABOUT
+		MENUITEM "Guida",        ID_HELP, GRAYED
+		MENUITEM "Informazioni", ID_ABOUT
 	END
 END
 
@@ -29,7 +31,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Apri il collegamento in un browser", ID_OPEN_LINK
+		MENUITEM "&Apri il collegamento in un browser",  ID_OPEN_LINK
 		MENUITEM "&Copia il collegamento negli appunti", ID_COPY_LINK
 	END
 END
@@ -38,13 +40,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Installa",   ID_INSTALL
+		MENUITEM "&Installa",    ID_INSTALL
 		MENUITEM "&Disinstalla", ID_UNINSTALL
 		MENUITEM "&Modifica",    ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "&Rimuovi da Registry", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Aggiorna",   ID_REFRESH
+		MENUITEM "&Aggiorna",    ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",     ID_RESETDB
 	END
 END
 

@@ -11,16 +11,18 @@ BEGIN
 	POPUP "プログラム(&P)"
 	BEGIN
 		MENUITEM "インストール(&I)",    ID_INSTALL
-		MENUITEM "アンインストール(&U)",ID_UNINSTALL
-		MENUITEM "変更(&M)",            ID_MODIFY
+		MENUITEM "アンインストール(&U)", ID_UNINSTALL
+		MENUITEM "変更(&M)",         ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "レジストリから削除(&R)",ID_REGREMOVE
+		MENUITEM "レジストリから削除(&R)", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "更新(&R)",            ID_REFRESH
+		MENUITEM "更新(&R)",          ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",  ID_RESETDB
 	END
 	POPUP "ヘルプ"
 	BEGIN
-		MENUITEM "ヘルプ",              ID_HELP, GRAYED
+		MENUITEM "ヘルプ",            ID_HELP, GRAYED
 		MENUITEM "バージョン情報",      ID_ABOUT
 	END
 END
@@ -29,7 +31,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "ブラウザでリンクを開く(&O)",     ID_OPEN_LINK
+		MENUITEM "ブラウザでリンクを開く(&O)",    ID_OPEN_LINK
 		MENUITEM "クリップボードにコピーする(&C)", ID_COPY_LINK
 	END
 END
@@ -39,12 +41,14 @@ BEGIN
 	POPUP "popup"
 	BEGIN
 		MENUITEM "インストール(&I)",     ID_INSTALL
-		MENUITEM "アンインストール(&U)", ID_UNINSTALL
-		MENUITEM "変更(&M)",             ID_MODIFY
+		MENUITEM "アンインストール(&U)",  ID_UNINSTALL
+		MENUITEM "変更(&M)",          ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "レジストリから削除(&R)", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "更新(&R)",             ID_REFRESH
+		MENUITEM "更新(&R)",          ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",  ID_RESETDB
 	END
 END
 

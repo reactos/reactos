@@ -17,6 +17,8 @@ BEGIN
 		MENUITEM "&Bu Bilgiyi Değer Defteri'nden Kaldır.", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Yenile",          ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase", ID_RESETDB
 	END
 	POPUP "Y&ardım"
 	BEGIN
@@ -38,13 +40,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Kur",   ID_INSTALL
-		MENUITEM "K&aldır", ID_UNINSTALL
-		MENUITEM "&Değiştir",    ID_MODIFY
+		MENUITEM "&Kur",             ID_INSTALL
+		MENUITEM "K&aldır",          ID_UNINSTALL
+		MENUITEM "&Değiştir",        ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Bu Bilgiyi Değer Defteri'nden Kaldır", ID_REGREMOVE
+		MENUITEM "&Bu Bilgiyi Değer Defteri'nden Kaldır",  ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Yenile",   ID_REFRESH
+		MENUITEM "&Yenile",          ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase", ID_RESETDB
 	END
 END
 

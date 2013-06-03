@@ -17,11 +17,13 @@ BEGIN
 		MENUITEM "У&далить из реестра", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Обновить",    ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",    ID_RESETDB
 	END
 	POPUP "Справка"
 	BEGIN
-		MENUITEM "Содержание",      ID_HELP, GRAYED
-		MENUITEM "О программе",     ID_ABOUT
+		MENUITEM "Содержание",  ID_HELP, GRAYED
+		MENUITEM "О программе", ID_ABOUT
 	END
 END
 
@@ -38,13 +40,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Установить",   ID_INSTALL
-		MENUITEM "&Удалить",      ID_UNINSTALL
-		MENUITEM "&Изменить",     ID_MODIFY
+		MENUITEM "&Установить", ID_INSTALL
+		MENUITEM "&Удалить",    ID_UNINSTALL
+		MENUITEM "&Изменить",   ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "У&далить из реестра", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Обновить",     ID_REFRESH
+		MENUITEM "&Обновить",   ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",    ID_RESETDB
 	END
 END
 

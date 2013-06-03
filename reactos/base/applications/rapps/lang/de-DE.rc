@@ -6,22 +6,24 @@ BEGIN
 	BEGIN
 		MENUITEM "&Einstellungen", ID_SETTINGS
 		MENUITEM SEPARATOR
-		MENUITEM "&Beenden",     ID_EXIT
+		MENUITEM "&Beenden",       ID_EXIT
 	END
 	POPUP "&Programme"
 	BEGIN
-		MENUITEM "&Installieren",  ID_INSTALL
-		MENUITEM "&Deinstallieren",ID_UNINSTALL
-		MENUITEM "&Ändern",   ID_MODIFY
+		MENUITEM "&Installieren",   ID_INSTALL
+		MENUITEM "&Deinstallieren", ID_UNINSTALL
+		MENUITEM "&Ändern",         ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Aktualisieren",  ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Da&tenbank aktualisieren",ID_RESETDB
 	END
 	POPUP "Hilfe"
 	BEGIN
-		MENUITEM "Hilfe",      ID_HELP, GRAYED
-		MENUITEM "Über",     ID_ABOUT
+		MENUITEM "Hilfe", ID_HELP, GRAYED
+		MENUITEM "Über",  ID_ABOUT
 	END
 END
 
@@ -29,7 +31,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Öffne den Link in einem Browser", ID_OPEN_LINK
+		MENUITEM "&Öffne den Link in einem Browser",        ID_OPEN_LINK
 		MENUITEM "&Kopiere den Link in die Zwischenablage", ID_COPY_LINK
 	END
 END
@@ -40,11 +42,13 @@ BEGIN
 	BEGIN
 		MENUITEM "&Installieren",   ID_INSTALL
 		MENUITEM "&Deinstallieren", ID_UNINSTALL
-		MENUITEM "&Ändern",    ID_MODIFY
+		MENUITEM "&Ändern",         ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Aktualisieren",   ID_REFRESH
+		MENUITEM "&Aktualisieren",  ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Da&tenbank aktualisieren",ID_RESETDB
 	END
 END
 

@@ -11,24 +11,26 @@ IDR_MAINMENU MENU
 BEGIN
 	POPUP "&Fișier"
 	BEGIN
-		MENUITEM "&Preferințe…",           ID_SETTINGS
+		MENUITEM "&Preferințe…", ID_SETTINGS
 		MENUITEM SEPARATOR
-		MENUITEM "I&eșire",                ID_EXIT
+		MENUITEM "I&eșire",      ID_EXIT
 	END
 	POPUP "&Programe"
 	BEGIN
-		MENUITEM "&Instalează",            ID_INSTALL
-		MENUITEM "&Dezinstalează",         ID_UNINSTALL
-		MENUITEM "&Modifică",              ID_MODIFY
+		MENUITEM "&Instalează",           ID_INSTALL
+		MENUITEM "&Dezinstalează",        ID_UNINSTALL
+		MENUITEM "&Modifică",             ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Elimină din registru",  ID_REGREMOVE
+		MENUITEM "&Elimină din registru", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "Împ&rospătează",         ID_REFRESH
+		MENUITEM "Împ&rospătează",        ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",      ID_RESETDB
 	END
 	POPUP "&?"
 	BEGIN
-		MENUITEM "&Manual…",                ID_HELP, GRAYED
-		MENUITEM "&Despre…",               ID_ABOUT
+		MENUITEM "&Manual…", ID_HELP, GRAYED
+		MENUITEM "&Despre…", ID_ABOUT
 	END
 END
 
@@ -36,8 +38,8 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Deschide în navigator",   ID_OPEN_LINK
-		MENUITEM "&Copiază în memorie",      ID_COPY_LINK
+		MENUITEM "&Deschide în navigator", ID_OPEN_LINK
+		MENUITEM "&Copiază în memorie",    ID_COPY_LINK
 	END
 END
 
@@ -52,6 +54,8 @@ BEGIN
 		MENUITEM "&Elimină din registru", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "Împ&rospătează",        ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",      ID_RESETDB
 	END
 END
 

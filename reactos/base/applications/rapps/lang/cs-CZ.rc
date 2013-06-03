@@ -15,18 +15,20 @@ BEGIN
 	END
 	POPUP "&Programy"
 	BEGIN
-		MENUITEM "&Instalovat",  ID_INSTALL
-		MENUITEM "&Odinstalovat",ID_UNINSTALL
-		MENUITEM "&Změnit",   ID_MODIFY
+		MENUITEM "&Instalovat",   ID_INSTALL
+		MENUITEM "&Odinstalovat", ID_UNINSTALL
+		MENUITEM "&Změnit",       ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "Odstranit z &registru", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Obnovit",  ID_REFRESH
+		MENUITEM "&Obnovit",      ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",      ID_RESETDB
 	END
 	POPUP "Nápověda"
 	BEGIN
 		MENUITEM "Nápověda",      ID_HELP, GRAYED
-		MENUITEM "O programu...",     ID_ABOUT
+		MENUITEM "O programu...", ID_ABOUT
 	END
 END
 
@@ -34,7 +36,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Otevřít odkaz v prohlížeči", ID_OPEN_LINK
+		MENUITEM "&Otevřít odkaz v prohlížeči",  ID_OPEN_LINK
 		MENUITEM "&Kopírovat odkaz do schránky", ID_COPY_LINK
 	END
 END
@@ -45,11 +47,13 @@ BEGIN
 	BEGIN
 		MENUITEM "&Instalovat",   ID_INSTALL
 		MENUITEM "&Odinstalovat", ID_UNINSTALL
-		MENUITEM "&Změnit",    ID_MODIFY
+		MENUITEM "&Změnit",       ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "Odebrat z &registru", ID_REGREMOVE
+		MENUITEM "Odstranit z &registru", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "&Obnovit",   ID_REFRESH
+		MENUITEM "&Obnovit",      ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",      ID_RESETDB
 	END
 END
 

@@ -14,18 +14,20 @@ BEGIN
 	END
 	POPUP "&Приложения"
 	BEGIN
-		MENUITEM "&Слагане",  ID_INSTALL
-		MENUITEM "&Махане",ID_UNINSTALL
-		MENUITEM "&Промяна",   ID_MODIFY
+		MENUITEM "&Слагане",     ID_INSTALL
+		MENUITEM "&Махане",      ID_UNINSTALL
+		MENUITEM "&Промяна",     ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "О&пресняване",  ID_REFRESH
+		MENUITEM "О&пресняване", ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",         ID_RESETDB
 	END
 	POPUP "Помощ"
 	BEGIN
-		MENUITEM "Помощ",      ID_HELP, GRAYED
-		MENUITEM "За",     ID_ABOUT
+		MENUITEM "Помощ", ID_HELP, GRAYED
+		MENUITEM "За",    ID_ABOUT
 	END
 END
 
@@ -33,7 +35,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Отваряне на връзката в обзорник", ID_OPEN_LINK
+		MENUITEM "&Отваряне на връзката в обзорник",   ID_OPEN_LINK
 		MENUITEM "&Запомняне на връзката в кошницата", ID_COPY_LINK
 	END
 END
@@ -42,13 +44,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Слагане",   ID_INSTALL
-		MENUITEM "&Махане", ID_UNINSTALL
-		MENUITEM "&Промяна",    ID_MODIFY
+		MENUITEM "&Слагане",     ID_INSTALL
+		MENUITEM "&Махане",      ID_UNINSTALL
+		MENUITEM "&Промяна",     ID_MODIFY
 		MENUITEM SEPARATOR
 		MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
 		MENUITEM SEPARATOR
-		MENUITEM "О&пресняване",   ID_REFRESH
+		MENUITEM "О&пресняване", ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",         ID_RESETDB
 	END
 END
 

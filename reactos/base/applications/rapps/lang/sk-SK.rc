@@ -22,6 +22,8 @@ BEGIN
 		MENUITEM "Odst&rániť z Registrov", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Obnoviť",      ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",       ID_RESETDB
 	END
 	POPUP "Pomocník"
 	BEGIN
@@ -50,6 +52,8 @@ BEGIN
 		MENUITEM "Odst&rániť z Registrov", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Obnoviť",      ID_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Update Da&tabase",       ID_RESETDB
 	END
 END
 
