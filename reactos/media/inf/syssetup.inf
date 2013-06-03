@@ -24,7 +24,7 @@ scsi.inf
 unknown.inf
 usbport.inf
 audio.inf
-;ks.inf
+ks.inf
 c_image.inf
 
 [RegistrationPhase2]
