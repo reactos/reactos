@@ -18,7 +18,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Rafraîchir",   ID_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "Update Da&tabase",       ID_RESETDB
+		MENUITEM "Me&ttre à jour la base",       ID_RESETDB
 	END
 	POPUP "Aide"
 	BEGIN
@@ -48,7 +48,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Rafraîchir",   ID_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "Update Da&tabase",       ID_RESETDB
+		MENUITEM "Me&ttre à jour la base",       ID_RESETDB
 	END
 END
 
