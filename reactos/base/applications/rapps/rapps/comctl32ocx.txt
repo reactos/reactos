@@ -23,6 +23,10 @@ Description = X es necesario para varias aplicaciones.
 Licence = Inconnue
 Description = Fichier nécessaire pour certaines applications.
 
+[Section.0410]
+Licence = Sconosciuta
+Description = File necessari per alcune applicazioni. Contiene: Comctl32.ocx, mscomctl.ocx, advpack.dll.
+
 [Section.0413]
 Licence = Ongekend
 Description = Gebruikt door bepaalde applicaties. Bevat: comctl32.ocx, mscomctl.ocx, advpack.dll.

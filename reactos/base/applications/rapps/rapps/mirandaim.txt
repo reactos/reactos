@@ -20,6 +20,9 @@ Description = Aplicación de mensajería instantánea multiprotocolo de código 
 [Section.040c]
 Description = Application de messagerie instantannée multi-protocoles open source - pourrait ne pas fonctionner complètement.
 
+[Section.0410]
+Description = Multi-protocollo open source per applicazioni di messaggistica istantanea - potrebbe non funzionare del tutto.
+
 [Section.0413]
 Description = Open-bron multi-protocol instant message toepassing - werkt mogelijk niet volledig.
 

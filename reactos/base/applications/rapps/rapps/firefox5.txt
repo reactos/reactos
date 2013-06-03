@@ -7,7 +7,7 @@ Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
 Size = 20.3MB
 Category = 5
-URLSite = http://www.mozilla.com/en-US/
+URLSite = http://www.mozilla.org/en-US/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/21.0/win32/en-US/Firefox%20Setup%2021.0.exe
 CDPath = none
 
@@ -28,6 +28,12 @@ Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
 Size = 20,46 Mo
 URLSite = http://www.mozilla-europe.org/fr/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/21.0/win32/fr/Firefox%20Setup%2021.0.exe
+
+[Section.0410]
+Description = Il più popolare e uno dei migliori web browser gratuiti.
+Size = 20.1MB
+URLSite = http://www.mozilla-europe.org/it/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/21.0/win32/it/Firefox%20Setup%2021.0.exe
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis Web browsers.

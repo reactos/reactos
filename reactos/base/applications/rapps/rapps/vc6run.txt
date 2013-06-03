@@ -23,6 +23,10 @@ Description = Librerias Visual Studio 2006.
 Licence = Inconnue
 Description = Bibliothèque Visual Studio 6.
 
+[Section.0410]
+Licence = Sconosciuta
+Description = Visual Studio 6 Runtime. Contiene: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+
 [Section.0413]
 Licence = Ongekend
 Description = Visual Studio 6 Runtime. Bevat: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.

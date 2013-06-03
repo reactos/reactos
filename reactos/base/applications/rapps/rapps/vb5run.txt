@@ -23,6 +23,10 @@ Description = Librerias Visual Basic 5.
 Licence = Inconnue
 Description = Bibliothèque Visual Basic 5.
 
+[Section.0410]
+Licence = Sconosciuta
+Description = Libreria Visual Basic 5.Contiene: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
 [Section.0413]
 Licence = Ongekend
 Description = Visual Basic 5 Runtime. Bevat: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.

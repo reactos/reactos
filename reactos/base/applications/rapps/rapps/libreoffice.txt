@@ -20,6 +20,9 @@ Description = La suite de ofimática de código abierto.
 [Section.040c]
 Description = Précédemment appelé OpenOffice. Suite bureautique open source.
 
+[Section.0410]
+Description = Precedentemente chiamato OpenOffice. Open Source Office Suite.
+
 [Section.0413]
 Description = Voorheen OpenOffice. Open-bron Office pakket.
 

@@ -11,6 +11,13 @@ URLSite = http://http://cnt.lakefolks.com
 URLDownload = http://svn.reactos.org/packages/CNTzip.exe
 CDPath = none
 
+[Section.0407]
+Description = Kostenlose virtuelle Tastatur.
+
+[Section.0410]
+Licence = Gratuita
+Description = Applicazione gratuita per la simulazione della tastiera.
+
 [Section.0415]
 Description = Wirtualna klawiatura ekranowa
 

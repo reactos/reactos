@@ -23,6 +23,10 @@ Description = Complementos adicionales para soportar más formatos.
 Licence = Gratuit (pour un usage personnel)
 Description = Modules additionnels pour supporter plus de types de fichiers.
 
+[Section.0410]
+Licence = Gratuita (per uso personale)
+Description = Plugins addizionale per il supporto di molti tipi di file.
+
 [Section.0413]
 Licence = Freeware (voor persoonlijk gebruik)
 Description = Toegevoegde plugins voor ondersteuning van extra bestandstypes.

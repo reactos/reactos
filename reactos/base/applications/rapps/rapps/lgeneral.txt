@@ -20,6 +20,9 @@ Description = Clon de Panzer General usando las librerias SDL.
 [Section.040c]
 Description = Clone de Pansez General utilisant la bibliothèque SDL.
 
+[Section.0410]
+Description = Clone di Pansez General utilizza librerie SDL.
+
 [Section.0413]
 Description = Panzer General kloon, gebruikt SDL.
 

@@ -21,7 +21,7 @@ Description = Reproductor multimedia.
 Description = Un lecteur media.
 
 [Section.0410]
-Description = Un lettore multimediale.
+Description = Lettore multimediale.
 
 [Section.0413]
 Description = Een mediaspeler.

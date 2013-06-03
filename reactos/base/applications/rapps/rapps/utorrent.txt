@@ -11,7 +11,6 @@ URLSite = http://www.utorrent.com/
 URLDownload = http://download-new.utorrent.com/endpoint/utorrent/os/windows/track/stable/utorrent.exe
 CDPath = none
 
-
 [Section.0407]
 Licence = Freeware für nichtkommerzielle Nutzung
 Description = Kleiner und schneller BitTorrent Client.
@@ -23,6 +22,10 @@ Description = Pequeño y rápido cliente BitTorrent.
 [Section.040c]
 Licence = Gratuit pour une utilisation non-commerciale
 Description = Client BitTorrent petit et rapide.
+
+[Section.040c]
+Licence = Gratita per un uso non-commerciale
+Description = Piccolo e rapido Client BitTorrent.
 
 [Section.0413]
 Licence = Freeware voor niet-commerciëel gebruik
@@ -48,4 +51,3 @@ Description = Маленький і швидкий клієнт BitTorrent.
 [Section.0813]
 Licence = Freeware voor niet-commerciëel gebruik
 Description = Kleine en snelle BitTorrent afnemer.
-

@@ -7,7 +7,7 @@ Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
 Size = 7.16MB
 Category = 5
-URLSite = http://www.mozilla.com/en-US/
+URLSite = http://www.mozilla.org/en-US/
 URLDownload = http://svn.reactos.org/packages/Firefox%20Setup%203.0.19.exe
 CDPath = none
 
@@ -26,6 +26,10 @@ URLSite = http://www.mozilla-europe.org/es/
 [Section.040c]
 Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
 URLSite = http://www.mozilla-europe.org/fr/
+
+[Section.0410]
+Description = Il più popolare e uno dei migliori web browser gratuiti.
+URLSite = http://www.mozilla-europe.org/it/
 
 [Section.0413]
 Description = De meest populaire en een van de beste gratis Web browsers.

@@ -20,6 +20,9 @@ Description = Te permite compilar el código de ReactOS ARM. Para más instrucci
 [Section.040c]
 Description = Vous permet de compiler le code source de ReactOS pour ARM. Pour plus d'instruction, reportez-vous au wiki ReactOS.
 
+[Section.0410]
+Description = Permette di compilare i sorgenti di ReactOS ARM. Per maggiori informazioni consultare il Wiki di ReactOS.
+
 [Section.0413]
 Description = Maakt het mogelijk om de ReactOS ARM broncode te bouwen. Meer instructies vind u op de ReactOS wiki.
 

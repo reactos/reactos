@@ -20,6 +20,9 @@ Description = Una aplicación de búsqueda rápida llena de opciones.
 [Section.040c]
 Description = Une application de recherche rapide et riche en fonctionnalités.
 
+[Section.0410]
+Description = Un applicazione veloce e ricca di funzionalità di ricerca.
+
 [Section.0413]
 Description = Een snelle zoekapplicatie rijk aan mogelijkheden.
 

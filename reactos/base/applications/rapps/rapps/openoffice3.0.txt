@@ -29,6 +29,11 @@ URLSite = http://fr.openoffice.org/
 Size = 120.18MB
 URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/localized/fr/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_fr.exe
 
+[Section.0410]
+URLSite = http://it.openoffice.org/
+Size = 120.0MB
+URLDownload = http://dfn.dl.sourceforge.net/project/openofficeorg.mirror/localized/it/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_it.exe
+
 [Section.0413]
 Description = Open-bron Office Pakket.
 URLSite = http://nl.openoffice.org/

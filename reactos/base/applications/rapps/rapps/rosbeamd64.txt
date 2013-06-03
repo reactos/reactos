@@ -23,6 +23,9 @@ Description = Te permite compilar el código de ReactOS AMD64. Para más instruc
 [Section.040c]
 Description = Vous permet de compiler le code source de ReactOS pour AMD64. Pour plus d'instruction, reportez-vous au wiki ReactOS.
 
+[Section.0410]
+Description = Permette di compilare i sorgenti di ReactOS AMD64. Per maggiori informazioni consultare il Wiki di ReactOS.
+
 [Section.0413]
 Description = Maakt het mogelijk om de ReactOS AMD64 broncode te bouwen. Meer instructies vind u op de ReastOS wiki.
 
@@ -36,5 +39,5 @@ Size = 15,83 Mo
 [Section.0422]
 Description = Дозволяє зібрати ReactOS AMD64 з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.
 
-[Section.0413]
+[Section.0813]
 Description = Maakt het mogelijk om de ReactOS AMD64 broncode te bouwen. Meer instructies vind u op de ReastOS wiki.

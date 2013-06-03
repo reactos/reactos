@@ -19,6 +19,7 @@ Description = Der Original BitTorrent Client.
 Description = L'originale Client BitTorrent
 
 [Section.0415]
+Licence = Freeware dla użytku niekomercyjnego
 Description = Oryginalny klient BitTorrent
 
 [Section.0418]

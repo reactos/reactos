@@ -30,6 +30,10 @@ URLSite = http://fr.openoffice.org/
 Size = 114MB
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/fr/2.4.2/OOo_2.4.2_Win32Intel_install_fr.exe
 
+[Section.0410]
+URLSite = http://it.openoffice.org/
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/it/2.4.2/OOo_2.4.2_Win32Intel_install_it.exe
+
 [Section.0413]
 URLSite = http://nl.openoffice.org/
 Description = Open-bron Office Pakket.

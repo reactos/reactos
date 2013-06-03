@@ -20,6 +20,9 @@ Description = Reproductor de audio simple y ligero.
 [Section.040c]
 Description = Lecteur audio simple et léger.
 
+[Section.0410]
+Description = Un semplice e leggero lettore audio
+
 [Section.0413]
 Description = Eenvoudige en lichte audio speler.
 

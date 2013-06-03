@@ -21,6 +21,9 @@ Description = Interfaz gráfico para Mplayer (reproductor multimedia).
 [Section.040a]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=fr
 
+[Section.0410]
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=it
+
 [Section.0413]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=nl
 Description = Mediaspeler, grafische interface voor MPlayer.

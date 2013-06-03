@@ -20,6 +20,9 @@ Description = Procesador de textos.
 [Section.040c]
 Description = Éditeur de texte.
 
+[Section.0410]
+Description = Editor di testo.
+
 [Section.0413]
 Description = Tekstverwerker.
 

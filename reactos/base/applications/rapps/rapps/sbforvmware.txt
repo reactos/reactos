@@ -30,6 +30,11 @@ Name = Pilote SoundBlaster pour VMWare
 Licence = Inconnue
 Description = Dézippez dans le répertoire "ReactOS" puis redémarrez deux fois.
 
+[Section.0410]
+Name = Driver SoundBlaster per VMWare
+Licence = Sconosciuta
+Description = Unzip nella cartella "ReactOS" e riavviare ReactOS.
+
 [Section.0413]
 Name = SoundBlaster Driver voor VMWare
 Licence = Ongekend

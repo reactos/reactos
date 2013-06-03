@@ -20,6 +20,9 @@ Description = DosBlaster en una extensión Shell que permite abrir cualquier eje
 [Section.040c]
 Description = DosBlaster est une extension Shell qui permet d'ouvrir n'importe quel exécutable DOS dans DOSBox via un click droit. Cette version contient DOSBox 0.70 mais peut être simplement mise à jour en installant une nouvelle version de DOSBox dans les répertoires de DosBlaster.
 
+[Section.0410]
+Description = DosBlaster è un'estensione della shell, consente di aprire qualsiasi file DOS eseguibile in DOSBox tramite un clic del tasto destro. Questa versione contiene DOSBox 0,70, ma può essere aggiornato semplicemente installando una nuova versione di DOSBox nella directory DosBlaster.
+
 [Section.0413]
 Description = DosBlaster is een Shell uitbreiding dat het mogelijk maakt om een DOS executable in DOSBox te openen via een rechterklik. Deze versie bevat DOSBox 0.70, maar kan eenvoudig worden geupdatet door een recentere versie van DOSBox te installeren in de DosBlaster mappen.
 

@@ -20,6 +20,9 @@ Description = Reproductor multimedia.
 [Section.040c]
 Description = Un lecteur media.
 
+[Section.0410]
+Description = Lettore multimediale
+
 [Section.0413]
 Description = Mediaspeler.
 

@@ -26,6 +26,10 @@ Name = Visionneur OLE et Microsoft Foundation Classes version 4
 Licence = Inconnue
 Description = MFC 4 est nécessaire pour certaines applications.
 
+[Section.0410]
+Licence = Sconosciuta
+Description = MFC 4 è necessario per alcune applicazioni.Contiene: mfc40.dll, msvcrt40.dll.
+
 [Section.0413]
 Licence = Ongekend
 Description = MFC 4 is nodig voor bepaalde applicaties. Bevat: mfc40.dll, msvcrt40.dll.

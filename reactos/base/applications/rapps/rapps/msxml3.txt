@@ -13,7 +13,7 @@ CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
-Description = MSXML3 wird von einige MSI Installern benötigt.
+Description = MSXML3 wird von einigen MSI Installern benötigt.
 
 [Section.040a]
 Licence = Desconocida
@@ -22,6 +22,10 @@ Description = MSXML3 para varios instaladores MSI.
 [Section.040c]
 Licence = Inconnue
 Description = MSXML3 est nécessaire pour certains installateurs MSI.
+
+[Section.0410]
+Licence = Sconosciuto
+Description = MSXML3 è necessario per alcuni installatori MSI. Contiene: msxml3.dll, msxml3a.dll, msxml3r.dll.
 
 [Section.0413]
 Licence = Ongekend

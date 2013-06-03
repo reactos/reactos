@@ -20,6 +20,9 @@ Description = Clon de Breakout usando las librerias SDL.
 [Section.040c]
 Description = Clone de casse-brique utilisant la bibliothèque SDL.
 
+[Section.0410]
+Description = Clone di Breakout utilizza librerie SDL.
+
 [Section.0413]
 Description = Breakout kloon, gebruikt SDL.
 
