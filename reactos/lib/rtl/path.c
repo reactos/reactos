@@ -479,18 +479,15 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
     /* Capture input string */
     CapturedDosName = *DosName;
 
-    /* Check for the presence of the NT prefix "\\?\" form */
-    if (RtlPrefixUnicodeString(&RtlpWin32NtRootSlash, &CapturedDosName, FALSE))
+    /* Check for the presence or absence of the NT prefix "\\?\" form */
+    // if (!RtlPrefixUnicodeString(&RtlpWin32NtRootSlash, &CapturedDosName, FALSE))
+    if ((CapturedDosName.Length <= RtlpWin32NtRootSlash.Length) ||
+        (CapturedDosName.Buffer[0] != RtlpWin32NtRootSlash.Buffer[0]) ||
+        (CapturedDosName.Buffer[1] != RtlpWin32NtRootSlash.Buffer[1]) ||
+        (CapturedDosName.Buffer[2] != RtlpWin32NtRootSlash.Buffer[2]) ||
+        (CapturedDosName.Buffer[3] != RtlpWin32NtRootSlash.Buffer[3]))
     {
-        /* NT prefix is contained in the path */
-
-        /* Use the optimized path after acquiring the lock */
-        QuickPath = TRUE;
-        NewBuffer = NULL;
-    }
-    else
-    {
-        /* NT prefix is not contained in the path */
+        /* NT prefix not present */
 
         /* Quick path won't be used */
         QuickPath = FALSE;
@@ -503,6 +500,14 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
         NewBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, MaxLength);
         DPRINT("MaxLength: %lx\n", MaxLength);
         if (!NewBuffer) return STATUS_NO_MEMORY;
+    }
+    else
+    {
+        /* NT prefix present */
+
+        /* Use the optimized path after acquiring the lock */
+        QuickPath = TRUE;
+        NewBuffer = NULL;
     }
 
     /* Lock the PEB and check if the quick path can be used */
