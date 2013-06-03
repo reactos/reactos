@@ -19,6 +19,7 @@ Description = Reproductor multimedia.
 
 [Section.040c]
 Description = Un lecteur media.
+Size = 21,88 Mo
 
 [Section.0410]
 Description = Lettore multimediale.

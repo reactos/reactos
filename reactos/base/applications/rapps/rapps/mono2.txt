@@ -15,10 +15,11 @@ CDPath = none
 Description = Open Source .net Framework.
 
 [Section.040a]
-Description = Versión open-source de .NET Framework
+Description = Versión open-source de .NET Framework.
 
 [Section.040c]
 Description = Framework .net open source.
+Size = 91,93 Mo
 
 [Section.0415]
 Description = Pakiet Mono .net Framework dla Programistów.

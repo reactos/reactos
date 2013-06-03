@@ -19,6 +19,7 @@ Description = La plataforma de juego STEAM usada por muchos juegos actuales.
 
 [Section.040c]
 Description = La plateforme de jeu STEAM utilisée par beaucoup de jeux de nos jours.
+Size = 1,59 Mo
 
 [Section.0410]
 Description = La piattaforma di gioco STEAM usata da molti giochi in questi giorni.

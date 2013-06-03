@@ -19,6 +19,7 @@ Description = ReMood es un port de Doom Legacy. Su fin es proporcionar la clási
 
 [Section.040c]
 Description = ReMood est un portage du source de Doom Legacy. Son but est de fournir l'expérience classique de Legacy avec de nouvelles fonctionnalités et plus de stabilité.
+Size = 1,15 Mo
 
 [Section.0410]
 Description = ReMooD è un porting del codice di Legacy Doom. Esso mira a fornire la classica esperienza Legacy con nuove funzionalità e maggiore stabilità.

@@ -19,6 +19,7 @@ Description = Un ciente SSH, Telnet, rlogin y TCP gratuito.
 
 [Section.040c]
 Description = Un client SSH, Telnet, rlogin et raw TCP gratuit.
+Size = 1,76 Mo
 
 [Section.0410]
 Description = Un client SSH, Telnet, rlogin, and raw TCP gratuito.

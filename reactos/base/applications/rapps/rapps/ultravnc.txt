@@ -19,6 +19,7 @@ Description = Cliente/Servidor VNC de código abierto.
 
 [Section.040c]
 Description = Client/serveur VNC open source.
+Size = 3,27 Mo
 
 [Section.0413]
 Description = Open-bron VNC afnemer/aanbieder.

@@ -22,6 +22,7 @@ Description = Visor para toda clase de archivos de imagen,audio y video.
 [Section.040c]
 Licence = Gratuit (pour un usage personnel)
 Description = Visionneur pour tous les types de fichiers graphiques/audio/vidéo.
+Size = 1,57 Mo
 
 [Section.0410]
 Licence = Gratuita (per uso personale)

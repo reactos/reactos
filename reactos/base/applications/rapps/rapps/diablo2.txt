@@ -19,6 +19,7 @@ Description = Diablo 2 Shareware. zeckensack's glide wrapper es necesario para s
 
 [Section.040c]
 Description = Diablo 2 Shareware. zeckensack's glide wrapper est requis pour le faire tourner.
+Size = 131,9 Mo
 
 [Section.0410]
 Description = Diablo 2 Shareware. zeckensack's glide wrappe è richiesto per avviarlo.

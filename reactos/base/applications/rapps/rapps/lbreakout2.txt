@@ -19,6 +19,7 @@ Description = Clon de Breakout usando las librerias SDL.
 
 [Section.040c]
 Description = Clone de casse-brique utilisant la bibliothèque SDL.
+Size = 3,03 Mo
 
 [Section.0410]
 Description = Clone di Breakout utilizza librerie SDL.

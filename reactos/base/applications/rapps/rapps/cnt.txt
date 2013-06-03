@@ -19,7 +19,7 @@ Licence = Gratuita
 Description = Applicazione gratuita per la simulazione della tastiera.
 
 [Section.0415]
-Description = Wirtualna klawiatura ekranowa
+Description = Wirtualna klawiatura ekranowa.
 
 [Section.0418]
 Licence = Gratuită

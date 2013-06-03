@@ -19,15 +19,13 @@ Description = KDE para Windows.
 
 [Section.040c]
 Description = KDE pour Windows.
+Size = 2,16 Mo
 
 [Section.0410]
 Description = KDE per Windows.
 
 [Section.0413]
 Description = KDE voor Windows.
-
-[Section.0410]
-Description = KDE per Windows.
 
 [Section.0415]
 Description = KDE dla Windows.

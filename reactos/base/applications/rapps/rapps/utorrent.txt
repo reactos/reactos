@@ -22,6 +22,7 @@ Description = Pequeño y rápido cliente BitTorrent.
 [Section.040c]
 Licence = Gratuit pour une utilisation non-commerciale
 Description = Client BitTorrent petit et rapide.
+Size = 1020,58 ko
 
 [Section.040c]
 Licence = Gratita per un uso non-commerciale

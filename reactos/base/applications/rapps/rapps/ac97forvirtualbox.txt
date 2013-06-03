@@ -29,6 +29,7 @@ Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces
 Name = Pilote AC97 pour VirtualBox
 Licence = Inconnue
 Description = Décompresser dans le dossier "ReactOS" puis redémarrer ReactOS deux fois.
+Size = 185,5 ko
 
 [Section.0410]
 Name = Driver AC97 per VirtualBox

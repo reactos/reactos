@@ -19,12 +19,16 @@ Description = Reproductor multimedia.
 
 [Section.040c]
 Description = Un lecteur media.
+Size = 7,08 Mo
 
 [Section.0410]
-Description = Lettore multimediale
+Description = Lettore multimediale.
 
 [Section.0413]
 Description = Mediaspeler.
+
+[Section.0415]
+Description = Odtwarzacz multimediów.
 
 [Section.0418]
 Description = Lector multimedia.
@@ -32,9 +36,6 @@ Size = 7,08 Mo
 
 [Section.0419]
 Description = Мультимедийный проигрыватель.
-
-[Section.0415]
-Description = Odtwarzacz multimediów.
 
 [Section.041b]
 Description = Multimediálny prehrávač.

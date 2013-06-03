@@ -16,11 +16,11 @@ Licence = Freeware für nichtkommerzielle Nutzung
 Description = Der Original BitTorrent Client.
 
 [Section.0410]
-Description = L'originale Client BitTorrent
+Description = L'originale Client BitTorrent.
 
 [Section.0415]
 Licence = Freeware dla użytku niekomercyjnego
-Description = Oryginalny klient BitTorrent
+Description = Oryginalny klient BitTorrent.
 
 [Section.0418]
 Licence = Gratuită pentru uz necomercial

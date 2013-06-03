@@ -15,7 +15,7 @@ CDPath = none
 Description = Total Commander ist ein Dateimanager mit zwei nebeneinander liegenden Panels.
 
 [Section.0410]
-Description = Total Commander è  un file manager con due pannelli affiancati.
+Description = Total Commander è un file manager con due pannelli affiancati.
 
 [Section.0413]
 Description = Total Commander is een bestandsbeheerder met twee panelen zij aan zij.

@@ -19,6 +19,7 @@ Description = Procesador de textos.
 
 [Section.040c]
 Description = Éditeur de texte.
+Size = 9,4 Mo
 
 [Section.0410]
 Description = Editor di testo.

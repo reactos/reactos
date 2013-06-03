@@ -4,7 +4,7 @@
 Name = Microsoft Visual Basic 6.0 Common Controls
 Version = 6.0
 Licence = Unknown
-Description = File needed by some applications. Contains: comctl32.ocx, mscomctl.ocx, advpack.dll. 
+Description = File needed by some applications. Contains: comctl32.ocx, mscomctl.ocx, advpack.dll.
 Size = 913.73kB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=25437D98-51D0-41C1-BB14-64662F5F62FE&displaylang=en
@@ -13,15 +13,16 @@ CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
-Description = Datei wird von einigen Anwendungen benötigt.
+Description = Datei wird von einigen Anwendungen benötigt. Beinhaltet: comctl32.ocx, mscomctl.ocx, advpack.dll.
 
 [Section.040a]
 Licence = Desconocida
-Description = X es necesario para varias aplicaciones.
+Description = X es necesario para varias aplicaciones. Incluye: comctl32.ocx, mscomctl.ocx, advpack.dll.
 
 [Section.040c]
 Licence = Inconnue
-Description = Fichier nécessaire pour certaines applications.
+Description = Fichier nécessaire pour certaines applications. Contient: comctl32.ocx, mscomctl.ocx, advpack.dll.
+Size = 913,73 ko
 
 [Section.0410]
 Licence = Sconosciuta
@@ -33,7 +34,7 @@ Description = Gebruikt door bepaalde applicaties. Bevat: comctl32.ocx, mscomctl.
 
 [Section.0415]
 Licence = Nieznana
-Description = Microsoft Visual Basic 6.0 Common Controls jest używany przez część aplikacji.
+Description = Microsoft Visual Basic 6.0 Common Controls jest używany przez część aplikacji. Zawiera: comctl32.ocx, mscomctl.ocx, advpack.dll.
 
 [Section.0418]
 Licence = Nespecificată
@@ -42,7 +43,7 @@ Size = 913,73 ko
 
 [Section.0422]
 Licence = Невідома
-Description = Файл потрібен декотрим програмам.
+Description = Файл потрібен декотрим програмам. включає: comctl32.ocx, mscomctl.ocx, advpack.dll.
 
 [Section.0813]
 Licence = Ongekend

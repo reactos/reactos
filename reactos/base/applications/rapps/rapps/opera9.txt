@@ -19,6 +19,7 @@ Description = Popular navegador web con muchas características avanzadas e incl
 
 [Section.040c]
 Description = Le populaire navigateur Opera avec beaucoup de fonctionnalités avancées, incluant un client mail et BitTorrent.
+Size = 7,21 Mo
 
 [Section.0410]
 Description = Il famoso browser Opera con features avanzate come un client BitTorrent integrato e la gestione delle Mail.

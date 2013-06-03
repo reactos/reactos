@@ -19,9 +19,10 @@ Description = Un lenguaje de programación dinámico sumamente potente.
 
 [Section.040c]
 Description = Un langage de programmation dynamique remarquablement puissant.
+Size = 15,48 Mo
 
 [Section.0410]
-Description = Un Linguaggio di programmazione dinamico e potente
+Description = Un Linguaggio di programmazione dinamico e potente.
 
 [Section.0413]
 Description = Een opmerkelijk krachtige dynamische programmeertaal.

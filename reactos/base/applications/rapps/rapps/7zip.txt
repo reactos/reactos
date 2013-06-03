@@ -19,15 +19,16 @@ Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos c
 
 [Section.040c]
 Description = Utilitaire pour créer et ouvrir les fichiers 7zip, zip, tar, rar et autres archives.
+Size = 1,03 Mo
 
 [Section.0410]
-Description = Utilità per creare e aprire 7zip, zip, tar, rar e altri file archivio 
-
-[Section.0415]
-Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, i innych plików archiwizacyjnych.
+Description = Utilità per creare e aprire 7zip, zip, tar, rar e altri file archivio.
 
 [Section.0413]
 Description = Gereedschap voor het maken en openen van 7z, zip, tar, rar and andere archiefbestanden.
+
+[Section.0415]
+Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, i innych plików archiwizacyjnych.
 
 [Section.0418]
 Description = Utilitar pentru crearea și deschiderea arhivelor 7zip, zip, tar, rar și altele.

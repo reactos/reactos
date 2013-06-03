@@ -19,6 +19,7 @@ Description = Sam and Max, Day of the Tentacle en ReactOS.
 
 [Section.040c]
 Description = Sam and Max, Day of the Tentacle, etc sur ReactOS.
+Size = 6,28 Mo
 
 [Section.0410]
 Description = Software che riproduce il funzionamento di motori grafici per videogiochi(Sam and Max, Day of the Tentacle, etc) su ReactOS.

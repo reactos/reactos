@@ -19,6 +19,7 @@ Description = glidewrapper es necesario para ejecutar Diablo 2 en ReactOS.
 
 [Section.040c]
 Description = glidewrapper est nécessaire pour faire tourner Diablo 2 dans ReactOS.
+Size = 249,02 ko
 
 [Section.0410]
 Description = glidewrapper è necessario per eseguire Diablo 2 in ReactOS.

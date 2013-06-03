@@ -22,6 +22,7 @@ Description = Complementos adicionales para soportar más formatos.
 [Section.040c]
 Licence = Gratuit (pour un usage personnel)
 Description = Modules additionnels pour supporter plus de types de fichiers.
+Size = 9,85 Mo
 
 [Section.0410]
 Licence = Gratuita (per uso personale)

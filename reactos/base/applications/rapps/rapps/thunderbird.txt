@@ -21,6 +21,7 @@ URLSite = http://www.mozilla-europe.org/es/products/thunderbird/
 
 [Section.040c]
 Description = Le plus populaire et l'un des meilleurs clients mail gratuits disponible.
+Size = 9,06 Mo
 URLSite = http://www.mozilla-europe.org/fr/products/thunderbird/
 
 [Section.0410]
