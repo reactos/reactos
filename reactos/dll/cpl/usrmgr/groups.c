@@ -277,11 +277,7 @@ GroupDelete(HWND hwndDlg)
         return FALSE;
 
     /* Delete the group */
-#if 0
     status = NetLocalGroupDel(NULL, szGroupName);
-#else
-    status = NERR_Success;
-#endif
     if (status != NERR_Success)
     {
         TCHAR szText[256];

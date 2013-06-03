@@ -347,11 +347,7 @@ UserDelete(HWND hwndDlg)
         return FALSE;
 
     /* Delete the user */
-#if 0
     status = NetUserDel(NULL, szUserName);
-#else
-    status = NERR_Success;
-#endif
     if (status != NERR_Success)
     {
         TCHAR szText[256];
