@@ -60,6 +60,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ob/ObType.c
     ntos_ob/ObTypes.c
     ntos_ps/PsNotify.c
+    ntos_se/SeQueryInfoToken.c
     ${COMMON_SOURCE}
 
     kmtest_drv/kmtest_drv.rc)
