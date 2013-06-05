@@ -45,6 +45,17 @@ typedef struct _ENUM_CONTEXT
 
 } ENUM_CONTEXT, *PENUM_CONTEXT;
 
+typedef struct _MEMBER_ENUM_CONTEXT
+{
+    SAM_HANDLE ServerHandle;
+    SAM_HANDLE DomainHandle;
+    SAM_HANDLE AliasHandle;
+
+    PSID *Sids;
+    ULONG Count;
+    ULONG Index;
+} MEMBER_ENUM_CONTEXT, *PMEMBER_ENUM_CONTEXT;
+
 
 static
 NET_API_STATUS
@@ -146,6 +157,66 @@ FreeAliasInfo(PALIAS_GENERAL_INFORMATION AliasInfo)
         SamFreeMemory(AliasInfo->AdminComment.Buffer);
 
     SamFreeMemory(AliasInfo);
+}
+
+
+static
+NET_API_STATUS
+BuildAliasMemberBuffer(PSID MemberSid,
+                       DWORD level,
+                       LPVOID *Buffer)
+{
+    LPVOID LocalBuffer = NULL;
+    PLOCALGROUP_MEMBERS_INFO_0 MembersInfo0;
+    PVOID Ptr;
+    ULONG Size = 0;
+    NET_API_STATUS ApiStatus = NERR_Success;
+
+    switch (level)
+    {
+        case 0:
+            Size = sizeof(LOCALGROUP_MEMBERS_INFO_0) +
+                   RtlLengthSid(MemberSid);
+            break;
+
+        default:
+            ApiStatus = ERROR_INVALID_LEVEL;
+            goto done;
+    }
+
+
+    ApiStatus = NetApiBufferAllocate(Size, &LocalBuffer);
+    if (ApiStatus != NERR_Success)
+        goto done;
+
+    ZeroMemory(LocalBuffer, Size);
+
+    switch (level)
+    {
+        case 0:
+            MembersInfo0 = (PLOCALGROUP_MEMBERS_INFO_0)LocalBuffer;
+
+            Ptr = (PVOID)MembersInfo0++;
+            MembersInfo0->lgrmi0_sid = (PSID)Ptr;
+
+            memcpy(MembersInfo0->lgrmi0_sid,
+                   MemberSid,
+                   RtlLengthSid(MemberSid));
+            break;
+    }
+
+done:
+    if (ApiStatus == NERR_Success)
+    {
+        *Buffer = LocalBuffer;
+    }
+    else
+    {
+        if (LocalBuffer != NULL)
+            NetApiBufferFree(LocalBuffer);
+    }
+
+    return ApiStatus;
 }
 
 
@@ -913,7 +984,9 @@ done:
 /************************************************************
  *                NetLocalGroupGetMembers  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupGetMembers(
+NET_API_STATUS
+WINAPI
+NetLocalGroupGetMembers(
     LPCWSTR servername,
     LPCWSTR localgroupname,
     DWORD level,
@@ -923,44 +996,163 @@ NET_API_STATUS WINAPI NetLocalGroupGetMembers(
     LPDWORD totalentries,
     PDWORD_PTR resumehandle)
 {
-    FIXME("(%s %s %d %p %d, %p %p %p) stub!\n", debugstr_w(servername),
+    UNICODE_STRING ServerName;
+    UNICODE_STRING AliasName;
+    PMEMBER_ENUM_CONTEXT EnumContext = NULL;
+    LPVOID Buffer = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s %d %p %d, %p %p %p) stub!\n", debugstr_w(servername),
           debugstr_w(localgroupname), level, bufptr, prefmaxlen, entriesread,
           totalentries, resumehandle);
 
-    if (level == 3)
+    *entriesread = 0;
+    *totalentries = 0;
+    *bufptr = NULL;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&AliasName, localgroupname);
+
+    if (resumehandle != NULL && *resumehandle != 0)
     {
-        WCHAR userName[MAX_COMPUTERNAME_LENGTH + 1];
-        DWORD userNameLen;
-        DWORD len,needlen;
-        PLOCALGROUP_MEMBERS_INFO_3 ptr;
+        EnumContext = (PMEMBER_ENUM_CONTEXT)*resumehandle;
+    }
+    else
+    {
+        /* Allocate the enumeration context */
+        ApiStatus = NetApiBufferAllocate(sizeof(MEMBER_ENUM_CONTEXT), (PVOID*)&EnumContext);
+        if (ApiStatus != NERR_Success)
+            goto done;
 
-        /* still a stub,  current user is belonging to all groups */
+        /* Connect to the SAM Server */
+        Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                            &EnumContext->ServerHandle,
+                            SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                            NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamConnect failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
 
-        *totalentries = 1;
-        *entriesread = 0;
+        /* Open the Builtin Domain */
+        Status = OpenBuiltinDomain(EnumContext->ServerHandle,
+                                   DOMAIN_LOOKUP,
+                                   &EnumContext->DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
 
-        userNameLen = MAX_COMPUTERNAME_LENGTH + 1;
-        GetUserNameW(userName,&userNameLen);
-        needlen = sizeof(LOCALGROUP_MEMBERS_INFO_3) +
-             (userNameLen+2) * sizeof(WCHAR);
-        if (prefmaxlen != MAX_PREFERRED_LENGTH)
-            len = min(prefmaxlen,needlen);
-        else
-            len = needlen;
+        /* Open the alias account in the builtin domain */
+        ApiStatus = OpenAliasByName(EnumContext->DomainHandle,
+                                    &AliasName,
+                                    ALIAS_LIST_MEMBERS,
+                                    &EnumContext->AliasHandle);
+        if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+        {
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            goto done;
+        }
 
-        NetApiBufferAllocate(len, (LPVOID *) bufptr);
-        if (len < needlen)
-            return ERROR_MORE_DATA;
+        if (EnumContext->AliasHandle == NULL)
+        {
+            if (EnumContext->DomainHandle != NULL)
+                SamCloseHandle(EnumContext->DomainHandle);
 
-        ptr = (PLOCALGROUP_MEMBERS_INFO_3)*bufptr;
-        ptr->lgrmi3_domainandname = (LPWSTR)(*bufptr+sizeof(LOCALGROUP_MEMBERS_INFO_3));
-        lstrcpyW(ptr->lgrmi3_domainandname,userName);
+            /* Open the Acount Domain */
+            Status = OpenAccountDomain(EnumContext->ServerHandle,
+                                       (servername != NULL) ? &ServerName : NULL,
+                                       DOMAIN_LOOKUP,
+                                       &EnumContext->DomainHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
 
-        *entriesread = 1;
+            /* Open the alias account in the account domain */
+            ApiStatus = OpenAliasByName(EnumContext->DomainHandle,
+                                        &AliasName,
+                                        ALIAS_LIST_MEMBERS,
+                                        &EnumContext->AliasHandle);
+            if (ApiStatus != NERR_Success)
+            {
+                ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+                if (ApiStatus == ERROR_NONE_MAPPED)
+                    ApiStatus = NERR_GroupNotFound;
+                goto done;
+            }
+        }
+
+        /* Get the member list */
+        Status = SamGetMembersInAlias(EnumContext->AliasHandle,
+                                      &EnumContext->Sids,
+                                      &EnumContext->Count);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamGetMemberInAlias failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        if (EnumContext->Count == 0)
+        {
+            TRACE("No member found. We're done.\n");
+            ApiStatus = NERR_Success;
+            goto done;
+        }
     }
 
-    return NERR_Success;
+    /* Build the member information buffer */
+    ApiStatus = BuildAliasMemberBuffer(EnumContext->Sids[EnumContext->Index],
+                                       level,
+                                       &Buffer);
+    if (ApiStatus != NERR_Success)
+        goto done;
+
+    EnumContext->Index++;
+    (*entriesread)++;
+
+done:
+    if (ApiStatus == NERR_Success && EnumContext->Index < EnumContext->Count)
+        ApiStatus = ERROR_MORE_DATA;
+
+    if (EnumContext != NULL)
+        *totalentries = EnumContext->Count - EnumContext->Index;
+
+    if (resumehandle == NULL || ApiStatus != ERROR_MORE_DATA)
+    {
+        /* Release the enumeration context */
+        if (EnumContext != NULL)
+        {
+            if (EnumContext->AliasHandle != NULL)
+                SamCloseHandle(EnumContext->AliasHandle);
+
+            if (EnumContext->DomainHandle != NULL)
+                SamCloseHandle(EnumContext->DomainHandle);
+
+            if (EnumContext->ServerHandle != NULL)
+                SamCloseHandle(EnumContext->ServerHandle);
+
+            if (EnumContext->Sids != NULL)
+                SamFreeMemory(EnumContext->Sids);
+
+            NetApiBufferFree(EnumContext);
+            EnumContext = NULL;
+        }
+    }
+
+    return ApiStatus;
 }
+
 
 /************************************************************
  *                NetLocalGroupSetInfo  (NETAPI32.@)
