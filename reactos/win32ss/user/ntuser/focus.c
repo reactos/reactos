@@ -210,7 +210,7 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
       /* FIXME: IntIsWindow */
       co_IntSendMessageNoWait( UserHMGetHandle(Window),
                                WM_NCACTIVATE,
-                              (WPARAM)(Window == gpqForeground->spwndActive),
+                              (WPARAM)(gpqForeground ? (Window == gpqForeground->spwndActive) : FALSE),
                                0); //(LPARAM)hWndPrev);
 
       co_IntSendMessageNoWait( UserHMGetHandle(Window),
