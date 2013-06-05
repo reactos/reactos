@@ -21,6 +21,7 @@ KMT_TESTFUNC Test_ExSingleList;
 KMT_TESTFUNC Test_ExTimer;
 KMT_TESTFUNC Test_FsRtlExpression;
 KMT_TESTFUNC Test_FsRtlMcb;
+KMT_TESTFUNC Test_FsRtlTunnel;
 KMT_TESTFUNC Test_IoDeviceInterface;
 KMT_TESTFUNC Test_IoEvent;
 KMT_TESTFUNC Test_IoInterrupt;
@@ -67,6 +68,7 @@ const KMT_TEST TestList[] =
     { "FsRtlExpression",                    Test_FsRtlExpression },
     /* Skipped on testman. See ROSTESTS-106. */
     { "-FsRtlMcb",                          Test_FsRtlMcb },
+    { "-FsRtlTunnel",                       Test_FsRtlTunnel },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },
     { "IoEvent",                            Test_IoEvent },
     { "IoInterrupt",                        Test_IoInterrupt },
