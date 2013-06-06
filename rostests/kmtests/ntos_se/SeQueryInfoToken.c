@@ -14,7 +14,7 @@
 #include <debug.h>
 
 //------------------------------------------------------------------------------//
-//		Functions required forWorking with ACCESS_STATE structure	//
+//      Functions required forWorking with ACCESS_STATE structure               //
 //------------------------------------------------------------------------------//
 
 NTKERNELAPI NTSTATUS NTAPI SeCreateAccessState(
@@ -29,7 +29,7 @@ NTKERNELAPI VOID NTAPI SeDeleteAccessState(
     );
 
 //------------------------------------------------------------------------------//
-//		Testing Functions 						//
+//      Testing Functions                                                       //
 //------------------------------------------------------------------------------//
 
 // Testing function for SQIT
@@ -47,10 +47,9 @@ void TestsSeQueryInformationToken(PACCESS_TOKEN Token)
     PTOKEN_STATISTICS TStats;
     PTOKEN_TYPE TType;
     PTOKEN_USER TUser;
-    //NTSTATUS ExceptionStatus;
 
     //----------------------------------------------------------------//
-    // Testing SeQueryInformationToken with various args 		  //
+    // Testing SeQueryInformationToken with various args              //
     //----------------------------------------------------------------//
 
     ok(Token != NULL, "Token is not captured. Testing SQIT interrupted\n\n");
@@ -58,92 +57,144 @@ void TestsSeQueryInformationToken(PACCESS_TOKEN Token)
     if (Token == NULL) return;
 
     Status = SeQueryInformationToken(Token, TokenOwner, &Buffer);
-    ok((Status == STATUS_SUCCESS), "SQIT with TokenOwner arg fails with \n");
-    if (Buffer)
+    ok((Status == STATUS_SUCCESS), "SQIT with TokenOwner arg fails with status 0x%X\n", Status);
+    if (Status == STATUS_SUCCESS)
     {
-        Towner = (TOKEN_OWNER *)Buffer;
-        sid = Towner->Owner;
-        ok((RtlValidSid(sid) == TRUE), "TokenOwner's SID is not a valid SID\n");
-        ExFreePool(Buffer);
-    }
+        ok(Buffer != NULL, "Wrong. SQIT call was successful with TokenOwner arg. But Buffer = NULL\n");
 
-    ok((SeQueryInformationToken(Token, TokenDefaultDacl, &Buffer) == STATUS_SUCCESS), "SQIT with TokenDefaultDacl fails\n");
-    if (Buffer) {
-        TDefDacl = (PTOKEN_DEFAULT_DACL)Buffer;
-        acl = TDefDacl->DefaultDacl;
-        ok(((acl->AclRevision == ACL_REVISION || acl->AclRevision == ACL_REVISION_DS) == TRUE), "DACL is invalid\n");
-        ExFreePool(Buffer);
-    }
-
-    ok((SeQueryInformationToken(Token, TokenGroups, &Buffer) == STATUS_SUCCESS), "SQIT with TokenGroups fails\n");
-    if (Buffer)
-    {
-        TGroups = (PTOKEN_GROUPS)Buffer;
-        GroupCount = TGroups->GroupCount;
-        int flag = 1;
-        int i;
-        for (i = 0; i < GroupCount; i++)
+        if (Buffer)
         {
-            sid = TGroups->Groups[i].Sid;
-            if (!RtlValidSid(sid))
-            {
-                flag = 0;
-                break;
-            }
+            Towner = (TOKEN_OWNER *)Buffer;
+            sid = Towner->Owner;
+            ok((RtlValidSid(sid) == TRUE), "TokenOwner's SID is not a valid SID\n");
+            ExFreePool(Buffer);
         }
-        ok((flag == TRUE), "TokenGroup's SIDs are not valid\n");
-        ExFreePool(Buffer);
     }
 
     //----------------------------------------------------------------//
-
-    ok(SeQueryInformationToken(Token, TokenImpersonationLevel, &Buffer), "SQIT with TokenImpersonation fails\n");
-
-    //----------------------------------------------------------------//
-
-    // Call SQIT with TokenStatistics
-
-    ok((SeQueryInformationToken(Token, TokenStatistics, &Buffer) == STATUS_SUCCESS), "SQIT with TokenStatistics fails\n");
-    if (Buffer)
+    
+    Buffer = NULL;
+    Status = SeQueryInformationToken(Token, TokenDefaultDacl, &Buffer);
+    ok(Status == STATUS_SUCCESS, "SQIT with TokenDefaultDacl fails with status 0x%X\n", Status);
+    if (Status == STATUS_SUCCESS)
     {
-        TStats = (PTOKEN_STATISTICS)Buffer;
-        // just put 0 into 1st arg or use trace to print TokenStatistics 
-        ok(1, "print statistics:\nTokenID = %u_%d\nSecurityImperLevel = %d\nPrivCount = %d\nGroupCount = %d\n\n", TStats->TokenId.LowPart, 
-            TStats->TokenId.HighPart, 
-            TStats->ImpersonationLevel,
-            TStats->PrivilegeCount,
-            TStats->GroupCount
-            );
-        ExFreePool(TStats);
+        ok(Buffer != NULL, "Wrong. SQIT call was successful with TokenDefaultDacl arg. But Buffer = NULL\n");
+        if (Buffer)
+        {
+            TDefDacl = (PTOKEN_DEFAULT_DACL)Buffer;
+            acl = TDefDacl->DefaultDacl;
+            ok(((acl->AclRevision == ACL_REVISION || acl->AclRevision == ACL_REVISION_DS) == TRUE), "DACL is invalid\n");
+            ExFreePool(Buffer);
+        }
     }
 
     //----------------------------------------------------------------//
 
-    // Call SQIT with TokenType
-
-    ok((SeQueryInformationToken(Token, TokenType, &Buffer) == STATUS_SUCCESS), "SQIT with TokenType fails\n");
-    if (Buffer)
+    Buffer = NULL;
+    Status = SeQueryInformationToken(Token, TokenGroups, &Buffer);
+    ok(Status == STATUS_SUCCESS, "SQIT with TokenGroups fails with status 0x%X\n", Status);
+    if (Status == STATUS_SUCCESS)
     {
-        TType = (PTOKEN_TYPE)Buffer;
-        ok((*TType == TokenPrimary || *TType == TokenImpersonation), "TokenType in not a primary nor impersonation. FAILED\n");
-        ExFreePool(TType);
+        ok(Buffer != NULL, "Wrong. SQIT call was successful with TokenGroups arg. But Buffer = NULL\n");
+        if (Buffer)
+        {
+            TGroups = (PTOKEN_GROUPS)Buffer;
+            GroupCount = TGroups->GroupCount;
+            int flag = 1;
+            int i;
+            for (i = 0; i < GroupCount; i++)
+            {
+                sid = TGroups->Groups[i].Sid;
+                if (!RtlValidSid(sid))
+                {
+                    flag = 0;
+                    break;
+                }
+            }
+            ok((flag == TRUE), "TokenGroup's SIDs are not valid\n");
+            ExFreePool(Buffer);
+        }
     }
 
     //----------------------------------------------------------------//
 
-    // Call SQIT with TokenUser
+    // Call SQIT with TokenImpersonationLevel argument
+    //
+    // What's up? Why SQIT fails with right arg?
 
-    ok((SeQueryInformationToken(Token, TokenUser, &Buffer) == STATUS_SUCCESS), "SQIT with TokenUser fails\n");
-    if (Buffer)
+    Buffer = NULL;
+    Status = SeQueryInformationToken(Token, TokenImpersonationLevel, &Buffer);
+    ok(Status == STATUS_SUCCESS, "SQIT with TokenImpersonationLevel fails with status 0x%X\n", Status);
+
+    Buffer = NULL;
+    Status = SeQueryInformationToken(Token, TokenImpersonationLevel, &Buffer);
+    ok(Status == STATUS_SUCCESS, "and again: SQIT with TokenImpersonationLevel fails with status 0x%X\n", Status);
+    if (Status == STATUS_SUCCESS)
     {
-        TUser = (PTOKEN_USER)Buffer;
-        ok(RtlValidSid(TUser->User.Sid), "TokenUser has an invalid Sid\n");
-        ExFreePool(TUser);
+        ok(Buffer != NULL, "Wrong. SQIT call was successful with TokenImpersonationLevel arg. But Buffer = NULL\n");
+    } else {
+        ok(Buffer == NULL, "Wrong. SQIT call is't success. But Buffer != NULL\n");
     }
 
     //----------------------------------------------------------------//
 
+    Buffer = NULL;
+    Status = SeQueryInformationToken(Token, TokenStatistics, &Buffer);
+    ok(Status == STATUS_SUCCESS, "SQIT with TokenStatistics fails with status 0x%X\n", Status);
+    if (Status == STATUS_SUCCESS)
+    {
+        ok(Buffer != NULL, "Wrong. SQIT call was successful with TokenStatistics arg. But Buffer = NULL\n");
+        if (Buffer)
+        {
+            TStats = (PTOKEN_STATISTICS)Buffer;
+            // just put 0 into 1st arg or use trace to print TokenStatistics f
+            ok(1, "print statistics:\n\tTokenID = %u_%d\n\tSecurityImperLevel = %d\n\tPrivCount = %d\n\tGroupCount = %d\n\n", TStats->TokenId.LowPart, 
+                TStats->TokenId.HighPart, 
+                TStats->ImpersonationLevel,
+                TStats->PrivilegeCount,
+                TStats->GroupCount
+                );
+            ExFreePool(TStats);
+        }
+    } else {
+        ok(Buffer == NULL, "Wrong. SQIT call is't success. But Buffer != NULL\n");
+    }
 
+    //----------------------------------------------------------------//
+
+    Buffer = NULL;
+    Status = SeQueryInformationToken(Token, TokenType, &Buffer);
+    ok(Status == STATUS_SUCCESS, "SQIT with TokenType fails with status 0x%X\n", Status);
+    if (Status == STATUS_SUCCESS)
+    {
+        ok(Buffer != NULL, "Wrong. SQIT call was successful with TokenType arg. But Buffer = NULL\n");
+        if (Buffer)
+        {
+            TType = (PTOKEN_TYPE)Buffer;
+            ok((*TType == TokenPrimary || *TType == TokenImpersonation), "TokenType in not a primary nor impersonation. FAILED\n");
+            ExFreePool(TType);
+        }
+    }
+
+    //----------------------------------------------------------------//
+
+    Buffer = NULL;
+    Status = SeQueryInformationToken(Token, TokenUser, &Buffer);
+    ok(Status == STATUS_SUCCESS, "SQIT with TokenUser fails\n");
+    if (Status == STATUS_SUCCESS)
+    {
+        ok(Buffer != NULL, "Wrong. SQIT call was successful with TokenUser arg. But Buffer = NULL\n");
+        if (Buffer)
+        {
+            TUser = (PTOKEN_USER)Buffer;
+            ok(RtlValidSid(TUser->User.Sid), "TokenUser has an invalid Sid\n");
+            ExFreePool(TUser);
+        }
+    }
+
+    //----------------------------------------------------------------//
+
+    Buffer = NULL;
     Status = SeQueryInformationToken(Token, TokenSandBoxInert, &Buffer);
     ok(Status != STATUS_SUCCESS, "SQIT must fail with wrong TOKEN_INFORMATION_CLASS arg\n");
 }
@@ -151,7 +202,7 @@ void TestsSeQueryInformationToken(PACCESS_TOKEN Token)
 //------------------------------------------------------------------------------//
 
 //------------------------------------------------------------------------------//
-//		Body of the main test 						//
+//      Body of the main test                                                   //
 //------------------------------------------------------------------------------//
 
 START_TEST(SeQueryInfoToken)
@@ -181,7 +232,7 @@ START_TEST(SeQueryInfoToken)
     TestsSeQueryInformationToken(Token);
 
     //----------------------------------------------------------------//
-    //		Creating an ACCESS_STATE structure 		  //
+    //      Creating an ACCESS_STATE structure                        //
     //----------------------------------------------------------------//
 
     AccessState = ExAllocatePool(PagedPool, sizeof(ACCESS_STATE));
@@ -202,25 +253,26 @@ START_TEST(SeQueryInfoToken)
 
     Token = SeQuerySubjectContextToken(&AccessState->SubjectSecurityContext);
 
-    // Testing SQIT whti AccessState Token
+    // Testing SQIT with AccessState Token
     TestsSeQueryInformationToken(Token);
 
     //----------------------------------------------------------------//
-    //		Testing other functions				  //
+    //      Testing other functions                                   //
     //----------------------------------------------------------------//
 
     //----------------------------------------------------------------//
-    //		Testing SeAppendPrivileges 			  //
+    //      Testing SeAppendPrivileges                                //
     //----------------------------------------------------------------//
 
     AuxData->PrivilegeSet->PrivilegeCount = 1;
 
-    // 	Testing SeAppendPrivileges. Must change PrivilegeCount to 2 (1 + 1)
+    //  Testing SeAppendPrivileges. Must change PrivilegeCount to 2 (1 + 1)
 
     NewPrivilegeSet = ExAllocatePool(PagedPool, sizeof(PRIVILEGE_SET));
     NewPrivilegeSet->PrivilegeCount = 1;
 
-    ok((SeAppendPrivileges(AccessState, NewPrivilegeSet)) == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
+    Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
+    ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
     ok((AuxData->PrivilegeSet->PrivilegeCount == 2),"PrivelegeCount must be 2, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
     ExFreePool(NewPrivilegeSet);
 
@@ -231,12 +283,13 @@ START_TEST(SeQueryInfoToken)
     NewPrivilegeSet = ExAllocatePool(PagedPool, 4*sizeof(PRIVILEGE_SET));
     NewPrivilegeSet->PrivilegeCount = 4;
 
-    ok((SeAppendPrivileges(AccessState, NewPrivilegeSet)) == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
+    Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
+    ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
     ok((AuxData->PrivilegeSet->PrivilegeCount == 6),"PrivelegeCount must be 6, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
     ExFreePool(NewPrivilegeSet);
 
     //----------------------------------------------------------------//
-    //		Testing SePrivilegeCheck 			  //
+    //      Testing SePrivilegeCheck                                  //
     //----------------------------------------------------------------//
 
     // KPROCESSOR_MODE is set to KernelMode ===> Always return TRUE
@@ -252,7 +305,7 @@ START_TEST(SeQueryInfoToken)
     //----------------------------------------------------------------//
 
     //----------------------------------------------------------------//
-    // 		Testing SeFreePrivileges			  //
+    //      Testing SeFreePrivileges                                  //
     //----------------------------------------------------------------//
 
     Privileges = ExAllocatePool(PagedPool, AuxData->PrivilegeSet->PrivilegeCount*sizeof(PRIVILEGE_SET));
@@ -275,34 +328,39 @@ START_TEST(SeQueryInfoToken)
 
 
     //----------------------------------------------------------------//
-    // 		Testing SePrivilegeCheck			  //
+    //      Testing SePrivilegeCheck                                  //
     //----------------------------------------------------------------//
     // I'm trying to make success call of SePrivilegeCheck from UserMode
     // If we sets Privileges properly, can we expect true from SePrivilegeCheck?
     // answer: yes
     // This test demonstrates it
 
-    SeQueryInformationToken(Token, TokenPrivileges, &Buffer);
-    if (Buffer)
+    Buffer = NULL;
+    Status = SeQueryInformationToken(Token, TokenPrivileges, &Buffer);
+    if (Status == STATUS_SUCCESS)
     {
-        TPrivileges = (PTOKEN_PRIVILEGES)(Buffer);
-        //trace("TPCount = %u\n\n", TPrivileges->PrivilegeCount);
-
-        NewPrivilegeSet = ExAllocatePool(PagedPool, 14*sizeof(PRIVILEGE_SET));
-        NewPrivilegeSet->PrivilegeCount = 14;
-
-        ok((SeAppendPrivileges(AccessState, NewPrivilegeSet)) == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-        ok((AuxData->PrivilegeSet->PrivilegeCount == 20),"PrivelegeCount must be 20, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
-        ExFreePool(NewPrivilegeSet);
-        int i;
-        for (i = 0; i < AuxData->PrivilegeSet->PrivilegeCount; i++)
+        ok(Buffer != NULL, "Wrong. SQIT call was successful with TokenPrivileges arg. But Buffer = NULL\n");
+        if (Buffer)
         {
-            AuxData->PrivilegeSet->Privilege[i].Attributes = TPrivileges->Privileges[i].Attributes;
-            AuxData->PrivilegeSet->Privilege[i].Luid = TPrivileges->Privileges[i].Luid;
-        }
-        //trace("AccessState->privCount = %u\n\n", ((PAUX_ACCESS_DATA)(AccessState->AuxData))->PrivilegeSet->PrivilegeCount);
+            TPrivileges = (PTOKEN_PRIVILEGES)(Buffer);
+            //trace("TPCount = %u\n\n", TPrivileges->PrivilegeCount);
 
-        ok(SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck fails in UserMode, but I wish it will success\n");
+            NewPrivilegeSet = ExAllocatePool(PagedPool, 14*sizeof(PRIVILEGE_SET));
+            NewPrivilegeSet->PrivilegeCount = 14;
+
+            ok((SeAppendPrivileges(AccessState, NewPrivilegeSet)) == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
+            ok((AuxData->PrivilegeSet->PrivilegeCount == 20),"PrivelegeCount must be 20, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
+            ExFreePool(NewPrivilegeSet);
+            int i;
+            for (i = 0; i < AuxData->PrivilegeSet->PrivilegeCount; i++)
+            {
+                AuxData->PrivilegeSet->Privilege[i].Attributes = TPrivileges->Privileges[i].Attributes;
+                AuxData->PrivilegeSet->Privilege[i].Luid = TPrivileges->Privileges[i].Luid;
+            }
+            //trace("AccessState->privCount = %u\n\n", ((PAUX_ACCESS_DATA)(AccessState->AuxData))->PrivilegeSet->PrivilegeCount);
+
+            ok(SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck fails in UserMode, but I wish it will success\n");
+        }
     }
 
     // Call SeFreePrivileges again
@@ -326,7 +384,7 @@ START_TEST(SeQueryInfoToken)
     if (Privileges) SeFreePrivileges(Privileges);
 
     //----------------------------------------------------------------//
-    // 		Missing for now 				  //
+    //      Missing for now                                           //
     //----------------------------------------------------------------//
 
     SeUnlockSubjectContext(&AccessState->SubjectSecurityContext);
