@@ -47,6 +47,8 @@ void TestsSeQueryInformationToken(PACCESS_TOKEN Token)
     PTOKEN_STATISTICS TStats;
     PTOKEN_TYPE TType;
     PTOKEN_USER TUser;
+    BOOLEAN Flag;
+    ULONG i;
 
     //----------------------------------------------------------------//
     // Testing SeQueryInformationToken with various args              //
@@ -100,18 +102,17 @@ void TestsSeQueryInformationToken(PACCESS_TOKEN Token)
         {
             TGroups = (PTOKEN_GROUPS)Buffer;
             GroupCount = TGroups->GroupCount;
-            int flag = 1;
-            int i;
+            Flag = TRUE;
             for (i = 0; i < GroupCount; i++)
             {
                 sid = TGroups->Groups[i].Sid;
                 if (!RtlValidSid(sid))
                 {
-                    flag = 0;
+                    Flag = FALSE;
                     break;
                 }
             }
-            ok((flag == TRUE), "TokenGroup's SIDs are not valid\n");
+            ok((Flag == TRUE), "TokenGroup's SIDs are not valid\n");
             ExFreePool(Buffer);
         }
     }
@@ -221,6 +222,7 @@ START_TEST(SeQueryInfoToken)
     PVOID Buffer;
     POBJECT_TYPE PsProcessType = NULL;
     PGENERIC_MAPPING GenericMapping;
+    ULONG i;
 
     SubjectContext = ExAllocatePool(PagedPool, sizeof(SECURITY_SUBJECT_CONTEXT));
 
@@ -351,7 +353,6 @@ START_TEST(SeQueryInfoToken)
             ok((SeAppendPrivileges(AccessState, NewPrivilegeSet)) == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
             ok((AuxData->PrivilegeSet->PrivilegeCount == 20),"PrivelegeCount must be 20, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
             ExFreePool(NewPrivilegeSet);
-            int i;
             for (i = 0; i < AuxData->PrivilegeSet->PrivilegeCount; i++)
             {
                 AuxData->PrivilegeSet->Privilege[i].Attributes = TPrivileges->Privileges[i].Attributes;
