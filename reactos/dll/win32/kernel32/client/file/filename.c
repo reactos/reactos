@@ -233,53 +233,53 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
 BOOL
 WINAPI
 SetFileShortNameW(
-  HANDLE hFile,
-  LPCWSTR lpShortName)
+    HANDLE hFile,
+    LPCWSTR lpShortName)
 {
-  NTSTATUS Status;
-  ULONG NeededSize;
-  UNICODE_STRING ShortName;
-  IO_STATUS_BLOCK IoStatusBlock;
-  PFILE_NAME_INFORMATION FileNameInfo;
+    NTSTATUS Status;
+    ULONG NeededSize;
+    UNICODE_STRING ShortName;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PFILE_NAME_INFORMATION FileNameInfo;
 
-  if(IsConsoleHandle(hFile))
-  {
-    SetLastError(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
+    if(IsConsoleHandle(hFile))
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
-  if(!lpShortName)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    if(!lpShortName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-  RtlInitUnicodeString(&ShortName, lpShortName);
+    RtlInitUnicodeString(&ShortName, lpShortName);
 
-  NeededSize = sizeof(FILE_NAME_INFORMATION) + ShortName.Length + sizeof(WCHAR);
-  if(!(FileNameInfo = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize)))
-  {
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return FALSE;
-  }
+    NeededSize = sizeof(FILE_NAME_INFORMATION) + ShortName.Length + sizeof(WCHAR);
+    if(!(FileNameInfo = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize)))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
-  FileNameInfo->FileNameLength = ShortName.Length;
-  RtlCopyMemory(FileNameInfo->FileName, ShortName.Buffer, ShortName.Length);
+    FileNameInfo->FileNameLength = ShortName.Length;
+    RtlCopyMemory(FileNameInfo->FileName, ShortName.Buffer, ShortName.Length);
 
-  Status = NtSetInformationFile(hFile,
-                                &IoStatusBlock,	 //out
-                                FileNameInfo,
-                                NeededSize,
-                                FileShortNameInformation);
+    Status = NtSetInformationFile(hFile,
+                                  &IoStatusBlock, //out
+                                  FileNameInfo,
+                                  NeededSize,
+                                  FileShortNameInformation);
 
-  RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameInfo);
-  if(!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    return FALSE;
-  }
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameInfo);
+    if(!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -290,27 +290,26 @@ BOOL
 WINAPI
 SetFileShortNameA(
     HANDLE hFile,
-    LPCSTR lpShortName
-    )
+    LPCSTR lpShortName)
 {
-  PWCHAR ShortNameW;
+    PWCHAR ShortNameW;
 
-  if(IsConsoleHandle(hFile))
-  {
-    SetLastError(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
+    if(IsConsoleHandle(hFile))
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
-  if(!lpShortName)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    if(!lpShortName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-  if (!(ShortNameW = FilenameA2W(lpShortName, FALSE)))
-     return FALSE;
+    if (!(ShortNameW = FilenameA2W(lpShortName, FALSE)))
+        return FALSE;
 
-  return SetFileShortNameW(hFile, ShortNameW);
+    return SetFileShortNameW(hFile, ShortNameW);
 }
 
 
