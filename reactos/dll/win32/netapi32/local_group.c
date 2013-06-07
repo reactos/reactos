@@ -50,10 +50,13 @@ typedef struct _MEMBER_ENUM_CONTEXT
     SAM_HANDLE ServerHandle;
     SAM_HANDLE DomainHandle;
     SAM_HANDLE AliasHandle;
+    LSA_HANDLE LsaHandle;
 
     PSID *Sids;
     ULONG Count;
-    ULONG Index;
+    PLSA_REFERENCED_DOMAIN_LIST Domains;
+    PLSA_TRANSLATED_NAME Names;
+
 } MEMBER_ENUM_CONTEXT, *PMEMBER_ENUM_CONTEXT;
 
 
@@ -157,66 +160,6 @@ FreeAliasInfo(PALIAS_GENERAL_INFORMATION AliasInfo)
         SamFreeMemory(AliasInfo->AdminComment.Buffer);
 
     SamFreeMemory(AliasInfo);
-}
-
-
-static
-NET_API_STATUS
-BuildAliasMemberBuffer(PSID MemberSid,
-                       DWORD level,
-                       LPVOID *Buffer)
-{
-    LPVOID LocalBuffer = NULL;
-    PLOCALGROUP_MEMBERS_INFO_0 MembersInfo0;
-    PVOID Ptr;
-    ULONG Size = 0;
-    NET_API_STATUS ApiStatus = NERR_Success;
-
-    switch (level)
-    {
-        case 0:
-            Size = sizeof(LOCALGROUP_MEMBERS_INFO_0) +
-                   RtlLengthSid(MemberSid);
-            break;
-
-        default:
-            ApiStatus = ERROR_INVALID_LEVEL;
-            goto done;
-    }
-
-
-    ApiStatus = NetApiBufferAllocate(Size, &LocalBuffer);
-    if (ApiStatus != NERR_Success)
-        goto done;
-
-    ZeroMemory(LocalBuffer, Size);
-
-    switch (level)
-    {
-        case 0:
-            MembersInfo0 = (PLOCALGROUP_MEMBERS_INFO_0)LocalBuffer;
-
-            Ptr = (PVOID)MembersInfo0++;
-            MembersInfo0->lgrmi0_sid = (PSID)Ptr;
-
-            memcpy(MembersInfo0->lgrmi0_sid,
-                   MemberSid,
-                   RtlLengthSid(MemberSid));
-            break;
-    }
-
-done:
-    if (ApiStatus == NERR_Success)
-    {
-        *Buffer = LocalBuffer;
-    }
-    else
-    {
-        if (LocalBuffer != NULL)
-            NetApiBufferFree(LocalBuffer);
-    }
-
-    return ApiStatus;
 }
 
 
@@ -996,14 +939,21 @@ NetLocalGroupGetMembers(
     LPDWORD totalentries,
     PDWORD_PTR resumehandle)
 {
+    OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING ServerName;
     UNICODE_STRING AliasName;
     PMEMBER_ENUM_CONTEXT EnumContext = NULL;
     LPVOID Buffer = NULL;
+    PLOCALGROUP_MEMBERS_INFO_0 MembersInfo0;
+    PLOCALGROUP_MEMBERS_INFO_1 MembersInfo1;
+    LPWSTR Ptr;
+    ULONG Size = 0;
+    ULONG SidLength;
+    ULONG i;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    TRACE("(%s %s %d %p %d, %p %p %p) stub!\n", debugstr_w(servername),
+    TRACE("(%s %s %d %p %d, %p %p %p)\n", debugstr_w(servername),
           debugstr_w(localgroupname), level, bufptr, prefmaxlen, entriesread,
           totalentries, resumehandle);
 
@@ -1109,30 +1059,135 @@ NetLocalGroupGetMembers(
             ApiStatus = NERR_Success;
             goto done;
         }
+
+
+        if (level != 0)
+        {
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       NULL,
+                                       0,
+                                       0,
+                                       NULL);
+
+            Status = LsaOpenPolicy((servername != NULL) ? &ServerName : NULL,
+                                   (PLSA_OBJECT_ATTRIBUTES)&ObjectAttributes,
+                                   POLICY_EXECUTE,
+                                   &EnumContext->LsaHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            Status = LsaLookupSids(EnumContext->LsaHandle,
+                                   EnumContext->Count,
+                                   EnumContext->Sids,
+                                   &EnumContext->Domains,
+                                   &EnumContext->Names);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+        }
     }
 
-    /* Build the member information buffer */
-    ApiStatus = BuildAliasMemberBuffer(EnumContext->Sids[EnumContext->Index],
-                                       level,
-                                       &Buffer);
+    /* Calculate the required buffer size */
+    for (i = 0; i < EnumContext->Count; i++)
+    {
+        switch (level)
+        {
+            case 0:
+                Size = sizeof(LOCALGROUP_MEMBERS_INFO_0) +
+                       RtlLengthSid(EnumContext->Sids[i]);
+                break;
+
+            case 1:
+                Size = sizeof(LOCALGROUP_MEMBERS_INFO_1) +
+                       RtlLengthSid(EnumContext->Sids[i]) +
+                       EnumContext->Names[i].Name.Length + sizeof(WCHAR);
+                break;
+
+            default:
+                ApiStatus = ERROR_INVALID_LEVEL;
+                goto done;
+        }
+    }
+
+    /* Allocate the member buffer */
+    ApiStatus = NetApiBufferAllocate(Size, &Buffer);
     if (ApiStatus != NERR_Success)
         goto done;
 
-    EnumContext->Index++;
-    (*entriesread)++;
+    ZeroMemory(Buffer, Size);
+
+    /* Fill the member buffer */
+    switch (level)
+    {
+        case 0:
+            MembersInfo0 = (PLOCALGROUP_MEMBERS_INFO_0)Buffer;
+            Ptr = (PVOID)((ULONG_PTR)Buffer + sizeof(LOCALGROUP_MEMBERS_INFO_0) * EnumContext->Count);
+            break;
+
+        case 1:
+            MembersInfo1 = (PLOCALGROUP_MEMBERS_INFO_1)Buffer;
+            Ptr = (PVOID)((ULONG_PTR)Buffer + sizeof(LOCALGROUP_MEMBERS_INFO_1) * EnumContext->Count);
+            break;
+    }
+
+    for (i = 0; i < EnumContext->Count; i++)
+    {
+        switch (level)
+        {
+            case 0:
+                MembersInfo0->lgrmi0_sid = (PSID)Ptr;
+
+                SidLength = RtlLengthSid(EnumContext->Sids[i]);
+                memcpy(MembersInfo0->lgrmi0_sid,
+                       EnumContext->Sids[i],
+                       SidLength);
+                Ptr = (PVOID)((ULONG_PTR)Ptr + SidLength);
+                break;
+
+            case 1:
+                MembersInfo1->lgrmi1_sid = (PSID)Ptr;
+
+                SidLength = RtlLengthSid(EnumContext->Sids[i]);
+                memcpy(MembersInfo1->lgrmi1_sid,
+                       EnumContext->Sids[i],
+                       SidLength);
+
+                Ptr = (PVOID)((ULONG_PTR)Ptr + SidLength);
+
+                MembersInfo1->lgrmi1_sidusage = EnumContext->Names[i].Use;
+
+                TRACE("Name: %S\n", EnumContext->Names[i].Name.Buffer);
+
+                MembersInfo1->lgrmi1_name = (LPWSTR)Ptr;
+
+                memcpy(MembersInfo1->lgrmi1_name,
+                       EnumContext->Names[i].Name.Buffer,
+                       EnumContext->Names[i].Name.Length);
+                break;
+        }
+    }
+
+    *entriesread = EnumContext->Count;
+
+    *bufptr = (LPBYTE)Buffer;
 
 done:
-    if (ApiStatus == NERR_Success && EnumContext->Index < EnumContext->Count)
-        ApiStatus = ERROR_MORE_DATA;
-
     if (EnumContext != NULL)
-        *totalentries = EnumContext->Count - EnumContext->Index;
+        *totalentries = EnumContext->Count;
 
     if (resumehandle == NULL || ApiStatus != ERROR_MORE_DATA)
     {
         /* Release the enumeration context */
         if (EnumContext != NULL)
         {
+            if (EnumContext->LsaHandle != NULL)
+                LsaClose(EnumContext->LsaHandle);
+
             if (EnumContext->AliasHandle != NULL)
                 SamCloseHandle(EnumContext->AliasHandle);
 
@@ -1144,6 +1199,12 @@ done:
 
             if (EnumContext->Sids != NULL)
                 SamFreeMemory(EnumContext->Sids);
+
+            if (EnumContext->Domains != NULL)
+                LsaFreeMemory(EnumContext->Domains);
+
+            if (EnumContext->Names != NULL)
+                LsaFreeMemory(EnumContext->Names);
 
             NetApiBufferFree(EnumContext);
             EnumContext = NULL;
