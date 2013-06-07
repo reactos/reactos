@@ -160,7 +160,7 @@ RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
         {
             /* Check if the character is a path or drive separator */
             c = *End;
-            if (IS_PATH_SEPARATOR(c) || ((c == ':') && (End == PathCopy.Buffer + 1)))
+            if ((c == '\\') || (c == '/') || ((c == ':') && (End == PathCopy.Buffer + 1)))
             {
                 /* Get the next lower case character */
                 End++;
@@ -422,33 +422,30 @@ RtlpWin32NTNameToNtPathName_U(IN PUNICODE_STRING DosPath,
     if (PartName)
     {
         /* Loop from the back until we find a path separator */
-        p = &NewBuffer[DosLength / sizeof (WCHAR)];
-        while (--p > NewBuffer)
-        {
-            /* We found a path separator, move past it */
-            if (*p == OBJ_NAME_PATH_SEPARATOR)
-            {
-                ++p;
-                break;
-            }
-        }
+        p = &NewBuffer[(DosLength - 1) / sizeof (WCHAR)];
+        while (p > NewBuffer) if (*p-- == '\\') break;
 
-        /* Check whether a separator was found and if something remains */
-        if ((p > NewBuffer) && *p)
+        /* Was one found? */
+        if (p > NewBuffer)
         {
-            /* What follows the path separator is the partial name */
-            *PartName = p;
-        }
-        else
-        {
-            /* The path ends with a path separator, no partial name */
-            *PartName = NULL;
+            /* Move past it -- anything left? */
+            p++;
+            if (!*p)
+            {
+                /* The path ends with a path separator, no part name */
+                *PartName = NULL;
+            }
+            else
+            {
+                /* What follows the path separator is the part name */
+                *PartName = p;
+            }
         }
     }
 
     /* Build the final NT path string */
-    NtPath->Buffer = NewBuffer;
     NtPath->Length = (USHORT)DosLength;
+    NtPath->Buffer = NewBuffer;
     NtPath->MaximumLength = (USHORT)DosLength + sizeof(UNICODE_NULL);
     return STATUS_SUCCESS;
 }
@@ -577,6 +574,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
         /* Nothing else is expected */
         default:
             ASSERT(FALSE);
+
     }
 
     /* Now copy the prefix and the buffer */
@@ -594,7 +592,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
     NtName->Length = (USHORT)Length;
     NtName->MaximumLength = (USHORT)MaxLength;
     NewBuffer[LengthChars] = UNICODE_NULL;
-    DPRINT("New buffer: %S\n", NewBuffer);
+    DPRINT("new buffer: %S\n", NewBuffer);
     DPRINT("NT Name: %wZ\n", NtName);
 
     /* Check if a partial name was requested */
@@ -653,7 +651,7 @@ RtlpDosPathNameToRelativeNtPathName_Ustr(IN BOOLEAN HaveRelative,
                     RelativeName->RelativeName.Buffer = (PWSTR)((ULONG_PTR)NewBuffer + PrefixLength + FullPath.Length - PrefixCut * sizeof(WCHAR));
                     RelativeName->RelativeName.Length = (USHORT)(PathLength - FullPath.Length);
                     /* If relative name starts with \, skip it */
-                    if (RelativeName->RelativeName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+                    if (RelativeName->RelativeName.Buffer[0] == L'\\')
                     {
                         RelativeName->RelativeName.Buffer++;
                         RelativeName->RelativeName.Length -= sizeof(WCHAR);
@@ -869,7 +867,7 @@ RtlGetLongestNtPathLength(VOID)
 /*
  * @implemented
  */
-RTL_PATH_TYPE
+ULONG
 NTAPI
 RtlDetermineDosPathNameType_U(IN PCWSTR Path)
 {
@@ -1123,7 +1121,7 @@ RtlSetCurrentDirectory_U(IN PUNICODE_STRING Path)
     FullPath.Length = (USHORT)FullPathLength;
 
     /* If full path isn't \ terminated, do it */
-    if (FullPath.Buffer[CharLength - 1] != OBJ_NAME_PATH_SEPARATOR)
+    if (FullPath.Buffer[CharLength - 1] != L'\\')
     {
         if ((CharLength + 1) * sizeof(WCHAR) > SavedLength)
         {
@@ -1131,7 +1129,7 @@ RtlSetCurrentDirectory_U(IN PUNICODE_STRING Path)
             goto Leave;
         }
 
-        FullPath.Buffer[CharLength] = OBJ_NAME_PATH_SEPARATOR;
+        FullPath.Buffer[CharLength] = L'\\';
         FullPath.Buffer[CharLength + 1] = UNICODE_NULL;
         FullPath.Length += sizeof(WCHAR);
     }
@@ -1502,8 +1500,6 @@ ULONG NTAPI RtlGetFullPathName_U(
 
     if (!name || !*name) return 0;
 
-    RtlZeroMemory(buffer, size);
-
     if (file_part) *file_part = NULL;
 
     /* check for DOS device name */
@@ -1737,9 +1733,9 @@ RtlDosSearchPath_U(IN PCWSTR Path,
         }
 
         /* Add a terminating slash if needed */
-        if ((BufferStart != NewBuffer) && (BufferStart[-1] != OBJ_NAME_PATH_SEPARATOR))
+        if ((BufferStart != NewBuffer) && (BufferStart[-1] != '\\'))
         {
-            *BufferStart++ = OBJ_NAME_PATH_SEPARATOR;
+            *BufferStart++ = '\\';
         }
 
         /* Bail out if we reached the end */
@@ -2055,7 +2051,6 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
     /* Initialize optional arguments */
     if (FullNameOut) *FullNameOut = NULL;
     if (FilePartSize) *FilePartSize = 0;
-    if (LengthNeeded) *LengthNeeded = 0;
     if (DynamicString)
     {
         DynamicString->Length = DynamicString->MaximumLength = 0;
@@ -2327,7 +2322,7 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
                              &StaticCandidateString,
                              Status);
                 }
-                DPRINT("Status: %lx BUFFER: %S\n", Status, CallerBuffer->Buffer);
+                DPRINT("STatus: %lx BUFFER: %S\n", Status, CallerBuffer->Buffer);
                 goto Quickie;
             }
             else

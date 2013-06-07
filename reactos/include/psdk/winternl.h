@@ -861,18 +861,18 @@ typedef struct _TIMER_BASIC_INFORMATION
 } TIMER_BASIC_INFORMATION, *PTIMER_BASIC_INFORMATION;
 
 
-/* Return type of RtlDetermineDosPathNameType_U */
-typedef enum _RTL_PATH_TYPE
+/* return type of RtlDetermineDosPathNameType_U (FIXME: not the correct names) */
+typedef enum
 {
-    RtlPathTypeUnknown,
-    RtlPathTypeUncAbsolute,
-    RtlPathTypeDriveAbsolute,
-    RtlPathTypeDriveRelative,
-    RtlPathTypeRooted,
-    RtlPathTypeRelative,
-    RtlPathTypeLocalDevice,
-    RtlPathTypeRootLocalDevice,
-} RTL_PATH_TYPE;
+    INVALID_PATH = 0,
+    UNC_PATH,              /* "//foo" */
+    ABSOLUTE_DRIVE_PATH,   /* "c:/foo" */
+    RELATIVE_DRIVE_PATH,   /* "c:foo" */
+    ABSOLUTE_PATH,         /* "/foo" */
+    RELATIVE_PATH,         /* "foo" */
+    DEVICE_PATH,           /* "//./foo" */
+    UNC_DOT_PATH           /* "//." */
+} DOS_PATHNAME_TYPE;
 
 /***********************************************************************
  * IA64 specific types and data structures
@@ -2130,7 +2130,7 @@ NTSTATUS  WINAPI RtlDestroyHandleTable(RTL_HANDLE_TABLE *);
 HANDLE    WINAPI RtlDestroyHeap(HANDLE);
 void      WINAPI RtlDestroyProcessParameters(RTL_USER_PROCESS_PARAMETERS*);
 NTSTATUS  WINAPI RtlDestroyQueryDebugBuffer(PDEBUG_BUFFER);
-RTL_PATH_TYPE WINAPI RtlDetermineDosPathNameType_U(PCWSTR);
+DOS_PATHNAME_TYPE WINAPI RtlDetermineDosPathNameType_U(PCWSTR);
 BOOLEAN   WINAPI RtlDoesFileExists_U(LPCWSTR);
 BOOLEAN   WINAPI RtlDosPathNameToNtPathName_U(PCWSTR,PUNICODE_STRING,PCWSTR*,CURDIR*);
 ULONG     WINAPI RtlDosSearchPath_U(LPCWSTR, LPCWSTR, LPCWSTR, ULONG, LPWSTR, LPWSTR*);

@@ -2617,7 +2617,7 @@ RtlDoesFileExists_U(
 );
 
 NTSYSAPI
-RTL_PATH_TYPE
+ULONG
 NTAPI
 RtlDetermineDosPathNameType_U(
     _In_ PCWSTR Path
