@@ -867,7 +867,7 @@ RtlGetLongestNtPathLength(VOID)
 /*
  * @implemented
  */
-ULONG
+RTL_PATH_TYPE
 NTAPI
 RtlDetermineDosPathNameType_U(IN PCWSTR Path)
 {

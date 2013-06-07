@@ -762,7 +762,7 @@ static BOOL PROFILE_Open( LPCWSTR filename, BOOL write_access )
     if (!filename)
 	filename = wininiW;
 
-    if ((RtlDetermineDosPathNameType_U(filename) == RELATIVE_PATH) &&
+    if ((RtlDetermineDosPathNameType_U(filename) == RtlPathTypeRelative) &&
         !strchrW(filename, '\\') && !strchrW(filename, '/'))
     {
         static const WCHAR wszSeparator[] = {'\\', 0};
