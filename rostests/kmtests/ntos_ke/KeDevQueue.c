@@ -75,6 +75,7 @@ void Tests_Insert_And_Delete()
     PKDEVICE_QUEUE_ENTRY element;
     KIRQL OldIrql;
     PKDEVICE_QUEUE_ENTRY* elem_array;
+    PKDEVICE_QUEUE_ENTRY return_value;
     PLIST_ENTRY next;
     ULONG key;
 
@@ -125,8 +126,6 @@ void Tests_Insert_And_Delete()
     /* Test deletion */
     trace("******* Testing KeRemoveDeviceQueue **************** \n");
     DPRINT1("\nStart KeRemoveDeviceQueue test\n");
-
-    PKDEVICE_QUEUE_ENTRY return_value;
 
     DPRINT1("Start deleting elements from queue\n");
     for (i = 0; i < INSERT_COUNT; i++) {
