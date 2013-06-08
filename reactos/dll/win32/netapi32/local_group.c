@@ -374,29 +374,159 @@ done:
 /************************************************************
  *                NetLocalGroupAddMember  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupAddMember(
+NET_API_STATUS
+WINAPI
+NetLocalGroupAddMember(
     LPCWSTR servername,
     LPCWSTR groupname,
     PSID membersid)
 {
-    FIXME("(%s %s %p) stub!\n", debugstr_w(servername),
+    LOCALGROUP_MEMBERS_INFO_0 Member;
+
+    TRACE("(%s %s %p)\n", debugstr_w(servername),
           debugstr_w(groupname), membersid);
-    return NERR_Success;
+
+    Member.lgrmi0_sid = membersid;
+
+    return NetLocalGroupAddMembers(servername,
+                                   groupname,
+                                   0,
+                                   (LPBYTE)&Member,
+                                   1);
 }
+
 
 /************************************************************
  *                NetLocalGroupAddMembers  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupAddMembers(
+NET_API_STATUS
+WINAPI
+NetLocalGroupAddMembers(
     LPCWSTR servername,
     LPCWSTR groupname,
     DWORD level,
     LPBYTE buf,
     DWORD totalentries)
 {
-    FIXME("(%s %s %d %p %d) stub!\n", debugstr_w(servername),
+    UNICODE_STRING ServerName;
+    UNICODE_STRING AliasName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE AliasHandle = NULL;
+    PLOCALGROUP_MEMBERS_INFO_0 MemberList = NULL;
+    ULONG i;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s %d %p %d)\n", debugstr_w(servername),
           debugstr_w(groupname), level, buf, totalentries);
-    return NERR_Success;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&AliasName, groupname);
+
+    switch (level)
+    {
+        case 0:
+            MemberList = (PLOCALGROUP_MEMBERS_INFO_0)buf;
+            break;
+
+        case 3:
+        default:
+            ApiStatus = ERROR_INVALID_LEVEL;
+            goto done;
+    }
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the alias account in the builtin domain */
+    ApiStatus = OpenAliasByName(DomainHandle,
+                                &AliasName,
+                                ALIAS_ADD_MEMBER,
+                                &AliasHandle);
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+    {
+        ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+        goto done;
+    }
+
+    if (AliasHandle == NULL)
+    {
+        if (DomainHandle != NULL)
+            SamCloseHandle(DomainHandle);
+
+        /* Open the Acount Domain */
+        Status = OpenAccountDomain(ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the alias account in the account domain */
+        ApiStatus = OpenAliasByName(DomainHandle,
+                                    &AliasName,
+                                    ALIAS_ADD_MEMBER,
+                                    &AliasHandle);
+        if (ApiStatus != NERR_Success)
+        {
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
+            goto done;
+        }
+    }
+
+    /* Add new members to the alias */
+    for (i = 0; i < totalentries; i++)
+    {
+        Status = SamAddMemberToAlias(AliasHandle,
+                                     MemberList[i].lgrmi0_sid);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamAddMemberToAlias failed (Status %lu)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+    }
+
+done:
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
 
 
