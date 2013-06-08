@@ -44,6 +44,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_io/IoIrp.c
     ntos_io/IoMdl.c
     ntos_ke/KeApc.c
+    ntos_ke/KeDevQueue.c
     ntos_ke/KeDpc.c
     ntos_ke/KeEvent.c
     ntos_ke/KeGuardedMutex.c
