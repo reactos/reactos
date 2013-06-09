@@ -49,46 +49,6 @@ typedef struct _ENUM_CONTEXT
 } ENUM_CONTEXT, *PENUM_CONTEXT;
 
 
-static PSID
-CreateSidFromSidAndRid(PSID SrcSid,
-                       ULONG RelativeId)
-{
-    UCHAR RidCount;
-    PSID DstSid;
-    ULONG i;
-    ULONG DstSidSize;
-    PULONG p, q;
-
-    RidCount = *RtlSubAuthorityCountSid(SrcSid);
-    if (RidCount >= 8)
-        return NULL;
-
-    DstSidSize = RtlLengthRequiredSid(RidCount + 1);
-
-    DstSid = RtlAllocateHeap(RtlGetProcessHeap(),
-                             0,
-                             DstSidSize);
-    if (DstSid == NULL)
-        return NULL;
-
-    RtlInitializeSid(DstSid,
-                     RtlIdentifierAuthoritySid(SrcSid),
-                     RidCount + 1);
-
-    for (i = 0; i < (ULONG)RidCount; i++)
-    {
-        p = RtlSubAuthoritySid(SrcSid, i);
-        q = RtlSubAuthoritySid(DstSid, i);
-        *q = *p;
-    }
-
-    q = RtlSubAuthoritySid(DstSid, (ULONG)RidCount);
-    *q = RelativeId;
-
-    return DstSid;
-}
-
-
 static
 ULONG
 GetAccountFlags(ULONG AccountControl)
@@ -1728,12 +1688,12 @@ NetUserGetLocalGroups(LPCWSTR servername,
     }
 
     /* Build the User SID from the Account Domain SID and the users RID */
-    UserSid = CreateSidFromSidAndRid(AccountDomainSid,
-                                     RelativeIds[0]);
-    if (UserSid == NULL)
+    ApiStatus = BuildSidFromSidAndRid(AccountDomainSid,
+                                      RelativeIds[0],
+                                      &UserSid);
+    if (ApiStatus != NERR_Success)
     {
-        ERR("CreateSidFromSidAndRid failed!\n");
-        ApiStatus = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("BuildSidFromSidAndRid failed!\n");
         goto done;
     }
 
@@ -1881,7 +1841,7 @@ done:
         SamFreeMemory(Use);
 
     if (UserSid != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, UserSid);
+        NetApiBufferFree(UserSid);
 
     if (AccountDomainSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);

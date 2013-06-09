@@ -218,6 +218,115 @@ done:
 }
 
 
+static
+NET_API_STATUS
+BuildSidListFromDomainAndName(IN PUNICODE_STRING ServerName,
+                              IN PLOCALGROUP_MEMBERS_INFO_3 buf,
+                              IN ULONG EntryCount,
+                              OUT PLOCALGROUP_MEMBERS_INFO_0 *MemberList)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE LsaHandle = NULL;
+    PUNICODE_STRING NamesArray = NULL;
+    ULONG i;
+    PLSA_REFERENCED_DOMAIN_LIST Domains = NULL;
+    PLSA_TRANSLATED_SID Sids = NULL;
+    PLOCALGROUP_MEMBERS_INFO_0 MemberBuffer = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    ApiStatus = NetApiBufferAllocate(sizeof(UNICODE_STRING) * EntryCount,
+                                     (LPVOID*)&NamesArray);
+    if (ApiStatus != NERR_Success)
+    {
+        goto done;
+    }
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        RtlInitUnicodeString(&NamesArray[i],
+                             buf[i].lgrmi3_domainandname);
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               0,
+                               0,
+                               NULL);
+
+    Status = LsaOpenPolicy(ServerName,
+                           (PLSA_OBJECT_ATTRIBUTES)&ObjectAttributes,
+                           POLICY_EXECUTE,
+                           &LsaHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    Status = LsaLookupNames(LsaHandle,
+                            EntryCount,
+                            NamesArray,
+                            &Domains,
+                            &Sids);
+    if (!NT_SUCCESS(Status))
+    {
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    ApiStatus = NetApiBufferAllocate(sizeof(LOCALGROUP_MEMBERS_INFO_0) * EntryCount,
+                                     (LPVOID*)&MemberBuffer);
+    if (ApiStatus != NERR_Success)
+    {
+        goto done;
+    }
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        ApiStatus = BuildSidFromSidAndRid(Domains->Domains[Sids[i].DomainIndex].Sid,
+                                          Sids[i].RelativeId,
+                                          &MemberBuffer[i].lgrmi0_sid);
+        if (ApiStatus != NERR_Success)
+        {
+            goto done;
+        }
+    }
+
+done:
+    if (ApiStatus != NERR_Success)
+    {
+        if (MemberBuffer != NULL)
+        {
+            for (i = 0; i < EntryCount; i++)
+            {
+                if (MemberBuffer[i].lgrmi0_sid != NULL)
+                    NetApiBufferFree(MemberBuffer[i].lgrmi0_sid);
+            }
+
+            NetApiBufferFree(MemberBuffer);
+            MemberBuffer = NULL;
+        }
+    }
+
+    if (Sids != NULL)
+        LsaFreeMemory(Sids);
+
+    if (Domains != NULL)
+        LsaFreeMemory(Domains);
+
+    if (LsaHandle != NULL)
+        LsaClose(LsaHandle);
+
+    if (NamesArray != NULL)
+        NetApiBufferFree(NamesArray);
+
+    *MemberList = MemberBuffer;
+
+    return ApiStatus;
+}
+
+
 /************************************************************
  * NetLocalGroupAdd  (NETAPI32.@)
  */
@@ -433,6 +542,18 @@ NetLocalGroupAddMembers(
             break;
 
         case 3:
+            Status = BuildSidListFromDomainAndName((servername != NULL) ? &ServerName : NULL,
+                                                   (PLOCALGROUP_MEMBERS_INFO_3)buf,
+                                                   totalentries,
+                                                   &MemberList);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("BuildSidListFromDomainAndName failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
         default:
             ApiStatus = ERROR_INVALID_LEVEL;
             goto done;
@@ -517,6 +638,17 @@ NetLocalGroupAddMembers(
     }
 
 done:
+    if (level == 3 && MemberList != NULL)
+    {
+        for (i = 0; i < totalentries; i++)
+        {
+            if (MemberList[i].lgrmi0_sid != NULL)
+                NetApiBufferFree(MemberList[i].lgrmi0_sid);
+        }
+
+        NetApiBufferFree(MemberList);
+    }
+
     if (AliasHandle != NULL)
         SamCloseHandle(AliasHandle);
 
@@ -707,6 +839,18 @@ NetLocalGroupDelMembers(
             break;
 
         case 3:
+            Status = BuildSidListFromDomainAndName((servername != NULL) ? &ServerName : NULL,
+                                                   (PLOCALGROUP_MEMBERS_INFO_3)buf,
+                                                   totalentries,
+                                                   &MemberList);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("BuildSidListFromDomainAndName failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
         default:
             ApiStatus = ERROR_INVALID_LEVEL;
             goto done;
@@ -791,6 +935,17 @@ NetLocalGroupDelMembers(
     }
 
 done:
+    if (level == 3 && MemberList != NULL)
+    {
+        for (i = 0; i < totalentries; i++)
+        {
+            if (MemberList[i].lgrmi0_sid != NULL)
+                NetApiBufferFree(MemberList[i].lgrmi0_sid);
+        }
+
+        NetApiBufferFree(MemberList);
+    }
+
     if (AliasHandle != NULL)
         SamCloseHandle(AliasHandle);
 

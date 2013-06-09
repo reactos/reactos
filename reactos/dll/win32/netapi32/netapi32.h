@@ -52,4 +52,9 @@ OpenBuiltinDomain(IN SAM_HANDLE ServerHandle,
                   IN ULONG DesiredAccess,
                   OUT SAM_HANDLE *DomainHandle);
 
+NET_API_STATUS
+BuildSidFromSidAndRid(IN PSID SrcSid,
+                      IN ULONG RelativeId,
+                      OUT PSID *DestSid);
+
 #endif
