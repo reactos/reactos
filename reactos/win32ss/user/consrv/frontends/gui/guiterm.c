@@ -250,8 +250,8 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
             LPWSTR WindowTitle = NULL;
             SIZE_T Length = 0;
 
-            Console->dwSelectionCursor.X = 0;
-            Console->dwSelectionCursor.Y = 0;
+            Console->dwSelectionCursor.X = ActiveBuffer->ViewOrigin.X;
+            Console->dwSelectionCursor.Y = ActiveBuffer->ViewOrigin.Y;
             Console->Selection.dwSelectionAnchor = Console->dwSelectionCursor;
             Console->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS;
             GuiConsoleUpdateSelection(Console, &Console->Selection.dwSelectionAnchor);
@@ -716,28 +716,67 @@ Quit:
     return;
 }
 
+static BOOL
+IsSystemKey(WORD VirtualKeyCode)
+{
+    switch (VirtualKeyCode)
+    {
+        /* From MSDN, "Virtual-Key Codes" */
+        case VK_RETURN:
+        case VK_SHIFT:
+        case VK_CONTROL:
+        case VK_MENU:
+        case VK_PAUSE:
+        case VK_CAPITAL:
+        case VK_ESCAPE:
+        case VK_LWIN:
+        case VK_RWIN:
+        case VK_NUMLOCK:
+        case VK_SCROLL:
+            return TRUE;
+        default:
+            return FALSE;
+    }
+}
+
 static VOID
 GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     PCONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
     MSG Message;
+    WORD VirtualKeyCode = LOWORD(wParam);
 
     if (!ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
     ActiveBuffer = Console->ActiveBuffer;
 
-    if ( (Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) &&
-        ((Console->Selection.dwFlags & CONSOLE_MOUSE_SELECTION) == 0) )
+    if (Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS)
     {
-        BOOL Interpreted = FALSE;
+        if (msg != WM_KEYDOWN) goto Quit;
 
-        /* Selection with keyboard */
-        if (msg == WM_KEYDOWN)
+        if (VirtualKeyCode == VK_RETURN)
         {
-            BOOL MajPressed = (GetKeyState(VK_SHIFT) & 0x8000);
+            /* Copy (and clear) selection if ENTER is pressed */
+            GuiConsoleCopy(GuiData);
+            goto Quit;
+        }
+        else if ( VirtualKeyCode == VK_ESCAPE ||
+                 (VirtualKeyCode == 'C' && GetKeyState(VK_CONTROL) & 0x8000) )
+        {
+            /* Cancel selection if ESC or Ctrl-C are pressed */
+            GuiConsoleUpdateSelection(Console, NULL);
+            SetWindowText(GuiData->hWindow, Console->Title.Buffer);
+            goto Quit;
+        }
 
-            switch (wParam)
+        if ((Console->Selection.dwFlags & CONSOLE_MOUSE_SELECTION) == 0)
+        {
+            /* Selection mode with keyboard */
+            BOOL Interpreted = FALSE;
+            BOOL MajPressed  = (GetKeyState(VK_SHIFT) & 0x8000);
+
+            switch (VirtualKeyCode)
             {
                 case VK_LEFT:
                 {
@@ -821,25 +860,34 @@ GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM l
 
                 GuiConsoleUpdateSelection(Console, &Console->dwSelectionCursor);
             }
+            else if (!IsSystemKey(VirtualKeyCode))
+            {
+                /* Emit an error beep sound */
+                SendNotifyMessage(GuiData->hWindow, PM_CONSOLE_BEEP, 0, 0);
+            }
+        }
+        else
+        {
+            /* Selection mode with mouse, clear the selection if needed */
+            if (!IsSystemKey(VirtualKeyCode))
+            {
+                GuiConsoleUpdateSelection(Console, NULL);
+                SetWindowText(GuiData->hWindow, Console->Title.Buffer);
+            }
         }
     }
-    else
+
+    if ((Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) == 0)
     {
         Message.hwnd = GuiData->hWindow;
         Message.message = msg;
         Message.wParam = wParam;
         Message.lParam = lParam;
 
-        if (msg == WM_KEYDOWN)
-        {
-            /* If we are in selection mode (with mouse), clear the selection */
-            GuiConsoleUpdateSelection(Console, NULL);
-            SetWindowText(GuiData->hWindow, Console->Title.Buffer);
-        }
-
         ConioProcessKey(Console, &Message);
     }
 
+Quit:
     LeaveCriticalSection(&Console->Lock);
 }
 
@@ -1105,10 +1153,6 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
                 else
                 {
                     GuiConsoleCopy(GuiData);
-
-                    /* Clear the selection */
-                    GuiConsoleUpdateSelection(Console, NULL);
-                    SetWindowText(GuiData->hWindow, Console->Title.Buffer);
                 }
 
                 GuiData->IgnoreNextMouseSignal = TRUE;
@@ -1129,7 +1173,7 @@ GuiConsoleHandleMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM
             }
 
             default:
-                Err = TRUE;
+                Err = FALSE; // TRUE;
                 break;
         }
     }
@@ -1287,6 +1331,10 @@ GuiConsoleCopy(PGUI_CONSOLE_DATA GuiData)
         }
 
         CloseClipboard();
+
+        /* Clear the selection */
+        GuiConsoleUpdateSelection(Console, NULL);
+        SetWindowText(GuiData->hWindow, Console->Title.Buffer);
     }
 }
 
@@ -1628,9 +1676,12 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_KEYDOWN:
         case WM_KEYUP:
+        case WM_CHAR:
+        case WM_DEADCHAR:
         case WM_SYSKEYDOWN:
         case WM_SYSKEYUP:
-        case WM_CHAR:
+        case WM_SYSCHAR:
+        case WM_SYSDEADCHAR:
         {
             /* Detect Alt-Enter presses and switch back and forth to fullscreen mode */
             if (msg == WM_SYSKEYDOWN && (HIWORD(lParam) & KF_ALTDOWN) && wParam == VK_RETURN)

@@ -38,6 +38,12 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer)
 
     PCONSOLE Console = Buffer->Header.Console;
 
+    /*
+     * Pressing the Shift key while copying text, allows us to copy
+     * text without newline characters (inline-text copy mode).
+     */
+    BOOL InlineCopyMode = (GetKeyState(VK_SHIFT) & 0x8000);
+
     HANDLE hData;
     PBYTE ptr;
     LPWSTR data, dstPos;
@@ -52,13 +58,18 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer)
            Console->Selection.srSelection.Right,
            Console->Selection.srSelection.Bottom);
 
-    /* Basic size for one line and termination */
-    size = selWidth + 1;
+    /* Basic size for one line... */
+    size = selWidth;
+    /* ... and for the other lines, add newline characters if needed. */
     if (selHeight > 0)
     {
-        /* Multiple line selections have to get \r\n appended */
-        size += ((selWidth + 2) * (selHeight - 1));
+        /*
+         * If we are not in inline-text copy mode, each selected line must
+         * finish with \r\n . Otherwise, the lines will be just concatenated.
+         */
+        size += (selWidth + (!InlineCopyMode ? 2 : 0)) * (selHeight - 1);
     }
+    size += 1; /* Null-termination */
     size *= sizeof(WCHAR);
 
     /* Allocate memory, it will be passed to the system and may not be freed here */
@@ -82,10 +93,15 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer)
             ConsoleAnsiCharToUnicodeChar(Console, &dstPos[xPos], (LPCSTR)&ptr[xPos * 2]);
         }
         dstPos += selWidth;
-        if (yPos != (selHeight - 1))
+
+        /* Add newline characters if we are not in inline-text copy mode */
+        if (!InlineCopyMode)
         {
-            wcscat(data, L"\r\n");
-            dstPos += 2;
+            if (yPos != (selHeight - 1))
+            {
+                wcscat(data, L"\r\n");
+                dstPos += 2;
+            }
         }
     }
 
