@@ -35,6 +35,10 @@ Author:
 #include <obtypes.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // GCC compatibility
 //
@@ -1462,5 +1466,10 @@ typedef struct _SYSTEM_MEMORY_LIST_INFORMATION
    SIZE_T ModifiedPageCountPageFile;
 } SYSTEM_MEMORY_LIST_INFORMATION, *PSYSTEM_MEMORY_LIST_INFORMATION;
 
+#endif // !NTOS_MODE_USER
+
+#ifdef __cplusplus
+}; // extern "C"
 #endif
-#endif
+
+#endif // !_EXTYPES_H

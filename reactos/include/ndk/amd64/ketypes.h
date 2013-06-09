@@ -125,6 +125,16 @@ Author:
 #define MSR_GS_SWAP         0xC0000102
 
 //
+// Caching values for the PAT MSR
+//
+#define PAT_UC                  0ULL
+#define PAT_WC                  1ULL
+#define PAT_WT                  4ULL
+#define PAT_WP                  5ULL
+#define PAT_WB                  6ULL
+#define PAT_UCM                 7ULL
+
+//
 // Flags in MSR_EFER
 //
 #define MSR_LMA                 0x0400
@@ -187,6 +197,11 @@ Author:
 #define SYNCH_LEVEL 12
 
 #define NMI_STACK_SIZE 0x2000
+
+//
+// Number of pool lookaside lists per pool in the PRCB
+//
+#define NUMBER_POOL_LOOKASIDE_LISTS 32
 
 //
 // Trap Frame Definition
@@ -527,8 +542,8 @@ typedef struct _KPRCB
 #endif
     KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock]; // 2003: 33, vista:49
     PP_LOOKASIDE_LIST PPLookasideList[16];
-    GENERAL_LOOKASIDE_POOL PPNPagedLookasideList[32];
-    GENERAL_LOOKASIDE_POOL PPPagedLookasideList[32];
+    GENERAL_LOOKASIDE_POOL PPNPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
+    GENERAL_LOOKASIDE_POOL PPPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
     UINT64 PacketBarrier;
     SINGLE_LIST_ENTRY DeferredReadyListHead;
     LONG MmPageFaultCount;

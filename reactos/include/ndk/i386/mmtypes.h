@@ -19,6 +19,10 @@ Author:
 #ifndef _I386_MMTYPES_H
 #define _I386_MMTYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Dependencies
 //
@@ -170,5 +174,9 @@ typedef struct _MMPTE_HARDWARE
 //
 #define HARDWARE_PTE        HARDWARE_PTE_X86
 #define PHARDWARE_PTE       PHARDWARE_PTE_X86
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif

@@ -26,6 +26,10 @@ Author:
 #include <mmtypes.h>
 #include <ldrtypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Maximum Atom Length
 //
@@ -1521,4 +1525,9 @@ typedef struct _MESSAGE_RESOURCE_DATA
 } MESSAGE_RESOURCE_DATA, *PMESSAGE_RESOURCE_DATA;
 
 #endif /* !NTOS_MODE_USER */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* !_RTLTYPES_H */

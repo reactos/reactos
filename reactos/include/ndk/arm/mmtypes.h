@@ -19,6 +19,10 @@ Author:
 #ifndef _ARM_MMTYPES_H
 #define _ARM_MMTYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Dependencies
 //
@@ -178,7 +182,7 @@ typedef union _MMPDE_HARDWARE
 
 typedef struct _MMPDE
 {
-    union 
+    union
     {
         MMPDE_HARDWARE Hard;
         ULONG Long;
@@ -190,5 +194,9 @@ typedef struct _MMPDE
 //
 #define HARDWARE_PTE        HARDWARE_PTE_ARMV6
 #define PHARDWARE_PTE       PHARDWARE_PTE_ARMV6
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif

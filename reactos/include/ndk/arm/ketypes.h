@@ -19,6 +19,10 @@ Author:
 #ifndef _ARM_KETYPES_H
 #define _ARM_KETYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Dependencies
 //
@@ -105,7 +109,7 @@ typedef struct _KEXCEPTION_FRAME
   //  ULONG R0;
 //    ULONG R1;
 //    ULONG R2;
-//    ULONG R3;    
+//    ULONG R3;
     ULONG R4;
     ULONG R5;
     ULONG R6;
@@ -134,7 +138,7 @@ typedef union _ARM_TTB_REGISTER
 
 typedef union _ARM_STATUS_REGISTER
 {
-    
+
     struct
     {
         ULONG Mode:5;
@@ -239,7 +243,7 @@ typedef union _ARM_CACHE_REGISTER
         ULONG DMultipler:1;
         ULONG DAssociativty:3;
         ULONG DSize:4;
-        ULONG DReserved:2;  
+        ULONG DReserved:2;
         ULONG Separate:1;
         ULONG CType:4;
         ULONG Reserved:3;
@@ -478,7 +482,7 @@ typedef struct _KIPCR
     ULONG VdmAlert;
     ULONG KernelReserved[14];
     ULONG SecondLevelCacheSize;
-    ULONG HalReserved[16];  
+    ULONG HalReserved[16];
     // arm part
     UCHAR IrqlMask[32];
     ULONG IrqlTable[32];
@@ -525,5 +529,10 @@ KeGetCurrentPrcb(VOID)
 #define KeGetPreviousMode()            _KeGetPreviousMode()
 #define KeGetDcacheFillSize()          PCR->DcacheFillSize
 
+#endif // !NTOS_MODE_USER
+
+#ifdef __cplusplus
+}; // extern "C"
 #endif
-#endif
+
+#endif // !_ARM_KETYPES_H

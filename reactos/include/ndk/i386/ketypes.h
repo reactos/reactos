@@ -187,6 +187,11 @@ typedef KIO_ACCESS_MAP *PKIO_ACCESS_MAP;
 #endif
 
 //
+// Number of pool lookaside lists per pool in the PRCB
+//
+#define NUMBER_POOL_LOOKASIDE_LISTS 32
+
+//
 // Trap Frame Definition
 //
 typedef struct _KTRAP_FRAME
@@ -558,8 +563,8 @@ typedef struct _KPRCB
     ULONG SpareCounter1[8];
 #endif
     PP_LOOKASIDE_LIST PPLookasideList[16];
-    PP_LOOKASIDE_LIST PPNPagedLookasideList[32];
-    PP_LOOKASIDE_LIST PPPagedLookasideList[32];
+    PP_LOOKASIDE_LIST PPNPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
+    PP_LOOKASIDE_LIST PPPagedLookasideList[NUMBER_POOL_LOOKASIDE_LISTS];
     volatile ULONG PacketBarrier;
     volatile ULONG ReverseStall;
     PVOID IpiFrame;

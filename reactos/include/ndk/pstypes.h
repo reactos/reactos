@@ -32,6 +32,10 @@ Author:
 #include <setypes.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -1421,5 +1425,9 @@ typedef struct _WIN32_CALLOUTS_FPNS
 } WIN32_CALLOUTS_FPNS, *PWIN32_CALLOUTS_FPNS;
 
 #endif // !NTOS_MODE_USER
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif // _PSTYPES_H

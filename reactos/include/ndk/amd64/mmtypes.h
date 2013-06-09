@@ -20,6 +20,10 @@ Author:
 #ifndef _AMD64_MMTYPES_H
 #define _AMD64_MMTYPES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Dependencies
 //
@@ -198,5 +202,8 @@ typedef struct _MMPTE_HARDWARE_LARGEPAGE
 #endif
 } MMPTE_HARDWARE_LARGEPAGE, *PMMPTE_HARDWARE_LARGEPAGE;
 
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif // !AMD64_MMTYPES_H
