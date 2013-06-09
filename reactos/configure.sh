@@ -9,11 +9,34 @@ BUILD_ENVIRONMENT=MinGW
 ARCH=$ROS_ARCH
 REACTOS_SOURCE_DIR=$(cd `dirname $0` && pwd)
 REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
-if [ "$1" = "Makefiles" -o "$1" = "makefiles" ]; then
-CMAKE_GENERATOR="Unix Makefiles"
-else
+
+usage() {
+echo Invalid parameter given.
+exit 1
+}
+
 CMAKE_GENERATOR="Ninja"
-fi
+for (( i=1; i<=$#; i++ )); do
+	case ${!i} in
+		-D)
+			((i++))
+			if [[ "x${!i}" == x?*=* ]] ; then
+				ROS_CMAKEOPTS+=" -D ${!i}"
+			else
+				usage
+			fi
+		;;
+
+		-D?*=*)
+			 ROS_CMAKEOPTS+=" ${!i}"
+		;;
+		makefiles|Makefiles)
+			CMAKE_GENERATOR="Unix Makefiles"
+		;;
+		*)
+			usage
+	esac
+done
 
 if [ "$REACTOS_SOURCE_DIR" = "$PWD" ]; then
   echo Creating directories in $REACTOS_OUTPUT_PATH
@@ -28,12 +51,12 @@ cd host-tools
 rm -f CMakeCache.txt
 
 REACTOS_BUILD_TOOLS_DIR="$PWD"
-cmake -G "$CMAKE_GENERATOR" -DARCH=$ARCH "$REACTOS_SOURCE_DIR"
+cmake -G "$CMAKE_GENERATOR" -DARCH=$ARCH $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
 
 echo Preparing reactos...
 cd ../reactos
 rm -f CMakeCache.txt
 
-cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE=0 -DPCH=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=$ARCH -DREACTOS_BUILD_TOOLS_DIR="$REACTOS_BUILD_TOOLS_DIR" "$REACTOS_SOURCE_DIR"
+cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE=0 -DPCH=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=$ARCH -DREACTOS_BUILD_TOOLS_DIR="$REACTOS_BUILD_TOOLS_DIR" $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
 
 echo Configure script complete! Enter directories and execute appropriate build commands\(ex: ninja, make, makex, etc...\).
