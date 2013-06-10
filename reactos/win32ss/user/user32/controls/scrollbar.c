@@ -63,10 +63,12 @@ static HWND ScrollTrackingWin = 0;
 static INT  ScrollTrackingBar = 0;
 static INT  ScrollTrackingPos = 0;
 static INT  ScrollTrackingVal = 0;
-static BOOL ScrollMovingThumb = FALSE;
-
+ /* Hit test code of the last button-down event */
 static DWORD ScrollTrackHitTest = SCROLL_NOWHERE;
 static BOOL ScrollTrackVertical;
+
+ /* Is the moving thumb being displayed? */
+static BOOL ScrollMovingThumb = FALSE;
 
 HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 
@@ -766,6 +768,12 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
   }
   if ((ScrollTrackHitTest == SCROLL_NOWHERE) && (Msg != WM_LBUTTONDOWN))
   {
+     //// ReactOS : Justin Case something goes wrong.
+     if (Wnd == GetCapture())
+     {
+        ReleaseCapture();
+     }
+     ////
      return;
   }
 
@@ -773,7 +781,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
   NewInfo.reserved = ScrollBarInfo.reserved;
   memcpy(NewInfo.rgstate, ScrollBarInfo.rgstate, (CCHILDREN_SCROLLBAR + 1) * sizeof(DWORD));
 
-  if (SB_CTL == SBType  && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
+  if (SBType == SB_CTL && (GetWindowLongPtrW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
   {
       switch(Msg)
       {
@@ -826,7 +834,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         LastMousePos  = LastClickPos;
         TrackThumbPos = ScrollBarInfo.xyThumbTop;
         PrevPt = Pt;
-        if (SB_CTL == SBType && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP)) SetFocus(Wnd);
+        if (SBType == SB_CTL && (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP)) SetFocus(Wnd);
         SetCapture(Wnd);
         ScrollBarInfo.rgstate[ScrollTrackHitTest] |= STATE_SYSTEM_PRESSED;
         NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
@@ -1226,9 +1234,15 @@ ScrollBarWndProc_common(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam
 
       case WM_LBUTTONDBLCLK:
       case WM_LBUTTONDOWN:
+        if (GetWindowLongW( Wnd, GWL_STYLE ) & SBS_SIZEGRIP)
+        {
+           SendMessageW( GetParent(Wnd), WM_SYSCOMMAND,
+                         SC_SIZE + ((GetWindowLongW( Wnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL) ?
+                                   WMSZ_BOTTOMLEFT : WMSZ_BOTTOMRIGHT), lParam );
+        }
+        else
         {
           POINT Pt;
-
           Pt.x = (short)LOWORD(lParam);
           Pt.y = (short)HIWORD(lParam);
           ScrollTrackScrollBar(Wnd, SB_CTL, Pt);
@@ -1240,7 +1254,6 @@ ScrollBarWndProc_common(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam
       case WM_SYSTIMER:
         {
           POINT Pt;
-
           Pt.x = (short)LOWORD(lParam);
           Pt.y = (short)HIWORD(lParam);
           IntScrollHandleScrollEvent(Wnd, SB_CTL, Msg, Pt);
@@ -1540,7 +1553,7 @@ GetScrollPos(HWND Wnd, INT Bar)
      }
 
      SetLastError(ERROR_NO_SCROLLBARS);
-     ERR("GetScrollPos No Scroll Info\n");
+     TRACE("GetScrollPos No Scroll Info\n");
      return 0;
   }
   SetLastError(ERROR_INVALID_PARAMETER);
