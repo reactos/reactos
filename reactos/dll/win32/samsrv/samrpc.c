@@ -4622,6 +4622,76 @@ SamrQueryInformationAlias(IN SAMPR_HANDLE AliasHandle,
 }
 
 
+static NTSTATUS
+SampSetAliasName(PSAM_DB_OBJECT AliasObject,
+                 PSAMPR_ALIAS_INFO_BUFFER Buffer)
+{
+    UNICODE_STRING OldAliasName = {0, 0, NULL};
+    UNICODE_STRING NewAliasName;
+    NTSTATUS Status;
+
+    Status = SampGetObjectAttributeString(AliasObject,
+                                          L"Name",
+                                          (PRPC_UNICODE_STRING)&OldAliasName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttributeString failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    NewAliasName.Length = Buffer->Name.Name.Length;
+    NewAliasName.MaximumLength = Buffer->Name.Name.MaximumLength;
+    NewAliasName.Buffer = Buffer->Name.Name.Buffer;
+
+    if (!RtlEqualUnicodeString(&OldAliasName, &NewAliasName, TRUE))
+    {
+        Status = SampCheckAccountNameInDomain(AliasObject->ParentObject,
+                                              NewAliasName.Buffer);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Alias name \'%S\' already exists in domain (Status 0x%08lx)\n",
+                  NewAliasName.Buffer, Status);
+            goto done;
+        }
+    }
+
+    Status = SampSetAccountNameInDomain(AliasObject->ParentObject,
+                                        L"Aliases",
+                                        NewAliasName.Buffer,
+                                        AliasObject->RelativeId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetAccountNameInDomain failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampRemoveAccountNameFromDomain(AliasObject->ParentObject,
+                                             L"Aliases",
+                                             OldAliasName.Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRemoveAccountNameFromDomain failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampSetObjectAttribute(AliasObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    NewAliasName.Buffer,
+                                    NewAliasName.Length + sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (OldAliasName.Buffer != NULL)
+        midl_user_free(OldAliasName.Buffer);
+
+    return Status;
+}
+
+
 /* Function 29 */
 NTSTATUS
 NTAPI
@@ -4646,11 +4716,8 @@ SamrSetInformationAlias(IN SAMPR_HANDLE AliasHandle,
     switch (AliasInformationClass)
     {
         case AliasNameInformation:
-            Status = SampSetObjectAttribute(AliasObject,
-                                            L"Name",
-                                            REG_SZ,
-                                            Buffer->Name.Name.Buffer,
-                                            Buffer->Name.Name.Length + sizeof(WCHAR));
+            Status = SampSetAliasName(AliasObject,
+                                      Buffer);
             break;
 
         case AliasAdminCommentInformation:
