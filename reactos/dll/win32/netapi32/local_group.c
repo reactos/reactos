@@ -1703,17 +1703,137 @@ done:
 /************************************************************
  *                NetLocalGroupSetInfo  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupSetInfo(
+NET_API_STATUS
+WINAPI
+NetLocalGroupSetInfo(
     LPCWSTR servername,
     LPCWSTR groupname,
     DWORD level,
     LPBYTE buf,
     LPDWORD parm_err)
 {
-    FIXME("(%s %s %d %p %p) stub!\n", debugstr_w(servername),
+    UNICODE_STRING ServerName;
+    UNICODE_STRING AliasName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE AliasHandle = NULL;
+    ALIAS_NAME_INFORMATION AliasNameInfo;
+
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s %d %p %p)\n", debugstr_w(servername),
           debugstr_w(groupname), level, buf, parm_err);
-    return NERR_Success;
+
+    if (parm_err != NULL)
+        *parm_err = PARM_ERROR_NONE;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&AliasName, groupname);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the alias account in the builtin domain */
+    ApiStatus = OpenAliasByName(DomainHandle,
+                                &AliasName,
+                                ALIAS_WRITE_ACCOUNT,
+                                &AliasHandle);
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_NONE_MAPPED)
+    {
+        ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+        goto done;
+    }
+
+    if (AliasHandle == NULL)
+    {
+        if (DomainHandle != NULL)
+            SamCloseHandle(DomainHandle);
+
+        /* Open the Acount Domain */
+        Status = OpenAccountDomain(ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the alias account in the account domain */
+        ApiStatus = OpenAliasByName(DomainHandle,
+                                    &AliasName,
+                                    ALIAS_WRITE_ACCOUNT,
+                                    &AliasHandle);
+        if (ApiStatus != NERR_Success)
+        {
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
+            goto done;
+        }
+    }
+
+    switch (level)
+    {
+        case 0:
+            /* Set the alias name */
+            RtlInitUnicodeString(&AliasNameInfo.Name,
+                                 ((PLOCALGROUP_INFO_0)buf)->lgrpi0_name);
+
+            Status = SamSetInformationAlias(AliasHandle,
+                                            AliasNameInformation,
+                                            &AliasNameInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("SamSetInformationAlias failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        default:
+            ApiStatus = ERROR_INVALID_LEVEL;
+            goto done;
+    }
+
+done:
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
+
 
 /************************************************************
  *                NetLocalGroupSetMember (NETAPI32.@)
