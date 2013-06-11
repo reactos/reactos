@@ -3963,6 +3963,76 @@ SamrQueryInformationGroup(IN SAMPR_HANDLE GroupHandle,
 
 
 static NTSTATUS
+SampSetGroupName(PSAM_DB_OBJECT GroupObject,
+                 PSAMPR_GROUP_INFO_BUFFER Buffer)
+{
+    UNICODE_STRING OldGroupName = {0, 0, NULL};
+    UNICODE_STRING NewGroupName;
+    NTSTATUS Status;
+
+    Status = SampGetObjectAttributeString(GroupObject,
+                                          L"Name",
+                                          (PRPC_UNICODE_STRING)&OldGroupName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttributeString failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    NewGroupName.Length = Buffer->Name.Name.Length;
+    NewGroupName.MaximumLength = Buffer->Name.Name.MaximumLength;
+    NewGroupName.Buffer = Buffer->Name.Name.Buffer;
+
+    if (!RtlEqualUnicodeString(&OldGroupName, &NewGroupName, TRUE))
+    {
+        Status = SampCheckAccountNameInDomain(GroupObject->ParentObject,
+                                              NewGroupName.Buffer);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Group name \'%S\' already exists in domain (Status 0x%08lx)\n",
+                  NewGroupName.Buffer, Status);
+            goto done;
+        }
+    }
+
+    Status = SampSetAccountNameInDomain(GroupObject->ParentObject,
+                                        L"Groups",
+                                        NewGroupName.Buffer,
+                                        GroupObject->RelativeId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetAccountNameInDomain failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampRemoveAccountNameFromDomain(GroupObject->ParentObject,
+                                             L"Groups",
+                                             OldGroupName.Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRemoveAccountNameFromDomain failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampSetObjectAttribute(GroupObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    NewGroupName.Buffer,
+                                    NewGroupName.Length + sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (OldGroupName.Buffer != NULL)
+        midl_user_free(OldGroupName.Buffer);
+
+    return Status;
+}
+
+
+static NTSTATUS
 SampSetGroupAttribute(PSAM_DB_OBJECT GroupObject,
                       PSAMPR_GROUP_INFO_BUFFER Buffer)
 {
@@ -4016,11 +4086,8 @@ SamrSetInformationGroup(IN SAMPR_HANDLE GroupHandle,
     switch (GroupInformationClass)
     {
         case GroupNameInformation:
-            Status = SampSetObjectAttribute(GroupObject,
-                                            L"Name",
-                                            REG_SZ,
-                                            Buffer->Name.Name.Buffer,
-                                            Buffer->Name.Name.Length + sizeof(WCHAR));
+            Status = SampSetGroupName(GroupObject,
+                                      Buffer);
             break;
 
         case GroupAttributeInformation:
