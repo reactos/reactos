@@ -51,11 +51,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "Visual Style", IDC_STATIC, 7, 130, 64, 7
+    LTEXT           "Fenster und Schaltflächen", IDC_STATIC, 7, 130, 64, 7
     COMBOBOX        IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Farbschema", IDC_STATIC, 7, 160, 64, 7
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Size", IDC_STATIC, 7, 190, 64, 7
+    LTEXT           "Schriftgröße", IDC_STATIC, 7, 190, 64, 7
     COMBOBOX        IDC_APPEARANCE_SIZE, 7, 200, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Effekte...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON      "Erweitert", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
@@ -213,9 +213,9 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_COLOR_4BIT "16 Farben"
     IDS_COLOR_8BIT "256 Farben"
-    IDS_COLOR_16BIT "High Color (16 Bit)"
-    IDS_COLOR_24BIT "True Color (24 Bit)"
-    IDS_COLOR_32BIT "True Color (32 Bit)"
+    IDS_COLOR_16BIT "Mittlere (16 Bit)"
+    IDS_COLOR_24BIT "Hoch (24 Bit)"
+    IDS_COLOR_32BIT "Höchste (32 Bit)"
     IDS_PIXEL "%lux%lu Pixel"
 END
 
@@ -233,7 +233,7 @@ BEGIN
     IDS_MESSBOX  "Dialogfeld"
     IDS_MESSTEXT "Dialogfeldtext"
     IDS_BUTTEXT  "OK"
-    IDS_CLASSIC_THEME   "Classic Theme"
+    IDS_CLASSIC_THEME   "Klassischer Stil"
 END
 
 STRINGTABLE DISCARDABLE

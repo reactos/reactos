@@ -26,7 +26,7 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL     "<A HREF=""http://www.reactos.de/"">ReactOS-Homepage</A> besuchen", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 100, 10
+    CONTROL     "<A HREF=""http://www.reactos.org/"">ReactOS-Homepage</A> besuchen", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 100, 10
     PUSHBUTTON  "&Lizenz anzeigen...", IDC_LICENCE, 170, 199, 78, 14
 END
 
@@ -71,7 +71,7 @@ BEGIN
     LTEXT       "Start- und Wiederherstellungseinstellungen regeln, wie der Computer gestartet werden soll und was passieren soll, wenn ein Fehler auftritt.", IDC_STATIC, 16, 144, 210, 27
     PUSHBUTTON  "Einstellungen", IDC_STAREC, 194, 162, 50, 14
 
-    PUSHBUTTON  "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
+    PUSHBUTTON  "Systemeinstellungen", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
     PUSHBUTTON  "Umgebungsvariablen", IDC_ENVVAR, 84, 192, 80, 14
     PUSHBUTTON  "Fehler melden", IDC_ERRORREPORT, 170, 192, 80, 14
 END
