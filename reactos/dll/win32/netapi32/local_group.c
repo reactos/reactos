@@ -1718,7 +1718,7 @@ NetLocalGroupSetInfo(
     SAM_HANDLE DomainHandle = NULL;
     SAM_HANDLE AliasHandle = NULL;
     ALIAS_NAME_INFORMATION AliasNameInfo;
-
+    ALIAS_ADM_COMMENT_INFORMATION AdminCommentInfo;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1808,6 +1808,22 @@ NetLocalGroupSetInfo(
             Status = SamSetInformationAlias(AliasHandle,
                                             AliasNameInformation,
                                             &AliasNameInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("SamSetInformationAlias failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        case 1:
+            /* Set the alias admin comment */
+            RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
+                                 ((PLOCALGROUP_INFO_1)buf)->lgrpi1_comment);
+
+            Status = SamSetInformationAlias(AliasHandle,
+                                            AliasAdminCommentInformation,
+                                            &AdminCommentInfo);
             if (!NT_SUCCESS(Status))
             {
                 TRACE("SamSetInformationAlias failed (ApiStatus %lu)\n", ApiStatus);
