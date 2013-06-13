@@ -22,7 +22,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
-BOOL NETAPI_IsLocalComputer(LPCWSTR ServerName);
 
 /************************************************************
  *                ACCESS_QueryAdminDisplayInformation

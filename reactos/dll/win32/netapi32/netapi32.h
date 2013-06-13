@@ -57,4 +57,9 @@ BuildSidFromSidAndRid(IN PSID SrcSid,
                       IN ULONG RelativeId,
                       OUT PSID *DestSid);
 
+/* wksta.c */
+
+BOOL
+NETAPI_IsLocalComputer(LMCSTR ServerName);
+
 #endif

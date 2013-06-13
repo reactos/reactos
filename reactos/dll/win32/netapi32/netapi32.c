@@ -25,13 +25,11 @@
 
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
-//#include "netapi32.h"
+#include "netapi32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 
 static HMODULE NETAPI32_hModule;
-
-BOOL NETAPI_IsLocalComputer(LMCSTR ServerName);
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
