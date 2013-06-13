@@ -1817,9 +1817,14 @@ NetLocalGroupSetInfo(
             break;
 
         case 1:
+        case 1002:
             /* Set the alias admin comment */
-            RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
-                                 ((PLOCALGROUP_INFO_1)buf)->lgrpi1_comment);
+            if (level == 1)
+                RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
+                                     ((PLOCALGROUP_INFO_1)buf)->lgrpi1_comment);
+            else
+                RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
+                                     ((PLOCALGROUP_INFO_1002)buf)->lgrpi1002_comment);
 
             Status = SamSetInformationAlias(AliasHandle,
                                             AliasAdminCommentInformation,
