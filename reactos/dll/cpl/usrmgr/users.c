@@ -492,7 +492,7 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
 {
     TCHAR szOldUserName[UNLEN];
     TCHAR szNewUserName[UNLEN];
-    //USER_INFO_0 useri0;
+    USER_INFO_0 useri0;
     NET_API_STATUS status;
 
     /* Leave, if there is no valid listview item */
@@ -521,13 +521,9 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
         return FALSE;
 
     /* Change the user name */
-    //useri0.usri0_name = szNewUserName;
+    useri0.usri0_name = szNewUserName;
 
-#if 0
     status = NetUserSetInfo(NULL, szOldUserName, 0, (LPBYTE)&useri0, NULL);
-#else
-    status = NERR_Success;
-#endif
     if (status != NERR_Success)
     {
         TCHAR szText[256];
