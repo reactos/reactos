@@ -23,7 +23,6 @@
  *    Implement NetUserChangePassword
  *    Implement NetUserGetGroups
  *    Implement NetUserSetGroups
- *    Implement NetUserSetInfo
  *    NetUserGetLocalGroups does not support LG_INCLUDE_INDIRECT yet.
  *    Add missing information levels.
  *    ...
@@ -764,6 +763,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
             DWORD Level)
 {
     USER_ALL_INFORMATION UserAllInfo;
+    PUSER_INFO_0 UserInfo0;
     PUSER_INFO_1 UserInfo1;
     PUSER_INFO_3 UserInfo3;
     NET_API_STATUS ApiStatus = NERR_Success;
@@ -773,8 +773,18 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
     switch (Level)
     {
+        case 0:
+            UserInfo0 = (PUSER_INFO_0)UserInfo;
+
+            RtlInitUnicodeString(&UserAllInfo.UserName,
+                                 UserInfo0->usri0_name);
+
+            UserAllInfo.WhichFields = USER_ALL_USERNAME;
+            break;
+
         case 1:
             UserInfo1 = (PUSER_INFO_1)UserInfo;
+
 //            RtlInitUnicodeString(&UserAllInfo.UserName,
 //                                 UserInfo1->usri1_name);
 
@@ -960,8 +970,17 @@ NetUserAdd(LPCWSTR servername,
     TRACE("(%s, %d, %p, %p)\n", debugstr_w(servername), level, bufptr, parm_err);
 
     /* Check the info level */
-    if (level < 1 || level > 4)
-        return ERROR_INVALID_LEVEL;
+    switch (level)
+    {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            break;
+
+        default:
+            return ERROR_INVALID_LEVEL;
+    }
 
     if (servername != NULL)
         RtlInitUnicodeString(&ServerName, servername);
@@ -1199,7 +1218,7 @@ NetUserEnum(LPCWSTR servername,
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    FIXME("(%s %d 0x%d %p %d %p %p %p) stub!\n", debugstr_w(servername), level,
+    TRACE("(%s %d 0x%d %p %d %p %p %p)\n", debugstr_w(servername), level,
           filter, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
 
     *entriesread = 0;
@@ -1900,9 +1919,109 @@ NetUserSetInfo(LPCWSTR servername,
                LPBYTE buf,
                LPDWORD parm_err)
 {
-    FIXME("(%s %s %lu %p %p)\n",
+    UNICODE_STRING ServerName;
+    UNICODE_STRING UserName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE AccountDomainHandle = NULL;
+    SAM_HANDLE UserHandle = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %s %lu %p %p)\n",
           debugstr_w(servername), debugstr_w(username), level, buf, parm_err);
-    return ERROR_ACCESS_DENIED;
+
+    /* Check the info level */
+    switch (level)
+    {
+        case 0:
+        case 1:
+//        case 2:
+        case 3:
+//        case 4:
+//        case 21:
+//        case 22:
+//        case 1003:
+//        case 1005:
+//        case 1006:
+//        case 1007:
+//        case 1008:
+//        case 1009:
+//        case 1010:
+//        case 1011:
+//        case 1012:
+//        case 1014:
+//        case 1017:
+//        case 1020:
+//        case 1024:
+//        case 1051:
+//        case 1052:
+//        case 1053:
+            break;
+
+        default:
+            return ERROR_INVALID_LEVEL;
+    }
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&UserName, username);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Account Domain */
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                               &AccountDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the User Account */
+    ApiStatus = OpenUserByName(AccountDomainHandle,
+                               &UserName,
+                               USER_ALL_ACCESS,
+                               &UserHandle);
+    if (ApiStatus != NERR_Success)
+    {
+        ERR("OpenUserByName failed (ApiStatus %lu)\n", ApiStatus);
+        goto done;
+    }
+
+    /* Set user information */
+    ApiStatus = SetUserInfo(UserHandle,
+                            buf,
+                            level);
+    if (ApiStatus != NERR_Success)
+    {
+        ERR("SetUserInfo failed (Status %lu)\n", ApiStatus);
+    }
+
+done:
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+
+    if (AccountDomainHandle != NULL)
+        SamCloseHandle(AccountDomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
 
 /* EOF */
