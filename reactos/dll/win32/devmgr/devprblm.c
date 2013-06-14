@@ -505,7 +505,7 @@ DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
     }
     else
     {
-        LPWSTR szProblem, szInfo = NULL;
+        LPWSTR szProblem, szInfo = L"FIXME";
         DWORD dwRet;
         BOOL AdvFormat = FALSE;
         UINT StringIDs[] =
@@ -521,7 +521,7 @@ DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
                 /* FIXME - if not a root bus devloader then use IDS_DEV_DEVLOADER_FAILED2 */
                 /* FIXME - get the type string (ie. ISAPNP, PCI or BIOS for root bus devloaders,
                            or FLOP, ESDI, SCSI, etc for others */
-                AdvFormat = (szInfo != NULL);
+                AdvFormat = TRUE;
                 break;
             }
 
@@ -538,7 +538,7 @@ DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
                       - use IDS_DEV_DEVLOADER_NOT_FOUND3
                       - AdvFormat = FALSE!
                  */
-                AdvFormat = (szInfo != NULL);
+                AdvFormat = TRUE;
                 break;
             }
 
@@ -549,12 +549,12 @@ DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
 
             case CM_PROB_NORMAL_CONFLICT:
                 /* FIXME - get resource type (IRQ, DMA, Memory or I/O) */
-                AdvFormat = (szInfo != NULL);
+                AdvFormat = TRUE;
                 break;
 
             case CM_PROB_UNKNOWN_RESOURCE:
                 /* FIXME - get the .inf file name */
-                AdvFormat = (szInfo != NULL);
+                AdvFormat = TRUE;
                 break;
 
             case CM_PROB_DISABLED:
@@ -563,7 +563,7 @@ DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
 
             case CM_PROB_FAILED_ADD:
                 /* FIXME - get the name of the sub-device with the error */
-                AdvFormat = (szInfo != NULL);
+                AdvFormat = TRUE;
                 break;
         }
 
