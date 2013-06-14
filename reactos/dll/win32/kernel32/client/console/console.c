@@ -1958,17 +1958,15 @@ GetConsoleCP(VOID)
     CONSOLE_API_MESSAGE ApiMessage;
 
     /* Get the Input Code Page */
-    ApiMessage.Data.ConsoleCPRequest.InputCP = TRUE;
+    ApiMessage.Data.ConsoleCPRequest.InputCP  = TRUE;
+    ApiMessage.Data.ConsoleCPRequest.CodePage = 0;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCP),
                                  sizeof(CONSOLE_GETSETINPUTOUTPUTCP));
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return 0;
-    }
+
+    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
 
     return ApiMessage.Data.ConsoleCPRequest.CodePage;
 }
@@ -1987,17 +1985,15 @@ SetConsoleCP(UINT wCodePageID)
     CONSOLE_API_MESSAGE ApiMessage;
 
     /* Set the Input Code Page */
-    ApiMessage.Data.ConsoleCPRequest.InputCP = TRUE;
+    ApiMessage.Data.ConsoleCPRequest.InputCP  = TRUE;
     ApiMessage.Data.ConsoleCPRequest.CodePage = wCodePageID;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCP),
                                  sizeof(CONSOLE_GETSETINPUTOUTPUTCP));
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-    }
+
+    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
 
     return NT_SUCCESS(Status);
 }
@@ -2016,17 +2012,15 @@ GetConsoleOutputCP(VOID)
     CONSOLE_API_MESSAGE ApiMessage;
 
     /* Get the Output Code Page */
-    ApiMessage.Data.ConsoleCPRequest.InputCP = FALSE;
+    ApiMessage.Data.ConsoleCPRequest.InputCP  = FALSE;
+    ApiMessage.Data.ConsoleCPRequest.CodePage = 0;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCP),
                                  sizeof(CONSOLE_GETSETINPUTOUTPUTCP));
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError (Status);
-        return 0;
-    }
+
+    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
 
     return ApiMessage.Data.ConsoleCPRequest.CodePage;
 }
@@ -2045,17 +2039,15 @@ SetConsoleOutputCP(UINT wCodePageID)
     CONSOLE_API_MESSAGE ApiMessage;
 
     /* Set the Output Code Page */
-    ApiMessage.Data.ConsoleCPRequest.InputCP = FALSE;
+    ApiMessage.Data.ConsoleCPRequest.InputCP  = FALSE;
     ApiMessage.Data.ConsoleCPRequest.CodePage = wCodePageID;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetCP),
                                  sizeof(CONSOLE_GETSETINPUTOUTPUTCP));
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-    }
+
+    if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
 
     return NT_SUCCESS(Status);
 }

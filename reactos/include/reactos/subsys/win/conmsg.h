@@ -361,10 +361,10 @@ typedef struct
     CODE_TYPE CodeType;
     union
     {
-        PVOID pCode;
-        PCHAR AsciiChar;
+        PVOID  pCode;
+        PCHAR  AsciiChar;
         PWCHAR UnicodeChar;
-        PWORD Attribute;
+        PWORD  Attribute;
     } pCode;    // Either a pointer to a character or to an attribute.
 } CONSOLE_READOUTPUTCODE, *PCONSOLE_READOUTPUTCODE;
 
@@ -379,14 +379,13 @@ typedef struct
 
     ULONG NrCharactersWritten;
 
-    USHORT CodeType;
+    CODE_TYPE CodeType;
     union
     {
-        // PVOID String;
-        PVOID pCode;
-        PCHAR AsciiChar;
+        PVOID  pCode;
+        PCHAR  AsciiChar;
         PWCHAR UnicodeChar;
-        PWORD Attribute;
+        PWORD  Attribute;
     } pCode;    // Either a pointer to a character or to an attribute.
 } CONSOLE_WRITEOUTPUTCODE, *PCONSOLE_WRITEOUTPUTCODE;
 
@@ -397,9 +396,9 @@ typedef struct
     CODE_TYPE CodeType;
     union
     {
-        CHAR AsciiChar;
+        CHAR  AsciiChar;
         WCHAR UnicodeChar;
-        WORD Attribute;
+        WORD  Attribute;
     } Code; // Either a character or an attribute.
 
     COORD Coord;
