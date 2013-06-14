@@ -214,15 +214,11 @@ LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR *Inser
     {
         for (i = Pos; i < NewSize; i++)
         {
-            CHAR AsciiChar;
-            WideCharToMultiByte(Console->OutputCodePage, 0,
-                                &Console->LineBuffer[i], 1,
-                                &AsciiChar, 1, NULL, NULL);
-            ConioWriteConsole(Console, ActiveBuffer, &AsciiChar, 1, TRUE);
+            ConioWriteConsole(Console, ActiveBuffer, &Console->LineBuffer[i], 1, TRUE);
         }
         for (; i < Console->LineSize; i++)
         {
-            ConioWriteConsole(Console, ActiveBuffer, " ", 1, TRUE);
+            ConioWriteConsole(Console, ActiveBuffer, L" ", 1, TRUE);
         }
         Console->LinePos = i;
     }
@@ -413,7 +409,7 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         {
             if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
             {
-                ConioWriteConsole(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), "\r", 1, TRUE);
+                ConioWriteConsole(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\r", 1, TRUE);
             }
         }
 
@@ -428,7 +424,7 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
             {
                 if (GetType(Console->ActiveBuffer) == TEXTMODE_BUFFER)
                 {
-                    ConioWriteConsole(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), "\n", 1, TRUE);
+                    ConioWriteConsole(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), L"\n", 1, TRUE);
                 }
             }
         }

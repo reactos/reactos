@@ -20,13 +20,6 @@
 #include <debug.h>
 
 
-/* GLOBALS ********************************************************************/
-
-/* Copied from consrv/text.c */
-#define ConsoleAnsiCharToUnicodeChar(Console, dWChar, sChar) \
-    MultiByteToWideChar((Console)->OutputCodePage, 0, (sChar), 1, (dWChar), 1)
-
-
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -45,7 +38,7 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer)
     BOOL InlineCopyMode = (GetKeyState(VK_SHIFT) & 0x8000);
 
     HANDLE hData;
-    PBYTE ptr;
+    PCHAR_INFO ptr;
     LPWSTR data, dstPos;
     ULONG selWidth, selHeight;
     ULONG xPos, yPos, size;
@@ -90,7 +83,7 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer)
         /* Copy only the characters, leave attributes alone */
         for (xPos = 0; xPos < selWidth; xPos++)
         {
-            ConsoleAnsiCharToUnicodeChar(Console, &dstPos[xPos], (LPCSTR)&ptr[xPos * 2]);
+            dstPos[xPos] = ptr[xPos].Char.UnicodeChar;
         }
         dstPos += selWidth;
 
@@ -192,9 +185,9 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
 
     ULONG TopLine, BottomLine, LeftChar, RightChar;
     ULONG Line, Char, Start;
-    PBYTE From;
+    PCHAR_INFO From;
     PWCHAR To;
-    BYTE LastAttribute, Attribute;
+    WORD LastAttribute, Attribute;
     ULONG CursorX, CursorY, CursorHeight;
     HBRUSH CursorBrush, OldBrush;
     HFONT OldFont;
@@ -205,35 +198,40 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     BottomLine = (rc->bottom + (GuiData->CharHeight - 1)) / GuiData->CharHeight - 1 + Buffer->ViewOrigin.Y;
     LeftChar = rc->left / GuiData->CharWidth + Buffer->ViewOrigin.X;
     RightChar = (rc->right + (GuiData->CharWidth - 1)) / GuiData->CharWidth - 1 + Buffer->ViewOrigin.X;
-    LastAttribute = ConioCoordToPointer(Buffer, LeftChar, TopLine)[1];
+
+    LastAttribute = ConioCoordToPointer(Buffer, LeftChar, TopLine)->Attributes;
 
     SetTextColor(hDC, RGBFromAttrib(Console, TextAttribFromAttrib(LastAttribute)));
     SetBkColor(hDC, RGBFromAttrib(Console, BkgdAttribFromAttrib(LastAttribute)));
 
     if (BottomLine >= Buffer->ScreenBufferSize.Y) BottomLine = Buffer->ScreenBufferSize.Y - 1;
-    if (RightChar >= Buffer->ScreenBufferSize.X) RightChar = Buffer->ScreenBufferSize.X - 1;
+    if (RightChar  >= Buffer->ScreenBufferSize.X) RightChar  = Buffer->ScreenBufferSize.X - 1;
 
     OldFont = SelectObject(hDC, GuiData->Font);
 
     for (Line = TopLine; Line <= BottomLine; Line++)
     {
-        WCHAR LineBuffer[80];
-        From = ConioCoordToPointer(Buffer, LeftChar, Line);
+        WCHAR LineBuffer[80];   // Buffer containing a part or all the line to be displayed
+        From  = ConioCoordToPointer(Buffer, LeftChar, Line);    // Get the first code of the line
         Start = LeftChar;
-        To = LineBuffer;
+        To    = LineBuffer;
 
         for (Char = LeftChar; Char <= RightChar; Char++)
         {
-            if (*(From + 1) != LastAttribute || (Char - Start == sizeof(LineBuffer) / sizeof(WCHAR)))
+            /*
+             * We flush the buffer if the new attribute is different
+             * from the current one, or if the buffer is full.
+             */
+            if (From->Attributes != LastAttribute || (Char - Start == sizeof(LineBuffer) / sizeof(WCHAR)))
             {
                 TextOutW(hDC,
-                         (Start - Buffer->ViewOrigin.X) * GuiData->CharWidth,
-                         (Line - Buffer->ViewOrigin.Y) * GuiData->CharHeight,
+                         (Start - Buffer->ViewOrigin.X) * GuiData->CharWidth ,
+                         (Line  - Buffer->ViewOrigin.Y) * GuiData->CharHeight,
                          LineBuffer,
                          Char - Start);
                 Start = Char;
-                To = LineBuffer;
-                Attribute = *(From + 1);
+                To    = LineBuffer;
+                Attribute = From->Attributes;
                 if (Attribute != LastAttribute)
                 {
                     SetTextColor(hDC, RGBFromAttrib(Console, TextAttribFromAttrib(Attribute)));
@@ -242,15 +240,12 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
                 }
             }
 
-            MultiByteToWideChar(Console->OutputCodePage,
-                                0, (PCHAR)From, 1, To, 1);
-            To++;
-            From += 2;
+            *(To++) = (From++)->Char.UnicodeChar;
         }
 
         TextOutW(hDC,
-                 (Start - Buffer->ViewOrigin.X) * GuiData->CharWidth,
-                 (Line - Buffer->ViewOrigin.Y) * GuiData->CharHeight,
+                 (Start - Buffer->ViewOrigin.X) * GuiData->CharWidth ,
+                 (Line  - Buffer->ViewOrigin.Y) * GuiData->CharHeight,
                  LineBuffer,
                  RightChar - Start + 1);
     }
@@ -268,11 +263,11 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
             TopLine  <= CursorY && CursorY <= BottomLine)
         {
             CursorHeight = ConioEffectiveCursorSize(Console, GuiData->CharHeight);
-            From = ConioCoordToPointer(Buffer, Buffer->CursorPosition.X, Buffer->CursorPosition.Y) + 1;
+            Attribute = ConioCoordToPointer(Buffer, Buffer->CursorPosition.X, Buffer->CursorPosition.Y)->Attributes;
 
-            if (*From != DEFAULT_SCREEN_ATTRIB)
+            if (Attribute != DEFAULT_SCREEN_ATTRIB)
             {
-                CursorBrush = CreateSolidBrush(RGBFromAttrib(Console, *From));
+                CursorBrush = CreateSolidBrush(RGBFromAttrib(Console, Attribute));
             }
             else
             {

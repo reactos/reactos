@@ -99,7 +99,7 @@ ConioProcessInputEvent(PCONSOLE Console,
         }
     }
 
-    /* add event to the queue */
+    /* Add event to the queue */
     ConInRec = ConsoleAllocHeap(0, sizeof(ConsoleInput));
     if (ConInRec == NULL) return STATUS_INSUFFICIENT_RESOURCES;
 

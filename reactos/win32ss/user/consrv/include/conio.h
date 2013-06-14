@@ -126,12 +126,12 @@ typedef struct _TEXTMODE_BUFFER_INFO
 
 typedef struct _TEXTMODE_SCREEN_BUFFER
 {
-    CONSOLE_SCREEN_BUFFER;          /* Screen buffer base class - MUST BE IN FIRST PLACE */
+    CONSOLE_SCREEN_BUFFER;      /* Screen buffer base class - MUST BE IN FIRST PLACE */
 
-    BYTE *Buffer; /* CHAR_INFO */   /* Pointer to screen buffer */
+    PCHAR_INFO Buffer;          /* Pointer to UNICODE screen buffer (Buffer->Char.UnicodeChar only is valid, not Char.AsciiChar) */
 
-    WORD ScreenDefaultAttrib;       /* Default screen char attribute */
-    WORD PopupDefaultAttrib;        /* Default popup char attribute */
+    WORD ScreenDefaultAttrib;   /* Default screen char attribute */
+    WORD PopupDefaultAttrib;    /* Default popup char attribute */
 } TEXTMODE_SCREEN_BUFFER, *PTEXTMODE_SCREEN_BUFFER;
 
 
@@ -189,7 +189,7 @@ typedef struct _FRONTEND_VTBL
                                SHORT CursorStartX,
                                SHORT CursorStartY,
                                UINT ScrolledLines,
-                               CHAR *Buffer,
+                               PWCHAR Buffer,
                                UINT Length);
     BOOL (WINAPI *SetCursorInfo)(struct _CONSOLE* Console,
                                  PCONSOLE_SCREEN_BUFFER ScreenBuffer);
@@ -286,7 +286,6 @@ typedef struct _CONSOLE
     BOOLEAN QuickEdit;
     BOOLEAN InsertMode;
     UINT CodePage;
-    UINT OutputCodePage;
 
     CONSOLE_SELECTION_INFO Selection;       /* Contains information about the selection */
     COORD dwSelectionCursor;                /* Selection cursor position, most of the time different from Selection.dwSelectionAnchor */
@@ -297,6 +296,7 @@ typedef struct _CONSOLE
     BYTE PauseFlags;
     HANDLE UnpauseEvent;
     LIST_ENTRY WriteWaitQueue;              /* List head for the queue of write wait blocks */
+    UINT OutputCodePage;
 
 /**************************** Aliases and Histories ***************************/
     struct _ALIAS_HEADER *Aliases;
@@ -348,14 +348,20 @@ do {    \
 #define ConioRectWidth(Rect) \
     (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
 
-PBYTE ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
+#define ConsoleUnicodeCharToAnsiChar(Console, dChar, sWChar) \
+    WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+
+#define ConsoleAnsiCharToUnicodeChar(Console, dWChar, sChar) \
+    MultiByteToWideChar((Console)->OutputCodePage, 0, (sChar), 1, (dWChar), 1)
+
+PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCONSOLE Console);
 NTSTATUS ConioResizeBuffer(PCONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
 NTSTATUS ConioWriteConsole(PCONSOLE Console,
                            PTEXTMODE_SCREEN_BUFFER Buff,
-                           CHAR *Buffer,
+                           PWCHAR Buffer,
                            DWORD Length,
                            BOOL Attrib);
 DWORD FASTCALL ConioEffectiveCursorSize(PCONSOLE Console,

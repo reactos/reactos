@@ -230,23 +230,25 @@ TuiSwapConsole(INT Next)
 }
 
 static VOID FASTCALL
-TuiCopyRect(char *Dest, PTEXTMODE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
+TuiCopyRect(PCHAR Dest, PTEXTMODE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
 {
     UINT SrcDelta, DestDelta;
     LONG i;
-    PBYTE Src, SrcEnd;
+    PCHAR_INFO Src, SrcEnd;
 
     Src = ConioCoordToPointer(Buff, Region->Left, Region->Top);
-    SrcDelta = Buff->ScreenBufferSize.X * 2;
-    SrcEnd = Buff->Buffer + Buff->ScreenBufferSize.Y * Buff->ScreenBufferSize.X * 2;
-    DestDelta = ConioRectWidth(Region) * 2;
+    SrcDelta = Buff->ScreenBufferSize.X * sizeof(CHAR_INFO);
+    SrcEnd = Buff->Buffer + Buff->ScreenBufferSize.Y * Buff->ScreenBufferSize.X * sizeof(CHAR_INFO);
+    DestDelta = ConioRectWidth(Region) * 2 /* 2 == sizeof(CHAR) + sizeof(BYTE) */;
     for (i = Region->Top; i <= Region->Bottom; i++)
     {
-        memcpy(Dest, Src, DestDelta);
+        ConsoleUnicodeCharToAnsiChar(Buff->Header.Console, (PCHAR)Dest, &Src->Char.UnicodeChar);
+        *(PBYTE)(Dest + 1) = (BYTE)Src->Attributes;
+
         Src += SrcDelta;
         if (SrcEnd <= Src)
         {
-            Src -= Buff->ScreenBufferSize.Y * Buff->ScreenBufferSize.X * 2;
+            Src -= Buff->ScreenBufferSize.Y * Buff->ScreenBufferSize.X * sizeof(CHAR_INFO);
         }
         Dest += DestDelta;
     }
@@ -501,7 +503,7 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
     ConsoleDraw->CursorX = Buff->CursorPosition.X;
     ConsoleDraw->CursorY = Buff->CursorPosition.Y;
 
-    TuiCopyRect((char*)(ConsoleDraw + 1), (PTEXTMODE_SCREEN_BUFFER)Buff, Region);
+    TuiCopyRect((PCHAR)(ConsoleDraw + 1), (PTEXTMODE_SCREEN_BUFFER)Buff, Region);
 
     if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_DRAW,
                          NULL, 0, ConsoleDraw, ConsoleDrawSize, &BytesReturned, NULL))
@@ -516,17 +518,31 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
 
 static VOID WINAPI
 TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, SHORT CursorStartX, SHORT CursorStartY,
-               UINT ScrolledLines, CHAR *Buffer, UINT Length)
+               UINT ScrolledLines, PWCHAR Buffer, UINT Length)
 {
-    DWORD BytesWritten;
     PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
+    PCHAR NewBuffer;
+    ULONG NewLength;
+    DWORD BytesWritten;
 
     if (ActiveConsole->Console->ActiveBuffer != Buff) return;
 
-    if (!WriteFile(ConsoleDeviceHandle, Buffer, Length, &BytesWritten, NULL))
+    NewLength = WideCharToMultiByte(Console->OutputCodePage, 0,
+                                    Buffer, Length,
+                                    NULL, 0, NULL, NULL);
+    NewBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, NewLength * sizeof(CHAR));
+    if (!NewBuffer) return;
+
+    WideCharToMultiByte(Console->OutputCodePage, 0,
+                        Buffer, Length,
+                        NewBuffer, NewLength, NULL, NULL);
+
+    if (!WriteFile(ConsoleDeviceHandle, NewBuffer, NewLength * sizeof(CHAR), &BytesWritten, NULL))
     {
         DPRINT1("Error writing to BlueScreen\n");
     }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, NewBuffer);
 }
 
 static BOOL WINAPI

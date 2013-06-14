@@ -744,8 +744,6 @@ GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM l
 {
     PCONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
-    MSG Message;
-    WORD VirtualKeyCode = LOWORD(wParam);
 
     if (!ConSrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
@@ -753,6 +751,8 @@ GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM l
 
     if (Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS)
     {
+        WORD VirtualKeyCode = LOWORD(wParam);
+
         if (msg != WM_KEYDOWN) goto Quit;
 
         if (VirtualKeyCode == VK_RETURN)
@@ -767,12 +767,13 @@ GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM l
             /* Cancel selection if ESC or Ctrl-C are pressed */
             GuiConsoleUpdateSelection(Console, NULL);
             SetWindowText(GuiData->hWindow, Console->Title.Buffer);
+
             goto Quit;
         }
 
         if ((Console->Selection.dwFlags & CONSOLE_MOUSE_SELECTION) == 0)
         {
-            /* Selection mode with keyboard */
+            /* Keyboard selection mode */
             BOOL Interpreted = FALSE;
             BOOL MajPressed  = (GetKeyState(VK_SHIFT) & 0x8000);
 
@@ -865,20 +866,30 @@ GuiConsoleHandleKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM l
                 /* Emit an error beep sound */
                 SendNotifyMessage(GuiData->hWindow, PM_CONSOLE_BEEP, 0, 0);
             }
+
+            goto Quit;
         }
         else
         {
-            /* Selection mode with mouse, clear the selection if needed */
+            /* Mouse selection mode */
+
             if (!IsSystemKey(VirtualKeyCode))
             {
+                /* Clear the selection and send the key into the input buffer */
                 GuiConsoleUpdateSelection(Console, NULL);
                 SetWindowText(GuiData->hWindow, Console->Title.Buffer);
+            }
+            else
+            {
+                goto Quit;
             }
         }
     }
 
     if ((Console->Selection.dwFlags & CONSOLE_SELECTION_IN_PROGRESS) == 0)
     {
+        MSG Message;
+
         Message.hwnd = GuiData->hWindow;
         Message.message = msg;
         Message.wParam = wParam;
@@ -2247,7 +2258,7 @@ GuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
 
 static VOID WINAPI
 GuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, SHORT CursorStartX, SHORT CursorStartY,
-               UINT ScrolledLines, CHAR *Buffer, UINT Length)
+               UINT ScrolledLines, PWCHAR Buffer, UINT Length)
 {
     PGUI_CONSOLE_DATA GuiData = Console->TermIFace.Data;
     PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
