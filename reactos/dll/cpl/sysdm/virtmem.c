@@ -624,7 +624,7 @@ VirtMemDlgProc(HWND hwndDlg,
                     return TRUE;
 
                 case IDC_PAGEFILELIST:
-                    switch HIWORD(wParam)
+                    switch (HIWORD(wParam))
                     {
                         case LBN_SELCHANGE:
                             OnSelChange(hwndDlg, pVirtMem);
