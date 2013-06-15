@@ -17,7 +17,7 @@
 #include <devguid.h>
 #include <debug.h>
 #include <shlwapi.h>
-
+#include <commdlg.h>
 #include "resource.h"
 
 //typedef LONG (CALLBACK *APPLET_PROC)(VOID);

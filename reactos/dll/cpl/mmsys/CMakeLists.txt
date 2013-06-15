@@ -24,7 +24,8 @@ add_importlibs(mmsys
     setupapi
     shlwapi
     ntdll
-    kernel32)
+    kernel32
+    comdlg32)
 
 add_pch(mmsys mmsys.h)
 add_cd_file(TARGET mmsys DESTINATION reactos/system32 FOR all)
