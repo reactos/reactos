@@ -78,8 +78,8 @@ HANDLE WINAPI FindDebugInfoFileEx(PCSTR FileName, PCSTR SymbolPath,
                                   PFIND_DEBUG_FILE_CALLBACK Callback,
                                   PVOID CallerData)
 {
-    FIXME("(%s %s %p %p %p): stub\n", 
-          debugstr_a(FileName), debugstr_a(SymbolPath), debugstr_a(DebugFilePath), Callback, CallerData);
+    FIXME("(%s %s %s %p %p): stub\n", debugstr_a(FileName), debugstr_a(SymbolPath),
+            debugstr_a(DebugFilePath), Callback, CallerData);
     return NULL;
 }
 
@@ -479,7 +479,6 @@ static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
         {
             HANDLE  hFile, hMap;
             void*   mapping;
-            DWORD   timestamp;
 
             timestamp = ~mf->dw1;
             size = ~mf->dw2;

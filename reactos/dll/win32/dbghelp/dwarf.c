@@ -40,9 +40,14 @@
 #endif
 //#include <stdio.h>
 #include <assert.h>
-//#include <stdarg.h>
+#include <stdarg.h>
+
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
 
 //#include "windef.h"
+#include <winternl.h>
 //#include "winbase.h"
 //#include "winuser.h"
 //#include "ole2.h"
@@ -157,6 +162,7 @@ typedef struct dwarf2_debug_info_s
 
 typedef struct dwarf2_section_s
 {
+    BOOL                        compressed;
     const unsigned char*        address;
     unsigned                    size;
     DWORD_PTR                   rva;
@@ -2188,7 +2194,7 @@ static BOOL dwarf2_parse_line_numbers(const dwarf2_section_t* sections,
     vector_init(&files, sizeof(unsigned), 16);
     while (*traverse.data)
     {
-        unsigned int    dir_index, mod_time, length;
+        unsigned int    dir_index, mod_time;
         const char*     name;
         const char*     dir;
         unsigned*       psrc;
@@ -2199,7 +2205,7 @@ static BOOL dwarf2_parse_line_numbers(const dwarf2_section_t* sections,
         mod_time = dwarf2_leb128_as_unsigned(&traverse);
         length = dwarf2_leb128_as_unsigned(&traverse);
         dir = *(const char**)vector_at(&dirs, dir_index);
-        TRACE("Got file %s/%s (%u,%u)\n", dir, name, mod_time, length);
+        TRACE("Got file %s/%s (%u,%lu)\n", dir, name, mod_time, length);
         psrc = vector_add(&files, &ctx->pool);
         *psrc = source_new(ctx->module, dir, name);
     }
@@ -2270,15 +2276,19 @@ static BOOL dwarf2_parse_line_numbers(const dwarf2_section_t* sections,
                         address = ctx->load_offset + dwarf2_parse_addr(&traverse);
                         break;
                     case DW_LNE_define_file:
-                        FIXME("not handled %s\n", traverse.data);
+                        FIXME("not handled define file %s\n", traverse.data);
                         traverse.data += strlen((const char *)traverse.data) + 1;
                         dwarf2_leb128_as_unsigned(&traverse);
                         dwarf2_leb128_as_unsigned(&traverse);
                         dwarf2_leb128_as_unsigned(&traverse);
                         break;
                     case DW_LNE_set_discriminator:
-                        WARN("not handled %s\n", traverse.data);
-                        dwarf2_leb128_as_unsigned(&traverse);
+                        {
+                            unsigned descr;
+
+                            descr = dwarf2_leb128_as_unsigned(&traverse);
+                            WARN("not handled discriminator %x\n", descr);
+                        }
                         break;
                     default:
                         FIXME("Unsupported extended opcode %x\n", extopcode);
@@ -2632,6 +2642,15 @@ static BOOL dwarf2_get_cie(unsigned long addr, struct module* module, DWORD_PTR 
     const BYTE*                 start_data = fde_ctx->data;
 
     cie_id = in_eh_frame ? 0 : DW_CIE_ID;
+    /* skip 0-padding at beginning of section (alignment) */
+    while (fde_ctx->data + 2 * 4 < fde_ctx->end_data)
+    {
+        if (dwarf2_parse_u4(fde_ctx))
+        {
+            fde_ctx->data -= 4;
+            break;
+        }
+    }
     for (; fde_ctx->data + 2 * 4 < fde_ctx->end_data; fde_ctx->data = ptr_blk)
     {
         /* find the FDE for address addr (skip CIE) */
@@ -2659,7 +2678,9 @@ static BOOL dwarf2_get_cie(unsigned long addr, struct module* module, DWORD_PTR 
             cie_ctx->end_data = cie_ptr + 4 + dwarf2_parse_u4(cie_ctx);
             if (dwarf2_parse_u4(cie_ctx) != cie_id)
             {
-                FIXME("wrong CIE pointer\n");
+                FIXME("wrong CIE pointer at %x from FDE %x\n",
+                      (unsigned)(cie_ptr - start_data),
+                      (unsigned)(fde_ctx->data - start_data));
                 return FALSE;
             }
             if (!parse_cie_details(cie_ctx, info)) return FALSE;
@@ -2840,7 +2861,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
             ULONG_PTR offset = (op == DW_CFA_def_cfa) ? dwarf2_leb128_as_unsigned(ctx)
                                                       : dwarf2_leb128_as_signed(ctx) * info->data_align;
             if (!valid_reg(reg)) break;
-            TRACE("%lx: DW_CFA_def_cfa %s, %lu\n",
+            TRACE("%lx: DW_CFA_def_cfa %s, %ld\n",
                   info->ip,
                   dbghelp_current_cpu->fetch_regname(dbghelp_current_cpu->map_dwarf_register(reg)),
                   offset);
@@ -2865,7 +2886,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
         {
             ULONG_PTR offset = (op == DW_CFA_def_cfa_offset) ? dwarf2_leb128_as_unsigned(ctx)
                                                              : dwarf2_leb128_as_signed(ctx) * info->data_align;
-            TRACE("%lx: DW_CFA_def_cfa_offset %lu\n", info->ip, offset);
+            TRACE("%lx: DW_CFA_def_cfa_offset %ld\n", info->ip, offset);
             info->state.cfa_offset = offset;
             info->state.cfa_rule   = RULE_CFA_OFFSET;
             break;
@@ -3267,29 +3288,134 @@ static void dwarf2_location_compute(struct process* pcs,
     }
 }
 
-static void dwarf2_module_remove(struct process* pcs, struct module_format* modfmt)
+#ifdef HAVE_ZLIB
+static void *zalloc(void *priv, uInt items, uInt sz)
 {
-    HeapFree(GetProcessHeap(), 0, modfmt);
+    return HeapAlloc(GetProcessHeap(), 0, items * sz);
 }
 
+static void zfree(void *priv, void *addr)
+{
+    HeapFree(GetProcessHeap(), 0, addr);
+}
+
+static inline BOOL dwarf2_init_zsection(dwarf2_section_t* section,
+                                        const char* zsectname,
+                                        struct image_section_map* ism)
+{
+    z_stream z;
+    LARGE_INTEGER li;
+    int res;
+    BOOL ret = FALSE;
+
+    BYTE *addr, *sect = (BYTE *)image_map_section(ism);
+    size_t sz = image_get_map_size(ism);
+
+    if (sz <= 12 || memcmp(sect, "ZLIB", 4))
+    {
+        ERR("invalid compressed section %s\n", zsectname);
+        goto out;
+    }
+
+#ifdef WORDS_BIGENDIAN
+    li.u.HighPart = *(DWORD*)&sect[4];
+    li.u.LowPart = *(DWORD*)&sect[8];
+#else
+    li.u.HighPart = RtlUlongByteSwap(*(DWORD*)&sect[4]);
+    li.u.LowPart = RtlUlongByteSwap(*(DWORD*)&sect[8]);
+#endif
+
+    addr = HeapAlloc(GetProcessHeap(), 0, li.QuadPart);
+    if (!addr)
+        goto out;
+
+    z.next_in = &sect[12];
+    z.avail_in = sz - 12;
+    z.opaque = NULL;
+    z.zalloc = zalloc;
+    z.zfree = zfree;
+
+    res = inflateInit(&z);
+    if (res != Z_OK)
+    {
+        FIXME("inflateInit failed with %i / %s\n", res, z.msg);
+        goto out_free;
+    }
+
+    do {
+        z.next_out = addr + z.total_out;
+        z.avail_out = li.QuadPart - z.total_out;
+        res = inflate(&z, Z_FINISH);
+    } while (z.avail_in && res == Z_STREAM_END);
+
+    if (res != Z_STREAM_END)
+    {
+        FIXME("Decompression failed with %i / %s\n", res, z.msg);
+        goto out_end;
+    }
+
+    ret = TRUE;
+    section->compressed = TRUE;
+    section->address = addr;
+    section->rva = image_get_map_rva(ism);
+    section->size = z.total_out;
+
+out_end:
+    inflateEnd(&z);
+out_free:
+    if (!ret)
+        HeapFree(GetProcessHeap(), 0, addr);
+out:
+    image_unmap_section(ism);
+    return ret;
+}
+
+#endif
+
 static inline BOOL dwarf2_init_section(dwarf2_section_t* section, struct image_file_map* fmap,
-                                       const char* sectname, struct image_section_map* ism)
+                                       const char* sectname, const char* zsectname,
+                                       struct image_section_map* ism)
 {
     struct image_section_map    local_ism;
 
     if (!ism) ism = &local_ism;
-    if (!image_find_section(fmap, sectname, ism))
+
+    section->compressed = FALSE;
+    if (image_find_section(fmap, sectname, ism))
     {
-        section->address = NULL;
-        section->size    = 0;
-        section->rva     = 0;
-        return FALSE;
+        section->address = (const BYTE*)image_map_section(ism);
+        section->size    = image_get_map_size(ism);
+        section->rva     = image_get_map_rva(ism);
+        return TRUE;
     }
 
-    section->address = (const BYTE*)image_map_section(ism);
-    section->size    = image_get_map_size(ism);
-    section->rva     = image_get_map_rva(ism);
-    return TRUE;
+    section->address = NULL;
+    section->size    = 0;
+    section->rva     = 0;
+
+    if (zsectname && image_find_section(fmap, zsectname, ism))
+    {
+#ifdef HAVE_ZLIB
+        return dwarf2_init_zsection(section, zsectname, ism);
+#else
+        FIXME("dbghelp not built with zlib, but compressed section found\n" );
+#endif
+    }
+
+    return FALSE;
+}
+
+static inline void dwarf2_fini_section(dwarf2_section_t* section)
+{
+    if (section->compressed)
+        HeapFree(GetProcessHeap(), 0, (void*)section->address);
+}
+
+static void dwarf2_module_remove(struct process* pcs, struct module_format* modfmt)
+{
+    dwarf2_fini_section(&modfmt->u.dwarf2_info->debug_loc);
+    dwarf2_fini_section(&modfmt->u.dwarf2_info->debug_frame);
+    HeapFree(GetProcessHeap(), 0, modfmt);
 }
 
 BOOL dwarf2_parse(struct module* module, unsigned long load_offset,
@@ -3303,12 +3429,12 @@ BOOL dwarf2_parse(struct module* module, unsigned long load_offset,
     BOOL                ret = TRUE;
     struct module_format* dwarf2_modfmt;
 
-    dwarf2_init_section(&eh_frame,                fmap, ".eh_frame",     &eh_frame_sect);
-    dwarf2_init_section(&section[section_debug],  fmap, ".debug_info",   &debug_sect);
-    dwarf2_init_section(&section[section_abbrev], fmap, ".debug_abbrev", &debug_abbrev_sect);
-    dwarf2_init_section(&section[section_string], fmap, ".debug_str",    &debug_str_sect);
-    dwarf2_init_section(&section[section_line],   fmap, ".debug_line",   &debug_line_sect);
-    dwarf2_init_section(&section[section_ranges], fmap, ".debug_ranges", &debug_ranges_sect);
+    dwarf2_init_section(&eh_frame,                fmap, ".eh_frame",     NULL,             &eh_frame_sect);
+    dwarf2_init_section(&section[section_debug],  fmap, ".debug_info",   ".zdebug_info",   &debug_sect);
+    dwarf2_init_section(&section[section_abbrev], fmap, ".debug_abbrev", ".zdebug_abbrev", &debug_abbrev_sect);
+    dwarf2_init_section(&section[section_string], fmap, ".debug_str",    ".zdebug_str",    &debug_str_sect);
+    dwarf2_init_section(&section[section_line],   fmap, ".debug_line",   ".zdebug_line",   &debug_line_sect);
+    dwarf2_init_section(&section[section_ranges], fmap, ".debug_ranges", ".zdebug_ranges", &debug_ranges_sect);
 
     /* to do anything useful we need either .eh_frame or .debug_info */
     if ((!eh_frame.address || eh_frame.address == IMAGE_NO_MAP) &&
@@ -3350,8 +3476,8 @@ BOOL dwarf2_parse(struct module* module, unsigned long load_offset,
     /* As we'll need later some sections' content, we won't unmap these
      * sections upon existing this function
      */
-    dwarf2_init_section(&dwarf2_modfmt->u.dwarf2_info->debug_loc,   fmap, ".debug_loc",   NULL);
-    dwarf2_init_section(&dwarf2_modfmt->u.dwarf2_info->debug_frame, fmap, ".debug_frame", NULL);
+    dwarf2_init_section(&dwarf2_modfmt->u.dwarf2_info->debug_loc,   fmap, ".debug_loc",   ".zdebug_loc",   NULL);
+    dwarf2_init_section(&dwarf2_modfmt->u.dwarf2_info->debug_frame, fmap, ".debug_frame", ".zdebug_frame", NULL);
     dwarf2_modfmt->u.dwarf2_info->eh_frame = eh_frame;
 
     while (mod_ctx.data < mod_ctx.end_data)
@@ -3366,7 +3492,16 @@ BOOL dwarf2_parse(struct module* module, unsigned long load_offset,
     dwarf2_modfmt->module->module.SourceIndexed = TRUE;
     dwarf2_modfmt->module->module.Publics = TRUE;
 
+    /* set the word_size for eh_frame parsing */
+    dwarf2_modfmt->u.dwarf2_info->word_size = fmap->addr_size / 8;
+
 leave:
+    dwarf2_fini_section(&section[section_debug]);
+    dwarf2_fini_section(&section[section_abbrev]);
+    dwarf2_fini_section(&section[section_string]);
+    dwarf2_fini_section(&section[section_line]);
+    dwarf2_fini_section(&section[section_ranges]);
+
     image_unmap_section(&debug_sect);
     image_unmap_section(&debug_abbrev_sect);
     image_unmap_section(&debug_str_sect);

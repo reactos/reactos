@@ -424,26 +424,26 @@ DECLSPEC_HIDDEN BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
                      * If we have spilled onto the next entrypoint, then
                      * bump the counter..
                      */
-                    for (;;)
+                    for (; l+1 < coff_files.files[j].neps; l++)
                     {
-                        if (l+1 >= coff_files.files[j].neps) break;
-                        symt_get_address(coff_files.files[j].entries[l+1], &addr);
-                        if (((msc_dbg->module->module.BaseOfImage + linepnt->Type.VirtualAddress) < addr))
+                        if (symt_get_address(coff_files.files[j].entries[l+1], &addr) &&
+                            msc_dbg->module->module.BaseOfImage + linepnt->Type.VirtualAddress < addr)
+                        {
+                            if (coff_files.files[j].entries[l+1]->tag == SymTagFunction)
+                            {
+                                /*
+                                 * Add the line number.  This is always relative to the
+                                 * start of the function, so we need to subtract that offset
+                                 * first.
+                                 */
+                                symt_add_func_line(msc_dbg->module,
+                                                   (struct symt_function*)coff_files.files[j].entries[l+1],
+                                                   coff_files.files[j].compiland->source,
+                                                   linepnt->Linenumber,
+                                                   msc_dbg->module->module.BaseOfImage + linepnt->Type.VirtualAddress - addr);
+                            }
                             break;
-                        l++;
-                    }
-
-                    if (coff_files.files[j].entries[l+1]->tag == SymTagFunction)
-                    {
-                        /*
-                         * Add the line number.  This is always relative to the
-                         * start of the function, so we need to subtract that offset
-                         * first.
-                         */
-                        symt_get_address(coff_files.files[j].entries[l+1], &addr);
-                        symt_add_func_line(msc_dbg->module, (struct symt_function*)coff_files.files[j].entries[l+1], 
-                                           coff_files.files[j].compiland->source, linepnt->Linenumber,
-                                           msc_dbg->module->module.BaseOfImage + linepnt->Type.VirtualAddress - addr);
+                        }
                     }
                 }
             }

@@ -224,6 +224,12 @@ static BOOL pe_map_file(HANDLE file, struct image_file_map* fmap, enum module_ty
 
             if (!(nthdr = RtlImageNtHeader(mapping))) goto error;
             memcpy(&fmap->u.pe.ntheader, nthdr, sizeof(fmap->u.pe.ntheader));
+            switch (nthdr->OptionalHeader.Magic)
+            {
+            case 0x10b: fmap->addr_size = 32; break;
+            case 0x20b: fmap->addr_size = 64; break;
+            default: return FALSE;
+            }
             section = (IMAGE_SECTION_HEADER*)
                 ((char*)&nthdr->OptionalHeader + nthdr->FileHeader.SizeOfOptionalHeader);
             fmap->u.pe.sect = HeapAlloc(GetProcessHeap(), 0,

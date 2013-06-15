@@ -1667,7 +1667,7 @@ typedef enum {
 #define IMAGE_FILE_MACHINE_AM33       0x1d3
 #define IMAGE_FILE_MACHINE_AMD64      0x8664
 #define IMAGE_FILE_MACHINE_ARM        0x1c0
-#define IMAGE_FILE_MACHINE_ARMV7      0x1c4
+#define IMAGE_FILE_MACHINE_ARMNT      0x1c4
 #define IMAGE_FILE_MACHINE_EBC        0xebc
 #define IMAGE_FILE_MACHINE_I386       0x14c
 #define IMAGE_FILE_MACHINE_IA64       0x200
@@ -1693,6 +1693,9 @@ typedef enum {
 #define IMAGE_FILE_MACHINE_CEE        0xC0EE
 #define IMAGE_FILE_MACHINE_TRICORE    0x0520
 #define IMAGE_FILE_MACHINE_CEF        0x0CEF
+
+/* Wine extension */
+#define IMAGE_FILE_MACHINE_ARM64      0x1c5
 
 #define IMAGE_FILE_EXPORT_DIRECTORY		0
 #define IMAGE_FILE_IMPORT_DIRECTORY		1

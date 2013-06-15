@@ -361,8 +361,6 @@ struct module
 {
     struct process*             process;
     IMAGEHLP_MODULEW64          module;
-    /* ANSI copy of module.ModuleName for efficiency */
-    char                        module_name[MAX_PATH];
     struct module*              next;
     enum module_type		type : 16;
     unsigned short              is_virtual : 1;
@@ -469,6 +467,55 @@ struct cpu_stack_walk
     } u;
 };
 
+struct dump_memory
+{
+    ULONG64                             base;
+    ULONG                               size;
+    ULONG                               rva;
+};
+
+struct dump_module
+{
+    unsigned                            is_elf;
+    ULONG64                             base;
+    ULONG                               size;
+    DWORD                               timestamp;
+    DWORD                               checksum;
+    WCHAR                               name[MAX_PATH];
+};
+
+struct dump_thread
+{
+    ULONG                               tid;
+    ULONG                               prio_class;
+    ULONG                               curr_prio;
+};
+
+struct dump_context
+{
+    /* process & thread information */
+    HANDLE                              hProcess;
+    DWORD                               pid;
+    unsigned                            flags_out;
+    /* thread information */
+    struct dump_thread*                 threads;
+    unsigned                            num_threads;
+    /* module information */
+    struct dump_module*                 modules;
+    unsigned                            num_modules;
+    unsigned                            alloc_modules;
+    /* exception information */
+    /* output information */
+    MINIDUMP_TYPE                       type;
+    HANDLE                              hFile;
+    RVA                                 rva;
+    struct dump_memory*                 mem;
+    unsigned                            num_mem;
+    unsigned                            alloc_mem;
+    /* callback information */
+    MINIDUMP_CALLBACK_INFORMATION*      cb;
+};
+
 enum cpu_addr {cpu_addr_pc, cpu_addr_stack, cpu_addr_frame};
 struct cpu
 {
@@ -492,6 +539,10 @@ struct cpu
     /* context related manipulation */
     void*       (*fetch_context_reg)(CONTEXT* context, unsigned regno, unsigned* size);
     const char* (*fetch_regname)(unsigned regno);
+
+    /* minidump per CPU extension */
+    BOOL        (*fetch_minidump_thread)(struct dump_context* dc, unsigned index, unsigned flags, const CONTEXT* ctx);
+    BOOL        (*fetch_minidump_module)(struct dump_context* dc, unsigned index, unsigned flags);
 };
 
 extern struct cpu*      dbghelp_current_cpu DECLSPEC_HIDDEN;
@@ -533,13 +584,16 @@ extern struct module*
 extern BOOL         macho_read_wine_loader_dbg_info(struct process* pcs) DECLSPEC_HIDDEN;
 extern BOOL         macho_synchronize_module_list(struct process* pcs) DECLSPEC_HIDDEN;
 
+/* minidump.c */
+void minidump_add_memory_block(struct dump_context* dc, ULONG64 base, ULONG size, ULONG rva);
+
 /* module.c */
 extern const WCHAR      S_ElfW[] DECLSPEC_HIDDEN;
 extern const WCHAR      S_WineLoaderW[] DECLSPEC_HIDDEN;
 extern const WCHAR      S_SlashW[] DECLSPEC_HIDDEN;
 
 extern struct module*
-                    module_find_by_addr(const struct process* pcs, unsigned long addr,
+                    module_find_by_addr(const struct process* pcs, DWORD64 addr,
                                         enum module_type type) DECLSPEC_HIDDEN;
 extern struct module*
                     module_find_by_nameW(const struct process* pcs,
@@ -628,6 +682,7 @@ extern DWORD64      sw_module_base(struct cpu_stack_walk* csw, DWORD64 addr) DEC
 
 /* symbol.c */
 extern const char*  symt_get_name(const struct symt* sym) DECLSPEC_HIDDEN;
+extern WCHAR*       symt_get_nameW(const struct symt* sym) DECLSPEC_HIDDEN;
 extern BOOL         symt_get_address(const struct symt* type, ULONG64* addr) DECLSPEC_HIDDEN;
 extern int          symt_cmp_addr(const void* p1, const void* p2) DECLSPEC_HIDDEN;
 extern void         copy_symbolW(SYMBOL_INFOW* siw, const SYMBOL_INFO* si) DECLSPEC_HIDDEN;

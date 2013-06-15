@@ -135,7 +135,7 @@ static void macho_calc_range(const struct macho_file_map* fmap, unsigned offset,
                              unsigned* out_aligned_end, unsigned* out_aligned_len,
                              unsigned* out_misalign)
 {
-    unsigned pagemask = getpagesize() - 1;
+    unsigned pagemask = sysconf( _SC_PAGESIZE ) - 1;
     unsigned file_offset, misalign;
 
     file_offset = fmap->arch_offset + offset;
@@ -383,7 +383,7 @@ static int macho_accum_segs_range(struct macho_file_map* fmap,
                                   const struct load_command* lc, void* user)
 {
     const struct segment_command*   sc = (const struct segment_command*)lc;
-    unsigned                        tmp, page_mask = getpagesize() - 1;
+    unsigned                        tmp, page_mask = sysconf( _SC_PAGESIZE ) - 1;
 
     TRACE("(%p/%d, %p, %p) before: 0x%08x - 0x%08x\n", fmap, fmap->fd, lc, user,
             (unsigned)fmap->segs_start, (unsigned)fmap->segs_size);

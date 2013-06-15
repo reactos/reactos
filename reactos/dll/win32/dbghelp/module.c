@@ -101,9 +101,6 @@ static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
 void module_set_module(struct module* module, const WCHAR* name)
 {
     module_fill_module(name, module->module.ModuleName, sizeof(module->module.ModuleName));
-    WideCharToMultiByte(CP_ACP, 0, module->module.ModuleName, -1,
-                        module->module_name, sizeof(module->module_name),
-                        NULL, NULL);
 }
 
 const WCHAR *get_wine_loader_name(void)
@@ -209,7 +206,7 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
 
     module->reloc_delta       = 0;
     module->type              = type;
-    module->is_virtual        = virtual ? TRUE : FALSE;
+    module->is_virtual        = virtual;
     for (i = 0; i < DFI_LAST; i++) module->format_info[i] = NULL;
     module->sortlist_valid    = FALSE;
     module->sorttab_size      = 0;
@@ -388,7 +385,7 @@ BOOL module_get_debug(struct module_pair* pair)
  * either the addr where module is loaded, or any address inside the 
  * module
  */
-struct module* module_find_by_addr(const struct process* pcs, unsigned long addr, 
+struct module* module_find_by_addr(const struct process* pcs, DWORD64 addr,
                                    enum module_type type)
 {
     struct module*      module;
@@ -659,8 +656,8 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
 DWORD64 WINAPI SymLoadModule64(HANDLE hProcess, HANDLE hFile, PCSTR ImageName,
                                PCSTR ModuleName, DWORD64 BaseOfDll, DWORD SizeOfDll)
 {
-    if (!validate_addr64(BaseOfDll)) return FALSE;
-    return SymLoadModule(hProcess, hFile, ImageName, ModuleName, (DWORD)BaseOfDll, SizeOfDll);
+    return SymLoadModuleEx(hProcess, hFile, ImageName, ModuleName, BaseOfDll, SizeOfDll,
+                           NULL, 0);
 }
 
 /******************************************************************
@@ -730,7 +727,7 @@ BOOL WINAPI SymUnloadModule64(HANDLE hProcess, DWORD64 BaseOfDll)
     pcs = process_find_by_handle(hProcess);
     if (!pcs) return FALSE;
     if (!validate_addr64(BaseOfDll)) return FALSE;
-    module = module_find_by_addr(pcs, (DWORD)BaseOfDll, DMT_UNKNOWN);
+    module = module_find_by_addr(pcs, BaseOfDll, DMT_UNKNOWN);
     if (!module) return FALSE;
     return module_remove(pcs, module);
 }

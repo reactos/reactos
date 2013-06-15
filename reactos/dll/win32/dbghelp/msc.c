@@ -935,6 +935,18 @@ static int codeview_add_type_struct_field_list(struct codeview_type_parse* ctp,
             }
             break;
 
+        case LF_INDEX_V1:
+            if (!codeview_add_type_struct_field_list(ctp, symt, type->index_v1.ref))
+                return FALSE;
+            ptr += 2 + 2;
+            break;
+
+        case LF_INDEX_V2:
+            if (!codeview_add_type_struct_field_list(ctp, symt, type->index_v2.ref))
+                return FALSE;
+            ptr += 2 + 2 + 4;
+            break;
+
         default:
             FIXME("Unsupported type %04x in STRUCT field list\n", type->generic.id);
             return FALSE;
@@ -1358,7 +1370,8 @@ static void codeview_snarf_linetab(const struct msc_debug_info* msc_dbg, const B
 {
     const BYTE*                 ptr = linetab;
     int				nfile, nseg;
-    int				i, j, k;
+    int                         i, j;
+    unsigned int                k;
     const unsigned int*         filetab;
     const unsigned int*         lt_ptr;
     const unsigned short*       linenos;
@@ -1551,7 +1564,6 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
     int                                 i, length;
     struct symt_block*                  block = NULL;
     struct symt*                        symt;
-    const char*                         name;
     struct symt_compiland*              compiland = NULL;
     struct location                     loc;
 
@@ -1947,9 +1959,13 @@ static int codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* root
 	case S_PROCREF_V1:
 	case S_DATAREF_V1:
 	case S_LPROCREF_V1:
-            name = (const char*)sym + length;
-            length += (*name + 1 + 3) & ~3;
-            break;
+            {
+                const char* name;
+
+                name = (const char*)sym + length;
+                length += (*name + 1 + 3) & ~3;
+                break;
+            }
 
         case S_MSTOOL_V3: /* just to silence a few warnings */
         case S_MSTOOLINFO_V3:

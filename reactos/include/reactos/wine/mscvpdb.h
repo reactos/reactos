@@ -723,6 +723,18 @@ union codeview_fieldtype
         struct p_string         p_name;
     } membermodify_v2;
 
+    struct
+    {
+        short int               id;
+        short int               ref;
+    } index_v1;
+
+    struct
+    {
+        short int               id;
+        short int               unk;
+        unsigned int            ref;
+    } index_v2;
 };
 
 

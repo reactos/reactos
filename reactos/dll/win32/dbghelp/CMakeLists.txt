@@ -2,7 +2,6 @@
 add_definitions(
     -D__WINESRC__
     -D_WINE
-    -DHAVE_REGEX_H
     -DHAVE_ALLOCA_H
     -D_IMAGEHLP_SOURCE_)
 
@@ -10,15 +9,18 @@ if(ARCH STREQUAL "amd64")
     add_definitions(-DUNW_FLAG_NHANDLER=0 -DUNW_FLAG_EHANDLER=1 -DUNW_FLAG_UHANDLER=2 -DUNW_FLAG_CHAININFO=3)
 endif()
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
+
 spec2def(dbghelp.dll dbghelp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     coff.c
     cpu_arm.c
+    cpu_arm64.c
     cpu_i386.c
     cpu_ppc.c
-    cpu_sparc.c
     cpu_x86_64.c
     crc32.c
     dbghelp.c
@@ -38,7 +40,6 @@ list(APPEND SOURCE
     storage.c
     symbol.c
     type.c
-    regex.c
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
 
@@ -51,7 +52,7 @@ if(NOT MSVC)
 endif()
 
 set_module_type(dbghelp win32dll)
-target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames)
+target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames zlib)
 add_delay_importlibs(dbghelp version)
 add_importlibs(dbghelp psapi msvcrt kernel32 ntdll)
 add_pch(dbghelp dbghelp_private.h)

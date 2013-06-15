@@ -74,6 +74,7 @@
 struct image_file_map
 {
     enum module_type            modtype;
+    unsigned                    addr_size;      /* either 16 (not used), 32 or 64 */
     union
     {
         struct elf_file_map
