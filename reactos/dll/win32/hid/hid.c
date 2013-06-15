@@ -126,7 +126,7 @@ HIDAPI
 NTSTATUS WINAPI
 HidP_GetButtonCaps(IN HIDP_REPORT_TYPE ReportType,
                    OUT PHIDP_BUTTON_CAPS ButtonCaps,
-                   IN OUT PULONG ButtonCapsLength,
+                   IN OUT PUSHORT ButtonCapsLength,
                    IN PHIDP_PREPARSED_DATA PreparsedData)
 {
   return HidP_GetSpecificButtonCaps(ReportType, 0, 0, 0, ButtonCaps,
@@ -343,7 +343,7 @@ HIDAPI
 NTSTATUS WINAPI
 HidP_GetValueCaps(IN HIDP_REPORT_TYPE ReportType,
                   OUT PHIDP_VALUE_CAPS ValueCaps,
-                  IN OUT PULONG ValueCapsLength,
+                  IN OUT PUSHORT ValueCapsLength,
                   IN PHIDP_PREPARSED_DATA PreparsedData)
 {
   return HidP_GetSpecificValueCaps(ReportType, 0, 0, 0, ValueCaps,
