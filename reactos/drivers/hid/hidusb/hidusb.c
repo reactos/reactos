@@ -421,8 +421,6 @@ HidUsb_ReadReportCompletion(
     IN PIRP Irp,
     IN PVOID Context)
 {
-    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
-    PHID_DEVICE_EXTENSION DeviceExtension;
     PURB Urb;
     PHID_USB_RESET_CONTEXT ResetContext;
 
@@ -467,12 +465,6 @@ HidUsb_ReadReportCompletion(
         //
         return STATUS_CONTINUE_COMPLETION;
     }
-
-    //
-    // get device extension
-    //
-    DeviceExtension = DeviceObject->DeviceExtension;
-    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // allocate reset context
@@ -971,7 +963,6 @@ Hid_DispatchUrb(
 {
     PIRP Irp;
     KEVENT Event;
-    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
     PHID_DEVICE_EXTENSION DeviceExtension;
     IO_STATUS_BLOCK IoStatus;
     PIO_STACK_LOCATION IoStack;
@@ -986,7 +977,6 @@ Hid_DispatchUrb(
     // get device extension
     //
     DeviceExtension = DeviceObject->DeviceExtension;
-    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // build irp
@@ -1374,16 +1364,8 @@ NTSTATUS
 Hid_SetIdle(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
-    PHID_DEVICE_EXTENSION DeviceExtension;
     PURB Urb;
     NTSTATUS Status;
-
-    //
-    // get device extension
-    //
-    DeviceExtension = DeviceObject->DeviceExtension;
-    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // allocate urb
@@ -1443,7 +1425,6 @@ Hid_GetProtocol(
     PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
     PHID_DEVICE_EXTENSION DeviceExtension;
     PURB Urb;
-    NTSTATUS Status;
     UCHAR Protocol[1];
 
     //
@@ -1494,10 +1475,11 @@ Hid_GetProtocol(
                           1,
                           NULL);
     Protocol[0] = 0xFF;
+
     //
     // dispatch urb
     //
-    Status = Hid_DispatchUrb(DeviceObject, Urb);
+    Hid_DispatchUrb(DeviceObject, Urb);
 
     //
     // free urb
@@ -1706,7 +1688,6 @@ HidPnp(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
-    PHID_USB_DEVICE_EXTENSION HidDeviceExtension;
     PHID_DEVICE_EXTENSION DeviceExtension;
     KEVENT Event;
 
@@ -1714,7 +1695,6 @@ HidPnp(
     // get device extension
     //
     DeviceExtension = DeviceObject->DeviceExtension;
-    HidDeviceExtension = DeviceExtension->MiniDeviceExtension;
 
     //
     // get current stack location

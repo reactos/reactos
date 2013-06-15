@@ -775,7 +775,7 @@ MouHid_StartDevice(
     HID_COLLECTION_INFORMATION Information;
     PVOID PreparsedData;
     HIDP_CAPS Capabilities;
-    ULONG ValueCapsLength;
+    USHORT ValueCapsLength;
     HIDP_VALUE_CAPS ValueCaps;
     PMOUHID_DEVICE_EXTENSION DeviceExtension;
     PUSAGE Buffer;
