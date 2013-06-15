@@ -112,11 +112,12 @@ GetAccountFlags(ULONG AccountControl)
 
 static
 NET_API_STATUS
-BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
+BuildUserInfoBuffer(PUSER_ALL_INFORMATION UserInfo,
                     DWORD level,
                     ULONG RelativeId,
                     LPVOID *Buffer)
 {
+    UNICODE_STRING LogonServer = RTL_CONSTANT_STRING(L"\\\\*");
     LPVOID LocalBuffer = NULL;
     PUSER_INFO_0 UserInfo0;
     PUSER_INFO_1 UserInfo1;
@@ -168,14 +169,20 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
             if (UserInfo->FullName.Length > 0)
                 Size += UserInfo->FullName.Length + sizeof(WCHAR);
 
-            /* FIXME: usri2_usr_comment */
-            /* FIXME: usri2_parms */
+            if (UserInfo->UserComment.Length > 0)
+                Size += UserInfo->UserComment.Length + sizeof(WCHAR);
+
+            if (UserInfo->Parameters.Length > 0)
+                Size += UserInfo->Parameters.Length + sizeof(WCHAR);
 
             if (UserInfo->WorkStations.Length > 0)
                 Size += UserInfo->WorkStations.Length + sizeof(WCHAR);
 
-            /* FIXME: usri2_logon_hours */
-            /* FIXME: usri2_logon_server */
+            if (UserInfo->LogonHours.UnitsPerWeek > 0)
+                Size += (((ULONG)UserInfo->LogonHours.UnitsPerWeek) + 7) / 8;
+
+            if (LogonServer.Length > 0)
+                Size += LogonServer.Length + sizeof(WCHAR);
             break;
 
         case 3:
@@ -194,14 +201,20 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
             if (UserInfo->FullName.Length > 0)
                 Size += UserInfo->FullName.Length + sizeof(WCHAR);
 
-            /* FIXME: usri3_usr_comment */
-            /* FIXME: usri3_parms */
+            if (UserInfo->UserComment.Length > 0)
+                Size += UserInfo->UserComment.Length + sizeof(WCHAR);
+
+            if (UserInfo->Parameters.Length > 0)
+                Size += UserInfo->Parameters.Length + sizeof(WCHAR);
 
             if (UserInfo->WorkStations.Length > 0)
                 Size += UserInfo->WorkStations.Length + sizeof(WCHAR);
 
-            /* FIXME: usri3_logon_hours */
-            /* FIXME: usri3_logon_server */
+            if (UserInfo->LogonHours.UnitsPerWeek > 0)
+                Size += (((ULONG)UserInfo->LogonHours.UnitsPerWeek) + 7) / 8;
+
+            if (LogonServer.Length > 0)
+                Size += LogonServer.Length + sizeof(WCHAR);
 
             if (UserInfo->ProfilePath.Length > 0)
                 Size += UserInfo->ProfilePath.Length + sizeof(WCHAR);
@@ -219,7 +232,8 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
             if (UserInfo->AdminComment.Length > 0)
                 Size += UserInfo->AdminComment.Length + sizeof(WCHAR);
 
-            /* FIXME: usri10_usr_comment */
+            if (UserInfo->UserComment.Length > 0)
+                Size += UserInfo->UserComment.Length + sizeof(WCHAR);
 
             if (UserInfo->FullName.Length > 0)
                 Size += UserInfo->FullName.Length + sizeof(WCHAR);
@@ -401,8 +415,29 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->FullName.Length + sizeof(WCHAR));
             }
 
-            /* FIXME: usri2_usr_comment */
-            /* FIXME: usri2_parms */
+            if (UserInfo->UserComment.Length > 0)
+            {
+                UserInfo2->usri2_usr_comment = Ptr;
+
+                memcpy(UserInfo2->usri2_usr_comment,
+                       UserInfo->UserComment.Buffer,
+                       UserInfo->UserComment.Length);
+                UserInfo2->usri2_usr_comment[UserInfo->UserComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserComment.Length + sizeof(WCHAR));
+            }
+
+            if (UserInfo->Parameters.Length > 0)
+            {
+                UserInfo2->usri2_parms = Ptr;
+
+                memcpy(UserInfo2->usri2_parms,
+                       UserInfo->Parameters.Buffer,
+                       UserInfo->Parameters.Length);
+                UserInfo2->usri2_parms[UserInfo->Parameters.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->Parameters.Length + sizeof(WCHAR));
+            }
 
             if (UserInfo->WorkStations.Length > 0)
             {
@@ -426,17 +461,36 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                                       &UserInfo2->usri2_acct_expires);
 
             UserInfo2->usri2_max_storage = USER_MAXSTORAGE_UNLIMITED;
+            UserInfo2->usri2_units_per_week = UserInfo->LogonHours.UnitsPerWeek;
 
-            /* FIXME: usri2_units_per_week */
-            /* FIXME: usri2_logon_hours */
+            if (UserInfo->LogonHours.UnitsPerWeek > 0)
+            {
+                UserInfo2->usri2_logon_hours = (PVOID)Ptr;
+
+                memcpy(UserInfo2->usri2_logon_hours,
+                       UserInfo->LogonHours.LogonHours,
+                       (((ULONG)UserInfo->LogonHours.UnitsPerWeek) + 7) / 8);
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + (((ULONG)UserInfo->LogonHours.UnitsPerWeek) + 7) / 8);
+            }
 
             UserInfo2->usri2_bad_pw_count = UserInfo->BadPasswordCount;
             UserInfo2->usri2_num_logons = UserInfo->LogonCount;
 
-            /* FIXME: usri2_logon_server */
-            /* FIXME: usri2_country_code */
-            /* FIXME: usri2_code_page */
+            if (LogonServer.Length > 0)
+            {
+                UserInfo2->usri2_logon_server = Ptr;
 
+                memcpy(UserInfo2->usri2_logon_server,
+                       LogonServer.Buffer,
+                       LogonServer.Length);
+                UserInfo2->usri2_logon_server[LogonServer.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + LogonServer.Length + sizeof(WCHAR));
+            }
+
+            UserInfo2->usri2_country_code = UserInfo->CountryCode;
+            UserInfo2->usri2_code_page = UserInfo->CodePage;
             break;
 
         case 3:
@@ -508,8 +562,29 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->FullName.Length + sizeof(WCHAR));
             }
 
-            /* FIXME: usri3_usr_comment */
-            /* FIXME: usri3_parms */
+            if (UserInfo->UserComment.Length > 0)
+            {
+                UserInfo3->usri3_usr_comment = Ptr;
+
+                memcpy(UserInfo3->usri3_usr_comment,
+                       UserInfo->UserComment.Buffer,
+                       UserInfo->UserComment.Length);
+                UserInfo3->usri3_usr_comment[UserInfo->UserComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserComment.Length + sizeof(WCHAR));
+            }
+
+            if (UserInfo->Parameters.Length > 0)
+            {
+                UserInfo3->usri3_parms = Ptr;
+
+                memcpy(UserInfo3->usri3_parms,
+                       UserInfo->Parameters.Buffer,
+                       UserInfo->Parameters.Length);
+                UserInfo3->usri3_parms[UserInfo->Parameters.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->Parameters.Length + sizeof(WCHAR));
+            }
 
             if (UserInfo->WorkStations.Length > 0)
             {
@@ -533,17 +608,36 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                                       &UserInfo3->usri3_acct_expires);
 
             UserInfo3->usri3_max_storage = USER_MAXSTORAGE_UNLIMITED;
+            UserInfo3->usri3_units_per_week = UserInfo->LogonHours.UnitsPerWeek;
 
-            /* FIXME: usri3_units_per_week */
-            /* FIXME: usri3_logon_hours */
+            if (UserInfo->LogonHours.UnitsPerWeek > 0)
+            {
+                UserInfo3->usri3_logon_hours = (PVOID)Ptr;
+
+                memcpy(UserInfo3->usri3_logon_hours,
+                       UserInfo->LogonHours.LogonHours,
+                       (((ULONG)UserInfo->LogonHours.UnitsPerWeek) + 7) / 8);
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + (((ULONG)UserInfo->LogonHours.UnitsPerWeek) + 7) / 8);
+            }
 
             UserInfo3->usri3_bad_pw_count = UserInfo->BadPasswordCount;
             UserInfo3->usri3_num_logons = UserInfo->LogonCount;
 
-            /* FIXME: usri3_logon_server */
-            /* FIXME: usri3_country_code */
-            /* FIXME: usri3_code_page */
+            if (LogonServer.Length > 0)
+            {
+                UserInfo3->usri3_logon_server = Ptr;
 
+                memcpy(UserInfo3->usri3_logon_server,
+                       LogonServer.Buffer,
+                       LogonServer.Length);
+                UserInfo3->usri3_logon_server[LogonServer.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + LogonServer.Length + sizeof(WCHAR));
+            }
+
+            UserInfo3->usri3_country_code = UserInfo->CountryCode;
+            UserInfo3->usri3_code_page = UserInfo->CodePage;
             UserInfo3->usri3_user_id = RelativeId;
             UserInfo3->usri3_primary_group_id = UserInfo->PrimaryGroupId;
 
@@ -602,7 +696,17 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
             }
 
-            /* FIXME: usri10_usr_comment */
+            if (UserInfo->UserComment.Length > 0)
+            {
+                UserInfo10->usri10_usr_comment = Ptr;
+
+                memcpy(UserInfo10->usri10_usr_comment,
+                       UserInfo->UserComment.Buffer,
+                       UserInfo->UserComment.Length);
+                UserInfo10->usri10_usr_comment[UserInfo->UserComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserComment.Length + sizeof(WCHAR));
+            }
 
             if (UserInfo->FullName.Length > 0)
             {
@@ -723,7 +827,7 @@ done:
 
 static
 VOID
-FreeUserInfo(PUSER_ACCOUNT_INFORMATION UserInfo)
+FreeUserInfo(PUSER_ALL_INFORMATION UserInfo)
 {
     if (UserInfo->UserName.Buffer != NULL)
         SamFreeMemory(UserInfo->UserName.Buffer);
@@ -748,6 +852,15 @@ FreeUserInfo(PUSER_ACCOUNT_INFORMATION UserInfo)
 
     if (UserInfo->WorkStations.Buffer != NULL)
         SamFreeMemory(UserInfo->WorkStations.Buffer);
+
+    if (UserInfo->UserComment.Buffer != NULL)
+        SamFreeMemory(UserInfo->UserComment.Buffer);
+
+    if (UserInfo->Parameters.Buffer != NULL)
+        SamFreeMemory(UserInfo->Parameters.Buffer);
+
+    if (UserInfo->PrivateData.Buffer != NULL)
+        SamFreeMemory(UserInfo->PrivateData.Buffer);
 
     if (UserInfo->LogonHours.LogonHours != NULL)
         SamFreeMemory(UserInfo->LogonHours.LogonHours);
@@ -1495,7 +1608,7 @@ NetUserEnum(LPCWSTR servername,
     LPVOID Buffer = NULL;
     ULONG i;
     SAM_HANDLE UserHandle = NULL;
-    PUSER_ACCOUNT_INFORMATION UserInfo = NULL;
+    PUSER_ALL_INFORMATION UserInfo = NULL;
 
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1620,7 +1733,7 @@ NetUserEnum(LPCWSTR servername,
         }
 
         Status = SamQueryInformationUser(UserHandle,
-                                         UserAccountInformation,
+                                         UserAllInformation,
                                          (PVOID *)&UserInfo);
         if (!NT_SUCCESS(Status))
         {
@@ -1747,7 +1860,7 @@ NetUserGetInfo(LPCWSTR servername,
     SAM_HANDLE UserHandle = NULL;
     PULONG RelativeIds = NULL;
     PSID_NAME_USE Use = NULL;
-    PUSER_ACCOUNT_INFORMATION UserInfo = NULL;
+    PUSER_ALL_INFORMATION UserInfo = NULL;
     LPVOID Buffer = NULL;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1820,7 +1933,7 @@ NetUserGetInfo(LPCWSTR servername,
     }
 
     Status = SamQueryInformationUser(UserHandle,
-                                     UserAccountInformation,
+                                     UserAllInformation,
                                      (PVOID *)&UserInfo);
     if (!NT_SUCCESS(Status))
     {
@@ -2211,6 +2324,9 @@ NetUserSetInfo(LPCWSTR servername,
 
     TRACE("(%s %s %lu %p %p)\n",
           debugstr_w(servername), debugstr_w(username), level, buf, parm_err);
+
+    if (parm_err != NULL)
+        *parm_err = PARM_ERROR_NONE;
 
     /* Check the info level */
     switch (level)
