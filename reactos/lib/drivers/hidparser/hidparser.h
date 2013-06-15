@@ -123,12 +123,12 @@ NTAPI
 HidParser_GetSpecificValueCaps(
     IN PHID_PARSER Parser,
     IN PVOID CollectionContext,
-    IN HIDP_REPORT_TYPE  ReportType,
-    IN USAGE  UsagePage,
-    IN USHORT  LinkCollection,
-    IN USAGE  Usage,
-    OUT PHIDP_VALUE_CAPS  ValueCaps,
-    IN OUT PULONG  ValueCapsLength);
+    IN HIDP_REPORT_TYPE ReportType,
+    IN USAGE UsagePage,
+    IN USHORT LinkCollection,
+    IN USAGE Usage,
+    OUT PHIDP_VALUE_CAPS ValueCaps,
+    IN OUT PUSHORT ValueCapsLength);
 
 
 HIDAPI

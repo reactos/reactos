@@ -273,11 +273,11 @@ HidParser_GetSpecificValueCapsWithReport(
     IN USHORT UsagePage,
     IN USHORT Usage,
     OUT PHIDP_VALUE_CAPS  ValueCaps,
-    IN OUT PULONG  ValueCapsLength)
+    IN OUT PUSHORT  ValueCapsLength)
 {
     ULONG Index;
     PHID_REPORT Report;
-    ULONG ItemCount = 0;
+    USHORT ItemCount = 0;
     USHORT CurrentUsagePage;
     USHORT CurrentUsage;
 

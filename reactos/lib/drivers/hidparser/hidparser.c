@@ -350,7 +350,7 @@ HidParser_GetSpecificValueCaps(
     IN USHORT  LinkCollection,
     IN USAGE  Usage,
     OUT PHIDP_VALUE_CAPS  ValueCaps,
-    IN OUT PULONG  ValueCapsLength)
+    IN OUT PUSHORT  ValueCapsLength)
 {
     HIDPARSER_STATUS ParserStatus;
 
