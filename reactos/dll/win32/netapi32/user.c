@@ -765,7 +765,18 @@ SetUserInfo(SAM_HANDLE UserHandle,
     USER_ALL_INFORMATION UserAllInfo;
     PUSER_INFO_0 UserInfo0;
     PUSER_INFO_1 UserInfo1;
+    PUSER_INFO_2 UserInfo2;
     PUSER_INFO_3 UserInfo3;
+    PUSER_INFO_1003 UserInfo1003;
+    PUSER_INFO_1006 UserInfo1006;
+    PUSER_INFO_1007 UserInfo1007;
+    PUSER_INFO_1009 UserInfo1009;
+    PUSER_INFO_1011 UserInfo1011;
+    PUSER_INFO_1012 UserInfo1012;
+    PUSER_INFO_1013 UserInfo1013;
+    PUSER_INFO_1014 UserInfo1014;
+    PUSER_INFO_1052 UserInfo1052;
+    PUSER_INFO_1053 UserInfo1053;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -779,97 +790,368 @@ SetUserInfo(SAM_HANDLE UserHandle,
             RtlInitUnicodeString(&UserAllInfo.UserName,
                                  UserInfo0->usri0_name);
 
-            UserAllInfo.WhichFields = USER_ALL_USERNAME;
+            UserAllInfo.WhichFields |= USER_ALL_USERNAME;
             break;
 
         case 1:
             UserInfo1 = (PUSER_INFO_1)UserInfo;
 
-//            RtlInitUnicodeString(&UserAllInfo.UserName,
-//                                 UserInfo1->usri1_name);
+            // usri1_name ignored
 
-            RtlInitUnicodeString(&UserAllInfo.AdminComment,
-                                 UserInfo1->usri1_comment);
+            if (UserInfo1->usri1_password != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.NtPassword,
+                                     UserInfo1->usri1_password);
+                UserAllInfo.NtPasswordPresent = TRUE;
+                UserAllInfo.WhichFields |= USER_ALL_NTPASSWORDPRESENT;
+            }
 
-            RtlInitUnicodeString(&UserAllInfo.HomeDirectory,
-                                 UserInfo1->usri1_home_dir);
+            // usri1_password_age ignored
 
-            RtlInitUnicodeString(&UserAllInfo.ScriptPath,
-                                 UserInfo1->usri1_script_path);
-
-            RtlInitUnicodeString(&UserAllInfo.NtPassword,
-                                 UserInfo1->usri1_password);
-            UserAllInfo.NtPasswordPresent = TRUE;
-
-//          UserInfo1->usri1_flags
 //          UserInfo1->usri1_priv
 
-            UserAllInfo.WhichFields = 
-                USER_ALL_ADMINCOMMENT |
-                USER_ALL_HOMEDIRECTORY |
-                USER_ALL_SCRIPTPATH |
-                USER_ALL_NTPASSWORDPRESENT
-//                USER_ALL_USERACCOUNTCONTROL
-                ;
+            if (UserInfo1->usri1_home_dir != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.HomeDirectory,
+                                     UserInfo1->usri1_home_dir);
+                UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORY;
+            }
+
+            if (UserInfo1->usri1_comment != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.AdminComment,
+                                     UserInfo1->usri1_comment);
+                UserAllInfo.WhichFields |= USER_ALL_ADMINCOMMENT;
+            }
+
+//          UserInfo1->usri1_flags
+//            UserAllInfo.WhichFields |= USER_ALL_USERACCOUNTCONTROL;
+
+            if (UserInfo1->usri1_script_path != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.ScriptPath,
+                                     UserInfo1->usri1_script_path);
+                UserAllInfo.WhichFields |= USER_ALL_SCRIPTPATH;
+            }
             break;
 
+        case 2:
+            UserInfo2 = (PUSER_INFO_2)UserInfo;
+
+            // usri2_name ignored
+
+            if (UserInfo2->usri2_password != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.NtPassword,
+                                     UserInfo2->usri2_password);
+                UserAllInfo.NtPasswordPresent = TRUE;
+                UserAllInfo.WhichFields |= USER_ALL_NTPASSWORDPRESENT;
+            }
+
+            // usri2_password_age ignored
+
+//          UserInfo2->usri2_priv;
+
+            if (UserInfo2->usri2_home_dir != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.HomeDirectory,
+                                     UserInfo2->usri2_home_dir);
+                UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORY;
+            }
+
+            if (UserInfo2->usri2_comment != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.AdminComment,
+                                     UserInfo2->usri2_comment);
+                UserAllInfo.WhichFields |= USER_ALL_ADMINCOMMENT;
+            }
+
+//          UserInfo2->usri2_flags;
+
+            if (UserInfo2->usri2_script_path != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.ScriptPath,
+                                     UserInfo2->usri2_script_path);
+                UserAllInfo.WhichFields |= USER_ALL_SCRIPTPATH;
+            }
+
+//          UserInfo2->usri2_auth_flags;
+
+            if (UserInfo2->usri2_full_name != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.FullName,
+                                     UserInfo2->usri2_full_name);
+                UserAllInfo.WhichFields |= USER_ALL_FULLNAME;
+            }
+
+            if (UserInfo2->usri2_usr_comment != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.UserComment,
+                                     UserInfo2->usri2_usr_comment);
+                UserAllInfo.WhichFields |= USER_ALL_USERCOMMENT;
+            }
+
+            if (UserInfo2->usri2_parms != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.Parameters,
+                                     UserInfo2->usri2_parms);
+                UserAllInfo.WhichFields |= USER_ALL_PARAMETERS;
+            }
+
+            if (UserInfo2->usri2_workstations != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.WorkStations,
+                                     UserInfo2->usri2_workstations);
+                UserAllInfo.WhichFields |= USER_ALL_WORKSTATIONS;
+            }
+
+            // usri2_last_logon ignored
+            // usri2_last_logoff ignored
+
+//          UserInfo2->usri2_acct_expires;
+//          UserInfo2->usri2_max_storage;
+//          UserInfo2->usri2_units_per_week;
+//          UserInfo2->usri2_logon_hours;
+
+            // usri2_bad_pw_count ignored
+            // usri2_num_logons ignored
+            // usri2_logon_server ignored
+
+//          UserInfo2->usri2_country_code;
+//          UserInfo2->usri2_code_page;
+            break;
 
         case 3:
             UserInfo3 = (PUSER_INFO_3)UserInfo;
 
-//  LPWSTR usri3_name;
+            // usri3_name ignored
 
-            RtlInitUnicodeString(&UserAllInfo.NtPassword,
-                                 UserInfo3->usri3_password);
-            UserAllInfo.NtPasswordPresent = TRUE;
+            if (UserInfo3->usri3_password != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.NtPassword,
+                                     UserInfo3->usri3_password);
+                UserAllInfo.NtPasswordPresent = TRUE;
+                UserAllInfo.WhichFields |= USER_ALL_NTPASSWORDPRESENT;
+            }
 
-//  DWORD  usri3_password_age; // ignored
-//  DWORD  usri3_priv;
+            // usri3_password_age ignored
 
-            RtlInitUnicodeString(&UserAllInfo.HomeDirectory,
-                                 UserInfo3->usri3_home_dir);
+//          UserInfo3->usri3_priv;
 
-            RtlInitUnicodeString(&UserAllInfo.AdminComment,
-                                 UserInfo3->usri3_comment);
+            if (UserInfo3->usri3_home_dir != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.HomeDirectory,
+                                     UserInfo3->usri3_home_dir);
+                UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORY;
+            }
 
-//  DWORD  usri3_flags;
+            if (UserInfo3->usri3_comment != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.AdminComment,
+                                     UserInfo3->usri3_comment);
+                UserAllInfo.WhichFields |= USER_ALL_ADMINCOMMENT;
+            }
 
-            RtlInitUnicodeString(&UserAllInfo.ScriptPath,
-                                 UserInfo3->usri3_script_path);
+//          UserInfo3->usri3_flags;
+//              UserAllInfo.WhichFields |= USER_ALL_USERACCOUNTCONTROL;
 
-//  DWORD  usri3_auth_flags;
+            if (UserInfo3->usri3_script_path != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.ScriptPath,
+                                     UserInfo3->usri3_script_path);
+                UserAllInfo.WhichFields |= USER_ALL_SCRIPTPATH;
+            }
 
-            RtlInitUnicodeString(&UserAllInfo.FullName,
-                                 UserInfo3->usri3_full_name);
+//          UserInfo3->usri3_auth_flags;
 
-//  LPWSTR usri3_usr_comment;
-//  LPWSTR usri3_parms;
-//  LPWSTR usri3_workstations;
-//  DWORD  usri3_last_logon;
-//  DWORD  usri3_last_logoff;
-//  DWORD  usri3_acct_expires;
-//  DWORD  usri3_max_storage;
-//  DWORD  usri3_units_per_week;
-//  PBYTE  usri3_logon_hours;
-//  DWORD  usri3_bad_pw_count;
-//  DWORD  usri3_num_logons;
-//  LPWSTR usri3_logon_server;
-//  DWORD  usri3_country_code;
-//  DWORD  usri3_code_page;
-//  DWORD  usri3_user_id;  // ignored
-//  DWORD  usri3_primary_group_id;
-//  LPWSTR usri3_profile;
-//  LPWSTR usri3_home_dir_drive;
-//  DWORD  usri3_password_expired;
+            if (UserInfo3->usri3_full_name != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.FullName,
+                                     UserInfo3->usri3_full_name);
+                UserAllInfo.WhichFields |= USER_ALL_FULLNAME;
+            }
 
-            UserAllInfo.WhichFields = 
-                USER_ALL_NTPASSWORDPRESENT |
-                USER_ALL_HOMEDIRECTORY |
-                USER_ALL_ADMINCOMMENT |
-                USER_ALL_SCRIPTPATH |
-                USER_ALL_FULLNAME
-//                USER_ALL_USERACCOUNTCONTROL
-                ;
+            if (UserInfo3->usri3_usr_comment != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.UserComment,
+                                     UserInfo3->usri3_usr_comment);
+                UserAllInfo.WhichFields |= USER_ALL_USERCOMMENT;
+            }
+
+            if (UserInfo3->usri3_parms != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.Parameters,
+                                     UserInfo3->usri3_parms);
+                UserAllInfo.WhichFields |= USER_ALL_PARAMETERS;
+            }
+
+            if (UserInfo3->usri3_workstations != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.WorkStations,
+                                     UserInfo3->usri3_workstations);
+                UserAllInfo.WhichFields |= USER_ALL_WORKSTATIONS;
+            }
+
+            // usri3_last_logon ignored
+            // usri3_last_logoff ignored
+
+//          UserInfo3->usri3_acct_expires;
+//          UserInfo3->usri3_max_storage;
+//          UserInfo3->usri3_units_per_week;
+//          UserInfo3->usri3_logon_hours;
+
+            // usri3_bad_pw_count ignored
+            // usri3_num_logons ignored
+            // usri3_logon_server ignored
+
+//          UserInfo3->usri3_country_code;
+//          UserInfo3->usri3_code_page;
+
+            // usri3_user_id ignored
+
+//          UserInfo3->usri3_primary_group_id;
+
+            if (UserInfo3->usri3_profile != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.ProfilePath,
+                                     UserInfo3->usri3_profile);
+                UserAllInfo.WhichFields |= USER_ALL_PROFILEPATH;
+            }
+
+            if (UserInfo3->usri3_home_dir_drive != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.HomeDirectoryDrive,
+                                     UserInfo3->usri3_home_dir_drive);
+                UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORYDRIVE;
+            }
+
+//          UserInfo3->usri3_password_expired;
+            break;
+
+//        case 4:
+//        case 21:
+//        case 22:
+
+        case 1003:
+            UserInfo1003 = (PUSER_INFO_1003)UserInfo;
+
+            if (UserInfo1003->usri1003_password != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.NtPassword,
+                                     UserInfo1003->usri1003_password);
+                UserAllInfo.NtPasswordPresent = TRUE;
+                UserAllInfo.WhichFields |= USER_ALL_NTPASSWORDPRESENT;
+            }
+            break;
+
+//        case 1005:
+
+        case 1006:
+            UserInfo1006 = (PUSER_INFO_1006)UserInfo;
+
+            if (UserInfo1006->usri1006_home_dir != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.HomeDirectory,
+                                     UserInfo1006->usri1006_home_dir);
+                UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORY;
+            }
+            break;
+
+        case 1007:
+            UserInfo1007 = (PUSER_INFO_1007)UserInfo;
+
+            if (UserInfo1007->usri1007_comment != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.AdminComment,
+                                     UserInfo1007->usri1007_comment);
+                UserAllInfo.WhichFields |= USER_ALL_ADMINCOMMENT;
+            }
+            break;
+
+//        case 1008:
+
+        case 1009:
+            UserInfo1009 = (PUSER_INFO_1009)UserInfo;
+
+            if (UserInfo1009->usri1009_script_path != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.ScriptPath,
+                                     UserInfo1009->usri1009_script_path);
+                UserAllInfo.WhichFields |= USER_ALL_SCRIPTPATH;
+            }
+            break;
+
+//        case 1010:
+
+        case 1011:
+            UserInfo1011 = (PUSER_INFO_1011)UserInfo;
+
+            if (UserInfo1011->usri1011_full_name != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.FullName,
+                                     UserInfo1011->usri1011_full_name);
+                UserAllInfo.WhichFields |= USER_ALL_FULLNAME;
+            }
+            break;
+
+        case 1012:
+            UserInfo1012 = (PUSER_INFO_1012)UserInfo;
+
+            if (UserInfo1012->usri1012_usr_comment != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.UserComment,
+                                     UserInfo1012->usri1012_usr_comment);
+                UserAllInfo.WhichFields |= USER_ALL_USERCOMMENT;
+            }
+            break;
+
+        case 1013:
+            UserInfo1013 = (PUSER_INFO_1013)UserInfo;
+
+            if (UserInfo1013->usri1013_parms != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.Parameters,
+                                     UserInfo1013->usri1013_parms);
+                UserAllInfo.WhichFields |= USER_ALL_PARAMETERS;
+            }
+            break;
+
+        case 1014:
+            UserInfo1014 = (PUSER_INFO_1014)UserInfo;
+
+            if (UserInfo1014->usri1014_workstations != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.WorkStations,
+                                     UserInfo1014->usri1014_workstations);
+                UserAllInfo.WhichFields |= USER_ALL_WORKSTATIONS;
+            }
+            break;
+
+//        case 1017:
+//        case 1020:
+//        case 1024:
+//        case 1051:
+
+        case 1052:
+            UserInfo1052 = (PUSER_INFO_1052)UserInfo;
+
+            if (UserInfo1052->usri1052_profile != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.ProfilePath,
+                                     UserInfo1052->usri1052_profile);
+                UserAllInfo.WhichFields |= USER_ALL_PROFILEPATH;
+            }
+            break;
+
+        case 1053:
+            UserInfo1053 = (PUSER_INFO_1053)UserInfo;
+
+            if (UserInfo1053->usri1053_home_dir_drive != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.HomeDirectoryDrive,
+                                     UserInfo1053->usri1053_home_dir_drive);
+                UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORYDRIVE;
+            }
             break;
 
         default:
@@ -1935,27 +2217,28 @@ NetUserSetInfo(LPCWSTR servername,
     {
         case 0:
         case 1:
-//        case 2:
+        case 2:
         case 3:
 //        case 4:
 //        case 21:
 //        case 22:
-//        case 1003:
+        case 1003:
 //        case 1005:
-//        case 1006:
-//        case 1007:
+        case 1006:
+        case 1007:
 //        case 1008:
-//        case 1009:
+        case 1009:
 //        case 1010:
-//        case 1011:
-//        case 1012:
-//        case 1014:
+        case 1011:
+        case 1012:
+        case 1013:
+        case 1014:
 //        case 1017:
 //        case 1020:
 //        case 1024:
 //        case 1051:
-//        case 1052:
-//        case 1053:
+        case 1052:
+        case 1053:
             break;
 
         default:
