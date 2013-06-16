@@ -21,16 +21,16 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "winreg.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+#include <wingdi.h>
+#include <winreg.h>
 
-#include "winspool.h"
-#include "ddk/winsplp.h"
+#include <winspool.h>
+#include <ddk/winsplp.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 
 /* ##### */
@@ -208,8 +208,8 @@ static void test_AddPort(void)
 
     if (0)
     {
-    /* NT4 crash on this test */
-    res = pAddPort(NULL, 0, NULL);
+        /* NT4 crash on this test */
+        pAddPort(NULL, 0, NULL);
     }
 
     /*  Testing-Results (localmon.dll from NT4.0):
@@ -445,8 +445,8 @@ static void test_ConfigurePort(void)
 
     if (0)
     {
-    /* NT4 crash on this test */
-    res = pConfigurePort(NULL, 0, NULL);
+        /* NT4 crash on this test */
+        pConfigurePort(NULL, 0, NULL);
     }
 
     /*  Testing-Results (localmon.dll from NT4.0):
@@ -486,8 +486,8 @@ static void test_DeletePort(void)
 
     if (0)
     {
-    /* NT4 crash on this test */
-    res = pDeletePort(NULL, 0, NULL);
+        /* NT4 crash on this test */
+        pDeletePort(NULL, 0, NULL);
     }
 
     /*  Testing-Results (localmon.dll from NT4.0):
@@ -573,10 +573,10 @@ static void test_EnumPorts(void)
 
         if (0)
         {
-        /* The following tests crash this app with native localmon/localspl */
-        res = pEnumPorts(NULL, level, NULL, cbBuf, &pcbNeeded, &pcReturned);
-        res = pEnumPorts(NULL, level, buffer, cbBuf, NULL, &pcReturned);
-        res = pEnumPorts(NULL, level, buffer, cbBuf, &pcbNeeded, NULL);
+            /* The following tests crash this app with native localmon/localspl */
+            pEnumPorts(NULL, level, NULL, cbBuf, &pcbNeeded, &pcReturned);
+            pEnumPorts(NULL, level, buffer, cbBuf, NULL, &pcReturned);
+            pEnumPorts(NULL, level, buffer, cbBuf, &pcbNeeded, NULL);
         }
 
         /* The Servername is ignored */
@@ -747,9 +747,9 @@ static void test_XcvClosePort(void)
 
     if (0)
     {
-    /* crash with native localspl.dll (w2k+xp) */
-    res = pXcvClosePort(NULL);
-    res = pXcvClosePort(INVALID_HANDLE_VALUE);
+        /* crash with native localspl.dll (w2k+xp) */
+        pXcvClosePort(NULL);
+        pXcvClosePort(INVALID_HANDLE_VALUE);
     }
 
 
@@ -761,12 +761,12 @@ static void test_XcvClosePort(void)
     if (res) {
         SetLastError(0xdeadbeef);
         res = pXcvClosePort(hXcv2);
-        ok( res, "returned %d with %u (expected '!= 0')\n", res, GetLastError());
+        ok(res, "returned %d with %u (expected '!= 0')\n", res, GetLastError());
 
         if (0)
         {
-        /* test for "Double Free": crash with native localspl.dll (w2k+xp) */
-        res = pXcvClosePort(hXcv2);
+            /* test for "Double Free": crash with native localspl.dll (w2k+xp) */
+            pXcvClosePort(hXcv2);
         }
     }
 }
@@ -1001,6 +1001,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
 
     /* the default timeout is returned, when the value is empty */
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)emptyA, 1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1011,6 +1012,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
 
     /* the dialog is limited (1 - 999999), but that is done somewhere else */
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)num_0A, lstrlenA(num_0A)+1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1021,6 +1023,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
 
 
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)num_1A, lstrlenA(num_1A)+1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1030,6 +1033,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
         "for '1')\n", res, GetLastError(), needed, buffer[0]);
 
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)num_999999A, lstrlenA(num_999999A)+1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1040,6 +1044,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
 
 
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)num_1000000A, lstrlenA(num_1000000A)+1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1094,10 +1099,10 @@ static void test_XcvDataPort_MonitorUI(void)
         "(expected 'ERROR_INVALID_PARAMETER')\n", res, GetLastError(), needed);
 
     if (0) {
-    /* crash with native localspl.dll (w2k+xp) */
-    res = pXcvDataPort(hXcv, NULL, NULL, 0, buffer, MAX_PATH, &needed);
-    res = pXcvDataPort(hXcv, cmd_MonitorUIW, NULL, 0, NULL, len, &needed);
-    res = pXcvDataPort(hXcv, cmd_MonitorUIW, NULL, 0, buffer, len, NULL);
+        /* crash with native localspl.dll (w2k+xp) */
+        pXcvDataPort(hXcv, NULL, NULL, 0, buffer, MAX_PATH, &needed);
+        pXcvDataPort(hXcv, cmd_MonitorUIW, NULL, 0, NULL, len, &needed);
+        pXcvDataPort(hXcv, cmd_MonitorUIW, NULL, 0, buffer, len, NULL);
     }
 
 
@@ -1173,8 +1178,8 @@ static void test_XcvDataPort_PortIsValid(void)
 
 
     if (0) {
-    /* crash with native localspl.dll (w2k+xp) */
-    res = pXcvDataPort(hXcv, cmd_PortIsValidW, NULL, 0, NULL, 0, &needed);
+        /* crash with native localspl.dll (w2k+xp) */
+        pXcvDataPort(hXcv, cmd_PortIsValidW, NULL, 0, NULL, 0, &needed);
     }
 
 
@@ -1304,9 +1309,9 @@ static void test_XcvOpenPort(void)
 
     if (0)
     {
-    /* crash with native localspl.dll (w2k+xp) */
-    res = pXcvOpenPort(NULL, SERVER_ACCESS_ADMINISTER, &hXcv2);
-    res = pXcvOpenPort(emptyW, SERVER_ACCESS_ADMINISTER, NULL);
+        /* crash with native localspl.dll (w2k+xp) */
+        pXcvOpenPort(NULL, SERVER_ACCESS_ADMINISTER, &hXcv2);
+        pXcvOpenPort(emptyW, SERVER_ACCESS_ADMINISTER, NULL);
     }
 
 
