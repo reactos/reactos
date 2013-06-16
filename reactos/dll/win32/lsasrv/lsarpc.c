@@ -2178,7 +2178,7 @@ NTSTATUS WINAPI LsarEnumerateAccountRights(
     PRPC_UNICODE_STRING RightsBuffer = NULL;
     PRPC_UNICODE_STRING PrivilegeString;
     ACCESS_MASK SystemAccess;
-    ULONG RightsCount;
+    ULONG RightsCount = 0;
     ULONG RightsIndex;
     ULONG i;
     NTSTATUS Status;
