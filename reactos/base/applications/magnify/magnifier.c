@@ -45,7 +45,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     // TODO: Place code here.
     MSG msg;
     HACCEL hAccelTable;
-       
+
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
+
     switch (GetUserDefaultUILanguage())
   {
     case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
@@ -55,9 +58,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     default:
       break;
   }
-    
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
 
     // Initialize global strings
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
