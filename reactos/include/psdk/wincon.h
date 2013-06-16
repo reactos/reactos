@@ -368,6 +368,19 @@ GetConsoleTitleW(
   _Out_writes_(nSize) LPWSTR lpConsoleTitle,
   _In_ DWORD nSize);
 
+COORD
+WINAPI
+GetConsoleFontSize(
+  _In_ HANDLE hConsoleOutput,
+  _In_ DWORD nFont);
+
+BOOL
+WINAPI
+GetCurrentConsoleFont(
+  _In_  HANDLE hConsoleOutput,
+  _In_  BOOL bMaximumWindow,
+  _Out_ PCONSOLE_FONT_INFO lpConsoleCurrentFont);
+
 #if (_WIN32_WINNT >= 0x0500)
 HWND WINAPI GetConsoleWindow(VOID);
 BOOL APIENTRY GetConsoleDisplayMode(_Out_ LPDWORD lpModeFlags);

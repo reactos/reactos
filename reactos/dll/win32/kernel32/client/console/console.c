@@ -346,12 +346,12 @@ GetConsoleDisplayMode(LPDWORD lpModeFlags)
  */
 DWORD
 WINAPI
-GetConsoleFontInfo(DWORD Unknown0,
-                   DWORD Unknown1,
-                   DWORD Unknown2,
-                   DWORD Unknown3)
+GetConsoleFontInfo(HANDLE hConsoleOutput,
+                   BOOL bMaximumWindow,
+                   DWORD nFontCount,
+                   PCONSOLE_FONT_INFO lpConsoleFontInfo)
 {
-    DPRINT1("GetConsoleFontInfo(0x%x, 0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2, Unknown3);
+    DPRINT1("GetConsoleFontInfo(0x%x, %d, %d, 0x%x) UNIMPLEMENTED!\n", hConsoleOutput, bMaximumWindow, nFontCount, lpConsoleFontInfo);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
@@ -424,7 +424,7 @@ GetConsoleInputWaitHandle(VOID)
 /*
  * @unimplemented
  */
-INT
+BOOL
 WINAPI
 GetCurrentConsoleFont(HANDLE hConsoleOutput,
                       BOOL bMaximumWindow,
@@ -610,10 +610,10 @@ SetConsoleDisplayMode(HANDLE hConsoleOutput,
  */
 BOOL
 WINAPI
-SetConsoleFont(DWORD Unknown0,
-               DWORD Unknown1)
+SetConsoleFont(HANDLE hConsoleOutput,
+               DWORD nFont)
 {
-    DPRINT1("SetConsoleFont(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
+    DPRINT1("SetConsoleFont(0x%x, %d) UNIMPLEMENTED!\n", hConsoleOutput, nFont);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
