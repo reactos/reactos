@@ -217,9 +217,9 @@ Sfx86OpcodeTable optab8086 = {
 	{Sfx86OpcodeExec_default,	Sfx86OpcodeDec_default},				/* 0x66 */
 	{Sfx86OpcodeExec_default,	Sfx86OpcodeDec_default},				/* 0x67 */
 
-	{Sfx86OpcodeExec_default,	Sfx86OpcodeDec_default},				/* 0x68 */
+	{Sfx86OpcodeExec_push,		Sfx86OpcodeDec_push},					/* 0x68 */
 	{Sfx86OpcodeExec_default,	Sfx86OpcodeDec_default},				/* 0x69 */
-	{Sfx86OpcodeExec_default,	Sfx86OpcodeDec_default},				/* 0x6A */
+	{Sfx86OpcodeExec_push,		Sfx86OpcodeDec_push},					/* 0x6A */
 	{Sfx86OpcodeExec_default,	Sfx86OpcodeDec_default},				/* 0x6B */
 	{Sfx86OpcodeExec_default,	Sfx86OpcodeDec_default},				/* 0x6C */
 	{Sfx86OpcodeExec_default,	Sfx86OpcodeDec_default},				/* 0x6D */

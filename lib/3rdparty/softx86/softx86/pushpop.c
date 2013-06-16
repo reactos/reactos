@@ -167,6 +167,21 @@ int Sfx86OpcodeExec_push(sx86_ubyte opcode,softx86_ctx* ctx)
 		return 1;
 	}
 
+	if (opcode == 0x6A)							// PUSH imm8
+	{
+		sx86_ubyte b = softx86_fetch_exec_byte(ctx);
+		softx86_stack_pushw(ctx, (sx86_uword)b);
+		return 1;
+	}
+
+	if (opcode == 0x68)							// PUSH imm16
+	{
+		sx86_uword w = softx86_fetch_exec_byte(ctx);
+		w |= softx86_fetch_exec_byte(ctx) << 8;
+		softx86_stack_pushw(ctx, w);
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -199,6 +214,21 @@ int Sfx86OpcodeDec_push(sx86_ubyte opcode,softx86_ctx* ctx,char buf[128])
 
 	if (opcode == 0x9C) {						// PUSHF
 		strcpy(buf,"PUSHF");
+		return 1;
+	}
+
+	if (opcode == 0x6A && ctx->__private->level >= SX86_CPULEVEL_80186)	// PUSH imm8
+	{
+		sx86_ubyte b = softx86_fetch_exec_byte(ctx);
+		sprintf(buf, "PUSH %02Xh", b);
+		return 1;
+	}
+
+	if (opcode == 0x68 && ctx->__private->level >= SX86_CPULEVEL_80186)	// PUSH imm16
+	{
+		sx86_uword w = softx86_fetch_exec_byte(ctx);
+		w |= softx86_fetch_exec_byte(ctx) << 8;
+		sprintf(buf, "PUSH %04Xh", w);
 		return 1;
 	}
 
