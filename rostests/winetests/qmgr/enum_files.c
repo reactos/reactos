@@ -18,13 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+
 #include <shlwapi.h>
-#include <stdio.h>
+//#include <stdio.h>
 
 #define COBJMACROS
 
-#include "wine/test.h"
-#include "bits.h"
+#include <wine/test.h>
+#include <bits.h>
 
 /* Globals used by many tests */
 #define NUM_FILES 2             /* At least two.  */
@@ -226,7 +236,7 @@ static void test_Skip_walkList(void)
         ok(hres == S_OK, "Skip failed: %08x\n", hres);
         if(hres != S_OK)
         {
-            skip("Unable to propely Skip files\n");
+            skip("Unable to properly Skip files\n");
             return;
         }
     }

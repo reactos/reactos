@@ -18,13 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+//#include <stdio.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
-#include "wine/test.h"
-#include "initguid.h"
-#include "bits.h"
+#include <wine/test.h>
+
+#include <winnls.h>
+#include <initguid.h>
+#include <objbase.h>
+#include <bits.h>
 
 static WCHAR progname[MAX_PATH];
 
@@ -38,6 +45,11 @@ test_CreateInstance(void)
     /* Creating BITS instance */
     hres = CoCreateInstance(&CLSID_BackgroundCopyManager, NULL, CLSCTX_LOCAL_SERVER,
                             &IID_IBackgroundCopyManager, (void **) &manager);
+
+    if(hres == __HRESULT_FROM_WIN32(ERROR_SERVICE_DISABLED)) {
+        skip("Needed Service is disabled\n");
+        return;
+    }
     ok(hres == S_OK, "CoCreateInstance failed: %08x\n", hres);
     if(hres != S_OK) {
         skip("Unable to create bits instance.\n");
@@ -203,6 +215,7 @@ static void test_globalness(void)
         BOOL found = FALSE;
 
         hres = IEnumBackgroundCopyJobs_GetCount(enumJobs, &n);
+        ok(hres == S_OK, "GetCount failed: %08x\n", hres);
         for (i = 0; i < n && !found; ++i)
         {
             LPWSTR name;
@@ -214,6 +227,7 @@ static void test_globalness(void)
             IBackgroundCopyJob_Release(job);
         }
         hres = IEnumBackgroundCopyJobs_Release(enumJobs);
+        ok(hres == S_OK, "Release failed: %08x\n", hres);
         ok(found, "Adding a job in another process failed\n");
     }
 

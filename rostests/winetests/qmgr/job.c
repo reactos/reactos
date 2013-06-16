@@ -18,75 +18,41 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+//#include <stdio.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
-#include "wine/test.h"
-#include "bits.h"
-#include "initguid.h"
+#include <wine/test.h>
+#include <objbase.h>
+#include <bits.h>
+#include <initguid.h>
 
 /* Globals used by many tests */
 static const WCHAR test_displayName[] = {'T', 'e', 's', 't', 0};
-static const WCHAR test_remoteNameA[] = {'r','e','m','o','t','e','A', 0};
-static const WCHAR test_remoteNameB[] = {'r','e','m','o','t','e','B', 0};
-static const WCHAR test_localNameA[] = {'l','o','c','a','l','A', 0};
-static const WCHAR test_localNameB[] = {'l','o','c','a','l','B', 0};
-static WCHAR *test_currentDir;
-static WCHAR *test_remotePathA;
-static WCHAR *test_remotePathB;
-static WCHAR *test_localPathA;
-static WCHAR *test_localPathB;
+static WCHAR test_remotePathA[MAX_PATH];
+static WCHAR test_remotePathB[MAX_PATH];
+static WCHAR test_localPathA[MAX_PATH];
+static WCHAR test_localPathB[MAX_PATH];
 static IBackgroundCopyManager *test_manager;
 static IBackgroundCopyJob *test_job;
 static GUID test_jobId;
 static BG_JOB_TYPE test_type;
 
-static BOOL init_paths(void)
+static VOID init_paths(void)
 {
-    static const WCHAR format[] = {'%','s','\\','%','s', 0};
-    DWORD n;
+    WCHAR tmpDir[MAX_PATH];
+    WCHAR prefix[] = {'q', 'm', 'g', 'r', 0};
 
-    n = GetCurrentDirectoryW(0, NULL);
-    if (n == 0)
-    {
-        skip("Couldn't get current directory size\n");
-        return FALSE;
-    }
+    GetTempPathW(MAX_PATH, tmpDir);
 
-    test_currentDir = HeapAlloc(GetProcessHeap(), 0, n * sizeof(WCHAR));
-    test_localPathA
-        = HeapAlloc(GetProcessHeap(), 0,
-                    (n + 1 + lstrlenW(test_localNameA)) * sizeof(WCHAR));
-    test_localPathB
-        = HeapAlloc(GetProcessHeap(), 0,
-                    (n + 1 + lstrlenW(test_localNameB)) * sizeof(WCHAR));
-    test_remotePathA
-        = HeapAlloc(GetProcessHeap(), 0,
-                    (n + 1 + lstrlenW(test_remoteNameA)) * sizeof(WCHAR));
-    test_remotePathB
-        = HeapAlloc(GetProcessHeap(), 0,
-                    (n + 1 + lstrlenW(test_remoteNameB)) * sizeof(WCHAR));
-
-    if (!test_currentDir || !test_localPathA || !test_localPathB
-        || !test_remotePathA || !test_remotePathB)
-    {
-        skip("Couldn't allocate memory for full paths\n");
-        return FALSE;
-    }
-
-    if (GetCurrentDirectoryW(n, test_currentDir) != n - 1)
-    {
-        skip("Couldn't get current directory\n");
-        return FALSE;
-    }
-
-    wsprintfW(test_localPathA, format, test_currentDir, test_localNameA);
-    wsprintfW(test_localPathB, format, test_currentDir, test_localNameB);
-    wsprintfW(test_remotePathA, format, test_currentDir, test_remoteNameA);
-    wsprintfW(test_remotePathB, format, test_currentDir, test_remoteNameB);
-
-    return TRUE;
+    GetTempFileNameW(tmpDir, prefix, 0, test_localPathA);
+    GetTempFileNameW(tmpDir, prefix, 0, test_localPathB);
+    GetTempFileNameW(tmpDir, prefix, 0, test_remotePathA);
+    GetTempFileNameW(tmpDir, prefix, 0, test_remotePathB);
 }
 
 /* Generic test setup */
@@ -545,8 +511,7 @@ START_TEST(job)
     };
     const test_t *test;
 
-    if (!init_paths())
-        return;
+    init_paths();
 
     CoInitialize(NULL);
 

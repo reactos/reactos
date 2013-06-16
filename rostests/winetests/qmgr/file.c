@@ -18,14 +18,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+//#include <stdio.h>
+
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
 
 #include <shlwapi.h>
 
 #define COBJMACROS
 
-#include "wine/test.h"
-#include "bits.h"
+#include <wine/test.h>
+#include <bits.h>
 
 /* Globals used by many tests */
 #define NUM_FILES 1
@@ -162,7 +172,7 @@ static void test_GetProgress_PreTransfer(void)
        (DWORD)(progress.BytesTotal >> 32), (DWORD)progress.BytesTotal);
     ok(progress.BytesTransferred == 0, "Got incorrect number of transferred bytes: %x%08x\n",
        (DWORD)(progress.BytesTransferred >> 32), (DWORD)progress.BytesTransferred);
-    ok(progress.Completed == FALSE, "Got incorret completion status\n");
+    ok(progress.Completed == FALSE, "Got incorrect completion status\n");
 }
 
 typedef void (*test_t)(void);
