@@ -40,7 +40,7 @@
 /* Background copy job vtbl and related data */
 typedef struct
 {
-    const IBackgroundCopyJob2Vtbl *lpVtbl;
+    IBackgroundCopyJob2 IBackgroundCopyJob2_iface;
     LONG ref;
     LPWSTR displayName;
     BG_JOB_TYPE type;
@@ -53,30 +53,10 @@ typedef struct
     struct list entryFromQmgr;
 } BackgroundCopyJobImpl;
 
-/* Enum background copy jobs vtbl and related data */
-typedef struct
-{
-    const IEnumBackgroundCopyJobsVtbl *lpVtbl;
-    LONG ref;
-    IBackgroundCopyJob **jobs;
-    ULONG numJobs;
-    ULONG indexJobs;
-} EnumBackgroundCopyJobsImpl;
-
-/* Enum background copy files vtbl and related data */
-typedef struct
-{
-    const IEnumBackgroundCopyFilesVtbl *lpVtbl;
-    LONG ref;
-    IBackgroundCopyFile **files;
-    ULONG numFiles;
-    ULONG indexFiles;
-} EnumBackgroundCopyFilesImpl;
-
 /* Background copy file vtbl and related data */
 typedef struct
 {
-    const IBackgroundCopyFileVtbl *lpVtbl;
+    IBackgroundCopyFile IBackgroundCopyFile_iface;
     LONG ref;
     BG_FILE_INFO info;
     BG_FILE_PROGRESS fileProgress;
@@ -88,7 +68,7 @@ typedef struct
 /* Background copy manager vtbl and related data */
 typedef struct
 {
-    const IBackgroundCopyManagerVtbl *lpVtbl;
+    IBackgroundCopyManager IBackgroundCopyManager_iface;
     /* Protects job list, job states, and jobEvent  */
     CRITICAL_SECTION cs;
     HANDLE jobEvent;
@@ -97,26 +77,25 @@ typedef struct
 
 typedef struct
 {
-    const IClassFactoryVtbl *lpVtbl;
+    IClassFactory IClassFactory_iface;
 } ClassFactoryImpl;
 
-extern HANDLE stop_event;
-extern ClassFactoryImpl BITS_ClassFactory;
-extern BackgroundCopyManagerImpl globalMgr;
+extern HANDLE stop_event DECLSPEC_HIDDEN;
+extern ClassFactoryImpl BITS_ClassFactory DECLSPEC_HIDDEN;
+extern BackgroundCopyManagerImpl globalMgr DECLSPEC_HIDDEN;
 
-HRESULT BackgroundCopyManagerConstructor(IUnknown *pUnkOuter, LPVOID *ppObj);
+HRESULT BackgroundCopyManagerConstructor(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
 HRESULT BackgroundCopyJobConstructor(LPCWSTR displayName, BG_JOB_TYPE type,
-                                     GUID *pJobId, LPVOID *ppObj);
-HRESULT EnumBackgroundCopyJobsConstructor(LPVOID *ppObj,
-                                          IBackgroundCopyManager* copyManager);
+                                     GUID *pJobId, BackgroundCopyJobImpl **job) DECLSPEC_HIDDEN;
+HRESULT enum_copy_job_create(BackgroundCopyManagerImpl *qmgr,
+        IEnumBackgroundCopyJobs **enumjob) DECLSPEC_HIDDEN;
 HRESULT BackgroundCopyFileConstructor(BackgroundCopyJobImpl *owner,
                                       LPCWSTR remoteName, LPCWSTR localName,
-                                      LPVOID *ppObj);
-HRESULT EnumBackgroundCopyFilesConstructor(LPVOID *ppObj,
-                                           IBackgroundCopyJob2 *copyJob);
-DWORD WINAPI fileTransfer(void *param);
-void processJob(BackgroundCopyJobImpl *job);
-BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job);
+                                      BackgroundCopyFileImpl **file) DECLSPEC_HIDDEN;
+HRESULT EnumBackgroundCopyFilesConstructor(BackgroundCopyJobImpl*, IEnumBackgroundCopyFiles**) DECLSPEC_HIDDEN;
+DWORD WINAPI fileTransfer(void *param) DECLSPEC_HIDDEN;
+void processJob(BackgroundCopyJobImpl *job) DECLSPEC_HIDDEN;
+BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job) DECLSPEC_HIDDEN;
 
 /* Little helper functions */
 static inline char *

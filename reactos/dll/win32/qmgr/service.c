@@ -95,9 +95,8 @@ StartCount(void)
         return FALSE;
 
     hr = CoRegisterClassObject(&CLSID_BackgroundCopyManager,
-                               (IUnknown *) &BITS_ClassFactory,
-                               CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE,
-                               &dwReg);
+                               (IUnknown *) &BITS_ClassFactory.IClassFactory_iface,
+                               CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &dwReg);
     if (FAILED(hr))
         return FALSE;
 

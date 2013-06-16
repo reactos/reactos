@@ -39,48 +39,55 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(qmgr);
 
-static void BackgroundCopyFileDestructor(BackgroundCopyFileImpl *This)
+static inline BackgroundCopyFileImpl *impl_from_IBackgroundCopyFile(IBackgroundCopyFile *iface)
 {
-    IBackgroundCopyJob_Release((IBackgroundCopyJob *) This->owner);
-    HeapFree(GetProcessHeap(), 0, This->info.LocalName);
-    HeapFree(GetProcessHeap(), 0, This->info.RemoteName);
-    HeapFree(GetProcessHeap(), 0, This);
-}
-
-static ULONG WINAPI BITS_IBackgroundCopyFile_AddRef(IBackgroundCopyFile* iface)
-{
-    BackgroundCopyFileImpl *This = (BackgroundCopyFileImpl *) iface;
-    return InterlockedIncrement(&This->ref);
+    return CONTAINING_RECORD(iface, BackgroundCopyFileImpl, IBackgroundCopyFile_iface);
 }
 
 static HRESULT WINAPI BITS_IBackgroundCopyFile_QueryInterface(
     IBackgroundCopyFile* iface,
     REFIID riid,
-    void **ppvObject)
+    void **obj)
 {
-    BackgroundCopyFileImpl *This = (BackgroundCopyFileImpl *) iface;
+    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), obj);
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IBackgroundCopyFile))
     {
-        *ppvObject = &This->lpVtbl;
-        BITS_IBackgroundCopyFile_AddRef(iface);
+        *obj = iface;
+        IBackgroundCopyFile_AddRef(iface);
         return S_OK;
     }
 
-    *ppvObject = NULL;
+    *obj = NULL;
     return E_NOINTERFACE;
 }
 
+static ULONG WINAPI BITS_IBackgroundCopyFile_AddRef(IBackgroundCopyFile* iface)
+{
+    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+    TRACE("(%p)->(%d)\n", This, ref);
+    return ref;
+}
 
 static ULONG WINAPI BITS_IBackgroundCopyFile_Release(
     IBackgroundCopyFile* iface)
 {
-    BackgroundCopyFileImpl *This = (BackgroundCopyFileImpl *) iface;
+    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
+    TRACE("(%p)->(%d)\n", This, ref);
+
     if (ref == 0)
-        BackgroundCopyFileDestructor(This);
+    {
+        IBackgroundCopyJob2_Release(&This->owner->IBackgroundCopyJob2_iface);
+        HeapFree(GetProcessHeap(), 0, This->info.LocalName);
+        HeapFree(GetProcessHeap(), 0, This->info.RemoteName);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
 
     return ref;
 }
@@ -90,7 +97,7 @@ static HRESULT WINAPI BITS_IBackgroundCopyFile_GetRemoteName(
     IBackgroundCopyFile* iface,
     LPWSTR *pVal)
 {
-    BackgroundCopyFileImpl *This = (BackgroundCopyFileImpl *) iface;
+    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
     int n = (lstrlenW(This->info.RemoteName) + 1) * sizeof(WCHAR);
 
     *pVal = CoTaskMemAlloc(n);
@@ -105,7 +112,7 @@ static HRESULT WINAPI BITS_IBackgroundCopyFile_GetLocalName(
     IBackgroundCopyFile* iface,
     LPWSTR *pVal)
 {
-    BackgroundCopyFileImpl *This = (BackgroundCopyFileImpl *) iface;
+    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
     int n = (lstrlenW(This->info.LocalName) + 1) * sizeof(WCHAR);
 
     *pVal = CoTaskMemAlloc(n);
@@ -120,7 +127,7 @@ static HRESULT WINAPI BITS_IBackgroundCopyFile_GetProgress(
     IBackgroundCopyFile* iface,
     BG_FILE_PROGRESS *pVal)
 {
-    BackgroundCopyFileImpl *This = (BackgroundCopyFileImpl *) iface;
+    BackgroundCopyFileImpl *This = impl_from_IBackgroundCopyFile(iface);
 
     EnterCriticalSection(&This->owner->cs);
     pVal->BytesTotal = This->fileProgress.BytesTotal;
@@ -143,13 +150,12 @@ static const IBackgroundCopyFileVtbl BITS_IBackgroundCopyFile_Vtbl =
 
 HRESULT BackgroundCopyFileConstructor(BackgroundCopyJobImpl *owner,
                                       LPCWSTR remoteName, LPCWSTR localName,
-                                      LPVOID *ppObj)
+                                      BackgroundCopyFileImpl **file)
 {
     BackgroundCopyFileImpl *This;
     int n;
 
-    TRACE("(%s,%s,%p)\n", debugstr_w(remoteName),
-            debugstr_w(localName), ppObj);
+    TRACE("(%s, %s, %p)\n", debugstr_w(remoteName), debugstr_w(localName), file);
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof *This);
     if (!This)
@@ -174,16 +180,16 @@ HRESULT BackgroundCopyFileConstructor(BackgroundCopyJobImpl *owner,
     }
     memcpy(This->info.LocalName, localName, n);
 
-    This->lpVtbl = &BITS_IBackgroundCopyFile_Vtbl;
+    This->IBackgroundCopyFile_iface.lpVtbl = &BITS_IBackgroundCopyFile_Vtbl;
     This->ref = 1;
 
     This->fileProgress.BytesTotal = BG_SIZE_UNKNOWN;
     This->fileProgress.BytesTransferred = 0;
     This->fileProgress.Completed = FALSE;
     This->owner = owner;
-    IBackgroundCopyJob_AddRef((IBackgroundCopyJob *) owner);
+    IBackgroundCopyJob2_AddRef(&owner->IBackgroundCopyJob2_iface);
 
-    *ppObj = &This->lpVtbl;
+    *file = This;
     return S_OK;
 }
 
@@ -217,25 +223,30 @@ static DWORD CALLBACK copyProgressCallback(LARGE_INTEGER totalSize,
 
 typedef struct
 {
-    const IBindStatusCallbackVtbl *lpVtbl;
+    IBindStatusCallback IBindStatusCallback_iface;
     BackgroundCopyFileImpl *file;
     LONG ref;
 } DLBindStatusCallback;
 
+static inline DLBindStatusCallback *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
+{
+    return CONTAINING_RECORD(iface, DLBindStatusCallback, IBindStatusCallback_iface);
+}
+
 static ULONG WINAPI DLBindStatusCallback_AddRef(IBindStatusCallback *iface)
 {
-    DLBindStatusCallback *This = (DLBindStatusCallback *) iface;
+    DLBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
     return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI DLBindStatusCallback_Release(IBindStatusCallback *iface)
 {
-    DLBindStatusCallback *This = (DLBindStatusCallback *) iface;
+    DLBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if (ref == 0)
     {
-        IBackgroundCopyFile_Release((IBackgroundCopyFile *) This->file);
+        IBackgroundCopyFile_Release(&This->file->IBackgroundCopyFile_iface);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -247,12 +258,12 @@ static HRESULT WINAPI DLBindStatusCallback_QueryInterface(
     REFIID riid,
     void **ppvObject)
 {
-    DLBindStatusCallback *This = (DLBindStatusCallback *) iface;
+    DLBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IBindStatusCallback))
     {
-        *ppvObject = &This->lpVtbl;
+        *ppvObject = &This->IBindStatusCallback_iface;
         DLBindStatusCallback_AddRef(iface);
         return S_OK;
     }
@@ -308,7 +319,7 @@ static HRESULT WINAPI DLBindStatusCallback_OnProgress(
     ULONG statusCode,
     LPCWSTR statusText)
 {
-    DLBindStatusCallback *This = (DLBindStatusCallback *) iface;
+    DLBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
     BackgroundCopyFileImpl *file = This->file;
     BackgroundCopyJobImpl *job = file->owner;
     ULONG64 diff;
@@ -363,8 +374,8 @@ static DLBindStatusCallback *DLBindStatusCallbackConstructor(
     if (!This)
         return NULL;
 
-    This->lpVtbl = &DLBindStatusCallback_Vtbl;
-    IBackgroundCopyFile_AddRef((IBackgroundCopyFile *) file);
+    This->IBindStatusCallback_iface.lpVtbl = &DLBindStatusCallback_Vtbl;
+    IBackgroundCopyFile_AddRef(&file->IBackgroundCopyFile_iface);
     This->file = file;
     This->ref = 1;
     return This;
@@ -373,7 +384,7 @@ static DLBindStatusCallback *DLBindStatusCallbackConstructor(
 BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
 {
     static const WCHAR prefix[] = {'B','I','T', 0};
-    IBindStatusCallback *callbackObj;
+    DLBindStatusCallback *callbackObj;
     WCHAR tmpDir[MAX_PATH];
     WCHAR tmpName[MAX_PATH];
     HRESULT hr;
@@ -394,7 +405,7 @@ BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
         return FALSE;
     }
 
-    callbackObj = (IBindStatusCallback *) DLBindStatusCallbackConstructor(file);
+    callbackObj = DLBindStatusCallbackConstructor(file);
     if (!callbackObj)
     {
         ERR("Out of memory\n");
@@ -416,8 +427,9 @@ BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
     transitionJobState(job, BG_JOB_STATE_QUEUED, BG_JOB_STATE_TRANSFERRING);
 
     DeleteUrlCacheEntryW(file->info.RemoteName);
-    hr = URLDownloadToFileW(NULL, file->info.RemoteName, tmpName, 0, callbackObj);
-    IBindStatusCallback_Release(callbackObj);
+    hr = URLDownloadToFileW(NULL, file->info.RemoteName, tmpName, 0,
+                            &callbackObj->IBindStatusCallback_iface);
+    IBindStatusCallback_Release(&callbackObj->IBindStatusCallback_iface);
     if (hr == INET_E_DOWNLOAD_FAILURE)
     {
         TRACE("URLDownload failed, trying local file copy\n");

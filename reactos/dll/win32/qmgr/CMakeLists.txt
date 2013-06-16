@@ -18,6 +18,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/qmgr.def)
 
 add_library(qmgr SHARED ${SOURCE})
+set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/qmgr.inf)
 add_idl_headers(qmgr_idlheader qmgr_local.idl)
 set_module_type(qmgr win32dll)
 target_link_libraries(qmgr uuid wine)
