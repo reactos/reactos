@@ -229,8 +229,11 @@ VideoPortGetCommonBuffer(IN PVOID HwDeviceExtension,
         return NULL;
     }
 
-    /* sanity check */
-    ASSERT(!IsListEmpty(&DeviceExtension->DmaAdapterList));
+    if (IsListEmpty(&DeviceExtension->DmaAdapterList))
+    {
+        /* no adapter available */
+        return NULL;
+    }
 
     /* grab first dma adapter */
     VpDmaAdapter = (PVIP_DMA_ADAPTER)CONTAINING_RECORD(DeviceExtension->DmaAdapterList.Flink, VIP_DMA_ADAPTER, Entry);
@@ -239,7 +242,6 @@ VideoPortGetCommonBuffer(IN PVOID HwDeviceExtension,
     ASSERT(VpDmaAdapter->HwDeviceExtension == HwDeviceExtension);
     ASSERT(VpDmaAdapter->Adapter != NULL);
     ASSERT(VpDmaAdapter->MapRegisters != 0);
-
 
     /* allocate common buffer */
     Result = VideoPortAllocateCommonBuffer(HwDeviceExtension, (PVP_DMA_ADAPTER)VpDmaAdapter, DesiredLength, LogicalAddress, CacheEnabled, NULL);
