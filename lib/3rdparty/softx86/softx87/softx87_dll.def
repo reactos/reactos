@@ -1,0 +1,14 @@
+
+LIBRARY			SOFTX87
+EXPORTS			softx87_getversion
+				softx87_init
+				softx87_reset
+				softx87_free
+				softx87_get_fpu_register_double
+				softx87_set_fpu_register_double
+				softx87_finit_setup
+				softx87_on_fpu_opcode_exec
+				softx87_on_fpu_opcode_dec
+				softx87_setbug
+				softx87_unpack_raw_fp32
+				softx87_unpack_raw_fp64

@@ -1,0 +1,355 @@
+v0.00.0033: Jonathan Campbell
+ - Added helper function softx87_connect_to_CPU()
+   to ease CPU <=> FPU connection for programmers.
+ - Added softx86_set_intvect().
+ - Added general API functions softx86_make_simple_near_call(),
+   softx86_make_simple_far_call(), softx86_make_simple_interrupt_call(),
+   to make it easier for the program to manually invoke
+   calls to program code within the virtual environment.
+ - Added FBLD and FBSTP emulation
+ - Added FLD1, FLDL2T and other constant-related FPU instruction emulation
+ - Added FCLEX & FSCALE emulation
+ - Added F2XM1 & FCOM emulation
+ - Added FDIV, FDIVR, and FICOM emulation
+
+v0.00.0032: Jonathan Campbell
+ - Using the 'u' command multiple times without
+   arguments now continues the decompiler from
+   where it left off, rather than restarting at
+   CS:IP
+ - Fixed a bug that caused Softx86dbg to crash if
+   run without an executable image to debug.
+ - Fixed a an error in the code that causes Softx86dbg
+   to crash when debugging a .COM file. See
+   http://sourceforge.net/tracker/index.php?func=detail&aid=919504&group_id=76259&atid=546548
+   for details.
+ - Added code to stop emulation and alert the user
+   if the instruction pointer wanders into areas
+   that normally do not contain code (e.g. the
+   interrupt vector table, the BIOS data area,
+   adapter ROM areas, etc).
+ - Fixed up INT 21h AH=4Ch/AH=00h code that would
+   have otherwise failed if AL was anything but 00h.
+ - Cleaned up interrupt handler system in Softx86dbg.
+
+v0.00.0031: Jonathan Campbell
+ - Added command "!ramdump" to dump the entire 1MB
+   simulated RAM buffer to a file so you can then
+   examine it further with your favorite hex editor.
+ - Fixed coding mistake in .EXE relocation code that
+   caused corruption of the .EXE image, as well as
+   incorrect relocations
+ - Added check for .EXE files with funny entry point
+   values (e.g. 0xFFF0:0x0100) that ultimately translate
+   to valid offsets (such as the very beginning of the
+   resident area). Attempts to debug these previously
+   caused softx86dbg to crash. These EXEs were probably
+   converted from .COM images anyway.
+ - Fixed 'D' and 'U' command parsing bugs in softx86dbg
+   that failed to recognize first segment value
+   if it started with A-F (e.g. BF45:1233)
+ - Fixed incorrect assignment of DS and ES when
+   setting up .EXE emulated environment in
+   softx86dbg. DS and ES now point to PSP segment
+   instead of the first paragraph of the EXE
+   binary.
+ - Fixed bugs dealing with group 80h instructions
+   that are using an 8-bit sign-extended immediate
+   value with a 16-bit parameter.
+ - It turns out DOS DEBUG.EXE (at least the one
+   bundled with Windows XP) also supports multiple
+   steps with t followed by the number of steps.
+   The funny thing is that it assumes the number
+   is hexadecimal... whatever.
+
+v0.00.0030: Jonathan Campbell
+ - More FADD fixes
+ - Softx86dbg shows FPU contents in scientific notation
+ - Added FSUB, FSUBP emulation
+ - Added FABS, FCHS, FRNDINT
+ - Soft86 context structure modified so that the structure
+   itself stays the same size and format even if additions
+   are made to sub-structures
+ - Softx87 will no longer be distributed separately from
+   the main source tarball
+ - New documentation!
+
+v0.00.0029: Jonathan Campbell
+ - Fixes for FADD
+ - Integer -> float conversion now normalizes the values.
+
+v0.00.0028: Jonathan Campbell
+ - Added FADD, FADDP, FIADD 8087 instructions
+
+v0.00.0027: Jonathan Campbell
+ - Fixed LOCK decompiler not printing anything to the buffer.
+ - Enhanced FPU backend and started development on
+   Softx87, an 8087 FPU emulation engine designed to tie
+   into Softx86.
+ - Added FINIT, FNOP, FLD, FINCSTP, FDECSTP, FFREE
+ - install.sh is no longer regenerated
+ - More intelligent makefile now checks for presence of
+   NASM and softx87 source tree. If you didn't download
+   the softx87 code with softx86, softx86dbg is compiled
+   and built without 8087 emulation support. If you don't
+   have NASM the samples are not built and are skipped.
+
+v0.00.0026: Jonathan Campbell
+ - Added callback-based backend so that Softx86 can
+   hand FPU opcodes off to other libraries or subroutines
+   assigned to emulating the 80x87 FPU. If no callbacks
+   for this have been assigned Softx86 treats the opcode
+   as unknown.
+ - Added version information to the context structure.
+ - Fixed bug in softx86dbg's handling of the 'R' register
+   change command for the segment registers.
+ - Added callback for CPU resets.
+
+v0.00.0025: Jonathan Campbell
+ - Added group 3-1A (0xF6/0xF7 opcodes) TEST r/m,
+   NOT r/m, NEG r/m, MUL r/m, IMUL r/m, DIV r/m, IDIV r/m.
+ - Added LOOP/LOOPZ/LOOPNZ.
+ - Added ENTER/LEAVE.
+ - Added LES and LDS.
+ - Added BOUND.
+ - The entire 8086 instruction set is now implemented in
+   this library (at least the ones that Intel documents).
+   Let me know if I'm wrong. If this proves to be a sturdy
+   implementation I might re-release this as the official
+   v1.0 beta! Let me know if any undocumented instructions
+   should be implemented.
+
+v0.00.0024: Jonathan Campbell
+ - Added RCL and RCR
+
+v0.00.0023: Jonathan Campbell
+ - Added SHL, SHR, and SAR
+ - Added some helpful constants in softx86.h that can be used
+   in shifting operations to obtain specific bits in the FLAGS
+   register, like this:
+
+   t = (ctx->stage.flags>>SX86_CPUFLAGBO_PARITY)&1;
+
+   instead of:
+
+   t = (ctx->stage.flags&SX86_CPUFLAG_PARITY)?1:0;
+
+ - Added ROL, ROR
+
+v0.00.0022: Jonathan Campbell
+ - Added PUSHA, POPA, LOCK
+
+v0.00.0021: Jonathan Campbell
+ - Fixed major mistake in FAR CALL/INTERRUPT stack framing
+   code. Segment and offset values were pushed onto the
+   stack in the wrong order!
+ - Added CALL/JMP/CALL FAR/JMP FAR (0xFF /2 /3 /4 and /5)
+ - Added preliminary code to start supporting 80286 instructions.
+   softx86_init() now reports 8088/8086 emulation as stable,
+   since 80% of the instructions have been implemented anyway.
+   calling softx86_init() with SX86_CPULEVEL_80286 or
+   SX86_CPULEVEL_80186 is now legal.
+ - Fixed main Makefile. Somehow it got mixed up with another
+   Makefile.
+
+v0.00.0020: Jonathan Campbell
+ - Added FAQ.
+ - Fixed minor error in hypothetical I/O device at port 0x9A.
+   16-bit data is now treated the same way that it would be if
+   written as 8-bit data.
+ - DOS 16-bit real-mode EXE loader. Now softx86dbg can debug
+   MS-DOS EXEs.
+
+v0.00.0019: Jonathan Campbell
+ - Added PUSHF/POPF.
+ - Added SAHF/LAHF---HA HA HA! LAHF! GET IT? :)
+ - Added CMPS and SCAS
+ - Updated instodo.txt to show some instructions that I forgot to
+   mention were implemented already.
+ - Fixed bug in REP loop code that continued looping even if
+   ZF flag failed condition. This caused many REPNE SCASB loops to
+   fail until it was fixed.
+
+v0.00.0018: Jonathan Campbell
+ - Fixed coding mistakes in segment prefix decoder (using >= not ==)
+ - Added REP/REPZ prefix handling
+ - Added MOVS, LODS, STOS
+ - README file rewritten
+ - Fixed SOFTX86DBG printing unshifted value ANDed from FLAGS for flag
+   states (e.g. should be ZF=1 not ZF=64).
+ - The 't' command under SOFTX86DBG now allows optional parameter to
+   specify how many instructions to step through before returning. For
+   example:
+   
+   t 27 
+
+   means step through 27 instructions.
+ - Added the ability to compile Softx86 and Softx86dbg using MINGW and
+   Bloodshed Dev-C++ IDE.
+
+v0.00.0017: Jonathan Campbell
+ - Found a way to convince MSVC++ that Softx86 is a dependency of
+   Softx86dbg. Reorganized project files so that the static library
+   is a dependency of the DLL version, and the DLL version is a
+   dependency of Softx86dbg. The DLL version now exports symbols
+   from the compiled static library version instead of recompiling
+   the entire library to produce the DLL.
+ - Softx86dbg now has a pretty icon resource so you can easily
+   identify it under Windows :)
+ - Added JMP abs. direct far and CALL abs. direct far.
+ - Fixed FAR and INTERRUPT stack frame code that put segment and
+   offset values in the wrong order!
+ - Added JMP/CALL rel8/rel16.
+
+v0.00.0016: Jonathan Campbell
+ - Added TEST and XCHG.
+ - Added LEA (Load Effective Address)
+ - Added TEST08.ASM to test the TEST/XCHG instructions.
+ - Softx86dbg now shows CPU flags as CF=1, AF=0, etc. for clarity.
+
+v0.00.0015: Jonathan Campbell
+ - Added DAA, XLAT and DAS instructions.
+ - Fixed a few subtle bugs in AAA and AAS emulation where final result
+   was not masked with 0xF like it should have been.
+ - Fixed AAA/AAS/AAM/AAD instructions to properly set CPU flags like they
+   should.
+
+v0.00.0014: Jonathan Campbell
+ - Registers are now represented by a structure (a union really)
+   rather than 16-bit word values that are referred to directly with
+   Endian-sensitive code. I had never thought of using C/C++ unions
+   like this before... thanks goes to Paul Muller for bringing this
+   up. On the other hand... in the act of modifying all of the emulation
+   code to handle the new arrangement it's possible that I broke
+   something.... please let me know or fix it and e-mail the patch to
+   me.
+ - Added Jcc (JMP conditional) instructions (JCXZ,JA,JB,JL,JG,JP,JZ,JC...)
+
+v0.00.0013: Jonathan Campbell
+ - Added CMP and AND.
+
+v0.00.0012: Jonathan Campbell
+ - Added API call to "reset" the CPU.
+ - Added XOR.
+ - Added API call to get library version. This can be used when
+   linked to the shared library to determine the version and
+   whether or not it matches the #defines in softx86.h.
+
+v0.00.0011: Jonathan Campbell
+ - Fixed missing header file problems in MSVC++ project workspace
+   files caused by renaming config.h to softx86cfg.h.
+ - Fixed erroneous use of opcode functions where parameters were
+   switched from their intended meaning. In other words, the
+   executioneer functions were passing the destination as the
+   source and the source as the destination. This causes the
+   SUB and SBB instructions to add rather than subtract like
+   they should.
+ - Added SBB.
+ - Added INT 3, INT n, INTO.
+ - Added CPU interrupt handling (external and internal).
+ - Added bug emulation.
+ - Added host idle callback for finer emulation during the
+   execution of an instruction.
+ - Added CPU NMI code.
+ - Softx86dbg now allows you to change register values by
+   typing "r [regname]".
+ - Softx86dbg now has very primitive INT 20h and INT 21h
+   emulation.
+ - Added fix for COM loading code in softx86dbg that would
+   otherwise overrun the simulated RAM if the user were to
+   try to debug a very large file.
+ - More fixes; apparently whenever I transfer the tarball
+   back and forth between my Linux box and my Windows box
+   the install.sh script got munged with DOS \n\r sequences.
+   This apparently causes Bash to come up with really weird
+   error messages pointing to the functions and referring to
+   'nstall.sh (wtf?!?). So from now on the Makefile automatically
+   generates install.sh when you type "make" for the first time
+   and removes install.sh file when you type "make distclean".
+
+v0.00.0010: Jonathan Campbell
+ - Added SUB and ADC.
+ - Added ADD r/m,imm.
+ - Make install improved, more intelligent, moved to install.sh
+   as a shell script that is called when you type "make install".
+ - Makefile script more intelligent, automatically creates "obj"
+   subdirectories now (and removes them on "make distclean").
+ - Changed BYTE_ORDER #define in softx86.h so that it doesn't
+   conflict with headers in /usr/include. It is now called
+   SX86_BYTE_ORDER.
+
+v0.00.0009: Jonathan Campbell
+ - Added IN/OUT instruction emulation.
+ - Sample code to make use of IN/OUT and hypothetical
+   hardware adding logic with I/O ports that softx86dbg
+   provides for testing.
+ - Fixed erroneous AF (Aux flag) emulation for ADD. Found
+   out (and later found a reference to this in Intel's
+   80286 documentation) that AF is set if the CPU, peforming
+   addition one 4-bit nibble at a time (a 16/32-bit
+   processor!?!) has to carry while adding the least
+   significant nibbles. For example:
+   0x04 + 0x06 = 0x0A           AF=0
+   0x08 + 0x08 = 0x10           AF=1
+   0x10 + 0xFF = 0x10F          AF=0
+   0x1E + 0xFF = 0x11D          AF=1
+
+v0.00.0008: Jonathan Campbell
+ - Softx86 now compiles into a shared library for Linux and a
+   DLL for Win32.
+
+v0.00.0007: Jonathan Campbell
+ - More work on the mod/reg/rm decoder
+ - MOV [r/m],[segreg] and MOV AL/AX,[mem] implemented
+ - MOV [r/m],[imm] implemented
+ - More test assembly code
+
+v0.00.0006: Jonathan Campbell
+ - Apparently DOS DEBUG single-step command is 't', not 's'.
+   Sorry :)
+ - ADD mod/reg/rm and MOV mod/reg/rm implemented.
+ - ADD al,imm8 and ADD ax,imm16 implemented.
+ - Segment prefixes CS: DS: ES: and SS: now supported.
+
+v0.00.0005: Jonathan Campbell
+ - Installation of library and header files for Softx86 possible
+   via "make install" command (if you are root).
+ - Fixed some errors in README file, compiling instructions
+   clearer now.
+
+v0.00.0004: Jonathan Campbell
+ - Linux/GCC makefiles.
+ - Command line input written for Linux version.
+ - SoftX86 documentation reference and summary included in source
+   now.
+ - Library archive output of SoftX86 for Linux.
+ - More comments in softx86dbg to make it easier to understand.
+
+v0.00.0003: Jonathan Campbell
+ - More opcodes: RET n, RETF, RETF n, IRETD, HLT
+ - Removed alignment code, statements about 80x86 CPU always
+   accessing memory on aligned boundaries was wrong, based
+   on mis-interpretation of CPU diagrams.
+ - Instruction execution functions can now return value 3
+   to indicate that the opcode was executed in full
+   completeness but that a looping operation is in effect and
+   that the instruction pointer should remain the same afterwards.
+
+v0.00.0002: Jonathan Campbell
+ - More one-byte opcodes added: CBW, CWDE, CWD, CDQ, CLC,
+   CLD, CLI, CMC, STC, STD, STI
+ - Made necessary additions to ? command in softx86dbg (now
+   it honestly tells you all commands supported).
+ - softx86dbg now heeds "warning" return value from libsoftx86
+   and displays warning message.
+
+v0.00.0001: Jonathan Campbell
+ - Initial release
+ - One-byte opcodes added: AAA, AAS, PUSH [reg], POP [reg],
+   PUSH CS/DS/ES/SS, POP CS/DS/ES/SS, NOP
+ - Preliminary library interface design
+ - MSVC 6.0 project workspace files only---Linux Makefile
+   soon to come
+ - Program to test library with: softx86dbg
+ - Sample assembly code to test library with:
+   samples/test01.asm (NASM required to assemble)

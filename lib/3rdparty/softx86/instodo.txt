@@ -1,0 +1,230 @@
+
+A complete log of which instructions have been implemented so far:
+
+KEY: X = execution implemented
+     D = decompiler implemented
+     B = has known bugs
+     I = incomplete preliminary
+     ? = bug-free status not confirmed
+     - = not implemented
+     N = not handled if emulating that particular CPU
+
+  INS          OPCODE        CONTRIBUTED TO BY      8086 8088 186 286 386 486
+==============|=============|======================|====|====|===|===|===|===|
+ADD           |0x00-0x03    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ADD           |0x04-0x05    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+PUSH ES       |0x06         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+POP ES        |0x07         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+OR            |0x08-0x0B    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+OR            |0x0C-0x0D    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+PUSH CS       |0x0E         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+POP CS        |0x0F         |jcampbell@mdjk.com    |XD? |XD? |N  |N  |N  |N  |
+SMSW /4       |0x0F 0x01 /4 |jcampbell@mdjk.com    |N   |N   |XD?|XD?|XD?|XD?|
+LMSW /6       |0x0F 0x01 /6 |jcampbell@mdjk.com    |N   |N   |XD?|XD?|XD?|XD?|
+ADC           |0x10-0x13    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ADC           |0x14-0x15    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+PUSH SS       |0x16         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+POP SS        |0x17         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SBB           |0x18-0x1B    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SBB           |0x1C-0x1D    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+PUSH DS       |0x1E         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+POP DS        |0x1F         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+AND           |0x20-0x23    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+AND           |0x24-0x25    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ES:           |0x26         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+DAA           |0x27         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SUB           |0x28-0x2B    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SUB           |0x2C-0x2D    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+CS:           |0x2E         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+DAS           |0x2F         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+XOR           |0x30-0x33    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+XOR           |0x34-0x35    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SS:           |0x36         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+AAA           |0x37         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+CMP           |0x38-0x3B    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+CMP           |0x3C-0x3D    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+DS:           |0x3E         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+AAS           |0x3F         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+INC [reg]     |0x40-0x47    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+DEC [reg]     |0x48-0x4F    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+PUSH [reg]    |0x50-0x57    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+POP [reg]     |0x58-0x5F    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+PUSHA         |0x60         |jcampbell@mdjk.com    |N   |XD? |XD?|XD?|XD?|XD?|
+POPA          |0x61         |jcampbell@mdjk.com    |N   |XD? |XD?|XD?|XD?|XD?|
+BOUND reg,rm  |0x62         |jcampbell@mdjk.com    |N   |XD? |XD?|XD?|XD?|XD?|
+J<cc> [near]  |0x70-0x7F    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ADD rm,imm /0 |0x80-0x83    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+OR  rm,imm /1 |0x80-0x83    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ADC rm,imm /2 |0x80-0x83    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SBB rm,imm /3 |0x80-0x83    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+AND rm,imm /4 |0x80-0x83    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SUB rm,imm /5 |0x80-0x83    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+XOR rm,imm /6 |0x80-0x83    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+CMP rm,imm /7 |0x80-0x83    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+TEST reg,r/m  |0x84-0x85    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+XCHG reg,r/m  |0x86-0x87    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+MOV           |0x88-0x8B    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+MOV [sreg]    |0x8C         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+LEA reg,r/m   |0x8D         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+MOV [sreg]    |0x8E         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+POP mem rm /6 |0x8F /6      |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+NOP/XCHG AX,AX|0x90         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+XCHG reg16,AX |0x91-0x97    |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+CBW           |0x98         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+CWD           |0x99         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+CALL seg:ofs  |0x9A         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+WAIT          |0x9B         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+PUSHF         |0x9C         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+POPF          |0x9D         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+SAHF          |0x9E         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+LAHF          |0x9F         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+MOV           |0xA0-0xA3    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+MOVS          |0xA4-0xA5    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+CMPS          |0xA6-0xA7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+TEST          |0xA8-0xA9    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+STOS          |0xAA-0xAB    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+LODS          |0xAC-0xAD    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SCAS          |0xAE-0xAF    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+MOV           |0xB0-0xB7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+MOV           |0xB8-0xBF    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ROL rm,imm /0 |0xC0-0xC1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ROR rm,imm /1 |0xC0-0xC1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RCL rm,imm /2 |0xC0-0xC1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RCR rm,imm /3 |0xC0-0xC1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SHL rm,imm /4 |0xC0-0xC1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SHR rm,imm /5 |0xC0-0xC1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SAR rm,imm /7 |0xC0-0xC1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RET + POP n   |0xC2         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RET (near)    |0xC3         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+LES reg,rm    |0xC4         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+LDS reg,rm    |0xC5         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+MOV           |0xC6-0xC7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ENTER imm,imm |0xC8         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+LEAVE         |0xC9         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RETF + POP n  |0xCA         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RETF (far)    |0xCB         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+INT 3h        |0xCC         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+INT n         |0xCD         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+INTO          |0xCE         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+IRET          |0xCF         |jcampbell@mdjk.com    |XD? |XD  |XD |XD |XD |XD |
+ROL rm,1 /0   |0xD0-0xD1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ROR rm,1 /1   |0xD0-0xD1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RCL rm,1 /2   |0xD0-0xD1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RCR rm,1 /3   |0xD0-0xD1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SHL rm,1 /4   |0xD0-0xD1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SHR rm,1 /5   |0xD0-0xD1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SAR rm,1 /7   |0xD0-0xD1    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ROL rm,CL /0  |0xD2-0xD3    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+ROR rm,CL /1  |0xD2-0xD3    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RCL rm,CL /2  |0xD2-0xD3    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+RCR rm,CL /3  |0xD2-0xD3    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SHL rm,CL /4  |0xD2-0xD3    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SHR rm,CL /5  |0xD2-0xD3    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+SAR rm,CL /7  |0xD2-0xD3    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+AAM           |0xD4         |jcampbell@mdjk.com    |XD? |XD  |XD |XD |XD |XD |
+AAD           |0xD5         |jcampbell@mdjk.com    |XD? |XD  |XD |XD |XD |XD |
+XLAT          |0xD7         |jcampbell@mdjk.com    |XD? |XD  |XD |XD |XD |XD |
+[FPU backend] |0xD8-0xDF    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+LOOPNZ        |0xE0         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+LOOPZ         |0xE1         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+LOOP          |0xE2         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+JCXZ          |0xE3         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+IN AL,imm     |0xE4         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+IN AX,imm     |0xE5         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+OUT AL,imm    |0xE6         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+OUT AX,imm    |0xE7         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+CALL rel16    |0xE8         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+JMP rel16     |0xE9         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+JMP seg:ofs   |0xEA         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+JMP rel8      |0xEB         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+IN AL,DX      |0xEC         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+IN AX,DX      |0xED         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+OUT AL,DX     |0xEE         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+OUT AX,DX     |0xEF         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+LOCK          |0xF0         |jcampbell@mdjk.com    |XDI |XDI |XDI|XDI|XDI|XDI|
+REPNZ         |0xF2         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+REPZ          |0xF3         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+HLT           |0xF4         |jcampbell@mdjk.com    |XDI |XDI |XDI|XDI|XDI|XDI|
+CMC           |0xF5         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+TEST rm,imm /0|0xF6-0xF7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+NOT rm /2     |0xF6-0xF7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+NEG rm /3     |0xF6-0xF7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+MUL rm /4     |0xF6-0xF7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+IMUL rm /5    |0xF6-0xF7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+DIV rm /6     |0xF6-0xF7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+IDIV rm /7    |0xF6-0xF7    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+CLC           |0xF8         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+STC           |0xF9         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+CLI           |0xFA         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+STI           |0xFB         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+CLD           |0xFC         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+STD           |0xFD         |jcampbell@mdjk.com    |XD  |XD  |XD |XD |XD |XD |
+INC rm /0     |0xFE-0xFF    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+DEC rm /1     |0xFE-0xFF    |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+CALL rm /2    |0xFF         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+JMP rm /3     |0xFF         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+CALL FAR rm /4|0xFF         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+JMP FAR rm /5 |0xFF         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+PUSH mem rm /6|0xFF         |jcampbell@mdjk.com    |XD? |XD? |XD?|XD?|XD?|XD?|
+
+FPU INSTRUCTIONS
+
+  INS          OPCODE          CONTRIBUTED TO BY      8087 287 387 487 
+==============|===============|======================|====|===|===|===|
+FADD mem32    |0xD8 /0        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FCOM mem32    |0xD8 /2        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FCOMP mem32   |0xD8 /3        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FSUB mem32    |0xD8 /4        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIV mem32    |0xD8 /6        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIVR mem32   |0xD8 /7        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FADD (0),(i)  |0xD8 0xC0-0xC7 |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FSUB (0),(i)  |0xD8 0xE0-0xE7 |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIV (0),(i)  |0xD8 0xF0-0xF7 |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIVR (0),(i) |0xD8 0xF8-0xFF |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLD mem32     |0xD9 /0        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLD ST(i)     |0xD9 0xC0-0xC7 |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FNOP          |0xD9 0xD0      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FCHS          |0xD9 0xE0      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FABS          |0xD9 0xE1      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLD1          |0xD9 0xE8      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLDL2T        |0xD9 0xE9      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLDL2E        |0xD9 0xEA      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLDPI         |0xD9 0xEB      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLDLG2        |0xD9 0xEC      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLDLN2        |0xD9 0xED      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLDZ          |0xD9 0xEE      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+F2XM1         |0xD9 0xF0      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDECSTP       |0xD9 0xF6      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FINCSTP       |0xD9 0xF7      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FRNDINT       |0xD9 0xFC      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FSCALE        |0xD9 0xFD      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FIADD mem32   |0xDA /0        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FICOM mem32   |0xDA /2        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FICOMP mem32  |0xDA /3        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FISUB mem32   |0xDA /4        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FIDIV mem32   |0xDA /6        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FIDIVR mem32  |0xDA /7        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FCLEX         |0xDB 0xE2      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FINIT         |0xDB 0xE3      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FADD mem64    |0xDC /0        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FCOM mem64    |0xDC /2        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FCOMP mem64   |0xDC /3        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FSUB mem64    |0xDC /4        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIV mem64    |0xDC /6        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIVR mem64   |0xDC /7        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FADD (i),(0)  |0xDC 0xC0-0xC7 |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIVR (i),(0) |0xDC 0xF0-0xF7 |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIV (i),(0)  |0xDC 0xF8-0xFF |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FLD ST(i)     |0xDD /0        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FFREE ST(i)   |0xDD 0xC0-0xC7 |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FIADD mem16   |0xDE /0        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FICOM mem16   |0xDE /2        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FICOMP mem16  |0xDE /3        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FIDIV mem16   |0xDE /6        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FIDIVR mem16  |0xDE /7        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FADDP (i),(0) |0xDE 0xC0-0xC7 |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FCOMPP        |0xDE 0xD9      |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FSUBP (i),(0) |0xDE 0xE8-0xEF |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIVRP (i),(0)|0xDE 0xF0-0xF7 |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FDIVP (i),(0) |0xDE 0xF8-0xFF |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
+FBLD mem80    |0xDF /4        |jcampbell@mdjk.com    |XD? |XD?|XD?|XD?|
