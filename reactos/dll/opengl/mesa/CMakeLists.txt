@@ -13,10 +13,8 @@ include_directories(
 
 if(NOT MSVC)
     add_compile_flags_language("-std=gnu99" "C")
-    add_compile_flags("-Wno-deprecated-declarations")
-    if(GCC_VERSION VERSION_EQUAL 4.7 OR GCC_VERSION VERSION_GREATER 4.7)
-        add_compile_flags("-Wno-error=unused-local-typedefs")
-    endif()
+    add_compile_flags("-Wno-deprecated-declarations -Wno-error=unused-local-typedefs -Wno-unused-but-set-variable")
+    add_compile_flags_language("-Wno-delete-non-virtual-dtor -Wno-narrowing" "CXX")
     # optimizations (builtin memcmp is slow on some gcc versions) used in SConsript files
     add_compile_flags("-ffast-math -fno-builtin-memcmp")
 else()
