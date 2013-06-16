@@ -8,6 +8,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
+#include <winnls.h>
 #include <winsvc.h>
 #include <winuser.h>
 #include <windowsx.h> /* GET_X/Y_LPARAM */

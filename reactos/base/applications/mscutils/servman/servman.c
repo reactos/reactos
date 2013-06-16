@@ -8,7 +8,6 @@
  */
 
 #include "precomp.h"
-
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
 
@@ -23,7 +22,17 @@ _tWinMain(HINSTANCE hThisInstance,
     MSG Msg;
     int Ret = 1;
     INITCOMMONCONTROLSEX icex;
+    
+    switch (GetUserDefaultUILanguage())
+  {
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+      SetProcessDefaultLayout(LAYOUT_RTL);
+      break;
 
+    default:
+      break;
+  }
+    
     hInstance = hThisInstance;
     ProcessHeap = GetProcessHeap();
 
