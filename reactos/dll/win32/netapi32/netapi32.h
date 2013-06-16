@@ -24,6 +24,7 @@
 #include <wine/list.h>
 
 #define NTOS_MODE_USER
+#include <ndk/kefuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ntsam.h>
 

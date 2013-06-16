@@ -111,6 +111,63 @@ GetAccountFlags(ULONG AccountControl)
 
 
 static
+ULONG
+GetAccountControl(ULONG Flags)
+{
+    ULONG AccountControl = 0;
+
+    if (Flags & UF_ACCOUNTDISABLE)
+        AccountControl |= USER_ACCOUNT_DISABLED;
+
+    if (Flags & UF_HOMEDIR_REQUIRED)
+        AccountControl |= USER_HOME_DIRECTORY_REQUIRED;
+
+    if (Flags & UF_PASSWD_NOTREQD)
+        AccountControl |= USER_PASSWORD_NOT_REQUIRED;
+
+    if (Flags & UF_LOCKOUT)
+        AccountControl |= USER_ACCOUNT_AUTO_LOCKED;
+
+    if (Flags & UF_DONT_EXPIRE_PASSWD)
+        AccountControl |= USER_DONT_EXPIRE_PASSWORD;
+
+    /* Set account type flags */
+    if (Flags & UF_TEMP_DUPLICATE_ACCOUNT)
+        AccountControl |= USER_TEMP_DUPLICATE_ACCOUNT;
+    else if (Flags & UF_NORMAL_ACCOUNT)
+        AccountControl |= USER_NORMAL_ACCOUNT;
+    else if (Flags & UF_INTERDOMAIN_TRUST_ACCOUNT)
+        AccountControl |= USER_INTERDOMAIN_TRUST_ACCOUNT;
+    else if (Flags & UF_WORKSTATION_TRUST_ACCOUNT)
+        AccountControl |= USER_WORKSTATION_TRUST_ACCOUNT;
+    else if (Flags & UF_SERVER_TRUST_ACCOUNT)
+        AccountControl |= USER_SERVER_TRUST_ACCOUNT;
+
+    return AccountControl;
+}
+
+
+static
+DWORD
+GetPasswordAge(IN PLARGE_INTEGER PasswordLastSet)
+{
+    LARGE_INTEGER SystemTime;
+    ULONG SystemSecondsSince1970;
+    ULONG PasswordSecondsSince1970;
+    NTSTATUS Status;
+
+    Status = NtQuerySystemTime(&SystemTime);
+    if (!NT_SUCCESS(Status))
+        return 0;
+
+    RtlTimeToSecondsSince1970(&SystemTime, &SystemSecondsSince1970);
+    RtlTimeToSecondsSince1970(PasswordLastSet, &PasswordSecondsSince1970);
+
+    return SystemSecondsSince1970 - PasswordSecondsSince1970;
+}
+
+
+static
 NET_API_STATUS
 BuildUserInfoBuffer(PUSER_ALL_INFORMATION UserInfo,
                     DWORD level,
@@ -306,7 +363,8 @@ BuildUserInfoBuffer(PUSER_ALL_INFORMATION UserInfo,
 
             UserInfo1->usri1_password = NULL;
 
-            /* FIXME: UserInfo1->usri1_password_age */
+            UserInfo1->usri1_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
+
             /* FIXME: UserInfo1->usri1_priv */
 
             if (UserInfo->HomeDirectory.Length > 0)
@@ -360,7 +418,8 @@ BuildUserInfoBuffer(PUSER_ALL_INFORMATION UserInfo,
 
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
 
-            /* FIXME: usri2_password_age */
+            UserInfo2->usri2_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
+
             /* FIXME: usri2_priv */
 
             if (UserInfo->HomeDirectory.Length > 0)
@@ -507,7 +566,8 @@ BuildUserInfoBuffer(PUSER_ALL_INFORMATION UserInfo,
 
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
 
-            /* FIXME: usri3_password_age */
+            UserInfo3->usri3_password_age = GetPasswordAge(&UserInfo->PasswordLastSet);
+
             /* FIXME: usri3_priv */
 
             if (UserInfo->HomeDirectory.Length > 0)
@@ -883,6 +943,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
     PUSER_INFO_1003 UserInfo1003;
     PUSER_INFO_1006 UserInfo1006;
     PUSER_INFO_1007 UserInfo1007;
+    PUSER_INFO_1008 UserInfo1008;
     PUSER_INFO_1009 UserInfo1009;
     PUSER_INFO_1011 UserInfo1011;
     PUSER_INFO_1012 UserInfo1012;
@@ -937,8 +998,8 @@ SetUserInfo(SAM_HANDLE UserHandle,
                 UserAllInfo.WhichFields |= USER_ALL_ADMINCOMMENT;
             }
 
-//          UserInfo1->usri1_flags
-//            UserAllInfo.WhichFields |= USER_ALL_USERACCOUNTCONTROL;
+            UserAllInfo.UserAccountControl = GetAccountControl(UserInfo1->usri1_flags);
+            UserAllInfo.WhichFields |= USER_ALL_USERACCOUNTCONTROL;
 
             if (UserInfo1->usri1_script_path != NULL)
             {
@@ -979,7 +1040,8 @@ SetUserInfo(SAM_HANDLE UserHandle,
                 UserAllInfo.WhichFields |= USER_ALL_ADMINCOMMENT;
             }
 
-//          UserInfo2->usri2_flags;
+            UserAllInfo.UserAccountControl = GetAccountControl(UserInfo2->usri2_flags);
+            UserAllInfo.WhichFields |= USER_ALL_USERACCOUNTCONTROL;
 
             if (UserInfo2->usri2_script_path != NULL)
             {
@@ -1065,8 +1127,8 @@ SetUserInfo(SAM_HANDLE UserHandle,
                 UserAllInfo.WhichFields |= USER_ALL_ADMINCOMMENT;
             }
 
-//          UserInfo3->usri3_flags;
-//              UserAllInfo.WhichFields |= USER_ALL_USERACCOUNTCONTROL;
+            UserAllInfo.UserAccountControl = GetAccountControl(UserInfo3->usri3_flags);
+            UserAllInfo.WhichFields |= USER_ALL_USERACCOUNTCONTROL;
 
             if (UserInfo3->usri3_script_path != NULL)
             {
@@ -1181,7 +1243,11 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             break;
 
-//        case 1008:
+        case 1008:
+            UserInfo1008 = (PUSER_INFO_1008)UserInfo;
+            UserAllInfo.UserAccountControl = GetAccountControl(UserInfo1008->usri1008_flags);
+            UserAllInfo.WhichFields |= USER_ALL_USERACCOUNTCONTROL;
+            break;
 
         case 1009:
             UserInfo1009 = (PUSER_INFO_1009)UserInfo;
@@ -2342,7 +2408,7 @@ NetUserSetInfo(LPCWSTR servername,
 //        case 1005:
         case 1006:
         case 1007:
-//        case 1008:
+        case 1008:
         case 1009:
 //        case 1010:
         case 1011:
