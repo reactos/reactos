@@ -678,7 +678,7 @@ ConvertSecurityDescriptorToStringSecurityDescriptorW(PSECURITY_DESCRIPTOR Securi
 
     if (SDRevision != SDDL_REVISION_1)
     {
-        ERR("Pogram requested unknown SDDL revision %d\n", SDRevision);
+        ERR("Program requested unknown SDDL revision %d\n", SDRevision);
         SetLastError(ERROR_UNKNOWN_REVISION);
         return FALSE;
     }
@@ -698,6 +698,9 @@ ConvertSecurityDescriptorToStringSecurityDescriptorW(PSECURITY_DESCRIPTOR Securi
             return FALSE;
 
     wstr = wptr = LocalAlloc(0, (len + 1)*sizeof(WCHAR));
+    if (wstr == NULL)
+        return FALSE;
+        
     if (SecurityInformation & OWNER_SECURITY_INFORMATION)
         if (!DumpOwner(SecurityDescriptor, &wptr, NULL))
             return FALSE;
@@ -740,6 +743,12 @@ ConvertSecurityDescriptorToStringSecurityDescriptorA(PSECURITY_DESCRIPTOR Securi
 
         lenA = WideCharToMultiByte(CP_ACP, 0, wstr, len, NULL, 0, NULL, NULL);
         *OutputString = HeapAlloc(GetProcessHeap(), 0, lenA);
+        if (*OutputString == NULL)
+        {
+            LocalFree(wstr);
+            *OutputLen = 0;
+            return FALSE;
+        }
         WideCharToMultiByte(CP_ACP, 0, wstr, len, *OutputString, lenA, NULL, NULL);
         LocalFree(wstr);
 
@@ -1786,6 +1795,8 @@ ConvertStringSidToSidA(IN LPCSTR StringSid,
     {
         UINT len = MultiByteToWideChar(CP_ACP, 0, StringSid, -1, NULL, 0);
         LPWSTR wStringSid = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (wStringSid == NULL)
+            return FALSE;
         MultiByteToWideChar(CP_ACP, 0, StringSid, - 1, wStringSid, len);
         bRetVal = ConvertStringSidToSidW(wStringSid, sid);
         HeapFree(GetProcessHeap(), 0, wStringSid);
