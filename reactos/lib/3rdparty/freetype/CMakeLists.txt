@@ -50,3 +50,7 @@ list(APPEND SOURCE
 
 add_library(freetype ${SOURCE})
 allow_warnings(freetype)
+
+if(NOT MSVC)
+    add_target_compile_flags(freetype "-Wno-unused-but-set-variable")
+endif()
