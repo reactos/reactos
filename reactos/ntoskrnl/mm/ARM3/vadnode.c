@@ -647,7 +647,7 @@ MiCheckSecuredVad(IN PMMVAD Vad,
             (EndAddress >= ((PMMVAD_LONG)Vad)->u3.Secured.StartVpn))
         {
             /* Guard page? */
-            if (ProtectionMask && MM_DECOMMIT)
+            if (ProtectionMask & MM_DECOMMIT)
             {
                 DPRINT1("Not allowed to change protection on guard page!\n");
                 return STATUS_INVALID_PAGE_PROTECTION;
