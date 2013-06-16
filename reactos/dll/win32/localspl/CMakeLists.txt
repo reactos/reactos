@@ -16,15 +16,7 @@ list(APPEND SOURCE
 add_library(localspl SHARED ${SOURCE} localspl.rc)
 set_module_type(localspl win32dll)
 target_link_libraries(localspl wine)
-
-add_importlibs(localspl
-    spoolss
-    user32
-    advapi32
-    msvcrt
-    kernel32
-    ntdll)
-
+add_importlibs(localspl spoolss user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET localspl DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
