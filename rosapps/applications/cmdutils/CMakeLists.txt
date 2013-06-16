@@ -1,8 +1,0 @@
-add_subdirectory(appwiz)
-add_subdirectory(comp)
-add_subdirectory(mode)
-add_subdirectory(sort)
-add_subdirectory(tee)
-add_subdirectory(touch)
-add_subdirectory(uptime)
-add_subdirectory(y)
