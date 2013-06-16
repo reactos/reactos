@@ -122,6 +122,8 @@ typedef struct _CONSOLE_START_INFO
     // UNICODE_STRING ConsoleTitle;
     WCHAR ConsoleTitle[MAX_PATH + 1];   // Console title or full path to the startup shortcut
     WCHAR AppPath[MAX_PATH + 1];        // Full path of the launched app
+    WCHAR IconPath[MAX_PATH + 1];       // Path to the file containing the icon
+    INT   IconIndex;                    // Index of the icon
 } CONSOLE_START_INFO, *PCONSOLE_START_INFO;
 
 typedef struct _CONSOLE_CONNECTION_INFO
@@ -315,7 +317,7 @@ typedef struct
     COORD BufferSize;
     COORD BufferCoord;
     SMALL_RECT WriteRegion;
-    CHAR_INFO* CharInfo;
+    PCHAR_INFO CharInfo;
 } CONSOLE_WRITEOUTPUT, *PCONSOLE_WRITEOUTPUT;
 
 typedef struct
@@ -372,12 +374,12 @@ typedef struct
 {
     HANDLE OutputHandle;
 
-    ULONG BufferSize;
+    ULONG BufferSize; // Seems unusued
     WORD Length;
     COORD Coord;
     COORD EndCoord;
 
-    ULONG NrCharactersWritten;
+    ULONG NrCharactersWritten; // Seems unusued
 
     CODE_TYPE CodeType;
     union
@@ -427,7 +429,7 @@ typedef struct
     COORD BufferSize;
     COORD BufferCoord;
     SMALL_RECT ReadRegion;
-    CHAR_INFO* CharInfo;
+    PCHAR_INFO CharInfo;
 } CONSOLE_READOUTPUT, *PCONSOLE_READOUTPUT;
 
 typedef struct

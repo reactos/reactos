@@ -108,12 +108,16 @@ PropDialogHandler(IN LPVOID lpThreadParameter)
 
 
 VOID
-InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo)
+InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
+                IN PUNICODE_STRING ImagePathName)
 {
     STARTUPINFOW si;
+    SIZE_T Length;
 
+    /* Get the startup information */
     GetStartupInfoW(&si);
 
+    /* Initialize the fields */
     ConsoleStartInfo->dwStartupFlags = si.dwFlags;
     if (si.dwFlags & STARTF_USEFILLATTRIBUTE)
     {
@@ -138,12 +142,8 @@ InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo)
         ConsoleStartInfo->ConsoleWindowSize.cx = (LONG)(si.dwXSize);
         ConsoleStartInfo->ConsoleWindowSize.cy = (LONG)(si.dwYSize);
     }
-    /*
-    if (si.dwFlags & STARTF_RUNFULLSCREEN)
-    {
-    }
-    */
 
+    /* Set up the title for the console */
     if (si.lpTitle)
     {
         wcsncpy(ConsoleStartInfo->ConsoleTitle, si.lpTitle, MAX_PATH + 1);
@@ -152,6 +152,16 @@ InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo)
     {
         ConsoleStartInfo->ConsoleTitle[0] = L'\0';
     }
+
+    /* Retrieve the application path name */
+    Length = min(sizeof(ConsoleStartInfo->AppPath) / sizeof(ConsoleStartInfo->AppPath[0]) - 1,
+                 ImagePathName->Length / sizeof(WCHAR));
+    wcsncpy(ConsoleStartInfo->AppPath, ImagePathName->Buffer, Length);
+    ConsoleStartInfo->AppPath[Length] = L'\0';
+
+    /* The Console Server will use these fields to set up the console icon */
+    ConsoleStartInfo->IconPath[0] = L'\0';
+    ConsoleStartInfo->IconIndex   = 0;
 }
 
 
@@ -191,15 +201,10 @@ BasepInitConsole(VOID)
     }
     else
     {
-        SIZE_T Length = 0;
         LPCWSTR ExeName;
 
-        InitConsoleInfo(&ConnectInfo.ConsoleStartInfo);
-
-        Length = min(sizeof(ConnectInfo.ConsoleStartInfo.AppPath) / sizeof(ConnectInfo.ConsoleStartInfo.AppPath[0]) - 1,
-                     Parameters->ImagePathName.Length / sizeof(WCHAR));
-        wcsncpy(ConnectInfo.ConsoleStartInfo.AppPath, Parameters->ImagePathName.Buffer, Length);
-        ConnectInfo.ConsoleStartInfo.AppPath[Length] = L'\0';
+        InitConsoleInfo(&ConnectInfo.ConsoleStartInfo,
+                        &Parameters->ImagePathName);
 
         /* Initialize Input EXE name */
         ExeName = wcsrchr(Parameters->ImagePathName.Buffer, L'\\');

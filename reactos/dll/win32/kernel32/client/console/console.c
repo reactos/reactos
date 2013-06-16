@@ -937,8 +937,6 @@ AllocConsole(VOID)
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_ALLOCCONSOLE AllocConsoleRequest = &ApiMessage.Data.AllocConsoleRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    LPWSTR AppPath = NULL;
-    SIZE_T Length = 0;
 
     if (Parameters->ConsoleHandle)
     {
@@ -959,14 +957,8 @@ AllocConsole(VOID)
                               sizeof(CONSOLE_START_INFO),
                               (PVOID*)&AllocConsoleRequest->ConsoleStartInfo);
 
-/** Copied from BasepInitConsole **********************************************/
-    InitConsoleInfo(AllocConsoleRequest->ConsoleStartInfo);
-
-    AppPath = AllocConsoleRequest->ConsoleStartInfo->AppPath;
-    Length = min(MAX_PATH, Parameters->ImagePathName.Length / sizeof(WCHAR));
-    wcsncpy(AppPath, Parameters->ImagePathName.Buffer, Length);
-    AppPath[Length] = L'\0';
-/******************************************************************************/
+    InitConsoleInfo(AllocConsoleRequest->ConsoleStartInfo,
+                    &Parameters->ImagePathName);
 
     AllocConsoleRequest->Console = NULL;
     AllocConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;

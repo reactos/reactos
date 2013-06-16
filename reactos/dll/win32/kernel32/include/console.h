@@ -51,7 +51,8 @@ HANDLE FASTCALL
 TranslateStdHandle(HANDLE hHandle);
 
 VOID
-InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo);
+InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
+                IN PUNICODE_STRING ImagePathName);
 
 LPCWSTR
 IntCheckForConsoleFileName(IN LPCWSTR pszName,
