@@ -16,7 +16,7 @@ list(APPEND SOURCE
     rw.c
     volinfo.c
     ntfs.rc)
-    
+
 add_library(ntfs SHARED ${SOURCE})
 
 set_module_type(ntfs kernelmodedriver)

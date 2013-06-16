@@ -45,17 +45,17 @@
 BOOLEAN
 NtfsIsIrpTopLevel(PIRP Irp)
 {
-  BOOLEAN	ReturnCode = FALSE;
-  
-  TRACE_(NTFS, "NtfsIsIrpTopLevel()\n");
+    BOOLEAN ReturnCode = FALSE;
 
-  if (IoGetTopLevelIrp() == NULL)
-  {
-    IoSetTopLevelIrp(Irp);
-    ReturnCode = TRUE;
-  }
+    TRACE_(NTFS, "NtfsIsIrpTopLevel()\n");
 
-  return ReturnCode;
+    if (IoGetTopLevelIrp() == NULL)
+    {
+        IoSetTopLevelIrp(Irp);
+        ReturnCode = TRUE;
+    }
+
+    return ReturnCode;
 }
 
 /*
@@ -69,29 +69,35 @@ PNTFS_IRP_CONTEXT
 NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
                        PIRP Irp)
 {
-  PNTFS_IRP_CONTEXT IrpContext;
-  PIO_STACK_LOCATION IoStackLocation;
-  
-  TRACE_(NTFS, "NtfsAllocateIrpContext()\n");
-  
-  IrpContext = (PNTFS_IRP_CONTEXT)ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_IRP_CONTEXT), 'PRIN');
-  if (IrpContext == NULL)
-    return NULL;
-  RtlZeroMemory(IrpContext, sizeof(NTFS_IRP_CONTEXT));
+    PNTFS_IRP_CONTEXT IrpContext;
+    PIO_STACK_LOCATION IoStackLocation;
 
-  IrpContext->Identifier.Type = NTFS_TYPE_IRP_CONTEST;
-  IrpContext->Identifier.Size = sizeof(NTFS_IRP_CONTEXT);
-  IrpContext->Irp = Irp;
-  IrpContext->DeviceObject = DeviceObject;
-  if (Irp)
-  {
-    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStackLocation);
+    TRACE_(NTFS, "NtfsAllocateIrpContext()\n");
 
-    IrpContext->MajorFunction = IoStackLocation->MajorFunction;
-    IrpContext->MinorFunction = IoStackLocation->MinorFunction;
-    IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
-  }
-  
-  return IrpContext;
+    IrpContext = (PNTFS_IRP_CONTEXT)ExAllocatePoolWithTag(NonPagedPool,
+                                                          sizeof(NTFS_IRP_CONTEXT),
+                                                          'PRIN');
+    if (IrpContext == NULL)
+        return NULL;
+
+    RtlZeroMemory(IrpContext, sizeof(NTFS_IRP_CONTEXT));
+
+    IrpContext->Identifier.Type = NTFS_TYPE_IRP_CONTEST;
+    IrpContext->Identifier.Size = sizeof(NTFS_IRP_CONTEXT);
+    IrpContext->Irp = Irp;
+    IrpContext->DeviceObject = DeviceObject;
+
+    if (Irp)
+    {
+        IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+        ASSERT(IoStackLocation);
+
+        IrpContext->MajorFunction = IoStackLocation->MajorFunction;
+        IrpContext->MinorFunction = IoStackLocation->MinorFunction;
+        IrpContext->IsTopLevel = (IoGetTopLevelIrp() == Irp);
+    }
+
+    return IrpContext;
 }
+
+/* EOF */

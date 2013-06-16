@@ -19,7 +19,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/filesystem/ntfs/rw.c
- * PURPOSE:          CDROM (ISO 9660) filesystem driver
+ * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Art Yerkes
  * UPDATE HISTORY:
  */
@@ -27,11 +27,10 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntddk.h>
+#include "ntfs.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "ntfs.h"
 
 
 /* GLOBALS *******************************************************************/
@@ -42,17 +41,18 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS
-NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
-	     PFILE_OBJECT FileObject,
-	     PUCHAR Buffer,
-	     ULONG Length,
-	     ULONG ReadOffset,
-	     ULONG IrpFlags,
-	     PULONG LengthRead)
 /*
  * FUNCTION: Reads data from a file
  */
+static
+NTSTATUS
+NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
+             PFILE_OBJECT FileObject,
+             PUCHAR Buffer,
+             ULONG Length,
+             ULONG ReadOffset,
+             ULONG IrpFlags,
+             PULONG LengthRead)
 {
 #if 0
   NTSTATUS Status = STATUS_SUCCESS;
@@ -123,73 +123,75 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
 
   return(Status);
 #else
-  *LengthRead = 0;
-  return STATUS_END_OF_FILE;
+    *LengthRead = 0;
+    return STATUS_END_OF_FILE;
 #endif
 }
 
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 NtfsFsdRead(PDEVICE_OBJECT DeviceObject,
-	 PIRP Irp)
+            PIRP Irp)
 {
-  PDEVICE_EXTENSION DeviceExt;
-  PIO_STACK_LOCATION Stack;
-  PFILE_OBJECT FileObject;
-  PVOID Buffer;
-  ULONG ReadLength;
-  LARGE_INTEGER ReadOffset;
-  ULONG ReturnedReadLength = 0;
-  NTSTATUS Status = STATUS_SUCCESS;
+    PDEVICE_EXTENSION DeviceExt;
+    PIO_STACK_LOCATION Stack;
+    PFILE_OBJECT FileObject;
+    PVOID Buffer;
+    ULONG ReadLength;
+    LARGE_INTEGER ReadOffset;
+    ULONG ReturnedReadLength = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-  DPRINT("NtfsRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+    DPRINT("NtfsRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
 
-  DeviceExt = DeviceObject->DeviceExtension;
-  Stack = IoGetCurrentIrpStackLocation(Irp);
-  FileObject = Stack->FileObject;
+    DeviceExt = DeviceObject->DeviceExtension;
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    FileObject = Stack->FileObject;
 
-  ReadLength = Stack->Parameters.Read.Length;
-  ReadOffset = Stack->Parameters.Read.ByteOffset;
-  Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+    ReadLength = Stack->Parameters.Read.Length;
+    ReadOffset = Stack->Parameters.Read.ByteOffset;
+    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
 
-  Status = NtfsReadFile(DeviceExt,
-			FileObject,
-			Buffer,
-			ReadLength,
-			ReadOffset.u.LowPart,
-			Irp->Flags,
-			&ReturnedReadLength);
-
-  if (NT_SUCCESS(Status))
+    Status = NtfsReadFile(DeviceExt,
+                          FileObject,
+                          Buffer,
+                          ReadLength,
+                          ReadOffset.u.LowPart,
+                          Irp->Flags,
+                          &ReturnedReadLength);
+    if (NT_SUCCESS(Status))
     {
-      if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-	{
-	  FileObject->CurrentByteOffset.QuadPart =
-	    ReadOffset.QuadPart + ReturnedReadLength;
-	}
-      Irp->IoStatus.Information = ReturnedReadLength;
+        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+        {
+            FileObject->CurrentByteOffset.QuadPart =
+                ReadOffset.QuadPart + ReturnedReadLength;
+        }
+
+        Irp->IoStatus.Information = ReturnedReadLength;
     }
-  else
+    else
     {
-      Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Information = 0;
     }
 
-  Irp->IoStatus.Status = Status;
-  IoCompleteRequest(Irp,IO_NO_INCREMENT);
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp,IO_NO_INCREMENT);
 
-  return(Status);
+    return Status;
 }
 
 
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 NtfsFsdWrite(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp)
+             PIRP Irp)
 {
-  DPRINT("NtfwWrite(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
+    DPRINT("NtfwWrite(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
 
-  Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-  Irp->IoStatus.Information = 0;
-  return(STATUS_NOT_SUPPORTED);
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+    Irp->IoStatus.Information = 0;
+    return STATUS_NOT_SUPPORTED;
 }
 
 /* EOF */

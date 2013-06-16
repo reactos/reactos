@@ -43,48 +43,47 @@
  *           Irp = IRP to be passed to internal functions
  * RETURNS: Status of I/O Request
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 NtfsFsdDispatch(PDEVICE_OBJECT DeviceObject,
                 PIRP Irp)
 {
-  PNTFS_IRP_CONTEXT IrpContext = NULL;
-  NTSTATUS Status = STATUS_UNSUCCESSFUL;
-  
-  TRACE_(NTFS, "NtfsFsdDispatch()\n");
-  
-  FsRtlEnterFileSystem();
-  ASSERT(DeviceObject);
-  ASSERT(Irp);
-  
-  NtfsIsIrpTopLevel(Irp);
-  
-  IrpContext = NtfsAllocateIrpContext(DeviceObject, Irp);
-  if (IrpContext)
-  {
-    switch (IrpContext->MajorFunction)
+    PNTFS_IRP_CONTEXT IrpContext = NULL;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+
+    TRACE_(NTFS, "NtfsFsdDispatch()\n");
+
+    FsRtlEnterFileSystem();
+    ASSERT(DeviceObject);
+    ASSERT(Irp);
+
+    NtfsIsIrpTopLevel(Irp);
+
+    IrpContext = NtfsAllocateIrpContext(DeviceObject, Irp);
+    if (IrpContext)
     {
-      case IRP_MJ_QUERY_VOLUME_INFORMATION:
-      {
-        Status = NtfsQueryVolumeInformation(IrpContext);
-        break;
-      }
-      case IRP_MJ_SET_VOLUME_INFORMATION:
-      {
-        Status = NtfsSetVolumeInformation(IrpContext);
-        break;
-      }
+        switch (IrpContext->MajorFunction)
+        {
+            case IRP_MJ_QUERY_VOLUME_INFORMATION:
+                Status = NtfsQueryVolumeInformation(IrpContext);
+                break;
+
+            case IRP_MJ_SET_VOLUME_INFORMATION:
+                Status = NtfsSetVolumeInformation(IrpContext);
+                break;
+        }
     }
-  }
-  else
-    Status = STATUS_INSUFFICIENT_RESOURCES;
-	
-  Irp->IoStatus.Status = Status;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	
-	if (IrpContext)
-    ExFreePoolWithTag(IrpContext, 'PRIN');
-	
-  IoSetTopLevelIrp(NULL);
-  FsRtlExitFileSystem();
-  return Status;
+    else
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    if (IrpContext)
+        ExFreePoolWithTag(IrpContext, 'PRIN');
+
+    IoSetTopLevelIrp(NULL);
+    FsRtlExitFileSystem();
+
+    return Status;
 }

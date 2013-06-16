@@ -36,75 +36,79 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS
-NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
-	      PFILE_OBJECT FileObject)
 /*
  * FUNCTION: Closes a file
  */
+static
+NTSTATUS
+NtfsCloseFile(PDEVICE_EXTENSION DeviceExt,
+              PFILE_OBJECT FileObject)
 {
-  PNTFS_CCB Ccb;
+    PNTFS_CCB Ccb;
 
-  DPRINT("NtfsCloseFile(DeviceExt %p, FileObject %p)\n",
-	 DeviceExt,
-	 FileObject);
+    DPRINT("NtfsCloseFile(DeviceExt %p, FileObject %p)\n",
+           DeviceExt,
+           FileObject);
 
-  Ccb = (PNTFS_CCB)(FileObject->FsContext2);
+    Ccb = (PNTFS_CCB)(FileObject->FsContext2);
 
-  DPRINT("Ccb %p\n", Ccb);
-  if (Ccb == NULL)
+    DPRINT("Ccb %p\n", Ccb);
+    if (Ccb == NULL)
     {
-      return(STATUS_SUCCESS);
+        return STATUS_SUCCESS;
     }
 
-  FileObject->FsContext2 = NULL;
+    FileObject->FsContext2 = NULL;
 
-  if (FileObject->FileName.Buffer)
+    if (FileObject->FileName.Buffer)
     {
-      // This a FO, that was created outside from FSD.
-      // Some FO's are created with IoCreateStreamFileObject() insid from FSD.
-      // This FO's don't have a FileName.
-      NtfsReleaseFCB(DeviceExt, FileObject->FsContext);
+        // This a FO, that was created outside from FSD.
+        // Some FO's are created with IoCreateStreamFileObject() insid from FSD.
+        // This FO's don't have a FileName.
+        NtfsReleaseFCB(DeviceExt, FileObject->FsContext);
     }
 
-  if (Ccb->DirectorySearchPattern)
+    if (Ccb->DirectorySearchPattern)
     {
-      ExFreePool(Ccb->DirectorySearchPattern);
+        ExFreePool(Ccb->DirectorySearchPattern);
     }
-  ExFreePool(Ccb);
 
-  return(STATUS_SUCCESS);
+    ExFreePool(Ccb);
+
+    return STATUS_SUCCESS;
 }
 
 
 NTSTATUS NTAPI
 NtfsFsdClose(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp)
+             PIRP Irp)
 {
-  PDEVICE_EXTENSION DeviceExtension;
-  PIO_STACK_LOCATION Stack;
-  PFILE_OBJECT FileObject;
-  NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExtension;
+    PIO_STACK_LOCATION Stack;
+    PFILE_OBJECT FileObject;
+    NTSTATUS Status;
 
-  DPRINT("NtfsClose() called\n");
+    DPRINT("NtfsClose() called\n");
 
-  if (DeviceObject == NtfsGlobalData->DeviceObject)
+    if (DeviceObject == NtfsGlobalData->DeviceObject)
     {
-      DPRINT("Closing file system\n");
-      Status = STATUS_SUCCESS;
-      goto ByeBye;
+        DPRINT("Closing file system\n");
+        Status = STATUS_SUCCESS;
+        goto ByeBye;
     }
 
-  Stack = IoGetCurrentIrpStackLocation(Irp);
-  FileObject = Stack->FileObject;
-  DeviceExtension = DeviceObject->DeviceExtension;
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    FileObject = Stack->FileObject;
+    DeviceExtension = DeviceObject->DeviceExtension;
 
-  Status = NtfsCloseFile(DeviceExtension,FileObject);
+    Status = NtfsCloseFile(DeviceExtension,FileObject);
 
 ByeBye:
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-  return(Status);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
+
+/* EOF */

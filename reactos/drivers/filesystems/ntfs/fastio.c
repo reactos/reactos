@@ -20,7 +20,7 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/filesystem/ntfs/fastio.c
  * PURPOSE:          NTFS filesystem driver
- * PROGRAMMER:       Pierre Schweitzer       
+ * PROGRAMMER:       Pierre Schweitzer
  */
 
 /* INCLUDES *****************************************************************/
@@ -35,30 +35,39 @@
 
 /* FUNCTIONS ****************************************************************/
 
-BOOLEAN NTAPI
+BOOLEAN
+NTAPI
 NtfsAcqLazyWrite(PVOID Context,
                  BOOLEAN Wait)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
-VOID NTAPI
+
+VOID
+NTAPI
 NtfsRelLazyWrite(PVOID Context)
 {
-  UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
-BOOLEAN NTAPI
+
+BOOLEAN
+NTAPI
 NtfsAcqReadAhead(PVOID Context,
                  BOOLEAN Wait)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
-VOID NTAPI
+
+VOID
+NTAPI
 NtfsRelReadAhead(PVOID Context)
 {
-  UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
+
+/* EOF */

@@ -36,252 +36,255 @@
 
 /* FUNCTIONS ****************************************************************/
 
-
-
-static ULONG
+static
+ULONG
 RunLength(PUCHAR run)
 {
-  return(*run & 0x0f) + ((*run >> 4) & 0x0f) + 1;
+    return(*run & 0x0f) + ((*run >> 4) & 0x0f) + 1;
 }
 
 
-static LONGLONG
+static
+LONGLONG
 RunLCN(PUCHAR run)
 {
-	UCHAR n1 = *run & 0x0f;
-	UCHAR n2 = (*run >> 4) & 0x0f;
-	LONGLONG lcn = (n2 == 0) ? 0 : (CHAR)(run[n1 + n2]);
-	LONG i = 0;
+    UCHAR n1 = *run & 0x0f;
+    UCHAR n2 = (*run >> 4) & 0x0f;
+    LONGLONG lcn = (n2 == 0) ? 0 : (CHAR)(run[n1 + n2]);
+    LONG i = 0;
 
-	for (i = n1 +n2 - 1; i > n1; i--)
-		lcn = (lcn << 8) + run[i];
-	return lcn;
+    for (i = n1 +n2 - 1; i > n1; i--)
+        lcn = (lcn << 8) + run[i];
+    return lcn;
 }
 
 
-
-static ULONGLONG
+static
+ULONGLONG
 RunCount(PUCHAR run)
 {
-	UCHAR n =  *run & 0xf;
-	ULONGLONG count = 0;
-	ULONG i = 0;
+    UCHAR n =  *run & 0xf;
+    ULONGLONG count = 0;
+    ULONG i = 0;
 
-	for (i = n; i > 0; i--)
-		count = (count << 8) + run[i];
-	return count;
+    for (i = n; i > 0; i--)
+        count = (count << 8) + run[i];
+    return count;
 }
 
 
 BOOLEAN
-FindRun (PNONRESIDENT_ATTRIBUTE NresAttr,
-	 ULONGLONG vcn,
-	 PULONGLONG lcn,
-	 PULONGLONG count)
+FindRun(PNONRESIDENT_ATTRIBUTE NresAttr,
+        ULONGLONG vcn,
+        PULONGLONG lcn,
+        PULONGLONG count)
 {
-  PUCHAR run;
+    PUCHAR run;
+    ULONGLONG base = NresAttr->StartVcn;
 
-  ULONGLONG base = NresAttr->StartVcn;
+    if (vcn < NresAttr->StartVcn || vcn > NresAttr->LastVcn)
+        return FALSE;
 
-  if (vcn < NresAttr->StartVcn || vcn > NresAttr->LastVcn)
-    return FALSE;
+    *lcn = 0;
 
-  *lcn = 0;
-
-  for (run = (PUCHAR)((ULONG_PTR)NresAttr + NresAttr->RunArrayOffset);
-	*run != 0; run += RunLength(run))
+    for (run = (PUCHAR)((ULONG_PTR)NresAttr + NresAttr->RunArrayOffset);
+         *run != 0; run += RunLength(run))
     {
-      *lcn += RunLCN(run);
-      *count = RunCount(run);
+        *lcn += RunLCN(run);
+        *count = RunCount(run);
 
-      if (base <= vcn && vcn < base + *count)
-	{
-	  *lcn = (RunLCN(run) == 0) ? 0 : *lcn + vcn - base;
-	  *count -= (ULONG)(vcn - base);
+        if (base <= vcn && vcn < base + *count)
+        {
+            *lcn = (RunLCN(run) == 0) ? 0 : *lcn + vcn - base;
+            *count -= (ULONG)(vcn - base);
 
-	  return TRUE;
-	}
-      else
-	{
-	  base += *count;
-	}
+            return TRUE;
+        }
+        else
+        {
+            base += *count;
+        }
     }
 
-  return FALSE;
+    return FALSE;
 }
 
 
-static VOID
+static
+VOID
 NtfsDumpFileNameAttribute(PATTRIBUTE Attribute)
 {
-  PRESIDENT_ATTRIBUTE ResAttr;
-  PFILENAME_ATTRIBUTE FileNameAttr;
+    PRESIDENT_ATTRIBUTE ResAttr;
+    PFILENAME_ATTRIBUTE FileNameAttr;
 
-  DbgPrint("  $FILE_NAME ");
+    DbgPrint("  $FILE_NAME ");
 
-  ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
-//  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
+    ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
+//    DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
 
-  FileNameAttr = (PFILENAME_ATTRIBUTE)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
-  DbgPrint(" '%.*S' ", FileNameAttr->NameLength, FileNameAttr->Name);
+    FileNameAttr = (PFILENAME_ATTRIBUTE)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
+    DbgPrint(" '%.*S' ", FileNameAttr->NameLength, FileNameAttr->Name);
 }
 
 
-static VOID
+static
+VOID
 NtfsDumpVolumeNameAttribute(PATTRIBUTE Attribute)
 {
-  PRESIDENT_ATTRIBUTE ResAttr;
-  PWCHAR VolumeName;
+    PRESIDENT_ATTRIBUTE ResAttr;
+    PWCHAR VolumeName;
 
-  DbgPrint("  $VOLUME_NAME ");
+    DbgPrint("  $VOLUME_NAME ");
 
-  ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
-//  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
+    ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
+//    DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
 
-  VolumeName = (PWCHAR)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
-  DbgPrint(" '%.*S' ", ResAttr->ValueLength / sizeof(WCHAR), VolumeName);
+    VolumeName = (PWCHAR)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
+    DbgPrint(" '%.*S' ", ResAttr->ValueLength / sizeof(WCHAR), VolumeName);
 }
 
 
-static VOID
+static
+VOID
 NtfsDumpVolumeInformationAttribute(PATTRIBUTE Attribute)
 {
-  PRESIDENT_ATTRIBUTE ResAttr;
-  PVOLINFO_ATTRIBUTE VolInfoAttr;
+    PRESIDENT_ATTRIBUTE ResAttr;
+    PVOLINFO_ATTRIBUTE VolInfoAttr;
 
-  DbgPrint("  $VOLUME_INFORMATION ");
+    DbgPrint("  $VOLUME_INFORMATION ");
 
-  ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
-//  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
+    ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
+//    DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
 
-  VolInfoAttr = (PVOLINFO_ATTRIBUTE)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
-  DbgPrint(" NTFS Version %u.%u  Flags 0x%04hx ",
-	   VolInfoAttr->MajorVersion,
-	   VolInfoAttr->MinorVersion,
-	   VolInfoAttr->Flags);
+    VolInfoAttr = (PVOLINFO_ATTRIBUTE)((ULONG_PTR)ResAttr + ResAttr->ValueOffset);
+    DbgPrint(" NTFS Version %u.%u  Flags 0x%04hx ",
+             VolInfoAttr->MajorVersion,
+             VolInfoAttr->MinorVersion,
+             VolInfoAttr->Flags);
 }
 
 
-static VOID
+static
+VOID
 NtfsDumpAttribute (PATTRIBUTE Attribute)
 {
-  PNONRESIDENT_ATTRIBUTE NresAttr;
-  UNICODE_STRING Name;
+    PNONRESIDENT_ATTRIBUTE NresAttr;
+    UNICODE_STRING Name;
 
-  ULONGLONG lcn = 0;
-  ULONGLONG runcount = 0;
+    ULONGLONG lcn = 0;
+    ULONGLONG runcount = 0;
 
-  switch (Attribute->AttributeType)
+    switch (Attribute->AttributeType)
     {
-      case AttributeFileName:
-	NtfsDumpFileNameAttribute(Attribute);
-	break;
+        case AttributeFileName:
+            NtfsDumpFileNameAttribute(Attribute);
+            break;
 
-      case AttributeStandardInformation:
-	DbgPrint("  $STANDARD_INFORMATION ");
-	break;
+        case AttributeStandardInformation:
+            DbgPrint("  $STANDARD_INFORMATION ");
+            break;
 
-      case AttributeAttributeList:
-	DbgPrint("  $ATTRIBUTE_LIST ");
-	break;
+        case AttributeAttributeList:
+            DbgPrint("  $ATTRIBUTE_LIST ");
+            break;
 
-      case AttributeObjectId:
-	DbgPrint("  $OBJECT_ID ");
-	break;
+        case AttributeObjectId:
+            DbgPrint("  $OBJECT_ID ");
+            break;
 
-      case AttributeSecurityDescriptor:
-	DbgPrint("  $SECURITY_DESCRIPTOR ");
-	break;
+        case AttributeSecurityDescriptor:
+            DbgPrint("  $SECURITY_DESCRIPTOR ");
+            break;
 
-      case AttributeVolumeName:
-	NtfsDumpVolumeNameAttribute(Attribute);
-	break;
+        case AttributeVolumeName:
+            NtfsDumpVolumeNameAttribute(Attribute);
+            break;
 
-      case AttributeVolumeInformation:
-	NtfsDumpVolumeInformationAttribute(Attribute);
-	break;
+        case AttributeVolumeInformation:
+            NtfsDumpVolumeInformationAttribute(Attribute);
+            break;
 
-      case AttributeData:
-	DbgPrint("  $DATA ");
-	//DataBuf = ExAllocatePool(NonPagedPool,AttributeLengthAllocated(Attribute));
-	break;
+        case AttributeData:
+            DbgPrint("  $DATA ");
+            //DataBuf = ExAllocatePool(NonPagedPool,AttributeLengthAllocated(Attribute));
+            break;
 
-      case AttributeIndexRoot:
-	DbgPrint("  $INDEX_ROOT ");
-	break;
+        case AttributeIndexRoot:
+            DbgPrint("  $INDEX_ROOT ");
+            break;
 
-      case AttributeIndexAllocation:
-	DbgPrint("  $INDEX_ALLOCATION ");
-	break;
+        case AttributeIndexAllocation:
+            DbgPrint("  $INDEX_ALLOCATION ");
+            break;
 
-      case AttributeBitmap:
-	DbgPrint("  $BITMAP ");
-	break;
+        case AttributeBitmap:
+            DbgPrint("  $BITMAP ");
+            break;
 
-      case AttributeReparsePoint:
-	DbgPrint("  $REPARSE_POINT ");
-	break;
+        case AttributeReparsePoint:
+            DbgPrint("  $REPARSE_POINT ");
+            break;
 
-      case AttributeEAInformation:
-	DbgPrint("  $EA_INFORMATION ");
-	break;
+        case AttributeEAInformation:
+            DbgPrint("  $EA_INFORMATION ");
+            break;
 
-      case AttributeEA:
-	DbgPrint("  $EA ");
-	break;
+        case AttributeEA:
+            DbgPrint("  $EA ");
+            break;
 
-      case AttributePropertySet:
-	DbgPrint("  $PROPERTY_SET ");
-	break;
+        case AttributePropertySet:
+            DbgPrint("  $PROPERTY_SET ");
+            break;
 
-      case AttributeLoggedUtilityStream:
-	DbgPrint("  $LOGGED_UTILITY_STREAM ");
-	break;
+        case AttributeLoggedUtilityStream:
+            DbgPrint("  $LOGGED_UTILITY_STREAM ");
+            break;
 
-      default:
-	DbgPrint("  Attribute %lx ",
-		 Attribute->AttributeType);
-	break;
+        default:
+            DbgPrint("  Attribute %lx ",
+                     Attribute->AttributeType);
+            break;
     }
 
-  if (Attribute->NameLength != 0)
+    if (Attribute->NameLength != 0)
     {
-      Name.Length = Attribute->NameLength * sizeof(WCHAR);
-      Name.MaximumLength = Name.Length;
-      Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
+        Name.Length = Attribute->NameLength * sizeof(WCHAR);
+        Name.MaximumLength = Name.Length;
+        Name.Buffer = (PWCHAR)((ULONG_PTR)Attribute + Attribute->NameOffset);
 
-      DbgPrint("'%wZ' ", &Name);
+        DbgPrint("'%wZ' ", &Name);
     }
 
-  DbgPrint("(%s)\n",
-	   Attribute->Nonresident ? "non-resident" : "resident");
+    DbgPrint("(%s)\n",
+             Attribute->Nonresident ? "non-resident" : "resident");
 
-  if (Attribute->Nonresident)
+    if (Attribute->Nonresident)
     {
-      NresAttr = (PNONRESIDENT_ATTRIBUTE)Attribute;
+        NresAttr = (PNONRESIDENT_ATTRIBUTE)Attribute;
 
-      FindRun (NresAttr,0,&lcn, &runcount);
+        FindRun(NresAttr,0,&lcn, &runcount);
 
-      DbgPrint ("  AllocatedSize %I64u  DataSize %I64u\n",
-		NresAttr->AllocatedSize, NresAttr->DataSize);
-      DbgPrint ("  logical clusters: %I64u - %I64u\n",
-		lcn, lcn + runcount - 1);
+        DbgPrint("  AllocatedSize %I64u  DataSize %I64u\n",
+                 NresAttr->AllocatedSize, NresAttr->DataSize);
+        DbgPrint("  logical clusters: %I64u - %I64u\n",
+                 lcn, lcn + runcount - 1);
     }
 }
 
 
 VOID
-NtfsDumpFileAttributes (PFILE_RECORD_HEADER FileRecord)
+NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord)
 {
-  PATTRIBUTE Attribute;
+    PATTRIBUTE Attribute;
 
-  Attribute = (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
-  while (Attribute < (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
-         Attribute->AttributeType != (ATTRIBUTE_TYPE)-1)
+    Attribute = (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    while (Attribute < (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
+           Attribute->AttributeType != (ATTRIBUTE_TYPE)-1)
     {
-      NtfsDumpAttribute (Attribute);
+        NtfsDumpAttribute(Attribute);
 
-      Attribute = (PATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Length);
+        Attribute = (PATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Length);
     }
 }
 
