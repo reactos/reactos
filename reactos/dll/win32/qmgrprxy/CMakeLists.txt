@@ -1,7 +1,7 @@
 
 add_definitions(
     -D__WINESRC__
-    -DREGISTER_PROXY_DLL)
+    -DWINE_REGISTER_DLL)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -12,7 +12,7 @@ spec2def(qmgrprxy.dll qmgrprxy.spec)
 add_rpcproxy_files(qmgrprxy.idl)
 
 list(APPEND SOURCE
-    version.rc
+    qmgrprxy.rc
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/qmgrprxy_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
