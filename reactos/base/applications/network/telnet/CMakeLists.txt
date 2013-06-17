@@ -29,3 +29,7 @@ set_module_type(telnet win32cui)
 add_pch(telnet src/precomp.h)
 add_importlibs(telnet ws2_32 user32 msvcrt kernel32)
 add_cd_file(TARGET telnet DESTINATION reactos/system32 FOR all)
+
+if(NOT MSVC)
+    add_compile_flags_language("-Wno-narrowing" "CXX")
+endif()
