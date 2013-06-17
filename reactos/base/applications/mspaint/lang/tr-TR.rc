@@ -1,9 +1,10 @@
 /*
- * PROJECT:     PAINT for ReactOS
+ * PROJECT:     ReactOS Paint
  * LICENSE:     unknown (LGPL assumed)
  * FILE:        base/applications/mspaint/lang/tr-TR.rc
- * PURPOSE:     Turkish Language resource file
- * TRANSLATORS: 2013 - Erdem Ersoy (eersoy93)
+ * PURPOSE:     Turkish Resource file for ReactOS Paint
+ * PROGRAMMERS:
+ * TRANSLATORS: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -71,8 +72,8 @@ BEGIN
         MENUITEM "&Döndür ya da Evir...\tCtrl+R",  IDM_IMAGEROTATEMIRROR
         MENUITEM "&Boyutlandır...\tCtrl+W",        IDM_IMAGECHANGESIZE
         MENUITEM "&Kırp",                          IDM_IMAGECROP
-        MENUITEM "&Renkleri Evir...\tCtrl+I",      IDM_IMAGEINVERTCOLORS
-        MENUITEM "&Öz Nitelikler\tCtrl+E",         IDM_IMAGEATTRIBUTES
+        MENUITEM "&Renkleri Evir\tCtrl+I",         IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Öz Nitelikler...\tCtrl+E",      IDM_IMAGEATTRIBUTES
         MENUITEM "R&esmi Temizle\tCtrl+Shft+N",    IDM_IMAGEDELETEIMAGE
         MENUITEM "D&onuk Çiz",                     IDM_IMAGEDRAWOPAQUE
     END

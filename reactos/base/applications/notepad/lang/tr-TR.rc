@@ -1,8 +1,8 @@
 /*
- * Notepad (Turkish resources)
+ * Turkish Resources for ReactOS Notepad
  *
- * Copyright 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>
- * Copyright 2013 Erdem Ersoy (eersoy93)
+ * Copyrights: 2012 Arda Tanrıkulu (ardatanrikulu@gmail.com)
+ *             2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -69,12 +69,12 @@ BEGIN
         MENUITEM "G&it...\tCtrl+G",         CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "&Tümünü Seç\tCtrl+A",     CMD_SELECT_ALL
-        MENUITEM "&Şimdiki Zamanı Koy\tF5", CMD_TIME_DATE
+        MENUITEM "&Şimdiki Zamânı Koy\tF5", CMD_TIME_DATE
     END
     POPUP "&Biçim"
     BEGIN
-        MENUITEM "&Satır Kaydır",           CMD_WRAP
-        MENUITEM "&Yazı Türü...",           CMD_FONT
+        MENUITEM "&Yataç Kaydır",           CMD_WRAP
+        MENUITEM "Y&azı Türü...",           CMD_FONT
     END
     POPUP "&Görünüm"
     BEGIN
@@ -83,7 +83,7 @@ BEGIN
     POPUP "&Yardım"
     BEGIN
         MENUITEM "&Yardım Konuları",        CMD_HELP_CONTENTS
-        MENUITEM "Y&ardımda Ara...",        CMD_HELP_SEARCH
+        MENUITEM "Y&ardımda Ara",           CMD_HELP_SEARCH
         MENUITEM "Ya&rdım İçin Yardım",     CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Bilgi",                  CMD_ABOUT
@@ -133,10 +133,10 @@ END
 DIALOG_GOTO DIALOGEX 0,0,165,50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Satıra Git"
+CAPTION "Yataca Git"
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Satır Nu:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "Yataç Numarası:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "Tamam",IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Vazgeç",IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
@@ -171,7 +171,7 @@ STRING_PAGESETUP_TOPVALUE,      "25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
 
 STRING_NOTEPAD,                                 "Metin Düzenleyicisi"
-STRING_ERROR,                                   "HATA"
+STRING_ERROR,                                   "HATÂ"
 STRING_WARNING,                                 "UYARI"
 STRING_INFO,                                    "Bilgi"
 
@@ -194,5 +194,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "UNIX"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "%d. Satır, %d. Sütun"
+STRING_LINE_COLUMN,                             "%d. Yataç, %d. Dikeç"
 END

@@ -2,8 +2,9 @@
  * PROJECT:     ReactOS Magnifier
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/magnify/lang/tr-TR.rc
- * PURPOSE:     Turkish Language File for Magnifier
- * TRANSLATOR:  2013 - Erdem Ersoy (eersoy93)
+ * PURPOSE:     Turkish Resource File for RecatOS Magnifier
+ * PROGRAMMERS:
+ * TRANSLATOR:  2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
  
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

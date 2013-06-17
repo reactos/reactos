@@ -1,3 +1,7 @@
+/*
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
+ 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDC_REACTOS_SNDREC32 ACCELERATORS
@@ -47,7 +51,7 @@ BEGIN
     IDS_STRPOS              "Konum: %.2f s"
     IDS_STRDUR              "Uzunluk: %.2f s"
     IDS_STRBUF              "Ara Bellek: %.2f KB"
-    IDS_STRFMT              "%.1f kHz, %u bitlik"
+    IDS_STRFMT              "%.1f kHz, %u ikillik"
     IDS_STRMONO             "Tek Yollu"
     IDS_STRSTEREO           "Çift Yollu"
     IDS_STRCHAN             "%s"

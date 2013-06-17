@@ -1,9 +1,8 @@
 /*
- * WineMine
- * Turkish Language Support
+ * Turkish Resources for ReactOS Winmine
  *
- * Copyright 2006 Fatih Aşıcı
- * Copyright 2013 Erdem Ersoy (eersoy93)
+ * Copyrights: 2006 Fatih Aşıcı
+ *             2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -81,8 +80,8 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Özel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Satır Sayısı:",   -1,   5,   5,  30,  10
-    LTEXT           "S&ütun Sayısı:",   -1,   5,  35,  30,  10
+    LTEXT           "&Yataç Sayısı:",   -1,   5,   5,  30,  10
+    LTEXT           "&Dikeç Sayısı:",   -1,   5,  35,  30,  10
     LTEXT           "&Mayın Sayısı:",   -1,   5,  65,  30,  10
     EDITTEXT             IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
     EDITTEXT             IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER

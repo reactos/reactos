@@ -1,30 +1,34 @@
+/*
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
+ 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-	POPUP "&Kütük"
-	BEGIN
-		MENUITEM "&Aç...",       IDM_OPEN_FILE
-		MENUITEM "&Kapat",       IDM_CLOSE_FILE
-		MENUITEM SEPARATOR
-		MENUITEM "&Çıkış",       IDM_EXIT
-	END
-	POPUP "&Yardım"
-	BEGIN
-		MENUITEM "&Hakkında",    IDM_ABOUT
-	END
+    POPUP "&Kütük"
+    BEGIN
+        MENUITEM "&Aç...",       IDM_OPEN_FILE
+        MENUITEM "&Kapat",       IDM_CLOSE_FILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Çıkış",       IDM_EXIT
+    END
+    POPUP "&Yardım"
+    BEGIN
+        MENUITEM "&Hakkında",    IDM_ABOUT
+    END
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_ALL_TYPES_FILTER "Desteklenen Kütükler (*.wav, *.cda, *.mid, *.midi, *.avi)\0*.wav;*.cda;*.mid;*.midi;*.avi\0"
-	IDS_TOOLTIP_PLAY "Çal"
-	IDS_TOOLTIP_STOP "Durdur"
-	IDS_TOOLTIP_EJECT "Çıkar"
-	IDS_TOOLTIP_BACKWARD "Bir Önceki"
-	IDS_TOOLTIP_SEEKBACK "Geri Sar"
-	IDS_TOOLTIP_SEEKFORW "İleri Sar"
-	IDS_TOOLTIP_FORWARD "Bir Sonraki"
-	IDS_APPTITLE "Ortam Oynatıcısı"
-	IDS_PLAY "Çal"
+    IDS_ALL_TYPES_FILTER "Desteklenen Kütükler (*.wav, *.cda, *.mid, *.midi, *.avi)\0*.wav;*.cda;*.mid;*.midi;*.avi\0"
+    IDS_TOOLTIP_PLAY "Çal"
+    IDS_TOOLTIP_STOP "Durdur"
+    IDS_TOOLTIP_EJECT "Çıkar"
+    IDS_TOOLTIP_BACKWARD "Bir Önceki"
+    IDS_TOOLTIP_SEEKBACK "Geri Sar"
+    IDS_TOOLTIP_SEEKFORW "İleri Sar"
+    IDS_TOOLTIP_FORWARD "Bir Sonraki"
+    IDS_APPTITLE "Ortam Oynatıcısı"
+    IDS_PLAY "Çal"
 END
