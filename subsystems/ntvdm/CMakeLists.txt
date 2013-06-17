@@ -1,11 +1,16 @@
 
-include_directories(.)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/softx86)
 
-add_executable(ntvdm
+list(APPEND SOURCE
+    bios.c
+    dos.c
+    emulator.c
     ntvdm.c
     ntvdm.rc)
 
-set_module_type(ntvdm win32cui)
-add_importlibs(ntvdm ntdll user32 gdi32 advapi32 msvcrt kernel32)
-add_dependencies(ntvdm ndk bugcodes)
+add_executable(ntvdm ${SOURCE})
+set_module_type(ntvdm win32cui UNICODE)
+target_link_libraries(ntvdm softx86 softx87)
+add_importlibs(ntvdm msvcrt user32 kernel32)
+add_dependencies(ntvdm softx86 softx87)
 add_cd_file(TARGET ntvdm DESTINATION reactos/system32 FOR all)

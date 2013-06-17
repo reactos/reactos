@@ -1,8 +1,0 @@
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-STRINGTABLE DISCARDABLE
-BEGIN
-
-STRING_WelcomeMsg,      "ReactOS 虚拟 DOS 机支持。\n"
-STRING_PromptMsg,       "输入 r<cr> 以便运行，s<cr> 以便关闭或者 q<cr> 以便立即退出。"
-END
