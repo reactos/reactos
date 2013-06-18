@@ -18,7 +18,18 @@ DBG_DEFAULT_CHANNEL(UserHotkey);
 
 /* GLOBALS *******************************************************************/
 
-/* Hardcoded hotkeys. See http://ivanlef0u.fr/repo/windoz/VI20051005.html */
+/*
+ * Hardcoded hotkeys. See http://ivanlef0u.fr/repo/windoz/VI20051005.html
+ * or http://repo.meh.or.id/Windows/VI20051005.html .
+ *
+ * NOTE: The (Shift-)F12 keys are used only for the "UserDebuggerHotKey" setting
+ * which enables setting a key shortcut which, when pressed, establishes a
+ * breakpoint in the code being debugged:
+ * see http://technet.microsoft.com/en-us/library/cc786263(v=ws.10).aspx
+ * and http://flylib.com/books/en/4.441.1.33/1/ for more details.
+ * By default the key is VK-F12 on a 101-key keyboard, and is VK_SUBTRACT
+ * (hyphen / substract sign) on a 82-key keyboard.
+ */
 /*                   thread hwnd  modifiers  vk      id  next */
 HOT_KEY hkF12 =      {NULL, NULL, 0,         VK_F12, IDHK_F12,      NULL};
 HOT_KEY hkShiftF12 = {NULL, NULL, MOD_SHIFT, VK_F12, IDHK_SHIFTF12, &hkF12};
@@ -171,7 +182,7 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
         {
             TRACE("Hot key pressed (hWnd %p, id %d)\n", pHotKey->hWnd, pHotKey->id);
 
-            /* WIN and F12 keys are hardcoded here. See: http://ivanlef0u.fr/repo/windoz/VI20051005.html */
+            /* WIN and F12 keys are hardcoded here. See comments on top of this file. */
             if (pHotKey == &hkWinKey)
             {
                 if(bWinHotkeyActive == TRUE)
@@ -180,10 +191,12 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                     bWinHotkeyActive = FALSE;
                 }
             }
+#if 0 /* FIXME: See comment about "UserDebuggerHotKey" on top of this file. */
             else if (pHotKey == &hkF12 || pHotKey == &hkShiftF12)
             {
                 //co_ActivateDebugger(); // FIXME
             }
+#endif
             else if (pHotKey->id == IDHK_REACTOS && !pHotKey->pThread) // FIXME: Those hotkeys doesn't depend on RegisterHotKey
             {
                 UserPostMessage(pHotKey->hWnd, WM_SYSCOMMAND, SC_HOTKEY, (LPARAM)pHotKey->hWnd);
