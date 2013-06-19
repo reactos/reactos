@@ -31,9 +31,10 @@ DBG_DEFAULT_CHANNEL(UserHotkey);
  * (hyphen / substract sign) on a 82-key keyboard.
  */
 /*                   thread hwnd  modifiers  vk      id  next */
-HOT_KEY hkF12 =      {NULL, NULL, 0,         VK_F12, IDHK_F12,      NULL};
-HOT_KEY hkShiftF12 = {NULL, NULL, MOD_SHIFT, VK_F12, IDHK_SHIFTF12, &hkF12};
-HOT_KEY hkWinKey =   {NULL, NULL, MOD_WIN,   0,      IDHK_WINKEY,   &hkShiftF12};
+// HOT_KEY hkF12 =      {NULL, NULL, 0,         VK_F12, IDHK_F12,      NULL};
+// HOT_KEY hkShiftF12 = {NULL, NULL, MOD_SHIFT, VK_F12, IDHK_SHIFTF12, &hkF12};
+// HOT_KEY hkWinKey =   {NULL, NULL, MOD_WIN,   0,      IDHK_WINKEY,   &hkShiftF12};
+HOT_KEY hkWinKey =   {NULL, NULL, MOD_WIN,   0,      IDHK_WINKEY,   NULL};
 
 PHOT_KEY gphkFirst = &hkWinKey;
 BOOL bWinHotkeyActive = FALSE;
