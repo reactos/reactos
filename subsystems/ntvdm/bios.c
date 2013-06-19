@@ -155,13 +155,16 @@ VOID BiosVideoService()
     HANDLE ConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     INT CursorHeight;
     BOOLEAN Invisible = FALSE;
-    COORD CursorPosition;
+    COORD Position;
     CONSOLE_CURSOR_INFO CursorInfo;
+    CHAR_INFO Character;
+    SMALL_RECT Rect;
     DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
     DWORD Ecx = EmulatorGetRegister(EMULATOR_REG_CX);
     DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
+    DWORD Ebx = EmulatorGetRegister(EMULATOR_REG_BX);
 
-    switch (LOBYTE(Eax))
+    switch (HIBYTE(Eax))
     {
         /* Set Text-Mode Cursor Shape */
         case 0x01:
@@ -183,22 +186,32 @@ VOID BiosVideoService()
         /* Set Cursor Position */
         case 0x02:
         {
-            CursorPosition.X = LOBYTE(Edx);
-            CursorPosition.Y = HIBYTE(Edx);
+            Position.X = LOBYTE(Edx);
+            Position.Y = HIBYTE(Edx);
 
-            SetConsoleCursorPosition(ConsoleOutput, CursorPosition);
+            SetConsoleCursorPosition(ConsoleOutput, Position);
             break;
         }
 
-        /* Scroll Up Window */
+        /* Scroll Up/Down Window */
         case 0x06:
-        {
-            break;
-        }
-
-        /* Scroll Down Window */
         case 0x07:
         {
+            Rect.Top = HIBYTE(Ecx);
+            Rect.Left = LOBYTE(Ecx);
+            Rect.Bottom = HIBYTE(Edx);
+            Rect.Right = LOBYTE(Edx);
+            Character.Char.UnicodeChar = L' ';
+            Character.Attributes = HIBYTE(Ebx);
+            Position.X = Rect.Left;
+            if (HIBYTE(Eax) == 0x06) Position.Y = Rect.Top - LOBYTE(Eax);
+            else Position.Y = Rect.Top + LOBYTE(Eax);
+            
+            ScrollConsoleScreenBuffer(ConsoleOutput,
+                                      &Rect,
+                                      &Rect,
+                                      Position,
+                                      &Character);
             break;
         }
 
