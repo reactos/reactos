@@ -354,7 +354,7 @@ void softx87_step_def_on_write_memory(void* _ctx,sx86_udword address,sx86_ubyte 
 /* loading/storing and conversion code */
 
 /* loads 16-bit integer from data[] */
-void softx87_unpack_raw_int16(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v)
+void softx87_unpack_raw_int16(softx87_ctx* ctx,char *data,softx87_reg80 *v)
 {
 #if SX86_BYTE_ORDER == LE
 	v->mantissa =	(sx87_uldword)(*((sx87_uword*)data));
@@ -374,7 +374,7 @@ void softx87_unpack_raw_int16(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v
 }
 
 /* loads 32-bit integer from data[] */
-void softx87_unpack_raw_int32(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v)
+void softx87_unpack_raw_int32(softx87_ctx* ctx,char *data,softx87_reg80 *v)
 {
 #if SX86_BYTE_ORDER == LE
 	v->mantissa =	(sx87_uldword)(*((sx87_udword*)data));
@@ -396,7 +396,7 @@ void softx87_unpack_raw_int32(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v
 }
 
 /* loads 32-bit double precision floating point from data[] */
-void softx87_unpack_raw_fp32(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v)
+void softx87_unpack_raw_fp32(softx87_ctx* ctx,char *data,softx87_reg80 *v)
 {
 #if SX86_BYTE_ORDER == LE
 	v->mantissa =	(sx87_uldword)(*((sx87_udword*)data));
@@ -419,7 +419,7 @@ void softx87_unpack_raw_fp32(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v)
 }
 
 /* loads 64-bit double precision floating point from data[] */
-void softx87_unpack_raw_fp64(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v)
+void softx87_unpack_raw_fp64(softx87_ctx* ctx,char *data,softx87_reg80 *v)
 {
 #if SX86_BYTE_ORDER == LE
 	v->mantissa =	*((sx87_uldword*)data);

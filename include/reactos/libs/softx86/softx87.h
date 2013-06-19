@@ -4,7 +4,7 @@
 
 /* get the Softx86 configuration defines and Softx86 headers */
 #include "softx86.h"
-#include <softx86cfg.h>
+#include "softx86cfg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -248,10 +248,10 @@ int softx87_setbug(softx87_ctx* ctx,sx87_udword bug_id,sx87_ubyte on_off);
 void softx87_normalize(softx87_ctx* ctx,softx87_reg80 *val);
 
 /* loading/saving */
-void softx87_unpack_raw_int16(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v);
-void softx87_unpack_raw_int32(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v);
-void softx87_unpack_raw_fp32(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v);
-void softx87_unpack_raw_fp64(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v);
+void softx87_unpack_raw_int16(softx87_ctx* ctx,char *data,softx87_reg80 *v);
+void softx87_unpack_raw_int32(softx87_ctx* ctx,char *data,softx87_reg80 *v);
+void softx87_unpack_raw_fp32(softx87_ctx* ctx,char *data,softx87_reg80 *v);
+void softx87_unpack_raw_fp64(softx87_ctx* ctx,char *data,softx87_reg80 *v);
 
 #ifdef __cplusplus
 }
@@ -262,7 +262,7 @@ void softx87_unpack_raw_fp64(softx87_ctx* ctx,sx87_ubyte *data,softx87_reg80 *v)
    This function assumes that you want the CPU and FPU to
    share the same memory. Provided as a service for those
    who don't want to manually link pointers together and such. */
-static int softx87_connect_to_CPU(softx86_ctx* cpu,softx87_ctx* fpu)
+static inline int softx87_connect_to_CPU(softx86_ctx* cpu,softx87_ctx* fpu)
 {
 	if (!cpu || !fpu) return 0;
 
