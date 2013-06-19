@@ -198,10 +198,12 @@ int Sfx86OpcodeDec_group80(sx86_ubyte opcode,softx86_ctx* ctx,char buf[128])
 
 		imm16 = softx86_fetch_dec_byte(ctx);
 		if (w16)
+                {
 			if (sx)
 				imm16 |= (imm16&0x80) ? 0xFF80 : 0;
 			else
 				imm16 |= softx86_fetch_dec_byte(ctx)<<8;
+                }
 
 		if (reg == 0)		sprintf(buf,"ADD %s,%04Xh",op1_tmp,imm16);
 		else if (reg == 1)	sprintf(buf,"OR %s,%04Xh",op1_tmp,imm16);

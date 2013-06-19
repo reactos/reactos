@@ -3,7 +3,7 @@
 #define SOFTX86_H
 
 /* get the Softx86 configuration defines */
-#include <softx86cfg.h>
+#include <softx86/softx86cfg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -215,16 +215,16 @@ typedef struct {
 #define SEGMENT_OFFSET_TO_LINEAR(s,o)	(SEGMENT_TO_LINEAR(x)+o)
 
 /* force a given value to fit within the specified size */
-#define MASK_BYTE_SIZE(x)		(x &= 0xFF)
-#define MASK_WORD_SIZE(x)		(x &= 0xFFFF)
-#define MASK_DWORD_SIZE(x)		(x &= 0xFFFFFFFFL)
-#define FORCE_BYTE_SIZE(x)		(x &  0xFF)
-#define FORCE_WORD_SIZE(x)		(x &  0xFFFF)
-#define FORCE_DWORD_SIZE(x)		(x &  0xFFFFFFFFL)
+#define MASK_BYTE_SIZE(x)		((x) &= 0xFF)
+#define MASK_WORD_SIZE(x)		((x) &= 0xFFFF)
+#define MASK_DWORD_SIZE(x)		((x) &= 0xFFFFFFFFL)
+#define FORCE_BYTE_SIZE(x)		((x) &  0xFF)
+#define FORCE_WORD_SIZE(x)		((x) &  0xFFFF)
+#define FORCE_DWORD_SIZE(x)		((x) &  0xFFFFFFFFL)
 
 /* sign-extending macros */
-#define SGNEXT8(x)			(x | ((x & 0x80) ? 0xFFFFFF00 : 0))
-#define SGNEXT16(x)			(x | ((x & 0x8000) ? 0xFFFF0000 : 0))
+#define SGNEXT8(x)			((x) | (((x) & 0x80) ? 0xFFFFFF00 : 0))
+#define SGNEXT16(x)			((x) | (((x) & 0x8000) ? 0xFFFF0000 : 0))
 
 /*=====================================================================================
    Softx86 bug structure

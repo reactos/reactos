@@ -1445,8 +1445,10 @@ void sx86_exec_full_modrmonly_rw_imm(softx86_ctx* ctx,sx86_ubyte w16,sx86_ubyte 
 	if (mod == 3) {		/* immediate <-> register */
 		imm = softx86_fetch_exec_byte(ctx);
 		if (w16)
+                {
 			if (sx)	imm |= (imm&0x80) ? 0xFF80 : 0;
 			else	imm |= softx86_fetch_exec_byte(ctx)<<8;
+                }
 
 		// TODO: For 386+ 32-bit instructions... if (d32) {...}
 		if (w16) {
@@ -1542,8 +1544,10 @@ void sx86_exec_full_modrmonly_rw_imm(softx86_ctx* ctx,sx86_ubyte w16,sx86_ubyte 
 
 		imm = softx86_fetch_exec_byte(ctx);
 		if (w16)
+                {
 			if (sx)	imm |= (imm&0x80) ? 0xFF80 : 0;
 			else	imm |= softx86_fetch_exec_byte(ctx)<<8;
+                }
 
 		// TODO: For 386+ 32-bit instructions... if (d32) {...}
 		if (w16) {
@@ -1742,8 +1746,10 @@ void sx86_exec_full_modrmonly_ro_imm(softx86_ctx* ctx,sx86_ubyte w16,sx86_ubyte 
 	if (mod == 3) {		/* immediate <-> register */
 		imm = softx86_fetch_exec_byte(ctx);
 		if (w16)
+                {
 			if (sx)	imm |= (imm&0x80) ? 0xFF80 : 0;
 			else	imm |= softx86_fetch_exec_byte(ctx)<<8;
+                }
 
 		// TODO: For 386+ 32-bit instructions... if (d32) {...}
 		if (w16) {
@@ -1835,8 +1841,10 @@ void sx86_exec_full_modrmonly_ro_imm(softx86_ctx* ctx,sx86_ubyte w16,sx86_ubyte 
 
 		imm = softx86_fetch_exec_byte(ctx);
 		if (w16)
+                {
 			if (sx)	imm |= (imm&0x80) ? 0xFF80 : 0;
 			else	imm |= softx86_fetch_exec_byte(ctx)<<8;
+                }
 
 		// TODO: For 386+ 32-bit instructions... if (d32) {...}
 		if (w16) {
@@ -2616,7 +2624,7 @@ void sx86_exec_full_modrmonly_memx(softx86_ctx* ctx,sx86_ubyte mod,sx86_ubyte rm
 
 			lo = sx86_far_to_linear(ctx,seg,ofs);
 			softx86_fetch(ctx,NULL,lo,tmp,sz);
-			op64(ctx,tmp,sz);
+			op64(ctx,(char*)tmp,sz);
 		}
 	}
 }
@@ -2709,7 +2717,7 @@ void sx86_exec_full_modrw_memx(softx86_ctx* ctx,sx86_ubyte mod,sx86_ubyte rm,int
 
 			lo = sx86_far_to_linear(ctx,seg,ofs);
 			softx86_fetch(ctx,NULL,lo,tmp,sz);
-			op64(ctx,tmp,sz);
+			op64(ctx,(char*)tmp,sz);
 			softx86_write(ctx,NULL,lo,tmp,sz);
 		}
 	}

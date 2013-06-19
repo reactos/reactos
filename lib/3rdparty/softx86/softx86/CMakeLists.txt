@@ -27,4 +27,3 @@ list(APPEND SOURCE
 )
 
 add_library(softx86 ${SOURCE})
-allow_warnings(softx86)
