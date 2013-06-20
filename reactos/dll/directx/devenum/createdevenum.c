@@ -258,7 +258,7 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
         WCHAR wszPinName[MAX_PATH];
         DWORD cName = sizeof(wszPinName) / sizeof(WCHAR);
         DWORD Type, cbData;
-        REGFILTERPINS *rgPin = &rgPins[rgf2->u.s.cPins];
+        REGFILTERPINS *rgPin = &rgPins[rgf2->u.s1.cPins];
         LONG lRet;
 
         rgPin->strName = NULL;
@@ -298,7 +298,7 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
 
         DEVENUM_ReadPinTypes(hkeyPinKey, rgPin);
 
-        ++rgf2->u.s.cPins;
+        ++rgf2->u.s1.cPins;
         continue;
 
         error_cleanup:
@@ -309,13 +309,13 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
 
     RegCloseKey(hkeyPins);
 
-    if (rgPins && !rgf2->u.s.cPins)
+    if (rgPins && !rgf2->u.s1.cPins)
     {
         CoTaskMemFree(rgPins);
         rgPins = NULL;
     }
 
-    rgf2->u.s.rgPins = rgPins;
+    rgf2->u.s1.rgPins = rgPins;
 }
 
 static HRESULT DEVENUM_RegisterLegacyAmFilters(void)
@@ -387,8 +387,8 @@ static HRESULT DEVENUM_RegisterLegacyAmFilters(void)
 
                 rgf2.dwVersion = 1;
                 rgf2.dwMerit = 0;
-                rgf2.u.s.cPins = 0;
-                rgf2.u.s.rgPins = NULL;
+                rgf2.u.s1.cPins = 0;
+                rgf2.u.s1.rgPins = NULL;
 
                 cbData = sizeof(wszFilterName);
                 if (RegQueryValueExW(hkeyFilterClass, NULL, NULL, &Type, (LPBYTE)wszFilterName, &cbData) != ERROR_SUCCESS ||
@@ -414,29 +414,29 @@ static HRESULT DEVENUM_RegisterLegacyAmFilters(void)
 
                 if (hkeyFilterClass) RegCloseKey(hkeyFilterClass);
 
-                if (rgf2.u.s.rgPins)
+                if (rgf2.u.s1.rgPins)
                 {
                     UINT iPin;
 
-                    for (iPin = 0; iPin < rgf2.u.s.cPins; iPin++)
+                    for (iPin = 0; iPin < rgf2.u.s1.cPins; iPin++)
                     {
-                        CoTaskMemFree(rgf2.u.s.rgPins[iPin].strName);
+                        CoTaskMemFree(rgf2.u.s1.rgPins[iPin].strName);
 
-                        if (rgf2.u.s.rgPins[iPin].lpMediaType)
+                        if (rgf2.u.s1.rgPins[iPin].lpMediaType)
                         {
                             UINT iType;
 
-                            for (iType = 0; iType < rgf2.u.s.rgPins[iPin].nMediaTypes; iType++)
+                            for (iType = 0; iType < rgf2.u.s1.rgPins[iPin].nMediaTypes; iType++)
                             {
-                                CoTaskMemFree((void*)rgf2.u.s.rgPins[iPin].lpMediaType[iType].clsMajorType);
-                                CoTaskMemFree((void*)rgf2.u.s.rgPins[iPin].lpMediaType[iType].clsMinorType);
+                                CoTaskMemFree((void*)rgf2.u.s1.rgPins[iPin].lpMediaType[iType].clsMajorType);
+                                CoTaskMemFree((void*)rgf2.u.s1.rgPins[iPin].lpMediaType[iType].clsMinorType);
                             }
 
-                            CoTaskMemFree((void*)rgf2.u.s.rgPins[iPin].lpMediaType);
+                            CoTaskMemFree((void*)rgf2.u.s1.rgPins[iPin].lpMediaType);
                         }
                     }
 
-                    CoTaskMemFree((void*)rgf2.u.s.rgPins);
+                    CoTaskMemFree((void*)rgf2.u.s1.rgPins);
                 }
             }
         }
@@ -606,8 +606,8 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
 
     rf2.dwVersion = 2;
     rf2.dwMerit = MERIT_PREFERRED;
-    rf2.u.s1.cPins2 = 1;
-    rf2.u.s1.rgPins2 = &rfp2;
+    rf2.u.s2.cPins2 = 1;
+    rf2.u.s2.rgPins2 = &rfp2;
     rfp2.cInstances = 1;
     rfp2.nMediums = 0;
     rfp2.lpMedium = NULL;

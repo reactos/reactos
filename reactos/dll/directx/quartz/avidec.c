@@ -38,24 +38,37 @@
 //#include <wine/unicode.h>
 #include <wine/debug.h>
 
-#include "transform.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 typedef struct AVIDecImpl
 {
-    TransformFilterImpl tf;
+    TransformFilter tf;
+
     HIC hvid;
     BITMAPINFOHEADER* pBihIn;
     BITMAPINFOHEADER* pBihOut;
+    REFERENCE_TIME late;
 } AVIDecImpl;
 
-static HRESULT AVIDec_ProcessBegin(TransformFilterImpl* pTransformFilter)
+static const IBaseFilterVtbl AVIDec_Vtbl;
+
+static inline AVIDecImpl *impl_from_IBaseFilter( IBaseFilter *iface )
 {
-    AVIDecImpl* This = (AVIDecImpl*)pTransformFilter;
+    return CONTAINING_RECORD(iface, AVIDecImpl, tf.filter.IBaseFilter_iface);
+}
+
+static inline AVIDecImpl *impl_from_TransformFilter( TransformFilter *iface )
+{
+    return CONTAINING_RECORD(iface, AVIDecImpl, tf.filter);
+}
+
+static HRESULT WINAPI AVIDec_StartStreaming(TransformFilter* pTransformFilter)
+{
+    AVIDecImpl* This = impl_from_TransformFilter(pTransformFilter);
     DWORD result;
 
     TRACE("(%p)->()\n", This);
+    This->late = -1;
 
     result = ICDecompressBegin(This->hvid, This->pBihIn, This->pBihOut);
     if (result != ICERR_OK)
@@ -66,9 +79,39 @@ static HRESULT AVIDec_ProcessBegin(TransformFilterImpl* pTransformFilter)
     return S_OK;
 }
 
-static HRESULT AVIDec_ProcessSampleData(InputPin *pin, IMediaSample *pSample)
+static HRESULT WINAPI AVIDec_EndFlush(TransformFilter *pTransformFilter) {
+    AVIDecImpl* This = impl_from_TransformFilter(pTransformFilter);
+    This->late = -1;
+    return S_OK;
+}
+
+static HRESULT WINAPI AVIDec_NotifyDrop(TransformFilter *pTransformFilter, IBaseFilter *sender, Quality qm) {
+    AVIDecImpl *This = impl_from_TransformFilter(pTransformFilter);
+
+    EnterCriticalSection(&This->tf.filter.csFilter);
+    if (qm.Late > 0)
+        This->late = qm.Late + qm.TimeStamp;
+    else
+        This->late = -1;
+    LeaveCriticalSection(&This->tf.filter.csFilter);
+    return S_OK;
+}
+
+static int AVIDec_DropSample(AVIDecImpl *This, REFERENCE_TIME tStart) {
+    if (This->late < 0)
+        return 0;
+
+    if (tStart < This->late) {
+        TRACE("Dropping sample\n");
+        return 1;
+    }
+    This->late = -1;
+    return 0;
+}
+
+static HRESULT WINAPI AVIDec_Receive(TransformFilter *tf, IMediaSample *pSample)
 {
-    AVIDecImpl* This = (AVIDecImpl *)pin->pin.pinInfo.pFilter;
+    AVIDecImpl* This = impl_from_TransformFilter(tf);
     AM_MEDIA_TYPE amt;
     HRESULT hr;
     DWORD res;
@@ -78,20 +121,9 @@ static HRESULT AVIDec_ProcessSampleData(InputPin *pin, IMediaSample *pSample)
     DWORD cbSrcStream;
     LPBYTE pbSrcStream;
     LONGLONG tStart, tStop;
+    DWORD flags = 0;
 
-    EnterCriticalSection(&This->tf.csFilter);
-    if (This->tf.state == State_Stopped)
-    {
-        LeaveCriticalSection(&This->tf.csFilter);
-        return VFW_E_WRONG_STATE;
-    }
-
-    if (pin->end_of_stream || pin->flushing)
-    {
-        LeaveCriticalSection(&This->tf.csFilter);
-        return S_FALSE;
-    }
-
+    EnterCriticalSection(&This->tf.csReceive);
     hr = IMediaSample_GetPointer(pSample, &pbSrcStream);
     if (FAILED(hr))
     {
@@ -112,7 +144,7 @@ static HRESULT AVIDec_ProcessSampleData(InputPin *pin, IMediaSample *pSample)
     /* Update input size to match sample size */
     This->pBihIn->biSizeImage = cbSrcStream;
 
-    hr = OutputPin_GetDeliveryBuffer((OutputPin*)This->tf.ppPins[1], &pOutSample, NULL, NULL, 0);
+    hr = BaseOutputPinImpl_GetDeliveryBuffer((BaseOutputPin*)This->tf.ppPins[1], &pOutSample, NULL, NULL, 0);
     if (FAILED(hr)) {
         ERR("Unable to get delivery buffer (%x)\n", hr);
         goto error;
@@ -133,9 +165,23 @@ static HRESULT AVIDec_ProcessSampleData(InputPin *pin, IMediaSample *pSample)
         goto error;
     }
 
-    res = ICDecompress(This->hvid, 0, This->pBihIn, pbSrcStream, This->pBihOut, pbDstStream);
+    if (IMediaSample_IsPreroll(pSample) == S_OK)
+        flags |= ICDECOMPRESS_PREROLL;
+    if (IMediaSample_IsSyncPoint(pSample) != S_OK)
+        flags |= ICDECOMPRESS_NOTKEYFRAME;
+    hr = IMediaSample_GetTime(pSample, &tStart, &tStop);
+    if (hr == S_OK && AVIDec_DropSample(This, tStart))
+        flags |= ICDECOMPRESS_HURRYUP;
+
+    res = ICDecompress(This->hvid, flags, This->pBihIn, pbSrcStream, This->pBihOut, pbDstStream);
     if (res != ICERR_OK)
         ERR("Error occurred during the decompression (%x)\n", res);
+
+    /* Drop sample if its intended to be dropped */
+    if (flags & ICDECOMPRESS_HURRYUP) {
+        hr = S_OK;
+        goto error;
+    }
 
     IMediaSample_SetActualDataLength(pOutSample, This->pBihOut->biSizeImage);
 
@@ -143,29 +189,35 @@ static HRESULT AVIDec_ProcessSampleData(InputPin *pin, IMediaSample *pSample)
     IMediaSample_SetDiscontinuity(pOutSample, (IMediaSample_IsDiscontinuity(pSample) == S_OK));
     IMediaSample_SetSyncPoint(pOutSample, (IMediaSample_IsSyncPoint(pSample) == S_OK));
 
-    if (IMediaSample_GetTime(pSample, &tStart, &tStop) == S_OK)
+    if (hr == S_OK)
         IMediaSample_SetTime(pOutSample, &tStart, &tStop);
+    else if (hr == VFW_S_NO_STOP_TIME)
+        IMediaSample_SetTime(pOutSample, &tStart, NULL);
     else
         IMediaSample_SetTime(pOutSample, NULL, NULL);
 
-    LeaveCriticalSection(&This->tf.csFilter);
-    hr = OutputPin_SendSample((OutputPin*)This->tf.ppPins[1], pOutSample);
+    if (IMediaSample_GetMediaTime(pSample, &tStart, &tStop) == S_OK)
+        IMediaSample_SetMediaTime(pOutSample, &tStart, &tStop);
+    else
+        IMediaSample_SetMediaTime(pOutSample, NULL, NULL);
+
+    LeaveCriticalSection(&This->tf.csReceive);
+    hr = BaseOutputPinImpl_Deliver((BaseOutputPin*)This->tf.ppPins[1], pOutSample);
+    EnterCriticalSection(&This->tf.csReceive);
     if (hr != S_OK && hr != VFW_E_NOT_CONNECTED)
         ERR("Error sending sample (%x)\n", hr);
-    IMediaSample_Release(pOutSample);
-    return hr;
 
 error:
     if (pOutSample)
         IMediaSample_Release(pOutSample);
 
-    LeaveCriticalSection(&This->tf.csFilter);
+    LeaveCriticalSection(&This->tf.csReceive);
     return hr;
 }
 
-static HRESULT AVIDec_ProcessEnd(TransformFilterImpl* pTransformFilter)
+static HRESULT WINAPI AVIDec_StopStreaming(TransformFilter* pTransformFilter)
 {
-    AVIDecImpl* This = (AVIDecImpl*)pTransformFilter;
+    AVIDecImpl* This = impl_from_TransformFilter(pTransformFilter);
     DWORD result;
 
     TRACE("(%p)->()\n", This);
@@ -182,12 +234,15 @@ static HRESULT AVIDec_ProcessEnd(TransformFilterImpl* pTransformFilter)
     return S_OK;
 }
 
-static HRESULT AVIDec_ConnectInput(InputPin *pin, const AM_MEDIA_TYPE * pmt)
+static HRESULT WINAPI AVIDec_SetMediaType(TransformFilter *tf, PIN_DIRECTION dir, const AM_MEDIA_TYPE * pmt)
 {
-    AVIDecImpl* This = (AVIDecImpl*)pin->pin.pinInfo.pFilter;
+    AVIDecImpl* This = impl_from_TransformFilter(tf);
     HRESULT hr = VFW_E_TYPE_NOT_ACCEPTED;
 
     TRACE("(%p)->(%p)\n", This, pmt);
+
+    if (dir != PINDIR_INPUT)
+        return S_OK;
 
     /* Check root (GUID w/o FOURCC) */
     if ((IsEqualIID(&pmt->majortype, &MEDIATYPE_Video)) &&
@@ -268,9 +323,6 @@ static HRESULT AVIDec_ConnectInput(InputPin *pin, const AM_MEDIA_TYPE * pmt)
             else
                 assert(0);
 
-            /* Update buffer size of media samples in output */
-            ((OutputPin*)This->tf.ppPins[1])->allocProps.cbBuffer = This->pBihOut->biSizeImage;
-
             TRACE("Connection accepted\n");
             return S_OK;
         }
@@ -283,33 +335,69 @@ failed:
     return hr;
 }
 
-static HRESULT AVIDec_Cleanup(InputPin *pin)
+static HRESULT WINAPI AVIDec_CompleteConnect(TransformFilter *tf, PIN_DIRECTION dir, IPin *pin)
 {
-    AVIDecImpl *This = (AVIDecImpl *)pin->pin.pinInfo.pFilter;
+    AVIDecImpl* This = impl_from_TransformFilter(tf);
 
-    TRACE("(%p)->()\n", This);
-    
-    if (This->hvid)
-        ICClose(This->hvid);
-    if (This->pBihIn)
-        CoTaskMemFree(This->pBihIn);
-    if (This->pBihOut)
-        CoTaskMemFree(This->pBihOut);
-
-    This->hvid = NULL;
-    This->pBihIn = NULL;
-    This->pBihOut = NULL;
+    TRACE("(%p)\n", This);
 
     return S_OK;
 }
 
-static const TransformFuncsTable AVIDec_FuncsTable = {
-    AVIDec_ProcessBegin,
-    AVIDec_ProcessSampleData,
-    AVIDec_ProcessEnd,
+static HRESULT WINAPI AVIDec_BreakConnect(TransformFilter *tf, PIN_DIRECTION dir)
+{
+    AVIDecImpl *This = impl_from_TransformFilter(tf);
+
+    TRACE("(%p)->()\n", This);
+
+    if (dir == PINDIR_INPUT)
+    {
+        if (This->hvid)
+            ICClose(This->hvid);
+        if (This->pBihIn)
+            CoTaskMemFree(This->pBihIn);
+        if (This->pBihOut)
+            CoTaskMemFree(This->pBihOut);
+
+        This->hvid = NULL;
+        This->pBihIn = NULL;
+        This->pBihOut = NULL;
+    }
+
+    return S_OK;
+}
+
+static HRESULT WINAPI AVIDec_DecideBufferSize(TransformFilter *tf, IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *ppropInputRequest)
+{
+    AVIDecImpl *pAVI = impl_from_TransformFilter(tf);
+    ALLOCATOR_PROPERTIES actual;
+
+    if (!ppropInputRequest->cbAlign)
+        ppropInputRequest->cbAlign = 1;
+
+    if (ppropInputRequest->cbBuffer < pAVI->pBihOut->biSizeImage)
+            ppropInputRequest->cbBuffer = pAVI->pBihOut->biSizeImage;
+
+    if (!ppropInputRequest->cBuffers)
+        ppropInputRequest->cBuffers = 1;
+
+    return IMemAllocator_SetProperties(pAlloc, ppropInputRequest, &actual);
+}
+
+static const TransformFilterFuncTable AVIDec_FuncsTable = {
+    AVIDec_DecideBufferSize,
+    AVIDec_StartStreaming,
+    AVIDec_Receive,
+    AVIDec_StopStreaming,
     NULL,
-    AVIDec_ConnectInput,
-    AVIDec_Cleanup
+    AVIDec_SetMediaType,
+    AVIDec_CompleteConnect,
+    AVIDec_BreakConnect,
+    NULL,
+    NULL,
+    AVIDec_EndFlush,
+    NULL,
+    AVIDec_NotifyDrop
 };
 
 HRESULT AVIDec_create(IUnknown * pUnkOuter, LPVOID * ppv)
@@ -324,19 +412,35 @@ HRESULT AVIDec_create(IUnknown * pUnkOuter, LPVOID * ppv)
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    /* Note: This memory is managed by the transform filter once created */
-    This = CoTaskMemAlloc(sizeof(AVIDecImpl));
+    hr = TransformFilter_Construct(&AVIDec_Vtbl, sizeof(AVIDecImpl), &CLSID_AVIDec, &AVIDec_FuncsTable, (IBaseFilter**)&This);
+
+    if (FAILED(hr))
+        return hr;
 
     This->hvid = NULL;
     This->pBihIn = NULL;
     This->pBihOut = NULL;
 
-    hr = TransformFilter_Create(&(This->tf), &CLSID_AVIDec, &AVIDec_FuncsTable, NULL, NULL, NULL);
-
-    if (FAILED(hr))
-        return hr;
-
     *ppv = This;
 
     return hr;
 }
+
+static const IBaseFilterVtbl AVIDec_Vtbl =
+{
+    TransformFilterImpl_QueryInterface,
+    BaseFilterImpl_AddRef,
+    TransformFilterImpl_Release,
+    BaseFilterImpl_GetClassID,
+    TransformFilterImpl_Stop,
+    TransformFilterImpl_Pause,
+    TransformFilterImpl_Run,
+    BaseFilterImpl_GetState,
+    BaseFilterImpl_SetSyncSource,
+    BaseFilterImpl_GetSyncSource,
+    BaseFilterImpl_EnumPins,
+    TransformFilterImpl_FindPin,
+    BaseFilterImpl_QueryFilterInfo,
+    BaseFilterImpl_JoinFilterGraph,
+    BaseFilterImpl_QueryVendorInfo
+};

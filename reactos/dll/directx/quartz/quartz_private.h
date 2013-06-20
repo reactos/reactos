@@ -2,9 +2,6 @@
  *
  * Copyright 2002 Lionel Ulmer
  *
- * This file contains the (internal) driver registration functions,
- * driver enumeration APIs and DirectDraw creation functions.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -39,6 +36,7 @@
 #include <objbase.h>
 #include <oleauto.h>
 #include <dshow.h>
+#include <wine/strmbase.h>
 #include <wine/list.h>
 
 #define MEDIATIME_FROM_BYTES(x) ((LONGLONG)(x) * 10000000)
@@ -46,60 +44,35 @@
 #define BYTES_FROM_MEDIATIME(time) SEC_FROM_MEDIATIME(time)
 #define MSEC_FROM_MEDIATIME(time) ((time) / 10000)
 
-#define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
+HRESULT FilterGraph_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
+HRESULT FilterGraphNoThread_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
+HRESULT FilterMapper2_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
+HRESULT FilterMapper_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
+HRESULT AsyncReader_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT StdMemAllocator_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT AVISplitter_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT MPEGSplitter_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT AVIDec_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT DSoundRender_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT VideoRenderer_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT NullRenderer_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT VideoRendererDefault_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT QUARTZ_CreateSystemClock(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT ACMWrapper_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT WAVEParser_create(IUnknown * pUnkOuter, LPVOID * ppv) DECLSPEC_HIDDEN;
+HRESULT VMR9Impl_create(IUnknown *pUnkOuter, LPVOID *ppv) DECLSPEC_HIDDEN;
 
-HRESULT FilterGraph_create(IUnknown *pUnkOuter, LPVOID *ppObj);
-HRESULT FilterGraphNoThread_create(IUnknown *pUnkOuter, LPVOID *ppObj);
-HRESULT FilterMapper2_create(IUnknown *pUnkOuter, LPVOID *ppObj);
-HRESULT FilterMapper_create(IUnknown *pUnkOuter, LPVOID *ppObj);
-HRESULT AsyncReader_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT StdMemAllocator_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT AVISplitter_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT MPEGSplitter_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT AVIDec_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT DSoundRender_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT VideoRenderer_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT NullRenderer_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT VideoRendererDefault_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT QUARTZ_CreateSystemClock(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT ACMWrapper_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT WAVEParser_create(IUnknown * pUnkOuter, LPVOID * ppv);
-HRESULT SeekingPassThru_create(IUnknown *pUnkOuter, LPVOID *ppObj);
+HRESULT EnumMonikerImpl_Create(IMoniker ** ppMoniker, ULONG nMonikerCount, IEnumMoniker ** ppEnum) DECLSPEC_HIDDEN;
 
-HRESULT EnumMonikerImpl_Create(IMoniker ** ppMoniker, ULONG nMonikerCount, IEnumMoniker ** ppEnum);
+HRESULT IEnumRegFiltersImpl_Construct(REGFILTER * pInRegFilters, const ULONG size, IEnumRegFilters ** ppEnum) DECLSPEC_HIDDEN;
+HRESULT IEnumFiltersImpl_Construct(IGraphVersion * pVersionSource, IBaseFilter *** pppFilters, ULONG * pNumFilters, IEnumFilters ** ppEnum) DECLSPEC_HIDDEN;
 
-typedef struct tagENUMEDIADETAILS
-{
-	ULONG cMediaTypes;
-	AM_MEDIA_TYPE * pMediaTypes;
-} ENUMMEDIADETAILS;
+extern const char * qzdebugstr_guid(const GUID * id) DECLSPEC_HIDDEN;
+extern void video_unregister_windowclass(void) DECLSPEC_HIDDEN;
 
-typedef HRESULT (* FNOBTAINPIN)(IBaseFilter *iface, ULONG pos, IPin **pin, DWORD *lastsynctick);
-
-HRESULT IEnumPinsImpl_Construct(IEnumPins ** ppEnum, FNOBTAINPIN receive_pin, IBaseFilter *base);
-HRESULT IEnumMediaTypesImpl_Construct(const ENUMMEDIADETAILS * pDetails, IEnumMediaTypes ** ppEnum);
-HRESULT IEnumRegFiltersImpl_Construct(REGFILTER * pInRegFilters, const ULONG size, IEnumRegFilters ** ppEnum);
-HRESULT IEnumFiltersImpl_Construct(IBaseFilter ** ppFilters, ULONG nFilters, IEnumFilters ** ppEnum);
-
-extern const char * qzdebugstr_guid(const GUID * id);
-
-HRESULT CopyMediaType(AM_MEDIA_TYPE * pDest, const AM_MEDIA_TYPE *pSrc);
-void FreeMediaType(AM_MEDIA_TYPE * pmt);
-void DeleteMediaType(AM_MEDIA_TYPE * pmt);
 BOOL CompareMediaTypes(const AM_MEDIA_TYPE * pmt1, const AM_MEDIA_TYPE * pmt2, BOOL bWildcards);
-void dump_AM_MEDIA_TYPE(const AM_MEDIA_TYPE * pmt);
-HRESULT updatehres( HRESULT original, HRESULT new );
+void dump_AM_MEDIA_TYPE(const AM_MEDIA_TYPE * pmt) DECLSPEC_HIDDEN;
 
-typedef struct StdMediaSample2
-{
-    const IMediaSample2Vtbl * lpvtbl;
-
-    LONG ref;
-    AM_SAMPLE2_PROPERTIES props;
-    IMemAllocator * pParent;
-    struct list listentry;
-    LONGLONG tMediaStart;
-    LONGLONG tMediaEnd;
-} StdMediaSample2;
+HRESULT GetClassMediaFile(IAsyncReader * pReader, LPCOLESTR pszFileName, GUID * majorType, GUID * minorType, GUID * sourceFilter);
 
 #endif /* __QUARTZ_PRIVATE_INCLUDED__ */

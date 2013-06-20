@@ -1,6 +1,4 @@
 /*
- * Copyright (C) 2002 Robert Shearman
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -16,15 +14,4 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-import "objidl.idl";
-
-#include <devenum.idl>
-
-#include <axcore.idl>
-
-#include <axextend.idl>
-
-#include <dyngraph.idl>
-
-/* TODO: #include <dvdif.h> */
-#include <vmrender.idl>
+#include "control.idl"

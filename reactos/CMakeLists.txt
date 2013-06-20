@@ -202,8 +202,8 @@ else()
             include/psdk
             include/dxsdk
             ${REACTOS_BINARY_DIR}/include
-            ${REACTOS_BINARY_DIR}/include/dxsdk
             ${REACTOS_BINARY_DIR}/include/psdk
+			${REACTOS_BINARY_DIR}/include/dxsdk
             ${REACTOS_BINARY_DIR}/include/reactos
             include/crt
             include/ddk

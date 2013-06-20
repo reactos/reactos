@@ -768,10 +768,15 @@ typedef struct _DEBUG_EVENT {
 typedef struct _OVERLAPPED {
 	ULONG_PTR Internal;
 	ULONG_PTR InternalHigh;
-	DWORD Offset;
-	DWORD OffsetHigh;
+	union {
+		struct {
+			DWORD Offset;
+			DWORD OffsetHigh;
+		} DUMMYSTRUCTNAME;
+		PVOID Pointer;
+	} DUMMYUNIONNAME;
 	HANDLE hEvent;
-} OVERLAPPED,*POVERLAPPED,*LPOVERLAPPED;
+} OVERLAPPED, *POVERLAPPED, *LPOVERLAPPED;
 
 typedef struct _STARTUPINFOA {
 	DWORD	cb;

@@ -129,43 +129,43 @@ static HRESULT unregister_filters(struct regsvr_filter const *list);
 /***********************************************************************
  *		static string constants
  */
-static WCHAR const interface_keyname[10] = {
+static const WCHAR interface_keyname[] = {
     'I', 'n', 't', 'e', 'r', 'f', 'a', 'c', 'e', 0 };
-static WCHAR const base_ifa_keyname[14] = {
+static const WCHAR base_ifa_keyname[] = {
     'B', 'a', 's', 'e', 'I', 'n', 't', 'e', 'r', 'f', 'a', 'c',
     'e', 0 };
-static WCHAR const num_methods_keyname[11] = {
+static const WCHAR num_methods_keyname[] = {
     'N', 'u', 'm', 'M', 'e', 't', 'h', 'o', 'd', 's', 0 };
-static WCHAR const ps_clsid_keyname[15] = {
+static const WCHAR ps_clsid_keyname[] = {
     'P', 'r', 'o', 'x', 'y', 'S', 't', 'u', 'b', 'C', 'l', 's',
     'i', 'd', 0 };
-static WCHAR const ps_clsid32_keyname[17] = {
+static const WCHAR ps_clsid32_keyname[] = {
     'P', 'r', 'o', 'x', 'y', 'S', 't', 'u', 'b', 'C', 'l', 's',
     'i', 'd', '3', '2', 0 };
-static WCHAR const clsid_keyname[6] = {
+static const WCHAR clsid_keyname[] = {
     'C', 'L', 'S', 'I', 'D', 0 };
-static WCHAR const curver_keyname[7] = {
+static const WCHAR curver_keyname[] = {
     'C', 'u', 'r', 'V', 'e', 'r', 0 };
-static WCHAR const ips_keyname[13] = {
+static const WCHAR ips_keyname[] = {
     'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
     0 };
-static WCHAR const ips32_keyname[15] = {
+static const WCHAR ips32_keyname[] = {
     'I', 'n', 'P', 'r', 'o', 'c', 'S', 'e', 'r', 'v', 'e', 'r',
     '3', '2', 0 };
-static WCHAR const progid_keyname[7] = {
+static const WCHAR progid_keyname[] = {
     'P', 'r', 'o', 'g', 'I', 'D', 0 };
-static WCHAR const viprogid_keyname[25] = {
+static const WCHAR viprogid_keyname[] = {
     'V', 'e', 'r', 's', 'i', 'o', 'n', 'I', 'n', 'd', 'e', 'p',
     'e', 'n', 'd', 'e', 'n', 't', 'P', 'r', 'o', 'g', 'I', 'D',
     0 };
-static char const tmodel_valuename[] = "ThreadingModel";
-static WCHAR const mediatype_name[11] = {
+static const char tmodel_valuename[] = "ThreadingModel";
+static const WCHAR mediatype_name[] = {
     'M', 'e', 'd', 'i', 'a', ' ', 'T', 'y', 'p', 'e', 0 };
-static WCHAR const subtype_valuename[8] = {
+static const WCHAR subtype_valuename[] = {
     'S', 'u', 'b', 't', 'y', 'p', 'e', 0 };
-static WCHAR const sourcefilter_valuename[14] = {
+static const WCHAR sourcefilter_valuename[] = {
     'S', 'o', 'u', 'r', 'c', 'e', ' ', 'F', 'i', 'l', 't', 'e', 'r', 0 };
-static WCHAR const extensions_keyname[11] = {
+static const WCHAR extensions_keyname[] = {
     'E', 'x', 't', 'e', 'n', 's', 'i', 'o', 'n', 's', 0 };
 
 /***********************************************************************
@@ -214,7 +214,7 @@ static HRESULT register_interfaces(struct regsvr_interface const *list)
 	}
 
 	if (0 <= list->num_methods) {
-	    static WCHAR const fmt[3] = { '%', 'd', 0 };
+	    static const WCHAR fmt[] = { '%', 'd', 0 };
 	    HKEY key;
 
 	    res = RegCreateKeyExW(iid_key, num_methods_keyname, 0, NULL, 0,
@@ -595,8 +595,8 @@ static HRESULT register_filters(struct regsvr_filter const *list)
 	    for (i = 0; list->pins[i].flags != 0xFFFFFFFF; i++) ;
 	    rf2.dwVersion = 2;
 	    rf2.dwMerit = list->merit;
-	    rf2.u.s1.cPins2 = i;
-	    rf2.u.s1.rgPins2 = prfp2 = CoTaskMemAlloc(i*sizeof(REGFILTERPINS2));
+	    rf2.u.s2.cPins2 = i;
+	    rf2.u.s2.rgPins2 = prfp2 = CoTaskMemAlloc(i*sizeof(REGFILTERPINS2));
 	    if (!prfp2) {
 		hr = E_OUTOFMEMORY;
 		break;
@@ -783,121 +783,10 @@ error_close_progid_key:
     return res;
 }
 
-static GUID const CLSID_PSFactoryBuffer = {
-    0x92a3a302, 0xda7c, 0x4a1f, {0xba,0x7e,0x18,0x02,0xbb,0x5d,0x2d,0x02} };
-
 /***********************************************************************
  *		coclass list
  */
 static struct regsvr_coclass const coclass_list[] = {
-    {   &CLSID_FilterGraph,
-	"Filter Graph",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_FilterGraphNoThread,
-	"Filter Graph",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_FilterMapper,
-	"Filter Mapper",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_FilterMapper2,
-	"Filter Mapper2",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_SystemClock,
-	"System Clock",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_MemoryAllocator,
-	"Memory Allocator",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_SeekingPassThru,
-       "Seeking",
-       NULL,
-       "quartz.dll",
-       "Both"
-    },
-    {   &CLSID_AsyncReader,
-	"File Source Filter",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_AviSplitter,
-	"AVI Splitter",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_MPEG1Splitter,
-        "MPEG-I Stream Splitter",
-        NULL,
-        "quartz.dll",
-        "Both"
-    },
-    {   &CLSID_AVIDec,
-	"AVI Decompressor",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_DSoundRender,
-	"DirectSound Audio Renderer",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_AudioRender,
-	"Wave Audio Renderer",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_NullRenderer,
-        "Null Renderer",
-        NULL,
-        "quartz.dll",
-        "Both"
-    },
-    {   &CLSID_VideoRenderer,
-	"Video Renderer",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_VideoRendererDefault,
-        "Default Video Renderer",
-        NULL,
-        "quartz.dll",
-        "Both"
-    },
-    {   &CLSID_ACMWrapper,
-	"ACM wrapper",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
-    {   &CLSID_WAVEParser,
-	"Wave Parser",
-	NULL,
-	"quartz.dll",
-	"Both"
-    },
     { NULL }			/* list terminator */
 };
 
@@ -997,7 +886,7 @@ static struct regsvr_filter const filter_list[] = {
     {   &CLSID_AviSplitter,
 	&CLSID_LegacyAmFilterCategory,
 	{'A','V','I',' ','S','p','l','i','t','t','e','r',0},
-	0x600000,
+	0x5ffff0,
 	{   {   0,
 		{   { &MEDIATYPE_Stream, &MEDIASUBTYPE_Avi },
 		    { NULL }
@@ -1014,7 +903,7 @@ static struct regsvr_filter const filter_list[] = {
     {   &CLSID_MPEG1Splitter,
         &CLSID_LegacyAmFilterCategory,
         {'M','P','E','G','-','I',' ','S','t','r','e','a','m',' ','S','p','l','i','t','t','e','r',0},
-        0x600000,
+        0x5ffff0,
         {   {   0,
                 {   { &MEDIATYPE_Stream, &MEDIASUBTYPE_MPEG1Audio },
                     { &MEDIATYPE_Stream, &MEDIASUBTYPE_MPEG1Video },
@@ -1074,6 +963,18 @@ static struct regsvr_filter const filter_list[] = {
             { 0xFFFFFFFF },
         }
     },
+    {   &CLSID_VideoMixingRenderer9,
+        &CLSID_LegacyAmFilterCategory,
+        {'V','i','d','e','o',' ','M','i','x','i','n','g',' ','R','e','n','d','e','r','e','r',' ','9',0},
+        0x200000,
+        {   {   REG_PINFLAG_B_RENDERER,
+                {   { &MEDIATYPE_Video, &GUID_NULL },
+                    { NULL }
+                },
+            },
+            { 0xFFFFFFFF },
+        }
+    },
     {   &CLSID_DSoundRender,
         &CLSID_LegacyAmFilterCategory,
         {'A','u','d','i','o',' ','R','e','n','d','e','r','e','r',0},
@@ -1103,7 +1004,7 @@ static struct regsvr_filter const filter_list[] = {
     {   &CLSID_AVIDec,
 	&CLSID_LegacyAmFilterCategory,
 	{'A','V','I',' ','D','e','c','o','m','p','r','e','s','s','o','r',0},
-	0x600000,
+	0x5ffff0,
 	{   {   0,
 		{   { &MEDIATYPE_Video, &GUID_NULL },
 		    { NULL }
@@ -1132,7 +1033,7 @@ static struct regsvr_filter const filter_list[] = {
     {   &CLSID_ACMWrapper,
 	&CLSID_LegacyAmFilterCategory,
 	{'A','C','M',' ','W','r','a','p','p','e','r',0},
-	0x600000,
+	0x5ffff0,
 	{   {   0,
 		{   { &MEDIATYPE_Audio, &GUID_NULL },
 		    { NULL }

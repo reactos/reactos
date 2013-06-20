@@ -26,22 +26,31 @@ WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 typedef struct IEnumFiltersImpl
 {
-    const IEnumFiltersVtbl * lpVtbl;
+    IEnumFilters IEnumFilters_iface;
     LONG refCount;
-    IBaseFilter ** ppFilters;
-    int nFilters;
+    IGraphVersion * pVersionSource;
+    LONG Version;
+    IBaseFilter *** pppFilters;
+    ULONG * pNumFilters;
     ULONG uIndex;
 } IEnumFiltersImpl;
 
 static const struct IEnumFiltersVtbl IEnumFiltersImpl_Vtbl;
 
-HRESULT IEnumFiltersImpl_Construct(IBaseFilter ** ppFilters, ULONG nFilters, IEnumFilters ** ppEnum)
+static inline IEnumFiltersImpl *impl_from_IEnumFilters(IEnumFilters *iface)
+{
+    return CONTAINING_RECORD(iface, IEnumFiltersImpl, IEnumFilters_iface);
+}
+
+HRESULT IEnumFiltersImpl_Construct(IGraphVersion * pVersionSource, IBaseFilter *** pppFilters, ULONG * pNumFilters, IEnumFilters ** ppEnum)
 {
     /* Note: The incoming IBaseFilter interfaces are not AddRef'd here as in Windows,
      * they should have been previously AddRef'd. */
     IEnumFiltersImpl * pEnumFilters = CoTaskMemAlloc(sizeof(IEnumFiltersImpl));
+    HRESULT hr;
+    LONG currentVersion;
 
-    TRACE("(%p, %d, %p)\n", ppFilters, nFilters, ppEnum);
+    TRACE("(%p, %p, %p)\n", pppFilters, pNumFilters, ppEnum);
 
     *ppEnum = NULL;
 
@@ -50,20 +59,19 @@ HRESULT IEnumFiltersImpl_Construct(IBaseFilter ** ppFilters, ULONG nFilters, IEn
         return E_OUTOFMEMORY;
     }
 
-    pEnumFilters->lpVtbl = &IEnumFiltersImpl_Vtbl;
+    pEnumFilters->IEnumFilters_iface.lpVtbl = &IEnumFiltersImpl_Vtbl;
     pEnumFilters->refCount = 1;
     pEnumFilters->uIndex = 0;
-    pEnumFilters->nFilters = nFilters;
-    pEnumFilters->ppFilters = CoTaskMemAlloc(sizeof(IBaseFilter*) * nFilters);
-    if (!pEnumFilters->ppFilters)
-    {
-	CoTaskMemFree(pEnumFilters);
-	return E_OUTOFMEMORY;
-    }
+    pEnumFilters->pNumFilters = pNumFilters;
+    pEnumFilters->pppFilters = pppFilters;
+    IGraphVersion_AddRef(pVersionSource);
+    pEnumFilters->pVersionSource = pVersionSource;
 
-    memcpy(pEnumFilters->ppFilters, ppFilters, nFilters * sizeof(IBaseFilter*));
+    /* Store the current version of the graph */
+    hr = IGraphVersion_QueryVersion(pVersionSource, &currentVersion);
+    pEnumFilters->Version = (hr==S_OK) ? currentVersion : 0;
 
-    *ppEnum = (IEnumFilters *)(&pEnumFilters->lpVtbl);
+    *ppEnum = &pEnumFilters->IEnumFilters_iface;
     return S_OK;
 }
 
@@ -91,7 +99,7 @@ static HRESULT WINAPI IEnumFiltersImpl_QueryInterface(IEnumFilters * iface, REFI
 
 static ULONG WINAPI IEnumFiltersImpl_AddRef(IEnumFilters * iface)
 {
-    IEnumFiltersImpl *This = (IEnumFiltersImpl *)iface;
+    IEnumFiltersImpl *This = impl_from_IEnumFilters(iface);
     ULONG refCount = InterlockedIncrement(&This->refCount);
 
     TRACE("(%p)->()\n", iface);
@@ -101,15 +109,14 @@ static ULONG WINAPI IEnumFiltersImpl_AddRef(IEnumFilters * iface)
 
 static ULONG WINAPI IEnumFiltersImpl_Release(IEnumFilters * iface)
 {
-    IEnumFiltersImpl *This = (IEnumFiltersImpl *)iface;
+    IEnumFiltersImpl *This = impl_from_IEnumFilters(iface);
     ULONG refCount = InterlockedDecrement(&This->refCount);
 
     TRACE("(%p)->()\n", iface);
 
     if (!refCount)
     {
-        CoTaskMemFree(This->ppFilters);
-        CoTaskMemFree(This);
+        IGraphVersion_Release(This->pVersionSource);
         return 0;
     }
     else
@@ -120,18 +127,26 @@ static HRESULT WINAPI IEnumFiltersImpl_Next(IEnumFilters * iface, ULONG cFilters
 {
     ULONG cFetched; 
     ULONG i;
-    IEnumFiltersImpl *This = (IEnumFiltersImpl *)iface;
+    LONG currentVersion;
+    IEnumFiltersImpl *This = impl_from_IEnumFilters(iface);
+    HRESULT hr;
 
-    cFetched = min(This->nFilters, This->uIndex + cFilters) - This->uIndex;
+    cFetched = min(*This->pNumFilters, This->uIndex + cFilters) - This->uIndex;
 
     TRACE("(%p)->(%u, %p, %p)\n", iface, cFilters, ppFilters, pcFetched);
+
+    /* First of all check if the graph has changed */
+    hr = IGraphVersion_QueryVersion(This->pVersionSource, &currentVersion);
+    if (hr==S_OK && This->Version != currentVersion)
+        return VFW_E_ENUM_OUT_OF_SYNC;
+
 
     if (!ppFilters)
         return E_POINTER;
 
     for (i = 0; i < cFetched; i++)
     {
-	ppFilters[i] = This->ppFilters[This->uIndex + i];
+        ppFilters[i] = (*This->pppFilters)[This->uIndex + i];
 	IBaseFilter_AddRef(ppFilters[i]);
     }
 
@@ -147,11 +162,11 @@ static HRESULT WINAPI IEnumFiltersImpl_Next(IEnumFilters * iface, ULONG cFilters
 
 static HRESULT WINAPI IEnumFiltersImpl_Skip(IEnumFilters * iface, ULONG cFilters)
 {
-    IEnumFiltersImpl *This = (IEnumFiltersImpl *)iface;
+    IEnumFiltersImpl *This = impl_from_IEnumFilters(iface);
 
     TRACE("(%p)->(%u)\n", iface, cFilters);
 
-    if (This->uIndex + cFilters < This->nFilters)
+    if (This->uIndex + cFilters < *This->pNumFilters)
     {
         This->uIndex += cFilters;
         return S_OK;
@@ -161,22 +176,27 @@ static HRESULT WINAPI IEnumFiltersImpl_Skip(IEnumFilters * iface, ULONG cFilters
 
 static HRESULT WINAPI IEnumFiltersImpl_Reset(IEnumFilters * iface)
 {
-    IEnumFiltersImpl *This = (IEnumFiltersImpl *)iface;
+    IEnumFiltersImpl *This = impl_from_IEnumFilters(iface);
+    HRESULT hr;
+    LONG currentVersion;
 
     TRACE("(%p)->()\n", iface);
 
     This->uIndex = 0;
+    hr = IGraphVersion_QueryVersion(This->pVersionSource, &currentVersion);
+    if (!hr)
+        This->Version = currentVersion;
     return S_OK;
 }
 
 static HRESULT WINAPI IEnumFiltersImpl_Clone(IEnumFilters * iface, IEnumFilters ** ppEnum)
 {
     HRESULT hr;
-    IEnumFiltersImpl *This = (IEnumFiltersImpl *)iface;
+    IEnumFiltersImpl *This = impl_from_IEnumFilters(iface);
 
     TRACE("(%p)->(%p)\n", iface, ppEnum);
 
-    hr = IEnumFiltersImpl_Construct(This->ppFilters, This->nFilters, ppEnum);
+    hr = IEnumFiltersImpl_Construct(This->pVersionSource, This->pppFilters, This->pNumFilters, ppEnum);
     if (FAILED(hr))
         return hr;
     return IEnumFilters_Skip(*ppEnum, This->uIndex);
