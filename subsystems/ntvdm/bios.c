@@ -55,6 +55,22 @@ BOOLEAN BiosInitialize()
     CursorRow = ConsoleInfo.dwCursorPosition.Y;
     ConsoleWidth = ConsoleInfo.dwSize.X;
     ConsoleHeight = ConsoleInfo.dwSize.Y;
+    
+    /* Initialize the PIC */
+    PicWriteCommand(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
+    PicWriteCommand(PIC_SLAVE_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
+    
+    /* Set the interrupt offsets */
+    PicWriteData(PIC_MASTER_DATA, BIOS_PIC_MASTER_INT);
+    PicWriteData(PIC_SLAVE_DATA, BIOS_PIC_SLAVE_INT);
+    
+    /* Tell the master PIC there is a slave at IRQ 2 */
+    PicWriteData(PIC_MASTER_DATA, 1 << 2);
+    PicWriteData(PIC_SLAVE_DATA, 2);
+    
+    /* Make sure the PIC is in 8086 mode */
+    PicWriteData(PIC_MASTER_DATA, PIC_ICW4_8086);
+    PicWriteData(PIC_SLAVE_DATA, PIC_ICW4_8086);
 
     return TRUE;
 }

@@ -23,6 +23,8 @@
 #define MAX_ADDRESS TO_LINEAR(MAX_SEGMENT, MAX_OFFSET)
 #define ROM_AREA_START 0xC0000
 #define ROM_AREA_END 0xFFFFF
+#define BIOS_PIC_MASTER_INT 0x08
+#define BIOS_PIC_SLAVE_INT 0x70
 #define BIOS_SEGMENT 0xF000
 #define VIDEO_BIOS_INTERRUPT 0x10
 #define SPECIAL_INT_NUM 0xFF
@@ -42,6 +44,28 @@
 #define CONSOLE_FONT_HEIGHT 8
 #define CONSOLE_VIDEO_MEM_START 0xB8000
 #define CONSOLE_VIDEO_MEM_END 0xBFFFF
+
+/* Programmable interval timer (PIT) */
+#define PIT_CHANNELS 3
+#define PIT_BASE_FREQUENCY 1193182LL
+#define PIT_DATA_PORT(x) (0x40 + (x))
+#define PIT_COMMAND_PORT 0x43
+
+/* Programmable interrupt controller (PIC) */
+#define PIC_MASTER_CMD 0x20
+#define PIC_MASTER_DATA 0x21
+#define PIC_SLAVE_CMD 0xA0
+#define PIC_SLAVE_DATA 0xA1
+#define PIC_ICW1 0x10
+#define PIC_ICW1_ICW4 (1 << 0)
+#define PIC_ICW1_SINGLE (1 << 1)
+#define PIC_ICW4_8086 (1 << 0)
+#define PIC_ICW4_AEOI (1 << 1)
+#define PIC_OCW2_NUM_MASK 0x07
+#define PIC_OCW2_EOI (1 << 5)
+#define PIC_OCW2_SL (1 << 6)
+#define PIC_OCW3 (1 << 3)
+#define PIC_OCW3_READ_ISR 0x0B
 
 #define EMULATOR_FLAG_CF (1 << 0)
 #define EMULATOR_FLAG_PF (1 << 2)
@@ -184,6 +208,11 @@ VOID DosInt20h(WORD CodeSegment);
 VOID DosInt21h(WORD CodeSegment);
 VOID DosBreakInterrupt();
 VOID BiosVideoService();
+BYTE PicReadCommand(BYTE Port);
+VOID PicWriteCommand(BYTE Port, BYTE Value);
+BYTE PicReadData(BYTE Port);
+VOID PicWriteData(BYTE Port, BYTE Value);
+VOID PicInterruptRequest(BYTE Number);
 VOID EmulatorSetStack(WORD Segment, WORD Offset);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
 VOID EmulatorInterrupt(BYTE Number);

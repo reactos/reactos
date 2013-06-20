@@ -5,6 +5,7 @@ list(APPEND SOURCE
     bios.c
     dos.c
     emulator.c
+    hardware.c
     ntvdm.c
     ntvdm.rc)
 
