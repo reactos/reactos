@@ -1,0 +1,29 @@
+/*
+ * PROJECT:     ReactOS Management Console
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/mmc/lang/zh-CN.rc
+ * PURPOSE:     Chinese (Simplified) Language File for Management Console
+ * TRANSLATOR:  Elton Chung aka MfldElton <elton328@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDM_CONSOLEROOT MENU DISCARDABLE
+BEGIN
+    POPUP "档案(&F)"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "结束(&X)\tAlt+F4", ID_FILE_EXIT
+    END
+
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于 ReactOS 控制台(&A)...", ID_HELP_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APPTITLE "ReactOS 控制台"
+    IDS_CONSOLETITLE "控制台%1!u!"
+END

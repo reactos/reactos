@@ -1,0 +1,13 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_INSTALL, "Installieren"
+	IDS_PRINT, "Drucken"
+	IDS_STRING, "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. 1234567890"
+	IDS_OPEN, "Schriftartendatei öffnen..."
+	IDS_ERROR, "Fehler"
+	IDS_ERROR_NOMEM, "Es steht nicht genügend Speicher zur Verfügung."
+	IDS_ERROR_NOFONT, "Die angegebene Datei %1 ist keine gültige Schriftartendatei."
+	IDS_ERROR_NOCLASS, "Fehler beim Initialisieren der Fensterklasse."
+END

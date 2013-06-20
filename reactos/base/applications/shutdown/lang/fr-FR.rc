@@ -1,0 +1,107 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+/* Dialog */
+IDD_GUI DIALOGEX DISCARDABLE 0, 0, 240, 255
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Arrêt à distance"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDC_OK,125,232,50,14
+    PUSHBUTTON      "A&nnuler",IDC_CANCEL,178,232,50,14
+    LTEXT           "Or&dinateurs :", IDC_STATIC,9,9,40,36
+    LISTBOX         IDC_COMPUTER_LIST,8,19,162,55
+    PUSHBUTTON      "Ajout&er...",IDC_ADD_SYSTEM,179,19,50,14
+    PUSHBUTTON      "&Supprimer",IDC_REMOVE_SYSTEM,179,36,50,14,WS_DISABLED
+    PUSHBUTTON      "Pa&rcourir...",IDC_BROWSE_SYSTEM,179,53,50,14
+    LTEXT           "&Quelle tâche voulez-vous que ces ordinateurs exécutent ?", IDC_ACTION,11,81,20,14
+    COMBOBOX        IDC_ACTION_TYPE,37,79,129,14,WS_TABSTOP | CBS_DROPDOWN
+    CHECKBOX        "A&vertir les utilisateurs de l'action",IDC_WARN_USERS,175,79,55,14,BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT           "A&fficher l'avertissement pendant",IDC_SHOW_WARN_ONE,11,99,65,14
+    EDITTEXT        IDC_SHOW_WARN,78,97,41,14
+    LTEXT           "seconde(s)",IDC_SHOW_WARN_TWO,124,99,35,10
+    GROUPBOX        "Moniteur d'événements d'arrêt",IDC_STATIC,5,114,224,114
+    LTEXT           "Raison :",IDC_STATIC,16,130,27,8
+    CHECKBOX        "Planifié",IDC_PLANNED,175,130,40,12,BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX        IDC_REASON_CODE,17,142,198,13,WS_TABSTOP | CBS_DROPDOWN
+    LTEXT           "&Commentaire :",IDC_COMMENT_CAPTION,16,159,48,8
+    EDITTEXT        IDC_COMMENT_TEXT,17,171,198,50,WS_VSCROLL
+END
+
+/* Information and error messages */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE,  "ReactOS Shutdown Utility\n\
+\n\
+Utilisation : shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+              [/m \\\\ordinateur][/t xxx][/d [p|u:]xx:yy [/c ""commentaire""]]\n\
+\n\
+    Sans argument ou /?    Afficher l'aide.\n\
+    /i      Afficher l'interface utilisateur graphique (GUI). Cette option doit\n\
+            être la première.\n\
+    /l      Fermer la session sur l'ordinateur local uniquement. Ne peut pas\n\
+            être utilisée avec les options /m ou /d.\n\
+    /s      Arrêter l'ordinateur.\n\
+    /r      Redémarrer l'ordinateur.\n\
+    /g      Redémarrer l'ordinateur et redémarrer toutes les applications\n\
+            enregistrées.\n\
+    /a      Annuler un arrêt du système. Ne peut être utilisée que pendant\n\
+            la période de délai.\n\
+    /p      Arrêter l'ordinateur local sans délai d'expiration ou\n\
+            avertissement. Peut être utilisée avec les options /d ou /f.\n\
+    /h      Mettre l'ordinateur local en veille prolongée. Utilisable avec\n\
+            l'option /f.\n\
+    /e      Documenter la raison de l'arrêt inattendu d'un ordinateur.\n\
+    /m \\\\ordinateur  Spécifier l'ordinateur cible (adresse UNC/IP).\n\
+    /t xxx  Définir la période de délai avant l'arrêt au bout de xxx secondes.\n\
+            La plage valide est comprise entre 0 et 315360000 (10 ans),\n\
+            30 étant la valeur par défaut.\n\
+    /c ""commentaire""  Commentaire sur la raison de l'arrêt ou du redémarrage.\n\
+            512 caractères maximum autorisés.\n\
+    /f      Force la fermeture des applications en cours d'exécution sans\n\
+            prévenir les utilisateurs. Si vous ne spécifiez aucun autre\n\
+            paramètre, cette option provoquera aussi une déconnexion.\n\
+    /d [p|u:]xx:yy  Fournit la raison de l'arrêt ou du redémarrage.\n\
+            p indique que l'arrêt ou le redémarrage est planifié.\n\
+            u indique que la raison est définie par l'utilisateur.\n\
+            Si ni p ni u ne sont spécifiés, l'arrêt ou le redémarrage ne sont\n\
+            planifiés.\n\
+            xx est le code de raison majeur (entier positif inférieur à 256).\n\
+            yy est le code de raison mineur (entier positif inférieur à 65536).\n"
+
+    IDS_ERROR_SHUTDOWN_REBOOT,          "ERREUR : Impossible d'arrêter et de redémarrer en même temps.\n"
+    IDS_ERROR_TIMEOUT,                  "ERREUR : La valeur de délai %u est en-dehors des limites autorisées (0-315360000).\n"
+    IDS_ERROR_ABORT,                    "ERREUR : Impossible d'annuler l'arrêt du système.\n"
+    IDS_ERROR_LOGOFF,                   "ERREUR : Impossible de se déconnecter du système.\n"
+    IDS_ERROR_SHUTDOWN,                 "ERREUR : Impossible d'arrêter le système.\n"
+    IDS_ERROR_RESTART,                  "ERREUR : Impossible de redémarrer le système.\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH,       "ERREUR : La longueur du commentaire excède le nombre maximal de caractères imposé par le système.\n"
+    IDS_ERROR_HIBERNATE,                "ERREUR : Impossible de mettre le système en veille prolongée.\n"
+    IDS_ERROR_HIBERNATE_LOCAL,          "ERREUR : La mise en veille prolongée ne peut être commandée à distance.\n"
+    IDS_ERROR_HIBERNATE_ENABLED,        "ERREUR : La mise en veille prolongée n'est pas activée.\n"
+    IDS_ERROR_DIALOG_CAPTION,           "Arrêt à distance"
+    IDS_ERROR_DIALOG_INIT,              "Impossible d'afficher l'interface graphique utilisateur."
+END
+
+/* Remote shutdown action strings */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ACTION_SHUTDOWN,                "Arrêter le système"
+    IDS_ACTION_RESTART,                 "Redémarrer le système"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN,     "Annoter l'arrêt non planifié"
+END
+
+/* Remote shutdown reason strings */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_REASON_OTHER,                   "Autre"
+    IDS_REASON_HARDWARE_MAINTENANCE,    "Matériel : Maintenance"
+    IDS_REASON_HARDWARE_INSTALL,        "Matériel : Installation"
+    IDS_REASON_OS_RECOVER,              "Système d'exploitation : Récupération"
+    IDS_REASON_OS_RECONFIGURE,          "Système d'exploitation : Reconfiguration"
+    IDS_REASON_APP_MAINTENANCE,         "Application : Maintenance"
+    IDS_REASON_APP_INSTALL,             "Application : Installation"
+    IDS_REASON_APP_UNRESPONSIVE,        "Application : Aucune réponse"
+    IDS_REASON_APP_UNSTABLE,            "Application : Instable"
+    IDS_REASON_SECURITY,                "Problème de sécurité"
+    IDS_REASON_NETWORK,                 "Perte de connectivité réseau"
+END

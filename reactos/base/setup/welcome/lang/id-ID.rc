@@ -1,0 +1,64 @@
+/*
+ * Indonesian resources by Zaenal Mutaqin (ade999 at gmail dot com)
+ */
+
+LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APPTITLE            "ReactOS - Selamat Datang"
+    IDS_DEFAULTTOPICTITLE   "ReactOS"
+    IDS_DEFAULTTOPICDESC    "Selamat datang di React Operating System.\n\nKlik topik di sisi kiri."
+//    IDS_CHECKTEXT           "Show this dialog again"
+//    IDS_CLOSETEXT           "Exit"
+END
+
+/* Topic buttons */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICBUTTON0        "Instalasi ReactOS"
+    IDS_TOPICBUTTON1        "Lihat CD ini"
+    IDS_TOPICBUTTON2        "Keluar"
+//    IDS_TOPICBUTTON3        "Empty Topic 3"
+//    IDS_TOPICBUTTON4        "Empty Topic 4"
+//    IDS_TOPICBUTTON5        "Empty Topic 5"
+//    IDS_TOPICBUTTON6        "Empty Topic 6"
+//    IDS_TOPICBUTTON7        "Empty Topic 7"
+//    IDS_TOPICBUTTON8        "Empty Topic 8"
+//    IDS_TOPICBUTTON9        "Empty Topic 9"
+END
+
+/* Topic titles */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICTITLE0         "Instalasi ReactOS"
+    IDS_TOPICTITLE1         "Lihat CD ini"
+    IDS_TOPICTITLE2         "Keluar"
+//    IDS_TOPICTITLE3         "Empty Topic Title 3"
+//    IDS_TOPICTITLE4         "Empty Topic Title 4"
+//    IDS_TOPICTITLE5         "Empty Topic Title 5"
+//    IDS_TOPICTITLE6         "Empty Topic Title 6"
+//    IDS_TOPICTITLE7         "Empty Topic Title 7"
+//    IDS_TOPICTITLE8         "Empty Topic Title 8"
+//    IDS_TOPICTITLE9         "Empty Topic Title 9"
+END
+
+/* Topic descriptions */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TOPICDESC0          "Buat instalasi baru ReactOS pada komputer anda atau tingkatkan instalasi yang sudah ada."
+    IDS_TOPICDESC1          "Lihat CD."
+    IDS_TOPICDESC2          "Klik untuk keluar aplikasi ini."
+//    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
+//    IDS_TOPICDESC4          "Topic description 4.\n\nDescribe topic 4 here."
+//    IDS_TOPICDESC5          "Topic description 5.\n\nDescribe topic 5 here."
+//    IDS_TOPICDESC6          "Topic description 6.\n\nDescribe topic 6 here."
+//    IDS_TOPICDESC7          "Topic description 7.\n\nDescribe topic 7 here."
+//    IDS_TOPICDESC8          "Topic description 8.\n\nDescribe topic 8 here."
+//    IDS_TOPICDESC9          "Topic description 9.\n\nDescribe topic 9 here."
+END
+
+/* EOF */

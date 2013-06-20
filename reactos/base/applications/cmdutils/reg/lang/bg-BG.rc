@@ -1,0 +1,40 @@
+/*
+ * REG.EXE - Wine-compatible reg program.
+ * Bulgarian language support
+ *
+ * Copyright 2008 Andrew Riedi
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "reg.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_USAGE, "Синтаксисът на командата е:\n\nREG [ ADD | DELETE | QUERY ]\nREG команда /?\n"
+    STRING_ADD_USAGE, "REG ADD ключ_име [/v стойност_име | /ve] [/t вид] [/s разделител] [/d данни] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE ключ_име [/v стойност_име | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY ключ_име [/v стойност_име | /ve] [/s]\n"
+    STRING_SUCCESS, "Десйствието е приключено успешно\n"
+    STRING_INVALID_KEY, "Грешка: Недопустимо име за ключ\n"
+    STRING_INVALID_CMDLINE, "Грешка: Неправилни параметри на командия ред\n"
+    STRING_NO_REMOTE, "Грешка: Неуспешно добавяне на ключове в отдалечената машина\n"
+    STRING_CANNOT_FIND, "Грешка: Уредбата не откри указания регистърен ключ или стойност\n"
+}

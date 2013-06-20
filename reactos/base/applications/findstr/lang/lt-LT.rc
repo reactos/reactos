@@ -1,0 +1,26 @@
+/*
+ * PROJECT:     ReactOS find command
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/cmdutils/find/lang/lt-LT.rc
+ * PURPOSE:     Lithuanian Language File
+ * TRANSLATOR:  Vytis "CMan" Girdžijauskas (cman@cman.us)
+ * DATE:        2007-09-23
+ */
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "FIND: Spausdina visas bylos eilutes, kuriose yra ieškomas tekstas.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""tekstas"" [ byla... ]\n\
+    /C  Skaičiuoti eilutes, kuriose yra ieškomas tekstas\n\
+    /I  Ignoruoti raidžių dydį\n\
+    /N  Numeruoti vaizduojamas eilutes, pradedant nuo 1\n\
+    /V  Spausdinti eilutes, kuriose nėra ieškomo teksto"
+
+IDS_NO_SUCH_FILE, "FIND: %s: Tokios bylos nėra\n"
+
+IDS_CANNOT_OPEN, "FIND: %s: Nepavyko atverti bylos\n"
+
+END

@@ -1,0 +1,22 @@
+/* FILE:        applications/cmdutils/more/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * THANKS TO:   Mario Kacmar aka Kario (kario@szm.sk)
+ * UPDATED:     2008-02-29
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_USAGE, "Zobrazí výstup po jednotlivých stránkách na obrazovku.\n\n\
+  MORE < [Jednotka:][Cesta]Název souboru\n\
+  Příkaz | MORE \n\
+  MORE [Jednotka:][Cesta]Název souboru\n\n\
+  [Jednotka:][Cesta]Název souboru    Soubor, jehož obsah bude zobrazen.\n\
+  Příkaz\t\t     Příkaz, jehož výstup bude zobrazen.\n\n\
+  Při výzvě ""-- Pokračovat --"" lze stisknout libovolnou klávesu\n\
+  pro zobrazení další stránky.\n"
+
+  IDS_CONTINUE, " -- Pokračovat (100%) -- "
+  IDS_FILE_ACCESS, "Nelze získat přístup k souboru %s."
+END

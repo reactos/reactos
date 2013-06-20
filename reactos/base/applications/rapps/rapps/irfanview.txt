@@ -1,0 +1,50 @@
+﻿; UTF-8
+
+[Section]
+Name = IrfanView
+Version = 4.35
+Licence = Freeware (for personal use)
+Description = Viewer for all kinds of graphics/audio files/video files.
+Size = 1.57MB
+Category = 3
+URLSite = http://www.irfanview.com/
+URLDownload = http://irfanview.tuwien.ac.at/iview435_setup.exe
+CDPath = none
+
+[Section.0407]
+Licence = Freeware für nichtkommerzielle Nutzung
+Description = Anzeigeprogramm für alle Arten von Grafik-/Audio- oder Video-Dateien.
+
+[Section.040a]
+Licence = Gratuito (para uso personal)
+Description = Visor para toda clase de archivos de imagen,audio y video.
+
+[Section.040c]
+Licence = Gratuit (pour un usage personnel)
+Description = Visionneur pour tous les types de fichiers graphiques/audio/vidéo.
+Size = 1,57 Mo
+
+[Section.0410]
+Licence = Gratuita (per uso personale)
+Description = Viewer per tutti i tipi di grafici / file audio / file video.
+
+[Section.0413]
+Licence = Freeware (voor persoonlijk gebruik)
+Description = Weergave voor allerhande bestandstypes voor audio, video, grafiek.
+
+[Section.0415]
+Licence = Freeware (dla użytku domowego)
+Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz wideo.
+
+[Section.0418]
+Licence = Gratuită (pentru uz personal)
+Description = Lector pentru multiple formate de fișiere grafice/audio/video.
+Size = 1,57 Mo
+
+[Section.0422]
+Licence = Freeware (для домашнього використання)
+Description = Переглядач для всіх видів графічних та аудіо/відео файлів.
+
+[Section.0813]
+Licence = Freeware (voor persoonlijk gebruik)
+Description = Weergave voor allerhande bestandstypes voor audio, video, grafiek.

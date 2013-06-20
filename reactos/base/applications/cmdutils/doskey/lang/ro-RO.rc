@@ -1,0 +1,36 @@
+/* 
+ * FILE:             base/applications/cmdutils/doskey/lang/ro-RO.rc
+ *                   ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-08-20  initial translation
+ *                   2011-10-17  diacritics change, other minor changes
+ */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Gestionează starea de editare a liniei de comandă, istoric și macrodefiniții.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe]\n\
+       [/HISTORY] [/LISTSIZE=dimensiune] [/REINSTALL]\n\
+       [/MACROS[:exe | :ALL]] [/MACROFILE=fișier] [nume_macro=[text]]\n\
+\n\
+  /INSERT                 Activează modul de inserție.\n\
+  /OVERSTRIKE             Dezactivează modul de inserție.\n\
+  /EXENAME=exename        Stabilește programul de vizualizare/modificare a\n\
+                          istoricului și a macrodefinițiilor.\n\
+                          Implicit este cmd.exe.\n\
+  /HISTORY                Afișează istoricul comenzilor.\n\
+  /LISTSIZE=dimensiune    Stabilește numărul de comenzi reținute în istoric.\n\
+  /REINSTALL              Curăță istoricul comenzilor.\n\
+  /MACROS                 Afișează macrodefinițiile.\n\
+  /MACROS:exename         Afișează macrodefinițiile pentru un program anume.\n\
+  /MACROS:ALL             Afișează macrodefinițiile pentru toate programele.\n\
+  /MACROFILE=fișier       Încarcă macrodefinițiile din fișier.\n\
+  nume_macro              Numele macrodefiniției în curs de creare.\n\
+  text                    Textul înlocuitor dintr-o macrodefiniție.\n"
+
+IDS_INVALID_MACRO_DEF, "Macrodefiniția «%s» este nevalidă!\n"
+
+END

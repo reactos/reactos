@@ -1,0 +1,72 @@
+/*
+ *         translated by Caemyr - Olaf Siejka (Feb, 2008)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDC_MAGNIFIER MENU
+BEGIN
+    POPUP "&Plik"
+    BEGIN
+        MENUITEM "&Wyjście",                       IDM_EXIT
+        MENUITEM "&Opcje",                    IDM_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "O p&rogramie ...",                  IDM_ABOUT
+    END
+END
+
+IDC_MAGNIFIER ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "O programie"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_ICON,IDC_MYICON,14,9,20,20
+    LTEXT           "Lupa, wersja 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
+    PUSHBUTTON      "OK",IDOK,162,48,50,14
+END
+
+IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ustawienia"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Wyjście",IDOK,96,161,50,14
+    PUSHBUTTON      "Pomoc",IDC_BUTTON_HELP,38,161,50,14
+    LTEXT           "Stopień powiększenia:",IDC_STATIC,6,8,68,8
+    COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Śledzenie",IDC_STATIC,7,25,139,59
+    GROUPBOX        "Prezentacja",IDC_STATIC,7,87,139,57
+    CONTROL         "Podążaj za kursorem myszki",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
+    CONTROL         "Podążaj za aktywnym oknem",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
+    CONTROL         "Podążaj za tekstem",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
+    CONTROL         "Odwróć kolory",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
+    CONTROL         "Uruchom zminimalizowaną",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
+    CONTROL         "Pokaż Lupę",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
+END
+
+IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Lupa ReactOS"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
+    ICON            IDI_ICON,IDC_STATIC,7,17,20,20
+    LTEXT           "Lupa ma za zadanie dostarczyć podstawowy poziom funkcjonalności dla osób z niewielkimi problemami ze wzrokiem. Użytkownicy ze znaczniejszymi problemami ze wzrokiem mogą być zmuszeni użyć bardziej zaawansowanego narzędzia.",IDC_STATIC,36,7,207,33
+    CONTROL         "Nie pokazuj więcej tej wiadomości",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE           "Lupa"
+END

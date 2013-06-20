@@ -1,0 +1,40 @@
+/* FILE:        base/applications/network/ping/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2011-03-31
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE "\nPoužití: ping [-t] [-n počet] [-l velikost] [-w timeout] cíl\n\n\
+Options:\n\
+    -t             Opakovaně zasílá požadavky o ozvěnu zadanému cíli až do zastavení.\n\
+                   Ukončení stisknutím Ctrl+C.\n\
+    -n počet       Počet požadavků o ozvěnu, které budou zaslány.\n\
+    -l velikost    Velikost vyrovnávací paměti.\n\
+    -w timeout     Doba v milisekundách, po kterou se bude čekat na odpověď.\n\n\0"
+
+    IDS_PING_WITH_BYTES             "\nPing na %1 [%2] s %3!d! bajty dat:\n\n\0"
+    IDS_PING_STATISTICS             "\nStatistika pro %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    Pakety: Odesláno = %1!d!, Přijato = %2!d!, Ztraceno = %3!d! (%4!d!%% ztráta),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "Přibližná doba do přijetí odezvy v milisekundách:\n\0"
+    IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maximum = %2, Průměr = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Není k dispozici dostatek volných zdrojů.\n\0"
+    IDS_UNKNOWN_HOST                "Neznámý hostitel %1.\n\0"
+    IDS_SETSOCKOPT_FAILED           "setsockopt selhalo (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET     "Nebylo možné vytvořit socket (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK      "Nebylo možné inicializovat knihovnu winsock.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Je nutno zadat název nebo IP adresu cíle.\n\0"
+    IDS_BAD_PARAMETER               "Nesprávný parametr %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "Nesprávný formát volby %1.\n\0"
+    IDS_BAD_OPTION                  "Nesprávná volba %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Nesprávná hodnota volby -l, platný rozsah je od 0 do %1!d!.\n\0"
+    IDS_REPLY_FROM                  "Odpověď od %1: bajtů=%2!d! čas%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "Cíl je nedostupný.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "Nebylo možné přenést data (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV              "Nebylo možné přijmout data (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT             "Časový limit žádosti vypršel.\n\0"
+    IDS_MS                          "ms\0"
+    IDS_1MS                         "1ms\0"
+END

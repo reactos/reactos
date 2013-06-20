@@ -1,0 +1,52 @@
+// Exception Handling support header for -*- C++ -*-
+
+#ifndef __EXCEPTION__
+#define __EXCEPTION__
+
+extern "C++" {
+
+class exception
+{
+public:
+    exception() throw();
+    exception(const char * const &) throw();
+    exception(const char * const &, int) throw();
+
+    virtual ~exception() throw();
+
+    virtual const char *what() const throw();
+private:
+    const char *_name;
+    int _do_free;
+};
+
+class bad_exception : public exception
+{
+public:
+    bad_exception(const char *name = "bad exception") throw()
+        : exception(name) { }
+
+    virtual ~bad_exception() throw() { }
+};
+
+namespace std
+{
+    using ::exception;
+    using ::bad_exception;
+
+    typedef void (*unexpected_handler) ();
+
+    unexpected_handler set_unexpected(unexpected_handler) throw();
+
+    __MINGW_ATTRIB_NORETURN void unexpected();
+
+    bool uncaught_exception() throw();
+} // namespace std
+
+typedef void (*terminate_handler) ();
+terminate_handler set_terminate(terminate_handler) throw();
+__MINGW_ATTRIB_NORETURN void terminate() throw();
+
+} // extern "C++"
+
+#endif

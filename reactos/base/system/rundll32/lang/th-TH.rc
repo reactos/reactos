@@ -1,0 +1,10 @@
+/*
+ * Copyright (C) 2006 Sumath Aowsakulsutthi (Thai translation)
+ */
+
+LANGUAGE LANG_THAI, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DllNotLoaded, "การบรรจุค่าระบบเกิดผิดพลาด '%s'"
+    IDS_MissingEntry, "การเข้าหาตำแหน่งผิดพลาด: %s\n%s"
+END

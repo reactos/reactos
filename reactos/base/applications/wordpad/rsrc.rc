@@ -1,0 +1,132 @@
+/*
+ * Copyright 2004 by Krzysztof Foltman
+ * Copyright 2007 by Alexander N. Sørnes <alex@thehandofagony.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include <windef.h>
+#include <winuser.h>
+
+#include "wordpad.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS WordPad\0"
+#define REACTOS_STR_INTERNAL_NAME     "wordpad\0"
+#define REACTOS_STR_ORIGINAL_FILENAME "wordpad.exe\0"
+
+#include <reactos/version.rc>
+
+MAINACCELTABLE ACCELERATORS
+BEGIN
+    "1",          ID_BACK_1,          VIRTKEY, CONTROL
+    "2",          ID_BACK_2,          VIRTKEY, CONTROL
+    "L",          ID_ALIGN_LEFT,      VIRTKEY, CONTROL
+    "E",          ID_ALIGN_CENTER,    VIRTKEY, CONTROL
+    "R",          ID_ALIGN_RIGHT,     VIRTKEY, CONTROL
+    "F",          ID_FIND,            VIRTKEY, CONTROL
+    VK_F3,        ID_FIND_NEXT,       VIRTKEY
+    "H",          ID_REPLACE,         VIRTKEY, CONTROL
+    "A",          ID_EDIT_SELECTALL,  VIRTKEY, CONTROL
+    "X",          ID_EDIT_CUT,        VIRTKEY, CONTROL
+    "C",          ID_EDIT_COPY,       VIRTKEY, CONTROL
+    "Z",          ID_EDIT_UNDO,       VIRTKEY, CONTROL
+    "Y",          ID_EDIT_REDO,       VIRTKEY, CONTROL
+    "B",          ID_FORMAT_BOLD,     VIRTKEY, CONTROL
+    "I",          ID_FORMAT_ITALIC,   VIRTKEY, CONTROL
+    "U",          ID_FORMAT_UNDERLINE,VIRTKEY, CONTROL
+    "N",          ID_FILE_NEW,        VIRTKEY, CONTROL
+    "O",          ID_FILE_OPEN,       VIRTKEY, CONTROL
+    "S",          ID_FILE_SAVE,       VIRTKEY, CONTROL
+    "P",          ID_PRINT,           VIRTKEY, CONTROL
+END
+
+/* @makedep: toolbar.bmp */
+IDB_TOOLBAR BITMAP "toolbar.bmp"
+
+/* @makedep: formatbar.bmp */
+IDB_FORMATBAR BITMAP "formatbar.bmp"
+
+/* @makedep: wordpad.ico */
+IDI_WORDPAD ICON "wordpad.ico"
+
+/* @makedep: zoom.cur */
+IDC_ZOOM CURSOR "zoom.cur"
+
+
+#ifdef LANGUAGE_EN_US
+    #include "En.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "Hu.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "Ko.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "Pl.rc"
+#endif
+
+/* UTF-8 */
+#ifdef LANGUAGE_DA_DK
+    #include "Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "He.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "Ja.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "No.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "Si.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "Tr.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "Zh.rc"
+#endif

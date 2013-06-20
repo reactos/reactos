@@ -1,0 +1,5 @@
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS TCP/IPv4 Win32 nslookup\0"
+#define REACTOS_STR_INTERNAL_NAME       "nslookup\0"
+#define REACTOS_STR_ORIGINAL_FILENAME   "nslookup.exe\0"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT  "Lucas Suggs (lucas.suggs@gmail.com)\0"
+#include <reactos/version.rc>

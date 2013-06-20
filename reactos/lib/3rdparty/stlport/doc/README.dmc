@@ -1,0 +1,81 @@
+==================================================
+STLport README for Digital Mars C++ compilers.
+==================================================
+
+Build of STLport with Digital Mars C++ compiler is very similar
+to the one for Microsoft Visual Studio compiler (see README.msvc).
+
+Below are some additional hints. [DMC users are encouraged to 
+contribute additional information.] 
+
+=============
+Prerequisites
+=============
+
+ - Digital Mars C++ 8.49 or above
+
+ - A GNU environment with make tool. Prefer MinGW/MSys to Cygwin because the
+   latter contains a link command that is also the name of the Digital Mars linker
+   and you might experiment collision between both commands.
+   See README.mingw for additional information.
+
+===================
+Installing STLport
+===================
+
+ - STLport directory can be almost anywhere EXCEPT native dm\include directory.
+
+===================
+Configuring STLport
+===================
+
+ - In a console window go to the STLport build\lib folder. Run
+
+	  configure -c dmc
+
+================
+Building STLport
+================
+
+ - To build STLport libraries:
+
+    cd [STLport dir]\build\lib
+    [mingw32-make] -f dmc.mak install
+
+ - To build STLport (dynamic) unit tests:
+
+    cd [STLport dir]\build\test\unit
+    [mingw32-make] -f dmc.mak install
+
+============
+Known issues
+============
+
+1. typeinfo.h
+
+  DMC forces inclusion of typeinfo.h header at the begining of any
+translation unit. This breaks the STLport include schema, especially
+when building the library. As a workaround STLport typeinfo.h simply
+include native DMC header not performing any internal STLport work as
+importing things to STLport namespace. As a result typeinfo.h should
+never be reference in user code, as it is neither a C nor a C++ header
+this is not considered as a major limitation. The C++ Standard header
+is typeinfo.
+
+2. link.exe and lib.exe
+
+  STLport makefiles for DMC use dm_link and dm_lib instead of link and lib to
+avoid conflicts with other vendors' linkers and archivers.  To build STLport 
+with DMC, please copy or rename the following files:
+  
+  copy dm\bin\link.exe dm\bin\dm_link.exe
+  copy dm\bin\lib.exe dm\bin\dm_lib.exe
+
+3. Free online version. 
+
+  If DMC's free online version reports compiler or linker errors, the 
+solution may be in a free online CD update.  Download and unzip all free 
+CD patches for versions 8.30 and above, in consecutive order, overwriting
+previous files. Then install free online version 8.49 or above, overwriting 
+previous files. 
+

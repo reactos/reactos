@@ -1,0 +1,52 @@
+<!ELEMENT apispec (template|api)+>
+
+<!ELEMENT api (category*, function*)>
+<!ELEMENT category EMPTY>
+<!ELEMENT function EMPTY>
+
+<!ELEMENT template (proto, desc*)>
+<!ELEMENT proto (return, (param|vector)*)>
+<!ELEMENT return EMPTY>
+<!ELEMENT param EMPTY>
+<!ELEMENT vector (param*)>
+<!ELEMENT desc ((value|range)*, desc*)>
+<!ELEMENT value EMPTY>
+<!ELEMENT range EMPTY>
+
+<!ATTLIST api      name                NMTOKEN #REQUIRED
+                   implementation      (true | false) "false">
+<!ATTLIST category name                NMTOKEN #REQUIRED>
+<!ATTLIST function name                NMTOKEN #REQUIRED
+                   default_prefix      NMTOKEN "_mesa_"
+                   external            (true | false) "false"
+                   template            NMTOKEN #REQUIRED
+                   gltype              CDATA #IMPLIED
+                   vector_size         NMTOKEN #IMPLIED
+                   expand_vector       (true | false) "false"
+                   skip_desc           (true | false) "false">
+
+<!ATTLIST template name                NMTOKEN #REQUIRED
+                   direction           (set | get) "set">
+
+<!ATTLIST return   type                CDATA #REQUIRED>
+<!ATTLIST param    name                NMTOKEN #REQUIRED
+                   type                CDATA #REQUIRED
+                   hide_if_expanded    (true | false) "false"
+                   category            NMTOKEN #IMPLIED>
+<!ATTLIST vector   name                NMTOKEN #REQUIRED
+                   type                CDATA #REQUIRED
+                   size                NMTOKEN #REQUIRED
+                   category            NMTOKEN #IMPLIED>
+
+<!ATTLIST desc     name                NMTOKEN #REQUIRED
+                   vector_size         CDATA #IMPLIED
+                   convert             (true | false) #IMPLIED
+                   error               NMTOKEN "GL_INVALID_ENUM"
+                   category            NMTOKEN #IMPLIED>
+
+<!ATTLIST value    name                CDATA #REQUIRED
+                   category            NMTOKEN #IMPLIED>
+<!ATTLIST range    from                NMTOKEN #REQUIRED
+                   to                  NMTOKEN #REQUIRED
+                   base                NMTOKEN #IMPLIED
+                   category            NMTOKEN #IMPLIED>

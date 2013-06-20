@@ -1,0 +1,54 @@
+/*
+ * Copyright (c) 1999
+ * Boris Fomitchev
+ *
+ * This material is provided "as is", with absolutely no warranty expressed
+ * or implied. Any use is at your own risk.
+ *
+ * Permission to use or copy this software for any purpose is hereby granted
+ * without fee, provided the above notices are retained on all copies.
+ * Permission to modify the code and to distribute modified code is granted,
+ * provided the above notices are retained, and a notice that the code was
+ * modified is included with the above copyright notice.
+ *
+ */
+
+#ifndef _STLP_CSTDLIB
+
+#ifndef _STLP_OUTERMOST_HEADER_ID
+#  define _STLP_OUTERMOST_HEADER_ID 0x116
+#  define _STLP_CSTDLIB
+#  include <stl/_prolog.h>
+#endif
+
+#  if defined (__GNUC__) && defined (__MINGW32__)
+/* Native cstdlib includes stdlib.h using an include_next so STLport stdlib.h
+ * is not used and the workaround in this file must be duplicated here
+ * (see stdlib.h). */
+#    include "errno.h"
+#  endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x116)
+#  ifndef _STLP_INTERNAL_CSTDLIB
+#    include <stl/_cstdlib.h>
+#  endif
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID != 0x116) || defined (_STLP_IMPORT_VENDOR_STD)
+#  if defined (_STLP_HAS_INCLUDE_NEXT)
+#    include_next <cstdlib>
+#  else
+#    include _STLP_NATIVE_CPP_C_HEADER(cstdlib)
+#  endif
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x116)
+#  include <stl/_epilog.h>
+#  undef _STLP_OUTERMOST_HEADER_ID
+#endif
+
+#endif /* _STLP_CSTDLIB */
+
+// Local Variables:
+// mode:C++
+// End:

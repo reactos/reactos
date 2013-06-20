@@ -1,0 +1,68 @@
+/*
+ * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDD_GENERAL DIALOGEX 0, 0, 242, 175
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "登录设置",IDC_STATIC,7,7,228,89
+    GROUPBOX        "连接设置",IDC_STATIC,7,103,228,65
+    ICON            "", IDC_LOGONICON, 15,19,20,20
+    LTEXT           "输入服务器地址",IDC_STATIC,47,24,81,8
+    LTEXT           "服务器：",IDC_STATIC,47,41,25,8
+    LTEXT           "用户名：",IDC_STATIC,47,58,38,8
+    COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON      "保存",IDC_SAVE,67,139,50,14
+    PUSHBUTTON      "另存为...",IDC_SAVEAS,123,139,50,14
+    PUSHBUTTON      "打开...",IDC_OPEN,177,139,50,14
+    ICON            "", IDC_CONNICON, 16,114,20,20
+    LTEXT           "保存当前连接设置或打开一个已有的配置",IDC_STATIC,50,115,172,20
+END
+
+IDD_DISPLAY DIALOGEX 0, 0, 242, 175
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "远程桌面大小",IDC_STATIC,7,7,228,68
+    GROUPBOX        "颜色",IDC_STATIC,7,83,228,85
+    ICON            "", IDC_REMICON, 15,19,20,20
+    ICON            "", IDC_COLORSICON, 15,98,20,20
+    LTEXT           "为您的远程桌面设置屏幕大小。将这个滑块向右拉远以启用全屏。",IDC_STATIC,53,22,175,21
+    CONTROL         "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
+    COMBOBOX        IDC_BPPCOMBO,56,102,128,80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_COLORIMAGE,"Static",SS_OWNERDRAW | SS_SUNKEN, 56,121,127,10
+    LTEXT           "注意：远程计算机上的设置可能会覆盖这个设置。",IDC_STATIC,56,143,165,18
+    LTEXT           "更少",IDC_STATIC,35,42,15,8
+    LTEXT           "更多",IDC_STATIC,189,42,17,8
+    LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
+END
+
+IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "远程桌面连接"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "连接",IDOK,147,245,50,14
+    PUSHBUTTON      "取消",IDCANCEL,203,245,50,14
+    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
+END
+
+
+STRINGTABLE 
+BEGIN
+    IDS_TAB_GENERAL         "普通"
+    IDS_TAB_DISPLAY         "显示"
+    IDS_256COLORS           "256 色"
+    IDS_HIGHCOLOR15         "32,768 色 (15 位)"
+    IDS_HIGHCOLOR16         "65,536 色 (16 位)"
+    IDS_HIGHCOLOR24         "16,777,216 色 (24 位)"
+    IDS_PIXEL               "%lux%lu 像素"
+    IDS_FULLSCREEN          "全屏"
+    IDS_BROWSESERVER        "<浏览更多...>"
+    IDS_HEADERTEXT1         "远程桌面"
+    IDS_HEADERTEXT2         "连接"
+END

@@ -1,0 +1,34 @@
+/*
+ * Regedit-32 resources
+ *
+ * Copyright 2008 Carlo Bramini
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+#include <windef.h>
+
+#include "resource.h"
+
+// Common resources
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Registry Explorer\0"
+#define REACTOS_STR_INTERNAL_NAME	"regedt32\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"regedt32.exe\0"
+#include <reactos/version.rc>
+
+IDI_REGEDIT  ICON   DISCARDABLE   res/regedt32.ico

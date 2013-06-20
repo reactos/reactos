@@ -1,0 +1,84 @@
+#######################################################################
+# SConscript for glapi
+
+
+Import('*')
+
+env = env.Clone()
+
+env.Append(CPPDEFINES = [
+    'MAPI_MODE_UTIL',
+])
+
+if env['platform'] == 'windows':
+    env.Append(CPPDEFINES = [
+        '_GDI32_', # prevent gl* being declared __declspec(dllimport) in MS headers
+        'BUILD_GL32', # declare gl* as __declspec(dllexport) in Mesa headers
+    ])
+    if env['gles']:
+        env.Append(CPPDEFINES = ['_GLAPI_DLL_EXPORTS'])
+    else:
+        # prevent _glapi_* from being declared __declspec(dllimport)
+        env.Append(CPPDEFINES = ['_GLAPI_NO_EXPORTS'])
+
+env.Append(CPPPATH = [
+    '#/src/mapi',
+    '#/src/mesa',
+])
+
+glapi_sources = [
+    'glapi_dispatch.c',
+    'glapi_entrypoint.c',
+    'glapi_getproc.c',
+    'glapi_nop.c',
+    'glthread.c',
+    'glapi.c',
+]
+
+mapi_sources = [
+    'u_current.c',
+    'u_execmem.c',
+    'u_thread.c',
+]
+for s in mapi_sources:
+    o = env.SharedObject(s[:-2], '../mapi/' + s)
+    glapi_sources.append(o)
+
+#
+# Assembly sources
+#
+if env['gcc'] and env['platform'] != 'windows':
+    if env['machine'] == 'x86':
+        env.Append(CPPDEFINES = [
+            'USE_X86_ASM',
+        ])
+        glapi_sources += [
+            'glapi_x86.S',
+        ]
+    elif env['machine'] == 'x86_64':
+        env.Append(CPPDEFINES = [
+            'USE_X86_64_ASM',
+        ])
+        glapi_sources += [
+            'glapi_x86-64.S'
+        ]
+    elif env['machine'] == 'sparc':
+        env.Append(CPPDEFINES = [
+            'USE_SPARC_ASM',
+        ])
+        glapi_sources += [
+            'glapi_sparc.S'
+        ]
+    else:
+        pass
+
+if env['toolchain'] == 'crossmingw':
+    # compile these files without -gstabs option
+    glapi_sources = env.compile_without_gstabs(glapi_sources, "glapi_dispatch.c")
+    glapi_sources = env.compile_without_gstabs(glapi_sources, "glapi_getproc.c")
+
+glapi = env.ConvenienceLibrary(
+    target = 'glapi',
+    source = glapi_sources,
+)
+Export('glapi')

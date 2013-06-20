@@ -1,0 +1,82 @@
+/*
+ * Slovak language file by Mário Kačmár aka Kario (kario@szm.sk) 16-01-2008
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Zobrazí alebo zmení zoznamy prístupových práv (Access Control List) súborov.\n\n\
+CACLS názov_súboru [/T] [/E] [/C] [/G používateľ:povolenia [...]]\n\
+                   [/R používateľ [...]] [/P používateľ:povolenia [...]]\n\
+                   [/D používateľ [...]]\n\
+    názov_súboru   Zobrazí zoznamy ACL.\n\
+    /T             Zmení zoznamy ACL špecifikovaných súborov\n\
+                   v aktuálnom adresári a vo všetkých podadresároch.\n\
+    /E             Upraví zoznam ACL namiesto jeho nahradenia.\n\
+    /C             Pokračovanie pri chybách odmietnutia prístupu.\n\
+    /G používateľ:povolenia\n\
+                   Udelí špecifikovanému používateľovi prístupové práva.\n\
+                   Povolenia môžu byť: R  čítanie\n\
+                                       W  zápis\n\
+                                       C  zmena (zápis)\n\
+                                       F  úplný prístup\n\
+    /R používateľ  Odoberie špecifikovaným používateľom prístupové práva\n\
+                   (platné iba s prepínačom /E).\n\
+    /P používateľ:povolenia\n\
+                   Nahradí špecifikovaným používateľom prístupové práva.\n\
+                   Povolenia môžu byť: N  žiadne\n\
+                                       R  čítanie\n\
+                                       W  zápis\n\
+                                       C  zmena (zápis)\n\
+                                       F  úplný prístup\n\
+    /D používateľ  Odoprie špecifikovanému používateľovi prístup.\n\
+Náhradné znaky sa dajú použiť na špecifikovanie viacerých súborov v jednom\n\
+príkaze. Rovnako môžete špecifikovať aj viacerých používateľov v príkaze.\n\n\
+Skratky:\n\
+    CI - Kontajnerové dedenie.\n\
+         ACE bude zdedené po adresároch.\n\
+    OI - Objektové dedenie.\n\
+         ACE bude zdedené po súboroch.\n\
+    IO - Iba zdediť.\n\
+         ACE sa neaplikuje na aktuálny súbor alebo adresár.\n"
+
+IDS_ABBR_CI, "(CI)"
+IDS_ABBR_OI, "(OI)"
+IDS_ABBR_IO, "(IO)"
+IDS_ABBR_FULL, "F"
+IDS_ABBR_READ, "R"
+IDS_ABBR_WRITE, "W"
+IDS_ABBR_CHANGE, "C"
+IDS_ABBR_NONE, "N"
+IDS_ALLOW, ""
+IDS_DENY, "(DENY)"
+IDS_SPECIAL_ACCESS, "(špeciálny prístup:)"
+IDS_GENERIC_READ, "GENERIC_READ"
+IDS_GENERIC_WRITE, "GENERIC_WRITE"
+IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"
+IDS_GENERIC_ALL, "GENERIC_ALL"
+IDS_FILE_GENERIC_EXECUTE, "FILE_GENERIC_EXECUTE"
+IDS_FILE_GENERIC_READ, "FILE_GENERIC_READ"
+IDS_FILE_GENERIC_WRITE, "FILE_GENERIC_WRITE"
+IDS_FILE_READ_DATA, "FILE_READ_DATA"
+IDS_FILE_WRITE_DATA, "FILE_WRITE_DATA"
+IDS_FILE_APPEND_DATA, "FILE_APPEND_DATA"
+IDS_FILE_READ_EA, "FILE_READ_EA"
+IDS_FILE_WRITE_EA, "FILE_WRITE_EA"
+IDS_FILE_EXECUTE, "FILE_EXECUTE"
+IDS_FILE_DELETE_CHILD, "FILE_DELETE_CHILD"
+IDS_FILE_READ_ATTRIBUTES, "FILE_READ_ATTRIBUTES"
+IDS_FILE_WRITE_ATTRIBUTES, "FILE_WRITE_ATTRIBUTES"
+IDS_MAXIMUM_ALLOWED, "MAXIMUM_ALLOWED"
+IDS_ACCESS_SYSTEM_SECURITY, "ACCESS_SYSTEM_SECURITY"
+IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIC_RIGHTS_ALL"
+IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RIGHTS_REQUIRED"
+IDS_SYNCHRONIZE, "SYNCHRONIZE"
+IDS_WRITE_OWNER, "WRITE_OWNER"
+IDS_WRITE_DAC, "WRITE_DAC"
+IDS_READ_CONTROL, "READ_CONTROL"
+IDS_DELETE, "DELETE"
+IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
+END

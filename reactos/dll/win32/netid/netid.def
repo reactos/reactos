@@ -1,0 +1,5 @@
+
+LIBRARY netid.dll
+
+EXPORTS
+  CreateNetIDPropertyPage@0 @1

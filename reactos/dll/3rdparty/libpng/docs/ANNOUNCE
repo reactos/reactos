@@ -1,0 +1,76 @@
+
+Libpng 1.5.14 - January 24, 2013
+
+This is a public release of libpng, intended for use in production codes.
+
+Files available for download:
+
+Source files with LF line endings (for Unix/Linux) and with a
+"configure" script
+
+   libpng-1.5.14.tar.xz (LZMA-compressed, recommended)
+   libpng-1.5.14.tar.gz
+   libpng-1.5.14.tar.bz2
+
+Source files with CRLF line endings (for Windows), without the
+"configure" script
+
+   lpng1514.7z  (LZMA-compressed, recommended)
+   lpng1514.zip
+
+Other information:
+
+   libpng-1.5.14-README.txt
+   libpng-1.5.14-LICENSE.txt
+
+Changes since the last public release (1.5.13):
+  Added -DZ_SOLO to contrib/pngminim/*/makefile to work with zlib-1.2.7
+  Warn about the incorrect runtime library setting for VS2010 debug DLL builds.
+  Fixed build when using #define PNG_NO_READ_GAMMA in png_do_compose() in
+    pngrtran.c (Domani Hannes).
+  Check for png_ptr==NULL earlier in png_zalloc().
+  Ignore, with a warning, out-of-range value of num_trans in png_set_tRNS().
+  Rearranged building of ARM NEON optimizations. The ARM specific code is
+    split out entirely to the arm subdirectory and changes to configure.ac and
+    Makefile.am to add new stuff are reduced.  Now material code changes,
+    although for build test purposes, --enable-arm-neon now builds on non-ARM
+    systems.
+  Rebuilt Makefile.in, configure, etc., with autoconf-2.69 and automake-1.12.5.
+  Fixed cases of unquoted DESTDIR in Makefile.am
+  Fixed a minor bug in types to malloc and major bug in handling compressed
+    iTXt. Compressed iTXt could not be handled.
+  Cleaned up whitespace in the synopsis portion of the manpage "libpng.3"
+  Disassembled the version number in scripts/options.awk (necessary for
+    building on SunOs).
+  Fixed Windows build issues, enabled ARM compilation. Various warnings issued
+    by earlier versions of GCC fixed for Cygwin and Min/GW (which both use old
+    GCCs.) ARM support is enabled by default in zlib.props (unsupported by
+    Microsoft) and ARM compilation is made possible by deleting the check for
+    x86. The test programs cannot be run because they are not signed.
+  Fixed 'make distcheck' on SUN OS - libpng.so was not being removed
+  Replaced AM_CONFIG_HEADER(config.h) with AC_CONFIG_HEADERS([config.h])
+    in configure.ac
+  De-configured build fixes to make a range of deconfiguration options (such
+    as switching off read or write support) work in more cases.  Also upgraded
+    pngtest and pngvalid to the libpng 1.6 versions (with some modifications)
+    which provide more extensive testing.  Replaced pngtest.png because pngtest
+    writes the ancillary chunks in a different order.
+  Check validity of "num_unknowns" parameter of png_set_unknown_chunks()
+    (Bug report from yuris).
+  Revised test for validity of "num_unknowns" to eliminate compiler warnings.
+  Check the validity of the "nentries" parameter of png_set_sPLT() and the
+  "num_text" parameter of png_set_text_2().
+
+  ===========================================================================
+                       NOTICE November 17, 2012:
+     The location of the git repository at SourceForge has changed.
+               Visit http://libpng.sf.net/ for details.
+  ===========================================================================
+
+Send comments/corrections/commendations to png-mng-implement at lists.sf.net
+(subscription required; visit
+https://lists.sourceforge.net/lists/listinfo/png-mng-implement
+to subscribe)
+or to glennrp at users.sourceforge.net
+
+Glenn R-P

@@ -1,0 +1,11 @@
+/* 
+ * Hungarian version is Copyright 2005 - Peter Nagy <nagylakas@gmail.com>
+ */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+BEGIN
+
+STRING_USERINIT_FAIL, "Az Userinit nem tudja elindítani a rendszert!\n"
+
+END

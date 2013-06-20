@@ -1,0 +1,51 @@
+  Here is a description of how you can use STLport to read/write utf8 files.
+utf8 is a way of encoding wide characters. As so, management of encoding in
+the C++ Standard library is handle by the codecvt locale facet which is part
+of the ctype category. However utf8 only describe how encoding must be
+performed, it cannot be used to classify characters so it is not enough info
+to know how to generate the whole ctype category facets of a locale
+instance.
+
+In C++ it means that the following code will throw an exception to
+signal that creation failed:
+
+#include <locale>
+// Will throw a std::runtime_error exception.
+std::locale loc(".utf8");
+
+For the same reason building a locale with the ctype facets based on
+UTF8 is also wrong:
+
+// Will throw a std::runtime_error exception:
+std::locale loc(locale::classic(), ".utf8", std::locale::ctype);
+
+The only solution to get a locale instance that will handle utf8 encoding
+is to specifically signal that the codecvt facet should be based on utf8
+encoding:
+
+// Will succeed if there is necessary platform support.
+locale loc(locale::classic(), new codecvt_byname<wchar_t, char, mbstate_t>(".utf8"));
+
+  Once you have obtain a locale instance you can inject it in a file stream to
+read/write utf8 files:
+
+std::fstream fstr("file.utf8");
+fstr.imbue(loc);
+
+You can also access the facet directly to perform utf8 encoding/decoding operations:
+
+typedef std::codecvt<wchar_t, char, mbstate_t> codecvt_t;
+const codecvt_t& encoding = use_facet<codecvt_t>(loc);
+
+Notes:
+
+1. The dot ('.') is mandatory in front of utf8. This is a POSIX convention, locale
+names have the following format:
+language[_country[.encoding]]
+
+Ex: 'fr_FR'
+    'french'
+    'ru_RU.koi8r'
+
+2. utf8 encoding is only supported for the moment under Windows. The less common
+utf7 encoding is also supported.

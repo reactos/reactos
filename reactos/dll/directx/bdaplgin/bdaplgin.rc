@@ -1,0 +1,12 @@
+#include <windows.h>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS BDA Device Control Plug-in for MPEG2 based networks\0"
+#define REACTOS_STR_INTERNAL_NAME	"BdaPlgin.ax\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"BdaPlgin.ax\0"
+#define REACTOS_STR_PRODUCT_VERSION     "5.3.2600.3264\0"
+#define REACTOS_STR_FILE_VERSION        "5.3.2600.3264\0"
+
+#include <reactos/version.rc>

@@ -1,0 +1,16 @@
+/*
+ * PROJECT:     Cylinders fractal ScreenSaver
+ * LICENSE:     Public Domain
+ * FILE:        base/applications/screensavers/cylfrac/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for Cylinders fractal ScreenSaver
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Заставка ""Cylinders fractal"""
+    IDS_TITLE       "Про"
+    IDS_TEXT        "Cylinders fractal від unC0Rr.\nСпеціально для ReactOS."
+END

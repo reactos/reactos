@@ -1,0 +1,23 @@
+/*
+ * PROJECT:     ReactOS Console Command More
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        /base/applications/cmdutils/more/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS Console Command More
+ * PROGRAMMERS: Rostislav Zabolotny
+ */
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_USAGE, "Виводить iнфрмацію поекранно. Використання:\n\n\
+  MORE < [Диск:][Шлях]Iм'я_файлу\n\
+  Command | MORE \n\
+  MORE [Диск:][Шлях]Iм'я_файлу\n\n\
+  Де: \n\
+  [Диск:][Шлях]Ім'я_файлу    Файл, вмiст якого треба вивести на екран.\n\
+  Command\t\t     Команда, результат роботи якої треба вивести на екран.\n\n\
+  На запрошення ""-- Далi --"" Ви можете натиснути будь-яку клавiшу щоб побачити наступну сторiнку.\n"
+
+  IDS_CONTINUE, " -- Далi (100%) -- "
+  IDS_FILE_ACCESS, "Не можу отримати доступ до файла %s."
+END

@@ -1,0 +1,65 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_BCAST   "Broadcast"
+  IDS_P2P     "Peer To Peer"
+  IDS_MIXED   "Mixto"
+  IDS_HYBRID  "Híbrido"
+  IDS_UNKNOWN "Deconocido"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_OTHER   "Otro Tipo de Adaptador"
+  IDS_ETH     "Adaptador Ethernet"
+  IDS_TOKEN   "Adaptador Token Ring"
+  IDS_FDDI    "Adaptador FDDI"
+  IDS_PPP     "Adaptador PPP"
+  IDS_LOOP    "Adaptador Loopback"
+  IDS_SLIP    "Adaptador SLIP"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+/* Please keep the spacing/formatting as per En.rc when translating */
+  IDS_USAGE
+    "\nUSO:\n \
+        ipconfig [/? | /all | /renew [adaptador] | /release [adaptador] |\n \
+                  /flushdns | /displaydns | /registerdns |\n \
+                  /showclassid adaptador |\n \
+                  /setclassid adaptador [classid] ]\n \
+    \n \
+    En la cual\n \
+        adaptador       Nombre de la conexión\n \
+                       (caracteres especiales * and ? autorizados, ver ejemplos)\n \
+    \n \
+        Optiones:\n \
+           /?           Muestra este mensaje de ayuda\n \
+           /all         Muestra todas las informaciones de configuración.\n \
+           /release     Libera la dirección IP para el adaptador especificado.\n \
+           /renew       Renueva la dirección IP para el adaptador especificado.\n \
+           /flushdns    Purga la cache de Resolución DNS.\n \
+           /registerdns Actualiza todas las concesiones DHCP y registra de nuevo nombres DNS.\n \
+           /displaydns  Muestra el contenido del cache de Resolución DNS.\n \
+           /showclassid Muestra todos los class IDs dhcp concedidos al adaptador.\n \
+           /setclassid  Modifica el class id dhcp.\n \
+    \n \
+    Generalmente se muestra solamente la dirección IP, la máscara de red y\n \
+    la puerta de enlace predefinidas de cada adaptador relacionado a TCP/IP.\n \
+    \n \
+    Para los parámetros Release y Renew, si no se especifica un adaptador, entonces la(s) dirección(es)\n \
+    IP asignada(s) para todos los adaptadores relacionados a TCP/IP serán liberadas o renovadas.\n \
+    \n \
+    Para Setclassid, si no se especifica algún ClassId, este será removido.\n \
+    \n \
+    Ejemplos:\n \
+        > ipconfig                   ... Muestra informaciones.\n \
+        > ipconfig /all              ... Muestra informaciones detalladas\n \
+        > ipconfig /renew            ... Renueva todos los adaptadores\n \
+        > ipconfig /renew EL*        ... Renueva todas las direcciones IP de los adaptadores\n \
+                                         cuyo nombre comienza con EL\n \
+        > ipconfig /release *Con*    ... Libera todas las conexiones concernidas,\n \
+                                         ej. ""Conexión al area local 1"" o\n \
+                                             ""Conexión al area local 2""\n"
+END

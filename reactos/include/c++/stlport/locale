@@ -1,0 +1,156 @@
+/*
+ * Copyright (c) 1999
+ * Silicon Graphics Computer Systems, Inc.
+ *
+ * Copyright (c) 1999
+ * Boris Fomitchev
+ *
+ * This material is provided "as is", with absolutely no warranty expressed
+ * or implied. Any use is at your own risk.
+ *
+ * Permission to use or copy this software for any purpose is hereby granted
+ * without fee, provided the above notices are retained on all copies.
+ * Permission to modify the code and to distribute modified code is granted,
+ * provided the above notices are retained, and a notice that the code was
+ * modified is included with the above copyright notice.
+ *
+ */
+#ifndef _STLP_LOCALE
+
+// Basic framework: class locale and class locale::facet
+
+#ifndef _STLP_OUTERMOST_HEADER_ID
+#  define _STLP_OUTERMOST_HEADER_ID 0x1041
+#  include <stl/_prolog.h>
+#  define _STLP_LOCALE
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x1041) && \
+   !(defined (_STLP_NO_IOSTREAMS) && defined (_STLP_IMPORT_VENDOR_STD))
+#  include <stl/_ioserr.h>
+
+// Individual facets
+#  ifndef _STLP_INTERNAL_CTYPE_H
+#    include <stl/_ctype.h>
+#  endif
+
+#  ifndef _STLP_INTERNAL_CODECVT_H
+#    include <stl/_codecvt.h>
+#  endif
+
+#  ifndef _STLP_INTERNAL_COLLATE_H
+#    include <stl/_collate.h>
+#  endif
+
+#  ifndef _STLP_INTERNAL_NUM_PUT_H
+#    include <stl/_num_put.h>
+#  endif
+
+#  ifndef _STLP_INTERNAL_NUM_GET_H
+#    include <stl/_num_get.h>
+#  endif
+
+// those never included separately anyway
+#  include <stl/_monetary.h>
+#  include <stl/_time_facets.h>
+#  include <stl/_messages_facets.h>
+
+// some stuff for streambuf iterators ended up defined there
+// Strictly speaking, _istream.h portion is only required for <iterator>, but it may break too many
+// programs if we omit it
+#  ifndef _STLP_ISTREAM_H
+#    include <stl/_istream.h>
+#  endif
+
+// Convenience interfaces
+#undef isspace
+#undef isprint
+#undef iscntrl
+#undef isupper
+#undef islower
+#undef isalpha
+#undef isdigit
+#undef ispunct
+#undef isxdigit
+#undef isalnum
+#undef isgraph
+#undef toupper
+#undef tolower
+
+_STLP_BEGIN_NAMESPACE
+
+template <class _CharT> 
+inline bool isspace (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::space, c); }
+
+template <class _CharT> 
+inline bool isprint (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::print, c); }
+
+template <class _CharT> 
+inline bool iscntrl (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::cntrl, c); }
+
+template <class _CharT> 
+inline bool isupper (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::upper, c); }
+
+template <class _CharT> 
+inline bool islower (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::lower, c); }
+
+template <class _CharT> 
+inline bool isalpha (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::alpha, c); }
+
+template <class _CharT> 
+inline bool isdigit (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::digit, c); }
+
+template <class _CharT> 
+inline bool ispunct (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::punct, c); }
+
+template <class _CharT> 
+inline bool isxdigit (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::xdigit, c); }
+
+template <class _CharT> 
+inline bool isalnum (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::alnum, c); }
+
+template <class _CharT> 
+inline bool isgraph (_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).is(ctype_base::graph, c); }
+
+template <class _CharT>
+inline _CharT toupper(_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).toupper(c); }
+
+template <class _CharT>
+inline _CharT tolower(_CharT c, const locale& loc)
+{ return (use_facet<ctype<_CharT> >(loc)).tolower(c); }
+
+_STLP_END_NAMESPACE
+
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID != 0x1041) || defined (_STLP_IMPORT_VENDOR_STD)
+#  if defined (_STLP_HAS_INCLUDE_NEXT)
+#    include_next <locale>
+#  else
+#    include _STLP_NATIVE_HEADER(locale)
+#  endif
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x1041)
+#  include <stl/_epilog.h>
+#  undef _STLP_OUTERMOST_HEADER_ID
+#endif
+
+#endif /* _STLP_LOCALE */
+
+
+// Local Variables:
+// mode:C++
+// End:

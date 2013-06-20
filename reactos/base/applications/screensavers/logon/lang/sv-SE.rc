@@ -1,0 +1,14 @@
+/*
+ * PROJECT:         ReactOS RAPPS
+ * FILE:            base/applications/screensavers/logon/lang/sv-SE.rc
+ * PURPOSE:         Swedish resource file
+ * Translation:     Jaix Bly
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Inloggingsskärmsläckare"
+    IDS_TEXT        "Inga inställningar behövs."
+END

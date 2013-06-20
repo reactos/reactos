@@ -1,0 +1,232 @@
+/*
+ * Copyright 2010 Justin Chevrier
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef DO_NO_IMPORTS
+import "oaidl.idl";
+#ifdef __midl
+import "msctf.idl";
+#endif
+#endif
+
+interface ITfLangBarEventSink;
+interface ITfLangBarItemMgr;
+interface ITfInputProcessorProfiles;
+interface IEnumTfLangBarItems;
+interface ITfLangBarItem;
+interface ITfLangBarItemSink;
+
+[
+    object,
+    uuid(87955690-e627-11d2-8ddb-00105a2799b5),
+    pointer_default(unique)
+]
+interface ITfLangBarMgr: IUnknown
+{
+    HRESULT AdviseEventSink(
+        [in] ITfLangBarEventSink *pSink,
+        [in] HWND hwnd,
+        [in] DWORD dwflags,
+        [in] DWORD *pdwCookie);
+
+    HRESULT UnAdviseEventSink(
+        [in] DWORD dwCookie);
+
+    HRESULT GetThreadMarshalInterface(
+        [in] DWORD dwThreadId,
+        [in] DWORD dwType,
+        [in] REFIID riid,
+        [out] IUnknown **ppunk);
+
+    HRESULT GetThreadLangBarItemMgr(
+        [in] DWORD dwThreadId,
+        [out] ITfLangBarItemMgr **pplbie,
+        [out] DWORD *pdwThreadid);
+
+    HRESULT GetInputProcessorProfiles(
+        [in] DWORD dwThreadId,
+        [out] ITfInputProcessorProfiles **ppaip,
+        [out] DWORD *pdwThreadid);
+
+    HRESULT RestoreLastFocus(
+        [out] DWORD *dwThreadId,
+        [in] BOOL fPrev);
+
+    HRESULT SetModalInput(
+        [in] ITfLangBarEventSink *pSink,
+        [in] DWORD dwThreadId,
+        [in] DWORD dwFlags);
+
+    HRESULT ShowFloating(
+        [in] DWORD dwFlags);
+
+    HRESULT GetShowFloatingStatus(
+        [out] DWORD *pdwFlags);
+};
+
+[
+  object,
+  uuid(18a4e900-e0ae-11d2-afdd-00105a2799b5),
+  pointer_default(unique)
+]
+interface ITfLangBarEventSink: IUnknown
+{
+    HRESULT OnSetFocus(
+        [in] DWORD dwThreadId);
+
+    HRESULT OnThreadTerminate(
+        [in] DWORD dwThreadId);
+
+    HRESULT OnThreadItemChange(
+        [in] DWORD dwThreadId);
+
+    HRESULT OnModalInput(
+        [in] DWORD dwThreadId,
+        [in] UINT uMsg, 
+        [in] WPARAM wParam, 
+        [in] LPARAM lParam);
+
+    HRESULT ShowFloating(
+        [in] DWORD dwFlags);
+
+    HRESULT GetItemFloatingRect(
+        [in] DWORD dwThreadId,
+        [in] REFGUID rguid,
+        [out] RECT *prc);
+}
+
+const ULONG TF_LBI_DESC_MAXLEN = 32;
+
+typedef [uuid(12a1d29f-a065-440c-9746-eb2002c8bd19)] struct TF_LANGBARITEMINFO
+{
+    CLSID clsidService;
+    GUID guidItem;
+    DWORD dwStyle;
+    ULONG ulSort;
+    WCHAR szDescription[TF_LBI_DESC_MAXLEN];
+} TF_LANGBARITEMINFO;
+
+[
+  object,
+  uuid(ba468c55-9956-4fb1-a59d-52a7dd7cc6aa),
+  pointer_default(unique),
+]
+interface ITfLangBarItemMgr : IUnknown
+{
+    HRESULT EnumItems(
+        [out] IEnumTfLangBarItems **ppEnum);
+
+    HRESULT GetItem(
+        [in] REFGUID rguid, 
+        [out] ITfLangBarItem **ppItem);
+
+    HRESULT AddItem(
+        [in] ITfLangBarItem *punk);
+
+    HRESULT RemoveItem(
+        [in] ITfLangBarItem *punk);
+
+    HRESULT AdviseItemSink(
+        [in] ITfLangBarItemSink *punk, 
+        [out] DWORD *pdwCookie, 
+        [in] REFGUID rguidItem);
+
+    HRESULT UnadviseItemSink(
+        [in] DWORD dwCookie);
+
+    HRESULT GetItemFloatingRect(
+        [in] DWORD dwThreadId,
+        [in] REFGUID rguid,
+        [out] RECT *prc);
+
+    HRESULT GetItemsStatus(
+        [in] ULONG ulCount,
+        [in, size_is(ulCount)] const GUID *prgguid,
+        [out, size_is(ulCount)] DWORD *pdwStatus);
+
+    HRESULT GetItemNum(
+        [out] ULONG *pulCount);
+
+    HRESULT GetItems(
+        [in] ULONG ulCount, 
+        [out, size_is(ulCount), length_is(*pcFetched)] ITfLangBarItem **ppItem, 
+        [out, size_is(ulCount), length_is(*pcFetched)] TF_LANGBARITEMINFO *pInfo,
+        [out, size_is(ulCount), length_is(*pcFetched)] DWORD *pdwStatus,
+        [in, out, unique] ULONG *pcFetched);
+
+    HRESULT AdviseItemsSink(
+        [in] ULONG ulCount,
+        [in, size_is(ulCount)] ITfLangBarItemSink **ppunk, 
+        [in, size_is(ulCount)] const GUID *pguidItem,
+        [out, size_is(ulCount)] DWORD *pdwCookie);
+
+    HRESULT UnadviseItemsSink(
+        [in] ULONG ulCount,
+        [in, size_is(ulCount)] DWORD *pdwCookie);
+};
+
+[
+  object,
+  uuid(583f34d0-de25-11d2-afdd-00105a2799b5),
+  pointer_default(unique),
+]
+interface IEnumTfLangBarItems : IUnknown
+{
+    HRESULT Clone(
+        [out] IEnumTfLangBarItems **ppEnum);
+
+    HRESULT Next(
+        [in] ULONG ulCount, 
+        [out, size_is(ulCount)] ITfLangBarItem **ppItem, 
+        [in, out, unique] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+        [in] ULONG ulCount);
+}
+
+[
+  object,
+  uuid(73540d69-edeb-4ee9-96c9-23aa30b25916),
+  pointer_default(unique),
+]
+interface ITfLangBarItem : IUnknown
+{
+    HRESULT GetInfo(
+        [out] TF_LANGBARITEMINFO *pInfo);
+
+    HRESULT GetStatus(
+        [out] DWORD *pdwStatus);
+
+    HRESULT Show(
+        [in] BOOL fShow);
+
+    HRESULT GetTooltipString(
+        [out] BSTR *pbstrToolTip);
+}
+
+[
+  object,
+  uuid(57dbe1a0-de25-11d2-afdd-00105a2799b5),
+  pointer_default(unique),
+]
+interface ITfLangBarItemSink : IUnknown
+{
+    HRESULT OnUpdate(
+        [in] DWORD dwFlags);
+}

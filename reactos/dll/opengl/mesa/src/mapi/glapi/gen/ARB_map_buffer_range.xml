@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+
+<OpenGLAPI>
+
+<category name="GL_ARB_map_buffer_range" number="50">
+
+    <enum name="MAP_READ_BIT"                value="0x0001"/>
+    <enum name="MAP_WRITE_BIT"               value="0x0002"/>
+    <enum name="MAP_INVALIDATE_RANGE_BIT"    value="0x0004"/>
+    <enum name="MAP_INVALIDATE_BUFFER_BIT"   value="0x0008"/>
+    <enum name="MAP_FLUSH_EXPLICIT_BIT"      value="0x0010"/>
+    <enum name="MAP_UNSYNCHRONIZED_BIT"      value="0x0020"/>
+
+    <function name="MapBufferRange" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="offset" type="GLintptr"/>
+        <param name="length" type="GLsizeiptr"/>
+        <param name="access" type="GLbitfield"/>
+        <return type="GLvoid *"/>
+    </function>
+
+    <function name="FlushMappedBufferRange" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="offset" type="GLintptr"/>
+        <param name="length" type="GLsizeiptr"/>
+    </function>
+
+</category>
+
+</OpenGLAPI>

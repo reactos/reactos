@@ -1,0 +1,8 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Цилиндрични фрактали"
+    IDS_TITLE       "За"
+    IDS_TEXT        "Цилиндрични фрактали за unC0Rr.\nНарочно за РеактОС."
+END

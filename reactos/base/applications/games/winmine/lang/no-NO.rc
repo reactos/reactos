@@ -1,0 +1,91 @@
+/*
+ * WineMine
+ * Norwegian Bokmål language support
+ *
+ * Copyright 2005 Alexander N. Sørnes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+
+STRINGTABLE BEGIN
+     IDS_APPNAME, "Minesveiper"
+     IDS_NOBODY,  "Ingen"
+     IDS_ABOUT,   "Kopirett 2000 tilhører Joshua Thielen"
+END
+
+MENU_WINEMINE MENU
+BEGIN
+    POPUP "&Innstillinger" BEGIN
+        MENUITEM "&Ny\tF2",       IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Merk spørsmål", IDM_MARKQ
+        MENUITEM SEPARATOR
+        MENUITEM "Ny&begynner",      IDM_BEGINNER
+        MENUITEM "&Avansert",      IDM_ADVANCED
+        MENUITEM "&Ekspert",        IDM_EXPERT
+        MENUITEM "E&gendefinert",        IDM_CUSTOM
+        MENUITEM SEPARATOR
+        MENUITEM "Avslut&t\tAlt+X",   IDM_EXIT
+    END
+    POPUP "&Hjelp" BEGIN
+        MENUITEM "&Beste tider",    IDM_TIMES
+        MENUITEM "&Om",         IDM_ABOUT
+    END
+END
+
+DLG_TIMES DIALOGEX 0, 0, 160, 80
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Beste tider"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Beste tider", -1,  10,  10, 140,  45
+    LTEXT           "Nybegynner",      -1,  20,  20,  40,   8
+    LTEXT           "Avansert",      -1,  20,  30,  40,   8
+    LTEXT           "Ekspert",        -1,  20,  40,  40,   8
+    LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
+    LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
+    LTEXT           "999",          IDC_TIME3,  70,  40,  15,   8
+    LTEXT           "",             IDC_NAME1,  90,  20,  55,   8
+    LTEXT           "",             IDC_NAME2,  90,  30,  55,   8
+    LTEXT           "",             IDC_NAME3,  90,  40,  55,   8
+    DEFPUSHBUTTON   "OK",                IDOK,  55,  60,  50,  15
+END
+
+DLG_CONGRATS DIALOGEX  0, 0, 160, 60
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Gratulerer!"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Skriv inn navnet ditt", -1,  10,  10, 150,  10
+    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
+    DEFPUSHBUTTON   "OK",                         IDOK,  60,  40,  40,  15
+END
+
+DLG_CUSTOM DIALOGEX  0, 0, 100, 100
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Egendefinert spill"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Rader",   -1,   5,   5,  30,  10
+    LTEXT           "Kolonner",   -1,   5,  35,  30,  10
+    LTEXT           "Miner",  -1,   5,  65,  30,  10
+    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
+    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
+    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
+    DEFPUSHBUTTON   "OK",     IDOK,      40,  30,  50,  15
+    PUSHBUTTON      "Avbryt", IDCANCEL,  40,  50,  50,  15
+END

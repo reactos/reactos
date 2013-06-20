@@ -1,0 +1,29 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {D969A300-E7FF-11d0-A93B-00A0C90F2719} = s 'ReactOS New Object Service'
+		{
+			val flags = d '0'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+	NoRemove Directory
+	{
+		NoRemove Background
+		{
+			NoRemove shellex
+			{
+				NoRemove ContextMenuHandlers
+				{
+					ForceRemove New = s '{D969A300-E7FF-11d0-A93B-00A0C90F2719}'
+					{
+					}
+				}
+			}
+		}
+	}
+}

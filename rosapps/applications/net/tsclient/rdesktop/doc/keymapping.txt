@@ -1,0 +1,243 @@
+Keyboard mapping
+================
+This release of rdesktop uses a new, portable keyboard mapping
+implementation. It should hopefully work on all X11 systems. This new
+implementation only looks at X11 keysyms: Not on (nonportable)
+keycodes or modifier status. This means that rdesktop will obey your
+local keyboard configuration. For example, if you have swapped
+CapsLock and Control, rdesktop will use this mapping. 
+
+XKB is currently not used. It seems like a good idea to me, but since
+some X servers (like Xvnc) does not support XKB, we still need to use
+the plain old interface as well, at least. 
+
+There are still some small problems.
+
+* CapsLock: CapsLock changes are never sent to the RDP
+  server. rdesktop does not know which keys that are modified by
+  CapsLock and which are not. So, the CapsLock indicator in Wordpad
+  etc will always be off.
+
+Composing/Multi_key is supported. For more information, see:
+
+  MIT:              $SRC/xc/nls/X11/locale/Compose/iso8859-1
+  XFree86:          /usr/X11R6/lib/X11/locale/*/Compose
+  Solaris' Openwin: /usr/openwin/include/X11/Suncompose.h
+                    /usr/openwin/lib/locale/*/Compose
+  Irix6:            compose(5)
+
+
+Keymap files
+============
+The names of the keymaps follows RFC1766. 
+
+(You can find a translation from Windows keyboard layout numbers to
+keymap names by looking at
+HKEY_LOCAL_MACHINE\SOFTWARE\Classes\MIME\Database\RFC1766 in the
+registry.)
+
+
+Contents of keymap files
+========================
+The keymaps are line based. There are four different types of lines:
+
+1) include lines
+Syntax:
+include <another-map-file>
+
+Example:
+include common
+
+
+2) map lines
+Syntax:
+map <hex-number>
+
+Example:
+map 0x41d
+
+Map-lines specifies how the remote RDP server should interpret the
+sent scancodes. 
+
+
+3) Translation lines
+Syntax:
+<keysym-name> <scancode> [flags..]
+
+Example:
+onehalf 0x29 shift
+
+The scancode can be found in scancodes.h. Note: The scancode value for
+extended keys can be calculated by OR:ing with 0x80. Example: The
+Delete key have the scancode sequence 0xe0, 0x52. You can get the
+scancode value to put into the map file by running:
+
+python -c "print hex(0x80 | 0x52)"
+
+If flags are "altgr", "shift", the scancode sent for this keysym will
+be prefixed with AltGr, or Shift.
+
+If flags includes "addupper", a translation for this keysyms uppercase
+name will be added as well, in addition to the non-uppercase
+name. Example:
+
+x 2d addupper
+
+...will add an translation for "X" automatically, just like if you
+would specify:
+
+X 2d shift
+
+If flags include "localstate", the modifier to send will be determined
+by the local modifier state. 
+
+If flags is "inhibit", nothing will be sent to the server. 
+
+If flags is "numlock", rdesktop will make sure that the remote NumLock
+state is on before generating the key event. Otherwise, it will make
+sure NumLock is off.
+
+
+4) enable_compose
+
+If any line starts with the keyword "enable_compose", rdesktop will
+enable local Compose/Multi_key handling. Enabling this will often make
+it impossible to compose characters with dead keys (on the remote
+side). This is because when local compose support is enabled, dead
+keys will not be sent to the remote side. 
+
+
+5) sequence lines
+Syntax:
+sequence <event-keysym-name> <keysym-name1> <keysym-name2> ...
+
+Examples:
+sequence eacute dead_acute e
+sequence F12 f o o at e x a m p l e period c o m
+
+Sequence lines allows you to specify that multiple scancodes should be
+sent to the RDP server, in response to one X11 keyboard event. Note:
+The sequence is sent at the X11 KeyPress event. Nothing is sent at
+KeyRelease.
+
+
+6) keyboard_type lines
+Syntax:
+keyboard_type <hex-number>
+ 
+keyboard_type lines specifies the keyboard type. Default value is 0x4
+(en-us 101/104 keys keyboard).
+
+
+7) keyboard_subtype lines
+Syntax:
+keyboard_subtype <hex-number>
+
+keyboard_subtype lines specifies the keyboard subtype. Default value
+is 0x0 (en-us 101/104 keys keyboard).
+
+
+8) keyboard_functionkeys lines
+Syntax:
+keyboard_functionkeys <hex-number>
+
+keyboard_functionkeys specifies the number of keyboard function
+keys. Default value is 0xc (12, for standard 101/104 keys keyboard).
+
+
+
+
+Suggested X11 keysym mapping on PCs
+===================================
+Unfortunately, there is no standard for which keysyms a given key
+should generate. If you have a PC-keyboard with Windows keys, I suggest this mapping:
+
+Keyboard keys:
+CtrlLeft WinLeft AltLeft Space AltGr WinRight Menu CtrlRight
+
+...should generate keysyms:
+Control_L Super_L Alt_L space Mode_switch Super_R Menu Control_R
+
+Additionally:
+Shift-Alt should produce Meta_L
+Shift-AltGr should produce Multi_Key. 
+
+Use a modifier-map like this:
+
+shift       Shift_L (0x32),  Shift_R (0x3e)
+lock        Caps_Lock (0x25)
+control     Control_L (0x42),  Control_R (0x6d)
+mod1        Alt_L (0x40)
+mod2        Num_Lock (0x4d)
+mod3        Mode_switch (0x71)
+mod4        Super_L (0x73),  Super_R (0x74)
+mod5        Scroll_Lock (0x4e)
+
+
+Updating / writing keymap files
+===============================
+When writing new or updating keymap files, please use comments and
+blanks, to increase readability. The "sv" keymap is a good template. 
+
+When you need to add a translation to a keymap file, do:
+
+    1. Get the "key number" for this key, by looking at keynums.png. 
+
+    2. Take a look at scancodes.h, and look for
+    SCANCODE_KEY_<my-key-number>. The scancode value is at the end of
+    the line. If the line contains (SCANCODE_EXTENDED | 0xsomething),
+    then you should OR 0x80 to this value. For example, you can do:
+    
+    python -c "print hex(0x80 | 0xsomething)"
+
+    3. Put the scancode (from step 2) and keysym name (found in the
+    error message) into the keymap file. 
+
+
+Special keys
+============
+
+* The combination Ctrl-Alt-Enter toggles between fullscreen and
+  non-fullscreen mode. 
+
+* Meta, Hyper and Super are treated as windows keys. RDP4 does not
+  support the windows keys though, so if you are running RDP4, these
+  keys will translate to Ctrl-Esc. 
+
+
+Links
+=====
+http://www.win.tue.nl/~aeb/linux/kbd/scancodes.html
+
+
+Test cases
+==========
+When changing the keyboard code, make sure all these tests in Notepad
+works:
+
+1. Ctrl+f should bring up Find dialog, with CapsLock both on and off. 
+
+2. Ctrl+Shift+arrows should mark text, with CapsLock both on and off. 
+
+3. Test a sequence, like egrave. 
+
+4. Test a char generated with AltGr, such as @ on a swedish keyboard. 
+
+5. Test Ctrl-Alt-Delete. 
+
+6. Ctrl-Alt-Enter should toggle fullscreen. 
+
+7. Test NumLock synchronization using the -N option. Excel is able to
+   indicate the current NumLock state. Verify that the status is
+   updated correctly on reconnects. 
+
+8. Test the Windows keys, standalone as well as in combination with,
+   say, E.
+
+9. Make sure the system menu (via Alt-space) cannot be accessed in
+   single app mode.
+
+10. Make sure keymaps can be loaded from ~/.rdesktop/keymaps,
+    KEYMAP_PATH, $CWD/keymaps, and from an absolute path. 
+
+

@@ -1,0 +1,3 @@
+exception.h
+new.h
+typeinfo.h

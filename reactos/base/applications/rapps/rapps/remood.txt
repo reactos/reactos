@@ -1,0 +1,41 @@
+﻿; UTF-8
+
+[Section]
+Name = ReMooD
+Version = 0.8a
+Licence = GPL
+Description = ReMooD is a source port of Doom Legacy. It aims to provide the classic Legacy Experience with new features and more stability.
+Size = 1.15MB
+Category = 4
+URLSite = http://remood.sourceforge.net/
+URLDownload = http://garr.dl.sourceforge.net/project/remood/ReMooD/0.8a/remoodsetup-win32_08a.exe
+CDPath = none
+
+[Section.0407]
+Description = ReMooD ist ein Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilität zu bieten.
+
+[Section.040a]
+Description = ReMood es un port de Doom Legacy. Su fin es proporcionar la clásica experiencia anterior con nuevas características y mayor estabilidad.
+
+[Section.040c]
+Description = ReMood est un portage du source de Doom Legacy. Son but est de fournir l'expérience classique de Legacy avec de nouvelles fonctionnalités et plus de stabilité.
+Size = 1,15 Mo
+
+[Section.0410]
+Description = ReMooD è un porting del codice di Legacy Doom. Esso mira a fornire la classica esperienza Legacy con nuove funzionalità e maggiore stabilità.
+
+[Section.0413]
+Description = ReMood is een broncodeoverdracht van Doom Legacy. Het biedt de klassieke Legacy Ervaring met nieuwe mogelijkheden en betere stabiliteit.
+
+[Section.0415]
+Description = Źródłowy port Doom. Jego celem jest zapewnienie rozrywki znanej z klasycznej wersji z nowymi funkcjami i lepszą stabilnością.
+
+[Section.0418]
+Description = ReMooD este o portare a codului Doom Legacy. Scopul e de a oferi clasica experiență cu noi funcționalități și o mai bună stabilitate.
+Size = 1,15 Mo
+
+[Section.0422]
+Description = ReMooD э Портом вихідних кодів Doom Legacy. Його метою є додати нові можливості та стабільність до досвіду класичного Legacy.
+
+[Section.0813]
+Description = ReMood is een broncodeoverdracht van Doom Legacy. Het biedt de klassieke Legacy Ervaring met nieuwe mogelijkheden en betere stabiliteit.

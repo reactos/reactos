@@ -1,0 +1,32 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Arquivo"
+	BEGIN
+		MENUITEM "&Abrir...", IDM_OPEN_FILE
+		MENUITEM "&Fechar", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "&Sair", IDM_EXIT
+	END
+	POPUP "A&juda"
+	BEGIN
+		MENUITEM "&Sobre...", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "Todos os formatos (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Executar"
+	IDS_TOOLTIP_STOP "Pausar"
+	IDS_TOOLTIP_EJECT "Ejetar"
+	IDS_TOOLTIP_BACKWARD "Pular Anterior"
+	IDS_TOOLTIP_SEEKBACK "Procurar Anterior"
+	IDS_TOOLTIP_SEEKFORW "Procurar Próximo"
+	IDS_TOOLTIP_FORWARD "Pular Próxima"
+	IDS_APPTITLE "ReactOS Multimedia Player"
+	IDS_PLAY "Executar"
+END

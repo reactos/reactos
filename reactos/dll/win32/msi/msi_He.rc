@@ -1,0 +1,39 @@
+/*
+ * Hebrew resources for MSI
+ *
+ * Copyright 2005 Mike McCormack
+ * Copyright 2010 Detlef Riekenberg
+ *
+ * Translated by Baruch Rutman
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "windef.h"
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
+	5 "הנתיב %s לא נמצא"
+	9 "הכנס דיסק %s"
+	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parameter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
+	11 "הזן איזו תיקיה מכילה את %s"
+	12 "מקור ההתקנה עבור התכונה חסר"
+	13 "כונן רשת עבור התכונה חסר"
+	14 "מהתקן מ:"
+	15 "בחר איזו תיקיה מכילה את %s"
+}

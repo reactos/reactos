@@ -1,0 +1,20 @@
+/* FILE:        applications/logoff/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2008-02-29
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "Ukončí sezení.\n\n\
+  /v\t\tZobrazí informace o provedených akcích.\n\
+  /?\t\tZobrazí tuto informaci.\n\n"
+
+IDS_LOGOFF_REMOTE, "Ukončuje se sezení na vzdáleném počítači."
+IDS_LOGOFF_LOCAL, "Ukončuje se současné sezení na tomto počítači."
+
+IDS_ILLEGAL_PARAM, "Neplatné parametry\n"
+END
+/* EOF */

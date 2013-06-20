@@ -1,0 +1,356 @@
+/*
+ * Copyright 2008 James Hawkins
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "objidl.idl";
+
+interface IAssemblyCache;
+interface IAssemblyCacheItem;
+interface IAssemblyEnum;
+interface IAssemblyName;
+
+typedef enum
+{
+    ASM_CACHE_ZAP       = 0x1,
+    ASM_CACHE_GAC       = 0x2,
+    ASM_CACHE_DOWNLOAD  = 0x4,
+    ASM_CACHE_ROOT      = 0x8,
+    ASM_CACHE_ROOT_EX   = 0x80
+} ASM_CACHE_FLAGS;
+
+typedef enum
+{
+    peNone      = 0x00000000,
+    peMSIL      = 0x00000001,
+    peI386      = 0x00000002,
+    peIA64      = 0x00000003,
+    peAMD64     = 0x00000004,
+    peARM       = 0x00000005,
+    peInvalid   = 0xffffffff
+} PEKIND;
+
+typedef enum _tagAssemblyComparisonResult
+{
+    ACR_Unknown,
+    ACR_EquivalentFullMatch,
+    ACR_EquivalentWeakNamed,
+    ACR_EquivalentFXUnified,
+    ACR_EquivalentUnified,
+    ACR_NonEquivalentVersion,
+    ACR_NonEquivalent,
+    ACR_EquivalentPartialMatch,
+    ACR_EquivalentPartialWeakNamed,
+    ACR_EquivalentPartialUnified,
+    ACR_EquivalentPartialFXUnified,
+    ACR_NonEquivalentPartialVersion
+} AssemblyComparisonResult;
+
+[
+    local,
+    object,
+    uuid(e707dcde-d1cd-11d2-bab9-00c04f8eceae),
+    pointer_default(unique)
+]
+interface IAssemblyCache : IUnknown
+{
+    typedef struct _FUSION_INSTALL_REFERENCE_
+    {
+        DWORD cbSize;
+        DWORD dwFlags;
+        GUID guidScheme;
+        LPCWSTR szIdentifier;
+        LPCWSTR szNonCannonicalData;
+    } FUSION_INSTALL_REFERENCE, *LPFUSION_INSTALL_REFERENCE;
+
+    typedef const FUSION_INSTALL_REFERENCE  *LPCFUSION_INSTALL_REFERENCE;
+
+    typedef struct _ASSEMBLY_INFO
+    {
+        ULONG cbAssemblyInfo;
+        DWORD dwAssemblyFlags;
+        ULARGE_INTEGER uliAssemblySizeInKB;
+        LPWSTR pszCurrentAssemblyPathBuf;
+        ULONG cchBuf;
+    } ASSEMBLY_INFO;
+
+    cpp_quote("#define IASSEMBLYCACHE_INSTALL_FLAG_REFRESH       0x00000001")
+    cpp_quote("#define IASSEMBLYCACHE_INSTALL_FLAG_FORCE_REFRESH 0x00000002")
+
+    cpp_quote("#define IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED 1")
+    cpp_quote("#define IASSEMBLYCACHE_UNINSTALL_DISPOSITION_STILL_IN_USE 2")
+    cpp_quote("#define IASSEMBLYCACHE_UNINSTALL_DISPOSITION_ALREADY_UNINSTALLED 3")
+    cpp_quote("#define IASSEMBLYCACHE_UNINSTALL_DISPOSITION_DELETE_PENDING 4")
+    cpp_quote("#define IASSEMBLYCACHE_UNINSTALL_DISPOSITION_HAS_INSTALL_REFERENCES 5")
+    cpp_quote("#define IASSEMBLYCACHE_UNINSTALL_DISPOSITION_REFERENCE_NOT_FOUND 6")
+
+    cpp_quote("#define QUERYASMINFO_FLAG_VALIDATE   0x00000001")
+    cpp_quote("#define QUERYASMINFO_FLAG_GETSIZE    0x00000002")
+
+    cpp_quote("#define ASSEMBLYINFO_FLAG_INSTALLED       0x00000001")
+    cpp_quote("#define ASSEMBLYINFO_FLAG_PAYLOADRESIDENT 0x00000002")
+
+    HRESULT UninstallAssembly(
+        [in] DWORD dwFlags,
+        [in] LPCWSTR pszAssemblyName,
+        [in] LPCFUSION_INSTALL_REFERENCE pRefData,
+        [out, optional] ULONG *pulDisposition);
+
+    HRESULT QueryAssemblyInfo(
+        [in] DWORD dwFlags,
+        [in] LPCWSTR pszAssemblyName,
+        [in, out] ASSEMBLY_INFO *pAsmInfo);
+
+    HRESULT CreateAssemblyCacheItem(
+        [in] DWORD dwFlags,
+        [in] PVOID pvReserved,
+        [out] IAssemblyCacheItem **ppAsmItem,
+        [in, optional] LPCWSTR pszAssemblyName);
+
+    HRESULT CreateAssemblyScavenger([out] IUnknown **ppUnkReserved);
+
+    HRESULT InstallAssembly(
+        [in] DWORD dwFlags,
+        [in] LPCWSTR pszManifestFilePath,
+        [in] LPCFUSION_INSTALL_REFERENCE pRefData);
+}
+
+[
+    local,
+    object,
+    uuid(9e3aaeb4-d1cd-11d2-bab9-00c04f8eceae),
+    pointer_default(unique)
+]
+interface IAssemblyCacheItem : IUnknown
+{
+    cpp_quote("#define STREAM_FORMAT_COMPLIB_MODULE    0")
+    cpp_quote("#define STREAM_FORMAT_COMPLIB_MANIFEST  1")
+    cpp_quote("#define STREAM_FORMAT_WIN32_MODULE      2")
+    cpp_quote("#define STREAM_FORMAT_WIN32_MANIFEST    4")
+
+    cpp_quote("#define IASSEMBLYCACHEITEM_COMMIT_FLAG_REFRESH       0x00000001")
+    cpp_quote("#define IASSEMBLYCACHEITEM_COMMIT_FLAG_FORCE_REFRESH 0x00000002")
+
+    cpp_quote("#define IASSEMBLYCACHEITEM_COMMIT_DISPOSITION_INSTALLED 1")
+    cpp_quote("#define IASSEMBLYCACHEITEM_COMMIT_DISPOSITION_REFRESHED 2")
+    cpp_quote("#define IASSEMBLYCACHEITEM_COMMIT_DISPOSITION_ALREADY_INSTALLED 3")
+
+    HRESULT CreateStream(
+        [in] DWORD dwFlags,
+        [in] LPCWSTR pszStreamName,
+        [in] DWORD dwFormat,
+        [in] DWORD dwFormatFlags,
+        [out] IStream **ppIStream,
+        [in, optional] ULARGE_INTEGER *puliMaxSize);
+
+    HRESULT Commit(
+        [in] DWORD dwFlags,
+        [out, optional] ULONG *pulDisposition);
+
+    HRESULT AbortItem();
+}
+
+[
+    local,
+    object,
+    uuid(CD193BC0-B4BC-11d2-9833-00C04FC31D2E),
+    pointer_default(unique)
+]
+interface IAssemblyName: IUnknown
+{
+    typedef [unique] IAssemblyName *LPASSEMBLYNAME;
+
+    typedef enum
+    {
+        CANOF_PARSE_DISPLAY_NAME = 0x1,
+        CANOF_SET_DEFAULT_VALUES = 0x2,
+        CANOF_VERIFY_FRIEND_ASSEMBLYNAME = 0x4,
+        CANOF_PARSE_FRIEND_DISPLAY_NAME = CANOF_PARSE_DISPLAY_NAME |
+                                          CANOF_VERIFY_FRIEND_ASSEMBLYNAME
+    } CREATE_ASM_NAME_OBJ_FLAGS;
+
+    typedef enum
+    {
+        ASM_NAME_PUBLIC_KEY = 0,
+        ASM_NAME_PUBLIC_KEY_TOKEN,
+        ASM_NAME_HASH_VALUE,
+        ASM_NAME_NAME,
+        ASM_NAME_MAJOR_VERSION,
+        ASM_NAME_MINOR_VERSION,
+        ASM_NAME_BUILD_NUMBER,
+        ASM_NAME_REVISION_NUMBER,
+        ASM_NAME_CULTURE,
+        ASM_NAME_PROCESSOR_ID_ARRAY,
+        ASM_NAME_OSINFO_ARRAY,
+        ASM_NAME_HASH_ALGID,
+        ASM_NAME_ALIAS,
+        ASM_NAME_CODEBASE_URL,
+        ASM_NAME_CODEBASE_LASTMOD,
+        ASM_NAME_NULL_PUBLIC_KEY,
+        ASM_NAME_NULL_PUBLIC_KEY_TOKEN,
+        ASM_NAME_CUSTOM,
+        ASM_NAME_NULL_CUSTOM,
+        ASM_NAME_MVID,
+        ASM_NAME_FILE_MAJOR_VERSION,
+        ASM_NAME_FILE_MINOR_VERSION,
+        ASM_NAME_FILE_BUILD_NUMBER,
+        ASM_NAME_FILE_REVISION_NUMBER,
+        ASM_NAME_RETARGET,
+        ASM_NAME_SIGNATURE_BLOB,
+        ASM_NAME_CONFIG_MASK,
+        ASM_NAME_ARCHITECTURE,
+        ASM_NAME_MAX_PARAMS
+    } ASM_NAME;
+
+    typedef enum
+    {
+        ASM_DISPLAYF_VERSION = 0x1,
+        ASM_DISPLAYF_CULTURE = 0x2,
+        ASM_DISPLAYF_PUBLIC_KEY_TOKEN = 0x4,
+        ASM_DISPLAYF_PUBLIC_KEY = 0x8,
+        ASM_DISPLAYF_CUSTOM = 0x10,
+        ASM_DISPLAYF_PROCESSORARCHITECTURE = 0x20,
+        ASM_DISPLAYF_LANGUAGEID = 0x40,
+        ASM_DISPLAYF_RETARGET = 0x80,
+        ASM_DISPLAYF_CONFIG_MASK = 0x100,
+        ASM_DISPLAYF_MVID = 0x200,
+
+        ASM_DISPLAYF_FULL = ASM_DISPLAYF_VERSION |
+                            ASM_DISPLAYF_CULTURE |
+                            ASM_DISPLAYF_PUBLIC_KEY_TOKEN |
+                            ASM_DISPLAYF_RETARGET |
+                            ASM_DISPLAYF_PROCESSORARCHITECTURE,
+    } ASM_DISPLAY_FLAGS;
+
+    typedef enum
+    {
+        ASM_CMPF_NAME               = 0x1,
+        ASM_CMPF_MAJOR_VERSION      = 0x2,
+        ASM_CMPF_MINOR_VERSION      = 0x4,
+        ASM_CMPF_BUILD_NUMBER       = 0x8,
+        ASM_CMPF_REVISION_NUMBER    = 0x10,
+        ASM_CMPF_VERSION = ASM_CMPF_MAJOR_VERSION |
+                           ASM_CMPF_MINOR_VERSION |
+                           ASM_CMPF_BUILD_NUMBER |
+                           ASM_CMPF_REVISION_NUMBER,
+        ASM_CMPF_PUBLIC_KEY_TOKEN   = 0x20,
+        ASM_CMPF_CULTURE            = 0x40,
+        ASM_CMPF_CUSTOM             = 0x80,
+        ASM_CMPF_DEFAULT            = 0x100,
+        ASM_CMPF_RETARGET           = 0x200,
+        ASM_CMPF_ARCHITECTURE       = 0x400,
+        ASM_CMPF_CONFIG_MASK        = 0x800,
+        ASM_CMPF_MVID               = 0x1000,
+        ASM_CMPF_SIGNATURE          = 0x2000,
+        ASM_CMPF_IL_ALL = ASM_CMPF_NAME |
+                          ASM_CMPF_VERSION |
+                          ASM_CMPF_PUBLIC_KEY_TOKEN |
+                          ASM_CMPF_CULTURE,
+        ASM_CMPF_IL_NO_VERSION = ASM_CMPF_NAME |
+                                 ASM_CMPF_PUBLIC_KEY_TOKEN |
+                                 ASM_CMPF_CULTURE
+    } ASM_CMP_FLAGS;
+
+    HRESULT SetProperty(
+        [in] DWORD PropertyId,
+        [in] LPVOID pvProperty,
+        [in] DWORD cbProperty);
+
+    HRESULT GetProperty(
+        [in] DWORD PropertyId,
+        [out] LPVOID pvProperty,
+        [in, out] LPDWORD pcbProperty);
+
+    HRESULT Finalize();
+
+    HRESULT GetDisplayName(
+        [out] LPOLESTR szDisplayName,
+        [in, out] LPDWORD pccDisplayName,
+        [in] DWORD dwDisplayFlags);
+
+    HRESULT Reserved(
+        [in] REFIID refIID,
+        [in] IUnknown *pUnkReserved1,
+        [in] IUnknown *pUnkReserved2,
+        [in] LPCOLESTR szReserved,
+        [in] LONGLONG llReserved,
+        [in] LPVOID pvReserved,
+        [in] DWORD cbReserved,
+        [out] LPVOID *ppReserved);
+
+    HRESULT GetName(
+        [in, out] LPDWORD lpcwBuffer,
+        [out] WCHAR *pwzName);
+
+    HRESULT GetVersion(
+        [out] LPDWORD pdwVersionHi,
+        [out] LPDWORD pdwVersionLow);
+
+    HRESULT IsEqual(
+        [in] IAssemblyName *pName,
+        [in] DWORD dwCmpFlags);
+
+    HRESULT Clone([out] IAssemblyName **pName);
+}
+
+[
+    local,
+    object,
+    uuid(21b8916c-f28e-11d2-a473-00c04f8ef448),
+    pointer_default(unique)
+]
+interface IAssemblyEnum : IUnknown
+{
+    HRESULT GetNextAssembly(
+        [in] LPVOID pvReserved,
+        [out] IAssemblyName **ppName,
+        [in] DWORD dwFlags);
+
+    HRESULT Reset(void);
+
+    HRESULT Clone([out] IAssemblyEnum **ppEnum);
+}
+
+[
+    local,
+    object,
+    uuid(582dac66-e678-449f-aba6-6faaec8a9394),
+    pointer_default(unique)
+]
+interface IInstallReferenceItem : IUnknown
+{
+
+}
+
+[
+    local,
+    object,
+    uuid(56b1a988-7c0c-4aa2-8639-c3eb5a90226f),
+    pointer_default(unique)
+]
+interface IInstallReferenceEnum : IUnknown
+{
+
+}
+
+cpp_quote("HRESULT WINAPI ClearDownloadCache(void);")
+cpp_quote("HRESULT WINAPI CompareAssemblyIdentity(LPCWSTR,BOOL,LPCWSTR,BOOL,BOOL*,AssemblyComparisonResult*);")
+cpp_quote("HRESULT WINAPI CreateAssemblyCache(IAssemblyCache**,DWORD);")
+cpp_quote("HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum**,IUnknown*,IAssemblyName*,DWORD,LPVOID);")
+cpp_quote("HRESULT WINAPI CreateAssemblyNameObject(LPASSEMBLYNAME*,LPCWSTR,DWORD,LPVOID);")
+cpp_quote("HRESULT WINAPI CreateInstallReferenceEnum(IInstallReferenceEnum**,IAssemblyName*,DWORD,LPVOID);")
+cpp_quote("HRESULT WINAPI GetAssemblyIdentityFromFile(LPCWSTR,REFIID,IUnknown**);")
+cpp_quote("HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS,LPWSTR,PDWORD);")

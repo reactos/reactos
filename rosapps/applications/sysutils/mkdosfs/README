@@ -1,0 +1,50 @@
+mkdosfs - Make DOS file system utilty.
+
+
+I wrote this, partially to complement the dosfsck utility written by Werner
+Almesberger (who graciously gave me some pointers when I asked for some
+advice about writing this code), and also to avoid me having to boot DOS
+just to create data partitions (I use Linux to back up DOS :-) ).
+
+The code is really derived from Remy Card's mke2fs utility - I used this as a
+framework, although all of the file system specific stuff was removed and the
+DOS stuff inserted.  I believe originally mke2fs was based on Linus' mkfs
+code, hence the acknowledgements in the source code.
+
+Neither Remy nor Linus have had any involvement with mkdosfs, so if there are
+any bugs they're almost certainly "all my own work".
+
+The code has been available for ftp since 1st September 1993, and I have yet
+to receive any bug reports from users.  I don't know of any bugs, but if you
+do find a bug or have any constructive comments, please mail me!
+
+The only bug I found with version 0.1 was an obscure fault that could lead
+to an invalid (for MS-DOS, not Linux's dos fs) number of sectors used in the
+file allocation table(s).
+
+
+Dave Hudson
+dave@humbug.demon.co.uk
+
+
+FAT32 support
+=============
+
+mkdosfs now can also create filesystems in the new FAT32 format. To do
+this, give mkdosfs a "-F 32" option. FAT32 isn't selected
+automatically (yet), even if very large clusters are needed with
+FAT16. With FAT32 you have two additional options, -R to select the
+number of reserved sectors (usually 32), and -b to select the location
+of the backup boot sector (default 6). Of course such a backup is
+created, as well as the new info sector. On FAT32, the root directory
+is always created as a cluster chain. Sorry, there's no switch to
+generate an old static root dir.
+
+One bigger bug fix besides FAT32 was to reject filesystems that need a
+16 bit FAT to fit all possible clusters, but the bigger FAT needs some
+more sectors, so the total number of clusters drop below the border
+where MS-DOS expects a 12 bit FAT. So such filesystems would be FAT16,
+but interpreted as FAT32 by DOS. The fix is to reduce filesystem size
+a bit.
+
+- Roman <Roman.Hodek@informatik.uni-erlangen.de>

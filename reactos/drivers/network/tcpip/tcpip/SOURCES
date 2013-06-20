@@ -1,0 +1,28 @@
+TARGETNAME=tcpip
+TARGETPATH=..\objects
+TARGETTYPE=EXPORT_DRIVER
+
+TARGETLIBS=$(DDK_LIB_PATH)\tdi.lib \
+           $(DDK_LIB_PATH)\ndis.lib \
+           ..\objects\*\free\datagram.lib \
+           ..\objects\*\free\datalink.lib \
+           ..\objects\*\free\network.lib \
+           ..\objects\*\free\rawip.lib \
+           ..\objects\*\free\tcp.lib \
+           ..\objects\*\free\udp.lib
+
+INCLUDES=..\include;$(BASEDIR)\INC;..\..\..\..\include\net
+
+
+SOURCES= address.c \
+         checksum.c \
+	     dispatch.c \
+         fileobjs.c \
+         info.c \
+         main.c \
+         pool.c \
+         routines.c \
+         RESOURCE.RC
+
+MSC_WARNING_LEVEL=/W3 /WX
+

@@ -1,0 +1,73 @@
+/*
+ * crypt32 dll resources
+ *
+ * Copyright (C) 2006 Juan Lang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "cryptres.h"
+
+#include "version.rc"
+
+#ifdef LANGUAGE_EN_US
+    #include "crypt32_En.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "crypt32_Ko.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "crypt32_Pl.rc"
+#endif
+
+/* UTF-8 */
+#ifdef LANGUAGE_DE_DE
+    #include "crypt32_De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "crypt32_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "crypt32_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "crypt32_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "crypt32_It.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "crypt32_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "crypt32_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "crypt32_No.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "crypt32_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "crypt32_Ro.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "crypt32_Sv.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "crypt32_Uk.rc"
+#endif

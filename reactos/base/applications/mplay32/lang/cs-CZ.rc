@@ -1,0 +1,35 @@
+/* FILE:        base/applications/mplay32/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2009-08-03
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Soubor"
+	BEGIN
+		MENUITEM "&Otevřít...", IDM_OPEN_FILE
+		MENUITEM "&Zavřít", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "&Ukončit", IDM_EXIT
+	END
+	POPUP "&Nápověda"
+	BEGIN
+		MENUITEM "&O programu...", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "Všechny podporované (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Přehrát"
+	IDS_TOOLTIP_STOP "Zastavit"
+	IDS_TOOLTIP_EJECT "Vysunout"
+	IDS_TOOLTIP_BACKWARD "Přeskočit zpět"
+	IDS_TOOLTIP_SEEKBACK "Posunout zpět"
+	IDS_TOOLTIP_SEEKFORW "Posunout vpřed"
+	IDS_TOOLTIP_FORWARD "Přeskočit vpřed"
+	IDS_APPTITLE "ReactOS Přehrávač multimédií"
+	IDS_PLAY "Přehrát"
+END

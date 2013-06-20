@@ -1,0 +1,39 @@
+/*
+ * Lithuanian resources for MSI
+ *
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "windef.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+	4 "Nepavyko atverti nurodyto diegimo paketo. Patikrinkite failo kelią ir mėginkite dar kartą."
+	5 "kelias %s nerastas"
+	9 "įdėkite diską %s"
+	10 "Windows diegimo programa %s\n\nNaudojimas:\nmsiexec komanda {būtinas parametras} [nebūtinas parametras]\n\nĮdiegti produktą:\n\t/i {paketas|produkto_kodas} [savybė]\n\t/package {paketas|produkto_kodas} [savybė]\n\t/a paketas [savybė]\nTaisyti įdiegimą:\n\t/f[p|o|e|d|c|a|u|m|s|v] {paketas|produkto_kodas}\nPašalinti produktą:\n\t/uninstall {paketas|produkto_kodas} [savybė]\n\t/x {paketas|produkto_kodas} [savybė]\nSkelbti produktą:\n\t/j[u|m] paketas [/t pakeitimas] [/g kalbos_identifikatorius]\nPritaikyti pataisą:\n\t/p pataisos_paketas [savybė]\n\t/p pataisos_paketas /a paketas [savybė]\nŽurnalo ir sąsajos modifikatoriai aukščiau išvardintoms komandoms:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] žurnalo_failas\n\t/q{|n|b|r|f|n+|b+|b-}\nRegistruoti MSI tarnybą:\n\t/y\nIšregistruoti MSI tarnybą:\n\t/z\nParodyti šią pagalbą:\n\t/help\n\t/?\n"
+	11 "įveskite aplanką, kuris turi %s"
+	12 "trūksta diegimo šaltinio komponentui"
+	13 "trūksta tinklo disko komponentui"
+	14 "komponentas iš:"
+	15 "parinkite aplanką, kuris turi %s"
+}

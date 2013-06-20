@@ -1,0 +1,25 @@
+/*
+ *         translated by Caemyr - Olaf Siejka (Dec,2007)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "FIND: Wyświetla wszystkie linie danego pliku, zawierające szukany ciąg znaków.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""ciąg znaków"" [ plik... ]\n\
+    /C  Oblicza w ilu liniach pojawił się szukany ciąg znaków\n\
+    /I  Ignoruje wielkość liter\n\
+    /N  Numeruje wyświetlane linie, zaczynając od 1\n\
+    /V  Wyświetla te linie, które nie zawierają szukanego ciągu znaków"
+
+IDS_NO_SUCH_FILE, "FIND: %s: Plik nie został znaleziony\n"
+
+IDS_CANNOT_OPEN, "FIND: %s: Nie można otworzyć pliku\n"
+
+END

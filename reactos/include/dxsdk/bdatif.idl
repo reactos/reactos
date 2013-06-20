@@ -1,0 +1,272 @@
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+import "strmif.idl";
+import "tuner.idl";
+import "bdaiface.idl";
+#endif
+
+interface IMPEG2_TIF_CONTROL;
+interface IATSCChannelInfo;
+interface IMPEG2PIDMap;
+
+[
+    object,
+    uuid(DFEF4A68-EE61-415f-9CCB-CD95F2F98A3A),
+    pointer_default(unique)
+]
+interface IBDA_TIF_REGISTRATION : IUnknown
+{
+    HRESULT
+    RegisterTIFEx(
+        [in]  IPin * pTIFInputPin,
+        [in, out] ULONG * ppvRegistrationContext,
+        [in, out] IUnknown ** ppMpeg2DataControl);
+
+    HRESULT
+    UnregisterTIF(
+        [in] ULONG pvRegistrationContext);
+}
+
+[
+    object,
+    uuid(F9BAC2F9-4149-4916-B2EF-FAA202326862),
+    pointer_default(unique)
+]
+interface IMPEG2_TIF_CONTROL : IUnknown
+{
+    HRESULT
+    RegisterTIF(
+        [in]  IUnknown * pUnkTIF,
+        [in, out] ULONG * ppvRegistrationContext);
+
+    HRESULT
+    UnregisterTIF(
+        [in] ULONG pvRegistrationContext);
+
+    HRESULT
+    AddPIDs(
+        [in] ULONG ulcPIDs,
+        [in] ULONG * pulPIDs);
+
+    HRESULT
+    DeletePIDs(
+        [in] ULONG ulcPIDs,
+        [in] ULONG * pulPIDs);
+
+    HRESULT
+    GetPIDCount(
+        [out] ULONG * pulcPIDs);
+
+    HRESULT
+    GetPIDs(
+        [out] ULONG * pulcPIDs,
+        [out] ULONG * pulPIDs);
+}
+
+[
+    object,
+    uuid(A3B152DF-7A90-4218-AC54-9830BEE8C0B6),
+    pointer_default(unique)
+]
+interface ITuneRequestInfo : IUnknown
+{
+    HRESULT
+    GetLocatorData(
+        [in]  ITuneRequest *Request);
+
+    HRESULT
+    GetComponentData(
+        [in]  ITuneRequest *CurrentRequest);
+
+    HRESULT
+    CreateComponentList(
+        [in]  ITuneRequest *CurrentRequest);
+
+    HRESULT
+    GetNextProgram (
+        [in]  ITuneRequest *CurrentRequest,
+        [out, retval] ITuneRequest **TuneRequest);
+
+    HRESULT
+    GetPreviousProgram(
+        [in]  ITuneRequest *CurrentRequest,
+        [out, retval] ITuneRequest **TuneRequest);
+
+    HRESULT
+    GetNextLocator(
+        [in]  ITuneRequest *CurrentRequest,
+        [out, retval] ITuneRequest **TuneRequest);
+
+    HRESULT
+    GetPreviousLocator(
+        [in]  ITuneRequest *CurrentRequest,
+        [out, retval] ITuneRequest **TuneRequest);
+}
+
+[
+    object,
+    uuid(EFDA0C80-F395-42c3-9B3C-56B37DEC7BB7),
+    pointer_default(unique)
+]
+interface IGuideDataEvent : IUnknown
+{
+    HRESULT
+    GuideDataAcquired();
+
+    HRESULT ProgramChanged(
+        [in] VARIANT varProgramDescriptionID);
+
+    HRESULT ServiceChanged(
+        [in] VARIANT varServiceDescriptionID);
+
+    HRESULT ScheduleEntryChanged(
+        [in] VARIANT varScheduleEntryDescriptionID);
+
+    HRESULT ProgramDeleted(
+        [in] VARIANT varProgramDescriptionID);
+
+    HRESULT ServiceDeleted(
+        [in] VARIANT varServiceDescriptionID);
+
+    HRESULT ScheduleDeleted(
+        [in] VARIANT varScheduleEntryDescriptionID);
+}
+
+[
+    object,
+    uuid(88EC5E58-BB73-41d6-99CE-66C524B8B591),
+    pointer_default(unique)
+]
+interface IGuideDataProperty : IUnknown
+{
+    HRESULT 
+    get_Name(
+        [out] BSTR *pbstrName);
+
+    HRESULT
+    get_Language(
+        [out] long *idLang);
+
+    HRESULT
+    get_Value(
+        [out] VARIANT *pvar);
+}
+
+[
+    object,
+    uuid(AE44423B-4571-475c-AD2C-F40A771D80EF),
+    pointer_default(unique)
+]
+interface IEnumGuideDataProperties : IUnknown
+{
+    HRESULT
+    Next(
+        [in] unsigned long celt, 
+        [out] IGuideDataProperty **ppprop,
+        [out] unsigned long *pcelt);
+
+    HRESULT
+    Skip(
+        [in] unsigned long celt);
+
+    HRESULT
+    Reset();
+
+    HRESULT
+    Clone(
+        [out] IEnumGuideDataProperties **ppenum);
+}
+
+[
+    object,
+    uuid(1993299C-CED6-4788-87A3-420067DCE0C7),
+    pointer_default(unique)
+]
+interface IEnumTuneRequests : IUnknown
+{
+    HRESULT
+    Next(
+        [in] unsigned long celt,
+        [out] ITuneRequest **ppprop,
+        [out] unsigned long *pcelt);
+
+    HRESULT
+    Skip(
+        [in] unsigned long celt);
+
+    HRESULT
+    Reset();
+
+    HRESULT
+    Clone(
+        [out] IEnumTuneRequests **ppenum);
+}
+
+[
+    object,
+    uuid(61571138-5B01-43cd-AEAF-60B784A0BF93),
+    pointer_default(unique)
+]
+interface IGuideData : IUnknown
+{
+    HRESULT
+    GetServices(
+        [out, retval] IEnumTuneRequests ** ppEnumTuneRequests);
+
+    HRESULT
+    GetServiceProperties(
+        [in] ITuneRequest * pTuneRequest,
+        [out, retval] IEnumGuideDataProperties ** ppEnumProperties);
+
+    HRESULT
+    GetGuideProgramIDs(
+        [out, retval] IEnumVARIANT ** pEnumPrograms);
+
+    HRESULT
+    GetProgramProperties(
+        [in] VARIANT varProgramDescriptionID,
+        [out, retval] IEnumGuideDataProperties ** ppEnumProperties);
+
+    HRESULT
+    GetScheduleEntryIDs(
+        [out, retval] IEnumVARIANT ** pEnumScheduleEntries);
+
+    HRESULT
+    GetScheduleEntryProperties(
+        [in] VARIANT varScheduleEntryDescriptionID,
+        [out, retval] IEnumGuideDataProperties ** ppEnumProperties);
+}
+
+[
+    object,
+    uuid(4764ff7c-fa95-4525-af4d-d32236db9e38),
+    pointer_default(unique)
+]
+interface IGuideDataLoader : IUnknown
+{
+    HRESULT Init([in] IGuideData *pGuideStore);
+    HRESULT Terminate();
+};
+
+[
+    uuid(8224A083-7F8C-432D-B83E-3C5E9BDE3528),
+    version(1.0),
+]
+library PSISLOADLib
+{
+#ifndef __midl
+    importlib("stdole32.tlb");
+#endif
+    importlib("stdole2.tlb");
+
+    [
+        uuid(14EB8748-1753-4393-95AE-4F7E7A87AAD6),
+        helpstring("TIFLoad Class")
+    ]
+    coclass TIFLoad
+    {
+        interface IGuideDataLoader;
+        interface IGuideDataEvent;
+    };
+};
+

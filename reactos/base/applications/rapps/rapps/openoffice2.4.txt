@@ -1,0 +1,67 @@
+﻿; UTF-8
+
+[Section]
+Name = OpenOffice 2.4
+Version = 2.4.3
+Licence = LGPL
+Description = THE Open Source Office Suite.
+Size = 113MB
+Category = 6
+URLSite = http://www.openoffice.org/
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/stable/2.4.3/OOo_2.4.3_Win32Intel_install_en-US.exe
+CDPath = none
+
+[Section.0407]
+Description = DIE Open Source Office Suite.
+URLSite = http://de.openoffice.org/
+Size = 114.25MB
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/de/2.4.3/OOo_2.4.3_Win32Intel_install_de.exe
+
+[Section.040a]
+Description = La suite de ofimática de código abierto.
+URLSite = http://es.openoffice.org/
+Size = 113.87MB
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/es/2.4.3/OOo_2.4.3_Win32Intel_install_es.exe
+
+[Section.040c]
+Version = 2.4.2
+Description = LA suite bureautique open source.
+URLSite = http://fr.openoffice.org/
+Size = 114 Mo
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/fr/2.4.2/OOo_2.4.2_Win32Intel_install_fr.exe
+
+[Section.0410]
+URLSite = http://it.openoffice.org/
+Size = 113.79MB
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/it/2.4.3/OOo_2.4.3_Win32Intel_install_it.exe
+
+[Section.0413]
+Version = 2.4.2
+URLSite = http://nl.openoffice.org/
+Description = Open-bron Office Pakket.
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/nl/2.4.2/OOo_2.4.2_Win32Intel_install_nl.exe
+Size = 113.8MB
+
+[Section.0415]
+Version = 2.4.2
+URLSite = http://pl.openoffice.org/
+Description = Otwarty pakiet biurowy.
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/pl/2.4.2/OOo_2.4.2_Win32Intel_install_pl.exe
+Size = 113.92MB
+
+[Section.0418]
+Description = Suita de aplicații de birotică open-source.
+Size = 113 Mo
+
+[Section.0422]
+URLSite = http://ua.openoffice.org/
+Description = Відкритий офісний пакет.
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/ru/2.4.3/OOo_2.4.3_Win32Intel_install_ru.exe
+Size = 114.76MB
+
+[Section.0813]
+Version = 2.4.2
+URLSite = http://nl.openoffice.org/
+Description = Open-bron Office Pakket.
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/nl/2.4.2/OOo_2.4.2_Win32Intel_install_nl.exe
+Size = 113.8MB

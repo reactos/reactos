@@ -1,0 +1,274 @@
+/*
+ * Copyright 2009 Andrew Hill
+ *           2011 Fulea Ștefan
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
+
+IDM_CABINET_CONTEXTMENU MENUEX
+BEGIN
+    POPUP "",                                        264,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "Butoane &standard",                   IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
+        MENUITEM "Bara de &adresă",                     IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
+        MENUITEM "Butoane a&drese",                     IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
+        MENUITEM "", -1,                                MFT_SEPARATOR
+        MENUITEM "&Fixează panourile de instrumente",   IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
+        MENUITEM "Parti&cularizare…",                   IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Etichete de text",                   IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
+        MENUITEM "Butonul de &navigare",                IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
+    END
+END
+
+IDM_CABINET_MAINMENU MENUEX
+BEGIN
+    POPUP "&Fișier",                                FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "",                                -1, MFT_SEPARATOR
+        MENUITEM "I&eșire",                         IDM_FILE_CLOSE
+    END
+    POPUP "&Editare",                               FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "",                                -1, MFT_SEPARATOR
+    END
+    POPUP "&Afișare",                               FCIDM_MENU_VIEW
+    BEGIN
+        POPUP "Ins&trumente",                       IDM_VIEW_TOOLBARS
+        BEGIN
+            MENUITEM "",                            -1, MFT_SEPARATOR
+        END
+        MENUITEM "Bară de &stare",                  IDM_VIEW_STATUSBAR
+        POPUP "Bară de &explorare",                 IDM_VIEW_EXPLORERBAR
+        BEGIN
+            MENUITEM "&Căutare\tCtrl+E",            IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Favorite\tCtrl+I",           IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Media",                      IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Istoric\tCtrl+H",            IDM_EXPLORERBAR_HISTORY
+            MENUITEM "&Dosare",                     IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "",                            IDM_EXPLORERBAR_SEPARATOR
+        END
+        MENUITEM "",                                FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP "&Navigare",                          FCIDM_MENU_EXPLORE
+        BEGIN
+            MENUITEM "Î&napoi\tAlt+Left Arrow",     IDM_GOTO_BACK
+            MENUITEM "Îna&poi\tAlt+Right Arrow",    IDM_GOTO_FORWARD
+            MENUITEM "Un nivel în s&us",            IDM_GOTO_UPONELEVEL
+            MENUITEM "",                            -1, MFT_SEPARATOR
+            MENUITEM "Pagină &inițială\tAlt+Home",  IDM_GOTO_HOMEPAGE
+        END
+        MENUITEM "Î&mprospătare",                   IDM_VIEW_REFRESH
+    END
+    POPUP "Fa&vorite",                              FCIDM_MENU_FAVORITES
+    BEGIN
+        MENUITEM "&Adăugare la favorite…",          IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&Organizare favorite…",           IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "",                                -1, MFT_SEPARATOR
+        MENUITEM "(gol)",                           IDM_FAVORITES_EMPTY
+    END
+    POPUP "Ins&trumente",                           FCIDM_MENU_TOOLS
+    BEGIN
+        MENUITEM "Creare unitate de &rețea…",       IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "&Debranșare unitate de rețea…",   IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Sincronizare…",                  IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "",                                -1, MFT_SEPARATOR
+        MENUITEM "&Opțiuni de dosar…",              IDM_TOOLS_FOLDEROPTIONS
+    END
+    POPUP "&?",                                     FCIDM_MENU_HELP
+    BEGIN
+        MENUITEM "Este această copie a ReactOS &legală?",    IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "&Despre…",                        IDM_HELP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
+STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Opțiuni de te&xt:",-1,4,2,48,15
+    COMBOBOX                 IDC_TEXTOPTIONS,52,0,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Opțiuni pictogra&me:",-1,4,20,48,15
+    COMBOBOX                 IDC_ICONOPTIONS,52,18,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATORS ACCELERATORS
+BEGIN
+    VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, NOINVERT
+    VK_F5,          IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
+    "R",            IDM_VIEW_REFRESH,                   VIRTKEY, CONTROL, NOINVERT
+    VK_HOME,        IDM_GOTO_HOMEPAGE,                  VIRTKEY, ALT, NOINVERT
+    "D",            IDM_FAVORITES_ADDTOFAVORITES,       VIRTKEY, CONTROL, NOINVERT
+    "B",            IDM_FAVORITES_ORGANIZEFAVORITES,    VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT,        IDM_GOTO_BACK,                      VIRTKEY, ALT
+    VK_RIGHT,       IDM_GOTO_FORWARD,                   VIRTKEY, ALT
+    "W",            IDM_FILE_CLOSE,                     VIRTKEY, CONTROL, NOINVERT
+    "E",            IDM_EXPLORERBAR_SEARCH,             VIRTKEY, CONTROL, NOINVERT
+    "I",            IDM_EXPLORERBAR_FAVORITES,          VIRTKEY, CONTROL, NOINVERT
+    "H",            IDM_EXPLORERBAR_HISTORY,            VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+BEGIN
+    800                       "Conține comenzile de selecțiie."
+END
+
+STRINGTABLE
+BEGIN
+    864                       "Conține comenzile de editare."
+END
+
+STRINGTABLE
+BEGIN
+    928                       "Conține comenzile aferente afișării."
+END
+
+STRINGTABLE
+BEGIN
+    992                       "Conține comenzile aferente instrumentelor."
+END
+
+STRINGTABLE
+BEGIN
+    1056                      "Conține comenzi de informare."
+END
+
+STRINGTABLE
+BEGIN
+    9025                      "Închide fereastra."
+    9026                      "Deplasează în sus cu un nivel."
+END
+
+STRINGTABLE
+BEGIN
+    9121                      "Conectează o unitate de rețea."
+    9122                      "Deconectează o unitate de rețea."
+END
+
+STRINGTABLE
+BEGIN
+    9250                      "Afișează informațiile de program, versiune, și drepturile de autor."
+    9252                      "Afișează informațiile de depanare."
+END
+
+STRINGTABLE
+BEGIN
+    9281                      "Navigare la pagina precedentă."
+    9282                      "Navigare la pagina următoare."
+    9283                      "Permite modificarea preferințelor."
+    9285                      "Navigare la pagina inițială."
+END
+
+STRINGTABLE
+BEGIN
+    9362                      "Deschide dosarul Favorite."
+    9363                      "Adaugă pagina curentă în lista Favorite."
+END
+
+STRINGTABLE
+BEGIN
+    9505                      "Afișează sau ascunde panouri."
+    9506                      "Afișează sau ascunde bara de stare."
+    9508                      "Afișează panoul butoanelor standard."
+    9509                      "Afișează bara de adresă."
+    9510                      "Afișează panoul Adrese rapide."
+    9516                      "Fixează dimensiunea și poziția panourilor."
+END
+
+STRINGTABLE
+BEGIN
+    9533                      "Particularizează panoul."
+END
+
+STRINGTABLE
+BEGIN
+    9552                      "Afișează sau ascunde panoul Explorare."
+    9553                      "Afișează panoul Căutare."
+    9554                      "Afișează panoul Favorite."
+    9555                      "Afișează panoul Istoric."
+    9557                      "Afișează panoul Dosare."
+    9559                      "Afișează panoul Media."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SMALLICONS            "Pictograme mici"
+    IDS_LARGEICONS            "Pictograme mari"
+    IDS_SHOWTEXTLABELS        "Afișează etichete text"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOTEXTLABELS          "Fără etichete text"
+    IDS_SELECTIVETEXTONRIGHT  "Text selectiv la dreapta"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_GOBUTTONLABEL         "|Salt||"
+    IDS_GOBUTTONTIPTEMPLATE   "Salt la „%s”"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCHLABEL           "Caută"
+    IDS_ADDRESSBANDLABEL      "A&dresă"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_FOLDERSLABEL          "Dosare"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HISTORYTEXT           "&Istoric\tCtrl+H"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UP                    "Sus"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BACK                  "Înapoi"
+    IDS_FORWARD               "Înainte"
+END
+
+

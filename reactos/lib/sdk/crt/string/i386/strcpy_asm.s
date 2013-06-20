@@ -1,0 +1,4 @@
+
+#include "tcscpy.inc"
+
+/* EOF */

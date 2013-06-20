@@ -1,0 +1,66 @@
+﻿; UTF-8
+
+[Section]
+Name = Mozilla Firefox 3.0
+Version = 3.0.19
+Licence = MPL/GPL/LGPL
+Description = The most popular and one of the best free Web Browsers out there.
+Size = 7.16MB
+Category = 5
+URLSite = http://www.mozilla.org/en-US/
+URLDownload = http://svn.reactos.org/packages/Firefox%20Setup%203.0.19.exe
+CDPath = none
+
+[Section.0405]
+Description = Nejpopulárnější a jeden z nejlepších svobodných webových prohlížečů.
+URLSite = http://www.mozilla-europe.org/cs/
+
+[Section.0407]
+Description = Der populärste und einer der besten freien Webbrowser.
+URLSite = http://www.mozilla-europe.org/de/
+
+[Section.040a]
+Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
+URLSite = http://www.mozilla-europe.org/es/
+
+[Section.040c]
+Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
+Size = 7,16 Mo
+URLSite = http://www.mozilla-europe.org/fr/
+
+[Section.0410]
+Description = Il più popolare e uno dei migliori web browser gratuiti.
+URLSite = http://www.mozilla-europe.org/it/
+
+[Section.0413]
+Description = De meest populaire en een van de beste gratis Web browsers.
+URLSite = http://www.mozilla-europe.org/nl/
+
+[Section.0414]
+Description = Mest populære og best også gratis nettleserene der ute.
+URLSite = http://www.mozilla-europe.org/no/
+
+[Section.0415]
+Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
+URLSite = http://www.mozilla-europe.org/pl/
+
+[Section.0418]
+Description = Cel mai popular și unul dintre cele mai bune navigatoare web gratuite existente.
+Size = 7,16 Mo
+URLSite = http://www.mozilla-europe.org/ro/
+
+[Section.0419]
+Description = Один из самых популярных и лучших бесплатных браузеров.
+URLSite = http://www.mozilla-europe.org/ru/
+
+[Section.041b] 
+Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
+URLSite = http://www.mozilla-europe.org/sk/
+
+[Section.0422]
+Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
+URLSite = http://www.mozilla-europe.org/uk/
+
+[Section.0813]
+Description = De meest populaire en een van de beste gratis Web browsers.
+URLSite = http://www.mozilla-europe.org/nl/

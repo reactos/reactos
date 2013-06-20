@@ -1,0 +1,72 @@
+/*
+ * PROJECT:     ReactOS Magnifier
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/magnify/lang/zh-CN.rc
+ * PURPOSE:     Chinese (Simplified) Language File for Magnifier
+ * TRANSLATOR:  Elton Chung aka MfldElton <elton328@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDC_MAGNIFIER MENU
+BEGIN
+    POPUP "档案(&F)"
+    BEGIN
+        MENUITEM "结束(&X)",                       IDM_EXIT
+        MENUITEM "选项(&O)",                       IDM_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "关于(&A)...",                    IDM_ABOUT
+    END
+END
+
+IDC_MAGNIFIER ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "关于"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_ICON,IDC_MYICON,14,9,20,20
+    LTEXT           "放大镜版本 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "版权所有 (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
+    PUSHBUTTON      "确定",IDOK,162,48,50,14
+END
+
+IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "放大镜设定"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "结束",IDOK,96,161,50,14
+    PUSHBUTTON      "帮助",IDC_BUTTON_HELP,38,161,50,14
+    LTEXT           "放大倍数：",IDC_STATIC,6,8,68,8
+    COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "追踪",IDC_STATIC,7,25,139,59
+    GROUPBOX        "展示",IDC_STATIC,7,87,139,57
+    CONTROL         "跟随滑鼠游标",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
+    CONTROL         "跟随键盘焦点",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
+    CONTROL         "跟随文本编辑",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
+    CONTROL         "色彩对换",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
+    CONTROL         "开始时隐藏",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
+    CONTROL         "显示放大镜",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
+END
+
+IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "ReactOS 放大镜"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,193,76,50,14
+    ICON            IDI_ICON,IDC_STATIC,7,17,20,20
+    LTEXT           "放大镜是为有轻微视觉障碍的用户提供的一个最低限度的功能。大多数有视觉障碍的用户需要一个较高功能性的放大镜作日常使用。",IDC_STATIC,36,7,207,33
+    CONTROL         "不要再次显示此讯息",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE           "放大镜"
+END

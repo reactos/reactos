@@ -1,0 +1,74 @@
+/* FILE:        dll/cpl/appwiz/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2010-03-14
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Create link"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Text1", -1, 115, 15, 160, 24
+	LTEXT "Text2", -1, 115, 35, 160, 17
+END
+
+IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Create link"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Text1",-1,10,0,225,40
+	LTEXT "Text2",-1,10,40,120,20
+	LTEXT "Text3",-1,10,55,120,20
+END
+
+IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Vytvo¯it z·stupce"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Tento pr˘vodce pom˘ûe s vytvo¯enÌm z·stupc˘ na mÌstnÌ\nnebo sÌùovÈ programy, soubory, sloûky, poËÌtaËe nebo\ninternetovÈ adresy.", -1, 120, 15, 200, 30
+  LTEXT "Zadejte umÌstÏnÌ poloûky:", -1, 120, 50, 120, 10
+  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+  PUSHBUTTON "Proch·zet...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+  LTEXT "PokraËujte kliknutÌm na DalöÌ.", -1, 120, 97, 162, 10
+END
+
+IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Zvolte n·zev programu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "&Zadejte n·zev tohoto z·stupce:", -1, 120, 15, 150, 10
+  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+  LTEXT "KliknutÌm na DokonËit vytvo¯Ìte z·stupce.", -1, 118, 97, 178, 17
+END
+
+STRINGTABLE
+BEGIN
+	IDS_CPLSYSTEMNAME "P¯idat a odebrat programy"
+	IDS_CPLSYSTEMDESCRIPTION "Nastavuje programy a vytv·¯Ì z·stupce."
+    IDS_CREATE_SHORTCUT "Vytvo¯it z·stupce"
+    IDS_ERROR_NOT_FOUND "Soubor %s nebyl nalezen."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DOWNLOADING     "Downloading..."
+    IDS_INSTALLING      "Installing..."
+    IDS_INVALID_SHA     "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
+END
+
+ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Wine Gecko Installer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Wine could not find a Gecko package which is needed for applications embedding HTML to work correctly. Wine can automatically download and install it for you.\n\nNote: it is recommended to use your distribution's packages instead. See <a href=""http://wiki.winehq.org/Gecko"">http://wiki.winehq.org/Gecko</a> for details.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Install", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancel", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+END

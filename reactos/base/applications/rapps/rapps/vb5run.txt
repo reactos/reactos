@@ -1,0 +1,50 @@
+﻿; UTF-8
+
+[Section]
+Name = Visual Basic 5 Runtime
+Version = 5.0
+Licence = Unknown
+Description = Visual Basic 5 Runtime. Contains: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+Size = 969.59kB
+Category = 14
+URLSite = http://support.microsoft.com/kb/180071/
+URLDownload = http://download.microsoft.com/download/vb50pro/utility/1/win98/en-us/msvbvm50.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Visual Basic 5 Laufzeitsystem. Beinhaltet: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
+[Section.040a]
+Licence = Desconocida
+Description = Librerias Visual Basic 5. Incluye: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
+[Section.040c]
+Licence = Inconnue
+Description = Bibliothèque Visual Basic 5. Contient: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+Size = 969,59 ko
+
+[Section.0410]
+Licence = Sconosciuta
+Description = Libreria Visual Basic 5. Contiene: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0413]
+Licence = Ongekend
+Description = Visual Basic 5 Runtime. Bevat: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0415]
+Licence = Nieznana
+Description = Biblioteki uruchomieniowe Visual Basic 5. Zawiera: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0418]
+Licence = Necunoscută
+Description = Visual Basic 5 Runtime. Conține: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+Size = 969,59 ko
+
+[Section.0422]
+Licence = Невідома
+Description = Бібліотеки Visual Basic 5. включає: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0813]
+Licence = Ongekend
+Description = Visual Basic 5 Runtime. Bevat: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.

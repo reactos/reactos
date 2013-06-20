@@ -1,0 +1,77 @@
+// Standard C library declarations
+
+#pragma once
+
+#include <cstddef>
+#include <stdlib.h>
+
+// Get rid of those macros defined in <stdlib.h> in lieu of real functions.
+#undef abort
+#undef abs
+#undef atexit
+#undef atof
+#undef atoi
+#undef atol
+#undef bsearch
+#undef calloc
+#undef div
+#undef exit
+#undef free
+#undef getenv
+#undef labs
+#undef ldiv
+#undef malloc
+#undef mblen
+#undef mbstowcs
+#undef mbtowc
+#undef qsort
+#undef rand
+#undef realloc
+#undef srand
+#undef strtod
+#undef strtol
+#undef strtoul
+#undef system
+#undef wcstombs
+#undef wctomb
+
+namespace std
+{
+  using ::div_t;
+  using ::ldiv_t;
+
+  using ::abort;
+  using ::abs;
+  using ::atexit;
+  using ::atof;
+  using ::atoi;
+  using ::atol;
+  using ::bsearch;
+  using ::calloc;
+  using ::div;
+  using ::exit;
+  using ::free;
+  using ::getenv;
+  using ::labs;
+  using ::ldiv;
+  using ::malloc;
+  using ::mblen;
+  using ::mbstowcs;
+  using ::mbtowc;
+  using ::qsort;
+  using ::rand;
+  using ::realloc;
+  using ::srand;
+  using ::strtod;
+  using ::strtol;
+  using ::strtoul;
+  using ::system;
+  using ::wcstombs;
+  using ::wctomb;
+
+  inline long
+  abs(long __i) { return labs(__i); }
+
+  inline ldiv_t
+  div(long __i, long __j) { return ldiv(__i, __j); }
+}

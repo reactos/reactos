@@ -1,0 +1,55 @@
+  The MinGW GNU make command can be used to build STLport with different
+compilers
+
+- gcc (native compiler):
+
+  Makefile : gcc.mak
+
+  Notes:
+
+    1. Static library (archive)
+
+    If you use the static version of the STLport libraries
+  you have to define the _STLP_USE_STATIC_LIB macro in order
+  to have your executable linked correctly.
+
+    2. Shell
+
+    You will need MSys in order to build STLport.
+
+    Be carefull about what make command you are using. STLport comes with a
+  GNU make build system design for unix like platforms, make files have not
+  been adapted for the Windows platform. So you have to use the make command
+  coming with the MinGW package 'mingw32-make' and not the one coming with MSys
+  that is a portage of the GNU make for Windows.
+
+    3. Threading configuration
+
+    STLport libraries are built per default in order to be used in a
+  multithreaded environment. Under MinGW it means that we use the '-mthread'
+  compiler option. Don't forget to add it to your compiler command line too
+  if you want to use STLport libraries. You can also ask for not thread
+  safe libraries using the --no-thread configure script option.
+
+    4. Linking
+
+    In this environment STLport is almost complete replacement for libstdc++.
+  It means that when you were linking with libstdc++ (-lstdc++) you only have
+  to replace it with STLport (-lstlport.5.2 for instance) and with libsupc++
+  containing language compiler support (lsupc++). However default gcc
+  behavior is to automatically link libstdc++ and a number of other system libs.
+  To avoid this behavior you have to use the -nodefaultlibs compiler option and
+  explicitely give all libraries by yourself. See build of unit tests to see what
+  library you might need, here is the list when this note was written:
+
+    -lstlportg.5.2 -lsupc++ -lgcc_s -lmingw32 -lmingwex -lmsvcrt -lm -lmoldname
+    -lcoldname -lkernel32
+
+- Borland C++ compiler:
+
+  Makefile : bcc.mak
+
+- Digital Mars C++ compiler:
+
+  Makefile : dmc.mak
+

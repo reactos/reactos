@@ -1,0 +1,23 @@
+/* FILE:        applications/cmdutils/find/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * THANKS TO:   Mario Kacmar aka Kario (kario@szm.sk)
+ * UPDATED:     2008-02-29
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "FIND: Zobrazí všechny řádky souboru obsahující hledaný řetězec.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""řetězec"" [ soubor... ]\n\
+    /C  Zobrazí počet řádků obsahující řetězec.\n\
+    /I  Ignoruje velikost písmen.\n\
+    /N  Čísluje zobrazené řádky, začíná od 1.\n\
+    /V  Zobrazí všechny řádky, které NEobsahují zadaný řetěžec."
+
+IDS_NO_SUCH_FILE, "FIND: Soubor %s nebyl nalezen.\n"
+
+IDS_CANNOT_OPEN, "FIND: Soubor %s nelze otevřít!\n"
+
+END

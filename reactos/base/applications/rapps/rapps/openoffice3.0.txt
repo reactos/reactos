@@ -1,0 +1,64 @@
+﻿; UTF-8
+
+[Section]
+Name = OpenOffice 3.4
+Version = 3.4.1
+Licence = LGPL
+Description = THE Open Source Office Suite.
+Size = 129.64MB
+Category = 6
+URLSite = http://www.openoffice.org/
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/stable/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_en-US.exe
+CDPath = none
+
+[Section.0407]
+Description = DIE Open Source Office Suite.
+URLSite = http://de.openoffice.org/
+Size = 145.2MB
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/localized/de/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_de.exe
+
+[Section.040a]
+Description = La suite de ofimática de código abierto.
+URLSite = http://es.openoffice.org/
+Size = 119.19MB
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/localized/es/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_es.exe
+
+[Section.040c]
+Description = LA suite bureautique open source.
+URLSite = http://fr.openoffice.org/
+Size = 120,18 Mo
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/localized/fr/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_fr.exe
+
+[Section.0410]
+URLSite = http://it.openoffice.org/
+Size = 120.0MB
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/localized/it/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_it.exe
+
+[Section.0413]
+Description = Open-bron Office Pakket.
+URLSite = http://nl.openoffice.org/
+Size = 124.13MB
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/localized/nl/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_nl.exe
+
+[Section.0415]
+Description = Otwarty pakiet biurowy.
+URLSite = http://pl.openoffice.org/
+Size = 120.29MB
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/localized/pl/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_pl.exe
+
+[Section.0419]
+Description = Suita de aplicații de birotică open-source.
+Size = 129,64 Mo
+URLSite = http://www.openoffice.org/ro/
+
+[Section.0422]
+Description = Відкритий офісний пакет.
+URLSite = http://ua.openoffice.org/
+Size = 123.22MB
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/localized/ru/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_ru.exe
+
+[Section.0813]
+Description = Open-bron Office Pakket.
+URLSite = http://nl.openoffice.org/
+Size = 124.13MB
+URLDownload = http://heanet.dl.sourceforge.net/project/openofficeorg.mirror/localized/nl/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_nl.exe

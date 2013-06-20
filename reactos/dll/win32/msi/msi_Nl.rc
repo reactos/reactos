@@ -1,0 +1,36 @@
+/*
+ * Dutch resources for MSI
+ *
+ * Copyright 2005 Hans Leidekker
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "windef.h"
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+	4 "Het opgegeven installatie pakket kon niet worden geopend.  Verifieer het bestandspad en probeer opnieuw."
+	5 "Pad %s niet gevonden"
+	9 "Plaats disk %s"
+	10 "Windows Installer %s\n\nGebruik:\nmsiexec commando {vereiste parameter} [optionele parameter]\n\nInstalleer een product:\n\t/i {pakket|productcode} [eigenschap]\n\t/package {pakket|productcode} [eigenschap]\n\t/a pakket [eigenschap]\nHerstel een installatie:\n\t/f[p|o|e|d|c|a|u|m|s|v] {pakket|productcode}\nVerwijder een product:\n\t/uninstall {pakket|productcode} [eigenschap]\n\t/x {pakket|productcode} [eigenschap]\nAdverteer een product:\n\t/j[u|m] pakket [/t transform] [/g languageid]\nPas een patch toe:\n\t/p patchpakket [eigenschap]\n\t/p patchpakket /a pakket [eigenschap]\nLog en UI Modifiers voor bovenstaande commando's:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logbestand\n\t/q{|n|b|r|f|n+|b+|b-}\nRegistreer MSI Service:\n\t/y\nMaak registratie MSI Service ongedaan:\n\t/z\nLaat dit helpvenster zien:\n\t/help\n\t/?\n"
+	11 "Voer de map in die %s bevat"
+	12 "De installatiebron van de feature ontbreekt"
+	13 "De netwerkschijf met de feature ontbreekt"
+	14 "Feature van:"
+	15 "Kies de map die %s bevat"
+}

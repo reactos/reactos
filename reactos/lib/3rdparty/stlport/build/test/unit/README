@@ -1,0 +1,409 @@
+$Id$
+
+===========================
+STLport testing unit README
+===========================
+
+=======
+Purpose
+=======
+Provide independent STLport unit tests, with clearly defined pass/failed
+result for every single test without any user action (i.e. diff)
+and without any input request (i.e. files, cin input ...).
+
+=====
+Build
+=====
+Use makefile(s): 
+
+make -f gcc.mak
+
+======================
+Running the test suite
+======================
+commad-line syntax as follows:
+  stl_unit_test [OPTIONS]
+  where OPTIONS are
+   -t=CLASS[::TEST]    run the test class CLASS or member test CLASS::TEST
+   -f=FILE             save output in file FILE instead of stdout
+
+examples:
+./stl_unit_test
+ - runs all tests registered with this unit
+
+./stl_unit_test -f=out.txt
+ - runs all tests registered with this unit but print results into out.txt instead of stdout
+
+./stl_unit_test -t=VectorTest
+ - runs all tests registered in VectorTest class
+
+./stl_unit_test -t=VectorTest::vec_test_1  -f=out.txt
+ - runs only VectorTest::vec_test_1() test, print result into out.txt instead of stdout
+
+==================
+CU mini background
+==================
+see:
+http://www.stlport.com/dcforum/DCForumID5/764.html
+
+Note: cppunit mini sources are modified from original!
+
+===============
+Adding new test
+===============
+You can add/create new tests easily just use _template.cpp as your new
+test class and do not forget to edit Makefile.inc
+
+For guide to CppUnit like tests see http://cppunit.sourceforge.net/
+
+==============================================
+Replacement of regression by unit tests:
+==============================================
+
+regression                  unit
+-----------------------------------------
+accum1.cpp              accum_test.cpp
+accum2.cpp
+
+adjdiff0.cpp            adj_test.cpp
+adjdiff1.cpp
+adjdiff2.cpp
+adjfind0.cpp
+adjfind1.cpp
+adjfind2.cpp
+
+advance.cpp             advance_test.cpp
+
+alg1.cpp                alg_test.cpp
+alg2.cpp
+alg3.cpp
+alg4.cpp
+alg5.cpp
+
+bcompos1.cpp            bcompos_test.cpp
+bcompos2.cpp
+
+bind1st1.cpp            bind_test.cpp
+bind1st2.cpp
+bind2nd1.cpp
+bind2nd2.cpp
+
+binsert1.cpp            binsert_test.cpp
+binsert2.cpp
+
+binsrch1.cpp            bsearch_test.cpp
+binsrch2.cpp
+
+bnegate1.cpp            bnegate_test.cpp
+bnegate2.cpp
+
+bvec1.cpp               bvector_test.cpp
+
+bug.cpp                 -
+
+copy1.cpp               copy_test.cpp
+copy2.cpp
+copy3.cpp
+copy4.cpp
+copyb0.cpp
+copyb.cpp
+
+count0.cpp              count_test.cpp
+count1.cpp
+countif1.cpp
+
+deque1.cpp              deque_test.cpp
+
+divides.cpp             divides_test.cpp
+
+eqlrnge0.cpp            equal_test.cpp
+eqlrnge1.cpp
+eqlrnge2.cpp
+equal0.cpp
+equal1.cpp
+equal2.cpp
+equalto.cpp
+
+fill1.cpp               fill_test.cpp
+filln1.cpp
+
+find0.cpp               find_test.cpp
+find1.cpp
+findif0.cpp
+findif1.cpp
+
+finsert1.cpp            finsert_test.cpp
+finsert2.cpp
+
+float_input.cpp         floatio_test.cpp
+float_output.cpp
+
+foreach0.cpp            foreach_test.cpp
+foreach1.cpp
+
+fstream1.cpp            -
+
+func1.cpp               func_test.cpp
+func2.cpp
+func3.cpp
+
+gener1.cpp              generator_test.cpp
+gener2.cpp
+genern1.cpp
+genern2.cpp
+
+greateq.cpp             greater_test.cpp
+greater.cpp
+
+hmap1.cpp               hash_test.cpp
+hmmap1.cpp
+hmset1.cpp
+hset2.cpp
+
+incl0.cpp               includes_test.cpp
+incl1.cpp
+incl2.cpp
+
+inplmrg1.cpp            inplace_test.cpp
+inplmrg2.cpp
+
+inrprod0.cpp            innerprod_test.cpp
+inrprod1.cpp
+inrprod2.cpp
+
+insert1.cpp             insert_test.cpp
+insert2.cpp
+
+ioiter.cpp              ioiter_test.cpp
+
+iota1.cpp               iota_test.cpp
+
+istmit1.cpp             istmit_test.cpp
+
+iter1.cpp               iter_test.cpp
+iter2.cpp
+iter3.cpp
+iter4.cpp
+iterswp.cpp
+
+less.cpp                less_test.cpp
+lesseq.cpp
+
+lexcmp1.cpp             lexcmp_test.cpp
+lexcmp2.cpp
+
+list1.cpp               list_test.cpp
+list2.cpp
+list3.cpp
+list4.cpp
+
+logicand.cpp            logic_test.cpp
+logicnot.cpp
+logicor.cpp
+
+lwrbnd1.cpp             bound_test.cpp
+lwrbnd2.cpp
+uprbnd1.cpp
+uprbnd2.cpp
+
+map1.cpp                map_test.cpp
+mmap1.cpp
+mmap2.cpp
+
+max1.cpp                max_test.cpp
+max2.cpp
+maxelem1.cpp
+maxelem2.cpp
+
+memfunptr.cpp           mfunptr_test.cpp
+
+merge0.cpp              merge_test.cpp
+merge1.cpp
+merge2.cpp
+
+min1.cpp                min_test.cpp            
+min2.cpp
+minelem1.cpp
+minelem2.cpp
+
+minus.cpp               plusminus.cpp
+
+mismtch0.cpp            mismatch_test.cpp
+mismtch1.cpp
+mismtch2.cpp
+
+mkheap0.cpp             heap_test.cpp
+mkheap1.cpp
+pheap0.cpp
+pheap1.cpp
+
+modulus.cpp             modulus_test.cpp
+
+move_constructor.cpp    mvctor_test.cpp
+
+multiset.cpp            multiset_test.cpp
+
+negate.cpp              neq_test.cpp
+nequal.cpp
+
+nextprm0.cpp            perm_test.cpp
+nextprm1.cpp
+nextprm2.cpp
+prevprm0.cpp
+prevprm1.cpp
+prevprm2.cpp
+
+nthelem0.cpp            nthelm_test.cpp
+nthelem1.cpp
+nthelem2.cpp
+
+ostmit.cpp              ostmit_test.cpp
+
+pair0.cpp               pair_test.cpp
+pair1.cpp
+pair2.cpp
+
+parsrt0.cpp             partial_test.cpp
+parsrt1.cpp
+parsrt2.cpp
+parsrtc0.cpp
+parsrtc1.cpp
+parsrtc2.cpp
+partsum0.cpp
+partsum1.cpp
+partsum2.cpp
+
+pqueue1.cpp             queue_test.cpp
+queue1.cpp
+
+ptition0.cpp            partition_test.cpp
+ptition1.cpp
+stblptn0.cpp
+stblptn1.cpp
+
+ptrbinf1.cpp            ptr2_test.cpp
+ptrbinf2.cpp
+ptrunf1.cpp
+ptrunf2.cpp
+
+ptr_specialization.cpp  ptrspec_test.cpp
+
+quiet_signal_nan.cpp    -
+
+rawiter.cpp             rawiter.cpp
+
+remcopy1.cpp            rm_cp_test.cpp
+remcpif1.cpp
+remif1.cpp
+remove1.cpp
+repcpif1.cpp
+replace0.cpp
+replace1.cpp
+replcpy1.cpp
+replif1.cpp
+revcopy1.cpp
+reverse1.cpp
+
+reviter1.cpp            reviter_test.cpp
+reviter2.cpp
+revbit1.cpp
+
+rndshuf0.cpp            rndshf_test.cpp
+rndshuf1.cpp
+rndshuf2.cpp
+
+rotate0.cpp             rotate_copy.cpp
+rotate1.cpp
+rotcopy0.cpp
+rotcopy1.cpp
+
+search0.cpp             search_test.cpp
+search1.cpp
+search2.cpp
+
+seek.cpp                -
+
+set.cpp                 set_test.cpp
+
+setdiff0.cpp            setdiff_test.cpp
+setdiff1.cpp
+setdiff2.cpp
+setsymd0.cpp
+setsymd1.cpp
+setsymd2.cpp
+
+setintr0.cpp            setinter_test.cpp
+setintr1.cpp
+setintr2.cpp
+
+setunon0.cpp            setunion_test.cpp
+setunon1.cpp
+setunon2.cpp
+
+single.cpp              -
+
+slist1.cpp              slist_test.cpp
+
+sort1.cpp               sort_test.cpp
+sort2.cpp
+stblsrt1.cpp
+stblsrt2.cpp
+
+sstream1.cpp            -
+
+stack1.cpp              stack_test.cpp
+stack2.cpp
+
+strass1.cpp             -
+
+string1.cpp             string_test.cpp
+string_mt.cpp
+short_string.cpp
+
+swap1.cpp               swap_test.cpp
+swprnge1.cpp
+
+times.cpp               times_test.cpp
+
+trnsfrm1.cpp            transform_test.cpp
+trnsfrm2.cpp
+
+tstdeq.cpp              -
+
+ucompos1.cpp            unary_test.cpp
+ucompos2.cpp
+unegate1.cpp
+unegate2.cpp
+
+uniqcpy1.cpp            unique_test.cpp
+uniqcpy2.cpp
+unique1.cpp
+unique2.cpp
+
+vec.cpp                 vector_test.cpp
+
+======
+Status
+======
+So far all tests from regression directory were ported except following ones:
+
+iter2.cpp                       (pointless - already tested in iter1.cpp,
+                                 see iter_test.cpp)
+move_constructor.cpp		(not fully tested see mvctor_test.cpp)
+mset1.cpp                       (moved in multiset.cpp)
+mset3.cpp                       (moved in multiset.cpp)
+mset4.cpp                       (moved in multiset.cpp)
+mset5.cpp                       (moved in multiset.cpp)
+pair1.cpp                       (pointless - already tested in pair0.cpp,
+                                 see pair_test.cpp)
+pair2.cpp                       (pointless - already tested in pair0.cpp,
+                                 see pair_test.cpp)
+partsrt0.cpp                    (identic w ith parsrt0.cpp - tested in
+                                 pair_test.cpp )
+quiet_signal_nan.cpp
+revbit2.cpp                     (pointless - already tested in revbit1.cpp,
+                                 see reviter_test.cpp )
+rndshuf1.cpp                    (pointless - already tested in rndshuf0.cpp,
+                                 see rndshf_test.cpp )
+set1.cpp                        (moved in set.cpp)
+set2.cpp                        (moved in set.cpp)

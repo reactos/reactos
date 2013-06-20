@@ -1,0 +1,52 @@
+/*
+ * Copyright 2012 Jacek Caban for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "objidl.idl";
+import "oleidl.idl";
+import "shtypes.idl";
+
+typedef struct _WINDOWDATA {
+    DWORD dwWindowID;
+    UINT uiCP;
+    PIDLIST_ABSOLUTE pidl;
+    [string] LPWSTR lpszUrl;
+    [string] LPWSTR lpszUrlLocation;
+    [string] LPWSTR lpszTitle;
+} WINDOWDATA;
+
+typedef WINDOWDATA *LPWINDOWDATA;
+typedef const WINDOWDATA *LPCWINDOWDATA;
+
+[
+    uuid(241c033e-e659-43da-aa4d-4086dbc4758d),
+    object
+]
+interface ITravelLogClient : IUnknown
+{
+    HRESULT FindWindowByIndex(
+            [in] DWORD dwID,
+            [out] IUnknown **ppunk);
+
+    HRESULT GetWindowData(
+            [in] IStream *pStream,
+            [out] LPWINDOWDATA pWinData);
+
+    HRESULT LoadHistoryPosition(
+            [in] LPWSTR pszUrlLocation,
+            [in] DWORD dwPosition);
+}

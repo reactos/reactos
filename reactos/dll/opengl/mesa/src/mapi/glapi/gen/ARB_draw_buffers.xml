@@ -1,0 +1,187 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<OpenGLAPI>
+<category name="GL_ARB_draw_buffers" number="37">
+    <enum name="MAX_DRAW_BUFFERS_ARB"          count="1"  value="0x8824">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER0_ARB"              count="1"  value="0x8825">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER1_ARB"              count="1"  value="0x8826">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER2_ARB"              count="1"  value="0x8827">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER3_ARB"              count="1"  value="0x8828">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER4_ARB"              count="1"  value="0x8829">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER5_ARB"              count="1"  value="0x882A">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER6_ARB"              count="1"  value="0x882B">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER7_ARB"              count="1"  value="0x882C">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER8_ARB"              count="1"  value="0x882D">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER9_ARB"              count="1"  value="0x882E">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER10_ARB"             count="1"  value="0x882F">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER11_ARB"             count="1"  value="0x8830">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER12_ARB"             count="1"  value="0x8831">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER13_ARB"             count="1"  value="0x8832">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER14_ARB"             count="1"  value="0x8833">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER15_ARB"             count="1"  value="0x8834">
+        <size name="Get" mode="get"/>
+    </enum>
+
+    <function name="DrawBuffersARB" offset="assign">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="bufs" type="const GLenum *" count="n"/>
+        <glx rop="233" large="true"/>
+    </function>
+</category>
+
+<category name="GL_ATI_draw_buffers" number="277">
+    <enum name="MAX_DRAW_BUFFERS_ATI"          count="1"  value="0x8824">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER0_ATI"              count="1"  value="0x8825">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER1_ATI"              count="1"  value="0x8826">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER2_ATI"              count="1"  value="0x8827">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER3_ATI"              count="1"  value="0x8828">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER4_ATI"              count="1"  value="0x8829">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER5_ATI"              count="1"  value="0x882A">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER6_ATI"              count="1"  value="0x882B">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER7_ATI"              count="1"  value="0x882C">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER8_ATI"              count="1"  value="0x882D">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER9_ATI"              count="1"  value="0x882E">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER10_ATI"             count="1"  value="0x882F">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER11_ATI"             count="1"  value="0x8830">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER12_ATI"             count="1"  value="0x8831">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER13_ATI"             count="1"  value="0x8832">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER14_ATI"             count="1"  value="0x8833">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER15_ATI"             count="1"  value="0x8834">
+        <size name="Get" mode="get"/>
+    </enum>
+
+    <function name="DrawBuffersATI" alias="DrawBuffersARB">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="bufs" type="const GLenum *" count="n"/>
+    </function>
+</category>
+
+<!--
+    This extension serves a similar purpose to ARB_draw_buffers except
+    that this is for OpenGL ES 2.0.
+-->
+<category name="GL_NV_draw_buffers" number="91">
+    <enum name="MAX_DRAW_BUFFERS_NV"           count="1"  value="0x8824">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER0_NV"               count="1"  value="0x8825">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER1_NV"               count="1"  value="0x8826">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER2_NV"               count="1"  value="0x8827">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER3_NV"               count="1"  value="0x8828">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER4_NV"               count="1"  value="0x8829">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER5_NV"               count="1"  value="0x882A">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER6_NV"               count="1"  value="0x882B">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER7_NV"               count="1"  value="0x882C">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER8_NV"               count="1"  value="0x882D">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER9_NV"               count="1"  value="0x882E">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER10_NV"              count="1"  value="0x882F">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER11_NV"              count="1"  value="0x8830">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER12_NV"              count="1"  value="0x8831">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER13_NV"              count="1"  value="0x8832">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER14_NV"              count="1"  value="0x8833">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_BUFFER15_NV"              count="1"  value="0x8834">
+        <size name="Get" mode="get"/>
+    </enum>
+
+    <function name="DrawBuffersNV" alias="DrawBuffersARB">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="bufs" type="const GLenum *" count="n"/>
+    </function>
+</category>
+
+</OpenGLAPI>

@@ -1,0 +1,47 @@
+The following icons are the property of the Tango project and are 
+released under Creative Commons Attribution-ShareAlike 2.5 License.
+Please see COPYING for details
+
+1.ico
+2.ico
+3.ico
+4.ico
+5.ico
+6.ico
+7.ico
+8.ico
+9.ico
+10.ico
+11.ico
+18.ico
+19.ico
+21.ico
+22.ico
+23.ico
+24.ico
+25.ico
+28.ico
+40.ico
+41.ico
+42.ico
+43.ico
+50.ico
+51.ico
+52.ico
+53.ico
+54.ico
+105.ico
+159.ico
+161.ico
+500.ico
+501.ico
+502.ico
+5012.ico
+
+The following icons are the property of the VMware, Inc and are 
+released under Creative Commons Attribution-ShareAlike 2.5 License.
+(http://www.chipx86.com/blog/?p=206)
+Please see COPYING for details
+
+20.ico
+23.ico

@@ -1,0 +1,14 @@
+#include <windef.h>
+#include <winuser.h>
+
+#include "resource.h"
+
+/* Define language neutral resources */
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Shutdown Utility"
+#define REACTOS_STR_INTERNAL_NAME       "shutdown"
+#define REACTOS_STR_ORIGINAL_FILENAME   "shutdown.exe"
+#include <reactos/version.rc>
+
+#include "rsrc.rc"

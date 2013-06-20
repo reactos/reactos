@@ -1,0 +1,36 @@
+Import('*')
+
+env = env.Clone()
+
+env.Prepend(CPPPATH = [
+    '#src/mapi',
+    '#src/mesa',
+])
+
+env.Prepend(LIBS = [
+    glapi,
+    mesa,
+    glsl,
+])
+
+sources = [
+    'osmesa.c',
+]
+
+if env['platform'] == 'windows':
+    env.AppendUnique(CPPDEFINES = [
+        '_GDI32_', # prevent wgl* being declared __declspec(dllimport)
+        'BUILD_GL32', # declare gl* as __declspec(dllexport) in Mesa headers 
+    ])
+    if not env['gles']:
+        # prevent _glapi_* from being declared __declspec(dllimport)
+        env.Append(CPPDEFINES = ['_GLAPI_NO_EXPORTS'])
+
+    sources += ['osmesa.def']
+    
+osmesa = env.SharedLibrary(
+    target ='osmesa',
+    source = sources,
+)
+
+env.Alias('osmesa', osmesa)

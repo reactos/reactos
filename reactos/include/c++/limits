@@ -1,0 +1,1122 @@
+// Numerical limits for C++
+
+#include <climits>
+#include <cwchar>
+#include <cfloat>
+#include <ymath.h>
+
+namespace std
+{
+    // Rounding style for floating point numbers
+    enum float_round_style {
+        round_indeterminate = -1,
+        round_toward_zero = 0,
+        round_to_nearest = 1,
+        round_toward_infinity = 2,
+        round_toward_neg_infinity = 3
+        };
+    
+    // How to represent denormalized values
+    enum float_denorm_style {
+        denorm_indeterminate = -1,
+        denorm_absent = 0,
+        denorm_present = 1
+        };
+
+    template<class Type> class numeric_limits
+    {
+    public:
+        // Not specialized by default
+        static const bool is_specialized = false;
+
+        // Bounding
+        static const bool is_bounded = false;
+        static Type lowest() throw();
+        static Type max( ) throw( );
+        static Type min( ) throw( );
+
+        // infinity
+        static const bool has_infinity = false;
+        static Type infinity( ) throw( );
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static Type denorm_min( ) throw( );
+
+        // Digits
+        static const int digits = 0;
+        static const int digits10 = 0;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static Type quiet_NaN( ) throw( );
+        static Type signaling_NaN( ) throw( );
+
+        // Information
+        static const bool is_exact = false;
+        static const bool is_iec559 = false;
+        static const bool is_integer = false;
+        static const bool is_modulo = false;
+        static const bool is_signed = false;
+
+        // misc
+        static Type epsilon( ) throw( );
+        static const int max_digits10 = 0;
+        static const int radix = 0;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static Type round_error( ) throw( );
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<wchar_t>
+    {
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static wchar_t lowest() throw()
+            {return WCHAR_MIN;}
+        static wchar_t max( ) throw()
+            {return WCHAR_MAX;}
+        static wchar_t min( ) throw()
+            {return WCHAR_MIN;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static wchar_t infinity( ) throw()
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static wchar_t denorm_min( ) throw()
+            {return 0;}
+
+        // Digits
+        static const bool is_signed = WCHAR_MIN != 0;
+        static const int digits = sizeof(wchar_t) * CHAR_BIT - (is_signed ? 1 : 0);
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int digits10 = digits * 643 / 2136;
+
+        // NaN
+        static wchar_t quiet_NaN( ) throw()
+            {return 0;}
+        static wchar_t signaling_NaN( ) throw()
+            {return 0;}
+        
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+
+        // misc
+        static wchar_t epsilon( ) throw()
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const int radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static wchar_t round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<bool>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static bool lowest() throw()
+            {return false;}
+        static bool max( ) throw( )
+            {return true;}
+        static bool min( ) throw( )
+            {return false;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static bool infinity( ) throw( )
+            {return false;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static bool denorm_min( ) throw( )
+            {return false;}
+
+        // Digits
+        static const int digits = 1;
+        static const int digits10 = 0;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static bool quiet_NaN( ) throw( )
+            {return false;}
+        static bool signaling_NaN( ) throw( )
+            {return false;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = false;
+        static const bool is_signed = false;
+
+        // misc
+        static bool epsilon( ) throw( )
+            {return false;}
+        static const int max_digits10 = 0;
+        static const int radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static bool round_error( ) throw( )
+            {return false;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<char>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static char lowest() throw()
+            {return CHAR_MIN;}
+        static char max( ) throw( )
+            {return CHAR_MAX;}
+        static char min( ) throw( )
+            {return CHAR_MIN;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static char infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static char denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const bool is_signed = CHAR_MIN != 0;
+        static const int digits = sizeof(char) * CHAR_BIT - (is_signed ? 1 : 0);
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static char quiet_NaN( ) throw( )
+            {return 0;}
+        static char signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+
+        // misc
+        static char epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const int radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static char round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<signed char>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static signed char lowest() throw()
+            {return SCHAR_MIN;}
+        static signed char max( ) throw( )
+            {return SCHAR_MAX;}
+        static signed char min( ) throw( )
+            {return SCHAR_MIN;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static signed char infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static signed char denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const int digits = sizeof(signed char) * CHAR_BIT - 1;
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static signed char quiet_NaN( ) throw( )
+            {return 0;}
+        static signed char signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+        static const bool is_signed = true;
+
+        // misc
+        static signed char epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const int radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static signed char round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<unsigned char>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static unsigned char lowest() throw()
+            {return 0;}
+        static unsigned char max( ) throw( )
+            {return UCHAR_MAX;}
+        static unsigned char min( ) throw( )
+            {return 0;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static unsigned char infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static unsigned char denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const int digits = sizeof(unsigned char) * CHAR_BIT;
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static unsigned char quiet_NaN( ) throw( )
+            {return 0;}
+        static unsigned char signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+        static const bool is_signed = false;
+
+        // misc
+        static unsigned char epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const int radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static unsigned char round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<short>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static short lowest() throw()
+            {return SHRT_MIN;}
+        static short max( ) throw( )
+            {return SHRT_MAX;}
+        static short min( ) throw( )
+            {return SHRT_MIN;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static short infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static short denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const bool is_signed = SHRT_MIN != 0;
+        static const int digits = sizeof(short) * CHAR_BIT - (is_signed ? 1 : 0);
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static short quiet_NaN( ) throw( )
+            {return 0;}
+        static short signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+
+        // misc
+        static short epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const int radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static short round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<unsigned short>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static unsigned short lowest() throw()
+            {return 0;}
+        static unsigned short max( ) throw( )
+            {return USHRT_MAX;}
+        static unsigned short min( ) throw( )
+            {return 0;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static unsigned short infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static unsigned short denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const int digits = sizeof(unsigned short) * CHAR_BIT;
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static unsigned short quiet_NaN( ) throw( )
+            {return 0;}
+        static unsigned short signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+        static const bool is_signed = false;
+
+        // misc
+        static unsigned short epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const int radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static unsigned short round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<int>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static int lowest() throw()
+            {return INT_MIN;}
+        static int max( ) throw( )
+            {return INT_MAX;}
+        static int min( ) throw( )
+            {return INT_MIN;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static int infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static int denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const bool is_signed = INT_MIN != 0;
+        static const int digits = sizeof(int) * CHAR_BIT - (is_signed ? 1 : 0);
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static int quiet_NaN( ) throw( )
+            {return 0;}
+        static int signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+
+        // misc
+        static int epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const int radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static int round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<unsigned int>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static unsigned int lowest() throw()
+            {return 0;}
+        static unsigned int max( ) throw( )
+            {return UINT_MAX;}
+        static unsigned int min( ) throw( )
+            {return 0;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static unsigned int infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static unsigned int denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const int digits = sizeof(unsigned int) * CHAR_BIT;
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static unsigned int quiet_NaN( ) throw( )
+            {return 0;}
+        static unsigned int signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+        static const bool is_signed = false;
+
+        // misc
+        static unsigned int epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const int radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const int max_exponent = 0;
+        static const int max_exponent10 = 0;
+        static const int min_exponent = 0;
+        static const int min_exponent10 = 0;
+
+        // rounding
+        static unsigned int round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<long>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static long lowest() throw()
+            {return LONG_MIN;}
+        static long max( ) throw( )
+            {return LONG_MAX;}
+        static long min( ) throw( )
+            {return LONG_MIN;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static long infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static long denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const bool is_signed = LONG_MIN != 0;
+        static const long digits = sizeof(long) * CHAR_BIT - (is_signed ? 1 : 0);
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const long digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static long quiet_NaN( ) throw( )
+            {return 0;}
+        static long signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_longeger = true;
+        static const bool is_modulo = true;
+
+        // misc
+        static long epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const long radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const long max_exponent = 0;
+        static const long max_exponent10 = 0;
+        static const long min_exponent = 0;
+        static const long min_exponent10 = 0;
+
+        // rounding
+        static long round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<unsigned long>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static unsigned long lowest() throw()
+            {return 0;}
+        static unsigned long max( ) throw( )
+            {return ULONG_MAX;}
+        static unsigned long min( ) throw( )
+            {return 0;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static unsigned long infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static unsigned long denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const long digits = sizeof(unsigned long) * CHAR_BIT;
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const long digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static unsigned long quiet_NaN( ) throw( )
+            {return 0;}
+        static unsigned long signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_longeger = true;
+        static const bool is_modulo = true;
+        static const bool is_signed = false;
+
+        // misc
+        static unsigned long epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const long radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const long max_exponent = 0;
+        static const long max_exponent10 = 0;
+        static const long min_exponent = 0;
+        static const long min_exponent10 = 0;
+
+        // rounding
+        static unsigned long round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<long long>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static long long lowest() throw()
+            {return LLONG_MIN;}
+        static long long max( ) throw( )
+            {return LLONG_MAX;}
+        static long long min( ) throw( )
+            {return LLONG_MIN;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static long long infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static long long denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const long long digits = sizeof(long long) * CHAR_BIT - (LLONG_MIN != 0 ? 1 : 0);
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const long long digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static long long quiet_NaN( ) throw( )
+            {return 0;}
+        static long long signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+        static const bool is_signed = LLONG_MIN != 0;
+
+        // misc
+        static long long epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const long long radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const long long max_exponent = 0;
+        static const long long max_exponent10 = 0;
+        static const long long min_exponent = 0;
+        static const long long min_exponent10 = 0;
+
+        // rounding
+        static long long round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+    
+    template<> class numeric_limits<unsigned long long>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static unsigned long long lowest() throw()
+            {return 0;}
+        static unsigned long long max( ) throw( )
+            {return ULLONG_MAX;}
+        static unsigned long long min( ) throw( )
+            {return 0;}
+
+        // infinity
+        static const bool has_infinity = false;
+        static unsigned long long infinity( ) throw( )
+            {return 0;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_absent;
+        static const bool has_denorm_loss = false;
+        static unsigned long long denorm_min( ) throw( )
+            {return 0;}
+
+        // Digits
+        static const long long digits = sizeof(unsigned long long) * CHAR_BIT;
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const long long digits10 = digits * 643 / 2136;
+
+        // NaN
+        static const bool has_quiet_NaN = false;
+        static const bool has_signaling_NaN = false;
+        static unsigned long long quiet_NaN( ) throw( )
+            {return 0;}
+        static unsigned long long signaling_NaN( ) throw( )
+            {return 0;}
+
+        // Information
+        static const bool is_exact = true;
+        static const bool is_iec559 = false;
+        static const bool is_integer = true;
+        static const bool is_modulo = true;
+        static const bool is_signed = false;
+
+        // misc
+        static unsigned long long epsilon( ) throw( )
+            {return 0;}
+        static const int max_digits10 = 0;
+        static const long long radix = 2;
+        static const bool traps = false;
+
+        // exponent
+        static const long long max_exponent = 0;
+        static const long long max_exponent10 = 0;
+        static const long long min_exponent = 0;
+        static const long long min_exponent10 = 0;
+
+        // rounding
+        static unsigned long long round_error( ) throw( )
+            {return 0;}
+        static const float_round_style round_style = round_toward_zero;
+        static const bool tinyness_before = false;
+    };
+
+    template<> class numeric_limits<float>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static float lowest() throw()
+            {return -FLT_MAX;}
+        static float max( ) throw( )
+            {return FLT_MAX;}
+        static float min( ) throw( )
+            {return FLT_MIN;}
+
+        // infinity
+        static const bool has_infinity = true;
+        static float infinity( ) throw( )
+            //{return _FInf._Float;}
+        {
+            static const unsigned __inf_bytes = 0x7f800000;
+            return *(float*)&__inf_bytes;
+        }
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_present;
+        static const bool has_denorm_loss = true;
+        static float denorm_min( ) throw( )
+            {return _FDenorm._Float;}
+
+        // Digits
+        static const int digits = FLT_MANT_DIG;
+        static const int digits10 = FLT_DIG;
+
+        // NaN
+        static const bool has_quiet_NaN = true;
+        static const bool has_signaling_NaN = true;
+        static float quiet_NaN( ) throw( )
+            {return _FNan._Float;}
+        static float signaling_NaN( ) throw( )
+            {return _FSnan._Float;}
+
+        // Information
+        static const bool is_exact = false;
+        static const bool is_iec559 = true;
+        static const bool is_integer = false;
+        static const bool is_modulo = false;
+        static const bool is_signed = true;
+
+        // misc
+        static float epsilon( ) throw( )
+            {return FLT_EPSILON;}
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int max_digits10 = FLT_MANT_DIG * 643 / 2136;
+        static const int radix = FLT_RADIX;
+        static const bool traps = true;
+
+        // exponent
+        static const int max_exponent = FLT_MAX_EXP;
+        static const int max_exponent10 = FLT_MAX_10_EXP;
+        static const int min_exponent = FLT_MIN_EXP;
+        static const int min_exponent10 = FLT_MIN_10_EXP;
+
+        // rounding
+        static float round_error( ) throw( )
+            {return 0.5f;}
+        static const float_round_style round_style = round_to_nearest;
+        static const bool tinyness_before = true;
+    };
+    
+    template<> class numeric_limits<double>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static double lowest() throw()
+            {return -DBL_MAX;}
+        static double max( ) throw( )
+            {return DBL_MAX;}
+        static double min( ) throw( )
+            {return DBL_MIN;}
+
+        // infinity
+        static const bool has_infinity = true;
+        static double infinity( ) throw( )
+            {return _Inf._Double;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_present;
+        static const bool has_denorm_loss = true;
+        static double denorm_min( ) throw( )
+            {return _Denorm._Double;}
+
+        // Digits
+        static const int digits = DBL_MANT_DIG;
+        static const int digits10 = DBL_DIG;
+
+        // NaN
+        static const bool has_quiet_NaN = true;
+        static const bool has_signaling_NaN = true;
+        static double quiet_NaN( ) throw( )
+            {return _Nan._Double;}
+        static double signaling_NaN( ) throw( )
+            {return _Snan._Double;}
+
+        // Information
+        static const bool is_exact = false;
+        static const bool is_iec559 = true;
+        static const bool is_integer = false;
+        static const bool is_modulo = false;
+        static const bool is_signed = true;
+
+        // misc
+        static double epsilon( ) throw( )
+            {return DBL_EPSILON;}
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int max_digits10 = DBL_MANT_DIG * 643 / 2136;
+        static const int radix = FLT_RADIX;
+        static const bool traps = true;
+
+        // exponent
+        static const int max_exponent = DBL_MAX_EXP;
+        static const int max_exponent10 = DBL_MAX_10_EXP;
+        static const int min_exponent = DBL_MIN_EXP;
+        static const int min_exponent10 = DBL_MIN_10_EXP;
+
+        // rounding
+        static double round_error( ) throw( )
+            {return 0.5f;}
+        static const float_round_style round_style = round_to_nearest;
+        static const bool tinyness_before = true;
+    };
+    
+    template<> class numeric_limits<long double>
+    {
+    public:
+        static const bool is_specialized = true;
+
+        // Bounding
+        static const bool is_bounded = true;
+        static long double lowest() throw()
+            {return -LDBL_MAX;}
+        static long double max( ) throw( )
+            {return LDBL_MAX;}
+        static long double min( ) throw( )
+            {return DBL_MIN;}
+
+        // infinity
+        static const bool has_infinity = true;
+        static long double infinity( ) throw( )
+            {return _LInf._Long_double;}
+
+        // Denormalization
+        static const float_denorm_style has_denorm = denorm_present;
+        static const bool has_denorm_loss = true;
+        static long double denorm_min( ) throw( )
+            {return _LDenorm._Long_double;}
+
+        // Digits
+        static const int digits = LDBL_MANT_DIG;
+        static const int digits10 = LDBL_DIG;
+
+        // NaN
+        static const bool has_quiet_NaN = true;
+        static const bool has_signaling_NaN = true;
+        static long double quiet_NaN( ) throw( )
+            {return _LNan._Long_double;}
+        static long double signaling_NaN( ) throw( )
+            {return _LSnan._Long_double;}
+
+        // Information
+        static const bool is_exact = false;
+        static const bool is_iec559 = true;
+        static const bool is_integer = false;
+        static const bool is_modulo = false;
+        static const bool is_signed = true;
+
+        // misc
+        static long double epsilon( ) throw( )
+            {return LDBL_EPSILON;}
+        // The fraction 643/2136 approximates log10(2) to 7 significant digits.
+        static const int max_digits10 = FLT_MANT_DIG * 643 / 2136;
+        static const int radix = FLT_RADIX;
+        static const bool traps = true;
+
+        // exponent
+        static const int max_exponent = LDBL_MAX_EXP;
+        static const int max_exponent10 = LDBL_MAX_10_EXP;
+        static const int min_exponent = LDBL_MIN_EXP;
+        static const int min_exponent10 = LDBL_MIN_10_EXP;
+
+        // rounding
+        static long double round_error( ) throw( )
+            {return 0.5f;}
+        static const float_round_style round_style = round_to_nearest;
+        static const bool tinyness_before = true;
+    };
+}

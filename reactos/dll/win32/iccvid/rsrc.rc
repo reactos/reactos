@@ -1,0 +1,86 @@
+/*
+ * Copyright 2005 Dmitry Timoshkov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include <windef.h>
+//#include "iccvid_private.h"
+
+#ifdef LANGUAGE_DA_DK
+    #include "iccvid_Da.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "iccvid_En.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "iccvid_Hu.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "iccvid_Ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "iccvid_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "iccvid_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "iccvid_Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "iccvid_Pt.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "iccvid_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "iccvid_Tr.rc"
+#endif
+
+/* UTF-8 */
+#ifdef LANGUAGE_DE_DE
+    #include "iccvid_De.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "iccvid_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "iccvid_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "iccvid_He.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "iccvid_It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "iccvid_Ja.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "iccvid_Lt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "iccvid_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "iccvid_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "iccvid_Si.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "iccvid_Uk.rc"
+#endif

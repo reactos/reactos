@@ -1,0 +1,27 @@
+/* 
+ * FILE:             dll/win32/msports/lang/ro-RO.rc
+ *                   ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
+ * CHANGE LOG:       2011-09-06  initial translation
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDD_SERIALSETTINGS DIALOGEX DISCARDABLE  0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Configurația portului"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    RTEXT       "&Biți pe secundă:",     -1, 74, 19, 62, 8, WS_GROUP
+    COMBOBOX                             IDC_SERIAL_BITSPERSECOND, 139, 17, 106, 90, WS_TABSTOP | CBS_DROPDOWNLIST
+    RTEXT       "Biți de &date:",        -1, 74, 40, 62, 8
+    COMBOBOX                             IDC_SERIAL_DATABITS, 139, 38, 106, 54, WS_TABSTOP | CBS_DROPDOWNLIST
+    RTEXT       "&Paritate:",            -1, 74, 61, 62, 8
+    COMBOBOX                             IDC_SERIAL_PARITY, 139, 59, 106, 62, WS_TABSTOP | CBS_DROPDOWNLIST
+    RTEXT       "Biți de st&op:",        -1, 74, 82, 62, 8
+    COMBOBOX                             IDC_SERIAL_STOPBITS, 139, 80, 106, 54, WS_TABSTOP | CBS_DROPDOWNLIST
+    RTEXT       "&Controlul fluxului:",  - 1, 74, 102, 62, 8
+    COMBOBOX                             IDC_SERIAL_FLOWCONTROL, 139, 100, 106, 54, WS_TABSTOP | CBS_DROPDOWNLIST
+    PUSHBUTTON  "A&vansate…",            IDC_SERIAL_ADVANCED, 111, 130, 65, 14,WS_GROUP
+    PUSHBUTTON  "Valori i&mplicite",     IDC_SERIAL_RESTORE, 180, 130, 65, 14, WS_GROUP
+END

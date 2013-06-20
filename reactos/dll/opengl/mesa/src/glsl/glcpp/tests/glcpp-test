@@ -1,0 +1,80 @@
+#!/bin/sh
+
+trap 'rm $test.valgrind-errors; exit 1' INT QUIT
+
+usage ()
+{
+    cat <<EOF
+Usage: glcpp [options...]
+
+Run the test suite for mesa's GLSL pre-processor.
+
+Valid options include:
+
+	--valgrind	Run the test suite a second time under valgrind
+EOF
+}
+
+# Parse command-line options
+for option; do
+    if [ "${option}" = '--help' ] ; then
+	usage
+	exit 0
+    elif [ "${option}" = '--valgrind' ] ; then
+	do_valgrind=yes
+    else
+	echo "Unrecognized option: $option" >&2
+	echo >&2
+	usage
+	exit 1
+    fi
+done
+
+total=0
+pass=0
+clean=0
+
+echo "====== Testing for correctness ======"
+for test in *.c; do
+    echo -n "Testing $test..."
+    ../glcpp < $test > $test.out 2>&1
+    total=$((total+1))
+    if cmp $test.expected $test.out >/dev/null 2>&1; then
+	echo "PASS"
+	pass=$((pass+1))
+    else
+	echo "FAIL"
+	diff -u $test.expected $test.out
+    fi
+done
+
+echo ""
+echo "$pass/$total tests returned correct results"
+echo ""
+
+if [ "$do_valgrind" = "yes" ]; then
+    echo "====== Testing for valgrind cleanliness ======"
+    for test in *.c; do
+	echo -n "Testing $test with valgrind..."
+	valgrind --error-exitcode=31 --log-file=$test.valgrind-errors ../glcpp < $test >/dev/null 2>&1
+	if [ "$?" = "31" ]; then
+	    echo "ERRORS"
+	    cat $test.valgrind-errors
+	else
+	    echo "CLEAN"
+	    clean=$((clean+1))
+	    rm $test.valgrind-errors
+	fi
+    done
+
+    echo ""
+    echo "$pass/$total tests returned correct results"
+    echo "$clean/$total tests are valgrind-clean"
+fi
+
+if [ "$pass" = "$total" ] && [ "$clean" = "$total" ]; then
+    exit 0
+else
+    exit 1
+fi
+

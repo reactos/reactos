@@ -1,0 +1,103 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+/* Dialog */
+IDD_GUI DIALOGEX DISCARDABLE 0, 0, 240, 255
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Accesso remoto"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDC_OK,125,232,50,14
+    PUSHBUTTON      "&Cancel",IDC_CANCEL,178,232,50,14
+    LTEXT           "Co&mputers:", IDC_STATIC,9,9,35,36
+    LISTBOX         IDC_COMPUTER_LIST,8,19,162,55
+    PUSHBUTTON      "&Aggiungi...",IDC_ADD_SYSTEM,179,19,50,14
+    PUSHBUTTON      "&Rimuovi...",IDC_REMOVE_SYSTEM,179,36,50,14,WS_DISABLED
+    PUSHBUTTON      "&Naviga...",IDC_BROWSE_SYSTEM,179,53,50,14
+    LTEXT           "quale azione si vuole eseguire?", IDC_ACTION,11,81,20,14
+    COMBOBOX        IDC_ACTION_TYPE,37,79,129,14,WS_TABSTOP | CBS_DROPDOWN
+    CHECKBOX        "Avvio all'utente",IDC_WARN_USERS,175,79,55,14,BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT           "Visualizza avviso per",IDC_SHOW_WARN_ONE,11,99,65,14
+    EDITTEXT        IDC_SHOW_WARN,78,97,41,14
+    LTEXT           "secondi(s)",IDC_SHOW_WARN_TWO,124,99,32,10
+    GROUPBOX        "Individuazione evento di arresto",IDC_STATIC,5,114,224,114
+    LTEXT           "Ragione:",IDC_STATIC,16,130,30,8
+    CHECKBOX        "Progettato",IDC_PLANNED,175,130,40,12,BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX        IDC_REASON_CODE,17,142,198,13,WS_TABSTOP | CBS_DROPDOWN
+    LTEXT           "Comm&ento:",IDC_COMMENT_CAPTION,16,159,38,8
+    EDITTEXT        IDC_COMMENT_TEXT,17,171,198,50,WS_VSCROLL
+END
+
+/* Information and error messages */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE,  "ReactOS Shutdown Utility\n\
+\n\
+Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
+\n\
+    Non ci sono argomenti o/? Visualizza aiuti.\n\
+    /i      Mostra l'interfaccia utente grafica (GUI). Questa opzione deve essere la \n\
+            prima.\n\
+    /l      Disconnessione dal sistema locale. Non può essere utilizzata con /m or /d.\n\
+    /s      Chiusura del computer.\n\
+    /r      Riavvio del computer.\n\
+    /g      Riavvio del computer e riavvio di tutte le applicazioni registrate.\n\
+    /a      cancellare un arresto ritardato. Può essere utilizzato solo durante il periodo\n\
+            di ritardo.\n\
+    /p      Spegnere il computer locale senza alcun timeout o avviso. Può essere\n\
+            utilizzato con /d or /f.\n\
+    /h      Sospensione del computer locale. Utilizzabile con /f.\n\
+    /e      Documento e il motivo dell'arresto del computer inatteso.\n\
+    /m \\\\computer  Specificare la destinazione del computer (UNC/IP address).\n\
+    /t xxx  Imposta il periodo di timeout di xxx secondi prima di spegnersi.\n\
+            L'intervallo valido inizia 0-315360000 (10 anni),\n\
+            30 è il valore di default.\n\
+    /c ""comment"" Commento sul motivo per cui spegnere o riavviare.\n\
+            512 caratteri massimi consentiti.\n\
+    /f      Forzare la chiusura delle applicazioni in esecuzione senza che avvertire gli utenti. Se\n\
+            non è specificato un'altro parametro, questa opzione è valida anche per la disconnessione.\n\
+    /d [p|u:]xx:yy  Indicare il codice motivo per l'arresto o il riavvio.\n\
+            p indica che l'arresto o il riavvio è previsto.\n\
+            u indica che il motivo è definito dall'utente.\n\
+            Se nè p nè u vengono specificati, l'arresto o il riavvio non sono\n\
+            pianificati.\n\
+            xx è il codice maggiore (numero intero positivo inferiore a 256).\n\
+            yy è il codice minore (numero intero positivo inferiore a 65536).\n"
+
+    IDS_ERROR_SHUTDOWN_REBOOT,          "ERROR: Impossibile arrestare e riavviare al tempo stesso.\n"
+    IDS_ERROR_TIMEOUT,                  "ERROR: Il valore di timeout di u% è fuori dai limiti (0-315360000) \n"
+    IDS_ERROR_ABORT,                    "ERROR: Impossibile interrompere l'arresto del sistema \n."
+    IDS_ERROR_LOGOFF,                   "ERROR: Impossibile disconnettersi dal sistema \n"
+    IDS_ERROR_SHUTDOWN,                 "ERROR: Impossibile arrestare il sistema \n."
+    IDS_ERROR_RESTART,                  "ERROR: Impossibile riavviare il sistema \n."
+    IDS_ERROR_MAX_COMMENT_LENGTH,       "ERROR: Lunghezza commento supera il limite massimo di caratteri impostato dal sistema \n"
+    IDS_ERROR_HIBERNATE,                "ERROR: Impossibile avviare il sistema in modalità di sospensione. \n"
+    IDS_ERROR_HIBERNATE_LOCAL,          "ERROR: Modalitài sospensione non può essere avviata in modalità remota \n"
+    IDS_ERROR_HIBERNATE_ENABLED,        "ERROR: Modalità di sospensione non è abilitata \n"
+    IDS_ERROR_DIALOG_CAPTION,           "Arresto improviso"
+    IDS_ERROR_DIALOG_INIT,              "Impossibile visualizzare l'interfaccia utente grafica."
+END
+
+/* Remote shutdown action strings */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ACTION_SHUTDOWN,                "Esci dal sistema"
+    IDS_ACTION_RESTART,                 "Riavvia il sistema"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN,     "Arresto improviso"
+END
+
+/* Remote shutdown reason strings */
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_REASON_OTHER,                   "Altro"
+    IDS_REASON_HARDWARE_MAINTENANCE,    "Hardware: Manutenzione"
+    IDS_REASON_HARDWARE_INSTALL,        "Hardware: Installazione"
+    IDS_REASON_OS_RECOVER,              "Sistema Operativo System: Recupero"
+    IDS_REASON_OS_RECONFIGURE,          "Sistema Operativo: Riconfigurazione"
+    IDS_REASON_APP_MAINTENANCE,         "Applicazione: Manutenzione"
+    IDS_REASON_APP_INSTALL,             "Applicazione: Installazione"
+    IDS_REASON_APP_UNRESPONSIVE,        "Applicazione: Non Risponde"
+    IDS_REASON_APP_UNSTABLE,            "Applicazione: Instabile"
+    IDS_REASON_SECURITY,                "Problema di sicurezza"
+    IDS_REASON_NETWORK,                 "Connetività di rete assente"
+END

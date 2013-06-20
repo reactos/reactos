@@ -1,0 +1,104 @@
+/*
+ * Top level resource file for MS-RLE
+ *
+ * Copyright 2002 Michael Günnewig
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+//#include "windef.h"
+//#include "winbase.h"
+
+//#include "msrle_private.h"
+
+/*
+ * Everything specific to any language goes
+ * in one of the specific files.
+ * Note that you can and may override resources
+ * which also have a neutral version. This is to
+ * get localized bitmaps for example.
+ */
+
+#ifdef LANGUAGE_BG_BG
+    #include "msrle_Bg.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "msrle_Cs.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "msrle_Da.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "msrle_Es.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "msrle_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "msrle_It.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "msrle_Ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "msrle_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "msrle_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "msrle_Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "msrle_Pt.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "msrle_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "msrle_Tr.rc"
+#endif
+
+/* UTF-8 */
+#ifdef LANGUAGE_DE_DE
+    #include "msrle_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "msrle_En.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "msrle_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "msrle_He.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "msrle_Ja.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "msrle_Lt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "msrle_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "msrle_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "msrle_Si.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "msrle_Uk.rc"
+#endif

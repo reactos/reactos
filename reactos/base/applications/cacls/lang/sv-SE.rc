@@ -1,0 +1,81 @@
+/*
+ * PROJECT:     ReactOS CACLS
+ * FILE:        base/applications/cacls/lang/sv-SE.rc
+ * PURPOSE:     Swedish resource file
+ * TRANSLATOR:  Jaix Bly
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Visar eller ändrar rättighets-kontroll-listor (ACL) av filer\n\n\
+CACLS filnamn  [/T] [/E] [/C] [/G användare:rättighet [...]] [/R användare [...]]\n\
+               [/P användare:rättighet [...]] [/D användare [...]]\n\
+   filnamn       Visar ACL.\n\
+   /T            Ändrer ACL av specificerade filer i\n\
+                 nuvarende katalog och alla undermapper.\n\
+   /E            Redigera ACL istället för erstätta den.\n\
+   /C            Fortsätt vid nekad åtkomst fel.\n\
+   /G användare:rättighet  Medge specificerad användar rättigheter.\n\
+                 rättighet kan vara: L  Läs\n\
+                              S  Skriv\n\
+                              E  Ändra (skriv)\n\
+                              F  Full kontroll\n\
+  /R användare      Återkkalla specificerad användarrättighet (endast giltig med /E).\n\
+  /P användare:rättighet Erstätt specificerad användar rättighet.\n\
+                 rättighet kan vara: I  Ingen\n\
+                               L  Läs\n\
+                               S  Skrive\n\
+                               E  Ändra (skriv)\n\
+                               F  Full kontroll\n\
+   /D användare     Avslå specificerad användare tillgång.\n\
+Wildcards kan användas för att specificere mer än en fil i ett kommando.\n\
+Du kan spesifisere mere enn en användare i en kommando.\n\n\
+Förkortningar:\n\
+   CI - Container Inherit.\n\
+        ACE kommer att bli ärvd av mappar.\n\
+   OI - Object Inherit.\n\
+        ACE kommer att bli ärvd av filer.\n\
+   IO - Inherit Only.\n\
+        ACE gäller inte nuvarende fil/katalog.\n"
+
+IDS_ABBR_CI, "(CI)"
+IDS_ABBR_OI, "(OI)"
+IDS_ABBR_IO, "(IO)"
+IDS_ABBR_FULL, "F"
+IDS_ABBR_READ, "R"
+IDS_ABBR_WRITE, "W"
+IDS_ABBR_CHANGE, "C"
+IDS_ABBR_NONE, "N"
+IDS_ALLOW, ""
+IDS_DENY, "(NEKA)"
+IDS_SPECIAL_ACCESS, "(speciell rättighet:)"
+IDS_GENERIC_READ, "GENERISK_LÄSNING"
+IDS_GENERIC_WRITE, "GENERISK_SKRIVNING"
+IDS_GENERIC_EXECUTE, "GENERISK_KÖRNING"
+IDS_GENERIC_ALL, "GENERISK_ALLT"
+IDS_FILE_GENERIC_EXECUTE, "FIL_GENERISK_KJØRE"
+IDS_FILE_GENERIC_READ, "FIL_GENERISK_LÄSNING"
+IDS_FILE_GENERIC_WRITE, "FIL_GENERISK_SKRIVNING"
+IDS_FILE_READ_DATA, "FIL_LÄS_DATA"
+IDS_FILE_WRITE_DATA, "FIL_SKRIV_DATA"
+IDS_FILE_APPEND_DATA, "FIL_TILLFÖRA_DATA"
+IDS_FILE_READ_EA, "FIL_LÄS_EA"
+IDS_FILE_WRITE_EA, "FIL_SKRIVA_EA"
+IDS_FILE_EXECUTE, "FIL_KÖRA"
+IDS_FILE_DELETE_CHILD, "FIL_RADERA_BARN"
+IDS_FILE_READ_ATTRIBUTES, "FIL_LÄSA_ATTRIBUT"
+IDS_FILE_WRITE_ATTRIBUTES, "FIL_SKRIVA_ATTRIBUT"
+IDS_MAXIMUM_ALLOWED, "MAXIMALT_TILLÅTNA"
+IDS_ACCESS_SYSTEM_SECURITY, "TILLGÅNG_SYSTEM_SÄKERHET"
+IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIKA_RÄTTIGHETER_ALLT"
+IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RÄTTIGHETER_KRÄVS"
+IDS_SYNCHRONIZE, "SYNKRONISERA"
+IDS_WRITE_OWNER, "SKRIVA_ÄGARE"
+IDS_WRITE_DAC, "SKRIVA_DAC"
+IDS_READ_CONTROL, "LÄSE_KONTROLL"
+IDS_DELETE, "RADERA"
+IDS_STANDARD_RIGHTS_ALL, "STANDARD_RÄTTIGHETER_ALLT"
+END

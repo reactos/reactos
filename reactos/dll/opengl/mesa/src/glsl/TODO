@@ -1,0 +1,27 @@
+- Detect code paths in non-void functions that don't reach a return statement
+
+- Improve handling of constants and their initializers.  Constant initializers
+  should never generate any code.  This is trival for scalar constants.  It is
+  also trivial for arrays, matrices, and vectors that are accessed with
+  constant index values.  For others it is more complicated.  Perhaps these
+  cases should be silently converted to uniforms?
+
+- Implement support for ir_binop_dot in ir_algebraic.cpp.  Perform
+  transformations such as "dot(v, vec3(0.0, 1.0, 0.0))" -> v.y.
+
+- Track source locations throughout the IR.  There are currently several
+  places where we cannot emit line numbers for errors (and currently emit 0:0)
+  because we've "lost" the line number information.  This is particularly
+  noticeable at link time.
+
+1.30 features:
+
+- Implement AST-to-HIR conversion of switch-statements
+  - switch
+  - case
+  - Update break to correcly handle mixed nexting of switch-statements
+    and loops.
+
+- Implement support for gl_ClipDistance.  This is non-trivial because
+  gl_ClipDistance is exposed as a float[8], but all hardware actually
+  implements it as vec4[2].

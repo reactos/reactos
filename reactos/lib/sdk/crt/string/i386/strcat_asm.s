@@ -1,0 +1,4 @@
+
+#include "tcscat.inc"
+
+/* EOF */

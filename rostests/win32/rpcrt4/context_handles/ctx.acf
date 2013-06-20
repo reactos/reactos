@@ -1,0 +1,8 @@
+//file hello.idl
+[
+    implicit_handle(handle_t hBinding)
+]
+interface hello
+{
+
+}

@@ -1,0 +1,45 @@
+Index: graphics.c
+===================================================================
+--- graphics.c  (revision 57285)
++++ graphics.c  (working copy)
+@@ -42,6 +42,23 @@
+
+ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
+
++/* Mike "tamlin" Nordell 2012-09-14 for ReactOS:
++ * NOTE: Wine uses per-GpGraphics id's ('contid' starting from zero in
++ * every GpGraphics). Windows seems to use process-global id's, or at
++ * least more unique id's.
++ * This have the following implications. It:
++ * 1. fails the current gdiplus test case.
++ * 2. is not what Windows does.
++ *
++ * We therefore "obfuscate" the 'contid' a little to more match Windows'
++ * behaviour. The observable behviour should still remain the same,
++ * except for handing out more "unique" id's.
++ */
++#define GDIP_CONTID_STEP 64
++static volatile LONG g_priv_contid = GDIP_CONTID_STEP;
++#define GDIP_GET_NEW_CONTID_FOR(pGpGraphics) \
++   (UINT)(InterlockedExchangeAdd(&g_priv_contid,GDIP_CONTID_STEP))
++
+ /* looks-right constants */
+ #define ANCHOR_WIDTH (2.0)
+ #define MAX_ITERS (50)
+@@ -2203,7 +2220,7 @@
+     (*graphics)->busy = FALSE;
+     (*graphics)->textcontrast = 4;
+     list_init(&(*graphics)->containers);
+-    (*graphics)->contid = 0;
++    (*graphics)->contid = GDIP_GET_NEW_CONTID_FOR(*graphics);
+
+     TRACE("<-- %p\n", *graphics);
+
+@@ -2242,7 +2259,7 @@
+     (*graphics)->busy = FALSE;
+     (*graphics)->textcontrast = 4;
+     list_init(&(*graphics)->containers);
+-    (*graphics)->contid = 0;
++    (*graphics)->contid = GDIP_GET_NEW_CONTID_FOR(*graphics);
+
+     TRACE("<-- %p\n", *graphics);

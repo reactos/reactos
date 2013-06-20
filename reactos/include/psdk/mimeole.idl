@@ -1,0 +1,1337 @@
+/*
+ * Copyright 2007 Robert Shearman for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "ocidl.idl";
+import "objidl.idl";
+import "propidl.idl";
+
+#define DECLARE_HANDLE(name) typedef void *name
+
+interface IMimeMessageCallback;
+interface IMimeEnumAddressTypes;
+interface IMimeMessageParts;
+interface IMimeMessageTree;
+interface IMimeBody;
+interface IMimeEnumProperties;
+
+cpp_quote("DEFINE_GUID(CLSID_IMimeBody,      0xfd853cdb, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("DEFINE_GUID(CLSID_IMimeAllocator, 0xfd853cdd, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("DEFINE_GUID(CLSID_IMimeMessage,   0xfd853ce3, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("DEFINE_GUID(CLSID_IMimeSecurity,  0xfd853cde, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("DEFINE_GUID(CLSID_IVirtualStream, 0xfd853cdf, 0x7f86, 0x11d0, 0x82, 0x52, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+
+cpp_quote("#define MIME_E_REG_CREATE_KEY         0x800cce01")
+cpp_quote("#define MIME_E_REG_QUERY_INFO         0x800cce02")
+cpp_quote("#define MIME_E_INVALID_ENCTYPE        0x800cce03")
+cpp_quote("#define MIME_E_BOUNDARY_MISMATCH      0x800cce04")
+cpp_quote("#define MIME_E_NOT_FOUND              0x800cce05")
+cpp_quote("#define MIME_E_NO_DATA                0x800cce05")
+cpp_quote("#define MIME_E_BUFFER_TOO_SMALL       0x800cce06")
+cpp_quote("#define MIME_E_INVALID_ITEM_FLAGS     0x800cce07")
+cpp_quote("#define MIME_E_ONE_LINE_ITEME         0x800cce08")
+cpp_quote("#define MIME_E_INVALID_HANDLE         0x800cce09")
+cpp_quote("#define MIME_E_CHARSET_TRANSLATE      0x800cce0a")
+cpp_quote("#define MIME_E_NOT_INITIALIZED        0x800cce0b")
+
+cpp_quote("#define MIME_E_INVALID_CHARSET_TYPE   0x800cce31")
+
+cpp_quote("#define MIME_E_INVALID_TEXT_TYPE      0x800cce38")
+
+cpp_quote("#define MIME_E_SECURITY_NOOP          0x800cceb1")
+cpp_quote("#define MIME_S_SECURITY_NOOP          0x000cceb1")
+
+cpp_quote("typedef enum tagMIMEPROPID {")
+cpp_quote("    PID_HDR_NEWSGROUP  = 2,")
+cpp_quote("    PID_HDR_NEWSGROUPS = 3,")
+cpp_quote("    PID_HDR_REFS       = 4,")
+cpp_quote("    PID_HDR_SUBJECT    = 5,")
+cpp_quote("    PID_HDR_FROM       = 6,")
+cpp_quote("    PID_HDR_MESSAGEID  = 7,")
+cpp_quote("    PID_HDR_RETURNPATH = 8,")
+cpp_quote("    PID_HDR_RR         = 9,")
+cpp_quote("    PID_HDR_RETRCPTO   = 10,")
+cpp_quote("    PID_HDR_APPARTO    = 11,")
+cpp_quote("    PID_HDR_DATE       = 12,")
+cpp_quote("    PID_HDR_RECEIVED   = 13,")
+cpp_quote("    PID_HDR_REPLYTO    = 14,")
+cpp_quote("    PID_HDR_XMAILER    = 15,")
+cpp_quote("    PID_HDR_BCC        = 16,")
+cpp_quote("    PID_HDR_MIMEVER    = 17,")
+cpp_quote("    PID_HDR_CNTTYPE    = 18,")
+cpp_quote("    PID_HDR_CNTXFER    = 19,")
+cpp_quote("    PID_HDR_CNTID      = 20,")
+cpp_quote("    PID_HDR_CNTDESC    = 21,")
+cpp_quote("    PID_HDR_CNTDISP    = 22,")
+cpp_quote("    PID_HDR_CNTBASE    = 23,")
+cpp_quote("    PID_HDR_CNTLOC     = 24,")
+cpp_quote("    PID_HDR_TO         = 25,")
+cpp_quote("    PID_HDR_PATH       = 26,")
+cpp_quote("    PID_HDR_FOLLOWUPTO = 27,")
+cpp_quote("    PID_HDR_EXPIRES    = 28,")
+cpp_quote("    PID_HDR_CC         = 29,")
+
+cpp_quote("    PID_HDR_SENDER     = 61,")
+
+cpp_quote("    PID_HDR_INREPLYTO  = 77,")
+cpp_quote("} MIMEPROPID;")
+
+cpp_quote("#define TYPEDID_MASK                  ((ULONG)0xffff)")
+cpp_quote("#define TYPEDID_TYPE(t)               ((VARTYPE)((t) & TYPEDID_MASK))")
+
+cpp_quote("#define OID_HIDE_TNEF_ATTACHMENTS     (0x000e0000 | VT_BOOL)")
+cpp_quote("#define OID_SECURITY_TYPE             (0x00180000 | VT_UI4)")
+cpp_quote("#define OID_SECURITY_HWND_OWNER       (0x00320000 | VT_UI4)")
+cpp_quote("#define OID_HEADER_RELOAD_TYPE        (0x00370000 | VT_UI4)")
+cpp_quote("#define OID_SHOW_MACBINARY            (0x00390000 | VT_BOOL)")
+
+
+[
+    uuid(e4b28371-83b0-11d0-8259-00c04fd85ab4),
+    version(1.0)
+]
+library MIMEOLE
+{
+    importlib("stdole2.tlb");
+
+    DECLARE_HANDLE(HCHARSET);
+    DECLARE_HANDLE(HBODY);
+    DECLARE_HANDLE(HHEADERROW);
+
+    typedef HCHARSET *LPHCHARSET;
+    typedef HBODY *LPHBODY;
+    typedef HHEADERROW *LPHHEADERROW;
+    typedef DWORD TYPEDID;
+    typedef const PROPVARIANT *LPCPROPVARIANT;
+    typedef const BLOB *LPCBLOB;
+
+    typedef enum tagRELOADTYPE
+    {
+        RELOAD_HEADER_NONE,
+        RELOAD_HEADER_RESET,
+        RELOAD_HEADER_APPEND,
+        RELOAD_HEADER_REPLACE,
+    } RELOADTYPE;
+
+    typedef enum tagMIMESAVETYPE
+    {
+        SAVE_RFC822,
+        SAVE_RFC1521,
+    } MIMESAVETYPE;
+
+    typedef enum tagCSETAPPLYTYPE
+    {
+        CSET_APPLY_UNTAGGED,
+        CSET_APPLY_ALL,
+        CSET_APPLY_TAG_ALL,
+    } CSETAPPLYTYPE;
+
+    typedef enum tagENCODINGTYPE
+    {
+        IET_BINARY,
+        IET_BASE64,
+        IET_UUENCODE,
+        IET_QP,
+        IET_7BIT,
+        IET_8BIT,
+        IET_INETCSET,
+        IET_UNICODE,
+        IET_RFC1522,
+        IET_ENCODED,
+        IET_CURRENT,
+        IET_UNKNOWN,
+        IET_BINHEX40,
+        IET_LAST
+    } ENCODINGTYPE;
+
+    const SHORT IET_DECODED = IET_BINARY;
+
+    const SHORT CCHMAX_HEADER_LINE = 1000;
+
+    [
+        uuid(c5588349-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeInternational : IUnknown
+    {
+        typedef [unique] IMimeInternational *LPMIMEINTERNATIONAL;
+        typedef DWORD CODEPAGEID;
+
+        const CODEPAGEID CP_USASCII = 1252;
+        const CODEPAGEID CP_UNICODE = 1200;
+        const CODEPAGEID CP_JAUTODETECT = 50932;
+        const CODEPAGEID CP_KAUTODETECT = 50949;
+        const CODEPAGEID CP_ISO2022JPESC = 50221;
+        const CODEPAGEID CP_ISO2022JPSIO = 50222;
+
+        const SHORT CCHMAX_CSET_NAME = 128;
+        const SHORT CCHMAX_LANG_NAME = 128;
+        const SHORT CCHMAX_FACE_NAME = 128;
+
+        typedef struct tagINETCSETINFO
+        {
+            CHAR        szName[CCHMAX_CSET_NAME];
+            HCHARSET    hCharset;
+            CODEPAGEID  cpiWindows;
+            CODEPAGEID  cpiInternet;
+            DWORD       dwReserved1;
+        } INETCSETINFO, *LPINETCSETINFO;
+
+        typedef enum tagINETLANGMASK
+        {
+            ILM_FAMILY          = 0x01,
+            ILM_NAME            = 0x02,
+            ILM_BODYCSET        = 0x04,
+            ILM_HEADERCSET      = 0x08,
+            ILM_WEBCSET         = 0x10,
+            ILM_FIXEDFONT       = 0x20,
+            ILM_VARIABLEFONT    = 0x40,
+        } INETLANGMASK;
+
+        typedef struct tagCODEPAGEINFO
+        {
+            DWORD dwMask;
+            CODEPAGEID cpiCodePage;
+            BOOL fIsValidCodePage;
+            ULONG ulMaxCharSize;
+            BOOL fInternetCP;
+            CODEPAGEID cpiFamily;
+            CHAR szName[CCHMAX_LANG_NAME];
+            CHAR szBodyCset[CCHMAX_CSET_NAME];
+            CHAR szHeaderCset[CCHMAX_CSET_NAME];
+            CHAR szWebCset[CCHMAX_CSET_NAME];
+            CHAR szFixedFont[CCHMAX_FACE_NAME];
+            CHAR szVariableFont[CCHMAX_FACE_NAME];
+            ENCODINGTYPE ietNewsDefault;
+            ENCODINGTYPE ietMailDefault;
+            DWORD dwReserved1;
+        } CODEPAGEINFO, *LPCODEPAGEINFO;
+
+        typedef struct tagRFC1522INFO
+        {
+            BOOL fRfc1522Allowed;
+            BOOL fRfc1522Used;
+            BOOL fAllow8bit;
+            HCHARSET hRfc1522Cset;
+        } RFC1522INFO, *LPRFC1522INFO;
+
+        typedef enum tagCHARSETTYPE
+        {
+            CHARSET_BODY,
+            CHARSET_HEADER,
+            CHARSET_WEB,
+        } CHARSETTYPE;
+
+
+        HRESULT SetDefaultCharset(
+            [in]        HCHARSET hCharset);
+        HRESULT GetDefaultCharset(
+            [out]       LPHCHARSET phCharset);
+        HRESULT GetCodePageCharset(
+            [in]        CODEPAGEID cpiCodePage,
+            [in]        CHARSETTYPE ctCsetType,
+            [out]       LPHCHARSET phCharset);
+        HRESULT FindCharset(
+            [in]        LPCSTR pszCharset,
+            [out]       LPHCHARSET phCharset);
+        HRESULT GetCharsetInfo(
+            [in]        HCHARSET hCharset,
+            [in, out]   LPINETCSETINFO pCsetInfo);
+        HRESULT GetCodePageInfo(
+            [in]        CODEPAGEID cpiCodePage,
+            [in, out]   LPCODEPAGEINFO pCodePageInfo);
+        HRESULT CanConvertCodePages(
+            [in]        CODEPAGEID cpiSource,
+            [in]        CODEPAGEID cpiDest);
+        HRESULT DecodeHeader(
+            [in]        HCHARSET hCharset,
+            [in]        LPCSTR pszData,
+            [in, out]   LPPROPVARIANT pDecoded,
+            [in, out]   LPRFC1522INFO pRfc1522Info);
+        HRESULT EncodeHeader(
+            [in]        HCHARSET hCharset,
+            [in]        LPPROPVARIANT pData,
+            [out]       LPSTR *ppszEncoded,
+            [in, out]   LPRFC1522INFO pRfc1522Info);
+        HRESULT ConvertBuffer(
+            [in]        CODEPAGEID cpiSource,
+            [in]        CODEPAGEID cpiDest,
+            [in]        LPBLOB pIn,
+            [in, out]   LPBLOB pOut,
+            [out]       ULONG *pcbRead);
+        HRESULT ConvertString(
+            [in]        CODEPAGEID cpiSource,
+            [in]        CODEPAGEID cpiDest,
+            [in]        LPPROPVARIANT pIn,
+            [in, out]   LPPROPVARIANT pOut);
+        HRESULT MLANG_ConvertInetReset(void);
+        HRESULT MLANG_ConvertInetString(
+            [in]        CODEPAGEID cpiSource,
+            [in]        CODEPAGEID cpiDest,
+            [in]        LPCSTR pSource,
+            [in]        int *pnSizeOfSource,
+            [in,out,unique]  LPSTR pDestination,
+            [in]        int *pnDstSize);
+        HRESULT Rfc1522Decode(
+            [in]        LPCSTR pszValue,
+            [in,ref]    LPSTR pszCharset,
+            [in]        ULONG cchmax,
+            [out]       LPSTR *ppszDecoded);
+        HRESULT Rfc1522Encode(
+            [in]        LPCSTR pszValue,
+            [in]        HCHARSET hCharset,
+            [out]       LPSTR *ppszEncoded);
+    }
+
+    [
+        uuid(c5588353-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeSecurity : IUnknown
+    {
+        typedef [unique] IMimeSecurity *LPMIMESECURITY;
+
+        cpp_quote("#ifdef __WINE_WINCRYPT_H")
+        cpp_quote("typedef PCCERT_CONTEXT PCX509CERT;")
+        cpp_quote("#else")
+        typedef const void *PCX509CERT;
+        typedef void *HCERTSTORE;
+        cpp_quote("#endif")
+
+        typedef BLOB THUMBBLOB;
+        typedef void *HCAPICERTSTORE;
+
+        cpp_quote("#define MST_NONE             0x00000000")
+        cpp_quote("#define MST_THIS_SIGN        0x00000001")
+        cpp_quote("#define MST_THIS_ENCRYPT     0x00000002")
+        cpp_quote("#define MST_BLOB_FLAG        0x00000004")
+        cpp_quote("#define MST_THIS_BLOBSIGN    (MST_BLOB_FLAG | MST_THIS_SIGN)")
+        cpp_quote("#define MST_CHILD_SIGN       0x00000100")
+        cpp_quote("#define MST_CHILD_ENCRYPT    0x00000200")
+        cpp_quote("#define MST_SUBMSG_SIGN      0x00001000")
+        cpp_quote("#define MST_SUBMSG_ENCRYPT   0x00002000")
+        cpp_quote("#define MST_RECEIPT_REQUEST  0x00010000")
+        cpp_quote("#define MST_CLASS_SMIME_V1   0x00000000")
+        cpp_quote("#define MST_CLASS_PGP        0x01000000")
+
+        typedef enum tagCERTSTATE
+        {
+            CERTIFICATE_OK,
+            CERTIFICATE_NOT_PRESENT,
+            CERTIFICATE_EXPIRED,
+            CERTIFICATE_CHAIN_TOO_LONG,
+            CERTIFICATE_MISSING_ISSUER,
+            CERTIFICATE_CRL_LISTED,
+            CERTIFICATE_NOT_TRUSTED,
+            CERTIFICATE_INVALID,
+            CERTIFICATE_ERROR,
+            CERTIFICATE_NOPRINT,
+            CERTIFICATE_UNKNOWN
+        } CERTSTATE;
+
+        typedef enum tagCERTNAMETYPE
+        {
+            SIMPLE,
+            OID,
+            X500,
+        } CERTNAMETYPE;
+
+        typedef enum tagCERTDATAID
+        {
+            CDID_EMAIL,
+            CDID_MAX
+        } CERTDATAID;
+
+        typedef struct tagX509CERTRESULT
+        {
+            DWORD       cEntries;
+            CERTSTATE  *rgcs;
+            PCX509CERT *rgpCert;
+        } X509CERTRESULT, *PX509CERTRESULT;
+        typedef const X509CERTRESULT *PCX509CERTRESULT;
+
+        HRESULT InitNew(void);
+
+        HRESULT CheckInit(void);
+
+        HRESULT EncodeMessage(
+            [in]    IMimeMessageTree */*const*/ pTree,
+            [in]    DWORD dwFlags);
+
+        HRESULT EncodeBody(
+            [in]    IMimeMessageTree */*const*/ pTree,
+            [in]    HBODY hEncodeRoot,
+            [in]    DWORD dwFlags);
+
+        HRESULT DecodeMessage(
+            [in]    IMimeMessageTree */*const*/ pTree,
+            [in]    DWORD dwFlags);
+
+        HRESULT DecodeBody(
+            [in]    IMimeMessageTree */*const*/ pTree,
+            [in]    HBODY hDecodeRoot,
+            [in]    DWORD dwFlags);
+
+        HRESULT EnumCertificates(
+            [in]    HCAPICERTSTORE hc,
+            [in]    DWORD dwUsage,
+            [in]    PCX509CERT pPrev,
+            [out]   PCX509CERT *ppCert);
+
+        HRESULT GetCertificateName(
+            [in]    const PCX509CERT pX509Cert,
+            [in]    const CERTNAMETYPE cn,
+            [out]   LPSTR *ppszName);
+
+        HRESULT GetMessageType(
+            [in]    const HWND hwndParent,
+            [in]    IMimeBody */*const*/ pBody,
+            [out]   DWORD */*const*/ pdwSecType);
+
+        HRESULT GetCertData(
+            [in]        const PCX509CERT pX509Cert,
+            [in]        const CERTDATAID dataid,
+            [out, ref]  LPPROPVARIANT pValue);
+    }
+
+    [
+        uuid(fd853cd1-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeHeaderTable : IPersistStream
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(fd853cec-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimePropertySchema : IUnknown
+    {
+        typedef enum tagMIMEPROPFLAGS
+        {
+            MPF_INETCSET            = 0x01,
+            MPF_RFC1522             = 0x02,
+            MPF_ADDRESS             = 0x04,
+            MPF_HASPARAMS           = 0x08,
+            MPF_MIME                = 0x10,
+            MPF_READONLY            = 0x20
+        } MIMEPROPFLAGS;
+
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(fd853cd3-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimePropertySet : IPersistStreamInit
+    {
+        typedef [unique] IMimePropertySet *LPMIMEPROPERTYSET;
+
+        cpp_quote("#define PDF_ENCODED              0x00000001")
+        cpp_quote("#define PDF_NAMEINDATA           0x00000002")
+        cpp_quote("#define PDF_HEADERFORMAT        (0x00000004 | PDF_ENCODED)")
+        cpp_quote("#define PDF_NOCOMMENTS           0x00000008")
+        cpp_quote("#define PDF_SAVENOENCODE         0x00000010")
+        cpp_quote("#define PDF_VECTOR               0x00000020")
+
+        typedef struct tagMIMEPARAMINFO
+        {
+            LPSTR           pszName;
+            LPSTR           pszData;
+        } MIMEPARAMINFO, *LPMIMEPARAMINFO;
+
+        typedef enum tagPROPINFOMASK
+        {
+            PIM_CHARSET           = 0x01,
+            PIM_ENCODINGTYPE      = 0x02,
+            PIM_ROWNUMBER         = 0x04,
+            PIM_FLAGS             = 0x08,
+            PIM_PROPID            = 0x10,
+            PIM_VALUES            = 0x20,
+            PIM_VTDEFAULT         = 0x40,
+            PIM_VTCURRENT         = 0x80
+        } PROPINFOMASK;
+
+        typedef struct tagMIMEPROPINFO
+        {
+            DWORD           dwMask;
+            HCHARSET        hCharset;
+            ENCODINGTYPE    ietEncoding;
+            DWORD           dwRowNumber;
+            DWORD           dwFlags;
+            DWORD           dwPropId;
+            DWORD           cValues;
+            VARTYPE         vtDefault;
+            VARTYPE         vtCurrent;
+        } MIMEPROPINFO, *LPMIMEPROPINFO;
+        typedef const MIMEPROPINFO *LPCMIMEPROPINFO;
+
+        HRESULT GetPropInfo(
+            [in]        LPCSTR               pszName,
+            [in,out]    LPMIMEPROPINFO       pInfo);
+
+        HRESULT SetPropInfo(
+            [in]        LPCSTR               pszName,
+            [in]        LPCMIMEPROPINFO      pInfo);
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef GetProp")
+cpp_quote("#undef SetProp")
+cpp_quote("#undef EnumProps")
+cpp_quote("#endif")
+        HRESULT GetProp(
+            [in]        LPCSTR               pszName,
+            [in]        DWORD                dwFlags,
+            [in,out]    LPPROPVARIANT        pValue);
+
+        HRESULT SetProp(
+            [in]        LPCSTR               pszName,
+            [in]        DWORD                dwFlags,
+            [in]        LPCPROPVARIANT       pValue);
+
+        HRESULT AppendProp(
+            [in]        LPCSTR               pszName,
+            [in]        DWORD                dwFlags,
+            [in]        LPPROPVARIANT        pValue);
+
+        HRESULT DeleteProp(
+            [in]        LPCSTR               pszName);
+
+        HRESULT CopyProps(
+            [in]        ULONG                cNames,
+            [in,unique] LPCSTR               *prgszName,
+            [in]        IMimePropertySet     *pPropertySet);
+
+        HRESULT MoveProps(
+            [in]        ULONG                cNames,
+            [in]        LPCSTR               *prgszName,
+            [in]        IMimePropertySet     *pPropertySet);
+
+        HRESULT DeleteExcept(
+            [in]        ULONG                cNames,
+            [in]        LPCSTR               *prgszName);
+
+        HRESULT QueryProp(
+            [in]        LPCSTR               pszName,
+            [in]        LPCSTR               pszCriteria,
+            [in]        boolean              fSubString,
+            [in]        boolean              fCaseSensitive);
+
+        HRESULT GetCharset(
+            [out]       LPHCHARSET           phCharset);
+
+        HRESULT SetCharset(
+            [in]        HCHARSET             hCharset,
+            [in]        CSETAPPLYTYPE        applytype);
+
+        HRESULT GetParameters(
+            [in]        LPCSTR               pszName,
+            [out]       ULONG                *pcParams,
+            [out]       LPMIMEPARAMINFO      *pprgParam);
+
+        HRESULT IsContentType(
+            [in]        LPCSTR               pszPriType,
+            [in,unique] LPCSTR               pszSubType);
+
+        HRESULT BindToObject(
+            [in]        REFIID               riid,
+            [out,iid_is(riid)] void          **ppvObject);
+
+        HRESULT Clone(
+            [out]       IMimePropertySet     **ppPropertySet);
+
+        HRESULT SetOption(
+            [in]        const TYPEDID        oid,
+            [in]        LPCPROPVARIANT       pValue);
+
+        HRESULT GetOption(
+            [in]        const TYPEDID        oid,
+            [in,out]    LPPROPVARIANT        pValue);
+
+        cpp_quote("#define EPF_NONAME 0x00000001")
+
+        HRESULT EnumProps(
+            [in]        DWORD                dwFlags,
+            [out]       IMimeEnumProperties  **ppEnum);
+
+    }
+
+    [
+        uuid(c558834a-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeAddressTable : IUnknown
+    {
+        typedef [unique] IMimeAddressTable *LPMIMEADDRESSTABLE;
+
+        DECLARE_HANDLE(HADDRESS);
+        typedef HADDRESS *LPHADDRESS;
+        typedef DWORD IADDRESSTYPE;
+
+        typedef enum tagADDRESSFORMAT
+        {
+            AFT_DISPLAY_FRIENDLY,
+            AFT_DISPLAY_EMAIL,
+            AFT_DISPLAY_BOTH,
+            AFT_RFC822_DECODED,
+            AFT_RFC822_ENCODED,
+            AFT_RFC822_TRANSMIT,
+        } ADDRESSFORMAT;
+
+        typedef struct tagADDRESSPROPS
+        {
+            DWORD           dwProps;
+            HADDRESS        hAddress;
+            ENCODINGTYPE    ietFriendly;
+            HCHARSET        hCharset;
+            DWORD           dwAdrType;
+            LPSTR           pszFriendly;
+            LPWSTR          pwszReserved;
+            LPSTR           pszEmail;
+            CERTSTATE       certstate;
+            THUMBBLOB       tbSigning;
+            THUMBBLOB       tbEncryption;
+            DWORD           dwCookie;
+            DWORD           dwReserved1;
+            DWORD           dwReserved2;
+        } ADDRESSPROPS, *LPADDRESSPROPS;
+
+        typedef struct tagADDRESSLIST
+        {
+            ULONG           cAdrs;
+            LPADDRESSPROPS  prgAdr;
+        } ADDRESSLIST, *LPADDRESSLIST;
+
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(ee519f11-851a-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeWebDocument : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(c558834c-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeBody : IMimePropertySet
+    {
+        typedef [unique] IMimeBody *LPMIMEBODY;
+
+        typedef enum tagIMSGBODYTYPE
+        {
+            IBT_SECURE,
+            IBT_ATTACHMENT,
+            IBT_EMPTY,
+            IBT_CSETTAGGED,
+            IBT_AUTOATTACH,
+        } IMSGBODYTYPE;
+
+        typedef struct tagBODYOFFSETS
+        {
+            DWORD cbBoundaryStart;
+            DWORD cbHeaderStart;
+            DWORD cbBodyStart;
+            DWORD cbBodyEnd;
+        } BODYOFFSETS, *LPBODYOFFSETS;
+
+        typedef struct tagTRANSMITINFO
+        {
+            ENCODINGTYPE ietCurrent;
+            ENCODINGTYPE ietXmitMime;
+            ENCODINGTYPE ietXmit822;
+            ULONG cbLongestLine;
+            ULONG cExtended;
+            ULONG ulPercentExt;
+            ULONG cbSize;
+            ULONG cLines;
+        } TRANSMITINFO, *LPTRANSMITINFO;
+
+        HRESULT IsType(
+            [in]        IMSGBODYTYPE     bodytype);
+
+        HRESULT SetDisplayName(
+            [in]        LPCSTR           pszDisplay);
+
+        HRESULT GetDisplayName(
+            [out]       LPSTR            *ppszDisplay);
+
+        HRESULT GetOffsets(
+            [out]       LPBODYOFFSETS     pOffsets);
+
+        HRESULT GetCurrentEncoding(
+            [out]       ENCODINGTYPE     *pietEncoding);
+
+        HRESULT SetCurrentEncoding(
+            [in]        ENCODINGTYPE     ietEncoding);
+
+        HRESULT GetEstimatedSize(
+            [in]        ENCODINGTYPE     ietEncoding,
+            [out]       ULONG            *pcbSize);
+
+        HRESULT GetDataHere(
+            [in]        ENCODINGTYPE     ietEncoding,
+            [in]        IStream          *pStream);
+
+        HRESULT GetData(
+            [in]        ENCODINGTYPE     ietEncoding,
+            [out]       IStream          **ppStream);
+
+        HRESULT SetData(
+            [in]        ENCODINGTYPE     ietEncoding,
+            [in,unique] LPCSTR           pszPriType,
+            [in,unique] LPCSTR           pszSubType,
+            [in]        REFIID           riid,
+            [in,iid_is(riid)]  LPVOID    pvObject);
+
+        HRESULT EmptyData(void);
+
+        HRESULT CopyTo(
+            [in]        IMimeBody        *pBody);
+
+        HRESULT GetTransmitInfo(
+            [in,out]    LPTRANSMITINFO   pTransmitInfo);
+
+        HRESULT SaveToFile(
+            [in]        ENCODINGTYPE     ietEncoding,
+            [in]        LPCSTR           pszFilePath);
+
+        HRESULT GetHandle(
+           [out]        LPHBODY          phBody);
+
+    }
+
+    [
+        uuid(fd853cd4-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeMessageTree : IPersistStreamInit
+    {
+        typedef [unique] IMimeMessageTree *LPMIMEMESSAGETREE;
+
+        const HBODY HBODY_ROOT = (HBODY)-1;
+
+        typedef enum tagBODYLOCATION
+        {
+            IBL_ROOT,
+            IBL_PARENT,
+            IBL_FIRST,
+            IBL_LAST,
+            IBL_NEXT,
+            IBL_PREVIOUS,
+        } BODYLOCATION;
+
+        typedef struct tagFINDBODY
+        {
+            LPSTR pszPriType;
+            LPSTR pszSubType;
+            DWORD dwReserved;
+        } FINDBODY, *LPFINDBODY;
+
+        HRESULT GetMessageSource(
+            [out]       IStream **ppStream,
+            [in]        DWORD dwFlags);
+
+        HRESULT GetMessageSize(
+            [out]       ULONG *pcbSize,
+            [in]        DWORD dwFlags);
+
+        HRESULT LoadOffsetTable(
+            [in]        IStream *pStream);
+
+        HRESULT SaveOffsetTable(
+            [in]        IStream *pStream,
+            [in]        DWORD dwFlags);
+
+        HRESULT GetFlags(
+            [out]       DWORD *pdwFlags);
+
+        HRESULT Commit(
+            [in]        DWORD dwFlags);
+
+        HRESULT HandsOffStorage();
+
+        HRESULT BindToObject(
+            [in]        const HBODY hBody,
+            [in]        REFIID riid,
+            [out, iid_is(riid)] void **ppvObject);
+
+        HRESULT SaveBody(
+            [in]        HBODY hBody,
+            [in]        DWORD dwFlags,
+            [in]        IStream *pStream);
+
+        HRESULT InsertBody(
+            [in]        BODYLOCATION location,
+            [in]        HBODY hPivot,
+            [out]       LPHBODY phBody);
+
+        HRESULT GetBody(
+            [in]        BODYLOCATION location,
+            [in]        HBODY hPivot,
+            [out]       LPHBODY phBody);
+
+        HRESULT DeleteBody(
+            [in]        HBODY hBody,
+            [in]        DWORD dwFlags);
+
+        HRESULT MoveBody(
+            [in]        HBODY hBody,
+            [in]        BODYLOCATION location);
+
+        HRESULT CountBodies(
+            [in]        HBODY hParent,
+            [in]        boolean fRecurse,
+            [out]       ULONG *pcBodies);
+
+        HRESULT FindFirst(
+            [in, out]   LPFINDBODY pFindBody,
+            [out]       LPHBODY phBody);
+
+        HRESULT FindNext(
+            [in, out]   LPFINDBODY pFindBody,
+            [out]       LPHBODY phBody);
+
+        HRESULT ResolveURL(
+            [in]        HBODY hRelated,
+            [in]        LPCSTR pszBase,
+            [in]        LPCSTR pszURL,
+            [in]        DWORD dwFlags,
+            [out]       LPHBODY phBody);
+
+        HRESULT ToMultipart(
+            [in]        HBODY hBody,
+            [in]        LPCSTR pszSubType,
+            [out]       LPHBODY phMultipart);
+
+        HRESULT GetBodyOffsets(
+            [in]        HBODY hBody,
+            [in, out]   LPBODYOFFSETS pOffsets);
+
+        HRESULT GetCharset(
+            [out]       LPHCHARSET phCharset);
+
+        HRESULT SetCharset(
+            [in]        HCHARSET hCharset,
+            [in]        CSETAPPLYTYPE applytype);
+
+        HRESULT IsBodyType(
+            [in]        HBODY hBody,
+            [in]        IMSGBODYTYPE bodytype);
+
+        HRESULT IsContentType(
+            [in]        HBODY hBody,
+            [in]        LPCSTR pszPriType,
+            [in]        LPCSTR pszSubType);
+
+        HRESULT QueryBodyProp(
+            [in]        HBODY hBody,
+            [in]        LPCSTR pszName,
+            [in]        LPCSTR pszCriteria,
+            [in]        boolean fSubString,
+            [in]        boolean fCaseSensitive);
+
+        HRESULT GetBodyProp(
+            [in]        HBODY hBody,
+            [in]        LPCSTR pszName,
+            [in]        DWORD dwFlags,
+            [in, out]   LPPROPVARIANT pValue);
+
+        HRESULT SetBodyProp(
+            [in]        HBODY hBody,
+            [in]        LPCSTR pszName,
+            [in]        DWORD dwFlags,
+            [in]        LPCPROPVARIANT pValue);
+
+        HRESULT DeleteBodyProp(
+            [in]        HBODY hBody,
+            [in]        LPCSTR pszName);
+
+        HRESULT SetOption(
+            [in]        const TYPEDID oid,
+            [in]        LPCPROPVARIANT pValue);
+
+        HRESULT GetOption(
+            [in]        const TYPEDID oid,
+            [in, out]   LPPROPVARIANT pValue);
+    }
+
+    [
+        uuid(fd853cd5-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeMessage : IMimeMessageTree
+    {
+        typedef [unique] IMimeMessage *LPMIMEMESSAGE;
+
+        typedef DWORD TEXTTYPE;
+
+        typedef enum tagIMSGFLAGS
+        {
+            IMF_ATTACHMENTS     = 0x00000001,
+            IMF_MULTIPART       = 0x00000002,
+            IMF_SUBMULTIPART    = 0x00000004,
+            IMF_MIME            = 0x00000008,
+            IMF_HTML            = 0x00000010,
+            IMF_PLAIN           = 0x00000020,
+            IMF_PARTIAL         = 0x00000040,
+            IMF_SIGNED          = 0x00000080,
+            IMF_ENCRYPTED       = 0x00000100,
+            IMF_TNEF            = 0x00000200,
+            IMF_MHTML           = 0x00000400,
+            IMF_SECURE          = 0x00000800,
+            IMF_TEXT            = 0x00001000,
+            IMF_CSETTAGGED      = 0x00002000,
+            IMF_NEWS            = 0x00004000,
+            IMF_VOICEMAIL       = 0x00008000,
+            IMF_HASVCARD        = 0x00010000,
+            IMF_RFC1154         = 0x00020000,
+        } IMSGFLAGS;
+
+        typedef enum tagIMSGPRIORITY
+        {
+            IMSG_PRI_LOW    = 5,
+            IMSG_PRI_NORMAL = 3,
+            IMSG_PRI_HIGH   = 1,
+        } IMSGPRIORITY;
+
+        cpp_quote("#define WPF_HTML             0x00000001")
+        cpp_quote("#define WPF_AUTOINLINE       0x00000002")
+        cpp_quote("#define WPF_SLIDESHOW        0x00000004")
+        cpp_quote("#define WPF_ATTACHLINKS      0x00000008")
+        cpp_quote("#define WPF_IMAGESONLY       0x00000010")
+        cpp_quote("#define WPF_NOMETACHARSET    0x00000020")
+
+        typedef struct tagWEPAGEOPTIONS
+        {
+            DWORD cbSize;
+            DWORD dwFlags;
+            DWORD dwDelay;
+            WCHAR wchQuote;
+        } WEBPAGEOPTIONS, *LPWEBPAGEOPTIONS;
+
+        cpp_quote("#define TXT_PLAIN       1")
+        cpp_quote("#define TXT_HTML        2")
+
+        HRESULT CreateWebPage(
+            [in]        IStream *pRootStm,
+            [in]        LPWEBPAGEOPTIONS pOptions,
+            [in]        IMimeMessageCallback *pCallback,
+            [out]       IMoniker **ppMoniker);
+
+        HRESULT GetProp(
+            [in]        LPCSTR pszName,
+            [in]        DWORD dwFlags,
+            [in,out]    LPPROPVARIANT pValue);
+
+        HRESULT SetProp(
+            [in]        LPCSTR pszName,
+            [in]        DWORD dwFlags,
+            [in]        LPCPROPVARIANT pValue);
+
+        HRESULT DeleteProp(
+            [in]        LPCSTR pszName);
+
+        HRESULT QueryProp(
+            [in]        LPCSTR pszName,
+            [in]        LPCSTR pszCriteria,
+            [in]        boolean fSubString,
+            [in]        boolean fCaseSensitive);
+
+        HRESULT GetTextBody(
+            [in]        DWORD dwTxtType,
+            [in]        ENCODINGTYPE ietEncoding,
+            [out]       IStream **pStream,
+            [out]       LPHBODY phBody);
+
+        HRESULT SetTextBody(
+            [in]        DWORD dwTxtType,
+            [in]        ENCODINGTYPE ietEncoding,
+            [in]        HBODY hAlternative,
+            [in]        IStream *pStream,
+            [out]       LPHBODY phBody);
+
+        HRESULT AttachObject(
+            [in]        REFIID riid,
+            [in, iid_is(riid)] void *pvObject,
+            [out]       LPHBODY phBody);
+
+        HRESULT AttachFile(
+            [in]        LPCSTR pszFilePath,
+            [in]        IStream *pstmFile,
+            [out]       LPHBODY phBody);
+
+        HRESULT AttachURL(
+            [in]        LPCSTR pszBase,
+            [in]        LPCSTR pszURL,
+            [in]        DWORD dwFlags,
+            [in]        IStream *pstmURL,
+            [out]       LPSTR *ppszCIDURL,
+            [out]       LPHBODY phBody);
+
+        HRESULT GetAttachments(
+            [out]       ULONG *pcAttach,
+            [out]       LPHBODY *pprghAttach);
+
+        HRESULT GetAddressTable(
+            [out]       IMimeAddressTable **ppTable);
+
+        HRESULT GetSender(
+            [in, out]   LPADDRESSPROPS pAddress);
+
+        HRESULT GetAddressTypes(
+            [in]        DWORD dwAdrTypes,
+            [in]        DWORD dwProps,
+            [in, out]   LPADDRESSLIST pList);
+
+        HRESULT GetAddressFormat(
+            [in]        DWORD dwAdrTypes,
+            [in]        ADDRESSFORMAT format,
+            [out]       LPSTR *ppszFormat);
+
+        HRESULT EnumAddressTypes(
+            [in]        DWORD dwAdrTypes,
+            [in]        DWORD dwProps,
+            [out]       IMimeEnumAddressTypes **ppEnum);
+
+        HRESULT SplitMessage(
+            [in]        ULONG cbMaxPart,
+            [out]       IMimeMessageParts **ppParts);
+
+        HRESULT GetRootMoniker(
+            [out]       IMoniker **ppMoniker);
+    }
+
+    [
+        uuid(761aa741-7bda-11d1-8aa9-00c04fb951f3),
+        object
+    ]
+    interface IMimeMessageCallback : IUnknown
+    {
+        HRESULT OnWebPageSplitter(
+            [in]       DWORD cInlined,
+            [in]       IStream *ppStream);
+    }
+
+    [
+        uuid(de4ad8da-555f-11d1-8dd0-00c04fb951f9),
+        object
+    ]
+    interface IPersistMime : IPersist
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(c558834f-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeMessageParts : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(c558834d-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeEnumHeaderRows : IUnknown
+    {
+        typedef struct tagENUMHEADERROW
+        {
+            HHEADERROW   hRow;
+            LPSTR        pszHeader;
+            LPSTR        pszData;
+            ULONG        cchData;
+            DWORD_PTR    dwReserved;
+        } ENUMHEADERROW, *LPENUMHEADERROW;
+
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(fd853cee-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeEnumProperties : IUnknown
+    {
+        typedef [unique] IMimeEnumProperties *LPMIMEENUMPROPERTIES;
+
+        typedef struct tagENUMPROPERTY
+        {
+            LPSTR       pszName;
+            HHEADERROW  hRow;
+            DWORD       dwPropId;
+        } ENUMPROPERTY, *LPENUMPROPERTY;
+
+        HRESULT Next(
+            [in]      ULONG cFetch,
+            [in, out] LPENUMPROPERTY prgProp,
+            [out]     ULONG *pcFetched);
+
+        HRESULT Skip(
+            [in]      ULONG cItems);
+
+        HRESULT Reset(void);
+
+        HRESULT Clone(
+            [out]      IMimeEnumProperties **ppEnum);
+
+        HRESULT Count(
+            [out]      ULONG *pcItems);
+
+    }
+
+    [
+        uuid(c5588354-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeEnumAddressTypes : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(c5588350-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeEnumMessageParts : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(64577981-86d7-11d1-bdfc-00c04fa31009),
+        object
+    ]
+    interface IHashTable : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(c5588351-7f86-11d0-8252-00c04fd85ab4),
+        object
+    ]
+    interface IMimeAllocator : IMalloc
+    {
+        typedef [unique] IMimeAllocator *LPMIMEALLOCATOR;
+
+        HRESULT FreeParamInfoArray(
+            [in] ULONG            cParams,
+            [in] LPMIMEPARAMINFO  prgParam,
+            [in] boolean          fFreeArray);
+
+        HRESULT FreeAddressList(
+            [in,out] LPADDRESSLIST pList);
+
+        HRESULT FreeAddressProps(
+            [in,out] LPADDRESSPROPS pAddress);
+
+        HRESULT ReleaseObjects(
+            [in] ULONG            cObjects,
+            [in] IUnknown         **prgpUnknown,
+            [in] boolean          fFreeArray);
+
+        HRESULT FreeEnumHeaderRowArray(
+            [in] ULONG            cRows,
+            [in] LPENUMHEADERROW  prgRow,
+            [in] boolean          fFreeArray);
+
+        HRESULT FreeEnumPropertyArray(
+            [in] ULONG            cProps,
+            [in] LPENUMPROPERTY   prgProp,
+            [in] boolean          fFreeArray);
+
+        HRESULT FreeThumbprint(
+            [in] THUMBBLOB         *pthumbprint);
+
+        HRESULT PropVariantClear(
+            [in] LPPROPVARIANT     pProp);
+
+    }
+
+    [
+        uuid(feceaffd-c441-11d1-960e-00c04fbd7c09),
+        object
+    ]
+    interface IMimeObjResolver : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(b0d17fc2-7bc4-11d1-bdfa-00c04fa31009),
+        object
+    ]
+    interface IFontCache : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(b0d17fc5-7bc4-11d1-bdfa-00c04fa31009),
+        object
+    ]
+    interface IFontCacheNotify : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(70183210-7b36-11d2-8c12-00c04fa31009),
+        object
+    ]
+    interface IMimeEditTag : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+        uuid(d09ee528-7b38-11d2-8c12-00c04fa31009),
+        object
+    ]
+    interface IMimeEditTagCollection : IUnknown
+    {
+        /* FIXME: fill this in */
+    }
+
+    [
+         uuid(ba715ae0-a740-11d2-8b22-0080c76b34c6),
+         local
+    ]
+    interface IMimeSecurityCallback : IUnknown
+    {
+        /* FIXME: fill this in */
+
+        cpp_quote("#define CMS_RECIPIENT_INFO_TYPE_UNKNOWN                0")
+        cpp_quote("#define CMS_RECIPIENT_INFO_TYPE_KEYTRANS               1")
+        cpp_quote("#define CMS_RECIPIENT_INFO_TYPE_KEYAGREE               2")
+        cpp_quote("#define CMS_RECIPIENT_INFO_TYPE_MAIL_LIST              3")
+
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_CERTIFICATE          0")
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_KEYTRANS             1")
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_PROVIDER             2")
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_EPHEMERAL_KEYAGREE   3")
+        cpp_quote("#define CMS_RECIPIENT_INFO_PUBKEY_STATIC_KEYAGREE      4")
+
+        cpp_quote("#define CMS_RECIPIENT_INFO_KEYID_CERTIFICATE           0")
+        cpp_quote("#define CMS_RECIPIENT_INFO_KEYID_ISSUERSERIAL          1")
+        cpp_quote("#define CMS_RECIPIENT_INFO_KEYID_KEY_ID                2")
+
+    }
+}
+
+cpp_quote("#ifdef __cplusplus")
+cpp_quote(" extern \"C\" {")
+cpp_quote("#endif")
+
+cpp_quote("")
+cpp_quote("HRESULT WINAPI MimeOleSetCompatMode(DWORD);")
+cpp_quote("HRESULT WINAPI MimeOleContentTypeFromUrl(LPCSTR,LPCSTR,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleParseMhtmlUrl(LPSTR,LPSTR*,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleObjectFromUrl(LPCSTR,BOOL,REFIID,LPVOID*,IUnknown**);")
+cpp_quote("HRESULT WINAPI MimeOleObjectFromMoniker(BINDF,IMoniker*,IBindCtx*,REFIID,LPVOID*,IMoniker**);")
+cpp_quote("HRESULT WINAPI MimeOleCombineURL(LPCSTR,ULONG,LPCSTR,ULONG,BOOL,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleGetSubjectFileName(IMimePropertySet*,ULONG*,ULONG*,LPSTR,ULONG);")
+cpp_quote("HRESULT WINAPI MimeOleCreateWebDocument(LPCSTR,LPCSTR,IMimeWebDocument**);")
+cpp_quote("HRESULT WINAPI MimeOleGetRelatedSection(IMimeMessageTree*,boolean,LPHBODY,boolean*);")
+cpp_quote("HRESULT WINAPI MimeOleGetMixedSection(IMimeMessageTree*,boolean,LPHBODY,boolean*);")
+cpp_quote("HRESULT WINAPI MimeOleGetAlternativeSection(IMimeMessageTree*,LPHBODY,boolean*);")
+cpp_quote("HRESULT WINAPI MimeOleGenerateCID(LPSTR,ULONG,boolean);")
+cpp_quote("HRESULT WINAPI MimeOleGenerateMID(LPSTR,ULONG,boolean);")
+cpp_quote("HRESULT WINAPI MimeOleCreateByteStream(IStream**);")
+cpp_quote("HRESULT WINAPI MimeOlGetPropertySchema(IMimePropertySchema**);")
+cpp_quote("HRESULT WINAPI MimeOleQueryString(LPCSTR,LPCSTR,boolean,boolean);")
+cpp_quote("HRESULT WINAPI MimeOleGetPropA(IMimePropertySet*,LPCSTR,DWORD,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleSetPropA(IMimePropertySet*,LPCSTR,DWORD,LPCSTR);")
+cpp_quote("HRESULT WINAPI MimeOleGetPropW(IMimePropertySet*,LPCSTR,DWORD,LPWSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleSetPropW(IMimePropertySet*,LPCSTR,DWORD,LPCWSTR);")
+cpp_quote("HRESULT WINAPI MimeOleGetBodyPropA(IMimeMessageTree*,HBODY,LPCSTR,DWORD,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleSetBodyPropA(IMimeMessageTree*,HBODY,LPCSTR,DWORD,LPCSTR);")
+cpp_quote("HRESULT WINAPI MimeOleGetBodyPropW(IMimeMessageTree*,HBODY,LPCSTR,DWORD,LPWSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleSetBodyPropW(IMimeMessageTree*,HBODY,LPCSTR,DWORD,LPCWSTR);")
+cpp_quote("HRESULT WINAPI MimeOleCreateHeaderTable(IMimeHeaderTable**);")
+cpp_quote("HRESULT WINAPI MimeOleVariantFree(LPPROPVARIANT);")
+cpp_quote("HRESULT WINAPI MimeOleVariantCopy(LPPROPVARIANT,LPPROPVARIANT);")
+cpp_quote("HRESULT WINAPI MimeOleGetExtClassId(LPCSTR,LPCLSID);")
+cpp_quote("HRESULT WINAPI MimeOleEncodeHeader(HCHARSET,LPPROPVARIANT,LPSTR*,LPRFC1522INFO);")
+cpp_quote("HRESULT WINAPI MimeOleDecodeHeader(HCHARSET,LPCSTR,LPPROPVARIANT,LPRFC1522INFO);")
+cpp_quote("HRESULT WINAPI MimeOleRfc1522Decode(LPCSTR,LPSTR,ULONG,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleRfc1522Encode(LPCSTR,HCHARSET,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleGetInternat(IMimeInternational**);")
+cpp_quote("HRESULT WINAPI MimeOleFindCharset(LPCSTR,LPHCHARSET);")
+cpp_quote("HRESULT WINAPI MimeOleGetCharsetInfo(HCHARSET,LPINETCSETINFO);")
+cpp_quote("HRESULT WINAPI MimeOleGetCodePageInfo(HCHARSET,LPCODEPAGEINFO);")
+cpp_quote("HRESULT WINAPI MimeOleGetDefaultCharset(LPHCHARSET);")
+cpp_quote("HRESULT WINAPI MimeOleSetDefaultCharset(HCHARSET);")
+cpp_quote("HRESULT WINAPI MimeOleGetCodePageCharset(CODEPAGEID,CHARSETTYPE,LPHCHARSET);")
+cpp_quote("HRESULT WINAPI MimeOleCreateVirtualStream(IStream**);")
+cpp_quote("HRESULT WINAPI MimeOleOpenFileStream(LPCSTR,DWORD,DWORD,IStream**);")
+cpp_quote("HRESULT WINAPI MimeOleIsTnefStream(IStream*);")
+cpp_quote("HRESULT WINAPI MimeOleGenerateFileName(LPCSTR,LPCSTR,LPCSTR,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleGetFileExtension(LPCSTR,LPSTR,ULONG);")
+cpp_quote("HRESULT WINAPI MimeOleCreateSecurity(IMimeSecurity**);")
+cpp_quote("HRESULT WINAPI MimeOleInetDateToFileTime(LPCSTR,LPFILETIME);")
+cpp_quote("HRESULT WINAPI MimeOleFileTimeToInetDate(LPFILETIME,LPSTR,ULONG);")
+cpp_quote("HRESULT WINAPI MimeOleCreateMessageParts(IMimeMessageParts**);")
+cpp_quote("HRESULT WINAPI MimeOleGetAllocator(IMimeAllocator**);")
+cpp_quote("HRESULT WINAPI MimeOleParseRfc822Address(DWORD,ENCODINGTYPE,LPCSTR,LPADDRESSLIST);")
+cpp_quote("HRESULT WINAPI MimeOleCreateMessage(IUnknown*,IMimeMessage**);")
+cpp_quote("HRESULT WINAPI MimeOleMergePartialHeaders(IStream*,IStream*);")
+cpp_quote("HRESULT WINAPI MimeOleEscapeString(CODEPAGEID,LPCSTR,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleGetExtContentType(LPCSTR,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleGetContentTypeExt(LPCSTR,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleGetFileInfo(LPSTR,LPSTR*,LPSTR*,LPSTR*,LPSTR*,LPSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleCreateBody(IMimeBody**);")
+cpp_quote("HRESULT WINAPI MimeOleCreatePropertySet(IUnknown*,IMimePropertySet**);")
+cpp_quote("HRESULT WINAPI MimeOleCreateMessageTree(IUnknown*,IMimeMessageTree**);")
+cpp_quote("HRESULT WINAPI MimeOleGetCertsFromThumbprints(THUMBBLOB*,X509CERTRESULT*,const HCERTSTORE*,DWORD);")
+cpp_quote("HRESULT WINAPI MimeOleSplitMessage(IMimeMessage*,ULONG,IMimeMessageParts**);")
+cpp_quote("HRESULT WINAPI MimeOleClearDirtyTree(IMimeMessageTree*);")
+cpp_quote("HRESULT WINAPI MimeOleConvertEnrichedToHTML(CODEPAGEID,IStream*,IStream*);")
+cpp_quote("HRESULT WINAPI MimeOleSMimeCapsToDlg(LPBYTE,DWORD,DWORD,PCX509CERT*,HWND,DWORD,DWORD,DWORD);")
+cpp_quote("HRESULT WINAPI MimeOleSMimeCapsFromDlg(HWND,DWORD,DWORD,DWORD,LPBYTE,DWORD*);")
+cpp_quote("HRESULT WINAPI MimeOleSMimeCapInit(LPBYTE,DWORD,LPVOID*);")
+cpp_quote("HRESULT WINAPI MimeOleSMimeCapAddSMimeCap(LPBYTE,DWORD,LPVOID);")
+cpp_quote("HRESULT WINAPI MimeOleSMimeCapAddCert(LPBYTE,DWORD,BOOL,LPVOID);")
+cpp_quote("HRESULT WINAPI MimeOleSMimeCapGetEncAlg(LPVOID,LPBYTE,DWORD*,DWORD*);")
+cpp_quote("HRESULT WINAPI MimeOleSMimeCapGetHashAlg(LPVOID,LPBYTE,DWORD*,DWORD*);")
+cpp_quote("HRESULT WINAPI MimeOleSMimeCapRelease(LPVOID);")
+cpp_quote("HRESULT WINAPI MimeOleAlgNameFromSMimeap(LPBYTE,DWORD,LPCSTR*);")
+cpp_quote("HRESULT WINAPI MimeOleAlgStrengthFromSMimeCap(LPBYTE,DWORD,BOOL,DWORD*);")
+cpp_quote("HRESULT WINAPI MimeOleSMimeCapsFull(LPVOID,BOOL,BOOL,LPBYTE,DWORD*);")
+cpp_quote("HRESULT WINAPI MimeOleCreateHashTable(DWORD,BOOL,IHashTable**);")
+cpp_quote("HRESULT WINAPI MimeOleStripHeaders(IMimeMessage*,HBODY,LPCSTR,LPCSTR,IStream**);")
+
+cpp_quote("HRESULT WINAPI MimeEditViewSource(HWND,IMimeMessage*);")
+cpp_quote("HRESULT WINAPI MimeEditIsSafeToRun(HWND,LPCSTR);")
+cpp_quote("HRESULT WINAPI MimeEditVerifyTrust(HWND,LPCSTR,LPCSTR);")
+cpp_quote("HRESULT WINAPI MimeEditCreateMimeDocument(IUnknown*,IMimeMessage*,DWORD,IMimeMessage**);")
+cpp_quote("HRESULT WINAPI MimeEditGetBackgroundImageUrl(IUnknown*,BSTR*);")
+cpp_quote("HRESULT WINAPI MimeEditDocumentFromStream(IStream*,REFIID,void**);")
+
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("}")
+cpp_quote("#endif")

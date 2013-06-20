@@ -1,0 +1,41 @@
+Index: msxml3.spec
+===================================================================
+--- msxml3.spec	(revision 49877)
++++ msxml3.spec	(working copy)
+@@ -1,10 +1,10 @@
+- 6 stub @
+- 7 stub @
+- 8 stub @
+- 9 stub @
+-10 stub @
+-11 stub @
+-12 stub @
++ 6 stub MSXML3_6
++ 7 stub MSXML3_7
++ 8 stub MSXML3_8
++ 9 stub MSXML3_9
++10 stub MSXML3_10
++11 stub MSXML3_11
++12 stub MSXML3_12
+ 
+ @ stdcall -private DllCanUnloadNow()
+ @ stdcall -private DllGetClassObject(ptr ptr ptr)
+
+
+Index: nodelist.c
+===================================================================
+--- nodelist.c  (revision 57316)
++++ nodelist.c  (working copy)
+@@ -89,7 +89,11 @@
+
+     if (!ppvObject)
+     {
+-        return E_POINTER;
++        /* NOTE: Interface documentation for IUnknown explicitly states
++         * this case should return E_POINTER. Empirical data proves
++         * MS violates this contract and instead return E_INVALIDARG.
++         */
++        return E_INVALIDARG;
+     }
+
+     if ( IsEqualGUID( riid, &IID_IUnknown ) ||

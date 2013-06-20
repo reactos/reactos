@@ -1,0 +1,1817 @@
+
+
+cpp_quote("#pragma once")
+
+#include <olectl.h>
+#ifndef DO_NO_IMPORTS
+import "oaidl.idl";
+import "comcat.idl";
+import "strmif.idl";
+import "bdaiface.idl";
+import "regbag.idl";
+#else
+cpp_quote("#include <bdaiface.h>")
+#endif
+
+interface ITuningSpaceContainer;
+interface ITuningSpace;
+interface IEnumTuningSpaces;
+interface ITuneRequest;
+interface ITuner;
+interface ITunerCap;
+interface IScanningTuner;
+interface IEnumComponentTypes;
+interface IComponentTypes;
+interface IComponentType;
+interface ILanguageComponentType;
+interface IEnumComponents;
+interface IComponents;
+interface IComponent;
+interface IMPEG2ComponentType;
+interface IMPEG2Component;
+interface ILocator;
+interface IATSCLocator;
+interface IDVBSLocator;
+interface IDVBTLocator;
+interface IDVBCLocator;
+interface IDigitalCableLocator;
+interface IAnalogLocator;
+interface IDigitalCableTuneRequest;
+interface IDigitalCableTuningSpace;
+
+[
+    object,
+    uuid(901284E4-33FE-4b69-8D63-634A596F3756),
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface ITuningSpaces : IDispatch
+{
+    HRESULT get_Count(
+        [out] long *Count);
+
+    HRESULT get__NewEnum(
+        [out] IEnumVARIANT** NewEnum);
+
+    HRESULT get_Item(
+        [in] VARIANT varIndex,
+        [out] ITuningSpace** TuningSpace);
+
+    HRESULT get_EnumTuningSpaces(
+        [out] IEnumTuningSpaces** NewEnum);
+}
+
+[
+    object,
+    uuid(5B692E84-E2F1-11d2-9493-00C04F72D980),
+    dual,
+    oleautomation,
+    hidden,
+    nonextensible,
+    pointer_default(unique)
+]
+interface ITuningSpaceContainer : IDispatch
+{
+    HRESULT get_Count(
+        [out] long *Count);
+
+    HRESULT get__NewEnum(
+        [out] IEnumVARIANT** NewEnum);
+
+    HRESULT get_Item(
+        [in] VARIANT varIndex,
+        [out] ITuningSpace** TuningSpace);
+
+    HRESULT put_Item(
+        [in] VARIANT varIndex,
+        [in] ITuningSpace *TuningSpace);
+
+    HRESULT TuningSpacesForCLSID(
+        [in] BSTR SpaceCLSID,
+        [out] ITuningSpaces** NewColl);
+
+    HRESULT _TuningSpacesForCLSID(
+        [in] REFCLSID SpaceCLSID,
+        [out] ITuningSpaces** NewColl);
+
+    HRESULT TuningSpacesForName(
+        [in] BSTR Name,
+        [out] ITuningSpaces** NewColl);
+
+    HRESULT FindID(
+        [in] ITuningSpace *TuningSpace,
+        [out] long *ID);
+
+    HRESULT Add(
+        [in] ITuningSpace* TuningSpace,
+        [out] VARIANT* NewIndex);
+
+    HRESULT get_EnumTuningSpaces(
+        [out] IEnumTuningSpaces **ppEnum);
+
+    HRESULT Remove(
+        [in] VARIANT Index);
+
+    HRESULT get_MaxCount(
+        [out] long *MaxCount);
+
+    HRESULT put_MaxCount(
+        [in] long MaxCount);
+}
+
+
+[
+    object,
+    uuid(061C6E30-E622-11d2-9493-00C04F72D980),
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface ITuningSpace : IDispatch
+{
+    HRESULT get_UniqueName(
+        [out] BSTR *Name);
+
+    HRESULT put_UniqueName(
+        [in] BSTR Name);
+
+    HRESULT get_FriendlyName(
+        [out] BSTR *Name);
+
+    HRESULT put_FriendlyName(
+        [in] BSTR Name);
+
+    HRESULT get_CLSID(
+        [out] BSTR* SpaceCLSID);
+
+    HRESULT get_NetworkType(
+        [out] BSTR *NetworkTypeGuid);
+
+    HRESULT put_NetworkType(
+        [in] BSTR NetworkTypeGuid);
+
+    HRESULT get__NetworkType(
+        [out] GUID* NetworkTypeGuid);
+
+    HRESULT put__NetworkType(
+        [in] REFCLSID NetworkTypeGuid);
+
+    HRESULT CreateTuneRequest(
+        [out] ITuneRequest **TuneRequest);
+
+    HRESULT EnumCategoryGUIDs(
+        [out] IEnumGUID **ppEnum);
+
+    HRESULT EnumDeviceMonikers(
+        [out] IEnumMoniker **ppEnum);
+
+    HRESULT get_DefaultPreferredComponentTypes(
+        [out] IComponentTypes** ComponentTypes);
+
+    HRESULT put_DefaultPreferredComponentTypes(
+        [in] IComponentTypes* NewComponentTypes);
+
+    HRESULT get_FrequencyMapping(
+        [out] BSTR *pMapping);
+
+    HRESULT put_FrequencyMapping(
+        BSTR Mapping);
+
+    HRESULT get_DefaultLocator(
+        [out] ILocator **LocatorVal);
+
+    HRESULT put_DefaultLocator(
+        [in]ILocator *LocatorVal);
+
+    HRESULT Clone(
+        [out] ITuningSpace **NewTS);
+}
+
+[
+    hidden,
+    restricted,
+    object,
+    uuid(8B8EB248-FC2B-11d2-9D8C-00C04F72D980),
+    pointer_default(unique)
+]
+interface IEnumTuningSpaces : IUnknown
+{
+    HRESULT Next(
+        [in] ULONG celt,
+        [in, out]ITuningSpace** rgelt,
+        [out] ULONG* pceltFetched);
+
+    HRESULT Skip(
+        [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+        [out] IEnumTuningSpaces** ppEnum);
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(ADA0B268-3B19-4e5b-ACC4-49F852BE13BA),
+    pointer_default(unique)
+]
+interface IDVBTuningSpace : ITuningSpace
+{
+    HRESULT get_SystemType(
+        [out] DVBSystemType *SysType);
+
+    HRESULT put_SystemType(
+        [in] DVBSystemType SysType);
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(843188B4-CE62-43db-966B-8145A094E040),
+    pointer_default(unique)
+]
+interface IDVBTuningSpace2 : IDVBTuningSpace
+{
+    HRESULT get_NetworkID(
+        [out] long *NetworkID);
+
+    HRESULT put_NetworkID(
+        [in] long NetworkID);
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(CDF7BE60-D954-42fd-A972-78971958E470),
+    pointer_default(unique)
+]
+interface IDVBSTuningSpace : IDVBTuningSpace2
+{
+
+    HRESULT get_LowOscillator(
+        [out] long *LowOscillator);
+
+    HRESULT put_LowOscillator(
+        [in] long LowOscillator);
+
+    HRESULT get_HighOscillator(
+        [out] long *HighOscillator);
+
+    HRESULT put_HighOscillator(
+        [in] long HighOscillator);
+
+    HRESULT get_LNBSwitch(
+        [out] long *LNBSwitch);
+
+    HRESULT put_LNBSwitch(
+        [in] long LNBSwitch);
+
+    HRESULT get_InputRange(
+        [out] BSTR *InputRange);
+
+    HRESULT put_InputRange(
+        [in] BSTR InputRange);
+
+    HRESULT get_SpectralInversion(
+        [out] SpectralInversion *SpectralInversionVal);
+
+    HRESULT put_SpectralInversion(
+        [in] SpectralInversion SpectralInversionVal);
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(E48244B8-7E17-4f76-A763-5090FF1E2F30),
+    pointer_default(unique)
+]
+interface IAuxInTuningSpace : ITuningSpace
+{
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(B10931ED-8BFE-4AB0-9DCE-E469C29A9729),
+    pointer_default(unique)
+]
+interface IAuxInTuningSpace2 : IAuxInTuningSpace
+{
+    HRESULT get_CountryCode([out] long *CountryCodeVal);
+
+    HRESULT put_CountryCode([in] long NewCountryCodeVal);
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(2A6E293C-2595-11d3-B64C-00C04F79498E),
+    pointer_default(unique)
+]
+interface IAnalogTVTuningSpace : ITuningSpace
+{
+    HRESULT get_MinChannel(
+        [out] long *MinChannelVal);
+
+    HRESULT put_MinChannel(
+        [in] long NewMinChannelVal);
+
+    HRESULT get_MaxChannel(
+        [out] long *MaxChannelVal);
+
+    HRESULT put_MaxChannel(
+        [in] long NewMaxChannelVal);
+
+    HRESULT get_InputType(
+        [out] TunerInputType *InputTypeVal);
+
+    HRESULT put_InputType(
+        [in] TunerInputType NewInputTypeVal);
+
+    HRESULT get_CountryCode(
+        [out] long *CountryCodeVal);
+
+    HRESULT put_CountryCode(
+        [in] long NewCountryCodeVal);
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(0369B4E2-45B6-11d3-B650-00C04F79498E),
+    pointer_default(unique)
+]
+interface IATSCTuningSpace : IAnalogTVTuningSpace
+{
+    HRESULT get_MinMinorChannel(
+        [out] long *MinMinorChannelVal);
+
+    HRESULT put_MinMinorChannel(
+        [in] long NewMinMinorChannelVal);
+
+    HRESULT get_MaxMinorChannel(
+        [out] long *MaxMinorChannelVal);
+
+    HRESULT put_MaxMinorChannel(
+        [in] long NewMaxMinorChannelVal);
+
+    HRESULT get_MinPhysicalChannel(
+        [out] long *MinPhysicalChannelVal);
+
+    HRESULT put_MinPhysicalChannel(
+        [in] long NewMinPhysicalChannelVal);
+
+    HRESULT get_MaxPhysicalChannel(
+        [out] long *MaxPhysicalChannelVal);
+
+    HRESULT put_MaxPhysicalChannel(
+        [in] long NewMaxPhysicalChannelVal);
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(013F9F9C-B449-4ec7-A6D2-9D4F2FC70AE5),
+    pointer_default(unique)
+]
+interface IDigitalCableTuningSpace : IATSCTuningSpace
+{
+    HRESULT get_MinMajorChannel(
+        [out] long *MinMajorChannelVal);
+
+    HRESULT put_MinMajorChannel(
+        [in] long NewMinMajorChannelVal);
+
+    HRESULT get_MaxMajorChannel(
+        [out] long *MaxMajorChannelVal);
+
+    HRESULT put_MaxMajorChannel(
+        [in] long NewMaxMajorChannelVal);
+
+    HRESULT get_MinSourceID(
+        [out] long *MinSourceIDVal);
+
+    HRESULT put_MinSourceID(
+        [in] long NewMinSourceIDVal);
+
+    HRESULT get_MaxSourceID(
+        [out] long *MaxSourceIDVal);
+
+    HRESULT put_MaxSourceID(
+        [in] long NewMaxSourceIDVal);
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(2A6E293B-2595-11d3-B64C-00C04F79498E),
+    pointer_default(unique)
+]
+interface IAnalogRadioTuningSpace : ITuningSpace
+{
+    HRESULT get_MinFrequency(
+        [out] long *MinFrequencyVal);
+
+    HRESULT put_MinFrequency(
+        [in] long NewMinFrequencyVal);
+
+    HRESULT get_MaxFrequency(
+        [out] long *MaxFrequencyVal);
+
+    HRESULT put_MaxFrequency(
+        [in] long NewMaxFrequencyVal);
+
+    HRESULT get_Step(
+        [out] long *StepVal);
+
+    HRESULT put_Step(
+        [in] long NewStepVal);
+}
+
+[
+    object,
+    hidden,
+    dual,
+    oleautomation,
+    nonextensible,
+    uuid(39DD45DA-2DA8-46BA-8A8A-87E2B73D983A),
+    pointer_default(unique)
+]
+interface IAnalogRadioTuningSpace2 : IAnalogRadioTuningSpace {
+    HRESULT get_CountryCode([out] long *CountryCodeVal);
+    HRESULT put_CountryCode([in] long NewCountryCodeVal);
+}
+[
+    object,
+    nonextensible,
+    uuid(07DDC146-FC3D-11d2-9D8C-00C04F72D980),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface ITuneRequest : IDispatch
+{
+    HRESULT get_TuningSpace(
+        [out] ITuningSpace **TuningSpace);
+
+    HRESULT get_Components(
+        [out] IComponents **Components);
+
+    HRESULT Clone(
+        [out] ITuneRequest **NewTuneRequest);
+
+    HRESULT get_Locator(
+        [out] ILocator **Locator);
+
+    HRESULT put_Locator(
+        [in] ILocator *Locator);
+}
+
+[
+    object,
+    nonextensible,
+    uuid(0369B4E0-45B6-11d3-B650-00C04F79498E),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IChannelTuneRequest : ITuneRequest
+{
+    HRESULT get_Channel(
+        [out] long *Channel);
+
+    HRESULT put_Channel(
+        [in] long Channel);
+}
+
+[
+    object,
+    nonextensible,
+    uuid(0369B4E1-45B6-11d3-B650-00C04F79498E),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IATSCChannelTuneRequest : IChannelTuneRequest
+{
+    HRESULT get_MinorChannel(
+        [out] long *MinorChannel);
+
+    HRESULT put_MinorChannel(
+        [in] long MinorChannel);
+}
+
+[
+    object,
+    nonextensible,
+    uuid(BAD7753B-6B37-4810-AE57-3CE0C4A9E6CB),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IDigitalCableTuneRequest : IATSCChannelTuneRequest
+{
+    HRESULT get_MajorChannel(
+        [out] long *pMajorChannel);
+
+    HRESULT put_MajorChannel(
+        [in] long MajorChannel);
+
+    HRESULT get_SourceID(
+        [out] long *pSourceID);
+
+    HRESULT put_SourceID(
+        [in] long SourceID);
+}
+
+
+[
+    object,
+    nonextensible,
+    uuid(0D6F567E-A636-42bb-83BA-CE4C1704AFA2),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IDVBTuneRequest : ITuneRequest
+{
+    HRESULT get_ONID(
+        [out] long *ONID);
+
+    HRESULT put_ONID(
+        [in] long ONID);
+
+    HRESULT get_TSID(
+        [out] long *TSID);
+
+    HRESULT put_TSID(
+        [in] long TSID);
+
+    HRESULT get_SID(
+        [out] long *SID);
+
+    HRESULT put_SID(
+        [in] long SID);
+}
+
+[
+    object,
+    nonextensible,
+    uuid(EB7D987F-8A01-42ad-B8AE-574DEEE44D1A),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IMPEG2TuneRequest : ITuneRequest
+{
+    HRESULT get_TSID(
+        [out] long *TSID);
+
+    HRESULT put_TSID(
+        [in] long TSID);
+
+    HRESULT get_ProgNo(
+        [out] long *ProgNo);
+
+    HRESULT put_ProgNo(
+        [in] long ProgNo);
+}
+
+[
+    object,
+    nonextensible,
+    hidden,
+    uuid(14E11ABD-EE37-4893-9EA1-6964DE933E39),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IMPEG2TuneRequestFactory : IDispatch
+{
+    HRESULT CreateTuneRequest(
+        [in] ITuningSpace *TuningSpace,
+        [out] IMPEG2TuneRequest **TuneRequest);
+}
+
+[
+    object,
+    hidden,
+    restricted,
+    nonextensible,
+    uuid(1B9D5FC3-5BBC-4b6c-BB18-B9D10E3EEEBF),
+    pointer_default(unique)
+]
+interface IMPEG2TuneRequestSupport : IUnknown
+{
+}
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(E60DFA45-8D56-4e65-A8AB-D6BE9412C249),
+    pointer_default(unique)
+]
+interface ITunerCap : IUnknown
+{
+    HRESULT get_SupportedNetworkTypes(
+        [in] ULONG ulcNetworkTypesMax, 
+        [out] ULONG *pulcNetworkTypes, 
+        [in, out] GUID *pguidNetworkTypes);
+
+    HRESULT get_SupportedVideoFormats(
+        [out] ULONG *pulAMTunerModeType, 
+        [out] ULONG *pulAnalogVideoStandard);
+
+    HRESULT get_AuxInputCount(
+        [in, out] ULONG *pulCompositeCount,
+        [in, out] ULONG *pulSvideoCount);
+}
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(28C52640-018A-11d3-9D8E-00C04F72D980),
+    pointer_default(unique)
+]
+interface ITuner : IUnknown
+{
+    HRESULT get_TuningSpace(
+        [out] ITuningSpace **TuningSpace);
+
+    HRESULT put_TuningSpace(
+        [in] ITuningSpace *TuningSpace);
+
+    HRESULT EnumTuningSpaces(
+        [out] IEnumTuningSpaces **ppEnum);
+
+    HRESULT get_TuneRequest(
+        [out] ITuneRequest **TuneRequest);
+
+    HRESULT put_TuneRequest(
+        [in] ITuneRequest *TuneRequest);
+
+    HRESULT Validate(
+        [in] ITuneRequest *TuneRequest);
+
+    HRESULT get_PreferredComponentTypes(
+        [out] IComponentTypes **ComponentTypes);
+
+    HRESULT put_PreferredComponentTypes(
+        [in] IComponentTypes *ComponentTypes);
+
+    HRESULT get_SignalStrength(
+        [out] long *Strength);
+
+    HRESULT TriggerSignalEvents(
+        [in] long Interval);
+}
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(1DFD0A5C-0284-11d3-9D8E-00C04F72D980),
+    pointer_default(unique)
+]
+interface IScanningTuner : ITuner
+{
+    HRESULT SeekUp();
+
+    HRESULT SeekDown();
+
+    HRESULT ScanUp(
+        [in] long MillisecondsPause);
+
+    HRESULT ScanDown(
+        [in] long MillisecondsPause);
+
+    HRESULT AutoProgram();
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(04BBD195-0E2D-4593-9BD5-4F908BC33CF5),
+    pointer_default(unique)
+]
+interface IScanningTunerEx : IScanningTuner
+{
+    HRESULT GetCurrentLocator(
+        [in]ILocator **pILocator);
+
+    HRESULT PerformExhaustiveScan(
+         [in]  long dwLowerFreq,
+         [in]  long dwHigherFreq,
+         [in]  VARIANT_BOOL bFineTune,
+         [in]  HEVENT hEvent);
+
+    HRESULT TerminateCurrentScan(
+         [out] long *pcurrentFreq);
+
+    HRESULT ResumeCurrentScan(
+         [in] HEVENT hEvent);
+
+    HRESULT GetTunerScanningCapability(
+         [out] long *HardwareAssistedScanning,
+         [out] long *NumStandardsSupported,
+         [out] GUID *BroadcastStandards);
+
+    HRESULT GetTunerStatus(
+         [out] long *SecondsLeft,
+         [out] long *CurrentLockType,
+         [out] long *AutoDetect,
+         [out] long *CurrentFreq);
+
+    HRESULT GetCurrentTunerStandardCapability(
+         [in] GUID CurrentBroadcastStandard,
+         [out] long  *SettlingTime,
+         [out] long  *TvStandardsSupported);
+
+    HRESULT SetScanSignalTypeFilter( 
+        [in] long ScanModulationTypes,
+        [in] long AnalogVideoStandard);
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(6A340DC0-0311-11d3-9D8E-00C04F72D980),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IComponentType : IDispatch
+{
+    HRESULT get_Category(
+        [out] ComponentCategory *Category);
+
+    HRESULT put_Category(
+        [in] ComponentCategory Category);
+
+    HRESULT get_MediaMajorType(
+        [out] BSTR *MediaMajorType);
+
+    HRESULT put_MediaMajorType(
+        [in] BSTR MediaMajorType);
+
+    HRESULT get__MediaMajorType(
+        [out] GUID* MediaMajorTypeGuid);
+
+    HRESULT put__MediaMajorType(
+        [in] REFCLSID MediaMajorTypeGuid);
+
+    HRESULT get_MediaSubType(
+        [out] BSTR *MediaSubType);
+
+    HRESULT put_MediaSubType(
+        [in] BSTR MediaSubType);
+
+    HRESULT get__MediaSubType(
+        [out] GUID* MediaSubTypeGuid);
+
+    HRESULT put__MediaSubType(
+        [in] REFCLSID MediaSubTypeGuid);
+
+    HRESULT get_MediaFormatType(
+        [out] BSTR *MediaFormatType);
+
+    HRESULT put_MediaFormatType(
+        [in] BSTR MediaFormatType);
+
+    HRESULT get__MediaFormatType(
+        [out] GUID* MediaFormatTypeGuid);
+
+    HRESULT put__MediaFormatType(
+        [in] REFCLSID MediaFormatTypeGuid);
+
+    HRESULT get_MediaType(
+        [out] AM_MEDIA_TYPE *MediaType);
+
+    HRESULT put_MediaType(
+        [in] AM_MEDIA_TYPE *MediaType);
+
+    HRESULT Clone(
+        [out] IComponentType **NewCT);
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(B874C8BA-0FA2-11d3-9D8E-00C04F72D980),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface ILanguageComponentType : IComponentType
+{
+    HRESULT get_LangID(
+        [out] long *LangID);
+
+    HRESULT put_LangID(
+        [in] long LangID);
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(2C073D84-B51C-48c9-AA9F-68971E1F6E38),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IMPEG2ComponentType : ILanguageComponentType
+{
+    HRESULT get_StreamType(
+        [out] MPEG2StreamType *MP2StreamType);
+
+    HRESULT put_StreamType(
+        [in] MPEG2StreamType MP2StreamType);
+};
+
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(FC189E4D-7BD4-4125-B3B3-3A76A332CC96),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IATSCComponentType : IMPEG2ComponentType
+{
+    HRESULT get_Flags(
+        [out] long *Flags);
+
+    HRESULT put_Flags(
+        [in] long flags);
+};
+
+[
+    hidden, restricted,
+    object,
+    uuid(8A674B4A-1F63-11d3-B64C-00C04F79498E),
+    pointer_default(unique)
+]
+interface IEnumComponentTypes : IUnknown
+{
+    HRESULT Next(
+        [in] ULONG celt,
+        [in, out]IComponentType** rgelt,
+        [out] ULONG* pceltFetched);
+
+    HRESULT Skip(
+        [in] ULONG celt);
+
+    HRESULT Reset(void);
+
+    HRESULT Clone(
+        [out] IEnumComponentTypes** ppEnum);
+}
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(0DC13D4A-0313-11d3-9D8E-00C04F72D980),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IComponentTypes : IDispatch
+{
+    HRESULT get_Count(
+        [out] long *Count);
+
+    HRESULT get__NewEnum(
+        [out] IEnumVARIANT **ppNewEnum);
+
+    HRESULT EnumComponentTypes(
+        [out] IEnumComponentTypes **ppNewEnum);
+
+    HRESULT get_Item(
+        [in] VARIANT Index,
+        [out] IComponentType **ComponentType);
+
+    HRESULT put_Item(
+        [in] VARIANT Index,
+        [in] IComponentType *ComponentType);
+
+    HRESULT Add(
+        [in] IComponentType *ComponentType,
+        [out] VARIANT *NewIndex);
+
+    HRESULT Remove(
+        [in] VARIANT Index);
+
+    HRESULT Clone([out] IComponentTypes **NewList);
+};
+
+[
+    object,
+    nonextensible,
+    uuid(1A5576FC-0E19-11d3-9D8E-00C04F72D980),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IComponent : IDispatch
+{
+    HRESULT get_Type(
+        [out] IComponentType** CT);
+
+    HRESULT put_Type(
+        [in] IComponentType* CT);
+
+    HRESULT get_DescLangID(
+        [out] long *LangID);
+
+    HRESULT put_DescLangID(
+        [in] long LangID);
+
+    HRESULT get_Status(
+        [out] ComponentStatus *Status);
+
+    HRESULT put_Status(
+        [in] ComponentStatus Status);
+
+    HRESULT get_Description(
+        [out] BSTR *Description);
+
+    HRESULT put_Description(
+        [in] BSTR Description);
+
+    HRESULT Clone(
+        [out] IComponent **NewComponent);
+
+};
+
+[
+    object,
+    nonextensible,
+    uuid(2CFEB2A8-1787-4A24-A941-C6EAEC39C842),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IAnalogAudioComponentType : IComponentType
+{
+    HRESULT get_AnalogAudioMode(
+        [out] TVAudioMode *Mode);
+
+    HRESULT put_AnalogAudioMode(
+        [in] TVAudioMode Mode);
+}
+
+[
+    object,
+    nonextensible,
+    uuid(1493E353-1EB6-473c-802D-8E6B8EC9D2A9),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IMPEG2Component : IComponent
+{
+    HRESULT get_PID(
+        [out] long *PID);
+
+    HRESULT put_PID(
+        [in] long PID);
+
+    HRESULT get_PCRPID(
+        [out] long *PCRPID);
+
+    HRESULT put_PCRPID(
+        [in] long PCRPID);
+
+    HRESULT get_ProgramNumber(
+        [out] long *ProgramNumber);
+
+    HRESULT put_ProgramNumber(
+        [in] long ProgramNumber);
+};
+
+[
+    hidden,
+    restricted,
+    object,
+    uuid(2A6E2939-2595-11d3-B64C-00C04F79498E),
+    pointer_default(unique)
+]
+interface IEnumComponents : IUnknown
+{
+    HRESULT Next(
+        [in] ULONG celt,
+        [in, out]IComponent** rgelt,
+        [out] ULONG* pceltFetched);
+
+    HRESULT Skip(
+        [in] ULONG celt);
+
+    HRESULT Reset(void);
+
+    HRESULT Clone(
+        [out] IEnumComponents** ppEnum);
+}
+
+
+
+[
+    object,
+    nonextensible,
+    uuid(39A48091-FFFE-4182-A161-3FF802640E26),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IComponents : IDispatch
+{
+    HRESULT get_Count(
+        [out] long *Count);
+
+    HRESULT get__NewEnum(
+        [out] IEnumVARIANT **ppNewEnum);
+
+    HRESULT EnumComponents(
+        [out] IEnumComponents **ppNewEnum);
+
+    HRESULT get_Item(
+        [in] VARIANT Index,
+        [out] IComponent **ppComponent);
+
+    HRESULT Add(
+        [in] IComponent *Component,
+        [out] VARIANT *NewIndex);
+
+    HRESULT Remove(
+        [in] VARIANT Index);
+
+    HRESULT Clone(
+        [out] IComponents **NewList);
+
+    HRESULT put_Item(
+        [in] VARIANT Index,
+        [in] IComponent *ppComponent);
+
+};
+
+[
+    object,
+    nonextensible,
+    uuid(FCD01846-0E19-11d3-9D8E-00C04F72D980),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IComponentsOld : IDispatch
+{
+    HRESULT get_Count(
+        [out] long *Count);
+
+    HRESULT get__NewEnum(
+        [out] IEnumVARIANT **ppNewEnum);
+
+    HRESULT EnumComponents(
+        [out] IEnumComponents **ppNewEnum);
+
+    HRESULT get_Item(
+        [in] VARIANT Index,
+        [out] IComponent **ppComponent);
+
+    HRESULT Add(
+        [in] IComponent *Component,
+        [out] VARIANT *NewIndex);
+
+    HRESULT Remove(
+        [in] VARIANT Index);
+
+    HRESULT Clone(
+        [out] IComponents **NewList);
+
+};
+
+[
+    object,
+    nonextensible,
+    uuid(286D7F89-760C-4F89-80C4-66841D2507AA),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface ILocator : IDispatch
+{
+
+    HRESULT get_CarrierFrequency(
+        [out] long* Frequency);
+
+    HRESULT put_CarrierFrequency(
+        [in] long Frequency);
+
+    HRESULT get_InnerFEC(
+        [out] FECMethod* FEC);
+
+    HRESULT put_InnerFEC(
+        [in] FECMethod FEC);
+
+    HRESULT get_InnerFECRate(
+        [out] BinaryConvolutionCodeRate* FEC);
+
+    HRESULT put_InnerFECRate(
+        [in] BinaryConvolutionCodeRate FEC);
+
+    HRESULT get_OuterFEC(
+        [out] FECMethod* FEC);
+
+    HRESULT put_OuterFEC(
+        [in] FECMethod FEC);
+
+    HRESULT get_OuterFECRate(
+        [out] BinaryConvolutionCodeRate* FEC);
+
+    HRESULT put_OuterFECRate(
+        [in] BinaryConvolutionCodeRate FEC);
+
+    HRESULT get_Modulation(
+        [out] ModulationType* Modulation);
+
+    HRESULT put_Modulation(
+        [in] ModulationType Modulation);
+
+    HRESULT get_SymbolRate(
+        [out] long* Rate);
+
+    HRESULT put_SymbolRate(
+        [in] long Rate);
+
+    HRESULT Clone(
+        [out] ILocator **NewLocator);
+};
+
+[
+    object,
+    nonextensible,
+    uuid(34D1F26B-E339-430D-ABCE-738CB48984DC),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IAnalogLocator : ILocator
+{
+    HRESULT get_VideoStandard(
+        [out] AnalogVideoStandard* AVS);
+
+    HRESULT put_VideoStandard(
+        [in] AnalogVideoStandard AVS);
+}
+
+[
+    object,
+    nonextensible,
+    uuid(19B595D8-839A-47F0-96DF-4F194F3C768C),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IDigitalLocator : ILocator
+{
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(BF8D986F-8C2B-4131-94D7-4D3D9FCC21EF),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IATSCLocator : IDigitalLocator
+{
+    HRESULT get_PhysicalChannel(
+        [out] long *PhysicalChannel);
+
+    HRESULT put_PhysicalChannel(
+        [in] long PhysicalChannel);
+
+    HRESULT get_TSID(
+        [out] long *TSID);
+
+    HRESULT put_TSID(
+        [in] long TSID);
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(612AA885-66CF-4090-BA0A-566F5312E4CA),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IATSCLocator2 : IATSCLocator
+{
+    HRESULT get_ProgramNumber(
+        [out] long *ProgramNumber);
+
+    HRESULT put_ProgramNumber(
+        [in] long ProgramNumber);
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(48F66A11-171A-419A-9525-BEEECD51584C),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IDigitalCableLocator : IATSCLocator2
+{
+}
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(8664DA16-DDA2-42ac-926A-C18F9127C302),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IDVBTLocator : IDigitalLocator
+{
+    HRESULT get_Bandwidth(
+        [out] long* BandWidthVal);
+
+    HRESULT put_Bandwidth(
+        [in] long BandwidthVal);
+
+    HRESULT get_LPInnerFEC(
+        [out] FECMethod* FEC);
+
+    HRESULT put_LPInnerFEC(
+        [in] FECMethod FEC);
+
+    HRESULT get_LPInnerFECRate(
+        [out] BinaryConvolutionCodeRate* FEC);
+
+    HRESULT put_LPInnerFECRate(
+        [in] BinaryConvolutionCodeRate FEC);
+
+    HRESULT get_HAlpha(
+        [out] HierarchyAlpha* Alpha);
+
+    HRESULT put_HAlpha(
+        [in] HierarchyAlpha Alpha);
+
+    HRESULT get_Guard(
+        [out] GuardInterval* GI);
+
+    HRESULT put_Guard(
+        [in] GuardInterval GI);
+
+    HRESULT get_Mode(
+        [out] TransmissionMode* mode);
+
+    HRESULT put_Mode(
+        [in] TransmissionMode mode);
+
+    HRESULT get_OtherFrequencyInUse(
+        [out] VARIANT_BOOL* OtherFrequencyInUseVal);
+
+    HRESULT put_OtherFrequencyInUse(
+        [in] VARIANT_BOOL OtherFrequencyInUseVal);
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(3D7C353C-0D04-45f1-A742-F97CC1188DC8),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IDVBSLocator : IDigitalLocator
+{
+
+    HRESULT get_SignalPolarisation(
+        [out] Polarisation* PolarisationVal);
+
+    HRESULT put_SignalPolarisation(
+        [in] Polarisation PolarisationVal);
+
+    HRESULT get_WestPosition(
+        [out] VARIANT_BOOL* WestLongitude);
+
+    HRESULT put_WestPosition(
+        [in] VARIANT_BOOL WestLongitude);
+
+    HRESULT get_OrbitalPosition(
+        [out] long* longitude);
+
+    HRESULT put_OrbitalPosition(
+        [in] long longitude);
+
+    HRESULT get_Azimuth(
+        [out] long* Azimuth);
+
+    HRESULT put_Azimuth(
+        [in] long Azimuth);
+
+    HRESULT get_Elevation(
+        [out] long* Elevation);
+
+    HRESULT put_Elevation(
+        [in] long Elevation);
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(6E42F36E-1DD2-43c4-9F78-69D25AE39034),
+    dual,
+    oleautomation,
+    pointer_default(unique)
+]
+interface IDVBCLocator : IDigitalLocator
+{
+};
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(3B21263F-26E8-489d-AAC4-924F7EFD9511),
+    pointer_default(unique)
+]
+interface IBroadcastEvent : IUnknown
+{
+    HRESULT Fire([in] GUID EventID);
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(3d9e3887-1929-423f-8021-43682de95448),
+    pointer_default(unique)
+]
+interface IBroadcastEventEx : IBroadcastEvent
+{
+    HRESULT FireEx(
+        [in] GUID EventID,
+        [in] ULONG Param1,
+        [in] ULONG Param2,
+        [in] ULONG Param3,
+        [in] ULONG Param4);
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(359B3901-572C-4854-BB49-CDEF66606A25),
+    pointer_default(unique)
+]
+interface IRegisterTuner : IUnknown
+{
+    HRESULT Register(
+        [in] ITuner* pTuner,
+        [in] IGraphBuilder* pGraph);
+
+    HRESULT Unregister();
+};
+
+[
+    object,
+    hidden,
+    nonextensible,
+    uuid(B34505E0-2F0E-497b-80BC-D43F3B24ED7F),
+    pointer_default(unique)
+]
+interface IBDAComparable : IUnknown
+{
+    HRESULT CompareExact(
+       [in] IDispatch* CompareTo,
+       [out] long* Result);
+
+    HRESULT CompareEquivalent(
+       [in] IDispatch* CompareTo,
+       [in] DWORD dwFlags,
+       [out] long* Result);
+
+    HRESULT HashExact(
+       [out] __int64* Result);
+
+    HRESULT HashExactIncremental(
+       [in] __int64 PartialResult,
+       [out] __int64* Result);
+
+    HRESULT HashEquivalent(
+       [in] DWORD dwFlags,
+       [out] __int64* Result);
+
+    HRESULT HashEquivalentIncremental(
+       [in] __int64 PartialResult,
+       [in] DWORD dwFlags,
+       [out] __int64* Result);
+};
+
+[
+    uuid(9B085638-018E-11d3-9D8E-00C04F72D980),
+    version(1.0),
+]
+library TunerLib
+{
+    importlib("stdole2.tlb");
+
+[
+    uuid(D02AAC50-027E-11d3-9D8E-00C04F72D980)
+]
+
+    coclass SystemTuningSpaces
+{
+        [default] interface ITuningSpaceContainer;
+};
+
+[
+    noncreatable,
+    hidden,
+    uuid(5FFDC5E6-B83A-4b55-B6E8-C69E765FE9DB)
+]
+    coclass TuningSpace
+{
+    [default] interface ITuningSpace;
+    interface IBDAComparable;
+};
+
+
+[
+    uuid(A2E30750-6C3D-11d3-B653-00C04F79498E)
+]
+    coclass ATSCTuningSpace
+{
+    [default] interface IATSCTuningSpace;
+    interface IBDAComparable;
+};
+
+[
+    uuid(D9BB4CEE-B87A-47F1-AC92-B08D9C7813FC)
+]
+    coclass DigitalCableTuningSpace
+{
+    [default] interface IDigitalCableTuningSpace;
+    interface IBDAComparable;
+};
+
+
+[
+    uuid(8A674B4C-1F63-11d3-B64C-00C04F79498E)
+]
+    coclass AnalogRadioTuningSpace
+{
+    [default] interface IAnalogRadioTuningSpace2;
+    interface IAnalogRadioTuningSpace;
+    interface IBDAComparable;
+};
+
+[
+    uuid(F9769A06-7ACA-4e39-9CFB-97BB35F0E77E)
+]
+    coclass AuxInTuningSpace
+{
+    interface IAuxInTuningSpace;
+    [default] interface IAuxInTuningSpace2;
+    interface IBDAComparable;
+};
+
+[
+    uuid(8A674B4D-1F63-11d3-B64C-00C04F79498E)
+]
+    coclass AnalogTVTuningSpace
+{
+    [default] interface IAnalogTVTuningSpace;
+    interface IBDAComparable;
+};
+
+[
+    uuid(C6B14B32-76AA-4a86-A7AC-5C79AAF58DA7)
+]
+    coclass DVBTuningSpace
+{
+    [default] interface IDVBTuningSpace2;
+    interface IDVBTuningSpace;
+    interface IBDAComparable;
+};
+
+[
+    uuid(B64016F3-C9A2-4066-96F0-BD9563314726)
+]
+    coclass DVBSTuningSpace
+{
+    [default] interface IDVBSTuningSpace;
+    interface IBDAComparable;
+};
+
+
+[
+    uuid(A1A2B1C4-0E3A-11d3-9D8E-00C04F72D980)
+]
+    coclass ComponentTypes
+{
+        [default] interface IComponentTypes;
+        };
+
+[
+    uuid(823535A0-0318-11d3-9D8E-00C04F72D980)
+]
+    coclass ComponentType
+{
+        [default] interface IComponentType;
+        };
+
+[
+    uuid(1BE49F30-0E1B-11d3-9D8E-00C04F72D980)
+]
+    coclass LanguageComponentType
+{
+        [default] interface ILanguageComponentType;
+        };
+
+[
+    uuid(418008F3-CF67-4668-9628-10DC52BE1D08)
+]
+    coclass MPEG2ComponentType
+{
+        [default] interface IMPEG2ComponentType;
+        };
+
+[
+    uuid(A8DCF3D5-0780-4ef4-8A83-2CFFAACB8ACE)
+]
+    coclass ATSCComponentType
+{
+        [default] interface IATSCComponentType;
+        };
+
+[
+    hidden,
+    uuid(809B6661-94C4-49e6-B6EC-3F0F862215AA)
+]
+    coclass Components
+{
+    [default] interface IComponents;
+    interface IComponentsOld;
+};
+
+[
+    hidden,
+    uuid(59DC47A8-116C-11d3-9D8E-00C04F72D980)
+]
+    coclass Component
+{
+        [default] interface IComponent;
+        };
+
+[
+    hidden,
+    uuid(055CB2D7-2969-45cd-914B-76890722F112)
+]
+    coclass MPEG2Component
+{
+        [default] interface IMPEG2Component;
+        };
+
+
+[
+    hidden,
+    uuid(28AB0005-E845-4FFA-AA9B-F4665236141C)
+]
+    coclass AnalogAudioComponentType
+{
+        [default] interface IAnalogAudioComponentType;
+        };
+
+[
+    noncreatable,
+    hidden,
+    uuid(B46E0D38-AB35-4a06-A137-70576B01B39F)
+]
+    coclass TuneRequest
+{
+    [default] interface ITuneRequest;
+    interface IBDAComparable;
+};
+
+
+[
+    hidden,
+    uuid(0369B4E5-45B6-11d3-B650-00C04F79498E)
+]
+    coclass ChannelTuneRequest
+{
+    [default] interface IChannelTuneRequest;
+    interface IBDAComparable;
+};
+
+[
+    hidden,
+    uuid(0369B4E6-45B6-11d3-B650-00C04F79498E)
+]
+    coclass ATSCChannelTuneRequest
+{
+    [default] interface IATSCChannelTuneRequest;
+    interface IBDAComparable;
+};
+
+[
+    hidden,
+    uuid(26EC0B63-AA90-458A-8DF4-5659F2C8A18A)
+]
+    coclass DigitalCableTuneRequest
+{
+    [default] interface IDigitalCableTuneRequest;
+    interface IBDAComparable;
+};
+
+
+[
+    hidden,
+    uuid(0955AC62-BF2E-4cba-A2B9-A63F772D46CF)
+]
+    coclass MPEG2TuneRequest
+{
+    [default] interface IMPEG2TuneRequest;
+    interface IBDAComparable;
+};
+
+[
+    uuid(2C63E4EB-4CEA-41b8-919C-E947EA19A77C)
+]
+    coclass MPEG2TuneRequestFactory
+{
+        [default] interface IMPEG2TuneRequestFactory;
+};
+
+
+[
+    noncreatable,
+    hidden,
+    uuid(0888C883-AC4F-4943-B516-2C38D9B34562)
+]
+    coclass Locator
+{
+        [default] interface ILocator;
+    interface IBDAComparable;
+};
+[
+    noncreatable,
+    hidden,
+    uuid(6E50CC0D-C19B-4BF6-810B-5BD60761F5CC)
+]
+    coclass DigitalLocator
+{
+    [default] interface IDigitalLocator;
+    interface IBDAComparable;
+};
+
+[
+    uuid(49638B91-48AB-48B7-A47A-7D0E75A08EDE)
+]
+    coclass AnalogLocator
+{
+    [default] interface IAnalogLocator;
+    interface IBDAComparable;
+};
+
+[
+    uuid(8872FF1B-98FA-4d7a-8D93-C9F1055F85BB)
+]
+    coclass ATSCLocator
+{
+    [default] interface IATSCLocator2;
+    interface IATSCLocator;
+    interface IBDAComparable;
+};
+
+[
+    uuid(03C06416-D127-407A-AB4C-FDD279ABBE5D)
+]
+    coclass DigitalCableLocator
+{
+    [default] interface IDigitalCableLocator;
+    interface IBDAComparable;
+};
+
+[
+    uuid(9CD64701-BDF3-4d14-8E03-F12983D86664)
+]
+    coclass DVBTLocator
+{
+    [default] interface IDVBTLocator;
+    interface IBDAComparable;
+};
+
+[
+    uuid(1DF7D126-4050-47f0-A7CF-4C4CA9241333)
+]
+    coclass DVBSLocator
+{
+    [default] interface IDVBSLocator;
+    interface IBDAComparable;
+};
+
+[
+    uuid(C531D9FD-9685-4028-8B68-6E1232079F1E)
+]
+    coclass DVBCLocator
+{
+    [default] interface IDVBCLocator;
+    interface IBDAComparable;
+};
+
+[
+    hidden,
+    uuid(15D6504A-5494-499c-886C-973C9E53B9F1)
+]
+    coclass DVBTuneRequest
+{
+        [default] interface IDVBTuneRequest;
+    interface IBDAComparable;
+};
+
+
+[
+    hidden,
+    uuid(8A674B49-1F63-11d3-B64C-00C04F79498E)
+]
+    coclass CreatePropBagOnRegKey
+{
+    interface ICreatePropBagOnRegKey;
+};
+
+[
+    hidden,
+    uuid(0B3FFB92-0919-4934-9D5B-619C719D0202)
+]
+    coclass BroadcastEventService
+{
+    interface IBroadcastEvent;
+};
+
+[
+    hidden,
+    uuid(6438570B-0C08-4a25-9504-8012BB4D50CF)
+]
+    coclass TunerMarshaler
+{
+    interface IRegisterTuner;
+    interface ITuner;
+};
+
+cpp_quote("#define SID_SBroadcastEventService CLSID_BroadcastEventService")
+cpp_quote("#define SID_SContentTuneRequest IID_ITuner")
+cpp_quote("#define SID_ScanningTuner IID_IScanningTuner")
+cpp_quote("#define SID_ScanningTunerEx IID_IScanningTunerEx")
+}

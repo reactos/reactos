@@ -1,0 +1,57 @@
+list(APPEND FONT_FILES
+    DejaVuSans-Bold.ttf
+    DejaVuSans-BoldOblique.ttf
+    DejaVuSans-ExtraLight.ttf
+    DejaVuSans-Oblique.ttf
+    DejaVuSans.ttf
+    DejaVuSansCondensed-Bold.ttf
+    DejaVuSansCondensed-BoldOblique.ttf
+    DejaVuSansCondensed-Oblique.ttf
+    DejaVuSansCondensed.ttf
+    DejaVuSansMono-Bold.ttf
+    DejaVuSansMono-BoldOblique.ttf
+    DejaVuSansMono-Oblique.ttf
+    DejaVuSansMono.ttf
+    DejaVuSerif-Bold.ttf
+    DejaVuSerif-BoldItalic.ttf
+    DejaVuSerif-Italic.ttf
+    DejaVuSerif.ttf
+    DejaVuSerifCondensed-Bold.ttf
+    DejaVuSerifCondensed-BoldItalic.ttf
+    DejaVuSerifCondensed-Italic.ttf
+    DejaVuSerifCondensed.ttf
+    FreeMono.ttf
+    FreeMonoBold.ttf
+    FreeMonoBoldOblique.ttf
+    FreeMonoOblique.ttf
+    FreeSans.ttf
+    FreeSansBold.ttf
+    FreeSansBoldOblique.ttf
+    FreeSansOblique.ttf
+    FreeSerif.ttf
+    FreeSerifBold.ttf
+    FreeSerifBoldItalic.ttf
+    FreeSerifItalic.ttf
+    FSEX301.ttf
+    FSEX301-L2.ttf
+    LiberationMono-Bold.ttf
+    LiberationMono-BoldItalic.ttf
+    LiberationMono-Italic.ttf
+    LiberationMono-Regular.ttf
+    LiberationSans-Bold.ttf
+    LiberationSans-BoldItalic.ttf
+    LiberationSans-Italic.ttf
+    LiberationSans-Regular.ttf
+    LiberationSerif-Bold.ttf
+    LiberationSerif-BoldItalic.ttf
+    LiberationSerif-Italic.ttf
+    LiberationSerif-Regular.ttf
+    Marlett.ttf
+    symbol.ttf
+    tahoma.ttf
+    tahomabd.ttf
+)
+
+foreach(item ${FONT_FILES})
+    add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/${item}" DESTINATION reactos/Fonts FOR all)
+endforeach(item)

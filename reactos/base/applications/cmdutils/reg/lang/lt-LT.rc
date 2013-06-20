@@ -1,0 +1,40 @@
+/*
+ * REG.EXE - Wine-compatible reg program.
+ * Lithuanian language support
+ *
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "reg.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "Šios komandos sintaksė yra:\n\nREG [ ADD | DELETE | QUERY ]\nREG komanda /?\n"
+    STRING_ADD_USAGE, "REG ADD rakto_vardas [/v reikšmės_vardas | /ve] [/t tipas] [/s skirtukas] [/d duomenys] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE rakto_vardas [/v reikšmės_vardas | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY rakto_vardas [/v reikšmės_vardas | /ve] [/s]\n"
+    STRING_SUCCESS, "Operacija sėkmingai įvykdyta\n"
+    STRING_INVALID_KEY, "Klaida: Netinkamas rakto vardas\n"
+    STRING_INVALID_CMDLINE, "Klaida: Netinkami komandos eilutės parametrai\n"
+    STRING_NO_REMOTE, "Klaida: Negalima pridėti raktų nuotoliniame kompiuteryje\n"
+    STRING_CANNOT_FIND, "Klaida: Sistemai nepavyko rasti nurodyto registro rakto ar reikšmės\n"
+}

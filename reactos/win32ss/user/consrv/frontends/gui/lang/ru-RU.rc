@@ -1,0 +1,26 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT            "Изменить"
+    IDS_MARK            "Пометить"
+    IDS_COPY            "Копировать\tEnter"
+    IDS_PASTE           "Вставить"
+    IDS_SELECTALL       "Выделить все"
+    IDS_SCROLL          "Прокрутить"
+    IDS_FIND            "Искать..."
+    IDS_DEFAULTS        "Умолчания"
+    IDS_PROPERTIES      "Свойства"
+
+/*
+    IDS_SCROLLHERE      "Scroll Here"
+    IDS_SCROLLTOP       "Scroll Top"
+    IDS_SCROLLBOTTOM    "Прокрутить вниз"
+    IDS_SCROLLPAGE_UP   "Вверх страницы"
+    IDS_SCROLLPAGE_DOWN "Вниз страницы"
+    IDS_SCROLLUP        "Прокрутить вверх"
+    IDS_SCROLLDOWN      "Scroll Down"
+*/
+
+    IDS_TERMINAL_TITLE   "ReactOS Console"
+END

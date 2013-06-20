@@ -1,0 +1,4 @@
+Jan 2007 TODO list
+
+* Set WHDR_COMPLETE when WriteFileEx APC is called
+* Check for WHDR_COMPLETE flag when completing buffers outside APC

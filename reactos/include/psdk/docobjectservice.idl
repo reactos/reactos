@@ -1,0 +1,67 @@
+/*
+ * Copyright 2011 Piotr Caban for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "objidl.idl";
+import "mshtml.idl";
+
+[
+    local,
+    object,
+    uuid(3050f801-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IDocObjectService : IUnknown
+{
+    HRESULT FireBeforeNavigate2(
+            [in] IDispatch *pDispatch,
+            [in] LPCWSTR lpszUrl,
+            [in] DWORD dwFlags,
+            [in] LPCWSTR lpszFrameName,
+            [in] BYTE *pPostData,
+            [in] DWORD cbPostData,
+            [in] LPCWSTR lpszHeaders,
+            [in] BOOL fPlayNavSound,
+            [out] BOOL *pfCancel);
+
+    HRESULT FireNavigateComplete2(
+            [in] IHTMLWindow2 *pHTMLWindow2,
+            [in] DWORD dwFlags);
+
+    HRESULT FireDownloadBegin(void);
+
+    HRESULT FireDownloadComplete(void);
+
+    HRESULT FireDocumentComplete(
+            [in] IHTMLWindow2 *pHTMLWindow,
+            [in] DWORD dwFlags);
+
+    HRESULT UpdateDesktopComponent(
+            [in] IHTMLWindow2 *pHTMLWindow);
+
+    HRESULT GetPendingUrl(
+            [out] BSTR *pbstrPendingUrl);
+
+    HRESULT ActiveElementChanged(
+            [in] IHTMLElement *pHTMLElement);
+
+    HRESULT GetUrlSearchComponent(
+            [out] BSTR *pbstrSearch);
+
+    HRESULT IsErrorUrl(
+            [in] LPCWSTR lpszUrl,
+            [out] BOOL *pfIsError);
+};

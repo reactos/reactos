@@ -1,0 +1,20 @@
+/* TRANSLATOR:  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR:  14-02-2008
+ */
+ 
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_USAGE, "Zobrazuje údaje, stránku za stránkou, na obrazovke.\n\n\
+  MORE < [Jednotka:][Cesta]Názov súboru\n\
+  Príkaz | MORE \n\
+  MORE [Jednotka:][Cesta]Názov súboru\n\n\
+  [Jednotka:][Cesta]Názov súboru    Súbor, ktorého obsah má byť zobrazený.\n\
+  Príkaz\t\t     Príkaz, ktorého výstup má byť zobrazený.\n\n\
+  Pri výzve ""-- Pokračujte --"" môžete stlačiť ľubovoľný kláves\n\
+  k zobrazeniu nasledujúcej stránky.\n"
+
+  IDS_CONTINUE, " -- Pokračujte (100%) -- "
+  IDS_FILE_ACCESS, "Neviem získať prístup k súboru %s."
+END

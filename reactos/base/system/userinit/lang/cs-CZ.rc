@@ -1,0 +1,12 @@
+/* FILE:        system/userinit/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2008-04-21
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+BEGIN
+
+STRING_USERINIT_FAIL, "Aplikace Userinit selhala při spouštění uživatelského rozhraní!\n"
+
+END

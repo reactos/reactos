@@ -1,0 +1,71 @@
+/*
+ * cryptdlg dll resources
+ *
+ * Copyright 2008 Juan Lang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+#include <windef.h>
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "cryptres.h"
+
+#ifdef LANGUAGE_DA_DK
+    #include "cryptdlg_Da.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "cryptdlg_En.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "cryptdlg_Ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "cryptdlg_Nl.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "cryptdlg_Pl.rc"
+#endif
+
+/* UTF-8 */
+#ifdef LANGUAGE_DE_DE
+    #include "cryptdlg_De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "cryptdlg_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "cryptdlg_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "cryptdlg_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "cryptdlg_It.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "cryptdlg_Lt.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "cryptdlg_No.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "cryptdlg_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "cryptdlg_Ro.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "cryptdlg_Uk.rc"
+#endif

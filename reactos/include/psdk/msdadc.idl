@@ -1,0 +1,92 @@
+/*
+ * Copyright 2009 Huw Davies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "oledb.idl";
+
+[
+    object,
+    pointer_default(unique),
+    uuid(0c733a8d-2a1c-11ce-ade5-00aa0044773d)
+]
+interface IDataConvert : IUnknown
+{
+    typedef DWORD DBDATACONVERT;
+
+    enum DBDATACONVERTENUM
+    {
+        DBDATACONVERT_DEFAULT = 0,
+        DBDATACONVERT_SETDATABEHAVIOR = 1,
+        DBDATACONVERT_LENGTHFROMNTS = 2,
+        DBDATACONVERT_DSTISFIXEDLENGTH = 4,
+        DBDATACONVERT_DECIMALSCALE = 8
+    };
+
+    [local] HRESULT DataConvert([in] DBTYPE wSrcType,
+                                [in] DBTYPE wDstType,
+                                [in] DBLENGTH cbSrcLength,
+                                [in, out] DBLENGTH *pcbDstLength,
+                                [in] void *pSrc,
+                                [out] void *pDst,
+                                [in] DBLENGTH cbDstMaxLength,
+                                [in] DBSTATUS dbsSrcStatus,
+                                [out] DBSTATUS *pdbsDstStatus,
+                                [in] BYTE bPrecision,
+                                [in] BYTE bScale,
+                                [in] DBDATACONVERT dwFlags);
+
+
+    HRESULT CanConvert([in] DBTYPE wSrcType,
+                       [in] DBTYPE wDstType);
+
+
+    [local] HRESULT GetConversionSize([in] DBTYPE wSrcType,
+                                      [in] DBTYPE wDstType,
+                                      [in] DBLENGTH *pcbSrcLength,
+                                      [out] DBLENGTH *pcbDstLength,
+                                      [in, size_is(*pcbSrcLength)] void *pSrc);
+};
+
+[
+    object,
+    pointer_default(unique),
+    uuid(0c733a9c-2a1c-11ce-ade5-00aa0044773d)
+]
+interface IDCInfo : IUnknown
+{
+    typedef DWORD DCINFOTYPE;
+
+    enum DCINFOTYPEENUM
+    {
+        DCINFOTYPE_VERSION = 1
+    };
+
+    typedef struct tagDCINFO
+    {
+        DCINFOTYPE eInfoType;
+        VARIANT vData;
+    } DCINFO;
+
+    HRESULT GetInfo([in] ULONG cInfo,
+                    [in, size_is(cInfo)] DCINFOTYPE rgeInfoType[],
+                    [out, size_is(cInfo)] DCINFO **prgInfo);
+
+    HRESULT SetInfo([in] ULONG cInfo,
+                    [in, size_is(cInfo)] DCINFO prgInfo[]);
+};

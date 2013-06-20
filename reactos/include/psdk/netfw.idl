@@ -1,0 +1,470 @@
+/*
+ * Copyright 2007 Jeff Latimer
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ *****************************************************************************
+ *
+ * The firewall management interface
+ *
+ */
+
+import "icftypes.idl";
+import "oaidl.idl";
+
+[
+   object,
+   uuid(A6207B2E-7CDD-426A-951E-5E1CBC5AFEAD),
+   dual
+]
+interface INetFwIcmpSettings : IDispatch
+{
+    [id(1), propget]
+    HRESULT AllowOutboundDestinationUnreachable([out, retval] VARIANT_BOOL* allow);
+
+    [id(1), propput]
+    HRESULT AllowOutboundDestinationUnreachable( [in] VARIANT_BOOL allow );
+
+    [id(2), propget]
+    HRESULT AllowRedirect( [out, retval] VARIANT_BOOL* allow );
+
+    [id(2), propput]
+    HRESULT AllowRedirect( [in] VARIANT_BOOL allow );
+
+    [id(3), propget]
+    HRESULT AllowInboundEchoRequest( [out, retval] VARIANT_BOOL* allow );
+
+    [id(3), propput]
+    HRESULT AllowInboundEchoRequest( [in] VARIANT_BOOL allow );
+
+    [id(4), propget]
+    HRESULT AllowOutboundTimeExceeded( [out, retval] VARIANT_BOOL* allow );
+
+    [id(4), propput]
+    HRESULT AllowOutboundTimeExceeded( [in] VARIANT_BOOL allow );
+
+    [id(5), propget]
+    HRESULT AllowOutboundParameterProblem( [out, retval] VARIANT_BOOL* allow );
+
+    [id(5), propput]
+    HRESULT AllowOutboundParameterProblem( [in] VARIANT_BOOL allow );
+
+    [id(6), propget]
+    HRESULT AllowOutboundSourceQuench( [out, retval] VARIANT_BOOL* allow );
+
+    [id(6), propput]
+    HRESULT AllowOutboundSourceQuench( [in] VARIANT_BOOL allow );
+
+    [id(7), propget]
+    HRESULT AllowInboundRouterRequest( [out, retval] VARIANT_BOOL* allow );
+
+    [id(7), propput]
+    HRESULT AllowInboundRouterRequest( [in] VARIANT_BOOL allow );
+
+    [id(8), propget]
+    HRESULT AllowInboundTimestampRequest( [out, retval] VARIANT_BOOL* allow );
+
+    [id(8), propput]
+    HRESULT AllowInboundTimestampRequest( [in] VARIANT_BOOL allow );
+
+    [id(9), propget]
+    HRESULT AllowInboundMaskRequest( [out, retval] VARIANT_BOOL* allow );
+
+    [id(9), propput]
+    HRESULT AllowInboundMaskRequest( [in] VARIANT_BOOL allow );
+
+    [id(10), propget]
+    HRESULT AllowOutboundPacketTooBig( [out, retval] VARIANT_BOOL* allow );
+
+    [id(10), propput]
+    HRESULT AllowOutboundPacketTooBig( [in] VARIANT_BOOL allow );
+}
+
+[
+    object,
+    uuid(E0483BA0-47FF-4D9C-A6D6-7741D0B195F7),
+    dual
+]
+interface INetFwOpenPort : IDispatch
+{
+    [id(1), propget]
+    HRESULT Name( [out, retval] BSTR* name );
+
+    [id(1), propput]
+    HRESULT Name( [in] BSTR name );
+
+    [id(2), propget]
+    HRESULT IpVersion( [out, retval] NET_FW_IP_VERSION* ipVersion );
+
+    [id(2), propput]
+    HRESULT IpVersion( [in] NET_FW_IP_VERSION ipVersion );
+
+    [id(3), propget]
+    HRESULT Protocol( [out, retval] NET_FW_IP_PROTOCOL* ipProtocol );
+
+    [id(3), propput]
+    HRESULT Protocol( [in] NET_FW_IP_PROTOCOL ipProtocol );
+
+    [id(4), propget]
+    HRESULT Port( [out, retval] LONG* portNumber );
+
+    [id(4), propput]
+    HRESULT Port( [in] LONG portNumber );
+
+    [id(5), propget]
+    HRESULT Scope( [out, retval] NET_FW_SCOPE* scope );
+
+    [id(5), propput]
+    HRESULT Scope( [in] NET_FW_SCOPE scope );
+
+    [id(6), propget]
+    HRESULT RemoteAddresses( [out, retval] BSTR* remoteAddrs );
+
+    [id(6), propput]
+    HRESULT RemoteAddresses( [in] BSTR remoteAddrs );
+
+    [id(7), propget]
+    HRESULT Enabled( [out, retval] VARIANT_BOOL* enabled );
+
+    [id(7), propput]
+    HRESULT Enabled( [in] VARIANT_BOOL enabled );
+
+    [id(8), propget]
+    HRESULT BuiltIn( [out, retval] VARIANT_BOOL* builtIn );
+}
+
+[
+    object,
+    uuid(C0E9D7FA-E07E-430A-B19A-090CE82D92E2),
+    dual
+]
+interface INetFwOpenPorts : IDispatch
+{
+    [id(1), propget]
+    HRESULT Count( [out, retval] long* count );
+
+    [id(2)]
+    HRESULT Add( [in] INetFwOpenPort* port );
+
+    [id(3)]
+    HRESULT Remove( [in] LONG portNumber, [in] NET_FW_IP_PROTOCOL ipProtocol );
+
+    [id(4)]
+    HRESULT Item( [in] LONG portNumber, [in] NET_FW_IP_PROTOCOL ipProtocol,
+                  [out, retval] INetFwOpenPort** openPort );
+
+    [id(DISPID_NEWENUM), propget, restricted]
+    HRESULT _NewEnum( [out, retval] IUnknown** newEnum );
+}
+
+[
+    object,
+    uuid(79FD57C8-908E-4A36-9888-D5B3F0A444CF),
+    dual
+]
+interface INetFwService : IDispatch
+{
+    [id(1), propget]
+    HRESULT Name( [out, retval] BSTR* name );
+
+    [id(2), propget]
+    HRESULT Type( [out, retval] NET_FW_SERVICE_TYPE* type );
+
+    [id(3), propget]
+    HRESULT Customized( [out, retval] VARIANT_BOOL* customized );
+
+    [id(4), propget]
+    HRESULT IpVersion( [out, retval] NET_FW_IP_VERSION* ipVersion );
+
+    [id(4), propput]
+    HRESULT IpVersion( [in] NET_FW_IP_VERSION ipVersion );
+
+    [id(5), propget]
+    HRESULT Scope( [out, retval] NET_FW_SCOPE* scope );
+
+    [id(5), propput]
+    HRESULT Scope( [in] NET_FW_SCOPE scope );
+
+    [id(6), propget]
+    HRESULT RemoteAddresses( [out, retval] BSTR* remoteAddrs );
+
+    [id(6), propput]
+    HRESULT RemoteAddresses( [in] BSTR remoteAddrs );
+
+    [id(7), propget]
+    HRESULT Enabled( [out, retval] VARIANT_BOOL* enabled );
+
+    [id(7), propput]
+    HRESULT Enabled( [in] VARIANT_BOOL enabled );
+
+    [id(8), propget]
+    HRESULT GloballyOpenPorts( [out, retval] INetFwOpenPorts** openPorts );
+}
+
+[
+    object,
+    uuid(79649BB4-903E-421B-94C9-79848E79F6EE),
+    dual
+]
+interface INetFwServices : IDispatch
+{
+    [id(1), propget]
+    HRESULT Count( [out, retval] long* count );
+
+     [id(2)]
+    HRESULT Item( [in] NET_FW_SERVICE_TYPE svcType,
+                  [out, retval] INetFwService** service );
+
+    [id(DISPID_NEWENUM), propget, restricted]
+    HRESULT _NewEnum( [out, retval] IUnknown** newEnum );
+}
+
+[
+    object,
+    uuid(B5E64FFA-C2C5-444E-A301-FB5E00018050),
+    dual
+]
+interface INetFwAuthorizedApplication : IDispatch
+{
+    [id(1), propget]
+    HRESULT Name( [out, retval] BSTR* name );
+
+    [id(1), propput]
+    HRESULT Name( [in] BSTR name );
+
+    [id(2), propget]
+    HRESULT ProcessImageFileName( [out, retval] BSTR* imageFileName );
+
+    [id(2), propput]
+    HRESULT ProcessImageFileName( [in] BSTR imageFileName );
+
+    [id(3), propget]
+    HRESULT IpVersion( [out, retval] NET_FW_IP_VERSION* ipVersion );
+
+    [id(3), propput]
+    HRESULT IpVersion( [in] NET_FW_IP_VERSION ipVersion );
+
+    [id(4), propget]
+    HRESULT Scope( [out, retval] NET_FW_SCOPE* scope );
+
+    [id(4), propput]
+    HRESULT Scope( [in] NET_FW_SCOPE scope );
+
+    [id(5), propget]
+    HRESULT RemoteAddresses( [out, retval] BSTR* remoteAddrs );
+
+    [id(5), propput]
+    HRESULT RemoteAddresses( [in] BSTR remoteAddrs );
+
+    [id(6), propget]
+    HRESULT Enabled( [out, retval] VARIANT_BOOL* enabled );
+
+    [id(6), propput]
+    HRESULT Enabled( [in] VARIANT_BOOL enabled );
+}
+
+[
+    object,
+    uuid(D4BECDDF-6F73-4A83-B832-9C66874CD20E),
+    dual
+]
+interface INetFwRemoteAdminSettings : IDispatch
+{
+    [id(1), propget]
+    HRESULT IpVersion( [out, retval] NET_FW_IP_VERSION* ipVersion );
+
+    [id(1), propput]
+    HRESULT IpVersion( [in] NET_FW_IP_VERSION ipVersion );
+
+    [id(2), propget]
+    HRESULT Scope( [out, retval] NET_FW_SCOPE* scope );
+
+    [id(2), propput]
+    HRESULT Scope( [in] NET_FW_SCOPE scope );
+
+    [id(3), propget]
+    HRESULT RemoteAddresses( [out, retval] BSTR* remoteAddrs );
+
+    [id(3), propput]
+    HRESULT RemoteAddresses( [in] BSTR remoteAddrs );
+
+    [id(4), propget]
+    HRESULT Enabled( [out, retval] VARIANT_BOOL* enabled );
+
+    [id(4), propput]
+    HRESULT Enabled( [in] VARIANT_BOOL enabled );
+}
+
+
+[
+    object,
+    uuid(644EFD52-CCF9-486C-97A2-39F352570B30),
+    dual
+]
+interface INetFwAuthorizedApplications : IDispatch
+{
+    [id(1), propget]
+    HRESULT Count( [out, retval] long* count );
+
+    [id(2)]
+    HRESULT Add( [in] INetFwAuthorizedApplication* app );
+
+    [id(3)]
+    HRESULT Remove( [in] BSTR imageFileName );
+
+    [id(4)]
+    HRESULT Item( [in] BSTR imageFileName,
+                  [out, retval] INetFwAuthorizedApplication** app );
+
+    [id(DISPID_NEWENUM), propget, restricted]
+    HRESULT _NewEnum( [out, retval] IUnknown** newEnum );
+}
+
+[
+     object,
+     uuid(174A0DDA-E9F9-449D-993B-21AB667CA456),
+     dual
+]
+interface INetFwProfile : IDispatch
+{
+    [id(1), propget]
+    HRESULT Type( [out, retval] NET_FW_PROFILE_TYPE* type );
+
+    [id(2), propget]
+    HRESULT FirewallEnabled( [out, retval] VARIANT_BOOL* enabled );
+
+    [id(2), propput]
+    HRESULT FirewallEnabled( [in] VARIANT_BOOL enabled );
+
+    [id(3), propget]
+    HRESULT ExceptionsNotAllowed( [out, retval] VARIANT_BOOL* notAllowed );
+
+    [id(3), propput]
+    HRESULT ExceptionsNotAllowed( [in] VARIANT_BOOL notAllowed );
+
+    [id(4), propget]
+    HRESULT NotificationsDisabled( [out, retval] VARIANT_BOOL* disabled );
+
+    [id(4), propput]
+    HRESULT NotificationsDisabled( [in] VARIANT_BOOL disabled );
+
+    [id(5), propget]
+    HRESULT UnicastResponsesToMulticastBroadcastDisabled( [out, retval] VARIANT_BOOL* disabled );
+
+    [id(5), propput]
+    HRESULT UnicastResponsesToMulticastBroadcastDisabled( [in] VARIANT_BOOL disabled );
+
+    [id(6), propget]
+    HRESULT RemoteAdminSettings( [out, retval] INetFwRemoteAdminSettings** remoteAdminSettings );
+
+    [id(7), propget]
+    HRESULT IcmpSettings( [out, retval] INetFwIcmpSettings** icmpSettings );
+
+    [id(8), propget]
+    HRESULT GloballyOpenPorts( [out, retval] INetFwOpenPorts** openPorts );
+
+    [id(9), propget]
+    HRESULT Services( [out, retval] INetFwServices** services );
+
+    [id(10), propget]
+    HRESULT AuthorizedApplications( [out, retval] INetFwAuthorizedApplications** apps );
+}
+
+[
+     object,
+     uuid(D46D2478-9AC9-4008-9DC7-5563CE5536CC),
+     dual
+]
+interface INetFwPolicy : IDispatch
+{
+    [id(1), propget]
+    HRESULT CurrentProfile( [out, retval] INetFwProfile** profile );
+
+    [id(2)]
+    HRESULT GetProfileByType( [in] NET_FW_PROFILE_TYPE profileType,
+                              [out, retval] INetFwProfile** profile );
+}
+
+[
+    object,
+    uuid(F7898AF5-CAC4-4632-A2EC-DA06E5111AF2),
+    dual
+]
+interface INetFwMgr : IDispatch
+{
+    [id(1), propget]
+    HRESULT LocalPolicy( [out, retval] INetFwPolicy** localPolicy );
+
+    [id(2), propget]
+    HRESULT CurrentProfileType( [out, retval] NET_FW_PROFILE_TYPE* profileType );
+
+    [id(3)]
+    HRESULT RestoreDefaults();
+
+    [id(4)]
+    HRESULT IsPortAllowed( [in] BSTR imageFileName, [in] NET_FW_IP_VERSION ipVersion,
+                           [in] LONG portNumber, [in] BSTR localAddress,
+                           [in] NET_FW_IP_PROTOCOL ipProtocol, [out] VARIANT* allowed,
+                           [out] VARIANT* restricted );
+
+    [id(5)]
+    HRESULT IsIcmpTypeAllowed( [in] NET_FW_IP_VERSION ipVersion, [in] BSTR localAddress,
+                               [in] BYTE type, [out] VARIANT* allowed,
+                               [out] VARIANT* restricted );
+}
+
+[
+    uuid(DB4F3345-3EF8-45ED-B976-25A6D3B81B71),
+    version(1.0)
+]
+library NetFwPublicTypeLib
+{
+    importlib("stdole2.tlb");
+    interface INetFwRemoteAdminSettings;
+    interface INetFwIcmpSettings;
+    interface INetFwOpenPort;
+    interface INetFwOpenPorts;
+    interface INetFwService;
+    interface INetFwServices;
+    interface INetFwAuthorizedApplication;
+    interface INetFwAuthorizedApplications;
+    interface INetFwProfile;
+    interface INetFwPolicy;
+    interface INetFwMgr;
+
+    [
+        uuid(0CA545C6-37AD-4A6C-BF92-9F7610067EF5)
+    ]
+    coclass NetFwOpenPort
+    {
+        [default] interface INetFwOpenPort;
+    }
+
+    [
+        uuid(EC9846B3-2762-4A6B-A214-6ACB603462D2)
+    ]
+    coclass NetFwAuthorizedApplication
+    {
+        [default] interface INetFwAuthorizedApplication;
+    }
+
+    [
+        uuid(304CE942-6E39-40D8-943A-B913C40C9CD4)
+    ]
+    coclass NetFwMgr
+    {
+        [default] interface INetFwMgr;
+    }
+}

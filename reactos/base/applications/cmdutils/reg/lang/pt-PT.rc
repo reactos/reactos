@@ -1,0 +1,40 @@
+/*
+ * REG.EXE - Wine-compatible reg program.
+ * Portuguese language support
+ *
+ * Copyright 2008 Andrew Riedi
+ * Copyright 2008 Ricardo Filipe
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "reg.h"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "A sintaxe deste comando é:\n\nREG [ ADD | DELETE | QUERY ]\nREG comando /?\n"
+    STRING_ADD_USAGE, "REG ADD nome_chave [/v nome_valor | /ve] [/t tipo] [/s separador] [/d dados] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nome_chave [/v nome_valor | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nome_chave [/v nome_valor | /ve] [/s]\n"
+    STRING_SUCCESS, "A operação foi completada com sucesso\n"
+    STRING_INVALID_KEY, "Erro: Nome de chave inválido\n"
+    STRING_INVALID_CMDLINE, "Erro: Parâmetros da linha de comandos inválidos\n"
+    STRING_NO_REMOTE, "Erro: Incapaz de adicionar chaves à máquina remota\n"
+    STRING_CANNOT_FIND, "Erro: O sistema foi incapaz de encontrar a chave de registo ou valor especificado\n"
+}

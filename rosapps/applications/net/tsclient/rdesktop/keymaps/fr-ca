@@ -1,0 +1,50 @@
+# Canadian French
+# By Simon Germain
+include common
+map 0xc0c
+
+backslash 0x29 altgr
+plusminus 0x2 altgr
+at 0x3 altgr
+sterling 0x4 altgr
+cent 0x5 altgr
+currency 0x6 altgr
+notsign 0x7 altgr
+bar 0x29 shift
+twosuperior 0x9 altgr
+threesuperior 0xa altgr
+onequarter 0xb altgr
+onehalf 0xc altgr
+threequarters 0xd altgr
+section 0x18 altgr
+paragraph 0x19 altgr
+bracketleft 0x1a altgr
+bracketright 0x1b altgr
+asciitilde 0x27 altgr
+braceleft 0x28 altgr
+braceright 0x2b altgr
+less 0x2b
+greater 0x2b shift
+guillemotleft 0x56
+guillemotright 0x56 shift
+degree 0x56 altgr
+mu 0x32 altgr
+eacute 0x35
+dead_acute 0x35 altgr
+dead_grave 0x28
+dead_circumflex 0x1a
+dead_circumflex 0x1a shift
+dead_cedilla 0x1b
+dead_diaeresis 0x1b shift
+exclam 0x2 shift
+quotedbl 0x3 shift
+slash 0x4 shift
+dollar 0x5 shift
+percent 0x6 shift
+question 0x7 shift
+ampersand 0x8 shift
+asterisk 0x9 shift
+parenleft 0xa shift
+parenright 0xb shift
+underscore 0xc shift
+plus 0xd shift

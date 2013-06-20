@@ -1,0 +1,7 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+BEGIN
+
+STRING_USERINIT_FAIL, "Приложението userinit не успя да пусне обвивката!\n"
+
+END

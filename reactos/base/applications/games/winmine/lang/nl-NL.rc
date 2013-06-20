@@ -1,0 +1,90 @@
+/*
+ * WineMine (Dutch resources)
+ *
+ * Copyright 2003 Hans Leidekker
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE BEGIN
+     IDS_APPNAME, "WineMine"
+     IDS_NOBODY,  "Niemand"
+     IDS_ABOUT,   "Copyright 2000 Joshua Thielen"
+END
+
+MENU_WINEMINE MENU
+BEGIN
+    POPUP "&Opties" BEGIN
+        MENUITEM "&Nieuw spel\tF2", IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Markeer vraag",  IDM_MARKQ
+        MENUITEM SEPARATOR
+        MENUITEM "&Beginner",       IDM_BEGINNER
+        MENUITEM "&Gevorderde",     IDM_ADVANCED
+        MENUITEM "&Expert",         IDM_EXPERT
+        MENUITEM "Aange&past spel", IDM_CUSTOM
+        MENUITEM SEPARATOR
+        MENUITEM "&Afsluiten\tAlt+X", IDM_EXIT
+    END
+    POPUP "&Info" BEGIN
+        MENUITEM "&Snelste tijden...", IDM_TIMES
+        MENUITEM "&Over WineMine",   IDM_ABOUT
+    END
+END
+
+DLG_TIMES DIALOGEX 0, 0, 160, 80
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Snelste tijden"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Snelste tijden", -1,  10,  10, 140,  45
+    LTEXT           "Beginner",       -1,  20,  20,  40,   8
+    LTEXT           "Gevorderde",     -1,  20,  30,  40,   8
+    LTEXT           "Expert",         -1,  20,  40,  40,   8
+    LTEXT           "999",            IDC_TIME1,  70,  20,  15,   8
+    LTEXT           "999",            IDC_TIME2,  70,  30,  15,   8
+    LTEXT           "999",            IDC_TIME3,  70,  40,  15,   8
+    LTEXT           "",               IDC_NAME1,  90,  20,  55,   8
+    LTEXT           "",               IDC_NAME2,  90,  30,  55,   8
+    LTEXT           "",               IDC_NAME3,  90,  40,  55,   8
+    DEFPUSHBUTTON   "OK",             IDOK,  55,  60,  50,  15
+END
+
+DLG_CONGRATS DIALOGEX  0, 0, 160, 60
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Gefeliciteerd!"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Voer uw naam in", -1,  10,  10, 150,  10
+    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
+    DEFPUSHBUTTON   "OK",                         IDOK,  60,  40,  40,  15
+END
+
+DLG_CUSTOM DIALOGEX  0, 0, 100, 100
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "Aangepast spel"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Rijen",    -1,   5,   5,  30,  10
+    LTEXT           "Kolommen", -1,   5,  35,  30,  10
+    LTEXT           "Mijnen",   -1,   5,  65,  30,  10
+    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
+    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
+    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
+    DEFPUSHBUTTON   "OK",     IDOK,      40,  30,  50,  15
+    PUSHBUTTON      "Annuleren", IDCANCEL,  40,  50,  50,  15
+END

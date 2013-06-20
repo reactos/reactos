@@ -1,0 +1,345 @@
+/*
+ * Copyright (C) 2006 Mike McCormack
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+typedef DWORD DBKIND;
+
+enum DBKINDENUM {
+    DBKIND_GUID_NAME,
+    DBKIND_GUID_PROPID,
+    DBKIND_NAME,
+    DBKIND_PGUID_NAME,
+    DBKIND_PGUID_PROPID,
+    DBKIND_PROPID,
+    DBKIND_GUID,
+};
+
+typedef struct tagDBID {
+    [switch_type(DBKIND), switch_is(eKind)] union
+    {
+    [case(DBKIND_GUID_NAME, DBKIND_GUID_PROPID, DBKIND_GUID, DBKIND_NAME, DBKIND_PROPID)]
+        GUID guid;
+    [case(DBKIND_PGUID_NAME, DBKIND_PGUID_PROPID)]
+        GUID *pguid;
+    [default]
+        ;
+    } uGuid;
+    DBKIND eKind;
+    [switch_type(DBKIND), switch_is(eKind)] union
+    {
+    [case(DBKIND_GUID_NAME, DBKIND_NAME, DBKIND_PGUID_NAME)]
+        LPOLESTR pwszName;
+    [case(DBKIND_GUID_PROPID, DBKIND_GUID, DBKIND_PGUID_PROPID, DBKIND_PROPID)]
+        ULONG ulPropid;
+    [default]
+        ;
+    } uName;
+} DBID;
+
+typedef DWORD DBPROPID;
+
+typedef struct tagDBPROPIDSET {
+    [size_is(cPropertyIDs)] DBPROPID *rgPropertyIDs;
+    ULONG cPropertyIDs;
+    GUID guidPropertySet;
+} DBPROPIDSET;
+
+typedef DWORD DBPROPOPTIONS;
+
+enum DBPROPOPTIONENUM {
+    DBPROPOPTIONS_REQUIRED = 0,
+    DBPROPOPTIONS_SETIFCHEAP = 1,
+    DBPROPOPTIONS_OPTIONAL = 1,
+};
+
+typedef DWORD DBPROPSTATUS;
+
+typedef struct tagDBPROP {
+    DBPROPID dwPropertyID;
+    DBPROPOPTIONS dwOptions;
+    DBPROPSTATUS dwStatus;
+    DBID colid;
+    VARIANT vValue;
+} DBPROP;
+
+typedef struct tagDBPROPSET {
+    [size_is(cProperties)] DBPROP *rgProperties;
+    ULONG cProperties;
+    GUID guidPropertySet;
+} DBPROPSET;
+
+typedef DWORD DBPROPFLAGS;
+
+typedef struct tagDBPROPINFO {
+    LPOLESTR pwszDescription;
+    DBPROPID dwPropertyID;
+    DBPROPFLAGS dwFlags;
+    VARTYPE vtType;
+    VARIANT vValues;
+} DBPROPINFO;
+
+typedef DBPROPINFO *PDBPROPINFO;
+
+typedef struct tagDBPROPINFOSET {
+    [size_is(cPropertyInfos)] PDBPROPINFO rgPropertyInfos;
+    ULONG cPropertyInfos;
+    GUID guidPropertySet;
+} DBPROPINFOSET;
+
+typedef DWORD DBBINDURLFLAG;
+typedef DWORD DBBINDURLSTATUS;
+
+typedef struct tagDBIMPLICITSESSION
+{
+    IUnknown *pUnkOuter;
+    IID *piid;
+    IUnknown *pSession;
+} DBIMPLICITSESSION;
+
+typedef WORD DBTYPE;
+
+enum DBTYPEENUM
+{
+    DBTYPE_EMPTY         = 0,
+    DBTYPE_NULL          = 1,
+    DBTYPE_I2            = 2,
+    DBTYPE_I4            = 3,
+    DBTYPE_R4            = 4,
+    DBTYPE_R8            = 5,
+    DBTYPE_CY            = 6,
+    DBTYPE_DATE          = 7,
+    DBTYPE_BSTR          = 8,
+    DBTYPE_IDISPATCH     = 9,
+    DBTYPE_ERROR         = 10,
+    DBTYPE_BOOL          = 11,
+    DBTYPE_VARIANT       = 12,
+    DBTYPE_IUNKNOWN      = 13,
+    DBTYPE_DECIMAL       = 14,
+    DBTYPE_I1            = 16,
+    DBTYPE_UI1           = 17,
+    DBTYPE_UI2           = 18,
+    DBTYPE_UI4           = 19,
+    DBTYPE_I8            = 20,
+    DBTYPE_UI8           = 21,
+    DBTYPE_GUID          = 72,
+    DBTYPE_BYTES         = 128,
+    DBTYPE_STR           = 129,
+    DBTYPE_WSTR          = 130,
+    DBTYPE_NUMERIC       = 131,
+    DBTYPE_UDT           = 132,
+    DBTYPE_DBDATE        = 133,
+    DBTYPE_DBTIME        = 134,
+    DBTYPE_DBTIMESTAMP   = 135,
+
+    DBTYPE_VECTOR        = 0x1000,
+    DBTYPE_ARRAY         = 0x2000,
+    DBTYPE_BYREF         = 0x4000,
+    DBTYPE_RESERVED      = 0x8000
+};
+
+enum DBTYPEENUM15
+{
+    DBTYPE_HCHAPTER      = 136
+};
+
+enum DBTYPEENUM20
+{
+    DBTYPE_FILETIME      = 64,
+    DBTYPE_PROPVARIANT   = 138,
+    DBTYPE_VARNUMERIC    = 139
+};
+
+typedef DWORD DBSTATUS;
+
+enum DBSTATUSENUM
+{
+    DBSTATUS_S_OK = 0,
+    DBSTATUS_E_BADACCESSOR = 1,
+    DBSTATUS_E_CANTCONVERTVALUE = 2,
+    DBSTATUS_S_ISNULL = 3,
+    DBSTATUS_S_TRUNCATED = 4,
+    DBSTATUS_E_SIGNMISMATCH = 5,
+    DBSTATUS_E_DATAOVERFLOW = 6,
+    DBSTATUS_E_CANTCREATE = 7,
+    DBSTATUS_E_UNAVAILABLE = 8,
+    DBSTATUS_E_PERMISSIONDENIED = 9,
+    DBSTATUS_E_INTEGRITYVIOLATION = 10,
+    DBSTATUS_E_SCHEMAVIOLATION = 11,
+    DBSTATUS_E_BADSTATUS = 12,
+    DBSTATUS_S_DEFAULT = 13
+};
+
+cpp_quote("#ifdef DBINITCONSTANTS")
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("#define DEFINE_DBGUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \\")
+cpp_quote("        EXTERN_C const GUID name DECLSPEC_HIDDEN;     \\")
+cpp_quote("        EXTERN_C const GUID name =                    \\")
+cpp_quote("	{ l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }")
+cpp_quote("#else")
+cpp_quote("#define DEFINE_DBGUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \\")
+cpp_quote("        const GUID name DECLSPEC_HIDDEN;      \\")
+cpp_quote("        const GUID name =                             \\")
+cpp_quote("	{ l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }")
+cpp_quote("#endif")
+cpp_quote("#else")
+cpp_quote("#define DEFINE_DBGUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \\")
+cpp_quote("    EXTERN_C const GUID name DECLSPEC_HIDDEN")
+cpp_quote("#endif")
+
+cpp_quote("DEFINE_DBGUID(DBGUID_SESSION,    0xc8b522f5, 0x5cf3, 0x11ce, 0xad, 0xe5, 0x00, 0xaa, 0x00, 0x44, 0x77, 0x3d);")
+cpp_quote("DEFINE_DBGUID(DBGUID_ROWSET,     0xc8b522f6, 0x5cf3, 0x11ce, 0xad, 0xe5, 0x00, 0xaa, 0x00, 0x44, 0x77, 0x3d);")
+cpp_quote("DEFINE_DBGUID(DBGUID_ROW,        0xc8b522f7, 0x5cf3, 0x11ce, 0xad, 0xe5, 0x00, 0xaa, 0x00, 0x44, 0x77, 0x3d);")
+cpp_quote("DEFINE_DBGUID(DBGUID_STREAM,     0xc8b522f9, 0x5cf3, 0x11ce, 0xad, 0xe5, 0x00, 0xaa, 0x00, 0x44, 0x77, 0x3d);")
+
+typedef struct tagDBCOLUMNACCESS
+{
+    void *pData;
+    DBID columnid;
+    DBLENGTH cbDataLen;
+    DBSTATUS dwStatus;
+    DBLENGTH cbMaxLen;
+    DB_DWRESERVE dwReserved;
+    DBTYPE wType;
+    BYTE bPrecision;
+    BYTE bScale;
+} DBCOLUMNACCESS;
+
+typedef DWORD DBROWSTATUS;
+
+enum DBROWSTATUSENUM
+{
+    DBROWSTATUS_S_OK         = 0,
+    /* FIXME */
+    DBROWSTATUS_E_FAIL       = 19,
+
+};
+
+typedef DWORD DBPART;
+
+enum DBPARTENUM
+{
+    DBPART_INVALID  = 0,
+    DBPART_VALUE    = 1,
+    DBPART_LENGTH   = 2,
+    DBPART_STATUS   = 4,
+};
+
+typedef DWORD DBPARAMIO;
+
+enum DBPARAMIOENUM
+{
+    DBPARAMIO_NOTPARAM = 0,
+    DBPARAMIO_INPUT    = 1,
+    DBPARAMIO_OUTPUT   = 2,
+};
+
+typedef DWORD DBMEMOWNER;
+
+enum DBMEMOWNERENUM
+{
+    DBMEMOWNER_CLIENTOWNED    = 0,
+    DBMEMOWNER_PROVIDEROWNED  = 1,
+};
+
+typedef struct tagDBOBJECT
+{
+    DWORD dwFlags;
+    IID iid;
+} DBOBJECT;
+
+typedef struct tagDBBINDEXT
+{
+    [size_is((ULONG)ulExtension)] BYTE *pExtension;
+    DBCOUNTITEM ulExtension;
+} DBBINDEXT;
+
+typedef struct tagDBBINDING
+{
+    DBORDINAL iOrdinal;
+    DBBYTEOFFSET obValue;
+    DBBYTEOFFSET obLength;
+    DBBYTEOFFSET obStatus;
+    ITypeInfo *pTypeInfo;
+    DBOBJECT *pObject;
+    DBBINDEXT *pBindExt;
+    DBPART dwPart;
+    DBMEMOWNER dwMemOwner;
+    DBPARAMIO eParamIO;
+    DBLENGTH cbMaxLen;
+    DWORD dwFlags;
+    DBTYPE wType;
+    BYTE bPrecision;
+    BYTE bScale;
+} DBBINDING;
+
+typedef ULONG_PTR HACCESSOR;
+
+cpp_quote("#define DB_INVALID_HACCESSOR 0x00")
+
+typedef ULONG_PTR HROW;
+
+cpp_quote("#define DB_NULL_HROW 0x00")
+
+typedef ULONG_PTR HWATCHREGION;
+
+cpp_quote("#define DBWATCHREGION_NULL NULL")
+
+typedef ULONG_PTR HCHAPTER;
+
+cpp_quote("#define DB_NULL_HCHAPTER 0x00")
+
+typedef struct tagDBPARAMS
+{
+    void *pData;
+    DB_UPARAMS cParamSets;
+    HACCESSOR hAccessor;
+} DBPARAMS;
+
+typedef DWORD DBASYNCHOP;
+
+enum DBASYNCHOPENUM
+{
+    DBSYNCHOP_OPEN,
+};
+
+typedef DWORD DBASYNCHPHASE;
+
+enum DBASYNCHPHASEENUM
+{
+    DBASYNCHPHASE_INITIALIZATION,
+    DBASYNCHPHASE_POPULATION,
+    DBASYNCHPHASE_COMPLETE,
+    DBASYNCHPHASE_CANCELED,
+};
+
+typedef struct tagRMTPACK
+{
+    ISequentialStream *pISeqStream;
+    ULONG cbData;
+    ULONG cBSTR;
+    [size_is(cBSTR)] BSTR *rgBSTR;
+    ULONG cVARIANT;
+    [size_is(cVARIANT)] VARIANT *rgVARIANT;
+    ULONG cIDISPATCH;
+    [size_is(cIDISPATCH)] IDispatch **rgIDISPATCH;
+    ULONG cIUNKNOWN;
+    [size_is(cIUNKNOWN)] IUnknown **rgIUNKNOWN;
+    ULONG cPROPVARIANT;
+    [size_is(cPROPVARIANT)] PROPVARIANT *rgPROPVARIANT;
+    ULONG cArray;
+    [size_is(cArray)] VARIANT *rgArray;
+} RMTPACK;

@@ -1,0 +1,35 @@
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USAGE "\nSyntax: ping [-t] [-n Anzahl] [-l Größe] [-w Zeitlimit] Zielhost\n\n\
+Optionen:\n\
+    -t             Sendet fortlaufend Pings an den angegebenen Host.\n\
+                   Drücken Sie STRG-C, um den Vorgang abzubrechen.\n\
+    -n Anzahl      Anzahl der Echoanforderungen, die gesendet werden.\n\
+    -l Größe       Größe des Sendepuffers.\n\
+    -w Zeitlimit   Zeitlimit in Millisekunden für eine Antwort.\n\n\0"
+
+    IDS_PING_WITH_BYTES             "\nPinging %1 [%2] with %3!d! bytes Data:\n\n\0"
+    IDS_PING_STATISTICS             "\nPing Statistik für %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST  "    Packets: Gesendet = %1!d!, Empfangen = %2!d!, Verloren = %3!d! (%4!d!%% Verlust),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP      "Durchschnittliche Antwortzeit in Millisekunden:\n\0"
+    IDS_MIN_MAX_AVERAGE             "    Minimum = %1, Maximum = %2, Durchschnitt = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES        "Nicht genügend freie Resourcen verfügbar.\n\0"
+    IDS_UNKNOWN_HOST                "Unbekannter Host %1.\n\0"
+    IDS_SETSOCKOPT_FAILED           "setsockopt ist fehlgeschlagen (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET     "Konnte keinen Socket erzeugen (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK      "Die Winsock DLL konnte nicht initialisiert werden.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED      "Name oder IP-Address des Zielhostes muss angegeben werden.\n\0"
+    IDS_BAD_PARAMETER               "Ungültiger Parameter %1.\n\0"
+    IDS_BAD_OPTION_FORMAT           "Ungültiges Options-Format %1.\n\0"
+    IDS_BAD_OPTION                  "Ungültige Option %1.\n\0"
+    IDS_BAD_VALUE_OPTION_L          "Ungültiger Wert für Option -l, Erlaubter Bereich ist von 0 bis %1!d!.\n\0"
+    IDS_REPLY_FROM                  "Antwort von %1: bytes=%2!d! time%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE            "Zielhost nicht erreichbar.\n\0"
+    IDS_COULD_NOT_TRANSMIT          "Es konnten keine Daten gesendet werden (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV              "Es konnten keine Daten empfangen werden (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT             "Zeitüberschreitung der Anforderung.\n\0"
+    IDS_MS                          "ms\0"
+    IDS_1MS                         "1ms\0"
+END

@@ -1,0 +1,47 @@
+﻿; UTF-8
+
+[Section]
+Name = Notepad++
+Version = 6.3.3
+Licence = GPL
+Description = A text editor.
+Size = 6.7MB
+Category = 6
+URLSite = http://notepad-plus-plus.org/
+URLDownload = http://download.tuxfamily.org/notepadplus/6.3.3/npp.6.3.3.Installer.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein Texteditor.
+
+[Section.040a]
+Description = Un editor de text.
+
+[Section.040c]
+Description = Un éditeur de texte.
+Size = 6,7 Mo
+
+[Section.0410]
+Description = Un editor di testo.
+
+[Section.0413]
+Description = Een teksteditor.
+
+[Section.0415]
+Description = Edytor tekstu.
+
+[Section.0418]
+Description = A text editor.
+Size = 6,7 Mo
+
+[Section.0419]
+Description = Текстовый редактор.
+
+[Section.041b]
+Description = Textový editor.
+
+[Section.0422]
+Description = Текстовый редактор.
+
+[Section.0813]
+Description = Een teksteditor.

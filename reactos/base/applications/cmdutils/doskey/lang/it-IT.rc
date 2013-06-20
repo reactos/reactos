@@ -1,0 +1,27 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT 
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Gestisce le impostazioni della riga di comando di editing, la cronologia e le macro.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
+\n\
+  /INSERT             Attiva la modalità di inserimento.\n\
+  /OVERSTRIKE         Disattiva la modalità di inserimento.\n\
+  /EXENAME=exename    Consente di impostare il nome del programma per visualizzare/cambiare la cronologia\n\
+                      e le macro. Il valore predefinito è cmd.exe.\n\
+  /HISTORY            Consente di visualizzare la cronologia dei comandi.\n\
+  /LISTSIZE=size      Imposta il numero di comandi al buffer storico.\n\
+  /REINSTALL          Cancella la cronologia dei comandi.\n\
+  /MACROS             Consente di visualizzare le definizioni delle macro.\n\
+  /MACROS:exename     Visualizza le definizioni di macro per un programma specifico.\n\
+  /MACROS:ALL         Visualizza le definizioni macro per tutti i programmi.\n\
+  /MACROFILE=file     Carica le definizioni di macro da un file.\n\
+  macroname           Specifica il nome di una macro per creare.\n\
+  text                Consente di specificare il testo di sostituzione per la macro.\n"
+  
+IDS_INVALID_MACRO_DEF, "Definizion macro non valida: %s\n"
+
+END

@@ -1,0 +1,41 @@
+﻿; UTF-8
+
+[Section]
+Name = PuTTY
+Version = 0.62
+Licence = MIT
+Description = A free SSH, Telnet, rlogin, and raw TCP client.
+Size = 1.76MB
+Category = 5
+URLSite = http://www.chiark.greenend.org.uk/~sgtatham/putty/
+URLDownload = http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.62-installer.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein freier SSH-, Telnet-, rlogin- und TCP-Client.
+
+[Section.040a]
+Description = Un ciente SSH, Telnet, rlogin y TCP gratuito.
+
+[Section.040c]
+Description = Un client SSH, Telnet, rlogin et raw TCP gratuit.
+Size = 1,76 Mo
+
+[Section.0410]
+Description = Un client SSH, Telnet, rlogin, and raw TCP gratuito.
+
+[Section.0413]
+Description = Een gratis SSH, Telnet, rlogin en pure TCP afnemer.
+
+[Section.0415]
+Description = Darmowy klient obsługujący protokoły SSH, Telnet, rlogin oraz bezpośrednie TCP.
+
+[Section.0418]
+Description = Un client gratuit de SSH, Telnet, rlogin, and TCP brut.
+Size = 1,76 Mo
+
+[Section.0422]
+Description = Безплатний SSH, Telnet, rlogin та raw TCP клієнт.
+
+[Section.0813]
+Description = Een gratis SSH, Telnet, rlogin en pure TCP afnemer.

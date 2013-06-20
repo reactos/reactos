@@ -1,0 +1,23 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {0AFACED1-E828-11D1-9187-B532F1E9575D} = s 'Folder Shortcut'
+		{
+			val Details = s 'prop:Name;LinkTarget'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'shellex'
+			{
+				IconHandler = s '{0AFACED1-E828-11D1-9187-B532F1E9575D}'
+			}
+			'ShellFolder'
+			{
+				val Attributes = d '&H60410137'
+				val CallForAttributes = d '&Hf0000000'
+			}
+		}
+	}
+}

@@ -1,0 +1,63 @@
+
+; Main ReactOS package
+
+.Set DiskLabelTemplate="ReactOS"                ; Label of disk
+.Set CabinetNameTemplate="reactos.cab"          ; reactos.cab
+.Set InfFileName="reactos.inf"                  ; reactos.inf
+
+
+;.Set Cabinet=on
+;.Set Compress=on
+
+.InfBegin
+[Version]
+Signature = "$ReactOS$"
+
+[Directories]
+1 = system32
+2 = system32\drivers
+3 = Fonts
+4 =
+5 = system32\drivers\etc
+6 = inf
+7 = bin
+8 = bin\data
+9 = media
+10 = Microsoft.NET
+11 = Microsoft.NET\Framework
+12 = Microsoft.NET\Framework\v1.0.3705
+13 = Microsoft.NET\Framework\v1.1.4322
+14 = Microsoft.NET\Framework\v2.0.50727
+15 = Resources
+16 = Resources\Themes
+
+.InfEnd
+
+; Contents of disk
+.InfBegin
+[SourceFiles]
+.InfEnd
+
+; Optional/proprietary files
+modules\optional\DroidSansFallback.ttf              3  optional
+modules\optional\NOTICE_for_Droid_Font.txt          4  optional
+modules\optional\netkvm2k.inf                       6  optional
+modules\optional\netkvm2k.cat                       6  optional
+modules\optional\netkvm.sys                         2  optional
+modules\optional\alcxwdm.inf                        6  optional
+modules\optional\alcxwdm.sys                        2  optional
+modules\optional\mfc42.dll                          1  optional
+modules\optional\mfc42u.dll                         1  optional
+modules\optional\mfc71.dll                          1  optional
+modules\optional\mfc71u.dll                         1  optional
+modules\optional\msvbvm50.dll                       1  optional
+modules\optional\msvbvm60.dll                       1  optional
+modules\optional\msvcirt.dll                        1  optional
+modules\optional\msvcp71.dll                        1  optional
+modules\optional\msvcr71.dll                        1  optional
+modules\optional\vmx_fb.dll                         1  optional
+modules\optional\vmx_mode.dll                       1  optional
+modules\optional\vmx_svga.inf                       6  optional
+modules\optional\vmx_svga.sys                       2  optional
+modules\optional\wine_gecko-1.9-x86.msi             4  optional
+boot\bootdata\bootcdregtest\AHKAppTests.cmd         7  optional

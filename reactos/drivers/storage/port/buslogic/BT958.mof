@@ -1,0 +1,30 @@
+[
+    Dynamic, Provider("WMIProv"),
+    WMI,
+    Description ("BT958 Extended Setup Information (Operation Code 8Dh)"),
+    guid ("{CBD60D59-CE49-4cf4-AB7A-DEC6F4988D1A}"),
+    HeaderName("BT958ExtendedSetupInfo"),
+    GuidName1("BT958Wmi_ExtendedSetupInfo_Guid"),
+    WmiExpense(0)
+]
+class BT958ExtendedSetupInfoGuid
+{
+    [read,key] String InstanceName;
+    [read] boolean Active;
+
+    [read, WmiDataId(1), WmiVersion(1)]	uint8 BusType;				            
+	[read, WmiDataId(2), WmiVersion(1)]	uint8  BIOS_Address;				        
+	[read, WmiDataId(3), WmiVersion(1)]	uint16 ScatterGatherLimit;		
+	[read, WmiDataId(4), WmiVersion(1)]	uint8  MailboxCount;				        
+	[read, WmiDataId(5), WmiVersion(1)] uint32 BaseMailboxAddress;	
+	[read, WmiDataId(6), WmiVersion(1)] boolean FastOnEISA;
+	[read, WmiDataId(7), WmiVersion(1)] boolean LevelSensitiveInterrupt;	
+	[read, WmiDataId(8), WmiVersion(1), max(3)] uint8 FirmwareRevision[];		        
+	[read, WmiDataId(9), WmiVersion(1)] boolean HostWideSCSI;				    
+	[read, WmiDataId(10), WmiVersion(1)] boolean HostDifferentialSCSI;			
+	[read, WmiDataId(11), WmiVersion(1)] boolean HostSupportsSCAM;				
+	[read, WmiDataId(12), WmiVersion(1)] boolean HostUltraSCSI;				    
+	[read, WmiDataId(13), WmiVersion(1)] boolean HostSmartTermination;			
+};
+
+

@@ -1,0 +1,24 @@
+Index: usp10.c
+===================================================================
+--- usp10.c     (revision 54504)
++++ usp10.c     (working copy)
+@@ -3746,3 +3746,9 @@
+ 
+     return SHAPE_GetFontFeatureTags(hdc, (ScriptCache *)*psc, psa, tagScript, tagLangSys, cMaxTags, pFeatureTags, pcTags);
+ }
++
++BOOL gbLpkPresent = FALSE;
++VOID WINAPI LpkPresent()
++{
++    gbLpkPresent = TRUE; /* Turn it on this way! Wine is out of control! */
++}
+Index: usp10.spec
+===================================================================
+--- usp10.spec	(revision 54504)
++++ usp10.spec	(working copy)
+@@ -1,4 +1,4 @@
+-@ stub LpkPresent
++@ stdcall LpkPresent()
+ @ stdcall ScriptApplyDigitSubstitution(ptr ptr ptr)
+ @ stdcall ScriptApplyLogicalWidth(ptr long long ptr ptr ptr ptr ptr ptr)
+ @ stdcall ScriptBreak(ptr long ptr ptr)

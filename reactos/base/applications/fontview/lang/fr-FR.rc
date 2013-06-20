@@ -1,0 +1,13 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_INSTALL, "Installer"
+	IDS_PRINT, "Imprimer"
+	IDS_STRING, "Voix ambiguë d'un cœur qui au zéphyr préfère les jattes de kiwis. 1234567890"
+	IDS_OPEN, "Ouvrir un fichier police..."
+	IDS_ERROR, "Erreur"
+	IDS_ERROR_NOMEM, "Mémoire insuffisante pour terminer l'opération."
+	IDS_ERROR_NOFONT, "Le fichier %1 n'est pas un fichier police valide."
+	IDS_ERROR_NOCLASS, "Impossible d'initialiser la classe de fenêtre."
+END

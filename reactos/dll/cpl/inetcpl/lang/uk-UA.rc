@@ -1,0 +1,78 @@
+/*
+ * Internet control panel applet
+ *
+ * Copyright 2010 Detlef Riekenberg
+ * Copyright 2010 Igor Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+#include "inetcpl.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+/* "General" propsheet */
+IDD_GENERAL DIALOG  0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "Загальні"
+BEGIN
+
+    GROUPBOX    " Домашня сторінка ", IDC_STATIC, 4, 4, 312, 52
+    LTEXT       "Ви можете вказати адресу, що буде використана як домашня сторінка.",
+                IDC_STATIC, 58, 12, 252, 10
+    EDITTEXT    IDC_HOME_EDIT, 58, 22, 252, 12, WS_VISIBLE | ES_AUTOHSCROLL
+    PUSHBUTTON  "&Поточна сторінка", IDC_HOME_CURRENT, 58, 36, 80, 14
+    PUSHBUTTON  "&За замовчуванням", IDC_HOME_DEFAULT, 144, 36, 80, 14
+    PUSHBUTTON  "По&рожня сторінка", IDC_HOME_BLANK, 230, 36, 80, 14
+    GROUPBOX    " Browsing history ", IDC_STATIC, 4, 60, 312, 46
+    LTEXT       "You can delete cached pages, cookies and other data.",
+                IDC_STATIC, 58, 72, 252, 10
+    PUSHBUTTON  "Delete &files...", IDC_HISTORY_DELETE, 144, 86, 80, 14
+    PUSHBUTTON  "&Settings...", IDC_HISTORY_SETTINGS, 230, 86, 80, 14
+
+END
+
+/* "Content" propsheet */
+IDD_CONTENT DIALOG  0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "Вміст"
+BEGIN
+
+    GROUPBOX    " Сертифікати ", IDC_STATIC, 4, 4, 312, 50
+    LTEXT       "Сертифікати використовуються для вашої ідентифікації та для ідентифікації органів сертифікації та видавців.",
+                IDC_STATIC, 58, 14, 252, 18
+    PUSHBUTTON  "Сертифікати...", IDC_CERT, 146, 34, 80, 14
+    PUSHBUTTON	"Видавці...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
+
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CPL_NAME        "Internet Settings"
+    IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"
+    IDS_SEC_SETTINGS    "Security settings for zone: "
+    IDS_SEC_LEVEL0      "Custom"
+    IDS_SEC_LEVEL1      "Very Low"
+    IDS_SEC_LEVEL2      "Low"
+    IDS_SEC_LEVEL3      "Medium"
+    IDS_SEC_LEVEL4      "Increased"
+    IDS_SEC_LEVEL5      "High"
+END

@@ -1,0 +1,76 @@
+/*
+ * Copyright (C) 2006 Mike McCormack
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+cpp_quote("#ifdef _WIN64")
+cpp_quote("#include <pshpack8.h>")
+cpp_quote("#else")
+cpp_quote("#include <pshpack2.h>")
+cpp_quote("#endif")
+cpp_quote("")
+
+import "wtypes.idl";
+import "oaidl.idl";
+import "ocidl.idl";
+import "propidl.idl";
+import "urlmon.idl";
+
+typedef ULONG DBBYTEOFFSET;
+typedef LONG  DBROWOFFSET;
+typedef LONG  DBROWCOUNT;
+typedef ULONG DBCOUNTITEM;
+typedef ULONG DBLENGTH;
+typedef ULONG DBORDINAL;
+typedef ULONG DBBKMARK;
+typedef DWORD DB_DWRESERVE;
+typedef ULONG DBREFCOUNT;
+typedef ULONG DB_UPARAMS;
+typedef LONG  DB_LPARAMS;
+typedef DWORD DBHASHVALUE;
+typedef struct {
+    SHORT year;
+    USHORT month;
+    USHORT day;
+    USHORT hour;
+    USHORT minute;
+    USHORT second;
+    ULONG fraction;
+} DBTIMESTAMP;
+
+#include "dbs.idl"
+
+#include "access.idl"
+#include "rstbas.idl"
+#include "rstinf.idl"
+#include "rstloc.idl"
+#include "cmdbas.idl"
+#include "cmdtxt.idl"
+#include "dbccmd.idl"
+#include "dbcses.idl"
+#include "dbprop.idl"
+#include "dbinit.idl"
+#include "dbdsad.idl"
+#include "asynot.idl"
+#include "asysta.idl"
+#include "sesprp.idl"
+#include "opnrst.idl"
+#include "row.idl"
+#include "rowchg.idl"
+#include "binres.idl"
+#include "crtrow.idl"
+
+cpp_quote("#include <poppack.h>")
+cpp_quote("")

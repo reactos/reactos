@@ -1,0 +1,484 @@
+<HTML>
+<HEAD>
+<!-- This HTML file has been created by texi2html 1.54
+     from manual.texi on 23 March 2000 -->
+
+<TITLE>bzip2 and libbzip2 - How to use bzip2</TITLE>
+<link href="manual_3.html" rel=Next>
+<link href="manual_1.html" rel=Previous>
+<link href="manual_toc.html" rel=ToC>
+
+</HEAD>
+<BODY>
+<p>Go to the <A HREF="manual_1.html">first</A>, <A HREF="manual_1.html">previous</A>, <A HREF="manual_3.html">next</A>, <A HREF="manual_4.html">last</A> section, <A HREF="manual_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC2" HREF="manual_toc.html#TOC2">How to use <CODE>bzip2</CODE></A></H1>
+
+<P>
+This chapter contains a copy of the <CODE>bzip2</CODE> man page,
+and nothing else.
+
+</P>
+
+<BLOCKQUOTE>
+
+
+
+<H4><A NAME="SEC3" HREF="manual_toc.html#TOC3">NAME</A></H4>
+
+<UL>
+<LI><CODE>bzip2</CODE>, <CODE>bunzip2</CODE>
+
+- a block-sorting file compressor, v1.0
+<LI><CODE>bzcat</CODE>
+
+- decompresses files to stdout
+<LI><CODE>bzip2recover</CODE>
+
+- recovers data from damaged bzip2 files
+</UL>
+
+
+
+<H4><A NAME="SEC4" HREF="manual_toc.html#TOC4">SYNOPSIS</A></H4>
+
+<UL>
+<LI><CODE>bzip2</CODE> [ -cdfkqstvzVL123456789 ] [ filenames ...  ]
+
+<LI><CODE>bunzip2</CODE> [ -fkvsVL ] [ filenames ...  ]
+
+<LI><CODE>bzcat</CODE> [ -s ] [ filenames ...  ]
+
+<LI><CODE>bzip2recover</CODE> filename
+
+</UL>
+
+
+
+<H4><A NAME="SEC5" HREF="manual_toc.html#TOC5">DESCRIPTION</A></H4>
+
+<P>
+<CODE>bzip2</CODE> compresses files using the Burrows-Wheeler block sorting
+text compression algorithm, and Huffman coding.  Compression is
+generally considerably better than that achieved by more conventional
+LZ77/LZ78-based compressors, and approaches the performance of the PPM
+family of statistical compressors.
+
+</P>
+<P>
+The command-line options are deliberately very similar to those of GNU
+<CODE>gzip</CODE>, but they are not identical.
+
+</P>
+<P>
+<CODE>bzip2</CODE> expects a list of file names to accompany the command-line
+flags.  Each file is replaced by a compressed version of itself, with
+the name <CODE>original_name.bz2</CODE>.  Each compressed file has the same
+modification date, permissions, and, when possible, ownership as the
+corresponding original, so that these properties can be correctly
+restored at decompression time.  File name handling is naive in the
+sense that there is no mechanism for preserving original file names,
+permissions, ownerships or dates in filesystems which lack these
+concepts, or have serious file name length restrictions, such as MS-DOS.
+
+</P>
+<P>
+<CODE>bzip2</CODE> and <CODE>bunzip2</CODE> will by default not overwrite existing
+files.  If you want this to happen, specify the <CODE>-f</CODE> flag.
+
+</P>
+<P>
+If no file names are specified, <CODE>bzip2</CODE> compresses from standard
+input to standard output.  In this case, <CODE>bzip2</CODE> will decline to
+write compressed output to a terminal, as this would be entirely
+incomprehensible and therefore pointless.
+
+</P>
+<P>
+<CODE>bunzip2</CODE> (or <CODE>bzip2 -d</CODE>) decompresses all
+specified files.  Files which were not created by <CODE>bzip2</CODE>
+will be detected and ignored, and a warning issued.  
+<CODE>bzip2</CODE> attempts to guess the filename for the decompressed file 
+from that of the compressed file as follows:
+
+<UL>
+<LI><CODE>filename.bz2 </CODE> becomes <CODE>filename</CODE>
+
+<LI><CODE>filename.bz  </CODE> becomes <CODE>filename</CODE>
+
+<LI><CODE>filename.tbz2</CODE> becomes <CODE>filename.tar</CODE>
+
+<LI><CODE>filename.tbz </CODE> becomes <CODE>filename.tar</CODE>
+
+<LI><CODE>anyothername </CODE> becomes <CODE>anyothername.out</CODE>
+
+</UL>
+
+<P>
+If the file does not end in one of the recognised endings, 
+<CODE>.bz2</CODE>, <CODE>.bz</CODE>, 
+<CODE>.tbz2</CODE> or <CODE>.tbz</CODE>, <CODE>bzip2</CODE> complains that it cannot
+guess the name of the original file, and uses the original name
+with <CODE>.out</CODE> appended.
+
+</P>
+<P>
+As with compression, supplying no
+filenames causes decompression from standard input to standard output.
+
+</P>
+<P>
+<CODE>bunzip2</CODE> will correctly decompress a file which is the
+concatenation of two or more compressed files.  The result is the
+concatenation of the corresponding uncompressed files.  Integrity
+testing (<CODE>-t</CODE>) of concatenated compressed files is also supported.
+
+</P>
+<P>
+You can also compress or decompress files to the standard output by
+giving the <CODE>-c</CODE> flag.  Multiple files may be compressed and
+decompressed like this.  The resulting outputs are fed sequentially to
+stdout.  Compression of multiple files in this manner generates a stream
+containing multiple compressed file representations.  Such a stream
+can be decompressed correctly only by <CODE>bzip2</CODE> version 0.9.0 or
+later.  Earlier versions of <CODE>bzip2</CODE> will stop after decompressing
+the first file in the stream.
+
+</P>
+<P>
+<CODE>bzcat</CODE> (or <CODE>bzip2 -dc</CODE>) decompresses all specified files to
+the standard output.
+
+</P>
+<P>
+<CODE>bzip2</CODE> will read arguments from the environment variables
+<CODE>BZIP2</CODE> and <CODE>BZIP</CODE>, in that order, and will process them
+before any arguments read from the command line.  This gives a 
+convenient way to supply default arguments.
+
+</P>
+<P>
+Compression is always performed, even if the compressed file is slightly
+larger than the original.  Files of less than about one hundred bytes
+tend to get larger, since the compression mechanism has a constant
+overhead in the region of 50 bytes.  Random data (including the output
+of most file compressors) is coded at about 8.05 bits per byte, giving
+an expansion of around 0.5%.
+
+</P>
+<P>
+As a self-check for your protection, <CODE>bzip2</CODE> uses 32-bit CRCs to
+make sure that the decompressed version of a file is identical to the
+original.  This guards against corruption of the compressed data, and
+against undetected bugs in <CODE>bzip2</CODE> (hopefully very unlikely).  The
+chances of data corruption going undetected is microscopic, about one
+chance in four billion for each file processed.  Be aware, though, that
+the check occurs upon decompression, so it can only tell you that
+something is wrong.  It can't help you recover the original uncompressed
+data.  You can use <CODE>bzip2recover</CODE> to try to recover data from
+damaged files.
+
+</P>
+<P>
+Return values: 0 for a normal exit, 1 for environmental problems (file
+not found, invalid flags, I/O errors, &#38;c), 2 to indicate a corrupt
+compressed file, 3 for an internal consistency error (eg, bug) which
+caused <CODE>bzip2</CODE> to panic.
+
+</P>
+
+
+
+<H4><A NAME="SEC6" HREF="manual_toc.html#TOC6">OPTIONS</A></H4>
+<DL COMPACT>
+
+<DT><CODE>-c  --stdout</CODE>
+<DD>
+Compress or decompress to standard output.
+<DT><CODE>-d  --decompress</CODE>
+<DD>
+Force decompression.  <CODE>bzip2</CODE>, <CODE>bunzip2</CODE> and <CODE>bzcat</CODE> are
+really the same program, and the decision about what actions to take is
+done on the basis of which name is used.  This flag overrides that
+mechanism, and forces bzip2 to decompress.
+<DT><CODE>-z --compress</CODE>
+<DD>
+The complement to <CODE>-d</CODE>: forces compression, regardless of the
+invokation name.
+<DT><CODE>-t --test</CODE>
+<DD>
+Check integrity of the specified file(s), but don't decompress them.
+This really performs a trial decompression and throws away the result.
+<DT><CODE>-f --force</CODE>
+<DD>
+Force overwrite of output files.  Normally, <CODE>bzip2</CODE> will not overwrite
+existing output files.  Also forces <CODE>bzip2</CODE> to break hard links
+to files, which it otherwise wouldn't do.
+<DT><CODE>-k --keep</CODE>
+<DD>
+Keep (don't delete) input files during compression
+or decompression.
+<DT><CODE>-s --small</CODE>
+<DD>
+Reduce memory usage, for compression, decompression and testing.  Files
+are decompressed and tested using a modified algorithm which only
+requires 2.5 bytes per block byte.  This means any file can be
+decompressed in 2300k of memory, albeit at about half the normal speed.
+
+During compression, <CODE>-s</CODE> selects a block size of 200k, which limits
+memory use to around the same figure, at the expense of your compression
+ratio.  In short, if your machine is low on memory (8 megabytes or
+less), use -s for everything.  See MEMORY MANAGEMENT below.
+<DT><CODE>-q --quiet</CODE>
+<DD>
+Suppress non-essential warning messages.  Messages pertaining to
+I/O errors and other critical events will not be suppressed.
+<DT><CODE>-v --verbose</CODE>
+<DD>
+Verbose mode -- show the compression ratio for each file processed.
+Further <CODE>-v</CODE>'s increase the verbosity level, spewing out lots of
+information which is primarily of interest for diagnostic purposes.
+<DT><CODE>-L --license -V --version</CODE>
+<DD>
+Display the software version, license terms and conditions.
+<DT><CODE>-1 to -9</CODE>
+<DD>
+Set the block size to 100 k, 200 k ..  900 k when compressing.  Has no
+effect when decompressing.  See MEMORY MANAGEMENT below.
+<DT><CODE>--</CODE>
+<DD>
+Treats all subsequent arguments as file names, even if they start
+with a dash.  This is so you can handle files with names beginning
+with a dash, for example: <CODE>bzip2 -- -myfilename</CODE>.
+<DT><CODE>--repetitive-fast</CODE>
+<DD>
+<DT><CODE>--repetitive-best</CODE>
+<DD>
+These flags are redundant in versions 0.9.5 and above.  They provided
+some coarse control over the behaviour of the sorting algorithm in
+earlier versions, which was sometimes useful.  0.9.5 and above have an
+improved algorithm which renders these flags irrelevant.
+</DL>
+
+
+
+<H4><A NAME="SEC7" HREF="manual_toc.html#TOC7">MEMORY MANAGEMENT</A></H4>
+
+<P>
+<CODE>bzip2</CODE> compresses large files in blocks.  The block size affects
+both the compression ratio achieved, and the amount of memory needed for
+compression and decompression.  The flags <CODE>-1</CODE> through <CODE>-9</CODE>
+specify the block size to be 100,000 bytes through 900,000 bytes (the
+default) respectively.  At decompression time, the block size used for
+compression is read from the header of the compressed file, and
+<CODE>bunzip2</CODE> then allocates itself just enough memory to decompress
+the file.  Since block sizes are stored in compressed files, it follows
+that the flags <CODE>-1</CODE> to <CODE>-9</CODE> are irrelevant to and so ignored
+during decompression.
+
+</P>
+<P>
+Compression and decompression requirements, in bytes, can be estimated
+as:
+
+<PRE>
+     Compression:   400k + ( 8 x block size )
+
+     Decompression: 100k + ( 4 x block size ), or
+                    100k + ( 2.5 x block size )
+</PRE>
+
+<P>
+Larger block sizes give rapidly diminishing marginal returns.  Most of
+the compression comes from the first two or three hundred k of block
+size, a fact worth bearing in mind when using <CODE>bzip2</CODE> on small machines.
+It is also important to appreciate that the decompression memory
+requirement is set at compression time by the choice of block size.
+
+</P>
+<P>
+For files compressed with the default 900k block size, <CODE>bunzip2</CODE>
+will require about 3700 kbytes to decompress.  To support decompression
+of any file on a 4 megabyte machine, <CODE>bunzip2</CODE> has an option to
+decompress using approximately half this amount of memory, about 2300
+kbytes.  Decompression speed is also halved, so you should use this
+option only where necessary.  The relevant flag is <CODE>-s</CODE>.
+
+</P>
+<P>
+In general, try and use the largest block size memory constraints allow,
+since that maximises the compression achieved.  Compression and
+decompression speed are virtually unaffected by block size.
+
+</P>
+<P>
+Another significant point applies to files which fit in a single block
+-- that means most files you'd encounter using a large block size.  The
+amount of real memory touched is proportional to the size of the file,
+since the file is smaller than a block.  For example, compressing a file
+20,000 bytes long with the flag <CODE>-9</CODE> will cause the compressor to
+allocate around 7600k of memory, but only touch 400k + 20000 * 8 = 560
+kbytes of it.  Similarly, the decompressor will allocate 3700k but only
+touch 100k + 20000 * 4 = 180 kbytes.
+
+</P>
+<P>
+Here is a table which summarises the maximum memory usage for different
+block sizes.  Also recorded is the total compressed size for 14 files of
+the Calgary Text Compression Corpus totalling 3,141,622 bytes.  This
+column gives some feel for how compression varies with block size.
+These figures tend to understate the advantage of larger block sizes for
+larger files, since the Corpus is dominated by smaller files.
+
+<PRE>
+          Compress   Decompress   Decompress   Corpus
+   Flag     usage      usage       -s usage     Size
+
+    -1      1200k       500k         350k      914704
+    -2      2000k       900k         600k      877703
+    -3      2800k      1300k         850k      860338
+    -4      3600k      1700k        1100k      846899
+    -5      4400k      2100k        1350k      845160
+    -6      5200k      2500k        1600k      838626
+    -7      6100k      2900k        1850k      834096
+    -8      6800k      3300k        2100k      828642
+    -9      7600k      3700k        2350k      828642
+</PRE>
+
+
+
+<H4><A NAME="SEC8" HREF="manual_toc.html#TOC8">RECOVERING DATA FROM DAMAGED FILES</A></H4>
+
+<P>
+<CODE>bzip2</CODE> compresses files in blocks, usually 900kbytes long.  Each
+block is handled independently.  If a media or transmission error causes
+a multi-block <CODE>.bz2</CODE> file to become damaged, it may be possible to
+recover data from the undamaged blocks in the file.
+
+</P>
+<P>
+The compressed representation of each block is delimited by a 48-bit
+pattern, which makes it possible to find the block boundaries with
+reasonable certainty.  Each block also carries its own 32-bit CRC, so
+damaged blocks can be distinguished from undamaged ones.
+
+</P>
+<P>
+<CODE>bzip2recover</CODE> is a simple program whose purpose is to search for
+blocks in <CODE>.bz2</CODE> files, and write each block out into its own
+<CODE>.bz2</CODE> file.  You can then use <CODE>bzip2 -t</CODE> to test the
+integrity of the resulting files, and decompress those which are
+undamaged.
+
+</P>
+<P>
+<CODE>bzip2recover</CODE> 
+takes a single argument, the name of the damaged file, 
+and writes a number of files <CODE>rec0001file.bz2</CODE>,
+       <CODE>rec0002file.bz2</CODE>, etc, containing the  extracted  blocks.
+       The  output  filenames  are  designed  so  that the use of
+       wildcards in subsequent processing -- for example,  
+<CODE>bzip2 -dc  rec*file.bz2 &#62; recovered_data</CODE> -- lists the files in
+       the correct order.
+
+</P>
+<P>
+<CODE>bzip2recover</CODE> should be of most use dealing with large <CODE>.bz2</CODE>
+       files,  as  these will contain many blocks.  It is clearly
+       futile to use it on damaged single-block  files,  since  a
+       damaged  block  cannot  be recovered.  If you wish to minimise 
+any potential data loss through media  or  transmission errors, 
+you might consider compressing with a smaller
+       block size.
+
+</P>
+
+
+
+<H4><A NAME="SEC9" HREF="manual_toc.html#TOC9">PERFORMANCE NOTES</A></H4>
+
+<P>
+The sorting phase of compression gathers together similar strings in the
+file.  Because of this, files containing very long runs of repeated
+symbols, like "aabaabaabaab ..."  (repeated several hundred times) may
+compress more slowly than normal.  Versions 0.9.5 and above fare much
+better than previous versions in this respect.  The ratio between
+worst-case and average-case compression time is in the region of 10:1.
+For previous versions, this figure was more like 100:1.  You can use the
+<CODE>-vvvv</CODE> option to monitor progress in great detail, if you want.
+
+</P>
+<P>
+Decompression speed is unaffected by these phenomena.
+
+</P>
+<P>
+<CODE>bzip2</CODE> usually allocates several megabytes of memory to operate
+in, and then charges all over it in a fairly random fashion.  This means
+that performance, both for compressing and decompressing, is largely
+determined by the speed at which your machine can service cache misses.
+Because of this, small changes to the code to reduce the miss rate have
+been observed to give disproportionately large performance improvements.
+I imagine <CODE>bzip2</CODE> will perform best on machines with very large
+caches.
+
+</P>
+
+
+
+<H4><A NAME="SEC10" HREF="manual_toc.html#TOC10">CAVEATS</A></H4>
+
+<P>
+I/O error messages are not as helpful as they could be.  <CODE>bzip2</CODE>
+tries hard to detect I/O errors and exit cleanly, but the details of
+what the problem is sometimes seem rather misleading.
+
+</P>
+<P>
+This manual page pertains to version 1.0 of <CODE>bzip2</CODE>.  Compressed
+data created by this version is entirely forwards and backwards
+compatible with the previous public releases, versions 0.1pl2, 0.9.0 and
+0.9.5, but with the following exception: 0.9.0 and above can correctly
+decompress multiple concatenated compressed files.  0.1pl2 cannot do
+this; it will stop after decompressing just the first file in the
+stream.
+
+</P>
+<P>
+<CODE>bzip2recover</CODE> uses 32-bit integers to represent bit positions in
+compressed files, so it cannot handle compressed files more than 512
+megabytes long.  This could easily be fixed.
+
+</P>
+
+
+
+<H4><A NAME="SEC11" HREF="manual_toc.html#TOC11">AUTHOR</A></H4>
+<P>
+Julian Seward, <CODE>jseward@acm.org</CODE>.
+
+</P>
+<P>
+The ideas embodied in <CODE>bzip2</CODE> are due to (at least) the following
+people: Michael Burrows and David Wheeler (for the block sorting
+transformation), David Wheeler (again, for the Huffman coder), Peter
+Fenwick (for the structured coding model in the original <CODE>bzip</CODE>,
+and many refinements), and Alistair Moffat, Radford Neal and Ian Witten
+(for the arithmetic coder in the original <CODE>bzip</CODE>).  I am much
+indebted for their help, support and advice.  See the manual in the
+source distribution for pointers to sources of documentation.  Christian
+von Roques encouraged me to look for faster sorting algorithms, so as to
+speed up compression.  Bela Lubkin encouraged me to improve the
+worst-case compression performance.  Many people sent patches, helped
+with portability problems, lent machines, gave advice and were generally
+helpful.
+
+</P>
+</BLOCKQUOTE>
+
+<P><HR><P>
+<p>Go to the <A HREF="manual_1.html">first</A>, <A HREF="manual_1.html">previous</A>, <A HREF="manual_3.html">next</A>, <A HREF="manual_4.html">last</A> section, <A HREF="manual_toc.html">table of contents</A>.
+</BODY>
+</HTML>

@@ -1,0 +1,15 @@
+/*
+ *         translated by Caemyr - Olaf Siejka (Dec,2007)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ *         UTF-8 conversion by Caemyr (ł) (May, 2011) 
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Wygaszacz ekranu Logon"
+    IDS_TEXT        "Brak opcji."
+END

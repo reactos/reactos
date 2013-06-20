@@ -1,0 +1,333 @@
+#!/bin/sh
+
+# Time-stamp: <08/06/07 15:22:19 yeti>
+
+base=`cd \`dirname $0\`; echo $PWD`
+
+configmak=$base/build/Makefiles/gmake/config.mak
+
+write_option() {
+  target=`echo $1 | sed -e 's/^[^=]*=//'`
+  echo $2 := $3$target >> ${configmak}
+}
+
+write_over_option() {
+  target=`echo $1 | sed -e 's/^[^=]*=//'`
+  echo $2 ?= $target >> ${configmak}
+}
+
+print_help() {
+  cat <<EOF
+Configuration utility.
+
+Usage:
+
+  configure [options]
+
+Available options:
+
+  --prefix=<dir>        base install path (/usr/local/)
+  --bindir=<dir>        install path for executables (PREFIX/bin)
+  --libdir=<dir>        install path for libraries (PREFIX/lib)
+  --includedir=<dir>    install path for headers (PREFIX/include)
+
+  --target=<target>     target platform (cross-compiling)
+
+  --help                print this help message and exit
+
+  --with-stlport=<dir>  use STLport in catalog <dir>
+  --without-stlport     compile without STLport
+  --with-boost=<dir>    use boost headers in catalog <dir>
+  --with-system-boost   use boost installed on this system
+  --with-msvc=<dir>     use MS VC from this catalog
+  --with-mssdk=<dir>    use MS SDK from this catalog
+  --with-extra-cxxflags=<options>
+                        pass extra options to C++ compiler
+  --with-extra-cflags=<options>
+                        pass extra options to C compiler
+  --with-extra-ldflags=<options>
+                        pass extra options to linker (via C/C++)
+  --use-static-gcc      use static gcc libs instead of shared libgcc_s (useful for gcc compiler,
+                        that was builded with --enable-shared [default]; if compiler was builded
+                        with --disable-shared, static libraries will be used in any case)
+  --clean               remove custom settings (file ${configmak})
+                        and use default values
+  --with-cxx=<name>     use <name> as C++ compiler (use --target= for cross-compilation)
+  --with-cc=<name>      use <name> as C compiler (use --target= for cross-compilation)
+  --use-compiler-family=<name> use compiler family; one of:
+                        gcc      GNU compilers (default)
+                        icc      Intel compilers
+                        aCC      HP's aCC compilers
+                        CC       SunPro's CC compilers
+                        bcc      Borland's compilers
+  --without-debug       don't build debug variant
+  --without-stldebug    don't build STLport's STLP_DEBUG mode
+  --enable-static       build static
+  --disable-shared      don't build shared 
+  --with-lib-motif=<motif>
+                        Use this option to customize the generated library name.
+                        The motif will be used in the last place before version information,
+                        separated by an underscore, ex:
+                        stlportd_MOTIF.5.0.lib
+                        stlportstld_static_MOTIF.5.1.lib
+  --without-thread      Per default STLport libraries are built in order to be usable
+                        in a multithreaded context. If you don't need this you can ask
+                        for a not thread safe version with this option.
+  --without-rtti        Disable RTTI when building libraries.
+  --with-static-rtl
+  --with-dynamic-rtl
+                        Enables usage of static (libc.lib family) or dynamic (msvcrt.lib family)
+                        C/C++ runtime library when linking with STLport. If you want your appli/dll
+                        to link statically with STLport but using the dynamic C runtime use
+                        --with-dynamic-rtl; if you want to link dynamicaly with STLport but using the
+                        static C runtime use --with-static-rtl. See README.options for details.
+                        Don't forget to signal the link method when building your appli or dll, in
+                        stlport/stl/config/host.h set the following macro depending on the configure
+                        option:
+                        --with-static-rtl  -> _STLP_USE_DYNAMIC_LIB"
+                        --with-dynamic-rtl -> _STLP_USE_STATIC_LIB"
+  --windows-platform=<name>
+                        Targetted OS when building for Windows; one of:
+                        win95   Windows 95
+                        win98   Windows 98
+                        winxp   Windows XP and later (default)
+
+Environment variables:
+
+  \$CXX                 C++ compiler name (use --target= for cross-compilation)
+  \$CC                  C compiler name (use --target= for cross-compilation)
+  \$CXXFLAGS            pass extra options to C++ compiler
+  \$CFLAGS              pass extra options to C compiler
+  \$LDFLAGS             pass extra options to linker (via C/C++)
+
+  Options has preference over environment variables.
+
+EOF
+}
+
+default_settings () {
+  # if [ "$boost_set" = "" ]; then
+  #   write_option "${PWD}/external/boost" BOOST_DIR
+  # fi
+
+  # if [ -z "${stlport_set}" ]; then
+  #   write_over_option "$base" STLPORT_DIR
+  # fi
+
+  # Set in Makefiles/gmake/top.mak
+  if [ -z "${compiler_family_set}" ]; then
+  #  write_option gcc COMPILER_NAME
+    echo include gcc.mak > ${base}/build/lib/Makefile
+    echo include gcc.mak > ${base}/build/test/unit/Makefile
+    echo include gcc.mak > ${base}/build/test/eh/Makefile
+  fi
+
+  # Set in Makefiles/gmake/targetdirs.mak
+  # if [ -z "${prefix_set}" ]; then
+  #   write_option "/usr/local" BASE_INSTALL_DIR '${DESTDIR}'
+  # fi
+}
+
+[ $# -eq 0 ] && { >${configmak}; default_settings; exit 0; }
+
+for a in $@ ; do
+  case $a in
+    --help)
+      print_help
+      exit 0
+      ;;
+    --clean)
+      rm -f ${configmak}
+      exit 0
+      ;;
+  esac
+done
+
+>${configmak}
+
+while :
+do
+  case $# in
+    0)
+      break
+      ;;
+  esac
+  option="$1"
+  shift
+  case $option in
+    --target=*)
+      write_option "$option" TARGET_OS
+      target_set=y
+      ;;
+    --with-stlport=*)
+      write_option "$option" STLPORT_DIR
+      stlport_set=y
+      ;;
+    --without-stlport)
+      write_option 1 WITHOUT_STLPORT
+      stlport_set=y
+      ;;
+    --with-boost=*)
+      write_option "$option" BOOST_DIR
+      ;;
+    --with-system-boost)
+      write_option 1 USE_SYSTEM_BOOST
+      ;;
+    --with-msvc=*)
+      write_option "$option" MSVC_DIR
+      ;;
+    --with-mssdk=*)
+      write_option "$option" MSSDK_DIR
+      ;;
+    --with-extra-cxxflags=*)
+      write_option "$option" EXTRA_CXXFLAGS
+      cxxflags_set=y
+      ;;
+    --with-extra-cflags=*)
+      write_option "$option" EXTRA_CFLAGS
+      cflags_set=y
+      ;;
+    --with-extra-ldflags=*)
+      write_option "$option" EXTRA_LDFLAGS
+      ldflags_set=y
+      ;;
+    --with-lib-motif=*)
+      echo "Using $option in generated library names"
+      write_option "$option" LIB_MOTIF
+      ;;
+    --without-thread)
+      write_option 1 WITHOUT_THREAD
+      ;;
+    --without-rtti)
+      write_option 1 WITHOUT_RTTI
+      ;;
+    --with-dynamic-rtl)
+      write_option 1 WITH_DYNAMIC_RTL
+      ;;
+    --with-static-rtl)
+      write_option 1 WITH_STATIC_RTL
+      ;;
+    --use-static-gcc)
+      write_option 1 USE_STATIC_LIBGCC
+      ;;
+    --without-debug)
+      write_option 1 _NO_DBG_BUILD
+      ;;
+    --without-stldebug)
+      write_option 1 _NO_STLDBG_BUILD
+      ;;
+    --enable-static)
+      write_option 1 _STATIC_BUILD
+      ;;
+    --disable-shared)
+      write_option 1 _NO_SHARED_BUILD
+      ;;
+    --with-cxx=*)
+      write_option "$option" _FORCE_CXX
+      cxx_set=y
+      ;;
+    --with-cc=*)
+      write_option "$option" _FORCE_CC
+      cc_set=y
+      ;;
+    --use-compiler-family=*)
+      case `echo $option | sed -e 's/^[^=]*=//'` in
+        gcc|icc|aCC|CC|bcc|dmc)
+          target=`echo $option | sed -e 's/^[^=]*=//'`
+          echo COMPILER_NAME := $target >> ${configmak}
+          echo include $target.mak > ${base}/build/lib/Makefile
+          echo include $target.mak > ${base}/build/test/unit/Makefile
+          echo include $target.mak > ${base}/build/test/eh/Makefile
+          ;;
+        *)
+          echo "Not supported compilers family"
+          exit -1
+          ;;
+      esac
+      compiler_family_set=y
+      ;;
+    --prefix=*)
+      write_option "$option" BASE_INSTALL_DIR '${DESTDIR}'
+      prefix_set=y
+      ;;
+    --bindir=*)
+      write_option "$option" INSTALL_BIN_DIR '${DESTDIR}'
+      ;;
+    --libdir=*)
+      write_option "$option" INSTALL_LIB_DIR '${DESTDIR}'
+      ;;
+    --includedir=*)
+      write_option "$option" INSTALL_HDR_DIR '${DESTDIR}'
+      ;;
+    --windows-platform=*)
+      case `echo $option | sed -e 's/^[^=]*=//'` in
+        win95)
+          write_option 0x0400 WINVER
+          ;;
+        win98)
+          write_option 0x0410 WINVER
+          ;;
+        winxp)
+          write_option 0x0501 WINVER
+          ;;
+        *)
+          echo "Not supported windows platform"
+          exit -1
+          ;;
+      esac
+      ;;
+    *)
+      echo "Unknown configuration option '$option'"
+      exit -1
+      ;;
+  esac
+done
+
+if [ -n "${CXX}" ]; then
+  if [ -n "${cxx_set}" ]; then
+    echo "Both --with-cxx and \$CXX set, using the first"
+  elif [ -z "${target_set}" ]; then
+    write_option "${CXX}" _FORCE_CXX
+  else
+    echo "For cross-compilation with gcc use --target option only"
+  fi
+  if [ -z "${CC}" -a -z "${cc_set}" ]; then
+    echo "\$CXX set, but I don't see \$CC!"
+  fi
+fi
+
+if [ -n "${CC}" ]; then
+  if [ -n "${cxx_set}" ]; then
+    echo "Both --with-cc and \$CC set, using the first"
+  else
+    write_option "${CC}" _FORCE_CC
+  fi
+fi
+
+if [ -n "${CXXFLAGS}" ]; then
+  if [ -z "${cxxflags_set}" ]; then
+    write_option "${CXXFLAGS}" EXTRA_CXXFLAGS
+  else
+    echo "Both --with-extra-cxxflags and \$CXXFLAGS set, using the first"
+  fi
+fi
+
+if [ -n "${CFLAGS}" ]; then
+  if [ -z "${cflags_set}" ]; then
+    write_option "${CFLAGS}" EXTRA_CFLAGS
+  else
+    echo "Both --with-extra-cflags and \$CFLAGS set, using the first"
+  fi
+fi
+
+if [ -n "${LDFLAGS}" ]; then
+  if [ -z "${ldflags_set}" ]; then
+    write_option "${LDFLAGS}" EXTRA_LDFLAGS
+  else
+    echo "Both --with-extra-ldflags and \$LDFLAGS set, using the first"
+  fi
+fi
+
+# default settings
+
+default_settings

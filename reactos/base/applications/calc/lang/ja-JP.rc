@@ -1,0 +1,732 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+// Dialog
+
+IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 163
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 電卓"
+MENU IDR_MENU_SCIENTIFIC_1
+FONT 9, "MS UI Gothic", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "",IDC_STATIC,5,14,141,20
+    CONTROL         "16進",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,21,30,10
+    CONTROL         "10進",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,41,21,30,10
+    CONTROL         "8進",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,74,21,30,10
+    CONTROL         "2進",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,107,21,30,10
+    GROUPBOX        "",IDC_STATIC,5,34,84,20
+    CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,8,41,26,10
+    CONTROL         "Hyp",IDC_CHECK_HYP,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,49,41,29,10
+    CTEXT           "",IDC_TEXT_PARENT,93,38,18,16,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CTEXT           "",IDC_TEXT_MEMORY,126,38,18,16,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Sta",IDC_BUTTON_STA,5,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Ave",IDC_BUTTON_AVE,5,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Sum",IDC_BUTTON_SUM,5,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "s",IDC_BUTTON_S,5,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Dat",IDC_BUTTON_DAT,5,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "F-E",IDC_BUTTON_FE,38,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "dms",IDC_BUTTON_DMS,38,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "sin",IDC_BUTTON_SIN,38,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "cos",IDC_BUTTON_COS,38,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "tan",IDC_BUTTON_TAN,38,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "(",IDC_BUTTON_LEFTPAR,64,60,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Exp",IDC_BUTTON_EXP,64,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "x^y",IDC_BUTTON_XeY,64,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "x^2",IDC_BUTTON_Xe2,64,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "x^3",IDC_BUTTON_Xe3,64,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      ")",IDC_BUTTON_RIGHTPAR,90,60,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "ln",IDC_BUTTON_LN,90,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "log",IDC_BUTTON_LOG,90,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "n!",IDC_BUTTON_NF,90,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1/x",IDC_BUTTON_RX,90,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MC",IDC_BUTTON_MC,123,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MR",IDC_BUTTON_MR,123,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MS",IDC_BUTTON_MS,123,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "M+",IDC_BUTTON_MP,123,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "pi",IDC_BUTTON_PI,123,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "7",IDC_BUTTON_7,156,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "4",IDC_BUTTON_4,156,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1",IDC_BUTTON_1,156,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "0",IDC_BUTTON_0,156,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "A",IDC_BUTTON_A,156,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "8",IDC_BUTTON_8,182,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "5",IDC_BUTTON_5,182,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "2",IDC_BUTTON_2,182,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+/-",IDC_BUTTON_SIGN,182,120,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "B",IDC_BUTTON_B,182,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "9",IDC_BUTTON_9,208,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "6",IDC_BUTTON_6,208,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "3",IDC_BUTTON_3,208,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      ",",IDC_BUTTON_DOT,208,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "C",IDC_BUTTON_C,208,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "/",IDC_BUTTON_DIV,234,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "*",IDC_BUTTON_MULT,234,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "-",IDC_BUTTON_SUB,234,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+",IDC_BUTTON_ADD,234,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "D",IDC_BUTTON_D,234,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Mod",IDC_BUTTON_MOD,260,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Or",IDC_BUTTON_OR,260,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Lsh",IDC_BUTTON_LSH,260,100,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "=",IDC_BUTTON_EQU,260,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "E",IDC_BUTTON_E,260,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "And",IDC_BUTTON_AND,286,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Xor",IDC_BUTTON_XOR,286,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Not",IDC_BUTTON_NOT,286,100,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Int",IDC_BUTTON_INT,286,120,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "F",IDC_BUTTON_F,286,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    GROUPBOX        "",IDC_STATIC,147,14,163,20
+    CONTROL         "Qword",IDC_RADIO_QWORD,"Button",BS_AUTORADIOBUTTON |
+                    NOT WS_VISIBLE,150,21,38,10
+    CONTROL         "Dword",IDC_RADIO_DWORD,"Button",BS_AUTORADIOBUTTON |
+                    NOT WS_VISIBLE,190,21,38,10
+    CONTROL         "Word",IDC_RADIO_WORD,"Button",BS_AUTORADIOBUTTON | NOT
+                    WS_VISIBLE,230,21,38,10
+    CONTROL         "Byte",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT
+                    WS_VISIBLE,270,21,38,10
+    CONTROL         "Degrees",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,
+                    150,21,45,10
+    CONTROL         "Radians",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,
+                    204,21,45,10
+    CONTROL         "Gradians",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
+                    258,21,45,10
+    PUSHBUTTON      "C",IDC_BUTTON_CANC,267,38,43,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "CE",IDC_BUTTON_CE,222,38,43,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Back",IDC_BUTTON_BACK,177,38,43,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    RTEXT           "",IDC_TEXT_OUTPUT,5,1,305,14,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5, NOT WS_VISIBLE
+END
+
+IDD_DIALOG_STANDARD DIALOGEX 0, 0, 169, 128
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 電卓"
+MENU IDR_MENU_STANDARD
+FONT 9, "MS UI Gothic", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "C",IDC_BUTTON_CANC,123,23,41,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "CE",IDC_BUTTON_CE,80,23,41,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Back",IDC_BUTTON_BACK,36,23,42,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    RTEXT           "",IDC_TEXT_OUTPUT,5,1,159,14,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "7",IDC_BUTTON_7,36,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "4",IDC_BUTTON_4,36,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1",IDC_BUTTON_1,36,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "0",IDC_BUTTON_0,36,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "8",IDC_BUTTON_8,62,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "5",IDC_BUTTON_5,62,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "2",IDC_BUTTON_2,62,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+/-",IDC_BUTTON_SIGN,62,105,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "9",IDC_BUTTON_9,88,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "6",IDC_BUTTON_6,88,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "3",IDC_BUTTON_3,88,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      ",",IDC_BUTTON_DOT,88,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "/",IDC_BUTTON_DIV,114,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "*",IDC_BUTTON_MULT,114,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "-",IDC_BUTTON_SUB,114,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+",IDC_BUTTON_ADD,114,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Sqrt",IDC_BUTTON_SQRT,140,45,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "%",IDC_BUTTON_PERCENT,140,65,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1/x",IDC_BUTTON_RX,140,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "=",IDC_BUTTON_EQU,140,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    CTEXT           "",IDC_TEXT_MEMORY,8,24,18,16,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "MC",IDC_BUTTON_MC,5,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MR",IDC_BUTTON_MR,5,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MS",IDC_BUTTON_MS,5,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "M+",IDC_BUTTON_MP,5,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5, NOT WS_VISIBLE
+END
+
+IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 電卓"
+MENU IDR_MENU_STANDARD
+FONT 9, "MS UI Gothic"
+BEGIN
+    PUSHBUTTON      "変換",IDC_BUTTON_CONVERT,35,105,76,17
+    COMBOBOX        IDC_COMBO_CATEGORY,5,31,140,168,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    LTEXT           "分類:",IDC_STATIC,5,20,56,8
+    COMBOBOX        IDC_COMBO_FROM,5,60,140,168,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    LTEXT           "変換元:",IDC_STATIC,5,49,56,8
+    COMBOBOX        IDC_COMBO_TO,5,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP | CBS_SORT
+    LTEXT           "変換先:",IDC_STATIC,5,76,56,8
+    CONTROL         "C",IDC_BUTTON_CANC,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
+    CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,232,24,40,17
+    CONTROL         "Back",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW |
+                    BS_CENTER | BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,24,
+                    40,17
+    RTEXT           "",IDC_TEXT_OUTPUT,5,1,312,14,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "7",IDC_BUTTON_7,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,48,24,18
+    CONTROL         "4",IDC_BUTTON_4,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,67,24,18
+    CONTROL         "1",IDC_BUTTON_1,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,86,24,18
+    CONTROL         "0",IDC_BUTTON_0,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,105,24,18
+    CONTROL         "8",IDC_BUTTON_8,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,48,24,18
+    CONTROL         "5",IDC_BUTTON_5,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,67,24,18
+    CONTROL         "2",IDC_BUTTON_2,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,86,24,18
+    CONTROL         "+/-",IDC_BUTTON_SIGN,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,105,24,18
+    CONTROL         "9",IDC_BUTTON_9,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,48,24,18
+    CONTROL         "6",IDC_BUTTON_6,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,67,24,18
+    CONTROL         "3",IDC_BUTTON_3,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,86,24,18
+    CONTROL         ",",IDC_BUTTON_DOT,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,105,24,18
+    CONTROL         "/",IDC_BUTTON_DIV,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,48,24,18
+    CONTROL         "*",IDC_BUTTON_MULT,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,67,24,18
+    CONTROL         "-",IDC_BUTTON_SUB,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,86,24,18
+    CONTROL         "+",IDC_BUTTON_ADD,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,105,24,18
+    CONTROL         "Sqrt",IDC_BUTTON_SQRT,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,48,24,18
+    CONTROL         "%",IDC_BUTTON_PERCENT,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,67,24,18
+    CONTROL         "1/x",IDC_BUTTON_RX,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,86,24,18
+    CONTROL         "=",IDC_BUTTON_EQU,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,105,24,18
+    CTEXT           "",IDC_TEXT_MEMORY,152,24,24,18,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "MC",IDC_BUTTON_MC,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,48,24,18
+    CONTROL         "MR",IDC_BUTTON_MR,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,67,24,18
+    CONTROL         "MS",IDC_BUTTON_MS,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,86,24,18
+    CONTROL         "M+",IDC_BUTTON_MP,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,105,24,18
+    DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5,NOT WS_VISIBLE
+END
+
+IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS 電卓について"
+FONT 9, "MS UI Gothic"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
+    CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE |
+                    SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
+    LTEXT           "ReactOS 電卓",IDC_STATIC,120,12,132,8,
+                    SS_CENTERIMAGE
+    LTEXT           "Version ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
+    LTEXT           "Written by Carlo Bramini",IDC_STATIC,120,32,132,8,
+                    SS_CENTERIMAGE
+    GROUPBOX        "",IDC_STATIC,112,0,148,52
+    GROUPBOX        "",IDC_STATIC,5,56,256,88
+    EDITTEXT        IDC_EDIT_LICENSE,12,68,240,68,ES_MULTILINE | ES_READONLY |
+                    WS_VSCROLL
+END
+
+IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
+STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Statistics box"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LISTBOX         IDC_LIST_STAT,4,4,156,40,LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "RET",IDC_BUTTON_RET,4,48,36,16
+    PUSHBUTTON      "LOAD",IDC_BUTTON_LOAD,44,48,36,16
+    PUSHBUTTON      "CD",IDC_BUTTON_CD,84,48,36,16
+    PUSHBUTTON      "CAD",IDC_BUTTON_CAD,124,48,36,16
+    CTEXT           "n=0",IDC_TEXT_NITEMS,4,68,156,12,SS_CENTERIMAGE |
+                    SS_SUNKEN
+END
+
+// Menus
+
+IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE
+BEGIN
+    POPUP "編集(&E)"
+    BEGIN
+        MENUITEM "コピー(&C)\tCtrl+C",              IDM_EDIT_COPY
+        MENUITEM "貼り付け(&P)\tCtrl+V",           IDM_EDIT_PASTE
+    END
+    POPUP "表示(&V)"
+    BEGIN
+        MENUITEM "標準(&T)",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "関数電卓(&S)",                IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "変換(&C)",                    IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "1&6進\tF5",                   IDM_VIEW_HEX, CHECKED
+        MENUITEM "&10進\tF6",                   IDM_VIEW_DEC, CHECKED
+        MENUITEM "&8進\tF7",                    IDM_VIEW_OCT, CHECKED
+        MENUITEM "&2進\tF8",                    IDM_VIEW_BIN, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Degrees\tF2",                IDM_VIEW_DEG, CHECKED
+        MENUITEM "&Radians\tF3",                IDM_VIEW_RAD, CHECKED
+        MENUITEM "&Gradians\tF4",               IDM_VIEW_GRAD, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "桁を区切る(&I)",              IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "ヘルプ トピック",             IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "ReactOS 電卓について",        IDM_HELP_ABOUT
+    END
+END
+
+IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
+BEGIN
+    POPUP "編集(&E)"
+    BEGIN
+        MENUITEM "コピー(&C)\tCtrl+C",          IDM_EDIT_COPY
+        MENUITEM "貼り付け(&P)\tCtrl+V",        IDM_EDIT_PASTE
+    END
+    POPUP "表示(&V)"
+    BEGIN
+        MENUITEM "標準(&T)",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "関数電卓(&S)",                IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "変換(&C)",                    IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "1&6進\tF5",                   IDM_VIEW_HEX, CHECKED
+        MENUITEM "&10進\tF6",                   IDM_VIEW_DEC, CHECKED
+        MENUITEM "&8進\tF7",                    IDM_VIEW_OCT, CHECKED
+        MENUITEM "&2進\tF8",                    IDM_VIEW_BIN, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Qword\tF12",                 IDM_VIEW_QWORD, CHECKED
+        MENUITEM "&Dword\tF2",                  IDM_VIEW_DWORD, CHECKED
+        MENUITEM "&Word\tF3",                   IDM_VIEW_WORD, CHECKED
+        MENUITEM "&Byte\tF4",                   IDM_VIEW_BYTE, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "桁を区切る(&I)",              IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "ヘルプ トピック",             IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "ReactOS 電卓について",        IDM_HELP_ABOUT
+    END
+END
+
+IDR_MENU_STANDARD MENU DISCARDABLE
+BEGIN
+    POPUP "編集(&E)"
+    BEGIN
+        MENUITEM "コピー(&C)\tCtrl+C",          IDM_EDIT_COPY
+        MENUITEM "貼り付け(&P)\tCtrl+V",        IDM_EDIT_PASTE
+    END
+    POPUP "表示"
+    BEGIN
+        MENUITEM "標準(&T)",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "関数電卓(&S)",                IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "変換(&C)",                    IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "桁を区切る(&I)",              IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "ヘルプ トピック",             IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "ReactOS 電卓について",        IDM_HELP_ABOUT
+    END
+END
+
+// String Tables
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STRING_LICENSE      "ReactOS 電卓はGNU GPLライセンスの元で提供されるフリーソフトウェアです。\r\n\r\nこちらでGNU GPLライセンスのコピーを得ることができます:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nこちらでGNU GPLライセンスの翻訳を得ることができます:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_MATH_ERROR          "エラー"
+    IDS_QUICKHELP           "クイックヘルプ"
+END
+
+// Types of conversion
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CONV_ANGLE          "角度"
+    IDS_CONV_AREA           "面積"
+    IDS_CONV_CONSUMPTION    "消費 (エンジン)"
+    IDS_CONV_CURRENCY       "通貨"
+    IDS_CONV_ENERGY         "エネルギー"
+    IDS_CONV_LENGTH         "長さ"
+    IDS_CONV_POWER          "力"
+    IDS_CONV_PRESSURE       "圧力"
+    IDS_CONV_TEMPERATURE    "温度"
+    IDS_CONV_TIME           "時間"
+    IDS_CONV_VELOCITY       "速度"
+    IDS_CONV_VOLUME         "体積"
+    IDS_CONV_WEIGHT         "重さ"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "Degrees"
+    IDS_ANGLE_GRADIANS      "Gradians"
+    IDS_ANGLE_RADIANS       "Radians"
+END
+
+// TYPES OF AREAS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_AREA_ACRES                  "エーカー"
+    IDS_AREA_ACRES_BRAZIL           "エーカー (ブラジル)"
+    IDS_AREA_ACRES_FRANCE           "エーカー (フランス)"
+    IDS_AREA_ACRES_SCOTS            "エーカー (スコットランド)"
+    IDS_AREA_ACRES_US               "エーカー (米国)"
+    IDS_AREA_ARES                   "アール"
+    IDS_AREA_CHOU                   "Chou"
+    IDS_AREA_DANBO                  "Danbo"
+    IDS_AREA_HECTARES               "ヘクタール"
+    IDS_AREA_JEONGBO                "Jeongbo"
+    IDS_AREA_MORGEN_HUNGARY         "Morgen (Hungary)"
+    IDS_AREA_MU                     "Mu"
+    IDS_AREA_PING                   "Ping"
+    IDS_AREA_PYEONG                 "Pyeong"
+    IDS_AREA_PYEONGBANGJA           "Pyeongbangja"
+    IDS_AREA_RAI                    "Rai"
+    IDS_AREA_SE                     "Se"
+    IDS_AREA_SQUARE_CENTIMETERS     "平方センチメートル"
+    IDS_AREA_SQUARE_CHR             "Square chr"
+    IDS_AREA_SQUARE_FATHOMS         "平方尋"
+    IDS_AREA_SQUARE_FATHOMS_HUNGARY "平方尋 (ハンガリー)"
+    IDS_AREA_SQUARE_FEET            "平方フィート"
+    IDS_AREA_SQUARE_INCHES          "平方インチ"
+    IDS_AREA_SQUARE_KILOMETERS      "平方キロメーター"
+    IDS_AREA_SQUARE_LAR             "Square lar"
+    IDS_AREA_SQUARE_METER           "平方メートル"
+    IDS_AREA_SQUARE_MILES           "平方マイル"
+    IDS_AREA_SQUARE_MILLIMETERS     "平方ミリメートル"
+    IDS_AREA_SQUARE_SHAKU           "平方尺"
+    IDS_AREA_SQUARE_TSUEN           "Square tsuen"
+    IDS_AREA_SQUARE_VA              "Square va"
+    IDS_AREA_SQUARE_YARD            "平方ヤード"
+    IDS_AREA_TAN                    "Tan"
+    IDS_AREA_TSUBO                  "坪"
+END
+
+// TYPES OF COMSUMPTIONS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CONSUMPTION_KM_PER_L        "キロメートル/リットル"
+    IDS_CONSUMPTION_L_PER_100_KM    "リットル/100キロメートル"
+    IDS_CONSUMPTION_MILES_GALLON_UK "マイル/ガロン (英国)"
+    IDS_CONSUMPTION_MILES_GALLON_US "マイル/ガロン (米国)"
+END
+
+// TYPES OF CURRENCIES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "オーストリア シリング"
+    IDS_CURRENCY_BELGIAN_FRANC      "ベルギー フラン"
+    IDS_CURRENCY_CYPRIOT_POUND      "キプロス ポンド"
+    IDS_CURRENCY_CZECH_KORUNA       "チェコ コルナ"
+    IDS_CURRENCY_DEUTSCHE_MARK      "ドイツ マルク"
+    IDS_CURRENCY_DUTCH_GUILDER      "オランダ ギルダー"
+    IDS_CURRENCY_EURO               "ユーロ"
+    IDS_CURRENCY_FINNISH_MARKKA     "フィンランド マルッカ"
+    IDS_CURRENCY_FRENCH_FRANC       "フランス フラン"
+    IDS_CURRENCY_GREEK_DRACHMA      "ギリシャ ドラクマ"
+    IDS_CURRENCY_IRISH_POUND        "アイルランド ポンド"
+    IDS_CURRENCY_ITALIAN_LIRA       "イタリア リラ"
+    IDS_CURRENCY_LUXEMBOURG_FRANC   "ルクセンブルク フラン"
+    IDS_CURRENCY_MALTESE_LIRA       "マルタ リラ"
+    IDS_CURRENCY_PORTOGUESE_ESCUDO  "ポルトガル エスクード"
+    IDS_CURRENCY_SLOVAK_KORUNA      "スロバキア コルナ"
+    IDS_CURRENCY_SLOVENIAN_TOLAR    "スロベニア tolar"
+    IDS_CURRENCY_SPANISH_PESETA     "スペイン ペセタ"
+END
+
+// TYPES OF ENERGIES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ENERGY_15_C_CALORIES        "15℃カロリー"
+    IDS_ENERGY_BTUS                 "英国熱単位"
+    IDS_ENERGY_ERGS                 "エルグ"
+    IDS_ENERGY_EVS                  "電子ボルト"
+    IDS_ENERGY_FOOT_POUNDS          "フートポンド"
+    IDS_ENERGY_IT_CALORIES          "International Table calories"
+    IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
+    IDS_ENERGY_JOULES               "ジュール"
+    IDS_ENERGY_KILOJOULES           "キロジュール"
+    IDS_ENERGY_KILOWATT_HOURS       "キロワット時"
+    IDS_ENERGY_NUTRITION_CALORIES   "栄養カロリー"
+    IDS_ENERGY_TH_CALORIES          "熱化学カロリー"
+END
+
+// TYPES OF LENGTHS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LENGTH_ANGSTROMS            "オングストローム"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "天文単位"
+    IDS_LENGTH_BARLEYCORNS          "バーレーコーン"
+    IDS_LENGTH_CENTIMETERS          "センチメートル"
+    IDS_LENGTH_CHAINS_UK            "チェーン (英国)"
+    IDS_LENGTH_CHI                  "Chi"
+    IDS_LENGTH_CHOU                 "Chou"
+    IDS_LENGTH_CHR                  "Chr"
+    IDS_LENGTH_CUN                  "Cun"
+    IDS_LENGTH_FATHOMS              "ファゾム"
+    IDS_LENGTH_FATHOMS_HUNGARY      "ファゾム (ハンガリー)"
+    IDS_LENGTH_FEET                 "フィート"
+    IDS_LENGTH_FURLONGS             "ハロン"
+    IDS_LENGTH_GAN                  "Gan"
+    IDS_LENGTH_HANDS                "ハンド"
+    IDS_LENGTH_HUNH                 "Hunh"
+    IDS_LENGTH_INCHES               "インチ"
+    IDS_LENGTH_JA                   "Ja"
+    IDS_LENGTH_JEONG                "Jeong"
+    IDS_LENGTH_KABIET               "Kabiet"
+    IDS_LENGTH_KEN                  "Ken"
+    IDS_LENGTH_KEUB                 "Keub"
+    IDS_LENGTH_KILOMETERS           "キロメートル"
+    IDS_LENGTH_LAR                  "Lar"
+    IDS_LENGTH_LIGHT_YEARS          "光年"
+    IDS_LENGTH_LINKS_UK             "リンク (英国)"
+    IDS_LENGTH_METERS               "メートル"
+    IDS_LENGTH_MICRONS              "ミクロン"
+    IDS_LENGTH_MILES                "マイル"
+    IDS_LENGTH_MILLIMETERS          "ミリメートル"
+    IDS_LENGTH_NAUTICAL_MILES       "海里"
+    IDS_LENGTH_NIEU                 "Nieu"
+    IDS_LENGTH_PARSECS              "パーセク"
+    IDS_LENGTH_PICAS                "パイカ"
+    IDS_LENGTH_RI_JAPAN             "里 (日本)"
+    IDS_LENGTH_RI_KOREA             "Ri (韓国)"
+    IDS_LENGTH_RODS                 "ロッド"
+    IDS_LENGTH_SAWK                 "Sawk"
+    IDS_LENGTH_SEN                  "Sen"
+    IDS_LENGTH_SHAKU                "尺"
+    IDS_LENGTH_SPAN                 "スパン"
+    IDS_LENGTH_SUN                  "寸"
+    IDS_LENGTH_TSUEN                "Tsuen"
+    IDS_LENGTH_VA                   "Va"
+    IDS_LENGTH_YARDS                "ヤード"
+    IDS_LENGTH_YOTE                 "Yote"
+    IDS_LENGTH_ZHANG                "Zhang"
+END
+
+// TYPES OF POWERS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "英国熱単位/分"
+    IDS_POWER_FPS_PER_MINUTE        "フートポンド/分"
+    IDS_POWER_HORSEPOWER            "馬力"
+    IDS_POWER_KILOWATTS             "キロワット"
+    IDS_POWER_MEGAWATTS             "メガワット"
+    IDS_POWER_WATTS                 "ワット"
+END
+
+// TYPE OF PRESSURES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PRESSURE_ATMOSPHERES        "気圧"
+    IDS_PRESSURE_BARS               "Bars"
+    IDS_PRESSURE_HECTOPASCALS       "ヘクトパスカル"
+    IDS_PRESSURE_KILOPASCALS        "キロパスカル"
+    IDS_PRESSURE_MM_OF_MERCURY      "水銀ミリメートル"
+    IDS_PRESSURE_PASCALS            "パスカル"
+    IDS_PRESSURE_PSI                "ポンド重/平方インチ"
+END
+
+// TYPES OF TEMPERATURES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TEMPERATURE_CELSIUS         "摂氏"
+    IDS_TEMPERATURE_FAHRENHEIT      "華氏"
+    IDS_TEMPERATURE_KELVIN          "ケルビン"
+    IDS_TEMPERATURE_RANKINE         "Rankine"
+END
+
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "日数"
+    IDS_TIME_HOURS        "時間"
+    IDS_TIME_NANOSECONDS  "ナノ秒"
+    IDS_TIME_MICROSECONDS "マイクロ秒"
+    IDS_TIME_MILLISECONDS "ミリ秒"
+    IDS_TIME_MINUTES      "分"
+    IDS_TIME_SECONDS      "秒"
+    IDS_TIME_WEEKS        "週"
+    IDS_TIME_YEARS        "年"
+END
+
+// TYPES OF VELOCITIES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_VELOCITY_CMS_SECOND         "センチメートル/時"
+    IDS_VELOCITY_FEET_HOUR          "フィート/時"
+    IDS_VELOCITY_FEET_SECOND        "フィート/秒"
+    IDS_VELOCITY_KILOMETERS_HOUR    "キロメートル/時"
+    IDS_VELOCITY_KNOTS              "ノット"
+    IDS_VELOCITY_MACH               "マッハ"
+    IDS_VELOCITY_METERS_SECOND      "メートル/秒"
+    IDS_VELOCITY_MILES_HOUR         "マイル/時"
+END
+
+// TYPES OF VOLUMES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_VOLUME_BARRELS_UK           "バレル (英国)"
+    IDS_VOLUME_BARRELS_OIL          "石油バレル"
+    IDS_VOLUME_BUN                  "Bun"
+    IDS_VOLUME_BUSHELS_UK           "ブッシェル (英国)"
+    IDS_VOLUME_BUSHELS_US           "ブッシェル (米国)"
+    IDS_VOLUME_CUBIC_CENTIMETERS    "立法センチメートル"
+    IDS_VOLUME_CUBIC_FEET           "立法フィート"
+    IDS_VOLUME_CUBIC_INCHES         "立法インチ"
+    IDS_VOLUME_CUBIC_METERS         "立法メートル"
+    IDS_VOLUME_CUBIC_YARDS          "立法ヤード"
+    IDS_VOLUME_DOE                  "Doe"
+    IDS_VOLUME_FLUID_OUNCES_UK      "流体オンス (英国)"
+    IDS_VOLUME_FLUID_OUNCES_US      "流体オンス (米国)"
+    IDS_VOLUME_GALLONS_UK           "ガロン (英国)"
+    IDS_VOLUME_GALLONS_DRY_US       "ガロン、乾燥 (米国)"
+    IDS_VOLUME_GALLONS_LIQUID_US    "ガロン、液体 (米国)"
+    IDS_VOLUME_GOU                  "Gou"
+    IDS_VOLUME_HOP                  "Hop"
+    IDS_VOLUME_ICCE                 "Icce"
+    IDS_VOLUME_KWIAN                "Kwian"
+    IDS_VOLUME_LITERS               "リットル"
+    IDS_VOLUME_MAL                  "Mal"
+    IDS_VOLUME_MILLILITERS          "ミリリットル"
+    IDS_VOLUME_PINTS_UK             "パイント (英国)"
+    IDS_VOLUME_PINTS_DRY_US         "パイント、乾燥 (米国)"
+    IDS_VOLUME_PINTS_LIQUID_US      "パイント、液体 (米国)"
+    IDS_VOLUME_QUARTS_UK            "クォート (英国)"
+    IDS_VOLUME_QUARTS_DRY_US        "クォート、乾燥 (米国)"
+    IDS_VOLUME_QUARTS_LIQUID_US     "クォート、液体 (米国)"
+    IDS_VOLUME_SEKI                 "Seki"
+    IDS_VOLUME_SYOU                 "Syou"
+    IDS_VOLUME_TANANLOUNG           "Tananloung"
+    IDS_VOLUME_TANG                 "Tang"
+    IDS_VOLUME_TO                   "To"
+END
+
+// TYPES OF WEIGHTS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WEIGHT_BAHT                 "Baht"
+    IDS_WEIGHT_CARATS               "カラット"
+    IDS_WEIGHT_CHUNG                "Chung"
+    IDS_WEIGHT_DON                  "Don"
+    IDS_WEIGHT_GEUN                 "Geun"
+    IDS_WEIGHT_GRAMS                "グラム"
+    IDS_WEIGHT_GWAN                 "Gwan"
+    IDS_WEIGHT_HARB                 "Harb"
+    IDS_WEIGHT_JIN_CHINA            "Jin (中国)"
+    IDS_WEIGHT_JIN_TAIWAN           "Jin (台湾)"
+    IDS_WEIGHT_KAN                  "Kan"
+    IDS_WEIGHT_KILOGRAMS            "キログラム"
+    IDS_WEIGHT_KIN                  "Kin"
+    IDS_WEIGHT_LIANG_CHINA          "Liang (中国)"
+    IDS_WEIGHT_LIANG_TAIWAN         "Liang (台湾)"
+    IDS_WEIGHT_MONME                "匁 (もんめ)"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "常衡オンス"
+    IDS_WEIGHT_OUNCES_TROY          "トロイ オンス"
+    IDS_WEIGHT_POUNDS               "ポンド"
+    IDS_WEIGHT_QUINTAL_METRIC       "キンタル (metric)"
+    IDS_WEIGHT_SALOUNG              "Saloung"
+    IDS_WEIGHT_STONES               "ストーン"
+    IDS_WEIGHT_TAMLUNG              "Tamlung"
+    IDS_WEIGHT_TONNES               "トン"
+    IDS_WEIGHT_TONS_UK              "トン (英国)"
+    IDS_WEIGHT_TONS_US              "トン (米国)"
+END

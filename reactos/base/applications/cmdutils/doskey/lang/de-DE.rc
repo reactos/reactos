@@ -1,0 +1,28 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Verwaltet Einstellungen, Verlauf und Makros der Kommandozeile.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
+\n\
+  /INSERT             Aktiviert den Einfügemodus.\n\
+  /OVERSTRIKE         Deaktiviert den Einfügemodus.\n\
+  /EXENAME=exename    Legt den Namen der Anwendung, auf die die Einstel-\n\
+                      lungen angewendet werden sollen, fest. Der Standard-\n\
+                      wert ist cmd.exe.\n\
+  /HISTORY            Zeigt den Befehlsverlauf an.\n\
+  /LISTSIZE=size      Legt die Anzahl der Befehle per Verlaufspuffer fest.\n\
+  /REINSTALL          Leert den Befehlsverlauf.\n\
+  /MACROS             Zeigt Makrodefinitionen an.\n\
+  /MACROS:exename     Zeigt Makrodefinitionen für eine Anwendung an.\n\
+  /MACROS:ALL         Zeigt Makrodefinitionen für alle Anwendungen an.\n\
+  /MACROFILE=file     Lädt Makrodefinitionen aus einer Datei.\n\
+  macroname           Legt den Namen eines zu erstellenden Makros fest.\n\
+  text                Legt den ersetzenden Text des Makros fest.\n"
+
+IDS_INVALID_MACRO_DEF, "Ungültige Makrodefinition: %s\n"
+
+END

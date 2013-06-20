@@ -1,0 +1,41 @@
+﻿; UTF-8
+
+[Section]
+Name = Miranda IM
+Version = 0.10.13
+Licence = GPL
+Description = Open source multiprotocol instant messaging application - May not work completely.
+Size = 2.81MB
+Category = 5
+URLSite = http://www.miranda-im.org/
+URLDownload = http://miranda.googlecode.com/files/miranda-im-v0.10.13-unicode.exe
+CDPath = none
+
+[Section.0407]
+Description = Open source Multiprotokoll Instant Messaging Anwendung - funktioniert möglicherweise nicht vollständig.
+
+[Section.040a]
+Description = Aplicación de mensajería instantánea multiprotocolo de código abierto - Puede no funcionar en su totalidad.
+
+[Section.040c]
+Description = Application de messagerie instantannée multi-protocoles open source - pourrait ne pas fonctionner complètement.
+Size = 2,81 Mo
+
+[Section.0410]
+Description = Multi-protocollo open source per applicazioni di messaggistica istantanea - potrebbe non funzionare del tutto.
+
+[Section.0413]
+Description = Open-bron multi-protocol instant message toepassing - werkt mogelijk niet volledig.
+
+[Section.0415]
+Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.
+
+[Section.0418]
+Description = Aplicație de mesagerie instant multiprotocol (open-source) - posibil cu limitări în funcționalitate.
+Size = 2,81 Mo
+
+[Section.0422]
+Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.
+
+[Section.0813]
+Description = Open-bron multi-protocol instant message toepassing - werkt mogelijk niet volledig.

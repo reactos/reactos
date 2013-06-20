@@ -1,0 +1,86 @@
+/*
+ * PROJECT:      Spider Solitaire
+ * LICENSE:      See COPYING in top level directory
+ * FILE:         base/applications/games/spider/lang/ja-JP.rc
+ * PURPOSE:      Japanese Language File for Spider Solitaire
+ * TRANSLATOR:   Tomoya Kitagawa
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+/* Dialogs */
+
+IDD_CARDBACK DIALOGEX 6, 6, 186, 104
+CAPTION "カードの背景を選択"
+FONT 9, "MS UI Gothic"
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+BEGIN
+    CONTROL       "", IDC_CARDBACK1, "Static", SS_NOTIFY, 4, 7, 26, 32
+    CONTROL       "", IDC_CARDBACK2, "Static", SS_NOTIFY, 34, 7, 26, 32
+    CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 64, 7, 26, 32
+    CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 94, 7, 26, 32
+    CONTROL       "", IDC_CARDBACK5, "Static", SS_NOTIFY, 124, 7, 26, 32
+    CONTROL       "", IDC_CARDBACK6, "Static", SS_NOTIFY, 154, 7, 26, 32
+    CONTROL       "", IDC_CARDBACK7, "Static", SS_NOTIFY, 4, 46, 26, 32
+    CONTROL       "", IDC_CARDBACK8, "Static", SS_NOTIFY, 34, 46, 26, 32
+    CONTROL       "", IDC_CARDBACK9, "Static", SS_NOTIFY, 64, 46, 26, 32
+    CONTROL       "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
+    CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
+    CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
+    DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
+    PUSHBUTTON    "キャンセル", IDCANCEL, 126, 84, 54, 13
+END
+
+IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 106, 80
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "難易度"
+FONT 9, "MS UI Gothic"
+BEGIN
+    AUTORADIOBUTTON "初級: 1 色(&O)", IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "中級: 2 色(&T)", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
+    AUTORADIOBUTTON "上級: 4 色(&F)", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
+
+    DEFPUSHBUTTON   "OK", IDOK, 8, 58, 40, 14
+    PUSHBUTTON      "キャンセル", IDCANCEL, 58, 58, 40, 14
+END
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_SPI_NAME    "スパイダ"
+    IDS_SPI_ABOUT   "Gregor Schneider によるスパイダ ソリティア\n\nCardLib バージョン 1.0"
+    IDS_SPI_QUIT    "現在のゲームを終了しますか?"
+    IDS_SPI_WIN     "おめでとう、あなたの勝ちです!"
+    IDS_SPI_DEAL    "もう一度カードを配りますか?"
+END
+
+
+/* Menus */
+
+IDR_MENU1 MENU DISCARDABLE
+BEGIN
+    POPUP "ゲーム(&G)"
+    BEGIN
+        MENUITEM "新規ゲーム(&N)\tF2",          IDM_GAME_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "カードの装飾(&D)...",         IDM_GAME_DECK
+        MENUITEM SEPARATOR
+        MENUITEM "スパイダの終了(&E)",          IDM_GAME_EXIT
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "目次(&C)\tF1",                IDM_HELP_CONTENTS
+        MENUITEM "バージョン情報(&A)",          IDM_HELP_ABOUT
+    END
+END
+
+
+
+/* Accelerator */
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE
+BEGIN
+    VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
+    VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
+END

@@ -1,0 +1,60 @@
+
+import "unknwn.idl";
+import "strmif.idl";
+
+cpp_quote("#include \"ks.h\"")
+cpp_quote("#ifndef _KS_")
+typedef struct {
+    ULONG   FromNode;
+    ULONG   FromNodePin;
+    ULONG   ToNode;
+    ULONG   ToNodePin;
+} KSTOPOLOGY_CONNECTION, *PKSTOPOLOGY_CONNECTION;
+cpp_quote("#endif")
+
+
+[
+    object,
+    local,
+    uuid(720D4AC0-7533-11D0-A5D6-28DB04C10000),
+    pointer_default(unique)
+]
+interface IKsTopologyInfo : IUnknown
+{
+    HRESULT get_NumCategories([out] DWORD *pdwNumCategories);
+    HRESULT get_Category([in] DWORD dwIndex, [out] GUID *pCategory);
+    HRESULT get_NumConnections([out] DWORD *pdwNumConnections);
+    HRESULT get_ConnectionInfo([in] DWORD dwIndex, [out] KSTOPOLOGY_CONNECTION *pConnectionInfo);
+    HRESULT get_NodeName([in] DWORD dwNodeId, [out] WCHAR *pwchNodeName, [in] DWORD dwBufSize, [out] DWORD *pdwNameLen);
+    HRESULT get_NumNodes([out] DWORD *pdwNumNodes);
+    HRESULT get_NodeType([in] DWORD dwNodeId, [out] GUID *pNodeType);
+    HRESULT CreateNodeInstance([in] DWORD dwNodeId, [in] REFIID iid, [out] void **ppvObject);
+}
+
+[
+    object,
+    local,
+    uuid(11737C14-24A7-4bb5-81A0-0D003813B0C4),
+    pointer_default(unique)
+]
+interface IKsNodeControl :IUnknown
+{
+    HRESULT put_NodeId([in] DWORD dwNodeId);
+    HRESULT put_KsControl([in] PVOID pKsControl);
+}
+
+[
+    object,
+    local,
+    uuid(1ABDAECA-68B6-4F83-9371-B413907C7B9F),
+    pointer_default(unique)
+]
+interface ISelector : IUnknown
+{
+    HRESULT get_NumSources([out] DWORD *pdwNumSources);
+    HRESULT get_SourceNodeId([out] DWORD *pdwPinId);
+    HRESULT put_SourceNodeId([in] DWORD dwPinId);
+}
+
+
+

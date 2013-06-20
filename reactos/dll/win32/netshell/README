@@ -1,0 +1,58 @@
+=== Introduction ===
+
+The netshell library is responsible for managing network connections. The user interface is accessed
+by opening the control panel and selecting the "Network Connections" folder.
+The netshell library provides COM interfaces to enumerate available network adapters, network protocols, network clients and network transports
+and receive detailed information about them. However, it cannot configure these components. For configuration, look in the netcfgx documentation
+(Hint: INetCfg)
+
+=== Interface ===
+
+The user interface is exposed by implementing the IShellFolder interface as required by explorer
+namespace extension. The code is currently placed in shfldr_netconnect.c
+
+The enumeration of the available network connections is performed by the IShellFolder::EnumObjects
+(ISF_NetConnect_fnEnumObjects). It uses the INetConnectionManager interface implemented by netshell 
+in connectmanager.c to enumerate all available network connections.
+
+The context menu of network connection items is populated by the IContextMenu::QueryContextMenu 
+(ISF_NetConnect_IContextMenu3_QueryContextMenu) which is obtained by IShellFolder::GetUIObjectOf. The actions are performed by the 
+IContextMenu::InvokeCommand function (ISF_NetConnect_IContextMenu3_InvokeCommand). At the moment
+the actions "Status" / "Properties" are implemented.
+
+=== Status Dialog & Notification Area ===
+
+The status dialog is implemented by IOleCommandTarget interface(CLSID_LanConnectStatusUI). This interface manages all status dialogs
+for all available dialogs. The interface is implemented as a singleton to advoid multiple notification icons
+appear in the Notification area of the explorer. Everytime the IShellFolder object is created (ISF_NetConnect_Constructor), 
+it creates a reference to IOleCommandTarget interface and calls its IOleCommandTarget::Exec function with CGID_ShellServiceObject.
+This causes IOleCommandTarget interface to enumerate all available network connections, check if they should be shown (NCCF_SHOW_ICON flag set
+in the NETCON_PROPERTIES dwCharacter), and add them to notification area with Shell_NotifyIcon. For that purpose a hidden window is created (dialog
+procedure is LANStatusDlg) which receives WM_SHOWSTATUSDLG msg when it shall show display the status dialog.
+
+When a user wants to display the status dialog by clicking on the context menu of network connection item, the IShellFolder sends the NetCfgInstanceId of
+the selected network connection to IOleCommandTarget::Exec function. The function then looks up the specified notification item and then sends
+the WM_SHOWSTATUSDLG msg to specific window.
+
+=== Network Connections Property Dialog ===
+
+The network connections property dialog is implemented by the INetConnectionPropertyUi2 interface. The class id is obtained by calling
+INetConnection::GetUiObjectClassId of the current selected network connection. After obtaining the interface by calling CoCreateInstance, the
+selected network connection is stored as reference by calling INetConnectionPropertyUi::SetConnection. The next step is to call 
+INetConnectionPropertyUi::AddPages to add custom property pages to the property sheet set. If the function suceeds, the caller can then invoke
+PropertySheetW function to display the properties. 
+	Note: If the context doesnt match, i.e. the INetConnectionPropertyUi2 cannot work together
+		with current INetConnection, then it should fail INetConnectionPropertyUi::AddPages
+	Note: The function ShowNetConnectionProperties in shlfdr_netconnect.c shows how to invoke the Network Connections Property Dialog
+
+The enumeration of network components (protocols, client, transport) is done by using the INetCfg api). Initialization is performed in InitializeLANPropertiesUIDlg
+function. When a user accepts changes, it calls INetCfg::Apply or when it aborts the changes INetCfg::Cancel.
+
+=== Known Issues ===
+* The notification icons are only added once IShellFolder of netshell is created for the first time
+* Status changes of an adapter are not automatically updated because the information is cached
+* There seems to be an icon problem which makes icon blink in the status dialog
+
+Last Update 31/10/2008
+
+

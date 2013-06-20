@@ -1,0 +1,28 @@
+
+Code style / indentation
+------------------------
+The file indent-all.sh contains information about the current code
+style.  Run this script before commits.
+
+
+Variable argument macros
+------------------------
+Variable argument macros are non-portable in general, and should be
+avoided.  Either use a second set of parentheses like DEBUG, or create
+a variable argument function like error.
+
+
+Structure
+---------
+The core protocol stack should be system-independent (i.e. ANSI C
+only) so that it is easy to port. This currently applies to the
+following files:
+
+bitmap.c licence.c orders.c rdp.c rdp5.c cache.c iso.c mcs.c
+secure.c mppc.c channels.c
+rdesktop.c
+
+
+RDP resources
+-------------
+http://dev.remotenetworktechnology.com/refdata.htm

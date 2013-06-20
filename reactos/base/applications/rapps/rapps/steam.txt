@@ -1,0 +1,43 @@
+﻿; UTF-8
+
+[Section]
+Name = STEAM
+Version = 1.0
+Licence = Freeware
+Description = The STEAM Gaming platform used by many games these days.
+Size = 1.59MB
+Category = 4
+URLSite = http://steampowered.com/
+URLDownload = http://storefront.steampowered.com/download/SteamInstall.msi
+CDPath = none
+
+[Section.0407]
+Description = Die STEAM Spieleplattform, die von viele Spielen verwendet wird.
+
+[Section.040a]
+Description = La plataforma de juego STEAM usada por muchos juegos actuales.
+
+[Section.040c]
+Description = La plateforme de jeu STEAM utilisée par beaucoup de jeux de nos jours.
+Size = 1,59 Mo
+
+[Section.0410]
+Description = La piattaforma di gioco STEAM usata da molti giochi in questi giorni.
+
+[Section.0413]
+Description = Het STEAM platform, veel gebruikt voor spelletjes.
+
+[Section.0415]
+Description = STEAM - platforma, którą używa obecnie wiele gier.
+
+[Section.0418]
+Licence = Gratuită
+Description = Platforma de joc STEAM, utilizată de multe jocuri în zilele de astăzi.
+Size = 1,59 Mo
+URLSite = http://store.steampowered.com/?l=romanian
+
+[Section.0422]
+Description = Ігрова платформа, що використовується багатьма іграми.
+
+[Section.0813]
+Description = Het STEAM platform, veel gebruikt voor spelletjes.

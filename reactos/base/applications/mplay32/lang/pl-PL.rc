@@ -1,0 +1,37 @@
+/*
+ *         translated by Maciej Białas
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl
+ *         UTF-8 conversion by Caemyr (May, 2011)
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Plik"
+	BEGIN
+		MENUITEM "&Otwórz...", IDM_OPEN_FILE
+		MENUITEM "&Zamknij", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "&Wyjdź", IDM_EXIT
+	END
+	POPUP "&Pomoc"
+	BEGIN
+		MENUITEM "&O programie...", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "Wszystkie formaty (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Odtwarzaj"
+	IDS_TOOLTIP_STOP "Zatrzymaj"
+	IDS_TOOLTIP_EJECT "Wysuń"
+	IDS_TOOLTIP_BACKWARD "Przeskocz do tyłu"
+	IDS_TOOLTIP_SEEKBACK "Przewiń do tyłu"
+	IDS_TOOLTIP_SEEKFORW "Przewiń do przodu"
+	IDS_TOOLTIP_FORWARD "Przeskocz do przodu"
+    IDS_APPTITLE "ReactOS Multimedia Player"
+	IDS_PLAY "Odtwórz"
+END

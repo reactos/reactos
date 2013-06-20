@@ -1,0 +1,77 @@
+/*
+ *         translated by Caemyr - Olaf Siejka (Jan, 2008)
+ *         Use ReactOS forum PM or IRC to contact me
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ *         UTF-8 conversion by Caemyr (May, 2011) 
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Utwórz łącze"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Text1", -1, 115, 15, 160, 24
+	LTEXT "Text2", -1, 115, 35, 160, 17
+END
+
+IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Utwórz łącze"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Text1",-1,10,0,225,40
+	LTEXT "Text2",-1,10,40,120,20
+	LTEXT "Text3",-1,10,55,120,20
+END
+
+IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Utwórz skrót"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "Ten program konfiguracyjny pomoże ci stworzyć skróty do lokalnych lub\nsieciowych programów, plików, katalogów, komputerów, bądź addresów\nInternetowych.", -1, 120, 15, 200, 30
+  LTEXT "Wpisz ścieżkę dostępu do obiektu:", -1, 120, 50, 120, 10
+  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+  PUSHBUTTON "Przeglądaj...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+  LTEXT "Naciśnij Dalej aby kontynuować.", -1, 120, 97, 162, 10
+END
+
+IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Wybierz nazwę"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "&Wpisz nazwę dla tego skrótu:", -1, 120, 15, 150, 10
+  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+  LTEXT "Naciśnij Zakończ by utworzyć skrót.", -1, 118, 97, 178, 17
+END
+
+STRINGTABLE
+BEGIN
+	IDS_CPLSYSTEMNAME "Dodaj/Usuń Programy"
+	IDS_CPLSYSTEMDESCRIPTION "Instaluje bądź usuwa programy oraz tworzy skróty."
+    IDS_CREATE_SHORTCUT "Utwórz skrót"
+    IDS_ERROR_NOT_FOUND "Plik %s nie został znaleziony."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DOWNLOADING     "Downloading..."
+    IDS_INSTALLING      "Installing..."
+    IDS_INVALID_SHA     "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
+END
+
+ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Wine Gecko Installer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Wine could not find a Gecko package which is needed for applications embedding HTML to work correctly. Wine can automatically download and install it for you.\n\nNote: it is recommended to use your distribution's packages instead. See <a href=""http://wiki.winehq.org/Gecko"">http://wiki.winehq.org/Gecko</a> for details.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Install", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancel", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+END

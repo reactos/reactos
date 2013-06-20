@@ -1,0 +1,164 @@
+// Hebrew (he-IL) resources by Baruch Rutman (peterooch at gmail dot com)
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "תכניות צריכת חשמל"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+  LTEXT "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.",
+        -1, 37, 6, 209, 36
+  GROUPBOX "תכנית צריכת חשמל", -1, 6, 43, 240, 50
+  COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+  PUSHBUTTON "שמור בשם...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+  PUSHBUTTON "מחק", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
+  GROUPBOX "Unknown", IDC_GRPDETAIL, 6, 95, 240, 136
+  LTEXT "מתי שהמחשב:",IDC_SAT, 12, 109, 60, 12
+  LTEXT "מחובר",IDC_SAC, 123, 110, 45, 15
+  ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
+  LTEXT "פועל על סוללות",IDC_SDC, 195, 110, 45, 15
+  ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
+  LTEXT "כיבוי מסך:",IDC_MONITOR, 13, 148, 84, 10
+  COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "כיבוי כוננים קשיחים:",IDC_DISK, 13, 171, 84, 10
+  COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "מצב המתנה:",IDC_STANDBY, 13, 191, 84, 10
+  COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "מצב שינה:",IDC_HYBERNATE, 13, 212, 84, 10
+  COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEALARMS DIALOGEX DISCARDABLE  0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "התראות"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "התראת סוללה נמוכה",-1, 6, 7, 239, 104
+    CONTROL         "הפעל התראת סוללה נמוכה מתי שכוח הסוללה מגיע ל:",IDC_ALARM1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    LTEXT           "unknown",IDC_ALARMVALUE1, 209, 20, 33, 10
+    LTEXT           "0%",-1, 28, 43, 15, 10
+    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
+                    TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
+    LTEXT           "100%", -1, 214, 43, 25, 10
+    PUSHBUTTON      "פעולת התראה...",-1, 17, 69, 70, 14,WS_DISABLED
+    LTEXT           "הודעה:",-1, 95, 71, 57, 10
+    LTEXT           "Unknown",IDC_ALARMMSG1, 154, 71, 84, 10
+    LTEXT           "פעולה",-1, 95, 83, 55, 10
+    LTEXT           "Unknown",IDC_ALARMAKTION1, 154, 83, 84, 10
+    LTEXT           "הפעל תכנית:",-1, 95, 95, 55, 10
+    LTEXT           "Unknown",IDC_ALARMPROG1, 154, 95, 84, 10
+
+    GROUPBOX        "התראת סוללה קריטית",-1, 6, 120, 239, 106
+    CONTROL         "הפעל התראת סוללה קריטית מתי שכוח הסוללה מגיע ל:",IDC_ALARM2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    LTEXT           "unknown",IDC_ALARMVALUE2, 209, 133, 33, 10
+    LTEXT           "0%",-1, 28, 154, 15, 10
+    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
+                    TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
+    LTEXT           "100%",-1, 214, 154, 25, 10
+    PUSHBUTTON      "פעולת התראה:",-1, 17, 183, 70, 14, WS_DISABLED
+    LTEXT           "הודעה:",-1, 95, 185, 50, 10
+    LTEXT           "Unknown",IDC_ALARMMSG2, 154, 185, 84, 10
+    LTEXT           "פעולה",-1, 95, 198, 45, 10
+    LTEXT           "Unknown",IDC_ALARMAKTION2, 154, 198, 84, 10
+    LTEXT           "הפעל תכנית:",-1, 95, 211, 50, 10
+    LTEXT           "Unknown",IDC_ALARMPROG2, 154, 211, 84, 10
+END
+
+IDD_PROPPAGEADVANCED DIALOGEX DISCARDABLE  0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "מתקדם"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_ACDC,IDI_ACDC, 7, 7, 20, 20
+    LTEXT           "בחר את אפשרויות צריכת החשמל שברצונך להשתמש:",-1, 37, 6, 207, 20
+    GROUPBOX        "אפשרויות",-1, 6, 30, 240, 65
+    CONTROL         "תמיר הראה סמל על שורת המשימות",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 17, 43, 220, 10
+    CONTROL         "בקש סיסמה מתי שחוזר מהמתנה",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 17, 60, 220, 10
+    CONTROL         "עמעם תצוגה בזמן פעולה על סוללות",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 17, 78, 220, 10
+    GROUPBOX        "לחצני הפעלה",-1, 6, 101, 240, 127
+    LTEXT           "כאשר אני סוגר את מכסה:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    COMBOBOX        IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "כאשר אני לוחץ על לחצן ההפעלה:", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    COMBOBOX        IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "כאשר אני לוחץ על לחצן השינה:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    COMBOBOX        IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEHIBERNATE DIALOGEX DISCARDABLE  0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "תרדמת"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_HIBERNATE,IDI_HIBERNATE, 7, 7, 20, 20
+    LTEXT           "When your computer hibernates, it stores whatever it has in memory on your hard disk and then shuts down. When your computer comes out of hibernation, it returns to its previous state. ",
+                    -1, 37, 6, 210, 35
+    GROUPBOX        "תרדמת",-1, 6, 41, 240, 32
+    CONTROL         "אפשר תרדמת",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 17, 55, 210, 10
+    GROUPBOX        "שטח כונן לתרדמת",-1, 6, 80, 240, 76
+    LTEXT           "שטח כונן פנוי:",-1, 15, 95, 140, 10
+    LTEXT           "Unknown",IDC_FREESPACE, 160, 95, 80, 10
+    LTEXT           "שטח כונן הדרוש לתרדמת",-1, 15, 115, 140, 10
+    LTEXT           "Unknown",IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
+    LTEXT           "You must free some disk space before your computer can hibernate. ",IDC_TOLESSFREESPACE, 15, 135, 224, 20
+END
+
+STRINGTABLE
+BEGIN
+  IDS_CPLNAME_1 "אפשרויות צריכת חשמל"
+  IDS_CPLDESCRIPTION_1 "Configure energy-saving settings for your computer."
+  IDS_PROCENT "%i%%"
+  IDS_SOUND "קול"
+  IDS_TEXT "טקסט"
+  IDS_CONFIG1 "Settings for %1 power scheme"
+  IDS_CONFIG2 "אפשרויות מתקדמות ל %1"
+
+  IDS_SIZEBYTS "%i בית"
+  IDS_SIZEMB "%i MB"
+
+  IDS_NOACTION "אל תעשה דבר"
+
+  IDS_PowerActionNone1 "שום פעולה"
+  IDS_PowerActionUnknown "לא ידוע"
+  IDS_PowerActionSleep "המתנה"
+  IDS_PowerActionHibernate "תרדמת"
+  IDS_PowerActionShutdown "כיבוי"
+  IDS_PowerActionRestart "הפעלה מחדש"
+  IDS_PowerActionShutdownOff "Shutdown and Turn the Power Off"
+  IDS_PowerActionWarmEject "שאל אותי מה לעשות"
+  IDS_PowerActionNone2 "כלום"
+
+  IDS_TIMEOUT1 "אחרי דקה"
+  IDS_TIMEOUT2 "אחרי 2 דקות"
+  IDS_TIMEOUT3 "אחרי 3 דקות"
+  IDS_TIMEOUT4 "אחרי 5 דקות"
+  IDS_TIMEOUT5 "אחרי 10 דקות"
+  IDS_TIMEOUT6 "אחרי 15 דקות"
+  IDS_TIMEOUT7 "אחרי 20 דקות"
+  IDS_TIMEOUT8 "אחרי 25 דקות"
+  IDS_TIMEOUT9 "אחרי 30 דקות"
+  IDS_TIMEOUT10 "אחרי 45 דקות"
+  IDS_TIMEOUT11 "אחרי שעה"
+  IDS_TIMEOUT12 "אחרי שעתיים"
+  IDS_TIMEOUT13 "אחרי 3 שעות"
+  IDS_TIMEOUT14 "אחרי 4 שעות"
+  IDS_TIMEOUT15 "אחרי 5 דקות"
+  IDS_TIMEOUT16 "אף פעם"
+
+  IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
+  IDS_DEL_SCHEME_TITLE "מחק ערכה"
+END

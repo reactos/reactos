@@ -1,0 +1,289 @@
+/*
+ * PROJECT:      ReactOS Service Manager
+ * FILE:         base\applications\mscutils\servman\lang\sv-SE.rc
+ * PURPOSE:      Swedish resource file
+ * TRANSLATOR:   Jaix Bly
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&Arkiv"
+  BEGIN
+    MENUITEM "Exportera...",   ID_EXPORT
+    MENUITEM SEPARATOR
+    MENUITEM "A&vsluta",       ID_EXIT
+  END
+  POPUP "Åtgärd"
+  BEGIN
+    MENUITEM "Koppla till...", ID_CONNECT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Starta",       ID_START, GRAYED
+    MENUITEM "Stoppa",        ID_STOP, GRAYED
+    MENUITEM "Pausa",       ID_PAUSE, GRAYED
+    MENUITEM "Fortsätta",      ID_RESUME, GRAYED
+    MENUITEM "Starta om",     ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Uppdatera",     ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "Redigera...",     ID_EDIT, GRAYED
+    MENUITEM "Skapa...",   ID_CREATE, GRAYED
+    MENUITEM "Ta bort...",   ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Egenskaper...", ID_PROP, GRAYED
+  END
+  POPUP "Visa"
+  BEGIN
+    MENUITEM "Stora ikoner", ID_VIEW_LARGE
+    MENUITEM "Små ikoner", ID_VIEW_SMALL
+    MENUITEM "Lista",        ID_VIEW_LIST
+    MENUITEM "Detaljer",     ID_VIEW_DETAILS
+    MENUITEM SEPARATOR
+    MENUITEM "Anpassa...",ID_VIEW_CUST, GRAYED
+  END
+  POPUP "Hjälp"
+  BEGIN
+    MENUITEM "Hjälp",        ID_HELP
+    MENUITEM "Om",       ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM "Starta",       ID_START, GRAYED
+    MENUITEM "Stoppa",        ID_STOP, GRAYED
+    MENUITEM "Pausa",       ID_PAUSE, GRAYED
+    MENUITEM "Fortsätta",      ID_RESUME, GRAYED
+    MENUITEM "Starta om",     ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Uppdatera",     ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "Redigera...",     ID_EDIT, GRAYED
+    MENUITEM "Ta bort...",   ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Egenskaper...", ID_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Hjälp...",     ID_HELP
+  END
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "Om Tjänster"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "Tjänster v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 30
+  PUSHBUTTON "Stäng", IDOK, 75, 162, 44, 15
+  ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
+CAPTION "Allmännt"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
+  EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
+  PUSHBUTTON "Starta", IDC_START, 6, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Stoppa", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Pausa", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Fortsätta", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+  LTEXT "Tjänstenamn:", IDC_STATIC, 4, 11, 53, 11
+  LTEXT "Visningsnamn:", IDC_STATIC, 4, 29, 53, 11
+  LTEXT "Beskrivning:", IDC_STATIC, 4, 51, 53, 11
+  LTEXT "Väg till körbar fil:", IDC_STATIC, 6, 73, 82, 9
+  LTEXT "Startmetod:", IDC_STATIC, 6, 108, 53, 11
+  LTEXT "Tjänstestatus:", IDC_STATIC, 4, 138, 53, 11
+  LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
+  LTEXT "Du kan ange startparametrar som gäller när du startar tjänsten härifrån.",IDC_STATIC, 6,177,240,15
+  LTEXT "startparametrar:", IDC_STATIC, 6, 200, 58, 11
+  EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "Redigera", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+END
+
+IDD_DLG_DEPEND DIALOGEX 6,6,253,225
+CAPTION "Beroenden"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
+  LTEXT "Några tjänster är beroende av andra tjänster, systemdrivrutiner och laddsystemsgrupper. Om systemkomponenten är stoppad eller inte kör korrekt, kan tjänster som är beroende av den bli påverkade.", IDC_STATIC,8, 7, 238, 26
+  LTEXT "Denna tjänsten är beroende av följande komponenter", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
+END
+
+IDD_DLG_CREATE DIALOGEX 6,6,225,209
+CAPTION "Skapa en tjänst"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
+  EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_PATH, 10, 62, 210, 13, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
+  LTEXT "*Tjänstenamn:", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*Visningsnamn:", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*Väg till körbar fil:", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "Beskrivning:", IDC_STATIC, 12, 86, 44, 9
+  PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
+  PUSHBUTTON "Avbryt", IDCANCEL, 176, 192, 46, 13
+  LTEXT "'Ytterligere val (klicka hjälp för detaljer)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "Hjälp", ID_CREATE_HELP, 10, 192, 44, 13
+END
+
+IDD_DLG_DELETE DIALOGEX 6,6,185,148
+CAPTION "Ta bort en tjänt"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "Är du säker på att du vill ta bort denna tjänsten? Detta kan inte ångras när den blivit raderad!", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "Tjönstenamn:",IDC_STATIC, 6, 40, 80, 9
+  LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
+  EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
+  PUSHBUTTON "Ja", IDOK, 26, 129, 54, 13
+  DEFPUSHBUTTON "Nej", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+CAPTION "Stoppa Annan Tjänst"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+  LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+  LTEXT "Vill du stoppa dessa tjänster?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "Ja", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "Nej", IDCANCEL, 120, 129, 54, 14
+END
+
+IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
+CAPTION "Val"
+FONT 8, "MS Shell Dlg",0,0
+STYLE 0x10CF0000
+BEGIN
+  LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
+  PUSHBUTTON "Ok", IDOK, 75, 130, 44, 13
+END
+
+IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
+CAPTION "Tjänst kontroll"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+BEGIN
+  CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
+  LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
+  LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
+  PUSHBUTTON "&Stäng", IDOK, 100, 70, 54, 13
+END
+
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_FIRSTCOLUMN "Namn"
+  IDS_SECONDCOLUMN "Beskrivning"
+  IDS_THIRDCOLUMN "Status"
+  IDS_FOURTHCOLUMN "Startmetod"
+  IDS_FITHCOLUMN "Logga på som"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_SERVICES_STARTED "Startad"
+  IDS_SERVICES_STOPPED "Stoppad"
+  IDS_SERVICES_AUTO "Automatisk"
+  IDS_SERVICES_MAN "Manuell"
+  IDS_SERVICES_DIS "Inaktiverad"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_NUM_SERVICES "Num tjänster: %d"
+  IDS_STOP_DEPENDS "När %s stoppas, kommer också dessa tjänster att stanna"
+  IDS_NO_DEPENDS "<No Dependencies>"
+  IDS_LICENSE "Detta programmet är fri programvara; du kan distribuera det och/eller ändra det under villkoren enligt GNU General Public License som är utgivet av Free Software Foundation;  version 2, eller (om du så önskar) alla senare versioner.\r\n\r\nDette programmet er utgivet i hopp om att det skall kunne användas, men DET FINNS INGA GARANTIER; även utan underförstådd garanti om SÄLJBARHET eller LÄMPLIGHET FÖR ETT VISST ÄNDAMÅL.  Se på GNU General Public Licensen för mer detaljer.\r\n\r\nDu skall ha motagit en kopia av GNU General Public Licensen tillsammans med detta programmet; om du inte har fått det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROP "Egenskaper"
+  IDS_TOOLTIP_REFRESH "Uppdatera"
+  IDS_TOOLTIP_EXPORT "Exportera lista"
+  IDS_TOOLTIP_CREATE "Skapa en ny tjänst"
+  IDS_TOOLTIP_DELETE "Tar bort en exiterande tjänst"
+  IDS_TOOLTIP_START "Starta tjänest"
+  IDS_TOOLTIP_STOP "Stoppa tjänst"
+  IDS_TOOLTIP_PAUSE "Pausa tjänst"
+  IDS_TOOLTIP_RESTART "Starta om tjänest"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_PROGRESS_INFO_START  "ReactOS försöker att starta följande tjänst"
+  IDS_PROGRESS_INFO_STOP   "ReactOS försöker att stoppa följande tjänst"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS försöker att pausa följande tjänst"
+  IDS_PROGRESS_INFO_RESUME "ReactOS försöker att fortsätta följende tjänst"
+  IDS_CREATE_SUCCESS "Tjänsten blev skapad"
+  IDS_DELETE_SUCCESS "Tjänsten togs bort"
+  IDS_CREATE_REQ "Fält markerade med en\nasterisk är obligatoriska"
+  IDS_DELETE_STOP "Du måste manuellt stoppa tjänsten före den kan raderas!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTE: The option name includes the equal sign.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXPORT       " Exportera nuvarende lista till en fil."
+  IDS_HINT_EXIT         " Avsluta programmet."
+
+  IDS_HINT_CONNECT      " Kontrollera en annan dator."
+  IDS_HINT_START        " Starta valda tjänster."
+  IDS_HINT_STOP         " Stoppa valda tjänster."
+  IDS_HINT_PAUSE        " Pausa valda tjänster."
+  IDS_HINT_RESUME       " Fortsätt valda tjänster."
+  IDS_HINT_RESTART      " Stoppa och starta valda tjänster."
+  IDS_HINT_REFRESH      " Uppdatera tjänstelistan."
+  IDS_HINT_EDIT         " Editera egenskaperna för den valda tjänsten."
+  IDS_HINT_CREATE       " Skapa en ny tjänst."
+  IDS_HINT_DELETE       " Radera valda tjänster."
+  IDS_HINT_PROP         " Öppna egenskaperna för nuvarande val."
+
+  IDS_HINT_LARGE        " Visa objekt med store ikoner."
+  IDS_HINT_SMALL        " Visa objekt med mindre ikoner."
+  IDS_HINT_LIST         " Visa objekt i en liste."
+  IDS_HINT_DETAILS      " Visa information om varje objekt i ett fönster."
+  IDS_HINT_CUST         " Anpassa vy."
+
+  IDS_HINT_HELP         " Visa hjälpfönstret."
+  IDS_HINT_ABOUT        " Om ReactOS tjänster."
+
+  IDS_HINT_SYS_RESTORE  " Återställ fönstret till normal storlek."
+  IDS_HINT_SYS_MOVE     " Flytta detta fönstret."
+  IDS_HINT_SYS_SIZE     " Ändra storleken på dette fönstret."
+  IDS_HINT_SYS_MINIMIZE " Minimera dette fönstret till en ikon."
+  IDS_HINT_SYS_MAXIMIZE " Maximera dette fönstret till fullskärm."
+  IDS_HINT_SYS_CLOSE    " Stäng detta fönstret."
+END
+
+/* Application title */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME "ReactOS tjänster"
+END

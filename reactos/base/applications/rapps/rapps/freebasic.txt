@@ -1,0 +1,35 @@
+﻿; UTF-8
+
+[Section]
+Name = FreeBASIC
+Version = 0.24.0
+Licence = GPL/LGPL
+Description = Open Source BASIC Compiler. The BASIC syntax is compatible to QBASIC.
+Size = 8.65MB
+Category = 7
+URLSite = http://www.freebasic.net/
+URLDownload = http://garr.dl.sourceforge.net/project/fbc/Binaries%20-%20Windows/FreeBASIC-0.24.0-win32.exe
+CDPath = none
+
+[Section.0407]
+Description = Open Source BASIC Compiler. Die BASIC Syntax ist kompatibel zu QBASIC.
+
+[Section.040a]
+Description = Compilador BASIC de código abierto. El lenguaje BASIC es compatible con QBASIC.
+
+[Section.040c]
+Description = Compilateur BASIC open source. La syntaxe du BASIC est compatible avec le QBASIC.
+Size = 8,65 Mo
+
+[Section.0410]
+Description = Compilatore BASIC open source. La sintassi del BASIC è compatibile con il QBASIC.
+
+[Section.0415]
+Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC.
+
+[Section.0419]
+Description = Compilator (open-source) BASIC. Sintaxa BASIC este compatibilă cu QBASIC.
+Size = 8,65 Mo
+
+[Section.0422]
+Description = Відкритий компілятор BASIC. Синтаксис сумісний з QBASIC.

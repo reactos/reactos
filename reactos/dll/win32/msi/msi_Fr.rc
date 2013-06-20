@@ -1,0 +1,40 @@
+/*
+ * French resources for MSI
+ *
+ * Copyright 2005 Jonathan Ernst
+ * Copyright 2009-2010 Frédéric Delanoy
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "windef.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+	4 "Le paquet d'installation spécifié n'a pu être ouvert. Veuillez vérifier le chemin du fichier et réessayer."
+	5 "Le chemin %s est introuvable"
+	9 "insérez le disque %s"
+	10 "Programme d'installation Windows %s\n\nUsage :\nmsiexec commande {paramètre obligatoire} [paramètre optionnel]\n\nInstaller un produit :\n\t/i {paquet|code_produit} [propriété]\n\t/package {paquet|code_produit} [propriété]\n\t/a paquet [propriété]\nRéparer une installation :\n\t/f[p|o|e|d|c|a|u|m|s|v] {paquet|code_produit}\nDésinstaller un produit :\n\t/uninstall {paquet|code_produit} [propriété]\n\t/x {paquet|code_produit} [propriété]\nPublier un produit :\n\t/j[u|m] paquet [/t transformation] [/g id_langue]\nAppliquer un patch :\n\t/p paquet_patch [propriété]\n\t/p paquet_patch /a paquet [propriété]\nModificateurs de journalisation et d'interface utilisateur pour les commandes ci-dessus :\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] fichier_journal\n\t/q{|n|b|r|f|n+|b+|b-}\nEnregistrer le service MSI :\n\t/y\nAnnuler l'enregistrement du service MSI :\n\t/z\nAfficher cette aide :\n\t/help\n\t/?\n"
+	11 "saisissez le nom du dossier contenant %s"
+	12 "source d'installation pour la fonctionnalité manquante"
+	13 "lecteur réseau pour la fonctionnalité manquante"
+	14 "fonctionnalité depuis :"
+	15 "sélectionnez le dossier contenant %s"
+}

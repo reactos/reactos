@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"Digital Rights Management\0"
+#define REACTOS_STR_INTERNAL_NAME	"drmk\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"drmk.sys\0"
+#include <reactos/version.rc>

@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+<OpenGLAPI>
+<category name="GL_EXT_separate_shader_objects" number="377">
+    <!-- Alias of CURRENT_PROGRAM -->
+    <enum name="ACTIVE_PROGRAM_EXT"               value="0x8B8D"/>
+
+    <function name="UseShaderProgramEXT"  offset="assign">
+        <param name="type" type="GLenum"/>
+	<param name="program" type="GLuint"/>
+    </function>
+
+    <function name="ActiveProgramEXT"  offset="assign">
+	<param name="program" type="GLuint"/>
+    </function>
+
+    <function name="CreateShaderProgramEXT"  offset="assign">
+        <param name="type" type="GLenum"/>
+        <param name="string" type="const GLchar *"/>
+        <return type="GLuint"/>
+    </function>
+</category>
+</OpenGLAPI>

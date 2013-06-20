@@ -1,0 +1,714 @@
+/*
+ * Copyright 2008 Jacek Caban for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "ocidl.idl";
+import "activscp.idl";
+/* import "dbgprop.idl"; */
+
+interface IDebugDocumentContext;
+interface IRemoteDebugApplication;
+interface IEnumDebugCodeContexts;
+
+/* FIXME: */
+interface IEnumDebugStackFrames;
+interface IDebugStackFrame;
+interface IApplicationDebugger;
+interface IEnumRemoteDebugApplicationThreads;
+interface IDebugApplicationNode;
+interface IEnumDebugExpressionContexts;
+interface IDebugApplicationThread;
+interface IDebugSyncOperation;
+interface IDebugAsyncOperation;
+interface IDebugStackFrameSniffer;
+interface IDebugThreadCall32;
+interface IActiveScriptErrorDebug;
+interface IProvideExpressionContexts;
+
+typedef enum tagBREAKPOINT_STATE {
+    BREAKPOINT_DELETED,
+    BREAKPOINT_DISABLED,
+    BREAKPOINT_ENABLED
+} BREAKPOINT_STATE;
+
+typedef DWORD APPBREAKFLAGS;
+
+typedef enum tagBREAKREASON {
+    BREAKREASON_STEP,
+    BREAKREASON_BREAKPOINT,
+    BREAKREASON_DEBUGGER_BLOCK,
+    BREAKREASON_HOST_INITIATED,
+    BREAKREASON_LANGUAGE_INITIATED,
+    BREAKREASON_DEBUGGER_HALT,
+    BREAKREASON_ERROR,
+    BREAKREASON_JIT
+} BREAKREASON;
+
+typedef enum tagBREAKRESUME_ACTION {
+    BREAKRESUMEACTION_ABORT,
+    BREAKRESUMEACTION_CONTINUE,
+    BREAKRESUMEACTION_STEP_INTO,
+    BREAKRESUMEACTION_STEP_OVER,
+    BREAKRESUMEACTION_STEP_OUT,
+    BREAKRESUMEACTION_IGNORE
+} BREAKRESUMEACTION;
+
+typedef enum tagDOCUMENTNAMETYPE {
+    DOCUMENTNAMETYPE_APPNODE,
+    DOCUMENTNAMETYPE_TITLE,
+    DOCUMENTNAMETYPE_FILE_TAIL,
+    DOCUMENTNAMETYPE_URL
+} DOCUMENTNAMETYPE;
+
+typedef enum tagERRORRESUMEACTION {
+    ERRORRESUMEACTION_ReexecuteErrorStatement,
+    ERRORRESUMEACTION_AbortCallAndReturnErrorToCaller,
+    ERRORRESUMEACTION_SkipErrorStatement,
+} ERRORRESUMEACTION;
+
+typedef WORD SOURCE_TEXT_ATTR;
+
+#ifdef INTEROPLIB
+enum enum_SOURCE_TEXT_ATTR
+{
+    SOURCETEXT_ATTR_KEYWORD        = 0x01,
+    SOURCETEXT_ATTR_COMMENT        = 0x02,
+    SOURCETEXT_ATTR_NONSOURCE      = 0x04,
+    SOURCETEXT_ATTR_OPERATOR       = 0x08,
+    SOURCETEXT_ATTR_NUMBER         = 0x10,
+    SOURCETEXT_ATTR_STRING         = 0x20,
+    SOURCETEXT_ATTR_FUNCTION_START = 0x40
+};
+#endif
+
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_KEYWORD         = 0x01;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_COMMENT         = 0x02;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_NONSOURCE       = 0x04;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_OPERATOR        = 0x08;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_NUMBER          = 0x10;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_STRING          = 0x20;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_FUNCTION_START  = 0x40;
+
+/************************************************************
+ *      interface IActiveScriptDebug32
+ */
+[
+    object,
+    uuid(51973c10-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IActiveScriptDebug32 : IUnknown
+{
+    HRESULT GetScriptTextAttributes(
+            [in, size_is(uNumCodeChars)] LPCOLESTR pstrCode,
+            [in] ULONG uNumCodeChars,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORD dwFlags,
+            [in, out, size_is(uNumCodeChars)] SOURCE_TEXT_ATTR *pattr);
+
+    HRESULT GetScriptletTextAttributes(
+            [in, size_is(uNumCodeChars)] LPCOLESTR pstrCode,
+            [in] ULONG uNumCodeChars,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORD dwFlags,
+            [in, out, size_is(uNumCodeChars)] SOURCE_TEXT_ATTR *pattr);
+
+    HRESULT EnumCodeContextsOfPosition(
+            [in] DWORD dwSourceContext,
+            [in] ULONG uCharacterOffset,
+            [in] ULONG uNumChars,
+            [out] IEnumDebugCodeContexts **ppescc);
+}
+
+[
+    object,
+    uuid(bc437e23-f5b8-47f4-bb79-7d1ce5483b86),
+    pointer_default(unique)
+]
+interface IActiveScriptDebug64 : IUnknown
+{
+    HRESULT GetScriptTextAttributes(
+            [in, size_is(uNumCodeChars)] LPCOLESTR pstrCode,
+            [in] ULONG uNumCodeChars,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORD dwFlags,
+            [in, out, size_is(uNumCodeChars)] SOURCE_TEXT_ATTR *pattr);
+
+    HRESULT GetScriptletTextAttributes(
+            [in, size_is(uNumCodeChars)] LPCOLESTR pstrCode,
+            [in] ULONG uNumCodeChars,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORD dwFlags,
+            [in, out, size_is(uNumCodeChars)] SOURCE_TEXT_ATTR *pattr);
+
+    HRESULT EnumCodeContextsOfPosition(
+           [in] DWORDLONG dwSourceContext,
+           [in] ULONG uCharacterOffset,
+           [in] ULONG uNumChars,
+           [out] IEnumDebugCodeContexts **ppescc);
+}
+
+/************************************************************
+ *      interface IDebugDocumentInfo
+ */
+[
+    object,
+    uuid(51973c1f-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IDebugDocumentInfo : IUnknown
+{
+    HRESULT GetName(
+            [in]  DOCUMENTNAMETYPE dnt,
+            [out] BSTR *pbstrName);
+
+    HRESULT GetDocumentClassId(
+            [out] CLSID *pclsidDocument);
+}
+
+/************************************************************
+ *      interface IDebugDocument
+ */
+[
+    object,
+    uuid(51973c21-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IDebugDocument : IDebugDocumentInfo
+{
+}
+
+/************************************************************
+ *      interface IDebugCodeContext
+ */
+[
+    object,
+    uuid(51973c13-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IDebugCodeContext : IUnknown
+{
+    HRESULT GetDocumentContext(
+            [out] IDebugDocumentContext **ppsc);
+
+    HRESULT SetBreakPoint(
+            [in]  BREAKPOINT_STATE bps);
+}
+
+/************************************************************
+ *      interface IEnumDebugCodeContexts
+ */
+[
+    object,
+    uuid(51973c1d-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IEnumDebugCodeContexts : IUnknown
+{
+    HRESULT Next(
+            [in]  ULONG celt,
+            [out] IDebugCodeContext **pscc,
+            [out] ULONG *pceltFetched);
+
+    HRESULT Skip(
+            [in]  ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+            [out] IEnumDebugCodeContexts **ppescc);
+}
+
+/************************************************************
+ *      interface IDebugDocumentContext
+ */
+[
+    object,
+    uuid(51973c28-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IDebugDocumentContext : IUnknown
+{
+    HRESULT GetDocument(
+            [out] IDebugDocument **ppsd);
+
+    HRESULT EnumCodeContexts(
+            [out] IEnumDebugCodeContexts **ppescc);
+}
+
+/************************************************************
+ *      interface IRemoteDebugApplicationThread
+ */
+[
+    object,
+    uuid(51973c37-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IRemoteDebugApplicationThread : IUnknown
+{
+    HRESULT GetSystemThreadId(
+            [out] DWORD *dwThreadId);
+
+    HRESULT GetApplication(
+            [out] IRemoteDebugApplication **pprda);
+
+    HRESULT EnumStackFrames(
+            [out] IEnumDebugStackFrames **ppedsf);
+
+    HRESULT GetDescription(
+            [out] BSTR *pbstrDescription,
+            [out] BSTR *pbstrState);
+
+    HRESULT SetNextStatement(
+            [in]  IDebugStackFrame *pStackFrame,
+            [in]  IDebugCodeContext *pCodeContext);
+
+    HRESULT GetState(
+            [out] DWORD *pState);
+
+    HRESULT Suspend(
+            [out] DWORD *pdwCount);
+
+    HRESULT Resume(
+            [out] DWORD *pdwCount);
+
+    HRESULT GetSuspendCount(
+            [out] DWORD *pdwCount);
+}
+
+/************************************************************
+ *      interface IRemoteDebugApplication
+ */
+[
+    object,
+    uuid(51973c30-cb0c-11d0-b5c9-00a0244Aae7a),
+    pointer_default(unique)
+]
+interface IRemoteDebugApplication : IUnknown
+{
+    HRESULT ResumeFromBreakPoint(
+            [in]  IRemoteDebugApplicationThread *prptFocus,
+            [in]  BREAKRESUMEACTION bra,
+            [in]  ERRORRESUMEACTION era);
+
+    HRESULT CauseBreak();
+
+    HRESULT ConnectDebugger(
+            [in]  IApplicationDebugger *pad);
+
+    HRESULT DisconnectDebugger();
+
+    HRESULT GetDebugger(
+            [out] IApplicationDebugger **pad);
+
+    HRESULT CreateInstanceAtApplication(
+            [in]  REFCLSID rclsid,
+            [in]  IUnknown *pUnkOuter,
+            [in]  DWORD dwClsContext,
+            [in]  REFIID riid,
+            [out, iid_is(riid)] IUnknown **ppvObject);
+
+    HRESULT QueryAlive();
+
+    HRESULT EnumThreads(
+            [out] IEnumRemoteDebugApplicationThreads **pperdat);
+
+    HRESULT GetName(
+            [out] BSTR *pbstrName);
+
+    HRESULT GetRootNode(
+            [out] IDebugApplicationNode **ppdanRoot);
+
+    HRESULT EnumGlobalExpressionContexts(
+            [out] IEnumDebugExpressionContexts **ppedec);
+}
+
+/************************************************************
+ *      interface IDebugApplication32
+ */
+[
+    object,
+    uuid(51973c32-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique),
+    local
+]
+interface IDebugApplication32 : IRemoteDebugApplication
+{
+    HRESULT SetName(
+            [in] LPCOLESTR pstrName);
+
+    HRESULT StepOutComplete();
+
+    HRESULT DebugOutput(
+            [in] LPCOLESTR pstr);
+
+    HRESULT StartDebugSession();
+
+    HRESULT HandleBreakPoint(
+            [in]  BREAKREASON br,
+            [out] BREAKRESUMEACTION *pbra);
+
+    HRESULT Close();
+
+    HRESULT GetBreakFlags(
+            [out] APPBREAKFLAGS *pabf,
+            [out] IRemoteDebugApplicationThread **pprdatSteppingThread);
+
+    HRESULT GetCurrentThread(
+            [out] IDebugApplicationThread **pat);
+
+    HRESULT CreateAsyncDebugOperation(
+            [in]  IDebugSyncOperation *psdo,
+            [out] IDebugAsyncOperation **ppado);
+
+    HRESULT AddStackFrameSniffer(
+            [in]  IDebugStackFrameSniffer *pdsfs,
+            [out] DWORD *pdwCookie);
+
+    HRESULT RemoveStackFrameSniffer(
+            [in]  DWORD dwCookie);
+
+    HRESULT QueryCurrentThreadIsDebuggerThread();
+
+    HRESULT SynchronousCallInDebuggerThread(
+            [in]  IDebugThreadCall32 *pptc,
+            [in]  DWORD dwParam1,
+            [in]  DWORD dwParam2,
+            [in]  DWORD dwParam3);
+
+    HRESULT CreateApplicationNode(
+            [out] IDebugApplicationNode **ppdanNew);
+
+    HRESULT FireDebuggerEvent(
+            [in]  REFGUID riid,
+            [in]  IUnknown *punk);
+
+    HRESULT HandleRuntimeError(
+            [in]  IActiveScriptErrorDebug *pErrorDebug,
+            [in]  IActiveScriptSite *pScriptSite,
+            [out] BREAKRESUMEACTION *pbra,
+            [out] ERRORRESUMEACTION *perra,
+            [out] BOOL *pfCallOnScriptError);
+
+    BOOL FCanJitDebug();
+
+    BOOL FIsAutoJitDebugEnabled();
+
+    HRESULT AddGlobalExpressionContextProvider(
+            [in]  IProvideExpressionContexts *pdsfs,
+            [out] DWORD *pdwCookie);
+
+    HRESULT RemoveGlobalExpressionContextProvider(
+            [in]  DWORD dwCookie);
+}
+
+/************************************************************
+ *      interface IDebugApplication64
+ */
+[
+    object,
+    uuid(4dedc754-04c7-4f10-9e60-16a390fe6e62),
+    pointer_default(unique),
+    local
+]
+interface IDebugApplication64 : IRemoteDebugApplication
+{
+    HRESULT SetName(
+            [in] LPCOLESTR pstrName);
+
+    HRESULT StepOutComplete();
+
+    HRESULT DebugOutput(
+            [in] LPCOLESTR pstr);
+
+    HRESULT StartDebugSession();
+
+    HRESULT HandleBreakPoint(
+            [in]  BREAKREASON br,
+            [out] BREAKRESUMEACTION *pbra);
+
+    HRESULT Close();
+
+    HRESULT GetBreakFlags(
+            [out] APPBREAKFLAGS *pabf,
+            [out] IRemoteDebugApplicationThread **pprdatSteppingThread);
+
+    HRESULT GetCurrentThread(
+            [out] IDebugApplicationThread **pat);
+
+    HRESULT CreateAsyncDebugOperation(
+            [in]  IDebugSyncOperation *psdo,
+            [out] IDebugAsyncOperation **ppado);
+
+    HRESULT AddStackFrameSniffer(
+            [in]  IDebugStackFrameSniffer *pdsfs,
+            [out] DWORD *pdwCookie);
+
+    HRESULT RemoveStackFrameSniffer(
+            [in]  DWORD dwCookie);
+
+    HRESULT QueryCurrentThreadIsDebuggerThread();
+
+    HRESULT SynchronousCallInDebuggerThread(
+            [in]  IDebugThreadCall32 *pptc,
+            [in]  DWORDLONG dwParam1,
+            [in]  DWORDLONG dwParam2,
+            [in]  DWORDLONG dwParam3);
+
+    HRESULT CreateApplicationNode(
+            [out] IDebugApplicationNode **ppdanNew);
+
+    HRESULT FireDebuggerEvent(
+            [in]  REFGUID riid,
+            [in]  IUnknown *punk);
+
+    HRESULT HandleRuntimeError(
+            [in]  IActiveScriptErrorDebug *pErrorDebug,
+            [in]  IActiveScriptSite *pScriptSite,
+            [out] BREAKRESUMEACTION *pbra,
+            [out] ERRORRESUMEACTION *perra,
+            [out] BOOL *pfCallOnScriptError);
+
+    BOOL FCanJitDebug();
+
+    BOOL FIsAutoJitDebugEnabled();
+
+    HRESULT AddGlobalExpressionContextProvider(
+            [in]  IProvideExpressionContexts *pdsfs,
+            [out] DWORDLONG *pdwCookie);
+
+    HRESULT RemoveGlobalExpressionContextProvider(
+            [in]  DWORDLONG dwCookie);
+}
+
+/************************************************************
+ *      interface IActiveScriptSiteDebug32
+ */
+[
+    object,
+    uuid(51973c11-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique),
+    local
+]
+interface IActiveScriptSiteDebug32 : IUnknown
+{
+    HRESULT GetDocumentContextFromPosition(
+            [in]  DWORD dwSourceContext,
+            [in]  ULONG uCharacterOffset,
+            [in]  ULONG uNumChars,
+            [out] IDebugDocumentContext **ppsc);
+
+    HRESULT GetApplication(
+            [out] IDebugApplication32 **ppda);
+
+    HRESULT GetRootApplicationNode(
+            [out] IDebugApplicationNode **ppdanRoot);
+
+    HRESULT OnScriptErrorDebug(
+            [in]  IActiveScriptErrorDebug *pErrorDebug,
+            [out] BOOL *pfEnterDebugger,
+            [out] BOOL *pfCallOnScriptErrorWhenContinuing);
+}
+
+/************************************************************
+ *      interface IActiveScriptSiteDebug64
+ */
+[
+    object,
+    uuid(d6b96b0a-7463-402c-92ac-89984226942f),
+    pointer_default(unique),
+    local
+]
+interface IActiveScriptSiteDebug64 : IUnknown
+{
+    HRESULT GetDocumentContextFromPosition(
+            [in]  DWORDLONG dwSourceContext,
+            [in]  ULONG uCharacterOffset,
+            [in]  ULONG uNumChars,
+            [out] IDebugDocumentContext **ppsc);
+
+    HRESULT GetApplication(
+            [out] IDebugApplication64 **ppda);
+
+    HRESULT GetRootApplicationNode(
+            [out] IDebugApplicationNode **ppdanRoot);
+
+    HRESULT OnScriptErrorDebug(
+            [in]  IActiveScriptErrorDebug *pErrorDebug,
+            [out] BOOL *pfEnterDebugger,
+            [out] BOOL *pfCallOnScriptErrorWhenContinuing);
+}
+
+[
+    object,
+    uuid(51973C17-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IDebugStackFrame : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C1e-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IEnumDebugStackFrames : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C2a-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IApplicationDebugger : IUnknown
+{
+    /* FIXME: fill me! */
+};
+
+[
+    object,
+    uuid(51973C3c-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IEnumRemoteDebugApplicationThreads : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C34-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IDebugApplicationNode : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C40-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IEnumDebugExpressionContexts : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973c38-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique),
+    local
+]
+interface IDebugApplicationThread : IRemoteDebugApplicationThread
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C1a-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique),
+    local
+]
+interface IDebugSyncOperation : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973c1b-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique),
+    local
+]
+interface IDebugAsyncOperation : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973c18-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IDebugStackFrameSniffer : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C36-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique),
+    local
+]
+interface IDebugThreadCall32 : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C12-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IActiveScriptErrorDebug : IActiveScriptError
+{
+    /* FIXME: fill me! */
+}
+
+[
+    object,
+    uuid(51973C41-CB0C-11d0-B5C9-00A0244A0E7A),
+    pointer_default(unique)
+]
+interface IProvideExpressionContexts : IUnknown
+{
+    /* FIXME: fill me! */
+}
+
+cpp_quote("#ifndef DISABLE_ACTIVDBG_INTERFACE_WRAPPERS")
+cpp_quote("#ifdef _WIN64")
+
+cpp_quote("#define IActiveScriptDebug IActiveScriptDebug64")
+cpp_quote("#define IID_IActiveScriptDebug IID_IActiveScriptDebug64")
+
+cpp_quote("#define IActiveScriptSiteDebug IActiveScriptSiteDebug64")
+cpp_quote("#define IID_IActiveScriptSiteDebug IID_IActiveScriptSiteDebug64")
+
+cpp_quote("#define IDebugApplication IDebugApplication64")
+cpp_quote("#define IID_IDebugApplication IID_IDebugApplication64")
+
+cpp_quote("#else")
+
+cpp_quote("#define IActiveScriptDebug IActiveScriptDebug32")
+cpp_quote("#define IID_IActiveScriptDebug IID_IActiveScriptDebug32")
+
+cpp_quote("#define IActiveScriptSiteDebug IActiveScriptSiteDebug32")
+cpp_quote("#define IID_IActiveScriptSiteDebug IID_IActiveScriptSiteDebug32")
+
+cpp_quote("#define IDebugApplication IDebugApplication32")
+cpp_quote("#define IID_IDebugApplication IID_IDebugApplication32")
+
+cpp_quote("#endif")
+cpp_quote("#endif")

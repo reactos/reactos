@@ -1,0 +1,7 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+BEGIN
+
+STRING_USERINIT_FAIL, "Userinit non ha potuto avviare l'ambiente(shell)!\n"
+
+END

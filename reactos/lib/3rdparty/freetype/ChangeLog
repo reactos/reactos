@@ -1,0 +1,1560 @@
+2010-11-28  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.4 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-4'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.4
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.3/2.4.4/, s/243/244/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 4.
+
+	* builds/unix/configure.raw (version_info): Set to 12:2:6.
+
+2010-11-28  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[ftsmooth]: Minor code simplification.
+
+	* src/smooth/ftgrays (gray_render_cubic): Do only one comparison
+	instead of two.
+
+2010-11-26  Johnson Y. Yan  <yinsen_yan@foxitsoftware.com>
+
+	[truetype] Better multi-threading support.
+
+	* src/truetype/ttinterp.c (TT_Load_Context): Reset glyph zone
+	references.
+
+2010-11-23  John Tytgat  <John.Tytgat@esko.com>
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstring): Expand
+	start_point, check_points, add_point, add_point1, close_contour
+	macros.
+	Remove add_contour macro.
+	Return error code from t1_builder_start_point and
+	t1_builder_check_points when there was one (instead of returning 0).
+
+2010-11-22  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Identify the tricky fonts by cvt/fpgm/prep checksums.
+	Some Latin TrueType fonts are still expected to be unhinted.
+	Fix Savannah bug #31645.
+
+	* src/truetype/ttobjs.c (tt_check_trickyness): Divided to...
+	(tt_check_trickyness_family): this checking family name, and
+	(tt_check_trickyness_sfnt_ids): this checking cvt/fpgm/prep.
+	(tt_get_sfnt_checksum): Function to retrieve the sfnt checksum
+	for specified subtable even if cleared by lazy PDF generators.
+	(tt_synth_sfnt_checksum): Function to calculate the checksum.
+
+2010-11-18  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix `loca' handling for inconsistent number of glyphs.
+	Reported by Johnson Y. Yan <yinsen_yan@foxitsoftware.com>.
+
+	* src/truetype/ttpload.c (tt_face_load_loca): While sanitizing,
+	handle case where `loca' is the last table in the font.
+
+2010-11-18  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Ignore all errors while loading `OS/2' table.
+	Suggested by Johnson Y. Yan <yinsen_yan@foxitsoftware.com>.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Do it.
+
+2010-11-18  Johnson Y. Yan  <yinsen_yan@foxitsoftware.com>
+
+	[type1] Fix matrix normalization.
+
+	* src/type1/t1load.c (parse_font_matrix): Handle sign of scaling
+	factor.
+
+2010-11-18  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Improve guard against malformed data.
+	Based on a patch submitted by Johnson Y. Yan
+	<yinsen_yan@foxitsoftware.com>
+
+	* src/type1/t1load.c (read_binary_data): Check `size'.
+
+2010-11-17  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] While tracing, output table checksums also.
+
+	* src/sfnt/ttload.c (tt_face_load_font_dir): Do it.
+
+2010-11-04  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[UVS] Fix find_variant_selector_charmap(), Savannah bug #31545.
+
+	Since 2010-07-04, find_variant_selector_charmap() returns
+	the first cmap subtable always under rogue-compatible
+	configuration, it causes NULL pointer dereference and
+	make UVS-related functions crashed.
+
+	* src/base/ftobjs.c (Fix find_variant_selector_charmap):
+	Returns UVS cmap correctly.
+
+2010-11-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[ftsmooth] Improve rendering.
+
+	* src/smooth/ftsmooth.c (gray_render_conic): Since version 2.4.3,
+	cubic deviations have been estimated _after_ UPSCALE, whereas
+	conic ones have been evaluated _before_ UPSCALE, which produces
+	inferior rendering results.  Fix this.
+	Partially undo change from 2010-10-15 by using ONE_PIXEL/4; this has
+	been tested with demo images sent to the mailing list.  See
+
+	  http://lists.gnu.org/archive/html/freetype-devel/2010-10/msg00055.html
+
+	and later mails in this thread.
+
+2010-10-28  Werner Lemberg  <wl@gnu.org>
+
+	[ftraster] Minor fixes.
+
+	Reported by Tom Bishop <wenlin@wenlin.com>.
+
+	* src/raster/ftraster.c (ULong): Remove unused typedef.
+	(TWorker): Remove unused variable `precision_mask'.
+
+2010-10-28  Werner Lemberg  <wl@gnu.org>
+
+	[ftraster] Fix rendering.
+
+	Problem reported by Tom Bishop <wenlin@wenlin.com>; see
+	thread starting with
+
+	  http://lists.gnu.org/archive/html/freetype/2010-10/msg00049.html
+
+	* src/raster/ftraster.c (Line_Up): Replace FMulDiv with SMulDiv
+	since the involved multiplication exceeds 32 bits.
+
+2010-10-25  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Revert a change of `_idx' type in FTC_CACHE_LOOKUP_CMP().
+
+	* src/cache/ftccache.h (FTC_CACHE_LOOKUP_CMP): Revert
+	the type of `_idx' from FT_PtrDist (by previous change)
+	to original FT_UFast, to match with FT_CacheRec.
+
+2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Change the hash types to FT_PtrDist.
+
+	On LLP64 platforms (e.g. Win64), FT_ULong (32-bit)
+	variables are inappropriate to calculate hash values
+	from the memory address (64-bit).  The hash variables  
+	are extended from FT_ULong to FT_PtrDist and new
+	hashing macro functions are introduced.  The hash
+	values on 16-bit memory platforms are changed, but
+	ILP32 and LP64 are not changed.  The hash value in
+	the cache subsystem is not reverted to the memory
+	address, so using signed type FT_PtrDist is safe.
+
+	* src/cache/ftccache.h (_FTC_FACE_ID_HASH): New hash
+	function to replace FTC_FACE_ID_HASH() for portability.
+	* src/cache/ftcmanag.h (FTC_SCALER_HASH): Replace 
+	FTC_FACE_ID_HASH() by _FTC_FACE_ID_HASH().
+	* src/cache/ftccmap.c (FTC_CMAP_HASH): Ditto.
+
+	* src/cache/ftccache.h (FTC_NodeRec): The type of the
+	member `hash' is changed from FT_UInt32 to FT_PtrDist.
+
+	* src/cache/ftccache.h (FTC_Cache_Lookup): The type of the
+	argument `hash' is changed from FT_UInt32 to FT_PtrDist.
+	(FTC_Cache_NewNode): Ditto.
+	* src/cache/ftccache.c (ftc_cache_add): Ditto.
+	(FTC_Cache_Lookup): Ditto.  (FTC_Cache_NewNode): Ditto.
+	* src/cache/ftcglyph.h (FTC_GCache_Lookup): Ditto.
+	* src/cache/ftcglyph.c (FTC_GCache_Lookup): Ditto.
+
+	* src/cache/ftcbasic.c (FTC_ImageCache_Lookup): The type
+	of the internal variable `hash' is changed to FT_PtrDist
+	from FT_UInt32.  (FTC_ImageCache_LookupScaler): Ditto.
+	(FTC_SBitCache_Lookup): Ditto.
+	(FTC_SBitCache_LookupScaler): Ditto.
+	* src/cache/ftccmap.c (FTC_CMapCache_Lookup): Ditto.
+	* src/cache/ftccache.h (FTC_CACHE_LOOKUP_CMP): Ditto.
+	Also the type of the internal variable `_idx' is changed to
+	FT_PtrDist from FT_UFast for better pointer calculation.
+	
+2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cache] Hide internal macros incompatible with LLP64.
+
+	FT_POINTER_TO_ULONG(), FTC_FACE_ID_HASH() and
+	FTC_IMAGE_TYPE_HASH() are enclosed by
+	FT_CONFIG_OPTION_OLD_INTERNALS and hidden from
+	normal clients.
+
+	For the history of these macros, see the investigation:
+	http://lists.gnu.org/archive/html/freetype/2010-10/msg00022.html
+
+2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Change the type of FT_MEM_VAL() from FT_ULong to FT_PtrDist.
+
+	On LLP64 platforms (e.g. Win64), unsigned long (32-bit)
+	cannot cover the memory address (64-bit).  FT_MEM_VAL() is
+	used for hashing only and not dereferred, so using signed
+	type FT_PtrDist is safe.
+
+	* src/base/ftdbgmem.c (FT_MEM_VAL): Change the type of the
+	return value from FT_ULong to FT_PtrDist.
+	(ft_mem_table_resize): The type of hash is changed to
+	FT_PtrDist.  (ft_mem_table_get_nodep): Ditto.
+
+2010-10-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Replace "%lx" for memory address by "%p", LLP64 platforms.
+
+	On LLP64 platforms (e.g. Win64), long (32-bit) cannot cover
+	the memory address (64-bit).  Also the casts from the pointer
+	type to long int should be removed to preserve the address
+	correctly.
+
+	* src/raster/ftraster.c (New_Profile): Replace "%lx" by "%p".
+	(End_Profile) Ditto.
+	* src/truetype/ttinterp.c (Init_Context): Ditto.
+
+2010-10-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Fix thinko in spline flattening.
+
+	FT_MAX_CURVE_DEVIATION is dependent on the value of ONE_PIXEL.
+
+	* src/smooth/ftgrays.c (FT_MAX_CURVE_DEVIATION): Remove it and
+	replace it everywhere with ONE_PIXEL/8.
+
+2010-10-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[raccess] Skip unrequired resource access rules by Darwin VFS.
+
+	When a resource fork access rule by Darwin VFS could open the
+	resource fork but no font is found in it, the rest of rules
+	by Darwin VFS are skipped.  It reduces the warnings of the
+	deprecated resource fork access method by recent Darwin kernel.
+	Fix MacPorts ticket #18859:
+		http://trac.macports.org/ticket/18859
+
+	* src/base/ftobjs.c (load_face_in_embedded_rfork):
+	When FT_Stream_New() returns FT_Err_Cannot_Open_Stream, it
+	means that the file is possible to be fopen()-ed but zero-sized.
+	Also there is a case that the resource fork is not zero-sized, 
+	but no supported font exists in it.  If a rule by Darwin VFS
+	falls into such cases, there is no need to try other Darwin VFS
+	rules anymore.  Such cases are marked by vfs_rfork_has_no_font.
+	If it is TRUE, the Darwin VFS rules are skipped.
+
+2010-10-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[raccess] Grouping resource access rules based on Darwin VFS.
+
+	MacOS X/Darwin kernel supports a few tricky methods to access
+	a resource fork via ANSI C or POSIX interface.  Current resource
+	fork accessor tries all possible methods to support all kernels.
+	But if a method could open a resource fork but no font is found,
+	there is no need to try other methods older than tested method. 
+	To determine whether the rule index is for Darwin VFS, a local
+	function ftrfork.c::raccess_rule_by_darwin_vfs() is introduced.
+	To use this function in ftobjs.c etc but it should be inlined,
+	it is exposed by ftbase.h.
+
+	* src/base/ftrfork.c (FT_RFork_Rule): New enum type to identify
+	the rules to access the resource fork.
+	(raccess_guess_rec): New structure to bind the rule function and
+	rule enum type.
+	(FT_Raccess_Guess): The list of the rule functions is replaced by
+	(raccess_guess_table): This.  This is exposed to be used by other
+	intra module functions.
+	(raccess_rule_by_darwin_vfs): A function to return a boolean
+	if the rule specified by the rule index is based on Darwin VFS.
+
+2010-10-13  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Prevent to open a FT_Stream for zero-sized file on non-Unix.
+
+	builds/unix/ftsystem.c prevents to open an useless stream from
+	zero-sized file and returns FT_Err_Cannot_Open_Stream, but the
+	stream drivers for ANSI C, Amiga and VMS return useless streams.
+	For cross-platform consistency, all stream drivers should act
+	same.
+
+	* src/base/ftsystem.c (FT_Stream_Open): If the size of the opened
+	file is zero, FT_Err_Cannot_Open_Stream is returned.
+	* builds/amiga/src/base/ftsystem.c (FT_Stream_Open): Ditto.
+	* src/vms/ftsystem.c (FT_Stream_Open): Ditto.
+
+2010-10-12  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #31310.
+
+	* src/truetype/ttgxvar.c (ft_var_readpackedpoints): Protect against
+	invalid `runcnt' values.
+
+2010-10-08  Chris Liddell  <chris.liddell@artifex.com>
+
+	Fix Savannah bug #31275.
+
+	* src/sfnt/ttpost.c: Include FT_INTERNAL_DEBUG_H.
+
+2010-10-06  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Improve error handling of `SHZ' bytecode instruction.
+	Problem reported by Chris Evans <scarybeasts@gmail.com>.
+
+	* src/truetype/ttinterp.c (Ins_SHZ): Check `last_point'.
+
+2010-10-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #31253.
+	Patch submitted by an anonymous reporter.
+
+	* configure: Use `awk' instead of `sed' to manipulate output of `ls
+	-id'.
+
+2010-10-03  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.3 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-3'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.3
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.2/2.4.3/, s/242/243/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 3.
+
+	* builds/unix/configure.raw (version_info): Set to 12:1:6.
+
+2010-10-03  Werner Lemberg  <wl@gnu.org>
+
+	Avoid `configure' issues with symbolic links.
+	Based on a patch from Alexander Stohr <Alexander.Stohr@gmx.de>.
+
+	* configure: Compare directories using `ls -id'.
+	Check existence of `reference' subdirectory before creating it.
+
+2010-10-02  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #31088 (sort of).
+
+	* src/sfnt/ttload.c (tt_face_load_maxp): Always allocate at least 64
+	function entries.
+
+2010-10-02  Werner Lemberg  <wl@gnu.org>
+
+	[smooth] Fix splitting of cubics for negative values.
+
+	Reported by Róbert Márki <gsmiko@gmail.com>; see
+	http://lists.gnu.org/archive/html/freetype/2010-09/msg00019.html.
+
+	* src/smooth/ftgrays.c (gray_render_cubic): Fix thinko.
+
+2010-10-01  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix Savannah bug #31040.
+
+	* src/truetype/ttinterp.c (free_buffer_in_size): Remove.
+	(TT_RunIns): Updated.
+
+2010-09-20  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[sfnt] Make error message filling NULL names less verbose.
+
+	* src/sfnt/ttpost.c (load_format_20): Showing 1 summary message
+	when we fill `post' names by NULL, instead of per-entry message.
+
+2010-09-20  Graham Asher  <graham.asher@btinternet.com>
+	    David Bevan  <david.bevan@pb.com>
+
+	[smooth] Fix and improve spline flattening.
+
+	This fixes the flattening of cubic, S-shaped curves and speeds up
+	the handling of both the conic and cubic arcs.
+
+	See the discussions on the freetype-devel mailing list in late
+	August and September 2010 for details.
+
+	* src/smooth/ftgrays.c (FT_MAX_CURVE_DEVIATION): New macro.
+	(TWorker): Remove `conic_level' and `cubic_level' elements.
+	(gray_render_conic): Simplify algorithm.
+	(gray_render_cubic): New algorithm; details are given in the code
+	comments.
+	(gray_convert_glyph): Remove heuristics.
+
+2010-09-19  Werner Lemberg  <wl@gnu.org>
+
+	Minor fixes.
+
+	* src/cff/cffload.c (cff_charset_compute_cids): `charset->sids[i]'
+	is `FT_UShort'.
+	(cff_index_access_element): Don't use additions in comparison.
+	* src/sfnt/ttpost.c (load_format_20): Make `post_limit' of type
+	`FT_Long'.
+	Don't use additions in comparison.
+	Improve tracing messages.
+	(load_format_25, load_post_names): Make `post_limit' of type
+	`FT_Long'.
+
+2010-09-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cff] Truncate the element length at the end of the stream.
+	See Savannah bug #30975.
+
+	* src/cff/cffload.c (cff_index_access_element): `off2', the offset
+	to the next element is truncated at the end of the stream to prevent
+	invalid I/O.  As `off1', the offset to the requested element has
+	been checked by FT_STREAM_SEEK(), `off2' should be checked
+	similarly.
+
+2010-09-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cff] Ignore CID > 0xFFFFU.
+	See Savannah bug #30975.
+
+	* src/cff/cffload.c (cff_charset_compute_cids): Ignore CID if
+	greater than 0xFFFFU.  CFF font spec does not mention maximum CID in
+	the font, but PostScript and PDF spec define that maximum CID is
+	0xFFFFU.
+
+2010-09-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cff] Make trace message in cff_charset_load() verbose.
+	See Savannah bug #30975.
+
+	* src/cff/cffload.c (cff_charset_load): Report the original `nleft'
+	and truncated `nleft'.
+
+2010-09-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cff] Correct `max_cid' from CID array length to max CID.
+	See Savannah bug #30975.
+
+	* src/cff/cffload.c (cff_charset_compute_cids): Don't increment
+	max_cid after detecting max CID.  The array CFF_Charset->cids is
+	allocated by max_cid + 1.
+	(cff_charset_cid_to_gindex): Permit CID is less than or equal to
+	CFF_Charset->max_cid.
+	* src/cff/cffobjs.c (cff_face_init): FT_Face->num_glyphs is
+	calculated as CFF_Charset->max_cid + 1.
+
+2010-09-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Sanitize the broken offsets in `loca'.
+	See Savannah bug #31040.
+
+	* src/truetype/ttpload.c (tt_face_get_location): If `pos1', the
+	offset to the requested entry in `glyf' exceeds the end of the
+	table, return offset=0, length=0.  If `pos2', the offset to the next
+	entry in `glyf' exceeds the end of the table, truncate the entry
+	length at the end of `glyf' table.
+
+2010-09-19  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[sfnt] Prevent overrunning in `post' table parser.
+	See Savannah bug #31040.
+
+	* src/sfnt/ttpost.c (load_post_names): Get the length of `post'
+	table and pass the limit of `post' table to load_format_20() and
+	load_format_25().
+	(load_format_20): Stop the parsing when we reached at the limit of
+	`post' table.  If more glyph names are required, they are filled by
+	NULL names.
+
+2010-09-17  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Don't duplicate size->twilight structure to be freed.
+	See Savannah bug #31040 for detail.
+
+	* src/truetype/ttinterp.c (free_buffer_in_size): Don't duplicate
+	FT_GlyphZoneRec size->twilight to be freed.  If duplicated,
+	FT_FREE() erases the duplicated pointers only and leave original
+	pointers.  They can cause the double-free crash when the burst
+	errors occur in TrueType interpreter and free_buffer_in_size() is
+	invoked repeatedly.
+
+2010-09-15  Werner Lemberg  <wl@gnu.org>
+
+	Make bytecode debugging with FontForge work again.
+
+	* src/truetype/ttinterp.c (TT_RunIns): Don't call
+	`free_buffer_in_size' in case of error if a debugger is active.
+
+2010-09-14  Werner Lemberg  <wl@gnu.org>
+
+	Improve tracing messages.
+
+	* src/truetype/ttinterp.c (TT_RunIns): Improve wording of tracing
+	message.
+	* src/truetype/ttobjs.c (tt_size_run_fpgm, tt_size_run_prep): Add
+	tracing message.
+	* src/truetype/ttgload.c (tt_loader_init): Add tracing message.
+	* src/cache/ftcsbits.c (ftc_snode_load): Emit tracing message if
+	glyph doesn't fit into a small bitmap container.
+
+2010-09-13  Werner Lemberg  <wl@gnu.org>
+
+	Fix minor issues reported by <muktha.narayan@wipro.com>.
+
+	* src/autofit/aflatin.c (af_latin_compute_stem_width): Remove
+	redundant conditional check.
+	* src/base/ftsynth.c (FT_GlyphSlot_Embolden): Ditto.
+	* src/cff/cffload.c (cff_encoding_load): Remove conditional check
+	which always evaluates to `true'.
+	* src/pshinter/pshalgo.c (ps_glyph_interpolate_strong_points):
+	Ditto.
+	* src/truetype/ttinterp.c (Ins_IUP): Ditto.
+	* src/cid/cidgload.c (cid_slot_load_glyph): Don't check for NULL if
+	value is already dereferenced.
+	* src/winfonts/winfnt.c (FNT_Load_Glyph): Fix check of `face'.
+
+2010-08-31  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Ignore the environmental setting of LIBTOOL.
+	Patch is suggested by Adrian Bunk, to prevent unexpected
+	reflection of environmental LIBTOOL.  See:
+	http://savannah.nongnu.org/patch/?7290
+
+	* builds/unix/unix-cc.in: LIBTOOL is unconditionally set to
+	$(FT_LIBTOOL_DIR)/libtool.  FT_LIBTOOL_DIR is set to $(BUILD_DIR)
+	by default.
+	* configure: When configured for the building out of source tee,
+	FT_LIBTOOL_DIR is set to $(OBJ_DIR).
+
+2010-08-31  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Decrease the trace level catching the interpreter error.
+
+	* src/truetype/ttinterp.c (TT_RunIns): Decrease the trace level
+	showing the error when the interpreter returns with an error,
+	from FT_TRACE7() to FT_TRACE1().
+
+2010-08-30  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Prevent bytecode reuse after the interpretation error.
+
+	* src/truetype/ttinterp.c (free_buffer_in_size): New function to
+	free the buffer allocated during the interpretation of this glyph.
+	(TT_RunIns): Unset FT_Face->size->{cvt_ready,bytecode_ready} if
+	an error occurs in the bytecode interpretation.  The interpretation
+	of invalid bytecode may break the function definitions and referring
+	them in later interpretation is danger.  By unsetting these flags,
+	`fpgm' and `prep' tables are executed again in next interpretation.
+
+	This fixes Savannah bug #30798, reported by Robert Święcki.
+
+2010-08-29  Werner Lemberg  <wl@gnu.org>
+
+	[ftraster] Pacify compiler.
+
+	* src/raster/ftraster.c (ft_black_new) [_STANDALONE_]: `memory' is
+	not used.
+
+2010-08-29  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Allow SIDs >= 65000.
+
+	* src/cff/cffload.c (cff_charset_load): Fix change from 2009-03-20:
+	The threshold for SIDs is not applicable here.  I misinterpreted the
+	`SID values 65000 and above are available for implementation use'
+	sentence in the CFF specification.
+
+	Problem reported by Ivan Ninčić <inincic@pdftron.com>.
+
+2010-08-28  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Force hinting when the font lacks its familyname.
+
+	In Type42 or Type11 font embedded in PostScript & PDF, TrueType sfnt
+	stream may lack `name' table because they are not required.  Hinting
+	for nameless fonts is safer for PDFs including embedded Chinese
+	fonts.  Written by David Bevan, see:
+
+	http://lists.gnu.org/archive/html/freetype-devel/2010-08/msg00021.html
+	http://lists.freedesktop.org/archives/poppler/2010-August/006310.html
+
+	* src/truetype/ttobjs.c (tt_check_trickyness): If a NULL pointer by
+	nameless font is given, TRUE is returned to enable hinting.
+
+2010-08-28  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Register yet another tricky TrueType font.
+
+	* src/truetype/ttobjs.c (tt_check_trickyness): Add `HuaTianKaiTi?',
+	a Kaishu typeface paired with `HuaTianSongTi?' by Huatian
+	Information Industry.
+
+2010-08-17  Teijo Kinnunen <Teijo.Kinnunen@nuance.com>
+
+	Fix Savannah bug #30788.
+
+	* src/cache/ftccache.c (FTC_Cache_Clear): Check `cache->buckets' for
+	NULL too.
+
+2010-08-10  Werner Lemberg  <wl@gnu.org>
+
+	Try to fix Savannah bug #30717 (and probably #30719 too).
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Add another
+	overflow test for `width' and `height'.
+
+2010-08-06  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.2 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-2'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.2
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.1/2.4.2/, s/241/242/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 2.
+
+	* builds/unix/configure.raw (version_info): Set to 12:0:6.
+
+2010-08-06  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix Savannah bug #30648.
+
+	* src/base/ftobjs.c (FT_Done_Library): Specify the order of font
+	drivers during the face closing process.  Type42 faces should be
+	closed before TrueType faces, because a Type42 face refers to
+	another internal TrueType face which is created from sfnt[] array on
+	the memory.
+
+2010-08-06  Yuriy Kaminskiy  <yumkam@mail.ru>
+
+	[raster] Fix valgrind warning.
+
+	* src/raster/ftraster.c (Decompose_Curve) <default>: Access point[0]
+	only if we don't hit `limit'.
+
+2010-08-06  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix Savannah bug #30658.
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): Check that the total
+	length of collected POST segments does not overrun the allocated
+	buffer.
+
+2010-08-06  Yuriy Kaminskiy  <yumkam@mail.ru>
+
+	Fix conditional usage of FT_MulFix_i386.
+	With -ansi flag, gcc does not define `i386', only `__i386__'.
+
+	* include/freetype/config/ftconfig.h, builds/unix/ftconfig.in:
+	s/i386/__i386__/.
+
+2010-08-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30657.
+
+	* src/truetype/ttinterp.c (BOUNDSL): New macro.
+	Change `BOUNDS' to `BOUNDSL' where appropriate.
+
+	* src/truetype/ttinterp.h (TT_ExecContextRec): Fix type of
+	`cvtSize'.
+
+2010-08-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30656.
+
+	* src/type42/t42parse.c (t42_parse_sfnts): Protect against negative
+	string_size.
+	Fix comparison.
+
+2010-08-05  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cff] Don't use any values in decoder after parsing error.
+
+	* src/cff/cffgload.c (cff_slot_load): Skip the evaluations
+	of the values in decoder, if cff_decoder_parse_charstrings()
+	returns any error.
+
+2010-08-04  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30644.
+
+	* src/base/ftstream.c (FT_Stream_EnterFrame): Fix comparison.
+
+2010-08-04  Werner Lemberg  <wl@gnu.org>
+
+	`make devel' fails if FT_CONFIG_OPTION_OLD_INTERNALS is set.
+
+	* devel/ftoption.h: Synchronize with
+	include/freetype/config/ftoption.h.
+
+2010-08-04  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cff] Improve stack overflow test.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings): Check stack
+	after execution of operations too.
+
+2010-07-18  Werner Lemberg  <wl@gnu.org>
+
+	Add reference counters and to FT_Library and FT_Face objects.
+
+	* include/freetype/freetype.h (FT_Reference_Face): New function.
+	* include/freetype/ftmodapi.h (FT_Rererence_Library): New function.
+
+	* include/freetype/internal/ftobjs.h (FT_Face_InternalRec,
+	FT_LibraryRec): New field `refcount'.
+
+	* src/base/ftobjs.c (FT_Open_Face, FT_New_Library): Handle
+	`refcount'.
+	(FT_Reference_Face, FT_Reference_Library): Implement new functions.
+	(FT_Done_Face, FT_Done_Library): Handle `refcount'.
+
+	* docs/CHANGES: Updated.
+
+2010-07-18  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.1 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-1'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.1.
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.0/2.4.1/, s/240/241/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 1.
+
+	* builds/unix/configure.raw (version_info): Set to 11:1:5.
+
+2010-07-17  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Final try to fix `hintmask' and `cntrmask' limit check.
+
+	Problem reported by Tobias Wolf <towolf@gmail.com>.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings)
+	<cff_op_hintmask>: Sigh.  I'm apparently too silly to fix this
+	correctly in less than three tries.
+
+2010-07-12  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.0 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-0'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.0.
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.3.12/2.4.0/, s/2312/240/.
+
+	* include/freetype/freetype.h (FREETYPE_MINOR): Set to 4.
+	(FREETYPE_PATCH): Set to 0.
+
+	* builds/unix/configure.raw (version_info): Set to 11:0:5.
+
+2010-07-12  Werner Lemberg  <wl@gnu.org>
+
+	Remove C++ warnings.
+
+	*/*: Initialize pointers where necessary to make g++ happy.
+
+2010-07-12  malc  <av1474@comtv.ru>
+	    Richard Henderson  <rth@redhat.com>
+
+	Fix type-punning issues with C++.
+
+	* include/freetype/internal/ftmemory.h (FT_ASSIGNP) [__cplusplus]:
+	Emulate a `typeof' operator with an inline template which uses
+	`static_cast'.
+
+2010-07-11  Werner Lemberg  <wl@gnu.org>
+
+	Fix C++ compilation issue.
+
+	* src/tools/apinames.c (names_dump) <OUTPUT_WATCOM_LBC>: Fix
+	type of `dot' variable.
+
+2010-07-10  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix another case reported in Savannah bug #30373.
+	Permit a face for Type1, Type42 and CFF without charmap,
+	patch by Tor Andersson.
+
+	* src/type1/t1objs.c (T1_Face_Init): Reset the error if it
+	is FT_Err_No_Unicode_Glyph_Name.
+	* src/type42/t42objs.c (T42_Face_Init): Ditto.
+	* src/cff/cffobjs.c (cff_face_init): Ditto.
+
+2010-07-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Use defined macros to set {platform,encoding}_id.
+
+	* src/bdf/bdfdrivr.c: Include ttnameid.h and use macros to
+	set charmap.{platfom,encoding}_id.
+	* src/pcf/pcfdrivr.c: Ditto.
+	* src/winfonts/winfnt.c: Ditto.
+	* src/type1/t1objs.c: Ditto.
+	* src/type42/t42objs.c: Ditto.
+	* src/cff/cffobjs.c: Ditto.
+	* src/pfr/pfrobjs.c: Ditto.
+
+2010-07-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix Savannah bug #30373.
+	Too serious check of errors by `FT_CMap_New' since 2010-07-04
+	is fixed. Reported by Tor Andersson.
+
+	* include/freetype/fterrdef.h
+	(PSnames_Err_No_Unicode_Glyph_Name): New error code to
+	indicate the Unicode charmap synthesis failed because
+	no Unicode glyph name is found.
+
+	* src/psnames/psmodule.c (ps_unicodes_init): Return
+	PSnames_Err_No_Unicode_Glyph_Name when no Unicode glyph name
+	is found in the font.
+	* src/cff/cffcmap.c (cff_cmap_unicode_init): Return
+	CFF_Err_No_Unicode_Glyph_Name when no SID is available.
+
+	* src/type1/t1objs.c (T1_Face_Init): Proceed if `FT_CMap_New'
+	is failed by the lack of Unicode glyph name.
+	* src/type42/t42objs.c (T42_Face_Init): Ditto.
+	* src/cff/cffobjs.c (cff_face_init): Ditto.
+
+2010-07-09  Ken Sharp  <ken.sharp@artifex.com>
+
+	Make ftraster.c compile in stand-alone mode with MSVC compiler.
+
+	* src/raster/ftmisc.h (FT_Int64) [_WIN32, _WIN64]: Fix typedef
+	since there is no `inttypes.h' for MSVC.
+
+2010-07-08  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30361.
+
+	* src/truetype/ttinterp.c (Ins_IUP): Fix bounds check.
+
+2010-07-06  Werner Lemberg  <wl@gnu.org>
+
+	Pacify compiler.
+
+	* src/cff/cffload.c (cff_index_get_pointers): Initialize
+	`new_bytes'.
+
+2010-07-05  Eugene A. Shatokhin  <spectre@ispras.ru>
+
+	Fix Savannah bug #27648.
+
+	* src/base/ftobjs.c (ft_remove_renderer, FT_Add_Module): Call
+	`raster_done' only if we have an outline glyph format.
+
+2010-07-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30030.
+
+	* builds/win32/*/freetype.vcproj: Add ftxf86.c.
+
+2010-07-05  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Next try to fix `hintmask' and `cntrmask' limit check.
+
+	Problem reported by malc <av1474@comtv.ru>.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings)
+	<cff_op_hintmask>: It is possible that there is just a single byte
+	after the `hintmask' or `cntrmask', e.g., a `return' instruction.
+
+2010-07-04  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Restrict the number of the charmaps in a rogue-compatible mode.
+	Fix for Savannah bug #30059.
+
+	* src/cache/ftccmap.c (FTC_CMapCache_Lookup): Replace `16' the
+	minimum character code passed by a legacy rogue client by...
+	* include/freetype/config/ftoption.h (FT_MAX_CHARMAP_CACHEABLE):
+	This.  It is undefined when FT_CONFIG_OPTION_OLD_INTERNALS is
+	undefined (thus the rogue client compatibility is not required).
+
+	* src/cff/cffobjs.c (cff_face_init): Abort the automatic
+	selection or synthesis of Unicode cmap subtable when the charmap
+	index exceeds FT_MAX_CHARMAP_CACHEABLE.
+	* src/sfnt/ttcmap.c (tt_face_build_cmaps): Issue error message
+	when the charmap index exceeds FT_MAX_CHARMAP_CACHEABLE.
+
+	* src/base/ftobjs.c (find_unicode_charmap): When Unicode charmap
+	is found after FT_MAX_CHARMAP_CACHEABLE, ignore it and search
+	earlier one.
+	(find_variant_selector_charmap): When UVS charmap is found after
+	FT_MAX_CHARMAP_CACHEABLE, ignore it and search earlier one.
+	(FT_Select_Charmap): When a charmap matching with requested
+	encoding but after FT_MAX_CHARMAP_CACHEABLE, ignore and search
+	earlier one.
+	(FT_Set_Charmap): When a charmap matching with requested
+	charmap but after FT_MAX_CHARMAP_CACHEABLE, ignore and search
+	earlier one.
+	(FT_Get_Charmap_Index): When a requested charmap is found
+	after FT_MAX_CHARMAP_CACHEABLE, return the inverted charmap
+	index.
+
+2010-07-04  Werner Lemberg  <wl@gnu.org>
+
+	TrueType hinting is no longer patented.
+
+	* include/freetype/config/ftoption.h, devel/ftoption.h
+	(TT_CONFIG_OPTION_BYTECODE_INTERPRETER): Define.
+	(TT_CONFIG_OPTION_UNPATENTED_HINTING): Undefine.
+
+	* docs/CHANGES, docs/INSTALL, include/freetype/freetype.h: Updated.
+	* docs/TRUETYPE, docs/PATENTS: Removed.
+
+2010-07-04  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Check error value by `FT_CMap_New'.
+
+	* src/cff/cffobjs.c (cff_face_init): Check error value by
+	`FT_CMap_New'.
+	* src/pfr/pfrobjs.c (pfr_face_init): Ditto.
+	* src/type1/t1jobjs.c (T1_Face_Init): Ditto.
+	* src/type42/t42jobjs.c (T42_Face_Init): Ditto.
+
+2010-07-03  Werner Lemberg  <wl@gnu.org>
+
+	Make ftgrays.c compile stand-alone again.
+
+	* src/smooth/ftgrays.c [_STANDALONE_]: Include `stddef.h'.
+	(FT_INT_MAX, FT_PtrDist)[_STANDALONE_]: Define.
+
+2010-07-02  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Additional fix for Savannah bug #30306.
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): If the type of the
+	POST fragment is 0, the segment is completely ignored.  The declared
+	length of the segment is not cared at all.  According to Adobe
+	Technical Note 5040, type 0 segment is a comment only and should not
+	be loaded for the interpreter.  Reported by Robert Święcki.
+
+2010-07-01  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Protect against code range underflow.
+
+	* src/truetype/ttinterp.c (DO_JROT, DO_JMPR, DO_JROF): Don't allow
+	negative IP values.
+
+2010-07-01  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Add rudimentary tracing for bytecode instructions.
+
+	* src/truetype/ttinterp.c (opcode_name) [FT_DEBUG_LEVEL_TRACE]: New
+	array.
+	(TT_RunIns): Trace opcodes.
+
+2010-06-30  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30263.
+
+	* src/smooth/ftgrays.c (gray_render_span): Use cast to `unsigned
+	int' to avoid integer overflow.
+
+	* src/smooth/ftsmooth.c (ft_smooth_render_generic): Use smaller
+	threshold values for `width' and `height'.  This is not directly
+	related to the bug fix but makes sense anyway.
+
+2010-07-01  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Initial fix for Savannah bug #30306.
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): Check `rlen', the
+	length of fragment declared in the POST fragment header, and prevent
+	an underflow in length calculation.  Some fonts set the length to
+	zero in spite of the existence of a following 16bit `type'.
+	Reported by Robert Święcki.
+
+2010-07-01  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Additional fix for Savannah bug #30248 and #30249.
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): Check the buffer size
+	during gathering PFB fragments embedded in LaserWriter PS font for
+	Macintosh.  Reported by Robert Święcki.
+
+2010-06-30  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Minor optimizations by avoiding divisions.
+
+	* src/sfnt/ttkern.c (tt_face_load_kern, tt_face_get_kerning):
+	Replace divisions with multiplication in comparisons.
+
+2010-06-29  Werner Lemberg  <wl@gnu.org>
+
+	Fix minor tracing issues.
+
+	* src/cff/cffgload.c, src/truetype/ttgload.c: Adjust tracing levels.
+
+2010-06-27  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Really fix `hintmask' and `cntrmask' limit check.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings)
+	<cff_op_hintmask>: Fix thinko and handle tracing also.
+
+2010-06-27  Werner Lemberg  <wl@gnu.org>
+
+	Fix valgrind warning.
+
+	* src/base/ftoutln.c (FT_Outline_Get_Orientation): Initialize
+	`result' array.
+
+2010-06-27  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Fix memory leak.
+
+	* src/cff/cffgload.c (cff_operator_seac): Free charstrings even in
+	case of errors.
+
+2010-06-27  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Protect against invalid `hintmask' and `cntrmask' operators.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings)
+	<cff_op_hintmask>: Ensure that we don't exceed `limit' while parsing
+	the bit masks of the `hintmask' and `cntrmask' operators.
+
+2010-06-26  Werner Lemberg  <wl@gnu.org>
+
+	Fix PFR change 2010-06-24.
+
+	* src/pfr/pfrgload.c (pfr_glyph_load_simple): Really protect against
+	invalid indices.
+
+2010-06-26  Werner Lemberg  <wl@gnu.org>
+
+	Improve PFR tracing messages.
+
+	* src/pfr/pfrgload.c (pfr_glyph_load_rec): Emit tracing messages for
+	simple and compound glyph offsets.
+
+2010-06-26  Werner Lemberg  <wl@gnu.org>
+
+	Fix last PFR change.
+
+	* src/pfr/pfrobjs.c (pfr_face_init): Fix rejection logic.
+
+2010-06-26  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30262.
+
+	* src/sfnt/ttload.c (tt_face_load_maxp): Limit `maxComponentDepth'
+	arbitrarily to 100 to avoid stack exhaustion.
+
+2010-06-26  Werner Lemberg  <wl@gnu.org>
+
+	Add some memory checks (mainly for debugging).
+
+	* src/base/ftstream.c (FT_Stream_EnterFrame): Exit with error
+	if the frame size is larger than the stream size.
+
+	* src/base/ftsystem.c (ft_ansi_stream_io): Exit with error if
+	seeking a position larger than the stream size.
+
+2010-06-25  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30261.
+
+	* src/pfr/pfrobjs.c (pfr_face_init): Reject fonts which contain
+	neither outline nor bitmap glyphs.
+
+2010-06-25  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30254.
+
+	* src/cff/cffload.c (cff_index_get_pointers): Do sanity check for
+	first offset also.
+
+2010-06-25  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Initial fix for Savannah bug #30248 and #30249.
+
+	* src/base/ftobjs.c (Mac_Read_POST_Resource): Check the error during
+	reading a PFB fragment embedded in LaserWriter PS font for Macintosh.
+	Reported by Robert Święcki.
+
+2010-06-24  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30247.
+
+	* src/pcf/pcfread.c (pcf_get_metrics): Disallow (invalid) fonts with
+	zero metrics.
+
+2010-06-24  Graham Asher  <graham.asher@btinternet.com>
+
+	* src/smooth/ftgrays.c (gray_render_cubic): Fix algorithm.
+	The previous version was too aggressive, as demonstrated in
+	http://lists.gnu.org/archive/html/freetype-devel/2010-06/msg00020.html.
+
+2010-06-24  Werner Lemberg  <wl@gnu.org>
+
+	*/*: Use module specific error names where appropriate.
+
+2010-06-24  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30236.
+
+	* src/sfnt/ttcmap.c (tt_face_build_cmaps): Improve check for pointer
+	to `cmap_table'.
+
+2010-06-24  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30235.
+
+	* src/pfr/pfrgload.c (pfr_glyph_load_simple): Protect against
+	invalid indices if there aren't any coordinates for indexing.
+
+2010-06-24  Werner Lemberg  <wl@gnu.org>
+
+	[bdf]: Font properties are optional.
+
+	* src/bdf/bdflib.c (_bdf_readstream): Use special error code to
+	indicate a redo operation.
+	(_bdf_parse_start): Handle `CHARS' keyword here too and pass current
+	input line to `_bdf_parse_glyph'.
+
+2010-06-23  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30220.
+
+	* include/freetype/fterrdef.h
+	(BDF_Err_Missing_Fontboundingbox_Field): New error code.
+
+	* src/bdf/bdflib.c (_bdf_parse_start): Check for missing
+	`FONTBOUNDINGBOX' field.
+	Avoid memory leak if there are multiple `FONT' lines (which is
+	invalid but doesn't hurt).
+
+2010-06-21  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30168.
+
+	* src/pfr/pfrgload.c (pfr_glyph_load_compound): Limit the number of
+	subglyphs to avoid endless recursion.
+
+2010-06-20  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30145.
+
+	* src/psaux/psobjs.c (t1_builder_add_contour): Protect against
+	`outline == NULL' which might happen in invalid fonts.
+
+2010-06-19  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30135.
+
+	* src/bdf/bdflib.c (_bdf_list_join): Don't modify value in static
+	string `empty'.
+	(_bdf_parse_glyph): Avoid memory leak in case of error.
+
+2010-06-15  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30108.
+
+	* src/autofit/afglobal.c (af_face_globals_compute_script_coverage):
+	Properly mask AF_DIGIT bit in comparison.
+
+2010-06-11  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30106.
+
+	Point numbers for FreeType's implementation of hinting masks are
+	collected before the final number of points of a glyph has been
+	determined; in particular, the code for handling the `endchar'
+	opcode can reduce the number of points.
+
+	* src/pshinter/pshalgo.c (psh_glyph_find_strong_points): Assure that
+	`end_point' is not larger than `glyph->num_points'.
+
+2010-06-11  Werner Lemberg  <wl@gnu.org>
+
+	[cff]: Improve debugging output.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings)
+	<cff_op_hintmask>: Implement it.
+
+2010-06-10  Graham Asher  <graham.asher@btinternet.com>
+
+	ftgrays: Speed up rendering of small cubic splines.
+
+	* src/smooth/ftgrays.c (gray_render_cubic): Implement new,
+	simplified algorithm to find out whether the spline can be replaced
+	with two straight lines.  See this thread for more:
+
+	  http://lists.gnu.org/archive/html/freetype-devel/2010-06/msg00000.html
+
+2010-06-09  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30082.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings)
+	<cff_op_callothersubr>: Protect against stack underflow.
+
+2010-06-08  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30053.
+
+	* src/cff/cffparse.c (cff_parse_real): Handle border case where
+	`fraction_length' has value 10.
+
+2010-06-07  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #30052.
+	This bug has been introduced with commit 2415cbf3.
+
+	* src/base/ftobjs.c (FT_Get_First_Char, FT_Get_Next_Char): Protect
+	against endless loop in case of corrupted font header data.
+
+2010-05-26  Werner Lemberg  <wl@gnu.org>
+
+	Remove unused variable.
+	Found by Graham.
+
+	* src/autofit/afhints.c (af_glyph_hints_reload): Remove unused
+	variable `first' in first block.
+
+2010-05-22  Werner Lemberg  <wl@gnu.org>
+
+	Fix various memory problems found by linuxtesting.org.
+
+	* src/base/ftgxval.c (FT_TrueTypeGX_Free, FT_ClassicKern_Free),
+	src/base/ftotval.c (FT_OpenType_Free), src/base/ftpfr.c
+	(ft_pfr_check): Check `face'.
+
+	* src/base/ftobjs.c (FT_Get_Charmap_Index): Check `charmap' and
+	`charmap->face'.
+	(FT_Render_Glyph): Check `slot->face'.
+	(FT_Get_SubGlyph_Info): Check `glyph->subglyphs'.
+
+2010-05-22  Werner Lemberg  <wl@gnu.org>
+
+	autofit: Remove dead code.
+	Suggested by Graham.
+
+	* src/autofit/afhints.c (af_glyph_hints_compute_inflections):
+	Removed.
+	(af_glyph_hints_reload): Remove third argument.
+	Update all callers.
+
+2010-05-21  Bram Tassyns  <bramt@enfocus.be>
+
+	Fix Savannah bug #27987.
+
+	* src/cff/cffobjs.c (remove_subset_prefix): New function.
+	(cff_face_init): Use it to adjust `cffface->family_name'.
+
+2010-05-20  Werner Lemberg  <wl@gnu.org>
+
+	TrueType: Make FreeType ignore maxSizeOfInstructions in `maxp'.
+
+	Acroread does the same.
+
+	* src/truetype/ttgload.c (TT_Process_Composite_Glyph): Call
+	`Update_Max' to adjust size of instructions array if necessary and
+	add a rough safety check.
+
+	(load_truetype_glyph): Save `loader->byte_len' before recursive
+	call.
+
+	* src/truetype/ttinterp.h, src/truetype/ttinterp.c (Update_Max):
+	Declare it as FT_LOCAL.
+
+2010-05-18  Hongbo Ni  <hongbo@njstar.com>
+
+	Apply Savannah patch #7196.
+
+	* src/cff/cffgload.c (cff_slot_load): Prevent crash if CFF subfont
+	index is out of range.
+
+2010-05-11  Werner Lemberg  <wl@gnu.org>
+
+	* docs/formats.txt: Give pointer to PCF documentation.
+	Information provided by Alan Coopersmith
+	<alan.coopersmith@oracle.com>.
+
+2010-05-10  Ken Sharp  <ken.sharp@artifex.com>
+
+	Fix Savannah bug #29846.
+
+	Previously we discovered fonts which used `setcurrentpoint' to set
+	the initial point of a contour to 0,0.  This caused FreeType to
+	raise an error, because the `setcurrentpoint' operator is only
+	supposed to be used with the results from an OtherSubr subroutine.
+
+	This was fixed by simply ignoring the error and carrying on.
+
+	Now we have found a font which uses setcurrentpoint to actually
+	establish a non-zero point for a contour during the course of a
+	glyph program.  FWIW, these files may be produced by an application
+	called `Intaglio' on the Mac, when converting TrueType fonts to
+	Type 1.
+
+	The fix allows the new invalid behaviour, the old invalid behaviour
+	and real proper usage of the operator to work the same way as Adobe
+	interpreters apparently do.
+
+	(t1_decoder_parse_charstrings): Make `setcurrentpoint' use the top
+	two elements of the stack to establish unconditionally the current x
+	and y coordinates.
+
+	Make the `flex' subroutine handling (OtherSubr 0) put the current
+	x,y coordinates onto the stack, instead of two dummy uninitialised
+	values.
+
+2010-04-14  Ken Sharp  <ken.sharp@artifex.com>
+
+	Fix Savannah bug #29444.
+
+	* src/psaux/psobjs.c (t1_builder_start_point): Accept (invalid)
+	`lineto' immediately after `hsbw', in accordance with Acrobat, GS,
+	and others.
+
+2010-04-14  Michał Cichoń  <thedmd@artifexmundi.com>
+
+	Fix Savannah bug #27999.
+
+	* src/cache/ftcmanag.c (FTC_Manager_RemoveFaceID): Only remove
+	selected entry, not all.
+
+2010-04-06  Jonathan Kew  <jfkthame@gmail.com>
+
+	Add overflow check to `fvar' table.
+
+	* src/truetype/ttgxvar.c (TT_Get_MM_Var): Check axis and instance
+	count.
+
+2010-04-05  Ken Sharp  <ken.sharp@artifex.com>
+
+	Fix Savannah bug #29335.
+
+	* src/raster/ftraster.c (Line_Up): Use slow multiplication to
+	prevent overflow.  This shouldn't have any serious impact on speed,
+	however.
+
+2010-04-05  Werner Lemberg  <wl@gnu.org>
+
+	Add new function `FT_Library_SetLcdFilterWeights'.
+
+	This is based on code written by Lifter
+	<http://unixforum.org/index.php?showuser=11691>.  It fixes
+	FreeDesktop bug #27386.
+
+	* src/base/ftlcdfil.c (FT_Library_SetLcdFilterWeights): New
+	function.
+
+	* include/freetype/ftlcdfil.h: Updated.
+
+	* docs/CHANGES: Updated.
+
+2010-04-01  John Tytgat  <John.Tytgat@esko.com>
+
+	Fix Savannah bug #29404.
+
+	* src/truetype/ttgload.c: Revert change 2752bd1a (check on bit 1
+	of `head' table of TrueType fonts).
+
+2010-03-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix `multi build' for Tytgat's CFF driver improvement.
+
+	* src/base/cffload.h (cff_index_get_name): Added.
+
+2010-03-12  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Remove duplicated inclusion of `FT_OUTLINE_H' in ftobjs.c.
+
+	* src/base/ftobjs.c: Remove 2nd inclusion of `FT_OUTLINE_H'.
+
+2010-03-11  Chris Liddell  <chris.liddell@artifex.com>
+
+	Fix Savannah bug #27442.
+
+	* src/raster/ftraster.c (ft_black_reset): Fix `buffer_size'.
+
+2010-03-09  Werner Lemberg  <wl@gnu.org>
+
+	Remove unused variable.
+	Reported by Graham.
+
+	* src/cff/cffparse.c (cff_parse_real): Remove `rest'.
+
+2010-03-02  John Tytgat  <John.Tytgat@esko.com>
+
+	Improve CFF string (especially glyphname) lookup performance.
+
+	We do this by avoiding memory allocation and file I/O.  This is
+	Savannah patch #7104.
+
+	* src/cff/cfftypes.h: Include PS cmaps service and
+	FT_INTERNAL_POSTSCRIPT_HINTS_H.
+	(CFF_SubFontRec): Remove `num_local_subrs'.
+	(CFF_FontRec): Add `num_strings', `strings', and `string_pool'
+	fields.
+	Remove `string_index' and `num_global_subrs' fields.
+	Use real types instead of `void' for `pshinter' and `psnames' fields.
+
+	* src/cff/cffload.c: Don't include PS cmaps service.
+	(cff_index_get_pointers): Add `pool' parameter which allows to
+	insert an extra NUL character for each String INDEX entry.
+	(cff_index_get_name): Make it a local function.
+	(cff_index_get_string): New function.
+	(cff_subfont_load): Updated.
+	(cff_font_load): Initialize `num_strings', `strings', and
+	`string_pool' fields in the `CFF_FontRec' structure.
+	(cff_index_get_sid_string): Use `cff_index_get_string' instead of
+	`cff_index_get_name'.
+	(cff_font_done): Updated.
+
+	* src/cff/cffload.h: Don't include PS cmaps service.
+	(cff_index_get_string): Added.
+	(cff_index_get_sid_string): Updated.
+
+	* src/cff/cffobjs.c: Don't include PS cmaps service and
+	FT_INTERNAL_POSTSCRIPT_HINTS_H.
+	(cff_size_get_globals_funcs, cff_slot_init): Updated.
+	(cff_face_init): Follow `cff_index_get_name',
+	`cff_index_get_string', and `cff_index_get_sid_string' changes.
+
+	* src/cff/cffcmap.c (cff_sid_free_glyph_name): Removed.
+	(cff_sid_to_glyph_name): Use `cff_index_get_cid_string'.
+	(cff_cmap_unicode_init): Updated.
+
+	* src/cff/cffdrivr.c: Don't include PS cmap service.
+	(cff_get_glyph_name): Avoid unnecessary lookup for POSTSCRIPT_CMAPS
+	service.
+	(cff_get_glyph_name, cff_ps_get_font_info, cff_get_ros): Follow API
+	`cff_index_get_sid_string' change.
+	(cff_get_name_index): Use `cff_index_get_string' instead of
+	`cff_index_get_name'.
+
+	* src/cff/cffgload.c: Don't include FT_INTERNAL_POSTSCRIPT_HINTS_H.
+	(cff_decoder_init, cff_decoder_prepare): Updated.
+
+2010-02-27  Werner Lemberg  <wl@gnu.org>
+
+	Simplify code.
+	Suggested by Behdad.
+
+	* src/base/ftobjs.c (FT_Get_First_Char): Don't use a loop since we
+	call FT_Get_Next_Char anyway if necessary.
+
+2010-02-26  Behdad Esfahbod  <behdad@behdad.org>
+
+	Improve handling of invalid glyph indices in char->index functions.
+
+	* src/base/ftobjs.c (FT_Get_First_Char, FT_Get_Next_Char): Use a
+	loop.
+
+2010-02-18  Chris Liddell  <chris.liddell@artifex.com>
+
+	Fix Savannah bug #28905.
+
+	Initialize phantom points before calling the incremental interface
+	to update glyph metrics.
+
+	* src/truetype/ttgload.c (tt_get_metrics_incr_overrides)
+	[FT_CONFIG_OPTION_INCREMENTAL]: New function, split off from...
+	(tt_get_metrics): This.
+	Updated.
+	(load_truetype_glyph): Use tt_get_metrics_incr_overrides.
+
+----------------------------------------------------------------------------
+
+Copyright 2010 by
+David Turner, Robert Wilhelm, and Werner Lemberg.
+
+This file is part of the FreeType project, and may only be used, modified,
+and distributed under the terms of the FreeType project license,
+LICENSE.TXT.  By continuing to use, modify, or distribute this file you
+indicate that you have read the license and understand and accept it
+fully.
+
+
+Local Variables:
+version-control: never
+coding: utf-8
+End:

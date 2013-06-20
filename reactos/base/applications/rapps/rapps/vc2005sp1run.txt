@@ -1,0 +1,50 @@
+﻿; UTF-8
+
+[Section]
+Name = Microsoft Visual C++ 2005 SP1 Redistributable Package
+Version = 7.1
+Licence = Unknown
+Description = Visual Studio 2005 Runtime SP1. Contains: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+Size = 2.6MB
+Category = 14
+URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=5638
+URLDownload = http://download.microsoft.com/download/e/1/c/e1c773de-73ba-494a-a5ba-f24906ecf088/vcredist_x86.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Visual Studio 2005 Laufzeitsystem SP1. Beinhaltet: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+
+[Section.040a]
+Licence = Desconocida
+Description = Librerias Visual Studio 2005 SP1. Incluye: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+
+[Section.040c]
+Licence = Inconnue
+Description = Bibliothèque Visual Studio 2005 SP1. Contient: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+Size = 2,6 Mo
+
+[Section.0410]
+Licence = Sconosciuta
+Description = Visual Studio 2005 Runtime SP1. Contiene: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+
+[Section.0413]
+Licence = Ongekend
+Description = Visual Studio 2005 Runtime SP1. Bevat: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+
+[Section.0415]
+Licence = Nieznana
+Description = Biblioteki uruchomieniowe Visual Studio 2005 SP1. Zawiera: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+
+[Section.0418]
+Licence = Necunoscută
+Description = Visual Studio 2005 Runtime SP1. Conține: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+Size = 2,6 Mo
+
+[Section.0422]
+Licence = Невідома
+Description = Бібліотеки Visual Studio 2005 SP1. включає: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+
+[Section.0813]
+Licence = Ongekend
+Description = Visual Studio 2005 Runtime SP1. Bevat: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.

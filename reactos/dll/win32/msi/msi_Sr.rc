@@ -1,0 +1,54 @@
+/*
+ * Serbian resources for MSI
+ *
+ * Copyright 2010 Nenad Vujic
+ *                Paul Vriens
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "windef.h"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_LATIN
+
+STRINGTABLE
+{
+	4 "Instalacija ne može biti otvorena.  Molimo proverite destinaciju fajla i pokušajte ponovo."
+	5 "putanja %s nije nađena"
+	9 "Ubacite disk %s"
+	10 "Windows Instalacija programa %s\n\nSvrha:\nmsiexec komanda {traženi parametar} [opcioni parametar]\n\nInstalacija proizvoda:\n\t/i {paket|kod} [svojina]\n\t/package {paket|kod} [svojina]\n\t/a paket [svojina]\nPopravak instalacije:\n\t/f[p|o|e|d|c|a|u|m|s|v] {paket|kod}\nUninstal programa:\n\t/uninstall {paket|kod} [svojina]\n\t/x {paket|kod} [svojina]\nReklama programa:\n\t/j[u|m] paket [/t pretvori] [/g id jezika]\nPrimeni peč:\n\t/p pečpaket [svojina]\n\t/p pečpaket /a paket [svojina]\nIzveštalj i Izgled Modifikatori za komande iznad:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] izvestaj\n\t/q{|n|b|r|f|n+|b+|b-}\nRegistracija MSI Servisa:\n\t/y\n Uklanjanje MSI Servisa:\n\t/z\nPrikaži ovu Pomoć:\n\t/help\n\t/?\n"
+	11 "unesite koji folder sadrži %s"
+	12 "instalacija nedostaje"
+	13 "mrežni drajv nedostaje"
+	14 "dodatak sa:"
+	15 "izaberite koji folder sadrži %s"
+}
+
+LANGUAGE LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC
+
+STRINGTABLE
+{
+	4 "Инсталација не може бити отворена. Молимо проверите дестинацију фајла и покушајте поново."
+	5 "путања %s није нађена"
+	9 "Убаците диск %s"
+	10 "Виндовс Инсталација програма %s\n\nСврха:\nmsiexec команда {тражени параметар} [опциони параметар]\n\nИнсталација производа:\n\t/i {пакет|код} [својина]\n\t/package {пакет|код} [својина]\n\t/a пакет [svojina]\nПоправак инсталације:\n\t/f[p|o|e|d|c|a|u|m|s|v] {пакет|код}\nБрисање програма:\n\t/uninstall {пакет|код} [svojina]\n\t/x {пакет|код} [својина]\nРеклама програма:\n\t/j[u|m] пакет [/t transform] [/g languageid]\nПримени печ:\n\t/p печпакет [својина]\n\t/p печпакет /a пакет [својина]\nИзвестај и Изглед Модификатора за команде изнад:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] извештај\n\t/q{|n|b|r|f|n+|b+|b-}\nРегистрација МСИ Сервиса:\n\t/y\nУклањање МСИ Сервиса:\n\t/z\nПрикажи ову Помоћ:\n\t/help\n\t/?\n"
+	11 "Унесите који фолдер садржи %s"
+	12 "Инсталација недостаје"
+	13 "Мрежни драјв недостаје"
+	14 "Додатак са:"
+	15 "Изаберите који фолдер садржи %s"
+}

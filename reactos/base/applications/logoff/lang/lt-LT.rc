@@ -1,0 +1,17 @@
+/* Translation by Vytis "CMan" Girdžijauskas (cman@cman.us) */
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "Užbaigia seansą.\n\n\
+  /v\t\tParodo informaciją apie atliktus veiksmus.\n\
+  /?\t\tParodo šią informaciją.\n\n"
+
+IDS_LOGOFF_REMOTE, "Užbaigia seansą nutolusioje mašinoje."
+IDS_LOGOFF_LOCAL, "Užbaigia einamąjį seansą šioje mašinoje."
+
+IDS_ILLEGAL_PARAM, "Neteisingas(i) parametras(ai)\n"
+END
+/* EOF */

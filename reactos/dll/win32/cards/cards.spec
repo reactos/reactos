@@ -1,0 +1,6 @@
+@ stdcall WEP(long)
+@ stdcall cdtAnimate(ptr long long long long)
+@ stdcall cdtDraw(ptr long long long long long)
+@ stdcall cdtDrawExt(ptr long long long long long long long)
+@ stdcall cdtInit(ptr ptr)
+@ stdcall cdtTerm()

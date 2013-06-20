@@ -1,0 +1,74 @@
+/*
+ *         translated by TestamenT
+ *         testament@users.sourceforge.net
+ *         https://sourceforge.net/projects/reactospl
+ *         UTF-8 conversion by Caemyr (May, 2011) 
+ */
+ 
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_BCAST   "Broadcast"
+  IDS_P2P     "Peer To Peer"
+  IDS_MIXED   "Mieszany"
+  IDS_HYBRID  "Hybrydowy"
+  IDS_UNKNOWN "nieznany"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_OTHER   "inny rodzaj karty"
+  IDS_ETH     "karta Ethernet"
+  IDS_TOKEN   "karta Token Ring"
+  IDS_FDDI    "karta FDDI"
+  IDS_PPP     "karta PPP"
+  IDS_LOOP    "karta Loopback"
+  IDS_SLIP    "karta SLIP"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+/* Please keep the spacing/formatting as per En.rc when translating */
+  IDS_USAGE
+    "\nSPOSÓB UŻYCIA:\n \
+        ipconfig [/? | /all | /renew [karta] | /release [karta] |\n \
+                  /flushdns | /displaydns | /registerdns \n \
+                  /showclassid karta |\n \
+                  /setclassid karta [identyfikator_klasy] ]\n \
+    \n \
+    gdzie\n \
+        karta           Nazwa połączenia\n \
+                        (dozwolone symbole zastępcze * i ?, zobacz przykłady)\n \
+    \n \
+         Opcje:\n \
+           /?           Wyświetla ten komunikat pomocy.\n \
+           /all         Wyświetla pełne informacje o konfiguracji.\n \
+           /release     Zwalnia adres IP dla określonej karty.\n \
+           /renew       Odnawia adres IP dla określonej karty.\n \
+           /flushdns    Czyści bufor programu rozpoznającego nazwy DNS.\n \
+           /registerdns Odświeża wszystkie dzierżawy DHCP i ponownie rejestruje nazwy DNS.\n \
+           /displaydns  Wyświetla zawartość buforu programu rozpoznającego nazwy DNS.\n \
+           /showclassid Wyświetla wszystkie identyfikatory klas DHCP dozwolone dla karty.\n \
+           /setclassid  Modyfikuje identyfikator klasy DHCP.\n \
+    \n \
+    Zachowanie domyślne to wyświetlanie tylko adresu IP, maski podsieci i bramy\n \
+    domyślnej dla każdej karty związanej z protokołem TCP/IP.\n \
+    \n \
+    Jeśli dla parametrów Release i Renew nie zostanie określona nazwa karty,\n \
+    zwolnieniu lub odnowieniu ulegają dzierżawy adresów IP dla wszystkich kart\n \
+    związanych z protokołem TCP/IP.\n \
+    \n \
+    Jeśli dla parametru Setclassid nie zostanie określony\n \
+    identyfikator_klasy, to identyfikator_klasy jest usuwany.\n \
+    \n \
+    Przykłady:\n \
+        > ipconfig                   ... Pokazuje informacje.\n \
+        > ipconfig /all              ... Pokazuje szczegółowe informacje.\n \
+        > ipconfig /renew            ... Odnawia wszystkie karty.\n \
+        > ipconfig /renew EL*        ... Odnawia każde połączenie o nazwie\n \
+                                         zaczynającej się od EL\n \
+        > ipconfig /release *Poł*    ... Zwalnia wszystkie pasujące połączenia,\n \
+                                         np. ""Połączenie lokalne 1"" lub\n \
+                                             ""Połączenie lokalne 2""\n"
+END

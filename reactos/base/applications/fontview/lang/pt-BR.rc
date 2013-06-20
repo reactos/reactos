@@ -1,0 +1,18 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_INSTALL, "Install"
+	IDS_PRINT, "Imprimir"
+	IDS_STRING, "Jackdaws ama minha grande esfinge de quartzo. 1234567890"
+	IDS_OPEN, "Open Font..."
+	IDS_ERROR, "Erro"
+	IDS_ERROR_NOMEM, "Não há memória suficiente para completar a operação."
+	IDS_ERROR_NOFONT, "O arquivo %1 não é um arquivo de fonte válida."
+	IDS_ERROR_NOCLASS, "Não foi possível inicializar a janela."
+END
+
+
+

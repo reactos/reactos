@@ -1,0 +1,19 @@
+
+if(MSVC)
+    add_library(rossym dummy.c)
+else()
+    add_definitions(-D_NTSYSTEM_)
+    list(APPEND SOURCE
+        delete.c
+        find.c
+        fromfile.c
+        frommem.c
+        fromraw.c
+        getraw.c
+        init.c
+        initkm.c
+        initum.c
+        zwfile.c)
+    add_library(rossym ${SOURCE})
+    add_dependencies(rossym psdk bugcodes)
+endif()

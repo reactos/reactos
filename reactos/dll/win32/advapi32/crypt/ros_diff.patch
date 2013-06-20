@@ -1,0 +1,13 @@
+Index: crypt.c
+===================================================================
+--- crypt.c	(Revision 48087)
++++ crypt.c	(Arbeitskopie)
+@@ -618,7 +618,7 @@
+  *  Success: TRUE
+  *  Failure: FALSE
+  */
+-BOOL WINAPI CryptReleaseContext (HCRYPTPROV hProv, ULONG_PTR dwFlags)
++BOOL WINAPI CryptReleaseContext (HCRYPTPROV hProv, DWORD dwFlags)
+ {
+ 	PCRYPTPROV pProv = (PCRYPTPROV)hProv;
+ 	BOOL ret = TRUE;

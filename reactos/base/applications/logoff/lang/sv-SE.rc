@@ -1,0 +1,22 @@
+/*
+ * PROJECT:      ReactOS RAPPS
+ * FILE:         base\applications\logoff\lang\sv-SE.rc
+ * PURPOSE:      Swedish resource file
+ * TRANSLATOR:   Jaix Bly
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "Avbryter en session.\n\n\
+  /v\t\tVisar information om de utförda handlingarna.\n\
+  /?\t\tViser denne informationen.\n\n"
+
+IDS_LOGOFF_REMOTE, "Avbryter session på en fjärrdatorn"
+IDS_LOGOFF_LOCAL, "Avbryter session på denna datorn."
+
+IDS_ILLEGAL_PARAM, "En eller flera ogiltiga parametrar.\n"
+END
+/* EOF */

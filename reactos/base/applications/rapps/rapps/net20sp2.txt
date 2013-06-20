@@ -1,0 +1,30 @@
+﻿; UTF-8
+
+[Section]
+Name = Microsoft .NET Framework Version 2.0 Service Pack 2
+Version = 2.0SP2
+Licence = Unknown
+Description = Microsoft .NET Framework Version 2.0 Service Pack 2.
+Size = 23.84MB
+Category = 14
+URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=1639
+URLDownload = http://download.microsoft.com/download/c/6/e/c6e88215-0178-4c6c-b5f3-158ff77b1f38/NetFx20SP2_x86.exe
+CDPath = none
+
+[Section.0407]
+Description = Microsoft .NET Framework Version 2.0 Service Pack 2.
+
+[Section.040a]
+Description = Microsoft .NET Framework versión 2.0 Service Pack 2.
+
+[Section.040c]
+Description = Microsoft .NET Framework version 2.0 Service Pack 2.
+Size = 23,84 Mo
+
+[Section.0415]
+Description = Microsoft .NET Framework Wersja 2.0 Service Pack 2.
+
+[Section.0418]
+Licence = Nespecificată
+Description = Platforma Microsoft .NET versiunea 2.0 - Service Pack 2.
+Size = 23,84 Mo

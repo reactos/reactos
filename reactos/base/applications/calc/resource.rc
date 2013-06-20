@@ -1,0 +1,120 @@
+/*
+ * ReactOS Calc (global resource file)
+ *
+ * Copyright 2007, Carlo Bramini
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+#include <windef.h>
+#include <winuser.h>
+
+#include "resource.h"
+
+#ifndef IDC_STATIC
+#define IDC_STATIC    -1
+#endif
+
+#ifndef DS_SHELLFONT
+#define DS_SHELLFONT DS_SETFONT|DS_FIXEDSYS
+#endif
+
+// Common resources
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+// Icons
+
+IDI_CALC_BIG            ICON    DISCARDABLE     "res/calc.ico"
+IDI_CALC_SMALL          ICON    DISCARDABLE     "res/calc_sm.ico"
+
+// Bitmaps
+
+IDB_BITMAP_ROS          BITMAP  DISCARDABLE     "res/ROS_logo.bmp"
+
+// UTF-8
+#pragma code_page(65001)
+#ifdef LANGUAGE_BG_BG
+    #include "lang/bg-BG.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_EL_GR
+    #include "lang/el-GR.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/hu-HU.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/ko-KR.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/nl-NL.rc"
+#endif
+#ifdef LANGUAGE_NB_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_PT_BR
+    #include "lang/pt-BR.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/sk-SK.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/sv-SE.rc"
+#endif
+#ifdef LANGUAGE_TH_TH
+    #include "lang/th-TH.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif

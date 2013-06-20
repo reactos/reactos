@@ -1,0 +1,49 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+IDD_CHARMAP DIALOGEX 6, 6, 292, 224
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_CHILD | WS_VISIBLE
+BEGIN
+  LTEXT         "Police :", IDC_STATIC, 6, 7, 24, 9
+  COMBOBOX      IDC_FONTCOMBO, 36, 5, 210, 210, WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT | CBS_HASSTRINGS
+  PUSHBUTTON    "Aide", IDC_CMHELP, 249, 5, 35, 13
+  CONTROL       "", IDC_FONTMAP, "FontMapWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL, 20, 22, 266, 156
+  LTEXT         "Caractères à copier :", IDC_STATIC, 6, 188, 68, 9
+  CONTROL       "", IDC_TEXTBOX, RICHEDIT_CLASS, ES_AUTOHSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 74, 186, 114, 13
+  DEFPUSHBUTTON "Sélectionner", IDC_SELECT, 194, 186, 44, 13
+  PUSHBUTTON    "Copier", IDC_COPY, 242, 186, 44, 13, WS_DISABLED
+  CONTROL       "Affichage avancé", IDC_CHECK_ADVANCED, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 8, 208, 95, 10
+END
+
+IDD_ADVANCED DIALOGEX 0, 0, 292, 64
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT         "Jeu de caractères :", IDC_STATIC, 8, 8, 62, 8
+  COMBOBOX      IDC_COMBO_CHARSET, 72, 4, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT         "Grouper par :", IDC_STATIC, 8, 28, 50, 8
+  COMBOBOX      IDC_COMBO_GROUPBY, 72, 24, 116, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  PUSHBUTTON    "Rechercher", IDC_BUTTON_SEARCH, 200, 44, 50, 14
+  EDITTEXT      IDC_EDIT_SEARCH, 72, 44, 116, 14, ES_AUTOHSCROLL
+  LTEXT         "Rechercher :", IDC_STATIC, 8, 48, 42, 8
+  LTEXT         "Unicode :", IDC_STATIC, 200, 8, 30, 8
+  EDITTEXT      IDC_EDIT_UNICODE, 236, 4, 28, 12, ES_AUTOHSCROLL
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 210, 182
+CAPTION "À propos de la Table des Caractères"
+FONT 8, "MS Shell Dlg", 0, 0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT         "Table des Caractères v0.1\nCopyright (C) 2007 Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 150, 36
+  PUSHBUTTON    "Fermer", IDOK, 75, 162, 44, 15
+  ICON          IDI_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT      IDC_LICENSE_EDIT, 8, 44, 194, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE   "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiée par la Free Software Foundation; dans sa version 2 (ou selon votre préférence) toute version ultérieure.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans même une garantie implicite de COMMERCIABILITÉ ou DE CONFORMITÉ À UNE UTILISATION PARTICULIÈRE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_ABOUT     "À propos..."
+  IDS_TITLE     "Table des Caractères"
+END

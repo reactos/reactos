@@ -1,0 +1,3 @@
+
+!include vc-common.mak
+

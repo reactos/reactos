@@ -1,0 +1,740 @@
+/*
+ * PROJECT:     ReactOS Calculator
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/calc/lang/hu-HU.rc
+ * PURPOSE:     Hungarian Language File for ReactOS Calc
+ * TRANSLATOR:  Nagy Tibor (xnagytibor at gmail dot com)
+ */
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+// Dialog
+
+IDD_DIALOG_SCIENTIFIC DIALOGEX 0, 0, 316, 163
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Számológép"
+MENU IDR_MENU_SCIENTIFIC_1
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "",IDC_STATIC,5,14,141,20
+    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,21,30,10
+    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,41,21,30,10
+    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,74,21,30,10
+    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,107,21,30,10
+    GROUPBOX        "",IDC_STATIC,5,34,84,20
+    CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,8,41,26,10
+    CONTROL         "Hyp",IDC_CHECK_HYP,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,49,41,29,10
+    CTEXT           "",IDC_TEXT_PARENT,93,38,18,16,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CTEXT           "",IDC_TEXT_MEMORY,126,38,18,16,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Sta",IDC_BUTTON_STA,5,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Ave",IDC_BUTTON_AVE,5,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Sum",IDC_BUTTON_SUM,5,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "s",IDC_BUTTON_S,5,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Dat",IDC_BUTTON_DAT,5,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | WS_DISABLED | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "F-E",IDC_BUTTON_FE,38,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "dms",IDC_BUTTON_DMS,38,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "sin",IDC_BUTTON_SIN,38,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "cos",IDC_BUTTON_COS,38,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "tan",IDC_BUTTON_TAN,38,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "(",IDC_BUTTON_LEFTPAR,64,60,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Exp",IDC_BUTTON_EXP,64,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "x^y",IDC_BUTTON_XeY,64,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "x^2",IDC_BUTTON_Xe2,64,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "x^3",IDC_BUTTON_Xe3,64,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      ")",IDC_BUTTON_RIGHTPAR,90,60,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "ln",IDC_BUTTON_LN,90,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "log",IDC_BUTTON_LOG,90,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "n!",IDC_BUTTON_NF,90,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1/x",IDC_BUTTON_RX,90,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MC",IDC_BUTTON_MC,123,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MR",IDC_BUTTON_MR,123,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MS",IDC_BUTTON_MS,123,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "M+",IDC_BUTTON_MP,123,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "pi",IDC_BUTTON_PI,123,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "7",IDC_BUTTON_7,156,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "4",IDC_BUTTON_4,156,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1",IDC_BUTTON_1,156,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "0",IDC_BUTTON_0,156,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "A",IDC_BUTTON_A,156,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "8",IDC_BUTTON_8,182,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "5",IDC_BUTTON_5,182,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "2",IDC_BUTTON_2,182,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+/-",IDC_BUTTON_SIGN,182,120,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "B",IDC_BUTTON_B,182,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "9",IDC_BUTTON_9,208,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "6",IDC_BUTTON_6,208,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "3",IDC_BUTTON_3,208,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      ",",IDC_BUTTON_DOT,208,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "C",IDC_BUTTON_C,208,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "/",IDC_BUTTON_DIV,234,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "*",IDC_BUTTON_MULT,234,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "-",IDC_BUTTON_SUB,234,100,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+",IDC_BUTTON_ADD,234,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "D",IDC_BUTTON_D,234,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Mod",IDC_BUTTON_MOD,260,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Or",IDC_BUTTON_OR,260,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Lsh",IDC_BUTTON_LSH,260,100,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "=",IDC_BUTTON_EQU,260,120,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "E",IDC_BUTTON_E,260,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "And",IDC_BUTTON_AND,286,60,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Xor",IDC_BUTTON_XOR,286,80,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Not",IDC_BUTTON_NOT,286,100,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Int",IDC_BUTTON_INT,286,120,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "F",IDC_BUTTON_F,286,140,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    GROUPBOX        "",IDC_STATIC,147,14,163,20
+    CONTROL         "Négyszó",IDC_RADIO_QWORD,"Button",BS_AUTORADIOBUTTON |
+                    NOT WS_VISIBLE,150,21,38,10
+    CONTROL         "Duplaszó",IDC_RADIO_DWORD,"Button",BS_AUTORADIOBUTTON |
+                    NOT WS_VISIBLE,190,21,38,10
+    CONTROL         "Szó",IDC_RADIO_WORD,"Button",BS_AUTORADIOBUTTON | NOT
+                    WS_VISIBLE,230,21,38,10
+    CONTROL         "Bájt",IDC_RADIO_BYTE,"Button",BS_AUTORADIOBUTTON | NOT
+                    WS_VISIBLE,270,21,38,10
+    CONTROL         "Fok",IDC_RADIO_DEG,"Button",BS_AUTORADIOBUTTON,
+                    150,21,45,10
+    CONTROL         "Radián",IDC_RADIO_RAD,"Button",BS_AUTORADIOBUTTON,
+                    204,21,45,10
+    CONTROL         "Gradián",IDC_RADIO_GRAD,"Button",BS_AUTORADIOBUTTON,
+                    258,21,45,10
+    PUSHBUTTON      "C",IDC_BUTTON_CANC,267,38,43,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "CE",IDC_BUTTON_CE,222,38,43,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Vissza",IDC_BUTTON_BACK,177,38,43,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    RTEXT           "",IDC_TEXT_OUTPUT,5,1,305,14,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5, NOT WS_VISIBLE
+END
+
+IDD_DIALOG_STANDARD DIALOGEX 0, 0, 169, 128
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Számológép"
+MENU IDR_MENU_STANDARD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "C",IDC_BUTTON_CANC,123,23,41,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "CE",IDC_BUTTON_CE,80,23,41,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Vissza",IDC_BUTTON_BACK,36,23,42,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    RTEXT           "",IDC_TEXT_OUTPUT,5,1,159,14,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "7",IDC_BUTTON_7,36,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "4",IDC_BUTTON_4,36,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1",IDC_BUTTON_1,36,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "0",IDC_BUTTON_0,36,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "8",IDC_BUTTON_8,62,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "5",IDC_BUTTON_5,62,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "2",IDC_BUTTON_2,62,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+/-",IDC_BUTTON_SIGN,62,105,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "9",IDC_BUTTON_9,88,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "6",IDC_BUTTON_6,88,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "3",IDC_BUTTON_3,88,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      ",",IDC_BUTTON_DOT,88,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "/",IDC_BUTTON_DIV,114,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "*",IDC_BUTTON_MULT,114,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "-",IDC_BUTTON_SUB,114,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "+",IDC_BUTTON_ADD,114,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "Sqrt",IDC_BUTTON_SQRT,140,45,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "%",IDC_BUTTON_PERCENT,140,65,24,18,BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "1/x",IDC_BUTTON_RX,140,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "=",IDC_BUTTON_EQU,140,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    CTEXT           "",IDC_TEXT_MEMORY,8,24,18,16,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "MC",IDC_BUTTON_MC,5,45,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MR",IDC_BUTTON_MR,5,65,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "MS",IDC_BUTTON_MS,5,85,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    PUSHBUTTON      "M+",IDC_BUTTON_MP,5,105,24,18,BS_CENTER | BS_VCENTER |
+                    BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
+    DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5, NOT WS_VISIBLE
+END
+
+IDD_DIALOG_CONVERSION DIALOGEX 0, 0, 320, 130
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Számológép"
+MENU IDR_MENU_STANDARD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Átváltás",IDC_BUTTON_CONVERT,35,105,76,17
+    COMBOBOX        IDC_COMBO_CATEGORY,5,31,140,168,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    LTEXT           "Kategória:",IDC_STATIC,5,20,56,8
+    COMBOBOX        IDC_COMBO_FROM,5,60,140,168,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    LTEXT           "Átváltás erről:",IDC_STATIC,5,49,56,8
+    COMBOBOX        IDC_COMBO_TO,5,87,140,168,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP | CBS_SORT
+    LTEXT           "Átváltás erre:",IDC_STATIC,5,76,56,8
+    CONTROL         "C",IDC_BUTTON_CANC,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,276,24,40,17
+    CONTROL         "CE",IDC_BUTTON_CE,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,232,24,40,17
+    CONTROL         "Vissza",IDC_BUTTON_BACK,"Button",BS_OWNERDRAW |
+                    BS_CENTER | BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,24,
+                    40,17
+    RTEXT           "",IDC_TEXT_OUTPUT,5,1,312,14,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "7",IDC_BUTTON_7,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,48,24,18
+    CONTROL         "4",IDC_BUTTON_4,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,67,24,18
+    CONTROL         "1",IDC_BUTTON_1,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,86,24,18
+    CONTROL         "0",IDC_BUTTON_0,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,188,105,24,18
+    CONTROL         "8",IDC_BUTTON_8,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,48,24,18
+    CONTROL         "5",IDC_BUTTON_5,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,67,24,18
+    CONTROL         "2",IDC_BUTTON_2,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,86,24,18
+    CONTROL         "+/-",IDC_BUTTON_SIGN,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,214,105,24,18
+    CONTROL         "9",IDC_BUTTON_9,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,48,24,18
+    CONTROL         "6",IDC_BUTTON_6,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,67,24,18
+    CONTROL         "3",IDC_BUTTON_3,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,86,24,18
+    CONTROL         ",",IDC_BUTTON_DOT,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,240,105,24,18
+    CONTROL         "/",IDC_BUTTON_DIV,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,48,24,18
+    CONTROL         "*",IDC_BUTTON_MULT,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,67,24,18
+    CONTROL         "-",IDC_BUTTON_SUB,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,86,24,18
+    CONTROL         "+",IDC_BUTTON_ADD,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,266,105,24,18
+    CONTROL         "Sqrt",IDC_BUTTON_SQRT,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,48,24,18
+    CONTROL         "%",IDC_BUTTON_PERCENT,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,67,24,18
+    CONTROL         "1/x",IDC_BUTTON_RX,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,86,24,18
+    CONTROL         "=",IDC_BUTTON_EQU,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,292,105,24,18
+    CTEXT           "",IDC_TEXT_MEMORY,152,24,24,18,SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "MC",IDC_BUTTON_MC,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,48,24,18
+    CONTROL         "MR",IDC_BUTTON_MR,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,67,24,18
+    CONTROL         "MS",IDC_BUTTON_MS,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,86,24,18
+    CONTROL         "M+",IDC_BUTTON_MP,"Button",BS_OWNERDRAW | BS_CENTER |
+                    BS_VCENTER | BS_NOTIFY | WS_TABSTOP,152,105,24,18
+    DEFPUSHBUTTON   "",IDC_BUTTON_FOCUS,0,0,5,5,NOT WS_VISIBLE
+END
+
+IDD_DIALOG_ABOUT DIALOGEX DISCARDABLE  0, 0, 264, 169
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "A ReactOS Számológépről"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,105,148,52,16
+    CONTROL         IDB_BITMAP_ROS,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE |
+                    SS_REALSIZEIMAGE | WS_BORDER,4,4,104,48
+    LTEXT           "ReactOS Számológép",IDC_STATIC,120,12,132,8,
+                    SS_CENTERIMAGE
+    LTEXT           "Verzió ",IDC_TEXT_VERSION,120,20,132,8,SS_CENTERIMAGE
+    LTEXT           "Írta Carlo Bramini",IDC_STATIC,120,32,132,8,
+                    SS_CENTERIMAGE
+    GROUPBOX        "",IDC_STATIC,112,0,148,52
+    GROUPBOX        "",IDC_STATIC,5,56,256,88
+    EDITTEXT        IDC_EDIT_LICENSE,12,68,240,68,ES_MULTILINE | ES_READONLY |
+                    WS_VSCROLL
+END
+
+IDD_DIALOG_STAT DIALOGEX DISCARDABLE  0, 0, 163, 85
+STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Statisztika"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_LIST_STAT,4,4,156,40,LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "RET",IDC_BUTTON_RET,4,48,36,16
+    PUSHBUTTON      "LOAD",IDC_BUTTON_LOAD,44,48,36,16
+    PUSHBUTTON      "CD",IDC_BUTTON_CD,84,48,36,16
+    PUSHBUTTON      "CAD",IDC_BUTTON_CAD,124,48,36,16
+    CTEXT           "n=0",IDC_TEXT_NITEMS,4,68,156,12,SS_CENTERIMAGE |
+                    SS_SUNKEN
+END
+
+// Menus
+
+IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE
+BEGIN
+    POPUP "&Szerkesztés"
+    BEGIN
+        MENUITEM "&Másolás\tCtrl+C",            IDM_EDIT_COPY
+        MENUITEM "&Beillesztés\tCtrl+V",        IDM_EDIT_PASTE
+    END
+    POPUP "&Nézet"
+    BEGIN
+        MENUITEM "&Szokásos",                   IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "&Tudományos",                 IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Át&váltás",                   IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "&Hexadecimális\tF5",          IDM_VIEW_HEX, CHECKED
+        MENUITEM "&Decimális\tF6",              IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Oktális\tF7",                IDM_VIEW_OCT, CHECKED
+        MENUITEM "&Bináris\tF8",                IDM_VIEW_BIN, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Fok\tF2",                    IDM_VIEW_DEG, CHECKED
+        MENUITEM "&Radián\tF3",                 IDM_VIEW_RAD, CHECKED
+        MENUITEM "&Gradián\tF4",                IDM_VIEW_GRAD, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "Számjegyek &csoportosítása",  IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "&Súgó"
+    BEGIN
+        MENUITEM "&Témakörök",                  IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "A ReactOS &Számológépről",    IDM_HELP_ABOUT
+    END
+END
+
+IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
+BEGIN
+    POPUP "&Szerkesztés"
+    BEGIN
+        MENUITEM "&Másolás\tCtrl+C",            IDM_EDIT_COPY
+        MENUITEM "&Beillesztés\tCtrl+V",        IDM_EDIT_PASTE
+    END
+    POPUP "&Nézet"
+    BEGIN
+        MENUITEM "&Szokásos",                   IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "&Tudományos",                 IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Át&váltás",                   IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "&Hexadecimális\tF5",          IDM_VIEW_HEX, CHECKED
+        MENUITEM "&Decimális\tF6",              IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Oktális\tF7",                IDM_VIEW_OCT, CHECKED
+        MENUITEM "&Bináris\tF8",                IDM_VIEW_BIN, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Négyszó\tF12",               IDM_VIEW_QWORD, CHECKED
+        MENUITEM "&Duplaszó\tF2",               IDM_VIEW_DWORD, CHECKED
+        MENUITEM "&Szó\tF3",                    IDM_VIEW_WORD, CHECKED
+        MENUITEM "&Bájt\tF4",                   IDM_VIEW_BYTE, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "Számjegyek &csoportosítása",  IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "&Súgó"
+    BEGIN
+        MENUITEM "&Témakörök",                  IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "A ReactOS &Számológépről",    IDM_HELP_ABOUT
+    END
+END
+
+IDR_MENU_STANDARD MENU DISCARDABLE
+BEGIN
+    POPUP "&Szerkesztés"
+    BEGIN
+        MENUITEM "&Másolás\tCtrl+C",            IDM_EDIT_COPY
+        MENUITEM "&Beillesztés\tCtrl+V",        IDM_EDIT_PASTE
+    END
+    POPUP "&Nézet"
+    BEGIN
+        MENUITEM "&Szokásos",                   IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "&Tudományos",                 IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Át&váltás",                   IDM_VIEW_CONVERSION
+        MENUITEM SEPARATOR
+        MENUITEM "Számjegyek &csoportosítása",  IDM_VIEW_GROUP, CHECKED
+    END
+    POPUP "&Súgó"
+    BEGIN
+        MENUITEM "&Témakörök",                  IDM_HELP_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "A ReactOS &Számológépről",    IDM_HELP_ABOUT
+    END
+END
+
+// String Tables
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STRING_LICENSE      "A ReactOS Számológép a GNU GPL licenc alatt kiadott szabad szoftver.\r\n\r\nA GNU GPL licenc egy másolatát innen szerezheted be:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nValamint a GNU GPL licenc fordítását innen szerezheted be:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_MATH_ERROR          "Hiba"
+    IDS_QUICKHELP           "Gyors súgó"
+END
+
+// Types of conversion
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CONV_ANGLE          "Szög"
+    IDS_CONV_AREA           "Terület"
+    IDS_CONV_CONSUMPTION    "Fogyasztás (motorok)"
+    IDS_CONV_CURRENCY       "Pénznemek"
+    IDS_CONV_ENERGY         "Energia"
+    IDS_CONV_LENGTH         "Hossz"
+    IDS_CONV_POWER          "Teljesítmény"
+    IDS_CONV_PRESSURE       "Nyomás"
+    IDS_CONV_TEMPERATURE    "Hőmérséklet"
+    IDS_CONV_TIME           "Idő"
+    IDS_CONV_VELOCITY       "Sebesség"
+    IDS_CONV_VOLUME         "Térfogat"
+    IDS_CONV_WEIGHT         "Súly/tömeg"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "Fok"
+    IDS_ANGLE_GRADIANS      "Gradián"
+    IDS_ANGLE_RADIANS       "Radián"
+END
+
+// TYPES OF AREAS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_AREA_ACRES                  "Acre"
+    IDS_AREA_ACRES_BRAZIL           "Acre (Brazília)"
+    IDS_AREA_ACRES_FRANCE           "Acre (Franciaország)"
+    IDS_AREA_ACRES_SCOTS            "Acre (Skót)"
+    IDS_AREA_ACRES_US               "Acre (Egyesült Államok)"
+    IDS_AREA_ARES                   "Are"                      // ?
+    IDS_AREA_CHOU                   "Chou"
+    IDS_AREA_DANBO                  "Danbo"
+    IDS_AREA_HECTARES               "Hektár"
+    IDS_AREA_JEONGBO                "Jeongbo"
+    IDS_AREA_MORGEN_HUNGARY         "Hold (Magyarország)"      // ?
+    IDS_AREA_MU                     "Mu"
+    IDS_AREA_PING                   "Ping"
+    IDS_AREA_PYEONG                 "Pyeong"
+    IDS_AREA_PYEONGBANGJA           "Pyeongbangja"
+    IDS_AREA_RAI                    "Rai"
+    IDS_AREA_SE                     "Se"
+    IDS_AREA_SQUARE_CENTIMETERS     "Négyzetcentiméter"
+    IDS_AREA_SQUARE_CHR             "Négyzetchr"               // ?
+    IDS_AREA_SQUARE_FATHOMS         "Négyzetöl"                // Alt.: Négyszögöl
+    IDS_AREA_SQUARE_FATHOMS_HUNGARY "Négyzetöl (Magyarország)" // Alt.: Négyszögöl (Magyarország)
+    IDS_AREA_SQUARE_FEET            "Négyzetláb"               // Alt.: Négyszögláb
+    IDS_AREA_SQUARE_INCHES          "Négyzethüvelyk"           // Alt.: Négyszöghüvelyk
+    IDS_AREA_SQUARE_KILOMETERS      "Négyzetkilométer"
+    IDS_AREA_SQUARE_LAR             "Négyzetlar"               // ?
+    IDS_AREA_SQUARE_METER           "Négyzetméter"
+    IDS_AREA_SQUARE_MILES           "Négyzetmérföld"
+    IDS_AREA_SQUARE_MILLIMETERS     "Négyzetmilliméter"
+    IDS_AREA_SQUARE_SHAKU           "Négyzetshaku"             // ?
+    IDS_AREA_SQUARE_TSUEN           "Négyzettsuen"             // ?
+    IDS_AREA_SQUARE_VA              "Négyzetva"                // ?
+    IDS_AREA_SQUARE_YARD            "Négyzetyard"
+    IDS_AREA_TAN                    "Tan"
+    IDS_AREA_TSUBO                  "Tsubo"
+END
+
+// TYPES OF COMSUMPTIONS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CONSUMPTION_KM_PER_L        "Kilométer/liter"
+    IDS_CONSUMPTION_L_PER_100_KM    "Liter/100 kilométer"
+    IDS_CONSUMPTION_MILES_GALLON_UK "Mérföld/gallon (Egyesült Királyság)"
+    IDS_CONSUMPTION_MILES_GALLON_US "Mérföld/gallon (Egyesült Államok)"
+END
+
+// TYPES OF CURRENCIES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Osztrák schilling"
+    IDS_CURRENCY_BELGIAN_FRANC      "Belga frank"
+    IDS_CURRENCY_CYPRIOT_POUND      "Ciprusi font"
+    IDS_CURRENCY_CZECH_KORUNA       "Cseh korona"
+    IDS_CURRENCY_DEUTSCHE_MARK      "Német márka"
+    IDS_CURRENCY_DUTCH_GUILDER      "Holland gulden"
+    IDS_CURRENCY_EURO               "Euró"
+    IDS_CURRENCY_FINNISH_MARKKA     "Finn márka"
+    IDS_CURRENCY_FRENCH_FRANC       "Francia frank"
+    IDS_CURRENCY_GREEK_DRACHMA      "Görög drachma"
+    IDS_CURRENCY_IRISH_POUND        "Ír font"
+    IDS_CURRENCY_ITALIAN_LIRA       "Olasz líra"
+    IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxemburgi frank"
+    IDS_CURRENCY_MALTESE_LIRA       "Máltai líra"
+    IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portugál escudo"
+    IDS_CURRENCY_SLOVAK_KORUNA      "Szlovák korona"
+    IDS_CURRENCY_SLOVENIAN_TOLAR    "Szlovén tolár"
+    IDS_CURRENCY_SPANISH_PESETA     "Spanyol pezeta"
+END
+
+// TYPES OF ENERGIES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ENERGY_15_C_CALORIES        "15 °C kalória"
+    IDS_ENERGY_BTUS                 "Brit hőegység"
+    IDS_ENERGY_ERGS                 "Erg"
+    IDS_ENERGY_EVS                  "Elektronvolt"
+    IDS_ENERGY_FOOT_POUNDS          "Láb-font"
+    IDS_ENERGY_IT_CALORIES          "Kalória (nemzetközi táblázat)"
+    IDS_ENERGY_IT_KILOCALORIES      "Kilokalória (nemzetközi táblázat)"
+    IDS_ENERGY_JOULES               "Joule"
+    IDS_ENERGY_KILOJOULES           "Kilojoule"
+    IDS_ENERGY_KILOWATT_HOURS       "Kilowattóra"
+    IDS_ENERGY_NUTRITION_CALORIES   "Táplálkozási kalória"
+    IDS_ENERGY_TH_CALORIES          "Termokémiai kalória"
+END
+
+// TYPES OF LENGTHS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LENGTH_ANGSTROMS            "Ångström"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Csillagászati egység"
+    IDS_LENGTH_BARLEYCORNS          "Barleycorn"
+    IDS_LENGTH_CENTIMETERS          "Centiméter"
+    IDS_LENGTH_CHAINS_UK            "Chain (Egyesült Királyság)"
+    IDS_LENGTH_CHI                  "Chi"
+    IDS_LENGTH_CHOU                 "Chou"
+    IDS_LENGTH_CHR                  "Chr"
+    IDS_LENGTH_CUN                  "Cun"
+    IDS_LENGTH_FATHOMS              "Öl"
+    IDS_LENGTH_FATHOMS_HUNGARY      "Öl (Magyarország)"
+    IDS_LENGTH_FEET                 "Láb"
+    IDS_LENGTH_FURLONGS             "Furlong"
+    IDS_LENGTH_GAN                  "Gan"
+    IDS_LENGTH_HANDS                "Hand"
+    IDS_LENGTH_HUNH                 "Hunh"
+    IDS_LENGTH_INCHES               "Hüvelyk"
+    IDS_LENGTH_JA                   "Ja"
+    IDS_LENGTH_JEONG                "Jeong"
+    IDS_LENGTH_KABIET               "Kabiet"
+    IDS_LENGTH_KEN                  "Ken"
+    IDS_LENGTH_KEUB                 "Keub"
+    IDS_LENGTH_KILOMETERS           "Kilométer"
+    IDS_LENGTH_LAR                  "Lar"
+    IDS_LENGTH_LIGHT_YEARS          "Fényév"
+    IDS_LENGTH_LINKS_UK             "Link (Egyesült Királyság)"
+    IDS_LENGTH_METERS               "Méter"
+    IDS_LENGTH_MICRONS              "Mikron"
+    IDS_LENGTH_MILES                "Mérföld"
+    IDS_LENGTH_MILLIMETERS          "Milliméter"
+    IDS_LENGTH_NAUTICAL_MILES       "Tengeri mérföld"
+    IDS_LENGTH_NIEU                 "Nieu"
+    IDS_LENGTH_PARSECS              "Parsec"
+    IDS_LENGTH_PICAS                "Pica"
+    IDS_LENGTH_RI_JAPAN             "Ri (Japán)"
+    IDS_LENGTH_RI_KOREA             "Ri (Korea)"
+    IDS_LENGTH_RODS                 "Rod"
+    IDS_LENGTH_SAWK                 "Sawk"
+    IDS_LENGTH_SEN                  "Sen"
+    IDS_LENGTH_SHAKU                "Shaku"
+    IDS_LENGTH_SPAN                 "Arasz"
+    IDS_LENGTH_SUN                  "Sun"
+    IDS_LENGTH_TSUEN                "Tsuen"
+    IDS_LENGTH_VA                   "Va"
+    IDS_LENGTH_YARDS                "Yard"
+    IDS_LENGTH_YOTE                 "Yote"
+    IDS_LENGTH_ZHANG                "Zhang"
+END
+
+// TYPES OF POWERS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "Brit hőegység per perc"
+    IDS_POWER_FPS_PER_MINUTE        "Láb-font per perc"
+    IDS_POWER_HORSEPOWER            "Lóerő"
+    IDS_POWER_KILOWATTS             "Kilowatt"
+    IDS_POWER_MEGAWATTS             "Megawatt"
+    IDS_POWER_WATTS                 "Watt"
+END
+
+// TYPE OF PRESSURES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PRESSURE_ATMOSPHERES        "Atmoszféra"
+    IDS_PRESSURE_BARS               "Bar"
+    IDS_PRESSURE_HECTOPASCALS       "Hektopascal"
+    IDS_PRESSURE_KILOPASCALS        "Kilopascal"
+    IDS_PRESSURE_MM_OF_MERCURY      "Higanymilliméter"
+    IDS_PRESSURE_PASCALS            "Pascal"
+    IDS_PRESSURE_PSI                "Font per négyzethüvelyk"
+END
+
+// TYPES OF TEMPERATURES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TEMPERATURE_CELSIUS         "Celsius"
+    IDS_TEMPERATURE_FAHRENHEIT      "Fahrenheit"
+    IDS_TEMPERATURE_KELVIN          "Kelvin"
+    IDS_TEMPERATURE_RANKINE         "Rankine"
+END
+
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "Nap"
+    IDS_TIME_HOURS        "Óra"
+    IDS_TIME_NANOSECONDS  "Nanoszekundum"
+    IDS_TIME_MICROSECONDS "Microszekundum"
+    IDS_TIME_MILLISECONDS "Milliszekundum"
+    IDS_TIME_MINUTES      "Perc"
+    IDS_TIME_SECONDS      "Másodperc"
+    IDS_TIME_WEEKS        "Hét"
+    IDS_TIME_YEARS        "Év"
+END
+
+// TYPES OF VELOCITIES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_VELOCITY_CMS_SECOND         "Centiméter/óra"
+    IDS_VELOCITY_FEET_HOUR          "Láb/óra"
+    IDS_VELOCITY_FEET_SECOND        "Láb/másodperc"
+    IDS_VELOCITY_KILOMETERS_HOUR    "Kilométer/óra"
+    IDS_VELOCITY_KNOTS              "Csomó"
+    IDS_VELOCITY_MACH               "Mach"
+    IDS_VELOCITY_METERS_SECOND      "Méter/másodperc"
+    IDS_VELOCITY_MILES_HOUR         "Mérföld/óra"
+END
+
+// TYPES OF VOLUMES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_VOLUME_BARRELS_UK           "Hordó (Egyesült Királyság)"
+    IDS_VOLUME_BARRELS_OIL          "Olajhordó"
+    IDS_VOLUME_BUN                  "Bun"
+    IDS_VOLUME_BUSHELS_UK           "Véka (Egyesült Királyság)"
+    IDS_VOLUME_BUSHELS_US           "Véka (Egyesült Államok)"
+    IDS_VOLUME_CUBIC_CENTIMETERS    "Köbcentiméter"
+    IDS_VOLUME_CUBIC_FEET           "Köbláb"
+    IDS_VOLUME_CUBIC_INCHES         "Köbhüvelyk"
+    IDS_VOLUME_CUBIC_METERS         "Köbméter"
+    IDS_VOLUME_CUBIC_YARDS          "Köbyard"
+    IDS_VOLUME_DOE                  "Doe"
+    IDS_VOLUME_FLUID_OUNCES_UK      "Folyadék uncia (Egyesült Királyság)"
+    IDS_VOLUME_FLUID_OUNCES_US      "Folyadék uncia (Egyesült Államok)"
+    IDS_VOLUME_GALLONS_UK           "Gallon (Egyesült Királyság)"
+    IDS_VOLUME_GALLONS_DRY_US       "Gallon, száraz (Egyesült Államok)"
+    IDS_VOLUME_GALLONS_LIQUID_US    "Gallon, folyékony (Egyesült Államok)"
+    IDS_VOLUME_GOU                  "Gou"
+    IDS_VOLUME_HOP                  "Hop"
+    IDS_VOLUME_ICCE                 "Icce"
+    IDS_VOLUME_KWIAN                "Kwian"
+    IDS_VOLUME_LITERS               "Liter"
+    IDS_VOLUME_MAL                  "Mal"
+    IDS_VOLUME_MILLILITERS          "Milliliter"
+    IDS_VOLUME_PINTS_UK             "Pint (Egyesült Királyság)"
+    IDS_VOLUME_PINTS_DRY_US         "Pint, száraz (Egyesült Államok)"
+    IDS_VOLUME_PINTS_LIQUID_US      "Pint, folyékony (Egyesült Államok)"
+    IDS_VOLUME_QUARTS_UK            "Quart (Egyesült Királyság)"
+    IDS_VOLUME_QUARTS_DRY_US        "Quart, száraz (Egyesült Államok)"
+    IDS_VOLUME_QUARTS_LIQUID_US     "Quart, folyékony (Egyesült Államok)"
+    IDS_VOLUME_SEKI                 "Seki"
+    IDS_VOLUME_SYOU                 "Syou"
+    IDS_VOLUME_TANANLOUNG           "Tananloung"
+    IDS_VOLUME_TANG                 "Tang"
+    IDS_VOLUME_TO                   "To"
+END
+
+// TYPES OF WEIGHTS
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WEIGHT_BAHT                 "Baht"
+    IDS_WEIGHT_CARATS               "Karát"
+    IDS_WEIGHT_CHUNG                "Chung"
+    IDS_WEIGHT_DON                  "Don"
+    IDS_WEIGHT_GEUN                 "Geun"
+    IDS_WEIGHT_GRAMS                "Gramm"
+    IDS_WEIGHT_GWAN                 "Gwan"
+    IDS_WEIGHT_HARB                 "Harb"
+    IDS_WEIGHT_JIN_CHINA            "Jin (Kína)"
+    IDS_WEIGHT_JIN_TAIWAN           "Jin (Tajvan)"
+    IDS_WEIGHT_KAN                  "Kan"
+    IDS_WEIGHT_KILOGRAMS            "Kilogramm"
+    IDS_WEIGHT_KIN                  "Kin"
+    IDS_WEIGHT_LIANG_CHINA          "Liang (Kína)"
+    IDS_WEIGHT_LIANG_TAIWAN         "Liang (Tajvan)"
+    IDS_WEIGHT_MONME                "Monme"
+    IDS_WEIGHT_OUNCES_AVOIRDUPOIS   "Uncia, avoirdupois"
+    IDS_WEIGHT_OUNCES_TROY          "Uncia, troy"
+    IDS_WEIGHT_POUNDS               "Font"
+    IDS_WEIGHT_QUINTAL_METRIC       "Mázsa (metrikus)"
+    IDS_WEIGHT_SALOUNG              "Saloung"
+    IDS_WEIGHT_STONES               "Stone"
+    IDS_WEIGHT_TAMLUNG              "Tamlung"
+    IDS_WEIGHT_TONNES               "Tonna"
+    IDS_WEIGHT_TONS_UK              "Hosszú tonna (Egyesült Királyság)"
+    IDS_WEIGHT_TONS_US              "Rövid tonna (Egyesült Államok)"
+END

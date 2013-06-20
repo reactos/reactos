@@ -1,0 +1,162 @@
+/*
+ * Type definitions for shell objects
+ *
+ * Copyright (C) 1999 Juergen Schmied
+ * Copyright (C) 2003 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "wtypes.idl";
+
+cpp_quote("#include <pshpack1.h>")
+typedef struct
+{
+    WORD cb;      /* nr of bytes in this item */
+    BYTE abID[1]; /* first byte in this item */
+} SHITEMID, *LPSHITEMID;
+typedef const SHITEMID *LPCSHITEMID;
+
+typedef struct _ITEMIDLIST
+{
+    SHITEMID mkid; /* first itemid in list */
+} ITEMIDLIST,*LPITEMIDLIST;
+typedef const ITEMIDLIST *LPCITEMIDLIST;
+typedef LPITEMIDLIST PITEMID_CHILD;
+typedef const PITEMID_CHILD PCITEMID_CHILD;
+typedef LPCITEMIDLIST PCUITEMID_CHILD;
+typedef LPCITEMIDLIST *PCUITEMID_CHILD_ARRAY;
+typedef LPCITEMIDLIST PCUIDLIST_RELATIVE;
+typedef LPITEMIDLIST PIDLIST_ABSOLUTE;
+typedef LPCITEMIDLIST PCIDLIST_ABSOLUTE;
+cpp_quote("#include <poppack.h>")
+
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
+
+cpp_quote("#if 0")
+typedef struct { int dummy; } WIN32_FIND_DATAA, WIN32_FIND_DATAW;
+cpp_quote("#endif")
+
+typedef enum tagSTRRET_TYPE
+{
+    STRRET_WSTR = 0,
+    STRRET_OFFSET = 1,
+    STRRET_CSTR = 2
+} STRRET_TYPE;
+
+cpp_quote("#include <pshpack8.h>")
+typedef struct _STRRET
+{
+    UINT uType;			/* STRRET_xxx */
+    [switch_type(UINT), switch_is(uType)] union
+    {
+    [case(STRRET_WSTR)][string] LPWSTR    pOleStr;        /* OLESTR that will be freed */
+    [case(STRRET_OFFSET)]       UINT      uOffset;        /* Offset into SHITEMID (ANSI) */
+    [case(STRRET_CSTR)]         char      cStr[MAX_PATH]; /* ANSI Buffer */
+    } DUMMYUNIONNAME;
+} STRRET, *LPSTRRET;
+cpp_quote("#include <poppack.h>")
+
+cpp_quote("#include <pshpack1.h>")
+typedef struct
+{
+    int fmt;
+    int cxChar;
+    STRRET str;
+} SHELLDETAILS, *LPSHELLDETAILS;
+cpp_quote("#include <poppack.h>")
+
+typedef struct _COMDLG_FILTERSPEC
+{
+    [string] LPCWSTR pszName;
+    [string] LPCWSTR pszSpec;
+} COMDLG_FILTERSPEC;
+
+typedef [v1_enum] enum tagSHCOLSTATE
+{
+    SHCOLSTATE_DEFAULT = 0,
+    SHCOLSTATE_TYPE_STR,
+    SHCOLSTATE_TYPE_INT,
+    SHCOLSTATE_TYPE_DATE,
+    SHCOLSTATE_TYPEMASK = 0xf,
+    SHCOLSTATE_ONBYDEFAULT = 0x10,
+    SHCOLSTATE_SLOW = 0x20,
+    SHCOLSTATE_EXTENDED = 0x40,
+    SHCOLSTATE_SECONDARYUI = 0x80,
+    SHCOLSTATE_HIDDEN = 0x100,
+    SHCOLSTATE_PREFER_VARCMP = 0x200,
+    SHCOLSTATE_PREFER_FMTCMP = 0x400,
+    SHCOLSTATE_NOSORTBYFOLDERNESS = 0x800,
+    SHCOLSTATE_VIEWONLY = 0x10000,
+    SHCOLSTATE_BATCHREAD = 0x20000,
+    SHCOLSTATE_NO_GROUPBY = 0x40000,
+    SHCOLSTATE_FIXED_WIDTH = 0x1000,
+    SHCOLSTATE_NODPISCALE = 0x2000,
+    SHCOLSTATE_FIXED_RATIO = 0x4000,
+    SHCOLSTATE_DISPLAYMASK = 0xf000
+} SHCOLSTATE;
+
+typedef DWORD SHCOLSTATEF;
+
+typedef GUID KNOWNFOLDERID;
+
+cpp_quote("#if 0")
+typedef KNOWNFOLDERID *REFKNOWNFOLDERID;
+cpp_quote("#endif")
+
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("#define REFKNOWNFOLDERID const KNOWNFOLDERID &")
+cpp_quote("#else")
+cpp_quote("#define REFKNOWNFOLDERID const KNOWNFOLDERID * __MIDL_CONST")
+cpp_quote("#endif")
+
+typedef GUID FOLDERTYPEID;
+
+cpp_quote("#if 0")
+typedef FOLDERTYPEID *REFFOLDERTYPEID;
+cpp_quote("#endif")
+
+cpp_quote("#ifdef __cplusplus")
+cpp_quote("#define REFFOLDERTYPEID const FOLDERTYPEID &")
+cpp_quote("#else")
+cpp_quote("#define REFFOLDERTYPEID const FOLDERTYPEID * __MIDL_CONST")
+cpp_quote("#endif")
+
+typedef  [v1_enum] enum tagPERCEIVED {
+  PERCEIVED_TYPE_CUSTOM      = -3,
+  PERCEIVED_TYPE_UNSPECIFIED = -2,
+  PERCEIVED_TYPE_FOLDER      = -1,
+  PERCEIVED_TYPE_UNKNOWN     = 0,
+  PERCEIVED_TYPE_TEXT        = 1,
+  PERCEIVED_TYPE_IMAGE       = 2,
+  PERCEIVED_TYPE_AUDIO       = 3,
+  PERCEIVED_TYPE_VIDEO       = 4,
+  PERCEIVED_TYPE_COMPRESSED  = 5,
+  PERCEIVED_TYPE_DOCUMENT    = 6,
+  PERCEIVED_TYPE_SYSTEM      = 7,
+  PERCEIVED_TYPE_APPLICATION = 8,
+  PERCEIVED_TYPE_GAMEMEDIA   = 9,
+  PERCEIVED_TYPE_CONTACTS    = 10
+} PERCEIVED;
+
+cpp_quote("#define PERCEIVEDFLAG_UNDEFINED     0x0000")
+cpp_quote("#define PERCEIVEDFLAG_SOFTCODED     0x0001")
+cpp_quote("#define PERCEIVEDFLAG_HARDCODED     0x0002")
+cpp_quote("#define PERCEIVEDFLAG_NATIVESUPPORT 0x0004")
+cpp_quote("#define PERCEIVEDFLAG_GDIPLUS       0x0010")
+cpp_quote("#define PERCEIVEDFLAG_WMSDK         0x0020")
+cpp_quote("#define PERCEIVEDFLAG_ZIPFOLDER     0x0040")

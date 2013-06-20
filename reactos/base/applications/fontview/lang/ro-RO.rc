@@ -1,0 +1,14 @@
+//2012.09.09 - Fulea Ștefan: update caused by r56898, corrections
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_INSTALL,        "Inst&alează"
+    IDS_PRINT,          "I&mprimă"
+	IDS_STRING,         "Turubinele eoliene generează câțiva MJ (câțiva kW•h) în exces, acoperind și necesarul familiei. QY 1234567890"
+	IDS_OPEN, 			"Deschidere font…"
+	IDS_ERROR,          "Eroare"
+	IDS_ERROR_NOMEM,    "Nu e destulă memorie pentru a încheia operația."
+	IDS_ERROR_NOFONT,   "Fișierul «%1» este un fișier font deteriorat."
+	IDS_ERROR_NOCLASS,  "Nu s-a putut inițializa clasa de ferestre."
+END

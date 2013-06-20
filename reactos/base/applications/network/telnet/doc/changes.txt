@@ -1,0 +1,239 @@
+                **********************************************
+                *** Console Telnet version 2.1 Change log  ***
+                **********************************************
+
+Version 2.1b2 -- October 16, 2000
+  Redirection fix (Mark Miesfield)
+  Allow "o" to open a connecton on the command line
+  Fixed problem with special keys (ALt-[, Alt-], Alt-\, etc.)
+  Added MTE Support (Ziglio Frediano)
+  Speed improvements in ttelhndl.cpp -- may be buggy?
+  Wrap_line option is now modifiable via telnet command line
+  Lock_linewrap option added
+  Cleaned up console code
+  Fixed some color issues with nonstandard consoles
+  Tab setting/resetting
+  Fixed "telnet.exe" installer problem
+  Fixed miscellaneous parsing bugs
+  Fixed vt100-compliance
+  Added NAWS support, but it doesn't work (RFC 1073)
+  Added X Display Location support (RFC 1096)
+
+Version 2.1b1 -- April 5, 2000
+-Bugfixes
+  Console code writes to bottom of buffer (W2K scrollback buffer now works)
+  Updated Winsock error messages (Craig Nellist)
+  Sleeping while thread paused, to give up CPU time (Craig Nellist)
+  Ctrl_Break_as_C now works properly
+  Restore original screen colors; use initial screen colors as default
+
+-New features
+  Cursor size sequences (Jose Cesar Otero Ridriguez)
+  Network piping
+  Line mode support added
+  Support for telnet:// URLs
+  Command-line history (Craig Nellist)
+  Connection Aliases
+
+-Translator updates
+  New code structure
+  Unified character map class
+  More configurable "special" keys:
+    tn_escape, tn_scrollback, tn_dial, tn_paste, tn_null, tn_cr, tn_crlf
+  Transmission of NUL character possible
+  Czech keyboard definition (Jakub Sterba)
+
+-New INI options
+  Window_Width, Window_Height
+  Scriptname (not functional), Script_Enable (not functional)
+  Netpipe (functional), Iopipe (not functional)
+
+Version 2.0 -- July 5, 1999
+-Bugfixes
+  Save/restore console title, character mapping fix (Pedro Gutierrez)
+  Telnet prompt fix, suspend telnet, string-based port (Craig Davidson)
+  Mutt/Lynx colors/underline fix, repeat character fix
+  Color display problem fixed (I.Ioannou)
+  Newline properly handled, added APP4_KEY, better key translation
+  Problem with icons not displaying properly fixed
+  Small bug with telnet crashing at exit (Sam Robertson, Daniel Straub)
+  Bug getting name of executable (Thomas Briggs)
+
+-Updates
+  Better key translation
+  Spanish keyboard definition (Cesar Otero)
+
+-New ini options
+  Set_Title (Adi Seiker)
+  Scroll_Enable/Scroll_Size
+  CtrlBreak_as_CtrlC (Bryan Montgomery)
+  Clear_on_Tabset removed
+  
+Version 2.0b7.1 -- Dec. 5, 1998
+-Minor changes
+  Fixed problems with Scrollback and Clipboard
+  Minor updates to terminal emulation
+  Keyboard init improvements (Vassili Bourdo)
+  Repeat sequence support, German key config (Titus von Boxberg)
+
+Version 2.0b7 -- Oct. 21, 1988
+-To do still:
+  ZModem support
+  Update key translator/character maps
+  Finish scrollback
+
+-Changes
+  Options added: Term_Width, Term_Height, Wide_Enable, Buffer_Size, Dial_key,
+        Keyboard_Paste, Status_bg, Status_fg, Input_Redir, Output_Redir
+
+  Application keypad mode support
+  Numlock/scroll lock support in KEYS.CFG
+  Del/. key now works properly
+  Ctrl-break bugfixes (Thomas Briggs)
+
+  Added suspend and fast quit to the command line (Thomas Briggs)
+  Error message for unable to load ini file (Thomas Briggs)
+  Fixed TELNET_INI environment variable (BK Oxley)
+
+  Support for changing screen size
+  Support for switching to 132-column mode via ANSI sequences
+
+  Fixed minor memory leaks
+  Mouse speedups/bugfixes, scrolling speedups/bugfixes
+  Miscellaneous ANSI parser fixes
+
+  Added support for changing the icon in the corner of the window
+  Fixed bug with mIRC
+  Fixed "try again" error message
+  Input and output redirection now separate (TELNET_REDIR still supported)
+  Modified "set" command to operate on groups
+  Character mapping now works again
+
+Version 2.0b6 28 Jul 1998
+-To Do still:
+  ZModem support
+  Finish mouse support
+  Fix character maps
+
+-Changes:
+  ANSI Parser should be almost complete
+  Reorganized source
+  Display speedups
+  Preliminary mouse support
+  Enhanced scrollback support
+  Miscellaneous bug fixes
+
+Version 2.0b5 05 Jun 1998
+-Version 2b5 released from I.Ioannou <roryt@hol.gr>
+-To Do Still:
+  Too many to mention :-)
+-To Do, Maybe:
+  Mouse cut/paste support.
+  Support secure telnet options.
+  Real blinking attributes.
+  Zmodem & Kermit DL Protocols.
+  Any ideas acceptable :-)
+
+
+May 1998
+-Changes
+   Paul Brannan <pbranna@clemson.edu> add telnet.ini code
+   improve telnet's speed, add some VT emulation, port telnet to
+   MSVC, rewrote the command line options processing with GNU getopt,
+   fix many bugs, and more.  Good work Paul :-)
+   I.Ioannou <roryt@hol.gr> . A few bugs fixes, and a icon.
+   Also I convert tnmsg files to use a resource compiler.
+
+December 1997
+-Changes
+    Andrey V. Smilianets (smile@head.aval.kiev.ua)
+    rewrote the keys translator to support many different
+    keymaps, charmaps and configurations.
+    Also add editing support to telnet> prompt.
+
+
+Version 2.0b4 10/6/97
+-Updated by Brad Johnson who can be contacted at
+  <jbj@nounname.com>  http://nounname.com
+-Changes
+  Added command line history at the telnet> prompt.
+  Added ability to "unmap" a key by setting it equal to \000 in the key.cfg.
+  Added log-file option '-dFILENAME'.
+  Added print screen/line commands by I.Ioannou <roryt@hol.gr>.
+  Added Support for running in an emacs buffer <mauch@unidui.uni-duisburg.de>.
+  Added better support for international character sets
+     <mauch@unidui.uni-duisburg.de>.
+-To Do Still:
+  Support for local echo.
+  Scrollback buffer.
+  Fix Scrolling bug.
+-To Do, Maybe:
+  Change the telnet options to initiate the negotiation.
+  Mouse cut/paste support.
+  Support secure telnet options.
+  Real blinking attributes.
+  Zmodem & Kermit DL Protocols.
+
+Version 2.0b3  12/25/96:
+-Updated by Brad Johnson who can be contacted at
+  <jbj@nounname.com>  http://nounname.com
+-Changes
+  Screen colors and buffer settings are now preserved on exit.
+  Fixed WindowSize height/width 255 exception :-).
+  Found out that the paste problem is a bug in Win 95 (not my problem)!
+  Fixed screen buffer problems under NT when the window
+    was smaller than the buffer.
+  Added custom key maps by I.Ioannou <roryt@hol.gr>.
+-To Do Still:
+  Fix advance to next line error when writing past column
+  Extend NAWS window negotiation to include buffer size changes.
+  Change the telnet options to initiate the negotiation.
+  Add print screen/line commands.
+-To Do, Maybe:
+  Support for running in an emacs buffer.
+  Mouse cut/paste support.
+  Support secure telnet options.
+  Real blinking attributes.
+  Zmodem & Kermit DL Protocols.
+
+Version 2.0b2  09/29/96:
+-Updated by Brad Johnson who can be contacted at
+  <jbj@nounname.com>  http://nounname.com
+-Changes
+  Added code to move cursor to end of screen and reset attributes on close
+  Fixed potential IAC parsing problem
+  Fixed ClearScreen Last line problem
+  Fixed parse problem that prevented line clears on unix history
+  Changed scroll code to scroll the entire buffer
+  Removed destructive backspace. May cause problems with terminals that want
+    destructive backspaces.
+  Added binary telnet option to use 8bit.
+-To Do Next
+  Paste still doesn't work!
+
+Version 2.0b1  09/22/96:
+-Updated by Brad Johnson who can be contacted at
+  <jbj@nounname.com>  http://nounname.com
+-Changes
+  Added Color ANSI support. It works!
+  Added option for user specified port addresses on the command line.
+  Added ANSI keyboard mapping support for cursor keys.
+  Added destructive Backspace.
+  Added escape key 'ALT-]'.
+  Added TermType and WindowSize telnet options.
+  Added/Fixed various other ANSI codes.
+  Now (I hope) all ANSI codes handled correctly!
+  Fixed cursor left/right/save/restore commands.
+  Fixed clear line and clear screen command.
+  Expanded and altered network buffer to prevent some lockups :-).
+  Added Unix style telnet prompt "telnet>" with options.
+-To Do Next
+  Should parse for IAC separate from ANSI.
+
+Version 1.0a:
+- This release fixes a bug which caused it to hang when connecting to
+  UNIX boxes. The program simply ignored Telnet DO instead of replying
+  with WON'T as required by RFC 854.
+
+Version 1.0:
+- First release

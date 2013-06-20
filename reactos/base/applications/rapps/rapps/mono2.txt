@@ -1,0 +1,33 @@
+﻿; UTF-8
+
+[Section]
+Name = Mono .net Development Framework
+Version = 2.11.4
+Licence = Unknown
+Description = Open-source .net Framework.
+Size = 91.93MB
+Category = 14
+URLSite = http://www.mono-project.com/Main_Page
+URLDownload = http://origin-download.mono-project.com/archive/2.11.4/windows-installer/mono-2.11.4-gtksharp-2.12.11-win32-0.exe
+CDPath = none
+
+[Section.0407]
+Description = Open Source .net Framework.
+
+[Section.040a]
+Description = Versión open-source de .NET Framework.
+
+[Section.040c]
+Description = Framework .net open source.
+Size = 91,93 Mo
+
+[Section.0415]
+Description = Pakiet Mono .net Framework dla Programistów.
+
+[Section.0418]
+Licence = Nespecificată
+Description = Platformă .net (open-source).
+Size = 91,93 Mo
+
+[Section.0422]
+Description = Відкритий .net Фреймворк.

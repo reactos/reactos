@@ -1,0 +1,94 @@
+// Russian language file. (Dmitry Chapyshev, 2007.06.17)
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDD_STATUSWINDOW_DLG DIALOGEX 0,0,275,80
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Пожалуйста подождите..."
+FONT 8,"MS Shell Dlg",400,0,1
+BEGIN
+    CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
+    LTEXT           "",IDC_STATUSLABEL,7,62,261,12,SS_WORDELLIPSIS
+END
+
+IDD_NOTICE_DLG DIALOGEX 0, 0, 186, 32
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Добро пожаловать в ReactOS"
+FONT 8,"MS Shell Dlg",400,0,1
+BEGIN
+    ICON            IDI_LOCKICON, -1, 7, 5, 32, 32
+    LTEXT           "Нажмите клавиши Ctrl-Alt-Del.",IDC_STATIC, 38, 10, 144, 14
+END
+
+IDD_LOGGEDOUT_DLG DIALOGEX 0,0,275,147
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Вход"
+FONT 8,"MS Shell Dlg",400,0,1
+BEGIN
+    CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
+    RTEXT           "Имя пользователя:", IDC_STATIC, 6, 75, 70, 8
+    EDITTEXT        IDC_USERNAME,84,72,119,14,ES_AUTOHSCROLL
+    RTEXT           "Пароль:", IDC_STATIC, 6, 93, 70, 8
+    EDITTEXT        IDC_PASSWORD,84,91,119,14,ES_AUTOHSCROLL | ES_PASSWORD
+    PUSHBUTTON      "OK", IDOK, 47, 122, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Отмена", IDCANCEL, 109, 122, 50, 14
+    PUSHBUTTON      "Выключение", IDC_SHUTDOWN, 171, 122, 58, 14
+END
+
+IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 175
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Безопасность"
+FONT 8,"MS Shell Dlg",400,0,1
+BEGIN
+    CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
+    GROUPBOX        "Logon Information",IDC_STATIC,7,61,261,52
+    LTEXT           "<Message>",IDC_LOGONMSG,15,73,245,18
+    LTEXT           "<Logon date>",IDC_LOGONDATE,15,94,245,8
+    CTEXT           "Выберите необходимое действие:", IDC_STATIC,10,119,255,8
+    PUSHBUTTON      "Заблокировать", IDC_LOCK, 7,135, 86, 14
+    PUSHBUTTON      "Завершение сеанса", IDC_LOGOFF, 102,135, 86, 14
+    PUSHBUTTON      "Выключение",IDC_SHUTDOWN, 198,135, 70, 14
+    PUSHBUTTON      "Диспетчер задач",IDC_TASKMGR, 102,154, 86, 14
+    PUSHBUTTON      "Отмена", IDCANCEL, 198,154, 70, 14
+END
+
+IDD_LOCKED_DLG DIALOGEX 0,0,275,121
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Computer Locked"
+FONT 8,"MS Shell Dlg",400,0,1
+BEGIN
+    CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
+    ICON            IDI_LOCKICON,-1,7,59,20,20
+    LTEXT           "This computer is in use and has been locked.",IDC_STATIC,37,61,231,8
+    LTEXT           "Message",IDC_LOCKMSG,37,75,231,26
+    LTEXT           "Press Ctrl-Alt-Del to unlock this computer.",IDC_STATIC,37,106,231,8
+END
+
+IDD_UNLOCK_DLG DIALOGEX 0,0,275,179
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Unlock Computer"
+FONT 8,"MS Shell Dlg",400,0,1
+BEGIN
+    CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
+    ICON            IDI_LOCKICON,-1,7,59,20,20
+    LTEXT           "This computer is in use and has been locked.",IDC_STATIC,36,61,232,8
+    LTEXT           "Message",IDC_LOCKMSG,36,75,232,26
+    LTEXT           "Username:",IDC_STATIC,36,107,40,8
+    EDITTEXT        IDC_USERNAME,84,104,119,14,ES_AUTOHSCROLL
+    LTEXT           "Password:",IDC_STATIC,36,125,42,8
+    EDITTEXT        IDC_PASSWORD,84,123,119,14,ES_AUTOHSCROLL | ES_PASSWORD
+    PUSHBUTTON      "OK",IDOK,80,154,50,14,BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Cancel",IDCANCEL,144,154,50,14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LOGGEDOUTSAS "Добро пожаловать!"
+    IDS_LOCKEDSAS "Этот компьютер сейчас заблокирован."
+    IDS_PRESSCTRLALTDELETE "Нажмите клавиши Control+Alt+Delete для входа."
+    IDS_ASKFORUSER "Имя пользователя: "
+    IDS_ASKFORPASSWORD "Пароль: "
+    IDS_FORCELOGOFF "При регистрации нового пользователя все несохраненные данные будут утеряны. Продолжить?"
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOGONDATE "Logon date: %s %s"
+END

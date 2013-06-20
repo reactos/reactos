@@ -1,0 +1,564 @@
+/*
+ * COM interfaces for shell objects
+ *
+ * Copyright (C) 2004 Maxime Bellengé
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "ocidl.idl";
+
+#include <shdispid.h>
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef ShellExecute")
+cpp_quote("#endif")
+
+/*****************************************************************************
+ * IEnumACString interface
+ */
+[
+    local,
+    object,
+    uuid(8e74c210-cf9d-4eaf-a403-7356428f0a5a),
+    pointer_default(unique)
+]
+interface IEnumACString : IEnumString
+{
+    typedef IEnumACString *PENUMACSTRING, *LPENUMACSTRING;
+
+    typedef enum _tagACENUMOPTION
+    {
+        ACEO_NONE            = 0x00000000,
+        ACEO_MOSTRECENTFIRST = 0x00000001,
+        ACEO_FIRSTUNUSED     = 0x00010000,
+    } ACENUMOPTION;
+
+    HRESULT NextItem( [out] LPWSTR pszUrl,
+                      [in] ULONG cchMax,
+                      [out] ULONG *pulSortIndex);
+
+    HRESULT SetEnumOptions( [in] DWORD dwOptions );
+
+    HRESULT GetEnumOptions( [out] DWORD *pdwOptions );
+}
+
+/*****************************************************************************
+ * IAutoComplete interface
+ */
+[
+    local,
+    object,
+    uuid(00bb2762-6a77-11d0-a535-00c04fd7d062),
+    pointer_default(unique)
+]
+interface IAutoComplete : IUnknown
+{
+    typedef IAutoComplete *LPAUTOCOMPLETE;
+
+    HRESULT Init( [in] HWND hwndEdit,
+		  [in] IUnknown *punkACL,
+		  [in] LPCOLESTR pwszRegKeyPath,
+		  [in] LPCOLESTR pwszQuickComplete);
+    
+    HRESULT Enable( [in] BOOL fEnable );
+}
+
+/*****************************************************************************
+ * IAutoComplete2 interface
+ */
+[
+    local,
+    object,
+    uuid(eac04bc0-3791-11d2-bb95-0060977b464c),
+    pointer_default(unique)
+]
+interface IAutoComplete2 : IAutoComplete
+{
+    typedef IAutoComplete2 *LPAUTOCOMPLETE2;
+
+    typedef enum _tagAUTOCOMPLETEOPTIONS
+	{
+	    ACO_NONE           = 0x00,      /* No AutoComplete */
+	    ACO_AUTOSUGGEST    = 0x01,      /* enable autosuggest dropdown */
+	    ACO_AUTOAPPEND     = 0x02,      /* enable autoappend */
+	    ACO_SEARCH         = 0x04,      /* add search entry to completion list */
+	    ACO_FILTERPREFIXES = 0x08,      /* don't match common prefixes (www., http://, etc) */
+	    ACO_USETAB         = 0x10,      /* use tab to select autosuggest entries */
+	    ACO_UPDOWNKEYDROPSLIST = 0x20,  /* up/down arrow key invokes autosuggest dropdown (if enabled) */
+	    ACO_RTLREADING     = 0x40,      /* enable RTL reading order for dropdown */
+	} AUTOCOMPLETEOPTIONS;
+
+    HRESULT SetOptions( [in] DWORD dwFlag);
+
+    HRESULT GetOptions( [out] DWORD *pdwFlag);
+}
+
+[
+    uuid(50a7e9b0-70ef-11d1-b75a-00a0c90564fe),
+    version(1.0)
+]
+library Shell32
+{
+
+importlib("stdole2.tlb");
+
+[
+    object,
+    oleautomation,
+    uuid(9ba05970-f6a8-11cf-a442-00a0c90a8f39),
+    pointer_default(unique)
+]
+interface IFolderViewOC : IDispatch
+{
+    HRESULT SetFolderView( [in] IDispatch *pdisp );
+}
+
+[
+    uuid(62112aa2-ebe4-11cf-a5fb-0020afe7292d)
+]
+dispinterface DShellFolderViewEvents
+{
+    properties:
+    methods:
+    [id(DISPID_SELECTIONCHANGED)]
+    void SelectionChanged();
+
+    [id(DISPID_FILELISTENUMDONE)]
+    void EnumDone();
+
+    [id(DISPID_VERBINVOKED)]
+    VARIANT_BOOL VerbInvoked();
+
+    [id(DISPID_DEFAULTVERBINVOKED)]
+    VARIANT_BOOL DefaultVerbInvoked();
+
+    [id(DISPID_BEGINDRAG)]
+    VARIANT_BOOL BeginDrag();
+}
+
+[
+    uuid(9ba05971-f6a8-11cf-a442-00a0c90a8f39),
+    hidden
+]
+coclass ShellFolderViewOC
+{
+    [default]         interface     IFolderViewOC;
+    [default, source] dispinterface DShellFolderViewEvents;
+}
+
+interface FolderItem;
+interface FolderItems;
+interface FolderItemVerb;
+interface FolderItemVerbs;
+
+/*****************************************************************************
+ * Folder interface
+ */
+[
+    object,
+    uuid(bbcbde60-c3ff-11ce-8350-444553540000),
+    oleautomation,
+    dual
+]
+interface Folder : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Title( [out, retval] BSTR *pbs );
+
+    [propget]
+    HRESULT Application( [out, retval] IDispatch **ppid );
+
+    [propget]
+    HRESULT Parent( [out, retval] IDispatch **ppid );
+
+    [propget]
+    HRESULT ParentFolder( [out, retval] Folder **ppsf );
+
+    HRESULT Items( [out, retval] FolderItems **ppid );
+
+    HRESULT ParseName( [in] BSTR bName, [out, retval] FolderItem **ppid );
+
+    HRESULT NewFolder( [in] BSTR bName, [in, optional] VARIANT vOptions );
+
+    HRESULT MoveHere( [in] VARIANT vItem, [in, optional] VARIANT vOptions );
+
+    HRESULT CopyHere( [in] VARIANT vItem, [in, optional] VARIANT vOptions );
+
+    HRESULT GetDetailsOf( [in] VARIANT vItem,
+        [in] int iColumn,
+        [out, retval] BSTR *pbs );
+}
+
+/*****************************************************************************
+ * Folder2 interface
+ */
+[
+    object,
+    uuid(f0d2d8ef-3890-11d2-bf8b-00c04fb93661),
+    oleautomation,
+    dual
+]
+interface Folder2 : Folder
+{
+    [propget]
+    HRESULT Self( [out, retval] FolderItem **ppfi );
+
+    [propget]
+    HRESULT OfflineStatus( [out, retval] LONG *pul );
+
+    HRESULT Synchronize();
+
+    [propget, id(1)]
+    HRESULT HaveToShowWebViewBarricade(
+        [out, retval] VARIANT_BOOL *pbHaveToShowWebViewBarricade );
+
+    HRESULT DismissedWebViewBarricade();
+}
+
+/*****************************************************************************
+ * Folder3 interface
+ */
+[
+    object,
+    uuid(a7ae5f64-c4d7-4d7f-9307-4d24ee54b841),
+    oleautomation,
+    dual
+]
+interface Folder3 : Folder2
+{
+    [propget, id(2)]
+    HRESULT ShowWebViewBarricade(
+        [out, retval] VARIANT_BOOL *pbShowWebViewBarricade );
+
+    [propput, id(2)]
+    HRESULT ShowWebViewBarricade( [in] VARIANT_BOOL bShowWebViewBarricade );
+}
+
+/*****************************************************************************
+ * FolderItem interface
+ */
+[
+    object,
+    uuid(fac32c80-cbe4-11ce-8350-444553540000),
+    oleautomation,
+    dual
+]
+interface FolderItem : IDispatch
+{
+    typedef FolderItem *LPFOLDERITEM;
+
+    [propget]
+    HRESULT Application( [out, retval] IDispatch **ppid );
+
+    [propget]
+    HRESULT Parent( [out, retval] IDispatch **ppid );
+
+    [propget, id(DISPID_VALUE)]
+    HRESULT Name( [out, retval] BSTR *pbs );
+
+    [propput, id(DISPID_VALUE)]
+    HRESULT Name( [in] BSTR bs );
+
+    [propget]
+    HRESULT Path( [out, retval] BSTR *pbs );
+
+    [propget]
+    HRESULT GetLink( [out, retval] IDispatch **ppid );
+
+    [propget]
+    HRESULT GetFolder( [out, retval] IDispatch **ppid );
+
+    [propget]
+    HRESULT IsLink( [out, retval] VARIANT_BOOL *pb );
+
+    [propget]
+    HRESULT IsFolder( [out, retval] VARIANT_BOOL *pb );
+
+    [propget]
+    HRESULT IsFileSystem( [out, retval] VARIANT_BOOL *pb );
+
+    [propget]
+    HRESULT IsBrowsable( [out, retval] VARIANT_BOOL *pb );
+
+    [propget]
+    HRESULT ModifyDate( [out, retval] DATE *pdt );
+
+    [propput]
+    HRESULT ModifyDate( [in] DATE dt );
+
+    [propget]
+    HRESULT Size( [out, retval] LONG *pul );
+
+    [propget]
+    HRESULT Type( [out, retval] BSTR *pbs );
+
+    HRESULT Verbs( [out, retval] FolderItemVerbs **ppfic );
+
+    HRESULT InvokeVerb( [in, optional] VARIANT vVerb );
+}
+
+/*****************************************************************************
+ * FolderItems interface
+ */
+[
+    object,
+    uuid(744129e0-cbe5-11ce-8350-444553540000),
+    oleautomation,
+    dual
+]
+interface FolderItems : IDispatch
+{
+    [propget]
+    HRESULT Count( [out, retval] long *plCount );
+
+    [propget]
+    HRESULT Application( [out, retval] IDispatch **ppid );
+
+    [propget]
+    HRESULT Parent( [out, retval] IDispatch **ppid );
+
+    HRESULT Item( [in, optional] VARIANT index,
+        [out, retval] FolderItem **ppid );
+
+    [id(DISPID_NEWENUM)]
+    HRESULT _NewEnum( [out, retval] IUnknown **ppunk );
+}
+
+/*****************************************************************************
+ * FolderItemVerb interface
+ */
+[
+    object,
+    uuid(08ec3e00-50b0-11cf-960c-0080c7f4ee85),
+    oleautomation,
+    dual
+]
+interface FolderItemVerb : IDispatch
+{
+    [propget]
+    HRESULT Application( [out, retval] IDispatch **ppid );
+
+    [propget]
+    HRESULT Parent( [out, retval] IDispatch **ppid );
+
+    [propget, id(DISPID_VALUE)]
+    HRESULT Name( [out, retval] BSTR *pbs );
+
+    HRESULT DoIt();
+}
+
+/*****************************************************************************
+ * FolderItemVerbs interface
+ */
+[
+    object,
+    uuid(1f8352c0-50b0-11cf-960c-0080c7f4ee85),
+    oleautomation,
+    dual
+]
+interface FolderItemVerbs : IDispatch
+{
+    [propget]
+    HRESULT Count( [out, retval] long *plCount );
+
+    [propget]
+    HRESULT Application( [out, retval] IDispatch **ppid );
+
+    [propget]
+    HRESULT Parent( [out, retval] IDispatch **ppid );
+
+    HRESULT Item( [in, optional] VARIANT index,
+        [out, retval] FolderItemVerb **ppid );
+
+    [id(DISPID_NEWENUM)]
+    HRESULT _NewEnum( [out, retval] IUnknown **ppunk );
+}
+
+/*****************************************************************************
+ * IShellDispatch interface
+ */
+[
+    object,
+    uuid(d8f015c0-c278-11ce-a49e-444553540000),
+    oleautomation,
+    hidden,
+    dual
+]
+interface IShellDispatch : IDispatch
+{
+    [propget]
+    HRESULT Application( [out, retval] IDispatch **ppid );
+
+    [propget]
+    HRESULT Parent( [out, retval] IDispatch **ppid );
+
+    HRESULT NameSpace( [in] VARIANT vDir, [out, retval] Folder **ppsdf );
+
+    HRESULT BrowseForFolder( [in] long Hwnd,
+        [in] BSTR Title,
+        [in] long Options,
+        [in, optional] VARIANT RootFolder,
+        [out, retval] Folder **ppsdf );
+
+    HRESULT Windows( [out, retval] IDispatch **ppid );
+
+    HRESULT Open( [in] VARIANT vDir );
+
+    HRESULT Explore( [in] VARIANT vDir );
+
+    HRESULT MinimizeAll();
+
+    HRESULT UndoMinimizeALL();
+
+    HRESULT FileRun();
+
+    HRESULT CascadeWindows();
+
+    HRESULT TileVertically();
+
+    HRESULT TileHorizontally();
+
+    HRESULT ShutdownWindows();
+
+    HRESULT Suspend();
+
+    HRESULT EjectPC();
+
+    HRESULT SetTime();
+
+    HRESULT TrayProperties();
+
+    HRESULT Help();
+
+    HRESULT FindFiles();
+
+    HRESULT FindComputer();
+
+    HRESULT RefreshMenu();
+
+    HRESULT ControlPanelItem( [in] BSTR szDir );
+}
+
+[
+    object,
+    uuid(a4c6892c-3ba9-11d2-9dea-00c04fb16162),
+    oleautomation,
+    hidden,
+    dual,
+]
+interface IShellDispatch2 : IShellDispatch
+{
+    HRESULT IsRestricted([in] BSTR group, [in] BSTR restriction, [out, retval] long *value);
+    HRESULT ShellExecute([in] BSTR file, [in, optional] VARIANT args, [in, optional] VARIANT dir,
+        [in, optional] VARIANT op, [in, optional] VARIANT show);
+    HRESULT FindPrinter([in, optional] BSTR name, [in, optional] BSTR location, [in, optional] BSTR model);
+    HRESULT GetSystemInformation([in] BSTR name, [out, retval] VARIANT *ret);
+    HRESULT ServiceStart([in] BSTR service, [in] VARIANT persistent, [out, retval] VARIANT *ret);
+    HRESULT ServiceStop([in] BSTR service, [in] VARIANT persistent, [out, retval] VARIANT *ret);
+    HRESULT IsServiceRunning([in] BSTR service, [out, retval] VARIANT *running);
+    HRESULT CanStartStopService([in] BSTR service, [out, retval] VARIANT *ret);
+    HRESULT ShowBrowserBar([in] BSTR clsid, [in] VARIANT show, [out, retval] VARIANT *ret);
+}
+
+[
+    uuid(13709620-c279-11ce-a49e-444553540000)
+]
+coclass Shell
+{
+    [default] interface IShellDispatch2;
+}
+
+[
+    uuid(0a89a860-d7b1-11ce-8350-444553540000),
+    hidden
+]
+coclass ShellDispatchInproc
+{
+    interface IUnknown;
+}
+
+typedef
+[
+    uuid(ca31ea20-48d0-11cf-8350-444553540000)
+]
+enum ShellSpecialFolderConstants {
+    ssfDESKTOP          = 0x00,
+    ssfPROGRAMS         = 0x02,
+    ssfCONTROLS         = 0x03,
+    ssfPRINTERS         = 0x04,
+    ssfPERSONAL         = 0x05,
+    ssfFAVORITES        = 0x06,
+    ssfSTARTUP          = 0x07,
+    ssfRECENT           = 0x08,
+    ssfSENDTO           = 0x09,
+    ssfBITBUCKET        = 0x0a,
+    ssfSTARTMENU        = 0x0b,
+    ssfDESKTOPDIRECTORY = 0x10,
+    ssfDRIVES           = 0x11,
+    ssfNETWORK          = 0x12,
+    ssfNETHOOD          = 0x13,
+    ssfFONTS            = 0x14,
+    ssfTEMPLATES        = 0x15,
+    ssfCOMMONSTARTMENU  = 0x16,
+    ssfCOMMONPROGRAMS   = 0x17,
+    ssfCOMMONSTARTUP    = 0x18,
+    ssfCOMMONDESKTOPDIR = 0x19,
+    ssfAPPDATA          = 0x1a,
+    ssfPRINTHOOD        = 0x1b,
+    ssfLOCALAPPDATA     = 0x1c,
+    ssfALTSTARTUP       = 0x1d,
+    ssfCOMMONALTSTARTUP = 0x1e,
+    ssfCOMMONFAVORITES  = 0x1f,
+    ssfINTERNETCACHE    = 0x20,
+    ssfCOOKIES          = 0x21,
+    ssfHISTORY          = 0x22,
+    ssfCOMMONAPPDATA    = 0x23,
+    ssfWINDOWS          = 0x24,
+    ssfSYSTEM           = 0x25,
+    ssfPROGRAMFILES     = 0x26,
+    ssfMYPICTURES       = 0x27,
+    ssfPROFILE          = 0x28,
+    ssfSYSTEMx86        = 0x29,
+    ssfPROGRAMFILESx86  = 0x30
+} ShellSpecialFolderConstants;
+
+} /* library Shell32 */
+
+/*****************************************************************************
+ * IAsyncOperation interface
+ */
+[
+    uuid(3d8b0590-f691-11d2-8ea9-006097df5bd4),
+    object,
+]
+
+interface IAsyncOperation : IUnknown
+{
+    typedef [unique] IAsyncOperation *LPASYNCOPERATION;
+
+    HRESULT SetAsyncMode([in] BOOL fDoOpAsync);
+
+    HRESULT GetAsyncMode([out] BOOL *pfIsOpAsync);
+
+    HRESULT StartOperation([in, unique, optional] IBindCtx *pbcReserved);
+
+    HRESULT InOperation([out] BOOL *pfInAsyncOp);
+
+    HRESULT EndOperation(
+            [in] HRESULT hResult,
+            [in, unique] IBindCtx *pbcReserved,
+            [in] DWORD dwEffects);
+}

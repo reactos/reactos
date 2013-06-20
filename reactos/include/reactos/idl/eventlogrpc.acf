@@ -1,0 +1,6 @@
+[
+	implicit_handle(handle_t bindhandle), strict_context_handle
+]
+interface eventlog
+{
+}

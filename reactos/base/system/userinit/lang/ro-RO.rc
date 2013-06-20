@@ -1,0 +1,15 @@
+/*
+ * FILE:         base/system/runonce/lang/ro-RO.rc
+ *               ReactOS Project (http://www.reactos.org)
+ * AUTHOR:       Magnus Olsen  2005
+ * TRANSLATOR:   Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
+ * CHANGE LOG:   2011-08-29  initial translation
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+BEGIN
+
+STRING_USERINIT_FAIL, "Userinit a eșuat în lansarea interfeței!\n"
+
+END

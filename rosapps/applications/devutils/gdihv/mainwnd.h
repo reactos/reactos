@@ -1,0 +1,2 @@
+
+INT_PTR CALLBACK MainWindow_WndProc(HWND, UINT, WPARAM, LPARAM);

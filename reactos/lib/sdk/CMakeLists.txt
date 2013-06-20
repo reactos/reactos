@@ -1,0 +1,11 @@
+
+add_subdirectory(comsupp)
+add_subdirectory(crt)
+add_subdirectory(delayimp)
+add_subdirectory(dxguid)
+add_subdirectory(ioevent)
+add_subdirectory(nt)
+add_subdirectory(scrnsave)
+add_subdirectory(strmiids)
+add_subdirectory(uuid)
+add_subdirectory(wdmguid)

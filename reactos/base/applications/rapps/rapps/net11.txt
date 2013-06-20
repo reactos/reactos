@@ -1,0 +1,30 @@
+﻿; UTF-8
+
+[Section]
+Name = Microsoft .NET Framework Version 1.1 Redistributable Package
+Version = 1.1
+Licence = Unknown
+Description = Microsoft .NET Framework Version 1.1 - Redistributable Package.
+Size = 23.14MB
+Category = 14
+URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=26
+URLDownload = http://download.microsoft.com/download/a/a/c/aac39226-8825-44ce-90e3-bf8203e74006/dotnetfx.exe
+CDPath = none
+
+[Section.0407]
+Description = Microsoft .NET Framework Version 1.1 - Redistributable Paket.
+
+[Section.040a]
+Description = Microsoft .NET Framework versión 1.1 - Paquete redistribuible.
+
+[Section.040c]
+Description = Microsoft .NET Framework version 1.1 - Paquet redistribuable.
+Size = 23,14 Mo
+
+[Section.0415]
+Description = Microsoft .NET Framework Wersja 1.1 - Pakiet Dystrybucyjny.
+
+[Section.0418]
+Licence = Nespecificată
+Description = Platforma Microsoft .NET versiunea 1.1 - Pachet redistributabl.
+Size = 23,14 Mo

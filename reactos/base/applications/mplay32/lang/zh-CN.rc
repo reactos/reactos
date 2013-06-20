@@ -1,0 +1,34 @@
+/*
+ * Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "文件(&F)"
+	BEGIN
+		MENUITEM "打开... (&O)", IDM_OPEN_FILE
+		MENUITEM "关闭(&C)", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "退出(&E)", IDM_EXIT
+	END
+	POPUP "帮助(&H)"
+	BEGIN
+		MENUITEM "关于... (&A)", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "所有支持的格式 (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "播放"
+	IDS_TOOLTIP_STOP "停止"
+	IDS_TOOLTIP_EJECT "弹出"
+	IDS_TOOLTIP_BACKWARD "向后跳过"
+	IDS_TOOLTIP_SEEKBACK "快退"
+	IDS_TOOLTIP_SEEKFORW "快进"
+	IDS_TOOLTIP_FORWARD "向前跳过"
+	IDS_APPTITLE "ReactOS 多媒体播放器"
+	IDS_PLAY "播放"
+END
