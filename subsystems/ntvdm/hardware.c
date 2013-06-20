@@ -188,6 +188,12 @@ VOID PicInterruptRequest(BYTE Number)
         {
             return;
         }
+
+        /* Check the if the slave PIC is busy */
+        if (MasterPic.InServiceRegister & (1 << 2)) return;
+
+        /* Set the IRQ 2 bit in the master ISR */
+        MasterPic.InServiceRegister |= 1 << 2;
         
         /* Check if the interrupt is busy or in a cascade */
         if (SlavePic.CascadeRegister & (1 << Number)
