@@ -58,7 +58,7 @@ static VOID NTAPI McbMappingFree(PRTL_GENERIC_TABLE Table, PVOID Buffer)
 }
 
 static RTL_GENERIC_COMPARE_RESULTS NTAPI McbMappingCompare
-(RTL_GENERIC_TABLE Table, PVOID PtrA, PVOID PtrB)
+(PRTL_GENERIC_TABLE Table, PVOID PtrA, PVOID PtrB)
 {
     PLARGE_MCB_MAPPING_ENTRY A = PtrA, B = PtrB;
 
@@ -253,7 +253,7 @@ FsRtlInitializeBaseMcb(IN PBASE_MCB OpaqueMcb,
     Mcb->PoolType = PoolType;
     Mcb->MaximumPairCount = MAXIMUM_PAIR_COUNT;
     RtlInitializeGenericTable(&Mcb->Mapping->Table,
-                              (PRTL_GENERIC_COMPARE_ROUTINE)McbMappingCompare,
+                              McbMappingCompare,
                               McbMappingAllocate,
                               McbMappingFree,
                               Mcb);
