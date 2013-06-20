@@ -488,9 +488,11 @@ VOID DosInt21h(WORD CodeSegment)
 {
     INT i;
     CHAR Character;
+    SYSTEMTIME SystemTime;
     PCHAR String;
     PDOS_INPUT_BUFFER InputBuffer;
     DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
+    DWORD Ecx = EmulatorGetRegister(EMULATOR_REG_CX);
     DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
     DWORD Ebx = EmulatorGetRegister(EMULATOR_REG_BX);
     WORD DataSegment = EmulatorGetRegister(EMULATOR_REG_DS);
@@ -562,6 +564,36 @@ VOID DosInt21h(WORD CodeSegment)
                 InputBuffer->Length++;
             }
 
+            break;
+        }
+
+        /* Get system date */
+        case 0x2A:
+        {
+            GetSystemTime(&SystemTime);
+            EmulatorSetRegister(EMULATOR_REG_CX,
+                                (Ecx & 0xFFFF0000) | SystemTime.wYear);
+            EmulatorSetRegister(EMULATOR_REG_DX,
+                                (Edx & 0xFFFF0000)
+                                | (SystemTime.wMonth << 8)
+                                | SystemTime.wDay);
+            EmulatorSetRegister(EMULATOR_REG_AX,
+                                (Eax & 0xFFFFFF00) | SystemTime.wDayOfWeek);
+            break;
+        }
+
+        /* Get system time */
+        case 0x2C:
+        {
+            GetSystemTime(&SystemTime);
+            EmulatorSetRegister(EMULATOR_REG_CX,
+                                (Ecx & 0xFFFF0000)
+                                | (SystemTime.wHour << 8)
+                                | SystemTime.wMinute);
+            EmulatorSetRegister(EMULATOR_REG_DX,
+                                (Edx & 0xFFFF0000)
+                                | (SystemTime.wSecond << 8)
+                                | (SystemTime.wMilliseconds / 10));
             break;
         }
 
