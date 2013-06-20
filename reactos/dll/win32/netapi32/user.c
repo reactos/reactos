@@ -1313,6 +1313,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
     PUSER_INFO_1 UserInfo1;
     PUSER_INFO_2 UserInfo2;
     PUSER_INFO_3 UserInfo3;
+    PUSER_INFO_4 UserInfo4;
     PUSER_INFO_1003 UserInfo1003;
     PUSER_INFO_1006 UserInfo1006;
     PUSER_INFO_1007 UserInfo1007;
@@ -1583,10 +1584,122 @@ SetUserInfo(SAM_HANDLE UserHandle,
                 UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORYDRIVE;
             }
 
-//          UserInfo3->usri3_password_expired;
+            UserAllInfo.PasswordExpired = (UserInfo3->usri3_password_expired != 0);
+            UserAllInfo.WhichFields |= USER_ALL_PASSWORDEXPIRED;
             break;
 
-//        case 4:
+        case 4:
+            UserInfo4 = (PUSER_INFO_4)UserInfo;
+
+            // usri4_name ignored
+
+            if (UserInfo4->usri4_password != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.NtPassword,
+                                     UserInfo4->usri4_password);
+                UserAllInfo.NtPasswordPresent = TRUE;
+                UserAllInfo.WhichFields |= USER_ALL_NTPASSWORDPRESENT;
+            }
+
+            // usri4_password_age ignored
+
+//          UserInfo3->usri4_priv;
+
+            if (UserInfo4->usri4_home_dir != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.HomeDirectory,
+                                     UserInfo4->usri4_home_dir);
+                UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORY;
+            }
+
+            if (UserInfo4->usri4_comment != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.AdminComment,
+                                     UserInfo4->usri4_comment);
+                UserAllInfo.WhichFields |= USER_ALL_ADMINCOMMENT;
+            }
+
+            UserAllInfo.UserAccountControl = GetAccountControl(UserInfo4->usri4_flags);
+            UserAllInfo.WhichFields |= USER_ALL_USERACCOUNTCONTROL;
+
+            if (UserInfo4->usri4_script_path != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.ScriptPath,
+                                     UserInfo4->usri4_script_path);
+                UserAllInfo.WhichFields |= USER_ALL_SCRIPTPATH;
+            }
+
+//          UserInfo4->usri4_auth_flags;
+
+            if (UserInfo4->usri4_full_name != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.FullName,
+                                     UserInfo4->usri4_full_name);
+                UserAllInfo.WhichFields |= USER_ALL_FULLNAME;
+            }
+
+            if (UserInfo4->usri4_usr_comment != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.UserComment,
+                                     UserInfo4->usri4_usr_comment);
+                UserAllInfo.WhichFields |= USER_ALL_USERCOMMENT;
+            }
+
+            if (UserInfo4->usri4_parms != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.Parameters,
+                                     UserInfo4->usri4_parms);
+                UserAllInfo.WhichFields |= USER_ALL_PARAMETERS;
+            }
+
+            if (UserInfo4->usri4_workstations != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.WorkStations,
+                                     UserInfo4->usri4_workstations);
+                UserAllInfo.WhichFields |= USER_ALL_WORKSTATIONS;
+            }
+
+            // usri4_last_logon ignored
+            // usri4_last_logoff ignored
+
+//          UserInfo3->usri4_acct_expires;
+//          UserInfo3->usri4_max_storage;
+//          UserInfo3->usri4_units_per_week;
+//          UserInfo3->usri4_logon_hours;
+
+            // usri4_bad_pw_count ignored
+            // usri4_num_logons ignored
+            // usri4_logon_server ignored
+
+            UserAllInfo.CountryCode = UserInfo4->usri4_country_code;
+            UserAllInfo.WhichFields |= USER_ALL_COUNTRYCODE;
+
+            UserAllInfo.CodePage = UserInfo4->usri4_code_page;
+            UserAllInfo.WhichFields |= USER_ALL_CODEPAGE;
+
+            // usri4_user_sid ignored
+
+            UserAllInfo.PrimaryGroupId = UserInfo4->usri4_primary_group_id;
+            UserAllInfo.WhichFields |= USER_ALL_PRIMARYGROUPID;
+
+            if (UserInfo4->usri4_profile != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.ProfilePath,
+                                     UserInfo4->usri4_profile);
+                UserAllInfo.WhichFields |= USER_ALL_PROFILEPATH;
+            }
+
+            if (UserInfo4->usri4_home_dir_drive != NULL)
+            {
+                RtlInitUnicodeString(&UserAllInfo.HomeDirectoryDrive,
+                                     UserInfo4->usri4_home_dir_drive);
+                UserAllInfo.WhichFields |= USER_ALL_HOMEDIRECTORYDRIVE;
+            }
+
+            UserAllInfo.PasswordExpired = (UserInfo4->usri4_password_expired != 0);
+            UserAllInfo.WhichFields |= USER_ALL_PASSWORDEXPIRED;
+            break;
+
 //        case 21:
 //        case 22:
 
