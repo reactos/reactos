@@ -1323,6 +1323,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
     PUSER_INFO_1012 UserInfo1012;
     PUSER_INFO_1013 UserInfo1013;
     PUSER_INFO_1014 UserInfo1014;
+    PUSER_INFO_1017 UserInfo1017;
     PUSER_INFO_1024 UserInfo1024;
     PUSER_INFO_1025 UserInfo1025;
     PUSER_INFO_1051 UserInfo1051;
@@ -1460,7 +1461,18 @@ SetUserInfo(SAM_HANDLE UserHandle,
             // usri2_last_logon ignored
             // usri2_last_logoff ignored
 
-//          UserInfo2->usri2_acct_expires;
+            if (UserInfo2->usri2_acct_expires == TIMEQ_FOREVER)
+            {
+                UserAllInfo.AccountExpires.LowPart = 0;
+                UserAllInfo.AccountExpires.HighPart = 0;
+            }
+            else
+            {
+                RtlSecondsSince1970ToTime(UserInfo2->usri2_acct_expires,
+                                          &UserAllInfo.AccountExpires);
+            }
+            UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
+
 //          UserInfo2->usri2_max_storage;
 //          UserInfo2->usri2_units_per_week;
 //          UserInfo2->usri2_logon_hours;
@@ -1550,7 +1562,18 @@ SetUserInfo(SAM_HANDLE UserHandle,
             // usri3_last_logon ignored
             // usri3_last_logoff ignored
 
-//          UserInfo3->usri3_acct_expires;
+            if (UserInfo3->usri3_acct_expires == TIMEQ_FOREVER)
+            {
+                UserAllInfo.AccountExpires.LowPart = 0;
+                UserAllInfo.AccountExpires.HighPart = 0;
+            }
+            else
+            {
+                RtlSecondsSince1970ToTime(UserInfo3->usri3_acct_expires,
+                                          &UserAllInfo.AccountExpires);
+            }
+            UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
+
 //          UserInfo3->usri3_max_storage;
 //          UserInfo3->usri3_units_per_week;
 //          UserInfo3->usri3_logon_hours;
@@ -1662,7 +1685,18 @@ SetUserInfo(SAM_HANDLE UserHandle,
             // usri4_last_logon ignored
             // usri4_last_logoff ignored
 
-//          UserInfo3->usri4_acct_expires;
+            if (UserInfo4->usri4_acct_expires == TIMEQ_FOREVER)
+            {
+                UserAllInfo.AccountExpires.LowPart = 0;
+                UserAllInfo.AccountExpires.HighPart = 0;
+            }
+            else
+            {
+                RtlSecondsSince1970ToTime(UserInfo4->usri4_acct_expires,
+                                          &UserAllInfo.AccountExpires);
+            }
+            UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
+
 //          UserInfo3->usri4_max_storage;
 //          UserInfo3->usri4_units_per_week;
 //          UserInfo3->usri4_logon_hours;
@@ -1802,7 +1836,22 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             break;
 
-//        case 1017:
+        case 1017:
+            UserInfo1017 = (PUSER_INFO_1017)UserInfo;
+
+            if (UserInfo1017->usri1017_acct_expires == TIMEQ_FOREVER)
+            {
+                UserAllInfo.AccountExpires.LowPart = 0;
+                UserAllInfo.AccountExpires.HighPart = 0;
+            }
+            else
+            {
+                RtlSecondsSince1970ToTime(UserInfo1017->usri1017_acct_expires,
+                                          &UserAllInfo.AccountExpires);
+            }
+            UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
+            break;
+
 //        case 1018:
 //        case 1020:
 
