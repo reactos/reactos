@@ -32,8 +32,8 @@ struct test_info TestResults[] = {{L"WinSta0",L"Default"},
 
 void do_InitialDesktop_child(int i)
 {
-	HDESK hdesktop;
-	HWINSTA hwinsta;
+    HDESK hdesktop;
+    HWINSTA hwinsta;
     WCHAR buffer[100];
     DWORD size;
     BOOL ret;
@@ -47,12 +47,14 @@ void do_InitialDesktop_child(int i)
     IsGUIThread(TRUE);
 
     hdesktop = GetThreadDesktop(GetCurrentThreadId());
-	hwinsta = GetProcessWindowStation();
+    hwinsta = GetProcessWindowStation();
 
     ret = GetUserObjectInformationW( hwinsta, UOI_NAME, buffer, sizeof(buffer), &size );
+    ok(ret == TRUE, "ret = %d\n", ret);
     ok(wcscmp(buffer, TestResults[i].ExpectedWinsta) == 0, "Wrong winsta %S insted of %S\n", buffer, TestResults[i].ExpectedWinsta);
 
     ret = GetUserObjectInformationW( hdesktop, UOI_NAME, buffer, sizeof(buffer), &size );
+    ok(ret == TRUE, "ret = %d\n", ret);
     ok(wcscmp(buffer, TestResults[i].ExpectedDesktp) == 0, "Wrong desktop %S insted of %S\n", buffer, TestResults[i].ExpectedDesktp);
 }
 
@@ -107,12 +109,11 @@ HDESK CreateInheritableDesktop(WCHAR* name, ACCESS_MASK dwDesiredAccess, BOOL in
 void Test_InitialDesktop(char *argv0)
 {
     HWINSTA hwinsta = NULL, hwinstaInitial;
-	HDESK hdesktop = NULL, hdeskInitial;
+    HDESK hdesktop = NULL;
     BOOL ret;
 
     hwinstaInitial = GetProcessWindowStation();
-    hdeskInitial = GetThreadDesktop(GetCurrentThreadId());
-    
+
     test_CreateProcessWithDesktop(0, argv0, NULL, 0);
     test_CreateProcessWithDesktop(1, argv0, "Default", 0);
     test_CreateProcessWithDesktop(2, argv0, "WinSta0\\Default", 0);
@@ -158,7 +159,7 @@ void Test_OpenInputDesktop()
 
     hDeskInput2 = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
     ok(hDeskInput2 != NULL, "Second call to OpenInputDesktop failed\n");
-    ok(hDeskInput2 != hDeskInput, "Second call to OpenInputDesktop returned same handle\n"); 
+    ok(hDeskInput2 != hDeskInput, "Second call to OpenInputDesktop returned same handle\n");
 
     ok(CloseDesktop(hDeskInput2) != 0, "CloseDesktop failed\n");
 
@@ -176,10 +177,10 @@ void Test_OpenInputDesktop()
 
     hwinsta = CreateWindowStationW(L"TestWinsta", 0, WINSTA_ALL_ACCESS, NULL);
     ok(hwinsta != 0, "CreateWindowStationW failed\n");
-    
+
     ret = SetProcessWindowStation(hwinsta);
     ok(ret != 0, "SetProcessWindowStation failed\n");
-    
+
     hDeskInput = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
     ok(hDeskInput == 0, "OpenInputDesktop should fail\n");
 
@@ -188,7 +189,7 @@ void Test_OpenInputDesktop()
 
     ret = SetProcessWindowStation(hwinstaInitial);
     ok(ret != 0, "SetProcessWindowStation failed\n");
-    
+
     ret = CloseWindowStation(hwinsta);
     ok(ret != 0, "CloseWindowStation failed\n");
 
@@ -211,7 +212,7 @@ START_TEST(desktop)
         do_InitialDesktop_child( arg );
         return;
     }
-	
+
     Test_InitialDesktop(test_argv[0]);
-    Test_OpenInputDesktop();    
+    Test_OpenInputDesktop();
 }

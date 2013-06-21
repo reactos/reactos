@@ -32,6 +32,8 @@ ValidateAllocations(VOID)
 
         AllocationSize = ((PSIZE_T)UserBuffer)[-2];
         DataSize = ((PSIZE_T)UserBuffer)[-1];
+        ASSERT(AllocationSize != 0);
+        ASSERT(AllocationSize % PAGE_SIZE == 0);
         ASSERT(DataSize != 0);
         ASSERT(((SIZE_T)UserBuffer + DataSize) % PAGE_SIZE == 0);
     }

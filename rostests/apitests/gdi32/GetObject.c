@@ -433,6 +433,7 @@ Test_ExtPen(void)
 		EXTLOGPEN extlogpen;
 		DWORD dwStyles[50];
 	} elpUserStyle;
+	int i;
 
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectA((HANDLE)GDI_OBJECT_TYPE_EXTPEN, 0, NULL) == 0, "\n");
@@ -496,9 +497,8 @@ Test_ExtPen(void)
 	hPen = ExtCreatePen(PS_GEOMETRIC | PS_USERSTYLE, 5, &logbrush, 16, (CONST DWORD*)&dwStyles);
 	ok(GetObject(hPen, 0, NULL) == sizeof(EXTLOGPEN) + 15*sizeof(DWORD), "\n");
 	ok(GetObject(hPen, sizeof(EXTLOGPEN) + 15*sizeof(DWORD), &elpUserStyle) == sizeof(EXTLOGPEN) + 15*sizeof(DWORD), "\n");
-	ok(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[0] == 0, "\n");
-	ok(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[1] == 1, "\n");
-	ok(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[15] == 15, "\n");
+	for (i = 0; i <= 15; i++)
+		ok(((EXTLOGPEN*)&elpUserStyle)->elpStyleEntry[i] == i, "%d\n", i);
 	DeleteObject(hPen);
 }
 
