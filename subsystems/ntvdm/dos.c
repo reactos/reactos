@@ -570,7 +570,7 @@ VOID DosInt21h(WORD CodeSegment)
         /* Get system date */
         case 0x2A:
         {
-            GetSystemTime(&SystemTime);
+            GetLocalTime(&SystemTime);
             EmulatorSetRegister(EMULATOR_REG_CX,
                                 (Ecx & 0xFFFF0000) | SystemTime.wYear);
             EmulatorSetRegister(EMULATOR_REG_DX,
@@ -581,11 +581,33 @@ VOID DosInt21h(WORD CodeSegment)
                                 (Eax & 0xFFFFFF00) | SystemTime.wDayOfWeek);
             break;
         }
+        
+        /* Set system date */
+        case 0x2B:
+        {
+            GetLocalTime(&SystemTime);
+            SystemTime.wYear = LOWORD(Ecx);
+            SystemTime.wMonth = HIBYTE(Edx);
+            SystemTime.wDay = LOBYTE(Edx);
+            
+            if (SetLocalTime(&SystemTime))
+            {
+                /* Return success */
+                EmulatorSetRegister(EMULATOR_REG_AX, Eax & 0xFFFFFF00);
+            }
+            else
+            {
+                /* Return failure */
+                EmulatorSetRegister(EMULATOR_REG_AX, Eax | 0xFF);
+            }
+            
+            break;
+        }
 
         /* Get system time */
         case 0x2C:
         {
-            GetSystemTime(&SystemTime);
+            GetLocalTime(&SystemTime);
             EmulatorSetRegister(EMULATOR_REG_CX,
                                 (Ecx & 0xFFFF0000)
                                 | (SystemTime.wHour << 8)
@@ -594,6 +616,29 @@ VOID DosInt21h(WORD CodeSegment)
                                 (Edx & 0xFFFF0000)
                                 | (SystemTime.wSecond << 8)
                                 | (SystemTime.wMilliseconds / 10));
+            break;
+        }
+        
+        /* Set system time */
+        case 0x2D:
+        {
+            GetLocalTime(&SystemTime);
+            SystemTime.wHour = HIBYTE(Ecx);
+            SystemTime.wMinute = LOBYTE(Ecx);
+            SystemTime.wSecond = HIBYTE(Edx);
+            SystemTime.wMilliseconds = LOBYTE(Edx) * 10;
+            
+            if (SetLocalTime(&SystemTime))
+            {
+                /* Return success */
+                EmulatorSetRegister(EMULATOR_REG_AX, Eax & 0xFFFFFF00);
+            }
+            else
+            {
+                /* Return failure */
+                EmulatorSetRegister(EMULATOR_REG_AX, Eax | 0xFF);
+            }
+            
             break;
         }
 
