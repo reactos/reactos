@@ -219,17 +219,21 @@ VOID PicWriteData(BYTE Port, BYTE Value)
 }
 
 VOID PicInterruptRequest(BYTE Number)
-{
+{    
+    BYTE i;
+    
     if (Number >= 0 && Number < 8)
     {
-        /* Check if the interrupt is busy, in a cascade or masked */
-        if (MasterPic.CascadeRegister & (1 << Number)
-            || MasterPic.InServiceRegister & (1 << Number)
-            || MasterPic.MaskRegister & (1 << Number))
+        /* Check if any of the higher-priorirty interrupts are busy */
+        for (i = 0; i <= Number ; i++)
         {
-            return;
+            if (MasterPic.InServiceRegister & (1 << Number)) return;
         }
         
+        /* Check if the interrupt is masked */
+        if (MasterPic.MaskRegister & (1 << Number)) return;
+        
+        /* Set the appropriate bit in the ISR and interrupt the CPU */
         if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= 1 << Number;
         EmulatorInterrupt(MasterPic.IntOffset + Number);
     }
@@ -246,22 +250,21 @@ VOID PicInterruptRequest(BYTE Number)
         {
             return;
         }
-
-        /* Check the if the slave PIC is busy or masked */
-        if (MasterPic.InServiceRegister & (1 << 2)
-            || MasterPic.MaskRegister & (1 << 2)) return;
+        
+        /* Check if any of the higher-priorirty interrupts are busy */
+        if (MasterPic.InServiceRegister != 0) return;
+        for (i = 0; i <= Number ; i++)
+        {
+            if (SlavePic.InServiceRegister & (1 << Number)) return;
+        }
+        
+        /* Check if the interrupt is masked */
+        if (SlavePic.MaskRegister & (1 << Number)) return;
 
         /* Set the IRQ 2 bit in the master ISR */
         if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= 1 << 2;
-        
-        /* Check if the interrupt is busy, in a cascade or masked */
-        if (SlavePic.CascadeRegister & (1 << Number)
-            || SlavePic.InServiceRegister & (1 << Number)
-            || SlavePic.MaskRegister & (1 << Number))
-        {
-            return;
-        }
-        
+    
+        /* Set the appropriate bit in the ISR and interrupt the CPU */
         if (!SlavePic.AutoEoi) SlavePic.InServiceRegister |= 1 << Number;
         EmulatorInterrupt(SlavePic.IntOffset + Number);
     }
