@@ -49,6 +49,52 @@ typedef struct _PIT_CHANNEL
 
 static PIC MasterPic, SlavePic;
 static PIT_CHANNEL PitChannels[PIT_CHANNELS];
+static BYTE KeyboardQueue[KEYBOARD_BUFFER_SIZE];
+static BOOLEAN KeyboardQueueEmpty = TRUE;
+static UINT KeyboardQueueStart = 0;
+static UINT KeyboardQueueEnd = 0;
+
+static BOOLEAN KeyboardQueuePush(BYTE ScanCode)
+{
+    /* Check if the keyboard queue is full */
+    if (!KeyboardQueueEmpty && (KeyboardQueueStart == KeyboardQueueEnd))
+    {
+        return FALSE;
+    }
+    
+    /* Insert the value in the queue */
+    KeyboardQueue[KeyboardQueueEnd] = ScanCode;
+    KeyboardQueueEnd++;
+    KeyboardQueueEnd %= KEYBOARD_BUFFER_SIZE;
+    
+    /* Since we inserted a value, it's not empty anymore */
+    KeyboardQueueEmpty = FALSE;
+    
+    return TRUE;
+}
+
+#if 0
+static BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
+{
+    /* Make sure the keyboard queue is not empty */
+    if (KeyboardQueueEmpty) return FALSE;
+    
+    /* Get the scan code */
+    *ScanCode = KeyboardQueue[KeyboardQueueStart];
+    
+    /* Remove the value from the queue */
+    KeyboardQueueStart++;
+    KeyboardQueueStart %= KEYBOARD_BUFFER_SIZE;
+    
+    /* Check if the queue is now empty */
+    if (KeyboardQueueStart == KeyboardQueueEnd)
+    {
+        KeyboardQueueEmpty = TRUE;
+    }
+    
+    return TRUE;
+}
+#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -451,3 +497,48 @@ VOID PitDecrementCount()
     }
 }
 
+VOID CheckForInputEvents()
+{
+    PINPUT_RECORD Buffer;
+    HANDLE ConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD i, j, Count, TotalEvents;
+    BYTE ScanCode;
+    
+    /* Get the number of input events */
+    if (!GetNumberOfConsoleInputEvents(ConsoleInput, &Count)) return;
+    if (Count == 0) return;
+        
+    /* Allocate the buffer */
+    Buffer = (PINPUT_RECORD)HeapAlloc(GetProcessHeap(), 0, Count * sizeof(INPUT_RECORD));
+    if (Buffer == NULL) return;
+    
+    /* Peek the input events */
+    if (!ReadConsoleInput(ConsoleInput, Buffer, Count, &TotalEvents)) goto Cleanup;
+    
+    for (i = 0; i < TotalEvents; i++)
+    {
+        /* Check if this is a key event */
+        if (Buffer[i].EventType != KEY_EVENT) continue;
+        
+        /* Get the scan code */
+        ScanCode = Buffer[i].Event.KeyEvent.wVirtualScanCode;
+        
+        /* If this is a key release, set the highest bit in the scan code */
+        if (!Buffer[i].Event.KeyEvent.bKeyDown) ScanCode |= 0x80;
+          
+        /* Push the scan code onto the keyboard queue */
+        for (j = 0; j < Buffer[i].Event.KeyEvent.wRepeatCount; j++)
+        {
+            KeyboardQueuePush(ScanCode);
+        }
+            
+        /* Yes, IRQ 1 */
+        PicInterruptRequest(1);
+            
+        /* Stop the loop */
+        break;
+    }
+    
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, Buffer);
+}

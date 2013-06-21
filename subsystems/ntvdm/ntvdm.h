@@ -67,6 +67,11 @@
 #define PIC_OCW3 (1 << 3)
 #define PIC_OCW3_READ_ISR 0x0B
 
+/* 8042 PS/2 controller */
+#define KEYBOARD_BUFFER_SIZE 32
+#define PS2_DATA_PORT 0x60
+#define PS2_CONTROL_PORT 0x64
+
 #define EMULATOR_FLAG_CF (1 << 0)
 #define EMULATOR_FLAG_PF (1 << 2)
 #define EMULATOR_FLAG_AF (1 << 4)
@@ -219,6 +224,7 @@ VOID PitWriteCommand(BYTE Value);
 BYTE PitReadData(BYTE Channel);
 VOID PitWriteData(BYTE Channel, BYTE Value);
 VOID PitDecrementCount();
+VOID CheckForInputEvents();
 VOID EmulatorSetStack(WORD Segment, WORD Offset);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
 VOID EmulatorInterrupt(BYTE Number);

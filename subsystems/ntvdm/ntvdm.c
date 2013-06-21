@@ -144,6 +144,9 @@ INT wmain(INT argc, WCHAR *argv[])
         for (i = 0; i < TimerTicks; i++) PitDecrementCount();
         LastTimerTick = Counter;
         
+        /* Check for console input events */
+        CheckForInputEvents();
+        
         /* Continue CPU emulation */
         EmulatorStep();
     }
