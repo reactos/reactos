@@ -6752,6 +6752,71 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
 
 
 static NTSTATUS
+SampSetUserName(PSAM_DB_OBJECT UserObject,
+                PRPC_UNICODE_STRING NewUserName)
+{
+    UNICODE_STRING OldUserName = {0, 0, NULL};
+    NTSTATUS Status;
+
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          (PRPC_UNICODE_STRING)&OldUserName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttributeString failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (!RtlEqualUnicodeString(&OldUserName, (PCUNICODE_STRING)NewUserName, TRUE))
+    {
+        Status = SampCheckAccountNameInDomain(UserObject->ParentObject,
+                                              NewUserName->Buffer);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("User name \'%S\' already exists in domain (Status 0x%08lx)\n",
+                  NewUserName->Buffer, Status);
+            goto done;
+        }
+    }
+
+    Status = SampSetAccountNameInDomain(UserObject->ParentObject,
+                                        L"Users",
+                                        NewUserName->Buffer,
+                                        UserObject->RelativeId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetAccountNameInDomain failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampRemoveAccountNameFromDomain(UserObject->ParentObject,
+                                             L"Users",
+                                             OldUserName.Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRemoveAccountNameFromDomain failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    NewUserName->Buffer,
+                                    NewUserName->Length + sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (OldUserName.Buffer != NULL)
+        midl_user_free(OldUserName.Buffer);
+
+    return Status;
+}
+
+
+static NTSTATUS
 SampSetUserGeneral(PSAM_DB_OBJECT UserObject,
                    PSAMPR_USER_INFO_BUFFER Buffer)
 {
@@ -6778,11 +6843,8 @@ SampSetUserGeneral(PSAM_DB_OBJECT UserObject,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    Buffer->General.UserName.Buffer,
-                                    Buffer->General.UserName.MaximumLength);
+    Status = SampSetUserName(UserObject,
+                             &Buffer->General.UserName);
     if (!NT_SUCCESS(Status))
         goto done;
 
@@ -7011,11 +7073,8 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
 
     if (WhichFields & USER_ALL_USERNAME)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"Name",
-                                        REG_SZ,
-                                        Buffer->All.UserName.Buffer,
-                                        Buffer->All.UserName.MaximumLength);
+        Status = SampSetUserName(UserObject,
+                                 &Buffer->All.UserName);
         if (!NT_SUCCESS(Status))
             goto done;
     }
@@ -7265,11 +7324,8 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserNameInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"Name",
-                                            REG_SZ,
-                                            Buffer->Name.UserName.Buffer,
-                                            Buffer->Name.UserName.MaximumLength);
+            Status = SampSetUserName(UserObject,
+                                     &Buffer->Name.UserName);
             if (!NT_SUCCESS(Status))
                 break;
 
@@ -7281,11 +7337,8 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserAccountNameInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"Name",
-                                            REG_SZ,
-                                            Buffer->AccountName.UserName.Buffer,
-                                            Buffer->AccountName.UserName.MaximumLength);
+            Status = SampSetUserName(UserObject,
+                                     &Buffer->AccountName.UserName);
             break;
 
         case UserFullNameInformation:
