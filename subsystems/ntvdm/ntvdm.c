@@ -57,6 +57,8 @@ INT wmain(INT argc, WCHAR *argv[])
     INT i;
     BOOLEAN PrintUsage = TRUE;
     CHAR CommandLine[128];
+    LARGE_INTEGER Frequency, LastTimerTick, Counter;
+    LONGLONG TimerTicks;
 
     /* Set the handler routine */
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
@@ -96,6 +98,13 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
     if (!EmulatorInitialize()) return 1;
+    
+    /* Initialize the performance counter (needed for hardware timers) */
+    if (!QueryPerformanceFrequency(&Frequency))
+    {
+        wprintf(L"FATAL: Performance counter not available\n");
+        goto Cleanup;
+    }
 
     /* Initialize the system BIOS */
     if (!BiosInitialize())
@@ -117,9 +126,27 @@ INT wmain(INT argc, WCHAR *argv[])
         DisplayMessage(L"Could not start program: %S", CommandLine);
         return -1;
     }
+    
+    /* Set the last timer tick to the current time */
+    QueryPerformanceCounter(&LastTimerTick);
 
     /* Main loop */
-    while (VdmRunning) EmulatorStep();
+    while (VdmRunning)
+    {
+        /* Get the current time */
+        QueryPerformanceCounter(&Counter);
+        
+        /* Get the number of PIT ticks that have passed */
+        TimerTicks = ((Counter.QuadPart - LastTimerTick.QuadPart)
+                     * PIT_BASE_FREQUENCY) / Frequency.QuadPart;
+        
+        /* Update the PIT */
+        for (i = 0; i < TimerTicks; i++) PitDecrementCount();
+        LastTimerTick = Counter;
+        
+        /* Continue CPU emulation */
+        EmulatorStep();
+    }
 
 Cleanup:
     EmulatorCleanup();

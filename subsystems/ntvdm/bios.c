@@ -76,7 +76,9 @@ BOOLEAN BiosInitialize()
     PicWriteData(PIC_MASTER_DATA, 0x00);
     PicWriteData(PIC_SLAVE_DATA, 0x00);
     
-    PitInitialize();
+    PitWriteCommand(0x34);
+    PitWriteData(0, 0x00);
+    PitWriteData(0, 0x00);
 
     return TRUE;
 }
