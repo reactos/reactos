@@ -24,7 +24,64 @@ typedef struct _PIC
     BOOLEAN ReadIsr;
 } PIC, *PPIC;
 
+typedef struct _PIT_CHANNEL
+{
+    BOOLEAN RateGenerator;
+    BOOLEAN Pulsed;
+    BOOLEAN FlipFlop;
+    BYTE AccessMode;
+    WORD ReloadValue;
+} PIT_CHANNEL, *PPIT_CHANNEL;
+
 static PIC MasterPic, SlavePic;
+static PIT_CHANNEL PitChannels[PIT_CHANNELS];
+
+static DWORD WINAPI PitThread(PVOID Parameter)
+{
+    LARGE_INTEGER Frequency, CurrentTime, LastTickTime;
+    LONGLONG Elapsed, Milliseconds, TicksNeeded;
+    UNREFERENCED_PARAMETER(Parameter);
+    
+    /* Get the performance counter frequency */
+    if (!QueryPerformanceFrequency(&Frequency)) return EXIT_FAILURE;
+    if (!QueryPerformanceCounter(&LastTickTime)) return EXIT_FAILURE;
+    
+    while (VdmRunning)
+    {
+        if (!QueryPerformanceCounter(&CurrentTime)) return EXIT_FAILURE;
+        
+        /* Calculate the elapsed time, in PIT ticks */
+        Elapsed = ((CurrentTime.QuadPart - LastTickTime.QuadPart)
+                  * PIT_BASE_FREQUENCY)
+                  / Frequency.QuadPart;
+                  
+        /* A reload value of 0 indicates 65536 */
+        if (PitChannels[0].ReloadValue) TicksNeeded = PitChannels[0].ReloadValue;
+        else TicksNeeded = 65536;
+
+        if (Elapsed < TicksNeeded)
+        {
+            /* Get the number of milliseconds */
+            Milliseconds = (Elapsed * 1000LL) / PIT_BASE_FREQUENCY;
+            
+            /* If this number is non-zero, put the thread in the waiting state */
+            if (Milliseconds > 0LL) Sleep((DWORD)Milliseconds);
+            
+            continue;
+        }
+        
+        LastTickTime = CurrentTime;
+        
+        /* Do the IRQ */
+        if (PitChannels[0].RateGenerator || !PitChannels[0].Pulsed)
+        {
+            PitChannels[0].Pulsed = TRUE;
+            PicInterruptRequest(0);
+        }
+    }
+    
+    return EXIT_SUCCESS;
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -165,14 +222,15 @@ VOID PicInterruptRequest(BYTE Number)
 {
     if (Number >= 0 && Number < 8)
     {
-        /* Check if the interrupt is busy or in a cascade */
+        /* Check if the interrupt is busy, in a cascade or masked */
         if (MasterPic.CascadeRegister & (1 << Number)
-            || MasterPic.InServiceRegister & (1 << Number))
+            || MasterPic.InServiceRegister & (1 << Number)
+            || MasterPic.MaskRegister & (1 << Number))
         {
             return;
         }
         
-        MasterPic.InServiceRegister |= 1 << Number;
+        if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= 1 << Number;
         EmulatorInterrupt(MasterPic.IntOffset + Number);
     }
     else if (Number >= 8 && Number < 16)
@@ -189,20 +247,96 @@ VOID PicInterruptRequest(BYTE Number)
             return;
         }
 
-        /* Check the if the slave PIC is busy */
-        if (MasterPic.InServiceRegister & (1 << 2)) return;
+        /* Check the if the slave PIC is busy or masked */
+        if (MasterPic.InServiceRegister & (1 << 2)
+            || MasterPic.MaskRegister & (1 << 2)) return;
 
         /* Set the IRQ 2 bit in the master ISR */
-        MasterPic.InServiceRegister |= 1 << 2;
+        if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= 1 << 2;
         
-        /* Check if the interrupt is busy or in a cascade */
+        /* Check if the interrupt is busy, in a cascade or masked */
         if (SlavePic.CascadeRegister & (1 << Number)
-            || SlavePic.InServiceRegister & (1 << Number))
+            || SlavePic.InServiceRegister & (1 << Number)
+            || SlavePic.MaskRegister & (1 << Number))
         {
             return;
         }
         
-        SlavePic.InServiceRegister |= 1 << Number;
+        if (!SlavePic.AutoEoi) SlavePic.InServiceRegister |= 1 << Number;
         EmulatorInterrupt(SlavePic.IntOffset + Number);
     }
+}
+
+VOID PitWriteCommand(BYTE Value)
+{
+    BYTE Channel = Value >> 6;
+    BYTE Mode = (Value >> 1) & 0x07;
+    
+    /* Set the access mode and reset flip-flop */
+    // TODO: Support latch command!
+    PitChannels[Channel].AccessMode = (Value >> 4) & 3;
+    PitChannels[Channel].FlipFlop = FALSE;
+    
+    switch (Mode)
+    {
+        case 0:
+        case 4:
+        {
+            PitChannels[Channel].RateGenerator = FALSE;
+            break;
+        }
+            
+        case 2:
+        case 3:
+        {
+            PitChannels[Channel].RateGenerator = TRUE;
+            break;
+        }
+    }
+}
+
+VOID PitWriteData(BYTE Channel, BYTE Value)
+{
+    /* Use the flip-flop for access mode 3 */
+    if (PitChannels[Channel].AccessMode == 3)
+    {
+        PitChannels[Channel].AccessMode = PitChannels[Channel].FlipFlop ? 1 : 2;
+        PitChannels[Channel].FlipFlop = !PitChannels[Channel].FlipFlop;
+    }
+    
+    switch (PitChannels[Channel].AccessMode)
+    {
+        case 1:
+        {
+            /* Low byte */
+            PitChannels[Channel].ReloadValue &= 0xFF00;
+            PitChannels[Channel].ReloadValue |= Value;
+            break;
+        }
+        
+        case 2:
+        {
+            /* High byte */
+            PitChannels[Channel].ReloadValue &= 0x00FF;
+            PitChannels[Channel].ReloadValue |= Value << 8;
+        }
+    }
+}
+
+VOID PitInitialize()
+{
+    HANDLE ThreadHandle;
+    
+    /* Set up channel 0 */
+    PitChannels[0].ReloadValue = 0;
+    PitChannels[0].RateGenerator = TRUE;
+    PitChannels[0].Pulsed = FALSE;
+    PitChannels[0].AccessMode = 3;
+    PitChannels[0].FlipFlop = FALSE;
+
+    /* Create the PIT timer thread */
+    ThreadHandle = CreateThread(NULL, 0, PitThread, NULL, 0, NULL);
+    
+    /* We don't need the handle */
+    CloseHandle(ThreadHandle);
 }

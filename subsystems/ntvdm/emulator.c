@@ -56,12 +56,58 @@ static VOID EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT 
 
 static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
-    // TODO: NOT IMPLEMENTED!
+    switch (Address)
+    {
+        case PIC_MASTER_CMD:
+        case PIC_SLAVE_CMD:
+        {
+            *Buffer = PicReadCommand(Address);
+            break;
+        }
+        
+        case PIC_MASTER_DATA:
+        case PIC_SLAVE_DATA:
+        {
+            *Buffer = PicReadData(Address);
+            break;
+        }
+    }
 }
 
 static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
-    // TODO: NOT IMPLEMENTED!
+    BYTE Byte = *Buffer;
+    
+    switch (Address)
+    {
+        case PIT_COMMAND_PORT:
+        {
+            PitWriteCommand(Byte);
+            break;
+        }
+        
+        case PIT_DATA_PORT(0):
+        case PIT_DATA_PORT(1):
+        case PIT_DATA_PORT(2):
+        {
+            PitWriteData(Address - PIT_DATA_PORT(0), Byte);
+            break;
+        }
+        
+        case PIC_MASTER_CMD:
+        case PIC_SLAVE_CMD:
+        {
+            PicWriteCommand(Address, Byte);
+            break;
+        }
+        
+        case PIC_MASTER_DATA:
+        case PIC_SLAVE_DATA:
+        {
+            PicWriteData(Address, Byte);
+            break;
+        }
+    }
 }
 
 static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
@@ -100,6 +146,18 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
             /* Stop the VDM */
             VdmRunning = FALSE;
             return;
+        }
+        
+        /* Check if this was an PIC IRQ */
+        if (IntNum >= BIOS_PIC_MASTER_INT && IntNum < BIOS_PIC_MASTER_INT + 8)
+        {
+            /* It was an IRQ from the master PIC */
+            BiosHandleIrq(IntNum - BIOS_PIC_MASTER_INT);
+        }
+        else if (IntNum >= BIOS_PIC_SLAVE_INT && IntNum < BIOS_PIC_SLAVE_INT + 8)
+        {
+            /* It was an IRQ from the slave PIC */
+            BiosHandleIrq(IntNum - BIOS_PIC_SLAVE_INT + 8);
         }
 
         switch (IntNum)
@@ -183,7 +241,7 @@ VOID EmulatorExecute(WORD Segment, WORD Offset)
 
 VOID EmulatorInterrupt(BYTE Number)
 {
-    LPWORD IntVecTable = (LPWORD)((ULONG_PTR)BaseAddress);
+    LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     UINT Segment, Offset;
 
     /* Get the segment and offset */

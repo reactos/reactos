@@ -71,6 +71,12 @@ BOOLEAN BiosInitialize()
     /* Make sure the PIC is in 8086 mode */
     PicWriteData(PIC_MASTER_DATA, PIC_ICW4_8086);
     PicWriteData(PIC_SLAVE_DATA, PIC_ICW4_8086);
+    
+    /* Clear the masks for both PICs */
+    PicWriteData(PIC_MASTER_DATA, 0x00);
+    PicWriteData(PIC_SLAVE_DATA, 0x00);
+    
+    PitInitialize();
 
     return TRUE;
 }
@@ -249,6 +255,11 @@ VOID BiosVideoService()
             break;
         }
     }
+}
+
+VOID BiosHandleIrq(BYTE IrqNumber)
+{
+    PicWriteCommand(PIC_MASTER_CMD, PIC_OCW2_EOI);
 }
 
 /* EOF */
