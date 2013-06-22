@@ -18,7 +18,7 @@
 //#include <stdio.h>
 //#include <stdarg.h>
 //#include <string.h>
-//#include <locale.h>
+#include <locale.h>
 #include <io.h>
 #include <time.h>
 //#include <ctype.h>
