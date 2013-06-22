@@ -8,6 +8,8 @@
 
 #include "ntvdm.h"
 
+#define NDEBUG
+
 BOOLEAN VdmRunning = TRUE;
 LPVOID BaseAddress = NULL;
 LPCWSTR ExceptionName[] =
@@ -57,6 +59,7 @@ INT wmain(INT argc, WCHAR *argv[])
     INT i;
     BOOLEAN PrintUsage = TRUE;
     CHAR CommandLine[128];
+    DWORD CurrentTickCount, LastTickCount = 0, Cycles = 0, LastCyclePrintout = 0;
     LARGE_INTEGER Frequency, LastTimerTick, Counter;
     LONGLONG TimerTicks;
 
@@ -133,7 +136,10 @@ INT wmain(INT argc, WCHAR *argv[])
     /* Main loop */
     while (VdmRunning)
     {
-        /* Get the current time */
+        /* Get the current number of ticks */
+        CurrentTickCount = GetTickCount();
+        
+        /* Get the current performance counter value */
         QueryPerformanceCounter(&Counter);
         
         /* Get the number of PIT ticks that have passed */
@@ -144,11 +150,23 @@ INT wmain(INT argc, WCHAR *argv[])
         for (i = 0; i < TimerTicks; i++) PitDecrementCount();
         LastTimerTick = Counter;
         
-        /* Check for console input events */
-        CheckForInputEvents();
+        /* Check for console input events every millisecond */
+        if (CurrentTickCount != LastTickCount)
+        {
+            CheckForInputEvents();
+            LastTickCount = CurrentTickCount;
+        }
         
         /* Continue CPU emulation */
         EmulatorStep();
+        
+        Cycles++;
+        if ((CurrentTickCount - LastCyclePrintout) >= 1000)
+        {
+            DPRINT1("NTVDM: %d Instructions Per Second\n", Cycles);
+            LastCyclePrintout = CurrentTickCount;
+            Cycles = 0;
+        }
     }
 
 Cleanup:

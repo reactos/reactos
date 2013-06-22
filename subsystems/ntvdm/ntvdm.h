@@ -14,6 +14,7 @@
 #include <conio.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <debug.h>
 
 /* DEFINES ********************************************************************/
 
