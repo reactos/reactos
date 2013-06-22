@@ -21,7 +21,7 @@ if /I "%1" == "arm_hosttools" (
 
 :: Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
-set USE_NMAKE=0
+set USE_VSCMD=0
 
 :: Detect presence of cmake
 cmd /c cmake --version 2>&1 | find "cmake version" > NUL || goto cmake_notfound
@@ -49,7 +49,7 @@ if defined ROS_ARCH (
     ) else if "%_BUILDARCH%" == "AMD64" (
         set ARCH=amd64
     )
-    set USE_NMAKE=1
+    set USE_VSCMD=1
     set USE_WDK_HEADERS=0
 
 ) else if defined VCINSTALLDIR (
@@ -96,8 +96,8 @@ if defined ROS_ARCH (
             )
         )
     ) else (
-        set USE_NMAKE=1
-        echo This script defaults to nmake. To use Visual Studio GUI specify "VSSolution" as a parameter.
+        set USE_VSCMD=1
+        echo This script defaults to Ninja. To use Visual Studio GUI specify "VSSolution" as a parameter.
     )
 
 ) else if defined sdkdir (
@@ -109,7 +109,7 @@ if defined ROS_ARCH (
     )
 
     set BUILD_ENVIRONMENT=SDK
-    set USE_NMAKE=1
+    set USE_VSCMD=1
 
 ) else (
     echo Error: Unable to detect build environment. Configure script failure.
@@ -122,8 +122,8 @@ if not defined ARCH (
     exit /b
 )
 
-:: Detect nmake generator
-if %USE_NMAKE% == 1 (
+:: Detect VS command line generator
+if %USE_VSCMD% == 1 (
     if /I "%1" == "CodeBlocks" (
         set CMAKE_GENERATOR="CodeBlocks - NMake Makefiles"
     ) else if /I "%1" == "Eclipse" (
@@ -186,9 +186,9 @@ if "%BUILD_ENVIRONMENT%" == "MinGW" (
 
 cd..
 
-echo Configure script complete! Enter directories and execute appropriate build commands(ex: ninja, make, nmake, etc...).
+echo Configure script complete^^! Enter directories and execute appropriate build commands (ex: ninja, make, nmake, etc...).
 exit /b
 
 :cmake_notfound
- echo Unable to find cmake, if it is installed, check your PATH variable.
- exit /b
+echo Unable to find cmake, if it is installed, check your PATH variable.
+exit /b
