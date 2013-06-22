@@ -1,3 +1,5 @@
 add_subdirectory(glu32)
-add_subdirectory(mesa)
+if(NOT MSVC)
+    add_subdirectory(mesa)
+endif()
 add_subdirectory(opengl32)
