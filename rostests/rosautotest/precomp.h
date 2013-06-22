@@ -57,10 +57,3 @@ bool IsNumber(const char* Input);
 string StringOut(const string& String, bool forcePrint = true);
 string UnicodeToAscii(PCWSTR UnicodeString);
 string UnicodeToAscii(const wstring& UnicodeString);
-
-
-/* Lazy HACK to allow compiling/debugging with MSVC while we lack support
-   for linking against "debugsup_ntdll" in MSVC */
-#ifdef _MSC_VER
-    #define DbgPrint
-#endif
