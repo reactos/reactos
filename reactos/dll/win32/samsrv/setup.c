@@ -88,63 +88,71 @@ SampSetupAddMemberToAlias(HKEY hDomainKey,
 }
 
 
-static BOOL
-SampSetupCreateAliasAccount(HKEY hDomainKey,
+static
+NTSTATUS
+SampSetupCreateAliasAccount(HANDLE hDomainKey,
                             LPCWSTR lpAccountName,
                             LPCWSTR lpDescription,
                             ULONG ulRelativeId)
 {
-    DWORD dwDisposition;
     WCHAR szAccountKeyName[32];
-    HKEY hAccountKey = NULL;
-    HKEY hNamesKey = NULL;
+    HANDLE hAccountKey = NULL;
+    HANDLE hNamesKey = NULL;
+    NTSTATUS Status;
 
     swprintf(szAccountKeyName, L"Aliases\\%08lX", ulRelativeId);
 
-    if (!RegCreateKeyExW(hDomainKey,
-                         szAccountKeyName,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         KEY_ALL_ACCESS,
-                         NULL,
-                         &hAccountKey,
-                         &dwDisposition))
+    Status = SampRegCreateKey(hDomainKey,
+                              szAccountKeyName,
+                              KEY_ALL_ACCESS,
+                              &hAccountKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"Name",
+                             REG_SZ,
+                             (LPVOID)lpAccountName,
+                             (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"Description",
+                             REG_SZ,
+                             (LPVOID)lpDescription,
+                             (wcslen(lpDescription) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+
+    Status = SampRegOpenKey(hDomainKey,
+                            L"Aliases\\Names",
+                            KEY_ALL_ACCESS,
+                            &hNamesKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hNamesKey,
+                            lpAccountName,
+                            REG_DWORD,
+                            (LPVOID)&ulRelativeId,
+                            sizeof(ULONG));
+
+done:
+    if (hNamesKey != NULL)
+        SampRegCloseKey(hNamesKey);
+
+    if (hAccountKey != NULL)
     {
-        RegSetValueEx(hAccountKey,
-                      L"Name",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpAccountName,
-                      (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
+        SampRegCloseKey(hAccountKey);
 
-        RegSetValueEx(hAccountKey,
-                      L"Description",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpDescription,
-                      (wcslen(lpDescription) + 1) * sizeof(WCHAR));
-
-        RegCloseKey(hAccountKey);
+        if (!NT_SUCCESS(Status))
+            SampRegDeleteKey(hDomainKey,
+                             szAccountKeyName);
     }
 
-    if (!RegOpenKeyExW(hDomainKey,
-                       L"Aliases\\Names",
-                       0,
-                       KEY_ALL_ACCESS,
-                       &hNamesKey))
-    {
-        RegSetValueEx(hNamesKey,
-                      lpAccountName,
-                      0,
-                      REG_DWORD,
-                      (LPVOID)&ulRelativeId,
-                      sizeof(ULONG));
-
-        RegCloseKey(hNamesKey);
-    }
-
-    return TRUE;
+    return Status;
 }
 
 
@@ -310,8 +318,9 @@ done:
 }
 
 
-static BOOL
-SampSetupCreateUserAccount(HKEY hDomainKey,
+static
+NTSTATUS
+SampSetupCreateUserAccount(HANDLE hDomainKey,
                            LPCWSTR lpAccountName,
                            LPCWSTR lpComment,
                            ULONG ulRelativeId,
@@ -321,10 +330,10 @@ SampSetupCreateUserAccount(HKEY hDomainKey,
     GROUP_MEMBERSHIP GroupMembership;
     UCHAR LogonHours[23];
     LPWSTR lpEmptyString = L"";
-    DWORD dwDisposition;
     WCHAR szAccountKeyName[32];
-    HKEY hAccountKey = NULL;
-    HKEY hNamesKey = NULL;
+    HANDLE hAccountKey = NULL;
+    HANDLE hNamesKey = NULL;
+    NTSTATUS Status;
 
     /* Initialize fixed user data */
     FixedUserData.Version = 1;
@@ -347,189 +356,213 @@ SampSetupCreateUserAccount(HKEY hDomainKey,
 
     swprintf(szAccountKeyName, L"Users\\%08lX", ulRelativeId);
 
-    if (!RegCreateKeyExW(hDomainKey,
-                         szAccountKeyName,
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         KEY_ALL_ACCESS,
-                         NULL,
-                         &hAccountKey,
-                         &dwDisposition))
+    Status = SampRegCreateKey(hDomainKey,
+                              szAccountKeyName,
+                              KEY_ALL_ACCESS,
+                              &hAccountKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"F",
+                             REG_BINARY,
+                             (LPVOID)&FixedUserData,
+                             sizeof(SAM_USER_FIXED_DATA));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"Name",
+                             REG_SZ,
+                             (LPVOID)lpAccountName,
+                             (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"FullName",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"HomeDirectory",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"HomeDirectoryDrive",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"ScriptPath",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"ProfilePath",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"AdminComment",
+                             REG_SZ,
+                             (LPVOID)lpComment,
+                             (wcslen(lpComment) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"UserComment",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"WorkStations",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"Parameters",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set LogonHours attribute*/
+    *((PUSHORT)LogonHours) = 168;
+    memset(&(LogonHours[2]), 0xff, 21);
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"LogonHours",
+                             REG_BINARY,
+                             (LPVOID)LogonHours,
+                             sizeof(LogonHours));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set Groups attribute*/
+    GroupMembership.RelativeId = DOMAIN_GROUP_RID_USERS;
+    GroupMembership.Attributes = SE_GROUP_MANDATORY |
+                                 SE_GROUP_ENABLED |
+                                 SE_GROUP_ENABLED_BY_DEFAULT;
+
+    Status = SampRegSetValue(hAccountKey,
+                             L"Groups",
+                             REG_BINARY,
+                             (LPVOID)&GroupMembership,
+                             sizeof(GROUP_MEMBERSHIP));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set LMPwd attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"LMPwd",
+                             REG_BINARY,
+                             (LPVOID)&EmptyLmHash,
+                             sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set NTPwd attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"NTPwd",
+                             REG_BINARY,
+                             (LPVOID)&EmptyNtHash,
+                             sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set LMPwdHistory attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"LMPwdHistory",
+                             REG_BINARY,
+                             NULL,
+                             0);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set NTPwdHistory attribute*/
+    Status = SampRegSetValue(hAccountKey,
+                             L"NTPwdHistory",
+                             REG_BINARY,
+                             NULL,
+                             0);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* FIXME: Set SecDesc attribute*/
+
+
+    Status = SampRegOpenKey(hDomainKey,
+                            L"Users\\Names",
+                            KEY_ALL_ACCESS,
+                            &hNamesKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegSetValue(hNamesKey,
+                            lpAccountName,
+                            REG_DWORD,
+                            (LPVOID)&ulRelativeId,
+                            sizeof(ULONG));
+
+done:
+    if (hNamesKey != NULL)
+        SampRegCloseKey(hNamesKey);
+
+    if (hAccountKey != NULL)
     {
-        RegSetValueEx(hAccountKey,
-                      L"F",
-                      0,
-                      REG_BINARY,
-                      (LPVOID)&FixedUserData,
-                      sizeof(SAM_USER_FIXED_DATA));
+        SampRegCloseKey(hAccountKey);
 
-        RegSetValueEx(hAccountKey,
-                      L"Name",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpAccountName,
-                      (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
-
-        RegSetValueEx(hAccountKey,
-                      L"FullName",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpEmptyString,
-                      sizeof(WCHAR));
-
-        RegSetValueEx(hAccountKey,
-                      L"HomeDirectory",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpEmptyString,
-                      sizeof(WCHAR));
-
-        RegSetValueEx(hAccountKey,
-                      L"HomeDirectoryDrive",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpEmptyString,
-                      sizeof(WCHAR));
-
-        RegSetValueEx(hAccountKey,
-                      L"ScriptPath",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpEmptyString,
-                      sizeof(WCHAR));
-
-        RegSetValueEx(hAccountKey,
-                      L"ProfilePath",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpEmptyString,
-                      sizeof(WCHAR));
-
-        RegSetValueEx(hAccountKey,
-                      L"AdminComment",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpComment,
-                      (wcslen(lpComment) + 1) * sizeof(WCHAR));
-
-        RegSetValueEx(hAccountKey,
-                      L"UserComment",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpEmptyString,
-                      sizeof(WCHAR));
-
-        RegSetValueEx(hAccountKey,
-                      L"WorkStations",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpEmptyString,
-                      sizeof(WCHAR));
-
-        RegSetValueEx(hAccountKey,
-                      L"Parameters",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpEmptyString,
-                      sizeof(WCHAR));
-
-        /* Set LogonHours attribute*/
-        *((PUSHORT)LogonHours) = 168;
-        memset(&(LogonHours[2]), 0xff, 21);
-
-        RegSetValueEx(hAccountKey,
-                      L"LogonHours",
-                      0,
-                      REG_BINARY,
-                      (LPVOID)LogonHours,
-                      sizeof(LogonHours));
-
-        /* Set Groups attribute*/
-        GroupMembership.RelativeId = DOMAIN_GROUP_RID_USERS;
-        GroupMembership.Attributes = SE_GROUP_MANDATORY |
-                                     SE_GROUP_ENABLED |
-                                     SE_GROUP_ENABLED_BY_DEFAULT;
-
-        RegSetValueEx(hAccountKey,
-                      L"Groups",
-                      0,
-                      REG_BINARY,
-                      (LPVOID)&GroupMembership,
-                      sizeof(GROUP_MEMBERSHIP));
-
-        /* Set LMPwd attribute*/
-        RegSetValueEx(hAccountKey,
-                      L"LMPwd",
-                      0,
-                      REG_BINARY,
-                      (LPVOID)&EmptyLmHash,
-                      sizeof(ENCRYPTED_LM_OWF_PASSWORD));
-
-        /* Set NTPwd attribute*/
-        RegSetValueEx(hAccountKey,
-                      L"NTPwd",
-                      0,
-                      REG_BINARY,
-                      (LPVOID)&EmptyNtHash,
-                      sizeof(ENCRYPTED_NT_OWF_PASSWORD));
-
-        /* Set LMPwdHistory attribute*/
-        RegSetValueEx(hAccountKey,
-                      L"LMPwdHistory",
-                      0,
-                      REG_BINARY,
-                      NULL,
-                      0);
-
-        /* Set NTPwdHistory attribute*/
-        RegSetValueEx(hAccountKey,
-                      L"NTPwdHistory",
-                      0,
-                      REG_BINARY,
-                      NULL,
-                      0);
-
-        /* FIXME: Set SecDesc attribute*/
-
-        RegCloseKey(hAccountKey);
+        if (!NT_SUCCESS(Status))
+            SampRegDeleteKey(hDomainKey,
+                             szAccountKeyName);
     }
 
-    if (!RegOpenKeyExW(hDomainKey,
-                       L"Users\\Names",
-                       0,
-                       KEY_ALL_ACCESS,
-                       &hNamesKey))
-    {
-        RegSetValueEx(hNamesKey,
-                      lpAccountName,
-                      0,
-                      REG_DWORD,
-                      (LPVOID)&ulRelativeId,
-                      sizeof(ULONG));
-
-        RegCloseKey(hNamesKey);
-    }
-
-    return TRUE;
+    return Status;
 }
 
 
-static BOOL
-SampSetupCreateDomain(IN HKEY hDomainsKey,
+static
+NTSTATUS
+SampSetupCreateDomain(IN HANDLE hServerKey,
                       IN LPCWSTR lpKeyName,
                       IN LPCWSTR lpDomainName,
                       IN PSID lpDomainSid,
-                      OUT PHKEY lpDomainKey)
+                      OUT HANDLE *lpDomainKey)
 {
     SAM_DOMAIN_FIXED_DATA FixedData;
+    WCHAR szDomainKeyName[32];
     LPWSTR lpEmptyString = L"";
-    DWORD dwDisposition;
-    HKEY hDomainKey = NULL;
-    HKEY hAliasesKey = NULL;
-    HKEY hGroupsKey = NULL;
-    HKEY hUsersKey = NULL;
-    HKEY hNamesKey = NULL;
+    HANDLE hDomainKey = NULL;
+    HANDLE hAliasesKey = NULL;
+    HANDLE hGroupsKey = NULL;
+    HANDLE hUsersKey = NULL;
+    HANDLE hNamesKey = NULL;
+    NTSTATUS Status;
 
     if (lpDomainKey != NULL)
         *lpDomainKey = NULL;
@@ -554,137 +587,164 @@ SampSetupCreateDomain(IN HKEY hDomainsKey,
     FixedData.DomainServerRole = DomainServerRolePrimary;
     FixedData.UasCompatibilityRequired = TRUE;
 
-    if (RegCreateKeyExW(hDomainsKey,
-                        lpKeyName,
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hDomainKey,
-                        &dwDisposition))
-        return FALSE;
+    wcscpy(szDomainKeyName, L"Domains\\");
+    wcscat(szDomainKeyName, lpKeyName);
+
+    Status = SampRegCreateKey(hServerKey,
+                              szDomainKeyName,
+                              KEY_ALL_ACCESS,
+                              &hDomainKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Set the fixed data value */
-    if (RegSetValueEx(hDomainKey,
-                      L"F",
-                      0,
-                      REG_BINARY,
-                      (LPVOID)&FixedData,
-                      sizeof(SAM_DOMAIN_FIXED_DATA)))
-        return FALSE;
+    Status = SampRegSetValue(hDomainKey,
+                             L"F",
+                             REG_BINARY,
+                             (LPVOID)&FixedData,
+                             sizeof(SAM_DOMAIN_FIXED_DATA));
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     if (lpDomainSid != NULL)
     {
-        RegSetValueEx(hDomainKey,
-                      L"Name",
-                      0,
-                      REG_SZ,
-                      (LPVOID)lpDomainName,
-                      (wcslen(lpDomainName) + 1) * sizeof(WCHAR));
+        Status = SampRegSetValue(hDomainKey,
+                                 L"Name",
+                                 REG_SZ,
+                                 (LPVOID)lpDomainName,
+                                 (wcslen(lpDomainName) + 1) * sizeof(WCHAR));
+        if (!NT_SUCCESS(Status))
+            goto done;
 
-        RegSetValueEx(hDomainKey,
-                      L"SID",
-                      0,
-                      REG_BINARY,
-                      (LPVOID)lpDomainSid,
-                      RtlLengthSid(lpDomainSid));
+        Status = SampRegSetValue(hDomainKey,
+                                 L"SID",
+                                 REG_BINARY,
+                                 (LPVOID)lpDomainSid,
+                                 RtlLengthSid(lpDomainSid));
+        if (!NT_SUCCESS(Status))
+            goto done;
     }
 
-    RegSetValueEx(hDomainKey,
-                  L"OemInformation",
-                  0,
-                  REG_SZ,
-                  (LPVOID)lpEmptyString,
-                  sizeof(WCHAR));
+    Status = SampRegSetValue(hDomainKey,
+                             L"OemInformation",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-    RegSetValueEx(hDomainKey,
-                  L"ReplicaSourceNodeName",
-                  0,
-                  REG_SZ,
-                  (LPVOID)lpEmptyString,
-                  sizeof(WCHAR));
+    Status = SampRegSetValue(hDomainKey,
+                             L"ReplicaSourceNodeName",
+                             REG_SZ,
+                             (LPVOID)lpEmptyString,
+                             sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     /* Create the Alias container */
-    if (!RegCreateKeyExW(hDomainKey,
-                         L"Aliases",
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         KEY_ALL_ACCESS,
-                         NULL,
-                         &hAliasesKey,
-                         &dwDisposition))
-    {
-        if (!RegCreateKeyExW(hAliasesKey,
-                             L"Names",
-                             0,
-                             NULL,
-                             REG_OPTION_NON_VOLATILE,
-                             KEY_ALL_ACCESS,
-                             NULL,
-                             &hNamesKey,
-                             &dwDisposition))
-            RegCloseKey(hNamesKey);
+    Status = SampRegCreateKey(hDomainKey,
+                              L"Aliases",
+                              KEY_ALL_ACCESS,
+                              &hAliasesKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-        RegCloseKey(hAliasesKey);
-    }
+    Status = SampRegCreateKey(hAliasesKey,
+                              L"Names",
+                              KEY_ALL_ACCESS,
+                              &hNamesKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    SampRegCloseKey(hNamesKey);
 
     /* Create the Groups container */
-    if (!RegCreateKeyExW(hDomainKey,
-                         L"Groups",
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         KEY_ALL_ACCESS,
-                         NULL,
-                         &hGroupsKey,
-                         &dwDisposition))
-    {
-        if (!RegCreateKeyExW(hGroupsKey,
-                             L"Names",
-                             0,
-                             NULL,
-                             REG_OPTION_NON_VOLATILE,
-                             KEY_ALL_ACCESS,
-                             NULL,
-                             &hNamesKey,
-                             &dwDisposition))
-            RegCloseKey(hNamesKey);
+    Status = SampRegCreateKey(hDomainKey,
+                              L"Groups",
+                              KEY_ALL_ACCESS,
+                              &hGroupsKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-        RegCloseKey(hGroupsKey);
-    }
+    Status = SampRegCreateKey(hGroupsKey,
+                              L"Names",
+                              KEY_ALL_ACCESS,
+                              &hNamesKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
+    SampRegCloseKey(hNamesKey);
 
     /* Create the Users container */
-    if (!RegCreateKeyExW(hDomainKey,
-                         L"Users",
-                         0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         KEY_ALL_ACCESS,
-                         NULL,
-                         &hUsersKey,
-                         &dwDisposition))
-    {
-        if (!RegCreateKeyExW(hUsersKey,
-                             L"Names",
-                             0,
-                             NULL,
-                             REG_OPTION_NON_VOLATILE,
-                             KEY_ALL_ACCESS,
-                             NULL,
-                             &hNamesKey,
-                             &dwDisposition))
-            RegCloseKey(hNamesKey);
+    Status = SampRegCreateKey(hDomainKey,
+                              L"Users",
+                              KEY_ALL_ACCESS,
+                              &hUsersKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-        RegCloseKey(hUsersKey);
-    }
+    Status = SampRegCreateKey(hUsersKey,
+                              L"Names",
+                              KEY_ALL_ACCESS,
+                              &hNamesKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    SampRegCloseKey(hNamesKey);
 
     if (lpDomainKey != NULL)
         *lpDomainKey = hDomainKey;
 
-    return TRUE;
+done:
+    if (hAliasesKey != NULL)
+        SampRegCloseKey(hAliasesKey);
+
+    if (hGroupsKey != NULL)
+        SampRegCloseKey(hGroupsKey);
+
+    if (hUsersKey != NULL)
+        SampRegCloseKey(hUsersKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (hDomainKey != NULL)
+            SampRegCloseKey(hDomainKey);
+    }
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+SampSetupCreateServer(IN HANDLE hSamKey,
+                      OUT HANDLE *lpServerKey)
+{
+    HANDLE hServerKey = NULL;
+    HANDLE hDomainsKey = NULL;
+    NTSTATUS Status;
+
+    Status = SampRegCreateKey(hSamKey,
+                              L"SAM",
+                              KEY_ALL_ACCESS,
+                              &hServerKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegCreateKey(hServerKey,
+                              L"Domains",
+                              KEY_ALL_ACCESS,
+                              &hDomainsKey);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    SampRegCloseKey(hDomainsKey);
+
+    *lpServerKey = hServerKey;
+
+done:
+
+    return Status;
 }
 
 
@@ -724,10 +784,10 @@ BOOL
 SampInitializeSAM(VOID)
 {
     PPOLICY_ACCOUNT_DOMAIN_INFO AccountDomainInfo = NULL;
-    DWORD dwDisposition;
-    HKEY hSamKey = NULL;
-    HKEY hDomainsKey = NULL;
-    HKEY hDomainKey = NULL;
+    HANDLE hSamKey = NULL;
+    HANDLE hServerKey = NULL;
+    HANDLE hBuiltinDomainKey = NULL;
+    HANDLE hAccountDomainKey = NULL;
     PSID pBuiltinSid = NULL;
     BOOL bResult = TRUE;
     PSID pSid;
@@ -740,37 +800,25 @@ SampInitializeSAM(VOID)
 
     hInstance = GetModuleHandleW(L"samsrv.dll");
 
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                        L"SAM\\SAM",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hSamKey,
-                        &dwDisposition))
+    /* Open the SAM key */
+    Status = SampRegOpenKey(NULL,
+                            L"\\Registry\\Machine\\SAM",
+                            KEY_READ | KEY_CREATE_SUB_KEY | KEY_ENUMERATE_SUB_KEYS,
+                            &hSamKey);
+    if (!NT_SUCCESS(Status))
     {
-        ERR("Failed to create 'Sam' key! (Error %lu)\n", GetLastError());
+        ERR("Failed to open the SAM key (Status: 0x%08lx)\n", Status);
         return FALSE;
     }
 
-    if (RegCreateKeyExW(hSamKey,
-                        L"Domains",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hDomainsKey,
-                        &dwDisposition))
+    /* Create the SAM Server object */
+    Status = SampSetupCreateServer(hSamKey,
+                                   &hServerKey);
+    if (!NT_SUCCESS(Status))
     {
-        ERR("Failed to create 'Domains' key! (Error %lu)\n", GetLastError());
         bResult = FALSE;
         goto done;
     }
-
-    RegCloseKey(hSamKey);
-    hSamKey = NULL;
 
     /* Create and initialize the Builtin Domain SID */
     pBuiltinSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, RtlLengthRequiredSid(1));
@@ -796,16 +844,21 @@ SampInitializeSAM(VOID)
     SampLoadString(hInstance, IDS_DOMAIN_BUILTIN_NAME, szName, 80);
 
     /* Create the Builtin domain */
-    if (SampSetupCreateDomain(hDomainsKey,
-                              L"Builtin",
-                              szName,
-                              pBuiltinSid,
-                              &hDomainKey))
+    Status = SampSetupCreateDomain(hServerKey,
+                                   L"Builtin",
+                                   szName,
+                                   pBuiltinSid,
+                                   &hBuiltinDomainKey);
+    if (!NT_SUCCESS(Status))
     {
-        SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_NAME, szName, 80);
-        SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_COMMENT, szComment, 256);
+        bResult = FALSE;
+        goto done;
+    }
 
-        SampSetupCreateAliasAccount(hDomainKey,
+    SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_COMMENT, szComment, 256);
+
+        SampSetupCreateAliasAccount(hBuiltinDomainKey,
                                     szName,
                                     szComment,
                                     DOMAIN_ALIAS_RID_ADMINS);
@@ -813,7 +866,7 @@ SampInitializeSAM(VOID)
         SampLoadString(hInstance, IDS_ALIAS_USERS_NAME, szName, 80);
         SampLoadString(hInstance, IDS_ALIAS_USERS_COMMENT, szComment, 256);
 
-        SampSetupCreateAliasAccount(hDomainKey,
+        SampSetupCreateAliasAccount(hBuiltinDomainKey,
                                     szName,
                                     szComment,
                                     DOMAIN_ALIAS_RID_USERS);
@@ -821,7 +874,7 @@ SampInitializeSAM(VOID)
         SampLoadString(hInstance, IDS_ALIAS_GUESTS_NAME, szName, 80);
         SampLoadString(hInstance, IDS_ALIAS_GUESTS_COMMENT, szComment, 256);
 
-        SampSetupCreateAliasAccount(hDomainKey,
+        SampSetupCreateAliasAccount(hBuiltinDomainKey,
                                     szName,
                                     szComment,
                                     DOMAIN_ALIAS_RID_GUESTS);
@@ -829,7 +882,7 @@ SampInitializeSAM(VOID)
         SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_NAME, szName, 80);
         SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_COMMENT, szComment, 256);
 
-        SampSetupCreateAliasAccount(hDomainKey,
+        SampSetupCreateAliasAccount(hBuiltinDomainKey,
                                     szName,
                                     szComment,
                                     DOMAIN_ALIAS_RID_POWER_USERS);
@@ -839,7 +892,7 @@ SampInitializeSAM(VOID)
                               DOMAIN_USER_RID_ADMIN);
         if (pSid != NULL)
         {
-            SampSetupAddMemberToAlias(hDomainKey,
+            SampSetupAddMemberToAlias(hBuiltinDomainKey,
                                       DOMAIN_ALIAS_RID_ADMINS,
                                       pSid);
 
@@ -851,27 +904,30 @@ SampInitializeSAM(VOID)
                               DOMAIN_USER_RID_GUEST);
         if (pSid != NULL)
         {
-            SampSetupAddMemberToAlias(hDomainKey,
+            SampSetupAddMemberToAlias(hBuiltinDomainKey,
                                       DOMAIN_ALIAS_RID_GUESTS,
                                       pSid);
 
             RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
         }
 
-        RegCloseKey(hDomainKey);
-    }
 
     /* Create the Account domain */
-    if (SampSetupCreateDomain(hDomainsKey,
-                              L"Account",
-                              L"",
-                              AccountDomainInfo->DomainSid,
-                              &hDomainKey))
+    Status = SampSetupCreateDomain(hServerKey,
+                                   L"Account",
+                                   L"",
+                                   AccountDomainInfo->DomainSid,
+                                   &hAccountDomainKey);
+    if (!NT_SUCCESS(Status))
     {
+        bResult = FALSE;
+        goto done;
+    }
+
         SampLoadString(hInstance, IDS_GROUP_NONE_NAME, szName, 80);
         SampLoadString(hInstance, IDS_GROUP_NONE_COMMENT, szComment, 256);
 
-        SampSetupCreateGroupAccount(hDomainKey,
+        SampSetupCreateGroupAccount(hAccountDomainKey,
                                     szName,
                                     szComment,
                                     DOMAIN_GROUP_RID_USERS);
@@ -879,31 +935,28 @@ SampInitializeSAM(VOID)
         SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_NAME, szName, 80);
         SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_COMMENT, szComment, 256);
 
-        SampSetupCreateUserAccount(hDomainKey,
+        SampSetupCreateUserAccount(hAccountDomainKey,
                                    szName,
                                    szComment,
                                    DOMAIN_USER_RID_ADMIN,
                                    USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
-        SampSetupAddMemberToGroup(hDomainKey,
+        SampSetupAddMemberToGroup(hAccountDomainKey,
                                   DOMAIN_GROUP_RID_USERS,
                                   DOMAIN_USER_RID_ADMIN);
 
         SampLoadString(hInstance, IDS_USER_GUEST_NAME, szName, 80);
         SampLoadString(hInstance, IDS_USER_GUEST_COMMENT, szComment, 256);
 
-        SampSetupCreateUserAccount(hDomainKey,
+        SampSetupCreateUserAccount(hAccountDomainKey,
                                    szName,
                                    szComment,
                                    DOMAIN_USER_RID_GUEST,
                                    USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
-        SampSetupAddMemberToGroup(hDomainKey,
+        SampSetupAddMemberToGroup(hAccountDomainKey,
                                   DOMAIN_GROUP_RID_USERS,
                                   DOMAIN_USER_RID_GUEST);
-
-        RegCloseKey(hDomainKey);
-    }
 
 done:
     if (AccountDomainInfo)
@@ -912,11 +965,17 @@ done:
     if (pBuiltinSid)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pBuiltinSid);
 
-    if (hDomainsKey)
-        RegCloseKey(hDomainsKey);
+    if (hAccountDomainKey != NULL)
+        SampRegCloseKey(hAccountDomainKey);
 
-    if (hSamKey)
-        RegCloseKey(hSamKey);
+    if (hBuiltinDomainKey != NULL)
+        SampRegCloseKey(hBuiltinDomainKey);
+
+    if (hServerKey != NULL)
+        SampRegCloseKey(hServerKey);
+
+    if (hSamKey != NULL)
+        SampRegCloseKey(hSamKey);
 
     TRACE("SampInitializeSAM() done\n");
 
