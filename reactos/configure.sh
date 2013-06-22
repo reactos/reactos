@@ -59,4 +59,4 @@ rm -f CMakeCache.txt
 
 cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE=0 -DPCH=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=$ARCH -DREACTOS_BUILD_TOOLS_DIR="$REACTOS_BUILD_TOOLS_DIR" $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
 
-echo Configure script complete! Enter directories and execute appropriate build commands\(ex: ninja, make, makex, etc...\).
+echo Configure script complete! Enter directories and execute appropriate build commands \(ex: ninja, make, makex, etc...\).
