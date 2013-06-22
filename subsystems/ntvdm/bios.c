@@ -91,7 +91,7 @@ static COORD BiosVideoAddressToCoord(ULONG Address)
 
     if (!GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo))
     {
-        assert(0);
+        ASSERT(FALSE);
         return Result;
     }
 

@@ -12,8 +12,9 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <conio.h>
-#include <assert.h>
 #include <stdarg.h>
+
+#define NDEBUG
 #include <debug.h>
 
 /* DEFINES ********************************************************************/

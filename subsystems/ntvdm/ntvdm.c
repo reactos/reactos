@@ -8,8 +8,6 @@
 
 #include "ntvdm.h"
 
-#define NDEBUG
-
 BOOLEAN VdmRunning = TRUE;
 LPVOID BaseAddress = NULL;
 LPCWSTR ExceptionName[] =
