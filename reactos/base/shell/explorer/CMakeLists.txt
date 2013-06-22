@@ -1,7 +1,7 @@
 
 add_subdirectory(notifyhook)
 
-set_cpp()
+set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
 
 add_definitions(
     -DWIN32

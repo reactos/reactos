@@ -1,9 +1,81 @@
 
+# set_cpp
+#  Marks the current folder as containing C++ modules, additionally enabling
+#  specific C++ language features as specified (all of these default to off):
+#
+#  WITH_RUNTIME
+#   Links with the C++ runtime. Enable this for modules which use new/delete or
+#   RTTI, but do not require STL. This is the right choice if you see undefined
+#   references to operator new/delete, vector constructor/destructor iterator,
+#   type_info::vtable, ...
+#   Note: this only affects linking, so cannot be used for static libraries.
+#  WITH_RTTI
+#   Enables run-time type information. Enable this if the module uses typeid or
+#   dynamic_cast. You will probably need to enable WITH_RUNTIME as well, if
+#   you're not already using STL.
+#  WITH_EXCEPTIONS
+#   Enables C++ exception handling. Enable this if the module uses try/catch or
+#   throw. You might also need this if you use a standard operator new (the one
+#   without nothrow).
+#  WITH_STL
+#   Enables standard C++ headers and links to the Standard Template Library.
+#   Use this for modules using anything from the std:: namespace, e.g. maps,
+#   strings, vectors, etc.
+#   Note: this affects both compiling (via include directories) and
+#         linking (by adding STL). Implies WITH_RUNTIME.
+#   FIXME: WITH_STL is currently also required for runtime headers such as
+#          <new> and <exception>. This is not a big issue because in stl-less
+#          environments you usually don't want those anyway; but we might want
+#          to have modules like this in the future.
+#
+# Examples:
+#  set_cpp()
+#   Enables the C++ language, but will cause errors if any runtime or standard
+#   library features are used. This should be the default for C++ in kernel
+#   mode or otherwise restricted environments.
+#   Note: this is required to get libgcc (for multiplication/division) linked
+#         in for C++ modules, and to set the correct language for precompiled
+#         header files, so it IS required even with no features specified.
+#  set_cpp(WITH_RUNTIME)
+#   Links with the C++ runtime, so that e.g. custom operator new implementations
+#   can be used in a restricted environment. This is also required for linking
+#   with libraries (such as ATL) which have RTTI enabled, even if the module in
+#   question does not use WITH_RTTI.
+#  set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
+#   The full package. This will adjust compiler and linker so that all C++
+#   features can be used.
 macro(set_cpp)
-    set(IS_CPP 1)
-    if(MSVC)
-        include_directories(${REACTOS_SOURCE_DIR}/include/c++)
+    cmake_parse_arguments(__cppopts "WITH_RUNTIME;WITH_RTTI;WITH_EXCEPTIONS;WITH_STL" "" "" ${ARGN})
+    if(__cppopts_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "set_cpp: unparsed arguments ${__cppopts_UNPARSED_ARGUMENTS}")
     endif()
+
+    if(__cppopts_WITH_RUNTIME)
+        set(CPP_USE_RT 1)
+    endif()
+    if(__cppopts_WITH_RTTI)
+        if(MSVC)
+            replace_compile_flags("/GR-" "/GR")
+        else()
+            replace_compile_flags_language("-fno-rtti" "-frtti" "CXX")
+        endif()
+    endif()
+    if(__cppopts_WITH_EXCEPTIONS)
+        if(MSVC)
+            replace_compile_flags("/EHs-c-" "/EHsc")
+        else()
+            replace_compile_flags_language("-fno-exceptions" "-fexceptions" "CXX")
+        endif()
+    endif()
+    if(__cppopts_WITH_STL)
+        set(CPP_USE_STL 1)
+        if(MSVC)
+            add_definitions(-DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++)
+            include_directories(${REACTOS_SOURCE_DIR}/include/c++/stlport)
+        endif()
+    endif()
+
+    set(IS_CPP 1)
 endmacro()
 
 function(add_dependency_node _node)

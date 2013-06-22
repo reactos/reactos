@@ -20,7 +20,7 @@ endif()
 
 add_definitions(/Dinline=__inline /D__STDC__=1)
 
-add_compile_flags("/X /GR- /GS- /Zl /W3")
+add_compile_flags("/X /GR- /EHs-c- /GS- /Zl /W3")
 
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
 # default for older compilers. See bug #7174
@@ -108,6 +108,12 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
+    if(CPP_USE_STL)
+        if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
+            message(FATAL_ERROR "Use of STL in kernelmodedriver or wdmdriver type module prohibited")
+        endif()
+        #target_link_libraries(${MODULE} stlport oldnames)
+    endif()
     if((${TYPE} STREQUAL "win32dll") OR (${TYPE} STREQUAL "win32ocx") OR (${TYPE} STREQUAL "cpl"))
         add_target_link_flags(${MODULE} "/DLL")
     elseif(${TYPE} STREQUAL "kernelmodedriver")

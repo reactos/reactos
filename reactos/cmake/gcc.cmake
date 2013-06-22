@@ -15,6 +15,8 @@ if(GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-mstackrealign")
 endif()
 
+add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
+
 #bug
 #file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)
 #workaround
@@ -190,12 +192,15 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    if(IS_CPP)
+    if(CPP_USE_STL)
         if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
-            target_link_libraries(${MODULE} -lgcc)
-        else()
-            target_link_libraries(${MODULE} -lstdc++ -lsupc++ -lgcc -lmingwex)
+            message(FATAL_ERROR "Use of STL in kernelmodedriver or wdmdriver type module prohibited")
         endif()
+        target_link_libraries(${MODULE} -lstdc++ -lsupc++ -lgcc -lmingwex)
+    elseif(CPP_USE_RT)
+        target_link_libraries(${MODULE} -lsupc++ -lgcc)
+    elseif(IS_CPP)
+        target_link_libraries(${MODULE} -lgcc)
     endif()
 
     if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))

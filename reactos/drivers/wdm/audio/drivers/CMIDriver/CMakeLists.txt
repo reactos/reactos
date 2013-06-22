@@ -12,33 +12,23 @@ list(APPEND SOURCE
     adapter.cpp
     common.cpp
     mintopo.cpp
-    minwave.cpp
-)
+    minwave.cpp)
 
 add_library(cmipci SHARED
     ${SOURCE}
-    cmipci.rc
-)
+    cmipci.rc)
 
-target_link_libraries(cmipci
-    stdunk
-    libcntpr
-)
+target_link_libraries(cmipci stdunk libcntpr)
 
 set_module_type(cmipci wdmdriver UNICODE ENTRYPOINT 0)
 
-add_importlibs(cmipci
-    portcls
-    hal
-    ntoskrnl)
+add_importlibs(cmipci portcls hal ntoskrnl)
 
-# FIXME: http://www.cmake.org/Bug/view.php?id=12998
-if(MSVC)
-    #add_target_compile_flags(portcls "/GR-")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/GR-")
-else()
-    #add_target_compile_flags(portcls "-fno-exceptions -fno-rtti")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti -Wno-write-strings -Wno-switch -Wno-error")
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #add_target_compile_flags(portcls "-Wno-write-strings -Wno-switch")
+    #allow_warnings(portcls)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-write-strings -Wno-switch -Wno-error")
 endif()
 
 add_cd_file(TARGET cmipci DESTINATION reactos/system32/drivers FOR all)

@@ -1,16 +1,13 @@
 
-include_directories(..)
-
 set_cpp()
+
+include_directories(..)
 
 add_executable(cmicontrol
     main.cpp
-    window.rc
-)
+    window.rc)
 
-# FIXME: http://www.cmake.org/Bug/view.php?id=12998
 if(NOT MSVC)
-    #add_target_compile_flags(cmicontrol "-fno-exceptions -fno-rtti")
     set_source_files_properties(main.cpp PROPERTIES COMPILE_FLAGS "-Wno-write-strings")
 endif()
 
@@ -25,8 +22,7 @@ add_importlibs(cmicontrol
     setupapi
     winmm
     msvcrt
-    kernel32
-)
+    kernel32)
 
 set_module_type(cmicontrol win32gui)
 

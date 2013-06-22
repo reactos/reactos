@@ -1,7 +1,7 @@
 
-add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
+set_cpp(WITH_STL)
 
-set_cpp()
+add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
 
 add_executable(telnet
     src/ansiprsr.cpp

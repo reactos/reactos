@@ -1,5 +1,5 @@
 
-set_cpp()
+set_cpp(WITH_EXCEPTIONS WITH_STL)
 
 list(APPEND SOURCE
     CConfiguration.cpp

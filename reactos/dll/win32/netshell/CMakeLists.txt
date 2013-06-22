@@ -1,9 +1,11 @@
 
+set_cpp(WITH_RUNTIME)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D_NETSHELL_)
-set_cpp()
+
 spec2def(netshell.dll netshell.spec)
 
 list(APPEND SOURCE
