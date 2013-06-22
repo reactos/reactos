@@ -1,7 +1,5 @@
 
-if(NOT MSVC)
-    set_cpp(WITH_RTTI)
-endif()
+set_cpp(WITH_RTTI)
 
 add_definitions(
     -DUNICODE -D_UNICODE
