@@ -32,6 +32,7 @@
 #define SPECIAL_INT_NUM 0xFF
 #define SEGMENT_TO_MCB(seg) ((PDOS_MCB)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
 #define SEGMENT_TO_PSP(seg) ((PDOS_PSP)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
+#define STEPS_PER_CYCLE 256
 
 /* DOS constants */
 #define DOS_VERSION 0x0600

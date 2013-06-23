@@ -156,9 +156,9 @@ INT wmain(INT argc, WCHAR *argv[])
         }
         
         /* Continue CPU emulation */
-        EmulatorStep();
+        for (i = 0; i < STEPS_PER_CYCLE; i++) EmulatorStep();
         
-        Cycles++;
+        Cycles += STEPS_PER_CYCLE;
         if ((CurrentTickCount - LastCyclePrintout) >= 1000)
         {
             DPRINT1("NTVDM: %d Instructions Per Second\n", Cycles);
