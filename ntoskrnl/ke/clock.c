@@ -242,8 +242,26 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
                        OUT PULONG MaximumResolution,
                        OUT PULONG ActualResolution)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    _SEH2_TRY
+    {
+        /* Probe the parameters */
+        ProbeForWriteUlong(MinimumResolution);
+        ProbeForWriteUlong(MaximumResolution);
+        ProbeForWriteUlong(ActualResolution);
+
+        /* Set the parameters to the actual values */
+        *MinimumResolution = KeMinimumIncrement;
+        *MaximumResolution = KeMaximumIncrement;
+        *ActualResolution = KeTimeIncrement;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
