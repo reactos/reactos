@@ -549,7 +549,7 @@ ConDrvRegisterFrontEnd(IN PCONSOLE Console,
     Console->TermIFace.Console = Console;
 
     /* Initialize the frontend AFTER having attached it to the console */
-    DPRINT1("Finish initialization of frontend\n");
+    DPRINT("Finish initialization of frontend\n");
     Status = Console->TermIFace.Vtbl->InitFrontEnd(&Console->TermIFace, Console);
     if (!NT_SUCCESS(Status))
     {
@@ -565,9 +565,9 @@ ConDrvRegisterFrontEnd(IN PCONSOLE Console,
     /* Copy buffer contents to screen */
     // FrontEnd.Draw();
     // ConioDrawConsole(Console);
-    DPRINT1("Console drawn\n");
+    DPRINT("Console drawn\n");
 
-    DPRINT1("Terminal FrontEnd initialization done\n");
+    DPRINT("Terminal FrontEnd initialization done\n");
     return STATUS_SUCCESS;
 }
 
@@ -584,7 +584,7 @@ ConDrvDeregisterFrontEnd(IN PCONSOLE Console)
     /* Detach the frontend from the console */
     RtlZeroMemory(&Console->TermIFace, sizeof(Console->TermIFace));
 
-    DPRINT1("Terminal FrontEnd unregistered\n");
+    DPRINT("Terminal FrontEnd unregistered\n");
     return STATUS_SUCCESS;
 }
 
@@ -597,28 +597,26 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
      * Forbid validation of any console by other threads
      * during the deletion of this console.
      */
-    // ConDrvLockConsoleListExclusive();
+    ConDrvLockConsoleListExclusive();
 
-    // /* Check the existence of the console, and if it's ok, continue */
-    // if (!ConDrvValidateConsolePointer(Console))
-    // {
-        // /* Unlock the console list and return */
-        // ConDrvUnlockConsoleList();
-        // return;
-    // }
+    /* Check the existence of the console, and if it's ok, continue */
+    if (!ConDrvValidateConsolePointer(Console))
+    {
+        /* Unlock the console list and return */
+        ConDrvUnlockConsoleList();
+        return;
+    }
 
-    // /*
-     // * If the console is already being destroyed
-     // * (thus not running), just return.
-     // */
-    // if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
-    // {
-        // /* Unlock the console list and return */
-        // ConDrvUnlockConsoleList();
-        // return;
-    // }
-
-    if (!ConDrvValidateConsole(Console, CONSOLE_RUNNING, TRUE)) return;
+    /*
+     * If the console is already being destroyed
+     * (thus not running), just return.
+     */
+    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
+    {
+        /* Unlock the console list and return */
+        ConDrvUnlockConsoleList();
+        return;
+    }
 
     /*
      * We are about to be destroyed. Signal it to other people
@@ -626,9 +624,6 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
      * they cannot longer validate the console.
      */
     Console->State = CONSOLE_TERMINATING;
-
-    /* We really delete the console. Reset the count to be sure. */
-    Console->ReferenceCount = 0;
 
     /*
      * Allow other threads to finish their job: basically, unlock
@@ -639,25 +634,14 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
      * can see that we are in fact already deleting the console.
      */
     LeaveCriticalSection(&Console->Lock);
-    // ConDrvUnlockConsoleList();
+    ConDrvUnlockConsoleList();
 
     /* FIXME: Send a terminate message to all the processes owning this console */
 
-    /* Close all the applications which are linked to this console */
-    /*
-     * FIXME: Windows will wait up to 5 seconds for the thread to exit.
-     * We shouldn't wait here, though, since the console lock is entered.
-     * A copy of the thread list probably needs to be made.
-     */
-    // ConDrvConsoleProcessCtrlEvent(Console, 0, CTRL_CLOSE_EVENT);
-    // DPRINT1("Apps closed\n");
-    // FIXME: Be sure that, starting from here, there is NO app running
-    //  on this console anymore !!!!!
-
     /* Cleanup the UI-oriented part */
-    DPRINT1("Deregister console\n");
+    DPRINT("Deregister console\n");
     ConDrvDeregisterFrontEnd(Console);
-    DPRINT1("Console deregistered\n");
+    DPRINT("Console deregistered\n");
 
     /***
      * Check that the console is in terminating state before continuing
@@ -665,36 +649,30 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
      * ...unless to cancel console deletion ?).
      ***/
 
-    // ConDrvLockConsoleListExclusive();
+    ConDrvLockConsoleListExclusive();
 
-    // /* Re-check the existence of the console, and if it's ok, continue */
-    // if (!ConDrvValidateConsolePointer(Console))
-    // {
-        // /* Unlock the console list and return */
-        // ConDrvUnlockConsoleList();
-        // return;
-    // }
+    /* Re-check the existence of the console, and if it's ok, continue */
+    if (!ConDrvValidateConsolePointer(Console))
+    {
+        /* Unlock the console list and return */
+        ConDrvUnlockConsoleList();
+        return;
+    }
 
-    // if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_TERMINATING, TRUE))
-    // {
-        // ConDrvUnlockConsoleList();
-        // return;
-    // }
-
-    if (!ConDrvValidateConsole(Console, CONSOLE_TERMINATING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_TERMINATING, TRUE))
+    {
+        ConDrvUnlockConsoleList();
+        return;
+    }
 
     /* We are now in destruction */
     Console->State = CONSOLE_IN_DESTRUCTION;
 
-    /////////////////////
-    ConDrvLockConsoleListExclusive();
-    /////////////////////
-
     /* Remove the console from the list */
     RemoveEntryList(&Console->Entry);
 
-    /* Unlock the console list */
-    ConDrvUnlockConsoleList();
+    /* We really delete the console. Reset the count to be sure. */
+    Console->ReferenceCount = 0;
 
     /* Discard all entries in the input event queue */
     PurgeInputBuffer(Console);
@@ -726,8 +704,8 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
     ConsoleFreeHeap(Console);
     DPRINT("ConDrvDeleteConsole - Console destroyed\n");
 
-    // /* Unlock the console list and return */
-    // ConDrvUnlockConsoleList();
+    /* Unlock the console list and return */
+    ConDrvUnlockConsoleList();
 }
 
 
