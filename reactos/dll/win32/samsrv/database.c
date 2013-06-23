@@ -356,7 +356,6 @@ SampValidateDbObject(SAMPR_HANDLE Handle,
 NTSTATUS
 SampCloseDbObject(PSAM_DB_OBJECT DbObject)
 {
-    PSAM_DB_OBJECT ParentObject = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
     DbObject->RefCount--;
@@ -369,9 +368,6 @@ SampCloseDbObject(PSAM_DB_OBJECT DbObject)
 
     if (DbObject->MembersKeyHandle != NULL)
         SampRegCloseKey(DbObject->MembersKeyHandle);
-
-    if (DbObject->ParentObject != NULL)
-        ParentObject = DbObject->ParentObject;
 
     if (DbObject->Name != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject->Name);
