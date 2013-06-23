@@ -57,15 +57,13 @@ GuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd);
 /***************/
 
 typedef
-NTSTATUS NTAPI
-(*FRONTEND_LOAD)(IN OUT PFRONTEND FrontEnd,
-                 IN OUT PCONSOLE_INFO ConsoleInfo,
-                 IN OUT PVOID ExtraConsoleInfo,
-                 IN ULONG ProcessId);
+NTSTATUS (NTAPI *FRONTEND_LOAD)(IN OUT PFRONTEND FrontEnd,
+                                IN OUT PCONSOLE_INFO ConsoleInfo,
+                                IN OUT PVOID ExtraConsoleInfo,
+                                IN ULONG ProcessId);
 
 typedef
-NTSTATUS NTAPI
-(*FRONTEND_UNLOAD)(IN OUT PFRONTEND FrontEnd);
+NTSTATUS (NTAPI *FRONTEND_UNLOAD)(IN OUT PFRONTEND FrontEnd);
 
 /*
  * If we are not in GUI-mode, start the text-mode terminal emulator.
