@@ -12,7 +12,6 @@ list(APPEND SOURCE
     alias.c
     coninput.c
     conoutput.c
-    text.c
     console.c
     frontendctl.c
     handle.c
@@ -22,6 +21,7 @@ list(APPEND SOURCE
     condrv/conoutput.c
     condrv/console.c
     condrv/graphics.c
+    condrv/text.c
     frontends/input.c
     frontends/gui/guiterm.c
     frontends/gui/guisettings.c
