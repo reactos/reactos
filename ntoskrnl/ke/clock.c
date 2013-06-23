@@ -252,8 +252,26 @@ NtSetTimerResolution(IN ULONG DesiredResolution,
                      IN BOOLEAN SetResolution,
                      OUT PULONG CurrentResolution)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG NewResolution;
+
+    /* Call the internal API */
+    NewResolution = ExSetTimerResolution(DesiredResolution, SetResolution);
+
+    /* Return the resolution to the caller */
+    _SEH2_TRY
+    {
+        ProbeForWriteUlong(CurrentResolution);
+        *CurrentResolution = NewResolution;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+    
+    /* Return success if we set the resolution */
+    if (SetResolution) return STATUS_SUCCESS;
+    else return STATUS_TIMER_RESOLUTION_NOT_SET;
 }
 
 /* EOF */
