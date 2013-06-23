@@ -169,8 +169,8 @@ typedef struct _IP_ADAPTER_ADDRESSES {
     struct {
       ULONG Length;
       DWORD IfIndex;
-    };
-  };
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
   struct _IP_ADAPTER_ADDRESSES *Next;
   PCHAR AdapterName;
   PIP_ADAPTER_UNICAST_ADDRESS FirstUnicastAddress;
