@@ -443,7 +443,7 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    if (ConSrvValidateConsole(ObjectEntry->Console, CONSOLE_RUNNING, LockConsole))
+    if (ConDrvValidateConsole(ObjectEntry->Console, CONSOLE_RUNNING, LockConsole))
     {
         _InterlockedIncrement(&ObjectEntry->Console->ReferenceCount);
 
@@ -492,7 +492,9 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
     ConSrvFreeHandlesTable(ProcessData);
 
     /* Initialize a new Console owned by this process */
-    Status = ConSrvInitConsole(&ProcessData->Console, ConsoleStartInfo, ProcessData->Process);
+    Status = ConSrvInitConsole(&ProcessData->Console,
+                               ConsoleStartInfo,
+                               HandleToUlong(ProcessData->Process->ClientId.UniqueProcess));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console initialization failed\n");
@@ -551,7 +553,7 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Validate and lock the console */
-    if (!ConSrvValidateConsole(Console, CONSOLE_RUNNING, TRUE))
+    if (!ConDrvValidateConsole(Console, CONSOLE_RUNNING, TRUE))
     {
         // FIXME: Find another status code
         return STATUS_UNSUCCESSFUL;
@@ -629,7 +631,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
     // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     /* Validate and lock the console */
-    if (ConSrvValidateConsole(Console, CONSOLE_RUNNING, TRUE))
+    if (ConDrvValidateConsole(Console, CONSOLE_RUNNING, TRUE))
     {
         DPRINT("ConSrvRemoveConsole - Locking OK\n");
 

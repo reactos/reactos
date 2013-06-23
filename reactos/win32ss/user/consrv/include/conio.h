@@ -70,7 +70,7 @@ struct _CONSOLE_SCREEN_BUFFER
     COORD   OldScreenBufferSize;        /* Old size of this screen buffer */
     COORD   OldViewSize;                /* Old associated view size */
 
-    COORD  ViewOrigin;                  /* Beginning offset for the actual display area */
+    COORD   ViewOrigin;                 /* Beginning offset for the actual display area */
 
 /***** Put that VV in TEXTMODE_SCREEN_BUFFER ?? *****/
     USHORT  VirtualY;                   /* Top row of buffer being displayed, reported to callers */
@@ -173,79 +173,85 @@ typedef struct _CONSOLE_INPUT_BUFFER
     USHORT      Mode;               /* Input buffer modes */
 } CONSOLE_INPUT_BUFFER, *PCONSOLE_INPUT_BUFFER;
 
+
+typedef struct _FRONTEND FRONTEND, *PFRONTEND;
+/* HACK: */ typedef struct _CONSOLE_INFO *PCONSOLE_INFO;
 typedef struct _FRONTEND_VTBL
 {
     /*
      * Internal interface (functions called by the console server only)
      */
-    // BOOL (WINAPI *Init)();
-    VOID (WINAPI *CleanupConsole)(struct _CONSOLE* Console);
+    NTSTATUS (WINAPI *InitFrontEnd)(IN OUT PFRONTEND This,
+                                    IN struct _CONSOLE* Console);
+    VOID (WINAPI *DeinitFrontEnd)(IN OUT PFRONTEND This);
+
     /* Interface used for both text-mode and graphics screen buffers */
-    VOID (WINAPI *DrawRegion)(struct _CONSOLE* Console,
+    VOID (WINAPI *DrawRegion)(IN OUT PFRONTEND This,
                               SMALL_RECT* Region);
     /* Interface used only for text-mode screen buffers */
-    VOID (WINAPI *WriteStream)(struct _CONSOLE* Console,
+    VOID (WINAPI *WriteStream)(IN OUT PFRONTEND This,
                                SMALL_RECT* Block,
                                SHORT CursorStartX,
                                SHORT CursorStartY,
                                UINT ScrolledLines,
                                PWCHAR Buffer,
                                UINT Length);
-    BOOL (WINAPI *SetCursorInfo)(struct _CONSOLE* Console,
+    BOOL (WINAPI *SetCursorInfo)(IN OUT PFRONTEND This,
                                  PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (WINAPI *SetScreenInfo)(struct _CONSOLE* Console,
+    BOOL (WINAPI *SetScreenInfo)(IN OUT PFRONTEND This,
                                  PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                                  SHORT OldCursorX,
                                  SHORT OldCursorY);
-    VOID (WINAPI *ResizeTerminal)(struct _CONSOLE* Console);
-    BOOL (WINAPI *ProcessKeyCallback)(struct _CONSOLE* Console,
+    VOID (WINAPI *ResizeTerminal)(IN OUT PFRONTEND This);
+    BOOL (WINAPI *ProcessKeyCallback)(IN OUT PFRONTEND This,
                                       MSG* msg,
                                       BYTE KeyStateMenu,
                                       DWORD ShiftState,
                                       UINT VirtualKeyCode,
                                       BOOL Down);
-    VOID (WINAPI *RefreshInternalInfo)(struct _CONSOLE* Console);
+    VOID (WINAPI *RefreshInternalInfo)(IN OUT PFRONTEND This);
 
     /*
      * External interface (functions corresponding to the Console API)
      */
-    VOID (WINAPI *ChangeTitle)(struct _CONSOLE* Console);
-    BOOL (WINAPI *ChangeIcon)(struct _CONSOLE* Console,
+    VOID (WINAPI *ChangeTitle)(IN OUT PFRONTEND This);
+    BOOL (WINAPI *ChangeIcon)(IN OUT PFRONTEND This,
                               HICON hWindowIcon);
-    HWND (WINAPI *GetConsoleWindowHandle)(struct _CONSOLE* Console);
-    VOID (WINAPI *GetLargestConsoleWindowSize)(struct _CONSOLE* Console,
+    HWND (WINAPI *GetConsoleWindowHandle)(IN OUT PFRONTEND This);
+    VOID (WINAPI *GetLargestConsoleWindowSize)(IN OUT PFRONTEND This,
                                                PCOORD pSize);
-    ULONG (WINAPI *GetDisplayMode)(struct _CONSOLE* Console);
-    BOOL  (WINAPI *SetDisplayMode)(struct _CONSOLE* Console,
+    ULONG (WINAPI *GetDisplayMode)(IN OUT PFRONTEND This);
+    BOOL  (WINAPI *SetDisplayMode)(IN OUT PFRONTEND This,
                                    ULONG NewMode);
-    INT   (WINAPI *ShowMouseCursor)(struct _CONSOLE* Console,
+    INT   (WINAPI *ShowMouseCursor)(IN OUT PFRONTEND This,
                                     BOOL Show);
-    BOOL  (WINAPI *SetMouseCursor)(struct _CONSOLE* Console,
+    BOOL  (WINAPI *SetMouseCursor)(IN OUT PFRONTEND This,
                                    HCURSOR hCursor);
-    HMENU (WINAPI *MenuControl)(struct _CONSOLE* Console,
+    HMENU (WINAPI *MenuControl)(IN OUT PFRONTEND This,
                                 UINT cmdIdLow,
                                 UINT cmdIdHigh);
-    BOOL  (WINAPI *SetMenuClose)(struct _CONSOLE* Console,
+    BOOL  (WINAPI *SetMenuClose)(IN OUT PFRONTEND This,
                                  BOOL Enable);
 
 #if 0 // Possible future front-end interface
-    BOOL (WINAPI *GetFrontEndProperty)(struct _CONSOLE* Console,
+    BOOL (WINAPI *GetFrontEndProperty)(IN OUT PFRONTEND This,
                                        ULONG Flag,
                                        PVOID Info,
                                        ULONG Size);
-    BOOL (WINAPI *SetFrontEndProperty)(struct _CONSOLE* Console,
+    BOOL (WINAPI *SetFrontEndProperty)(IN OUT PFRONTEND This,
                                        ULONG Flag,
                                        PVOID Info /*,
                                        ULONG Size */);
 #endif
 } FRONTEND_VTBL, *PFRONTEND_VTBL;
 
-typedef struct _FRONTEND_IFACE
+struct _FRONTEND
 {
-    PFRONTEND_VTBL Vtbl;    /* Virtual table */
-    PVOID Data;             /* Private data  */
-    PVOID OldData;          /* Reserved      */
-} FRONTEND_IFACE, *PFRONTEND_IFACE;
+    PFRONTEND_VTBL Vtbl;        /* Virtual table */
+    struct _CONSOLE* Console;   /* Console to which the frontend is attached to */
+    PVOID Data;                 /* Private data  */
+    PVOID OldData;              /* Reserved      */
+};
 
 /*
  * WARNING: Change the state of the console ONLY when the console is locked !
@@ -267,7 +273,7 @@ typedef struct _CONSOLE
     LIST_ENTRY Entry;                       /* Entry in the list of consoles */
     LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
 
-    FRONTEND_IFACE TermIFace;               /* Frontend-specific interface */
+    FRONTEND TermIFace;                     /* Frontend-specific interface */
 
 /**************************** Input buffer and data ***************************/
     CONSOLE_INPUT_BUFFER InputBuffer;               /* Input buffer of the console */
@@ -324,9 +330,11 @@ typedef struct _CONSOLE
 /* console.c */
 VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
-ULONG FASTCALL ConSrvConsoleProcessCtrlEvent(PCONSOLE Console,
-                                             ULONG ProcessGroupId,
-                                             DWORD Event);
+
+NTSTATUS NTAPI
+ConDrvConsoleProcessCtrlEvent(IN PCONSOLE Console,
+                              IN ULONG ProcessGroupId,
+                              IN ULONG Event);
 
 /* coninput.c */
 VOID WINAPI ConioProcessKey(PCONSOLE Console, MSG* msg);

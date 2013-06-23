@@ -9,6 +9,8 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+#ifdef TUITERM_COMPILE
+
 #include "consrv.h"
 #include "include/conio.h"
 #include "include/console.h"
@@ -274,7 +276,7 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_KEYUP:
         case WM_SYSKEYUP:
         {
-            if (ConSrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
+            if (ConDrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
             {
                 MSG Message;
                 Message.hwnd = hWnd;
@@ -290,7 +292,7 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_ACTIVATE:
         {
-            if (ConSrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
+            if (ConDrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
             {
                 if (LOWORD(wParam) != WA_INACTIVE)
                 {
@@ -440,9 +442,90 @@ Quit:
  ******************************************************************************/
 
 static VOID WINAPI
-TuiCleanupConsole(PCONSOLE Console)
+TuiDeinitFrontEnd(IN OUT PFRONTEND This /*,
+                  IN PCONSOLE Console */);
+
+NTSTATUS NTAPI
+TuiInitFrontEnd(IN OUT PFRONTEND This,
+                IN PCONSOLE Console)
 {
-    PTUI_CONSOLE_DATA TuiData = Console->TermIFace.Data;
+    PTUI_CONSOLE_DATA TuiData;
+    HANDLE ThreadHandle;
+
+    if (This == NULL || Console == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    // if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER)
+        // return STATUS_INVALID_PARAMETER;
+
+    // /* Initialize the console */
+    // Console->TermIFace.Vtbl = &TuiVtbl;
+
+    TuiData = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(TUI_CONSOLE_DATA));
+    if (!TuiData)
+    {
+        DPRINT1("CONSRV: Failed to create TUI_CONSOLE_DATA\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+    // Console->TermIFace.Data = (PVOID)TuiData;
+    TuiData->Console = Console;
+    TuiData->hWindow = NULL;
+
+    InitializeCriticalSection(&TuiData->Lock);
+
+    /*
+     * HACK: Resize the console since we don't support for now changing
+     * the console size when we display it with the hardware.
+     */
+    // Console->ConsoleSize = PhysicalConsoleSize;
+    // ConioResizeBuffer(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), PhysicalConsoleSize);
+
+    // /* The console cannot be resized anymore */
+    // Console->FixedSize = TRUE; // MUST be placed AFTER the call to ConioResizeBuffer !!
+    // // ConioResizeTerminal(Console);
+
+    /*
+     * Contrary to what we do in the GUI front-end, here we create
+     * an input thread for each console. It will dispatch all the
+     * input messages to the proper console (on the GUI it is done
+     * via the default GUI dispatch thread).
+     */
+    ThreadHandle = CreateThread(NULL,
+                                0,
+                                TuiConsoleThread,
+                                (PVOID)TuiData,
+                                0,
+                                NULL);
+    if (NULL == ThreadHandle)
+    {
+        DPRINT1("CONSRV: Unable to create console thread\n");
+        // TuiDeinitFrontEnd(Console);
+        TuiDeinitFrontEnd(This);
+        return STATUS_UNSUCCESSFUL;
+    }
+    CloseHandle(ThreadHandle);
+
+    /*
+     * Insert the newly created console in the list of virtual consoles
+     * and activate it (give it the focus).
+     */
+    EnterCriticalSection(&ActiveVirtConsLock);
+    InsertTailList(&VirtConsList, &TuiData->Entry);
+    ActiveConsole = TuiData;
+    LeaveCriticalSection(&ActiveVirtConsLock);
+
+    /* Finally, initialize the frontend structure */
+    This->Data = TuiData;
+    This->OldData = NULL;
+
+    return STATUS_SUCCESS;
+}
+
+static VOID WINAPI
+TuiDeinitFrontEnd(IN OUT PFRONTEND This)
+{
+    // PCONSOLE Console = This->Console;
+    PTUI_CONSOLE_DATA TuiData = This->Data; // Console->TermIFace.Data;
 
     /* Close the notification window */
     DestroyWindow(TuiData->hWindow);
@@ -473,13 +556,15 @@ TuiCleanupConsole(PCONSOLE Console)
     /* Switch to the next console */
     if (NULL != ActiveConsole) ConioDrawConsole(ActiveConsole->Console);
 
-    Console->TermIFace.Data = NULL;
+    // Console->TermIFace.Data = NULL;
+    This->Data = NULL;
     DeleteCriticalSection(&TuiData->Lock);
     ConsoleFreeHeap(TuiData);
 }
 
 static VOID WINAPI
-TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
+TuiDrawRegion(IN OUT PFRONTEND This,
+              SMALL_RECT* Region)
 {
     DWORD BytesReturned;
     PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
@@ -517,8 +602,13 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
 }
 
 static VOID WINAPI
-TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, SHORT CursorStartX, SHORT CursorStartY,
-               UINT ScrolledLines, PWCHAR Buffer, UINT Length)
+TuiWriteStream(IN OUT PFRONTEND This,
+               SMALL_RECT* Region,
+               SHORT CursorStartX,
+               SHORT CursorStartY,
+               UINT ScrolledLines,
+               PWCHAR Buffer,
+               UINT Length)
 {
     PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
     PCHAR NewBuffer;
@@ -546,7 +636,8 @@ TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, SHORT CursorStartX, SHORT C
 }
 
 static BOOL WINAPI
-TuiSetCursorInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
+TuiSetCursorInfo(IN OUT PFRONTEND This,
+                 PCONSOLE_SCREEN_BUFFER Buff)
 {
     CONSOLE_CURSOR_INFO Info;
     DWORD BytesReturned;
@@ -567,7 +658,10 @@ TuiSetCursorInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
 }
 
 static BOOL WINAPI
-TuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, SHORT OldCursorX, SHORT OldCursorY)
+TuiSetScreenInfo(IN OUT PFRONTEND This,
+                 PCONSOLE_SCREEN_BUFFER Buff,
+                 SHORT OldCursorX,
+                 SHORT OldCursorY)
 {
     CONSOLE_SCREEN_BUFFER_INFO Info;
     DWORD BytesReturned;
@@ -590,12 +684,17 @@ TuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, SHORT OldCursorX
 }
 
 static VOID WINAPI
-TuiResizeTerminal(PCONSOLE Console)
+TuiResizeTerminal(IN OUT PFRONTEND This)
 {
 }
 
 static BOOL WINAPI
-TuiProcessKeyCallback(PCONSOLE Console, MSG* msg, BYTE KeyStateMenu, DWORD ShiftState, UINT VirtualKeyCode, BOOL Down)
+TuiProcessKeyCallback(IN OUT PFRONTEND This,
+                      MSG* msg,
+                      BYTE KeyStateMenu,
+                      DWORD ShiftState,
+                      UINT VirtualKeyCode,
+                      BOOL Down)
 {
     if (0 != (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) &&
         VK_TAB == VirtualKeyCode)
@@ -616,43 +715,46 @@ TuiProcessKeyCallback(PCONSOLE Console, MSG* msg, BYTE KeyStateMenu, DWORD Shift
 }
 
 static VOID WINAPI
-TuiRefreshInternalInfo(PCONSOLE Console)
+TuiRefreshInternalInfo(IN OUT PFRONTEND This)
 {
 }
 
 static VOID WINAPI
-TuiChangeTitle(PCONSOLE Console)
+TuiChangeTitle(IN OUT PFRONTEND This)
 {
 }
 
 static BOOL WINAPI
-TuiChangeIcon(PCONSOLE Console, HICON hWindowIcon)
+TuiChangeIcon(IN OUT PFRONTEND This,
+              HICON hWindowIcon)
 {
     return TRUE;
 }
 
 static HWND WINAPI
-TuiGetConsoleWindowHandle(PCONSOLE Console)
+TuiGetConsoleWindowHandle(IN OUT PFRONTEND This)
 {
-    PTUI_CONSOLE_DATA TuiData = Console->TermIFace.Data;
+    PTUI_CONSOLE_DATA TuiData = This->Data;
     return TuiData->hWindow;
 }
 
 static VOID WINAPI
-TuiGetLargestConsoleWindowSize(PCONSOLE Console, PCOORD pSize)
+TuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
+                               PCOORD pSize)
 {
     if (!pSize) return;
     *pSize = PhysicalConsoleSize;
 }
 
 static ULONG WINAPI
-TuiGetDisplayMode(PCONSOLE Console)
+TuiGetDisplayMode(IN OUT PFRONTEND This)
 {
     return CONSOLE_FULLSCREEN_HARDWARE; // CONSOLE_FULLSCREEN;
 }
 
 static BOOL WINAPI
-TuiSetDisplayMode(PCONSOLE Console, ULONG NewMode)
+TuiSetDisplayMode(IN OUT PFRONTEND This,
+                  ULONG NewMode)
 {
     // if (NewMode & ~(CONSOLE_FULLSCREEN_MODE | CONSOLE_WINDOWED_MODE))
     //     return FALSE;
@@ -660,32 +762,38 @@ TuiSetDisplayMode(PCONSOLE Console, ULONG NewMode)
 }
 
 static INT WINAPI
-TuiShowMouseCursor(PCONSOLE Console, BOOL Show)
+TuiShowMouseCursor(IN OUT PFRONTEND This,
+                   BOOL Show)
 {
     return 0;
 }
 
 static BOOL WINAPI
-TuiSetMouseCursor(PCONSOLE Console, HCURSOR hCursor)
+TuiSetMouseCursor(IN OUT PFRONTEND This,
+                  HCURSOR hCursor)
 {
     return TRUE;
 }
 
 static HMENU WINAPI
-TuiMenuControl(PCONSOLE Console, UINT cmdIdLow, UINT cmdIdHigh)
+TuiMenuControl(IN OUT PFRONTEND This,
+               UINT cmdIdLow,
+               UINT cmdIdHigh)
 {
     return NULL;
 }
 
 static BOOL WINAPI
-TuiSetMenuClose(PCONSOLE Console, BOOL Enable)
+TuiSetMenuClose(IN OUT PFRONTEND This,
+                BOOL Enable)
 {
     return TRUE;
 }
 
 static FRONTEND_VTBL TuiVtbl =
 {
-    TuiCleanupConsole,
+    TuiInitFrontEnd,
+    TuiDeinitFrontEnd,
     TuiDrawRegion,
     TuiWriteStream,
     TuiSetCursorInfo,
@@ -705,80 +813,49 @@ static FRONTEND_VTBL TuiVtbl =
     TuiSetMenuClose,
 };
 
-NTSTATUS FASTCALL
-TuiInitConsole(PCONSOLE Console,
-               /*IN*/ PCONSOLE_START_INFO ConsoleStartInfo,
-               PCONSOLE_INFO ConsoleInfo,
-               DWORD ProcessId)
+// static BOOL
+// DtbgIsDesktopVisible(VOID)
+// {
+    // return !((BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE));
+// }
+static BOOLEAN
+IsConsoleMode(VOID)
 {
-    PTUI_CONSOLE_DATA TuiData;
-    HANDLE ThreadHandle;
+    return (BOOLEAN)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE);
+}
 
-    if (Console == NULL || ConsoleInfo == NULL)
+NTSTATUS NTAPI
+TuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
+                IN OUT PCONSOLE_INFO ConsoleInfo,
+                IN OUT PVOID ExtraConsoleInfo,
+                IN ULONG ProcessId)
+{
+    if (FrontEnd == NULL || ConsoleInfo == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER)
-        return STATUS_INVALID_PARAMETER;
+    /* We must be in console mode already */
+    if (!IsConsoleMode()) return STATUS_UNSUCCESSFUL;
 
     /* Initialize the TUI terminal emulator */
-    if (!TuiInit(Console->CodePage)) return STATUS_UNSUCCESSFUL;
+    if (!TuiInit(ConsoleInfo->CodePage)) return STATUS_UNSUCCESSFUL;
 
-    /* Initialize the console */
-    Console->TermIFace.Vtbl = &TuiVtbl;
-
-    TuiData = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(TUI_CONSOLE_DATA));
-    if (!TuiData)
-    {
-        DPRINT1("CONSRV: Failed to create TUI_CONSOLE_DATA\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-    Console->TermIFace.Data = (PVOID)TuiData;
-    TuiData->Console = Console;
-    TuiData->hWindow = NULL;
-
-    InitializeCriticalSection(&TuiData->Lock);
-
-    /*
-     * HACK: Resize the console since we don't support for now changing
-     * the console size when we display it with the hardware.
-     */
-    Console->ConsoleSize = PhysicalConsoleSize;
-    ConioResizeBuffer(Console, (PTEXTMODE_SCREEN_BUFFER)(Console->ActiveBuffer), PhysicalConsoleSize);
-
-    /* The console cannot be resized anymore */
-    Console->FixedSize = TRUE; // MUST be placed AFTER the call to ConioResizeBuffer !!
-    // ConioResizeTerminal(Console);
-
-    /*
-     * Contrary to what we do in the GUI front-end, here we create
-     * an input thread for each console. It will dispatch all the
-     * input messages to the proper console (on the GUI it is done
-     * via the default GUI dispatch thread).
-     */
-    ThreadHandle = CreateThread(NULL,
-                                0,
-                                TuiConsoleThread,
-                                (PVOID)TuiData,
-                                0,
-                                NULL);
-    if (NULL == ThreadHandle)
-    {
-        DPRINT1("CONSRV: Unable to create console thread\n");
-        TuiCleanupConsole(Console);
-        return STATUS_UNSUCCESSFUL;
-    }
-    CloseHandle(ThreadHandle);
-
-    /*
-     * Insert the newly created console in the list of virtual consoles
-     * and activate it (give it the focus).
-     */
-    EnterCriticalSection(&ActiveVirtConsLock);
-    InsertTailList(&VirtConsList, &TuiData->Entry);
-    ActiveConsole = TuiData;
-    LeaveCriticalSection(&ActiveVirtConsLock);
+    /* Finally, initialize the frontend structure */
+    FrontEnd->Vtbl    = &TuiVtbl;
+    FrontEnd->Data    = NULL;
+    FrontEnd->OldData = NULL;
 
     return STATUS_SUCCESS;
 }
+
+NTSTATUS NTAPI
+TuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd)
+{
+    if (FrontEnd == NULL) return STATUS_INVALID_PARAMETER;
+    if (FrontEnd->Data)   TuiDeinitFrontEnd(FrontEnd);
+
+    return STATUS_SUCCESS;
+}
+
+#endif
 
 /* EOF */

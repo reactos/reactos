@@ -150,6 +150,11 @@ ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
     // ConioDrawConsole(Console);
 }
 
+PCONSOLE_SCREEN_BUFFER
+ConDrvGetActiveScreenBuffer(IN PCONSOLE Console)
+{
+    return (Console ? Console->ActiveBuffer : NULL);
+}
 
 /* PUBLIC SERVER APIS *********************************************************/
 

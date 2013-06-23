@@ -365,7 +365,7 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
         PCONSOLE_PROCESS_DATA SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
 
         /* Validate and lock the parent's console */
-        if (ConSrvValidateConsole(SourceProcessData->Console, CONSOLE_RUNNING, TRUE))
+        if (ConDrvValidateConsole(SourceProcessData->Console, CONSOLE_RUNNING, TRUE))
         {
             /* Inherit the parent's handles table */
             Status = ConSrvInheritHandlesTable(SourceProcessData, TargetProcessData);
@@ -508,7 +508,7 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     if (!ConSrvHeap) return STATUS_NO_MEMORY;
 */
 
-    ConSrvInitConsoleSupport();
+    ConDrvInitConsoleSupport();
 
     /* Setup the DLL Object */
     LoadedServerDll->ApiBase = CONSRV_FIRST_API_NUMBER;

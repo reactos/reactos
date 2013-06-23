@@ -8,14 +8,21 @@
 
 #pragma once
 
-BOOL FASTCALL ConSrvValidateConsolePointer(PCONSOLE Console);
-BOOL FASTCALL ConSrvValidateConsoleState(PCONSOLE Console,
-                                         CONSOLE_STATE ExpectedState);
-BOOL FASTCALL ConSrvValidateConsoleUnsafe(PCONSOLE Console,
-                                          CONSOLE_STATE ExpectedState,
-                                          BOOL LockConsole);
-BOOL FASTCALL ConSrvValidateConsole(PCONSOLE Console,
-                                    CONSOLE_STATE ExpectedState,
-                                    BOOL LockConsole);
+BOOLEAN NTAPI
+ConDrvValidateConsolePointer(IN PCONSOLE Console);
+
+BOOLEAN NTAPI
+ConDrvValidateConsoleState(IN PCONSOLE Console,
+                           IN CONSOLE_STATE ExpectedState);
+
+BOOLEAN NTAPI
+ConDrvValidateConsoleUnsafe(IN PCONSOLE Console,
+                            IN CONSOLE_STATE ExpectedState,
+                            IN BOOLEAN LockConsole);
+
+BOOLEAN NTAPI
+ConDrvValidateConsole(IN PCONSOLE Console,
+                      IN CONSOLE_STATE ExpectedState,
+                      IN BOOLEAN LockConsole);
 
 /* EOF */
