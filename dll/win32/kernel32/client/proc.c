@@ -2541,6 +2541,7 @@ CreateProcessInternalW(HANDLE hToken,
     WCHAR SaveChar = 0;
     ULONG RetVal;
     UINT Error = 0;
+    UINT Length;
     BOOLEAN SearchDone = FALSE;
     BOOLEAN Escape = FALSE;
     CLIENT_ID ClientId;
@@ -2630,7 +2631,13 @@ CreateProcessInternalW(HANDLE hToken,
     }
 
     /* Get the path to the VDM host */
-    ASSERT(GetSystemDirectoryW(VdmPath, MAX_PATH - wcslen(NTVDM_STRING)) != 0);
+    Length = GetSystemDirectoryW(VdmPath, MAX_PATH - wcslen(NTVDM_STRING));
+    if ((Length == 0) || (Length >= MAX_PATH - wcslen(NTVDM_STRING)))
+    {
+        /* System path not found for some reason, fail */
+        SetLastError(ERROR_INVALID_NAME);
+        return FALSE;
+    }
     wcscat(VdmPath, NTVDM_STRING);
 
     /*
