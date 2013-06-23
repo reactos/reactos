@@ -183,22 +183,6 @@ BasepConfigureAppCertDlls(IN PWSTR ValueName,
     return BasepSaveAppCertRegistryValue(Context, ValueName, ValueData);
 }
 
-
-BOOLEAN
-NTAPI
-BasepCheckDosApp(IN PUNICODE_STRING ApplicationName)
-{
-    PWCHAR Extension;
-    
-    /* Get the extension from the file name */
-    Extension = &ApplicationName->Buffer[ApplicationName->Length /
-                                         sizeof(WCHAR) - 4];
-
-    /* Check if the extension is .COM */
-    if (_wcsnicmp(Extension, L".com", 4) == 0) return TRUE;
-    else return FALSE;
-}
-
 NTSTATUS
 WINAPI
 BasepIsProcessAllowed(IN PCHAR ApplicationName)
@@ -2877,7 +2861,7 @@ GetAppName:
             case STATUS_INVALID_IMAGE_NOT_MZ:
 
             /* If it's a DOS app, use VDM */
-            if ((BasepCheckDosApp(&ApplicationName)))
+            if (BaseIsDosApplication(&ApplicationName, Status))
             {
                 DPRINT1("Launching VDM...\n");
                 RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
