@@ -411,7 +411,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
 NTSTATUS NTAPI
 ConDrvReadConsoleOutput(IN PCONSOLE Console,
                         IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                        IN BOOL Unicode,
+                        IN BOOLEAN Unicode,
                         OUT PCHAR_INFO CharInfo/*Buffer*/,
                         IN PCOORD BufferSize,
                         IN PCOORD BufferCoord,
@@ -452,7 +452,7 @@ CSR_API(SrvReadConsoleOutput)
 NTSTATUS NTAPI
 ConDrvWriteConsoleOutput(IN PCONSOLE Console,
                          IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                         IN BOOL Unicode,
+                         IN BOOLEAN Unicode,
                          IN PCHAR_INFO CharInfo/*Buffer*/,
                          IN PCOORD BufferSize,
                          IN PCOORD BufferCoord,
@@ -762,9 +762,9 @@ CSR_API(SrvSetConsoleScreenBufferSize)
 NTSTATUS NTAPI
 ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
                                 IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                                IN BOOL Unicode,
+                                IN BOOLEAN Unicode,
                                 IN PSMALL_RECT ScrollRectangle,
-                                IN BOOL UseClipRectangle,
+                                IN BOOLEAN UseClipRectangle,
                                 IN PSMALL_RECT ClipRectangle OPTIONAL,
                                 IN PCOORD DestinationOrigin,
                                 IN CHAR_INFO FillChar);

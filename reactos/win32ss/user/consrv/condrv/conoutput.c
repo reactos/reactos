@@ -227,7 +227,7 @@ ConDrvSetConsoleCursorInfo(IN PCONSOLE Console,
                            IN PCONSOLE_CURSOR_INFO CursorInfo)
 {
     ULONG Size;
-    BOOL Visible, Success = TRUE;
+    BOOLEAN Visible, Success = TRUE;
 
     if (Console == NULL || Buffer == NULL || CursorInfo == NULL)
         return STATUS_INVALID_PARAMETER;
