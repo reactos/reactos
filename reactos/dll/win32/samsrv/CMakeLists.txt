@@ -15,6 +15,7 @@ list(APPEND SOURCE
     registry.c
     samrpc.c
     samsrv.c
+    security.c
     setup.c
     user.c
     utils.c

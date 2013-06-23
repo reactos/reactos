@@ -722,6 +722,8 @@ SampSetupCreateServer(IN HANDLE hSamKey,
 {
     HANDLE hServerKey = NULL;
     HANDLE hDomainsKey = NULL;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
     NTSTATUS Status;
 
     Status = SampRegCreateKey(hSamKey,
@@ -738,11 +740,28 @@ SampSetupCreateServer(IN HANDLE hSamKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
+    /* Create the server SD */
+    Status = SampCreateServerSD(&Sd,
+                                &SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set SecDesc attribute*/
+    Status = SampRegSetValue(hServerKey,
+                             L"SecDesc",
+                             REG_BINARY,
+                             Sd,
+                             SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
     SampRegCloseKey(hDomainsKey);
 
     *lpServerKey = hServerKey;
 
 done:
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
 
     return Status;
 }
