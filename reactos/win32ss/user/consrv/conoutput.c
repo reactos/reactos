@@ -515,25 +515,25 @@ CSR_API(SrvWriteConsole)
     return Status;
 }
 
-#if 0000
-
+NTSTATUS NTAPI
+ConDrvReadConsoleOutputString(IN PCONSOLE Console,
+                              IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                              IN CODE_TYPE CodeType,
+                              OUT PVOID StringBuffer,
+                              IN ULONG NumCodesToRead,
+                              IN PCOORD ReadCoord,
+                              OUT PCOORD EndCoord,
+                              OUT PULONG CodesRead);
 CSR_API(SrvReadConsoleOutputString)
 {
     NTSTATUS Status;
     PCONSOLE_READOUTPUTCODE ReadOutputCodeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadOutputCodeRequest;
-    PCONSOLE Console;
-    PTEXTMODE_SCREEN_BUFFER Buff;
-    USHORT CodeType;
-    SHORT Xpos, Ypos;
-    PVOID ReadBuffer;
-    DWORD i;
+    PTEXTMODE_SCREEN_BUFFER Buffer;
     ULONG CodeSize;
-    PCHAR_INFO Ptr;
 
     DPRINT("SrvReadConsoleOutputString\n");
 
-    CodeType = ReadOutputCodeRequest->CodeType;
-    switch (CodeType)
+    switch (ReadOutputCodeRequest->CodeType)
     {
         case CODE_ASCII:
             CodeSize = sizeof(CHAR);
@@ -561,111 +561,41 @@ CSR_API(SrvReadConsoleOutputString)
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      ReadOutputCodeRequest->OutputHandle,
-                                     &Buff,
-                                     GENERIC_READ,
-                                     TRUE);
+                                     &Buffer, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Console = Buff->Header.Console;
+    Status = ConDrvReadConsoleOutputString(Buffer->Header.Console,
+                                           Buffer,
+                                           ReadOutputCodeRequest->CodeType,
+                                           ReadOutputCodeRequest->pCode.pCode,
+                                           ReadOutputCodeRequest->NumCodesToRead,
+                                           &ReadOutputCodeRequest->ReadCoord,
+                                           &ReadOutputCodeRequest->EndCoord,
+                                           &ReadOutputCodeRequest->CodesRead);
 
-    ReadBuffer = ReadOutputCodeRequest->pCode.pCode;
-    Xpos = ReadOutputCodeRequest->ReadCoord.X;
-    Ypos = (ReadOutputCodeRequest->ReadCoord.Y + Buff->VirtualY) % Buff->ScreenBufferSize.Y;
-
-    /*
-     * MSDN (ReadConsoleOutputAttribute and ReadConsoleOutputCharacter) :
-     *
-     * If the number of attributes (resp. characters) to be read from extends
-     * beyond the end of the specified screen buffer row, attributes (resp.
-     * characters) are read from the next row. If the number of attributes
-     * (resp. characters) to be read from extends beyond the end of the console
-     * screen buffer, attributes (resp. characters) up to the end of the console
-     * screen buffer are read.
-     *
-     * TODO: Do NOT loop up to NumCodesToRead, but stop before
-     * if we are going to overflow...
-     */
-    // Ptr = ConioCoordToPointer(Buff, Xpos, Ypos); // Doesn't work
-    for (i = 0; i < min(ReadOutputCodeRequest->NumCodesToRead, Buff->ScreenBufferSize.X * Buff->ScreenBufferSize.Y); ++i)
-    {
-        // Ptr = ConioCoordToPointer(Buff, Xpos, Ypos); // Doesn't work either
-        Ptr = &Buff->Buffer[Xpos + Ypos * Buff->ScreenBufferSize.X];
-
-        switch (CodeType)
-        {
-            case CODE_ASCII:
-                ConsoleUnicodeCharToAnsiChar(Console, (PCHAR)ReadBuffer, &Ptr->Char.UnicodeChar);
-                break;
-
-            case CODE_UNICODE:
-                *(PWCHAR)ReadBuffer = Ptr->Char.UnicodeChar;
-                break;
-
-            case CODE_ATTRIBUTE:
-                *(PWORD)ReadBuffer = Ptr->Attributes;
-                break;
-        }
-        ReadBuffer = (PVOID)((ULONG_PTR)ReadBuffer + CodeSize);
-        // ++Ptr;
-
-        Xpos++;
-
-        if (Xpos == Buff->ScreenBufferSize.X)
-        {
-            Xpos = 0;
-            Ypos++;
-
-            if (Ypos == Buff->ScreenBufferSize.Y)
-            {
-                Ypos = 0;
-            }
-        }
-    }
-
-    // switch (CodeType)
-    // {
-        // case CODE_UNICODE:
-            // *(PWCHAR)ReadBuffer = 0;
-            // break;
-
-        // case CODE_ASCII:
-            // *(PCHAR)ReadBuffer = 0;
-            // break;
-
-        // case CODE_ATTRIBUTE:
-            // *(PWORD)ReadBuffer = 0;
-            // break;
-    // }
-
-    ReadOutputCodeRequest->EndCoord.X = Xpos;
-    ReadOutputCodeRequest->EndCoord.Y = (Ypos - Buff->VirtualY + Buff->ScreenBufferSize.Y) % Buff->ScreenBufferSize.Y;
-
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
-
-    ReadOutputCodeRequest->CodesRead = (DWORD)((ULONG_PTR)ReadBuffer - (ULONG_PTR)ReadOutputCodeRequest->pCode.pCode) / CodeSize;
-    // <= ReadOutputCodeRequest->NumCodesToRead
-
-    return STATUS_SUCCESS;
+    ConSrvReleaseScreenBuffer(Buffer, TRUE);
+    return Status;
 }
 
+NTSTATUS NTAPI
+ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
+                               IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                               IN CODE_TYPE CodeType,
+                               IN PVOID StringBuffer,
+                               IN ULONG NumCodesToWrite,
+                               IN PCOORD WriteCoord /*,
+                               OUT PCOORD EndCoord,
+                               OUT PULONG CodesWritten */);
 CSR_API(SrvWriteConsoleOutputString)
 {
     NTSTATUS Status;
     PCONSOLE_WRITEOUTPUTCODE WriteOutputCodeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteOutputCodeRequest;
-    PCONSOLE Console;
-    PTEXTMODE_SCREEN_BUFFER Buff;
-    USHORT CodeType;
-    PVOID ReadBuffer = NULL;
-    PWCHAR tmpString = NULL;
-    DWORD X, Y, Length; // , Written = 0;
+    PTEXTMODE_SCREEN_BUFFER Buffer;
     ULONG CodeSize;
-    SMALL_RECT UpdateRect;
-    PCHAR_INFO Ptr;
 
     DPRINT("SrvWriteConsoleOutputString\n");
 
-    CodeType = WriteOutputCodeRequest->CodeType;
-    switch (CodeType)
+    switch (WriteOutputCodeRequest->CodeType)
     {
         case CODE_ASCII:
             CodeSize = sizeof(CHAR);
@@ -693,113 +623,41 @@ CSR_API(SrvWriteConsoleOutputString)
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      WriteOutputCodeRequest->OutputHandle,
-                                     &Buff,
-                                     GENERIC_WRITE,
-                                     TRUE);
+                                     &Buffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Console = Buff->Header.Console;
-
-    if (CodeType == CODE_ASCII)
-    {
-        /* Convert the ASCII string into Unicode before writing it to the console */
-        Length = MultiByteToWideChar(Console->OutputCodePage, 0,
-                                     WriteOutputCodeRequest->pCode.AsciiChar,
-                                     WriteOutputCodeRequest->Length,
-                                     NULL, 0);
-        tmpString = ReadBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
-        if (ReadBuffer)
-        {
-            MultiByteToWideChar(Console->OutputCodePage, 0,
-                                WriteOutputCodeRequest->pCode.AsciiChar,
-                                WriteOutputCodeRequest->Length,
-                                (PWCHAR)ReadBuffer, Length);
-        }
-        else
-        {
-            Status = STATUS_NO_MEMORY;
-        }
-    }
-    else
-    {
-        /* For CODE_UNICODE or CODE_ATTRIBUTE, we are already OK */
-        ReadBuffer = WriteOutputCodeRequest->pCode.pCode;
-    }
-
-    if (ReadBuffer == NULL || !NT_SUCCESS(Status)) goto Cleanup;
-
-    X = WriteOutputCodeRequest->Coord.X;
-    Y = (WriteOutputCodeRequest->Coord.Y + Buff->VirtualY) % Buff->ScreenBufferSize.Y;
-    Length = WriteOutputCodeRequest->Length;
-    // Ptr = ConioCoordToPointer(Buff, X, Y); // Doesn't work
-    // Ptr = &Buff->Buffer[X + Y * Buff->ScreenBufferSize.X]; // May work
-
-    while (Length--)
-    {
-        // Ptr = ConioCoordToPointer(Buff, X, Y); // Doesn't work either
-        Ptr = &Buff->Buffer[X + Y * Buff->ScreenBufferSize.X];
-
-        switch (CodeType)
-        {
-            case CODE_ASCII:
-            case CODE_UNICODE:
-                Ptr->Char.UnicodeChar = *(PWCHAR)ReadBuffer;
-                break;
-
-            case CODE_ATTRIBUTE:
-                Ptr->Attributes = *(PWORD)ReadBuffer;
-                break;
-        }
-        ReadBuffer = (PVOID)((ULONG_PTR)ReadBuffer + CodeSize);
-        // ++Ptr;
-
-        // Written++;
-        if (++X == Buff->ScreenBufferSize.X)
-        {
-            X = 0;
-
-            if (++Y == Buff->ScreenBufferSize.Y)
-            {
-                Y = 0;
-            }
-        }
-    }
-
-    if ((PCONSOLE_SCREEN_BUFFER)Buff == Console->ActiveBuffer)
-    {
-        ConioComputeUpdateRect(Buff, &UpdateRect, &WriteOutputCodeRequest->Coord,
-                               WriteOutputCodeRequest->Length);
-        ConioDrawRegion(Console, &UpdateRect);
-    }
-
-    // WriteOutputCodeRequest->EndCoord.X = X;
-    // WriteOutputCodeRequest->EndCoord.Y = (Y + Buff->ScreenBufferSize.Y - Buff->VirtualY) % Buff->ScreenBufferSize.Y;
-
-Cleanup:
-    if (tmpString)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
-
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    Status = ConDrvWriteConsoleOutputString(Buffer->Header.Console,
+                                            Buffer,
+                                            WriteOutputCodeRequest->CodeType,
+                                            WriteOutputCodeRequest->pCode.pCode,
+                                            WriteOutputCodeRequest->Length, // NumCodesToWrite,
+                                            &WriteOutputCodeRequest->Coord /*, // WriteCoord,
+                                            &WriteOutputCodeRequest->EndCoord,
+                                            &WriteOutputCodeRequest->NrCharactersWritten */);
 
     // WriteOutputCodeRequest->NrCharactersWritten = Written;
+
+    ConSrvReleaseScreenBuffer(Buffer, TRUE);
     return Status;
 }
 
+NTSTATUS NTAPI
+ConDrvFillConsoleOutput(IN PCONSOLE Console,
+                        IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                        IN CODE_TYPE CodeType,
+                        IN PVOID Code,
+                        IN ULONG NumCodesToWrite,
+                        IN PCOORD WriteCoord /*,
+                        OUT PULONG CodesWritten */);
 CSR_API(SrvFillConsoleOutput)
 {
     NTSTATUS Status;
     PCONSOLE_FILLOUTPUTCODE FillOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FillOutputRequest;
-    PCONSOLE Console;
-    PTEXTMODE_SCREEN_BUFFER Buff;
-    DWORD X, Y, Length; // , Written = 0;
-    USHORT CodeType;
-    PVOID Code = NULL;
-    PCHAR_INFO Ptr;
-    SMALL_RECT UpdateRect;
+    PTEXTMODE_SCREEN_BUFFER Buffer;
+    USHORT CodeType = FillOutputRequest->CodeType;
 
     DPRINT("SrvFillConsoleOutput\n");
 
-    CodeType = FillOutputRequest->CodeType;
     if ( (CodeType != CODE_ASCII    ) &&
          (CodeType != CODE_UNICODE  ) &&
          (CodeType != CODE_ATTRIBUTE) )
@@ -809,78 +667,24 @@ CSR_API(SrvFillConsoleOutput)
 
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      FillOutputRequest->OutputHandle,
-                                     &Buff,
-                                     GENERIC_WRITE,
-                                     TRUE);
+                                     &Buffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Console = Buff->Header.Console;
+    Status = ConDrvFillConsoleOutput(Buffer->Header.Console,
+                                     Buffer,
+                                     CodeType,
+                                     &FillOutputRequest->Code,
+                                     FillOutputRequest->Length, // NumCodesToWrite,
+                                     &FillOutputRequest->Coord /*, // WriteCoord,
+                                     &FillOutputRequest->NrCharactersWritten */);
 
-    switch (CodeType)
-    {
-        case CODE_ASCII:
-            /* On-place conversion from the ASCII char to the UNICODE char */
-            ConsoleAnsiCharToUnicodeChar(Console, &FillOutputRequest->Code.UnicodeChar, &FillOutputRequest->Code.AsciiChar);
-        /* Fall through */
-        case CODE_UNICODE:
-            Code = &FillOutputRequest->Code.UnicodeChar;
-            break;
+    // FillOutputRequest->NrCharactersWritten = Written;
 
-        case CODE_ATTRIBUTE:
-            Code = &FillOutputRequest->Code.Attribute;
-            break;
-    }
-
-    X = FillOutputRequest->Coord.X;
-    Y = (FillOutputRequest->Coord.Y + Buff->VirtualY) % Buff->ScreenBufferSize.Y;
-    Length = FillOutputRequest->Length;
-    // Ptr = ConioCoordToPointer(Buff, X, Y); // Doesn't work
-    // Ptr = &Buff->Buffer[X + Y * Buff->ScreenBufferSize.X]; // May work
-
-    while (Length--)
-    {
-        // Ptr = ConioCoordToPointer(Buff, X, Y); // Doesn't work either
-        Ptr = &Buff->Buffer[X + Y * Buff->ScreenBufferSize.X];
-
-        switch (CodeType)
-        {
-            case CODE_ASCII:
-            case CODE_UNICODE:
-                Ptr->Char.UnicodeChar = *(PWCHAR)Code;
-                break;
-
-            case CODE_ATTRIBUTE:
-                Ptr->Attributes = *(PWORD)Code;
-                break;
-        }
-        // ++Ptr;
-
-        // Written++;
-        if (++X == Buff->ScreenBufferSize.X)
-        {
-            X = 0;
-
-            if (++Y == Buff->ScreenBufferSize.Y)
-            {
-                Y = 0;
-            }
-        }
-    }
-
-    if ((PCONSOLE_SCREEN_BUFFER)Buff == Console->ActiveBuffer)
-    {
-        ConioComputeUpdateRect(Buff, &UpdateRect, &FillOutputRequest->Coord,
-                               FillOutputRequest->Length);
-        ConioDrawRegion(Console, &UpdateRect);
-    }
-
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
-/*
-    Length = FillOutputRequest->Length;
-    FillOutputRequest->NrCharactersWritten = Length;
-*/
-    return STATUS_SUCCESS;
+    ConSrvReleaseScreenBuffer(Buffer, TRUE);
+    return Status;
 }
+
+#if 0000
 
 CSR_API(SrvGetConsoleScreenBufferInfo)
 {
