@@ -219,6 +219,20 @@ SamIFree_SAMPR_RETURNED_USTRING_ARRAY(PSAMPR_RETURNED_USTRING_ARRAY Ptr)
 
 VOID
 NTAPI
+SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR(PSAMPR_SR_SECURITY_DESCRIPTOR Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->SecurityDescriptor != NULL)
+            MIDL_user_free(Ptr->SecurityDescriptor);
+
+        MIDL_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
 SamIFree_SAMPR_ULONG_ARRAY(PSAMPR_ULONG_ARRAY Ptr)
 {
     if (Ptr != NULL)
