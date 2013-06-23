@@ -19,6 +19,7 @@ list(APPEND SOURCE
     init.c
     lineinput.c
     settings.c
+    condrv/conoutput.c
     condrv/console.c
     condrv/graphics.c
     frontends/input.c
