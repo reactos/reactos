@@ -49,6 +49,7 @@ VOID WINAPI
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 
 #define CMD_STRING L"cmd /c "
+#define NTVDM_STRING L"\\ntvdm.exe"
 
 /* FUNCTIONS ****************************************************************/
 
@@ -180,6 +181,22 @@ BasepConfigureAppCertDlls(IN PWSTR ValueName,
 {
     /* Add this to the certification list */
     return BasepSaveAppCertRegistryValue(Context, ValueName, ValueData);
+}
+
+
+BOOLEAN
+NTAPI
+BasepCheckDosApp(IN PUNICODE_STRING ApplicationName)
+{
+    PWCHAR Extension;
+    
+    /* Get the extension from the file name */
+    Extension = &ApplicationName->Buffer[ApplicationName->Length /
+                                         sizeof(WCHAR) - 4];
+
+    /* Check if the extension is .COM */
+    if (_wcsnicmp(Extension, L".com", 4) == 0) return TRUE;
+    else return FALSE;
 }
 
 NTSTATUS
@@ -2531,6 +2548,7 @@ CreateProcessInternalW(HANDLE hToken,
     PPEB RemotePeb;
     SIZE_T EnvSize = 0;
     BOOL Ret = FALSE;
+    WCHAR VdmPath[MAX_PATH];
 
     /* FIXME should process
      * HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options
@@ -2610,6 +2628,10 @@ CreateProcessInternalW(HANDLE hToken,
                                                   CREATE_SEPARATE_WOW_VDM;
         }
     }
+
+    /* Get the path to the VDM host */
+    ASSERT(GetSystemDirectoryW(VdmPath, MAX_PATH - wcslen(NTVDM_STRING)) != 0);
+    wcscat(VdmPath, NTVDM_STRING);
 
     /*
      * According to some sites, ShellExecuteEx uses an undocumented flag to
@@ -2847,14 +2869,13 @@ GetAppName:
             case STATUS_INVALID_IMAGE_PROTECT:
             case STATUS_INVALID_IMAGE_NOT_MZ:
 
-#if 0
             /* If it's a DOS app, use VDM */
             if ((BasepCheckDosApp(&ApplicationName)))
             {
                 DPRINT1("Launching VDM...\n");
                 RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, ApplicationName.Buffer);
-                return CreateProcessW(L"ntvdm.exe",
+                return CreateProcessW(VdmPath,
                                       (LPWSTR)((ULONG_PTR)lpApplicationName), /* FIXME: Buffer must be writable!!! */
                                       lpProcessAttributes,
                                       lpThreadAttributes,
@@ -2865,7 +2886,6 @@ GetAppName:
                                       &StartupInfo,
                                       lpProcessInformation);
             }
-#endif
             /* It's a batch file */
             Extension = &ApplicationName.Buffer[ApplicationName.Length /
                                                 sizeof(WCHAR) - 4];
@@ -2925,7 +2945,7 @@ GetAppName:
                 DPRINT1("Launching VDM...\n");
                 RtlFreeHeap(RtlGetProcessHeap(), 0, NameBuffer);
                 RtlFreeHeap(RtlGetProcessHeap(), 0, ApplicationName.Buffer);
-                return CreateProcessW(L"ntvdm.exe",
+                return CreateProcessW(VdmPath,
                                       (LPWSTR)((ULONG_PTR)lpApplicationName), /* FIXME: Buffer must be writable!!! */
                                       lpProcessAttributes,
                                       lpThreadAttributes,

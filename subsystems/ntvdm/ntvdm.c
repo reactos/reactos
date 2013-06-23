@@ -55,7 +55,6 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
 INT wmain(INT argc, WCHAR *argv[])
 {
     INT i;
-    BOOLEAN PrintUsage = TRUE;
     CHAR CommandLine[128];
     DWORD CurrentTickCount, LastTickCount = 0, Cycles = 0, LastCyclePrintout = 0;
     LARGE_INTEGER Frequency, LastTimerTick, Counter;
@@ -64,39 +63,8 @@ INT wmain(INT argc, WCHAR *argv[])
     /* Set the handler routine */
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 
-    /* Parse the command line arguments */
-    for (i = 1; i < argc; i++)
-    {
-        if (argv[i][0] != L'-' && argv[i][0] != L'/') continue;
-
-        switch (argv[i][1])
-        {
-            case L'f':
-            case L'F':
-            {
-                if (argv[i+1] != NULL)
-                {
-                    /* The DOS command line must be ASCII */
-                    WideCharToMultiByte(CP_ACP, 0, argv[i+1], -1, CommandLine, 128, NULL, NULL);
-
-                    /* This is the only mandatory parameter */
-                    PrintUsage = FALSE;
-                }
-                break;
-            }
-            default:
-            {
-                wprintf(L"Unknown option: %s", argv[i]);
-            }
-        }
-    }
-
-    if (PrintUsage)
-    {
-        wprintf(L"ReactOS Virtual DOS Machine\n\n");
-        wprintf(L"Usage: NTVDM /F <PROGRAM>\n");
-        return 0;
-    }
+    /* The DOS command line must be ASCII */
+    WideCharToMultiByte(CP_ACP, 0, GetCommandLine(), -1, CommandLine, 128, NULL, NULL);
 
     if (!EmulatorInitialize()) return 1;
     
