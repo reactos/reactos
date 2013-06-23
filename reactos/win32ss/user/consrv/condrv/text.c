@@ -438,7 +438,7 @@ ConioResizeBuffer(PCONSOLE Console,
 }
 
 static VOID FASTCALL
-ConioNextLine(PTEXTMODE_SCREEN_BUFFER Buff, SMALL_RECT* UpdateRect, UINT *ScrolledLines)
+ConioNextLine(PTEXTMODE_SCREEN_BUFFER Buff, PSMALL_RECT UpdateRect, PUINT ScrolledLines)
 {
     /* If we hit bottom, slide the viewable screen */
     if (++Buff->CursorPosition.Y == Buff->ScreenBufferSize.Y)
@@ -1099,157 +1099,144 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
     return STATUS_SUCCESS;
 }
 
-
-
-CSR_API(SrvGetConsoleScreenBufferInfo)
+NTSTATUS NTAPI
+ConDrvGetConsoleScreenBufferInfo(IN PCONSOLE Console,
+                                 IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                 OUT PCONSOLE_SCREEN_BUFFER_INFO ScreenBufferInfo)
 {
-    NTSTATUS Status;
-    PCONSOLE_GETSCREENBUFFERINFO ScreenBufferInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ScreenBufferInfoRequest;
-    // PCONSOLE Console;
-    PTEXTMODE_SCREEN_BUFFER Buff;
-    PCONSOLE_SCREEN_BUFFER_INFO pInfo = &ScreenBufferInfoRequest->Info;
+    if (Console == NULL || Buffer == NULL || ScreenBufferInfo == NULL)
+        return STATUS_INVALID_PARAMETER;
 
-    DPRINT("SrvGetConsoleScreenBufferInfo\n");
+    /* Validity check */
+    ASSERT(Console == Buffer->Header.Console);
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), ScreenBufferInfoRequest->OutputHandle, &Buff, GENERIC_READ, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    ScreenBufferInfo->dwSize              = Buffer->ScreenBufferSize;
+    ScreenBufferInfo->dwCursorPosition    = Buffer->CursorPosition;
+    ScreenBufferInfo->wAttributes         = Buffer->ScreenDefaultAttrib;
+    ScreenBufferInfo->srWindow.Left       = Buffer->ViewOrigin.X;
+    ScreenBufferInfo->srWindow.Top        = Buffer->ViewOrigin.Y;
+    ScreenBufferInfo->srWindow.Right      = Buffer->ViewOrigin.X + Buffer->ViewSize.X - 1;
+    ScreenBufferInfo->srWindow.Bottom     = Buffer->ViewOrigin.Y + Buffer->ViewSize.Y - 1;
 
-    // Console = Buff->Header.Console;
+    // FIXME: Refine the computation
+    ScreenBufferInfo->dwMaximumWindowSize = Buffer->ScreenBufferSize;
 
-    pInfo->dwSize = Buff->ScreenBufferSize;
-    pInfo->dwCursorPosition = Buff->CursorPosition;
-    pInfo->wAttributes      = Buff->ScreenDefaultAttrib;
-    pInfo->srWindow.Left    = Buff->ViewOrigin.X;
-    pInfo->srWindow.Top     = Buff->ViewOrigin.Y;
-    pInfo->srWindow.Right   = Buff->ViewOrigin.X + Buff->ViewSize.X - 1;
-    pInfo->srWindow.Bottom  = Buff->ViewOrigin.Y + Buff->ViewSize.Y - 1;
-    pInfo->dwMaximumWindowSize = Buff->ScreenBufferSize; // TODO: Refine the computation
-
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvSetConsoleTextAttribute)
+NTSTATUS NTAPI
+ConDrvSetConsoleTextAttribute(IN PCONSOLE Console,
+                              IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                              IN WORD Attribute)
 {
-    NTSTATUS Status;
-    PCONSOLE_SETTEXTATTRIB SetTextAttribRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetTextAttribRequest;
-    PTEXTMODE_SCREEN_BUFFER Buff;
+    if (Console == NULL || Buffer == NULL)
+        return STATUS_INVALID_PARAMETER;
 
-    DPRINT("SrvSetConsoleTextAttribute\n");
+    /* Validity check */
+    ASSERT(Console == Buffer->Header.Console);
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetTextAttribRequest->OutputHandle, &Buff, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Buff->ScreenDefaultAttrib = SetTextAttribRequest->Attrib;
-
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
+    Buffer->ScreenDefaultAttrib = Attribute;
     return STATUS_SUCCESS;
 }
 
-CSR_API(SrvSetConsoleScreenBufferSize)
+NTSTATUS NTAPI
+ConDrvSetConsoleScreenBufferSize(IN PCONSOLE Console,
+                                 IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                 IN PCOORD Size)
 {
     NTSTATUS Status;
-    PCONSOLE_SETSCREENBUFFERSIZE SetScreenBufferSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetScreenBufferSizeRequest;
-    PCONSOLE Console;
-    PTEXTMODE_SCREEN_BUFFER Buff;
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetScreenBufferSizeRequest->OutputHandle, &Buff, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (Console == NULL || Buffer == NULL || Size == NULL)
+        return STATUS_INVALID_PARAMETER;
 
-    Console = Buff->Header.Console;
+    /* Validity check */
+    ASSERT(Console == Buffer->Header.Console);
 
-    Status = ConioResizeBuffer(Console, Buff, SetScreenBufferSizeRequest->Size);
+    Status = ConioResizeBuffer(Console, Buffer, *Size);
     if (NT_SUCCESS(Status)) ConioResizeTerminal(Console);
 
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
     return Status;
 }
 
-CSR_API(SrvScrollConsoleScreenBuffer)
+NTSTATUS NTAPI
+ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
+                                IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                                IN BOOL Unicode,
+                                IN PSMALL_RECT ScrollRectangle,
+                                IN BOOL UseClipRectangle,
+                                IN PSMALL_RECT ClipRectangle OPTIONAL,
+                                IN PCOORD DestinationOrigin,
+                                IN CHAR_INFO FillChar)
 {
-    PCONSOLE_SCROLLSCREENBUFFER ScrollScreenBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ScrollScreenBufferRequest;
-    PCONSOLE Console;
-    PTEXTMODE_SCREEN_BUFFER Buff;
+    COORD CapturedDestinationOrigin;
     SMALL_RECT ScreenBuffer;
     SMALL_RECT SrcRegion;
     SMALL_RECT DstRegion;
     SMALL_RECT UpdateRegion;
-    SMALL_RECT ScrollRectangle;
-    SMALL_RECT ClipRectangle;
-    NTSTATUS Status;
-    HANDLE OutputHandle;
-    BOOLEAN UseClipRectangle;
-    COORD DestinationOrigin;
-    CHAR_INFO FillChar;
+    SMALL_RECT CapturedClipRectangle;
 
-    DPRINT("SrvScrollConsoleScreenBuffer\n");
-
-    OutputHandle = ScrollScreenBufferRequest->OutputHandle;
-    UseClipRectangle = ScrollScreenBufferRequest->UseClipRectangle;
-    DestinationOrigin = ScrollScreenBufferRequest->DestinationOrigin;
-    FillChar = ScrollScreenBufferRequest->Fill;
-
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), OutputHandle, &Buff, GENERIC_WRITE, TRUE);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    Console = Buff->Header.Console;
-
-    ScrollRectangle = ScrollScreenBufferRequest->ScrollRectangle;
-
-    /* Make sure source rectangle is inside the screen buffer */
-    ConioInitRect(&ScreenBuffer, 0, 0, Buff->ScreenBufferSize.Y - 1, Buff->ScreenBufferSize.X - 1);
-    if (!ConioGetIntersection(&SrcRegion, &ScreenBuffer, &ScrollRectangle))
+    if (Console == NULL || Buffer == NULL || ScrollRectangle == NULL ||
+        (UseClipRectangle ? ClipRectangle == NULL : FALSE) || DestinationOrigin == NULL)
     {
-        ConSrvReleaseScreenBuffer(Buff, TRUE);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Validity check */
+    ASSERT(Console == Buffer->Header.Console);
+
+    CapturedDestinationOrigin = *DestinationOrigin;
+
+    /* Make sure the source rectangle is inside the screen buffer */
+    ConioInitRect(&ScreenBuffer, 0, 0, Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+    if (!ConioGetIntersection(&SrcRegion, &ScreenBuffer, ScrollRectangle))
+    {
         return STATUS_SUCCESS;
     }
 
     /* If the source was clipped on the left or top, adjust the destination accordingly */
-    if (ScrollRectangle.Left < 0)
+    if (ScrollRectangle->Left < 0)
     {
-        DestinationOrigin.X -= ScrollRectangle.Left;
+        CapturedDestinationOrigin.X -= ScrollRectangle->Left;
     }
-    if (ScrollRectangle.Top < 0)
+    if (ScrollRectangle->Top < 0)
     {
-        DestinationOrigin.Y -= ScrollRectangle.Top;
+        CapturedDestinationOrigin.Y -= ScrollRectangle->Top;
     }
 
     if (UseClipRectangle)
     {
-        ClipRectangle = ScrollScreenBufferRequest->ClipRectangle;
-        if (!ConioGetIntersection(&ClipRectangle, &ClipRectangle, &ScreenBuffer))
+        CapturedClipRectangle = *ClipRectangle;
+        if (!ConioGetIntersection(&CapturedClipRectangle, &CapturedClipRectangle, &ScreenBuffer))
         {
-            ConSrvReleaseScreenBuffer(Buff, TRUE);
             return STATUS_SUCCESS;
         }
     }
     else
     {
-        ClipRectangle = ScreenBuffer;
+        CapturedClipRectangle = ScreenBuffer;
     }
 
     ConioInitRect(&DstRegion,
-                  DestinationOrigin.Y,
-                  DestinationOrigin.X,
-                  DestinationOrigin.Y + ConioRectHeight(&SrcRegion) - 1,
-                  DestinationOrigin.X + ConioRectWidth(&SrcRegion) - 1);
+                  CapturedDestinationOrigin.Y,
+                  CapturedDestinationOrigin.X,
+                  CapturedDestinationOrigin.Y + ConioRectHeight(&SrcRegion) - 1,
+                  CapturedDestinationOrigin.X + ConioRectWidth(&SrcRegion ) - 1);
 
-    if (!ScrollScreenBufferRequest->Unicode)
+    if (!Unicode)
         ConsoleAnsiCharToUnicodeChar(Console, &FillChar.Char.UnicodeChar, &FillChar.Char.AsciiChar);
 
-    ConioMoveRegion(Buff, &SrcRegion, &DstRegion, &ClipRectangle, FillChar);
+    ConioMoveRegion(Buffer, &SrcRegion, &DstRegion, &CapturedClipRectangle, FillChar);
 
-    if ((PCONSOLE_SCREEN_BUFFER)Buff == Console->ActiveBuffer)
+    if ((PCONSOLE_SCREEN_BUFFER)Buffer == Console->ActiveBuffer)
     {
         ConioGetUnion(&UpdateRegion, &SrcRegion, &DstRegion);
-        if (ConioGetIntersection(&UpdateRegion, &UpdateRegion, &ClipRectangle))
+        if (ConioGetIntersection(&UpdateRegion, &UpdateRegion, &CapturedClipRectangle))
         {
             /* Draw update region */
             ConioDrawRegion(Console, &UpdateRegion);
         }
     }
 
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
     return STATUS_SUCCESS;
 }
 
