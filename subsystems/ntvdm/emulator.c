@@ -64,7 +64,7 @@ static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
             *Buffer = PicReadCommand(Address);
             break;
         }
-        
+
         case PIC_MASTER_DATA:
         case PIC_SLAVE_DATA:
         {
@@ -77,7 +77,7 @@ static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     BYTE Byte = *Buffer;
-    
+
     switch (Address)
     {
         case PIT_COMMAND_PORT:
@@ -85,7 +85,7 @@ static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size
             PitWriteCommand(Byte);
             break;
         }
-        
+
         case PIT_DATA_PORT(0):
         case PIT_DATA_PORT(1):
         case PIT_DATA_PORT(2):
@@ -93,14 +93,14 @@ static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size
             PitWriteData(Address - PIT_DATA_PORT(0), Byte);
             break;
         }
-        
+
         case PIC_MASTER_CMD:
         case PIC_SLAVE_CMD:
         {
             PicWriteCommand(Address, Byte);
             break;
         }
-        
+
         case PIC_MASTER_DATA:
         case PIC_SLAVE_DATA:
         {
@@ -147,7 +147,7 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
             VdmRunning = FALSE;
             return;
         }
-        
+
         /* Check if this was an PIC IRQ */
         if (IntNum >= BIOS_PIC_MASTER_INT && IntNum < BIOS_PIC_MASTER_INT + 8)
         {

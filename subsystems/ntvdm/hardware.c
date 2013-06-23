@@ -61,15 +61,15 @@ static BOOLEAN KeyboardQueuePush(BYTE ScanCode)
     {
         return FALSE;
     }
-    
+
     /* Insert the value in the queue */
     KeyboardQueue[KeyboardQueueEnd] = ScanCode;
     KeyboardQueueEnd++;
     KeyboardQueueEnd %= KEYBOARD_BUFFER_SIZE;
-    
+
     /* Since we inserted a value, it's not empty anymore */
     KeyboardQueueEmpty = FALSE;
-    
+
     return TRUE;
 }
 
@@ -78,20 +78,20 @@ static BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
 {
     /* Make sure the keyboard queue is not empty */
     if (KeyboardQueueEmpty) return FALSE;
-    
+
     /* Get the scan code */
     *ScanCode = KeyboardQueue[KeyboardQueueStart];
-    
+
     /* Remove the value from the queue */
     KeyboardQueueStart++;
     KeyboardQueueStart %= KEYBOARD_BUFFER_SIZE;
-    
+
     /* Check if the queue is now empty */
     if (KeyboardQueueStart == KeyboardQueueEnd)
     {
         KeyboardQueueEmpty = TRUE;
     }
-    
+
     return TRUE;
 }
 #endif
@@ -101,11 +101,11 @@ static BOOLEAN KeyboardQueuePop(BYTE *ScanCode)
 BYTE PicReadCommand(BYTE Port)
 {
     PPIC Pic;
-    
+
     /* Which PIC are we accessing? */
     if (Port == PIC_MASTER_CMD) Pic = &MasterPic;
     else Pic = &SlavePic;
-    
+
     if (Pic->ReadIsr)
     {
         /* Read the in-service register */
@@ -122,11 +122,11 @@ BYTE PicReadCommand(BYTE Port)
 VOID PicWriteCommand(BYTE Port, BYTE Value)
 {
     PPIC Pic;
-    
+
     /* Which PIC are we accessing? */
     if (Port == PIC_MASTER_CMD) Pic = &MasterPic;
     else Pic = &SlavePic;
-    
+
     if (Value & PIC_ICW1)
     {
         /* Start initialization */
@@ -136,7 +136,7 @@ VOID PicWriteCommand(BYTE Port, BYTE Value)
         Pic->ConfigRegister = Value;
         return;
     }
-    
+
     if (Value & PIC_OCW3)
     {
         /* This is an OCR3 */
@@ -145,10 +145,10 @@ VOID PicWriteCommand(BYTE Port, BYTE Value)
             /* Return the ISR on next read from command port */
             Pic->ReadIsr = TRUE;
         }
-        
+
         return;
     }
-    
+
     /* This is an OCW2 */
     if (Value & PIC_OCW2_EOI)
     {
@@ -175,11 +175,11 @@ BYTE PicReadData(BYTE Port)
 VOID PicWriteData(BYTE Port, BYTE Value)
 {
     PPIC Pic;
-    
+
     /* Which PIC are we accessing? */
     if (Port == PIC_MASTER_DATA) Pic = &MasterPic;
     else Pic = &SlavePic;
-    
+
     /* Is the PIC ready? */
     if (!Pic->Initialization)
     {
@@ -187,13 +187,13 @@ VOID PicWriteData(BYTE Port, BYTE Value)
         Pic->MaskRegister = Value;
         return;
     }
-    
+
     /* Has the interrupt offset been set? */
     if (Pic->IntOffset == 0xFF)
     {
         /* This is an ICW2, set the offset (last three bits always zero) */
         Pic->IntOffset = Value & 0xF8;
-        
+
         /* Check if we are in single mode and don't need an ICW4 */
         if ((Pic->ConfigRegister & PIC_ICW1_SINGLE)
             && !(Pic->ConfigRegister & PIC_ICW1_ICW4))
@@ -203,14 +203,14 @@ VOID PicWriteData(BYTE Port, BYTE Value)
         }
         return;
     }
-    
+
     /* Check if we are in cascade mode and the cascade register was not set */
     if (!(Pic->ConfigRegister & PIC_ICW1_SINGLE) && !Pic->CascadeRegisterSet)
     {
         /* This is an ICW3 */
         Pic->CascadeRegister = Value;
         Pic->CascadeRegisterSet = TRUE;
-        
+
         /* Check if we need an ICW4 */
         if (!(Pic->ConfigRegister & PIC_ICW1_ICW4))
         {
@@ -219,22 +219,22 @@ VOID PicWriteData(BYTE Port, BYTE Value)
         }
         return;
     }
-    
+
     /* This must be an ICW4, we will ignore the 8086 bit (assume always set) */
     if (Value & PIC_ICW4_AEOI)
     {
         /* Use automatic end-of-interrupt */
         Pic->AutoEoi = TRUE;
     }
-    
+
     /* Done initializing */
     Pic->Initialization = FALSE;
 }
 
 VOID PicInterruptRequest(BYTE Number)
-{    
+{
     BYTE i;
-    
+
     if (Number >= 0 && Number < 8)
     {
         /* Check if any of the higher-priorirty interrupts are busy */
@@ -242,10 +242,10 @@ VOID PicInterruptRequest(BYTE Number)
         {
             if (MasterPic.InServiceRegister & (1 << Number)) return;
         }
-        
+
         /* Check if the interrupt is masked */
         if (MasterPic.MaskRegister & (1 << Number)) return;
-        
+
         /* Set the appropriate bit in the ISR and interrupt the CPU */
         if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= 1 << Number;
         EmulatorInterrupt(MasterPic.IntOffset + Number);
@@ -253,7 +253,7 @@ VOID PicInterruptRequest(BYTE Number)
     else if (Number >= 8 && Number < 16)
     {
         Number -= 8;
-        
+
         /*
          * The slave PIC is connected to IRQ 2, always! If the master PIC
          * was misconfigured, don't do anything.
@@ -263,20 +263,20 @@ VOID PicInterruptRequest(BYTE Number)
         {
             return;
         }
-        
+
         /* Check if any of the higher-priorirty interrupts are busy */
         if (MasterPic.InServiceRegister != 0) return;
         for (i = 0; i <= Number ; i++)
         {
             if (SlavePic.InServiceRegister & (1 << Number)) return;
         }
-        
+
         /* Check if the interrupt is masked */
         if (SlavePic.MaskRegister & (1 << Number)) return;
 
         /* Set the IRQ 2 bit in the master ISR */
         if (!MasterPic.AutoEoi) MasterPic.InServiceRegister |= 1 << 2;
-    
+
         /* Set the appropriate bit in the ISR and interrupt the CPU */
         if (!SlavePic.AutoEoi) SlavePic.InServiceRegister |= 1 << Number;
         EmulatorInterrupt(SlavePic.IntOffset + Number);
@@ -287,7 +287,7 @@ VOID PitWriteCommand(BYTE Value)
 {
     BYTE Channel = Value >> 6;
     BYTE Mode = (Value >> 1) & 0x07;
-    
+
     /* Check if this is a counter latch command */
     if (((Value >> 4) & 3) == 0)
     {
@@ -295,14 +295,14 @@ VOID PitWriteCommand(BYTE Value)
         PitChannels[Channel].LatchedValue = PitChannels[Channel].CurrentValue;
         return;
     }
-    
+
     /* Set the access mode and reset flip-flops */
     PitChannels[Channel].AccessMode = (Value >> 4) & 3;
     PitChannels[Channel].Pulsed = FALSE;
     PitChannels[Channel].LatchSet = FALSE;
     PitChannels[Channel].InputFlipFlop = FALSE;
     PitChannels[Channel].OutputFlipFlop = FALSE;
-    
+
     switch (Mode)
     {
         case 0:
@@ -315,13 +315,13 @@ VOID PitWriteCommand(BYTE Value)
             PitChannels[Channel].Mode = Mode;
             break;
         }
-        
+
         case 6:
         {
             PitChannels[Channel].Mode = PIT_MODE_RATE_GENERATOR;
             break;
         }
-        
+
         case 7:
         {
             PitChannels[Channel].Mode = PIT_MODE_SQUARE_WAVE;
@@ -339,20 +339,20 @@ BYTE PitReadData(BYTE Channel)
     if (PitChannels[Channel].LatchSet)
     {
         CurrentValue = PitChannels[Channel].LatchedValue;
-        
+
         if (AccessMode == 1 || AccessMode == 2)
         {
             /* The latched value was read as one byte */
             PitChannels[Channel].LatchSet = FALSE;
         }
     }
-    
+
     /* Use the flip-flop for access mode 3 */
     if (AccessMode == 3)
     {
         AccessMode = PitChannels[Channel].InputFlipFlop ? 1 : 2;
         PitChannels[Channel].InputFlipFlop = !PitChannels[Channel].InputFlipFlop;
-        
+
         /* Check if this was the last read for the latched value */
         if (!PitChannels[Channel].InputFlipFlop)
         {
@@ -360,7 +360,7 @@ BYTE PitReadData(BYTE Channel)
             PitChannels[Channel].LatchSet = FALSE;
         }
     }
-    
+
     switch (AccessMode)
     {
         case 1:
@@ -368,14 +368,14 @@ BYTE PitReadData(BYTE Channel)
             /* Low byte */
             return CurrentValue & 0x00FF;
         }
-        
+
         case 2:
         {
             /* High byte */
             return CurrentValue >> 8;
         }
     }
-    
+
     /* Shouldn't get here */
     return 0;
 }
@@ -383,14 +383,14 @@ BYTE PitReadData(BYTE Channel)
 VOID PitWriteData(BYTE Channel, BYTE Value)
 {
     BYTE AccessMode = PitChannels[Channel].AccessMode;
-    
+
     /* Use the flip-flop for access mode 3 */
     if (PitChannels[Channel].AccessMode == 3)
     {
         AccessMode = PitChannels[Channel].InputFlipFlop ? 1 : 2;
         PitChannels[Channel].InputFlipFlop = !PitChannels[Channel].InputFlipFlop;
     }
-    
+
     switch (AccessMode)
     {
         case 1:
@@ -400,7 +400,7 @@ VOID PitWriteData(BYTE Channel, BYTE Value)
             PitChannels[Channel].ReloadValue |= Value;
             break;
         }
-        
+
         case 2:
         {
             /* High byte */
@@ -413,7 +413,7 @@ VOID PitWriteData(BYTE Channel, BYTE Value)
 VOID PitDecrementCount()
 {
     INT i;
-    
+
     for (i = 0; i < PIT_CHANNELS; i++)
     {
         switch (PitChannels[i].Mode)
@@ -422,7 +422,7 @@ VOID PitDecrementCount()
             {
                 /* Decrement the value */
                 PitChannels[i].CurrentValue--;
-                
+
                 /* Did it fall to the terminal count? */
                 if (PitChannels[i].CurrentValue == 0 && !PitChannels[i].Pulsed)
                 {
@@ -432,40 +432,40 @@ VOID PitDecrementCount()
                 }
                 break;
             }
-            
+
             case PIT_MODE_RATE_GENERATOR:
             {
                 /* Decrement the value */
                 PitChannels[i].CurrentValue--;
-                
+
                 /* Did it fall to zero? */
                 if (PitChannels[i].CurrentValue != 0) break;
 
                 /* Yes, raise the output line and reload */
                 if (i == 0) PicInterruptRequest(0);
                 PitChannels[i].CurrentValue = PitChannels[i].ReloadValue;
-                
+
                 break;
             }
-            
+
             case PIT_MODE_SQUARE_WAVE:
             {
                 /* Decrement the value by 2 */
                 PitChannels[i].CurrentValue -= 2;
-                
+
                 /* Did it fall to zero? */
                 if (PitChannels[i].CurrentValue != 0) break;
-                
+
                 /* Yes, toggle the flip-flop */
                 PitChannels[i].OutputFlipFlop = !PitChannels[i].OutputFlipFlop;
-                    
+
                 /* Did this create a rising edge in the signal? */
                 if (PitChannels[i].OutputFlipFlop)
                 {
                     /* Yes, IRQ 0 if this is channel 0 */
                     if (i == 0) PicInterruptRequest(0);
                 }
-                    
+
                 /* Reload the value, but make sure it's even */
                 if (PitChannels[i].ReloadValue % 2)
                 {
@@ -477,16 +477,16 @@ VOID PitDecrementCount()
                     /* It was even */
                     PitChannels[i].CurrentValue = PitChannels[i].ReloadValue;
                 }
-                
+
                 break;
             }
-            
+
             case PIT_MODE_SOFTWARE_STROBE:
             {
                 // TODO: NOT IMPLEMENTED
                 break;
             }
-            
+
             case PIT_MODE_HARDWARE_ONE_SHOT:
             case PIT_MODE_HARDWARE_STROBE:
             {
@@ -503,42 +503,42 @@ VOID CheckForInputEvents()
     HANDLE ConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
     DWORD i, j, Count, TotalEvents;
     BYTE ScanCode;
-    
+
     /* Get the number of input events */
     if (!GetNumberOfConsoleInputEvents(ConsoleInput, &Count)) return;
     if (Count == 0) return;
-        
+
     /* Allocate the buffer */
     Buffer = (PINPUT_RECORD)HeapAlloc(GetProcessHeap(), 0, Count * sizeof(INPUT_RECORD));
     if (Buffer == NULL) return;
-    
+
     /* Peek the input events */
     if (!ReadConsoleInput(ConsoleInput, Buffer, Count, &TotalEvents)) goto Cleanup;
-    
+
     for (i = 0; i < TotalEvents; i++)
     {
         /* Check if this is a key event */
         if (Buffer[i].EventType != KEY_EVENT) continue;
-        
+
         /* Get the scan code */
         ScanCode = Buffer[i].Event.KeyEvent.wVirtualScanCode;
-        
+
         /* If this is a key release, set the highest bit in the scan code */
         if (!Buffer[i].Event.KeyEvent.bKeyDown) ScanCode |= 0x80;
-          
+
         /* Push the scan code onto the keyboard queue */
         for (j = 0; j < Buffer[i].Event.KeyEvent.wRepeatCount; j++)
         {
             KeyboardQueuePush(ScanCode);
         }
-            
+
         /* Yes, IRQ 1 */
         PicInterruptRequest(1);
-            
+
         /* Stop the loop */
         break;
     }
-    
+
 Cleanup:
     HeapFree(GetProcessHeap(), 0, Buffer);
 }

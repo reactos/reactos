@@ -581,7 +581,7 @@ VOID DosInt21h(WORD CodeSegment)
                                 (Eax & 0xFFFFFF00) | SystemTime.wDayOfWeek);
             break;
         }
-        
+
         /* Set system date */
         case 0x2B:
         {
@@ -589,7 +589,7 @@ VOID DosInt21h(WORD CodeSegment)
             SystemTime.wYear = LOWORD(Ecx);
             SystemTime.wMonth = HIBYTE(Edx);
             SystemTime.wDay = LOBYTE(Edx);
-            
+
             if (SetLocalTime(&SystemTime))
             {
                 /* Return success */
@@ -600,7 +600,7 @@ VOID DosInt21h(WORD CodeSegment)
                 /* Return failure */
                 EmulatorSetRegister(EMULATOR_REG_AX, Eax | 0xFF);
             }
-            
+
             break;
         }
 
@@ -618,7 +618,7 @@ VOID DosInt21h(WORD CodeSegment)
                                 | (SystemTime.wMilliseconds / 10));
             break;
         }
-        
+
         /* Set system time */
         case 0x2D:
         {
@@ -627,7 +627,7 @@ VOID DosInt21h(WORD CodeSegment)
             SystemTime.wMinute = LOBYTE(Ecx);
             SystemTime.wSecond = HIBYTE(Edx);
             SystemTime.wMilliseconds = LOBYTE(Edx) * 10;
-            
+
             if (SetLocalTime(&SystemTime))
             {
                 /* Return success */
@@ -638,7 +638,7 @@ VOID DosInt21h(WORD CodeSegment)
                 /* Return failure */
                 EmulatorSetRegister(EMULATOR_REG_AX, Eax | 0xFF);
             }
-            
+
             break;
         }
 
