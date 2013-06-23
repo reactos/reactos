@@ -242,23 +242,37 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
                        OUT PULONG MaximumResolution,
                        OUT PULONG ActualResolution)
 {
-    _SEH2_TRY
-    {
-        /* Probe the parameters */
-        ProbeForWriteUlong(MinimumResolution);
-        ProbeForWriteUlong(MaximumResolution);
-        ProbeForWriteUlong(ActualResolution);
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
-        /* Set the parameters to the actual values */
+    /* Check if the call came from user mode */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe the parameters */
+            ProbeForWriteUlong(MinimumResolution);
+            ProbeForWriteUlong(MaximumResolution);
+            ProbeForWriteUlong(ActualResolution);
+
+            /* Try to set the parameters to the actual values */
+            *MinimumResolution = KeMinimumIncrement;
+            *MaximumResolution = KeMaximumIncrement;
+            *ActualResolution = KeTimeIncrement;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* The call came from kernel mode. Use the pointers directly */
         *MinimumResolution = KeMinimumIncrement;
         *MaximumResolution = KeMaximumIncrement;
         *ActualResolution = KeTimeIncrement;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        _SEH2_YIELD(return _SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -271,21 +285,32 @@ NtSetTimerResolution(IN ULONG DesiredResolution,
                      OUT PULONG CurrentResolution)
 {
     ULONG NewResolution;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
     /* Call the internal API */
     NewResolution = ExSetTimerResolution(DesiredResolution, SetResolution);
 
-    /* Return the resolution to the caller */
-    _SEH2_TRY
+    /* Check if the call came from user mode */
+    if (PreviousMode != KernelMode)
     {
-        ProbeForWriteUlong(CurrentResolution);
+        /* Try to write the value */
+        _SEH2_TRY
+        {
+            ProbeForWriteUlong(CurrentResolution);
+            *CurrentResolution = NewResolution;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* The call came from kernel mode. Use the pointer directly */
         *CurrentResolution = NewResolution;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        _SEH2_YIELD(return _SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
     
     /* Return success if we set the resolution */
     if (SetResolution) return STATUS_SUCCESS;
