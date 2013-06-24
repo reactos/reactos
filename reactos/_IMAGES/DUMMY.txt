@@ -12,7 +12,7 @@
   the specified target file is non-existent, or stale, relative to the source file, then the build tool will be
   invoked. Therefore, if we create a dummy source file, such as this file, DUMMY.TXT, and specify a target file that will
   never be actually generated, DUMMY.ZZZ, then each time Visual Studio examines whether to build DUMMY.ZZZ, it
-  will always conclude that the answer is "Yes. Try to build DUMMY.TXT." In this way, we can force an operation
+  will always conclude that the answer is "Yes. Try to build DUMMY.ZZZ." In this way, we can force an operation
   to occur, always, for a project. 
   
   In this particular case, we use this technique to build ReactOS target images that can be booted, installed, etc. 
