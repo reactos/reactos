@@ -1,0 +1,296 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="amd64">
+      <UniqueIdentifier>{5d7cdd14-8dda-4c63-8811-fadf00456132}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arm">
+      <UniqueIdentifier>{7a0ca2ba-5b55-4679-8ab5-81c453df87ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="i386">
+      <UniqueIdentifier>{459b9426-2ff8-4fab-b1c0-c2a6a8c8f7b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="powerpc">
+      <UniqueIdentifier>{284728ff-b95d-4e96-b57c-be7ea838a6b9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="access.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="acl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="actctx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="assert.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="atom.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="avlsupp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="avltable.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bitmap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bootdata.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="byteswap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compress.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="condvar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="crc32.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="critical.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dbgbuffer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dos8dot3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="encode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="env.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="error.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="exception.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="generictable.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="handle.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="heap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="heapdbg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="heappage.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="heapuser.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="image.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interlck.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="largeint.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="luid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="message.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="network.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nls.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="path.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ppb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="priv.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="process.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="propvar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="random.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rangelist.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="registry.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="res.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="resource.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="security.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="slist.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="splaytree.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="srw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="time.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="timerqueue.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="timezone.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="unicode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="unicodeprefix.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vectoreh.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="version.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wait.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="workitem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="amd64\stubs.c">
+      <Filter>amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="amd64\unwind.c">
+      <Filter>amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="i386\except.c">
+      <Filter>i386</Filter>
+    </ClCompile>
+    <ClCompile Include="i386\thread.c">
+      <Filter>i386</Filter>
+    </ClCompile>
+    <ClCompile Include="powerpc\debug.c">
+      <Filter>powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="powerpc\except.c">
+      <Filter>powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="powerpc\interlocked.c">
+      <Filter>powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="powerpc\thread.c">
+      <Filter>powerpc</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="amd64\debug_asm.S">
+      <Filter>amd64</Filter>
+    </None>
+    <None Include="amd64\except_asm.S">
+      <Filter>amd64</Filter>
+    </None>
+    <None Include="amd64\rtlmem.S">
+      <Filter>amd64</Filter>
+    </None>
+    <None Include="amd64\slist.S">
+      <Filter>amd64</Filter>
+    </None>
+    <None Include="arm\debug_asm.S">
+      <Filter>arm</Filter>
+    </None>
+    <None Include="powerpc\rtlmem.s">
+      <Filter>powerpc</Filter>
+    </None>
+    <None Include="powerpc\rtlswap.s">
+      <Filter>powerpc</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="heap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rtl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rtlavl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rtlp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="i386\debug_asm.S">
+      <Filter>i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="i386\rtlswap.S">
+      <Filter>i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="i386\rtlmem.s">
+      <Filter>i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="i386\res_asm.s">
+      <Filter>i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="i386\interlck.S">
+      <Filter>i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="i386\except_asm.s">
+      <Filter>i386</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

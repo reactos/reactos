@@ -1,0 +1,1492 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A6EB60E2-8414-4C0C-AA83-AE854151D868}</ProjectGuid>
+    <RootNamespace>psdk</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Midl>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <AdditionalIncludeDirectories>.\;..\dxsdk</AdditionalIncludeDirectories>
+      <OutputDirectory>build\x86_32\$(Configuration)\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(ProjectName).tlb</TypeLibraryName>
+      <PreprocessorDefinitions>_MIDL_USE_GUIDDEF_</PreprocessorDefinitions>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Midl>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <AdditionalIncludeDirectories>.\;..\dxsdk</AdditionalIncludeDirectories>
+      <OutputDirectory>build\x86_32\$(Configuration)\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>$(ProjectName).tlb</TypeLibraryName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="accctrl.h" />
+    <ClInclude Include="aclapi.h" />
+    <ClInclude Include="aclui.h" />
+    <ClInclude Include="adshlp.h" />
+    <ClInclude Include="advpub.h" />
+    <ClInclude Include="afxres.h" />
+    <ClInclude Include="af_irda.h" />
+    <ClInclude Include="appmgmt.h" />
+    <ClInclude Include="atsmedia.h" />
+    <ClInclude Include="audiosessiontypes.h" />
+    <ClInclude Include="authz.h" />
+    <ClInclude Include="basetsd.h" />
+    <ClInclude Include="basetyps.h" />
+    <ClInclude Include="batclass.h" />
+    <ClInclude Include="bcrypt.h" />
+    <ClInclude Include="bitsmsg.h" />
+    <ClInclude Include="cderr.h" />
+    <ClInclude Include="cfg.h" />
+    <ClInclude Include="cfgmgr32.h" />
+    <ClInclude Include="cguid.h" />
+    <ClInclude Include="cierror.h" />
+    <ClInclude Include="clusapi.h" />
+    <ClInclude Include="commctrl.h" />
+    <ClInclude Include="commdlg.h" />
+    <ClInclude Include="compstui.h" />
+    <ClInclude Include="concurrencysal.h" />
+    <ClInclude Include="corerror.h" />
+    <ClInclude Include="corhdr.h" />
+    <ClInclude Include="cpl.h" />
+    <ClInclude Include="cplext.h" />
+    <ClInclude Include="cryptdlg.h" />
+    <ClInclude Include="cryptuiapi.h" />
+    <ClInclude Include="custcntl.h" />
+    <ClInclude Include="cvconst.h" />
+    <ClInclude Include="d3d.h" />
+    <ClInclude Include="d3d8.h" />
+    <ClInclude Include="d3d8types.h" />
+    <ClInclude Include="d3d9.h" />
+    <ClInclude Include="d3d9types.h" />
+    <ClInclude Include="d3dnthal.h" />
+    <ClInclude Include="d3drm.h" />
+    <ClInclude Include="d3drmdef.h" />
+    <ClInclude Include="d3dtypes.h" />
+    <ClInclude Include="d3dx8core.h" />
+    <ClInclude Include="dbghelp.h" />
+    <ClInclude Include="dbt.h" />
+    <ClInclude Include="dciman.h" />
+    <ClInclude Include="dde.h" />
+    <ClInclude Include="ddeml.h" />
+    <ClInclude Include="ddkernel.h" />
+    <ClInclude Include="ddkmapi.h" />
+    <ClInclude Include="ddraw.h" />
+    <ClInclude Include="ddrawgdi.h" />
+    <ClInclude Include="ddrawi.h" />
+    <ClInclude Include="ddrawint.h" />
+    <ClInclude Include="delayimp.h" />
+    <ClInclude Include="devguid.h" />
+    <ClInclude Include="devioctl.h" />
+    <ClInclude Include="devpkey.h" />
+    <ClInclude Include="devpropdef.h" />
+    <ClInclude Include="dhcpcapi.h" />
+    <ClInclude Include="dhcpcsdk.h" />
+    <ClInclude Include="digitalv.h" />
+    <ClInclude Include="dinput.h" />
+    <ClInclude Include="diskguid.h" />
+    <ClInclude Include="dlgs.h" />
+    <ClInclude Include="dmemmgr.h" />
+    <ClInclude Include="dmksctrl.h" />
+    <ClInclude Include="dpfilter.h" />
+    <ClInclude Include="dplay.h" />
+    <ClInclude Include="dplobby.h" />
+    <ClInclude Include="driverspecs.h" />
+    <ClInclude Include="dsgetdc.h" />
+    <ClInclude Include="dsound.h" />
+    <ClInclude Include="dsrole.h" />
+    <ClInclude Include="dvdevcod.h" />
+    <ClInclude Include="dvdmedia.h" />
+    <ClInclude Include="dvp.h" />
+    <ClInclude Include="dwmapi.h" />
+    <ClInclude Include="eaptypes.h" />
+    <ClInclude Include="edevdefs.h" />
+    <ClInclude Include="errorrep.h" />
+    <ClInclude Include="evntprov.h" />
+    <ClInclude Include="evntrace.h" />
+    <ClInclude Include="exdispid.h" />
+    <ClInclude Include="fci.h" />
+    <ClInclude Include="fdi.h" />
+    <ClInclude Include="gdiplus.h" />
+    <ClInclude Include="gdiplusbase.h" />
+    <ClInclude Include="gdiplusbrush.h" />
+    <ClInclude Include="gdipluscolor.h" />
+    <ClInclude Include="gdipluscolormatrix.h" />
+    <ClInclude Include="gdipluseffects.h" />
+    <ClInclude Include="gdiplusenums.h" />
+    <ClInclude Include="gdiplusflat.h" />
+    <ClInclude Include="gdiplusgpstubs.h" />
+    <ClInclude Include="gdiplusgraphics.h" />
+    <ClInclude Include="gdiplusheaders.h" />
+    <ClInclude Include="gdiplusimageattributes.h" />
+    <ClInclude Include="gdiplusimaging.h" />
+    <ClInclude Include="gdiplusinit.h" />
+    <ClInclude Include="gdipluslinecaps.h" />
+    <ClInclude Include="gdiplusmatrix.h" />
+    <ClInclude Include="gdiplusmem.h" />
+    <ClInclude Include="gdiplusmetafile.h" />
+    <ClInclude Include="gdiplusmetaheader.h" />
+    <ClInclude Include="gdipluspath.h" />
+    <ClInclude Include="gdipluspen.h" />
+    <ClInclude Include="gdipluspixelformats.h" />
+    <ClInclude Include="gdiplusstringformat.h" />
+    <ClInclude Include="gdiplustypes.h" />
+    <ClInclude Include="guiddef.h" />
+    <ClInclude Include="hidpi.h" />
+    <ClInclude Include="hidusage.h" />
+    <ClInclude Include="hlguids.h" />
+    <ClInclude Include="htmlhelp.h" />
+    <ClInclude Include="http.h" />
+    <ClInclude Include="httpext.h" />
+    <ClInclude Include="httprequestid.h" />
+    <ClInclude Include="icm.h" />
+    <ClInclude Include="icmpapi.h" />
+    <ClInclude Include="idispids.h" />
+    <ClInclude Include="idndl.h" />
+    <ClInclude Include="ieverp.h" />
+    <ClInclude Include="ifdef.h" />
+    <ClInclude Include="imagehlp.h" />
+    <ClInclude Include="imm.h" />
+    <ClInclude Include="in6addr.h" />
+    <ClInclude Include="inaddr.h" />
+    <ClInclude Include="initguid.h" />
+    <ClInclude Include="intsafe.h" />
+    <ClInclude Include="intshcut.h" />
+    <ClInclude Include="ioevent.h" />
+    <ClInclude Include="ipexport.h" />
+    <ClInclude Include="iphlpapi.h" />
+    <ClInclude Include="ipifcons.h" />
+    <ClInclude Include="iprtrmib.h" />
+    <ClInclude Include="iptypes.h" />
+    <ClInclude Include="isguids.h" />
+    <ClInclude Include="i_cryptasn1tls.h" />
+    <ClInclude Include="kcom.h" />
+    <ClInclude Include="knownfolders.h" />
+    <ClInclude Include="ks.h" />
+    <ClInclude Include="ksdebug.h" />
+    <ClInclude Include="ksmedia.h" />
+    <ClInclude Include="ksproxy.h" />
+    <ClInclude Include="ksuuids.h" />
+    <ClInclude Include="ktmtypes.h" />
+    <ClInclude Include="l2cmn.h" />
+    <ClInclude Include="largeint.h" />
+    <ClInclude Include="lm.h" />
+    <ClInclude Include="lmaccess.h" />
+    <ClInclude Include="lmalert.h" />
+    <ClInclude Include="lmapibuf.h" />
+    <ClInclude Include="lmat.h" />
+    <ClInclude Include="lmaudit.h" />
+    <ClInclude Include="lmchdev.h" />
+    <ClInclude Include="lmconfig.h" />
+    <ClInclude Include="lmcons.h" />
+    <ClInclude Include="lmerr.h" />
+    <ClInclude Include="lmerrlog.h" />
+    <ClInclude Include="lmjoin.h" />
+    <ClInclude Include="lmmsg.h" />
+    <ClInclude Include="lmon.h" />
+    <ClInclude Include="lmremutl.h" />
+    <ClInclude Include="lmrepl.h" />
+    <ClInclude Include="lmserver.h" />
+    <ClInclude Include="lmshare.h" />
+    <ClInclude Include="lmsname.h" />
+    <ClInclude Include="lmstats.h" />
+    <ClInclude Include="lmsvc.h" />
+    <ClInclude Include="lmuse.h" />
+    <ClInclude Include="lmuseflg.h" />
+    <ClInclude Include="lmwksta.h" />
+    <ClInclude Include="loadperf.h" />
+    <ClInclude Include="lzexpand.h" />
+    <ClInclude Include="mapi.h" />
+    <ClInclude Include="mapicode.h" />
+    <ClInclude Include="mapidefs.h" />
+    <ClInclude Include="mapiform.h" />
+    <ClInclude Include="mapiguid.h" />
+    <ClInclude Include="mapitags.h" />
+    <ClInclude Include="mapiutil.h" />
+    <ClInclude Include="mapival.h" />
+    <ClInclude Include="mapix.h" />
+    <ClInclude Include="mciavi.h" />
+    <ClInclude Include="mcx.h" />
+    <ClInclude Include="mgmtapi.h" />
+    <ClInclude Include="midles.h" />
+    <ClInclude Include="mmddk.h" />
+    <ClInclude Include="mmreg.h" />
+    <ClInclude Include="mmsystem.h" />
+    <ClInclude Include="mprapi.h" />
+    <ClInclude Include="msacm.h" />
+    <ClInclude Include="msacmdlg.h" />
+    <ClInclude Include="mscat.h" />
+    <ClInclude Include="mshtmcid.h" />
+    <ClInclude Include="mshtmdid.h" />
+    <ClInclude Include="msi.h" />
+    <ClInclude Include="msidefs.h" />
+    <ClInclude Include="msiquery.h" />
+    <ClInclude Include="mssip.h" />
+    <ClInclude Include="mstcpip.h" />
+    <ClInclude Include="mswsock.h" />
+    <ClInclude Include="mswsockdef.h" />
+    <ClInclude Include="msxml2did.h" />
+    <ClInclude Include="msxml6did.h" />
+    <ClInclude Include="msxmldid.h" />
+    <ClInclude Include="multimon.h" />
+    <ClInclude Include="nb30.h" />
+    <ClInclude Include="nddeapi.h" />
+    <ClInclude Include="ndrtypes.h" />
+    <ClInclude Include="netcfgn.h" />
+    <ClInclude Include="netcfgx.h" />
+    <ClInclude Include="netcon.h" />
+    <ClInclude Include="netevent.h" />
+    <ClInclude Include="netioapi.h" />
+    <ClInclude Include="netiodef.h" />
+    <ClInclude Include="nettypes.h" />
+    <ClInclude Include="newdev.h" />
+    <ClInclude Include="nldef.h" />
+    <ClInclude Include="npapi.h" />
+    <ClInclude Include="nspapi.h" />
+    <ClInclude Include="ntdd1394.h" />
+    <ClInclude Include="ntdd8042.h" />
+    <ClInclude Include="ntddbeep.h" />
+    <ClInclude Include="ntddcdrm.h" />
+    <ClInclude Include="ntddcdvd.h" />
+    <ClInclude Include="ntddchgr.h" />
+    <ClInclude Include="ntdddisk.h" />
+    <ClInclude Include="ntddft.h" />
+    <ClInclude Include="ntddkbd.h" />
+    <ClInclude Include="ntddmmc.h" />
+    <ClInclude Include="ntddmou.h" />
+    <ClInclude Include="ntddndis.h" />
+    <ClInclude Include="ntddpar.h" />
+    <ClInclude Include="ntddscsi.h" />
+    <ClInclude Include="ntddser.h" />
+    <ClInclude Include="ntddstor.h" />
+    <ClInclude Include="ntddtape.h" />
+    <ClInclude Include="ntddtdi.h" />
+    <ClInclude Include="ntddvdeo.h" />
+    <ClInclude Include="ntddvol.h" />
+    <ClInclude Include="ntdef.h" />
+    <ClInclude Include="ntdll.h" />
+    <ClInclude Include="ntdsapi.h" />
+    <ClInclude Include="ntgdi.h" />
+    <ClInclude Include="ntiologc.h" />
+    <ClInclude Include="ntldap.h" />
+    <ClInclude Include="ntlsa.h" />
+    <ClInclude Include="ntquery.h" />
+    <ClInclude Include="ntsecapi.h" />
+    <ClInclude Include="ntsecpkg.h" />
+    <ClInclude Include="ntstatus.h" />
+    <ClInclude Include="ntverp.h" />
+    <ClInclude Include="objbase.h" />
+    <ClInclude Include="objerror.h" />
+    <ClInclude Include="objfwd.h" />
+    <ClInclude Include="objsel.h" />
+    <ClInclude Include="odbcinst.h" />
+    <ClInclude Include="ole.h" />
+    <ClInclude Include="ole2.h" />
+    <ClInclude Include="ole2ver.h" />
+    <ClInclude Include="oleauto.h" />
+    <ClInclude Include="olectl.h" />
+    <ClInclude Include="olectlid.h" />
+    <ClInclude Include="oledlg.h" />
+    <ClInclude Include="pbt.h" />
+    <ClInclude Include="pdh.h" />
+    <ClInclude Include="pdhmsg.h" />
+    <ClInclude Include="polarity.h" />
+    <ClInclude Include="poppack.h" />
+    <ClInclude Include="powrprof.h" />
+    <ClInclude Include="prntfont.h" />
+    <ClInclude Include="propkey.h" />
+    <ClInclude Include="propkeydef.h" />
+    <ClInclude Include="propvarutil.h" />
+    <ClInclude Include="prsht.h" />
+    <ClInclude Include="psapi.h" />
+    <ClInclude Include="pshpack1.h" />
+    <ClInclude Include="pshpack2.h" />
+    <ClInclude Include="pshpack4.h" />
+    <ClInclude Include="pshpack8.h" />
+    <ClInclude Include="pshpck16.h" />
+    <ClInclude Include="qos.h" />
+    <ClInclude Include="rapi.h" />
+    <ClInclude Include="ras.h" />
+    <ClInclude Include="rasdlg.h" />
+    <ClInclude Include="raseapif.h" />
+    <ClInclude Include="raserror.h" />
+    <ClInclude Include="rassapi.h" />
+    <ClInclude Include="rasshost.h" />
+    <ClInclude Include="reason.h" />
+    <ClInclude Include="regstr.h" />
+    <ClInclude Include="richedit.h" />
+    <ClInclude Include="rpc.h" />
+    <ClInclude Include="rpcasync.h" />
+    <ClInclude Include="rpcdce.h" />
+    <ClInclude Include="rpcdce2.h" />
+    <ClInclude Include="rpcdcep.h" />
+    <ClInclude Include="rpcndr.h" />
+    <ClInclude Include="rpcnsi.h" />
+    <ClInclude Include="rpcnsip.h" />
+    <ClInclude Include="rpcnterr.h" />
+    <ClInclude Include="rpcproxy.h" />
+    <ClInclude Include="sal.h" />
+    <ClInclude Include="sal_old.h" />
+    <ClInclude Include="scarderr.h" />
+    <ClInclude Include="schannel.h" />
+    <ClInclude Include="schemadef.h" />
+    <ClInclude Include="schnlsp.h" />
+    <ClInclude Include="scrnsave.h" />
+    <ClInclude Include="sddl.h" />
+    <ClInclude Include="sdkddkver.h" />
+    <ClInclude Include="secext.h" />
+    <ClInclude Include="security.h" />
+    <ClInclude Include="sensapi.h" />
+    <ClInclude Include="setupapi.h" />
+    <ClInclude Include="sfc.h" />
+    <ClInclude Include="shdispid.h" />
+    <ClInclude Include="shellapi.h" />
+    <ClInclude Include="shlguid.h" />
+    <ClInclude Include="shlguid_undoc.h" />
+    <ClInclude Include="shlobj.h" />
+    <ClInclude Include="shlobj_undoc.h" />
+    <ClInclude Include="shlwapi.h" />
+    <ClInclude Include="shlwapi_undoc.h" />
+    <ClInclude Include="snmp.h" />
+    <ClInclude Include="softpub.h" />
+    <ClInclude Include="specstrings.h" />
+    <ClInclude Include="sql.h" />
+    <ClInclude Include="sqlext.h" />
+    <ClInclude Include="sqltypes.h" />
+    <ClInclude Include="sqlucode.h" />
+    <ClInclude Include="srrestoreptapi.h" />
+    <ClInclude Include="sspi.h" />
+    <ClInclude Include="sti.h" />
+    <ClInclude Include="stierr.h" />
+    <ClInclude Include="stireg.h" />
+    <ClInclude Include="strsafe.h" />
+    <ClInclude Include="subauth.h" />
+    <ClInclude Include="suppress.h" />
+    <ClInclude Include="svcguid.h" />
+    <ClInclude Include="svrapi.h" />
+    <ClInclude Include="t2embapi.h" />
+    <ClInclude Include="tapi.h" />
+    <ClInclude Include="tcpioctl.h" />
+    <ClInclude Include="tdi.h" />
+    <ClInclude Include="tdiinfo.h" />
+    <ClInclude Include="textserv.h" />
+    <ClInclude Include="tlhelp32.h" />
+    <ClInclude Include="tmschema.h" />
+    <ClInclude Include="traffic.h" />
+    <ClInclude Include="tvout.h" />
+    <ClInclude Include="twain.h" />
+    <ClInclude Include="unknown.h" />
+    <ClInclude Include="usb.h" />
+    <ClInclude Include="usb100.h" />
+    <ClInclude Include="usb200.h" />
+    <ClInclude Include="usbcamdi.h" />
+    <ClInclude Include="usbdi.h" />
+    <ClInclude Include="usbioctl.h" />
+    <ClInclude Include="usbiodef.h" />
+    <ClInclude Include="usbrpmif.h" />
+    <ClInclude Include="usbuser.h" />
+    <ClInclude Include="userenv.h" />
+    <ClInclude Include="usp10.h" />
+    <ClInclude Include="uxtheme.h" />
+    <ClInclude Include="vfw.h" />
+    <ClInclude Include="vfwmsgs.h" />
+    <ClInclude Include="vsstyle.h" />
+    <ClInclude Include="vssym32.h" />
+    <ClInclude Include="w32api.h" />
+    <ClInclude Include="warning.h" />
+    <ClInclude Include="wdbgexts.h" />
+    <ClInclude Include="werapi.h" />
+    <ClInclude Include="wia.h" />
+    <ClInclude Include="winable.h" />
+    <ClInclude Include="winbase.h" />
+    <ClInclude Include="winber.h" />
+    <ClInclude Include="wincon.h" />
+    <ClInclude Include="wincred.h" />
+    <ClInclude Include="wincrypt.h" />
+    <ClInclude Include="winddi.h" />
+    <ClInclude Include="winddiui.h" />
+    <ClInclude Include="windef.h" />
+    <ClInclude Include="windns.h" />
+    <ClInclude Include="windot11.h" />
+    <ClInclude Include="windows.h" />
+    <ClInclude Include="windowsx.h" />
+    <ClInclude Include="winefs.h" />
+    <ClInclude Include="winerror.h" />
+    <ClInclude Include="winfax.h" />
+    <ClInclude Include="wingdi.h" />
+    <ClInclude Include="winhttp.h" />
+    <ClInclude Include="wininet.h" />
+    <ClInclude Include="winineti.h" />
+    <ClInclude Include="winioctl.h" />
+    <ClInclude Include="winldap.h" />
+    <ClInclude Include="winnetwk.h" />
+    <ClInclude Include="winnls.h" />
+    <ClInclude Include="winnls32.h" />
+    <ClInclude Include="winnt.h" />
+    <ClInclude Include="winperf.h" />
+    <ClInclude Include="winreg.h" />
+    <ClInclude Include="winres.h" />
+    <ClInclude Include="winresrc.h" />
+    <ClInclude Include="winsafer.h" />
+    <ClInclude Include="winscard.h" />
+    <ClInclude Include="winsmcrd.h" />
+    <ClInclude Include="winsnmp.h" />
+    <ClInclude Include="winsock.h" />
+    <ClInclude Include="winsock2.h" />
+    <ClInclude Include="winsplp.h" />
+    <ClInclude Include="winspool.h" />
+    <ClInclude Include="winsvc.h" />
+    <ClInclude Include="winternl.h" />
+    <ClInclude Include="wintrust.h" />
+    <ClInclude Include="winuser.h" />
+    <ClInclude Include="winver.h" />
+    <ClInclude Include="winwlx.h" />
+    <ClInclude Include="wlanapi.h" />
+    <ClInclude Include="wlantypes.h" />
+    <ClInclude Include="wmistr.h" />
+    <ClInclude Include="ws2atm.h" />
+    <ClInclude Include="ws2bth.h" />
+    <ClInclude Include="ws2def.h" />
+    <ClInclude Include="ws2ipdef.h" />
+    <ClInclude Include="ws2spi.h" />
+    <ClInclude Include="ws2tcpip.h" />
+    <ClInclude Include="wsahelp.h" />
+    <ClInclude Include="wsipv6ok.h" />
+    <ClInclude Include="wsipx.h" />
+    <ClInclude Include="wsnetbs.h" />
+    <ClInclude Include="wspiapi.h" />
+    <ClInclude Include="wtsapi32.h" />
+    <ClInclude Include="xcmc.h" />
+    <ClInclude Include="xinput.h" />
+    <ClInclude Include="xmldom.h" />
+    <ClInclude Include="xmldomdid.h" />
+    <ClInclude Include="xmldsodid.h" />
+    <ClInclude Include="xprtdefs.h" />
+    <ClInclude Include="zmouse.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="access.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="activaut.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="activdbg.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="activscp.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="asptlb.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="asynot.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="asysta.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="atliface.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="audioclient.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="bdaiface.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="binres.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="bits.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="bits1_5.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="cmdbas.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="cmdtxt.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="comcat.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="commoncontrols.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="control.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="cor.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="cordebug.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="crtrow.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="ctfutb.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="ctxtcall.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="dbccmd.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="dbcses.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="dbdsad.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="dbinit.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="dbprop.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="dbs.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="devenum.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="dimm.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="dispex.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="docobj.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="downloadmgr.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="dyngraph.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="exdisp.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="fusion.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="hlink.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="htiframe.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="httprequest.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="iads.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="icftypes.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="imnact.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="imnxport.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="indexsrv.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="metahost.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="mimeinfo.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="mimeole.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="mlang.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="mmdeviceapi.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="mscoree.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="msctf.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="msdadc.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="mshtmhst.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="mshtml.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="msinkaut.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="mstask.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="msxml.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="msxml2.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="msxml6.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="netcon.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="netfw.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="oaidl.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="objectarray.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="objidl.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="objsafe.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="ocidl.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="ocmm.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="oleacc.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="oledb.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="oleidl.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="opnrst.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="optary.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="perhist.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="propidl.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="propsys.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="pstore.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="richole.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="row.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="rowchg.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="rstbas.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="rstinf.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="rstloc.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="sensevts.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="servprov.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="sesprp.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="shdeprecated.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="shldisp.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="shobjidl.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="shtypes.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="stdole2.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="strmif.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="structuredquerycondition.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="textstor.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="tom.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="tuner.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="unknwn.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="urlhist.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="urlmon.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="vmr9.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="vmrender.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="wbemcli.idl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="wia_lh.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="wia_xp.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="wincodec.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="wincodecsdk.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="winsxs.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="wtypes.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="wuapi.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="xmldom.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="xmldso.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="xmllite.idl">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\tools\widl\$(OutDir)\widl.exe" -h -I . -I ..\..\include\dxsdk -o "$(OutDir)\%(Filename).h" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).h</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIDL.EXE is compiling %(FullPath)</Message>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="common.ver" />
+    <None Include="README.w32api" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\widl\widl.vcxproj">
+      <Project>{532400e1-c173-42e2-801b-3d9c3f2dfca9}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

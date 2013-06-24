@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6CDF09A6-5013-4ED3-98BA-DA7571324FA2}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>unicode</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;inline=;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\host;..\..\include\crt;..\..\include\psdk;..\..\include\crt\msc</AdditionalIncludeDirectories>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\host;..\..\include\crt;..\..\include\psdk;..\..\include\crt\msc</AdditionalIncludeDirectories>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="casemap.c" />
+    <ClCompile Include="collation.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="compose.c" />
+    <ClCompile Include="cptable.c" />
+    <ClCompile Include="c_037.c" />
+    <ClCompile Include="c_10000.c" />
+    <ClCompile Include="c_10006.c" />
+    <ClCompile Include="c_10007.c" />
+    <ClCompile Include="c_10029.c" />
+    <ClCompile Include="c_1006.c" />
+    <ClCompile Include="c_10079.c" />
+    <ClCompile Include="c_10081.c" />
+    <ClCompile Include="c_1026.c" />
+    <ClCompile Include="c_1250.c" />
+    <ClCompile Include="c_1251.c" />
+    <ClCompile Include="c_1252.c" />
+    <ClCompile Include="c_1253.c" />
+    <ClCompile Include="c_1254.c" />
+    <ClCompile Include="c_1255.c" />
+    <ClCompile Include="c_1256.c" />
+    <ClCompile Include="c_1257.c" />
+    <ClCompile Include="c_1258.c" />
+    <ClCompile Include="c_1361.c" />
+    <ClCompile Include="c_20127.c" />
+    <ClCompile Include="c_20866.c" />
+    <ClCompile Include="c_20932.c" />
+    <ClCompile Include="c_21866.c" />
+    <ClCompile Include="c_28591.c" />
+    <ClCompile Include="c_28592.c" />
+    <ClCompile Include="c_28593.c" />
+    <ClCompile Include="c_28594.c" />
+    <ClCompile Include="c_28595.c" />
+    <ClCompile Include="c_28596.c" />
+    <ClCompile Include="c_28597.c" />
+    <ClCompile Include="c_28598.c" />
+    <ClCompile Include="c_28599.c" />
+    <ClCompile Include="c_28600.c" />
+    <ClCompile Include="c_28603.c" />
+    <ClCompile Include="c_28604.c" />
+    <ClCompile Include="c_28605.c" />
+    <ClCompile Include="c_28606.c" />
+    <ClCompile Include="c_424.c" />
+    <ClCompile Include="c_437.c" />
+    <ClCompile Include="c_500.c" />
+    <ClCompile Include="c_737.c" />
+    <ClCompile Include="c_775.c" />
+    <ClCompile Include="c_850.c" />
+    <ClCompile Include="c_852.c" />
+    <ClCompile Include="c_855.c" />
+    <ClCompile Include="c_856.c" />
+    <ClCompile Include="c_857.c" />
+    <ClCompile Include="c_860.c" />
+    <ClCompile Include="c_861.c" />
+    <ClCompile Include="c_862.c" />
+    <ClCompile Include="c_863.c" />
+    <ClCompile Include="c_864.c" />
+    <ClCompile Include="c_865.c" />
+    <ClCompile Include="c_866.c" />
+    <ClCompile Include="c_869.c" />
+    <ClCompile Include="c_874.c" />
+    <ClCompile Include="c_875.c" />
+    <ClCompile Include="c_878.c" />
+    <ClCompile Include="c_932.c" />
+    <ClCompile Include="c_936.c" />
+    <ClCompile Include="c_949.c" />
+    <ClCompile Include="c_950.c" />
+    <ClCompile Include="fold.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="mbtowc.c" />
+    <ClCompile Include="sortkey.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="string.c" />
+    <ClCompile Include="utf8.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="wctomb.c" />
+    <ClCompile Include="wctype.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="cpmap.pl" />
+    <None Include="defaults" />
+    <None Include="wine_unicode.def" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

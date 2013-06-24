@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="lang">
+      <UniqueIdentifier>{573ce210-9d58-493c-b20c-381d18a60108}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="res">
+      <UniqueIdentifier>{8a2be7f0-90ca-4c17-8e9a-d30ab811d8ed}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="res\auto_hide.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\lock_group_noql.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\lock_group_ql.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\lock_nogroup_noql.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\lock_nogroup_ql.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\logov.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\nolock_group_noql.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\nolock_group_ql.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\nolock_nogroup_noql.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\nolock_nogroup_ql.bmp">
+      <Filter>res</Filter>
+    </None>
+    <None Include="res\start.ico">
+      <Filter>res</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="comcsup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="precomp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="todo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="undoc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="desktop.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dragdrop.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="explorer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="settings.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="startmnu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="startup.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="taskband.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="taskswnd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tbsite.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="trayntfy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="trayprop.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="traywnd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="explorer.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="explorer.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\bg-BG.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\cs-CZ.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\de-DE.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\en-US.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\es-ES.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\fr-FR.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\he-IL.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\it-IT.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\ja-JP.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\ko-KR.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\lt-LT.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\nl-NL.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\no-NO.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\pl-PL.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\pt-BR.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\ro-RO.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\ru-RU.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\sk-SK.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\uk-UA.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="lang\zh-CN.rc">
+      <Filter>lang</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

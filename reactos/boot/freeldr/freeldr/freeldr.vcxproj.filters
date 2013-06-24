@@ -1,0 +1,619 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="arcemul">
+      <UniqueIdentifier>{f66434c1-7ef1-4d8d-8727-d81cf6dced51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arch">
+      <UniqueIdentifier>{8a3deef4-0480-4061-a79c-7565de8efd64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arch\amd64">
+      <UniqueIdentifier>{17f45fac-7449-4e39-8c45-c40abd05e062}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arch\arm">
+      <UniqueIdentifier>{2c2d7bf5-74fb-4446-8fed-6a23fd99c8da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arch\realmode">
+      <UniqueIdentifier>{124b5e74-99be-495d-88b8-9b3d3c2dbed4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arch\powerpc">
+      <UniqueIdentifier>{c430d469-9704-4ccb-bdeb-db2f020ee15d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arch\i386">
+      <UniqueIdentifier>{54dc3e76-b256-44e0-a4de-dab6436cb17d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cache">
+      <UniqueIdentifier>{1f860699-5f32-4de3-a7de-cd91cd13fb25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="comm">
+      <UniqueIdentifier>{d28b5d5a-12e4-4ac3-8cda-47226f734a56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="disk">
+      <UniqueIdentifier>{27212c40-7bf2-40b2-a0b2-0d35c18f2d0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="fs">
+      <UniqueIdentifier>{0c49a8af-2034-4e85-92f7-ab9f5a6a9ebf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{6f3d3260-6ab2-4fad-845d-c189929c4458}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\arch">
+      <UniqueIdentifier>{61218bdb-024b-4a84-917f-747e2b57188a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\fs">
+      <UniqueIdentifier>{b82abf66-ed69-411e-aaf1-873c4cca95eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ui">
+      <UniqueIdentifier>{c351a7bc-1f98-4a2d-a7bc-a43c8285f64b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\arch\amd64">
+      <UniqueIdentifier>{a52f846b-1172-4f37-83b2-eac159045f7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\arch\arm">
+      <UniqueIdentifier>{4d56b281-d833-4e75-b73b-8589a53e85e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\arch\i386">
+      <UniqueIdentifier>{3a8b326f-ca27-42ad-afcf-3ff8423a9771}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\arch\powerpc">
+      <UniqueIdentifier>{8f4cb0e4-13f8-431b-b3fe-b730a42040af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\arch\pc">
+      <UniqueIdentifier>{64aab0a4-fbc4-4476-83d9-3f04d6a7ef0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inffile">
+      <UniqueIdentifier>{92c8f626-ce01-4ce6-bd8a-225c4f41d559}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inifile">
+      <UniqueIdentifier>{090c2d2d-2f06-4bd4-b77a-5625309ff189}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mm">
+      <UniqueIdentifier>{e93e5d61-09cb-45ac-b4fc-af5594b46d23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="reactos">
+      <UniqueIdentifier>{b4e1d4aa-b048-4046-8ad5-0eec50c7c051}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rtl">
+      <UniqueIdentifier>{640822b9-97f3-454c-8076-0e1c155afcd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ui">
+      <UniqueIdentifier>{884c0cb0-5b21-445f-86b7-f09e3b497b5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="video">
+      <UniqueIdentifier>{41620f53-d8b7-4954-af62-64f694a9e0f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="windows">
+      <UniqueIdentifier>{b3b20688-fce6-466a-92d9-b6bb7f1e7157}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="bootmgr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="freeldr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="linuxboot.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="arcemul\time.c">
+      <Filter>arcemul</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\amd64\winldr.c">
+      <Filter>arch\amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\arm\macharm.c">
+      <Filter>arch\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\arm\winldr.c">
+      <Filter>arch\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\archmach.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\custom.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\drivemap.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\halstub.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\hardware.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\hwacpi.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\hwapm.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\hwdisk.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\hwpci.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\i386bug.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\i386disk.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\i386idt.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\i386rtl.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\i386vid.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\machpc.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\machxbox.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\miscboot.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\ntoskrnl.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\pccons.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\pcdisk.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\pcmem.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\pcrtc.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\pcvideo.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\winldr.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\xboxcons.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\xboxdisk.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\xboxfont.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\xboxhw.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\xboxi2c.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\xboxmem.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\xboxrtc.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\i386\xboxvideo.c">
+      <Filter>arch\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\loader.c">
+      <Filter>arch\powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\mach.c">
+      <Filter>arch\powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\mboot.c">
+      <Filter>arch\powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\mmu.c">
+      <Filter>arch\powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\ofw_method.c">
+      <Filter>arch\powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\prep.c">
+      <Filter>arch\powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\prep_ide.c">
+      <Filter>arch\powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\prep_pci.c">
+      <Filter>arch\powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\prep_vga.c">
+      <Filter>arch\powerpc</Filter>
+    </ClCompile>
+    <ClCompile Include="cache\blocklist.c">
+      <Filter>cache</Filter>
+    </ClCompile>
+    <ClCompile Include="cache\cache.c">
+      <Filter>cache</Filter>
+    </ClCompile>
+    <ClCompile Include="comm\rs232.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="disk\disk.c">
+      <Filter>disk</Filter>
+    </ClCompile>
+    <ClCompile Include="disk\partition.c">
+      <Filter>disk</Filter>
+    </ClCompile>
+    <ClCompile Include="disk\ramdisk.c">
+      <Filter>disk</Filter>
+    </ClCompile>
+    <ClCompile Include="disk\scsiport.c">
+      <Filter>disk</Filter>
+    </ClCompile>
+    <ClCompile Include="fs\ext2.c">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="fs\fat.c">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="fs\fs.c">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="fs\iso.c">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="fs\ntfs.c">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="fs\pxe.c">
+      <Filter>fs</Filter>
+    </ClCompile>
+    <ClCompile Include="inifile\ini_init.c">
+      <Filter>inifile</Filter>
+    </ClCompile>
+    <ClCompile Include="inifile\inifile.c">
+      <Filter>inifile</Filter>
+    </ClCompile>
+    <ClCompile Include="inifile\parse.c">
+      <Filter>inifile</Filter>
+    </ClCompile>
+    <ClCompile Include="mm\heap.c">
+      <Filter>mm</Filter>
+    </ClCompile>
+    <ClCompile Include="mm\meminit.c">
+      <Filter>mm</Filter>
+    </ClCompile>
+    <ClCompile Include="mm\mm.c">
+      <Filter>mm</Filter>
+    </ClCompile>
+    <ClCompile Include="reactos\binhive.c">
+      <Filter>reactos</Filter>
+    </ClCompile>
+    <ClCompile Include="reactos\archwsup.c">
+      <Filter>reactos</Filter>
+    </ClCompile>
+    <ClCompile Include="reactos\arcname.c">
+      <Filter>reactos</Filter>
+    </ClCompile>
+    <ClCompile Include="reactos\registry.c">
+      <Filter>reactos</Filter>
+    </ClCompile>
+    <ClCompile Include="rtl\libsupp.c">
+      <Filter>rtl</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\directui.c">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\gui.c">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\minitui.c">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\noui.c">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\tui.c">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\tuimenu.c">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui.c">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="video\fade.c">
+      <Filter>video</Filter>
+    </ClCompile>
+    <ClCompile Include="video\palette.c">
+      <Filter>video</Filter>
+    </ClCompile>
+    <ClCompile Include="video\video.c">
+      <Filter>video</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\conversion.c">
+      <Filter>windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\headless.c">
+      <Filter>windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\peloader.c">
+      <Filter>windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\setupldr.c">
+      <Filter>windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\winldr.c">
+      <Filter>windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\wlmemory.c">
+      <Filter>windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\wlregistry.c">
+      <Filter>windows</Filter>
+    </ClCompile>
+    <ClCompile Include="machine.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="options.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="oslist.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="version.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cmdline.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="inffile\inffile.c">
+      <Filter>inffile</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CHANGELOG" />
+    <None Include="CMakeLists.txt" />
+    <None Include="freeldr.spec" />
+    <None Include="freeldr_amd64.lds" />
+    <None Include="freeldr_arm.lds" />
+    <None Include="freeldr_i386.lds" />
+    <None Include="arch\amd64\entry.S">
+      <Filter>arch\amd64</Filter>
+    </None>
+    <None Include="arch\amd64\int386.S">
+      <Filter>arch\amd64</Filter>
+    </None>
+    <None Include="arch\amd64\pnpbios.S">
+      <Filter>arch\amd64</Filter>
+    </None>
+    <None Include="arch\arm\boot.s">
+      <Filter>arch\arm</Filter>
+    </None>
+    <None Include="arch\i386\multiboot.S">
+      <Filter>arch\i386</Filter>
+    </None>
+    <None Include="arch\powerpc\boot.s">
+      <Filter>arch\powerpc</Filter>
+    </None>
+    <None Include="arch\powerpc\ofw_util.s">
+      <Filter>arch\powerpc</Filter>
+    </None>
+    <None Include="arch\realmode\amd64.S">
+      <Filter>arch\realmode</Filter>
+    </None>
+    <None Include="arch\realmode\fathelp.inc">
+      <Filter>arch\realmode</Filter>
+    </None>
+    <None Include="arch\realmode\helpers.inc">
+      <Filter>arch\realmode</Filter>
+    </None>
+    <None Include="arch\realmode\int386.inc">
+      <Filter>arch\realmode</Filter>
+    </None>
+    <None Include="arch\realmode\linux.inc">
+      <Filter>arch\realmode</Filter>
+    </None>
+    <None Include="arch\realmode\pnp.inc">
+      <Filter>arch\realmode</Filter>
+    </None>
+    <None Include="arch\realmode\pxe.inc">
+      <Filter>arch\realmode</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="arch\powerpc\compat.h">
+      <Filter>arch\powerpc</Filter>
+    </ClInclude>
+    <ClInclude Include="arch\powerpc\prep.h">
+      <Filter>arch\powerpc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\amd64\amd64.h">
+      <Filter>include\arch\amd64</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\arm\hardware.h">
+      <Filter>include\arch\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\i386\custom.h">
+      <Filter>include\arch\i386</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\i386\drivemap.h">
+      <Filter>include\arch\i386</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\i386\i386.h">
+      <Filter>include\arch\i386</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\i386\machxbox.h">
+      <Filter>include\arch\i386</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\i386\miscboot.h">
+      <Filter>include\arch\i386</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\pc\hardware.h">
+      <Filter>include\arch\pc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\pc\machpc.h">
+      <Filter>include\arch\pc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\pc\pcbios.h">
+      <Filter>include\arch\pc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\pc\pxe.h">
+      <Filter>include\arch\pc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\pc\x86common.h">
+      <Filter>include\arch\pc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arch\powerpc\hardware.h">
+      <Filter>include\arch\powerpc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fs\ext2.h">
+      <Filter>include\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fs\fat.h">
+      <Filter>include\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fs\iso.h">
+      <Filter>include\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fs\ntfs.h">
+      <Filter>include\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fs\pxe.h">
+      <Filter>include\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ui\gui.h">
+      <Filter>include\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ui\minitui.h">
+      <Filter>include\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ui\noui.h">
+      <Filter>include\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ui\tui.h">
+      <Filter>include\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\arcemul.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\bytesex.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\cache.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\cmdline.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\comm.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\debug.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\disk.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\freeldr.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fs.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\inffile.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\inifile.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\keycodes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\linux.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\machine.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mm.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\multiboot.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ntoskrnl.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\of.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\options.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\oslist.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ramdisk.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\reactos.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\registry.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ui.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ver.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\video.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\winldr.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="arch\i386\drvmap.S">
+      <Filter>arch\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\entry.S">
+      <Filter>arch\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\i386pnp.S">
+      <Filter>arch\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\i386trap.S">
+      <Filter>arch\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="arch\realmode\i386.S">
+      <Filter>arch\realmode</Filter>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\linux.S">
+      <Filter>arch\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\mb.S">
+      <Filter>arch\i386</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

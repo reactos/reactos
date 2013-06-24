@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="halx86">
+      <UniqueIdentifier>{bda4032d-fefd-434d-b6f9-2c9f8ba63d44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\generic">
+      <UniqueIdentifier>{642921be-7de5-4e18-a8a4-1890eda64098}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\halx86\generic\beep.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\bios.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\cmos.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\display.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\dma.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\drive.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\halinit.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\memory.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\misc.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\portio.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\reboot.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\sysinfo.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\usage.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\CMakeLists.txt" />
+    <None Include="..\halx86\generic.cmake" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\halx86\generic\v86.S">
+      <Filter>halx86\generic</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

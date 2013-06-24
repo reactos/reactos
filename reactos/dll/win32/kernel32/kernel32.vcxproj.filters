@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="client">
+      <UniqueIdentifier>{db886d5d-968f-4bb3-b270-786680e6c96b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="wine">
+      <UniqueIdentifier>{52d99469-2445-4f58-b670-0f24e2e6e329}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="winnls">
+      <UniqueIdentifier>{364dbea6-3684-4857-aa4e-6c9805bba1f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{3cc96de1-8f41-4b87-8fef-22dd23c21a33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="client\amd64">
+      <UniqueIdentifier>{8cafaaab-4e50-4124-ace1-b2f2e280a69a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="client\i386">
+      <UniqueIdentifier>{bd67470b-5791-4ac9-8b56-37d709a07022}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="client\console">
+      <UniqueIdentifier>{a575f2da-9af6-4f63-8d72-91762c4b4c42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="client\file">
+      <UniqueIdentifier>{9bd0a7cc-3381-4f45-915b-43658d5d2cf5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="kernel32.spec" />
+    <None Include="client\amd64\fiber.S">
+      <Filter>client\amd64</Filter>
+    </None>
+    <None Include="client\amd64\thread.S">
+      <Filter>client\amd64</Filter>
+    </None>
+    <None Include="client\i386\fiber.S">
+      <Filter>client\i386</Filter>
+    </None>
+    <None Include="client\i386\thread.S">
+      <Filter>client\i386</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="k32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\base_x.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\baseheap.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\console.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\kernel32.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="kernel32.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="client\appcache.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\atom.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\compname.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\debugger.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\dllmain.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\dosdev.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\environ.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\except.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\fiber.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\handle.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\heapmem.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\job.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\loader.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\path.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\perfcnt.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\power.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\proc.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\resntfy.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\session.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\synch.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\sysinfo.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\thread.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\time.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\timerqueue.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\toolhelp.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\utils.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\vdm.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\version.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\virtmem.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\vista.c">
+      <Filter>client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\console\alias.c">
+      <Filter>client\console</Filter>
+    </ClCompile>
+    <ClCompile Include="client\console\console.c">
+      <Filter>client\console</Filter>
+    </ClCompile>
+    <ClCompile Include="client\console\history.c">
+      <Filter>client\console</Filter>
+    </ClCompile>
+    <ClCompile Include="client\console\init.c">
+      <Filter>client\console</Filter>
+    </ClCompile>
+    <ClCompile Include="client\console\readwrite.c">
+      <Filter>client\console</Filter>
+    </ClCompile>
+    <ClCompile Include="client\console\vista.c">
+      <Filter>client\console</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\backup.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\cnotify.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\copy.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\create.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\delete.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\deviceio.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\dir.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\fileinfo.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\filemap.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\filename.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\find.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\hardlink.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\iocompl.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\lfile.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\lock.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\mailslot.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\move.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\npipe.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\rw.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\tape.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+    <ClCompile Include="client\file\volume.c">
+      <Filter>client\file</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

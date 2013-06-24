@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="halx86">
+      <UniqueIdentifier>{36341592-7da5-4107-8d1f-bdfe5880341a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\legacy">
+      <UniqueIdentifier>{fc2c0825-e32a-45a5-b6eb-ffe989dcddde}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\legacy\bus">
+      <UniqueIdentifier>{486c13b2-10f5-46d6-97e8-e3f5c53376df}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\halx86\legacy\bussupp.c">
+      <Filter>halx86\legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\halpcat.c">
+      <Filter>halx86\legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\halpnpdd.c">
+      <Filter>halx86\legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\bushndlr.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\cmosbus.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\isabus.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\pcibus.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\sysbus.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="build\x86_32\pci_classes.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="build\x86_32\pci_vendors.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\CMakeLists.txt" />
+    <None Include="..\halx86\legacy.cmake" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\halx86\legacy\bus\pci_classes.ids">
+      <Filter>halx86\legacy\bus</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\halx86\legacy\bus\pci_vendors.ids">
+      <Filter>halx86\legacy\bus</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="build\x86_32\pci_classes.h">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

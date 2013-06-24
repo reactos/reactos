@@ -1,0 +1,1691 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="accctrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="aclapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="aclui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="adshlp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="advpub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="af_irda.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="afxres.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="appmgmt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="atsmedia.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="audiosessiontypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="authz.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="basetsd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="basetyps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="batclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bcrypt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bitsmsg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cderr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cfg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cfgmgr32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cguid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cierror.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="clusapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="commctrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="commdlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="compstui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="concurrencysal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="corerror.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="corhdr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cplext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cryptdlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cryptuiapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="custcntl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cvconst.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d8.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d8types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d9.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3d9types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dnthal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3drm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3drmdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dtypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dx8core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dbghelp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dbt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dciman.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dde.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ddeml.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ddkernel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ddkmapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ddraw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ddrawgdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ddrawi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ddrawint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="delayimp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="devguid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="devioctl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="devpkey.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="devpropdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dhcpcapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dhcpcsdk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="digitalv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dinput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="diskguid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dlgs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dmemmgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dmksctrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dpfilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dplay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dplobby.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="driverspecs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dsgetdc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dsound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dsrole.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dvdevcod.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dvdmedia.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dvp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dwmapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="eaptypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="edevdefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="errorrep.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="evntprov.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="evntrace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="exdispid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fci.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusbase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusbrush.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdipluscolor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdipluscolormatrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdipluseffects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusenums.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusflat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusgpstubs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusgraphics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusheaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusimageattributes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusimaging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusinit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdipluslinecaps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusmatrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusmem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusmetafile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusmetaheader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdipluspath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdipluspen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdipluspixelformats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplusstringformat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gdiplustypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="guiddef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hidpi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hidusage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hlguids.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="htmlhelp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="http.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="httpext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="httprequestid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="i_cryptasn1tls.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="icm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="icmpapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="idispids.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="idndl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ieverp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ifdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imagehlp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="in6addr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inaddr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="initguid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="intsafe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="intshcut.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ioevent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ipexport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="iphlpapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ipifcons.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="iprtrmib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="iptypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="isguids.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kcom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="knownfolders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ksdebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ksmedia.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ksproxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ksuuids.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ktmtypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="l2cmn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="largeint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmaccess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmalert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmapibuf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmaudit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmchdev.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmcons.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmerr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmerrlog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmjoin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmmsg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmremutl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmrepl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmserver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmshare.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmsname.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmstats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmsvc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmuse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmuseflg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lmwksta.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="loadperf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lzexpand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapicode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapidefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapiform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapiguid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapitags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapiutil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapival.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mciavi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mcx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mgmtapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="midles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mmddk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mmreg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mmsystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mprapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msacm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msacmdlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mscat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mshtmcid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mshtmdid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msidefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msiquery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mssip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mstcpip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mswsock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mswsockdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msxml2did.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msxml6did.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="msxmldid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="multimon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nb30.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nddeapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ndrtypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="netcfgn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="netcfgx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="netcon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="netevent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="netioapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="netiodef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nettypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="newdev.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nldef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="npapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nspapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntdd1394.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntdd8042.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddbeep.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddcdrm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddcdvd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddchgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntdddisk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddft.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddkbd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddmmc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddmou.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddndis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddpar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddscsi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddstor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddtape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddtdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddvdeo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntddvol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntdll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntdsapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntgdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntiologc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntldap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntlsa.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntquery.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntsecapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntsecpkg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntstatus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ntverp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="objbase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="objerror.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="objfwd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="objsel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="odbcinst.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ole.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ole2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ole2ver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="oleauto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="olectl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="olectlid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="oledlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pbt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pdh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pdhmsg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="polarity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="poppack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="powrprof.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="prntfont.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="propkey.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="propkeydef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="propvarutil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="prsht.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="psapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pshpack1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pshpack2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pshpack4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pshpack8.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pshpck16.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="qos.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ras.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rasdlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="raseapif.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="raserror.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rassapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rasshost.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="reason.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="regstr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="richedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpcasync.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpcdce.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpcdce2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpcdcep.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpcndr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpcnsi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpcnsip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpcnterr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rpcproxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sal_old.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scarderr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="schannel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="schemadef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="schnlsp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scrnsave.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sddl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdkddkver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="secext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="security.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sensapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="setupapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sfc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shdispid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shellapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shlguid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shlguid_undoc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shlobj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shlobj_undoc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shlwapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shlwapi_undoc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="snmp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="softpub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="specstrings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sql.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sqltypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlucode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="srrestoreptapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sspi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sti.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stierr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stireg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="strsafe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="subauth.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="suppress.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="svcguid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="svrapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="t2embapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tcpioctl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tdiinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="textserv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tlhelp32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tmschema.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="traffic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tvout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="twain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="unknown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usb100.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usb200.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usbcamdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usbdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usbioctl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usbiodef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usbrpmif.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usbuser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="userenv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usp10.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="uxtheme.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vfw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vfwmsgs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsstyle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vssym32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="w32api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="warning.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wdbgexts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="werapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wia.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winbase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winber.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wincon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wincred.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wincrypt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winddi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winddiui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windot11.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windowsx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winerror.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winfax.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wingdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winhttp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wininet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winineti.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winioctl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winldap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winnetwk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winnls.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winnls32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winnt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winperf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winreg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winres.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winresrc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winsafer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winscard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winsmcrd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winsnmp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winsock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winsock2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winsplp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winspool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winsvc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winternl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wintrust.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winuser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winwlx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wlanapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wlantypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wmistr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ws2atm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ws2bth.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ws2def.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ws2ipdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ws2spi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ws2tcpip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wsahelp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wsipv6ok.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wsipx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wsnetbs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wspiapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtsapi32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xcmc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xinput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xmldom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xmldomdid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xmldsodid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xprtdefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zmouse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="common.ver" />
+    <None Include="README.w32api" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="mshtml.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="xmllite.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="xmldso.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="xmldom.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="wuapi.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="wtypes.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="winsxs.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="wincodec.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="wia_xp.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="wia_lh.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="wbemcli.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="vmrender.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="vmr9.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="urlmon.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="urlhist.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unknwn.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="tuner.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="tom.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="textstor.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="structuredquerycondition.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="strmif.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="stdole2.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shtypes.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shobjidl.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shldisp.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="shdeprecated.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="sesprp.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="servprov.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="sensevts.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="rstloc.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="rstinf.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="rstbas.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="rowchg.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="row.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="richole.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="pstore.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="propsys.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="propidl.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="perhist.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="optary.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="opnrst.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="wincodecsdk.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="oledb.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="oleacc.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ocmm.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ocidl.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="objsafe.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="objidl.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="objectarray.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="oaidl.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="netfw.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="netcon.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="msxml6.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="msxml2.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="msxml.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mstask.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="msinkaut.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mshtmhst.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="msdadc.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="msctf.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mscoree.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mmdeviceapi.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mlang.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mimeole.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mimeinfo.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="metahost.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="indexsrv.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="imnxport.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="imnact.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="icftypes.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="iads.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="httprequest.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="htiframe.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="hlink.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="fusion.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="oleidl.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dyngraph.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="downloadmgr.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="docobj.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dispex.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dimm.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="devenum.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dbs.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dbprop.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dbinit.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dbdsad.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dbcses.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="dbccmd.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ctxtcall.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="ctfutb.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="crtrow.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="cordebug.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="cor.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="control.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="commoncontrols.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="comcat.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="cmdtxt.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="cmdbas.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="bits1_5.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="bits.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="binres.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="bdaiface.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="audioclient.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="atliface.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="asysta.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="asynot.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="asptlb.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="activscp.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="activdbg.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="activaut.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="exdisp.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="access.idl">
+      <Filter>Source Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

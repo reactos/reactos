@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5E4AB3B3-ABEA-4B91-9EFF-67A788D33EA2}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>cmd</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="alias.c" />
+    <ClCompile Include="assoc.c" />
+    <ClCompile Include="attrib.c" />
+    <ClCompile Include="batch.c" />
+    <ClCompile Include="beep.c" />
+    <ClCompile Include="call.c" />
+    <ClCompile Include="chcp.c" />
+    <ClCompile Include="choice.c" />
+    <ClCompile Include="cls.c" />
+    <ClCompile Include="cmd.c" />
+    <ClCompile Include="cmddbg.c" />
+    <ClCompile Include="cmdinput.c" />
+    <ClCompile Include="cmdtable.c" />
+    <ClCompile Include="color.c" />
+    <ClCompile Include="console.c" />
+    <ClCompile Include="copy.c" />
+    <ClCompile Include="date.c" />
+    <ClCompile Include="del.c" />
+    <ClCompile Include="delay.c" />
+    <ClCompile Include="dir.c" />
+    <ClCompile Include="dirstack.c" />
+    <ClCompile Include="echo.c" />
+    <ClCompile Include="error.c" />
+    <ClCompile Include="filecomp.c" />
+    <ClCompile Include="for.c" />
+    <ClCompile Include="free.c" />
+    <ClCompile Include="goto.c" />
+    <ClCompile Include="history.c" />
+    <ClCompile Include="if.c" />
+    <ClCompile Include="internal.c" />
+    <ClCompile Include="label.c" />
+    <ClCompile Include="locale.c" />
+    <ClCompile Include="memory.c" />
+    <ClCompile Include="misc.c" />
+    <ClCompile Include="mklink.c" />
+    <ClCompile Include="move.c" />
+    <ClCompile Include="msgbox.c" />
+    <ClCompile Include="parser.c" />
+    <ClCompile Include="path.c" />
+    <ClCompile Include="pause.c" />
+    <ClCompile Include="prompt.c" />
+    <ClCompile Include="redir.c" />
+    <ClCompile Include="ren.c" />
+    <ClCompile Include="replace.c" />
+    <ClCompile Include="screen.c" />
+    <ClCompile Include="set.c" />
+    <ClCompile Include="setlocal.c" />
+    <ClCompile Include="shift.c" />
+    <ClCompile Include="start.c" />
+    <ClCompile Include="strtoclr.c" />
+    <ClCompile Include="time.c" />
+    <ClCompile Include="timer.c" />
+    <ClCompile Include="title.c" />
+    <ClCompile Include="type.c" />
+    <ClCompile Include="ver.c" />
+    <ClCompile Include="verify.c" />
+    <ClCompile Include="vol.c" />
+    <ClCompile Include="where.c" />
+    <ClCompile Include="window.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="batch.h" />
+    <ClInclude Include="cmd.h" />
+    <ClInclude Include="cmddbg.h" />
+    <ClInclude Include="cmdver.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="precomp.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="files.txt" />
+    <None Include="history.txt" />
+    <None Include="license.txt" />
+    <None Include="readme.txt" />
+    <None Include="readme2.txt" />
+    <None Include="ren.txt" />
+    <None Include="res\terminal.ico" />
+    <None Include="todo.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="cmd.rc" />
+    <ResourceCompile Include="lang\de-DE.rc" />
+    <ResourceCompile Include="lang\el-GR.rc" />
+    <ResourceCompile Include="lang\en-US.rc" />
+    <ResourceCompile Include="lang\es-ES.rc" />
+    <ResourceCompile Include="lang\fr-FR.rc" />
+    <ResourceCompile Include="lang\hu-HU.rc" />
+    <ResourceCompile Include="lang\id-ID.rc" />
+    <ResourceCompile Include="lang\it-IT.rc" />
+    <ResourceCompile Include="lang\ja-JP.rc" />
+    <ResourceCompile Include="lang\no-NO.rc" />
+    <ResourceCompile Include="lang\pl-PL.rc" />
+    <ResourceCompile Include="lang\ro-RO.rc" />
+    <ResourceCompile Include="lang\ru-RU.rc" />
+    <ResourceCompile Include="lang\sk-SK.rc" />
+    <ResourceCompile Include="lang\sv-SE.rc" />
+    <ResourceCompile Include="lang\uk-UA.rc" />
+    <ResourceCompile Include="lang\zh-CN.rc" />
+    <ResourceCompile Include="rsrc.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

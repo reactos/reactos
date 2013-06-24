@@ -1,0 +1,510 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="halarm">
+      <UniqueIdentifier>{a83e65e6-e30d-4f98-9032-7de6c080f800}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halarm\generic">
+      <UniqueIdentifier>{3be7b1b8-1199-452b-ba44-6ca2e9772211}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halarm\include">
+      <UniqueIdentifier>{41dab7ce-e2cf-446c-9a89-4e3d058041bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halarm\omap3">
+      <UniqueIdentifier>{e0f11936-5f74-4226-9a40-d9999d6e80f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halarm\versa">
+      <UniqueIdentifier>{7ec9026d-e958-4fe7-87e1-8995cce0f065}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halppc">
+      <UniqueIdentifier>{01e35c6a-2882-463d-a469-d15d669668e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halppc\generic">
+      <UniqueIdentifier>{99d8643d-80f1-4149-a8ff-af55d64541ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halppc\include">
+      <UniqueIdentifier>{5beb8744-20a9-40cc-bd40-248273c1bf40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halppc\up">
+      <UniqueIdentifier>{546d9803-41af-4704-99b5-d1aca08c314b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86">
+      <UniqueIdentifier>{381683e2-5272-468b-b8c5-592f2cabeab8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\acpi">
+      <UniqueIdentifier>{d0a564f3-a1d6-4651-88c7-754ec4368b54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\amd64">
+      <UniqueIdentifier>{695076f2-0614-4a67-870a-6bfd7eee73df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\apic">
+      <UniqueIdentifier>{255ff07c-f12a-4448-aef5-a70ed28c2950}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\generic">
+      <UniqueIdentifier>{5de868d8-0012-433e-8c1f-944404903b1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\include">
+      <UniqueIdentifier>{349b0bf8-ae75-4266-bb23-154eaec184f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\legacy">
+      <UniqueIdentifier>{0210435d-e949-4abb-b534-5ecee44f3306}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\legacy\bus">
+      <UniqueIdentifier>{e75f9734-f5ab-4318-8a22-131859b9750f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\mp">
+      <UniqueIdentifier>{67bea9e4-fe03-4d8f-9613-b1b297cf602b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\up">
+      <UniqueIdentifier>{a696fbfb-0345-43fd-b4a4-5117c2407a6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\xbox">
+      <UniqueIdentifier>{11ecf851-cd3f-40c5-81d5-50b6ea111678}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\halarm\generic\beep.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\bus.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\display.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\dma.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\drive.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\fmutex.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\halinit.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\misc.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\pic.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\portio.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\processor.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\profil.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\reboot.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\rtc.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\spinlock.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\sysinfo.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\timer.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\generic\usage.c">
+      <Filter>halarm\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\omap3\halinit_up.c">
+      <Filter>halarm\omap3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halarm\versa\halinit_up.c">
+      <Filter>halarm\versa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\beep.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\bus.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\cmos.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\display.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\dma.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\drive.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\enum.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\fmutex.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\font.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\halinit.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\irql.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\isa.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\misc.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\pci.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\portio.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\processor.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\profil.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\reboot.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\spinlock.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\sysinfo.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\generic\timer.c">
+      <Filter>halppc\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halppc\up\halinit_up.c">
+      <Filter>halppc\up</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\acpi\busemul.c">
+      <Filter>halx86\acpi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\acpi\halacpi.c">
+      <Filter>halx86\acpi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\acpi\halpnpdd.c">
+      <Filter>halx86\acpi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\amd64\halinit.c">
+      <Filter>halx86\amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\amd64\processor.c">
+      <Filter>halx86\amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\amd64\stubs.c">
+      <Filter>halx86\amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\amd64\x86bios.c">
+      <Filter>halx86\amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\apic\apic.c">
+      <Filter>halx86\apic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\apic\apictimer.c">
+      <Filter>halx86\apic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\apic\halinit_apic.c">
+      <Filter>halx86\apic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\apic\rtctimer.c">
+      <Filter>halx86\apic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\apic\tsc.c">
+      <Filter>halx86\apic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\beep.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\bios.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\cmos.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\display.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\dma.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\drive.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\halinit.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\memory.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\misc.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\portio.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\profil.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\reboot.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\spinlock.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\sysinfo.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\timer.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\generic\usage.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bussupp.c">
+      <Filter>halx86\legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\halpcat.c">
+      <Filter>halx86\legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\halpnpdd.c">
+      <Filter>halx86\legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\bushndlr.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\cmosbus.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\isabus.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\pcibus.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\legacy\bus\sysbus.c">
+      <Filter>halx86\legacy\bus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\mp\apic.c">
+      <Filter>halx86\mp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\mp\halinit_mp.c">
+      <Filter>halx86\mp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\mp\ioapic.c">
+      <Filter>halx86\mp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\mp\ipi_mp.c">
+      <Filter>halx86\mp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\mp\mpconfig.c">
+      <Filter>halx86\mp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\mp\mpsirql.c">
+      <Filter>halx86\mp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\mp\processor_mp.c">
+      <Filter>halx86\mp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\up\halinit_mini.c">
+      <Filter>halx86\up</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\up\halinit_up.c">
+      <Filter>halx86\up</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\up\pic.c">
+      <Filter>halx86\up</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\up\processor.c">
+      <Filter>halx86\up</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\xbox\halinit_xbox.c">
+      <Filter>halx86\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\xbox\part_xbox.c">
+      <Filter>halx86\xbox</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\halarm\generic\cache.S">
+      <Filter>halarm\generic</Filter>
+    </None>
+    <None Include="..\halx86\acpi.cmake">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\halx86\apic.cmake">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\halx86\CMakeLists.txt">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\halx86\generic.cmake">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\halx86\legacy.cmake">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\halx86\minihal.cmake">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\halx86\pcidata.cmake">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\halx86\pic.cmake">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\halx86\up.cmake">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\halx86\amd64\mps.S">
+      <Filter>halx86\amd64</Filter>
+    </None>
+    <None Include="..\halx86\amd64\systimer.S">
+      <Filter>halx86\amd64</Filter>
+    </None>
+    <None Include="..\halx86\apic\apictrap.S">
+      <Filter>halx86\apic</Filter>
+    </None>
+    <None Include="..\halx86\apic\tsccal.S">
+      <Filter>halx86\apic</Filter>
+    </None>
+    <None Include="..\halx86\generic\systimer.S">
+      <Filter>halx86\generic</Filter>
+    </None>
+    <None Include="..\halx86\generic\trap.S">
+      <Filter>halx86\generic</Filter>
+    </None>
+    <None Include="..\halx86\generic\v86.S">
+      <Filter>halx86\generic</Filter>
+    </None>
+    <None Include="..\halx86\legacy\bus\pci_classes.ids">
+      <Filter>halx86\legacy\bus</Filter>
+    </None>
+    <None Include="..\halx86\legacy\bus\pci_vendors.ids">
+      <Filter>halx86\legacy\bus</Filter>
+    </None>
+    <None Include="..\halx86\mp\mps.S">
+      <Filter>halx86\mp</Filter>
+    </None>
+    <None Include="..\halx86\mp\mpsboot.asm">
+      <Filter>halx86\mp</Filter>
+    </None>
+    <None Include="..\hal.spec" />
+    <None Include="..\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\halarm\include\hal.h">
+      <Filter>halarm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halarm\include\halp.h">
+      <Filter>halarm\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halppc\include\apic.h">
+      <Filter>halppc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halppc\include\bus.h">
+      <Filter>halppc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halppc\include\hal.h">
+      <Filter>halppc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halppc\include\haldma.h">
+      <Filter>halppc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halppc\include\halirq.h">
+      <Filter>halppc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halppc\include\halp.h">
+      <Filter>halppc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halppc\include\ioapic.h">
+      <Filter>halppc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halppc\include\mps.h">
+      <Filter>halppc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\apic\apic.h">
+      <Filter>halx86\apic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\apic\tsc.h">
+      <Filter>halx86\apic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\include\apic.h">
+      <Filter>halx86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\include\bus.h">
+      <Filter>halx86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\include\hal.h">
+      <Filter>halx86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\include\halacpi.h">
+      <Filter>halx86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\include\haldma.h">
+      <Filter>halx86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\include\halirq.h">
+      <Filter>halx86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\include\halp.h">
+      <Filter>halx86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\include\ioapic.h">
+      <Filter>halx86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\include\mps.h">
+      <Filter>halx86\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\halx86\xbox\halxbox.h">
+      <Filter>halx86\xbox</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\halarm\omap3\halup.rc">
+      <Filter>halarm\omap3</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\halarm\versa\halup.rc">
+      <Filter>halarm\versa</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\halppc\up\halup.rc">
+      <Filter>halppc\up</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\halx86\acpi\halacpi.rc">
+      <Filter>halx86\acpi</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\halx86\mp\halmp.rc">
+      <Filter>halx86\mp</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\halx86\up\halup.rc">
+      <Filter>halx86\up</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\halx86\xbox\halxbox.rc">
+      <Filter>halx86\xbox</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="halx86">
+      <UniqueIdentifier>{0f0b6dae-9a32-420b-8a20-408242768ded}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\generic">
+      <UniqueIdentifier>{d88ef2b4-8c63-4f02-8766-484891d248ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="halx86\up">
+      <UniqueIdentifier>{870ab724-d7cb-4ddf-a9fe-824dd824ad75}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\halx86\generic\spinlock.c">
+      <Filter>halx86\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\halx86\up\processor.c">
+      <Filter>halx86\up</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\halx86\up.cmake">
+      <Filter>halx86</Filter>
+    </None>
+    <None Include="..\CMakeLists.txt" />
+  </ItemGroup>
+</Project>

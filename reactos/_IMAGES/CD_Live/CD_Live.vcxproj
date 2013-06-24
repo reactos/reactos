@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\DUMMY.TXT">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cd "$(OutDir)"
+mkdir root
+cd root
+copy "$(SolutionDir)\boot\freeldr\bootsect\$(OutDir)\isoboot.bin" .
+mkdir Loader
+cd loader
+copy "$(SolutionDir)\boot\freeldr\freeldr\$(Outdir)\freeldr.sys" setupldr.sys
+cd ..
+copy "$(SolutionDir)\boot\bootdata\livecd.ini" FREELDR.INI
+mkdir Profiles
+cd Profiles
+echo We would write profile files here.
+cd ..
+mkdir reactos
+cd reactos
+mkdir system32
+cd system32
+copy "$(SolutionDir)\ntkrnlmp\$(OutDir)\NTKRNLMP.EXE" .
+copy "$(SolutionDir)\ntoskrnl\$(OutDir)\NTOSKRNL.EXE" .
+copy "$(SolutionDir)\HAL\$(Outdir)\HAL.DLL" .
+copy "$(SolutionDir)\Drivers\Base\BootVid\$(Outdir)\BootVid.DLL" .
+copy "$(SolutionDir)\Drivers\Base\KDCOM\$(OutDir)\KDCOM.DLL" .
+copy "$(SolutionDir)\base\applications\ATACTL\$(OutDir)\ATACTL.EXE" .
+REM "copy $(SolutionDir)\base\applications\CALC\$(OutDir)\CALC.EXE" .
+copy "$(SolutionDir)\media\nls\*.nls" .
+mkdir config
+cd "$(SolutionDir)\boot\bootdata"
+"$(SolutionDir)\tools\mkhive\build\x86_32\$(Configuration)\mkhive.exe" "$(TargetDir)\root\reactos\system32\config" hivecls.inf hivedef.inf hivesft.inf hivesys.inf livecd.inf hiveinst.inf
+echo Creating ReactOS CD Live, writing Master-Boot-Rectord (MBR) in the process:
+"$(SolutionDir)\tools\cdmake\$(OutDir)\cdmake.exe" -b "$(SolutionDir)\boot\freeldr\bootsect\$(OutDir)\isoboot.bin" "$(TargetDir)\root"  ReactOSLive "$(TargetDir)\ReactOS_CD_Live.iso"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cd "$(OutDir)"
+mkdir root
+cd root
+copy "$(SolutionDir)\boot\freeldr\bootsect\$(OutDir)\isoboot.bin" .
+mkdir Loader
+cd loader
+copy "$(SolutionDir)\boot\freeldr\freeldr\$(Outdir)\freeldr.sys" setupldr.sys
+cd ..
+copy "$(SolutionDir)\boot\bootdata\livecd.ini" FREELDR.INI
+mkdir Profiles
+cd Profiles
+echo We would write profile files here.
+cd ..
+mkdir reactos
+cd reactos
+mkdir system32
+cd system32
+copy "$(SolutionDir)\ntkrnlmp\$(OutDir)\NTKRNLMP.EXE" .
+copy "$(SolutionDir)\ntoskrnl\$(OutDir)\NTOSKRNL.EXE" .
+copy "$(SolutionDir)\HAL\$(Outdir)\HAL.DLL" .
+copy "$(SolutionDir)\Drivers\Base\BootVid\$(Outdir)\BootVid.DLL" .
+copy "$(SolutionDir)\Drivers\Base\KDCOM\$(OutDir)\KDCOM.DLL" .
+copy "$(SolutionDir)\base\applications\ATACTL\$(OutDir)\ATACTL.EXE" .
+REM "copy $(SolutionDir)\base\applications\CALC\$(OutDir)\CALC.EXE" .
+copy "$(SolutionDir)\media\nls\*.nls" .
+mkdir config
+cd "$(SolutionDir)\boot\bootdata"
+"$(SolutionDir)\tools\mkhive\build\x86_32\$(Configuration)\mkhive.exe" "$(TargetDir)\root\reactos\system32\config" hivecls.inf hivedef.inf hivesft.inf hivesys.inf livecd.inf hiveinst.inf
+echo Creating ReactOS CD Live, writing Master-Boot-Rectord (MBR) in the process:
+"$(SolutionDir)\tools\cdmake\$(OutDir)\cdmake.exe" -b "$(SolutionDir)\boot\freeldr\bootsect\$(OutDir)\isoboot.bin" "$(TargetDir)\root"  ReactOSLive "$(TargetDir)\ReactOS_CD_Live.iso"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\DUMMY.ZZZ</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\DUMMY.ZZZ</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\boot\freeldr\bootsect\bootsect.vcxproj">
+      <Project>{f58e944d-47dd-472f-b383-1ab014515b9a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\boot\freeldr\freeldr\freeldr.vcxproj">
+      <Project>{b0c75a46-c23f-4ac0-af06-8b5c9a7b1f20}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\drivers\base\bootvid\bootvid.vcxproj">
+      <Project>{39162ac2-e17b-4301-b1cb-19ebcd13b22b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\drivers\base\kdcom\kdcom.vcxproj">
+      <Project>{c6e75fa9-bcbb-46ec-91ff-0f05064d3039}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\hal\hal.vcxproj">
+      <Project>{ba5347bf-c0fd-44f0-976e-510b4d48e07b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\ntoskrnl\ntoskrnl.vcxproj">
+      <Project>{2406d983-79b4-4596-86c8-8c2cdbcba77b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\tools\cdmake\cdmake.vcxproj">
+      <Project>{d77c7601-c61b-4135-b2dd-06a11eff79d0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\tools\mkhive\mkhive.vcxproj">
+      <Project>{0dce13da-3398-46ec-84c9-d7d8d8ff8d1a}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{4C659395-F02C-4F38-BFC3-B0661C39B2CE}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>CD_Live</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="compat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dwarf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rossympriv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="delete.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dummy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarf386.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfabbrev.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfaranges.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfcfa.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfdump.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfeval.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfget.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfinfo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfopen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfpc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dwarfpubnames.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="find.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fromfile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="frommem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fromraw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="getraw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="init.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="initkm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="initum.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="iofile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pe.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zwfile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="i386">
+      <UniqueIdentifier>{46ef876f-970d-4a14-aa6d-ec7fe65b6e93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="amd64">
+      <UniqueIdentifier>{f71f0445-dae8-4252-990f-1602e860d837}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="powerpc">
+      <UniqueIdentifier>{9dc1473d-3397-4a1d-9cc9-3c05084c280e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="i386\framebased.S">
+      <Filter>i386</Filter>
+    </None>
+    <None Include="i386\framebased-gcchack-asm.S">
+      <Filter>i386</Filter>
+    </None>
+    <None Include="i386\pseh3_i386.S">
+      <Filter>i386</Filter>
+    </None>
+    <None Include="i386\seh.s">
+      <Filter>i386</Filter>
+    </None>
+    <None Include="i386\seh_prolog.s">
+      <Filter>i386</Filter>
+    </None>
+    <None Include="amd64\framebased.S">
+      <Filter>amd64</Filter>
+    </None>
+    <None Include="amd64\seh.s">
+      <Filter>amd64</Filter>
+    </None>
+    <None Include="amd64\seh_prolog.s">
+      <Filter>amd64</Filter>
+    </None>
+    <None Include="powerpc\framebased.S">
+      <Filter>powerpc</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dummy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="framebased.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="i386\framebased-gcchack.c">
+      <Filter>i386</Filter>
+    </ClCompile>
+    <ClCompile Include="i386\pseh3.c">
+      <Filter>i386</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="i386\pseh3_asmdef.h">
+      <Filter>i386</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

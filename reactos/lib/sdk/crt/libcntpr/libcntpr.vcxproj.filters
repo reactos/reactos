@@ -1,0 +1,983 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="except">
+      <UniqueIdentifier>{fdd01ea1-6a58-42d8-ae38-0db7b84e4abe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="except\powerpc">
+      <UniqueIdentifier>{224d8124-7520-4da6-81c1-6c3be483c432}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="except\i386">
+      <UniqueIdentifier>{21373679-6001-4737-b4c5-610a80ce76d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="except\amd64">
+      <UniqueIdentifier>{87fafb2a-6b8f-42e8-ad16-7ccf4707e8ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="float">
+      <UniqueIdentifier>{946a8559-67c1-45b7-94a1-e703c3eece6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{f1c5c27e-1a81-4678-9dc5-0057e04599de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{976809ca-94db-4377-b671-f469ce6201ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\internal">
+      <UniqueIdentifier>{7945287d-d8d0-4564-b987-8da60bb85ce1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\internal\mingw-w64">
+      <UniqueIdentifier>{4f241515-85d0-4072-8a0b-1f18a71975ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\internal\wine">
+      <UniqueIdentifier>{529fe0e1-cf4a-4e37-987b-69fa7f9ff3a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math">
+      <UniqueIdentifier>{348631cf-8291-4b78-98f7-a46afb7f86d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\i386">
+      <UniqueIdentifier>{6d037b96-14e2-4f70-abf0-363c9d9441c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\amd64">
+      <UniqueIdentifier>{1c27d0e4-13e6-4bca-8543-39a2178f316e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math\ieee754">
+      <UniqueIdentifier>{d14926e6-b1ef-40c5-8e3d-4651ced4bfe6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mbstring">
+      <UniqueIdentifier>{eae6dfda-6b9d-484b-be5a-8f6fa78efee4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mem">
+      <UniqueIdentifier>{fec5d6ec-ed3d-4838-80b8-4277bb1c0a91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mem\i386">
+      <UniqueIdentifier>{64cf1665-995c-4603-a636-e8bd7d438b3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc">
+      <UniqueIdentifier>{b47ea355-6017-4d3a-a036-ef98813a65ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc\i386">
+      <UniqueIdentifier>{f72beb45-9712-4a41-bcd4-81ec81b62075}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="printf">
+      <UniqueIdentifier>{d821ee41-ca6f-46af-8330-d2e8af046a78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{82057c14-ea57-4448-a5b3-0045f7f7b638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="search">
+      <UniqueIdentifier>{f80e9014-258e-46cc-b659-4e7312b145e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="setjmp">
+      <UniqueIdentifier>{915fac73-5f0e-48fd-8685-243d5d588667}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="setjmp\i386">
+      <UniqueIdentifier>{2be55190-80f7-4ec1-87d1-9b796b577f3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="setjmp\amd64">
+      <UniqueIdentifier>{6d8f35e0-d75a-43f3-8109-9b2bfc68c053}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{41af85d1-c501-4762-85aa-baa0d678d14c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="stdlib">
+      <UniqueIdentifier>{65d61489-03f7-4aaa-bff4-f1d30803c029}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="string">
+      <UniqueIdentifier>{71813e8b-9591-4c91-932e-25f57e5d83fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="string\i386">
+      <UniqueIdentifier>{d9a7a7e6-7098-48f9-a4c2-9e49cf612ac6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="wstring">
+      <UniqueIdentifier>{72d11b61-6b11-4617-a11d-d2e651e8ceee}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\except\i386\unwind.c">
+      <Filter>except\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="..\except\amd64\ehandler.c">
+      <Filter>except\amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\float\isnan.c">
+      <Filter>float</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\abs.c">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\div.c">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\labs.c">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\rand_nt.c">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\i386\ci.c">
+      <Filter>math\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\i386\cicos.c">
+      <Filter>math\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\i386\cilog.c">
+      <Filter>math\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\i386\cipow.c">
+      <Filter>math\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\i386\cisin.c">
+      <Filter>math\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\i386\cisqrt.c">
+      <Filter>math\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\i386\ldexp.c">
+      <Filter>math\i386</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\amd64\asin.c">
+      <Filter>math\amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\amd64\sqrt.c">
+      <Filter>math\amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\ieee754\j0_y0.c">
+      <Filter>math\ieee754</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\ieee754\j1_y1.c">
+      <Filter>math\ieee754</Filter>
+    </ClCompile>
+    <ClCompile Include="..\math\ieee754\jn_yn.c">
+      <Filter>math\ieee754</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mbstring\mbstrlen.c">
+      <Filter>mbstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mem\memccpy.c">
+      <Filter>mem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mem\memchr.c">
+      <Filter>mem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mem\memcmp.c">
+      <Filter>mem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mem\memcpy.c">
+      <Filter>mem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mem\memicmp.c">
+      <Filter>mem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mem\memmove.c">
+      <Filter>mem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mem\memset.c">
+      <Filter>mem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\misc\fltused.c">
+      <Filter>misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\fprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\fprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\fwprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\fwprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\printf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\printf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\sprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\sprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\streamout.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\swprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\swprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vfprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vfprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vfwprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vfwprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vsprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vsprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vswprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vswprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vwprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\vwprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\wprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\wprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\wsprintfA.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\wsprintfW.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\wstreamout.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\wvsnprintfA.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\wvsnprintfW.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\wvsprintfA.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\wvsprintfW.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_cprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_cwprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_snprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_snprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_snwprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_snwprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_sxprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_vcprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_vcwprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_vscprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_vscwprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_vsnprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_vsnprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_vsnwprintf.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_vsnwprintf_s.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\printf\_vsprintf_p.c">
+      <Filter>printf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\search\bsearch.c">
+      <Filter>search</Filter>
+    </ClCompile>
+    <ClCompile Include="..\search\lfind.c">
+      <Filter>search</Filter>
+    </ClCompile>
+    <ClCompile Include="..\search\lsearch.c">
+      <Filter>search</Filter>
+    </ClCompile>
+    <ClCompile Include="..\stdlib\qsort.c">
+      <Filter>stdlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\atof.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\atoi.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\atoi64.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\atol.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\ctype.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\iswctype.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\is_wctype.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\itoa.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\itow.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\mbstowcs_nt.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\mbstowcs_s.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\scanf.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strcat.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strchr.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strcmp.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strcoll.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strcpy.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strcspn.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strdup.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\stricmp.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\string.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strlen.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strlwr.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strncat.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strncmp.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strncoll.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strncpy.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strnicmp.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strnlen.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strpbrk.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strrchr.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strrev.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strset.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strspn.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strstr.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strtod.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strtoi64.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strtol.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strtoul.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strtoull.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strupr.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\strxfrm.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcs.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcscat.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcschr.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcscmp.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcscpy.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcslen.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcsncat.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcsncmp.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcsncpy.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcsnlen.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcsrchr.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcstod.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcstol.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcstombs_nt.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcstombs_s.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wcstoul.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wctype.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wtoi.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wtoi64.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\wtol.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\_mbsnlen.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\_mbstrnlen.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\_splitpath.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\_splitpath_s.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\_wsplitpath.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\string\_wsplitpath_s.c">
+      <Filter>string</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcscoll.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcscspn.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcsicmp.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcslwr.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcsnicmp.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcsspn.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcsstr.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcstok.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcsupr.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wstring\wcsxfrm.c">
+      <Filter>wstring</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\except\powerpc\chkstk_asm.s">
+      <Filter>except\powerpc</Filter>
+    </None>
+    <None Include="..\except\powerpc\seh.s">
+      <Filter>except\powerpc</Filter>
+    </None>
+    <None Include="..\except\i386\chkesp.s">
+      <Filter>except\i386</Filter>
+    </None>
+    <None Include="..\except\i386\chkstk_ms.s">
+      <Filter>except\i386</Filter>
+    </None>
+    <None Include="..\except\i386\cpp.s">
+      <Filter>except\i386</Filter>
+    </None>
+    <None Include="..\except\i386\prolog.s">
+      <Filter>except\i386</Filter>
+    </None>
+    <None Include="..\except\amd64\chkstk_asm.s">
+      <Filter>except\amd64</Filter>
+    </None>
+    <None Include="..\except\amd64\chkstk_ms.s">
+      <Filter>except\amd64</Filter>
+    </None>
+    <None Include="..\except\amd64\cpp.s">
+      <Filter>except\amd64</Filter>
+    </None>
+    <None Include="..\except\amd64\seh.s">
+      <Filter>except\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\acos.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\acosf.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\atan.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\atan2.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\ceil.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\ceilf.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\exp.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\fabs.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\floor.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\floorf.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\fmod.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\fmodf.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\ldexp.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\log.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\log10.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\pow.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\sqrt.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\sqrtf.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\math\amd64\tan.S">
+      <Filter>math\amd64</Filter>
+    </None>
+    <None Include="..\mem\i386\memchr_asm.s">
+      <Filter>mem\i386</Filter>
+    </None>
+    <None Include="..\mem\i386\memcpy_asm.s">
+      <Filter>mem\i386</Filter>
+    </None>
+    <None Include="..\mem\i386\memmove_asm.s">
+      <Filter>mem\i386</Filter>
+    </None>
+    <None Include="..\mem\i386\memset_asm.s">
+      <Filter>mem\i386</Filter>
+    </None>
+    <None Include="..\setjmp\amd64\setjmp.s">
+      <Filter>setjmp\amd64</Filter>
+    </None>
+    <None Include="..\moldname-msvcrt.def">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\string\i386\strcat_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\strchr_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\strcmp_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\strcpy_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\strlen_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\strncat_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\strncmp_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\strncpy_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\strnlen_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\strrchr_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcscat.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcschr.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcscmp.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcscpy.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcslen.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcsncat.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcsncmp.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcsncpy.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcsnlen.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\tcsrchr.inc">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcscat_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcschr_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcscmp_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcscpy_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcslen_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcsncat_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcsncmp_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcsncpy_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcsnlen_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\string\i386\wcsrchr_asm.s">
+      <Filter>string\i386</Filter>
+    </None>
+    <None Include="..\libcntpr.cmake" />
+    <None Include="..\oldnames-msvcrt.S" />
+    <None Include="..\oldnames.cmake" />
+    <None Include="..\README.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\precomp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\float.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\atexit.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\console.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\ieee.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\locale.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\math.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\mbstring.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\misc.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\mtdll.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\rterror.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\safecrt.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\time.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\tls.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\wine_msc.h">
+      <Filter>include\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\mingw-w64\internal.h">
+      <Filter>include\internal\mingw-w64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\mingw-w64\oscalls.h">
+      <Filter>include\internal\mingw-w64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\mingw-w64\sect_attribs.h">
+      <Filter>include\internal\mingw-w64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\wine\cppexcept.h">
+      <Filter>include\internal\wine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\wine\eh.h">
+      <Filter>include\internal\wine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\internal\wine\msvcrt.h">
+      <Filter>include\internal\wine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\math\ieee754\ieee754.h">
+      <Filter>math\ieee754</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\scanf.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\strxspn.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcscat.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcschr.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcscmp.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcscpy.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcslen.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcsncat.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcsncmp.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcsncpy.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcsnlen.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\tcsrchr.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\_tsplitpath_x.h">
+      <Filter>string</Filter>
+    </ClInclude>
+    <ClInclude Include="..\string\i386\tchar.h">
+      <Filter>string\i386</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\except\i386\chkstk_asm.s">
+      <Filter>except\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\except\i386\seh.s">
+      <Filter>except\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\except\i386\seh_prolog.s">
+      <Filter>except\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\setjmp\i386\setjmp.s">
+      <Filter>setjmp\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\tan_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\sqrt_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\sin_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\pow_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\log_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\log10_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\ftol_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\ftol2_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\fmodf_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\fmod_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\floorf.S">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\floor_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\fabs_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\cos_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\ceilf.S">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\ceil_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\aullshr_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\aullrem_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\aulldvrm_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\aulldiv_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\atan_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\atan2_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\allshr_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\allshl_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\allrem_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\allmul_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\alldvrm_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\math\i386\alldiv_asm.s">
+      <Filter>math\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\misc\i386\readcr4.S">
+      <Filter>misc\i386</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

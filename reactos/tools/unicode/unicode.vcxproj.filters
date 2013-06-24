@@ -1,0 +1,246 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="c_037.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_424.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_437.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_500.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_737.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_775.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_850.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_852.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_855.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_856.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_857.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_860.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_861.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_862.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_863.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_864.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_865.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_866.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_869.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_874.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_875.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_878.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_932.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_936.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_949.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_950.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1006.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1026.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1250.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1251.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1252.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1253.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1254.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1255.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1256.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1257.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1258.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_1361.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_10000.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_10006.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_10007.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_10029.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_10079.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_10081.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_20127.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_20866.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_20932.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_21866.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28591.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28592.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28593.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28594.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28595.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28596.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28597.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28598.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28599.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28600.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28603.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28604.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28605.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c_28606.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="casemap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="collation.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compose.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cptable.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fold.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mbtowc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sortkey.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utf8.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wctomb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wctype.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="cpmap.pl" />
+    <None Include="defaults" />
+    <None Include="wine_unicode.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

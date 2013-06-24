@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="csr">
+      <UniqueIdentifier>{4fea921a-5b9e-4967-8708-e977463d4ee0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dbg">
+      <UniqueIdentifier>{f4fc3552-fa07-4fc1-8f7d-326beb631c1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dispatch">
+      <UniqueIdentifier>{15211dae-2c5a-497f-a045-411f771e43fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{82d03cf5-531a-40db-bbf9-04f9c90acdc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ldr">
+      <UniqueIdentifier>{fda038e1-361d-4751-9305-29dcb8d513c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rtl">
+      <UniqueIdentifier>{d907a9ec-8422-4408-80a6-cbadaea80b6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="def">
+      <UniqueIdentifier>{d7cd89e9-bf92-42a0-b43e-0242f0b4f005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dispatch\amd64">
+      <UniqueIdentifier>{a8b7e5e2-fa41-4dbc-8725-14da4afc3f25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dispatch\i386">
+      <UniqueIdentifier>{c15d907c-99a0-4cbf-853b-e3ac17fa36fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dispatch\arm">
+      <UniqueIdentifier>{1a0cd7fc-0ac0-431c-b02e-6c8a4b0d5b13}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\ntdll.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ntdllp.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="dispatch\amd64\dispatch.S">
+      <Filter>dispatch\amd64</Filter>
+    </None>
+    <None Include="dispatch\arm\stubs_asm.s">
+      <Filter>dispatch\arm</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="csr\api.c">
+      <Filter>csr</Filter>
+    </ClCompile>
+    <ClCompile Include="csr\capture.c">
+      <Filter>csr</Filter>
+    </ClCompile>
+    <ClCompile Include="csr\connect.c">
+      <Filter>csr</Filter>
+    </ClCompile>
+    <ClCompile Include="dbg\dbgui.c">
+      <Filter>dbg</Filter>
+    </ClCompile>
+    <ClCompile Include="dispatch\dispatch.c">
+      <Filter>dispatch</Filter>
+    </ClCompile>
+    <ClCompile Include="dispatch\amd64\stubs.c">
+      <Filter>dispatch\amd64</Filter>
+    </ClCompile>
+    <ClCompile Include="ldr\ldrapi.c">
+      <Filter>ldr</Filter>
+    </ClCompile>
+    <ClCompile Include="ldr\ldrinit.c">
+      <Filter>ldr</Filter>
+    </ClCompile>
+    <ClCompile Include="ldr\ldrpe.c">
+      <Filter>ldr</Filter>
+    </ClCompile>
+    <ClCompile Include="ldr\ldrutils.c">
+      <Filter>ldr</Filter>
+    </ClCompile>
+    <ClCompile Include="rtl\libsupp.c">
+      <Filter>rtl</Filter>
+    </ClCompile>
+    <ClCompile Include="rtl\version.c">
+      <Filter>rtl</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="def\ntdll.rc">
+      <Filter>def</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="dispatch\i386\dispatch.S">
+      <Filter>dispatch\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="def\ntdll.spec">
+      <Filter>def</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

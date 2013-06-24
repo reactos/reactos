@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{03ff00ba-8588-485f-baa1-609181830eb2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="fbtdev.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fbtpnp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fbtpwr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fbtrwr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fbtusb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fbtwmi.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="fbtusb.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\fbtdev.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbthci.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciCmds.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciCmdStructs.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciDefs.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciErrors.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciEvents.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciEventStructs.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciLocal.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciOpCodes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciParms.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciRoundTrip.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtHciSizes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbthw.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtlog.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtpnp.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtpwr.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtreg.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtrwr.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtSeXcpt.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtusb.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtusr.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtutil.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtwmi.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fbtxcpt.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

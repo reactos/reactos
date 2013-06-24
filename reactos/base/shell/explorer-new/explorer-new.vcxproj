@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{76E3C31E-0164-4311-A1C9-FB96C54EACA8}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>explorernew</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="res\auto_hide.bmp" />
+    <None Include="res\lock_group_noql.bmp" />
+    <None Include="res\lock_group_ql.bmp" />
+    <None Include="res\lock_nogroup_noql.bmp" />
+    <None Include="res\lock_nogroup_ql.bmp" />
+    <None Include="res\logov.bmp" />
+    <None Include="res\nolock_group_noql.bmp" />
+    <None Include="res\nolock_group_ql.bmp" />
+    <None Include="res\nolock_nogroup_noql.bmp" />
+    <None Include="res\nolock_nogroup_ql.bmp" />
+    <None Include="res\start.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="comcsup.h" />
+    <ClInclude Include="precomp.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="todo.h" />
+    <ClInclude Include="undoc.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="desktop.c" />
+    <ClCompile Include="dragdrop.c" />
+    <ClCompile Include="explorer.c" />
+    <ClCompile Include="settings.c" />
+    <ClCompile Include="startmnu.c" />
+    <ClCompile Include="startup.c" />
+    <ClCompile Include="taskband.c" />
+    <ClCompile Include="taskswnd.c" />
+    <ClCompile Include="tbsite.c" />
+    <ClCompile Include="trayntfy.c" />
+    <ClCompile Include="trayprop.c" />
+    <ClCompile Include="traywnd.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="explorer.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="explorer.rc" />
+    <ResourceCompile Include="lang\bg-BG.rc" />
+    <ResourceCompile Include="lang\cs-CZ.rc" />
+    <ResourceCompile Include="lang\de-DE.rc" />
+    <ResourceCompile Include="lang\en-US.rc" />
+    <ResourceCompile Include="lang\es-ES.rc" />
+    <ResourceCompile Include="lang\fr-FR.rc" />
+    <ResourceCompile Include="lang\he-IL.rc" />
+    <ResourceCompile Include="lang\it-IT.rc" />
+    <ResourceCompile Include="lang\ja-JP.rc" />
+    <ResourceCompile Include="lang\ko-KR.rc" />
+    <ResourceCompile Include="lang\lt-LT.rc" />
+    <ResourceCompile Include="lang\nl-NL.rc" />
+    <ResourceCompile Include="lang\no-NO.rc" />
+    <ResourceCompile Include="lang\pl-PL.rc" />
+    <ResourceCompile Include="lang\pt-BR.rc" />
+    <ResourceCompile Include="lang\ro-RO.rc" />
+    <ResourceCompile Include="lang\ru-RU.rc" />
+    <ResourceCompile Include="lang\sk-SK.rc" />
+    <ResourceCompile Include="lang\uk-UA.rc" />
+    <ResourceCompile Include="lang\zh-CN.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

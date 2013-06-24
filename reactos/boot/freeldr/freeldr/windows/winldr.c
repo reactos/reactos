@@ -327,6 +327,20 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
         //FIXME: Maybe remove it from the list and try to continue?
         if (!Status)
         {
+			// JC put this block of code here to help Xiaochu determine which boot drivers are expected
+			// during boot.
+			/// **********
+			char buffer[1024];	
+			unsigned int i = 0;
+			while (i < BootDriver->FilePath.Length)
+			{
+				buffer[i] = BootDriver->FilePath.Buffer[i];
+				++i;
+			}
+			buffer[i] = 0;
+			UiMessageBox(buffer);
+			/// **********
+
             UiMessageBox("Can't load boot driver!");
             return FALSE;
         }
@@ -483,16 +497,16 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     CHAR KdTransportDllName[MAX_PATH];
     PLDR_DATA_TABLE_ENTRY HalDTE, KdComDTE = NULL;
 
-    if (!KernelDTE) return FALSE;
+	if (!KernelDTE) return FALSE;
 
-    /* Load the Kernel */
-    LoadModule(LoaderBlock, BootPath, "NTOSKRNL.EXE", LoaderSystemCode, KernelDTE, FALSE, 30);
+	/* Load the Kernel */
+	LoadModule(LoaderBlock, BootPath, "NTOSKRNL.EXE", LoaderSystemCode, KernelDTE, FALSE, 30);
 
-    /* Load the HAL */
-    LoadModule(LoaderBlock, BootPath, "HAL.DLL", LoaderHalCode, &HalDTE, FALSE, 45);
+	/* Load the HAL */
+	LoadModule(LoaderBlock, BootPath, "HAL.DLL", LoaderHalCode, &HalDTE, FALSE, 45);
 
-    /* Load the Kernel Debugger Transport DLL */
-    if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
+	/* Load the Kernel Debugger Transport DLL */
+	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
     {
         /*
          * According to http://www.nynaeve.net/?p=173 :

@@ -1,0 +1,529 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B0C75A46-C23F-4AC0-AF06-8B5C9A7B1F20}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>freeldr</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;__REACTOS__;_NTHAL_;_BLDR_;_NTSYSTEM_;DBG=1;_SEH_ENABLE_TRACE;_WINKD_=1;WINVER=0x502;_WIN32_IE=0x600;_WIN32_WINNT=0x502;_WIN32_WINDOWS=0x502;_SETUPAPI_VER=0x502;_M_IX86;_X86_;__i386__;USE_COMPILER_EXCEPTIONS;_USE_32BIT_TIME_T;inline=__inline;__STDC__=1;LANGUAGE_EN_US;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\include;..\..\..\include\ddk;..\..\..\include\psdk;$(SolutionDir)\include\reactos\mc\$(OutDir)\ReactOS;..\..\..\include\reactos;..\..\..\include\ndk;..\..\..\include\crt;..\..\..\include\crt\msc;..\..\..\include;..\..\..\ntoskrnl\include;..\..\..\include\reactos\libs;..\..\..\lib\cmlib</AdditionalIncludeDirectories>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Native</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <EntryPointSymbol>RealEntryPoint</EntryPointSymbol>
+      <BaseAddress>0x10000</BaseAddress>
+      <Driver>Driver</Driver>
+      <SetChecksum>true</SetChecksum>
+      <FixedBaseAddress>true</FixedBaseAddress>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <EnableUAC>false</EnableUAC>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <SectionAlignment>1024</SectionAlignment>
+      <MergeSections>
+      </MergeSections>
+      <AdditionalOptions>/ignore:4254 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy  /B $(OutDir)\i386.bin + $(TargetPath) $(OutDir)\$(TargetName).sys</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Join i386.bin to $(TargetPath)</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;__REACTOS__;_NTHAL_;_BLDR_;_NTSYSTEM_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\include;..\..\..\include\ddk;..\..\..\include\psdk;$(SolutionDir)\include\reactos\mc\$(OutDir)\ReactOS;..\..\..\include\reactos;..\..\..\include\ndk;..\..\..\include\crt;..\..\..\include\crt\msc;..\..\..\include;..\..\..\ntoskrnl\include;..\..\..\include\reactos\libs;..\..\..\lib\cmlib</AdditionalIncludeDirectories>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Native</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+      <EntryPointSymbol>RealEntryPoint</EntryPointSymbol>
+      <BaseAddress>0x10000</BaseAddress>
+      <Driver>Driver</Driver>
+      <SetChecksum>true</SetChecksum>
+      <FixedBaseAddress>true</FixedBaseAddress>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <EnableUAC>false</EnableUAC>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <SectionAlignment>1024</SectionAlignment>
+      <MergeSections>.text16=.text .data=.text .rdata=.text .bss=.text</MergeSections>
+      <AdditionalOptions>/ignore:4254 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy  /B $(OutDir)\i386.bin + $(TargetPath) $(OutDir)\$(TargetName).sys</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Join i386.bin to $(TargetPath)</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="arcemul\time.c" />
+    <ClCompile Include="arch\amd64\winldr.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\arm\macharm.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\arm\winldr.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\i386\archmach.c" />
+    <ClCompile Include="arch\i386\custom.c" />
+    <ClCompile Include="arch\i386\drivemap.c" />
+    <ClCompile Include="arch\i386\halstub.c" />
+    <ClCompile Include="arch\i386\hardware.c" />
+    <ClCompile Include="arch\i386\hwacpi.c" />
+    <ClCompile Include="arch\i386\hwapm.c" />
+    <ClCompile Include="arch\i386\hwdisk.c" />
+    <ClCompile Include="arch\i386\hwpci.c" />
+    <ClCompile Include="arch\i386\i386bug.c" />
+    <ClCompile Include="arch\i386\i386disk.c" />
+    <ClCompile Include="arch\i386\i386idt.c" />
+    <ClCompile Include="arch\i386\i386rtl.c" />
+    <ClCompile Include="arch\i386\i386vid.c" />
+    <ClCompile Include="arch\i386\machpc.c" />
+    <ClCompile Include="arch\i386\machxbox.c" />
+    <ClCompile Include="arch\i386\miscboot.c" />
+    <ClCompile Include="arch\i386\ntoskrnl.c" />
+    <ClCompile Include="arch\i386\pccons.c" />
+    <ClCompile Include="arch\i386\pcdisk.c" />
+    <ClCompile Include="arch\i386\pcmem.c" />
+    <ClCompile Include="arch\i386\pcrtc.c" />
+    <ClCompile Include="arch\i386\pcvideo.c" />
+    <ClCompile Include="arch\i386\winldr.c" />
+    <ClCompile Include="arch\i386\xboxcons.c" />
+    <ClCompile Include="arch\i386\xboxdisk.c" />
+    <ClCompile Include="arch\i386\xboxfont.c" />
+    <ClCompile Include="arch\i386\xboxhw.c" />
+    <ClCompile Include="arch\i386\xboxi2c.c" />
+    <ClCompile Include="arch\i386\xboxmem.c" />
+    <ClCompile Include="arch\i386\xboxrtc.c" />
+    <ClCompile Include="arch\i386\xboxvideo.c" />
+    <ClCompile Include="arch\powerpc\loader.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\mach.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\mboot.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\mmu.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\ofw_method.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\prep.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\prep_ide.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\prep_pci.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="arch\powerpc\prep_vga.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="bootmgr.c" />
+    <ClCompile Include="cache\blocklist.c" />
+    <ClCompile Include="cache\cache.c" />
+    <ClCompile Include="cmdline.c" />
+    <ClCompile Include="comm\rs232.c" />
+    <ClCompile Include="debug.c" />
+    <ClCompile Include="disk\disk.c" />
+    <ClCompile Include="disk\partition.c" />
+    <ClCompile Include="disk\ramdisk.c" />
+    <ClCompile Include="disk\scsiport.c" />
+    <ClCompile Include="freeldr.c" />
+    <ClCompile Include="fs\ext2.c" />
+    <ClCompile Include="fs\fat.c" />
+    <ClCompile Include="fs\fs.c" />
+    <ClCompile Include="fs\iso.c" />
+    <ClCompile Include="fs\ntfs.c" />
+    <ClCompile Include="fs\pxe.c" />
+    <ClCompile Include="inffile\inffile.c" />
+    <ClCompile Include="inifile\inifile.c" />
+    <ClCompile Include="inifile\ini_init.c" />
+    <ClCompile Include="inifile\parse.c" />
+    <ClCompile Include="linuxboot.c" />
+    <ClCompile Include="machine.c" />
+    <ClCompile Include="mm\heap.c" />
+    <ClCompile Include="mm\meminit.c" />
+    <ClCompile Include="mm\mm.c" />
+    <ClCompile Include="options.c" />
+    <ClCompile Include="oslist.c" />
+    <ClCompile Include="reactos\archwsup.c" />
+    <ClCompile Include="reactos\arcname.c" />
+    <ClCompile Include="reactos\binhive.c" />
+    <ClCompile Include="reactos\registry.c" />
+    <ClCompile Include="rtl\libsupp.c" />
+    <ClCompile Include="ui\directui.c" />
+    <ClCompile Include="ui\gui.c" />
+    <ClCompile Include="ui\minitui.c" />
+    <ClCompile Include="ui\noui.c" />
+    <ClCompile Include="ui\tui.c" />
+    <ClCompile Include="ui\tuimenu.c" />
+    <ClCompile Include="ui\ui.c" />
+    <ClCompile Include="version.c" />
+    <ClCompile Include="video\fade.c" />
+    <ClCompile Include="video\palette.c" />
+    <ClCompile Include="video\video.c" />
+    <ClCompile Include="windows\conversion.c" />
+    <ClCompile Include="windows\headless.c" />
+    <ClCompile Include="windows\peloader.c" />
+    <ClCompile Include="windows\setupldr.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="windows\winldr.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)\duplicate</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)\duplicate</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="windows\wlmemory.c" />
+    <ClCompile Include="windows\wlregistry.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="arch\amd64\entry.S">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\amd64\int386.S">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\amd64\pnpbios.S">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\arm\boot.s">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <CustomBuild Include="arch\i386\drvmap.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c %(FullPath) &gt; $(OutDir)\%(Filename).tmp
+ml /nologo /Cp /Fo $(OutDir)\%(FileName).obj /c /Ta  $(OutDir)\%(Filename).tmp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\entry.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Fullpath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Fullpath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\i386pnp.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Fullpath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Fullpath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\i386trap.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Fullpath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Fullpath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\linux.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Fullpath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Fullpath)</Message>
+    </CustomBuild>
+    <CustomBuild Include="arch\i386\mb.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I.\include /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Assembling %(Fullpath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Assembling %(Fullpath)</Message>
+    </CustomBuild>
+    <None Include="arch\i386\multiboot.S">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\powerpc\boot.s">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\powerpc\ofw_util.s">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\realmode\amd64.S">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\realmode\fathelp.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\realmode\helpers.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <CustomBuild Include="arch\realmode\i386.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" F800</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" F800</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).bin</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).bin</Outputs>
+    </CustomBuild>
+    <None Include="arch\realmode\int386.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\realmode\linux.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\realmode\pnp.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="arch\realmode\pxe.inc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="CHANGELOG" />
+    <None Include="CMakeLists.txt" />
+    <None Include="freeldr.spec" />
+    <None Include="freeldr_amd64.lds" />
+    <None Include="freeldr_arm.lds" />
+    <None Include="freeldr_i386.lds" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="arch\powerpc\compat.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="arch\powerpc\prep.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\arcemul.h" />
+    <ClInclude Include="include\arch\amd64\amd64.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\arch\arm\hardware.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\arch\i386\custom.h" />
+    <ClInclude Include="include\arch\i386\drivemap.h" />
+    <ClInclude Include="include\arch\i386\i386.h" />
+    <ClInclude Include="include\arch\i386\machxbox.h" />
+    <ClInclude Include="include\arch\i386\miscboot.h" />
+    <ClInclude Include="include\arch\pc\hardware.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\arch\pc\machpc.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\arch\pc\pcbios.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\arch\pc\pxe.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\arch\pc\x86common.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\arch\powerpc\hardware.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="include\bytesex.h" />
+    <ClInclude Include="include\cache.h" />
+    <ClInclude Include="include\cmdline.h" />
+    <ClInclude Include="include\comm.h" />
+    <ClInclude Include="include\debug.h" />
+    <ClInclude Include="include\disk.h" />
+    <ClInclude Include="include\freeldr.h" />
+    <ClInclude Include="include\fs.h" />
+    <ClInclude Include="include\fs\ext2.h" />
+    <ClInclude Include="include\fs\fat.h" />
+    <ClInclude Include="include\fs\iso.h" />
+    <ClInclude Include="include\fs\ntfs.h" />
+    <ClInclude Include="include\fs\pxe.h" />
+    <ClInclude Include="include\inffile.h" />
+    <ClInclude Include="include\inifile.h" />
+    <ClInclude Include="include\keycodes.h" />
+    <ClInclude Include="include\linux.h" />
+    <ClInclude Include="include\machine.h" />
+    <ClInclude Include="include\mm.h" />
+    <ClInclude Include="include\multiboot.h" />
+    <ClInclude Include="include\ntoskrnl.h" />
+    <ClInclude Include="include\of.h" />
+    <ClInclude Include="include\options.h" />
+    <ClInclude Include="include\oslist.h" />
+    <ClInclude Include="include\ramdisk.h" />
+    <ClInclude Include="include\reactos.h" />
+    <ClInclude Include="include\registry.h" />
+    <ClInclude Include="include\ui.h" />
+    <ClInclude Include="include\ui\gui.h" />
+    <ClInclude Include="include\ui\minitui.h" />
+    <ClInclude Include="include\ui\noui.h" />
+    <ClInclude Include="include\ui\tui.h" />
+    <ClInclude Include="include\ver.h" />
+    <ClInclude Include="include\video.h" />
+    <ClInclude Include="include\winldr.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\hal\minihal\minihal.vcxproj">
+      <Project>{f4761755-fec3-4956-bf16-7253f2004532}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\include\asm\asm.vcxproj">
+      <Project>{f11df557-8941-4427-b720-d99eefcff744}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\include\reactos\mc\mc.vcxproj">
+      <Project>{8b41e8f9-abeb-4510-90d6-e56065b0d3ad}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\cmlib\cmlib.vcxproj">
+      <Project>{6d55d0c8-47f4-4fee-89cc-9c2153e76cbf}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\cportlib\cportlib.vcxproj">
+      <Project>{928cfffa-a81c-4f49-80fc-1a037c760962}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\rossym\rossym.vcxproj">
+      <Project>{88c34bae-4a5b-41b3-a559-bbc9ae00a862}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\rtl\rtl.vcxproj">
+      <Project>{d763ce2c-8d8a-4ff5-b27b-a60d53196f63}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\sdk\crt\libcntpr\libcntpr.vcxproj">
+      <Project>{271006d5-01b2-4f33-8699-9909a41e0707}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

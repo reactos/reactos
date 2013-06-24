@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="arb">
+      <UniqueIdentifier>{1462dc66-aec7-4af4-bb38-7cac98db4f39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intrface">
+      <UniqueIdentifier>{8c1d0184-b159-4789-9e6f-e4379a643bff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pci">
+      <UniqueIdentifier>{3784e18e-7280-4773-86ca-89cd0fa8fbfc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="debug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="device.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dispatch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="enum.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fdo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="guid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hookhal.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="init.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pcivrify.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pdo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="power.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usage.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pci\busno.c">
+      <Filter>pci</Filter>
+    </ClCompile>
+    <ClCompile Include="pci\config.c">
+      <Filter>pci</Filter>
+    </ClCompile>
+    <ClCompile Include="pci\devhere.c">
+      <Filter>pci</Filter>
+    </ClCompile>
+    <ClCompile Include="pci\id.c">
+      <Filter>pci</Filter>
+    </ClCompile>
+    <ClCompile Include="pci\ppbridge.c">
+      <Filter>pci</Filter>
+    </ClCompile>
+    <ClCompile Include="pci\romimage.c">
+      <Filter>pci</Filter>
+    </ClCompile>
+    <ClCompile Include="pci\state.c">
+      <Filter>pci</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\agpintrf.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\busintrf.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\cardbus.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\devhere.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\ideintrf.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\intrface.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\lddintrf.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\locintrf.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\pmeintf.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="intrface\routintf.c">
+      <Filter>intrface</Filter>
+    </ClCompile>
+    <ClCompile Include="arb\ar_busno.c">
+      <Filter>arb</Filter>
+    </ClCompile>
+    <ClCompile Include="arb\ar_memio.c">
+      <Filter>arb</Filter>
+    </ClCompile>
+    <ClCompile Include="arb\arb_comn.c">
+      <Filter>arb</Filter>
+    </ClCompile>
+    <ClCompile Include="arb\tr_irq.c">
+      <Filter>arb</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pci.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="pci.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

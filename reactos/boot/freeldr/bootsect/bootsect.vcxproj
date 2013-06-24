@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F58E944D-47DD-472F-B383-1AB014515B9A}</ProjectGuid>
+    <Keyword>MakeFileProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <OutDir>build\x86_32\$(Configuration)\</OutDir>
+    <IntDir>build\x86_32\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <NMakeOutput>bootsect.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeBuildCommandLine>echo "Hello There!"</NMakeBuildCommandLine>
+    <IncludePath>..\..\..\include\asm;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <NMakeOutput>bootsect.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <CustomBuild>
+      <Command>cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c %(FullPath) &gt; $(OutDir)\%(Filename).tmp
+ml /nologo /Cp /Fo $(OutDir)\%(FileName).obj /c /Ta  $(OutDir)\%(Filename).tmp
+..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe $(OutDir)\%(Filename).obj $(OutDir)\%(Filename).bin 7c00</Command>
+      <Outputs>$(OutDir)\%(Filename).obj;$(OutDir)\%(Filename).bin</Outputs>
+      <Message>Preprocessing, assembling, and converting to .bin</Message>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <CustomBuild>
+      <Command>cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c %(FullPath) &gt; fool.asm
+ml /c fool.asm</Command>
+      <Outputs>%(Filename)</Outputs>
+      <Message>Preprocessing and assembling %(Filename)</Message>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <CustomBuild Include="dosmbr.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ml  %(FullPath)  foo.asm</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).obj</Outputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuild>
+    <CustomBuild Include="dosmbr.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7c00</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj;$(OutDir)\%(Filename).bin</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7c00</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Preprocessing, assembling, and converting to .bin</Message>
+    </CustomBuild>
+    <None Include="ext2.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <CustomBuild Include="ext2.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7000</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7000</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Preprocessing, assembling, and converting to .bin</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj;$(OutDir)\%(Filename).bin</Outputs>
+    </CustomBuild>
+    <None Include="fat.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <CustomBuild Include="fat.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7c00</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7c00</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Preprocessing, assembling, and converting to .bin</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj;$(OutDir)\%(Filename).bin</Outputs>
+    </CustomBuild>
+    <None Include="fat32.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <CustomBuild Include="fat32.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7c00</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7c00</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Preprocessing, assembling, and converting to .bin</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj;$(OutDir)\%(Filename).bin</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="fatx.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7c00</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7c00</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Preprocessing, assembling, and converting to .bin</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj;$(OutDir)\%(Filename).bin</Outputs>
+    </CustomBuild>
+    <None Include="isoboot.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <CustomBuild Include="isoboot.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7000</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7000</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Preprocessing, assembling, and converting to .bin</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj;$(OutDir)\%(Filename).bin</Outputs>
+    </CustomBuild>
+    <None Include="isobtrt.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <CustomBuild Include="isobtrt.S">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7000</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c "%(FullPath)" &gt; "$(OutDir)\%(Filename).tmp"
+ml /nologo /Cp /Fo "$(OutDir)\%(FileName).obj" /c /Ta  "$(OutDir)\%(Filename).tmp"
+"..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe" "$(OutDir)\%(Filename).obj" "$(OutDir)\%(Filename).bin" 7000</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Preprocessing, assembling, and converting to .bin</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).obj;$(OutDir)\%(Filename).bin</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="ofwboot.s">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cl /nologo /I..\..\..\include\asm /X /D__ASM__ /D_USE_ML /EP /c %(FullPath) &gt; $(OutDir)\%(Filename).tmp
+ml /nologo /Cp /Fo $(OutDir)\%(FileName).obj /c /Ta  $(OutDir)\%(Filename).tmp
+..\..\..\tools\obj2bin\$(OutDir)\obj2bin.exe $(OutDir)\%(Filename).obj $(OutDir)\%(Filename).bin 7c00</Command>
+    </CustomBuild>
+    <None Include="win2k.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="wxpfat16.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="fat.h" />
+    <ClInclude Include="fat32.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
