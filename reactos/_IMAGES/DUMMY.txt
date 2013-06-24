@@ -1,0 +1,22 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS _IMAGES
+ * FILE:            _IMAGES/DUMMY.TXT
+ * PURPOSE:         Give Visual Studio's build engine a source file from which it will try to generate a target file.
+ * PROGRAMMERS:     J. C. Jones
+ */
+
+ /* 
+  The sole purpose of this file is to stimulate Visual Studio's build engine. When deciding when to invoke a build
+  tool, such as a compiler, Visual Studio always has the intent of generating a target file from a source file. If
+  the specified target file is non-existent, or stale, relative to the source file, then the build tool will be
+  invoked. Therefore, if we create a dummy source file, such as this file, DUMMY.TXT, and specify a target file that will
+  never be actually generated, DUMMY.ZZZ, then each time Visual Studio examines whether to build DUMMY.ZZZ, it
+  will always conclude that the answer is "Yes. Try to build DUMMY.TXT." In this way, we can force an operation
+  to occur, always, for a project. 
+  
+  In this particular case, we use this technique to build ReactOS target images that can be booted, installed, etc. 
+  The creation of a CD, for example, by copying and packing files, is ~always~ done, no matter what might have 
+  occured previously.  This same DUMMY.TXT file is used for several Visual Studio projects in the image directory. 
+  That is why DUMMY.TXT is an immediate child of the directory _IMAGE.
+  */
