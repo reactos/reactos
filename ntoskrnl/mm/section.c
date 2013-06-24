@@ -237,6 +237,10 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     if(pidhDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
         DIE(("No MZ signature found, e_magic is %hX\n", pidhDosHeader->e_magic));
 
+    /* check if this is an old MZ executable */
+    if(pidhDosHeader->e_lfarlc < 0x40)
+        DIE(("Old-style MZ executable found, e_lfarlc is %d\n", pidhDosHeader->e_lfarlc));
+
     /* not a Windows executable */
     if(pidhDosHeader->e_lfanew <= 0)
         DIE(("Not a Windows executable, e_lfanew is %d\n", pidhDosHeader->e_lfanew));

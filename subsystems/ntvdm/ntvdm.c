@@ -42,6 +42,7 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
         {
             /* Perform interrupt 0x23 */
             EmulatorInterrupt(0x23);
+            break;
         }
         default:
         {
@@ -124,9 +125,12 @@ INT wmain(INT argc, WCHAR *argv[])
         }
         
         /* Continue CPU emulation */
-        for (i = 0; i < STEPS_PER_CYCLE; i++) EmulatorStep();
+        for (i = 0; (i < STEPS_PER_CYCLE) && VdmRunning; i++)
+        {
+            EmulatorStep();
+            Cycles++;
+        }
         
-        Cycles += STEPS_PER_CYCLE;
         if ((CurrentTickCount - LastCyclePrintout) >= 1000)
         {
             DPRINT1("NTVDM: %d Instructions Per Second\n", Cycles);

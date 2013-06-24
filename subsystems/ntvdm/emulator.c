@@ -254,13 +254,13 @@ VOID EmulatorInterrupt(BYTE Number)
 
 ULONG EmulatorGetRegister(ULONG Register)
 {
-    if (Register < EMULATOR_REG_CS)
+    if (Register < EMULATOR_REG_ES)
     {
         return EmulatorContext.state->general_reg[Register].val;
     }
     else
     {
-        return EmulatorContext.state->segment_reg[(Register >> 3) - 1].val;
+        return EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val;
     }
 }
 
@@ -272,7 +272,7 @@ VOID EmulatorSetRegister(ULONG Register, ULONG Value)
     }
     else
     {
-        EmulatorContext.state->segment_reg[(Register >> 3) - 1].val = Value;
+        EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val = Value;
     }
 }
 

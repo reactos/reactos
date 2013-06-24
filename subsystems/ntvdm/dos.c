@@ -320,7 +320,10 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     LPSTR ProgramFilePath, Parameters[128];
     CHAR CommandLineCopy[128];
     INT ParamCount = 0;
-    WORD Segment, FileSize;
+    WORD i, Segment, FileSize, ExeSize;
+    PIMAGE_DOS_HEADER Header;
+    PDWORD RelocationTable;
+    PWORD RelocWord;
 
     /* Save a copy of the command line */
     strcpy(CommandLineCopy, CommandLine);
@@ -366,8 +369,64 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     {
         /* EXE file */
 
-        // TODO: NOT IMPLEMENTED
-        DisplayMessage(L"EXE files are not yet supported!");
+        /* Get the MZ header */
+        Header = (PIMAGE_DOS_HEADER)Address;
+
+        // TODO: Verify checksum and executable!
+
+        /* Get the base size of the file, in paragraphs (rounded up) */
+        ExeSize = (((Header->e_cp - 1) << 8) + Header->e_cblp + 0x0F) >> 4;
+
+        /* Loop from the maximum to the minimum number of extra paragraphs */
+        for (i = Header->e_maxalloc; i >= Header->e_minalloc; i--)
+        {
+            /* Try to allocate that much memory */
+            Segment = DosAllocateMemory(ExeSize + (sizeof(DOS_PSP) >> 4) + i);
+            if (Segment != 0) break;
+        }
+
+        /* Check if at least the lowest allocation was successful */
+        if (Segment == 0) goto Cleanup;
+
+        /* Initialize the PSP */
+        DosInitializePsp(Segment,
+                         CommandLine, ExeSize + (sizeof(DOS_PSP) >> 4) + i,
+                         EnvBlock);
+
+        /* Copy the program to Segment:0100 */
+        RtlCopyMemory((PVOID)((ULONG_PTR)BaseAddress
+                      + TO_LINEAR(Segment, 0x100)),
+                      Address + (Header->e_cparhdr << 4),
+                      FileSize - (Header->e_cparhdr << 4));
+
+        /* Get the relocation table */
+        RelocationTable = (PDWORD)(Address + Header->e_lfarlc);
+
+        /* Perform relocations */
+        for (i = 0; i < Header->e_crlc; i++)
+        {
+            /* Get a pointer to the word that needs to be patched */
+            RelocWord = (PWORD)((ULONG_PTR)BaseAddress
+                                + TO_LINEAR(Segment + HIWORD(RelocationTable[i]),
+                                            0x100 + LOWORD(RelocationTable[i])));
+
+            /* Add the number of the EXE segment to it */
+            *RelocWord += Segment + (sizeof(DOS_PSP) >> 4);
+        }
+
+        /* Set the initial segment registers */
+        EmulatorSetRegister(EMULATOR_REG_DS, Segment);
+        EmulatorSetRegister(EMULATOR_REG_ES, Segment);
+
+        /* Set the stack to the location from the header */
+        EmulatorSetStack(Segment + (sizeof(DOS_PSP) >> 4) + Header->e_ss,
+                         Header->e_sp);
+
+        /* Execute */
+        CurrentPsp = Segment;
+        EmulatorExecute(Segment + Header->e_cs, sizeof(DOS_PSP) + Header->e_ip);
+
+        Success = TRUE;
     }
     else
     {
