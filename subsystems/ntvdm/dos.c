@@ -701,6 +701,67 @@ VOID DosInt21h(WORD CodeSegment)
             break;
         }
 
+        /* Create Directory */
+        case 0x39:
+        {
+            String = (PCHAR)((ULONG_PTR)BaseAddress
+                     + TO_LINEAR(DataSegment, LOWORD(Edx)));
+
+            if (CreateDirectoryA(String, NULL))
+            {
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+            }
+            else
+            {
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | LOWORD(GetLastError()));
+            }
+
+            break;
+        }
+
+        /* Remove Directory */
+        case 0x3A:
+        {
+            String = (PCHAR)((ULONG_PTR)BaseAddress
+                     + TO_LINEAR(DataSegment, LOWORD(Edx)));
+
+            if (RemoveDirectoryA(String))
+            {
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+            }
+            else
+            {
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | LOWORD(GetLastError()));
+            }
+
+
+            break;
+        }
+
+        /* Set Current Directory */
+        case 0x3B:
+        {
+            String = (PCHAR)((ULONG_PTR)BaseAddress
+                     + TO_LINEAR(DataSegment, LOWORD(Edx)));
+
+            if (SetCurrentDirectoryA(String))
+            {
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+            }
+            else
+            {
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | LOWORD(GetLastError()));
+            }
+
+            break;
+        }
+
         /* Allocate Memory */
         case 0x48:
         {
