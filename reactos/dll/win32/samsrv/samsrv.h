@@ -300,6 +300,13 @@ VOID
 SampStartRpcServer(VOID);
 
 
+/* security.c */
+
+NTSTATUS
+SampCreateServerSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
+                   OUT PULONG Size);
+
+
 /* setup.c */
 
 BOOL

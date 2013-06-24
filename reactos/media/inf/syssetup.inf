@@ -98,6 +98,7 @@ AddReg=Classes
 11,,wininet.dll,2
 11,,wintrust.dll,1
 11,,wuapi.dll,1
+11,wbem,wbemprox.dll,1
 
 [TypeLibraries]
 stdole2.tlb

@@ -34,9 +34,6 @@
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
     WideCharToMultiByte((Console)->CodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
-#define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
-    MultiByteToWideChar((Console)->CodePage, 0, (sChar), 1, (dWChar), 1)
-
 typedef struct ConsoleInput_t
 {
     LIST_ENTRY ListEntry;
@@ -64,146 +61,6 @@ ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
                                           &InputEvent->Event.KeyEvent.uChar.AsciiChar,
                                           &UnicodeChar);
     }
-}
-
-NTSTATUS FASTCALL
-ConioProcessInputEvent(PCONSOLE Console,
-                       PINPUT_RECORD InputEvent)
-{
-    ConsoleInput *ConInRec;
-
-    /* Check for pause or unpause */
-    if (InputEvent->EventType == KEY_EVENT && InputEvent->Event.KeyEvent.bKeyDown)
-    {
-        WORD vk = InputEvent->Event.KeyEvent.wVirtualKeyCode;
-        if (!(Console->PauseFlags & PAUSED_FROM_KEYBOARD))
-        {
-            DWORD cks = InputEvent->Event.KeyEvent.dwControlKeyState;
-            if (Console->InputBuffer.Mode & ENABLE_LINE_INPUT &&
-                (vk == VK_PAUSE || (vk == 'S' &&
-                                    (cks & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) &&
-                                   !(cks & (LEFT_ALT_PRESSED  | RIGHT_ALT_PRESSED)))))
-            {
-                ConioPause(Console, PAUSED_FROM_KEYBOARD);
-                return STATUS_SUCCESS;
-            }
-        }
-        else
-        {
-            if ((vk < VK_SHIFT || vk > VK_CAPITAL) && vk != VK_LWIN &&
-                vk != VK_RWIN && vk != VK_NUMLOCK && vk != VK_SCROLL)
-            {
-                ConioUnpause(Console, PAUSED_FROM_KEYBOARD);
-                return STATUS_SUCCESS;
-            }
-        }
-    }
-
-    /* Add event to the queue */
-    ConInRec = ConsoleAllocHeap(0, sizeof(ConsoleInput));
-    if (ConInRec == NULL) return STATUS_INSUFFICIENT_RESOURCES;
-
-    ConInRec->InputEvent = *InputEvent;
-    InsertTailList(&Console->InputBuffer.InputEvents, &ConInRec->ListEntry);
-
-    SetEvent(Console->InputBuffer.ActiveEvent);
-    CsrNotifyWait(&Console->InputBuffer.ReadWaitQueue,
-                  WaitAny,
-                  NULL,
-                  NULL);
-    if (!IsListEmpty(&Console->InputBuffer.ReadWaitQueue))
-    {
-        CsrDereferenceWait(&Console->InputBuffer.ReadWaitQueue);
-    }
-
-    return STATUS_SUCCESS;
-}
-
-VOID FASTCALL
-PurgeInputBuffer(PCONSOLE Console)
-{
-    PLIST_ENTRY CurrentEntry;
-    ConsoleInput* Event;
-
-    while (!IsListEmpty(&Console->InputBuffer.InputEvents))
-    {
-        CurrentEntry = RemoveHeadList(&Console->InputBuffer.InputEvents);
-        Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-        ConsoleFreeHeap(Event);
-    }
-
-    CloseHandle(Console->InputBuffer.ActiveEvent);
-}
-
-VOID NTAPI
-ConDrvProcessKey(IN PCONSOLE Console,
-                 IN BOOLEAN Down,
-                 IN UINT VirtualKeyCode,
-                 IN UINT VirtualScanCode,
-                 IN WCHAR UnicodeChar,
-                 IN ULONG ShiftState,
-                 IN BYTE KeyStateCtrl)
-{
-    INPUT_RECORD er;
-
-    /* process Ctrl-C and Ctrl-Break */
-    if ( Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
-         Down && (VirtualKeyCode == VK_PAUSE || VirtualKeyCode == 'C') &&
-         (ShiftState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyStateCtrl & 0x80) )
-    {
-        DPRINT1("Console_Api Ctrl-C\n");
-        ConDrvConsoleProcessCtrlEvent(Console, 0, CTRL_C_EVENT);
-
-        if (Console->LineBuffer && !Console->LineComplete)
-        {
-            /* Line input is in progress; end it */
-            Console->LinePos = Console->LineSize = 0;
-            Console->LineComplete = TRUE;
-        }
-        return;
-    }
-
-    if ( (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) != 0 &&
-         (VK_UP == VirtualKeyCode || VK_DOWN == VirtualKeyCode) )
-    {
-        if (!Down) return;
-
-        /* scroll up or down */
-        if (VK_UP == VirtualKeyCode)
-        {
-            /* only scroll up if there is room to scroll up into */
-            if (Console->ActiveBuffer->CursorPosition.Y != Console->ActiveBuffer->ScreenBufferSize.Y - 1)
-            {
-                Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY +
-                                                   Console->ActiveBuffer->ScreenBufferSize.Y - 1) %
-                                                   Console->ActiveBuffer->ScreenBufferSize.Y;
-                Console->ActiveBuffer->CursorPosition.Y++;
-            }
-        }
-        else
-        {
-            /* only scroll down if there is room to scroll down into */
-            if (Console->ActiveBuffer->CursorPosition.Y != 0)
-            {
-                Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY + 1) %
-                                                   Console->ActiveBuffer->ScreenBufferSize.Y;
-                Console->ActiveBuffer->CursorPosition.Y--;
-            }
-        }
-
-        ConioDrawConsole(Console);
-        return;
-    }
-
-    er.EventType                        = KEY_EVENT;
-    er.Event.KeyEvent.bKeyDown          = Down;
-    er.Event.KeyEvent.wRepeatCount      = 1;
-    er.Event.KeyEvent.wVirtualKeyCode   = VirtualKeyCode;
-    er.Event.KeyEvent.wVirtualScanCode  = VirtualScanCode;
-    er.Event.KeyEvent.uChar.UnicodeChar = UnicodeChar;
-    er.Event.KeyEvent.dwControlKeyState = ShiftState;
-
-    ConioProcessInputEvent(Console, &er);
 }
 
 static NTSTATUS
@@ -683,16 +540,19 @@ CSR_API(SrvGetConsoleInput)
     return Status;
 }
 
+NTSTATUS NTAPI
+ConDrvWriteConsoleInput(IN PCONSOLE Console,
+                        IN PCONSOLE_INPUT_BUFFER InputBuffer,
+                        IN BOOLEAN Unicode,
+                        IN PINPUT_RECORD InputRecord,
+                        IN ULONG NumEventsToWrite,
+                        OUT PULONG NumEventsWritten);
 CSR_API(SrvWriteConsoleInput)
 {
     NTSTATUS Status;
     PCONSOLE_WRITEINPUT WriteInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteInputRequest;
-    PINPUT_RECORD InputRecord;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCONSOLE_INPUT_BUFFER InputBuffer;
-    PCONSOLE Console;
-    DWORD Length;
-    DWORD i;
+    ULONG NumEventsWritten = 0;
 
     DPRINT("SrvWriteConsoleInput\n");
 
@@ -704,92 +564,69 @@ CSR_API(SrvWriteConsoleInput)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConSrvGetInputBuffer(ProcessData, WriteInputRequest->InputHandle, &InputBuffer, GENERIC_WRITE, TRUE);
+    Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                  WriteInputRequest->InputHandle,
+                                  &InputBuffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Console = InputBuffer->Header.Console;
-    InputRecord = WriteInputRequest->InputRecord;
-    Length = WriteInputRequest->Length;
-
-    for (i = 0; i < Length && NT_SUCCESS(Status); i++)
-    {
-        if (!WriteInputRequest->Unicode &&
-            InputRecord->EventType == KEY_EVENT)
-        {
-            CHAR AsciiChar = InputRecord->Event.KeyEvent.uChar.AsciiChar;
-            ConsoleInputAnsiCharToUnicodeChar(Console,
-                                              &InputRecord->Event.KeyEvent.uChar.UnicodeChar,
-                                              &AsciiChar);
-        }
-
-        Status = ConioProcessInputEvent(Console, InputRecord++);
-    }
+    Status = ConDrvWriteConsoleInput(InputBuffer->Header.Console,
+                                     InputBuffer,
+                                     WriteInputRequest->Unicode,
+                                     WriteInputRequest->InputRecord,
+                                     WriteInputRequest->Length,
+                                     &NumEventsWritten);
+    WriteInputRequest->Length = NumEventsWritten;
 
     ConSrvReleaseInputBuffer(InputBuffer, TRUE);
-
-    WriteInputRequest->Length = i;
-
     return Status;
 }
 
+NTSTATUS NTAPI
+ConDrvFlushConsoleInputBuffer(IN PCONSOLE Console,
+                              IN PCONSOLE_INPUT_BUFFER InputBuffer);
 CSR_API(SrvFlushConsoleInputBuffer)
 {
     NTSTATUS Status;
     PCONSOLE_FLUSHINPUTBUFFER FlushInputBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FlushInputBufferRequest;
-    PLIST_ENTRY CurrentEntry;
     PCONSOLE_INPUT_BUFFER InputBuffer;
-    ConsoleInput* Event;
 
     DPRINT("SrvFlushConsoleInputBuffer\n");
 
     Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                                 FlushInputBufferRequest->InputHandle,
-                                 &InputBuffer,
-                                 GENERIC_WRITE,
-                                 TRUE);
+                                  FlushInputBufferRequest->InputHandle,
+                                  &InputBuffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Discard all entries in the input event queue */
-    while (!IsListEmpty(&InputBuffer->InputEvents))
-    {
-        CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
-        Event = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-        ConsoleFreeHeap(Event);
-    }
-    ResetEvent(InputBuffer->ActiveEvent);
+    Status = ConDrvFlushConsoleInputBuffer(InputBuffer->Header.Console,
+                                           InputBuffer);
 
     ConSrvReleaseInputBuffer(InputBuffer, TRUE);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
+NTSTATUS NTAPI
+ConDrvGetConsoleNumberOfInputEvents(IN PCONSOLE Console,
+                                    IN PCONSOLE_INPUT_BUFFER InputBuffer,
+                                    OUT PULONG NumEvents);
 CSR_API(SrvGetConsoleNumberOfInputEvents)
 {
     NTSTATUS Status;
     PCONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetNumInputEventsRequest;
     PCONSOLE_INPUT_BUFFER InputBuffer;
-    PLIST_ENTRY CurrentInput;
-    DWORD NumEvents;
 
     DPRINT("SrvGetConsoleNumberOfInputEvents\n");
 
-    Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), GetNumInputEventsRequest->InputHandle, &InputBuffer, GENERIC_READ, TRUE);
+    Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                  GetNumInputEventsRequest->InputHandle,
+                                  &InputBuffer, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    CurrentInput = InputBuffer->InputEvents.Flink;
-    /* GetNumInputEventsRequest->NumInputEvents = */ NumEvents = 0;
-
-    /* If there are any events ... */
-    while (CurrentInput != &InputBuffer->InputEvents)
-    {
-        CurrentInput = CurrentInput->Flink;
-        NumEvents++;
-    }
+    Status = ConDrvGetConsoleNumberOfInputEvents(InputBuffer->Header.Console,
+                                                 InputBuffer,
+                                                 &GetNumInputEventsRequest->NumInputEvents);
 
     ConSrvReleaseInputBuffer(InputBuffer, TRUE);
-
-    GetNumInputEventsRequest->NumInputEvents = NumEvents;
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /* EOF */

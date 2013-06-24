@@ -952,7 +952,7 @@ static void write_inline_wrappers(FILE *header, const type_t *iface, const char 
     if (!is_callas(func->attrs) && !is_inherited_method(iface, func)) {
       const var_t *arg;
 
-      fprintf(header, "static FORCEINLINE ");
+      fprintf(header, "FORCEINLINE ");
       write_type_decl_left(header, type_function_get_rettype(func->type));
       fprintf(header, " %s_%s(", name, get_name(func));
       write_args(header, type_get_function_args(func->type), name, 1, FALSE);
@@ -975,6 +975,15 @@ static void do_write_c_method_def(FILE *header, const type_t *iface, const char 
 
   if (type_iface_get_inherit(iface))
     do_write_c_method_def(header, type_iface_get_inherit(iface), name);
+  else if (type_iface_get_stmts(iface) == NULL)
+  {
+    fprintf(header, "#ifndef __cplusplus\n");
+    indent(header, 0);
+    fprintf(header, "char dummy;\n");
+    fprintf(header, "#endif\n");
+    fprintf(header, "\n");
+    return;
+  }
 
   STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface))
   {

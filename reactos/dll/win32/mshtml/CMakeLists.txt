@@ -89,7 +89,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
 
-add_library(mshtml SHARED ${SOURCE})
+if(MSVC)
+    add_asm_files(mshtml_asm msvc.S)
+endif()
+
+add_library(mshtml SHARED ${SOURCE} ${mshtml_asm})
 
 list(APPEND mshtml_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/blank.htm

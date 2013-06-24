@@ -460,13 +460,13 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
     ScreenBufferInfo.CursorSize       = ConsoleInfo->CursorSize;
 
     InitializeListHead(&Console->BufferList);
-    Status = ConSrvCreateScreenBuffer(&NewBuffer,
+    Status = ConDrvCreateScreenBuffer(&NewBuffer,
                                       Console,
                                       CONSOLE_TEXTMODE_BUFFER,
                                       &ScreenBufferInfo);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ConSrvCreateScreenBuffer: failed, Status = 0x%08lx\n", Status);
+        DPRINT1("ConDrvCreateScreenBuffer: failed, Status = 0x%08lx\n", Status);
         CloseHandle(Console->InputBuffer.ActiveEvent);
         DeleteCriticalSection(&Console->Lock);
         ConsoleFreeHeap(Console);

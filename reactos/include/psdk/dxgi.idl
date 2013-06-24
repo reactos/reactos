@@ -1,0 +1,446 @@
+/*
+ * Copyright 2007 Andras Kovacs
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "dxgitype.h";
+
+const UINT _FACDXGI = 0x87a;
+
+cpp_quote("#define MAKE_DXGI_STATUS(x)                         MAKE_HRESULT(0, _FACDXGI, x)")
+cpp_quote("#define DXGI_STATUS_OCCLUDED                        MAKE_DXGI_STATUS(1)")
+cpp_quote("#define DXGI_STATUS_CLIPPED                         MAKE_DXGI_STATUS(2)")
+cpp_quote("#define DXGI_STATUS_NO_REDIRECTION                  MAKE_DXGI_STATUS(4)")
+cpp_quote("#define DXGI_STATUS_NO_DESKTOP_ACCESS               MAKE_DXGI_STATUS(5)")
+cpp_quote("#define DXGI_STATUS_GRAPHICS_VIDPN_SOURCE_IN_USE    MAKE_DXGI_STATUS(6)")
+cpp_quote("#define DXGI_STATUS_MODE_CHANGED                    MAKE_DXGI_STATUS(7)")
+cpp_quote("#define DXGI_STATUS_MODE_CHANGE_IN_PROGRESS         MAKE_DXGI_STATUS(8)")
+
+cpp_quote("#define MAKE_DXGI_HRESULT(x)                        MAKE_HRESULT(1, _FACDXGI, x)")
+cpp_quote("#define DXGI_ERROR_INVALID_CALL                     MAKE_DXGI_HRESULT(1)")
+cpp_quote("#define DXGI_ERROR_NOT_FOUND                        MAKE_DXGI_HRESULT(2)")
+cpp_quote("#define DXGI_ERROR_MORE_DATA                        MAKE_DXGI_HRESULT(3)")
+cpp_quote("#define DXGI_ERROR_UNSUPPORTED                      MAKE_DXGI_HRESULT(4)")
+cpp_quote("#define DXGI_ERROR_DEVICE_REMOVED                   MAKE_DXGI_HRESULT(5)")
+cpp_quote("#define DXGI_ERROR_DEVICE_HUNG                      MAKE_DXGI_HRESULT(6)")
+cpp_quote("#define DXGI_ERROR_DEVICE_RESET                     MAKE_DXGI_HRESULT(7)")
+cpp_quote("#define DXGI_ERROR_WAS_STILL_DRAWING                MAKE_DXGI_HRESULT(10)")
+cpp_quote("#define DXGI_ERROR_FRAME_STATISTICS_DISJOINT        MAKE_DXGI_HRESULT(11)")
+cpp_quote("#define DXGI_ERROR_GRAPHICS_VIDPN_SOURCE_IN_USE     MAKE_DXGI_HRESULT(12)")
+cpp_quote("#define DXGI_ERROR_DRIVER_INTERNAL_ERROR            MAKE_DXGI_HRESULT(32)")
+cpp_quote("#define DXGI_ERROR_NONEXCLUSIVE                     MAKE_DXGI_HRESULT(33)")
+cpp_quote("#define DXGI_ERROR_NOT_CURRENTLY_AVAILABLE          MAKE_DXGI_HRESULT(34)")
+
+cpp_quote("#if 0")
+typedef HANDLE HMONITOR;
+typedef struct _LUID {
+    DWORD LowPart;
+    LONG HighPart;
+} LUID, *PLUID;
+cpp_quote("#endif")
+
+typedef UINT DXGI_USAGE;
+const DXGI_USAGE DXGI_USAGE_SHADER_INPUT            = 0x10L;
+const DXGI_USAGE DXGI_USAGE_RENDER_TARGET_OUTPUT    = 0x20L;
+const DXGI_USAGE DXGI_USAGE_BACK_BUFFER             = 0x40L;
+const DXGI_USAGE DXGI_USAGE_SHARED                  = 0x80L;
+const DXGI_USAGE DXGI_USAGE_READ_ONLY               = 0x100L;
+
+const UINT DXGI_ENUM_MODES_INTERLACED               = 1;
+const UINT DXGI_ENUM_MODES_SCALING                  = 2;
+
+typedef enum DXGI_SWAP_EFFECT {
+    DXGI_SWAP_EFFECT_DISCARD    = 0,
+    DXGI_SWAP_EFFECT_SEQUENTIAL = 1,
+} DXGI_SWAP_EFFECT;
+
+typedef enum DXGI_RESIDENCY {
+    DXGI_RESIDENCY_FULLY_RESIDENT               = 1,
+    DXGI_RESIDENCY_RESIDENT_IN_SHARED_MEMORY    = 2,
+    DXGI_RESIDENCY_EVICTED_TO_DISK              = 3,
+} DXGI_RESIDENCY;
+
+typedef struct DXGI_SURFACE_DESC {
+    UINT Width;
+    UINT Height;
+    DXGI_FORMAT Format;
+    DXGI_SAMPLE_DESC SampleDesc;
+} DXGI_SURFACE_DESC;
+
+typedef struct DXGI_MAPPED_RECT {
+    INT Pitch;
+    BYTE *pBits;
+} DXGI_MAPPED_RECT;
+
+typedef struct DXGI_OUTPUT_DESC {
+    WCHAR DeviceName[32];
+    RECT DesktopCoordinates;
+    BOOL AttachedToDesktop;
+    DXGI_MODE_ROTATION Rotation;
+    HMONITOR Monitor;
+} DXGI_OUTPUT_DESC;
+
+typedef struct DXGI_FRAME_STATISTICS {
+    UINT PresentCount;
+    UINT PresentRefreshCount;
+    UINT SyncRefreshCount;
+    LARGE_INTEGER SyncQPCTime;
+    LARGE_INTEGER SyncGPUTime;
+} DXGI_FRAME_STATISTICS;
+
+typedef struct DXGI_ADAPTER_DESC {
+    WCHAR Description[128];
+    UINT VendorId;
+    UINT DeviceId;
+    UINT SubSysId;
+    UINT Revision;
+    SIZE_T DedicatedVideoMemory;
+    SIZE_T DedicatedSystemMemory;
+    SIZE_T SharedSystemMemory;
+    LUID AdapterLuid;
+} DXGI_ADAPTER_DESC;
+
+typedef enum DXGI_SWAP_CHAIN_FLAG {
+    DXGI_SWAP_CHAIN_FLAG_NONPREROTATED      = 1,
+    DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH  = 2,
+    DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE     = 4
+} DXGI_SWAP_CHAIN_FLAG;
+
+typedef struct DXGI_SWAP_CHAIN_DESC {
+    DXGI_MODE_DESC BufferDesc;
+    DXGI_SAMPLE_DESC SampleDesc;
+    DXGI_USAGE BufferUsage;
+    UINT BufferCount;
+    HWND OutputWindow;
+    BOOL Windowed;
+    DXGI_SWAP_EFFECT SwapEffect;
+    UINT Flags;
+} DXGI_SWAP_CHAIN_DESC;
+
+typedef struct DXGI_SHARED_RESOURCE {
+    HANDLE Handle;
+} DXGI_SHARED_RESOURCE;
+
+[
+    object,
+    local,
+    uuid(aec22fb8-76f3-4639-9be0-28eb43a67a2e)
+]
+interface IDXGIObject : IUnknown
+{
+    HRESULT SetPrivateData(
+        [in] REFGUID guid,
+        [in] UINT data_size,
+        [in] const void *data
+    );
+    HRESULT SetPrivateDataInterface(
+        [in] REFGUID guid,
+        [in] const IUnknown *object
+    );
+    HRESULT GetPrivateData(
+        [in] REFGUID guid,
+        [in, out] UINT *data_size,
+        [out] void *data
+    );
+    HRESULT GetParent(
+        [in] REFIID riid,
+        [out] void **parent
+    );
+}
+
+[
+    object,
+    local,
+    uuid(3d3e0379-f9de-4d58-bb6c-18d62992f1a6)
+]
+interface IDXGIDeviceSubObject : IDXGIObject
+{
+    HRESULT GetDevice(
+        [in] REFIID riid,
+        [out] void **device
+    );
+}
+
+[
+    object,
+    uuid(035f3ab4-482e-4e50-b41f-8a7f8bd8960b),
+    local,
+    pointer_default(unique)
+]
+interface IDXGIResource : IDXGIDeviceSubObject
+{
+    HRESULT GetSharedHandle([out] HANDLE *pSharedHandle);
+    HRESULT GetUsage([out] DXGI_USAGE *pUsage);
+    HRESULT SetEvictionPriority([in] UINT EvictionPriority);
+    HRESULT GetEvictionPriority([out, retval] UINT *pEvictionPriority);
+}
+
+[
+    object,
+    uuid(9d8e1289-d7b3-465f-8126-250e349af85d),
+    local,
+    pointer_default(unique)
+]
+interface IDXGIKeyedMutex : IDXGIDeviceSubObject
+{
+    HRESULT AcquireSync([in] UINT64 Key, [in] DWORD dwMilliseconds);
+    HRESULT ReleaseSync([in] UINT64 Key);
+}
+
+[
+    object,
+    local,
+    uuid(cafcb56c-6ac3-4889-bf47-9e23bbd260ec)
+]
+interface IDXGISurface : IDXGIDeviceSubObject
+{
+    HRESULT GetDesc(
+        [out] DXGI_SURFACE_DESC *desc
+    );
+    HRESULT Map(
+        [out] DXGI_MAPPED_RECT *mapped_rect,
+        [in] UINT flags
+    );
+    HRESULT Unmap(
+    );
+}
+
+[
+    object,
+    local,
+    uuid(ae02eedb-c735-4690-8d52-5a8dc20213aa)
+]
+interface IDXGIOutput : IDXGIObject
+{
+    HRESULT GetDesc(
+        [out] DXGI_OUTPUT_DESC *desc
+    );
+    HRESULT GetDisplayModeList(
+        [in] DXGI_FORMAT format,
+        [in] UINT flags,
+        [in, out] UINT *mode_count,
+        [out] DXGI_MODE_DESC *desc
+    );
+    HRESULT FindClosestMatchingMode(
+        [in] const DXGI_MODE_DESC *mode,
+        [out] DXGI_MODE_DESC *closest_match,
+        [in] IUnknown *device
+    );
+    HRESULT WaitForVBlank(
+    );
+    HRESULT TakeOwnership(
+        [in] IUnknown *device,
+        [in] BOOL exclusive
+    );
+    void ReleaseOwnership(
+    );
+    HRESULT GetGammaControlCapabilities(
+        [out] DXGI_GAMMA_CONTROL_CAPABILITIES *gamma_caps
+    );
+    HRESULT SetGammaControl(
+        [in] const DXGI_GAMMA_CONTROL *gamma_control
+    );
+    HRESULT GetGammaControl(
+        [out] DXGI_GAMMA_CONTROL *gamma_control
+    );
+    HRESULT SetDisplaySurface(
+        [in] IDXGISurface *surface
+    );
+    HRESULT GetDisplaySurfaceData(
+        [in] IDXGISurface *surface
+    );
+    HRESULT GetFrameStatistics(
+        [out] DXGI_FRAME_STATISTICS *stats
+    );
+}
+
+[
+    object,
+    local,
+    uuid(2411e7e1-12ac-4ccf-bd14-9798e8534dc0)
+]
+interface IDXGIAdapter : IDXGIObject
+{
+    HRESULT EnumOutputs(
+        [in] UINT output_idx,
+        [in, out] IDXGIOutput **output
+    );
+    HRESULT GetDesc(
+        [out] DXGI_ADAPTER_DESC *desc
+    );
+    HRESULT CheckInterfaceSupport(
+        [in] REFGUID guid,
+        [out] LARGE_INTEGER *umd_version
+    );
+}
+
+[
+    object,
+    local,
+    uuid(310d36a0-d2e7-4c0a-aa04-6a9d23b8886a)
+]
+interface IDXGISwapChain : IDXGIDeviceSubObject
+{
+    HRESULT Present(
+        [in] UINT sync_interval,
+        [in] UINT flags
+    );
+    HRESULT GetBuffer(
+        [in] UINT buffer_idx,
+        [in] REFIID riid,
+        [in, out] void **surface
+    );
+    HRESULT SetFullscreenState(
+        [in] BOOL fullscreen,
+        [in] IDXGIOutput *target
+    );
+    HRESULT GetFullscreenState(
+        [out] BOOL *fullscreen,
+        [out] IDXGIOutput **target
+    );
+    HRESULT GetDesc(
+        [out] DXGI_SWAP_CHAIN_DESC *desc
+    );
+    HRESULT ResizeBuffers(
+        [in] UINT buffer_count,
+        [in] UINT width,
+        [in] UINT height,
+        [in] DXGI_FORMAT format,
+        [in] UINT flags
+    );
+    HRESULT ResizeTarget(
+        [in] const DXGI_MODE_DESC *target_mode_desc
+    );
+    HRESULT GetContainingOutput(
+        [out] IDXGIOutput **output
+    );
+    HRESULT GetFrameStatistics(
+        [out] DXGI_FRAME_STATISTICS *stats
+    );
+    HRESULT GetLastPresentCount(
+        [out] UINT *last_present_count
+    );
+}
+
+cpp_quote("#define DXGI_MWA_NO_WINDOW_CHANGES  0x1")
+cpp_quote("#define DXGI_MWA_NO_ALT_ENTER       0x2")
+cpp_quote("#define DXGI_MWA_NO_PRINT_SCREEN    0x4")
+cpp_quote("#define DXGI_MWA_VALID              0x7")
+
+[
+    object,
+    local,
+    uuid(7b7166ec-21c7-44ae-b21a-c9ae321ae369)
+]
+interface IDXGIFactory : IDXGIObject
+{
+    HRESULT EnumAdapters(
+        [in] UINT adapter_idx,
+        [out] IDXGIAdapter **adapter
+    );
+    HRESULT MakeWindowAssociation(
+        [in] HWND window,
+        [in] UINT flags
+    );
+    HRESULT GetWindowAssociation(
+        [in] HWND *window
+    );
+    HRESULT CreateSwapChain(
+        [in] IUnknown *device,
+        [in] DXGI_SWAP_CHAIN_DESC *desc,
+        [out] IDXGISwapChain **swapchain
+    );
+    HRESULT CreateSoftwareAdapter(
+        [in] HMODULE swrast,
+        [out] IDXGIAdapter **adapter
+    );
+}
+
+[local] HRESULT __stdcall CreateDXGIFactory(REFIID riid, void **factory);
+
+[
+    object,
+    local,
+    uuid(54ec77fa-1377-44e6-8c32-88fd5f44c84c)
+]
+interface IDXGIDevice : IDXGIObject
+{
+    HRESULT GetAdapter(
+        [out] IDXGIAdapter **adapter
+    );
+    HRESULT CreateSurface(
+        [in] const DXGI_SURFACE_DESC *desc,
+        [in] UINT surface_count,
+        [in] DXGI_USAGE usage,
+        [in] const DXGI_SHARED_RESOURCE *shared_resource,
+        [out] IDXGISurface **surface
+    );
+    HRESULT QueryResourceResidency(
+        [in] IUnknown *const *resources,
+        [out] DXGI_RESIDENCY *residency,
+        [in] UINT resource_count
+    );
+    HRESULT SetGPUThreadPriority(
+        [in] INT priority
+    );
+    HRESULT GetGPUThreadPriority(
+        [out] INT *priority
+    );
+}
+
+typedef enum DXGI_ADAPTER_FLAG {
+    DXGI_ADAPTER_FLAG_NONE         = 0,
+    DXGI_ADAPTER_FLAG_REMOTE       = 1,
+    DXGI_ADAPTER_FLAG_FORCE_DWORD  = 0xFFFFFFFF
+} DXGI_ADAPTER_FLAG;
+
+typedef struct DXGI_ADAPTER_DESC1 {
+    WCHAR  Description[128];
+    UINT   VendorId;
+    UINT   DeviceId;
+    UINT   SubSysId;
+    UINT   Revision;
+    SIZE_T DedicatedVideoMemory;
+    SIZE_T DedicatedSystemMemory;
+    SIZE_T SharedSystemMemory;
+    LUID   AdapterLuid;
+    UINT   Flags;
+} DXGI_ADAPTER_DESC1;
+
+[
+    object,
+    uuid(29038f61-3839-4626-91fd-086879011a05),
+    local,
+    pointer_default(unique)
+]
+interface IDXGIAdapter1 : IDXGIAdapter
+{
+    HRESULT GetDesc1([out] DXGI_ADAPTER_DESC1 *pDesc);
+}
+
+[
+    object,
+    uuid(770aae78-f26f-4dba-a829-253c83d1b387),
+    local,
+    pointer_default(unique)
+ ]
+interface IDXGIFactory1 : IDXGIFactory
+{
+    HRESULT EnumAdapters1([in] UINT Adapter, [out] IDXGIAdapter1 **ppAdapter);
+    BOOL IsCurrent();
+}

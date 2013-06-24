@@ -35,6 +35,7 @@ reactos/dll/directx/dplay         # Synced to Wine-1.5.26
 reactos/dll/directx/dplayx        # Synced to Wine-1.5.26
 reactos/dll/directx/dsound        # Synced to Wine-1.5.26
 reactos/dll/directx/dxdiagn       # Synced to Wine-0_9_5
+reactos/dll/directx/dxgi          # Synced to Wine-1.5.26
 reactos/dll/directx/msdmo         # Autosync
 reactos/dll/directx/qedit         # Autosync
 reactos/dll/directx/quartz        # Synced to Wine-1.5.26
@@ -186,6 +187,7 @@ reactos/dll/win32/usp10           # Synced to Wine-1.5.26
 reactos/dll/win32/uxtheme         # Forked
 reactos/dll/win32/vbscript        # Synced to Wine-1.5.26
 reactos/dll/win32/version         # Autosync
+reactos/dll/win32/wbemprox        # Synced to Wine-1.5.26
 reactos/dll/win32/wer             # Autosync
 reactos/dll/win32/windowscodecs   # Synced to Wine-1.5.26
 reactos/dll/win32/winemp3.acm     # Synced to Wine-1.5.19
