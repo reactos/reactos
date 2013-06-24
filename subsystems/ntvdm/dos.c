@@ -10,38 +10,31 @@
 
 WORD CurrentPsp = SYSTEM_PSP, LastError = 0;
 
-static VOID DosCombineFreeBlocks()
+static VOID DosCombineFreeBlocks(WORD StartBlock)
 {
-    WORD Segment = FIRST_MCB_SEGMENT;
-    PDOS_MCB CurrentMcb, NextMcb;
+    PDOS_MCB CurrentMcb = SEGMENT_TO_MCB(StartBlock), NextMcb;
 
-    /* Loop through all the blocks */
+    /* If this is the last block or it's not free, quit */
+    if (CurrentMcb->BlockType == 'Z' || CurrentMcb->OwnerPsp != 0) return;
+
     while (TRUE)
     {
-        /* Get a pointer to the MCB */
-        CurrentMcb = SEGMENT_TO_MCB(Segment);
-
-        /* Ignore the last block */
-        if (CurrentMcb->BlockType == 'Z') break;
-
         /* Get a pointer to the next MCB */
-        NextMcb = SEGMENT_TO_MCB(Segment + CurrentMcb->Size + 1);
+        NextMcb = SEGMENT_TO_MCB(StartBlock + CurrentMcb->Size + 1);
 
-        /* If both this block and the next one are free, combine them */
-        if ((CurrentMcb->OwnerPsp == 0) && (NextMcb->OwnerPsp == 0))
+        /* Check if the next MCB is free */
+        if (NextMcb->OwnerPsp == 0)
         {
+            /* Combine them */
             CurrentMcb->Size += NextMcb->Size + 1;
             CurrentMcb->BlockType = NextMcb->BlockType;
-
-            /* Invalidate the next MCB */
             NextMcb->BlockType = 'I';
-
-            /* Try to combine the current block again with the next one */
-            continue;
         }
-
-        /* Update the segment and continue */
-        Segment += CurrentMcb->Size + 1;
+        else
+        {
+            /* No more adjoining free blocks */
+            break;
+        }
     }
 }
 
@@ -62,7 +55,7 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment)
     TotalSize++;
 
     /* Allocate the memory for the environment block */
-    DestSegment = DosAllocateMemory((TotalSize + 0x0F) >> 4);
+    DestSegment = DosAllocateMemory((TotalSize + 0x0F) >> 4, NULL);
     if (!DestSegment) return 0;
 
     Ptr = SourceBuffer;
@@ -84,12 +77,11 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment)
     return DestSegment;
 }
 
-WORD DosAllocateMemory(WORD Size)
+WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
 {
-    WORD Result = 0, Segment = FIRST_MCB_SEGMENT;
+    WORD Result = 0, Segment = FIRST_MCB_SEGMENT, MaxSize = 0;
     PDOS_MCB CurrentMcb, NextMcb;
 
-    /* Find an unallocated block */
     while (TRUE)
     {
         /* Get a pointer to the MCB */
@@ -104,7 +96,13 @@ WORD DosAllocateMemory(WORD Size)
         /* Only check free blocks */
         if (CurrentMcb->OwnerPsp != 0) goto Next;
 
-        /* Check if the block is big enough */
+        /* Combine this free block with adjoining free blocks */
+        DosCombineFreeBlocks(Segment);
+
+        /* Update the maximum block size */
+        if (CurrentMcb->Size > MaxSize) MaxSize = CurrentMcb->Size;
+
+        /* Check if this block is big enough */
         if (CurrentMcb->Size < Size) goto Next;
 
         /* It is, update the smallest found so far */
@@ -114,15 +112,19 @@ WORD DosAllocateMemory(WORD Size)
         }
 
 Next:
-        /* If this was the last MCB in the chain, quit. */
+        /* If this was the last MCB in the chain, quit */
         if (CurrentMcb->BlockType == 'Z') break;
 
         /* Otherwise, update the segment and continue */
         Segment += CurrentMcb->Size + 1;
     }
 
-    /* If we didn't find a free block, return zero */
-    if (Result == 0) return 0;
+    /* If we didn't find a free block, return 0 */
+    if (Result == 0)
+    {
+        if (MaxAvailable) *MaxAvailable = MaxSize;
+        return 0;
+    }
 
     /* Get a pointer to the MCB */
     CurrentMcb = SEGMENT_TO_MCB(Result);
@@ -135,15 +137,12 @@ Next:
 
         /* Initialize the new MCB structure */
         NextMcb->BlockType = CurrentMcb->BlockType;
-        NextMcb->Size = Size - CurrentMcb->Size - 1;
+        NextMcb->Size = CurrentMcb->Size - Size - 1;
         NextMcb->OwnerPsp = 0;
 
         /* Update the current block */
         CurrentMcb->BlockType = 'M';
         CurrentMcb->Size = Size;
-
-        /* Combine consecutive free blocks into larger blocks */
-        DosCombineFreeBlocks();
     }
 
     /* Take ownership of the block */
@@ -154,77 +153,71 @@ Next:
 
 WORD DosResizeMemory(WORD Segment, WORD NewSize)
 {
-    WORD ReturnSize = 0, CurrentSeg;
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment), CurrentMcb;
-    BOOLEAN FinalBlockUsed = FALSE;
+    WORD ReturnSize = 0, NextSegment;
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment), NextMcb;
 
-    /* We can't expand the last block */
-    if (Mcb->BlockType != 'M') return 0;
+    /* Make sure this is a valid, allocated block */
+    if ((Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') || Mcb->OwnerPsp == 0)
+    {
+        return 0;
+    }
 
     /* Check if need to expand or contract the block */
     if (NewSize > Mcb->Size)
     {
+        /* We can't expand the last block */
+        if (Mcb->BlockType != 'M') return Mcb->Size;
+
         ReturnSize = Mcb->Size;
+        
+        /* Get the pointer and segment of the next MCB */
+        NextSegment = Segment + Mcb->Size + 1;
+        NextMcb = SEGMENT_TO_MCB(NextSegment);
 
-        /* Get the segment of the next MCB */
-        CurrentSeg = Segment + Mcb->Size + 1;
+        /* Make sure the next segment is free */
+        if (NextMcb->OwnerPsp != 0) return Mcb->Size;
 
-        /* Calculate the maximum amount of memory this block could expand to */
-        while (ReturnSize < NewSize)
-        {
-            /* Get the MCB */
-            CurrentMcb = SEGMENT_TO_MCB(CurrentSeg);
+        /* Combine this free block with adjoining free blocks */
+        DosCombineFreeBlocks(NextSegment);
 
-            /* We can't expand the block over an allocated block */
-            if (CurrentMcb->OwnerPsp != 0) break;
+        /* Set the maximum possible size of the block */
+        ReturnSize += NextMcb->Size + 1;
 
-            ReturnSize += CurrentMcb->Size + 1;
-
-            /* Check if this is the last block */
-            if (CurrentMcb->BlockType == 'Z')
-            {
-                FinalBlockUsed = TRUE;
-                break;
-            }
-
-            /* Update the segment and continue */
-            CurrentSeg += CurrentMcb->Size + 1;
-        }
-
-        /* Check if we need to split the last block */
-        if (ReturnSize > NewSize)
-        {
-            /* Initialize the new MCB structure */
-            CurrentMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
-            CurrentMcb->BlockType = (FinalBlockUsed) ? 'Z' : 'M';
-            CurrentMcb->Size = ReturnSize - NewSize - 1;
-            CurrentMcb->OwnerPsp = 0;
-        }
-
-        /* Calculate the new size of the block */
-        ReturnSize = min(ReturnSize, NewSize);
-
-        /* Update the MCB */
-        if (FinalBlockUsed) Mcb->BlockType = 'Z';
+        /* Maximize the current block */
         Mcb->Size = ReturnSize;
+        Mcb->BlockType = NextMcb->BlockType;
+
+        /* Invalidate the next block */
+        NextMcb->BlockType = 'I';
+
+        /* Check if the block is larger than requested */
+        if (Mcb->Size > NewSize)
+        {
+            /* It is, split it into two blocks */
+            NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
+    
+            /* Initialize the new MCB structure */
+            NextMcb->BlockType = Mcb->BlockType;
+            NextMcb->Size = Mcb->Size - NewSize - 1;
+            NextMcb->OwnerPsp = 0;
+
+            /* Update the current block */
+            Mcb->BlockType = 'M';
+            Mcb->Size = NewSize;
+        }
     }
     else if (NewSize < Mcb->Size)
     {
         /* Just split the block */
-        CurrentMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
-        CurrentMcb->BlockType = Mcb->BlockType;
-        CurrentMcb->Size = Mcb->Size - NewSize - 1;
-        CurrentMcb->OwnerPsp = 0;
+        NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
+        NextMcb->BlockType = Mcb->BlockType;
+        NextMcb->Size = Mcb->Size - NewSize - 1;
+        NextMcb->OwnerPsp = 0;
 
         /* Update the MCB */
         Mcb->BlockType = 'M';
         Mcb->Size = NewSize;
-
-        ReturnSize = NewSize;
     }
-
-    /* Combine consecutive free blocks into larger blocks */
-    DosCombineFreeBlocks();
 
     return ReturnSize;
 }
@@ -238,9 +231,6 @@ BOOLEAN DosFreeMemory(WORD Segment)
 
     /* Mark the block as free */
     Mcb->OwnerPsp = 0;
-
-    /* Combine consecutive free blocks into larger blocks */
-    DosCombineFreeBlocks();
 
     return TRUE;
 }
@@ -381,7 +371,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         for (i = Header->e_maxalloc; i >= Header->e_minalloc; i--)
         {
             /* Try to allocate that much memory */
-            Segment = DosAllocateMemory(ExeSize + (sizeof(DOS_PSP) >> 4) + i);
+            Segment = DosAllocateMemory(ExeSize + (sizeof(DOS_PSP) >> 4) + i, NULL);
             if (Segment != 0) break;
         }
 
@@ -433,7 +423,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         /* COM file */
 
         /* Allocate memory for the whole program and the PSP */
-        Segment = DosAllocateMemory((FileSize + sizeof(DOS_PSP)) >> 4);
+        Segment = DosAllocateMemory((FileSize + sizeof(DOS_PSP)) >> 4, NULL);
         if (Segment == 0) goto Cleanup;
 
         /* Copy the program to Segment:0100 */
@@ -765,10 +755,13 @@ VOID DosInt21h(WORD CodeSegment)
         /* Allocate Memory */
         case 0x48:
         {
-            WORD Segment = DosAllocateMemory(LOWORD(Ebx));
+            WORD MaxAvailable = 0;
+            WORD Segment = DosAllocateMemory(LOWORD(Ebx), &MaxAvailable);
+
             if (Segment != 0)
             {
                 EmulatorSetRegister(EMULATOR_REG_AX, Segment);
+                EmulatorSetRegister(EMULATOR_REG_BX, MaxAvailable);
                 EmulatorClearFlag(EMULATOR_FLAG_CF);
             }
             else EmulatorSetFlag(EMULATOR_FLAG_CF);

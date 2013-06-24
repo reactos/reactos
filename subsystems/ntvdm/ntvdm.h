@@ -206,7 +206,7 @@ BOOLEAN BiosInitialize();
 VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress);
 VOID BiosPrintCharacter(CHAR Character, BYTE Attribute);
 BOOLEAN DosInitialize();
-WORD DosAllocateMemory(WORD Size);
+WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable);
 BOOLEAN DosFreeMemory(WORD Segment);
 WORD DosResizeMemory(WORD Segment, WORD NewSize);
 BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock);
