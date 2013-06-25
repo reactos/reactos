@@ -208,7 +208,7 @@ VOID BiosPrintCharacter(CHAR Character, BYTE Attribute);
 BOOLEAN DosInitialize();
 WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable);
 BOOLEAN DosFreeMemory(WORD BlockData);
-WORD DosResizeMemory(WORD BlockData, WORD NewSize);
+BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable);
 BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock);
 VOID DosInt20h(WORD CodeSegment);
 VOID DosInt21h(WORD CodeSegment);

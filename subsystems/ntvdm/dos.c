@@ -152,31 +152,41 @@ Next:
     return Result + 1;
 }
 
-WORD DosResizeMemory(WORD BlockData, WORD NewSize)
+BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
 {
+    BOOLEAN Success = TRUE;
     WORD Segment = BlockData - 1, ReturnSize = 0, NextSegment;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment), NextMcb;
 
     /* Make sure this is a valid, allocated block */
     if ((Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') || Mcb->OwnerPsp == 0)
     {
-        return 0;
+        Success = FALSE;
+        goto Done;
     }
 
-    /* Check if need to expand or contract the block */
+    ReturnSize = Mcb->Size;
+
+    /* Check if we need to expand or contract the block */
     if (NewSize > Mcb->Size)
     {
         /* We can't expand the last block */
-        if (Mcb->BlockType != 'M') return Mcb->Size;
+        if (Mcb->BlockType != 'M')
+        {
+            Success = FALSE;
+            goto Done;
+        }
 
-        ReturnSize = Mcb->Size;
-        
         /* Get the pointer and segment of the next MCB */
         NextSegment = Segment + Mcb->Size + 1;
         NextMcb = SEGMENT_TO_MCB(NextSegment);
 
         /* Make sure the next segment is free */
-        if (NextMcb->OwnerPsp != 0) return Mcb->Size;
+        if (NextMcb->OwnerPsp != 0)
+        {
+            Success = FALSE;
+            goto Done;
+        }
 
         /* Combine this free block with adjoining free blocks */
         DosCombineFreeBlocks(NextSegment);
@@ -220,7 +230,15 @@ WORD DosResizeMemory(WORD BlockData, WORD NewSize)
         Mcb->Size = NewSize;
     }
 
-    return ReturnSize;
+Done:
+    /* Check if the operation failed */
+    if (!Success)
+    {
+        /* Return the maximum possible size */
+        if (MaxAvailable) *MaxAvailable = ReturnSize;
+    }
+    
+    return Success;
 }
 
 BOOLEAN DosFreeMemory(WORD BlockData)
@@ -785,14 +803,17 @@ VOID DosInt21h(WORD CodeSegment)
         /* Resize Memory Block */
         case 0x4A:
         {
-            WORD Size = DosResizeMemory(ExtSegment, LOWORD(Ebx));
+            WORD Size;
 
-            if (Size != 0)
+            if (DosResizeMemory(ExtSegment, LOWORD(Ebx), &Size))
             {
-                EmulatorSetRegister(EMULATOR_REG_BX, Size);
                 EmulatorClearFlag(EMULATOR_FLAG_CF);
             }
-            else EmulatorSetFlag(EMULATOR_FLAG_CF);
+            else
+            {
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_BX, Size);
+            }
 
             break;
         }
