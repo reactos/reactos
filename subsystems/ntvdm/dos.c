@@ -148,12 +148,13 @@ Next:
     /* Take ownership of the block */
     CurrentMcb->OwnerPsp = CurrentPsp;
 
-    return Result;
+    /* Return the segment of the data portion of the block */
+    return Result + 1;
 }
 
-WORD DosResizeMemory(WORD Segment, WORD NewSize)
+WORD DosResizeMemory(WORD BlockData, WORD NewSize)
 {
-    WORD ReturnSize = 0, NextSegment;
+    WORD Segment = BlockData - 1, ReturnSize = 0, NextSegment;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment), NextMcb;
 
     /* Make sure this is a valid, allocated block */
@@ -222,9 +223,9 @@ WORD DosResizeMemory(WORD Segment, WORD NewSize)
     return ReturnSize;
 }
 
-BOOLEAN DosFreeMemory(WORD Segment)
+BOOLEAN DosFreeMemory(WORD BlockData)
 {
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(BlockData - 1);
 
     /* Make sure the MCB is valid */
     if (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') return FALSE;
