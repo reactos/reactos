@@ -635,6 +635,17 @@ VOID DosInt21h(WORD CodeSegment)
             break;
         }
 
+        /* Set Interrupt Vector */
+        case 0x25:
+        {
+            DWORD FarPointer = MAKELONG(LOWORD(Edx), DataSegment);
+
+            /* Write the new far pointer to the IDT */
+            ((PDWORD)BaseAddress)[LOBYTE(Eax)] = FarPointer;
+
+            break;
+        }
+
         /* Get system date */
         case 0x2A:
         {
@@ -706,6 +717,18 @@ VOID DosInt21h(WORD CodeSegment)
                 /* Return failure */
                 EmulatorSetRegister(EMULATOR_REG_AX, Eax | 0xFF);
             }
+
+            break;
+        }
+
+        /* Get Interrupt Vector */
+        case 0x35:
+        {
+            DWORD FarPointer = ((PDWORD)BaseAddress)[LOBYTE(Eax)];
+
+            /* Read the address from the IDT into ES:BX */
+            EmulatorSetRegister(EMULATOR_REG_ES, HIWORD(FarPointer));
+            EmulatorSetRegister(EMULATOR_REG_BX, LOWORD(FarPointer));
 
             break;
         }
