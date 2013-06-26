@@ -14,9 +14,13 @@
 
 softx86_ctx EmulatorContext;
 softx87_ctx FpuEmulatorContext;
+static BOOLEAN A20Line = FALSE;
 
 static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
+    /* If the A20 line is disabled, mask bit 20 */
+    if (!A20Line) Address &= ~(1 << 20);
+
     /* Make sure the requested address is valid */
     if ((Address + Size) >= MAX_ADDRESS) return;
 
@@ -35,6 +39,9 @@ static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT S
 
 static VOID EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
+    /* If the A20 line is disabled, mask bit 20 */
+    if (!A20Line) Address &= ~(1 << 20);
+
     /* Make sure the requested address is valid */
     if ((Address + Size) >= MAX_ADDRESS) return;
 
@@ -71,6 +78,26 @@ static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
             *Buffer = PicReadData(Address);
             break;
         }
+
+        case PIT_DATA_PORT(0):
+        case PIT_DATA_PORT(1):
+        case PIT_DATA_PORT(2):
+        {
+            *Buffer = PitReadData(Address - PIT_DATA_PORT(0));
+            break;
+        }
+
+        case PS2_CONTROL_PORT:
+        {
+            *Buffer = KeyboardReadStatus();
+            break;
+        }
+
+        case PS2_DATA_PORT:
+        {
+            *Buffer = KeyboardReadData();
+            break;
+        }
     }
 }
 
@@ -105,6 +132,18 @@ static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size
         case PIC_SLAVE_DATA:
         {
             PicWriteData(Address, Byte);
+            break;
+        }
+
+        case PS2_CONTROL_PORT:
+        {
+            KeyboardWriteCommand(Byte);
+            break;
+        }
+
+        case PS2_DATA_PORT:
+        {
+            KeyboardWriteData(Byte);
             break;
         }
     }
@@ -187,6 +226,16 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
     }
 }
 
+static VOID EmulatorHardwareInt(PVOID Context, BYTE Number)
+{
+    /* Do nothing */
+}
+
+static VOID EmulatorHardwareIntAck(PVOID Context, BYTE Number)
+{
+    /* Do nothing */
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN EmulatorInitialize()
@@ -196,7 +245,7 @@ BOOLEAN EmulatorInitialize()
     if (BaseAddress == NULL) return FALSE;
 
     /* Initialize the softx86 CPU emulator */
-    if (!softx86_init(&EmulatorContext, SX86_CPULEVEL_80186))
+    if (!softx86_init(&EmulatorContext, SX86_CPULEVEL_80286))
     {
         HeapFree(GetProcessHeap(), 0, BaseAddress);
         return FALSE;
@@ -220,9 +269,14 @@ BOOLEAN EmulatorInitialize()
 
     /* Set interrupt callbacks */
     EmulatorContext.callbacks->on_sw_int = EmulatorSoftwareInt;
+    EmulatorContext.callbacks->on_hw_int = EmulatorHardwareInt;
+    EmulatorContext.callbacks->on_hw_int_ack = EmulatorHardwareIntAck;
 
     /* Connect the emulated FPU to the emulated CPU */
     softx87_connect_to_CPU(&EmulatorContext, &FpuEmulatorContext);
+
+    /* Enable interrupts */
+    EmulatorSetFlag(EMULATOR_FLAG_IF);
 
     return TRUE;
 }
@@ -250,6 +304,12 @@ VOID EmulatorInterrupt(BYTE Number)
 
     /* Call the softx86 API */
     softx86_make_simple_interrupt_call(&EmulatorContext, &Segment, &Offset);
+}
+
+VOID EmulatorExternalInterrupt(BYTE Number)
+{
+    /* Call the softx86 API */
+    softx86_ext_hw_signal(&EmulatorContext, Number);
 }
 
 ULONG EmulatorGetRegister(ULONG Register)
@@ -294,7 +354,11 @@ VOID EmulatorClearFlag(ULONG Flag)
 VOID EmulatorStep()
 {
     /* Call the softx86 API */
-    softx86_step(&EmulatorContext);
+    if (!softx86_step(&EmulatorContext))
+    {
+        /* Invalid opcode */
+        EmulatorInterrupt(EMULATOR_EXCEPTION_INVALID_OPCODE);
+    }
 }
 
 VOID EmulatorCleanup()
@@ -305,6 +369,11 @@ VOID EmulatorCleanup()
     /* Free the softx86 CPU and FPU emulator */
     softx86_free(&EmulatorContext);
     softx87_free(&FpuEmulatorContext);
+}
+
+VOID EmulatorSetA20(BOOLEAN Enabled)
+{
+    A20Line = Enabled;
 }
 
 /* EOF */

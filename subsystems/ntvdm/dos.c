@@ -9,6 +9,7 @@
 #include "ntvdm.h"
 
 WORD CurrentPsp = SYSTEM_PSP, LastError = 0;
+DWORD DiskTransferArea;
 
 static VOID DosCombineFreeBlocks(WORD StartBlock)
 {
@@ -433,6 +434,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
 
         /* Execute */
         CurrentPsp = Segment;
+        DiskTransferArea = MAKELONG(0x80, Segment);
         EmulatorExecute(Segment + Header->e_cs, sizeof(DOS_PSP) + Header->e_ip);
 
         Success = TRUE;
@@ -466,6 +468,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
 
         /* Execute */
         CurrentPsp = Segment;
+        DiskTransferArea = MAKELONG(0x80, Segment);
         EmulatorExecute(Segment, 0x100);
 
         Success = TRUE;
@@ -635,6 +638,13 @@ VOID DosInt21h(WORD CodeSegment)
             break;
         }
 
+        /* Set Disk Transfer Area */
+        case 0x1A:
+        {
+            DiskTransferArea = MAKELONG(LOWORD(Edx), DataSegment);
+            break;
+        }
+
         /* Set Interrupt Vector */
         case 0x25:
         {
@@ -717,6 +727,15 @@ VOID DosInt21h(WORD CodeSegment)
                 /* Return failure */
                 EmulatorSetRegister(EMULATOR_REG_AX, Eax | 0xFF);
             }
+
+            break;
+        }
+
+        /* Get Disk Transfer Area */
+        case 0x2F:
+        {
+            EmulatorSetRegister(EMULATOR_REG_ES, HIWORD(DiskTransferArea));
+            EmulatorSetRegister(EMULATOR_REG_BX, LOWORD(DiskTransferArea));
 
             break;
         }

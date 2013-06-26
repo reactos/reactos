@@ -74,6 +74,9 @@
 #define KEYBOARD_BUFFER_SIZE 32
 #define PS2_DATA_PORT 0x60
 #define PS2_CONTROL_PORT 0x64
+#define PS2_DEFAULT_CONFIG 0x05
+#define KEYBOARD_ACK 0xFA
+#define KEYBOARD_RESEND 0xFE
 
 #define EMULATOR_FLAG_CF (1 << 0)
 #define EMULATOR_FLAG_PF (1 << 2)
@@ -91,6 +94,18 @@
 #define EMULATOR_FLAG_VIF (1 << 19)
 #define EMULATOR_FLAG_VIP (1 << 20)
 #define EMULATOR_FLAG_ID (1 << 21)
+
+enum
+{
+    EMULATOR_EXCEPTION_DIVISION_BY_ZERO,
+    EMULATOR_EXCEPTION_DEBUG,
+    EMULATOR_EXCEPTION_NMI,
+    EMULATOR_EXCEPTION_BREAKPOINT,
+    EMULATOR_EXCEPTION_OVERFLOW,
+    EMULATOR_EXCEPTION_BOUND,
+    EMULATOR_EXCEPTION_INVALID_OPCODE,
+    EMULATOR_EXCEPTION_NO_FPU
+};
 
 typedef enum
 {
@@ -226,9 +241,14 @@ BYTE PitReadData(BYTE Channel);
 VOID PitWriteData(BYTE Channel, BYTE Value);
 VOID PitDecrementCount();
 VOID CheckForInputEvents();
+BYTE KeyboardReadStatus();
+VOID KeyboardWriteCommand(BYTE Command);
+BYTE KeyboardReadData();
+VOID KeyboardWriteData(BYTE Data);
 VOID EmulatorSetStack(WORD Segment, WORD Offset);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
 VOID EmulatorInterrupt(BYTE Number);
+VOID EmulatorExternalInterrupt(BYTE Number);
 ULONG EmulatorGetRegister(ULONG Register);
 VOID EmulatorSetRegister(ULONG Register, ULONG Value);
 VOID EmulatorSetFlag(ULONG Flag);
@@ -237,5 +257,7 @@ BOOLEAN EmulatorGetFlag(ULONG Flag);
 BOOLEAN EmulatorInitialize();
 VOID EmulatorStep();
 VOID EmulatorCleanup();
+VOID EmulatorHalt();
+VOID EmulatorSetA20(BOOLEAN Enabled);
 
 /* EOF */
