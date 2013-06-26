@@ -8,13 +8,20 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "ntvdm.h"
-#include <softx86/softx86.h>
-#include <softx86/softx87.h>
+#include "emulator.h"
+#include "bios.h"
+#include "dos.h"
+#include "pic.h"
+#include "ps2.h"
+#include "timer.h"
 
-softx86_ctx EmulatorContext;
-softx87_ctx FpuEmulatorContext;
+/* PRIVATE VARIABLES **********************************************************/
+
+static softx86_ctx EmulatorContext;
+static softx87_ctx FpuEmulatorContext;
 static BOOLEAN A20Line = FALSE;
+
+/* PRIVATE FUNCTIONS **********************************************************/
 
 static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {

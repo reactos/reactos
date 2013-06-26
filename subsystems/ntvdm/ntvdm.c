@@ -6,7 +6,17 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "ntvdm.h"
+#include "emulator.h"
+#include "bios.h"
+#include "dos.h"
+#include "timer.h"
+#include "pic.h"
+#include "ps2.h"
+
+/* PUBLIC VARIABLES ***********************************************************/
 
 BOOLEAN VdmRunning = TRUE;
 LPVOID BaseAddress = NULL;
@@ -21,6 +31,8 @@ LPCWSTR ExceptionName[] =
     L"Invalid Opcode",
     L"FPU Not Available"
 };
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID DisplayMessage(LPCWSTR Format, ...)
 {

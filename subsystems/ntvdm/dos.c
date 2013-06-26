@@ -6,10 +6,17 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-#include "ntvdm.h"
+/* INCLUDES *******************************************************************/
 
-WORD CurrentPsp = SYSTEM_PSP, LastError = 0;
-DWORD DiskTransferArea;
+#include "dos.h"
+#include "emulator.h"
+
+/* PRIVATE VARIABLES **********************************************************/
+
+static WORD CurrentPsp = SYSTEM_PSP;
+static DWORD DiskTransferArea;
+
+/* PRIVATE FUNCTIONS **********************************************************/
 
 static VOID DosCombineFreeBlocks(WORD StartBlock)
 {
@@ -77,6 +84,8 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment)
 
     return DestSegment;
 }
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
 {

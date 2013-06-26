@@ -6,10 +6,39 @@
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-#include "ntvdm.h"
+/* INCLUDES *******************************************************************/
 
-BYTE CursorRow, CursorCol;
-WORD ConsoleWidth, ConsoleHeight;
+#include "bios.h"
+#include "emulator.h"
+#include "pic.h"
+#include "timer.h"
+
+/* PRIVATE VARIABLES **********************************************************/
+
+static BYTE CursorRow, CursorCol;
+static WORD ConsoleWidth, ConsoleHeight;
+
+/* PRIVATE FUNCTIONS **********************************************************/
+
+static COORD BiosVideoAddressToCoord(ULONG Address)
+{
+    COORD Result = {0, 0};
+    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
+    HANDLE ConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    if (!GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo))
+    {
+        ASSERT(FALSE);
+        return Result;
+    }
+
+    Result.X = ((Address - CONSOLE_VIDEO_MEM_START) >> 1) % ConsoleInfo.dwSize.X;
+    Result.Y = ((Address - CONSOLE_VIDEO_MEM_START) >> 1) / ConsoleInfo.dwSize.X;
+
+    return Result;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN BiosInitialize()
 {
@@ -81,24 +110,6 @@ BOOLEAN BiosInitialize()
     PitWriteData(0, 0x00);
 
     return TRUE;
-}
-
-static COORD BiosVideoAddressToCoord(ULONG Address)
-{
-    COORD Result = {0, 0};
-    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
-    HANDLE ConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    if (!GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo))
-    {
-        ASSERT(FALSE);
-        return Result;
-    }
-
-    Result.X = ((Address - CONSOLE_VIDEO_MEM_START) >> 1) % ConsoleInfo.dwSize.X;
-    Result.Y = ((Address - CONSOLE_VIDEO_MEM_START) >> 1) / ConsoleInfo.dwSize.X;
-
-    return Result;
 }
 
 VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress)

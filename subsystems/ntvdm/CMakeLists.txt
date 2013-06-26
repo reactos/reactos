@@ -5,7 +5,9 @@ list(APPEND SOURCE
     bios.c
     dos.c
     emulator.c
-    hardware.c
+    pic.c
+    timer.c
+    ps2.c
     ntvdm.c
     ntvdm.rc)
 
