@@ -314,30 +314,39 @@ Quit:
     return (Status == STATUS_PENDING ? FALSE : TRUE);
 }
 
+NTSTATUS NTAPI
+ConDrvWriteConsole(IN PCONSOLE Console,
+                   IN PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
+                   IN BOOLEAN Unicode,
+                   IN PVOID StringBuffer,
+                   IN ULONG NumCharsToWrite,
+                   OUT PULONG NumCharsWritten OPTIONAL);
 static NTSTATUS
 DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
                IN PCSR_THREAD ClientThread,
                IN BOOL CreateWaitBlock OPTIONAL)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PCONSOLE_WRITECONSOLE WriteConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleRequest;
-    PCONSOLE Console;
-    PTEXTMODE_SCREEN_BUFFER Buff;
-    PVOID Buffer;
-    DWORD Written = 0;
-    ULONG Length;
+    PTEXTMODE_SCREEN_BUFFER ScreenBuffer;
 
-    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(ClientThread->Process), WriteConsoleRequest->OutputHandle, &Buff, GENERIC_WRITE, FALSE);
+    Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(ClientThread->Process),
+                                     WriteConsoleRequest->OutputHandle,
+                                     &ScreenBuffer, GENERIC_WRITE, FALSE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    Console = Buff->Header.Console;
+    Status = ConDrvWriteConsole(ScreenBuffer->Header.Console,
+                                ScreenBuffer,
+                                WriteConsoleRequest->Unicode,
+                                WriteConsoleRequest->Buffer,
+                                WriteConsoleRequest->NrCharactersToWrite,
+                                &WriteConsoleRequest->NrCharactersWritten);
 
-    // if (Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION))
-    if (Console->PauseFlags && Console->UnpauseEvent != NULL)
+    if (Status == STATUS_PENDING)
     {
         if (CreateWaitBlock)
         {
-            if (!CsrCreateWait(&Console->WriteWaitQueue,
+            if (!CsrCreateWait(&ScreenBuffer->Header.Console->WriteWaitQueue,
                                WriteConsoleThread,
                                ClientThread,
                                ApiMessage,
@@ -345,63 +354,17 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
                                NULL))
             {
                 /* Fail */
-                ConSrvReleaseScreenBuffer(Buff, FALSE);
-                return STATUS_NO_MEMORY;
+                Status = STATUS_NO_MEMORY;
+                goto Quit;
             }
         }
 
         /* Wait until we un-pause the console */
-        Status = STATUS_PENDING;
-    }
-    else
-    {
-        if (WriteConsoleRequest->Unicode)
-        {
-            Buffer = WriteConsoleRequest->Buffer;
-        }
-        else
-        {
-            Length = MultiByteToWideChar(Console->OutputCodePage, 0,
-                                         (PCHAR)WriteConsoleRequest->Buffer,
-                                         WriteConsoleRequest->NrCharactersToWrite,
-                                         NULL, 0);
-            Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
-            if (Buffer)
-            {
-                MultiByteToWideChar(Console->OutputCodePage, 0,
-                                    (PCHAR)WriteConsoleRequest->Buffer,
-                                    WriteConsoleRequest->NrCharactersToWrite,
-                                    (PWCHAR)Buffer, Length);
-            }
-            else
-            {
-                Status = STATUS_NO_MEMORY;
-            }
-        }
-
-        if (Buffer)
-        {
-            if (NT_SUCCESS(Status))
-            {
-                Status = ConioWriteConsole(Console,
-                                           Buff,
-                                           Buffer,
-                                           WriteConsoleRequest->NrCharactersToWrite,
-                                           TRUE);
-                if (NT_SUCCESS(Status))
-                {
-                    Written = WriteConsoleRequest->NrCharactersToWrite;
-                }
-            }
-
-            if (!WriteConsoleRequest->Unicode)
-                RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-        }
-
-        WriteConsoleRequest->NrCharactersWritten = Written;
+        // Status = STATUS_PENDING;
     }
 
-    ConSrvReleaseScreenBuffer(Buff, FALSE);
+Quit:
+    ConSrvReleaseScreenBuffer(ScreenBuffer, FALSE);
     return Status;
 }
 
@@ -509,8 +472,7 @@ CSR_API(SrvWriteConsole)
                             CsrGetClientThread(),
                             TRUE);
 
-    if (Status == STATUS_PENDING)
-        *ReplyCode = CsrReplyPending;
+    if (Status == STATUS_PENDING) *ReplyCode = CsrReplyPending;
 
     return Status;
 }

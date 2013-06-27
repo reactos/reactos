@@ -751,9 +751,77 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
 }
 
 NTSTATUS NTAPI
-ConDrvWriteConsole(IN PCONSOLE Console)
+ConDrvWriteConsole(IN PCONSOLE Console,
+                   IN PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
+                   IN BOOLEAN Unicode,
+                   IN PVOID StringBuffer,
+                   IN ULONG NumCharsToWrite,
+                   OUT PULONG NumCharsWritten OPTIONAL)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PWCHAR Buffer = NULL;
+    ULONG Written = 0;
+    ULONG Length;
+
+    if (Console == NULL || ScreenBuffer == NULL /* || StringBuffer == NULL */)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Validity checks */
+    ASSERT(Console == ScreenBuffer->Header.Console);
+    ASSERT( (StringBuffer != NULL && NumCharsToWrite >= 0) ||
+            (StringBuffer == NULL && NumCharsToWrite == 0) );
+
+    // if (Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION))
+    if (Console->PauseFlags && Console->UnpauseEvent != NULL)
+    {
+        return STATUS_PENDING;
+    }
+
+    if (Unicode)
+    {
+        Buffer = StringBuffer;
+    }
+    else
+    {
+        Length = MultiByteToWideChar(Console->OutputCodePage, 0,
+                                     (PCHAR)StringBuffer,
+                                     NumCharsToWrite,
+                                     NULL, 0);
+        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length * sizeof(WCHAR));
+        if (Buffer)
+        {
+            MultiByteToWideChar(Console->OutputCodePage, 0,
+                                (PCHAR)StringBuffer,
+                                NumCharsToWrite,
+                                (PWCHAR)Buffer, Length);
+        }
+        else
+        {
+            Status = STATUS_NO_MEMORY;
+        }
+    }
+
+    if (Buffer)
+    {
+        if (NT_SUCCESS(Status))
+        {
+            Status = ConioWriteConsole(Console,
+                                       ScreenBuffer,
+                                       Buffer,
+                                       NumCharsToWrite,
+                                       TRUE);
+            if (NT_SUCCESS(Status))
+            {
+                Written = NumCharsToWrite;
+            }
+        }
+
+        if (!Unicode) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    }
+
+    if (NumCharsWritten) *NumCharsWritten = Written;
+
+    return Status;
 }
 
 NTSTATUS NTAPI
