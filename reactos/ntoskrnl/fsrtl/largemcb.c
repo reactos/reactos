@@ -975,11 +975,51 @@ FsRtlSplitBaseMcb(IN PBASE_MCB OpaqueMcb,
                   IN LONGLONG Vbn,
                   IN LONGLONG Amount)
 {
-    //PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
+    PBASE_MCB_INTERNAL Mcb = (PBASE_MCB_INTERNAL)OpaqueMcb;
+    PLARGE_MCB_MAPPING_ENTRY Run, InsertLowerRun = NULL, ExistingRun = NULL;
+    LARGE_MCB_MAPPING_ENTRY LowerRun;
+    BOOLEAN NewElement;
 
-    UNIMPLEMENTED;
+    /* Traverse the tree */
+    for (Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, TRUE);
+        Run;
+        Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, FALSE))
+    {
+        /* unaffected run? */
+        /* FIXME: performance: effective skip of all 'lower' runs without traversing them */
+        if (Vbn >= Run->RunStartVbn.QuadPart) continue;
 
-    return FALSE;
+        /* crossing run to be split?
+        * 'lower_run' is created on the original place; just shortened.
+        * current 'run' is shifted up later
+        */
+        if (Vbn < Run->RunEndVbn.QuadPart)
+        {
+            LowerRun = *Run;
+            LowerRun.RunEndVbn.QuadPart = Vbn;
+            /* FIXME: shift 'run->Lbn_start' ? */
+            Run->RunStartVbn.QuadPart = Vbn;
+
+            InsertLowerRun = &LowerRun;
+        }
+
+        /* Shift the current 'run'.
+        * Ordering is not changed in Generic Tree so I hope I do not need to reinsert it.
+        */
+        Run->RunStartVbn.QuadPart += Amount;
+        ASSERT(Run->RunEndVbn.QuadPart + Amount > Run->RunEndVbn.QuadPart); /* overflow? */
+        Run->RunEndVbn.QuadPart += Amount;
+        /* FIXME: shift 'run->Lbn_start' ? */
+
+        /* continue the traversal */
+    }
+
+    if (InsertLowerRun)
+        ExistingRun = RtlInsertElementGenericTable(&Mcb->Mapping->Table, InsertLowerRun, sizeof(*InsertLowerRun), &NewElement);
+
+    ASSERT(ExistingRun == NULL);
+
+    return (InsertLowerRun != NULL); /* the hole was successfuly created? */
 }
 
 /*
