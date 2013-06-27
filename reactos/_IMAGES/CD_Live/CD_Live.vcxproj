@@ -37,6 +37,10 @@ copy "$(SolutionDir)\Drivers\Base\KDCOM\$(OutDir)\KDCOM.DLL" .
 copy "$(SolutionDir)\base\applications\ATACTL\$(OutDir)\ATACTL.EXE" .
 REM "copy $(SolutionDir)\base\applications\CALC\$(OutDir)\CALC.EXE" .
 copy "$(SolutionDir)\media\nls\*.nls" .
+mkdir drivers
+cd drivers
+copy "$(SolutionDir)\drivers\filesystems\CDFS\$(OutDir)\CDFS.SYS" .
+cd ..
 mkdir config
 cd "$(SolutionDir)\boot\bootdata"
 "$(SolutionDir)\tools\mkhive\build\x86_32\$(Configuration)\mkhive.exe" "$(TargetDir)\root\reactos\system32\config" hivecls.inf hivedef.inf hivesft.inf hivesys.inf livecd.inf hiveinst.inf
@@ -67,6 +71,10 @@ copy "$(SolutionDir)\Drivers\Base\KDCOM\$(OutDir)\KDCOM.DLL" .
 copy "$(SolutionDir)\base\applications\ATACTL\$(OutDir)\ATACTL.EXE" .
 REM "copy $(SolutionDir)\base\applications\CALC\$(OutDir)\CALC.EXE" .
 copy "$(SolutionDir)\media\nls\*.nls" .
+mkdir drivers
+cd drivers
+copy "$(SolutionDir)\drivers\filesystems\CDFS\$(OutDir)\CDFS.SYS" .
+cd ..
 mkdir config
 cd "$(SolutionDir)\boot\bootdata"
 "$(SolutionDir)\tools\mkhive\build\x86_32\$(Configuration)\mkhive.exe" "$(TargetDir)\root\reactos\system32\config" hivecls.inf hivedef.inf hivesft.inf hivesys.inf livecd.inf hiveinst.inf
