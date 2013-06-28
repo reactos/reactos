@@ -214,6 +214,12 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
                 BiosVideoService();
                 break;
             }
+            case VIDEO_KBD_INTERRUPT:
+            {
+                /* This is the keyboard BIOS interrupt, call the BIOS */
+                BiosKeyboardService();
+                break;
+            }
             case 0x20:
             {
                 DosInt20h(CodeSegment);

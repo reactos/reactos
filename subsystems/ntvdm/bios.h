@@ -23,14 +23,19 @@
 #define BIOS_PIC_SLAVE_INT 0x70
 #define BIOS_SEGMENT 0xF000
 #define VIDEO_BIOS_INTERRUPT 0x10
+#define VIDEO_KBD_INTERRUPT 0x16
 #define CONSOLE_FONT_HEIGHT 8
+#define BIOS_KBD_BUFFER_SIZE 256
 
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN BiosInitialize();
 VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress);
 VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress);
+WORD BiosPeekCharacter();
+WORD BiosGetCharacter();
 VOID BiosVideoService();
+VOID BiosKeyboardService();
 VOID BiosHandleIrq(BYTE IrqNumber);
 
 #endif

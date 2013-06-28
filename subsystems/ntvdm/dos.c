@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "dos.h"
+#include "bios.h"
 #include "emulator.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -83,6 +84,14 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment)
     *DestBuffer = 0;
 
     return DestSegment;
+}
+
+static VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
+{
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment - 1);
+
+    /* Just set the owner */
+    Mcb->OwnerPsp = NewOwner;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -412,6 +421,9 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
                          CommandLine, ExeSize + (sizeof(DOS_PSP) >> 4) + i,
                          EnvBlock);
 
+        /* The process owns its own memory */
+        DosChangeMemoryOwner(Segment, Segment);
+
         /* Copy the program to Segment:0100 */
         RtlCopyMemory((PVOID)((ULONG_PTR)BaseAddress
                       + TO_LINEAR(Segment, 0x100)),
@@ -548,7 +560,13 @@ Done:
 CHAR DosReadCharacter()
 {
     // TODO: STDIN can be redirected under DOS 2.0+
-    return _getch();
+    CHAR Character = 0;
+
+    /* A zero value for the character indicates a special key */
+    do Character = BiosGetCharacter();
+    while (!Character);
+
+    return Character;
 }
 
 VOID DosPrintCharacter(CHAR Character)
@@ -749,6 +767,15 @@ VOID DosInt21h(WORD CodeSegment)
             break;
         }
 
+        /* Get DOS Version */
+        case 0x30:
+        {
+            PDOS_PSP PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+
+            EmulatorSetRegister(EMULATOR_REG_AX, PspBlock->DosVersion);
+            break;
+        }
+
         /* Get Interrupt Vector */
         case 0x35:
         {
@@ -879,6 +906,7 @@ VOID DosInt21h(WORD CodeSegment)
         /* Unsupported */
         default:
         {
+            DPRINT1("DOS Function INT 0x21, AH = 0x%02X NOT IMPLEMENTED!\n", HIBYTE(Eax));
             EmulatorSetFlag(EMULATOR_FLAG_CF);
         }
     }

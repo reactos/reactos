@@ -11,12 +11,17 @@
 #include "bios.h"
 #include "emulator.h"
 #include "pic.h"
+#include "ps2.h"
 #include "timer.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
 static BYTE CursorRow, CursorCol;
 static WORD ConsoleWidth, ConsoleHeight;
+static BYTE BiosKeyboardMap[256];
+static WORD BiosKbdBuffer[BIOS_KBD_BUFFER_SIZE];
+static UINT BiosKbdBufferStart = 0, BiosKbdBufferEnd = 0;
+static BOOLEAN BiosKbdBufferEmpty = TRUE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -38,12 +43,54 @@ static COORD BiosVideoAddressToCoord(ULONG Address)
     return Result;
 }
 
+static BOOLEAN BiosKbdBufferPush(WORD Data)
+{
+    /* If it's full, fail */
+    if (!BiosKbdBufferEmpty && (BiosKbdBufferStart == BiosKbdBufferEnd))
+    {
+        return FALSE;
+    }
+
+    /* Otherwise, add the value to the queue */
+    BiosKbdBuffer[BiosKbdBufferEnd] = Data;
+    BiosKbdBufferEnd++;
+    BiosKbdBufferEnd %= BIOS_KBD_BUFFER_SIZE;
+    BiosKbdBufferEmpty = FALSE;
+
+    /* Return success */
+    return TRUE;
+}
+
+static BOOLEAN BiosKbdBufferTop(LPWORD Data)
+{
+    /* If it's empty, fail */
+    if (BiosKbdBufferEmpty) return FALSE;
+
+    /* Otherwise, get the value and return success */
+    *Data = BiosKbdBuffer[BiosKbdBufferStart];
+    return TRUE;
+}
+
+static BOOLEAN BiosKbdBufferPop()
+{
+    /* If it's empty, fail */
+    if (BiosKbdBufferEmpty) return FALSE;
+
+    /* Otherwise, remove the value and return success */
+    BiosKbdBufferStart++;
+    BiosKbdBufferStart %= BIOS_KBD_BUFFER_SIZE;
+    if (BiosKbdBufferStart == BiosKbdBufferEnd) BiosKbdBufferEmpty = TRUE;
+
+    return TRUE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN BiosInitialize()
 {
     INT i;
     WORD Offset = 0;
+    HANDLE ConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE ConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
     LPWORD IntVecTable = (LPWORD)((ULONG_PTR)BaseAddress);
@@ -84,6 +131,9 @@ BOOLEAN BiosInitialize()
     CursorRow = ConsoleInfo.dwCursorPosition.Y;
     ConsoleWidth = ConsoleInfo.dwSize.X;
     ConsoleHeight = ConsoleInfo.dwSize.Y;
+
+    /* Set the console input mode */
+    SetConsoleMode(ConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 
     /* Initialize the PIC */
     PicWriteCommand(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
@@ -185,6 +235,56 @@ VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress)
     }
 }
 
+WORD BiosPeekCharacter()
+{
+    WORD CharacterData;
+    
+    /* Check if there is a key available */
+    if (BiosKbdBufferEmpty) return 0xFFFF;
+
+    /* Get the key from the queue, but don't remove it */
+    BiosKbdBufferTop(&CharacterData);
+
+    return CharacterData;
+}
+
+WORD BiosGetCharacter()
+{
+    WORD CharacterData;
+    HANDLE ConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
+    INPUT_RECORD InputRecord;
+    DWORD Count;
+
+    /* Check if there is a key available */
+    if (!BiosKbdBufferEmpty)
+    {
+        /* Get the key from the queue, and remove it */
+        BiosKbdBufferTop(&CharacterData);
+        BiosKbdBufferPop();
+    }
+    else
+    {
+        while (TRUE)
+        {
+            /* Wait for a console event */
+            WaitForSingleObject(ConsoleInput, INFINITE);
+    
+            /* Read the event, and make sure it's a keypress */
+            if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count)) continue;
+            if (InputRecord.EventType != KEY_EVENT) continue;
+            if (!InputRecord.Event.KeyEvent.bKeyDown) continue;
+
+            /* Save the scan code and end the loop */
+            CharacterData = (InputRecord.Event.KeyEvent.wVirtualScanCode << 8)
+                            | InputRecord.Event.KeyEvent.uChar.AsciiChar;
+
+            break;
+        }
+    }
+
+    return CharacterData;
+}
+
 VOID BiosVideoService()
 {
     HANDLE ConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -270,8 +370,100 @@ VOID BiosVideoService()
     }
 }
 
+VOID BiosKeyboardService()
+{
+    DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
+
+    switch (HIBYTE(Eax))
+    {
+        case 0x00:
+        {
+            /* Read the character (and wait if necessary) */
+            EmulatorSetRegister(EMULATOR_REG_AX, BiosGetCharacter());
+
+            break;
+        }
+
+        case 0x01:
+        {
+            WORD Data = BiosPeekCharacter();
+
+            if (Data != 0xFFFF)
+            {
+                /* There is a character, clear ZF and return it */
+                EmulatorSetRegister(EMULATOR_REG_AX, Data);
+                EmulatorClearFlag(EMULATOR_FLAG_ZF);
+            }
+            else
+            {
+                /* No character, set ZF */
+                EmulatorSetFlag(EMULATOR_FLAG_ZF);
+            }
+
+            break;
+        }
+    }
+}
+
 VOID BiosHandleIrq(BYTE IrqNumber)
 {
+    switch (IrqNumber)
+    {
+        /* PIT IRQ */
+        case 0:
+        {
+            /* Perform the system timer interrupt */
+            EmulatorInterrupt(0x1C);
+
+            break;
+        }
+
+        /* Keyboard IRQ */
+        case 1:
+        {
+            BYTE ScanCode, VirtualKey;
+            WORD Character;
+            
+            /* Check if there is a scancode available */
+            if (!(KeyboardReadStatus() & 1)) break;
+
+            /* Get the scan code and virtual key code */
+            ScanCode = KeyboardReadData();
+            VirtualKey = MapVirtualKey(ScanCode, MAPVK_VSC_TO_VK);
+
+            /* Check if this is a key press or release */
+            if (!(ScanCode & (1 << 7)))
+            {
+                /* Key press */
+                if (VirtualKey == VK_NUMLOCK
+                    || VirtualKey == VK_CAPITAL
+                    || VirtualKey == VK_SCROLL)
+                {
+                    /* For toggle keys, toggle the lowest bit in the keyboard map */
+                    BiosKeyboardMap[VirtualKey] ^= ~(1 << 0);
+                }
+
+                /* Set the highest bit */
+                BiosKeyboardMap[VirtualKey] |= (1 << 7);
+
+                /* Find out which character this is */
+                ToAscii(ScanCode, VirtualKey, BiosKeyboardMap, &Character, 0);
+
+                /* Push it onto the BIOS keyboard queue */
+                BiosKbdBufferPush((ScanCode << 8) | (Character & 0xFF));
+            }
+            else
+            {
+                /* Key release, unset the highest bit */
+                BiosKeyboardMap[VirtualKey] &= ~(1 << 7);
+            }
+
+            break;
+        }
+    }
+
+    /* Send End-of-Interrupt to the PIC */
+    if (IrqNumber > 8) PicWriteCommand(PIC_SLAVE_CMD, PIC_OCW2_EOI);
     PicWriteCommand(PIC_MASTER_CMD, PIC_OCW2_EOI);
 }
 

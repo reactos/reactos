@@ -15,7 +15,7 @@
 
 /* DEFINES ********************************************************************/
 
-#define DOS_VERSION 0x0600
+#define DOS_VERSION MAKEWORD(6, 0)
 #define DOS_CONFIG_PATH L"%SystemRoot%\\system32\\CONFIG.NT"
 #define DOS_COMMAND_INTERPRETER L"%SystemRoot%\\system32\\COMMAND.COM /k %SystemRoot%\\system32\\AUTOEXEC.NT"
 #define FIRST_MCB_SEGMENT 0x1000
