@@ -1,9 +1,9 @@
 /*
- * PROJECT:			ReactOS SvcHost
- * LICENSE:			GPL - See COPYING in the top level directory
- * FILE:			/base/services/svchost/svchost.h
- * PURPOSE:			Provide dll service loader
- * PROGRAMMERS:		Gregor Brunmar (gregor.brunmar@home.se)
+ * PROJECT:         ReactOS SvcHost
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            /base/services/svchost/svchost.h
+ * PURPOSE:         Provide dll service loader
+ * PROGRAMMERS:     Gregor Brunmar (gregor.brunmar@home.se)
  */
 
 #pragma once
@@ -24,15 +24,14 @@
 
 /* DEFINES *******************************************************************/
 
-#define CS_TIMEOUT	1000
+#define CS_TIMEOUT  1000
 
 typedef struct _SERVICE {
-    PTSTR		Name;
-	HINSTANCE	hServiceDll;	
-    LPSERVICE_MAIN_FUNCTION	ServiceMainFunc;
-	struct _SERVICE	*Next;
+    PTSTR Name;
+    HINSTANCE hServiceDll;
+    LPSERVICE_MAIN_FUNCTION ServiceMainFunc;
+    struct _SERVICE *Next;
 } SERVICE, *PSERVICE;
-
 
 /* FUNCTIONS *****************************************************************/
 
