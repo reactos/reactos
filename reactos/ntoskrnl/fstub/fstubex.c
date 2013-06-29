@@ -84,7 +84,7 @@ typedef struct _MASTER_BOOT_RECORD
 #define EFI_HEADER_SIGNATURE  0x5452415020494645ULL
 /* Defines version 1.0 */
 #define EFI_HEADER_REVISION_1 0x00010000
-/* Defines system type for MBR showing that a GPT is following */ 
+/* Defines system type for MBR showing that a GPT is following */
 #define EFI_PMBR_OSTYPE_EFI 0xEE
 
 #define IS_VALID_DISK_INFO(Disk) \
@@ -1057,7 +1057,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
     }
     DriveLayoutEx->PartitionCount = PartitionCount;
 
-    /* If we updated partition table using backup table, rewrite partition table */ 
+    /* If we updated partition table using backup table, rewrite partition table */
     if (UpdatedPartitionTable)
     {
         IoWritePartitionTableEx(Disk->DeviceObject,
@@ -1777,6 +1777,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
         }
 
         /* Prepare for getting disk geometry */
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
         Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
                                             DeviceObject,
                                             NULL,
@@ -1793,7 +1794,6 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
         }
 
         /* Then, call the drive, and wait for it if needed */
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
         Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
@@ -1886,6 +1886,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         }
 
                         /* And call the drive to get information about partition */
+                        KeInitializeEvent(&Event, NotificationEvent, FALSE);
                         Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO_EX,
                                                             DeviceObject,
                                                             NULL,
@@ -1903,7 +1904,6 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         }
 
                         /* Call & wait if needed */
-                        KeInitializeEvent(&Event, NotificationEvent, FALSE);
                         Status = IoCallDriver(DeviceObject, Irp);
                         if (Status == STATUS_PENDING)
                         {
@@ -1957,6 +1957,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         }
 
                         /* And call the drive to get information about partition */
+                        KeInitializeEvent(&Event, NotificationEvent, FALSE);
                         Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO_EX,
                                                             DeviceObject,
                                                             NULL,
@@ -1974,7 +1975,6 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         }
 
                         /* Call & wait if needed */
-                        KeInitializeEvent(&Event, NotificationEvent, FALSE);
                         Status = IoCallDriver(DeviceObject, Irp);
                         if (Status == STATUS_PENDING)
                         {
