@@ -55,7 +55,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
     }
 
     /* Open the service registry key to find the dll name */
-    if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, ServiceKeyBuffer, 0, KEY_READ, &hServiceKey))
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, ServiceKeyBuffer, 0, KEY_READ, &hServiceKey) != ERROR_SUCCESS)
     {
         DPRINT1("Could not open service key (%s)\n", ServiceKeyBuffer);
         return FALSE;
@@ -67,7 +67,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
             HeapFree(GetProcessHeap(), 0, Buffer);
 
         Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize);
-        if (NULL == Buffer)
+        if (Buffer == NULL)
         {
             DPRINT1("Not enough memory for service: %s\n", ServiceName);
             return FALSE;
@@ -75,12 +75,12 @@ BOOL PrepareService(LPCTSTR ServiceName)
 
         RetVal = RegQueryValueEx(hServiceKey, _T("ServiceDll"), NULL, &KeyType, (LPBYTE)Buffer, &BufferSize);
 
-    } while (ERROR_MORE_DATA == RetVal);
+    } while (RetVal == ERROR_MORE_DATA);
 
 
     RegCloseKey(hServiceKey);
 
-    if (ERROR_SUCCESS != RetVal || 0 == BufferSize)
+    if (RetVal != ERROR_SUCCESS || BufferSize == 0)
     {
         DPRINT1("Could not read 'ServiceDll' value from service: %s, ErrorCode: 0x%x\n", ServiceName, RetVal);
         HeapFree(GetProcessHeap(), 0, Buffer);
@@ -89,7 +89,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
 
     /* Convert possible %SystemRoot% to a real path */
     BufferSize = ExpandEnvironmentStrings(Buffer, DllPath, _countof(DllPath));
-    if (0 == BufferSize)
+    if (BufferSize == 0)
     {
         DPRINT1("Invalid ServiceDll path: %s\n", Buffer);
         HeapFree(GetProcessHeap(), 0, Buffer);
@@ -102,7 +102,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
     DPRINT("Trying to load dll\n");
     hServiceDll = LoadLibrary(DllPath);
 
-    if (NULL == hServiceDll)
+    if (hServiceDll == NULL)
     {
         DPRINT1("Unable to load ServiceDll: %s, ErrorCode: %u\n", DllPath, GetLastError());
         return FALSE;
@@ -112,7 +112,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
 
     /* Allocate a service node in the linked list */
     Service = HeapAlloc(GetProcessHeap(), 0, sizeof(SERVICE));
-    if (NULL == Service)
+    if (Service == NULL)
     {
         DPRINT1("Not enough memory for service: %s\n", ServiceName);
         return FALSE;
@@ -120,7 +120,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
 
     memset(Service, 0, sizeof(SERVICE));
     Service->Name = HeapAlloc(GetProcessHeap(), 0, (_tcslen(ServiceName)+1) * sizeof(TCHAR));
-    if (NULL == Service->Name)
+    if (Service->Name == NULL)
     {
         DPRINT1("Not enough memory for service: %s\n", ServiceName);
         HeapFree(GetProcessHeap(), 0, Service);
@@ -165,13 +165,13 @@ DWORD LoadServiceCategory(LPCTSTR ServiceCategory)
     DWORD NrOfServices = 0;
 
     /* Get all the services in this category */
-    if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, SVCHOST_REG_KEY, 0, KEY_READ, &hServicesKey))
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, SVCHOST_REG_KEY, 0, KEY_READ, &hServicesKey) != ERROR_SUCCESS)
     {
         DPRINT1("Could not open service category: %s\n", ServiceCategory);
         return 0;
     }
 
-    if (ERROR_SUCCESS != RegQueryValueEx(hServicesKey, ServiceCategory, NULL, &KeyType, (LPBYTE)Buffer, &BufferSize))
+    if (RegQueryValueEx(hServicesKey, ServiceCategory, NULL, &KeyType, (LPBYTE)Buffer, &BufferSize) != ERROR_SUCCESS)
     {
         DPRINT1("Could not open service category (2): %s\n", ServiceCategory);
         RegCloseKey(hServicesKey);
@@ -183,15 +183,15 @@ DWORD LoadServiceCategory(LPCTSTR ServiceCategory)
 
     /* Load services in the category */
     ServiceName = Buffer;
-    while (_T('\0') != ServiceName[0])
+    while (ServiceName[0] != _T('\0'))
     {
         size_t Length;
         
         Length = _tcslen(ServiceName);
-        if (0 == Length)
+        if (Length == 0)
             break;
 
-        if (TRUE == PrepareService(ServiceName))
+        if (PrepareService(ServiceName) == TRUE)
             ++NrOfServices;
 
         BufferIndex += Length + 1;
@@ -222,12 +222,12 @@ int _tmain (int argc, LPTSTR argv [])
     NrOfServices = LoadServiceCategory(argv[2]);
 
     DPRINT("NrOfServices: %lu\n", NrOfServices);
-    if (0 == NrOfServices)
+    if (NrOfServices == 0)
         return 0;
 
     ServiceTable = HeapAlloc(GetProcessHeap(), 0, sizeof(SERVICE_TABLE_ENTRY) * (NrOfServices + 1));
 
-    if (NULL != ServiceTable)
+    if (ServiceTable != NULL)
     {
         DWORD i;
         PSERVICE Service = FirstService;
@@ -245,7 +245,7 @@ int _tmain (int argc, LPTSTR argv [])
         ServiceTable[i].lpServiceName = NULL;
         ServiceTable[i].lpServiceProc = NULL;
 
-        if (FALSE == StartServiceCtrlDispatcher(ServiceTable))
+        if (StartServiceCtrlDispatcher(ServiceTable) == FALSE)
             DPRINT1("Failed to start service control dispatcher, ErrorCode: %lu\n", GetLastError());
 
         HeapFree(GetProcessHeap(), 0, ServiceTable);
