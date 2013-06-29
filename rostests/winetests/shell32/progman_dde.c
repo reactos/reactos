@@ -695,6 +695,11 @@ static void DdeTestProgman2(DWORD instance, HCONV hConv, int testnum)
 
 START_TEST(progman_dde)
 {
+    if(!winetest_interactive)
+    {
+        skip("Skipping progman_dde() until we have a sane DDE implementation. CORE-6559.\n");
+        return;
+    }
     DWORD instance = 0;
     UINT err;
     HSZ hszProgman;

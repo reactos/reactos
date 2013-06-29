@@ -58,7 +58,7 @@ static char tmpdir[MAX_PATH];
 static char child_file[MAX_PATH];
 static DLLVERSIONINFO dllver;
 static BOOL skip_noassoc_tests = FALSE;
-//static HANDLE dde_ready_event; FIXME: CORE-6559
+static HANDLE dde_ready_event;
 
 
 /***
@@ -2079,7 +2079,6 @@ typedef struct
     int todo;
 } dde_tests_t;
 
-#if CORE_6559_IS_FIXED
 static dde_tests_t dde_tests[] =
 {
     /* Test passing and not passing command-line
@@ -2276,7 +2275,6 @@ static void test_dde(void)
     CloseHandle(map);
     hook_WaitForInputIdle((void *) WaitForInputIdle);
 }
-#endif
 
 #define DDE_DEFAULT_APP_VARIANTS 2
 typedef struct
@@ -2287,7 +2285,6 @@ typedef struct
     int rc[DDE_DEFAULT_APP_VARIANTS];
 } dde_default_app_tests_t;
 
-#if CORE_6559_IS_FIXED
 static dde_default_app_tests_t dde_default_app_tests[] =
 {
     /* Windows XP and 98 handle default DDE app names in different ways.
@@ -2447,7 +2444,6 @@ static void test_dde_default_app(void)
     assert(DdeFreeStringHandle(ddeInst, hszApplication));
     assert(DdeUninitialize(ddeInst));
 }
-#endif
 
 static void init_test(void)
 {
@@ -2662,12 +2658,16 @@ START_TEST(shlexec)
     test_find_executable();
     test_lnks();
     test_exes();
-#if CORE_6559_IS_FIXED
+if(winetest_interactive)
+{
     test_dde();
     test_dde_default_app();
-#endif
+}
+else
+{
     win_skip("Skipping test_dde() until we have a sane DDE implementation. CORE-6559.\n");
     win_skip("Skipping test_dde_default_app() until we have a sane DDE implementation. CORE-6559.\n");
+}
     test_directory();
 
     cleanup_test();

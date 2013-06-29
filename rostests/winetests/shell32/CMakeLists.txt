@@ -10,7 +10,7 @@ list(APPEND SOURCE
     brsfolder.c
     ebrowser.c
     generated.c
-    #progman_dde.c FIXME: CORE-6559
+    progman_dde.c
     recyclebin.c
     shelldispatch.c
     shelllink.c

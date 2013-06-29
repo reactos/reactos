@@ -12,7 +12,7 @@ extern void func_autocomplete(void);
 extern void func_brsfolder(void);
 extern void func_ebrowser(void);
 extern void func_generated(void);
-//extern void func_progman_dde(void); FIXME: bug 7233
+extern void func_progman_dde(void);
 extern void func_recyclebin(void);
 extern void func_shelldispatch(void);
 extern void func_shelllink(void);
@@ -34,7 +34,7 @@ const struct test winetest_testlist[] =
     { "brsfolder", func_brsfolder },
     { "ebrowser", func_ebrowser },
     { "generated", func_generated },
-//    { "progman_dde", func_progman_dde }, FIXME: bug 7233
+    { "progman_dde", func_progman_dde },
     { "recyclebin", func_recyclebin },
     { "shelldispatch", func_shelldispatch },
     { "shelllink", func_shelllink },
