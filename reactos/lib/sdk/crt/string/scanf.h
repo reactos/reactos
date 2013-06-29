@@ -279,7 +279,7 @@ _FUNCTION_ {
 		    /* handle exponent */
 		    if (width!=0 && (nch == 'e' || nch == 'E')) {
 			int exponent = 0, negexp = 0;
-			float expcnt;
+			double expcnt, shift;
                         nch = _GETC_(file);
 			if (width>0) width--;
 			/* possible sign on the exponent */
@@ -296,13 +296,15 @@ _FUNCTION_ {
 			    if (width>0) width--;
                         }
 			/* update 'cur' with this exponent. */
-			expcnt =  negexp ? 0.1f : 10.0f;
+			expcnt = 10;
+			shift = 1.0;
 			while (exponent!=0) {
 			    if (exponent&1)
-				cur*=expcnt;
+				shift *= expcnt;
 			    exponent/=2;
 			    expcnt=expcnt*expcnt;
 			}
+			cur = (negexp ? cur / shift : cur * shift);
 		    }
                     st = 1;
                     if (!suppress) {
