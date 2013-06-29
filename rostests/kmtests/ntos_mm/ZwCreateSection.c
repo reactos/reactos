@@ -507,9 +507,12 @@ START_TEST(ZwCreateSection)
 
     KmtInitTestFiles(&FileHandleReadOnly, &FileHandleWriteOnly, &FileHandleExecuteOnly);
 
-    FileSectionViewPermissionCheck(FileHandleReadOnly, FileHandleWriteOnly, FileHandleExecuteOnly);
-    SimpleErrorChecks(FileHandleReadOnly, FileHandleWriteOnly, FileHandleExecuteOnly);
-    BasicBehaviorChecks(FileHandleWriteOnly);
+    if (FileHandleReadOnly && FileHandleWriteOnly && FileHandleExecuteOnly)
+    {
+        FileSectionViewPermissionCheck(FileHandleReadOnly, FileHandleWriteOnly, FileHandleExecuteOnly);
+        SimpleErrorChecks(FileHandleReadOnly, FileHandleWriteOnly, FileHandleExecuteOnly);
+        BasicBehaviorChecks(FileHandleWriteOnly);
+    }
 
     if (FileHandleReadOnly)
         ZwClose(FileHandleReadOnly);
