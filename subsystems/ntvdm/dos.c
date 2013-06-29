@@ -311,14 +311,7 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
     /* Initialize the handle table */
     for (i = 0; i < 20; i++) PspBlock->HandleTable[i] = 0xFF;
 
-    /* Did we get an environment segment? */
-    if (!Environment)
-    {
-        /* No, copy the one from the parent */
-        Environment = DosCopyEnvironmentBlock((CurrentPsp != SYSTEM_PSP)
-                                              ? SEGMENT_TO_PSP(CurrentPsp)->EnvBlock
-                                              : SYSTEM_ENV_BLOCK);
-    }
+    
 
     PspBlock->EnvBlock = Environment;
 
@@ -342,13 +335,13 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
 
 BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
 {
-    BOOLEAN Success = FALSE;
+    BOOLEAN Success = FALSE, AllocatedEnvBlock = FALSE;
     HANDLE FileHandle = INVALID_HANDLE_VALUE, FileMapping = NULL;
     LPBYTE Address = NULL;
     LPSTR ProgramFilePath, Parameters[128];
     CHAR CommandLineCopy[128];
     INT ParamCount = 0;
-    WORD i, Segment, FileSize, ExeSize;
+    WORD i, Segment = 0, FileSize, ExeSize;
     PIMAGE_DOS_HEADER Header;
     PDWORD RelocationTable;
     PWORD RelocWord;
@@ -392,6 +385,18 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     Address = (LPBYTE)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0);
     if (Address == NULL) goto Cleanup;
 
+    /* Did we get an environment segment? */
+    if (!EnvBlock)
+    {
+        /* Set a flag to know if the environment block was allocated here */
+        AllocatedEnvBlock = TRUE;
+
+        /* No, copy the one from the parent */
+        EnvBlock = DosCopyEnvironmentBlock((CurrentPsp != SYSTEM_PSP)
+                                           ? SEGMENT_TO_PSP(CurrentPsp)->EnvBlock
+                                           : SYSTEM_ENV_BLOCK);
+    }
+
     /* Check if this is an EXE file or a COM file */
     if (Address[0] == 'M' && Address[1] == 'Z')
     {
@@ -423,6 +428,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
 
         /* The process owns its own memory */
         DosChangeMemoryOwner(Segment, Segment);
+        DosChangeMemoryOwner(EnvBlock, Segment);
 
         /* Copy the program to Segment:0100 */
         RtlCopyMemory((PVOID)((ULONG_PTR)BaseAddress
@@ -456,7 +462,8 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         /* Execute */
         CurrentPsp = Segment;
         DiskTransferArea = MAKELONG(0x80, Segment);
-        EmulatorExecute(Segment + Header->e_cs, sizeof(DOS_PSP) + Header->e_ip);
+        EmulatorExecute(Segment + Header->e_cs + (sizeof(DOS_PSP) >> 4),
+                        Header->e_ip);
 
         Success = TRUE;
     }
@@ -496,6 +503,13 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     }
 
 Cleanup:
+    if (!Success)
+    {
+        /* It was not successful, cleanup the DOS memory */
+        if (AllocatedEnvBlock) DosFreeMemory(EnvBlock);
+        if (Segment) DosFreeMemory(Segment);
+    }
+
     /* Unmap the file*/
     if (Address != NULL) UnmapViewOfFile(Address);
 

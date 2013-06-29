@@ -22,6 +22,8 @@ static BYTE BiosKeyboardMap[256];
 static WORD BiosKbdBuffer[BIOS_KBD_BUFFER_SIZE];
 static UINT BiosKbdBufferStart = 0, BiosKbdBufferEnd = 0;
 static BOOLEAN BiosKbdBufferEmpty = TRUE;
+static DWORD BiosTickCount = 0;
+static BOOLEAN BiosPassedMidnight = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -405,6 +407,44 @@ VOID BiosKeyboardService()
     }
 }
 
+VOID BiosTimeService()
+{
+    DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
+    DWORD Ecx = EmulatorGetRegister(EMULATOR_REG_CX);
+    DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
+
+    switch (HIBYTE(Eax))
+    {
+        case 0x00:
+        {
+            /* Set AL to 1 if midnight had passed, 0 otherwise */
+            Eax &= 0xFFFFFF00;
+            if (BiosPassedMidnight) Eax |= 1;
+
+            /* Return the tick count in CX:DX */
+            EmulatorSetRegister(EMULATOR_REG_AX, Eax);
+            EmulatorSetRegister(EMULATOR_REG_CX, HIWORD(BiosTickCount));
+            EmulatorSetRegister(EMULATOR_REG_DX, LOWORD(BiosTickCount));
+
+            /* Reset the midnight flag */
+            BiosPassedMidnight = FALSE;
+
+            break;
+        }
+
+        case 0x01:
+        {
+            /* Set the tick count to CX:DX */
+            BiosTickCount = MAKELONG(LOWORD(Edx), LOWORD(Ecx));
+
+            /* Reset the midnight flag */
+            BiosPassedMidnight = FALSE;
+
+            break;
+        }
+    }
+}
+
 VOID BiosHandleIrq(BYTE IrqNumber)
 {
     switch (IrqNumber)
@@ -412,6 +452,9 @@ VOID BiosHandleIrq(BYTE IrqNumber)
         /* PIT IRQ */
         case 0:
         {
+            /* Increase the system tick count */
+            BiosTickCount++;
+
             /* Perform the system timer interrupt */
             EmulatorInterrupt(0x1C);
 

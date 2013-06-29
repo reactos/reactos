@@ -22,8 +22,9 @@
 #define BIOS_PIC_MASTER_INT 0x08
 #define BIOS_PIC_SLAVE_INT 0x70
 #define BIOS_SEGMENT 0xF000
-#define VIDEO_BIOS_INTERRUPT 0x10
-#define VIDEO_KBD_INTERRUPT 0x16
+#define BIOS_VIDEO_INTERRUPT 0x10
+#define BIOS_KBD_INTERRUPT 0x16
+#define BIOS_TIME_INTERRUPT 0x1A
 #define CONSOLE_FONT_HEIGHT 8
 #define BIOS_KBD_BUFFER_SIZE 256
 
@@ -36,6 +37,7 @@ WORD BiosPeekCharacter();
 WORD BiosGetCharacter();
 VOID BiosVideoService();
 VOID BiosKeyboardService();
+VOID BiosTimeService();
 VOID BiosHandleIrq(BYTE IrqNumber);
 
 #endif

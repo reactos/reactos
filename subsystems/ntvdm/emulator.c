@@ -199,25 +199,33 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
         {
             /* It was an IRQ from the master PIC */
             BiosHandleIrq(IntNum - BIOS_PIC_MASTER_INT);
+            return;
         }
         else if (IntNum >= BIOS_PIC_SLAVE_INT && IntNum < BIOS_PIC_SLAVE_INT + 8)
         {
             /* It was an IRQ from the slave PIC */
             BiosHandleIrq(IntNum - BIOS_PIC_SLAVE_INT + 8);
+            return;
         }
 
         switch (IntNum)
         {
-            case VIDEO_BIOS_INTERRUPT:
+            case BIOS_VIDEO_INTERRUPT:
             {
                 /* This is the video BIOS interrupt, call the BIOS */
                 BiosVideoService();
                 break;
             }
-            case VIDEO_KBD_INTERRUPT:
+            case BIOS_KBD_INTERRUPT:
             {
                 /* This is the keyboard BIOS interrupt, call the BIOS */
                 BiosKeyboardService();
+                break;
+            }
+            case BIOS_TIME_INTERRUPT:
+            {
+                /* This is the time BIOS interrupt, call the BIOS */
+                BiosTimeService();
                 break;
             }
             case 0x20:
@@ -233,6 +241,11 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
             case 0x23:
             {
                 DosBreakInterrupt();
+                break;
+            }
+            default:
+            {
+                DPRINT1("Unhandled interrupt: 0x%02X\n", IntNum);
                 break;
             }
         }
