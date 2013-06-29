@@ -17,15 +17,16 @@
  *    17-Oct-2001 (Eric Kohl)
  *        Implemented basic rename code.
  *
- *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc
- *	  25-Nov-2008 (Victor Martinez) <vicmarcal@hotmail.com> Patch dedicated to Myrjala because her comprenhension and love :D
- *		  Fixing following Bugs:
- *	           -Wrong behavior with wildcards when Source and Destiny are Paths(FIXED).
- *			   -Wrong general behavior (MSDN:"Rename cant move files between subdirectories")(FIXED)
- *			   -Wrong behavior when renaming without path in destiny:(i.e) "ren C:\text\as.txt list.txt" it moves as.txt and then rename it(FIXED)
- *				(MSDN: If there is a Path in Source and no Path in Destiny, then Destiny Path is Source Path,because never Ren has to be used to move.)
- *			   -Implemented checkings if SourcePath and DestinyPath are differents.
+ *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *        Remove all hardcoded strings in En.rc
+ *
+ *    25-Nov-2008 (Victor Martinez) <vicmarcal@hotmail.com> Patch dedicated to Myrjala because her comprenhension and love :D
+ *        Fixing following Bugs:
+ *             -Wrong behavior with wildcards when Source and Destiny are Paths(FIXED).
+ *             -Wrong general behavior (MSDN:"Rename cant move files between subdirectories")(FIXED)
+ *             -Wrong behavior when renaming without path in destiny:(i.e) "ren C:\text\as.txt list.txt" it moves as.txt and then rename it(FIXED)
+ *              (MSDN: If there is a Path in Source and no Path in Destiny, then Destiny Path is Source Path,because never Ren has to be used to move.)
+ *             -Implemented checkings if SourcePath and DestinyPath are differents.
  *
  */
 
@@ -35,19 +36,18 @@
 
 enum
 {
-  REN_ATTRIBUTES = 0x001,   /* /A : not implemented */
-  REN_ERROR      = 0x002,   /* /E */
-  REN_NOTHING    = 0x004,   /* /N */
-  REN_PROMPT     = 0x008,   /* /P : not implemented */
-  REN_QUIET      = 0x010,   /* /Q */
-  REN_SUBDIR     = 0x020,   /* /S */
-  REN_TOTAL      = 0x040,   /* /T */
+    REN_ATTRIBUTES = 0x001,   /* /A : not implemented */
+    REN_ERROR      = 0x002,   /* /E */
+    REN_NOTHING    = 0x004,   /* /N */
+    REN_PROMPT     = 0x008,   /* /P : not implemented */
+    REN_QUIET      = 0x010,   /* /Q */
+    REN_SUBDIR     = 0x020,   /* /S */
+    REN_TOTAL      = 0x040,   /* /T */
 };
 
 
 /*
  *  file rename internal command.
- *
  */
 INT cmd_rename (LPTSTR param)
 {
@@ -59,12 +59,10 @@ INT cmd_rename (LPTSTR param)
   DWORD dwFiles = 0; /* number of renamedd files */
   INT i;
 
-
   LPTSTR srcPattern = NULL; /* Source Argument*/
   TCHAR srcPath[MAX_PATH]; /*Source Path Directories*/
   LPTSTR srcFILE = NULL;  /*Contains the files name(s)*/
   TCHAR srcFinal[MAX_PATH];
-
 
   LPTSTR dstPattern = NULL; /*Destiny Argument*/
   TCHAR dstPath[MAX_PATH]; /*Source Path Directories*/
@@ -76,11 +74,6 @@ INT cmd_rename (LPTSTR param)
   BOOL bDstWildcard = FALSE;
   BOOL bPath = FALSE;
 
-
-
-
-
-
   LPTSTR p,q,r;
 
   HANDLE hFile;
@@ -88,8 +81,6 @@ INT cmd_rename (LPTSTR param)
  /*If the PARAM=/? then show the help*/
   if (!_tcsncmp(param, _T("/?"), 2))
   {
-
-
     ConOutResPaging(TRUE,STRING_REN_HELP1);
     return 0;
   }
