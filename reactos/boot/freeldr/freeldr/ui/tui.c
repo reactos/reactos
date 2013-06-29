@@ -952,29 +952,29 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
                     MachBeep();
                 }
             }
-            else if (key == KEY_HOME) // Go to the start of the buffer
+            else if (Extended && key == KEY_HOME) // Go to the start of the buffer
             {
                 EditBoxTextPosition = 0;
             }
-            else if (key == KEY_END) // Go to the end of the buffer
+            else if (Extended && key == KEY_END) // Go to the end of the buffer
             {
                 EditBoxTextPosition = EditBoxTextLength;
             }
-            else if (key == KEY_RIGHT) // Go right
+            else if (Extended && key == KEY_RIGHT) // Go right
             {
                 if (EditBoxTextPosition < EditBoxTextLength)
                     EditBoxTextPosition++;
                 else
                     MachBeep();
             }
-            else if (key == KEY_LEFT) // Go left
+            else if (Extended && key == KEY_LEFT) // Go left
             {
                 if (EditBoxTextPosition > 0)
                     EditBoxTextPosition--;
                 else
                     MachBeep();
             }
-            else // Add this key to the buffer
+            else if (!Extended) // Add this key to the buffer
             {
                 if ( (EditBoxTextLength   < Length - 1) &&
                      (EditBoxTextPosition < Length - 1) )
@@ -991,6 +991,10 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
                 {
                     MachBeep();
                 }
+            }
+            else
+            {
+                MachBeep();
             }
         }
 
