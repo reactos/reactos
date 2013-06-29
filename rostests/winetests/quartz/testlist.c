@@ -18,12 +18,16 @@ extern void func_videorenderer(void);
 const struct test winetest_testlist[] =
 {
     { "avisplitter", func_avisplitter },
-	{ "dsoundrender", func_dsoundrender },
-	{ "filtergraph", func_filtergraph },
-	{ "filtermapper", func_filtermapper },
-	{ "memallocator", func_memallocator },
-	{ "misc", func_misc },
-	{ "videorenderer", func_videorenderer },
-	{ "referenceclock", func_referenceclock },
+#ifdef ROSTESTS_116_FIXED
+    { "dsoundrender", func_dsoundrender },
+    { "filtergraph", func_filtergraph },
+#endif /* ROSTESTS_116_FIXED */
+    { "filtermapper", func_filtermapper },
+    { "memallocator", func_memallocator },
+#ifdef ROSTESTS_116_FIXED
+    { "misc", func_misc },
+    { "videorenderer", func_videorenderer },
+#endif /* ROSTESTS_116_FIXED */
+    { "referenceclock", func_referenceclock },
     { 0, 0 }
 };
