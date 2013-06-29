@@ -20,14 +20,13 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <winsvc.h>
-#include <tchar.h>
 
 /* DEFINES *******************************************************************/
 
 #define CS_TIMEOUT  1000
 
 typedef struct _SERVICE {
-    PTSTR Name;
+    PWSTR Name;
     HINSTANCE hServiceDll;
     LPSERVICE_MAIN_FUNCTION ServiceMainFunc;
     struct _SERVICE *Next;

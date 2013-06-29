@@ -15,38 +15,38 @@
 
 /* DEFINES *******************************************************************/
 
-static LPCTSTR SVCHOST_REG_KEY  = _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SvcHost");
-static LPCTSTR SERVICE_KEY      = _T("SYSTEM\\CurrentControlSet\\Services\\");
-static LPCTSTR PARAMETERS_KEY   = _T("\\Parameters");
+static PCWSTR SVCHOST_REG_KEY   = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SvcHost";
+static PCWSTR SERVICE_KEY       = L"SYSTEM\\CurrentControlSet\\Services\\";
+static PCWSTR PARAMETERS_KEY    = L"\\Parameters";
 
-#define SERVICE_KEY_LENGTH  _tcslen(SERVICE_KEY);
+#define SERVICE_KEY_LENGTH  wcslen(SERVICE_KEY);
 #define REG_MAX_DATA_SIZE   2048
 
 static PSERVICE FirstService = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL PrepareService(LPCTSTR ServiceName)
+BOOL PrepareService(PCWSTR ServiceName)
 {
     HKEY hServiceKey;
-    TCHAR ServiceKeyBuffer[MAX_PATH + 1];
+    WCHAR ServiceKeyBuffer[MAX_PATH + 1];
     DWORD LeftOfBuffer = sizeof(ServiceKeyBuffer) / sizeof(ServiceKeyBuffer[0]);
     DWORD KeyType;
-    PTSTR Buffer = NULL;
+    PWSTR Buffer = NULL;
     DWORD BufferSize = MAX_PATH + 1;
     LONG RetVal;
     HINSTANCE hServiceDll;
-    TCHAR DllPath[MAX_PATH + 2]; /* See MSDN on ExpandEnvironmentStrings() for ANSI strings for more details on + 2 */
+    WCHAR DllPath[MAX_PATH + 2]; /* See MSDN on ExpandEnvironmentStrings() for ANSI strings for more details on + 2 */
     LPSERVICE_MAIN_FUNCTION ServiceMainFunc;
     PSERVICE Service;
 
     /* Compose the registry path to the service's "Parameter" key */
-    _tcsncpy(ServiceKeyBuffer, SERVICE_KEY, LeftOfBuffer);
-    LeftOfBuffer -= _tcslen(SERVICE_KEY);
-    _tcsncat(ServiceKeyBuffer, ServiceName, LeftOfBuffer);
-    LeftOfBuffer -= _tcslen(ServiceName);
-    _tcsncat(ServiceKeyBuffer, PARAMETERS_KEY, LeftOfBuffer);
-    LeftOfBuffer -= _tcslen(PARAMETERS_KEY);
+    wcsncpy(ServiceKeyBuffer, SERVICE_KEY, LeftOfBuffer);
+    LeftOfBuffer -= wcslen(SERVICE_KEY);
+    wcsncat(ServiceKeyBuffer, ServiceName, LeftOfBuffer);
+    LeftOfBuffer -= wcslen(ServiceName);
+    wcsncat(ServiceKeyBuffer, PARAMETERS_KEY, LeftOfBuffer);
+    LeftOfBuffer -= wcslen(PARAMETERS_KEY);
 
     if (LeftOfBuffer < 0)
     {
@@ -73,7 +73,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
             return FALSE;
         }
 
-        RetVal = RegQueryValueEx(hServiceKey, _T("ServiceDll"), NULL, &KeyType, (LPBYTE)Buffer, &BufferSize);
+        RetVal = RegQueryValueEx(hServiceKey, L"ServiceDll", NULL, &KeyType, (LPBYTE)Buffer, &BufferSize);
 
     } while (RetVal == ERROR_MORE_DATA);
 
@@ -119,14 +119,14 @@ BOOL PrepareService(LPCTSTR ServiceName)
     }
 
     memset(Service, 0, sizeof(SERVICE));
-    Service->Name = HeapAlloc(GetProcessHeap(), 0, (_tcslen(ServiceName)+1) * sizeof(TCHAR));
+    Service->Name = HeapAlloc(GetProcessHeap(), 0, (wcslen(ServiceName)+1) * sizeof(WCHAR));
     if (Service->Name == NULL)
     {
         DPRINT1("Not enough memory for service: %s\n", ServiceName);
         HeapFree(GetProcessHeap(), 0, Service);
         return FALSE;
     }
-    _tcscpy(Service->Name, ServiceName);
+    wcscpy(Service->Name, ServiceName);
 
     Service->hServiceDll = hServiceDll;
     Service->ServiceMainFunc = ServiceMainFunc;
@@ -154,13 +154,13 @@ VOID FreeServices(VOID)
 /*
  * Returns the number of services successfully loaded from the category
  */
-DWORD LoadServiceCategory(LPCTSTR ServiceCategory)
+DWORD LoadServiceCategory(PCWSTR ServiceCategory)
 {
     HKEY hServicesKey;
     DWORD KeyType;
     DWORD BufferSize = REG_MAX_DATA_SIZE;
-    TCHAR Buffer[REG_MAX_DATA_SIZE];
-    LPCTSTR ServiceName;
+    WCHAR Buffer[REG_MAX_DATA_SIZE];
+    PCWSTR ServiceName;
     DWORD BufferIndex = 0;
     DWORD NrOfServices = 0;
 
@@ -183,11 +183,11 @@ DWORD LoadServiceCategory(LPCTSTR ServiceCategory)
 
     /* Load services in the category */
     ServiceName = Buffer;
-    while (ServiceName[0] != _T('\0'))
+    while (ServiceName[0] != UNICODE_NULL)
     {
         size_t Length;
-        
-        Length = _tcslen(ServiceName);
+
+        Length = wcslen(ServiceName);
         if (Length == 0)
             break;
 
@@ -202,7 +202,7 @@ DWORD LoadServiceCategory(LPCTSTR ServiceCategory)
     return NrOfServices;
 }
 
-int _tmain (int argc, LPTSTR argv [])
+int wmain(int argc, wchar_t **argv)
 {
     DWORD NrOfServices;
     LPSERVICE_TABLE_ENTRY ServiceTable;
@@ -213,7 +213,7 @@ int _tmain (int argc, LPTSTR argv [])
         return 0;
     }
 
-    if (_tcscmp(argv[1], _T("-k")) != 0)
+    if (wcscmp(argv[1], L"-k") != 0)
     {
         /* For now, we only handle "-k" */
         return 0;
