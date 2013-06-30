@@ -2,13 +2,13 @@
 
 [Section]
 Name = IrfanView
-Version = 4.35
+Version = 4.36
 Licence = Freeware (for personal use)
 Description = Viewer for all kinds of graphics/audio files/video files.
-Size = 1.57MB
+Size = 1.77MB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://irfanview.tuwien.ac.at/iview435_setup.exe
+URLDownload = http://ring.maffin.ad.jp/archives/pc/forest/i/irfanview/10829/iview436_setup.exe
 CDPath = none
 
 [Section.0407]

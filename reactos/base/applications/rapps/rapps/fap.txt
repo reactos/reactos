@@ -2,13 +2,13 @@
 
 [Section]
 Name = Fox Audio Player
-Version = 0.9.2
+Version = 0.10.0
 Licence = GPL
 Description = Simple and lightweight audio player.
-Size = 1.86MB
+Size = 1.89MB
 Category = 1
 URLSite = http://foxaudioplayer.sourceforge.net/
-URLDownload = http://svn.reactos.org/packages/fap-0.9.2-win32-bin.exe
+URLDownload = http://svn.reactos.org/packages/fap-0.10.0-win32-bin.exe
 CDPath = none
 
 [Section.0407]
@@ -19,7 +19,7 @@ Description = Reproductor de audio simple y ligero.
 
 [Section.040c]
 Description = Lecteur audio simple et léger.
-Size = 1,86 Mo
+Size = 1,89 Mo
 
 [Section.0410]
 Description = Un semplice e leggero lettore audio.
@@ -32,7 +32,7 @@ Description = Prosty i lekki odtwarzacz audio.
 
 [Section.0418]
 Description = Un lector audio simplu și ușor.
-Size = 1,86 Mo
+Size = 1,89 Mo
 
 [Section.0422]
 Description = Простий та маленький програвач аудіо файлів.

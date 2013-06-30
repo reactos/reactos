@@ -2,13 +2,13 @@
 
 [Section]
 Name = 7-Zip
-Version = 9.25
+Version = 9.30a
 Licence = LGPL
 Description = Utility to create and open 7zip, zip, tar, rar and other archive files.
-Size = 1.03MB
+Size = 1.1MB
 Category = 12
 URLSite = http://www.7-zip.org/
-URLDownload = http://dl.7-zip.org/7z925.exe
+URLDownload = http://dl.7-zip.org/7z930.exe
 CDPath = none
 
 [Section.0407]
