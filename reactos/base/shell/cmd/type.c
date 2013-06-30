@@ -128,12 +128,10 @@ INT cmd_type (LPTSTR param)
             }
         }
 
-        ConOutPuts(_T("\n"));
         CloseHandle(hFile);
     }
 
-    freep (argv);
-
+    freep(argv);
     return 0;
 }
 
