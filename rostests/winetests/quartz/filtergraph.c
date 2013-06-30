@@ -1846,6 +1846,12 @@ static void test_render_filter_priority(void)
 START_TEST(filtergraph)
 {
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
+if(!winetest_interactive)
+{
+    skip("Skipping filtergraph test, see ROSTESTS_116\n");
+    return;
+}
+else{
     test_render_run(avifileA);
     test_render_run(mpegfileA);
     test_graph_builder();
@@ -1853,5 +1859,6 @@ START_TEST(filtergraph)
     test_mediacontrol();
     test_filter_graph2();
     test_render_filter_priority();
+}
     CoUninitialize();
 }

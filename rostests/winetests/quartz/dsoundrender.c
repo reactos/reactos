@@ -221,6 +221,11 @@ static void test_basefilter(void)
 
 START_TEST(dsoundrender)
 {
+if(!winetest_interactive)
+{
+    skip("Skipping dsoundrender test, see ROSTESTS_116\n");
+    return;
+}
     CoInitialize(NULL);
     if (!create_dsound_renderer())
         return;
