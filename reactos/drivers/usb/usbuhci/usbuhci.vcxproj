@@ -62,6 +62,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Native</SubSystem>
@@ -88,6 +89,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Native</SubSystem>
@@ -126,11 +128,17 @@
     <None Include="CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\lib\drivers\libusb\libusb.vcxproj">
+      <Project>{721cd5ef-a6f1-432b-a6e0-2f578ab2dd97}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\lib\import\HAL\HAL.vcxproj">
       <Project>{19d0d0aa-c065-4101-9f74-e45a87d35ba7}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\lib\import\ntoskrnl\ntoskrnl.vcxproj">
       <Project>{315ae91a-d723-485c-abd0-1378a1ead8e5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\lib\sdk\crt\libcntpr\libcntpr.vcxproj">
+      <Project>{271006d5-01b2-4f33-8699-9909a41e0707}</Project>
     </ProjectReference>
     <ProjectReference Include="..\usbd\usbd.vcxproj">
       <Project>{17786c00-926d-45ff-a031-3800821afc7a}</Project>
