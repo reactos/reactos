@@ -26,6 +26,29 @@ UINT InputCodePage;
 UINT OutputCodePage;
 
 
+BOOL IsConsoleHandle(HANDLE hHandle)
+{
+    DWORD dwMode;
+
+    /* Check whether the handle may be that of a console... */
+    if ((GetFileType(hHandle) & FILE_TYPE_CHAR) == 0) return FALSE;
+
+    /*
+     * It may be. Perform another test... The idea comes from the
+     * MSDN description of the WriteConsole API:
+     *
+     * "WriteConsole fails if it is used with a standard handle
+     *  that is redirected to a file. If an application processes
+     *  multilingual output that can be redirected, determine whether
+     *  the output handle is a console handle (one method is to call
+     *  the GetConsoleMode function and check whether it succeeds).
+     *  If the handle is a console handle, call WriteConsole. If the
+     *  handle is not a console handle, the output is redirected and
+     *  you should call WriteFile to perform the I/O."
+     */
+    return GetConsoleMode(hHandle, &dwMode);
+}
+
 VOID ConInDisable(VOID)
 {
     HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
@@ -116,8 +139,12 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
     DWORD dwWritten;
     HANDLE hOutput = GetStdHandle(nStdHandle);
 
-    if (WriteConsole(hOutput, str, len, &dwWritten, NULL))
-        return;
+    /* Check whether we are writing to a console and if so, write to it */
+    if (IsConsoleHandle(hOutput))
+    {
+        if (WriteConsole(hOutput, str, len, &dwWritten, NULL))
+            return;
+    }
 
     /* We're writing to a file or pipe instead of the console. Convert the
      * string from TCHARs to the desired output format, if the two differ */
@@ -220,9 +247,8 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
     if (szFormat == NULL)
         return 0;
 
-
     //get the size of the visual screen that can be printed too
-    if (!GetConsoleScreenBufferInfo(hOutput, &csbi))
+    if (!IsConsoleHandle(hOutput) || !GetConsoleScreenBufferInfo(hOutput, &csbi))
     {
         // we assuming its a file handle
         ConPrintf(szFormat, arg_ptr, nStdHandle);
