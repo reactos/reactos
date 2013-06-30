@@ -1323,6 +1323,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
     PUSER_INFO_1013 UserInfo1013;
     PUSER_INFO_1014 UserInfo1014;
     PUSER_INFO_1017 UserInfo1017;
+    PUSER_INFO_1018 UserInfo1018;
     PUSER_INFO_1024 UserInfo1024;
     PUSER_INFO_1025 UserInfo1025;
     PUSER_INFO_1051 UserInfo1051;
@@ -1472,7 +1473,8 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-//          UserInfo2->usri2_max_storage;
+            // usri2_max_storage ignored
+
 //          UserInfo2->usri2_units_per_week;
 //          UserInfo2->usri2_logon_hours;
 
@@ -1573,7 +1575,8 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-//          UserInfo3->usri3_max_storage;
+            // usri3_max_storage ignored
+
 //          UserInfo3->usri3_units_per_week;
 //          UserInfo3->usri3_logon_hours;
 
@@ -1696,7 +1699,8 @@ SetUserInfo(SAM_HANDLE UserHandle,
             }
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
 
-//          UserInfo3->usri4_max_storage;
+            // usri4_max_storage ignored
+
 //          UserInfo3->usri4_units_per_week;
 //          UserInfo3->usri4_logon_hours;
 
@@ -1851,7 +1855,16 @@ SetUserInfo(SAM_HANDLE UserHandle,
             UserAllInfo.WhichFields |= USER_ALL_ACCOUNTEXPIRES;
             break;
 
-//        case 1018:
+        case 1018:
+            UserInfo1018 = (PUSER_INFO_1018)UserInfo;
+
+            if (UserInfo1018->usri1018_max_storage != USER_MAXSTORAGE_UNLIMITED)
+            {
+                // FIXME: Report error
+                return ERROR_INVALID_PARAMETER;
+            }
+            break;
+
 //        case 1020:
 
         case 1024:
