@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{AECD4AD4-8930-4C1D-A083-CCB981D4205C}</ProjectGuid>
+    <ProjectGuid>{17786C00-926D-45FF-A031-3800821AFC7A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>pci</RootNamespace>
+    <RootNamespace>usbd</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -53,8 +53,6 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -78,16 +76,12 @@
       </RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+      <ModuleDefinitionFile>$(OutDir)\$(ProjectName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;..\..\..\include\psdk;..\..\..\include\ddk;..\..\..\include\reactos\mc\build\x86_32\$(Configuration)\ReactOS;..\..\..\include\crt;..\..\..\include\crt\msc;..\..\..\include\reactos;..\..\..\include;..\..\..\include\ndk</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -108,27 +102,29 @@
       </RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+      <ModuleDefinitionFile>$(OutDir)\$(ProjectName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
+    <CustomBuild Include="usbd.spec">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\..\tools\spec2def\build\x86_32\$(Configuration)\spec2def.exe" -a=i386 --kill-at -n="$(TargetFileName)" --ms -d="$(OutDir)%(FileName).def" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\..\tools\spec2def\build\x86_32\$(Configuration)\spec2def.exe" -a=i386 --kill-at -n="$(TargetFileName)" --ms -d="$(OutDir)%(FileName).def" "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)\%(Filename).def</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)\%(Filename).def</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="fdo.c" />
-    <ClCompile Include="pci.c" />
-    <ClCompile Include="pdo.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="pci.h" />
-    <ClInclude Include="pcidef.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="pci.rc">
+    <ResourceCompile Include="usbd.rc">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\..\include;..\..\..\include\psdk</AdditionalIncludeDirectories>
       <IgnoreStandardIncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IgnoreStandardIncludePath>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\..\include;..\..\..\include\psdk</AdditionalIncludeDirectories>
       <IgnoreStandardIncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</IgnoreStandardIncludePath>
-    </ResourceCompile>
+	</ResourceCompile>			
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="usbd.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\lib\import\HAL\HAL.vcxproj">

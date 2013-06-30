@@ -40,6 +40,8 @@ copy "$(SolutionDir)\media\nls\*.nls" .
 mkdir drivers
 cd drivers
 copy "$(SolutionDir)\drivers\filesystems\CDFS\$(OutDir)\CDFS.SYS" .
+copy "$(SolutionDir)\drivers\bus\PCI\$(OutDir)\PCI.SYS" .
+copy "$(SolutionDir)\drivers\usb\usbuhci\$(OutDir)\USBUHCI.SYS" .
 cd ..
 mkdir config
 cd "$(SolutionDir)\boot\bootdata"
@@ -74,6 +76,8 @@ copy "$(SolutionDir)\media\nls\*.nls" .
 mkdir drivers
 cd drivers
 copy "$(SolutionDir)\drivers\filesystems\CDFS\$(OutDir)\CDFS.SYS" .
+copy "$(SolutionDir)\drivers\bus\PCI\$(OutDir)\PCI.SYS" .
+copy "$(SolutionDir)\drivers\usb\usbuhci\$(OutDir)\USBUHCI.SYS" .
 cd ..
 mkdir config
 cd "$(SolutionDir)\boot\bootdata"
@@ -96,6 +100,12 @@ echo Creating ReactOS CD Live, writing Master-Boot-Rectord (MBR) in the process:
     </ProjectReference>
     <ProjectReference Include="..\..\drivers\base\kdcom\kdcom.vcxproj">
       <Project>{c6e75fa9-bcbb-46ec-91ff-0f05064d3039}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\drivers\bus\pci\pci.vcxproj">
+      <Project>{aecd4ad4-8930-4c1d-a083-ccb981d4205c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\drivers\filesystems\cdfs\cdfs.vcxproj">
+      <Project>{1f0d3cae-da53-40bd-b7ea-77a521c4bbc2}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\hal\hal.vcxproj">
       <Project>{ba5347bf-c0fd-44f0-976e-510b4d48e07b}</Project>
