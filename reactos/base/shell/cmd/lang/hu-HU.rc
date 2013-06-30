@@ -106,7 +106,7 @@ hex  név             hex  név\n\
 3    Sötétlila       B    Türkízkék\n\
 4    Bordó           C    Vörös\n\
 5    Ciklámen        D    Ciklámen\n\
-6    Olíva		     E    Sárga\n\
+6    Olíva           E    Sárga\n\
 7    Világos szürke  F    Fehér\n"
 
 STRING_COPY_HELP1,  "Felülírja a következõt: %s (Igen/Nem/Mind)? "
@@ -251,6 +251,11 @@ STRING_FREE_HELP1, "\nA (%s) meghajtóban lévõ kötet címkéje %-11s\n\
 
 STRING_FREE_HELP2, "Kötet méret információk.\n\nFREE [meghajtó: ...]\n"
 
+STRING_GOTO_HELP1,  "Átirányít egy másik címkére a batch állományban.\n\n\
+GOTO címke\n\n\
+  címke  A megadott címkére fog ugrani az értelmezõ.\n\n\
+Egy címkét egy sorban lehet megadni, ':' -tal kezdve."
+
 STRING_IF_HELP1, "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\
@@ -266,11 +271,6 @@ string1==string2  Specifies a true condition if the specified text strings\n\
 EXIST állományname    Specifies a true condition if the specified állományname exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
                   defined.\n"
-
-STRING_GOTO_HELP1,  "Átirányít egy másik címkére a batch állományban.\n\n\
-GOTO címke\n\n\
-  címke  A megadott címkére fog ugrani az értelmezõ.\n\n\
-Egy címkét egy sorban lehet megadni, ':' -tal kezdve."
 
 STRING_LABEL_HELP1, "A kötet címkéjét megjeleníti, vagy megváltoztatja.\n\n\
 LABEL [meghajtó:] [új_címke]\n"
@@ -373,7 +373,7 @@ STRING_REN_HELP1, "Átnevez egy állományt.\n\n\
 RENAME [/E /N /P /Q /S /T] régi_név ... új_név\n\
 REN [/E /N /P /Q /S /T] régi_név ... új_név\n\n\
   /E    Hibaüzenetek elrejtése.\n\
-  /N    Ne csináljon semmit	.\n\
+  /N    Ne csináljon semmit.\n\
   /P    Minden állománynál rákérdez. (Még NEM mûködik!!)\n\
   /Q    Csendes mûködés.\n\
   /S    Almappákat is átnevez.\n\
@@ -479,7 +479,7 @@ will toggle stopwatch state\n\n"
 
 STRING_TYPE_HELP1, "Megjeleníti az állományok tartalmát.\n\n\
 TYPE [meghajtó:][elérési_út]állománynév \n\
-  /P 		  Csak egy képernyõnyi tartalmat jelenít meg egyszerre.\n"
+  /P          Csak egy képernyõnyi tartalmat jelenít meg egyszerre.\n"
 
 STRING_VERIFY_HELP1, "Ez a parancs még nem mûködik!!\n\
 Lemezre írás utáni ellenõrzést állítja be.\n\n\
@@ -543,6 +543,7 @@ title         new title\n"
 
 
 STRING_HELP1, "Támogatott parancsok megjelenítése\n\n\
+  help parancs\n\
   parancs /?     Több (részletes) információ megtekintéséhez használd ezt.\n\n\
 ?        Minden támogatott parancs megjelenítése (részletek nélkül).\n\
 ALIAS    Megjeleníti, vagy megváltoztatja az aliasokat.\n\

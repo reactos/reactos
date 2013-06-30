@@ -254,6 +254,11 @@ STRING_FREE_HELP1, "\n驱动器 %s 中的卷是 %-11s\n\
 
 STRING_FREE_HELP2, "显示驱动器信息。\n\nFREE [驱动器: ...]\n"
 
+STRING_GOTO_HELP1,  "在批处理脚本中将 CMD 定向到被标记的行执行。\n\n\
+GOTO 标签\n\n\
+  标签    在批处理脚本中被用作标签的文本字符串。\n\n\
+使用冒号开头的一行就作为一个标签。"
+
 STRING_IF_HELP1, "在批处理文件中执行条件控制处理。\n\n\
   IF [NOT] ERRORLEVEL 数字 命令\n\
   IF [NOT] 字符串1==字符串2 命令\n\
@@ -265,11 +270,6 @@ ERRORLEVEL 数字    当上一个程序返回一个大于或等于指定数字�
 字符串1==字符串2   当所指定的字符串相匹配时为真。\n\
 EXIST 文件名       当指定的文件名存在时为真。\n\
 DEFINED 变量       当指定的变量已被定义时为真。\n"
-
-STRING_GOTO_HELP1,  "在批处理脚本中将 CMD 定向到被标记的行执行。\n\n\
-GOTO 标签\n\n\
-  标签    在批处理脚本中被用作标签的文本字符串。\n\n\
-使用冒号开头的一行就作为一个标签。"
 
 STRING_LABEL_HELP1, "显示或改变驱动器卷标。\n\nLABEL [驱动器:][卷标]\n"
 
@@ -363,9 +363,9 @@ STRING_REM_HELP, "在批处理文件中开始一行注释。\n\nREM [注释]"
 
 STRING_RMDIR_HELP,   "删除一个目录。\n\n\
 RMDIR [驱动器:]路径\nRD [驱动器:]路径\n\
-/S			删除目标中的所有文件和文件夹。\n\
-/Q			删除时不要提示。\n"
-STRING_RMDIR_HELP2,	"目录非空！\n"
+/S          删除目标中的所有文件和文件夹。\n\
+/Q          删除时不要提示。\n"
+STRING_RMDIR_HELP2, "目录非空！\n"
 
 STRING_REN_HELP1, "重命名一个或者多个文件或文件夹。\n\n\
 RENAME [/E /N /P /Q /S /T] 旧名称 ... 新名称\n\
@@ -463,7 +463,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
 如果没有 ON，OFF 或者 /S 在调用该命令时被指定，将会切换停表状态。\n\n"
 
 STRING_TYPE_HELP1, "显示文本文件的内容。\n\nTYPE [驱动器:][路径]文件名 \n\
-  /P 		  每次只显示一屏内容。\n"
+  /P          每次只显示一屏内容。\n"
 
 STRING_VERIFY_HELP1, "这条命令只是个摆设！！\n\
 设置是否检查您的文件已被正确地写入磁盘。\n\n\
@@ -527,6 +527,7 @@ RESTORE       恢复窗口\n\
 
 
 STRING_HELP1, "列出所有可用命令 (+ 它们的描述)\n\n\
+  help 命令\n\
   命令 /?         得到特定命令的更多信息\n\n\
 ?        列出所有可用命令 (没有描述)。\n\
 ALIAS    设置、删除或显示别名。\n\

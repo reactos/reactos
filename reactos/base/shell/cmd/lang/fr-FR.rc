@@ -281,6 +281,11 @@ Le numéro de série est %s\n\
 
 STRING_FREE_HELP2, "Affiche les information d'un disque.\n\nFREE [lecteur: ...]"
 
+STRING_GOTO_HELP1,  "Dirige CMD vers une ligne nommée dans un script batch.\n\n\
+GOTO label\n\n\
+  label  Spécifie un champ texte utilisé dans un script batch comme un label.\n\n\
+Vous écrivez un label seul sur une ligne commençant par un deux-points.\n"
+
 STRING_IF_HELP1, "Exécute un traitement conditionnel dans des programmes batch.\n\n\
   IF [NOT] ERRORLEVEL nombre commande\n\
   IF [NOT] chaine1==chaine2 commande\n\
@@ -293,11 +298,6 @@ commande          Indique la commande à lancer si la condition est vérifiée.\
 chaine1==chaine2  La condition sera vraie si les deux chaines sont identiques.\n\
 EXIST nomfichier  La condition sera vraie si le fichier spécifié existe.\n\
 DEFINED variable  La condition sera vraie si la variable indiquée est définie."
-
-STRING_GOTO_HELP1,  "Dirige CMD vers une ligne nommée dans un script batch.\n\n\
-GOTO label\n\n\
-  label  Spécifie un champ texte utilisé dans un script batch comme un label.\n\n\
-Vous écrivez un label seul sur une ligne commençant par un deux-points.\n"
 
 STRING_LABEL_HELP1, "Affiche ou change le nom de volume du disque.\n\nLABEL [disque:][nomdevolume]\n"
 
@@ -396,9 +396,9 @@ STRING_REM_HELP, "Démarrer une ligne de commentaire dans un fichier batch.\n\nR
 
 STRING_RMDIR_HELP,   "Supprime un répertoire.\n\n\
 RMDIR [lecteur:]chemin\nRD [lecteur:]chemin\n\
-/S			Supprime tous les fichiers et dossiers dans le répertoire cible\n\
-/Q			N'interroge pas l'utilisateur\n"
-STRING_RMDIR_HELP2,	"Le répertoire n'est pas vide!\n"
+/S          Supprime tous les fichiers et dossiers dans le répertoire cible\n\
+/Q          N'interroge pas l'utilisateur\n"
+STRING_RMDIR_HELP2, "Le répertoire n'est pas vide!\n"
 
 STRING_REN_HELP1, "Renomme un(des) fichier(s)/répertoire(s)\n\
 RENAME [/E /N /P /Q /S /T] ancien_nom ... nouveau_nom\n\
@@ -508,7 +508,7 @@ En l'absence d'une option ON, OFF ou /S la commande\n\
 changera l'état du chronomètre sélectionné\n\n"
 
 STRING_TYPE_HELP1, "Affiche le contenu de fichiers textes.\n\nTYPE [lecteur:][chemin]nomfich \n\
-  /P 		  Ne montre qu'un écran de contenu à la fois.\n"
+  /P          Ne montre qu'un écran de contenu à la fois.\n"
 
 STRING_VERIFY_HELP1, "Cette commande ne fait rien !!\n\
 Spécifie s'il faut verifier que vos fichiers sont écrits correctement.\
@@ -573,6 +573,7 @@ titre         titre de la fenêtre"
 
 
 STRING_HELP1, "Liste de toutes les commandes disponibles (+ description)\n\n\
+  help commande\n\
   commande /?    Pour plus d'informations sur une commande spécifique\n\n\
 ?        Liste toutes les commandes disponibles sans leur description).\n\
 ALIAS    Défini, supprime ou montre les alias.\n\

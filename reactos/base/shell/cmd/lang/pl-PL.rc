@@ -270,6 +270,11 @@ STRING_FREE_HELP1, "\nWolumin w napędzie %s ma etykietę: %-11s\n\
 
 STRING_FREE_HELP2, "Wyświetla informacje o wolnym miejscu w napędzie.\n\nFREE [napęd: ...]\n"
 
+STRING_GOTO_HELP1,  "Przekierowuje CMD do oznaczonej linii w programie wsadowym.\n\n\
+GOTO etykieta\n\n\
+  etykieta  Ciąg znaków, użyty w programie wsadowym do oznaczenia linii.\n\n\
+Możesz oznaczyć linie dowolną etykietą, zaczynając od dwukropka."
+
 STRING_IF_HELP1, "Wykonuje przetwarzanie warunkowe w programach wsadowych.\n\n\
   IF [NOT] ERRORLEVEL numer komenda\n\
   IF [NOT] ciąg_znaków1==ciąg_znaków2 komenda\n\
@@ -283,11 +288,6 @@ komenda           Komenda do wykonania, gdy warunek będzie spełniony.\n\
 ciąg1==ciąg2      Zwraca PRAWDA, gdy oba ciągi znaków są identyczne\n\
 EXIST plik        Zwraca PRAWDA, jeśli podany plik istnieje.\n\
 DEFINED zmienna   Zwraca PRAWDA, jeśli podana zmienna została zdefiniowana\n"
-
-STRING_GOTO_HELP1,  "Przekierowuje CMD do oznaczonej linii w programie wsadowym.\n\n\
-GOTO etykieta\n\n\
-  etykieta  Ciąg znaków, użyty w programie wsadowym do oznaczenia linii.\n\n\
-Możesz oznaczyć linie dowolną etykietą, zaczynając od dwukropka."
 
 STRING_LABEL_HELP1, "Wyświetla lub zmienia etykietę napędu.\n\nLABEL [napęd:][etykieta]\n"
 
@@ -383,9 +383,9 @@ STRING_REM_HELP, "Definiuje linię komentarza w pliku wsadowym.\n\nREM [komentar
 
 STRING_RMDIR_HELP,   "Usuwa katalog.\n\n\
 RMDIR [napęd:]ścieżka\nRD [napęd:]ścieżka\n\
-/S		Kasuje także wszystkie pliki i podkatalogi w danym katalogu\n\
-/Q		Nie wyświetla prośby o potwierdzenie\n"
-STRING_RMDIR_HELP2,	"Katalog nie jest pusty!\n"
+/S      Kasuje także wszystkie pliki i podkatalogi w danym katalogu\n\
+/Q      Nie wyświetla prośby o potwierdzenie\n"
+STRING_RMDIR_HELP2, "Katalog nie jest pusty!\n"
 
 STRING_REN_HELP1, "Zmienia nazwę pliku/katalogu (także wielu).\n\n\
 RENAME [/E /N /P /Q /S /T] stara_nazwa ... nowa_nazwa\n\
@@ -496,7 +496,7 @@ jeśli nie podano w składni parametrów: ON, OFF or /S, \n\
 komenda zmieni obecny stan stopera\n\n"
 
 STRING_TYPE_HELP1, "Wyświetla zawartość plików tekstowych.\n\nTYPE [napęd:][ścieżka]nazwa_pliku \n\
-  /P 		  Pauzuje po każdym pełnym ekranie.\n"
+  /P          Pauzuje po każdym pełnym ekranie.\n"
 
 STRING_VERIFY_HELP1, "Ta komenda jest tylko na podpuchę\
 Odpowiada za to, czy po zapisaniu plików ma nastąpić sprawdzenie\n\
@@ -560,6 +560,7 @@ title         nowy tytuł okna\n"
 
 
 STRING_HELP1, "Lista wszystkich dostępnych komend (+opisy)\n\n\
+  help komenda\n\
   komenda /?     Wyświetla dokładny opis danej komendy\n\n\
 ?        Lista wszystkich dostępnych komend (bez opisów).\n\
 ALIAS    Ustawia, pokazuje lub usuwa aliasy.\n\

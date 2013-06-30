@@ -294,6 +294,12 @@ Numărul de serie este %s\n\
 
 STRING_FREE_HELP2, "Afișează informația unei unități (de stocare).\n\nFREE [unitate: ...]\n"
 
+STRING_GOTO_HELP1,  "Execută un salt către o linie etichetată în interiorul unui fișier de comenzi.\n\n\
+GOTO etichetă\n\n\
+  etichetă      Specifică un șir text utilizat ca etichetă în\n\
+                fișierele de comenzi.\n\n\
+O etichetă se va defini pe un rând întreg, începând cu două puncte (:)\n"
+
 STRING_IF_HELP1, "Realizează execuția condiționată a comenzilor într-un fișier de comenzi.\n\n\
   IF [NOT] ERRORLEVEL număr comandă\n\
   IF [NOT] șir1==șir2 comandă\n\
@@ -312,12 +318,6 @@ STRING_IF_HELP1, "Realizează execuția condiționată a comenzilor într-un fi�
                     fișierului specificat.\n\
   DEFINED variablă  Determină o condiție satisfăcută dacă «variabilă»\n\
                     a fost anterior definită.\n"
-
-STRING_GOTO_HELP1,  "Execută un salt către o linie etichetată în interiorul unui fișier de comenzi.\n\n\
-GOTO etichetă\n\n\
-  etichetă      Specifică un șir text utilizat ca etichetă în\n\
-                fișierele de comenzi.\n\n\
-O etichetă se va defini pe un rând întreg, începând cu două puncte (:)\n"
 
 STRING_LABEL_HELP1, "Afișează sau modifică eticheta unei unități (de stocare).\n\nLABEL [unitate:][etichetă]\n"
 
@@ -420,7 +420,7 @@ STRING_RMDIR_HELP,   "Șterge un director.\n\n\
 RMDIR [unitate:]cale\nRD [unitate:]cale\n\
   /S    Șterge toate fișierele și directoarele țintă.\n\
   /Q    Omite cererile de confirmare.\n"
-STRING_RMDIR_HELP2,	"Directorul nu este gol!\n"
+STRING_RMDIR_HELP2, "Directorul nu este gol!\n"
 
 STRING_REN_HELP1, "Redenumește un fișier/director sau fișiere/directoare.\n\n\
 RENAME [/E /N /P /Q /S /T] nume_vechi ... nume_nou\n\
@@ -594,6 +594,7 @@ titlu         Noul titlu.\n"
 
 
 STRING_HELP1, "Enumeră toate comenzile disponibile (+ descriere)\n\n\
+  help comandă\n\
   comandă /?     Pentru mai multe informații referitoare la o anume comandă.\n\n\
 ?         Enumeră toate comenzile disponibile (fără descriere).\n\
 ALIAS     Instituie, destituie sau afișează alias.\n\

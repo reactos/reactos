@@ -266,6 +266,11 @@ STRING_FREE_HELP1, "\nVolume in drive %s is %-11s\n\
 
 STRING_FREE_HELP2, "Displays drive information.\n\nFREE [drive: ...]\n"
 
+STRING_GOTO_HELP1,  "Directs CMD to a labeled line in a batch script.\n\n\
+GOTO label\n\n\
+  label  Specifies a text string used in a batch script as a label.\n\n\
+You type a label on a line by itself, beginning with a colon."
+
 STRING_IF_HELP1, "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\
@@ -281,11 +286,6 @@ string1==string2  Specifies a true condition if the specified text strings\n\
 EXIST filename    Specifies a true condition if the specified filename exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
                   defined.\n"
-
-STRING_GOTO_HELP1,  "Directs CMD to a labeled line in a batch script.\n\n\
-GOTO label\n\n\
-  label  Specifies a text string used in a batch script as a label.\n\n\
-You type a label on a line by itself, beginning with a colon."
 
 STRING_LABEL_HELP1, "Displays or changes drive label.\n\nLABEL [drive:][label]\n"
 
@@ -381,9 +381,9 @@ STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 
 STRING_RMDIR_HELP,   "Removes a directory.\n\n\
 RMDIR [drive:]path\nRD [drive:]path\n\
-/S			Deletes all files and folders within target\n\
-/Q			Doesnt prompt for user\n"
-STRING_RMDIR_HELP2,	"Directory is not empty!\n"
+/S          Deletes all files and folders within target\n\
+/Q          Doesn't prompt for user\n"
+STRING_RMDIR_HELP2, "Directory is not empty!\n"
 
 STRING_REN_HELP1, "Renames a file/directory or files/directories.\n\n\
 RENAME [/E /N /P /Q /S /T] old_name ... new_name\n\
@@ -494,7 +494,7 @@ if none of ON, OFF or /S is specified the command\n\
 will toggle stopwatch state\n\n"
 
 STRING_TYPE_HELP1, "Displays the contents of text files.\n\nTYPE [drive:][path]filename \n\
-  /P 		  Shows one screen of output at a time.\n"
+  /P          Shows one screen of output at a time.\n"
 
 STRING_VERIFY_HELP1, "This command is just a dummy!!\n\
 Sets whether to verify that your files are written correctly to a\n\
@@ -559,6 +559,7 @@ title         new title\n"
 
 
 STRING_HELP1, "List of all available commands (+ description)\n\n\
+  help command\n\
   command /?     For more information on a specific command\n\n\
 ?        List all available commands (without description).\n\
 ALIAS    Sets, removes or shows aliases.\n\
