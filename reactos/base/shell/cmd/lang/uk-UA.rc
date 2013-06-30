@@ -278,6 +278,10 @@ GOTO мiтка\n\n\
   label  рядок пакетного файлу, визначений як мiтка.\n\n\
 Мітка повинна знаходитися в окремому рядку i починатися з двокрапки."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Оператор умовного виконання команд у пакетному файлi.\n\n\
   IF [NOT] ERRORLEVEL число команда\n\
   IF [NOT] рядок1==рядок2 команда\n\

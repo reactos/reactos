@@ -270,6 +270,10 @@ GOTO etichetta\n\n\
   etichetta  Indica il testo utilizzato come etichetta in un batch.\n\n\
 Nel batch questa deve trovarsi da sola in una linea con davanti due punti :.\n"
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Esegue una elaborazione condizionale nei batch.\n\n\
   IF [NOT] ERRORLEVEL numero comando\n\
   IF [NOT] stringa1==stringa2 comando\n\

@@ -275,6 +275,10 @@ GOTO etykieta\n\n\
   etykieta  Ciąg znaków, użyty w programie wsadowym do oznaczenia linii.\n\n\
 Możesz oznaczyć linie dowolną etykietą, zaczynając od dwukropka."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Wykonuje przetwarzanie warunkowe w programach wsadowych.\n\n\
   IF [NOT] ERRORLEVEL numer komenda\n\
   IF [NOT] ciąg_znaków1==ciąg_znaków2 komenda\n\

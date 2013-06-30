@@ -300,6 +300,10 @@ GOTO etichetă\n\n\
                 fișierele de comenzi.\n\n\
 O etichetă se va defini pe un rând întreg, începând cu două puncte (:)\n"
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Realizează execuția condiționată a comenzilor într-un fișier de comenzi.\n\n\
   IF [NOT] ERRORLEVEL număr comandă\n\
   IF [NOT] șir1==șir2 comandă\n\

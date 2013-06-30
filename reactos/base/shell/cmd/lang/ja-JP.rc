@@ -277,6 +277,10 @@ GOTO ラベル\n\n\
 ラベルの先頭には : (コロン) を指定し、ラベルだけを単独で 1 行に入力してくだ\n\
 さい。"
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "バッチ プログラム中で条件処理を実行します。\n\n\
   IF [NOT] ERRORLEVEL 番号 コマンド\n\
   IF [NOT] 文字列1==文字列2 コマンド\n\

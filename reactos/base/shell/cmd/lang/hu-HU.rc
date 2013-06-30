@@ -256,6 +256,10 @@ GOTO címke\n\n\
   címke  A megadott címkére fog ugrani az értelmezõ.\n\n\
 Egy címkét egy sorban lehet megadni, ':' -tal kezdve."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\

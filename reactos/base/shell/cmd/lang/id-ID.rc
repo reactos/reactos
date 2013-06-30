@@ -272,6 +272,10 @@ GOTO label\n\n\
   label  Menetapkan string teks yang digunakan dalam naskah batch sebagai label.\n\n\
 Anda mengetik label pada sebuah baris, dimulai dengan titik dua."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Melakukan pemrosesan kondisional dalam program batch.\n\n\
   IF [NOT] ERRORLEVEL nomor perintah\n\
   IF [NOT] string1==string2 perintah\n\

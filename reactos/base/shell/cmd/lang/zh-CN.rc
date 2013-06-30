@@ -259,6 +259,10 @@ GOTO 标签\n\n\
   标签    在批处理脚本中被用作标签的文本字符串。\n\n\
 使用冒号开头的一行就作为一个标签。"
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "在批处理文件中执行条件控制处理。\n\n\
   IF [NOT] ERRORLEVEL 数字 命令\n\
   IF [NOT] 字符串1==字符串2 命令\n\

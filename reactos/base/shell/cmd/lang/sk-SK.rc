@@ -275,6 +275,10 @@ GOTO label\n\n\
   label  Specifies a text string used in a batch script as a label.\n\n\
 You type a label on a line by itself, beginning with a colon."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\

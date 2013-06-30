@@ -245,7 +245,7 @@ COMMAND cmds[] =
 };
 
 
-VOID PrintCommandList (VOID)
+VOID PrintCommandList(VOID)
 {
     LPCOMMAND cmdptr;
     INT y;
@@ -258,7 +258,7 @@ VOID PrintCommandList (VOID)
         {
             if (++y == 8)
             {
-                ConOutPuts (cmdptr->name);
+                ConOutPuts(cmdptr->name);
                 y = 0;
             }
             else
@@ -271,13 +271,13 @@ VOID PrintCommandList (VOID)
     }
 
     if (y != 0)
-        ConOutChar ('\n');
+        ConOutChar('\n');
 }
 
-VOID PrintCommandListDetail (VOID)
+VOID PrintCommandListDetail(VOID)
 {
-    ConOutResPaging(TRUE,STRING_HELP1);
-    ConOutResPaging(FALSE,STRING_HELP2);
+    ConOutResPaging(TRUE , STRING_HELP1);
+    ConOutResPaging(FALSE, STRING_HELP2);
 }
 
 /* EOF */

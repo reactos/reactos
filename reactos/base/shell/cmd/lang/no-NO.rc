@@ -267,6 +267,10 @@ GOTO merke\n\n\
   merke     angir en tekst streng brukt i en satsvis skript.\n\n\
 Et merke opprettes på egen linje ved å skrive kolon fulgt av navn på merke."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Utføre betinget behandling i satsvise programmer.\n\n\
   IF [NOT] ERRORLEVEL nummer kommando\n\
   IF [NOT] streng1==streng2 kommando\n\

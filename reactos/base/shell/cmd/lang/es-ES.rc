@@ -272,6 +272,10 @@ GOTO etiqueta\n\n\
   etiqueta  Especifica la cadena de texto usada en el archivo por lotes como etiqueta.\n\n\
 Escriba la etiqueta en la linea misma, empezando con dos puntos."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Ejecuta procesos condicionales en archivos por lotes.\n\n\
   IF [NOT] ERRORLEVEL número comando\n\
   IF [NOT] string1==string2 comando\n\

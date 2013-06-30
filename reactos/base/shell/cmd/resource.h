@@ -137,72 +137,74 @@
 
 #define STRING_GOTO_HELP1                  659
 
-#define STRING_LABEL_HELP1                 660
-#define STRING_LABEL_HELP2                 661
-#define STRING_LABEL_HELP3                 662
-#define STRING_LABEL_HELP4                 663
-#define STRING_LABEL_HELP5                 664
+#define STRING_HELP_HELP1                  660
 
-#define STRING_LOCALE_HELP1                665
+#define STRING_LABEL_HELP1                 661
+#define STRING_LABEL_HELP2                 662
+#define STRING_LABEL_HELP3                 663
+#define STRING_LABEL_HELP4                 664
+#define STRING_LABEL_HELP5                 665
 
-#define STRING_MKDIR_HELP                  666
+#define STRING_LOCALE_HELP1                666
 
-#define STRING_MEMMORY_HELP1               667
-#define STRING_MEMMORY_HELP2               668
+#define STRING_MKDIR_HELP                  667
 
-#define STRING_MISC_HELP1                  669
+#define STRING_MEMMORY_HELP1               668
+#define STRING_MEMMORY_HELP2               669
 
-#define STRING_MOVE_HELP1                  670
-#define STRING_MOVE_HELP2                  671
+#define STRING_MISC_HELP1                  670
 
-#define STRING_MSGBOX_HELP                 672
+#define STRING_MOVE_HELP1                  671
+#define STRING_MOVE_HELP2                  672
 
-#define STRING_PATH_HELP1                  673
+#define STRING_MSGBOX_HELP                 673
 
-#define STRING_PAUSE_HELP1                 674
+#define STRING_PATH_HELP1                  674
 
-#define STRING_PROMPT_HELP1                675
-#define STRING_PROMPT_HELP2                676
-#define STRING_PROMPT_HELP3                677
+#define STRING_PAUSE_HELP1                 675
 
-#define STRING_REM_HELP                    678
+#define STRING_PROMPT_HELP1                676
+#define STRING_PROMPT_HELP2                677
+#define STRING_PROMPT_HELP3                678
 
-#define STRING_REN_HELP1                   679
-#define STRING_REN_HELP2                   680
-#define STRING_REN_HELP3                   681
+#define STRING_REM_HELP                    679
 
-#define STRING_RMDIR_HELP                  682
+#define STRING_REN_HELP1                   680
+#define STRING_REN_HELP2                   681
+#define STRING_REN_HELP3                   682
 
-#define STRING_SCREEN_HELP                 683
+#define STRING_RMDIR_HELP                  683
 
-#define STRING_SHIFT_HELP                  684
+#define STRING_SCREEN_HELP                 684
 
-#define STRING_SET_HELP                    685
+#define STRING_SHIFT_HELP                  685
 
-#define STRING_START_HELP1                 686
+#define STRING_SET_HELP                    686
 
-#define STRING_TITLE_HELP                  687
+#define STRING_START_HELP1                 687
 
-#define STRING_TIME_HELP1                  688
-#define STRING_TIME_HELP2                  689
+#define STRING_TITLE_HELP                  688
 
-#define STRING_TIMER_HELP1                 690
-#define STRING_TIMER_HELP2                 691
-#define STRING_TIMER_HELP3                 692
+#define STRING_TIME_HELP1                  689
+#define STRING_TIME_HELP2                  690
 
-#define STRING_TYPE_HELP1                  693
+#define STRING_TIMER_HELP1                 691
+#define STRING_TIMER_HELP2                 692
+#define STRING_TIMER_HELP3                 693
 
-#define STRING_VERIFY_HELP1                694
-#define STRING_VERIFY_HELP2                695
-#define STRING_VERIFY_HELP3                696
+#define STRING_TYPE_HELP1                  694
 
-#define STRING_VERSION_HELP1               697
-#define STRING_VERSION_HELP2               698
-#define STRING_VERSION_HELP3               699
-#define STRING_VERSION_HELP4               700
-#define STRING_VERSION_HELP5               701
-#define STRING_VERSION_HELP6               702
-#define STRING_VERSION_HELP7               703
+#define STRING_VERIFY_HELP1                695
+#define STRING_VERIFY_HELP2                696
+#define STRING_VERIFY_HELP3                697
+
+#define STRING_VERSION_HELP1               698
+#define STRING_VERSION_HELP2               699
+#define STRING_VERSION_HELP3               700
+#define STRING_VERSION_HELP4               701
+#define STRING_VERSION_HELP5               702
+#define STRING_VERSION_HELP6               703
+#define STRING_VERSION_HELP7               704
 #define STRING_VERSION_RUNVER              705
 
 #define STRING_VOL_HELP1                   706

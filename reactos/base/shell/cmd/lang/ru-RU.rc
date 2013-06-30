@@ -272,6 +272,10 @@ GOTO метка\n\n\
   label  Строка пакетного файла, оформленная как метка.\n\n\
 Метка должна находиться в отдельной строке и начинаться с двоеточия."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Оператор условного выполнения команд в пакетном файле.\n\n\
   IF [NOT] ERRORLEVEL число команда\n\
   IF [NOT] строка1==строка2 команда\n\

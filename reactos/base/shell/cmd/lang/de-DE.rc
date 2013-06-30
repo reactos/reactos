@@ -267,6 +267,10 @@ GOTO Marke\n\n\
   Marke  Definiert eine Zeichenfolge als Marke in einem Batchprogramm.\n\n\
 Marken stehen am Zeilenanfang mit einem vorangestellten Doppelpunkt."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\n\
   IF [NOT] ERRORLEVEL Nummer Befehl\n\
   IF [NOT] variable1==variable2 Befehl\n\

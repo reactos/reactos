@@ -267,6 +267,10 @@ GOTO etikett\n\n\
   etikett  Anger en text sträng använt i ett batchprogram.\n\n\
 En etikett skapas på en egen rad genom att skriva kolon följt av namn på etiketten."
 
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Utför villkorsstyrd bearbetning i batchprogram.\n\n\
   IF [NOT] ERRORLEVEL nummer kommando\n\
   IF [NOT] sträng1==sträng2 kommando\n\

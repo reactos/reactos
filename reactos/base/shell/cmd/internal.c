@@ -543,13 +543,20 @@ INT CommandRem (LPTSTR param)
 
 INT CommandShowCommands (LPTSTR param)
 {
-    PrintCommandList ();
+    PrintCommandList();
     return 0;
 }
 
-INT CommandShowCommandsDetail (LPTSTR param)
+INT CommandShowCommandsDetail(LPTSTR param)
 {
-    /* If a param was send, display help of correspondent command */
+    /* We display help for the help command */
+    if (!_tcsncmp(param, _T("/?"), 2))
+    {
+        ConOutResPaging(TRUE, STRING_HELP_HELP1);
+        return 0;
+    }
+
+    /* If a param was send, display help of corresponding command */
     if (_tcslen(param))
     {
         DoCommand(param, _T("/?"), NULL);
@@ -557,7 +564,7 @@ INT CommandShowCommandsDetail (LPTSTR param)
     /* Else, display detailed commands list */
     else
     {
-        PrintCommandListDetail ();
+        PrintCommandListDetail();
     }
     return 0;
 }

@@ -286,6 +286,10 @@ GOTO label\n\n\
   label  Spécifie un champ texte utilisé dans un script batch comme un label.\n\n\
 Vous écrivez un label seul sur une ligne commençant par un deux-points.\n"
 
+STRING_HELP_HELP1, "Fournit des informations d'aide pour les commandes de ReactOS.\n\n\
+HELP [commande]\n\n\
+  commande - Affiche des informations d'aide sur cette commande.\n"
+
 STRING_IF_HELP1, "Exécute un traitement conditionnel dans des programmes batch.\n\n\
   IF [NOT] ERRORLEVEL nombre commande\n\
   IF [NOT] chaine1==chaine2 commande\n\
