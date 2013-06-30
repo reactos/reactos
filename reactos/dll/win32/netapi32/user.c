@@ -20,7 +20,6 @@
 
 /*
  *  TODO:
- *    Implement NetUserChangePassword
  *    Implement NetUserGetGroups
  *    Implement NetUserSetGroups
  *    NetUserGetLocalGroups does not support LG_INCLUDE_INDIRECT yet.
@@ -2100,8 +2099,137 @@ NetUserChangePassword(LPCWSTR domainname,
                       LPCWSTR oldpassword,
                       LPCWSTR newpassword)
 {
+    PMSV1_0_CHANGEPASSWORD_REQUEST RequestBuffer = NULL;
+    PMSV1_0_CHANGEPASSWORD_RESPONSE ResponseBuffer = NULL;
+    ULONG RequestBufferSize;
+    ULONG ResponseBufferSize = 0;
+    LPWSTR Ptr;
+    ANSI_STRING PackageName;
+    ULONG AuthenticationPackage = 0;
+    HANDLE LsaHandle = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS ProtocolStatus;
+
     TRACE("(%s, %s, ..., ...)\n", debugstr_w(domainname), debugstr_w(username));
-    return NERR_Success;
+
+    /* FIXME: handle null domain or user name */
+
+    /* Check the parameters */
+    if ((oldpassword == NULL) ||
+        (newpassword == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    /* Connect to the LSA server */
+    Status = LsaConnectUntrusted(&LsaHandle);
+    if (!NT_SUCCESS(Status))
+        return NetpNtStatusToApiStatus(Status);
+
+    /* Get the authentication package ID */
+    RtlInitAnsiString(&PackageName,
+                      MSV1_0_PACKAGE_NAME);
+
+    Status = LsaLookupAuthenticationPackage(LsaHandle,
+                                            &PackageName,
+                                            &AuthenticationPackage);
+    if (!NT_SUCCESS(Status))
+    {
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Calculate the request buffer size */
+    RequestBufferSize = sizeof(MSV1_0_CHANGEPASSWORD_REQUEST) +
+                        ((wcslen(domainname) + 1) * sizeof(WCHAR)) +
+                        ((wcslen(username) + 1) * sizeof(WCHAR)) +
+                        ((wcslen(oldpassword) + 1) * sizeof(WCHAR)) +
+                        ((wcslen(newpassword) + 1) * sizeof(WCHAR));
+
+    /* Allocate the request buffer */
+    ApiStatus = NetApiBufferAllocate(RequestBufferSize,
+                                     (PVOID*)&RequestBuffer);
+    if (ApiStatus != NERR_Success)
+        goto done;
+
+    /* Initialize the request buffer */
+    RequestBuffer->MessageType = MsV1_0ChangePassword;
+    RequestBuffer->Impersonating = TRUE;
+
+    Ptr = (LPWSTR)((ULONG_PTR)RequestBuffer + sizeof(MSV1_0_CHANGEPASSWORD_REQUEST));
+
+    /* Pack the domain name */
+    RequestBuffer->DomainName.Length = wcslen(domainname) * sizeof(WCHAR);
+    RequestBuffer->DomainName.MaximumLength = RequestBuffer->DomainName.Length + sizeof(WCHAR);
+    RequestBuffer->DomainName.Buffer = Ptr;
+
+    RtlCopyMemory(RequestBuffer->DomainName.Buffer,
+                  domainname,
+                  RequestBuffer->DomainName.MaximumLength);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->DomainName.MaximumLength);
+
+    /* Pack the user name */
+    RequestBuffer->AccountName.Length = wcslen(username) * sizeof(WCHAR);
+    RequestBuffer->AccountName.MaximumLength = RequestBuffer->AccountName.Length + sizeof(WCHAR);
+    RequestBuffer->AccountName.Buffer = Ptr;
+
+    RtlCopyMemory(RequestBuffer->AccountName.Buffer,
+                  username,
+                  RequestBuffer->AccountName.MaximumLength);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->AccountName.MaximumLength);
+
+    /* Pack the old password */
+    RequestBuffer->OldPassword.Length = wcslen(oldpassword) * sizeof(WCHAR);
+    RequestBuffer->OldPassword.MaximumLength = RequestBuffer->OldPassword.Length + sizeof(WCHAR);
+    RequestBuffer->OldPassword.Buffer = Ptr;
+
+    RtlCopyMemory(RequestBuffer->OldPassword.Buffer,
+                  oldpassword,
+                  RequestBuffer->OldPassword.MaximumLength);
+
+    Ptr = (LPWSTR)((ULONG_PTR)Ptr + RequestBuffer->OldPassword.MaximumLength);
+
+    /* Pack the new password */
+    RequestBuffer->NewPassword.Length = wcslen(newpassword) * sizeof(WCHAR);
+    RequestBuffer->NewPassword.MaximumLength = RequestBuffer->NewPassword.Length + sizeof(WCHAR);
+    RequestBuffer->NewPassword.Buffer = Ptr;
+
+    RtlCopyMemory(RequestBuffer->NewPassword.Buffer,
+                  newpassword,
+                  RequestBuffer->NewPassword.MaximumLength);
+
+    /* Call the authentication package */
+    Status = LsaCallAuthenticationPackage(LsaHandle,
+                                          AuthenticationPackage,
+                                          RequestBuffer,
+                                          RequestBufferSize,
+                                          (PVOID*)&ResponseBuffer,
+                                          &ResponseBufferSize,
+                                          &ProtocolStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    if (!NT_SUCCESS(ProtocolStatus))
+    {
+        ApiStatus = NetpNtStatusToApiStatus(ProtocolStatus);
+        goto done;
+    }
+
+done:
+    if (RequestBuffer != NULL)
+        NetApiBufferFree(RequestBuffer);
+
+    if (ResponseBuffer != NULL)
+        LsaFreeReturnBuffer(ResponseBuffer);
+
+    if (LsaHandle != NULL)
+        NtClose(LsaHandle);
+
+    return ApiStatus;
 }
 
 
