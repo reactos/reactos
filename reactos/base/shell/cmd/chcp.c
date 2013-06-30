@@ -73,7 +73,6 @@ INT CommandChcp (LPTSTR param)
     }
 
     freep (arg);
-
     return 0;
 }
 
