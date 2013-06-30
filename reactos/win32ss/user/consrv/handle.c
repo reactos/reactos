@@ -418,8 +418,7 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
     ASSERT(Object);
     if (Entry) *Entry = NULL;
 
-    // DPRINT("ConSrvGetObject, Object: %x, %x, %x\n",
-           // Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
+    DPRINT("ConSrvGetObject -- Object: 0x%x, Handle: 0x%x\n", Object, Handle);
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -436,7 +435,9 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
          /*(Type != 0 && ObjectEntry->Type != Type)*/
          (Type != 0 && (ObjectEntry->Type & Type) == 0) )
     {
-        DPRINT1("ConSrvGetObject returning invalid handle (%x) of type %lu with access %lu ; wanted type %lu with access %lu\n", Handle, ObjectEntry->Type, HandleEntry->Access, Type, Access);
+        DPRINT1("ConSrvGetObject -- Invalid handle 0x%x of type %lu with access %lu ; retrieved object 0x%x (handle 0x%x) of type %lu with access %lu\n",
+                Handle, Type, Access, ObjectEntry, HandleEntry, (ObjectEntry ? ObjectEntry->Type : 0), (HandleEntry ? HandleEntry->Access : 0));
+
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
