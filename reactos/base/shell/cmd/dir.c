@@ -372,12 +372,12 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
 
                 /* Copy it to the entries list */
                 temp = cmd_alloc((ptrEnd - ptrStart + 1) * sizeof (TCHAR));
-                if(!temp)
+                if (!temp)
                     return FALSE;
                 memcpy(temp, ptrStart, (ptrEnd - ptrStart) * sizeof (TCHAR));
                 temp[ptrEnd - ptrStart] = _T('\0');
                 StripQuotes(temp);
-                if(!add_entry(entries, params, temp))
+                if (!add_entry(entries, params, temp))
                 {
                     cmd_free(temp);
                     freep(*params);
@@ -404,9 +404,9 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
             switch(cCurSwitch)
             {
             case _T('A'):	/* Switch parameters for /A (attributes filter) */
-                if(cCurChar == _T('-'))
+                if (cCurChar == _T('-'))
                     bPNegative = TRUE;
-                else if(cCurUChar == _T('D'))
+                else if (cCurUChar == _T('D'))
                 {
                     lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_DIRECTORY;
                     if (bPNegative)
@@ -414,7 +414,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                     else
                         lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_DIRECTORY;
                 }
-                else if(cCurUChar == _T('R'))
+                else if (cCurUChar == _T('R'))
                 {
                     lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_READONLY;
                     if (bPNegative)
@@ -422,7 +422,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                     else
                         lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_READONLY;
                 }
-                else if(cCurUChar == _T('H'))
+                else if (cCurUChar == _T('H'))
                 {
                     lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_HIDDEN;
                     if (bPNegative)
@@ -430,7 +430,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                     else
                         lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_HIDDEN;
                 }
-                else if(cCurUChar == _T('A'))
+                else if (cCurUChar == _T('A'))
                 {
                     lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_ARCHIVE;
                     if (bPNegative)
@@ -438,7 +438,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                     else
                         lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_ARCHIVE;
                 }
-                else if(cCurUChar == _T('S'))
+                else if (cCurUChar == _T('S'))
                 {
                     lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_SYSTEM;
                     if (bPNegative)
@@ -453,11 +453,11 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                 }
                 break;
             case _T('T'):	/* Switch parameters for /T (time field) */
-                if(cCurUChar == _T('C'))
+                if (cCurUChar == _T('C'))
                     lpFlags->stTimeField.eTimeField= TF_CREATIONDATE ;
-                else if(cCurUChar == _T('A'))
+                else if (cCurUChar == _T('A'))
                     lpFlags->stTimeField.eTimeField= TF_LASTACCESSEDDATE ;
-                else if(cCurUChar == _T('W'))
+                else if (cCurUChar == _T('W'))
                     lpFlags->stTimeField.eTimeField= TF_MODIFIEDDATE  ;
                 else
                 {
@@ -465,37 +465,37 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                     return FALSE;
                 }
                 break;
-            case _T('O'):	/* Switch parameters for /O (order) */
+            case _T('O'):   /* Switch parameters for /O (order) */
                 /* Ok a switch parameter was given */
                 bOrderByNoPar = FALSE;
 
-                if(cCurChar == _T('-'))
+                if (cCurChar == _T('-'))
                     bPNegative = TRUE;
-                else if(cCurUChar == _T('N'))
+                else if (cCurUChar == _T('N'))
                 {
                     if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
                     lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
                     lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_NAME;
                 }
-                else if(cCurUChar == _T('S'))
+                else if (cCurUChar == _T('S'))
                 {
                     if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
                     lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
                     lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_SIZE;
                 }
-                else if(cCurUChar == _T('G'))
+                else if (cCurUChar == _T('G'))
                 {
                     if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
                     lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
                     lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_DIRECTORY;
                 }
-                else if(cCurUChar == _T('E'))
+                else if (cCurUChar == _T('E'))
                 {
                     if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
                     lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
                     lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_EXTENSION;
                 }
-                else if(cCurUChar == _T('D'))
+                else if (cCurUChar == _T('D'))
                 {
                     if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
                     lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
@@ -1111,12 +1111,12 @@ DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[], /* [IN] Files' Info */
         /* Bare format */
         DirPrintBareList(ptrFiles, dwCount, szCurPath, lpFlags);
     }
-    else if(lpFlags->bShortName)
+    else if (lpFlags->bShortName)
     {
         /* New list style / Short names */
         DirPrintNewList(ptrFiles, dwCount, szCurPath, lpFlags);
     }
-    else if(lpFlags->bWideListColSort || lpFlags->bWideList)
+    else if (lpFlags->bWideListColSort || lpFlags->bWideList)
     {
         /* Wide list */
         DirPrintWideList(ptrFiles, dwCount, szCurPath, lpFlags);
@@ -1348,7 +1348,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
         do
         {
             /*If retrieved FileName has extension,and szPath doesnt have extension then JUMP the retrieved FileName*/
-            if(_tcschr(wfdFileInfo.cFileName,_T('.'))&&(fPoint==TRUE))
+            if (_tcschr(wfdFileInfo.cFileName,_T('.'))&&(fPoint==TRUE))
             {
                 continue;
             /* Here we filter all the specified attributes */

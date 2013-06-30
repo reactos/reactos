@@ -112,7 +112,7 @@ static BOOL bInsert = TRUE;
 
 
 static VOID
-ClearCommandLine (LPTSTR str, INT maxlen, SHORT orgx, SHORT orgy)
+ClearCommandLine(LPTSTR str, INT maxlen, SHORT orgx, SHORT orgy)
 {
     INT count;
 
@@ -125,7 +125,7 @@ ClearCommandLine (LPTSTR str, INT maxlen, SHORT orgx, SHORT orgy)
 
 
 /* read in a command line */
-BOOL ReadCommand (LPTSTR str, INT maxlen)
+BOOL ReadCommand(LPTSTR str, INT maxlen)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     SHORT orgx;     /* origin x/y */
@@ -182,9 +182,7 @@ BOOL ReadCommand (LPTSTR str, INT maxlen)
 
     do
     {
-
         bReturn = FALSE;
-
         ConInKey (&ir);
 
         if (ir.Event.KeyEvent.dwControlKeyState &
@@ -360,21 +358,21 @@ BOOL ReadCommand (LPTSTR str, INT maxlen)
                         /*if second TAB, list matches*/
                         if (ShowCompletionMatches (str, charcount))
                         {
-                            PrintPrompt ();
-                            GetCursorXY (&orgx, &orgy);
-                            ConOutPrintf (_T("%s"), str);
+                            PrintPrompt();
+                            GetCursorXY(&orgx, &orgy);
+                            ConOutPrintf(_T("%s"), str);
 
                             /* set cursor position */
-                            SetCursorXY ((orgx + current) % maxx,
-                                     orgy + (orgx + current) / maxx);
-                            GetCursorXY (&curx, &cury);
+                            SetCursorXY((orgx + current) % maxx,
+                                         orgy + (orgx + current) / maxx);
+                            GetCursorXY(&curx, &cury);
                         }
 
                     }
                 }
                 else
                 {
-                    MessageBeep (-1);
+                    MessageBeep(-1);
                 }
 #endif
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
@@ -396,24 +394,24 @@ BOOL ReadCommand (LPTSTR str, INT maxlen)
                 _tcscpy(str,szPath);
 
                 /* Figure out where cusor is going to be after we print it */
-                charcount = _tcslen (str);
+                charcount = _tcslen(str);
                 current = charcount;
 
-                SetCursorXY (orgx, orgy);
+                SetCursorXY(orgx, orgy);
                 /* Print out what we have now */
-                ConOutPrintf (_T("%s"), str);
+                ConOutPrintf(_T("%s"), str);
 
                 /* Move cursor accordingly */
-                if(tempscreen > charcount)
+                if (tempscreen > charcount)
                 {
-                    GetCursorXY (&curx, &cury);
+                    GetCursorXY(&curx, &cury);
                     for(count = tempscreen - charcount; count--; )
-                        ConOutChar (_T(' '));
-                    SetCursorXY (curx, cury);
+                        ConOutChar(_T(' '));
+                    SetCursorXY(curx, cury);
                 }
                 else
                 {
-                    if(((charcount + orgx) / maxx) + orgy > maxy - 1)
+                    if (((charcount + orgx) / maxx) + orgy > maxy - 1)
                         orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
                 }
                 SetCursorXY((short)(((int)orgx + current) % maxx), (short)((int)orgy + ((int)orgx + current) / maxx));
@@ -425,7 +423,7 @@ BOOL ReadCommand (LPTSTR str, INT maxlen)
             case _T('C'):
                 /* ^M does the same as return */
                 bCharInput = TRUE;
-                if(!(ir.Event.KeyEvent.dwControlKeyState &
+                if (!(ir.Event.KeyEvent.dwControlKeyState &
                     (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)))
                 {
                     break;

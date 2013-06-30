@@ -26,37 +26,37 @@ UINT InputCodePage;
 UINT OutputCodePage;
 
 
-VOID ConInDisable (VOID)
+VOID ConInDisable(VOID)
 {
-    HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
     DWORD dwMode;
 
-    GetConsoleMode (hInput, &dwMode);
+    GetConsoleMode(hInput, &dwMode);
     dwMode &= ~ENABLE_PROCESSED_INPUT;
-    SetConsoleMode (hInput, dwMode);
+    SetConsoleMode(hInput, dwMode);
 }
 
 
-VOID ConInEnable (VOID)
+VOID ConInEnable(VOID)
 {
-    HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
     DWORD dwMode;
 
-    GetConsoleMode (hInput, &dwMode);
+    GetConsoleMode(hInput, &dwMode);
     dwMode |= ENABLE_PROCESSED_INPUT;
-    SetConsoleMode (hInput, dwMode);
+    SetConsoleMode(hInput, dwMode);
 }
 
 
 VOID ConInFlush (VOID)
 {
-    FlushConsoleInputBuffer (GetStdHandle (STD_INPUT_HANDLE));
+    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 }
 
 
-VOID ConInKey (PINPUT_RECORD lpBuffer)
+VOID ConInKey(PINPUT_RECORD lpBuffer)
 {
-    HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
+    HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
     DWORD  dwRead;
 
     if (hInput == INVALID_HANDLE_VALUE)
@@ -64,7 +64,7 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 
     do
     {
-        ReadConsoleInput (hInput, lpBuffer, 1, &dwRead);
+        ReadConsoleInput(hInput, lpBuffer, 1, &dwRead);
         if ((lpBuffer->EventType == KEY_EVENT) &&
             (lpBuffer->Event.KeyEvent.bKeyDown == TRUE))
             break;
@@ -73,7 +73,7 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 }
 
 
-VOID ConInString (LPTSTR lpInput, DWORD dwLength)
+VOID ConInString(LPTSTR lpInput, DWORD dwLength)
 {
     DWORD dwOldMode;
     DWORD dwRead = 0;
@@ -87,13 +87,13 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 #else
     pBuf = lpInput;
 #endif
-    ZeroMemory (lpInput, dwLength * sizeof(TCHAR));
-    hFile = GetStdHandle (STD_INPUT_HANDLE);
-    GetConsoleMode (hFile, &dwOldMode);
+    ZeroMemory(lpInput, dwLength * sizeof(TCHAR));
+    hFile = GetStdHandle(STD_INPUT_HANDLE);
+    GetConsoleMode(hFile, &dwOldMode);
 
-    SetConsoleMode (hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    SetConsoleMode(hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
-    ReadFile (hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
+    ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
 
 #ifdef _UNICODE
     MultiByteToWideChar(InputCodePage, 0, pBuf, dwRead, lpInput, dwLength - 1);
@@ -108,7 +108,7 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
         }
     }
 
-    SetConsoleMode (hFile, dwOldMode);
+    SetConsoleMode(hFile, dwOldMode);
 }
 
 static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
@@ -213,7 +213,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 
     int from = 0, i = 0;
 
-    if(NewPage == TRUE)
+    if (NewPage == TRUE)
         LineCount = 0;
 
     /* rest LineCount and return if no string have been given */
@@ -233,7 +233,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
     CharSL = csbi.dwCursorPosition.X;
 
     //make sure they didnt make the screen to small
-    if(ScreenLines<4)
+    if (ScreenLines<4)
     {
         ConPrintf(szFormat, arg_ptr, nStdHandle);
         return 0;
@@ -250,12 +250,12 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
         LineCount++;
         CharSL=0;
 
-        if(LineCount >= ScreenLines)
+        if (LineCount >= ScreenLines)
         {
             WriteConsole(hOutput, &szOut[from], i-from, &dwWritten, NULL);
             from = i;
 
-            if(PagePrompt() != PROMPT_YES)
+            if (PagePrompt() != PROMPT_YES)
             {
                 return 1;
             }
@@ -286,7 +286,7 @@ VOID ConErrFormatMessage (DWORD MessageId, ...)
            &arg_ptr);
 
     va_end (arg_ptr);
-    if(ret > 0)
+    if (ret > 0)
     {
         ConErrPuts (text);
         LocalFree(text);
@@ -315,7 +315,7 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
                         &arg_ptr);
 
     va_end (arg_ptr);
-    if(ret > 0)
+    if (ret > 0)
     {
         ConErrPuts (text);
         LocalFree(text);

@@ -57,7 +57,7 @@ VOID PrintPrompt(VOID)
     TCHAR  szPrompt[256];
     LPTSTR pr;
 
-    if (GetEnvironmentVariable (_T("PROMPT"), szPrompt, 256))
+    if (GetEnvironmentVariable(_T("PROMPT"), szPrompt, 256))
         pr = szPrompt;
     else
         pr = default_pr;
@@ -66,24 +66,24 @@ VOID PrintPrompt(VOID)
     {
         if (*pr != _T('$'))
         {
-            ConOutChar (*pr);
+            ConOutChar(*pr);
         }
         else
         {
             pr++;
 
-            switch (_totupper (*pr))
+            switch (_totupper(*pr))
             {
                 case _T('A'):
-                    ConOutChar (_T('&'));
+                    ConOutChar(_T('&'));
                     break;
 
                 case _T('B'):
-                    ConOutChar (_T('|'));
+                    ConOutChar(_T('|'));
                     break;
 
                 case _T('C'):
-                    ConOutChar (_T('('));
+                    ConOutChar(_T('('));
                     break;
 
                 case _T('D'):
@@ -91,49 +91,49 @@ VOID PrintPrompt(VOID)
                     break;
 
                 case _T('E'):
-                    ConOutChar (_T('\x1B'));
+                    ConOutChar(_T('\x1B'));
                     break;
 
                 case _T('F'):
-                    ConOutChar (_T(')'));
+                    ConOutChar(_T(')'));
                     break;
 
                 case _T('G'):
-                    ConOutChar (_T('>'));
+                    ConOutChar(_T('>'));
                     break;
 
                 case _T('H'):
-                    ConOutChar (_T('\x08'));
-          ConOutChar (_T(' '));
-          ConOutChar (_T('\x08'));
+                    ConOutChar(_T('\x08'));
+                    ConOutChar(_T(' '));
+                    ConOutChar(_T('\x08'));
                     break;
 
                 case _T('L'):
-                    ConOutChar (_T('<'));
+                    ConOutChar(_T('<'));
                     break;
 
                 case _T('N'):
                     {
                         TCHAR szPath[MAX_PATH];
-                        GetCurrentDirectory (MAX_PATH, szPath);
-                        ConOutChar (szPath[0]);
+                        GetCurrentDirectory(MAX_PATH, szPath);
+                        ConOutChar(szPath[0]);
                     }
                     break;
 
                 case _T('P'):
                     {
                         TCHAR szPath[MAX_PATH];
-                        GetCurrentDirectory (MAX_PATH, szPath);
-                        ConOutPrintf (_T("%s"), szPath);
+                        GetCurrentDirectory(MAX_PATH, szPath);
+                        ConOutPrintf(_T("%s"), szPath);
                     }
                     break;
 
                 case _T('Q'):
-                    ConOutChar (_T('='));
+                    ConOutChar(_T('='));
                     break;
 
-        case _T('S'):
-                    ConOutChar (_T(' '));
+                case _T('S'):
+                    ConOutChar(_T(' '));
                     break;
 
                 case _T('T'):
@@ -146,25 +146,25 @@ VOID PrintPrompt(VOID)
                         case VER_PLATFORM_WIN32_WINDOWS:
                             if (osvi.dwMajorVersion == 4 &&
                                 osvi.dwMinorVersion == 1)
-                                ConOutPrintf (_T("Windows 98"));
+                                ConOutPrintf(_T("Windows 98"));
                             else
-                                ConOutPrintf (_T("Windows 95"));
+                                ConOutPrintf(_T("Windows 95"));
                             break;
 
 
                         case VER_PLATFORM_WIN32_NT:
-                            ConOutPrintf (_T("Windows NT Version %lu.%lu"),
-                                          osvi.dwMajorVersion, osvi.dwMinorVersion);
+                            ConOutPrintf(_T("Windows NT Version %lu.%lu"),
+                                         osvi.dwMajorVersion, osvi.dwMinorVersion);
                             break;
                     }
                     break;
 
                 case _T('_'):
-                    ConOutChar (_T('\n'));
+                    ConOutChar(_T('\n'));
                     break;
 
                 case '$':
-                    ConOutChar (_T('$'));
+                    ConOutChar(_T('$'));
                     break;
 
 #ifdef FEATURE_DIRECTORY_STACK
@@ -172,7 +172,7 @@ VOID PrintPrompt(VOID)
                     {
                         INT i;
                         for (i = 0; i < GetDirectoryStackDepth (); i++)
-                            ConOutChar (_T('+'));
+                            ConOutChar(_T('+'));
                     }
                     break;
 #endif

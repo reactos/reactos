@@ -85,7 +85,7 @@ static INT ServiceActivate (LPTSTR param, HWND hWnd)
                 tmp++;
 
             pos.left= _ttoi(tmp);
-            if(!(tmp=_tcschr(tmp, _T(','))))
+            if (!(tmp=_tcschr(tmp, _T(','))))
             {
                 error_invalid_parameter_format(p[i]);
                 freep(p);
@@ -93,7 +93,7 @@ static INT ServiceActivate (LPTSTR param, HWND hWnd)
             }
 
             pos.top = _ttoi (++tmp);
-            if(!(tmp=_tcschr(tmp, _T(','))))
+            if (!(tmp=_tcschr(tmp, _T(','))))
             {
                 error_invalid_parameter_format(p[i]);
                 freep(p);
@@ -198,25 +198,25 @@ INT CommandActivate (LPTSTR param)
         return 0;
     }
 
-    if(!(*param))
+    if (!(*param))
         return 1;
 
     /* Split the user input into array */
     arg = split (param, &argc, FALSE);
-    if(argc < 2)
+    if (argc < 2)
     {
-        if(arg != NULL)
+        if (arg != NULL)
             freep(arg);
     }
     hwnd = FindWindow(NULL, arg[0]);
     if (hwnd == NULL)
     {
-        if(arg != NULL)
+        if (arg != NULL)
             freep(arg);
         ConErrResPuts(STRING_WINDOW_ERROR1);
         return 1;
     }
-    if(arg != NULL)
+    if (arg != NULL)
         freep(arg);
 
     return ServiceActivate(param, hwnd);

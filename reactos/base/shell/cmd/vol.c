@@ -32,7 +32,7 @@ PrintVolumeHeader (LPTSTR pszRootPath)
     DWORD dwSerialNr;
 
     /* get the volume information of the drive */
-    if(!GetVolumeInformation(pszRootPath,
+    if (!GetVolumeInformation(pszRootPath,
                              szVolName,
                              80,
                              &dwSerialNr,

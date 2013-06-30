@@ -36,7 +36,7 @@ void invalid_switch(LPTSTR is)
 /* retrives the pathe dependen om the input file name */
 void getPath(TCHAR* out, LPTSTR in)
 {
-    if(_tcslen(in) == 2 && in[1] == _T(':'))
+    if (_tcslen(in) == 2 && in[1] == _T(':'))
         GetRootPath(in,out,MAX_PATH);
     else
         GetFullPathName (in, MAX_PATH, out, NULL);
@@ -83,7 +83,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
      */
     dwAttrib = GetFileAttributes (source);
 
-    if(IsExistingFile (dest))
+    if (IsExistingFile (dest))
     {
         /*
          * Resets the attributes to avoid probles with read only files,
@@ -94,7 +94,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
          * Is the update flas set? The time has to be controled so that
          * only older files are replaced.
          */
-        if(dwFlags & REPLACE_UPDATE)
+        if (dwFlags & REPLACE_UPDATE)
         {
             /* Read destination time */
             hFileDest = CreateFile(dest, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
@@ -108,7 +108,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
 
             /* Compare time */
             GetFileTime (hFileDest, &destCreationTime, &destLastAccessTime, &destLastWriteTime);
-            if(!((srcLastWriteTime.dwHighDateTime > destLastWriteTime.dwHighDateTime) ||
+            if (!((srcLastWriteTime.dwHighDateTime > destLastWriteTime.dwHighDateTime) ||
                     (srcLastWriteTime.dwHighDateTime == destLastWriteTime.dwHighDateTime &&
                      srcLastWriteTime.dwLowDateTime > destLastWriteTime.dwLowDateTime)))
             {
@@ -123,25 +123,25 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
     }
 
     /* Check confirm flag, and take appropriate action */
-    if(dwFlags & REPLACE_CONFIRM)
+    if (dwFlags & REPLACE_CONFIRM)
     {
         /* Output depending on add flag */
-        if(dwFlags & REPLACE_ADD)
+        if (dwFlags & REPLACE_ADD)
             ConOutResPrintf(STRING_REPLACE_HELP9, dest);
         else
             ConOutResPrintf(STRING_REPLACE_HELP10, dest);
-        if( !FilePromptYNA (0))
+        if ( !FilePromptYNA (0))
             return 0;
     }
 
     /* Output depending on add flag */
-    if(dwFlags & REPLACE_ADD)
+    if (dwFlags & REPLACE_ADD)
         ConOutResPrintf(STRING_REPLACE_HELP11, dest);
     else
         ConOutResPrintf(STRING_REPLACE_HELP5, dest);
 
     /* Make sure source and destination is not the same */
-    if(!_tcscmp(s, d))
+    if (!_tcscmp(s, d))
     {
         ConOutResPaging(TRUE, STRING_REPLACE_ERROR7);
         CloseHandle (hFileSrc);
@@ -229,7 +229,7 @@ INT recReplace(DWORD dwFlags,
      */
     for(i = (_tcslen(szSrcPath) -  1); i > -1; i--)
     {
-        if(szSrcPath[i] != _T('\\'))
+        if (szSrcPath[i] != _T('\\'))
             szSrcPath[i] = _T('\0');
         else
             break;
@@ -238,17 +238,17 @@ INT recReplace(DWORD dwFlags,
     /* Go through all the soursfiles and copy/replace them */
     do
     {
-        if(CheckCtrlBreak(BREAK_INPUT))
+        if (CheckCtrlBreak(BREAK_INPUT))
         {
             return filesReplaced;
         }
 
         /* Problem with file handler */
-        if(hFile == INVALID_HANDLE_VALUE)
+        if (hFile == INVALID_HANDLE_VALUE)
             return filesReplaced;
 
         /* We do not want to replace any .. . ocr directory */
-        if(!_tcscmp (findBuffer.cFileName, _T("."))  ||
+        if (!_tcscmp (findBuffer.cFileName, _T("."))  ||
                 !_tcscmp (findBuffer.cFileName, _T(".."))||
                 findBuffer.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 continue;
@@ -259,23 +259,23 @@ INT recReplace(DWORD dwFlags,
 
         dwAttrib = GetFileAttributes(tmpDestPath);
         /* Check add flag */
-        if(dwFlags & REPLACE_ADD)
+        if (dwFlags & REPLACE_ADD)
         {
-            if(IsExistingFile(tmpDestPath))
+            if (IsExistingFile(tmpDestPath))
                 continue;
             else
                 dwAttrib = 0;
         }
         else
         {
-            if(!IsExistingFile(tmpDestPath))
+            if (!IsExistingFile(tmpDestPath))
                 continue;
         }
 
         /* Check if file is read only, if so check if that should be ignored */
-        if(dwAttrib & FILE_ATTRIBUTE_READONLY)
+        if (dwAttrib & FILE_ATTRIBUTE_READONLY)
         {
-            if(!(dwFlags & REPLACE_READ_ONLY))
+            if (!(dwFlags & REPLACE_READ_ONLY))
             {
                 ConOutResPrintf(STRING_REPLACE_ERROR5, tmpDestPath);
                 *doMore = FALSE;
@@ -288,7 +288,7 @@ INT recReplace(DWORD dwFlags,
         _tcscat (tmpSrcPath, findBuffer.cFileName);
 
         /* Make the replace */
-        if(replace(tmpSrcPath,tmpDestPath, dwFlags, doMore))
+        if (replace(tmpSrcPath,tmpDestPath, dwFlags, doMore))
         {
             filesReplaced++;
         }
@@ -329,7 +329,7 @@ INT recFindSubDirs(DWORD dwFlags,
     /* Remove the star added earlyer to dest path */
     for(i = (_tcslen(szDestPath) -  1); i > -1; i--)
     {
-        if(szDestPath[i] != _T('\\'))
+        if (szDestPath[i] != _T('\\'))
             szDestPath[i] = _T('\0');
         else
             break;
@@ -341,7 +341,7 @@ INT recFindSubDirs(DWORD dwFlags,
         /* Save the source path so that it will not be wrecked */
         _tcscpy(tmpSrcPath,szSrcPath);
         /* Check for reading problems */
-        if(hFile == INVALID_HANDLE_VALUE)
+        if (hFile == INVALID_HANDLE_VALUE)
         {
             ConOutFormatMessage (GetLastError(), tmpSrcPath);
             return filesReplaced;
@@ -351,7 +351,7 @@ INT recFindSubDirs(DWORD dwFlags,
          * Check if the we should enter the dir or if it is a file
          * or . or .. if so thake the next object to process.
          */
-        if(!_tcscmp (findBuffer.cFileName, _T("."))  ||
+        if (!_tcscmp (findBuffer.cFileName, _T("."))  ||
             !_tcscmp (findBuffer.cFileName, _T(".."))||
             IsExistingFile(findBuffer.cFileName))
             continue;
@@ -359,20 +359,20 @@ INT recFindSubDirs(DWORD dwFlags,
         _tcscpy(tmpDestPath,szDestPath);
         _tcscat (tmpDestPath, findBuffer.cFileName);
         /* Make sure that we have a directory */
-        if(IsExistingDirectory(tmpDestPath))
+        if (IsExistingDirectory(tmpDestPath))
         {
             /* Add a \ to the end or the path */
-            if(szDestPath[_tcslen(tmpDestPath) -  1] != _T('\\'))
+            if (szDestPath[_tcslen(tmpDestPath) -  1] != _T('\\'))
                 _tcscat(tmpDestPath, _T("\\"));
             /* Call the function to replace files in the new directory */
             filesReplaced += recReplace(dwFlags, tmpSrcPath, tmpDestPath, doMore);
             /* If there were problems break e.g. read-only file */
-            if(!*doMore)
+            if (!*doMore)
                 break;
             _tcscpy(tmpSrcPath,szSrcPath);
             /* Controle the next level of subdirs */
             filesReplaced += recFindSubDirs(dwFlags,tmpSrcPath,tmpDestPath, doMore);
-            if(!*doMore)
+            if (!*doMore)
                 break;
         }
         /* Get the next handle */
@@ -442,11 +442,11 @@ INT cmd_replace (LPTSTR param)
         }
         else
         {
-            if(srcIndex == -1)
+            if (srcIndex == -1)
             {
                 srcIndex = i;
             }
-            else if(destIndex == -1)
+            else if (destIndex == -1)
             {
                 destIndex = i;
             }
@@ -468,7 +468,7 @@ INT cmd_replace (LPTSTR param)
         return 1;
     }
     /* Check so that not both update and add switch is added and subdir */
-    if((dwFlags & REPLACE_UPDATE || dwFlags & REPLACE_SUBDIR) && (dwFlags & REPLACE_ADD))
+    if ((dwFlags & REPLACE_UPDATE || dwFlags & REPLACE_SUBDIR) && (dwFlags & REPLACE_ADD))
     {
         ConOutResPaging(TRUE,STRING_REPLACE_ERROR4);
         ConOutResPaging(TRUE,STRING_REPLACE_HELP7);
@@ -477,9 +477,9 @@ INT cmd_replace (LPTSTR param)
     }
 
     /* If we have a destination get the full path */
-    if(destIndex != -1)
+    if (destIndex != -1)
     {
-        if(_tcslen(arg[destIndex]) == 2 && arg[destIndex][1] == ':')
+        if (_tcslen(arg[destIndex]) == 2 && arg[destIndex][1] == ':')
             GetRootPath(arg[destIndex],szDestPath,MAX_PATH);
         else
         {
@@ -494,7 +494,7 @@ INT cmd_replace (LPTSTR param)
             }
             getPath(szDestPath, arg[destIndex]);
             /* Make sure that destination exists */
-            if(!IsExistingDirectory(szDestPath))
+            if (!IsExistingDirectory(szDestPath))
             {
                 ConOutResPrintf(STRING_REPLACE_ERROR2, szDestPath);
                 ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
@@ -510,7 +510,7 @@ INT cmd_replace (LPTSTR param)
     }
 
     /* Get the full source path */
-    if(!(_tcslen(arg[srcIndex]) == 2 && arg[srcIndex][1] == ':'))
+    if (!(_tcslen(arg[srcIndex]) == 2 && arg[srcIndex][1] == ':'))
         getPath(szSrcPath, arg[srcIndex]);
     else
         _tcscpy(szSrcPath,arg[srcIndex]);
@@ -520,7 +520,7 @@ INT cmd_replace (LPTSTR param)
         _tcschr (arg[srcIndex], _T('?')) == NULL)
     {
         /* Check so that source is not a directory, because that is not allowed */
-        if(IsExistingDirectory(szSrcPath))
+        if (IsExistingDirectory(szSrcPath))
         {
             ConOutResPrintf(STRING_REPLACE_ERROR6, szSrcPath);
             ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
@@ -528,7 +528,7 @@ INT cmd_replace (LPTSTR param)
             return 1;
         }
         /* Check if the file exists */
-        if(!IsExistingFile(szSrcPath))
+        if (!IsExistingFile(szSrcPath))
         {
             ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
             freep(arg);
@@ -536,14 +536,14 @@ INT cmd_replace (LPTSTR param)
         }
     }
     /* /w switch is set so wait for any key to be pressed */
-    if(dwFlags & REPLACE_DISK)
+    if (dwFlags & REPLACE_DISK)
     {
         msg_pause();
         cgetchar();
     }
 
     /* Add an extra \ to the destination path if needed */
-    if(szDestPath[_tcslen(szDestPath) -  1] != _T('\\'))
+    if (szDestPath[_tcslen(szDestPath) -  1] != _T('\\'))
         _tcscat(szDestPath, _T("\\"));
 
     /* Save source path */
@@ -551,19 +551,19 @@ INT cmd_replace (LPTSTR param)
     /* Replace in dest dir */
     filesReplaced += recReplace(dwFlags, tmpSrcPath, szDestPath, &doMore);
     /* If subdir switch is set replace in the subdirs to */
-    if(dwFlags & REPLACE_SUBDIR && doMore)
+    if (dwFlags & REPLACE_SUBDIR && doMore)
     {
         filesReplaced += recFindSubDirs(dwFlags, szSrcPath,  szDestPath, &doMore);
     }
 
     /* If source == dest write no more */
-    if(filesReplaced != -1)
+    if (filesReplaced != -1)
     {
         /* No files replaced */
-        if(filesReplaced==0)
+        if (filesReplaced==0)
         {
             /* Add switch dependent output */
-            if(dwFlags & REPLACE_ADD)
+            if (dwFlags & REPLACE_ADD)
                 ConOutResPaging(TRUE,STRING_REPLACE_HELP7);
             else
                 ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
@@ -572,7 +572,7 @@ INT cmd_replace (LPTSTR param)
         else
         {
             /* Add switch dependent output */
-            if(dwFlags & REPLACE_ADD)
+            if (dwFlags & REPLACE_ADD)
                 ConOutResPrintf(STRING_REPLACE_HELP8, filesReplaced);
             else
                 ConOutResPrintf(STRING_REPLACE_HELP4, filesReplaced);

@@ -185,7 +185,7 @@ INT cmd_start (LPTSTR Rest)
     }
     SetLastError(0);
     size = GetEnvironmentVariable (_T("COMSPEC"), comspec, MAX_PATH);
-    if(GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+    if (GetLastError() == ERROR_ENVVAR_NOT_FOUND)
     {
         _tcscpy(comspec, _T("cmd"));
     }

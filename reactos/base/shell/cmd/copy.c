@@ -68,12 +68,12 @@ copy(TCHAR source[MAX_PATH],
     SYSTEMTIME CurrentTime;
 
     /* Check Breaker */
-    if(CheckCtrlBreak(BREAK_INPUT))
+    if (CheckCtrlBreak(BREAK_INPUT))
         return 0;
 
     TRACE ("checking mode\n");
 
-    if(bTouch)
+    if (bTouch)
     {
         hFileSrc = CreateFile (source, GENERIC_WRITE, FILE_SHARE_READ,
             NULL, OPEN_EXISTING, 0, NULL);
@@ -86,7 +86,7 @@ copy(TCHAR source[MAX_PATH],
 
         GetSystemTime(&CurrentTime);
         SystemTimeToFileTime(&CurrentTime, &NewFileTime);
-        if(SetFileTime(hFileSrc,(LPFILETIME) NULL, (LPFILETIME) NULL, &NewFileTime))
+        if (SetFileTime(hFileSrc,(LPFILETIME) NULL, (LPFILETIME) NULL, &NewFileTime))
         {
             CloseHandle(hFileSrc);
             nErrorLevel = 1;
@@ -120,7 +120,7 @@ copy(TCHAR source[MAX_PATH],
 
     /* Check to see if /D or /Z are true, if so we need a middle
        man to copy the file too to allow us to use CopyFileEx later */
-    if(lpdwFlags & COPY_DECRYPT)
+    if (lpdwFlags & COPY_DECRYPT)
     {
         GetEnvironmentVariable(_T("TEMP"),TempSrc,MAX_PATH);
         _tcscat(TempSrc,_T("\\"));
@@ -134,7 +134,7 @@ copy(TCHAR source[MAX_PATH],
            which would error when it tried to open the handles for ReadFile
            and WriteFile */
         _tcscat(TempSrc,_T(".decrypt"));
-        if(!CopyFileEx(source, TempSrc, NULL, NULL, FALSE, COPY_FILE_ALLOW_DECRYPTED_DESTINATION))
+        if (!CopyFileEx(source, TempSrc, NULL, NULL, FALSE, COPY_FILE_ALLOW_DECRYPTED_DESTINATION))
         {
             nErrorLevel = 1;
             return 0;
@@ -143,7 +143,7 @@ copy(TCHAR source[MAX_PATH],
     }
 
 
-    if(lpdwFlags & COPY_RESTART)
+    if (lpdwFlags & COPY_RESTART)
     {
         _tcscpy(TrueDest, dest);
         GetEnvironmentVariable(_T("TEMP"),dest,MAX_PATH);
@@ -260,9 +260,9 @@ copy(TCHAR source[MAX_PATH],
     SetFileAttributes (dest, dwAttrib);
 
     /* Now finish off the copy if needed with CopyFileEx */
-    if(lpdwFlags & COPY_RESTART)
+    if (lpdwFlags & COPY_RESTART)
     {
-        if(!CopyFileEx(dest, TrueDest, NULL, NULL, FALSE, COPY_FILE_RESTARTABLE))
+        if (!CopyFileEx(dest, TrueDest, NULL, NULL, FALSE, COPY_FILE_RESTARTABLE))
         {
             nErrorLevel = 1;
             DeleteFile(dest);
@@ -273,7 +273,7 @@ copy(TCHAR source[MAX_PATH],
 
     }
 
-    if(lpdwFlags & COPY_DECRYPT)
+    if (lpdwFlags & COPY_DECRYPT)
         DeleteFile(TempSrc);
 
     return 1;
@@ -480,8 +480,8 @@ INT cmd_copy(LPTSTR param)
                         break;
 
                     case _T('-'):
-                        if(_tcslen(arg[i]) >= 3)
-                            if(_totupper(arg[i][2]) == _T('Y'))
+                        if (_tcslen(arg[i]) >= 3)
+                            if (_totupper(arg[i][2]) == _T('Y'))
                             {
                                 dwFlags &= ~COPY_NO_PROMPT;
                                 dwFlags |= COPY_PROMPT;
@@ -538,7 +538,7 @@ INT cmd_copy(LPTSTR param)
 
                 bMoreFiles = FALSE;
             }
-            else if(nDes == -1)
+            else if (nDes == -1)
             {
                 nDes = i;
             }
@@ -825,7 +825,7 @@ INT cmd_copy(LPTSTR param)
             _tcscat (tmpSrcPath, findBuffer.cFileName);
 
             /* Check to see if the file is the same file */
-            if(!bTouch && !_tcscmp(tmpSrcPath, tmpDestPath))
+            if (!bTouch && !_tcscmp(tmpSrcPath, tmpDestPath))
             {
                 ConOutResPrintf(STRING_COPY_ERROR2);
 
@@ -846,7 +846,7 @@ INT cmd_copy(LPTSTR param)
                 dwFlags |= COPY_NO_PROMPT;
 
             /* Tell weather the copy was successful or not */
-            if(copy(tmpSrcPath,tmpDestPath, bAppend, dwFlags, bTouch))
+            if (copy(tmpSrcPath,tmpDestPath, bAppend, dwFlags, bTouch))
             {
                 nFiles++;
                 //LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);

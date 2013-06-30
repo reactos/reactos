@@ -94,10 +94,10 @@ INT chop_blank(LPTSTR *arg_str)
 {
     LPTSTR str;
     str = _tcschr(*arg_str,_T(' '));
-    if(!str)
+    if (!str)
     {
         str = _tcschr (*arg_str, _T('\0'));
-        if(str != NULL)
+        if (str != NULL)
             *arg_str=str;
         return CP_BLANK_NOT_FOUND;
     }
@@ -129,13 +129,13 @@ WORD hex_clr(LPTSTR str)
 
     ch = str[1];
 
-    if(_istdigit(ch))
+    if (_istdigit(ch))
         ret = ch-_T('0');
     else
     {
         ch=_totupper(ch);
 
-        if(  ch >= _T('A') && ch <= _T('F')  )
+        if (  ch >= _T('A') && ch <= _T('F')  )
             ret = ch-_T('A')+10;
         else
             return (WORD)-1;
@@ -143,13 +143,13 @@ WORD hex_clr(LPTSTR str)
 
     ch = str[0];
 
-    if(_istdigit(ch))
+    if (_istdigit(ch))
         ret |= (ch-_T('0')) << 4;
     else
     {
         ch=_totupper(ch);
 
-        if(  ch >= _T('A') && ch <= _T('F')  )
+        if (  ch >= _T('A') && ch <= _T('F')  )
             ret |= (ch-_T('A')+10) <<4;
         else
             return (WORD)-1;
@@ -215,15 +215,15 @@ WORD str_to_color(LPTSTR* arg_str)
     /* background */
     bBri = FALSE;
 
-    if(_tcsnicmp(str,_T("bri"),3) == 0 )
+    if (_tcsnicmp(str,_T("bri"),3) == 0 )
     {
         bBri = TRUE;
 
-        if(chop_blank(&str))
+        if (chop_blank(&str))
             return (WORD)-1;
     }
 
-    if( (tmp_clr = txt_clr(str)) == (WORD)-1 )
+    if ( (tmp_clr = txt_clr(str)) == (WORD)-1 )
         return (WORD)-1;
 
     chop_blank(&str);

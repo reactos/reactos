@@ -47,7 +47,7 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
                        (LPTSTR)&szError, 0, NULL))
     {
         ConErrPrintf (_T("%s %s\n"), szError, szMessage);
-        if(szError)
+        if (szError)
             LocalFree (szError);
         return;
     }

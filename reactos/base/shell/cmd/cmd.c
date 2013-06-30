@@ -310,7 +310,7 @@ HANDLE RunFile(DWORD flags, LPTSTR filename, LPTSTR params,
  * Rest  - rest of command line
  */
 static INT
-Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
+Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 {
     TCHAR szFullName[MAX_PATH];
     TCHAR *first, *rest, *dot;
@@ -415,8 +415,8 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         stui.wShowWindow = SW_SHOWDEFAULT;
 
         // return console to standard mode
-        SetConsoleMode (GetStdHandle(STD_INPUT_HANDLE),
-                        ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
+        SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),
+                       ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT);
 
         if (CreateProcess (szFullName,
                            szFullCmdLine,
@@ -1439,7 +1439,7 @@ BOOL WINAPI BreakHandler (DWORD dwCtrlType)
     }
     else
     {
-        if(SelfGenerated)
+        if (SelfGenerated)
         {
             SelfGenerated = FALSE;
             return TRUE;
@@ -1539,7 +1539,7 @@ ExecuteAutoRunFile(HKEY hkeyRoot)
                      KEY_READ,
                      &hkey) == ERROR_SUCCESS)
     {
-        if(RegQueryValueEx(hkey,
+        if (RegQueryValueEx(hkey,
                            _T("AutoRun"),
                            0,
                            0,

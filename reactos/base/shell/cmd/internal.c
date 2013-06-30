@@ -297,7 +297,7 @@ MakeFullPath(TCHAR * DirPath)
         n = p ? p++ - DirPath : _tcslen(DirPath);
         _tcsncpy(path, DirPath, n);
         path[n] = _T('\0');
-        if( !CreateDirectory(path, NULL) &&
+        if ( !CreateDirectory(path, NULL) &&
             (GetLastError() != ERROR_ALREADY_EXISTS))
         {
             return FALSE;
@@ -334,7 +334,7 @@ INT cmd_mkdir (LPTSTR param)
     {
         if (!MakeFullPath(p[i]))
         {
-            if(GetLastError() == ERROR_PATH_NOT_FOUND)
+            if (GetLastError() == ERROR_PATH_NOT_FOUND)
             {
                 ConErrResPuts(STRING_MD_ERROR2);
             }
@@ -376,12 +376,12 @@ BOOL DeleteFolder(LPTSTR FileName)
             _tcscpy(TempFileName,Base);
             _tcscat(TempFileName,f.cFileName);
 
-            if(f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 DeleteFolder(TempFileName);
             else
             {
                 SetFileAttributes(TempFileName,FILE_ATTRIBUTE_NORMAL);
-                if(!DeleteFile(TempFileName))
+                if (!DeleteFile(TempFileName))
                     return 0;
             }
 

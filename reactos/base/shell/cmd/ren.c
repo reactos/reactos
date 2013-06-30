@@ -171,24 +171,24 @@ INT cmd_rename (LPTSTR param)
         while(_tcschr(srcFILE, _T('\\')))
         {
             srcFILE++;
-            if(*srcFILE==_T('\\')) nSlash++ ;
-            if(!_tcschr(srcFILE, _T('\\'))) break;
+            if (*srcFILE==_T('\\')) nSlash++ ;
+            if (!_tcschr(srcFILE, _T('\\'))) break;
         }
         _tcsncpy(srcPath,srcPattern,_tcslen(srcPattern)-_tcslen(srcFILE));
 
-        if(_tcschr(dstPattern, _T('\\'))) //Checking if the Destiny (dstPattern)is also a Path.And splitting dstPattern in dstPath and srcPath.
+        if (_tcschr(dstPattern, _T('\\'))) //Checking if the Destiny (dstPattern)is also a Path.And splitting dstPattern in dstPath and srcPath.
         {
             dstFILE = _tcschr(dstPattern, _T('\\'));
             nSlash=0;
             while(_tcschr(dstFILE, _T('\\')))
             {
                 dstFILE++;
-                if(*dstFILE==_T('\\')) nSlash++ ;
-                if(!_tcschr(dstFILE, _T('\\'))) break;
+                if (*dstFILE==_T('\\')) nSlash++ ;
+                if (!_tcschr(dstFILE, _T('\\'))) break;
             }
             _tcsncpy(dstPath,dstPattern,_tcslen(dstPattern)-_tcslen(dstFILE));
 
-            if((_tcslen(dstPath)!=_tcslen(srcPath))||(_tcsncmp(srcPath,dstPath,_tcslen(srcPath))!=0)) //If it has a Path,then MUST be equal than srcPath
+            if ((_tcslen(dstPath)!=_tcslen(srcPath))||(_tcsncmp(srcPath,dstPath,_tcslen(srcPath))!=0)) //If it has a Path,then MUST be equal than srcPath
             {
                 error_syntax(dstPath);
                 freep(arg);
@@ -205,7 +205,7 @@ INT cmd_rename (LPTSTR param)
     if (!_tcschr(srcPattern, _T('\\'))) //If srcPattern isn't a Path but a name:
     {
         srcFILE=srcPattern;
-        if(_tcschr(dstPattern, _T('\\')))
+        if (_tcschr(dstPattern, _T('\\')))
         {
             error_syntax(dstPattern);
             freep(arg);
@@ -286,7 +286,7 @@ INT cmd_rename (LPTSTR param)
         }
         *r = 0;
         //Well we have splitted the Paths,so now we have to paste them again(if needed),thanks bPath.
-        if(bPath == TRUE)
+        if (bPath == TRUE)
         {
             _tcscpy(srcFinal,srcPath);
             _tcscat(srcFinal,f.cFileName);

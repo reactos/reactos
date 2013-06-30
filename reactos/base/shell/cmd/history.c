@@ -219,8 +219,8 @@ VOID add_at_bottom(LPTSTR string)
         return;
 
     /*if new entry is the same than the last do not add it*/
-    if(size)
-        if(_tcscmp(string,Bottom->next->string)==0)
+    if (size)
+        if (_tcscmp(string,Bottom->next->string)==0)
             return;
 
     /*fill bottom with string, it will become Bottom->next*/
@@ -287,7 +287,7 @@ LPCTSTR PeekHistory(INT dir)
 
 VOID History (INT dir, LPTSTR commandline)
 {
-    if(dir==0)
+    if (dir==0)
     {
         add_at_bottom(commandline);
         curr_ptr=Bottom;
@@ -300,7 +300,7 @@ VOID History (INT dir, LPTSTR commandline)
         return;
     }
 
-    if(dir<0)/*key up*/
+    if (dir<0)/*key up*/
     {
         if (curr_ptr->next==Top || curr_ptr==Top)
         {
@@ -314,11 +314,11 @@ VOID History (INT dir, LPTSTR commandline)
         }
 
         curr_ptr = curr_ptr->next;
-        if(curr_ptr->string)
+        if (curr_ptr->string)
             _tcscpy(commandline,curr_ptr->string);
     }
 
-    if(dir>0)
+    if (dir>0)
     {
         if (curr_ptr->prev==Bottom || curr_ptr==Bottom)
         {
@@ -332,7 +332,7 @@ VOID History (INT dir, LPTSTR commandline)
         }
 
         curr_ptr=curr_ptr->prev;
-        if(curr_ptr->string)
+        if (curr_ptr->string)
             _tcscpy(commandline,curr_ptr->string);
     }
 }

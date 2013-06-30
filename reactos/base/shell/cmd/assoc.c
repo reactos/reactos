@@ -32,7 +32,7 @@ PrintAssociation(LPTSTR extension)
 
     return_val = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0, KEY_READ, &hKey);
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         return -1;
@@ -40,7 +40,7 @@ PrintAssociation(LPTSTR extension)
 
     return_val = RegOpenKeyEx(hKey, extension, 0, KEY_READ, &hInsideKey);
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         RegCloseKey(hInsideKey);
@@ -50,14 +50,14 @@ PrintAssociation(LPTSTR extension)
     /* obtain string length */
     return_val = RegQueryValueEx(hInsideKey, NULL, NULL, NULL, NULL, &fileTypeLength);
 
-    if(return_val == ERROR_FILE_NOT_FOUND)	/* no default value, don't display */
+    if (return_val == ERROR_FILE_NOT_FOUND)	/* no default value, don't display */
     {
         RegCloseKey(hInsideKey);
         RegCloseKey(hKey);
         return 0;
     }
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
     {
         RegCloseKey(hInsideKey);
         RegCloseKey(hKey);
@@ -72,18 +72,18 @@ PrintAssociation(LPTSTR extension)
     RegCloseKey(hInsideKey);
     RegCloseKey(hKey);
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
     {
         cmd_free(fileType);
         return -2;
     }
 
-    if(fileTypeLength != 0)	/* if there is a default key, display relevant information */
+    if (fileTypeLength != 0)	/* if there is a default key, display relevant information */
     {
         ConOutPrintf(_T("%s=%s\r\n"), extension, fileType);
     }
 
-    if(fileTypeLength)
+    if (fileTypeLength)
         cmd_free(fileType);
 
     return 1;
@@ -102,7 +102,7 @@ PrintAllAssociations()
 
     return_val = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0, KEY_READ, &hKey);
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         return -1;
@@ -110,7 +110,7 @@ PrintAllAssociations()
 
     return_val = RegQueryInfoKey(hKey, NULL, NULL, NULL, &numKeys, &extLength, NULL, NULL, NULL, NULL, NULL, NULL);
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         return -2;
@@ -123,9 +123,9 @@ PrintAllAssociations()
         DWORD buffer_size = extLength;
         return_val = RegEnumKeyEx(hKey, keyCtr, extName, &buffer_size, NULL, NULL, NULL, NULL);
 
-        if(return_val == ERROR_SUCCESS || return_val == ERROR_MORE_DATA)
+        if (return_val == ERROR_SUCCESS || return_val == ERROR_MORE_DATA)
         {
-            if(*extName == _T('.'))
+            if (*extName == _T('.'))
                 PrintAssociation(extName);
         }
         else
@@ -138,7 +138,7 @@ PrintAllAssociations()
 
     RegCloseKey(hKey);
 
-    if(extName)
+    if (extName)
         cmd_free(extName);
 
     return numKeys;
@@ -152,12 +152,12 @@ AddAssociation(LPTSTR extension, LPTSTR type)
 
     return_val = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0, KEY_ALL_ACCESS, &hKey);
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
         return -1;
 
     return_val = RegCreateKeyEx(hKey, extension, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &insideKey, NULL);
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         return -1;
@@ -165,7 +165,7 @@ AddAssociation(LPTSTR extension, LPTSTR type)
 
     return_val = RegSetValueEx(insideKey, NULL, 0, REG_SZ, (LPBYTE)type, (_tcslen(type) + 1) * sizeof(TCHAR));
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
     {
         RegCloseKey(insideKey);
         RegCloseKey(hKey);
@@ -186,12 +186,12 @@ RemoveAssociation(LPTSTR extension)
 
     return_val = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0, KEY_ALL_ACCESS, &hKey);
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
         return -1;
 
     return_val = RegDeleteKey(hKey, extension);
 
-    if(return_val != ERROR_SUCCESS)
+    if (return_val != ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
         return -2;
@@ -214,12 +214,12 @@ INT CommandAssoc (LPTSTR param)
 
     nErrorLevel = 0;
 
-    if(_tcslen(param) == 0)
+    if (_tcslen(param) == 0)
         PrintAllAssociations();
     else
     {
         LPTSTR lpEqualSign = _tcschr(param, _T('='));
-        if(lpEqualSign != NULL)
+        if (lpEqualSign != NULL)
         {
             LPTSTR fileType = lpEqualSign + 1;
             LPTSTR extension = cmd_alloc((lpEqualSign - param + 1) * sizeof(TCHAR));
@@ -227,7 +227,7 @@ INT CommandAssoc (LPTSTR param)
             _tcsncpy(extension, param, lpEqualSign - param);
             extension[lpEqualSign - param] = (TCHAR)0;
 
-            if(_tcslen(fileType) == 0)
+            if (_tcslen(fileType) == 0)
             /* if the equal sign is the last character
             in the string, then delete the key */
             {
@@ -247,7 +247,7 @@ INT CommandAssoc (LPTSTR param)
             /* no equal sign, print all associations */
             INT retval = PrintAssociation(param);
 
-            if(retval == 0)	/* if nothing printed out */
+            if (retval == 0)	/* if nothing printed out */
                 ConOutResPrintf(STRING_ASSOC_ERROR, param);
         }
     }

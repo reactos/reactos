@@ -94,16 +94,16 @@ VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
 
     for(i = 0; i < _tcslen(Path); i++)
     {
-        if(Path[i] != _T('\\'))
+        if (Path[i] != _T('\\'))
         {
             _tcsncat(TempPath, &Path[i], 1);
-            if(i != _tcslen(Path) - 1)
+            if (i != _tcslen(Path) - 1)
                 continue;
         }
         /* Handle the base part of the path different.
            Because if you put it into findfirstfile, it will
            return your current folder */
-        if(_tcslen(TempPath) == 2 && TempPath[1] == _T(':'))
+        if (_tcslen(TempPath) == 2 && TempPath[1] == _T(':'))
         {
             _tcscat(OutPath, TempPath);
             _tcscat(OutPath, _T("\\"));
@@ -112,7 +112,7 @@ VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
         else
         {
             hFind = FindFirstFile(TempPath,&FindFileData);
-            if(hFind == INVALID_HANDLE_VALUE)
+            if (hFind == INVALID_HANDLE_VALUE)
             {
                 _tcscpy(OutPath, Path);
                 return;
@@ -533,25 +533,25 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
     return TRUE;
 }
 
-INT PagePrompt (VOID)
+INT PagePrompt(VOID)
 {
     INPUT_RECORD ir;
 
     ConOutResPuts(STRING_MISC_HELP1);
 
-    RemoveBreakHandler ();
-    ConInDisable ();
+    RemoveBreakHandler();
+    ConInDisable();
 
     do
     {
-        ConInKey (&ir);
+        ConInKey(&ir);
     }
     while ((ir.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
            (ir.Event.KeyEvent.wVirtualKeyCode == VK_MENU) ||
            (ir.Event.KeyEvent.wVirtualKeyCode == VK_CONTROL));
 
-    AddBreakHandler ();
-    ConInEnable ();
+    AddBreakHandler();
+    ConInEnable();
 
     if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
         ((ir.Event.KeyEvent.wVirtualKeyCode == _T('C')) &&
@@ -600,8 +600,8 @@ INT FilePromptYN (UINT resID)
 
     /* unfinished solution */
 #if 0
-    RemoveBreakHandler ();
-    ConInDisable ();
+    RemoveBreakHandler();
+    ConInDisable();
 
     do
     {
@@ -616,8 +616,8 @@ INT FilePromptYN (UINT resID)
            (ir.Event.KeyEvent.wVirtualKeyCode == VK_MENU) ||
            (ir.Event.KeyEvent.wVirtualKeyCode == VK_CONTROL));
 
-    AddBreakHandler ();
-    ConInEnable ();
+    AddBreakHandler();
+    ConInEnable();
 
     if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
         ((ir.Event.KeyEvent.wVirtualKeyCode == 'C') &&
@@ -666,8 +666,8 @@ INT FilePromptYNA (UINT resID)
 
     /* unfinished solution */
 #if 0
-    RemoveBreakHandler ();
-    ConInDisable ();
+    RemoveBreakHandler();
+    ConInDisable();
 
     do
     {
@@ -680,8 +680,8 @@ INT FilePromptYNA (UINT resID)
            (ir.Event.KeyEvent.wVirtualKeyCode == VK_MENU) ||
            (ir.Event.KeyEvent.wVirtualKeyCode == VK_CONTROL));
 
-    AddBreakHandler ();
-    ConInEnable ();
+    AddBreakHandler();
+    ConInEnable();
 
     if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
         ((ir.Event.KeyEvent.wVirtualKeyCode == _T('C')) &&

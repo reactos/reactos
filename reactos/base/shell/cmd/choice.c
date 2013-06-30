@@ -230,7 +230,7 @@ CommandChoice (LPTSTR param)
 
     ConInFlush ();
 
-    if(!bTimeout)
+    if (!bTimeout)
     {
         while (TRUE)
         {

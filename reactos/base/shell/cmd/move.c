@@ -283,7 +283,7 @@ INT cmd_move (LPTSTR param)
                             ~MOVE_SRC_CURRENT_IS_DIR &
                             ~MOVE_DEST_EXISTS;
         _tcscpy(szFullSrcPath,szSrcDirPath);
-        if(szFullSrcPath[_tcslen(szFullSrcPath) -  1] != _T('\\'))
+        if (szFullSrcPath[_tcslen(szFullSrcPath) -  1] != _T('\\'))
             _tcscat (szFullSrcPath, _T("\\"));
         _tcscat(szFullSrcPath,findBuffer.cFileName);
         _tcscpy(szSrcPath, szFullSrcPath);
@@ -311,7 +311,7 @@ INT cmd_move (LPTSTR param)
             /*build the dest string(accounts for *)*/
             _tcscpy (szFullDestPath, szDestPath);
             /*check to see if there is an ending slash, if not add one*/
-            if(szFullDestPath[_tcslen(szFullDestPath) -  1] != _T('\\'))
+            if (szFullDestPath[_tcslen(szFullDestPath) -  1] != _T('\\'))
                 _tcscat (szFullDestPath, _T("\\"));
             _tcscat (szFullDestPath, findBuffer.cFileName);
 
@@ -365,10 +365,10 @@ INT cmd_move (LPTSTR param)
         }
 
         /*checks to make sure user wanted/wants the override*/
-        if((dwFlags & MOVE_OVER_NO) &&
+        if ((dwFlags & MOVE_OVER_NO) &&
            (dwMoveStatusFlags & MOVE_DEST_EXISTS))
             continue;
-        if(!(dwFlags & MOVE_OVER_YES) &&
+        if (!(dwFlags & MOVE_OVER_YES) &&
             (dwMoveStatusFlags & MOVE_DEST_EXISTS))
             nOverwrite = MoveOverwrite (szFullDestPath);
         if (nOverwrite == PROMPT_NO || nOverwrite == PROMPT_BREAK)
@@ -440,9 +440,9 @@ INT cmd_move (LPTSTR param)
                                 nDiff = _tcslen(szMoveDest) - _tcslen(szTempPath);
                                 pszDestDirPointer = pszDestDirPointer - nDiff;
                                 _tcscpy(pszDestDirPointer,_T(""));
-                                if(szMoveSrc[_tcslen(szMoveSrc) -  1] != _T('\\'))
+                                if (szMoveSrc[_tcslen(szMoveSrc) -  1] != _T('\\'))
                                     _tcscat (szMoveSrc, _T("\\"));
-                                if(szMoveDest[_tcslen(szMoveDest) -  1] != _T('\\'))
+                                if (szMoveDest[_tcslen(szMoveDest) -  1] != _T('\\'))
                                     _tcscat (szMoveDest, _T("\\"));
                                 pszDestDirPointer = szMoveDest + _tcslen(szMoveDest);
                                 pszSrcDirPointer = szMoveSrc + _tcslen(szMoveSrc);

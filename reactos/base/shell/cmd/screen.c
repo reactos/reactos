@@ -33,7 +33,7 @@ INT CommandScreen (LPTSTR param)
     while(_istspace(*param))
         param++;
 
-    if(!(*param))
+    if (!(*param))
     {
         error_req_param_missing ();
         return 1;
@@ -48,7 +48,7 @@ INT CommandScreen (LPTSTR param)
     }
 
     //get col
-    if(!(param = _tcschr(param,_T(' '))))
+    if (!(param = _tcschr(param,_T(' '))))
     {
         error_req_param_missing ();
         return 1;
@@ -57,7 +57,7 @@ INT CommandScreen (LPTSTR param)
     while(_istspace(*param))
         param++;
 
-    if(!(*param))
+    if (!(*param))
     {
         error_req_param_missing ();
         return 1;
@@ -71,7 +71,7 @@ INT CommandScreen (LPTSTR param)
     }
 
     //get text
-    if(!(param = _tcschr(param,_T(' '))))
+    if (!(param = _tcschr(param,_T(' '))))
     {
         bSkipText = TRUE;
     }
@@ -80,7 +80,7 @@ INT CommandScreen (LPTSTR param)
         while(_istspace(*param))
             param++;
 
-        if(!(*param))
+        if (!(*param))
         {
             bSkipText = TRUE;
         }
@@ -88,13 +88,13 @@ INT CommandScreen (LPTSTR param)
 
     bIgnoreEcho = TRUE;
 
-    if(bSkipText)
+    if (bSkipText)
         x=0;
 
 
     SetCursorXY(x,y);
 
-    if(!(bSkipText))
+    if (!(bSkipText))
         ConOutPuts(param);
 
     return 0;

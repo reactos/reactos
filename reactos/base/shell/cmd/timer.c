@@ -143,7 +143,7 @@ INT CommandTimer (LPTSTR param)
     }
 
     // do stuff (start/stop/read timer)
-    if(NewClkStatus == NCS_ON)
+    if (NewClkStatus == NCS_ON)
     {
         cT=GetTickCount();
         cS=TRUE;
@@ -154,9 +154,9 @@ INT CommandTimer (LPTSTR param)
         return 0;
     }
 
-    if(bS)
+    if (bS)
     {
-        if(cS)
+        if (cS)
         {
             ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
             ConOutPrintf(_T("%s\n"), GetTimeString());

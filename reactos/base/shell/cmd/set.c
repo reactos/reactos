@@ -110,7 +110,7 @@ INT cmd_set (LPTSTR param)
         BOOL Success;
         StripQuotes(param);
         Success = seta_eval ( skip_ws(param+2) );
-        if(!Success)
+        if (!Success)
         {
             /* might seem random but this is what windows xp does */
             nErrorLevel = 9165;
