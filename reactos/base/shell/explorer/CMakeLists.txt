@@ -5,6 +5,7 @@ set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
 
 add_definitions(
     -DWIN32
+    -D__MINGW32__
     -D__WINDRES__)
 
 #add_pch(explorer precomp.h)
