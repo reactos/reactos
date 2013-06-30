@@ -1,0 +1,15 @@
+﻿; UTF-8
+
+[Section]
+Name = Lazarus
+Version = 1.0.10
+Licence = modified LGPL, GPL
+Description = A cross-platform integrated development environment (IDE) that lets you create visual (GUI) and non-visual Object Pascal programs, and uses the Free Pascal compiler to generate your executable.
+Size = 106MB
+Category = 7
+URLSite = http://www.lazarus.freepascal.org/
+URLDownload = http://garr.dl.sourceforge.net/project/lazarus/Lazarus%20Windows%2032%20bits/Lazarus%201.0.10/lazarus-1.0.10-fpc-2.6.2-win32.exe
+CDPath = none
+
+[Section.0407]
+Description = Eine plattformunabhängige, integrierte Entwicklungsumgebung (IDE), mit der man grafische (GUI) und nicht-grafische Pascal-Programme erstellen kann. Es verwendet den Free Pascal Compiler um die Programme zu erzeugen.

@@ -167,8 +167,8 @@ typedef struct
     HANDLE InputHandle;
 
     BOOL Unicode;
-    WORD NrCharactersToRead;
-    WORD NrCharactersRead;
+    ULONG NrCharactersToRead;
+    ULONG NrCharactersRead;
 
     UNICODE_STRING ExeName;
     DWORD CtrlWakeupMask;

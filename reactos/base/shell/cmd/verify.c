@@ -14,8 +14,8 @@
  *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection ready!
  *
- *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
- *        Remove all hardcode string to En.rc
+ *    30-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
+ *        Remove all hardcoded strings in En.rc
  */
 
 #include "precomp.h"
@@ -29,19 +29,19 @@ static BOOL bVerify = FALSE;
 
 INT cmd_verify (LPTSTR param)
 {
-	if (!_tcsncmp (param, _T("/?"), 2))
-	{
-		ConOutResPaging(TRUE,STRING_VERIFY_HELP1);
-		return 0;
-	}
+    if (!_tcsncmp (param, _T("/?"), 2))
+    {
+        ConOutResPaging(TRUE,STRING_VERIFY_HELP1);
+        return 0;
+    }
 
-	if (!OnOffCommand(param, &bVerify, STRING_VERIFY_HELP2))
-	{
-		ConErrResPuts(STRING_VERIFY_HELP3);
-		return nErrorLevel = 1;
-	}
+    if (!OnOffCommand(param, &bVerify, STRING_VERIFY_HELP2))
+    {
+        ConErrResPuts(STRING_VERIFY_HELP3);
+        return nErrorLevel = 1;
+    }
 
-	return nErrorLevel = 0;
+    return nErrorLevel = 0;
 }
 
 #endif

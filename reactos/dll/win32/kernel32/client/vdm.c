@@ -309,7 +309,7 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 {
     BOOL Result;
     ULONG RegionSize, EnvironmentSize = 0;
-    PWCHAR p, Environment, NewEnvironment;
+    PWCHAR p, Environment, NewEnvironment = NULL;
     NTSTATUS Status;
 
     /* Make sure we have both strings */

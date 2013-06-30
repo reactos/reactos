@@ -152,7 +152,7 @@ ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]atributos]] archivo ...\n\n\
   /N    Nada.\n\
   /P    Prompt. Pregunta antes de borar cada archivo\n\
   /T    Total. Muestra el número total de archivos eliminados y el espacio\n\
-	liberado en disco\n\
+        liberado en disco\n\
   /Q    Modo silencioso.\n\
   /W    Limpiar. Sobreescribe el archivo con números aleatorios después de eliminarlo.\n\
   /Y    Si. Borra incluso *.* sin preguntar.\n\
@@ -198,8 +198,8 @@ STRING_DIR_HELP1, "DIR [unidad:][ruta][nombre de archivo] [/A[[:]atributos]] [/B
   /S          Muestra los archivos en el directorio especificado y sus subdirectorios.\n\
   /T          Controla que campo de tiempo se muestra o es usado para ordenar:\n\
   campo de tiempo  C  Creación\n\
-              	   A  Último acceso\n\
-	           W  Última escritura\n\
+                   A  Último acceso\n\
+                   W  Última escritura\n\
   /W          Usa el formato de lista a lo ancho.\n\
   /X          Muestra los nombres cortos generados para archivos que no tienen un\n\
               nombre 8.3.  El formato es como /N pero con el nombre corto colocado\n\
@@ -267,6 +267,15 @@ STRING_FREE_HELP1, "\nEl volumen en la unidad %s es %-11s\n\
 
 STRING_FREE_HELP2, "Muestra la información de la unidad.\n\nFREE [unidad: ...]\n"
 
+STRING_GOTO_HELP1,  "Manda al CMD a una linea etiquetada en un archivo por lotes.\n\n\
+GOTO etiqueta\n\n\
+  etiqueta  Especifica la cadena de texto usada en el archivo por lotes como etiqueta.\n\n\
+Escriba la etiqueta en la linea misma, empezando con dos puntos."
+
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Ejecuta procesos condicionales en archivos por lotes.\n\n\
   IF [NOT] ERRORLEVEL número comando\n\
   IF [NOT] string1==string2 comando\n\
@@ -280,11 +289,6 @@ comando           Especifica el comando a ejecutar si se cumple la condición.\n
 string1==string2  Especifica una condición verdadera si las cadenas de texto coinciden.\n\
 EXIST archivo     Especifica una condición verdadera si existe el archivo especificado.\n\
 DEFINED variable  Especifica una condición verdadera si la variable está definida.\n"
-
-STRING_GOTO_HELP1,  "Manda al CMD a una linea etiquetada en un archivo por lotes.\n\n\
-GOTO etiqueta\n\n\
-  etiqueta  Especifica la cadena de texto usada en el archivo por lotes como etiqueta.\n\n\
-Escriba la etiqueta en la linea misma, empezando con dos puntos."
 
 STRING_LABEL_HELP1, "Muestra o cambia la etiqueta de una unidad.\n\nLABEL [unidad:][etiqueta]\n"
 
@@ -495,7 +499,7 @@ Si ni ON, OFF o /S se especifican, el comando\n\
 cambiara el estado de parada del reloj\n\n"
 
 STRING_TYPE_HELP1, "Muestra los contenidos de un archivo de texto.\n\nTYPE [unidad:][ruta]archivo \n\
-  /P 		Muestra sólo una pantalla de salida cada vez.\n"
+  /P        Muestra sólo una pantalla de salida cada vez.\n"
 
 STRING_VERIFY_HELP1, "¡¡Este comando es solo de relleno!!\n\
 Configura si hay que verificar que los archivos se and escrito correctamente\n\
@@ -560,6 +564,7 @@ title         Nuevo título\n"
 
 
 STRING_HELP1, "Lista de todos los comandos disponibles (con descripción)\n\n\
+  help comando\n\
   comando /?     Para más información del comando especificado.\n\n\
 ?        Muestra todos los comandos disponibles (sin la descripción).\n\
 ALIAS    Crea, borra o muestra los alias.\n\

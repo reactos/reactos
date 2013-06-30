@@ -26,8 +26,8 @@ Skriv ATTRIB utan parametrar för att visa attributten för alla filer.\n"
 
 STRING_ALIAS_HELP,  "Sätter, tar bort eller visar alias.\n\n\
 ALIAS [alias=[Kommando]]\n\n\
-  alias    Namn på ett alias.\n\
-  Kommando 									 Text som skall erstättas av ett alias.\n\n\
+  alias     Namn på ett alias.\n\
+  Kommando  Text som skall erstättas av ett alias.\n\n\
 för att lista alla alias:\n\
   ALIAS\n\n\
 För att sätta ett nytt eller ändra ett befintligt alias:\n\
@@ -118,7 +118,7 @@ COPY [/V][/Y|/-Y][/A|/B] källa [/A|/B]\n\
   källa        Anger filen eller filerna som kopieras.\n\
   /A           Anger att filen är en ASCII-textfil.\n\
   /B           Anger att filen är en binär-fil.\n\
-  mål  		   Anger mappen och/eller filnamn för den nya filen/filerna.\n\
+  mål          Anger mappen och/eller filnamn för den nya filen/filerna.\n\
   /V           Kontrollera att nya filer är korrekt skrivna.\n\
   /Y           Undertrycker frågor om att godkänna om du önskar att skriva över\n\
                befintlig destinationsfil.\n\
@@ -262,6 +262,15 @@ STRING_FREE_HELP1, "\nVolum i enhet %s är %-11s\n\
 
 STRING_FREE_HELP2, "Visa enhetsinformation.\n\nFREE [enhet: ...]\n"
 
+STRING_GOTO_HELP1,  "Dirigerar CMD till en namngiven etikett i ett batchprogram.\n\n\
+GOTO etikett\n\n\
+  etikett  Anger en text sträng använt i ett batchprogram.\n\n\
+En etikett skapas på en egen rad genom att skriva kolon följt av namn på etiketten."
+
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Utför villkorsstyrd bearbetning i batchprogram.\n\n\
   IF [NOT] ERRORLEVEL nummer kommando\n\
   IF [NOT] sträng1==sträng2 kommando\n\
@@ -276,11 +285,6 @@ sträng1==sträng2  Anger ett uppfyllt villkor om textsträngarna är lika\n\
 EXIST filnamn     Anger ett uppfyllt villkor om angivet filnamn existerar.\n\
 DEFINED variabel  Anger ett uppfyllt villkor om angiven variabel är\n\
                   definerad.\n"
-
-STRING_GOTO_HELP1,  "Dirigerar CMD till en namngiven etikett i ett batchprogram.\n\n\
-GOTO etikett\n\n\
-  etikett  	Anger en text sträng använt i ett batchprogram.\n\n\
-En etikett skapas på en egen rad genom att skriva kolon följt av namn på etiketten."
 
 STRING_LABEL_HELP1, "Skapar, tar bort eller ändrar etikett på enhet.\n\nLABEL [enhet:][etikett]\n"
 
@@ -333,9 +337,9 @@ type          knapp vises\n\
               YESNO, YESNOCANCEL\n\
 tittel        tittel på meldingsboks\n\
 melding       text som vises i meldingsboks\n\n\n\
-ERRORLEVEL 	  settes avhengig av hvilken knapp som trykkes:\n\n\
-JA  :  10    |  NEI      :  11\n\
-OK   :  10    |  AVBRYT  :  12\n"
+ERRORLEVEL    settes avhengig av hvilken knapp som trykkes:\n\n\
+JA  :  10    |  NEI     :  11\n\
+OK  :  10    |  AVBRYT  :  12\n"
 
 STRING_PATH_HELP1, "Viser eller setter en søkesti for kjørbare filer.\n\n\
 PATH [[enhet:]mapp[;...]]\nPATH ;\n\n\
@@ -376,9 +380,9 @@ STRING_REM_HELP, "Start en kommentarlinje i en satsvis fil.\n\nREM [Kommentar]"
 
 STRING_RMDIR_HELP,   "Flytter en mapp.\n\n\
 RMDIR [enhet:]mapp\nRD [enhet:]mapp\n\
-/S			Sletter alle filer och mappar innenfor målet\n\
-/Q			Inte spør før sletting.\n"
-STRING_RMDIR_HELP2,	"mappn är inte tom!\n"
+/S          Sletter alle filer och mappar innenfor målet\n\
+/Q          Inte spør før sletting.\n"
+STRING_RMDIR_HELP2, "mappn är inte tom!\n"
 
 STRING_REN_HELP1, "Ändra namn på fil/mapp eller filer/mappar.\n\n\
 ENDRE NAVN [/E /N /P /Q /S /T] gammelt_namn ... nytt_namn\n\
@@ -489,7 +493,7 @@ hvis hverken ON, OFF eller /S är spesifisert\n\
 vil status for stoppeklokken veksles.\n\n"
 
 STRING_TYPE_HELP1, "Vis innholdet av tekstfiler.\n\nSkriv [enhet:][mapp]filnamn \n\
-  /P 		  Vis en full skjerm om gangen.\n"
+  /P          Vis en full skjerm om gangen.\n"
 
 STRING_VERIFY_HELP1, "Denne kommandoen är bare en etterlikning!!\n\
 Anger om det skal bekreftes at dine filer är skrevet korrekt til disk \n\n\
@@ -553,6 +557,7 @@ tittel        ny tittel\n"
 
 
 STRING_HELP1, "Liste av alle tilgjengelige kommandoer (+ beskrivelse)\n\n\
+help kommando\n\
 kommando /?     For mer informasjon om en bestemt kommando\n\n\
 ?        Lister alle tilgjengelige kommando uten beskrivelse).\n\
 ALIAS    Sett, fjern eller vis alias.\n\

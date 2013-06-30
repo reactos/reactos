@@ -118,7 +118,7 @@ COPY [/V][/Y|/-Y][/A|/B] kilde [/A|/B]\n\
   kilde        Spesifiserer filen eller filer som kopieres.\n\
   /A           Indikerer en ASCII tekst fil.\n\
   /B           Indikerer en binær fil.\n\
-  mål  		   Spesifiserer mappen og/eller filnavn for den nye fil(ene).\n\
+  mål          Spesifiserer mappen og/eller filnavn for den nye fil(ene).\n\
   /V           Bekreftet at nye filer er skrevet korrekt.\n\
   /Y           Undertrykker spørsmål om å godkjenne hvorvidt du ønsker å overskrive en\n\
                eksisterende destinasjonsfil.\n\
@@ -262,6 +262,15 @@ STRING_FREE_HELP1, "\nVolum i stasjon %s er %-11s\n\
 
 STRING_FREE_HELP2, "Vis stasjonsinformasjon.\n\nFREE [stasjon: ...]\n"
 
+STRING_GOTO_HELP1,  "Leder CMD til en merket linje i et satsvis skript.\n\n\
+GOTO merke\n\n\
+  merke     angir en tekst streng brukt i en satsvis skript.\n\n\
+Et merke opprettes på egen linje ved å skrive kolon fulgt av navn på merke."
+
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Utføre betinget behandling i satsvise programmer.\n\n\
   IF [NOT] ERRORLEVEL nummer kommando\n\
   IF [NOT] streng1==streng2 kommando\n\
@@ -276,11 +285,6 @@ streng1==streng2  Angir et oppfylt vilkår hvis tekststrengene er like\n\
 EXIST filnavn     Angir et oppfylt vilkår hvis spesifisert filnavn eksisterer.\n\
 DEFINED variabel  Angir et oppfylt vilkår hvis spesifisert variabel er\n\
                   definert.\n"
-
-STRING_GOTO_HELP1,  "Leder CMD til en merket linje i et satsvis skript.\n\n\
-GOTO merke\n\n\
-  merke  	angir en tekst streng brukt i en satsvis skript.\n\n\
-Et merke opprettes på egen linje ved å skrive kolon fulgt av navn på merke."
 
 STRING_LABEL_HELP1, "Viser eller endrer navn på stasjon.\n\nLABEL [stasjon:][merke]\n"
 
@@ -333,7 +337,7 @@ type          knapp vises\n\
               YESNO, YESNOCANCEL\n\
 tittel        tittel på meldingsboks\n\
 melding       tekst som vises i meldingsboks\n\n\n\
-ERRORLEVEL 	  settes avhengig av hvilken knapp som trykkes:\n\n\
+ERRORLEVEL    settes avhengig av hvilken knapp som trykkes:\n\n\
 JA  :  10    |  NEI      :  11\n\
 OK   :  10    |  AVBRYT  :  12\n"
 
@@ -376,9 +380,9 @@ STRING_REM_HELP, "Start en kommentarlinje i en satsvis fil.\n\nREM [Kommentar]"
 
 STRING_RMDIR_HELP,   "Flytter en mappe.\n\n\
 RMDIR [stasjon:]mappe\nRD [stasjon:]mappe\n\
-/S			Sletter alle filer og mapper innenfor målet\n\
-/Q			Ikke spør før sletting.\n"
-STRING_RMDIR_HELP2,	"Mappen er ikke tom!\n"
+/S          Sletter alle filer og mapper innenfor målet\n\
+/Q          Ikke spør før sletting.\n"
+STRING_RMDIR_HELP2, "Mappen er ikke tom!\n"
 
 STRING_REN_HELP1, "Endre navn på fil/mappe eller filer/mapper.\n\n\
 ENDRE NAVN [/E /N /P /Q /S /T] gammelt_navn ... nytt_navn\n\
@@ -489,7 +493,7 @@ hvis hverken ON, OFF eller /S er spesifisert\n\
 vil status for stoppeklokken veksles.\n\n"
 
 STRING_TYPE_HELP1, "Vis innholdet av tekstfiler.\n\nSkriv [stasjon:][mappe]filnavn \n\
-  /P 		  Vis en full skjerm om gangen.\n"
+  /P          Vis en full skjerm om gangen.\n"
 
 STRING_VERIFY_HELP1, "Denne kommandoen er bare en etterlikning!!\n\
 Angir om det skal bekreftes at dine filer er skrevet korrekt til disk \n\n\
@@ -553,6 +557,7 @@ tittel        ny tittel\n"
 
 
 STRING_HELP1, "Liste av alle tilgjengelige kommandoer (+ beskrivelse)\n\n\
+help kommando\n\
 kommando /?     For mer informasjon om en bestemt kommando\n\n\
 ?        Lister alle tilgjengelige kommando uten beskrivelse).\n\
 ALIAS    Sett, fjern eller vis alias.\n\
