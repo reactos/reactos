@@ -37,9 +37,9 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 
     if (szFormat)
     {
-        va_start (arg_ptr, szFormat);
-        _vstprintf (szMessage, szFormat, arg_ptr);
-        va_end (arg_ptr);
+        va_start(arg_ptr, szFormat);
+        _vstprintf(szMessage, szFormat, arg_ptr);
+        va_end(arg_ptr);
     }
 
     if (FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
