@@ -1,6 +1,5 @@
 /*
  *  PARSER.C - command parsing.
- *
  */
 
 #include "precomp.h"

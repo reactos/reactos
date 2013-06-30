@@ -112,7 +112,7 @@ INT cmd_set (LPTSTR param)
         Success = seta_eval ( skip_ws(param+2) );
         if(!Success)
         {
-            /*might seem random but this is what windows xp does */
+            /* might seem random but this is what windows xp does */
             nErrorLevel = 9165;
         }
         return !Success;
@@ -218,11 +218,11 @@ ident_len(LPCTSTR p)
 }
 
 #define PARSE_IDENT(ident,identlen,p) \
-	identlen = ident_len(p); \
-	ident = (LPTSTR)alloca ( ( identlen + 1 ) * sizeof(TCHAR) ); \
-	memmove ( ident, p, identlen * sizeof(TCHAR) ); \
-	ident[identlen] = 0; \
-	p += identlen;
+    identlen = ident_len(p); \
+    ident = (LPTSTR)alloca ( ( identlen + 1 ) * sizeof(TCHAR) ); \
+    memmove ( ident, p, identlen * sizeof(TCHAR) ); \
+    ident[identlen] = 0; \
+    p += identlen;
 
 static BOOL
 seta_identval(LPCTSTR ident, INT* result)

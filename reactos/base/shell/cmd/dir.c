@@ -130,8 +130,8 @@
  *
  *    3-feb-2007 (Paolo Devoti devotip at gmail)
  *        Removed variables formerly in use to handle pagination
- *		  Pagination belongs to ConOutPrintfPaging
- *		  Removed already commented out code of old pagination
+ *        Pagination belongs to ConOutPrintfPaging
+ *        Removed already commented out code of old pagination
  */
 
 #include "precomp.h"
@@ -143,70 +143,66 @@
 /* Time Field enumeration */
 enum ETimeField
 {
-	TF_CREATIONDATE		= 0,
-	TF_MODIFIEDDATE		= 1,
-	TF_LASTACCESSEDDATE	= 2
+    TF_CREATIONDATE     = 0,
+    TF_MODIFIEDDATE     = 1,
+    TF_LASTACCESSEDDATE = 2
 };
 
 /* Ordered by enumeration */
 enum EOrderBy
 {
-	ORDER_NAME		= 0,
-	ORDER_SIZE		= 1,
-	ORDER_DIRECTORY	= 2,
-	ORDER_EXTENSION	= 3,
-	ORDER_TIME		= 4
+    ORDER_NAME      = 0,
+    ORDER_SIZE      = 1,
+    ORDER_DIRECTORY = 2,
+    ORDER_EXTENSION = 3,
+    ORDER_TIME      = 4
 };
 
 /* The struct for holding the switches */
 typedef struct _DirSwitchesFlags
 {
-	BOOL bBareFormat;	/* Bare Format */
-	BOOL bTSeperator;	/* Thousands seperator */
-	BOOL bWideList;		/* Wide list format	*/
-	BOOL bWideListColSort;	/* Wide list format but sorted by column */
-	BOOL bLowerCase;	/* Uses lower case */
-	BOOL bNewLongList;	/* New long list */
-	BOOL bPause;		/* Pause per page */
-	BOOL bUser;			/* Displays the owner of file */
-	BOOL bRecursive;	/* Displays files in specified directory and all sub */
-	BOOL bShortName;	/* Displays the sort name of files if exist	*/
-	BOOL b4Digit;		/* Four digit year	*/
-	struct
-	{
-		DWORD dwAttribVal;	/* The desired state of attribute */
-		DWORD dwAttribMask;	/* Which attributes to check */
-	} stAttribs;		/* Displays files with this attributes only */
-	struct
-	{
-		enum EOrderBy eCriteria[3];	/* Criterias used to order by */
-		BOOL bCriteriaRev[3];		/* If the criteria is in reversed order */
-		short sCriteriaCount;		/* The quantity of criterias */
-	} stOrderBy;		/* Ordered by criterias */
-	struct
-	{
-		enum ETimeField eTimeField;	/* The time field that will be used for */
-	} stTimeField;		/* The time field to display or use for sorting */
+    BOOL bBareFormat;   /* Bare Format */
+    BOOL bTSeperator;   /* Thousands seperator */
+    BOOL bWideList;     /* Wide list format	*/
+    BOOL bWideListColSort;  /* Wide list format but sorted by column */
+    BOOL bLowerCase;    /* Uses lower case */
+    BOOL bNewLongList;  /* New long list */
+    BOOL bPause;        /* Pause per page */
+    BOOL bUser;         /* Displays the owner of file */
+    BOOL bRecursive;    /* Displays files in specified directory and all sub */
+    BOOL bShortName;    /* Displays the sort name of files if exist */
+    BOOL b4Digit;       /* Four digit year */
+    struct
+    {
+        DWORD dwAttribVal;  /* The desired state of attribute */
+        DWORD dwAttribMask; /* Which attributes to check */
+    } stAttribs;            /* Displays files with this attributes only */
+    struct
+    {
+        enum EOrderBy eCriteria[3]; /* Criterias used to order by */
+        BOOL bCriteriaRev[3];       /* If the criteria is in reversed order */
+        short sCriteriaCount;       /* The quantity of criterias */
+    } stOrderBy;                    /* Ordered by criterias */
+    struct
+    {
+        enum ETimeField eTimeField; /* The time field that will be used for */
+    } stTimeField;                  /* The time field to display or use for sorting */
 } DIRSWITCHFLAGS, *LPDIRSWITCHFLAGS;
-
 
 typedef struct _DIRFINDLISTNODE
 {
-  WIN32_FIND_DATA stFindInfo;
-  struct _DIRFINDLISTNODE *ptrNext;
+    WIN32_FIND_DATA stFindInfo;
+    struct _DIRFINDLISTNODE *ptrNext;
 } DIRFINDLISTNODE, *PDIRFINDLISTNODE;
-
 
 typedef BOOL
 (WINAPI *PGETFREEDISKSPACEEX)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
-
 
 /* Globally save the # of dirs, files and bytes,
  * probabaly later pass them to functions. Rob Lake  */
 static ULONG recurse_dir_cnt;
 static ULONG recurse_file_cnt;
 static ULONGLONG recurse_bytes;
-
 
 /*
  * help
@@ -217,10 +213,8 @@ static ULONGLONG recurse_bytes;
 static VOID
 DirHelp(VOID)
 {
-  ConOutResPaging(TRUE, STRING_DIR_HELP1);
+    ConOutResPaging(TRUE, STRING_DIR_HELP1);
 }
-
-
 
 /*
  * DirReadParameters
@@ -228,328 +222,328 @@ DirHelp(VOID)
  * Parse the parameters and switches of the command line and exports them
  */
 static BOOL
-DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
-			LPTSTR** params,			/* [OUT] The parameters after parsing */
-			LPINT entries,				/* [OUT] The number of parameters after parsing */
-			LPDIRSWITCHFLAGS lpFlags)	/* [IN/OUT] The flags after calculating switches */
+DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & switches */
+             LPTSTR** params,           /* [OUT] The parameters after parsing */
+             LPINT entries,             /* [OUT] The number of parameters after parsing */
+             LPDIRSWITCHFLAGS lpFlags)  /* [IN/OUT] The flags after calculating switches */
 {
-	TCHAR cCurSwitch;	/* The current switch */
-	TCHAR cCurChar;		/* Current examing character */
-	TCHAR cCurUChar;	/* Current upper examing character */
-	BOOL bNegative;		/* Negative switch */
-	BOOL bPNegative;	/* Negative switch parameter */
-	BOOL bIntoQuotes;	/* A flag showing if we are in quotes (") */
-	LPTSTR ptrStart;	/* A pointer to the first character of a parameter */
-	LPTSTR ptrEnd;		/* A pointer to the last character of a parameter */
-	BOOL bOrderByNoPar;	/* A flag to indicate /O with no switch parameter */
-	LPTSTR temp;
+    TCHAR cCurSwitch;   /* The current switch */
+    TCHAR cCurChar;     /* Current examing character */
+    TCHAR cCurUChar;    /* Current upper examing character */
+    BOOL bNegative;     /* Negative switch */
+    BOOL bPNegative;    /* Negative switch parameter */
+    BOOL bIntoQuotes;   /* A flag showing if we are in quotes (") */
+    LPTSTR ptrStart;    /* A pointer to the first character of a parameter */
+    LPTSTR ptrEnd;      /* A pointer to the last character of a parameter */
+    BOOL bOrderByNoPar; /* A flag to indicate /O with no switch parameter */
+    LPTSTR temp;
 
-	/* Initialize parameter array */
-	*params = NULL;
-	*entries = 0;
+    /* Initialize parameter array */
+    *params = NULL;
+    *entries = 0;
 
-	/* Initialize variables; */
-	cCurSwitch = _T(' ');
-	bNegative = FALSE;
-	bPNegative = FALSE;
+    /* Initialize variables; */
+    cCurSwitch = _T(' ');
+    bNegative = FALSE;
+    bPNegative = FALSE;
 
-	/* We suppose that switch parameters
-	   were given to avoid setting them to default
-	   if the switch was not given */
-	bOrderByNoPar = FALSE;
+    /* We suppose that switch parameters
+       were given to avoid setting them to default
+       if the switch was not given */
+    bOrderByNoPar = FALSE;
 
-	/* Main Loop (see README_DIR.txt) */
-	/* scan the command line char per char, and we process its char */
-	while (*Line)
-	{
-		/* we save current character as it is and its upper case */
-		cCurChar = *Line;
-		cCurUChar = _totupper(*Line);
+    /* Main Loop (see README_DIR.txt) */
+    /* scan the command line char per char, and we process its char */
+    while (*Line)
+    {
+        /* we save current character as it is and its upper case */
+        cCurChar = *Line;
+        cCurUChar = _totupper(*Line);
 
-		/* 1st section (see README_DIR.txt) */
-		/* When a switch is expecting */
-		if (cCurSwitch == _T('/'))
-		{
-			while (*Line == _T(' '))
-				Line++;
+        /* 1st section (see README_DIR.txt) */
+        /* When a switch is expecting */
+        if (cCurSwitch == _T('/'))
+        {
+            while (*Line == _T(' '))
+                Line++;
 
-			bNegative = (*Line == _T('-'));
-			Line += bNegative;
+            bNegative = (*Line == _T('-'));
+            Line += bNegative;
 
-			cCurChar = *Line;
-			cCurUChar = _totupper(*Line);
+            cCurChar = *Line;
+            cCurUChar = _totupper(*Line);
 
-			if ((cCurUChar == _T('A')) ||(cCurUChar == _T('T')) || (cCurUChar == _T('O')))
-			{
-				/* If positive, prepare for parameters... if negative, reset to defaults */
-				switch (cCurUChar)
-				{
-				case _T('A'):
-					lpFlags->stAttribs.dwAttribVal = 0L;
-					lpFlags->stAttribs.dwAttribMask = 0L;
-					if (bNegative)
-						lpFlags->stAttribs.dwAttribMask = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
-					break;
-				case _T('T'):
-					if (bNegative)
-						lpFlags->stTimeField.eTimeField = TF_MODIFIEDDATE;
-					break;
-				case _T('O'):
-					bOrderByNoPar = !bNegative;
-					lpFlags->stOrderBy.sCriteriaCount = 0;
-					break;
-				}
+            if ((cCurUChar == _T('A')) ||(cCurUChar == _T('T')) || (cCurUChar == _T('O')))
+            {
+                /* If positive, prepare for parameters... if negative, reset to defaults */
+                switch (cCurUChar)
+                {
+                case _T('A'):
+                    lpFlags->stAttribs.dwAttribVal = 0L;
+                    lpFlags->stAttribs.dwAttribMask = 0L;
+                    if (bNegative)
+                        lpFlags->stAttribs.dwAttribMask = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
+                    break;
+                case _T('T'):
+                    if (bNegative)
+                        lpFlags->stTimeField.eTimeField = TF_MODIFIEDDATE;
+                    break;
+                case _T('O'):
+                    bOrderByNoPar = !bNegative;
+                    lpFlags->stOrderBy.sCriteriaCount = 0;
+                    break;
+                }
 
-				if (!bNegative)
-				{
-					/* Positive switch, so it can take parameters. */
-					cCurSwitch = cCurUChar;
-					Line++;
-					/* Skip optional leading colon */
-					if (*Line == _T(':'))
-						Line++;
-					continue;
-				}
-			}
-			else if (cCurUChar == _T('L'))
-				lpFlags->bLowerCase = ! bNegative;
-			else if (cCurUChar == _T('B'))
-				lpFlags->bBareFormat = ! bNegative;
-			else if (cCurUChar == _T('C'))
-				lpFlags->bTSeperator = ! bNegative;
-			else if (cCurUChar == _T('W'))
-				lpFlags->bWideList = ! bNegative;
-			else if (cCurUChar == _T('D'))
-				lpFlags->bWideListColSort = ! bNegative;
-			else if (cCurUChar == _T('N'))
-				lpFlags->bNewLongList = ! bNegative;
-			else if (cCurUChar == _T('P'))
-				lpFlags->bPause = ! bNegative;
-			else if (cCurUChar == _T('Q'))
-				lpFlags->bUser = ! bNegative;
-			else if (cCurUChar == _T('S'))
-				lpFlags->bRecursive = ! bNegative;
-			else if (cCurUChar == _T('X'))
-				lpFlags->bShortName = ! bNegative;
-			else if (cCurChar == _T('4'))
-				lpFlags->b4Digit = ! bNegative;
-			else if (cCurChar == _T('?'))
-			{
-				DirHelp();
-				return FALSE;
-			}
-			else
-			{
-				error_invalid_switch ((TCHAR)_totupper (*Line));
-				return FALSE;
-			}
+                if (!bNegative)
+                {
+                    /* Positive switch, so it can take parameters. */
+                    cCurSwitch = cCurUChar;
+                    Line++;
+                    /* Skip optional leading colon */
+                    if (*Line == _T(':'))
+                        Line++;
+                    continue;
+                }
+            }
+            else if (cCurUChar == _T('L'))
+                lpFlags->bLowerCase = ! bNegative;
+            else if (cCurUChar == _T('B'))
+                lpFlags->bBareFormat = ! bNegative;
+            else if (cCurUChar == _T('C'))
+                lpFlags->bTSeperator = ! bNegative;
+            else if (cCurUChar == _T('W'))
+                lpFlags->bWideList = ! bNegative;
+            else if (cCurUChar == _T('D'))
+                lpFlags->bWideListColSort = ! bNegative;
+            else if (cCurUChar == _T('N'))
+                lpFlags->bNewLongList = ! bNegative;
+            else if (cCurUChar == _T('P'))
+                lpFlags->bPause = ! bNegative;
+            else if (cCurUChar == _T('Q'))
+                lpFlags->bUser = ! bNegative;
+            else if (cCurUChar == _T('S'))
+                lpFlags->bRecursive = ! bNegative;
+            else if (cCurUChar == _T('X'))
+                lpFlags->bShortName = ! bNegative;
+            else if (cCurChar == _T('4'))
+                lpFlags->b4Digit = ! bNegative;
+            else if (cCurChar == _T('?'))
+            {
+                DirHelp();
+                return FALSE;
+            }
+            else
+            {
+                error_invalid_switch ((TCHAR)_totupper (*Line));
+                return FALSE;
+            }
 
-			/* Make sure there's no extra characters at the end of the switch */
-			if (Line[1] && Line[1] != _T('/') && Line[1] != _T(' '))
-			{
-				error_parameter_format(Line[1]);
-				return FALSE;
-			}
+            /* Make sure there's no extra characters at the end of the switch */
+            if (Line[1] && Line[1] != _T('/') && Line[1] != _T(' '))
+            {
+                error_parameter_format(Line[1]);
+                return FALSE;
+            }
 
-			cCurSwitch = _T(' ');
-		}
-		else if (cCurSwitch == _T(' '))
-		{
-			/* 2nd section (see README_DIR.txt) */
-			/* We are expecting parameter or the unknown */
+            cCurSwitch = _T(' ');
+        }
+        else if (cCurSwitch == _T(' '))
+        {
+            /* 2nd section (see README_DIR.txt) */
+            /* We are expecting parameter or the unknown */
 
-			if (cCurChar == _T('/'))
-				cCurSwitch = _T('/');
-			else if (cCurChar == _T(' '))
-				/* do nothing */;
-			else
-			{
-				/* This is a file/directory name parameter. Find its end */
-				ptrStart = Line;
-				bIntoQuotes = FALSE;
-				while (*Line)
-				{
-					if (!bIntoQuotes && (*Line == _T('/') || *Line == _T(' ')))
-						break;
-					bIntoQuotes ^= (*Line == _T('"'));
-					Line++;
-				}
-				ptrEnd = Line;
+            if (cCurChar == _T('/'))
+                cCurSwitch = _T('/');
+            else if (cCurChar == _T(' '))
+                /* do nothing */;
+            else
+            {
+                /* This is a file/directory name parameter. Find its end */
+                ptrStart = Line;
+                bIntoQuotes = FALSE;
+                while (*Line)
+                {
+                    if (!bIntoQuotes && (*Line == _T('/') || *Line == _T(' ')))
+                        break;
+                    bIntoQuotes ^= (*Line == _T('"'));
+                    Line++;
+                }
+                ptrEnd = Line;
 
-				/* Copy it to the entries list */
-				temp = cmd_alloc((ptrEnd - ptrStart + 1) * sizeof (TCHAR));
-				if(!temp)
-					return FALSE;
-				memcpy(temp, ptrStart, (ptrEnd - ptrStart) * sizeof (TCHAR));
-				temp[ptrEnd - ptrStart] = _T('\0');
-				StripQuotes(temp);
-				if(!add_entry(entries, params, temp))
-				{
-					cmd_free(temp);
-					freep(*params);
-					return FALSE;
-				}
+                /* Copy it to the entries list */
+                temp = cmd_alloc((ptrEnd - ptrStart + 1) * sizeof (TCHAR));
+                if(!temp)
+                    return FALSE;
+                memcpy(temp, ptrStart, (ptrEnd - ptrStart) * sizeof (TCHAR));
+                temp[ptrEnd - ptrStart] = _T('\0');
+                StripQuotes(temp);
+                if(!add_entry(entries, params, temp))
+                {
+                    cmd_free(temp);
+                    freep(*params);
+                    return FALSE;
+                }
 
-				cmd_free(temp);
-				continue;
-			}
-		}
-		else
-		{
-			/* 3rd section (see README_DIR.txt) */
-			/* We are waiting for switch parameters */
+                cmd_free(temp);
+                continue;
+            }
+        }
+        else
+        {
+            /* 3rd section (see README_DIR.txt) */
+            /* We are waiting for switch parameters */
 
-			/* Check if there are no more switch parameters */
-			if ((cCurChar == _T('/')) || ( cCurChar == _T(' ')))
-			{
-				/* Wrong desicion path, reprocess current character */
-				cCurSwitch = _T(' ');
-				continue;
-			}
-			/* Process parameter switch */
-			switch(cCurSwitch)
-			{
-			case _T('A'):	/* Switch parameters for /A (attributes filter) */
-				if(cCurChar == _T('-'))
-					bPNegative = TRUE;
-				else if(cCurUChar == _T('D'))
-				{
-					lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_DIRECTORY;
-					if (bPNegative)
-						lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_DIRECTORY;
-					else
-						lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_DIRECTORY;
-				}
-				else if(cCurUChar == _T('R'))
-				{
-					lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_READONLY;
-					if (bPNegative)
-						lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_READONLY;
-					else
-						lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_READONLY;
-				}
-				else if(cCurUChar == _T('H'))
-				{
-					lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_HIDDEN;
-					if (bPNegative)
-						lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_HIDDEN;
-					else
-						lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_HIDDEN;
-				}
-				else if(cCurUChar == _T('A'))
-				{
-					lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_ARCHIVE;
-					if (bPNegative)
-						lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_ARCHIVE;
-					else
-						lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_ARCHIVE;
-				}
-				else if(cCurUChar == _T('S'))
-				{
-					lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_SYSTEM;
-					if (bPNegative)
-						lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_SYSTEM;
-					else
-						lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_SYSTEM;
-				}
-				else
-				{
-					error_parameter_format((TCHAR)_totupper (*Line));
-					return FALSE;
-				}
-				break;
-			case _T('T'):	/* Switch parameters for /T (time field) */
-				if(cCurUChar == _T('C'))
-					lpFlags->stTimeField.eTimeField= TF_CREATIONDATE ;
-				else if(cCurUChar == _T('A'))
-					lpFlags->stTimeField.eTimeField= TF_LASTACCESSEDDATE ;
-				else if(cCurUChar == _T('W'))
-					lpFlags->stTimeField.eTimeField= TF_MODIFIEDDATE  ;
-				else
-				{
-					error_parameter_format((TCHAR)_totupper (*Line));
-					return FALSE;
-				}
-				break;
-			case _T('O'):	/* Switch parameters for /O (order) */
-				/* Ok a switch parameter was given */
-				bOrderByNoPar = FALSE;
+            /* Check if there are no more switch parameters */
+            if ((cCurChar == _T('/')) || ( cCurChar == _T(' ')))
+            {
+                /* Wrong desicion path, reprocess current character */
+                cCurSwitch = _T(' ');
+                continue;
+            }
+            /* Process parameter switch */
+            switch(cCurSwitch)
+            {
+            case _T('A'):	/* Switch parameters for /A (attributes filter) */
+                if(cCurChar == _T('-'))
+                    bPNegative = TRUE;
+                else if(cCurUChar == _T('D'))
+                {
+                    lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_DIRECTORY;
+                    if (bPNegative)
+                        lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_DIRECTORY;
+                    else
+                        lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_DIRECTORY;
+                }
+                else if(cCurUChar == _T('R'))
+                {
+                    lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_READONLY;
+                    if (bPNegative)
+                        lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_READONLY;
+                    else
+                        lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_READONLY;
+                }
+                else if(cCurUChar == _T('H'))
+                {
+                    lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_HIDDEN;
+                    if (bPNegative)
+                        lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_HIDDEN;
+                    else
+                        lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_HIDDEN;
+                }
+                else if(cCurUChar == _T('A'))
+                {
+                    lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_ARCHIVE;
+                    if (bPNegative)
+                        lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_ARCHIVE;
+                    else
+                        lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_ARCHIVE;
+                }
+                else if(cCurUChar == _T('S'))
+                {
+                    lpFlags->stAttribs.dwAttribMask |= FILE_ATTRIBUTE_SYSTEM;
+                    if (bPNegative)
+                        lpFlags->stAttribs.dwAttribVal &= ~FILE_ATTRIBUTE_SYSTEM;
+                    else
+                        lpFlags->stAttribs.dwAttribVal |= FILE_ATTRIBUTE_SYSTEM;
+                }
+                else
+                {
+                    error_parameter_format((TCHAR)_totupper (*Line));
+                    return FALSE;
+                }
+                break;
+            case _T('T'):	/* Switch parameters for /T (time field) */
+                if(cCurUChar == _T('C'))
+                    lpFlags->stTimeField.eTimeField= TF_CREATIONDATE ;
+                else if(cCurUChar == _T('A'))
+                    lpFlags->stTimeField.eTimeField= TF_LASTACCESSEDDATE ;
+                else if(cCurUChar == _T('W'))
+                    lpFlags->stTimeField.eTimeField= TF_MODIFIEDDATE  ;
+                else
+                {
+                    error_parameter_format((TCHAR)_totupper (*Line));
+                    return FALSE;
+                }
+                break;
+            case _T('O'):	/* Switch parameters for /O (order) */
+                /* Ok a switch parameter was given */
+                bOrderByNoPar = FALSE;
 
-				if(cCurChar == _T('-'))
-					bPNegative = TRUE;
-				else if(cCurUChar == _T('N'))
-				{
-					if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
-					lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
-					lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_NAME;
-				}
-				else if(cCurUChar == _T('S'))
-				{
-					if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
-					lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
-					lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_SIZE;
-				}
-				else if(cCurUChar == _T('G'))
-				{
-					if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
-					lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
-					lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_DIRECTORY;
-				}
-				else if(cCurUChar == _T('E'))
-				{
-					if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
-					lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
-					lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_EXTENSION;
-				}
-				else if(cCurUChar == _T('D'))
-				{
-					if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
-					lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
-					lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_TIME;
-				}
+                if(cCurChar == _T('-'))
+                    bPNegative = TRUE;
+                else if(cCurUChar == _T('N'))
+                {
+                    if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
+                    lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
+                    lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_NAME;
+                }
+                else if(cCurUChar == _T('S'))
+                {
+                    if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
+                    lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
+                    lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_SIZE;
+                }
+                else if(cCurUChar == _T('G'))
+                {
+                    if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
+                    lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
+                    lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_DIRECTORY;
+                }
+                else if(cCurUChar == _T('E'))
+                {
+                    if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
+                    lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
+                    lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_EXTENSION;
+                }
+                else if(cCurUChar == _T('D'))
+                {
+                    if (lpFlags->stOrderBy.sCriteriaCount < 3) lpFlags->stOrderBy.sCriteriaCount++;
+                    lpFlags->stOrderBy.bCriteriaRev[lpFlags->stOrderBy.sCriteriaCount - 1] = bPNegative;
+                    lpFlags->stOrderBy.eCriteria[lpFlags->stOrderBy.sCriteriaCount - 1] = ORDER_TIME;
+                }
 
-				else
-				{
-					error_parameter_format((TCHAR)_totupper (*Line));
-					return FALSE;
-				}
+                else
+                {
+                    error_parameter_format((TCHAR)_totupper (*Line));
+                    return FALSE;
+                }
 
 
-			}
-			/* We check if we calculated the negative value and realese the flag */
-			if ((cCurChar != _T('-')) && bPNegative)
-				bPNegative = FALSE;
-		}
+            }
+            /* We check if we calculated the negative value and realese the flag */
+            if ((cCurChar != _T('-')) && bPNegative)
+                bPNegative = FALSE;
+        }
 
-		Line++;
-	}
+        Line++;
+    }
 
-	/* /O with no switch parameters acts like /O:GN */
-	if (bOrderByNoPar)
-	{
-		lpFlags->stOrderBy.sCriteriaCount = 2;
-		lpFlags->stOrderBy.eCriteria[0] = ORDER_DIRECTORY;
-		lpFlags->stOrderBy.bCriteriaRev[0] = FALSE;
-		lpFlags->stOrderBy.eCriteria[1] = ORDER_NAME;
-		lpFlags->stOrderBy.bCriteriaRev[1] = FALSE;
-	}
+    /* /O with no switch parameters acts like /O:GN */
+    if (bOrderByNoPar)
+    {
+        lpFlags->stOrderBy.sCriteriaCount = 2;
+        lpFlags->stOrderBy.eCriteria[0] = ORDER_DIRECTORY;
+        lpFlags->stOrderBy.bCriteriaRev[0] = FALSE;
+        lpFlags->stOrderBy.eCriteria[1] = ORDER_NAME;
+        lpFlags->stOrderBy.bCriteriaRev[1] = FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 /* Print either with or without paging, depending on /P switch */
 static INT
 DirPrintf(LPDIRSWITCHFLAGS lpFlags, LPTSTR szFormat, ...)
 {
-	INT iReturn = 0;
-	va_list arg_ptr;
-	va_start(arg_ptr, szFormat);
-	if (lpFlags->bPause)
-		iReturn = ConPrintfPaging(FALSE, szFormat, arg_ptr, STD_OUTPUT_HANDLE);
-	else
-		ConPrintf(szFormat, arg_ptr, STD_OUTPUT_HANDLE);
-	va_end(arg_ptr);
-	return iReturn;
+    INT iReturn = 0;
+    va_list arg_ptr;
+    va_start(arg_ptr, szFormat);
+    if (lpFlags->bPause)
+        iReturn = ConPrintfPaging(FALSE, szFormat, arg_ptr, STD_OUTPUT_HANDLE);
+    else
+        ConPrintf(szFormat, arg_ptr, STD_OUTPUT_HANDLE);
+    va_end(arg_ptr);
+    return iReturn;
 }
 
 
@@ -561,50 +555,50 @@ DirPrintf(LPDIRSWITCHFLAGS lpFlags, LPTSTR szFormat, ...)
 static BOOL
 PrintDirectoryHeader(LPTSTR szPath, LPDIRSWITCHFLAGS lpFlags)
 {
-  TCHAR szMsg[RC_STRING_MAX_SIZE];
-  TCHAR szFullDir[MAX_PATH];
-  TCHAR szRootName[MAX_PATH];
-  TCHAR szVolName[80];
-  LPTSTR pszFilePart;
-  DWORD dwSerialNr;
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    TCHAR szFullDir[MAX_PATH];
+    TCHAR szRootName[MAX_PATH];
+    TCHAR szVolName[80];
+    LPTSTR pszFilePart;
+    DWORD dwSerialNr;
 
-  if (lpFlags->bBareFormat)
+    if (lpFlags->bBareFormat)
+        return TRUE;
+
+    if (GetFullPathName(szPath, sizeof(szFullDir) / sizeof(TCHAR), szFullDir, &pszFilePart) == 0)
+    {
+        ErrorMessage(GetLastError(), _T("Failed to build full directory path"));
+        return FALSE;
+    }
+
+    if (pszFilePart != NULL)
+    *pszFilePart = _T('\0');
+
+    /* get the media ID of the drive */
+    if (!GetVolumePathName(szFullDir, szRootName, sizeof(szRootName) / sizeof(TCHAR)) ||
+        !GetVolumeInformation(szRootName, szVolName, 80, &dwSerialNr,
+                              NULL, NULL, NULL, 0))
+    {
+        return TRUE;
+    }
+
+    /* print drive info */
+    if (szVolName[0] != _T('\0'))
+    {
+        LoadString(CMD_ModuleHandle, STRING_DIR_HELP2, szMsg, RC_STRING_MAX_SIZE);
+        DirPrintf(lpFlags, szMsg, szRootName[0], szVolName);
+    }
+    else
+    {
+        LoadString(CMD_ModuleHandle, STRING_DIR_HELP3, szMsg, RC_STRING_MAX_SIZE);
+        DirPrintf(lpFlags, szMsg, szRootName[0]);
+    }
+
+    /* print the volume serial number if the return was successful */
+    LoadString(CMD_ModuleHandle, STRING_DIR_HELP4, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
+    DirPrintf(lpFlags, szMsg, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
+
     return TRUE;
-
-  if (GetFullPathName(szPath, sizeof(szFullDir) / sizeof(TCHAR), szFullDir, &pszFilePart) == 0)
-    {
-      ErrorMessage(GetLastError(), _T("Failed to build full directory path"));
-      return FALSE;
-    }
-
-  if (pszFilePart != NULL)
-      *pszFilePart = _T('\0');
-
-  /* get the media ID of the drive */
-  if (!GetVolumePathName(szFullDir, szRootName, sizeof(szRootName) / sizeof(TCHAR)) ||
-      !GetVolumeInformation(szRootName, szVolName, 80, &dwSerialNr,
-			    NULL, NULL, NULL, 0))
-    {
-      return(TRUE);
-    }
-
-  /* print drive info */
-  if (szVolName[0] != _T('\0'))
-    {
-      LoadString(CMD_ModuleHandle, STRING_DIR_HELP2, szMsg, RC_STRING_MAX_SIZE);
-      DirPrintf(lpFlags, szMsg, szRootName[0], szVolName);
-    }
-  else
-    {
-      LoadString(CMD_ModuleHandle, STRING_DIR_HELP3, szMsg, RC_STRING_MAX_SIZE);
-      DirPrintf(lpFlags, szMsg, szRootName[0]);
-    }
-
-  /* print the volume serial number if the return was successful */
-  LoadString(CMD_ModuleHandle, STRING_DIR_HELP4, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
-  DirPrintf(lpFlags, szMsg, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
-
-  return TRUE;
 }
 
 
@@ -614,123 +608,123 @@ DirPrintFileDateTime(TCHAR *lpDate,
                      LPWIN32_FIND_DATA lpFile,
                      LPDIRSWITCHFLAGS lpFlags)
 {
-	FILETIME ft;
-	SYSTEMTIME dt;
+    FILETIME ft;
+    SYSTEMTIME dt;
 
-	/* Select the right time field */
-	switch (lpFlags->stTimeField.eTimeField)
-	{
-		case TF_CREATIONDATE:
-			if (!FileTimeToLocalFileTime(&lpFile->ftCreationTime, &ft))
-				return;
-			FileTimeToSystemTime(&ft, &dt);
-			break;
+    /* Select the right time field */
+    switch (lpFlags->stTimeField.eTimeField)
+    {
+        case TF_CREATIONDATE:
+            if (!FileTimeToLocalFileTime(&lpFile->ftCreationTime, &ft))
+                return;
+            FileTimeToSystemTime(&ft, &dt);
+            break;
 
-		case TF_LASTACCESSEDDATE :
-			if (!FileTimeToLocalFileTime(&lpFile->ftLastAccessTime, &ft))
-				return;
-			FileTimeToSystemTime(&ft, &dt);
-			break;
+        case TF_LASTACCESSEDDATE :
+            if (!FileTimeToLocalFileTime(&lpFile->ftLastAccessTime, &ft))
+                return;
+            FileTimeToSystemTime(&ft, &dt);
+            break;
 
-		case TF_MODIFIEDDATE:
-			if (!FileTimeToLocalFileTime(&lpFile->ftLastWriteTime, &ft))
-				return;
-			FileTimeToSystemTime(&ft, &dt);
-			break;
-	}
+        case TF_MODIFIEDDATE:
+            if (!FileTimeToLocalFileTime(&lpFile->ftLastWriteTime, &ft))
+                return;
+            FileTimeToSystemTime(&ft, &dt);
+            break;
+    }
 
-	FormatDate(lpDate, &dt, lpFlags->b4Digit);
-	FormatTime(lpTime, &dt);
+    FormatDate(lpDate, &dt, lpFlags->b4Digit);
+    FormatTime(lpTime, &dt);
 }
 
 INT
 FormatDate(TCHAR *lpDate, LPSYSTEMTIME dt, BOOL b4Digit)
 {
-	/* Format date */
-	WORD wYear = b4Digit ? dt->wYear : dt->wYear%100;
-	switch (nDateFormat)
-	{
-		case 0: /* mmddyy */
-		default:
-			return _stprintf(lpDate, _T("%02d%c%02d%c%0*d"),
-					dt->wMonth, cDateSeparator,
-					dt->wDay, cDateSeparator,
-					b4Digit?4:2, wYear);
-			break;
+    /* Format date */
+    WORD wYear = b4Digit ? dt->wYear : dt->wYear%100;
+    switch (nDateFormat)
+    {
+        case 0: /* mmddyy */
+        default:
+            return _stprintf(lpDate, _T("%02d%c%02d%c%0*d"),
+                    dt->wMonth, cDateSeparator,
+                    dt->wDay, cDateSeparator,
+                    b4Digit?4:2, wYear);
+            break;
 
-		case 1: /* ddmmyy */
-			return _stprintf(lpDate, _T("%02d%c%02d%c%0*d"),
-					dt->wDay, cDateSeparator, dt->wMonth,
-					cDateSeparator, b4Digit?4:2, wYear);
-			break;
+        case 1: /* ddmmyy */
+            return _stprintf(lpDate, _T("%02d%c%02d%c%0*d"),
+                    dt->wDay, cDateSeparator, dt->wMonth,
+                    cDateSeparator, b4Digit?4:2, wYear);
+            break;
 
-		case 2: /* yymmdd */
-			return _stprintf(lpDate, _T("%0*d%c%02d%c%02d"),
-					b4Digit?4:2, wYear, cDateSeparator,
-					dt->wMonth, cDateSeparator, dt->wDay);
-			break;
-	}
+        case 2: /* yymmdd */
+            return _stprintf(lpDate, _T("%0*d%c%02d%c%02d"),
+                    b4Digit?4:2, wYear, cDateSeparator,
+                    dt->wMonth, cDateSeparator, dt->wDay);
+            break;
+    }
 }
 
 INT
 FormatTime(TCHAR *lpTime, LPSYSTEMTIME dt)
 {
-	/* Format Time */
-	switch (nTimeFormat)
-	{
-		case 0: /* 12 hour format */
-		default:
-			return _stprintf(lpTime,_T("%02d%c%02u %cM"),
-					(dt->wHour == 0 ? 12 : (dt->wHour <= 12 ? dt->wHour : dt->wHour - 12)),
-					cTimeSeparator,
-					 dt->wMinute, (dt->wHour <= 11 ? _T('A') : _T('P')));
-			break;
+    /* Format Time */
+    switch (nTimeFormat)
+    {
+        case 0: /* 12 hour format */
+        default:
+            return _stprintf(lpTime,_T("%02d%c%02u %cM"),
+                    (dt->wHour == 0 ? 12 : (dt->wHour <= 12 ? dt->wHour : dt->wHour - 12)),
+                    cTimeSeparator,
+                     dt->wMinute, (dt->wHour <= 11 ? _T('A') : _T('P')));
+            break;
 
-		case 1: /* 24 hour format */
-			return _stprintf(lpTime, _T("%02d%c%02u"),
-					dt->wHour, cTimeSeparator, dt->wMinute);
-			break;
-	}
+        case 1: /* 24 hour format */
+            return _stprintf(lpTime, _T("%02d%c%02u"),
+                    dt->wHour, cTimeSeparator, dt->wMinute);
+            break;
+    }
 }
 
 
 static VOID
 GetUserDiskFreeSpace(LPCTSTR lpRoot,
-		     PULARGE_INTEGER lpFreeSpace)
+                     PULARGE_INTEGER lpFreeSpace)
 {
-  PGETFREEDISKSPACEEX pGetFreeDiskSpaceEx;
-  HINSTANCE hInstance;
-  DWORD dwSecPerCl;
-  DWORD dwBytPerSec;
-  DWORD dwFreeCl;
-  DWORD dwTotCl;
-  ULARGE_INTEGER TotalNumberOfBytes, TotalNumberOfFreeBytes;
+    PGETFREEDISKSPACEEX pGetFreeDiskSpaceEx;
+    HINSTANCE hInstance;
+    DWORD dwSecPerCl;
+    DWORD dwBytPerSec;
+    DWORD dwFreeCl;
+    DWORD dwTotCl;
+    ULARGE_INTEGER TotalNumberOfBytes, TotalNumberOfFreeBytes;
 
-  lpFreeSpace->QuadPart = 0;
+    lpFreeSpace->QuadPart = 0;
 
-  hInstance = GetModuleHandle(_T("KERNEL32"));
-  if (hInstance != NULL)
+    hInstance = GetModuleHandle(_T("KERNEL32"));
+    if (hInstance != NULL)
     {
-      pGetFreeDiskSpaceEx = (PGETFREEDISKSPACEEX)GetProcAddress(hInstance,
+        pGetFreeDiskSpaceEx = (PGETFREEDISKSPACEEX)GetProcAddress(hInstance,
 #ifdef _UNICODE
-					                        "GetDiskFreeSpaceExW");
+                                                "GetDiskFreeSpaceExW");
 #else
-				                                "GetDiskFreeSpaceExA");
+                                                "GetDiskFreeSpaceExA");
 #endif
-      if (pGetFreeDiskSpaceEx != NULL)
-	{
-	  if (pGetFreeDiskSpaceEx(lpRoot, lpFreeSpace, &TotalNumberOfBytes, &TotalNumberOfFreeBytes) == TRUE)
-	    return;
-	}
+        if (pGetFreeDiskSpaceEx != NULL)
+        {
+            if (pGetFreeDiskSpaceEx(lpRoot, lpFreeSpace, &TotalNumberOfBytes, &TotalNumberOfFreeBytes) == TRUE)
+                return;
+        }
     }
 
-  GetDiskFreeSpace(lpRoot,
-		   &dwSecPerCl,
-		   &dwBytPerSec,
-		   &dwFreeCl,
-		   &dwTotCl);
+    GetDiskFreeSpace(lpRoot,
+                     &dwSecPerCl,
+                     &dwBytPerSec,
+                     &dwFreeCl,
+                     &dwTotCl);
 
-  lpFreeSpace->QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
+    lpFreeSpace->QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
 }
 
 
@@ -738,63 +732,60 @@ GetUserDiskFreeSpace(LPCTSTR lpRoot,
  * print_summary: prints dir summary
  * Added by Rob Lake 06/17/98 to compact code
  * Just copied Tim's Code and patched it a bit
- *
  */
 static INT
 PrintSummary(LPTSTR szPath,
-	     ULONG ulFiles,
-	     ULONG ulDirs,
-	     ULONGLONG u64Bytes,
-	     LPDIRSWITCHFLAGS lpFlags,
-	     BOOL TotalSummary)
+             ULONG ulFiles,
+             ULONG ulDirs,
+             ULONGLONG u64Bytes,
+             LPDIRSWITCHFLAGS lpFlags,
+             BOOL TotalSummary)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	TCHAR szBuffer[64];
-	ULARGE_INTEGER uliFree;
+    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    TCHAR szBuffer[64];
+    ULARGE_INTEGER uliFree;
 
+    /* Here we check if we didn't find anything */
+    if (!(ulFiles + ulDirs))
+    {
+        if (!lpFlags->bRecursive || (TotalSummary && lpFlags->bRecursive))
+            error_file_not_found();
+        return 1;
+    }
 
-	/* Here we check if we didn't find anything */
-	if (!(ulFiles + ulDirs))
-	{
-		if (!lpFlags->bRecursive || (TotalSummary && lpFlags->bRecursive))
-			error_file_not_found();
-		return 1;
-	}
+    /* In bare format we don't print results */
+    if (lpFlags->bBareFormat)
+        return 0;
 
-
-	/* In bare format we don't print results */
-	if (lpFlags->bBareFormat)
-		return 0;
-
-	/* Print recursive specific results */
+    /* Print recursive specific results */
 
     /* Take this code offline to fix /S does not print duoble info */
-   if (TotalSummary && lpFlags->bRecursive)
-   {
-      ConvertULargeInteger(u64Bytes, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
-      LoadString(CMD_ModuleHandle, STRING_DIR_HELP5, szMsg, RC_STRING_MAX_SIZE);
-      DirPrintf(lpFlags, szMsg, ulFiles, szBuffer);
-   }
-   else
-   {
-      /* Print File Summary */
-      /* Condition to print summary is:
-      If we are not in bare format and if we have results! */
-      ConvertULargeInteger(u64Bytes, szBuffer, 20, lpFlags->bTSeperator);
-      LoadString(CMD_ModuleHandle, STRING_DIR_HELP8, szMsg, RC_STRING_MAX_SIZE);
-      DirPrintf(lpFlags, szMsg, ulFiles, szBuffer);
-   }
+    if (TotalSummary && lpFlags->bRecursive)
+    {
+        ConvertULargeInteger(u64Bytes, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
+        LoadString(CMD_ModuleHandle, STRING_DIR_HELP5, szMsg, RC_STRING_MAX_SIZE);
+        DirPrintf(lpFlags, szMsg, ulFiles, szBuffer);
+    }
+    else
+    {
+        /* Print File Summary */
+        /* Condition to print summary is:
+        If we are not in bare format and if we have results! */
+        ConvertULargeInteger(u64Bytes, szBuffer, 20, lpFlags->bTSeperator);
+        LoadString(CMD_ModuleHandle, STRING_DIR_HELP8, szMsg, RC_STRING_MAX_SIZE);
+        DirPrintf(lpFlags, szMsg, ulFiles, szBuffer);
+    }
 
-	/* Print total directories and freespace */
-	if (!lpFlags->bRecursive || TotalSummary)
-	{
-		GetUserDiskFreeSpace(szPath, &uliFree);
-		ConvertULargeInteger(uliFree.QuadPart, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
-		LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
-		DirPrintf(lpFlags, szMsg, ulDirs, szBuffer);
-	}
+    /* Print total directories and freespace */
+    if (!lpFlags->bRecursive || TotalSummary)
+    {
+        GetUserDiskFreeSpace(szPath, &uliFree);
+        ConvertULargeInteger(uliFree.QuadPart, szBuffer, sizeof(szBuffer), lpFlags->bTSeperator);
+        LoadString(CMD_ModuleHandle, STRING_DIR_HELP6, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
+        DirPrintf(lpFlags, szMsg, ulDirs, szBuffer);
+    }
 
-	return 0;
+    return 0;
 }
 
 /*
@@ -804,9 +795,9 @@ PrintSummary(LPTSTR szPath,
  */
 TCHAR* getExt(const TCHAR* file)
 {
-        static TCHAR *NoExt = _T("");
-        TCHAR* lastdot = _tcsrchr(file, _T('.'));
-	return (lastdot != NULL ? lastdot + 1 : NoExt);
+    static TCHAR *NoExt = _T("");
+    TCHAR* lastdot = _tcsrchr(file, _T('.'));
+    return (lastdot != NULL ? lastdot + 1 : NoExt);
 }
 
 /*
@@ -817,28 +808,27 @@ TCHAR* getExt(const TCHAR* file)
 static LPTSTR
 getName(const TCHAR* file, TCHAR * dest)
 {
-	INT_PTR iLen;
-	LPTSTR end;
+    INT_PTR iLen;
+    LPTSTR end;
 
-	/* Check for "." and ".." folders */
-	if ((_tcscmp(file, _T(".")) == 0) ||
-	    (_tcscmp(file, _T("..")) == 0))
-	{
-		_tcscpy(dest,file);
-		return dest;
-	}
+    /* Check for "." and ".." folders */
+    if ((_tcscmp(file, _T(".")) == 0) ||
+        (_tcscmp(file, _T("..")) == 0))
+    {
+        _tcscpy(dest,file);
+        return dest;
+    }
 
-	end = _tcsrchr(file, _T('.'));
-	if (!end)
-		iLen = _tcslen(file);
-	else
-		iLen = (end - file);
+    end = _tcsrchr(file, _T('.'));
+    if (!end)
+        iLen = _tcslen(file);
+    else
+        iLen = (end - file);
 
+    _tcsncpy(dest, file, iLen);
+    *(dest + iLen) = _T('\0');
 
-	_tcsncpy(dest, file, iLen);
-	*(dest + iLen) = _T('\0');
-
-	return dest;
+    return dest;
 }
 
 
@@ -848,60 +838,60 @@ getName(const TCHAR* file, TCHAR * dest)
  * The function that prints in new style
  */
 static VOID
-DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
-		DWORD dwCount,			/* [IN] The quantity of files */
-		TCHAR *szCurPath,		/* [IN] Full path of current directory */
-		LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags used */
+DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN]Files' Info */
+                DWORD dwCount,                  /* [IN] The quantity of files */
+                TCHAR *szCurPath,               /* [IN] Full path of current directory */
+                LPDIRSWITCHFLAGS lpFlags)       /* [IN] The flags used */
 {
-  DWORD i;
-  TCHAR szSize[30];
-  TCHAR szShortName[15];
-  TCHAR szDate[20];
-  TCHAR szTime[20];
-  INT iSizeFormat;
-  ULARGE_INTEGER u64FileSize;
+    DWORD i;
+    TCHAR szSize[30];
+    TCHAR szShortName[15];
+    TCHAR szDate[20];
+    TCHAR szTime[20];
+    INT iSizeFormat;
+    ULARGE_INTEGER u64FileSize;
 
-  for (i = 0; i < dwCount && !bCtrlBreak; i++)
-  {
-    /* Calculate size */
-    if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+    for (i = 0; i < dwCount && !bCtrlBreak; i++)
     {
-      /* Junction */
-      iSizeFormat = -14;
-      _tcscpy(szSize, _T("<JUNCTION>"));
-    }
-    else if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    {
-      /* Directory */
-      iSizeFormat = -14;
-      _tcscpy(szSize, _T("<DIR>"));
-    }
-    else
-    {
-      /* File */
-      iSizeFormat = 14;
-      u64FileSize.HighPart = ptrFiles[i]->nFileSizeHigh;
-      u64FileSize.LowPart = ptrFiles[i]->nFileSizeLow;
-      ConvertULargeInteger(u64FileSize.QuadPart, szSize, 20, lpFlags->bTSeperator);
-    }
+        /* Calculate size */
+        if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+        {
+            /* Junction */
+            iSizeFormat = -14;
+            _tcscpy(szSize, _T("<JUNCTION>"));
+        }
+        else if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            /* Directory */
+            iSizeFormat = -14;
+            _tcscpy(szSize, _T("<DIR>"));
+        }
+        else
+        {
+            /* File */
+            iSizeFormat = 14;
+            u64FileSize.HighPart = ptrFiles[i]->nFileSizeHigh;
+            u64FileSize.LowPart = ptrFiles[i]->nFileSizeLow;
+            ConvertULargeInteger(u64FileSize.QuadPart, szSize, 20, lpFlags->bTSeperator);
+        }
 
-    /* Calculate short name */
-    szShortName[0] = _T('\0');
-    if (lpFlags->bShortName)
-      _stprintf(szShortName, _T(" %-12s"), ptrFiles[i]->cAlternateFileName);
+        /* Calculate short name */
+        szShortName[0] = _T('\0');
+        if (lpFlags->bShortName)
+            _stprintf(szShortName, _T(" %-12s"), ptrFiles[i]->cAlternateFileName);
 
-    /* Format date and time */
-    DirPrintFileDateTime(szDate, szTime, ptrFiles[i], lpFlags);
+        /* Format date and time */
+        DirPrintFileDateTime(szDate, szTime, ptrFiles[i], lpFlags);
 
-    /* Print the line */
-    DirPrintf(lpFlags, _T("%10s  %-6s    %*s%s %s\n"),
-							szDate,
-							szTime,
-							iSizeFormat,
-							szSize,
-							szShortName,
-							ptrFiles[i]->cFileName);
-  }
+        /* Print the line */
+        DirPrintf(lpFlags, _T("%10s  %-6s    %*s%s %s\n"),
+                  szDate,
+                  szTime,
+                  iSizeFormat,
+                  szSize,
+                  szShortName,
+                  ptrFiles[i]->cFileName);
+    }
 }
 
 
@@ -911,81 +901,79 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
  * The function that prints in wide list
  */
 static VOID
-DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
-				 DWORD dwCount,			/* [IN] The quantity of files */
-				 TCHAR *szCurPath,		/* [IN] Full path of current directory */
-				 LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags used */
+DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],  /* [IN] Files' Info */
+                 DWORD dwCount,                 /* [IN] The quantity of files */
+                 TCHAR *szCurPath,              /* [IN] Full path of current directory */
+                 LPDIRSWITCHFLAGS lpFlags)      /* [IN] The flags used */
 {
-  SHORT iScreenWidth;
-  USHORT iColumns;
-  USHORT iLines;
-  UINT_PTR iLongestName;
-  TCHAR szTempFname[MAX_PATH];
-  DWORD i;
-  DWORD j;
-  DWORD temp;
+    SHORT iScreenWidth;
+    USHORT iColumns;
+    USHORT iLines;
+    UINT_PTR iLongestName;
+    TCHAR szTempFname[MAX_PATH];
+    DWORD i;
+    DWORD j;
+    DWORD temp;
 
-  /* Calculate longest name */
-  iLongestName = 1;
-  for (i = 0; i < dwCount; i++)
-  {
-    if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    /* Calculate longest name */
+    iLongestName = 1;
+    for (i = 0; i < dwCount; i++)
     {
-      /* Directories need 2 additinal characters for brackets */
-      if ((_tcslen(ptrFiles[i]->cFileName) + 2) > iLongestName)
-        iLongestName = _tcslen(ptrFiles[i]->cFileName) + 2;
-    }
-    else
-    {
-      if (_tcslen(ptrFiles[i]->cFileName) > iLongestName)
-        iLongestName = _tcslen(ptrFiles[i]->cFileName);
-    }
-  }
-
-  /* Count the highest number of columns */
-  GetScreenSize(&iScreenWidth, 0);
-  iColumns = (USHORT)(iScreenWidth / iLongestName);
-
-  /* Check if there is enough space for spaces between names */
-  if (((iLongestName * iColumns) + iColumns) >= (UINT)iScreenWidth)
-    iColumns --;
-
-  /* A last check at iColumns to avoid division by zero */
-  if (!(iColumns))
-    iColumns = 1;
-
-  /* Calculate the lines that will be printed */
-  iLines = (USHORT)((dwCount + iColumns - 1) / iColumns);
-
-  for (i = 0; i < iLines && !bCtrlBreak; i++)
-  {
-    for (j = 0; j < iColumns; j++)
-    {
-      if (lpFlags->bWideListColSort)
-      {
-        /* Print Column sorted */
-        temp = (j * iLines) + i;
-      }
-      else
-      {
-        /* Print Line sorted */
-        temp = (i * iColumns) + j;
-      }
-
-      if (temp >= dwCount)
-         break;
-
-      if (ptrFiles[temp]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        _stprintf(szTempFname, _T("[%s]"), ptrFiles[temp]->cFileName);
-      else
-        _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->cFileName);
-
-      DirPrintf(lpFlags, _T("%-*s"), iLongestName + 1, szTempFname);
+        if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            /* Directories need 2 additinal characters for brackets */
+            if ((_tcslen(ptrFiles[i]->cFileName) + 2) > iLongestName)
+                iLongestName = _tcslen(ptrFiles[i]->cFileName) + 2;
+        }
+        else
+        {
+            if (_tcslen(ptrFiles[i]->cFileName) > iLongestName)
+                iLongestName = _tcslen(ptrFiles[i]->cFileName);
+        }
     }
 
-    /* Add a new line after the last item in the column */
-    DirPrintf(lpFlags, _T("\n"));
-  }
+    /* Count the highest number of columns */
+    GetScreenSize(&iScreenWidth, 0);
+    iColumns = (USHORT)(iScreenWidth / iLongestName);
+
+    /* Check if there is enough space for spaces between names */
+    if (((iLongestName * iColumns) + iColumns) >= (UINT)iScreenWidth)
+        iColumns --;
+
+    /* A last check at iColumns to avoid division by zero */
+    if (!iColumns) iColumns = 1;
+
+    /* Calculate the lines that will be printed */
+    iLines = (USHORT)((dwCount + iColumns - 1) / iColumns);
+
+    for (i = 0; i < iLines && !bCtrlBreak; i++)
+    {
+        for (j = 0; j < iColumns; j++)
+        {
+            if (lpFlags->bWideListColSort)
+            {
+                /* Print Column sorted */
+                temp = (j * iLines) + i;
+            }
+            else
+            {
+                /* Print Line sorted */
+                temp = (i * iColumns) + j;
+            }
+
+            if (temp >= dwCount) break;
+
+            if (ptrFiles[temp]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                _stprintf(szTempFname, _T("[%s]"), ptrFiles[temp]->cFileName);
+            else
+                _stprintf(szTempFname, _T("%s"), ptrFiles[temp]->cFileName);
+
+            DirPrintf(lpFlags, _T("%-*s"), iLongestName + 1, szTempFname);
+        }
+
+        /* Add a new line after the last item in the column */
+        DirPrintf(lpFlags, _T("\n"));
+    }
 }
 
 
@@ -995,63 +983,63 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
  * The function that prints in old style
  */
 static VOID
-DirPrintOldList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
-				DWORD dwCount,					/* [IN] The quantity of files */
-				TCHAR * szCurPath,				/* [IN] Full path of current directory */
-				LPDIRSWITCHFLAGS lpFlags)		/* [IN] The flags used */
+DirPrintOldList(LPWIN32_FIND_DATA ptrFiles[],   /* [IN] Files' Info */
+                DWORD dwCount,                  /* [IN] The quantity of files */
+                TCHAR * szCurPath,              /* [IN] Full path of current directory */
+                LPDIRSWITCHFLAGS lpFlags)       /* [IN] The flags used */
 {
-DWORD i;						/* An indexer for "for"s */
-TCHAR szName[10];				/* The name of file */
-TCHAR szExt[5];					/* The extension of file */
-TCHAR szDate[30],szTime[30];	/* Used to format time and date */
-TCHAR szSize[30];				/* The size of file */
-int iSizeFormat;				/* The format of size field */
-ULARGE_INTEGER u64FileSize;		/* The file size */
+    DWORD i;                        /* An indexer for "for"s */
+    TCHAR szName[10];               /* The name of file */
+    TCHAR szExt[5];                 /* The extension of file */
+    TCHAR szDate[30],szTime[30];    /* Used to format time and date */
+    TCHAR szSize[30];               /* The size of file */
+    int iSizeFormat;                /* The format of size field */
+    ULARGE_INTEGER u64FileSize;     /* The file size */
 
-	for (i = 0; i < dwCount && !bCtrlBreak; i++)
-	{
-		/* Broke 8.3 format */
-		if (*ptrFiles[i]->cAlternateFileName )
-		{
-			/* If the file is long named then we read the alter name */
-			getName( ptrFiles[i]->cAlternateFileName, szName);
-			_tcscpy(szExt, getExt( ptrFiles[i]->cAlternateFileName));
-		}
-		else
-		{
-			/* If the file is not long name we read its original name */
-			getName( ptrFiles[i]->cFileName, szName);
-			_tcscpy(szExt, getExt( ptrFiles[i]->cFileName));
-		}
+    for (i = 0; i < dwCount && !bCtrlBreak; i++)
+    {
+        /* Broke 8.3 format */
+        if (*ptrFiles[i]->cAlternateFileName )
+        {
+            /* If the file is long named then we read the alter name */
+            getName( ptrFiles[i]->cAlternateFileName, szName);
+            _tcscpy(szExt, getExt( ptrFiles[i]->cAlternateFileName));
+        }
+        else
+        {
+            /* If the file is not long name we read its original name */
+            getName( ptrFiles[i]->cFileName, szName);
+            _tcscpy(szExt, getExt( ptrFiles[i]->cFileName));
+        }
 
-		/* Calculate size */
-		if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		{
-			/* Directory, no size it's a directory*/
-			iSizeFormat = -17;
-			_tcscpy(szSize, _T("<DIR>"));
-		}
-		else
-		{
-			/* File */
-			iSizeFormat = 17;
-			u64FileSize.HighPart = ptrFiles[i]->nFileSizeHigh;
-			u64FileSize.LowPart = ptrFiles[i]->nFileSizeLow;
-			ConvertULargeInteger(u64FileSize.QuadPart, szSize, 20, lpFlags->bTSeperator);
-		}
+        /* Calculate size */
+        if (ptrFiles[i]->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            /* Directory, no size it's a directory*/
+            iSizeFormat = -17;
+            _tcscpy(szSize, _T("<DIR>"));
+        }
+        else
+        {
+            /* File */
+            iSizeFormat = 17;
+            u64FileSize.HighPart = ptrFiles[i]->nFileSizeHigh;
+            u64FileSize.LowPart = ptrFiles[i]->nFileSizeLow;
+            ConvertULargeInteger(u64FileSize.QuadPart, szSize, 20, lpFlags->bTSeperator);
+        }
 
-		/* Format date and time */
-		DirPrintFileDateTime(szDate,szTime,ptrFiles[i],lpFlags);
+        /* Format date and time */
+        DirPrintFileDateTime(szDate,szTime,ptrFiles[i],lpFlags);
 
-		/* Print the line */
-		DirPrintf(lpFlags, _T("%-8s %-3s  %*s %s  %s\n"),
-								szName,			/* The file's 8.3 name */
-								szExt,			/* The file's 8.3 extension */
-								iSizeFormat,	/* print format for size column */
-								szSize,			/* The size of file or "<DIR>" for dirs */
-								szDate,			/* The date of file/dir */
-								szTime);		/* The time of file/dir */
-	}
+        /* Print the line */
+        DirPrintf(lpFlags, _T("%-8s %-3s  %*s %s  %s\n"),
+                  szName,       /* The file's 8.3 name */
+                  szExt,        /* The file's 8.3 extension */
+                  iSizeFormat,  /* print format for size column */
+                  szSize,       /* The size of file or "<DIR>" for dirs */
+                  szDate,       /* The date of file/dir */
+                  szTime);      /* The time of file/dir */
+    }
 }
 
 /*
