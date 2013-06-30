@@ -7,7 +7,7 @@
  *    23-Dec-1998 (Eric Kohl)
  *        Started.
  *
- *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    02-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  */
 

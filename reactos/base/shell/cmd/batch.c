@@ -212,15 +212,15 @@ void BatchFile2Mem(HANDLE hBatchFile)
     bc->mem     = (char *)cmd_alloc(bc->memsize+1);		/* 1 extra for '\0' */
 
     /* if memory is available, read it in and close the file */
-    if (bc->mem != NULL) 
+    if (bc->mem != NULL)
     {
         TRACE ("BatchFile2Mem memory %08x - %08x\n",bc->mem,bc->memsize);
         SetFilePointer (hBatchFile, 0, NULL, FILE_BEGIN);
         ReadFile(hBatchFile, (LPVOID)bc->mem, bc->memsize,  &bc->memsize, NULL);
         bc->mem[bc->memsize]='\0';  /* end this, so you can dump it as a string */
         bc->memfree=TRUE;           /* this one needs to be freed */
-    } 
-    else 
+    }
+    else
     {
         bc->memsize=0;              /* this will prevent mem being accessed */
         bc->memfree=FALSE;
@@ -244,11 +244,11 @@ INT Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 
     HANDLE hFile = 0;
     SetLastError(0);
-    if (bc && bc->mem) 
+    if (bc && bc->mem)
     {
         TCHAR fpname[MAX_PATH];
         GetFullPathName(fullname, sizeof(fpname) / sizeof(TCHAR), fpname, NULL);
-        if (_tcsicmp(bc->BatchFilePath,fpname)==0) 
+        if (_tcsicmp(bc->BatchFilePath,fpname)==0)
             same_fn=TRUE;
     }
     TRACE ("Batch: (\'%s\', \'%s\', \'%s\')  same_fn = %d\n",
@@ -312,7 +312,7 @@ INT Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 
     GetFullPathName(fullname, sizeof(bc->BatchFilePath) / sizeof(TCHAR), bc->BatchFilePath, NULL);
     /*  if a new batch file, load it into memory and close the file */
-    if (!same_fn) 
+    if (!same_fn)
     {
         BatchFile2Mem(hFile);
         CloseHandle(hFile);
@@ -402,12 +402,12 @@ BOOL BatchGetString (LPTSTR lpBuffer, INT nBufferLength)
     lpString = lpBuffer;
 #endif
     /* read all chars from memory until a '\n' is encountered */
-    if (bc->mem) 
+    if (bc->mem)
     {
-        for (; (bc->mempos < bc->memsize  &&  len < (nBufferLength-1)); len++) 
-        {  
+        for (; (bc->mempos < bc->memsize  &&  len < (nBufferLength-1)); len++)
+        { 
             lpString[len] = bc->mem[bc->mempos++];
-            if (lpString[len] == '\n' ) 
+            if (lpString[len] == '\n' )
             {
                 len++;
                 break;

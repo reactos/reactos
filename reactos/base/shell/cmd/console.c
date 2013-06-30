@@ -7,13 +7,13 @@
  *    20-Jan-1999 (Eric Kohl)
  *        started
  *
- *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    03-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  *
- *    01-Jul-2005 (Brandon Turner) <turnerb7@msu.edu>
+ *    01-Jul-2005 (Brandon Turner <turnerb7@msu.edu>)
  *        Added ConPrintfPaging and ConOutPrintfPaging
  *
- *    02-Feb-2007 (Paolo Devoti) <devotip at gmail.com>
+ *    02-Feb-2007 (Paolo Devoti <devotip at gmail.com>)
  *        Fixed ConPrintfPaging
  */
 

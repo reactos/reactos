@@ -20,13 +20,13 @@
  *    27-Oct-1998 (Eric Kohl)
  *        Disabled prompting when used in batch mode.
  *
- *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *    03-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcode string to En.rc
  *
- *    13-Jul-2005 (Brandon Turner) <turnerb7@msu.edu>)
+ *    13-Jul-2005 (Brandon Turner <turnerb7@msu.edu>)
  *        Rewrite to clean up copy and support wildcard.
  *
- *    20-Jul-2005 (Brandon Turner) <turnerb7@msu.edu>)
+ *    20-Jul-2005 (Brandon Turner <turnerb7@msu.edu>)
  *        Add touch syntax.  "copy arp.exe+,,"
  *        Copy command is now completed.
  */

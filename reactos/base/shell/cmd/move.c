@@ -21,10 +21,10 @@
 *    03-Feb-1999 (Eric Kohl)
 *        Added "/N" option.
 *
-*    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
-*        Remove all hardcode string to En.rc
+*    30-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
+*        Remove all hardcoded strings in En.rc
 *
-*    24-Jun-2005 (Brandon Turner) <turnerb7@msu.edu>)
+*    24-Jun-2005 (Brandon Turner <turnerb7@msu.edu>)
 *        Fixed bug to allow MS style wildcards + code clean up
 *        added /y and /-y
 */

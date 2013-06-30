@@ -17,10 +17,11 @@
  *    17-Oct-2001 (Eric Kohl)
  *        Implemented basic rename code.
  *
- *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    30-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  *
- *    25-Nov-2008 (Victor Martinez) <vicmarcal@hotmail.com> Patch dedicated to Myrjala because her comprenhension and love :D
+ *    25-Nov-2008 (Victor Martinez <vicmarcal@hotmail.com>)
+ *        Patch dedicated to Myrjala because her comprenhension and love :D
  *        Fixing following Bugs:
  *             -Wrong behavior with wildcards when Source and Destiny are Paths(FIXED).
  *             -Wrong general behavior (MSDN:"Rename cant move files between subdirectories")(FIXED)

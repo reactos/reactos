@@ -14,7 +14,7 @@
  *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection ready!
  *
- *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    30-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  */
 

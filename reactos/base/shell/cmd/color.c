@@ -16,7 +16,7 @@
  *    14-Oct-1999 (Paolo Pantaleo <paolopan@freemail.it>)
  *        4nt's syntax implemented.
  *
- *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    03-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Move all hardcoded strings in En.rc.
  */
 

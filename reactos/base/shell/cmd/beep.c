@@ -20,7 +20,7 @@
  *    20-Jan-1999 (Eric Kohl)
  *        Redirection ready!
  *
- *    02-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    02-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  */
 

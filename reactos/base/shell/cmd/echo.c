@@ -22,7 +22,7 @@
  *    13-Jul-2000 (Eric Kohl)
  *        Implemented 'echo.' and 'echoerr.'.
  *
- *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    28-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  */
 

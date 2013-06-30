@@ -10,7 +10,7 @@
  *     activate and window in a single file using mainly the same code
  *     (nice size optimization :)
  *
- *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    30-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  */
 

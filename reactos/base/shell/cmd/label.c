@@ -13,7 +13,7 @@
  *    19-Jan-1998 (Eric Kohl)
  *        Unicode ready!
  *
- *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    28-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  */
 

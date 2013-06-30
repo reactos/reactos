@@ -20,7 +20,7 @@
  *    04-Feb-1999 (Eric Kohl)
  *        Fixed time input bug.
  *
- *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    30-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc.
  */
 

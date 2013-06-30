@@ -5,7 +5,7 @@
  *
  *    1 Feb 2008 (Christoph von Wittich)
  *        started.
-*/ 
+*/
 
 #include "precomp.h"
 

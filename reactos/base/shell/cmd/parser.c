@@ -123,7 +123,7 @@ static int ParseToken(TCHAR ExtraEnd, TCHAR *Separators)
                     break;
                 }
             }
-        
+
             /* Check for numbered redirection */
             if ((Char >= _T('0') && Char <= _T('9') &&
                    (ParsePos == &ParseLine[1] || IsSeparator(ParsePos[-2]))

@@ -26,7 +26,7 @@
  *        Implemented preservation of echo flag. Some other for related
  *        code in other files fixed, too.
  *
- *    28-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    28-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  */
 

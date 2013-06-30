@@ -28,7 +28,7 @@
  *    06-Nov-1999 (Eric Kohl)
  *        Added PagePrompt() and FilePrompt().
  *
- *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>
+ *    30-Apr-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        Remove all hardcoded strings in En.rc
  */
 
