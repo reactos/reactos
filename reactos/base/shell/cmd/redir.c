@@ -61,8 +61,7 @@ PerformRedirection(REDIRECTION *RedirList)
     static SECURITY_ATTRIBUTES SecAttr = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
 
     /* Some parameters used for read, write, and append, respectively */
-    static
-    struct REDIR_PARAMS
+    static struct REDIR_PARAMS
     {
         DWORD dwDesiredAccess;
         DWORD dwShareMode;

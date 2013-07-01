@@ -414,21 +414,20 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         stui.dwFlags = STARTF_USESHOWWINDOW;
         stui.wShowWindow = SW_SHOWDEFAULT;
 
-        // return console to standard mode
+        /* Set the console to standard mode */
         SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),
-                       ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT);
+                       ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
-        if (CreateProcess (szFullName,
-                           szFullCmdLine,
-                           NULL,
-                           NULL,
-                           TRUE,
-                           0,   /* CREATE_NEW_PROCESS_GROUP */
-                           NULL,
-                           NULL,
-                           &stui,
-                           &prci))
-
+        if (CreateProcess(szFullName,
+                          szFullCmdLine,
+                          NULL,
+                          NULL,
+                          TRUE,
+                          0,   /* CREATE_NEW_PROCESS_GROUP */
+                          NULL,
+                          NULL,
+                          &stui,
+                          &prci))
         {
             CloseHandle(prci.hThread);
         }
@@ -449,32 +448,33 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
                 EnterCriticalSection(&ChildProcessRunningLock);
                 dwChildProcessId = prci.dwProcessId;
 
-                WaitForSingleObject (prci.hProcess, INFINITE);
+                WaitForSingleObject(prci.hProcess, INFINITE);
 
                 LeaveCriticalSection(&ChildProcessRunningLock);
 
-                GetExitCodeProcess (prci.hProcess, &dwExitCode);
+                GetExitCodeProcess(prci.hProcess, &dwExitCode);
                 nErrorLevel = (INT)dwExitCode;
             }
-            CloseHandle (prci.hProcess);
+            CloseHandle(prci.hProcess);
         }
         else
         {
             TRACE ("[ShellExecute failed!: %s]\n", debugstr_aw(Full));
-            error_bad_command (first);
+            error_bad_command(first);
             dwExitCode = 1;
         }
 
-        // restore console mode
-        SetConsoleMode (
-            GetStdHandle( STD_INPUT_HANDLE ),
-            ENABLE_PROCESSED_INPUT );
+        /* Restore our default console mode */
+        SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),
+                       ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+        SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE),
+                       ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
     }
 
-    /* Get code page if it has been change */
+    /* Get code page if it has been changed */
     InputCodePage= GetConsoleCP();
     OutputCodePage = GetConsoleOutputCP();
-    SetConsoleTitle (szWindowTitle);
+    SetConsoleTitle(szWindowTitle);
 
     return dwExitCode;
 }
@@ -1360,7 +1360,7 @@ DoDelayedExpansion(LPTSTR Line)
  */
 
 BOOL
-ReadLine (TCHAR *commandline, BOOL bMore)
+ReadLine(TCHAR *commandline, BOOL bMore)
 {
     TCHAR readline[CMDLINE_LENGTH];
     LPTSTR ip;
@@ -1426,7 +1426,7 @@ ProcessInput()
 /*
  * control-break handler.
  */
-BOOL WINAPI BreakHandler (DWORD dwCtrlType)
+BOOL WINAPI BreakHandler(DWORD dwCtrlType)
 {
     DWORD           dwWritten;
     INPUT_RECORD    rec;
@@ -1637,18 +1637,18 @@ Initialize()
         NtReadVirtualMemoryPtr = (NtReadVirtualMemoryProc)GetProcAddress(NtDllModule, "NtReadVirtualMemory");
     }
 
-    InitLocale ();
+    InitLocale();
 
     /* get default input and output console handles */
-    hOut = GetStdHandle (STD_OUTPUT_HANDLE);
-    hIn  = GetStdHandle (STD_INPUT_HANDLE);
+    hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    hIn  = GetStdHandle(STD_INPUT_HANDLE);
 
     /* Set EnvironmentVariable PROMPT if it does not exists any env value.
        for you can change the EnvirommentVariable for prompt before cmd start
        this patch are not 100% right, if it does not exists a PROMPT value cmd should use
        $P$G as defualt not set EnvirommentVariable PROMPT to $P$G if it does not exists */
     if (GetEnvironmentVariable(_T("PROMPT"),lpBuffer, sizeof(lpBuffer) / sizeof(lpBuffer[0])) == 0)
-        SetEnvironmentVariable (_T("PROMPT"), _T("$P$G"));
+        SetEnvironmentVariable(_T("PROMPT"), _T("$P$G"));
 
 #ifdef FEATURE_DIR_STACK
     /* initialize directory stack */
@@ -1667,10 +1667,13 @@ Initialize()
         SetEnvironmentVariable (_T("COMSPEC"), ModuleName);
     }
 
-    /* add ctrl break handler */
-    AddBreakHandler ();
+    /* Add ctrl break handler */
+    AddBreakHandler();
 
-    SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
+    /* Set our default console mode */
+    SetConsoleMode(hOut, 0); // Reinitialize the console output mode
+    SetConsoleMode(hOut, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+    SetConsoleMode(hIn , ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
     cmdLine = GetCommandLine();
     TRACE ("[command args: %s]\n", debugstr_aw(cmdLine));
@@ -1800,10 +1803,15 @@ static VOID Cleanup()
     /* free GetEnvVar's buffer */
     GetEnvVar(NULL);
 
-    /* remove ctrl break handler */
-    RemoveBreakHandler ();
-    SetConsoleMode(GetStdHandle( STD_INPUT_HANDLE ),
-                   ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT);
+    /* Remove ctrl break handler */
+    RemoveBreakHandler();
+
+    /* Restore the default console mode */
+    SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),
+                   ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE),
+                   ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
+
     DeleteCriticalSection(&ChildProcessRunningLock);
 }
 
