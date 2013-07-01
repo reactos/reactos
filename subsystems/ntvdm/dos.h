@@ -22,6 +22,8 @@
 #define USER_MEMORY_SIZE 0x8FFFF
 #define SYSTEM_PSP 0x08
 #define SYSTEM_ENV_BLOCK 0x800
+#define INVALID_DOS_HANDLE 0xFFFF
+#define DOS_SFT_SIZE 255
 #define SEGMENT_TO_MCB(seg) ((PDOS_MCB)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
 #define SEGMENT_TO_PSP(seg) ((PDOS_PSP)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
 
@@ -76,34 +78,6 @@ typedef struct _DOS_PSP
     CHAR CommandLine[127];
 } DOS_PSP, *PDOS_PSP;
 
-typedef struct _DOS_SFT_ENTRY
-{
-    WORD ReferenceCount;
-    WORD Mode;
-    BYTE Attribute;
-    WORD DeviceInfo;
-    DWORD DriveParamBlock;
-    WORD FirstCluster;
-    WORD FileTime;
-    WORD FileDate;
-    DWORD FileSize;
-    DWORD CurrentOffset;
-    WORD LastClusterAccessed;
-    DWORD DirEntSector;
-    BYTE DirEntryIndex;
-    CHAR FileName[11];
-    BYTE Reserved0[6];
-    WORD OwnerPsp;
-    BYTE Reserved1[8];
-} DOS_SFT_ENTRY, *PDOS_SFT_ENTRY;
-
-typedef struct _DOS_SFT
-{
-    DWORD NextTablePtr;
-    WORD FileCount;
-    DOS_SFT_ENTRY Entry[ANYSIZE_ARRAY];
-} DOS_SFT, *PDOS_SFT;
-
 typedef struct _DOS_INPUT_BUFFER
 {
     BYTE MaxLength, Length;
@@ -117,6 +91,10 @@ typedef struct _DOS_INPUT_BUFFER
 WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable);
 BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable);
 BOOLEAN DosFreeMemory(WORD BlockData);
+WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes);
+WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode);
+WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead);
+WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten);
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment);
 BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock);
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);

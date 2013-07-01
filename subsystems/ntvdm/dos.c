@@ -16,6 +16,8 @@
 
 static WORD CurrentPsp = SYSTEM_PSP;
 static DWORD DiskTransferArea;
+static HANDLE DosSystemFileTable[DOS_SFT_SIZE];
+static WORD DosSftRefCount[DOS_SFT_SIZE];
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -92,6 +94,125 @@ static VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
 
     /* Just set the owner */
     Mcb->OwnerPsp = NewOwner;
+}
+
+static WORD DosOpenHandle(HANDLE Handle)
+{
+    BYTE i;
+    WORD DosHandle;
+    PDOS_PSP PspBlock;
+    LPBYTE HandleTable;
+
+    /* The system PSP has no handle table */
+    if (CurrentPsp == SYSTEM_PSP) return INVALID_DOS_HANDLE;
+
+    /* Get a pointer to the handle table */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
+
+    /* Find a free entry in the JFT */
+    for (DosHandle = 0; DosHandle < PspBlock->HandleTableSize; DosHandle++)
+    {
+        if (HandleTable[DosHandle] == 0xFF) break;
+    }
+
+    /* If there are no free entries, fail */
+    if (DosHandle == PspBlock->HandleTableSize) return INVALID_DOS_HANDLE;
+
+    /* Check if the handle is already in the SFT */
+    for (i = 0; i < DOS_SFT_SIZE; i++)
+    {
+        /* Check if this is the same handle */
+        if (DosSystemFileTable[i] != Handle) continue;
+
+        /* Already in the table, reference it */
+        DosSftRefCount[i]++;
+
+        /* Set the JFT entry to that SFT index */
+        HandleTable[DosHandle] = i;
+
+        /* Return the new handle */
+        return DosHandle;
+    }
+
+    /* Add the handle to the SFT */
+    for (i = 0; i < DOS_SFT_SIZE; i++)
+    {
+        /* Make sure this is an empty table entry */
+        if (DosSystemFileTable[i] != INVALID_HANDLE_VALUE) continue;
+
+        /* Initialize the empty table entry */
+        DosSystemFileTable[i] = Handle;
+        DosSftRefCount[i] = 1;
+
+        /* Set the JFT entry to that SFT index */
+        HandleTable[DosHandle] = i;
+
+        /* Return the new handle */
+        return DosHandle;
+    }
+
+    /* The SFT is full */
+    return INVALID_DOS_HANDLE;
+}
+
+static HANDLE DosGetRealHandle(WORD DosHandle)
+{
+    PDOS_PSP PspBlock;
+    LPBYTE HandleTable;
+
+    /* The system PSP has no handle table */
+    if (CurrentPsp == SYSTEM_PSP) return INVALID_HANDLE_VALUE;
+
+    /* Get a pointer to the handle table */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
+
+    /* Make sure the handle is open */
+    if (HandleTable[DosHandle] == 0xFF) return INVALID_HANDLE_VALUE;
+
+    /* Return the Win32 handle */
+    return DosSystemFileTable[HandleTable[DosHandle]];
+}
+
+static VOID DosCopyHandleTable(LPBYTE DestinationTable)
+{
+    INT i;
+    PDOS_PSP PspBlock;
+    LPBYTE SourceTable;
+
+    /* Clear the table first */
+    for (i = 0; i < 20; i++) DestinationTable[i] = 0xFF;
+
+    /* Check if this is the initial process */
+    if (CurrentPsp == SYSTEM_PSP)
+    {
+        /* Set up the standard I/O devices */
+        for (i = 0; i <= 2; i++)
+        {
+            /* Set the index in the SFT */
+            DestinationTable[i] = i;
+
+            /* Increase the reference count */
+            DosSftRefCount[i]++;
+        }
+
+        /* Done */
+        return;
+    }
+
+    /* Get the parent PSP block and handle table */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    SourceTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
+
+    /* Copy the first 20 handles into the new table */
+    for (i = 0; i < 20; i++)
+    {
+        DestinationTable[i] = SourceTable[i];
+
+        /* Increase the reference count */
+        DosSftRefCount[SourceTable[i]]++;
+    }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -273,21 +394,193 @@ BOOLEAN DosFreeMemory(WORD BlockData)
     return TRUE;
 }
 
-WORD DosCreateFile(LPCSTR FilePath)
+WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
 {
-    // TODO: NOT IMPLEMENTED
-    return 0;
+    HANDLE FileHandle;
+    WORD DosHandle;
+
+    /* Create the file */
+    FileHandle = CreateFileA(FilePath,
+                             GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                             NULL,
+                             CREATE_ALWAYS,
+                             Attributes,
+                             NULL);
+
+    if (FileHandle == INVALID_HANDLE_VALUE)
+    {
+        /* Return the error code */
+        return GetLastError();
+    }
+
+    /* Open the DOS handle */
+    DosHandle = DosOpenHandle(FileHandle);
+
+    if (DosHandle == INVALID_DOS_HANDLE)
+    {
+        /* Close the handle */
+        CloseHandle(FileHandle);
+
+        /* Return the error code */
+        return ERROR_TOO_MANY_OPEN_FILES;
+    }
+
+    /* It was successful */
+    *Handle = DosHandle;
+    return ERROR_SUCCESS;
 }
 
-WORD DosOpenFile(LPCSTR FilePath)
+WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
 {
-    // TODO: NOT IMPLEMENTED
-    return 0;
+    HANDLE FileHandle;
+    ACCESS_MASK Access = 0;
+    WORD DosHandle;
+
+    /* Parse the access mode */
+    switch (AccessMode & 3)
+    {
+        case 0:
+        {
+            /* Read-only */
+            Access = GENERIC_READ;
+            break;
+        }
+
+        case 1:
+        {
+            /* Write only */
+            Access = GENERIC_WRITE;
+            break;
+        }
+
+        case 2:
+        {
+            /* Read and write */
+            Access = GENERIC_READ | GENERIC_WRITE;
+            break;
+        }
+
+        default:
+        {
+            /* Invalid */
+            return ERROR_INVALID_PARAMETER;
+        }
+    }
+
+    /* Open the file */
+    FileHandle = CreateFileA(FilePath,
+                             Access,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                             NULL,
+                             OPEN_EXISTING,
+                             FILE_ATTRIBUTE_NORMAL,
+                             NULL);
+
+    if (FileHandle == INVALID_HANDLE_VALUE)
+    {
+        /* Return the error code */
+        return GetLastError();
+    }
+
+    /* Open the DOS handle */
+    DosHandle = DosOpenHandle(FileHandle);
+
+    if (DosHandle == INVALID_DOS_HANDLE)
+    {
+        /* Close the handle */
+        CloseHandle(FileHandle);
+
+        /* Return the error code */
+        return ERROR_TOO_MANY_OPEN_FILES;
+    }
+
+    /* It was successful */
+    *Handle = DosHandle;
+    return ERROR_SUCCESS;
+}
+
+WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
+{
+    WORD Result = ERROR_SUCCESS;
+    DWORD BytesRead32 = 0;
+    HANDLE Handle = DosGetRealHandle(FileHandle);
+
+    /* Make sure the handle is valid */
+    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_PARAMETER;
+
+    /* Read the file */
+    if (!ReadFile(Handle, Buffer, Count, &BytesRead32, NULL))
+    {
+        /* Store the error code */
+        Result = GetLastError();
+    }
+
+    /* The number of bytes read is always 16-bit */
+    *BytesRead = LOWORD(BytesRead32);
+
+    /* Return the error code */
+    return Result;
+}
+
+WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten)
+{
+    WORD Result = ERROR_SUCCESS;
+    DWORD BytesWritten32 = 0;
+    HANDLE Handle = DosGetRealHandle(FileHandle);
+
+    /* Make sure the handle is valid */
+    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_PARAMETER;
+
+    /* Write the file */
+    if (!WriteFile(Handle, Buffer, Count, &BytesWritten32, NULL))
+    {
+        /* Store the error code */
+        Result = GetLastError();
+    }
+
+    /* The number of bytes written is always 16-bit */
+    *BytesWritten = LOWORD(BytesWritten32);
+
+    /* Return the error code */
+    return Result;
+}
+
+BOOLEAN DosCloseHandle(WORD DosHandle)
+{
+    BYTE SftIndex;
+    PDOS_PSP PspBlock;
+    LPBYTE HandleTable;
+
+    /* The system PSP has no handle table */
+    if (CurrentPsp == SYSTEM_PSP) return FALSE;
+
+    /* Get a pointer to the handle table */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
+
+    /* Make sure the handle is open */
+    if (HandleTable[DosHandle] == 0xFF) return FALSE;
+
+    /* Decrement the reference count of the SFT entry */
+    SftIndex = HandleTable[DosHandle];
+    DosSftRefCount[SftIndex]--;
+
+    /* Check if the reference count fell to zero */
+    if (!DosSftRefCount[SftIndex])
+    {
+        /* Close the file, it's no longer needed */
+        CloseHandle(DosSystemFileTable[SftIndex]);
+
+        /* Clear the handle */
+        DosSystemFileTable[SftIndex] = INVALID_HANDLE_VALUE;
+    }
+
+    return TRUE;
 }
 
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment)
 {
-    INT i;
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(PspSegment);
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
 
@@ -308,11 +601,10 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
     /* Set the parent PSP */
     PspBlock->ParentPsp = CurrentPsp;
 
-    /* Initialize the handle table */
-    for (i = 0; i < 20; i++) PspBlock->HandleTable[i] = 0xFF;
+    /* Copy the parent handle table */
+    DosCopyHandleTable(PspBlock->HandleTable);
 
-    
-
+    /* Set the environment block */
     PspBlock->EnvBlock = Environment;
 
     /* Set the handle table pointers to the internal handle table */
@@ -863,6 +1155,152 @@ VOID DosInt21h(WORD CodeSegment)
             break;
         }
 
+        /* Create File */
+        case 0x3C:
+        {
+            WORD FileHandle;
+            WORD ErrorCode = DosCreateFile(&FileHandle,
+                                           (LPCSTR)(ULONG_PTR)BaseAddress
+                                           + TO_LINEAR(DataSegment, LOWORD(Edx)),
+                                           LOWORD(Ecx));
+
+            if (ErrorCode == 0)
+            {
+                /* Clear CF */
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+
+                /* Return the handle in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | FileHandle);
+            }
+            else
+            {
+                /* Set CF */
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+
+                /* Return the error code in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | ErrorCode);
+            }
+
+            break;
+        }
+
+        /* Open File */
+        case 0x3D:
+        {
+            WORD FileHandle;
+            WORD ErrorCode = DosCreateFile(&FileHandle,
+                                           (LPCSTR)(ULONG_PTR)BaseAddress
+                                           + TO_LINEAR(DataSegment, LOWORD(Edx)),
+                                           LOBYTE(Eax));
+
+            if (ErrorCode == 0)
+            {
+                /* Clear CF */
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+
+                /* Return the handle in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | FileHandle);
+            }
+            else
+            {
+                /* Set CF */
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+
+                /* Return the error code in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | ErrorCode);
+            }
+
+            break;
+        }
+
+        /* Close File */
+        case 0x3E:
+        {
+            if (DosCloseHandle(LOWORD(Ebx)))
+            {
+                /* Clear CF */
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+            }
+            else
+            {
+                /* Set CF */
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+
+                /* Return the error code in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | ERROR_INVALID_PARAMETER);
+            }
+
+            break;
+        }
+
+        /* Read File */
+        case 0x3F:
+        {
+            WORD BytesRead = 0;
+            WORD ErrorCode = DosReadFile(LOWORD(Ebx),
+                                         (LPVOID)((ULONG_PTR)BaseAddress
+                                         + TO_LINEAR(DataSegment, LOWORD(Edx))),
+                                         LOWORD(Ecx),
+                                         &BytesRead);
+
+            if (ErrorCode == 0)
+            {
+                /* Clear CF */
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+
+                /* Return the number of bytes read in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | BytesRead);
+            }
+            else
+            {
+                /* Set CF */
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+
+                /* Return the error code in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | ErrorCode);
+            }
+            break;
+        }
+
+        /* Write File */
+        case 0x40:
+        {
+            WORD BytesWritten = 0;
+            WORD ErrorCode = DosWriteFile(LOWORD(Ebx),
+                                          (LPVOID)((ULONG_PTR)BaseAddress
+                                          + TO_LINEAR(DataSegment, LOWORD(Edx))),
+                                          LOWORD(Ecx),
+                                          &BytesWritten);
+
+            if (ErrorCode == 0)
+            {
+                /* Clear CF */
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+
+                /* Return the number of bytes written in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | BytesWritten);
+            }
+            else
+            {
+                /* Set CF */
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+
+                /* Return the error code in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | ErrorCode);
+            }
+
+            break;
+        }
+
         /* Allocate Memory */
         case 0x48:
         {
@@ -933,6 +1371,7 @@ VOID DosBreakInterrupt()
 
 BOOLEAN DosInitialize()
 {
+    BYTE i;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT);
     FILE *Stream;
     WCHAR Buffer[256];
@@ -1005,6 +1444,18 @@ BOOLEAN DosInitialize()
         }
         fclose(Stream);
     }
+
+    /* Initialize the SFT */
+    for (i = 0; i < DOS_SFT_SIZE; i++)
+    {
+        DosSystemFileTable[i] = INVALID_HANDLE_VALUE;
+        DosSftRefCount[i] = 0;
+    }
+
+    /* Get handles to standard I/O devices */
+    DosSystemFileTable[0] = GetStdHandle(STD_INPUT_HANDLE);
+    DosSystemFileTable[1] = GetStdHandle(STD_OUTPUT_HANDLE);
+    DosSystemFileTable[2] = GetStdHandle(STD_ERROR_HANDLE);
 
     return TRUE;
 }

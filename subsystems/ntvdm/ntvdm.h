@@ -26,6 +26,7 @@
 #define MAX_SEGMENT 0xFFFF
 #define MAX_OFFSET 0xFFFF
 #define MAX_ADDRESS TO_LINEAR(MAX_SEGMENT, MAX_OFFSET)
+#define FAR_POINTER(x) ((ULONG_PTR)BaseAddress + TO_LINEAR(HIWORD(x), LOWORD(x)))
 #define STEPS_PER_CYCLE 256
 
 /* FUNCTIONS ******************************************************************/
