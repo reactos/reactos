@@ -69,7 +69,10 @@ INT wmain(INT argc, WCHAR *argv[])
 {
     INT i;
     CHAR CommandLine[128];
-    DWORD CurrentTickCount, LastTickCount = 0, Cycles = 0, LastCyclePrintout = 0;
+    DWORD CurrentTickCount;
+    DWORD LastTickCount = GetTickCount();
+    DWORD Cycles = 0;
+    DWORD LastCyclePrintout = GetTickCount();
     LARGE_INTEGER Frequency, LastTimerTick, Counter;
     LONGLONG TimerTicks;
 
@@ -79,7 +82,11 @@ INT wmain(INT argc, WCHAR *argv[])
     /* The DOS command line must be ASCII */
     WideCharToMultiByte(CP_ACP, 0, GetCommandLine(), -1, CommandLine, 128, NULL, NULL);
 
-    if (!EmulatorInitialize()) return 1;
+    if (!EmulatorInitialize())
+    {
+        wprintf(L"FATAL: Failed to initialize the CPU emulator\n");
+        return 1;
+    }
     
     /* Initialize the performance counter (needed for hardware timers) */
     if (!QueryPerformanceFrequency(&Frequency))

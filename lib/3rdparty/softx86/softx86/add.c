@@ -386,13 +386,13 @@ sx86_uword op_sub16(softx86_ctx* ctx,sx86_uword src,sx86_uword val)
 /* peform the addition */
 	ret = src - val;
 
-/* if carry/overflow */
-	if (ret > src)
-		ctx->state->reg_flags.val |=
-			 (SX86_CPUFLAG_CARRY | SX86_CPUFLAG_OVERFLOW);
-	else
-		ctx->state->reg_flags.val &=
-			~(SX86_CPUFLAG_CARRY | SX86_CPUFLAG_OVERFLOW);
+/* if carry */
+        if (val > src) ctx->state->reg_flags.val |= SX86_CPUFLAG_CARRY;
+        else ctx->state->reg_flags.val &= ~SX86_CPUFLAG_CARRY;
+
+/* if overflow */
+	if ((ret & 0x8000) != (src & 0x8000)) ctx->state->reg_flags.val |= SX86_CPUFLAG_OVERFLOW;
+	else ctx->state->reg_flags.val &= ~SX86_CPUFLAG_OVERFLOW;
 
 /* if result treated as signed value is negative */
 	if (ret & 0x8000)	ctx->state->reg_flags.val |=  SX86_CPUFLAG_SIGN;

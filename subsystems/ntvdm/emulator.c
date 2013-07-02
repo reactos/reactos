@@ -385,6 +385,11 @@ VOID EmulatorClearFlag(ULONG Flag)
 
 VOID EmulatorStep()
 {
+    /* Print the current position - useful for debugging */
+    DPRINT("Executing at CS:IP = %04X:%04X\n",
+           EmulatorGetRegister(EMULATOR_REG_CS),
+           EmulatorContext.state->reg_ip);
+
     /* Call the softx86 API */
     if (!softx86_step(&EmulatorContext))
     {

@@ -369,6 +369,12 @@ VOID BiosVideoService()
         {
             break;
         }
+
+        default:
+        {
+            DPRINT1("BIOS Function INT 10h, AH = 0x%02X NOT IMPLEMENTED\n",
+                    HIBYTE(Eax));
+        }
     }
 }
 
@@ -403,6 +409,12 @@ VOID BiosKeyboardService()
             }
 
             break;
+        }
+        
+        default:
+        {
+            DPRINT1("BIOS Function INT 16h, AH = 0x%02X NOT IMPLEMENTED\n",
+                    HIBYTE(Eax));
         }
     }
 }
@@ -441,6 +453,12 @@ VOID BiosTimeService()
             BiosPassedMidnight = FALSE;
 
             break;
+        }
+
+        default:
+        {
+            DPRINT1("BIOS Function INT 1Ah, AH = 0x%02X NOT IMPLEMENTED\n",
+                    HIBYTE(Eax));
         }
     }
 }
