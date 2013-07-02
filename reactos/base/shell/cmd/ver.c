@@ -46,7 +46,7 @@ VOID ShortVersion (VOID)
             ConOutResPrintf(STRING_VERSION_RUNVER, RosVersion);
         }
     }
-    ConOutPuts (_T("\n"));
+    ConOutChar(_T('\n'));
 }
 
 

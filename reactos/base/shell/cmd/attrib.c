@@ -96,15 +96,15 @@ PrintAttribute (LPTSTR pszPath, LPTSTR pszFile, BOOL bRecurse)
 
         _tcscpy (pszFileName, findData.cFileName);
 
-        ConOutPrintf (_T("%c  %c%c%c     %s\n"),
-                      (findData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) ? _T('A') : _T(' '),
-                      (findData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) ? _T('S') : _T(' '),
-                      (findData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? _T('H') : _T(' '),
-                      (findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ? _T('R') : _T(' '),
-                      szFullName);
+        ConOutPrintf(_T("%c  %c%c%c     %s\n"),
+                     (findData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) ? _T('A') : _T(' '),
+                     (findData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) ? _T('S') : _T(' '),
+                     (findData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? _T('H') : _T(' '),
+                     (findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ? _T('R') : _T(' '),
+                     szFullName);
     }
-    while (FindNextFile (hFind, &findData));
-    FindClose (hFind);
+    while (FindNextFile(hFind, &findData));
+    FindClose(hFind);
 }
 
 

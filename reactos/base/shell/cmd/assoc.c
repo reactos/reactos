@@ -80,7 +80,7 @@ PrintAssociation(LPTSTR extension)
 
     if (fileTypeLength != 0)	/* if there is a default key, display relevant information */
     {
-        ConOutPrintf(_T("%s=%s\r\n"), extension, fileType);
+        ConOutPrintf(_T("%s=%s\n"), extension, fileType);
     }
 
     if (fileTypeLength)

@@ -66,7 +66,7 @@ PrintDiskInfo (LPTSTR szDisk)
                            &dwBytPerSec, &dwFreeCl, &dwTotCl))
     {
         LoadString(CMD_ModuleHandle, STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-        ConErrPrintf (_T("%s %s:\n"), szMsg, szDrive);
+        ConErrPrintf(_T("%s %s:\n"), szMsg, szDrive);
         return;
     }
 

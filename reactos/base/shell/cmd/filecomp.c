@@ -302,7 +302,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
         longestfname += 3;
 
         /* find anything */
-        ConOutChar (_T('\n'));
+        ConOutChar(_T('\n'));
         do
         {
             /* ignore . and .. */
@@ -323,7 +323,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
                 /* print the new line only if we aren't on the
                  * last column, in this case it wraps anyway */
                 if (count * longestfname != (UINT)screenwidth)
-                    ConOutPrintf (_T("\n"));
+                    ConOutChar(_T('\n'));
                 count = 0;
             }
         }
@@ -332,7 +332,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
         FindClose (hFile);
 
         if (count)
-            ConOutChar (_T('\n'));
+            ConOutChar(_T('\n'));
     }
     else
     {

@@ -271,7 +271,7 @@ VOID PrintCommandList(VOID)
     }
 
     if (y != 0)
-        ConOutChar('\n');
+        ConOutChar(_T('\n'));
 }
 
 VOID PrintCommandListDetail(VOID)

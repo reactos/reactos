@@ -157,7 +157,7 @@ BOOL CheckCtrlBreak (INT mode)
                 c = _totupper(cgetchar());
             } while (!(_tcschr(options, c) || c == _T('\3')) || !c);
 
-            ConOutPuts (_T("\r\n"));
+            ConOutChar(_T('\n'));
 
             if (c == options[1])
                 return bCtrlBreak = FALSE; /* ignore */
@@ -578,8 +578,8 @@ INT FilePromptYN (UINT resID)
         ConOutResPrintf (resID);
 
     /* preliminary fix */
-    ConInString (szIn, 10);
-    ConOutPrintf (_T("\n"));
+    ConInString(szIn, 10);
+    ConOutChar(_T('\n'));
 
     _tcsupr (szIn);
     for (p = szIn; _istspace (*p); p++)
@@ -642,8 +642,8 @@ INT FilePromptYNA (UINT resID)
         ConOutResPrintf (resID);
 
     /* preliminary fix */
-    ConInString (szIn, 10);
-    ConOutPrintf (_T("\n"));
+    ConInString(szIn, 10);
+    ConOutChar(_T('\n'));
 
     _tcsupr (szIn);
     for (p = szIn; _istspace (*p); p++)

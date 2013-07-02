@@ -1378,7 +1378,7 @@ ReadLine(TCHAR *commandline, BOOL bMore)
             if (bEcho)
             {
                 if (!bIgnoreEcho)
-                    ConOutChar('\n');
+                    ConOutChar(_T('\n'));
                 PrintPrompt();
             }
         }
@@ -1391,7 +1391,7 @@ ReadLine(TCHAR *commandline, BOOL bMore)
 
         if (CheckCtrlBreak(BREAK_INPUT))
         {
-            ConOutPuts(_T("\n"));
+            ConOutChar(_T('\n'));
             return FALSE;
         }
         ip = readline;

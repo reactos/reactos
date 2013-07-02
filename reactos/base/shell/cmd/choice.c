@@ -296,7 +296,7 @@ loop:
                 GetTickCount () - clk);
 
     val = IsKeyInString (lpOptions, cDefault, bCaseSensitive);
-    ConOutPrintf (_T("%c\n"), lpOptions[val]);
+    ConOutPrintf(_T("%c\n"), lpOptions[val]);
 
     nErrorLevel = val + 1;
 

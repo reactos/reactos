@@ -63,7 +63,7 @@ INT cmd_path (LPTSTR param)
             GetEnvironmentVariable (_T("PATH"), pszBuffer, dwBuffer);
         }
 
-        ConOutPrintf (_T("PATH=%s\n"), pszBuffer);
+        ConOutPrintf(_T("PATH=%s\n"), pszBuffer);
         cmd_free (pszBuffer);
 
         return 0;

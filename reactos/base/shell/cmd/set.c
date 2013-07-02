@@ -96,7 +96,7 @@ INT cmd_set (LPTSTR param)
                 if (*lpOutput != _T('='))
                     ConOutPuts(lpOutput);
                 lpOutput += _tcslen(lpOutput) + 1;
-                ConOutPuts(_T("\r\n"));
+                ConOutChar(_T('\n'));
             }
             FreeEnvironmentStrings (lpEnv);
         }
@@ -185,7 +185,7 @@ INT cmd_set (LPTSTR param)
                 if (!_tcsnicmp(lpOutput, param, p - param))
                 {
                     ConOutPuts(lpOutput);
-                    ConOutPuts(_T("\r\n"));
+                    ConOutChar(_T('\n'));
                     bFound = TRUE;
                 }
                 lpOutput += _tcslen(lpOutput) + 1;
