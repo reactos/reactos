@@ -445,6 +445,12 @@ VOID BiosTimeService()
     }
 }
 
+VOID BiosEquipmentService()
+{
+    /* Return the equipment list */
+    EmulatorSetRegister(EMULATOR_REG_AX, BIOS_EQUIPMENT_LIST);
+}
+
 VOID BiosHandleIrq(BYTE IrqNumber)
 {
     switch (IrqNumber)

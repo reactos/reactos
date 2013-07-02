@@ -19,10 +19,13 @@
 #define DOS_CONFIG_PATH L"%SystemRoot%\\system32\\CONFIG.NT"
 #define DOS_COMMAND_INTERPRETER L"%SystemRoot%\\system32\\COMMAND.COM /k %SystemRoot%\\system32\\AUTOEXEC.NT"
 #define FIRST_MCB_SEGMENT 0x1000
-#define USER_MEMORY_SIZE 0x8FFFF
+#define USER_MEMORY_SIZE 0x8FFF
 #define SYSTEM_PSP 0x08
 #define SYSTEM_ENV_BLOCK 0x800
 #define INVALID_DOS_HANDLE 0xFFFF
+#define DOS_INPUT_HANDLE 0
+#define DOS_OUTPUT_HANDLE 1
+#define DOS_ERROR_HANDLE 2
 #define DOS_SFT_SIZE 255
 #define SEGMENT_TO_MCB(seg) ((PDOS_MCB)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
 #define SEGMENT_TO_PSP(seg) ((PDOS_PSP)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
@@ -56,7 +59,7 @@ typedef struct _DOS_FCB
 typedef struct _DOS_PSP
 {
     BYTE Exit[2];
-    WORD MemSize;
+    WORD LastParagraph;
     BYTE Reserved0[6];
     DWORD TerminateAddress;
     DWORD BreakAddress;

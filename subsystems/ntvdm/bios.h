@@ -23,10 +23,12 @@
 #define BIOS_PIC_SLAVE_INT 0x70
 #define BIOS_SEGMENT 0xF000
 #define BIOS_VIDEO_INTERRUPT 0x10
+#define BIOS_EQUIPMENT_INTERRUPT 0x11
 #define BIOS_KBD_INTERRUPT 0x16
 #define BIOS_TIME_INTERRUPT 0x1A
 #define CONSOLE_FONT_HEIGHT 8
 #define BIOS_KBD_BUFFER_SIZE 256
+#define BIOS_EQUIPMENT_LIST 0x3C // HACK: Disable FPU for now
 
 /* FUNCTIONS ******************************************************************/
 
@@ -36,6 +38,7 @@ VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress);
 WORD BiosPeekCharacter();
 WORD BiosGetCharacter();
 VOID BiosVideoService();
+VOID BiosEquipmentService();
 VOID BiosKeyboardService();
 VOID BiosTimeService();
 VOID BiosHandleIrq(BYTE IrqNumber);

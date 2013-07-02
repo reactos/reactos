@@ -79,7 +79,10 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment)
 
         /* Advance to the next string */
         Ptr += strlen(Ptr) + 1;
-        DestBuffer += strlen(Ptr) + 1;
+        DestBuffer += strlen(Ptr);
+
+        /* Put a zero after the string */
+        *(DestBuffer++) = 0;
     }
 
     /* Set the final zero */
@@ -590,8 +593,8 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
     PspBlock->Exit[0] = 0xCD; // int 0x20
     PspBlock->Exit[1] = 0x20;
 
-    /* Set the program size */
-    PspBlock->MemSize = ProgramSize;
+    /* Set the number of the last paragraph */
+    PspBlock->LastParagraph = PspSegment + ProgramSize - 1;
 
     /* Save the interrupt vectors */
     PspBlock->TerminateAddress = IntVecTable[0x22];
@@ -633,7 +636,8 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     LPSTR ProgramFilePath, Parameters[128];
     CHAR CommandLineCopy[128];
     INT ParamCount = 0;
-    WORD i, Segment = 0, FileSize, ExeSize;
+    DWORD Segment = 0;
+    DWORD i, FileSize, ExeSize;
     PIMAGE_DOS_HEADER Header;
     PDWORD RelocationTable;
     PWORD RelocWord;
@@ -700,13 +704,22 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         // TODO: Verify checksum and executable!
 
         /* Get the base size of the file, in paragraphs (rounded up) */
-        ExeSize = (((Header->e_cp - 1) << 8) + Header->e_cblp + 0x0F) >> 4;
+        ExeSize = (((Header->e_cp - 1) * 512) + Header->e_cblp + 0x0F) >> 4;
 
-        /* Loop from the maximum to the minimum number of extra paragraphs */
-        for (i = Header->e_maxalloc; i >= Header->e_minalloc; i--)
+        /* Add the PSP size, in paragraphs */
+        ExeSize += sizeof(DOS_PSP) >> 4;
+
+        /* Add the maximum size that should be allocated */
+        ExeSize += Header->e_maxalloc;
+
+        /* Make sure it does not pass 0xFFFF */
+        if (ExeSize > 0xFFFF) ExeSize = 0xFFFF;
+
+        /* Reduce the size one by one until the allocation is successful */
+        for (i = Header->e_maxalloc; i >= Header->e_minalloc; i--, ExeSize--)
         {
             /* Try to allocate that much memory */
-            Segment = DosAllocateMemory(ExeSize + (sizeof(DOS_PSP) >> 4) + i, NULL);
+            Segment = DosAllocateMemory(ExeSize, NULL);
             if (Segment != 0) break;
         }
 
@@ -715,7 +728,8 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
 
         /* Initialize the PSP */
         DosInitializePsp(Segment,
-                         CommandLine, ExeSize + (sizeof(DOS_PSP) >> 4) + i,
+                         CommandLine,
+                         ExeSize,
                          EnvBlock);
 
         /* The process owns its own memory */
@@ -865,21 +879,21 @@ Done:
 
 CHAR DosReadCharacter()
 {
-    // TODO: STDIN can be redirected under DOS 2.0+
-    CHAR Character = 0;
+    CHAR Character = '\0';
+    WORD BytesRead;
 
-    /* A zero value for the character indicates a special key */
-    do Character = BiosGetCharacter();
-    while (!Character);
+    /* Use the file reading function */
+    DosReadFile(DOS_INPUT_HANDLE, &Character, sizeof(CHAR), &BytesRead);
 
     return Character;
 }
 
 VOID DosPrintCharacter(CHAR Character)
 {
-    // TODO: STDOUT can be redirected under DOS 2.0+
-    if (Character == '\r') Character = '\n';
-    putchar(Character);
+    WORD BytesWritten;
+
+    /* Use the file writing function */
+    DosWriteFile(DOS_OUTPUT_HANDLE, &Character, sizeof(CHAR), &BytesWritten);
 }
 
 VOID DosInt20h(WORD CodeSegment)
@@ -1382,7 +1396,7 @@ BOOLEAN DosInitialize()
 
     /* Initialize the MCB */
     Mcb->BlockType = 'Z';
-    Mcb->Size = (WORD)USER_MEMORY_SIZE;
+    Mcb->Size = USER_MEMORY_SIZE;
     Mcb->OwnerPsp = 0;
 
     /* Get the environment strings */
@@ -1428,8 +1442,10 @@ BOOLEAN DosInitialize()
 
         /* Move to the next string */
         SourcePtr += wcslen(SourcePtr) + 1;
-        DestPtr += strlen(AsciiString) + 1;
+        DestPtr += strlen(AsciiString);
+        *(DestPtr++) = 0;
     }
+    *DestPtr = 0;
 
     /* Free the memory allocated for environment strings */
     FreeEnvironmentStringsW(Environment);

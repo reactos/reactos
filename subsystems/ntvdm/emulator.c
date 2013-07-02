@@ -216,6 +216,12 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
                 BiosVideoService();
                 break;
             }
+            case BIOS_EQUIPMENT_INTERRUPT:
+            {
+                /* This is the BIOS "get equipment" command, call the BIOS */
+                BiosEquipmentService();
+                break;
+            }
             case BIOS_KBD_INTERRUPT:
             {
                 /* This is the keyboard BIOS interrupt, call the BIOS */
@@ -267,7 +273,7 @@ static VOID EmulatorHardwareIntAck(PVOID Context, BYTE Number)
 BOOLEAN EmulatorInitialize()
 {
     /* Allocate memory for the 16-bit address space */
-    BaseAddress = HeapAlloc(GetProcessHeap(), 0, MAX_ADDRESS);
+    BaseAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_ADDRESS);
     if (BaseAddress == NULL) return FALSE;
 
     /* Initialize the softx86 CPU emulator */
