@@ -248,13 +248,15 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
     return ERR_OK;
 }
 
+/* This function MUST return an error value that is not ERR_ABRT or ERR_OK if the connection
+ * is not accepted to avoid leaking the new PCB */
 static
 err_t
 InternalAcceptEventHandler(void *arg, PTCP_PCB newpcb, const err_t err)
 {
     /* Make sure the socket didn't get closed */
     if (!arg)
-        return ERR_ABRT;
+        return ERR_CLSD;
 
     TCPAcceptEventHandler(arg, newpcb);
 
@@ -262,7 +264,7 @@ InternalAcceptEventHandler(void *arg, PTCP_PCB newpcb, const err_t err)
     if (newpcb->callback_arg)
         return ERR_OK;
     else
-        return ERR_ABRT;
+        return ERR_CLSD;
 }
 
 static
