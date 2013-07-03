@@ -43,6 +43,9 @@ copy "$(SolutionDir)\drivers\filesystems\CDFS\$(OutDir)\CDFS.SYS" .
 copy "$(SolutionDir)\drivers\bus\PCI\$(OutDir)\PCI.SYS" .
 copy "$(SolutionDir)\drivers\usb\usbuhci\$(OutDir)\USBUHCI.SYS" .
 copy "$(SolutionDir)\drivers\usb\usbd\$(OutDir)\USBD.SYS" .
+copy "$(SolutionDir)\drivers\usb\usbccgp\$(OutDir)\USBCCGP.SYS" .
+copy "$(SolutionDir)\drivers\usb\usbehci\$(OutDir)\USBEHCI.SYS" .
+copy "$(SolutionDir)\drivers\usb\usbhub\$(OutDir)\USBHUB.SYS" .
 cd ..
 mkdir config
 cd "$(SolutionDir)\boot\bootdata"
@@ -80,6 +83,9 @@ copy "$(SolutionDir)\drivers\filesystems\CDFS\$(OutDir)\CDFS.SYS" .
 copy "$(SolutionDir)\drivers\bus\PCI\$(OutDir)\PCI.SYS" .
 copy "$(SolutionDir)\drivers\usb\usbuhci\$(OutDir)\USBUHCI.SYS" .
 copy "$(SolutionDir)\drivers\usb\usbd\$(OutDir)\USBD.SYS" .
+copy "$(SolutionDir)\drivers\usb\usbccgp\$(OutDir)\USBCCGP.SYS" .
+copy "$(SolutionDir)\drivers\usb\usbehci\$(OutDir)\USBEHCI.SYS" .
+copy "$(SolutionDir)\drivers\usb\usbhub\$(OutDir)\USBHUB.SYS" .
 cd ..
 mkdir config
 cd "$(SolutionDir)\boot\bootdata"
@@ -109,8 +115,17 @@ echo Creating ReactOS CD Live, writing Master-Boot-Rectord (MBR) in the process:
     <ProjectReference Include="..\..\drivers\filesystems\cdfs\cdfs.vcxproj">
       <Project>{1f0d3cae-da53-40bd-b7ea-77a521c4bbc2}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\drivers\usb\usbccgp\usbccgp.vcxproj">
+      <Project>{5c8b332e-b51e-4dfa-a6ee-1338c1075160}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\drivers\usb\usbd\usbd.vcxproj">
       <Project>{17786c00-926d-45ff-a031-3800821afc7a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\drivers\usb\usbehci\usbehci.vcxproj">
+      <Project>{5c2b3a8c-7ada-4a5c-9cd6-d6bfa856d42e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\drivers\usb\usbhub\usbhub.vcxproj">
+      <Project>{53db47d8-29a6-49e9-a741-967a5546376e}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\drivers\usb\usbuhci\usbuhci.vcxproj">
       <Project>{1bf87245-cd63-4e76-a594-1790bd61c498}</Project>
