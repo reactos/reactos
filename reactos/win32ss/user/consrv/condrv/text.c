@@ -18,12 +18,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/*
-// Define wmemset(...)
-#include <wchar.h>
-#define HAVE_WMEMSET
-*/
-
 
 /* GLOBALS ********************************************************************/
 
@@ -323,13 +317,10 @@ ConioResizeBuffer(PCONSOLE Console,
     PCHAR_INFO Buffer;
     DWORD Offset = 0;
     PCHAR_INFO ptr;
+    WORD CurrentAttribute;
     USHORT CurrentY;
     PCHAR_INFO OldBuffer;
-#ifdef HAVE_WMEMSET
-    USHORT value = MAKEWORD(' ', ScreenBuffer->ScreenDefaultAttrib);
-#else
     DWORD i;
-#endif
     DWORD diff;
 
     /* Buffer size is not allowed to be smaller than the view size */
@@ -374,28 +365,29 @@ ConioResizeBuffer(PCONSOLE Console,
             RtlCopyMemory(Buffer + Offset, ptr, ScreenBuffer->ScreenBufferSize.X * sizeof(CHAR_INFO));
             Offset += ScreenBuffer->ScreenBufferSize.X;
 
+            /* The attribute to be used is the one of the last cell of the current line */
+            CurrentAttribute = ConioCoordToPointer(ScreenBuffer,
+                                                   ScreenBuffer->ScreenBufferSize.X - 1,
+                                                   CurrentY)->Attributes;
+
             diff = Size.X - ScreenBuffer->ScreenBufferSize.X;
-            /* Zero new part of it */
-#ifdef HAVE_WMEMSET
-            wmemset((PWCHAR)&Buffer[Offset], value, diff);
-#else
+
+            /* Zero-out the new part of the buffer */
             for (i = 0; i < diff; i++)
             {
                 ptr = Buffer + Offset;
                 ptr->Char.UnicodeChar = L' ';
-                ptr->Attributes = ScreenBuffer->ScreenDefaultAttrib;
+                ptr->Attributes = CurrentAttribute;
                 ++Offset;
             }
-#endif
         }
     }
 
     if (Size.Y > ScreenBuffer->ScreenBufferSize.Y)
     {
         diff = Size.X * (Size.Y - ScreenBuffer->ScreenBufferSize.Y);
-#ifdef HAVE_WMEMSET
-        wmemset((PWCHAR)&Buffer[Offset], value, diff);
-#else
+
+        /* Zero-out the new part of the buffer */
         for (i = 0; i < diff; i++)
         {
             ptr = Buffer + Offset;
@@ -403,7 +395,6 @@ ConioResizeBuffer(PCONSOLE Console,
             ptr->Attributes = ScreenBuffer->ScreenDefaultAttrib;
             ++Offset;
         }
-#endif
     }
 
     (void)InterlockedExchangePointer((PVOID volatile*)&ScreenBuffer->Buffer, Buffer);
