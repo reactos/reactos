@@ -16,8 +16,6 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static BYTE CursorRow, CursorCol;
-static WORD ConsoleWidth, ConsoleHeight;
 static BYTE BiosKeyboardMap[256];
 static WORD BiosKbdBuffer[BIOS_KBD_BUFFER_SIZE];
 static UINT BiosKbdBufferStart = 0, BiosKbdBufferEnd = 0;
@@ -30,17 +28,9 @@ static BOOLEAN BiosPassedMidnight = FALSE;
 static COORD BiosVideoAddressToCoord(ULONG Address)
 {
     COORD Result = {0, 0};
-    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
-    HANDLE ConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    if (!GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo))
-    {
-        ASSERT(FALSE);
-        return Result;
-    }
-
-    Result.X = ((Address - CONSOLE_VIDEO_MEM_START) >> 1) % ConsoleInfo.dwSize.X;
-    Result.Y = ((Address - CONSOLE_VIDEO_MEM_START) >> 1) / ConsoleInfo.dwSize.X;
+    Result.X = ((Address - CONSOLE_VIDEO_MEM_START) >> 1) % CONSOLE_WIDTH;
+    Result.Y = ((Address - CONSOLE_VIDEO_MEM_START) >> 1) / CONSOLE_WIDTH;
 
     return Result;
 }
@@ -92,9 +82,9 @@ BOOLEAN BiosInitialize()
 {
     INT i;
     WORD Offset = 0;
+    COORD Size = { CONSOLE_WIDTH, CONSOLE_HEIGHT};
     HANDLE ConsoleInput = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE ConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO ConsoleInfo;
     LPWORD IntVecTable = (LPWORD)((ULONG_PTR)BaseAddress);
     LPBYTE BiosCode = (LPBYTE)((ULONG_PTR)BaseAddress + TO_LINEAR(BIOS_SEGMENT, 0));
 
@@ -122,17 +112,8 @@ BOOLEAN BiosInitialize()
         BiosCode[Offset++] = 0xCF; // iret
     }
 
-    /* Get the console buffer info */
-    if (!GetConsoleScreenBufferInfo(ConsoleOutput, &ConsoleInfo))
-    {
-        return FALSE;
-    }
-
-    /* Set the initial cursor position and console size */
-    CursorCol = ConsoleInfo.dwCursorPosition.X;
-    CursorRow = ConsoleInfo.dwCursorPosition.Y;
-    ConsoleWidth = ConsoleInfo.dwSize.X;
-    ConsoleHeight = ConsoleInfo.dwSize.Y;
+    /* Set the console buffer size */
+    if (!SetConsoleScreenBufferSize(ConsoleOutput, Size)) return FALSE;
 
     /* Set the console input mode */
     SetConsoleMode(ConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
@@ -168,34 +149,31 @@ VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress)
 {
     ULONG i;
     COORD Coordinates;
-    DWORD CharsWritten;
+    COORD Origin = { 0, 0 };
+    COORD UnitSize = { 1, 1 };
+    CHAR_INFO Character;
+    SMALL_RECT Rect;
     HANDLE ConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
 
+    /* Start from the character address */
+    StartAddress &= ~1;
+
     /* Loop through all the addresses */
-    for (i = StartAddress; i < EndAddress; i++)
+    for (i = StartAddress; i < EndAddress; i += 2)
     {
         /* Get the coordinates */
         Coordinates = BiosVideoAddressToCoord(i);
 
-        /* Check if this is a character byte or an attribute byte */
-        if ((i - CONSOLE_VIDEO_MEM_START) % 2 == 0)
-        {
-            /* This is a regular character */
-            FillConsoleOutputCharacterA(ConsoleOutput,
-                                        *(PCHAR)((ULONG_PTR)BaseAddress + i),
-                                        sizeof(CHAR),
-                                        Coordinates,
-                                        &CharsWritten);
-        }
-        else
-        {
-            /*  This is an attribute */
-            FillConsoleOutputAttribute(ConsoleOutput,
-                                       *(PCHAR)((ULONG_PTR)BaseAddress + i),
-                                       sizeof(CHAR),
-                                       Coordinates,
-                                       &CharsWritten);
-        }
+        /* Fill the rectangle structure */
+        Rect.Left = Coordinates.X;
+        Rect.Top = Coordinates.Y;
+
+        /* Fill the character data */
+        Character.Char.AsciiChar = *((PCHAR)((ULONG_PTR)BaseAddress + i));
+        Character.Attributes = *((PBYTE)((ULONG_PTR)BaseAddress + i + 1));
+
+        /* Write the character */
+        WriteConsoleOutputA(ConsoleOutput, &Character, UnitSize, Origin, &Rect);
     }
 }
 
@@ -294,6 +272,7 @@ VOID BiosVideoService()
     BOOLEAN Invisible = FALSE;
     COORD Position;
     CONSOLE_CURSOR_INFO CursorInfo;
+    CONSOLE_SCREEN_BUFFER_INFO ScreenBufferInfo;
     CHAR_INFO Character;
     SMALL_RECT Rect;
     DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
@@ -330,6 +309,27 @@ VOID BiosVideoService()
             break;
         }
 
+        /* Get Cursor Position */
+        case 0x03:
+        {
+            INT StartLine;
+
+            /* Retrieve the data */
+            GetConsoleCursorInfo(ConsoleOutput, &CursorInfo);
+            GetConsoleScreenBufferInfo(ConsoleOutput, &ScreenBufferInfo);
+
+            /* Find the first line */
+            StartLine = 32 - ((CursorInfo.dwSize * 32) / 100);
+
+            /* Return the result */
+            EmulatorSetRegister(EMULATOR_REG_AX, 0);
+            EmulatorSetRegister(EMULATOR_REG_CX, (StartLine << 8) | 0x1F);
+            EmulatorSetRegister(EMULATOR_REG_DX,
+                                LOWORD(ScreenBufferInfo.dwCursorPosition.Y) << 8
+                                || LOWORD(ScreenBufferInfo.dwCursorPosition.X));
+            break;
+        }
+
         /* Scroll Up/Down Window */
         case 0x06:
         case 0x07:
@@ -355,18 +355,75 @@ VOID BiosVideoService()
         /* Read Character And Attribute At Cursor Position */
         case 0x08:
         {
+            COORD BufferSize = { 1, 1 }, Origin = { 0, 0 };
+
+            /* Get the cursor position */
+            GetConsoleScreenBufferInfo(ConsoleOutput, &ScreenBufferInfo);
+
+            /* Read at cursor position */
+            Rect.Left = ScreenBufferInfo.dwCursorPosition.X;
+            Rect.Top = ScreenBufferInfo.dwCursorPosition.Y;
+            
+            /* Read the console output */
+            ReadConsoleOutput(ConsoleOutput, &Character, BufferSize, Origin, &Rect);
+
+            /* Return the result */
+            EmulatorSetRegister(EMULATOR_REG_AX,
+                                (LOBYTE(Character.Attributes) << 8)
+                                | Character.Char.AsciiChar);
+
             break;
         }
 
         /* Write Character And Attribute At Cursor Position */
         case 0x09:
         {
+            DWORD CharsWritten;
+
+            /* Get the cursor position */
+            GetConsoleScreenBufferInfo(ConsoleOutput, &ScreenBufferInfo);
+
+            /* Write the attribute to the output */
+            FillConsoleOutputAttribute(ConsoleOutput,
+                                       LOBYTE(Ebx),
+                                       LOWORD(Ecx),
+                                       ScreenBufferInfo.dwCursorPosition,
+                                       &CharsWritten);
+
+            /* Write the character to the output */
+            FillConsoleOutputCharacterA(ConsoleOutput,
+                                        LOBYTE(Eax),
+                                        LOWORD(Ecx),
+                                        ScreenBufferInfo.dwCursorPosition,
+                                        &CharsWritten);
+
             break;
         }
 
         /* Write Character Only At Cursor Position */
         case 0x0A:
         {
+            DWORD CharsWritten;
+
+            /* Get the cursor position */
+            GetConsoleScreenBufferInfo(ConsoleOutput, &ScreenBufferInfo);
+
+            /* Write the character to the output */
+            FillConsoleOutputCharacterA(ConsoleOutput,
+                                        LOBYTE(Eax),
+                                        LOWORD(Ecx),
+                                        ScreenBufferInfo.dwCursorPosition,
+                                        &CharsWritten);
+
+            break;
+        }
+
+        case 0x0F:
+        {
+            /* Return just text mode information, for now */
+            EmulatorSetRegister(EMULATOR_REG_AX, 0x5003);
+            EmulatorSetRegister(EMULATOR_REG_BX, 0x0000);
+
             break;
         }
 

@@ -36,8 +36,8 @@ static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT S
         && (Address < CONSOLE_VIDEO_MEM_END))
     {
         /* Call the VDM BIOS to update the video memory */
-        BiosUpdateConsole(max(Address, CONSOLE_VIDEO_MEM_START),
-                          min(Address + Size, CONSOLE_VIDEO_MEM_END));
+        BiosUpdateVideoMemory(max(Address, CONSOLE_VIDEO_MEM_START),
+                              min(Address + Size, CONSOLE_VIDEO_MEM_END));
     }
 
     /* Read the data from the virtual address space and store it in the buffer */

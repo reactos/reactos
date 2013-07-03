@@ -943,6 +943,7 @@ VOID DosInt21h(WORD CodeSegment)
         }
 
         /* Read Character Without Echo */
+        case 0x07:
         case 0x08:
         {
             EmulatorSetRegister(EMULATOR_REG_AX,

@@ -47,7 +47,7 @@ enum
     EMULATOR_EXCEPTION_NO_FPU
 };
 
-typedef enum
+enum
 {
     EMULATOR_REG_AX,
     EMULATOR_REG_CX,
@@ -61,7 +61,7 @@ typedef enum
     EMULATOR_REG_CS,
     EMULATOR_REG_SS,
     EMULATOR_REG_DS,
-} EMULATOR_REGISTER;
+};
 
 /* FUNCTIONS ******************************************************************/
 
