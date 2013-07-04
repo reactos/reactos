@@ -64,7 +64,7 @@ VOID InitPrompt(VOID)
 
     /*
      * Set the PROMPT environment variable if it doesn't exist already.
-     * You can change the PROMPT environment variable before cmd start.
+     * You can change the PROMPT environment variable before cmd starts.
      */
     if (GetEnvironmentVariable(_T("PROMPT"), Buffer, sizeof(Buffer) / sizeof(Buffer[0])) == 0)
         SetEnvironmentVariable(_T("PROMPT"), DefaultPrompt);
@@ -261,8 +261,8 @@ INT cmd_prompt(LPTSTR param)
      * So even if 'param' is null you _must_ still set prompt
      * to the default.  There seems to be some kind of difference
      * between winxp and 2k in this matter and this way will
-     * cover both. Do not use fixed size of szParam for param the buffer
-     * are 8192 bytes and will later change to dynamic buffer.
+     * cover both. Do not use fixed size of 'szParam' for 'param';
+     * the buffers are 8192 bytes and will later change to dynamic buffer.
      */
 
     /* Set the PROMPT environment variable */
