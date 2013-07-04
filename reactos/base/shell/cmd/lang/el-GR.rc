@@ -364,10 +364,12 @@ Prompt can be made up of normal characters and the following special codes:\n\n\
   $F   ) (Right parenthesis)\n\
   $G   > (greater-than sign)\n\
   $H   Backspace (erases previous character)\n\
+  $I   Information line\n\
   $L   < (less-than sign)\n\
   $N   Current drive\n\
   $P   Current drive and path\n\
   $Q   = (equal sign)\n\
+  $S   (space)\n\
   $T   Current time\n\
   $V   OS version number\n\
   $_   Carriage return and linefeed\n\

@@ -364,10 +364,12 @@ códigos especiales:\n\n\
   $F   ) (Paréntesis derecho)\n\
   $G   > (Signo mayor que)\n\
   $H   Borra el caracter anterior\n\
+  $I   Information line\n\
   $L   < (Signo menor que)\n\
   $N   Unidad actual\n\
   $P   Unidad y ruta actuales\n\
   $Q   = (signo igual)\n\
+  $S   (space)\n\
   $T   Hora actual\n\
   $V   Número de versión del SO\n\
   $_   Salto de linea\n\

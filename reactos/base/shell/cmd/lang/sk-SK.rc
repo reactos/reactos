@@ -368,10 +368,12 @@ Prompt can be made up of normal characters and the following special codes:\n\n\
   $F   ) (Pravá okrúhla zátvorka)\n\
   $G   > (greater-than sign)\n\
   $H   Backspace (erases previous character)\n\
+  $I   Information line\n\
   $L   < (less-than sign)\n\
   $N   Current drive\n\
   $P   Current drive and path\n\
   $Q   = (equal sign)\n\
+  $S   (space)\n\
   $T   Aktuálny čas\n\
   $V   Číslo verzie OS\n\
   $_   Carriage return and linefeed\n\

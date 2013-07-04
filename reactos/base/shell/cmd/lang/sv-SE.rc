@@ -359,10 +359,12 @@ Ledeteksten kan bli satt sammen av normale tegn och følgende spesielle koder:\n
   $F   ) (Høyreparentes)\n\
   $G   > (større-enn symbol)\n\
   $H   Tilbake (sletter forrige tegn)\n\
+  $I   Information line\n\
   $L   < (mindre-enn symbol)\n\
   $N   aktuell enhet\n\
   $P   aktuell enhet och mapp\n\
   $Q   = (likhetstegn)\n\
+  $S   (space)\n\
   $T   aktuell klokkeslett\n\
   $V   Versjonsnummer for ReactOS\n\
   $_   Retur och linjeskift\n\

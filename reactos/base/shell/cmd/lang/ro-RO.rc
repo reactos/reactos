@@ -401,10 +401,12 @@ PROMPT [text]\n\n\
   $F   ) (paranteză dreapta)\n\
   $G   > (semnul mai mare decât)\n\
   $H   Backspace (ștergerea caracterului precedent)\n\
+  $I   Information line\n\
   $L   < (semnul mai mic decât)\n\
   $N   Unitatea de stocare curentă\n\
   $P   Unitatea de stocare și calea curentă\n\
   $Q   = (semnul egal)\n\
+  $S   (space)\n\
   $T   Ora curentă\n\
   $V   Numărul versiunii SO\n\
   $_   Sfârșit de linie și rând nou\n\

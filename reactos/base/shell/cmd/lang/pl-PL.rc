@@ -366,10 +366,12 @@ Znak zachęty może składać się z normalnych znaków, a także poniższych sy
   $F   ) (prawy nawias)\n\
   $G   > (znak większości)\n\
   $H   (usuwa ostatni znak)\n\
+  $I   Information line\n\
   $L   < (znak mniejszości)\n\
   $N   Bieżący napęd\n\
   $P   Bieżący napęd i ścieżka\n\
   $Q   = (znak równości)\n\
+  $S   (space)\n\
   $T   Bieżący czas\n\
   $V   Wersja systemu\n\
   $_   Znak CR/LF\n\

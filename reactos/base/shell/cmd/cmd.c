@@ -1615,7 +1615,6 @@ Initialize()
     HMODULE NtDllModule;
     TCHAR commandline[CMDLINE_LENGTH];
     TCHAR ModuleName[_MAX_PATH + 1];
-    TCHAR lpBuffer[2];
     INT nExitCode;
 
     //INT len;
@@ -1643,16 +1642,12 @@ Initialize()
     hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     hIn  = GetStdHandle(STD_INPUT_HANDLE);
 
-    /* Set EnvironmentVariable PROMPT if it does not exists any env value.
-       for you can change the EnvirommentVariable for prompt before cmd start
-       this patch are not 100% right, if it does not exists a PROMPT value cmd should use
-       $P$G as defualt not set EnvirommentVariable PROMPT to $P$G if it does not exists */
-    if (GetEnvironmentVariable(_T("PROMPT"),lpBuffer, sizeof(lpBuffer) / sizeof(lpBuffer[0])) == 0)
-        SetEnvironmentVariable(_T("PROMPT"), _T("$P$G"));
+    /* Initialize prompt support */
+    InitPrompt();
 
 #ifdef FEATURE_DIR_STACK
     /* initialize directory stack */
-    InitDirectoryStack ();
+    InitDirectoryStack();
 #endif
 
 #ifdef FEATURE_HISTORY
@@ -1750,6 +1745,7 @@ Initialize()
     if (!*ptr)
     {
         /* If neither /C or /K was given, display a simple version string */
+        ConOutChar(_T('\n'));
         ConOutResPrintf(STRING_REACTOS_VERSION,
             _T(KERNEL_RELEASE_STR),
             _T(KERNEL_VERSION_BUILD_STR));

@@ -48,19 +48,72 @@
  */
 #include "precomp.h"
 
+// FIXME: Localize the information line.
+static TCHAR InfoLine[] = _T("  ReactOS Command Prompt                                      Type HELP = Help  ");
+
+/* The default prompt */
+static TCHAR DefaultPrompt[] = _T("$I$P$G");
+
+
 /*
- * print the command-line prompt
+ * Initialize prompt support
+ */
+VOID InitPrompt(VOID)
+{
+    TCHAR Buffer[2];
+
+    /*
+     * Set the PROMPT environment variable if it doesn't exist already.
+     * You can change the PROMPT environment variable before cmd start.
+     */
+    if (GetEnvironmentVariable(_T("PROMPT"), Buffer, sizeof(Buffer) / sizeof(Buffer[0])) == 0)
+        SetEnvironmentVariable(_T("PROMPT"), DefaultPrompt);
+}
+
+/*
+ * Print an information line on top of the screen
+ */
+VOID PrintInfoLine(VOID)
+{
+#define FOREGROUND_WHITE (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY)
+
+    HANDLE hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD coPos;
+    DWORD dwWritten;
+
+    if (!GetConsoleScreenBufferInfo(hOutput, &csbi))
+    {
+        /* No console */
+        return;
+    }
+
+    coPos.X = 0;
+    coPos.Y = 0;
+    FillConsoleOutputAttribute(hOutput, BACKGROUND_BLUE | FOREGROUND_WHITE,
+                               csbi.dwSize.X,
+                               coPos, &dwWritten);
+    FillConsoleOutputCharacter(hOutput, _T(' '),
+                               csbi.dwSize.X,
+                               coPos, &dwWritten);
+
+    WriteConsoleOutputCharacter(hOutput, InfoLine,
+                                sizeof(InfoLine)/sizeof(TCHAR) - 1,
+                                coPos, &dwWritten);
+}
+
+/*
+ * Print the command-line prompt
  */
 VOID PrintPrompt(VOID)
 {
-    static TCHAR default_pr[] = _T("$P$G");
     TCHAR  szPrompt[256];
     LPTSTR pr;
 
     if (GetEnvironmentVariable(_T("PROMPT"), szPrompt, 256))
         pr = szPrompt;
     else
-        pr = default_pr;
+        pr = DefaultPrompt;
 
     while (*pr)
     {
@@ -106,6 +159,10 @@ VOID PrintPrompt(VOID)
                     ConOutChar(_T('\x08'));
                     ConOutChar(_T(' '));
                     ConOutChar(_T('\x08'));
+                    break;
+
+                case _T('I'):
+                    PrintInfoLine();
                     break;
 
                 case _T('L'):
@@ -185,40 +242,33 @@ VOID PrintPrompt(VOID)
 
 #ifdef INCLUDE_CMD_PROMPT
 
-INT cmd_prompt (LPTSTR param)
+INT cmd_prompt(LPTSTR param)
 {
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_PROMPT_HELP1);
+        ConOutResPaging(TRUE, STRING_PROMPT_HELP1);
 
 #ifdef FEATURE_DIRECTORY_STACK
-        ConOutResPaging(FALSE,STRING_PROMPT_HELP2);
+        ConOutResPaging(FALSE, STRING_PROMPT_HELP2);
 #endif
-        ConOutResPaging(FALSE,STRING_PROMPT_HELP3);
+        ConOutResPaging(FALSE, STRING_PROMPT_HELP3);
         return 0;
     }
 
     /*
-     * if it is null, then it needs to set to default,
+     * If 'param' is NULL, then we need to set it to default,
      * because that means the user entered "prompt" only.
-     * so even if param is null you _must_ still set prompt
-     * to the default.  There seems to be some kinda difference
+     * So even if 'param' is null you _must_ still set prompt
+     * to the default.  There seems to be some kind of difference
      * between winxp and 2k in this matter and this way will
      * cover both. Do not use fixed size of szParam for param the buffer
-     * are 8192 bytes and will later change to dymatic buffer.
+     * are 8192 bytes and will later change to dynamic buffer.
      */
 
-    /* set PROMPT environment variable */
-    if (param[0] != _T('\0'))
+    /* Set the PROMPT environment variable */
+    if (!SetEnvironmentVariable(_T("PROMPT"),
+                                (param[0] != _T('\0') ? param : DefaultPrompt)))
     {
-        if (!SetEnvironmentVariable (_T("PROMPT"), param))
-        return 1;
-    }
-    else
-    {
-        TCHAR szParam[5];
-        _tcscpy(szParam,_T("$P$G"));
-        if (!SetEnvironmentVariable (_T("PROMPT"),szParam))
         return 1;
     }
 

@@ -72,8 +72,8 @@ INT cmd_ver (LPTSTR param)
     /* Basic copyright notice */
     if (param[0] != _T('\0'))
     {
-        ConOutPuts (_T("Copyright (C) 1994-1998 Tim Norman and others."));
-        ConOutPuts (_T("Copyright (C) 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team"));
+        ConOutPuts(_T("Copyright (C) 1994-1998 Tim Norman and others.\n"));
+        ConOutPuts(_T("Copyright (C) 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team\n"));
 
         for (i = 0; param[i]; i++)
         {

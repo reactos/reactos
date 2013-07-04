@@ -378,10 +378,12 @@ des caractères spéciaux suivants:\n\n\
   $F   ) (parenthèse fermante)\n\
   $G   > (signe supérieur à)\n\
   $H   Backspace (efface le caractère précédent)\n\
+  $I   Ligne d'information\n\
   $L   < (signe inférieur à)\n\
   $N   Lecteur courant\n\
   $P   Lecteur et chemin courants\n\
   $Q   = (signe égale)\n\
+  $S   (espace)\n\
   $T   Heure courante\n\
   $V   Numéro de version de ReactOS\n\
   $_   Retour chariot/saut de ligne\n\
@@ -718,7 +720,7 @@ STRING_REPLACE_ERROR6, "Aucun fichier trouvé - %s\n"
 STRING_REPLACE_ERROR7, "Erreur étendue 32\n"
 
 STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
-STRING_CMD_SHELLINFO,              "\n Interpréteur de ligne de commandes ReactOS\nVersion %s %s"
+STRING_CMD_SHELLINFO,              "\nInterpréteur de ligne de commandes ReactOS\nVersion %s %s"
 STRING_VERSION_RUNVER,             " tournant sur %s"
 STRING_COPY_FILE,                  "        %d fichier(s) copié(s)\n"
 STRING_DELETE_WIPE,                "effacé(s)"

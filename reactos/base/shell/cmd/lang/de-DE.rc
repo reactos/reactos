@@ -361,10 +361,12 @@ Sie kann aus normalen Zeichen und folgenden Sonderzeichen bestehen:\n\n\
   $F   ) (Klammer zu)\n\
   $G   > (Größer-als-Zeichen)\n\
   $H   Rückschritt (löscht vorangehendes Zeichen)\n\
+  $I   Information line\n\
   $L   < (Kleiner-als-Zeichen)\n\
   $N   Aktuelles Laufwerk\n\
   $P   Aktuelles Laufwerk und Pfad\n\
   $Q   = (Gleichheitszeichen)\n\
+  $S   (space)\n\
   $T   Aktuelle Zeit\n\
   $V   Betriebssystem-Versionsnummer\n\
   $_   Wagenrücklauf und Zeilenvorschub\n\

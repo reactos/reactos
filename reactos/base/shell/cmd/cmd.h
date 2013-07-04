@@ -405,6 +405,7 @@ INT cmd_path (LPTSTR);
 
 
 /* Prototypes from PROMPT.C */
+VOID InitPrompt (VOID);
 VOID PrintPrompt (VOID);
 INT  cmd_prompt (LPTSTR);
 

@@ -364,10 +364,12 @@ Prompt bisa dibuat dari karakter normal dan kode spesial berikut:\n\n\
   $F   ) (Tanda kurung Kanan)\n\
   $G   > (Tanda lebih-dari)\n\
   $H   Backspace (menghapus karakter sebelumnya)\n\
+  $I   Information line\n\
   $L   < (tanda kurang-dari)\n\
   $N   Drive saat ini\n\
   $P   Drive dan path saat ini\n\
   $Q   = (tanda sama dengan)\n\
+  $S   (space)\n\
   $T   Jam saat ini\n\
   $V   Nomor versi OS\n\
   $_   Carriage return dan linefeed\n\

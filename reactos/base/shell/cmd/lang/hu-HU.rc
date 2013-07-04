@@ -350,10 +350,12 @@ A parancssor speciális kódokat is tartalmazhat:\n\n\
   $F   ) (záró zárójel)\n\
   $G   > ('nagyobb' jel)\n\
   $H   Törlés (elötte lévõ karaktert törli)\n\
+  $I   Information line\n\
   $L   < ('kissebb' jel)\n\
   $N   Aktuális meghajtó\n\
   $P   Aktuális meghajtó és mappa\n\
   $Q   = (egyenlõség jel)\n\
+  $S   (space)\n\
   $T   Aktuális idõ\n\
   $V   OS verziószám\n\
   $_   Újsor\n\

@@ -368,10 +368,12 @@ Può essere composto da un testo qualunque e dai seguenti codici speciali:\n\n\
   $F   ) (parentesi destra)\n\
   $G   > (simbolo di maggiore di)\n\
   $H   Backspace (cancella il carattere precedente)\n\
+  $I   Information line\n\
   $L   < (simbolo di minore di)\n\
   $N   Disco corrente\n\
   $P   Disco e percorso corrente\n\
   $Q   = (simbolo di uguale)\n\
+  $S   (space)\n\
   $T   Ora attuale\n\
   $V   Versione del sistema operativo\n\
   $_   CR LF (a capo)\n\
