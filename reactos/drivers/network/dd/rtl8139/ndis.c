@@ -356,6 +356,7 @@ MiniportInitialize (
     if (adapter->ReceiveBuffer == NULL)
     {
         NDIS_DbgPrint(MIN_TRACE, ("Unable to allocate receive buffer\n"));
+        status = NDIS_STATUS_RESOURCES;
         goto Cleanup;
     }
     
@@ -367,6 +368,7 @@ MiniportInitialize (
     if (adapter->RuntTxBuffers == NULL)
     {
         NDIS_DbgPrint(MIN_TRACE, ("Unable to allocate runt TX buffer\n"));
+        status = NDIS_STATUS_RESOURCES;
         goto Cleanup;
     }
     

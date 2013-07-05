@@ -12,7 +12,7 @@ list(APPEND SOURCE
     rtl8139.rc)
 
 add_library(rtl8139 SHARED ${SOURCE})
-add_pch(rtl8139 pcnet.h)
+add_pch(rtl8139 nic.h)
 set_module_type(rtl8139 kernelmodedriver)
 add_importlibs(rtl8139 ndis ntoskrnl hal)
 add_cd_file(TARGET rtl8139 DESTINATION reactos/system32/drivers FOR all)
