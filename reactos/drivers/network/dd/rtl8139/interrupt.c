@@ -78,7 +78,6 @@ MiniportHandleInterrupt (
     )
 {
     PRTL_ADAPTER adapter = (PRTL_ADAPTER)MiniportAdapterContext;
-    ULONG i;
     ULONG txStatus;
     UCHAR command;
     PPACKET_HEADER nicHeader;
@@ -146,7 +145,7 @@ MiniportHandleInterrupt (
     //
     if (adapter->InterruptPending & (R_I_RXOK | R_I_RXERR))
     {
-        for (i = 0; i < MAX_RECEIVES_PER_INT; i++)
+        for (;;)
         {
             NdisRawReadPortUchar(adapter->IoBase + R_CMD, &command);
             if (command & R_CMD_RXEMPTY)
@@ -200,6 +199,15 @@ MiniportHandleInterrupt (
             adapter->ReceiveOffset += nicHeader->PacketLength + sizeof(PACKET_HEADER);
             adapter->ReceiveOffset = (adapter->ReceiveOffset + 3) & ~3;
             NdisRawWritePortUshort(adapter->IoBase + R_CAPR, adapter->ReceiveOffset - 0x10);
+            
+            if (adapter->InterruptPending & (R_I_RXOVRFLW | R_I_FIFOOVR))
+            {
+                //
+                // We can only clear these interrupts once CAPR has been reset
+                //
+                NdisRawWritePortUshort(adapter->IoBase + R_IS, R_I_RXOVRFLW | R_I_FIFOOVR);
+                adapter->InterruptPending &= ~(R_I_RXOVRFLW | R_I_FIFOOVR);
+            }
         }
         
         NdisMEthIndicateReceiveComplete(adapter->MiniportAdapterHandle);

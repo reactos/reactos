@@ -12,9 +12,8 @@
 #define RESOURCE_LIST_TAG 'Rltr'
 
 #define MAX_RESET_ATTEMPTS 25
-#define MAX_RECEIVES_PER_INT 10
-#define RECEIVE_BUFFER_SIZE      (32768)
-#define FULL_RECEIVE_BUFFER_SIZE (32768 + 16 + 2048)
+#define RECEIVE_BUFFER_SIZE      (65536)
+#define FULL_RECEIVE_BUFFER_SIZE (65536 + 16 + 2048)
 #define RECV_CRC_LENGTH 4
 
 #define MINIMUM_FRAME_SIZE 60
@@ -22,11 +21,11 @@
 
 #define DRIVER_VERSION 1
 
-// 32K RX buffer, 512 byte DMA bursts
-#define RC_VAL (0x0001680)
+// 1/2 packet early RX, 512 byte FIFO threshold, 64K RX buffer, unlimited DMA bursts, WRAP
+#define RC_VAL (0x800BF80)
 
-// 1024 byte DMA bursts
-#define TC_VAL (0x600)
+// 2048 byte DMA bursts
+#define TC_VAL (0x700)
 
 typedef struct _RTL_ADAPTER {
     NDIS_HANDLE MiniportAdapterHandle;
