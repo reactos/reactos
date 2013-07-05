@@ -234,6 +234,12 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
                 BiosTimeService();
                 break;
             }
+            case BIOS_SYS_TIMER_INTERRUPT:
+            {
+                /* BIOS timer update */
+                BiosSystemTimerInterrupt();
+                break;
+            }
             case 0x20:
             {
                 DosInt20h(CodeSegment);

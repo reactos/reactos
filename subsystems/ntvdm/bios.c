@@ -22,11 +22,16 @@ static UINT BiosKbdBufferStart = 0, BiosKbdBufferEnd = 0;
 static BOOLEAN BiosKbdBufferEmpty = TRUE;
 static DWORD BiosTickCount = 0;
 static BOOLEAN BiosPassedMidnight = FALSE;
-static HANDLE BiosConsoleInput, BiosConsoleOutput;
+static HANDLE BiosConsoleInput = INVALID_HANDLE_VALUE;
+static HANDLE BiosConsoleOutput = INVALID_HANDLE_VALUE;
 static BYTE CurrentVideoMode = BIOS_DEFAULT_VIDEO_MODE;
 static BYTE CurrentVideoPage = 0;
 static HANDLE ConsoleBuffers[BIOS_MAX_PAGES] = { NULL };
 static LPVOID ConsoleFramebuffers[BIOS_MAX_PAGES] = { NULL };
+static HANDLE ConsoleMutexes[BIOS_MAX_PAGES] = { NULL };
+static BOOLEAN VideoNeedsUpdate = TRUE;
+static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
+static CONSOLE_SCREEN_BUFFER_INFO BiosSavedBufferInfo;
 static VIDEO_MODE VideoModes[] =
 {
     /* Width | Height | Text | Colors | Gray | Pages | Segment */
@@ -54,14 +59,39 @@ static VIDEO_MODE VideoModes[] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static INT BiosColorNumberToBits(DWORD Colors)
+{
+    INT i;
+
+    /* Find the index of the highest-order bit */
+    for (i = 31; i >= 0; i--) if (Colors & (1 << i)) break;
+
+    /* Special case for zero */
+    if (i == 0) i = 32;
+
+    return i;
+}
+
 static COORD BiosVideoAddressToCoord(ULONG Address)
 {
     COORD Result = {0, 0};
+    INT BitsPerPixel;
+    DWORD Offset = Address - (VideoModes[CurrentVideoMode].Segment << 4);
 
-    Result.X = ((Address - (VideoModes[CurrentVideoMode].Segment << 4)) >> 1)
-               % VideoModes[CurrentVideoMode].Width;
-    Result.Y = ((Address - (VideoModes[CurrentVideoMode].Segment << 4)) >> 1)
-               / VideoModes[CurrentVideoMode].Width;
+    if (VideoModes[CurrentVideoMode].Text)
+    {
+        Result.X = (Offset / sizeof(WORD)) % VideoModes[CurrentVideoMode].Width;
+        Result.Y = (Offset / sizeof(WORD)) / VideoModes[CurrentVideoMode].Width;
+    }
+    else
+    {
+        BitsPerPixel = BiosColorNumberToBits(VideoModes[CurrentVideoMode].Colors);
+
+        Result.X = ((Offset * 8) / BitsPerPixel)
+                   % VideoModes[CurrentVideoMode].Width;
+        Result.Y = ((Offset * 8) / BitsPerPixel)
+                   / VideoModes[CurrentVideoMode].Width;
+    }
 
     return Result;
 }
@@ -130,6 +160,7 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
     for (i = 0; i < VideoModes[CurrentVideoMode].Pages; i++)
     {
         if (ConsoleBuffers[i] != NULL) CloseHandle(ConsoleBuffers[i]);
+        if (!VideoModes[CurrentVideoMode].Text) CloseHandle(ConsoleMutexes[i]);
     }
 
     if (VideoModes[ModeNumber].Text)
@@ -182,14 +213,7 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
         BitmapInfo->bmiHeader.biHeight = VideoModes[ModeNumber].Height;
         BitmapInfo->bmiHeader.biPlanes = 1;
         BitmapInfo->bmiHeader.biCompression = BI_RGB;
-
-        /* Calculate the number of color bits */
-        for (i = 31; i >= 0; i--)
-        {
-            if (VideoModes[ModeNumber].Colors & (1 << i)) break;
-        }
-        if (i == 0) i = 32;
-        BitmapInfo->bmiHeader.biBitCount = i;
+        BitmapInfo->bmiHeader.biBitCount = BiosColorNumberToBits(VideoModes[ModeNumber].Colors);
 
         /* Calculate the image size */
         BitmapInfo->bmiHeader.biSizeImage = BitmapInfo->bmiHeader.biWidth
@@ -220,8 +244,9 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
                                                           CONSOLE_GRAPHICS_BUFFER,
                                                           &GraphicsBufferInfo);
 
-            /* Save the framebuffer address */
+            /* Save the framebuffer address and mutex */
             ConsoleFramebuffers[i] = GraphicsBufferInfo.lpBitMap;
+            ConsoleMutexes[i] = GraphicsBufferInfo.hMutex;
         }
 
         /* Free the bitmap information */
@@ -244,22 +269,21 @@ inline DWORD BiosGetVideoMemoryStart()
 
 inline VOID BiosVerticalRefresh()
 {
-    SMALL_RECT Region;
-
     /* Ignore if we're in text mode */
     if (VideoModes[CurrentVideoMode].Text) return;
 
-    /* Fill the rectangle structure */
-    Region.Left = Region.Top = 0;
-    Region.Right = VideoModes[CurrentVideoMode].Width;
-    Region.Bottom = VideoModes[CurrentVideoMode].Height;
+    /* Ignore if there's nothing to update */
+    if (!VideoNeedsUpdate) return;
 
     /* Redraw the screen */
     InvalidateConsoleDIBits(ConsoleBuffers[CurrentVideoPage],
-                            &Region);
+                            &UpdateRectangle);
+
+    /* Clear the update flag */
+    VideoNeedsUpdate = FALSE;
 }
 
-BOOLEAN BiosInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
+BOOLEAN BiosInitialize()
 {
     INT i;
     WORD Offset = 0;
@@ -290,15 +314,41 @@ BOOLEAN BiosInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
         BiosCode[Offset++] = 0xCF; // iret
     }
 
-    /* Set global console I/O handles */
-    BiosConsoleInput = ConsoleInput;
-    BiosConsoleOutput = ConsoleOutput;
+    /* Get the input and output handles to the real console */
+    BiosConsoleInput = CreateFile(TEXT("CONIN$"),
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                  NULL,
+                                  OPEN_EXISTING,
+                                  0,
+                                  NULL);
 
+    BiosConsoleOutput = CreateFile(TEXT("CONOUT$"),
+                                   GENERIC_READ | GENERIC_WRITE,
+                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                   NULL,
+                                   OPEN_EXISTING,
+                                   0,
+                                   NULL);
+
+    /* Make sure it was successful */
+    if ((BiosConsoleInput == INVALID_HANDLE_VALUE)
+        || (BiosConsoleOutput == INVALID_HANDLE_VALUE))
+    {
+        return FALSE;
+    }
+
+    /* Save the console screen buffer information */
+    if (!GetConsoleScreenBufferInfo(BiosConsoleOutput, &BiosSavedBufferInfo))
+    {
+        return FALSE;
+    }
+    
     /* Set the default video mode */
     BiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
 
     /* Set the console input mode */
-    SetConsoleMode(ConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
+    SetConsoleMode(BiosConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
 
     /* Initialize the PIC */
     PicWriteCommand(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
@@ -325,6 +375,28 @@ BOOLEAN BiosInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     PitWriteData(0, 0x00);
 
     return TRUE;
+}
+
+VOID BiosCleanup()
+{
+    INT i;
+
+    /* Restore the old screen buffer */
+    SetConsoleActiveScreenBuffer(BiosConsoleOutput);
+
+    /* Restore the screen buffer size */
+    SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
+
+    /* Free the buffers */
+    for (i = 0; i < VideoModes[CurrentVideoMode].Pages; i++)
+    {
+        if (ConsoleBuffers[i] != NULL) CloseHandle(ConsoleBuffers[i]);
+        if (!VideoModes[CurrentVideoMode].Text) CloseHandle(ConsoleMutexes[i]);
+    }
+
+    /* Close the console handles */
+    if (BiosConsoleInput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleInput);
+    if (BiosConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleOutput);
 }
 
 VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress)
@@ -367,11 +439,40 @@ VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress)
     }
     else
     {
+        /* Wait for the mutex object */
+        WaitForSingleObject(ConsoleMutexes[CurrentVideoPage], INFINITE);
+
         /* Copy the data to the framebuffer */
         RtlCopyMemory((LPVOID)((ULONG_PTR)ConsoleFramebuffers[CurrentVideoPage]
                       + StartAddress - BiosGetVideoMemoryStart()),
                       (LPVOID)((ULONG_PTR)BaseAddress + StartAddress),
                       EndAddress - StartAddress);
+
+        /* Release the mutex */
+        ReleaseMutex(ConsoleMutexes[CurrentVideoPage]);
+
+        /* Check if this is the first time the rectangle is updated */
+        if (!VideoNeedsUpdate)
+        {
+            UpdateRectangle.Left = UpdateRectangle.Top = (SHORT)0x7FFF;
+            UpdateRectangle.Right = UpdateRectangle.Bottom = (SHORT)0x8000;
+        }
+
+        /* Expand the update rectangle */
+        for (i = StartAddress; i < EndAddress; i++)
+        {
+            /* Get the coordinates */
+            Coordinates = BiosVideoAddressToCoord(i);
+
+            /* Expand the rectangle to include the point */
+            UpdateRectangle.Left = min(UpdateRectangle.Left, Coordinates.X);
+            UpdateRectangle.Right = max(UpdateRectangle.Right, Coordinates.X);
+            UpdateRectangle.Top = min(UpdateRectangle.Top, Coordinates.Y);
+            UpdateRectangle.Bottom = max(UpdateRectangle.Bottom, Coordinates.Y);
+        }
+
+        /* Set the update flag */
+        VideoNeedsUpdate = TRUE;
     }
 }
 
@@ -415,11 +516,17 @@ VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress)
     }
     else
     {
+        /* Wait for the mutex object */
+        WaitForSingleObject(ConsoleMutexes[CurrentVideoPage], INFINITE);
+
         /* Copy the data to the emulator memory */
         RtlCopyMemory((LPVOID)((ULONG_PTR)BaseAddress + StartAddress),
                       (LPVOID)((ULONG_PTR)ConsoleFramebuffers[CurrentVideoPage]
                       + StartAddress - BiosGetVideoMemoryStart()),
                       EndAddress - StartAddress);
+
+        /* Release the mutex */
+        ReleaseMutex(ConsoleMutexes[CurrentVideoPage]);
     }
 }
 
@@ -736,6 +843,12 @@ VOID BiosTimeService()
     }
 }
 
+VOID BiosSystemTimerInterrupt()
+{
+    /* Increase the system tick count */
+    BiosTickCount++;
+}
+
 VOID BiosEquipmentService()
 {
     /* Return the equipment list */
@@ -749,11 +862,8 @@ VOID BiosHandleIrq(BYTE IrqNumber)
         /* PIT IRQ */
         case 0:
         {
-            /* Increase the system tick count */
-            BiosTickCount++;
-
             /* Perform the system timer interrupt */
-            EmulatorInterrupt(0x1C);
+            EmulatorInterrupt(BIOS_SYS_TIMER_INTERRUPT);
 
             break;
         }

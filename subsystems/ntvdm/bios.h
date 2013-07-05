@@ -25,6 +25,7 @@
 #define BIOS_EQUIPMENT_INTERRUPT 0x11
 #define BIOS_KBD_INTERRUPT 0x16
 #define BIOS_TIME_INTERRUPT 0x1A
+#define BIOS_SYS_TIMER_INTERRUPT 0x1C
 #define CONSOLE_FONT_HEIGHT 8
 #define BIOS_KBD_BUFFER_SIZE 256
 #define BIOS_EQUIPMENT_LIST 0x3C // HACK: Disable FPU for now
@@ -46,6 +47,7 @@ typedef struct
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN BiosInitialize();
+VOID BiosCleanup();
 VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress);
 VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress);
 inline DWORD BiosGetVideoMemoryStart();
@@ -57,5 +59,6 @@ VOID BiosEquipmentService();
 VOID BiosKeyboardService();
 VOID BiosTimeService();
 VOID BiosHandleIrq(BYTE IrqNumber);
+VOID BiosSystemTimerInterrupt();
 
 #endif
