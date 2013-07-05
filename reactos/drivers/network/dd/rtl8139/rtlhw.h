@@ -1,11 +1,18 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS RTL8139 Driver
- * FILE:        include/8139.h
+ * FILE:        rtlhw.h
  * PURPOSE:     8139 NIC definitions
  */
 
 #pragma once
+
+#define MAXIMUM_MULTICAST_ADDRESSES 8
+#define DEFAULT_INTERRUPT_MASK (R_I_RXOK | R_I_RXERR | R_I_TXOK |          \
+                                R_I_TXERR | R_I_RXOVRFLW | R_I_RXUNDRUN |  \
+                                R_I_FIFOOVR | R_I_PCSTMOUT | R_I_PCIERR)
+#define TX_DESC_COUNT 4
+
 //Register addresses
 #define R_MAC           0x00    //MAC address uses bytes 0-5, 6 and 7 are reserved
 #define R_MCAST0        0x08    //Multicast registers
@@ -28,7 +35,15 @@
 #define R_ERXBC         0x34    //Early RX byte count register
 #define R_ERXSTS        0x36    //Early RX status register
 
+#define R_TXS_HOSTOWNS  0x00002000 //Driver still owns the buffer
+#define R_TXS_UNDERRUN  0x00004000 //TX underrun
+#define R_TXS_STATOK    0x00008000 //Successful TX
+#define R_TXS_OOW       0x20000000 //Out of window
+#define R_TXS_ABORTED   0x40000000 //TX aborted
+#define R_TXS_CARLOST   0x80000000 //Carrier lost
+
 #define R_CMD           0x37    //Command register
+#define R_CMD_RXEMPTY   0x01    //Receive buffer empty
 #define B_CMD_TXE       0x04    //Enable TX
 #define B_CMD_RXE       0x08    //Enable RX
 #define B_CMD_RST       0x10    //Reset bit
@@ -38,6 +53,16 @@
 #define R_IM            0x3C    //Interrupt mask register
 #define R_IS            0x3E    //Interrupt status register
 #define R_TC            0x40    //Transmit configuration register
+
+#define R_I_RXOK        0x0001  //Receive OK
+#define R_I_RXERR       0x0002  //Receive error
+#define R_I_TXOK        0x0004  //Transmit OK
+#define R_I_TXERR       0x0008  //Trasmit error
+#define R_I_RXOVRFLW    0x0010  //Receive overflow
+#define R_I_RXUNDRUN    0x0020  //Receive underrun
+#define R_I_FIFOOVR     0x0040  //FIFO overflow
+#define R_I_PCSTMOUT    0x4000  //PCS timeout
+#define R_I_PCIERR      0x8000  //PCI error
 
 #define R_RC            0x44    //Receive configuration register
 #define B_RC_AAP        0x01    //Accept all packets
@@ -53,6 +78,10 @@
 #define R_CFG1          0x52
 #define R_TINTR         0x54    //Timer interrupt register
 #define R_MS            0x58    //Media status register
+
+#define R_MS_LINKDWN    0x04    //Link is down
+#define R_MS_SPEED_10   0x08    //Media is at 10mbps
+
 #define R_CFG3          0x59    //Configuration register 3
 #define R_CFG4          0x5A    //Configuration register 4
 #define R_MINTS         0x5C    //Multiple interrupt select
@@ -68,6 +97,10 @@
 #define R_NWT           0x70    //N-way test register
 #define R_RXERRCTR      0x72    //RX error counter
 #define R_CSCFG         0x74    //CS configuration register
+
+#define R_CSCR_LINKOK     0x00400 //Link up
+#define R_CSCR_LINKCHNG   0x00800 //Link changed
+
 #define R_PHYP1         0x78    //PHY parameter 1
 #define R_TWP           0x7C    //Twister parameter
 #define R_PHYP2         0x80    //PHY parameter 2
@@ -88,13 +121,13 @@
 #define R_WAKE6         0xBC
 #define R_WAKE7         0xC4
 #define R_LSBCRC0       0xCC    //LSB of the mask byte of wakeup frame 0 within offset 12 to 75
-#define R_LSBCRC0       0xCD
-#define R_LSBCRC0       0xCE
-#define R_LSBCRC0       0xCF
-#define R_LSBCRC0       0xD0
-#define R_LSBCRC0       0xD1
-#define R_LSBCRC0       0xD2
-#define R_LSBCRC0       0xD3
+#define R_LSBCRC1       0xCD
+#define R_LSBCRC2       0xCE
+#define R_LSBCRC3       0xCF
+#define R_LSBCRC4       0xD0
+#define R_LSBCRC5       0xD1
+#define R_LSBCRC6       0xD2
+#define R_LSBCRC7       0xD3
 #define R_CFG5          0xD8    //Configuration register 5
 
 //EEPROM Control Bytes
@@ -108,12 +141,20 @@
 //EEPROM Commands
 #define EE_READ_CMD     0x06
 
+#define RSR_MAR   0x8000  //Mulicast receive
+#define RSR_PAM   0x4000  //Physical address match (directed packet)
+#define RSR_BAR   0x2000  //Broadcast receive
+#define RSR_ISE   0x0020  //Invalid symbol
+#define RSR_RUNT  0x0010  //Runt packet
+#define RSR_LONG  0x0008  //Long packet
+#define RSR_CRC   0x0004  //CRC error
+#define RSR_FAE   0x0002  //Frame alignment error
+#define RSR_ROK   0x0001  //Receive OK
 
 /* NIC prepended structure to a received packet */
 typedef struct _PACKET_HEADER {
-    UCHAR Status;           /* See RSR_* constants */
-    UCHAR NextPacket;       /* Pointer to next packet in chain */
-    USHORT PacketLength;    /* Length of packet including this header */
+    USHORT Status;           /* See RSR_* constants */
+    USHORT PacketLength;    /* Length of packet NOT including this header */
 } PACKET_HEADER, *PPACKET_HEADER;
 
 #define IEEE_802_ADDR_LENGTH 6
@@ -124,23 +165,5 @@ typedef struct _ETH_HEADER {
     UCHAR Source[IEEE_802_ADDR_LENGTH];
     USHORT PayloadType;
 } ETH_HEADER, *PETH_HEADER;
-
-typedef struct _DISCARD_HEADER {
-    PACKET_HEADER HWHeader;
-    ETH_HEADER EthernetHeader;
-} DISCARD_HEADER, *PDISCARD_HEADER;
-
-#define NICDisableInterrupts(Adapter) { \
-    NDIS_DbgPrint(MAX_TRACE, ("NICDisableInterrupts()\n")); \
-    NdisRawWritePortUchar((Adapter)->IOBase + PG0_IMR, 0x00); \
-}
-
-#define NICEnableInterrupts(Adapter) { \
-    NDIS_DbgPrint(MAX_TRACE, ("NICEnableInterrupts() Mask (0x%X)\n", (Adapter)->InterruptMask)); \
-    NdisRawWritePortUchar((Adapter)->IOBase + PG0_IMR, (Adapter)->InterruptMask); \
-}
-
-VOID NTAPI MiniportHandleInterrupt(
-    IN  NDIS_HANDLE MiniportAdapterContext);
 
 /* EOF */
