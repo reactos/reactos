@@ -12,8 +12,10 @@
 #define RESOURCE_LIST_TAG 'Rltr'
 
 #define MAX_RESET_ATTEMPTS 25
-#define RECEIVE_BUFFER_SIZE      (65536)
-#define FULL_RECEIVE_BUFFER_SIZE (65536 + 16 + 2048)
+#define RECEIVE_BUFFER_SIZE      (32768)
+// The full receive window requires 16 bytes of padding
+// plus 2048 for receive overflows (because of WRAP)
+#define FULL_RECEIVE_BUFFER_SIZE (32768 + 16 + 2048)
 #define RECV_CRC_LENGTH 4
 
 #define MINIMUM_FRAME_SIZE 60
@@ -21,8 +23,8 @@
 
 #define DRIVER_VERSION 1
 
-// 1/2 packet early RX, 512 byte FIFO threshold, 64K RX buffer, unlimited DMA bursts, WRAP
-#define RC_VAL (0x800BF80)
+// 1/2 packet early RX, 512 byte FIFO threshold, 32K RX buffer, unlimited DMA bursts, WRAP
+#define RC_VAL (0x800B780)
 
 // 2048 byte DMA bursts
 #define TC_VAL (0x700)
