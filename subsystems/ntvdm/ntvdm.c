@@ -73,11 +73,46 @@ INT wmain(INT argc, WCHAR *argv[])
     DWORD LastTickCount = GetTickCount();
     DWORD Cycles = 0;
     DWORD LastCyclePrintout = GetTickCount();
+    DWORD LastVerticalRefresh = GetTickCount();
     LARGE_INTEGER Frequency, LastTimerTick, Counter;
     LONGLONG TimerTicks;
+    HANDLE ConsoleInput = INVALID_HANDLE_VALUE;
+    HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
+    CONSOLE_SCREEN_BUFFER_INFO SavedBufferInfo;
 
     /* Set the handler routine */
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+
+    /* Get the input and output handles to the real console */
+    ConsoleInput = CreateFile(TEXT("CONIN$"),
+                              GENERIC_READ | GENERIC_WRITE,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE,
+                              NULL,
+                              OPEN_EXISTING,
+                              0,
+                              NULL);
+
+    ConsoleOutput = CreateFile(TEXT("CONOUT$"),
+                               GENERIC_READ | GENERIC_WRITE,
+                               FILE_SHARE_READ | FILE_SHARE_WRITE,
+                               NULL,
+                               OPEN_EXISTING,
+                               0,
+                               NULL);
+
+    if ((ConsoleInput == INVALID_HANDLE_VALUE)
+        || (ConsoleOutput == INVALID_HANDLE_VALUE))
+    {
+        wprintf(L"FATAL: Could not get handles to the console\n");
+        goto Cleanup;
+    }
+
+    /* Save the console screen buffer information */
+    if (!GetConsoleScreenBufferInfo(ConsoleOutput, &SavedBufferInfo))
+    {
+        wprintf(L"FATAL: Could not save the console screen buffer information\n");
+        goto Cleanup;
+    }
 
     /* The DOS command line must be ASCII */
     WideCharToMultiByte(CP_ACP, 0, GetCommandLine(), -1, CommandLine, 128, NULL, NULL);
@@ -85,7 +120,7 @@ INT wmain(INT argc, WCHAR *argv[])
     if (!EmulatorInitialize())
     {
         wprintf(L"FATAL: Failed to initialize the CPU emulator\n");
-        return 1;
+        goto Cleanup;
     }
     
     /* Initialize the performance counter (needed for hardware timers) */
@@ -96,7 +131,7 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
     /* Initialize the system BIOS */
-    if (!BiosInitialize())
+    if (!BiosInitialize(ConsoleInput, ConsoleOutput))
     {
         wprintf(L"FATAL: Failed to initialize the VDM BIOS.\n");
         goto Cleanup;
@@ -142,6 +177,13 @@ INT wmain(INT argc, WCHAR *argv[])
             CheckForInputEvents();
             LastTickCount = CurrentTickCount;
         }
+
+        /* Check for vertical refresh */
+        if ((CurrentTickCount - LastVerticalRefresh) >= 16)
+        {
+            BiosVerticalRefresh();
+            LastVerticalRefresh = CurrentTickCount;
+        }
         
         /* Continue CPU emulation */
         for (i = 0; (i < STEPS_PER_CYCLE) && VdmRunning; i++)
@@ -159,7 +201,17 @@ INT wmain(INT argc, WCHAR *argv[])
     }
 
 Cleanup:
+    /* Restore the old screen buffer */
+    SetConsoleActiveScreenBuffer(ConsoleOutput);
+
+    /* Restore the screen buffer size */
+    SetConsoleScreenBufferSize(ConsoleOutput, SavedBufferInfo.dwSize);
+
     EmulatorCleanup();
+
+    /* Close the console handles */
+    if (ConsoleInput != INVALID_HANDLE_VALUE) CloseHandle(ConsoleInput);
+    if (ConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(ConsoleOutput);
 
     return 0;
 }

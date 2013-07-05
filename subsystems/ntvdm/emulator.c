@@ -32,11 +32,11 @@ static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT S
     if ((Address + Size) >= MAX_ADDRESS) return;
 
     /* Are we reading some of the console video memory? */
-    if (((Address + Size) >= CONSOLE_VIDEO_MEM_START)
+    if (((Address + Size) >= BiosGetVideoMemoryStart())
         && (Address < CONSOLE_VIDEO_MEM_END))
     {
         /* Call the VDM BIOS to update the video memory */
-        BiosUpdateVideoMemory(max(Address, CONSOLE_VIDEO_MEM_START),
+        BiosUpdateVideoMemory(max(Address, BiosGetVideoMemoryStart()),
                               min(Address + Size, CONSOLE_VIDEO_MEM_END));
     }
 
@@ -59,11 +59,11 @@ static VOID EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT 
     RtlCopyMemory((LPVOID)((ULONG_PTR)BaseAddress + Address), Buffer, Size);
 
     /* Check if we modified the console video memory */
-    if (((Address + Size) >= CONSOLE_VIDEO_MEM_START)
+    if (((Address + Size) >= BiosGetVideoMemoryStart())
         && (Address < CONSOLE_VIDEO_MEM_END))
     {
         /* Call the VDM BIOS to update the screen */
-        BiosUpdateConsole(max(Address, CONSOLE_VIDEO_MEM_START),
+        BiosUpdateConsole(max(Address, BiosGetVideoMemoryStart()),
                           min(Address + Size, CONSOLE_VIDEO_MEM_END));
     }
 }
