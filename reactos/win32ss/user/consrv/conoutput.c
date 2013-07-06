@@ -756,56 +756,38 @@ CSR_API(SrvScrollConsoleScreenBuffer)
     return Status;
 }
 
-
-
-
-
+NTSTATUS NTAPI
+ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
+                           IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                           IN BOOLEAN Absolute,
+                           IN PSMALL_RECT WindowRect);
 CSR_API(SrvSetConsoleWindowInfo)
 {
     NTSTATUS Status;
     PCONSOLE_SETWINDOWINFO SetWindowInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetWindowInfoRequest;
-    PCONSOLE_SCREEN_BUFFER Buff;
-    SMALL_RECT WindowRect = SetWindowInfoRequest->WindowRect;
+    // PCONSOLE_SCREEN_BUFFER Buffer;
+    PTEXTMODE_SCREEN_BUFFER Buffer;
 
-    DPRINT("SrvSetConsoleWindowInfo(0x%08x, %d, {L%d, T%d, R%d, B%d}) called\n",
+    DPRINT1("SrvSetConsoleWindowInfo(0x%08x, %d, {L%d, T%d, R%d, B%d}) called\n",
             SetWindowInfoRequest->OutputHandle, SetWindowInfoRequest->Absolute,
-            WindowRect.Left, WindowRect.Top, WindowRect.Right, WindowRect.Bottom);
+            SetWindowInfoRequest->WindowRect.Left ,
+            SetWindowInfoRequest->WindowRect.Top  ,
+            SetWindowInfoRequest->WindowRect.Right,
+            SetWindowInfoRequest->WindowRect.Bottom);
 
+    // ConSrvGetScreenBuffer
     Status = ConSrvGetTextModeBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                      SetWindowInfoRequest->OutputHandle,
-                                     &Buff,
-                                     GENERIC_READ,
-                                     TRUE);
+                                     &Buffer, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    if (SetWindowInfoRequest->Absolute == FALSE)
-    {
-        /* Relative positions given. Transform them to absolute ones */
-        WindowRect.Left   += Buff->ViewOrigin.X;
-        WindowRect.Top    += Buff->ViewOrigin.Y;
-        WindowRect.Right  += Buff->ViewOrigin.X + Buff->ViewSize.X - 1;
-        WindowRect.Bottom += Buff->ViewOrigin.Y + Buff->ViewSize.Y - 1;
-    }
+    Status = ConDrvSetConsoleWindowInfo(Buffer->Header.Console,
+                                        Buffer,
+                                        SetWindowInfoRequest->Absolute,
+                                        &SetWindowInfoRequest->WindowRect);
 
-    /* See MSDN documentation on SetConsoleWindowInfo about the performed checks */
-    if ( (WindowRect.Left < 0) || (WindowRect.Top < 0)   ||
-         (WindowRect.Right  >= Buff->ScreenBufferSize.X) ||
-         (WindowRect.Bottom >= Buff->ScreenBufferSize.Y) ||
-         (WindowRect.Right  <= WindowRect.Left)          ||
-         (WindowRect.Bottom <= WindowRect.Top) )
-    {
-        ConSrvReleaseScreenBuffer(Buff, TRUE);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    Buff->ViewOrigin.X = WindowRect.Left;
-    Buff->ViewOrigin.Y = WindowRect.Top;
-
-    Buff->ViewSize.X = WindowRect.Right - WindowRect.Left + 1;
-    Buff->ViewSize.Y = WindowRect.Bottom - WindowRect.Top + 1;
-
-    ConSrvReleaseScreenBuffer(Buff, TRUE);
-    return STATUS_SUCCESS;
+    ConSrvReleaseScreenBuffer(Buffer, TRUE);
+    return Status;
 }
 
 /* EOF */

@@ -144,6 +144,32 @@ const COLORREF s_Colors[16] =
 /* FUNCTIONS ******************************************************************/
 
 static VOID
+GetScreenBufferSizeUnits(IN PCONSOLE_SCREEN_BUFFER Buffer,
+                         IN PGUI_CONSOLE_DATA GuiData,
+                         OUT PUINT WidthUnit,
+                         OUT PUINT HeightUnit)
+{
+    if (Buffer == NULL || GuiData == NULL ||
+        WidthUnit == NULL || HeightUnit == NULL)
+    {
+        return;
+    }
+
+    if (GetType(Buffer) == TEXTMODE_BUFFER)
+    {
+        *WidthUnit  = GuiData->CharWidth ;
+        *HeightUnit = GuiData->CharHeight;
+    }
+    else /* if (GetType(Buffer) == GRAPHICS_BUFFER) */
+    {
+        *WidthUnit  = 1;
+        *HeightUnit = 1;
+    }
+}
+
+
+
+static VOID
 GuiConsoleAppendMenuItems(HMENU hMenu,
                           const GUICONSOLE_MENUITEM *Items)
 {
@@ -374,16 +400,7 @@ GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData)
     DWORD Width, Height;
     UINT  WidthUnit, HeightUnit;
 
-    if (GetType(Buff) == TEXTMODE_BUFFER)
-    {
-        WidthUnit  = GuiData->CharWidth ;
-        HeightUnit = GuiData->CharHeight;
-    }
-    else /* if (GetType(Buff) == GRAPHICS_BUFFER) */
-    {
-        WidthUnit  = 1;
-        HeightUnit = 1;
-    }
+    GetScreenBufferSizeUnits(Buff, GuiData, &WidthUnit, &HeightUnit);
 
     Width  = Buff->ViewSize.X * WidthUnit  +
              2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
@@ -576,16 +593,7 @@ SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
     PCONSOLE_SCREEN_BUFFER Buffer = ConDrvGetActiveScreenBuffer(Console);
     UINT WidthUnit, HeightUnit;
 
-    if (GetType(Buffer) == TEXTMODE_BUFFER)
-    {
-        WidthUnit  = GuiData->CharWidth ;
-        HeightUnit = GuiData->CharHeight;
-    }
-    else /* if (GetType(Buffer) == GRAPHICS_BUFFER) */
-    {
-        WidthUnit  = 1;
-        HeightUnit = 1;
-    }
+    GetScreenBufferSizeUnits(Buffer, GuiData, &WidthUnit, &HeightUnit);
 
     Rect->left   = (SmallRect->Left       - Buffer->ViewOrigin.X) * WidthUnit ;
     Rect->top    = (SmallRect->Top        - Buffer->ViewOrigin.Y) * HeightUnit;
@@ -1061,16 +1069,7 @@ PointToCoord(PGUI_CONSOLE_DATA GuiData, LPARAM lParam)
     COORD Coord;
     UINT  WidthUnit, HeightUnit;
 
-    if (GetType(Buffer) == TEXTMODE_BUFFER)
-    {
-        WidthUnit  = GuiData->CharWidth ;
-        HeightUnit = GuiData->CharHeight;
-    }
-    else /* if (GetType(Buffer) == GRAPHICS_BUFFER) */
-    {
-        WidthUnit  = 1;
-        HeightUnit = 1;
-    }
+    GetScreenBufferSizeUnits(Buffer, GuiData, &WidthUnit, &HeightUnit);
 
     Coord.X = Buffer->ViewOrigin.X + ((SHORT)LOWORD(lParam) / (int)WidthUnit );
     Coord.Y = Buffer->ViewOrigin.Y + ((SHORT)HIWORD(lParam) / (int)HeightUnit);
@@ -1400,16 +1399,7 @@ GuiConsoleGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
 
     ActiveBuffer = ConDrvGetActiveScreenBuffer(Console);
 
-    if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
-    {
-        WidthUnit  = GuiData->CharWidth ;
-        HeightUnit = GuiData->CharHeight;
-    }
-    else /* if (GetType(ActiveBuffer) == GRAPHICS_BUFFER) */
-    {
-        WidthUnit  = 1;
-        HeightUnit = 1;
-    }
+    GetScreenBufferSizeUnits(ActiveBuffer, GuiData, &WidthUnit, &HeightUnit);
 
     windx = CONGUI_MIN_WIDTH  * WidthUnit  + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
     windy = CONGUI_MIN_HEIGHT * HeightUnit + 2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
@@ -1443,16 +1433,7 @@ GuiConsoleResize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         DWORD windx, windy, charx, chary;
         UINT  WidthUnit, HeightUnit;
 
-        if (GetType(Buff) == TEXTMODE_BUFFER)
-        {
-            WidthUnit  = GuiData->CharWidth ;
-            HeightUnit = GuiData->CharHeight;
-        }
-        else /* if (GetType(Buff) == GRAPHICS_BUFFER) */
-        {
-            WidthUnit  = 1;
-            HeightUnit = 1;
-        }
+        GetScreenBufferSizeUnits(Buff, GuiData, &WidthUnit, &HeightUnit);
 
         GuiData->WindowSizeLock = TRUE;
 
@@ -1615,16 +1596,7 @@ GuiConsoleHandleScroll(PGUI_CONSOLE_DATA GuiData, UINT uMsg, WPARAM wParam)
 
         *pShowXY = sInfo.nPos;
 
-        if (GetType(Buff) == TEXTMODE_BUFFER)
-        {
-            WidthUnit  = GuiData->CharWidth ;
-            HeightUnit = GuiData->CharHeight;
-        }
-        else /* if (GetType(Buff) == GRAPHICS_BUFFER) */
-        {
-            WidthUnit  = 1;
-            HeightUnit = 1;
-        }
+        GetScreenBufferSizeUnits(Buff, GuiData, &WidthUnit, &HeightUnit);
 
         ScrollWindowEx(GuiData->hWindow,
                        (OldX - Buff->ViewOrigin.X) * WidthUnit ,
@@ -2684,16 +2656,7 @@ GuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
     ActiveBuffer = ConDrvGetActiveScreenBuffer(GuiData->Console);
     if (ActiveBuffer)
     {
-        if (GetType(ActiveBuffer) == TEXTMODE_BUFFER)
-        {
-            WidthUnit  = GuiData->CharWidth ;
-            HeightUnit = GuiData->CharHeight;
-        }
-        else /* if (GetType(ActiveBuffer) == GRAPHICS_BUFFER) */
-        {
-            WidthUnit  = 1;
-            HeightUnit = 1;
-        }
+        GetScreenBufferSizeUnits(ActiveBuffer, GuiData, &WidthUnit, &HeightUnit);
     }
     else
     {

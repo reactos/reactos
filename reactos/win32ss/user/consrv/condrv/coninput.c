@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/consrv/coninput.c
+ * PROJECT:         ReactOS Console Driver DLL
+ * FILE:            win32ss/user/consrv/condrv/coninput.c
  * PURPOSE:         Console Input functions
  * PROGRAMMERS:     Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -200,7 +200,7 @@ ConDrvProcessKey(IN PCONSOLE Console,
 }
 
 
-/* PUBLIC SERVER APIS *********************************************************/
+/* PUBLIC DRIVER APIS *********************************************************/
 
 NTSTATUS NTAPI
 ConDrvReadConsole(IN PCONSOLE Console,

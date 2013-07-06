@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
+ * PROJECT:         ReactOS Console Driver DLL
  * FILE:            win32ss/user/consrv/condrv/conoutput.c
  * PURPOSE:         General Console Output Functions
  * PROGRAMMERS:     Jeffrey Morlan
@@ -184,7 +184,7 @@ ConDrvGetActiveScreenBuffer(IN PCONSOLE Console)
     return (Console ? Console->ActiveBuffer : NULL);
 }
 
-/* PUBLIC SERVER APIS *********************************************************/
+/* PUBLIC DRIVER APIS *********************************************************/
 
 NTSTATUS NTAPI
 ConDrvInvalidateBitMapRect(IN PCONSOLE Console,

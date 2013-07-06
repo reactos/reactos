@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/consrv/text.c
+ * PROJECT:         ReactOS Console Driver DLL
+ * FILE:            win32ss/user/consrv/condrv/text.c
  * PURPOSE:         Console Output Functions for text-mode screen-buffers
  * PROGRAMMERS:     Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -592,7 +592,7 @@ ConioWriteConsole(PCONSOLE Console,
 }
 
 
-/* PUBLIC SERVER APIS *********************************************************/
+/* PUBLIC DRIVER APIS *********************************************************/
 
 NTSTATUS NTAPI
 ConDrvReadConsoleOutput(IN PCONSOLE Console,
@@ -1295,6 +1295,50 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
             ConioDrawRegion(Console, &UpdateRegion);
         }
     }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS NTAPI
+ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
+                           IN PTEXTMODE_SCREEN_BUFFER Buffer,
+                           IN BOOLEAN Absolute,
+                           IN PSMALL_RECT WindowRect)
+{
+    SMALL_RECT CapturedWindowRect;
+
+    if (Console == NULL || Buffer == NULL || WindowRect == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Validity check */
+    ASSERT(Console == Buffer->Header.Console);
+
+    CapturedWindowRect = *WindowRect;
+
+    if (Absolute == FALSE)
+    {
+        /* Relative positions given. Transform them to absolute ones */
+        CapturedWindowRect.Left   += Buffer->ViewOrigin.X;
+        CapturedWindowRect.Top    += Buffer->ViewOrigin.Y;
+        CapturedWindowRect.Right  += Buffer->ViewOrigin.X + Buffer->ViewSize.X - 1;
+        CapturedWindowRect.Bottom += Buffer->ViewOrigin.Y + Buffer->ViewSize.Y - 1;
+    }
+
+    /* See MSDN documentation on SetConsoleWindowInfo about the performed checks */
+    if ( (CapturedWindowRect.Left < 0) || (CapturedWindowRect.Top < 0)  ||
+         (CapturedWindowRect.Right  >= Buffer->ScreenBufferSize.X)      ||
+         (CapturedWindowRect.Bottom >= Buffer->ScreenBufferSize.Y)      ||
+         (CapturedWindowRect.Right  <= CapturedWindowRect.Left)         ||
+         (CapturedWindowRect.Bottom <= CapturedWindowRect.Top) )
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Buffer->ViewOrigin.X = CapturedWindowRect.Left;
+    Buffer->ViewOrigin.Y = CapturedWindowRect.Top;
+
+    Buffer->ViewSize.X = CapturedWindowRect.Right - CapturedWindowRect.Left + 1;
+    Buffer->ViewSize.Y = CapturedWindowRect.Bottom - CapturedWindowRect.Top + 1;
 
     return STATUS_SUCCESS;
 }

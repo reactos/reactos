@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/consrv/graphics.c
+ * PROJECT:         ReactOS Console Driver DLL
+ * FILE:            win32ss/user/consrv/condrv/graphics.c
  * PURPOSE:         Console Output Functions for graphics-mode screen-buffers
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *
