@@ -960,7 +960,7 @@ AllocConsole(VOID)
     InitConsoleInfo(AllocConsoleRequest->ConsoleStartInfo,
                     &Parameters->ImagePathName);
 
-    AllocConsoleRequest->Console = NULL;
+    AllocConsoleRequest->ConsoleHandle  = NULL;
     AllocConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;
     AllocConsoleRequest->PropDispatcher = PropDialogHandler;
 
@@ -977,7 +977,7 @@ AllocConsole(VOID)
         return FALSE;
     }
 
-    Parameters->ConsoleHandle = AllocConsoleRequest->Console;
+    Parameters->ConsoleHandle = AllocConsoleRequest->ConsoleHandle;
     SetStdHandle(STD_INPUT_HANDLE , AllocConsoleRequest->InputHandle );
     SetStdHandle(STD_OUTPUT_HANDLE, AllocConsoleRequest->OutputHandle);
     SetStdHandle(STD_ERROR_HANDLE , AllocConsoleRequest->ErrorHandle );
@@ -2174,7 +2174,7 @@ AttachConsole(DWORD dwProcessId)
         return FALSE;
     }
 
-    Parameters->ConsoleHandle = AttachConsoleRequest->Console;
+    Parameters->ConsoleHandle = AttachConsoleRequest->ConsoleHandle;
     SetStdHandle(STD_INPUT_HANDLE , AttachConsoleRequest->InputHandle );
     SetStdHandle(STD_OUTPUT_HANDLE, AttachConsoleRequest->OutputHandle);
     SetStdHandle(STD_ERROR_HANDLE , AttachConsoleRequest->ErrorHandle );
