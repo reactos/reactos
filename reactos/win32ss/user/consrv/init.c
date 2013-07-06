@@ -326,7 +326,7 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
      **************************************************************************/
 
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE_PROCESS_DATA /* SourceProcessData, */ TargetProcessData;
+    PCONSOLE_PROCESS_DATA TargetProcessData;
 
     /* An empty target process is invalid */
     if (!TargetProcess) return STATUS_INVALID_PARAMETER;
@@ -337,7 +337,7 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     RtlZeroMemory(TargetProcessData, sizeof(*TargetProcessData));
     TargetProcessData->Process = TargetProcess;
     TargetProcessData->ConsoleEvent = NULL;
-    TargetProcessData->Console = TargetProcessData->ParentConsole = NULL;
+    TargetProcessData->ConsoleHandle = TargetProcessData->ParentConsoleHandle = NULL;
     TargetProcessData->ConsoleApp = ((TargetProcess->Flags & CsrProcessIsConsoleApp) ? TRUE : FALSE);
 
     /*
@@ -363,20 +363,23 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     if (TargetProcessData->ConsoleApp /* && SourceProcessData->ConsoleApp */)
     {
         PCONSOLE_PROCESS_DATA SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
+        PCONSOLE SourceConsole;
 
         /* Validate and lock the parent's console */
-        if (ConDrvValidateConsole(SourceProcessData->Console, CONSOLE_RUNNING, TRUE))
+        if (ConDrvValidateConsole(&SourceConsole,
+                                  SourceProcessData->ConsoleHandle,
+                                  CONSOLE_RUNNING, TRUE))
         {
             /* Inherit the parent's handles table */
             Status = ConSrvInheritHandlesTable(SourceProcessData, TargetProcessData);
             if (NT_SUCCESS(Status))
             {
                 /* Temporary save the parent's console too */
-                TargetProcessData->ParentConsole = SourceProcessData->Console;
+                TargetProcessData->ParentConsoleHandle = SourceProcessData->ConsoleHandle;
             }
 
             /* Unlock the parent's console */
-            LeaveCriticalSection(&SourceProcessData->Console->Lock);
+            LeaveCriticalSection(&SourceConsole->Lock);
         }
     }
 
@@ -412,8 +415,8 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
     }
 
     /* If we don't have a console, then create a new one... */
-    if (!ConnectInfo->Console ||
-         ConnectInfo->Console != ProcessData->ParentConsole)
+    if (!ConnectInfo->ConsoleHandle ||
+         ConnectInfo->ConsoleHandle != ProcessData->ParentConsoleHandle)
     {
         DPRINT("ConSrvConnect - Allocate a new console\n");
 
@@ -446,7 +449,7 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
         /* Reuse our current console */
         Status = ConSrvInheritConsole(ProcessData,
-                                      ConnectInfo->Console,
+                                      ConnectInfo->ConsoleHandle,
                                       FALSE,
                                       NULL,  // &ConnectInfo->InputHandle,
                                       NULL,  // &ConnectInfo->OutputHandle,
@@ -458,16 +461,12 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
         }
     }
 
-    /* Return it to the caller */
-    ConnectInfo->Console = ProcessData->Console;
-
-    /* Input Wait Handle */
+    /* Return the console handle and the input wait handle to the caller */
+    ConnectInfo->ConsoleHandle   = ProcessData->ConsoleHandle;
     ConnectInfo->InputWaitHandle = ProcessData->ConsoleEvent;
 
-    /* Set the Property Dialog Handler */
+    /* Set the Property-Dialog and Control-Dispatcher handlers */
     ProcessData->PropDispatcher = ConnectInfo->PropDispatcher;
-
-    /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = ConnectInfo->CtrlDispatcher;
 
     return STATUS_SUCCESS;
@@ -483,8 +482,8 @@ ConSrvDisconnect(PCSR_PROCESS Process)
      * This function is called whenever a new process (GUI or CUI) is destroyed.
      **************************************************************************/
 
-    if ( ProcessData->Console     != NULL ||
-         ProcessData->HandleTable != NULL )
+    if ( ProcessData->ConsoleHandle != NULL ||
+         ProcessData->HandleTable   != NULL )
     {
         DPRINT("ConSrvDisconnect - calling ConSrvRemoveConsole\n");
         ConSrvRemoveConsole(ProcessData);

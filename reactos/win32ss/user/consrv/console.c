@@ -147,9 +147,8 @@ ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
     *Console = NULL;
 
     // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    ProcessConsole = ProcessData->Console;
 
-    Status = ConDrvGrabConsole(ProcessConsole, LockConsole);
+    Status = ConDrvGetConsole(&ProcessConsole, ProcessData->ConsoleHandle, LockConsole);
     if (NT_SUCCESS(Status)) *Console = ProcessConsole;
 
     // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -166,11 +165,13 @@ ConSrvReleaseConsole(PCONSOLE Console,
 
 
 NTSTATUS WINAPI
-ConSrvInitConsole(OUT PCONSOLE* NewConsole,
+ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
+                  OUT PCONSOLE* NewConsole,
                   IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
                   IN ULONG ConsoleLeaderProcessId)
 {
     NTSTATUS Status;
+    HANDLE ConsoleHandle;
     PCONSOLE Console;
     CONSOLE_INFO ConsoleInfo;
     SIZE_T Length = 0;
@@ -266,7 +267,10 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     ConsoleInfo.CodePage = GetOEMCP();
 /******************************************************************************/
 
-    Status = ConDrvInitConsole(&Console, &ConsoleInfo, ConsoleLeaderProcessId);
+    Status = ConDrvInitConsole(&ConsoleHandle,
+                               &Console,
+                               &ConsoleInfo,
+                               ConsoleLeaderProcessId);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Creating a new console failed, Status = 0x%08lx\n", Status);
@@ -288,7 +292,8 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     DPRINT("FrontEnd registered\n");
 
     /* Return the newly created console to the caller and a success code too */
-    *NewConsole = Console;
+    *NewConsoleHandle = ConsoleHandle;
+    *NewConsole       = Console;
     return STATUS_SUCCESS;
 }
 
@@ -311,7 +316,7 @@ CSR_API(SrvAllocConsole)
     PCSR_PROCESS CsrProcess = CsrGetClientThread()->Process;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
 
-    if (ProcessData->Console != NULL)
+    if (ProcessData->ConsoleHandle != NULL)
     {
         DPRINT1("Process already has a console\n");
         return STATUS_ACCESS_DENIED;
@@ -337,16 +342,12 @@ CSR_API(SrvAllocConsole)
         return Status;
     }
 
-    /* Return it to the caller */
-    AllocConsoleRequest->Console = ProcessData->Console;
-
-    /* Input Wait Handle */
+    /* Return the console handle and the input wait handle to the caller */
+    AllocConsoleRequest->ConsoleHandle   = ProcessData->ConsoleHandle;
     AllocConsoleRequest->InputWaitHandle = ProcessData->ConsoleEvent;
 
-    /* Set the Property Dialog Handler */
+    /* Set the Property-Dialog and Control-Dispatcher handlers */
     ProcessData->PropDispatcher = AllocConsoleRequest->PropDispatcher;
-
-    /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = AllocConsoleRequest->CtrlDispatcher;
 
     return STATUS_SUCCESS;
@@ -363,7 +364,7 @@ CSR_API(SrvAttachConsole)
 
     TargetProcessData = ConsoleGetPerProcessData(TargetProcess);
 
-    if (TargetProcessData->Console != NULL)
+    if (TargetProcessData->ConsoleHandle != NULL)
     {
         DPRINT1("Process already has a console\n");
         return STATUS_ACCESS_DENIED;
@@ -396,7 +397,7 @@ CSR_API(SrvAttachConsole)
 
     SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
 
-    if (SourceProcessData->Console == NULL)
+    if (SourceProcessData->ConsoleHandle == NULL)
     {
         Status = STATUS_INVALID_HANDLE;
         goto Quit;
@@ -407,7 +408,7 @@ CSR_API(SrvAttachConsole)
      * if any, otherwise return an error.
      */
     Status = ConSrvInheritConsole(TargetProcessData,
-                                  SourceProcessData->Console,
+                                  SourceProcessData->ConsoleHandle,
                                   TRUE,
                                   &AttachConsoleRequest->InputHandle,
                                   &AttachConsoleRequest->OutputHandle,
@@ -418,16 +419,12 @@ CSR_API(SrvAttachConsole)
         goto Quit;
     }
 
-    /* Return it to the caller */
-    AttachConsoleRequest->Console = TargetProcessData->Console;
-
-    /* Input Wait Handle */
+    /* Return the console handle and the input wait handle to the caller */
+    AttachConsoleRequest->ConsoleHandle   = TargetProcessData->ConsoleHandle;
     AttachConsoleRequest->InputWaitHandle = TargetProcessData->ConsoleEvent;
 
-    /* Set the Property Dialog Handler */
+    /* Set the Property-Dialog and Control-Dispatcher handlers */
     TargetProcessData->PropDispatcher = AttachConsoleRequest->PropDispatcher;
-
-    /* Set the Ctrl Dispatcher */
     TargetProcessData->CtrlDispatcher = AttachConsoleRequest->CtrlDispatcher;
 
     Status = STATUS_SUCCESS;

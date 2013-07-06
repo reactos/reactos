@@ -21,6 +21,7 @@ list(APPEND SOURCE
     condrv/coninput.c
     condrv/conoutput.c
     condrv/console.c
+    condrv/dummyfrontend.c
     condrv/graphics.c
     condrv/text.c
     frontends/input.c

@@ -60,8 +60,9 @@ typedef struct _CONSOLE_PROCESS_DATA
     LIST_ENTRY ConsoleLink;
     PCSR_PROCESS Process;   // Process owning this structure.
     HANDLE ConsoleEvent;
-    struct _CONSOLE* /* PCONSOLE */ Console;
-    struct _CONSOLE* /* PCONSOLE */ ParentConsole;
+
+    HANDLE ConsoleHandle;
+    HANDLE ParentConsoleHandle;
 
     BOOL ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
 

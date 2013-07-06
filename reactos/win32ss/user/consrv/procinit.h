@@ -14,7 +14,7 @@ NTSTATUS FASTCALL ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                         PHANDLE pErrorHandle,
                                         PCONSOLE_START_INFO ConsoleStartInfo);
 NTSTATUS FASTCALL ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                                       struct _CONSOLE* /* PCONSOLE */ Console,
+                                       HANDLE ConsoleHandle,
                                        BOOL CreateNewHandlesTable,
                                        PHANDLE pInputHandle,
                                        PHANDLE pOutputHandle,

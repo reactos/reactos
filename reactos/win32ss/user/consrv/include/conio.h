@@ -270,13 +270,12 @@ typedef struct _CONSOLE
     CRITICAL_SECTION Lock;
     CONSOLE_STATE State;                    /* State of the console */
 
-    LIST_ENTRY Entry;                       /* Entry in the list of consoles */
     LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
 
     FRONTEND TermIFace;                     /* Frontend-specific interface */
 
 /**************************** Input buffer and data ***************************/
-    CONSOLE_INPUT_BUFFER InputBuffer;               /* Input buffer of the console */
+    CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
 
     /** Put those things in TEXTMODE_SCREEN_BUFFER ?? **/
     PWCHAR LineBuffer;                      /* Current line being input, in line buffered mode */
