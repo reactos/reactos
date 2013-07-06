@@ -83,7 +83,15 @@ GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer)
         /* Copy only the characters, leave attributes alone */
         for (xPos = 0; xPos < selWidth; xPos++)
         {
-            dstPos[xPos] = ptr[xPos].Char.UnicodeChar;
+            /*
+             * Sometimes, applications can put NULL chars into the screen-buffer
+             * (this behaviour is allowed). Detect this and replace by a space.
+             * FIXME - HACK: Improve the way we're doing that (i.e., put spaces
+             * instead of NULLs (or even, nothing) only if it exists a non-null
+             * char *after* those NULLs, before the end-of-line of the selection.
+             * Do the same concerning spaces -- i.e. trailing spaces --).
+             */
+            dstPos[xPos] = (ptr[xPos].Char.UnicodeChar ? ptr[xPos].Char.UnicodeChar : L' ');
         }
         dstPos += selWidth;
 
