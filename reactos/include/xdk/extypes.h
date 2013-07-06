@@ -51,7 +51,7 @@ typedef enum _EX_POOL_PRIORITY {
 #if !defined(_WIN64) && (defined(_NTDDK_) || defined(_NTIFS_) || defined(_NDIS_))
 #define LOOKASIDE_ALIGN
 #else
-#define LOOKASIDE_ALIGN /* FIXME: DECLSPEC_CACHEALIGN */
+#define LOOKASIDE_ALIGN DECLSPEC_CACHEALIGN
 #endif
 
 typedef struct _LOOKASIDE_LIST_EX *PLOOKASIDE_LIST_EX;
