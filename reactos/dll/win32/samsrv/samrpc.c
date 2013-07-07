@@ -7471,12 +7471,18 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
 {
     ENCRYPTED_LM_OWF_PASSWORD StoredLmPassword;
     ENCRYPTED_NT_OWF_PASSWORD StoredNtPassword;
+    PENCRYPTED_LM_OWF_PASSWORD OldLmPassword;
+    PENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
+    PENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
+    PENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
     PSAM_DB_OBJECT UserObject;
     ULONG Length;
     NTSTATUS Status;
 
-    TRACE("(%p %u %u)\n",
-          UserHandle, LmPresent, NtPresent);
+    TRACE("(%p %u %p %p %u %p %p %u %p %u %p)\n",
+          UserHandle, LmPresent, OldLmEncryptedWithNewLm, NewLmEncryptedWithOldLm,
+          NtPresent, OldNtEncryptedWithNewNt, NewNtEncryptedWithOldNt, NtCrossEncryptionPresent,
+          NewNtEncryptedWithNewLm, LmCrossEncryptionPresent, NewLmEncryptedWithNewNt);
 
     /* Validate the user handle */
     Status = SampValidateDbObject(UserHandle,
@@ -7513,36 +7519,94 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
 
     }
 
-    /* FIXME: Check if the old passwords match the stored ones */
+    /* FIXME: Decrypt passwords */
+    OldLmPassword = OldLmEncryptedWithNewLm;
+    NewLmPassword = NewLmEncryptedWithOldLm;
+    OldNtPassword = OldNtEncryptedWithNewNt;
+    NewNtPassword = NewNtEncryptedWithOldNt;
 
-
-    /* Store the new LM password */
-    if (LmPresent)
+    /* Check if the old passwords match the stored ones */
+    if (NtPresent)
     {
-        Length = sizeof(ENCRYPTED_LM_OWF_PASSWORD);
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"LMPwd",
-                                        REG_BINARY,
-                                        NewLmEncryptedWithOldLm,
-                                        Length);
-        if (!NT_SUCCESS(Status))
+        if (LmPresent)
         {
-            goto done;
+            if (!RtlEqualMemory(&StoredLmPassword,
+                                OldLmPassword,
+                                sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+            {
+                TRACE("Old LM Password does not match!\n");
+                Status = STATUS_WRONG_PASSWORD;
+            }
+            else
+            {
+                if (!RtlEqualMemory(&StoredNtPassword,
+                                    OldNtPassword,
+                                    sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+                {
+                    TRACE("Old NT Password does not match!\n");
+                    Status = STATUS_WRONG_PASSWORD;
+                }
+            }
+        }
+        else
+        {
+            if (!RtlEqualMemory(&StoredNtPassword,
+                                OldNtPassword,
+                                sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+            {
+                TRACE("Old NT Password does not match!\n");
+                Status = STATUS_WRONG_PASSWORD;
+            }
+        }
+    }
+    else
+    {
+        if (LmPresent)
+        {
+            if (!RtlEqualMemory(&StoredLmPassword,
+                                OldLmPassword,
+                                sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+            {
+                TRACE("Old LM Password does not match!\n");
+                Status = STATUS_WRONG_PASSWORD;
+            }
+        }
+        else
+        {
+            Status = STATUS_INVALID_PARAMETER;
         }
     }
 
-    /* Store the new NT password */
-    if (NtPresent)
+    /* Store the new LM password */
+    if (NT_SUCCESS(Status))
     {
-        Length = sizeof(ENCRYPTED_NT_OWF_PASSWORD);
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"NTPwd",
-                                        REG_BINARY,
-                                        NewNtEncryptedWithOldNt,
-                                        Length);
-        if (!NT_SUCCESS(Status))
+        if (LmPresent)
         {
-            goto done;
+            Length = sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"LMPwd",
+                                            REG_BINARY,
+                                            NewLmPassword,
+                                            Length);
+            if (!NT_SUCCESS(Status))
+            {
+                goto done;
+            }
+        }
+
+        /* Store the new NT password */
+        if (NtPresent)
+        {
+            Length = sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"NTPwd",
+                                            REG_BINARY,
+                                            NewNtPassword,
+                                            Length);
+            if (!NT_SUCCESS(Status))
+            {
+                goto done;
+            }
         }
     }
 
