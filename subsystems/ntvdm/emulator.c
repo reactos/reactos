@@ -17,11 +17,18 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static softx86_ctx EmulatorContext;
-static softx87_ctx FpuEmulatorContext;
+#ifndef NEW_EMULATOR
+softx86_ctx EmulatorContext;
+softx87_ctx FpuEmulatorContext;
+#else
+EMULATOR_CONTEXT EmulatorContext;
+#endif
+
 static BOOLEAN A20Line = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+#ifndef NEW_EMULATOR
 
 static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
@@ -165,8 +172,13 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
     if (Number == SPECIAL_INT_NUM)
     {
         /* Get the SS:SP */
+#ifndef NEW_EMULATOR
         StackSegment = EmulatorContext.state->segment_reg[SX86_SREG_SS].val;
         StackPointer = EmulatorContext.state->general_reg[SX86_REG_SP].val;
+#else
+        StackSegment = EmulatorContext.Registers[EMULATOR_REG_SS].LowWord;
+        StackPointer = EmulatorContext.Registers[EMULATOR_REG_SP].LowWord;
+#endif
 
         /* Get the interrupt number */
         IntNum = *(LPBYTE)((ULONG_PTR)BaseAddress + TO_LINEAR(StackSegment, StackPointer));
@@ -274,6 +286,8 @@ static VOID EmulatorHardwareIntAck(PVOID Context, BYTE Number)
     /* Do nothing */
 }
 
+#endif
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BOOLEAN EmulatorInitialize()
@@ -282,6 +296,7 @@ BOOLEAN EmulatorInitialize()
     BaseAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_ADDRESS);
     if (BaseAddress == NULL) return FALSE;
 
+#ifndef NEW_EMULATOR
     /* Initialize the softx86 CPU emulator */
     if (!softx86_init(&EmulatorContext, SX86_CPULEVEL_80286))
     {
@@ -312,6 +327,9 @@ BOOLEAN EmulatorInitialize()
 
     /* Connect the emulated FPU to the emulated CPU */
     softx87_connect_to_CPU(&EmulatorContext, &FpuEmulatorContext);
+#else
+    // TODO: NOT IMPLEMENTED
+#endif
 
     /* Enable interrupts */
     EmulatorSetFlag(EMULATOR_FLAG_IF);
@@ -321,14 +339,22 @@ BOOLEAN EmulatorInitialize()
 
 VOID EmulatorSetStack(WORD Segment, WORD Offset)
 {
+#ifndef NEW_EMULATOR
     /* Call the softx86 API */
     softx86_set_stack_ptr(&EmulatorContext, Segment, Offset);
+#else
+    // TODO: NOT IMPLEMENTED
+#endif
 }
 
 VOID EmulatorExecute(WORD Segment, WORD Offset)
 {
+#ifndef NEW_EMULATOR
     /* Call the softx86 API */
     softx86_set_instruction_ptr(&EmulatorContext, Segment, Offset);
+#else
+    // TODO: NOT IMPLEMENTED
+#endif
 }
 
 VOID EmulatorInterrupt(BYTE Number)
@@ -340,18 +366,27 @@ VOID EmulatorInterrupt(BYTE Number)
     Segment = HIWORD(IntVecTable[Number]);
     Offset = LOWORD(IntVecTable[Number]);
 
+#ifndef NEW_EMULATOR
     /* Call the softx86 API */
     softx86_make_simple_interrupt_call(&EmulatorContext, &Segment, &Offset);
+#else
+    UNREFERENCED_PARAMETER(Segment);
+    UNREFERENCED_PARAMETER(Offset);
+    // TODO: NOT IMPLEMENTED
+#endif
 }
 
 VOID EmulatorExternalInterrupt(BYTE Number)
 {
+#ifndef NEW_EMULATOR
     /* Call the softx86 API */
     softx86_ext_hw_signal(&EmulatorContext, Number);
+#endif
 }
 
 ULONG EmulatorGetRegister(ULONG Register)
 {
+#ifndef NEW_EMULATOR
     if (Register < EMULATOR_REG_ES)
     {
         return EmulatorContext.state->general_reg[Register].val;
@@ -360,10 +395,14 @@ ULONG EmulatorGetRegister(ULONG Register)
     {
         return EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val;
     }
+#else
+    return EmulatorContext.Registers[Register].Long;
+#endif
 }
 
 VOID EmulatorSetRegister(ULONG Register, ULONG Value)
 {
+#ifndef NEW_EMULATOR
     if (Register < EMULATOR_REG_CS)
     {
         EmulatorContext.state->general_reg[Register].val = Value;
@@ -372,25 +411,41 @@ VOID EmulatorSetRegister(ULONG Register, ULONG Value)
     {
         EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val = Value;
     }
+#else
+    // TODO: NOT IMPLEMENTED
+#endif
 }
 
 BOOLEAN EmulatorGetFlag(ULONG Flag)
 {
-    return (EmulatorContext.state->reg_flags.val & Flag);
+#ifndef NEW_EMULATOR
+    return (EmulatorContext.state->reg_flags.val & Flag) ? TRUE : FALSE;
+#else
+    return (EmulatorContext.Flags.Long & Flag) ? TRUE : FALSE;
+#endif
 }
 
 VOID EmulatorSetFlag(ULONG Flag)
 {
+#ifndef NEW_EMULATOR
     EmulatorContext.state->reg_flags.val |= Flag;
+#else
+    EmulatorContext.Flags.Long |= Flag;
+#endif
 }
 
 VOID EmulatorClearFlag(ULONG Flag)
 {
+#ifndef NEW_EMULATOR
     EmulatorContext.state->reg_flags.val &= ~Flag;
+#else
+    EmulatorContext.Flags.Long &= ~Flag;
+#endif
 }
 
 VOID EmulatorStep()
 {
+#ifndef NEW_EMULATOR
     /* Print the current position - useful for debugging */
     DPRINT("Executing at CS:IP = %04X:%04X\n",
            EmulatorGetRegister(EMULATOR_REG_CS),
@@ -402,6 +457,9 @@ VOID EmulatorStep()
         /* Invalid opcode */
         EmulatorInterrupt(EMULATOR_EXCEPTION_INVALID_OPCODE);
     }
+#else
+    // TODO: NOT IMPLEMENTED
+#endif
 }
 
 VOID EmulatorCleanup()
@@ -409,9 +467,11 @@ VOID EmulatorCleanup()
     /* Free the memory allocated for the 16-bit address space */
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
 
+#ifndef NEW_EMULATOR
     /* Free the softx86 CPU and FPU emulator */
     softx86_free(&EmulatorContext);
     softx87_free(&FpuEmulatorContext);
+#endif
 }
 
 VOID EmulatorSetA20(BOOLEAN Enabled)

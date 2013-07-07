@@ -738,6 +738,28 @@ VOID BiosVideoService()
             break;
         }
 
+        /* Teletype Output */
+        case 0x0E:
+        {
+            CHAR Character = LOBYTE(Eax);
+            DWORD NumWritten;
+
+            /* Make sure the page exists */
+            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
+
+            /* Set the attribute */
+            SetConsoleTextAttribute(ConsoleBuffers[HIBYTE(Ebx)], LOBYTE(Ebx));
+
+            /* Write the character */
+            WriteConsoleA(ConsoleBuffers[HIBYTE(Ebx)],
+                          &Character,
+                          sizeof(CHAR),
+                          &NumWritten,
+                          NULL);
+
+            break;
+        }
+
         /* Get Current Video Mode */
         case 0x0F:
         {

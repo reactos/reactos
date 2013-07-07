@@ -86,22 +86,22 @@ int Sfx86OpcodeExec_jc(sx86_ubyte opcode,softx86_ctx* ctx)
 		tf = !(ctx->state->reg_flags.val & SX86_CPUFLAG_PARITY);
 /* JL */
 	else if (opcode == 0x7C)
-		tf =	(ctx->state->reg_flags.val & SX86_CPUFLAG_SIGN) !=
-			(ctx->state->reg_flags.val & SX86_CPUFLAG_OVERFLOW);
+		tf =	 (((ctx->state->reg_flags.val & SX86_CPUFLAG_SIGN) ? 1 : 0) !=
+			  ((ctx->state->reg_flags.val & SX86_CPUFLAG_OVERFLOW) ? 1 : 0));
 /* JGE */
 	else if (opcode == 0x7D)
-		tf =	(ctx->state->reg_flags.val & SX86_CPUFLAG_SIGN) ==
-			(ctx->state->reg_flags.val & SX86_CPUFLAG_OVERFLOW);
+		tf =	((ctx->state->reg_flags.val & SX86_CPUFLAG_SIGN) ? 1 : 0) ==
+			((ctx->state->reg_flags.val & SX86_CPUFLAG_OVERFLOW) ? 1 : 0);
 /* JLE */
 	else if (opcode == 0x7E)
-		tf =	((ctx->state->reg_flags.val & SX86_CPUFLAG_SIGN) !=
-			 (ctx->state->reg_flags.val & SX86_CPUFLAG_OVERFLOW)) ||
-			 (ctx->state->reg_flags.val & SX86_CPUFLAG_ZERO);
+		tf =	(((ctx->state->reg_flags.val & SX86_CPUFLAG_SIGN) ? 1 : 0) !=
+			 ((ctx->state->reg_flags.val & SX86_CPUFLAG_OVERFLOW) ? 1 : 0) ||
+			 (ctx->state->reg_flags.val & SX86_CPUFLAG_ZERO));
 /* JG */
 	else if (opcode == 0x7F)
-		tf =	 ((ctx->state->reg_flags.val & SX86_CPUFLAG_SIGN) ==
-			  (ctx->state->reg_flags.val & SX86_CPUFLAG_OVERFLOW)) &&
-			(!(ctx->state->reg_flags.val & SX86_CPUFLAG_ZERO));
+		tf =	 (((ctx->state->reg_flags.val & SX86_CPUFLAG_SIGN) ? 1 : 0) ==
+			  ((ctx->state->reg_flags.val & SX86_CPUFLAG_OVERFLOW) ? 1 : 0) &&
+			(!(ctx->state->reg_flags.val & SX86_CPUFLAG_ZERO)));
 /* should NOT be here !*/
 	else
 		return 0;
