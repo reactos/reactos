@@ -102,17 +102,14 @@ DEFINE_GUID(CLSID_ShellFileDefExt,         0x21B22460, 0x3AEA, 0x1069, 0xA2, 0xD
 DEFINE_GUID(CLSID_ShellDrvDefExt,          0x5F5295E0, 0x429F, 0x1069, 0xA2, 0xE2, 0x08, 0x00, 0x2B, 0x30, 0x30, 0x9D);
 DEFINE_GUID(CLSID_ShellNetDefExt,          0x86422020, 0x42A0, 0x1069, 0xA2, 0xE5, 0x08, 0x00, 0x2B, 0x30, 0x30, 0x9D);
 
-// In theory, this is documented. But until I see an SDK header that defines it, it will be treated as undocumented...
-DEFINE_GUID(CLSID_ShellItem,               0x2FE352EA, 0xFD1F, 0x11D2, 0xB1, 0xF4, 0x00, 0xC0, 0x4F, 0x8E, 0xEB, 0x3E);
-
 #define CGID_IExplorerToolbar IID_IExplorerToolbar
 #define SID_IExplorerToolbar IID_IExplorerToolbar
 #define SID_ITargetFrame2 IID_ITargetFrame2
 #define SID_IWebBrowserApp IID_IWebBrowserApp
 #define CGID_IDeskBand IID_IDeskBand
 #define CGID_MenuBand CLSID_MenuBand
-#define SID_STravelLogCursor IID_ITravelLogStg 
-#define SID_IBandSite IID_IBandSite 
+#define SID_STravelLogCursor IID_ITravelLogStg
+#define SID_IBandSite IID_IBandSite
 #define SID_IFolderView IID_IFolderView
 #define SID_IShellBrowser IID_IShellBrowser
 

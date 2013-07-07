@@ -1765,7 +1765,7 @@ interface INewShortcutHookA : IUnknown
     HRESULT GetExtension(
                 [out] LPSTR pszExtension,
                 [in] int cchExtension);
-} 
+}
 
 
 /*****************************************************************************
@@ -1796,7 +1796,7 @@ interface INewShortcutHookW : IUnknown
     HRESULT GetExtension(
                 [out] LPWSTR pszExtension,
                 [in] int cchExtension);
-} 
+}
 
 /*****************************************************************************
  * IRunnableTask interface
@@ -2281,7 +2281,7 @@ cpp_quote("#define SMC_SFDDRESTRICTED		0x00000030")
 ]
 interface IShellMenuCallback : IUnknown
 {
-	HRESULT CallbackSM( 
+	HRESULT CallbackSM(
 		[in, out] LPSMDATA psmd,
         [in] UINT uMsg,
         [in] WPARAM wParam,
@@ -2317,48 +2317,48 @@ cpp_quote("#define SMINV_ID                     0x00000008")
 ]
 interface IShellMenu : IUnknown
 {
-	HRESULT Initialize( 
+	HRESULT Initialize(
 		[in] IShellMenuCallback *psmc,
         [in] UINT uId,
         [in] UINT uIdAncestor,
         [in] DWORD dwFlags);
-        
-	HRESULT GetMenuInfo( 
+
+	HRESULT GetMenuInfo(
 		[out] IShellMenuCallback **ppsmc,
 		[out] UINT *puId,
 		[out] UINT *puIdAncestor,
 		[out] DWORD *pdwFlags);
-        
-	HRESULT SetShellFolder( 
+
+	HRESULT SetShellFolder(
         [in] IShellFolder *psf,
 		[in] LPCITEMIDLIST pidlFolder,
         [in] HKEY hKey,
         [in] DWORD dwFlags);
-        
-	HRESULT GetShellFolder( 
+
+	HRESULT GetShellFolder(
 		[out] DWORD *pdwFlags,
 		[out] LPITEMIDLIST *ppidl,
 		[in] REFIID riid,
 		[out] void **ppv);
-        
-	HRESULT SetMenu( 
+
+	HRESULT SetMenu(
 		[in] HMENU hmenu,
 		[in] HWND hwnd,
         [in] DWORD dwFlags);
-        
-	HRESULT GetMenu( 
+
+	HRESULT GetMenu(
 		[out] HMENU *phmenu,
 		[out] HWND *phwnd,
 		[out] DWORD *pdwFlags);
-        
-	HRESULT InvalidateItem( 
+
+	HRESULT InvalidateItem(
 		[in] LPSMDATA psmd,
         [in] DWORD dwFlags);
-        
-	HRESULT GetState( 
+
+	HRESULT GetState(
 		[out] LPSMDATA psmd);
-        
-	HRESULT SetMenuToolbar( 
+
+	HRESULT SetMenuToolbar(
 		[in] IUnknown *punk,
         [in] DWORD dwFlags);
 }
@@ -2970,12 +2970,12 @@ cpp_quote("#if (_WIN32_IE >= _WIN32_IE_IE60)")
 ]
 interface ITrackShellMenu : IShellMenu
 {
-	HRESULT SetObscured( 
+	HRESULT SetObscured(
 		[in] HWND hwndTB,
 		[in] IUnknown *punkBand,
 		DWORD dwSMSetFlags);
 
-	HRESULT Popup( 
+	HRESULT Popup(
 		[in] HWND hwnd,
 		[in] POINTL *ppt,
 		[in] RECTL *prcExclude,
@@ -4484,5 +4484,12 @@ library ShellObjects
     ]
     coclass DestinationList {
         interface ICustomDestinationList;
+    }
+
+    [
+        uuid(9ac9fbe1-e0a2-4ad6-b4ee-e212013ea917)
+    ]
+    coclass ShellItem {
+        interface IShellItem2;
     }
 }

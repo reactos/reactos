@@ -72,7 +72,7 @@ interface IAutoComplete : IUnknown
 		  [in] IUnknown *punkACL,
 		  [in] LPCOLESTR pwszRegKeyPath,
 		  [in] LPCOLESTR pwszQuickComplete);
-    
+
     HRESULT Enable( [in] BOOL fEnable );
 }
 
@@ -308,6 +308,27 @@ interface FolderItem : IDispatch
     HRESULT Verbs( [out, retval] FolderItemVerbs **ppfic );
 
     HRESULT InvokeVerb( [in, optional] VARIANT vVerb );
+}
+
+[
+    object,
+    uuid(edc817aa-92b8-11d1-b075-00c04fc33aa5),
+    oleautomation,
+    dual
+]
+interface FolderItem2 : FolderItem
+{
+    HRESULT InvokeVerbEx( [in, optional] VARIANT vVerb, [in, optional] VARIANT vArgs );
+
+    HRESULT ExtendedProperty( [in] BSTR sPropName, [out, retval] VARIANT *pvRet );
+}
+
+[
+    uuid(2fe352ea-fd1f-11d2-b1f4-00c04f8eeb3e)
+]
+coclass ShellFolderItem
+{
+    interface FolderItem2;
 }
 
 /*****************************************************************************
