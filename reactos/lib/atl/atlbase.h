@@ -617,6 +617,11 @@ public:
 				objectMapEntry++;
 			}
 		}
+		if (hResult == S_OK && *ppv == NULL)
+		{
+			// FIXME: call AtlComModuleGetClassObject
+			hResult = CLASS_E_CLASSNOTAVAILABLE;
+		}
 		return hResult;
 	}
 
