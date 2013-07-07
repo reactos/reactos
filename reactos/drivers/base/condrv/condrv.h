@@ -10,7 +10,10 @@
 #define __CONDRV_H__
 
 /* This is needed for VisualDDK testing */
+// #define __USE_VISUALDDK_AT_HOME__
+
 #ifdef __USE_VISUALDDK_AT_HOME__
+    #pragma message("Disable __USE_VISUALDDK_AT_HOME__ before committing!!")
     #include "VisualDDKHelpers.h"
 #endif
 

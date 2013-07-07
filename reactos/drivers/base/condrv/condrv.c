@@ -40,16 +40,16 @@ CompleteRequest(IN PIRP      Irp,
     Irp->IoStatus.Information = Information;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return Irp->IoStatus.Status;
+    return Status;
 }
 
 NTSTATUS NTAPI
 ConDrvDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-#define HANDLE_CTRL_CODE(CtrlCode)  \
-    case CtrlCode :                 \
-    {                               \
-        DPRINT1("ConDrv: " #CtrlCode ", stack->FileObject = 0x%p\n", stack->FileObject);    \
+#define HANDLE_CTRL_CODE(Code)  \
+    case Code :                 \
+    {                           \
+        DPRINT1("ConDrv: " #Code ", stack->FileObject = 0x%p\n", stack->FileObject);        \
         if (stack->FileObject)                                                              \
         {                                                                                   \
             DPRINT1("stack->FileObject->FileName = %wZ\n", &stack->FileObject->FileName);   \
@@ -58,10 +58,11 @@ ConDrvDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     }
 
     PIO_STACK_LOCATION stack    = IoGetCurrentIrpStackLocation(Irp);
-    ULONG              ctrlCode = stack->Parameters.DeviceIoControl.IoControlCode;
+    // ULONG              ctrlCode = stack->Parameters.DeviceIoControl.IoControlCode;
+    ULONG MajorFunction         = stack->MajorFunction;
 
     /* Just display all the IRP codes for now... */
-    switch (ctrlCode)
+    switch (MajorFunction)
     {
         HANDLE_CTRL_CODE(IRP_MJ_CREATE);
         HANDLE_CTRL_CODE(IRP_MJ_CREATE_NAMED_PIPE);
@@ -96,7 +97,7 @@ ConDrvDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
         default:
         {
-            DPRINT1("Unknown code %lu\n", ctrlCode);
+            DPRINT1("Unknown Major %lu\n", MajorFunction);
             break;
         }
     }

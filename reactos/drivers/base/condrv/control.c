@@ -44,8 +44,7 @@ ConDrvCreateController(IN PDRIVER_OBJECT DriverObject,
                             &Controller);
     if (!NT_SUCCESS(Status)) goto Done;
 
-    Status = IoCreateSymbolicLink((PUNICODE_STRING)&SymlinkName,
-                                  (PUNICODE_STRING)&DeviceName);
+    Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
     if (!NT_SUCCESS(Status))
     {
         IoDeleteDevice(Controller);
