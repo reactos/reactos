@@ -1,6 +1,7 @@
 
 add_subdirectory(beep)
 add_subdirectory(bootvid)
+add_subdirectory(condrv)
 
 if(_WINKD_)
 add_subdirectory(kdcom)
