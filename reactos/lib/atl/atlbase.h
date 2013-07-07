@@ -595,6 +595,7 @@ public:
 		ATLASSERT(ppv != NULL);
 		if (ppv == NULL)
 			return E_POINTER;
+		*ppv = NULL;
 		hResult = S_OK;
 		if (m_pObjMap != NULL)
 		{
