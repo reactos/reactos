@@ -4112,12 +4112,22 @@ RtlUnlockBootStatusData(
 #endif
 
 #ifdef NTOS_MODE_USER
+_Must_inspect_result_
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGUIDFromString(
     _In_ PUNICODE_STRING GuidString,
     _Out_ GUID *Guid);
+
+_Must_inspect_result_
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlStringFromGUID(
+  _In_ REFGUID Guid,
+  _Out_ _At_(GuidString->Buffer, __drv_allocatesMem(Mem))
+    PUNICODE_STRING GuidString);
 
 NTSYSAPI
 NTSTATUS
