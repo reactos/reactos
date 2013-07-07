@@ -57,10 +57,10 @@ if defined ROS_ARCH (
     cl 2>&1 | find "x86" > NUL && set ARCH=i386
     cl 2>&1 | find "x64" > NUL && set ARCH=amd64
     cl 2>&1 | find "ARM" > NUL && set ARCH=arm
-    cl 2>&1 | find " 14." > NUL && set BUILD_ENVIRONMENT=VS8
-    cl 2>&1 | find " 15." > NUL && set BUILD_ENVIRONMENT=VS9
-    cl 2>&1 | find " 16." > NUL && set BUILD_ENVIRONMENT=VS10
-    cl 2>&1 | find " 17." > NUL && set BUILD_ENVIRONMENT=VS11
+    cl 2>&1 | find "14." > NUL && set BUILD_ENVIRONMENT=VS8
+    cl 2>&1 | find "15." > NUL && set BUILD_ENVIRONMENT=VS9
+    cl 2>&1 | find "16." > NUL && set BUILD_ENVIRONMENT=VS10
+    cl 2>&1 | find "17." > NUL && set BUILD_ENVIRONMENT=VS11
     if not defined BUILD_ENVIRONMENT (
         echo Error: Visual Studio version too old or version detection failed.
         exit /b
