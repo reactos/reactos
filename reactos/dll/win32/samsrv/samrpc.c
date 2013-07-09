@@ -7577,41 +7577,16 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
         }
     }
 
-    /* Store the new LM password */
+    /* Store the new password hashes */
     if (NT_SUCCESS(Status))
     {
-        if (LmPresent)
-        {
-            Length = sizeof(ENCRYPTED_LM_OWF_PASSWORD);
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"LMPwd",
-                                            REG_BINARY,
-                                            NewLmPassword,
-                                            Length);
-            if (!NT_SUCCESS(Status))
-            {
-                goto done;
-            }
-        }
-
-        /* Store the new NT password */
-        if (NtPresent)
-        {
-            Length = sizeof(ENCRYPTED_NT_OWF_PASSWORD);
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"NTPwd",
-                                            REG_BINARY,
-                                            NewNtPassword,
-                                            Length);
-            if (!NT_SUCCESS(Status))
-            {
-                goto done;
-            }
-        }
+        Status = SampSetUserPassword(UserObject,
+                                     NewNtPassword,
+                                     NtPresent,
+                                     NewLmPassword,
+                                     LmPresent);
     }
 
-
-done:
     return Status;
 }
 
