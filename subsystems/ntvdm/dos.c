@@ -637,6 +637,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     CHAR CommandLineCopy[128];
     INT ParamCount = 0;
     DWORD Segment = 0;
+    WORD MaxAllocSize;
     DWORD i, FileSize, ExeSize;
     PIMAGE_DOS_HEADER Header;
     PDWORD RelocationTable;
@@ -701,8 +702,6 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         /* Get the MZ header */
         Header = (PIMAGE_DOS_HEADER)Address;
 
-        // TODO: Verify checksum and executable!
-
         /* Get the base size of the file, in paragraphs (rounded up) */
         ExeSize = (((Header->e_cp - 1) * 512) + Header->e_cblp + 0x0F) >> 4;
 
@@ -740,7 +739,8 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         RtlCopyMemory((PVOID)((ULONG_PTR)BaseAddress
                       + TO_LINEAR(Segment, 0x100)),
                       Address + (Header->e_cparhdr << 4),
-                      FileSize - (Header->e_cparhdr << 4));
+                      min(FileSize - (Header->e_cparhdr << 4),
+                          (ExeSize << 4) - sizeof(DOS_PSP)));
 
         /* Get the relocation table */
         RelocationTable = (PDWORD)(Address + Header->e_lfarlc);
@@ -777,9 +777,19 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     {
         /* COM file */
 
-        /* Allocate memory for the whole program and the PSP */
-        Segment = DosAllocateMemory((FileSize + sizeof(DOS_PSP)) >> 4, NULL);
+        /* Find the maximum amount of memory that can be allocated */
+        DosAllocateMemory(0xFFFF, &MaxAllocSize);
+
+        /* Make sure it's enough for the whole program and the PSP */
+        if ((MaxAllocSize << 4) < (FileSize + sizeof(DOS_PSP))) goto Cleanup;
+
+        /* Allocate all of it */
+        Segment = DosAllocateMemory(MaxAllocSize, NULL);
         if (Segment == 0) goto Cleanup;
+
+        /* The process owns its own memory */
+        DosChangeMemoryOwner(Segment, Segment);
+        DosChangeMemoryOwner(EnvBlock, Segment);
 
         /* Copy the program to Segment:0100 */
         RtlCopyMemory((PVOID)((ULONG_PTR)BaseAddress
