@@ -7477,6 +7477,7 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
     PENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
     PSAM_DB_OBJECT UserObject;
     ULONG Length;
+    SAM_USER_FIXED_DATA FixedUserData;
     NTSTATUS Status;
 
     TRACE("(%p %u %p %p %u %p %p %u %p %u %p)\n",
@@ -7585,6 +7586,28 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
                                      NtPresent,
                                      NewLmPassword,
                                      LmPresent);
+        if (NT_SUCCESS(Status))
+        {
+            /* Get the fixed size user data */
+            Length = sizeof(SAM_USER_FIXED_DATA);
+            Status = SampGetObjectAttribute(UserObject,
+                                            L"F",
+                                            NULL,
+                                            &FixedUserData,
+                                            &Length);
+            if (NT_SUCCESS(Status))
+            {
+                /* Update PasswordLastSet */
+                NtQuerySystemTime(&FixedUserData.PasswordLastSet);
+
+                /* Set the fixed size user data */
+                Status = SampSetObjectAttribute(UserObject,
+                                                L"F",
+                                                REG_BINARY,
+                                                &FixedUserData,
+                                                Length);
+            }
+        }
     }
 
     return Status;
