@@ -72,11 +72,31 @@ static INT BiosColorNumberToBits(DWORD Colors)
     return i;
 }
 
+static DWORD BiosGetVideoPageSize()
+{
+    INT i;
+    DWORD BufferSize = VideoModes[CurrentVideoMode].Width
+                       * VideoModes[CurrentVideoMode].Height
+                       * BiosColorNumberToBits(VideoModes[CurrentVideoMode].Colors)
+                       / 8;
+    
+    for (i = 0; i < 32; i++) if ((1 << i) >= BufferSize) break;
+
+    return 1 << i;
+}
+
+static BYTE BiosVideoAddressToPage(ULONG Address)
+{
+    return (Address - (VideoModes[CurrentVideoMode].Segment << 4))
+            / BiosGetVideoPageSize();
+}
+
 static COORD BiosVideoAddressToCoord(ULONG Address)
 {
     COORD Result = {0, 0};
     INT BitsPerPixel;
-    DWORD Offset = Address - (VideoModes[CurrentVideoMode].Segment << 4);
+    BYTE PageStart = BiosVideoAddressToPage(Address) * BiosGetVideoPageSize();
+    DWORD Offset = Address - (VideoModes[CurrentVideoMode].Segment << 4) - PageStart;
 
     if (VideoModes[CurrentVideoMode].Text)
     {
@@ -403,6 +423,7 @@ VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress)
 {
     ULONG i;
     COORD Coordinates;
+    BYTE Page;
     COORD Origin = { 0, 0 };
     COORD UnitSize = { 1, 1 };
     CHAR_INFO Character;
@@ -419,6 +440,12 @@ VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress)
             /* Get the coordinates */
             Coordinates = BiosVideoAddressToCoord(i);
 
+            /* Get the page number */
+            Page = BiosVideoAddressToPage(i);
+
+            /* Make sure the page is valid */
+            if (Page >= VideoModes[CurrentVideoMode].Pages) continue;
+
             /* Fill the rectangle structure */
             Rect.Left = Coordinates.X;
             Rect.Top = Coordinates.Y;
@@ -430,7 +457,7 @@ VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress)
             Character.Attributes = *((PBYTE)((ULONG_PTR)BaseAddress + i + 1));
 
             /* Write the character */
-            WriteConsoleOutputA(BiosConsoleOutput,
+            WriteConsoleOutputA(ConsoleBuffers[Page],
                                 &Character,
                                 UnitSize,
                                 Origin,
@@ -480,6 +507,7 @@ VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress)
 {
     ULONG i;
     COORD Coordinates;
+    BYTE Page;
     WORD Attribute;
     DWORD CharsWritten;
 
@@ -491,11 +519,17 @@ VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress)
             /* Get the coordinates */
             Coordinates = BiosVideoAddressToCoord(i);
 
+            /* Get the page number */
+            Page = BiosVideoAddressToPage(i);
+
+            /* Make sure the page is valid */
+            if (Page >= VideoModes[CurrentVideoMode].Pages) continue;
+
             /* Check if this is a character byte or an attribute byte */
             if ((i - (VideoModes[CurrentVideoMode].Segment << 4)) % 2 == 0)
             {
                 /* This is a regular character */
-                ReadConsoleOutputCharacterA(BiosConsoleOutput,
+                ReadConsoleOutputCharacterA(ConsoleBuffers[Page],
                                             (LPSTR)((ULONG_PTR)BaseAddress + i),
                                             sizeof(CHAR),
                                             Coordinates,
@@ -504,7 +538,7 @@ VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress)
             else
             {
                 /*  This is an attribute */
-                ReadConsoleOutputAttribute(BiosConsoleOutput,
+                ReadConsoleOutputAttribute(ConsoleBuffers[Page],
                                            &Attribute,
                                            sizeof(CHAR),
                                            Coordinates,
@@ -614,7 +648,7 @@ VOID BiosVideoService()
             /* Set the cursor */
             CursorInfo.dwSize = (CursorHeight * 100) / CONSOLE_FONT_HEIGHT;
             CursorInfo.bVisible = !Invisible;
-            SetConsoleCursorInfo(BiosConsoleOutput, &CursorInfo);
+            SetConsoleCursorInfo(ConsoleBuffers[CurrentVideoPage], &CursorInfo);
 
             break;
         }
@@ -622,10 +656,13 @@ VOID BiosVideoService()
         /* Set Cursor Position */
         case 0x02:
         {
+            /* Make sure the selected video page exists */
+            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
+
             Position.X = LOBYTE(Edx);
             Position.Y = HIBYTE(Edx);
 
-            SetConsoleCursorPosition(BiosConsoleOutput, Position);
+            SetConsoleCursorPosition(ConsoleBuffers[HIBYTE(Ebx)], Position);
             break;
         }
 
@@ -634,9 +671,13 @@ VOID BiosVideoService()
         {
             INT StartLine;
 
+            /* Make sure the selected video page exists */
+            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
+
             /* Retrieve the data */
-            GetConsoleCursorInfo(BiosConsoleOutput, &CursorInfo);
-            GetConsoleScreenBufferInfo(BiosConsoleOutput, &ScreenBufferInfo);
+            GetConsoleCursorInfo(ConsoleBuffers[HIBYTE(Ebx)], &CursorInfo);
+            GetConsoleScreenBufferInfo(ConsoleBuffers[HIBYTE(Ebx)],
+                                       &ScreenBufferInfo);
 
             /* Find the first line */
             StartLine = 32 - ((CursorInfo.dwSize * 32) / 100);
@@ -647,6 +688,28 @@ VOID BiosVideoService()
             EmulatorSetRegister(EMULATOR_REG_DX,
                                 LOWORD(ScreenBufferInfo.dwCursorPosition.Y) << 8
                                 || LOWORD(ScreenBufferInfo.dwCursorPosition.X));
+            break;
+        }
+
+        /* Select Active Display Page */
+        case 0x05:
+        {
+            /* Check if the page exists */
+            if (LOBYTE(Eax) >= VideoModes[CurrentVideoMode].Pages) break;
+
+            /* Check if this is the same page */
+            if (LOBYTE(Eax) == CurrentVideoPage) break;
+
+            /* Change the video page */
+            CurrentVideoPage = LOBYTE(Eax);
+
+            /* Set the active page console buffer */
+            SetConsoleActiveScreenBuffer(ConsoleBuffers[CurrentVideoPage]);
+
+            /* Restore the cursor to (0, 0) */
+            Position.X = Position.Y = 0;
+            SetConsoleCursorPosition(BiosConsoleOutput, Position);
+
             break;
         }
 
@@ -664,7 +727,7 @@ VOID BiosVideoService()
             if (HIBYTE(Eax) == 0x06) Position.Y = Rect.Top - LOBYTE(Eax);
             else Position.Y = Rect.Top + LOBYTE(Eax);
 
-            ScrollConsoleScreenBuffer(BiosConsoleOutput,
+            ScrollConsoleScreenBuffer(ConsoleBuffers[CurrentVideoPage],
                                       &Rect,
                                       &Rect,
                                       Position,
@@ -677,15 +740,23 @@ VOID BiosVideoService()
         {
             COORD BufferSize = { 1, 1 }, Origin = { 0, 0 };
 
+            /* Make sure the selected video page exists */
+            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
+
             /* Get the cursor position */
-            GetConsoleScreenBufferInfo(BiosConsoleOutput, &ScreenBufferInfo);
+            GetConsoleScreenBufferInfo(ConsoleBuffers[HIBYTE(Ebx)],
+                                       &ScreenBufferInfo);
 
             /* Read at cursor position */
             Rect.Left = ScreenBufferInfo.dwCursorPosition.X;
             Rect.Top = ScreenBufferInfo.dwCursorPosition.Y;
             
             /* Read the console output */
-            ReadConsoleOutput(BiosConsoleOutput, &Character, BufferSize, Origin, &Rect);
+            ReadConsoleOutput(ConsoleBuffers[HIBYTE(Ebx)],
+                              &Character,
+                              BufferSize,
+                              Origin,
+                              &Rect);
 
             /* Return the result */
             EmulatorSetRegister(EMULATOR_REG_AX,
@@ -700,18 +771,22 @@ VOID BiosVideoService()
         {
             DWORD CharsWritten;
 
+            /* Make sure the selected video page exists */
+            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
+
             /* Get the cursor position */
-            GetConsoleScreenBufferInfo(BiosConsoleOutput, &ScreenBufferInfo);
+            GetConsoleScreenBufferInfo(ConsoleBuffers[HIBYTE(Ebx)],
+                                       &ScreenBufferInfo);
 
             /* Write the attribute to the output */
-            FillConsoleOutputAttribute(BiosConsoleOutput,
+            FillConsoleOutputAttribute(ConsoleBuffers[HIBYTE(Ebx)],
                                        LOBYTE(Ebx),
                                        LOWORD(Ecx),
                                        ScreenBufferInfo.dwCursorPosition,
                                        &CharsWritten);
 
             /* Write the character to the output */
-            FillConsoleOutputCharacterA(BiosConsoleOutput,
+            FillConsoleOutputCharacterA(ConsoleBuffers[HIBYTE(Ebx)],
                                         LOBYTE(Eax),
                                         LOWORD(Ecx),
                                         ScreenBufferInfo.dwCursorPosition,
@@ -725,11 +800,15 @@ VOID BiosVideoService()
         {
             DWORD CharsWritten;
 
+            /* Make sure the selected video page exists */
+            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
+
             /* Get the cursor position */
-            GetConsoleScreenBufferInfo(BiosConsoleOutput, &ScreenBufferInfo);
+            GetConsoleScreenBufferInfo(ConsoleBuffers[HIBYTE(Ebx)],
+                                       &ScreenBufferInfo);
 
             /* Write the character to the output */
-            FillConsoleOutputCharacterA(BiosConsoleOutput,
+            FillConsoleOutputCharacterA(ConsoleBuffers[HIBYTE(Ebx)],
                                         LOBYTE(Eax),
                                         LOWORD(Ecx),
                                         ScreenBufferInfo.dwCursorPosition,

@@ -219,7 +219,7 @@ int Sfx86OpcodeExec_xlat(sx86_ubyte opcode,softx86_ctx* ctx)
 	else
 		seg = ctx->state->segment_override;
 
-	if ((opcode&0xFC) == 0xD7) {					// MOV reg,reg/mem or reg/mem,reg
+	if (opcode == 0xD7) {					// MOV reg,reg/mem or reg/mem,reg
 		sx86_ubyte d;
 		sx86_udword ofs;
 
@@ -239,7 +239,7 @@ int Sfx86OpcodeExec_xlat(sx86_ubyte opcode,softx86_ctx* ctx)
 
 int Sfx86OpcodeDec_xlat(sx86_ubyte opcode,softx86_ctx* ctx,char buf[128])
 {
-	if ((opcode&0xFC) == 0xD7) {					// XLAT
+	if (opcode == 0xD7) {					// XLAT
 		strcpy(buf,"XLAT");
 		return 1;
 	}
