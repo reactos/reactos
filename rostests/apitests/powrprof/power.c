@@ -15,13 +15,6 @@
 #include <winreg.h>
 #include <powrprof.h>
 
-/*
-   LONG WINAPI RegOpenCurrentUser(REGSAM a,PHKEY b)
-   {
-      *b = HKEY_CURRENT_USER;
-      return ERROR_SUCCESS;
-   }
- */
 unsigned int g_NumPwrSchemes = 0;
 unsigned int g_NumPwrSchemesEnumerated = 0;
 unsigned int g_ActivePwrScheme = 3;
