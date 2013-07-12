@@ -16,19 +16,19 @@ exit 1
 }
 
 CMAKE_GENERATOR="Ninja"
-for (( i=1; i<=$#; i++ )); do
-	case ${!i} in
+while [ $# -gt 0 ]; do
+	case $1 in
 		-D)
-			((i++))
-			if [[ "x${!i}" == x?*=* ]] ; then
-				ROS_CMAKEOPTS+=" -D ${!i}"
+			shift
+			if echo "x$1" | grep 'x?*=*' > /dev/null; then
+				ROS_CMAKEOPTS+=" -D $1"
 			else
 				usage
 			fi
 		;;
 
-		-D?*=*)
-			 ROS_CMAKEOPTS+=" ${!i}"
+		-D?*=*|-D?*)
+			ROS_CMAKEOPTS+=" $1"
 		;;
 		makefiles|Makefiles)
 			CMAKE_GENERATOR="Unix Makefiles"
@@ -36,6 +36,8 @@ for (( i=1; i<=$#; i++ )); do
 		*)
 			usage
 	esac
+
+	shift
 done
 
 if [ "$REACTOS_SOURCE_DIR" = "$PWD" ]; then
