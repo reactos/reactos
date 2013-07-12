@@ -1,8 +1,8 @@
 #!/bin/sh
 
 if [ "x$ROS_ARCH" = "x" ]; then
-  echo Could not detect RosBE.
-  exit 1
+	echo Could not detect RosBE.
+	exit 1
 fi
 
 BUILD_ENVIRONMENT=MinGW
@@ -11,8 +11,8 @@ REACTOS_SOURCE_DIR=$(cd `dirname $0` && pwd)
 REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
 
 usage() {
-echo Invalid parameter given.
-exit 1
+	echo Invalid parameter given.
+	exit 1
 }
 
 CMAKE_GENERATOR="Ninja"
@@ -41,9 +41,9 @@ while [ $# -gt 0 ]; do
 done
 
 if [ "$REACTOS_SOURCE_DIR" = "$PWD" ]; then
-  echo Creating directories in $REACTOS_OUTPUT_PATH
-  mkdir -p "$REACTOS_OUTPUT_PATH"
-  cd "$REACTOS_OUTPUT_PATH"
+	echo Creating directories in $REACTOS_OUTPUT_PATH
+	mkdir -p "$REACTOS_OUTPUT_PATH"
+	cd "$REACTOS_OUTPUT_PATH"
 fi
 
 mkdir -p host-tools reactos
