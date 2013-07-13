@@ -346,8 +346,9 @@ TestModuleRegistry(
             NTSTATUS status;
             UNICODE_STRING clsid;
             DWORD type;
-            WCHAR dllName[100];
-            DWORD dllNameSize;
+            WCHAR data[100];
+            DWORD dataSize;
+            PCWSTR expectedThreadingModel;
 
             class = &ExpectedInterfaces[iClass];
             status = RtlStringFromGUID(class->clsid, &clsid);
@@ -367,31 +368,34 @@ TestModuleRegistry(
             if (myskip(result == NO_ERROR, "No key\n"))
                 continue;
 
-            dllNameSize = sizeof(dllName);
-            result = RegQueryValueEx(hKeyServer, NULL, NULL, &type, (PBYTE)dllName, &dllNameSize);
+            dataSize = sizeof(data);
+            result = RegQueryValueEx(hKeyServer, NULL, NULL, &type, (PBYTE)data, &dataSize);
             ok(result == NO_ERROR, "Failed to query value for %s, error %lu\n", class->name, result);
             if (!myskip(result == NO_ERROR, "No module name\n"))
             {
                 ok(type == REG_SZ || type == REG_EXPAND_SZ, "type %lu for %s\n", type, class->name);
-                ok(dllNameSize % sizeof(WCHAR) == 0, "size %lu for %s\n", dllNameSize, class->name);
-                ok(dllNameSize <= sizeof(dllName), "size %lu for %s\n", dllNameSize, class->name);
-                ok(dllName[dllNameSize / sizeof(WCHAR) - 1] == UNICODE_NULL, "Not null terminated for %s\n", class->name);
+                ok(dataSize % sizeof(WCHAR) == 0, "size %lu for %s\n", dataSize, class->name);
+                ok(dataSize <= sizeof(data), "size %lu for %s\n", dataSize, class->name);
+                ok(data[dataSize / sizeof(WCHAR) - 1] == UNICODE_NULL, "Not null terminated for %s\n", class->name);
                 // TODO: Use SearchPath (or assume everything's in system32) and do a proper full path compare
-                PathStripPathW(dllName);
-                PathRemoveExtensionW(dllName);
-                ok(!wcsicmp(dllName, ModuleName), "Server is %ls, expected %ls for %s\n", dllName, ModuleName, class->name);
+                PathStripPathW(data);
+                PathRemoveExtensionW(data);
+                ok(!wcsicmp(data, ModuleName), "Server is %ls, expected %ls for %s\n", data, ModuleName, class->name);
             }
 
-            dllNameSize = sizeof(dllName);
-            result = RegQueryValueEx(hKeyServer, L"ThreadingModel", NULL, &type, (PBYTE)dllName, &dllNameSize);
+            dataSize = sizeof(data);
+            result = RegQueryValueEx(hKeyServer, L"ThreadingModel", NULL, &type, (PBYTE)data, &dataSize);
             ok(result == NO_ERROR, "Failed to query value for %s, error %lu\n", class->name, result);
             if (!myskip(result == NO_ERROR, "No ThreadingModel\n"))
             {
                 ok(type == REG_SZ || type == REG_EXPAND_SZ, "type %lu for %s\n", type, class->name);
-                ok(dllNameSize % sizeof(WCHAR) == 0, "size %lu for %s\n", dllNameSize, class->name);
-                ok(dllNameSize <= sizeof(dllName), "size %lu for %s\n", dllNameSize, class->name);
-                ok(dllName[dllNameSize / sizeof(WCHAR) - 1] == UNICODE_NULL, "Not null terminated for %s\n", class->name);
-                ok(!wcsicmp(dllName, L"Apartment"), "Server is %ls, expected %ls for %s\n", dllName, L"Apartment", class->name);
+                ok(dataSize % sizeof(WCHAR) == 0, "size %lu for %s\n", dataSize, class->name);
+                ok(dataSize <= sizeof(data), "size %lu for %s\n", dataSize, class->name);
+                ok(data[dataSize / sizeof(WCHAR) - 1] == UNICODE_NULL, "Not null terminated for %s\n", class->name);
+                expectedThreadingModel = class->ThreadingModel;
+                if (!expectedThreadingModel)
+                    expectedThreadingModel = L"Apartment";
+                ok(!wcsicmp(data, expectedThreadingModel), "Server is %ls, expected %ls for %s\n", data, expectedThreadingModel, class->name);
             }
 
             RegCloseKey(hKeyServer);
@@ -428,7 +432,7 @@ TestManualInstantiation(
             IClassFactory *pCF = pv;
             hr = IClassFactory_CreateInstance(pCF, NULL, &IID_IUnknown, &pv);
             ok(hr == S_OK, "IClassFactory::CreateInstance failed for %s, hr = 0x%lx\n", class->name, hr);
-            if (SUCCEEDED(hr))
+            if (!myskip(SUCCEEDED(hr), "No instance\n"))
             {
                 IUnknown *pUnk = pv;
                 IUnknown_Release(pUnk);

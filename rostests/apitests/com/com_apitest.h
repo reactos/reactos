@@ -48,6 +48,7 @@ typedef struct _CLASS_AND_INTERFACES
         LONG offset;
         const IID *iid;
     } ifaces[80];
+    PCWSTR ThreadingModel;
 } CLASS_AND_INTERFACES;
 typedef const CLASS_AND_INTERFACES *PCCLASS_AND_INTERFACES;
 
