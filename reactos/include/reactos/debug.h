@@ -23,6 +23,10 @@
 #error Please include SDK first.
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 ULONG
 __cdecl
 DbgPrint(
@@ -36,7 +40,7 @@ __cdecl
 DbgPrintEx(
     _In_ ULONG ComponentId,
     _In_ ULONG Level,
-    _In_z_ _Printf_format_string_ PCCH Format,
+    _In_z_ _Printf_format_string_ PCSTR Format,
     ...
 );
 
@@ -45,11 +49,15 @@ NTSYSAPI
 VOID
 NTAPI
 RtlAssert(
-    PVOID FailedAssertion,
-    PVOID FileName,
-    ULONG LineNumber,
-    PCHAR Message
+    _In_ PVOID FailedAssertion,
+    _In_ PVOID FileName,
+    _In_ ULONG LineNumber,
+    _In_opt_z_ PCHAR Message
 );
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* !defined(_RTLFUNCS_H) && !defined(_NTDDK_) */
 
