@@ -11,7 +11,6 @@ START_TEST(RtlException)
 {
     NTSTATUS ExceptionStatus;
     PCHAR Buffer[128];
-    CHAR Value;
 
     /* Access a valid pointer - must not trigger SEH */
     KmtStartSeh()
@@ -20,7 +19,7 @@ START_TEST(RtlException)
 
     /* Read from a NULL pointer - must cause an access violation */
     KmtStartSeh()
-        Value = *(volatile CHAR *)NULL;
+        (void)*(volatile CHAR *)NULL;
     KmtEndSeh(STATUS_ACCESS_VIOLATION);
 
     /* Write to a NULL pointer - must cause an access violation */
@@ -32,7 +31,7 @@ START_TEST(RtlException)
 #if 0 //def KMT_KERNEL_MODE
     /* Read from MmBadPointer - must cause an access violation */
     KmtStartSeh()
-        Value = *(volatile CHAR *)MmBadPointer;
+        (void)*(volatile CHAR *)MmBadPointer;
     KmtEndSeh(STATUS_ACCESS_VIOLATION);
 
     /* Write to MmBadPointer - must cause an access violation */
