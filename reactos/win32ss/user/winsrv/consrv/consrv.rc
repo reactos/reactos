@@ -1,0 +1,6 @@
+#include <windef.h>
+#include <winuser.h>
+#include "resource.h"
+
+#include "rsrc.rc"
+#include "frontends/frontends.rc"

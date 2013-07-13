@@ -5,16 +5,19 @@ include_directories(
 
 spec2def(winsrv.dll winsrv.spec)
 
+# The components
+include(consrv.cmake)
+include(usersrv.cmake)
+
 list(APPEND SOURCE
-    harderror.c
     init.c
-    register.c
-    shutdown.c
     winsrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winsrv.def)
 
 add_library(winsrv SHARED ${SOURCE})
 
+# Add the components
+target_link_libraries(winsrv consrv usersrv)
 target_link_libraries(winsrv win32ksys ${PSEH_LIB}) # win32ksys because of NtUser...()
 
 set_module_type(winsrv win32dll UNICODE)
