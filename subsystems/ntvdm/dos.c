@@ -906,6 +906,56 @@ VOID DosPrintCharacter(CHAR Character)
     DosWriteFile(DOS_OUTPUT_HANDLE, &Character, sizeof(CHAR), &BytesWritten);
 }
 
+VOID DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
+{
+    HANDLE Handle = DosGetRealHandle(FileHandle);
+
+    if (Handle == INVALID_HANDLE_VALUE)
+    {
+        /* Doesn't exist */
+        EmulatorSetFlag(EMULATOR_FLAG_CF);
+        EmulatorSetRegister(EMULATOR_REG_AX, ERROR_FILE_NOT_FOUND);
+    }
+
+    switch (ControlCode)
+    {
+        /* Get Device Information */
+        case 0x00:
+        {
+            WORD InfoWord = 0;
+
+            if (Handle == DosSystemFileTable[0])
+            {
+                /* Console input */
+                InfoWord |= 1 << 0;
+            }
+            else if (Handle == DosSystemFileTable[1])
+            {
+                /* Console output */
+                InfoWord |= 1 << 1;
+            }
+
+            /* It is a character device */
+            InfoWord |= 1 << 7;
+
+            /* Return the device information word */
+            EmulatorClearFlag(EMULATOR_FLAG_CF);
+            EmulatorSetRegister(EMULATOR_REG_DX, InfoWord);
+
+            break;
+        }
+
+        /* Unsupported control code */
+        default:
+        {
+            DPRINT1("Unsupported IOCTL: 0x%02X\n", ControlCode);
+
+            EmulatorSetFlag(EMULATOR_FLAG_CF);
+            EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_PARAMETER);
+        }
+    }
+}
+
 VOID DosInt20h(WORD CodeSegment)
 {
     /* This is the exit interrupt */
@@ -1322,6 +1372,14 @@ VOID DosInt21h(WORD CodeSegment)
                 EmulatorSetRegister(EMULATOR_REG_AX,
                                     (Eax & 0xFFFF0000) | ErrorCode);
             }
+
+            break;
+        }
+
+        /* IOCTL */
+        case 0x44:
+        {
+            DosHandleIoctl(LOBYTE(Eax), LOWORD(Ebx));
 
             break;
         }

@@ -38,7 +38,7 @@ typedef struct
     DWORD Width;
     DWORD Height;
     BOOLEAN Text;
-    DWORD Colors;
+    BYTE Bpp;
     BOOLEAN Gray;
     BYTE Pages;
     WORD Segment;
