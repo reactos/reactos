@@ -19,18 +19,22 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,       &IID_IContextMenu2 },
             {    0x0,           &IID_IContextMenu },
             {    0x0,               &IID_IUnknown },
+            {    0x4,   &IID_IShellExtInit },
             {    0x8,   &IID_IObjectWithSite },
+            {   0x10,   &IID_IFolderFilter },
         }
     },
     {
         ID_NAME(CLSID_DeskMovr),
         {
             {    0x0,   &IID_IUnknown },
+            {   0x70,   &IID_IDeskMovr },
             {   0x74,   &IID_IOleObject },
             {   0x78,   &IID_IPersistPropertyBag },
             {   0x80,   &IID_IOleInPlaceActiveObject },
-            {   0x84,   &IID_IViewObject2 },
-            {   0x84,       &IID_IViewObject },
+            {   0x84,   &IID_IViewObjectEx },
+            {   0x84,       &IID_IViewObject2 },
+            {   0x84,           &IID_IViewObject },
             {   0x88,   &IID_IOleWindow },
             {   0x88,       &IID_IOleInPlaceObject },
             {   0x88,           &IID_IOleInPlaceObjectWindowless },
@@ -110,6 +114,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x20,   &IID_IPersistStream },
             {   0x20,   &IID_IPersistStreamInit },
             {   0x24,   &IID_IPersistPropertyBag },
+            {   0x28,   &IID_IBrowserFrameOptions },
         }
     },
     {
@@ -210,7 +215,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,       &IID_IContextMenu2 },
             {    0x0,           &IID_IContextMenu },
             {    0x0,               &IID_IUnknown },
+            {    0x4,   &IID_IShellExtInit },
             {    0x8,   &IID_IObjectWithSite },
+            {   0x10,   &IID_IFolderFilter },
         }
     },
     {
@@ -220,7 +227,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   -0x4,   &IID_IContextMenu3 },
             {   -0x4,       &IID_IContextMenu2 },
             {   -0x4,           &IID_IContextMenu },
-            {    0x0,   &IID_IUnknown },
+            {    0x0,   &IID_IShellExtInit },
+            {    0x0,       &IID_IUnknown },
         }
     },
     {
@@ -272,7 +280,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   -0x4,   &IID_IContextMenu3 },
             {   -0x4,       &IID_IContextMenu2 },
             {   -0x4,           &IID_IContextMenu },
-            {    0x0,   &IID_IUnknown },
+            {    0x0,   &IID_IShellExtInit },
+            {    0x0,       &IID_IUnknown },
             {    0x4,   &IID_IOleWindow },
         }
     },
@@ -292,7 +301,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_ShellDesktop),
         {
-            {   -0x8,   &IID_IObjectWithSite },
+            {   -0x8,   &CLSID_ShellDesktop },
+            {   -0x8,       &IID_IObjectWithSite },
             {    0x0,   &IID_IUnknown },
             {    0x8,   &IID_IPersistFolder2 },
             {    0x8,       &IID_IPersistFolder },
@@ -322,7 +332,9 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_ShellFldSetExt),
         {
-            {    0x0,   &IID_IUnknown },
+            {    0x0,   &IID_IShellPropSheetExt },
+            {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IShellExtInit },
             {    0x8,   &IID_IObjectWithSite },
         }
     },
@@ -371,6 +383,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x4,   &IID_IShellLinkW },
             {    0x8,   &IID_IPersistStream },
             {    0xc,   &IID_IPersistFile },
+            {   0x10,   &IID_IShellExtInit },
             {   0x14,   &IID_IContextMenu3 },
             {   0x14,       &IID_IContextMenu2 },
             {   0x14,           &IID_IContextMenu },
@@ -412,7 +425,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_StartMenuPin),
         {
-            {    0x0,   &IID_IUnknown },
+            {    0x0,   &IID_IShellExtInit },
+            {    0x0,       &IID_IUnknown },
             {    0x4,   &IID_IContextMenu },
             {    0xc,   &IID_IObjectWithSite },
         }

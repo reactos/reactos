@@ -13,6 +13,26 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
+        ID_NAME(CLSID_ExplorerBand),
+        {
+            {  -0xb4,   &IID_IDeskBand },
+            {  -0xb4,       &IID_IDockingWindow },
+            {  -0xb4,           &IID_IOleWindow },
+            {  -0xb0,   &IID_IObjectWithSite },
+            {  -0xa8,   &IID_IInputObject },
+            {  -0xa4,   &IID_IPersistStream },
+            {  -0xa4,       &IID_IPersist },
+            {  -0xa0,   &IID_IOleCommandTarget },
+            {  -0x9c,   &IID_IServiceProvider },
+            {  -0x84,   &IID_IContextMenu },
+            {  -0x80,   &IID_IBandNavigate },
+            {  -0x7c,   &IID_IWinEventHandler },
+            {  -0x78,   &IID_INamespaceProxy },
+            {    0x0,   &IID_IDispatch },
+            {    0x0,       &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_FontsFolderShortcut),
         {
             {    0x0,   &IID_IShellFolder2 },
@@ -30,6 +50,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x20,   &IID_IPersistStream },
             {   0x20,   &IID_IPersistStreamInit },
             {   0x24,   &IID_IPersistPropertyBag },
+            {   0x28,   &IID_IBrowserFrameOptions },
         }
     },
 #if 0 // E_OUTOFMEMORY?
