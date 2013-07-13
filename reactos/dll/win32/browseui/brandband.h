@@ -28,9 +28,9 @@ class CBrandBand :
     public IObjectWithSite,
     public IInputObject,
     public IPersistStream,
-    public IWinEventHandler,
     public IOleCommandTarget,
     public IServiceProvider,
+    public IWinEventHandler,
     public IDispatch
 {
 private:

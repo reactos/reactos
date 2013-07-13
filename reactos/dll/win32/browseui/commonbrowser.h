@@ -23,15 +23,15 @@
 class CCommonBrowser :
     public CComCoClass<CCommonBrowser, &CLSID_ACLMulti>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IShellBrowser,
+    public IBrowserService3,
     public IServiceProvider,
     public IOleCommandTarget,
-    public IBrowserService3,
-    public IShellBrowser,
-    public IShellBrowserService,
     public IDockingWindowSite,
     public IDockingWindowFrame,
     public IInputObjectSite,
-    public IDropTarget
+    public IDropTarget,
+    public IShellBrowserService
 {
 private:
 public:

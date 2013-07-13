@@ -24,13 +24,13 @@ class CAddressEditBox :
     public CWindowImpl<CAddressEditBox, CWindow, CControlWinTraits>,
     public CComCoClass<CAddressEditBox, &CLSID_AddressEditBox>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellService,
+    public IWinEventHandler,
+    public IDispatch,
     public IAddressBand,
     public IAddressEditBox,
-    public IWinEventHandler,
     public IOleCommandTarget,
-    public IDispatch,
-    public IPersistStream
+    public IPersistStream,
+    public IShellService
 {
 private:
     CContainedWindow                        fEditWindow;

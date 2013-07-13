@@ -25,8 +25,8 @@
 class CBandSiteMenu :
     public CComCoClass<CBandSiteMenu, &CLSID_BandSiteMenu>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellService,
-    public IContextMenu2
+    public IContextMenu2,
+    public IShellService
 {
 public:
     CBandSiteMenu();
