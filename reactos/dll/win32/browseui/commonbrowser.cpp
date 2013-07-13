@@ -509,13 +509,13 @@ HRESULT STDMETHODCALLTYPE CCommonBrowser::v_CheckZoneCrossing(LPCITEMIDLIST pidl
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::_PositionViewWindow(HWND *, RECT *)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::_PositionViewWindow(HWND, RECT *)
 {
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CCommonBrowser::IEParseDisplayNameEx(
-    unsigned int, const unsigned short *, DWORD, LPITEMIDLIST *)
+    UINT, PCWSTR, DWORD, LPITEMIDLIST *)
 {
     return E_NOTIMPL;
 }

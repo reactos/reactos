@@ -21,7 +21,7 @@
 #pragma once
 
 class CRegTreeOptions :
-    public CComCoClass<CRegTreeOptions, &CLSID_ACLMulti>,
+    public CComCoClass<CRegTreeOptions, &CLSID_CRegTreeOptions>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IRegTreeOptions,
     public IObjectWithSite

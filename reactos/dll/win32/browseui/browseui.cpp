@@ -36,7 +36,10 @@ OBJECT_ENTRY(CLSID_BandProxy, CBandProxy)
 OBJECT_ENTRY(CLSID_RebarBandSite, CBandSite)
 OBJECT_ENTRY(CLSID_BandSiteMenu, CBandSiteMenu)
 OBJECT_ENTRY(CLSID_BrandBand, CBrandBand)
+OBJECT_ENTRY(CLSID_CCommonBrowser, CCommonBrowser)
+OBJECT_ENTRY(CLSID_GlobalFolderSettings, CGlobalFolderSettings)
 OBJECT_ENTRY(CLSID_InternetToolbar, CInternetToolbar)
+OBJECT_ENTRY(CLSID_CRegTreeOptions, CRegTreeOptions)
 END_OBJECT_MAP()
 
 CBrowseUIModule                             gModule;

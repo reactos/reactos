@@ -59,6 +59,12 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::GetCommandString(UINT_PTR idCmd, UINT u
 
 HRESULT STDMETHODCALLTYPE CBandSiteMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    FIXME("(%p, %p)\n", this, uMsg, wParam, lParam);
+    FIXME("(%p, %u, %p, %p)\n", this, uMsg, wParam, lParam);
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CBandSiteMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult)
+{
+    FIXME("(%p, %u, %p, %p, %p)\n", this, uMsg, wParam, lParam);
     return E_NOTIMPL;
 }
