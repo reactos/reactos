@@ -110,7 +110,7 @@ STDAPI DllUnregisterServer()
 /***********************************************************************
  *              DllGetVersion (BROWSEUI.@)
  */
-HRESULT WINAPI DllGetVersion(DLLVERSIONINFO *info)
+STDAPI DllGetVersion(DLLVERSIONINFO *info)
 {
     if (info->cbSize != sizeof(DLLVERSIONINFO)) FIXME("support DLLVERSIONINFO2\n");
 

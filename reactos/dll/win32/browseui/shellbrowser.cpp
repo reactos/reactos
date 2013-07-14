@@ -532,13 +532,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE get_Document(IDispatch **ppDisp);
     virtual HRESULT STDMETHODCALLTYPE get_TopLevelContainer(VARIANT_BOOL *pBool);
     virtual HRESULT STDMETHODCALLTYPE get_Type(BSTR *Type);
-
-// WIDL temp hack : when the interface contains 'long' WIDL writes it out as a 'LONG'
-// Setting the prototype to LONG in this class breaks building with MSVC so we use
-// the correct 'long' type here and temp hack it for WIDL generated prototypes.
-#ifdef __exdisp_h__
-#define long LONG
-#endif
     virtual HRESULT STDMETHODCALLTYPE get_Left(long *pl);
     virtual HRESULT STDMETHODCALLTYPE put_Left(long Left);
     virtual HRESULT STDMETHODCALLTYPE get_Top(long *pl);
@@ -547,9 +540,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE put_Width(long Width);
     virtual HRESULT STDMETHODCALLTYPE get_Height(long *pl);
     virtual HRESULT STDMETHODCALLTYPE put_Height(long Height);
-#ifdef __exdisp_h__
-#undef long
-#endif
     virtual HRESULT STDMETHODCALLTYPE get_LocationName(BSTR *LocationName);
     virtual HRESULT STDMETHODCALLTYPE get_LocationURL(BSTR *LocationURL);
     virtual HRESULT STDMETHODCALLTYPE get_Busy(VARIANT_BOOL *pBool);
@@ -612,9 +602,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SaveHistory(IStream *pStream);
     virtual HRESULT STDMETHODCALLTYPE SetPositionCookie(DWORD dwPositioncookie);
     virtual HRESULT STDMETHODCALLTYPE GetPositionCookie(DWORD *pdwPositioncookie);
-
-    // *** IBrowserService2 methods ***
-
 
     // message handlers
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
