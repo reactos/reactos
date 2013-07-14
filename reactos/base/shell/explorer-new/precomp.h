@@ -18,6 +18,7 @@
 #include <shlobj_undoc.h>
 #include <shlwapi.h>
 #include <shlguid_undoc.h>
+#include <shdeprecated.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <uxtheme.h>

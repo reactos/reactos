@@ -13,6 +13,7 @@
 #include <tlogstg.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
+#include <shdeprecated.h>
 #include <tchar.h>
 #include <atlbase.h>
 #include <atlcom.h>
