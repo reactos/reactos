@@ -34,6 +34,93 @@ cpp_quote("#define TLMENUF_BACK             0x00000010")
 cpp_quote("#define TLMENUF_FORE             0x00000020")
 cpp_quote("#define TLMENUF_BACKANDFORTH     (TLMENUF_BACK | TLMENUF_FORE | TLMENUF_INCLUDECURRENT)")
 
+[
+    uuid(F46EDB3B-BC2F-11d0-9412-00AA00A3EBD3),
+    object,
+    pointer_default(unique),
+    local
+]
+interface ITravelEntry : IUnknown
+{
+    HRESULT Invoke(
+        [in] IUnknown *punk);
+
+    HRESULT Update(
+        [in] IUnknown *punk,
+        BOOL fIsLocalAnchor);
+
+    HRESULT GetPidl(
+        [in] LPITEMIDLIST *ppidl);
+};
+
+[
+    uuid(66A9CB08-4802-11d2-A561-00A0C92DBFE8),
+    object,
+    pointer_default(unique),
+    local
+]
+interface ITravelLog : IUnknown
+{
+    enum tagTLENUMF
+    {
+        TLEF_RELATIVE_INCLUDE_CURRENT   = 0x00000001,
+        TLEF_RELATIVE_BACK              = 0x00000010,
+        TLEF_RELATIVE_FORE              = 0x00000020,
+        TLEF_INCLUDE_UNINVOKEABLE       = 0x00000040,
+        TLEF_ABSOLUTE                   = 0x00000031,
+    };
+    typedef DWORD TLENUMF;
+
+    HRESULT AddEntry(
+        [in] IUnknown *punk,
+        BOOL fIsLocalAnchor);
+
+    HRESULT UpdateEntry(
+        [in] IUnknown *punk,
+        BOOL fIsLocalAnchor);
+
+    HRESULT UpdateExternal(
+        [in] IUnknown *punk,
+        [in] IUnknown *punkHLBrowseContext);
+
+    HRESULT Travel(
+        [in] IUnknown *punk,
+        int iOffset);
+
+    HRESULT GetTravelEntry(
+        [in] IUnknown *punk,
+        int iOffset,
+        [out] ITravelEntry **ppte);
+
+    HRESULT FindTravelEntry(
+        [in] IUnknown *punk,
+        [in] LPCITEMIDLIST pidl,
+        [out] ITravelEntry **ppte);
+
+    HRESULT GetToolTipText(
+        [in] IUnknown *punk,
+        int iOffset,
+        int idsTemplate,
+        [out] LPWSTR pwzText,
+        DWORD cchText);
+
+    HRESULT InsertMenuEntries(
+        [in] IUnknown *punk,
+        [in, out] HMENU hmenu,
+        int nPos,
+        int idFirst,
+        int idLast,
+        DWORD dwFlags);
+
+    HRESULT Clone(
+        [out] ITravelLog **pptl);
+
+    DWORD CountEntries(
+        [in] IUnknown *punk);
+
+    HRESULT Revert();
+};
+
 typedef void *CIE4ConnectionPoint;
 
 [
@@ -95,6 +182,228 @@ cpp_quote("#define HLNF_EXTERNALNAVIGATE            0x10000000")
 cpp_quote("#define HLNF_ALLOW_AUTONAVIGATE          0x20000000")
 cpp_quote("#define HLNF_NEWWINDOWSMANAGED           0x80000000")
 
+[
+    object,
+    uuid(5836FB00-8187-11CF-A12B-00AA004AE837),
+    pointer_default(unique),
+    local
+]
+interface IShellService : IUnknown
+{
+    HRESULT SetOwner(
+        [in] IUnknown *owner);
+};
+
+[
+    object,
+    uuid(02BA3B52-0547-11D1-B833-00C04FC9B31F),
+    pointer_default(unique),
+    local
+]
+interface IBrowserService : IUnknown
+{
+    typedef enum tagBNSTATE
+    {
+        BNS_NORMAL = 0,
+        BNS_BEGIN_NAVIGATE = 1,
+        BNS_NAVIGATE = 2
+    } BNSTATE;
+
+    cpp_quote("#include <pshpack8.h>")
+    typedef struct basebrowserdataxp
+    {
+        HWND                _hwnd;
+        ITravelLog          *_ptl;
+        IUnknown            *_phlf;
+        IUnknown            *_pautoWB2;
+        IUnknown            *_pautoEDS;
+        IShellService       *_pautoSS;
+        int                 _eSecureLockIcon;
+        DWORD               _fCreatingViewWindow;
+        UINT                _uActivateState;
+        LPITEMIDLIST        _pidlViewState;
+        IOleCommandTarget   *_pctView;
+        LPITEMIDLIST        _pidlCur;
+        IShellView          *_psv;
+        IShellFolder        *_psf;
+        HWND                _hwndView;
+        LPWSTR              _pszTitleCur;
+        LPITEMIDLIST        _pidlPending;
+        IShellView          *_psvPending;
+        IShellFolder        *_psfPending;
+        HWND                _hwndViewPending;
+        LPWSTR              _pszTitlePending;
+        BOOL                _fIsViewMSHTML;
+        BOOL                _fPrivacyImpacted;
+        CLSID               _clsidView;
+        CLSID               _clsidViewPending;
+        HWND                _hwndFrame;
+    } BASEBROWSERDATAXP;
+    typedef struct basebrowserdataxp *LPBASEBROWSERDATAXP;
+
+    typedef struct basebrowserdatalh
+    {
+        HWND                _hwnd;
+        ITravelLog          *_ptl;
+        IUnknown            *_phlf;
+        IUnknown            *_pautoWB2;
+        IUnknown            *_pautoEDS;
+        IShellService       *_pautoSS;
+        int                 _eSecureLockIcon;
+        DWORD               _fCreatingViewWindow;
+        UINT                _uActivateState;
+        LPITEMIDLIST        _pidlViewState;
+        IOleCommandTarget   *_pctView;
+        LPITEMIDLIST        _pidlCur;
+        IShellView          *_psv;
+        IShellFolder        *_psf;
+        HWND                _hwndView;
+        LPWSTR              _pszTitleCur;
+        LPITEMIDLIST        _pidlPending;
+        IShellView          *_psvPending;
+        IShellFolder        *_psfPending;
+        HWND                _hwndViewPending;
+        LPWSTR              _pszTitlePending;
+        BOOL                _fIsViewMSHTML;
+        BOOL                _fPrivacyImpacted;
+        CLSID               _clsidView;
+        CLSID               _clsidViewPending;
+        HWND                _hwndFrame;
+        LONG                _lPhishingFilterStatus;
+    } BASEBROWSERDATALH;
+    cpp_quote("#include <poppack.h>")
+    typedef struct basebrowserdatalh *LPBASEBROWSERDATALH;
+
+    typedef BASEBROWSERDATAXP BASEBROWSERDATA;
+
+    typedef const BASEBROWSERDATA *LPCBASEBROWSERDATA;
+
+    typedef BASEBROWSERDATA *LPBASEBROWSERDATA;
+
+cpp_quote("#if 0")
+typedef HANDLE HMONITOR;
+cpp_quote("#endif /* 0 */")
+
+    typedef struct SToolbarItem
+    {
+        IDockingWindow      *ptbar;
+        BORDERWIDTHS        rcBorderTool;
+        LPWSTR              pwszItem;
+        BOOL                fShow;
+        HMONITOR            hMon;
+    } TOOLBARITEM;
+
+    typedef struct SToolbarItem *LPTOOLBARITEM;
+
+    HRESULT GetParentSite(
+        [out] IOleInPlaceSite **ppipsite);
+
+    HRESULT SetTitle(
+        [in] IShellView *psv,
+        [in] LPCWSTR pszName);
+
+    HRESULT GetTitle(
+        [in] IShellView *psv,
+        [out] LPWSTR pszName,
+        DWORD cchName);
+
+    HRESULT GetOleObject(
+        [out] IOleObject **ppobjv);
+
+    HRESULT GetTravelLog(
+        [out] ITravelLog **pptl);
+
+    HRESULT ShowControlWindow(
+        UINT id,
+        BOOL fShow);
+
+    HRESULT IsControlWindowShown(
+        UINT id,
+        [out] BOOL *pfShown);
+
+    HRESULT IEGetDisplayName(
+        [in] LPCITEMIDLIST pidl,
+        [out] LPWSTR pwszName,
+        UINT uFlags);
+
+    HRESULT IEParseDisplayName(
+        UINT uiCP,
+        [in] LPCWSTR pwszPath,
+        [out] LPCITEMIDLIST *ppidlOut);
+
+    HRESULT DisplayParseError(
+        HRESULT hres,
+        [in] LPCWSTR pwszPath);
+
+    HRESULT NavigateToPidl(
+        [in] LPCITEMIDLIST pidl,
+        DWORD grfHLNF);
+
+    HRESULT SetNavigateState(
+        BNSTATE bnstate);
+
+    HRESULT GetNavigateState(
+        [out] BNSTATE *pbnstate);
+
+    HRESULT NotifyRedirect(
+        [in] IShellView *psv,
+        [in] LPCITEMIDLIST pidl,
+        [out] BOOL *pfDidBrowse);
+
+    HRESULT UpdateWindowList();
+
+    HRESULT UpdateBackForwardState();
+
+    HRESULT SetFlags(
+        DWORD dwFlags,
+        DWORD dwFlagMask);
+
+    HRESULT GetFlags(
+        [out] DWORD *pdwFlags);
+
+    HRESULT CanNavigateNow();
+
+    HRESULT GetPidl(
+        [out] LPCITEMIDLIST *ppidl);
+
+    HRESULT SetReferrer(
+        [in] LPCITEMIDLIST pidl);
+
+    DWORD GetBrowserIndex();
+
+    HRESULT GetBrowserByIndex(
+        DWORD dwID,
+        [out] IUnknown **ppunk);
+
+    HRESULT GetHistoryObject(
+        [out] IOleObject **ppole,
+        [out] IStream **pstm,
+        [out] IBindCtx **ppbc);
+
+    HRESULT SetHistoryObject(
+        [in] IOleObject *pole,
+        BOOL fIsLocalAnchor);
+
+    HRESULT CacheOLEServer(
+        [in] IOleObject *pole);
+
+    HRESULT GetSetCodePage(
+        [in] VARIANT *pvarIn,
+        [out] VARIANT *pvarOut);
+
+    HRESULT OnHttpEquiv(
+        [in] IShellView *psv,
+        BOOL fDone,
+        [in] VARIANT *pvarargIn,
+        [out] VARIANT *pvarargOut);
+
+    HRESULT GetPalette(
+        [out] HPALETTE *hpal);
+
+    HRESULT RegisterWindow(
+        BOOL fForceRegister,
+        int swc);
+}
 
 enum {
     SECURELOCK_NOCHANGE                 = -1,
@@ -130,3 +439,261 @@ cpp_quote("#define VIEW_PRIORITY_NONE               0x00000000")
 
 
 cpp_quote("#define ITB_VIEW        ((UINT)-1)")
+
+[
+    uuid(68BD21CC-438B-11D2-A560-00A0C92DBFE8),
+    object,
+    pointer_default(unique),
+    local
+]
+interface IBrowserService2 : IBrowserService
+{
+    typedef struct tagFolderSetData
+    {
+        FOLDERSETTINGS      _fs;
+        SHELLVIEWID         _vidRestore;
+        DWORD               _dwViewPriority;
+    } FOLDERSETDATA;
+
+    typedef struct tagFolderSetData *LPFOLDERSETDATA;
+
+    LRESULT WndProcBS(
+        [in] HWND hwnd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam);
+
+    HRESULT SetAsDefFolderSettings();
+
+    HRESULT GetViewRect(
+        [out] RECT *prc);
+
+    HRESULT OnSize(
+        WPARAM wParam);
+
+    HRESULT OnCreate(
+        [in] struct tagCREATESTRUCTW *pcs);
+
+    LRESULT OnCommand(
+        WPARAM wParam,
+        LPARAM lParam);
+
+    HRESULT OnDestroy();
+
+    LRESULT OnNotify(
+        [in] struct tagNMHDR *pnm);
+
+    HRESULT OnSetFocus();
+
+    HRESULT OnFrameWindowActivateBS(
+        BOOL fActive);
+
+    HRESULT ReleaseShellView();
+
+    HRESULT ActivatePendingView();
+
+    HRESULT CreateViewWindow(
+        [in] IShellView *psvNew,
+        [in] IShellView *psvOld,
+        [in] LPRECT prcView,
+        [out] HWND *phwnd);
+
+    HRESULT CreateBrowserPropSheetExt(
+        [in] REFIID riid,
+        [out] void **ppv);
+
+    HRESULT GetViewWindow(
+        [out] HWND *phwndView);
+
+    HRESULT GetBaseBrowserData(
+        [out] LPCBASEBROWSERDATA *pbbd);
+
+    LPBASEBROWSERDATA PutBaseBrowserData();
+
+    HRESULT InitializeTravelLog(
+        [in] ITravelLog *ptl,
+        DWORD dw);
+
+    HRESULT SetTopBrowser();
+
+    HRESULT Offline(
+        int iCmd);
+
+    HRESULT AllowViewResize(
+        BOOL f);
+
+    HRESULT SetActivateState(
+        UINT u);
+
+    HRESULT UpdateSecureLockIcon(
+        int eSecureLock);
+
+    HRESULT InitializeDownloadManager();
+
+    HRESULT InitializeTransitionSite();
+
+    HRESULT _Initialize(
+        [in] HWND hwnd,
+        [in] IUnknown *pauto);
+
+    HRESULT _CancelPendingNavigationAsync();
+
+    HRESULT _CancelPendingView();
+
+    HRESULT _MaySaveChanges();
+
+    HRESULT _PauseOrResumeView(
+        BOOL fPaused);
+
+    HRESULT _DisableModeless();
+
+    HRESULT _NavigateToPidl(
+        [in] LPCITEMIDLIST pidl,
+        DWORD grfHLNF,
+        DWORD dwFlags);
+
+    HRESULT _TryShell2Rename(
+        [in] IShellView *psv,
+        [in] LPCITEMIDLIST pidlNew);
+
+    HRESULT _SwitchActivationNow();
+
+    HRESULT _ExecChildren(
+        [in] IUnknown *punkBar,
+        BOOL fBroadcast,
+        [in] const GUID *pguidCmdGroup,
+        DWORD nCmdID,
+        DWORD nCmdexecopt,
+        [in] VARIANTARG *pvarargIn,
+        [in, out] VARIANTARG *pvarargOut);
+
+    HRESULT _SendChildren(
+        [in] HWND hwndBar,
+        BOOL fBroadcast,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam);
+
+    HRESULT GetFolderSetData(
+        [out] struct tagFolderSetData *pfsd);
+
+    HRESULT _OnFocusChange(
+        UINT itb);
+
+    HRESULT v_ShowHideChildWindows(
+        BOOL fChildOnly);
+
+    UINT _get_itbLastFocus();
+
+    HRESULT _put_itbLastFocus(
+        UINT itbLastFocus);
+
+    HRESULT _UIActivateView(
+        UINT uState);
+
+    HRESULT _GetViewBorderRect(
+        [out] RECT *prc);
+
+    HRESULT _UpdateViewRectSize();
+
+    HRESULT _ResizeNextBorder(
+        UINT itb);
+
+    HRESULT _ResizeView();
+
+    HRESULT _GetEffectiveClientArea(
+        [out] LPRECT lprectBorder,
+        [in] HMONITOR hmon);
+
+    IStream *v_GetViewStream(
+        [in] LPCITEMIDLIST pidl,
+        DWORD grfMode,
+        [in] LPCWSTR pwszName);
+
+    LRESULT ForwardViewMsg(
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam);
+
+    HRESULT SetAcceleratorMenu(
+        [in] HACCEL hacc);
+
+    int _GetToolbarCount();
+
+    LPTOOLBARITEM _GetToolbarItem(
+        int itb);
+
+    HRESULT _SaveToolbars(
+        [in] IStream *pstm);
+
+    HRESULT _LoadToolbars(
+        [in] IStream *pstm);
+
+    HRESULT _CloseAndReleaseToolbars(
+        BOOL fClose);
+
+    HRESULT v_MayGetNextToolbarFocus(
+        [in] LPMSG lpMsg,
+        UINT itbNext,
+        int citb,
+        [out] LPTOOLBARITEM *pptbi,
+        [out] HWND *phwnd);
+
+    HRESULT _ResizeNextBorderHelper(
+        UINT itb,
+        BOOL bUseHmonitor);
+
+    UINT _FindTBar(
+        [in] IUnknown *punkSrc);
+
+    HRESULT _SetFocus(
+        [in] LPTOOLBARITEM ptbi,
+        [in] HWND hwnd,
+        [in] LPMSG lpMsg);
+
+    HRESULT v_MayTranslateAccelerator(
+        [in] MSG *pmsg);
+
+    HRESULT _GetBorderDWHelper(
+        [in] IUnknown *punkSrc,
+        [out] LPRECT lprectBorder,
+        BOOL bUseHmonitor);
+
+    HRESULT v_CheckZoneCrossing(
+        [in] LPCITEMIDLIST pidl);
+}
+
+[
+    uuid(27D7CE21-762D-48F3-86F3-40E2FD3749C4),
+    object,
+    pointer_default(unique),
+    local
+]
+interface IBrowserService3 : IBrowserService2
+{
+    HRESULT _PositionViewWindow(
+        [in] HWND hwnd,
+        [in] LPRECT prc);
+
+    HRESULT IEParseDisplayNameEx(
+        UINT uiCP,
+        [in] LPCWSTR pwszPath,
+        DWORD dwFlags,
+        [out] LPITEMIDLIST *ppidlOut);
+}
+
+[
+    uuid(639f1bff-e135-4096-abd8-e0f504d649a4),
+    object,
+    pointer_default(unique),
+    local
+]
+interface IBrowserService4 : IBrowserService3
+{
+    HRESULT ActivateView(
+        BOOL fPendingView);
+
+    HRESULT SaveViewState();
+
+    HRESULT _ResizeAllBorders();
+}

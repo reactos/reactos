@@ -110,6 +110,7 @@ list(APPEND IDL_SOURCES
     sensevts.idl
     servprov.idl
 #    shappmgr.idl
+    shdeprecated.idl
 #    shgina.idl
 #    shimgdata.idl
     shldisp.idl
