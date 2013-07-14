@@ -170,7 +170,11 @@ DuplicateHandle(IN HANDLE hSourceProcessHandle,
         ((hSourceHandle != NtCurrentProcess()) &&
          (hSourceHandle != NtCurrentThread())))
     {
-        if ((hSourceProcessHandle != NtCurrentProcess()) &&
+        /*
+         * We can duplicate console handles only if both the source
+         * and the target processes are in fact the current process.
+         */
+        if ((hSourceProcessHandle != NtCurrentProcess()) ||
             (hTargetProcessHandle != NtCurrentProcess()))
         {
             BaseSetLastNTError(STATUS_INVALID_PARAMETER);
