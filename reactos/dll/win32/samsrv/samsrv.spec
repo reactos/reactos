@@ -22,7 +22,7 @@
 @ stub SamIFree_SAMPR_DOMAIN_INFO_BUFFER
 @ stdcall SamIFree_SAMPR_ENUMERATION_BUFFER(ptr)
 @ stdcall SamIFree_SAMPR_GET_GROUPS_BUFFER(ptr)
-@ stub SamIFree_SAMPR_GET_MEMBERS_BUFFER
+@ stdcall SamIFree_SAMPR_GET_MEMBERS_BUFFER(ptr)
 @ stub SamIFree_SAMPR_GROUP_INFO_BUFFER
 @ stdcall SamIFree_SAMPR_PSID_ARRAY(ptr)
 @ stdcall SamIFree_SAMPR_RETURNED_USTRING_ARRAY(ptr)
