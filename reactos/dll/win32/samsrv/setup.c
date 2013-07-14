@@ -552,6 +552,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
                       IN LPCWSTR lpKeyName,
                       IN LPCWSTR lpDomainName,
                       IN PSID lpDomainSid,
+                      IN BOOLEAN bBuiltinDomain,
                       OUT HANDLE *lpDomainKey)
 {
     SAM_DOMAIN_FIXED_DATA FixedData;
@@ -562,6 +563,8 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
     HANDLE hGroupsKey = NULL;
     HANDLE hUsersKey = NULL;
     HANDLE hNamesKey = NULL;
+    PSECURITY_DESCRIPTOR Sd = NULL;
+    ULONG SdSize = 0;
     NTSTATUS Status;
 
     if (lpDomainKey != NULL)
@@ -690,12 +693,35 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
+    /* Create the server SD */
+    if (bBuiltinDomain == TRUE)
+        Status = SampCreateBuiltinDomainSD(&Sd,
+                                           &SdSize);
+    else
+        Status = SampCreateAccountDomainSD(&Sd,
+                                           &SdSize);
+
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set SecDesc attribute*/
+    Status = SampRegSetValue(hServerKey,
+                             L"SecDesc",
+                             REG_BINARY,
+                             Sd,
+                             SdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
     SampRegCloseKey(hNamesKey);
 
     if (lpDomainKey != NULL)
         *lpDomainKey = hDomainKey;
 
 done:
+    if (Sd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
+
     if (hAliasesKey != NULL)
         SampRegCloseKey(hAliasesKey);
 
@@ -867,6 +893,7 @@ SampInitializeSAM(VOID)
                                    L"Builtin",
                                    szName,
                                    pBuiltinSid,
+                                   TRUE,
                                    &hBuiltinDomainKey);
     if (!NT_SUCCESS(Status))
     {
@@ -936,6 +963,7 @@ SampInitializeSAM(VOID)
                                    L"Account",
                                    L"",
                                    AccountDomainInfo->DomainSid,
+                                   FALSE,
                                    &hAccountDomainKey);
     if (!NT_SUCCESS(Status))
     {

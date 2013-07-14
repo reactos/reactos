@@ -306,6 +306,14 @@ NTSTATUS
 SampCreateServerSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
                    OUT PULONG Size);
 
+NTSTATUS
+SampCreateBuiltinDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
+                          OUT PULONG Size);
+
+NTSTATUS
+SampCreateAccountDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
+                          OUT PULONG Size);
+
 
 /* setup.c */
 
