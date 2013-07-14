@@ -2435,14 +2435,18 @@ static void test_flash_ax(void)
     /* Set in DoVerb */
     CHECK_CALLED(InPlaceObject_GetWindow);
     CHECK_CALLED(SetObjectRects);
-#if ROSTESTS_114_IS_FIXED
-    test_ui_activate();
-    test_container(notif_doc);
-    test_object_elem(notif_doc);
-#endif
-    win_skip("Skipping test_ui_activate(). ROSTESTS-114.\n");
-    win_skip("Skipping test_container(notif_doc). ROSTESTS-114.\n");
-    win_skip("Skipping test_object_elem(notif_doc). ROSTESTS-114.\n");
+    if (winetest_interactive)
+    {
+        test_ui_activate();
+        test_container(notif_doc);
+        test_object_elem(notif_doc);
+    }
+    else
+    {
+        skip("Skipping test_ui_activate(). ROSTESTS-114.\n");
+        skip("Skipping test_container(notif_doc). ROSTESTS-114.\n");
+        skip("Skipping test_object_elem(notif_doc). ROSTESTS-114.\n");
+    }
 
     SET_EXPECT(UIDeactivate);
     SET_EXPECT(Invoke_ENABLED);
@@ -2557,10 +2561,10 @@ static void test_event_binding(void)
     CHECK_CALLED(FindConnectionPoint);
     CHECK_CALLED(Advise);
 
-#if ROSTESTS_114_IS_FIXED
-    test_event_call();
-#endif
-    win_skip("Skipping test_event_call(). ROSTESTS-114.\n");
+    if (winetest_interactive)
+        test_event_call();
+    else
+        skip("Skipping test_event_call(). ROSTESTS-114.\n");
 
     SET_EXPECT(InPlaceDeactivate);
     SET_EXPECT(Close);
