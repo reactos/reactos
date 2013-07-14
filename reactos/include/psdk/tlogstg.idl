@@ -50,3 +50,13 @@ interface ITravelLogClient : IUnknown
             [in] LPWSTR pszUrlLocation,
             [in] DWORD dwPosition);
 }
+
+enum tagTLENUMF
+{
+    TLEF_RELATIVE_INCLUDE_CURRENT   = 0x00000001,
+    TLEF_RELATIVE_BACK              = 0x00000010,
+    TLEF_RELATIVE_FORE              = 0x00000020,
+    TLEF_INCLUDE_UNINVOKEABLE       = 0x00000040,
+    TLEF_ABSOLUTE                   = 0x00000031,
+};
+typedef DWORD TLENUMF;

@@ -35,10 +35,10 @@ cpp_quote("#define TLMENUF_FORE             0x00000020")
 cpp_quote("#define TLMENUF_BACKANDFORTH     (TLMENUF_BACK | TLMENUF_FORE | TLMENUF_INCLUDECURRENT)")
 
 [
-    uuid(F46EDB3B-BC2F-11d0-9412-00AA00A3EBD3),
-    object,
     pointer_default(unique),
-    local
+    local,
+    object,
+    uuid(F46EDB3B-BC2F-11d0-9412-00AA00A3EBD3)
 ]
 interface ITravelEntry : IUnknown
 {
@@ -54,23 +54,13 @@ interface ITravelEntry : IUnknown
 };
 
 [
-    uuid(66A9CB08-4802-11d2-A561-00A0C92DBFE8),
-    object,
     pointer_default(unique),
-    local
+    local,
+    object,
+    uuid(66A9CB08-4802-11d2-A561-00A0C92DBFE8)
 ]
 interface ITravelLog : IUnknown
 {
-    enum tagTLENUMF
-    {
-        TLEF_RELATIVE_INCLUDE_CURRENT   = 0x00000001,
-        TLEF_RELATIVE_BACK              = 0x00000010,
-        TLEF_RELATIVE_FORE              = 0x00000020,
-        TLEF_INCLUDE_UNINVOKEABLE       = 0x00000040,
-        TLEF_ABSOLUTE                   = 0x00000031,
-    };
-    typedef DWORD TLENUMF;
-
     HRESULT AddEntry(
         [in] IUnknown *punk,
         BOOL fIsLocalAnchor);
@@ -149,6 +139,12 @@ interface IExpDispSupport : IUnknown
         UINT *puArgErr);
 };
 
+typedef enum tagBNSTATE
+{
+    BNS_NORMAL = 0,
+    BNS_BEGIN_NAVIGATE = 1,
+    BNS_NAVIGATE = 2
+} BNSTATE;
 
 enum {
     SBSC_HIDE = 0,
@@ -183,118 +179,13 @@ cpp_quote("#define HLNF_ALLOW_AUTONAVIGATE          0x20000000")
 cpp_quote("#define HLNF_NEWWINDOWSMANAGED           0x80000000")
 
 [
-    object,
-    uuid(5836FB00-8187-11CF-A12B-00AA004AE837),
     pointer_default(unique),
-    local
-]
-interface IShellService : IUnknown
-{
-    HRESULT SetOwner(
-        [in] IUnknown *owner);
-};
-
-[
+    local,
     object,
-    uuid(02BA3B52-0547-11D1-B833-00C04FC9B31F),
-    pointer_default(unique),
-    local
+    uuid(02BA3B52-0547-11D1-B833-00C04FC9B31F)
 ]
 interface IBrowserService : IUnknown
 {
-    typedef enum tagBNSTATE
-    {
-        BNS_NORMAL = 0,
-        BNS_BEGIN_NAVIGATE = 1,
-        BNS_NAVIGATE = 2
-    } BNSTATE;
-
-    cpp_quote("#include <pshpack8.h>")
-    typedef struct basebrowserdataxp
-    {
-        HWND                _hwnd;
-        ITravelLog          *_ptl;
-        IUnknown            *_phlf;
-        IUnknown            *_pautoWB2;
-        IUnknown            *_pautoEDS;
-        IShellService       *_pautoSS;
-        int                 _eSecureLockIcon;
-        DWORD               _fCreatingViewWindow;
-        UINT                _uActivateState;
-        LPITEMIDLIST        _pidlViewState;
-        IOleCommandTarget   *_pctView;
-        LPITEMIDLIST        _pidlCur;
-        IShellView          *_psv;
-        IShellFolder        *_psf;
-        HWND                _hwndView;
-        LPWSTR              _pszTitleCur;
-        LPITEMIDLIST        _pidlPending;
-        IShellView          *_psvPending;
-        IShellFolder        *_psfPending;
-        HWND                _hwndViewPending;
-        LPWSTR              _pszTitlePending;
-        BOOL                _fIsViewMSHTML;
-        BOOL                _fPrivacyImpacted;
-        CLSID               _clsidView;
-        CLSID               _clsidViewPending;
-        HWND                _hwndFrame;
-    } BASEBROWSERDATAXP;
-    typedef struct basebrowserdataxp *LPBASEBROWSERDATAXP;
-
-    typedef struct basebrowserdatalh
-    {
-        HWND                _hwnd;
-        ITravelLog          *_ptl;
-        IUnknown            *_phlf;
-        IUnknown            *_pautoWB2;
-        IUnknown            *_pautoEDS;
-        IShellService       *_pautoSS;
-        int                 _eSecureLockIcon;
-        DWORD               _fCreatingViewWindow;
-        UINT                _uActivateState;
-        LPITEMIDLIST        _pidlViewState;
-        IOleCommandTarget   *_pctView;
-        LPITEMIDLIST        _pidlCur;
-        IShellView          *_psv;
-        IShellFolder        *_psf;
-        HWND                _hwndView;
-        LPWSTR              _pszTitleCur;
-        LPITEMIDLIST        _pidlPending;
-        IShellView          *_psvPending;
-        IShellFolder        *_psfPending;
-        HWND                _hwndViewPending;
-        LPWSTR              _pszTitlePending;
-        BOOL                _fIsViewMSHTML;
-        BOOL                _fPrivacyImpacted;
-        CLSID               _clsidView;
-        CLSID               _clsidViewPending;
-        HWND                _hwndFrame;
-        LONG                _lPhishingFilterStatus;
-    } BASEBROWSERDATALH;
-    cpp_quote("#include <poppack.h>")
-    typedef struct basebrowserdatalh *LPBASEBROWSERDATALH;
-
-    typedef BASEBROWSERDATAXP BASEBROWSERDATA;
-
-    typedef const BASEBROWSERDATA *LPCBASEBROWSERDATA;
-
-    typedef BASEBROWSERDATA *LPBASEBROWSERDATA;
-
-cpp_quote("#if 0")
-typedef HANDLE HMONITOR;
-cpp_quote("#endif /* 0 */")
-
-    typedef struct SToolbarItem
-    {
-        IDockingWindow      *ptbar;
-        BORDERWIDTHS        rcBorderTool;
-        LPWSTR              pwszItem;
-        BOOL                fShow;
-        HMONITOR            hMon;
-    } TOOLBARITEM;
-
-    typedef struct SToolbarItem *LPTOOLBARITEM;
-
     HRESULT GetParentSite(
         [out] IOleInPlaceSite **ppipsite);
 
@@ -405,6 +296,22 @@ cpp_quote("#endif /* 0 */")
         int swc);
 }
 
+[
+    pointer_default(unique),
+    local,
+    object,
+    uuid(5836FB00-8187-11CF-A12B-00AA004AE837)
+]
+interface IShellService : IUnknown
+{
+    HRESULT SetOwner(
+        [in] IUnknown *owner);
+};
+
+cpp_quote("#if 0")
+typedef HANDLE HMONITOR;
+cpp_quote("#endif /* 0 */")
+
 enum {
     SECURELOCK_NOCHANGE                 = -1,
     SECURELOCK_SET_UNSECURE             = 0,
@@ -424,7 +331,76 @@ enum {
     SECURELOCK_SUGGEST_SECURE128BIT     = 13,
 };
 
+cpp_quote("#include <pshpack8.h>")
+typedef struct basebrowserdataxp
+{
+    HWND                _hwnd;
+    ITravelLog          *_ptl;
+    IUnknown            *_phlf;
+    IUnknown            *_pautoWB2;
+    IUnknown            *_pautoEDS;
+    IShellService       *_pautoSS;
+    int                 _eSecureLockIcon;
+    DWORD               _fCreatingViewWindow;
+    UINT                _uActivateState;
+    LPITEMIDLIST        _pidlViewState;
+    IOleCommandTarget   *_pctView;
+    LPITEMIDLIST        _pidlCur;
+    IShellView          *_psv;
+    IShellFolder        *_psf;
+    HWND                _hwndView;
+    LPWSTR              _pszTitleCur;
+    LPITEMIDLIST        _pidlPending;
+    IShellView          *_psvPending;
+    IShellFolder        *_psfPending;
+    HWND                _hwndViewPending;
+    LPWSTR              _pszTitlePending;
+    BOOL                _fIsViewMSHTML;
+    BOOL                _fPrivacyImpacted;
+    CLSID               _clsidView;
+    CLSID               _clsidViewPending;
+    HWND                _hwndFrame;
+} BASEBROWSERDATAXP;
+typedef struct basebrowserdataxp *LPBASEBROWSERDATAXP;
 
+typedef struct basebrowserdatalh
+{
+    HWND                _hwnd;
+    ITravelLog          *_ptl;
+    IUnknown            *_phlf;
+    IUnknown            *_pautoWB2;
+    IUnknown            *_pautoEDS;
+    IShellService       *_pautoSS;
+    int                 _eSecureLockIcon;
+    DWORD               _fCreatingViewWindow;
+    UINT                _uActivateState;
+    LPITEMIDLIST        _pidlViewState;
+    IOleCommandTarget   *_pctView;
+    LPITEMIDLIST        _pidlCur;
+    IShellView          *_psv;
+    IShellFolder        *_psf;
+    HWND                _hwndView;
+    LPWSTR              _pszTitleCur;
+    LPITEMIDLIST        _pidlPending;
+    IShellView          *_psvPending;
+    IShellFolder        *_psfPending;
+    HWND                _hwndViewPending;
+    LPWSTR              _pszTitlePending;
+    BOOL                _fIsViewMSHTML;
+    BOOL                _fPrivacyImpacted;
+    CLSID               _clsidView;
+    CLSID               _clsidViewPending;
+    HWND                _hwndFrame;
+    LONG                _lPhishingFilterStatus;
+} BASEBROWSERDATALH;
+cpp_quote("#include <poppack.h>")
+typedef struct basebrowserdatalh *LPBASEBROWSERDATALH;
+
+typedef BASEBROWSERDATAXP BASEBROWSERDATA;
+
+typedef const BASEBROWSERDATA *LPCBASEBROWSERDATA;
+
+typedef BASEBROWSERDATA *LPBASEBROWSERDATA;
 
 cpp_quote("#define VIEW_PRIORITY_RESTRICTED         0x00000070")
 cpp_quote("#define VIEW_PRIORITY_CACHEHIT           0x00000050")
@@ -437,26 +413,36 @@ cpp_quote("#define VIEW_PRIORITY_SHELLEXT_ASBACKUP  0x0015")
 cpp_quote("#define VIEW_PRIORITY_DESPERATE          0x00000010")
 cpp_quote("#define VIEW_PRIORITY_NONE               0x00000000")
 
+typedef struct tagFolderSetData
+{
+    FOLDERSETTINGS      _fs;
+    SHELLVIEWID         _vidRestore;
+    DWORD               _dwViewPriority;
+} FOLDERSETDATA;
+
+typedef struct tagFolderSetData *LPFOLDERSETDATA;
+
+typedef struct SToolbarItem
+{
+    IDockingWindow      *ptbar;
+    BORDERWIDTHS        rcBorderTool;
+    LPWSTR              pwszItem;
+    BOOL                fShow;
+    HMONITOR            hMon;
+} TOOLBARITEM;
+
+typedef struct SToolbarItem *LPTOOLBARITEM;
 
 cpp_quote("#define ITB_VIEW        ((UINT)-1)")
 
 [
-    uuid(68BD21CC-438B-11D2-A560-00A0C92DBFE8),
-    object,
     pointer_default(unique),
-    local
+    local,
+    object,
+    uuid(68BD21CC-438B-11D2-A560-00A0C92DBFE8)
 ]
 interface IBrowserService2 : IBrowserService
 {
-    typedef struct tagFolderSetData
-    {
-        FOLDERSETTINGS      _fs;
-        SHELLVIEWID         _vidRestore;
-        DWORD               _dwViewPriority;
-    } FOLDERSETDATA;
-
-    typedef struct tagFolderSetData *LPFOLDERSETDATA;
-
     LRESULT WndProcBS(
         [in] HWND hwnd,
         UINT uMsg,
@@ -664,10 +650,10 @@ interface IBrowserService2 : IBrowserService
 }
 
 [
-    uuid(27D7CE21-762D-48F3-86F3-40E2FD3749C4),
-    object,
     pointer_default(unique),
-    local
+    local,
+    object,
+    uuid(27D7CE21-762D-48F3-86F3-40E2FD3749C4)
 ]
 interface IBrowserService3 : IBrowserService2
 {
@@ -683,10 +669,10 @@ interface IBrowserService3 : IBrowserService2
 }
 
 [
-    uuid(639f1bff-e135-4096-abd8-e0f504d649a4),
-    object,
     pointer_default(unique),
-    local
+    local,
+    object,
+    uuid(639f1bff-e135-4096-abd8-e0f504d649a4)
 ]
 interface IBrowserService4 : IBrowserService3
 {
