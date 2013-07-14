@@ -28,12 +28,6 @@ list(APPEND mshtml_winetest_rc_deps
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${mshtml_winetest_rc_deps}")
 
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(mshtml_winetest)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
-
 target_link_libraries(mshtml_winetest wine uuid strmiids)
 set_module_type(mshtml_winetest win32cui)
 add_importlibs(mshtml_winetest wininet ole32 oleaut32 user32 gdi32 urlmon advapi32 msvcrt kernel32 ntdll)
