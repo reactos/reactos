@@ -45,8 +45,8 @@ endif()
 add_library(consrv ${CONSRV_SOURCE})
 #add_object_library(consrv ${CONSRV_SOURCE})
 
-add_importlibs(consrv psapi)         # And the default ones from winsrv
-add_delay_importlibs(consrv ole32)   # And the default ones from winsrv
-target_link_libraries(consrv uuid)   # And the default ones from winsrv
+list(APPEND CONSRV_IMPORT_LIBS psapi)
+list(APPEND CONSRV_DELAY_IMPORT_LIBS ole32)
+list(APPEND CONSRV_TARGET_LINK_LIBS uuid)
 
 set_module_type(consrv module UNICODE)
