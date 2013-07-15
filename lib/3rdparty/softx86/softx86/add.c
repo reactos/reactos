@@ -342,13 +342,16 @@ sx86_ubyte op_sub8(softx86_ctx* ctx,sx86_ubyte src,sx86_ubyte val)
 /* peform the addition */
 	ret = src - val;
 
-/* if carry/overflow */
-	if (ret > src)
-		ctx->state->reg_flags.val |=
-			 (SX86_CPUFLAG_CARRY | SX86_CPUFLAG_OVERFLOW);
-	else
-		ctx->state->reg_flags.val &=
-			~(SX86_CPUFLAG_CARRY | SX86_CPUFLAG_OVERFLOW);
+/* if carry */
+        if (val > src) ctx->state->reg_flags.val |= SX86_CPUFLAG_CARRY;
+        else ctx->state->reg_flags.val &= ~SX86_CPUFLAG_CARRY;
+
+/* if overflow */
+	if (((src & 0x80) != (val & 0x80)) && ((src & 0x80) != (ret & 0x80)))
+        {
+            ctx->state->reg_flags.val |= SX86_CPUFLAG_OVERFLOW;
+        }
+	else ctx->state->reg_flags.val &= ~SX86_CPUFLAG_OVERFLOW;
 
 /* if result treated as signed value is negative */
 	if (ret & 0x80)	ctx->state->reg_flags.val |=  SX86_CPUFLAG_SIGN;
@@ -391,7 +394,10 @@ sx86_uword op_sub16(softx86_ctx* ctx,sx86_uword src,sx86_uword val)
         else ctx->state->reg_flags.val &= ~SX86_CPUFLAG_CARRY;
 
 /* if overflow */
-	if ((ret & 0x8000) != (src & 0x8000)) ctx->state->reg_flags.val |= SX86_CPUFLAG_OVERFLOW;
+	if (((src & 0x8000) != (val & 0x8000)) && ((src & 0x8000) != (ret & 0x8000)))
+        {
+            ctx->state->reg_flags.val |= SX86_CPUFLAG_OVERFLOW;
+        }
 	else ctx->state->reg_flags.val &= ~SX86_CPUFLAG_OVERFLOW;
 
 /* if result treated as signed value is negative */
@@ -430,13 +436,17 @@ sx86_udword op_sub32(softx86_ctx* ctx,sx86_udword src,sx86_udword val)
 /* peform the addition */
 	ret = src - val;
 
-/* if carry/overflow */
-	if (ret > src)
-		ctx->state->reg_flags.val |=
-			 (SX86_CPUFLAG_CARRY | SX86_CPUFLAG_OVERFLOW);
-	else
-		ctx->state->reg_flags.val &=
-			~(SX86_CPUFLAG_CARRY | SX86_CPUFLAG_OVERFLOW);
+/* if carry */
+        if (val > src) ctx->state->reg_flags.val |= SX86_CPUFLAG_CARRY;
+        else ctx->state->reg_flags.val &= ~SX86_CPUFLAG_CARRY;
+
+/* if overflow */
+	if (((src & 0x80000000) != (val & 0x80000000))
+            && ((src & 0x80000000) != (ret & 0x80000000)))
+        {
+            ctx->state->reg_flags.val |= SX86_CPUFLAG_OVERFLOW;
+        }
+	else ctx->state->reg_flags.val &= ~SX86_CPUFLAG_OVERFLOW;
 
 /* if result treated as signed value is negative */
 	if (ret & 0x80000000)	ctx->state->reg_flags.val |=  SX86_CPUFLAG_SIGN;
