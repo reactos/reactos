@@ -16,23 +16,18 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+static PBIOS_DATA_AREA Bda;
 static BYTE BiosKeyboardMap[256];
-static WORD BiosKbdBuffer[BIOS_KBD_BUFFER_SIZE];
-static UINT BiosKbdBufferStart = 0, BiosKbdBufferEnd = 0;
-static BOOLEAN BiosKbdBufferEmpty = TRUE;
-static DWORD BiosTickCount = 0;
-static BOOLEAN BiosPassedMidnight = FALSE;
 static HANDLE BiosConsoleInput = INVALID_HANDLE_VALUE;
 static HANDLE BiosConsoleOutput = INVALID_HANDLE_VALUE;
-static BYTE CurrentVideoMode = BIOS_DEFAULT_VIDEO_MODE;
-static BYTE CurrentVideoPage = 0;
-static COORD BiosCursorPositions[BIOS_MAX_PAGES];
 static HANDLE BiosGraphicsOutput = NULL;
 static LPVOID ConsoleFramebuffer = NULL;
 static HANDLE ConsoleMutex = NULL;
+static BYTE CurrentVideoMode, CurrentVideoPage;
 static BOOLEAN VideoNeedsUpdate = TRUE;
 static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
 static CONSOLE_SCREEN_BUFFER_INFO BiosSavedBufferInfo;
+
 static VIDEO_MODE VideoModes[] =
 {
     /* Width | Height | Text | Bpp   | Gray | Pages | Segment */
@@ -103,17 +98,25 @@ static COORD BiosVideoAddressToCoord(ULONG Address)
 
 static BOOLEAN BiosKbdBufferPush(WORD Data)
 {
-    /* If it's full, fail */
-    if (!BiosKbdBufferEmpty && (BiosKbdBufferStart == BiosKbdBufferEnd))
-    {
-        return FALSE;
-    }
+    /* Get the location of the element after the head */
+    WORD NextElement = Bda->KeybdBufferHead + 2;
 
-    /* Otherwise, add the value to the queue */
-    BiosKbdBuffer[BiosKbdBufferEnd] = Data;
-    BiosKbdBufferEnd++;
-    BiosKbdBufferEnd %= BIOS_KBD_BUFFER_SIZE;
-    BiosKbdBufferEmpty = FALSE;
+    /* Wrap it around if it's at or beyond the end */
+    if (NextElement >= Bda->KeybdBufferEnd) NextElement = Bda->KeybdBufferStart;
+
+    /* If it's full, fail */
+    if (NextElement == Bda->KeybdBufferTail) return FALSE;
+
+    /* Put the value in the queue */
+    *((LPWORD)((ULONG_PTR)Bda + Bda->KeybdBufferTail)) = Data;
+    Bda->KeybdBufferTail += sizeof(WORD);
+
+    /* Check if we are at, or have passed, the end of the buffer */
+    if (Bda->KeybdBufferTail >= Bda->KeybdBufferEnd)
+    {
+        /* Return it to the beginning */
+        Bda->KeybdBufferTail = Bda->KeybdBufferStart;
+    }
 
     /* Return success */
     return TRUE;
@@ -122,23 +125,30 @@ static BOOLEAN BiosKbdBufferPush(WORD Data)
 static BOOLEAN BiosKbdBufferTop(LPWORD Data)
 {
     /* If it's empty, fail */
-    if (BiosKbdBufferEmpty) return FALSE;
+    if (Bda->KeybdBufferHead == Bda->KeybdBufferTail) return FALSE;
 
     /* Otherwise, get the value and return success */
-    *Data = BiosKbdBuffer[BiosKbdBufferStart];
+    *Data = *((LPWORD)((ULONG_PTR)Bda + Bda->KeybdBufferHead));
+
     return TRUE;
 }
 
 static BOOLEAN BiosKbdBufferPop()
 {
     /* If it's empty, fail */
-    if (BiosKbdBufferEmpty) return FALSE;
+    if (Bda->KeybdBufferHead == Bda->KeybdBufferTail) return FALSE;
 
-    /* Otherwise, remove the value and return success */
-    BiosKbdBufferStart++;
-    BiosKbdBufferStart %= BIOS_KBD_BUFFER_SIZE;
-    if (BiosKbdBufferStart == BiosKbdBufferEnd) BiosKbdBufferEmpty = TRUE;
+    /* Remove the value from the queue */
+    Bda->KeybdBufferHead += sizeof(WORD);
 
+    /* Check if we are at, or have passed, the end of the buffer */
+    if (Bda->KeybdBufferHead >= Bda->KeybdBufferEnd)
+    {
+        /* Return it to the beginning */
+        Bda->KeybdBufferHead = Bda->KeybdBufferStart;
+    }
+
+    /* Return success */
     return TRUE;
 }
 
@@ -271,8 +281,16 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
         SetConsoleActiveScreenBuffer(BiosGraphicsOutput);
     }
 
-    /* Set the video mode */
+    /* Change the mode number */
     CurrentVideoMode = ModeNumber;
+    CurrentVideoPage = 0;
+
+    /* Update the BDA */
+    Bda->VideoMode = CurrentVideoMode;
+    Bda->VideoPage = CurrentVideoPage;
+    Bda->VideoPageSize = BiosGetVideoPageSize();
+    Bda->VideoPageOffset = 0;
+    Bda->ScreenColumns = VideoModes[ModeNumber].Width;
 
     return TRUE;
 }
@@ -280,6 +298,7 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
 BOOLEAN BiosSetVideoPage(BYTE PageNumber)
 {
     ULONG PageStart;
+    COORD Coordinates;
     CONSOLE_SCREEN_BUFFER_INFO BufferInfo;
 
     /* Make sure this is a valid page number */
@@ -291,17 +310,25 @@ BOOLEAN BiosSetVideoPage(BYTE PageNumber)
 
     /* Save the cursor */
     if (!GetConsoleScreenBufferInfo(BiosConsoleOutput, &BufferInfo)) return FALSE;
-    BiosCursorPositions[CurrentVideoPage] = BufferInfo.dwCursorPosition;
+    Bda->CursorPosition[CurrentVideoPage] = MAKEWORD(BufferInfo.dwCursorPosition.X,
+                                                     BufferInfo.dwCursorPosition.Y);
 
     /* Set the page */
     CurrentVideoPage = PageNumber;
 
+    /* Update the BDA */
+    Bda->VideoPage = CurrentVideoPage;
+    Bda->VideoPageSize = BiosGetVideoPageSize();
+    Bda->VideoPageOffset = CurrentVideoPage * Bda->VideoPageSize;
+
     /* Update the console */
-    PageStart = BiosGetVideoMemoryStart() + CurrentVideoPage * BiosGetVideoPageSize();
+    PageStart = BiosGetVideoMemoryStart() + Bda->VideoPage * BiosGetVideoPageSize();
     BiosUpdateConsole(PageStart, PageStart + BiosGetVideoPageSize());
 
     /* Set the cursor */
-    SetConsoleCursorPosition(BiosConsoleOutput, BiosCursorPositions[PageNumber]);
+    Coordinates.X = LOBYTE(Bda->CursorPosition[Bda->VideoPage]);
+    Coordinates.Y = HIBYTE(Bda->CursorPosition[Bda->VideoPage]);
+    SetConsoleCursorPosition(BiosConsoleOutput, Coordinates);
 
     return TRUE;
 }
@@ -332,6 +359,12 @@ BOOLEAN BiosInitialize()
     WORD Offset = 0;
     LPWORD IntVecTable = (LPWORD)((ULONG_PTR)BaseAddress);
     LPBYTE BiosCode = (LPBYTE)((ULONG_PTR)BaseAddress + TO_LINEAR(BIOS_SEGMENT, 0));
+
+    /* Initialize the BDA */
+    Bda = (PBIOS_DATA_AREA)((ULONG_PTR)BaseAddress + TO_LINEAR(BDA_SEGMENT, 0));
+    Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
+    Bda->KeybdBufferStart = FIELD_OFFSET(BIOS_DATA_AREA, KeybdBuffer);
+    Bda->KeybdBufferEnd = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
 
     /* Generate ISR stubs and fill the IVT */
     for (i = 0; i < 256; i++)
@@ -388,8 +421,8 @@ BOOLEAN BiosInitialize()
     }
 
     /* Store the cursor position */
-    ZeroMemory(&BiosCursorPositions, sizeof(BiosCursorPositions));
-    BiosCursorPositions[0] = BiosSavedBufferInfo.dwCursorPosition;
+    Bda->CursorPosition[0] = MAKEWORD(BiosSavedBufferInfo.dwCursorPosition.X,
+                                      BiosSavedBufferInfo.dwCursorPosition.Y);
     
     /* Set the default video mode */
     BiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
@@ -582,7 +615,7 @@ WORD BiosPeekCharacter()
     WORD CharacterData;
     
     /* Check if there is a key available */
-    if (BiosKbdBufferEmpty) return 0xFFFF;
+    if (Bda->KeybdBufferHead == Bda->KeybdBufferTail) return 0xFFFF;
 
     /* Get the key from the queue, but don't remove it */
     BiosKbdBufferTop(&CharacterData);
@@ -597,7 +630,7 @@ WORD BiosGetCharacter()
     DWORD Count;
 
     /* Check if there is a key available */
-    if (!BiosKbdBufferEmpty)
+    if (Bda->KeybdBufferHead != Bda->KeybdBufferTail)
     {
         /* Get the key from the queue, and remove it */
         BiosKbdBufferTop(&CharacterData);
@@ -673,15 +706,14 @@ VOID BiosVideoService()
             /* Make sure the selected video page exists */
             if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
 
-            Position.X = LOBYTE(Edx);
-            Position.Y = HIBYTE(Edx);
-
-            BiosCursorPositions[HIBYTE(Ebx)] = Position;
+            Bda->CursorPosition[HIBYTE(Ebx)] = LOWORD(Edx);
 
             /* Check if this is the current video page */
             if (HIBYTE(Ebx) == CurrentVideoPage)
             {
                 /* Yes, change the actual cursor */
+                Position.X = LOBYTE(Edx);
+                Position.Y = HIBYTE(Edx);
                 SetConsoleCursorPosition(BiosConsoleOutput, Position);
             }
 
@@ -705,9 +737,8 @@ VOID BiosVideoService()
             /* Return the result */
             EmulatorSetRegister(EMULATOR_REG_AX, 0);
             EmulatorSetRegister(EMULATOR_REG_CX, (StartLine << 8) | 0x1F);
-            EmulatorSetRegister(EMULATOR_REG_DX,
-                                (LOBYTE(BiosCursorPositions[HIBYTE(Ebx)].Y) << 8)
-                                | LOBYTE(BiosCursorPositions[HIBYTE(Ebx)].X));
+            EmulatorSetRegister(EMULATOR_REG_DX, Bda->CursorPosition[HIBYTE(Ebx)]);
+
             break;
         }
 
@@ -877,10 +908,9 @@ VOID BiosVideoService()
         case 0x0F:
         {
             EmulatorSetRegister(EMULATOR_REG_AX,
-                                (VideoModes[CurrentVideoMode].Width << 8)
-                                | CurrentVideoMode);
+                                MAKEWORD(Bda->VideoMode, Bda->ScreenColumns));
             EmulatorSetRegister(EMULATOR_REG_BX,
-                                (CurrentVideoPage << 8) | LOBYTE(Ebx));
+                                MAKEWORD(LOBYTE(Ebx), Bda->VideoPage));
 
             break;
         }
@@ -946,15 +976,15 @@ VOID BiosTimeService()
         {
             /* Set AL to 1 if midnight had passed, 0 otherwise */
             Eax &= 0xFFFFFF00;
-            if (BiosPassedMidnight) Eax |= 1;
+            if (Bda->MidnightPassed) Eax |= 1;
 
             /* Return the tick count in CX:DX */
             EmulatorSetRegister(EMULATOR_REG_AX, Eax);
-            EmulatorSetRegister(EMULATOR_REG_CX, HIWORD(BiosTickCount));
-            EmulatorSetRegister(EMULATOR_REG_DX, LOWORD(BiosTickCount));
+            EmulatorSetRegister(EMULATOR_REG_CX, HIWORD(Bda->TickCounter));
+            EmulatorSetRegister(EMULATOR_REG_DX, LOWORD(Bda->TickCounter));
 
             /* Reset the midnight flag */
-            BiosPassedMidnight = FALSE;
+            Bda->MidnightPassed = FALSE;
 
             break;
         }
@@ -962,10 +992,10 @@ VOID BiosTimeService()
         case 0x01:
         {
             /* Set the tick count to CX:DX */
-            BiosTickCount = MAKELONG(LOWORD(Edx), LOWORD(Ecx));
+            Bda->TickCounter = MAKELONG(LOWORD(Edx), LOWORD(Ecx));
 
             /* Reset the midnight flag */
-            BiosPassedMidnight = FALSE;
+            Bda->MidnightPassed = FALSE;
 
             break;
         }
@@ -981,13 +1011,13 @@ VOID BiosTimeService()
 VOID BiosSystemTimerInterrupt()
 {
     /* Increase the system tick count */
-    BiosTickCount++;
+    Bda->TickCounter++;
 }
 
 VOID BiosEquipmentService()
 {
     /* Return the equipment list */
-    EmulatorSetRegister(EMULATOR_REG_AX, BIOS_EQUIPMENT_LIST);
+    EmulatorSetRegister(EMULATOR_REG_AX, Bda->EquipmentList);
 }
 
 VOID BiosHandleIrq(BYTE IrqNumber)
@@ -1014,7 +1044,7 @@ VOID BiosHandleIrq(BYTE IrqNumber)
 
             /* Get the scan code and virtual key code */
             ScanCode = KeyboardReadData();
-            VirtualKey = MapVirtualKey(ScanCode, MAPVK_VSC_TO_VK);
+            VirtualKey = MapVirtualKey(ScanCode & 0x7F, MAPVK_VSC_TO_VK);
 
             /* Check if this is a key press or release */
             if (!(ScanCode & (1 << 7)))
@@ -1032,10 +1062,11 @@ VOID BiosHandleIrq(BYTE IrqNumber)
                 BiosKeyboardMap[VirtualKey] |= (1 << 7);
 
                 /* Find out which character this is */
-                ToAscii(ScanCode, VirtualKey, BiosKeyboardMap, &Character, 0);
-
-                /* Push it onto the BIOS keyboard queue */
-                BiosKbdBufferPush((ScanCode << 8) | (Character & 0xFF));
+                if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) > 0)
+                {
+                    /* Push it onto the BIOS keyboard queue */
+                    BiosKbdBufferPush((ScanCode << 8) | (Character & 0xFF));
+                }
             }
             else
             {
