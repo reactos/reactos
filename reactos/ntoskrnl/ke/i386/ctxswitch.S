@@ -112,7 +112,7 @@ _Ki386LargePageIdentityLabel:
     and eax, NOT CR0_PG
     mov cr0, eax
 
-    /* Jump to the next instruction */
+    /* Jump to the next instruction to clear the prefetch queue */
     jmp $+2
 
     /* Enable Page Size Extension in CR4 */
