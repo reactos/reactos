@@ -172,8 +172,8 @@ CcPfInitializePrefetcher(
 VOID
 NTAPI
 CcMdlReadComplete2(
-    IN PMDL MemoryDescriptorList,
-    IN PFILE_OBJECT FileObject
+    IN PFILE_OBJECT FileObject,
+    IN PMDL MemoryDescriptorList
 );
 
 VOID

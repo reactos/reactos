@@ -80,8 +80,8 @@ CcMdlReadComplete(IN PFILE_OBJECT FileObject,
 
 VOID
 NTAPI
-CcMdlReadComplete2(IN PMDL MdlChain,
-                   IN PFILE_OBJECT FileObject)
+CcMdlReadComplete2(IN PFILE_OBJECT FileObject,
+                   IN PMDL MdlChain)
 {
     UNIMPLEMENTED
 }
