@@ -3350,9 +3350,10 @@ static __inline PVOID
 ExAllocateFromZone(
   IN PZONE_HEADER Zone)
 {
+  PVOID Result = (PVOID)Zone->FreeList.Next;
   if (Zone->FreeList.Next)
     Zone->FreeList.Next = Zone->FreeList.Next->Next;
-  return (PVOID) Zone->FreeList.Next;
+  return Result;
 }
 
 static __inline PVOID
