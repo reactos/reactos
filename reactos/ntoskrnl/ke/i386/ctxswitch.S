@@ -81,6 +81,61 @@ PUBLIC @KiRetireDpcListInDpcStack@8
     pop esp
     ret
 
+PUBLIC _Ki386EnableCurrentLargePage@8
+_Ki386EnableCurrentLargePage@8:
+    /* Save StartAddress in eax */
+    mov eax, [esp + 4]
+
+    /* Save new CR3 value in ecx */
+    mov ecx, [esp + 8]
+
+    /* Save flags value */
+    pushfd
+
+    /* Disable interrupts */
+    cli
+
+    /* Compute linear address */
+    sub eax, offset _Ki386EnableCurrentLargePage@8
+    add eax, offset _Ki386LargePageIdentityLabel
+
+    /* Save old CR3 in edx and replace with a new one */
+    mov edx, cr3
+    mov cr3, ecx
+
+    /* Jump to the next instruction but in linear mapping */
+    jmp eax
+
+_Ki386LargePageIdentityLabel:
+    /* Disable paging */
+    mov eax, cr0
+    and eax, NOT CR0_PG
+    mov cr0, eax
+
+    /* Jump to the next instruction */
+    jmp $+2
+
+    /* Enable Page Size Extension in CR4 */
+    mov ecx, cr4
+    or ecx, CR4_PSE
+    mov cr4, ecx
+
+    /* Done, now re-enable paging */
+    or eax, CR0_PG
+    mov cr0, eax
+
+    /* Jump to virtual address */
+    mov eax, offset VirtualSpace
+    jmp eax
+
+VirtualSpace:
+    /* Restore CR3 contents */
+    mov cr3, edx
+
+    /* Restore flags */
+    popfd
+
+    ret 8
 
 /* FIXFIX: Move to C code ****/
 PUBLIC _Ki386SetupAndExitToV86Mode@4

@@ -163,6 +163,18 @@ typedef struct _KV8086_STACK_FRAME
     KV86_FRAME V86Frame;
 } KV8086_STACK_FRAME, *PKV8086_STACK_FRAME;
 
+//
+// Large Pages Support
+//
+typedef struct _LARGE_IDENTITY_MAP
+{
+    PHARDWARE_PTE TopLevelDirectory;
+    ULONG Cr3;
+    ULONG_PTR StartAddress;
+    ULONG PagesCount;
+    PVOID PagesList[30];
+} LARGE_IDENTITY_MAP, *PLARGE_IDENTITY_MAP;
+
 /* Diable interrupts and return whether they were enabled before */
 FORCEINLINE
 BOOLEAN
@@ -372,6 +384,33 @@ ULONG_PTR
 NTAPI
 Ki386EnableGlobalPage(
     IN volatile ULONG_PTR Context
+);
+
+ULONG_PTR
+NTAPI
+Ki386EnableTargetLargePage(
+    IN volatile ULONG_PTR Context
+);
+
+BOOLEAN
+NTAPI
+Ki386CreateIdentityMap(
+    IN PLARGE_IDENTITY_MAP IdentityMap,
+    IN PVOID StartPtr,
+    IN ULONG Length
+);
+
+VOID
+NTAPI
+Ki386FreeIdentityMap(
+    IN PLARGE_IDENTITY_MAP IdentityMap
+);
+
+VOID
+NTAPI
+Ki386EnableCurrentLargePage(
+    IN ULONG_PTR StartAddress,
+    IN ULONG Cr3
 );
 
 VOID
