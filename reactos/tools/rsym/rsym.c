@@ -30,17 +30,17 @@
 static int
 CompareSymEntry(const PROSSYM_ENTRY SymEntry1, const PROSSYM_ENTRY SymEntry2)
 {
-  if (SymEntry1->Address < SymEntry2->Address)
+    if (SymEntry1->Address < SymEntry2->Address)
     {
-      return -1;
+        return -1;
     }
 
-  if (SymEntry2->Address < SymEntry1->Address)
+    if (SymEntry2->Address < SymEntry1->Address)
     {
-      return +1;
+        return +1;
     }
 
-  return 0;
+    return 0;
 }
 
 static int
@@ -49,38 +49,36 @@ GetStabInfo(void *FileData, PIMAGE_FILE_HEADER PEFileHeader,
             ULONG *StabSymbolsLength, void **StabSymbolsBase,
             ULONG *StabStringsLength, void **StabStringsBase)
 {
-  ULONG Idx;
+    ULONG Idx;
 
-  /* Load .stab and .stabstr sections if available */
-  *StabSymbolsBase = NULL;
-  *StabSymbolsLength = 0;
-  *StabStringsBase = NULL;
-  *StabStringsLength = 0;
+    /* Load .stab and .stabstr sections if available */
+    *StabSymbolsBase = NULL;
+    *StabSymbolsLength = 0;
+    *StabStringsBase = NULL;
+    *StabStringsLength = 0;
 
-  for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
+    for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
-      /* printf("section: '%.08s'\n", PESectionHeaders[Idx].Name); */
-      if ((strncmp((char *) PESectionHeaders[Idx].Name, ".stab", 5) == 0)
-        && (PESectionHeaders[Idx].Name[5] == 0))
+        /* printf("section: '%.08s'\n", PESectionHeaders[Idx].Name); */
+        if ((strncmp((char *) PESectionHeaders[Idx].Name, ".stab", 5) == 0)
+            && (PESectionHeaders[Idx].Name[5] == 0))
         {
-           /* printf(".stab section found. Size %d\n",
-               PESectionHeaders[Idx].SizeOfRawData); */
+            /* printf(".stab section found. Size %d\n", PESectionHeaders[Idx].SizeOfRawData); */
 
-           *StabSymbolsLength = PESectionHeaders[Idx].SizeOfRawData;
-           *StabSymbolsBase = (void *)((char *) FileData + PESectionHeaders[Idx].PointerToRawData);
+            *StabSymbolsLength = PESectionHeaders[Idx].SizeOfRawData;
+            *StabSymbolsBase = (void *)((char *) FileData + PESectionHeaders[Idx].PointerToRawData);
         }
 
-      if (strncmp((char *) PESectionHeaders[Idx].Name, ".stabstr", 8) == 0)
+        if (strncmp((char *) PESectionHeaders[Idx].Name, ".stabstr", 8) == 0)
         {
-           /* printf(".stabstr section found. Size %d\n",
-               PESectionHeaders[Idx].SizeOfRawData); */
+            /* printf(".stabstr section found. Size %d\n", PESectionHeaders[Idx].SizeOfRawData); */
 
-           *StabStringsLength = PESectionHeaders[Idx].SizeOfRawData;
-           *StabStringsBase = (void *)((char *) FileData + PESectionHeaders[Idx].PointerToRawData);
+            *StabStringsLength = PESectionHeaders[Idx].SizeOfRawData;
+            *StabStringsBase = (void *)((char *) FileData + PESectionHeaders[Idx].PointerToRawData);
         }
     }
 
-  return 0;
+    return 0;
 }
 
 static int
@@ -90,44 +88,44 @@ GetCoffInfo(void *FileData, PIMAGE_FILE_HEADER PEFileHeader,
             ULONG *CoffStringsLength, void **CoffStringsBase)
 {
 
-  if (0 == PEFileHeader->PointerToSymbolTable || 0 == PEFileHeader->NumberOfSymbols)
+    if (PEFileHeader->PointerToSymbolTable == 0 || PEFileHeader->NumberOfSymbols == 0)
     {
-      /* No COFF symbol table */
-      *CoffSymbolsLength = 0;
-      *CoffStringsLength = 0;
+        /* No COFF symbol table */
+        *CoffSymbolsLength = 0;
+        *CoffStringsLength = 0;
     }
-  else
+    else
     {
-      *CoffSymbolsLength = PEFileHeader->NumberOfSymbols * sizeof(COFF_SYMENT);
-      *CoffSymbolsBase = (void *)((char *) FileData + PEFileHeader->PointerToSymbolTable);
-      *CoffStringsLength = *((ULONG *) ((char *) *CoffSymbolsBase + *CoffSymbolsLength));
-      *CoffStringsBase = (void *)((char *) *CoffSymbolsBase + *CoffSymbolsLength);
+        *CoffSymbolsLength = PEFileHeader->NumberOfSymbols * sizeof(COFF_SYMENT);
+        *CoffSymbolsBase = (void *)((char *) FileData + PEFileHeader->PointerToSymbolTable);
+        *CoffStringsLength = *((ULONG *) ((char *) *CoffSymbolsBase + *CoffSymbolsLength));
+        *CoffStringsBase = (void *)((char *) *CoffSymbolsBase + *CoffSymbolsLength);
     }
 
-  return 0;
+    return 0;
 }
 
 static ULONG
 FindOrAddString(char *StringToFind, ULONG *StringsLength, void *StringsBase)
 {
-  char *Search, *End;
+    char *Search, *End;
 
-  Search = (char *) StringsBase;
-  End = Search + *StringsLength;
+    Search = (char *)StringsBase;
+    End = Search + *StringsLength;
 
-  while (Search < End)
+    while (Search < End)
     {
-      if (0 == strcmp(Search, StringToFind))
+        if (strcmp(Search, StringToFind) == 0)
         {
-          return Search - (char *) StringsBase;
+            return Search - (char *)StringsBase;
         }
-      Search += strlen(Search) + 1;
+        Search += strlen(Search) + 1;
     }
 
-  strcpy(Search, StringToFind);
-  *StringsLength += strlen(StringToFind) + 1;
+    strcpy(Search, StringToFind);
+    *StringsLength += strlen(StringToFind) + 1;
 
-  return Search - (char *) StringsBase;
+    return Search - (char *)StringsBase;
 }
 
 static int
@@ -138,129 +136,130 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
              ULONG_PTR ImageBase, PIMAGE_FILE_HEADER PEFileHeader,
              PIMAGE_SECTION_HEADER PESectionHeaders)
 {
-  PSTAB_ENTRY StabEntry;
-  ULONG Count, i;
-  ULONG_PTR Address, LastFunctionAddress;
-  int First = 1;
-  char *Name;
-  ULONG NameLen;
-  char FuncName[256];
-  PROSSYM_ENTRY Current;
+    PSTAB_ENTRY StabEntry;
+    ULONG Count, i;
+    ULONG_PTR Address, LastFunctionAddress;
+    int First = 1;
+    char *Name;
+    ULONG NameLen;
+    char FuncName[256];
+    PROSSYM_ENTRY Current;
 
-  StabEntry = StabSymbolsBase;
-  Count = StabSymbolsLength / sizeof(STAB_ENTRY);
-  *SymbolsCount = 0;
-  if (Count == 0)
+    StabEntry = StabSymbolsBase;
+    Count = StabSymbolsLength / sizeof(STAB_ENTRY);
+    *SymbolsCount = 0;
+
+    if (Count == 0)
     {
-      /* No symbol info */
-      *SymbolsBase = NULL;
-      return 0;
+        /* No symbol info */
+        *SymbolsBase = NULL;
+        return 0;
     }
 
-  *SymbolsBase = malloc(Count * sizeof(ROSSYM_ENTRY));
-  if (NULL == *SymbolsBase)
+    *SymbolsBase = malloc(Count * sizeof(ROSSYM_ENTRY));
+    if (*SymbolsBase == NULL)
     {
-      fprintf(stderr, "Failed to allocate memory for converted .stab symbols\n");
-      return 1;
+        fprintf(stderr, "Failed to allocate memory for converted .stab symbols\n");
+        return 1;
     }
-  Current = *SymbolsBase;
-  memset ( Current, 0, sizeof(*Current) );
+    Current = *SymbolsBase;
+    memset(Current, 0, sizeof(*Current));
 
-  LastFunctionAddress = 0;
-  for (i = 0; i < Count; i++)
+    LastFunctionAddress = 0;
+    for (i = 0; i < Count; i++)
     {
-      if ( 0 == LastFunctionAddress )
+        if (LastFunctionAddress == 0)
         {
-          Address = StabEntry[i].n_value - ImageBase;
+            Address = StabEntry[i].n_value - ImageBase;
         }
-      else
+        else
         {
-          Address = LastFunctionAddress + StabEntry[i].n_value;
+            Address = LastFunctionAddress + StabEntry[i].n_value;
         }
-      switch (StabEntry[i].n_type)
+        switch (StabEntry[i].n_type)
         {
-          case N_SO:
-          case N_SOL:
-          case N_BINCL:
-            Name = (char *) StabStringsBase + StabEntry[i].n_strx;
-            if (StabStringsLength < StabEntry[i].n_strx
-                ||'\0' == *Name || '/' == Name[strlen(Name) - 1]
-                || '\\' == Name[strlen(Name) - 1]
-                || StabEntry[i].n_value < ImageBase)
-              {
-                continue;
-              }
-            if ( First || Address != Current->Address )
-              {
-                if ( !First )
-                  {
-                    memset ( ++Current, 0, sizeof(*Current) );
-                    Current->FunctionOffset = Current[-1].FunctionOffset;
-                  }
-                else
-                  First = 0;
-                Current->Address = Address;
-              }
-            Current->FileOffset = FindOrAddString((char *)StabStringsBase
-                                                  + StabEntry[i].n_strx,
-                                                  StringsLength,
-                                                  StringsBase);
-            break;
-          case N_FUN:
-            if (0 == StabEntry[i].n_desc || StabEntry[i].n_value < ImageBase)
-              {
-                LastFunctionAddress = 0; /* line # 0 = end of function */
-                continue;
-              }
-            if ( First || Address != Current->Address )
-              {
-                if ( !First )
-                  memset ( ++Current, 0, sizeof(*Current) );
-                else
-                  First = 0;
-                Current->Address = Address;
-                Current->FileOffset = Current[-1].FileOffset;
-              }
-            Name = (char *) StabStringsBase + StabEntry[i].n_strx;
-            NameLen = strcspn(Name, ":");
-            if (sizeof(FuncName) <= NameLen)
-              {
-                free(*SymbolsBase);
-                fprintf(stderr, "Function name too long\n");
-                return 1;
-              }
-            memcpy(FuncName, Name, NameLen);
-            FuncName[NameLen] = '\0';
-            Current->FunctionOffset = FindOrAddString(FuncName,
+            case N_SO:
+            case N_SOL:
+            case N_BINCL:
+                Name = (char *) StabStringsBase + StabEntry[i].n_strx;
+                if (StabStringsLength < StabEntry[i].n_strx
+                    || *Name == '\0' || Name[strlen(Name) - 1] == '/'
+                    || Name[strlen(Name) - 1] == '\\'
+                    || StabEntry[i].n_value < ImageBase)
+                {
+                    continue;
+                }
+                if (First || Address != Current->Address)
+                {
+                    if (!First)
+                    {
+                        memset(++Current, 0, sizeof(*Current));
+                        Current->FunctionOffset = Current[-1].FunctionOffset;
+                    }
+                    else
+                        First = 0;
+                    Current->Address = Address;
+                }
+                Current->FileOffset = FindOrAddString((char *)StabStringsBase
+                                                      + StabEntry[i].n_strx,
                                                       StringsLength,
                                                       StringsBase);
-            Current->SourceLine = 0;
-            LastFunctionAddress = Address;
-            break;
-          case N_SLINE:
-            if ( First || Address != Current->Address )
-              {
-                if ( !First )
-                  {
-                    memset ( ++Current, 0, sizeof(*Current) );
+                break;
+            case N_FUN:
+                if (StabEntry[i].n_desc == 0 || StabEntry[i].n_value < ImageBase)
+                {
+                    LastFunctionAddress = 0; /* line # 0 = end of function */
+                    continue;
+                }
+                if (First || Address != Current->Address)
+                {
+                    if (!First)
+                        memset(++Current, 0, sizeof(*Current));
+                    else
+                        First = 0;
+                    Current->Address = Address;
                     Current->FileOffset = Current[-1].FileOffset;
-                    Current->FunctionOffset = Current[-1].FunctionOffset;
-                  }
-                else
-                  First = 0;
-                Current->Address = Address;
-              }
-            Current->SourceLine = StabEntry[i].n_desc;
-            break;
-          default:
-            continue;
+                }
+                Name = (char *)StabStringsBase + StabEntry[i].n_strx;
+                NameLen = strcspn(Name, ":");
+                if (sizeof(FuncName) <= NameLen)
+                {
+                    free(*SymbolsBase);
+                    fprintf(stderr, "Function name too long\n");
+                    return 1;
+                }
+                memcpy(FuncName, Name, NameLen);
+                FuncName[NameLen] = '\0';
+                Current->FunctionOffset = FindOrAddString(FuncName,
+                                                          StringsLength,
+                                                          StringsBase);
+                Current->SourceLine = 0;
+                LastFunctionAddress = Address;
+                break;
+            case N_SLINE:
+                if (First || Address != Current->Address)
+                {
+                    if (!First)
+                    {
+                        memset(++Current, 0, sizeof(*Current));
+                        Current->FileOffset = Current[-1].FileOffset;
+                        Current->FunctionOffset = Current[-1].FunctionOffset;
+                    }
+                    else
+                        First = 0;
+                    Current->Address = Address;
+                }
+                Current->SourceLine = StabEntry[i].n_desc;
+                break;
+            default:
+                continue;
         }
     }
-  *SymbolsCount = (Current - *SymbolsBase + 1);
+    *SymbolsCount = (Current - *SymbolsBase + 1);
 
-  qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
+    qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
 
-  return 0;
+    return 0;
 }
 
 static int
@@ -271,76 +270,80 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
              ULONG_PTR ImageBase, PIMAGE_FILE_HEADER PEFileHeader,
              PIMAGE_SECTION_HEADER PESectionHeaders)
 {
-  ULONG Count, i;
-  PCOFF_SYMENT CoffEntry;
-  char FuncName[256];
-  char *p;
-  PROSSYM_ENTRY Current;
+    ULONG Count, i;
+    PCOFF_SYMENT CoffEntry;
+    char FuncName[256];
+    char *p;
+    PROSSYM_ENTRY Current;
 
-  CoffEntry = (PCOFF_SYMENT) CoffSymbolsBase;
-  Count = CoffSymbolsLength / sizeof(COFF_SYMENT);
-  *SymbolsBase = malloc(Count * sizeof(ROSSYM_ENTRY));
-  if (NULL == *SymbolsBase)
+    CoffEntry = (PCOFF_SYMENT) CoffSymbolsBase;
+    Count = CoffSymbolsLength / sizeof(COFF_SYMENT);
+
+    *SymbolsBase = malloc(Count * sizeof(ROSSYM_ENTRY));
+    if (*SymbolsBase == NULL)
     {
-      fprintf(stderr, "Unable to allocate memory for converted COFF symbols\n");
-      return 1;
+        fprintf(stderr, "Unable to allocate memory for converted COFF symbols\n");
+        return 1;
     }
-  *SymbolsCount = 0;
-  Current = *SymbolsBase;
+    *SymbolsCount = 0;
+    Current = *SymbolsBase;
 
-  for (i = 0; i < Count; i++)
+    for (i = 0; i < Count; i++)
     {
-      if (ISFCN(CoffEntry[i].e_type) || C_EXT == CoffEntry[i].e_sclass)
+        if (ISFCN(CoffEntry[i].e_type) || C_EXT == CoffEntry[i].e_sclass)
         {
-          Current->Address = CoffEntry[i].e_value;
-          if (0 < CoffEntry[i].e_scnum)
+            Current->Address = CoffEntry[i].e_value;
+            if (CoffEntry[i].e_scnum > 0)
             {
-              if (PEFileHeader->NumberOfSections < CoffEntry[i].e_scnum)
+                if (PEFileHeader->NumberOfSections < CoffEntry[i].e_scnum)
                 {
-                  free(*SymbolsBase);
-                  fprintf(stderr, "Invalid section number %d in COFF symbols (only %d sections present)\n",
-                          CoffEntry[i].e_scnum, PEFileHeader->NumberOfSections);
-                  return 1;
+                    free(*SymbolsBase);
+                    fprintf(stderr,
+                            "Invalid section number %d in COFF symbols (only %d sections present)\n",
+                            CoffEntry[i].e_scnum,
+                            PEFileHeader->NumberOfSections);
+                    return 1;
                 }
-              Current->Address += PESectionHeaders[CoffEntry[i].e_scnum - 1].VirtualAddress;
+                Current->Address += PESectionHeaders[CoffEntry[i].e_scnum - 1].VirtualAddress;
             }
-          Current->FileOffset = 0;
-          if (0 == CoffEntry[i].e.e.e_zeroes)
+            Current->FileOffset = 0;
+            if (CoffEntry[i].e.e.e_zeroes == 0)
             {
-              if (sizeof(FuncName) <= strlen((char *) CoffStringsBase + CoffEntry[i].e.e.e_offset))
+                if (sizeof(FuncName) <= strlen((char *) CoffStringsBase + CoffEntry[i].e.e.e_offset))
                 {
-                  free(*SymbolsBase);
-                  fprintf(stderr, "Function name too long\n");
-                  return 1;
+                    free(*SymbolsBase);
+                    fprintf(stderr, "Function name too long\n");
+                    return 1;
                 }
-              strcpy(FuncName, (char *) CoffStringsBase + CoffEntry[i].e.e.e_offset);
+                strcpy(FuncName, (char *) CoffStringsBase + CoffEntry[i].e.e.e_offset);
             }
-          else
+            else
             {
-              memcpy(FuncName, CoffEntry[i].e.e_name, E_SYMNMLEN);
-              FuncName[E_SYMNMLEN] = '\0';
+                memcpy(FuncName, CoffEntry[i].e.e_name, E_SYMNMLEN);
+                FuncName[E_SYMNMLEN] = '\0';
             }
 
-          /* Name demangling: stdcall */
-          p = strrchr(FuncName, '@');
-          if (NULL != p)
+            /* Name demangling: stdcall */
+            p = strrchr(FuncName, '@');
+            if (p != NULL)
             {
-              *p = '\0';
+                *p = '\0';
             }
-          p = ('_' == FuncName[0] || '@' == FuncName[0] ? FuncName + 1 : FuncName);
-          Current->FunctionOffset = FindOrAddString(p,
-                                                                         StringsLength,
-                                                                         StringsBase);
-          Current->SourceLine = 0;
-          memset ( ++Current, 0, sizeof(*Current) );
+            p = ('_' == FuncName[0] || '@' == FuncName[0] ? FuncName + 1 : FuncName);
+            Current->FunctionOffset = FindOrAddString(p,
+                                                      StringsLength,
+                                                      StringsBase);
+            Current->SourceLine = 0;
+            memset(++Current, 0, sizeof(*Current));
         }
-      i += CoffEntry[i].e_numaux;
+
+        i += CoffEntry[i].e_numaux;
     }
 
-  *SymbolsCount = (Current - *SymbolsBase + 1);
-  qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
+    *SymbolsCount = (Current - *SymbolsBase + 1);
+    qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
 
-  return 0;
+    return 0;
 }
 
 static int
@@ -348,87 +351,88 @@ MergeStabsAndCoffs(ULONG *MergedSymbolCount, PROSSYM_ENTRY *MergedSymbols,
                    ULONG StabSymbolsCount, PROSSYM_ENTRY StabSymbols,
                    ULONG CoffSymbolsCount, PROSSYM_ENTRY CoffSymbols)
 {
-  ULONG StabIndex, j;
-  ULONG CoffIndex;
-  ULONG_PTR StabFunctionStartAddress;
-  ULONG StabFunctionStringOffset, NewStabFunctionStringOffset;
+    ULONG StabIndex, j;
+    ULONG CoffIndex;
+    ULONG_PTR StabFunctionStartAddress;
+    ULONG StabFunctionStringOffset, NewStabFunctionStringOffset;
 
-  *MergedSymbolCount = 0;
-  if (StabSymbolsCount == 0)
+    *MergedSymbolCount = 0;
+    if (StabSymbolsCount == 0)
     {
-      *MergedSymbols = NULL;
-      return 0;
+        *MergedSymbols = NULL;
+        return 0;
     }
-  *MergedSymbols = malloc(StabSymbolsCount * sizeof(ROSSYM_ENTRY));
-  if (NULL == *MergedSymbols)
+    *MergedSymbols = malloc(StabSymbolsCount * sizeof(ROSSYM_ENTRY));
+    if (*MergedSymbols == NULL)
     {
-      fprintf(stderr, "Unable to allocate memory for merged symbols\n");
-      return 1;
-    }
-
-  StabFunctionStartAddress = 0;
-  StabFunctionStringOffset = 0;
-  CoffIndex = 0;
-  for (StabIndex = 0; StabIndex < StabSymbolsCount; StabIndex++)
-    {
-      (*MergedSymbols)[*MergedSymbolCount] = StabSymbols[StabIndex];
-      for (j = StabIndex + 1;
-           j < StabSymbolsCount && StabSymbols[j].Address == StabSymbols[StabIndex].Address;
-           j++)
-        {
-          if (0 != StabSymbols[j].FileOffset && 0 == (*MergedSymbols)[*MergedSymbolCount].FileOffset)
-            {
-              (*MergedSymbols)[*MergedSymbolCount].FileOffset = StabSymbols[j].FileOffset;
-            }
-          if (0 != StabSymbols[j].FunctionOffset && 0 == (*MergedSymbols)[*MergedSymbolCount].FunctionOffset)
-            {
-              (*MergedSymbols)[*MergedSymbolCount].FunctionOffset = StabSymbols[j].FunctionOffset;
-            }
-          if (0 != StabSymbols[j].SourceLine && 0 == (*MergedSymbols)[*MergedSymbolCount].SourceLine)
-            {
-              (*MergedSymbols)[*MergedSymbolCount].SourceLine = StabSymbols[j].SourceLine;
-            }
-        }
-      StabIndex = j - 1;
-      while (CoffIndex < CoffSymbolsCount
-          && CoffSymbols[CoffIndex + 1].Address <= (*MergedSymbols)[*MergedSymbolCount].Address)
-        {
-          CoffIndex++;
-        }
-      NewStabFunctionStringOffset = (*MergedSymbols)[*MergedSymbolCount].FunctionOffset;
-      if (CoffSymbolsCount > 0 &&
-          CoffSymbols[CoffIndex].Address < (*MergedSymbols)[*MergedSymbolCount].Address
-          && StabFunctionStartAddress < CoffSymbols[CoffIndex].Address
-          && 0 != CoffSymbols[CoffIndex].FunctionOffset)
-        {
-          (*MergedSymbols)[*MergedSymbolCount].FunctionOffset = CoffSymbols[CoffIndex].FunctionOffset;
-        }
-      if (StabFunctionStringOffset != NewStabFunctionStringOffset)
-        {
-          StabFunctionStartAddress = (*MergedSymbols)[*MergedSymbolCount].Address;
-        }
-      StabFunctionStringOffset = NewStabFunctionStringOffset;
-      (*MergedSymbolCount)++;
+        fprintf(stderr, "Unable to allocate memory for merged symbols\n");
+        return 1;
     }
 
-  return 0;
+    StabFunctionStartAddress = 0;
+    StabFunctionStringOffset = 0;
+    CoffIndex = 0;
+    for (StabIndex = 0; StabIndex < StabSymbolsCount; StabIndex++)
+    {
+        (*MergedSymbols)[*MergedSymbolCount] = StabSymbols[StabIndex];
+        for (j = StabIndex + 1;
+             j < StabSymbolsCount && StabSymbols[j].Address == StabSymbols[StabIndex].Address;
+             j++)
+        {
+            if (StabSymbols[j].FileOffset != 0 && (*MergedSymbols)[*MergedSymbolCount].FileOffset == 0)
+            {
+                (*MergedSymbols)[*MergedSymbolCount].FileOffset = StabSymbols[j].FileOffset;
+            }
+            if (StabSymbols[j].FunctionOffset != 0 && (*MergedSymbols)[*MergedSymbolCount].FunctionOffset == 0)
+            {
+                (*MergedSymbols)[*MergedSymbolCount].FunctionOffset = StabSymbols[j].FunctionOffset;
+            }
+            if (StabSymbols[j].SourceLine != 0 && (*MergedSymbols)[*MergedSymbolCount].SourceLine == 0)
+            {
+                (*MergedSymbols)[*MergedSymbolCount].SourceLine = StabSymbols[j].SourceLine;
+            }
+        }
+        StabIndex = j - 1;
+
+        while (CoffIndex < CoffSymbolsCount &&
+               CoffSymbols[CoffIndex + 1].Address <= (*MergedSymbols)[*MergedSymbolCount].Address)
+        {
+            CoffIndex++;
+        }
+        NewStabFunctionStringOffset = (*MergedSymbols)[*MergedSymbolCount].FunctionOffset;
+        if (CoffSymbolsCount > 0 &&
+            CoffSymbols[CoffIndex].Address < (*MergedSymbols)[*MergedSymbolCount].Address &&
+            StabFunctionStartAddress < CoffSymbols[CoffIndex].Address &&
+            CoffSymbols[CoffIndex].FunctionOffset != 0)
+        {
+            (*MergedSymbols)[*MergedSymbolCount].FunctionOffset = CoffSymbols[CoffIndex].FunctionOffset;
+        }
+        if (StabFunctionStringOffset != NewStabFunctionStringOffset)
+        {
+            StabFunctionStartAddress = (*MergedSymbols)[*MergedSymbolCount].Address;
+        }
+        StabFunctionStringOffset = NewStabFunctionStringOffset;
+        (*MergedSymbolCount)++;
+    }
+
+    return 0;
 }
 
 static PIMAGE_SECTION_HEADER
 FindSectionForRVA(DWORD RVA, unsigned NumberOfSections, PIMAGE_SECTION_HEADER SectionHeaders)
 {
-  unsigned Section;
+    unsigned Section;
 
-  for (Section = 0; Section < NumberOfSections; Section++)
+    for (Section = 0; Section < NumberOfSections; Section++)
     {
-      if (SectionHeaders[Section].VirtualAddress <= RVA &&
-          RVA < SectionHeaders[Section].VirtualAddress + SectionHeaders[Section].Misc.VirtualSize)
+        if (SectionHeaders[Section].VirtualAddress <= RVA &&
+            RVA < SectionHeaders[Section].VirtualAddress + SectionHeaders[Section].Misc.VirtualSize)
         {
-          return SectionHeaders + Section;
+            return SectionHeaders + Section;
         }
     }
 
-  return NULL;
+    return NULL;
 }
 
 static int
@@ -436,70 +440,74 @@ ProcessRelocations(ULONG *ProcessedRelocsLength, void **ProcessedRelocs,
                    void *RawData, PIMAGE_OPTIONAL_HEADER OptHeader,
                    unsigned NumberOfSections, PIMAGE_SECTION_HEADER SectionHeaders)
 {
-  PIMAGE_SECTION_HEADER RelocSectionHeader, TargetSectionHeader;
-  PIMAGE_BASE_RELOCATION BaseReloc, End, AcceptedRelocs;
-  int Found;
+    PIMAGE_SECTION_HEADER RelocSectionHeader, TargetSectionHeader;
+    PIMAGE_BASE_RELOCATION BaseReloc, End, AcceptedRelocs;
+    int Found;
 
-  if (OptHeader->NumberOfRvaAndSizes < IMAGE_DIRECTORY_ENTRY_BASERELOC
-      || 0 == OptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress)
+    if (OptHeader->NumberOfRvaAndSizes < IMAGE_DIRECTORY_ENTRY_BASERELOC ||
+        OptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress == 0)
     {
-      /* No relocation entries */
-      *ProcessedRelocsLength = 0;
-      *ProcessedRelocs = NULL;
-      return 0;
+        /* No relocation entries */
+        *ProcessedRelocsLength = 0;
+        *ProcessedRelocs = NULL;
+        return 0;
     }
 
-  RelocSectionHeader = FindSectionForRVA(OptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress,
-                                         NumberOfSections, SectionHeaders);
-  if (NULL == RelocSectionHeader)
+    RelocSectionHeader = FindSectionForRVA(OptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress,
+                                           NumberOfSections, SectionHeaders);
+    if (RelocSectionHeader == NULL)
     {
-      fprintf(stderr, "Can't find section header for relocation data\n");
-      return 1;
+        fprintf(stderr, "Can't find section header for relocation data\n");
+        return 1;
     }
 
-  *ProcessedRelocs = malloc(RelocSectionHeader->SizeOfRawData);
-  if (NULL == *ProcessedRelocs)
+    *ProcessedRelocs = malloc(RelocSectionHeader->SizeOfRawData);
+    if (*ProcessedRelocs == NULL)
     {
-      fprintf(stderr, "Failed to allocate %u bytes for relocations\n", (unsigned int)RelocSectionHeader->SizeOfRawData);
-      return 1;
+        fprintf(stderr,
+                "Failed to allocate %u bytes for relocations\n",
+                (unsigned int)RelocSectionHeader->SizeOfRawData);
+        return 1;
     }
-  *ProcessedRelocsLength = 0;
+    *ProcessedRelocsLength = 0;
 
-  BaseReloc = (PIMAGE_BASE_RELOCATION) ((char *) RawData
-                                        + RelocSectionHeader->PointerToRawData
-                                        + (OptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress -
+    BaseReloc = (PIMAGE_BASE_RELOCATION) ((char *) RawData +
+                                          RelocSectionHeader->PointerToRawData +
+                                          (OptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress -
                                            RelocSectionHeader->VirtualAddress));
-  End = (PIMAGE_BASE_RELOCATION) ((char *) BaseReloc
-                                  + OptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size);
+    End = (PIMAGE_BASE_RELOCATION) ((char *) BaseReloc +
+                                    OptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size);
 
-  while (BaseReloc < End && 0 < BaseReloc->SizeOfBlock)
+    while (BaseReloc < End && BaseReloc->SizeOfBlock > 0)
     {
-      TargetSectionHeader = FindSectionForRVA(BaseReloc->VirtualAddress, NumberOfSections,
-                                              SectionHeaders);
-      if (NULL != TargetSectionHeader)
+        TargetSectionHeader = FindSectionForRVA(BaseReloc->VirtualAddress,
+                                                NumberOfSections,
+                                                SectionHeaders);
+        if (TargetSectionHeader != NULL)
         {
-          AcceptedRelocs = *ProcessedRelocs;
-          Found = 0;
-          while (AcceptedRelocs < (PIMAGE_BASE_RELOCATION) ((char *) *ProcessedRelocs +
-                                                            *ProcessedRelocsLength)
-                 && ! Found)
+            AcceptedRelocs = *ProcessedRelocs;
+            Found = 0;
+            while (AcceptedRelocs < (PIMAGE_BASE_RELOCATION) ((char *) *ProcessedRelocs +
+                                                              *ProcessedRelocsLength)
+                   && !Found)
             {
-              Found = BaseReloc->SizeOfBlock == AcceptedRelocs->SizeOfBlock
-                      && 0 == memcmp(BaseReloc, AcceptedRelocs, AcceptedRelocs->SizeOfBlock);
-              AcceptedRelocs= (PIMAGE_BASE_RELOCATION) ((char *) AcceptedRelocs +
-                                                        AcceptedRelocs->SizeOfBlock);
+                Found = BaseReloc->SizeOfBlock == AcceptedRelocs->SizeOfBlock &&
+                                                  memcmp(BaseReloc, AcceptedRelocs, AcceptedRelocs->SizeOfBlock) == 0;
+                AcceptedRelocs = (PIMAGE_BASE_RELOCATION) ((char *) AcceptedRelocs +
+                                                           AcceptedRelocs->SizeOfBlock);
             }
-          if (! Found)
+            if (!Found)
             {
-              memcpy((char *) *ProcessedRelocs + *ProcessedRelocsLength,
-                     BaseReloc, BaseReloc->SizeOfBlock);
-              *ProcessedRelocsLength += BaseReloc->SizeOfBlock;
+                memcpy((char *) *ProcessedRelocs + *ProcessedRelocsLength,
+                       BaseReloc,
+                       BaseReloc->SizeOfBlock);
+                *ProcessedRelocsLength += BaseReloc->SizeOfBlock;
             }
         }
-      BaseReloc = (PIMAGE_BASE_RELOCATION)((char *) BaseReloc + BaseReloc->SizeOfBlock);
+        BaseReloc = (PIMAGE_BASE_RELOCATION)((char *) BaseReloc + BaseReloc->SizeOfBlock);
     }
 
-  return 0;
+    return 0;
 }
 
 static int
@@ -508,449 +516,502 @@ CreateOutputFile(FILE *OutFile, void *InData,
                  PIMAGE_OPTIONAL_HEADER InOptHeader, PIMAGE_SECTION_HEADER InSectionHeaders,
                  ULONG RosSymLength, void *RosSymSection)
 {
-  ULONG StartOfRawData;
-  unsigned Section;
-  void *OutHeader, *ProcessedRelocs, *PaddedRosSym, *Data;
-  PIMAGE_DOS_HEADER OutDosHeader;
-  PIMAGE_FILE_HEADER OutFileHeader;
-  PIMAGE_OPTIONAL_HEADER OutOptHeader;
-  PIMAGE_SECTION_HEADER OutSectionHeaders, CurrentSectionHeader;
-  DWORD CheckSum;
-  ULONG Length, i;
-  ULONG ProcessedRelocsLength;
-  ULONG RosSymOffset, RosSymFileLength;
-  int InRelocSectionIndex;
-  PIMAGE_SECTION_HEADER OutRelocSection;
+    ULONG StartOfRawData;
+    unsigned Section;
+    void *OutHeader, *ProcessedRelocs, *PaddedRosSym, *Data;
+    PIMAGE_DOS_HEADER OutDosHeader;
+    PIMAGE_FILE_HEADER OutFileHeader;
+    PIMAGE_OPTIONAL_HEADER OutOptHeader;
+    PIMAGE_SECTION_HEADER OutSectionHeaders, CurrentSectionHeader;
+    DWORD CheckSum;
+    ULONG Length, i;
+    ULONG ProcessedRelocsLength;
+    ULONG RosSymOffset, RosSymFileLength;
+    int InRelocSectionIndex;
+    PIMAGE_SECTION_HEADER OutRelocSection;
 
-  StartOfRawData = 0;
-  for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
+    StartOfRawData = 0;
+    for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
     {
-      if ((0 == StartOfRawData
-           || InSectionHeaders[Section].PointerToRawData < StartOfRawData)
-          && 0 != InSectionHeaders[Section].PointerToRawData
-          && 0 != (strncmp((char *) InSectionHeaders[Section].Name, ".stab", 5)))
+        if ((StartOfRawData == 0 ||
+             InSectionHeaders[Section].PointerToRawData < StartOfRawData)
+            && InSectionHeaders[Section].PointerToRawData != 0
+            && (strncmp((char *) InSectionHeaders[Section].Name, ".stab", 5)) != 0)
         {
-          StartOfRawData = InSectionHeaders[Section].PointerToRawData;
+            StartOfRawData = InSectionHeaders[Section].PointerToRawData;
         }
     }
-  OutHeader = malloc(StartOfRawData);
-  if (NULL == OutHeader)
+    OutHeader = malloc(StartOfRawData);
+    if (OutHeader == NULL)
     {
-      fprintf(stderr, "Failed to allocate %u bytes for output file header\n", (unsigned int)StartOfRawData);
-      return 1;
+        fprintf(stderr,
+                "Failed to allocate %u bytes for output file header\n",
+                (unsigned int)StartOfRawData);
+        return 1;
     }
-  memset(OutHeader, '\0', StartOfRawData);
+    memset(OutHeader, '\0', StartOfRawData);
 
-  OutDosHeader = (PIMAGE_DOS_HEADER) OutHeader;
-  memcpy(OutDosHeader, InDosHeader, InDosHeader->e_lfanew + sizeof(ULONG));
+    OutDosHeader = (PIMAGE_DOS_HEADER) OutHeader;
+    memcpy(OutDosHeader, InDosHeader, InDosHeader->e_lfanew + sizeof(ULONG));
 
-  OutFileHeader = (PIMAGE_FILE_HEADER)((char *) OutHeader + OutDosHeader->e_lfanew + sizeof(ULONG));
-  memcpy(OutFileHeader, InFileHeader, sizeof(IMAGE_FILE_HEADER));
-  OutFileHeader->PointerToSymbolTable = 0;
-  OutFileHeader->NumberOfSymbols = 0;
-  OutFileHeader->Characteristics &= ~(IMAGE_FILE_LINE_NUMS_STRIPPED | IMAGE_FILE_LOCAL_SYMS_STRIPPED |
-                                      IMAGE_FILE_DEBUG_STRIPPED);
+    OutFileHeader = (PIMAGE_FILE_HEADER)((char *) OutHeader + OutDosHeader->e_lfanew + sizeof(ULONG));
+    memcpy(OutFileHeader, InFileHeader, sizeof(IMAGE_FILE_HEADER));
+    OutFileHeader->PointerToSymbolTable = 0;
+    OutFileHeader->NumberOfSymbols = 0;
+    OutFileHeader->Characteristics &= ~(IMAGE_FILE_LINE_NUMS_STRIPPED | IMAGE_FILE_LOCAL_SYMS_STRIPPED |
+                                        IMAGE_FILE_DEBUG_STRIPPED);
 
-  OutOptHeader = (PIMAGE_OPTIONAL_HEADER)(OutFileHeader + 1);
-  memcpy(OutOptHeader, InOptHeader, sizeof(IMAGE_OPTIONAL_HEADER));
-  OutOptHeader->CheckSum = 0;
+    OutOptHeader = (PIMAGE_OPTIONAL_HEADER)(OutFileHeader + 1);
+    memcpy(OutOptHeader, InOptHeader, sizeof(IMAGE_OPTIONAL_HEADER));
+    OutOptHeader->CheckSum = 0;
 
-  OutSectionHeaders = (PIMAGE_SECTION_HEADER)((char *) OutOptHeader + OutFileHeader->SizeOfOptionalHeader);
+    OutSectionHeaders = (PIMAGE_SECTION_HEADER)((char *) OutOptHeader + OutFileHeader->SizeOfOptionalHeader);
 
-  if (ProcessRelocations(&ProcessedRelocsLength, &ProcessedRelocs, InData, InOptHeader,
-                         InFileHeader->NumberOfSections, InSectionHeaders))
+    if (ProcessRelocations(&ProcessedRelocsLength,
+                           &ProcessedRelocs,
+                           InData,
+                           InOptHeader,
+                           InFileHeader->NumberOfSections,
+                           InSectionHeaders))
     {
-      return 1;
+        return 1;
     }
-  if (InOptHeader->NumberOfRvaAndSizes < IMAGE_DIRECTORY_ENTRY_BASERELOC
-      || 0 == InOptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress)
+    if (InOptHeader->NumberOfRvaAndSizes < IMAGE_DIRECTORY_ENTRY_BASERELOC ||
+        InOptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress == 0)
     {
-      InRelocSectionIndex = -1;
+        InRelocSectionIndex = -1;
     }
-  else
+    else
     {
-      InRelocSectionIndex = FindSectionForRVA(InOptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress,
-                                              InFileHeader->NumberOfSections, InSectionHeaders) - InSectionHeaders;
+        InRelocSectionIndex = FindSectionForRVA(InOptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress,
+                                                InFileHeader->NumberOfSections, InSectionHeaders) - InSectionHeaders;
     }
 
-  OutFileHeader->NumberOfSections = 0;
-  CurrentSectionHeader = OutSectionHeaders;
-  OutOptHeader->SizeOfImage = 0;
-  RosSymOffset = 0;
-  OutRelocSection = NULL;
-  for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
+    OutFileHeader->NumberOfSections = 0;
+    CurrentSectionHeader = OutSectionHeaders;
+    OutOptHeader->SizeOfImage = 0;
+    RosSymOffset = 0;
+    OutRelocSection = NULL;
+    for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
     {
-      if (0 != (strncmp((char *) InSectionHeaders[Section].Name, ".stab", 5)))
+        if ((strncmp((char *) InSectionHeaders[Section].Name, ".stab", 5)) != 0)
         {
-          *CurrentSectionHeader = InSectionHeaders[Section];
-          CurrentSectionHeader->PointerToLinenumbers = 0;
-          CurrentSectionHeader->NumberOfLinenumbers = 0;
-          if (OutOptHeader->SizeOfImage < CurrentSectionHeader->VirtualAddress +
-                                          CurrentSectionHeader->Misc.VirtualSize)
+            *CurrentSectionHeader = InSectionHeaders[Section];
+            CurrentSectionHeader->PointerToLinenumbers = 0;
+            CurrentSectionHeader->NumberOfLinenumbers = 0;
+            if (OutOptHeader->SizeOfImage < CurrentSectionHeader->VirtualAddress +
+                                            CurrentSectionHeader->Misc.VirtualSize)
             {
-              OutOptHeader->SizeOfImage = ROUND_UP(CurrentSectionHeader->VirtualAddress +
-                                                   CurrentSectionHeader->Misc.VirtualSize,
-                                                   OutOptHeader->SectionAlignment);
+                OutOptHeader->SizeOfImage = ROUND_UP(CurrentSectionHeader->VirtualAddress +
+                                                     CurrentSectionHeader->Misc.VirtualSize,
+                                                     OutOptHeader->SectionAlignment);
             }
-          if (RosSymOffset < CurrentSectionHeader->PointerToRawData + CurrentSectionHeader->SizeOfRawData)
+            if (RosSymOffset < CurrentSectionHeader->PointerToRawData + CurrentSectionHeader->SizeOfRawData)
             {
-              RosSymOffset = CurrentSectionHeader->PointerToRawData + CurrentSectionHeader->SizeOfRawData;
+                RosSymOffset = CurrentSectionHeader->PointerToRawData + CurrentSectionHeader->SizeOfRawData;
             }
-          if (Section == (ULONG)InRelocSectionIndex)
+            if (Section == (ULONG)InRelocSectionIndex)
             {
-              OutRelocSection = CurrentSectionHeader;
+                OutRelocSection = CurrentSectionHeader;
             }
-          (OutFileHeader->NumberOfSections) ++;
-          CurrentSectionHeader++;
+            (OutFileHeader->NumberOfSections)++;
+            CurrentSectionHeader++;
         }
     }
 
-  if (OutRelocSection == CurrentSectionHeader - 1)
+    if (OutRelocSection == CurrentSectionHeader - 1)
     {
-      OutOptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size = ProcessedRelocsLength;
-      if (OutOptHeader->SizeOfImage == OutRelocSection->VirtualAddress +
-                                       ROUND_UP(OutRelocSection->Misc.VirtualSize,
-                                                OutOptHeader->SectionAlignment))
+        OutOptHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size = ProcessedRelocsLength;
+        if (OutOptHeader->SizeOfImage == OutRelocSection->VirtualAddress +
+                                         ROUND_UP(OutRelocSection->Misc.VirtualSize,
+                                                  OutOptHeader->SectionAlignment))
         {
-          OutOptHeader->SizeOfImage = OutRelocSection->VirtualAddress +
-                                      ROUND_UP(ProcessedRelocsLength,
-                                               OutOptHeader->SectionAlignment);
+            OutOptHeader->SizeOfImage = OutRelocSection->VirtualAddress +
+                                        ROUND_UP(ProcessedRelocsLength,
+                                                 OutOptHeader->SectionAlignment);
         }
-      OutRelocSection->Misc.VirtualSize = ProcessedRelocsLength;
-      if (RosSymOffset == OutRelocSection->PointerToRawData
-                          + OutRelocSection->SizeOfRawData)
+        OutRelocSection->Misc.VirtualSize = ProcessedRelocsLength;
+        if (RosSymOffset == OutRelocSection->PointerToRawData +
+                            OutRelocSection->SizeOfRawData)
         {
-          RosSymOffset = OutRelocSection->PointerToRawData +
-                         ROUND_UP(ProcessedRelocsLength, OutOptHeader->FileAlignment);
+            RosSymOffset = OutRelocSection->PointerToRawData +
+                           ROUND_UP(ProcessedRelocsLength,
+                                    OutOptHeader->FileAlignment);
         }
-      OutRelocSection->SizeOfRawData = ROUND_UP(ProcessedRelocsLength,
-                                                OutOptHeader->FileAlignment);
+        OutRelocSection->SizeOfRawData = ROUND_UP(ProcessedRelocsLength,
+                                                  OutOptHeader->FileAlignment);
     }
 
-  if (RosSymLength > 0)
+    if (RosSymLength > 0)
     {
-      RosSymFileLength = ROUND_UP(RosSymLength, OutOptHeader->FileAlignment);
-      memcpy(CurrentSectionHeader->Name, ".rossym", 8); /* We're lucky: string is exactly 8 bytes long */
-      CurrentSectionHeader->Misc.VirtualSize = RosSymLength;
-      CurrentSectionHeader->VirtualAddress = OutOptHeader->SizeOfImage;
-      CurrentSectionHeader->SizeOfRawData = RosSymFileLength;
-      CurrentSectionHeader->PointerToRawData = RosSymOffset;
-      CurrentSectionHeader->PointerToRelocations = 0;
-      CurrentSectionHeader->PointerToLinenumbers = 0;
-      CurrentSectionHeader->NumberOfRelocations = 0;
-      CurrentSectionHeader->NumberOfLinenumbers = 0;
-      CurrentSectionHeader->Characteristics = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_DISCARDABLE
-                                              | IMAGE_SCN_LNK_REMOVE | IMAGE_SCN_TYPE_NOLOAD;
-      OutOptHeader->SizeOfImage = ROUND_UP(CurrentSectionHeader->VirtualAddress +
-                                           CurrentSectionHeader->Misc.VirtualSize,
-                                       OutOptHeader->SectionAlignment);
-      (OutFileHeader->NumberOfSections)++;
+        RosSymFileLength = ROUND_UP(RosSymLength, OutOptHeader->FileAlignment);
+        memcpy(CurrentSectionHeader->Name, ".rossym", 8); /* We're lucky: string is exactly 8 bytes long */
+        CurrentSectionHeader->Misc.VirtualSize = RosSymLength;
+        CurrentSectionHeader->VirtualAddress = OutOptHeader->SizeOfImage;
+        CurrentSectionHeader->SizeOfRawData = RosSymFileLength;
+        CurrentSectionHeader->PointerToRawData = RosSymOffset;
+        CurrentSectionHeader->PointerToRelocations = 0;
+        CurrentSectionHeader->PointerToLinenumbers = 0;
+        CurrentSectionHeader->NumberOfRelocations = 0;
+        CurrentSectionHeader->NumberOfLinenumbers = 0;
+        CurrentSectionHeader->Characteristics = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_DISCARDABLE
+                                                | IMAGE_SCN_LNK_REMOVE | IMAGE_SCN_TYPE_NOLOAD;
+        OutOptHeader->SizeOfImage = ROUND_UP(CurrentSectionHeader->VirtualAddress + CurrentSectionHeader->Misc.VirtualSize,
+                                             OutOptHeader->SectionAlignment);
+        (OutFileHeader->NumberOfSections)++;
 
-      PaddedRosSym = malloc(RosSymFileLength);
-      if (NULL == PaddedRosSym)
+        PaddedRosSym = malloc(RosSymFileLength);
+        if (PaddedRosSym == NULL)
         {
-          fprintf(stderr, "Failed to allocate %u bytes for padded .rossym\n", (unsigned int)RosSymFileLength);
-          return 1;
+            fprintf(stderr,
+                    "Failed to allocate %u bytes for padded .rossym\n",
+                    (unsigned int)RosSymFileLength);
+            return 1;
         }
-      memcpy(PaddedRosSym, RosSymSection, RosSymLength);
-      memset((char *) PaddedRosSym + RosSymLength, '\0', RosSymFileLength - RosSymLength);
+        memcpy(PaddedRosSym, RosSymSection, RosSymLength);
+        memset((char *) PaddedRosSym + RosSymLength,
+               '\0',
+               RosSymFileLength - RosSymLength);
     }
-  else
+    else
     {
-      PaddedRosSym = NULL;
+        PaddedRosSym = NULL;
     }
-  CheckSum = 0;
-  for (i = 0; i < StartOfRawData / 2; i++)
-   {
-      CheckSum += ((unsigned short*) OutHeader)[i];
-      CheckSum = 0xffff & (CheckSum + (CheckSum >> 16));
-   }
-  Length = StartOfRawData;
-  for (Section = 0; Section < OutFileHeader->NumberOfSections; Section++)
+    CheckSum = 0;
+    for (i = 0; i < StartOfRawData / 2; i++)
     {
-      DWORD SizeOfRawData;
-      if (OutRelocSection == OutSectionHeaders + Section)
-        {
-          Data = (void *) ProcessedRelocs;
-	  SizeOfRawData = ProcessedRelocsLength;
-        }
-      else if (RosSymLength > 0 && Section + 1 == OutFileHeader->NumberOfSections)
-        {
-          Data = (void *) PaddedRosSym;
-	  SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
-        }
-      else
-        {
-          Data = (void *) ((char *) InData + OutSectionHeaders[Section].PointerToRawData);
-	  SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
-        }
-      for (i = 0; i < SizeOfRawData / 2; i++)
-        {
-          CheckSum += ((unsigned short*) Data)[i];
-          CheckSum = 0xffff & (CheckSum + (CheckSum >> 16));
-        }
-      Length += OutSectionHeaders[Section].SizeOfRawData;
+        CheckSum += ((unsigned short*) OutHeader)[i];
+        CheckSum = 0xffff & (CheckSum + (CheckSum >> 16));
     }
-  CheckSum += Length;
-  OutOptHeader->CheckSum = CheckSum;
+    Length = StartOfRawData;
+    for (Section = 0; Section < OutFileHeader->NumberOfSections; Section++)
+    {
+        DWORD SizeOfRawData;
+        if (OutRelocSection == OutSectionHeaders + Section)
+        {
+            Data = (void *) ProcessedRelocs;
+            SizeOfRawData = ProcessedRelocsLength;
+        }
+        else if (RosSymLength > 0 && Section + 1 == OutFileHeader->NumberOfSections)
+        {
+            Data = (void *) PaddedRosSym;
+            SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
+        }
+        else
+        {
+            Data = (void *) ((char *) InData + OutSectionHeaders[Section].PointerToRawData);
+            SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
+        }
+        for (i = 0; i < SizeOfRawData / 2; i++)
+        {
+            CheckSum += ((unsigned short*) Data)[i];
+            CheckSum = 0xffff & (CheckSum + (CheckSum >> 16));
+        }
+        Length += OutSectionHeaders[Section].SizeOfRawData;
+    }
+    CheckSum += Length;
+    OutOptHeader->CheckSum = CheckSum;
 
-  if (fwrite(OutHeader, 1, StartOfRawData, OutFile) != StartOfRawData)
+    if (fwrite(OutHeader, 1, StartOfRawData, OutFile) != StartOfRawData)
     {
-      perror("Error writing output header\n");
-      free(OutHeader);
-      return 1;
+        perror("Error writing output header\n");
+        free(OutHeader);
+        return 1;
     }
 
-  for (Section = 0; Section < OutFileHeader->NumberOfSections; Section++)
+    for (Section = 0; Section < OutFileHeader->NumberOfSections; Section++)
     {
-      if (0 != OutSectionHeaders[Section].SizeOfRawData)
+        if (OutSectionHeaders[Section].SizeOfRawData != 0)
         {
-	  DWORD SizeOfRawData;
-          fseek(OutFile, OutSectionHeaders[Section].PointerToRawData, SEEK_SET);
-          if (OutRelocSection == OutSectionHeaders + Section)
+            DWORD SizeOfRawData;
+            fseek(OutFile, OutSectionHeaders[Section].PointerToRawData, SEEK_SET);
+            if (OutRelocSection == OutSectionHeaders + Section)
             {
-              Data = (void *) ProcessedRelocs;
-	      SizeOfRawData = ProcessedRelocsLength;
+                Data = (void *) ProcessedRelocs;
+                SizeOfRawData = ProcessedRelocsLength;
             }
-          else if (RosSymLength > 0 && Section + 1 == OutFileHeader->NumberOfSections)
+            else if (RosSymLength > 0 && Section + 1 == OutFileHeader->NumberOfSections)
             {
-              Data = (void *) PaddedRosSym;
-	      SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
+                Data = (void *) PaddedRosSym;
+                SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
             }
-          else
+            else
             {
-              Data = (void *) ((char *) InData + OutSectionHeaders[Section].PointerToRawData);
-	      SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
+                Data = (void *) ((char *) InData + OutSectionHeaders[Section].PointerToRawData);
+                SizeOfRawData = OutSectionHeaders[Section].SizeOfRawData;
             }
-          if (fwrite(Data, 1, SizeOfRawData, OutFile) != SizeOfRawData)
+            if (fwrite(Data, 1, SizeOfRawData, OutFile) != SizeOfRawData)
             {
-              perror("Error writing section data\n");
-              free(PaddedRosSym);
-              free(OutHeader);
-              return 1;
+                perror("Error writing section data\n");
+                free(PaddedRosSym);
+                free(OutHeader);
+                return 1;
             }
         }
-   }
-
-  if (PaddedRosSym)
-    {
-      free(PaddedRosSym);
     }
-  free(OutHeader);
 
-  return 0;
+    if (PaddedRosSym)
+    {
+        free(PaddedRosSym);
+    }
+    free(OutHeader);
+
+    return 0;
 }
 
 int main(int argc, char* argv[])
 {
-  PSYMBOLFILE_HEADER SymbolFileHeader;
-  PIMAGE_DOS_HEADER PEDosHeader;
-  PIMAGE_FILE_HEADER PEFileHeader;
-  PIMAGE_OPTIONAL_HEADER PEOptHeader;
-  PIMAGE_SECTION_HEADER PESectionHeaders;
-  ULONG ImageBase;
-  void *StabBase;
-  ULONG StabsLength;
-  void *StabStringBase;
-  ULONG StabStringsLength;
-  void *CoffBase = NULL;
-  ULONG CoffsLength;
-  void *CoffStringBase = NULL;
-  ULONG CoffStringsLength;
-  char* path1;
-  char* path2;
-  FILE* out;
-  void *StringBase;
-  ULONG StringsLength;
-  ULONG StabSymbolsCount;
-  PROSSYM_ENTRY StabSymbols;
-  ULONG CoffSymbolsCount;
-  PROSSYM_ENTRY CoffSymbols;
-  ULONG MergedSymbolsCount;
-  PROSSYM_ENTRY MergedSymbols;
-  size_t FileSize;
-  void *FileData;
-  ULONG RosSymLength;
-  void *RosSymSection;
-  char elfhdr[4] = { '\177', 'E', 'L', 'F' };
+    PSYMBOLFILE_HEADER SymbolFileHeader;
+    PIMAGE_DOS_HEADER PEDosHeader;
+    PIMAGE_FILE_HEADER PEFileHeader;
+    PIMAGE_OPTIONAL_HEADER PEOptHeader;
+    PIMAGE_SECTION_HEADER PESectionHeaders;
+    ULONG ImageBase;
+    void *StabBase;
+    ULONG StabsLength;
+    void *StabStringBase;
+    ULONG StabStringsLength;
+    void *CoffBase = NULL;
+    ULONG CoffsLength;
+    void *CoffStringBase = NULL;
+    ULONG CoffStringsLength;
+    char* path1;
+    char* path2;
+    FILE* out;
+    void *StringBase;
+    ULONG StringsLength;
+    ULONG StabSymbolsCount;
+    PROSSYM_ENTRY StabSymbols;
+    ULONG CoffSymbolsCount;
+    PROSSYM_ENTRY CoffSymbols;
+    ULONG MergedSymbolsCount;
+    PROSSYM_ENTRY MergedSymbols;
+    size_t FileSize;
+    void *FileData;
+    ULONG RosSymLength;
+    void *RosSymSection;
+    char elfhdr[4] = { '\177', 'E', 'L', 'F' };
 
-  if (3 != argc)
+    if (argc != 3)
     {
-      fprintf(stderr, "Usage: rsym <exefile> <symfile>\n");
-      exit(1);
+        fprintf(stderr, "Usage: rsym <exefile> <symfile>\n");
+        exit(1);
     }
 
-  path1 = convert_path(argv[1]);
-  path2 = convert_path(argv[2]);
+    path1 = convert_path(argv[1]);
+    path2 = convert_path(argv[2]);
 
-  FileData = load_file ( path1, &FileSize );
-  if ( !FileData )
-  {
-    fprintf ( stderr, "An error occured loading '%s'\n", path1 );
-    exit(1);
-  }
-
-  /* Check if MZ header exists  */
-  PEDosHeader = (PIMAGE_DOS_HEADER) FileData;
-  if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || PEDosHeader->e_lfanew == 0L)
+    FileData = load_file(path1, &FileSize);
+    if (!FileData)
     {
-      /* Ignore elf */
-      if (!memcmp(PEDosHeader, elfhdr, sizeof(elfhdr)))
-	exit(0);
-      perror("Input file is not a PE image.\n");
-      free(FileData);
-      exit(1);
+        fprintf(stderr, "An error occured loading '%s'\n", path1);
+        exit(1);
     }
 
-  /* Locate PE file header  */
-  /* sizeof(ULONG) = sizeof(MAGIC) */
-  PEFileHeader = (PIMAGE_FILE_HEADER)((char *) FileData + PEDosHeader->e_lfanew + sizeof(ULONG));
-
-  /* Locate optional header */
-  assert(sizeof(ULONG) == 4);
-  PEOptHeader = (PIMAGE_OPTIONAL_HEADER)(PEFileHeader + 1);
-  ImageBase = PEOptHeader->ImageBase;
-
-  /* Locate PE section headers  */
-  PESectionHeaders = (PIMAGE_SECTION_HEADER)((char *) PEOptHeader + PEFileHeader->SizeOfOptionalHeader);
-
-  if (GetStabInfo(FileData, PEFileHeader, PESectionHeaders, &StabsLength, &StabBase,
-                  &StabStringsLength, &StabStringBase))
+    /* Check if MZ header exists  */
+    PEDosHeader = (PIMAGE_DOS_HEADER) FileData;
+    if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
+        PEDosHeader->e_lfanew == 0L)
     {
-      free(FileData);
-      exit(1);
+        /* Ignore elf */
+        if (!memcmp(PEDosHeader, elfhdr, sizeof(elfhdr)))
+            exit(0);
+        perror("Input file is not a PE image.\n");
+        free(FileData);
+        exit(1);
     }
 
-  if (GetCoffInfo(FileData, PEFileHeader, PESectionHeaders, &CoffsLength, &CoffBase,
-                  &CoffStringsLength, &CoffStringBase))
+    /* Locate PE file header  */
+    /* sizeof(ULONG) = sizeof(MAGIC) */
+    PEFileHeader = (PIMAGE_FILE_HEADER)((char *) FileData + PEDosHeader->e_lfanew + sizeof(ULONG));
+
+    /* Locate optional header */
+    assert(sizeof(ULONG) == 4);
+    PEOptHeader = (PIMAGE_OPTIONAL_HEADER)(PEFileHeader + 1);
+    ImageBase = PEOptHeader->ImageBase;
+
+    /* Locate PE section headers  */
+    PESectionHeaders = (PIMAGE_SECTION_HEADER)((char *) PEOptHeader + PEFileHeader->SizeOfOptionalHeader);
+
+    if (GetStabInfo(FileData,
+                    PEFileHeader,
+                    PESectionHeaders,
+                    &StabsLength,
+                    &StabBase,
+                    &StabStringsLength,
+                    &StabStringBase))
     {
-      free(FileData);
-      exit(1);
+        free(FileData);
+        exit(1);
     }
 
-  StringBase = malloc(1 + StabStringsLength + CoffStringsLength +
-                      (CoffsLength / sizeof(ROSSYM_ENTRY)) * (E_SYMNMLEN + 1));
-  if (NULL == StringBase)
+    if (GetCoffInfo(FileData,
+                    PEFileHeader,
+                    PESectionHeaders,
+                    &CoffsLength,
+                    &CoffBase,
+                    &CoffStringsLength,
+                    &CoffStringBase))
     {
-      free(FileData);
-      fprintf(stderr, "Failed to allocate memory for strings table\n");
-      exit(1);
-    }
-  /* Make offset 0 into an empty string */
-  *((char *) StringBase) = '\0';
-  StringsLength = 1;
-
-  if (ConvertStabs(&StabSymbolsCount, &StabSymbols, &StringsLength, StringBase,
-                   StabsLength, StabBase, StabStringsLength, StabStringBase,
-                   ImageBase, PEFileHeader, PESectionHeaders))
-    {
-      free(StringBase);
-      free(FileData);
-      fprintf(stderr, "Failed to allocate memory for strings table\n");
-      exit(1);
+        free(FileData);
+        exit(1);
     }
 
-  if (ConvertCoffs(&CoffSymbolsCount, &CoffSymbols, &StringsLength, StringBase,
-                   CoffsLength, CoffBase, CoffStringsLength, CoffStringBase,
-                   ImageBase, PEFileHeader, PESectionHeaders))
+    StringBase = malloc(1 + StabStringsLength + CoffStringsLength +
+                        (CoffsLength / sizeof(ROSSYM_ENTRY)) * (E_SYMNMLEN + 1));
+    if (StringBase == NULL)
     {
-      if (StabSymbols)
+        free(FileData);
+        fprintf(stderr, "Failed to allocate memory for strings table\n");
+        exit(1);
+    }
+    /* Make offset 0 into an empty string */
+    *((char *) StringBase) = '\0';
+    StringsLength = 1;
+
+    if (ConvertStabs(&StabSymbolsCount,
+                     &StabSymbols,
+                     &StringsLength,
+                     StringBase,
+                     StabsLength,
+                     StabBase,
+                     StabStringsLength,
+                     StabStringBase,
+                     ImageBase,
+                     PEFileHeader,
+                     PESectionHeaders))
+    {
+        free(StringBase);
+        free(FileData);
+        fprintf(stderr, "Failed to allocate memory for strings table\n");
+        exit(1);
+    }
+
+    if (ConvertCoffs(&CoffSymbolsCount,
+                     &CoffSymbols,
+                     &StringsLength,
+                     StringBase,
+                     CoffsLength,
+                     CoffBase,
+                     CoffStringsLength,
+                     CoffStringBase,
+                     ImageBase,
+                     PEFileHeader,
+                     PESectionHeaders))
+    {
+        if (StabSymbols)
         {
-          free(StabSymbols);
+            free(StabSymbols);
         }
-      free(StringBase);
-      free(FileData);
-      exit(1);
+        free(StringBase);
+        free(FileData);
+        exit(1);
     }
 
-  if (MergeStabsAndCoffs(&MergedSymbolsCount, &MergedSymbols,
-                         StabSymbolsCount, StabSymbols,
-                         CoffSymbolsCount, CoffSymbols))
+    if (MergeStabsAndCoffs(&MergedSymbolsCount,
+                           &MergedSymbols,
+                           StabSymbolsCount,
+                           StabSymbols,
+                           CoffSymbolsCount,
+                           CoffSymbols))
     {
-      if (CoffSymbols)
+        if (CoffSymbols)
         {
-         free(CoffSymbols);
+            free(CoffSymbols);
         }
-      if (StabSymbols)
+        if (StabSymbols)
         {
-          free(StabSymbols);
+            free(StabSymbols);
         }
-      free(StringBase);
-      free(FileData);
-      exit(1);
+        free(StringBase);
+        free(FileData);
+        exit(1);
     }
 
-  if (CoffSymbols)
+    if (CoffSymbols)
     {
-      free(CoffSymbols);
+        free(CoffSymbols);
     }
-  if (StabSymbols)
+    if (StabSymbols)
     {
-      free(StabSymbols);
+        free(StabSymbols);
     }
-  if (MergedSymbolsCount == 0)
+    if (MergedSymbolsCount == 0)
     {
-      RosSymLength = 0;
-      RosSymSection = NULL;
+        RosSymLength = 0;
+        RosSymSection = NULL;
     }
-  else
+    else
     {
-      RosSymLength = sizeof(SYMBOLFILE_HEADER) + MergedSymbolsCount * sizeof(ROSSYM_ENTRY)
-                            + StringsLength;
-      RosSymSection = malloc(RosSymLength);
-      if (NULL == RosSymSection)
+        RosSymLength = sizeof(SYMBOLFILE_HEADER) +
+                       MergedSymbolsCount * sizeof(ROSSYM_ENTRY) +
+                       StringsLength;
+
+        RosSymSection = malloc(RosSymLength);
+        if (RosSymSection == NULL)
         {
-          free(MergedSymbols);
-          free(StringBase);
-          free(FileData);
-          fprintf(stderr, "Unable to allocate memory for .rossym section\n");
-          exit(1);
+            free(MergedSymbols);
+            free(StringBase);
+            free(FileData);
+            fprintf(stderr, "Unable to allocate memory for .rossym section\n");
+            exit(1);
         }
-      memset(RosSymSection, '\0', RosSymLength);
+        memset(RosSymSection, '\0', RosSymLength);
 
-      SymbolFileHeader = (PSYMBOLFILE_HEADER) RosSymSection;
-      SymbolFileHeader->SymbolsOffset = sizeof(SYMBOLFILE_HEADER);
-      SymbolFileHeader->SymbolsLength = MergedSymbolsCount * sizeof(ROSSYM_ENTRY);
-      SymbolFileHeader->StringsOffset = SymbolFileHeader->SymbolsOffset + SymbolFileHeader->SymbolsLength;
-      SymbolFileHeader->StringsLength = StringsLength;
+        SymbolFileHeader = (PSYMBOLFILE_HEADER)RosSymSection;
+        SymbolFileHeader->SymbolsOffset = sizeof(SYMBOLFILE_HEADER);
+        SymbolFileHeader->SymbolsLength = MergedSymbolsCount * sizeof(ROSSYM_ENTRY);
+        SymbolFileHeader->StringsOffset = SymbolFileHeader->SymbolsOffset +
+                                          SymbolFileHeader->SymbolsLength;
+        SymbolFileHeader->StringsLength = StringsLength;
 
-      memcpy((char *) RosSymSection + SymbolFileHeader->SymbolsOffset, MergedSymbols,
-             SymbolFileHeader->SymbolsLength);
-      memcpy((char *) RosSymSection + SymbolFileHeader->StringsOffset, StringBase,
-             SymbolFileHeader->StringsLength);
+        memcpy((char *) RosSymSection + SymbolFileHeader->SymbolsOffset,
+               MergedSymbols,
+               SymbolFileHeader->SymbolsLength);
 
-      free(MergedSymbols);
-    }
-  free(StringBase);
-  out = fopen(path2, "wb");
-  if (out == NULL)
-    {
-      perror("Cannot open output file");
-      free(RosSymSection);
-      free(FileData);
-      exit(1);
+        memcpy((char *) RosSymSection + SymbolFileHeader->StringsOffset,
+               StringBase,
+               SymbolFileHeader->StringsLength);
+
+        free(MergedSymbols);
     }
 
-  if (CreateOutputFile(out, FileData, PEDosHeader, PEFileHeader, PEOptHeader,
-                       PESectionHeaders, RosSymLength, RosSymSection))
+    free(StringBase);
+    out = fopen(path2, "wb");
+    if (out == NULL)
     {
-      fclose(out);
-      if (RosSymSection)
+        perror("Cannot open output file");
+        free(RosSymSection);
+        free(FileData);
+        exit(1);
+    }
+
+    if (CreateOutputFile(out,
+                         FileData,
+                         PEDosHeader,
+                         PEFileHeader,
+                         PEOptHeader,
+                         PESectionHeaders,
+                         RosSymLength,
+                         RosSymSection))
+    {
+        fclose(out);
+        if (RosSymSection)
         {
-          free(RosSymSection);
+            free(RosSymSection);
         }
-      free(FileData);
-      exit(1);
+        free(FileData);
+        exit(1);
     }
 
-  fclose(out);
-  if (RosSymSection)
+    fclose(out);
+    if (RosSymSection)
     {
-      free(RosSymSection);
+        free(RosSymSection);
     }
-  free(FileData);
+    free(FileData);
 
-  return 0;
+    return 0;
 }
 
 /* EOF */
