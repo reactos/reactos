@@ -16,6 +16,12 @@
 #include "pic.h"
 #include "ps2.h"
 
+/*
+ * Activate this line if you want to be able to test NTVDM with:
+ * ntvdm.exe <program>
+ */
+// #define TESTING
+
 /* PUBLIC VARIABLES ***********************************************************/
 
 BOOLEAN VdmRunning = TRUE;
@@ -84,7 +90,16 @@ INT wmain(INT argc, WCHAR *argv[])
     /* The DOS command line must be ASCII */
     WideCharToMultiByte(CP_ACP, 0, GetCommandLine(), -1, CommandLine, 128, NULL, NULL);
 #else
-    WideCharToMultiByte(CP_ACP, 0, argv[1], -1, CommandLine, 128, NULL, NULL);
+    if (argc == 2 && argv[1] != NULL)
+    {
+        WideCharToMultiByte(CP_ACP, 0, argv[1], -1, CommandLine, 128, NULL, NULL);
+    }
+    else
+    {
+        wprintf(L"\nReactOS Virtual DOS Machine\n\n"
+                L"Usage: NTVDM <executable>\n");
+        return 0;
+    }
 #endif
 
     if (!EmulatorInitialize())
