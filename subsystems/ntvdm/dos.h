@@ -19,7 +19,7 @@
 #define DOS_CONFIG_PATH L"%SystemRoot%\\system32\\CONFIG.NT"
 #define DOS_COMMAND_INTERPRETER L"%SystemRoot%\\system32\\COMMAND.COM /k %SystemRoot%\\system32\\AUTOEXEC.NT"
 #define FIRST_MCB_SEGMENT 0x1000
-#define USER_MEMORY_SIZE 0x8FFF
+#define USER_MEMORY_SIZE 0x8FFE
 #define SYSTEM_PSP 0x08
 #define SYSTEM_ENV_BLOCK 0x800
 #define INVALID_DOS_HANDLE 0xFFFF
@@ -103,12 +103,12 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment);
 BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock);
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
-CHAR DosReadCharacter();
+CHAR DosReadCharacter(VOID);
 VOID DosPrintCharacter(CHAR Character);
 VOID DosInt20h(WORD CodeSegment);
 VOID DosInt21h(WORD CodeSegment);
-VOID DosBreakInterrupt();
-BOOLEAN DosInitialize();
+VOID DosBreakInterrupt(VOID);
+BOOLEAN DosInitialize(VOID);
 
 #endif
 

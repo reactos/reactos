@@ -398,7 +398,7 @@ BOOLEAN DosFreeMemory(WORD BlockData)
     return TRUE;
 }
 
-BOOLEAN DosLinkUmb()
+BOOLEAN DosLinkUmb(VOID)
 {
     DWORD Segment = FIRST_MCB_SEGMENT;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
@@ -423,7 +423,7 @@ BOOLEAN DosLinkUmb()
     return TRUE;
 }
 
-BOOLEAN DosUnlinkUmb()
+BOOLEAN DosUnlinkUmb(VOID)
 {
     DWORD Segment = FIRST_MCB_SEGMENT;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
@@ -895,6 +895,7 @@ Cleanup:
 
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
 {
+    WORD i;
     WORD McbSegment = FIRST_MCB_SEGMENT;
     PDOS_MCB CurrentMcb;
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
@@ -903,7 +904,11 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
     /* Check if this PSP is it's own parent */
     if (PspBlock->ParentPsp == Psp) goto Done;
 
-    // TODO: Close all handles opened by the process
+    for (i = 0; i < PspBlock->HandleTableSize; i++)
+    {
+        /* Close the handle */
+        DosCloseHandle(i);
+    }
 
     /* Free the memory used by the process */
     while (TRUE)
@@ -942,7 +947,7 @@ Done:
                     LOWORD(PspBlock->TerminateAddress));
 }
 
-CHAR DosReadCharacter()
+CHAR DosReadCharacter(VOID)
 {
     CHAR Character = '\0';
     WORD BytesRead;
@@ -1539,12 +1544,12 @@ VOID DosInt21h(WORD CodeSegment)
     }
 }
 
-VOID DosBreakInterrupt()
+VOID DosBreakInterrupt(VOID)
 {
     VdmRunning = FALSE;
 }
 
-BOOLEAN DosInitialize()
+BOOLEAN DosInitialize(VOID)
 {
     BYTE i;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT);
