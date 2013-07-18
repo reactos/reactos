@@ -25,7 +25,10 @@
 #include <assert.h>
 
 #include "dbghelp_private.h"
+
+#ifndef DBGHELP_STATIC_LIB
 #include <wine/debug.h>
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 

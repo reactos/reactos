@@ -29,10 +29,13 @@
 #include <stdarg.h>
 #include <assert.h>
 
+#ifndef DBGHELP_STATIC_LIB
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
 #include "wine/debug.h"
+#endif
+
 #include "dbghelp_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);

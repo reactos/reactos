@@ -26,18 +26,25 @@
 #define COM_NO_WINDOWS_H
 
 #include <stdarg.h>
+
+#ifndef DBGHELP_STATIC_LIB
 #include <windef.h>
 #include <winbase.h>
 #include <winver.h>
 #include <dbghelp.h>
 #include <objbase.h>
+#include <cvconst.h>
+#include <wine/unicode.h>
+#else
+#include <string.h>
+#include "compat.h"
+#endif
+
 //#include "oaidl.h"
 //#include "winnls.h"
 #include <wine/list.h>
-#include <wine/unicode.h>
 #include <wine/rbtree.h>
 
-#include <cvconst.h>
 
 /* #define USE_STATS */
 
@@ -675,7 +682,9 @@ extern BOOL         dwarf2_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR 
                                           CONTEXT* context, ULONG_PTR* cfa) DECLSPEC_HIDDEN;
 
 /* stack.c */
+#ifndef DBGHELP_STATIC_LIB
 extern BOOL         sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz) DECLSPEC_HIDDEN;
+#endif
 extern DWORD64      sw_xlat_addr(struct cpu_stack_walk* csw, ADDRESS64* addr) DECLSPEC_HIDDEN;
 extern void*        sw_table_access(struct cpu_stack_walk* csw, DWORD64 addr) DECLSPEC_HIDDEN;
 extern DWORD64      sw_module_base(struct cpu_stack_walk* csw, DWORD64 addr) DECLSPEC_HIDDEN;

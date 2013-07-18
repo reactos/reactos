@@ -1,34 +1,123 @@
-Index: stabs.c
-===================================================================
---- stabs.c	(revision 35085)
-+++ stabs.c	(working copy)
-@@ -64,6 +64,8 @@
-
- WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
-
-+#define strtoull _strtoui64
+diff -prudN e:\Wine\dlls\dbghelp/cpu_i386.c e:\reactos-dwarf\dll\win32\dbghelp/cpu_i386.c
+--- e:\Wine\dlls\dbghelp/cpu_i386.c	2012-12-09 09:57:02.223180200 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/cpu_i386.c	2013-07-14 16:01:45.804981700 +0100
+@@ -20,12 +20,17 @@
+ 
+ #include <assert.h>
+ 
++#ifndef DBGHELP_STATIC_LIB
+ #include "ntstatus.h"
+-#define WIN32_NO_STATUS
++#endif
 +
- /* Masks for n_type field */
- #ifndef N_STAB
- #define N_STAB		0xe0
-Index: cpu_sparc.c
-===================================================================
---- cpu_sparc.c	(revision 35085)
-+++ cpu_sparc.c	(working copy)
-@@ -29,6 +29,8 @@
-
+ #include "dbghelp_private.h"
++
++#ifndef DBGHELP_STATIC_LIB
+ #include "wine/winbase16.h"
+ #include "winternl.h"
+ #include "wine/debug.h"
++#endif
+ 
  WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
-
-+#define IMAGE_FILE_MACHINE_SPARC   0x2000
+ 
+@@ -34,7 +39,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+ 
+ #define IS_VM86_MODE(ctx) (ctx->EFlags & V86_FLAG)
+ 
+-#ifdef __i386__
 +
- static unsigned sparc_get_addr(HANDLE hThread, const CONTEXT* ctx,
-                              enum cpu_addr ca, ADDRESS64* addr)
++#if defined(__i386__) && !defined(DBGHELP_STATIC_LIB)
+ static ADDRESS_MODE get_selector_type(HANDLE hThread, const CONTEXT* ctx, WORD sel)
  {
-Index: cpu_x86_64.c
-===================================================================
---- cpu_x86_64.c	(Revision 56237)
-+++ cpu_x86_64.c	(Arbeitskopie)
-@@ -281,10 +281,10 @@
+     LDT_ENTRY	le;
+@@ -73,6 +79,7 @@ static unsigned i386_build_addr(HANDLE h
+ }
+ #endif
+ 
++#ifndef DBGHELP_STATIC_LIB
+ static unsigned i386_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                               enum cpu_addr ca, ADDRESS64* addr)
+ {
+@@ -86,8 +93,9 @@ static unsigned i386_get_addr(HANDLE hTh
+ #endif
+     return FALSE;
+ }
++#endif /* DBGHELP_STATIC_LIB */
+ 
+-#ifdef __i386__
++#if defined(__i386__) && !defined(DBGHELP_STATIC_LIB)
+ /* fetch_next_frame32()
+  *
+  * modify (at least) context.{eip, esp, ebp} using unwind information
+@@ -110,7 +118,9 @@ static BOOL fetch_next_frame32(struct cp
+     cpair[2].name = "$eip";      cpair[2].pvalue = &context->Eip;
+     cpair[3].name = NULL;        cpair[3].pvalue = NULL;
+ 
++#ifndef DBGHELP_STATIC_LIB
+     if (!pdb_virtual_unwind(csw, curr_pc, context, cpair))
++#endif
+     {
+         /* do a simple unwind using ebp
+          * we assume a "regular" prologue in the function has been used
+@@ -148,6 +158,7 @@ enum st_mode {stm_start, stm_32bit, stm_
+ #define set_curr_mode(m) {frame->Reserved[__CurrentModeCount] &= ~0x0F; frame->Reserved[__CurrentModeCount] |= (m & 0x0F);}
+ #define inc_curr_count() (frame->Reserved[__CurrentModeCount] += 0x10)
+ 
++#ifndef DBGHELP_STATIC_LIB
+ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
+ {
+     STACK32FRAME        frame32;
+@@ -513,6 +524,7 @@ done_err:
+     set_curr_mode(stm_done);
+     return FALSE;
+ }
++#endif /* DBGHELP_STATIC_LIB */
+ 
+ static unsigned i386_map_dwarf_register(unsigned regno)
+ {
+@@ -662,6 +674,7 @@ static const char* i386_fetch_regname(un
+     return NULL;
+ }
+ 
++#ifndef DBGHELP_STATIC_LIB
+ static BOOL i386_fetch_minidump_thread(struct dump_context* dc, unsigned index, unsigned flags, const CONTEXT* ctx)
+ {
+     if (ctx->ContextFlags && (flags & ThreadWriteInstructionWindow))
+@@ -675,6 +688,7 @@ static BOOL i386_fetch_minidump_thread(s
+ 
+     return TRUE;
+ }
++#endif
+ 
+ static BOOL i386_fetch_minidump_module(struct dump_context* dc, unsigned index, unsigned flags)
+ {
+@@ -688,12 +702,22 @@ DECLSPEC_HIDDEN struct cpu cpu_i386 = {
+     IMAGE_FILE_MACHINE_I386,
+     4,
+     CV_REG_EBP,
++#ifndef DBGHELP_STATIC_LIB
+     i386_get_addr,
+     i386_stack_walk,
++#else
++    NULL,
++    NULL,
++#endif
+     NULL,
+     i386_map_dwarf_register,
+     i386_fetch_context_reg,
+     i386_fetch_regname,
++#ifndef DBGHELP_STATIC_LIB
+     i386_fetch_minidump_thread,
+     i386_fetch_minidump_module,
++#else
++    NULL,
++    NULL,
++#endif
+ };
+diff -prudN e:\Wine\dlls\dbghelp/cpu_x86_64.c e:\reactos-dwarf\dll\win32\dbghelp/cpu_x86_64.c
+--- e:\Wine\dlls\dbghelp/cpu_x86_64.c	2012-04-02 20:39:57.749333300 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/cpu_x86_64.c	2013-07-14 16:01:02.487336800 +0100
+@@ -302,10 +302,10 @@ static BOOL is_inside_epilog(struct cpu_
      if ((op0 & 0xf8) == 0x48)
      {
          if (!sw_read_mem(csw, pc + 1, &op1, 1)) return FALSE;
@@ -40,3 +129,622 @@ Index: cpu_x86_64.c
              if (op0 == 0x48 && op2 == 0xc4)
              {
                  pc += 7;
+@@ -313,7 +313,6 @@ static BOOL is_inside_epilog(struct cpu_
+             }
+             return FALSE;
+         case 0x83: /* add $n,%rsp */
+-            if (!sw_read_mem(csw, pc + 2, &op2, 1)) return FALSE;
+             if (op0 == 0x48 && op2 == 0xc4)
+             {
+                 pc += 4;
+@@ -321,7 +320,6 @@ static BOOL is_inside_epilog(struct cpu_
+             }
+             return FALSE;
+         case 0x8d: /* lea n(reg),%rsp */
+-            if (!sw_read_mem(csw, pc + 2, &op2, 1)) return FALSE;
+             if (op0 & 0x06) return FALSE;  /* rex.RX must be cleared */
+             if (((op2 >> 3) & 7) != 4) return FALSE;  /* dest reg mus be %rsp */
+             if ((op2 & 7) == 4) return FALSE;  /* no SIB byte allowed */
+diff -prudN e:\Wine\dlls\dbghelp/dbghelp.c e:\reactos-dwarf\dll\win32\dbghelp/dbghelp.c
+--- e:\Wine\dlls\dbghelp/dbghelp.c	2013-03-16 11:54:52.395468000 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/dbghelp.c	2013-07-17 21:37:35.292366600 +0100
+@@ -21,11 +21,14 @@
+ #include "config.h"
+ 
+ #include "dbghelp_private.h"
++#include "wdbgexts.h"
++
++#ifndef DBGHELP_STATIC_LIB
+ #include "winerror.h"
+ #include "psapi.h"
+ #include "wine/debug.h"
+-#include "wdbgexts.h"
+ #include "winnls.h"
++#endif
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+ 
+@@ -133,6 +136,7 @@ void* fetch_buffer(struct process* pcs, 
+     return pcs->buffer;
+ }
+ 
++#ifndef DBGHELP_STATIC_LIB
+ const char* wine_dbgstr_addr(const ADDRESS64* addr)
+ {
+     if (!addr) return "(null)";
+@@ -150,12 +154,18 @@ const char* wine_dbgstr_addr(const ADDRE
+         return "unknown";
+     }
+ }
++#endif
+ 
+ extern struct cpu       cpu_i386, cpu_x86_64, cpu_ppc, cpu_arm, cpu_arm64;
+ 
++#ifndef DBGHELP_STATIC_LIB
+ static struct cpu*      dbghelp_cpus[] = {&cpu_i386, &cpu_x86_64, &cpu_ppc, &cpu_arm, &cpu_arm64, NULL};
++#else
++static struct cpu*      dbghelp_cpus[] = {&cpu_i386, NULL};
++#endif
++
+ struct cpu*             dbghelp_current_cpu =
+-#if defined(__i386__)
++#if defined(__i386__) || defined(DBGHELP_STATIC_LIB)
+     &cpu_i386
+ #elif defined(__x86_64__)
+     &cpu_x86_64
+@@ -280,8 +290,10 @@ static BOOL check_live_target(struct pro
+ {
+     if (!GetProcessId(pcs->handle)) return FALSE;
+     if (GetEnvironmentVariableA("DBGHELP_NOLIVE", NULL, 0)) return FALSE;
++#ifndef DBGHELP_STATIC_LIB
+     if (!elf_read_wine_loader_dbg_info(pcs))
+         macho_read_wine_loader_dbg_info(pcs);
++#endif
+     return TRUE;
+ }
+ 
+@@ -370,7 +382,8 @@ BOOL WINAPI SymInitializeW(HANDLE hProce
+     pcs->dbg_hdr_addr = 0;
+     pcs->next = process_first;
+     process_first = pcs;
+-    
++
++#ifndef DBGHELP_STATIC_LIB
+     if (check_live_target(pcs))
+     {
+         if (fInvadeProcess)
+@@ -384,6 +397,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProce
+         SetLastError(ERROR_INVALID_PARAMETER);
+         return FALSE;
+     }
++#endif
+ 
+     return TRUE;
+ }
+
+diff -prudN e:\Wine\dlls\dbghelp/dbghelp_private.h e:\reactos-dwarf\dll\win32\dbghelp/dbghelp_private.h
+--- e:\Wine\dlls\dbghelp/dbghelp_private.h	2012-04-02 20:39:57.749333300 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/dbghelp_private.h	2013-07-14 16:01:46.453826200 +0100
+@@ -21,19 +21,30 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
++#define WIN32_NO_STATUS
++#define _INC_WINDOWS
++#define COM_NO_WINDOWS_H
++
+ #include <stdarg.h>
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winver.h"
+-#include "dbghelp.h"
+-#include "objbase.h"
+-#include "oaidl.h"
+-#include "winnls.h"
+-#include "wine/list.h"
+-#include "wine/unicode.h"
+-#include "wine/rbtree.h"
+ 
+-#include "cvconst.h"
++#ifndef DBGHELP_STATIC_LIB
++#include <windef.h>
++#include <winbase.h>
++#include <winver.h>
++#include <dbghelp.h>
++#include <objbase.h>
++#include <cvconst.h>
++#include <wine/unicode.h>
++#else
++#include <string.h>
++#include "compat.h"
++#endif
++
++//#include "oaidl.h"
++//#include "winnls.h"
++#include <wine/list.h>
++#include <wine/rbtree.h>
++
+ 
+ /* #define USE_STATS */
+ 
+@@ -671,7 +682,9 @@ extern BOOL         dwarf2_virtual_unwin
+                                           CONTEXT* context, ULONG_PTR* cfa) DECLSPEC_HIDDEN;
+ 
+ /* stack.c */
++#ifndef DBGHELP_STATIC_LIB
+ extern BOOL         sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz) DECLSPEC_HIDDEN;
++#endif
+ extern DWORD64      sw_xlat_addr(struct cpu_stack_walk* csw, ADDRESS64* addr) DECLSPEC_HIDDEN;
+ extern void*        sw_table_access(struct cpu_stack_walk* csw, DWORD64 addr) DECLSPEC_HIDDEN;
+ extern DWORD64      sw_module_base(struct cpu_stack_walk* csw, DWORD64 addr) DECLSPEC_HIDDEN;
+
+diff -prudN e:\Wine\dlls\dbghelp/dwarf.c e:\reactos-dwarf\dll\win32\dbghelp/dwarf.c
+--- e:\Wine\dlls\dbghelp/dwarf.c	2013-03-02 14:17:59.439371000 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/dwarf.c	2013-07-14 16:01:46.490851000 +0100
+@@ -22,23 +22,23 @@
+ 
+ #define NONAMELESSUNION
+ 
+-#include "config.h"
++#include <config.h>
+ 
+-#include <sys/types.h>
+-#include <fcntl.h>
++//#include <sys/types.h>
++//#include <fcntl.h>
+ #ifdef HAVE_SYS_STAT_H
+ # include <sys/stat.h>
+ #endif
+ #ifdef HAVE_SYS_MMAN_H
+ #include <sys/mman.h>
+ #endif
+-#include <limits.h>
+-#include <stdlib.h>
+-#include <string.h>
++//#include <limits.h>
++//#include <stdlib.h>
++//#include <string.h>
+ #ifdef HAVE_UNISTD_H
+ # include <unistd.h>
+ #endif
+-#include <stdio.h>
++//#include <stdio.h>
+ #include <assert.h>
+ #include <stdarg.h>
+ 
+@@ -46,18 +46,20 @@
+ #include <zlib.h>
+ #endif
+ 
+-#include "windef.h"
+-#include "winternl.h"
+-#include "winbase.h"
+-#include "winuser.h"
+-#include "ole2.h"
+-#include "oleauto.h"
++//#include "windef.h"
++//#include "winbase.h"
++//#include "winuser.h"
++//#include "ole2.h"
++//#include "oleauto.h"
++
++#ifndef DBGHELP_STATIC_LIB
++#include <winternl.h>
++#include <wine/debug.h>
++#endif
+ 
+ #include "dbghelp_private.h"
+ #include "image_private.h"
+ 
+-#include "wine/debug.h"
+-
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_dwarf);
+ 
+ /* FIXME:
+@@ -1888,8 +1890,10 @@ static struct symt* dwarf2_parse_subprog
+      * (not the case for stabs), we just drop Wine's thunks here...
+      * Actual thunks will be created in elf_module from the symbol table
+      */
++#ifndef DBGHELP_STATIC_LIB
+     if (elf_is_in_thunk_area(ctx->load_offset + low_pc, ctx->thunks) >= 0)
+         return NULL;
++#endif
+     if (!(ret_type = dwarf2_lookup_type(ctx, di)))
+     {
+         ret_type = ctx->symt_cache[sc_void];
+diff -prudN e:\Wine\dlls\dbghelp/dwarf.h e:\reactos-dwarf\dll\win32\dbghelp/dwarf.h
+--- e:\Wine\dlls\dbghelp/dwarf.h	2011-09-16 23:22:36.194780200 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/dwarf.h	2013-07-14 16:01:46.862099400 +0100
+@@ -554,3 +554,15 @@ enum dwarf_call_frame_info
+ #define DW_INL_inlined                  0x01
+ #define DW_INL_declared_not_inlined     0x02
+ #define DW_INL_declared_inlined         0x03
++
++#ifdef DBGHELP_STATIC_LIB
++/* from stack.c */
++static BOOL sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz)
++{
++    DWORD bytes_read = 0;
++    if (csw->is32)
++        return csw->u.s32.f_read_mem(csw->hProcess, addr, ptr, sz, &bytes_read);
++    else
++        return csw->u.s64.f_read_mem(csw->hProcess, addr, ptr, sz, &bytes_read);
++}
++#endif
+ 
+diff -prudN e:\Wine\dlls\dbghelp/image_private.h e:\reactos-dwarf\dll\win32\dbghelp/image_private.h
+--- e:\Wine\dlls\dbghelp/image_private.h	2012-04-02 20:39:57.752333500 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/image_private.h	2013-07-14 16:01:46.946185400 +0100
+@@ -45,7 +45,7 @@
+ 
+ #define IMAGE_NO_MAP  ((void*)-1)
+ 
+-#ifdef __ELF__
++#if defined(__ELF__) && !defined(DBGHELP_STATIC_LIB)
+ 
+ #ifdef _WIN64
+ #define         Elf_Ehdr        Elf64_Ehdr
+@@ -85,7 +85,7 @@ struct image_file_map
+             const char*	                shstrtab;
+             struct image_file_map*      alternate;      /* another ELF file (linked to this one) */
+             char*                       target_copy;
+-#ifdef __ELF__
++#if defined(__ELF__) && !defined(DBGHELP_STATIC_LIB)
+             Elf_Ehdr                    elfhdr;
+             struct
+             {
+@@ -135,7 +135,9 @@ static inline BOOL image_find_section(st
+ {
+     switch (fmap->modtype)
+     {
++#ifndef DBGHELP_STATIC_LIB
+     case DMT_ELF: return elf_find_section(fmap, name, SHT_NULL, ism);
++#endif
+     case DMT_PE:  return pe_find_section(fmap, name, ism);
+     default: assert(0); return FALSE;
+     }
+@@ -146,7 +148,9 @@ static inline const char* image_map_sect
+     if (!ism->fmap) return NULL;
+     switch (ism->fmap->modtype)
+     {
++#ifndef DBGHELP_STATIC_LIB
+     case DMT_ELF: return elf_map_section(ism);
++#endif
+     case DMT_PE:  return pe_map_section(ism);
+     default: assert(0); return NULL;
+     }
+@@ -157,7 +161,9 @@ static inline void image_unmap_section(s
+     if (!ism->fmap) return;
+     switch (ism->fmap->modtype)
+     {
++#ifndef DBGHELP_STATIC_LIB
+     case DMT_ELF: elf_unmap_section(ism); break;
++#endif
+     case DMT_PE:  pe_unmap_section(ism);   break;
+     default: assert(0); return;
+     }
+@@ -168,7 +174,9 @@ static inline DWORD_PTR image_get_map_rv
+     if (!ism->fmap) return 0;
+     switch (ism->fmap->modtype)
+     {
++#ifndef DBGHELP_STATIC_LIB
+     case DMT_ELF: return elf_get_map_rva(ism);
++#endif
+     case DMT_PE:  return pe_get_map_rva(ism);
+     default: assert(0); return 0;
+     }
+@@ -179,7 +187,9 @@ static inline unsigned image_get_map_siz
+     if (!ism->fmap) return 0;
+     switch (ism->fmap->modtype)
+     {
++#ifndef DBGHELP_STATIC_LIB
+     case DMT_ELF: return elf_get_map_size(ism);
++#endif
+     case DMT_PE:  return pe_get_map_size(ism);
+     default: assert(0); return 0;
+     }
+
+diff -prudN e:\Wine\dlls\dbghelp/module.c e:\reactos-dwarf\dll\win32\dbghelp/module.c
+--- e:\Wine\dlls\dbghelp/module.c	2012-09-09 19:47:53.367024200 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/module.c	2013-07-14 16:01:46.973202500 +0100
+@@ -19,16 +19,19 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
+ 
+-#include "config.h"
+-#include <stdlib.h>
+-#include <stdio.h>
+-#include <string.h>
++#include <config.h>
++//#include <stdlib.h>
++//#include <stdio.h>
++//#include <string.h>
+ #include <assert.h>
+ 
+ #include "dbghelp_private.h"
+-#include "psapi.h"
+-#include "winternl.h"
+-#include "wine/debug.h"
++
++#ifndef DBGHELP_STATIC_LIB
++#include <psapi.h>
++#include <wine/debug.h>
++#endif
++//#include "winternl.h"
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+ 
+@@ -346,9 +349,11 @@ BOOL module_get_debug(struct module_pair
+         if (pair->effective->is_virtual) ret = FALSE;
+         else switch (pair->effective->type)
+         {
++#ifndef DBGHELP_STATIC_LIB
+         case DMT_ELF:
+             ret = elf_load_debug_info(pair->effective);
+             break;
++#endif
+         case DMT_PE:
+             idslW64.SizeOfStruct = sizeof(idslW64);
+             idslW64.BaseOfImage = pair->effective->module.BaseOfImage;
+@@ -365,9 +370,11 @@ BOOL module_get_debug(struct module_pair
+                          ret ? CBA_DEFERRED_SYMBOL_LOAD_COMPLETE : CBA_DEFERRED_SYMBOL_LOAD_FAILURE,
+                          &idslW64);
+             break;
++#ifndef DBGHELP_STATIC_LIB
+         case DMT_MACHO:
+             ret = macho_load_debug_info(pair->effective, NULL);
+             break;
++#endif
+         default:
+             ret = FALSE;
+             break;
+@@ -506,11 +513,13 @@ enum module_type module_get_type_by_name
+ /******************************************************************
+  *		                refresh_module_list
+  */
++#ifndef DBGHELP_STATIC_LIB
+ static BOOL refresh_module_list(struct process* pcs)
+ {
+     /* force transparent ELF and Mach-O loading / unloading */
+     return elf_synchronize_module_list(pcs) || macho_synchronize_module_list(pcs);
+ }
++#endif
+ 
+ /***********************************************************************
+  *			SymLoadModule (DBGHELP.@)
+@@ -594,7 +603,9 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE 
+     if (Flags & ~(SLMFLAG_VIRTUAL))
+         FIXME("Unsupported Flags %08x for %s\n", Flags, debugstr_w(wImageName));
+ 
++#ifndef DBGHELP_STATIC_LIB
+     refresh_module_list(pcs);
++#endif
+ 
+     /* this is a Wine extension to the API just to redo the synchronisation */
+     if (!wImageName && !hFile) return 0;
+@@ -618,6 +629,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE 
+             wImageName)
+         {
+             /* and finally an ELF or Mach-O module */
++#ifndef DBGHELP_STATIC_LIB
+             switch (module_get_type_by_name(wImageName))
+             {
+                 case DMT_ELF:
+@@ -630,6 +642,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE 
+                     /* Ignored */
+                     break;
+             }
++#endif
+         }
+     }
+     if (!module)
+@@ -819,6 +832,7 @@ BOOL  WINAPI SymEnumerateModulesW64(HAND
+     return TRUE;
+ }
+ 
++#ifndef DBGHELP_STATIC_LIB
+ /******************************************************************
+  *		EnumerateLoadedModules64 (DBGHELP.@)
+  *
+@@ -919,6 +933,7 @@ BOOL  WINAPI EnumerateLoadedModulesW64(H
+ 
+     return sz != 0 && i == sz;
+ }
++#endif /* DBGHELP_STATIC_LIB */
+ 
+ /******************************************************************
+  *		SymGetModuleInfo (DBGHELP.@)
+@@ -1131,7 +1146,11 @@ BOOL WINAPI SymRefreshModuleList(HANDLE 
+ 
+     if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
+ 
++#ifndef DBGHELP_STATIC_LIB
+     return refresh_module_list(pcs);
++#else
++    return TRUE;
++#endif
+ }
+ 
+ /***********************************************************************
+ 
+diff -prudN e:\Wine\dlls\dbghelp/pe_module.c e:\reactos-dwarf\dll\win32\dbghelp/pe_module.c
+--- e:\Wine\dlls\dbghelp/pe_module.c	2012-04-02 20:39:57.755333700 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/pe_module.c	2013-07-14 17:06:18.750513200 +0100
+@@ -31,8 +31,10 @@
+ 
+ #include "dbghelp_private.h"
+ #include "image_private.h"
++#ifndef DBGHELP_STATIC_LIB
+ #include "winternl.h"
+ #include "wine/debug.h"
++#endif
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+ 
+@@ -526,6 +528,7 @@ static BOOL pe_load_dwarf(struct module*
+     return ret;
+ }
+ 
++#ifndef DBGHELP_STATIC_LIB
+ /******************************************************************
+  *		pe_load_dbg_file
+  *
+@@ -625,6 +628,7 @@ done:
+     pe_unmap_full(fmap);
+     return ret;
+ }
++#endif /* DBGHELP_STATIC_LIB */
+ 
+ /***********************************************************************
+  *			pe_load_export_debug_info
+@@ -721,7 +725,9 @@ BOOL pe_load_debug_info(const struct pro
+     {
+         ret = pe_load_stabs(pcs, module);
+         ret = pe_load_dwarf(module) || ret;
++        #ifndef DBGHELP_STATIC_LIB
+         ret = pe_load_msc_debug_info(pcs, module) || ret;
++        #endif
+         ret = ret || pe_load_coff_symbol_table(module); /* FIXME */
+         /* if we still have no debug info (we could only get SymExport at this
+          * point), then do the SymExport except if we have an ELF container,
+
+diff -prudN e:\Wine\dlls\dbghelp/source.c e:\reactos-dwarf\dll\win32\dbghelp/source.c
+--- e:\Wine\dlls\dbghelp/source.c	2011-09-16 23:22:36.198780400 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/source.c	2013-07-14 16:01:47.027608100 +0100
+@@ -18,14 +18,17 @@
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  *
+  */
+-#include "config.h"
+-#include <stdlib.h>
+-#include <stdio.h>
+-#include <string.h>
++#include <config.h>
++//#include <stdlib.h>
++//#include <stdio.h>
++//#include <string.h>
+ #include <assert.h>
+ 
+ #include "dbghelp_private.h"
+-#include "wine/debug.h"
++
++#ifndef DBGHELP_STATIC_LIB
++#include <wine/debug.h>
++#endif
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+ 
+diff -prudN e:\Wine\dlls\dbghelp/stabs.c e:\reactos-dwarf\dll\win32\dbghelp/stabs.c
+--- e:\Wine\dlls\dbghelp/stabs.c	2012-08-13 02:55:03.317206300 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/stabs.c	2013-07-14 17:06:14.969603400 +0100
+@@ -29,41 +29,47 @@
+  *     available (hopefully) from http://sources.redhat.com/gdb/onlinedocs
+  */
+ 
+-#include "config.h"
+-#include "wine/port.h"
++#include <config.h>
++//#include "wine/port.h"
+ 
+-#include <sys/types.h>
+-#include <fcntl.h>
++//#include <sys/types.h>
++//#include <fcntl.h>
+ #ifdef HAVE_SYS_STAT_H
+ # include <sys/stat.h>
+ #endif
+ #ifdef HAVE_SYS_MMAN_H
+ #include <sys/mman.h>
+ #endif
+-#include <limits.h>
+-#include <stdlib.h>
+-#include <string.h>
++//#include <limits.h>
++//#include <stdlib.h>
++//#include <string.h>
+ #ifdef HAVE_UNISTD_H
+ # include <unistd.h>
+ #endif
+-#include <stdio.h>
++//#include <stdio.h>
+ #include <assert.h>
+-#include <stdarg.h>
++//#include <stdarg.h>
+ 
+ #ifdef HAVE_MACH_O_NLIST_H
+ # include <mach-o/nlist.h>
+ #endif
+ 
+-#include "windef.h"
+-#include "winbase.h"
+-#include "winnls.h"
++//#include "windef.h"
++//#include "winbase.h"
++//#include "winnls.h"
+ 
+ #include "dbghelp_private.h"
+ 
+-#include "wine/debug.h"
++#ifndef DBGHELP_STATIC_LIB
++#include <wine/debug.h>
++#endif
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
+ 
++#ifndef DBGHELP_STATIC_LIB
++#define strtoull _strtoui64
++#endif
++
+ /* Masks for n_type field */
+ #ifndef N_STAB
+ #define N_STAB		0xe0
+ 
+diff -prudN e:\Wine\dlls\dbghelp/storage.c e:\reactos-dwarf\dll\win32\dbghelp/storage.c
+--- e:\Wine\dlls\dbghelp/storage.c	2011-09-16 23:22:36.199780500 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/storage.c	2013-07-14 16:01:47.077595900 +0100
+@@ -23,7 +23,10 @@
+ #include "config.h"
+ #include <assert.h>
+ #include <stdlib.h>
++
++#ifndef DBGHELP_STATIC_LIB
+ #include "wine/debug.h"
++#endif
+ 
+ #include "dbghelp_private.h"
+ #ifdef USE_STATS
+
+diff -prudN e:\Wine\dlls\dbghelp/symbol.c e:\reactos-dwarf\dll\win32\dbghelp/symbol.c
+--- e:\Wine\dlls\dbghelp/symbol.c	2012-04-02 20:39:57.756333700 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/symbol.c	2013-07-17 04:29:08.161225800 +0100
+@@ -31,9 +31,12 @@
+ #include <sys/types.h>
+ #include <assert.h>
+ 
+-#include "wine/debug.h"
+ #include "dbghelp_private.h"
++
++#ifndef DBGHELP_STATIC_LIB
++#include "wine/debug.h"
+ #include "winnls.h"
++#endif
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+ WINE_DECLARE_DEBUG_CHANNEL(dbghelp_symt);
+diff -prudN e:\Wine\dlls\dbghelp/type.c e:\reactos-dwarf\dll\win32\dbghelp/type.c
+--- e:\Wine\dlls\dbghelp/type.c	2012-04-02 20:39:57.756333700 +0100
++++ e:\reactos-dwarf\dll\win32\dbghelp/type.c	2013-07-14 16:01:47.136913600 +0100
+@@ -29,10 +29,13 @@
+ #include <stdarg.h>
+ #include <assert.h>
+ 
++#ifndef DBGHELP_STATIC_LIB
+ #include "windef.h"
+ #include "winbase.h"
+ #include "winnls.h"
+ #include "wine/debug.h"
++#endif
++
+ #include "dbghelp_private.h"
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);

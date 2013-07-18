@@ -31,9 +31,12 @@
 #include <sys/types.h>
 #include <assert.h>
 
-#include "wine/debug.h"
 #include "dbghelp_private.h"
+
+#ifndef DBGHELP_STATIC_LIB
+#include "wine/debug.h"
 #include "winnls.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 WINE_DECLARE_DEBUG_CHANNEL(dbghelp_symt);

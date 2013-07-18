@@ -60,11 +60,15 @@
 
 #include "dbghelp_private.h"
 
+#ifndef DBGHELP_STATIC_LIB
 #include <wine/debug.h>
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
 
+#ifndef DBGHELP_STATIC_LIB
 #define strtoull _strtoui64
+#endif
 
 /* Masks for n_type field */
 #ifndef N_STAB

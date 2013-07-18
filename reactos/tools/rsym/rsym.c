@@ -20,12 +20,18 @@
  * non-zero is failure.
  */
 
+#include "../../dll/win32/dbghelp/compat.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <wchar.h>
 
 #include "rsym.h"
+
+#define MAX_PATH 260
+#define MAX_SYM_NAME 2000
 
 static int
 CompareSymEntry(const PROSSYM_ENTRY SymEntry1, const PROSSYM_ENTRY SymEntry2)
@@ -272,7 +278,7 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
 {
     ULONG Count, i;
     PCOFF_SYMENT CoffEntry;
-    char FuncName[256];
+    char FuncName[256], FileName[1024];
     char *p;
     PROSSYM_ENTRY Current;
 
@@ -346,6 +352,215 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
     return 0;
 }
 
+struct DbgHelpLineEntry {
+  ULONG vma;
+  ULONG fileId;
+  ULONG functionId;
+  ULONG line;
+};
+
+struct DbgHelpStringTab {
+  ULONG Length;
+  ULONG Bytes;
+  char ***Table;
+  ULONG LineEntries, CurLineEntries;
+  struct DbgHelpLineEntry *LineEntryData;
+  ULONG NumberOfSymbols;
+  void *process;
+  DWORD module_base;
+  struct DbgHelpLineEntry *lastLineEntry;
+};
+
+/* This is the famous DJB hash */
+static unsigned int
+ComputeDJBHash(const char *name)
+{
+    unsigned int val = 5381;
+    int i = 0;
+
+    for (i = 0; name[i]; i++)
+    {
+        val = (33 * val) + name[i];
+    }
+
+    return val;
+}
+
+static struct DbgHelpLineEntry*
+DbgHelpAddLineEntry(struct DbgHelpStringTab *tab)
+{
+    if (tab->CurLineEntries == tab->LineEntries)
+    {
+        struct DbgHelpLineEntry *newEntries = realloc(tab->LineEntryData,
+                                                      tab->LineEntries * 2 * sizeof(struct DbgHelpLineEntry));
+
+        if (!newEntries)
+            return 0;
+
+        tab->LineEntryData = newEntries;
+
+        memset(tab->LineEntryData + tab->LineEntries, 0, sizeof(struct DbgHelpLineEntry) * tab->LineEntries);
+        tab->LineEntries *= 2;
+    }
+
+    return &tab->LineEntryData[tab->CurLineEntries++];
+}
+
+static int
+DbgHelpAddStringToTable(struct DbgHelpStringTab *tab, char *name)
+{
+    unsigned int bucket = ComputeDJBHash(name) % tab->Length;
+    char **tabEnt = tab->Table[bucket];
+    int i;
+    char **newBucket;
+
+    if (tabEnt) 
+    {
+        for (i = 0; tabEnt[i] && strcmp(tabEnt[i], name); i++);
+        if (tabEnt[i])
+        {
+            free(name);
+            return (i << 10) | bucket;
+        }
+    }
+    else
+        i = 0;
+
+    /* At this point, we need to insert */
+    tab->Bytes += strlen(name) + 1;
+
+    newBucket = realloc(tab->Table[bucket], (i+2) * sizeof(char *));
+
+    if (!newBucket)
+    {
+        fprintf(stderr, "realloc failed!\n");
+        return -1;
+    }
+
+    tab->Table[bucket] = newBucket;
+    tab->Table[bucket][i+1] = 0;
+    tab->Table[bucket][i] = name;
+    return (i << 10) | bucket;
+}
+
+const char*
+DbgHelpGetString(struct DbgHelpStringTab *tab, int id)
+{
+    int i = id >> 10;
+    int bucket = id & 0x3ff;
+    return tab->Table[bucket][i];
+}
+
+static BOOL
+DbgHelpAddLineNumber(PSRCCODEINFO LineInfo, void *UserContext)
+{
+    struct DbgHelpStringTab *tab = (struct DbgHelpStringTab *)UserContext;
+    DWORD64 disp;
+    int fileId, functionId;
+    PSYMBOL_INFO pSymbol = malloc(FIELD_OFFSET(SYMBOL_INFO, Name[MAX_SYM_NAME]));
+    if (!pSymbol) return FALSE;
+    memset(pSymbol, 0, FIELD_OFFSET(SYMBOL_INFO, Name[MAX_SYM_NAME]));
+
+    fileId = DbgHelpAddStringToTable(tab, strdup(LineInfo->FileName));
+
+    pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    pSymbol->MaxNameLen = MAX_SYM_NAME;
+
+    if (!SymFromAddr(tab->process, LineInfo->Address, &disp, pSymbol))
+    {
+        //fprintf(stderr, "SymFromAddr failed.\n");
+        free(pSymbol);
+        return FALSE;
+    }
+
+    functionId = DbgHelpAddStringToTable(tab, strdup(pSymbol->Name));
+
+    if (LineInfo->Address == 0)
+        fprintf(stderr, "Address is 0.\n");
+
+    tab->lastLineEntry = DbgHelpAddLineEntry(tab);
+    tab->lastLineEntry->vma = LineInfo->Address - LineInfo->ModBase;
+    tab->lastLineEntry->functionId = functionId;
+    tab->lastLineEntry->fileId = fileId;
+    tab->lastLineEntry->line = LineInfo->LineNumber;
+
+    free(pSymbol);
+    return TRUE;
+}
+
+static int
+ConvertDbgHelp(void *process, DWORD module_base,
+               ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
+               ULONG *StringsLength, void **StringsBase)
+{
+    char *strings, *strings_copy;
+    int i, j, bucket, entry;
+    PROSSYM_ENTRY rossym;
+    struct DbgHelpStringTab strtab = { 0 };
+
+    strtab.process = process;
+    strtab.module_base = module_base;
+    strtab.Bytes = 1;
+    strtab.Length = 1024;
+    strtab.Table = calloc(1024, sizeof(const char **));
+    strtab.Table[0] = calloc(2, sizeof(const char *));
+    strtab.Table[0][0] = strdup(""); // The zero string
+    strtab.CurLineEntries = 0;
+    strtab.LineEntries = 16384;
+    strtab.LineEntryData = calloc(strtab.LineEntries, sizeof(struct DbgHelpLineEntry));
+
+    SymEnumLines(process, module_base, NULL, NULL, DbgHelpAddLineNumber, &strtab);
+
+    /* Transcribe necessary strings */
+    *StringsLength = strtab.Bytes;
+    strings = strings_copy = ((char *)(*StringsBase = malloc(strtab.Bytes)));
+
+    /* Copy in strings */
+    for (i = 0; i < strtab.Length; i++)
+    {
+        for (j = 0; strtab.Table[i] && strtab.Table[i][j]; j++)
+        {
+            /* Each entry is replaced by its corresponding entry in our string
+               section. We can substract the strings origin to get an offset. */
+            char *toFree = strtab.Table[i][j];
+            strtab.Table[i][j] = strcpy(strings_copy, strtab.Table[i][j]);
+            free(toFree);
+            strings_copy += strlen(strings_copy) + 1;
+        }
+    }
+
+    assert(strings_copy == strings + strtab.Bytes);
+
+    *SymbolsBase = calloc(strtab.CurLineEntries, sizeof(ROSSYM_ENTRY));
+    *SymbolsCount = strtab.CurLineEntries;
+
+    /* Copy symbols into rossym entries */
+    for (i = 0; i < strtab.CurLineEntries; i++)
+    {
+        rossym = &(*SymbolsBase)[i];
+        rossym->Address = strtab.LineEntryData[i].vma;
+        bucket = strtab.LineEntryData[i].fileId & 0x3ff;
+        entry = strtab.LineEntryData[i].fileId >> 10;
+        rossym->FileOffset = strtab.Table[bucket][entry] - strings;
+        bucket = strtab.LineEntryData[i].functionId & 0x3ff;
+        entry = strtab.LineEntryData[i].functionId >> 10;
+        rossym->FunctionOffset = strtab.Table[bucket][entry] - strings;
+        rossym->SourceLine = strtab.LineEntryData[i].line;
+    }
+
+    /* Free stringtab */
+    for (i = 0; i < strtab.Length; i++)
+    {
+        free(strtab.Table[i]);
+    }
+
+    free(strtab.LineEntryData);
+
+    qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *))CompareSymEntry);
+
+    return 0;
+}
+
 static int
 MergeStabsAndCoffs(ULONG *MergedSymbolCount, PROSSYM_ENTRY *MergedSymbols,
                    ULONG StabSymbolsCount, PROSSYM_ENTRY StabSymbols,
@@ -362,7 +577,7 @@ MergeStabsAndCoffs(ULONG *MergedSymbolCount, PROSSYM_ENTRY *MergedSymbols,
         *MergedSymbols = NULL;
         return 0;
     }
-    *MergedSymbols = malloc(StabSymbolsCount * sizeof(ROSSYM_ENTRY));
+    *MergedSymbols = malloc((StabSymbolsCount + CoffSymbolsCount) * sizeof(ROSSYM_ENTRY));
     if (*MergedSymbols == NULL)
     {
         fprintf(stderr, "Unable to allocate memory for merged symbols\n");
@@ -406,6 +621,7 @@ MergeStabsAndCoffs(ULONG *MergedSymbolCount, PROSSYM_ENTRY *MergedSymbols,
             CoffSymbols[CoffIndex].FunctionOffset != 0)
         {
             (*MergedSymbols)[*MergedSymbolCount].FunctionOffset = CoffSymbols[CoffIndex].FunctionOffset;
+            CoffSymbols[CoffIndex].FileOffset = CoffSymbols[CoffIndex].FunctionOffset = 0;
         }
         if (StabFunctionStringOffset != NewStabFunctionStringOffset)
         {
@@ -414,6 +630,18 @@ MergeStabsAndCoffs(ULONG *MergedSymbolCount, PROSSYM_ENTRY *MergedSymbols,
         StabFunctionStringOffset = NewStabFunctionStringOffset;
         (*MergedSymbolCount)++;
     }
+    /* Handle functions that have no analog in the upstream data */
+    for (CoffIndex = 0; CoffIndex < CoffSymbolsCount; CoffIndex++) 
+    {
+        if (CoffSymbols[CoffIndex].Address &&
+            CoffSymbols[CoffIndex].FunctionOffset)
+        {
+            (*MergedSymbols)[*MergedSymbolCount] = CoffSymbols[CoffIndex];
+            (*MergedSymbolCount)++;
+        }
+    }
+
+    qsort(*MergedSymbols, *MergedSymbolCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
 
     return 0;
 }
@@ -510,6 +738,18 @@ ProcessRelocations(ULONG *ProcessedRelocsLength, void **ProcessedRelocs,
     return 0;
 }
 
+static const BYTE*
+GetSectionName(void *StringsBase, const BYTE *SectionTitle)
+{
+    if (SectionTitle[0] == '/')
+    {
+        int offset = atoi((char*)SectionTitle+1);
+        return ((BYTE *)StringsBase) + offset;
+    }
+    else
+        return SectionTitle;
+}
+
 static int
 CreateOutputFile(FILE *OutFile, void *InData,
                  PIMAGE_DOS_HEADER InDosHeader, PIMAGE_FILE_HEADER InFileHeader,
@@ -529,14 +769,19 @@ CreateOutputFile(FILE *OutFile, void *InData,
     ULONG RosSymOffset, RosSymFileLength;
     int InRelocSectionIndex;
     PIMAGE_SECTION_HEADER OutRelocSection;
+    /* Each coff symbol is 18 bytes and the string table follows */
+    char *StringTable = (char *)InData + 
+        InFileHeader->PointerToSymbolTable + 18 * InFileHeader->NumberOfSymbols;
 
     StartOfRawData = 0;
     for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
     {
-        if ((StartOfRawData == 0 ||
-             InSectionHeaders[Section].PointerToRawData < StartOfRawData)
+        const BYTE *SectionName = GetSectionName(StringTable,
+                                                 InSectionHeaders[Section].Name);
+        if ((StartOfRawData == 0 || InSectionHeaders[Section].PointerToRawData < StartOfRawData)
             && InSectionHeaders[Section].PointerToRawData != 0
-            && (strncmp((char *) InSectionHeaders[Section].Name, ".stab", 5)) != 0)
+            && (strncmp((char *) SectionName, ".stab", 5)) != 0
+            && (strncmp((char *) SectionName, ".debug_", 7)) != 0)
         {
             StartOfRawData = InSectionHeaders[Section].PointerToRawData;
         }
@@ -594,7 +839,10 @@ CreateOutputFile(FILE *OutFile, void *InData,
     OutRelocSection = NULL;
     for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
     {
-        if ((strncmp((char *) InSectionHeaders[Section].Name, ".stab", 5)) != 0)
+        const BYTE *SectionName = GetSectionName(StringTable,
+                                                 InSectionHeaders[Section].Name);
+        if ((strncmp((char *) SectionName, ".stab", 5) != 0) &&
+            (strncmp((char *) SectionName, ".debug_", 7)) != 0)
         {
             *CurrentSectionHeader = InSectionHeaders[Section];
             CurrentSectionHeader->PointerToLinenumbers = 0;
@@ -778,19 +1026,22 @@ int main(int argc, char* argv[])
     char* path1;
     char* path2;
     FILE* out;
-    void *StringBase;
-    ULONG StringsLength;
-    ULONG StabSymbolsCount;
-    PROSSYM_ENTRY StabSymbols;
-    ULONG CoffSymbolsCount;
-    PROSSYM_ENTRY CoffSymbols;
-    ULONG MergedSymbolsCount;
-    PROSSYM_ENTRY MergedSymbols;
+    void *StringBase = NULL;
+    ULONG StringsLength = 0;
+    ULONG StabSymbolsCount = 0;
+    PROSSYM_ENTRY StabSymbols = NULL;
+    ULONG CoffSymbolsCount = 0;
+    PROSSYM_ENTRY CoffSymbols = NULL;
+    ULONG MergedSymbolsCount = 0;
+    PROSSYM_ENTRY MergedSymbols = NULL;
     size_t FileSize;
     void *FileData;
     ULONG RosSymLength;
     void *RosSymSection;
+    DWORD module_base;
+    void *file;
     char elfhdr[4] = { '\177', 'E', 'L', 'F' };
+    BOOLEAN UseDbgHelp = FALSE;
 
     if (argc != 3)
     {
@@ -807,6 +1058,8 @@ int main(int argc, char* argv[])
         fprintf(stderr, "An error occured loading '%s'\n", path1);
         exit(1);
     }
+
+    file = fopen(path1, "rb");
 
     /* Check if MZ header exists  */
     PEDosHeader = (PIMAGE_DOS_HEADER) FileData;
@@ -845,6 +1098,33 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    if (StabsLength == 0)
+    {
+        // SYMOPT_AUTO_PUBLICS
+        // SYMOPT_FAVOR_COMPRESSED
+        // SYMOPT_LOAD_ANYTHING
+        // SYMOPT_LOAD_LINES
+        SymSetOptions(0x10000 | 0x800000 | 0x40 | 0x10);
+        SymInitialize(FileData, ".", 0);
+      
+        module_base = SymLoadModule(FileData, file, path1, path1, 0, FileSize) & 0xffffffff;
+
+        if (ConvertDbgHelp(FileData, 
+                           module_base,
+                           &StabSymbolsCount,
+                           &StabSymbols,
+                           &StringsLength,
+                           &StringBase))
+        {
+            free(FileData);
+            exit(1);
+        }
+
+        UseDbgHelp = TRUE;
+        SymUnloadModule(FileData, module_base);
+        SymCleanup(FileData);
+    }
+
     if (GetCoffInfo(FileData,
                     PEFileHeader,
                     PESectionHeaders,
@@ -857,34 +1137,47 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    StringBase = malloc(1 + StabStringsLength + CoffStringsLength +
-                        (CoffsLength / sizeof(ROSSYM_ENTRY)) * (E_SYMNMLEN + 1));
-    if (StringBase == NULL)
+    if (!UseDbgHelp)
     {
-        free(FileData);
-        fprintf(stderr, "Failed to allocate memory for strings table\n");
-        exit(1);
-    }
-    /* Make offset 0 into an empty string */
-    *((char *) StringBase) = '\0';
-    StringsLength = 1;
+        StringBase = malloc(1 + StringsLength + CoffStringsLength +
+                            (CoffsLength / sizeof(ROSSYM_ENTRY)) * (E_SYMNMLEN + 1));
+        if (StringBase == NULL)
+        {
+            free(FileData);
+            fprintf(stderr, "Failed to allocate memory for strings table\n");
+            exit(1);
+        }
+        /* Make offset 0 into an empty string */
+        *((char *) StringBase) = '\0';
+        StringsLength = 1;
 
-    if (ConvertStabs(&StabSymbolsCount,
-                     &StabSymbols,
-                     &StringsLength,
-                     StringBase,
-                     StabsLength,
-                     StabBase,
-                     StabStringsLength,
-                     StabStringBase,
-                     ImageBase,
-                     PEFileHeader,
-                     PESectionHeaders))
+        if (ConvertStabs(&StabSymbolsCount,
+                         &StabSymbols,
+                         &StringsLength,
+                         StringBase,
+                         StabsLength,
+                         StabBase,
+                         StabStringsLength,
+                         StabStringBase,
+                         ImageBase,
+                         PEFileHeader,
+                         PESectionHeaders))
+        {
+            free(StringBase);
+            free(FileData);
+            fprintf(stderr, "Failed to allocate memory for strings table\n");
+            exit(1);
+        }
+    }
+    else
     {
-        free(StringBase);
-        free(FileData);
-        fprintf(stderr, "Failed to allocate memory for strings table\n");
-        exit(1);
+        StringBase = realloc(StringBase, StringsLength + CoffStringsLength);
+        if (!StringBase)
+        {
+            free(FileData);
+            fprintf(stderr, "Failed to allocate memory for strings table\n");
+            exit(1);
+        }
     }
 
     if (ConvertCoffs(&CoffSymbolsCount,

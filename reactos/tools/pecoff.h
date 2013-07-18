@@ -44,32 +44,6 @@
 #define IMAGE_REL_I386_ABSOLUTE 0x0001
 #define IMAGE_REL_I386_DIR32    0x0006
 
-typedef unsigned char BYTE;
-typedef unsigned char UCHAR;
-typedef unsigned short WORD;
-typedef short SHORT;
-typedef unsigned short USHORT;
-typedef unsigned long long ULONGLONG;
-
-#if defined(__x86_64__) && !defined(_WIN64)
-typedef signed int LONG;
-typedef unsigned int ULONG;
-typedef unsigned int DWORD;
-#else
-typedef signed long LONG;
-typedef unsigned long ULONG;
-typedef unsigned long DWORD;
-#endif
-#if defined(_WIN64)
-typedef unsigned __int64 ULONG_PTR;
-#else
-#if defined(__x86_64__) && !defined(_WIN64)
-typedef  unsigned int  ULONG_PTR;
-#else
-typedef  unsigned long ULONG_PTR;
-#endif
-#endif
-
 #pragma pack(push,2)
 typedef struct _IMAGE_DOS_HEADER {
   WORD e_magic;
@@ -266,3 +240,11 @@ typedef struct _IMAGE_SYMBOL {
 } IMAGE_SYMBOL;
 typedef struct _IMAGE_SYMBOL UNALIGNED *PIMAGE_SYMBOL;
 #pragma pack(pop)
+
+#define IMAGE_DOS_SIGNATURE 0x5A4D
+#define IMAGE_OS2_SIGNATURE 0x454E
+#define IMAGE_OS2_SIGNATURE_LE 0x454C
+#define IMAGE_VXD_SIGNATURE 0x454C
+#define IMAGE_NT_SIGNATURE 0x00004550
+
+#define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((ULONG_PTR)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))

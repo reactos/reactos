@@ -45,7 +45,7 @@
 
 #define IMAGE_NO_MAP  ((void*)-1)
 
-#ifdef __ELF__
+#if defined(__ELF__) && !defined(DBGHELP_STATIC_LIB)
 
 #ifdef _WIN64
 #define         Elf_Ehdr        Elf64_Ehdr
@@ -85,7 +85,7 @@ struct image_file_map
             const char*	                shstrtab;
             struct image_file_map*      alternate;      /* another ELF file (linked to this one) */
             char*                       target_copy;
-#ifdef __ELF__
+#if defined(__ELF__) && !defined(DBGHELP_STATIC_LIB)
             Elf_Ehdr                    elfhdr;
             struct
             {
@@ -135,7 +135,9 @@ static inline BOOL image_find_section(struct image_file_map* fmap, const char* n
 {
     switch (fmap->modtype)
     {
+#ifndef DBGHELP_STATIC_LIB
     case DMT_ELF: return elf_find_section(fmap, name, SHT_NULL, ism);
+#endif
     case DMT_PE:  return pe_find_section(fmap, name, ism);
     default: assert(0); return FALSE;
     }
@@ -146,7 +148,9 @@ static inline const char* image_map_section(struct image_section_map* ism)
     if (!ism->fmap) return NULL;
     switch (ism->fmap->modtype)
     {
+#ifndef DBGHELP_STATIC_LIB
     case DMT_ELF: return elf_map_section(ism);
+#endif
     case DMT_PE:  return pe_map_section(ism);
     default: assert(0); return NULL;
     }
@@ -157,7 +161,9 @@ static inline void image_unmap_section(struct image_section_map* ism)
     if (!ism->fmap) return;
     switch (ism->fmap->modtype)
     {
+#ifndef DBGHELP_STATIC_LIB
     case DMT_ELF: elf_unmap_section(ism); break;
+#endif
     case DMT_PE:  pe_unmap_section(ism);   break;
     default: assert(0); return;
     }
@@ -168,7 +174,9 @@ static inline DWORD_PTR image_get_map_rva(const struct image_section_map* ism)
     if (!ism->fmap) return 0;
     switch (ism->fmap->modtype)
     {
+#ifndef DBGHELP_STATIC_LIB
     case DMT_ELF: return elf_get_map_rva(ism);
+#endif
     case DMT_PE:  return pe_get_map_rva(ism);
     default: assert(0); return 0;
     }
@@ -179,7 +187,9 @@ static inline unsigned image_get_map_size(const struct image_section_map* ism)
     if (!ism->fmap) return 0;
     switch (ism->fmap->modtype)
     {
+#ifndef DBGHELP_STATIC_LIB
     case DMT_ELF: return elf_get_map_size(ism);
+#endif
     case DMT_PE:  return pe_get_map_size(ism);
     default: assert(0); return 0;
     }
