@@ -29,6 +29,8 @@
 #define DOS_SFT_SIZE 255
 #define SEGMENT_TO_MCB(seg) ((PDOS_MCB)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
 #define SEGMENT_TO_PSP(seg) ((PDOS_PSP)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
+#define UMB_START_SEGMENT 0xC000
+#define UMB_END_SEGMENT 0xDFFF
 
 #pragma pack(push, 1)
 

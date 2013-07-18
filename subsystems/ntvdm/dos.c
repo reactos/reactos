@@ -18,6 +18,7 @@ static WORD CurrentPsp = SYSTEM_PSP;
 static DWORD DiskTransferArea;
 static HANDLE DosSystemFileTable[DOS_SFT_SIZE];
 static WORD DosSftRefCount[DOS_SFT_SIZE];
+static BOOLEAN DosUmbLinked = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -394,6 +395,60 @@ BOOLEAN DosFreeMemory(WORD BlockData)
     /* Mark the block as free */
     Mcb->OwnerPsp = 0;
 
+    return TRUE;
+}
+
+BOOLEAN DosLinkUmb()
+{
+    DWORD Segment = FIRST_MCB_SEGMENT;
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
+
+    /* Check if UMBs are already linked */
+    if (DosUmbLinked) return FALSE;
+
+    /* Find the last block */
+    while ((Mcb->BlockType == 'M') && (Segment <= 0xFFFF))
+    {
+        Segment += Mcb->Size + 1;
+        Mcb = SEGMENT_TO_MCB(Segment);
+    }
+
+    /* Make sure it's valid */
+    if (Mcb->BlockType != 'Z') return FALSE;
+
+    /* Connect the MCB with the UMB chain */
+    Mcb->BlockType = 'M';
+
+    DosUmbLinked = TRUE;
+    return TRUE;
+}
+
+BOOLEAN DosUnlinkUmb()
+{
+    DWORD Segment = FIRST_MCB_SEGMENT;
+    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
+
+    /* Check if UMBs are already unlinked */
+    if (!DosUmbLinked) return FALSE;
+
+    /* Find the block preceding the MCB that links it with the UMB chain */
+    while (Segment <= 0xFFFF)
+    {
+        if ((Segment + Mcb->Size) == (FIRST_MCB_SEGMENT + USER_MEMORY_SIZE))
+        {
+            /* This is the last non-UMB segment */
+            break;
+        }
+
+        /* Advance to the next MCB */
+        Segment += Mcb->Size + 1;
+        Mcb = SEGMENT_TO_MCB(Segment);
+    }
+
+    /* Mark the MCB as the last MCB */
+    Mcb->BlockType = 'Z';
+
+    DosUmbLinked = FALSE;
     return TRUE;
 }
 
@@ -1412,7 +1467,11 @@ VOID DosInt21h(WORD CodeSegment)
             {
                 EmulatorClearFlag(EMULATOR_FLAG_CF);
             }
-            else EmulatorSetFlag(EMULATOR_FLAG_CF);
+            else
+            {
+                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_ARENA_TRASHED);
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+            }
 
             break;
         }
@@ -1439,6 +1498,35 @@ VOID DosInt21h(WORD CodeSegment)
         case 0x4C:
         {
             DosTerminateProcess(CurrentPsp, LOBYTE(Eax));
+            break;
+        }
+
+        /* Get/Set Memory Management Options */
+        case 0x58:
+        {
+            if (LOBYTE(Eax) == 0x02)
+            {
+                /* Get UMB link state */
+
+                Eax &= 0xFFFFFF00;
+                if (DosUmbLinked) Eax |= 1;
+                EmulatorSetRegister(EMULATOR_REG_AX, Eax);
+            }
+            else if (LOBYTE(Eax) == 0x03)
+            {
+                /* Set UMB link state */
+
+                if (Ebx) DosLinkUmb();
+                else DosUnlinkUmb();
+            }
+            else
+            {
+                /* Invalid or unsupported function */
+
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_FUNCTION);
+            }
+
             break;
         }
 
@@ -1470,6 +1558,18 @@ BOOLEAN DosInitialize()
     /* Initialize the MCB */
     Mcb->BlockType = 'Z';
     Mcb->Size = USER_MEMORY_SIZE;
+    Mcb->OwnerPsp = 0;
+
+    /* Initialize the link MCB to the UMB area */
+    Mcb = SEGMENT_TO_MCB(FIRST_MCB_SEGMENT + USER_MEMORY_SIZE + 1);
+    Mcb->BlockType = 'M';
+    Mcb->Size = UMB_START_SEGMENT - FIRST_MCB_SEGMENT - USER_MEMORY_SIZE - 2;
+    Mcb->OwnerPsp = SYSTEM_PSP;
+
+    /* Initialize the UMB area */
+    Mcb = SEGMENT_TO_MCB(UMB_START_SEGMENT);
+    Mcb->BlockType = 'Z';
+    Mcb->Size = UMB_END_SEGMENT - UMB_START_SEGMENT;
     Mcb->OwnerPsp = 0;
 
     /* Get the environment strings */

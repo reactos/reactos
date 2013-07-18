@@ -16,7 +16,7 @@
 /* DEFINES ********************************************************************/
 
 #define CONSOLE_VIDEO_MEM_END 0xBFFFF
-#define ROM_AREA_START 0xC0000
+#define ROM_AREA_START 0xE0000
 #define ROM_AREA_END 0xFFFFF
 #define BDA_SEGMENT 0x40
 #define BIOS_PIC_MASTER_INT 0x08
