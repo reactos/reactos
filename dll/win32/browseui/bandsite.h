@@ -24,15 +24,15 @@
 class CBandSiteBase :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IBandSite,
-    public IWinEventHandler,
-    public IDeskBarClient,
-    public IOleCommandTarget,
-    public IInputObject,
     public IInputObjectSite,
-    public IServiceProvider,
+    public IInputObject,
+    public IDeskBarClient,
+    public IWinEventHandler,
     public IPersistStream,
     public IDropTarget,
-    public IBandSiteHelper
+    public IServiceProvider,
+    public IBandSiteHelper,
+    public IOleCommandTarget
 {
 private:
     struct BandObject

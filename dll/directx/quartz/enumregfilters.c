@@ -28,12 +28,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 typedef struct IEnumRegFiltersImpl
 {
-    const IEnumRegFiltersVtbl * lpVtbl;
+    IEnumRegFilters IEnumRegFilters_iface;
     LONG refCount;
     ULONG size;
     REGFILTER* RegFilters;
     ULONG uIndex;
 } IEnumRegFiltersImpl;
+
+static inline IEnumRegFiltersImpl *impl_from_IEnumRegFilters(IEnumRegFilters *iface)
+{
+    return CONTAINING_RECORD(iface, IEnumRegFiltersImpl, IEnumRegFilters_iface);
+}
 
 static const struct IEnumRegFiltersVtbl IEnumRegFiltersImpl_Vtbl;
 
@@ -79,13 +84,13 @@ HRESULT IEnumRegFiltersImpl_Construct(REGFILTER* pInRegFilters, const ULONG size
         CopyMemory(pRegFilters[i].Name, pInRegFilters[i].Name, (strlenW(pInRegFilters[i].Name)+1)*sizeof(WCHAR));
     }
 
-    pEnumRegFilters->lpVtbl = &IEnumRegFiltersImpl_Vtbl;
+    pEnumRegFilters->IEnumRegFilters_iface.lpVtbl = &IEnumRegFiltersImpl_Vtbl;
     pEnumRegFilters->refCount = 1;
     pEnumRegFilters->uIndex = 0;
     pEnumRegFilters->RegFilters = pRegFilters;
     pEnumRegFilters->size = size;
 
-    *ppEnum = (IEnumRegFilters *)(&pEnumRegFilters->lpVtbl);
+    *ppEnum = &pEnumRegFilters->IEnumRegFilters_iface;
 
     return S_OK;
 }
@@ -114,7 +119,7 @@ static HRESULT WINAPI IEnumRegFiltersImpl_QueryInterface(IEnumRegFilters * iface
 
 static ULONG WINAPI IEnumRegFiltersImpl_AddRef(IEnumRegFilters * iface)
 {
-    IEnumRegFiltersImpl *This = (IEnumRegFiltersImpl *)iface;
+    IEnumRegFiltersImpl *This = impl_from_IEnumRegFilters(iface);
     ULONG refCount = InterlockedIncrement(&This->refCount);
 
     TRACE("(%p)\n", iface);
@@ -124,7 +129,7 @@ static ULONG WINAPI IEnumRegFiltersImpl_AddRef(IEnumRegFilters * iface)
 
 static ULONG WINAPI IEnumRegFiltersImpl_Release(IEnumRegFilters * iface)
 {
-    IEnumRegFiltersImpl *This = (IEnumRegFiltersImpl *)iface;
+    IEnumRegFiltersImpl *This = impl_from_IEnumRegFilters(iface);
     ULONG refCount = InterlockedDecrement(&This->refCount);
 
     TRACE("(%p)\n", iface);
@@ -147,7 +152,7 @@ static ULONG WINAPI IEnumRegFiltersImpl_Release(IEnumRegFilters * iface)
 static HRESULT WINAPI IEnumRegFiltersImpl_Next(IEnumRegFilters * iface, ULONG cFilters, REGFILTER ** ppRegFilter, ULONG * pcFetched)
 {
     ULONG cFetched; 
-    IEnumRegFiltersImpl *This = (IEnumRegFiltersImpl *)iface;
+    IEnumRegFiltersImpl *This = impl_from_IEnumRegFilters(iface);
     unsigned int i;
 
     cFetched = min(This->size, This->uIndex + cFilters) - This->uIndex;
@@ -193,7 +198,7 @@ static HRESULT WINAPI IEnumRegFiltersImpl_Skip(IEnumRegFilters * iface, ULONG n)
 
 static HRESULT WINAPI IEnumRegFiltersImpl_Reset(IEnumRegFilters * iface)
 {
-    IEnumRegFiltersImpl *This = (IEnumRegFiltersImpl *)iface;
+    IEnumRegFiltersImpl *This = impl_from_IEnumRegFilters(iface);
 
     TRACE("(%p)\n", iface);
 

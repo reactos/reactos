@@ -60,11 +60,17 @@ IntReadConsole(HANDLE hConsoleInput,
     /* Set up the data to send to the Console Server */
     ReadConsoleRequest->InputHandle = hConsoleInput;
     ReadConsoleRequest->Unicode = bUnicode;
-    ReadConsoleRequest->NrCharactersToRead = (WORD)nNumberOfCharsToRead;
+    ReadConsoleRequest->NrCharactersToRead = nNumberOfCharsToRead;
     ReadConsoleRequest->NrCharactersRead = 0;
     ReadConsoleRequest->CtrlWakeupMask = 0;
     if (pInputControl && pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
     {
+        /*
+         * From MSDN (ReadConsole function), the description
+         * for pInputControl says:
+         * "This parameter requires Unicode input by default.
+         * For ANSI mode, set this parameter to NULL."
+         */
         ReadConsoleRequest->NrCharactersRead = pInputControl->nInitialChars;
         memcpy(ReadConsoleRequest->Buffer,
                lpBuffer,

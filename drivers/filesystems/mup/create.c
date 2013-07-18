@@ -51,9 +51,8 @@ MupCreate(PDEVICE_OBJECT DeviceObject,
 
     FileObject = Stack->FileObject;
 
-    DPRINT("FileName: '%wZ'\n", &FileObject->FileName);
-
-    Status = STATUS_BAD_NETWORK_PATH;
+    DPRINT1("MUP - Unimplemented (FileName: '%wZ')\n", &FileObject->FileName);
+    Status = STATUS_OBJECT_NAME_INVALID; // STATUS_BAD_NETWORK_PATH;
 
     Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
     Irp->IoStatus.Status = Status;

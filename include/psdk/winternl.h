@@ -1084,19 +1084,17 @@ typedef struct _RTL_RWLOCK {
 
 typedef struct _SYSTEM_BASIC_INFORMATION {
 #ifdef __WINESRC__
-    DWORD dwUnknown1;
-    ULONG uKeMaximumIncrement;
-    ULONG uPageSize;
-    ULONG uMmNumberOfPhysicalPages;
-    ULONG uMmLowestPhysicalPage;
-    ULONG uMmHighestPhysicalPage;
-    ULONG uAllocationGranularity;
-    PVOID pLowestUserAddress;
-    PVOID pMmHighestUserAddress;
-    ULONG uKeActiveProcessors;
-    BYTE bKeNumberProcessors;
-    BYTE bUnknown2;
-    WORD wUnknown3;
+    DWORD     unknown;
+    ULONG     KeMaximumIncrement;
+    ULONG     PageSize;
+    ULONG     MmNumberOfPhysicalPages;
+    ULONG     MmLowestPhysicalPage;
+    ULONG     MmHighestPhysicalPage;
+    ULONG_PTR AllocationGranularity;
+    PVOID     LowestUserAddress;
+    PVOID     HighestUserAddress;
+    ULONG_PTR ActiveProcessorsAffinityMask;
+    BYTE      NumberOfProcessors;
 #else
     BYTE Reserved1[24];
     PVOID Reserved2[4];

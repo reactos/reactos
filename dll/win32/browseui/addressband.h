@@ -25,14 +25,14 @@ class CAddressBand :
     public CComCoClass<CAddressBand, &CLSID_SH_AddressBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDeskBand,
-    public IOleCommandTarget,
     public IObjectWithSite,
     public IInputObject,
+    public IPersistStream,
+    public IOleCommandTarget,
+    public IServiceProvider,
     public IWinEventHandler,
     public IAddressBand,
-    public IServiceProvider,
-    public IInputObjectSite,
-    public IPersistStream
+    public IInputObjectSite
 {
 private:
     CComPtr<IDockingWindowSite>             fSite;

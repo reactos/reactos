@@ -133,7 +133,7 @@ typedef struct _CONSOLE_CONNECTION_INFO
     /* Adapted from CONSOLE_ALLOCCONSOLE */
     CONSOLE_START_INFO ConsoleStartInfo;
 
-    HANDLE Console; // ConsoleHandle // On ReactOS, it is a PCONSOLE
+    HANDLE ConsoleHandle;
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;
@@ -167,8 +167,8 @@ typedef struct
     HANDLE InputHandle;
 
     BOOL Unicode;
-    WORD NrCharactersToRead;
-    WORD NrCharactersRead;
+    ULONG NrCharactersToRead;
+    ULONG NrCharactersRead;
 
     UNICODE_STRING ExeName;
     DWORD CtrlWakeupMask;
@@ -182,7 +182,7 @@ typedef struct
 {
     PCONSOLE_START_INFO ConsoleStartInfo;
 
-    HANDLE Console; // ConsoleHandle // On ReactOS, it is a PCONSOLE
+    HANDLE ConsoleHandle;
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;
@@ -194,7 +194,7 @@ typedef struct
 typedef struct
 {
     DWORD ProcessId; // If ProcessId == ATTACH_PARENT_PROCESS == -1, then attach the current process to its parent process console.
-    HANDLE Console; // ConsoleHandle // On ReactOS, it is a PCONSOLE
+    HANDLE ConsoleHandle;
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;

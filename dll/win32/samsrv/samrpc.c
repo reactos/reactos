@@ -6752,6 +6752,71 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
 
 
 static NTSTATUS
+SampSetUserName(PSAM_DB_OBJECT UserObject,
+                PRPC_UNICODE_STRING NewUserName)
+{
+    UNICODE_STRING OldUserName = {0, 0, NULL};
+    NTSTATUS Status;
+
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          (PRPC_UNICODE_STRING)&OldUserName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttributeString failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (!RtlEqualUnicodeString(&OldUserName, (PCUNICODE_STRING)NewUserName, TRUE))
+    {
+        Status = SampCheckAccountNameInDomain(UserObject->ParentObject,
+                                              NewUserName->Buffer);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("User name \'%S\' already exists in domain (Status 0x%08lx)\n",
+                  NewUserName->Buffer, Status);
+            goto done;
+        }
+    }
+
+    Status = SampSetAccountNameInDomain(UserObject->ParentObject,
+                                        L"Users",
+                                        NewUserName->Buffer,
+                                        UserObject->RelativeId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetAccountNameInDomain failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampRemoveAccountNameFromDomain(UserObject->ParentObject,
+                                             L"Users",
+                                             OldUserName.Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRemoveAccountNameFromDomain failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    NewUserName->Buffer,
+                                    NewUserName->Length + sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (OldUserName.Buffer != NULL)
+        midl_user_free(OldUserName.Buffer);
+
+    return Status;
+}
+
+
+static NTSTATUS
 SampSetUserGeneral(PSAM_DB_OBJECT UserObject,
                    PSAMPR_USER_INFO_BUFFER Buffer)
 {
@@ -6778,11 +6843,8 @@ SampSetUserGeneral(PSAM_DB_OBJECT UserObject,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    Buffer->General.UserName.Buffer,
-                                    Buffer->General.UserName.MaximumLength);
+    Status = SampSetUserName(UserObject,
+                             &Buffer->General.UserName);
     if (!NT_SUCCESS(Status))
         goto done;
 
@@ -7011,11 +7073,8 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
 
     if (WhichFields & USER_ALL_USERNAME)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"Name",
-                                        REG_SZ,
-                                        Buffer->All.UserName.Buffer,
-                                        Buffer->All.UserName.MaximumLength);
+        Status = SampSetUserName(UserObject,
+                                 &Buffer->All.UserName);
         if (!NT_SUCCESS(Status))
             goto done;
     }
@@ -7265,11 +7324,8 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserNameInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"Name",
-                                            REG_SZ,
-                                            Buffer->Name.UserName.Buffer,
-                                            Buffer->Name.UserName.MaximumLength);
+            Status = SampSetUserName(UserObject,
+                                     &Buffer->Name.UserName);
             if (!NT_SUCCESS(Status))
                 break;
 
@@ -7281,11 +7337,8 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserAccountNameInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"Name",
-                                            REG_SZ,
-                                            Buffer->AccountName.UserName.Buffer,
-                                            Buffer->AccountName.UserName.MaximumLength);
+            Status = SampSetUserName(UserObject,
+                                     &Buffer->AccountName.UserName);
             break;
 
         case UserFullNameInformation:
@@ -7416,8 +7469,148 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
                        IN unsigned char LmCrossEncryptionPresent,
                        IN PENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithNewNt)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ENCRYPTED_LM_OWF_PASSWORD StoredLmPassword;
+    ENCRYPTED_NT_OWF_PASSWORD StoredNtPassword;
+    PENCRYPTED_LM_OWF_PASSWORD OldLmPassword;
+    PENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
+    PENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
+    PENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
+    PSAM_DB_OBJECT UserObject;
+    ULONG Length;
+    SAM_USER_FIXED_DATA FixedUserData;
+    NTSTATUS Status;
+
+    TRACE("(%p %u %p %p %u %p %p %u %p %u %p)\n",
+          UserHandle, LmPresent, OldLmEncryptedWithNewLm, NewLmEncryptedWithOldLm,
+          NtPresent, OldNtEncryptedWithNewNt, NewNtEncryptedWithOldNt, NtCrossEncryptionPresent,
+          NewNtEncryptedWithNewLm, LmCrossEncryptionPresent, NewLmEncryptedWithNewNt);
+
+    /* Validate the user handle */
+    Status = SampValidateDbObject(UserHandle,
+                                  SamDbUserObject,
+                                  USER_CHANGE_PASSWORD,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Retrieve the LM password */
+    Length = sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"LMPwd",
+                                    NULL,
+                                    &StoredLmPassword,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+
+    }
+
+    /* Retrieve the NT password */
+    Length = sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"NTPwd",
+                                    NULL,
+                                    &StoredNtPassword,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+
+    }
+
+    /* FIXME: Decrypt passwords */
+    OldLmPassword = OldLmEncryptedWithNewLm;
+    NewLmPassword = NewLmEncryptedWithOldLm;
+    OldNtPassword = OldNtEncryptedWithNewNt;
+    NewNtPassword = NewNtEncryptedWithOldNt;
+
+    /* Check if the old passwords match the stored ones */
+    if (NtPresent)
+    {
+        if (LmPresent)
+        {
+            if (!RtlEqualMemory(&StoredLmPassword,
+                                OldLmPassword,
+                                sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+            {
+                TRACE("Old LM Password does not match!\n");
+                Status = STATUS_WRONG_PASSWORD;
+            }
+            else
+            {
+                if (!RtlEqualMemory(&StoredNtPassword,
+                                    OldNtPassword,
+                                    sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+                {
+                    TRACE("Old NT Password does not match!\n");
+                    Status = STATUS_WRONG_PASSWORD;
+                }
+            }
+        }
+        else
+        {
+            if (!RtlEqualMemory(&StoredNtPassword,
+                                OldNtPassword,
+                                sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+            {
+                TRACE("Old NT Password does not match!\n");
+                Status = STATUS_WRONG_PASSWORD;
+            }
+        }
+    }
+    else
+    {
+        if (LmPresent)
+        {
+            if (!RtlEqualMemory(&StoredLmPassword,
+                                OldLmPassword,
+                                sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+            {
+                TRACE("Old LM Password does not match!\n");
+                Status = STATUS_WRONG_PASSWORD;
+            }
+        }
+        else
+        {
+            Status = STATUS_INVALID_PARAMETER;
+        }
+    }
+
+    /* Store the new password hashes */
+    if (NT_SUCCESS(Status))
+    {
+        Status = SampSetUserPassword(UserObject,
+                                     NewNtPassword,
+                                     NtPresent,
+                                     NewLmPassword,
+                                     LmPresent);
+        if (NT_SUCCESS(Status))
+        {
+            /* Get the fixed size user data */
+            Length = sizeof(SAM_USER_FIXED_DATA);
+            Status = SampGetObjectAttribute(UserObject,
+                                            L"F",
+                                            NULL,
+                                            &FixedUserData,
+                                            &Length);
+            if (NT_SUCCESS(Status))
+            {
+                /* Update PasswordLastSet */
+                NtQuerySystemTime(&FixedUserData.PasswordLastSet);
+
+                /* Set the fixed size user data */
+                Status = SampSetObjectAttribute(UserObject,
+                                                L"F",
+                                                REG_BINARY,
+                                                &FixedUserData,
+                                                Length);
+            }
+        }
+    }
+
+    return Status;
 }
 
 

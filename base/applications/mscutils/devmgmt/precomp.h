@@ -7,6 +7,7 @@
 #include <winuser.h>
 #include <winreg.h>
 #include <wingdi.h>
+#include <winnls.h>
 #include <windowsx.h>
 #include <tchar.h>
 #include <setupapi.h>

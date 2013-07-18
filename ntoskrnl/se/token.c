@@ -657,7 +657,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
      */
 
     uLength = sizeof(SID_AND_ATTRIBUTES) * AccessToken->UserAndGroupCount;
-    uLength += RtlLengthSid(User);
+    uLength += RtlLengthSid(User->Sid);
     for (i = 0; i < GroupCount; i++)
         uLength += RtlLengthSid(Groups[i].Sid);
 

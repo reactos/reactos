@@ -21,17 +21,17 @@
 #pragma once
 
 class CCommonBrowser :
-    public CComCoClass<CCommonBrowser, &CLSID_ACLMulti>,
+    public CComCoClass<CCommonBrowser, &CLSID_CCommonBrowser>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IShellBrowser,
+    public IBrowserService3,
     public IServiceProvider,
     public IOleCommandTarget,
-    public IBrowserService3,
-    public IShellBrowser,
-    public IShellBrowserService,
     public IDockingWindowSite,
     public IDockingWindowFrame,
     public IInputObjectSite,
-    public IDropTarget
+    public IDropTarget,
+    public IShellBrowserService
 {
 private:
 public:
@@ -142,8 +142,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE v_CheckZoneCrossing(LPCITEMIDLIST pidl);
 
     // *** IBrowserService3 methods ***
-    virtual HRESULT STDMETHODCALLTYPE _PositionViewWindow(HWND *, RECT *);
-    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayNameEx(unsigned int, const unsigned short *, DWORD, LPITEMIDLIST *);
+    virtual HRESULT STDMETHODCALLTYPE _PositionViewWindow(HWND, RECT *);
+    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayNameEx(UINT, PCWSTR, DWORD, LPITEMIDLIST *);
 
     // *** IShellBrowser methods ***
     virtual HRESULT STDMETHODCALLTYPE InsertMenusSB(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths);
@@ -187,6 +187,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_COMMONBROWSER)
+    DECLARE_NOT_AGGREGATABLE(CCommonBrowser)
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 

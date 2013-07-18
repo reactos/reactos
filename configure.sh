@@ -1,8 +1,8 @@
 #!/bin/sh
 
 if [ "x$ROS_ARCH" = "x" ]; then
-  echo Could not detect RosBE.
-  exit 1
+	echo Could not detect RosBE.
+	exit 1
 fi
 
 BUILD_ENVIRONMENT=MinGW
@@ -11,24 +11,24 @@ REACTOS_SOURCE_DIR=$(cd `dirname $0` && pwd)
 REACTOS_OUTPUT_PATH=output-$BUILD_ENVIRONMENT-$ARCH
 
 usage() {
-echo Invalid parameter given.
-exit 1
+	echo Invalid parameter given.
+	exit 1
 }
 
 CMAKE_GENERATOR="Ninja"
-for (( i=1; i<=$#; i++ )); do
-	case ${!i} in
+while [ $# -gt 0 ]; do
+	case $1 in
 		-D)
-			((i++))
-			if [[ "x${!i}" == x?*=* ]] ; then
-				ROS_CMAKEOPTS+=" -D ${!i}"
+			shift
+			if echo "x$1" | grep 'x?*=*' > /dev/null; then
+				ROS_CMAKEOPTS+=" -D $1"
 			else
 				usage
 			fi
 		;;
 
-		-D?*=*)
-			 ROS_CMAKEOPTS+=" ${!i}"
+		-D?*=*|-D?*)
+			ROS_CMAKEOPTS+=" $1"
 		;;
 		makefiles|Makefiles)
 			CMAKE_GENERATOR="Unix Makefiles"
@@ -36,12 +36,14 @@ for (( i=1; i<=$#; i++ )); do
 		*)
 			usage
 	esac
+
+	shift
 done
 
 if [ "$REACTOS_SOURCE_DIR" = "$PWD" ]; then
-  echo Creating directories in $REACTOS_OUTPUT_PATH
-  mkdir -p "$REACTOS_OUTPUT_PATH"
-  cd "$REACTOS_OUTPUT_PATH"
+	echo Creating directories in $REACTOS_OUTPUT_PATH
+	mkdir -p "$REACTOS_OUTPUT_PATH"
+	cd "$REACTOS_OUTPUT_PATH"
 fi
 
 mkdir -p host-tools reactos
@@ -59,4 +61,4 @@ rm -f CMakeCache.txt
 
 cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE=0 -DPCH=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=$ARCH -DREACTOS_BUILD_TOOLS_DIR="$REACTOS_BUILD_TOOLS_DIR" $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
 
-echo Configure script complete! Enter directories and execute appropriate build commands\(ex: ninja, make, makex, etc...\).
+echo Configure script complete! Enter directories and execute appropriate build commands \(ex: ninja, make, makex, etc...\).

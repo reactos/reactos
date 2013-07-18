@@ -1,5 +1,5 @@
 
-set_cpp()
+set_cpp(WITH_RUNTIME)
 
 add_executable(sndrec32
     audio_format.cpp

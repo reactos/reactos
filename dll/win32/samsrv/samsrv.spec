@@ -26,7 +26,7 @@
 @ stub SamIFree_SAMPR_GROUP_INFO_BUFFER
 @ stdcall SamIFree_SAMPR_PSID_ARRAY(ptr)
 @ stdcall SamIFree_SAMPR_RETURNED_USTRING_ARRAY(ptr)
-@ stub SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR
+@ stdcall SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR(ptr)
 @ stdcall SamIFree_SAMPR_ULONG_ARRAY(ptr)
 @ stdcall SamIFree_SAMPR_USER_INFO_BUFFER(ptr long)
 @ stub SamIFree_UserInternal6Information

@@ -203,8 +203,95 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
                       IN PUNICODE_STRING OldPassword,
                       IN PUNICODE_STRING NewPassword)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
+    ENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
+    ENCRYPTED_LM_OWF_PASSWORD OldLmPassword;
+    ENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
+    OEM_STRING LmPwdString;
+    CHAR LmPwdBuffer[15];
+    BOOLEAN OldLmPasswordPresent = FALSE;
+    BOOLEAN NewLmPasswordPresent = FALSE;
+    NTSTATUS Status;
+
+    /* Calculate the NT hash for the old password */
+    Status = SystemFunction007(OldPassword,
+                               (LPBYTE)&OldNtPassword);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SystemFunction007 failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Calculate the NT hash for the new password */
+    Status = SystemFunction007(NewPassword,
+                               (LPBYTE)&NewNtPassword);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SystemFunction007 failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Calculate the LM password and hash for the old password */
+    LmPwdString.Length = 15;
+    LmPwdString.MaximumLength = 15;
+    LmPwdString.Buffer = LmPwdBuffer;
+    ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
+
+    Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
+                                               OldPassword,
+                                               FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Calculate the LM hash value of the password */
+        Status = SystemFunction006(LmPwdString.Buffer,
+                                   (LPSTR)&OldLmPassword);
+        if (NT_SUCCESS(Status))
+        {
+            OldLmPasswordPresent = TRUE;
+        }
+    }
+
+    /* Calculate the LM password and hash for the new password */
+    LmPwdString.Length = 15;
+    LmPwdString.MaximumLength = 15;
+    LmPwdString.Buffer = LmPwdBuffer;
+    ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
+
+    Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
+                                               NewPassword,
+                                               FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Calculate the LM hash value of the password */
+        Status = SystemFunction006(LmPwdString.Buffer,
+                                   (LPSTR)&NewLmPassword);
+        if (NT_SUCCESS(Status))
+        {
+            NewLmPasswordPresent = TRUE;
+        }
+    }
+
+    RpcTryExcept
+    {
+        Status = SamrChangePasswordUser((SAMPR_HANDLE)UserHandle,
+                                        OldLmPasswordPresent && NewLmPasswordPresent,
+                                        &OldLmPassword,
+                                        &NewLmPassword,
+                                        TRUE,
+                                        &OldNtPassword,
+                                        &NewNtPassword,
+                                        FALSE,
+                                        NULL,
+                                        FALSE,
+                                        NULL);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -536,7 +623,7 @@ SamEnumerateAliasesInDomain(IN SAM_HANDLE DomainHandle,
     {
         Status = SamrEnumerateAliasesInDomain((SAMPR_HANDLE)DomainHandle,
                                               EnumerationContext,
-                                              (PSAMPR_ENUMERATION_BUFFER *)&EnumBuffer,
+                                              &EnumBuffer,
                                               PreferedMaximumLength,
                                               CountReturned);
 
@@ -586,7 +673,7 @@ SamEnumerateDomainsInSamServer(IN SAM_HANDLE ServerHandle,
     {
         Status = SamrEnumerateDomainsInSamServer((SAMPR_HANDLE)ServerHandle,
                                                  EnumerationContext,
-                                                 (PSAMPR_ENUMERATION_BUFFER *)&EnumBuffer,
+                                                 &EnumBuffer,
                                                  PreferedMaximumLength,
                                                  CountReturned);
 
@@ -634,7 +721,7 @@ SamEnumerateGroupsInDomain(IN SAM_HANDLE DomainHandle,
     {
         Status = SamrEnumerateGroupsInDomain((SAMPR_HANDLE)DomainHandle,
                                              EnumerationContext,
-                                             (PSAMPR_ENUMERATION_BUFFER *)&EnumBuffer,
+                                             &EnumBuffer,
                                              PreferedMaximumLength,
                                              CountReturned);
         if (EnumBuffer != NULL)
@@ -681,7 +768,7 @@ SamEnumerateUsersInDomain(IN SAM_HANDLE DomainHandle,
         Status = SamrEnumerateUsersInDomain((SAMPR_HANDLE)DomainHandle,
                                             EnumerationContext,
                                             UserAccountControl,
-                                            (PSAMPR_ENUMERATION_BUFFER *)&EnumBuffer,
+                                            &EnumBuffer,
                                             PreferedMaximumLength,
                                             CountReturned);
         if (EnumBuffer != NULL)

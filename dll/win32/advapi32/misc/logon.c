@@ -650,7 +650,7 @@ LogonUserW(LPWSTR lpszUsername,
     /* Get the user SID from the registry */
     if (!GetUserSid (lpszUsername, &UserSid))
     {
-        ERR("SamGetUserSid() failed\n");
+        ERR("GetUserSid() failed\n");
         return FALSE;
     }
 

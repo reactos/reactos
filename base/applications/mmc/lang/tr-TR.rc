@@ -1,0 +1,25 @@
+/*
+ * TRANSLATORS: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDM_CONSOLEROOT MENU DISCARDABLE
+BEGIN
+    POPUP "&Kütük"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Çıkış\tAlt+F4", ID_FILE_EXIT
+    END
+
+    POPUP "&Yardım"
+    BEGIN
+        MENUITEM "&Hakkında...", ID_HELP_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APPTITLE "Yönetim Konsolu"
+    IDS_CONSOLETITLE "Konsol%1!u!"
+END

@@ -5,3 +5,9 @@
 #define REACTOS_STR_INTERNAL_NAME	"getuname\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"getuname.dll\0"
 #include <reactos/version.rc>
+
+//UTF-8
+#pragma code_page(65001)
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif

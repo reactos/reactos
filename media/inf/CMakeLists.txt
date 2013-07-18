@@ -27,6 +27,7 @@ list(APPEND INF_FILES
     NET_NIC.inf
     netamd.inf
     netisa.inf
+    netrtl.inf
     netrtpnt.inf
     nettcpip.inf
     ports.inf

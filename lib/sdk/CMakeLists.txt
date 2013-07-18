@@ -1,5 +1,8 @@
 
 add_subdirectory(comsupp)
+if(MSVC)
+    add_subdirectory(cpprt)
+endif()
 add_subdirectory(crt)
 add_subdirectory(delayimp)
 add_subdirectory(dxguid)

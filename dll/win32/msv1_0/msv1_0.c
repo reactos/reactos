@@ -729,6 +729,41 @@ done:
 }
 
 
+static
+NTSTATUS
+ChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
+               IN PVOID ProtocolSubmitBuffer,
+               IN PVOID ClientBufferBase,
+               IN ULONG SubmitBufferLength,
+               OUT PVOID *ProtocolReturnBuffer,
+               OUT PULONG ReturnBufferLength,
+               OUT PNTSTATUS ProtocolStatus)
+{
+    PMSV1_0_CHANGEPASSWORD_REQUEST RequestBuffer;
+    ULONG_PTR PtrOffset;
+
+    TRACE("()\n");
+
+    RequestBuffer = (PMSV1_0_CHANGEPASSWORD_REQUEST)ProtocolSubmitBuffer;
+
+    /* Fix-up pointers in the request buffer info */
+    PtrOffset = (ULONG_PTR)ProtocolSubmitBuffer - (ULONG_PTR)ClientBufferBase;
+
+    RequestBuffer->DomainName.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->DomainName.Buffer + PtrOffset);
+    RequestBuffer->AccountName.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->AccountName.Buffer + PtrOffset);
+    RequestBuffer->OldPassword.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->OldPassword.Buffer + PtrOffset);
+    RequestBuffer->NewPassword.Buffer = (PWSTR)((ULONG_PTR)RequestBuffer->NewPassword.Buffer + PtrOffset);
+
+    TRACE("Domain: %S\n", RequestBuffer->DomainName.Buffer);
+    TRACE("Account: %S\n", RequestBuffer->AccountName.Buffer);
+    TRACE("Old Password: %S\n", RequestBuffer->OldPassword.Buffer);
+    TRACE("New Password: %S\n", RequestBuffer->NewPassword.Buffer);
+
+
+    return STATUS_SUCCESS;
+}
+
+
 /*
  * @unimplemented
  */
@@ -742,8 +777,53 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
                  OUT PULONG ReturnBufferLength,
                  OUT PNTSTATUS ProtocolStatus)
 {
+    ULONG MessageType;
+    NTSTATUS Status;
+
     TRACE("()\n");
-    return STATUS_NOT_IMPLEMENTED;
+
+    if (SubmitBufferLength < sizeof(MSV1_0_PROTOCOL_MESSAGE_TYPE))
+        return STATUS_INVALID_PARAMETER;
+
+    MessageType = (ULONG)*((PMSV1_0_PROTOCOL_MESSAGE_TYPE)ProtocolSubmitBuffer);
+
+    *ProtocolReturnBuffer = NULL;
+    *ReturnBufferLength = 0;
+
+    switch (MessageType)
+    {
+        case MsV1_0Lm20ChallengeRequest:
+        case MsV1_0Lm20GetChallengeResponse:
+        case MsV1_0EnumerateUsers:
+        case MsV1_0GetUserInfo:
+        case MsV1_0ReLogonUsers:
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case MsV1_0ChangePassword:
+            Status = ChangePassword(ClientRequest,
+                                    ProtocolSubmitBuffer,
+                                    ClientBufferBase,
+                                    SubmitBufferLength,
+                                    ProtocolReturnBuffer,
+                                    ReturnBufferLength,
+                                    ProtocolStatus);
+            break;
+
+        case MsV1_0ChangeCachedPassword:
+        case MsV1_0GenericPassthrough:
+        case MsV1_0CacheLogon:
+        case MsV1_0SubAuth:
+        case MsV1_0DeriveCredential:
+        case MsV1_0CacheLookup:
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        default:
+            return STATUS_INVALID_PARAMETER;
+    }
+
+    return Status;
 }
 
 

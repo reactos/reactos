@@ -1,7 +1,9 @@
 
-set_cpp()
+set_cpp(WITH_RUNTIME)
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/cardlib ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(
+    ${REACTOS_SOURCE_DIR}/lib/3rdparty/cardlib
+    ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(spider
     spider.cpp

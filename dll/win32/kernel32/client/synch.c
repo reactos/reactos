@@ -590,7 +590,7 @@ CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
     CreateNtObjectFromWin32Api(Event, Event, EVENT,
                                lpEventAttributes,
                                lpName,
-                               bManualReset ? NotificationTimer : SynchronizationTimer,
+                               bManualReset ? NotificationEvent : SynchronizationEvent,
                                bInitialState);
 }
 

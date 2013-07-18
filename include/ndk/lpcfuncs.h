@@ -52,7 +52,7 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAcceptConnectPort(
-    _In_ PHANDLE PortHandle,
+    _Out_ PHANDLE PortHandle,
     _In_opt_ PVOID PortContext,
     _In_ PPORT_MESSAGE ConnectionRequest,
     _In_ BOOLEAN AcceptConnection,
@@ -71,11 +71,11 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtConnectPort(
-    _In_ PHANDLE PortHandle,
+    _Out_ PHANDLE PortHandle,
     _In_ PUNICODE_STRING PortName,
     _In_ PSECURITY_QUALITY_OF_SERVICE SecurityQos,
     _In_opt_ PPORT_VIEW ClientView,
-    _In_opt_ PREMOTE_PORT_VIEW ServerViewONAL,
+    _In_opt_ PREMOTE_PORT_VIEW ServerView,
     _In_opt_ PULONG MaxMessageLength,
     _In_opt_ PVOID ConnectionInformation,
     _In_opt_ PULONG ConnectionInformationLength
@@ -85,7 +85,7 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreatePort(
-    _In_ PHANDLE PortHandle,
+    _Out_ PHANDLE PortHandle,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes,
     _In_ ULONG MaxConnectionInfoLength,
     _In_ ULONG MaxMessageLength,
@@ -96,7 +96,7 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateWaitablePort(
-    _In_ PHANDLE PortHandle,
+    _Out_ PHANDLE PortHandle,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes,
     _In_ ULONG MaxConnectInfoLength,
     _In_ ULONG MaxDataLength,
@@ -206,9 +206,9 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSecureConnectPort(
-    PHANDLE PortHandle,
-    PUNICODE_STRING PortName,
-    PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+    _Out_ PHANDLE PortHandle,
+    _In_ PUNICODE_STRING PortName,
+    _In_ PSECURITY_QUALITY_OF_SERVICE SecurityQos,
     _In_opt_ PPORT_VIEW ClientView,
     _In_opt_ PSID Sid,
     _In_opt_ PREMOTE_PORT_VIEW ServerView,

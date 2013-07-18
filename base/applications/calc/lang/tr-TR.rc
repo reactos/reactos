@@ -1,3 +1,7 @@
+/*
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
+ 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 // Dialog
@@ -547,7 +551,7 @@ BEGIN
     IDS_ENERGY_KILOJOULES           "Kilojul"
     IDS_ENERGY_KILOWATT_HOURS       "Kilovat-saat"
     IDS_ENERGY_NUTRITION_CALORIES   "Besin kalorisi"
-    IDS_ENERGY_TH_CALORIES          "Termokimyasal kalori"
+    IDS_ENERGY_TH_CALORIES          "Termokimyevî kalori"
 END
 
 // TYPES OF LENGTHS

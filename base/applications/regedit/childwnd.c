@@ -439,8 +439,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
         goto def;
     case WM_DESTROY:
-        DestroyTreeView();
         DestroyListView(g_pChildWnd->hListWnd);
+        DestroyTreeView(g_pChildWnd->hTreeWnd);
         DestroyMainMenu();
         HeapFree(GetProcessHeap(), 0, g_pChildWnd);
         g_pChildWnd = NULL;

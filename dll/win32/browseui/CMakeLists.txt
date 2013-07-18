@@ -1,12 +1,8 @@
 
-set_cpp()
+set_cpp(WITH_RUNTIME)
 
 add_definitions(
     -D__WINESRC__)
-
-if (MSVC)
-    add_compile_flags("/EHa-")
-endif()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -70,4 +66,3 @@ add_importlibs(browseui
 
 add_pch(browseui precomp.h)
 add_cd_file(TARGET browseui DESTINATION reactos/system32 FOR all)
-

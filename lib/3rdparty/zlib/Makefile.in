@@ -1,5 +1,5 @@
 # Makefile for zlib
-# Copyright (C) 1995-2011 Jean-loup Gailly.
+# Copyright (C) 1995-2013 Jean-loup Gailly, Mark Adler
 # For conditions of distribution and use, see copyright notice in zlib.h
 
 # To compile and test, type:
@@ -32,7 +32,7 @@ CPP=$(CC) -E
 
 STATICLIB=libz.a
 SHAREDLIB=libz.so
-SHAREDLIBV=libz.so.1.2.7
+SHAREDLIBV=libz.so.1.2.8
 SHAREDLIBM=libz.so.1
 LIBS=$(STATICLIB) $(SHAREDLIBV)
 
@@ -83,7 +83,7 @@ check: test
 test: all teststatic testshared
 
 teststatic: static
-	@TMPST=`mktemp fooXXXXXX`; \
+	@TMPST=tmpst_$$; \
 	if echo hello world | ./minigzip | ./minigzip -d && ./example $$TMPST ; then \
 	  echo '		*** zlib test OK ***'; \
 	else \
@@ -96,7 +96,7 @@ testshared: shared
 	LD_LIBRARYN32_PATH=`pwd`:$(LD_LIBRARYN32_PATH) ; export LD_LIBRARYN32_PATH; \
 	DYLD_LIBRARY_PATH=`pwd`:$(DYLD_LIBRARY_PATH) ; export DYLD_LIBRARY_PATH; \
 	SHLIB_PATH=`pwd`:$(SHLIB_PATH) ; export SHLIB_PATH; \
-	TMPSH=`mktemp fooXXXXXX`; \
+	TMPSH=tmpsh_$$; \
 	if echo hello world | ./minigzipsh | ./minigzipsh -d && ./examplesh $$TMPSH; then \
 	  echo '		*** zlib shared test OK ***'; \
 	else \
@@ -105,7 +105,7 @@ testshared: shared
 	rm -f $$TMPSH
 
 test64: all64
-	@TMP64=`mktemp fooXXXXXX`; \
+	@TMP64=tmp64_$$; \
 	if echo hello world | ./minigzip64 | ./minigzip64 -d && ./example64 $$TMP64; then \
 	  echo '		*** zlib 64-bit test OK ***'; \
 	else \
@@ -216,13 +216,13 @@ install: install-libs
 	chmod 644 $(DESTDIR)$(includedir)/zlib.h $(DESTDIR)$(includedir)/zconf.h
 
 uninstall:
-	cd $(DESTDIR)$(includedir); rm -f zlib.h zconf.h
-	cd $(DESTDIR)$(libdir); rm -f libz.a; \
+	cd $(DESTDIR)$(includedir) && rm -f zlib.h zconf.h
+	cd $(DESTDIR)$(libdir) && rm -f libz.a; \
 	if test -n "$(SHAREDLIBV)" -a -f $(SHAREDLIBV); then \
 	  rm -f $(SHAREDLIBV) $(SHAREDLIB) $(SHAREDLIBM); \
 	fi
-	cd $(DESTDIR)$(man3dir); rm -f zlib.3
-	cd $(DESTDIR)$(pkgconfigdir); rm -f zlib.pc
+	cd $(DESTDIR)$(man3dir) && rm -f zlib.3
+	cd $(DESTDIR)$(pkgconfigdir) && rm -f zlib.pc
 
 docs: zlib.3.pdf
 
@@ -230,7 +230,7 @@ zlib.3.pdf: zlib.3
 	groff -mandoc -f H -T ps zlib.3 | ps2pdf - zlib.3.pdf
 
 zconf.h.cmakein: zconf.h.in
-	-@ TEMPFILE=`mktemp __XXXXXX`; \
+	-@ TEMPFILE=zconfh_$$; \
 	echo "/#define ZCONF_H/ a\\\\\n#cmakedefine Z_PREFIX\\\\\n#cmakedefine Z_HAVE_UNISTD_H\n" >> $$TEMPFILE &&\
 	sed -f $$TEMPFILE zconf.h.in > zconf.h.cmakein &&\
 	touch -r zconf.h.in zconf.h.cmakein &&\

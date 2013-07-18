@@ -1,11 +1,11 @@
 
+set_cpp()
+
 include_directories(
     BEFORE ${CMAKE_CURRENT_SOURCE_DIR}
     inc)
 
 #add_definitions(-D_DEBUG)
-
-set_cpp()
 
 list(APPEND SOURCE
     id_ata.cpp
@@ -19,14 +19,11 @@ list(APPEND SOURCE
 
 add_library(uniata SHARED ${SOURCE} idedma.rc)
 
-# FIXME: http://www.cmake.org/Bug/view.php?id=12998
-if(MSVC)
-    #add_target_compile_flags(uniata "/GR-")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/GR-")
-else()
+
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     #allow_warnings(uniata)
-    #add_target_compile_flags(uniata "-fno-exceptions -fno-rtti")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti -Wno-error")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()
 
 add_pch(uniata stdafx.h)

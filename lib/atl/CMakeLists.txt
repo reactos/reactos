@@ -1,4 +1,6 @@
 
+set_cpp(WITH_RTTI)
+
 add_definitions(
     -DUNICODE -D_UNICODE
     -DROS_Headers)

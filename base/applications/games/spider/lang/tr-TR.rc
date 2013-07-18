@@ -1,9 +1,10 @@
 /*
- * PROJECT:    Spider Solitaire
- * LICENSE:    See COPYING in top level directory
- * FILE:       base/applications/games/spider/lang/tr-TR.rc
- * PURPOSE:    Turkish Language File for Spider Solitaire
- * TRANSLATOR: Erdem Ersoy (eersoy93)
+ * PROJECT:     ReactOS Spider Solitaire
+ * LICENSE:     See COPYING in top level directory
+ * FILE:        base/applications/games/spider/lang/tr-TR.rc
+ * PURPOSE:     Turkish Resource File for ReactOS Spider Solitaire
+ * PROGRAMMERS:
+ * TRANSLATOR:  2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

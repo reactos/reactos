@@ -4,8 +4,7 @@ add_definitions(
     -D_GDI32_ # prevent gl* being declared __declspec(dllimport) in MS headers
     -DBUILD_GL32 # declare gl* as __declspec(dllexport) in Mesa headers
     -D_GLAPI_NO_EXPORTS # prevent _glapi_* from being declared __declspec(dllimport)
-    -DKHRONOS_DLL_EXPORTS
-)
+    -DKHRONOS_DLL_EXPORTS)
 
 if((ARCH STREQUAL "i386") AND (NOT MSVC))
     list(APPEND SOURCE glapi_x86.S)

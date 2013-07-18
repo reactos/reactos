@@ -34,7 +34,17 @@ _tWinMain(HINSTANCE hThisInstance,
         }
         return 0;
     }
+    
+    switch (GetUserDefaultUILanguage())
+  {
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+      SetProcessDefaultLayout(LAYOUT_RTL);
+      break;
 
+    default:
+      break;
+  }
+    
     hInstance = hThisInstance;
     ProcessHeap = GetProcessHeap();
 

@@ -1878,7 +1878,7 @@ typedef enum _EX_POOL_PRIORITY {
 #if !defined(_WIN64) && (defined(_NTDDK_) || defined(_NTIFS_) || defined(_NDIS_))
 #define LOOKASIDE_ALIGN
 #else
-#define LOOKASIDE_ALIGN /* FIXME: DECLSPEC_CACHEALIGN */
+#define LOOKASIDE_ALIGN DECLSPEC_CACHEALIGN
 #endif
 
 typedef struct _LOOKASIDE_LIST_EX *PLOOKASIDE_LIST_EX;
@@ -8333,7 +8333,7 @@ KeRestoreFloatingPointState(PVOID FloatingState)
 #define HIGH_LEVEL              15
 
 #define KI_USER_SHARED_DATA ((ULONG_PTR)(KADDRESS_BASE + 0xFFFE0000))
-extern volatile LARGE_INTEGER KeTickCount;
+extern DECLSPEC_CACHEALIGN volatile LARGE_INTEGER KeTickCount;
 
 #define PAUSE_PROCESSOR __yield();
 

@@ -6,6 +6,7 @@ list(APPEND SOURCE
     classinst.c
     comdb.c
     msports.c
+    parallel.c
     serial.c
     msports.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msports_stubs.c

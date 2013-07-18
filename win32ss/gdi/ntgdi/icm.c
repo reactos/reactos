@@ -23,6 +23,8 @@ IntGdiCreateColorSpace(
     HCOLORSPACE hCS;
 
     pCS = COLORSPACEOBJ_AllocCSWithHandle();
+    if (pCS == NULL) return NULL;
+
     hCS = pCS->BaseObject.hHmgr;
 
     pCS->lcsColorSpace = pLogColorSpace->lcsColorSpace;

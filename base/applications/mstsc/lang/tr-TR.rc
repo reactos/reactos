@@ -1,3 +1,7 @@
+/*
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
+ 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_GENERAL DIALOGEX 0, 0, 242, 175
@@ -50,7 +54,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TAB_GENERAL         "Genel"
+    IDS_TAB_GENERAL         "Umûmî"
     IDS_TAB_DISPLAY         "Görüntü"
     IDS_256COLORS           "256 Renk"
     IDS_HIGHCOLOR15         "32,768 (15 İkillik) Renk"

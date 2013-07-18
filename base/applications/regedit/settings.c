@@ -149,7 +149,7 @@ extern void SaveSettings(void)
 
         /* Get program window settings */
         tConfig.tPlacement.length = sizeof(WINDOWPLACEMENT);
-        GetWindowPlacement(hFrameWnd , &tConfig.tPlacement);
+        GetWindowPlacement(hFrameWnd, &tConfig.tPlacement);
 
         /* Save all the data */
         RegSetValueExW(hKey, L"View", 0, REG_BINARY, (LPBYTE)&tConfig, iBufferSize);

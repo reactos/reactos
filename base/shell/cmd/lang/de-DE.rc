@@ -89,12 +89,12 @@ STRING_CMD_HELP7,"  [redirections and piping]"
 
 STRING_CMD_HELP8, "Startet eine neue Instanz des ReactOS-Befehlsinterpreters.\n\n\
 CMD [/[C|K] Befehl][/P][/Q][/T:bf]\n\n\
-  /C Befehl   	Führt den Befehl in der Zeichenfolge aus. Anschließend\n\
-				wird diese Instanz beendet.\n\
-  /K Befehl   	Führt den Befehl in der Zeichenfolge aus und läuft weiter.\n\
-  /P          	CMD wird permanent und führt autoexec.bat aus\n\
-				(kann nicht beendet werden).\n\
-  /T:bf       	Ändert die Hintergrund- und Vordergrund-Farbe (siehe COLOR Befehl)."
+  /C Befehl     Führt den Befehl in der Zeichenfolge aus. Anschließend\n\
+                wird diese Instanz beendet.\n\
+  /K Befehl     Führt den Befehl in der Zeichenfolge aus und läuft weiter.\n\
+  /P            CMD wird permanent und führt autoexec.bat aus\n\
+                (kann nicht beendet werden).\n\
+  /T:bf         Ändert die Hintergrund- und Vordergrund-Farbe (siehe COLOR Befehl)."
 
 STRING_COLOR_HELP1, "Legt die Standardhinter- und Vordergrundfarben für die Konsole fest.\n\n\
 COLOR [attr [/F]] \n\n\
@@ -107,15 +107,15 @@ Die jeweils erste Angabe bezieht sich auf den Hintergrund, die zweite\n\
 auf den Vordergrund. \n\
 Es müssen jeweils zwei Werte angegeben werden. \n\
 Farben:\n\
-Dez  Hex  Name       		dec  hex  name\n\
-0    0    Schwarz      		8    8    Dunkelgrau\n\
+Dez  Hex  Name              dec  hex  name\n\
+0    0    Schwarz           8    8    Dunkelgrau\n\
 1    1    Dunkelblau        9    9    Blau\n\
-2    2    Dunkelgrün     	10   A    Grün\n\
-3    3    Blaugrün       	11   B    Zyan\n\
-4    4    Dunkelrot        	12   C    Rot\n\
-5    5    Lila   			13   D    Magenta\n\
-6    6    Ocker     		14   E    Gelb\n\
-7    7    Hellgrau      	15   F    Weiß\n\
+2    2    Dunkelgrün        10   A    Grün\n\
+3    3    Blaugrün          11   B    Zyan\n\
+4    4    Dunkelrot         12   C    Rot\n\
+5    5    Lila              13   D    Magenta\n\
+6    6    Ocker             14   E    Gelb\n\
+7    7    Hellgrau          15   F    Weiß\n\
 Beispiel: ""COLOR fc"" legt Rot als Text- und Weiß als Hintergrund-\n\
 farbe fest"
 
@@ -262,6 +262,15 @@ STRING_FREE_HELP1, "\nVolume in Laufwerk %s ist %-11s\n\
 
 STRING_FREE_HELP2, "Zeigt die Volumeinformationen an.\n\nFREE [Laufwerk: ...]"
 
+STRING_GOTO_HELP1,  "Setzt die Ausführung eines Batchprogramms an einer Marke fort.\n\n\
+GOTO Marke\n\n\
+  Marke  Definiert eine Zeichenfolge als Marke in einem Batchprogramm.\n\n\
+Marken stehen am Zeilenanfang mit einem vorangestellten Doppelpunkt."
+
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\n\
   IF [NOT] ERRORLEVEL Nummer Befehl\n\
   IF [NOT] variable1==variable2 Befehl\n\
@@ -278,11 +287,6 @@ variable1==variable2\n\
 EXIST Dateiname   Bedingung ist erfüllt, wenn die angegebene Datei existiert.\n\
 DEFINED variable  Bedingung ist erfüllt, wenn die angegebene Datei definiert\n\
                   wurde."
-
-STRING_GOTO_HELP1,  "Setzt die Ausführung eines Batchprogramms an einer Marke fort.\n\n\
-GOTO Marke\n\n\
-  Marke  Definiert eine Zeichenfolge als Marke in einem Batchprogramm.\n\n\
-Marken stehen am Zeilenanfang mit einem vorangestellten Doppelpunkt."
 
 STRING_LABEL_HELP1, "Erstellt, ändert oder löscht die Bezeichnung eines Volumes.\n\nLABEL [Laufwerk:][label]"
 
@@ -357,10 +361,12 @@ Sie kann aus normalen Zeichen und folgenden Sonderzeichen bestehen:\n\n\
   $F   ) (Klammer zu)\n\
   $G   > (Größer-als-Zeichen)\n\
   $H   Rückschritt (löscht vorangehendes Zeichen)\n\
+  $I   Information line\n\
   $L   < (Kleiner-als-Zeichen)\n\
   $N   Aktuelles Laufwerk\n\
   $P   Aktuelles Laufwerk und Pfad\n\
   $Q   = (Gleichheitszeichen)\n\
+  $S   (space)\n\
   $T   Aktuelle Zeit\n\
   $V   Betriebssystem-Versionsnummer\n\
   $_   Wagenrücklauf und Zeilenvorschub\n\
@@ -554,6 +560,7 @@ RESTORE       stellt das Fenster wieder her\n\
 title         neuer Titel"
 
 STRING_HELP1, "Übersicht aller verfügbaren Befehle und deren Kurzbeschreibungen\n\n\
+  help Befehl\n\
   Befehl /?     Um nähere Informationen zu einem bestimmten Befehl\n\
                 zu erhalten.\n\n\
 ?        Listet alle Befehle auf (ohne Erklärung).\n\

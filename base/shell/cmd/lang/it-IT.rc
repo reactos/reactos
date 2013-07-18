@@ -264,6 +264,16 @@ STRING_FREE_HELP1, "\nIl Volume del disco %s è %-11s\n\
 
 STRING_FREE_HELP2, "Visualizza le informazioni sul disco.\n\nFREE [disco: ...]\n"
 
+STRING_GOTO_HELP1,  "Porta l'esecuzione di un batch alla linea con l'etichetta\n\
+                     indicata.\n\n\
+GOTO etichetta\n\n\
+  etichetta  Indica il testo utilizzato come etichetta in un batch.\n\n\
+Nel batch questa deve trovarsi da sola in una linea con davanti due punti :.\n"
+
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Esegue una elaborazione condizionale nei batch.\n\n\
   IF [NOT] ERRORLEVEL numero comando\n\
   IF [NOT] stringa1==stringa2 comando\n\
@@ -278,12 +288,6 @@ command           E' il comando da eseguire se la condizione è verificata.\n\
 string1==string2  E' verificata se sono uguali le due stringhe\n\
 EXIST nomefile    E' verificata se il file esiste.\n\
 DEFINED variabile E' verificata se la variabile è definita.\n"
-
-STRING_GOTO_HELP1,  "Porta l'esecuzione di un batch alla linea con l'etichetta\n\
-                     indicata.\n\n\
-GOTO etichetta\n\n\
-  etichetta  Indica il testo utilizzato come etichetta in un batch.\n\n\
-Nel batch questa deve trovarsi da sola in una linea con davanti due punti :.\n"
 
 STRING_LABEL_HELP1, "Visualizza o modifica l'etichetta di un disco.\n\n\
 LABEL [disco:][etichetta]\n"
@@ -364,10 +368,12 @@ Può essere composto da un testo qualunque e dai seguenti codici speciali:\n\n\
   $F   ) (parentesi destra)\n\
   $G   > (simbolo di maggiore di)\n\
   $H   Backspace (cancella il carattere precedente)\n\
+  $I   Information line\n\
   $L   < (simbolo di minore di)\n\
   $N   Disco corrente\n\
   $P   Disco e percorso corrente\n\
   $Q   = (simbolo di uguale)\n\
+  $S   (space)\n\
   $T   Ora attuale\n\
   $V   Versione del sistema operativo\n\
   $_   CR LF (a capo)\n\
@@ -386,9 +392,9 @@ REM [Commento]"
 
 STRING_RMDIR_HELP,   "Cancella una cartella.\n\n\
 RMDIR [disco:]percorso\nRD [disco:]percorso\n\
-/S			cancella tutti i file e le cartelle indicate\n\
-/Q			non chiede conferma\n"
-STRING_RMDIR_HELP2,	"La cartella non è vuota!\n"
+/S          cancella tutti i file e le cartelle indicate\n\
+/Q          non chiede conferma\n"
+STRING_RMDIR_HELP2, "La cartella non è vuota!\n"
 
 STRING_REN_HELP1, "Rinomina file/cartella or file/cartelle.\n\n\
 RENAME [/E /N /P /Q /S /T] vecchio_nome ... nuovo_nome\n\
@@ -500,7 +506,7 @@ del cronometro da attivo a fermo o viceversa\n\n"
 
 STRING_TYPE_HELP1, "Visualizza il contenuto di un file di testo.\n\n\
 TYPE [disco:][percorso]nomefile \n\
-  /P 		  Mostra una schermata alla volta.\n"
+  /P          Mostra una schermata alla volta.\n"
 
 STRING_VERIFY_HELP1, "Questo comando non è implementato!!\n\
 Attiva o disattiva la verifica automatica della scrittura dei file\n\
@@ -566,6 +572,7 @@ titolo        il nuovo titolo\n"
 
 
 STRING_HELP1, "Elenco di tutti i comandi disponibili (+ descrizione)\n\n\
+  help comando\n\
   comando /?   Per i dettagli su uno specifico comando\n\n\
 ?        Elenco di tutti i comandi disponibili.\n\
 ALIAS    Imposta, toglie o visualizza gli alias.\n\

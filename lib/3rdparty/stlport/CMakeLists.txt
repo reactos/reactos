@@ -2,12 +2,12 @@
 #uncomment this if you want to test c++ compilation
 #add_subdirectory(test)
 
+set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
+
 add_definitions(
     -D_STLP_USE_EXCEPTIONS
     -D_DLL -D__USE_CRTIMP
     -D_BUILD_STLPORT)
-
-set_cpp()
 
 list(APPEND SOURCE
     src/allocators.cpp

@@ -618,9 +618,11 @@ NTSTATUS DispTdiListen(
 			      Connection->AddressFile->Protocol );
       }
 
-      if( NT_SUCCESS(Status) )
+      if( NT_SUCCESS(Status) ) {
+	  ReferenceObject(Connection->AddressFile->Listener);
 	  Status = TCPListen( Connection->AddressFile->Listener, 1024 );
 	  /* BACKLOG */
+      }
   }
 
   if( NT_SUCCESS(Status) ) {

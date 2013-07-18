@@ -8,7 +8,7 @@ Description = Additional Plugins for supporting more file types.
 Size = 9.85MB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_435_setup.exe
+URLDownload = http://ring.maffin.ad.jp/archives/pc/forest/i/irfanview/10830/irfanview_plugins_436_setup.exe
 CDPath = none
 
 [Section.0407]

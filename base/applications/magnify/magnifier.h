@@ -25,6 +25,7 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <tchar.h>
+#include <winnls.h> //test
 
 #include "resource.h"
 

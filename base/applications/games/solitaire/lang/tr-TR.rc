@@ -1,10 +1,10 @@
 /*
- * PROJECT:     Solitaire
+ * PROJECT:     ReactOS Solitaire
  * LICENSE:     Freeware, permission to use under Public Domain
  * FILE:        base/applications/games/solitaire/lang/tr-TR.rc
- * PURPOSE:     Turkish Language File for Solitaire
+ * PURPOSE:     Turkish Resource File for ReactOS Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
- * TRANSLATOR:  Erdem Ersoy (eersoy93)
+ * TRANSLATOR:  2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

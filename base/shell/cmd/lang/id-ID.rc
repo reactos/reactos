@@ -267,6 +267,15 @@ STRING_FREE_HELP1, "\nVolume di drive %s adalah %-11s\n\
 
 STRING_FREE_HELP2, "Menampilkan informasi drive.\n\nFREE [drive: ...]\n"
 
+STRING_GOTO_HELP1,  "Mengarahkan CMD ke baris berlabel dalam naskah batch.\n\n\
+GOTO label\n\n\
+  label  Menetapkan string teks yang digunakan dalam naskah batch sebagai label.\n\n\
+Anda mengetik label pada sebuah baris, dimulai dengan titik dua."
+
+STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
+HELP [command]\n\n\
+  command - Display help information for this command.\n"
+
 STRING_IF_HELP1, "Melakukan pemrosesan kondisional dalam program batch.\n\n\
   IF [NOT] ERRORLEVEL nomor perintah\n\
   IF [NOT] string1==string2 perintah\n\
@@ -281,11 +290,6 @@ string1==string2  Menetapkan kondisi benar jika string teks yang ditetapkan\n\
                   sama.\n\
 EXIST filename    Menetapkan kondisi benar jika nama file ada.\n\
 DEFINED variable  Menetapkan kondisi benar jika variabel didefinisikan.\n"
-
-STRING_GOTO_HELP1,  "Mengarahkan CMD ke baris berlabel dalam naskah batch.\n\n\
-GOTO label\n\n\
-  label  Menetapkan string teks yang digunakan dalam naskah batch sebagai label.\n\n\
-Anda mengetik label pada sebuah baris, dimulai dengan titik dua."
 
 STRING_LABEL_HELP1, "Menampilkan atau mengubah label drive.\n\nLABEL [drive:][label]\n"
 
@@ -360,10 +364,12 @@ Prompt bisa dibuat dari karakter normal dan kode spesial berikut:\n\n\
   $F   ) (Tanda kurung Kanan)\n\
   $G   > (Tanda lebih-dari)\n\
   $H   Backspace (menghapus karakter sebelumnya)\n\
+  $I   Information line\n\
   $L   < (tanda kurang-dari)\n\
   $N   Drive saat ini\n\
   $P   Drive dan path saat ini\n\
   $Q   = (tanda sama dengan)\n\
+  $S   (space)\n\
   $T   Jam saat ini\n\
   $V   Nomor versi OS\n\
   $_   Carriage return dan linefeed\n\
@@ -381,9 +387,9 @@ STRING_REM_HELP, "Memulai baris komentar dalam file batch.\n\nREM [Komentar]"
 
 STRING_RMDIR_HELP,   "Menghapus direktori.\n\n\
 RMDIR [drive:]path\nRD [drive:]path\n\
-/S			Menghapus semua file dan folder di dalam target\n\
-/Q			Tidak bertanya pada pengguna\n"
-STRING_RMDIR_HELP2,	"Direktori tidak kosong!\n"
+/S          Menghapus semua file dan folder di dalam target\n\
+/Q          Tidak bertanya pada pengguna\n"
+STRING_RMDIR_HELP2, "Direktori tidak kosong!\n"
 
 STRING_REN_HELP1, "Mengganti nama file/direktori.\n\n\
 RENAME [/E /N /P /Q /S /T] nama_lama ... nama_baru\n\
@@ -495,7 +501,7 @@ jika tidak ada yang ON, OFF atau /S ditetapkan dalam perintah\n\
 akan menghidupkan/mematikan keadaan stopwatch\n\n"
 
 STRING_TYPE_HELP1, "Menampilkan isi dari file teks.\n\nTYPE [drive:][path]filename \n\
-  /P 		  Menampilkan satu layar output sekali waktu.\n"
+  /P          Menampilkan satu layar output sekali waktu.\n"
 
 STRING_VERIFY_HELP1, "Perintah ini hanya dummy!!\n\
 Menyetel apakah memverifikasi bawa file anda ditulis dengan benar ke\n\
@@ -558,6 +564,7 @@ title         judul baru\n"
 
 
 STRING_HELP1, "Daftar semua perintah yang tersedia (+ deskripsi)\n\n\
+  help command\n\
   command /?     Untuk informasi lengkap pada perintah tertentu\n\n\
 ?        Daftar semua perintah yang tersedia tanpa deskripsi.\n\
 ALIAS    Menyetel, menghapus atau menampilkan alias.\n\

@@ -519,7 +519,9 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
     PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
-    PNAMED_PIPE_CREATE_PARAMETERS Buffer;
+    ULONG Disposition;
+    ULONG ShareAccess;
+    PNAMED_PIPE_CREATE_PARAMETERS Parameters;
 
     DPRINT("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -529,12 +531,16 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
     DPRINT("FileObject %p\n", FileObject);
     DPRINT("Pipe name %wZ\n", &FileObject->FileName);
 
-    Buffer = IoStack->Parameters.CreatePipe.Parameters;
+    Disposition = (IoStack->Parameters.CreatePipe.Options >> 24) & 0xFF;
+    ShareAccess = IoStack->Parameters.CreatePipe.ShareAccess;
+    Parameters = IoStack->Parameters.CreatePipe.Parameters;
 
     Irp->IoStatus.Information = 0;
 
-    if (!(IoStack->Parameters.CreatePipe.ShareAccess & (FILE_SHARE_READ|FILE_SHARE_WRITE)) ||
-        (IoStack->Parameters.CreatePipe.ShareAccess & ~(FILE_SHARE_READ|FILE_SHARE_WRITE)))
+    if ((Disposition == FILE_OVERWRITE) ||
+        (Disposition == FILE_OVERWRITE_IF) ||
+        !(ShareAccess & (FILE_SHARE_READ|FILE_SHARE_WRITE)) ||
+        (ShareAccess & ~(FILE_SHARE_READ|FILE_SHARE_WRITE)))
     {
         Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -564,9 +570,10 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
             return STATUS_INSTANCE_NOT_AVAILABLE;
         }
 
-        if (Fcb->MaximumInstances != Buffer->MaximumInstances ||
-            Fcb->TimeOut.QuadPart != Buffer->DefaultTimeout.QuadPart ||
-            Fcb->PipeType != Buffer->NamedPipeType)
+        if (Disposition == FILE_CREATE ||
+            Fcb->MaximumInstances != Parameters->MaximumInstances ||
+            Fcb->TimeOut.QuadPart != Parameters->DefaultTimeout.QuadPart ||
+            Fcb->PipeType != Parameters->NamedPipeType)
         {
             DPRINT("Asked for invalid pipe mode.\n");
             NpfsDereferenceFcb(Fcb);
@@ -612,13 +619,13 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
         InitializeListHead(&Fcb->WaiterListHead);
         KeInitializeMutex(&Fcb->CcbListLock, 0);
 
-        Fcb->PipeType = Buffer->NamedPipeType;
-        Fcb->ServerReadMode = Buffer->ReadMode;
+        Fcb->PipeType = Parameters->NamedPipeType;
+        Fcb->ServerReadMode = Parameters->ReadMode;
         /* MSDN documentation reads that clients always start off in byte mode */
         Fcb->ClientReadMode = FILE_PIPE_BYTE_STREAM_MODE;
 
-        Fcb->CompletionMode = Buffer->CompletionMode;
-        switch (IoStack->Parameters.CreatePipe.ShareAccess & (FILE_SHARE_READ|FILE_SHARE_WRITE))
+        Fcb->CompletionMode = Parameters->CompletionMode;
+        switch (ShareAccess & (FILE_SHARE_READ|FILE_SHARE_WRITE))
         {
         case FILE_SHARE_READ:
             Fcb->PipeConfiguration = FILE_PIPE_OUTBOUND;
@@ -630,19 +637,19 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
             Fcb->PipeConfiguration = FILE_PIPE_FULL_DUPLEX;
             break;
         }
-        Fcb->MaximumInstances = Buffer->MaximumInstances;
+        Fcb->MaximumInstances = Parameters->MaximumInstances;
         Fcb->CurrentInstances = 0;
-        Fcb->TimeOut = Buffer->DefaultTimeout;
+        Fcb->TimeOut = Parameters->DefaultTimeout;
         if (!(Fcb->PipeConfiguration & FILE_PIPE_OUTBOUND) ||
             Fcb->PipeConfiguration & FILE_PIPE_FULL_DUPLEX)
         {
-            if (Buffer->InboundQuota == 0)
+            if (Parameters->InboundQuota == 0)
             {
                 Fcb->InboundQuota = Vcb->DefaultQuota;
             }
             else
             {
-                Fcb->InboundQuota = PAGE_ROUND_UP(Buffer->InboundQuota);
+                Fcb->InboundQuota = PAGE_ROUND_UP(Parameters->InboundQuota);
                 if (Fcb->InboundQuota < Vcb->MinQuota)
                 {
                     Fcb->InboundQuota = Vcb->MinQuota;
@@ -660,13 +667,13 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 
         if (Fcb->PipeConfiguration & (FILE_PIPE_FULL_DUPLEX|FILE_PIPE_OUTBOUND))
         {
-            if (Buffer->OutboundQuota == 0)
+            if (Parameters->OutboundQuota == 0)
             {
                 Fcb->OutboundQuota = Vcb->DefaultQuota;
             }
             else
             {
-                Fcb->OutboundQuota = PAGE_ROUND_UP(Buffer->OutboundQuota);
+                Fcb->OutboundQuota = PAGE_ROUND_UP(Parameters->OutboundQuota);
                 if (Fcb->OutboundQuota < Vcb->MinQuota)
                 {
                     Fcb->OutboundQuota = Vcb->MinQuota;

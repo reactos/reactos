@@ -1,21 +1,18 @@
 
+set_cpp(WITH_RUNTIME)
+
 include_directories(BEFORE
     include
     src/include
     src/libnurbs/internals
     src/libnurbs/interface
-    src/libnurbs/nurbtess
-)
+    src/libnurbs/nurbtess)
 
 add_definitions(
     -DBUILD_GLU32
     -DNDEBUG
     -DLIBRARYBUILD
-    -DRESOLVE_3D_TEXTURE_SUPPORT
-)
-
-#this library uses C++
-# set_cpp()
+    -DRESOLVE_3D_TEXTURE_SUPPORT)
 
 # we must use our own spec file
 spec2def(glu32.dll glu32.spec ADD_IMPORTLIB)
@@ -117,8 +114,6 @@ add_library(glu32 SHARED ${SOURCE})
 set_module_type(glu32 win32dll)
 
 if(NOT MSVC)
-#FIXME: we really need a standard C++ library
-    target_link_libraries(glu32 -lsupc++ -lgcc)
     add_compile_flags("-Wno-error=write-strings")
 endif()
 

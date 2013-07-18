@@ -2,13 +2,13 @@
 
 [Section]
 Name = LibreOffice
-Version = 4.0.3
+Version = 4.0.4
 Licence = LGPL
 Description = Former called OpenOffice. Open Source Office Suite.
 Size = 182.5MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.0.3/win/x86/LibreOffice_4.0.3_Win_x86.msi
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.0.4/win/x86/LibreOffice_4.0.4_Win_x86.msi
 CDPath = none
 
 [Section.0407]

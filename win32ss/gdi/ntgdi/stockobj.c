@@ -107,7 +107,10 @@ IntCreateStockPen(DWORD dwPenStyle,
                   ULONG ulColor)
 {
     HPEN hPen;
-    PBRUSH pbrushPen = PEN_AllocPenWithHandle();
+    PBRUSH pbrushPen;
+
+    pbrushPen = PEN_AllocPenWithHandle();
+    if (pbrushPen == NULL) return NULL;
 
     if ((dwPenStyle & PS_STYLE_MASK) == PS_NULL) dwWidth = 1;
 

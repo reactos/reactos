@@ -31,9 +31,20 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
+typedef struct StdMediaSample2
+{
+    IMediaSample2 IMediaSample2_iface;
+    LONG ref;
+    AM_SAMPLE2_PROPERTIES props;
+    IMemAllocator * pParent;
+    struct list listentry;
+    LONGLONG tMediaStart;
+    LONGLONG tMediaEnd;
+} StdMediaSample2;
+
 typedef struct BaseMemAllocator
 {
-    const IMemAllocatorVtbl * lpVtbl;
+    IMemAllocator IMemAllocator_iface;
 
     LONG ref;
     ALLOCATOR_PROPERTIES props;
@@ -52,8 +63,14 @@ typedef struct BaseMemAllocator
     CRITICAL_SECTION *pCritSect;
 } BaseMemAllocator;
 
+static inline BaseMemAllocator *impl_from_IMemAllocator(IMemAllocator *iface)
+{
+    return CONTAINING_RECORD(iface, BaseMemAllocator, IMemAllocator_iface);
+}
+
 static const IMemAllocatorVtbl BaseMemAllocator_VTable;
 static const IMediaSample2Vtbl StdMediaSample2_VTable;
+static inline StdMediaSample2 *unsafe_impl_from_IMediaSample(IMediaSample * iface);
 
 #define AM_SAMPLE2_PROP_SIZE_WRITABLE FIELD_OFFSET(AM_SAMPLE2_PROPERTIES, pbBuffer)
 
@@ -70,7 +87,7 @@ static HRESULT BaseMemAllocator_Init(HRESULT (* fnAlloc)(IMemAllocator *),
 {
     assert(fnAlloc && fnFree && fnDestroyed);
 
-    pMemAlloc->lpVtbl = &BaseMemAllocator_VTable;
+    pMemAlloc->IMemAllocator_iface.lpVtbl = &BaseMemAllocator_VTable;
 
     pMemAlloc->ref = 1;
     ZeroMemory(&pMemAlloc->props, sizeof(pMemAlloc->props));
@@ -93,7 +110,7 @@ static HRESULT BaseMemAllocator_Init(HRESULT (* fnAlloc)(IMemAllocator *),
 
 static HRESULT WINAPI BaseMemAllocator_QueryInterface(IMemAllocator * iface, REFIID riid, LPVOID * ppv)
 {
-    BaseMemAllocator *This = (BaseMemAllocator *)iface;
+    BaseMemAllocator *This = impl_from_IMemAllocator(iface);
     TRACE("(%p)->(%s, %p)\n", This, qzdebugstr_guid(riid), ppv);
 
     *ppv = NULL;
@@ -116,7 +133,7 @@ static HRESULT WINAPI BaseMemAllocator_QueryInterface(IMemAllocator * iface, REF
 
 static ULONG WINAPI BaseMemAllocator_AddRef(IMemAllocator * iface)
 {
-    BaseMemAllocator *This = (BaseMemAllocator *)iface;
+    BaseMemAllocator *This = impl_from_IMemAllocator(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p)->() AddRef from %d\n", iface, ref - 1);
@@ -126,7 +143,7 @@ static ULONG WINAPI BaseMemAllocator_AddRef(IMemAllocator * iface)
 
 static ULONG WINAPI BaseMemAllocator_Release(IMemAllocator * iface)
 {
-    BaseMemAllocator *This = (BaseMemAllocator *)iface;
+    BaseMemAllocator *This = impl_from_IMemAllocator(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p)->() Release from %d\n", iface, ref + 1);
@@ -145,7 +162,7 @@ static ULONG WINAPI BaseMemAllocator_Release(IMemAllocator * iface)
 
 static HRESULT WINAPI BaseMemAllocator_SetProperties(IMemAllocator * iface, ALLOCATOR_PROPERTIES *pRequest, ALLOCATOR_PROPERTIES *pActual)
 {
-    BaseMemAllocator *This = (BaseMemAllocator *)iface;
+    BaseMemAllocator *This = impl_from_IMemAllocator(iface);
     HRESULT hr;
 
     TRACE("(%p)->(%p, %p)\n", This, pRequest, pActual);
@@ -178,7 +195,7 @@ static HRESULT WINAPI BaseMemAllocator_SetProperties(IMemAllocator * iface, ALLO
 
 static HRESULT WINAPI BaseMemAllocator_GetProperties(IMemAllocator * iface, ALLOCATOR_PROPERTIES *pProps)
 {
-    BaseMemAllocator *This = (BaseMemAllocator *)iface;
+    BaseMemAllocator *This = impl_from_IMemAllocator(iface);
     HRESULT hr = S_OK;
 
     TRACE("(%p)->(%p)\n", This, pProps);
@@ -194,7 +211,7 @@ static HRESULT WINAPI BaseMemAllocator_GetProperties(IMemAllocator * iface, ALLO
 
 static HRESULT WINAPI BaseMemAllocator_Commit(IMemAllocator * iface)
 {
-    BaseMemAllocator *This = (BaseMemAllocator *)iface;
+    BaseMemAllocator *This = impl_from_IMemAllocator(iface);
     HRESULT hr;
 
     TRACE("(%p)->()\n", This);
@@ -238,7 +255,7 @@ static HRESULT WINAPI BaseMemAllocator_Commit(IMemAllocator * iface)
 
 static HRESULT WINAPI BaseMemAllocator_Decommit(IMemAllocator * iface)
 {
-    BaseMemAllocator *This = (BaseMemAllocator *)iface;
+    BaseMemAllocator *This = impl_from_IMemAllocator(iface);
     HRESULT hr;
 
     TRACE("(%p)->()\n", This);
@@ -279,7 +296,7 @@ static HRESULT WINAPI BaseMemAllocator_Decommit(IMemAllocator * iface)
 
 static HRESULT WINAPI BaseMemAllocator_GetBuffer(IMemAllocator * iface, IMediaSample ** pSample, REFERENCE_TIME *pStartTime, REFERENCE_TIME *pEndTime, DWORD dwFlags)
 {
-    BaseMemAllocator *This = (BaseMemAllocator *)iface;
+    BaseMemAllocator *This = impl_from_IMemAllocator(iface);
     HRESULT hr = S_OK;
 
     /* NOTE: The pStartTime and pEndTime parameters are not applied to the sample. 
@@ -319,14 +336,14 @@ static HRESULT WINAPI BaseMemAllocator_GetBuffer(IMemAllocator * iface, IMediaSa
             hr = VFW_E_TIMEOUT;
         else
         {
+            StdMediaSample2 *ms;
             struct list * free = list_head(&This->free_list);
             list_remove(free);
             list_add_head(&This->used_list, free);
 
-            *pSample = (IMediaSample *)LIST_ENTRY(free, StdMediaSample2, listentry);
-
-            assert(((StdMediaSample2 *)*pSample)->ref == 0);
-
+            ms = LIST_ENTRY(free, StdMediaSample2, listentry);
+            assert(ms->ref == 0);
+            *pSample = (IMediaSample *)&ms->IMediaSample2_iface;
             IMediaSample_AddRef(*pSample);
         }
     }
@@ -339,10 +356,10 @@ static HRESULT WINAPI BaseMemAllocator_GetBuffer(IMemAllocator * iface, IMediaSa
 
 static HRESULT WINAPI BaseMemAllocator_ReleaseBuffer(IMemAllocator * iface, IMediaSample * pSample)
 {
-    BaseMemAllocator *This = (BaseMemAllocator *)iface;
-    StdMediaSample2 * pStdSample = (StdMediaSample2 *)pSample;
+    BaseMemAllocator *This = impl_from_IMemAllocator(iface);
+    StdMediaSample2 * pStdSample = unsafe_impl_from_IMediaSample(pSample);
     HRESULT hr = S_OK;
-    
+
     TRACE("(%p)->(%p)\n", This, pSample);
 
     /* FIXME: make sure that sample is currently on the used list */
@@ -408,7 +425,7 @@ static HRESULT StdMediaSample2_Construct(BYTE * pbBuffer, LONG cbBuffer, IMemAll
     if (!(*ppSample = CoTaskMemAlloc(sizeof(StdMediaSample2))))
         return E_OUTOFMEMORY;
 
-    (*ppSample)->lpvtbl = &StdMediaSample2_VTable;
+    (*ppSample)->IMediaSample2_iface.lpVtbl = &StdMediaSample2_VTable;
     (*ppSample)->ref = 0;
     ZeroMemory(&(*ppSample)->props, sizeof((*ppSample)->props));
 
@@ -431,47 +448,45 @@ static void StdMediaSample2_Delete(StdMediaSample2 * This)
     CoTaskMemFree(This);
 }
 
-static HRESULT WINAPI StdMediaSample2_QueryInterface(IMediaSample2 * iface, REFIID riid, LPVOID * ppv)
+static inline StdMediaSample2 *impl_from_IMediaSample2(IMediaSample2 * iface)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    return CONTAINING_RECORD(iface, StdMediaSample2, IMediaSample2_iface);
+}
+
+static HRESULT WINAPI StdMediaSample2_QueryInterface(IMediaSample2 * iface, REFIID riid, void ** ppv)
+{
     TRACE("(%s, %p)\n", qzdebugstr_guid(riid), ppv);
 
     *ppv = NULL;
 
-    if (IsEqualIID(riid, &IID_IUnknown))
-        *ppv = This;
-    else if (IsEqualIID(riid, &IID_IMediaSample))
-        *ppv = This;
-    else if (IsEqualIID(riid, &IID_IMediaSample2))
-        *ppv = This;
-
-    if (*ppv)
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IMediaSample) ||
+            IsEqualIID(riid, &IID_IMediaSample2))
     {
-        IUnknown_AddRef((IUnknown *)(*ppv));
+        *ppv = iface;
+        IMediaSample2_AddRef(iface);
         return S_OK;
     }
 
     FIXME("No interface for %s!\n", qzdebugstr_guid(riid));
-
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI StdMediaSample2_AddRef(IMediaSample2 * iface)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->() AddRef from %d\n", iface, ref - 1);
+    TRACE("(%p)->(): new ref = %d\n", This, ref);
 
     return ref;
 }
 
 static ULONG WINAPI StdMediaSample2_Release(IMediaSample2 * iface)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->() Release from %d\n", iface, ref + 1);
+    TRACE("(%p)->(): new ref = %d\n", This, ref);
 
     if (!ref)
     {
@@ -479,14 +494,13 @@ static ULONG WINAPI StdMediaSample2_Release(IMediaSample2 * iface)
             IMemAllocator_ReleaseBuffer(This->pParent, (IMediaSample *)iface);
         else
             StdMediaSample2_Delete(This);
-        return 0;
     }
     return ref;
 }
 
 static HRESULT WINAPI StdMediaSample2_GetPointer(IMediaSample2 * iface, BYTE ** ppBuffer)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%p)\n", iface, ppBuffer);
 
@@ -503,7 +517,7 @@ static HRESULT WINAPI StdMediaSample2_GetPointer(IMediaSample2 * iface, BYTE ** 
 
 static LONG WINAPI StdMediaSample2_GetSize(IMediaSample2 * iface)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("StdMediaSample2_GetSize()\n");
 
@@ -512,8 +526,8 @@ static LONG WINAPI StdMediaSample2_GetSize(IMediaSample2 * iface)
 
 static HRESULT WINAPI StdMediaSample2_GetTime(IMediaSample2 * iface, REFERENCE_TIME * pStart, REFERENCE_TIME * pEnd)
 {
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
     HRESULT hr;
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
 
     TRACE("(%p)->(%p, %p)\n", iface, pStart, pEnd);
 
@@ -539,7 +553,7 @@ static HRESULT WINAPI StdMediaSample2_GetTime(IMediaSample2 * iface, REFERENCE_T
 
 static HRESULT WINAPI StdMediaSample2_SetTime(IMediaSample2 * iface, REFERENCE_TIME * pStart, REFERENCE_TIME * pEnd)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%p, %p)\n", iface, pStart, pEnd);
 
@@ -564,7 +578,7 @@ static HRESULT WINAPI StdMediaSample2_SetTime(IMediaSample2 * iface, REFERENCE_T
 
 static HRESULT WINAPI StdMediaSample2_IsSyncPoint(IMediaSample2 * iface)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->()\n", iface);
 
@@ -573,7 +587,7 @@ static HRESULT WINAPI StdMediaSample2_IsSyncPoint(IMediaSample2 * iface)
 
 static HRESULT WINAPI StdMediaSample2_SetSyncPoint(IMediaSample2 * iface, BOOL bIsSyncPoint)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%s)\n", iface, bIsSyncPoint ? "TRUE" : "FALSE");
 
@@ -587,7 +601,7 @@ static HRESULT WINAPI StdMediaSample2_SetSyncPoint(IMediaSample2 * iface, BOOL b
 
 static HRESULT WINAPI StdMediaSample2_IsPreroll(IMediaSample2 * iface)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->()\n", iface);
 
@@ -596,7 +610,7 @@ static HRESULT WINAPI StdMediaSample2_IsPreroll(IMediaSample2 * iface)
 
 static HRESULT WINAPI StdMediaSample2_SetPreroll(IMediaSample2 * iface, BOOL bIsPreroll)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%s)\n", iface, bIsPreroll ? "TRUE" : "FALSE");
 
@@ -610,7 +624,7 @@ static HRESULT WINAPI StdMediaSample2_SetPreroll(IMediaSample2 * iface, BOOL bIs
 
 static LONG WINAPI StdMediaSample2_GetActualDataLength(IMediaSample2 * iface)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->()\n", iface);
 
@@ -619,7 +633,7 @@ static LONG WINAPI StdMediaSample2_GetActualDataLength(IMediaSample2 * iface)
 
 static HRESULT WINAPI StdMediaSample2_SetActualDataLength(IMediaSample2 * iface, LONG len)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%d)\n", iface, len);
 
@@ -637,7 +651,7 @@ static HRESULT WINAPI StdMediaSample2_SetActualDataLength(IMediaSample2 * iface,
 
 static HRESULT WINAPI StdMediaSample2_GetMediaType(IMediaSample2 * iface, AM_MEDIA_TYPE ** ppMediaType)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%p)\n", iface, ppMediaType);
 
@@ -656,13 +670,18 @@ static HRESULT WINAPI StdMediaSample2_GetMediaType(IMediaSample2 * iface, AM_MED
 
 static HRESULT WINAPI StdMediaSample2_SetMediaType(IMediaSample2 * iface, AM_MEDIA_TYPE * pMediaType)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%p)\n", iface, pMediaType);
 
     if (This->props.pMediaType)
+    {
         FreeMediaType(This->props.pMediaType);
-    else if (!(This->props.pMediaType = CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE))))
+        This->props.pMediaType = NULL;
+    }
+    if (!pMediaType)
+        return S_FALSE;
+    if (!(This->props.pMediaType = CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE))))
         return E_OUTOFMEMORY;
 
     return CopyMediaType(This->props.pMediaType, pMediaType);
@@ -670,7 +689,7 @@ static HRESULT WINAPI StdMediaSample2_SetMediaType(IMediaSample2 * iface, AM_MED
 
 static HRESULT WINAPI StdMediaSample2_IsDiscontinuity(IMediaSample2 * iface)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->()\n", iface);
 
@@ -679,7 +698,7 @@ static HRESULT WINAPI StdMediaSample2_IsDiscontinuity(IMediaSample2 * iface)
 
 static HRESULT WINAPI StdMediaSample2_SetDiscontinuity(IMediaSample2 * iface, BOOL bIsDiscontinuity)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%s)\n", iface, bIsDiscontinuity ? "TRUE" : "FALSE");
 
@@ -693,7 +712,7 @@ static HRESULT WINAPI StdMediaSample2_SetDiscontinuity(IMediaSample2 * iface, BO
 
 static HRESULT WINAPI StdMediaSample2_GetMediaTime(IMediaSample2 * iface, LONGLONG * pStart, LONGLONG * pEnd)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%p, %p)\n", iface, pStart, pEnd);
 
@@ -703,12 +722,12 @@ static HRESULT WINAPI StdMediaSample2_GetMediaTime(IMediaSample2 * iface, LONGLO
     *pStart = This->tMediaStart;
     *pEnd = This->tMediaEnd;
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI StdMediaSample2_SetMediaTime(IMediaSample2 * iface, LONGLONG * pStart, LONGLONG * pEnd)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%p, %p)\n", iface, pStart, pEnd);
 
@@ -727,7 +746,7 @@ static HRESULT WINAPI StdMediaSample2_SetMediaTime(IMediaSample2 * iface, LONGLO
 
 static HRESULT WINAPI StdMediaSample2_GetProperties(IMediaSample2 * iface, DWORD cbProperties, BYTE * pbProperties)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%d, %p)\n", iface, cbProperties, pbProperties);
 
@@ -738,7 +757,7 @@ static HRESULT WINAPI StdMediaSample2_GetProperties(IMediaSample2 * iface, DWORD
 
 static HRESULT WINAPI StdMediaSample2_SetProperties(IMediaSample2 * iface, DWORD cbProperties, const BYTE * pbProperties)
 {
-    StdMediaSample2 *This = (StdMediaSample2 *)iface;
+    StdMediaSample2 *This = impl_from_IMediaSample2(iface);
 
     TRACE("(%p)->(%d, %p)\n", iface, cbProperties, pbProperties);
 
@@ -773,6 +792,16 @@ static const IMediaSample2Vtbl StdMediaSample2_VTable =
     StdMediaSample2_SetProperties
 };
 
+static inline StdMediaSample2 *unsafe_impl_from_IMediaSample(IMediaSample * iface)
+{
+    IMediaSample2 *iface2 = (IMediaSample2 *)iface;
+
+    if (!iface)
+        return NULL;
+    assert(iface2->lpVtbl == &StdMediaSample2_VTable);
+    return impl_from_IMediaSample2(iface2);
+}
+
 typedef struct StdMemAllocator
 {
     BaseMemAllocator base;
@@ -780,9 +809,14 @@ typedef struct StdMemAllocator
     LPVOID pMemory;
 } StdMemAllocator;
 
+static inline StdMemAllocator *StdMemAllocator_from_IMemAllocator(IMemAllocator * iface)
+{
+    return CONTAINING_RECORD(iface, StdMemAllocator, base.IMemAllocator_iface);
+}
+
 static HRESULT StdMemAllocator_Alloc(IMemAllocator * iface)
 {
-    StdMemAllocator *This = (StdMemAllocator *)iface;
+    StdMemAllocator *This = StdMemAllocator_from_IMemAllocator(iface);
     StdMediaSample2 * pSample = NULL;
     SYSTEM_INFO si;
     LONG i;
@@ -802,6 +836,9 @@ static HRESULT StdMemAllocator_Alloc(IMemAllocator * iface)
     /* allocate memory */
     This->pMemory = VirtualAlloc(NULL, (This->base.props.cbBuffer + This->base.props.cbPrefix) * This->base.props.cBuffers, MEM_COMMIT, PAGE_READWRITE);
 
+    if (!This->pMemory)
+        return E_OUTOFMEMORY;
+
     for (i = This->base.props.cBuffers - 1; i >= 0; i--)
     {
         /* pbBuffer does not start at the base address, it starts at base + cbPrefix */
@@ -817,7 +854,7 @@ static HRESULT StdMemAllocator_Alloc(IMemAllocator * iface)
 
 static HRESULT StdMemAllocator_Free(IMemAllocator * iface)
 {
-    StdMemAllocator *This = (StdMemAllocator *)iface;
+    StdMemAllocator *This = StdMemAllocator_from_IMemAllocator(iface);
     struct list * cursor;
 
     if (!list_empty(&This->base.used_list))
@@ -850,7 +887,7 @@ static HRESULT StdMemAllocator_Free(IMemAllocator * iface)
 
 static void StdMemAllocator_Destroy(IMemAllocator *iface)
 {
-    StdMemAllocator *This = (StdMemAllocator *)iface;
+    StdMemAllocator *This = StdMemAllocator_from_IMemAllocator(iface);
 
     This->csState.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&This->csState);

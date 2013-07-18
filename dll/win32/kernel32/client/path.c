@@ -990,7 +990,7 @@ GetFullPathNameA(IN LPCSTR lpFileName,
                  OUT LPSTR *lpFilePart)
 {
     NTSTATUS Status;
-    PWCHAR Buffer;
+    PWCHAR Buffer = NULL;
     ULONG PathSize, FilePartSize;
     ANSI_STRING AnsiString;
     UNICODE_STRING FileNameString, UniString;

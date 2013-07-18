@@ -245,7 +245,7 @@ BasepInitConsole(VOID)
     }
 
     /* Now use the proper console handle */
-    ConnectInfo.Console = Parameters->ConsoleHandle;
+    ConnectInfo.ConsoleHandle = Parameters->ConsoleHandle;
 
     /* Initialize the Console Ctrl Handler */
     InitConsoleCtrlHandling();
@@ -290,7 +290,7 @@ BasepInitConsole(VOID)
     if (!ConnectInfo.ConsoleNeeded) return TRUE;
 
     /* We got the handles, let's set them */
-    if ((Parameters->ConsoleHandle = ConnectInfo.Console))
+    if ((Parameters->ConsoleHandle = ConnectInfo.ConsoleHandle))
     {
         /* If we already had some, don't use the new ones */
         if (!Parameters->StandardInput)

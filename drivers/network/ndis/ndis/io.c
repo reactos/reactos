@@ -1192,7 +1192,7 @@ NdisMInitializeScatterGatherDma(
     DeviceDesc.Version = DEVICE_DESCRIPTION_VERSION;
     DeviceDesc.Master = TRUE;
     DeviceDesc.ScatterGather = TRUE;
-    DeviceDesc.Dma32BitAddresses = !Dma64BitAddresses;
+    DeviceDesc.Dma32BitAddresses = TRUE; // All callers support 32-bit addresses
     DeviceDesc.Dma64BitAddresses = Dma64BitAddresses;
     DeviceDesc.BusNumber = Adapter->NdisMiniportBlock.BusNumber;
     DeviceDesc.InterfaceType = Adapter->NdisMiniportBlock.BusType;

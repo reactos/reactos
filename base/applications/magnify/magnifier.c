@@ -49,6 +49,16 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
+    switch (GetUserDefaultUILanguage())
+  {
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+      SetProcessDefaultLayout(LAYOUT_RTL);
+      break;
+
+    default:
+      break;
+  }
+
     // Initialize global strings
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
@@ -170,7 +180,7 @@ void Draw(HDC aDc)
     HDC HdcStrech;
     HANDLE hOld;
     HBITMAP HbmpStrech;
-
+    
     RECT R;
     RECT appRect;
     DWORD rop = SRCCOPY;
@@ -202,7 +212,7 @@ void Draw(HDC aDc)
 
     /* Select our bitmap in memory DC and save the old one.*/
     hOld = SelectObject (HdcStrech , HbmpStrech);
-
+    
     /* Paint the screen bitmap to our in memory DC */
     BitBlt(
         HdcStrech,
@@ -214,7 +224,7 @@ void Draw(HDC aDc)
         0,
         0,
         SRCCOPY);
-
+        
     /* Draw the mouse pointer in the right position */
     DrawIcon(
         HdcStrech ,
@@ -271,8 +281,9 @@ void Draw(HDC aDc)
         blitAreaY,
         blitAreaWidth,
         blitAreaHeight,
-        rop);
-
+        rop | NOMIRRORBITMAP);
+        
+        
     /* Cleanup.*/
     if (iinfo.hbmMask)
         DeleteObject(iinfo.hbmMask);

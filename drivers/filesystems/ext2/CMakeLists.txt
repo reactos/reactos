@@ -22,6 +22,11 @@ list(APPEND SOURCE
     src/shutdown.c)
     
 add_library(ext2fs SHARED ${SOURCE})
+
+if(NOT MSVC)
+    add_compile_flags("-Wno-unused-but-set-variable")
+endif()
+
 allow_warnings(ext2fs)
 target_link_libraries(ext2fs ${PSEH_LIB})
 add_pch(ext2fs inc/ext2fsd.h)

@@ -763,7 +763,17 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     WCHAR szErrorText[MAX_STR_LEN];
     HANDLE hMutex = NULL;
     MSG Msg;
+   
+    switch (GetUserDefaultUILanguage())
+  {
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+      SetProcessDefaultLayout(LAYOUT_RTL);
+      break;
 
+    default:
+      break;
+  }
+    
     hInst = hInstance;
 
     if (!IsUserAnAdmin())

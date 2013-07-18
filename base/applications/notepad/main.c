@@ -554,9 +554,19 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     HMONITOR    monitor;
     MONITORINFO info;
     INT         x, y;
-
+	
     static const TCHAR className[] = _T("NPClass");
     static const TCHAR winName[]   = _T("Notepad");
+	
+    switch (GetUserDefaultUILanguage())
+  {
+    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+      SetProcessDefaultLayout(LAYOUT_RTL);
+      break;
+
+    default:
+      break;
+  }
 
     UNREFERENCED_PARAMETER(prev);
 

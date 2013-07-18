@@ -35,9 +35,10 @@ reactos/dll/directx/dplay         # Synced to Wine-1.5.26
 reactos/dll/directx/dplayx        # Synced to Wine-1.5.26
 reactos/dll/directx/dsound        # Synced to Wine-1.5.26
 reactos/dll/directx/dxdiagn       # Synced to Wine-0_9_5
+reactos/dll/directx/dxgi          # Synced to Wine-1.5.26
 reactos/dll/directx/msdmo         # Autosync
 reactos/dll/directx/qedit         # Autosync
-reactos/dll/directx/quartz        # Autosync
+reactos/dll/directx/quartz        # Synced to Wine-1.5.26
 reactos/dll/win32/activeds        # Synced to Wine-1.1.43?
 reactos/dll/win32/actxprxy        # Synced to Wine-1.5.26
 reactos/dll/win32/advpack         # Synced to Wine-1.5.26
@@ -186,6 +187,7 @@ reactos/dll/win32/usp10           # Synced to Wine-1.5.26
 reactos/dll/win32/uxtheme         # Forked
 reactos/dll/win32/vbscript        # Synced to Wine-1.5.26
 reactos/dll/win32/version         # Autosync
+reactos/dll/win32/wbemprox        # Synced to Wine-1.5.26
 reactos/dll/win32/wer             # Autosync
 reactos/dll/win32/windowscodecs   # Synced to Wine-1.5.26
 reactos/dll/win32/winemp3.acm     # Synced to Wine-1.5.19
@@ -228,7 +230,8 @@ In addition the following libs, dlls and source files are mostly based on code p
 from Winehq CVS. If you are looking to update something in these files
 check Wine current souces first as it may already be fixed.
 
-reactos/lib/sdk/uuid                  # Synced to Wine-1.1.42
+reactos/lib/3rdparty/strmbase             # Synced to Wine-1.5.26
+reactos/lib/sdk/uuid                      # Synced to Wine-1.1.42
 
 advapi32 -
   reactos/dll/win32/advapi32/crypt/*.c          # Unknown

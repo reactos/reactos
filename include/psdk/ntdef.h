@@ -299,6 +299,18 @@
 #endif
 #endif /* DECLSPEC_ALIGN */
 
+#ifndef SYSTEM_CACHE_ALIGNMENT_SIZE
+#if defined(_AMD64_) || defined(_X86_)
+#define SYSTEM_CACHE_ALIGNMENT_SIZE 64
+#else
+#define SYSTEM_CACHE_ALIGNMENT_SIZE 128
+#endif
+#endif
+
+#ifndef DECLSPEC_CACHEALIGN
+#define DECLSPEC_CACHEALIGN DECLSPEC_ALIGN(SYSTEM_CACHE_ALIGNMENT_SIZE)
+#endif
+
 #ifndef DECLSPEC_SELECTANY
 #if (_MSC_VER >= 1100) || defined(__GNUC__)
 #define DECLSPEC_SELECTANY  __declspec(selectany)
