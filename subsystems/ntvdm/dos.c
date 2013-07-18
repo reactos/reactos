@@ -1393,10 +1393,14 @@ VOID DosInt21h(WORD CodeSegment)
             if (Segment != 0)
             {
                 EmulatorSetRegister(EMULATOR_REG_AX, Segment);
-                EmulatorSetRegister(EMULATOR_REG_BX, MaxAvailable);
                 EmulatorClearFlag(EMULATOR_FLAG_CF);
             }
-            else EmulatorSetFlag(EMULATOR_FLAG_CF);
+            else
+            {
+                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_NOT_ENOUGH_MEMORY);
+                EmulatorSetRegister(EMULATOR_REG_BX, MaxAvailable);
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+            }
 
             break;
         }

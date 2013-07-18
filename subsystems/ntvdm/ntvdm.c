@@ -80,8 +80,12 @@ INT wmain(INT argc, WCHAR *argv[])
     /* Set the handler routine */
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 
+#ifndef TESTING
     /* The DOS command line must be ASCII */
     WideCharToMultiByte(CP_ACP, 0, GetCommandLine(), -1, CommandLine, 128, NULL, NULL);
+#else
+    WideCharToMultiByte(CP_ACP, 0, argv[1], -1, CommandLine, 128, NULL, NULL);
+#endif
 
     if (!EmulatorInitialize())
     {

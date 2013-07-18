@@ -661,11 +661,10 @@ WORD BiosGetCharacter()
 
 VOID BiosVideoService()
 {
-    INT CursorHeight;
+    INT i, CursorHeight;
     BOOLEAN Invisible = FALSE;
     COORD Position;
     CONSOLE_CURSOR_INFO CursorInfo;
-    CONSOLE_SCREEN_BUFFER_INFO ScreenBufferInfo;
     CHAR_INFO Character;
     SMALL_RECT Rect;
     DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
@@ -673,7 +672,6 @@ VOID BiosVideoService()
     DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
     DWORD Ebx = EmulatorGetRegister(EMULATOR_REG_BX);
 
-    // TODO: Add support for multiple pages!
     switch (HIBYTE(Eax))
     {
         /* Set Video Mode */
@@ -691,6 +689,10 @@ VOID BiosVideoService()
             CursorHeight = (HIBYTE(Ecx) & 0x1F) - (LOBYTE(Ecx) & 0x1F);
             if (CursorHeight < 1) CursorHeight = 1;
             if (CursorHeight > 100) CursorHeight = 100;
+
+            /* Update the BDA */
+            Bda->CursorStartLine = HIBYTE(Ecx);
+            Bda->CursorEndLine = LOBYTE(Ecx) & 0x1F;
 
             /* Set the cursor */
             CursorInfo.dwSize = (CursorHeight * 100) / CONSOLE_FONT_HEIGHT;
@@ -723,20 +725,13 @@ VOID BiosVideoService()
         /* Get Cursor Position */
         case 0x03:
         {
-            INT StartLine;
-
             /* Make sure the selected video page exists */
             if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
 
-            /* Retrieve the data */
-            GetConsoleCursorInfo(BiosConsoleOutput, &CursorInfo);
-
-            /* Find the first line */
-            StartLine = 32 - ((CursorInfo.dwSize * 32) / 100);
-
             /* Return the result */
             EmulatorSetRegister(EMULATOR_REG_AX, 0);
-            EmulatorSetRegister(EMULATOR_REG_CX, (StartLine << 8) | 0x1F);
+            EmulatorSetRegister(EMULATOR_REG_CX,
+                                (Bda->CursorStartLine << 8) | Bda->CursorEndLine);
             EmulatorSetRegister(EMULATOR_REG_DX, Bda->CursorPosition[HIBYTE(Ebx)]);
 
             break;
@@ -758,9 +753,12 @@ VOID BiosVideoService()
         }
 
         /* Scroll Up/Down Window */
+        // TODO: Implement for different pages
         case 0x06:
         case 0x07:
         {
+            BYTE Lines = LOBYTE(Eax);
+
             Rect.Top = HIBYTE(Ecx);
             Rect.Left = LOBYTE(Ecx);
             Rect.Bottom = HIBYTE(Edx);
@@ -769,115 +767,94 @@ VOID BiosVideoService()
             Character.Attributes = HIBYTE(Ebx);
             Position.X = Rect.Left;
 
-            if (HIBYTE(Eax) == 0x06) Position.Y = Rect.Top - LOBYTE(Eax);
-            else Position.Y = Rect.Top + LOBYTE(Eax);
+            /* 0 means clear entire window */
+            if (Lines == 0) Lines = Rect.Bottom - Rect.Top;
+
+            if (HIBYTE(Eax) == 0x06) Position.Y = Rect.Top - Lines;
+            else Position.Y = Rect.Top + Lines;
 
             ScrollConsoleScreenBuffer(BiosConsoleOutput,
                                       &Rect,
                                       &Rect,
                                       Position,
                                       &Character);
+
             break;
         }
 
         /* Read Character And Attribute At Cursor Position */
         case 0x08:
         {
-            COORD BufferSize = { 1, 1 }, Origin = { 0, 0 };
+            DWORD Address;
+            
+            /* Make sure this is text mode */
+            if (!VideoModes[CurrentVideoMode].Text) break;
 
             /* Make sure the selected video page exists */
             if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
-
-            if (HIBYTE(Ebx) == CurrentVideoPage)
-            {
-                /* Get the cursor position */
-                GetConsoleScreenBufferInfo(BiosConsoleOutput,
-                                           &ScreenBufferInfo);
-
-                /* Read at cursor position */
-                Rect.Left = ScreenBufferInfo.dwCursorPosition.X;
-                Rect.Top = ScreenBufferInfo.dwCursorPosition.Y;
             
-                /* Read the console output */
-                ReadConsoleOutput(BiosConsoleOutput,
-                                  &Character,
-                                  BufferSize,
-                                  Origin,
-                                  &Rect);
+            /* Find the address */
+            Address = BiosGetVideoMemoryStart()
+                      + HIBYTE(Ebx) * BiosGetVideoPageSize()
+                      + (HIBYTE(Bda->CursorPosition[HIBYTE(Ebx)])
+                      * VideoModes[CurrentVideoMode].Height
+                      + LOBYTE(Bda->CursorPosition[HIBYTE(Ebx)]))
+                      * VideoModes[CurrentVideoMode].Bpp / 8;
 
-                /* Return the result */
-                EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (LOBYTE(Character.Attributes) << 8)
-                                    | Character.Char.AsciiChar);
-            }
-            else
-            {
-                // TODO: NOT IMPLEMENTED
-            }
+            /* Update the video memory at that address */
+            BiosUpdateVideoMemory(Address,
+                                  Address + VideoModes[CurrentVideoMode].Bpp / 8);
+
+            /* Return the result in AX */
+            EmulatorSetRegister(EMULATOR_REG_AX,
+                                *((LPWORD)((ULONG_PTR)BaseAddress + Address)));
 
             break;
         }
 
         /* Write Character And Attribute At Cursor Position */
         case 0x09:
-        {
-            DWORD CharsWritten;
-
-            /* Make sure the selected video page exists */
-            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
-
-            if (HIBYTE(Ebx) == CurrentVideoPage)
-            {
-                /* Get the cursor position */
-                GetConsoleScreenBufferInfo(BiosConsoleOutput,
-                                           &ScreenBufferInfo);
-
-                /* Write the attribute to the output */
-                FillConsoleOutputAttribute(BiosConsoleOutput,
-                                           LOBYTE(Ebx),
-                                           LOWORD(Ecx),
-                                           ScreenBufferInfo.dwCursorPosition,
-                                           &CharsWritten);
-
-                /* Write the character to the output */
-                FillConsoleOutputCharacterA(BiosConsoleOutput,
-                                            LOBYTE(Eax),
-                                            LOWORD(Ecx),
-                                            ScreenBufferInfo.dwCursorPosition,
-                                            &CharsWritten);
-            }
-            else
-            {
-                // TODO: NOT IMPLEMENTED
-            }
-
-            break;
-        }
-
-        /* Write Character Only At Cursor Position */
         case 0x0A:
         {
-            DWORD CharsWritten;
+            BYTE PixelSize = VideoModes[CurrentVideoMode].Bpp / 8;
+            WORD Data = (LOBYTE(Ebx) << 8) | LOBYTE(Eax);
+            WORD Repeat = LOWORD(Ecx);
+            DWORD Address = BiosGetVideoMemoryStart()
+                            + CurrentVideoPage * BiosGetVideoPageSize()
+                            + (HIBYTE(Bda->CursorPosition[CurrentVideoPage])
+                            * VideoModes[CurrentVideoMode].Height
+                            + LOBYTE(Bda->CursorPosition[CurrentVideoPage]))
+                            * PixelSize;
+
+            /* Make sure this is text mode */
+            if (!VideoModes[CurrentVideoMode].Text) break;
 
             /* Make sure the selected video page exists */
             if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
 
-            if (HIBYTE(Ebx) == CurrentVideoPage)
-            {
-                /* Get the cursor position */
-                GetConsoleScreenBufferInfo(BiosConsoleOutput, &ScreenBufferInfo);
+            /* Make sure we don't write over the end of video memory */
+            Repeat = min(Repeat,
+                        (CONSOLE_VIDEO_MEM_END - Address)
+                        / PixelSize);
 
-                /* Write the character to the output */
-                FillConsoleOutputCharacterA(BiosConsoleOutput,
-                                            LOBYTE(Eax),
-                                            LOWORD(Ecx),
-                                            ScreenBufferInfo.dwCursorPosition,
-                                            &CharsWritten);
-            }
-            else
+            /* Copy the values to the memory */
+            for (i = 0; i < Repeat; i++)
             {
-                // TODO: NOT IMPLEMENTED
+                if (PixelSize == sizeof(BYTE) || HIBYTE(Eax) == 0x0A)
+                {
+                    /* Just characters, no attributes */
+                    *((LPBYTE)((ULONG_PTR)BaseAddress + Address) + i * PixelSize) = LOBYTE(Data);
+                }
+                else if (PixelSize == sizeof(WORD))
+                {
+                    /* First byte for characters, second for attributes */
+                    *((LPWORD)((ULONG_PTR)BaseAddress + Address) + i) = Data;
+                }
             }
+
+            /* Update the range */
+            BiosUpdateConsole(Address,
+                              Address + Repeat * (VideoModes[CurrentVideoMode].Bpp / 8));
 
             break;
         }
@@ -911,6 +888,32 @@ VOID BiosVideoService()
                                 MAKEWORD(Bda->VideoMode, Bda->ScreenColumns));
             EmulatorSetRegister(EMULATOR_REG_BX,
                                 MAKEWORD(LOBYTE(Ebx), Bda->VideoPage));
+
+            break;
+        }
+
+        /* Scroll Window */
+        case 0x12:
+        {
+            Rect.Top = HIBYTE(Ecx);
+            Rect.Left = LOBYTE(Ecx);
+            Rect.Bottom = HIBYTE(Edx);
+            Rect.Right = LOBYTE(Edx);
+            Character.Char.UnicodeChar = L' ';
+            Character.Attributes = 0x07;
+            Position.X = Rect.Left;
+            Position.Y = Rect.Top;
+
+            if (LOBYTE(Ebx) == 0) Position.Y -= LOBYTE(Eax);
+            else if (LOBYTE(Ebx) == 1) Position.Y += LOBYTE(Eax);
+            else if (LOBYTE(Ebx) == 2) Position.X -= LOBYTE(Eax);
+            else if (LOBYTE(Ebx) == 3) Position.X += LOBYTE(Eax);
+
+            ScrollConsoleScreenBuffer(BiosConsoleOutput,
+                                      &Rect,
+                                      &Rect,
+                                      Position,
+                                      &Character);
 
             break;
         }
