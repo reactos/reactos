@@ -62,6 +62,5 @@ target_link_libraries(libxml2 oldnames)
 add_dependencies(libxml2 psdk)
 
 if(NOT MSVC)
-    add_target_compile_flags(libxml2 "-Wno-format -Wno-pointer-sign")
-    allow_warnings(libxml2)
+    add_target_compile_flags(libxml2 "-w")
 endif()
