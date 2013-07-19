@@ -162,6 +162,9 @@ SmpParseToken(IN PUNICODE_STRING Input,
     /* Save the input length */
     InputLength = Input->Length;
 
+    /* If the input string is empty, just return */
+    if (InputLength == 0) return STATUS_SUCCESS;
+
     /* Parse the buffer until the first character */
     p = Input->Buffer;
     Length = 0;
