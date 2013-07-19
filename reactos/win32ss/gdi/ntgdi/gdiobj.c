@@ -570,20 +570,18 @@ VOID
 NTAPI
 GDIOBJ_vReferenceObjectByPointer(POBJ pobj)
 {
-    ULONG cRefs;
-
     /* Check if the object has a handle */
     if (GDI_HANDLE_GET_INDEX(pobj->hHmgr))
     {
         /* Increase the handle's reference count */
         ULONG ulIndex = GDI_HANDLE_GET_INDEX(pobj->hHmgr);
         ASSERT((gpaulRefCount[ulIndex] & REF_MASK_COUNT) > 0);
-        cRefs = InterlockedIncrement((LONG*)&gpaulRefCount[ulIndex]);
+        InterlockedIncrement((LONG*)&gpaulRefCount[ulIndex]);
     }
     else
     {
         /* Increase the object's reference count */
-        cRefs = InterlockedIncrement((LONG*)&pobj->ulShareCount);
+        InterlockedIncrement((LONG*)&pobj->ulShareCount);
     }
 
     DBG_LOGEVENT(&pobj->slhLog, EVENT_REFERENCE, cRefs);

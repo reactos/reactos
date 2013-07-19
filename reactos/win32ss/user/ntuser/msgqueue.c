@@ -506,7 +506,6 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
 {
    LARGE_INTEGER LargeTickCount;
    MSLLHOOKSTRUCT MouseHookData;
-   PDESKTOP pDesk;
    PWND pwnd, pwndDesktop;
    HDC hdcScreen;
    PTHREADINFO pti;
@@ -550,7 +549,6 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    /* Get the desktop window */
    pwndDesktop = UserGetDesktopWindow();
    if (!pwndDesktop) return;
-   pDesk = pwndDesktop->head.rpdesk;
 
    /* Check if the mouse is captured */
    Msg->hwnd = IntGetCaptureWindow();
