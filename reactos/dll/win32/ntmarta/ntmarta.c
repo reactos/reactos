@@ -887,7 +887,7 @@ AccpOpenNamedObject(LPWSTR pObjectName,
                                        NULL);
 
             Status = NtOpenFile(Handle,
-                                DesiredAccess,
+                                DesiredAccess /* | SYNCHRONIZE */,
                                 &ObjectAttributes,
                                 &IoStatusBlock,
                                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,

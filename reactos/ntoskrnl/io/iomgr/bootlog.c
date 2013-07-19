@@ -168,7 +168,7 @@ IopWriteLogFile(PWSTR LogText)
                                NULL);
 
     Status = ZwCreateFile(&FileHandle,
-                          FILE_APPEND_DATA,
+                          FILE_APPEND_DATA | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,

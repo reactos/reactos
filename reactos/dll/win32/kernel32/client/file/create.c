@@ -535,11 +535,11 @@ OpenFile(LPCSTR lpFileName,
 	ObjectAttributes.SecurityQualityOfService = NULL;
 
 	errCode = NtOpenFile (&FileHandle,
-	                      GENERIC_READ|SYNCHRONIZE,
+	                      GENERIC_READ | SYNCHRONIZE,
 	                      &ObjectAttributes,
 	                      &IoStatusBlock,
 	                      FILE_SHARE_READ,
-	                      FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
+	                      FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
 
 	RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameString.Buffer);
 

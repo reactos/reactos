@@ -161,7 +161,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // Open a handle to the driver
     //
     Status = ZwOpenFile(&DriverHandle,
-                        GENERIC_ALL,
+                        GENERIC_ALL | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,

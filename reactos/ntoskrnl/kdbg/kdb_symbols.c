@@ -391,10 +391,10 @@ KdbpSymLoadModuleSymbols(
     DPRINT("Attempting to open image: %wZ\n", FileName);
 
     Status = ZwOpenFile(&FileHandle,
-                        FILE_READ_ACCESS,
+                        FILE_READ_ACCESS | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        FILE_SHARE_READ|FILE_SHARE_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
