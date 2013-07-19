@@ -1,6 +1,5 @@
 
-add_definitions(
-    -D__ROS_LONG64__)
+add_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
     capture.c
@@ -18,5 +17,5 @@ add_importlibs(winmm_winetest winmm user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET winmm_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)
-    add_target_compile_flags(winmm_winetest "-Wno-format")
+    add_target_compile_flags(winmm_winetest "-Wno-format -Wno-unused-but-set-variable")
 endif()
