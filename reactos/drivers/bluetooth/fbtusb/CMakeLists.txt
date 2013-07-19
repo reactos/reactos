@@ -9,14 +9,12 @@ list(APPEND SOURCE
 #   fbtwmi.c
     fbtusb.c)
 
-add_library(fbtusb SHARED
-    ${SOURCE}
-    fbtusb.rc)
+add_library(fbtusb SHARED ${SOURCE} fbtusb.rc)
 
 # FIXME: http://www.cmake.org/Bug/view.php?id=12998
 if(NOT MSVC)
     #allow_warnings(fbtusb)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error -Wno-unused-but-set-variable")
 endif()
 
 set_module_type(fbtusb kernelmodedriver)
