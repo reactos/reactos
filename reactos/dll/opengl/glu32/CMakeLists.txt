@@ -107,21 +107,14 @@ list(APPEND SOURCE
     src/libnurbs/nurbtess/sampleMonoPoly.cc
     src/libnurbs/nurbtess/sampledLine.cc
     src/libnurbs/nurbtess/searchTree.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/glu32.def
-)
+    ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 
 add_library(glu32 SHARED ${SOURCE})
 set_module_type(glu32 win32dll)
 
 if(NOT MSVC)
-    add_compile_flags("-Wno-error=write-strings")
+    add_target_compile_flags(glu32 "-Wno-write-strings -Wno-unused-but-set-variable")
 endif()
 
-add_importlibs(glu32
-    opengl32
-    gdi32
-    msvcrt
-    kernel32
-    ntdll)
-
+add_importlibs(glu32 opengl32 gdi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET glu32 DESTINATION reactos/system32 FOR all)
