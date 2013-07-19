@@ -35,7 +35,7 @@ agpintrf_Initializer(IN PVOID Instance)
 {
     UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
-    ASSERTMSG(FALSE, "PCI agpintrf_Initializer, unexpected call.");
+    ASSERTMSG("PCI agpintrf_Initializer, unexpected call.", FALSE);
     return STATUS_UNSUCCESSFUL;
 }
 

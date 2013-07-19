@@ -35,7 +35,7 @@ lddintrf_Initializer(IN PVOID Instance)
 {
     UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
-    ASSERTMSG(FALSE, "PCI lddintrf_Initializer, unexpected call.");
+    ASSERTMSG("PCI lddintrf_Initializer, unexpected call.", FALSE);
     return STATUS_UNSUCCESSFUL;
 }
 

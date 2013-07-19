@@ -35,7 +35,7 @@ devpresent_Initializer(IN PVOID Instance)
 {
     UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
-    ASSERTMSG(FALSE, "PCI devpresent_Initializer, unexpected call.");
+    ASSERTMSG("PCI devpresent_Initializer, unexpected call.", FALSE);
     return STATUS_UNSUCCESSFUL;
 }
 
