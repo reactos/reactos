@@ -79,9 +79,9 @@ RtlAssert(
 
 #ifndef ASSERTMSG
 #ifndef NASSERT
-#define ASSERTMSG(x,m) if (!(x)) { RtlAssert((PVOID)#x, __FILE__, __LINE__, m); }
+#define ASSERTMSG(m, x) if (!(x)) { RtlAssert((PVOID)#x, __FILE__, __LINE__, m); }
 #else
-#define ASSERTMSG(x)
+#define ASSERTMSG(m, x)
 #endif
 #endif
 

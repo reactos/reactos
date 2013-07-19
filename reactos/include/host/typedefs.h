@@ -29,7 +29,7 @@
 /* Basic definitions */
 #define UNIMPLEMENTED { printf("%s unimplemented\n", __FUNCTION__); exit(1); }
 #define ASSERT(x) assert(x)
-#define ASSERTMSG(x, m) assert(x)
+#define ASSERTMSG(m, x) assert(x)
 #define DPRINT if (0) printf
 #define DPRINT1 printf
 
