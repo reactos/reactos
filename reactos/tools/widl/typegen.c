@@ -1158,7 +1158,7 @@ static unsigned int write_new_procformatstring_type(FILE *file, int indent, cons
     if (flags >> 13) sprintf( buffer + strlen(buffer), " srv size=%u,", (flags >> 13) * 8 );
     strcpy( buffer + strlen( buffer ) - 1, " */" );
     print_file( file, indent, "NdrFcShort(0x%hx),\t%s\n", flags, buffer );
-    print_file( file, indent, "NdrFcShort(0x%hx),	/* stack offset = %hu */\n",
+    print_file( file, indent, "NdrFcShort(0x%x),	/* stack offset = %u */\n",
                 *stack_offset, *stack_offset );
     if (flags & IsBasetype)
     {
@@ -1332,7 +1332,7 @@ static void write_proc_func_header( FILE *file, int indent, const type_t *iface,
     print_file( file, indent, "0x%02x,\n", oi_flags );
     print_file( file, indent, "NdrFcLong(0x%x),\n", rpc_flags );
     print_file( file, indent, "NdrFcShort(0x%hx),\t/* method %hu */\n", num_proc, num_proc );
-    print_file( file, indent, "NdrFcShort(0x%hx),\t/* stack size = %hu */\n", stack_size, stack_size );
+    print_file( file, indent, "NdrFcShort(0x%x),\t/* stack size = %u */\n", stack_size, stack_size );
     *offset += 10;
 
     if (!implicit_fc)
@@ -1380,9 +1380,9 @@ static void write_proc_func_header( FILE *file, int indent, const type_t *iface,
         if (is_attr( func->attrs, ATTR_NOTIFYFLAG )) ext_flags |= 0x10;  /* HasNotify2 */
 
         size = get_function_buffer_size( func, PASS_IN );
-        print_file( file, indent, "NdrFcShort(0x%x),\t/* client buffer = %hu */\n", size, size );
+        print_file( file, indent, "NdrFcShort(0x%x),\t/* client buffer = %u */\n", size, size );
         size = get_function_buffer_size( func, PASS_OUT );
-        print_file( file, indent, "NdrFcShort(0x%x),\t/* server buffer = %hu */\n", size, size );
+        print_file( file, indent, "NdrFcShort(0x%x),\t/* server buffer = %u */\n", size, size );
         print_file( file, indent, "0x%02x,\n", oi2_flags );
         print_file( file, indent, "0x%02x,\t/* %u params */\n", nb_args, nb_args );
         print_file( file, indent, "0x%02x,\n", pointer_size == 8 ? 10 : 8 );
