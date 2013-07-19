@@ -70,7 +70,7 @@ int symt_cmp_addr(const void* p1, const void* p2)
 
 DWORD             symt_ptr2index(struct module* module, const struct symt* sym)
 {
-#ifdef _WIN64
+#ifdef __x86_64__
     const struct symt** c;
     int                 len = vector_length(&module->vsymt), i;
 
@@ -91,7 +91,7 @@ DWORD             symt_ptr2index(struct module* module, const struct symt* sym)
 
 struct symt*      symt_index2ptr(struct module* module, DWORD id)
 {
-#ifdef _WIN64
+#ifdef __x86_64__
     if (!id-- || id >= vector_length(&module->vsymt)) return NULL;
     return *(struct symt**)vector_at(&module->vsymt, id);
 #else
