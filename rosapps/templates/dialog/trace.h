@@ -21,7 +21,7 @@
     }                                               \
 }                                                   \
 
-#define ASSERTMSG(exp, msg)                         \
+#define ASSERTMSG(msg, exp)                         \
 {                                                   \
     if (!(exp)) {                                   \
         Assert(#exp, __FILE__, __LINE__, msg);      \
@@ -45,7 +45,7 @@
 
 #ifndef ASSERT
 #define ASSERT(exp)
-#define ASSERTMSG(exp, msg)
+#define ASSERTMSG(msg, exp)
 #endif
 
 #define TRACE 0 ? (void)0 : Trace
