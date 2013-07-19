@@ -536,8 +536,8 @@ FDO_HandleResetCyclePort(
             ListIrp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
 
             /* Complete request with status success */
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            ListIrp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(ListIrp, IO_NO_INCREMENT);
         }
 
         /* Status success */
