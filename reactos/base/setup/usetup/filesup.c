@@ -198,7 +198,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 			     NULL);
 
   Status = NtCreateFile(&FileHandleDest,
-			GENERIC_WRITE,
+			GENERIC_WRITE | SYNCHRONIZE,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,
@@ -377,7 +377,7 @@ DoesFileExist(PWSTR PathName,
 			     NULL);
 
   Status = NtOpenFile(&FileHandle,
-		      GENERIC_READ,
+		      GENERIC_READ | SYNCHRONIZE,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
