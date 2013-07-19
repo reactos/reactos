@@ -517,18 +517,18 @@ KdbpSymLoadModuleSymbols(
     /*  Open the file  */
     InitializeObjectAttributes(&ObjectAttributes,
                                FileName,
-                               OBJ_CASE_INSENSITIVE|OBJ_KERNEL_HANDLE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
     DPRINT("Attempting to open image: %wZ\n", FileName);
 
     Status = ZwOpenFile(&FileHandle,
-                        FILE_READ_ACCESS,
+                        FILE_READ_ACCESS | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        FILE_SHARE_READ|FILE_SHARE_WRITE,
-                        FILE_NON_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT);
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Could not open image file(%x): %wZ\n", Status, FileName);
@@ -539,7 +539,7 @@ KdbpSymLoadModuleSymbols(
 
     Status = ObReferenceObjectByHandle
         (FileHandle,
-         FILE_READ_DATA|SYNCHRONIZE,
+         FILE_READ_DATA | SYNCHRONIZE,
          NULL,
          KernelMode,
          (PVOID*)&FileObject,

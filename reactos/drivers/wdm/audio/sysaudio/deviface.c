@@ -29,7 +29,7 @@ OpenDevice(
     InitializeObjectAttributes(&ObjectAttributes, DeviceName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
 
     Status = ZwCreateFile(&NodeHandle,
-                          GENERIC_READ | GENERIC_WRITE,
+                          GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
