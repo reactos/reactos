@@ -34,7 +34,7 @@ typedef struct
     UINT Status;
 } LANSTATUSUI_CONTEXT;
 
-class CLanStatus:
+class CLanStatus :
     public IOleCommandTarget
 {
     public:

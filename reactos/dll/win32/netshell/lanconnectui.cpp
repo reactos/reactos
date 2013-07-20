@@ -22,38 +22,38 @@ typedef struct
     UINT NumPropDialogOpen;
 } NET_ITEM, *PNET_ITEM;
 
-class CNetConnectionPropertyUi:
+class CNetConnectionPropertyUi final :
     public INetConnectionPropertyUi2,
     public INetLanConnectionUiInfo,
     public INetConnectionConnectUi
 {
     public:
         CNetConnectionPropertyUi();
-        
+
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
         virtual ULONG WINAPI AddRef();
         virtual ULONG WINAPI Release();
-        
+
         // INetConnectionPropertyUi2
         virtual HRESULT WINAPI AddPages(HWND hwndParent, LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
         virtual HRESULT WINAPI GetIcon(DWORD dwSize, HICON *phIcon);
 
         // INetLanConnectionUiInfo
         virtual HRESULT WINAPI GetDeviceGuid(GUID *pGuid);
-        
+
         // INetConnectionConnectUi
         virtual HRESULT WINAPI SetConnection(INetConnection* pCon);
         virtual HRESULT WINAPI Connect(HWND hwndParent, DWORD dwFlags);
         virtual HRESULT WINAPI Disconnect(HWND hwndParent, DWORD dwFlags);
-    
+
     private:
         BOOL GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent ** pOut);
         VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type);
         VOID InitializeLANPropertiesUIDlg(HWND hwndDlg);
         VOID ShowNetworkComponentProperties(HWND hwndDlg);
         static INT_PTR CALLBACK LANPropertiesUIDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-        
+
         INetConnection * pCon;
         INetCfgLock *NCfgLock;
         INetCfg * pNCfg;
@@ -505,7 +505,7 @@ CNetConnectionPropertyUi::Release()
 HRESULT
 WINAPI
 CNetConnectionPropertyUi::AddPages(
-    HWND hwndParent, 
+    HWND hwndParent,
     LPFNADDPROPSHEETPAGE pfnAddPage,
     LPARAM lParam)
 {

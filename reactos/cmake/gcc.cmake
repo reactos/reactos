@@ -15,7 +15,7 @@ if(GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-mstackrealign")
 endif()
 
-add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
+add_compile_flags_language("-fno-rtti -fno-exceptions -std=c++11" "CXX")
 
 #bug
 #file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)

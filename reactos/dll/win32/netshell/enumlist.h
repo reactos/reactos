@@ -22,24 +22,24 @@ typedef struct tagENUMLIST
     LPITEMIDLIST pidl;
 } ENUMLIST, *LPENUMLIST;
 
-class CEnumIDList:
+class CEnumIDList final :
     public IEnumIDList
 {
     public:
         CEnumIDList();
         BOOL AddToEnumList(LPITEMIDLIST pidl);
-        
+
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
         virtual ULONG WINAPI AddRef();
         virtual ULONG WINAPI Release();
-        
+
         // IEnumIDList
         virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched);
         virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
         virtual HRESULT STDMETHODCALLTYPE Reset();
         virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
-    
+
     private:
         LONG        ref;
         LPENUMLIST  mpFirst;
