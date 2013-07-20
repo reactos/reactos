@@ -65,7 +65,9 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     include_directories(include/host)
 
-    add_subdirectory(dll/win32/dbghelp)
+    if(NOT MSVC)
+        add_subdirectory(dll/win32/dbghelp)
+    endif()
     add_subdirectory(tools)
     add_subdirectory(lib)
 
