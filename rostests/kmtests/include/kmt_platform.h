@@ -21,8 +21,9 @@
 #include <ntifs.h>
 #include <ndk/exfuncs.h>
 #include <ndk/kefuncs.h>
-#include <ndk/obfuncs.h>
 #include <ndk/mmfuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/sefuncs.h>
 #include <ntstrsafe.h>
 
 #elif defined KMT_USER_MODE
@@ -30,7 +31,10 @@
 #define UNICODE
 #include <windef.h>
 #include <winbase.h>
+#include <winreg.h>
 #include <winsvc.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/mmfuncs.h>
 #include <strsafe.h>
