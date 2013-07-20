@@ -51,7 +51,7 @@ add_compile_flags("-Werror -Wall -Wno-char-subscripts -Wpointer-arith -Wno-multi
 if(GCC_VERSION VERSION_LESS 4.7)
     add_compile_flags("-Wno-error=uninitialized")
 elseif(GCC_VERSION VERSION_EQUAL 4.7 OR GCC_VERSION VERSION_GREATER 4.7)
-    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-maybe-uninitialized -Wno-error=delete-non-virtual-dtor -Wno-error=narrowing")
+    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-maybe-uninitialized -Wno-error=narrowing")
 endif()
 
 if(ARCH STREQUAL "amd64")
