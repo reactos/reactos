@@ -15,9 +15,11 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 static WORD CurrentPsp = SYSTEM_PSP;
+static WORD DosLastError = 0;
 static DWORD DiskTransferArea;
 static HANDLE DosSystemFileTable[DOS_SFT_SIZE];
 static WORD DosSftRefCount[DOS_SFT_SIZE];
+static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
 static BOOLEAN DosUmbLinked = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -225,6 +227,14 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
 {
     WORD Result = 0, Segment = FIRST_MCB_SEGMENT, MaxSize = 0;
     PDOS_MCB CurrentMcb, NextMcb;
+    BOOLEAN SearchUmb = FALSE;
+
+    if (DosUmbLinked && (DosAllocStrategy & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)))
+    {
+        /* Search UMB first */
+        Segment = UMB_START_SEGMENT;
+        SearchUmb = TRUE;
+    }
 
     while (TRUE)
     {
@@ -234,6 +244,7 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
         /* Make sure it's valid */
         if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z')
         {
+            DosLastError = ERROR_ARENA_TRASHED;
             return 0;
         }
 
@@ -249,23 +260,59 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
         /* Check if this block is big enough */
         if (CurrentMcb->Size < Size) goto Next;
 
-        /* It is, update the smallest found so far */
-        if ((Result == 0) || (CurrentMcb->Size < SEGMENT_TO_MCB(Result)->Size))
+        switch (DosAllocStrategy & 0x3F)
         {
-            Result = Segment;
+            case DOS_ALLOC_FIRST_FIT:
+            {
+                /* For first fit, stop immediately */
+                Result = Segment;
+                goto Done;
+            }
+
+            case DOS_ALLOC_BEST_FIT:
+            {
+                /* For best fit, update the smallest block found so far */
+                if ((Result == 0) || (CurrentMcb->Size < SEGMENT_TO_MCB(Result)->Size))
+                {
+                    Result = Segment;
+                }
+
+                break;
+            }
+
+            case DOS_ALLOC_LAST_FIT:
+            {
+                /* For last fit, make the current block the result, but keep searching */
+                Result = Segment;
+                break;
+            }
         }
 
 Next:
         /* If this was the last MCB in the chain, quit */
-        if (CurrentMcb->BlockType == 'Z') break;
+        if (CurrentMcb->BlockType == 'Z')
+        {
+            /* Check if nothing was found while searching through UMBs */
+            if ((Result == 0) && SearchUmb && (DosAllocStrategy & DOS_ALLOC_HIGH_LOW))
+            {
+                /* Search low memory */
+                Segment = FIRST_MCB_SEGMENT;
+                continue;
+            }
+
+            break;
+        }
 
         /* Otherwise, update the segment and continue */
         Segment += CurrentMcb->Size + 1;
     }
 
+Done:
+
     /* If we didn't find a free block, return 0 */
     if (Result == 0)
     {
+        DosLastError = ERROR_NOT_ENOUGH_MEMORY;
         if (MaxAvailable) *MaxAvailable = MaxSize;
         return 0;
     }
@@ -306,6 +353,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
     if ((Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') || Mcb->OwnerPsp == 0)
     {
         Success = FALSE;
+        DosLastError = ERROR_INVALID_PARAMETER;
         goto Done;
     }
 
@@ -328,6 +376,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         /* Make sure the next segment is free */
         if (NextMcb->OwnerPsp != 0)
         {
+            DosLastError = ERROR_NOT_ENOUGH_MEMORY;
             Success = FALSE;
             goto Done;
         }
@@ -1457,7 +1506,7 @@ VOID DosInt21h(WORD CodeSegment)
             }
             else
             {
-                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_NOT_ENOUGH_MEMORY);
+                EmulatorSetRegister(EMULATOR_REG_AX, DosLastError);
                 EmulatorSetRegister(EMULATOR_REG_BX, MaxAvailable);
                 EmulatorSetFlag(EMULATOR_FLAG_CF);
             }
@@ -1492,6 +1541,7 @@ VOID DosInt21h(WORD CodeSegment)
             }
             else
             {
+                EmulatorSetRegister(EMULATOR_REG_AX, DosLastError);
                 EmulatorSetFlag(EMULATOR_FLAG_CF);
                 EmulatorSetRegister(EMULATOR_REG_BX, Size);
             }
@@ -1509,13 +1559,45 @@ VOID DosInt21h(WORD CodeSegment)
         /* Get/Set Memory Management Options */
         case 0x58:
         {
-            if (LOBYTE(Eax) == 0x02)
+            if (LOBYTE(Eax) == 0x00)
+            {
+                /* Get allocation strategy */
+
+                EmulatorSetRegister(EMULATOR_REG_AX, DosAllocStrategy);
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+            }
+            else if (LOBYTE(Eax) == 0x01)
+            {
+                /* Set allocation strategy */
+
+                if ((LOBYTE(Ebx) & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
+                    == (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW))
+                {
+                    /* Can't set both */
+                    EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_PARAMETER);
+                    EmulatorSetFlag(EMULATOR_FLAG_CF);
+                    break;
+                }
+
+                if ((LOBYTE(Ebx) & 0x3F) > DOS_ALLOC_LAST_FIT)
+                {
+                    /* Invalid allocation strategy */
+                    EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_PARAMETER);
+                    EmulatorSetFlag(EMULATOR_FLAG_CF);
+                    break;
+                }
+
+                DosAllocStrategy = LOBYTE(Ebx);
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+            }
+            else if (LOBYTE(Eax) == 0x02)
             {
                 /* Get UMB link state */
 
                 Eax &= 0xFFFFFF00;
                 if (DosUmbLinked) Eax |= 1;
                 EmulatorSetRegister(EMULATOR_REG_AX, Eax);
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
             }
             else if (LOBYTE(Eax) == 0x03)
             {
@@ -1523,6 +1605,7 @@ VOID DosInt21h(WORD CodeSegment)
 
                 if (Ebx) DosLinkUmb();
                 else DosUnlinkUmb();
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
             }
             else
             {

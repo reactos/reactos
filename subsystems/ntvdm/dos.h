@@ -31,6 +31,15 @@
 #define SEGMENT_TO_PSP(seg) ((PDOS_PSP)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
 #define UMB_START_SEGMENT 0xC000
 #define UMB_END_SEGMENT 0xDFFF
+#define DOS_ALLOC_HIGH 0x40
+#define DOS_ALLOC_HIGH_LOW 0x80
+
+enum DOS_ALLOC_STRATEGY
+{
+    DOS_ALLOC_FIRST_FIT,
+    DOS_ALLOC_BEST_FIT,
+    DOS_ALLOC_LAST_FIT
+};
 
 #pragma pack(push, 1)
 
