@@ -1581,7 +1581,7 @@ MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
 
     /* Free the session page tables */
 #ifndef _M_AMD64
-    ExFreePool(SessionGlobal->PageTables);
+    ExFreePoolWithTag(SessionGlobal->PageTables, 'tHmM');
 #endif
     ASSERT(!MI_IS_PHYSICAL_ADDRESS(SessionGlobal));
 

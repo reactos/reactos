@@ -787,7 +787,7 @@ QSI_DEF(SystemProcessInformation)
                         RtlCopyMemory(SpiCurrent->ImageName.Buffer, szSrc, SpiCurrent->ImageName.Length);
 
                         /* Release the memory allocated by SeLocateProcessImageName */
-                        ExFreePool(ProcessImageName);
+                        ExFreePoolWithTag(ProcessImageName, TAG_SEPA);
                     }
                     else
                     {

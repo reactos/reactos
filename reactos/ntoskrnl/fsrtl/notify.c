@@ -424,7 +424,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
                 }
 
                 /* Finally, free the notification, as it's not needed anymore */
-                ExFreePool(NotifyChange);
+                ExFreePoolWithTag(NotifyChange, 'FSrN');
             }
         }
     }

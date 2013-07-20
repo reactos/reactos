@@ -655,7 +655,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
             Process->SeAuditProcessCreationInfo.ImageFileName =
                 ExAllocatePoolWithTag(PagedPool,
                                       sizeof(OBJECT_NAME_INFORMATION),
-                                      'aPeS');
+                                      TAG_SEPA);
             if (!Process->SeAuditProcessCreationInfo.ImageFileName)
             {
                 /* Fail */

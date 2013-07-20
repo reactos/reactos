@@ -553,7 +553,7 @@ MmDereferencePage(PFN_NUMBER Pfn)
 
         /* It's not a ROS PFN anymore */
         Page->u4.AweAllocation = FALSE;
-        ExFreePool(MI_GET_ROS_DATA(Page));
+        ExFreePoolWithTag(MI_GET_ROS_DATA(Page), 'RsPf');
         Page->RosMmData = 0;
 
         /* Bring it back into the free list */

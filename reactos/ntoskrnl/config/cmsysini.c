@@ -164,7 +164,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
         ((Length < (*ReturnLength)) && (BytesToCopy < sizeof(WCHAR))))
     {
         /* Free the buffer allocated by CmpConstructName */
-        ExFreePool(KeyName);
+        ExFreePoolWithTag(KeyName, TAG_CM);
 
         /* Return buffer length failure without writing anything there because nothing fits */
         return STATUS_INFO_LENGTH_MISMATCH;
@@ -207,7 +207,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
     _SEH2_END;
 
     /* Free the buffer allocated by CmpConstructName */
-    ExFreePool(KeyName);
+    ExFreePoolWithTag(KeyName, TAG_CM);
 
     /* Return status */
     return Status;

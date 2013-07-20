@@ -699,7 +699,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 }
 
                 /* Free the image path */
-                ExFreePool(ImageName);
+                ExFreePoolWithTag(ImageName, TAG_SEPA);
             }
             /* Dereference the process */
             ObDereferenceObject(Process);
