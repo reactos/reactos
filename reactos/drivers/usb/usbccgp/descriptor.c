@@ -311,7 +311,6 @@ USBCCGP_ScanConfigurationDescriptor(
 {
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
     ULONG InterfaceIndex = 0;
-    PVOID CurrentPosition;
     ULONG DescriptorCount;
 
     //
@@ -337,7 +336,6 @@ USBCCGP_ScanConfigurationDescriptor(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    CurrentPosition = ConfigurationDescriptor;
     do
     {
         //
@@ -351,7 +349,6 @@ USBCCGP_ScanConfigurationDescriptor(
             //
             FDODeviceExtension->InterfaceList[FDODeviceExtension->InterfaceListCount].InterfaceDescriptor = InterfaceDescriptor;
             FDODeviceExtension->InterfaceListCount++;
-            CurrentPosition = (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
         }
         else
         {

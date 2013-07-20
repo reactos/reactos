@@ -544,7 +544,6 @@ USBSTOR_StartIo(
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     KIRQL OldLevel;
-    NTSTATUS Status;
     BOOLEAN ResetInProgress;
 
     DPRINT("USBSTOR_StartIo\n");
@@ -660,7 +659,7 @@ USBSTOR_StartIo(
     //
     // execute scsi
     //
-    Status = USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp, 0);
+    USBSTOR_HandleExecuteSCSI(IoStack->DeviceObject, Irp, 0);
 
     //
     // FIXME: handle error

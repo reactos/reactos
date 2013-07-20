@@ -245,21 +245,14 @@ NTAPI
 ErrorHandlerWorkItemRoutine(
     PVOID Context)
 {
-    NTSTATUS Status;
-    PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PERRORHANDLER_WORKITEM_DATA WorkItemData = (PERRORHANDLER_WORKITEM_DATA)Context;
-
-    //
-    // get fdo
-    //
-    FDODeviceExtension = WorkItemData->Context->FDODeviceExtension;
 
     if (WorkItemData->Context->ErrorIndex == 2)
     {
         //
         // reset device
         //
-        Status = USBSTOR_HandleTransferError(WorkItemData->DeviceObject, WorkItemData->Context);
+        USBSTOR_HandleTransferError(WorkItemData->DeviceObject, WorkItemData->Context);
     }
     else
     {

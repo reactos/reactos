@@ -471,7 +471,7 @@ Return Value:
     UNICODE_STRING  unicodeDeviceName;
     PFILE_OBJECT    fileObject;
     CCHAR           deviceNameBuffer[256];
-    BOOLEAN         deviceFound = FALSE;
+    /* BOOLEAN         deviceFound = FALSE; See note at the end */
     PCLASS_DRIVER_EXTENSION DriverExtension;
     PUNICODE_STRING RegistryPath = Argument2;
 
@@ -578,7 +578,7 @@ Return Value:
             if (InitializationData->ClassFindDevices(DriverObject, Argument2, InitializationData,
                                                      portDeviceObject, DriverExtension->PortNumber)) {
 
-                deviceFound = TRUE;
+                /* deviceFound = TRUE; See note at the end */
             }
         }
 

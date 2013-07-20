@@ -181,9 +181,7 @@ USBSTOR_CSWCompletionRoutine(
     PREAD_CAPACITY_DATA_EX CapacityDataEx;
     PREAD_CAPACITY_DATA CapacityData;
     PUFI_CAPACITY_RESPONSE Response;
-
     NTSTATUS Status;
-    PURB Urb;
 
     //
     // access context
@@ -274,7 +272,6 @@ USBSTOR_CSWCompletionRoutine(
     ASSERT(Request);
 
     Status = Irp->IoStatus.Status;
-    Urb = &Context->Urb;
 
     //
     // get SCSI command data block

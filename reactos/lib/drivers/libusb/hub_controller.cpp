@@ -402,7 +402,6 @@ CHubController::HandlePnp(
     IN OUT PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PCOMMON_DEVICE_EXTENSION DeviceExtension;
     PDEVICE_CAPABILITIES DeviceCapabilities;
     PPNP_BUS_INFORMATION BusInformation;
     PDEVICE_RELATIONS DeviceRelations;
@@ -412,16 +411,6 @@ CHubController::HandlePnp(
     ULONG HiSpeed, NumPorts;
     WCHAR Buffer[300];
     LPWSTR DeviceName;
-
-    //
-    // get device extension
-    //
-    DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    //
-    // sanity check
-    //
-    ASSERT(DeviceExtension->IsFDO == FALSE);
 
     //
     // get current stack location
@@ -2189,7 +2178,6 @@ CHubController::HandleDeviceControl(
     IN OUT PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PCOMMON_DEVICE_EXTENSION DeviceExtension;
     PURB Urb;
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
 
@@ -2197,11 +2185,6 @@ CHubController::HandleDeviceControl(
     // get current stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    //
-    // get device extension
-    //
-    DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
     // determine which request should be performed

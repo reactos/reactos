@@ -67,7 +67,6 @@ IntVideoPortChildQueryId(
 {
     PWCHAR Buffer = NULL, StaticBuffer;
     UNICODE_STRING UnicodeStr;
-    ULONG Length;
     
     switch (IrpSp->Parameters.QueryId.IdType)
     {
@@ -78,7 +77,6 @@ IntVideoPortChildQueryId(
                     if (ChildExtension->EdidValid)
                     {
                         StaticBuffer = L"DISPLAY\\";
-                        Length = 8 * sizeof(WCHAR);
                         Buffer = ExAllocatePool(PagedPool, (wcslen(StaticBuffer) + 8) * sizeof(WCHAR));
                         if (!Buffer) return STATUS_NO_MEMORY;
 
@@ -92,7 +90,6 @@ IntVideoPortChildQueryId(
                     else
                     {
                         StaticBuffer = L"DISPLAY\\Default_Monitor";
-                        Length = wcslen(StaticBuffer) * sizeof(WCHAR);
                         Buffer = ExAllocatePool(PagedPool, (wcslen(StaticBuffer) + 1) * sizeof(WCHAR));
                         if (!Buffer) return STATUS_NO_MEMORY;
 
@@ -121,7 +118,6 @@ IntVideoPortChildQueryId(
                     if (ChildExtension->EdidValid)
                     {
                         StaticBuffer = L"MONITOR\\";
-                        Length = 8 * sizeof(WCHAR);
                         Buffer = ExAllocatePool(PagedPool, (wcslen(StaticBuffer) + 9) * sizeof(WCHAR));
                         if (!Buffer) return STATUS_NO_MEMORY;
 
@@ -138,7 +134,6 @@ IntVideoPortChildQueryId(
                     else
                     {
                         StaticBuffer = L"MONITOR\\Default_Monitor";
-                        Length = wcslen(StaticBuffer) * sizeof(WCHAR);
                         Buffer = ExAllocatePool(PagedPool, (wcslen(StaticBuffer) + 2) * sizeof(WCHAR));
                         if (!Buffer) return STATUS_NO_MEMORY;
 

@@ -220,7 +220,6 @@ bool ext2_expand_inode( PEXT2_FILESYS Ext2Sys,
     PEXT2_SUPER_BLOCK pExt2Sb = Ext2Sys->ext2_sb;
     int   i = 0;
     bool  bRet = true;
-    bool  bDirty = false;
     ULONG TotalBlocks;
 
     TotalBlocks = Inode->i_blocks / (Ext2Sys->blocksize / SECTOR_SIZE);
@@ -245,7 +244,6 @@ bool ext2_expand_inode( PEXT2_FILESYS Ext2Sys,
             if (i == 0)
             {
                 Inode->i_block[Index] = newBlk;
-                bDirty = true;
             }
             else
             {
@@ -256,7 +254,6 @@ bool ext2_expand_inode( PEXT2_FILESYS Ext2Sys,
                     if (ext2_alloc_block(Ext2Sys, 0, &dwBlk))
                     {
                         Inode->i_block[(i + 12 - 1)] = dwBlk;
-                        bDirty = true;
 
                         Inode->i_blocks += (Ext2Sys->blocksize / SECTOR_SIZE);
                     }
