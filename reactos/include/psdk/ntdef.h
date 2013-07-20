@@ -321,9 +321,9 @@
 
 /* Use to silence unused variable warnings when it is intentional */
 #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
-#define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
+#define UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
 #define DBG_UNREFERENCED_PARAMETER(P) {(P)=(P);}
-#define DBG_UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
+#define DBG_UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
 
 /* min/max helper macros */
 #ifndef NOMINMAX
