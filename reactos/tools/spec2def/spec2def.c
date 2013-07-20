@@ -10,7 +10,7 @@
 typedef struct
 {
     char *pcName;
-    size_t nNameLength;
+    int nNameLength;
     char *pcRedirection;
     int nRedirectionLength;
     int nCallingConvention;
@@ -315,7 +315,7 @@ void
 PrintName(FILE *fileDest, EXPORT *pexp, char *pszPrefix, int fRedir, int fDeco)
 {
     char *pcName = fRedir ? pexp->pcRedirection : pexp->pcName;
-    size_t nNameLength = fRedir ? pexp->nRedirectionLength : pexp->nNameLength;
+    int nNameLength = fRedir ? pexp->nRedirectionLength : pexp->nNameLength;
 
     /* Handle autoname */
     if (nNameLength == 1 && pcName[0] == '@')
@@ -649,10 +649,10 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             {
                 /* Check for stdcall name */
                 char *p = strchr(pc, '@');
-                if (p && ((size_t)(p - pc) < exp.nNameLength))
+                if (p && (p - pc < exp.nNameLength))
                 {
                     int i;
-                    exp.nNameLength = p - pc;
+                    exp.nNameLength = (int)(p - pc);
                     if (exp.nNameLength < 1)
                     {
                         fprintf(stderr, "error, @ in line %d\n", nLine);
@@ -669,7 +669,8 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         }
 
         /* Get optional redirection */
-        if ((pc = NextToken(pc)))
+        pc = NextToken(pc);
+        if (pc)
         {
             exp.pcRedirection = pc;
             exp.nRedirectionLength = TokenLength(pc);
