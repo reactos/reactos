@@ -14,21 +14,6 @@
 #include <debug.h>
 
 //------------------------------------------------------------------------------//
-//      Functions required forWorking with ACCESS_STATE structure               //
-//------------------------------------------------------------------------------//
-
-NTKERNELAPI NTSTATUS NTAPI SeCreateAccessState(
-    PACCESS_STATE AccessState,
-    PVOID AuxData,
-    ACCESS_MASK DesiredAccess,
-    PGENERIC_MAPPING Mapping
-    );
-
-NTKERNELAPI VOID NTAPI SeDeleteAccessState(
-    PACCESS_STATE AccessState
-    );
-
-//------------------------------------------------------------------------------//
 //      Testing Functions                                                       //
 //------------------------------------------------------------------------------//
 
