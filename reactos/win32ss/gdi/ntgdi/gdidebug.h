@@ -47,7 +47,7 @@ VOID NTAPI DbgPrintEvent(PLOGENTRY pLogEntry);
 #define DBG_DUMP_EVENT_LIST(pslh) DbgDumpEventList(pslh)
 #define DBG_CLEANUP_EVENT_LIST(pslh) DbgCleanupEventList(pslh)
 #else
-#define DBG_LOGEVENT(pslh, type, val)
+#define DBG_LOGEVENT(pslh, type, val) ((void)(val))
 #define DBG_INITLOG(pslh)
 #define DBG_DUMP_EVENT_LIST(pslh)
 #define DBG_CLEANUP_EVENT_LIST(pslh)
