@@ -30,6 +30,7 @@
 
 #include "fatfs.h"
 
+#ifdef _DEBUG
 
 static union DEntry* link_dir_entries(struct dirent* dir, struct Kette* K, int cnt)
 {
@@ -634,3 +635,5 @@ int FATDrive::get_cache_buffer()	// search for free cache buffer
 
  return j;
 }
+
+#endif // _DEBUG

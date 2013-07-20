@@ -177,7 +177,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		_root._entry = new RegistryRoot();
 		entry = _root.read_tree(info._path+_tcslen(_root._path));
 		break;
-
+#ifdef _DEBUG
 	  case ET_FAT: {
 		_root._drive_type = DRIVE_UNKNOWN;
 		_root._sort_order = SORT_NONE;
@@ -194,7 +194,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 			entry = _root.read_tree(info._path+_tcslen(_root._path));
 		}
 		break;}
-
+#endif
 #ifndef _NO_WIN_FS
 	  default:	// ET_WINDOWS
 		_root._drive_type = GetDriveType(info._path);
