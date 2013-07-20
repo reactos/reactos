@@ -853,10 +853,19 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCWSTR pszKeyPath, DWORD dwType)
             cbData = sizeof(WCHAR);
             break;
         case REG_MULTI_SZ:
-            cbData = sizeof(WCHAR) * 2;
+            /*
+             * WARNING: An empty multi-string has only one null char.
+             * Indeed, multi-strings are built in the following form:
+             * str1\0str2\0...strN\0\0
+             * where each strI\0 is a null-terminated string, and it
+             * ends with a terminating empty string.
+             * Therefore an empty multi-string contains only the terminating
+             * empty string, that is, one null char.
+             */
+            cbData = sizeof(WCHAR);
             break;
-        case REG_QWORD:
-            cbData = sizeof(DWORD) * 2;
+        case REG_QWORD: /* REG_QWORD_LITTLE_ENDIAN */
+            cbData = sizeof(DWORDLONG); // == sizeof(DWORD) * 2;
             break;
         default:
             cbData = 0;
