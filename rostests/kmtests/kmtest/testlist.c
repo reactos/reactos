@@ -13,6 +13,7 @@ KMT_TESTFUNC Test_IoDeviceObject;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlException;
 KMT_TESTFUNC Test_RtlMemory;
+KMT_TESTFUNC Test_RtlRegistry;
 KMT_TESTFUNC Test_RtlSplayTree;
 KMT_TESTFUNC Test_RtlUnicodeString;
 
@@ -25,6 +26,7 @@ const KMT_TEST TestList[] =
     { "RtlAvlTree",         Test_RtlAvlTree },
     { "RtlException",       Test_RtlException },
     { "RtlMemory",          Test_RtlMemory },
+    { "RtlRegistry",        Test_RtlRegistry },
     { "RtlSplayTree",       Test_RtlSplayTree },
     { "RtlUnicodeString",   Test_RtlUnicodeString },
     { NULL,                 NULL },

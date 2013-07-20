@@ -13,6 +13,7 @@ list(APPEND COMMON_SOURCE
     rtl/RtlAvlTree.c
     rtl/RtlException.c
     rtl/RtlMemory.c
+    rtl/RtlRegistry.c
     rtl/RtlSplayTree.c
     rtl/RtlUnicodeString.c)
 

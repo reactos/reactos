@@ -48,6 +48,7 @@ KMT_TESTFUNC Test_SeQueryInfoToken;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlException;
 KMT_TESTFUNC Test_RtlMemory;
+KMT_TESTFUNC Test_RtlRegistry;
 KMT_TESTFUNC Test_RtlSplayTree;
 KMT_TESTFUNC Test_ZwAllocateVirtualMemory;
 KMT_TESTFUNC Test_ZwCreateSection;
@@ -97,6 +98,7 @@ const KMT_TEST TestList[] =
     { "RtlAvlTreeKM",                       Test_RtlAvlTree },
     { "RtlExceptionKM",                     Test_RtlException },
     { "RtlMemoryKM",                        Test_RtlMemory },
+    { "RtlRegistryKM",                      Test_RtlRegistry },
     { "RtlSplayTreeKM",                     Test_RtlSplayTree },
     { "ZwAllocateVirtualMemory",            Test_ZwAllocateVirtualMemory },
     { "ZwCreateSection",                    Test_ZwCreateSection },
