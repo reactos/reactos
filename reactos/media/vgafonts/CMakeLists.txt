@@ -18,4 +18,3 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab
 add_custom_target(vgafonts DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab)
 
 add_cd_file(TARGET vgafonts FILE ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab DESTINATION reactos NO_CAB FOR all)
-add_cd_file(TARGET vgafonts FILE ${CMAKE_CURRENT_BINARY_DIR}/vgafonts.cab DESTINATION reactos FOR all)

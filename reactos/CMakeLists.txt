@@ -235,6 +235,9 @@ else()
     add_subdirectory(subsystems)
     add_subdirectory(win32ss)
 
+    # Create {bootcd, livecd, bootcdregtest}.lst
+    create_iso_lists()
+
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
 
     add_dependency_footer()

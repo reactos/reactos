@@ -33,8 +33,13 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef _WIN32
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
 # include <io.h>
 # include <dos.h>
+# ifdef _MSC_VER
+#  define R_OK 4
+# endif
 #else
 # if defined(__FreeBSD__) || defined(__APPLE__)
 #  include <sys/uio.h>
@@ -45,28 +50,19 @@
 # include <sys/types.h>
 # include <dirent.h>
 # include <unistd.h>
+# define TRUE 1
+# define FALSE 0
 #endif // _WIN32
 #include <ctype.h>
 #include <setjmp.h>
 #include <time.h>
-#ifndef _WIN32
-#ifndef MAX_PATH
-#define MAX_PATH 260
-#endif
-#define DIR_SEPARATOR_CHAR '/'
-#define DIR_SEPARATOR_STRING "/"
-#else
-#define DIR_SEPARATOR_CHAR '\\'
-#define DIR_SEPARATOR_STRING "\\"
-#endif
+#include "dirsep.h"
+#include "dirhash.h"
 
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
 typedef unsigned long DWORD;
 typedef int BOOL;
-
-const BOOL TRUE  = 1;
-const BOOL FALSE = 0;
 
 // file system parameters
 
@@ -115,6 +111,7 @@ typedef struct directory_record
   char extension[MAX_EXTENSION_LENGTH+1];
   char extension_on_cd[MAX_CDEXTENSION_LENGTH+1];
   char *joliet_name;
+  const char *orig_name;
   DATE_AND_TIME date_and_time;
   DWORD sector;
   DWORD size;
@@ -172,6 +169,8 @@ BOOL joliet;
 DWORD joliet_path_table_size;
 DWORD joliet_little_endian_path_table_sector;
 DWORD joliet_big_endian_path_table_sector;
+
+struct target_dir_hash specified_files;
 
 /*-----------------------------------------------------------------------------
 This function edits a 32-bit unsigned number into a comma-delimited form, such
@@ -1068,6 +1067,159 @@ make_directory_records (PDIR_RECORD d)
 
 #endif
 
+static PDIR_RECORD
+new_empty_dirrecord(PDIR_RECORD d, BOOL directory)
+{
+    PDIR_RECORD new_d;
+    new_d = malloc(sizeof(*new_d));
+    memset(new_d, 0, sizeof(*new_d));
+    new_d->parent = d;
+    new_d->level = d->level + 1;
+    new_d->next_in_directory = d->first_record;
+    d->first_record = new_d;
+    new_d->next_in_memory = root.next_in_memory;
+    root.next_in_memory = new_d;
+    if (directory)
+    {
+        new_d->flags |= DIRECTORY_FLAG;
+        new_d->next_in_path_table = root.next_in_path_table;
+        root.next_in_path_table = new_d;
+    }
+    return new_d;
+}
+
+#if _WIN32
+static int
+get_cd_file_time(HANDLE handle, DATE_AND_TIME *cd_time_info)
+{
+    FILETIME file_time;
+    SYSTEMTIME sys_time;
+    if (!GetFileTime(handle, NULL, NULL, &file_time))
+    {
+        return -1;
+    }
+    FileTimeToSystemTime(&file_time, &sys_time);
+    memset(cd_time_info, 0, sizeof(*cd_time_info));
+    cd_time_info->year = sys_time.wYear;
+    cd_time_info->month = sys_time.wMonth - 1;
+    cd_time_info->day = sys_time.wDay;
+    cd_time_info->hour = sys_time.wHour;
+    cd_time_info->minute = sys_time.wMinute;
+    cd_time_info->second = sys_time.wSecond;
+    return 0;
+}
+#endif
+
+static void
+scan_specified_files(PDIR_RECORD d, struct target_dir_entry *dir)
+{
+    PDIR_RECORD new_d;
+#if _WIN32
+    HANDLE open_file;
+    LARGE_INTEGER file_size;
+#else
+    struct stat stbuf;
+#endif
+    struct target_file *file;
+    struct target_dir_entry *child;
+
+    d->first_record = NULL;
+
+    for (file = dir->head; file; file = file->next)
+    {
+        if (strcmp(file->target_name, DIRECTORY_TIMESTAMP) == 0)
+        {
+#if _WIN32
+            if ((open_file = CreateFileA(file->source_name,
+                                         GENERIC_READ,
+                                         FILE_SHARE_READ,
+                                         NULL,
+                                         OPEN_EXISTING,
+                                         FILE_ATTRIBUTE_NORMAL,
+                                         NULL)) == INVALID_HANDLE_VALUE)
+            {
+                error_exit("Can't open timestamp file %s\n", file->source_name);
+            }
+
+            if (get_cd_file_time(open_file, &d->date_and_time) == -1)
+            {
+                error_exit("Can't stat timestamp file %s\n", file->source_name);
+            }
+            CloseHandle(open_file);
+#else
+            if (stat(file->target_name, &stbuf) == -1)
+            {
+                error_exit("Can't stat timestamp file %s\n", file->source_name);
+            }
+            convert_date_and_time(&d->date_and_time, &stbuf.st_ctime);
+#endif
+        }
+        else
+        {
+            if (verbosity == VERBOSE)
+            {
+                printf("%d: file %s (from %s)\n",
+                       d->level,
+                       file->target_name,
+                       file->source_name);
+            }
+            new_d = new_empty_dirrecord(d, FALSE);
+            parse_filename_into_dirrecord(file->target_name, new_d, FALSE);
+#if _WIN32
+            if ((open_file = CreateFileA(file->source_name,
+                                         GENERIC_READ,
+                                         FILE_SHARE_READ,
+                                         NULL,
+                                         OPEN_EXISTING,
+                                         FILE_ATTRIBUTE_NORMAL,
+                                         NULL)) == INVALID_HANDLE_VALUE)
+            {
+                error_exit("Can't open file %s\n", file->source_name);
+            }
+            if (get_cd_file_time(open_file, &new_d->date_and_time) == -1)
+            {
+                error_exit("Can't stat file %s\n", file->source_name);
+            }
+            if (!GetFileSizeEx(open_file, &file_size))
+            {
+                error_exit("Can't get file size of %s\n", file->source_name);
+            }
+            new_d->size = new_d->joliet_size = file_size.QuadPart;
+            new_d->orig_name = file->source_name;
+            CloseHandle(open_file);
+#else
+            if (stat(file->source_name, &stbuf) == -1)
+            {
+                error_exit("Can't find '%s' (target %s)\n",
+                           file->source_name,
+                           file->target_name);
+            }
+            convert_date_and_time(&new_d->date_and_time, &stbuf.st_mtime);
+            new_d->size = new_d->joliet_size = stbuf.st_size;
+            new_d->orig_name = file->source_name;
+#endif
+        }
+    }
+
+    for (child = dir->child; child; child = child->next)
+    {
+        if (verbosity == VERBOSE)
+        {
+            printf("%d: directory %s\n", d->level, child->case_name);
+        }
+        new_d = new_empty_dirrecord(d, TRUE);
+        parse_filename_into_dirrecord(child->case_name, new_d, TRUE);
+        scan_specified_files(new_d, child);
+    }
+
+    /* sort directory */
+    d->first_record = sort_linked_list(d->first_record,
+                                       0,
+                                       compare_directory_order);
+    source[0] = 0;
+    end_source = source;
+}
+
 /*-----------------------------------------------------------------------------
 This function loads the file specifications for the file or directory
 corresponding to the specified directory record into the source[] buffer. It
@@ -1455,14 +1607,23 @@ static void pass(void)
           }
           else
           {
+            const char *file_source;
             old_end_source = end_source;
-            get_file_specifications(q);
-            *end_source = 0;
+            if (!q->orig_name)
+            {
+              get_file_specifications(q);
+              *end_source = 0;
+              file_source = source;
+            }
+            else
+            {
+              file_source = q->orig_name;
+            }
             if (verbosity == VERBOSE)
-              printf("Writing %s\n", source);
-            file = fopen(source, "rb");
+              printf("Writing contents of %s\n", file_source);
+            file = fopen(file_source, "rb");
             if (file == NULL)
-              error_exit("Can't open %s\n", source);
+              error_exit("Can't open %s\n", file_source);
             fseek(file, 0, SEEK_SET);
             while (size > 0)
             {
@@ -1472,7 +1633,7 @@ static void pass(void)
               if (fread (cd.buffer + cd.count, n, 1, file) < 1)
               {
                 fclose(file);
-                error_exit("Read error in file %s\n", source);
+                error_exit("Read error in file %s\n", file_source);
               }
               cd.count += n;
               if (cd.count == BUFFER_SIZE)
@@ -1626,23 +1787,71 @@ int main(int argc, char **argv)
   if (cd.filespecs[0] == 0)
     error_exit("Missing image file specifications");
 
+  if (source[0] != '@')
+  {
+    /* set source[] and end_source to source directory,
+     * with a terminating directory separator */
+    end_source = source + strlen(source);
+    if (end_source[-1] == ':')
+      *end_source++ = '.';
+    if (end_source[-1] != DIR_SEPARATOR_CHAR)
+      *end_source++ = DIR_SEPARATOR_CHAR;
 
-  // set source[] and end_source to source directory, with a terminating directory separator
+    /* scan all files and create directory structure in memory */
+    make_directory_records(&root);
+  }
+  else
+  {
+    char *trimmedline, *targetname, *srcname, *eq;
+    char lineread[1024];
+    FILE *f = fopen(source+1, "r");
+    if (!f)
+    {
+      error_exit("Can't open cd description %s\n", source+1);
+    }
+    while (fgets(lineread, sizeof(lineread), f))
+    {
+      /* We treat these characters as line endings */
+      trimmedline = strtok(lineread, "\t\r\n;");
+      eq = strchr(trimmedline, '=');
+      if (!eq)
+      {
+        char *normdir;
+        /* Treat this as a directory name */
+        targetname = trimmedline;
+        normdir = strdup(targetname);
+        normalize_dirname(normdir);
+        dir_hash_create_dir(&specified_files, targetname, normdir);
+        free(normdir);
+      }
+      else
+      {
+        targetname = strtok(lineread, "=");
+        srcname = strtok(NULL, "");
 
-  end_source = source + strlen(source);
-  if (end_source[-1] == ':')
-    *end_source++ = '.';
-  if (end_source[-1] != DIR_SEPARATOR_CHAR)
-    *end_source++ = DIR_SEPARATOR_CHAR;
+#if _WIN32
+        if (_access(srcname, R_OK) == 0)
+          dir_hash_add_file(&specified_files, srcname, targetname);
+        else
+          error_exit("can't access file '%s' (target %s)\n", srcname, targetname);
+#else
+        if (access(srcname, R_OK) == 0)
+          dir_hash_add_file(&specified_files, srcname, targetname);
+        else
+          error_exit("can't access file '%s' (target %s)\n", srcname, targetname);
+#endif
+      }
+    }
+    fclose(f);
 
-  // scan all files and create directory structure in memory
+    /* scan all files and create directory structure in memory */
+    scan_specified_files(&root, &specified_files.root);
+  }
 
-  make_directory_records(&root);
-
-  // sort path table entries
-
-  root.next_in_path_table = sort_linked_list(root.next_in_path_table, 1,
-    compare_path_table_order);
+  /* sort path table entries */
+  root.next_in_path_table = sort_linked_list(root.next_in_path_table,
+                                             1,
+                                             compare_path_table_order);
 
   // initialize CD-ROM write buffer
 
@@ -1704,9 +1913,9 @@ int main(int argc, char **argv)
   if (verbosity >= NORMAL)
     puts("CD-ROM image made successfully");
 
+  dir_hash_destroy(&specified_files);
   release_memory();
   return 0;
 }
-
 
 /* EOF */
