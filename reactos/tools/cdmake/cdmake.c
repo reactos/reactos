@@ -652,10 +652,9 @@ new_directory_record (struct _finddata_t *f,
 {
   PDIR_RECORD d;
 
-  d = malloc(sizeof(DIR_RECORD));
+  d = calloc(1, sizeof(DIR_RECORD));
   if (d == NULL)
     error_exit("Insufficient memory");
-  memset ( d, 0, sizeof(DIR_RECORD) );
   d->next_in_memory = root.next_in_memory;
   root.next_in_memory = d;
 
@@ -687,10 +686,9 @@ new_directory_record (struct dirent *entry,
   char *n;
 	*/
 
-  d = malloc(sizeof(DIR_RECORD));
+  d = calloc(1, sizeof(DIR_RECORD));
   if (d == NULL)
     error_exit("Insufficient memory");
-  memset ( d, 0, sizeof(DIR_RECORD) );
   d->next_in_memory = root.next_in_memory;
   root.next_in_memory = d;
 
@@ -1071,8 +1069,7 @@ static PDIR_RECORD
 new_empty_dirrecord(PDIR_RECORD d, BOOL directory)
 {
     PDIR_RECORD new_d;
-    new_d = malloc(sizeof(*new_d));
-    memset(new_d, 0, sizeof(*new_d));
+    new_d = calloc(1, sizeof(*new_d));
     new_d->parent = d;
     new_d->level = d->level + 1;
     new_d->next_in_directory = d->first_record;

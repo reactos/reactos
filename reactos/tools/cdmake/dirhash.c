@@ -111,8 +111,7 @@ dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char
     free(parentname);
     free(parentcase);
     hashcode = djb_hash(targetnorm);
-    de = malloc(sizeof(*de));
-    memset(de, 0, sizeof(*de));
+    de = calloc(1, sizeof(*de));
     de->parent = parent_de;
     de->normalized_name = strdup(targetnorm);
     de->case_name = strdup(chop_filename(casename));
@@ -139,8 +138,7 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
     targetnorm = strdup(targetdir);
     normalize_dirname(targetnorm);
     de = dir_hash_create_dir(dh, targetdir, targetnorm);
-    tf = malloc(sizeof(*tf));
-    memset(tf, 0, sizeof(*tf));
+    tf = calloc(1, sizeof(*tf));
     tf->next = de->head;
     de->head = tf;
     tf->source_name = strdup(source);
