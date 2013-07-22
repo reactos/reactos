@@ -43,13 +43,13 @@ void Test_Initialize()
 
     /* Check for properly setting up fields */
     ok(!testing_queue->Busy, "(Initialize testing) Test 1:\tExpected 'not busy' status\n");
-    DPRINT1("1 test complete\n");
+    DPRINT1("Test 1 completed\n");
 
     ok(testing_queue->Size == sizeof(KDEVICE_QUEUE), "(Initialize testing) Test 2:\tExpected another size for KDEVICE_QUEUE\n");
-    DPRINT1("2 test complete\n");
+    DPRINT1("Test 2 completed\n");
 
     ok(testing_queue->Type == DeviceQueueObject, "(Initialize testing) Test 3:\tExpected type == DeviceQueueObject\n");
-    DPRINT1("3 test complete\n");
+    DPRINT1("Test 3 completed\n");
 
     /* Make sure it does not write outside allocated buffer */
     double_queue = ExAllocatePool(NonPagedPool, sizeof(KDEVICE_QUEUE) * 2);
@@ -58,7 +58,7 @@ void Test_Initialize()
     KeInitializeDeviceQueue(double_queue);
 
     ok(Check_mem((void*)((char*)double_queue + sizeof(KDEVICE_QUEUE)), NUMBER, sizeof(KDEVICE_QUEUE)), "(Initialize testing) Test 4:\tFunction uses someone else's memory \n");
-    DPRINT1("4 test complete\n");
+    DPRINT1("Test 4 completed\n");
 
 //====================================================================
 
@@ -92,7 +92,7 @@ void Tests_Insert_And_Delete()
 
     KeInsertDeviceQueue(testing_queue, element);
     ok(!element->Inserted, "Wrong 'Inserted' status\n");
-    DPRINT1("1 test complete\n");
+    DPRINT1("Test 1 completed\n");
 
     /* Fill the queue*/
     elem_array = ExAllocatePool(NonPagedPool, sizeof(PKDEVICE_QUEUE_ENTRY) * INSERT_COUNT);
@@ -112,13 +112,13 @@ void Tests_Insert_And_Delete()
     /* Check how the queue was filled */
     next = &testing_queue->DeviceListHead;
 
-    DPRINT1("Arrow of tests starting\n");
+    DPRINT1("Bunch of tests starting\n");
     for (i = 0; i < INSERT_COUNT; i++) {
         next = next->Flink;
         key = CONTAINING_RECORD(next, KDEVICE_QUEUE_ENTRY, DeviceListEntry)->SortKey;
         ok(key == i, "Sort key was changed\n");
     }
-    DPRINT1("Arrow of tests complete\n");
+    DPRINT1("Bunch of tests completed\n");
 
     trace("****************************************************\n\n");
     DPRINT1("KeInsertDeviceQueue test finish\n");
@@ -146,7 +146,6 @@ void Tests_Insert_And_Delete()
     trace("****************************************************\n\n");
     DPRINT1("Finish KeRemoveDeviceQueue test\n");
 
-//====================================================================
     trace("******* Testing KeRemoveEntryDeviceQueue *********** \n");
     DPRINT1("\nStart KeRemoveEntryDeviceQueue test\n");
 
@@ -157,13 +156,13 @@ void Tests_Insert_And_Delete()
         KeInsertDeviceQueue(testing_queue, elem_array[i]);
     }
 
-    //Delete half elements
+    /* Delete half of all elements in the queue */
     DPRINT1("Deleting elements\n");
     for (i = 0; i < INSERT_COUNT / 2; i++) {
         ok(KeRemoveEntryDeviceQueue(testing_queue, elem_array[i * 2 + 1]), "Element is not deleted\n");
     }
 
-    //Checking queue
+    /* Checking queue */
     DPRINT1("Checking\n");
     next = &testing_queue->DeviceListHead;
     for (i = 0; i < INSERT_COUNT / 2 + 1; i++) {
@@ -171,15 +170,14 @@ void Tests_Insert_And_Delete()
         next = next->Flink;
     }
 
-    //Trying delete elements, which are not in this queue
+    /* Trying delete elements, which are not in this queue */
     DPRINT1("Trying delete nonexistent elements\n");
     for (i = 0; i < INSERT_COUNT / 2; i++) {
         ok(!KeRemoveEntryDeviceQueue(testing_queue, elem_array[i * 2 + 1]), "Wrong remove operation\n");
     }
 
     trace("****************************************************\n\n");
-//Освобожденеи памяти
-//====================================================================
+    /* Freeing memory */
     for (i = 0; i < INSERT_COUNT; i++) {
         ExFreePool(elem_array[i]);
     }
