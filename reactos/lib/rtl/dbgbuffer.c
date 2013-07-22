@@ -159,6 +159,13 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
                                      sizeof(LDR_DATA_TABLE_ENTRY),
                                      NULL);
 
+        if (!NT_SUCCESS(Status))
+        {
+            /* failure */
+            DPRINT( "NtReadVirtualMemory 3 0x%lx \n", Status);
+            return Status;
+        }
+
         /* Import module name from remote Process user space. */
         Unicode.Length = lmModule.FullDllName.Length;
         Unicode.MaximumLength = lmModule.FullDllName.MaximumLength;
