@@ -83,8 +83,8 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment)
         strcpy(DestBuffer, Ptr);
 
         /* Advance to the next string */
-        Ptr += strlen(Ptr) + 1;
         DestBuffer += strlen(Ptr);
+        Ptr += strlen(Ptr) + 1;
 
         /* Put a zero after the string */
         *(DestBuffer++) = 0;
@@ -231,6 +231,8 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
     PDOS_MCB CurrentMcb, NextMcb;
     BOOLEAN SearchUmb = FALSE;
 
+    DPRINT("DosAllocateMemory: Size 0x%04X\n", Size);
+
     if (DosUmbLinked && (DosAllocStrategy & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)))
     {
         /* Search UMB first */
@@ -246,6 +248,7 @@ WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
         /* Make sure it's valid */
         if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z')
         {
+            DPRINT("The DOS memory arena is corrupted!\n");
             DosLastError = ERROR_ARENA_TRASHED;
             return 0;
         }
@@ -1750,13 +1753,13 @@ BOOLEAN DosInitialize(VOID)
         /* Copy the string into DOS memory */
         strcpy(DestPtr, AsciiString);
 
-        /* Free the memory */
-        HeapFree(GetProcessHeap(), 0, AsciiString);
-
         /* Move to the next string */
         SourcePtr += wcslen(SourcePtr) + 1;
         DestPtr += strlen(AsciiString);
         *(DestPtr++) = 0;
+
+        /* Free the memory */
+        HeapFree(GetProcessHeap(), 0, AsciiString);
     }
     *DestPtr = 0;
 
