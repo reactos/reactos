@@ -54,7 +54,7 @@ static VOID DosCombineFreeBlocks(WORD StartBlock)
     }
 }
 
-static WORD DosCopyEnvironmentBlock(WORD SourceSegment)
+static WORD DosCopyEnvironmentBlock(WORD SourceSegment, LPCSTR ProgramName)
 {
     PCHAR Ptr, SourceBuffer, DestBuffer = NULL;
     ULONG TotalSize = 0;
@@ -69,6 +69,9 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment)
         Ptr += strlen(Ptr) + 1;
     }
     TotalSize++;
+
+    /* Add the string buffer size */
+    TotalSize += strlen(ProgramName) + 1;
 
     /* Allocate the memory for the environment block */
     DestSegment = DosAllocateMemory((TotalSize + 0x0F) >> 4, NULL);
@@ -91,7 +94,10 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment)
     }
 
     /* Set the final zero */
-    *DestBuffer = 0;
+    *(DestBuffer++) = 0;
+
+    /* Copy the program name after the environment block */
+    strcpy(DestBuffer, ProgramName);
 
     return DestSegment;
 }
@@ -846,7 +852,8 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         /* No, copy the one from the parent */
         EnvBlock = DosCopyEnvironmentBlock((CurrentPsp != SYSTEM_PSP)
                                            ? SEGMENT_TO_PSP(CurrentPsp)->EnvBlock
-                                           : SYSTEM_ENV_BLOCK);
+                                           : SYSTEM_ENV_BLOCK,
+                                           ProgramFilePath);
     }
 
     /* Check if this is an EXE file or a COM file */
