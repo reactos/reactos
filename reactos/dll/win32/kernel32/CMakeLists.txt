@@ -75,6 +75,7 @@ list(APPEND SOURCE
     winnls/string/lang.c
     winnls/string/lcformat.c
     winnls/string/lstring.c
+    winnls/string/mui.c
     winnls/string/nls.c
     winnls/string/sortkey.c
     kernel32.rc
