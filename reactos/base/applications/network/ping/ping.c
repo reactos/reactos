@@ -143,10 +143,13 @@ void FormatOutput(UINT uID, ...)
     va_list valist;
 
     WCHAR Buf[1024];
+    CHAR AnsiBuf[1024];
     LPWSTR pBuf = Buf;
+    PCHAR pAnsiBuf = AnsiBuf;
     LPWSTR Format;
     DWORD written;
     UINT DataLength;
+    int AnsiLength;
 
     va_start(valist, uID);
 
@@ -169,7 +172,28 @@ void FormatOutput(UINT uID, ...)
             return;
     }
 
-    WriteConsole(hStdOutput, pBuf, DataLength, &written, NULL);
+    if(GetFileType(hStdOutput) == FILE_TYPE_CHAR)
+    {
+        /* Is a console or a printer */
+        WriteConsole(hStdOutput, pBuf, DataLength, &written, NULL);
+    }
+    else
+    {
+        /* Is a pipe, socket, file or other */
+        AnsiLength = WideCharToMultiByte(CP_ACP, 0, pBuf, DataLength,\
+                                         NULL, 0, NULL, NULL);
+
+        if(AnsiLength >= sizeof(AnsiBuf))
+            pAnsiBuf = (PCHAR)HeapAlloc(GetProcessHeap(), 0, AnsiLength);
+
+        AnsiLength = WideCharToMultiByte(CP_OEMCP, 0, pBuf, DataLength,\
+                                         pAnsiBuf, AnsiLength, " ", NULL);
+
+        WriteFile(hStdOutput, pAnsiBuf, AnsiLength, &written, NULL);
+
+        if(pAnsiBuf != AnsiBuf)
+            HeapFree(NULL, 0, pAnsiBuf);
+    }
 
     if(pBuf != Buf)
         LocalFree(pBuf);
