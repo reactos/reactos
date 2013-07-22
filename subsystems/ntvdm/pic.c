@@ -8,6 +8,8 @@
 
 /* INCLUDES *******************************************************************/
 
+#define NDEBUG
+
 #include "pic.h"
 #include "emulator.h"
 

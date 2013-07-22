@@ -8,6 +8,8 @@
 
 /* INCLUDES *******************************************************************/
 
+#define NDEBUG
+
 #include "dos.h"
 #include "bios.h"
 #include "emulator.h"
@@ -349,11 +351,15 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
     WORD Segment = BlockData - 1, ReturnSize = 0, NextSegment;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment), NextMcb;
 
+    DPRINT("DosResizeMemory: BlockData 0x%04X, NewSize 0x%04X\n",
+           BlockData,
+           NewSize);
+
     /* Make sure this is a valid, allocated block */
     if ((Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') || Mcb->OwnerPsp == 0)
     {
         Success = FALSE;
-        DosLastError = ERROR_INVALID_PARAMETER;
+        DosLastError = ERROR_INVALID_HANDLE;
         goto Done;
     }
 
@@ -376,6 +382,7 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         /* Make sure the next segment is free */
         if (NextMcb->OwnerPsp != 0)
         {
+            DPRINT("Cannot expand memory block: next segment is not free!\n");
             DosLastError = ERROR_NOT_ENOUGH_MEMORY;
             Success = FALSE;
             goto Done;
@@ -397,6 +404,10 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
         /* Check if the block is larger than requested */
         if (Mcb->Size > NewSize)
         {
+            DPRINT("Block too large, reducing size from 0x%04X to 0x%04X\n",
+                   Mcb->Size,
+                   NewSize);
+
             /* It is, split it into two blocks */
             NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
     
@@ -412,6 +423,10 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
     }
     else if (NewSize < Mcb->Size)
     {
+        DPRINT("Shrinking block from 0x%04X to 0x%04X\n",
+                Mcb->Size,
+                NewSize);
+
         /* Just split the block */
         NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
         NextMcb->BlockType = Mcb->BlockType;
@@ -427,6 +442,9 @@ Done:
     /* Check if the operation failed */
     if (!Success)
     {
+        DPRINT("DosResizeMemory FAILED. Maximum available: 0x%04X\n",
+               ReturnSize);
+
         /* Return the maximum possible size */
         if (MaxAvailable) *MaxAvailable = ReturnSize;
     }
@@ -438,8 +456,14 @@ BOOLEAN DosFreeMemory(WORD BlockData)
 {
     PDOS_MCB Mcb = SEGMENT_TO_MCB(BlockData - 1);
 
+    DPRINT("DosFreeMemory: BlockData 0x%04X\n", BlockData);
+
     /* Make sure the MCB is valid */
-    if (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') return FALSE;
+    if (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z')
+    {
+        DPRINT("MCB block type '%c' not valid!\n", Mcb->BlockType);
+        return FALSE;
+    }
 
     /* Mark the block as free */
     Mcb->OwnerPsp = 0;
@@ -451,6 +475,8 @@ BOOLEAN DosLinkUmb(VOID)
 {
     DWORD Segment = FIRST_MCB_SEGMENT;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
+
+    DPRINT("Linking UMB\n");
 
     /* Check if UMBs are already linked */
     if (DosUmbLinked) return FALSE;
@@ -476,6 +502,8 @@ BOOLEAN DosUnlinkUmb(VOID)
 {
     DWORD Segment = FIRST_MCB_SEGMENT;
     PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
+
+    DPRINT("Unlinking UMB\n");
 
     /* Check if UMBs are already unlinked */
     if (!DosUmbLinked) return FALSE;
@@ -505,6 +533,10 @@ WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
 {
     HANDLE FileHandle;
     WORD DosHandle;
+
+    DPRINT("DosCreateFile: FilePath \"%s\", Attributes 0x%04X\n",
+            FilePath,
+            Attributes);
 
     /* Create the file */
     FileHandle = CreateFileA(FilePath,
@@ -543,6 +575,10 @@ WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
     HANDLE FileHandle;
     ACCESS_MASK Access = 0;
     WORD DosHandle;
+
+    DPRINT("DosOpenFile: FilePath \"%s\", AccessMode 0x%04X\n",
+            FilePath,
+            AccessMode);
 
     /* Parse the access mode */
     switch (AccessMode & 3)
@@ -613,8 +649,10 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
     DWORD BytesRead32 = 0;
     HANDLE Handle = DosGetRealHandle(FileHandle);
 
+    DPRINT("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
+
     /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_PARAMETER;
+    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
 
     /* Read the file */
     if (!ReadFile(Handle, Buffer, Count, &BytesRead32, NULL))
@@ -636,8 +674,12 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
     DWORD BytesWritten32 = 0;
     HANDLE Handle = DosGetRealHandle(FileHandle);
 
+    DPRINT("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n",
+           FileHandle,
+           Count);
+
     /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_PARAMETER;
+    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
 
     /* Write the file */
     if (!WriteFile(Handle, Buffer, Count, &BytesWritten32, NULL))
@@ -658,6 +700,8 @@ BOOLEAN DosCloseHandle(WORD DosHandle)
     BYTE SftIndex;
     PDOS_PSP PspBlock;
     LPBYTE HandleTable;
+
+    DPRINT("DosCloseHandle: DosHandle 0x%04X\n", DosHandle);
 
     /* The system PSP has no handle table */
     if (CurrentPsp == SYSTEM_PSP) return FALSE;
@@ -746,6 +790,10 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     PIMAGE_DOS_HEADER Header;
     PDWORD RelocationTable;
     PWORD RelocWord;
+
+    DPRINT("DosCreateProcess: CommandLine \"%s\", EnvBlock 0x%04X\n",
+           CommandLine,
+           EnvBlock);
 
     /* Save a copy of the command line */
     strcpy(CommandLineCopy, CommandLine);
@@ -949,6 +997,10 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
     PDOS_MCB CurrentMcb;
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);
+
+    DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X\n",
+           Psp,
+           ReturnCode);
 
     /* Check if this PSP is it's own parent */
     if (PspBlock->ParentPsp == Psp) goto Done;
@@ -1416,7 +1468,7 @@ VOID DosInt21h(WORD CodeSegment)
 
                 /* Return the error code in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | ERROR_INVALID_PARAMETER);
+                                    (Eax & 0xFFFF0000) | ERROR_INVALID_HANDLE);
             }
 
             break;

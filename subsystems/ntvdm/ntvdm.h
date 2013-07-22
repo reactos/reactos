@@ -16,8 +16,6 @@
 #include <stdio.h>
 #include <conio.h>
 #include <stdarg.h>
-
-#define NDEBUG
 #include <debug.h>
 
 /* DEFINES ********************************************************************/

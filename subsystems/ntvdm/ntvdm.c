@@ -8,6 +8,8 @@
 
 /* INCLUDES *******************************************************************/
 
+#define NDEBUG
+
 #include "ntvdm.h"
 #include "emulator.h"
 #include "bios.h"
