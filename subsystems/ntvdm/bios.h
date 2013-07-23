@@ -97,19 +97,19 @@ typedef struct
 
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN BiosInitialize();
-VOID BiosCleanup();
+BOOLEAN BiosInitialize(VOID);
+VOID BiosCleanup(VOID);
 VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress);
 VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress);
-inline DWORD BiosGetVideoMemoryStart();
-inline VOID BiosVerticalRefresh();
-WORD BiosPeekCharacter();
-WORD BiosGetCharacter();
-VOID BiosVideoService();
-VOID BiosEquipmentService();
-VOID BiosKeyboardService();
-VOID BiosTimeService();
-VOID BiosHandleIrq(BYTE IrqNumber);
-VOID BiosSystemTimerInterrupt();
+inline DWORD BiosGetVideoMemoryStart(VOID);
+inline VOID BiosVerticalRefresh(VOID);
+WORD BiosPeekCharacter(VOID);
+WORD BiosGetCharacter(VOID);
+VOID BiosVideoService(LPWORD Stack);
+VOID BiosEquipmentService(LPWORD Stack);
+VOID BiosKeyboardService(LPWORD Stack);
+VOID BiosTimeService(LPWORD Stack);
+VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack);
+VOID BiosSystemTimerInterrupt(LPWORD Stack);
 
 #endif

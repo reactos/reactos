@@ -1161,15 +1161,15 @@ VOID DosPrintCharacter(CHAR Character)
     DosWriteFile(DOS_OUTPUT_HANDLE, &Character, sizeof(CHAR), &BytesWritten);
 }
 
-VOID DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
+BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
 {
     HANDLE Handle = DosGetRealHandle(FileHandle);
 
     if (Handle == INVALID_HANDLE_VALUE)
     {
         /* Doesn't exist */
-        EmulatorSetFlag(EMULATOR_FLAG_CF);
-        EmulatorSetRegister(EMULATOR_REG_AX, ERROR_FILE_NOT_FOUND);
+        DosLastError = ERROR_FILE_NOT_FOUND;
+        return FALSE;
     }
 
     switch (ControlCode)
@@ -1194,10 +1194,9 @@ VOID DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
             InfoWord |= 1 << 7;
 
             /* Return the device information word */
-            EmulatorClearFlag(EMULATOR_FLAG_CF);
             EmulatorSetRegister(EMULATOR_REG_DX, InfoWord);
 
-            break;
+            return TRUE;
         }
 
         /* Unsupported control code */
@@ -1205,19 +1204,19 @@ VOID DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
         {
             DPRINT1("Unsupported IOCTL: 0x%02X\n", ControlCode);
 
-            EmulatorSetFlag(EMULATOR_FLAG_CF);
-            EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_PARAMETER);
+            DosLastError = ERROR_INVALID_PARAMETER;
+            return FALSE;
         }
     }
 }
 
-VOID DosInt20h(WORD CodeSegment)
+VOID DosInt20h(LPWORD Stack)
 {
     /* This is the exit interrupt */
-    DosTerminateProcess(CodeSegment, 0);
+    DosTerminateProcess(Stack[STACK_CS], 0);
 }
 
-VOID DosInt21h(WORD CodeSegment)
+VOID DosInt21h(LPWORD Stack)
 {
     INT i;
     CHAR Character;
@@ -1237,7 +1236,7 @@ VOID DosInt21h(WORD CodeSegment)
         /* Terminate Program */
         case 0x00:
         {
-            DosTerminateProcess(CodeSegment, 0);
+            DosTerminateProcess(Stack[STACK_CS], 0);
             break;
         }
 
@@ -1432,11 +1431,11 @@ VOID DosInt21h(WORD CodeSegment)
 
             if (CreateDirectoryA(String, NULL))
             {
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX,
                                     (Eax & 0xFFFF0000) | LOWORD(GetLastError()));
             }
@@ -1452,11 +1451,11 @@ VOID DosInt21h(WORD CodeSegment)
 
             if (RemoveDirectoryA(String))
             {
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX,
                                     (Eax & 0xFFFF0000) | LOWORD(GetLastError()));
             }
@@ -1473,11 +1472,11 @@ VOID DosInt21h(WORD CodeSegment)
 
             if (SetCurrentDirectoryA(String))
             {
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX,
                                     (Eax & 0xFFFF0000) | LOWORD(GetLastError()));
             }
@@ -1497,7 +1496,7 @@ VOID DosInt21h(WORD CodeSegment)
             if (ErrorCode == 0)
             {
                 /* Clear CF */
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
                 /* Return the handle in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1506,7 +1505,7 @@ VOID DosInt21h(WORD CodeSegment)
             else
             {
                 /* Set CF */
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 
                 /* Return the error code in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1528,7 +1527,7 @@ VOID DosInt21h(WORD CodeSegment)
             if (ErrorCode == 0)
             {
                 /* Clear CF */
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
                 /* Return the handle in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1537,7 +1536,7 @@ VOID DosInt21h(WORD CodeSegment)
             else
             {
                 /* Set CF */
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 
                 /* Return the error code in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1553,12 +1552,12 @@ VOID DosInt21h(WORD CodeSegment)
             if (DosCloseHandle(LOWORD(Ebx)))
             {
                 /* Clear CF */
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
                 /* Set CF */
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 
                 /* Return the error code in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1581,7 +1580,7 @@ VOID DosInt21h(WORD CodeSegment)
             if (ErrorCode == 0)
             {
                 /* Clear CF */
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
                 /* Return the number of bytes read in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1590,7 +1589,7 @@ VOID DosInt21h(WORD CodeSegment)
             else
             {
                 /* Set CF */
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 
                 /* Return the error code in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1612,7 +1611,7 @@ VOID DosInt21h(WORD CodeSegment)
             if (ErrorCode == 0)
             {
                 /* Clear CF */
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
                 /* Return the number of bytes written in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1621,7 +1620,7 @@ VOID DosInt21h(WORD CodeSegment)
             else
             {
                 /* Set CF */
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 
                 /* Return the error code in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1637,10 +1636,10 @@ VOID DosInt21h(WORD CodeSegment)
             LPSTR FileName = (LPSTR)((ULONG_PTR)BaseAddress + TO_LINEAR(DataSegment, Edx));
 
             /* Call the API function */
-            if (DeleteFileA(FileName)) EmulatorClearFlag(EMULATOR_FLAG_CF);
+            if (DeleteFileA(FileName)) Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             else
             {
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX, GetLastError());
             }
 
@@ -1659,7 +1658,7 @@ VOID DosInt21h(WORD CodeSegment)
             if (ErrorCode == 0)
             {
                 /* Clear CF */
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
 
                 /* Return the new offset in DX:AX */
                 EmulatorSetRegister(EMULATOR_REG_DX,
@@ -1670,7 +1669,7 @@ VOID DosInt21h(WORD CodeSegment)
             else
             {
                 /* Set CF */
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 
                 /* Return the error code in AX */
                 EmulatorSetRegister(EMULATOR_REG_AX,
@@ -1694,14 +1693,14 @@ VOID DosInt21h(WORD CodeSegment)
                 /* Check if it failed */
                 if (Attributes == INVALID_FILE_ATTRIBUTES)
                 {
-                    EmulatorSetFlag(EMULATOR_FLAG_CF);
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                     EmulatorSetRegister(EMULATOR_REG_AX, GetLastError());
 
                     break;
                 }
 
                 /* Return the attributes that DOS can understand */
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_CX,
                                     (Ecx & 0xFFFFFF00) | LOBYTE(Attributes));
             }
@@ -1710,17 +1709,17 @@ VOID DosInt21h(WORD CodeSegment)
                 /* Try to set the attributes */
                 if (SetFileAttributesA(FileName, LOBYTE(Ecx)))
                 {
-                    EmulatorClearFlag(EMULATOR_FLAG_CF);
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
                 }
                 else
                 {
-                    EmulatorSetFlag(EMULATOR_FLAG_CF);
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                     EmulatorSetRegister(EMULATOR_REG_AX, GetLastError());
                 }
             }
             else
             {
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_FUNCTION);
             }
 
@@ -1730,7 +1729,15 @@ VOID DosInt21h(WORD CodeSegment)
         /* IOCTL */
         case 0x44:
         {
-            DosHandleIoctl(LOBYTE(Eax), LOWORD(Ebx));
+            if (DosHandleIoctl(LOBYTE(Eax), LOWORD(Ebx)))
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            }
+            else
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                EmulatorSetRegister(EMULATOR_REG_AX, DosLastError);
+            }
 
             break;
         }
@@ -1744,7 +1751,7 @@ VOID DosInt21h(WORD CodeSegment)
             if (Handle != INVALID_HANDLE_VALUE)
             {
                 /* The handle is invalid */
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_HANDLE);
 
                 break;
@@ -1756,14 +1763,14 @@ VOID DosInt21h(WORD CodeSegment)
             if (NewHandle == INVALID_DOS_HANDLE)
             {
                 /* Too many files open */
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX, ERROR_TOO_MANY_OPEN_FILES);
 
                 break;
             }
 
             /* Return the result */
-            EmulatorClearFlag(EMULATOR_FLAG_CF);
+            Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             EmulatorSetRegister(EMULATOR_REG_AX, NewHandle);
 
             break;
@@ -1774,11 +1781,11 @@ VOID DosInt21h(WORD CodeSegment)
         {
             if (DosDuplicateHandle(LOWORD(Ebx), LOWORD(Ecx)))
             {
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_HANDLE);
             }
 
@@ -1794,13 +1801,13 @@ VOID DosInt21h(WORD CodeSegment)
             if (Segment != 0)
             {
                 EmulatorSetRegister(EMULATOR_REG_AX, Segment);
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
                 EmulatorSetRegister(EMULATOR_REG_AX, DosLastError);
                 EmulatorSetRegister(EMULATOR_REG_BX, MaxAvailable);
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
             }
 
             break;
@@ -1811,12 +1818,12 @@ VOID DosInt21h(WORD CodeSegment)
         {
             if (DosFreeMemory(ExtSegment))
             {
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
                 EmulatorSetRegister(EMULATOR_REG_AX, ERROR_ARENA_TRASHED);
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
             }
 
             break;
@@ -1829,12 +1836,12 @@ VOID DosInt21h(WORD CodeSegment)
 
             if (DosResizeMemory(ExtSegment, LOWORD(Ebx), &Size))
             {
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
                 EmulatorSetRegister(EMULATOR_REG_AX, DosLastError);
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_BX, Size);
             }
 
@@ -1864,7 +1871,7 @@ VOID DosInt21h(WORD CodeSegment)
                 /* Get allocation strategy */
 
                 EmulatorSetRegister(EMULATOR_REG_AX, DosAllocStrategy);
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else if (LOBYTE(Eax) == 0x01)
             {
@@ -1875,7 +1882,7 @@ VOID DosInt21h(WORD CodeSegment)
                 {
                     /* Can't set both */
                     EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_PARAMETER);
-                    EmulatorSetFlag(EMULATOR_FLAG_CF);
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                     break;
                 }
 
@@ -1883,12 +1890,12 @@ VOID DosInt21h(WORD CodeSegment)
                 {
                     /* Invalid allocation strategy */
                     EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_PARAMETER);
-                    EmulatorSetFlag(EMULATOR_FLAG_CF);
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                     break;
                 }
 
                 DosAllocStrategy = LOBYTE(Ebx);
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else if (LOBYTE(Eax) == 0x02)
             {
@@ -1897,7 +1904,7 @@ VOID DosInt21h(WORD CodeSegment)
                 Eax &= 0xFFFFFF00;
                 if (DosUmbLinked) Eax |= 1;
                 EmulatorSetRegister(EMULATOR_REG_AX, Eax);
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else if (LOBYTE(Eax) == 0x03)
             {
@@ -1905,13 +1912,13 @@ VOID DosInt21h(WORD CodeSegment)
 
                 if (Ebx) DosLinkUmb();
                 else DosUnlinkUmb();
-                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
             else
             {
                 /* Invalid or unsupported function */
 
-                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_FUNCTION);
             }
 
@@ -1922,12 +1929,12 @@ VOID DosInt21h(WORD CodeSegment)
         default:
         {
             DPRINT1("DOS Function INT 0x21, AH = 0x%02X NOT IMPLEMENTED!\n", HIBYTE(Eax));
-            EmulatorSetFlag(EMULATOR_FLAG_CF);
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
         }
     }
 }
 
-VOID DosBreakInterrupt(VOID)
+VOID DosBreakInterrupt(LPWORD Stack)
 {
     VdmRunning = FALSE;
 }

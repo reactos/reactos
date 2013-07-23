@@ -72,6 +72,10 @@
 #define MAX_GDT_ENTRIES 8192
 #define EMULATOR_BOP 0xC4C4
 #define EMULATOR_INT_BOP 0xBEEF
+#define STACK_INT_NUM 0
+#define STACK_IP 1
+#define STACK_CS 2
+#define STACK_FLAGS 3
 
 enum
 {

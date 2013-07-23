@@ -114,6 +114,11 @@ static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
             *Buffer = KeyboardReadData();
             break;
         }
+
+        default:
+        {
+            DPRINT1("Read from unknown port: 0x%X\n", Address);
+        }
     }
 }
 
@@ -162,6 +167,11 @@ static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size
             KeyboardWriteData(Byte);
             break;
         }
+
+        default:
+        {
+            DPRINT1("Write to unknown port: 0x%X\n", Address);
+        }
     }
 }
 
@@ -186,11 +196,11 @@ static VOID EmulatorBop(WORD Code)
     if (Code == EMULATOR_INT_BOP)
     {
         /* Get the interrupt number */
-        IntNum = LOBYTE(Stack[0]);
+        IntNum = LOBYTE(Stack[STACK_INT_NUM]);
 
         /* Get the CS:IP */
-        InstructionPointer = Stack[1];
-        CodeSegment = Stack[2];
+        InstructionPointer = Stack[STACK_IP];
+        CodeSegment = Stack[STACK_CS];
 
         /* Check if this was an exception */
         if (IntNum < 8)
@@ -210,13 +220,13 @@ static VOID EmulatorBop(WORD Code)
         if (IntNum >= BIOS_PIC_MASTER_INT && IntNum < BIOS_PIC_MASTER_INT + 8)
         {
             /* It was an IRQ from the master PIC */
-            BiosHandleIrq(IntNum - BIOS_PIC_MASTER_INT);
+            BiosHandleIrq(IntNum - BIOS_PIC_MASTER_INT, Stack);
             return;
         }
         else if (IntNum >= BIOS_PIC_SLAVE_INT && IntNum < BIOS_PIC_SLAVE_INT + 8)
         {
             /* It was an IRQ from the slave PIC */
-            BiosHandleIrq(IntNum - BIOS_PIC_SLAVE_INT + 8);
+            BiosHandleIrq(IntNum - BIOS_PIC_SLAVE_INT + 8, Stack);
             return;
         }
 
@@ -225,46 +235,46 @@ static VOID EmulatorBop(WORD Code)
             case BIOS_VIDEO_INTERRUPT:
             {
                 /* This is the video BIOS interrupt, call the BIOS */
-                BiosVideoService();
+                BiosVideoService(Stack);
                 break;
             }
             case BIOS_EQUIPMENT_INTERRUPT:
             {
                 /* This is the BIOS "get equipment" command, call the BIOS */
-                BiosEquipmentService();
+                BiosEquipmentService(Stack);
                 break;
             }
             case BIOS_KBD_INTERRUPT:
             {
                 /* This is the keyboard BIOS interrupt, call the BIOS */
-                BiosKeyboardService();
+                BiosKeyboardService(Stack);
                 break;
             }
             case BIOS_TIME_INTERRUPT:
             {
                 /* This is the time BIOS interrupt, call the BIOS */
-                BiosTimeService();
+                BiosTimeService(Stack);
                 break;
             }
             case BIOS_SYS_TIMER_INTERRUPT:
             {
                 /* BIOS timer update */
-                BiosSystemTimerInterrupt();
+                BiosSystemTimerInterrupt(Stack);
                 break;
             }
             case 0x20:
             {
-                DosInt20h(CodeSegment);
+                DosInt20h(Stack);
                 break;
             }
             case 0x21:
             {
-                DosInt21h(CodeSegment);
+                DosInt21h(Stack);
                 break;
             }
             case 0x23:
             {
-                DosBreakInterrupt();
+                DosBreakInterrupt(Stack);
                 break;
             }
             default:
@@ -273,13 +283,6 @@ static VOID EmulatorBop(WORD Code)
                 break;
             }
         }
-
-        /* Update the flags on the stack */
-#ifndef NEW_EMULATOR
-        Stack[3] = EmulatorContext.state->reg_flags.val;
-#else
-        Stack[3] = EmulatorContext.Flags.LowWord;
-#endif
     }
 }
 

@@ -57,7 +57,7 @@ static VIDEO_MODE VideoModes[] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static DWORD BiosGetVideoPageSize()
+static DWORD BiosGetVideoPageSize(VOID)
 {
     INT i;
     DWORD BufferSize = VideoModes[CurrentVideoMode].Width
@@ -135,7 +135,7 @@ static BOOLEAN BiosKbdBufferTop(LPWORD Data)
     return TRUE;
 }
 
-static BOOLEAN BiosKbdBufferPop()
+static BOOLEAN BiosKbdBufferPop(VOID)
 {
     /* If it's empty, fail */
     if (Bda->KeybdBufferHead == Bda->KeybdBufferTail) return FALSE;
@@ -214,7 +214,7 @@ static BOOLEAN BiosCreateGraphicsBuffer(BYTE ModeNumber)
     return TRUE;
 }
 
-static VOID BiosDestroyGraphicsBuffer()
+static VOID BiosDestroyGraphicsBuffer(VOID)
 {
     CloseHandle(ConsoleMutex);
     CloseHandle(BiosGraphicsOutput);
@@ -222,7 +222,7 @@ static VOID BiosDestroyGraphicsBuffer()
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-BYTE BiosGetVideoMode()
+BYTE BiosGetVideoMode(VOID)
 {
     return CurrentVideoMode;
 }
@@ -335,12 +335,12 @@ BOOLEAN BiosSetVideoPage(BYTE PageNumber)
     return TRUE;
 }
 
-inline DWORD BiosGetVideoMemoryStart()
+inline DWORD BiosGetVideoMemoryStart(VOID)
 {
     return (VideoModes[CurrentVideoMode].Segment << 4);
 }
 
-inline VOID BiosVerticalRefresh()
+inline VOID BiosVerticalRefresh(VOID)
 {
     /* Ignore if we're in text mode */
     if (VideoModes[CurrentVideoMode].Text) return;
@@ -355,7 +355,7 @@ inline VOID BiosVerticalRefresh()
     VideoNeedsUpdate = FALSE;
 }
 
-BOOLEAN BiosInitialize()
+BOOLEAN BiosInitialize(VOID)
 {
     INT i;
     WORD Offset = 0;
@@ -458,7 +458,7 @@ BOOLEAN BiosInitialize()
     return TRUE;
 }
 
-VOID BiosCleanup()
+VOID BiosCleanup(VOID)
 {
     /* Restore the old screen buffer */
     SetConsoleActiveScreenBuffer(BiosConsoleOutput);
@@ -611,7 +611,7 @@ VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress)
     }
 }
 
-WORD BiosPeekCharacter()
+WORD BiosPeekCharacter(VOID)
 {
     WORD CharacterData;
     
@@ -624,7 +624,7 @@ WORD BiosPeekCharacter()
     return CharacterData;
 }
 
-WORD BiosGetCharacter()
+WORD BiosGetCharacter(VOID)
 {
     WORD CharacterData;
     INPUT_RECORD InputRecord;
@@ -660,7 +660,7 @@ WORD BiosGetCharacter()
     return CharacterData;
 }
 
-VOID BiosVideoService()
+VOID BiosVideoService(LPWORD Stack)
 {
     INT i, CursorHeight;
     BOOLEAN Invisible = FALSE;
@@ -811,7 +811,8 @@ VOID BiosVideoService()
                                 *((LPWORD)((ULONG_PTR)BaseAddress + Address)));
 
             break;
-        }
+        }                EmulatorSetFlag(EMULATOR_FLAG_ZF);
+
 
         /* Write Character And Attribute At Cursor Position */
         case 0x09:
@@ -927,7 +928,7 @@ VOID BiosVideoService()
     }
 }
 
-VOID BiosKeyboardService()
+VOID BiosKeyboardService(LPWORD Stack)
 {
     DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
 
@@ -949,12 +950,12 @@ VOID BiosKeyboardService()
             {
                 /* There is a character, clear ZF and return it */
                 EmulatorSetRegister(EMULATOR_REG_AX, Data);
-                EmulatorClearFlag(EMULATOR_FLAG_ZF);
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_ZF;
             }
             else
             {
                 /* No character, set ZF */
-                EmulatorSetFlag(EMULATOR_FLAG_ZF);
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_ZF;
             }
 
             break;
@@ -968,7 +969,7 @@ VOID BiosKeyboardService()
     }
 }
 
-VOID BiosTimeService()
+VOID BiosTimeService(LPWORD Stack)
 {
     DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
     DWORD Ecx = EmulatorGetRegister(EMULATOR_REG_CX);
@@ -1012,19 +1013,19 @@ VOID BiosTimeService()
     }
 }
 
-VOID BiosSystemTimerInterrupt()
+VOID BiosSystemTimerInterrupt(LPWORD Stack)
 {
     /* Increase the system tick count */
     Bda->TickCounter++;
 }
 
-VOID BiosEquipmentService()
+VOID BiosEquipmentService(LPWORD Stack)
 {
     /* Return the equipment list */
     EmulatorSetRegister(EMULATOR_REG_AX, Bda->EquipmentList);
 }
 
-VOID BiosHandleIrq(BYTE IrqNumber)
+VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack)
 {
     switch (IrqNumber)
     {

@@ -117,9 +117,10 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock);
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
 CHAR DosReadCharacter(VOID);
 VOID DosPrintCharacter(CHAR Character);
-VOID DosInt20h(WORD CodeSegment);
-VOID DosInt21h(WORD CodeSegment);
-VOID DosBreakInterrupt(VOID);
+BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
+VOID DosInt20h(LPWORD Stack);
+VOID DosInt21h(LPWORD Stack);
+VOID DosBreakInterrupt(LPWORD Stack);
 BOOLEAN DosInitialize(VOID);
 
 #endif
