@@ -374,20 +374,19 @@ BOOLEAN BiosInitialize()
         IntVecTable[i * 2] = Offset;
         IntVecTable[i * 2 + 1] = BIOS_SEGMENT;
 
-        if (i != SPECIAL_INT_NUM)
-        {
-            BiosCode[Offset++] = 0xFA; // cli
+        BiosCode[Offset++] = 0xFA; // cli
 
-            BiosCode[Offset++] = 0x6A; // push i
-            BiosCode[Offset++] = (BYTE)i;
+        BiosCode[Offset++] = 0x6A; // push i
+        BiosCode[Offset++] = (BYTE)i;
 
-            BiosCode[Offset++] = 0xCD; // int SPECIAL_INT_NUM
-            BiosCode[Offset++] = SPECIAL_INT_NUM;
+        BiosCode[Offset++] = LOBYTE(EMULATOR_BOP); // BOP sequence
+        BiosCode[Offset++] = HIBYTE(EMULATOR_BOP);
+        BiosCode[Offset++] = LOBYTE(EMULATOR_INT_BOP);
+        BiosCode[Offset++] = HIBYTE(EMULATOR_INT_BOP);
 
-            BiosCode[Offset++] = 0x83; // add sp, 2
-            BiosCode[Offset++] = 0xC4;
-            BiosCode[Offset++] = 0x02;
-        }
+        BiosCode[Offset++] = 0x83; // add sp, 2
+        BiosCode[Offset++] = 0xC4;
+        BiosCode[Offset++] = 0x02;
 
         BiosCode[Offset++] = 0xCF; // iret
     }

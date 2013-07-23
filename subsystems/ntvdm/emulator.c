@@ -165,34 +165,32 @@ static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size
     }
 }
 
-static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
+static VOID EmulatorBop(WORD Code)
 {
     WORD StackSegment, StackPointer, CodeSegment, InstructionPointer;
     BYTE IntNum;
+    LPWORD Stack;
 
-    /* Check if this is the special interrupt */
-    if (Number == SPECIAL_INT_NUM)
-    {
-        /* Get the SS:SP */
+    /* Get the SS:SP */
 #ifndef NEW_EMULATOR
-        StackSegment = EmulatorContext.state->segment_reg[SX86_SREG_SS].val;
-        StackPointer = EmulatorContext.state->general_reg[SX86_REG_SP].val;
+    StackSegment = EmulatorContext.state->segment_reg[SX86_SREG_SS].val;
+    StackPointer = EmulatorContext.state->general_reg[SX86_REG_SP].val;
 #else
-        StackSegment = EmulatorContext.Registers[EMULATOR_REG_SS].LowWord;
-        StackPointer = EmulatorContext.Registers[EMULATOR_REG_SP].LowWord;
+    StackSegment = EmulatorContext.Registers[EMULATOR_REG_SS].LowWord;
+    StackPointer = EmulatorContext.Registers[EMULATOR_REG_SP].LowWord;
 #endif
 
-        /* Get the interrupt number */
-        IntNum = *(LPBYTE)((ULONG_PTR)BaseAddress + TO_LINEAR(StackSegment, StackPointer));
+    /* Get the stack */
+    Stack = (LPWORD)((ULONG_PTR)BaseAddress + TO_LINEAR(StackSegment, StackPointer));
 
-        /* Move the stack pointer forward one word to skip the interrupt number */
-        StackPointer += sizeof(WORD);
+    if (Code == EMULATOR_INT_BOP)
+    {
+        /* Get the interrupt number */
+        IntNum = LOBYTE(Stack[0]);
 
         /* Get the CS:IP */
-        InstructionPointer = *(LPWORD)((ULONG_PTR)BaseAddress
-                             + TO_LINEAR(StackSegment, StackPointer));
-        CodeSegment = *(LPWORD)((ULONG_PTR)BaseAddress
-                      + TO_LINEAR(StackSegment, StackPointer + sizeof(WORD)));
+        InstructionPointer = Stack[1];
+        CodeSegment = Stack[2];
 
         /* Check if this was an exception */
         if (IntNum < 8)
@@ -275,7 +273,19 @@ static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
                 break;
             }
         }
+
+        /* Update the flags on the stack */
+#ifndef NEW_EMULATOR
+        Stack[3] = EmulatorContext.state->reg_flags.val;
+#else
+        Stack[3] = EmulatorContext.Flags.LowWord;
+#endif
     }
+}
+
+static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
+{
+    /* Do nothing */
 }
 
 static VOID EmulatorHardwareInt(PVOID Context, BYTE Number)
@@ -445,13 +455,29 @@ VOID EmulatorClearFlag(ULONG Flag)
 #endif
 }
 
-VOID EmulatorStep()
+VOID EmulatorStep(VOID)
 {
+    LPWORD Instruction;
+
 #ifndef NEW_EMULATOR
     /* Print the current position - useful for debugging */
     DPRINT("Executing at CS:IP = %04X:%04X\n",
            EmulatorGetRegister(EMULATOR_REG_CS),
            EmulatorContext.state->reg_ip);
+
+    Instruction = (LPWORD)((ULONG_PTR)BaseAddress
+                           + TO_LINEAR(EmulatorGetRegister(EMULATOR_REG_CS),
+                           EmulatorContext.state->reg_ip));
+
+    /* Check for the BIOS operation (BOP) sequence */
+    if (Instruction[0] == EMULATOR_BOP)
+    {
+        /* Skip the opcodes */
+        EmulatorContext.state->reg_ip += 4;
+
+        /* Call the BOP handler */
+        EmulatorBop(Instruction[1]);
+    }
 
     /* Call the softx86 API */
     if (!softx86_step(&EmulatorContext))
@@ -464,7 +490,7 @@ VOID EmulatorStep()
 #endif
 }
 
-VOID EmulatorCleanup()
+VOID EmulatorCleanup(VOID)
 {
     /* Free the memory allocated for the 16-bit address space */
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
