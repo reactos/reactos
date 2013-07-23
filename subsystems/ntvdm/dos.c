@@ -704,6 +704,87 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
     return Result;
 }
 
+WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset)
+{
+    WORD Result = ERROR_SUCCESS;
+    DWORD FilePointer;
+    HANDLE Handle = DosGetRealHandle(FileHandle);
+
+    DPRINT("DosSeekFile: FileHandle 0x%04X, Offset 0x%08X, Origin 0x%02X\n",
+           FileHandle,
+           Offset,
+           Origin);
+
+    /* Make sure the handle is valid */
+    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
+
+    /* Check if the origin is valid */
+    if (Origin != FILE_BEGIN && Origin != FILE_CURRENT && Origin != FILE_END)
+    {
+        return ERROR_INVALID_FUNCTION;
+    }
+
+    /* Move the file pointer */
+    FilePointer = SetFilePointer(Handle, Offset, NULL, Origin);
+
+    /* Check if there's a possibility the operation failed */
+    if (FilePointer == INVALID_SET_FILE_POINTER)
+    {
+        /* Get the real error code */
+        Result = GetLastError();
+    }
+
+    if (Result != ERROR_SUCCESS)
+    {
+        /* The operation did fail */
+        return Result;
+    }
+
+    /* Return the file pointer, if requested */
+    if (NewOffset) *NewOffset = FilePointer;
+
+    /* Return success */
+    return ERROR_SUCCESS;
+}
+
+BOOLEAN DosDuplicateHandle(WORD OldHandle, WORD NewHandle)
+{
+    BYTE SftIndex;
+    PDOS_PSP PspBlock;
+    LPBYTE HandleTable;
+
+    DPRINT("DosDuplicateHandle: OldHandle 0x%04X, NewHandle 0x%04X\n",
+           OldHandle,
+           NewHandle);
+
+    /* The system PSP has no handle table */
+    if (CurrentPsp == SYSTEM_PSP) return FALSE;
+
+    /* Get a pointer to the handle table */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
+
+    /* Make sure the old handle is open */
+    if (HandleTable[OldHandle] == 0xFF) return FALSE;
+
+    /* Check if the new handle is open */
+    if (HandleTable[NewHandle] != 0xFF)
+    {
+        /* Close it */
+        DosCloseHandle(NewHandle);
+    }
+
+    /* Increment the reference count of the SFT entry */
+    SftIndex = HandleTable[OldHandle];
+    DosSftRefCount[SftIndex]++;
+
+    /* Make the new handle point to that SFT entry */
+    HandleTable[NewHandle] = SftIndex;
+
+    /* Return success */
+    return TRUE;
+}
+
 BOOLEAN DosCloseHandle(WORD DosHandle)
 {
     BYTE SftIndex;
@@ -735,6 +816,9 @@ BOOLEAN DosCloseHandle(WORD DosHandle)
         /* Clear the handle */
         DosSystemFileTable[SftIndex] = INVALID_HANDLE_VALUE;
     }
+
+    /* Clear the entry in the JFT */
+    HandleTable[DosHandle] = 0xFF;
 
     return TRUE;
 }
@@ -1547,10 +1631,156 @@ VOID DosInt21h(WORD CodeSegment)
             break;
         }
 
+        /* Delete File */
+        case 0x41:
+        {
+            LPSTR FileName = (LPSTR)((ULONG_PTR)BaseAddress + TO_LINEAR(DataSegment, Edx));
+
+            /* Call the API function */
+            if (DeleteFileA(FileName)) EmulatorClearFlag(EMULATOR_FLAG_CF);
+            else
+            {
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_AX, GetLastError());
+            }
+
+            break;
+        }
+
+        /* Seek File */
+        case 0x42:
+        {
+            DWORD NewLocation;
+            WORD ErrorCode = DosSeekFile(LOWORD(Ebx),
+                                         MAKELONG(LOWORD(Edx), LOWORD(Ecx)),
+                                         LOBYTE(Eax),
+                                         &NewLocation);
+
+            if (ErrorCode == 0)
+            {
+                /* Clear CF */
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+
+                /* Return the new offset in DX:AX */
+                EmulatorSetRegister(EMULATOR_REG_DX,
+                                    (Edx & 0xFFFF0000) | HIWORD(NewLocation));
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | LOWORD(NewLocation));
+            }
+            else
+            {
+                /* Set CF */
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+
+                /* Return the error code in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX,
+                                    (Eax & 0xFFFF0000) | ErrorCode);
+            }
+
+            break;
+        }
+
+        /* Get/Set File Attributes */
+        case 0x43:
+        {
+            DWORD Attributes;
+            LPSTR FileName = (LPSTR)((ULONG_PTR)BaseAddress + TO_LINEAR(DataSegment, Edx));
+
+            if (LOBYTE(Eax) == 0x00)
+            {
+                /* Get the attributes */
+                Attributes = GetFileAttributesA(FileName);
+
+                /* Check if it failed */
+                if (Attributes == INVALID_FILE_ATTRIBUTES)
+                {
+                    EmulatorSetFlag(EMULATOR_FLAG_CF);
+                    EmulatorSetRegister(EMULATOR_REG_AX, GetLastError());
+
+                    break;
+                }
+
+                /* Return the attributes that DOS can understand */
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_CX,
+                                    (Ecx & 0xFFFFFF00) | LOBYTE(Attributes));
+            }
+            else if (LOBYTE(Eax) == 0x01)
+            {
+                /* Try to set the attributes */
+                if (SetFileAttributesA(FileName, LOBYTE(Ecx)))
+                {
+                    EmulatorClearFlag(EMULATOR_FLAG_CF);
+                }
+                else
+                {
+                    EmulatorSetFlag(EMULATOR_FLAG_CF);
+                    EmulatorSetRegister(EMULATOR_REG_AX, GetLastError());
+                }
+            }
+            else
+            {
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_FUNCTION);
+            }
+
+            break;
+        }
+
         /* IOCTL */
         case 0x44:
         {
             DosHandleIoctl(LOBYTE(Eax), LOWORD(Ebx));
+
+            break;
+        }
+
+        /* Duplicate Handle */
+        case 0x45:
+        {
+            WORD NewHandle;
+            HANDLE Handle = DosGetRealHandle(LOWORD(Ebx));
+
+            if (Handle != INVALID_HANDLE_VALUE)
+            {
+                /* The handle is invalid */
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_HANDLE);
+
+                break;
+            }
+
+            /* Open a new handle to the same entry */
+            NewHandle = DosOpenHandle(Handle);
+
+            if (NewHandle == INVALID_DOS_HANDLE)
+            {
+                /* Too many files open */
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_TOO_MANY_OPEN_FILES);
+
+                break;
+            }
+
+            /* Return the result */
+            EmulatorClearFlag(EMULATOR_FLAG_CF);
+            EmulatorSetRegister(EMULATOR_REG_AX, NewHandle);
+
+            break;
+        }
+
+        /* Force Duplicate Handle */
+        case 0x46:
+        {
+            if (DosDuplicateHandle(LOWORD(Ebx), LOWORD(Ecx)))
+            {
+                EmulatorClearFlag(EMULATOR_FLAG_CF);
+            }
+            else
+            {
+                EmulatorSetFlag(EMULATOR_FLAG_CF);
+                EmulatorSetRegister(EMULATOR_REG_AX, ERROR_INVALID_HANDLE);
+            }
 
             break;
         }
@@ -1615,6 +1845,14 @@ VOID DosInt21h(WORD CodeSegment)
         case 0x4C:
         {
             DosTerminateProcess(CurrentPsp, LOBYTE(Eax));
+            break;
+        }
+
+        /* Get Current Process */
+        case 0x51:
+        {
+            EmulatorSetRegister(EMULATOR_REG_BX, CurrentPsp);
+
             break;
         }
 
