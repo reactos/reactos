@@ -537,5 +537,6 @@
 #define IDR_OPENWITHMENU        146
 #define IDR_FILEDEFEXT          147
 #define IDR_DRVDEFEXT           148
+#define IDR_MENUBAND            149
 
 #endif

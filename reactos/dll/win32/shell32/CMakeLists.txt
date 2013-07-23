@@ -23,6 +23,7 @@ list(APPEND SOURCE
     classes.cpp
     clipboard.cpp
     control.cpp
+    CMenuBand.cpp
     dataobject.cpp
     dde.cpp
     debughlp.cpp

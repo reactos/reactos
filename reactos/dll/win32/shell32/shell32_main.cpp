@@ -1368,6 +1368,7 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_NewMenu, CNewMenu)
     OBJECT_ENTRY(CLSID_StartMenu, CStartMenu)
     OBJECT_ENTRY(CLSID_MenuBandSite, CMenuBandSite)
+    OBJECT_ENTRY(CLSID_MenuBand, CMenuBand)
 END_OBJECT_MAP()
 
 CShell32Module                                gModule;
