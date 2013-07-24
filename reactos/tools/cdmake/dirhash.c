@@ -1,5 +1,6 @@
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include "dirsep.h"
 #include "dirhash.h"
 
