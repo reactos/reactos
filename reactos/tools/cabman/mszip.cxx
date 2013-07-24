@@ -79,7 +79,7 @@ ULONG CMSZipCodec::Compress(void* OutputBuffer,
 
     /* WindowBits is passed < 0 to tell that there is no zlib header */
     Status = deflateInit2(&ZStream,
-                          Z_BEST_COMPRESSION,
+                          Z_DEFAULT_COMPRESSION,
                           Z_DEFLATED,
                           -MAX_WBITS,
                           8, /* memLevel */
