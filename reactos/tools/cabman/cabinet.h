@@ -95,7 +95,7 @@ extern ULONG DebugTraceLevel;
 
 #define CAB_SIGNATURE        0x4643534D // "MSCF"
 #define CAB_VERSION          0x0103
-#define CAB_BLOCKSIZE        2048
+#define CAB_BLOCKSIZE        32768
 
 #define CAB_COMP_MASK        0x00FF
 #define CAB_COMP_NONE        0x0000
