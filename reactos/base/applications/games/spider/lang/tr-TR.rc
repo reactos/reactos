@@ -50,7 +50,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME    "Örümcek Solitaire"
-    IDS_SPI_ABOUT   "Örümcek Solitaire Gregor Schneider tarafından yapılmıştır.\n\nCardLib sürümü: 1.0"
+    IDS_SPI_ABOUT   "Örümcek Solitaire, Gregor Schneider eliyle yapılmıştır.\n\nCardLib sürümü: 1.0"
     IDS_SPI_QUIT    "Bu oyundan çıkmak ister misiniz?"
     IDS_SPI_WIN     "Tebrikler, kazandınız!"
     IDS_SPI_DEAL    "Tekrar dağıtılsın mı?"
