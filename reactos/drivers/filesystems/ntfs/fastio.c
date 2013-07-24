@@ -40,6 +40,8 @@ NTAPI
 NtfsAcqLazyWrite(PVOID Context,
                  BOOLEAN Wait)
 {
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(Wait);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -49,6 +51,7 @@ VOID
 NTAPI
 NtfsRelLazyWrite(PVOID Context)
 {
+    UNREFERENCED_PARAMETER(Context);
     UNIMPLEMENTED;
 }
 
@@ -58,6 +61,8 @@ NTAPI
 NtfsAcqReadAhead(PVOID Context,
                  BOOLEAN Wait)
 {
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(Wait);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -67,6 +72,7 @@ VOID
 NTAPI
 NtfsRelReadAhead(PVOID Context)
 {
+    UNREFERENCED_PARAMETER(Context);
     UNIMPLEMENTED;
 }
 
