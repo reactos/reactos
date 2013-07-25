@@ -1102,6 +1102,10 @@ HRESULT CDefView::OpenSelectedItems()
     UINT uCommand;
     HRESULT hResult;
 
+    cidl = ListView_GetSelectedCount(hWndList);
+    if (cidl == 0)
+        return S_OK;
+
     hResult = OnDefaultCommand();
     if (hResult == S_OK)
         return hResult;
@@ -1175,7 +1179,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (!hMenu) 
         return E_FAIL;
 
-    GetSelections();
+    cidl = ListView_GetSelectedCount(hWndList);
 
     hResult = GetItemObject( cidl ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_IContextMenu, (LPVOID *)&pCM);
     if (FAILED( hResult))
