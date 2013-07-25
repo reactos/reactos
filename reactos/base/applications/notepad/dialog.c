@@ -293,7 +293,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
 {
     static const TCHAR dotlog[] = _T(".LOG");
     HANDLE hFile;
-    LPTSTR pszText;
+    LPTSTR pszText = NULL;
     DWORD dwTextLen;
     TCHAR log[5];
 
