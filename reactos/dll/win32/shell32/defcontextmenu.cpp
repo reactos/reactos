@@ -8,10 +8,7 @@
 
 /*
 TODO:
-1. In DoStaticShellExtensions, check for "Explore" and "Open" verbs, and for BrowserFlags or
-    ExplorerFlags under those entries. These flags indicate if we should browse to the new item
-    instead of attempting to open it.
-2. The code in NotifyShellViewWindow to deliver commands to the view is broken. It is an excellent
+    The code in NotifyShellViewWindow to deliver commands to the view is broken. It is an excellent
     example of the wrong way to do it.
 */
 
@@ -71,6 +68,9 @@ class CDefaultContextMenu :
         HRESULT DoFormat(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoDynamicShellExtensions(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoStaticShellExtensions(LPCMINVOKECOMMANDINFO lpcmi);
+        DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry);
+        HRESULT TryToBrowse(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, DWORD wFlags);
+        HRESULT InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry);
 
     public:
         CDefaultContextMenu();
@@ -1484,23 +1484,64 @@ CDefaultContextMenu::DoDynamicShellExtensions(
     return E_FAIL;
 }
 
-
-HRESULT
-CDefaultContextMenu::DoStaticShellExtensions(
-    LPCMINVOKECOMMANDINFO lpcmi)
+DWORD 
+CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry)
 {
-    PStaticShellEntry pEntry = m_pStaticEntries;
-    INT iCmd = LOWORD(lpcmi->lpVerb) - m_iIdSCMFirst;
+    LPSHELLBROWSER lpSB;
+    HWND hwndTree;
+    LPWSTR FlagsName;
+    WCHAR wszKey[256];
+    HRESULT hr;
+    DWORD wFlags;
+    DWORD cbVerb;
+
+    /* Get a pointer to the shell browser */
+    lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
+    if (lpSB == NULL)
+        return 0;
+
+    /* See if we are in Explore or Browse mode. If the browser's tree is present, we are in Explore mode.*/
+    if (SUCCEEDED(lpSB->GetControlWindow(FCW_TREE, &hwndTree)) && hwndTree)
+        FlagsName = L"ExplorerFlags";
+    else
+        FlagsName = L"BrowserFlags";
+
+    /* Try to get the flag from the verb */
+    hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"%s\\shell\\%s", pEntry->szClass, pEntry->szVerb);
+    if (!SUCCEEDED(hr))
+        return 0;
+
+    cbVerb = sizeof(wFlags);
+    if (RegGetValueW(HKEY_CLASSES_ROOT, wszKey, FlagsName, RRF_RT_REG_DWORD, NULL, &wFlags, &cbVerb) == ERROR_SUCCESS)
+    {
+        return wFlags;
+    }
+
+    return 0;
+}
+
+HRESULT 
+CDefaultContextMenu::TryToBrowse(
+    LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, DWORD wFlags)
+{
+    LPSHELLBROWSER lpSB = (LPSHELLBROWSER)SendMessageW(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
     HRESULT hr;
 
-    while (pEntry && (iCmd--) > 0)
-        pEntry = pEntry->pNext;
-
-    if (iCmd > 0)
+    if (lpSB == NULL)
         return E_FAIL;
 
+    hr = lpSB->BrowseObject(ILCombine(m_Dcm.pidlFolder, pidl), wFlags);
+
+    return hr;
+}
+
+HRESULT 
+CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
+{
+    HRESULT hr;
     STRRET strFile;
-    hr = m_Dcm.psf->GetDisplayNameOf(m_Dcm.apidl[0], SHGDN_FORPARSING, &strFile);
+
+    hr = m_Dcm.psf->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strFile);
     if (hr != S_OK)
     {
         ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
@@ -1508,7 +1549,7 @@ CDefaultContextMenu::DoStaticShellExtensions(
     }
 
     WCHAR wszPath[MAX_PATH];
-    hr = StrRetToBufW(&strFile, m_Dcm.apidl[0], wszPath, MAX_PATH);
+    hr = StrRetToBufW(&strFile, pidl, wszPath, MAX_PATH);
     if (hr != S_OK)
         return hr;
 
@@ -1519,14 +1560,57 @@ CDefaultContextMenu::DoStaticShellExtensions(
     SHELLEXECUTEINFOW sei;
     ZeroMemory(&sei, sizeof(sei));
     sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_CLASSNAME;
-    sei.lpClass = pEntry->szClass;
     sei.hwnd = lpcmi->hwnd;
     sei.nShow = SW_SHOWNORMAL;
     sei.lpVerb = pEntry->szVerb;
     sei.lpFile = wszPath;
     sei.lpDirectory = wszDir;
     ShellExecuteExW(&sei);
+
+    return S_OK;
+}
+
+HRESULT
+CDefaultContextMenu::DoStaticShellExtensions(
+    LPCMINVOKECOMMANDINFO lpcmi)
+{
+    PStaticShellEntry pEntry = m_pStaticEntries;
+    INT iCmd = LOWORD(lpcmi->lpVerb) - m_iIdSCMFirst;
+    HRESULT hr;
+    UINT i;
+
+    while (pEntry && (iCmd--) > 0)
+        pEntry = pEntry->pNext;
+
+    if (iCmd > 0)
+        return E_FAIL;
+
+    /* Get the browse flags to see if we need to browse */
+    DWORD wFlags = BrowserFlagsFromVerb(lpcmi, pEntry);
+    BOOL bBrowsed = FALSE;
+
+    for (i=0; i < m_Dcm.cidl; i++)
+    {
+        /* Check if we need to browse */
+        if (wFlags > 0)
+        {
+            /* In xp if we have browsed, we don't open any more folders .
+             * In win7 we browse to the first folder we find and 
+             * open new windows fo for each of the rest of the folders */
+            if (bBrowsed)
+                continue;
+
+            hr = TryToBrowse(lpcmi, m_Dcm.apidl[i], wFlags);
+            if (SUCCEEDED(hr))
+            {
+                bBrowsed = TRUE;
+                continue;
+            }
+        }
+
+        InvokePidl(lpcmi, m_Dcm.apidl[i], pEntry);
+    }
+
     return S_OK;
 }
 
