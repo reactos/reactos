@@ -129,7 +129,6 @@ dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char
 
 void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const char *target)
 {
-    unsigned int hashcode;
     struct target_file *tf;
     struct target_dir_entry *de;
     const char *filename = chop_filename(target);
