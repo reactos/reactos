@@ -218,7 +218,24 @@ NET_API_STATUS
 WINAPI
 NetpNtStatusToApiStatus(NTSTATUS Status)
 {
-    return RtlNtStatusToDosError(Status);
+    NET_API_STATUS ApiStatus;
+
+    switch (Status)
+    {
+        case STATUS_SUCCESS:
+            ApiStatus = NERR_Success;
+            break;
+
+        case STATUS_INVALID_ACCOUNT_NAME:
+            ApiStatus = NERR_BadUsername;
+            break;
+
+        default:
+            ApiStatus = RtlNtStatusToDosError(Status);
+            break;
+    }
+
+    return ApiStatus;
 }
 
 NET_API_STATUS WINAPI NetUseEnum(LMSTR server, DWORD level, LPBYTE* bufptr, DWORD prefmaxsize,
