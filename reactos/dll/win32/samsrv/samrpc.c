@@ -2128,6 +2128,12 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
+    if (Name->Length > 20 * sizeof(WCHAR))
+    {
+        TRACE("User name is too long!\n");
+        return STATUS_INVALID_ACCOUNT_NAME;
+    }
+
     /* Check if the user name already exists in the domain */
     Status = SampCheckAccountNameInDomain(DomainObject,
                                           Name->Buffer);
@@ -8089,6 +8095,12 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     {
         TRACE("failed with status 0x%08lx\n", Status);
         return Status;
+    }
+
+    if (Name->Length > 20 * sizeof(WCHAR))
+    {
+        TRACE("User name is too long!\n");
+        return STATUS_INVALID_ACCOUNT_NAME;
     }
 
     /* Check if the user name already exists in the domain */
