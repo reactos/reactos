@@ -21,7 +21,7 @@
 @ stdcall SamFreeMemory(ptr)
 @ stdcall SamGetAliasMembership(ptr long ptr ptr ptr)
 @ stdcall SamGetCompatibilityMode(ptr ptr)
-@ stub SamGetDisplayEnumerationIndex
+@ stdcall SamGetDisplayEnumerationIndex(ptr long ptr ptr)
 @ stdcall SamGetGroupsForUser(ptr ptr ptr)
 @ stdcall SamGetMembersInAlias(ptr ptr ptr)
 @ stdcall SamGetMembersInGroup(ptr ptr ptr ptr)

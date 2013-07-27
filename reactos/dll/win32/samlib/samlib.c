@@ -872,6 +872,39 @@ SamGetCompatibilityMode(IN SAM_HANDLE ObjectHandle,
 
 NTSTATUS
 NTAPI
+SamGetDisplayEnumerationIndex(IN SAM_HANDLE DomainHandle,
+                              IN DOMAIN_DISPLAY_INFORMATION DisplayInformation,
+                              IN PUNICODE_STRING Prefix,
+                              OUT PULONG Index)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p %lu %wZ %p)\n",
+           DomainHandle, DisplayInformation, Prefix, Index);
+
+    if ((Prefix == NULL) ||
+        (Index == NULL))
+        return STATUS_INVALID_PARAMETER;
+
+    RpcTryExcept
+    {
+        Status = SamrGetDisplayEnumerationIndex2((SAMPR_HANDLE)DomainHandle,
+                                                 DisplayInformation,
+                                                 (PRPC_UNICODE_STRING)Prefix,
+                                                 Index);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamGetGroupsForUser(IN SAM_HANDLE UserHandle,
                     OUT PGROUP_MEMBERSHIP *Groups,
                     OUT PULONG MembershipCount)

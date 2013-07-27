@@ -298,6 +298,15 @@ typedef struct _ALIAS_ADM_COMMENT_INFORMATION
     UNICODE_STRING AdminComment;
 } ALIAS_ADM_COMMENT_INFORMATION, *PALIAS_ADM_COMMENT_INFORMATION;
 
+typedef enum _DOMAIN_DISPLAY_INFORMATION
+{
+    DomainDisplayUser = 1,
+    DomainDisplayMachine,
+    DomainDisplayGroup,
+    DomainDisplayOemUser,
+    DomainDisplayOemGroup,
+    DomainDisplayServer
+} DOMAIN_DISPLAY_INFORMATION, *PDOMAIN_DISPLAY_INFORMATION;
 
 typedef enum _DOMAIN_INFORMATION_CLASS
 {
@@ -815,6 +824,13 @@ NTSTATUS
 NTAPI
 SamGetCompatibilityMode(IN SAM_HANDLE ObjectHandle,
                         OUT PULONG Mode);
+
+NTSTATUS
+NTAPI
+SamGetDisplayEnumerationIndex(IN SAM_HANDLE DomainHandle,
+                              IN DOMAIN_DISPLAY_INFORMATION DisplayInformation,
+                              IN PUNICODE_STRING Prefix,
+                              OUT PULONG Index);
 
 NTSTATUS
 NTAPI
