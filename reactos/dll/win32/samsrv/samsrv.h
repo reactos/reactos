@@ -388,6 +388,10 @@ NTSTATUS
 SampGetRidFromSid(IN PSID Sid,
                   OUT PULONG Rid);
 
+NTSTATUS
+SampCheckAccountName(IN PRPC_UNICODE_STRING AccountName,
+                     IN USHORT MaxLength);
+
 
 /* Undocumented advapi32 functions */
 

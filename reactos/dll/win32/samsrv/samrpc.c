@@ -1756,6 +1756,14 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
+    /* Check the group account name */
+    Status = SampCheckAccountName(Name, 256);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
     /* Check if the group name already exists in the domain */
     Status = SampCheckAccountNameInDomain(DomainObject,
                                           Name->Buffer);
@@ -2128,10 +2136,12 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    if (Name->Length > 20 * sizeof(WCHAR))
+    /* Check the user account name */
+    Status = SampCheckAccountName(Name, 20);
+    if (!NT_SUCCESS(Status))
     {
-        TRACE("User name is too long!\n");
-        return STATUS_INVALID_ACCOUNT_NAME;
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
     /* Check if the user name already exists in the domain */
@@ -2688,6 +2698,14 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Check the alias acoount name */
+    Status = SampCheckAccountName(AccountName, 256);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
         return Status;
     }
 
@@ -3985,6 +4003,14 @@ SampSetGroupName(PSAM_DB_OBJECT GroupObject,
         goto done;
     }
 
+    /* Check the new account name */
+    Status = SampCheckAccountName(&Buffer->Name.Name, 256);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
     NewGroupName.Length = Buffer->Name.Name.Length;
     NewGroupName.MaximumLength = Buffer->Name.Name.MaximumLength;
     NewGroupName.Buffer = Buffer->Name.Name.Buffer;
@@ -4710,6 +4736,14 @@ SampSetAliasName(PSAM_DB_OBJECT AliasObject,
     {
         TRACE("SampGetObjectAttributeString failed (Status 0x%08lx)\n", Status);
         goto done;
+    }
+
+    /* Check the new account name */
+    Status = SampCheckAccountName(&Buffer->Name.Name, 256);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
     NewAliasName.Length = Buffer->Name.Name.Length;
@@ -6764,6 +6798,14 @@ SampSetUserName(PSAM_DB_OBJECT UserObject,
     UNICODE_STRING OldUserName = {0, 0, NULL};
     NTSTATUS Status;
 
+    /* Check the account name */
+    Status = SampCheckAccountName(NewUserName, 20);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
     Status = SampGetObjectAttributeString(UserObject,
                                           L"Name",
                                           (PRPC_UNICODE_STRING)&OldUserName);
@@ -8097,10 +8139,12 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    if (Name->Length > 20 * sizeof(WCHAR))
+    /* Check the user account name */
+    Status = SampCheckAccountName(Name, 20);
+    if (!NT_SUCCESS(Status))
     {
-        TRACE("User name is too long!\n");
-        return STATUS_INVALID_ACCOUNT_NAME;
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
     /* Check if the user name already exists in the domain */
