@@ -371,7 +371,7 @@ CsrInitializeProcessStructure(VOID)
     CsrRootProcess->ClientId = NtCurrentTeb()->ClientId;
 
     /* Initialize the Thread Hash List */
-    for (i = 0; i < 256; i++) InitializeListHead(&CsrThreadHashTable[i]);
+    for (i = 0; i < NUMBER_THREAD_HASH_BUCKETS; i++) InitializeListHead(&CsrThreadHashTable[i]);
 
     /* Initialize the Wait Lock */
     return RtlInitializeCriticalSection(&CsrWaitListsLock);
@@ -1382,7 +1382,7 @@ CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
 
     /* Acquire process lock */
     CsrAcquireProcessLock();
-    
+
     /* Get the list pointers */
     NextEntry = CsrRootProcess->ListLink.Flink;
     while (NextEntry != &CsrRootProcess->ListLink)
@@ -1397,13 +1397,13 @@ CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
         CsrProcess->Flags &= ~CsrProcessSkipShutdown;
         CsrProcess->ShutdownFlags = 0;
     }
-    
+
     /* Set shudown Priority */
     CsrSetToShutdownPriority();
 
     /* Loop all processes */
     //DPRINT1("Enumerating for LUID: %lx %lx\n", CallerLuid->HighPart, CallerLuid->LowPart);
-    
+
     /* Start looping */
     while (TRUE)
     {

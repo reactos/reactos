@@ -14,11 +14,11 @@
 #define NDEBUG
 #include <debug.h>
 
-#define CsrHashThread(t) (HandleToUlong(t) % 257)
+#define CsrHashThread(t) (HandleToUlong(t) % NUMBER_THREAD_HASH_BUCKETS)
 
 /* GLOBALS ********************************************************************/
 
-LIST_ENTRY CsrThreadHashTable[257];
+LIST_ENTRY CsrThreadHashTable[NUMBER_THREAD_HASH_BUCKETS];
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
