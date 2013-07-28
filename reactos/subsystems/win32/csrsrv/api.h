@@ -45,7 +45,7 @@ extern HANDLE hBootstrapOk;
 extern HANDLE CsrApiPort;
 extern HANDLE CsrSmApiPort;
 extern HANDLE CsrSbApiPort;
-extern LIST_ENTRY CsrThreadHashTable[256];
+extern LIST_ENTRY CsrThreadHashTable[257];
 extern PCSR_PROCESS CsrRootProcess;
 extern UNICODE_STRING CsrDirectoryName;
 extern ULONG CsrDebug;

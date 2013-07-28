@@ -18,8 +18,8 @@
 
 BOOLEAN (*CsrClientThreadSetup)(VOID) = NULL;
 UNICODE_STRING CsrApiPortName;
-volatile LONG CsrpStaticThreadCount;
-volatile LONG CsrpDynamicThreadTotal;
+volatile ULONG CsrpStaticThreadCount;
+volatile ULONG CsrpDynamicThreadTotal;
 extern ULONG CsrMaxApiRequestThreads;
 
 /* FUNCTIONS ******************************************************************/
@@ -269,7 +269,7 @@ CsrpCheckRequestThreads(VOID)
     NTSTATUS Status;
 
     /* Decrease the count, and see if we're out */
-    if (_InterlockedDecrement(&CsrpStaticThreadCount) == 0)
+    if (InterlockedDecrementUL(&CsrpStaticThreadCount) == 0)
     {
         /* Check if we've still got space for a Dynamic Thread */
         if (CsrpDynamicThreadTotal < CsrMaxApiRequestThreads)
@@ -289,8 +289,8 @@ CsrpCheckRequestThreads(VOID)
             if (NT_SUCCESS(Status))
             {
                 /* Increase the thread counts */
-                _InterlockedIncrement(&CsrpStaticThreadCount);
-                _InterlockedIncrement(&CsrpDynamicThreadTotal);
+                InterlockedIncrementUL(&CsrpStaticThreadCount);
+                InterlockedIncrementUL(&CsrpDynamicThreadTotal);
 
                 /* Add a new server thread */
                 if (CsrAddStaticServerThread(hThread,
@@ -303,8 +303,8 @@ CsrpCheckRequestThreads(VOID)
                 else
                 {
                     /* Failed to create a new static thread */
-                    _InterlockedDecrement(&CsrpStaticThreadCount);
-                    _InterlockedDecrement(&CsrpDynamicThreadTotal);
+                    InterlockedDecrementUL(&CsrpStaticThreadCount);
+                    InterlockedDecrementUL(&CsrpDynamicThreadTotal);
 
                     /* Terminate it */
                     DPRINT1("Failing\n");
@@ -383,8 +383,8 @@ CsrApiRequestThread(IN PVOID Parameter)
         ASSERT(NT_SUCCESS(Status));
 
         /* Increase the Thread Counts */
-        _InterlockedIncrement(&CsrpStaticThreadCount);
-        _InterlockedIncrement(&CsrpDynamicThreadTotal);
+        InterlockedIncrementUL(&CsrpStaticThreadCount);
+        InterlockedIncrementUL(&CsrpDynamicThreadTotal);
     }
 
     /* Now start the loop */
@@ -513,7 +513,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                 }
 
                 /* Increase the thread count */
-                _InterlockedIncrement(&CsrpStaticThreadCount);
+                InterlockedIncrementUL(&CsrpStaticThreadCount);
 
                 /* If the response was 0xFFFFFFFF, we'll ignore it */
                 if (HardErrorMsg->Response == 0xFFFFFFFF)
@@ -595,7 +595,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     ServerDll->DispatchTable[ApiId](&ReceiveMsg, &ReplyCode);
 
                     /* Increase the static thread count */
-                    _InterlockedIncrement(&CsrpStaticThreadCount);
+                    InterlockedIncrementUL(&CsrpStaticThreadCount);
                 }
                 _SEH2_EXCEPT(CsrUnhandledExceptionFilter(_SEH2_GetExceptionInformation()))
                 {
@@ -706,7 +706,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                 }
 
                 /* Increase the thread count */
-                _InterlockedIncrement(&CsrpStaticThreadCount);
+                InterlockedIncrementUL(&CsrpStaticThreadCount);
 
                 /* If the response was 0xFFFFFFFF, we'll ignore it */
                 if (HardErrorMsg->Response == 0xFFFFFFFF)
@@ -818,7 +818,7 @@ CsrApiRequestThread(IN PVOID Parameter)
             ReplyMsg->Status = ServerDll->DispatchTable[ApiId](&ReceiveMsg, &ReplyCode);
 
             /* Increase the static thread count */
-            _InterlockedIncrement(&CsrpStaticThreadCount);
+            InterlockedIncrementUL(&CsrpStaticThreadCount);
 
             Teb->CsrClientThread = CurrentThread;
 
