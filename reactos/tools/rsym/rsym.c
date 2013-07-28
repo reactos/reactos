@@ -33,6 +33,83 @@
 #define MAX_PATH 260
 #define MAX_SYM_NAME 2000
 
+struct StringEntry
+{
+    struct StringEntry *Next;
+    ULONG Offset;
+    char *String;
+};
+
+struct StringHashTable
+{
+    ULONG TableSize;
+    struct StringEntry **Table;
+};
+
+/* This is the famous DJB hash */
+static unsigned int
+ComputeDJBHash(const char *name)
+{
+    unsigned int val = 5381;
+    int i = 0;
+
+    for (i = 0; name[i]; i++)
+    {
+        val = (33 * val) + name[i];
+    }
+
+    return val;
+}
+
+static void
+AddStringToHash(struct StringHashTable *StringTable,
+                unsigned int hash,
+                ULONG Offset,
+                char *StringPtr)
+{
+    struct StringEntry *entry = calloc(1, sizeof(struct StringEntry));
+    entry->Offset = Offset;
+    entry->String = StringPtr;
+    entry->Next = StringTable->Table[hash];
+    StringTable->Table[hash] = entry;
+}
+
+static void
+StringHashTableInit(struct StringHashTable *StringTable,
+                    ULONG StringsLength,
+                    char *StringsBase)
+{
+    char *Start = StringsBase;
+    char *End = StringsBase + StringsLength;
+    StringTable->TableSize = 1024;
+    StringTable->Table = calloc(1024, sizeof(struct StringEntry *));
+    while (Start < End)
+    {
+        AddStringToHash(StringTable,
+                        ComputeDJBHash(Start) % StringTable->TableSize,
+                        Start - StringsBase,
+                        Start);
+        Start += strlen(Start) + 1;
+    }
+}
+
+static void
+StringHashTableFree(struct StringHashTable *StringTable)
+{
+    int i;
+    struct StringEntry *entry;
+    for (i = 0; i < StringTable->TableSize; i++)
+    {
+        while ((entry = StringTable->Table[i]))
+        {
+            entry = entry->Next;
+            free(StringTable->Table[i]);
+            StringTable->Table[i] = entry;
+        }
+    }
+    free(StringTable->Table);
+}
+
 static int
 CompareSymEntry(const PROSSYM_ENTRY SymEntry1, const PROSSYM_ENTRY SymEntry2)
 {
@@ -112,26 +189,32 @@ GetCoffInfo(void *FileData, PIMAGE_FILE_HEADER PEFileHeader,
 }
 
 static ULONG
-FindOrAddString(char *StringToFind, ULONG *StringsLength, void *StringsBase)
+FindOrAddString(struct StringHashTable *StringTable,
+                char *StringToFind,
+                ULONG *StringsLength,
+                void *StringsBase)
 {
-    char *Search, *End;
+    unsigned int hash = ComputeDJBHash(StringToFind) % StringTable->TableSize;
+    struct StringEntry *entry = StringTable->Table[hash];
 
-    Search = (char *)StringsBase;
-    End = Search + *StringsLength;
+    while (entry && strcmp(entry->String, StringToFind))
+        entry = entry->Next;
 
-    while (Search < End)
+    if (entry)
     {
-        if (strcmp(Search, StringToFind) == 0)
-        {
-            return Search - (char *)StringsBase;
-        }
-        Search += strlen(Search) + 1;
+        return entry->Offset;
     }
+    else
+    {
+        char *End = (char *)StringsBase + *StringsLength;
 
-    strcpy(Search, StringToFind);
-    *StringsLength += strlen(StringToFind) + 1;
+        strcpy(End, StringToFind);
+        *StringsLength += strlen(StringToFind) + 1;
 
-    return Search - (char *)StringsBase;
+        AddStringToHash(StringTable, hash, End - (char *)StringsBase, End);
+        
+        return End - (char *)StringsBase;
+    }
 }
 
 static int
@@ -150,6 +233,7 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
     ULONG NameLen;
     char FuncName[256];
     PROSSYM_ENTRY Current;
+    struct StringHashTable StringHash;
 
     StabEntry = StabSymbolsBase;
     Count = StabSymbolsLength / sizeof(STAB_ENTRY);
@@ -170,6 +254,8 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
     }
     Current = *SymbolsBase;
     memset(Current, 0, sizeof(*Current));
+
+    StringHashTableInit(&StringHash, *StringsLength, (char *)StringsBase);
 
     LastFunctionAddress = 0;
     for (i = 0; i < Count; i++)
@@ -206,8 +292,8 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
                         First = 0;
                     Current->Address = Address;
                 }
-                Current->FileOffset = FindOrAddString((char *)StabStringsBase
-                                                      + StabEntry[i].n_strx,
+                Current->FileOffset = FindOrAddString(&StringHash,
+                                                      (char *)StabStringsBase + StabEntry[i].n_strx,
                                                       StringsLength,
                                                       StringsBase);
                 break;
@@ -236,7 +322,8 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
                 }
                 memcpy(FuncName, Name, NameLen);
                 FuncName[NameLen] = '\0';
-                Current->FunctionOffset = FindOrAddString(FuncName,
+                Current->FunctionOffset = FindOrAddString(&StringHash,
+                                                          FuncName,
                                                           StringsLength,
                                                           StringsBase);
                 Current->SourceLine = 0;
@@ -265,6 +352,8 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
 
     qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
 
+    StringHashTableFree(&StringHash);
+
     return 0;
 }
 
@@ -281,6 +370,7 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
     char FuncName[256], FileName[1024];
     char *p;
     PROSSYM_ENTRY Current;
+    struct StringHashTable StringHash;
 
     CoffEntry = (PCOFF_SYMENT) CoffSymbolsBase;
     Count = CoffSymbolsLength / sizeof(COFF_SYMENT);
@@ -293,6 +383,8 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
     }
     *SymbolsCount = 0;
     Current = *SymbolsBase;
+
+    StringHashTableInit(&StringHash, *StringsLength, (char*)StringsBase);
 
     for (i = 0; i < Count; i++)
     {
@@ -319,6 +411,7 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
                 {
                     free(*SymbolsBase);
                     fprintf(stderr, "Function name too long\n");
+                    StringHashTableFree(&StringHash);
                     return 1;
                 }
                 strcpy(FuncName, (char *) CoffStringsBase + CoffEntry[i].e.e.e_offset);
@@ -336,7 +429,8 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
                 *p = '\0';
             }
             p = ('_' == FuncName[0] || '@' == FuncName[0] ? FuncName + 1 : FuncName);
-            Current->FunctionOffset = FindOrAddString(p,
+            Current->FunctionOffset = FindOrAddString(&StringHash,
+                                                      p,
                                                       StringsLength,
                                                       StringsBase);
             Current->SourceLine = 0;
@@ -348,6 +442,8 @@ ConvertCoffs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
 
     *SymbolsCount = (Current - *SymbolsBase + 1);
     qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *)) CompareSymEntry);
+
+    StringHashTableFree(&StringHash);
 
     return 0;
 }
@@ -370,21 +466,6 @@ struct DbgHelpStringTab {
   DWORD module_base;
   struct DbgHelpLineEntry *lastLineEntry;
 };
-
-/* This is the famous DJB hash */
-static unsigned int
-ComputeDJBHash(const char *name)
-{
-    unsigned int val = 5381;
-    int i = 0;
-
-    for (i = 0; name[i]; i++)
-    {
-        val = (33 * val) + name[i];
-    }
-
-    return val;
-}
 
 static struct DbgHelpLineEntry*
 DbgHelpAddLineEntry(struct DbgHelpStringTab *tab)
