@@ -354,6 +354,8 @@ ffs(int mask)
     if (_BitScanForward(&index, mask) == 0) return 0;
     return index;
 }
+#else
+#define ffs __builtin_ffs
 #endif
 
 #else /* NO_LIBWINE_PORT */
