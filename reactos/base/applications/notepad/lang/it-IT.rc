@@ -186,7 +186,7 @@ STRING_ALL_FILES,                               "Tutti i file (*.*)"
 STRING_TEXT_FILES_TXT,                  "File di testo (*.txt)"
 
 STRING_TOOLARGE,                                "Il file '%s' è troppo grande per il blocco note.\n \
-Per favore usare un altro editore."
+Per favore usare un altro programma."
 STRING_NOTEXT,                                  "Non è stato inserito alcun testo. \
 \nPer favore digitare qualcosa e riprovare"
 STRING_DOESNOTEXIST,                            "Il file '%s'\nnon esiste\n\n \
