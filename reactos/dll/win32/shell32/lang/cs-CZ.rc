@@ -1,6 +1,6 @@
 /* FILE:        dll/win32/shell32/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2011-03-31
+ * UPDATED:     2013-06-01
  * THANKS TO:   navaraf, who translated major part of this file
  */
 
@@ -143,7 +143,7 @@ END
 
 IDD_RUN DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Run"
+CAPTION "Spustit"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
@@ -210,7 +210,7 @@ BEGIN
     EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Velikost:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
+    LTEXT "Velikost na disku:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Obsahuje:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -222,7 +222,7 @@ BEGIN
     AUTOCHECKBOX "&Jen pro čtení", 14021, 56, 152, 70, 10
     AUTOCHECKBOX "&Skrytý", 14022, 56, 166, 70, 10
     AUTOCHECKBOX "&Archivovat", 14023, 56, 180, 70, 10
-    PUSHBUTTON "A&dvanced...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Rozšířené...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -237,13 +237,14 @@ BEGIN
     CONTROL "Soubor", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "Otevírat v:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Změnit...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Umístění:", 14008, 8, 75, 45, 10
     EDITTEXT 14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Velikost:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT "Velikost na disku:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Vytvořeno:", 14014, 8, 131, 45, 10
@@ -257,7 +258,7 @@ BEGIN
     AUTOCHECKBOX "&Jen pro čtení", 14021, 58, 189, 67, 10
     AUTOCHECKBOX "&Skrytý", 14022, 126, 189, 50, 10
     AUTOCHECKBOX "&Archivovat", 14023, 181, 189, 49, 10
-    PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "&Rozšířené...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -382,7 +383,7 @@ BEGIN
     LTEXT "Vyberte program, ve kterém chcete otevřít tento soubor: ", -1, 44, 12, 211, 10
     LTEXT "Soubor:    ", 14001, 44, 25, 188, 10
     GROUPBOX "&Programy", -1, 7, 42, 249, 187
-        CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+        CONTROL "Programy", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Vždy použít vybraný program k otevření tohoto typu souboru", 14003, 20, 193, 225, 10
     PUSHBUTTON "P&rocházet...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
@@ -391,12 +392,12 @@ END
 
 IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Copying..."
+CAPTION "Kopírování..."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
+    PUSHBUTTON "Storno", 14002, 195, 14, 60, 16
     CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001,  8, 6, 169, 10
+    LTEXT "Soubor", 14001,  8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -669,9 +670,9 @@ BEGIN
     IDS_INSERT                  "Vložit"
 
     IDS_CREATEFOLDER_DENIED     "Nelze vytvořit novou složku, protože přístup byl odepřen."
-    IDS_CREATEFOLDER_CAPTION    "Chyba při pokusu vytvořit nový adresář"
+    IDS_CREATEFOLDER_CAPTION    "Chyba při pokusu vytvořit novou složku"
     IDS_DELETEITEM_CAPTION      "Potvrdit odstranění souboru"
-    IDS_DELETEFOLDER_CAPTION    "Potvrdit odstranění adresáře"
+    IDS_DELETEFOLDER_CAPTION    "Potvrdit odstranění složky"
     IDS_DELETEITEM_TEXT         "Opravdu chcete odstranit '%1'?"
     IDS_DELETEMULTIPLE_TEXT     "Opravdu chcete odstranit těchto %1 položek?"
     IDS_DELETESELECTED_TEXT     "Opravdu chcete odstranit zvolené položky?"
@@ -692,10 +693,10 @@ BEGIN
     IDS_LOGOFF_PROMPT           "Opravdu se chcete odhlásit?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR            "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR     "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION   "Browse"
-    IDS_RUNDLG_BROWSE_FILTER    "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR            "Nelze zobrazit dialog Spustit soubor (interní chyba)"
+    IDS_RUNDLG_BROWSE_ERROR     "Nelze zobrazit dialog Procházet (interní chyba)"
+    IDS_RUNDLG_BROWSE_CAPTION   "Procházet"
+    IDS_RUNDLG_BROWSE_FILTER    "Spustitelné soubory (*.exe)\0*.exe\0Všechnysoubory (*.*)\0*.*\0"
 
     /* shell folder path default values */
     IDS_PROGRAMS                "Nabídka Start\\Programy"
@@ -736,8 +737,8 @@ BEGIN
     /* Open With */
     IDS_OPEN_WITH               "Otevřít v"
     IDS_OPEN_WITH_CHOOSE        "Zvolit program..."
-    IDS_OPEN_WITH_RECOMMENDED   "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER         "Other Programs:"
+    IDS_OPEN_WITH_RECOMMENDED   "Doporučené programy:"
+    IDS_OPEN_WITH_OTHER         "Ostatní programy:"
 
     IDS_SHELL_ABOUT_AUTHORS     "&Autoři"
     IDS_SHELL_ABOUT_BACK        "< &Zpět"
@@ -787,9 +788,9 @@ BEGIN
     
     IDS_FILE_DETAILS            "Podrobnosti pro typ souborů '%s'"
     IDS_FILE_DETAILSADV         "Soubory s příponou '%s' jsou typu '%s'. Kliknutím na tlačítko Pokročilé lze změnit nastavení pro všechny soubory '%s'."
-    IDS_FILE_TYPES              "FileTypes"
-    IDS_COLUMN_EXTENSION        "Extensions"
-    IDS_BYTES_FORMAT            "bytes"
-    IDS_UNKNOWN_APP             "Unknown application"
-    IDS_EXE_DESCRIPTION         "Description:"
+    IDS_FILE_TYPES              "Typy souborů"
+    IDS_COLUMN_EXTENSION        "Přípony"
+    IDS_BYTES_FORMAT            "bajtů"
+    IDS_UNKNOWN_APP             "Neznámá aplikace"
+    IDS_EXE_DESCRIPTION         "Popis:"
 END

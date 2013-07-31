@@ -621,7 +621,7 @@ BEGIN
     IDS_MENU_CPUHISTORY           "Historie &CPU"
     IDS_MENU_SHOWKERNELTIMES      "&Zobrazit časy jádra"
     IDS_CREATENEWTASK             "Vytvořit novou úlohu"
-    IDS_CREATENEWTASK_DESC        "Napište název aplikace, adresář, dokument nebo zdroj na Internetu, a správce úloh jej otevře."
+    IDS_CREATENEWTASK_DESC        "Zadejte název aplikace, složku, dokument nebo zdroj na Internetu, a správce úloh jej otevře."
     IDS_MSG_ACCESSPROCESSAFF      "Není možné zpřístupnit afinitu procesu"
     IDS_MSG_PROCESSONEPRO         "Proces musí mít nastavenou afinitu alespoň s jedním procesorem."
     IDS_MSG_INVALIDOPTION         "Neplatná volba"
