@@ -52,6 +52,14 @@ typedef struct
     PDISPATCHIRP Dispatcher;                                     // dispatches the code
 }COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
+
+typedef struct _WORK_ITEM_DATA
+{
+    WORK_QUEUE_ITEM WorkItem;                                   // work item
+    PVOID CallbackContext;                                      // callback context
+    PRH_INIT_CALLBACK CallbackRoutine;                          // callback routine
+} INIT_ROOT_HUB_CONTEXT, *PINIT_ROOT_HUB_CONTEXT;
+
 //
 // tag for allocations
 //
