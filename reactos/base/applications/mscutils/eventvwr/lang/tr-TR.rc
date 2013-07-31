@@ -45,7 +45,7 @@ BEGIN
     ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
     LTEXT           "Olay Görüntüleyicisi - Sürüm: 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
     LTEXT           "Telif Hakkı: 2007 - Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
-    DEFPUSHBUTTON   "Tamâm",IDOK,90,48,42,16,WS_GROUP
+    DEFPUSHBUTTON   "Tamam",IDOK,90,48,42,16,WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40

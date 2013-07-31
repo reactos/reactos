@@ -6,6 +6,6 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Oturum Açma Ekran Koruyucu"
-    IDS_TEXT        "Bu ekran koruyucu için hiçbir seçenek yok."
+    IDS_DESCRIPTION "Oturum Açma Görüntülük Koruyucusu"
+    IDS_TEXT        "Bu görüntülük koruyucusu için hiçbir seçenek yok."
 END

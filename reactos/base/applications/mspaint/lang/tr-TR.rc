@@ -64,7 +64,7 @@ BEGIN
             MENUITEM "K&ılavuzu Göster\tCtrl+G",   IDM_VIEWSHOWGRID
             MENUITEM "K&üçüğünü Göster",           IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "&Tam Ekran\tCtrl+F",             IDM_VIEWFULLSCREEN
+        MENUITEM "&Tüm Görüntülük\tCtrl+F",        IDM_VIEWFULLSCREEN
     END
 
     POPUP "G&örüntü"

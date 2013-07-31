@@ -2,7 +2,7 @@
  * TRANSLATORS: 2012 - Arda Tanrıkulu (ardatanrikulu@gmail.com)
  *              2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
- 
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
@@ -23,7 +23,7 @@ IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu araç, dizgenizdeki yüklü ReactX bileşenleri ve sürücüleri hakkında ayrıntılı bilgi yazanaklar.", -1, 10, 10, 443, 17
+    LTEXT "Bu araç, dizgenizdeki yüklü ReactX bileşenleri ve sürücüleri hakkında ayrıntılı bilgi toplar.", -1, 10, 10, 443, 17
     LTEXT "Soruna hangi bölümün neden olduğunu biliyorsanız yukarıdaki uygun sekmeyi tıklatınız. Bilmiyorsanız sırayla her bölüme gitmek için aşağıdaki ""Sonraki Bölüm"" düğmesini kullanabilirsiniz.", -1, 10, 30, 443, 25
     GROUPBOX "Bilgisayar Bilgisi", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Geçerli Zaman:", -1, 70, 70, 80, 10, SS_RIGHT
@@ -217,12 +217,12 @@ BEGIN
     IDS_REG_FAIL "Yanlışlık"
     IDS_DDTEST_ERROR "Sınama başarısız oldu."
     IDS_DDTEST_DESCRIPTION "ReactDraw arayüz sınaması başlatılacak. Sürdürülsün mü?"
-    IDS_DDPRIMARY_DESCRIPTION "Bu sınama, ReactDraw'ı birincil yüzeye çizmek için kullanacak. Ekrana ak ve kara dikdörtgenler çizilecek. Sürdürülsün mü?"
-    IDS_DDPRIMARY_RESULT "Ekranda ak ve kara dikdörtgenler gördünüz mü?"
-    IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı ekran dışı arabelleğe çizmek için kullanacak. Ekranda devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
-    IDS_DDOFFSCREEN_RESULT "Ekranda devinen bir ak dikdörtgen gördünüz mü?"
-    IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tam ekranda çizmek için kullanacak. Tam ekranda devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
-    IDS_DDFULLSCREEN_RESULT "Tam ekranda devinen bir ak dikdörtgen gördünüz mü?"
+    IDS_DDPRIMARY_DESCRIPTION "Bu sınama, ReactDraw'ı birincil yüzeye çizmek için kullanacak. Görüntülüğe ak ve kara dikdörtgenler çizilecek. Sürdürülsün mü?"
+    IDS_DDPRIMARY_RESULT "Görüntülükte ak ve kara dikdörtgenler gördünüz mü?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı görüntülük dışı arabelleğe çizmek için kullanacak. Görüntülükte devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
+    IDS_DDOFFSCREEN_RESULT "Görüntülükte devinen bir ak dikdörtgen gördünüz mü?"
+    IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tüm görüntülükte çizmek için kullanacak. Tüm görüntülükte devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
+    IDS_DDFULLSCREEN_RESULT "Tüm görüntülükte devinen bir ak dikdörtgen gördünüz mü?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
     IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u ikillik) (%uHz)"
     IDS_OPTION_NO "Hayır"

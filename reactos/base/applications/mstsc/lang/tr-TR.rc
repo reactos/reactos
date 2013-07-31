@@ -1,7 +1,7 @@
 /*
  * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
- 
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_GENERAL DIALOGEX 0, 0, 242, 175
@@ -31,7 +31,7 @@ BEGIN
     GROUPBOX        "Uzak Masaüstü Renk Sayısı",IDC_STATIC,7,83,228,85
     ICON            "", IDC_REMICON, 15,19,20,20
     ICON            "", IDC_COLORSICON, 15,98,20,20
-    LTEXT           "Uzak Masaüstü boyutunu seçebilirsiniz. Tam ekrana geçmek için sürgüyü en sağa kaydırınız.",IDC_STATIC,53,22,175,21
+    LTEXT           "Uzak Masaüstü boyutunu seçebilirsiniz. Tüm görüntülüğe geçmek için sürgüyü en sağa kaydırınız.",IDC_STATIC,53,22,175,21
     CONTROL         "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
     COMBOBOX        IDC_BPPCOMBO,56,102,128,80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_COLORIMAGE,"Static",SS_OWNERDRAW | SS_SUNKEN, 56,121,127,10
@@ -61,7 +61,7 @@ BEGIN
     IDS_HIGHCOLOR16         "65,536 (16 İkillik) Renk"
     IDS_HIGHCOLOR24         "16,777,216 (24 İkillik) Renk"
     IDS_PIXEL               "%lux%lu Nokta"
-    IDS_FULLSCREEN          "Tam Ekran"
+    IDS_FULLSCREEN          "Tüm Görüntülük"
     IDS_BROWSESERVER        "(Daha Çok...)"
     IDS_HEADERTEXT1         "Uzak Masaüstü"
     IDS_HEADERTEXT2         "Bağlayıcısı"

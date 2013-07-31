@@ -76,7 +76,7 @@ BEGIN
     END
     POPUP "&Ekle"
     BEGIN
-        MENUITEM "&Tarih veyâ Saat...",ID_DATETIME
+        MENUITEM "&Târih veyâ Saat...",ID_DATETIME
     END
     POPUP "&Biçim"
     BEGIN
