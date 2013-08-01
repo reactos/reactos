@@ -195,15 +195,17 @@ typedef struct _FILTER_VOLUME_BASIC_INFORMATION {
   WCHAR FilterVolumeName[1];
 } FILTER_VOLUME_BASIC_INFORMATION, *PFILTER_VOLUME_BASIC_INFORMATION;
 
+typedef
 _Struct_size_bytes_(sizeof(INSTANCE_BASIC_INFORMATION) * InstanceNameLength)
-typedef struct _INSTANCE_BASIC_INFORMATION {
+struct _INSTANCE_BASIC_INFORMATION {
   ULONG NextEntryOffset;
   USHORT InstanceNameLength;
   USHORT InstanceNameBufferOffset;
 } INSTANCE_BASIC_INFORMATION, *PINSTANCE_BASIC_INFORMATION;
 
+typedef
 _Struct_size_bytes_(sizeof(INSTANCE_PARTIAL_INFORMATION) + InstanceNameLength + AltitudeLength)
-typedef struct _INSTANCE_PARTIAL_INFORMATION {
+struct _INSTANCE_PARTIAL_INFORMATION {
   ULONG NextEntryOffset;
   USHORT InstanceNameLength;
   USHORT InstanceNameBufferOffset;
@@ -211,8 +213,9 @@ typedef struct _INSTANCE_PARTIAL_INFORMATION {
   USHORT AltitudeBufferOffset;
 } INSTANCE_PARTIAL_INFORMATION, *PINSTANCE_PARTIAL_INFORMATION;
 
+typedef
 _Struct_size_bytes_(sizeof(INSTANCE_FULL_INFORMATION) + InstanceNameLength + AltitudeLength + VolumeNameLength + FilterNameLength)
-typedef struct _INSTANCE_FULL_INFORMATION {
+struct _INSTANCE_FULL_INFORMATION {
   ULONG NextEntryOffset;
   USHORT InstanceNameLength;
   USHORT InstanceNameBufferOffset;
