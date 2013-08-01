@@ -1,6 +1,5 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fullfat)
-
 add_definitions(-D__NTDRIVER__)
 
 list(APPEND SOURCE
@@ -20,3 +19,7 @@ list(APPEND SOURCE
 add_library(fullfat ${SOURCE})
 allow_warnings(fullfat)
 add_dependencies(fullfat bugcodes)
+
+if(NOT MSVC)
+    add_target_compile_flags(fullfat "-Wno-unused-but-set-variable")
+endif()
