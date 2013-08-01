@@ -754,6 +754,10 @@ INT WINAPI GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
     return ret;
 }
 
+static int get_value_base_by_lctype( LCTYPE lctype )
+{
+    return lctype == LOCALE_ILANGUAGE || lctype == LOCALE_IDEFAULTLANGUAGE ? 16 : 10;
+}
 
 /******************************************************************************
  *		GetLocaleInfoW (KERNEL32.@)
@@ -807,7 +811,7 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
                 if (ret > 0)
                 {
                     WCHAR *end;
-                    UINT number = strtolW( tmp, &end, 10 );
+                    UINT number = strtolW( tmp, &end, get_value_base_by_lctype( lctype ) );
                     if (*end)  /* invalid number */
                     {
                         SetLastError( ERROR_INVALID_FLAGS );
@@ -880,7 +884,7 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
         if (!tmp) return 0;
         memcpy( tmp, p + 1, *p * sizeof(WCHAR) );
         tmp[*p] = 0;
-        number = strtolW( tmp, &end, 10 );
+        number = strtolW( tmp, &end, get_value_base_by_lctype( lctype ) );
         if (!*end)
             memcpy( buffer, &number, sizeof(number) );
         else  /* invalid number */
