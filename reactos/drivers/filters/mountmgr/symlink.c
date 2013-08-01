@@ -119,6 +119,8 @@ GlobalCreateSymbolicLink(IN PUNICODE_STRING DosName,
     NTSTATUS Status;
     UNICODE_STRING GlobalName;
 
+    UNREFERENCED_PARAMETER(DeviceName);
+
     /* First create the global string */
     Status = CreateStringWithGlobal(DosName, &GlobalName);
     if (!NT_SUCCESS(Status))
@@ -528,6 +530,8 @@ QuerySymbolicLinkNamesFromStorage(IN PDEVICE_EXTENSION DeviceExtension,
     NTSTATUS Status;
     BOOLEAN WriteNew;
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+
+    UNREFERENCED_PARAMETER(DeviceExtension);
 
     /* First of all, count links */
     RtlZeroMemory(QueryTable, sizeof(QueryTable));

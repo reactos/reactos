@@ -816,6 +816,8 @@ MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
     PDEVICE_INFORMATION DeviceInformation;
     PSAVED_LINK_INFORMATION SavedLinkInformation;
 
+    UNREFERENCED_PARAMETER(DriverObject);
+
     /* Don't get notification any longer */
     IoUnregisterShutdownNotification(gdeviceObject);
 
@@ -1663,6 +1665,8 @@ MountMgrCreateClose(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Allow driver opening for communication
@@ -1688,6 +1692,8 @@ NTAPI
 MountMgrCancel(IN PDEVICE_OBJECT DeviceObject,
                IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     RemoveEntryList(&(Irp->Tail.Overlay.ListEntry));
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);

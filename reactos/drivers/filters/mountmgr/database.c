@@ -298,6 +298,9 @@ DeleteFromLocalDatabaseRoutine(IN PWSTR ValueName,
 {
     PMOUNTDEV_UNIQUE_ID UniqueId = Context;
 
+    UNREFERENCED_PARAMETER(ValueType);
+    UNREFERENCED_PARAMETER(EntryContext);
+
     /* Ensure it matches, and delete */
     if ((UniqueId->UniqueIdLength == ValueLength) &&
         (RtlCompareMemory(UniqueId->UniqueId, ValueData, ValueLength) ==
@@ -364,6 +367,7 @@ VOID
 NTAPI
 ReconcileThisDatabaseWithMasterWorker(IN PVOID Parameter)
 {
+    UNREFERENCED_PARAMETER(Parameter);
     return;
 }
 
@@ -385,6 +389,8 @@ WorkerThread(IN PDEVICE_OBJECT DeviceObject,
     PRECONCILE_WORK_ITEM WorkItem;
     PDEVICE_EXTENSION DeviceExtension;
     OBJECT_ATTRIBUTES ObjectAttributes;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &SafeVolumes,
@@ -508,6 +514,8 @@ QueryVolumeName(IN HANDLE RootDirectory,
     OBJECT_ATTRIBUTES ObjectAttributes;
     PFILE_NAME_INFORMATION FileNameInfo;
     PREPARSE_DATA_BUFFER ReparseDataBuffer;
+
+    UNREFERENCED_PARAMETER(ReparsePointInformation);
 
     if (!FileName)
     {
@@ -902,6 +910,8 @@ MigrateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
     OBJECT_ATTRIBUTES ObjectAttributes, MigrateAttributes;
 #define TEMP_BUFFER_SIZE 0x200
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     /* Extract context */
     WorkItem = Context;
     DeviceInformation = WorkItem->DeviceInformation;
@@ -1220,6 +1230,10 @@ QueryUniqueIdQueryRoutine(IN PWSTR ValueName,
     PMOUNTDEV_UNIQUE_ID IntUniqueId;
     PMOUNTDEV_UNIQUE_ID * UniqueId;
 
+    UNREFERENCED_PARAMETER(ValueName);
+    UNREFERENCED_PARAMETER(ValueType);
+    UNREFERENCED_PARAMETER(EntryContext);
+
     /* Sanity check */
     if (ValueLength >= 0x10000)
     {
@@ -1464,6 +1478,8 @@ DeleteDriveLetterRoutine(IN PWSTR ValueName,
     PMOUNTDEV_UNIQUE_ID UniqueId;
     UNICODE_STRING RegistryEntry;
 
+    UNREFERENCED_PARAMETER(EntryContext);
+
     if (ValueType != REG_BINARY)
     {
         return STATUS_SUCCESS;
@@ -1526,6 +1542,8 @@ DeleteNoDriveLetterEntryRoutine(IN PWSTR ValueName,
                                 IN PVOID EntryContext)
 {
     PMOUNTDEV_UNIQUE_ID UniqueId = Context;
+
+    UNREFERENCED_PARAMETER(EntryContext);
 
     /* Ensure we have correct input */
     if (ValueName[0] != L'#' || ValueType != REG_BINARY ||
