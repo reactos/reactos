@@ -194,6 +194,7 @@ BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry)
     *arg = cmd_realloc (oldarg, (*ac + 2) * sizeof (LPTSTR));
     if (NULL == *arg)
     {
+        cmd_free (q);
         *arg = oldarg;
         return FALSE;
     }
