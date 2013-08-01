@@ -984,7 +984,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Reserved_                                                  _SAL2_NAME(_Reserved_) _Group_([SA_Pre(Null=SA_Yes)])
 //#define _Result_nullonfailure_
 //#define _Result_zeroonfailure_
-//#define __inner_callback
+#define __inner_callback                                            [SAL_annotes(Name="__callback")]
 //#define _Ret_
 //#define _Ret_bound_
 //#define _Ret_bytecap_(size)
