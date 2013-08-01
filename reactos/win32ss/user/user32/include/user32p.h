@@ -52,7 +52,6 @@ extern const char *SPY_GetMsgName(UINT msg, HWND hWnd);
 extern const char *SPY_GetVKeyName(WPARAM wParam);
 extern void SPY_EnterMessage(INT iFlag, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern void SPY_ExitMessage(INT iFlag, HWND hwnd, UINT msg, LRESULT lReturn, WPARAM wParam, LPARAM lParam);
-extern int SPY_Init(void);
 
 /* definitions for usrapihk.c */
 BOOL FASTCALL BeginIfHookedUserApiHook(VOID);
