@@ -76,331 +76,344 @@ STORPORTAPI
 ULONG
 NTAPI
 StorPortInitialize(
-  IN PVOID Argument1,
-  IN PVOID Argument2,
-  IN PHW_INITIALIZATION_DATA HwInitializationData,
-  IN PVOID Unused);
+  _In_ PVOID Argument1,
+  _In_ PVOID Argument2,
+  _In_ PHW_INITIALIZATION_DATA HwInitializationData,
+  _In_opt_ PVOID Unused);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortFreeDeviceBase(
-  IN PVOID HwDeviceExtension,
-  IN PVOID MappedAddress);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PVOID MappedAddress);
 
 STORPORTAPI
 ULONG
 NTAPI
 StorPortGetBusData(
-  IN PVOID DeviceExtension,
-  IN ULONG BusDataType,
-  IN ULONG SystemIoBusNumber,
-  IN ULONG SlotNumber,
-  IN PVOID Buffer,
-  IN ULONG Length);
+  _In_ PVOID DeviceExtension,
+  _In_ ULONG BusDataType,
+  _In_ ULONG SystemIoBusNumber,
+  _In_ ULONG SlotNumber,
+  _Out_ _When_(Length != 0, _Out_writes_bytes_(Length)) PVOID Buffer,
+  _In_ ULONG Length);
 
 STORPORTAPI
 ULONG
 NTAPI
 StorPortSetBusDataByOffset(
-  IN PVOID DeviceExtension,
-  IN ULONG BusDataType,
-  IN ULONG SystemIoBusNumber,
-  IN ULONG SlotNumber,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ PVOID DeviceExtension,
+  _In_ ULONG BusDataType,
+  _In_ ULONG SystemIoBusNumber,
+  _In_ ULONG SlotNumber,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 STORPORTAPI
 PVOID
 NTAPI
 StorPortGetDeviceBase(
-  IN PVOID HwDeviceExtension,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG SystemIoBusNumber,
-  IN SCSI_PHYSICAL_ADDRESS IoAddress,
-  IN ULONG NumberOfBytes,
-  IN BOOLEAN InIoSpace);
+  _In_ PVOID HwDeviceExtension,
+  _In_ INTERFACE_TYPE BusType,
+  _In_ ULONG SystemIoBusNumber,
+  _In_ SCSI_PHYSICAL_ADDRESS IoAddress,
+  _In_ ULONG NumberOfBytes,
+  _In_ BOOLEAN InIoSpace);
 
 STORPORTAPI
 PVOID
 NTAPI
 StorPortGetLogicalUnit(
-  IN PVOID HwDeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun);
+  _In_ PVOID HwDeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun);
 
 STORPORTAPI
 PSCSI_REQUEST_BLOCK
 NTAPI
 StorPortGetSrb(
-  IN PVOID DeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun,
-  IN LONG QueueTag);
+  _In_ PVOID DeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun,
+  _In_ LONG QueueTag);
 
 STORPORTAPI
 STOR_PHYSICAL_ADDRESS
 NTAPI
 StorPortGetPhysicalAddress(
-  IN PVOID HwDeviceExtension,
-  IN PSCSI_REQUEST_BLOCK Srb,
-  IN PVOID VirtualAddress,
-  OUT ULONG *Length);
+  _In_ PVOID HwDeviceExtension,
+  _In_opt_ PSCSI_REQUEST_BLOCK Srb,
+  _In_ PVOID VirtualAddress,
+  _Out_ ULONG *Length);
 
 STORPORTAPI
 PVOID
 NTAPI
 StorPortGetVirtualAddress(
-  IN PVOID HwDeviceExtension,
-  IN STOR_PHYSICAL_ADDRESS PhysicalAddress);
+  _In_ PVOID HwDeviceExtension,
+  _In_ STOR_PHYSICAL_ADDRESS PhysicalAddress);
 
 STORPORTAPI
 PVOID
 NTAPI
 StorPortGetUncachedExtension(
-  IN PVOID HwDeviceExtension,
-  IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-  IN ULONG NumberOfBytes);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+  _In_ ULONG NumberOfBytes);
 
 STORPORTAPI
 VOID
 __cdecl
 StorPortNotification(
-  IN SCSI_NOTIFICATION_TYPE NotificationType,
-  IN PVOID HwDeviceExtension,
-  IN ...);
+  _In_ SCSI_NOTIFICATION_TYPE NotificationType,
+  _In_ PVOID HwDeviceExtension,
+  ...);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortLogError(
-  IN PVOID HwDeviceExtension,
-  IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun,
-  IN ULONG ErrorCode,
-  IN ULONG UniqueId);
+  _In_ PVOID HwDeviceExtension,
+  _In_opt_ PSCSI_REQUEST_BLOCK Srb,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun,
+  _In_ ULONG ErrorCode,
+  _In_ ULONG UniqueId);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortCompleteRequest(
-  IN PVOID HwDeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun,
-  IN UCHAR SrbStatus);
+  _In_ PVOID HwDeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun,
+  _In_ UCHAR SrbStatus);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortMoveMemory(
-  IN PVOID WriteBuffer,
-  IN PVOID ReadBuffer,
-  IN ULONG Length);
+  _Out_writes_bytes_(Length) PVOID WriteBuffer,
+  _In_reads_bytes_(Length) PVOID ReadBuffer,
+  _In_ ULONG Length);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortStallExecution(
-  IN ULONG Delay);
+  _In_ ULONG Delay);
 
 STORPORTAPI
 STOR_PHYSICAL_ADDRESS
 NTAPI
 StorPortConvertUlong64ToPhysicalAddress(
-  IN ULONG64 UlongAddress);
+  _In_ ULONG64 UlongAddress);
 
 STORPORTAPI
 ULONG64
 NTAPI
 StorPortConvertPhysicalAddressToUlong64(
-  IN STOR_PHYSICAL_ADDRESS Address);
+  _In_ STOR_PHYSICAL_ADDRESS Address);
 
 STORPORTAPI
 BOOLEAN
 NTAPI
 StorPortValidateRange(
-  IN PVOID HwDeviceExtension,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG SystemIoBusNumber,
-  IN STOR_PHYSICAL_ADDRESS IoAddress,
-  IN ULONG NumberOfBytes,
-  IN BOOLEAN InIoSpace);
+  _In_ PVOID HwDeviceExtension,
+  _In_ INTERFACE_TYPE BusType,
+  _In_ ULONG SystemIoBusNumber,
+  _In_ STOR_PHYSICAL_ADDRESS IoAddress,
+  _In_ ULONG NumberOfBytes,
+  _In_ BOOLEAN InIoSpace);
 
 STORPORTAPI
 VOID
 __cdecl
 StorPortDebugPrint(
-  IN ULONG DebugPrintLevel,
-  IN PCCHAR DebugMessage,
-  IN ...);
+  _In_ ULONG DebugPrintLevel,
+  _In_ PCCHAR DebugMessage,
+  ...);
 
 STORPORTAPI
 UCHAR
 NTAPI
 StorPortReadPortUchar(
-  IN PUCHAR Port);
+  _In_ PVOID HwDeviceExtension, 
+  _In_ PUCHAR Port);
 
 STORPORTAPI
 ULONG
 NTAPI
 StorPortReadPortUlong(
-  IN PULONG Port);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PULONG Port);
 
 STORPORTAPI
 USHORT
 NTAPI
 StorPortReadPortUshort(
-  IN PUSHORT Port);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PUSHORT Port);
 
 STORPORTAPI
 UCHAR
 NTAPI
 StorPortReadRegisterUchar(
-  IN PUCHAR Register);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PUCHAR Register);
 
 STORPORTAPI
 ULONG
 NTAPI
 StorPortReadRegisterUlong(
-  IN PULONG Register);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PULONG Register);
 
 STORPORTAPI
 USHORT
 NTAPI
 StorPortReadRegisterUshort(
-  IN PUSHORT Register);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PUSHORT Register);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortWritePortUchar(
-  IN PUCHAR Port,
-  IN UCHAR Value);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PUCHAR Port,
+  _In_ UCHAR Value);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortWritePortUlong(
-  IN PULONG Port,
-  IN ULONG Value);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PULONG Port,
+  _In_ ULONG Value);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortWritePortUshort(
-  IN PUSHORT Port,
-  IN USHORT Value);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PUSHORT Port,
+  _In_ USHORT Value);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortWriteRegisterUchar(
-  IN PUCHAR Port,
-  IN UCHAR Value);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PUCHAR Register,
+  _In_ UCHAR Value);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortWriteRegisterUlong(
-  IN PULONG Port,
-  IN ULONG Value);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PULONG Register,
+  _In_ ULONG Value);
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortWriteRegisterUshort(
-  IN PUSHORT Port,
-  IN USHORT Value);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PUSHORT Register,
+  _In_ USHORT Value);
 
 STORPORTAPI
 BOOLEAN
 NTAPI
 StorPortPauseDevice(
-  IN PVOID HwDeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun,
-  IN ULONG TimeOut);
+  _In_ PVOID HwDeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun,
+  _In_ ULONG TimeOut);
 
 STORPORTAPI
 BOOLEAN
 NTAPI
 StorPortResumeDevice(
-  IN PVOID HwDeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun);
+  _In_ PVOID HwDeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun);
 
 STORPORTAPI
 BOOLEAN
 NTAPI
 StorPortPause(
-  IN PVOID HwDeviceExtension,
-  IN ULONG TimeOut);
+  _In_ PVOID HwDeviceExtension,
+  _In_ ULONG TimeOut);
 
 STORPORTAPI
 BOOLEAN
 NTAPI
 StorPortResume(
-  IN PVOID HwDeviceExtension);
+  _In_ PVOID HwDeviceExtension);
 
 STORPORTAPI
 BOOLEAN
 NTAPI
 StorPortDeviceBusy(
-  IN PVOID HwDeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun,
-  IN ULONG RequestsToComplete);
+  _In_ PVOID HwDeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun,
+  _In_ ULONG RequestsToComplete);
 
 STORPORTAPI
 BOOLEAN
 NTAPI
 StorPortDeviceReady(
-  IN PVOID HwDeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun);
+  _In_ PVOID HwDeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun);
 
 STORPORTAPI
 BOOLEAN
 NTAPI
 StorPortBusy(
-  IN PVOID HwDeviceExtension,
-  IN ULONG RequestsToComplete);
+  _In_ PVOID HwDeviceExtension,
+  _In_ ULONG RequestsToComplete);
 
 STORPORTAPI
 BOOLEAN
 NTAPI
 StorPortReady(
-  IN PVOID HwDeviceExtension);
+  _In_ PVOID HwDeviceExtension);
 
 STORPORTAPI
 PSTOR_SCATTER_GATHER_LIST
 NTAPI
 StorPortGetScatterGatherList(
-  IN PVOID DeviceExtension,
-  IN PSCSI_REQUEST_BLOCK Srb);
+  _In_ PVOID DeviceExtension,
+  _In_ PSCSI_REQUEST_BLOCK Srb);
 
 typedef BOOLEAN
-(NTAPI *PSTOR_SYNCHRONIZED_ACCESS)(
-  IN PVOID HwDeviceExtension,
-  IN PVOID Context);
+(NTAPI STOR_SYNCHRONIZED_ACCESS)(
+  _In_ PVOID HwDeviceExtension,
+  _In_ PVOID Context);
+typedef STOR_SYNCHRONIZED_ACCESS *PSTOR_SYNCHRONIZED_ACCESS;
 
 STORPORTAPI
 VOID
 NTAPI
 StorPortSynchronizeAccess(
-  IN PVOID HwDeviceExtension,
-  IN PSTOR_SYNCHRONIZED_ACCESS SynchronizedAccessRoutine,
-  IN PVOID Context);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PSTOR_SYNCHRONIZED_ACCESS SynchronizedAccessRoutine,
+  _In_opt_ PVOID Context);
 
 #if DBG
 #define DebugPrint(x) StorPortDebugPrint x
