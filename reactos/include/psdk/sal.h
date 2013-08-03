@@ -1041,7 +1041,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Ret_z_count_(size)
 #define _Return_type_success_(expr)                                 _SAL2_NAME(_Return_type_success_) _Group_([SA_Success(Condition=_SA_SPECSTRIZE(expr))])
 #define _Scanf_format_string_                                       _SAL2_NAME(_Scanf_format_string_) _Group_([SA_FormatString(Style="scanf")])
-//#define _Scanf_s_format_string_
+#define _Scanf_s_format_string_                                     _SAL2_NAME(_Scanf_s_format_string_) _Group_([SA_FormatString(Style="scanf_s")])
 #define _Struct_size_bytes_(size)                                   _SAL2_NAME(_Struct_size_bytes_) _Group_(_Writable_bytes_(byteCount(size)))
 #define _Success_(expr)                                             _SAL2_NAME(_Success_) _Group_([SA_Success(Condition=_SA_SPECSTRIZE(expr))])
 #define _Unchanged_(expr)                                           _SAL2_NAME(_Unchanged_) _Group_([SAL_at(p1=_SA_SPECSTRIZE(expr))] _Group_(_Post_equal_to_(expr) _Const_))
