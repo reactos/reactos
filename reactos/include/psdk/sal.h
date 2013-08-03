@@ -482,7 +482,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_post_opt_valid_cap_(size)
 //#define _Deref_post_opt_valid_cap_c_(size)
 //#define _Deref_post_opt_valid_cap_x_(size)
-//#define _Deref_post_opt_z_
+#define _Deref_post_opt_z_                                          _SAL11_NAME(_Deref_post_opt_z_) _Group_([SA_Post(Deref=1,Null=SA_Maybe,Notref=1)] [SA_Post(Deref=1,NullTerminated=SA_Yes)] [SA_Post(Valid=SA_Yes)])
 //#define _Deref_post_opt_z_bytecap_(size)
 //#define _Deref_post_opt_z_bytecap_c_(size)
 //#define _Deref_post_opt_z_bytecap_x_(size)
@@ -538,7 +538,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_pre_opt_valid_cap_(size)
 //#define _Deref_pre_opt_valid_cap_c_(size)
 //#define _Deref_pre_opt_valid_cap_x_(size)
-//#define _Deref_pre_opt_z_
+#define _Deref_pre_opt_z_                                           _SAL11_NAME(_Deref_pre_opt_z_) _Group_([SA_Pre(Deref=1,Null=SA_Maybe,Notref=1)] [SA_Pre(Deref=1,NullTerminated=SA_Yes)] [SA_Pre(Valid=SA_Yes)])
 //#define _Deref_pre_opt_z_bytecap_(size)
 //#define _Deref_pre_opt_z_bytecap_c_(size)
 //#define _Deref_pre_opt_z_bytecap_x_(size)
@@ -582,7 +582,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_prepost_opt_valid_bytecap_x_(size)
 //#define _Deref_prepost_opt_valid_cap_(size)
 //#define _Deref_prepost_opt_valid_cap_x_(size)
-//#define _Deref_prepost_opt_z_
+#define _Deref_prepost_opt_z_                                       _SAL11_NAME(_Deref_prepost_opt_z_) _Group_(_Deref_pre_opt_z_ _Deref_post_opt_z_)
 //#define _Deref_prepost_opt_z_bytecap_(size)
 //#define _Deref_prepost_opt_z_cap_(size)
 //#define _Deref_prepost_valid_
