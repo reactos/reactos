@@ -32,7 +32,7 @@
 @ stdcall SamOpenDomain(ptr long ptr ptr)
 @ stdcall SamOpenGroup(ptr long long ptr)
 @ stdcall SamOpenUser(ptr long long ptr)
-@ stub SamQueryDisplayInformation
+@ stdcall SamQueryDisplayInformation(ptr long long long long ptr ptr ptr ptr)
 @ stdcall SamQueryInformationAlias(ptr long ptr)
 @ stdcall SamQueryInformationDomain(ptr long ptr)
 @ stdcall SamQueryInformationGroup(ptr long ptr)

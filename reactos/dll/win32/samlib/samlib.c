@@ -1411,6 +1411,92 @@ SamOpenUser(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamQueryDisplayInformation(IN SAM_HANDLE DomainHandle,
+                           IN DOMAIN_DISPLAY_INFORMATION DisplayInformation,
+                           IN ULONG Index,
+                           IN ULONG EntryCount,
+                           IN ULONG PreferredMaximumLength,
+                           OUT PULONG TotalAvailable,
+                           OUT PULONG TotalReturned,
+                           OUT PULONG ReturnedEntryCount,
+                           OUT PVOID *SortedBuffer)
+{
+    SAMPR_DISPLAY_INFO_BUFFER LocalBuffer;
+    NTSTATUS Status;
+
+    TRACE("(%p %lu %lu %lu %lu %p %p %p %p)\n",
+          DomainHandle, DisplayInformation, Index, EntryCount,
+          PreferredMaximumLength, TotalAvailable, TotalReturned,
+          ReturnedEntryCount, SortedBuffer);
+
+    if ((TotalAvailable == NULL) ||
+        (TotalReturned == NULL) ||
+        (ReturnedEntryCount == NULL) ||
+        (SortedBuffer == NULL))
+        return STATUS_INVALID_PARAMETER;
+
+    RpcTryExcept
+    {
+        Status = SamrQueryDisplayInformation3((SAMPR_HANDLE)DomainHandle,
+                                              DisplayInformation,
+                                              Index,
+                                              EntryCount,
+                                              PreferredMaximumLength,
+                                              TotalAvailable,
+                                              TotalReturned,
+                                              &LocalBuffer);
+        if (NT_SUCCESS(Status))
+        {
+            switch (DisplayInformation)
+            {
+                case DomainDisplayUser:
+                    *ReturnedEntryCount = LocalBuffer.UserInformation.EntriesRead;
+                    *SortedBuffer = LocalBuffer.UserInformation.Buffer;
+                    break;
+
+                case DomainDisplayMachine:
+                    *ReturnedEntryCount = LocalBuffer.MachineInformation.EntriesRead;
+                    *SortedBuffer = LocalBuffer.MachineInformation.Buffer;
+                    break;
+
+                case DomainDisplayGroup:
+                    *ReturnedEntryCount = LocalBuffer.GroupInformation.EntriesRead;
+                    *SortedBuffer = LocalBuffer.GroupInformation.Buffer;
+                    break;
+
+                case DomainDisplayOemUser:
+                    *ReturnedEntryCount = LocalBuffer.OemUserInformation.EntriesRead;
+                    *SortedBuffer = LocalBuffer.OemUserInformation.Buffer;
+                    break;
+
+                case DomainDisplayOemGroup:
+                    *ReturnedEntryCount = LocalBuffer.OemGroupInformation.EntriesRead;
+                    *SortedBuffer = LocalBuffer.OemGroupInformation.Buffer;
+                    break;
+
+                case DomainDisplayServer:
+                    /* FIXME */
+                    break;
+            }
+        }
+        else
+        {
+            *ReturnedEntryCount = 0;
+            *SortedBuffer = NULL;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamQueryInformationAlias(IN SAM_HANDLE AliasHandle,
                          IN ALIAS_INFORMATION_CLASS AliasInformationClass,
                          OUT PVOID *Buffer)

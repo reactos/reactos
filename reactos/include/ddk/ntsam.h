@@ -903,6 +903,18 @@ SamOpenUser(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamQueryDisplayInformation(IN SAM_HANDLE DomainHandle,
+                           IN DOMAIN_DISPLAY_INFORMATION DisplayInformation,
+                           IN ULONG Index,
+                           IN ULONG EntryCount,
+                           IN ULONG PreferredMaximumLength,
+                           OUT PULONG TotalAvailable,
+                           OUT PULONG TotalReturned,
+                           OUT PULONG ReturnedEntryCount,
+                           OUT PVOID *SortedBuffer);
+
+NTSTATUS
+NTAPI
 SamQueryInformationAlias(IN SAM_HANDLE AliasHandle,
                          IN ALIAS_INFORMATION_CLASS AliasInformationClass,
                          OUT PVOID *Buffer);
