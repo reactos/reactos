@@ -20,7 +20,7 @@
 @ stub EisaUpHalCoInstaller
 @ stub EisaUpHalPropPageProvider
 @ stub GenerateName
-@ stub HdcClassInstaller
+@ stdcall HdcClassInstaller(long ptr ptr)
 @ stdcall InitializeSetupActionLog(long)
 @ stdcall InstallLiveCD(ptr)
 @ stdcall InstallReactOS(ptr)

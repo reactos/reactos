@@ -11,7 +11,25 @@
 #define NDEBUG
 #include <debug.h>
 
-DWORD WINAPI
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+HdcClassInstaller(
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+{
+    return ERROR_DI_DO_DEFAULT;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
 KeyboardClassInstaller(
     IN DI_FUNCTION InstallFunction,
     IN HDEVINFO DeviceInfoSet,
@@ -25,7 +43,12 @@ KeyboardClassInstaller(
     }
 }
 
-DWORD WINAPI
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
 MouseClassInstaller(
     IN DI_FUNCTION InstallFunction,
     IN HDEVINFO DeviceInfoSet,
