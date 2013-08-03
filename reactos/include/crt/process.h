@@ -12,6 +12,7 @@
 #include <sys/types.h>
 
 #ifndef _POSIX_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,15 +27,33 @@ extern "C" {
 #define _WAIT_CHILD 0
 #define _WAIT_GRANDCHILD 1
 
-  _CRTIMP uintptr_t __cdecl _beginthread(void (__cdecl *_StartAddress) (void *),unsigned _StackSize,void *_ArgList);
+  _CRTIMP
+  uintptr_t
+  __cdecl
+  _beginthread(
+    _In_ void(__cdecl *_StartAddress) (void *),
+    _In_ unsigned _StackSize,
+    _In_opt_ void *_ArgList);
+
   _CRTIMP void __cdecl _endthread(void);
-  _CRTIMP uintptr_t __cdecl _beginthreadex(void *_Security,unsigned _StackSize,unsigned (__stdcall *_StartAddress) (void *),void *_ArgList,unsigned _InitFlag,unsigned *_ThrdAddr);
-  _CRTIMP void __cdecl _endthreadex(unsigned _Retval);
+
+  _CRTIMP
+  uintptr_t
+  __cdecl
+  _beginthreadex(
+    _In_opt_ void *_Security,
+    _In_ unsigned _StackSize,
+    _In_ unsigned(__stdcall *_StartAddress) (void *),
+    _In_opt_ void *_ArgList,
+    _In_ unsigned _InitFlag,
+    _Out_opt_ unsigned *_ThrdAddr);
+
+  _CRTIMP void __cdecl _endthreadex(_In_ unsigned _Retval);
 
 #ifndef _CRT_TERMINATE_DEFINED
 #define _CRT_TERMINATE_DEFINED
-  __declspec(noreturn) void __cdecl exit(int _Code);
-  _CRTIMP __declspec(noreturn) void __cdecl _exit(int _Code);
+  __declspec(noreturn) void __cdecl exit(_In_ int _Code);
+  _CRTIMP __declspec(noreturn) void __cdecl _exit(_In_ int _Code);
 
 #if __MINGW_GNUC_PREREQ(4,4)
 #pragma push_macro("abort")
@@ -47,55 +66,296 @@ extern "C" {
 #endif
 #endif
 
-  _CRTIMP void __cdecl _cexit(void);
-  _CRTIMP void __cdecl _c_exit(void);
+  __analysis_noreturn _CRTIMP void __cdecl _cexit(void);
+  __analysis_noreturn _CRTIMP void __cdecl _c_exit(void);
   _CRTIMP int __cdecl _getpid(void);
-  _CRTIMP intptr_t __cdecl _cwait(int *_TermStat,intptr_t _ProcHandle,int _Action);
-  _CRTIMP intptr_t __cdecl _execl(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _execle(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _execlp(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _execlpe(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _execv(const char *_Filename,const char *const *_ArgList);
-  _CRTIMP intptr_t __cdecl _execve(const char *_Filename,const char *const *_ArgList,const char *const *_Env);
-  _CRTIMP intptr_t __cdecl _execvp(const char *_Filename,const char *const *_ArgList);
-  _CRTIMP intptr_t __cdecl _execvpe(const char *_Filename,const char *const *_ArgList,const char *const *_Env);
-  _CRTIMP intptr_t __cdecl _spawnl(int _Mode,const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _spawnle(int _Mode,const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _spawnlp(int _Mode,const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _spawnlpe(int _Mode,const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _spawnv(int _Mode,const char *_Filename,const char *const *_ArgList);
-  _CRTIMP intptr_t __cdecl _spawnve(int _Mode,const char *_Filename,const char *const *_ArgList,const char *const *_Env);
-  _CRTIMP intptr_t __cdecl _spawnvp(int _Mode,const char *_Filename,const char *const *_ArgList);
-  _CRTIMP intptr_t __cdecl _spawnvpe(int _Mode,const char *_Filename,const char *const *_ArgList,const char *const *_Env);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _cwait(
+    _Out_opt_ int *_TermStat,
+    _In_ intptr_t _ProcHandle,
+    _In_ int _Action);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _execl(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _execle(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _execlp(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _execlpe(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _execv(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *const *_ArgList);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _execve(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *const *_ArgList,
+    _In_opt_z_ const char *const *_Env);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _execvp(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *const *_ArgList);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _execvpe(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *const *_ArgList,
+    _In_opt_z_ const char *const *_Env);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _spawnl(
+    _In_ int _Mode,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _spawnle(
+    _In_ int _Mode,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _spawnlp(
+    _In_ int _Mode,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _spawnlpe(
+    _In_ int _Mode,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _spawnv(
+    _In_ int _Mode,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *const *_ArgList);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _spawnve(
+    _In_ int _Mode,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *const *_ArgList,
+    _In_opt_z_ const char *const *_Env);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _spawnvp(
+    _In_ int _Mode,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *const *_ArgList);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _spawnvpe(
+    _In_ int _Mode,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *const *_ArgList,
+    _In_opt_z_ const char *const *_Env);
 
 #ifndef _CRT_SYSTEM_DEFINED
 #define _CRT_SYSTEM_DEFINED
-  int __cdecl system(const char *_Command);
+  int __cdecl system(_In_opt_z_ const char *_Command);
 #endif
 
 #ifndef _WPROCESS_DEFINED
 #define _WPROCESS_DEFINED
-  _CRTIMP intptr_t __cdecl _wexecl(const wchar_t *_Filename,const wchar_t *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _wexecle(const wchar_t *_Filename,const wchar_t *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _wexeclp(const wchar_t *_Filename,const wchar_t *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _wexeclpe(const wchar_t *_Filename,const wchar_t *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _wexecv(const wchar_t *_Filename,const wchar_t *const *_ArgList);
-  _CRTIMP intptr_t __cdecl _wexecve(const wchar_t *_Filename,const wchar_t *const *_ArgList,const wchar_t *const *_Env);
-  _CRTIMP intptr_t __cdecl _wexecvp(const wchar_t *_Filename,const wchar_t *const *_ArgList);
-  _CRTIMP intptr_t __cdecl _wexecvpe(const wchar_t *_Filename,const wchar_t *const *_ArgList,const wchar_t *const *_Env);
-  _CRTIMP intptr_t __cdecl _wspawnl(int _Mode,const wchar_t *_Filename,const wchar_t *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _wspawnle(int _Mode,const wchar_t *_Filename,const wchar_t *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _wspawnlp(int _Mode,const wchar_t *_Filename,const wchar_t *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _wspawnlpe(int _Mode,const wchar_t *_Filename,const wchar_t *_ArgList,...);
-  _CRTIMP intptr_t __cdecl _wspawnv(int _Mode,const wchar_t *_Filename,const wchar_t *const *_ArgList);
-  _CRTIMP intptr_t __cdecl _wspawnve(int _Mode,const wchar_t *_Filename,const wchar_t *const *_ArgList,const wchar_t *const *_Env);
-  _CRTIMP intptr_t __cdecl _wspawnvp(int _Mode,const wchar_t *_Filename,const wchar_t *const *_ArgList);
-  _CRTIMP intptr_t __cdecl _wspawnvpe(int _Mode,const wchar_t *_Filename,const wchar_t *const *_ArgList,const wchar_t *const *_Env);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wexecl(
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wexecle(
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wexeclp(
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wexeclpe(
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wexecv(
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *const *_ArgList);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wexecve(
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *const *_ArgList,
+    _In_opt_z_ const wchar_t *const *_Env);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wexecvp(
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *const *_ArgList);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wexecvpe(
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *const *_ArgList,
+    _In_opt_z_ const wchar_t *const *_Env);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wspawnl(
+    _In_ int _Mode,
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wspawnle(
+    _In_ int _Mode,
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wspawnlp(
+    _In_ int _Mode,
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wspawnlpe(
+    _In_ int _Mode,
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wspawnv(
+    _In_ int _Mode,
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *const *_ArgList);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wspawnve(
+    _In_ int _Mode,
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *const *_ArgList,
+    _In_opt_z_ const wchar_t *const *_Env);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wspawnvp(
+    _In_ int _Mode,
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *const *_ArgList);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _wspawnvpe(
+    _In_ int _Mode,
+    _In_z_ const wchar_t *_Filename,
+    _In_z_ const wchar_t *const *_ArgList,
+    _In_opt_z_ const wchar_t *const *_Env);
+
 #ifndef _CRT_WSYSTEM_DEFINED
 #define _CRT_WSYSTEM_DEFINED
-  _CRTIMP int __cdecl _wsystem(const wchar_t *_Command);
-#endif
-#endif
+  _CRTIMP int __cdecl _wsystem(_In_opt_z_ const wchar_t *_Command);
+#endif /* _CRT_WSYSTEM_DEFINED */
+
+#endif /* _WPROCESS_DEFINED */
 
   void __cdecl __security_init_cookie(void);
 #if (defined(_X86_) && !defined(__x86_64))
@@ -107,25 +367,68 @@ extern "C" {
 #endif
   extern uintptr_t __security_cookie;
 
-  intptr_t __cdecl _loaddll(char *_Filename);
-  int __cdecl _unloaddll(intptr_t _Handle);
-  int (__cdecl *__cdecl _getdllprocaddr(intptr_t _Handle,char *_ProcedureName,intptr_t _Ordinal))(void);
+  intptr_t __cdecl _loaddll(_In_z_ char *_Filename);
+  int __cdecl _unloaddll(_In_ intptr_t _Handle);
+  int (__cdecl *__cdecl _getdllprocaddr(_In_ intptr_t _Handle, _In_opt_z_ char *_ProcedureName, _In_ intptr_t _Ordinal))(void);
 
 #ifdef _DECL_DLLMAIN
-#ifdef _WIN32
-  WINBOOL WINAPI DllMain(HANDLE _HDllHandle,DWORD _Reason,LPVOID _Reserved);
-  WINBOOL WINAPI _CRT_INIT(HANDLE _HDllHandle,DWORD _Reason,LPVOID _Reserved);
-  WINBOOL WINAPI _wCRT_INIT(HANDLE _HDllHandle,DWORD _Reason,LPVOID _Reserved);
-  extern WINBOOL (WINAPI *const _pRawDllMain)(HANDLE,DWORD,LPVOID);
-#else
-  int __stdcall DllMain(void *_HDllHandle,unsigned _Reason,void *_Reserved);
-  int __stdcall _CRT_INIT(void *_HDllHandle,unsigned _Reason,void *_Reserved);
-  int __stdcall _wCRT_INIT(void *_HDllHandle,unsigned _Reason,void *_Reserved);
-  extern int (__stdcall *const _pRawDllMain)(void *,unsigned,void *);
-#endif
-#endif
 
-#ifndef	NO_OLDNAMES
+#ifdef _WIN32
+
+  WINBOOL
+  WINAPI
+  DllMain(
+    _In_ HANDLE _HDllHandle,
+    _In_ DWORD _Reason,
+    _In_opt_ LPVOID _Reserved);
+
+  WINBOOL
+  WINAPI
+  _CRT_INIT(
+    _In_ HANDLE _HDllHandle,
+    _In_ DWORD _Reason,
+    _In_opt_ LPVOID _Reserved);
+
+  WINBOOL
+  WINAPI
+  _wCRT_INIT(
+    _In_ HANDLE _HDllHandle,
+    _In_ DWORD _Reason,
+    _In_opt_ LPVOID _Reserved);
+
+  extern WINBOOL (WINAPI *const _pRawDllMain)(HANDLE,DWORD,LPVOID);
+
+#else /* _WIN32 */
+
+  int
+  __stdcall
+  DllMain(
+    _In_ void *_HDllHandle,
+    _In_ unsigned _Reason,
+    _In_opt_ void *_Reserved);
+
+  int
+  __stdcall
+  _CRT_INIT(
+    _In_ void *_HDllHandle,
+    _In_ unsigned _Reason,
+    _In_opt_ void *_Reserved);
+
+  int
+  __stdcall
+  _wCRT_INIT(
+    _In_ void *_HDllHandle,
+    _In_ unsigned _Reason,
+    _In_opt_ void *_Reserved);
+
+  extern int (__stdcall *const _pRawDllMain)(void *,unsigned,void *);
+
+#endif /* _WIN32 */
+
+#endif /* _DECL_DLLMAIN */
+
+#ifndef NO_OLDNAMES
+
 #define P_WAIT _P_WAIT
 #define P_NOWAIT _P_NOWAIT
 #define P_OVERLAY _P_OVERLAY
@@ -135,46 +438,233 @@ extern "C" {
 #define WAIT_CHILD _WAIT_CHILD
 #define WAIT_GRANDCHILD _WAIT_GRANDCHILD
 
-  _CRTIMP intptr_t __cdecl cwait(int *_TermStat,intptr_t _ProcHandle,int _Action);
+  _CRTIMP
+  intptr_t
+  __cdecl
+  cwait(
+    _Out_opt_ int *_TermStat,
+    _In_ intptr_t _ProcHandle,
+    _In_ int _Action);
+
 #ifdef __GNUC__
-  _CRTIMP int __cdecl execl(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP int __cdecl execle(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP int __cdecl execlp(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP int __cdecl execlpe(const char *_Filename,const char *_ArgList,...);
-#else
-  _CRTIMP intptr_t __cdecl execl(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl execle(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl execlp(const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl execlpe(const char *_Filename,const char *_ArgList,...);
-#endif
-  _CRTIMP intptr_t __cdecl spawnl(int,const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl spawnle(int,const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl spawnlp(int,const char *_Filename,const char *_ArgList,...);
-  _CRTIMP intptr_t __cdecl spawnlpe(int,const char *_Filename,const char *_ArgList,...);
+
+  _CRTIMP
+  int
+  __cdecl
+  execl(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  int
+  __cdecl
+  execle(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  int
+  __cdecl
+  execlp(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  int
+  __cdecl
+  execlpe(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+#else /* __GNUC__ */
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  execl(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  execle(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  execlp(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  execlpe(
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+#endif /* __GNUC__ */
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  spawnl(
+    _In_ int,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  spawnle(
+    _In_ int,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  spawnlp(
+    _In_ int,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  spawnlpe(
+    _In_ int,
+    _In_z_ const char *_Filename,
+    _In_z_ const char *_ArgList,
+    ...);
+
   _CRTIMP int __cdecl getpid(void);
+
 #ifdef __GNUC__
+
   /* Those methods are predefined by gcc builtins to return int. So to prevent
      stupid warnings, define them in POSIX way.  This is save, because those
      methods do not return in success case, so that the return value is not
      really dependent to its scalar width.  */
-  _CRTIMP int __cdecl execv(const char *_Filename,char *const _ArgList[]);
-  _CRTIMP int __cdecl execve(const char *_Filename,char *const _ArgList[],char *const _Env[]);
-  _CRTIMP int __cdecl execvp(const char *_Filename,char *const _ArgList[]);
-  _CRTIMP int __cdecl execvpe(const char *_Filename,char *const _ArgList[],char *const _Env[]);
-#else
-  _CRTIMP intptr_t __cdecl execv(const char *_Filename,char *const _ArgList[]);
-  _CRTIMP intptr_t __cdecl execve(const char *_Filename,char *const _ArgList[],char *const _Env[]);
-  _CRTIMP intptr_t __cdecl execvp(const char *_Filename,char *const _ArgList[]);
-  _CRTIMP intptr_t __cdecl execvpe(const char *_Filename,char *const _ArgList[],char *const _Env[]);
-#endif
-  _CRTIMP intptr_t __cdecl spawnv(int,const char *_Filename,char *const _ArgList[]);
-  _CRTIMP intptr_t __cdecl spawnve(int,const char *_Filename,char *const _ArgList[],char *const _Env[]);
-  _CRTIMP intptr_t __cdecl spawnvp(int,const char *_Filename,char *const _ArgList[]);
-  _CRTIMP intptr_t __cdecl spawnvpe(int,const char *_Filename,char *const _ArgList[],char *const _Env[]);
-#endif
+
+  _CRTIMP
+  int
+  __cdecl
+  execv(
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[]);
+
+  _CRTIMP
+  int
+  __cdecl
+  execve(
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[],
+    _In_opt_z_ char *const _Env[]);
+
+  _CRTIMP
+  int
+  __cdecl
+  execvp(
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[]);
+
+  _CRTIMP
+  int
+  __cdecl
+  execvpe(
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[],
+    _In_opt_z_ char *const _Env[]);
+
+#else /* __GNUC__ */
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  execv(
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[]);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  execve(
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[],
+    _In_opt_z_ char *const _Env[]);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  execvp(
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[]);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  execvpe(
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[],
+    _In_opt_z_ char *const _Env[]);
+
+#endif /* __GNUC__ */
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  spawnv(
+    _In_ int,
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[]);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  spawnve(
+    _In_ int,
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[],
+    _In_opt_z_ char *const _Env[]);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  spawnvp(
+    _In_ int,
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[]);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  spawnvpe(
+    _In_ int,
+    _In_z_ const char *_Filename,
+    _In_z_ char *const _ArgList[],
+    _In_opt_z_ char *const _Env[]);
+
+#endif /* NO_OLDNAMES */
 
 #ifdef __cplusplus
 }
 #endif
-#endif
-#endif
+
+#endif /* _POSIX_ */
+
+#endif /* _INC_PROCESS */
