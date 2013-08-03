@@ -113,6 +113,42 @@ PSAMPR_SERVER_NAME_unbind(PSAMPR_SERVER_NAME pszSystemName,
 
 
 NTSTATUS
+SampCheckPassword(IN SAMPR_HANDLE UserHandle,
+                  IN PUNICODE_STRING Password)
+{
+    USER_DOMAIN_PASSWORD_INFORMATION DomainPasswordInformation;
+    ULONG PasswordLength;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", UserHandle, Password);
+
+    /* Get the domain password information */
+    Status = SamrGetUserDomainPasswordInformation(UserHandle,
+                                                  &DomainPasswordInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrGetUserDomainPasswordInformation failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    PasswordLength = (ULONG)(Password->Length / sizeof(WCHAR));
+
+    /* Fail if the password is too short or too long */
+    if ((PasswordLength < DomainPasswordInformation.MinPasswordLength) ||
+        (PasswordLength > 256))
+        return STATUS_PASSWORD_RESTRICTION;
+
+    /* Check the password complexity */
+    if (DomainPasswordInformation.PasswordProperties & DOMAIN_PASSWORD_COMPLEX)
+    {
+        /* FIXME */
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 NTAPI
 SamAddMemberToAlias(IN SAM_HANDLE AliasHandle,
                     IN PSID MemberId)
@@ -1725,6 +1761,7 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
 {
     PSAMPR_USER_SET_PASSWORD_INFORMATION PasswordBuffer;
     SAMPR_USER_INTERNAL1_INFORMATION Internal1Buffer;
+    PUSER_ALL_INFORMATION AllBuffer;
     OEM_STRING LmPwdString;
     CHAR LmPwdBuffer[15];
     NTSTATUS Status;
@@ -1735,6 +1772,14 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
     if (UserInformationClass == UserSetPasswordInformation)
     {
         PasswordBuffer = (PSAMPR_USER_SET_PASSWORD_INFORMATION)Buffer;
+
+        Status = SampCheckPassword(UserHandle,
+                                   (PUNICODE_STRING)&PasswordBuffer->Password);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SampCheckPassword failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
 
         /* Calculate the NT hash value of the passord */
         Status = SystemFunction007((PUNICODE_STRING)&PasswordBuffer->Password,
@@ -1784,6 +1829,21 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
         {
             TRACE("SamrSetInformation() failed (Status 0x%08lx)\n", Status);
             return Status;
+        }
+    }
+    else if (UserInformationClass == UserAllInformation)
+    {
+        AllBuffer = (PUSER_ALL_INFORMATION)Buffer;
+
+        if (AllBuffer->WhichFields & (USER_ALL_LMPASSWORDPRESENT | USER_ALL_NTPASSWORDPRESENT))
+        {
+            Status = SampCheckPassword(UserHandle,
+                                       &AllBuffer->NtPassword);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("SampCheckPassword failed (Status 0x%08lx)\n", Status);
+                return Status;
+            }
         }
     }
 
