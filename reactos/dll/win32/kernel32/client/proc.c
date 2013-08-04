@@ -62,22 +62,27 @@ StuffStdHandle(IN HANDLE ProcessHandle,
     HANDLE DuplicatedHandle;
     SIZE_T Dummy;
 
-    /* Duplicate the handle */
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               StandardHandle,
-                               ProcessHandle,
-                               &DuplicatedHandle,
-                               0,
-                               0,
-                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES);
-    if (NT_SUCCESS(Status))
+    /* Is there a handle to duplicate? */
+    if (StandardHandle)
     {
-        /* Write it */
-        NtWriteVirtualMemory(ProcessHandle,
-                             Address,
-                             &DuplicatedHandle,
-                             sizeof(HANDLE),
-                             &Dummy);
+        /* Duplicate it */
+        Status = NtDuplicateObject(NtCurrentProcess(),
+                                   StandardHandle,
+                                   ProcessHandle,
+                                   &DuplicatedHandle,
+                                   0,
+                                   0,
+                                   DUPLICATE_SAME_ACCESS |
+                                   DUPLICATE_SAME_ATTRIBUTES);
+        if (NT_SUCCESS(Status))
+        {
+            /* Write it */
+            NtWriteVirtualMemory(ProcessHandle,
+                                 Address,
+                                 &DuplicatedHandle,
+                                 sizeof(HANDLE),
+                                 &Dummy);
+        }
     }
 }
 
@@ -4139,25 +4144,25 @@ StartScan:
             /* Duplicate standard input unless it's a console handle */
             if (!IsConsoleHandle(Peb->ProcessParameters->StandardInput))
             {
-                StuffStdHandle(&ProcessParameters->StandardInput,
-                               ProcessHandle,
-                               Peb->ProcessParameters->StandardInput);
+                StuffStdHandle(ProcessHandle,
+                               Peb->ProcessParameters->StandardInput,
+                               &ProcessParameters->StandardInput);
             }
 
             /* Duplicate standard output unless it's a console handle */
             if (!IsConsoleHandle(Peb->ProcessParameters->StandardOutput))
             {
-                StuffStdHandle(&ProcessParameters->StandardOutput,
-                               ProcessHandle,
-                               Peb->ProcessParameters->StandardOutput);
+                StuffStdHandle(ProcessHandle,
+                               Peb->ProcessParameters->StandardOutput,
+                               &ProcessParameters->StandardOutput);
             }
 
             /* Duplicate standard error unless it's a console handle */
             if (!IsConsoleHandle(Peb->ProcessParameters->StandardError))
             {
-                StuffStdHandle(&ProcessParameters->StandardError,
-                               ProcessHandle,
-                               Peb->ProcessParameters->StandardError);
+                StuffStdHandle(ProcessHandle,
+                               Peb->ProcessParameters->StandardError,
+                               &ProcessParameters->StandardError);
             }
         }
     }
