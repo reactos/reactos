@@ -2733,11 +2733,11 @@ StartScan:
                 /* This was a directory, fail later on */
                 Length = 0;
             }
-        }
-        else
-        {
-            /* It's a file! */
-            Length++;
+            else
+            {
+                /* It's a file! */
+                Length++;
+            }
         }
 
         DPRINT1("Length: %lx Buffer: %S\n", Length, NameBuffer);
