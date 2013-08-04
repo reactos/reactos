@@ -145,7 +145,7 @@ TDI_STATUS InfoTdiSetArptableMIB(PIP_INTERFACE IF, PVOID Buffer, UINT BufferSize
 
     AddrInitIPv4(&Address, ArpEntry->LogAddr);
 
-    if ((NCE = NBLocateNeighbor(&Address)))
+    if ((NCE = NBLocateNeighbor(&Address, IF)))
         NBRemoveNeighbor(NCE);
      
     if (NBAddNeighbor(IF,
