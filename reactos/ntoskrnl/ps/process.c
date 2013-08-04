@@ -369,7 +369,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
             "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
 
     /* Validate flags */
-    if (Flags & ~PS_ALL_FLAGS) return STATUS_INVALID_PARAMETER;
+    if (Flags & ~PROCESS_CREATE_FLAGS_LEGAL_MASK) return STATUS_INVALID_PARAMETER;
 
     /* Check for parent */
     if (ParentProcess)
@@ -508,7 +508,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         Process->DebugPort = DebugObject;
 
         /* Check if the caller doesn't want the debug stuff inherited */
-        if (Flags & PS_NO_DEBUG_INHERIT)
+        if (Flags & PROCESS_CREATE_FLAGS_NO_DEBUG_INHERIT)
         {
             /* Set the process flag */
             InterlockedOr((PLONG)&Process->Flags, PSF_NO_DEBUG_INHERIT_BIT);
@@ -595,7 +595,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         }
 
         /* Initialize object manager for the process */
-        Status = ObInitProcess(Flags & PS_INHERIT_HANDLES ? Parent : NULL,
+        Status = ObInitProcess(Flags & PROCESS_CREATE_FLAGS_INHERIT_HANDLES ?
+                               Parent : NULL,
                                Process);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
     }
@@ -643,7 +644,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         else
         {
             /* This is the initial system process */
-            Flags &= ~PS_LARGE_PAGES;
+            Flags &= ~PROCESS_CREATE_FLAGS_LARGE_PAGES;
             Status = MmInitializeProcessAddressSpace(Process,
                                                      NULL,
                                                      NULL,
@@ -1347,9 +1348,9 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
             "Parent: %p Attributes: %p\n", ParentProcess, ObjectAttributes);
 
     /* Set new-style flags */
-    if ((ULONG)SectionHandle & 1) Flags = PS_REQUEST_BREAKAWAY;
-    if ((ULONG)DebugPort & 1) Flags |= PS_NO_DEBUG_INHERIT;
-    if (InheritObjectTable) Flags |= PS_INHERIT_HANDLES;
+    if ((ULONG)SectionHandle & 1) Flags |= PROCESS_CREATE_FLAGS_BREAKAWAY;
+    if ((ULONG)DebugPort & 1) Flags |= PROCESS_CREATE_FLAGS_NO_DEBUG_INHERIT;
+    if (InheritObjectTable) Flags |= PROCESS_CREATE_FLAGS_INHERIT_HANDLES;
 
     /* Call the new API */
     return NtCreateProcessEx(ProcessHandle,
