@@ -230,6 +230,10 @@ NetpNtStatusToApiStatus(NTSTATUS Status)
             ApiStatus = NERR_BadUsername;
             break;
 
+        case STATUS_PASSWORD_RESTRICTION:
+            ApiStatus = NERR_PasswordTooShort;
+            break;
+
         default:
             ApiStatus = RtlNtStatusToDosError(Status);
             break;
