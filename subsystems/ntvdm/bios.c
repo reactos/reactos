@@ -12,6 +12,7 @@
 
 #include "bios.h"
 #include "emulator.h"
+#include "vga.h"
 #include "pic.h"
 #include "ps2.h"
 #include "timer.h"
@@ -22,81 +23,138 @@ static PBIOS_DATA_AREA Bda;
 static BYTE BiosKeyboardMap[256];
 static HANDLE BiosConsoleInput = INVALID_HANDLE_VALUE;
 static HANDLE BiosConsoleOutput = INVALID_HANDLE_VALUE;
-static HANDLE BiosGraphicsOutput = NULL;
-static LPVOID ConsoleFramebuffer = NULL;
-static HANDLE ConsoleMutex = NULL;
-static BYTE CurrentVideoMode, CurrentVideoPage;
-static BOOLEAN VideoNeedsUpdate = TRUE;
-static SMALL_RECT UpdateRectangle = { 0, 0, 0, 0 };
 static CONSOLE_SCREEN_BUFFER_INFO BiosSavedBufferInfo;
 
-static VIDEO_MODE VideoModes[] =
+static BYTE VideoMode_40x25_text[] =
 {
-    /* Width | Height | Text | Bpp   | Gray | Pages | Segment */
-    { 40,       25,     TRUE,   16,     TRUE,   8,      0xB800}, /* Mode 00h */
-    { 40,       25,     TRUE,   16,     FALSE,  8,      0xB800}, /* Mode 01h */
-    { 80,       25,     TRUE,   16,     TRUE,   8,      0xB800}, /* Mode 02h */
-    { 80,       25,     TRUE,   16,     FALSE,  8,      0xB800}, /* Mode 03h */
-    { 320,      200,    FALSE,  2,      FALSE,  1,      0xB800}, /* Mode 04h */
-    { 320,      200,    FALSE,  2,      TRUE,   1,      0xB800}, /* Mode 05h */
-    { 640,      200,    FALSE,  1,      FALSE,  1,      0xB800}, /* Mode 06h */
-    { 80,       25,     TRUE,   8,      FALSE,  1,      0xB000}, /* Mode 07h */
-    { 0,        0,      FALSE,  0,      FALSE,  0,      0x0000}, /* Mode 08h - not used */
-    { 0,        0,      FALSE,  0,      FALSE,  0,      0x0000}, /* Mode 09h - not used */
-    { 0,        0,      FALSE,  0,      FALSE,  0,      0x0000}, /* Mode 0Ah - not used */
-    { 0,        0,      FALSE,  0,      FALSE,  0,      0x0000}, /* Mode 0Bh - not used */
-    { 0,        0,      FALSE,  0,      FALSE,  0,      0x0000}, /* Mode 0Ch - not used */
-    { 320,      200,    FALSE,  4,      FALSE,  1,      0xA000}, /* Mode 0Dh */
-    { 640,      200,    FALSE,  4,      FALSE,  1,      0xA000}, /* Mode 0Eh */
-    { 640,      350,    FALSE,  1,      FALSE,  1,      0xA000}, /* Mode 0Fh */
-    { 640,      350,    FALSE,  4,      FALSE,  1,      0xA000}, /* Mode 10h */
-    { 640,      480,    FALSE,  1,      FALSE,  1,      0xA000}, /* Mode 11h */
-    { 640,      480,    FALSE,  4,      FALSE,  1,      0xA000}, /* Mode 12h */
-    { 320,      200,    FALSE,  8,      FALSE,  1,      0xA000}  /* Mode 13h */
+    /* Miscellaneous Register */
+    0x67,
+
+    /* Sequencer Registers */
+    0x03, 0x08, 0x03, 0x00, 0x02,
+
+    /* GC Registers */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x0F, 0xFF,
+
+    /* CRTC Registers */
+    0x2D, 0x27, 0x28, 0x90, 0x2B, 0xA0, 0xBF, 0x1F, 0x00, 0x4F, 0x0E, 0x0F,
+    0x00, 0x00, 0x00, 0x00, 0x9C, 0x8E, 0x8F, 0x14, 0x1F, 0x96, 0xB9, 0xA3,
+    0xFF,
+
+    /* AC Registers */
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B,
+    0x3C, 0x3D, 0x3E, 0x3F, 0x0C, 0x01, 0x0F, 0x13, 0x00
+};
+
+static BYTE VideoMode_80x25_text[] =
+{
+    /* Miscellaneous Register */
+    0x67,
+
+    /* Sequencer Registers */
+    0x03, 0x00, 0x03, 0x00, 0x02,
+
+    /* GC Registers */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x0F, 0xFF,
+
+    /* CRTC Registers */
+    0x5F, 0x4F, 0x50, 0x82, 0x55, 0x81, 0xBF, 0x1F, 0x00, 0x4F, 0x0E, 0x0F,
+    0x00, 0x00, 0x00, 0x00, 0x9C, 0x8E, 0x8F, 0x28, 0x1F, 0x96, 0xB9, 0xA3,
+    0xFF,
+
+    /* AC Registers */
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B,
+    0x3C, 0x3D, 0x3E, 0x3F, 0x0C, 0x01, 0x0F, 0x13, 0x00
+};
+
+static BYTE VideoMode_320x200_4color[] =
+{
+    /* Miscellaneous Register */
+    0x63,
+
+    /* Sequencer Registers */
+    0x03, 0x09, 0x03, 0x00, 0x02,
+
+    /* GC Registers */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x0F, 0x0F, 0xFF,
+
+    /* CRTC Registers */
+    0x2D, 0x27, 0x28, 0x90, 0x2B, 0x80, 0xBF, 0x1F, 0x00, 0xC1, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x9C, 0x8E, 0x8F, 0x14, 0x00, 0x96, 0xB9, 0xA2,
+    0xFF,
+
+    /* AC Registers */
+    0x00, 0x13, 0x15, 0x17, 0x02, 0x04, 0x06, 0x07, 0x10, 0x11, 0x12, 0x13,
+    0x14, 0x15, 0x16, 0x17, 0x01, 0x00, 0x03, 0x00, 0x00
+};
+
+static BYTE VideoMode_640x480_16color[] =
+{
+    /* Miscellaneous Register */
+    0xE3,
+
+    /* Sequencer Registers */
+    0x03, 0x01, 0x08, 0x00, 0x06,
+
+    /* GC Registers */
+    0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x05, 0x0F, 0xFF,
+
+    /* CRTC Registers */
+    0x5F, 0x4F, 0x50, 0x82, 0x54, 0x80, 0x0B, 0x3E, 0x00, 0x40, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xEA, 0x0C, 0xDF, 0x28, 0x00, 0xE7, 0x04, 0xE3,
+    0xFF,
+
+    /* AC Registers */
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B,
+    0x3C, 0x3D, 0x3E, 0x3F, 0x01, 0x00, 0x0F, 0x00, 0x00
+};
+
+static BYTE VideoMode_320x200_256color[] =
+{
+    /* Miscellaneous Register */
+    0x63,
+
+    /* Sequencer Registers */
+    0x03, 0x01, 0x0F, 0x00, 0x0E,
+
+    /* GC Registers */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF,
+
+    /* CRTC Registers */
+    0x5F, 0x4F, 0x50, 0x82, 0x54, 0x80, 0xBF, 0x1F, 0x00, 0x41, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x9C, 0x0E, 0x8F, 0x28, 0x40, 0x96, 0xB9, 0xA3,
+    0xFF,
+
+    /* AC Registers */
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,
+    0x0C, 0x0D, 0x0E, 0x0F, 0x41, 0x00, 0x0F, 0x00, 0x00
+};
+
+static LPBYTE VideoModes[] =
+{
+    VideoMode_40x25_text,       /* Mode 00h */
+    VideoMode_40x25_text,       /* Mode 01h */
+    VideoMode_80x25_text,       /* Mode 02h */
+    VideoMode_80x25_text,       /* Mode 03h */
+    VideoMode_320x200_4color,   /* Mode 04h */
+    VideoMode_320x200_4color,   /* Mode 05h */
+    NULL,                       /* Mode 06h */
+    NULL,                       /* Mode 07h */
+    NULL,                       /* Mode 08h */
+    NULL,                       /* Mode 09h */
+    NULL,                       /* Mode 0Ah */
+    NULL,                       /* Mode 0Bh */
+    NULL,                       /* Mode 0Ch */
+    NULL,                       /* Mode 0Dh */
+    NULL,                       /* Mode 0Eh */
+    NULL,                       /* Mode 0Fh */
+    NULL,                       /* Mode 10h */
+    NULL,                       /* Mode 11h */
+    VideoMode_640x480_16color,  /* Mode 12h */
+    VideoMode_320x200_256color, /* Mode 13h */
 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-static DWORD BiosGetVideoPageSize(VOID)
-{
-    INT i;
-    DWORD BufferSize = VideoModes[CurrentVideoMode].Width
-                       * VideoModes[CurrentVideoMode].Height
-                       * VideoModes[CurrentVideoMode].Bpp
-                       / 8;
-    
-    for (i = 0; i < 32; i++) if ((1 << i) >= BufferSize) break;
-
-    return 1 << i;
-}
-
-static BYTE BiosVideoAddressToPage(ULONG Address)
-{
-    return (Address - BiosGetVideoMemoryStart())
-            / BiosGetVideoPageSize();
-}
-
-static COORD BiosVideoAddressToCoord(ULONG Address)
-{
-    COORD Result = {0, 0};
-    DWORD PageStart = BiosVideoAddressToPage(Address) * BiosGetVideoPageSize();
-    DWORD Offset = Address - BiosGetVideoMemoryStart() - PageStart;
-
-    if (VideoModes[CurrentVideoMode].Text)
-    {
-        Result.X = (Offset / sizeof(WORD)) % VideoModes[CurrentVideoMode].Width;
-        Result.Y = (Offset / sizeof(WORD)) / VideoModes[CurrentVideoMode].Width;
-    }
-    else
-    {
-        Result.X = ((Offset * 8) / VideoModes[CurrentVideoMode].Bpp)
-                   % VideoModes[CurrentVideoMode].Width;
-        Result.Y = ((Offset * 8) / VideoModes[CurrentVideoMode].Bpp)
-                   / VideoModes[CurrentVideoMode].Width;
-    }
-
-    return Result;
-}
 
 static BOOLEAN BiosKbdBufferPush(WORD Data)
 {
@@ -154,205 +212,125 @@ static BOOLEAN BiosKbdBufferPop(VOID)
     return TRUE;
 }
 
-static BOOLEAN BiosCreateGraphicsBuffer(BYTE ModeNumber)
+static VOID BiosReadWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
 {
-    INT i;
-    CONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo;
-    LPBITMAPINFO BitmapInfo;
-    LPWORD PaletteIndex;
+    INT i, j;
+    INT Counter = 0;
+    DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Page * Bda->VideoPageSize);
 
-    /* Allocate a bitmap info structure */
-    BitmapInfo = (LPBITMAPINFO)HeapAlloc(GetProcessHeap(),
-                                         HEAP_ZERO_MEMORY,
-                                         sizeof(BITMAPINFOHEADER)
-                                         + (1 << VideoModes[ModeNumber].Bpp)
-                                         * sizeof(WORD));
-    if (BitmapInfo == NULL) return FALSE;
-
-    /* Fill the bitmap info header */
-    ZeroMemory(&BitmapInfo->bmiHeader, sizeof(BITMAPINFOHEADER));
-    BitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    BitmapInfo->bmiHeader.biWidth = VideoModes[ModeNumber].Width;
-    BitmapInfo->bmiHeader.biHeight = VideoModes[ModeNumber].Height;
-    BitmapInfo->bmiHeader.biPlanes = 1;
-    BitmapInfo->bmiHeader.biCompression = BI_RGB;
-    BitmapInfo->bmiHeader.biBitCount = VideoModes[ModeNumber].Bpp;
-
-    /* Calculate the image size */
-    BitmapInfo->bmiHeader.biSizeImage = BitmapInfo->bmiHeader.biWidth
-                                        * BitmapInfo->bmiHeader.biHeight
-                                        * (BitmapInfo->bmiHeader.biBitCount >> 3);
-
-    /* Fill the palette data */
-    PaletteIndex = (LPWORD)((ULONG_PTR)BitmapInfo + sizeof(BITMAPINFOHEADER));
-    for (i = 0; i < (1 << VideoModes[ModeNumber].Bpp); i++)
+    for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
     {
-        PaletteIndex[i] = i;
+        for (j = Rectangle.Left; j <= Rectangle.Right; j++)
+        {
+            WORD Character;
+
+            /* Read from video memory */
+            VgaReadMemory(VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                          (LPVOID)&Character,
+                          sizeof(WORD));
+
+            /* Write the data to the buffer in row order */
+            Buffer[Counter++] = Character;
+        }
     }
-
-    /* Fill the console graphics buffer info */
-    GraphicsBufferInfo.dwBitMapInfoLength = sizeof(BITMAPINFOHEADER)
-                                            + (1 << VideoModes[ModeNumber].Bpp)
-                                            * sizeof(WORD);
-    GraphicsBufferInfo.lpBitMapInfo = BitmapInfo;
-    GraphicsBufferInfo.dwUsage = DIB_PAL_COLORS;
-
-    /* Create the buffer */
-    BiosGraphicsOutput = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,
-                                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                                   NULL,
-                                                   CONSOLE_GRAPHICS_BUFFER,
-                                                   &GraphicsBufferInfo);
-
-    /* Save the framebuffer address and mutex */
-    ConsoleFramebuffer = GraphicsBufferInfo.lpBitMap;
-    ConsoleMutex = GraphicsBufferInfo.hMutex;
-
-    /* Free the bitmap information */
-    HeapFree(GetProcessHeap(), 0, BitmapInfo);
-
-    return TRUE;
 }
 
-static VOID BiosDestroyGraphicsBuffer(VOID)
+static VOID BiosWriteWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
 {
-    CloseHandle(ConsoleMutex);
-    CloseHandle(BiosGraphicsOutput);
+    INT i, j;
+    INT Counter = 0;
+    DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Page * Bda->VideoPageSize);
+
+    for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
+    {
+        for (j = Rectangle.Left; j <= Rectangle.Right; j++)
+        {
+            WORD Character = Buffer[Counter++];
+
+            /* Read from video memory */
+            VgaWriteMemory(VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
+                           (LPVOID)&Character,
+                           sizeof(WORD));
+        }
+    }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BYTE BiosGetVideoMode(VOID)
 {
-    return CurrentVideoMode;
+    return Bda->VideoMode;
 }
 
 BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
 {
-    COORD Coord;
+    INT i;
+    COORD Resolution;
+    LPBYTE Values = VideoModes[ModeNumber];
 
-    /* Make sure this is a valid video mode */
-    if (ModeNumber > BIOS_MAX_VIDEO_MODE) return FALSE;
-    if (VideoModes[ModeNumber].Pages == 0) return FALSE;
+    if (Values == NULL) return FALSE;
 
-    /* Set the new video mode size */
-    Coord.X = VideoModes[ModeNumber].Width;
-    Coord.Y = VideoModes[ModeNumber].Height;
+    /* Write the misc register */
+    VgaWritePort(VGA_MISC_WRITE, *(Values++));
 
-    if (VideoModes[ModeNumber].Text && VideoModes[CurrentVideoMode].Text)
+    /* Write the sequencer registers */
+    for (i = 0; i < VGA_SEQ_MAX_REG; i++)
     {
-        /* Switching from text mode to another text mode */
-
-        /* Resize the text buffer */
-        SetConsoleScreenBufferSize(BiosConsoleOutput, Coord);
-    }
-    else if (VideoModes[ModeNumber].Text && !VideoModes[CurrentVideoMode].Text)
-    {
-        /* Switching from graphics mode to text mode */
-
-        /* Resize the text buffer */
-        SetConsoleScreenBufferSize(BiosConsoleOutput, Coord);
-
-        /* Change the active screen buffer to the text buffer */
-        SetConsoleActiveScreenBuffer(BiosConsoleOutput);
-
-        /* Cleanup the graphics buffer */
-        BiosDestroyGraphicsBuffer();
-    }
-    else if (!VideoModes[ModeNumber].Text && VideoModes[CurrentVideoMode].Text)
-    {
-        /* Switching from text mode to graphics mode */
-        if (!BiosCreateGraphicsBuffer(ModeNumber)) return FALSE;
-
-        SetConsoleActiveScreenBuffer(BiosGraphicsOutput);
-    }
-    else if (!VideoModes[ModeNumber].Text && !VideoModes[CurrentVideoMode].Text)
-    {
-        /* Switching from graphics mode to another graphics mode */
-    
-        /* Temporarily switch to the text mode buffer */
-        SetConsoleActiveScreenBuffer(BiosConsoleOutput);
-
-        /* Cleanup the current graphics mode buffer */
-        BiosDestroyGraphicsBuffer();
-
-        /* Create a new graphics mode buffer */
-        if (!BiosCreateGraphicsBuffer(ModeNumber)) return FALSE;
-
-        /* Switch to it */
-        SetConsoleActiveScreenBuffer(BiosGraphicsOutput);
+        VgaWritePort(VGA_SEQ_INDEX, i);
+        VgaWritePort(VGA_SEQ_DATA, *(Values++));
     }
 
-    /* Change the mode number */
-    CurrentVideoMode = ModeNumber;
-    CurrentVideoPage = 0;
+    /* Write the GC registers */
+    for (i = 0; i < VGA_GC_MAX_REG; i++)
+    {
+        VgaWritePort(VGA_GC_INDEX, i);
+        VgaWritePort(VGA_GC_DATA, *(Values++));
+    }
 
-    /* Update the BDA */
-    Bda->VideoMode = CurrentVideoMode;
-    Bda->VideoPage = CurrentVideoPage;
-    Bda->VideoPageSize = BiosGetVideoPageSize();
+    /* Write the CRTC registers */
+    for (i = 0; i < VGA_CRTC_MAX_REG; i++)
+    {
+        VgaWritePort(VGA_CRTC_INDEX, i);
+        VgaWritePort(VGA_CRTC_DATA, *(Values++));
+    }
+
+    /* Write the AC registers */
+    for (i = 0; i < VGA_AC_MAX_REG; i++)
+    {
+        VgaWritePort(VGA_AC_INDEX, i);
+        VgaWritePort(VGA_AC_WRITE, *(Values++));
+    }
+
+    /* Update the values in the BDA */
+    Bda->VideoMode = ModeNumber;
+    Bda->VideoPage = 0;
+    Bda->VideoPageSize = BIOS_PAGE_SIZE;
     Bda->VideoPageOffset = 0;
-    Bda->ScreenColumns = VideoModes[ModeNumber].Width;
+    Bda->CharacterHeight = 16;
+
+    Resolution = VgaGetDisplayResolution();
+    Bda->ScreenColumns = Resolution.X;
+    Bda->ScreenRows = Resolution.Y - 1;
 
     return TRUE;
 }
 
 BOOLEAN BiosSetVideoPage(BYTE PageNumber)
 {
-    ULONG PageStart;
-    COORD Coordinates;
-    CONSOLE_SCREEN_BUFFER_INFO BufferInfo;
+    if (PageNumber >= BIOS_MAX_PAGES) return FALSE;
 
-    /* Make sure this is a valid page number */
-    if (PageNumber >= VideoModes[CurrentVideoMode].Pages) return FALSE;
+    /* Set the values in the BDA */
+    Bda->VideoPage = PageNumber;
+    Bda->VideoPageSize = BIOS_PAGE_SIZE;
+    Bda->VideoPageOffset = PageNumber * BIOS_PAGE_SIZE;
 
-    /* Save the current console buffer in the video memory */
-    PageStart = BiosGetVideoMemoryStart() + CurrentVideoPage * BiosGetVideoPageSize();
-    BiosUpdateVideoMemory(PageStart, PageStart + BiosGetVideoPageSize());
-
-    /* Save the cursor */
-    if (!GetConsoleScreenBufferInfo(BiosConsoleOutput, &BufferInfo)) return FALSE;
-    Bda->CursorPosition[CurrentVideoPage] = MAKEWORD(BufferInfo.dwCursorPosition.X,
-                                                     BufferInfo.dwCursorPosition.Y);
-
-    /* Set the page */
-    CurrentVideoPage = PageNumber;
-
-    /* Update the BDA */
-    Bda->VideoPage = CurrentVideoPage;
-    Bda->VideoPageSize = BiosGetVideoPageSize();
-    Bda->VideoPageOffset = CurrentVideoPage * Bda->VideoPageSize;
-
-    /* Update the console */
-    PageStart = BiosGetVideoMemoryStart() + Bda->VideoPage * BiosGetVideoPageSize();
-    BiosUpdateConsole(PageStart, PageStart + BiosGetVideoPageSize());
-
-    /* Set the cursor */
-    Coordinates.X = LOBYTE(Bda->CursorPosition[Bda->VideoPage]);
-    Coordinates.Y = HIBYTE(Bda->CursorPosition[Bda->VideoPage]);
-    SetConsoleCursorPosition(BiosConsoleOutput, Coordinates);
+    /* Set the start address in the CRTC */
+    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
+    VgaWritePort(VGA_CRTC_DATA, LOBYTE(Bda->VideoPageOffset));
+    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
+    VgaWritePort(VGA_CRTC_DATA, HIBYTE(Bda->VideoPageOffset));
 
     return TRUE;
-}
-
-inline DWORD BiosGetVideoMemoryStart(VOID)
-{
-    return (VideoModes[CurrentVideoMode].Segment << 4);
-}
-
-inline VOID BiosVerticalRefresh(VOID)
-{
-    /* Ignore if we're in text mode */
-    if (VideoModes[CurrentVideoMode].Text) return;
-
-    /* Ignore if there's nothing to update */
-    if (!VideoNeedsUpdate) return;
-
-    /* Redraw the screen */
-    InvalidateConsoleDIBits(BiosGraphicsOutput, &UpdateRectangle);
-
-    /* Clear the update flag */
-    VideoNeedsUpdate = FALSE;
 }
 
 BOOLEAN BiosInitialize(VOID)
@@ -425,8 +403,7 @@ BOOLEAN BiosInitialize(VOID)
     Bda->CursorPosition[0] = MAKEWORD(BiosSavedBufferInfo.dwCursorPosition.X,
                                       BiosSavedBufferInfo.dwCursorPosition.Y);
     
-    /* Set the default video mode */
-    BiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
+    VgaInitialize(BiosConsoleOutput);
 
     /* Set the console input mode */
     SetConsoleMode(BiosConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
@@ -466,149 +443,9 @@ VOID BiosCleanup(VOID)
     /* Restore the screen buffer size */
     SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
 
-    /* Free the graphics buffer */
-    if (!VideoModes[CurrentVideoMode].Text) BiosDestroyGraphicsBuffer();
-
     /* Close the console handles */
     if (BiosConsoleInput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleInput);
     if (BiosConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleOutput);
-}
-
-VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress)
-{
-    ULONG i;
-    COORD Coordinates;
-    COORD Origin = { 0, 0 };
-    COORD UnitSize = { 1, 1 };
-    CHAR_INFO Character;
-    SMALL_RECT Rect;
-
-    /* Start from the character address */
-    StartAddress &= ~1;
-
-    if (VideoModes[CurrentVideoMode].Text)
-    {
-        /* Loop through all the addresses */
-        for (i = StartAddress; i < EndAddress; i += 2)
-        {
-            /* Get the coordinates */
-            Coordinates = BiosVideoAddressToCoord(i);
-
-            /* Make sure this is the current page */
-            if (BiosVideoAddressToPage(i) != CurrentVideoPage) continue;
-
-            /* Fill the rectangle structure */
-            Rect.Left = Coordinates.X;
-            Rect.Top = Coordinates.Y;
-            Rect.Right = Rect.Left;
-            Rect.Bottom = Rect.Top;
-
-            /* Fill the character data */
-            Character.Char.AsciiChar = *((PCHAR)((ULONG_PTR)BaseAddress + i));
-            Character.Attributes = *((PBYTE)((ULONG_PTR)BaseAddress + i + 1));
-
-            /* Write the character */
-            WriteConsoleOutputA(BiosConsoleOutput,
-                                &Character,
-                                UnitSize,
-                                Origin,
-                                &Rect);
-        }
-    }
-    else
-    {
-        /* Wait for the mutex object */
-        WaitForSingleObject(ConsoleMutex, INFINITE);
-
-        /* Copy the data to the framebuffer */
-        RtlCopyMemory((LPVOID)((ULONG_PTR)ConsoleFramebuffer
-                      + StartAddress - BiosGetVideoMemoryStart()),
-                      (LPVOID)((ULONG_PTR)BaseAddress + StartAddress),
-                      EndAddress - StartAddress);
-
-        /* Release the mutex */
-        ReleaseMutex(ConsoleMutex);
-
-        /* Check if this is the first time the rectangle is updated */
-        if (!VideoNeedsUpdate)
-        {
-            UpdateRectangle.Left = UpdateRectangle.Top = (SHORT)0x7FFF;
-            UpdateRectangle.Right = UpdateRectangle.Bottom = (SHORT)0x8000;
-        }
-
-        /* Expand the update rectangle */
-        for (i = StartAddress; i < EndAddress; i++)
-        {
-            /* Get the coordinates */
-            Coordinates = BiosVideoAddressToCoord(i);
-
-            /* Expand the rectangle to include the point */
-            UpdateRectangle.Left = min(UpdateRectangle.Left, Coordinates.X);
-            UpdateRectangle.Right = max(UpdateRectangle.Right, Coordinates.X);
-            UpdateRectangle.Top = min(UpdateRectangle.Top, Coordinates.Y);
-            UpdateRectangle.Bottom = max(UpdateRectangle.Bottom, Coordinates.Y);
-        }
-
-        /* Set the update flag */
-        VideoNeedsUpdate = TRUE;
-    }
-}
-
-VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress)
-{
-    ULONG i;
-    COORD Coordinates;
-    WORD Attribute;
-    DWORD CharsWritten;
-
-    if (VideoModes[CurrentVideoMode].Text)
-    {
-        /* Loop through all the addresses */
-        for (i = StartAddress; i < EndAddress; i++)
-        {
-            /* Get the coordinates */
-            Coordinates = BiosVideoAddressToCoord(i);
-
-            /* Make sure this is the current page */
-            if (BiosVideoAddressToPage(i) != CurrentVideoPage) continue;
-
-            /* Check if this is a character byte or an attribute byte */
-            if ((i - BiosGetVideoMemoryStart()) % 2 == 0)
-            {
-                /* This is a regular character */
-                ReadConsoleOutputCharacterA(BiosConsoleOutput,
-                                            (LPSTR)((ULONG_PTR)BaseAddress + i),
-                                            sizeof(CHAR),
-                                            Coordinates,
-                                            &CharsWritten);
-            }
-            else
-            {
-                /*  This is an attribute */
-                ReadConsoleOutputAttribute(BiosConsoleOutput,
-                                           &Attribute,
-                                           sizeof(CHAR),
-                                           Coordinates,
-                                           &CharsWritten);
-
-                *(PCHAR)((ULONG_PTR)BaseAddress + i) = LOBYTE(Attribute);
-            }
-        }
-    }
-    else
-    {
-        /* Wait for the mutex object */
-        WaitForSingleObject(ConsoleMutex, INFINITE);
-
-        /* Copy the data to the emulator memory */
-        RtlCopyMemory((LPVOID)((ULONG_PTR)BaseAddress + StartAddress),
-                      (LPVOID)((ULONG_PTR)ConsoleFramebuffer
-                      + StartAddress - BiosGetVideoMemoryStart()),
-                      EndAddress - StartAddress);
-
-        /* Release the mutex */
-        ReleaseMutex(ConsoleMutex);
-    }
 }
 
 WORD BiosPeekCharacter(VOID)
@@ -660,18 +497,123 @@ WORD BiosGetCharacter(VOID)
     return CharacterData;
 }
 
+VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
+{
+    /* Make sure the selected video page is valid */
+    if (Page >= BIOS_MAX_PAGES) return;
+
+    /* Update the position in the BDA */
+    Bda->CursorPosition[Page] = (Row << 8) | Column;
+
+    /* Check if this is the current video page */
+    if (Page == Bda->VideoPage)
+    {
+        WORD Offset = Row * Bda->ScreenColumns + Column;
+
+        /* Modify the CRTC registers */
+        VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
+        VgaWritePort(VGA_CRTC_DATA, LOBYTE(Offset));
+        VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
+        VgaWritePort(VGA_CRTC_DATA, HIBYTE(Offset));
+    }
+}
+
+BOOLEAN BiosScrollWindow(INT Direction,
+                         DWORD Amount,
+                         SMALL_RECT Rectangle,
+                         BYTE Page,
+                         BYTE FillAttribute)
+{
+    INT i;
+    LPWORD WindowData;
+    DWORD WindowSize = (Rectangle.Bottom - Rectangle.Top + 1)
+                       * (Rectangle.Right - Rectangle.Left + 1);
+
+    /* Allocate a buffer for the window */
+    WindowData = (LPWORD)HeapAlloc(GetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   WindowSize * sizeof(WORD));
+    if (WindowData == NULL) return FALSE;
+
+    /* Read the window data */
+    BiosReadWindow(WindowData, Rectangle, Page);
+
+    if (Amount == 0)
+    {
+        /* Fill the window */
+        for (i = 0; i < WindowSize; i++)
+        {
+            WindowData[i] = ' ' | (FillAttribute << 8);
+        }
+
+        goto Done;
+    }
+
+    // TODO: Scroll the window!
+
+Done:
+    /* Write back the window data */
+    BiosWriteWindow(WindowData, Rectangle, Page);
+
+    /* Free the window buffer */
+    HeapFree(GetProcessHeap(), 0, WindowData);
+
+    return TRUE;
+}
+
+VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
+{
+    WORD CharData = (Attribute << 8) | Character;
+    BYTE Row, Column;
+
+    /* Make sure the page exists */
+    if (Page >= BIOS_MAX_PAGES) return;
+
+    /* Get the cursor location */
+    Row = HIBYTE(Bda->CursorPosition[Page]);
+    Column = LOBYTE(Bda->CursorPosition[Page]);
+
+    /* Write the character */
+    VgaWriteMemory(TO_LINEAR(TEXT_VIDEO_SEG,
+                   (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                   (LPVOID)&CharData,
+                   sizeof(WORD));
+
+    /* Advance the cursor */
+    Column++;
+
+    /* Check if it passed the end of the row */
+    if (Column == Bda->ScreenColumns)
+    {
+        /* Return to the first column */
+        Column = 0;
+
+        if (Row == Bda->ScreenRows)
+        {
+            /* The screen must be scrolled */
+            SMALL_RECT Rectangle = { 0, 0, Bda->ScreenColumns - 1, Bda->ScreenRows };
+
+            BiosScrollWindow(SCROLL_DIRECTION_UP,
+                             1,
+                             Rectangle,
+                             Page,
+                             DEFAULT_ATTRIBUTE);
+        }
+        else Row++;
+    }
+
+    /* Set the cursor position */
+    BiosSetCursorPosition(Row, Column, Page);
+}
+
 VOID BiosVideoService(LPWORD Stack)
 {
-    INT i, CursorHeight;
-    BOOLEAN Invisible = FALSE;
-    COORD Position;
-    CONSOLE_CURSOR_INFO CursorInfo;
-    CHAR_INFO Character;
-    SMALL_RECT Rect;
     DWORD Eax = EmulatorGetRegister(EMULATOR_REG_AX);
     DWORD Ecx = EmulatorGetRegister(EMULATOR_REG_CX);
     DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
     DWORD Ebx = EmulatorGetRegister(EMULATOR_REG_BX);
+
+    UNREFERENCED_PARAMETER(Ecx);
 
     switch (HIBYTE(Eax))
     {
@@ -685,20 +627,15 @@ VOID BiosVideoService(LPWORD Stack)
         /* Set Text-Mode Cursor Shape */
         case 0x01:
         {
-            /* Retrieve and validate the input */
-            Invisible = ((HIBYTE(Ecx) >> 5) & 0x03) ? TRUE : FALSE;
-            CursorHeight = (HIBYTE(Ecx) & 0x1F) - (LOBYTE(Ecx) & 0x1F);
-            if (CursorHeight < 1) CursorHeight = 1;
-            if (CursorHeight > 100) CursorHeight = 100;
-
             /* Update the BDA */
             Bda->CursorStartLine = HIBYTE(Ecx);
-            Bda->CursorEndLine = LOBYTE(Ecx) & 0x1F;
+            Bda->CursorEndLine = LOBYTE(Ecx);
 
-            /* Set the cursor */
-            CursorInfo.dwSize = (CursorHeight * 100) / CONSOLE_FONT_HEIGHT;
-            CursorInfo.bVisible = !Invisible;
-            SetConsoleCursorInfo(BiosConsoleOutput, &CursorInfo);
+            /* Modify the CRTC registers */
+            VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_START_REG);
+            VgaWritePort(VGA_CRTC_DATA, Bda->CursorStartLine);
+            VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_END_REG);
+            VgaWritePort(VGA_CRTC_DATA, Bda->CursorEndLine);
 
             break;
         }
@@ -706,20 +643,7 @@ VOID BiosVideoService(LPWORD Stack)
         /* Set Cursor Position */
         case 0x02:
         {
-            /* Make sure the selected video page exists */
-            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
-
-            Bda->CursorPosition[HIBYTE(Ebx)] = LOWORD(Edx);
-
-            /* Check if this is the current video page */
-            if (HIBYTE(Ebx) == CurrentVideoPage)
-            {
-                /* Yes, change the actual cursor */
-                Position.X = LOBYTE(Edx);
-                Position.Y = HIBYTE(Edx);
-                SetConsoleCursorPosition(BiosConsoleOutput, Position);
-            }
-
+            BiosSetCursorPosition(HIBYTE(Edx), LOBYTE(Edx), HIBYTE(Ebx));
             break;
         }
 
@@ -727,7 +651,7 @@ VOID BiosVideoService(LPWORD Stack)
         case 0x03:
         {
             /* Make sure the selected video page exists */
-            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
+            if (HIBYTE(Ebx) >= BIOS_MAX_PAGES) break;
 
             /* Return the result */
             EmulatorSetRegister(EMULATOR_REG_AX, 0);
@@ -742,10 +666,10 @@ VOID BiosVideoService(LPWORD Stack)
         case 0x05:
         {
             /* Check if the page exists */
-            if (LOBYTE(Eax) >= VideoModes[CurrentVideoMode].Pages) break;
+            if (LOBYTE(Eax) >= BIOS_MAX_PAGES) break;
 
             /* Check if this is the same page */
-            if (LOBYTE(Eax) == CurrentVideoPage) break;
+            if (LOBYTE(Eax) == Bda->VideoPage) break;
 
             /* Change the video page */
             BiosSetVideoPage(LOBYTE(Eax));
@@ -753,110 +677,63 @@ VOID BiosVideoService(LPWORD Stack)
             break;
         }
 
-        /* Scroll Up/Down Window */
-        // TODO: Implement for different pages
+        /* Scroll Window Up/Down */
         case 0x06:
         case 0x07:
         {
-            BYTE Lines = LOBYTE(Eax);
+            SMALL_RECT Rectangle =
+            {
+                LOBYTE(Ecx),
+                HIBYTE(Ecx),
+                LOBYTE(Edx),
+                HIBYTE(Edx)
+            };
 
-            Rect.Top = HIBYTE(Ecx);
-            Rect.Left = LOBYTE(Ecx);
-            Rect.Bottom = HIBYTE(Edx);
-            Rect.Right = LOBYTE(Edx);
-            Character.Char.UnicodeChar = L' ';
-            Character.Attributes = HIBYTE(Ebx);
-            Position.X = Rect.Left;
-
-            /* 0 means clear entire window */
-            if (Lines == 0) Lines = Rect.Bottom - Rect.Top;
-
-            if (HIBYTE(Eax) == 0x06) Position.Y = Rect.Top - Lines;
-            else Position.Y = Rect.Top + Lines;
-
-            ScrollConsoleScreenBuffer(BiosConsoleOutput,
-                                      &Rect,
-                                      &Rect,
-                                      Position,
-                                      &Character);
+            /* Call the internal function */
+            BiosScrollWindow((HIBYTE(Eax)== 0x06)
+                             ? SCROLL_DIRECTION_UP : SCROLL_DIRECTION_DOWN,
+                             LOBYTE(Eax),
+                             Rectangle,
+                             Bda->VideoPage,
+                             HIBYTE(Ebx));
 
             break;
         }
 
-        /* Read Character And Attribute At Cursor Position */
+        /* Read/Write Character From Cursor Position */
         case 0x08:
-        {
-            DWORD Address;
-            
-            /* Make sure this is text mode */
-            if (!VideoModes[CurrentVideoMode].Text) break;
-
-            /* Make sure the selected video page exists */
-            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
-            
-            /* Find the address */
-            Address = BiosGetVideoMemoryStart()
-                      + HIBYTE(Ebx) * BiosGetVideoPageSize()
-                      + (HIBYTE(Bda->CursorPosition[HIBYTE(Ebx)])
-                      * VideoModes[CurrentVideoMode].Height
-                      + LOBYTE(Bda->CursorPosition[HIBYTE(Ebx)]))
-                      * VideoModes[CurrentVideoMode].Bpp / 8;
-
-            /* Update the video memory at that address */
-            BiosUpdateVideoMemory(Address,
-                                  Address + VideoModes[CurrentVideoMode].Bpp / 8);
-
-            /* Return the result in AX */
-            EmulatorSetRegister(EMULATOR_REG_AX,
-                                *((LPWORD)((ULONG_PTR)BaseAddress + Address)));
-
-            break;
-        }                EmulatorSetFlag(EMULATOR_FLAG_ZF);
-
-
-        /* Write Character And Attribute At Cursor Position */
         case 0x09:
         case 0x0A:
         {
-            BYTE PixelSize = VideoModes[CurrentVideoMode].Bpp / 8;
-            WORD Data = (LOBYTE(Ebx) << 8) | LOBYTE(Eax);
-            WORD Repeat = LOWORD(Ecx);
-            DWORD Address = BiosGetVideoMemoryStart()
-                            + CurrentVideoPage * BiosGetVideoPageSize()
-                            + (HIBYTE(Bda->CursorPosition[CurrentVideoPage])
-                            * VideoModes[CurrentVideoMode].Height
-                            + LOBYTE(Bda->CursorPosition[CurrentVideoPage]))
-                            * PixelSize;
+            WORD CharacterData = MAKEWORD(LOBYTE(Eax), LOBYTE(Ebx));
+            BYTE Page = HIBYTE(Ebx);
+            DWORD Offset;
 
-            /* Make sure this is text mode */
-            if (!VideoModes[CurrentVideoMode].Text) break;
+            /* Check if the page exists */
+            if (Page >= BIOS_MAX_PAGES) break;
 
-            /* Make sure the selected video page exists */
-            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
+            /* Find the offset of the character */
+            Offset = Page * Bda->VideoPageSize
+                     + (HIBYTE(Bda->CursorPosition[Page]) * Bda->ScreenColumns
+                     + LOBYTE(Bda->CursorPosition[Page])) * 2;
 
-            /* Make sure we don't write over the end of video memory */
-            Repeat = min(Repeat,
-                        (CONSOLE_VIDEO_MEM_END - Address)
-                        / PixelSize);
-
-            /* Copy the values to the memory */
-            for (i = 0; i < Repeat; i++)
+            if (HIBYTE(Eax) == 0x08)
             {
-                if (PixelSize == sizeof(BYTE) || HIBYTE(Eax) == 0x0A)
-                {
-                    /* Just characters, no attributes */
-                    *((LPBYTE)((ULONG_PTR)BaseAddress + Address) + i * PixelSize) = LOBYTE(Data);
-                }
-                else if (PixelSize == sizeof(WORD))
-                {
-                    /* First byte for characters, second for attributes */
-                    *((LPWORD)((ULONG_PTR)BaseAddress + Address) + i) = Data;
-                }
-            }
+                /* Read from the video memory */
+                VgaReadMemory(TO_LINEAR(TEXT_VIDEO_SEG, Offset),
+                              (LPVOID)&CharacterData,
+                              sizeof(WORD));
 
-            /* Update the range */
-            BiosUpdateConsole(Address,
-                              Address + Repeat * (VideoModes[CurrentVideoMode].Bpp / 8));
+                /* Return the character in AX */
+                EmulatorSetRegister(EMULATOR_REG_AX, CharacterData);
+            }
+            else
+            {
+                /* Write to video memory */
+                VgaWriteMemory(TO_LINEAR(TEXT_VIDEO_SEG, Offset),
+                               (LPVOID)&CharacterData,
+                               (HIBYTE(Ebx) == 0x09) ? sizeof(WORD) : sizeof(BYTE));
+            }
 
             break;
         }
@@ -864,22 +741,7 @@ VOID BiosVideoService(LPWORD Stack)
         /* Teletype Output */
         case 0x0E:
         {
-            CHAR Character = LOBYTE(Eax);
-            DWORD NumWritten;
-
-            /* Make sure the page exists */
-            if (HIBYTE(Ebx) >= VideoModes[CurrentVideoMode].Pages) break;
-
-            /* Set the attribute */
-            SetConsoleTextAttribute(BiosConsoleOutput, LOBYTE(Ebx));
-
-            /* Write the character */
-            WriteConsoleA(BiosConsoleOutput,
-                          &Character,
-                          sizeof(CHAR),
-                          &NumWritten,
-                          NULL);
-
+            BiosPrintCharacter(LOBYTE(Eax), LOBYTE(Ebx), HIBYTE(Ebx));
             break;
         }
 
@@ -897,25 +759,20 @@ VOID BiosVideoService(LPWORD Stack)
         /* Scroll Window */
         case 0x12:
         {
-            Rect.Top = HIBYTE(Ecx);
-            Rect.Left = LOBYTE(Ecx);
-            Rect.Bottom = HIBYTE(Edx);
-            Rect.Right = LOBYTE(Edx);
-            Character.Char.UnicodeChar = L' ';
-            Character.Attributes = 0x07;
-            Position.X = Rect.Left;
-            Position.Y = Rect.Top;
+            SMALL_RECT Rectangle =
+            {
+                LOBYTE(Ecx),
+                HIBYTE(Ecx),
+                LOBYTE(Edx),
+                HIBYTE(Edx)
+            };
 
-            if (LOBYTE(Ebx) == 0) Position.Y -= LOBYTE(Eax);
-            else if (LOBYTE(Ebx) == 1) Position.Y += LOBYTE(Eax);
-            else if (LOBYTE(Ebx) == 2) Position.X -= LOBYTE(Eax);
-            else if (LOBYTE(Ebx) == 3) Position.X += LOBYTE(Eax);
-
-            ScrollConsoleScreenBuffer(BiosConsoleOutput,
-                                      &Rect,
-                                      &Rect,
-                                      Position,
-                                      &Character);
+            /* Call the internal function */
+            BiosScrollWindow(LOBYTE(Ebx),
+                             LOBYTE(Eax),
+                             Rectangle,
+                             Bda->VideoPage,
+                             DEFAULT_ATTRIBUTE);
 
             break;
         }

@@ -98,6 +98,15 @@ typedef struct _DOS_INPUT_BUFFER
     CHAR Buffer[ANYSIZE_ARRAY];
 } DOS_INPUT_BUFFER, *PDOS_INPUT_BUFFER;
 
+typedef struct _DOS_DRIVER_HEADER
+{
+    DWORD NextDriver;
+    WORD Attributes;
+    WORD StrategyEntry;
+    WORD InterruptEntry;
+    CHAR DeviceName[8];
+} DOS_DRIVER_HEADER, *PDOS_DRIVER_HEADER;
+
 #pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/

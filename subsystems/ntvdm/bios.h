@@ -15,7 +15,6 @@
 
 /* DEFINES ********************************************************************/
 
-#define CONSOLE_VIDEO_MEM_END 0xBFFFF
 #define ROM_AREA_START 0xE0000
 #define ROM_AREA_END 0xFFFFF
 #define BDA_SEGMENT 0x40
@@ -32,18 +31,19 @@
 #define BIOS_EQUIPMENT_LIST 0x2C // HACK: Disable FPU for now
 #define BIOS_DEFAULT_VIDEO_MODE 0x03
 #define BIOS_MAX_PAGES 8
+#define BIOS_PAGE_SIZE 0x1000
 #define BIOS_MAX_VIDEO_MODE 0x13
+#define DEFAULT_ATTRIBUTE 0x07
+#define GRAPHICS_VIDEO_SEG 0xA000
+#define TEXT_VIDEO_SEG 0xB800
 
-typedef struct
+enum
 {
-    DWORD Width;
-    DWORD Height;
-    BOOLEAN Text;
-    BYTE Bpp;
-    BOOLEAN Gray;
-    BYTE Pages;
-    WORD Segment;
-} VIDEO_MODE;
+    SCROLL_DIRECTION_UP,
+    SCROLL_DIRECTION_DOWN,
+    SCROLL_DIRECTION_LEFT,
+    SCROLL_DIRECTION_RIGHT
+};
 
 #pragma pack(push, 1)
 
@@ -91,6 +91,8 @@ typedef struct
     BYTE ComTimeOut[4];
     WORD KeybdBufferStart;
     WORD KeybdBufferEnd;
+    BYTE ScreenRows;
+    WORD CharacterHeight;
 } BIOS_DATA_AREA, *PBIOS_DATA_AREA;
 
 #pragma pack(pop)
@@ -99,10 +101,8 @@ typedef struct
 
 BOOLEAN BiosInitialize(VOID);
 VOID BiosCleanup(VOID);
-VOID BiosUpdateConsole(ULONG StartAddress, ULONG EndAddress);
-VOID BiosUpdateVideoMemory(ULONG StartAddress, ULONG EndAddress);
-inline DWORD BiosGetVideoMemoryStart(VOID);
-inline VOID BiosVerticalRefresh(VOID);
+BYTE BiosGetVideoMode(VOID);
+BOOLEAN BiosSetVideoMode(BYTE ModeNumber);
 WORD BiosPeekCharacter(VOID);
 WORD BiosGetCharacter(VOID);
 VOID BiosVideoService(LPWORD Stack);
@@ -111,5 +111,12 @@ VOID BiosKeyboardService(LPWORD Stack);
 VOID BiosTimeService(LPWORD Stack);
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack);
 VOID BiosSystemTimerInterrupt(LPWORD Stack);
+BOOLEAN BiosScrollWindow(
+    INT Direction,
+    DWORD Amount,
+    SMALL_RECT Rectangle,
+    BYTE Page,
+    BYTE FillAttribute
+);
 
 #endif

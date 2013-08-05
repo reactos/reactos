@@ -13,6 +13,7 @@
 #include "ntvdm.h"
 #include "emulator.h"
 #include "bios.h"
+#include "vga.h"
 #include "dos.h"
 #include "timer.h"
 #include "pic.h"
@@ -137,7 +138,7 @@ INT wmain(INT argc, WCHAR *argv[])
         DisplayMessage(L"Could not start program: %S", CommandLine);
         return -1;
     }
-    
+ 
     /* Set the last timer tick to the current time */
     QueryPerformanceCounter(&LastTimerTick);
 
@@ -146,18 +147,18 @@ INT wmain(INT argc, WCHAR *argv[])
     {
         /* Get the current number of ticks */
         CurrentTickCount = GetTickCount();
-        
+ 
         /* Get the current performance counter value */
         QueryPerformanceCounter(&Counter);
-        
+ 
         /* Get the number of PIT ticks that have passed */
         TimerTicks = ((Counter.QuadPart - LastTimerTick.QuadPart)
                      * PIT_BASE_FREQUENCY) / Frequency.QuadPart;
-        
+ 
         /* Update the PIT */
         for (i = 0; i < TimerTicks; i++) PitDecrementCount();
         LastTimerTick = Counter;
-        
+
         /* Check for console input events every millisecond */
         if (CurrentTickCount != LastTickCount)
         {
@@ -165,20 +166,23 @@ INT wmain(INT argc, WCHAR *argv[])
             LastTickCount = CurrentTickCount;
         }
 
-        /* Check for vertical refresh */
+        /* Check for vertical retrace */
         if ((CurrentTickCount - LastVerticalRefresh) >= 16)
         {
-            BiosVerticalRefresh();
+            VgaRefreshDisplay();
             LastVerticalRefresh = CurrentTickCount;
         }
-        
+
+        /* Horizontal retrace occurs as fast as possible */
+        VgaHorizontalRetrace();
+
         /* Continue CPU emulation */
         for (i = 0; (i < STEPS_PER_CYCLE) && VdmRunning; i++)
         {
             EmulatorStep();
             Cycles++;
         }
-        
+
         if ((CurrentTickCount - LastCyclePrintout) >= 1000)
         {
             DPRINT1("NTVDM: %d Instructions Per Second\n", Cycles);
@@ -186,6 +190,9 @@ INT wmain(INT argc, WCHAR *argv[])
             Cycles = 0;
         }
     }
+
+    /* Perform another screen refresh */
+    VgaRefreshDisplay();
 
 Cleanup:
     BiosCleanup();

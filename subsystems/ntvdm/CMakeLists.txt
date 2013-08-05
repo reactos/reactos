@@ -8,6 +8,7 @@ list(APPEND SOURCE
     pic.c
     timer.c
     ps2.c
+    vga.c
     ntvdm.c
     ntvdm.rc)
 

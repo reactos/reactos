@@ -13,6 +13,7 @@
 #include "emulator.h"
 #include "bios.h"
 #include "dos.h"
+#include "vga.h"
 #include "pic.h"
 #include "ps2.h"
 #include "timer.h"
@@ -40,17 +41,19 @@ static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT S
     /* Make sure the requested address is valid */
     if ((Address + Size) >= MAX_ADDRESS) return;
 
-    /* Are we reading some of the console video memory? */
-    if (((Address + Size) >= BiosGetVideoMemoryStart())
-        && (Address < CONSOLE_VIDEO_MEM_END))
-    {
-        /* Call the VDM BIOS to update the video memory */
-        BiosUpdateVideoMemory(max(Address, BiosGetVideoMemoryStart()),
-                              min(Address + Size, CONSOLE_VIDEO_MEM_END));
-    }
-
     /* Read the data from the virtual address space and store it in the buffer */
     RtlCopyMemory(Buffer, (LPVOID)((ULONG_PTR)BaseAddress + Address), Size);
+
+    /* Check if we modified the console video memory */
+    if (((Address + Size) >= VgaGetVideoBaseAddress())
+        && (Address < VgaGetVideoLimitAddress()))
+    {
+        DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
+        LPBYTE VgaBuffer = &Buffer[VgaAddress - Address];
+
+        /* Read from the VGA memory */
+        VgaReadMemory(VgaAddress, VgaBuffer, Size);
+    }
 }
 
 static VOID EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
@@ -68,12 +71,14 @@ static VOID EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT 
     RtlCopyMemory((LPVOID)((ULONG_PTR)BaseAddress + Address), Buffer, Size);
 
     /* Check if we modified the console video memory */
-    if (((Address + Size) >= BiosGetVideoMemoryStart())
-        && (Address < CONSOLE_VIDEO_MEM_END))
+    if (((Address + Size) >= VgaGetVideoBaseAddress())
+        && (Address < VgaGetVideoLimitAddress()))
     {
-        /* Call the VDM BIOS to update the screen */
-        BiosUpdateConsole(max(Address, BiosGetVideoMemoryStart()),
-                          min(Address + Size, CONSOLE_VIDEO_MEM_END));
+        DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
+        LPBYTE VgaBuffer = &Buffer[VgaAddress - Address];
+
+        /* Write to the VGA memory */
+        VgaWriteMemory(VgaAddress, VgaBuffer, Size);
     }
 }
 
@@ -112,6 +117,26 @@ static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
         case PS2_DATA_PORT:
         {
             *Buffer = KeyboardReadData();
+            break;
+        }
+
+        case VGA_AC_WRITE:
+        case VGA_AC_READ:
+        case VGA_SEQ_INDEX:
+        case VGA_SEQ_DATA:
+        case VGA_DAC_READ_INDEX:
+        case VGA_DAC_WRITE_INDEX:
+        case VGA_DAC_DATA:
+        case VGA_MISC_READ:
+        case VGA_MISC_WRITE:
+        case VGA_CRTC_INDEX:
+        case VGA_CRTC_DATA:
+        case VGA_GC_INDEX:
+        case VGA_GC_DATA:
+        case VGA_STAT_MONO:
+        case VGA_STAT_COLOR:
+        {
+            *Buffer = VgaReadPort(Address);
             break;
         }
 
@@ -165,6 +190,26 @@ static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size
         case PS2_DATA_PORT:
         {
             KeyboardWriteData(Byte);
+            break;
+        }
+
+        case VGA_AC_WRITE:
+        case VGA_AC_READ:
+        case VGA_SEQ_INDEX:
+        case VGA_SEQ_DATA:
+        case VGA_DAC_READ_INDEX:
+        case VGA_DAC_WRITE_INDEX:
+        case VGA_DAC_DATA:
+        case VGA_MISC_READ:
+        case VGA_MISC_WRITE:
+        case VGA_CRTC_INDEX:
+        case VGA_CRTC_DATA:
+        case VGA_GC_INDEX:
+        case VGA_GC_DATA:
+        case VGA_STAT_MONO:
+        case VGA_STAT_COLOR:
+        {
+            VgaWritePort(Address, Byte);
             break;
         }
 
@@ -477,6 +522,9 @@ VOID EmulatorStep(VOID)
     {
         /* Skip the opcodes */
         EmulatorContext.state->reg_ip += 4;
+
+        // HACK: Refresh the display because the called function may wait.
+        VgaRefreshDisplay();
 
         /* Call the BOP handler */
         EmulatorBop(Instruction[1]);
