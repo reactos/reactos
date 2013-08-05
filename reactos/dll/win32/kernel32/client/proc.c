@@ -2291,7 +2291,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     SECTION_IMAGE_INFORMATION ImageInformation;
     IO_STATUS_BLOCK IoStatusBlock;
     CLIENT_ID ClientId;
-    ULONG NoWindow, RegionSize, StackSize, ImageMachine, dwErrCode, Flags;
+    ULONG NoWindow, RegionSize, StackSize, ImageMachine, ErrorCode, Flags;
     ULONG ParameterFlags, PrivilegeValue, HardErrorMode, ErrorResponse;
     ULONG_PTR ErrorParameters[2];
     BOOLEAN InJob, SaferNeeded, UseLargePages, HavePrivilege;
@@ -2320,14 +2320,14 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     //
     PCHAR pcScan;
     SIZE_T n;
-    WCHAR TempChar;
+    WCHAR SaveChar;
     ULONG Length, CurdirLength, CmdQuoteLength;
     ULONG CmdLineLength, ResultSize;
     PWCHAR QuotedCmdLine, AnsiCmdCommand, ExtBuffer, CurrentDirectory;
-    PWCHAR TempNull, WhiteScan, NameBuffer, SearchPath, DebuggerCmdLine;
+    PWCHAR NullBuffer, ScanString, NameBuffer, SearchPath, DebuggerCmdLine;
     ANSI_STRING AnsiEnv;
     UNICODE_STRING UnicodeEnv, PathName;
-    BOOLEAN SearchRetry, QuotesNeeded, CmdLineIsAppName;
+    BOOLEAN SearchRetry, QuotesNeeded, CmdLineIsAppName, HasQuotes;
 
     //
     // Variables used for Fusion/SxS (Side-by-Side Assemblies)
@@ -2405,13 +2405,13 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     DebuggerCmdLine = NULL;
     PathBuffer = NULL;
     SearchPath = NULL;
-    TempNull = 0;
+    NullBuffer = 0;
     FreeBuffer = NULL;
     NameBuffer = NULL;
     CurrentDirectory = NULL;
     FilePart = NULL;
     DebuggerString.Buffer = NULL;
-    QuotesNeeded = FALSE;
+    HasQuotes = FALSE;
     QuotedCmdLine = NULL;
 
     /* Zero out initial VDM state */
@@ -2624,7 +2624,7 @@ AppNameRetry:
     }
 
     /* Set the initial parsing state. This code can loop -- don't move this! */
-    dwErrCode = FALSE;
+    ErrorCode = 0;
     SearchRetry = TRUE;
     QuotesNeeded = FALSE;
     CmdLineIsAppName = FALSE;
@@ -2647,29 +2647,29 @@ AppNameRetry:
         }
 
         /* Initialize the application name and our parsing parameters */
-        lpApplicationName = TempNull = WhiteScan = lpCommandLine;
+        lpApplicationName = NullBuffer = ScanString = lpCommandLine;
 
         /* Check for an initial quote*/
         if (*lpCommandLine == L'\"')
         {
             /* We found a quote, keep searching for another one */
             SearchRetry = FALSE;
-            WhiteScan++;
-            lpApplicationName = TempNull = WhiteScan;
-            while (*WhiteScan)
+            ScanString++;
+            lpApplicationName = ScanString;
+            while (*ScanString)
             {
                 /* Have we found the terminating quote? */
-                if (*WhiteScan == L'\"')
+                if (*ScanString == L'\"')
                 {
                     /* We're done, get out of here */
-                    TempNull = WhiteScan;
-                    QuotesNeeded = TRUE;
+                    NullBuffer = ScanString;
+                    HasQuotes = TRUE;
                     break;
                 }
 
                 /* Keep searching for the quote */
-                WhiteScan++;
-                TempNull = WhiteScan;
+                ScanString++;
+                NullBuffer = ScanString;
             }
         }
         else
@@ -2677,25 +2677,25 @@ AppNameRetry:
 StartScan:
             /* We simply make the application name be the command line*/
             lpApplicationName = lpCommandLine;
-            while (*WhiteScan)
+            while (*ScanString)
             {
                 /* Check if it starts with a space or tab */
-                if ((*WhiteScan == L' ') || (*WhiteScan == '\t'))
+                if ((*ScanString == L' ') || (*ScanString == L'\t'))
                 {
                     /* Break out of the search loop */
-                    TempNull = WhiteScan;
+                    NullBuffer = ScanString;
                     break;
                 }
 
                 /* Keep searching for a space or tab */
-                WhiteScan++;
-                TempNull = WhiteScan;
+                ScanString++;
+                NullBuffer = ScanString;
             }
         }
 
         /* We have found the end of the application name, terminate it */
-        TempChar = *TempNull;
-        *TempNull = UNICODE_NULL;
+        SaveChar = *NullBuffer;
+        *NullBuffer = UNICODE_NULL;
 
         /* New iteration -- free any existing saved path */
         if (SearchPath)
@@ -2746,7 +2746,7 @@ StartScan:
         if ((Length) && (Length < MAX_PATH))
         {
             /* Everything looks good, restore the name */
-            *TempNull = TempChar;
+            *NullBuffer = SaveChar;
             lpApplicationName = NameBuffer;
         }
         else
@@ -2779,23 +2779,23 @@ StartScan:
             }
 
             /* Did we already fail once? */
-            if (dwErrCode)
+            if (ErrorCode)
             {
                 /* Set the error code */
-                SetLastError(dwErrCode);
+                SetLastError(ErrorCode);
             }
             else
             {
                 /* Not yet, cache it */
-                dwErrCode = GetLastError();
+                ErrorCode = GetLastError();
             }
 
             /* Put back the command line */
-            *TempNull = TempChar;
+            *NullBuffer = SaveChar;
             lpApplicationName = NameBuffer;
 
             /* It's possible there's whitespace in the directory name */
-            if (!(*WhiteScan) || !(SearchRetry))
+            if (!(*ScanString) || !(SearchRetry))
             {
                 /* Not the case, give up completely */
                 Result = FALSE;
@@ -2803,11 +2803,12 @@ StartScan:
             }
 
             /* There are spaces, so keep trying the next possibility */
-            WhiteScan++;
-            TempNull = WhiteScan;
+            ScanString++;
+            NullBuffer = ScanString;
 
             /* We will have to add a quote, since there is a space */
             QuotesNeeded = TRUE;
+            HasQuotes = TRUE;
             goto StartScan;
         }
     }
@@ -3437,10 +3438,10 @@ StartScan:
                 }
 
                 /* Check if we need to account for quotes around the path */
-                CmdQuoteLength = CmdLineIsAppName || QuotesNeeded;
+                CmdQuoteLength = CmdLineIsAppName || HasQuotes;
                 if (!CmdLineIsAppName)
                 {
-                    if (QuotesNeeded) CmdQuoteLength++;
+                    if (HasQuotes) CmdQuoteLength++;
                 }
                 else
                 {
@@ -3466,12 +3467,12 @@ StartScan:
 
                 /* Build it */
                 wcscpy(AnsiCmdCommand, CMD_STRING);
-                if ((CmdLineIsAppName) || (QuotesNeeded))
+                if ((CmdLineIsAppName) || (HasQuotes))
                 {
                     wcscat(AnsiCmdCommand, L"\"");
                 }
                 wcscat(AnsiCmdCommand, lpCommandLine);
-                if ((CmdLineIsAppName) || (QuotesNeeded))
+                if ((CmdLineIsAppName) || (HasQuotes))
                 {
                     wcscat(AnsiCmdCommand, L"\"");
                 }
@@ -4062,8 +4063,8 @@ StartScan:
         /* Allocate our buffer, plus enough space for quotes and a NULL */
         QuotedCmdLine = RtlAllocateHeap(RtlGetProcessHeap(),
                                         0,
-                                        wcslen(lpCommandLine) * sizeof(WCHAR) +
-                                        2 * sizeof(L'\"') + sizeof(UNICODE_NULL));
+                                        (wcslen(lpCommandLine) * sizeof(WCHAR)) +
+                                        (2 * sizeof(L'\"') + sizeof(UNICODE_NULL)));
         if (QuotedCmdLine)
         {
             /* Copy the first quote */
@@ -4072,8 +4073,8 @@ StartScan:
             /* Save the current null-character */
             if (QuotesNeeded)
             {
-                TempChar = *TempNull;
-                *TempNull = UNICODE_NULL;
+                SaveChar = *NullBuffer;
+                *NullBuffer = UNICODE_NULL;
             }
 
             /* Copy the command line and the final quote */
@@ -4083,8 +4084,8 @@ StartScan:
             /* Copy the null-char back */
             if (QuotesNeeded)
             {
-                *TempNull = TempChar;
-                wcscat(QuotedCmdLine, TempNull);
+                *NullBuffer = SaveChar;
+                wcscat(QuotedCmdLine, NullBuffer);
             }
         }
         else
@@ -4095,8 +4096,11 @@ StartScan:
         }
     }
 
-    /* Reserve the first 1MB if needed */
+    /* Use isolation if needed */
     if (CreateProcessMsg->Sxs.Flags & 1) ParameterFlags |= 1;
+
+    /* Set the new command-line if needed */
+    if ((QuotesNeeded) || (CmdLineIsAppName)) lpCommandLine = QuotedCmdLine;
 
     /* Call the helper function in charge of RTL_USER_PROCESS_PARAMETERS */
     Result = BasePushProcessParameters(ParameterFlags,
@@ -4104,8 +4108,7 @@ StartScan:
                                        RemotePeb,
                                        lpApplicationName,
                                        CurrentDirectory,
-                                       ((QuotesNeeded) || (CmdLineIsAppName)) ?
-                                       QuotedCmdLine : lpCommandLine,
+                                       lpCommandLine,
                                        lpEnvironment,
                                        &StartupInfo,
                                        dwCreationFlags | NoWindow,
