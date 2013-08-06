@@ -133,6 +133,7 @@ PreloadGlobalMessageTable(IN PVOID ImageBase)
     if (GlobalMessageTable) goto Exit;
 
     /* Loop through up to 200 messages */
+    TotalLength = 0;
     for (MessageId = 1; MessageId != SAC_MAX_MESSAGES; MessageId++)
     {
         /* Find this message ID in the string table*/
