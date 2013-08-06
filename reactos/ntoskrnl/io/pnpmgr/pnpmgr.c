@@ -2268,8 +2268,6 @@ IopEnumerateDevice(
                                   &DeviceNode->InstancePath);
     }
 
-    DeviceNode->Flags &= ~DNF_NEED_TO_ENUM;
-
     DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
     Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
