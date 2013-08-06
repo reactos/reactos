@@ -60,30 +60,28 @@ StuffStdHandle(IN HANDLE ProcessHandle,
 {
     NTSTATUS Status;
     HANDLE DuplicatedHandle;
-    SIZE_T Dummy;
+    SIZE_T NumberOfBytesWritten;
 
-    /* Is there a handle to duplicate? */
-    if (StandardHandle)
-    {
-        /* Duplicate it */
-        Status = NtDuplicateObject(NtCurrentProcess(),
-                                   StandardHandle,
-                                   ProcessHandle,
-                                   &DuplicatedHandle,
-                                   0,
-                                   0,
-                                   DUPLICATE_SAME_ACCESS |
-                                   DUPLICATE_SAME_ATTRIBUTES);
-        if (NT_SUCCESS(Status))
-        {
-            /* Write it */
-            NtWriteVirtualMemory(ProcessHandle,
-                                 Address,
-                                 &DuplicatedHandle,
-                                 sizeof(HANDLE),
-                                 &Dummy);
-        }
-    }
+    /* If there is no handle to duplicate, return immediately */
+    if (!StandardHandle) return;
+
+    /* Duplicate the handle */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               StandardHandle,
+                               ProcessHandle,
+                               &DuplicatedHandle,
+                               0,
+                               0,
+                               DUPLICATE_SAME_ACCESS |
+                               DUPLICATE_SAME_ATTRIBUTES);
+    if (!NT_SUCCESS(Status)) return;
+
+    /* Write it */
+    NtWriteVirtualMemory(ProcessHandle,
+                         Address,
+                         &DuplicatedHandle,
+                         sizeof(HANDLE),
+                         &NumberOfBytesWritten);
 }
 
 BOOLEAN
