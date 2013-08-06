@@ -326,9 +326,9 @@ BOOLEAN BiosSetVideoPage(BYTE PageNumber)
 
     /* Set the start address in the CRTC */
     VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
-    VgaWritePort(VGA_CRTC_DATA, LOBYTE(Bda->VideoPageOffset));
+    VgaWritePort(VGA_CRTC_DATA , LOBYTE(Bda->VideoPageOffset));
     VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
-    VgaWritePort(VGA_CRTC_DATA, HIBYTE(Bda->VideoPageOffset));
+    VgaWritePort(VGA_CRTC_DATA , HIBYTE(Bda->VideoPageOffset));
 
     return TRUE;
 }
