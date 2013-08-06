@@ -2270,17 +2270,17 @@ C_ASSERT(PROCESS_PRIORITY_CLASS_REALTIME == (PROCESS_PRIORITY_CLASS_HIGH + 1));
 BOOL
 WINAPI
 CreateProcessInternalW(IN HANDLE hUserToken,
-                           IN LPCWSTR lpApplicationName,
-                           IN LPWSTR lpCommandLine,
-                           IN LPSECURITY_ATTRIBUTES lpProcessAttributes,
-                           IN LPSECURITY_ATTRIBUTES lpThreadAttributes,
-                           IN BOOL bInheritHandles,
-                           IN DWORD dwCreationFlags,
-                           IN LPVOID lpEnvironment,
-                           IN LPCWSTR lpCurrentDirectory,
-                           IN LPSTARTUPINFOW lpStartupInfo,
-                           IN LPPROCESS_INFORMATION lpProcessInformation,
-                           OUT PHANDLE hNewToken)
+                       IN LPCWSTR lpApplicationName,
+                       IN LPWSTR lpCommandLine,
+                       IN LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                       IN LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                       IN BOOL bInheritHandles,
+                       IN DWORD dwCreationFlags,
+                       IN LPVOID lpEnvironment,
+                       IN LPCWSTR lpCurrentDirectory,
+                       IN LPSTARTUPINFOW lpStartupInfo,
+                       IN LPPROCESS_INFORMATION lpProcessInformation,
+                       OUT PHANDLE hNewToken)
 {
     //
     // Core variables used for creating the initial process and thread
@@ -2503,7 +2503,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     else if (dwCreationFlags & REALTIME_PRIORITY_CLASS)
     {
         PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_HIGH;
-        PriorityClass.PriorityClass += (BasepIsRealtimeAllowed(0) != NULL);
+        PriorityClass.PriorityClass += (BasepIsRealtimeAllowed(FALSE) != NULL);
     }
     else
     {
@@ -3003,7 +3003,7 @@ StartScan:
         if ((dwCreationFlags & CREATE_FORCEDOS) &&
             (BaseStaticServerData->IsWowTaskReady))
         {
-            /* This request can't be satisifeed, instead, a separate VDM is needed */
+            /* This request can't be satisfied, instead, a separate VDM is needed */
             dwCreationFlags &= ~(CREATE_FORCEDOS | CREATE_SHARED_WOW_VDM);
             dwCreationFlags |= CREATE_SEPARATE_WOW_VDM;
 
@@ -4263,7 +4263,11 @@ StartScan:
     if ((ImageInformation.SubSystemType == IMAGE_SUBSYSTEM_WINDOWS_GUI) ||
         (IsWowApp))
     {
-        /* Some flag sent to CSRSS, not sure for what purpose */
+        /*
+         * For GUI apps we turn on the 2nd bit. This allow CSRSS server dlls
+         * (basesrv in particular) to know whether or not this is a GUI or a
+         * TUI application.
+         */
         AddToHandle(CreateProcessMsg->ProcessHandle, 2);
 
         /* Also check if the parent is also a GUI process */
@@ -4271,7 +4275,7 @@ StartScan:
         if ((NtHeaders) &&
             (NtHeaders->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI))
         {
-            /* Let it know that it should dislay the hourglass mouse cursor */
+            /* Let it know that it should display the hourglass mouse cursor */
             AddToHandle(CreateProcessMsg->ProcessHandle, 1);
         }
     }
