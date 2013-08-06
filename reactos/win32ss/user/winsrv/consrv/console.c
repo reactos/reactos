@@ -159,7 +159,7 @@ VOID FASTCALL
 ConSrvReleaseConsole(PCONSOLE Console,
                      BOOL WasConsoleLocked)
 {
-    /* Just call the driver*/
+    /* Just call the driver */
     ConDrvReleaseConsole(Console, WasConsoleLocked);
 }
 

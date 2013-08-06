@@ -387,6 +387,8 @@ ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     ASSERT(ProcessData->HandleTable);
+    // ASSERT( (ProcessData->HandleTable == NULL && ProcessData->HandleTableSize == 0) ||
+    //         (ProcessData->HandleTable != NULL && ProcessData->HandleTableSize != 0) );
 
     if (Index >= ProcessData->HandleTableSize ||
         (Object = ProcessData->HandleTable[Index].Object) == NULL)
@@ -781,6 +783,9 @@ CSR_API(SrvVerifyConsoleIoHandle)
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
+    // ASSERT( (ProcessData->HandleTable == NULL && ProcessData->HandleTableSize == 0) ||
+    //         (ProcessData->HandleTable != NULL && ProcessData->HandleTableSize != 0) );
+
     if (!IsConsoleHandle(ConsoleHandle)    ||
         Index >= ProcessData->HandleTableSize ||
         ProcessData->HandleTable[Index].Object == NULL)
@@ -815,6 +820,9 @@ CSR_API(SrvDuplicateHandle)
     }
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
+    // ASSERT( (ProcessData->HandleTable == NULL && ProcessData->HandleTableSize == 0) ||
+    //         (ProcessData->HandleTable != NULL && ProcessData->HandleTableSize != 0) );
 
     if ( /** !IsConsoleHandle(ConsoleHandle)    || **/
         Index >= ProcessData->HandleTableSize ||

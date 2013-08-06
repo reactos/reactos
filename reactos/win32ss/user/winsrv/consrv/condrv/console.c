@@ -143,8 +143,12 @@ static NTSTATUS
 RemoveConsoleByHandle(IN HANDLE Handle)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG Index = HandleToULong(Handle) >> 2;
     PCONSOLE Console;
+
+    BOOLEAN ValidHandle = ((HandleToULong(Handle) & 0x3) == 0x3);
+    ULONG Index = HandleToULong(Handle) >> 2;
+
+    if (!ValidHandle) return STATUS_INVALID_HANDLE;
 
     ASSERT( (ConsoleList == NULL && ConsoleListSize == 0) ||
             (ConsoleList != NULL && ConsoleListSize != 0) );
@@ -339,9 +343,12 @@ ConDrvValidateConsole(OUT PCONSOLE* Console,
                       IN BOOLEAN LockConsole)
 {
     BOOLEAN RetVal = FALSE;
-
-    ULONG Index = HandleToULong(ConsoleHandle) >> 2;
     PCONSOLE ValidatedConsole;
+
+    BOOLEAN ValidHandle = ((HandleToULong(ConsoleHandle) & 0x3) == 0x3);
+    ULONG Index = HandleToULong(ConsoleHandle) >> 2;
+
+    if (!ValidHandle) return FALSE;
 
     if (!Console) return FALSE;
     *Console = NULL;
