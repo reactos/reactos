@@ -18,6 +18,7 @@ FreeSysPartDiskSpace=350
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
 nmidebug.sys=,,,,,,x,,,,,,4
+sacdrv.sys=,,,,,,x,,,,,,4
 uniata.sys=,,,,,,x,,,,,,4
 buslogic.sys=,,,,,,x,,,,,,4
 blue.sys=,,,,,,x,,,,,,4

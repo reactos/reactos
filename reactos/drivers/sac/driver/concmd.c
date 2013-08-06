@@ -1,18 +1,75 @@
 /*
- * PROJECT:		 ReactOS Boot Loader
- * LICENSE:		 BSD - See COPYING.ARM in the top level directory
- * FILE:		 drivers/sac/driver/concmd.c
- * PURPOSE:		 Driver for the Server Administration Console (SAC) for EMS
- * PROGRAMMERS:	 ReactOS Portable Systems Group
+ * PROJECT:     ReactOS Drivers
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/sac/driver/concmd.c
+ * PURPOSE:     Driver for the Server Administration Console (SAC) for EMS
+ * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES *******************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS ********************************************************************/
+/* GLOBALS *******************************************************************/
 
-/* FUNCTIONS ******************************************************************/
+PWCHAR GlobalBuffer;
+ULONG GlobalBufferSize;
+
+/* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+DoRebootCommand(IN BOOLEAN Reboot)
+{
+    LARGE_INTEGER Timeout, TickCount;
+    NTSTATUS Status;
+    KEVENT Event;
+    SAC_DBG(1, "SAC DoRebootCommand: Entering.\n");
+
+    /* Get the current time now, and setup a timeout in 1 second */
+    KeQueryTickCount(&TickCount);
+    Timeout.QuadPart = TickCount.QuadPart / (10000000 / KeQueryTimeIncrement());
+
+    /* Check if the timeout is small enough */
+    if (Timeout.QuadPart < 60 )
+    {
+        /* Show the prompt */
+        ConMgrSimpleEventMessage(Reboot ?
+                                 SAC_RESTART_PROMPT : SAC_SHUTDOWN_PROMPT,
+                                 TRUE);
+
+        /* Do the wait */
+        KeInitializeEvent(&Event, SynchronizationEvent, 0);
+        Timeout.QuadPart = -10000000 * (60 - Timeout.LowPart);
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &Timeout);
+    }
+
+    /* Do a shutdown or a reboot, based on the request */
+    Status = NtShutdownSystem(Reboot ? ShutdownReboot : ShutdownPowerOff);
+
+    /* Check if anyone in the command channel already allocated this */
+    if (!GlobalBuffer)
+    {
+        /* Allocate it */
+        GlobalBuffer = SacAllocatePool(PAGE_SIZE, GLOBAL_BLOCK_TAG);
+        if (!GlobalBuffer)
+        {
+            /* We need the global buffer, bail out without it*/
+            SacPutSimpleMessage(SAC_OUT_OF_MEMORY_PROMPT);
+            SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC DoRebootCommand: Exiting (1).\n");
+            return;
+        }
+
+        /* Set the size of the buffer */
+        GlobalBufferSize = PAGE_SIZE;
+    }
+
+    /* We came back from a reboot, this doesn't make sense, tell the user */
+    SacPutSimpleMessage(Reboot ? SAC_RESTART_FAIL_PROMPT : SAC_SHUTDOWN_FAIL_PROMPT);
+    swprintf(GlobalBuffer, GetMessage(SAC_FAIL_PROMPT), Status);
+    SacPutString(GlobalBuffer);
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC DoRebootCommand: Exiting.\n");
+}
 
 NTSTATUS
 GetTListInfo(
@@ -117,14 +174,6 @@ DoRaisePriorityCommand(
 VOID
 DoLimitMemoryCommand(
 	IN PCHAR LimitString
-	)
-{
-
-}
-
-VOID
-DoRebootCommand(
-	IN BOOLEAN Reboot
 	)
 {
 

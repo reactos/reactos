@@ -7,7 +7,8 @@ list(APPEND UNICODE_SOURCE
     neteventmsg.mc
     ntiologc.mc
     ntstatus.mc
-    pciclass.mc)
+    pciclass.mc
+    sacmsg.mc)
 
 add_message_headers(ANSI ${ANSI_SOURCE})
 # FIXME: this needs testing before switching to unicode
