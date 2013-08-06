@@ -50,7 +50,7 @@ VOID DisplayMessage(LPCWSTR Format, ...)
 
     va_start(Parameters, Format);
     _vsnwprintf(Buffer, 256, Format, Parameters);
-    MessageBox(NULL, Buffer, L"NTVDM Subsystem", MB_OK);
+    MessageBoxW(NULL, Buffer, L"NTVDM Subsystem", MB_OK);
     va_end(Parameters);
 }
 

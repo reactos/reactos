@@ -21,7 +21,7 @@
 
 static PBIOS_DATA_AREA Bda;
 static BYTE BiosKeyboardMap[256];
-static HANDLE BiosConsoleInput = INVALID_HANDLE_VALUE;
+static HANDLE BiosConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE BiosConsoleOutput = INVALID_HANDLE_VALUE;
 static CONSOLE_SCREEN_BUFFER_INFO BiosSavedBufferInfo;
 
@@ -216,14 +216,13 @@ static VOID BiosReadWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
 {
     INT i, j;
     INT Counter = 0;
+    WORD Character;
     DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Page * Bda->VideoPageSize);
 
     for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
     {
         for (j = Rectangle.Left; j <= Rectangle.Right; j++)
         {
-            WORD Character;
-
             /* Read from video memory */
             VgaReadMemory(VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
                           (LPVOID)&Character,
@@ -239,13 +238,14 @@ static VOID BiosWriteWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
 {
     INT i, j;
     INT Counter = 0;
+    WORD Character;
     DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Page * Bda->VideoPageSize);
 
     for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
     {
         for (j = Rectangle.Left; j <= Rectangle.Right; j++)
         {
-            WORD Character = Buffer[Counter++];
+            Character = Buffer[Counter++];
 
             /* Read from video memory */
             VgaWriteMemory(VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
@@ -304,7 +304,7 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
     /* Update the values in the BDA */
     Bda->VideoMode = ModeNumber;
     Bda->VideoPage = 0;
-    Bda->VideoPageSize = BIOS_PAGE_SIZE;
+    Bda->VideoPageSize   = BIOS_PAGE_SIZE;
     Bda->VideoPageOffset = 0;
     Bda->CharacterHeight = 16;
 
@@ -369,33 +369,38 @@ BOOLEAN BiosInitialize(VOID)
         BiosCode[Offset++] = 0xCF; // iret
     }
 
-    /* Get the input and output handles to the real console */
-    BiosConsoleInput = CreateFile(TEXT("CONIN$"),
-                                  GENERIC_READ | GENERIC_WRITE,
-                                  FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                  NULL,
-                                  OPEN_EXISTING,
-                                  0,
-                                  NULL);
-
-    BiosConsoleOutput = CreateFile(TEXT("CONOUT$"),
+    /* Get the input handle to the real console, and check for success */
+    BiosConsoleInput = CreateFileW(L"CONIN$",
                                    GENERIC_READ | GENERIC_WRITE,
                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
                                    NULL,
                                    OPEN_EXISTING,
                                    0,
                                    NULL);
-
-    /* Make sure it was successful */
-    if ((BiosConsoleInput == INVALID_HANDLE_VALUE)
-        || (BiosConsoleOutput == INVALID_HANDLE_VALUE))
+    if (BiosConsoleInput == INVALID_HANDLE_VALUE)
     {
+        return FALSE;
+    }
+
+    /* Get the output handle to the real console, and check for success */
+    BiosConsoleOutput = CreateFileW(L"CONOUT$",
+                                    GENERIC_READ | GENERIC_WRITE,
+                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                    NULL,
+                                    OPEN_EXISTING,
+                                    0,
+                                    NULL);
+    if (BiosConsoleOutput == INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(BiosConsoleInput);
         return FALSE;
     }
 
     /* Save the console screen buffer information */
     if (!GetConsoleScreenBufferInfo(BiosConsoleOutput, &BiosSavedBufferInfo))
     {
+        CloseHandle(BiosConsoleOutput);
+        CloseHandle(BiosConsoleInput);
         return FALSE;
     }
 
@@ -410,23 +415,23 @@ BOOLEAN BiosInitialize(VOID)
 
     /* Initialize the PIC */
     PicWriteCommand(PIC_MASTER_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
-    PicWriteCommand(PIC_SLAVE_CMD, PIC_ICW1 | PIC_ICW1_ICW4);
+    PicWriteCommand(PIC_SLAVE_CMD , PIC_ICW1 | PIC_ICW1_ICW4);
 
     /* Set the interrupt offsets */
     PicWriteData(PIC_MASTER_DATA, BIOS_PIC_MASTER_INT);
-    PicWriteData(PIC_SLAVE_DATA, BIOS_PIC_SLAVE_INT);
+    PicWriteData(PIC_SLAVE_DATA , BIOS_PIC_SLAVE_INT);
 
     /* Tell the master PIC there is a slave at IRQ 2 */
     PicWriteData(PIC_MASTER_DATA, 1 << 2);
-    PicWriteData(PIC_SLAVE_DATA, 2);
+    PicWriteData(PIC_SLAVE_DATA , 2);
 
     /* Make sure the PIC is in 8086 mode */
     PicWriteData(PIC_MASTER_DATA, PIC_ICW4_8086);
-    PicWriteData(PIC_SLAVE_DATA, PIC_ICW4_8086);
+    PicWriteData(PIC_SLAVE_DATA , PIC_ICW4_8086);
 
     /* Clear the masks for both PICs */
     PicWriteData(PIC_MASTER_DATA, 0x00);
-    PicWriteData(PIC_SLAVE_DATA, 0x00);
+    PicWriteData(PIC_SLAVE_DATA , 0x00);
 
     PitWriteCommand(0x34);
     PitWriteData(0, 0x00);
@@ -444,8 +449,8 @@ VOID BiosCleanup(VOID)
     SetConsoleScreenBufferSize(BiosConsoleOutput, BiosSavedBufferInfo.dwSize);
 
     /* Close the console handles */
-    if (BiosConsoleInput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleInput);
     if (BiosConsoleOutput != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleOutput);
+    if (BiosConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(BiosConsoleInput);
 }
 
 WORD BiosPeekCharacter(VOID)
@@ -512,9 +517,9 @@ VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page)
 
         /* Modify the CRTC registers */
         VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_LOW_REG);
-        VgaWritePort(VGA_CRTC_DATA, LOBYTE(Offset));
+        VgaWritePort(VGA_CRTC_DATA , LOBYTE(Offset));
         VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_LOC_HIGH_REG);
-        VgaWritePort(VGA_CRTC_DATA, HIBYTE(Offset));
+        VgaWritePort(VGA_CRTC_DATA , HIBYTE(Offset));
     }
 }
 
@@ -633,9 +638,9 @@ VOID BiosVideoService(LPWORD Stack)
 
             /* Modify the CRTC registers */
             VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_START_REG);
-            VgaWritePort(VGA_CRTC_DATA, Bda->CursorStartLine);
+            VgaWritePort(VGA_CRTC_DATA , Bda->CursorStartLine);
             VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_CURSOR_END_REG);
-            VgaWritePort(VGA_CRTC_DATA, Bda->CursorEndLine);
+            VgaWritePort(VGA_CRTC_DATA , Bda->CursorEndLine);
 
             break;
         }

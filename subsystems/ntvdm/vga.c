@@ -15,6 +15,9 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+static CONST DWORD MemoryBase[]  = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
+static CONST DWORD MemoryLimit[] = { 0xA7FFF, 0xA7FFF, 0xB7FFF, 0xBFFFF };
+
 static BYTE VgaMemory[VGA_NUM_BANKS * VGA_BANK_SIZE];
 static BYTE VgaMiscRegister;
 static BYTE VgaSeqIndex = VGA_SEQ_RESET_REG;
@@ -63,8 +66,7 @@ static inline INT VgaGetAddressSize(VOID)
 
 static inline DWORD VgaTranslateReadAddress(DWORD Address)
 {
-    CONST DWORD MemoryBase[] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
-    DWORD Offset = Address - MemoryBase[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
+    DWORD Offset = Address - VgaGetVideoBaseAddress();
     BYTE Plane;
 
     /* Check for chain-4 and odd-even mode */
@@ -94,8 +96,7 @@ static inline DWORD VgaTranslateReadAddress(DWORD Address)
 
 static inline DWORD VgaTranslateWriteAddress(DWORD Address)
 {
-    CONST DWORD MemoryBase[] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
-    DWORD Offset = Address - MemoryBase[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
+    DWORD Offset = Address - VgaGetVideoBaseAddress();
 
     /* Check for chain-4 and odd-even mode */
     if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
@@ -514,13 +515,11 @@ static VOID VgaUpdateTextCursor(VOID)
 
 DWORD VgaGetVideoBaseAddress(VOID)
 {
-    CONST DWORD MemoryBase[] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
     return MemoryBase[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
 }
 
 DWORD VgaGetVideoLimitAddress(VOID)
 {
-    CONST DWORD MemoryLimit[] = { 0xA7FFF, 0xA7FFF, 0xB7FFF, 0xBFFFF };
     return MemoryLimit[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
 }
 

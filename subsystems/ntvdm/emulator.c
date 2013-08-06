@@ -543,14 +543,14 @@ VOID EmulatorStep(VOID)
 
 VOID EmulatorCleanup(VOID)
 {
-    /* Free the memory allocated for the 16-bit address space */
-    if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
-
 #ifndef NEW_EMULATOR
     /* Free the softx86 CPU and FPU emulator */
-    softx86_free(&EmulatorContext);
     softx87_free(&FpuEmulatorContext);
+    softx86_free(&EmulatorContext);
 #endif
+
+    /* Free the memory allocated for the 16-bit address space */
+    if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
 }
 
 VOID EmulatorSetA20(BOOLEAN Enabled)
