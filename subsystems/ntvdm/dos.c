@@ -964,7 +964,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         for (i = Header->e_maxalloc; i >= Header->e_minalloc; i--, ExeSize--)
         {
             /* Try to allocate that much memory */
-            Segment = DosAllocateMemory(ExeSize, NULL);
+            Segment = DosAllocateMemory((WORD)ExeSize, NULL);
             if (Segment != 0) break;
         }
 
@@ -974,7 +974,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         /* Initialize the PSP */
         DosInitializePsp(Segment,
                          CommandLine,
-                         ExeSize,
+                         (WORD)ExeSize,
                          EnvBlock);
 
         /* The process owns its own memory */
@@ -1046,7 +1046,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         /* Initialize the PSP */
         DosInitializePsp(Segment,
                          CommandLine,
-                         (FileSize + sizeof(DOS_PSP)) >> 4,
+                         (WORD)((FileSize + sizeof(DOS_PSP)) >> 4),
                          EnvBlock);
 
         /* Set the initial segment registers */
@@ -1227,8 +1227,8 @@ VOID DosInt21h(LPWORD Stack)
     DWORD Ecx = EmulatorGetRegister(EMULATOR_REG_CX);
     DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
     DWORD Ebx = EmulatorGetRegister(EMULATOR_REG_BX);
-    WORD DataSegment = EmulatorGetRegister(EMULATOR_REG_DS);
-    WORD ExtSegment = EmulatorGetRegister(EMULATOR_REG_ES);
+    WORD DataSegment = (WORD)EmulatorGetRegister(EMULATOR_REG_DS);
+    WORD ExtSegment = (WORD)EmulatorGetRegister(EMULATOR_REG_ES);
 
     /* Check the value in the AH register */
     switch (HIBYTE(Eax))

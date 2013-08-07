@@ -235,7 +235,7 @@ static VOID VgaEnterGraphicsMode(UINT Width, UINT Height, UINT BitDepth)
     BitmapInfo->bmiHeader.biSizeImage = Width * Height * (BitDepth / 8);
 
     /* Fill the palette data */
-    for (i = 0; i < BitDepth; i++) PaletteIndex[i] = i;
+    for (i = 0; i < BitDepth; i++) PaletteIndex[i] = (WORD)i;
 
     /* Fill the console graphics buffer info */
     GraphicsBufferInfo.dwBitMapInfoLength = VGA_BITMAP_INFO_SIZE;
@@ -503,8 +503,8 @@ static VOID VgaUpdateTextCursor(VOID)
     Location += (VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] >> 5) & 3;
 
     /* Find the coordinates of the new position */
-    Position.X = Location % ScanlineSize;
-    Position.Y = Location / ScanlineSize;
+    Position.X = (WORD)(Location % ScanlineSize);
+    Position.Y = (WORD)(Location / ScanlineSize);
 
     /* Update the physical cursor */
     SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);
