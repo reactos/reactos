@@ -502,6 +502,7 @@ static VOID VgaUpdateTextCursor(VOID)
     BYTE CursorStart = VgaCrtcRegisters[VGA_CRTC_CURSOR_START_REG] & 0x3F;
     BYTE CursorEnd = VgaCrtcRegisters[VGA_CRTC_CURSOR_END_REG] & 0x1F;
     DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
+    BYTE TextSize = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
     WORD Location = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_LOW_REG],
                              VgaCrtcRegisters[VGA_CRTC_CURSOR_LOC_HIGH_REG]);
 
@@ -509,7 +510,7 @@ static VOID VgaUpdateTextCursor(VOID)
     {
         /* Visible cursor */
         CursorInfo.bVisible = TRUE;
-        CursorInfo.dwSize = (100 * (CursorEnd - CursorStart)) >> 5;
+        CursorInfo.dwSize = (100 * (CursorEnd - CursorStart)) / TextSize;
     }
     else
     {
