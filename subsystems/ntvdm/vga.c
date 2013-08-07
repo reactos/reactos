@@ -254,6 +254,9 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     ConsoleFramebuffer = GraphicsBufferInfo.lpBitMap;
     ConsoleMutex = GraphicsBufferInfo.hMutex;
 
+    /* Clear the framebuffer */
+    ZeroMemory(ConsoleFramebuffer, BitmapInfo->bmiHeader.biSizeImage);
+
     /* Set the active buffer */
     SetConsoleActiveScreenBuffer(GraphicsConsoleBuffer);
 
@@ -945,6 +948,9 @@ VOID VgaInitialize(HANDLE TextHandle)
 
     /* Set the global handle */
     TextConsoleBuffer = TextHandle;
+
+    /* Clear the VGA memory */
+    ZeroMemory(VgaMemory, VGA_NUM_BANKS * VGA_BANK_SIZE);
 
     /* Set the default video mode */
     BiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
