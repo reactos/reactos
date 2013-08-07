@@ -74,7 +74,7 @@ static WORD DosCopyEnvironmentBlock(WORD SourceSegment, LPCSTR ProgramName)
     TotalSize += strlen(ProgramName) + 1;
 
     /* Allocate the memory for the environment block */
-    DestSegment = DosAllocateMemory((TotalSize + 0x0F) >> 4, NULL);
+    DestSegment = DosAllocateMemory((WORD)((TotalSize + 0x0F) >> 4), NULL);
     if (!DestSegment) return 0;
 
     Ptr = SourceBuffer;
@@ -559,7 +559,7 @@ WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD Attributes)
     if (FileHandle == INVALID_HANDLE_VALUE)
     {
         /* Return the error code */
-        return GetLastError();
+        return (WORD)GetLastError();
     }
 
     /* Open the DOS handle */
@@ -632,7 +632,7 @@ WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessMode)
     if (FileHandle == INVALID_HANDLE_VALUE)
     {
         /* Return the error code */
-        return GetLastError();
+        return (WORD)GetLastError();
     }
 
     /* Open the DOS handle */
@@ -667,7 +667,7 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
     if (!ReadFile(Handle, Buffer, Count, &BytesRead32, NULL))
     {
         /* Store the error code */
-        Result = GetLastError();
+        Result = (WORD)GetLastError();
     }
 
     /* The number of bytes read is always 16-bit */
@@ -694,7 +694,7 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
     if (!WriteFile(Handle, Buffer, Count, &BytesWritten32, NULL))
     {
         /* Store the error code */
-        Result = GetLastError();
+        Result = (WORD)GetLastError();
     }
 
     /* The number of bytes written is always 16-bit */
@@ -731,7 +731,7 @@ WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset)
     if (FilePointer == INVALID_SET_FILE_POINTER)
     {
         /* Get the real error code */
-        Result = GetLastError();
+        Result = (WORD)GetLastError();
     }
 
     if (Result != ERROR_SUCCESS)
@@ -877,7 +877,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     LPSTR ProgramFilePath, Parameters[128];
     CHAR CommandLineCopy[128];
     INT ParamCount = 0;
-    DWORD Segment = 0;
+    WORD Segment = 0;
     WORD MaxAllocSize;
     DWORD i, FileSize, ExeSize;
     PIMAGE_DOS_HEADER Header;
@@ -1027,7 +1027,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
         DosAllocateMemory(0xFFFF, &MaxAllocSize);
 
         /* Make sure it's enough for the whole program and the PSP */
-        if ((MaxAllocSize << 4) < (FileSize + sizeof(DOS_PSP))) goto Cleanup;
+        if (((DWORD)MaxAllocSize << 4) < (FileSize + sizeof(DOS_PSP))) goto Cleanup;
 
         /* Allocate all of it */
         Segment = DosAllocateMemory(MaxAllocSize, NULL);

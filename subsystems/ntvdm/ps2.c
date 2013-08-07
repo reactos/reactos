@@ -289,7 +289,7 @@ VOID CheckForInputEvents()
         if (Buffer[i].EventType != KEY_EVENT) continue;
 
         /* Get the scan code */
-        ScanCode = Buffer[i].Event.KeyEvent.wVirtualScanCode;
+        ScanCode = (BYTE)Buffer[i].Event.KeyEvent.wVirtualScanCode;
 
         /* If this is a key release, set the highest bit in the scan code */
         if (!Buffer[i].Event.KeyEvent.bKeyDown) ScanCode |= 0x80;

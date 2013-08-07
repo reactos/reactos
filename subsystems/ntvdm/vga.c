@@ -218,7 +218,7 @@ static VOID VgaWriteAc(BYTE Data)
 
 static VOID VgaEnterGraphicsMode(UINT Width, UINT Height, UINT BitDepth)
 {
-    INT i;
+    DWORD i;
     CONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo;
     BYTE BitmapInfoBuffer[VGA_BITMAP_INFO_SIZE];
     LPBITMAPINFO BitmapInfo = (LPBITMAPINFO)BitmapInfoBuffer;
@@ -640,7 +640,7 @@ VOID VgaHorizontalRetrace(VOID)
 
 VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
 {
-    INT i;
+    DWORD i;
 
     DPRINT("VgaReadMemory: Address 0x%08X, Size %lu\n",
            Address,
@@ -661,7 +661,7 @@ VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
 
 VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
 {
-    INT i, j;
+    DWORD i, j;
 
     DPRINT("VgaWriteMemory: Address 0x%08X, Size %lu\n",
            Address,
@@ -961,7 +961,7 @@ VOID VgaInitialize(HANDLE TextHandle)
             VgaMemory[CurrentAddr] = CharBuffer[i * Resolution.X + j].Char.AsciiChar;
 
             /* Store the attribute in plane 1 */
-            VgaMemory[CurrentAddr + VGA_BANK_SIZE] = CharBuffer[i * Resolution.X + j].Attributes;
+            VgaMemory[CurrentAddr + VGA_BANK_SIZE] = (BYTE)CharBuffer[i * Resolution.X + j].Attributes;
         }
 
         /* Move to the next scanline */

@@ -469,7 +469,7 @@ VOID EmulatorSetRegister(ULONG Register, ULONG Value)
     }
     else
     {
-        EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val = Value;
+        EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val = (WORD)Value;
     }
 #else
     // TODO: NOT IMPLEMENTED

@@ -529,7 +529,7 @@ BOOLEAN BiosScrollWindow(INT Direction,
                          BYTE Page,
                          BYTE FillAttribute)
 {
-    INT i;
+    DWORD i;
     LPWORD WindowData;
     DWORD WindowSize = (Rectangle.Bottom - Rectangle.Top + 1)
                        * (Rectangle.Right - Rectangle.Left + 1);
