@@ -15,8 +15,8 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static CONST DWORD MemoryBase[]  = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
-static CONST DWORD MemoryLimit[] = { 0xA7FFF, 0xA7FFF, 0xB7FFF, 0xBFFFF };
+static CONST DWORD MemoryBase[] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
+static CONST DWORD MemoryLimit[] = { 0xAFFFF, 0xAFFFF, 0xB7FFF, 0xBFFFF };
 
 static BYTE VgaMemory[VGA_NUM_BANKS * VGA_BANK_SIZE];
 static BYTE VgaMiscRegister;
@@ -124,8 +124,8 @@ static inline VOID VgaMarkForUpdate(SHORT Row, SHORT Column)
     /* Check if this is the first time the rectangle is updated */
     if (!NeedsUpdate)
     {
-        UpdateRectangle.Left = UpdateRectangle.Top = (SHORT)0x7FFF;
-        UpdateRectangle.Right = UpdateRectangle.Bottom = (SHORT)0x8000;
+        UpdateRectangle.Left = UpdateRectangle.Top = SHRT_MAX;
+        UpdateRectangle.Right = UpdateRectangle.Bottom = SHRT_MIN;
     }
 
     /* Expand the rectangle to include the point */
@@ -216,7 +216,7 @@ static VOID VgaWriteAc(BYTE Data)
     VgaAcRegisters[VgaAcIndex] = Data;
 }
 
-static BOOL VgaEnterGraphicsMode(PCOORD Resolution, UINT BitDepth)
+static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
 {
     DWORD i;
     CONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo;
@@ -227,16 +227,15 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution, UINT BitDepth)
     /* Fill the bitmap info header */
     ZeroMemory(&BitmapInfo->bmiHeader, sizeof(BITMAPINFOHEADER));
     BitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    BitmapInfo->bmiHeader.biWidth  = Resolution->X;
+    BitmapInfo->bmiHeader.biWidth = Resolution->X;
     BitmapInfo->bmiHeader.biHeight = Resolution->Y;
     BitmapInfo->bmiHeader.biBitCount = 8;
-    BitmapInfo->bmiHeader.biPlanes   = 1;
+    BitmapInfo->bmiHeader.biPlanes = 1;
     BitmapInfo->bmiHeader.biCompression = BI_RGB;
-    BitmapInfo->bmiHeader.biSizeImage = Resolution->X * Resolution->Y
-                                                      * (BitDepth / 8);
+    BitmapInfo->bmiHeader.biSizeImage = Resolution->X * Resolution->Y;
 
     /* Fill the palette data */
-    for (i = 0; i < BitDepth; i++) PaletteIndex[i] = (WORD)i;
+    for (i = 0; i < (VGA_PALETTE_SIZE / 3); i++) PaletteIndex[i] = (WORD)i;
 
     /* Fill the console graphics buffer info */
     GraphicsBufferInfo.dwBitMapInfoLength = VGA_BITMAP_INFO_SIZE;
@@ -281,7 +280,7 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
     ConsoleFramebuffer = HeapAlloc(GetProcessHeap(),
                                    HEAP_ZERO_MEMORY,
                                    Resolution->X * Resolution->Y
-                                       * sizeof(CHAR_INFO));
+                                   * sizeof(CHAR_INFO));
     if (ConsoleFramebuffer == NULL)
     {
         DisplayMessage(L"An unexpected error occurred!\n");
@@ -305,7 +304,7 @@ static VOID VgaUpdateMode(VOID)
 
     if (!TextMode)
     {
-        /* Switching from graphics mode to text mode */
+        /* Leave the current graphics mode */
         VgaLeaveGraphicsMode();
     }
     else
@@ -326,7 +325,7 @@ static VOID VgaUpdateMode(VOID)
     else
     {
         /* Enter 8-bit graphics mode */
-        if (!VgaEnterGraphicsMode(&Resolution, 8)) return;
+        if (!VgaEnterGraphicsMode(&Resolution)) return;
 
         /* Clear the text mode flag */
         TextMode = FALSE;
@@ -334,9 +333,9 @@ static VOID VgaUpdateMode(VOID)
 
     /* Perform a full update */
     NeedsUpdate = TRUE;
-    UpdateRectangle.Left   = 0;
-    UpdateRectangle.Top    = 0;
-    UpdateRectangle.Right  = Resolution.X;
+    UpdateRectangle.Left = 0;
+    UpdateRectangle.Top = 0;
+    UpdateRectangle.Right = Resolution.X;
     UpdateRectangle.Bottom = Resolution.Y;
 }
 
@@ -441,7 +440,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                         {
                             BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
                                                        + (Address + (j / 8)) * AddressSize];
-                        
+
                             /* If the bit on that plane is set, set it */
                             if (PlaneData & (1 << (7 - (j % 8)))) PixelData |= 1 << k;
                         }
@@ -953,11 +952,11 @@ VOID VgaInitialize(HANDLE TextHandle)
     ModeChanged = FALSE;
 
     /* Get the data */
-    Resolution  = VgaGetDisplayResolution();
-    CharBuffer  = (PCHAR_INFO)ConsoleFramebuffer;
+    Resolution = VgaGetDisplayResolution();
+    CharBuffer = (PCHAR_INFO)ConsoleFramebuffer;
     AddressSize = VgaGetAddressSize();
-    ScreenRect.Left   = ScreenRect.Top = 0;
-    ScreenRect.Right  = Resolution.X;
+    ScreenRect.Left = ScreenRect.Top = 0;
+    ScreenRect.Right = Resolution.X;
     ScreenRect.Bottom = Resolution.Y;
     ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
 

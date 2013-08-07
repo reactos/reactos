@@ -105,6 +105,7 @@ BYTE BiosGetVideoMode(VOID);
 BOOLEAN BiosSetVideoMode(BYTE ModeNumber);
 WORD BiosPeekCharacter(VOID);
 WORD BiosGetCharacter(VOID);
+VOID BiosSetCursorPosition(BYTE Row, BYTE Column, BYTE Page);
 VOID BiosVideoService(LPWORD Stack);
 VOID BiosEquipmentService(LPWORD Stack);
 VOID BiosKeyboardService(LPWORD Stack);

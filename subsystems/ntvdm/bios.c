@@ -404,11 +404,13 @@ BOOLEAN BiosInitialize(VOID)
         return FALSE;
     }
 
-    /* Store the cursor position */
-    Bda->CursorPosition[0] = MAKEWORD(BiosSavedBufferInfo.dwCursorPosition.X,
-                                      BiosSavedBufferInfo.dwCursorPosition.Y);
-    
+    /* Initialize VGA */
     VgaInitialize(BiosConsoleOutput);
+
+    /* Update the cursor position */
+    BiosSetCursorPosition(BiosSavedBufferInfo.dwCursorPosition.Y,
+                          BiosSavedBufferInfo.dwCursorPosition.Y,
+                          0);
 
     /* Set the console input mode */
     SetConsoleMode(BiosConsoleInput, ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);

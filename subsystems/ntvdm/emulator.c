@@ -35,6 +35,8 @@ static BOOLEAN A20Line = FALSE;
 
 static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
+    UNREFERENCED_PARAMETER(Context);
+
     /* If the A20 line is disabled, mask bit 20 */
     if (!A20Line) Address &= ~(1 << 20);
 
@@ -58,6 +60,8 @@ static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT S
 
 static VOID EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
+    UNREFERENCED_PARAMETER(Context);
+
     /* If the A20 line is disabled, mask bit 20 */
     if (!A20Line) Address &= ~(1 << 20);
 
@@ -84,6 +88,9 @@ static VOID EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT 
 
 static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(Size);
+
     switch (Address)
     {
         case PIC_MASTER_CMD:
@@ -150,6 +157,9 @@ static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     BYTE Byte = *Buffer;
+
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(Size);
 
     switch (Address)
     {
@@ -333,16 +343,25 @@ static VOID EmulatorBop(WORD Code)
 
 static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
 {
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(Number);
+
     /* Do nothing */
 }
 
 static VOID EmulatorHardwareInt(PVOID Context, BYTE Number)
 {
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(Number);
+
     /* Do nothing */
 }
 
 static VOID EmulatorHardwareIntAck(PVOID Context, BYTE Number)
 {
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(Number);
+
     /* Do nothing */
 }
 

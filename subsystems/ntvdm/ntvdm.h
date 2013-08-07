@@ -16,6 +16,7 @@
 #include <conio.h>
 #include <stdarg.h>
 #include <debug.h>
+#include <limits.h>
 
 /* DEFINES ********************************************************************/
 

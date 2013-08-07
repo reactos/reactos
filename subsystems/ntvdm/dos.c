@@ -205,7 +205,7 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
         for (i = 0; i <= 2; i++)
         {
             /* Set the index in the SFT */
-            DestinationTable[i] = i;
+            DestinationTable[i] = (BYTE)i;
 
             /* Increase the reference count */
             DosSftRefCount[i]++;
@@ -864,7 +864,7 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
     PspBlock->FarCall[2] = 0xCB; // retf
 
     /* Set the command line */
-    PspBlock->CommandLineSize = strlen(CommandLine);
+    PspBlock->CommandLineSize = (BYTE)min(strlen(CommandLine), DOS_CMDLINE_LENGTH);
     RtlCopyMemory(PspBlock->CommandLine, CommandLine, PspBlock->CommandLineSize);
     PspBlock->CommandLine[PspBlock->CommandLineSize] = '\r';
 }
@@ -1936,6 +1936,8 @@ VOID DosInt21h(LPWORD Stack)
 
 VOID DosBreakInterrupt(LPWORD Stack)
 {
+    UNREFERENCED_PARAMETER(Stack);
+
     VdmRunning = FALSE;
 }
 

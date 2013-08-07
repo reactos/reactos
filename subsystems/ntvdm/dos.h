@@ -33,6 +33,7 @@
 #define UMB_END_SEGMENT 0xDFFF
 #define DOS_ALLOC_HIGH 0x40
 #define DOS_ALLOC_HIGH_LOW 0x80
+#define DOS_CMDLINE_LENGTH 127
 
 enum DOS_ALLOC_STRATEGY
 {
@@ -89,7 +90,7 @@ typedef struct _DOS_PSP
     BYTE Reserved3[9];
     DOS_FCB Fcb;
     BYTE CommandLineSize;
-    CHAR CommandLine[127];
+    CHAR CommandLine[DOS_CMDLINE_LENGTH];
 } DOS_PSP, *PDOS_PSP;
 
 typedef struct _DOS_INPUT_BUFFER

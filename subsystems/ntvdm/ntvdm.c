@@ -90,6 +90,9 @@ INT wmain(INT argc, WCHAR *argv[])
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 
 #ifndef TESTING
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
     /* The DOS command line must be ASCII */
     WideCharToMultiByte(CP_ACP, 0, GetCommandLine(), -1, CommandLine, 128, NULL, NULL);
 #else
@@ -185,7 +188,7 @@ INT wmain(INT argc, WCHAR *argv[])
 
         if ((CurrentTickCount - LastCyclePrintout) >= 1000)
         {
-            DPRINT1("NTVDM: %d Instructions Per Second\n", Cycles);
+            DPRINT1("NTVDM: %lu Instructions Per Second\n", Cycles);
             LastCyclePrintout = CurrentTickCount;
             Cycles = 0;
         }
