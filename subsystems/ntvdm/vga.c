@@ -216,7 +216,7 @@ static VOID VgaWriteAc(BYTE Data)
     VgaAcRegisters[VgaAcIndex] = Data;
 }
 
-static VOID VgaEnterGraphicsMode(UINT Width, UINT Height, UINT BitDepth)
+static BOOL VgaEnterGraphicsMode(PCOORD Resolution, UINT BitDepth)
 {
     DWORD i;
     CONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo;
@@ -227,12 +227,13 @@ static VOID VgaEnterGraphicsMode(UINT Width, UINT Height, UINT BitDepth)
     /* Fill the bitmap info header */
     ZeroMemory(&BitmapInfo->bmiHeader, sizeof(BITMAPINFOHEADER));
     BitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    BitmapInfo->bmiHeader.biWidth = Width;
-    BitmapInfo->bmiHeader.biHeight = Height;
+    BitmapInfo->bmiHeader.biWidth  = Resolution->X;
+    BitmapInfo->bmiHeader.biHeight = Resolution->Y;
     BitmapInfo->bmiHeader.biBitCount = 8;
-    BitmapInfo->bmiHeader.biPlanes = 1;
+    BitmapInfo->bmiHeader.biPlanes   = 1;
     BitmapInfo->bmiHeader.biCompression = BI_RGB;
-    BitmapInfo->bmiHeader.biSizeImage = Width * Height * (BitDepth / 8);
+    BitmapInfo->bmiHeader.biSizeImage = Resolution->X * Resolution->Y
+                                                      * (BitDepth / 8);
 
     /* Fill the palette data */
     for (i = 0; i < BitDepth; i++) PaletteIndex[i] = (WORD)i;
@@ -248,6 +249,7 @@ static VOID VgaEnterGraphicsMode(UINT Width, UINT Height, UINT BitDepth)
                                                       NULL,
                                                       CONSOLE_GRAPHICS_BUFFER,
                                                       &GraphicsBufferInfo);
+    if (GraphicsConsoleBuffer == INVALID_HANDLE_VALUE) return FALSE;
 
     /* Save the framebuffer address and mutex */
     ConsoleFramebuffer = GraphicsBufferInfo.lpBitMap;
@@ -255,10 +257,12 @@ static VOID VgaEnterGraphicsMode(UINT Width, UINT Height, UINT BitDepth)
 
     /* Set the active buffer */
     SetConsoleActiveScreenBuffer(GraphicsConsoleBuffer);
+
+    return TRUE;
 }
 
-static VOID VgaLeaveGraphicsMode()
-{   
+static VOID VgaLeaveGraphicsMode(VOID)
+{
     /* Switch back to the text buffer */
     SetConsoleActiveScreenBuffer(TextConsoleBuffer);
 
@@ -266,6 +270,33 @@ static VOID VgaLeaveGraphicsMode()
     CloseHandle(ConsoleMutex);
     CloseHandle(GraphicsConsoleBuffer);
     GraphicsConsoleBuffer = NULL;
+}
+
+static BOOL VgaEnterTextMode(PCOORD Resolution)
+{
+    /* Resize the console */
+    SetConsoleScreenBufferSize(TextConsoleBuffer, *Resolution);
+
+    /* Allocate a framebuffer */
+    ConsoleFramebuffer = HeapAlloc(GetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   Resolution->X * Resolution->Y
+                                       * sizeof(CHAR_INFO));
+    if (ConsoleFramebuffer == NULL)
+    {
+        DisplayMessage(L"An unexpected error occurred!\n");
+        VdmRunning = FALSE;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static VOID VgaLeaveTextMode(VOID)
+{
+    /* Free the old framebuffer */
+    HeapFree(GetProcessHeap(), 0, ConsoleFramebuffer);
+    ConsoleFramebuffer = NULL;
 }
 
 static VOID VgaUpdateMode(VOID)
@@ -279,29 +310,15 @@ static VOID VgaUpdateMode(VOID)
     }
     else
     {
-        /* Free the old framebuffer */
-        HeapFree(GetProcessHeap(), 0, ConsoleFramebuffer);
-        ConsoleFramebuffer = NULL;
+        /* Leave the current text mode */
+        VgaLeaveTextMode();
     }
 
     /* Check if the new mode is alphanumeric */
     if (!(VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA))
     {
-        /* Resize the console */
-        SetConsoleScreenBufferSize(TextConsoleBuffer, Resolution);
-
-        /* Allocate a framebuffer */
-        ConsoleFramebuffer = HeapAlloc(GetProcessHeap(),
-                                        HEAP_ZERO_MEMORY,
-                                        sizeof(CHAR_INFO)
-                                        * Resolution.X
-                                        * Resolution.Y);
-        if (ConsoleFramebuffer == NULL)
-        {
-            DisplayMessage(L"An unexpected error occurred!\n");
-            VdmRunning = FALSE;
-            return;
-        }
+        /* Enter new text mode */
+        if (!VgaEnterTextMode(&Resolution)) return;
 
         /* Set the text mode flag */
         TextMode = TRUE;
@@ -309,7 +326,7 @@ static VOID VgaUpdateMode(VOID)
     else
     {
         /* Enter 8-bit graphics mode */
-        VgaEnterGraphicsMode(Resolution.X, Resolution.Y, 8);
+        if (!VgaEnterGraphicsMode(&Resolution, 8)) return;
 
         /* Clear the text mode flag */
         TextMode = FALSE;
@@ -317,9 +334,9 @@ static VOID VgaUpdateMode(VOID)
 
     /* Perform a full update */
     NeedsUpdate = TRUE;
-    UpdateRectangle.Left = 0;
-    UpdateRectangle.Top = 0;
-    UpdateRectangle.Right = Resolution.X;
+    UpdateRectangle.Left   = 0;
+    UpdateRectangle.Top    = 0;
+    UpdateRectangle.Right  = Resolution.X;
     UpdateRectangle.Bottom = Resolution.Y;
 }
 
@@ -641,6 +658,7 @@ VOID VgaHorizontalRetrace(VOID)
 VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
 {
     DWORD i;
+    DWORD VideoAddress;
 
     DPRINT("VgaReadMemory: Address 0x%08X, Size %lu\n",
            Address,
@@ -652,7 +670,7 @@ VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
     /* Loop through each byte */
     for (i = 0; i < Size; i++)
     {
-        DWORD VideoAddress = VgaTranslateReadAddress(Address + i);
+        VideoAddress = VgaTranslateReadAddress(Address + i);
 
         /* Copy the value to the buffer */
         Buffer[i] = VgaMemory[VideoAddress];
@@ -662,6 +680,7 @@ VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
 VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
 {
     DWORD i, j;
+    DWORD VideoAddress;
 
     DPRINT("VgaWriteMemory: Address 0x%08X, Size %lu\n",
            Address,
@@ -676,7 +695,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
     /* Loop through each byte */
     for (i = 0; i < Size; i++)
     {
-        DWORD VideoAddress = VgaTranslateWriteAddress(Address + i);
+        VideoAddress = VgaTranslateWriteAddress(Address + i);
 
         for (j = 0; j < VGA_NUM_BANKS; j++)
         {
@@ -923,6 +942,7 @@ VOID VgaInitialize(HANDLE TextHandle)
     SMALL_RECT ScreenRect;
     PCHAR_INFO CharBuffer;
     DWORD Address = 0;
+    DWORD CurrentAddr;
 
     /* Set the global handle */
     TextConsoleBuffer = TextHandle;
@@ -933,21 +953,20 @@ VOID VgaInitialize(HANDLE TextHandle)
     ModeChanged = FALSE;
 
     /* Get the data */
-    Resolution = VgaGetDisplayResolution();
-    CharBuffer = (PCHAR_INFO)ConsoleFramebuffer;
+    Resolution  = VgaGetDisplayResolution();
+    CharBuffer  = (PCHAR_INFO)ConsoleFramebuffer;
     AddressSize = VgaGetAddressSize();
-    ScreenRect.Left = ScreenRect.Top = 0;
-    ScreenRect.Right = Resolution.X;
+    ScreenRect.Left   = ScreenRect.Top = 0;
+    ScreenRect.Right  = Resolution.X;
     ScreenRect.Bottom = Resolution.Y;
     ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
 
     /* Read the data from the console into the framebuffer */
     ReadConsoleOutputA(TextConsoleBuffer,
-                       ConsoleFramebuffer,
+                       CharBuffer,
                        Resolution,
                        Origin,
                        &ScreenRect);
-
 
     /* Loop through the scanlines */
     for (i = 0; i < Resolution.Y; i++)
@@ -955,7 +974,7 @@ VOID VgaInitialize(HANDLE TextHandle)
         /* Loop through the characters */
         for (j = 0; j < Resolution.X; j++)
         {
-            DWORD CurrentAddr = LOWORD((Address + j) * AddressSize);
+            CurrentAddr = LOWORD((Address + j) * AddressSize);
 
             /* Store the character in plane 0 */
             VgaMemory[CurrentAddr] = CharBuffer[i * Resolution.X + j].Char.AsciiChar;
@@ -970,4 +989,3 @@ VOID VgaInitialize(HANDLE TextHandle)
 }
 
 /* EOF */
-
