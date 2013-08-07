@@ -292,6 +292,8 @@ MountMgrCheckUnprocessedVolumes(IN PDEVICE_EXTENSION DeviceExtension,
     PDEVICE_INFORMATION DeviceInformation;
     NTSTATUS ArrivalStatus, Status = STATUS_SUCCESS;
 
+    UNREFERENCED_PARAMETER(Irp);
+
     /* No offline volumes, nothing more to do */
     if (IsListEmpty(&(DeviceExtension->OfflineDeviceListHead)))
     {
@@ -690,6 +692,10 @@ MountMgrQuerySystemVolumeNameQueryRoutine(IN PWSTR ValueName,
     UNICODE_STRING ValueString;
     PUNICODE_STRING SystemVolumeName;
 
+    UNREFERENCED_PARAMETER(ValueName);
+    UNREFERENCED_PARAMETER(ValueLength);
+    UNREFERENCED_PARAMETER(EntryContext);
+
     if (ValueType != REG_SZ)
     {
         return STATUS_SUCCESS;
@@ -819,6 +825,8 @@ NTSTATUS
 MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
                            IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceExtension);
+    UNREFERENCED_PARAMETER(Irp);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -826,6 +834,8 @@ NTSTATUS
 MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
                             IN PIRP Irp)
 {
+    UNREFERENCED_PARAMETER(DeviceExtension);
+    UNREFERENCED_PARAMETER(Irp);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1460,6 +1470,9 @@ MountMgrVolumeMountPointCreated(IN PDEVICE_EXTENSION DeviceExtension,
                                 IN PIRP Irp,
                                 IN NTSTATUS LockStatus)
 {
+    UNREFERENCED_PARAMETER(DeviceExtension);
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(LockStatus);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1468,6 +1481,9 @@ MountMgrVolumeMountPointDeleted(IN PDEVICE_EXTENSION DeviceExtension,
                                 IN PIRP Irp,
                                 IN NTSTATUS LockStatus)
 {
+    UNREFERENCED_PARAMETER(DeviceExtension);
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(LockStatus);
     return STATUS_NOT_IMPLEMENTED;
 }
 

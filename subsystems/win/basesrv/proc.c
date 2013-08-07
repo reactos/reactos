@@ -57,7 +57,7 @@ CSR_API(BaseSrvCreateProcess)
                                DUPLICATE_SAME_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to duplicate process handle\n");
+        DPRINT1("Failed to duplicate process handle: %lx\n", Status);
         return Status;
     }
 
@@ -71,7 +71,7 @@ CSR_API(BaseSrvCreateProcess)
                                DUPLICATE_SAME_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to duplicate process handle\n");
+        DPRINT1("Failed to duplicate thread handle: %lx\n", Status);
         NtClose(ProcessHandle);
         return Status;
     }

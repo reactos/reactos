@@ -254,11 +254,6 @@ XFORMOBJ_iInverse(
     PMATRIX pmxDst, pmxSrc;
     FLOATOBJ foDet;
     XFORM xformSrc;
-    union
-    {
-        FLOAT Float;
-        LONG Long;
-    } eDet;
 
     pmxDst = XFORMOBJ_pmx(pxoDst);
     pmxSrc = XFORMOBJ_pmx(pxoSrc);
@@ -273,8 +268,6 @@ XFORMOBJ_iInverse(
         /* Determinant is 0! */
         return DDI_ERROR;
     }
-
-    eDet.Long = FLOATOBJ_GetFloat(&foDet);
 
     /* Calculate adj(A) / det(A) */
     pmxDst->efM11 = pmxSrc->efM22;

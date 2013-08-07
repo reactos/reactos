@@ -358,7 +358,7 @@ static HRESULT WINAPI InternetExplorer_get_Name(IWebBrowser2 *iface, BSTR *Name)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_get_HWND(IWebBrowser2 *iface, LONG *pHWND)
+static HRESULT WINAPI InternetExplorer_get_HWND(IWebBrowser2 *iface, SHANDLE_PTR *pHWND)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
     FIXME("(%p)->(%p)\n", This, pHWND);

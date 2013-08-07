@@ -105,7 +105,7 @@ CreatePipe(PHANDLE hReadPipe,
 
     /* Now try opening it for write access */
     Status = NtOpenFile(&WritePipeHandle,
-                        FILE_GENERIC_WRITE | SYNCHRONIZE,
+                        FILE_GENERIC_WRITE,
                         &ObjectAttributes,
                         &StatusBlock,
                         FILE_SHARE_READ,

@@ -53,6 +53,7 @@ RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 
 /* FUNCTIONS ****************************************************************/
 
+// NOTE: Code duplicated from BasepDuplicateAndWriteHandle
 VOID
 WINAPI
 StuffStdHandle(IN HANDLE ProcessHandle,
@@ -68,9 +69,8 @@ StuffStdHandle(IN HANDLE ProcessHandle,
                                StandardHandle,
                                ProcessHandle,
                                &DuplicatedHandle,
-                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES,
-                               0,
-                               0);
+                               0, 0,
+                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES);
     if (NT_SUCCESS(Status))
     {
         /* Write it */
@@ -716,6 +716,7 @@ BasepConvertPriorityClass(IN ULONG dwCreationFlags)
 /*
  * Duplicates a standard handle and writes it where requested.
  */
+// NOTE: Code duplicated from StuffStdHandle
 VOID
 WINAPI
 BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
@@ -737,9 +738,8 @@ BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
                                StandardHandle,
                                ProcessHandle,
                                &DuplicatedHandle,
-                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES,
-                               0,
-                               0);
+                               0, 0,
+                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES);
     if (NT_SUCCESS(Status))
     {
         /* Write it */

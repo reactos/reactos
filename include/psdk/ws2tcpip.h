@@ -24,7 +24,7 @@ extern "C" {
 #ifdef _MSC_VER
 #define WS2TCPIP_INLINE __inline
 #else
-#define WS2TCPIP_INLINE extern inline
+#define WS2TCPIP_INLINE static inline
 #endif
 
 /* getaddrinfo error codes */

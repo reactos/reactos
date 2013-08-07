@@ -65,6 +65,9 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     include_directories(include/host)
 
+    if(NOT MSVC)
+        add_subdirectory(dll/win32/dbghelp)
+    endif()
     add_subdirectory(tools)
     add_subdirectory(lib)
 
@@ -92,7 +95,7 @@ else()
     endif()
 
     # Default to Debug for the build type
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING 
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
 "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
 
     # Do some cleanup
@@ -182,36 +185,19 @@ else()
     # We're using widl now for both MSVC and GCC builds
     include(cmake/widl-support.cmake)
 
-    if(MSVC AND USE_WDK_HEADERS)
-        include_directories(
-            include
-            $ENV{SDK_INC_PATH}
-            include/dxsdk
-            ${REACTOS_BINARY_DIR}/include
-            ${REACTOS_BINARY_DIR}/include/dxsdk
-            ${REACTOS_BINARY_DIR}/include/psdk
-            ${REACTOS_BINARY_DIR}/include/reactos
-            $ENV{CRT_INC_PATH}
-            $ENV{DDK_INC_PATH}
-            include/ndk
-            include/reactos
-            include/reactos/libs)
-    else()
-        include_directories(
-            include
-            include/psdk
-            include/dxsdk
-            ${REACTOS_BINARY_DIR}/include
-            ${REACTOS_BINARY_DIR}/include/psdk
-			${REACTOS_BINARY_DIR}/include/dxsdk
-            ${REACTOS_BINARY_DIR}/include/reactos
-            include/crt
-            include/ddk
-            include/ndk
-            include/reactos
-            include/reactos/libs)
-    endif()
-
+    include_directories(
+        include
+        include/psdk
+        include/dxsdk
+        ${REACTOS_BINARY_DIR}/include
+        ${REACTOS_BINARY_DIR}/include/psdk
+        ${REACTOS_BINARY_DIR}/include/dxsdk
+        ${REACTOS_BINARY_DIR}/include/reactos
+        include/crt
+        include/ddk
+        include/ndk
+        include/reactos
+        include/reactos/libs)
 
     if(ARCH STREQUAL "arm")
         include_directories(${REACTOS_SOURCE_DIR}/include/reactos/arm)
@@ -232,7 +218,7 @@ else()
     add_subdirectory(include/asm)
 
     include(cmake/baseaddress.cmake)
-    
+
     # For MSVC builds, this puts all debug symbols file in the same directory.
     set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
 
@@ -248,6 +234,9 @@ else()
     add_subdirectory(ntoskrnl)
     add_subdirectory(subsystems)
     add_subdirectory(win32ss)
+
+    # Create {bootcd, livecd, bootcdregtest}.lst
+    create_iso_lists()
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
 

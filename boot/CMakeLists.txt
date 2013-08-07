@@ -1,50 +1,27 @@
 ##bootcd
 #clear it out
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.cmake 
-    "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bootcd)\n")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "")
 
 add_custom_target(bootcd
-    ${CMAKE_COMMAND} -D CD_DIR=${CMAKE_CURRENT_BINARY_DIR}/bootcd
-                             -P ${CMAKE_CURRENT_BINARY_DIR}/bootcd.cmake
-    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin ${CMAKE_CURRENT_BINARY_DIR}/bootcd REACTOS ${REACTOS_BINARY_DIR}/bootcd.iso
+    COMMAND native-cdmake -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin @${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst REACTOS ${REACTOS_BINARY_DIR}/bootcd.iso
     DEPENDS native-cdmake
     VERBATIM)
-    
+
 ##bootcdregtest
 #clear it out
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.cmake 
-    "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest)\n")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "")
 
 add_custom_target(bootcdregtest
-    ${CMAKE_COMMAND} -D CD_DIR=${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest
-                             -P ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.cmake
-    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isobtrt.bin ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest REACTOS ${REACTOS_BINARY_DIR}/bootcdregtest.iso
+    COMMAND native-cdmake -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isobtrt.bin @${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst REACTOS ${REACTOS_BINARY_DIR}/bootcdregtest.iso
     DEPENDS native-cdmake
     VERBATIM)
-    
 
 ##livecd
-#clear it out
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake 
-    "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/livecd)\n")
-#create profiles directories too
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake 
-    "file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles)\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake 
-    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/All Users\")\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake 
-    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/All Users/Desktop\")\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake 
-    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/Default User\")\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake
-    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/Default User/Desktop\")\n")
-file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake
-    "file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/livecd/Profiles/Default User/My Documents\")\n")
+#clear it out and create the empty Desktop folder
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop\n")
 
 add_custom_target(livecd
-    ${CMAKE_COMMAND} -D CD_DIR=${CMAKE_CURRENT_BINARY_DIR}/livecd
-                             -P ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake
-    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin ${CMAKE_CURRENT_BINARY_DIR}/livecd REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
+    COMMAND native-cdmake -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin @${CMAKE_CURRENT_BINARY_DIR}/livecd.lst REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
     DEPENDS native-cdmake
     VERBATIM)
 

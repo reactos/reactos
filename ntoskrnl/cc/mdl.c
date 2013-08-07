@@ -51,8 +51,9 @@ CcMdlRead (
 VOID
 NTAPI
 CcMdlReadComplete2 (
-    IN PMDL MemoryDescriptorList,
-    IN PFILE_OBJECT FileObject)
+    IN PFILE_OBJECT FileObject,
+    IN PMDL MemoryDescriptorList
+)
 {
     PMDL Mdl;
 
@@ -104,7 +105,7 @@ CcMdlReadComplete (
     }
 
     /* Use slow path */
-    CcMdlReadComplete2(MdlChain, FileObject);
+    CcMdlReadComplete2(FileObject, MdlChain);
 }
 
 /*

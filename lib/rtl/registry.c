@@ -38,7 +38,7 @@ RtlpQueryRegistryDirect(IN ULONG ValueType,
                         IN ULONG ValueLength,
                         IN PVOID Buffer)
 {
-    USHORT ActualLength = (USHORT)ValueLength;
+    USHORT ActualLength;
     PUNICODE_STRING ReturnString = Buffer;
     PULONG Length = Buffer;
     ULONG RealLength;
@@ -49,7 +49,10 @@ RtlpQueryRegistryDirect(IN ULONG ValueType,
         (ValueType == REG_MULTI_SZ))
     {
         /* Normalize the length */
-        if (ValueLength > MAXUSHORT) ValueLength = MAXUSHORT;
+        if (ValueLength > MAXUSHORT)
+            ActualLength = MAXUSHORT;
+        else
+            ActualLength = (USHORT)ValueLength;
 
         /* Check if the return string has been allocated */
         if (!ReturnString->Buffer)
@@ -242,7 +245,8 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
         {
             /* Prepare defaults */
             Status = STATUS_SUCCESS;
-            ValueEnd = (PWSTR)((ULONG_PTR)Data + Length - sizeof(UNICODE_NULL));
+            /* Skip the last two UNICODE_NULL chars (the terminating null string) */
+            ValueEnd = (PWSTR)((ULONG_PTR)Data + Length - 2 * sizeof(UNICODE_NULL));
             p = Data;
 
             /* Loop all strings */
@@ -260,9 +264,9 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                                                      Data,
                                                      (ULONG)Length,
                                                      QueryTable->EntryContext);
-                    QueryTable->EntryContext = (PVOID)((ULONG_PTR)QueryTable->
-                                                       EntryContext +
-                                                       sizeof(UNICODE_STRING));
+                    QueryTable->EntryContext =
+                        (PVOID)((ULONG_PTR)QueryTable->EntryContext +
+                                sizeof(UNICODE_STRING));
                 }
                 else
                 {
@@ -328,13 +332,13 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
                 {
                     /* This is the good case, where we fit into a string */
                     Destination.MaximumLength = (USHORT)SpareLength;
-                    Destination.Buffer[SpareLength / 2 - 1] = UNICODE_NULL;
+                    Destination.Buffer[SpareLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
                 }
                 else
                 {
                     /* We can't fit into a string, so truncate */
                     Destination.MaximumLength = MAXUSHORT;
-                    Destination.Buffer[MAXUSHORT / 2 - 1] = UNICODE_NULL;
+                    Destination.Buffer[MAXUSHORT / sizeof(WCHAR) - 1] = UNICODE_NULL;
                 }
 
                 /* Expand the strings and set our type as one string */
@@ -1149,7 +1153,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
                     if (KeyValueInfo->Type == REG_MULTI_SZ)
                     {
                         /* Add a null-char */
-                        ((PWCHAR)KeyValueInfo)[ResultLength / 2] = UNICODE_NULL;
+                        ((PWCHAR)KeyValueInfo)[ResultLength / sizeof(WCHAR)] = UNICODE_NULL;
                         KeyValueInfo->DataLength += sizeof(UNICODE_NULL);
                     }
 

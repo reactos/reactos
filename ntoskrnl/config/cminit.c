@@ -359,7 +359,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     if (!NT_SUCCESS(Status))
     {
         /* Close handles and free buffers */
-        if (NameBuffer) ExFreePool(NameBuffer);
+        if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
         ObDereferenceObject(Event);
         ZwClose(EventHandle);
         DPRINT1("ZwCreateFile failed : %lx.\n", Status);
@@ -397,7 +397,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         if (!NT_SUCCESS(Status))
         {
             /* Close handles and free buffers */
-            if (NameBuffer) ExFreePool(NameBuffer);
+            if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
             ObDereferenceObject(Event);
             ZwClose(EventHandle);
             ZwClose(*Primary);
@@ -461,7 +461,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         if (!NT_SUCCESS(Status))
         {
             /* Close handles and free buffers */
-            if (NameBuffer) ExFreePool(NameBuffer);
+            if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
             ObDereferenceObject(Event);
             ZwClose(EventHandle);
             return Status;
@@ -471,7 +471,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         if (FsSizeInformation.BytesPerSector > HBLOCK_SIZE)
         {
             /* Close handles and free buffers */
-            if (NameBuffer) ExFreePool(NameBuffer);
+            if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
             ObDereferenceObject(Event);
             ZwClose(EventHandle);
             return STATUS_CANNOT_LOAD_REGISTRY_FILE;
@@ -596,7 +596,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     }
 
     /* We're done, close handles and free buffers */
-    if (NameBuffer) ExFreePool(NameBuffer);
+    if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
     ObDereferenceObject(Event);
     ZwClose(EventHandle);
     return STATUS_SUCCESS;

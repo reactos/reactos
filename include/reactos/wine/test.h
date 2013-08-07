@@ -39,6 +39,10 @@
 #error wine/debug.h should not be used in Wine tests
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES  (~0u)
 #endif
@@ -74,13 +78,21 @@ static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 }
 
 #ifdef STANDALONE
+
 #define START_TEST(name) \
   static void func_##name(void); \
   const struct test winetest_testlist[] = { { #name, func_##name }, { 0, 0 } }; \
   static void func_##name(void)
+
+#else /* STANDALONE */
+
+#ifdef __cplusplus
+#define START_TEST(name) extern "C" void func_##name(void)
 #else
 #define START_TEST(name) void func_##name(void)
 #endif
+
+#endif /* STANDALONE */
 
 #if defined(__x86_64__) && defined(__GNUC__) && defined(__WINE_USE_MSVCRT)
 #define __winetest_cdecl __cdecl
@@ -668,5 +680,9 @@ int main( int argc, char **argv )
 #define ok_int(expression, result) ok_dec(expression, result)
 #define ok_ntstatus(status, expected) ok_hex(status, expected)
 #define ok_hdl ok_ptr
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  /* __WINE_WINE_TEST_H */

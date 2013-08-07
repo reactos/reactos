@@ -11,7 +11,11 @@ HKCR,"SystemFileAssociations","",0x00000000,""
 ; Folders
 HKCR,"Folder","",0x00000000,"Folder"
 ;HKCR,"Folder\DefaultIcon","",0x00000000,"%SystemRoot%\system32\shell32.dll,-4"
+HKCR,"Folder\shell\open","BrowserFlags",0x00010001,"0x00000010"
+HKCR,"Folder\shell\open","ExplorerFlags",0x00010001,"0x00000012"
 HKCR,"Folder\shell\open\command","",0x00000000,"explorer.exe ""%1"""
+HKCR,"Folder\shell\explore","BrowserFlags",0x00010001,"0x00000022"
+HKCR,"Folder\shell\explore","ExplorerFlags",0x00010001,"0x00000021"
 HKCR,"Folder\shell\explore\command","",0x00000000,"explorer.exe /e,""%1"""
 
 ; Drive property page

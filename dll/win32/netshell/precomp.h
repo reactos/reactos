@@ -25,6 +25,10 @@
 
 #include "resource.h"
 
+#if defined(_MSC_VER) && _MSC_VER < 1700
+#define final sealed
+#endif
+
 #define NCF_VIRTUAL                     0x1
 #define NCF_SOFTWARE_ENUMERATED         0x2
 #define NCF_PHYSICAL                    0x4

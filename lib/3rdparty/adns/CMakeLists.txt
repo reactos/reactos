@@ -22,4 +22,7 @@ list(APPEND SOURCE
 
 add_library(adns ${SOURCE})
 add_dependencies(adns psdk)
-allow_warnings(adns)
+
+if(NOT MSVC)
+    add_target_compile_flags(adns "-Wno-unused-but-set-variable")
+endif()

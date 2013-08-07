@@ -85,7 +85,7 @@ HRESULT STDMETHODCALLTYPE CCommonBrowser::IEGetDisplayName(LPCITEMIDLIST pidl, L
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPCITEMIDLIST *ppidlOut)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPITEMIDLIST *ppidlOut)
 {
     return E_NOTIMPL;
 }
@@ -140,7 +140,7 @@ HRESULT STDMETHODCALLTYPE CCommonBrowser::CanNavigateNow( void)
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CCommonBrowser::GetPidl(LPCITEMIDLIST *ppidl)
+HRESULT STDMETHODCALLTYPE CCommonBrowser::GetPidl(LPITEMIDLIST *ppidl)
 {
     return E_NOTIMPL;
 }

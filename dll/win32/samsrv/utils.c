@@ -155,4 +155,15 @@ SampGetRidFromSid(IN PSID Sid,
     return STATUS_SUCCESS;
 }
 
+
+NTSTATUS
+SampCheckAccountName(IN PRPC_UNICODE_STRING AccountName,
+                     IN USHORT MaxLength)
+{
+    if (AccountName->Length > MaxLength * sizeof(WCHAR))
+        return STATUS_INVALID_ACCOUNT_NAME;
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

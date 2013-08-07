@@ -493,7 +493,7 @@ PciGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
                     Status,
                     STATUS_BUFFER_TOO_SMALL);
             *OutputBuffer = NULL;
-            ASSERTMSG(FALSE, "PCI Successfully did the impossible!");
+            ASSERTMSG("PCI Successfully did the impossible!", FALSE);
             break;
         }
 

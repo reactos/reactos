@@ -321,9 +321,9 @@
 
 /* Use to silence unused variable warnings when it is intentional */
 #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
-#define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
+#define UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
 #define DBG_UNREFERENCED_PARAMETER(P) {(P)=(P);}
-#define DBG_UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
+#define DBG_UNREFERENCED_LOCAL_VARIABLE(L) ((void)(L))
 
 /* min/max helper macros */
 #ifndef NOMINMAX
@@ -444,6 +444,10 @@ typedef enum {
   DEFAULT_COMPARTMENT_ID
 } COMPARTMENT_ID, *PCOMPARTMENT_ID;
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
 /* Used to store a non-float 8 byte aligned structure */
 typedef struct _QUAD
 {
@@ -490,6 +494,10 @@ typedef union _ULARGE_INTEGER {
 #endif /* MIDL_PASS */
     ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
+
+#ifdef _MSC_VER
+#pragma warning(pop) /* disable:4201 */
+#endif
 
 /* Physical Addresses are always treated as 64-bit wide */
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;

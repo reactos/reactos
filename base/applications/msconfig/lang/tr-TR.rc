@@ -1,5 +1,5 @@
 /*
- * TRANSLATORS: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -159,7 +159,7 @@ BEGIN
     IDS_TOOLS_REGEDIT_DESCR     "Değer Defteri Düzenleyicisi'ni açar."
     IDS_TOOLS_REGEDIT_CMD       "regedit.exe"
 
-    IDS_TOOLS_SYSDM_NAME        "Dizge Özellikleri"
+    IDS_TOOLS_SYSDM_NAME        "Dizge Husûsiyetleri"
     IDS_TOOLS_SYSDM_DESCR       "Bu bilgisayarla ilgili bilgi verir."
     IDS_TOOLS_SYSDM_CMD         "control.exe"
     IDS_TOOLS_SYSDM_PARAM       "sysdm.cpl"

@@ -298,6 +298,15 @@ typedef struct _ALIAS_ADM_COMMENT_INFORMATION
     UNICODE_STRING AdminComment;
 } ALIAS_ADM_COMMENT_INFORMATION, *PALIAS_ADM_COMMENT_INFORMATION;
 
+typedef enum _DOMAIN_DISPLAY_INFORMATION
+{
+    DomainDisplayUser = 1,
+    DomainDisplayMachine,
+    DomainDisplayGroup,
+    DomainDisplayOemUser,
+    DomainDisplayOemGroup,
+    DomainDisplayServer
+} DOMAIN_DISPLAY_INFORMATION, *PDOMAIN_DISPLAY_INFORMATION;
 
 typedef enum _DOMAIN_INFORMATION_CLASS
 {
@@ -818,6 +827,13 @@ SamGetCompatibilityMode(IN SAM_HANDLE ObjectHandle,
 
 NTSTATUS
 NTAPI
+SamGetDisplayEnumerationIndex(IN SAM_HANDLE DomainHandle,
+                              IN DOMAIN_DISPLAY_INFORMATION DisplayInformation,
+                              IN PUNICODE_STRING Prefix,
+                              OUT PULONG Index);
+
+NTSTATUS
+NTAPI
 SamGetGroupsForUser(IN SAM_HANDLE UserHandle,
                     OUT PGROUP_MEMBERSHIP *Groups,
                     OUT PULONG MembershipCount);
@@ -884,6 +900,18 @@ SamOpenUser(IN SAM_HANDLE DomainHandle,
             IN ACCESS_MASK DesiredAccess,
             IN ULONG UserId,
             OUT PSAM_HANDLE UserHandle);
+
+NTSTATUS
+NTAPI
+SamQueryDisplayInformation(IN SAM_HANDLE DomainHandle,
+                           IN DOMAIN_DISPLAY_INFORMATION DisplayInformation,
+                           IN ULONG Index,
+                           IN ULONG EntryCount,
+                           IN ULONG PreferredMaximumLength,
+                           OUT PULONG TotalAvailable,
+                           OUT PULONG TotalReturned,
+                           OUT PULONG ReturnedEntryCount,
+                           OUT PVOID *SortedBuffer);
 
 NTSTATUS
 NTAPI

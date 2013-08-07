@@ -9,45 +9,45 @@ typedef struct tagINetConnectionItem
     NETCON_PROPERTIES    Props;
 } INetConnectionItem, *PINetConnectionItem;
 
-class CNetConnectionManager:
+class CNetConnectionManager final :
     public INetConnectionManager,
     public IEnumNetConnection
 {
     public:
         CNetConnectionManager();
         BOOL EnumerateINetConnections();
-        
+
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
         virtual ULONG WINAPI AddRef();
         virtual ULONG WINAPI Release();
-        
+
         // INetConnectionManager
         virtual HRESULT WINAPI EnumConnections(NETCONMGR_ENUM_FLAGS Flags, IEnumNetConnection **ppEnum);
-        
+
         // IEnumNetConnection
         virtual HRESULT WINAPI Next(ULONG celt, INetConnection **rgelt, ULONG *pceltFetched);
         virtual HRESULT WINAPI Skip(ULONG celt);
         virtual HRESULT WINAPI Reset();
         virtual HRESULT WINAPI Clone(IEnumNetConnection **ppenum);
-    
+
     private:
         LONG ref;
         PINetConnectionItem pHead;
         PINetConnectionItem pCurrent;
 };
 
-class CNetConnection:
+class CNetConnection final :
     public INetConnection
 {
     public:
         CNetConnection(PINetConnectionItem pItem);
-        
+
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
         virtual ULONG WINAPI AddRef();
         virtual ULONG WINAPI Release();
-        
+
         // INetConnection
         HRESULT WINAPI Connect();
         HRESULT WINAPI Disconnect();
@@ -56,7 +56,7 @@ class CNetConnection:
         HRESULT WINAPI GetProperties(NETCON_PROPERTIES **ppProps);
         HRESULT WINAPI GetUiObjectClassId(CLSID *pclsid);
         HRESULT WINAPI Rename(LPCWSTR pszwDuplicateName);
-        
+
     private:
         LONG ref;
         NETCON_PROPERTIES Props;
@@ -106,7 +106,7 @@ CNetConnectionManager::Release()
 {
     ULONG refCount = InterlockedDecrement(&ref);
 
-    if (!refCount) 
+    if (!refCount)
         delete this;
 
     return refCount;
@@ -190,7 +190,7 @@ CNetConnection::Release()
 {
     ULONG refCount = InterlockedDecrement(&ref);
 
-    if (!refCount) 
+    if (!refCount)
     {
         CoTaskMemFree(Props.pszwName);
         CoTaskMemFree(Props.pszwDeviceName);
@@ -494,7 +494,7 @@ CNetConnectionManager::EnumerateINetConnections()
     }
 
     dwSize = 0;
-    dwResult = GetAdaptersInfo(NULL, &dwSize); 
+    dwResult = GetAdaptersInfo(NULL, &dwSize);
     if (dwResult!= ERROR_BUFFER_OVERFLOW)
     {
         CoTaskMemFree(pIfTable);

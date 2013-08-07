@@ -70,6 +70,7 @@
 #include "startmenu.h"
 #include "filedefext.h"
 #include "drvdefext.h"
+#include "CMenuBand.h"
 
 #include <wine/debug.h>
 

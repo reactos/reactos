@@ -24,7 +24,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE BEGIN
      IDS_APPNAME, "Mayın Tarlası"
      IDS_NOBODY,  "Hiç kimse"
-     IDS_ABOUT,   "Bu oyun, Joshua Thielen tarafından 2000 yılında yapılmıştır."
+     IDS_ABOUT,   "Bu oyun, Joshua Thielen eliyle, 2000 yılında yapılmıştır."
 END
 
 MENU_WINEMINE MENU
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "&Başlangıç",          IDM_BEGINNER
         MENUITEM "&Orta",               IDM_ADVANCED
         MENUITEM "&İleri",              IDM_EXPERT
-        MENUITEM "&Özel...",            IDM_CUSTOM
+        MENUITEM "&Değişik...",         IDM_CUSTOM
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış\tAlt+X",       IDM_EXIT
     END
@@ -77,7 +77,7 @@ END
 
 DLG_CUSTOM DIALOGEX  0, 0, 100, 100
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Özel"
+CAPTION "Değişik"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Yataç Sayısı:",   -1,   5,   5,  30,  10

@@ -28,19 +28,19 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 *   IShellFolder implementation
 */
 
-class CNetworkConnections:
+class CNetworkConnections final :
     public IShellFolder2,
     public IPersistFolder2,
     public IShellExecuteHookW
 {
     public:
         CNetworkConnections();
-        
+
         /* IUnknown */
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
         virtual ULONG WINAPI AddRef();
         virtual ULONG WINAPI Release();
-        
+
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, LPITEMIDLIST *ppidl, DWORD *pdwAttributes);
         virtual HRESULT WINAPI EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList);
@@ -61,15 +61,15 @@ class CNetworkConnections:
         virtual HRESULT WINAPI GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv);
         virtual HRESULT WINAPI GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd);
         virtual HRESULT WINAPI MapColumnToSCID(UINT column, SHCOLUMNID *pscid);
-        
+
         // IPersistFolder2
         virtual HRESULT WINAPI GetClassID(CLSID *lpClassId);
         virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
         virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST *pidl);
-        
+
         // IShellExecuteHookW
         virtual HRESULT WINAPI Execute(LPSHELLEXECUTEINFOW pei);
-    
+
     private:
         LONG ref;
         /* both paths are parsible from the desktop */
@@ -78,7 +78,7 @@ class CNetworkConnections:
         IOleCommandTarget * lpOleCmd;
 };
 
-class CNetConUiObject:
+class CNetConUiObject final :
     public IContextMenu3,
     public IObjectWithSite,
     public IQueryInfo,
@@ -86,31 +86,31 @@ class CNetConUiObject:
 {
     public:
         CNetConUiObject(LPCITEMIDLIST apidl, IOleCommandTarget *lpOleCmd);
-        
+
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
         virtual ULONG WINAPI AddRef();
         virtual ULONG WINAPI Release();
-        
+
         // IContextMenu3
         virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
         virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici);
         virtual HRESULT WINAPI GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax);
         virtual HRESULT WINAPI HandleMenuMsg( UINT uMsg, WPARAM wParam, LPARAM lParam);
         virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
-        
+
         // IObjectWithSite
         virtual HRESULT WINAPI SetSite(IUnknown *punk);
         virtual HRESULT WINAPI GetSite(REFIID iid, void **ppvSite);
-        
+
         // IQueryInfo
         virtual HRESULT WINAPI GetInfoFlags(DWORD *pdwFlags);
         virtual HRESULT WINAPI GetInfoTip(DWORD dwFlags, WCHAR **ppwszTip);
-        
+
         // IExtractIconW
         virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
         virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
-    
+
     private:
         LONG ref;
         LPCITEMIDLIST apidl;
@@ -376,10 +376,10 @@ HRESULT WINAPI CNetworkConnections::GetAttributesOf(
 {
     //IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
-    static const DWORD dwNetConnectAttributes = SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | 
+    static const DWORD dwNetConnectAttributes = SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
 
-    static const DWORD dwNetConnectItemAttributes = SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | 
+    static const DWORD dwNetConnectItemAttributes = SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_CANRENAME;
 
     if (!rgfInOut)
@@ -725,7 +725,7 @@ ULONG WINAPI CNetConUiObject::Release()
     ULONG refCount;
 
     refCount = InterlockedDecrement(&ref);
-    if (!refCount) 
+    if (!refCount)
         delete this;
 
     return refCount;
@@ -816,12 +816,12 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
     _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_CREATELINK, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_CREATELINK), MFS_ENABLED);
 
-    if (pProperties->dwCharacter & NCCF_ALLOW_REMOVAL) 
+    if (pProperties->dwCharacter & NCCF_ALLOW_REMOVAL)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_DELETE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_ENABLED);
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_DELETE, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_DELETE), MFS_GRAYED);
 
-    if (pProperties->dwCharacter & NCCF_ALLOW_RENAME) 
+    if (pProperties->dwCharacter & NCCF_ALLOW_RENAME)
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_RENAME, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_ENABLED);
     else
         _InsertMenuItemW(hMenu, indexMenu++, TRUE, IDS_NET_RENAME, MFT_STRING, MAKEINTRESOURCEW(IDS_NET_RENAME), MFS_GRAYED);

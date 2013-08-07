@@ -3265,7 +3265,7 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
                                        PreviousMode,
                                        (PVOID*)&SourceProcess,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return(Status);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if got a target handle */
     if (TargetProcessHandle)

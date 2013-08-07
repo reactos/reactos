@@ -288,7 +288,7 @@ typedef struct _SCSI_REQUEST_BLOCK {
   ULONG SrbFlags;
   ULONG DataTransferLength;
   ULONG TimeOutValue;
-  PVOID DataBuffer;
+  _Field_size_bytes_(DataTransferLength) PVOID DataBuffer;
   PVOID SenseInfoBuffer;
   struct _SCSI_REQUEST_BLOCK *NextSrb;
   PVOID OriginalRequest;
@@ -424,52 +424,66 @@ typedef struct _SCSI_PNP_REQUEST_BLOCK {
   UCHAR Reserved4[16];
 } SCSI_PNP_REQUEST_BLOCK, *PSCSI_PNP_REQUEST_BLOCK;
 
-typedef BOOLEAN
+typedef
+_Must_inspect_result_
+BOOLEAN
 (NTAPI *PHW_INITIALIZE)(
-  IN PVOID DeviceExtension);
+  _In_ PVOID DeviceExtension);
 
-typedef BOOLEAN
+typedef
+_Must_inspect_result_
+BOOLEAN
 (NTAPI *PHW_STARTIO)(
-  IN PVOID DeviceExtension,
-  IN PSCSI_REQUEST_BLOCK Srb);
+  _In_ PVOID DeviceExtension,
+  _In_ PSCSI_REQUEST_BLOCK Srb);
 
-typedef BOOLEAN
+typedef
+_Must_inspect_result_
+BOOLEAN
 (NTAPI *PHW_INTERRUPT)(
-  IN PVOID DeviceExtension);
+  _In_ PVOID DeviceExtension);
 
 typedef VOID
 (NTAPI *PHW_TIMER)(
-  IN PVOID DeviceExtension);
+  _In_ PVOID DeviceExtension);
 
 typedef VOID
 (NTAPI *PHW_DMA_STARTED)(
-  IN PVOID DeviceExtension);
+  _In_ PVOID DeviceExtension);
 
-typedef ULONG
+typedef
+_Must_inspect_result_
+ULONG
 (NTAPI *PHW_FIND_ADAPTER)(
-  IN PVOID DeviceExtension,
-  IN PVOID HwContext,
-  IN PVOID BusInformation,
-  IN PCHAR ArgumentString,
-  IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-  OUT PBOOLEAN Again);
+  _In_ PVOID DeviceExtension,
+  _In_ PVOID HwContext,
+  _In_ PVOID BusInformation,
+  _In_ PCHAR ArgumentString,
+  _Inout_ PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+  _Out_ PBOOLEAN Again);
 
-typedef BOOLEAN
+typedef
+_Must_inspect_result_
+BOOLEAN
 (NTAPI *PHW_RESET_BUS)(
-  IN PVOID DeviceExtension,
-  IN ULONG PathId);
+  _In_ PVOID DeviceExtension,
+  _In_ ULONG PathId);
 
-typedef BOOLEAN
+typedef
+_Must_inspect_result_
+BOOLEAN
 (NTAPI *PHW_ADAPTER_STATE)(
-  IN PVOID DeviceExtension,
-  IN PVOID Context,
-  IN BOOLEAN SaveState);
+  _In_ PVOID DeviceExtension,
+  _In_ PVOID Context,
+  _In_ BOOLEAN SaveState);
 
-typedef SCSI_ADAPTER_CONTROL_STATUS
+typedef
+_Must_inspect_result_
+SCSI_ADAPTER_CONTROL_STATUS
 (NTAPI *PHW_ADAPTER_CONTROL)(
-  IN PVOID DeviceExtension,
-  IN SCSI_ADAPTER_CONTROL_TYPE ControlType,
-  IN PVOID Parameters);
+  _In_ PVOID DeviceExtension,
+  _In_ SCSI_ADAPTER_CONTROL_TYPE ControlType,
+  _In_ PVOID Parameters);
 
 typedef enum _SCSI_NOTIFICATION_TYPE {
   RequestComplete,
@@ -531,185 +545,198 @@ SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortCompleteRequest(
-  IN PVOID HwDeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun,
-  IN UCHAR SrbStatus);
+  _In_ PVOID HwDeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun,
+  _In_ UCHAR SrbStatus);
 
+_Must_inspect_result_
 SCSIPORTAPI
 ULONG
 NTAPI
 ScsiPortConvertPhysicalAddressToUlong(
-  IN SCSI_PHYSICAL_ADDRESS Address);
+  _In_ SCSI_PHYSICAL_ADDRESS Address);
 
 #define ScsiPortConvertPhysicalAddressToUlong(Address) ((Address).LowPart)
 #define ScsiPortConvertPhysicalAddressToULongPtr(Address) ((ULONG_PTR)((Address).QuadPart))
 
+_Must_inspect_result_
 SCSIPORTAPI
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
-  IN ULONG_PTR UlongAddress);
+  _In_ ULONG_PTR UlongAddress);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortFlushDma(
-  IN PVOID DeviceExtension);
+  _In_ PVOID DeviceExtension);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortFreeDeviceBase(
-  IN PVOID HwDeviceExtension,
-  IN PVOID MappedAddress);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PVOID MappedAddress);
 
+_Must_inspect_result_
 SCSIPORTAPI
 ULONG
 NTAPI
 ScsiPortGetBusData(
-  IN PVOID DeviceExtension,
-  IN ULONG BusDataType,
-  IN ULONG SystemIoBusNumber,
-  IN ULONG SlotNumber,
-  IN PVOID Buffer,
-  IN ULONG Length);
+  _In_ PVOID DeviceExtension,
+  _In_ ULONG BusDataType,
+  _In_ ULONG SystemIoBusNumber,
+  _In_ ULONG SlotNumber,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length);
 
+_Must_inspect_result_
 SCSIPORTAPI
 PVOID
 NTAPI
 ScsiPortGetDeviceBase(
-  IN PVOID HwDeviceExtension,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG SystemIoBusNumber,
-  IN SCSI_PHYSICAL_ADDRESS IoAddress,
-  IN ULONG NumberOfBytes,
-  IN BOOLEAN InIoSpace);
+  _In_ PVOID HwDeviceExtension,
+  _In_ INTERFACE_TYPE BusType,
+  _In_ ULONG SystemIoBusNumber,
+  _In_ SCSI_PHYSICAL_ADDRESS IoAddress,
+  _In_ ULONG NumberOfBytes,
+  _In_ BOOLEAN InIoSpace);
 
+_Must_inspect_result_
 SCSIPORTAPI
 PVOID
 NTAPI
 ScsiPortGetLogicalUnit(
-  IN PVOID HwDeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun);
+  _In_ PVOID HwDeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun);
 
+_Must_inspect_result_
 SCSIPORTAPI
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortGetPhysicalAddress(
-  IN PVOID HwDeviceExtension,
-  IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
-  IN PVOID VirtualAddress,
-  OUT ULONG *Length);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PSCSI_REQUEST_BLOCK Srb,
+  _In_ PVOID VirtualAddress,
+  _Out_ ULONG *Length);
 
+_Must_inspect_result_
 SCSIPORTAPI
 PSCSI_REQUEST_BLOCK
 NTAPI
 ScsiPortGetSrb(
-  IN PVOID DeviceExtension,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun,
-  IN LONG QueueTag);
+  _In_ PVOID DeviceExtension,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun,
+  _In_ LONG QueueTag);
 
+_Must_inspect_result_
 SCSIPORTAPI
 PVOID
 NTAPI
 ScsiPortGetUncachedExtension(
-  IN PVOID HwDeviceExtension,
-  IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
-  IN ULONG NumberOfBytes);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+  _In_ ULONG NumberOfBytes);
 
+_Must_inspect_result_
 SCSIPORTAPI
 PVOID
 NTAPI
 ScsiPortGetVirtualAddress(
-  IN PVOID HwDeviceExtension,
-  IN SCSI_PHYSICAL_ADDRESS PhysicalAddress);
+  _In_ PVOID HwDeviceExtension,
+  _In_ SCSI_PHYSICAL_ADDRESS PhysicalAddress);
 
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
 SCSIPORTAPI
 ULONG
 NTAPI
 ScsiPortInitialize(
-  IN PVOID Argument1,
-  IN PVOID Argument2,
-  IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
-  IN PVOID HwContext OPTIONAL);
+  _In_ PVOID Argument1,
+  _In_ PVOID Argument2,
+  _In_ struct _HW_INITIALIZATION_DATA *HwInitializationData,
+  _In_ PVOID HwContext);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortIoMapTransfer(
-  IN PVOID HwDeviceExtension,
-  IN PSCSI_REQUEST_BLOCK Srb,
-  IN PVOID LogicalAddress,
-  IN ULONG Length);
+  _In_ PVOID HwDeviceExtension,
+  _In_ PSCSI_REQUEST_BLOCK Srb,
+  _In_ PVOID LogicalAddress,
+  _In_ ULONG Length);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortLogError(
-  IN PVOID HwDeviceExtension,
-  IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
-  IN UCHAR PathId,
-  IN UCHAR TargetId,
-  IN UCHAR Lun,
-  IN ULONG ErrorCode,
-  IN ULONG UniqueId);
+  _In_ PVOID HwDeviceExtension,
+  _In_opt_ PSCSI_REQUEST_BLOCK Srb,
+  _In_ UCHAR PathId,
+  _In_ UCHAR TargetId,
+  _In_ UCHAR Lun,
+  _In_ ULONG ErrorCode,
+  _In_ ULONG UniqueId);
 
 SCSIPORTAPI
 VOID
 __cdecl
 ScsiPortNotification(
-  IN SCSI_NOTIFICATION_TYPE NotificationType,
-  IN PVOID HwDeviceExtension,
-  IN ...);
+  _In_ SCSI_NOTIFICATION_TYPE NotificationType,
+  _In_ PVOID HwDeviceExtension,
+  ...);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortQuerySystemTime(
-  OUT PLARGE_INTEGER CurrentTime);
+  _Out_ PLARGE_INTEGER CurrentTime);
 
+_Must_inspect_result_
 SCSIPORTAPI
 ULONG
 NTAPI
 ScsiPortSetBusDataByOffset(
-  IN PVOID DeviceExtension,
-  IN ULONG BusDataType,
-  IN ULONG SystemIoBusNumber,
-  IN ULONG SlotNumber,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ PVOID DeviceExtension,
+  _In_ ULONG BusDataType,
+  _In_ ULONG SystemIoBusNumber,
+  _In_ ULONG SlotNumber,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortStallExecution(
-  IN ULONG Delay);
+  _In_ ULONG Delay);
 
+_Must_inspect_result_
 SCSIPORTAPI
 BOOLEAN
 NTAPI
 ScsiPortValidateRange(
-  IN PVOID HwDeviceExtension,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG SystemIoBusNumber,
-  IN SCSI_PHYSICAL_ADDRESS IoAddress,
-  IN ULONG NumberOfBytes,
-  IN BOOLEAN InIoSpace);
+  _In_ PVOID HwDeviceExtension,
+  _In_ INTERFACE_TYPE BusType,
+  _In_ ULONG SystemIoBusNumber,
+  _In_ SCSI_PHYSICAL_ADDRESS IoAddress,
+  _In_ ULONG NumberOfBytes,
+  _In_ BOOLEAN InIoSpace);
 
 SCSIPORTAPI
 VOID
 __cdecl
 ScsiDebugPrint(
-  IN ULONG DebugPrintLevel,
-  IN PCCHAR DebugMessage,
-  IN ...);
+  ULONG DebugPrintLevel,
+  PCCHAR DebugMessage,
+  ...);
 
 #if defined(_M_AMD64)
 
@@ -749,187 +776,193 @@ ScsiDebugPrint(
 
 #else
 
+_Must_inspect_result_
 SCSIPORTAPI
 UCHAR
 NTAPI
 ScsiPortReadPortUchar(
-  IN PUCHAR Port);
+  _In_ PUCHAR Port);
 
+_Must_inspect_result_
 SCSIPORTAPI
 ULONG
 NTAPI
 ScsiPortReadPortUlong(
-  IN PULONG Port);
+  _In_ PULONG Port);
 
+_Must_inspect_result_
 SCSIPORTAPI
 USHORT
 NTAPI
 ScsiPortReadPortUshort(
-  IN PUSHORT Port);
+  _In_ PUSHORT Port);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortReadPortBufferUchar(
-  IN PUCHAR Port,
-  IN PUCHAR Buffer,
-  IN ULONG Count);
+  _In_ PUCHAR Port,
+  _In_ PUCHAR Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortReadPortBufferUlong(
-  IN PULONG Port,
-  IN PULONG Buffer,
-  IN ULONG Count);
+  _In_ PULONG Port,
+  _In_ PULONG Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortReadPortBufferUshort(
-  IN PUSHORT Port,
-  IN PUSHORT Buffer,
-  IN ULONG Count);
+  _In_ PUSHORT Port,
+  _In_ PUSHORT Buffer,
+  _In_ ULONG Count);
 
+_Must_inspect_result_
 SCSIPORTAPI
 UCHAR
 NTAPI
 ScsiPortReadRegisterUchar(
-  IN PUCHAR Register);
+  _In_ PUCHAR Register);
 
+_Must_inspect_result_
 SCSIPORTAPI
 ULONG
 NTAPI
 ScsiPortReadRegisterUlong(
-  IN PULONG Register);
+  _In_ PULONG Register);
 
+_Must_inspect_result_
 SCSIPORTAPI
 USHORT
 NTAPI
 ScsiPortReadRegisterUshort(
-  IN PUSHORT Register);
+  _In_ PUSHORT Register);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortReadRegisterBufferUchar(
-  IN PUCHAR Register,
-  IN PUCHAR Buffer,
-  IN ULONG Count);
+  _In_ PUCHAR Register,
+  _In_ PUCHAR Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortReadRegisterBufferUlong(
-  IN PULONG Register,
-  IN PULONG Buffer,
-  IN ULONG Count);
+  _In_ PULONG Register,
+  _In_ PULONG Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortReadRegisterBufferUshort(
-  IN PUSHORT Register,
-  IN PUSHORT Buffer,
-  IN ULONG Count);
+  _In_ PUSHORT Register,
+  _In_ PUSHORT Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWritePortUchar(
-  IN PUCHAR Port,
-  IN UCHAR Value);
+  _In_ PUCHAR Port,
+  _In_ UCHAR Value);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWritePortUlong(
-  IN PULONG Port,
-  IN ULONG Value);
+  _In_ PULONG Port,
+  _In_ ULONG Value);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWritePortUshort(
-  IN PUSHORT Port,
-  IN USHORT Value);
+  _In_ PUSHORT Port,
+  _In_ USHORT Value);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWritePortBufferUchar(
-  IN PUCHAR Port,
-  IN PUCHAR Buffer,
-  IN ULONG Count);
+  _In_ PUCHAR Port,
+  _In_ PUCHAR Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWritePortBufferUlong(
-  IN PULONG Port,
-  IN PULONG Buffer,
-  IN ULONG Count);
+  _In_ PULONG Port,
+  _In_ PULONG Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWritePortBufferUshort(
-  IN PUSHORT Port,
-  IN PUSHORT Buffer,
-  IN ULONG Count);
+  _In_ PUSHORT Port,
+  _In_ PUSHORT Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWriteRegisterUchar(
-  IN PUCHAR Register,
-  IN UCHAR Value);
+  _In_ PUCHAR Register,
+  _In_ UCHAR Value);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWriteRegisterUlong(
-  IN PULONG Register,
-  IN ULONG Value);
+  _In_ PULONG Register,
+  _In_ ULONG Value);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWriteRegisterUshort(
-  IN PUSHORT Register,
-  IN USHORT Value);
+  _In_ PUSHORT Register,
+  _In_ USHORT Value);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWriteRegisterBufferUchar(
-  IN PUCHAR Register,
-  IN PUCHAR Buffer,
-  IN ULONG Count);
+  _In_ PUCHAR Register,
+  _In_ PUCHAR Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWriteRegisterBufferUlong(
-  IN PULONG Register,
-  IN PULONG Buffer,
-  IN ULONG Count);
+  _In_ PULONG Register,
+  _In_ PULONG Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortWriteRegisterBufferUshort(
-  IN PUSHORT Register,
-  IN PUSHORT Buffer,
-  IN ULONG Count);
+  _In_ PUSHORT Register,
+  _In_ PUSHORT Buffer,
+  _In_ ULONG Count);
 
 SCSIPORTAPI
 VOID
 NTAPI
 ScsiPortMoveMemory(
-  IN PVOID WriteBuffer,
-  IN PVOID ReadBuffer,
-  IN ULONG Length);
+  _In_ PVOID WriteBuffer,
+  _In_ PVOID ReadBuffer,
+  _In_ ULONG Length);
 
 #endif /* defined(_M_AMD64) */
 

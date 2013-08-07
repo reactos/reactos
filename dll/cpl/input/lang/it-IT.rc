@@ -17,17 +17,17 @@ END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced Settings"
+CAPTION "Impostazioni avanzate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
-    LTEXT "Select this check box to turn off advanced text services in all programs.\nThis is not recommended for East Asian users because this closes the language bar.", -1, 14, 40, 230, 35
+    GROUPBOX "Configurazione di sistema", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Disabilita i servizi avanzati per il testo", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    LTEXT "Questa abilitazione toglie i servizi avanzati per il testo da tutti i programmi.\nSconsigliata agli utenti dell'Asia dell'est perchè verrà disabilitata la barra delle lingue.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Impostazioni avanzate"
+CAPTION "Impostazioni avanzate per la tastiera"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Per disattivare Blocco Maiuscole", -1, 7, 7, 258, 26

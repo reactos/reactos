@@ -1,9 +1,6 @@
 
 set_cpp(WITH_RUNTIME)
 
-add_definitions(
-    -D__WINESRC__)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -37,12 +34,6 @@ list(APPEND SOURCE
 add_library(browseui SHARED
     ${SOURCE}
     browseui.rc)
-
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(browseui)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
 
 set_module_type(browseui win32dll UNICODE)
 

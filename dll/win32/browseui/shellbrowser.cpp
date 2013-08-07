@@ -426,7 +426,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE ShowControlWindow(UINT id, BOOL fShow);
     virtual HRESULT STDMETHODCALLTYPE IsControlWindowShown(UINT id, BOOL *pfShown);
     virtual HRESULT STDMETHODCALLTYPE IEGetDisplayName(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags);
-    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPCITEMIDLIST *ppidlOut);
+    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPITEMIDLIST *ppidlOut);
     virtual HRESULT STDMETHODCALLTYPE DisplayParseError(HRESULT hres, LPCWSTR pwszPath);
     virtual HRESULT STDMETHODCALLTYPE NavigateToPidl(LPCITEMIDLIST pidl, DWORD grfHLNF);
     virtual HRESULT STDMETHODCALLTYPE SetNavigateState(BNSTATE bnstate);
@@ -437,7 +437,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SetFlags(DWORD dwFlags, DWORD dwFlagMask);
     virtual HRESULT STDMETHODCALLTYPE GetFlags(DWORD *pdwFlags);
     virtual HRESULT STDMETHODCALLTYPE CanNavigateNow( void);
-    virtual HRESULT STDMETHODCALLTYPE GetPidl(LPCITEMIDLIST *ppidl);
+    virtual HRESULT STDMETHODCALLTYPE GetPidl(LPITEMIDLIST *ppidl);
     virtual HRESULT STDMETHODCALLTYPE SetReferrer(LPCITEMIDLIST pidl);
     virtual DWORD STDMETHODCALLTYPE GetBrowserIndex();
     virtual HRESULT STDMETHODCALLTYPE GetBrowserByIndex(DWORD dwID, IUnknown **ppunk);
@@ -532,13 +532,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE get_Document(IDispatch **ppDisp);
     virtual HRESULT STDMETHODCALLTYPE get_TopLevelContainer(VARIANT_BOOL *pBool);
     virtual HRESULT STDMETHODCALLTYPE get_Type(BSTR *Type);
-
-// WIDL temp hack : when the interface contains 'long' WIDL writes it out as a 'LONG'
-// Setting the prototype to LONG in this class breaks building with MSVC so we use
-// the correct 'long' type here and temp hack it for WIDL generated prototypes.
-#ifdef __exdisp_h__
-#define long LONG
-#endif
     virtual HRESULT STDMETHODCALLTYPE get_Left(long *pl);
     virtual HRESULT STDMETHODCALLTYPE put_Left(long Left);
     virtual HRESULT STDMETHODCALLTYPE get_Top(long *pl);
@@ -547,9 +540,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE put_Width(long Width);
     virtual HRESULT STDMETHODCALLTYPE get_Height(long *pl);
     virtual HRESULT STDMETHODCALLTYPE put_Height(long Height);
-#ifdef __exdisp_h__
-#undef long
-#endif
     virtual HRESULT STDMETHODCALLTYPE get_LocationName(BSTR *LocationName);
     virtual HRESULT STDMETHODCALLTYPE get_LocationURL(BSTR *LocationURL);
     virtual HRESULT STDMETHODCALLTYPE get_Busy(VARIANT_BOOL *pBool);
@@ -612,9 +602,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SaveHistory(IStream *pStream);
     virtual HRESULT STDMETHODCALLTYPE SetPositionCookie(DWORD dwPositioncookie);
     virtual HRESULT STDMETHODCALLTYPE GetPositionCookie(DWORD *pdwPositioncookie);
-
-    // *** IBrowserService2 methods ***
-
 
     // message handlers
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -2070,7 +2057,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::IEGetDisplayName(LPCITEMIDLIST pidl, LP
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPCITEMIDLIST *ppidlOut)
+HRESULT STDMETHODCALLTYPE CShellBrowser::IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPITEMIDLIST *ppidlOut)
 {
     return E_NOTIMPL;
 }
@@ -2125,7 +2112,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::CanNavigateNow()
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShellBrowser::GetPidl(LPCITEMIDLIST *ppidl)
+HRESULT STDMETHODCALLTYPE CShellBrowser::GetPidl(LPITEMIDLIST *ppidl)
 {
     // called by explorer bar to get current pidl
     if (ppidl == NULL)

@@ -15,5 +15,8 @@ list(APPEND SOURCE
     dropzone.cpp)
 
 add_library(cardlib ${SOURCE})
-allow_warnings(cardlib)
 add_dependencies(cardlib psdk)
+
+if(NOT MSVC)
+    add_target_compile_flags(cardlib "-Wno-unused-but-set-variable")
+endif()

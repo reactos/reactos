@@ -21,11 +21,14 @@
 #include "config.h"
 
 #include "dbghelp_private.h"
+#include "wdbgexts.h"
+
+#ifndef DBGHELP_STATIC_LIB
 #include "winerror.h"
 #include "psapi.h"
 #include "wine/debug.h"
-#include "wdbgexts.h"
 #include "winnls.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -133,6 +136,7 @@ void* fetch_buffer(struct process* pcs, unsigned size)
     return pcs->buffer;
 }
 
+#ifndef DBGHELP_STATIC_LIB
 const char* wine_dbgstr_addr(const ADDRESS64* addr)
 {
     if (!addr) return "(null)";
@@ -150,12 +154,18 @@ const char* wine_dbgstr_addr(const ADDRESS64* addr)
         return "unknown";
     }
 }
+#endif
 
 extern struct cpu       cpu_i386, cpu_x86_64, cpu_ppc, cpu_arm, cpu_arm64;
 
+#ifndef DBGHELP_STATIC_LIB
 static struct cpu*      dbghelp_cpus[] = {&cpu_i386, &cpu_x86_64, &cpu_ppc, &cpu_arm, &cpu_arm64, NULL};
+#else
+static struct cpu*      dbghelp_cpus[] = {&cpu_i386, NULL};
+#endif
+
 struct cpu*             dbghelp_current_cpu =
-#if defined(__i386__)
+#if defined(__i386__) || defined(DBGHELP_STATIC_LIB)
     &cpu_i386
 #elif defined(__x86_64__)
     &cpu_x86_64
@@ -280,8 +290,10 @@ static BOOL check_live_target(struct process* pcs)
 {
     if (!GetProcessId(pcs->handle)) return FALSE;
     if (GetEnvironmentVariableA("DBGHELP_NOLIVE", NULL, 0)) return FALSE;
+#ifndef DBGHELP_STATIC_LIB
     if (!elf_read_wine_loader_dbg_info(pcs))
         macho_read_wine_loader_dbg_info(pcs);
+#endif
     return TRUE;
 }
 
@@ -370,7 +382,8 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
     pcs->dbg_hdr_addr = 0;
     pcs->next = process_first;
     process_first = pcs;
-    
+
+#ifndef DBGHELP_STATIC_LIB
     if (check_live_target(pcs))
     {
         if (fInvadeProcess)
@@ -384,6 +397,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+#endif
 
     return TRUE;
 }

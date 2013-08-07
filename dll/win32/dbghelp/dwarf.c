@@ -47,16 +47,18 @@
 #endif
 
 //#include "windef.h"
-#include <winternl.h>
 //#include "winbase.h"
 //#include "winuser.h"
 //#include "ole2.h"
 //#include "oleauto.h"
 
+#ifndef DBGHELP_STATIC_LIB
+#include <winternl.h>
+#include <wine/debug.h>
+#endif
+
 #include "dbghelp_private.h"
 #include "image_private.h"
-
-#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_dwarf);
 
@@ -1888,8 +1890,10 @@ static struct symt* dwarf2_parse_subprogram(dwarf2_parse_context_t* ctx,
      * (not the case for stabs), we just drop Wine's thunks here...
      * Actual thunks will be created in elf_module from the symbol table
      */
+#ifndef DBGHELP_STATIC_LIB
     if (elf_is_in_thunk_area(ctx->load_offset + low_pc, ctx->thunks) >= 0)
         return NULL;
+#endif
     if (!(ret_type = dwarf2_lookup_type(ctx, di)))
     {
         ret_type = ctx->symt_cache[sc_void];

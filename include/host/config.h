@@ -5,6 +5,12 @@
 
 #define HAVE_SPAWNVP 1
 
+/* Define to 1 if you have the `z' library (-lz). */
+#define HAVE_ZLIB 1
+
+/* Define to 1 if you have the <zlib.h> header file. */
+#define HAVE_ZLIB_H 1
+
 /* Define to 1 if you have the <float.h> header file. */
 #define HAVE_FLOAT_H 1
 

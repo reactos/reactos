@@ -35,13 +35,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(samlib);
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL WINAPI
-DllMain (HINSTANCE hInstance,
-	 DWORD dwReason,
-	 LPVOID lpReserved)
+BOOL
+WINAPI
+DllMain(HINSTANCE hInstance,
+        DWORD dwReason,
+        LPVOID lpReserved)
 {
-
-  return TRUE;
+    return TRUE;
 }
 
 /* EOF */

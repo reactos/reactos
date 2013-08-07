@@ -44,7 +44,7 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
 	DbgPrint("\n BusLogic - Creating the file");
 
 	status = ZwCreateFile(&FileHandle,
-					  FILE_APPEND_DATA,
+					  FILE_APPEND_DATA | SYNCHRONIZE,
 					  &objectAttributes,
 					  &IoStatus,
 					  0,

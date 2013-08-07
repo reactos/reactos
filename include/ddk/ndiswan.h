@@ -124,63 +124,63 @@ extern "C" {
 }
 
 typedef struct _NDIS_WAN_INFO {
-  OUT ULONG MaxFrameSize;
-  OUT ULONG MaxTransmit;
-  OUT ULONG HeaderPadding;
-  OUT ULONG TailPadding;
-  OUT ULONG Endpoints;
-  OUT UINT MemoryFlags;
-  OUT NDIS_PHYSICAL_ADDRESS HighestAcceptableAddress;
-  OUT ULONG FramingBits;
-  OUT ULONG DesiredACCM;
+  _Out_ ULONG MaxFrameSize;
+  _Out_ ULONG MaxTransmit;
+  _Out_ ULONG HeaderPadding;
+  _Out_ ULONG TailPadding;
+  _Out_ ULONG Endpoints;
+  _Out_ UINT MemoryFlags;
+  _Out_ NDIS_PHYSICAL_ADDRESS HighestAcceptableAddress;
+  _Out_ ULONG FramingBits;
+  _Out_ ULONG DesiredACCM;
 } NDIS_WAN_INFO, *PNDIS_WAN_INFO;
 
 typedef struct _NDIS_WAN_GET_LINK_INFO {
-  IN NDIS_HANDLE NdisLinkHandle;
-  IN ULONG MaxSendFrameSize;
-  OUT ULONG MaxRecvFrameSize;
-  OUT ULONG HeaderPadding;
-  OUT ULONG TailPadding;
-  OUT ULONG SendFramingBits;
-  OUT ULONG RecvFramingBits;
-  OUT ULONG SendCompressionBits;
-  OUT ULONG RecvCompressionBits;
-  OUT ULONG SendACCM;
-  OUT ULONG RecvACCM;
+  _In_ NDIS_HANDLE NdisLinkHandle;
+  _Out_ ULONG MaxSendFrameSize;
+  _Out_ ULONG MaxRecvFrameSize;
+  _Out_ ULONG HeaderPadding;
+  _Out_ ULONG TailPadding;
+  _Out_ ULONG SendFramingBits;
+  _Out_ ULONG RecvFramingBits;
+  _Out_ ULONG SendCompressionBits;
+  _Out_ ULONG RecvCompressionBits;
+  _Out_ ULONG SendACCM;
+  _Out_ ULONG RecvACCM;
 } NDIS_WAN_GET_LINK_INFO, *PNDIS_WAN_GET_LINK_INFO;
 
 typedef struct _NDIS_WAN_SET_LINK_INFO {
-  IN NDIS_HANDLE NdisLinkHandle;
-  IN ULONG MaxSendFrameSize;
-  IN ULONG MaxRecvFrameSize;
-  IN ULONG HeaderPadding;
-  IN ULONG TailPadding;
-  IN ULONG SendFramingBits;
-  IN ULONG RecvFramingBits;
-  IN ULONG SendCompressionBits;
-  IN ULONG RecvCompressionBits;
-  IN ULONG SendACCM;
-  IN ULONG RecvACCM;
+  _In_ NDIS_HANDLE NdisLinkHandle;
+  _In_ ULONG MaxSendFrameSize;
+  _In_ ULONG MaxRecvFrameSize;
+  _In_ ULONG HeaderPadding;
+  _In_ ULONG TailPadding;
+  _In_ ULONG SendFramingBits;
+  _In_ ULONG RecvFramingBits;
+  _In_ ULONG SendCompressionBits;
+  _In_ ULONG RecvCompressionBits;
+  _In_ ULONG SendACCM;
+  _In_ ULONG RecvACCM;
 } NDIS_WAN_SET_LINK_INFO, *PNDIS_WAN_SET_LINK_INFO;
 
 typedef struct _NDIS_WAN_GET_BRIDGE_INFO {
-  IN NDIS_HANDLE NdisLinkHandle;
-  OUT USHORT LanSegmentNumber;
-  OUT UCHAR BridgeNumber;
-  OUT UCHAR BridgingOptions;
-  OUT ULONG BridgingCapabilities;
-  OUT UCHAR BridgingType;
-  OUT UCHAR MacBytes[6];
+  _In_ NDIS_HANDLE NdisLinkHandle;
+  _Out_ USHORT LanSegmentNumber;
+  _Out_ UCHAR BridgeNumber;
+  _Out_ UCHAR BridgingOptions;
+  _Out_ ULONG BridgingCapabilities;
+  _Out_ UCHAR BridgingType;
+  _Out_ UCHAR MacBytes[6];
 } NDIS_WAN_GET_BRIDGE_INFO, *PNDIS_WAN_GET_BRIDGE_INFO;
 
 typedef struct _NDIS_WAN_SET_BRIDGE_INFO {
-  IN NDIS_HANDLE NdisLinkHandle;
-  IN USHORT LanSegmentNumber;
-  IN UCHAR BridgeNumber;
-  IN UCHAR BridgingOptions;
-  IN ULONG BridgingCapabilities;
-  IN UCHAR BridgingType;
-  IN UCHAR MacBytes[6];
+  _In_ NDIS_HANDLE NdisLinkHandle;
+  _In_ USHORT LanSegmentNumber;
+  _In_ UCHAR BridgeNumber;
+  _In_ UCHAR BridgingOptions;
+  _In_ ULONG BridgingCapabilities;
+  _In_ UCHAR BridgingType;
+  _In_ UCHAR MacBytes[6];
 } NDIS_WAN_SET_BRIDGE_INFO, *PNDIS_WAN_SET_BRIDGE_INFO;
 
 typedef struct _NDIS_WAN_COMPRESS_INFO {
@@ -201,15 +201,15 @@ typedef struct _NDIS_WAN_COMPRESS_INFO {
 } NDIS_WAN_COMPRESS_INFO, *PNDIS_WAN_COMPRESS_INFO;
 
 typedef struct _NDIS_WAN_GET_COMP_INFO {
-  IN NDIS_HANDLE NdisLinkHandle;
-  OUT NDIS_WAN_COMPRESS_INFO SendCapabilities;
-  OUT NDIS_WAN_COMPRESS_INFO RecvCapabilities;
+  _In_ NDIS_HANDLE NdisLinkHandle;
+  _Out_ NDIS_WAN_COMPRESS_INFO SendCapabilities;
+  _Out_ NDIS_WAN_COMPRESS_INFO RecvCapabilities;
 } NDIS_WAN_GET_COMP_INFO, *PNDIS_WAN_GET_COMP_INFO;
 
 typedef struct _NDIS_WAN_SET_COMP_INFO {
-  IN NDIS_HANDLE NdisLinkHandle;
-  IN NDIS_WAN_COMPRESS_INFO SendCapabilities;
-  IN NDIS_WAN_COMPRESS_INFO RecvCapabilities;
+  _In_ NDIS_HANDLE NdisLinkHandle;
+  _In_ NDIS_WAN_COMPRESS_INFO SendCapabilities;
+  _In_ NDIS_WAN_COMPRESS_INFO RecvCapabilities;
 } NDIS_WAN_SET_COMP_INFO, *PNDIS_WAN_SET_COMP_INFO;
 
 /*
@@ -219,93 +219,93 @@ typedef struct _NDIS_WAN_SET_COMP_INFO {
  * to write proper English or if they do not re-read what they are writing !!
  */
 typedef struct _NDIS_WAN_GET_STATS_INFO {
-  IN NDIS_HANDLE NdisLinkHandle;
-  OUT ULONG BytesSent;
-  OUT ULONG BytesRcvd;
-  OUT ULONG FramesSent;
-  OUT ULONG FramesRcvd;
-  OUT ULONG CRCErrors;
-  OUT ULONG TimeoutErrors;
-  OUT ULONG AlignmentErrors;
-  OUT ULONG SerialOverrunErrors;
-  OUT ULONG FramingErrors;
-  OUT ULONG BufferOverrunErrors;
-  OUT ULONG BytesTransmittedUncompressed;
-  OUT ULONG BytesReceivedUncompressed;
-  OUT ULONG BytesTransmittedCompressed;
-  OUT ULONG BytesReceivedCompressed;
-  OUT ULONG TunnelPacketsRecieved;
-  OUT ULONG TunnelRecievePacketsPending;
-  OUT ULONG TunnelPacketsIndicatedUp;
-  OUT ULONG TunnelRecievePacketsRejected;
-  OUT ULONG TunnelPacketsSent;
-  OUT ULONG TunnelPacketsSentComplete;
-  OUT ULONG TunnelTransmitPacketsPending;
-  OUT ULONG TunnelPacketsTransmitError;
-  OUT ULONG TunnelPacketsSentError;
-  OUT ULONG TunnelTransmitPacketsRejected;
-  OUT ULONG TunnelAcksSent;
-  OUT ULONG TunnelAcksSentComplete;
-  OUT ULONG TunnelGeneric1;
-  OUT ULONG TunnelGeneric2;
-  OUT ULONG TunnelGeneric3;
+  _In_ NDIS_HANDLE NdisLinkHandle;
+  _Out_ ULONG BytesSent;
+  _Out_ ULONG BytesRcvd;
+  _Out_ ULONG FramesSent;
+  _Out_ ULONG FramesRcvd;
+  _Out_ ULONG CRCErrors;
+  _Out_ ULONG TimeoutErrors;
+  _Out_ ULONG AlignmentErrors;
+  _Out_ ULONG SerialOverrunErrors;
+  _Out_ ULONG FramingErrors;
+  _Out_ ULONG BufferOverrunErrors;
+  _Out_ ULONG BytesTransmittedUncompressed;
+  _Out_ ULONG BytesReceivedUncompressed;
+  _Out_ ULONG BytesTransmittedCompressed;
+  _Out_ ULONG BytesReceivedCompressed;
+  _Out_ ULONG TunnelPacketsRecieved;
+  _Out_ ULONG TunnelRecievePacketsPending;
+  _Out_ ULONG TunnelPacketsIndicatedUp;
+  _Out_ ULONG TunnelRecievePacketsRejected;
+  _Out_ ULONG TunnelPacketsSent;
+  _Out_ ULONG TunnelPacketsSentComplete;
+  _Out_ ULONG TunnelTransmitPacketsPending;
+  _Out_ ULONG TunnelPacketsTransmitError;
+  _Out_ ULONG TunnelPacketsSentError;
+  _Out_ ULONG TunnelTransmitPacketsRejected;
+  _Out_ ULONG TunnelAcksSent;
+  _Out_ ULONG TunnelAcksSentComplete;
+  _Out_ ULONG TunnelGeneric1;
+  _Out_ ULONG TunnelGeneric2;
+  _Out_ ULONG TunnelGeneric3;
 } NDIS_WAN_GET_STATS_INFO, *PNDIS_WAN_GET_STATS_INFO;
 
 typedef struct _NDIS_MAC_LINE_UP {
-  IN ULONG LinkSpeed;
-  IN NDIS_WAN_QUALITY Quality;
-  IN USHORT SendWindow;
-  IN NDIS_HANDLE ConnectionWrapperID;
-  IN NDIS_HANDLE NdisLinkHandle;
-  OUT NDIS_HANDLE NdisLinkContext;
+  _In_ ULONG LinkSpeed;
+  _In_ NDIS_WAN_QUALITY Quality;
+  _In_ USHORT SendWindow;
+  _In_ NDIS_HANDLE ConnectionWrapperID;
+  _In_ NDIS_HANDLE NdisLinkHandle;
+  _Out_ NDIS_HANDLE NdisLinkContext;
 } NDIS_MAC_LINE_UP, *PNDIS_MAC_LINE_UP;
 
 typedef struct _NDIS_MAC_LINE_DOWN {
-  IN NDIS_HANDLE NdisLinkContext;
+  _In_ NDIS_HANDLE NdisLinkContext;
 } NDIS_MAC_LINE_DOWN, *PNDIS_MAC_LINE_DOWN;
 
 typedef struct _NDIS_MAC_FRAGMENT {
-  IN NDIS_HANDLE NdisLinkContext;
-  IN ULONG Errors;
+  _In_ NDIS_HANDLE NdisLinkContext;
+  _In_ ULONG Errors;
 } NDIS_MAC_FRAGMENT, *PNDIS_MAC_FRAGMENT;
 
 typedef struct _NDIS_WAN_CO_INFO {
-  OUT ULONG MaxFrameSize;
-  OUT ULONG MaxSendWindow;
-  OUT ULONG FramingBits;
-  OUT ULONG DesiredACCM;
+  _Out_ ULONG MaxFrameSize;
+  _Out_ ULONG MaxSendWindow;
+  _Out_ ULONG FramingBits;
+  _Out_ ULONG DesiredACCM;
 } NDIS_WAN_CO_INFO, *PNDIS_WAN_CO_INFO;
 
 typedef struct _NDIS_WAN_CO_GET_LINK_INFO {
-  OUT ULONG MaxSendFrameSize;
-  OUT ULONG MaxRecvFrameSize;
-  OUT ULONG SendFramingBits;
-  OUT ULONG RecvFramingBits;
-  OUT ULONG SendCompressionBits;
-  OUT ULONG RecvCompressionBits;
-  OUT ULONG SendACCM;
-  OUT ULONG RecvACCM;
+  _Out_ ULONG MaxSendFrameSize;
+  _Out_ ULONG MaxRecvFrameSize;
+  _Out_ ULONG SendFramingBits;
+  _Out_ ULONG RecvFramingBits;
+  _Out_ ULONG SendCompressionBits;
+  _Out_ ULONG RecvCompressionBits;
+  _Out_ ULONG SendACCM;
+  _Out_ ULONG RecvACCM;
 } NDIS_WAN_CO_GET_LINK_INFO, *PNDIS_WAN_CO_GET_LINK_INFO;
 
 typedef struct _NDIS_WAN_CO_SET_LINK_INFO {
-  IN ULONG MaxSendFrameSize;
-  IN ULONG MaxRecvFrameSize;
-  IN ULONG SendFramingBits;
-  IN ULONG RecvFramingBits;
-  IN ULONG SendCompressionBits;
-  IN ULONG RecvCompressionBits;
-  IN ULONG SendACCM;
-  IN ULONG RecvACCM;
+  _In_ ULONG MaxSendFrameSize;
+  _In_ ULONG MaxRecvFrameSize;
+  _In_ ULONG SendFramingBits;
+  _In_ ULONG RecvFramingBits;
+  _In_ ULONG SendCompressionBits;
+  _In_ ULONG RecvCompressionBits;
+  _In_ ULONG SendACCM;
+  _In_ ULONG RecvACCM;
 } NDIS_WAN_CO_SET_LINK_INFO, *PNDIS_WAN_CO_SET_LINK_INFO;
 
 typedef struct _NDIS_WAN_CO_GET_COMP_INFO {
-  OUT NDIS_WAN_COMPRESS_INFO SendCapabilities;
-  OUT NDIS_WAN_COMPRESS_INFO RecvCapabilities;
+  _Out_ NDIS_WAN_COMPRESS_INFO SendCapabilities;
+  _Out_ NDIS_WAN_COMPRESS_INFO RecvCapabilities;
 } NDIS_WAN_CO_GET_COMP_INFO, *PNDIS_WAN_CO_GET_COMP_INFO;
 
 typedef struct _NDIS_WAN_CO_SET_COMP_INFO {
-  IN NDIS_WAN_COMPRESS_INFO SendCapabilities;
-  IN NDIS_WAN_COMPRESS_INFO RecvCapabilities;
+  _In_ NDIS_WAN_COMPRESS_INFO SendCapabilities;
+  _In_ NDIS_WAN_COMPRESS_INFO RecvCapabilities;
 } NDIS_WAN_CO_SET_COMP_INFO, *PNDIS_WAN_CO_SET_COMP_INFO;
 
 /*
@@ -315,39 +315,39 @@ typedef struct _NDIS_WAN_CO_SET_COMP_INFO {
  * to write proper English or if they do not re-read what they are writing !!
  */
 typedef struct _NDIS_WAN_CO_GET_STATS_INFO {
-  OUT ULONG BytesSent;
-  OUT ULONG BytesRcvd;
-  OUT ULONG FramesSent;
-  OUT ULONG FramesRcvd;
-  OUT ULONG CRCErrors;
-  OUT ULONG TimeoutErrors;
-  OUT ULONG AlignmentErrors;
-  OUT ULONG SerialOverrunErrors;
-  OUT ULONG FramingErrors;
-  OUT ULONG BufferOverrunErrors;
-  OUT ULONG BytesTransmittedUncompressed;
-  OUT ULONG BytesReceivedUncompressed;
-  OUT ULONG BytesTransmittedCompressed;
-  OUT ULONG BytesReceivedCompressed;
-  OUT ULONG TunnelPacketsRecieved;
-  OUT ULONG TunnelRecievePacketsPending;
-  OUT ULONG TunnelPacketsIndicatedUp;
-  OUT ULONG TunnelRecievePacketsRejected;
-  OUT ULONG TunnelPacketsSent;
-  OUT ULONG TunnelPacketsSentComplete;
-  OUT ULONG TunnelTransmitPacketsPending;
-  OUT ULONG TunnelPacketsTransmitError;
-  OUT ULONG TunnelPacketsSentError;
-  OUT ULONG TunnelTransmitPacketsRejected;
-  OUT ULONG TunnelAcksSent;
-  OUT ULONG TunnelAcksSentComplete;
-  OUT ULONG TunnelGeneric1;
-  OUT ULONG TunnelGeneric2;
-  OUT ULONG TunnelGeneric3;
+  _Out_ ULONG BytesSent;
+  _Out_ ULONG BytesRcvd;
+  _Out_ ULONG FramesSent;
+  _Out_ ULONG FramesRcvd;
+  _Out_ ULONG CRCErrors;
+  _Out_ ULONG TimeoutErrors;
+  _Out_ ULONG AlignmentErrors;
+  _Out_ ULONG SerialOverrunErrors;
+  _Out_ ULONG FramingErrors;
+  _Out_ ULONG BufferOverrunErrors;
+  _Out_ ULONG BytesTransmittedUncompressed;
+  _Out_ ULONG BytesReceivedUncompressed;
+  _Out_ ULONG BytesTransmittedCompressed;
+  _Out_ ULONG BytesReceivedCompressed;
+  _Out_ ULONG TunnelPacketsRecieved;
+  _Out_ ULONG TunnelRecievePacketsPending;
+  _Out_ ULONG TunnelPacketsIndicatedUp;
+  _Out_ ULONG TunnelRecievePacketsRejected;
+  _Out_ ULONG TunnelPacketsSent;
+  _Out_ ULONG TunnelPacketsSentComplete;
+  _Out_ ULONG TunnelTransmitPacketsPending;
+  _Out_ ULONG TunnelPacketsTransmitError;
+  _Out_ ULONG TunnelPacketsSentError;
+  _Out_ ULONG TunnelTransmitPacketsRejected;
+  _Out_ ULONG TunnelAcksSent;
+  _Out_ ULONG TunnelAcksSentComplete;
+  _Out_ ULONG TunnelGeneric1;
+  _Out_ ULONG TunnelGeneric2;
+  _Out_ ULONG TunnelGeneric3;
 } NDIS_WAN_CO_GET_STATS_INFO, *PNDIS_WAN_CO_GET_STATS_INFO;
 
 typedef struct _NDIS_WAN_CO_FRAGMENT {
-  IN ULONG Errors;
+  _In_ ULONG Errors;
 } NDIS_WAN_CO_FRAGMENT, *PNDIS_WAN_CO_FRAGMENT;
 
 typedef struct _WAN_CO_LINKPARAMS {

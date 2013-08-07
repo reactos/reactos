@@ -28,12 +28,8 @@ IntGdiUnreferencePdev(PPDEVOBJ ppdev, DWORD CleanUpType)
 BOOL FASTCALL
 IntCreatePrimarySurface(VOID)
 {
-    SIZEL SurfSize;
-    SURFOBJ *pso;
-
     /* Create surface */
-    pso = &PDEVOBJ_pSurface(gppdevPrimary)->SurfObj;
-    SurfSize = pso->sizlBitmap;
+    PDEVOBJ_pSurface(gppdevPrimary);
 
     DPRINT("IntCreatePrimarySurface, gppdevPrimary=%p, gppdevPrimary->pSurface = %p\n",
         gppdevPrimary, gppdevPrimary->pSurface);

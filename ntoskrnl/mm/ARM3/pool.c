@@ -118,7 +118,7 @@ MiProtectedPoolUnProtectLinks(IN PLIST_ENTRY Links,
 
         /* So make it safe to access */
         Safe = MiUnProtectFreeNonPagedPool(PoolVa, 1);
-        if (Safe) PoolFlink = PoolVa;
+        if (Safe) *PoolFlink = PoolVa;
     }
 
     /* Are we going to need a backward link too? */
@@ -129,7 +129,7 @@ MiProtectedPoolUnProtectLinks(IN PLIST_ENTRY Links,
 
         /* Make it safe to access */
         Safe = MiUnProtectFreeNonPagedPool(PoolVa, 1);
-        if (Safe) PoolBlink = PoolVa;
+        if (Safe) *PoolBlink = PoolVa;
     }
 }
 

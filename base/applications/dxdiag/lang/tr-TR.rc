@@ -2,7 +2,7 @@
  * TRANSLATORS: 2012 - Arda Tanrıkulu (ardatanrikulu@gmail.com)
  *              2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
- 
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
@@ -23,8 +23,8 @@ IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu araç, dizgenizde yüklü ReactX bileşenleri ve sürücüleri hakkında ayrıntılı bilgi yazanaklar.", -1, 10, 10, 443, 17
-    LTEXT "Soruna hangi bölümün neden olduğunu biliyorsanız, yukarıdaki uygun sekmeyi tıklatınız. Bilmiyorsanız sırayla her bölüme gitmek için aşağıdaki ""Sonraki Bölüm"" düğmesini kullanabilirsiniz.", -1, 10, 30, 443, 25
+    LTEXT "Bu araç, dizgenizdeki yüklü ReactX bileşenleri ve sürücüleri hakkında ayrıntılı bilgi toplar.", -1, 10, 10, 443, 17
+    LTEXT "Soruna hangi bölümün neden olduğunu biliyorsanız yukarıdaki uygun sekmeyi tıklatınız. Bilmiyorsanız sırayla her bölüme gitmek için aşağıdaki ""Sonraki Bölüm"" düğmesini kullanabilirsiniz.", -1, 10, 30, 443, 25
     GROUPBOX "Bilgisayar Bilgisi", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Geçerli Zaman:", -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT "Ad:", -1, 70, 80, 80, 10, SS_RIGHT
@@ -86,7 +86,7 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
 
-    GROUPBOX "ReactX Özellikleri", -1, 10, 115, 450, 60
+    GROUPBOX "ReactX Husûsiyetleri", -1, 10, 115, 450, 60
     RTEXT "ReactDraw Hızlandırması:", -1, 15, 130, 110, 12
     RTEXT "React3D Hızlandırması:", -1, 15, 145, 110, 12
     RTEXT "AGP Doku Hızlandırması:", -1, 15, 160, 110, 12
@@ -134,7 +134,7 @@ BEGIN
     LTEXT "", IDC_STATIC_DSOUND_LOGO, 335, 55, 100, 10
     LTEXT "", IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
     LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
-    GROUPBOX "ReactX Özellikleri", -1, 10, 115, 450, 60
+    GROUPBOX "ReactX Husûsiyetleri", -1, 10, 115, 450, 60
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
     RTEXT "Donanım İvmesi:", -1, 20, 135, 90, 20
     PUSHBUTTON "&ReactSound'u Sına", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
@@ -214,15 +214,15 @@ BEGIN
     IDS_DIRECTPLAY_MODEMCONN "ReactPlay için Çeivrge Bağlantısı"
     IDS_DIRECTPLAY_SERIALCONN "ReactPlay için Dizilik Bağlantı"
     IDS_REG_SUCCESS "Tamam"
-    IDS_REG_FAIL "Hatâ"
+    IDS_REG_FAIL "Yanlışlık"
     IDS_DDTEST_ERROR "Sınama başarısız oldu."
     IDS_DDTEST_DESCRIPTION "ReactDraw arayüz sınaması başlatılacak. Sürdürülsün mü?"
-    IDS_DDPRIMARY_DESCRIPTION "Bu sınama, ReactDraw'ı birincil yüzeye çizmek için kullanacak. Ekrana ak ve kara dikdörtgenler çizilecek. Sürdürülsün mü?"
-    IDS_DDPRIMARY_RESULT "Ekranda ak ve kara dikdörtgenler gördünüz mü?"
-    IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı ekran dışı arabelleğe çizmek için kullanacak. Ekranda devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
-    IDS_DDOFFSCREEN_RESULT "Ekranda devinen bir ak dikdörtgen gördünüz mü?"
-    IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tam ekranda çizmek için kullanacak. Tam ekranda devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
-    IDS_DDFULLSCREEN_RESULT "Tam ekranda devinen bir ak dikdörtgen gördünüz mü?"
+    IDS_DDPRIMARY_DESCRIPTION "Bu sınama, ReactDraw'ı birincil yüzeye çizmek için kullanacak. Görüntülüğe ak ve kara dikdörtgenler çizilecek. Sürdürülsün mü?"
+    IDS_DDPRIMARY_RESULT "Görüntülükte ak ve kara dikdörtgenler gördünüz mü?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı görüntülük dışı arabelleğe çizmek için kullanacak. Görüntülükte devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
+    IDS_DDOFFSCREEN_RESULT "Görüntülükte devinen bir ak dikdörtgen gördünüz mü?"
+    IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tüm görüntülükte çizmek için kullanacak. Tüm görüntülükte devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
+    IDS_DDFULLSCREEN_RESULT "Tüm görüntülükte devinen bir ak dikdörtgen gördünüz mü?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
     IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u ikillik) (%uHz)"
     IDS_OPTION_NO "Hayır"

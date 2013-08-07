@@ -8,7 +8,7 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Ayarlar...",                        ID_SETTINGS
+        MENUITEM "&Seçenekler...",                     ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                             ID_EXIT
     END
@@ -22,7 +22,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Yenile",                            ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Y&azılım Veritabanını Güncelle",     ID_RESETDB
+        MENUITEM "Y&azılım Veritabanını Yenile",       ID_RESETDB
     END
     POPUP "Y&ardım"
     BEGIN
@@ -53,18 +53,18 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Yenile",                            ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Y&azılım Veritabanını Güncelle",     ID_RESETDB
+        MENUITEM "Y&azılım Veritabanını Yenile",       ID_RESETDB
     END
 END
 
 IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ayarlar"
+CAPTION "Seçenekler"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Umûmî", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Pencere Konumunu Kaydet", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Her Başlangıçta Erişilebilir Yazılım Dizelgesini Güncelle", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Her Başlangıçta Erişilebilir Yazılım Dizelgesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
     AUTOCHECKBOX "&Yazılımların Kuruluş ve Kaldırılışlarını Kaydet", IDC_LOG_ENABLED, 15, 46, 219, 12
 
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
@@ -107,7 +107,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Hakkında"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Yazılım Yöneticisi\nTelif Hakkı: 2009\nDmitry Chapyshev (dmitry@reactos.org) tarafından yazılmıştır.", IDC_STATIC, 48, 7, 130, 39
+    LTEXT "ReactOS Yazılım Yöneticisi\nTelif Hakkı: 2009 - \nDmitry Chapyshev (dmitry@reactos.org) eliyle yazılmıştır.", IDC_STATIC, 48, 7, 130, 39
     PUSHBUTTON "Tamam", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -117,7 +117,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Kur"
     IDS_TOOLTIP_UNINSTALL "Kaldır"
     IDS_TOOLTIP_MODIFY "Değiştir"
-    IDS_TOOLTIP_SETTINGS "Ayarlar"
+    IDS_TOOLTIP_SETTINGS "Seçenekler"
     IDS_TOOLTIP_REFRESH "Yenile"
     IDS_TOOLTIP_EXIT "Çıkış"
 END
@@ -140,14 +140,14 @@ BEGIN
     IDS_INFO_REGOWNER "\nKayıtlı Olduğu Kullanıcısı: "
     IDS_INFO_PRODUCTID "\nÜrün Kimliği: "
     IDS_INFO_CONTACT "\nİletişim: "
-    IDS_INFO_UPDATEINFO "\nGücnelleme Bilgisi: "
+    IDS_INFO_UPDATEINFO "\nYenileme Bilgisi: "
     IDS_INFO_INFOABOUT "\nHakkında Bilgi: "
     IDS_INFO_COMMENTS "\nYorumlar: "
     IDS_INFO_INSTLOCATION "\nKurulum Konumu: "
     IDS_INFO_INSTALLSRC "\nKurulum Kaynağı: "
     IDS_INFO_UNINSTALLSTR "\nKaldırma Dizgisi: "
     IDS_INFO_MODIFYPATH "\nDeğiştirme Yolu: "
-    IDS_INFO_INSTALLDATE "\nKurulum Zamanı: "
+    IDS_INFO_INSTALLDATE "\nKurulum Zamânı: "
 END
 
 STRINGTABLE DISCARDABLE
@@ -187,16 +187,16 @@ BEGIN
     IDS_MODIFY "Değiştir"
     IDS_APPS_COUNT "Yazılım Sayısı: %d"
     IDS_WELCOME_TITLE "ReactOS Yazılım Yöneticisi'ne hoşgeldiniz.\n\n"
-    IDS_WELCOME_TEXT "Soldaki herhangi bir ulamı seçip ulamdaki herhangi bir yazılımı kaldırabilir veya kurabilrisiniz.\nReactOS'un örütbağ sitesi: "
+    IDS_WELCOME_TEXT "Soldaki herhangi bir ulamı seçip ulamdaki herhangi bir yazılımı kaldırabilir veyâ kurabilrisiniz.\nReactOS'un örütbağ sitesi: "
     IDS_WELCOME_URL "http://www.reactos.org"
     IDS_INSTALLED "Kurulanlar"
     IDS_AVAILABLEFORINST "Kurulabilenler"
-    IDS_UPDATES "Güncellemeler"
+    IDS_UPDATES "Yenilemeler"
     IDS_APPLICATIONS "Yazılımlar"
     IDS_CHOOSE_FOLDER_TEXT "İndirme dizinini seçiniz:"
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
     IDS_USER_NOT_ADMIN "ReactOS Yazılım Yöneticisi'ni yönetici olarak çalıştırmalısınız."
-    IDS_APP_REG_REMOVE "Bu yazılımın bilgilerini Değer Defteri'nden kaldırmaya emin misiniz?"
+    IDS_APP_REG_REMOVE "Bu yazılımın bilgilerini Değer Defteri'nden kaldırmayı onaylıyor musunuz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_REMOVE "Bu yazılımın bilgileri Değer Defteri'nden kaldırılamıyor."
 END

@@ -14,11 +14,11 @@
 #define NDEBUG
 #include <debug.h>
 
-#define CsrHashThread(t) (HandleToUlong(t)&(256 - 1))
+#define CsrHashThread(t) (HandleToUlong(t) % NUMBER_THREAD_HASH_BUCKETS)
 
 /* GLOBALS ********************************************************************/
 
-LIST_ENTRY CsrThreadHashTable[256];
+LIST_ENTRY CsrThreadHashTable[NUMBER_THREAD_HASH_BUCKETS];
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -581,7 +581,7 @@ CsrCreateRemoteThread(IN HANDLE hThread,
         DPRINT1("No known process for %lx\n", ClientId->UniqueProcess);
         return Status;
     }
-    
+
     /* Make sure the thread didn't terminate */
     if (KernelTimes.ExitTime.QuadPart)
     {

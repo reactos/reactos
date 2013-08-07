@@ -212,7 +212,7 @@ LookupSidInformation(IN PSIDCACHEMGR scm,
     SID_NAME_USE SidNameUse = SidTypeUnknown;
     PPOLICY_ACCOUNT_DOMAIN_INFO PolicyAccountDomainInfo = NULL;
     NTSTATUS Status;
-    DWORD SidLength, AccountNameSize, DomainNameSize = 0;
+    DWORD AccountNameSize, DomainNameSize = 0;
     PSIDREQRESULT ReqRet = NULL;
     BOOL Ret = FALSE;
 
@@ -223,7 +223,6 @@ LookupSidInformation(IN PSIDCACHEMGR scm,
                            &Names);
     if (NT_SUCCESS(Status))
     {
-        SidLength = GetLengthSid(pSid);
         SidNameUse = Names->Use;
 
         if (ReferencedDomain != NULL &&

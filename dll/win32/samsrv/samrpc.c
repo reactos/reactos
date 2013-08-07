@@ -1756,6 +1756,14 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
+    /* Check the group account name */
+    Status = SampCheckAccountName(Name, 256);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
     /* Check if the group name already exists in the domain */
     Status = SampCheckAccountNameInDomain(DomainObject,
                                           Name->Buffer);
@@ -2125,6 +2133,14 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Check the user account name */
+    Status = SampCheckAccountName(Name, 20);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
         return Status;
     }
 
@@ -2682,6 +2698,14 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Check the alias acoount name */
+    Status = SampCheckAccountName(AccountName, 256);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
         return Status;
     }
 
@@ -3979,6 +4003,14 @@ SampSetGroupName(PSAM_DB_OBJECT GroupObject,
         goto done;
     }
 
+    /* Check the new account name */
+    Status = SampCheckAccountName(&Buffer->Name.Name, 256);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
     NewGroupName.Length = Buffer->Name.Name.Length;
     NewGroupName.MaximumLength = Buffer->Name.Name.MaximumLength;
     NewGroupName.Buffer = Buffer->Name.Name.Buffer;
@@ -4704,6 +4736,14 @@ SampSetAliasName(PSAM_DB_OBJECT AliasObject,
     {
         TRACE("SampGetObjectAttributeString failed (Status 0x%08lx)\n", Status);
         goto done;
+    }
+
+    /* Check the new account name */
+    Status = SampCheckAccountName(&Buffer->Name.Name, 256);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
     }
 
     NewAliasName.Length = Buffer->Name.Name.Length;
@@ -6758,6 +6798,14 @@ SampSetUserName(PSAM_DB_OBJECT UserObject,
     UNICODE_STRING OldUserName = {0, 0, NULL};
     NTSTATUS Status;
 
+    /* Check the account name */
+    Status = SampCheckAccountName(NewUserName, 20);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
     Status = SampGetObjectAttributeString(UserObject,
                                           L"Name",
                                           (PRPC_UNICODE_STRING)&OldUserName);
@@ -7475,9 +7523,15 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
     PENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
     PENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
     PENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
+    BOOLEAN StoredLmPresent = FALSE;
+    BOOLEAN StoredNtPresent = FALSE;
+    BOOLEAN StoredLmEmpty = TRUE;
+    BOOLEAN StoredNtEmpty = TRUE;
     PSAM_DB_OBJECT UserObject;
     ULONG Length;
-    SAM_USER_FIXED_DATA FixedUserData;
+    SAM_USER_FIXED_DATA UserFixedData;
+    SAM_DOMAIN_FIXED_DATA DomainFixedData;
+    LARGE_INTEGER SystemTime;
     NTSTATUS Status;
 
     TRACE("(%p %u %p %p %u %p %p %u %p %u %p)\n",
@@ -7496,6 +7550,14 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
         return Status;
     }
 
+    /* Get the current time */
+    Status = NtQuerySystemTime(&SystemTime);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("NtQuerySystemTime failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
     /* Retrieve the LM password */
     Length = sizeof(ENCRYPTED_LM_OWF_PASSWORD);
     Status = SampGetObjectAttribute(UserObject,
@@ -7503,9 +7565,16 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
                                     NULL,
                                     &StoredLmPassword,
                                     &Length);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-
+        if (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD))
+        {
+            StoredLmPresent = TRUE;
+            if (!RtlEqualMemory(&StoredLmPassword,
+                                &EmptyLmHash,
+                                sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+                StoredLmEmpty = FALSE;
+        }
     }
 
     /* Retrieve the NT password */
@@ -7515,9 +7584,52 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
                                     NULL,
                                     &StoredNtPassword,
                                     &Length);
+    if (NT_SUCCESS(Status))
+    {
+        if (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD))
+        {
+            StoredNtPresent = TRUE;
+            if (!RtlEqualMemory(&StoredNtPassword,
+                                &EmptyNtHash,
+                                sizeof(ENCRYPTED_NT_OWF_PASSWORD)))
+                StoredNtEmpty = FALSE;
+        }
+    }
+
+    /* Retrieve the fixed size user data */
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    &UserFixedData,
+                                    &Length);
     if (!NT_SUCCESS(Status))
     {
+        TRACE("SampGetObjectAttribute failed to retrieve the fixed user data (Status 0x%08lx)\n", Status);
+        return Status;
+    }
 
+    /* Check if we can change the password at this time */
+    if ((StoredNtEmpty == FALSE) || (StoredNtEmpty == FALSE))
+    {
+        /* Get fixed domain data */
+        Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+        Status = SampGetObjectAttribute(UserObject->ParentObject,
+                                        L"F",
+                                        NULL,
+                                        &DomainFixedData,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SampGetObjectAttribute failed to retrieve the fixed domain data (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+
+        if (DomainFixedData.MinPasswordAge.QuadPart > 0)
+        {
+            if (SystemTime.QuadPart < (UserFixedData.PasswordLastSet.QuadPart + DomainFixedData.MinPasswordAge.QuadPart))
+                return STATUS_ACCOUNT_RESTRICTION;
+        }
     }
 
     /* FIXME: Decrypt passwords */
@@ -7588,26 +7700,32 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
                                      LmPresent);
         if (NT_SUCCESS(Status))
         {
-            /* Get the fixed size user data */
-            Length = sizeof(SAM_USER_FIXED_DATA);
-            Status = SampGetObjectAttribute(UserObject,
-                                            L"F",
-                                            NULL,
-                                            &FixedUserData,
-                                            &Length);
-            if (NT_SUCCESS(Status))
-            {
-                /* Update PasswordLastSet */
-                NtQuerySystemTime(&FixedUserData.PasswordLastSet);
+            /* Update PasswordLastSet */
+            UserFixedData.PasswordLastSet.QuadPart = SystemTime.QuadPart;
 
-                /* Set the fixed size user data */
-                Status = SampSetObjectAttribute(UserObject,
-                                                L"F",
-                                                REG_BINARY,
-                                                &FixedUserData,
-                                                Length);
-            }
+            /* Set the fixed size user data */
+            Length = sizeof(SAM_USER_FIXED_DATA);
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"F",
+                                            REG_BINARY,
+                                            &UserFixedData,
+                                            Length);
         }
+    }
+
+    if (Status == STATUS_WRONG_PASSWORD)
+    {
+        /* Update BadPasswordCount and LastBadPasswordTime */
+        UserFixedData.BadPasswordCount++;
+        UserFixedData.LastBadPasswordTime.QuadPart = SystemTime.QuadPart;
+
+        /* Set the fixed size user data */
+        Length = sizeof(SAM_USER_FIXED_DATA);
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"F",
+                                        REG_BINARY,
+                                        &UserFixedData,
+                                        Length);
     }
 
     return Status;
@@ -8018,6 +8136,14 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Check the user account name */
+    Status = SampCheckAccountName(Name, 20);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampCheckAccountName failed (Status 0x%08lx)\n", Status);
         return Status;
     }
 

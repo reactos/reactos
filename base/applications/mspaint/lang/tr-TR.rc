@@ -64,7 +64,7 @@ BEGIN
             MENUITEM "K&ılavuzu Göster\tCtrl+G",   IDM_VIEWSHOWGRID
             MENUITEM "K&üçüğünü Göster",           IDM_VIEWSHOWMINIATURE
         END
-        MENUITEM "&Tam Ekran\tCtrl+F",             IDM_VIEWFULLSCREEN
+        MENUITEM "&Tüm Görüntülük\tCtrl+F",        IDM_VIEWFULLSCREEN
     END
 
     POPUP "G&örüntü"
@@ -119,14 +119,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Resmi Döndür ya da Evir"
 BEGIN
-    GROUPBOX "Döndür ya da Evir", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    GROUPBOX "Döndür ya da Evir",  IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
     AUTORADIOBUTTON "&Yatay Evir", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
     AUTORADIOBUTTON "&Dikey Evir", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "D&öndür",     IDD_MIRRORROTATERB3, 12, 42, 100, 10
     AUTORADIOBUTTON "&90°",  IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
     AUTORADIOBUTTON "1&80°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
     AUTORADIOBUTTON "2&70°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
-    DEFPUSHBUTTON "Tamam", IDOK, 125, 8, 48, 14
+    DEFPUSHBUTTON "Tamam",   IDOK, 125, 8, 48, 14
     PUSHBUTTON "Vazgeç", IDCANCEL, 125, 24, 48, 14
 END
 
@@ -180,7 +180,7 @@ BEGIN
     IDS_PROGRAMNAME, "Görüntü Düzenleyicisi"
     IDS_WINDOWTITLE, "%s - Görüntü Düzenleyicisi"
     IDS_INFOTITLE, "Görüntü Düzenleyicisi"
-    IDS_INFOTEXT, "Görüntü Düzenleyicisi GNU Kısıtlı Genel Kamu Lisansı'nın (LGPL) 3. sürümüyle lisanslıdır. (bk: www.gnu.org)"
+    IDS_INFOTEXT, "Görüntü Düzenleyicisi, GNU Kısıtlı Umûmî Kamu Lisansı'nın (LGPL) 3. sürümüyle lisanslıdır. (bk: www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "%s için yapılan değişiklikler kaydedilsin mi?"
     IDS_DEFAULTFILENAME, "Adsız.bmp"
     IDS_MINIATURETITLE, "Küçüğü"
@@ -201,7 +201,7 @@ BEGIN
     IDS_TOOLTIP15, "Söbek"
     IDS_TOOLTIP16, "Yuvarlatılmış Dikdörtgen"
     IDS_OPENFILTER, "Bit Eşlem Görüntüleri (*.bmp;*.dib)\1*.bmp;*.dib\1Tüm Kütükler (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24-bit Bit Eşlem Görüntüsü (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_SAVEFILTER, "24 İkillik Bit Eşlem Görüntüsü (*.bmp;*.dib)\1*.bmp;*.dib\1"
     IDS_FILESIZE, "%d sekizlik"
     IDS_PRINTRES, "Her metrekarede %d x %d nokta"
 END

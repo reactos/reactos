@@ -15,7 +15,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Konec", IDC_EXIT
     END
-    POPUP "&Pomoc"
+    POPUP "&Nápověda"
     BEGIN
         MENUITEM "&Témata nápovědy", IDC_HELP_TOPICS
         MENUITEM SEPARATOR

@@ -26,9 +26,12 @@
 #include <assert.h>
 
 #include "dbghelp_private.h"
+
+#ifndef DBGHELP_STATIC_LIB
 #include <psapi.h>
-//#include "winternl.h"
 #include <wine/debug.h>
+#endif
+//#include "winternl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -346,9 +349,11 @@ BOOL module_get_debug(struct module_pair* pair)
         if (pair->effective->is_virtual) ret = FALSE;
         else switch (pair->effective->type)
         {
+#ifndef DBGHELP_STATIC_LIB
         case DMT_ELF:
             ret = elf_load_debug_info(pair->effective);
             break;
+#endif
         case DMT_PE:
             idslW64.SizeOfStruct = sizeof(idslW64);
             idslW64.BaseOfImage = pair->effective->module.BaseOfImage;
@@ -365,9 +370,11 @@ BOOL module_get_debug(struct module_pair* pair)
                          ret ? CBA_DEFERRED_SYMBOL_LOAD_COMPLETE : CBA_DEFERRED_SYMBOL_LOAD_FAILURE,
                          &idslW64);
             break;
+#ifndef DBGHELP_STATIC_LIB
         case DMT_MACHO:
             ret = macho_load_debug_info(pair->effective, NULL);
             break;
+#endif
         default:
             ret = FALSE;
             break;
@@ -506,11 +513,13 @@ enum module_type module_get_type_by_name(const WCHAR* name)
 /******************************************************************
  *		                refresh_module_list
  */
+#ifndef DBGHELP_STATIC_LIB
 static BOOL refresh_module_list(struct process* pcs)
 {
     /* force transparent ELF and Mach-O loading / unloading */
     return elf_synchronize_module_list(pcs) || macho_synchronize_module_list(pcs);
 }
+#endif
 
 /***********************************************************************
  *			SymLoadModule (DBGHELP.@)
@@ -594,7 +603,9 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
     if (Flags & ~(SLMFLAG_VIRTUAL))
         FIXME("Unsupported Flags %08x for %s\n", Flags, debugstr_w(wImageName));
 
+#ifndef DBGHELP_STATIC_LIB
     refresh_module_list(pcs);
+#endif
 
     /* this is a Wine extension to the API just to redo the synchronisation */
     if (!wImageName && !hFile) return 0;
@@ -618,6 +629,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
             wImageName)
         {
             /* and finally an ELF or Mach-O module */
+#ifndef DBGHELP_STATIC_LIB
             switch (module_get_type_by_name(wImageName))
             {
                 case DMT_ELF:
@@ -630,6 +642,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
                     /* Ignored */
                     break;
             }
+#endif
         }
     }
     if (!module)
@@ -819,6 +832,7 @@ BOOL  WINAPI SymEnumerateModulesW64(HANDLE hProcess,
     return TRUE;
 }
 
+#ifndef DBGHELP_STATIC_LIB
 /******************************************************************
  *		EnumerateLoadedModules64 (DBGHELP.@)
  *
@@ -919,6 +933,7 @@ BOOL  WINAPI EnumerateLoadedModulesW64(HANDLE hProcess,
 
     return sz != 0 && i == sz;
 }
+#endif /* DBGHELP_STATIC_LIB */
 
 /******************************************************************
  *		SymGetModuleInfo (DBGHELP.@)
@@ -1131,7 +1146,11 @@ BOOL WINAPI SymRefreshModuleList(HANDLE hProcess)
 
     if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
 
+#ifndef DBGHELP_STATIC_LIB
     return refresh_module_list(pcs);
+#else
+    return TRUE;
+#endif
 }
 
 /***********************************************************************

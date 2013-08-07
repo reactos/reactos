@@ -45,6 +45,8 @@ NtfsGetStandardInformation(PNTFS_FCB Fcb,
                            PFILE_STANDARD_INFORMATION StandardInfo,
                            PULONG BufferLength)
 {
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     DPRINT("NtfsGetStandardInformation() called\n");
 
     if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
@@ -75,6 +77,8 @@ NtfsGetPositionInformation(PFILE_OBJECT FileObject,
                            PFILE_POSITION_INFORMATION PositionInfo,
                            PULONG BufferLength)
 {
+    UNREFERENCED_PARAMETER(FileObject);
+
     DPRINT("NtfsGetPositionInformation() called\n");
 
     if (*BufferLength < sizeof(FILE_POSITION_INFORMATION))
@@ -117,6 +121,11 @@ NtfsGetBasicInformation(PFILE_OBJECT FileObject,
 
     CdfsFileFlagsToAttributes(Fcb,
                               &BasicInfo->FileAttributes);
+#else
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Fcb);
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(BasicInfo);
 #endif
 
     *BufferLength -= sizeof(FILE_BASIC_INFORMATION);
@@ -137,6 +146,9 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
                        PULONG BufferLength)
 {
     ULONG NameLength;
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     DPRINT("NtfsGetNameInformation() called\n");
 

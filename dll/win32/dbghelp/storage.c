@@ -23,7 +23,10 @@
 #include "config.h"
 #include <assert.h>
 #include <stdlib.h>
+
+#ifndef DBGHELP_STATIC_LIB
 #include "wine/debug.h"
+#endif
 
 #include "dbghelp_private.h"
 #ifdef USE_STATS

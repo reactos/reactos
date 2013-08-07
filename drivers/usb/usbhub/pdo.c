@@ -54,7 +54,6 @@ FowardUrbToRootHub(
     OUT PVOID OutParameter1,
     OUT PVOID OutParameter2)
 {
-    NTSTATUS Status;
     PIRP ForwardIrp;
     IO_STATUS_BLOCK IoStatus;
     PIO_STACK_LOCATION ForwardStack, CurrentStack;
@@ -115,7 +114,7 @@ FowardUrbToRootHub(
                            TRUE,
                            TRUE);
 
-    Status = IoCallDriver(RootHubDeviceObject, ForwardIrp);
+    IoCallDriver(RootHubDeviceObject, ForwardIrp);
 
     //
     // Always return pending as the completion routine will take care of it
@@ -194,8 +193,6 @@ USBHUB_PdoHandleInternalDeviceControl(
     {
         case IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO:
         {
-            PHUB_DEVICE_EXTENSION DeviceExtension;
-
             DPRINT("IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO\n");
             if (Irp->AssociatedIrp.SystemBuffer == NULL
                 || Stack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(PVOID))
@@ -205,7 +202,6 @@ USBHUB_PdoHandleInternalDeviceControl(
             else
             {
                 PVOID* pHubPointer;
-                DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
                 pHubPointer = (PVOID*)Irp->AssociatedIrp.SystemBuffer;
                 // FIXME
@@ -497,10 +493,8 @@ USBHUB_PdoQueryDeviceText(
     PUNICODE_STRING SourceString = NULL;
     PWCHAR ReturnString = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    LCID LocaleId;
 
     DeviceTextType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.DeviceTextType;
-    LocaleId = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.LocaleId;
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //

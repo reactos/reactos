@@ -30,7 +30,7 @@ add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
 if(SEPARATE_DBG)
     add_compile_flags("-gdwarf-2 -g2")
 else()
-    add_compile_flags("-gstabs+")
+    add_compile_flags("-gdwarf-2 -gstrict-dwarf -femit-struct-debug-detailed=none -feliminate-unused-debug-symbols")
 endif()
 
 # For some reason, cmake sets -fPIC, and we don't want it
@@ -51,7 +51,7 @@ add_compile_flags("-Werror -Wall -Wno-char-subscripts -Wpointer-arith -Wno-multi
 if(GCC_VERSION VERSION_LESS 4.7)
     add_compile_flags("-Wno-error=uninitialized")
 elseif(GCC_VERSION VERSION_EQUAL 4.7 OR GCC_VERSION VERSION_GREATER 4.7)
-    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-maybe-uninitialized -Wno-error=delete-non-virtual-dtor -Wno-error=narrowing")
+    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-maybe-uninitialized -Wno-error=narrowing")
 endif()
 
 if(ARCH STREQUAL "amd64")
@@ -154,16 +154,15 @@ else()
         "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
         "${RSYM} <TARGET> <TARGET>")
     set(CMAKE_RC_CREATE_SHARED_LIBRARY
-        "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-        "${RSYM} <TARGET> <TARGET>")
+        "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import,--disable-stdcall-fixup")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
-SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> -Wa,--compress-debug-sections <FLAGS> -o <OBJECT> -c <SOURCE>")
 SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
-set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
+set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -Wa,--compress-debug-sections -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
 set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
@@ -211,11 +210,15 @@ function(set_module_type_toolchain MODULE TYPE)
     endif()
 endfunction()
 
-function(add_delay_importlibs MODULE)
-    foreach(LIB ${ARGN})
-        target_link_libraries(${MODULE} lib${LIB}_delayed)
+function(add_delay_importlibs _module)
+    get_target_property(_module_type ${_module} TYPE)
+    if(_module_type STREQUAL "STATIC_LIBRARY")
+        message(FATAL_ERROR "Cannot add delay imports to a static library")
+    endif()
+    foreach(_lib ${ARGN})
+        target_link_libraries(${_module} lib${_lib}_delayed)
     endforeach()
-    target_link_libraries(${MODULE} delayimp)
+    target_link_libraries(${_module} delayimp)
 endfunction()
 
 if(NOT ARCH STREQUAL "i386")

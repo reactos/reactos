@@ -45,9 +45,9 @@
 #include <winnetwk.h>
 #include <wincon.h>
 #include <mmsystem.h>
-//#include "objbase.h"
+#include "objbase.h"
 //#include "exdisp.h"
-//#include "shdeprecated.h"
+#include "shdeprecated.h"
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <shellapi.h>

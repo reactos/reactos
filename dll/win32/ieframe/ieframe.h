@@ -40,7 +40,7 @@
 //#include "exdisp.h"
 #include <hlink.h>
 #include <htiface.h>
-//#include "shdeprecated.h"
+#include "shdeprecated.h"
 #include <docobjectservice.h>
 
 #include <wine/unicode.h>

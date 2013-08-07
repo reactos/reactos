@@ -46,12 +46,17 @@ KiInitMachineDependent(VOID)
     ULONG Dummy;
     KI_SAMPLE_MAP Samples[4];
     PKI_SAMPLE_MAP CurrentSample = Samples;
+    LARGE_IDENTITY_MAP IdentityMap;
 
     /* Check for large page support */
     if (KeFeatureBits & KF_LARGE_PAGE)
     {
-        /* FIXME: Support this */
-        DPRINT("Large Page support detected but not yet taken advantage of\n");
+        /* Do an IPI to enable it on all CPUs */
+        if (Ki386CreateIdentityMap(&IdentityMap, Ki386EnableCurrentLargePage, 2))
+            KeIpiGenericCall(Ki386EnableTargetLargePage, (ULONG_PTR)&IdentityMap);
+
+        /* Free the pages allocated for identity map */
+        Ki386FreeIdentityMap(&IdentityMap);
     }
 
     /* Check for global page support */

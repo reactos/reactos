@@ -6,7 +6,7 @@
  * PROGRAMMERS:
  * TRANSLATOR:  2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
- 
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDC_MAGNIFIER MENU
@@ -14,7 +14,7 @@ BEGIN
     POPUP "&Seçke"
     BEGIN
         MENUITEM "&Çıkış",                     IDM_EXIT
-        MENUITEM "&Ayarlar...",                IDM_OPTIONS
+        MENUITEM "&Seçenekler...",             IDM_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Hakkında",                  IDM_ABOUT
     END
@@ -39,7 +39,7 @@ END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ayarlar"
+CAPTION "Seçenekler"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&Çıkış",IDOK,96,161,50,14

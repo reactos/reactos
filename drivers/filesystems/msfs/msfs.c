@@ -25,6 +25,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     UNICODE_STRING DeviceName;
     NTSTATUS Status;
 
+    UNREFERENCED_PARAMETER(RegistryPath);
+
     DPRINT("Mailslot FSD 0.0.1\n");
 
     DriverObject->Flags = 0;

@@ -436,7 +436,6 @@ NTSTATUS
 QueryStatusChangeEndpoint(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    NTSTATUS Status;
     PDEVICE_OBJECT RootHubDeviceObject;
     PIO_STACK_LOCATION Stack;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
@@ -520,7 +519,7 @@ QueryStatusChangeEndpoint(
     //
     DPRINT("DeviceObject is %x\n", DeviceObject);
     DPRINT("Iocalldriver %x with irp %x\n", RootHubDeviceObject, HubDeviceExtension->PendingSCEIrp);
-    Status = IoCallDriver(RootHubDeviceObject, HubDeviceExtension->PendingSCEIrp);
+    IoCallDriver(RootHubDeviceObject, HubDeviceExtension->PendingSCEIrp);
 
     return STATUS_PENDING;
 }
@@ -1509,15 +1508,11 @@ USBHUB_FdoStartDevice(
     USBD_INTERFACE_LIST_ENTRY InterfaceList[2] = {{NULL, NULL}, {NULL, NULL}};
     PURB ConfigUrb = NULL;
     ULONG HubStatus;
-    PIO_STACK_LOCATION Stack;
     NTSTATUS Status = STATUS_SUCCESS;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     PDEVICE_OBJECT RootHubDeviceObject;
-    PVOID HubInterfaceBusContext , UsbDInterfaceBusContext;
+    PVOID HubInterfaceBusContext;
     PORT_STATUS_CHANGE StatusChange;
-
-    // get current stack location
-    Stack = IoGetCurrentIrpStackLocation(Irp);
 
     // get hub device extension
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
@@ -1609,8 +1604,6 @@ USBHUB_FdoStartDevice(
         ExFreePool(Urb);
         return Status;
     }
-
-    UsbDInterfaceBusContext = HubDeviceExtension->UsbDInterface.BusContext;
 
     // Get Root Hub Device Handle
     Status = SubmitRequestToRootHub(RootHubDeviceObject,

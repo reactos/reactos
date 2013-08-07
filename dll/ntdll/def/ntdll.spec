@@ -91,9 +91,10 @@
 @ stdcall LdrLoadAlternateResourceModule(ptr ptr)
 @ stdcall LdrLoadDll(wstr long ptr ptr)
 @ stdcall LdrLockLoaderLock(long ptr ptr)
-;@ stdcall LdrOpenImageFileOptionsKey ; 5.2 SP1 and higher
+@ stdcall LdrOpenImageFileOptionsKey(ptr long ptr) ; 5.2 SP1 and higher
 @ stdcall LdrProcessRelocationBlock(ptr long ptr long)
 @ stdcall LdrQueryImageFileExecutionOptions(ptr str long ptr long ptr)
+@ stdcall LdrQueryImageFileKeyOption(ptr ptr long ptr long ptr)
 @ stdcall LdrQueryProcessModuleInformation(ptr long ptr)
 ;@ stdcall LdrSetAppCompatDllRedirectionCallback
 ;@ stdcall LdrSetDllManifestProber

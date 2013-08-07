@@ -306,6 +306,14 @@ NTSTATUS
 SampCreateServerSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
                    OUT PULONG Size);
 
+NTSTATUS
+SampCreateBuiltinDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
+                          OUT PULONG Size);
+
+NTSTATUS
+SampCreateAccountDomainSD(OUT PSECURITY_DESCRIPTOR *ServerSd,
+                          OUT PULONG Size);
+
 
 /* setup.c */
 
@@ -379,6 +387,10 @@ AppendRidToSid(PSID SrcSid,
 NTSTATUS
 SampGetRidFromSid(IN PSID Sid,
                   OUT PULONG Rid);
+
+NTSTATUS
+SampCheckAccountName(IN PRPC_UNICODE_STRING AccountName,
+                     IN USHORT MaxLength);
 
 
 /* Undocumented advapi32 functions */

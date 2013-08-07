@@ -308,7 +308,6 @@ CUSBDevice::SetDeviceAddress(
 {
     PUSB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     NTSTATUS Status;
-    UCHAR OldAddress;
     UCHAR Index;
 
     DPRINT1("[%s] SetDeviceAddress> Address %x\n", m_USBType, DeviceAddress);
@@ -340,9 +339,6 @@ CUSBDevice::SetDeviceAddress(
 
     // lets have a short nap
     KeStallExecutionProcessor(300);
-
-    // back up old address
-    OldAddress = m_DeviceAddress;
 
     // store new device address
     m_DeviceAddress = DeviceAddress;

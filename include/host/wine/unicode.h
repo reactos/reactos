@@ -21,6 +21,7 @@
 #ifndef __WINE_WINE_UNICODE_H
 #define __WINE_WINE_UNICODE_H
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
 #include <typedefs.h>

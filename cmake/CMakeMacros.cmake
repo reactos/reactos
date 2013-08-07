@@ -227,13 +227,14 @@ function(add_cd_file)
         if(_CD_NO_CAB)
             #directly on cd
             foreach(item ${_CD_FILE})
-                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake "file(COPY \"${item}\" DESTINATION \"\${CD_DIR}/${_CD_DESTINATION}\")\n")
+                if(_CD_NAME_ON_CD)
+                    #rename it in the cd tree
+                    set(__file ${_CD_NAME_ON_CD})
+                else()
+                    get_filename_component(__file ${item} NAME)
+                endif()
+                set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
             endforeach()
-            if(_CD_NAME_ON_CD)
-                get_filename_component(__file ${_CD_FILE} NAME)
-                #rename it in the cd tree
-                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake "file(RENAME \${CD_DIR}/${_CD_DESTINATION}/${__file} \${CD_DIR}/${_CD_DESTINATION}/${_CD_NAME_ON_CD})\n")
-            endif()
             if(_CD_TARGET)
                 #manage dependency
                 add_dependencies(bootcd ${_CD_TARGET})
@@ -259,13 +260,14 @@ function(add_cd_file)
             add_dependencies(livecd ${_CD_TARGET})
         endif()
         foreach(item ${_CD_FILE})
-            file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake "file(COPY \"${item}\" DESTINATION \"\${CD_DIR}/${_CD_DESTINATION}\")\n")
+            if(_CD_NAME_ON_CD)
+                #rename it in the cd tree
+                set(__file ${_CD_NAME_ON_CD})
+            else()
+                get_filename_component(__file ${item} NAME)
+            endif()
+            set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
         endforeach()
-        if(_CD_NAME_ON_CD)
-            get_filename_component(__file ${_CD_FILE} NAME)
-            #rename it in the cd tree
-            file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake "file(RENAME \${CD_DIR}/${_CD_DESTINATION}/${__file} \${CD_DIR}/${_CD_DESTINATION}/${_CD_NAME_ON_CD})\n")
-        endif()
     endif() #end livecd
 
     #do we add it to regtest?
@@ -275,13 +277,14 @@ function(add_cd_file)
         if(_CD_NO_CAB)
             #directly on cd
             foreach(item ${_CD_FILE})
-                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake "file(COPY \"${item}\" DESTINATION \"\${CD_DIR}/${_CD_DESTINATION}\")\n")
+                if(_CD_NAME_ON_CD)
+                    #rename it in the cd tree
+                    set(__file ${_CD_NAME_ON_CD})
+                else()
+                    get_filename_component(__file ${item} NAME)
+                endif()
+                set_property(GLOBAL APPEND PROPERTY BOOTCDREGTEST_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
             endforeach()
-            if(_CD_NAME_ON_CD)
-                get_filename_component(__file ${_CD_FILE} NAME)
-                #rename it in the cd tree
-                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake "file(RENAME \${CD_DIR}/${_CD_DESTINATION}/${__file} \${CD_DIR}/${_CD_DESTINATION}/${_CD_NAME_ON_CD})\n")
-            endif()
             if(_CD_TARGET)
                 #manage dependency
                 add_dependencies(bootcdregtest ${_CD_TARGET})
@@ -296,6 +299,23 @@ function(add_cd_file)
             #endif()
         endif()
     endif() #end bootcd
+endfunction()
+
+function(create_iso_lists)
+    get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.lst "${_filelist}")
+    unset(_filelist)
+
+    get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.lst "${_filelist}")
+    unset(_filelist)
+
+    get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.lst "${_filelist}")
+    unset(_filelist)
 endfunction()
 
 # Create module_clean targets

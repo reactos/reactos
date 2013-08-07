@@ -1,0 +1,32 @@
+/* FILE:        dll/cpl/wined3dcfg/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2013-06-01
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Obecné"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 21, 20
+    GROUPBOX "Shadery", -1, 5, 35, 230, 65
+    AUTOCHECKBOX "Zapnout &GLSL", IDC_GLSL, 15, 50, 150, 10
+    AUTOCHECKBOX "Zapnout &pixel shadery", IDC_PIXELSHADERS, 15, 65, 150, 10
+    AUTOCHECKBOX "Zapnout &vertex shadery", IDC_VERTEXSHADERS, 15, 80, 150, 10
+    GROUPBOX "Renderování", -1, 5, 110, 230, 85
+    AUTOCHECKBOX "Vynutit &multisampling", IDC_MULTISAMPLING, 15, 125, 150, 10
+    AUTOCHECKBOX "Vynutit &strict draw ordering", IDC_STRICTDRAWORDERING, 15, 140, 150, 10
+    LTEXT "Offscreen rendering:", -1, 15, 157, 80, 10
+    COMBOBOX IDC_OFFSCREEN, 95, 155, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Render target locking:", -1, 15, 175, 72, 10, SS_LEFT
+    COMBOBOX IDC_LOCKING, 95, 173, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "WineD3D"
+    IDS_CPLDESCRIPTION "Umožňuje konfigurovat nastavení WineD3D."
+END

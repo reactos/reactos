@@ -51,6 +51,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     NTSTATUS Status;
     UNICODE_STRING DeviceName;
 
+    UNREFERENCED_PARAMETER(RegistryPath);
+
     DPRINT("MUP 0.0.1\n");
 
     RtlInitUnicodeString(&DeviceName,

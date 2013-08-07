@@ -28,12 +28,6 @@ list(APPEND SOURCE
 
 add_library(ieframe SHARED ${SOURCE} ieframe.rc)
 
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(aclui)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
-
 add_typelib(ieframe_v1.idl)
 
 list(APPEND ieframe_rc_deps

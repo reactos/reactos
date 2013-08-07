@@ -173,7 +173,7 @@ NTSTATUS ICMPSendDatagram(
     }
     else
     {
-        if(!(NCE = NBLocateNeighbor( &LocalAddress )))
+        if(!(NCE = NBLocateNeighbor( &LocalAddress, NULL )))
         {
             UnlockObject(AddrFile, OldIrql);
             return STATUS_INVALID_PARAMETER;

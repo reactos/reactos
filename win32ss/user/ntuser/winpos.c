@@ -2056,7 +2056,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    LONG style;
    PWND Parent;
    PTHREADINFO pti;
-   BOOL ShowOwned = FALSE;
+   //  BOOL ShowOwned = FALSE;
    //  HRGN VisibleRgn;
 
    ASSERT_REFS_CO(Wnd);
@@ -2125,7 +2125,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
             Swp |= SWP_SHOWWINDOW;
             if (!(style & WS_MAXIMIZE))
             {
-               ShowOwned = TRUE;
+               //ShowOwned = TRUE;
 
                Swp |= co_WinPosMinMaximize(Wnd, SW_MAXIMIZE, &NewPos) |
                       SWP_FRAMECHANGED;

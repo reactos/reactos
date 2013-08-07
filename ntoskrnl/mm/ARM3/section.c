@@ -332,7 +332,7 @@ MiInsertInSystemSpace(IN PMMSESSION Session,
                                                               PagedPool,
                                                               HashSize *
                                                               sizeof(MMVIEW),
-                                                              '  mM');
+                                                              TAG_MM);
         if (!Session->SystemSpaceViewTable)
         {
             /* Failed to allocate a new table, keep the old one for now */

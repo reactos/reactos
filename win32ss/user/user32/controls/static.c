@@ -593,7 +593,6 @@ LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
 {
   DRAWITEMSTRUCT dis;
-  HBRUSH hBrush;
   HFONT font, oldFont = NULL;
   UINT id = (UINT)GetWindowLongPtrW( hwnd, GWLP_ID );
 
@@ -609,7 +608,7 @@ static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
 
   font = (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
   if (font) oldFont = SelectObject( hdc, font );
-  hBrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
+  /* hBrush = */ STATIC_SendWmCtlColorStatic(hwnd, hdc);
   SendMessageW( GetParent(hwnd), WM_DRAWITEM, id, (LPARAM)&dis );
   if (font) SelectObject( hdc, oldFont );
 }

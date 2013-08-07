@@ -15,3 +15,4 @@ NTSTATUS GetInterfaceName( PIP_INTERFACE Interface, PCHAR NameBuffer,
 NTSTATUS GetInterfaceConnectionStatus( PIP_INTERFACE Interface,
                                        PULONG OperStatus );
 PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address);
+PIP_INTERFACE GetDefaultInterface(VOID);

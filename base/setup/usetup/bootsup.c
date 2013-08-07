@@ -683,7 +683,7 @@ SaveCurrentBootSector(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -720,7 +720,7 @@ SaveCurrentBootSector(
                                NULL);
 
     Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE,
+                          GENERIC_WRITE | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
@@ -783,7 +783,7 @@ InstallFat16BootCodeToFile(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -828,7 +828,7 @@ InstallFat16BootCodeToFile(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -876,7 +876,7 @@ InstallFat16BootCodeToFile(
                                NULL);
 
     Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE,
+                          GENERIC_WRITE | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
@@ -943,7 +943,7 @@ InstallFat32BootCodeToFile(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -988,7 +988,7 @@ InstallFat32BootCodeToFile(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1039,7 +1039,7 @@ InstallFat32BootCodeToFile(
                                NULL);
 
     Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE,
+                          GENERIC_WRITE | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
@@ -1081,7 +1081,7 @@ InstallFat32BootCodeToFile(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE,
+                        GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1145,7 +1145,7 @@ InstallMbrBootCodeToDisk(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1193,7 +1193,7 @@ InstallMbrBootCodeToDisk(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1240,7 +1240,7 @@ InstallMbrBootCodeToDisk(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE,
+                        GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1296,7 +1296,7 @@ InstallFat12BootCodeToFloppy(PWSTR SrcPath,
                                NULL);
     
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1344,7 +1344,7 @@ InstallFat12BootCodeToFloppy(PWSTR SrcPath,
                                NULL);
     
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1392,7 +1392,7 @@ InstallFat12BootCodeToFloppy(PWSTR SrcPath,
                                NULL);
     
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE,
+                        GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1454,7 +1454,7 @@ InstallFat16BootCodeToDisk(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1502,7 +1502,7 @@ InstallFat16BootCodeToDisk(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1553,7 +1553,7 @@ InstallFat16BootCodeToDisk(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE,
+                        GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1617,7 +1617,7 @@ InstallFat32BootCodeToDisk(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1663,7 +1663,7 @@ InstallFat32BootCodeToDisk(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ,
+                        GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1717,7 +1717,7 @@ InstallFat32BootCodeToDisk(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE,
+                        GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1816,7 +1816,7 @@ UnprotectBootIni(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ|GENERIC_WRITE,
+                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
@@ -1890,7 +1890,7 @@ ProtectBootIni(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ|GENERIC_WRITE,
+                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,

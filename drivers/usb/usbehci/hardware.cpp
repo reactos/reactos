@@ -1124,14 +1124,10 @@ CUSBHardwareDevice::SetPortFeature(
     ULONG PortId,
     ULONG Feature)
 {
-    ULONG Value;
-
     DPRINT("CUSBHardwareDevice::SetPortFeature\n");
 
     if (PortId > m_Capabilities.HCSParams.PortCount)
         return STATUS_UNSUCCESSFUL;
-
-    Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId));
 
     if (Feature == PORT_ENABLE)
     {

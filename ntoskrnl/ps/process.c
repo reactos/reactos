@@ -655,7 +655,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
             Process->SeAuditProcessCreationInfo.ImageFileName =
                 ExAllocatePoolWithTag(PagedPool,
                                       sizeof(OBJECT_NAME_INFORMATION),
-                                      'aPeS');
+                                      TAG_SEPA);
             if (!Process->SeAuditProcessCreationInfo.ImageFileName)
             {
                 /* Fail */
@@ -838,6 +838,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Protect against bad user-mode pointer */
     _SEH2_TRY
     {
+        /* Hacky way of returning the PEB to the user-mode creator */
+        if ((Process->Peb) && (CurrentThread->Tcb.Teb))
+        {
+            CurrentThread->Tcb.Teb->NtTib.ArbitraryUserPointer = Process->Peb;
+        }
+
         /* Save the process handle */
        *ProcessHandle = hProcess;
     }

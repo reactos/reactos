@@ -1,4 +1,4 @@
-﻿// Italian language resource file (Paolo Devoti, devotip@tiscali.it, 2007-01-10)
+// Italian language resource file (Paolo Devoti, devotip@tiscali.it, 2007-01-10)
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
@@ -173,8 +173,8 @@ BEGIN
      EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      PUSHBUTTON "Dettagli del &Driver...", IDC_DRIVERDETAILS, 7, 106, 75, 15
      LTEXT "Per vedere i dettagli sui file del driver.", -1, 91, 110, 154, 17, SS_NOPREFIX
-     PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 126, 75, 15
-     LTEXT "Update the device driver.", -1, 91, 130, 154, 17, SS_NOPREFIX
+     PUSHBUTTON "&Aggiorna il Driver...", IDC_UPDATEDRIVER, 7, 126, 75, 15
+     LTEXT "Aggiorna il Driver.", -1, 91, 130, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX DISCARDABLE  0, 0, 224, 230

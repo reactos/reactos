@@ -59,7 +59,7 @@ BEGIN
     BEGIN
         MENUITEM "&Možnosti",                    ID_TOOLS_OPTIONS
     END
-    POPUP "&Pomoc"
+    POPUP "Ná&povìda"
     BEGIN
         MENUITEM "&Prùzkumník &FAQ",             ID_EXPLORER_FAQ
         MENUITEM "O P&rùzkumníku",               ID_ABOUT_EXPLORER
@@ -122,7 +122,7 @@ BEGIN
     BEGIN
         MENUITEM "&Nastavení",                   ID_TOOLS_OPTIONS
     END
-    POPUP "&Pomoc"
+    POPUP "Ná&povìda"
     BEGIN
         MENUITEM "Prùzkumník &FAQ",              ID_EXPLORER_FAQ
         MENUITEM "O &Prùzkumníku",               ID_ABOUT_EXPLORER
@@ -149,7 +149,7 @@ BEGIN
                     45,71,12
     DEFPUSHBUTTON   "&Spustit",1,158,6,47,14
     PUSHBUTTON      "&Storno",2,158,23,47,14
-    PUSHBUTTON      "&Pomoc",254,158,43,47,14
+    PUSHBUTTON      "Ná&povìda",254,158,43,47,14
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
@@ -332,7 +332,7 @@ BEGIN
     IDS_SHUTDOWN            "Vypnout..."
     IDS_RESTART             "Restartovat..."
     IDS_LAUNCH              "Spustit..."
-    IDS_START_HELP          "Pomoc"
+    IDS_START_HELP          "Nápovìda"
     IDS_SEARCH_FILES        "Hledat"
     IDS_DOCUMENTS           "Dokumenty"
     IDS_FAVORITES           "Oblíbené"

@@ -54,7 +54,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE ShowControlWindow(UINT id, BOOL fShow);
     virtual HRESULT STDMETHODCALLTYPE IsControlWindowShown(UINT id, BOOL *pfShown);
     virtual HRESULT STDMETHODCALLTYPE IEGetDisplayName(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags);
-    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPCITEMIDLIST *ppidlOut);
+    virtual HRESULT STDMETHODCALLTYPE IEParseDisplayName(UINT uiCP, LPCWSTR pwszPath, LPITEMIDLIST *ppidlOut);
     virtual HRESULT STDMETHODCALLTYPE DisplayParseError(HRESULT hres, LPCWSTR pwszPath);
     virtual HRESULT STDMETHODCALLTYPE NavigateToPidl(LPCITEMIDLIST pidl, DWORD grfHLNF);
     virtual HRESULT STDMETHODCALLTYPE SetNavigateState(BNSTATE bnstate);
@@ -65,7 +65,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SetFlags(DWORD dwFlags, DWORD dwFlagMask);
     virtual HRESULT STDMETHODCALLTYPE GetFlags(DWORD *pdwFlags);
     virtual HRESULT STDMETHODCALLTYPE CanNavigateNow();
-    virtual HRESULT STDMETHODCALLTYPE GetPidl(LPCITEMIDLIST *ppidl);
+    virtual HRESULT STDMETHODCALLTYPE GetPidl(LPITEMIDLIST *ppidl);
     virtual HRESULT STDMETHODCALLTYPE SetReferrer(LPCITEMIDLIST pidl);
     virtual DWORD STDMETHODCALLTYPE GetBrowserIndex();
     virtual HRESULT STDMETHODCALLTYPE GetBrowserByIndex(DWORD dwID, IUnknown **ppunk);

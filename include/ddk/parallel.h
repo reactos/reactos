@@ -81,28 +81,28 @@ typedef struct _MORE_PARALLEL_PORT_INFORMATION {
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_SET_CHIP_MODE)(
-	IN  PVOID  SetChipContext,
-	IN  UCHAR  ChipMode);
+  _In_ PVOID SetChipContext,
+  _In_ UCHAR ChipMode);
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_CLEAR_CHIP_MODE)(
-	IN  PVOID  ClearChipContext,
-	IN  UCHAR  ChipMode);
+  _In_ PVOID ClearChipContext,
+  _In_ UCHAR ChipMode);
 
 typedef NTSTATUS
 (NTAPI *PPARCHIP_CLEAR_CHIP_MODE)(
-	IN  PVOID  ClearChipContext,
-	IN  UCHAR  ChipMode);
+  _In_ PVOID ClearChipContext,
+  _In_ UCHAR ChipMode);
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_TRY_SELECT_ROUTINE)(
-	IN  PVOID  TrySelectContext,
-	IN  PVOID  TrySelectCommand);
+  _In_ PVOID TrySelectContext,
+  _In_ PVOID TrySelectCommand);
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_DESELECT_ROUTINE)(
-	IN PVOID  DeselectContext,
-	IN PVOID  DeselectCommand);
+  _In_ PVOID DeselectContext,
+  _In_ PVOID DeselectCommand);
 
 /* PARALLEL_PNP_INFORMATION.HardwareCapabilities */
 #define PPT_NO_HARDWARE_PRESENT           0x00000000
@@ -135,15 +135,15 @@ typedef struct _PARALLEL_PNP_INFORMATION {
 
 typedef BOOLEAN
 (NTAPI *PPARALLEL_TRY_ALLOCATE_ROUTINE)(
-  IN  PVOID  TryAllocateContext);
+  _In_ PVOID TryAllocateContext);
 
 typedef VOID
 (NTAPI *PPARALLEL_FREE_ROUTINE)(
-  IN  PVOID  FreeContext);
+  _In_ PVOID FreeContext);
 
 typedef ULONG
 (NTAPI *PPARALLEL_QUERY_WAITERS_ROUTINE)(
-	IN  PVOID  QueryAllocsContext);
+  _In_ PVOID QueryAllocsContext);
 
 typedef struct _PARALLEL_PORT_INFORMATION {
   PHYSICAL_ADDRESS  OriginalController;
@@ -166,7 +166,7 @@ typedef struct _PARALLEL_CHIP_MODE {
 
 typedef VOID
 (NTAPI *PPARALLEL_DEFERRED_ROUTINE)(
-	IN  PVOID  DeferredContext);
+  _In_ PVOID DeferredContext);
 
 typedef struct _PARALLEL_INTERRUPT_SERVICE_ROUTINE {
   PKSERVICE_ROUTINE  InterruptServiceRoutine;
@@ -193,7 +193,7 @@ typedef struct _PARALLEL_INTERRUPT_SERVICE_ROUTINE {
 
 typedef USHORT
 (NTAPI *PDETERMINE_IEEE_MODES)(
-  IN PVOID  Context);
+  _In_ PVOID Context);
 
 typedef enum _PARALLEL_SAFETY {
 	SAFE_MODE,
@@ -202,49 +202,49 @@ typedef enum _PARALLEL_SAFETY {
 
 typedef NTSTATUS
 (NTAPI *PNEGOTIATE_IEEE_MODE)(
-  IN PVOID  Context,
-  IN USHORT  ModeMaskFwd,
-  IN USHORT  ModeMaskRev,
-  IN PARALLEL_SAFETY  ModeSafety,
-  IN BOOLEAN  IsForward);
+  _In_ PVOID Context,
+  _In_ USHORT ModeMaskFwd,
+  _In_ USHORT ModeMaskRev,
+  _In_ PARALLEL_SAFETY ModeSafety,
+  _In_ BOOLEAN IsForward);
 
 typedef NTSTATUS
 (NTAPI *PTERMINATE_IEEE_MODE)(
-	IN  PVOID  Context);
+  _In_ PVOID Context);
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_IEEE_FWD_TO_REV)(
-  IN  PVOID  Context);
+  _In_ PVOID Context);
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_IEEE_REV_TO_FWD)(
-  IN  PVOID  Context);
+  _In_ PVOID Context);
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_READ)(
-	IN  PVOID  Context,
-	OUT PVOID  Buffer,
-	IN  ULONG  NumBytesToRead,
-	OUT PULONG  NumBytesRead,
-	IN  UCHAR  Channel);
+  _In_ PVOID Context,
+  _Out_writes_bytes_to_(NumBytesToRead, *NumBytesRead) PVOID Buffer,
+  _In_ ULONG NumBytesToRead,
+  _Out_ PULONG NumBytesRead,
+  _In_  UCHAR Channel);
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_WRITE)(
-	IN  PVOID  Context,
-	OUT PVOID  Buffer,
-	IN  ULONG  NumBytesToWrite,
-	OUT PULONG  NumBytesWritten,
-	IN  UCHAR   Channel);
+  _In_ PVOID Context,
+  _In_reads_bytes_(NumBytesToWrite) PVOID Buffer,
+  _In_ ULONG NumBytesToWrite,
+  _Out_ PULONG NumBytesWritten,
+  _In_ UCHAR Channel);
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_TRYSELECT_DEVICE)(
-  IN  PVOID  Context,
-  IN  PARALLEL_1284_COMMAND  Command);
+  _In_ PVOID Context,
+  _In_ PARALLEL_1284_COMMAND Command);
 
 typedef NTSTATUS
 (NTAPI *PPARALLEL_DESELECT_DEVICE)(
-  IN  PVOID  Context,
-  IN  PARALLEL_1284_COMMAND  Command);
+  _In_ PVOID Context,
+  _In_ PARALLEL_1284_COMMAND Command);
 
 typedef struct _PARCLASS_INFORMATION {
   PUCHAR  Controller;

@@ -439,7 +439,7 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
                     return ((int)dw2 - (int)dw1);
             }
 
-            case REG_QWORD:
+            case REG_QWORD: /* REG_QWORD_LITTLE_ENDIAN */
             {
                 qw1 = *(DWORDLONG*)l->val;
                 qw2 = *(DWORDLONG*)r->val;

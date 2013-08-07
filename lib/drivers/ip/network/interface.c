@@ -11,6 +11,8 @@
 
 #include "precomp.h"
 
+ULONG NextDefaultAdapter = 0;
+
 NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface,
 				  ULONG TargetType,
 				  PULONG Address ) {
@@ -143,18 +145,46 @@ BOOLEAN HasPrefix(
     return TRUE;
 }
 
-static PIP_INTERFACE GetDefaultInterface(VOID)
+PIP_INTERFACE GetDefaultInterface(VOID)
 {
    KIRQL OldIrql;
+   ULONG Index = 0;
+   
    IF_LIST_ITER(CurrentIF);
 
    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
+   /* DHCP hack: Always return the adapter without an IP address */
    ForEachInterface(CurrentIF) {
       if (CurrentIF->Context) {
+          if (AddrIsUnspecified(&CurrentIF->Unicast)) {
+              TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+              return CurrentIF;
+          }
+      }
+   } EndFor(CurrentIF);   
+   
+   /* Try to continue from the next adapter */
+   ForEachInterface(CurrentIF) {
+      if (CurrentIF->Context) {
+          if (Index++ == NextDefaultAdapter) {
+              NextDefaultAdapter++;
+              TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+              return CurrentIF;
+          }
+      }
+   } EndFor(CurrentIF);
+   
+   /* No luck, so we'll choose the first adapter this time */
+   ForEachInterface(CurrentIF) {
+      if (CurrentIF->Context) {
+          NextDefaultAdapter = 1;
           TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
           return CurrentIF;
       }
    } EndFor(CurrentIF);
+   
+   /* Even that didn't work, so we'll just go with loopback */
+   NextDefaultAdapter = 0;
    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
    /* There are no physical interfaces on the system

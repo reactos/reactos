@@ -402,7 +402,6 @@ CHubController::HandlePnp(
     IN OUT PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PCOMMON_DEVICE_EXTENSION DeviceExtension;
     PDEVICE_CAPABILITIES DeviceCapabilities;
     PPNP_BUS_INFORMATION BusInformation;
     PDEVICE_RELATIONS DeviceRelations;
@@ -412,16 +411,6 @@ CHubController::HandlePnp(
     ULONG HiSpeed, NumPorts;
     WCHAR Buffer[300];
     LPWSTR DeviceName;
-
-    //
-    // get device extension
-    //
-    DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    //
-    // sanity check
-    //
-    ASSERT(DeviceExtension->IsFDO == FALSE);
 
     //
     // get current stack location
@@ -2189,7 +2178,6 @@ CHubController::HandleDeviceControl(
     IN OUT PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PCOMMON_DEVICE_EXTENSION DeviceExtension;
     PURB Urb;
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
 
@@ -2197,11 +2185,6 @@ CHubController::HandleDeviceControl(
     // get current stack location
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    //
-    // get device extension
-    //
-    DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     //
     // determine which request should be performed
@@ -3368,6 +3351,31 @@ USBHI_Initialize20Hub(
     return STATUS_SUCCESS;
 }
 
+
+WORKER_THREAD_ROUTINE InitRootHub;
+
+VOID
+NTAPI
+InitRootHub(IN PVOID Context)
+{
+    PINIT_ROOT_HUB_CONTEXT WorkItem;
+
+    //
+    // get context
+    //
+    WorkItem = (PINIT_ROOT_HUB_CONTEXT)Context;
+
+    //
+    // perform callback
+    //
+    WorkItem->CallbackRoutine(WorkItem->CallbackContext);
+
+    //
+    // free contextg
+    //
+    ExFreePoolWithTag(Context, TAG_USBLIB);
+}
+
 NTSTATUS
 USB_BUSIFFN
 USBHI_RootHubInitNotification(
@@ -3376,6 +3384,7 @@ USBHI_RootHubInitNotification(
     PRH_INIT_CALLBACK CallbackRoutine)
 {
     CHubController * Controller;
+    PINIT_ROOT_HUB_CONTEXT WorkItem;
 
     DPRINT("USBHI_RootHubInitNotification %p \n", CallbackContext);
 
@@ -3391,9 +3400,26 @@ USBHI_RootHubInitNotification(
     Controller->SetNotification(CallbackContext, CallbackRoutine);
 
     //
-    // FIXME: determine when to perform callback
+    // Create and initialize work item data
     //
-    CallbackRoutine(CallbackContext);
+    WorkItem = (PINIT_ROOT_HUB_CONTEXT)ExAllocatePoolWithTag(NonPagedPool, sizeof(INIT_ROOT_HUB_CONTEXT), TAG_USBLIB);
+    if (!WorkItem)
+    {
+        DPRINT1("Failed to allocate memory!n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // init context
+    //
+    WorkItem->CallbackRoutine = CallbackRoutine;
+    WorkItem->CallbackContext = CallbackContext;
+
+    //
+    // Queue the work item to handle initializing the device
+    //
+    ExInitializeWorkItem(&WorkItem->WorkItem, InitRootHub, (PVOID)WorkItem);
+    ExQueueWorkItem(&WorkItem->WorkItem, DelayedWorkQueue);
 
     //
     // done

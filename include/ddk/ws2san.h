@@ -22,6 +22,7 @@
 
 #pragma once
 
+#ifndef _WS2SAN_H_
 #define _WS2SAN_H_
 
 #ifdef __cplusplus
@@ -79,172 +80,186 @@ typedef struct _WSPUPCALLTABLEEX {
 
 typedef struct _WSABUFEX {
   u_long len;
-  char FAR *buf;
+  _Field_size_bytes_(len) char FAR *buf;
   HANDLE handle;
 } WSABUFEX, FAR * LPWSABUFEX;
 
-typedef int
+typedef
+_Must_inspect_result_
+int
 (WSPAPI *LPWSPSTARTUPEX)(
-  IN WORD wVersionRequested,
-  OUT LPWSPDATA lpWSPData,
-  IN LPWSAPROTOCOL_INFOW lpProtocolInfo,
-  IN LPWSPUPCALLTABLEEX lpUpcallTable,
-  OUT LPWSPPROC_TABLE lpProcTable);
+  _In_ WORD wVersionRequested,
+  _Out_ LPWSPDATA lpWSPData,
+  _In_ LPWSAPROTOCOL_INFOW lpProtocolInfo,
+  _In_ LPWSPUPCALLTABLEEX lpUpcallTable,
+  _Out_ LPWSPPROC_TABLE lpProcTable);
 
-typedef HANDLE
+typedef
+_Must_inspect_result_
+HANDLE
 (WSPAPI *LPFN_WSPREGISTERMEMORY)(
-  IN SOCKET s,
-  IN PVOID lpBuffer,
-  IN DWORD dwBufferLength,
-  IN DWORD dwFlags,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_bytes_(dwBufferLength) PVOID lpBuffer,
+  _In_ DWORD dwBufferLength,
+  _In_ DWORD dwFlags,
+  _Out_ LPINT lpErrno);
 
 typedef int
 (WSPAPI *LPFN_WSPDEREGISTERMEMORY)(
-  IN SOCKET s,
-  IN HANDLE Handle,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_ HANDLE Handle,
+  _Out_ LPINT lpErrno);
 
-typedef int
+typedef
+_Must_inspect_result_
+int
 (WSPAPI *LPFN_WSPREGISTERRDMAMEMORY)(
-  IN SOCKET s,
-  IN PVOID lpBuffer,
-  IN DWORD dwBufferLength,
-  IN DWORD dwFlags,
-  OUT LPVOID lpRdmaBufferDescriptor,
-  IN OUT LPDWORD lpdwDescriptorLength,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_bytes_(dwBufferLength) PVOID lpBuffer,
+  _In_ DWORD dwBufferLength,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_(*lpdwDescriptorLength) LPVOID lpRdmaBufferDescriptor,
+  _Inout_ LPDWORD lpdwDescriptorLength,
+  _Out_ LPINT lpErrno);
 
 typedef int
 (WSPAPI *LPFN_WSPDEREGISTERRDMAMEMORY)(
-  IN SOCKET s,
-  IN LPVOID lpRdmaBufferDescriptor,
-  IN DWORD dwDescriptorLength,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_bytes_(dwDescriptorLength) LPVOID lpRdmaBufferDescriptor,
+  _In_ DWORD dwDescriptorLength,
+  _Out_ LPINT lpErrno);
 
 typedef int
 (WSPAPI *LPFN_WSPRDMAWRITE)(
-  IN SOCKET s,
-  IN LPWSABUFEX lpBuffers,
-  IN DWORD dwBufferCount,
-  IN LPVOID lpTargetBufferDescriptor,
-  IN DWORD dwTargetDescriptorLength,
-  IN DWORD dwTargetBufferOffset,
-  OUT LPDWORD lpdwNumberOfBytesWritten,
-  IN DWORD dwFlags,
-  IN LPWSAOVERLAPPED lpOverlapped OPTIONAL,
-  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
-  IN LPWSATHREADID lpThreadId,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_(dwBufferCount) LPWSABUFEX lpBuffers,
+  _In_ DWORD dwBufferCount,
+  _In_reads_bytes_(dwTargetDescriptorLength) LPVOID lpTargetBufferDescriptor,
+  _In_ DWORD dwTargetDescriptorLength,
+  _In_ DWORD dwTargetBufferOffset,
+  _Out_ LPDWORD lpdwNumberOfBytesWritten,
+  _In_ DWORD dwFlags,
+  _In_opt_ LPWSAOVERLAPPED lpOverlapped,
+  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+  _In_ LPWSATHREADID lpThreadId,
+  _Out_ LPINT lpErrno);
 
 typedef int
 (WSPAPI *LPFN_WSPRDMAREAD)(
-  IN SOCKET s,
-  IN LPWSABUFEX lpBuffers,
-  IN DWORD dwBufferCount,
-  IN LPVOID lpTargetBufferDescriptor,
-  IN DWORD dwTargetDescriptorLength,
-  IN DWORD dwTargetBufferOffset,
-  OUT LPDWORD lpdwNumberOfBytesRead,
-  IN DWORD dwFlags,
-  IN LPWSAOVERLAPPED lpOverlapped OPTIONAL,
-  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
-  IN LPWSATHREADID lpThreadId,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_(dwBufferCount) LPWSABUFEX lpBuffers,
+  _In_ DWORD dwBufferCount,
+  _In_reads_bytes_(dwTargetDescriptorLength) LPVOID lpTargetBufferDescriptor,
+  _In_ DWORD dwTargetDescriptorLength,
+  _In_ DWORD dwTargetBufferOffset,
+  _Out_ LPDWORD lpdwNumberOfBytesRead,
+  _In_ DWORD dwFlags,
+  _In_opt_ LPWSAOVERLAPPED lpOverlapped,
+  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+  _In_ LPWSATHREADID lpThreadId,
+  _Out_ LPINT lpErrno);
 
 #if(_WIN32_WINNT >= 0x0501)
-typedef int
+typedef
+_Must_inspect_result_
+int
 (WSPAPI *LPFN_WSPMEMORYREGISTRATIONCACHECALLBACK)(
-  IN PVOID lpvAddress,
-  IN SIZE_T Size,
-  OUT LPINT lpErrno);
+  _In_reads_bytes_(Size) PVOID lpvAddress,
+  _In_ SIZE_T Size,
+  _Out_ LPINT lpErrno);
 #endif
 
+_Must_inspect_result_
 int
 WSPAPI
 WSPStartupEx(
-  IN WORD wVersionRequested,
-  OUT LPWSPDATA lpWSPData,
-  IN LPWSAPROTOCOL_INFOW lpProtocolInfo,
-  IN LPWSPUPCALLTABLEEX lpUpcallTable,
-  OUT LPWSPPROC_TABLE lpProcTable);
+  _In_ WORD wVersionRequested,
+  _Out_ LPWSPDATA lpWSPData,
+  _In_ LPWSAPROTOCOL_INFOW lpProtocolInfo,
+  _In_ LPWSPUPCALLTABLEEX lpUpcallTable,
+  _Out_ LPWSPPROC_TABLE lpProcTable);
 
+_Must_inspect_result_
 HANDLE
 WSPAPI
 WSPRegisterMemory(
-  IN SOCKET s,
-  IN PVOID lpBuffer,
-  IN DWORD dwBufferLength,
-  IN DWORD dwFlags,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_bytes_(dwBufferLength) PVOID lpBuffer,
+  _In_ DWORD dwBufferLength,
+  _In_ DWORD dwFlags,
+  _Out_ LPINT lpErrno);
 
 int
 WSPAPI
 WSPDeregisterMemory(
-  IN SOCKET s,
-  IN HANDLE Handle,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_ HANDLE Handle,
+  _Out_ LPINT lpErrno);
 
+_Must_inspect_result_
 int
 WSPAPI
 WSPRegisterRdmaMemory(
-  IN SOCKET s,
-  IN PVOID lpBuffer,
-  IN DWORD dwBufferLength,
-  IN DWORD dwFlags,
-  OUT LPVOID lpRdmaBufferDescriptor,
-  IN OUT LPDWORD lpdwDescriptorLength,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_bytes_(dwBufferLength) PVOID lpBuffer,
+  _In_ DWORD dwBufferLength,
+  _In_ DWORD dwFlags,
+  _Out_writes_bytes_(*lpdwDescriptorLength) LPVOID lpRdmaBufferDescriptor,
+  _Inout_ LPDWORD lpdwDescriptorLength,
+  _Out_ LPINT lpErrno);
 
 int
 WSPAPI
 WSPDeregisterRdmaMemory(
-  IN SOCKET s,
-  IN LPVOID lpRdmaBufferDescriptor,
-  IN DWORD dwDescriptorLength,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_bytes_(dwDescriptorLength) LPVOID lpRdmaBufferDescriptor,
+  _In_ DWORD dwDescriptorLength,
+  _Out_ LPINT lpErrno);
 
 int
 WSPAPI
 WSPRdmaWrite(
-  IN SOCKET s,
-  IN LPWSABUFEX lpBuffers,
-  IN DWORD dwBufferCount,
-  IN LPVOID lpTargetBufferDescriptor,
-  IN DWORD dwTargetDescriptorLength,
-  IN DWORD dwTargetBufferOffset,
-  OUT LPDWORD lpdwNumberOfBytesWritten,
-  IN DWORD dwFlags,
-  IN LPWSAOVERLAPPED lpOverlapped OPTIONAL,
-  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
-  IN LPWSATHREADID lpThreadId,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_(dwBufferCount) LPWSABUFEX lpBuffers,
+  _In_ DWORD dwBufferCount,
+  _In_reads_bytes_(dwTargetDescriptorLength) LPVOID lpTargetBufferDescriptor,
+  _In_ DWORD dwTargetDescriptorLength,
+  _In_ DWORD dwTargetBufferOffset,
+  _Out_ LPDWORD lpdwNumberOfBytesWritten,
+  _In_ DWORD dwFlags,
+  _In_opt_ LPWSAOVERLAPPED lpOverlapped,
+  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+  _In_ LPWSATHREADID lpThreadId,
+  _Out_ LPINT lpErrno);
 
 int
 WSPAPI
 WSPRdmaRead(
-  IN SOCKET s,
-  IN LPWSABUFEX lpBuffers,
-  IN DWORD dwBufferCount,
-  IN LPVOID lpTargetBufferDescriptor,
-  IN DWORD dwTargetDescriptorLength,
-  IN DWORD dwTargetBufferOffset,
-  OUT LPDWORD lpdwNumberOfBytesRead,
-  IN DWORD dwFlags,
-  IN LPWSAOVERLAPPED lpOverlapped OPTIONAL,
-  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
-  IN LPWSATHREADID lpThreadId,
-  OUT LPINT lpErrno);
+  _In_ SOCKET s,
+  _In_reads_(dwBufferCount) LPWSABUFEX lpBuffers,
+  _In_ DWORD dwBufferCount,
+  _In_reads_bytes_(dwTargetDescriptorLength) LPVOID lpTargetBufferDescriptor,
+  _In_ DWORD dwTargetDescriptorLength,
+  _In_ DWORD dwTargetBufferOffset,
+  _Out_ LPDWORD lpdwNumberOfBytesRead,
+  _In_ DWORD dwFlags,
+  _In_opt_ LPWSAOVERLAPPED lpOverlapped,
+  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine,
+  _In_ LPWSATHREADID lpThreadId,
+  _Out_ LPINT lpErrno);
 
 #if(_WIN32_WINNT >= 0x0501)
+_Must_inspect_result_
 int
 WSPAPI
 WSPMemoryRegistrationCacheCallback(
-  IN PVOID lpvAddress,
-  IN SIZE_T Size,
-  OUT LPINT lpErrno);
+  _In_reads_bytes_(Size) PVOID lpvAddress,
+  _In_ SIZE_T Size,
+  _Out_ LPINT lpErrno);
 #endif
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* _WS2SAN_H_ */

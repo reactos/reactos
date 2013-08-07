@@ -1,7 +1,7 @@
 /*
  * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
- 
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 // Dialog
@@ -118,7 +118,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "mod",IDC_BUTTON_MOD,260,60,24,18,BS_CENTER | BS_VCENTER |
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Veya",IDC_BUTTON_OR,260,80,24,18,BS_CENTER | BS_VCENTER |
+    PUSHBUTTON      "Veyâ",IDC_BUTTON_OR,260,80,24,18,BS_CENTER | BS_VCENTER |
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "Sol",IDC_BUTTON_LSH,260,100,24,18,BS_CENTER |
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
@@ -353,7 +353,7 @@ BEGIN
     POPUP "&Görünüm"
     BEGIN
         MENUITEM "&Ölçünlü",                     IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Bilimsel",                    IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Bilimlik",                    IDM_VIEW_SCIENTIFIC, CHECKED
         MENUITEM "&Dönüştürücü",                 IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "%Onaltılık\tF5",               IDM_VIEW_HEX, CHECKED
@@ -385,7 +385,7 @@ BEGIN
     POPUP "&Görünüm"
     BEGIN
         MENUITEM "&Ölçünlü",                     IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Bilimsel",                    IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Bilimlik",                    IDM_VIEW_SCIENTIFIC, CHECKED
         MENUITEM "&Dönüştürücü",                 IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Onaltılık\tF5",               IDM_VIEW_HEX, CHECKED
@@ -418,7 +418,7 @@ BEGIN
     POPUP "&Görünüm"
     BEGIN
         MENUITEM "&Ölçünlü",                     IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Bilimsel",                    IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Bilimlik",                    IDM_VIEW_SCIENTIFIC, CHECKED
         MENUITEM "&Dönüştürücü",                 IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "B&asamak Ayırıcısı",           IDM_VIEW_GROUP, CHECKED
@@ -436,7 +436,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STRING_LICENSE      "Hesap Makinesi, GNU GPL ile yayınlanan özgür bir yazılımdır.\r\n\r\nGNU GPL'nin bir tıpkısını buradan elde edebilirsiniz:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nBir de GNU GPL'nin çevirilerini buradan elde edebilirsiniz:\r\nhttp://www.gnu.org/licenses/translations.html"
-    IDS_MATH_ERROR          "Yanlış"
+    IDS_MATH_ERROR          "Yanlışlık"
     IDS_QUICKHELP           "Hızlı Yardım"
 END
 
@@ -559,7 +559,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angström"
     IDS_LENGTH_ASTRONOMICAL_UNITS   "Astronomi birimi"
-    IDS_LENGTH_BARLEYCORNS          "Arpa tanesi"
+    IDS_LENGTH_BARLEYCORNS          "Arpa tânesi"
     IDS_LENGTH_CENTIMETERS          "Santimetre"
     IDS_LENGTH_CHAINS_UK            "Zincir (BB)"
     IDS_LENGTH_CHI                  "Çi"
@@ -609,8 +609,8 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_POWER_BTUS_PER_MINUTE       "Dakikadaki İngiliz Isı Birimi"
-    IDS_POWER_FPS_PER_MINUTE        "Dakikadaki ayak pond kuvveti"
+    IDS_POWER_BTUS_PER_MINUTE       "Dakîkadaki İngiliz Isı Birimi"
+    IDS_POWER_FPS_PER_MINUTE        "Dakîkadaki ayak pond kuvveti"
     IDS_POWER_HORSEPOWER            "At gücü"
     IDS_POWER_KILOWATTS             "Kilovat"
     IDS_POWER_MEGAWATTS             "Megavat"
@@ -643,11 +643,11 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TIME_DAYS         "Gün"
     IDS_TIME_HOURS        "Saat"
-    IDS_TIME_NANOSECONDS  "Nanosaniye"
-    IDS_TIME_MICROSECONDS "Mikrosaniye"
-    IDS_TIME_MILLISECONDS "Milisaniye"
-    IDS_TIME_MINUTES      "Dakika"
-    IDS_TIME_SECONDS      "Saniye"
+    IDS_TIME_NANOSECONDS  "Nanosâniye"
+    IDS_TIME_MICROSECONDS "Mikrosâniye"
+    IDS_TIME_MILLISECONDS "Milisâniye"
+    IDS_TIME_MINUTES      "Dakîka"
+    IDS_TIME_SECONDS      "Sâniye"
     IDS_TIME_WEEKS        "Hafta"
     IDS_TIME_YEARS        "Yıl"
 END
@@ -657,7 +657,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_VELOCITY_CMS_SECOND         "Santimetre/Saat"
     IDS_VELOCITY_FEET_HOUR          "Ayak/Saat"
-    IDS_VELOCITY_FEET_SECOND        "Ayak/Saniye"
+    IDS_VELOCITY_FEET_SECOND        "Ayak/Sâniye"
     IDS_VELOCITY_KILOMETERS_HOUR    "Kilometre/Saat"
     IDS_VELOCITY_KNOTS              "Düğüm"
     IDS_VELOCITY_MACH               "Maç"

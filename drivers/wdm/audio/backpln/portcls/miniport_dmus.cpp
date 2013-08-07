@@ -118,7 +118,7 @@ public:
     }
 
     CMiniportDMusUART(IUnknown * Unknown){}
-    ~CMiniportDMusUART();
+    virtual ~CMiniportDMusUART();
 
     /*************************************************************************
      * IMiniport methods
@@ -242,7 +242,7 @@ public:
         return m_Ref;
     }
 
-    ~CMiniportDMusUARTStream();
+    virtual ~CMiniportDMusUARTStream();
 
     STDMETHODIMP_(NTSTATUS) Init
     (

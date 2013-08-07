@@ -276,7 +276,8 @@ PspDeleteProcess(IN PVOID ObjectBody)
     if (Process->SeAuditProcessCreationInfo.ImageFileName)
     {
         /* Free it */
-        ExFreePool(Process->SeAuditProcessCreationInfo.ImageFileName);
+        ExFreePoolWithTag(Process->SeAuditProcessCreationInfo.ImageFileName,
+                          TAG_SEPA);
         Process->SeAuditProcessCreationInfo.ImageFileName = NULL;
     }
 
@@ -679,7 +680,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
             NextPort = TerminationPort->Next;
 
             /* Free the Termination Port Object */
-            ExFreePool(TerminationPort);
+            ExFreePoolWithTag(TerminationPort, '=TsP');
 
             /* Keep looping as long as there is a port */
             TerminationPort = NextPort;

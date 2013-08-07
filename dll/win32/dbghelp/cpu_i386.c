@@ -20,12 +20,17 @@
 
 #include <assert.h>
 
+#ifndef DBGHELP_STATIC_LIB
 #include "ntstatus.h"
-#define WIN32_NO_STATUS
+#endif
+
 #include "dbghelp_private.h"
+
+#ifndef DBGHELP_STATIC_LIB
 #include "wine/winbase16.h"
 #include "winternl.h"
 #include "wine/debug.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -34,7 +39,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 #define IS_VM86_MODE(ctx) (ctx->EFlags & V86_FLAG)
 
-#ifdef __i386__
+
+#if defined(__i386__) && !defined(DBGHELP_STATIC_LIB)
 static ADDRESS_MODE get_selector_type(HANDLE hThread, const CONTEXT* ctx, WORD sel)
 {
     LDT_ENTRY	le;
@@ -73,6 +79,7 @@ static unsigned i386_build_addr(HANDLE hThread, const CONTEXT* ctx, ADDRESS64* a
 }
 #endif
 
+#ifndef DBGHELP_STATIC_LIB
 static unsigned i386_get_addr(HANDLE hThread, const CONTEXT* ctx,
                               enum cpu_addr ca, ADDRESS64* addr)
 {
@@ -86,8 +93,9 @@ static unsigned i386_get_addr(HANDLE hThread, const CONTEXT* ctx,
 #endif
     return FALSE;
 }
+#endif /* DBGHELP_STATIC_LIB */
 
-#ifdef __i386__
+#if defined(__i386__) && !defined(DBGHELP_STATIC_LIB)
 /* fetch_next_frame32()
  *
  * modify (at least) context.{eip, esp, ebp} using unwind information
@@ -110,7 +118,9 @@ static BOOL fetch_next_frame32(struct cpu_stack_walk* csw,
     cpair[2].name = "$eip";      cpair[2].pvalue = &context->Eip;
     cpair[3].name = NULL;        cpair[3].pvalue = NULL;
 
+#ifndef DBGHELP_STATIC_LIB
     if (!pdb_virtual_unwind(csw, curr_pc, context, cpair))
+#endif
     {
         /* do a simple unwind using ebp
          * we assume a "regular" prologue in the function has been used
@@ -148,6 +158,7 @@ enum st_mode {stm_start, stm_32bit, stm_16bit, stm_done};
 #define set_curr_mode(m) {frame->Reserved[__CurrentModeCount] &= ~0x0F; frame->Reserved[__CurrentModeCount] |= (m & 0x0F);}
 #define inc_curr_count() (frame->Reserved[__CurrentModeCount] += 0x10)
 
+#ifndef DBGHELP_STATIC_LIB
 static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
 {
     STACK32FRAME        frame32;
@@ -513,6 +524,7 @@ done_err:
     set_curr_mode(stm_done);
     return FALSE;
 }
+#endif /* DBGHELP_STATIC_LIB */
 
 static unsigned i386_map_dwarf_register(unsigned regno)
 {
@@ -662,6 +674,7 @@ static const char* i386_fetch_regname(unsigned regno)
     return NULL;
 }
 
+#ifndef DBGHELP_STATIC_LIB
 static BOOL i386_fetch_minidump_thread(struct dump_context* dc, unsigned index, unsigned flags, const CONTEXT* ctx)
 {
     if (ctx->ContextFlags && (flags & ThreadWriteInstructionWindow))
@@ -675,6 +688,7 @@ static BOOL i386_fetch_minidump_thread(struct dump_context* dc, unsigned index, 
 
     return TRUE;
 }
+#endif
 
 static BOOL i386_fetch_minidump_module(struct dump_context* dc, unsigned index, unsigned flags)
 {
@@ -688,12 +702,22 @@ DECLSPEC_HIDDEN struct cpu cpu_i386 = {
     IMAGE_FILE_MACHINE_I386,
     4,
     CV_REG_EBP,
+#ifndef DBGHELP_STATIC_LIB
     i386_get_addr,
     i386_stack_walk,
+#else
+    NULL,
+    NULL,
+#endif
     NULL,
     i386_map_dwarf_register,
     i386_fetch_context_reg,
     i386_fetch_regname,
+#ifndef DBGHELP_STATIC_LIB
     i386_fetch_minidump_thread,
     i386_fetch_minidump_module,
+#else
+    NULL,
+    NULL,
+#endif
 };

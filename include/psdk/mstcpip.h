@@ -12,7 +12,7 @@ extern "C" {
 #ifdef _MSC_VER
 #define MSTCPIP_INLINE __inline
 #else
-#define MSTCPIP_INLINE extern inline
+#define MSTCPIP_INLINE static inline
 #endif
 
 #include <nldef.h>

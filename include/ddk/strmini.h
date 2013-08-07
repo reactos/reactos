@@ -117,16 +117,16 @@ typedef struct _HW_STREAM_INFORMATION {
   KSPIN_DATAFLOW DataFlow;
   BOOLEAN DataAccessible;
   ULONG NumberOfFormatArrayEntries;
-  PKSDATAFORMAT* StreamFormatsArray;
+  _Field_size_(NumberOfFormatArrayEntries) PKSDATAFORMAT* StreamFormatsArray;
   PVOID ClassReserved[4];
   ULONG NumStreamPropArrayEntries;
-  PKSPROPERTY_SET StreamPropertiesArray;
+  _Field_size_(NumStreamPropArrayEntries) PKSPROPERTY_SET StreamPropertiesArray;
   ULONG NumStreamEventArrayEntries;
-  PKSEVENT_SET StreamEventsArray;
+  _Field_size_(NumStreamEventArrayEntries) PKSEVENT_SET StreamEventsArray;
   GUID* Category;
   GUID* Name;
   ULONG MediumsCount;
-  const KSPIN_MEDIUM* Mediums;
+  _Field_size_(MediumsCount) const KSPIN_MEDIUM* Mediums;
   BOOLEAN BridgeStream;
   ULONG Reserved[2];
 } HW_STREAM_INFORMATION, *PHW_STREAM_INFORMATION;
@@ -146,7 +146,7 @@ typedef struct _STREAM_TIME_REFERENCE {
 typedef struct _STREAM_DATA_INTERSECT_INFO {
   ULONG StreamNumber;
   PKSDATARANGE DataRange;
-  PVOID DataFormatBuffer;
+  _Field_size_bytes_(SizeOfDataFormatBuffer) PVOID DataFormatBuffer;
   ULONG SizeOfDataFormatBuffer;
 } STREAM_DATA_INTERSECT_INFO, *PSTREAM_DATA_INTERSECT_INFO;
 
@@ -228,7 +228,7 @@ typedef struct _HW_STREAM_REQUEST_BLOCK {
   PVOID SRBExtension;
 
   union _CommandData {
-    PKSSTREAM_HEADER DataBufferArray;
+    _Field_size_(_Inexpressible_(NumberOfBuffers)) PKSSTREAM_HEADER DataBufferArray;
     PHW_STREAM_DESCRIPTOR StreamBuffer;
     KSSTATE StreamState;
     PSTREAM_TIME_REFERENCE TimeReference;
@@ -262,7 +262,7 @@ typedef struct _HW_STREAM_REQUEST_BLOCK {
     ULONG ActualBytesTransferred;
   };
 
-  PKSSCATTER_GATHER ScatterGatherBuffer;
+  _Field_size_(NumberOfScatterGatherElements) PKSSCATTER_GATHER ScatterGatherBuffer;
   ULONG NumberOfPhysicalPages;
   ULONG NumberOfScatterGatherElements;
   ULONG Reserved[1];
@@ -278,7 +278,7 @@ typedef enum {
 } STREAM_BUFFER_TYPE;
 
 typedef struct _ACCESS_RANGE {
-  STREAM_PHYSICAL_ADDRESS RangeStart;
+  _Field_size_bytes_(RangeLength) STREAM_PHYSICAL_ADDRESS RangeStart;
   ULONG RangeLength;
   BOOLEAN RangeInMemory;
   ULONG Reserved;
@@ -296,7 +296,7 @@ typedef struct _PORT_CONFIGURATION_INFORMATION {
   KINTERRUPT_MODE InterruptMode;
   ULONG DmaChannel;
   ULONG NumberOfAccessRanges;
-  PACCESS_RANGE AccessRanges;
+  _Field_size_(NumberOfAccessRanges) PACCESS_RANGE AccessRanges;
   ULONG StreamDescriptorSize;
   PIRP Irp;
   PKINTERRUPT InterruptObject;
@@ -368,7 +368,7 @@ typedef struct _HW_INITIALIZATION_DATA {
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
   ULONG NumNameExtensions;
-  PWCHAR *NameExtensionArray;
+  _Field_size_(NumNameExtensions) PWCHAR *NameExtensionArray;
 #else
   ULONG Reserved[2];
 #endif
@@ -384,37 +384,38 @@ typedef enum _STREAM_PRIORITY {
 
 VOID
 StreamClassAbortOutstandingRequests(
-  IN PVOID HwDeviceExtension,
-  IN PHW_STREAM_OBJECT HwStreamObject,
-  IN NTSTATUS Status);
+  _In_ PVOID HwDeviceExtension,
+  _In_opt_ PHW_STREAM_OBJECT HwStreamObject,
+  _In_ NTSTATUS Status);
 
 VOID
-STREAMAPI 
+STREAMAPI
 StreamClassCallAtNewPriority(
-  IN PHW_STREAM_OBJECT StreamObject,
-  IN PVOID HwDeviceExtension,
-  IN STREAM_PRIORITY Priority,
-  IN PHW_PRIORITY_ROUTINE PriorityRoutine,
-  IN PVOID Context);
+  _In_opt_ PHW_STREAM_OBJECT StreamObject,
+  _In_ PVOID HwDeviceExtension,
+  _In_ STREAM_PRIORITY Priority,
+  _In_ PHW_PRIORITY_ROUTINE PriorityRoutine,
+  _In_ PVOID Context);
 
 VOID
 STREAMAPI
 StreamClassCompleteRequestAndMarkQueueReady(
-  IN PHW_STREAM_REQUEST_BLOCK Srb);
+  _In_ PHW_STREAM_REQUEST_BLOCK Srb);
 
+__analysis_noreturn
 VOID
 STREAMAPI
 StreamClassDebugAssert(
-  IN PCHAR File,
-  IN ULONG Line,
-  IN PCHAR AssertText,
-  IN ULONG AssertValue);
+  _In_ PCHAR File,
+  _In_ ULONG Line,
+  _In_ PCHAR AssertText,
+  _In_ ULONG AssertValue);
 
 VOID
 __cdecl
 StreamClassDebugPrint(
-  IN STREAM_DEBUG_LEVEL DebugPrintLevel,
-  IN PCCHAR DebugMessage,
+  _In_ STREAM_DEBUG_LEVEL DebugPrintLevel,
+  _In_ PCCHAR DebugMessage,
   ...);
 
 VOID
@@ -430,92 +431,96 @@ StreamClassDeviceNotification(
 VOID
 STREAMAPI
 StreamClassFilterReenumerateStreams(
-  IN PVOID HwInstanceExtension,
-  IN ULONG StreamDescriptorSize);
+  _In_ PVOID HwInstanceExtension,
+  _In_ ULONG StreamDescriptorSize);
 
 PVOID
 STREAMAPI
 StreamClassGetDmaBuffer(
-  IN PVOID HwDeviceExtension);
+  _In_ PVOID HwDeviceExtension);
 
 
 PKSEVENT_ENTRY
 StreamClassGetNextEvent(
-  IN PVOID HwInstanceExtension_OR_HwDeviceExtension,
-  IN PHW_STREAM_OBJECT HwStreamObject,
-  IN GUID * EventGuid,
-  IN ULONG EventItem,
-  IN PKSEVENT_ENTRY CurrentEvent);
+  _In_opt_ PVOID HwInstanceExtension_OR_HwDeviceExtension,
+  _In_opt_ PHW_STREAM_OBJECT HwStreamObject,
+  _In_opt_ GUID *EventGuid,
+  _In_ ULONG EventItem,
+  _In_opt_ PKSEVENT_ENTRY CurrentEvent);
 
 STREAM_PHYSICAL_ADDRESS
 STREAMAPI
 StreamClassGetPhysicalAddress(
-  IN PVOID HwDeviceExtension,
-  IN PHW_STREAM_REQUEST_BLOCK HwSRB,
-  IN PVOID VirtualAddress,
-  IN STREAM_BUFFER_TYPE Type,
-  IN ULONG *Length);
+  _In_ PVOID HwDeviceExtension,
+  _In_opt_ PHW_STREAM_REQUEST_BLOCK HwSRB,
+  _In_ PVOID VirtualAddress,
+  _In_ STREAM_BUFFER_TYPE Type,
+  _Out_ ULONG *Length);
 
 VOID
 StreamClassQueryMasterClock(
-  IN PHW_STREAM_OBJECT HwStreamObject,
-  IN HANDLE MasterClockHandle,
-  IN TIME_FUNCTION TimeFunction,
-  IN PHW_QUERY_CLOCK_ROUTINE ClockCallbackRoutine);
+  _In_ PHW_STREAM_OBJECT HwStreamObject,
+  _In_ HANDLE MasterClockHandle,
+  _In_ TIME_FUNCTION TimeFunction,
+  _In_ PHW_QUERY_CLOCK_ROUTINE ClockCallbackRoutine);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
 STREAMAPI
 StreamClassQueryMasterClockSync(
-  IN HANDLE MasterClockHandle,
-  IN PHW_TIME_CONTEXT TimeContext);
+  _In_ HANDLE MasterClockHandle,
+  _Inout_ PHW_TIME_CONTEXT TimeContext);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN
 STREAMAPI
 StreamClassReadWriteConfig(
-  IN PVOID HwDeviceExtension,
-  IN BOOLEAN Read,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ PVOID HwDeviceExtension,
+  _In_ BOOLEAN Read,
+  _Inout_updates_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 VOID
 STREAMAPI
 StreamClassReenumerateStreams(
-  IN PVOID HwDeviceExtension,
-  IN ULONG StreamDescriptorSize);
+  _In_ PVOID HwDeviceExtension,
+  _In_ ULONG StreamDescriptorSize);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 STREAMAPI
 StreamClassRegisterAdapter(
-  IN PVOID Argument1,
-  IN PVOID Argument2,
-  IN PHW_INITIALIZATION_DATA HwInitializationData);
+  _In_ PVOID Argument1,
+  _In_ PVOID Argument2,
+  _In_ PHW_INITIALIZATION_DATA HwInitializationData);
 
 #define StreamClassRegisterMinidriver StreamClassRegisterAdapter
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSTATUS
 StreamClassRegisterFilterWithNoKSPins(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN const GUID *InterfaceClassGUID,
-  IN ULONG PinCount,
-  IN BOOLEAN *PinDirection,
-  IN KSPIN_MEDIUM *MediumList,
-  IN GUID *CategoryList);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ const GUID *InterfaceClassGUID,
+  _In_ ULONG PinCount,
+  _In_reads_(PinCount) BOOL *PinDirection,
+  _In_reads_(PinCount) KSPIN_MEDIUM *MediumList,
+  _In_reads_opt_(PinCount) GUID *CategoryList);
 
 VOID
 STREAMAPI
 StreamClassScheduleTimer(
-  IN PHW_STREAM_OBJECT StreamObject,
-  IN PVOID HwDeviceExtension,
-  IN ULONG NumberOfMicroseconds,
-  IN PHW_TIMER_ROUTINE TimerRoutine,
-  IN PVOID Context);
+  _In_opt_ PHW_STREAM_OBJECT StreamObject,
+  _In_ PVOID HwDeviceExtension,
+  _In_ ULONG NumberOfMicroseconds,
+  _In_ PHW_TIMER_ROUTINE TimerRoutine,
+  _In_ PVOID Context);
 
 VOID
 __cdecl
 StreamClassStreamNotification(
-  IN STREAM_MINIDRIVER_STREAM_NOTIFICATION_TYPE NotificationType,
-  IN PHW_STREAM_OBJECT StreamObject,
-  IN ...);
+  _In_ STREAM_MINIDRIVER_STREAM_NOTIFICATION_TYPE NotificationType,
+  _In_ PHW_STREAM_OBJECT StreamObject,
+  ...);
 
 #endif /* _STREAM_H */

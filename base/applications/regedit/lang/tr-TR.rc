@@ -259,13 +259,13 @@ FONT 8, "MS Shell Dlg"
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
     LTEXT "Giriş:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Özel Aygıt Bilgisi:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "Husûsî Aygıt Bilgisi:", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
     GROUPBOX "Kullanım", IDC_STATIC, 10, 219, 125, 39
     LTEXT "Belirsiz:", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
     LTEXT "Paylaşılan:", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Özel Aygıt", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Özel Sürücü", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    LTEXT "Husûsî Aygıt", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Husûsî Sürücü", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
     RTEXT "Arayüz Türü:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
     RTEXT "Veri Yolu Numarası:", IDC_STATIC, 151, 230, 51, 8
@@ -300,11 +300,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_REGISTRY_MENU        "Bu seçke, bütün Değer Defteri ile çalışma komutlarını içerir."
-    ID_EDIT_MENU            "Bu seçke, dizinleri veya değerleri düzenleme komutlarını içerir."
-    ID_VIEW_MENU            "Bu seçke, Değer Defteri Düzenleyicisi'nin penceresini özelleştirme komutlarını içerir."
+    ID_EDIT_MENU            "Bu seçke, dizinleri veyâ değerleri düzenleme komutlarını içerir."
+    ID_VIEW_MENU            "Bu seçke, Değer Defteri Düzenleyicisi'nin penceresini değiştirme komutlarını içerir."
     ID_FAVOURITES_MENU      "Bu seçke, yer imleri ile ilgili komutları içerir."
-    ID_HELP_MENU            "Bu seçke, Değer Defteri Düzenleyicisi ile ilgili bilgi veya yardım alma komutlarını içerir."
-    ID_EDIT_NEW_MENU        "Bu seçke, yeni bir dizin veya yeni bir değer oluşturma komutlarını içerir."
+    ID_HELP_MENU            "Bu seçke, Değer Defteri Düzenleyicisi ile ilgili bilgi veyâ yardım alma komutlarını içerir."
+    ID_EDIT_NEW_MENU        "Bu seçke, yeni bir dizin veyâ yeni bir değer oluşturma komutlarını içerir."
 END
 
 STRINGTABLE DISCARDABLE
@@ -336,30 +336,30 @@ BEGIN
     ID_EDIT_DELETE                        "Seçilen öğeyi siler."
     ID_EDIT_RENAME                        "Seçilen öğenin adını değiştirir."
     ID_EDIT_COPYKEYNAME                   "Seçilen öğenin dizin yolunu çoğaltır."
-    ID_EDIT_FIND                          "Belirtilen dizgiyi dizinlerin adlarında, değerlerde veya değer adlarında arar."
+    ID_EDIT_FIND                          "Belirtilen dizgiyi dizinlerin adlarında, değerlerde veyâ değer adlarında arar."
     ID_EDIT_FINDNEXT                      "Bulunan dizgiyi bulunduğu yerden başlayarak bir daha arar."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR                             "Hatâ"
+    IDS_ERROR                             "Yanlışlık"
     IDS_WARNING                           "Uyarı"
     IDS_BAD_KEY                           "Dizin sorgulanamıyor: %s"
     IDS_BAD_VALUE                         "Değer sorgulanamıyor: %s"
     IDS_UNSUPPORTED_TYPE                  "Bu türdeki dizinler değiştirilemez: %ld"
     IDS_TOO_BIG_VALUE                     "Değer çok büyük: %ld"
     IDS_MULTI_SZ_EMPTY_STRING             "REG_MULTI_SZ boş dizgi içeremez.\nBoş dizgiler dizelgeden silinmiştir."
-    IDS_QUERY_DELETE_KEY_ONE              "Bu dizini silmeye emin misiniz?"
-    IDS_QUERY_DELETE_KEY_MORE             "Bu dizinleri silmeye emin misiniz?"
-    IDS_QUERY_DELETE_KEY_CONFIRM          "Emin Misiniz?"
-    IDS_QUERY_DELETE_ONE                  "Bu değeri silmeye emin misiniz?"
-    IDS_QUERY_DELETE_MORE                 "Bu değerleri silmeye emin misiniz?"
-    IDS_QUERY_DELETE_CONFIRM              "Emin Misiniz?"
+    IDS_QUERY_DELETE_KEY_ONE              "Bu dizini silmeyi onaylıyor musunuz?"
+    IDS_QUERY_DELETE_KEY_MORE             "Bu dizinleri silmeyi onaylıyor musunuz?"
+    IDS_QUERY_DELETE_KEY_CONFIRM          "Onaylıyor musunuz?"
+    IDS_QUERY_DELETE_ONE                  "Bu değeri silmeyi onaylıyor musunuz?"
+    IDS_QUERY_DELETE_MORE                 "Bu değerleri silmeyi onaylıyor musunuz?"
+    IDS_QUERY_DELETE_CONFIRM              "Onaylıyor musunuz?"
     IDS_ERR_DELVAL_CAPTION                "Değerlerin Silinmesi"
     IDS_ERR_DELETEVALUE                   "Belirtilmiş değerler silinemiyor."
     IDS_ERR_RENVAL_CAPTION                "Değerin Adının Değiştirilmesi"
     IDS_ERR_RENVAL_TOEMPTY                "Yeni bir ad girmediğinizden dolayı bu değerin adı değiştirilemiyor: %s"
-    IDS_QUERY_IMPORT_HIVE_CAPTION         "Emin Misiniz?"
+    IDS_QUERY_IMPORT_HIVE_CAPTION         "Onaylıyor musunuz?"
     IDS_QUERY_IMPORT_HIVE_MSG             "Bu dizin, seçili dizinle yenilenecektir.\nBu yüzden bu dizinin tüm alt dizinleri ve değerleri silinecektir.\nİşlemi sürdürmek istiyor musunuz?"
     IDS_NEW_KEY                           "%d. Yeni Dizin"
     IDS_NEW_VALUE                         "%d. Yeni Değer"
@@ -394,7 +394,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "Tam Denetim"
+  IDS_ACCESS_FULLCONTROL        "Tüm Denetim"
   IDS_ACCESS_READ               "Okuma"
   IDS_ACCESS_QUERYVALUE         "Değer Sorgulama"
   IDS_ACCESS_SETVALUE           "Değer Atama"
@@ -404,7 +404,7 @@ BEGIN
   IDS_ACCESS_CREATELINK         "Bağlantı Oluşturma"
   IDS_ACCESS_DELETE             "Silme"
   IDS_ACCESS_WRITEDAC           "DAC Yazma"
-  IDS_ACCESS_WRITEOWNER         "Sahibi Yazma"
+  IDS_ACCESS_WRITEOWNER         "Sâhibi Yazma"
   IDS_ACCESS_READCONTROL        "Okuma Denetimi"
 END
 
@@ -420,15 +420,15 @@ BEGIN
   IDS_EXPAND                     "&Genişlet"
   IDS_COLLAPSE                   "&Daralt"
   IDS_GOTO_SUGGESTED_KEY         "G&it: %s"
-  IDS_FINISHEDFIND               "Değer defterinde arama tamamlandı."
+  IDS_FINISHEDFIND               "Değer defterinde arama bitti."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Eklenen bilgiler değerleri değiştirebilir veya bileşenlerin doğru çalışmasını engelleyebilir.\nEğer %s  kütüğündeki bilgilerin kaynağını bilmiyorsanız bu bilgileri değer defterine eklemeyiniz.\n\nSürdürmek istiyor musunuz?"
+  IDS_IMPORT_PROMPT              "Eklenen bilgiler, değerleri değiştirebilir veyâ bileşenlerin doğru çalışmasını engelleyebilir.\nEğer %s  kütüğündeki bilgilerin kaynağını bilmiyorsanız bu bilgileri değer defterine eklemeyiniz.\n\nSürdürmek istiyor musunuz?"
   IDS_IMPORT_OK                  "Bilgiler, %s kütüğünden başarıyla alındı."
-  IDS_IMPORT_ERROR               "%s alınamıyor. Disk hatâsı, kütük dizgesi hatâsı ya da belirtilen kütüğün olmamasından dolayı bilgi alınacak kütük açılamıyor."
-  IDS_EXPORT_ERROR               "%s verilemiyor. Disk hatâsı ya da kütük dizgesi hatâsından dolayı belirtilen kütük oluşturulamıyor ya da bilgiler bu kütüğün üzerine yazılamıyor."
+  IDS_IMPORT_ERROR               "%s alınamıyor. Disk yanlışlığı, kütük dizgesi yanlışlığı ya da belirtilen kütüğün olmamasından dolayı bilgi alınacak kütük açılamıyor."
+  IDS_EXPORT_ERROR               "%s verilemiyor. Disk yanlışlığı ya da kütük dizgesi yanlışlığından dolayı belirtilen kütük oluşturulamıyor ya da bilgiler, bu kütüğün üzerine yazılamıyor."
 END
 
 STRINGTABLE DISCARDABLE
@@ -441,10 +441,10 @@ BEGIN
     IDS_INTERRUPT_LEVEL           "Düzey"
     IDS_INTERRUPT_AFFINITY        "Benzerlik"
     IDS_INTERRUPT_TYPE            "Tür"
-    IDS_MEMORY_ADDRESS            "Fiziksel Erişki"
+    IDS_MEMORY_ADDRESS            "Fizikî Erişki"
     IDS_MEMORY_LENGTH             "Uzunluk"
     IDS_MEMORY_ACCESS             "Erişim"
-    IDS_PORT_ADDRESS              "Fiziksel Erişki"
+    IDS_PORT_ADDRESS              "Fizikî Erişki"
     IDS_PORT_LENGTH               "Uzunluk"
     IDS_PORT_ACCESS               "Erişim"
     IDS_SPECIFIC_RESERVED1        "Ayrılmış 1"
@@ -555,9 +555,9 @@ BEGIN
                     WS_TABSTOP,14,48,36,8
     CONTROL         "&Değerler",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
-    CONTROL         "Aranan, bir şeyin tam adı olsun.",IDC_MATCHSTRING,"Button",
+    CONTROL         "Yalnızca tüm dizgi",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "Büyük-küçük hârf ayrımı olsun.",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Büyük-küçük hârf ayrımı",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
 END
 

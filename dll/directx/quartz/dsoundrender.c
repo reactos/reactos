@@ -1247,20 +1247,20 @@ static HRESULT WINAPI AMDirectSound_ReleaseSecondaryBufferInterface(IAMDirectSou
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI AMDirectSound_SetFocusWindow(IAMDirectSound *iface, HWND hwnd, BOOL bgsilent)
+static HRESULT WINAPI AMDirectSound_SetFocusWindow(IAMDirectSound *iface, HWND hwnd, BOOL bgaudible)
 {
     DSoundRenderImpl *This = impl_from_IAMDirectSound(iface);
 
-    FIXME("(%p/%p)->(%p,%d): stub\n", This, iface, hwnd, bgsilent);
+    FIXME("(%p/%p)->(%p,%d): stub\n", This, iface, hwnd, bgaudible);
 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI AMDirectSound_GetFocusWindow(IAMDirectSound *iface, HWND hwnd)
+static HRESULT WINAPI AMDirectSound_GetFocusWindow(IAMDirectSound *iface, HWND *hwnd, BOOL *bgaudible)
 {
     DSoundRenderImpl *This = impl_from_IAMDirectSound(iface);
 
-    FIXME("(%p/%p)->(%p): stub\n", This, iface, hwnd);
+    FIXME("(%p/%p)->(%p,%p): stub\n", This, iface, hwnd, bgaudible);
 
     return E_NOTIMPL;
 }

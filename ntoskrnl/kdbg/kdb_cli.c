@@ -3578,7 +3578,8 @@ KdbpCliInit()
     InitializeObjectAttributes(&ObjectAttributes, &FileName, 0, NULL, NULL);
 
     /* Open the file */
-    Status = ZwOpenFile(&hFile, FILE_READ_DATA, &ObjectAttributes, &Iosb, 0,
+    Status = ZwOpenFile(&hFile, FILE_READ_DATA | SYNCHRONIZE,
+                        &ObjectAttributes, &Iosb, 0,
                         FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT |
                         FILE_NO_INTERMEDIATE_BUFFERING);
     if (!NT_SUCCESS(Status))

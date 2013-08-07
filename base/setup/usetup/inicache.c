@@ -1080,7 +1080,7 @@ IniCacheSave(PINICACHE Cache,
 			     NULL);
 
   Status = NtCreateFile(&FileHandle,
-			GENERIC_WRITE,
+			GENERIC_WRITE | SYNCHRONIZE,
 			&ObjectAttributes,
 			&IoStatusBlock,
 			NULL,

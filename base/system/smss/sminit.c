@@ -630,8 +630,8 @@ SmpRegistryConfigurationTable[] =
         0,
         L"BootExecute",
         &SmpBootExecuteList,
-        REG_NONE,
-        NULL,
+        REG_MULTI_SZ,
+        L"autocheck AutoChk.exe *\0",
         0
     },
 
@@ -710,16 +710,6 @@ SmpRegistryConfigurationTable[] =
         RTL_QUERY_REGISTRY_SUBKEY,
         L"KnownDlls",
         &SmpKnownDllsList,
-        REG_NONE,
-        NULL,
-        0
-    },
-
-    {
-        SmpConfigureEnvironment,
-        RTL_QUERY_REGISTRY_SUBKEY,
-        L"Environment",
-        NULL,
         REG_NONE,
         NULL,
         0

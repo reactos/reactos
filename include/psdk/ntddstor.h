@@ -617,6 +617,11 @@ typedef struct _STORAGE_PRIORITY_HINT_SUPPORT {
   ULONG SupportFlags;
 } STORAGE_PRIORITY_HINT_SUPPORT, *PSTORAGE_PRIORITY_HINT_SUPPORT;
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4200)
+#endif
+
 #if defined(_MSC_EXTENSIONS)
 
 typedef struct _STORAGE_MEDIA_SERIAL_NUMBER_DATA {
@@ -645,6 +650,10 @@ typedef struct _PERSISTENT_RESERVE_COMMAND {
 } PERSISTENT_RESERVE_COMMAND, *PPERSISTENT_RESERVE_COMMAND;
 
 #endif /* defined(_MSC_EXTENSIONS) */
+
+#ifdef _MSC_VER
+#pragma warning(pop) /* disable:4200 */
+#endif
 
 typedef _Struct_size_bytes_(Size) struct _STORAGE_READ_CAPACITY {
   ULONG Version;

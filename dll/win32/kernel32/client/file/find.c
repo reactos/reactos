@@ -547,7 +547,6 @@ FindClose(HANDLE hFindFile)
         }
 
         RtlFreeHeap(RtlGetProcessHeap(), 0, FindDataHandle);
-        _SEH2_YIELD(return TRUE);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -555,6 +554,7 @@ FindClose(HANDLE hFindFile)
         _SEH2_YIELD(return FALSE);
     }
     _SEH2_END;
+    return TRUE;
 }
 
 

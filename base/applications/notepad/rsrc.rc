@@ -22,7 +22,7 @@
 
 #include "notepad_res.h"
 
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Editor\0"
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Notepad\0"
 #define REACTOS_STR_INTERNAL_NAME	"notepad\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"notepad.exe\0"
 

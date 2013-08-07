@@ -327,7 +327,7 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
     PNEIGHBOR_CACHE_ENTRY NCE;
     IP_ADDRESS GeneralRoute;
 
-    NCE = NBLocateNeighbor(&IF->Unicast);
+    NCE = NBLocateNeighbor(&IF->Unicast, IF);
     if (NCE)
     {
        TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));

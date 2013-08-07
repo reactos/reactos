@@ -880,7 +880,7 @@ FsRtlGetFileSize(IN PFILE_OBJECT FileObject,
         IoStackLocation->FileObject = FileObject;
         IoStackLocation->DeviceObject = DeviceObject;
         IoStackLocation->Parameters.QueryFile.Length =
-            ALIGN_UP(sizeof(FILE_INFORMATION_CLASS), ULONG);
+            sizeof(FILE_STANDARD_INFORMATION);
         IoStackLocation->Parameters.QueryFile.FileInformationClass =
             FileStandardInformation;
 
@@ -1019,7 +1019,7 @@ FsRtlMdlReadCompleteDev(IN PFILE_OBJECT FileObject,
                         IN PDEVICE_OBJECT DeviceObject)
 {
     /* Call the Cache Manager */
-    CcMdlReadComplete2(MemoryDescriptorList, FileObject);
+    CcMdlReadComplete2(FileObject, MemoryDescriptorList);
     return TRUE;
 }
 

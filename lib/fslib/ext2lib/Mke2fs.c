@@ -120,7 +120,7 @@ void set_fs_defaults(const char *fs_type,
 bool zero_blocks(PEXT2_FILESYS fs, ULONG blk, ULONG num,
                  ULONG *ret_blk, ULONG *ret_count)
 {
-    ULONG       j, count, next_update, next_update_incr;
+    ULONG       j, count;
     static unsigned char        *buf;
     bool        retval;
 
@@ -153,11 +153,6 @@ bool zero_blocks(PEXT2_FILESYS fs, ULONG blk, ULONG num,
     }
 
     /* OK, do the write loop */
-    next_update = 0;
-    next_update_incr = num / 100;
-    if (next_update_incr < 1)
-        next_update_incr = 1;
-
     for (j=0; j < num; j += STRIDE_LENGTH, blk += STRIDE_LENGTH)
     {
         if (num-j > STRIDE_LENGTH)

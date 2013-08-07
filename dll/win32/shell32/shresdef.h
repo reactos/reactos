@@ -22,6 +22,12 @@
 #define IDC_STATIC                  -1
 
 /*
+ * Accelerators
+ */
+#define IDA_SHELLVIEW 1
+
+
+/*
  * Bitmaps
  */
 #define IDB_SHELL_ABOUT_LOGO_24BPP  131
@@ -531,5 +537,6 @@
 #define IDR_OPENWITHMENU        146
 #define IDR_FILEDEFEXT          147
 #define IDR_DRVDEFEXT           148
+#define IDR_MENUBAND            149
 
 #endif
