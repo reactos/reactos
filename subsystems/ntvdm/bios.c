@@ -618,8 +618,6 @@ VOID BiosVideoService(LPWORD Stack)
     DWORD Edx = EmulatorGetRegister(EMULATOR_REG_DX);
     DWORD Ebx = EmulatorGetRegister(EMULATOR_REG_BX);
 
-    UNREFERENCED_PARAMETER(Ecx);
-
     switch (HIBYTE(Eax))
     {
         /* Set Video Mode */
