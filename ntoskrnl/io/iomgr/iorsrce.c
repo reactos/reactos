@@ -908,35 +908,84 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
     return STATUS_SUCCESS;
 }
 
-/*
- * @halfplemented
- */
-NTSTATUS NTAPI
-IoAssignResources(PUNICODE_STRING RegistryPath,
-		  PUNICODE_STRING DriverClassName,
-		  PDRIVER_OBJECT DriverObject,
-		  PDEVICE_OBJECT DeviceObject,
-		  PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources,
-		  PCM_RESOURCE_LIST* AllocatedResources)
+NTSTATUS
+NTAPI
+IopLegacyResourceAllocation(IN ARBITER_REQUEST_SOURCE AllocationType,
+                            IN PDRIVER_OBJECT DriverObject,
+                            IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+                            IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements,
+                            IN OUT PCM_RESOURCE_LIST *AllocatedResources)
 {
     NTSTATUS Status;
-    
-    DPRINT1("IoAssignResources is halfplemented!\n");
 
-    *AllocatedResources = NULL;
-    Status = IopFixupResourceListWithRequirements(RequestedResources,
+    DPRINT1("IopLegacyResourceAllocation is halfplemented!\n");
+
+    Status = IopFixupResourceListWithRequirements(ResourceRequirements,
                                                   AllocatedResources);
     if (!NT_SUCCESS(Status))
     {
         if (Status == STATUS_CONFLICTING_ADDRESSES)
+        {
             DPRINT1("Denying an attempt to claim resources currently in use by another device!\n");
-        
+        }
+
         return Status;
     }
-    
+
     /* TODO: Claim resources in registry */
-    
     return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+IoAssignResources(IN PUNICODE_STRING RegistryPath,
+                  IN PUNICODE_STRING DriverClassName,
+                  IN PDRIVER_OBJECT DriverObject,
+                  IN PDEVICE_OBJECT DeviceObject,
+                  IN PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources,
+                  IN OUT PCM_RESOURCE_LIST* AllocatedResources)
+{
+    PDEVICE_NODE DeviceNode;
+
+    /* Do we have a DO? */
+    if (DeviceObject)
+    {
+        /* Get its device node */
+        DeviceNode = IopGetDeviceNode(DeviceObject);
+        if ((DeviceNode) && !(DeviceNode->Flags & DNF_LEGACY_RESOURCE_DEVICENODE))
+        {
+            /* New drivers should not call this API */
+            KeBugCheckEx(PNP_DETECTED_FATAL_ERROR,
+                         0,
+                         0,
+                         (ULONG_PTR)DeviceObject,
+                         (ULONG_PTR)DriverObject);
+        }
+    }
+
+    /* Did the driver supply resources? */
+    if (RequestedResources)
+    {
+        /* Make sure there's actually something useful in them */
+        if (!(RequestedResources->AlternativeLists) || !(RequestedResources->List[0].Count))
+        {
+            /* Empty resources are no resources */
+            RequestedResources = NULL;
+        }
+    }
+
+    /* Initialize output if given */
+    if (AllocatedResources) *AllocatedResources = NULL;
+
+    /* Call internal helper function */
+    return IopLegacyResourceAllocation(ArbiterRequestLegacyAssigned,
+                                       DriverObject,
+                                       DeviceObject,
+                                       RequestedResources,
+                                       AllocatedResources);
 }
 
 /*

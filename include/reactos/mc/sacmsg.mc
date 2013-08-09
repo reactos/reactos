@@ -1,17 +1,17 @@
 MessageId=1
-SymbolicName=SACDRV_1
+SymbolicName=SAC_INIT_STATUS
 Language=English
 Computer is booting, SAC started and initialized.\n\nUse the \"ch -?\" command for information about using channels.\nUse the \"?\" command for general help.
 .
 
 MessageId=2
-SymbolicName=SACDRV_2
+SymbolicName=SAC_NEWLINE
 Language=English
 
 .
 
 MessageId=3
-SymbolicName=SACDRV_3
+SymbolicName=SAC_PROMPT
 Language=English
 SAC>%0
 .
@@ -59,9 +59,9 @@ Paging is now OFF.
 .
 
 MessageId=11
-SymbolicName=SACDRV_11
+SymbolicName=SAC_OUT_OF_MEMORY_PROMPT
 Language=English
-Paging is now OFF.
+THIS LOOKS LIKE A BUG???
 .
 
 MessageId=12
@@ -173,7 +173,7 @@ lock                 Lock access to Command Prompt channels.
 .
 
 MessageId=48
-SymbolicName=SACDRV_48
+SymbolicName=SAC_FAIL_PROMPT
 Language=English
 Failed with status 0x%%X.
 .
@@ -269,13 +269,13 @@ SAC cannot raise the process priority any higher.
 .
 
 MessageId=65
-SymbolicName=SACDRV_65
+SymbolicName=SAC_SHUTDOWN_FAIL_PROMPT
 Language=English
 SAC failed to shutdown the system.
 .
 
 MessageId=66
-SymbolicName=SACDRV_66
+SymbolicName=SAC_RESTART_FAIL_PROMPT
 Language=English
 SAC failed to restart the system.
 .
@@ -551,19 +551,19 @@ ch                   Channel management commands.  Use ch -? for more help.
 .
 
 MessageId=113
-SymbolicName=SACDRV_113
+SymbolicName=SAC_RESTART_TIME_PROMPT
 Language=English
   Time since last reboot: %%d:%%02d:%%02d
 .
 
 MessageId=114
-SymbolicName=SACDRV_114
+SymbolicName=SAC_RESTART_PROMPT
 Language=English
 SAC preparing to restart the system.
 .
 
 MessageId=115
-SymbolicName=SACDRV_115
+SymbolicName=SAC_SHUTDOWN_PROMPT
 Language=English
 SAC preparing to shutdown the system.
 .
@@ -641,13 +641,13 @@ Error: There is no channel present at the specified index.
 .
 
 MessageId=144
-SymbolicName=SACDRV_144
+SymbolicName=SAC_CHANNEL_NAME
 Language=English
 SAC%0
 .
 
 MessageId=145
-SymbolicName=SACDRV_145
+SymbolicName=SAC_CHANNEL_DESCRIPTION
 Language=English
 Special Administration Console%0
 .

@@ -73,7 +73,8 @@ BaseCheckVDM(IN ULONG BinaryType,
              IN PCSR_API_MESSAGE ApiMessage,
              IN OUT PULONG iTask,
              IN DWORD CreationFlags,
-             IN LPSTARTUPINFOW StartupInfo)
+             IN LPSTARTUPINFOW StartupInfo,
+             IN HANDLE hUserToken OPTIONAL)
 {
     /* This is not supported */
     UNIMPLEMENTED;

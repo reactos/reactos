@@ -1,191 +1,541 @@
 /*
- * PROJECT:		 ReactOS Boot Loader
- * LICENSE:		 BSD - See COPYING.ARM in the top level directory
- * FILE:		 drivers/sac/driver/conmgr.c
- * PURPOSE:		 Driver for the Server Administration Console (SAC) for EMS
- * PROGRAMMERS:	 ReactOS Portable Systems Group
+ * PROJECT:     ReactOS Drivers
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/sac/driver/conmgr.c
+ * PURPOSE:     Driver for the Server Administration Console (SAC) for EMS
+ * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
-/* INCLUDES *******************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include "sacdrv.h"
 
-/* GLOBALS ********************************************************************/
+/* GLOBALS *******************************************************************/
 
-/* FUNCTIONS ******************************************************************/
+DEFINE_GUID(PRIMARY_SAC_CHANNEL_APPLICATION_GUID,
+            0x63D02270,
+            0x8AA4,
+            0x11D5,
+            0xBC, 0xCF, 0x80, 0x6D, 0x61, 0x72, 0x69, 0x6F);
 
-NTSTATUS
-ConMgrShutdown(
-	VOID)
+LONG CurrentChannelRefCount;
+KMUTEX CurrentChannelLock;
+
+PSAC_CHANNEL CurrentChannel;
+PSAC_CHANNEL SacChannel;
+
+ULONG ExecutePostConsumerCommand;
+PSAC_CHANNEL ExecutePostConsumerCommandData;
+
+/* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+ConMgrSerialPortConsumer(VOID)
 {
-	return STATUS_NOT_IMPLEMENTED;
-}
+    NTSTATUS Status;
+    CHAR Char;
+    SAC_DBG(0x2000, "SAC TimerDpcRoutine: Entering.\n"); //bug
 
-NTSTATUS
-ConMgrDisplayFastChannelSwitchingInterface(
-	IN PSAC_CHANNEL Channel
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
-}
+    /* Acquire the manager lock and make sure a channel is selected */
+    SacAcquireMutexLock();
+    ASSERT(CurrentChannel);
 
-NTSTATUS
-ConMgrSetCurrentChannel(
-	IN PSAC_CHANNEL Channel
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
-}
+    /* Read whatever came off the serial port */
+    for (Status = SerialBufferGetChar(&Char);
+         NT_SUCCESS(Status);
+         Status = SerialBufferGetChar(&Char))
+    {
+        /* If nothing came through, bail out */
+        if (Status == STATUS_NO_DATA_DETECTED) break;
+    }
 
-NTSTATUS
-ConMgrDisplayCurrentChannel(
-	VOID
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-ConMgrAdvanceCurrentChannel(
-	VOID
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-BOOLEAN
-ConMgrIsWriteEnabled(
-	IN PSAC_CHANNEL Channel
-	)
-{
-	return FALSE;
+    /* We're done, release the lock */
+    SacReleaseMutexLock();
+    SAC_DBG(0x2000, "SAC TimerDpcRoutine: Exiting.\n"); //bug
 }
 
 VOID
-SacPutString(
-	IN PWCHAR String
-	)
+NTAPI
+ConMgrWorkerProcessEvents(IN PSAC_DEVICE_EXTENSION DeviceExtension)
 {
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC WorkerProcessEvents: Entering.\n");
 
-}
+    /* Enter the main loop */
+    while (TRUE)
+    {
+        /* Wait for something to do */
+        KeWaitForSingleObject(&DeviceExtension->Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
 
-BOOLEAN
-SacPutSimpleMessage(
-	IN ULONG MessageIndex
-	)
-{
-	return FALSE;
-}
+        /* Consume data off the serial port */
+        ConMgrSerialPortConsumer();
+        switch (ExecutePostConsumerCommand)
+        {
+            case 1:
+                /* A reboot was sent, do it  */
+                DoRebootCommand(FALSE);
+                break;
 
-NTSTATUS
-ConMgrChannelOWrite(
-	IN PSAC_CHANNEL Channel,
-	IN PVOID WriteBuffer
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
-}
+            case 2:
+                /* A close was sent, do it */
+                ChanMgrCloseChannel(ExecutePostConsumerCommandData);
+                ChanMgrReleaseChannel(ExecutePostConsumerCommandData);
+                break;
 
-NTSTATUS
-ConMgrGetChannelCloseMessage(
-	IN PSAC_CHANNEL Channel,
-	IN NTSTATUS CloseStatus,
-	OUT PWCHAR OutputBuffer
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
-}
+            case 3:
+                /* A shutdown was sent, do it */
+                DoRebootCommand(TRUE);
+                break;
+        }
 
-NTSTATUS
-ConMgrWriteData(
-	IN PSAC_CHANNEL Channel,
-	IN PVOID Buffer,
-	IN ULONG BufferLength
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-ConMgrFlushData(
-	IN PSAC_CHANNEL Channel
-	)
-{
-	return FALSE;
-}
-
-BOOLEAN
-ConMgrIsSacChannel(
-	IN PSAC_CHANNEL Channel
-	)
-{
-	return FALSE;
-}
-
-NTSTATUS
-ConMgrInitialize(
-	VOID
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-ConMgrResetCurrentChannel(
-	IN BOOLEAN KeepChannel
-	)
-{
-	return STATUS_NOT_IMPLEMENTED;
+        /* Clear the serial port consumer state */
+        ExecutePostConsumerCommand = 0;
+        ExecutePostConsumerCommandData = NULL;
+    }
 }
 
 VOID
-ConMgrProcessInputLine(
-	VOID
-	)
+NTAPI
+SacPutString(IN PWCHAR String)
 {
+    NTSTATUS Status;
 
-}
-
-VOID
-ConMgrEventMessage(
-	IN PWCHAR EventMessage,
-	IN BOOLEAN LockHeld
-	)
-{
-
+    /* Write the string on the main SAC channel */
+    Status = ChannelOWrite(SacChannel,
+                           (PCHAR)String,
+                           wcslen(String) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        SAC_DBG(SAC_DBG_INIT, "SAC XmlMgrSacPutString: OWrite failed\n");
+    }
 }
 
 BOOLEAN
-ConMgrSimpleEventMessage(
-	IN ULONG MessageIndex,
-	IN BOOLEAN LockHeld
-	)
+NTAPI
+SacPutSimpleMessage(IN ULONG MessageIndex)
 {
-	return FALSE;
+    PWCHAR MessageBuffer;
+    BOOLEAN Result;
+
+    /* Get the message */
+    MessageBuffer = GetMessage(MessageIndex);
+    if (MessageBuffer)
+    {
+        /* Output it */
+        SacPutString(MessageBuffer);
+        Result = TRUE;
+    }
+    else
+    {
+        Result = FALSE;
+    }
+
+    /* All done */
+    return Result;
 }
 
 NTSTATUS
-ConMgrChannelClose(
-	IN PSAC_CHANNEL Channel
-	)
+NTAPI
+ConMgrDisplayCurrentChannel(VOID)
 {
-	return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    BOOLEAN HasRedraw;
+
+    /* Make sure the lock is held */
+    SacAssertMutexLockHeld();
+
+    /* Check if we can redraw */
+    Status = ChannelHasRedrawEvent(CurrentChannel, &HasRedraw);
+    if (NT_SUCCESS(Status))
+    {
+        /* Enable writes */
+        _InterlockedExchange(&CurrentChannel->WriteEnabled, 1);
+        if (HasRedraw)
+        {
+            /* If we can redraw, set the event */
+            ChannelSetRedrawEvent(CurrentChannel);
+        }
+
+        /* Flush the output */
+        Status = ChannelOFlush(CurrentChannel);
+    }
+
+    /* All done, return the status */
+    return Status;
 }
 
 NTSTATUS
-ConMgrHandleEvent(
-	IN ULONG EventCode,
-	IN PSAC_CHANNEL Channel,
-	OUT PVOID Data
-	)
+NTAPI
+ConMgrWriteData(IN PSAC_CHANNEL Channel,
+                IN PVOID Buffer,
+                IN ULONG BufferLength)
 {
-	return STATUS_NOT_IMPLEMENTED;
+    ULONG i;
+    NTSTATUS Status;
+    LARGE_INTEGER Interval;
+
+    /* Loop up to 32 times */
+    for (i = 0; i < 32; i++)
+    {
+        /* Attempt sending the data */
+        Status = HeadlessDispatch(HeadlessCmdPutData, Buffer, BufferLength, NULL, NULL);
+        if (Status != STATUS_UNSUCCESSFUL) break;
+
+        /* Sending the data on the port failed, wait a second... */
+        Interval.HighPart = -1;
+        Interval.LowPart = -100000;
+        KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+    }
+
+    /* After 32 attempts it should really have worked... */
+    ASSERT(NT_SUCCESS(Status));
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+ConMgrFlushData(IN PSAC_CHANNEL Channel)
+{
+    /* Nothing to do */
+    return STATUS_SUCCESS;
+}
+
+BOOLEAN
+NTAPI
+ConMgrIsSacChannel(IN PSAC_CHANNEL Channel)
+{
+    /* Check which channel is active */
+    return Channel == SacChannel;
+}
+
+BOOLEAN
+NTAPI
+ConMgrIsWriteEnabled(IN PSAC_CHANNEL Channel)
+{
+    /* If the current channel is active, allow writes */
+    return ChannelIsEqual(Channel, &CurrentChannel->ChannelId);
+}
+
+NTSTATUS
+NTAPI
+ConMgrInitialize(VOID)
+{
+    PWCHAR pcwch;
+    PSAC_CHANNEL FoundChannel;
+    SAC_CHANNEL_ATTRIBUTES SacChannelAttributes;
+    NTSTATUS Status;
+
+    /* Initialize the connection manager lock */
+    SacInitializeMutexLock();
+    SacAcquireMutexLock();
+
+    /* Setup the attributes for the raw SAC channel */
+    RtlZeroMemory(&SacChannelAttributes, sizeof(SacChannelAttributes));
+    SacChannelAttributes.ChannelType = Raw;
+
+    /* Get the right name for it */
+    pcwch = GetMessage(SAC_CHANNEL_NAME);
+    ASSERT(pcwch);
+    wcsncpy(SacChannelAttributes.NameBuffer, pcwch, SAC_CHANNEL_NAME_SIZE);
+    SacChannelAttributes.NameBuffer[SAC_CHANNEL_NAME_SIZE] = ANSI_NULL;
+
+    /* Get the right description for it */
+    pcwch = GetMessage(SAC_CHANNEL_DESCRIPTION);
+    ASSERT(pcwch);
+    wcsncpy(SacChannelAttributes.DescriptionBuffer, pcwch, SAC_CHANNEL_DESCRIPTION_SIZE);
+    SacChannelAttributes.DescriptionBuffer[SAC_CHANNEL_DESCRIPTION_SIZE] = ANSI_NULL;
+
+    /* Set all the right flags */
+    SacChannelAttributes.Flag = SAC_CHANNEL_FLAG_APPLICATION | SAC_CHANNEL_FLAG_INTERNAL;
+    SacChannelAttributes.CloseEvent = NULL;
+    SacChannelAttributes.HasNewDataEvent = NULL;
+    SacChannelAttributes.LockEvent = NULL;
+    SacChannelAttributes.RedrawEvent = NULL;
+    SacChannelAttributes.ChannelId = PRIMARY_SAC_CHANNEL_APPLICATION_GUID;
+
+    /* Now create it */
+    Status = ChanMgrCreateChannel(&SacChannel, &SacChannelAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /* Try to get it back */
+        Status = ChanMgrGetByHandle(SacChannel->ChannelId, &FoundChannel);
+        if (NT_SUCCESS(Status))
+        {
+            /* Set it as the current and SAC channel */
+            SacChannel = CurrentChannel = FoundChannel;
+
+            /* Diasable writes for now and clear the display */
+            _InterlockedExchange(&FoundChannel->WriteEnabled, FALSE);
+            Status = HeadlessDispatch(HeadlessCmdClearDisplay, NULL, 0, NULL, NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                SAC_DBG(SAC_DBG_INIT, "SAC ConMgrInitialize: Failed dispatch\n");
+            }
+
+            /* Display the initial prompt */
+            SacPutSimpleMessage(SAC_NEWLINE);
+            SacPutSimpleMessage(SAC_INIT_STATUS);
+            SacPutSimpleMessage(SAC_NEWLINE);
+            SacPutSimpleMessage(SAC_PROMPT);
+
+            /* Display the current channel */
+            ConMgrDisplayCurrentChannel();
+        }
+    }
+
+    /* Release the channel lock */
+    SacReleaseMutexLock();
+    return STATUS_SUCCESS;
 }
 
 VOID
-ConMgrWorkerProcessEvents(
-	IN PSAC_CHANNEL Channel
-	)
+NTAPI
+ConMgrEventMessage(IN PWCHAR EventMessage,
+                   IN BOOLEAN LockHeld)
 {
+    /* Acquire the current channel lock if needed */
+    if (!LockHeld) SacAcquireMutexLock();
 
+    /* Send out the event message */
+    SacPutSimpleMessage(2);
+    SacPutString(EventMessage);
+    SacPutSimpleMessage(3);
+
+    /* Release the current channel lock if needed */
+    if (!LockHeld) SacReleaseMutexLock();
 }
+
+BOOLEAN
+NTAPI
+ConMgrSimpleEventMessage(IN ULONG MessageIndex,
+                         IN BOOLEAN LockHeld)
+{
+    PWCHAR MessageBuffer;
+    BOOLEAN Result;
+
+    /* Get the message to send out */
+    MessageBuffer = GetMessage(MessageIndex);
+    if (MessageBuffer)
+    {
+        /* Send it */
+        ConMgrEventMessage(MessageBuffer, LockHeld);
+        Result = TRUE;
+    }
+    else
+    {
+        /* It doesn't exist, fail */
+        Result = FALSE;
+    }
+
+    /* Return if the message was sent or not */
+    return Result;
+}
+
+NTSTATUS
+NTAPI
+ConMgrDisplayFastChannelSwitchingInterface(IN PSAC_CHANNEL Channel)
+{
+    /* FIXME: TODO */
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+ConMgrSetCurrentChannel(IN PSAC_CHANNEL Channel)
+{
+    NTSTATUS Status;
+    BOOLEAN HasRedrawEvent;
+
+    /* Make sure the lock is held */
+    SacAssertMutexLockHeld();
+
+    /* Check if we have a redraw event */
+    Status = ChannelHasRedrawEvent(CurrentChannel, &HasRedrawEvent);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Clear it */
+    if (HasRedrawEvent) ChannelClearRedrawEvent(CurrentChannel);
+
+    /* Disable writes on the current channel */
+    _InterlockedExchange(&CurrentChannel->WriteEnabled, 0);
+
+    /* Release the current channel */
+    Status = ChanMgrReleaseChannel(CurrentChannel);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Set the new channel and also disable writes on it */
+    CurrentChannel = Channel;
+    _InterlockedExchange(&Channel->WriteEnabled, 0);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ConMgrResetCurrentChannel(IN BOOLEAN KeepChannel)
+{
+    NTSTATUS Status;
+    PSAC_CHANNEL Channel;
+
+    /* Make sure the lock is held */
+    SacAssertMutexLockHeld();
+
+    /* Get the current SAC channel */
+    Status = ChanMgrGetByHandle(SacChannel->ChannelId, &Channel);
+    if (NT_SUCCESS(Status))
+    {
+        /* Set this as the current SAC channel*/
+        SacChannel = Channel;
+        Status = ConMgrSetCurrentChannel(Channel);
+        if (NT_SUCCESS(Status))
+        {
+            /* Check if the caller wants to switch or not */
+            if (KeepChannel)
+            {
+                /* Nope, keep the same channel */
+                Status = ConMgrDisplayCurrentChannel();
+            }
+            else
+            {
+                /* Yep, show the switching interface */
+                Status = ConMgrDisplayFastChannelSwitchingInterface(CurrentChannel);
+            }
+        }
+    }
+
+    /* All done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+ConMgrChannelClose(IN PSAC_CHANNEL Channel)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Check if we're in the right channel */
+    if (ConMgrIsWriteEnabled(Channel))
+    {
+        /* Yep, reset it */
+        Status = ConMgrResetCurrentChannel(FALSE);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* All done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+ConMgrShutdown(VOID)
+{
+    NTSTATUS Status;
+
+    /* Check if we have a SAC channel */
+    if (SacChannel)
+    {
+        /* Close it */
+        Status = ChannelClose(SacChannel);
+        if (!NT_SUCCESS(Status))
+        {
+            SAC_DBG(SAC_DBG_INIT, "SAC ConMgrShutdown: failed closing SAC channel.\n");
+        }
+
+        /* No longer have one */
+        SacChannel = NULL;
+    }
+
+    /* Check if we have a current channel */
+    if (CurrentChannel)
+    {
+        /* Release it */
+        Status = ChanMgrReleaseChannel(CurrentChannel);
+        if (!NT_SUCCESS(Status))
+        {
+            SAC_DBG(SAC_DBG_INIT, "SAC ConMgrShutdown: failed releasing current channel\n");
+        }
+
+        /* No longer have one */
+        CurrentChannel = NULL;
+    }
+
+    /* All done */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+ConMgrAdvanceCurrentChannel(VOID)
+{
+    NTSTATUS Status;
+    ULONG Index;
+    PSAC_CHANNEL Channel;
+
+    /* Should always be called with the lock held */
+    SacAssertMutexLockHeld();
+
+    /* Get the next active channel */
+    Status = ChanMgrGetNextActiveChannel(CurrentChannel, &Index, &Channel);
+    if (NT_SUCCESS(Status))
+    {
+        /* Set it as the new channel */
+        Status = ConMgrSetCurrentChannel(Channel);
+        if (NT_SUCCESS(Status))
+        {
+            /* Let the user switch to it */
+            Status = ConMgrDisplayFastChannelSwitchingInterface(Channel);
+        }
+    }
+
+    /* All done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+ConMgrChannelOWrite(IN PSAC_CHANNEL Channel,
+                    IN PVOID WriteBuffer)
+{
+    NTSTATUS Status;
+
+    /* Do the write with the lock held */
+    SacAcquireMutexLock();
+    Status = STATUS_NOT_IMPLEMENTED;// ChannelOWrite(Channel, WriteBuffer + 24, *(WriteBuffer + 20));
+    SacReleaseMutexLock();
+
+    /* Return back to the caller */
+    ASSERT(NT_SUCCESS(Status) || Status == STATUS_NOT_FOUND);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+ConMgrGetChannelCloseMessage(IN PSAC_CHANNEL Channel,
+                             IN NTSTATUS CloseStatus,
+                             OUT PWCHAR OutputBuffer)
+{
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+NTAPI
+ConMgrProcessInputLine(VOID)
+{
+    ASSERT(FALSE);
+}
+
+NTSTATUS
+NTAPI
+ConMgrHandleEvent(IN ULONG EventCode,
+                  IN PSAC_CHANNEL Channel,
+                  OUT PVOID Data)
+{
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+

@@ -7,7 +7,7 @@ Licence = GPL
 Description = A media player.
 Size = 7.08MB
 Category = 1
-URLSite = http://mpc-hc.sourceforge.net/
+URLSite = http://mpc-hc.org/
 URLDownload = http://garr.dl.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20-%20Win32/MPC-HC_v1.6.8_x86/MPC-HC.1.6.8.x86.exe
 CDPath = none
 

@@ -47,6 +47,7 @@ list(APPEND SOURCE
     client/file/delete.c
     client/file/deviceio.c
     client/file/dir.c
+    client/file/disk.c
     client/file/fileinfo.c
     client/file/filemap.c
     client/file/filename.c
@@ -57,6 +58,7 @@ list(APPEND SOURCE
     client/file/lock.c
     client/file/mailslot.c
     client/file/move.c
+    client/file/mntpoint.c
     client/file/npipe.c
     client/file/rw.c
     client/file/tape.c

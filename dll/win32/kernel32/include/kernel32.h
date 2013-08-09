@@ -410,13 +410,13 @@ BasepLocateExeLdrEntry(IN PLDR_DATA_TABLE_ENTRY Entry,
 
 typedef NTSTATUS
 (NTAPI *PBASEP_APPCERT_PLUGIN_FUNC)(
-    IN PCHAR ApplicationName,
+    IN LPWSTR ApplicationName,
     IN ULONG CertFlag
 );
 
 typedef NTSTATUS
 (NTAPI *PBASEP_APPCERT_EMBEDDED_FUNC)(
-    IN PCHAR ApplicationName
+    IN LPWSTR ApplicationName
 );
 
 typedef NTSTATUS
@@ -491,10 +491,37 @@ BaseCheckForVDM(
     OUT LPDWORD ExitCode
 );
 
+BOOL
+WINAPI
+BaseCheckVDM(
+    IN ULONG BinaryType,
+    IN PCWCH ApplicationName,
+    IN PCWCH CommandLine,
+    IN PCWCH CurrentDirectory,
+    IN PANSI_STRING AnsiEnvironment,
+    IN PCSR_API_MESSAGE ApiMessage,
+    IN OUT PULONG iTask,
+    IN DWORD CreationFlags,
+    IN LPSTARTUPINFOW StartupInfo,
+    IN HANDLE hUserToken OPTIONAL
+);
+
+
 /* FIXME: This is EXPORTED! It should go in an external kernel32.h header */
 VOID
 WINAPI
 BasepFreeAppCompatData(
     IN PVOID AppCompatData,
     IN PVOID AppCompatSxsData
+);
+
+NTSTATUS
+WINAPI
+BasepCheckWinSaferRestrictions(
+    IN HANDLE UserToken,
+    IN LPWSTR ApplicationName,
+    IN HANDLE FileHandle,
+    OUT PBOOLEAN InJob,
+    OUT PHANDLE NewToken,
+    OUT PHANDLE JobHandle
 );

@@ -174,7 +174,7 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define DNF_LEGACY_DRIVER                       0x00004000
 #define DNF_STOPPED                             0x00008000
 #define DNF_WILL_BE_REMOVED                     0x00010000
-#define DNF_NEED_TO_ENUM                        0x00020000
+#define DNF_LEGACY_RESOURCE_DEVICENODE          0x00020000
 #define DNF_NOT_CONFIGURED                      0x00040000
 #define DNF_REINSTALL                           0x00080000
 #define DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED 0x00100000 // ???

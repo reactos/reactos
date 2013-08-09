@@ -8,13 +8,13 @@
 @ stub AsrpGetLocalVolumeInfo
 @ stub AsprRestoreNonCriticalDisksW
 @ stub CdromPropPageProvider
-@ stub ComputerClassInstaller
+@ stdcall ComputerClassInstaller(long ptr ptr)
 @ stub CreateLocalAdminAccount
 @ stub CreateLocalAdminAccountEx
 @ stub CreateLocalUserAccount
 @ stub CriticalDeviceCoInstaller
 @ stub DevInstallW
-@ stub DeviceBayClassInstaller
+@ stdcall DeviceBayClassInstaller(long ptr ptr)
 @ stub DiskPropPageProvider
 @ stub DoInstallComponentInfs
 @ stub EisaUpHalCoInstaller
@@ -29,7 +29,7 @@
 @ stub LegacyDriverPropPageProvider
 @ stub MigrateExceptionPackages
 @ stdcall MouseClassInstaller(long ptr ptr)
-@ stub NtApmClassInstaller
+@ stdcall NtApmClassInstaller(long ptr ptr)
 @ stub OpkCheckVersion
 @ stub PS2MousePropPageProvider
 @ stub PnPInitializationThread
@@ -37,7 +37,7 @@
 @ stub RepairStartMenuItems
 @ stub ReportError
 @ stub RunOEMExtraTasks
-@ stub ScsiClassInstaller
+@ stdcall ScsiClassInstaller(long ptr ptr)
 @ stub SetAccountDomainSid
 @ stub SetupAddOrRemoveTestCertificate
 @ stdcall SetupChangeFontSize(ptr wstr)
@@ -76,7 +76,7 @@
 @ stub SetupUnregisterOsComponent
 @ stub StorageCoInstaller
 @ stub SystemUpdateUserProfileDirectory
-@ stub TapeClassInstaller
+@ stdcall TapeClassInstaller(long ptr ptr)
 @ stub TapePropPageProvider
 @ stdcall TerminateSetupActionLog()
 @ stub UpdatePnpDeviceDrivers
