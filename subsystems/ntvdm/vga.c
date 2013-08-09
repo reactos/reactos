@@ -569,6 +569,7 @@ DWORD VgaGetVideoLimitAddress(VOID)
 COORD VgaGetDisplayResolution(VOID)
 {
     COORD Resolution;
+    BYTE TextSize = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
 
     /* The low 8 bits are in the display registers */
     Resolution.X = VgaCrtcRegisters[VGA_CRTC_END_HORZ_DISP_REG];
@@ -603,7 +604,7 @@ COORD VgaGetDisplayResolution(VOID)
     else
     {
         /* Divide the number of scanlines by the font size */
-        Resolution.Y /= 16;
+        Resolution.Y /= TextSize;
     }
 
     /* Return the resolution */
