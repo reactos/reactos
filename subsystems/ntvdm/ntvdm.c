@@ -23,7 +23,7 @@
  * Activate this line if you want to be able to test NTVDM with:
  * ntvdm.exe <program>
  */
-// #define TESTING
+#define TESTING
 
 /* PUBLIC VARIABLES ***********************************************************/
 

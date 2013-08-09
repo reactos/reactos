@@ -306,7 +306,10 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
     Bda->VideoPage = 0;
     Bda->VideoPageSize   = BIOS_PAGE_SIZE;
     Bda->VideoPageOffset = 0;
-    Bda->CharacterHeight = 16;
+
+    /* Get the character height */
+    VgaWritePort(VGA_CRTC_INDEX, VGA_CRTC_MAX_SCAN_LINE_REG);
+    Bda->CharacterHeight = 1 + (VgaReadPort(VGA_CRTC_DATA) & 0x1F);
 
     Resolution = VgaGetDisplayResolution();
     Bda->ScreenColumns = Resolution.X;
