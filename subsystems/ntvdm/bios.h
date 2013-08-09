@@ -120,4 +120,6 @@ BOOLEAN BiosScrollWindow(
     BYTE FillAttribute
 );
 
-#endif
+#endif // _BIOS_H_
+
+/* EOF */

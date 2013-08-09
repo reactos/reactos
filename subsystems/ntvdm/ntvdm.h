@@ -35,6 +35,6 @@ extern LPCWSTR ExceptionName[];
 
 VOID DisplayMessage(LPCWSTR Format, ...);
 
-#endif
+#endif // _NTVDM_H_
 
 /* EOF */

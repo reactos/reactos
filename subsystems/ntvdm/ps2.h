@@ -30,4 +30,6 @@ BYTE KeyboardReadData();
 VOID KeyboardWriteData(BYTE Data);
 VOID CheckForInputEvents();
 
-#endif
+#endif // _PS2_H_
+
+/* EOF */

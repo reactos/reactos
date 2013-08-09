@@ -133,7 +133,6 @@ VOID DosInt21h(LPWORD Stack);
 VOID DosBreakInterrupt(LPWORD Stack);
 BOOLEAN DosInitialize(VOID);
 
-#endif
+#endif // _DOS_H_
 
 /* EOF */
-

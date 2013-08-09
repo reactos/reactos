@@ -52,6 +52,6 @@ BYTE PicReadData(BYTE Port);
 VOID PicWriteData(BYTE Port, BYTE Value);
 VOID PicInterruptRequest(BYTE Number);
 
-#endif
+#endif // _PIC_H_
 
 /* EOF */

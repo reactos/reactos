@@ -195,6 +195,6 @@ BYTE VgaReadPort(WORD Port);
 VOID VgaWritePort(WORD Port, BYTE Data);
 VOID VgaInitialize(HANDLE TextHandle);
 
-#endif
+#endif // _VGA_H_
 
 /* EOF */

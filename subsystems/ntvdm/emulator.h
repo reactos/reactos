@@ -184,7 +184,6 @@ VOID EmulatorStep();
 VOID EmulatorCleanup();
 VOID EmulatorSetA20(BOOLEAN Enabled);
 
-#endif
+#endif // _EMULATOR_H_
 
 /* EOF */
-

@@ -50,7 +50,6 @@ BYTE PitReadData(BYTE Channel);
 VOID PitWriteData(BYTE Channel, BYTE Value);
 VOID PitDecrementCount();
 
-#endif
+#endif // _TIMER_H_
 
 /* EOF */
-
