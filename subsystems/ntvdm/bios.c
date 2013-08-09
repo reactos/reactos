@@ -667,6 +667,17 @@ VOID BiosVideoService(LPWORD Stack)
             break;
         }
 
+        /* Query Light Pen */
+        case 0x04:
+        {
+            /*
+             * On modern BIOSes, this function returns 0
+             * so that we can ignore the other registers.
+             */
+            EmulatorSetRegister(EMULATOR_REG_AX, 0);
+            break;
+        }
+
         /* Select Active Display Page */
         case 0x05:
         {
