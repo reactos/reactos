@@ -416,7 +416,7 @@ BOOLEAN EmulatorInitialize()
     return TRUE;
 }
 
-VOID EmulatorSetStack(WORD Segment, WORD Offset)
+VOID EmulatorSetStack(WORD Segment, DWORD Offset)
 {
 #ifndef NEW_EMULATOR
     /* Call the softx86 API */
@@ -479,6 +479,15 @@ ULONG EmulatorGetRegister(ULONG Register)
 #endif
 }
 
+ULONG EmulatorGetProgramCounter(VOID)
+{
+#ifndef NEW_EMULATOR
+    return EmulatorContext.state->reg_ip;
+#else
+    return EmulatorContext.InstructionPointer.Long;
+#endif
+}
+
 VOID EmulatorSetRegister(ULONG Register, ULONG Value)
 {
 #ifndef NEW_EMULATOR
@@ -524,9 +533,9 @@ VOID EmulatorClearFlag(ULONG Flag)
 
 VOID EmulatorStep(VOID)
 {
+#ifndef NEW_EMULATOR
     LPWORD Instruction;
 
-#ifndef NEW_EMULATOR
     /* Print the current position - useful for debugging */
     DPRINT("Executing at CS:IP = %04X:%04X\n",
            EmulatorGetRegister(EMULATOR_REG_CS),

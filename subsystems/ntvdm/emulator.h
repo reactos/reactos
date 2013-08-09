@@ -168,14 +168,22 @@ typedef struct
 
 typedef VOID (*EMULATOR_OPCODE_HANDLER)(PEMULATOR_CONTEXT Context, BYTE Opcode);
 
+#ifndef NEW_EMULATOR
+extern softx86_ctx EmulatorContext;
+extern softx87_ctx FpuEmulatorContext;
+#else
+extern EMULATOR_CONTEXT EmulatorContext;
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN EmulatorInitialize();
-VOID EmulatorSetStack(WORD Segment, WORD Offset);
+VOID EmulatorSetStack(WORD Segment, DWORD Offset);
 VOID EmulatorExecute(WORD Segment, WORD Offset);
 VOID EmulatorInterrupt(BYTE Number);
 VOID EmulatorExternalInterrupt(BYTE Number);
 ULONG EmulatorGetRegister(ULONG Register);
+ULONG EmulatorGetProgramCounter(VOID);
 VOID EmulatorSetRegister(ULONG Register, ULONG Value);
 BOOLEAN EmulatorGetFlag(ULONG Flag);
 VOID EmulatorSetFlag(ULONG Flag);

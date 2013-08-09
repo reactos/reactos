@@ -1,16 +1,20 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/softx86)
 
+spec2def(ntvdm.exe ntvdm.spec)
+
 list(APPEND SOURCE
     bios.c
     dos.c
     emulator.c
     pic.c
+    registers.c
     timer.c
     ps2.c
     vga.c
     ntvdm.c
     ntvdm.rc)
+#    ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def
 
 add_executable(ntvdm ${SOURCE})
 set_module_type(ntvdm win32cui UNICODE)
