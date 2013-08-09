@@ -408,8 +408,8 @@ BOOLEAN BiosInitialize(VOID)
     VgaInitialize(BiosConsoleOutput);
 
     /* Update the cursor position */
-    BiosSetCursorPosition(BiosSavedBufferInfo.dwCursorPosition.X,
-                          BiosSavedBufferInfo.dwCursorPosition.Y,
+    BiosSetCursorPosition(BiosSavedBufferInfo.dwCursorPosition.Y,
+                          BiosSavedBufferInfo.dwCursorPosition.X,
                           0);
 
     /* Set the console input mode */
