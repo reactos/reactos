@@ -265,11 +265,15 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
 
 static VOID VgaLeaveGraphicsMode(VOID)
 {
+    /* Release the console framebuffer mutex if needed */
+    ReleaseMutex(ConsoleMutex);
+
     /* Switch back to the text buffer */
     SetConsoleActiveScreenBuffer(TextConsoleBuffer);
 
     /* Cleanup the video data */
     CloseHandle(ConsoleMutex);
+    ConsoleMutex = NULL;
     CloseHandle(GraphicsConsoleBuffer);
     GraphicsConsoleBuffer = NULL;
 }
@@ -350,17 +354,22 @@ static VOID VgaUpdateFramebuffer(VOID)
     DWORD Address = (VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG] << 8)
                     + VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG];
     DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
-    PCHAR_INFO CharBuffer = (PCHAR_INFO)ConsoleFramebuffer;
-    PBYTE GraphicsBuffer = (PBYTE)ConsoleFramebuffer;
 
-    /* Loop through the scanlines */
-    for (i = 0; i < Resolution.Y; i++)
+    /* Check if this is text mode or graphics mode */
+    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
     {
-        /* Check if this is text mode or graphics mode */
-        if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
-        {
-            /* Graphics mode */
+        /* Graphics mode */
+        PBYTE GraphicsBuffer = (PBYTE)ConsoleFramebuffer;
 
+        /*
+         * Synchronize access to the graphics framebuffer
+         * with the console framebuffer mutex.
+         */
+        WaitForSingleObject(ConsoleMutex, INFINITE);
+
+        /* Loop through the scanlines */
+        for (i = 0; i < Resolution.Y; i++)
+        {
             /* Loop through the pixels */
             for (j = 0; j < Resolution.X; j++)
             {
@@ -460,11 +469,25 @@ static VOID VgaUpdateFramebuffer(VOID)
                     VgaMarkForUpdate(i, j);
                 }
             }
-        }
-        else
-        {
-            /* Text mode */
 
+            /* Move to the next scanline */
+            Address += ScanlineSize;
+        }
+
+        /*
+         * Release the console framebuffer mutex
+         * so that we allow for repainting.
+         */
+        ReleaseMutex(ConsoleMutex);
+    }
+    else
+    {
+        /* Text mode */
+        PCHAR_INFO CharBuffer = (PCHAR_INFO)ConsoleFramebuffer;
+
+        /* Loop through the scanlines */
+        for (i = 0; i < Resolution.Y; i++)
+        {
             /* Loop through the characters */
             for (j = 0; j < Resolution.X; j++)
             {
@@ -488,10 +511,10 @@ static VOID VgaUpdateFramebuffer(VOID)
                     VgaMarkForUpdate(i, j);
                 }
             }
-        }
 
-        /* Move to the next scanline */
-        Address += ScanlineSize;
+            /* Move to the next scanline */
+            Address += ScanlineSize;
+        }
     }
 }
 
