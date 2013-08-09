@@ -49,7 +49,6 @@ VOID WINAPI
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 
 #define CMD_STRING L"cmd /c "
-#define NTVDM_STRING L"\\ntvdm.exe"
 
 /* FUNCTIONS ****************************************************************/
 
@@ -2327,7 +2326,6 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     ANSI_STRING AnsiEnv;
     UNICODE_STRING UnicodeEnv, PathName;
     BOOLEAN SearchRetry, QuotesNeeded, CmdLineIsAppName, HasQuotes;
-    WCHAR VdmPath[MAX_PATH];
 
     //
     // Variables used for Fusion/SxS (Side-by-Side Assemblies)
