@@ -408,7 +408,7 @@ BOOLEAN BiosInitialize(VOID)
     VgaInitialize(BiosConsoleOutput);
 
     /* Update the cursor position */
-    BiosSetCursorPosition(BiosSavedBufferInfo.dwCursorPosition.Y,
+    BiosSetCursorPosition(BiosSavedBufferInfo.dwCursorPosition.X,
                           BiosSavedBufferInfo.dwCursorPosition.Y,
                           0);
 
