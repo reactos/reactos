@@ -77,7 +77,7 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
 INT wmain(INT argc, WCHAR *argv[])
 {
     INT i;
-    CHAR CommandLine[128];
+    CHAR CommandLine[MAX_PATH];
     DWORD CurrentTickCount;
     DWORD LastTickCount = GetTickCount();
     DWORD Cycles = 0;
@@ -94,11 +94,11 @@ INT wmain(INT argc, WCHAR *argv[])
     UNREFERENCED_PARAMETER(argv);
 
     /* The DOS command line must be ASCII */
-    WideCharToMultiByte(CP_ACP, 0, GetCommandLine(), -1, CommandLine, 128, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, GetCommandLine(), -1, CommandLine, sizeof(CommandLine), NULL, NULL);
 #else
     if (argc == 2 && argv[1] != NULL)
     {
-        WideCharToMultiByte(CP_ACP, 0, argv[1], -1, CommandLine, 128, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, argv[1], -1, CommandLine, sizeof(CommandLine), NULL, NULL);
     }
     else
     {

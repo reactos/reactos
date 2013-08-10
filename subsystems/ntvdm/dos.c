@@ -874,8 +874,8 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     BOOLEAN Success = FALSE, AllocatedEnvBlock = FALSE;
     HANDLE FileHandle = INVALID_HANDLE_VALUE, FileMapping = NULL;
     LPBYTE Address = NULL;
-    LPSTR ProgramFilePath, Parameters[128];
-    CHAR CommandLineCopy[128];
+    LPSTR ProgramFilePath, Parameters[256];
+    CHAR CommandLineCopy[MAX_PATH];
     INT ParamCount = 0;
     WORD Segment = 0;
     WORD MaxAllocSize;
@@ -891,11 +891,13 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     /* Save a copy of the command line */
     strcpy(CommandLineCopy, CommandLine);
 
+    // FIXME: Improve parsing (especially: "some_path\with spaces\program.exe" options)
+
     /* Get the file name of the executable */
     ProgramFilePath = strtok(CommandLineCopy, " \t");
 
     /* Load the parameters in the local array */
-    while ((ParamCount < 256)
+    while ((ParamCount < sizeof(Parameters)/sizeof(Parameters[0]))
            && ((Parameters[ParamCount] = strtok(NULL, " \t")) != NULL))
     {
         ParamCount++;
