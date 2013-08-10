@@ -255,31 +255,6 @@ static VOID BiosWriteWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
     }
 }
 
-static VOID BiosClearScreen(VOID)
-{
-    INT i;
-    BYTE PlaneMask;
-
-    /* Save the plane write register */
-    VgaWritePort(VGA_SEQ_INDEX, VGA_SEQ_MASK_REG);
-    PlaneMask = VgaReadPort(VGA_SEQ_DATA);
-
-    /* Write to all planes */
-    VgaWritePort(VGA_SEQ_DATA, 0x0F);
-
-    /* Clear the screen */
-    for (i = VgaGetVideoBaseAddress();
-         i < VgaGetVideoLimitAddress();
-         i += sizeof(DWORD))
-    {
-        DWORD Zero = 0;
-        VgaWriteMemory(i, (LPVOID)&Zero, sizeof(DWORD));
-    }
-
-    /* Restore the plane write register */
-    VgaWritePort(VGA_SEQ_DATA, PlaneMask);
-}
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 BYTE BiosGetVideoMode(VOID)
@@ -654,7 +629,7 @@ VOID BiosVideoService(LPWORD Stack)
         case 0x00:
         {
             BiosSetVideoMode(LOBYTE(Eax));
-            BiosClearScreen();
+            VgaClearMemory();
 
             break;
         }

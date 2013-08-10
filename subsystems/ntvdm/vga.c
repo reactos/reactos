@@ -1021,6 +1021,11 @@ VOID VgaWritePort(WORD Port, BYTE Data)
     }
 }
 
+VOID VgaClearMemory(VOID)
+{
+    ZeroMemory(VgaMemory, sizeof(VgaMemory));
+}
+
 VOID VgaInitialize(HANDLE TextHandle)
 {
     INT i, j;
