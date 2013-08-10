@@ -13,8 +13,8 @@ list(APPEND SOURCE
     ps2.c
     vga.c
     ntvdm.c
-    ntvdm.rc)
-#    ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def
+    ntvdm.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ntvdm.def)
 
 add_executable(ntvdm ${SOURCE})
 set_module_type(ntvdm win32cui UNICODE)
