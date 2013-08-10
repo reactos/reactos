@@ -864,7 +864,7 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
     PspBlock->FarCall[2] = 0xCB; // retf
 
     /* Set the command line */
-    PspBlock->CommandLineSize = (BYTE)min(strlen(CommandLine), DOS_CMDLINE_LENGTH);
+    PspBlock->CommandLineSize = (BYTE)min(strlen(CommandLine), DOS_CMDLINE_LENGTH - 1);
     RtlCopyMemory(PspBlock->CommandLine, CommandLine, PspBlock->CommandLineSize);
     PspBlock->CommandLine[PspBlock->CommandLineSize] = '\r';
 }
@@ -875,7 +875,7 @@ BOOLEAN DosCreateProcess(LPCSTR CommandLine, WORD EnvBlock)
     HANDLE FileHandle = INVALID_HANDLE_VALUE, FileMapping = NULL;
     LPBYTE Address = NULL;
     LPSTR ProgramFilePath, Parameters[256];
-    CHAR CommandLineCopy[MAX_PATH];
+    CHAR CommandLineCopy[DOS_CMDLINE_LENGTH];
     INT ParamCount = 0;
     WORD Segment = 0;
     WORD MaxAllocSize;

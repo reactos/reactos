@@ -77,7 +77,7 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType)
 INT wmain(INT argc, WCHAR *argv[])
 {
     INT i;
-    CHAR CommandLine[MAX_PATH];
+    CHAR CommandLine[DOS_CMDLINE_LENGTH];
     DWORD CurrentTickCount;
     DWORD LastTickCount = GetTickCount();
     DWORD Cycles = 0;
