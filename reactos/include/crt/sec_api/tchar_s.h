@@ -3,6 +3,7 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+
 #ifndef _INC_TCHAR_S
 #define _INC_TCHAR_S
 
@@ -107,7 +108,7 @@ extern "C" {
 #define _wcsnset_s_l(_Destination,_Destination_size_chars,_Value,_Count,_Locale) (_wcsnset_s(_Destination,_Destination_size_chars,_Value,_Count))
 #define _wcsset_s_l(_Destination,_Destination_size_chars,_Value,_Locale) (_wcsset_s(_Destination,_Destination_size_chars,_Value))
 
-#else
+#else /* _UNICODE */
 
 #define _tprintf_s printf_s
 #define _tprintf_s_l _printf_s_l
@@ -208,28 +209,156 @@ extern "C" {
 
 #define _tccpy_s _mbccpy_s
 #define _tccpy_s_l _mbccpy_s_l
-#else
 
-  _CRTIMP char *__cdecl _tcsncat_s(char *_Dst,size_t _DstSizeInChars,const char *_Src,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsncat_s_l(char *_Dst,size_t _DstSizeInChars,const char *_Src,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsncpy_s(char *_Dst,size_t _DstSizeInChars,const char *_Src,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsncpy_s_l(char *_Dst,size_t _DstSizeInChars,const char *_Src,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcstok_s(char *_Str,const char *_Delim,char **_Context);
-  _CRTIMP char *__cdecl _tcstok_s_l(char *_Str,const char *_Delim,char **_Context,_locale_t _Locale);
-  _CRTIMP errno_t __cdecl _tcsset_s(char *_Str,size_t _SizeInChars,unsigned int _Val);
-  _CRTIMP errno_t __cdecl _tcsset_s_l(char *_Str,size_t _SizeInChars,unsigned int,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsnccat_s(char *_Dst,size_t _DstSizeInChars,const char *_Src,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsnccat_s_l(char *_Dst,size_t _DstSizeInChars,const char *_Src,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsnccpy_s(char *_Dst,size_t _DstSizeInChars,const char *_Src,size_t _MaxCount);
-  _CRTIMP char *__cdecl _tcsnccpy_s_l(char *_Dst,size_t _DstSizeInChars,const char *_Src,size_t _MaxCount,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcslwr_s(char *_Str,size_t _SizeInChars);
-  _CRTIMP char *__cdecl _tcslwr_s_l(char *_Str,size_t _SizeInChars,_locale_t _Locale);
-  _CRTIMP char *__cdecl _tcsupr_s(char *_Str,size_t _SizeInChars);
-  _CRTIMP char *__cdecl _tcsupr_s_l(char *_Str,size_t _SizeInChars,_locale_t _Locale);
+#else /* _MB_MAP_DIRECT */
 
-#endif
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsncat_s(
+    _Inout_updates_z_(_DstSizeInChars) char *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount);
 
-#else
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsncat_s_l(
+    _Inout_updates_z_(_DstSizeInChars) char *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsncpy_s(
+    _Out_writes_(_DstSizeInChars) char *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsncpy_s_l(
+    _Out_writes_(_DstSizeInChars) char *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _CRTIMP
+  char *
+  __cdecl
+  _tcstok_s(
+    _Inout_opt_ char *_Str,
+    _In_z_ const char *_Delim,
+    _Inout_ _Deref_prepost_opt_z_ char **_Context);
+
+  _Check_return_
+  _CRTIMP
+  char *
+  __cdecl
+  _tcstok_s_l(
+    _Inout_opt_ char *_Str,
+    _In_z_ const char *_Delim,
+    _Inout_ _Deref_prepost_opt_z_ char **_Context,
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
+  _tcsset_s(
+    _Inout_updates_z_(_SizeInChars) char *_Str,
+    _In_ size_t _SizeInChars,
+    _In_ unsigned int _Val);
+
+  _Check_return_wat_
+  _CRTIMP
+  errno_t
+  __cdecl
+  _tcsset_s_l(
+    _Inout_updates_z_(_SizeInChars) char *_Str,
+    _In_ size_t _SizeInChars,
+    _In_ unsigned int,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsnccat_s(
+    _Inout_updates_z_(_DstSizeInChars) char *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsnccat_s_l(
+    _Inout_updates_z_(_DstSizeInChars) char *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsnccpy_s(
+    _Out_writes_(_DstSizeInChars) char *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsnccpy_s_l(
+    _Out_writes_(_DstSizeInChars) char *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const char *_Src,
+    _In_ size_t _MaxCount,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcslwr_s(
+    _Inout_updates_z_(_SizeInChars) char *_Str,
+    _In_ size_t _SizeInChars);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcslwr_s_l(
+    _Inout_updates_z_(_SizeInChars) char *_Str,
+    _In_ size_t _SizeInChars,
+    _In_opt_ _locale_t _Locale);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsupr_s(
+    _Inout_updates_z_(_SizeInChars) char *_Str,
+    _In_ size_t _SizeInChars);
+
+  _CRTIMP
+  char *
+  __cdecl
+  _tcsupr_s_l(
+    _Inout_updates_z_(_SizeInChars) char *_Str,
+    _In_ size_t _SizeInChars,
+    _In_opt_ _locale_t _Locale);
+
+#endif /* _MB_MAP_DIRECT */
+
+#else /* _MBCS */
 
 #define _tcsncat_s strncat_s
 #define _tcsncat_s_l _strncat_s_l
@@ -256,11 +385,15 @@ extern "C" {
 
 #define _strnset_s_l(_Destination,_Destination_size_chars,_Value,_Count,_Locale) (_strnset_s(_Destination,_Destination_size_chars,_Value,_Count))
 #define _strset_s_l(_Destination,_Destination_size_chars,_Value,_Locale) (_strset_s(_Destination,_Destination_size_chars,_Value))
-#endif
-#endif
+
+#endif /* _MBCS */
+
+#endif /* _UNICODE */
 
 #ifdef __cplusplus
 }
 #endif
-#endif
-#endif
+
+#endif /* MINGW_HAS_SECURE_API */
+
+#endif /* _INC_TCHAR_S */
