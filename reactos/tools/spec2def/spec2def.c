@@ -306,7 +306,7 @@ OutputHeader_def(FILE *file, char *libname)
 {
     fprintf(file,
             "; File generated automatically, do not edit!\n\n"
-            "LIBRARY %s\n\n"
+            "NAME %s\n\n"
             "EXPORTS\n",
             libname);
 }
