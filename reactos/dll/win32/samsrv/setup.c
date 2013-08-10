@@ -577,7 +577,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
     FixedData.DomainModifiedCount.QuadPart = 0;
     FixedData.MaxPasswordAge.QuadPart = -(6LL * 7LL * 24LL * 60LL * 60LL * TICKS_PER_SECOND); /* 6 weeks */
     FixedData.MinPasswordAge.QuadPart = 0;                                                    /* right now */
-//    FixedData.ForceLogoff.QuadPart = // very far in the future aka never
+    FixedData.ForceLogoff.QuadPart = LLONG_MAX;                                               /* very far in the future aka never */
     FixedData.LockoutDuration.QuadPart = -(30LL * 60LL * TICKS_PER_SECOND);                   /* 30 minutes */
     FixedData.LockoutObservationWindow.QuadPart = -(30LL * 60LL * TICKS_PER_SECOND);          /* 30 minutes */
     FixedData.ModifiedCountAtLastPromotion.QuadPart = 0;
