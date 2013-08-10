@@ -209,7 +209,7 @@
 @ stdcall NetUserGetInfo(wstr wstr long ptr)
 @ stdcall NetUserGetLocalGroups(wstr wstr long long ptr long ptr ptr)
 @ stdcall NetUserModalsGet(wstr long ptr)
-@ stub NetUserModalsSet
+@ stdcall NetUserModalsSet(wstr long ptr ptr)
 @ stdcall NetUserSetGroups(wstr wstr long ptr long)
 @ stdcall NetUserSetInfo(wstr wstr long ptr ptr)
 @ stdcall NetWkstaGetInfo(wstr long ptr)
