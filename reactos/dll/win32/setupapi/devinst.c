@@ -1911,7 +1911,8 @@ BOOL WINAPI SetupDiRegisterDeviceInfo(
                               ParentDevInst,
                               CM_CREATE_DEVINST_NORMAL | CM_CREATE_DEVINST_DO_NOT_INSTALL,
                               set->hMachine);
-    if (cr != CR_SUCCESS)
+    if (cr != CR_SUCCESS &&
+        cr != CR_ALREADY_SUCH_DEVINST)
     {
         dwError = ERROR_NO_SUCH_DEVINST;
     }
