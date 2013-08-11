@@ -712,16 +712,19 @@ SetConsoleMenuClose(BOOL bEnable)
 
 /*
  * @unimplemented (Undocumented)
+ * @note See http://comments.gmane.org/gmane.comp.lang.harbour.devel/27844
+ *       Usage example: https://github.com/harbour/core/commit/d79a1b7b812cbde6ddf718ebfd6939a24f633e52
  */
 BOOL
 WINAPI
-SetConsolePalette(DWORD Unknown0,
-                  DWORD Unknown1,
-                  DWORD Unknown2)
+SetConsolePalette(HANDLE hConsoleOutput,
+                  HPALETTE hPalette,
+                  UINT dwUsage)
 {
-    DPRINT1("SetConsolePalette(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2);
+    DPRINT1("SetConsolePalette(0x%x, 0x%x, %d) UNIMPLEMENTED!\n", hConsoleOutput, hPalette, dwUsage);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    // Return TRUE so that we don't fail when being used by NTVDM even if not implemented.
+    return TRUE;
 }
 
 /*
