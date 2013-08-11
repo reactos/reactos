@@ -19,6 +19,9 @@
 static WORD CurrentPsp = SYSTEM_PSP;
 static WORD DosLastError = 0;
 static DWORD DiskTransferArea;
+static BYTE CurrentDrive;
+static CHAR LastDrive = 'E';
+static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
 static HANDLE DosSystemFileTable[DOS_SFT_SIZE];
 static WORD DosSftRefCount[DOS_SFT_SIZE];
 static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
@@ -823,6 +826,81 @@ BOOLEAN DosCloseHandle(WORD DosHandle)
     return TRUE;
 }
 
+BOOLEAN DosChangeDrive(BYTE Drive)
+{
+    WCHAR DirectoryPath[DOS_CMDLINE_LENGTH];
+
+    /* Make sure the drive exists */
+    if (Drive > (LastDrive - 'A')) return FALSE;
+
+    /* Find the path to the new current directory */
+    swprintf(DirectoryPath, L"%c\\%S", Drive + 'A', CurrentDirectories[Drive]);
+
+    /* Change the current directory of the process */
+    if (!SetCurrentDirectory(DirectoryPath)) return FALSE;
+
+    /* Set the current drive */
+    CurrentDrive = Drive;
+
+    /* Return success */
+    return TRUE;
+}
+
+BOOLEAN DosChangeDirectory(LPSTR Directory)
+{
+    BYTE DriveNumber;
+    DWORD Attributes;
+    LPSTR Path;
+
+    /* Make sure the directory path is not too long */
+    if (strlen(Directory) >= DOS_DIR_LENGTH)
+    {
+        DosLastError = ERROR_PATH_NOT_FOUND;
+        return FALSE;
+    }
+
+    /* Get the drive number */
+    DriveNumber = Directory[0] - 'A';
+
+    /* Make sure the drive exists */
+    if (DriveNumber > (LastDrive - 'A'))
+    {
+        DosLastError = ERROR_PATH_NOT_FOUND;
+        return FALSE;
+    }
+
+    /* Get the file attributes */
+    Attributes = GetFileAttributesA(Directory);
+
+    /* Make sure the path exists and is a directory */
+    if ((Attributes == INVALID_FILE_ATTRIBUTES)
+        || !(Attributes & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        DosLastError = ERROR_PATH_NOT_FOUND;
+        return FALSE;
+    }
+
+    /* Check if this is the current drive */
+    if (DriveNumber == CurrentDrive)
+    {
+        /* Change the directory */
+        if (!SetCurrentDirectoryA(Directory))
+        {
+            DosLastError = LOWORD(GetLastError());
+            return FALSE;
+        }
+    }
+
+    /* Get the directory part of the path */
+    Path = strchr(Directory, '\\') + 1;
+
+    /* Set the directory for the drive */
+    strcpy(CurrentDirectories[DriveNumber], Path);
+    
+    /* Return success */
+    return TRUE;
+}
+
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment)
 {
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(PspSegment);
@@ -1302,6 +1380,16 @@ VOID DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Set Default Drive  */
+        case 0x0E:
+        {
+            DosChangeDrive(LOBYTE(Edx));
+            EmulatorSetRegister(EMULATOR_REG_AX,
+                                (Eax & 0xFFFFFF00) | (LastDrive - 'A' + 1));
+
+            break;
+        }
+
         /* Set Disk Transfer Area */
         case 0x1A:
         {
@@ -1472,7 +1560,7 @@ VOID DosInt21h(LPWORD Stack)
             String = (PCHAR)((ULONG_PTR)BaseAddress
                      + TO_LINEAR(DataSegment, LOWORD(Edx)));
 
-            if (SetCurrentDirectoryA(String))
+            if (DosChangeDirectory(String))
             {
                 Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
             }
@@ -1480,7 +1568,7 @@ VOID DosInt21h(LPWORD Stack)
             {
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
                 EmulatorSetRegister(EMULATOR_REG_AX,
-                                    (Eax & 0xFFFF0000) | LOWORD(GetLastError()));
+                                    (Eax & 0xFFFF0000) | DosLastError);
             }
 
             break;
@@ -1953,6 +2041,9 @@ BOOLEAN DosInitialize(VOID)
     LPSTR AsciiString;
     LPSTR DestPtr = (LPSTR)((ULONG_PTR)BaseAddress + TO_LINEAR(SYSTEM_ENV_BLOCK, 0));
     DWORD AsciiSize;
+    CHAR CurrentDirectory[MAX_PATH];
+    CHAR DosDirectory[DOS_DIR_LENGTH];
+    LPSTR Path;
 
     /* Initialize the MCB */
     Mcb->BlockType = 'Z';
@@ -2021,6 +2112,37 @@ BOOLEAN DosInitialize(VOID)
 
     /* Free the memory allocated for environment strings */
     FreeEnvironmentStringsW(Environment);
+
+    /* Clear the current directory buffer */
+    ZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
+
+    /* Get the current directory */
+    if (!GetCurrentDirectoryA(MAX_PATH, CurrentDirectory))
+    {
+        // TODO: Use some kind of default path?
+        return FALSE;
+    }
+
+    /* Convert that to a DOS path */
+    if (!GetShortPathNameA(CurrentDirectory, DosDirectory, DOS_DIR_LENGTH))
+    {
+        // TODO: Use some kind of default path?
+        return FALSE;
+    }
+
+    /* Set the drive */
+    CurrentDrive = DosDirectory[0] - 'A';
+
+    /* Get the path */
+    Path = strchr(DosDirectory, '\\');
+    if (Path != NULL)
+    {
+        /* Skip the backslash */
+        Path++;
+    }
+
+    /* Set the directory */
+    if (Path != NULL) strcpy(CurrentDirectories[CurrentDrive], Path);
 
     /* Read CONFIG.SYS */
     Stream = _wfopen(DOS_CONFIG_PATH, L"r");

@@ -34,6 +34,8 @@
 #define DOS_ALLOC_HIGH 0x40
 #define DOS_ALLOC_HIGH_LOW 0x80
 #define DOS_CMDLINE_LENGTH 127
+#define DOS_DIR_LENGTH 64
+#define NUM_DRIVES ('Z' - 'A' + 1)
 
 enum DOS_ALLOC_STRATEGY
 {
