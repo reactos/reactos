@@ -1780,7 +1780,8 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
     cr = CM_Create_DevInst_ExW(&DevInst,
                                (DEVINSTID)DeviceName,
                                RootDevInst,
-                               0,
+                               (CreationFlags & DICD_GENERATE_ID) ?
+                                     CM_CREATE_DEVINST_GENERATE_ID : 0,
                                set->hMachine);
     if (cr != CR_SUCCESS)
     {
