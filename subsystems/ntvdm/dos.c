@@ -892,10 +892,16 @@ BOOLEAN DosChangeDirectory(LPSTR Directory)
     }
 
     /* Get the directory part of the path */
-    Path = strchr(Directory, '\\') + 1;
+    Path = strchr(Directory, '\\');
+    if (Path != NULL)
+    {
+        /* Skip the backslash */
+        Path++;
+    }
 
     /* Set the directory for the drive */
-    strcpy(CurrentDirectories[DriveNumber], Path);
+    if (Path != NULL) strcpy(CurrentDirectories[DriveNumber], Path);
+    else strcpy(CurrentDirectories[DriveNumber], "");
     
     /* Return success */
     return TRUE;
