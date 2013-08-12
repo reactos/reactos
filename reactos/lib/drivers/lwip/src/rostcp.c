@@ -251,12 +251,15 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
         {
             Connection->SocketContext = NULL;
             tcp_arg(pcb, NULL);
-            TCPFinEventHandler(Connection, ERR_OK);
         }
-        else
+
+        /* Indicate the graceful close event */
+        TCPRecvEventHandler(arg);
+
+        /* If the PCB is gone, clean up the connection */
+        if (Connection->SendShutdown)
         {
-            /* Remotely initiated close */
-            TCPRecvEventHandler(arg);
+            TCPFinEventHandler(Connection, ERR_CLSD);
         }
     }
 
