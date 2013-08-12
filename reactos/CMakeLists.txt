@@ -142,7 +142,7 @@ else()
 
     # Arch Options
     if(ARCH STREQUAL "i386")
-        add_definitions(-D_M_IX86 -D_X86_ -D__i386__)
+        add_definitions(-D_M_IX86 -D_X86_ -D__i386__ -Di386)
     elseif(ARCH STREQUAL "amd64")
         add_definitions(-D_M_AMD64 -D_AMD64_ -D__x86_64__ -D_WIN64)
     elseif(ARCH STREQUAL "arm")
