@@ -35,6 +35,21 @@ extern NPAGED_LOOKASIDE_LIST QueueEntryLookasideList;
 /* Required for ERR_T to NTSTATUS translation in receive error handling */
 NTSTATUS TCPTranslateError(const err_t err);
 
+void
+LibTCPDumpPcb(PVOID SocketContext)
+{
+    struct tcp_pcb *pcb = (struct tcp_pcb*)SocketContext;
+    unsigned int addr = ntohl(pcb->remote_ip.addr);
+
+    DbgPrint("\tState: %s\n", tcp_state_str[pcb->state]);
+    DbgPrint("\tRemote: (%d.%d.%d.%d, %d)\n",
+    (addr >> 24) & 0xFF,
+    (addr >> 16) & 0xFF,
+    (addr >> 8) & 0xFF,
+    addr & 0xFF,
+    pcb->remote_port);
+}
+
 static
 void
 LibTCPEmptyQueue(PCONNECTION_ENDPOINT Connection)
@@ -231,18 +246,15 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
         Connection->ReceiveShutdown = TRUE;
         Connection->ReceiveShutdownStatus = STATUS_SUCCESS;
 
-        /* This code path executes for both remotely and locally initiated closures,
-         * and we need to distinguish between them */
-        if (Connection->SocketContext)
+        /* If we already did a send shutdown, we're in TIME_WAIT so we can't use this PCB anymore */
+        if (Connection->SendShutdown)
         {
-            /* Remotely initiated close */
-            TCPRecvEventHandler(arg);
+            Connection->SocketContext = NULL;
+            tcp_arg(pcb, NULL);
         }
-        else
-        {
-            /* Locally initated close */
-            TCPFinEventHandler(arg, ERR_CLSD);
-        }
+
+        /* Remotely initiated close */
+        TCPRecvEventHandler(arg);
     }
 
     return ERR_OK;
@@ -285,30 +297,18 @@ void
 InternalErrorEventHandler(void *arg, const err_t err)
 {
     PCONNECTION_ENDPOINT Connection = arg;
-    KIRQL OldIrql;
 
     /* Make sure the socket didn't get closed */
     if (!arg) return;
 
-    /* Check if data is left to be read */
-    LockObject(Connection, &OldIrql);
-    if (IsListEmpty(&Connection->PacketQueue))
-    {
-        UnlockObject(Connection, OldIrql);
+    /* The PCB is dead now */
+    Connection->SocketContext = NULL;
 
-        /* Deliver the error now */
-        TCPFinEventHandler(arg, err);
-    }
-    else
-    {
-        UnlockObject(Connection, OldIrql);
+    /* Defer the error delivery until all data is gone */
+    Connection->ReceiveShutdown = TRUE;
+    Connection->ReceiveShutdownStatus = TCPTranslateError(err);
 
-        /* Defer the error delivery until all data is gone */
-        Connection->ReceiveShutdown = TRUE;
-        Connection->ReceiveShutdownStatus = TCPTranslateError(err);
-
-        TCPRecvEventHandler(arg);
-    }
+    TCPRecvEventHandler(arg);
 }
 
 static
@@ -633,7 +633,12 @@ LibTCPShutdownCallback(void *arg)
         goto done;
     }
 
-    /* These need to be called separately, otherwise we get a tcp_close() */
+    /* LwIP makes the (questionable) assumption that SHUTDOWN_RDWR is equivalent to tcp_close().
+     * This assumption holds even if the shutdown calls are done separately (even through multiple
+     * WinSock shutdown() calls). This assumption means that lwIP has the right to deallocate our
+     * PCB without telling us if we shutdown TX and RX. To avoid these problems, we'll clear the
+     * socket context if we have called shutdown for TX and RX.
+     */
     if (msg->Input.Shutdown.shut_rx) {
         msg->Output.Shutdown.Error = tcp_shutdown(pcb, TRUE, FALSE);
     }
@@ -651,6 +656,14 @@ LibTCPShutdownCallback(void *arg)
 
         if (msg->Input.Shutdown.shut_tx)
             msg->Input.Shutdown.Connection->SendShutdown = TRUE;
+
+        if (msg->Input.Shutdown.Connection->ReceiveShutdown &&
+            msg->Input.Shutdown.Connection->SendShutdown)
+        {
+            /* The PCB is not ours anymore */
+            msg->Input.Shutdown.Connection->SocketContext = NULL;
+            tcp_arg(pcb, NULL);
+        }
     }
 
 done:
@@ -697,37 +710,43 @@ LibTCPCloseCallback(void *arg)
     /* Empty the queue even if we're already "closed" */
     LibTCPEmptyQueue(msg->Input.Close.Connection);
 
-    if (!msg->Input.Close.Connection->SocketContext)
+    /* Check if we've already been closed */
+    if (msg->Input.Close.Connection->Closing)
     {
         msg->Output.Close.Error = ERR_OK;
         goto done;
     }
 
-    /* Clear the PCB pointer */
-    msg->Input.Close.Connection->SocketContext = NULL;
+    /* Enter "closing" mode if we're doing a normal close */
+    if (msg->Input.Close.Callback)
+        msg->Input.Close.Connection->Closing = TRUE;
 
-    switch (pcb->state)
+    /* Check if the PCB was already "closed" but the client doesn't know it yet */
+    if (!msg->Input.Close.Connection->SocketContext)
     {
-        case CLOSED:
-        case LISTEN:
-        case SYN_SENT:
-           msg->Output.Close.Error = tcp_close(pcb);
-
-           if (!msg->Output.Close.Error && msg->Input.Close.Callback)
-               TCPFinEventHandler(msg->Input.Close.Connection, ERR_CLSD);
-           break;
-
-        default:
-           /* Abort the socket */
-           tcp_abort(pcb);
-           msg->Output.Close.Error = ERR_OK;
-           break;
+        if (msg->Input.Close.Callback)
+            TCPFinEventHandler(msg->Input.Close.Connection, ERR_CLSD);
+        msg->Output.Close.Error = ERR_OK;
+        goto done;
     }
+
+    /* Clear the PCB pointer and stop callbacks */
+    msg->Input.Close.Connection->SocketContext = NULL;
+    tcp_arg(pcb, NULL);
+
+    /* This may generate additional callbacks but we don't care,
+     * because they're too inconsistent to rely on */
+    msg->Output.Close.Error = tcp_close(pcb);
 
     if (msg->Output.Close.Error)
     {
         /* Restore the PCB pointer */
         msg->Input.Close.Connection->SocketContext = pcb;
+        msg->Input.Close.Connection->Closing = FALSE;
+    }
+    else if (msg->Input.Close.Callback)
+    {
+        TCPFinEventHandler(msg->Input.Close.Connection, ERR_CLSD);
     }
 
 done:
