@@ -444,8 +444,6 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
 
   TcpipAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
 
-  NCE = NeighborCache[HashValue].Cache;
-
   /* If there's no adapter specified, we'll look for a match on
    * each one. */
   if (Interface == NULL)
@@ -460,6 +458,7 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
 
   do
   {
+      NCE = NeighborCache[HashValue].Cache;
       while (NCE != NULL)
       {
          if (NCE->Interface == Interface &&
@@ -476,6 +475,21 @@ PNEIGHBOR_CACHE_ENTRY NBLocateNeighbor(
   }
   while ((FirstInterface != NULL) &&
          ((Interface = GetDefaultInterface()) != FirstInterface));
+
+  if ((NCE == NULL) && (FirstInterface != NULL))
+  {
+      /* This time we'll even match loopback NCEs */
+      NCE = NeighborCache[HashValue].Cache;
+      while (NCE != NULL)
+      {
+         if (AddrIsEqual(Address, &NCE->Address))
+         {
+             break;
+         }
+
+         NCE = NCE->Next;
+      }
+  }
 
   TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
