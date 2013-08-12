@@ -65,7 +65,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepSetCursor,
     ConsolepShowCursor,
     ConsolepMenuControl,
-    // ConsolepSetPalette,
+    ConsolepSetPalette,
     ConsolepSetDisplayMode,
     // ConsolepRegisterVDM,
     ConsolepGetHardwareState,
@@ -302,6 +302,13 @@ typedef struct
     HANDLE OutputHandle;
     SMALL_RECT Region;
 } CONSOLE_INVALIDATEDIBITS, *PCONSOLE_INVALIDATEDIBITS;
+
+typedef struct
+{
+    HANDLE   OutputHandle;
+    HPALETTE PaletteHandle;
+    UINT     Usage;
+} CONSOLE_SETPALETTE, *PCONSOLE_SETPALETTE;
 
 typedef struct
 {
@@ -664,6 +671,7 @@ typedef struct _CONSOLE_API_MESSAGE
 
         /* Console window */
         CONSOLE_INVALIDATEDIBITS InvalidateDIBitsRequest;
+        CONSOLE_SETPALETTE SetPaletteRequest;
         CONSOLE_GETSETCONSOLETITLE TitleRequest;
         CONSOLE_GETLARGESTWINDOWSIZE GetLargestWindowSizeRequest;
         CONSOLE_MENUCONTROL MenuControlRequest;
