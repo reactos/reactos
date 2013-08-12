@@ -681,7 +681,9 @@ CONFIGRET WINAPI CM_Create_DevNode_ExW(
 
     if (ret == CR_SUCCESS)
     {
-        *pdnDevInst = pSetupStringTableAddString(StringTable, pDeviceID, 1);
+        /* If CM_CREATE_DEVINST_GENERATE_ID was passed in, PNP_CreateDevInst
+         * will return the generated device ID in szLocalDeviceID */
+        *pdnDevInst = pSetupStringTableAddString(StringTable, szLocalDeviceID, 1);
         if (*pdnDevInst == 0)
             ret = CR_NO_SUCH_DEVNODE;
     }

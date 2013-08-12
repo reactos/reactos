@@ -408,7 +408,12 @@ BOOLEAN BiosInitialize(VOID)
     }
 
     /* Initialize VGA */
-    VgaInitialize(BiosConsoleOutput);
+    if (!VgaInitialize(BiosConsoleOutput))
+    {
+        CloseHandle(BiosConsoleOutput);
+        CloseHandle(BiosConsoleInput);
+        return FALSE;
+    }
 
     /* Update the cursor position */
     BiosSetCursorPosition(BiosSavedBufferInfo.dwCursorPosition.Y,

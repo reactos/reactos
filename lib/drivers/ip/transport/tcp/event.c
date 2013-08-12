@@ -264,11 +264,9 @@ TCPFinEventHandler(void *arg, const err_t err)
    const NTSTATUS Status = TCPTranslateError(err);
    KIRQL OldIrql;
 
+   ASSERT(Connection->SocketContext == NULL);
    ASSERT(Connection->AddressFile);
    ASSERT(err != ERR_OK);
-
-   /* First off all, remove the PCB pointer */
-   Connection->SocketContext = NULL;
 
    /* Complete all outstanding requests now */
    FlushAllQueues(Connection, Status);

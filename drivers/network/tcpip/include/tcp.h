@@ -211,3 +211,6 @@ VOID
 FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status);
 
 VOID CompleteBucket(PCONNECTION_ENDPOINT Connection, PTDI_BUCKET Bucket, const BOOLEAN Synchronous);
+
+void
+LibTCPDumpPcb(PVOID SocketContext);

@@ -35,8 +35,11 @@
 
 #define VGA_NUM_BANKS 4
 #define VGA_BANK_SIZE 0x10000
-#define VGA_PALETTE_SIZE 768
+#define VGA_MAX_COLORS 256
+#define VGA_PALETTE_SIZE (VGA_MAX_COLORS * 3)
 #define VGA_BITMAP_INFO_SIZE (sizeof(BITMAPINFOHEADER) + 2 * (VGA_PALETTE_SIZE / 3))
+#define VGA_DAC_TO_COLOR(x) (((x) << 2) | ((x) >> 6))
+#define VGA_COLOR_TO_DAC(x) ((x) >> 2)
 
 /* Sequencer reset register bits */
 #define VGA_SEQ_RESET_AR (1 << 0)
@@ -194,7 +197,7 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 BYTE VgaReadPort(WORD Port);
 VOID VgaWritePort(WORD Port, BYTE Data);
 VOID VgaClearMemory(VOID);
-VOID VgaInitialize(HANDLE TextHandle);
+BOOLEAN VgaInitialize(HANDLE TextHandle);
 
 #endif // _VGA_H_
 

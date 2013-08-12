@@ -24,6 +24,8 @@ BOOLEAN IpWorkItemQueued = FALSE;
 
 IP_PROTOCOL_HANDLER ProtocolTable[IP_PROTOCOL_TABLE_SIZE];
 
+ULONG IpTimerExpirations;
+
 VOID
 TCPRegisterInterface(PIP_INTERFACE IF);
 
@@ -119,9 +121,16 @@ VOID NTAPI IPTimeoutDpcFn(PKDPC Dpc,
  *     SystemArgument1 = Unused
  *     SystemArgument2 = Unused
  * NOTES:
- *     This routine is dispatched once in a while to do maintainance jobs
+ *     This routine is dispatched once in a while to do maintenance jobs
  */
 {
+    IpTimerExpirations++;
+    
+    if ((IpTimerExpirations % 10) == 0)
+    {
+        LogActiveObjects();
+    }
+
     /* Check if datagram fragments have taken too long to assemble */
     IPDatagramReassemblyTimeout();
 

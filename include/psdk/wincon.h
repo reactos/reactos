@@ -473,6 +473,8 @@ BOOL WINAPI SetConsoleMenuClose(_In_ BOOL);
 BOOL WINAPI SetConsoleCursor(_In_ HANDLE, _In_ HCURSOR);
 /* Undocumented, see http://undoc.airesoft.co.uk/kernel32.dll/ShowConsoleCursor.php */
 INT WINAPI ShowConsoleCursor(_In_ HANDLE, _In_ BOOL);
+/* Undocumented, see http://comments.gmane.org/gmane.comp.lang.harbour.devel/27844 */
+BOOL WINAPI SetConsolePalette(_In_ HANDLE, _In_ HPALETTE, _In_ UINT);
 
 BOOL WINAPI WriteConsoleA(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);
 BOOL WINAPI WriteConsoleW(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);

@@ -1727,6 +1727,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
     CONFIGRET cr;
     DEVINST RootDevInst;
     DEVINST DevInst;
+    WCHAR GenInstanceId[MAX_DEVICE_ID_LEN];
 
     TRACE("%p %s %s %s %p %x %p\n", DeviceInfoSet, debugstr_w(DeviceName),
         debugstr_guid(ClassGuid), debugstr_w(DeviceDescription),
@@ -1780,12 +1781,31 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
     cr = CM_Create_DevInst_ExW(&DevInst,
                                (DEVINSTID)DeviceName,
                                RootDevInst,
-                               0,
+                               (CreationFlags & DICD_GENERATE_ID) ?
+                                     CM_CREATE_DEVINST_GENERATE_ID : 0,
                                set->hMachine);
     if (cr != CR_SUCCESS)
     {
         SetLastError(GetErrorCodeFromCrCode(cr));
         return FALSE;
+    }
+
+    if (CreationFlags & DICD_GENERATE_ID)
+    {
+        /* Grab the actual instance ID that was created */
+        cr = CM_Get_Device_ID_Ex(DevInst,
+                                 GenInstanceId,
+                                 MAX_DEVICE_ID_LEN,
+                                 0,
+                                 set->hMachine);
+        if (cr != CR_SUCCESS)
+        {
+            SetLastError(GetErrorCodeFromCrCode(cr));
+            return FALSE;
+        }
+
+        DeviceName = GenInstanceId;
+        TRACE("Using generated instance ID: %s\n", debugstr_w(DeviceName));
     }
 
     if (CreateDeviceInfo(set, DeviceName, ClassGuid, &deviceInfo))
@@ -1891,7 +1911,8 @@ BOOL WINAPI SetupDiRegisterDeviceInfo(
                               ParentDevInst,
                               CM_CREATE_DEVINST_NORMAL | CM_CREATE_DEVINST_DO_NOT_INSTALL,
                               set->hMachine);
-    if (cr != CR_SUCCESS)
+    if (cr != CR_SUCCESS &&
+        cr != CR_ALREADY_SUCH_DEVINST)
     {
         dwError = ERROR_NO_SUCH_DEVINST;
     }

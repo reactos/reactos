@@ -51,6 +51,36 @@ CSR_API(SrvInvalidateBitMapRect)
 }
 
 NTSTATUS NTAPI
+ConDrvSetConsolePalette(IN PCONSOLE Console,
+                        IN PGRAPHICS_SCREEN_BUFFER Buffer,
+                        IN HPALETTE PaletteHandle,
+                        IN UINT Usage);
+CSR_API(SrvSetConsolePalette)
+{
+    NTSTATUS Status;
+    PCONSOLE_SETPALETTE SetPaletteRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetPaletteRequest;
+    // PCONSOLE_SCREEN_BUFFER Buffer;
+    PGRAPHICS_SCREEN_BUFFER Buffer;
+
+    DPRINT("SrvSetConsolePalette\n");
+
+    // NOTE: Tests show that this function is used only for graphics screen buffers
+    // and otherwise it returns false + sets last error to invalid handle.
+    Status = ConSrvGetGraphicsBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                     SetPaletteRequest->OutputHandle,
+                                     &Buffer, GENERIC_WRITE, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Status = ConDrvSetConsolePalette(Buffer->Header.Console,
+                                     Buffer,
+                                     SetPaletteRequest->PaletteHandle,
+                                     SetPaletteRequest->Usage);
+
+    ConSrvReleaseScreenBuffer(Buffer, TRUE);
+    return Status;
+}
+
+NTSTATUS NTAPI
 ConDrvGetConsoleCursorInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            OUT PCONSOLE_CURSOR_INFO CursorInfo);

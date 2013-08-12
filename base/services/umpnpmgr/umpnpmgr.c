@@ -1613,16 +1613,42 @@ DWORD PNP_CreateDevInst(
 
     if (ulFlags & CM_CREATE_DEVNODE_GENERATE_ID)
     {
-        /* FIXME */
-        DPRINT1("CM_CREATE_DEVNODE_GENERATE_ID support not implemented yet!\n", ret);
-        ret = CR_CALL_NOT_IMPLEMENTED;
-        goto done;
+        WCHAR szGeneratedInstance[MAX_DEVICE_ID_LEN];
+        DWORD dwInstanceNumber;
+
+        /* Generated ID is: Root\<Device ID>\<Instance number> */
+        dwInstanceNumber = 0;
+        do
+        {
+            swprintf(szGeneratedInstance, L"Root\\%ls\\%04d",
+                     pszDeviceID, dwInstanceNumber);
+
+            /* Try to create a device instance with this ID */
+            ret = CreateDeviceInstance(szGeneratedInstance);
+
+            dwInstanceNumber++;
+        }
+        while (ret == CR_ALREADY_SUCH_DEVINST);
+        
+        if (ret == CR_SUCCESS)
+        {
+            /* pszDeviceID is an out parameter too for generated IDs */
+            if (wcslen(szGeneratedInstance) > ulLength)
+            {
+                ret = CR_BUFFER_SMALL;
+            }
+            else
+            {
+                wcscpy(pszDeviceID, szGeneratedInstance);
+            }
+        }
+    }
+    else
+    {
+        /* Create the device instance */
+        ret = CreateDeviceInstance(pszDeviceID);
     }
 
-    /* Create the device instance */
-    ret = CreateDeviceInstance(pszDeviceID);
-
-done:;
     DPRINT("PNP_CreateDevInst() done (returns %lx)\n", ret);
 
     return ret;

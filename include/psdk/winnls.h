@@ -824,7 +824,6 @@ int WINAPI GetTimeFormatA(LCID,DWORD,const SYSTEMTIME*,LPCSTR,LPSTR,int);
 int WINAPI GetTimeFormatW(LCID,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int);
 LANGID WINAPI GetUserDefaultLangID(void);
 LCID WINAPI GetUserDefaultLCID(void);
-LANGID WINAPI GetUserDefaultUILanguage(void);
 GEOID WINAPI GetUserGeoID(_In_ GEOCLASS);
 BOOL WINAPI IsDBCSLeadByte(_In_ BYTE);
 BOOL WINAPI IsDBCSLeadByteEx(_In_ UINT, _In_ BYTE);

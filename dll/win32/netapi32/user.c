@@ -49,6 +49,24 @@ typedef struct _ENUM_CONTEXT
 
 static
 ULONG
+DeltaTimeToSeconds(LARGE_INTEGER DeltaTime)
+{
+    LARGE_INTEGER Seconds;
+
+    if (DeltaTime.QuadPart == 0)
+        return 0;
+
+    Seconds.QuadPart = -DeltaTime.QuadPart / 10000000;
+
+    if (Seconds.HighPart != 0)
+        return TIMEQ_FOREVER;
+
+    return Seconds.LowPart;
+}
+
+
+static
+ULONG
 GetAccountFlags(ULONG AccountControl)
 {
     ULONG Flags = UF_SCRIPT;
@@ -3055,6 +3073,332 @@ done:
     *bufptr = (LPBYTE)Buffer;
 
     return ApiStatus;
+}
+
+
+/******************************************************************************
+ * NetUserModalsGet  (NETAPI32.@)
+ *
+ * Retrieves global information for all users and global groups in the security
+ * database.
+ *
+ * PARAMS
+ *  servername [I] Specifies the DNS or the NetBIOS name of the remote server
+ *                 on which the function is to execute.
+ *  level      [I] Information level of the data.
+ *     0   Return global passwords parameters. bufptr points to a
+ *         USER_MODALS_INFO_0 struct.
+ *     1   Return logon server and domain controller information. bufptr
+ *         points to a USER_MODALS_INFO_1 struct.
+ *     2   Return domain name and identifier. bufptr points to a 
+ *         USER_MODALS_INFO_2 struct.
+ *     3   Return lockout information. bufptr points to a USER_MODALS_INFO_3
+ *         struct.
+ *  bufptr     [O] Buffer that receives the data.
+ *
+ * RETURNS
+ *  Success: NERR_Success.
+ *  Failure: 
+ *     ERROR_ACCESS_DENIED - the user does not have access to the info.
+ *     NERR_InvalidComputer - computer name is invalid.
+ */
+NET_API_STATUS
+WINAPI
+NetUserModalsGet(LPCWSTR servername,
+                 DWORD level,
+                 LPBYTE *bufptr)
+{
+    UNICODE_STRING ServerName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    PSID DomainSid = NULL;
+    PDOMAIN_PASSWORD_INFORMATION PasswordInfo = NULL;
+    PDOMAIN_LOGOFF_INFORMATION LogoffInfo = NULL;
+    PDOMAIN_SERVER_ROLE_INFORMATION ServerRoleInfo = NULL;
+    PDOMAIN_REPLICATION_INFORMATION ReplicationInfo = NULL;
+    PDOMAIN_NAME_INFORMATION NameInfo = NULL;
+    PDOMAIN_LOCKOUT_INFORMATION LockoutInfo = NULL;
+    ULONG DesiredAccess;
+    ULONG BufferSize;
+    PUSER_MODALS_INFO_0 umi0;
+    PUSER_MODALS_INFO_1 umi1;
+    PUSER_MODALS_INFO_2 umi2;
+    PUSER_MODALS_INFO_3 umi3;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %d %p)\n", debugstr_w(servername), level, bufptr);
+
+    *bufptr = NULL;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the Account Domain SID */
+    Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                 &DomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    switch (level)
+    {
+        case 0:
+            DesiredAccess = DOMAIN_READ_OTHER_PARAMETERS | DOMAIN_READ_PASSWORD_PARAMETERS;
+            break;
+
+        case 1:
+            DesiredAccess = DOMAIN_READ_OTHER_PARAMETERS;
+            break;
+
+        case 2:
+            DesiredAccess = DOMAIN_READ_OTHER_PARAMETERS;
+            break;
+
+        case 3:
+            DesiredAccess = DOMAIN_READ_PASSWORD_PARAMETERS;
+            break;
+
+        default:
+            ApiStatus = ERROR_INVALID_LEVEL;
+            goto done;
+    }
+
+    /* Open the Account Domain */
+    Status = SamOpenDomain(ServerHandle,
+                           DesiredAccess,
+                           DomainSid,
+                           &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    switch (level)
+    {
+        case 0:
+            /* return global passwords parameters */
+            Status = SamQueryInformationDomain(DomainHandle,
+                                               DomainPasswordInformation,
+                                               (PVOID*)&PasswordInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            Status = SamQueryInformationDomain(DomainHandle,
+                                               DomainLogoffInformation,
+                                               (PVOID*)&LogoffInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            BufferSize = sizeof(USER_MODALS_INFO_0);
+            break;
+
+        case 1:
+            /* return logon server and domain controller info */
+            Status = SamQueryInformationDomain(DomainHandle,
+                                               DomainServerRoleInformation,
+                                               (PVOID*)&ServerRoleInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            Status = SamQueryInformationDomain(DomainHandle,
+                                               DomainReplicationInformation,
+                                               (PVOID*)&ReplicationInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            BufferSize = sizeof(USER_MODALS_INFO_1) +
+                         ReplicationInfo->ReplicaSourceNodeName.Length + sizeof(WCHAR);
+            break;
+
+        case 2:
+            /* return domain name and identifier */
+            Status = SamQueryInformationDomain(DomainHandle,
+                                               DomainNameInformation,
+                                               (PVOID*)&NameInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            BufferSize = sizeof( USER_MODALS_INFO_2 ) +
+                         NameInfo->DomainName.Length + sizeof(WCHAR) +
+                         RtlLengthSid(DomainSid);
+            break;
+
+        case 3:
+            /* return lockout information */
+            Status = SamQueryInformationDomain(DomainHandle,
+                                               DomainLockoutInformation,
+                                               (PVOID*)&LockoutInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            BufferSize = sizeof(USER_MODALS_INFO_3);
+            break;
+
+        default:
+            TRACE("Invalid level %d is specified\n", level);
+            ApiStatus = ERROR_INVALID_LEVEL;
+            goto done;
+    }
+
+
+    ApiStatus = NetApiBufferAllocate(BufferSize,
+                                     (LPVOID *)bufptr);
+    if (ApiStatus != NERR_Success)
+    {
+        WARN("NetApiBufferAllocate() failed\n");
+        goto done;
+    }
+
+    switch (level)
+    {
+        case 0:
+            umi0 = (PUSER_MODALS_INFO_0)*bufptr;
+
+            umi0->usrmod0_min_passwd_len = PasswordInfo->MinPasswordLength;
+            umi0->usrmod0_max_passwd_age = (ULONG)(PasswordInfo->MaxPasswordAge.QuadPart / 10000000);
+            umi0->usrmod0_min_passwd_age =
+                DeltaTimeToSeconds(PasswordInfo->MinPasswordAge);
+            umi0->usrmod0_force_logoff =
+                DeltaTimeToSeconds(LogoffInfo->ForceLogoff);
+            umi0->usrmod0_password_hist_len = PasswordInfo->PasswordHistoryLength;
+            break;
+
+        case 1:
+            umi1 = (PUSER_MODALS_INFO_1)*bufptr;
+
+            switch (ServerRoleInfo->DomainServerRole)
+            {
+
+                    umi1->usrmod1_role = UAS_ROLE_STANDALONE;
+                    umi1->usrmod1_role = UAS_ROLE_MEMBER;
+
+                case DomainServerRolePrimary:
+                    umi1->usrmod1_role = UAS_ROLE_PRIMARY;
+                    break;
+
+                case DomainServerRoleBackup:
+                    umi1->usrmod1_role = UAS_ROLE_BACKUP;
+                    break;
+
+                default:
+                    ApiStatus = NERR_InternalError;
+                    goto done;
+            }
+
+            umi1->usrmod1_primary = (LPWSTR)(*bufptr + sizeof(USER_MODALS_INFO_1));
+            RtlCopyMemory(umi1->usrmod1_primary,
+                          ReplicationInfo->ReplicaSourceNodeName.Buffer,
+                          ReplicationInfo->ReplicaSourceNodeName.Length);
+            umi1->usrmod1_primary[ReplicationInfo->ReplicaSourceNodeName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+            break;
+
+        case 2:
+            umi2 = (PUSER_MODALS_INFO_2)*bufptr;
+
+            umi2->usrmod2_domain_name = (LPWSTR)(*bufptr + sizeof(USER_MODALS_INFO_2));
+            RtlCopyMemory(umi2->usrmod2_domain_name,
+                          NameInfo->DomainName.Buffer,
+                          NameInfo->DomainName.Length);
+            umi2->usrmod2_domain_name[NameInfo->DomainName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+            umi2->usrmod2_domain_id = *bufptr +
+                                      sizeof(USER_MODALS_INFO_2) +
+                                      NameInfo->DomainName.Length + sizeof(WCHAR);
+            RtlCopyMemory(umi2->usrmod2_domain_id,
+                          DomainSid,
+                          RtlLengthSid(DomainSid));
+            break;
+
+        case 3:
+            umi3 = (PUSER_MODALS_INFO_3)*bufptr;
+            umi3->usrmod3_lockout_duration =
+                DeltaTimeToSeconds(LockoutInfo->LockoutDuration);
+            umi3->usrmod3_lockout_observation_window =
+                DeltaTimeToSeconds(LockoutInfo->LockoutObservationWindow );
+            umi3->usrmod3_lockout_threshold = LockoutInfo->LockoutThreshold;
+            break;
+    }
+
+done:
+    if (LockoutInfo != NULL)
+        SamFreeMemory(LockoutInfo);
+
+    if (NameInfo != NULL)
+        SamFreeMemory(NameInfo);
+
+    if (ReplicationInfo != NULL)
+        SamFreeMemory(ReplicationInfo);
+
+    if (ServerRoleInfo != NULL)
+        SamFreeMemory(ServerRoleInfo);
+
+    if (LogoffInfo != NULL)
+        SamFreeMemory(LogoffInfo);
+
+    if (PasswordInfo != NULL)
+        SamFreeMemory(PasswordInfo);
+
+    if (DomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
+}
+
+
+/******************************************************************************
+ * NetUserModalsSet  (NETAPI32.@)
+ */
+NET_API_STATUS
+WINAPI
+NetUserModalsSet(IN LPCWSTR servername,
+                 IN DWORD level,
+                 IN LPBYTE buf,
+                 OUT LPDWORD parm_err)
+{
+    FIXME("(%s %d %p %p)\n", debugstr_w(servername), level, buf, parm_err);
+    return ERROR_ACCESS_DENIED;
 }
 
 
