@@ -93,6 +93,8 @@
 
 #else /* i386 */
 
+#error Unsupported architecture
+
 /* DWORD network to host byte order conversion for other architectures */
 #define DN2H(dw) \
     (dw)
@@ -148,7 +150,7 @@ typedef struct {
 } TDIEntityInfo;
 
 #ifndef htons
-#define htons(x) ((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
+#define htons(x) WH2N(x)
 #endif
 
 /* Global variable */
