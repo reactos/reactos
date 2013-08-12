@@ -11,7 +11,7 @@
 #include "precomp.h"
 
 /* Uncomment for logging of connections and address files every 10 seconds */
-#define LOG_OBJECTS
+//#define LOG_OBJECTS
 
 /* List of all address file objects managed by this driver */
 LIST_ENTRY AddressFileListHead;
