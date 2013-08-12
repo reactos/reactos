@@ -319,7 +319,11 @@ BOOL WINAPI AssocIsDangerous(LPCWSTR);
 
 #endif /* NO_SHLWAPI_REG */
 
+void WINAPI IUnknown_Set(IUnknown **ppunk, IUnknown *punk);
+void WINAPI IUnknown_AtomicRelease(IUnknown **punk);
+HRESULT WINAPI IUnknown_GetWindow(IUnknown *punk, HWND *phwnd);
 HRESULT WINAPI IUnknown_SetSite(IUnknown *punk, IUnknown *punkSite);
+HRESULT WINAPI IUnknown_GetSite(IUnknown *punk, REFIID riid, void **ppv);
 HRESULT WINAPI IUnknown_QueryService(IUnknown *punk, REFGUID guidService, REFIID riid, void **ppvOut);
 
 /* Path functions */
@@ -368,16 +372,18 @@ int WINAPI PathCommonPrefixA(LPCSTR,LPCSTR,LPSTR);
 int WINAPI PathCommonPrefixW(LPCWSTR,LPCWSTR,LPWSTR);
 #define PathCommonPrefix WINELIB_NAME_AW(PathCommonPrefix)
 
-HRESULT WINAPI PathCreateFromUrlA(LPCSTR pszUrl, LPSTR pszPath, LPDWORD pcchPath, DWORD dwReserved);
-HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath, LPDWORD pcchPath, DWORD dwReserved);
+HRESULT WINAPI PathCreateFromUrlA(LPCSTR,LPSTR,LPDWORD,DWORD);
+HRESULT WINAPI PathCreateFromUrlW(LPCWSTR,LPWSTR,LPDWORD,DWORD);
 #define PathCreateFromUrl WINELIB_NAME_AW(PathCreateFromUrl)
+
+HRESULT WINAPI PathCreateFromUrlAlloc(LPCWSTR,LPWSTR*,DWORD);
 
 BOOL WINAPI PathFileExistsA(LPCSTR);
 BOOL WINAPI PathFileExistsW(LPCWSTR);
 #define PathFileExists WINELIB_NAME_AW(PathFileExists)
 
-BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR lpszPath, DWORD *dwAttr);
-BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR lpszPath, DWORD *dwAttr);
+BOOL WINAPI PathFileExistsAndAttributesA(LPCSTR,DWORD*);
+BOOL WINAPI PathFileExistsAndAttributesW(LPCWSTR,DWORD*);
 #define PathFileExistsAndAttributes WINELIB_NAME_AW(PathFileExistsAndAttributes)
 
 LPSTR  WINAPI PathFindExtensionA(LPCSTR);
@@ -697,7 +703,7 @@ BOOL    WINAPI UrlIsOpaqueW(LPCWSTR);
 #define UrlIsOpaque WINELIB_NAME_AW(UrlIsOpaque)
 
 #define UrlIsFileUrlA(x) UrlIsA(x, URLIS_FILEURL)
-#define UrlIsFileUrlW(y) UrlIsW(x, URLIS_FILEURL)
+#define UrlIsFileUrlW(x) UrlIsW(x, URLIS_FILEURL)
 #define UrlIsFileUrl WINELIB_NAME_AW(UrlIsFileUrl)
 
 HRESULT WINAPI UrlUnescapeA(LPSTR,LPSTR,LPDWORD,DWORD);
@@ -877,6 +883,9 @@ LPSTR  WINAPI StrStrIA(LPCSTR,LPCSTR);
 LPWSTR WINAPI StrStrIW(LPCWSTR,LPCWSTR);
 #define StrStrI WINELIB_NAME_AW(StrStrI)
 
+LPWSTR WINAPI StrStrNW(LPCWSTR,LPCWSTR,UINT);
+LPWSTR WINAPI StrStrNIW(LPCWSTR,LPCWSTR,UINT);
+
 int WINAPI StrToIntA(LPCSTR);
 int WINAPI StrToIntW(LPCWSTR);
 #define StrToInt WINELIB_NAME_AW(StrToInt)
@@ -926,6 +935,10 @@ HRESULT WINAPI StrRetToBufW(STRRET*,LPCITEMIDLIST,LPWSTR,UINT);
 
 HRESULT WINAPI StrRetToBSTR(STRRET*,LPCITEMIDLIST,BSTR*);
 
+BOOL WINAPI IsCharSpaceA(CHAR);
+BOOL WINAPI IsCharSpaceW(WCHAR);
+#define IsCharSpace WINELIB_NAME_AW(IsCharSpace)
+
 #endif /* NO_SHLWAPI_STRFCNS */
 
 
@@ -942,6 +955,8 @@ VOID WINAPI ColorRGBToHLS(COLORREF,LPWORD,LPWORD,LPWORD);
 
 #endif /* NO_SHLWAPI_GDI */
 
+/* Security functions */
+BOOL WINAPI IsInternetESCEnabled(void);
 
 /* Stream functions */
 #ifndef NO_SHLWAPI_STREAM
@@ -981,6 +996,7 @@ HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 HRESULT WINAPI SHAutoComplete(HWND,DWORD);
 
 /* Threads */
+HRESULT WINAPI SHCreateThreadRef(LONG*, IUnknown**);
 HRESULT WINAPI SHGetThreadRef(IUnknown**);
 HRESULT WINAPI SHSetThreadRef(IUnknown*);
 HRESULT WINAPI SHReleaseThreadRef(void);
