@@ -251,10 +251,13 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
         {
             Connection->SocketContext = NULL;
             tcp_arg(pcb, NULL);
+            TCPFinEventHandler(Connection, ERR_OK);
         }
-
-        /* Remotely initiated close */
-        TCPRecvEventHandler(arg);
+        else
+        {
+            /* Remotely initiated close */
+            TCPRecvEventHandler(arg);
+        }
     }
 
     return ERR_OK;
@@ -299,16 +302,18 @@ InternalErrorEventHandler(void *arg, const err_t err)
     PCONNECTION_ENDPOINT Connection = arg;
 
     /* Make sure the socket didn't get closed */
-    if (!arg) return;
+    if (!arg || Connection->SocketContext == NULL) return;
 
     /* The PCB is dead now */
     Connection->SocketContext = NULL;
 
-    /* Defer the error delivery until all data is gone */
+    /* Give them one shot to receive the remaining data */
     Connection->ReceiveShutdown = TRUE;
     Connection->ReceiveShutdownStatus = TCPTranslateError(err);
+    TCPRecvEventHandler(Connection);
 
-    TCPRecvEventHandler(arg);
+    /* Terminate the connection */
+    TCPFinEventHandler(Connection, err);
 }
 
 static
@@ -663,6 +668,7 @@ LibTCPShutdownCallback(void *arg)
             /* The PCB is not ours anymore */
             msg->Input.Shutdown.Connection->SocketContext = NULL;
             tcp_arg(pcb, NULL);
+            TCPFinEventHandler(msg->Input.Shutdown.Connection, ERR_CLSD);
         }
     }
 
@@ -724,8 +730,6 @@ LibTCPCloseCallback(void *arg)
     /* Check if the PCB was already "closed" but the client doesn't know it yet */
     if (!msg->Input.Close.Connection->SocketContext)
     {
-        if (msg->Input.Close.Callback)
-            TCPFinEventHandler(msg->Input.Close.Connection, ERR_CLSD);
         msg->Output.Close.Error = ERR_OK;
         goto done;
     }
