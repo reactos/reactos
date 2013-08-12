@@ -204,6 +204,16 @@ ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
 }
 
 NTSTATUS NTAPI
+ConDrvSetConsolePalette(IN PCONSOLE Console,
+                        IN PGRAPHICS_SCREEN_BUFFER Buffer,
+                        IN HPALETTE PaletteHandle,
+                        IN UINT Usage)
+{
+    DPRINT1("ConDrvSetConsolePalette is UNIMPLEMENTED but returns STATUS_SUCCESS\n");
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS NTAPI
 ConDrvGetConsoleCursorInfo(IN PCONSOLE Console,
                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
                            OUT PCONSOLE_CURSOR_INFO CursorInfo)

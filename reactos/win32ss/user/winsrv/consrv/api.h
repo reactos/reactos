@@ -25,6 +25,7 @@ CSR_API(SrvGetConsoleNumberOfInputEvents);
 
 /* conoutput.c */
 CSR_API(SrvInvalidateBitMapRect);
+CSR_API(SrvSetConsolePalette);
 CSR_API(SrvReadConsoleOutput);
 CSR_API(SrvWriteConsole);
 CSR_API(SrvWriteConsoleOutput);
