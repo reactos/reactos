@@ -35,6 +35,7 @@
 #define SAC_DBG_UTIL                        0x02
 #define SAC_DBG_INIT                        0x04
 #define SAC_DBG_MM                          0x1000
+#define SAC_DBG_MACHINE                     0x2000
 #define SAC_DBG(x, ...)                     \
     if (SACDebug & x)                       \
     {                                       \

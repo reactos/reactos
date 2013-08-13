@@ -72,12 +72,11 @@ typedef struct _HEADLESS_LOG_ENTRY
 //
 // Headless Bugcheck Information
 //
-typedef struct _HEADLESS_BLUE_SCREEN_DATA
+typedef struct _HEADLESS_CMD_SET_BLUE_SCREEN_DATA
 {
-	PUCHAR Property;
-	PUCHAR XMLData;
-	struct _HEADLESS_BLUE_SCREEN_DATA *Next;
-} HEADLESS_BLUE_SCREEN_DATA, * PHEADLESS_BLUE_SCREEN_DATA;
+    ULONG ValueIndex;
+    UCHAR Data[ANYSIZE_ARRAY];
+} HEADLESS_CMD_SET_BLUE_SCREEN_DATA, *PHEADLESS_CMD_SET_BLUE_SCREEN_DATA;
 
 //
 // Headless Control Structure, mostly for !SAC
@@ -89,7 +88,7 @@ typedef struct _HEADLESS_GLOBALS
 	PHEADLESS_LOG_ENTRY LogEntries;
 	PUCHAR TmpBuffer;
 	PUCHAR InputBuffer;
-	PHEADLESS_BLUE_SCREEN_DATA BlueScreenData;
+    PHEADLESS_CMD_SET_BLUE_SCREEN_DATA BlueScreenData;
 	union
 	{
 		struct
@@ -182,6 +181,11 @@ typedef struct _HEADLESS_RSP_QUERY_INFO
         } Serial;
     };
 } HEADLESS_RSP_QUERY_INFO, *PHEADLESS_RSP_QUERY_INFO;
+
+typedef struct _HEADLESS_CMD_ENABLE_TERMINAL
+{
+    BOOLEAN Enable;
+} HEADLESS_CMD_ENABLE_TERMINAL, *PHEADLESS_CMD_ENABLE_TERMINAL;
 
 typedef struct _HEADLESS_CMD_PUT_STRING
 {

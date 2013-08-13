@@ -93,6 +93,11 @@ MyAllocatePool(IN SIZE_T PoolSize,
                IN PCHAR File,
                IN ULONG Line)
 {
+    PVOID p;
+    p = ExAllocatePoolWithTag(NonPagedPool, PoolSize, Tag);
+    SAC_DBG(SAC_DBG_MM, "Returning block 0x%X.\n", p);
+    return p;
+#if 0
     KIRQL OldIrql;
     PSAC_MEMORY_LIST GlobalDescriptor, NewDescriptor;
     PSAC_MEMORY_ENTRY LocalDescriptor, NextDescriptor;
@@ -102,7 +107,7 @@ MyAllocatePool(IN SIZE_T PoolSize,
     SAC_DBG(SAC_DBG_MM, "Entering.\n");
 
     /* Acquire the memory allocation lock and align the size request */
-    KeAcquireSpinLock(&MemoryLock, &OldIrql);;
+    KeAcquireSpinLock(&MemoryLock, &OldIrql);
     PoolSize = ALIGN_UP(PoolSize, ULONGLONG);
 
 #if _USE_SAC_HEAP_ALLOCATOR_
@@ -220,12 +225,14 @@ MyAllocatePool(IN SIZE_T PoolSize,
     Buffer = LocalDescriptor + 1;
     RtlZeroMemory(Buffer, PoolSize);
     return Buffer;
+#endif
 }
 
 VOID
 NTAPI
 MyFreePool(IN PVOID *Block)
 {
+#if 0
     PSAC_MEMORY_ENTRY NextDescriptor;
     PSAC_MEMORY_ENTRY ThisDescriptor, FoundDescriptor;
     PSAC_MEMORY_ENTRY LocalDescriptor = (PVOID)((ULONG_PTR)(*Block) - sizeof(SAC_MEMORY_ENTRY));
@@ -323,10 +330,10 @@ MyFreePool(IN PVOID *Block)
     LocalSize = GlobalSize = 0;
     ThisDescriptor = (PVOID)LocalSize;
     NextDescriptor = (PVOID)GlobalSize;
-    GlobalDescriptor = (PVOID) ThisDescriptor;
+    GlobalDescriptor = (PVOID)ThisDescriptor;
     FoundDescriptor = (PVOID)GlobalDescriptor;
-    GlobalDescriptor = (PVOID) NextDescriptor;
-    NextDescriptor = (PVOID) FoundDescriptor;
+    GlobalDescriptor = (PVOID)NextDescriptor;
+    NextDescriptor = (PVOID)FoundDescriptor;
 
     /* Use the NT pool allocator*/
     ExFreePool(LocalDescriptor);
@@ -334,6 +341,8 @@ MyFreePool(IN PVOID *Block)
 
     /* Release the lock, delete the address, and return */
     KeReleaseSpinLock(&MemoryLock, OldIrql);
+#endif
+    ExFreePool(*Block);
     *Block = NULL;
     SAC_DBG(SAC_DBG_MM, "exiting.\n");
 }

@@ -461,7 +461,7 @@ Language=English
 .
 
 MessageId=98
-SymbolicName=SACDRV_98
+SymbolicName=SAC_NO_DATA_MSG
 Language=English
 None%0
 .
@@ -473,25 +473,25 @@ Language=English
 .
 
 MessageId=100
-SymbolicName=SACDRV_100
+SymbolicName=SAC_DATACENTER_SUITE_MSG
 Language=English
 Windows Server 2003 Datacenter Edition%0
 .
 
 MessageId=101
-SymbolicName=SACDRV_101
+SymbolicName=SAC_EMBEDDED_SUITE_MSG
 Language=English
 Windows Server 2003 Embedded%0
 .
 
 MessageId=102
-SymbolicName=SACDRV_102
+SymbolicName=SAC_ENTERPRISE_SUITE_MSG
 Language=English
 Windows Server 2003 Enterprise Edition%0
 .
 
 MessageId=103
-SymbolicName=SACDRV_103
+SymbolicName=SAC_NO_SUITE_MSG
 Language=English
 Windows Server 2003%0
 .
@@ -695,7 +695,7 @@ The specified gateway IP address is invalid.
 .
 
 MessageId=153
-SymbolicName=SACDRV_153
+SymbolicName=SAC_UNINITIALIZED_MSG
 Language=English
 not yet initialized%0
 .

@@ -77,6 +77,8 @@ CreateDeviceSecurityDescriptor(IN PDEVICE_OBJECT *DeviceObject)
     else
     {
         SAC_DBG(SAC_DBG_INIT, "SAC CreateDeviceSecurityDescriptor : Unable to create Raw ACL, error : %x\n", Status);
+        /* FIXME: Temporary hack */
+        Status = STATUS_SUCCESS;
         goto CleanupPath;
     }
 
@@ -377,7 +379,7 @@ InitializeGlobalData(IN PUNICODE_STRING RegistryPath,
     SAC_DBG(SAC_DBG_ENTRY_EXIT, "Entering.\n");
 
     /* If we already did this, bail out */
-    if (!GlobalDataInitialized) goto SuccessExit;
+    if (GlobalDataInitialized) goto SuccessExit;
 
     /* Setup the symbolic link for Win32 support */
     RtlInitUnicodeString(&LinkName, L"\\DosDevices\\SAC");
