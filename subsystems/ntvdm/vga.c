@@ -668,7 +668,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                     /* Yes, write the new value */
                     CharBuffer[i * Resolution.X + j] = CharInfo;
 
-                    /* Mark the specified pixel as changed */
+                    /* Mark the specified cell as changed */
                     VgaMarkForUpdate(i, j);
                 }
             }
@@ -786,11 +786,6 @@ VOID VgaRefreshDisplay(VOID)
     {
         if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
         {
-            /* Set the graphics mode palette */
-            //SetConsolePalette(GraphicsConsoleBuffer,
-            //                  PaletteHandle,
-            //                  SYSPAL_NOSTATIC256);
-
             /* Trigger a full update of the screen */
             NeedsUpdate = TRUE;
             UpdateRectangle.Left = 0;
@@ -1154,7 +1149,7 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     TextConsoleBuffer = TextHandle;
 
     /* Clear the VGA memory */
-    ZeroMemory(VgaMemory, VGA_NUM_BANKS * VGA_BANK_SIZE);
+    VgaClearMemory();
 
     /* Set the default video mode */
     BiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
