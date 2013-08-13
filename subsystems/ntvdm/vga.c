@@ -98,7 +98,7 @@ static BYTE VgaCrtcRegisters[VGA_CRTC_MAX_REG];
 static BYTE VgaAcIndex = VGA_AC_PAL_0_REG;
 static BOOLEAN VgaAcLatch = FALSE;
 static BYTE VgaAcRegisters[VGA_AC_MAX_REG];
-static BYTE VgaDacIndex = 0;
+static WORD VgaDacIndex = 0;
 static BOOLEAN VgaDacReadWrite = FALSE;
 static BYTE VgaDacRegisters[VGA_PALETTE_SIZE];
 static HPALETTE PaletteHandle = NULL;
@@ -957,7 +957,7 @@ BYTE VgaReadPort(WORD Port)
 
         case VGA_DAC_WRITE_INDEX:
         {
-            return VgaDacIndex;
+            return VgaDacIndex / 3;
         }
 
         case VGA_DAC_DATA:
@@ -1066,7 +1066,7 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         case VGA_DAC_READ_INDEX:
         {
             VgaDacReadWrite = FALSE;
-            VgaDacIndex = Data % VGA_PALETTE_SIZE;
+            VgaDacIndex = Data * 3;
 
             break;
         }
@@ -1074,7 +1074,7 @@ VOID VgaWritePort(WORD Port, BYTE Data)
         case VGA_DAC_WRITE_INDEX:
         {
             VgaDacReadWrite = TRUE;
-            VgaDacIndex = Data % VGA_PALETTE_SIZE;
+            VgaDacIndex = Data * 3;
 
             break;
         }
