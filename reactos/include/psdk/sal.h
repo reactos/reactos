@@ -1030,7 +1030,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Ret_writes_bytes_to_(size,count)
 //#define _Ret_writes_bytes_to_maybenull_(size,count)
 //#define _Ret_writes_maybenull_(size)
-//#define _Ret_writes_maybenull_z_(size)
+#define _Ret_writes_maybenull_z_(size)                              _SAL2_NAME(_Ret_writes_maybenull_z_) _Group_([SA_Post(Null=SA_Maybe,ValidElements="\n" _SA_SPECSTRIZE(size),NullTerminated=SA_Yes)] [SA_Post(Valid=SA_Yes)])
 //#define _Ret_writes_to_(size,count)
 //#define _Ret_writes_to_maybenull_(size,count)
 //#define _Ret_writes_z_(size)
