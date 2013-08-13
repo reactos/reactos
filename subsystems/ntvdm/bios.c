@@ -429,7 +429,11 @@ BOOLEAN BiosSetVideoMode(BYTE ModeNumber)
 
 BOOLEAN BiosSetVideoPage(BYTE PageNumber)
 {
+    /* Check if the page exists */
     if (PageNumber >= BIOS_MAX_PAGES) return FALSE;
+
+    /* Check if this is the same page */
+    if (PageNumber == Bda->VideoPage) return TRUE;
 
     /* Set the values in the BDA */
     Bda->VideoPage = PageNumber;
@@ -744,7 +748,6 @@ VOID BiosVideoService(LPWORD Stack)
         {
             BiosSetVideoMode(LOBYTE(Eax));
             VgaClearMemory();
-
             break;
         }
 
@@ -800,15 +803,7 @@ VOID BiosVideoService(LPWORD Stack)
         /* Select Active Display Page */
         case 0x05:
         {
-            /* Check if the page exists */
-            if (LOBYTE(Eax) >= BIOS_MAX_PAGES) break;
-
-            /* Check if this is the same page */
-            if (LOBYTE(Eax) == Bda->VideoPage) break;
-
-            /* Change the video page */
             BiosSetVideoPage(LOBYTE(Eax));
-
             break;
         }
 
