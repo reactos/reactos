@@ -1345,11 +1345,11 @@ HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 ; EMS Serial Administration Console Driver
-HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","Group",0x00000000,"EMS"
-HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","ImagePath",0x00020000,"system32\drivers\sacdrv.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","Group",0x00000000,"EMS"
+HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","ImagePath",0x00020000,"system32\drivers\sacdrv.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","Type",0x00010001,0x00000001
 
 ; Event logging service
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog",,0x00000010

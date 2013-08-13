@@ -673,11 +673,6 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     /* Allocate and minimalistic-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
 
-#ifdef _M_IX86
-    /* Setup redirection support */
-    WinLdrSetupEms(BootOptions);
-#endif
-
     /* Load Hive */
     UiDrawBackdrop();
     UiDrawProgressBarCenter(15, 100, "Loading system hive...");
@@ -710,6 +705,11 @@ LoadAndBootWindowsCommon(
     KERNEL_ENTRY_POINT KiSystemStartup;
     LPCSTR SystemRoot;
     TRACE("LoadAndBootWindowsCommon()\n");
+
+#ifdef _M_IX86
+    /* Setup redirection support */
+    WinLdrSetupEms((PCHAR)BootOptions);
+#endif
 
     /* Convert BootPath to SystemRoot */
     SystemRoot = strstr(BootPath, "\\");
