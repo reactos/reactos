@@ -716,7 +716,7 @@ VOID BiosVideoService(LPWORD Stack)
             };
 
             /* Call the internal function */
-            BiosScrollWindow((HIBYTE(Eax)== 0x06)
+            BiosScrollWindow((HIBYTE(Eax) == 0x06)
                              ? SCROLL_DIRECTION_UP : SCROLL_DIRECTION_DOWN,
                              LOBYTE(Eax),
                              Rectangle,
