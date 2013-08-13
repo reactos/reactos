@@ -15,7 +15,7 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static CONST DWORD MemoryBase[] = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
+static CONST DWORD MemoryBase[]  = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
 static CONST DWORD MemoryLimit[] = { 0xAFFFF, 0xAFFFF, 0xB7FFF, 0xBFFFF };
 
 static CONST COLORREF VgaDefaultPalette[VGA_MAX_COLORS] = 
@@ -318,7 +318,7 @@ static VOID VgaWriteDac(BYTE Data)
     /* Update the palette entry */
     SetPaletteEntries(PaletteHandle, PaletteIndex, 1, &Entry);
 
-    /* Set the palette changed flag */
+    /* Set the palette change flag */
     PaletteChanged = TRUE;
 
     /* Update the index */
@@ -340,7 +340,7 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     CONSOLE_GRAPHICS_BUFFER_INFO GraphicsBufferInfo;
     BYTE BitmapInfoBuffer[VGA_BITMAP_INFO_SIZE];
     LPBITMAPINFO BitmapInfo = (LPBITMAPINFO)BitmapInfoBuffer;
-    LPWORD PaletteIndex = (LPWORD)(BitmapInfoBuffer + sizeof(BITMAPINFOHEADER));
+    LPWORD PaletteIndex = (LPWORD)(BitmapInfo->bmiColors);
 
     /* Fill the bitmap info header */
     ZeroMemory(&BitmapInfo->bmiHeader, sizeof(BITMAPINFOHEADER));
@@ -350,7 +350,7 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
     BitmapInfo->bmiHeader.biBitCount = 8;
     BitmapInfo->bmiHeader.biPlanes = 1;
     BitmapInfo->bmiHeader.biCompression = BI_RGB;
-    BitmapInfo->bmiHeader.biSizeImage = Resolution->X * Resolution->Y;
+    BitmapInfo->bmiHeader.biSizeImage = Resolution->X * Resolution->Y /* * 1 == biBitCount / 8 */;
 
     /* Fill the palette data */
     for (i = 0; i < (VGA_PALETTE_SIZE / 3); i++) PaletteIndex[i] = (WORD)i;
@@ -377,6 +377,14 @@ static BOOL VgaEnterGraphicsMode(PCOORD Resolution)
 
     /* Set the active buffer */
     SetConsoleActiveScreenBuffer(GraphicsConsoleBuffer);
+
+    /* Set the graphics mode palette */
+    SetConsolePalette(GraphicsConsoleBuffer,
+                      PaletteHandle,
+                      SYSPAL_NOSTATIC256);
+
+    /* Clear the text mode flag */
+    TextMode = FALSE;
 
     return TRUE;
 }
@@ -413,6 +421,9 @@ static BOOL VgaEnterTextMode(PCOORD Resolution)
         return FALSE;
     }
 
+    /* Set the text mode flag */
+    TextMode = TRUE;
+
     return TRUE;
 }
 
@@ -423,9 +434,12 @@ static VOID VgaLeaveTextMode(VOID)
     ConsoleFramebuffer = NULL;
 }
 
-static VOID VgaUpdateMode(VOID)
+static VOID VgaChangeMode(VOID)
 {
     COORD Resolution = VgaGetDisplayResolution();
+
+    /* Reset the mode change flag */
+    // ModeChanged = FALSE;
 
     if (!TextMode)
     {
@@ -443,30 +457,22 @@ static VOID VgaUpdateMode(VOID)
     {
         /* Enter new text mode */
         if (!VgaEnterTextMode(&Resolution)) return;
-
-        /* Set the text mode flag */
-        TextMode = TRUE;
     }
     else
     {
         /* Enter 8-bit graphics mode */
         if (!VgaEnterGraphicsMode(&Resolution)) return;
-
-        /* Clear the text mode flag */
-        TextMode = FALSE;
-
-        /* Set the palette */
-        SetConsolePalette(GraphicsConsoleBuffer,
-                          PaletteHandle,
-                          SYSPAL_NOSTATIC256);
     }
 
-    /* Perform a full update */
+    /* Trigger a full update of the screen */
     NeedsUpdate = TRUE;
     UpdateRectangle.Left = 0;
     UpdateRectangle.Top = 0;
     UpdateRectangle.Right = Resolution.X;
     UpdateRectangle.Bottom = Resolution.Y;
+
+    /* Reset the mode change flag */
+    ModeChanged = FALSE;
 }
 
 static VOID VgaUpdateFramebuffer(VOID)
@@ -675,6 +681,9 @@ static VOID VgaUpdateTextCursor(VOID)
     /* Update the physical cursor */
     SetConsoleCursorInfo(TextConsoleBuffer, &CursorInfo);
     SetConsoleCursorPosition(TextConsoleBuffer, Position);
+
+    /* Reset the cursor move flag */
+    CursorMoved = FALSE;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -735,34 +744,29 @@ VOID VgaRefreshDisplay(VOID)
 
     DPRINT("VgaRefreshDisplay\n");
 
-    if (ModeChanged)
-    {
-        /* Change the display mode */
-        VgaUpdateMode();
+    /* Change the display mode */
+    if (ModeChanged) VgaChangeMode();
 
-        /* Reset the mode change flag */
-        ModeChanged = FALSE;
-    }
-
-    if (CursorMoved)
-    {
-        /* Change the text cursor location */
-        VgaUpdateTextCursor();
-
-        /* Reset the cursor move flag */
-        CursorMoved = FALSE;
-    }
+    /* Change the text cursor location */
+    if (CursorMoved) VgaUpdateTextCursor();
 
     if (PaletteChanged)
     {
         if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
         {
             /* Set the graphics mode palette */
-            SetConsolePalette(GraphicsConsoleBuffer,
-                              PaletteHandle,
-                              SYSPAL_NOSTATIC256);
+            //SetConsolePalette(GraphicsConsoleBuffer,
+            //                  PaletteHandle,
+            //                  SYSPAL_NOSTATIC256);
+
+            /* Trigger a full update of the screen */
+            NeedsUpdate = TRUE;
+            UpdateRectangle.Left = 0;
+            UpdateRectangle.Top = 0;
+            UpdateRectangle.Right = Resolution.X;
+            UpdateRectangle.Bottom = Resolution.Y;
         }
-        
+
         PaletteChanged = FALSE;
     }
 
@@ -1122,8 +1126,7 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
 
     /* Set the default video mode */
     BiosSetVideoMode(BIOS_DEFAULT_VIDEO_MODE);
-    VgaUpdateMode();
-    ModeChanged = FALSE;
+    VgaChangeMode();
 
     /* Get the data */
     Resolution = VgaGetDisplayResolution();
@@ -1168,7 +1171,7 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     if (Palette == NULL) return FALSE;
 
     /* Initialize the palette */
-    Palette->palVersion = 0x0100;
+    Palette->palVersion = 0x0300;
     Palette->palNumEntries = VGA_MAX_COLORS;
 
     /* Copy the colors of the default palette to the DAC and console palette */
@@ -1178,6 +1181,7 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
         Palette->palPalEntry[i].peRed = GetRValue(VgaDefaultPalette[i]);
         Palette->palPalEntry[i].peGreen = GetGValue(VgaDefaultPalette[i]);
         Palette->palPalEntry[i].peBlue = GetBValue(VgaDefaultPalette[i]);
+        Palette->palPalEntry[i].peFlags = 0;
 
         /* Set the DAC registers */
         VgaDacRegisters[i * 3] = VGA_COLOR_TO_DAC(GetRValue(VgaDefaultPalette[i]));
@@ -1191,8 +1195,8 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     /* Free the palette */
     HeapFree(GetProcessHeap(), 0, Palette);
 
-    /* Return success */
-    return TRUE;
+    /* Return success if the palette was successfully created */
+    return (PaletteHandle ? TRUE : FALSE);
 }
 
 /* EOF */
