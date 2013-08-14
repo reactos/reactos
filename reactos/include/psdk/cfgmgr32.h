@@ -22,6 +22,7 @@
 
 #pragma once
 
+#ifndef _CFGMGR32_H_
 #define _CFGMGR32_H_
 
 #include <cfg.h>
@@ -69,14 +70,14 @@ typedef DWORDLONG *PDWORDLONG;
 
 #endif /* NT_INCLUDED */
 
-typedef DWORD RETURN_TYPE;
+typedef _Return_type_success_(return == 0) DWORD RETURN_TYPE;
 typedef RETURN_TYPE CONFIGRET;
 
 typedef DWORD DEVNODE, DEVINST;
 typedef DEVNODE *PDEVNODE, *PDEVINST;
 
-typedef CHAR *DEVNODEID_A, *DEVINSTID_A;
-typedef WCHAR *DEVNODEID_W, *DEVINSTID_W;
+typedef _Null_terminated_ CHAR *DEVNODEID_A, *DEVINSTID_A;
+typedef _Null_terminated_ WCHAR *DEVNODEID_W, *DEVINSTID_W;
 
 #ifdef UNICODE
 typedef DEVNODEID_W DEVNODEID;
@@ -953,54 +954,54 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Add_Empty_Log_Conf(
-  OUT PLOG_CONF plcLogConf,
-  IN DEVINST dnDevInst,
-  IN PRIORITY Priority,
-  IN ULONG ulFlags);
+  _Out_ PLOG_CONF plcLogConf,
+  _In_ DEVINST dnDevInst,
+  _In_ PRIORITY Priority,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Add_Empty_Log_Conf_Ex(
-  OUT PLOG_CONF plcLogConf,
-  IN DEVINST dnDevInst,
-  IN PRIORITY Priority,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PLOG_CONF plcLogConf,
+  _In_ DEVINST dnDevInst,
+  _In_ PRIORITY Priority,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Add_IDA(
-  IN DEVINST dnDevInst,
-  IN PSTR pszID,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ PSTR pszID,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Add_ID_ExA(
-  IN DEVINST dnDevInst,
-  IN PSTR pszID,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _In_ PSTR pszID,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Add_ID_ExW(
-  IN DEVINST dnDevInst,
-  IN PWSTR pszID,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _In_ PWSTR pszID,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Add_IDW(
-  IN DEVINST dnDevInst,
-  IN PWSTR pszID,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ PWSTR pszID,
+  _In_ ULONG ulFlags);
 
 #ifdef UNICODE
 #define CM_Add_ID CM_Add_IDW
@@ -1014,47 +1015,47 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Add_Range(
-  IN DWORDLONG ullStartValue,
-  IN DWORDLONG ullEndValue,
-  IN RANGE_LIST rlh,
-  IN ULONG ulFlags);
+  _In_ DWORDLONG ullStartValue,
+  _In_ DWORDLONG ullEndValue,
+  _In_ RANGE_LIST rlh,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Add_Res_Des(
-  OUT PRES_DES prdResDes OPTIONAL,
-  IN LOG_CONF lcLogConf,
-  IN RESOURCEID ResourceID,
-  IN PCVOID ResourceData,
-  IN ULONG ResourceLen,
-  IN ULONG ulFlags);
+  _Out_opt_ PRES_DES prdResDes,
+  _In_ LOG_CONF lcLogConf,
+  _In_ RESOURCEID ResourceID,
+  _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
+  _In_ ULONG ResourceLen,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Add_Res_Des_Ex(
-  OUT PRES_DES prdResDes OPTIONAL,
-  IN LOG_CONF lcLogConf,
-  IN RESOURCEID ResourceID,
-  IN PCVOID ResourceData,
-  IN ULONG ResourceLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_opt_ PRES_DES prdResDes,
+  _In_ LOG_CONF lcLogConf,
+  _In_ RESOURCEID ResourceID,
+  _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
+  _In_ ULONG ResourceLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Connect_MachineA(
-  IN PCSTR UNCServerName OPTIONAL,
-  OUT PHMACHINE phMachine);
+  _In_opt_ PCSTR UNCServerName,
+  _Out_ PHMACHINE phMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Connect_MachineW(
-  IN PCWSTR UNCServerName OPTIONAL,
-  OUT PHMACHINE phMachine);
+  _In_opt_ PCWSTR UNCServerName,
+  _Out_ PHMACHINE phMachine);
 
 #ifdef UNICODE
 #define CM_Connect_Machine CM_Connect_MachineW
@@ -1066,39 +1067,39 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Create_DevNodeA(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINSTID_A pDeviceID,
-  IN DEVINST dnParent,
-  IN ULONG ulFlags);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINSTID_A pDeviceID,
+  _In_ DEVINST dnParent,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Create_DevNodeW(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINSTID_W pDeviceID,
-  IN DEVINST dnParent,
-  IN ULONG ulFlags);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINSTID_W pDeviceID,
+  _In_ DEVINST dnParent,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Create_DevNode_ExA(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINSTID_A pDeviceID,
-  IN DEVINST dnParent,
-  IN ULONG ulFlags,
-  IN HANDLE hMachine);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINSTID_A pDeviceID,
+  _In_ DEVINST dnParent,
+  _In_ ULONG ulFlags,
+  _In_opt_ HANDLE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Create_DevNode_ExW(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINSTID_W pDeviceID,
-  IN DEVINST dnParent,
-  IN ULONG ulFlags,
-  IN HANDLE hMachine);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINSTID_W pDeviceID,
+  _In_ DEVINST dnParent,
+  _In_ ULONG ulFlags,
+  _In_opt_ HANDLE hMachine);
 
 #define CM_Create_DevInstW CM_Create_DevNodeW
 #define CM_Create_DevInstA CM_Create_DevNodeA
@@ -1120,40 +1121,40 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Create_Range_List(
-  OUT PRANGE_LIST prlh,
-  IN ULONG ulFlags);
+  _Out_ PRANGE_LIST prlh,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Delete_Class_Key(
-  IN LPGUID ClassGuid,
-  IN ULONG ulFlags);
+  _In_ LPGUID ClassGuid,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Delete_Class_Key_Ex(
-  IN LPGUID ClassGuid,
-  IN ULONG ulFlags,
-  IN HANDLE hMachine);
+  _In_ LPGUID ClassGuid,
+  _In_ ULONG ulFlags,
+  _In_opt_ HANDLE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Delete_DevNode_Key(
-  IN DEVNODE dnDevNode,
-  IN ULONG ulHardwareProfile,
-  IN ULONG ulFlags);
+  _In_ DEVNODE dnDevNode,
+  _In_ ULONG ulHardwareProfile,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Delete_DevNode_Key_Ex(
-  IN DEVNODE dnDevNode,
-  IN ULONG ulHardwareProfile,
-  IN ULONG ulFlags,
-  IN HANDLE hMachine);
+  _In_ DEVNODE dnDevNode,
+  _In_ ULONG ulHardwareProfile,
+  _In_ ULONG ulFlags,
+  _In_opt_ HANDLE hMachine);
 
 #define CM_Delete_DevInst_Key CM_Delete_DevNode_Key
 #define CM_Delete_DevInst_Key_Ex CM_Delete_DevNode_Key_Ex
@@ -1162,48 +1163,48 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Delete_Range(
-  IN DWORDLONG ullStartValue,
-  IN DWORDLONG ullEndValue,
-  IN RANGE_LIST rlh,
-  IN ULONG ulFlags);
+  _In_ DWORDLONG ullStartValue,
+  _In_ DWORDLONG ullEndValue,
+  _In_ RANGE_LIST rlh,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Detect_Resource_Conflict(
-  IN DEVINST dnDevInst,
-  IN RESOURCEID ResourceID,
-  IN PCVOID ResourceData,
-  IN ULONG ResourceLen,
-  OUT PBOOL pbConflictDetected,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ RESOURCEID ResourceID,
+  _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
+  _In_ ULONG ResourceLen,
+  _Out_ PBOOL pbConflictDetected,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Detect_Resource_Conflict_Ex(
-  IN DEVINST dnDevInst,
-  IN RESOURCEID ResourceID,
-  IN PCVOID ResourceData,
-  IN ULONG ResourceLen,
-  OUT PBOOL pbConflictDetected,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnDevInst,
+  _In_ RESOURCEID ResourceID,
+  _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
+  _In_ ULONG ResourceLen,
+  _Out_ PBOOL pbConflictDetected,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Disable_DevNode(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Disable_DevNode_Ex(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Disable_DevInst CM_Disable_DevNode
 #define CM_Disable_DevInst_Ex CM_Disable_DevNode_Ex
@@ -1212,30 +1213,30 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Disconnect_Machine(
-  IN HMACHINE hMachine OPTIONAL);
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Dup_Range_List(
-  IN RANGE_LIST rlhOld,
-  IN RANGE_LIST rlhNew,
-  IN ULONG ulFlags);
+  _In_ RANGE_LIST rlhOld,
+  _In_ RANGE_LIST rlhNew,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Enable_DevNode(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Enable_DevNode_Ex(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Enable_DevInst CM_Enable_DevNode
 #define CM_Enable_DevInst_Ex CM_Enable_DevNode_Ex
@@ -1244,56 +1245,56 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Enumerate_Classes(
-  IN ULONG ulClassIndex,
-  OUT LPGUID ClassGuid,
-  IN ULONG ulFlags);
+  _In_ ULONG ulClassIndex,
+  _Out_ LPGUID ClassGuid,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Enumerate_Classes_Ex(
-  IN ULONG ulClassIndex,
-  OUT LPGUID ClassGuid,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ ULONG ulClassIndex,
+  _Out_ LPGUID ClassGuid,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Enumerate_EnumeratorsA(
-  IN ULONG ulEnumIndex,
-  OUT PCHAR Buffer,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ ULONG ulEnumIndex,
+  _Out_writes_(*pulLength) PCHAR Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Enumerate_Enumerators_ExA(
-  IN ULONG ulEnumIndex,
-  OUT PCHAR Buffer,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ ULONG ulEnumIndex,
+  _Out_writes_(*pulLength) PCHAR Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Enumerate_Enumerators_ExW(
-  IN ULONG ulEnumIndex,
-  OUT PWCHAR Buffer,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ ULONG ulEnumIndex,
+  _Out_writes_(*pulLength) PWCHAR Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Enumerate_EnumeratorsW(
-  IN ULONG ulEnumIndex,
-  OUT PWCHAR Buffer,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ ULONG ulEnumIndex,
+  _Out_writes_(*pulLength) PWCHAR Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 #ifdef UNICODE
 #define CM_Enumerate_Enumerators CM_Enumerate_EnumeratorsW
@@ -1307,135 +1308,135 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Find_Range(
-  OUT PDWORDLONG pullStart,
-  IN DWORDLONG ullStart,
-  IN ULONG ulLength,
-  IN DWORDLONG ullAlignment,
-  IN DWORDLONG ullEnd,
-  IN RANGE_LIST rlh,
-  IN ULONG ulFlags);
+  _Out_ PDWORDLONG pullStart,
+  _In_ DWORDLONG ullStart,
+  _In_ ULONG ulLength,
+  _In_ DWORDLONG ullAlignment,
+  _In_ DWORDLONG ullEnd,
+  _In_ RANGE_LIST rlh,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_First_Range(
-  IN RANGE_LIST rlh,
-  OUT PDWORDLONG pullStart,
-  OUT PDWORDLONG pullEnd,
-  OUT PRANGE_ELEMENT preElement,
-  IN ULONG ulFlags);
+  _In_ RANGE_LIST rlh,
+  _Out_ PDWORDLONG pullStart,
+  _Out_ PDWORDLONG pullEnd,
+  _Out_ PRANGE_ELEMENT preElement,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Free_Log_Conf(
-  IN LOG_CONF lcLogConfToBeFreed,
-  IN ULONG ulFlags);
+  _In_ LOG_CONF lcLogConfToBeFreed,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Free_Log_Conf_Ex(
-  IN LOG_CONF lcLogConfToBeFreed,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ LOG_CONF lcLogConfToBeFreed,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Free_Log_Conf_Handle(
-  IN LOG_CONF lcLogConf);
+  _In_ LOG_CONF lcLogConf);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Free_Range_List(
-  IN RANGE_LIST rlh,
-  IN ULONG ulFlags);
+  _In_ RANGE_LIST rlh,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Free_Res_Des(
-  OUT PRES_DES prdResDes,
-  IN RES_DES rdResDes,
-  IN ULONG ulFlags);
+  _Out_opt_ PRES_DES prdResDes,
+  _In_ RES_DES rdResDes,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Free_Res_Des_Ex(
-  OUT PRES_DES prdResDes,
-  IN RES_DES rdResDes,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_opt_ PRES_DES prdResDes,
+  _In_ RES_DES rdResDes,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Free_Res_Des_Handle(
-  IN RES_DES rdResDes);
+  _In_ RES_DES rdResDes);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Free_Resource_Conflict_Handle(
-  IN CONFLICT_LIST clConflictList);
+  _In_ CONFLICT_LIST clConflictList);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Child(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Child_Ex(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_NameA(
-  IN LPGUID ClassGuid,
-  OUT PCHAR Buffer,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ LPGUID ClassGuid,
+  _Out_writes_opt_(*pulLength) PCHAR Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_NameW(
-  IN LPGUID ClassGuid,
-  OUT PWCHAR Buffer,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ LPGUID ClassGuid,
+  _Out_writes_opt_(*pulLength) PWCHAR Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_Name_ExA(
-  IN LPGUID ClassGuid,
-  OUT PCHAR Buffer,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ LPGUID ClassGuid,
+  _Out_writes_opt_(*pulLength) PCHAR Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_Name_ExW(
-  IN LPGUID ClassGuid,
-  OUT PWCHAR Buffer,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ LPGUID ClassGuid,
+  _Out_writes_opt_(*pulLength) PWCHAR Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Get_Class_Name CM_Get_Class_NameW
@@ -1449,39 +1450,39 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_Key_NameA(
-  IN LPGUID ClassGuid,
-  OUT LPSTR pszKeyName,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ LPGUID ClassGuid,
+  _Out_writes_opt_(*pulLength) LPSTR pszKeyName,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_Key_NameW(
-  IN LPGUID ClassGuid,
-  OUT LPWSTR pszKeyName,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ LPGUID ClassGuid,
+  _Out_writes_opt_(*pulLength) LPWSTR pszKeyName,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_Key_Name_ExA(
-  IN LPGUID ClassGuid,
-  OUT LPSTR pszKeyName,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ LPGUID ClassGuid,
+  _Out_writes_opt_(*pulLength) LPSTR pszKeyName,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_Key_Name_ExW(
-  IN LPGUID ClassGuid,
-  OUT LPWSTR pszKeyName,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ LPGUID ClassGuid,
+  _Out_writes_opt_(*pulLength) LPWSTR pszKeyName,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Get_Class_Key_Name CM_Get_Class_Key_NameW
@@ -1495,56 +1496,56 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Depth(
-  OUT PULONG pulDepth,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulDepth,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Depth_Ex(
-  OUT PULONG pulDepth,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PULONG pulDepth,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_IDA(
-  IN DEVINST dnDevInst,
-  OUT PCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _Out_writes_(BufferLen) PCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_ExA(
-  IN DEVINST dnDevInst,
-  OUT PCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _Out_writes_(BufferLen) PCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_ExW(
-  IN DEVINST dnDevInst,
-  OUT PWCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _Out_writes_(BufferLen) PWCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_IDW(
-  IN DEVINST dnDevInst,
-  OUT PWCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _Out_writes_(BufferLen) PWCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags);
 
 #ifdef UNICODE
 #define CM_Get_Device_ID CM_Get_Device_IDW
@@ -1558,39 +1559,39 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_ListA(
-  IN PCSTR pszFilter OPTIONAL,
-  OUT PCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags);
+  _In_opt_ PCSTR pszFilter,
+  _Out_writes_(BufferLen) PCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_List_ExA(
-  IN PCSTR pszFilter OPTIONAL,
-  OUT PCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_opt_ PCSTR pszFilter,
+  _Out_writes_(BufferLen) PCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_List_ExW(
-  IN PCWSTR pszFilter OPTIONAL,
-  OUT PWCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_opt_ PCWSTR pszFilter,
+  _Out_writes_(BufferLen) PWCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_ListW(
-  IN PCWSTR pszFilter OPTIONAL,
-  OUT PWCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags);
+  _In_opt_ PCWSTR pszFilter,
+  _Out_writes_(BufferLen) PWCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags);
 
 #ifdef UNICODE
 #define CM_Get_Device_ID_List CM_Get_Device_ID_ListW
@@ -1604,35 +1605,35 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_List_SizeA(
-  OUT PULONG pulLen,
-  IN PCSTR pszFilter OPTIONAL,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulLen,
+  _In_opt_ PCSTR pszFilter,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_List_Size_ExA(
-  OUT PULONG pulLen,
-  IN PCSTR pszFilter OPTIONAL,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PULONG pulLen,
+  _In_opt_ PCSTR pszFilter,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_List_Size_ExW(
-  OUT PULONG pulLen,
-  IN PCWSTR pszFilter OPTIONAL,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PULONG pulLen,
+  _In_opt_ PCWSTR pszFilter,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_List_SizeW(
-  OUT PULONG pulLen,
-  IN PCWSTR pszFilter OPTIONAL,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulLen,
+  _In_opt_ PCWSTR pszFilter,
+  _In_ ULONG ulFlags);
 
 #ifdef UNICODE
 #define CM_Get_Device_ID_List_Size CM_Get_Device_ID_List_SizeW
@@ -1646,64 +1647,64 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_Size(
-  OUT PULONG pulLen,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulLen,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_ID_Size_Ex(
-  OUT PULONG pulLen,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PULONG pulLen,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Registry_PropertyA(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProperty,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProperty,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Registry_PropertyW(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProperty,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProperty,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Registry_Property_ExA(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProperty,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProperty,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Registry_Property_ExW(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProperty,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProperty,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Get_DevInst_Registry_PropertyW CM_Get_DevNode_Registry_PropertyW
 #define CM_Get_DevInst_Registry_PropertyA CM_Get_DevNode_Registry_PropertyA
@@ -1728,47 +1729,47 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Custom_PropertyA(
-  IN DEVINST dnDevInst,
-  IN PCSTR pszCustomPropertyName,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ PCSTR pszCustomPropertyName,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Custom_PropertyW(
-  IN DEVINST dnDevInst,
-  IN PCWSTR pszCustomPropertyName,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ PCWSTR pszCustomPropertyName,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Custom_Property_ExA(
-  IN DEVINST dnDevInst,
-  IN PCSTR pszCustomPropertyName,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnDevInst,
+  _In_ PCSTR pszCustomPropertyName,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Custom_Property_ExW(
-  IN DEVINST dnDevInst,
-  IN PCWSTR pszCustomPropertyName,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnDevInst,
+  _In_ PCWSTR pszCustomPropertyName,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Get_DevInst_Custom_PropertyW     CM_Get_DevNode_Custom_PropertyW
 #define CM_Get_DevInst_Custom_PropertyA     CM_Get_DevNode_Custom_PropertyA
@@ -1792,20 +1793,20 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Status(
-  OUT PULONG pulStatus,
-  OUT PULONG pulProblemNumber,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulStatus,
+  _Out_ PULONG pulProblemNumber,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_DevNode_Status_Ex(
-  OUT PULONG pulStatus,
-  OUT PULONG pulProblemNumber,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PULONG pulStatus,
+  _Out_ PULONG pulProblemNumber,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Get_DevInst_Status CM_Get_DevNode_Status
 #define CM_Get_DevInst_Status_Ex CM_Get_DevNode_Status_Ex
@@ -1814,67 +1815,67 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_First_Log_Conf(
-  OUT PLOG_CONF plcLogConf OPTIONAL,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _Out_opt_ PLOG_CONF plcLogConf,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_First_Log_Conf_Ex(
-  OUT PLOG_CONF plcLogConf OPTIONAL,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _Out_opt_ PLOG_CONF plcLogConf,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Global_State(
-  OUT PULONG pulState,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulState,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Global_State_Ex(
-  OUT PULONG pulState,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PULONG pulState,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Hardware_Profile_InfoA(
-  IN ULONG ulIndex,
-  OUT PHWPROFILEINFO_A pHWProfileInfo,
-  IN ULONG ulFlags);
+  _In_ ULONG ulIndex,
+  _Out_ PHWPROFILEINFO_A pHWProfileInfo,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Hardware_Profile_Info_ExA(
-  IN ULONG ulIndex,
-  OUT PHWPROFILEINFO_A pHWProfileInfo,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ ULONG ulIndex,
+  _Out_ PHWPROFILEINFO_A pHWProfileInfo,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Hardware_Profile_InfoW(
-  IN ULONG ulIndex,
-  OUT PHWPROFILEINFO_W pHWProfileInfo,
-  IN ULONG ulFlags);
+  _In_ ULONG ulIndex,
+  _Out_ PHWPROFILEINFO_W pHWProfileInfo,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Hardware_Profile_Info_ExW(
-  IN ULONG ulIndex,
-  OUT PHWPROFILEINFO_W pHWProfileInfo,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ ULONG ulIndex,
+  _Out_ PHWPROFILEINFO_W pHWProfileInfo,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Get_Hardware_Profile_Info      CM_Get_Hardware_Profile_InfoW
@@ -1888,39 +1889,39 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_HW_Prof_FlagsA(
-  IN DEVINSTID_A szDevInstName,
-  IN ULONG ulHardwareProfile,
-  OUT PULONG pulValue,
-  IN ULONG ulFlags);
+  _In_ DEVINSTID_A szDevInstName,
+  _In_ ULONG ulHardwareProfile,
+  _Out_ PULONG pulValue,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_HW_Prof_FlagsW(
-  IN DEVINSTID_W szDevInstName,
-  IN ULONG ulHardwareProfile,
-  OUT PULONG pulValue,
-  IN ULONG ulFlags);
+  _In_ DEVINSTID_W szDevInstName,
+  _In_ ULONG ulHardwareProfile,
+  _Out_ PULONG pulValue,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_HW_Prof_Flags_ExA(
-  IN DEVINSTID_A szDevInstName,
-  IN ULONG ulHardwareProfile,
-  OUT PULONG pulValue,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINSTID_A szDevInstName,
+  _In_ ULONG ulHardwareProfile,
+  _Out_ PULONG pulValue,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_HW_Prof_Flags_ExW(
-  IN DEVINSTID_W szDevInstName,
-  IN ULONG ulHardwareProfile,
-  OUT PULONG pulValue,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINSTID_W szDevInstName,
+  _In_ ULONG ulHardwareProfile,
+  _Out_ PULONG pulValue,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Get_HW_Prof_Flags CM_Get_HW_Prof_FlagsW
@@ -1934,43 +1935,43 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_AliasA(
-  IN LPCSTR pszDeviceInterface,
-  IN LPGUID AliasInterfaceGuid,
-  OUT LPSTR pszAliasDeviceInterface,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ LPCSTR pszDeviceInterface,
+  _In_ LPGUID AliasInterfaceGuid,
+  _Out_writes_(*pulLength) LPSTR pszAliasDeviceInterface,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_AliasW(
-  IN LPCWSTR pszDeviceInterface,
-  IN LPGUID AliasInterfaceGuid,
-  OUT LPWSTR pszAliasDeviceInterface,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ LPCWSTR pszDeviceInterface,
+  _In_ LPGUID AliasInterfaceGuid,
+  _Out_writes_(*pulLength) LPWSTR pszAliasDeviceInterface,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_Alias_ExA(
-  IN LPCSTR pszDeviceInterface,
-  IN LPGUID AliasInterfaceGuid,
-  OUT LPSTR pszAliasDeviceInterface,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPCSTR pszDeviceInterface,
+  _In_ LPGUID AliasInterfaceGuid,
+  _Out_writes_(*pulLength) LPSTR pszAliasDeviceInterface,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_Alias_ExW(
-  IN LPCWSTR pszDeviceInterface,
-  IN LPGUID AliasInterfaceGuid,
-  OUT LPWSTR pszAliasDeviceInterface,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPCWSTR pszDeviceInterface,
+  _In_ LPGUID AliasInterfaceGuid,
+  _Out_writes_(*pulLength) LPWSTR pszAliasDeviceInterface,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Get_Device_Interface_Alias     CM_Get_Device_Interface_AliasW
@@ -1984,43 +1985,43 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_ListA(
-  IN LPGUID InterfaceClassGuid,
-  IN DEVINSTID_A pDeviceID OPTIONAL,
-  OUT PCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags);
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ DEVINSTID_A pDeviceID,
+  _Out_writes_(BufferLen) PCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_ListW(
-  IN LPGUID InterfaceClassGuid,
-  IN DEVINSTID_W pDeviceID OPTIONAL,
-  OUT PWCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags);
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ DEVINSTID_W pDeviceID,
+  _Out_writes_(BufferLen) PWCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_List_ExA(
-  IN LPGUID InterfaceClassGuid,
-  IN DEVINSTID_A pDeviceID OPTIONAL,
-  OUT PCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ DEVINSTID_A pDeviceID,
+  _Out_writes_(BufferLen) PCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_List_ExW(
-  IN LPGUID InterfaceClassGuid,
-  IN DEVINSTID_W pDeviceID OPTIONAL,
-  OUT PWCHAR Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ DEVINSTID_W pDeviceID,
+  _Out_writes_(BufferLen) PWCHAR Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Get_Device_Interface_List     CM_Get_Device_Interface_ListW
@@ -2034,39 +2035,39 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_List_SizeA(
-  OUT PULONG pulLen,
-  IN LPGUID InterfaceClassGuid,
-  IN DEVINSTID_A pDeviceID OPTIONAL,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulLen,
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ DEVINSTID_A pDeviceID,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_List_SizeW(
-  OUT PULONG pulLen,
-  IN LPGUID InterfaceClassGuid,
-  IN DEVINSTID_W pDeviceID OPTIONAL,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulLen,
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ DEVINSTID_W pDeviceID,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_List_Size_ExA(
-  OUT PULONG pulLen,
-  IN LPGUID InterfaceClassGuid,
-  IN DEVINSTID_A pDeviceID OPTIONAL,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _Out_ PULONG pulLen,
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ DEVINSTID_A pDeviceID,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Device_Interface_List_Size_ExW(
-  OUT PULONG pulLen,
-  IN LPGUID InterfaceClassGuid,
-  IN DEVINSTID_W pDeviceID OPTIONAL,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _Out_ PULONG pulLen,
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ DEVINSTID_W pDeviceID,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Get_Device_Interface_List_Size     CM_Get_Device_Interface_List_SizeW
@@ -2080,132 +2081,132 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Log_Conf_Priority(
-  IN LOG_CONF lcLogConf,
-  OUT PPRIORITY pPriority,
-  IN ULONG ulFlags);
+  _In_ LOG_CONF lcLogConf,
+  _Out_ PPRIORITY pPriority,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Log_Conf_Priority_Ex(
-  IN LOG_CONF lcLogConf,
-  OUT PPRIORITY pPriority,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ LOG_CONF lcLogConf,
+  _Out_ PPRIORITY pPriority,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Next_Log_Conf(
-  OUT PLOG_CONF plcLogConf OPTIONAL,
-  IN LOG_CONF lcLogConf,
-  IN ULONG ulFlags);
+  _Out_opt_ PLOG_CONF plcLogConf,
+  _In_ LOG_CONF lcLogConf,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Next_Log_Conf_Ex(
-  OUT PLOG_CONF plcLogConf OPTIONAL,
-  IN LOG_CONF lcLogConf,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_opt_ PLOG_CONF plcLogConf,
+  _In_ LOG_CONF lcLogConf,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Next_Res_Des(
-  OUT PRES_DES prdResDes,
-  IN RES_DES rdResDes,
-  IN RESOURCEID ForResource,
-  OUT PRESOURCEID pResourceID,
-  IN ULONG ulFlags);
+  _Out_ PRES_DES prdResDes,
+  _In_ RES_DES rdResDes,
+  _In_ RESOURCEID ForResource,
+  _Out_opt_ PRESOURCEID pResourceID,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Next_Res_Des_Ex(
-  OUT PRES_DES prdResDes,
-  IN RES_DES rdResDes,
-  IN RESOURCEID ForResource,
-  OUT PRESOURCEID pResourceID,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PRES_DES prdResDes,
+  _In_ RES_DES rdResDes,
+  _In_ RESOURCEID ForResource,
+  _Out_opt_ PRESOURCEID pResourceID,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Parent(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Parent_Ex(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Res_Des_Data(
-  IN RES_DES rdResDes,
-  OUT PVOID Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags);
+  _In_ RES_DES rdResDes,
+  _Out_writes_bytes_(BufferLen) PVOID Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Res_Des_Data_Ex(
-  IN RES_DES rdResDes,
-  OUT PVOID Buffer,
-  IN ULONG BufferLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ RES_DES rdResDes,
+  _Out_writes_bytes_(BufferLen) PVOID Buffer,
+  _In_ ULONG BufferLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Res_Des_Data_Size(
-  OUT PULONG pulSize,
-  IN RES_DES rdResDes,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulSize,
+  _In_ RES_DES rdResDes,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Res_Des_Data_Size_Ex(
-  OUT PULONG pulSize,
-  IN RES_DES rdResDes,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PULONG pulSize,
+  _In_ RES_DES rdResDes,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Resource_Conflict_Count(
-  IN CONFLICT_LIST clConflictList,
-  OUT PULONG pulCount);
+  _In_ CONFLICT_LIST clConflictList,
+  _Out_ PULONG pulCount);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Resource_Conflict_DetailsA(
-  IN CONFLICT_LIST clConflictList,
-  IN ULONG ulIndex,
-  IN OUT PCONFLICT_DETAILS_A pConflictDetails);
+  _In_ CONFLICT_LIST clConflictList,
+  _In_ ULONG ulIndex,
+  _Inout_ PCONFLICT_DETAILS_A pConflictDetails);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Resource_Conflict_DetailsW(
-  IN CONFLICT_LIST clConflictList,
-  IN ULONG ulIndex,
-  IN OUT PCONFLICT_DETAILS_W pConflictDetails);
+  _In_ CONFLICT_LIST clConflictList,
+  _In_ ULONG ulIndex,
+  _Inout_ PCONFLICT_DETAILS_W pConflictDetails);
 
 #ifdef UNICODE
 #define CM_Get_Resource_Conflict_Details CM_Get_Resource_Conflict_DetailsW
@@ -2217,47 +2218,47 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_Registry_PropertyW(
-  IN LPGUID ClassGuid,
-  IN ULONG ulProperty,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPGUID ClassGuid,
+  _In_ ULONG ulProperty,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_Class_Registry_PropertyW(
-  IN LPGUID ClassGuid,
-  IN ULONG ulProperty,
-  IN PCVOID Buffer OPTIONAL,
-  IN ULONG ulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPGUID ClassGuid,
+  _In_ ULONG ulProperty,
+  _In_reads_bytes_opt_(ulLength) PCVOID Buffer,
+  _In_ ULONG ulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Class_Registry_PropertyA(
-  IN LPGUID ClassGuid,
-  IN ULONG ulProperty,
-  OUT PULONG pulRegDataType OPTIONAL,
-  OUT PVOID Buffer OPTIONAL,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPGUID ClassGuid,
+  _In_ ULONG ulProperty,
+  _Out_opt_ PULONG pulRegDataType,
+  _Out_writes_bytes_opt_(*pulLength) PVOID Buffer,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_Class_Registry_PropertyA(
-  IN LPGUID ClassGuid,
-  IN ULONG ulProperty,
-  IN PCVOID Buffer OPTIONAL,
-  IN  ULONG ulLength,
-  IN  ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPGUID ClassGuid,
+  _In_ ULONG ulProperty,
+  _In_reads_bytes_opt_(ulLength) PCVOID Buffer,
+  _In_ ULONG ulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Get_Class_Registry_Property CM_Get_Class_Registry_PropertyW
@@ -2271,18 +2272,18 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Sibling(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINST DevInst,
-  IN ULONG ulFlags);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINST DevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Get_Sibling_Ex(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINST DevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PDEVINST pdnDevInst,
+  _In_ DEVINST DevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 WORD
@@ -2293,7 +2294,7 @@ CMAPI
 WORD
 WINAPI
 CM_Get_Version_Ex(
-  IN HMACHINE hMachine);
+  _In_opt_ HMACHINE hMachine);
 
 #if (WINVER >= _WIN32_WINNT_WINXP)
 
@@ -2301,14 +2302,14 @@ CMAPI
 BOOL
 WINAPI
 CM_Is_Version_Available(
-  IN WORD wVersion);
+  _In_ WORD wVersion);
 
 CMAPI
 BOOL
 WINAPI
 CM_Is_Version_Available_Ex(
-  IN WORD wVersion,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ WORD wVersion,
+  _In_opt_ HMACHINE hMachine);
 
 #endif /* (WINVER >= _WIN32_WINNT_WINXP) */
 
@@ -2316,66 +2317,66 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Intersect_Range_List(
-  IN RANGE_LIST rlhOld1,
-  IN RANGE_LIST rlhOld2,
-  IN RANGE_LIST rlhNew,
-  IN ULONG ulFlags);
+  _In_ RANGE_LIST rlhOld1,
+  _In_ RANGE_LIST rlhOld2,
+  _In_ RANGE_LIST rlhNew,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Invert_Range_List(
-  IN RANGE_LIST rlhOld,
-  IN RANGE_LIST rlhNew,
-  IN DWORDLONG ullMaxValue,
-  IN ULONG ulFlags);
+  _In_ RANGE_LIST rlhOld,
+  _In_ RANGE_LIST rlhNew,
+  _In_ DWORDLONG ullMaxValue,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Is_Dock_Station_Present(
-  OUT PBOOL pbPresent);
+  _Out_ PBOOL pbPresent);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Is_Dock_Station_Present_Ex(
-  OUT PBOOL pbPresent,
-  IN HMACHINE hMachine OPTIONAL);
+  _Out_ PBOOL pbPresent,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Locate_DevNodeA(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINSTID_A pDeviceID OPTIONAL,
-  IN ULONG ulFlags);
+  _Out_ PDEVINST pdnDevInst,
+  _In_opt_ DEVINSTID_A pDeviceID,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Locate_DevNode_ExA(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINSTID_A pDeviceID OPTIONAL,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PDEVINST pdnDevInst,
+  _In_opt_ DEVINSTID_A pDeviceID,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Locate_DevNode_ExW(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINSTID_W pDeviceID OPTIONAL,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PDEVINST pdnDevInst,
+  _In_opt_ DEVINSTID_W pDeviceID,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Locate_DevNodeW(
-  OUT PDEVINST pdnDevInst,
-  IN DEVINSTID_W pDeviceID OPTIONAL,
-  IN ULONG ulFlags);
+  _Out_ PDEVINST pdnDevInst,
+  _In_opt_ DEVINSTID_W pDeviceID,
+  _In_ ULONG ulFlags);
 
 #define CM_Locate_DevInstA CM_Locate_DevNodeA
 #define CM_Locate_DevInstW CM_Locate_DevNodeW
@@ -2398,50 +2399,50 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Merge_Range_List(
-  IN RANGE_LIST rlhOld1,
-  IN RANGE_LIST rlhOld2,
-  IN RANGE_LIST rlhNew,
-  IN ULONG ulFlags);
+  _In_ RANGE_LIST rlhOld1,
+  _In_ RANGE_LIST rlhOld2,
+  _In_ RANGE_LIST rlhNew,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Modify_Res_Des(
-  OUT PRES_DES prdResDes,
-  IN RES_DES rdResDes,
-  IN RESOURCEID ResourceID,
-  IN PCVOID ResourceData,
-  IN ULONG ResourceLen,
-  IN ULONG ulFlags);
+  _Out_ PRES_DES prdResDes,
+  _In_ RES_DES rdResDes,
+  _In_ RESOURCEID ResourceID,
+  _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
+  _In_ ULONG ResourceLen,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Modify_Res_Des_Ex(
-  OUT PRES_DES prdResDes,
-  IN RES_DES rdResDes,
-  IN RESOURCEID ResourceID,
-  IN PCVOID ResourceData,
-  IN ULONG ResourceLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _Out_ PRES_DES prdResDes,
+  _In_ RES_DES rdResDes,
+  _In_ RESOURCEID ResourceID,
+  _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
+  _In_ ULONG ResourceLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Move_DevNode(
-  IN DEVINST dnFromDevInst,
-  IN DEVINST dnToDevInst,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnFromDevInst,
+  _In_ DEVINST dnToDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Move_DevNode_Ex(
-  IN DEVINST dnFromDevInst,
-  IN DEVINST dnToDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnFromDevInst,
+  _In_ DEVINST dnToDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Move_DevInst                CM_Move_DevNode
 #define CM_Move_DevInst_Ex             CM_Move_DevNode_Ex
@@ -2450,56 +2451,56 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Next_Range(
-  IN OUT PRANGE_ELEMENT preElement,
-  OUT PDWORDLONG pullStart,
-  OUT PDWORDLONG pullEnd,
-  IN ULONG ulFlags);
+  _Inout_ PRANGE_ELEMENT preElement,
+  _Out_ PDWORDLONG pullStart,
+  _Out_ PDWORDLONG pullEnd,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Open_Class_KeyA(
-  IN LPGUID ClassGuid OPTIONAL,
-  IN LPCSTR pszClassName OPTIONAL,
-  IN REGSAM samDesired,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkClass,
-  IN ULONG ulFlags);
+  _In_opt_ LPGUID ClassGuid,
+  _In_opt_ LPCSTR pszClassName,
+  _In_ REGSAM samDesired,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkClass,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Open_Class_KeyW(
-  IN LPGUID ClassGuid OPTIONAL,
-  IN LPCWSTR pszClassName OPTIONAL,
-  IN REGSAM samDesired,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkClass,
-  IN ULONG ulFlags);
+  _In_opt_ LPGUID ClassGuid,
+  _In_opt_ LPCWSTR pszClassName,
+  _In_ REGSAM samDesired,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkClass,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Open_Class_Key_ExA(
-  IN LPGUID pszClassGuid OPTIONAL,
-  IN LPCSTR pszClassName OPTIONAL,
-  IN REGSAM samDesired,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkClass,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_opt_ LPGUID pszClassGuid,
+  _In_opt_ LPCSTR pszClassName,
+  _In_ REGSAM samDesired,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkClass,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Open_Class_Key_ExW(
-  IN LPGUID pszClassGuid OPTIONAL,
-  IN LPCWSTR pszClassName OPTIONAL,
-  IN REGSAM samDesired,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkClass,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_opt_ LPGUID pszClassGuid,
+  _In_opt_ LPCWSTR pszClassName,
+  _In_ REGSAM samDesired,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkClass,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Open_Class_Key CM_Open_Class_KeyW
@@ -2513,24 +2514,24 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Open_DevNode_Key(
-  IN DEVINST dnDevNode,
-  IN REGSAM samDesired,
-  IN ULONG ulHardwareProfile,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkDevice,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevNode,
+  _In_ REGSAM samDesired,
+  _In_ ULONG ulHardwareProfile,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkDevice,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Open_DevNode_Key_Ex(
-  IN DEVINST dnDevNode,
-  IN REGSAM samDesired,
-  IN ULONG ulHardwareProfile,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkDevice,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevNode,
+  _In_ REGSAM samDesired,
+  _In_ ULONG ulHardwareProfile,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkDevice,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Open_DevInst_Key CM_Open_DevNode_Key
 #define CM_Open_DevInst_Key_Ex CM_Open_DevNode_Key_Ex
@@ -2541,43 +2542,43 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Open_Device_Interface_KeyA(
-  IN LPCSTR pszDeviceInterface,
-  IN REGSAM samDesired,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkDeviceInterface,
-  IN ULONG ulFlags);
+  _In_ LPCSTR pszDeviceInterface,
+  _In_ REGSAM samDesired,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkDeviceInterface,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Open_Device_Interface_KeyW(
-  IN LPCWSTR pszDeviceInterface,
-  IN REGSAM samDesired,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkDeviceInterface,
-  IN ULONG ulFlags);
+  _In_ LPCWSTR pszDeviceInterface,
+  _In_ REGSAM samDesired,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkDeviceInterface,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Open_Device_Interface_Key_ExA(
-  IN LPCSTR pszDeviceInterface,
-  IN REGSAM samDesired,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkDeviceInterface,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPCSTR pszDeviceInterface,
+  _In_ REGSAM samDesired,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkDeviceInterface,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Open_Device_Interface_Key_ExW(
-  IN LPCWSTR pszDeviceInterface,
-  IN REGSAM samDesired,
-  IN REGDISPOSITION Disposition,
-  OUT PHKEY phkDeviceInterface,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPCWSTR pszDeviceInterface,
+  _In_ REGSAM samDesired,
+  _In_ REGDISPOSITION Disposition,
+  _Out_ PHKEY phkDeviceInterface,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Open_Device_Interface_Key    CM_Open_Device_Interface_KeyW
@@ -2591,31 +2592,31 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Delete_Device_Interface_KeyA(
-  IN LPCSTR pszDeviceInterface,
-  IN ULONG ulFlags);
+  _In_ LPCSTR pszDeviceInterface,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Delete_Device_Interface_KeyW(
-  IN LPCWSTR pszDeviceInterface,
-  IN ULONG ulFlags);
+  _In_ LPCWSTR pszDeviceInterface,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Delete_Device_Interface_Key_ExA(
-  IN LPCSTR pszDeviceInterface,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPCSTR pszDeviceInterface,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Delete_Device_Interface_Key_ExW(
-  IN LPCWSTR pszDeviceInterface,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPCWSTR pszDeviceInterface,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Delete_Device_Interface_Key    CM_Delete_Device_Interface_KeyW
@@ -2631,98 +2632,98 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Query_Arbitrator_Free_Data(
-  OUT PVOID pData,
-  IN ULONG DataLen,
-  IN DEVINST dnDevInst,
-  IN RESOURCEID ResourceID,
-  IN ULONG ulFlags);
+  _Out_writes_bytes_(DataLen) PVOID pData,
+  _In_ ULONG DataLen,
+  _In_ DEVINST dnDevInst,
+  _In_ RESOURCEID ResourceID,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Query_Arbitrator_Free_Data_Ex(
-  OUT PVOID pData,
-  IN ULONG DataLen,
-  IN DEVINST dnDevInst,
-  IN RESOURCEID ResourceID,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _Out_writes_bytes_(DataLen) PVOID pData,
+  _In_ ULONG DataLen,
+  _In_ DEVINST dnDevInst,
+  _In_ RESOURCEID ResourceID,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Query_Arbitrator_Free_Size(
-  OUT PULONG pulSize,
-  IN DEVINST dnDevInst,
-  IN RESOURCEID ResourceID,
-  IN ULONG ulFlags);
+  _Out_ PULONG pulSize,
+  _In_ DEVINST dnDevInst,
+  _In_ RESOURCEID ResourceID,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Query_Arbitrator_Free_Size_Ex(
-  OUT PULONG pulSize,
-  IN DEVINST dnDevInst,
-  IN RESOURCEID ResourceID,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _Out_ PULONG pulSize,
+  _In_ DEVINST dnDevInst,
+  _In_ RESOURCEID ResourceID,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Query_Remove_SubTree(
-  IN DEVINST dnAncestor,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnAncestor,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Query_Remove_SubTree_Ex(
-  IN DEVINST dnAncestor,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnAncestor,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Query_And_Remove_SubTreeA(
-  IN DEVINST dnAncestor,
-  OUT PPNP_VETO_TYPE pVetoType,
-  OUT LPSTR pszVetoName,
-  IN ULONG ulNameLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnAncestor,
+  _Out_opt_ PPNP_VETO_TYPE pVetoType,
+  _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
+  _In_ ULONG ulNameLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Query_And_Remove_SubTreeW(
-  IN DEVINST dnAncestor,
-  OUT PPNP_VETO_TYPE pVetoType,
-  OUT LPWSTR pszVetoName,
-  IN ULONG ulNameLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnAncestor,
+  _Out_opt_ PPNP_VETO_TYPE pVetoType,
+  _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
+  _In_ ULONG ulNameLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Query_And_Remove_SubTree_ExA(
-  IN DEVINST dnAncestor,
-  OUT PPNP_VETO_TYPE pVetoType,
-  OUT LPSTR pszVetoName,
-  IN ULONG ulNameLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnAncestor,
+  _Out_opt_ PPNP_VETO_TYPE pVetoType,
+  _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
+  _In_ ULONG ulNameLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Query_And_Remove_SubTree_ExW(
-  IN DEVINST dnAncestor,
-  OUT PPNP_VETO_TYPE pVetoType,
-  OUT LPWSTR pszVetoName,
-  IN ULONG ulNameLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnAncestor,
+  _Out_opt_ PPNP_VETO_TYPE pVetoType,
+  _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
+  _In_ ULONG ulNameLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Query_And_Remove_SubTree     CM_Query_And_Remove_SubTreeW
@@ -2736,28 +2737,28 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Query_Resource_Conflict_List(
-  OUT PCONFLICT_LIST pclConflictList,
-  IN DEVINST dnDevInst,
-  IN RESOURCEID ResourceID,
-  IN PCVOID ResourceData,
-  IN ULONG ResourceLen,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _Out_ PCONFLICT_LIST pclConflictList,
+  _In_ DEVINST dnDevInst,
+  _In_ RESOURCEID ResourceID,
+  _In_reads_bytes_(ResourceLen) PCVOID ResourceData,
+  _In_ ULONG ResourceLen,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Reenumerate_DevNode(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Reenumerate_DevNode_Ex(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Reenumerate_DevInst CM_Reenumerate_DevNode
 #define CM_Reenumerate_DevInst_Ex CM_Reenumerate_DevNode_Ex
@@ -2766,47 +2767,47 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Register_Device_InterfaceA(
-  IN DEVINST dnDevInst,
-  IN LPGUID InterfaceClassGuid,
-  IN LPCSTR pszReference OPTIONAL,
-  OUT LPSTR pszDeviceInterface,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ LPCSTR pszReference,
+  _Out_writes_(*pulLength) LPSTR pszDeviceInterface,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Register_Device_InterfaceW(
-  IN DEVINST dnDevInst,
-  IN LPGUID InterfaceClassGuid,
-  IN LPCWSTR pszReference OPTIONAL,
-  OUT LPWSTR pszDeviceInterface,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ LPCWSTR pszReference,
+  _Out_writes_(*pulLength) LPWSTR pszDeviceInterface,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Register_Device_Interface_ExA(
-  IN DEVINST dnDevInst,
-  IN LPGUID InterfaceClassGuid,
-  IN LPCSTR pszReference OPTIONAL,
-  OUT LPSTR pszDeviceInterface,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnDevInst,
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ LPCSTR pszReference,
+  _Out_writes_(*pulLength) LPSTR pszDeviceInterface,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Register_Device_Interface_ExW(
-  IN DEVINST dnDevInst,
-  IN LPGUID InterfaceClassGuid,
-  IN LPCWSTR pszReference OPTIONAL,
-  OUT LPWSTR pszDeviceInterface,
-  IN OUT PULONG pulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnDevInst,
+  _In_ LPGUID InterfaceClassGuid,
+  _In_opt_ LPCWSTR pszReference,
+  _Out_writes_(*pulLength) LPWSTR pszDeviceInterface,
+  _Inout_ PULONG pulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Register_Device_Interface    CM_Register_Device_InterfaceW
@@ -2820,43 +2821,43 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Request_Device_EjectA(
-  IN DEVINST dnDevInst,
-  OUT PPNP_VETO_TYPE pVetoType,
-  OUT LPSTR pszVetoName,
-  IN ULONG ulNameLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _Out_opt_ PPNP_VETO_TYPE pVetoType,
+  _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
+  _In_ ULONG ulNameLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Request_Device_Eject_ExW(
-  IN DEVINST dnDevInst,
-  OUT PPNP_VETO_TYPE pVetoType,
-  OUT LPWSTR pszVetoName,
-  IN ULONG ulNameLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _Out_opt_ PPNP_VETO_TYPE pVetoType,
+  _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
+  _In_ ULONG ulNameLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Request_Device_Eject_ExA(
-  IN DEVINST dnDevInst,
-  OUT PPNP_VETO_TYPE pVetoType,
-  OUT LPSTR pszVetoName,
-  IN ULONG ulNameLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _Out_opt_ PPNP_VETO_TYPE pVetoType,
+  _Out_writes_opt_(ulNameLength) LPSTR pszVetoName,
+  _In_ ULONG ulNameLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Request_Device_EjectW(
-  IN DEVINST dnDevInst,
-  OUT PPNP_VETO_TYPE pVetoType,
-  OUT LPWSTR pszVetoName,
-  IN ULONG ulNameLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _Out_opt_ PPNP_VETO_TYPE pVetoType,
+  _Out_writes_opt_(ulNameLength) LPWSTR pszVetoName,
+  _In_ ULONG ulNameLength,
+  _In_ ULONG ulFlags);
 
 #ifdef UNICODE
 #define CM_Request_Device_Eject CM_Request_Device_EjectW
@@ -2875,20 +2876,20 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Request_Eject_PC_Ex(
-  IN HMACHINE hMachine OPTIONAL);
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Run_Detection(
-  IN ULONG ulFlags);
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Run_Detection_Ex(
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #if (WINVER >= _WIN32_WINNT_VISTA)
 
@@ -2897,45 +2898,45 @@ CM_Apply_PowerScheme(VOID);
 
 CONFIGRET
 CM_Write_UserPowerKey(
-  IN CONST GUID *SchemeGuid OPTIONAL,
-  IN CONST GUID *SubGroupOfPowerSettingsGuid OPTIONAL,
-  IN CONST GUID *PowerSettingGuid OPTIONAL,
-  IN ULONG AccessFlags,
-  IN ULONG Type,
-  IN UCHAR *Buffer,
-  IN DWORD BufferSize,
-  OUT PDWORD Error);
+  _In_opt_ CONST GUID *SchemeGuid,
+  _In_opt_ CONST GUID *SubGroupOfPowerSettingsGuid,
+  _In_opt_ CONST GUID *PowerSettingGuid,
+  _In_ ULONG AccessFlags,
+  _In_ ULONG Type,
+  _In_reads_bytes_(BufferSize) UCHAR *Buffer,
+  _In_ DWORD BufferSize,
+  _Out_ PDWORD Error);
 
 CONFIGRET
 CM_Set_ActiveScheme(
-  IN CONST GUID *SchemeGuid,
-  OUT PDWORD Error);
+  _In_ CONST GUID *SchemeGuid,
+  _Out_ PDWORD Error);
 
 CONFIGRET
 CM_Restore_DefaultPowerScheme(
-  IN CONST GUID *SchemeGuid,
-  OUT PDWORD Error);
+  _In_ CONST GUID *SchemeGuid,
+  _Out_ PDWORD Error);
 
 CONFIGRET
 CM_RestoreAll_DefaultPowerSchemes(
-  OUT PDWORD Error);
+  _Out_ PDWORD Error);
 
 CONFIGRET
 CM_Duplicate_PowerScheme(
-  IN CONST GUID *SourceSchemeGuid,
-  IN GUID **DestinationSchemeGuid,
-  OUT PDWORD Error);
+  _In_ CONST GUID *SourceSchemeGuid,
+  _Inout_ GUID **DestinationSchemeGuid,
+  _Out_ PDWORD Error);
 
 CONFIGRET
 CM_Delete_PowerScheme(
-  IN CONST GUID *SchemeGuid,
-  OUT PDWORD Error);
+  _In_ CONST GUID *SchemeGuid,
+  _Out_ PDWORD Error);
 
 CONFIGRET
 CM_Import_PowerScheme(
-  IN LPCWSTR ImportFileNamePath,
-  IN OUT GUID **DestinationSchemeGuid,
-  OUT PDWORD Error);
+  _In_ LPCWSTR ImportFileNamePath,
+  _Inout_ GUID **DestinationSchemeGuid,
+  _Out_ PDWORD Error);
 
 #endif /* (WINVER >= _WIN32_WINNT_VISTA) */
 
@@ -2943,18 +2944,18 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Set_DevNode_Problem(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProblem,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProblem,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_DevNode_Problem_Ex(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProblem,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProblem,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Set_DevInst_Problem CM_Set_DevNode_Problem
 #define CM_Set_DevInst_Problem_Ex CM_Set_DevNode_Problem_Ex
@@ -2963,31 +2964,31 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Unregister_Device_InterfaceA(
-  IN LPCSTR pszDeviceInterface,
-  IN ULONG ulFlags);
+  _In_ LPCSTR pszDeviceInterface,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Unregister_Device_InterfaceW(
-  IN LPCWSTR pszDeviceInterface,
-  IN ULONG ulFlags);
+  _In_ LPCWSTR pszDeviceInterface,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Unregister_Device_Interface_ExA(
-  IN LPCSTR pszDeviceInterface,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPCSTR pszDeviceInterface,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Unregister_Device_Interface_ExW(
-  IN LPCWSTR pszDeviceInterface,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ LPCWSTR pszDeviceInterface,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Unregister_Device_Interface    CM_Unregister_Device_InterfaceW
@@ -3001,73 +3002,73 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Register_Device_Driver(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Register_Device_Driver_Ex(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Remove_SubTree(
-  IN DEVINST dnAncestor,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnAncestor,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Remove_SubTree_Ex(
-  IN DEVINST dnAncestor,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnAncestor,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_DevNode_Registry_PropertyA(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProperty,
-  IN PCVOID Buffer OPTIONAL,
-  IN ULONG ulLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProperty,
+  _In_reads_bytes_opt_(ulLength) PCVOID Buffer,
+  _In_ ULONG ulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_DevNode_Registry_PropertyW(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProperty,
-  IN PCVOID Buffer OPTIONAL,
-  IN ULONG ulLength,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProperty,
+  _In_reads_bytes_opt_(ulLength) PCVOID Buffer,
+  _In_ ULONG ulLength,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_DevNode_Registry_Property_ExA(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProperty,
-  IN PCVOID Buffer OPTIONAL,
-  IN ULONG ulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProperty,
+  _In_reads_bytes_opt_(ulLength) PCVOID Buffer,
+  _In_ ULONG ulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_DevNode_Registry_Property_ExW(
-  IN DEVINST dnDevInst,
-  IN ULONG ulProperty,
-  IN PCVOID Buffer OPTIONAL,
-  IN ULONG ulLength,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulProperty,
+  _In_reads_bytes_opt_(ulLength) PCVOID Buffer,
+  _In_ ULONG ulLength,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Set_DevInst_Registry_PropertyW CM_Set_DevNode_Registry_PropertyW
 #define CM_Set_DevInst_Registry_PropertyA CM_Set_DevNode_Registry_PropertyA
@@ -3090,54 +3091,54 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Set_HW_Prof(
-  IN ULONG ulHardwareProfile,
-  IN ULONG ulFlags);
+  _In_ ULONG ulHardwareProfile,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_HW_Prof_Ex(
-  IN ULONG ulHardwareProfile,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ ULONG ulHardwareProfile,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_HW_Prof_FlagsA(
-  IN DEVINSTID_A szDevInstName,
-  IN ULONG ulConfig,
-  IN ULONG ulValue,
-  IN ULONG ulFlags);
+  _In_ DEVINSTID_A szDevInstName,
+  _In_ ULONG ulConfig,
+  _In_ ULONG ulValue,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_HW_Prof_FlagsW(
-  IN DEVINSTID_W szDevInstName,
-  IN ULONG ulConfig,
-  IN ULONG ulValue,
-  IN ULONG ulFlags);
+  _In_ DEVINSTID_W szDevInstName,
+  _In_ ULONG ulConfig,
+  _In_ ULONG ulValue,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_HW_Prof_Flags_ExA(
-  IN DEVINSTID_A szDevInstName,
-  IN ULONG ulConfig,
-  IN ULONG ulValue,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINSTID_A szDevInstName,
+  _In_ ULONG ulConfig,
+  _In_ ULONG ulValue,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Set_HW_Prof_Flags_ExW(
-  IN DEVINSTID_W szDevInstName,
-  IN ULONG ulConfig,
-  IN ULONG ulValue,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINSTID_W szDevInstName,
+  _In_ ULONG ulConfig,
+  _In_ ULONG ulValue,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #ifdef UNICODE
 #define CM_Set_HW_Prof_Flags CM_Set_HW_Prof_FlagsW
@@ -3151,16 +3152,16 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Setup_DevNode(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Setup_DevNode_Ex(
-  IN DEVINST dnDevInst,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine OPTIONAL);
+  _In_ DEVINST dnDevInst,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Setup_DevInst         CM_Setup_DevNode
 #define CM_Setup_DevInst_Ex      CM_Setup_DevNode_Ex
@@ -3169,25 +3170,25 @@ CMAPI
 CONFIGRET
 WINAPI
 CM_Test_Range_Available(
-  IN DWORDLONG ullStartValue,
-  IN DWORDLONG ullEndValue,
-  IN RANGE_LIST rlh,
-  IN ULONG ulFlags);
+  _In_ DWORDLONG ullStartValue,
+  _In_ DWORDLONG ullEndValue,
+  _In_ RANGE_LIST rlh,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Uninstall_DevNode(
-  IN DEVINST dnPhantom,
-  IN ULONG ulFlags);
+  _In_ DEVINST dnPhantom,
+  _In_ ULONG ulFlags);
 
 CMAPI
 CONFIGRET
 WINAPI
 CM_Uninstall_DevNode_Ex(
-  IN DEVINST dnPhantom,
-  IN ULONG ulFlags,
-  IN HMACHINE hMachine);
+  _In_ DEVINST dnPhantom,
+  _In_ ULONG ulFlags,
+  _In_opt_ HMACHINE hMachine);
 
 #define CM_Uninstall_DevInst     CM_Uninstall_DevNode
 #define CM_Uninstall_DevInst_Ex  CM_Uninstall_DevNode_Ex
@@ -3201,10 +3202,12 @@ CMAPI
 DWORD
 WINAPI
 CMP_WaitNoPendingInstallEvents(
-  IN DWORD dwTimeout);
+  _In_ DWORD dwTimeout);
 
 #endif /* (WINVER >= _WIN32_WINNT_WIN2K) */
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* _CFGMGR32_H_ */
