@@ -30,7 +30,7 @@ BOOL FASTCALL UserIsEnteredExclusive(VOID);
 extern HANDLE GlobalUserHeap;
 
 PWIN32HEAP
-UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
+UserCreateHeap(OUT PVOID *SectionObject,
                IN OUT PVOID *SystemBase,
                IN SIZE_T HeapSize);
 

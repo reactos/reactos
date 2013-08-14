@@ -307,7 +307,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     FT_Face Face;
     ANSI_STRING AnsiFaceName;
     PFONT_ENTRY Entry;
-    PSECTION_OBJECT SectionObject;
+    PVOID SectionObject;
     ULONG ViewSize = 0;
     LARGE_INTEGER SectionSize;
     UNICODE_STRING FontRegPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
@@ -330,7 +330,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     }
 
     SectionSize.QuadPart = 0LL;
-    Status = MmCreateSection((PVOID)&SectionObject, SECTION_ALL_ACCESS,
+    Status = MmCreateSection(&SectionObject, SECTION_ALL_ACCESS,
                              NULL, &SectionSize, PAGE_READONLY,
                              SEC_COMMIT, FileHandle, NULL);
     if (!NT_SUCCESS(Status))

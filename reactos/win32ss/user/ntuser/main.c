@@ -15,12 +15,12 @@
 
 HANDLE hModuleWin;
 
-PGDI_HANDLE_TABLE NTAPI GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
+PGDI_HANDLE_TABLE NTAPI GDIOBJ_iAllocHandleTable(OUT PVOID *SectionObject);
 BOOL NTAPI GDI_CleanupForProcess (struct _EPROCESS *Process);
 NTSTATUS NTAPI UserDestroyThreadInfo(struct _ETHREAD *Thread);
 
 HANDLE GlobalUserHeap = NULL;
-PSECTION_OBJECT GlobalUserHeapSection = NULL;
+PVOID GlobalUserHeapSection = NULL;
 
 PSERVERINFO gpsi = NULL; // Global User Server Information.
 

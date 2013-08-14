@@ -63,7 +63,7 @@ IntUserHeapCommitRoutine(
     {
         SIZE_T ViewSize = 0;
         LARGE_INTEGER Offset;
-        extern PSECTION_OBJECT GlobalUserHeapSection;
+        extern PVOID GlobalUserHeapSection;
 
         /* HACK: This needs to be handled during startup only... */
         ASSERT(Base == (PVOID)GlobalUserHeap);
@@ -114,7 +114,7 @@ IntUserHeapCommitRoutine(
 }
 
 static PWIN32HEAP
-IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
+IntUserHeapCreate(IN PVOID SectionObject,
                   IN PVOID *SystemMappedBase,
                   IN ULONG HeapSize)
 {
@@ -172,7 +172,7 @@ IntUserHeapCreate(IN PSECTION_OBJECT SectionObject,
 }
 
 PWIN32HEAP
-UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
+UserCreateHeap(OUT PVOID *SectionObject,
                IN OUT PVOID *SystemBase,
                IN SIZE_T HeapSize)
 {

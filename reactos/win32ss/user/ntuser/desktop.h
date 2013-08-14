@@ -11,7 +11,7 @@ typedef struct _DESKTOP
     PWND spwndTray;
     PWND spwndMessage;
     PWND spwndTooltip;
-    PSECTION_OBJECT hsectionDesktop;
+    PVOID hsectionDesktop;
     PWIN32HEAP pheapDesktop;
     ULONG_PTR ulHeapSize;
     LIST_ENTRY PtiList;
