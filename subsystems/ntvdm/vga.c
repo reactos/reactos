@@ -575,13 +575,18 @@ static VOID VgaUpdateFramebuffer(VOID)
                     /* Check if this is 16 or 256 color mode */
                     if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
                     {
+                        // TODO: NOT IMPLEMENTED
+                        DPRINT1("8-bit interleaved mode is not implemented!\n");
+                    }
+                    else
+                    {
                         /*
                          * 2 bits shifted from plane 0 and 2 for the first 4 pixels,
                          * then 2 bits shifted from plane 1 and 3 for the next 4
                          */
                         BYTE LowPlaneData = VgaMemory[((j / 4) % 2) * VGA_BANK_SIZE
                                                       + (Address + (j / 4)) * AddressSize];
-                        BYTE HighPlaneData = VgaMemory[(((j / 4) % 2) + 1) * VGA_BANK_SIZE
+                        BYTE HighPlaneData = VgaMemory[(((j / 4) % 2) + 2) * VGA_BANK_SIZE
                                                        + (Address + (j / 4)) * AddressSize];
 
                         /* Extract the two bits from each plane */
@@ -590,11 +595,6 @@ static VOID VgaUpdateFramebuffer(VOID)
 
                         /* Combine them into the pixel */
                         PixelData = LowPlaneData | (HighPlaneData << 2);
-                    }
-                    else
-                    {
-                        // TODO: NOT IMPLEMENTED
-                        DPRINT1("8-bit interleaved mode is not implemented!\n");
                     }
                 }
                 else
