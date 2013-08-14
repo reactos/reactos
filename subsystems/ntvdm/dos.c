@@ -1201,7 +1201,7 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
         if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType !='Z') break;
 
         /* If this block was allocated by the process, free it */
-        if (CurrentMcb->OwnerPsp == Psp) DosFreeMemory(McbSegment);
+        if (CurrentMcb->OwnerPsp == Psp) DosFreeMemory(McbSegment + 1);
 
         /* If this was the last block, quit */
         if (CurrentMcb->BlockType == 'Z') break;
