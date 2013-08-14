@@ -41,8 +41,43 @@ SacTranslateUnicodeToUtf8(IN PWCHAR SourceBuffer,
                           OUT PULONG UTF8Count,
                           OUT PULONG ProcessedCount)
 {
-    ASSERT(FALSE);
-    return FALSE;
+    *UTF8Count = 0;
+    *ProcessedCount = 0;
+
+    while ((*SourceBuffer) &&
+           (*UTF8Count < DestinationBufferSize) &&
+           (*ProcessedCount < SourceBufferLength))
+    {
+        if (*SourceBuffer & 0xFF80)
+        {
+            if (*SourceBuffer & 0xF800)
+            {
+                if ((*UTF8Count + 3) >= DestinationBufferSize) break;
+                DestinationBuffer[*UTF8Count] = ((*SourceBuffer >> 12) & 0xF) | 0xE0;
+                ++*UTF8Count;
+                DestinationBuffer[*UTF8Count] = ((*SourceBuffer >> 6) & 0x3F) | 0x80;
+            }
+            else
+            {
+                if ((*UTF8Count + 2) >= DestinationBufferSize) break;
+                DestinationBuffer[*UTF8Count] = ((*SourceBuffer >> 6) & 31) | 0xC0;
+            }
+            ++*UTF8Count;
+            DestinationBuffer[*UTF8Count] = (*SourceBuffer & 0x3F) | 0x80;
+        }
+        else
+        {
+            DestinationBuffer[*UTF8Count] = (*SourceBuffer & 0x7F);
+        }
+
+        ++*UTF8Count;
+        ++*ProcessedCount;
+        ++SourceBuffer;
+    }
+
+    ASSERT(*ProcessedCount <= SourceBufferLength);
+    ASSERT(*UTF8Count <= DestinationBufferSize);
+    return TRUE;
 }
 
 PWCHAR

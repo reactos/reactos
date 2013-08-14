@@ -171,9 +171,19 @@ HeadlessInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-HdlspPutString(
-	IN PUCHAR String
-	)
+HdlspPutData(IN PUCHAR Data,
+             IN ULONG DataSize)
+{
+    ULONG i;
+    for (i = 0; i < DataSize; i++)
+    {
+        InbvPortPutByte(HeadlessGlobals->TerminalPort, Data[i]++);
+    }
+}
+
+VOID
+NTAPI
+HdlspPutString(IN PUCHAR String)
 {
 	PUCHAR Dest = HeadlessGlobals->TmpBuffer;
 	UCHAR Char = 0;
@@ -306,17 +316,18 @@ HdlspDispatch(IN HEADLESS_CMD Command,
                 break;
             }
 
-			/* Terminal should be on */
-			if (HeadlessGlobals->TerminalEnabled)
-			{
-				/* Print each byte in the string making sure VT100 chars are used */
-				PutString = InputBuffer;
-				HdlspPutString(PutString->String);
-			}
+            /* Terminal should be on */
+            if (HeadlessGlobals->TerminalEnabled)
+            {
+                /* Print each byte in the string making sure VT100 chars are used */
+                PutString = InputBuffer;
+                HdlspPutString(PutString->String);
+            }
 
-			/* Return success either way */
-			Status = STATUS_SUCCESS;
-			break;
+            /* Return success either way */
+            Status = STATUS_SUCCESS;
+            break;
+
 		case HeadlessCmdClearDisplay:
 			break;
 		case HeadlessCmdClearToEndOfDisplay:
@@ -403,10 +414,29 @@ HdlspDispatch(IN HEADLESS_CMD Command,
 		case HeadlessCmdQueryGUID:
 			break;
 		case HeadlessCmdPutData:
-			break;
-		default:
-			break;
-	}
+
+            /* Validate the existence of an input buffer */
+            if (!(InputBuffer) || !(InputBufferSize))
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Terminal should be on */
+            if (HeadlessGlobals->TerminalEnabled)
+            {
+                /* Print each byte in the string making sure VT100 chars are used */
+                PutString = InputBuffer;
+                HdlspPutData(PutString->String, InputBufferSize);
+            }
+
+            /* Return success either way */
+            Status = STATUS_SUCCESS;
+            break;
+
+        default:
+            break;
+    }
 
     /* Unset processing state */
     if ((Command != HeadlessCmdAddLogEntry) &&
