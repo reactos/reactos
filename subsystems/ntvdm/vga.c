@@ -572,13 +572,30 @@ static VOID VgaUpdateFramebuffer(VOID)
                 }
                 else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_SHIFTREG)
                 {
-                    /*
-                     * 2 bits shifted from plane 0 and 2 for the first 4 pixels,
-                     * then 2 bits shifted from plane 1 and 3 for the next 4
-                     */
+                    /* Check if this is 16 or 256 color mode */
+                    if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
+                    {
+                        /*
+                         * 2 bits shifted from plane 0 and 2 for the first 4 pixels,
+                         * then 2 bits shifted from plane 1 and 3 for the next 4
+                         */
+                        BYTE LowPlaneData = VgaMemory[((j / 4) % 2) * VGA_BANK_SIZE
+                                                      + (Address + (j / 4)) * AddressSize];
+                        BYTE HighPlaneData = VgaMemory[(((j / 4) % 2) + 1) * VGA_BANK_SIZE
+                                                       + (Address + (j / 4)) * AddressSize];
 
-                    // TODO: NOT IMPLEMENTED!
-                    DPRINT1("Interleaved shift mode is not implemented!\n");
+                        /* Extract the two bits from each plane */
+                        LowPlaneData = (LowPlaneData >> (6 - ((j % 4) * 2))) & 3;
+                        HighPlaneData = (HighPlaneData >> (6 - ((j % 4) * 2))) & 3;
+
+                        /* Combine them into the pixel */
+                        PixelData = LowPlaneData | (HighPlaneData << 2);
+                    }
+                    else
+                    {
+                        // TODO: NOT IMPLEMENTED
+                        DPRINT1("8-bit interleaved mode is not implemented!\n");
+                    }
                 }
                 else
                 {
@@ -618,6 +635,12 @@ static VOID VgaUpdateFramebuffer(VOID)
                             if (PlaneData & (1 << (7 - (j % 8)))) PixelData |= 1 << k;
                         }
                     }
+                }
+
+                if (!(VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT))
+                {
+                    /* In 16 color mode, the value is an index to the AC registers */
+                    PixelData = VgaAcRegisters[PixelData];
                 }
 
                 /* Now check if the resulting pixel data has changed */
