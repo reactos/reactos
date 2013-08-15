@@ -869,7 +869,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Post_maybenull_                                            _SAL2_NAME(_Post_maybenull_) _Group_([SA_Post(Null=SA_Maybe)])
 #define _Post_maybez_                                               _SAL11_NAME(_Post_maybez_) _Group_([SA_Post(NullTerminated=SA_Maybe)])
 #define _Post_notnull_                                              _SAL2_NAME(_Post_notnull_) _Group_([SA_Post(Null=SA_No)])
-//#define _Post_null_
+#define _Post_null_                                                 _SAL2_NAME(_Post_null_) _Group_([SA_Post(Null=SA_Yes)])
 #define _Post_ptr_invalid_                                          _SAL2_NAME(_Post_ptr_invalid_) _Group_([SA_Post(Valid=SA_No)])
 #define _Post_readable_byte_size_(size)                             _SAL2_NAME(_Post_readable_byte_size_) _Group_([SA_Post(ValidBytes="\n" _SA_SPECSTRIZE(size))] [SA_Post(Valid=SA_Yes)])
 #define _Post_readable_size_(size)                                  _SAL2_NAME(_Post_readable_size_) _Group_([SA_Post(ValidElements="\n" _SA_SPECSTRIZE(size))] [SA_Post(Valid=SA_Yes)])
