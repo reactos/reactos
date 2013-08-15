@@ -660,17 +660,30 @@ WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead)
     WORD Result = ERROR_SUCCESS;
     DWORD BytesRead32 = 0;
     HANDLE Handle = DosGetRealHandle(FileHandle);
+    WORD i;
 
     DPRINT("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
     /* Make sure the handle is valid */
     if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
 
-    /* Read the file */
-    if (!ReadFile(Handle, Buffer, Count, &BytesRead32, NULL))
+    if (IsConsoleHandle(Handle))
     {
-        /* Store the error code */
-        Result = (WORD)GetLastError();
+        for (i = 0; i < Count; i++)
+        {
+            /* Call the BIOS function to read the character */
+            ((LPBYTE)Buffer)[i] = LOBYTE(BiosGetCharacter());
+            BytesRead32++;
+        }
+    }
+    else
+    {
+        /* Read the file */
+        if (!ReadFile(Handle, Buffer, Count, &BytesRead32, NULL))
+        {
+            /* Store the error code */
+            Result = (WORD)GetLastError();
+        }
     }
 
     /* The number of bytes read is always 16-bit */
@@ -685,6 +698,7 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
     WORD Result = ERROR_SUCCESS;
     DWORD BytesWritten32 = 0;
     HANDLE Handle = DosGetRealHandle(FileHandle);
+    WORD i;
 
     DPRINT("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n",
            FileHandle,
@@ -693,11 +707,23 @@ WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritte
     /* Make sure the handle is valid */
     if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
 
-    /* Write the file */
-    if (!WriteFile(Handle, Buffer, Count, &BytesWritten32, NULL))
+    if (IsConsoleHandle(Handle))
     {
-        /* Store the error code */
-        Result = (WORD)GetLastError();
+        for (i = 0; i < Count; i++)
+        {
+            /* Call the BIOS to print the character */
+            BiosPrintCharacter(((LPBYTE)Buffer)[i], DOS_CHAR_ATTRIBUTE, Bda->VideoPage);
+            BytesWritten32++;
+        }
+    }
+    else
+    {
+        /* Write the file */
+        if (!WriteFile(Handle, Buffer, Count, &BytesWritten32, NULL))
+        {
+            /* Store the error code */
+            Result = (WORD)GetLastError();
+        }
     }
 
     /* The number of bytes written is always 16-bit */

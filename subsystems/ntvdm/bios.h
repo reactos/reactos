@@ -99,6 +99,8 @@ typedef struct
 
 /* FUNCTIONS ******************************************************************/
 
+extern PBIOS_DATA_AREA Bda;
+
 BOOLEAN BiosInitialize(VOID);
 VOID BiosCleanup(VOID);
 BYTE BiosGetVideoMode(VOID);
@@ -112,6 +114,7 @@ VOID BiosKeyboardService(LPWORD Stack);
 VOID BiosTimeService(LPWORD Stack);
 VOID BiosHandleIrq(BYTE IrqNumber, LPWORD Stack);
 VOID BiosSystemTimerInterrupt(LPWORD Stack);
+VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page);
 BOOLEAN BiosScrollWindow(
     INT Direction,
     DWORD Amount,

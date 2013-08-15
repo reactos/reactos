@@ -36,6 +36,7 @@
 #define DOS_CMDLINE_LENGTH 127
 #define DOS_DIR_LENGTH 64
 #define NUM_DRIVES ('Z' - 'A' + 1)
+#define DOS_CHAR_ATTRIBUTE 0x07
 
 enum DOS_ALLOC_STRATEGY
 {

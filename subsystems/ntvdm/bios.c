@@ -19,7 +19,7 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static PBIOS_DATA_AREA Bda;
+PBIOS_DATA_AREA Bda;
 static BYTE BiosKeyboardMap[256];
 static HANDLE BiosConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE BiosConsoleOutput = INVALID_HANDLE_VALUE;
