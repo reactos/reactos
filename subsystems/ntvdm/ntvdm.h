@@ -26,7 +26,6 @@
 #define MAX_ADDRESS TO_LINEAR(MAX_SEGMENT, MAX_OFFSET)
 #define FAR_POINTER(x) ((ULONG_PTR)BaseAddress + TO_LINEAR(HIWORD(x), LOWORD(x)))
 #define STEPS_PER_CYCLE 256
-#define IsConsoleHandle(h) (((((ULONG_PTR)h) & 0x10000003) == 3) ? TRUE : FALSE)
 
 /* FUNCTIONS ******************************************************************/
 
