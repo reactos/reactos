@@ -704,7 +704,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Inout_updates_bytes_to_opt_(size,count)                    _SAL2_NAME(_Inout_updates_bytes_to_opt_) _Group_(_Out_writes_bytes_to_opt_(size,count) [SA_Pre(Valid=SA_Yes)] [SA_Pre(ValidBytes="\n" _SA_SPECSTRIZE(count))])
 #define _Inout_updates_opt_(size)                                   _SAL2_NAME(_Inout_updates_opt_) _Group_(_Pre_opt_cap_(size) [SA_Pre(Valid=SA_Yes)] [SA_Post(Valid=SA_Yes)])
 #define _Inout_updates_opt_z_(size)                                 _SAL2_NAME(_Inout_updates_opt_z_) _Group_(_Pre_opt_cap_(size) [SA_Pre(Valid=SA_Yes)] [SA_Post(Valid=SA_Yes)] [SA_Pre(NullTerminated=SA_Yes)] [SA_Post(NullTerminated=SA_Yes)])
-//#define _Inout_updates_to_(size,count)
+#define _Inout_updates_to_(size,count)                              _SAL2_NAME(_Inout_updates_to_) _Group_(_Out_writes_to_(size,count) [SA_Pre(Valid=SA_Yes)] [SA_Pre(ValidElements="\n" _SA_SPECSTRIZE(count))])
 //#define _Inout_updates_to_opt_(size,count)
 #define _Inout_updates_z_(size)                                     _SAL2_NAME(_Inout_updates_z_) _Group_(_Pre_cap_(size) [SA_Pre(Valid=SA_Yes)] [SA_Post(Valid=SA_Yes)] [SA_Pre(NullTerminated=SA_Yes)] [SA_Post(NullTerminated=SA_Yes)])
 #define _Inout_z_                                                   _SAL2_NAME(_Inout_z_) _Group_(_Prepost_z_)
