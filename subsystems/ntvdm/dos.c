@@ -1665,10 +1665,10 @@ VOID DosInt21h(LPWORD Stack)
         case 0x3D:
         {
             WORD FileHandle;
-            WORD ErrorCode = DosCreateFile(&FileHandle,
-                                           (LPCSTR)(ULONG_PTR)BaseAddress
-                                           + TO_LINEAR(DataSegment, LOWORD(Edx)),
-                                           LOBYTE(Eax));
+            WORD ErrorCode = DosOpenFile(&FileHandle,
+                                         (LPCSTR)(ULONG_PTR)BaseAddress
+                                         + TO_LINEAR(DataSegment, LOWORD(Edx)),
+                                         LOBYTE(Eax));
 
             if (ErrorCode == 0)
             {
