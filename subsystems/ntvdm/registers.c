@@ -21,7 +21,7 @@ getEAX(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_AX].val;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_AX].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_AX].Long;
 #endif
 }
 
@@ -32,7 +32,7 @@ setEAX(ULONG Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_AX].val = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_AX].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_AX].Long = Value;
 #endif
 }
 
@@ -43,7 +43,7 @@ getAX(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_AX].w.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_AX].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_AX].LowWord;
 #endif
 }
 
@@ -54,7 +54,7 @@ setAX(USHORT Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_AX].w.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_AX].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_AX].LowWord = Value;
 #endif
 }
 
@@ -65,7 +65,7 @@ getAH(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_AX].b.hi;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_AX].HighByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_AX].HighByte;
 #endif
 }
 
@@ -76,7 +76,7 @@ setAH(UCHAR Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_AX].b.hi = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_AX].HighByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_AX].HighByte = Value;
 #endif
 }
 
@@ -87,7 +87,7 @@ getAL(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_AX].b.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_AX].LowByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_AX].LowByte;
 #endif
 }
 
@@ -98,7 +98,7 @@ setAL(UCHAR Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_AX].b.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_AX].LowByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_AX].LowByte = Value;
 #endif
 }
 
@@ -109,7 +109,7 @@ getEBX(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_BX].val;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_BX].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_BX].Long;
 #endif
 }
 
@@ -120,7 +120,7 @@ setEBX(ULONG Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_BX].val = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_BX].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_BX].Long = Value;
 #endif
 }
 
@@ -131,7 +131,7 @@ getBX(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_BX].w.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_BX].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_BX].LowWord;
 #endif
 }
 
@@ -142,7 +142,7 @@ setBX(USHORT Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_BX].w.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_BX].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_BX].LowWord = Value;
 #endif
 }
 
@@ -153,7 +153,7 @@ getBH(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_BX].b.hi;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_BX].HighByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_BX].HighByte;
 #endif
 }
 
@@ -164,7 +164,7 @@ setBH(UCHAR Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_BX].b.hi = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_BX].HighByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_BX].HighByte = Value;
 #endif
 }
 
@@ -175,7 +175,7 @@ getBL(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_BX].b.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_BX].LowByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_BX].LowByte;
 #endif
 }
 
@@ -186,7 +186,7 @@ setBL(UCHAR Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_BX].b.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_BX].LowByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_BX].LowByte = Value;
 #endif
 }
 
@@ -199,7 +199,7 @@ getECX(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_CX].val;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_CX].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_CX].Long;
 #endif
 }
 
@@ -210,7 +210,7 @@ setECX(ULONG Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_CX].val = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_CX].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_CX].Long = Value;
 #endif
 }
 
@@ -221,7 +221,7 @@ getCX(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_CX].w.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_CX].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_CX].LowWord;
 #endif
 }
 
@@ -232,7 +232,7 @@ setCX(USHORT Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_CX].w.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_CX].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_CX].LowWord = Value;
 #endif
 }
 
@@ -243,7 +243,7 @@ getCH(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_CX].b.hi;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_CX].HighByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_CX].HighByte;
 #endif
 }
 
@@ -254,7 +254,7 @@ setCH(UCHAR Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_CX].b.hi = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_CX].HighByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_CX].HighByte = Value;
 #endif
 }
 
@@ -265,7 +265,7 @@ getCL(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_CX].b.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_CX].LowByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_CX].LowByte;
 #endif
 }
 
@@ -276,7 +276,7 @@ setCL(UCHAR Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_CX].b.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_CX].LowByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_CX].LowByte = Value;
 #endif
 }
 
@@ -289,7 +289,7 @@ getEDX(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_DX].val;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_DX].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_DX].Long;
 #endif
 }
 
@@ -300,7 +300,7 @@ setEDX(ULONG Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_DX].val = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_DX].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_DX].Long = Value;
 #endif
 }
 
@@ -311,7 +311,7 @@ getDX(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_DX].w.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_DX].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_DX].LowWord;
 #endif
 }
 
@@ -322,7 +322,7 @@ setDX(USHORT Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_DX].w.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_DX].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_DX].LowWord = Value;
 #endif
 }
 
@@ -333,7 +333,7 @@ getDH(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_DX].b.hi;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_DX].HighByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_DX].HighByte;
 #endif
 }
 
@@ -344,7 +344,7 @@ setDH(UCHAR Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_DX].b.hi = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_DX].HighByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_DX].HighByte = Value;
 #endif
 }
 
@@ -355,7 +355,7 @@ getDL(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_DX].b.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_DX].LowByte;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_DX].LowByte;
 #endif
 }
 
@@ -366,7 +366,7 @@ setDL(UCHAR Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_DX].b.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_DX].LowByte = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_DX].LowByte = Value;
 #endif
 }
 
@@ -409,7 +409,7 @@ getEBP(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_BP].val;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_BP].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_BP].Long;
 #endif
 }
 
@@ -420,7 +420,7 @@ setEBP(ULONG Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_BP].val = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_BP].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_BP].Long = Value;
 #endif
 }
 
@@ -431,7 +431,7 @@ getBP(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_BP].w.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_BP].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_BP].LowWord;
 #endif
 }
 
@@ -442,7 +442,7 @@ setBP(USHORT Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_BP].w.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_BP].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_BP].LowWord = Value;
 #endif
 }
 
@@ -455,7 +455,7 @@ getESI(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_SI].val;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_SI].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_SI].Long;
 #endif
 }
 
@@ -466,7 +466,7 @@ setESI(ULONG Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_SI].val = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_SI].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_SI].Long = Value;
 #endif
 }
 
@@ -477,7 +477,7 @@ getSI(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_SI].w.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_SI].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_SI].LowWord;
 #endif
 }
 
@@ -488,7 +488,7 @@ setSI(USHORT Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_SI].w.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_SI].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_SI].LowWord = Value;
 #endif
 }
 
@@ -501,7 +501,7 @@ getEDI(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_DI].val;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_DI].Long;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_DI].Long;
 #endif
 }
 
@@ -512,7 +512,7 @@ setEDI(ULONG Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_DI].val = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_DI].Long = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_DI].Long = Value;
 #endif
 }
 
@@ -523,7 +523,7 @@ getDI(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->general_reg[EMULATOR_REG_DI].w.lo;
 #else
-    return EmulatorContext.Registers[EMULATOR_REG_DI].LowWord;
+    return EmulatorContext.GeneralRegs[EMULATOR_REG_DI].LowWord;
 #endif
 }
 
@@ -534,7 +534,7 @@ setDI(USHORT Value)
 #ifndef NEW_EMULATOR
     EmulatorContext.state->general_reg[EMULATOR_REG_DI].w.lo = Value;
 #else
-    EmulatorContext.Registers[EMULATOR_REG_DI].LowWord = Value;
+    EmulatorContext.GeneralRegs[EMULATOR_REG_DI].LowWord = Value;
 #endif
 }
 

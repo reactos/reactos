@@ -24,7 +24,7 @@
 softx86_ctx EmulatorContext;
 softx87_ctx FpuEmulatorContext;
 #else
-EMULATOR_CONTEXT EmulatorContext;
+SOFT386_STATE EmulatorContext;
 #endif
 
 static BOOLEAN A20Line = FALSE;
@@ -241,8 +241,8 @@ static VOID EmulatorBop(WORD Code)
     StackSegment = EmulatorContext.state->segment_reg[SX86_SREG_SS].val;
     StackPointer = EmulatorContext.state->general_reg[SX86_REG_SP].val;
 #else
-    StackSegment = EmulatorContext.Registers[EMULATOR_REG_SS].LowWord;
-    StackPointer = EmulatorContext.Registers[EMULATOR_REG_SP].LowWord;
+    StackSegment = EmulatorContext.SegmentRegs[SOFT386_REG_SS].LowWord;
+    StackPointer = EmulatorContext.SegmentRegs[SOFT386_REG_SP].LowWord;
 #endif
 
     /* Get the stack */
@@ -475,7 +475,14 @@ ULONG EmulatorGetRegister(ULONG Register)
         return EmulatorContext.state->segment_reg[Register - EMULATOR_REG_ES].val;
     }
 #else
-    return EmulatorContext.Registers[Register].Long;
+    if (Register < EMULATOR_REG_ES)
+    {
+        return EmulatorContext.GeneralRegs[Register].Long;
+    }
+    else
+    {
+        return EmulatorContext.SegmentRegs[Register - EMULATOR_REG_ES].Selector;
+    }
 #endif
 }
 
@@ -484,7 +491,7 @@ ULONG EmulatorGetProgramCounter(VOID)
 #ifndef NEW_EMULATOR
     return EmulatorContext.state->reg_ip;
 #else
-    return EmulatorContext.InstructionPointer.Long;
+    return EmulatorContext.InstPtr.Long;
 #endif
 }
 
