@@ -20,6 +20,7 @@ add_subdirectory(rtl)
 add_subdirectory(sdk)
 add_subdirectory(smlib)
 add_subdirectory(tdilib)
+add_subdirectory(soft386)
 
 else()
 

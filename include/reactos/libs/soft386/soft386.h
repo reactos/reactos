@@ -1,0 +1,294 @@
+/*
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
+ * PROJECT:         386/486 CPU Emulation Library
+ * FILE:            soft386.h
+ * PURPOSE:         Header file for Soft386.
+ * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ */
+
+#ifndef _SOFT386_H_
+#define _SOFT386_H_
+
+/* INCLUDES *******************************************************************/
+
+#include <windows.h>
+#include <debug.h>
+
+/* DEFINES ********************************************************************/
+
+#define SOFT386_NUM_GEN_REGS 8
+#define SOFT386_NUM_SEG_REGS 6
+#define SOFT386_NUM_CTRL_REGS 8
+#define SOFT386_NUM_DBG_REGS 8
+
+#define SOFT386_CR0_PE (1 << 0)
+#define SOFT386_CR0_MP (1 << 1)
+#define SOFT386_CR0_EM (1 << 2)
+#define SOFT386_CR0_TS (1 << 3)
+#define SOFT386_CR0_ET (1 << 4)
+#define SOFT386_CR0_NE (1 << 5)
+#define SOFT386_CR0_WP (1 << 16)
+#define SOFT386_CR0_AM (1 << 18)
+#define SOFT386_CR0_NW (1 << 29)
+#define SOFT386_CR0_CD (1 << 30)
+#define SOFT386_CR0_PG (1 << 31)
+
+struct _SOFT386_STATE;
+typedef struct _SOFT386_STATE SOFT386_STATE;
+typedef struct _SOFT386_STATE *PSOFT386_STATE;
+
+enum _SOFT386_GEN_REGS
+{
+    SOFT386_REG_EAX,
+    SOFT386_REG_ECX,
+    SOFT386_REG_EDX,
+    SOFT386_REG_EBX,
+    SOFT386_REG_ESP,
+    SOFT386_REG_EBP,
+    SOFT386_REG_ESI,
+    SOFT386_REG_EDI
+};
+
+enum _SOFT386_SEG_REGS
+{
+    SOFT386_REG_ES,
+    SOFT386_REG_CS,
+    SOFT386_REG_SS,
+    SOFT386_REG_DS,
+    SOFT386_REG_FS,
+    SOFT386_REG_GS
+};
+
+enum _SOFT386_CTRL_REGS
+{
+    SOFT386_REG_CR0,
+    SOFT386_REG_CR1,
+    SOFT386_REG_CR2,
+    SOFT386_REG_CR3,
+    SOFT386_REG_CR4,
+    SOFT386_REG_CR5,
+    SOFT386_REG_CR6,
+    SOFT386_REG_CR7
+};
+
+enum _SOFT386_DBG_REGS
+{
+    SOFT386_REG_DR0,
+    SOFT386_REG_DR1,
+    SOFT386_REG_DR2,
+    SOFT386_REG_DR3,
+    SOFT386_REG_DR4,
+    SOFT386_REG_DR5,
+    SOFT386_REG_DR6,
+    SOFT386_REG_DR7
+};
+
+typedef
+BOOLEAN
+(NTAPI *SOFT386_MEM_READ_PROC)
+(
+    PSOFT386_STATE State,
+    ULONG Address,
+    LPVOID Buffer,
+    ULONG Size
+);
+
+typedef
+BOOLEAN
+(NTAPI *SOFT386_MEM_WRITE_PROC)
+(
+    PSOFT386_STATE State,
+    ULONG Address,
+    LPVOID Buffer,
+    ULONG Size
+);
+
+typedef
+VOID
+(NTAPI *SOFT386_IO_READ_PROC)
+(
+    PSOFT386_STATE State,
+    ULONG Port,
+    LPVOID Buffer,
+    ULONG Size
+);
+
+typedef
+VOID
+(NTAPI *SOFT386_IO_WRITE_PROC)
+(
+    PSOFT386_STATE State,
+    ULONG Port,
+    LPVOID Buffer,
+    ULONG Size
+);
+
+typedef union _SOFT386_REG
+{
+    struct
+    {
+        UCHAR LowByte;
+        UCHAR HighByte;
+    };
+    USHORT LowWord;
+    ULONG Long;
+} SOFT386_REG, *PSOFT386_REG;
+
+typedef struct _SOFT386_SEG_REG
+{
+    USHORT Selector;
+
+    /* Descriptor cache */
+    ULONG Accessed : 1;
+    ULONG ReadWrite : 1;
+    ULONG DirConf : 1;
+    ULONG Executable : 1;
+    ULONG SystemType : 1;
+    ULONG Dpl : 2;
+    ULONG Present : 1;
+    ULONG Size : 1;
+    ULONG Limit;
+    ULONG Base;
+} SOFT386_SEG_REG, *PSOFT386_SEG_REG;
+
+typedef struct
+{
+    ULONG Limit : 16;
+    ULONG Base : 24;
+    ULONG Accessed : 1;
+    ULONG ReadWrite : 1;
+    ULONG DirConf : 1;
+    ULONG Executable : 1;
+    ULONG SystemType : 1;
+    ULONG Dpl : 2;
+    ULONG Present : 1;
+    ULONG LimitHigh : 4;
+    ULONG Avl : 1;
+    ULONG Reserved : 1;
+    ULONG Size : 1;
+    ULONG Granularity : 1;
+    ULONG BaseHigh : 8;
+} SOFT386_GDT_ENTRY;
+
+typedef struct
+{
+    ULONG Offset : 16;
+    ULONG Selector : 16;
+    ULONG Zero : 8;
+    ULONG Type : 4;
+    ULONG Storage : 1;
+    ULONG Dpl : 2;
+    ULONG Present : 1;
+    ULONG OffsetHigh : 16;
+} SOFT386_IDT_ENTRY;
+
+typedef struct _SOFT386_TABLE_REG
+{
+    USHORT Size;
+    ULONG Address;
+} SOFT386_TABLE_REG, *PSOFT386_TABLE_REG;
+
+typedef union _SOFT386_FLAGS_REG
+{
+    ULONG Long;
+    struct
+    {
+        ULONG Cf : 1;
+        ULONG AlwaysSet : 1;
+        ULONG Pf : 1;
+        ULONG Reserved0 : 1;
+        ULONG Af : 1;
+        ULONG Reserved1 : 1;
+        ULONG Zf : 1;
+        ULONG Sf : 1;
+        ULONG Tf : 1;
+        ULONG If : 1;
+        ULONG Df : 1;
+        ULONG Of : 1;
+        ULONG Iopl : 2;
+        ULONG Nt : 1;
+        ULONG Reserved2 : 1;
+        ULONG Rf : 1;
+        ULONG Vm : 1;
+        ULONG Ac : 1;
+        ULONG Vif : 1;
+        ULONG Vip : 1;
+        ULONG Id : 1;
+    };
+} SOFT386_FLAGS_REG, *PSOFT386_FLAGS_REG;
+
+typedef struct _SOFT386_TSS
+{
+    ULONG Link;
+    ULONG Esp0;
+    ULONG Ss0;
+    ULONG Esp1;
+    ULONG Ss1;
+    ULONG Esp2;
+    ULONG Ss2;
+    ULONG Cr3;
+    ULONG Eip;
+    ULONG Eflags;
+    ULONG Eax;
+    ULONG Ecx;
+    ULONG Edx;
+    ULONG Ebx;
+    ULONG Esp;
+    ULONG Ebp;
+    ULONG Esi;
+    ULONG Edi;
+    ULONG Es;
+    ULONG Cs;
+    ULONG Ss;
+    ULONG Ds;
+    ULONG Fs;
+    ULONG Gs;
+    ULONG Ldtr;
+    ULONG IopbOffset;
+} SOFT386_TSS, *PSOFT386_TSS;
+
+struct _SOFT386_STATE
+{
+    SOFT386_MEM_READ_PROC MemReadCallback;
+    SOFT386_MEM_WRITE_PROC MemWriteCallback;
+    SOFT386_IO_READ_PROC IoReadCallback;
+    SOFT386_IO_WRITE_PROC IoWriteCallback;
+    SOFT386_REG GeneralRegs[SOFT386_NUM_GEN_REGS];
+    SOFT386_SEG_REG SegmentRegs[SOFT386_NUM_SEG_REGS];
+    SOFT386_REG InstPtr;
+    SOFT386_FLAGS_REG Flags;
+    SOFT386_TABLE_REG Gdtr, Idtr, Ldtr, Tss;
+    ULONGLONG TimeStampCounter;
+    ULONG ControlRegisters[SOFT386_NUM_CTRL_REGS];
+    ULONG DebugRegisters[SOFT386_NUM_DBG_REGS];
+};
+
+/* FUNCTIONS ******************************************************************/
+
+VOID
+NTAPI
+Soft386Continue(PSOFT386_STATE State);
+
+VOID
+NTAPI
+Soft386StepInto(PSOFT386_STATE State);
+
+VOID
+NTAPI
+Soft386StepOver(PSOFT386_STATE State);
+
+VOID
+NTAPI
+Soft386StepOut(PSOFT386_STATE State);
+
+VOID
+NTAPI
+Soft386DumpState(PSOFT386_STATE State);
+
+VOID
+NTAPI
+Soft386Reset(PSOFT386_STATE State);
+
+#endif // _SOFT386_H_
+
+/* EOF */
