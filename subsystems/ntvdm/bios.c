@@ -907,6 +907,24 @@ VOID BiosVideoService(LPWORD Stack)
             break;
         }
 
+        /* Display combination code */
+        case 0x1A:
+        {
+            switch(LOBYTE(Eax))
+            {
+                case 0x00: /* Get Display combiantion code */
+                   EmulatorSetRegister(EMULATOR_REG_AX, MAKEWORD(0x1A, 0x1A));
+                   EmulatorSetRegister(EMULATOR_REG_BX, MAKEWORD(0x08, 0x0)); /* VGA w/ color analog display */
+                   break;
+                case 0x01: /* Set Display combination code */
+                   DPRINT1("Set Display combination code - Unsupported\n");
+                   break;
+                default:
+                   break;
+            }
+            break;
+        }
+
         default:
         {
             DPRINT1("BIOS Function INT 10h, AH = 0x%02X NOT IMPLEMENTED\n",
