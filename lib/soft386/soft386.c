@@ -8,7 +8,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "soft386.h"
+#include "common.h"
 
 /* DEFINES ********************************************************************/
 
@@ -23,6 +23,7 @@ typedef enum
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static
+inline
 VOID
 NTAPI
 Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
@@ -210,3 +211,5 @@ Soft386Interrupt(PSOFT386_STATE State, UCHAR Number)
     // TODO: NOT IMPLEMENTED!!!
     UNIMPLEMENTED;
 }
+
+/* EOF */
