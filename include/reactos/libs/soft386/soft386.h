@@ -9,11 +9,6 @@
 #ifndef _SOFT386_H_
 #define _SOFT386_H_
 
-/* INCLUDES *******************************************************************/
-
-#include <windows.h>
-#include <debug.h>
-
 /* DEFINES ********************************************************************/
 
 #define SOFT386_NUM_GEN_REGS 8
@@ -34,8 +29,7 @@
 #define SOFT386_CR0_PG (1 << 31)
 
 struct _SOFT386_STATE;
-typedef struct _SOFT386_STATE SOFT386_STATE;
-typedef struct _SOFT386_STATE *PSOFT386_STATE;
+typedef struct _SOFT386_STATE SOFT386_STATE, *PSOFT386_STATE;
 
 enum _SOFT386_GEN_REGS
 {
@@ -89,7 +83,7 @@ BOOLEAN
 (
     PSOFT386_STATE State,
     ULONG Address,
-    LPVOID Buffer,
+    PVOID Buffer,
     ULONG Size
 );
 
@@ -99,7 +93,7 @@ BOOLEAN
 (
     PSOFT386_STATE State,
     ULONG Address,
-    LPVOID Buffer,
+    PVOID Buffer,
     ULONG Size
 );
 
@@ -109,7 +103,7 @@ VOID
 (
     PSOFT386_STATE State,
     ULONG Port,
-    LPVOID Buffer,
+    PVOID Buffer,
     ULONG Size
 );
 
@@ -119,7 +113,7 @@ VOID
 (
     PSOFT386_STATE State,
     ULONG Port,
-    LPVOID Buffer,
+    PVOID Buffer,
     ULONG Size
 );
 
@@ -131,7 +125,7 @@ typedef union _SOFT386_REG
         UCHAR HighByte;
     };
     USHORT LowWord;
-    ULONG Long;
+    ULONG  Long;
 } SOFT386_REG, *PSOFT386_REG;
 
 typedef struct _SOFT386_SEG_REG
@@ -185,7 +179,7 @@ typedef struct
 typedef struct _SOFT386_TABLE_REG
 {
     USHORT Size;
-    ULONG Address;
+    ULONG  Address;
 } SOFT386_TABLE_REG, *PSOFT386_TABLE_REG;
 
 typedef union _SOFT386_FLAGS_REG

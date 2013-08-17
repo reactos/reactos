@@ -8,7 +8,15 @@
 
 /* INCLUDES *******************************************************************/
 
+// #define WIN32_NO_STATUS
+// #define _INC_WINDOWS
+#include <windef.h>
+
+#include <soft386.h>
 #include "common.h"
+
+// #define NDEBUG
+#include <debug.h>
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -100,7 +108,7 @@ Soft386ReadMemory(PSOFT386_STATE State,
     else
     {
         /* Read the memory directly */
-        RtlMoveMemory(Buffer, (LPVOID)LinearAddress, Size);
+        RtlMoveMemory(Buffer, (PVOID)LinearAddress, Size);
     }
 
     return TRUE;
@@ -177,7 +185,7 @@ Soft386WriteMemory(PSOFT386_STATE State,
     else
     {
         /* Write the memory directly */
-        RtlMoveMemory((LPVOID)LinearAddress, Buffer, Size);
+        RtlMoveMemory((PVOID)LinearAddress, Buffer, Size);
     }
 
     return TRUE;
@@ -344,7 +352,7 @@ Soft386LoadSegment(PSOFT386_STATE State, INT Segment, WORD Selector)
         else
         {
             RtlMoveMemory(&GdtEntry,
-                          (LPVOID)(State->Gdtr.Address
+                          (PVOID)(State->Gdtr.Address
                           + GET_SEGMENT_INDEX(Selector)),
                           sizeof(GdtEntry));
         }

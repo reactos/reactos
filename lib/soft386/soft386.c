@@ -8,7 +8,15 @@
 
 /* INCLUDES *******************************************************************/
 
+// #define WIN32_NO_STATUS
+// #define _INC_WINDOWS
+#include <windef.h>
+
+#include <soft386.h>
 #include "common.h"
+
+// #define NDEBUG
+#include <debug.h>
 
 /* DEFINES ********************************************************************/
 
