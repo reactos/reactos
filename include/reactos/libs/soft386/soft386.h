@@ -289,6 +289,10 @@ VOID
 NTAPI
 Soft386Reset(PSOFT386_STATE State);
 
+VOID
+NTAPI
+Soft386Interrupt(PSOFT386_STATE State, UCHAR Number);
+
 #endif // _SOFT386_H_
 
 /* EOF */
