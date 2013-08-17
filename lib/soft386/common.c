@@ -10,6 +10,16 @@
 
 #include "common.h"
 
+/* PRIVATE FUNCTIONS **********************************************************/
+
+static
+inline
+INT
+Soft386GetCurrentPrivLevel(PSOFT386_STATE State)
+{
+    return GET_SEGMENT_RPL(State->SegmentRegs[SOFT386_REG_CS].Selector);
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 inline
@@ -48,7 +58,7 @@ Soft386ReadMemory(PSOFT386_STATE State,
             return FALSE;
         }
 
-        if (GET_SEGMENT_DPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
+        if (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
         {
             // TODO: Generate exception #GP
             return FALSE;
@@ -131,7 +141,7 @@ Soft386WriteMemory(PSOFT386_STATE State,
             return FALSE;
         }
 
-        if (GET_SEGMENT_DPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
+        if (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
         {
             // TODO: Generate exception #GP
             return FALSE;
@@ -294,6 +304,116 @@ Soft386StackPop(PSOFT386_STATE State, PULONG Value)
 
         /* Store the value in the result */
         *Value = ShortValue;
+    }
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386LoadSegment(PSOFT386_STATE State, INT Segment, WORD Selector)
+{
+    PSOFT386_SEG_REG CachedDescriptor;
+    SOFT386_GDT_ENTRY GdtEntry;
+
+    ASSERT(Segment < SOFT386_NUM_SEG_REGS);
+
+    /* Get the cached descriptor */
+    CachedDescriptor = &State->SegmentRegs[Segment];
+
+    /* Check for protected mode */
+    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+    {
+        /* Make sure the GDT contains the entry */
+        if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+        {
+            // TODO: Exception #GP
+            return FALSE;
+        }
+
+        /* Read the GDT */
+        // FIXME: This code is only correct when paging is disabled!!!
+        if (State->MemReadCallback)
+        {
+            State->MemReadCallback(State,
+                                   State->Gdtr.Address
+                                   + GET_SEGMENT_INDEX(Selector),
+                                   &GdtEntry,
+                                   sizeof(GdtEntry));
+        }
+        else
+        {
+            RtlMoveMemory(&GdtEntry,
+                          (LPVOID)(State->Gdtr.Address
+                          + GET_SEGMENT_INDEX(Selector)),
+                          sizeof(GdtEntry));
+        }
+
+        /* Check if we are loading SS */
+        if (Segment == SOFT386_REG_SS)
+        {
+            if (GET_SEGMENT_INDEX(Selector) == 0)
+            {
+                // TODO: Exception #GP
+                return FALSE;
+            }
+
+            if (GdtEntry.Executable || !GdtEntry.ReadWrite)
+            {
+                // TODO: Exception #GP
+                return FALSE;
+            }
+
+            if ((GET_SEGMENT_RPL(Selector) != Soft386GetCurrentPrivLevel(State))
+                || (GET_SEGMENT_RPL(Selector) != GdtEntry.Dpl))
+            {
+                // TODO: Exception #GP
+                return FALSE;
+            }
+
+            if (!GdtEntry.Present)
+            {
+                // TODO: Exception #SS
+                return FALSE;
+            }
+        }
+        else
+        {
+            if ((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl)
+                && (Soft386GetCurrentPrivLevel(State) > GdtEntry.Dpl))
+            {
+                // TODO: Exception #GP
+                return FALSE;
+            }
+
+            if (!GdtEntry.Present)
+            {
+                // TODO: Exception #NP
+                return FALSE;
+            }
+        }
+
+        /* Update the cache entry */
+        CachedDescriptor->Selector = Selector;
+        CachedDescriptor->Base = GdtEntry.Base | (GdtEntry.BaseHigh << 24);
+        CachedDescriptor->Limit = GdtEntry.Limit | (GdtEntry.LimitHigh << 16);
+        CachedDescriptor->Accessed = GdtEntry.Accessed;
+        CachedDescriptor->ReadWrite = GdtEntry.ReadWrite;
+        CachedDescriptor->DirConf = GdtEntry.DirConf;
+        CachedDescriptor->Executable = GdtEntry.Executable;
+        CachedDescriptor->SystemType = GdtEntry.SystemType;
+        CachedDescriptor->Dpl = GdtEntry.Dpl;
+        CachedDescriptor->Present = GdtEntry.Present;
+        CachedDescriptor->Size = GdtEntry.Size;
+
+        /* Check for page granularity */
+        if (GdtEntry.Granularity) CachedDescriptor->Limit <<= 12;
+    }
+    else
+    {
+        /* Update the selector and base */
+        CachedDescriptor->Selector = Selector;
+        CachedDescriptor->Base = Selector << 4;
     }
 
     return TRUE;

@@ -356,7 +356,7 @@ static VOID BiosWriteWindow(LPWORD Buffer, SMALL_RECT Rectangle, BYTE Page)
         {
             Character = Buffer[Counter++];
 
-            /* Read from video memory */
+            /* Write to video memory */
             VgaWriteMemory(VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
                            (LPVOID)&Character,
                            sizeof(WORD));
@@ -701,33 +701,78 @@ VOID BiosPrintCharacter(CHAR Character, BYTE Attribute, BYTE Page)
     Row = HIBYTE(Bda->CursorPosition[Page]);
     Column = LOBYTE(Bda->CursorPosition[Page]);
 
-    /* Write the character */
-    VgaWriteMemory(TO_LINEAR(TEXT_VIDEO_SEG,
-                   (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
-                   (LPVOID)&CharData,
-                   sizeof(WORD));
+    if (Character == '\a')
+    {
+        /* Bell control character */
+        // NOTE: We may use what the terminal emulator offers to us...
+        Beep(800, 200);
+        return;
+    }
+    else if (Character == '\b')
+    {
+        /* Backspace control character */
+        if (Column > 0)
+        {
+            Column--;
+        }
+        else if (Row > 0)
+        {
+            Column = Bda->ScreenColumns - 1;
+            Row--;
+        }
 
-    /* Advance the cursor */
-    Column++;
+        /* Erase the existing character */
+        CharData = (Attribute << 8) | ' ';
+        VgaWriteMemory(TO_LINEAR(TEXT_VIDEO_SEG,
+                       Page * Bda->VideoPageSize
+                       + (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                       (LPVOID)&CharData,
+                       sizeof(WORD));
+    }
+    else if (Character == '\n')
+    {
+        /* Line Feed control character */
+        Row++;
+    }
+    else if (Character == '\r')
+    {
+        /* Carriage Return control character */
+        Column = 0;
+    }
+    else
+    {
+        /* Default character */
+
+        /* Write the character */
+        VgaWriteMemory(TO_LINEAR(TEXT_VIDEO_SEG,
+                       Page * Bda->VideoPageSize
+                       + (Row * Bda->ScreenColumns + Column) * sizeof(WORD)),
+                       (LPVOID)&CharData,
+                       sizeof(WORD));
+
+        /* Advance the cursor */
+        Column++;
+    }
 
     /* Check if it passed the end of the row */
-    if (Column == Bda->ScreenColumns)
+    if (Column >= Bda->ScreenColumns)
     {
-        /* Return to the first column */
+        /* Return to the first column and go to the next line */
         Column = 0;
+        Row++;
+    }
 
-        if (Row == Bda->ScreenRows)
-        {
-            /* The screen must be scrolled */
-            SMALL_RECT Rectangle = { 0, 0, Bda->ScreenColumns - 1, Bda->ScreenRows };
+    /* Scroll the screen up if needed */
+    if (Row > Bda->ScreenRows)
+    {
+        /* The screen must be scrolled up */
+        SMALL_RECT Rectangle = { 0, 0, Bda->ScreenColumns - 1, Bda->ScreenRows };
 
-            BiosScrollWindow(SCROLL_DIRECTION_UP,
-                             1,
-                             Rectangle,
-                             Page,
-                             DEFAULT_ATTRIBUTE);
-        }
-        else Row++;
+        BiosScrollWindow(SCROLL_DIRECTION_UP,
+                         1,
+                         Rectangle,
+                         Page,
+                         DEFAULT_ATTRIBUTE);
     }
 
     /* Set the cursor position */
@@ -820,8 +865,8 @@ VOID BiosVideoService(LPWORD Stack)
             };
 
             /* Call the internal function */
-            BiosScrollWindow((HIBYTE(Eax) == 0x06)
-                             ? SCROLL_DIRECTION_UP : SCROLL_DIRECTION_DOWN,
+            BiosScrollWindow((HIBYTE(Eax) == 0x06) ? SCROLL_DIRECTION_UP
+                                                   : SCROLL_DIRECTION_DOWN,
                              LOBYTE(Eax),
                              Rectangle,
                              Bda->VideoPage,

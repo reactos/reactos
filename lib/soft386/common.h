@@ -15,7 +15,8 @@
 
 /* DEFINES ********************************************************************/
 
-#define GET_SEGMENT_DPL(s) ((s) & 3)
+#define GET_SEGMENT_RPL(s) ((s) & 3)
+#define GET_SEGMENT_INDEX(s) ((s) & 0xFFF8)
 
 /* FUNCTIONS ******************************************************************/
 
@@ -56,6 +57,15 @@ Soft386StackPop
 (
     PSOFT386_STATE State,
     PULONG Value
+);
+
+inline
+BOOLEAN
+Soft386LoadSegment
+(
+    PSOFT386_STATE State,
+    INT Segment,
+    WORD Selector
 );
 
 #endif // _COMMON_H_
