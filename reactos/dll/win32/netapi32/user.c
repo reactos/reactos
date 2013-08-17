@@ -20,7 +20,7 @@
 
 /*
  *  TODO:
- *    Implement NetUserGetGroups
+ *    Implement NetUserGetGroups (WIP)
  *    Implement NetUserSetGroups
  *    NetUserGetLocalGroups does not support LG_INCLUDE_INDIRECT yet.
  *    Add missing information levels.
@@ -2056,7 +2056,7 @@ NetUserAdd(LPCWSTR servername,
     /* Open the Account Domain */
     Status = OpenAccountDomain(ServerHandle,
                                (servername != NULL) ? &ServerName : NULL,
-                               DOMAIN_CREATE_USER | DOMAIN_LOOKUP,
+                               DOMAIN_CREATE_USER | DOMAIN_LOOKUP | DOMAIN_READ_PASSWORD_PARAMETERS,
                                &DomainHandle);
     if (!NT_SUCCESS(Status))
     {
@@ -2621,15 +2621,160 @@ NetUserGetGroups(LPCWSTR servername,
                  LPDWORD entriesread,
                  LPDWORD totalentries)
 {
-    FIXME("%s %s %d %p %d %p %p stub\n", debugstr_w(servername),
+    UNICODE_STRING ServerName;
+    UNICODE_STRING UserName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE AccountDomainHandle = NULL;
+    SAM_HANDLE UserHandle = NULL;
+    PSID AccountDomainSid = NULL;
+    PULONG RelativeIds = NULL;
+    PSID_NAME_USE Use = NULL;
+    PGROUP_MEMBERSHIP GroupMembership = NULL;
+    ULONG GroupCount;
+
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("%s %s %d %p %d %p %p stub\n", debugstr_w(servername),
           debugstr_w(username), level, bufptr, prefixmaxlen, entriesread,
           totalentries);
 
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&UserName, username);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the Account Domain SID */
+    Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                 &AccountDomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Account Domain */
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_LOOKUP | DOMAIN_GET_ALIAS_MEMBERSHIP,
+                           AccountDomainSid,
+                           &AccountDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the RID for the given user name */
+    Status = SamLookupNamesInDomain(AccountDomainHandle,
+                                    1,
+                                    &UserName,
+                                    &RelativeIds,
+                                    &Use);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Fail, if it is not a user account */
+    if (Use[0] != SidTypeUser)
+    {
+        ERR("Account is not a User!\n");
+        ApiStatus = NERR_UserNotFound;
+        goto done;
+    }
+
+    /* Open the user object */
+    Status = SamOpenUser(AccountDomainHandle,
+                         USER_LIST_GROUPS,
+                         RelativeIds[0],
+                         &UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenUser failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the group memberships of this user */
+    Status = SamGetGroupsForUser(UserHandle,
+                                 &GroupMembership,
+                                 &GroupCount);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamGetGroupsForUser failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* If there is no group membership, we're done */
+    if (GroupCount == 0)
+    {
+        ApiStatus = NERR_Success;
+        goto done;
+    }
+
+
+done:
+
+    if (GroupMembership != NULL)
+        SamFreeMemory(GroupMembership);
+
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+
+    if (RelativeIds != NULL)
+        SamFreeMemory(RelativeIds);
+
+    if (Use != NULL)
+        SamFreeMemory(Use);
+
+    if (AccountDomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
+
+    if (AccountDomainHandle != NULL)
+        SamCloseHandle(AccountDomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_MORE_DATA)
+    {
+        *entriesread = 0;
+        *totalentries = 0;
+    }
+    else
+    {
+//        *entriesread = Count;
+//        *totalentries = Count;
+    }
+
+//    *bufptr = (LPBYTE)Buffer;
+
+    return ApiStatus;
+
+#if 0
     *bufptr = NULL;
     *entriesread = 0;
     *totalentries = 0;
 
     return ERROR_INVALID_LEVEL;
+#endif
 }
 
 
