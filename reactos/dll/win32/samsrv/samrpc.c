@@ -7311,7 +7311,24 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
         WriteFixedData = TRUE;
     }
 
-    /* FIXME: USER_ALL_PASSWORDEXPIRED */
+    if (WhichFields & USER_ALL_PASSWORDEXPIRED)
+    {
+        if (Buffer->All.PasswordExpired)
+        {
+            /* The pasword was last set ages ago */
+            FixedData.PasswordLastSet.LowPart = 0;
+            FixedData.PasswordLastSet.HighPart = 0;
+        }
+        else
+        {
+            /* The pasword was last set right now */
+            Status = NtQuerySystemTime(&FixedData.PasswordLastSet);
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
+
+        WriteFixedData = TRUE;
+    }
 
     if (WriteFixedData == TRUE)
     {
