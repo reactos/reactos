@@ -71,7 +71,8 @@ NTAPI
 CpGetByte(
     IN  PCPPORT Port,
     OUT PUCHAR  Byte,
-    IN  BOOLEAN Wait
+    IN  BOOLEAN Wait,
+    IN BOOLEAN Poll
 );
 
 VOID

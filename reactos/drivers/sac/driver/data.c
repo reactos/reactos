@@ -238,7 +238,7 @@ InitializeDeviceData(IN PDEVICE_OBJECT DeviceObject)
     KeInitializeTimer(&DeviceExtension->Timer);
     KeInitializeDpc(&DeviceExtension->Dpc, TimerDpcRoutine, DeviceExtension);
     KeInitializeSpinLock(&DeviceExtension->Lock);
-    KeInitializeEvent(&DeviceExtension->Event, SynchronizationEvent, 0);
+    KeInitializeEvent(&DeviceExtension->Event, SynchronizationEvent, FALSE);
     InitializeListHead(&DeviceExtension->List);
 
     /* Attempt to enable HDL support */
@@ -317,8 +317,8 @@ InitializeDeviceData(IN PDEVICE_OBJECT DeviceObject)
         DeviceExtension->PriorityFail = TRUE;
 
         /* Initialize rundown and wait for the thread to do it */
-        KeInitializeEvent(&DeviceExtension->RundownEvent, SynchronizationEvent, 0);
-        KeSetEvent(&DeviceExtension->Event, DeviceExtension->PriorityBoost, 0);
+        KeInitializeEvent(&DeviceExtension->RundownEvent, SynchronizationEvent, FALSE);
+        KeSetEvent(&DeviceExtension->Event, DeviceExtension->PriorityBoost, FALSE);
         Status = KeWaitForSingleObject(&DeviceExtension->RundownEvent,
                                        Executive,
                                        KernelMode,

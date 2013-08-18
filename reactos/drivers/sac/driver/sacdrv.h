@@ -156,6 +156,7 @@
 #define SAC_MAX_CHANNELS                    10
 #define SAC_SERIAL_PORT_BUFFER_SIZE         1024                // 1KB
 #define SAC_MAX_MESSAGES                    200
+#define SAC_VTUTF8_COL_WIDTH                80
 
 //
 // Channel flags
@@ -766,6 +767,35 @@ ChannelDestroy(
     IN PSAC_CHANNEL Channel
 );
 
+NTSTATUS
+NTAPI
+ChannelIWrite(
+    IN PSAC_CHANNEL Channel,
+    IN PCHAR Buffer,
+    IN ULONG BufferSize
+);
+
+UCHAR
+NTAPI
+ChannelIReadLast(
+    IN PSAC_CHANNEL Channel
+);
+
+ULONG
+NTAPI
+ChannelIBufferLength(
+    IN PSAC_CHANNEL Channel
+);
+
+NTSTATUS
+NTAPI
+ChannelIRead(
+    IN PSAC_CHANNEL Channel,
+    IN PCHAR Buffer,
+    IN ULONG BufferSize,
+    IN OUT PULONG ResultBufferSize
+);
+
 //
 // RAW Channel Table
 //
@@ -901,6 +931,7 @@ extern PSAC_MESSAGE_ENTRY GlobalMessageTable;
 extern KMUTEX CurrentChannelLock;
 extern LONG CurrentChannelRefCount;
 extern PCHAR SerialPortBuffer;
+extern LONG SerialPortConsumerIndex, SerialPortProducerIndex;
 extern PCHAR Utf8ConversionBuffer;
 extern ULONG Utf8ConversionBufferSize;
 

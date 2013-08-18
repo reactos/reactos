@@ -27,76 +27,10 @@ PSAC_CHANNEL SacChannel;
 ULONG ExecutePostConsumerCommand;
 PSAC_CHANNEL ExecutePostConsumerCommandData;
 
+BOOLEAN InputInEscape, InputInEscTab, ConMgrLastCharWasCR;
+CHAR InputBuffer[80];
+
 /* FUNCTIONS *****************************************************************/
-
-VOID
-NTAPI
-ConMgrSerialPortConsumer(VOID)
-{
-    NTSTATUS Status;
-    CHAR Char;
-    SAC_DBG(0x2000, "SAC TimerDpcRoutine: Entering.\n"); //bug
-
-    /* Acquire the manager lock and make sure a channel is selected */
-    SacAcquireMutexLock();
-    ASSERT(CurrentChannel);
-
-    /* Read whatever came off the serial port */
-    for (Status = SerialBufferGetChar(&Char);
-         NT_SUCCESS(Status);
-         Status = SerialBufferGetChar(&Char))
-    {
-        /* If nothing came through, bail out */
-        if (Status == STATUS_NO_DATA_DETECTED) break;
-    }
-
-    /* We're done, release the lock */
-    SacReleaseMutexLock();
-    SAC_DBG(0x2000, "SAC TimerDpcRoutine: Exiting.\n"); //bug
-}
-
-VOID
-NTAPI
-ConMgrWorkerProcessEvents(IN PSAC_DEVICE_EXTENSION DeviceExtension)
-{
-    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC WorkerProcessEvents: Entering.\n");
-
-    /* Enter the main loop */
-    while (TRUE)
-    {
-        /* Wait for something to do */
-        KeWaitForSingleObject(&DeviceExtension->Event,
-                              Executive,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-
-        /* Consume data off the serial port */
-        ConMgrSerialPortConsumer();
-        switch (ExecutePostConsumerCommand)
-        {
-            case 1:
-                /* A reboot was sent, do it  */
-                DoRebootCommand(FALSE);
-                break;
-
-            case 2:
-                /* A close was sent, do it */
-                ChanMgrCloseChannel(ExecutePostConsumerCommandData);
-                ChanMgrReleaseChannel(ExecutePostConsumerCommandData);
-                break;
-
-            case 3:
-                /* A shutdown was sent, do it */
-                DoRebootCommand(TRUE);
-                break;
-        }
-
-        /* Clear the serial port consumer state */
-        ExecutePostConsumerCommand = 0;
-        ExecutePostConsumerCommandData = NULL;
-    }
-}
 
 VOID
 NTAPI
@@ -512,6 +446,319 @@ ConMgrChannelOWrite(IN PSAC_CHANNEL Channel,
     return Status;
 }
 
+VOID
+NTAPI
+ConMgrProcessInputLine(VOID)
+{
+    ASSERT(FALSE);
+}
+
+#define Nothing 0
+
+VOID
+NTAPI
+ConMgrSerialPortConsumer(VOID)
+{
+    NTSTATUS Status;
+    CHAR Char, LastChar;
+    CHAR WriteBuffer[2], ReadBuffer[2];
+    ULONG ReadBufferSize, i;
+    WCHAR StringBuffer[2];
+    SAC_DBG(SAC_DBG_MACHINE, "SAC TimerDpcRoutine: Entering.\n"); //bug
+
+    /* Acquire the manager lock and make sure a channel is selected */
+    SacAcquireMutexLock();
+    ASSERT(CurrentChannel);
+
+    /* Read whatever came off the serial port */
+    for (Status = SerialBufferGetChar(&Char);
+         NT_SUCCESS(Status);
+         Status = SerialBufferGetChar(&Char))
+    {
+        /* If nothing came through, bail out */
+        if (Status == STATUS_NO_DATA_DETECTED) break;
+
+        /* Check if ESC was pressed */
+        if (Char == '\x1B')
+        {
+            /* Was it already pressed? */
+            if (!InputInEscape)
+            {
+                /* First time ESC is pressed! Remember and reset TAB state */
+                InputInEscTab = FALSE;
+                InputInEscape = TRUE;
+                continue;
+            }
+        }
+        else if (Char == '\t')
+        {
+            /* TAB was pressed, is it following ESC (VT-100 sequence)? */
+            if (InputInEscape)
+            {
+                /* Yes! This must be the only ESC-TAB we see in once moment */
+                ASSERT(InputInEscTab == FALSE);
+
+                /* No longer treat us as being in ESC */
+                InputInEscape = FALSE;
+
+                /* ESC-TAB is the sequence for changing channels */
+                Status = ConMgrAdvanceCurrentChannel();
+                if (!NT_SUCCESS(Status)) break;
+
+                /* Remember ESC-TAB was pressed */
+                InputInEscTab = TRUE;
+                continue;
+            }
+        }
+        else if ((Char == '0') && (InputInEscTab))
+        {
+            /* It this ESC-TAB-0? */
+            ASSERT(InputInEscape == FALSE);
+            InputInEscTab = FALSE;
+
+            /* If writes are already enabled, don't do this */
+            if (!CurrentChannel->WriteEnabled)
+            {
+                /* Reset the channel, this is our special sequence */
+                Status = ConMgrResetCurrentChannel(FALSE);
+                if (!NT_SUCCESS(Status)) break;
+            }
+
+            continue;
+        }
+        else
+        {
+            /* This is ESC-TAB-something else */
+            InputInEscTab = FALSE;
+
+            /* If writes are already enabled, don't do this */
+            if (!CurrentChannel->WriteEnabled)
+            {
+                /* Display the current channel */
+                InputInEscape = FALSE;
+                Status = ConMgrDisplayCurrentChannel();
+                if (!NT_SUCCESS(Status)) break;
+                continue;
+            }
+        }
+
+        /* Check if an ESC-sequence was being typed into a command channel */
+        if ((InputInEscape) && (CurrentChannel != SacChannel))
+        {
+            /* Store the ESC in the current channel buffer */
+            WriteBuffer[0] = '\x1B';
+            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(CHAR));
+        }
+
+        /* Check if we are no longer pressing ESC and exit the mode if so */
+        if (Char != '\x1B') InputInEscape = FALSE;
+
+        /* Whatever was typed in, save it int eh current channel */
+        ChannelIWrite(CurrentChannel, &Char, sizeof(Char));
+
+        /* If this is a command channel, we're done, nothing to process */
+        if (CurrentChannel != SacChannel) continue;
+
+        /* Check for line feed right after a carriage return */
+        if ((ConMgrLastCharWasCR) && (Char == '\n'))
+        {
+            /* Ignore the line feed, but clear the carriage return */
+            ChannelIReadLast(CurrentChannel);
+            ConMgrLastCharWasCR = 0;
+            continue;
+        }
+
+        /* Check if the user did a carriage return */
+        ConMgrLastCharWasCR = (Char == '\n');
+
+        /* If the user did an "ENTER", we need to run the command */
+        if ((Char == '\n') || (Char == '\r'))
+        {
+            /* Echo back to the terminal */
+            SacPutString(L"\r\n");
+
+DoLineParsing:
+            /* Inhibit the character (either CR or LF) */
+            ChannelIReadLast(CurrentChannel);
+
+            /* NULL-terminate the channel's input buffer */
+            WriteBuffer[0] = ANSI_NULL;
+            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(CHAR));
+
+            /* Loop over every last character */
+            do
+            {
+                /* Read every character in the channel, and strip whitespace */
+                LastChar = ChannelIReadLast(CurrentChannel);
+                WriteBuffer[0] = LastChar;
+            } while ((!(LastChar) ||
+                       (LastChar == ' ') ||
+                       (LastChar == '\t')) &&
+                     (ChannelIBufferLength(CurrentChannel)));
+
+            /* Write back into the channel the last character */
+            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(CHAR));
+
+            /* NULL-terminate the input buffer */
+            WriteBuffer[0] = ANSI_NULL;
+            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(WCHAR));
+
+            /* Now loop over every first character */
+            do
+            {
+                /* Read every character in the channel, and strip whitespace */
+                ChannelIRead(CurrentChannel,
+                             ReadBuffer,
+                             sizeof(ReadBuffer),
+                             &ReadBufferSize);
+                WriteBuffer[0] = ReadBuffer[0];
+            } while ((ReadBufferSize) &&
+                     ((ReadBuffer[0] != ' ') || (ReadBuffer[0] != '\t')));
+
+            /* We read one more than we should, so treat that as our first one */
+            InputBuffer[0] = ReadBuffer[0];
+            i = 1;
+
+            /* And now loop reading all the others */
+            do
+            {
+                /* Read each character -- there should be max 80 */
+                ChannelIRead(CurrentChannel,
+                             ReadBuffer,
+                             sizeof(ReadBuffer),
+                             &ReadBufferSize);
+                ASSERT(i < SAC_VTUTF8_COL_WIDTH);
+                InputBuffer[i++] = ReadBuffer[0];
+            } while (ReadBufferSize);
+
+            /* Now go over the entire input stream */
+            for (i = 0; InputBuffer[i]; i++)
+            {
+                /* Again it should be less than 80 characters */
+                ASSERT(i < SAC_VTUTF8_COL_WIDTH);
+
+                /* And upcase each character */
+                Char = InputBuffer[i];
+                if ((Char >= 'A') && (Char <= 'Z')) InputBuffer[i] = Char + ' ';
+            }
+
+            /* Ok, at this point, no pending command should exist */
+            ASSERT(ExecutePostConsumerCommand == Nothing);
+
+            /* Go and process the input, then show the prompt again */
+            ConMgrProcessInputLine();
+            SacPutSimpleMessage(SAC_PROMPT);
+
+            /* If the user typed a valid command, get out of here */
+            if (ExecutePostConsumerCommand != Nothing) break;
+
+            /* Keep going */
+            continue;
+        }
+
+        /* Check if the user typed backspace or delete */
+        if ((Char == '\b') || (Char == '\x7F'))
+        {
+            /* Omit the last character, which should be the DEL/BS itself */
+            if (ChannelIBufferLength(CurrentChannel))
+            {
+                ChannelIReadLast(CurrentChannel);
+            }
+
+            /* Omit the before-last character, which is the one to delete */
+            if (ChannelIBufferLength(CurrentChannel))
+            {
+                /* Also send two backspaces back to the console */
+                SacPutString(L"\b \b");
+                ChannelIReadLast(CurrentChannel);
+            }
+
+            /* Keep going */
+            continue;
+        }
+
+        /* If the user pressed CTRL-C at this point, treat it like ENTER */
+        if (Char == '\x03') goto DoLineParsing;
+
+        /* Check if the user pressed TAB */
+        if (Char == '\t')
+        {
+            /* Omit it, send a BELL, and keep going. We ignore TABs */
+            ChannelIReadLast(CurrentChannel);
+            SacPutString(L"\a");
+            continue;
+        }
+
+        /* Check if the user is getting close to the end of the screen */
+        if (ChannelIBufferLength(CurrentChannel) == (SAC_VTUTF8_COL_WIDTH - 2))
+        {
+            /* Delete the last character, replacing it with this one instead */
+            swprintf(StringBuffer, L"\b%c", Char);
+            SacPutString(StringBuffer);
+
+            /* Omit the last two characters from the buffer */
+            ChannelIReadLast(CurrentChannel);
+            ChannelIReadLast(CurrentChannel);
+
+            /* NULL-terminate it */
+            WriteBuffer[0] = Char;
+            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(CHAR));
+            continue;
+        }
+
+        /* Nothing of interest happened, just write the character back */
+        swprintf(StringBuffer, L"%c", Char);
+        SacPutString(StringBuffer);
+    }
+
+    /* We're done, release the lock */
+    SacReleaseMutexLock();
+    SAC_DBG(SAC_DBG_MACHINE, "SAC TimerDpcRoutine: Exiting.\n"); //bug
+}
+
+VOID
+NTAPI
+ConMgrWorkerProcessEvents(IN PSAC_DEVICE_EXTENSION DeviceExtension)
+{
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC WorkerProcessEvents: Entering.\n");
+
+    /* Enter the main loop */
+    while (TRUE)
+    {
+        /* Wait for something to do */
+        KeWaitForSingleObject(&DeviceExtension->Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+
+        /* Consume data off the serial port */
+        ConMgrSerialPortConsumer();
+        switch (ExecutePostConsumerCommand)
+        {
+            case 1:
+                /* A reboot was sent, do it  */
+                DoRebootCommand(FALSE);
+                break;
+
+            case 2:
+                /* A close was sent, do it */
+                ChanMgrCloseChannel(ExecutePostConsumerCommandData);
+                ChanMgrReleaseChannel(ExecutePostConsumerCommandData);
+                break;
+
+            case 3:
+                /* A shutdown was sent, do it */
+                DoRebootCommand(TRUE);
+                break;
+        }
+
+        /* Clear the serial port consumer state */
+        ExecutePostConsumerCommand = 0;
+        ExecutePostConsumerCommandData = NULL;
+    }
+}
+
 NTSTATUS
 NTAPI
 ConMgrGetChannelCloseMessage(IN PSAC_CHANNEL Channel,
@@ -520,13 +767,6 @@ ConMgrGetChannelCloseMessage(IN PSAC_CHANNEL Channel,
 {
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
-}
-
-VOID
-NTAPI
-ConMgrProcessInputLine(VOID)
-{
-    ASSERT(FALSE);
 }
 
 NTSTATUS

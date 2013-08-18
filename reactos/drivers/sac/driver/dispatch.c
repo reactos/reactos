@@ -12,6 +12,8 @@
 
 /* GLOBALS *******************************************************************/
 
+LONG TimerDpcCount;
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -61,7 +63,48 @@ TimerDpcRoutine(IN PKDPC Dpc,
                 IN PVOID SystemArgument1,
                 IN PVOID SystemArgument2)
 {
+    HEADLESS_RSP_GET_BYTE ByteValue;
+    ULONG ValueSize;
+    BOOLEAN GotChar;
+    NTSTATUS Status;
+    PSAC_DEVICE_EXTENSION SacExtension;
 
+    /* Update our counter */
+    _InterlockedExchangeAdd(&TimerDpcCount, 1);
+
+    /* Set defaults and loop for new characters */
+    GotChar = FALSE;
+    ValueSize = sizeof(ByteValue);
+    do
+    {
+        /* Ask the kernel for a byte */
+        Status = HeadlessDispatch(HeadlessCmdGetByte,
+                                  NULL,
+                                  0,
+                                  &ByteValue,
+                                  &ValueSize);
+
+        /* Break out if there's nothing interesting */
+        if (!NT_SUCCESS(Status)) break;
+        if (!ByteValue.Value) break;
+
+        /* Update the serial port buffer */
+        SerialPortBuffer[SerialPortProducerIndex] = ByteValue.Value;
+        GotChar = TRUE;
+
+        /* Update the index, let it roll-over if needed */
+        _InterlockedExchange(&SerialPortProducerIndex,
+                             (SerialPortProducerIndex + 1) &
+                             (SAC_SERIAL_PORT_BUFFER_SIZE - 1));
+    } while (ByteValue.Value);
+
+    /* Did we get anything */
+    if (GotChar)
+    {
+        /* Signal the worker thread that there is work to do */
+        SacExtension = DeferredContext;
+        KeSetEvent(&SacExtension->Event, SacExtension->PriorityBoost, FALSE);
+    }
 }
 
 VOID

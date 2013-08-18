@@ -262,6 +262,7 @@ HdlspDispatch(IN HEADLESS_CMD Command,
     PHEADLESS_RSP_QUERY_INFO HeadlessInfo;
     PHEADLESS_CMD_PUT_STRING PutString;
     PHEADLESS_CMD_ENABLE_TERMINAL EnableTerminal;
+    PHEADLESS_RSP_GET_BYTE GetByte;
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
     ASSERT(HeadlessGlobals != NULL);
 //	ASSERT(HeadlessGlobals->PageLockHandle != NULL);
@@ -328,8 +329,18 @@ HdlspDispatch(IN HEADLESS_CMD Command,
             Status = STATUS_SUCCESS;
             break;
 
-		case HeadlessCmdClearDisplay:
-			break;
+        case HeadlessCmdClearDisplay:
+
+            /* Send the VT100 claer screen command if the terminal is enabled */
+            if (HeadlessGlobals->TerminalEnabled)
+            {
+                HdlspSendStringAtBaud((PUCHAR)"\033[2J");
+            }
+
+            /* Return success either way */
+            Status = STATUS_SUCCESS;
+            break;
+
 		case HeadlessCmdClearToEndOfDisplay:
 			break;
 		case HeadlessCmdClearToEndOfLine:
@@ -344,8 +355,46 @@ HdlspDispatch(IN HEADLESS_CMD Command,
 			break;
 		case HeadlessCmdTerminalPoll:
 			break;
-		case HeadlessCmdGetByte:
-			break;
+
+        case HeadlessCmdGetByte:
+
+            /* Make sure the caller passed valid data */
+            if (!(OutputBuffer) ||
+                !(OutputBufferSize) ||
+                (*OutputBufferSize < sizeof(*GetByte)))
+            {
+                DPRINT1("Invalid buffer\n");
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Make sure the terminal is enabled */
+            GetByte = OutputBuffer;
+            if (HeadlessGlobals->TerminalEnabled)
+            {
+                /* Poll if something is on the wire */
+                if (InbvPortPollOnly(HeadlessGlobals->TerminalPort))
+                {
+                    /* If so, read it */
+                    InbvPortGetByte(HeadlessGlobals->TerminalPort,
+                                    &GetByte->Value);
+                }
+                else
+                {
+                    /* Nothing is there, return 0 */
+                    GetByte->Value = 0;
+                }
+            }
+            else
+            {
+                /* Otherwise return nothing */
+                GetByte->Value = 0;
+            }
+
+            /* Return success either way */
+            Status = STATUS_SUCCESS;
+            break;
+
 		case HeadlessCmdGetLine:
 			break;
 		case HeadlessCmdStartBugCheck:

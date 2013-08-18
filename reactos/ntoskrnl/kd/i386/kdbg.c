@@ -136,7 +136,7 @@ KdPortGetByteEx(
     IN PCPPORT PortInformation,
     OUT PUCHAR ByteReceived)
 {
-    return (CpGetByte(PortInformation, ByteReceived, FALSE) == CP_GET_SUCCESS);
+    return (CpGetByte(PortInformation, ByteReceived, FALSE, TRUE) == CP_GET_SUCCESS);
 }
 
 VOID

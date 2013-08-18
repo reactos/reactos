@@ -14,7 +14,9 @@
 
 PCHAR Utf8ConversionBuffer;
 ULONG Utf8ConversionBufferSize = PAGE_SIZE;
+
 PSAC_MACHINE_INFO MachineInformation;
+
 PVOID RequestSacCmdEventObjectBody;
 PKEVENT RequestSacCmdEventWaitObjectBody;
 PVOID RequestSacCmdSuccessEventObjectBody;

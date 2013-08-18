@@ -100,7 +100,7 @@ BOOLEAN Rs232PortGetByte(PUCHAR ByteReceived)
     if (PortInitialized == FALSE)
         return FALSE;
 
-    return (CpGetByte(&Rs232ComPort, ByteReceived, TRUE) == CP_GET_SUCCESS);
+    return (CpGetByte(&Rs232ComPort, ByteReceived, TRUE, FALSE) == CP_GET_SUCCESS);
 }
 
 /*
