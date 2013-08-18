@@ -331,7 +331,7 @@ HdlspDispatch(IN HEADLESS_CMD Command,
 
         case HeadlessCmdClearDisplay:
 
-            /* Send the VT100 claer screen command if the terminal is enabled */
+            /* Send the VT100 clear screen command if the terminal is enabled */
             if (HeadlessGlobals->TerminalEnabled)
             {
                 HdlspSendStringAtBaud((PUCHAR)"\033[2J");
