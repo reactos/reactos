@@ -464,6 +464,8 @@ struct DbgHelpStringTab {
   ULONG NumberOfSymbols;
   void *process;
   DWORD module_base;
+  char *PathChop;
+  char *SourcePath;
   struct DbgHelpLineEntry *lastLineEntry;
 };
 
@@ -532,6 +534,21 @@ DbgHelpGetString(struct DbgHelpStringTab *tab, int id)
     return tab->Table[bucket][i];
 }
 
+/* Remove a prefix of PathChop if it exists and return a copy of the tail. */
+static char *
+StrDupShortenPath(char *PathChop, char *FilePath)
+{
+    int pclen = strlen(PathChop);
+    if (!strncmp(FilePath, PathChop, pclen))
+    {
+        return strdup(FilePath+pclen);
+    }
+    else
+    {
+        return strdup(FilePath);
+    }
+}
+
 static BOOL
 DbgHelpAddLineNumber(PSRCCODEINFO LineInfo, void *UserContext)
 {
@@ -542,7 +559,48 @@ DbgHelpAddLineNumber(PSRCCODEINFO LineInfo, void *UserContext)
     if (!pSymbol) return FALSE;
     memset(pSymbol, 0, FIELD_OFFSET(SYMBOL_INFO, Name[MAX_SYM_NAME]));
 
-    fileId = DbgHelpAddStringToTable(tab, strdup(LineInfo->FileName));
+    /* If any file can be opened by relative path up to a certain level, then
+       record that path. */
+    if (!tab->PathChop)
+    {
+        int i, endLen;
+        char *end = strrchr(LineInfo->FileName, '/');
+
+        if (!end)
+            end = strrchr(LineInfo->FileName, '\\');
+
+        if (end)
+        {
+            for (i = (end - LineInfo->FileName) - 1; i >= 0; i--)
+            {
+                if (LineInfo->FileName[i] == '/' || LineInfo->FileName[i] == '\\')
+                {
+                    char *synthname = malloc(strlen(tab->SourcePath) +
+                                             strlen(LineInfo->FileName + i + 1)
+                                             + 2);
+                    strcpy(synthname, tab->SourcePath);
+                    strcat(synthname, "/");
+                    strcat(synthname, LineInfo->FileName + i + 1);
+                    FILE *f = fopen(synthname, "r");
+                    free(synthname);
+                    if (f)
+                    {
+                        fclose(f);
+                        break;
+                    }
+                }
+            }
+
+            i++; /* Be in the string or past the next slash */
+            tab->PathChop = malloc(i + 1);
+            memcpy(tab->PathChop, LineInfo->FileName, i);
+            tab->PathChop[i] = 0;
+        }
+    }
+
+    fileId = DbgHelpAddStringToTable(tab,
+                                     StrDupShortenPath(tab->PathChop,
+                                                       LineInfo->FileName));
 
     pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
     pSymbol->MaxNameLen = MAX_SYM_NAME;
@@ -570,7 +628,7 @@ DbgHelpAddLineNumber(PSRCCODEINFO LineInfo, void *UserContext)
 }
 
 static int
-ConvertDbgHelp(void *process, DWORD module_base,
+ConvertDbgHelp(void *process, DWORD module_base, char *SourcePath,
                ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
                ULONG *StringsLength, void **StringsBase)
 {
@@ -589,6 +647,8 @@ ConvertDbgHelp(void *process, DWORD module_base,
     strtab.CurLineEntries = 0;
     strtab.LineEntries = 16384;
     strtab.LineEntryData = calloc(strtab.LineEntries, sizeof(struct DbgHelpLineEntry));
+    strtab.PathChop = NULL;
+    strtab.SourcePath = SourcePath ? SourcePath : "";
 
     SymEnumLines(process, module_base, NULL, NULL, DbgHelpAddLineNumber, &strtab);
 
@@ -636,6 +696,7 @@ ConvertDbgHelp(void *process, DWORD module_base,
     }
 
     free(strtab.LineEntryData);
+    free(strtab.PathChop);
 
     qsort(*SymbolsBase, *SymbolsCount, sizeof(ROSSYM_ENTRY), (int (*)(const void *, const void *))CompareSymEntry);
 
@@ -1123,15 +1184,47 @@ int main(int argc, char* argv[])
     void *file;
     char elfhdr[4] = { '\177', 'E', 'L', 'F' };
     BOOLEAN UseDbgHelp = FALSE;
+    int arg, argstate = 0;
+    char *SourcePath = NULL;
 
-    if (argc != 3)
+    for (arg = 1; arg < argc; arg++)
     {
-        fprintf(stderr, "Usage: rsym <exefile> <symfile>\n");
-        exit(1);
+        switch (argstate)
+        {
+            default:
+                argstate = -1;
+                break;
+
+            case 0:
+                if (!strcmp(argv[arg], "-s"))
+                {
+                    argstate = 1;
+                }
+                else
+                {
+                    argstate = 2;
+                    path1 = convert_path(argv[arg]);
+                }
+            break;
+
+            case 1:
+                free(SourcePath);
+                SourcePath = strdup(argv[arg]);
+                argstate = 0;
+                break;
+
+            case 2:
+                path2 = convert_path(argv[arg]);
+                argstate = 3;
+                break;
+        }
     }
 
-    path1 = convert_path(argv[1]);
-    path2 = convert_path(argv[2]);
+    if (argstate != 3)
+    {
+        fprintf(stderr, "Usage: rsym [-s <sources>] <input> <output>\n");
+        exit(1);
+    }
 
     FileData = load_file(path1, &FileSize);
     if (!FileData)
@@ -1192,6 +1285,7 @@ int main(int argc, char* argv[])
 
         if (ConvertDbgHelp(FileData, 
                            module_base,
+                           SourcePath,
                            &StabSymbolsCount,
                            &StabSymbols,
                            &StringsLength,
