@@ -7115,9 +7115,24 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
     SAM_USER_FIXED_DATA FixedData;
     ULONG Length = 0;
     ULONG WhichFields;
+    PENCRYPTED_NT_OWF_PASSWORD NtPassword = NULL;
+    PENCRYPTED_LM_OWF_PASSWORD LmPassword = NULL;
+    BOOLEAN NtPasswordPresent = FALSE;
+    BOOLEAN LmPasswordPresent = FALSE;
+    BOOLEAN WriteFixedData = FALSE;
     NTSTATUS Status = STATUS_SUCCESS;
 
     WhichFields = Buffer->All.WhichFields;
+
+    /* Get the fixed size attributes */
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     if (WhichFields & USER_ALL_USERNAME)
     {
@@ -7234,39 +7249,72 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
             goto done;
     }
 
-    if (WhichFields & (USER_ALL_PRIMARYGROUPID |
-                       USER_ALL_ACCOUNTEXPIRES |
-                       USER_ALL_USERACCOUNTCONTROL |
-                       USER_ALL_COUNTRYCODE |
-                       USER_ALL_CODEPAGE))
+    if (WhichFields & USER_ALL_PRIMARYGROUPID)
     {
-        Length = sizeof(SAM_USER_FIXED_DATA);
-        Status = SampGetObjectAttribute(UserObject,
-                                        L"F",
-                                        NULL,
-                                        (PVOID)&FixedData,
-                                        &Length);
+        FixedData.PrimaryGroupId = Buffer->All.PrimaryGroupId;
+        WriteFixedData = TRUE;
+    }
+
+    if (WhichFields & USER_ALL_ACCOUNTEXPIRES)
+    {
+        FixedData.AccountExpires.LowPart = Buffer->All.AccountExpires.LowPart;
+        FixedData.AccountExpires.HighPart = Buffer->All.AccountExpires.HighPart;
+        WriteFixedData = TRUE;
+    }
+
+    if (WhichFields & USER_ALL_USERACCOUNTCONTROL)
+    {
+        FixedData.UserAccountControl = Buffer->All.UserAccountControl;
+        WriteFixedData = TRUE;
+    }
+
+    if (WhichFields & USER_ALL_COUNTRYCODE)
+    {
+        FixedData.CountryCode = Buffer->All.CountryCode;
+        WriteFixedData = TRUE;
+    }
+
+    if (WhichFields & USER_ALL_CODEPAGE)
+    {
+        FixedData.CodePage = Buffer->All.CodePage;
+        WriteFixedData = TRUE;
+    }
+
+    if (WhichFields & (USER_ALL_NTPASSWORDPRESENT |
+                       USER_ALL_LMPASSWORDPRESENT))
+    {
+        if (WhichFields & USER_ALL_NTPASSWORDPRESENT)
+        {
+            NtPassword = (PENCRYPTED_NT_OWF_PASSWORD)Buffer->All.NtOwfPassword.Buffer;
+            NtPasswordPresent = Buffer->All.NtPasswordPresent;
+        }
+
+        if (WhichFields & USER_ALL_LMPASSWORDPRESENT)
+        {
+            LmPassword = (PENCRYPTED_LM_OWF_PASSWORD)Buffer->All.LmOwfPassword.Buffer;
+            LmPasswordPresent = Buffer->All.LmPasswordPresent;
+        }
+
+        Status = SampSetUserPassword(UserObject,
+                                     NtPassword,
+                                     NtPasswordPresent,
+                                     LmPassword,
+                                     LmPasswordPresent);
         if (!NT_SUCCESS(Status))
             goto done;
 
-        if (WhichFields & USER_ALL_PRIMARYGROUPID)
-            FixedData.PrimaryGroupId = Buffer->All.PrimaryGroupId;
+        /* The password has just been set */
+        Status = NtQuerySystemTime(&FixedData.PasswordLastSet);
+        if (!NT_SUCCESS(Status))
+            goto done;
 
-        if (WhichFields & USER_ALL_ACCOUNTEXPIRES)
-        {
-            FixedData.AccountExpires.LowPart = Buffer->All.AccountExpires.LowPart;
-            FixedData.AccountExpires.HighPart = Buffer->All.AccountExpires.HighPart;
-        }
+        WriteFixedData = TRUE;
+    }
 
-        if (WhichFields & USER_ALL_USERACCOUNTCONTROL)
-            FixedData.UserAccountControl = Buffer->All.UserAccountControl;
+    /* FIXME: USER_ALL_PASSWORDEXPIRED */
 
-        if (WhichFields & USER_ALL_COUNTRYCODE)
-            FixedData.CountryCode = Buffer->Preferences.CountryCode;
-
-        if (WhichFields & USER_ALL_CODEPAGE)
-            FixedData.CodePage = Buffer->Preferences.CodePage;
-
+    if (WriteFixedData == TRUE)
+    {
         Status = SampSetObjectAttribute(UserObject,
                                         L"F",
                                         REG_BINARY,
@@ -7276,15 +7324,7 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
             goto done;
     }
 
-/*
-FIXME:
-    USER_ALL_NTPASSWORDPRESENT
-    USER_ALL_LMPASSWORDPRESENT
-    USER_ALL_PASSWORDEXPIRED
-*/
-
 done:
-
     return Status;
 }
 
