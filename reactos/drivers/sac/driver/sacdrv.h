@@ -157,6 +157,7 @@
 #define SAC_SERIAL_PORT_BUFFER_SIZE         1024                // 1KB
 #define SAC_MAX_MESSAGES                    200
 #define SAC_VTUTF8_COL_WIDTH                80
+#define SAC_VTUTF8_COL_HEIGHT               25
 
 //
 // Channel flags
@@ -302,7 +303,7 @@ ULONG
 );
 
 typedef
-CHAR
+WCHAR
 (NTAPI *PSAC_CHANNEL_IREAD_LAST)(
     IN struct _SAC_CHANNEL* Channel
 );
@@ -775,7 +776,7 @@ ChannelIWrite(
     IN ULONG BufferSize
 );
 
-UCHAR
+WCHAR
 NTAPI
 ChannelIReadLast(
     IN PSAC_CHANNEL Channel
@@ -864,7 +865,7 @@ RawChannelIBufferLength(
     IN PSAC_CHANNEL Channel
 );
 
-CHAR
+WCHAR
 NTAPI
 RawChannelIReadLast(
     IN PSAC_CHANNEL Channel
@@ -879,8 +880,105 @@ RawChannelIWrite(
 );
 
 //
+// VT-UTF8 Channel Table
+//
+NTSTATUS
+NTAPI
+VTUTF8ChannelCreate(
+    IN PSAC_CHANNEL Channel
+);
+
+NTSTATUS
+NTAPI
+VTUTF8ChannelDestroy(
+    IN PSAC_CHANNEL Channel
+);
+
+NTSTATUS
+NTAPI
+VTUTF8ChannelORead(
+    IN PSAC_CHANNEL Channel,
+    IN PCHAR Buffer,
+    IN ULONG BufferSize,
+    OUT PULONG ByteCount
+);
+
+NTSTATUS
+NTAPI
+VTUTF8ChannelOEcho(
+    IN PSAC_CHANNEL Channel,
+    IN PCHAR String,
+    IN ULONG Length
+);
+
+NTSTATUS
+NTAPI
+VTUTF8ChannelOFlush(
+    IN PSAC_CHANNEL Channel
+);
+
+NTSTATUS
+NTAPI
+VTUTF8ChannelOWrite(
+    IN PSAC_CHANNEL Channel,
+    IN PCHAR String,
+    IN ULONG Length
+);
+
+NTSTATUS
+NTAPI
+VTUTF8ChannelIRead(
+    IN PSAC_CHANNEL Channel,
+    IN PCHAR Buffer,
+    IN ULONG BufferSize,
+    IN PULONG ReturnBufferSize
+);
+
+NTSTATUS
+NTAPI
+VTUTF8ChannelIBufferIsFull(
+    IN PSAC_CHANNEL Channel,
+    OUT PBOOLEAN BufferStatus
+);
+
+ULONG
+NTAPI
+VTUTF8ChannelIBufferLength(
+    IN PSAC_CHANNEL Channel
+);
+
+WCHAR
+NTAPI
+VTUTF8ChannelIReadLast(
+    IN PSAC_CHANNEL Channel
+);
+
+NTSTATUS
+NTAPI
+VTUTF8ChannelIWrite(
+    IN PSAC_CHANNEL Channel,
+    IN PCHAR Buffer,
+    IN ULONG BufferSize
+);
+
+
+//
 // Helper Routines
 //
+BOOLEAN
+NTAPI
+SacTranslateUtf8ToUnicode(
+    IN CHAR Utf8Char,
+    IN PCHAR Utf8Buffer,
+    OUT PWCHAR Utf8Value
+);
+
+ULONG
+NTAPI
+GetMessageLineCount(
+    IN ULONG MessageIndex
+);
+
 NTSTATUS
 NTAPI
 SerialBufferGetChar(
@@ -923,6 +1021,102 @@ DoRebootCommand(
     IN BOOLEAN Reboot
 );
 
+VOID
+NTAPI
+DoFullInfoCommand(
+    VOID
+);
+
+VOID
+NTAPI
+DoPagingCommand(
+    VOID
+);
+
+VOID
+NTAPI
+DoSetTimeCommand(
+    IN PCHAR InputTime
+);
+
+VOID
+NTAPI
+DoKillCommand(
+    IN PCHAR KillString
+);
+
+VOID
+NTAPI
+DoLowerPriorityCommand(
+    IN PCHAR PrioString
+);
+
+VOID
+NTAPI
+DoRaisePriorityCommand(
+    IN PCHAR PrioString
+);
+
+VOID
+NTAPI
+DoLimitMemoryCommand(
+    IN PCHAR LimitString
+);
+
+VOID
+NTAPI
+DoCrashCommand(
+    VOID
+);
+
+VOID
+NTAPI
+DoMachineInformationCommand(
+    VOID
+);
+
+VOID
+NTAPI
+DoChannelCommand(
+    IN PCHAR ChannelString
+);
+
+VOID
+NTAPI
+DoCmdCommand(
+    IN PCHAR InputString
+);
+
+VOID
+NTAPI
+DoLockCommand(
+    VOID
+);
+
+VOID
+NTAPI
+DoHelpCommand(
+    VOID
+);
+
+VOID
+NTAPI
+DoGetNetInfo(
+    IN BOOLEAN DoPrint
+);
+
+VOID
+NTAPI
+DoSetIpAddressCommand(
+    IN PCHAR IpString
+);
+
+VOID
+NTAPI
+DoTlistCommand(
+    VOID
+);
+
 //
 // External data
 //
@@ -933,7 +1127,9 @@ extern LONG CurrentChannelRefCount;
 extern PCHAR SerialPortBuffer;
 extern LONG SerialPortConsumerIndex, SerialPortProducerIndex;
 extern PCHAR Utf8ConversionBuffer;
+extern BOOLEAN GlobalPagingNeeded;
 extern ULONG Utf8ConversionBufferSize;
+extern BOOLEAN CommandConsoleLaunchingEnabled;
 
 //
 // Function to initailize a SAC Semaphore Lock
@@ -1045,4 +1241,12 @@ ChannelGetIndex(IN PSAC_CHANNEL Channel)
 {
     /* Return the index of the channel */
     return Channel->Index;
+}
+
+FORCEINLINE
+BOOLEAN
+ChannelHasNewIBufferData(IN PSAC_CHANNEL Channel)
+{
+    /* Return if there's any new data in the input buffer */
+    return Channel->ChannelHasNewIBufferData;
 }

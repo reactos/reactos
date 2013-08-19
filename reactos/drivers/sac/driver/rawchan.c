@@ -23,17 +23,19 @@ RawChannelCreate(IN PSAC_CHANNEL Channel)
 {
     CHECK_PARAMETER(Channel);
 
+    /* Allocate the output buffer */
     Channel->OBuffer = SacAllocatePool(SAC_RAW_OBUFFER_SIZE, GLOBAL_BLOCK_TAG);
     CHECK_ALLOCATION(Channel->OBuffer);
 
+    /* Allocate the input buffer */
     Channel->IBuffer = SacAllocatePool(SAC_RAW_IBUFFER_SIZE, GLOBAL_BLOCK_TAG);
     CHECK_ALLOCATION(Channel->IBuffer);
 
+    /* Reset all flags and return success */
     Channel->OBufferIndex = 0;
     Channel->OBufferFirstGoodIndex = 0;
     Channel->ChannelHasNewIBufferData = FALSE;
     Channel->ChannelHasNewOBufferData = FALSE;
-
     return STATUS_SUCCESS;
 }
 
@@ -43,16 +45,9 @@ RawChannelDestroy(IN PSAC_CHANNEL Channel)
 {
     CHECK_PARAMETER(Channel);
 
-    if (Channel->OBuffer)
-    {
-        SacFreePool(Channel->OBuffer);
-    }
-
-    if (Channel->IBuffer)
-    {
-        SacFreePool(Channel->IBuffer);
-    }
-
+    /* Free the buffer and then destroy the channel */
+    if (Channel->OBuffer) SacFreePool(Channel->OBuffer);
+    if (Channel->IBuffer) SacFreePool(Channel->IBuffer);
     return ChannelDestroy(Channel);
 }
 
@@ -61,13 +56,6 @@ BOOLEAN
 ChannelHasNewOBufferData(IN PSAC_CHANNEL Channel)
 {
     return Channel->ChannelHasNewOBufferData;
-}
-
-FORCEINLINE
-BOOLEAN
-ChannelHasNewIBufferData(IN PSAC_CHANNEL Channel)
-{
-    return Channel->ChannelHasNewIBufferData;
 }
 
 NTSTATUS
@@ -207,38 +195,6 @@ RawChannelOFlush(IN PSAC_CHANNEL Channel)
     return ConMgrFlushData(Channel);
 }
 
-ULONG
-NTAPI
-RawChannelGetIBufferIndex(IN PSAC_CHANNEL Channel)
-{
-    ASSERT(Channel);
-    ASSERT(Channel->IBufferIndex < SAC_RAW_IBUFFER_SIZE);
-
-    return Channel->IBufferIndex;
-}
-
-VOID
-NTAPI
-RawChannelSetIBufferIndex(IN PSAC_CHANNEL Channel,
-                          IN ULONG BufferIndex)
-{
-    NTSTATUS Status;
-    ASSERT(Channel);
-    ASSERT(Channel->IBufferIndex < SAC_RAW_IBUFFER_SIZE);
-
-    Channel->IBufferIndex = BufferIndex;
-    Channel->ChannelHasNewIBufferData = BufferIndex != 0;
-
-    if (!Channel->IBufferIndex)
-    {
-        if (Channel->Flags & SAC_CHANNEL_FLAG_HAS_NEW_DATA_EVENT)
-        {
-            ChannelClearEvent(Channel, HasNewDataEvent);
-            UNREFERENCED_PARAMETER(Status);
-        }
-    }
-}
-
 NTSTATUS
 NTAPI
 RawChannelOWrite(IN PSAC_CHANNEL Channel,
@@ -256,6 +212,40 @@ RawChannelOWrite(IN PSAC_CHANNEL Channel,
     return RawChannelOWrite2(Channel, String, Length);
 }
 
+ULONG
+NTAPI
+RawChannelGetIBufferIndex(IN PSAC_CHANNEL Channel)
+{
+    ASSERT(Channel);
+    ASSERT(Channel->IBufferIndex < SAC_RAW_IBUFFER_SIZE);
+
+    /* Return the current buffer index */
+    return Channel->IBufferIndex;
+}
+
+VOID
+NTAPI
+RawChannelSetIBufferIndex(IN PSAC_CHANNEL Channel,
+                          IN ULONG BufferIndex)
+{
+    NTSTATUS Status;
+    ASSERT(Channel);
+    ASSERT(Channel->IBufferIndex < SAC_RAW_IBUFFER_SIZE);
+
+    /* Set the new index, and if it's not zero, it means we have data */
+    Channel->IBufferIndex = BufferIndex;
+    _InterlockedExchange(&Channel->ChannelHasNewIBufferData, BufferIndex != 0);
+
+    /* If we have new data, and an event has been registered... */
+    if (!(Channel->IBufferIndex) &&
+        (Channel->Flags & SAC_CHANNEL_FLAG_HAS_NEW_DATA_EVENT))
+    {
+        /* Go ahead and signal it */
+        ChannelClearEvent(Channel, HasNewDataEvent);
+        UNREFERENCED_PARAMETER(Status);
+    }
+}
+
 NTSTATUS
 NTAPI
 RawChannelIRead(IN PSAC_CHANNEL Channel,
@@ -264,38 +254,46 @@ RawChannelIRead(IN PSAC_CHANNEL Channel,
                 IN PULONG ReturnBufferSize)
 {
     ULONG CopyChars;
-
     CHECK_PARAMETER1(Channel);
     CHECK_PARAMETER2(Buffer);
     CHECK_PARAMETER_WITH_STATUS(BufferSize > 0, STATUS_INVALID_BUFFER_SIZE);
 
+    /* Assume failure */
     *ReturnBufferSize = 0;
 
+    /* Check how many bytes are in the buffer */
     if (Channel->ChannelInputBufferLength(Channel) == 0)
     {
+        /* Apparently nothing. Make sure the flag indicates so too */
         ASSERT(ChannelHasNewIBufferData(Channel) == FALSE);
     }
     else
     {
-        CopyChars = Channel->ChannelInputBufferLength(Channel);
-        if (CopyChars > BufferSize) CopyChars = BufferSize;
+        /* Use the smallest number of bytes either in the buffer or requested */
+        CopyChars = min(Channel->ChannelInputBufferLength(Channel), BufferSize);
         ASSERT(CopyChars <= Channel->ChannelInputBufferLength(Channel));
 
+        /* Copy them into the caller's buffer */
         RtlCopyMemory(Buffer, Channel->IBuffer, CopyChars);
 
+        /* Update the channel's index past the copied (read) bytes */
         RawChannelSetIBufferIndex(Channel,
                                   RawChannelGetIBufferIndex(Channel) - CopyChars);
 
+        /* Are there still bytes that haven't been read yet? */
         if (Channel->ChannelInputBufferLength(Channel))
         {
+            /* Shift them up in the buffer */
             RtlMoveMemory(Channel->IBuffer,
                           &Channel->IBuffer[CopyChars],
                           Channel->ChannelInputBufferLength(Channel));
         }
 
+        /* Return the number of bytes we actually copied */
         *ReturnBufferSize = CopyChars;
     }
 
+    /* Return success */
     return STATUS_SUCCESS;
 }
 
@@ -307,6 +305,7 @@ RawChannelIBufferIsFull(IN PSAC_CHANNEL Channel,
     CHECK_PARAMETER1(Channel);
     CHECK_PARAMETER2(BufferStatus);
 
+    /* If the index is beyond the length, the buffer must be full */
     *BufferStatus = RawChannelGetIBufferIndex(Channel) > SAC_RAW_IBUFFER_SIZE;
     return STATUS_SUCCESS;
 }
@@ -316,25 +315,31 @@ NTAPI
 RawChannelIBufferLength(IN PSAC_CHANNEL Channel)
 {
     ASSERT(Channel);
+
+    /* The index is the current length (since we're 0-based) */
     return RawChannelGetIBufferIndex(Channel);
 }
 
-CHAR
+WCHAR
 NTAPI
 RawChannelIReadLast(IN PSAC_CHANNEL Channel)
 {
     UCHAR LastChar = 0;
-
     ASSERT(Channel);
 
+    /* Check if there's anything to read in the buffer */
     if (Channel->ChannelInputBufferLength(Channel))
     {
-        RawChannelSetIBufferIndex(Channel, RawChannelGetIBufferIndex(Channel) - 1);
+        /* Go back one character */
+        RawChannelSetIBufferIndex(Channel,
+                                  RawChannelGetIBufferIndex(Channel) - 1);
 
+        /* Read it, and clear its current value */
         LastChar = Channel->IBuffer[RawChannelGetIBufferIndex(Channel)];
-        Channel->IBuffer[RawChannelGetIBufferIndex(Channel)] = 0;
+        Channel->IBuffer[RawChannelGetIBufferIndex(Channel)] = ANSI_NULL;
     }
 
+    /* Return the last character */
     return LastChar;
 }
 
@@ -347,27 +352,34 @@ RawChannelIWrite(IN PSAC_CHANNEL Channel,
     NTSTATUS Status;
     BOOLEAN IsFull;
     ULONG Index;
-
     CHECK_PARAMETER1(Channel);
     CHECK_PARAMETER2(Buffer);
     CHECK_PARAMETER_WITH_STATUS(BufferSize > 0, STATUS_INVALID_BUFFER_SIZE);
 
+    /* First, check if the input buffer still has space */
     Status = RawChannelIBufferIsFull(Channel, &IsFull);
     if (!NT_SUCCESS(Status)) return Status;
-
     if (IsFull) return STATUS_UNSUCCESSFUL;
 
+    /* Get the current buffer index */
     Index = RawChannelGetIBufferIndex(Channel);
-    if ((SAC_RAW_IBUFFER_SIZE - Index) >= BufferSize) return STATUS_INSUFFICIENT_RESOURCES;
+    if ((SAC_RAW_IBUFFER_SIZE - Index) < BufferSize)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
+    /* Copy the new data */
     RtlCopyMemory(&Channel->IBuffer[Index], Buffer, BufferSize);
 
+    /* Update the index */
     RawChannelSetIBufferIndex(Channel, BufferSize + Index);
 
+    /* Signal the event, if one was set */
     if (Channel->Flags & SAC_CHANNEL_FLAG_HAS_NEW_DATA_EVENT)
     {
         ChannelSetEvent(Channel, HasNewDataEvent);
     }
 
+    /* All done */
     return STATUS_SUCCESS;
 }

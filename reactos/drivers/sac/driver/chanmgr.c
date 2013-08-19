@@ -404,7 +404,6 @@ ChanMgrCreateChannel(OUT PSAC_CHANNEL *Channel,
     if (i == SAC_MAX_CHANNELS)
     {
         /* Bail out */
-        SAC_DBG(SAC_DBG_INIT, "failing here: %d %lx\n", __LINE__, Status);
         goto ReturnStatus;
     }
 
@@ -438,7 +437,6 @@ ChanMgrCreateChannel(OUT PSAC_CHANNEL *Channel,
     else
     {
         /* We couldn't create it, free the buffer */
-        SAC_DBG(SAC_DBG_INIT, "failing here: %d %lx\n", __LINE__, Status);
         SacFreePool(NewChannel);
     }
 

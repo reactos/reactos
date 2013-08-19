@@ -36,6 +36,56 @@ PCHAR SerialPortBuffer;
 
 BOOLEAN
 NTAPI
+SacTranslateUtf8ToUnicode(IN CHAR Utf8Char,
+                          IN PCHAR Utf8Buffer,
+                          OUT PWCHAR Utf8Value)
+{
+    ULONG i;
+
+    /* Find out how many valid characters we have in the buffer */
+    i = 0;
+    while (Utf8Buffer[i++] && (i < 3));
+
+    /* If we have at least 3, shift everything by a byte */
+    if (i >= 3)
+    {
+        /* The last input character goes at the end */
+        Utf8Buffer[0] = Utf8Buffer[1];
+        Utf8Buffer[1] = Utf8Buffer[2];
+        Utf8Buffer[2] = Utf8Char;
+    }
+    else
+    {
+        /* We don't have more than 3 characters, place the input at the index */
+        Utf8Buffer[i] = Utf8Char;
+    }
+
+    /* Print to debugger */
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SacTranslateUtf8ToUnicode - About to decode the UTF8 buffer.\n");
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "                                  UTF8[0]: 0x%02lx UTF8[1]: 0x%02lx UTF8[2]: 0x%02lx\n",
+            Utf8Buffer[0],
+            Utf8Buffer[1],
+            Utf8Buffer[2]);
+
+    /* Is this a simple ANSI character? */
+    if (!(Utf8Char & 0x80))
+    {
+        /* Return it as Unicode, nothing left to do */
+        SAC_DBG(SAC_DBG_ENTRY_EXIT, "SACDRV: SacTranslateUTf8ToUnicode - Case1\n");
+        *Utf8Value = (WCHAR)Utf8Char;
+        Utf8Buffer[0] = Utf8Buffer[1];
+        Utf8Buffer[1] = Utf8Buffer[2];
+        Utf8Buffer[2] = UNICODE_NULL;
+        return TRUE;
+    }
+
+    /* Anything else is not yet supported */
+    ASSERT(FALSE);
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
 SacTranslateUnicodeToUtf8(IN PWCHAR SourceBuffer,
                           IN ULONG SourceBufferLength,
                           OUT PCHAR DestinationBuffer,
@@ -151,8 +201,76 @@ SacFormatMessage(IN PWCHAR FormattedString,
                  IN PWCHAR MessageString,
                  IN ULONG MessageSize)
 {
-    /* FIXME: For now don't format anything */
-    wcsncpy(FormattedString, MessageString, MessageSize / sizeof(WCHAR));
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC SacFormatMessage: Entering.\n");
+
+    /* Check if any of the parameters are NULL or zero */
+    if (!(MessageString) || !(FormattedString) || !(MessageSize))
+    {
+        SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC SacFormatMessage: Exiting with invalid parameters.\n");
+        return;
+    }
+
+    /* Keep going as long as there's still characters */
+    while ((MessageString[0]) && (MessageSize))
+    {
+        /* Is it a non-formatting character? */
+        if (MessageString[0] != L'%')
+        {
+            /* Just write it back into the buffer and keep going */
+            *FormattedString++ = MessageString[0];
+            MessageString++;
+        }
+        else
+        {
+            /* Go over the format characters we recognize */
+            switch (MessageString[1])
+            {
+                case L'0':
+                    *FormattedString = UNICODE_NULL;
+                    return;
+
+                case L'%':
+                    *FormattedString++ = L'%';
+                    break;
+
+                case L'\\':
+                    *FormattedString++ = L'\r';
+                    *FormattedString++ = L'\n';
+                    break;
+
+                case L'r':
+                    *FormattedString++ = L'\r';
+                    break;
+
+                case L'b':
+                    *FormattedString++ = L' ';
+                    break;
+
+                case L'.':
+                    *FormattedString++ = L'.';
+                    break;
+
+                case L'!':
+                    *FormattedString++ = L'!';
+                    break;
+
+                default:
+                    /* Only move forward one character */
+                    MessageString--;
+                    break;
+            }
+
+            /* Move forward two characters */
+            MessageString += 2;
+        }
+
+        /* Move to the next character*/
+        MessageSize--;
+    }
+
+    /* All done */
+    *FormattedString = UNICODE_NULL;
+    SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC SacFormatMessage: Exiting.\n");
 }
 
 NTSTATUS
@@ -1106,6 +1224,25 @@ SerialBufferGetChar(OUT PCHAR Char)
 }
 
 ULONG
+NTAPI
+GetMessageLineCount(IN ULONG MessageIndex)
+{
+    ULONG LineCount = 0;
+    PWCHAR Buffer;
+
+    /* Get the message buffer */
+    Buffer = GetMessage(MessageIndex);
+    if (Buffer)
+    {
+        /* Scan it looking for new lines, and increment the conut each time */
+        while (*Buffer) if (*Buffer++ == L'\n') ++LineCount;
+    }
+
+    /* Return the line count */
+    return LineCount;
+}
+
+ULONG
 ConvertAnsiToUnicode(
 	IN PWCHAR pwch,
 	IN PCHAR pch,
@@ -1131,16 +1268,6 @@ InvokeUserModeService(
 	return STATUS_NOT_IMPLEMENTED;
 }
 
-BOOLEAN
-SacTranslateUtf8ToUnicode(
-	IN CHAR Utf8Char,
-	IN PCHAR UnicodeBuffer, 
-	OUT PCHAR Utf8Value
-	)
-{
-	return FALSE;
-}
-
 NTSTATUS
 TranslateMachineInformationText(
 	IN PWCHAR Buffer)
@@ -1157,14 +1284,6 @@ CopyAndInsertStringAtInterval(
 	)
 {
 	return STATUS_NOT_IMPLEMENTED;
-}
-
-ULONG
-GetMessageLineCount(
-	IN ULONG MessageIndex
-	)
-{
-	return 0;
 }
 
 NTSTATUS

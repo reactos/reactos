@@ -169,7 +169,7 @@ ConMgrInitialize(VOID)
 
     /* Setup the attributes for the raw SAC channel */
     RtlZeroMemory(&SacChannelAttributes, sizeof(SacChannelAttributes));
-    SacChannelAttributes.ChannelType = Raw;
+    SacChannelAttributes.ChannelType = Raw; /* FIXME: Should be VtUtf8 */
 
     /* Get the right name for it */
     pcwch = GetMessage(SAC_CHANNEL_NAME);
@@ -438,6 +438,7 @@ ConMgrChannelOWrite(IN PSAC_CHANNEL Channel,
 
     /* Do the write with the lock held */
     SacAcquireMutexLock();
+    ASSERT(FALSE);
     Status = STATUS_NOT_IMPLEMENTED;// ChannelOWrite(Channel, WriteBuffer + 24, *(WriteBuffer + 20));
     SacReleaseMutexLock();
 
@@ -446,22 +447,137 @@ ConMgrChannelOWrite(IN PSAC_CHANNEL Channel,
     return Status;
 }
 
+#define Shutdown    1
+#define Restart     3
+#define Nothing     0
+BOOLEAN GlobalPagingNeeded;
+
 VOID
 NTAPI
 ConMgrProcessInputLine(VOID)
 {
-    ASSERT(FALSE);
-}
+    BOOLEAN EnablePaging;
+    NTSTATUS Status;
 
-#define Nothing 0
+    SAC_DBG(4, "SAC Input Test: %s\n", InputBuffer);
+
+    if (!strncmp(InputBuffer, "t", 1))
+    {
+        DoTlistCommand();
+    }
+    else if (!strncmp(InputBuffer, "?", 1))
+    {
+        DoHelpCommand();
+    }
+    else if (!strncmp(InputBuffer, "help", 4))
+    {
+        DoHelpCommand();
+    }
+    else if (!strncmp(InputBuffer, "f", 1))
+    {
+        DoFullInfoCommand();
+    }
+    else if (!strncmp(InputBuffer, "p", 1))
+    {
+        DoPagingCommand();
+    }
+    else if (!strncmp(InputBuffer, "id", 2))
+    {
+        DoMachineInformationCommand();
+    }
+    else if (!strncmp(InputBuffer, "crashdump", 9))
+    {
+        DoCrashCommand();
+    }
+    else if (!strncmp(InputBuffer, "lock", 4))
+    {
+        DoLockCommand();
+    }
+    else if (!strncmp(InputBuffer, "shutdown", 8))
+    {
+        ExecutePostConsumerCommand = Shutdown;
+    }
+    else if (!strncmp(InputBuffer, "restart", 7))
+    {
+        ExecutePostConsumerCommand = Restart;
+    }
+    else if (!strncmp(InputBuffer, "d", 1))
+    {
+        EnablePaging = GlobalPagingNeeded;
+        Status = HeadlessDispatch(HeadlessCmdDisplayLog,
+                                  &EnablePaging,
+                                  sizeof(EnablePaging),
+                                  NULL,
+                                  0);
+        if (!NT_SUCCESS(Status)) SAC_DBG(4, "SAC Display Log failed.\n");
+    }
+    else if (!strncmp(InputBuffer, "cmd", 3))
+    {
+        if (CommandConsoleLaunchingEnabled)
+        {
+            DoCmdCommand(InputBuffer);
+        }
+        else
+        {
+            SacPutSimpleMessage(148);
+        }
+    }
+    else if (!(strncmp(InputBuffer, "ch", 2)) &&
+             (((strlen(InputBuffer) > 1) && (InputBuffer[2] == ' ')) ||
+              (strlen(InputBuffer) == 2)))
+    {
+        DoChannelCommand(InputBuffer);
+    }
+    else if (!(strncmp(InputBuffer, "k", 1)) &&
+             (((strlen(InputBuffer) > 1) && (InputBuffer[1] == ' ')) ||
+              (strlen(InputBuffer) == 1)))
+    {
+        DoKillCommand(InputBuffer);
+    }
+    else if (!(strncmp(InputBuffer, "l", 1)) &&
+             (((strlen(InputBuffer) > 1) && (InputBuffer[1] == ' ')) ||
+              (strlen(InputBuffer) == 1)))
+    {
+        DoLowerPriorityCommand(InputBuffer);
+    }
+    else if (!(strncmp(InputBuffer, "r", 1)) &&
+             (((strlen(InputBuffer) > 1) && (InputBuffer[1] == ' ')) ||
+              (strlen(InputBuffer) == 1)))
+    {
+        DoRaisePriorityCommand(InputBuffer);
+    }
+    else if (!(strncmp(InputBuffer, "m", 1)) &&
+             (((strlen(InputBuffer) > 1) && (InputBuffer[1] == ' ')) ||
+              (strlen(InputBuffer) == 1)))
+    {
+        DoLimitMemoryCommand(InputBuffer);
+    }
+    else if (!(strncmp(InputBuffer, "s", 1)) &&
+             (((strlen(InputBuffer) > 1) && (InputBuffer[1] == ' ')) ||
+              (strlen(InputBuffer) == 1)))
+    {
+        DoSetTimeCommand(InputBuffer);
+    }
+    else if (!(strncmp(InputBuffer, "i", 1)) &&
+             (((strlen(InputBuffer) > 1) && (InputBuffer[1] == ' ')) ||
+              (strlen(InputBuffer) == 1)))
+    {
+        DoSetIpAddressCommand(InputBuffer);
+    }
+    else if ((InputBuffer[0] != '\n') && (InputBuffer[0] != ANSI_NULL))
+    {
+        SacPutSimpleMessage(105);
+    }
+}
 
 VOID
 NTAPI
 ConMgrSerialPortConsumer(VOID)
 {
     NTSTATUS Status;
-    CHAR Char, LastChar;
-    CHAR WriteBuffer[2], ReadBuffer[2];
+    CHAR Char;
+    WCHAR LastChar;
+    CHAR ReadBuffer[2];
     ULONG ReadBufferSize, i;
     WCHAR StringBuffer[2];
     SAC_DBG(SAC_DBG_MACHINE, "SAC TimerDpcRoutine: Entering.\n"); //bug
@@ -546,8 +662,8 @@ ConMgrSerialPortConsumer(VOID)
         if ((InputInEscape) && (CurrentChannel != SacChannel))
         {
             /* Store the ESC in the current channel buffer */
-            WriteBuffer[0] = '\x1B';
-            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(CHAR));
+            ReadBuffer[0] = '\x1B';
+            ChannelIWrite(CurrentChannel, ReadBuffer, sizeof(CHAR));
         }
 
         /* Check if we are no longer pressing ESC and exit the mode if so */
@@ -582,26 +698,26 @@ DoLineParsing:
             ChannelIReadLast(CurrentChannel);
 
             /* NULL-terminate the channel's input buffer */
-            WriteBuffer[0] = ANSI_NULL;
-            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(CHAR));
+            ReadBuffer[0] = ANSI_NULL;
+            ChannelIWrite(CurrentChannel, ReadBuffer, sizeof(CHAR));
 
             /* Loop over every last character */
             do
             {
                 /* Read every character in the channel, and strip whitespace */
                 LastChar = ChannelIReadLast(CurrentChannel);
-                WriteBuffer[0] = LastChar;
+                ReadBuffer[0] = (CHAR) LastChar;
             } while ((!(LastChar) ||
-                       (LastChar == ' ') ||
-                       (LastChar == '\t')) &&
+                       (LastChar == L' ') ||
+                       (LastChar == L'\t')) &&
                      (ChannelIBufferLength(CurrentChannel)));
 
             /* Write back into the channel the last character */
-            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(CHAR));
+            ChannelIWrite(CurrentChannel, ReadBuffer, sizeof(CHAR));
 
             /* NULL-terminate the input buffer */
-            WriteBuffer[0] = ANSI_NULL;
-            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(WCHAR));
+            ReadBuffer[0] = ANSI_NULL;
+            ChannelIWrite(CurrentChannel, ReadBuffer, sizeof(CHAR));
 
             /* Now loop over every first character */
             do
@@ -609,11 +725,10 @@ DoLineParsing:
                 /* Read every character in the channel, and strip whitespace */
                 ChannelIRead(CurrentChannel,
                              ReadBuffer,
-                             sizeof(ReadBuffer),
+                             sizeof(CHAR), /* FIXME: Should be sizeof(ReadBuffer) */
                              &ReadBufferSize);
-                WriteBuffer[0] = ReadBuffer[0];
             } while ((ReadBufferSize) &&
-                     ((ReadBuffer[0] != ' ') || (ReadBuffer[0] != '\t')));
+                     ((ReadBuffer[0] == ' ') || (ReadBuffer[0] == '\t')));
 
             /* We read one more than we should, so treat that as our first one */
             InputBuffer[0] = ReadBuffer[0];
@@ -625,7 +740,7 @@ DoLineParsing:
                 /* Read each character -- there should be max 80 */
                 ChannelIRead(CurrentChannel,
                              ReadBuffer,
-                             sizeof(ReadBuffer),
+                             sizeof(CHAR), /* FIXME: Should be sizeof(ReadBuffer) */
                              &ReadBufferSize);
                 ASSERT(i < SAC_VTUTF8_COL_WIDTH);
                 InputBuffer[i++] = ReadBuffer[0];
@@ -637,7 +752,7 @@ DoLineParsing:
                 /* Again it should be less than 80 characters */
                 ASSERT(i < SAC_VTUTF8_COL_WIDTH);
 
-                /* And upcase each character */
+                /* And downbase each character */
                 Char = InputBuffer[i];
                 if ((Char >= 'A') && (Char <= 'Z')) InputBuffer[i] = Char + ' ';
             }
@@ -700,9 +815,9 @@ DoLineParsing:
             ChannelIReadLast(CurrentChannel);
             ChannelIReadLast(CurrentChannel);
 
-            /* NULL-terminate it */
-            WriteBuffer[0] = Char;
-            ChannelIWrite(CurrentChannel, WriteBuffer, sizeof(CHAR));
+            /* Write the last character that was just typed in */
+            ReadBuffer[0] = Char;
+            ChannelIWrite(CurrentChannel, ReadBuffer, sizeof(CHAR));
             continue;
         }
 
