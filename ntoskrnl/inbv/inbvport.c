@@ -23,6 +23,25 @@ CPPORT Port[4] =
 
 /* FUNCTIONS *****************************************************************/
 
+BOOLEAN
+NTAPI
+InbvPortPollOnly(IN ULONG PortId)
+{
+    UCHAR Dummy;
+
+    /* Poll a byte from the port */
+    return CpGetByte(&Port[PortId], &Dummy, FALSE, TRUE) == CP_GET_SUCCESS;
+}
+
+BOOLEAN
+NTAPI
+InbvPortGetByte(IN ULONG PortId,
+                OUT PUCHAR Char)
+{
+    /* Read a byte from the port */
+    return CpGetByte(&Port[PortId], Char, TRUE, FALSE) == CP_GET_SUCCESS;
+}
+
 VOID
 NTAPI
 InbvPortEnableFifo(IN ULONG   PortId,

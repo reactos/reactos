@@ -501,8 +501,14 @@ CreateFreeLoaderIniForReactos(
     /* ReactOS_Ram */
     CreateFreeLoaderEntry(IniCache, IniSection,
                           L"ReactOS_Ram", L"\"ReactOS (RAM Disk)\"",
-                          L"ReactOS", L"ramdisk(0)\\ReactOS",
+                          L"Windows2003", L"ramdisk(0)\\ReactOS",
                           L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDIMAGEPATH=reactos.img /RDIMAGEOFFSET=32256");
+
+    /* ReactOS_EMS */
+    CreateFreeLoaderEntry(IniCache, IniSection,
+                          L"ReactOS_EMS", L"\"ReactOS (Emergency Management Services)\"",
+                          L"Windows2003", ArcPath,
+                          L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /redirect=com2 /redirectbaudrate=115200");
 #endif
 
     /* Save the ini file */

@@ -546,207 +546,207 @@ struct sockproto {
 SOCKET
 PASCAL FAR
 accept(
-  IN SOCKET s,
-  OUT struct sockaddr FAR *addr OPTIONAL,
-  IN OUT int FAR *addrlen OPTIONAL);
+  _In_ SOCKET s,
+  _Out_writes_bytes_opt_(*addrlen) struct sockaddr FAR *addr,
+  _Inout_opt_ int FAR *addrlen);
 
 int
 PASCAL FAR
 bind(
-  IN SOCKET s,
-  IN const struct sockaddr FAR *addr,
-  IN int namelen);
+  _In_ SOCKET s,
+  _In_reads_bytes_(namelen) const struct sockaddr FAR *addr,
+  _In_ int namelen);
 
 int
 PASCAL FAR
 closesocket(
-  IN SOCKET s);
+  _In_ SOCKET s);
 
 int
 PASCAL FAR
 connect(
-  IN SOCKET s,
-  IN const struct sockaddr FAR *name,
-  IN int namelen);
+  _In_ SOCKET s,
+  _In_reads_bytes_(namelen) const struct sockaddr FAR *name,
+  _In_ int namelen);
 
 int
 PASCAL FAR
 ioctlsocket(
-  IN SOCKET s,
-  IN long cmd,
-  IN OUT u_long FAR *argp);
+  _In_ SOCKET s,
+  _In_ long cmd,
+  _Inout_ u_long FAR *argp);
 
 int
 PASCAL FAR
 getpeername(
-  IN SOCKET s,
-  OUT struct sockaddr FAR *name,
-  IN OUT int FAR *namelen);
+  _In_ SOCKET s,
+  _Out_writes_bytes_to_(*namelen, *namelen) struct sockaddr FAR *name,
+  _Inout_ int FAR *namelen);
 
 int
 PASCAL FAR
 getsockname(
-  IN SOCKET s,
-  OUT struct sockaddr FAR *name,
-  IN OUT int FAR *namelen);
+  _In_ SOCKET s,
+  _Out_writes_bytes_to_(*namelen, *namelen) struct sockaddr FAR *name,
+  _Inout_ int FAR *namelen);
 
 int
 PASCAL FAR
 getsockopt(
-  IN SOCKET s,
-  IN int level,
-  IN int optname,
-  OUT char FAR *optval,
-  IN OUT int FAR *optlen);
+  _In_ SOCKET s,
+  _In_ int level,
+  _In_ int optname,
+  _Out_writes_bytes_(*optlen) char FAR *optval,
+  _Inout_ int FAR *optlen);
 
 u_long
 PASCAL FAR
 htonl(
-  IN u_long hostlong);
+  _In_ u_long hostlong);
 
 u_short
 PASCAL FAR
 htons(
-  IN u_short hostshort);
+  _In_ u_short hostshort);
 
 unsigned long
 PASCAL FAR
 inet_addr(
-  IN const char FAR *cp);
+  _In_z_ const char FAR *cp);
 
 char FAR
 *PASCAL FAR
 inet_ntoa(
-  IN struct in_addr in);
+  _In_ struct in_addr in);
 
 int
 PASCAL FAR
 listen(
-  IN SOCKET s,
-  IN int backlog);
+  _In_ SOCKET s,
+  _In_ int backlog);
 
 u_long
 PASCAL FAR
 ntohl(
-  IN u_long netlong);
+  _In_ u_long netlong);
 
 u_short
 PASCAL FAR
 ntohs(
-  IN u_short netshort);
+  _In_ u_short netshort);
 
 int
 PASCAL FAR
 recv(
-  IN SOCKET s,
-  OUT char FAR *buf,
-  IN int len,
-  IN int flags);
+  _In_ SOCKET s,
+  _Out_writes_bytes_to_(len, return) __out_data_source(NETWORK) char FAR *buf,
+  _In_ int len,
+  _In_ int flags);
 
 int
 PASCAL FAR
 recvfrom(
-  IN SOCKET s,
-  OUT char FAR *buf,
-  IN int len,
-  IN int flags,
-  OUT struct sockaddr FAR *from OPTIONAL,
-  IN OUT int FAR * fromlen OPTIONAL);
+  _In_ SOCKET s,
+  _Out_writes_bytes_to_(len, return) __out_data_source(NETWORK) char FAR *buf,
+  _In_ int len,
+  _In_ int flags,
+  _Out_writes_bytes_to_opt_(*fromlen, *fromlen) struct sockaddr FAR *from,
+  _Inout_opt_ int FAR * fromlen);
 
 int
 PASCAL FAR
 select(
-  IN int nfds,
-  IN OUT fd_set FAR *readfds OPTIONAL,
-  IN OUT fd_set FAR *writefds OPTIONAL,
-  IN OUT fd_set FAR *exceptfds OPTIONAL,
-  IN const struct timeval FAR *timeout OPTIONAL);
+  _In_ int nfds,
+  _Inout_opt_ fd_set FAR *readfds,
+  _Inout_opt_ fd_set FAR *writefds,
+  _Inout_opt_ fd_set FAR *exceptfds,
+  _In_opt_ const struct timeval FAR *timeout);
 
 int
 PASCAL FAR
 send(
-  IN SOCKET s,
-  IN const char FAR *buf,
-  IN int len,
-  IN int flags);
+  _In_ SOCKET s,
+  _In_reads_bytes_(len) const char FAR *buf,
+  _In_ int len,
+  _In_ int flags);
 
 int
 PASCAL FAR
 sendto(
-  IN SOCKET s,
-  IN const char FAR *buf,
-  IN int len,
-  IN int flags,
-  IN const struct sockaddr FAR *to OPTIONAL,
-  IN int tolen);
+  _In_ SOCKET s,
+  _In_reads_bytes_(len) const char FAR *buf,
+  _In_ int len,
+  _In_ int flags,
+  _In_reads_bytes_opt_(tolen) const struct sockaddr FAR *to,
+  _In_ int tolen);
 
 int
 PASCAL FAR
 setsockopt(
-  IN SOCKET s,
-  IN int level,
-  IN int optname,
-  IN const char FAR *optval OPTIONAL,
-  IN int optlen);
+  _In_ SOCKET s,
+  _In_ int level,
+  _In_ int optname,
+  _In_reads_bytes_opt_(optlen) const char FAR *optval,
+  _In_ int optlen);
 
 int
 PASCAL FAR
 shutdown(
-  IN SOCKET s,
-  IN int how);
+  _In_ SOCKET s,
+  _In_ int how);
 
 SOCKET
 PASCAL FAR
 socket(
-  IN int af,
-  IN int type,
-  IN int protocol);
+  _In_ int af,
+  _In_ int type,
+  _In_ int protocol);
 
 struct hostent FAR
 *PASCAL FAR
 gethostbyaddr(
-  IN const char FAR *addr,
-  IN int len,
-  IN int type);
+  _In_reads_bytes_(len) const char FAR *addr,
+  _In_ int len,
+  _In_ int type);
 
 struct hostent FAR
 *PASCAL FAR
 gethostbyname(
-  IN const char FAR *name);
+  _In_z_ const char FAR *name);
 
 int
 PASCAL FAR
 gethostname(
-  OUT char FAR *name,
-  IN int namelen);
+  _Out_writes_bytes_to_(namelen, return) char FAR *name,
+  _In_ int namelen);
 
 struct servent FAR
 *PASCAL FAR
 getservbyport(
-  IN int port,
-  IN const char FAR *proto);
+  _In_ int port,
+  _In_z_ const char FAR *proto);
 
 struct servent FAR
 *PASCAL FAR
 getservbyname(
-  IN const char FAR *name,
-  IN const char FAR *proto);
+  _In_z_ const char FAR *name,
+  _In_z_ const char FAR *proto);
 
 struct protoent FAR
 *PASCAL FAR
 getprotobynumber(
-  IN int number);
+  _In_ int number);
 
 struct protoent FAR
 *PASCAL FAR
 getprotobyname(
-  IN const char FAR *name);
+  _In_z_ const char FAR *name);
 
 int
 PASCAL FAR
 WSAStartup(
-  IN WORD wVersionRequired,
-  OUT LPWSADATA lpWSAData);
+  _In_ WORD wVersionRequired,
+  _Out_ LPWSADATA lpWSAData);
 
 int
 PASCAL FAR
@@ -755,7 +755,7 @@ WSACleanup(void);
 void
 PASCAL FAR
 WSASetLastError(
-  IN int iError);
+  _In_ int iError);
 
 int
 PASCAL FAR
@@ -772,7 +772,7 @@ WSAUnhookBlockingHook(void);
 FARPROC
 PASCAL FAR
 WSASetBlockingHook(
-  IN FARPROC lpBlockFunc);
+  _In_ FARPROC lpBlockFunc);
 
 int
 PASCAL FAR
@@ -781,81 +781,81 @@ WSACancelBlockingCall(void);
 HANDLE
 PASCAL FAR
 WSAAsyncGetServByName(
-  IN HWND hWnd,
-  IN u_int wMsg,
-  IN const char FAR *name,
-  IN const char FAR *proto,
-  OUT char FAR *buf,
-  IN int buflen);
+  _In_ HWND hWnd,
+  _In_ u_int wMsg,
+  _In_z_ const char FAR *name,
+  _In_z_ const char FAR *proto,
+  _Out_writes_bytes_(buflen) char FAR *buf,
+  _In_ int buflen);
 
 HANDLE
 PASCAL FAR
 WSAAsyncGetServByPort(
-  IN HWND hWnd,
-  IN u_int wMsg,
-  IN int port,
-  IN const char FAR *proto,
-  OUT char FAR *buf,
-  IN int buflen);
+  _In_ HWND hWnd,
+  _In_ u_int wMsg,
+  _In_ int port,
+  _In_ const char FAR *proto,
+  _Out_writes_bytes_(buflen) char FAR *buf,
+  _In_ int buflen);
 
 HANDLE
 PASCAL FAR
 WSAAsyncGetProtoByName(
-  IN HWND hWnd,
-  IN u_int wMsg,
-  IN const char FAR *name,
-  OUT char FAR *buf,
-  IN int buflen);
+  _In_ HWND hWnd,
+  _In_ u_int wMsg,
+  _In_z_ const char FAR *name,
+  _Out_writes_bytes_(buflen) char FAR *buf,
+  _In_ int buflen);
 
 HANDLE
 PASCAL FAR
 WSAAsyncGetProtoByNumber(
-  IN HWND hWnd,
-  IN u_int wMsg,
-  IN int number,
-  OUT char FAR *buf,
-  IN int buflen);
+  _In_ HWND hWnd,
+  _In_ u_int wMsg,
+  _In_ int number,
+  _Out_writes_bytes_(buflen) char FAR *buf,
+  _In_ int buflen);
 
 HANDLE
 PASCAL FAR
 WSAAsyncGetHostByName(
-  IN HWND hWnd,
-  IN u_int wMsg,
-  IN const char FAR *name,
-  OUT char FAR *buf,
-  IN int buflen);
+  _In_ HWND hWnd,
+  _In_ u_int wMsg,
+  _In_z_ const char FAR *name,
+  _Out_writes_bytes_(buflen) char FAR *buf,
+  _In_ int buflen);
 
 HANDLE
 PASCAL FAR
 WSAAsyncGetHostByAddr(
-  IN HWND hWnd,
-  IN u_int wMsg,
-  IN const char FAR *addr,
-  IN int len,
-  IN int type,
-  OUT char FAR *buf,
-  IN int buflen);
+  _In_ HWND hWnd,
+  _In_ u_int wMsg,
+  _In_ const char FAR *addr,
+  _In_ int len,
+  _In_ int type,
+  _Out_writes_bytes_(buflen) char FAR *buf,
+  _In_ int buflen);
 
 int
 PASCAL FAR
 WSACancelAsyncRequest(
-  IN HANDLE hAsyncTaskHandle);
+  _In_ HANDLE hAsyncTaskHandle);
 
 int
 PASCAL FAR
 WSAAsyncSelect(
-  IN SOCKET s,
-  IN HWND hWnd,
-  IN u_int wMsg,
-  IN long lEvent);
+  _In_ SOCKET s,
+  _In_ HWND hWnd,
+  _In_ u_int wMsg,
+  _In_ long lEvent);
 
 int
 PASCAL FAR
 WSARecvEx(
-  IN SOCKET s,
-  OUT char FAR *buf,
-  IN int len,
-  IN OUT int FAR *flags);
+  _In_ SOCKET s,
+  _Out_writes_bytes_to_(len, return) __out_data_source(NETWORK) char FAR *buf,
+  _In_ int len,
+  _Inout_ int FAR *flags);
 
 typedef struct _TRANSMIT_FILE_BUFFERS {
   PVOID Head;
@@ -867,37 +867,37 @@ typedef struct _TRANSMIT_FILE_BUFFERS {
 BOOL
 PASCAL FAR
 TransmitFile(
-  IN SOCKET hSocket,
-  IN HANDLE hFile,
-  IN DWORD nNumberOfBytesToWrite,
-  IN DWORD nNumberOfBytesPerSend,
-  IN OUT LPOVERLAPPED lpOverlapped OPTIONAL,
-  IN LPTRANSMIT_FILE_BUFFERS lpTransmitBuffers OPTIONAL,
-  IN DWORD dwReserved);
+  _In_ SOCKET hSocket,
+  _In_ HANDLE hFile,
+  _In_ DWORD nNumberOfBytesToWrite,
+  _In_ DWORD nNumberOfBytesPerSend,
+  _Inout_opt_ LPOVERLAPPED lpOverlapped,
+  _In_opt_ LPTRANSMIT_FILE_BUFFERS lpTransmitBuffers,
+  _In_ DWORD dwReserved);
 
 BOOL
 PASCAL FAR
 AcceptEx(
-  IN SOCKET sListenSocket,
-  IN SOCKET sAcceptSocket,
-  OUT PVOID lpOutputBuffer,
-  IN DWORD dwReceiveDataLength,
-  IN DWORD dwLocalAddressLength,
-  IN DWORD dwRemoteAddressLength,
-  OUT LPDWORD lpdwBytesReceived,
-  IN OUT LPOVERLAPPED lpOverlapped);
+  _In_ SOCKET sListenSocket,
+  _In_ SOCKET sAcceptSocket,
+  _Out_writes_bytes_to_(dwReceiveDataLength + dwLocalAddressLength + dwRemoteAddressLength, *lpdwBytesReceived) PVOID lpOutputBuffer,
+  _In_ DWORD dwReceiveDataLength,
+  _In_ DWORD dwLocalAddressLength,
+  _In_ DWORD dwRemoteAddressLength,
+  _Out_ LPDWORD lpdwBytesReceived,
+  _Inout_ LPOVERLAPPED lpOverlapped);
 
 VOID
 PASCAL FAR
 GetAcceptExSockaddrs(
-  IN PVOID lpOutputBuffer,
-  IN DWORD dwReceiveDataLength,
-  IN DWORD dwLocalAddressLength,
-  IN DWORD dwRemoteAddressLength,
-  OUT struct sockaddr **LocalSockaddr,
-  OUT LPINT LocalSockaddrLength,
-  OUT struct sockaddr **RemoteSockaddr,
-  OUT LPINT RemoteSockaddrLength);
+  _In_reads_bytes_(dwReceiveDataLength + dwLocalAddressLength + dwRemoteAddressLength) PVOID lpOutputBuffer,
+  _In_ DWORD dwReceiveDataLength,
+  _In_ DWORD dwLocalAddressLength,
+  _In_ DWORD dwRemoteAddressLength,
+  _Outptr_result_bytebuffer_(*LocalSockaddrLength) struct sockaddr **LocalSockaddr,
+  _Out_ LPINT LocalSockaddrLength,
+  _Outptr_result_bytebuffer_(*RemoteSockaddrLength) struct sockaddr **RemoteSockaddr,
+  _Out_ LPINT RemoteSockaddrLength);
 
 #if(_WIN32_WINNT >= 0x0501)
 

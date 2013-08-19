@@ -255,7 +255,8 @@ USHORT
 NTAPI
 CpGetByte(IN  PCPPORT Port,
           OUT PUCHAR  Byte,
-          IN  BOOLEAN Wait)
+          IN  BOOLEAN Wait,
+          IN BOOLEAN Poll)
 {
     UCHAR Lsr;
     ULONG LimitCount = Wait ? TIMEOUT_COUNT : 1;
@@ -276,6 +277,9 @@ CpGetByte(IN  PCPPORT Port,
                 *Byte = 0;
                 return CP_GET_ERROR;
             }
+
+            /* If only polling was requested by caller, return now */
+            if (Poll) return CP_GET_SUCCESS;
 
             /* Otherwise read the byte and return it */
             *Byte = READ_PORT_UCHAR(Port->Address + RECEIVE_BUFFER_REGISTER);

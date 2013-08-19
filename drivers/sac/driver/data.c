@@ -77,6 +77,8 @@ CreateDeviceSecurityDescriptor(IN PDEVICE_OBJECT *DeviceObject)
     else
     {
         SAC_DBG(SAC_DBG_INIT, "SAC CreateDeviceSecurityDescriptor : Unable to create Raw ACL, error : %x\n", Status);
+        /* FIXME: Temporary hack */
+        Status = STATUS_SUCCESS;
         goto CleanupPath;
     }
 
@@ -236,7 +238,7 @@ InitializeDeviceData(IN PDEVICE_OBJECT DeviceObject)
     KeInitializeTimer(&DeviceExtension->Timer);
     KeInitializeDpc(&DeviceExtension->Dpc, TimerDpcRoutine, DeviceExtension);
     KeInitializeSpinLock(&DeviceExtension->Lock);
-    KeInitializeEvent(&DeviceExtension->Event, SynchronizationEvent, 0);
+    KeInitializeEvent(&DeviceExtension->Event, SynchronizationEvent, FALSE);
     InitializeListHead(&DeviceExtension->List);
 
     /* Attempt to enable HDL support */
@@ -315,8 +317,8 @@ InitializeDeviceData(IN PDEVICE_OBJECT DeviceObject)
         DeviceExtension->PriorityFail = TRUE;
 
         /* Initialize rundown and wait for the thread to do it */
-        KeInitializeEvent(&DeviceExtension->RundownEvent, SynchronizationEvent, 0);
-        KeSetEvent(&DeviceExtension->Event, DeviceExtension->PriorityBoost, 0);
+        KeInitializeEvent(&DeviceExtension->RundownEvent, SynchronizationEvent, FALSE);
+        KeSetEvent(&DeviceExtension->Event, DeviceExtension->PriorityBoost, FALSE);
         Status = KeWaitForSingleObject(&DeviceExtension->RundownEvent,
                                        Executive,
                                        KernelMode,
@@ -377,7 +379,7 @@ InitializeGlobalData(IN PUNICODE_STRING RegistryPath,
     SAC_DBG(SAC_DBG_ENTRY_EXIT, "Entering.\n");
 
     /* If we already did this, bail out */
-    if (!GlobalDataInitialized) goto SuccessExit;
+    if (GlobalDataInitialized) goto SuccessExit;
 
     /* Setup the symbolic link for Win32 support */
     RtlInitUnicodeString(&LinkName, L"\\DosDevices\\SAC");

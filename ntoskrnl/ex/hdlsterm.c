@@ -17,118 +17,173 @@ PHEADLESS_GLOBALS HeadlessGlobals;
 
 /* FUNCTIONS *****************************************************************/
 
+FORCEINLINE
+KIRQL
+HdlspAcquireGlobalLock(VOID)
+{
+    KIRQL OldIrql;
+
+    /* Don't acquire the lock if we are bugchecking */
+    if (!HeadlessGlobals->InBugCheck)
+    {
+        KeAcquireSpinLock(&HeadlessGlobals->SpinLock, &OldIrql);
+    }
+    else
+    {
+        OldIrql = 0xFF;
+    }
+
+    return OldIrql;
+}
+
+FORCEINLINE
+VOID
+HdlspReleaselobalLock(IN KIRQL OldIrql)
+{
+    /* Only release the lock if we aren't bugchecking */
+    if (OldIrql != 0xFF)
+    {
+        KeReleaseSpinLock(&HeadlessGlobals->SpinLock, OldIrql);
+    }
+    else
+    {
+        ASSERT(HeadlessGlobals->InBugCheck == TRUE);
+    }
+}
+
 VOID
 NTAPI
-HdlspSendStringAtBaud(
-	IN PUCHAR String
-	)
+HdlspSendStringAtBaud(IN PUCHAR String)
 {
-	/* Send every byte */
-	while (*String++ != ANSI_NULL)
-	{
-		InbvPortPutByte(HeadlessGlobals->TerminalPort, *String);
-	}
+    /* Send every byte */
+    while (*String++ != ANSI_NULL)
+    {
+        InbvPortPutByte(HeadlessGlobals->TerminalPort, *String);
+    }
 }
 
 NTSTATUS
 NTAPI
-HdlspEnableTerminal(
-	IN BOOLEAN Enable
-	)
+HdlspEnableTerminal(IN BOOLEAN Enable)
 {
-	/* Enable if requested, as long as this isn't a PCI serial port crashing */
-	if ((Enable) &&
-		!(HeadlessGlobals->TerminalEnabled) &&
-		!((HeadlessGlobals->IsMMIODevice) && (HeadlessGlobals->InBugCheck)))
-	{
-		/* Initialize the COM port with cportlib */
-		HeadlessGlobals->TerminalEnabled = InbvPortInitialize(
-			HeadlessGlobals->TerminalBaudRate,
-			HeadlessGlobals->TerminalPortNumber,
-			HeadlessGlobals->TerminalPortAddress,
-			&HeadlessGlobals->TerminalPort,
-			HeadlessGlobals->IsMMIODevice);
-        if (!HeadlessGlobals->TerminalEnabled) return STATUS_UNSUCCESSFUL;
+    /* Enable if requested, as long as this isn't a PCI serial port crashing */
+    if ((Enable) &&
+        !(HeadlessGlobals->TerminalEnabled) &&
+        !((HeadlessGlobals->IsMMIODevice) && (HeadlessGlobals->InBugCheck)))
+    {
+        /* Initialize the COM port with cportlib */
+        HeadlessGlobals->TerminalEnabled = InbvPortInitialize(HeadlessGlobals->
+                                                              TerminalBaudRate,
+                                                              HeadlessGlobals->
+                                                              TerminalPortNumber,
+                                                              HeadlessGlobals->
+                                                              TerminalPortAddress,
+                                                              &HeadlessGlobals->
+                                                              TerminalPort,
+                                                              HeadlessGlobals->
+                                                              IsMMIODevice);
+        if (!HeadlessGlobals->TerminalEnabled)
+        {
+            DPRINT1("Failed to initialize port through cportlib\n");
+            return STATUS_UNSUCCESSFUL;
+        }
 
-		/* Cleanup the screen and reset the cursor */
-		HdlspSendStringAtBaud((PUCHAR)"\x1B[2J");
-		HdlspSendStringAtBaud((PUCHAR)"\x1B[H");
+        /* Cleanup the screen and reset the cursor */
+        HdlspSendStringAtBaud((PUCHAR)"\x1B[2J");
+        HdlspSendStringAtBaud((PUCHAR)"\x1B[H");
 
-		/* Enable FIFO */
-		InbvPortEnableFifo(HeadlessGlobals->TerminalPort, TRUE);
-	}
-	else if (!Enable)
-	{
-		/* Specific case when headless is being disabled */
-		InbvPortTerminate(HeadlessGlobals->TerminalPort);
-		HeadlessGlobals->TerminalPort = 0;
-		HeadlessGlobals->TerminalEnabled = FALSE;
-	}
-	return STATUS_SUCCESS;
+        /* Enable FIFO */
+        InbvPortEnableFifo(HeadlessGlobals->TerminalPort, TRUE);
+    }
+    else if (!Enable)
+    {
+        /* Specific case when headless is being disabled */
+        InbvPortTerminate(HeadlessGlobals->TerminalPort);
+        HeadlessGlobals->TerminalPort = 0;
+        HeadlessGlobals->TerminalEnabled = FALSE;
+    }
+
+    /* All done */
+    return STATUS_SUCCESS;
 }
 
 VOID
 NTAPI
 INIT_FUNCTION
-HeadlessInit(
-	IN PLOADER_PARAMETER_BLOCK LoaderBlock
-	)
+HeadlessInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	PHEADLESS_LOADER_BLOCK HeadlessBlock;
+    PHEADLESS_LOADER_BLOCK HeadlessBlock;
 
-	HeadlessBlock = LoaderBlock->Extension->HeadlessLoaderBlock;
-	if (!HeadlessBlock) return;
-	if ((HeadlessBlock->PortNumber > 4) && (HeadlessBlock->UsedBiosSettings)) return;
+    /* Only initialize further if the loader found EMS enabled */
+    HeadlessBlock = LoaderBlock->Extension->HeadlessLoaderBlock;
+    if (!HeadlessBlock) return;
 
-	HeadlessGlobals = ExAllocatePoolWithTag(
-		NonPagedPool,
-		sizeof(HEADLESS_GLOBALS),
-		'sldH');
-	if (!HeadlessGlobals) return;
+    /* Ignore invalid EMS settings */
+    if ((HeadlessBlock->PortNumber > 4) && (HeadlessBlock->UsedBiosSettings)) return;
 
-	/* Zero and copy loader data */
-	RtlZeroMemory(HeadlessGlobals, sizeof(HEADLESS_GLOBALS));
-	HeadlessGlobals->TerminalPortNumber = HeadlessBlock->PortNumber;
-	HeadlessGlobals->TerminalPortAddress = HeadlessBlock->PortAddress;
-	HeadlessGlobals->TerminalBaudRate = HeadlessBlock->BaudRate;
-	HeadlessGlobals->TerminalParity = HeadlessBlock->Parity;
-	HeadlessGlobals->TerminalStopBits = HeadlessBlock->StopBits;
-	HeadlessGlobals->UsedBiosSettings = HeadlessBlock->UsedBiosSettings;
-	HeadlessGlobals->IsMMIODevice = HeadlessBlock->IsMMIODevice;
-	HeadlessGlobals->TerminalType = HeadlessBlock->TerminalType;
-	HeadlessGlobals->SystemGUID = HeadlessBlock->SystemGUID;
+    /* Allocate the global headless data */
+    HeadlessGlobals = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(*HeadlessGlobals),
+                                            'sldH');
+    if (!HeadlessGlobals) return;
 
-	/* These two are opposites of each other */
-	if (HeadlessGlobals->IsMMIODevice) HeadlessGlobals->IsNonLegacyDevice = TRUE;
+    /* Zero and copy loader data */
+    RtlZeroMemory(HeadlessGlobals, sizeof(*HeadlessGlobals));
+    HeadlessGlobals->TerminalPortNumber = HeadlessBlock->PortNumber;
+    HeadlessGlobals->TerminalPortAddress = HeadlessBlock->PortAddress;
+    HeadlessGlobals->TerminalBaudRate = HeadlessBlock->BaudRate;
+    HeadlessGlobals->TerminalParity = HeadlessBlock->Parity;
+    HeadlessGlobals->TerminalStopBits = HeadlessBlock->StopBits;
+    HeadlessGlobals->UsedBiosSettings = HeadlessBlock->UsedBiosSettings;
+    HeadlessGlobals->IsMMIODevice = HeadlessBlock->IsMMIODevice;
+    HeadlessGlobals->TerminalType = HeadlessBlock->TerminalType;
+    HeadlessGlobals->SystemGUID = HeadlessBlock->SystemGUID;
+    DPRINT1("EMS on Port %d (0x%lx) at %d bps\n",
+             HeadlessGlobals->TerminalPortNumber,
+             HeadlessGlobals->TerminalPortAddress,
+             HeadlessGlobals->TerminalBaudRate);
 
-	/* Check for a PCI device, warn that this isn't supported */
-	if (HeadlessBlock->PciDeviceId != PCI_INVALID_VENDORID)
-	{
-		DPRINT1("PCI Serial Ports not supported\n");
-	}
+    /* These two are opposites of each other */
+    if (HeadlessGlobals->IsMMIODevice) HeadlessGlobals->IsNonLegacyDevice = TRUE;
 
-	/* Log entries are not yet supported */
-	DPRINT1("FIXME: No Headless logging support\n");
+    /* Check for a PCI device, warn that this isn't supported */
+    if (HeadlessBlock->PciDeviceId != PCI_INVALID_VENDORID)
+    {
+        DPRINT1("PCI Serial Ports not supported\n");
+    }
 
-	/* Allocate temporary buffer */
-	HeadlessGlobals->TmpBuffer = ExAllocatePoolWithTag(NonPagedPool, 80, 'sldH');
-	if (!HeadlessGlobals->TmpBuffer) return;
+    /* Log entries are not yet supported */
+    DPRINT1("FIXME: No Headless logging support\n");
 
-	/* Windows seems to apply some special hacks for 9600 bps */
-	if (HeadlessGlobals->TerminalBaudRate == 9600)
-	{
-		DPRINT1("Please use other baud rate than 9600bps for now\n");
-	}
+    /* Allocate temporary buffer */
+    HeadlessGlobals->TmpBuffer = ExAllocatePoolWithTag(NonPagedPool, 80, 'sldH');
+    if (!HeadlessGlobals->TmpBuffer) return;
 
-	/* Enable the terminal */
-	HdlspEnableTerminal(TRUE);
+    /* Windows seems to apply some special hacks for 9600 bps */
+    if (HeadlessGlobals->TerminalBaudRate == 9600)
+    {
+        DPRINT1("Please use other baud rate than 9600bps for now\n");
+    }
+
+    /* Enable the terminal */
+    HdlspEnableTerminal(TRUE);
 }
 
 VOID
 NTAPI
-HdlspPutString(
-	IN PUCHAR String
-	)
+HdlspPutData(IN PUCHAR Data,
+             IN ULONG DataSize)
+{
+    ULONG i;
+    for (i = 0; i < DataSize; i++)
+    {
+        InbvPortPutByte(HeadlessGlobals->TerminalPort, Data[i]++);
+    }
+}
+
+VOID
+NTAPI
+HdlspPutString(IN PUCHAR String)
 {
 	PUCHAR Dest = HeadlessGlobals->TmpBuffer;
 	UCHAR Char = 0;
@@ -197,62 +252,95 @@ HdlspPutString(
 
 NTSTATUS
 NTAPI
-HdlspDispatch(
-	IN HEADLESS_CMD Command,
-	IN PVOID InputBuffer,
-	IN SIZE_T InputBufferSize,
-	OUT PVOID OutputBuffer,
-	OUT PSIZE_T OutputBufferSize
-	)
+HdlspDispatch(IN HEADLESS_CMD Command,
+              IN PVOID InputBuffer,
+              IN SIZE_T InputBufferSize,
+              OUT PVOID OutputBuffer,
+              OUT PSIZE_T OutputBufferSize)
 {
-	//NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
-	ASSERT(HeadlessGlobals != NULL);
+    KIRQL OldIrql;
+    PHEADLESS_RSP_QUERY_INFO HeadlessInfo;
+    PHEADLESS_CMD_PUT_STRING PutString;
+    PHEADLESS_CMD_ENABLE_TERMINAL EnableTerminal;
+    PHEADLESS_RSP_GET_BYTE GetByte;
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+    ASSERT(HeadlessGlobals != NULL);
 //	ASSERT(HeadlessGlobals->PageLockHandle != NULL);
 
-	/* FIXME: This should be using the headless spinlock */
+    /* Ignore non-reentrant commands */
+    if ((Command != HeadlessCmdAddLogEntry) &&
+        (Command != HeadlessCmdStartBugCheck) &&
+        (Command != HeadlessCmdSendBlueScreenData) &&
+        (Command != HeadlessCmdDoBugCheckProcessing))
+    {
+        OldIrql = HdlspAcquireGlobalLock();
 
-	/* Ignore non-reentrant commands */
-	if ((Command != HeadlessCmdAddLogEntry) &&
-		(Command != HeadlessCmdStartBugCheck) &&
-		(Command != HeadlessCmdSendBlueScreenData) &&
-		(Command != HeadlessCmdDoBugCheckProcessing))
-	{
-		if (HeadlessGlobals->ProcessingCmd) return STATUS_UNSUCCESSFUL;
+        if (HeadlessGlobals->ProcessingCmd)
+        {
+            HdlspReleaselobalLock(OldIrql);
+            return STATUS_UNSUCCESSFUL;
+        }
 
-		/* Don't allow these commands next time */
-		HeadlessGlobals->ProcessingCmd = TRUE;
-	}
+        /* Don't allow these commands next time */
+        HeadlessGlobals->ProcessingCmd = TRUE;
+        HdlspReleaselobalLock(OldIrql);
+    }
 
-	/* Handle each command */
-	switch (Command)
-	{
-		case HeadlessCmdEnableTerminal:
-			break;
+    /* Handle each command */
+    switch (Command)
+    {
+        case HeadlessCmdEnableTerminal:
+
+            /* Make sure the caller passed valid data */
+            if (!(InputBuffer) ||
+                (InputBufferSize != sizeof(*EnableTerminal)))
+            {
+                DPRINT1("Invalid buffer\n");
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Go and enable it */
+            EnableTerminal = InputBuffer;
+            Status = HdlspEnableTerminal(EnableTerminal->Enable);
+            break;
+
 		case HeadlessCmdCheckForReboot:
 			break;
 
 		case HeadlessCmdPutString:
 
-			/* Validate the existence of an input buffer */
-			if (!InputBuffer)
-			{
-				//Status = STATUS_INVALID_PARAMETER;
-				goto Reset;
-			}
+            /* Validate the existence of an input buffer */
+            if (!InputBuffer)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
 
-			/* Terminal should be on */
-			if (HeadlessGlobals->TerminalEnabled)
-			{
-				/* Print each byte in the string making sure VT100 chars are used */
-				PHEADLESS_CMD_PUT_STRING PutString = (PVOID)InputBuffer;
-				HdlspPutString(PutString->String);
-			}
+            /* Terminal should be on */
+            if (HeadlessGlobals->TerminalEnabled)
+            {
+                /* Print each byte in the string making sure VT100 chars are used */
+                PutString = InputBuffer;
+                HdlspPutString(PutString->String);
+            }
 
-			/* Return success either way */
-			//Status = STATUS_SUCCESS;
-			break;
-		case HeadlessCmdClearDisplay:
-			break;
+            /* Return success either way */
+            Status = STATUS_SUCCESS;
+            break;
+
+        case HeadlessCmdClearDisplay:
+
+            /* Send the VT100 clear screen command if the terminal is enabled */
+            if (HeadlessGlobals->TerminalEnabled)
+            {
+                HdlspSendStringAtBaud((PUCHAR)"\033[2J");
+            }
+
+            /* Return success either way */
+            Status = STATUS_SUCCESS;
+            break;
+
 		case HeadlessCmdClearToEndOfDisplay:
 			break;
 		case HeadlessCmdClearToEndOfLine:
@@ -267,8 +355,46 @@ HdlspDispatch(
 			break;
 		case HeadlessCmdTerminalPoll:
 			break;
-		case HeadlessCmdGetByte:
-			break;
+
+        case HeadlessCmdGetByte:
+
+            /* Make sure the caller passed valid data */
+            if (!(OutputBuffer) ||
+                !(OutputBufferSize) ||
+                (*OutputBufferSize < sizeof(*GetByte)))
+            {
+                DPRINT1("Invalid buffer\n");
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Make sure the terminal is enabled */
+            GetByte = OutputBuffer;
+            if (HeadlessGlobals->TerminalEnabled)
+            {
+                /* Poll if something is on the wire */
+                if (InbvPortPollOnly(HeadlessGlobals->TerminalPort))
+                {
+                    /* If so, read it */
+                    InbvPortGetByte(HeadlessGlobals->TerminalPort,
+                                    &GetByte->Value);
+                }
+                else
+                {
+                    /* Nothing is there, return 0 */
+                    GetByte->Value = 0;
+                }
+            }
+            else
+            {
+                /* Otherwise return nothing */
+                GetByte->Value = 0;
+            }
+
+            /* Return success either way */
+            Status = STATUS_SUCCESS;
+            break;
+
 		case HeadlessCmdGetLine:
 			break;
 		case HeadlessCmdStartBugCheck:
@@ -276,77 +402,145 @@ HdlspDispatch(
 		case HeadlessCmdDoBugCheckProcessing:
 			break;
 		case HeadlessCmdQueryInformation:
-			break;
+
+            /* Make sure the caller passed valid data */
+            if (!(OutputBuffer) ||
+                !(OutputBufferSize) ||
+                (*OutputBufferSize < sizeof(*HeadlessInfo)))
+            {
+                DPRINT1("Invalid buffer\n");
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* If we got here, headless is enabled -- we know this much */
+            HeadlessInfo = OutputBuffer;
+            HeadlessInfo->PortType = HeadlessSerialPort;
+            HeadlessInfo->Serial.TerminalAttached = TRUE;
+            HeadlessInfo->Serial.UsedBiosSettings = HeadlessGlobals->UsedBiosSettings;
+            HeadlessInfo->Serial.TerminalBaudRate = HeadlessGlobals->TerminalBaudRate;
+            HeadlessInfo->Serial.TerminalType = HeadlessGlobals->TerminalType;
+
+            /* Now check on what port/baud it's enabled on */
+            if ((HeadlessGlobals->TerminalPortNumber >= 1) ||
+                (HeadlessGlobals->UsedBiosSettings))
+            {
+                /* Get the EMS information */
+                HeadlessInfo->Serial.TerminalPort = HeadlessGlobals->
+                                                    TerminalPortNumber;
+                HeadlessInfo->Serial.TerminalPortBaseAddress = HeadlessGlobals->
+                                                               TerminalPortAddress;
+            }
+            else
+            {
+                /* We don't know for sure */
+                HeadlessInfo->Serial.TerminalPort = SerialPortUndefined;
+                HeadlessInfo->Serial.TerminalPortBaseAddress = 0;
+            }
+
+            /* All done */
+            Status = STATUS_SUCCESS;
+            break;
 		case HeadlessCmdAddLogEntry:
 			break;
 		case HeadlessCmdDisplayLog:
 			break;
-		case HeadlessCmdSetBlueScreenData:
-			break;
+        case HeadlessCmdSetBlueScreenData:
+
+            /* Validate the existence of an input buffer */
+            if (!InputBuffer)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Lie so that we can get Hdl bringup a little bit further */
+            UNIMPLEMENTED;
+            Status = STATUS_SUCCESS;
+            break;
 		case HeadlessCmdSendBlueScreenData:
 			break;
 		case HeadlessCmdQueryGUID:
 			break;
 		case HeadlessCmdPutData:
-			break;
-		default:
-			break;
-	}
 
-Reset:
-	/* Unset prcessing state */
-	if ((Command != HeadlessCmdAddLogEntry) &&
-		(Command != HeadlessCmdStartBugCheck) &&
-		(Command != HeadlessCmdSendBlueScreenData) &&
-		(Command != HeadlessCmdDoBugCheckProcessing))
-	{
-		ASSERT(HeadlessGlobals->ProcessingCmd == TRUE);
-		HeadlessGlobals->ProcessingCmd = FALSE;
-	}
+            /* Validate the existence of an input buffer */
+            if (!(InputBuffer) || !(InputBufferSize))
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
 
-	//UNIMPLEMENTED;
-	return STATUS_SUCCESS;
+            /* Terminal should be on */
+            if (HeadlessGlobals->TerminalEnabled)
+            {
+                /* Print each byte in the string making sure VT100 chars are used */
+                PutString = InputBuffer;
+                HdlspPutData(PutString->String, InputBufferSize);
+            }
+
+            /* Return success either way */
+            Status = STATUS_SUCCESS;
+            break;
+
+        default:
+            break;
+    }
+
+    /* Unset processing state */
+    if ((Command != HeadlessCmdAddLogEntry) &&
+        (Command != HeadlessCmdStartBugCheck) &&
+        (Command != HeadlessCmdSendBlueScreenData) &&
+        (Command != HeadlessCmdDoBugCheckProcessing))
+    {
+        ASSERT(HeadlessGlobals->ProcessingCmd == TRUE);
+        HeadlessGlobals->ProcessingCmd = FALSE;
+    }
+
+    /* All done */
+    return Status;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-HeadlessDispatch(
-	IN HEADLESS_CMD Command,
-	IN PVOID InputBuffer,
-	IN SIZE_T InputBufferSize,
-	OUT PVOID OutputBuffer,
-	OUT PSIZE_T OutputBufferSize
-	)
+HeadlessDispatch(IN HEADLESS_CMD Command,
+                 IN PVOID InputBuffer,
+                 IN SIZE_T InputBufferSize,
+                 OUT PVOID OutputBuffer,
+                 OUT PSIZE_T OutputBufferSize)
 {
-	/* Check for stubs that will expect something even with headless off */
-	if (!HeadlessGlobals)
-	{
-		/* Don't allow the SAC to connect */
-		if (Command == HeadlessCmdEnableTerminal) return STATUS_UNSUCCESSFUL;
+    /* Check for stubs that will expect something even with headless off */
+    if (!HeadlessGlobals)
+    {
+        /* Don't allow the SAC to connect */
+        if (Command == HeadlessCmdEnableTerminal) return STATUS_UNSUCCESSFUL;
 
-		/* Send bogus reply */
-		if ((Command == HeadlessCmdQueryInformation) ||
-			(Command == HeadlessCmdGetByte) ||
-			(Command == HeadlessCmdGetLine) ||
-			(Command == HeadlessCmdCheckForReboot) ||
-			(Command == HeadlessCmdTerminalPoll))
-		{
-			if (!(OutputBuffer) || !(OutputBufferSize)) return STATUS_INVALID_PARAMETER;
-			RtlZeroMemory(OutputBuffer, *OutputBufferSize);
-		}
-		return STATUS_SUCCESS;
-	}
-	
-	/* Do the real work */
-	return HdlspDispatch(
-		Command, 
-		InputBuffer,
-		InputBufferSize,
-		OutputBuffer,
-		OutputBufferSize);
-}    
+        /* Send bogus reply */
+        if ((Command == HeadlessCmdQueryInformation) ||
+            (Command == HeadlessCmdGetByte) ||
+            (Command == HeadlessCmdGetLine) ||
+            (Command == HeadlessCmdCheckForReboot) ||
+            (Command == HeadlessCmdTerminalPoll))
+        {
+            if (!(OutputBuffer) || !(OutputBufferSize))
+            {
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            RtlZeroMemory(OutputBuffer, *OutputBufferSize);
+        }
+        return STATUS_SUCCESS;
+    }
+
+    /* Do the real work */
+    return HdlspDispatch(Command, 
+                         InputBuffer,
+                         InputBufferSize,
+                         OutputBuffer,
+                         OutputBufferSize);
+}
 
 /* EOF */

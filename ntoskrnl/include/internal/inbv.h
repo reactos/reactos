@@ -107,4 +107,17 @@ InbvPortInitialize(
 	IN BOOLEAN IsMMIODevice
 );
 
+BOOLEAN
+NTAPI
+InbvPortPollOnly(
+    IN ULONG PortId
+);
+
+BOOLEAN
+NTAPI
+InbvPortGetByte(
+    IN ULONG PortId,
+    OUT PUCHAR Char
+);
+
 extern BOOLEAN InbvBootDriverInstalled;

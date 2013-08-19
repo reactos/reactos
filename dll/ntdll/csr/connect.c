@@ -44,8 +44,8 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
     PSID SystemSid = NULL;
-    CSR_CONNECTION_INFO ConnectionInfo;
-    ULONG ConnectionInfoLength = sizeof(CSR_CONNECTION_INFO);
+    CSR_API_CONNECTINFO ConnectionInfo;
+    ULONG ConnectionInfoLength = sizeof(CSR_API_CONNECTINFO);
 
     DPRINT("%s(%S)\n", __FUNCTION__, ObjectDirectory);
 
@@ -107,7 +107,7 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
     SecurityQos.EffectiveOnly = TRUE;
 
     /* Setup the connection info */
-    ConnectionInfo.Version = 0x10000;
+    ConnectionInfo.Version = CSRSRV_VERSION;
 
     /* Create a SID for us */
     Status = RtlAllocateAndInitializeSid(&NtSidAuthority,

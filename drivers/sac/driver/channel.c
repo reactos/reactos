@@ -147,11 +147,11 @@ ChannelIRead(IN PSAC_CHANNEL Channel,
     return Status;
 }
 
-UCHAR
+WCHAR
 NTAPI
 ChannelIReadLast(IN PSAC_CHANNEL Channel)
 {
-    UCHAR LastChar;
+    WCHAR LastChar;
 
     /* Read the last character while holding the lock */
     ChannelLockIBuffer(Channel);
@@ -410,9 +410,19 @@ ChannelInitializeVTable(IN PSAC_CHANNEL Channel)
     switch (Channel->ChannelType)
     {
         case VtUtf8:
-            /* FIXME: TODO */
-            ASSERT(FALSE);
-            return STATUS_NOT_IMPLEMENTED;
+            /* Setup the calls for a VT-UTF8 channel */
+            Channel->ChannelCreate = VTUTF8ChannelCreate;
+            Channel->ChannelDestroy = VTUTF8ChannelDestroy;
+            Channel->ChannelOutputFlush = VTUTF8ChannelOFlush;
+            Channel->ChannelOutputEcho = VTUTF8ChannelOEcho;
+            Channel->ChannelOutputWrite = VTUTF8ChannelOWrite;
+            Channel->ChannelOutputRead = VTUTF8ChannelORead;
+            Channel->ChannelInputWrite = VTUTF8ChannelIWrite;
+            Channel->ChannelInputRead = VTUTF8ChannelIRead;
+            Channel->ChannelInputReadLast = VTUTF8ChannelIReadLast;
+            Channel->ChannelInputBufferIsFull = VTUTF8ChannelIBufferIsFull;
+            Channel->ChannelInputBufferLength = VTUTF8ChannelIBufferLength;
+            break;
 
         case Cmd:
             /* FIXME: TODO */

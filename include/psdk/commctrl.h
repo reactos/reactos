@@ -3,6 +3,7 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
+
 #ifndef _INC_COMMCTRL
 #define _INC_COMMCTRL
 
@@ -21,7 +22,7 @@
 
 #ifndef _HRESULT_DEFINED
 #define _HRESULT_DEFINED
-typedef LONG HRESULT;
+typedef _Return_type_success_(return >= 0) LONG HRESULT;
 #endif
 
 #ifndef NOUSER
@@ -70,7 +71,8 @@ extern "C" {
 #define ICC_NATIVEFNTCTL_CLASS 0x2000
 #define ICC_STANDARD_CLASSES 0x4000
 #define ICC_LINK_CLASS 0x8000
-  WINCOMMCTRLAPI WINBOOL WINAPI InitCommonControlsEx(const INITCOMMONCONTROLSEX *);
+
+  WINCOMMCTRLAPI WINBOOL WINAPI InitCommonControlsEx(_In_ const INITCOMMONCONTROLSEX *);
 
 #define ODT_HEADER 100
 #define ODT_TAB 101
@@ -330,15 +332,57 @@ extern "C" {
 #define ILC_PERITEMMIRROR 0x8000
 
   WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_Create(int cx,int cy,UINT flags,int cInitial,int cGrow);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_Destroy(HIMAGELIST himl);
-  WINCOMMCTRLAPI int WINAPI ImageList_GetImageCount(HIMAGELIST himl);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_SetImageCount(HIMAGELIST himl,UINT uNewCount);
-  WINCOMMCTRLAPI int WINAPI ImageList_Add(HIMAGELIST himl,HBITMAP hbmImage,HBITMAP hbmMask);
-  WINCOMMCTRLAPI int WINAPI ImageList_ReplaceIcon(HIMAGELIST himl,int i,HICON hicon);
-  WINCOMMCTRLAPI COLORREF WINAPI ImageList_SetBkColor(HIMAGELIST himl,COLORREF clrBk);
-  WINCOMMCTRLAPI COLORREF WINAPI ImageList_GetBkColor(HIMAGELIST himl);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_SetOverlayImage(HIMAGELIST himl,int iImage,int iOverlay);
-  WINCOMMCTRLAPI HRESULT WINAPI HIMAGELIST_QueryInterface(HIMAGELIST,REFIID,void **);
+  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_Destroy(_In_opt_ HIMAGELIST himl);
+  WINCOMMCTRLAPI int WINAPI ImageList_GetImageCount(_In_ HIMAGELIST himl);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_SetImageCount(
+    _In_ HIMAGELIST himl,
+    _In_ UINT uNewCount);
+
+  WINCOMMCTRLAPI
+  int
+  WINAPI
+  ImageList_Add(
+    _In_ HIMAGELIST himl,
+    _In_ HBITMAP hbmImage,
+    _In_opt_ HBITMAP hbmMask);
+
+  WINCOMMCTRLAPI
+  int
+  WINAPI
+  ImageList_ReplaceIcon(
+    _In_ HIMAGELIST himl,
+    _In_ int i,
+    _In_ HICON hicon);
+
+  WINCOMMCTRLAPI
+  COLORREF
+  WINAPI
+  ImageList_SetBkColor(
+    _In_ HIMAGELIST himl,
+    _In_ COLORREF clrBk);
+
+  WINCOMMCTRLAPI COLORREF WINAPI ImageList_GetBkColor(_In_ HIMAGELIST himl);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_SetOverlayImage(
+    _In_ HIMAGELIST himl,
+    _In_ int iImage,
+    _In_ int iOverlay);
+
+  WINCOMMCTRLAPI
+  HRESULT
+  WINAPI
+  HIMAGELIST_QueryInterface(
+    _In_ HIMAGELIST,
+    _In_ REFIID,
+    _Outptr_ void **);
+
 #define ImageList_AddIcon(himl,hicon) ImageList_ReplaceIcon(himl,-1,hicon)
 
 #define ILD_NORMAL 0x0
@@ -365,13 +409,70 @@ extern "C" {
 #define ILS_SATURATE 0x4
 #define ILS_ALPHA 0x8
 
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_Draw(HIMAGELIST himl,int i,HDC hdcDst,int x,int y,UINT fStyle);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_Replace(HIMAGELIST himl,int i,HBITMAP hbmImage,HBITMAP hbmMask);
-  WINCOMMCTRLAPI int WINAPI ImageList_AddMasked(HIMAGELIST himl,HBITMAP hbmImage,COLORREF crMask);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_DrawEx(HIMAGELIST himl,int i,HDC hdcDst,int x,int y,int dx,int dy,COLORREF rgbBk,COLORREF rgbFg,UINT fStyle);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_DrawIndirect(IMAGELISTDRAWPARAMS *pimldp);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_Remove(HIMAGELIST himl,int i);
-  WINCOMMCTRLAPI HICON WINAPI ImageList_GetIcon(HIMAGELIST himl,int i,UINT flags);
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_Draw(
+    _In_ HIMAGELIST himl,
+    _In_ int i,
+    _In_ HDC hdcDst,
+    _In_ int x,
+    _In_ int y,
+    _In_ UINT fStyle);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_Replace(
+    _In_ HIMAGELIST himl,
+    _In_ int i,
+    _In_ HBITMAP hbmImage,
+    _In_opt_ HBITMAP hbmMask);
+
+  WINCOMMCTRLAPI
+  int
+  WINAPI
+  ImageList_AddMasked(
+    _In_ HIMAGELIST himl,
+    _In_ HBITMAP hbmImage,
+    _In_ COLORREF crMask);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_DrawEx(
+    _In_ HIMAGELIST himl,
+    _In_ int i,
+    _In_ HDC hdcDst,
+    _In_ int x,
+    _In_ int y,
+    _In_ int dx,
+    _In_ int dy,
+    _In_ COLORREF rgbBk,
+    _In_ COLORREF rgbFg,
+    _In_ UINT fStyle);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_DrawIndirect(
+    _In_ IMAGELISTDRAWPARAMS *pimldp);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_Remove(
+    _In_ HIMAGELIST himl,
+    _In_ int i);
+
+  WINCOMMCTRLAPI
+  HICON
+  WINAPI
+  ImageList_GetIcon(
+    _In_ HIMAGELIST himl,
+    _In_ int i,
+    _In_ UINT flags);
+
   WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_LoadImageA(HINSTANCE hi,LPCSTR lpbmp,int cx,int cGrow,COLORREF crMask,UINT uType,UINT uFlags);
   WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_LoadImageW(HINSTANCE hi,LPCWSTR lpbmp,int cx,int cGrow,COLORREF crMask,UINT uType,UINT uFlags);
 
@@ -379,26 +480,61 @@ extern "C" {
 
 #define ILCF_MOVE 0x0
 #define ILCF_SWAP 0x1
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_Copy(HIMAGELIST himlDst,int iDst,HIMAGELIST himlSrc,int iSrc,UINT uFlags);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_BeginDrag(HIMAGELIST himlTrack,int iTrack,int dxHotspot,int dyHotspot);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_Copy(
+    _In_ HIMAGELIST himlDst,
+    _In_ int iDst,
+    _In_ HIMAGELIST himlSrc,
+    _In_ int iSrc,
+    _In_ UINT uFlags);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_BeginDrag(
+    _In_ HIMAGELIST himlTrack,
+    _In_ int iTrack,
+    _In_ int dxHotspot,
+    _In_ int dyHotspot);
+
   WINCOMMCTRLAPI void WINAPI ImageList_EndDrag(void);
   WINCOMMCTRLAPI WINBOOL WINAPI ImageList_DragEnter(HWND hwndLock,int x,int y);
   WINCOMMCTRLAPI WINBOOL WINAPI ImageList_DragLeave(HWND hwndLock);
   WINCOMMCTRLAPI WINBOOL WINAPI ImageList_DragMove(int x,int y);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_SetDragCursorImage(HIMAGELIST himlDrag,int iDrag,int dxHotspot,int dyHotspot);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_SetDragCursorImage(
+    _In_ HIMAGELIST himlDrag,
+    _In_ int iDrag,
+    _In_ int dxHotspot,
+    _In_ int dyHotspot);
+
   WINCOMMCTRLAPI WINBOOL WINAPI ImageList_DragShowNolock(WINBOOL fShow);
-  WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_GetDragImage(POINT *ppt,POINT *pptHotspot);
+
+  _Success_(return != NULL)
+  WINCOMMCTRLAPI
+  HIMAGELIST
+  WINAPI
+  ImageList_GetDragImage(
+    _Out_opt_ POINT *ppt,
+    _Out_opt_ POINT *pptHotspot);
+
 #define ImageList_RemoveAll(himl) ImageList_Remove(himl,-1)
 #define ImageList_ExtractIcon(hi,himl,i) ImageList_GetIcon(himl,i,0)
 #define ImageList_LoadBitmap(hi,lpbmp,cx,cGrow,crMask) ImageList_LoadImage(hi,lpbmp,cx,cGrow,crMask,IMAGE_BITMAP,0)
 
 #ifdef __IStream_INTERFACE_DEFINED__
-  WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_Read(LPSTREAM pstm);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_Write(HIMAGELIST himl,LPSTREAM pstm);
+  WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_Read(_In_ LPSTREAM pstm);
+  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_Write(_In_ HIMAGELIST himl, _In_ LPSTREAM pstm);
 #define ILP_NORMAL 0
 #define ILP_DOWNLEVEL 1
-  WINCOMMCTRLAPI HRESULT WINAPI ImageList_ReadEx(DWORD dwFlags,LPSTREAM pstm,REFIID riid,PVOID *ppv);
-  WINCOMMCTRLAPI HRESULT WINAPI ImageList_WriteEx(HIMAGELIST himl,DWORD dwFlags,LPSTREAM pstm);
+  WINCOMMCTRLAPI HRESULT WINAPI ImageList_ReadEx(_In_ DWORD dwFlags, _In_ LPSTREAM pstm, _In_ REFIID riid, _Outptr_ PVOID *ppv);
+  WINCOMMCTRLAPI HRESULT WINAPI ImageList_WriteEx(_In_ HIMAGELIST himl, _In_ DWORD dwFlags, _In_ LPSTREAM pstm);
 #endif
 
 #ifndef IMAGEINFO
@@ -411,11 +547,46 @@ extern "C" {
   } IMAGEINFO,*LPIMAGEINFO;
 #endif
 
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_GetIconSize(HIMAGELIST himl,int *cx,int *cy);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_SetIconSize(HIMAGELIST himl,int cx,int cy);
-  WINCOMMCTRLAPI WINBOOL WINAPI ImageList_GetImageInfo(HIMAGELIST himl,int i,IMAGEINFO *pImageInfo);
-  WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_Merge(HIMAGELIST himl1,int i1,HIMAGELIST himl2,int i2,int dx,int dy);
-  WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_Duplicate(HIMAGELIST himl);
+  _Success_(return != 0)
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_GetIconSize(
+    _In_ HIMAGELIST himl,
+    _Out_opt_ int *cx,
+    _Out_opt_ int *cy);
+
+  _Success_(return != 0)
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_SetIconSize(
+    _In_ HIMAGELIST himl,
+    _In_ int cx,
+    _In_ int cy);
+
+  _Success_(return != 0)
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ImageList_GetImageInfo(
+    _In_ HIMAGELIST himl,
+    _In_ int i,
+    _Out_ IMAGEINFO *pImageInfo);
+
+  WINCOMMCTRLAPI
+  HIMAGELIST
+  WINAPI
+  ImageList_Merge(
+    _In_ HIMAGELIST himl1,
+    _In_ int i1,
+    _In_ HIMAGELIST himl2,
+    _In_ int i2,
+    _In_ int dx,
+    _In_ int dy);
+
+  WINCOMMCTRLAPI HIMAGELIST WINAPI ImageList_Duplicate(_In_ HIMAGELIST himl);
+
 #endif
 
 #ifndef NOHEADER
@@ -1760,8 +1931,22 @@ extern "C" {
 #ifndef NOMENUHELP
 
   WINCOMMCTRLAPI void WINAPI MenuHelp(UINT uMsg,WPARAM wParam,LPARAM lParam,HMENU hMainMenu,HINSTANCE hInst,HWND hwndStatus,UINT *lpwIDs);
-  WINCOMMCTRLAPI WINBOOL WINAPI ShowHideMenuCtl(HWND hWnd,UINT_PTR uFlags,LPINT lpInfo);
-  WINCOMMCTRLAPI void WINAPI GetEffectiveClientRect(HWND hWnd,LPRECT lprc,const INT *lpInfo);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  ShowHideMenuCtl(
+    _In_ HWND hWnd,
+    _In_ UINT_PTR uFlags,
+    _In_z_ LPINT lpInfo);
+
+  WINCOMMCTRLAPI
+  void
+  WINAPI
+  GetEffectiveClientRect(
+    _In_ HWND hWnd,
+    _Out_ LPRECT lprc,
+    _In_z_ const INT *lpInfo);
 
 #define MINSYSCOMMAND SC_SIZE
 #endif
@@ -4519,33 +4704,79 @@ typedef struct {
   typedef int (CALLBACK *PFNDSAENUMCALLBACK)(void *p,void *pData);
 
   WINCOMMCTRLAPI HDSA WINAPI DSA_Create(int cbItem,int cItemGrow);
-  WINCOMMCTRLAPI WINBOOL WINAPI DSA_Destroy(HDSA hdsa);
-  WINCOMMCTRLAPI void WINAPI DSA_DestroyCallback(HDSA hdsa,PFNDSAENUMCALLBACK pfnCB,void *pData);
-  WINCOMMCTRLAPI PVOID WINAPI DSA_GetItemPtr(HDSA hdsa,int i);
-  WINCOMMCTRLAPI int WINAPI DSA_InsertItem(HDSA hdsa,int i,void *pitem);
+  WINCOMMCTRLAPI WINBOOL WINAPI DSA_Destroy(_Inout_opt_ HDSA hdsa);
+
+  WINCOMMCTRLAPI
+  void
+  WINAPI
+  DSA_DestroyCallback(
+    _Inout_opt_ HDSA hdsa,
+    _In_ PFNDSAENUMCALLBACK pfnCB,
+    _In_opt_ void *pData);
+
+  WINCOMMCTRLAPI PVOID WINAPI DSA_GetItemPtr(_In_ HDSA hdsa, int i);
+
+  WINCOMMCTRLAPI
+  int
+  WINAPI
+  DSA_InsertItem(
+    _Inout_ HDSA hdsa,
+    _In_ int i,
+    _In_ void *pitem);
 
   typedef struct _DPA *HDPA;
 
   WINCOMMCTRLAPI HDPA WINAPI DPA_Create(int cItemGrow);
-  WINCOMMCTRLAPI WINBOOL WINAPI DPA_Destroy(HDPA hdpa);
-  WINCOMMCTRLAPI PVOID WINAPI DPA_DeletePtr(HDPA hdpa,int i);
-  WINCOMMCTRLAPI WINBOOL WINAPI DPA_DeleteAllPtrs(HDPA hdpa);
-  WINCOMMCTRLAPI void WINAPI DPA_EnumCallback(HDPA hdpa,PFNDPAENUMCALLBACK pfnCB,void *pData);
-  WINCOMMCTRLAPI void WINAPI DPA_DestroyCallback(HDPA hdpa,PFNDPAENUMCALLBACK pfnCB,void *pData);
-  WINCOMMCTRLAPI WINBOOL WINAPI DPA_SetPtr(HDPA hdpa,int i,void *p);
-  WINCOMMCTRLAPI int WINAPI DPA_InsertPtr(HDPA hdpa,int i,void *p);
-  WINCOMMCTRLAPI PVOID WINAPI DPA_GetPtr(HDPA hdpa,INT_PTR i);
+  WINCOMMCTRLAPI WINBOOL WINAPI DPA_Destroy(_Inout_opt_ HDPA hdpa);
+  WINCOMMCTRLAPI PVOID WINAPI DPA_DeletePtr(_Inout_ HDPA hdpa, _In_ int i);
+  WINCOMMCTRLAPI WINBOOL WINAPI DPA_DeleteAllPtrs(_Inout_ HDPA hdpa);
+
+  WINCOMMCTRLAPI
+  void
+  WINAPI
+  DPA_EnumCallback(
+    _In_opt_ HDPA hdpa,
+    _In_opt_ PFNDPAENUMCALLBACK pfnCB,
+    _In_opt_ void *pData);
+
+  WINCOMMCTRLAPI
+  void
+  WINAPI
+  DPA_DestroyCallback(
+    _Inout_opt_ HDPA hdpa,
+    _In_ PFNDPAENUMCALLBACK pfnCB,
+    _In_opt_ void *pData);
 
   typedef int (CALLBACK *PFNDPACOMPARE)(void *p1,void *p2,LPARAM lParam);
 
-  WINCOMMCTRLAPI WINBOOL WINAPI DPA_Sort(HDPA hdpa,PFNDPACOMPARE pfnCompare,LPARAM lParam);
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  DPA_Sort(
+    _Inout_ HDPA hdpa,
+    _In_ PFNDPACOMPARE pfnCompare,
+    _In_ LPARAM lParam);
 
 #define DPAS_SORTED 0x1
 #define DPAS_INSERTBEFORE 0x2
 #define DPAS_INSERTAFTER 0x4
 
-  WINCOMMCTRLAPI int WINAPI DPA_Search(HDPA hdpa,void *pFind,int iStart,PFNDPACOMPARE pfnCompare,LPARAM lParam,UINT options);
-  WINCOMMCTRLAPI WINBOOL WINAPI Str_SetPtrW(LPWSTR *ppsz,LPCWSTR psz);
+  WINCOMMCTRLAPI
+  int
+  WINAPI
+  DPA_Search(
+    _In_ HDPA hdpa,
+    _In_opt_ void *pFind,
+    _In_ int iStart,
+    _In_ PFNDPACOMPARE pfnCompare,
+    _In_ LPARAM lParam,
+    _In_ UINT options);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI Str_SetPtrW(
+    _Inout_ LPWSTR *ppsz,
+    _In_opt_ LPCWSTR psz);
 
 typedef struct _DPASTREAMINFO {
   int iPos;
@@ -4553,17 +4784,71 @@ typedef struct _DPASTREAMINFO {
 } DPASTREAMINFO;
 
 struct IStream;
-typedef HRESULT (CALLBACK *PFNDPASTREAM)(DPASTREAMINFO*, struct IStream*, void*);
-typedef void* (CALLBACK *PFNDPAMERGE)(UINT, void*, void*, LPARAM);
-typedef const void* (CALLBACK *PFNDPAMERGECONST)(UINT, const void*, const void*, LPARAM);
 
-  WINCOMMCTRLAPI HRESULT WINAPI DPA_LoadStream(HDPA * phdpa, PFNDPASTREAM pfn, struct IStream * pstream, void *pvInstData);
-  WINCOMMCTRLAPI HRESULT WINAPI DPA_SaveStream(HDPA hdpa, PFNDPASTREAM pfn, struct IStream * pstream, void *pvInstData);
-  WINCOMMCTRLAPI WINBOOL WINAPI DPA_Grow(HDPA pdpa, int cp);
-  WINCOMMCTRLAPI int WINAPI DPA_InsertPtr(HDPA hdpa, int i, void *p);
-  WINCOMMCTRLAPI PVOID WINAPI DPA_GetPtr(HDPA hdpa, INT_PTR i);
-  WINCOMMCTRLAPI WINBOOL WINAPI DPA_SetPtr(HDPA hdpa, int i, void *p);
-  WINCOMMCTRLAPI int WINAPI DPA_GetPtrIndex(HDPA hdpa, const void *p);
+typedef HRESULT
+(CALLBACK *PFNDPASTREAM)(
+  _In_ DPASTREAMINFO*,
+  _In_ struct IStream*,
+  _In_opt_ void*);
+
+typedef void*
+(CALLBACK *PFNDPAMERGE)(
+  _In_ UINT,
+  _In_ void*,
+  _In_ void*,
+  _In_ LPARAM);
+
+typedef const void*
+(CALLBACK *PFNDPAMERGECONST)(
+  _In_ UINT,
+  _In_ const void*,
+  _In_ const void*,
+  _In_ LPARAM);
+
+  WINCOMMCTRLAPI
+  HRESULT
+  WINAPI
+  DPA_LoadStream(
+    _Outptr_ HDPA * phdpa,
+    _In_ PFNDPASTREAM pfn,
+    _In_ struct IStream * pstream,
+    _In_opt_ void *pvInstData);
+
+  WINCOMMCTRLAPI
+  HRESULT
+  WINAPI
+  DPA_SaveStream(
+    _In_ HDPA hdpa,
+    _In_ PFNDPASTREAM pfn,
+    _In_ struct IStream * pstream,
+    _In_opt_ void *pvInstData);
+
+  WINCOMMCTRLAPI WINBOOL WINAPI DPA_Grow(_Inout_ HDPA pdpa, _In_ int cp);
+
+  WINCOMMCTRLAPI
+  int
+  WINAPI
+  DPA_InsertPtr(
+    _Inout_ HDPA hdpa,
+    _In_ int i,
+    _In_opt_ void *p);
+
+  WINCOMMCTRLAPI PVOID WINAPI DPA_GetPtr(_In_ HDPA hdpa, _In_ INT_PTR i);
+
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  DPA_SetPtr(
+    _Inout_ HDPA hdpa,
+    _In_ int i,
+    _In_opt_ void *p);
+
+  WINCOMMCTRLAPI
+  int
+  WINAPI
+  DPA_GetPtrIndex(
+    _In_ HDPA hdpa,
+    _In_opt_ const void *p);
 
 #define DPA_GetPtrCount(hdpa) (*(int *)(hdpa))
 #define DPA_SetPtrCount(hdpa, cItems) (*(int *)(hdpa) = (cItems))
@@ -4606,7 +4891,12 @@ typedef const void* (CALLBACK *PFNDPAMERGECONST)(UINT, const void*, const void*,
   } TRACKMOUSEEVENT,*LPTRACKMOUSEEVENT;
 #endif
 
-  WINCOMMCTRLAPI WINBOOL WINAPI _TrackMouseEvent(LPTRACKMOUSEEVENT lpEventTrack);
+  WINCOMMCTRLAPI
+  WINBOOL
+  WINAPI
+  _TrackMouseEvent(
+    _Inout_ LPTRACKMOUSEEVENT lpEventTrack);
+
 #endif
 
 #ifndef NOFLATSBAPIS
@@ -4653,11 +4943,46 @@ typedef const void* (CALLBACK *PFNDPAMERGECONST)(UINT, const void*, const void*,
 
   typedef LRESULT (CALLBACK *SUBCLASSPROC)(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam,UINT_PTR uIdSubclass,DWORD_PTR dwRefData);
 
-  WINBOOL WINAPI SetWindowSubclass(HWND hWnd,SUBCLASSPROC pfnSubclass,UINT_PTR uIdSubclass,DWORD_PTR dwRefData);
-  WINBOOL WINAPI GetWindowSubclass(HWND hWnd,SUBCLASSPROC pfnSubclass,UINT_PTR uIdSubclass,DWORD_PTR *pdwRefData);
-  WINBOOL WINAPI RemoveWindowSubclass(HWND hWnd,SUBCLASSPROC pfnSubclass,UINT_PTR uIdSubclass);
+  _Success_(return != 0)
+  WINBOOL
+  WINAPI
+  SetWindowSubclass(
+    _In_ HWND hWnd,
+    _In_ SUBCLASSPROC pfnSubclass,
+    _In_ UINT_PTR uIdSubclass,
+    _In_ DWORD_PTR dwRefData);
+
+  _Success_(return != 0)
+  WINBOOL
+  WINAPI
+  GetWindowSubclass(
+    _In_ HWND hWnd,
+    _In_ SUBCLASSPROC pfnSubclass,
+    _In_ UINT_PTR uIdSubclass,
+    _Out_opt_ DWORD_PTR *pdwRefData);
+
+  _Success_(return != 0)
+  WINBOOL
+  WINAPI
+  RemoveWindowSubclass(
+    _In_ HWND hWnd,
+    _In_ SUBCLASSPROC pfnSubclass,
+    _In_ UINT_PTR uIdSubclass);
+
   LRESULT WINAPI DefSubclassProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-  int WINAPI DrawShadowText(HDC hdc,LPCWSTR pszText,UINT cch,RECT *prc,DWORD dwFlags,COLORREF crText,COLORREF crShadow,int ixOffset,int iyOffset);
+
+  int
+  WINAPI
+  DrawShadowText(
+    _In_ HDC hdc,
+    _In_reads_(cch) LPCWSTR pszText,
+    _In_ UINT cch,
+    _In_ RECT *prc,
+    _In_ DWORD dwFlags,
+    _In_ COLORREF crText,
+    _In_ COLORREF crShadow,
+    _In_ int ixOffset,
+    _In_ int iyOffset);
 
 #ifndef NOTASKDIALOG
 
@@ -4701,7 +5026,13 @@ typedef struct _TASKDIALOG_BUTTON
     PCWSTR  pszButtonText;
 } TASKDIALOG_BUTTON;
 
-typedef HRESULT (CALLBACK *PFTASKDIALOGCALLBACK)(HWND, UINT, WPARAM, LPARAM, LONG_PTR);
+typedef HRESULT
+(CALLBACK *PFTASKDIALOGCALLBACK)(
+  _In_ HWND,
+  _In_ UINT,
+  _In_ WPARAM,
+  _In_ LPARAM,
+  _In_ LONG_PTR);
 
 typedef struct _TASKDIALOGCONFIG
 {
@@ -4739,7 +5070,13 @@ typedef struct _TASKDIALOGCONFIG
     UINT        cxWidth;
 } TASKDIALOGCONFIG;
 
-HRESULT WINAPI TaskDialogIndirect(const TASKDIALOGCONFIG *, int *, int *, BOOL *);
+HRESULT
+WINAPI
+TaskDialogIndirect(
+  _In_ const TASKDIALOGCONFIG *,
+  _Out_opt_ int *,
+  _Out_opt_ int *,
+  _Out_opt_ BOOL *);
 
 #include <poppack.h>
 
@@ -4748,5 +5085,6 @@ HRESULT WINAPI TaskDialogIndirect(const TASKDIALOGCONFIG *, int *, int *, BOOL *
 #ifdef __cplusplus
 }
 #endif
+
 #endif
 #endif

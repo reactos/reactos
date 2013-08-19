@@ -402,12 +402,14 @@ SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
     NTSTATUS Status;
 
     UseNtPassword =
-       ((memcmp(NtPassword, &EmptyNtHash, sizeof(ENCRYPTED_NT_OWF_PASSWORD)) != 0) &&
-        (NtPasswordPresent != FALSE));
+       ((NtPasswordPresent != FALSE) &&
+        (NtPassword != NULL) &&
+        (memcmp(NtPassword, &EmptyNtHash, sizeof(ENCRYPTED_NT_OWF_PASSWORD)) != 0));
 
     UseLmPassword =
-       ((memcmp(LmPassword, &EmptyLmHash, sizeof(ENCRYPTED_LM_OWF_PASSWORD)) != 0) &&
-        (LmPasswordPresent != FALSE));
+       ((LmPasswordPresent != FALSE) &&
+        (LmPassword != NULL) &&
+        (memcmp(LmPassword, &EmptyLmHash, sizeof(ENCRYPTED_LM_OWF_PASSWORD)) != 0));
 
     /* Update the NT password history only if we have a new non-empty NT password */
     if (UseNtPassword)

@@ -143,7 +143,7 @@ BOOLEAN
 WinLdrPortGetByte(IN ULONG PortId,
                   OUT PUCHAR Data)
 {
-    return CpGetByte(&Port[PortId], Data, TRUE) == CP_GET_SUCCESS;
+    return CpGetByte(&Port[PortId], Data, TRUE, FALSE) == CP_GET_SUCCESS;
 }
 
 BOOLEAN
@@ -151,7 +151,7 @@ WinLdrPortPollOnly(IN ULONG PortId)
 {
     UCHAR Dummy;
 
-    return CpGetByte(&Port[PortId], &Dummy, FALSE) == CP_GET_SUCCESS;
+    return CpGetByte(&Port[PortId], &Dummy, FALSE, TRUE) == CP_GET_SUCCESS;
 }
 
 VOID
@@ -246,7 +246,8 @@ WinLdrSetupEms(IN PCHAR BootOptions)
 
     /* Start fresh */
     RtlZeroMemory(&LoaderRedirectionInformation, sizeof(HEADLESS_LOADER_BLOCK));
-        
+    LoaderRedirectionInformation.PciDeviceId = PCI_INVALID_VENDORID;
+
     /* Use a direction port if one was given, or use ACPI to detect one instead */
     RedirectPort = strstr(BootOptions, "/redirect=");
 
@@ -257,6 +258,7 @@ WinLdrSetupEms(IN PCHAR BootOptions)
         {
             RedirectPort += sizeof("com") - 1;
             LoaderRedirectionInformation.PortNumber = atoi(RedirectPort);
+            LoaderRedirectionInformation.TerminalType = 1; //HeadlessSerialPort
         }
         else
         {

@@ -111,8 +111,7 @@ VOID
 ChannelReferenceToOneByIndexWithLock(IN LONG Index)
 {
     ChannelSlotLock(Index);
-    ASSERT(ChannelGetReferenceCount((Index)) == 1);
-    _InterlockedExchange(&ChannelRefCount[Index], 1);
+    ChannelReferenceToOneByIndex(Index);
     ChannelSlotUnlock(Index);
 }
 
@@ -359,7 +358,7 @@ ChanMgrCreateChannel(OUT PSAC_CHANNEL *Channel,
     ChannelLockCreates();
 
     /* Is the channel manager initialized? */
-    if (ChannelCreateEnabled)
+    if (!ChannelCreateEnabled)
     {
         /* Nope, bail out */
         Status = STATUS_UNSUCCESSFUL;
@@ -405,7 +404,6 @@ ChanMgrCreateChannel(OUT PSAC_CHANNEL *Channel,
     if (i == SAC_MAX_CHANNELS)
     {
         /* Bail out */
-        Status = STATUS_UNSUCCESSFUL;
         goto ReturnStatus;
     }
 

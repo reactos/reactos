@@ -956,7 +956,7 @@ ScmControlService(PSERVICE Service,
                 dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
                 goto Done;
             }
-            else if (dwError == ERROR_SUCCESS)
+            else if (dwError == WAIT_OBJECT_0)
             {
                 bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
                                               &Overlapped,
@@ -1010,7 +1010,7 @@ ScmControlService(PSERVICE Service,
                 dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
                 goto Done;
             }
-            else if (dwError == ERROR_SUCCESS)
+            else if (dwError == WAIT_OBJECT_0)
             {
                 bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
                                               &Overlapped,
@@ -1207,7 +1207,7 @@ ScmSendStartCommand(PSERVICE Service,
                 dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
                 goto Done;
             }
-            else if (dwError == ERROR_SUCCESS)
+            else if (dwError == WAIT_OBJECT_0)
             {
                 bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
                                               &Overlapped,
@@ -1261,7 +1261,7 @@ ScmSendStartCommand(PSERVICE Service,
                 dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
                 goto Done;
             }
-            else if (dwError == ERROR_SUCCESS)
+            else if (dwError == WAIT_OBJECT_0)
             {
                 bResult = GetOverlappedResult(Service->lpImage->hControlPipe,
                                               &Overlapped,
@@ -1425,9 +1425,9 @@ ScmWaitForServiceConnect(PSERVICE Service)
 
                 return ERROR_SERVICE_REQUEST_TIMEOUT;
             }
-            else if (dwError == ERROR_SUCCESS)
+            else if (dwError == WAIT_OBJECT_0)
             {
-                DPRINT("WaitForSingleObject() returned ERROR_SUCCESS\n");
+                DPRINT("WaitForSingleObject() returned WAIT_OBJECT_0\n");
 
                 DPRINT("Process Id: %lu\n", dwProcessId);
 

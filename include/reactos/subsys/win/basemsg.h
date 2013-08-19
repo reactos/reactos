@@ -52,6 +52,21 @@ typedef enum _BASESRV_API_NUMBER
     BasepMaxApiNumber
 } BASESRV_API_NUMBER, *PBASESRV_API_NUMBER;
 
+
+typedef struct _BASESRV_API_CONNECTINFO
+{
+    ULONG  ExpectedVersion;
+    HANDLE DefaultObjectDirectory;
+    ULONG  WindowsVersion;
+    ULONG  CurrentVersion;
+    ULONG  DebugFlags;
+    WCHAR  WindowsDirectory[MAX_PATH];
+    WCHAR  WindowsSystemDirectory[MAX_PATH];
+} BASESRV_API_CONNECTINFO, *PBASESRV_API_CONNECTINFO;
+
+#define BASESRV_VERSION 0x10000
+
+
 typedef struct _BASE_SXS_CREATEPROCESS_MSG
 {
     ULONG Flags;
@@ -96,38 +111,38 @@ typedef struct
 
 typedef struct
 {
-    UINT uExitCode;
-} BASE_EXIT_PROCESS, *PBASE_EXIT_PROCESS;
-
-typedef struct
-{
     UINT UniqueID;
 } BASE_GET_TEMP_FILE, *PBASE_GET_TEMP_FILE;
 
 typedef struct
 {
-    ULONG iTask;
+    UINT uExitCode;
+} BASE_EXIT_PROCESS, *PBASE_EXIT_PROCESS;
+
+typedef struct
+{
+    ULONG  iTask;
     HANDLE ConsoleHandle;
-    ULONG BinaryType;
+    ULONG  BinaryType;
     HANDLE WaitObjectForParent;
     HANDLE StdIn;
     HANDLE StdOut;
     HANDLE StdErr;
-    ULONG CodePage;
-    ULONG dwCreationFlags;
-    PCHAR CmdLine;
-    PCHAR appName;
-    PCHAR PifFile;
-    PCHAR CurDirectory;
-    PCHAR Env;
-    ULONG EnvLen;
-    PVOID StartupInfo;
-    PCHAR Desktop;
-    ULONG DesktopLen;
-    PCHAR Title;
-    ULONG TitleLen;
-    PCHAR Reserved;
-    ULONG ReservedLen;
+    ULONG  CodePage;
+    ULONG  dwCreationFlags;
+    PCHAR  CmdLine;
+    PCHAR  appName;
+    PCHAR  PifFile;
+    PCHAR  CurDirectory;
+    PCHAR  Env;
+    ULONG  EnvLen;
+    LPSTARTUPINFOA StartupInfo;
+    PCHAR  Desktop;
+    ULONG  DesktopLen;
+    PCHAR  Title;
+    ULONG  TitleLen;
+    PCHAR  Reserved;
+    ULONG  ReservedLen;
     USHORT CmdLen;
     USHORT AppLen;
     USHORT PifLen;
@@ -138,8 +153,8 @@ typedef struct
 
 typedef struct
 {
-    ULONG iTask;
-    ULONG BinaryType;
+    ULONG  iTask;
+    ULONG  BinaryType;
     HANDLE ConsoleHandle;
     HANDLE VDMProcessHandle;
     HANDLE WaitObjectForParent;
@@ -149,22 +164,85 @@ typedef struct
 
 typedef struct
 {
+    ULONG  iTask;
+    HANDLE ConsoleHandle;
+    HANDLE WaitObjectForVDM;
+    HANDLE StdIn;
+    HANDLE StdOut;
+    HANDLE StdErr;
+    ULONG  CodePage;
+    ULONG  dwCreationFlags;
+    ULONG  ExitCode;
+    PCHAR  CmdLine;
+    PCHAR  AppName;
+    PCHAR  PifFile;
+    PCHAR  CurDirectory;
+    PCHAR  Env;
+    ULONG  EnvLen;
+    LPSTARTUPINFOA StartupInfo;
+    PCHAR  Desktop;
+    ULONG  DesktopLen;
+    PCHAR  Title;
+    ULONG  TitleLen;
+    PCHAR  Reserved;
+    ULONG  ReservedLen;
+    USHORT CurrentDrive;
+    USHORT CmdLen;
+    USHORT AppLen;
+    USHORT PifLen;
+    USHORT CurDirectoryLen;
+    USHORT VDMState;
+    ULONG  fComingFromBat;
+} BASE_GET_NEXT_VDM_COMMAND, *PBASE_GET_NEXT_VDM_COMMAND;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    ULONG  iWowTask;
+    HANDLE WaitObjectForVDM;
+} BASE_EXIT_VDM, *PBASE_EXIT_VDM;
+
+typedef struct
+{
+    ULONG FirstVDM;
+} BASE_IS_FIRST_VDM, *PBASE_IS_FIRST_VDM;
+
+typedef struct
+{
     HANDLE ConsoleHandle;
     HANDLE hParent;
-    ULONG ExitCode;
+    ULONG  ExitCode;
 } BASE_GET_VDM_EXIT_CODE, *PBASE_GET_VDM_EXIT_CODE;
 
 typedef struct
 {
-    DWORD Level;
-    DWORD Flags;
-} BASE_SET_PROCESS_SHUTDOWN_PARAMS, *PBASE_SET_PROCESS_SHUTDOWN_PARAMS;
+    HANDLE ConsoleHandle;
+    ULONG  fIncDec;
+} BASE_SET_REENTER_COUNT, *PBASE_SET_REENTER_COUNT;
 
 typedef struct
 {
-    DWORD Level;
-    DWORD Flags;
-} BASE_GET_PROCESS_SHUTDOWN_PARAMS, *PBASE_GET_PROCESS_SHUTDOWN_PARAMS;
+    ULONG ShutdownLevel;
+    ULONG ShutdownFlags;
+} BASE_GETSET_PROCESS_SHUTDOWN_PARAMS, *PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    PCHAR  lpszzCurDirs;
+    ULONG  cchCurDirs;
+} BASE_GETSET_VDM_CURDIRS, *PBASE_GETSET_VDM_CURDIRS;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    ULONG  fBeginEnd;
+} BASE_BAT_NOTIFICATION, *PBASE_BAT_NOTIFICATION;
+
+typedef struct
+{
+    HANDLE hwndWowExec;
+} BASE_REGISTER_WOWEXEC, *PBASE_REGISTER_WOWEXEC;
 
 typedef struct
 {
@@ -173,9 +251,14 @@ typedef struct
 
 typedef struct
 {
+    UNICODE_STRING IniFileName;
+} BASE_REFRESH_INIFILE_MAPPING, *PBASE_REFRESH_INIFILE_MAPPING;
+
+typedef struct
+{
+    ULONG Flags;
     UNICODE_STRING DeviceName;
-    UNICODE_STRING TargetName;
-    DWORD dwFlags;
+    UNICODE_STRING TargetPath;
 } BASE_DEFINE_DOS_DEVICE, *PBASE_DEFINE_DOS_DEVICE;
 
 typedef struct _BASE_API_MESSAGE
@@ -190,14 +273,21 @@ typedef struct _BASE_API_MESSAGE
     {
         BASE_CREATE_PROCESS CreateProcessRequest;
         BASE_CREATE_THREAD CreateThreadRequest;
+        BASE_GET_TEMP_FILE GetTempFileRequest;
         BASE_EXIT_PROCESS ExitProcessRequest;
-        BASE_GET_TEMP_FILE GetTempFile;
-        BASE_CHECK_VDM CheckVdm;
-        BASE_UPDATE_VDM_ENTRY UpdateVdmEntry;
-        BASE_GET_VDM_EXIT_CODE GetVdmExitCode;
-        BASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest;
-        BASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest;
+        BASE_CHECK_VDM CheckVDMRequest;
+        BASE_UPDATE_VDM_ENTRY UpdateVDMEntryRequest;
+        BASE_GET_NEXT_VDM_COMMAND GetNextVDMCommandRequest;
+        BASE_EXIT_VDM ExitVDMRequest;
+        BASE_IS_FIRST_VDM IsFirstVDMRequest;
+        BASE_GET_VDM_EXIT_CODE GetVDMExitCodeRequest;
+        BASE_SET_REENTER_COUNT SetReenterCountRequest;
+        BASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest;
+        BASE_GETSET_VDM_CURDIRS VDMCurrentDirsRequest;
+        BASE_BAT_NOTIFICATION BatNotificationRequest;
+        BASE_REGISTER_WOWEXEC RegisterWowExecRequest;
         BASE_SOUND_SENTRY SoundSentryRequest;
+        BASE_REFRESH_INIFILE_MAPPING RefreshIniFileMappingRequest;
         BASE_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
     } Data;
 } BASE_API_MESSAGE, *PBASE_API_MESSAGE;

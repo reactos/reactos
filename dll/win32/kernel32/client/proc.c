@@ -963,13 +963,13 @@ GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
 {
     NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
-    PBASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest = &ApiMessage.Data.GetShutdownParametersRequest;
+    PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &ApiMessage.Data.ShutdownParametersRequest;
 
     /* Ask CSRSS for shutdown information */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetProcessShutdownParam),
-                                 sizeof(BASE_GET_PROCESS_SHUTDOWN_PARAMS));
+                                 sizeof(BASE_GETSET_PROCESS_SHUTDOWN_PARAMS));
     if (!NT_SUCCESS(Status))
     {
         /* Return the failure from CSRSS */
@@ -978,8 +978,8 @@ GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
     }
 
     /* Get the data back */
-    *lpdwLevel = GetShutdownParametersRequest->Level;
-    *lpdwFlags = GetShutdownParametersRequest->Flags;
+    *lpdwLevel = ShutdownParametersRequest->ShutdownLevel;
+    *lpdwFlags = ShutdownParametersRequest->ShutdownFlags;
     return TRUE;
 }
 
@@ -993,15 +993,15 @@ SetProcessShutdownParameters(IN DWORD dwLevel,
 {
     NTSTATUS Status;
     BASE_API_MESSAGE ApiMessage;
-    PBASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest = &ApiMessage.Data.SetShutdownParametersRequest;
+    PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &ApiMessage.Data.ShutdownParametersRequest;
 
     /* Write the data into the CSRSS request and send it */
-    SetShutdownParametersRequest->Level = dwLevel;
-    SetShutdownParametersRequest->Flags = dwFlags;
+    ShutdownParametersRequest->ShutdownLevel = dwLevel;
+    ShutdownParametersRequest->ShutdownFlags = dwFlags;
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetProcessShutdownParam),
-                                 sizeof(BASE_SET_PROCESS_SHUTDOWN_PARAMS));
+                                 sizeof(BASE_GETSET_PROCESS_SHUTDOWN_PARAMS));
     if (!NT_SUCCESS(Status))
     {
         /* Return the failure from CSRSS */
@@ -2426,7 +2426,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
 
     /* Set message structures */
     CreateProcessMsg = &CsrMsg.Data.CreateProcessRequest;
-    VdmMsg = &CsrMsg.Data.CheckVdm;
+    VdmMsg = &CsrMsg.Data.CheckVDMRequest;
 
     /* Clear the more complex structures by zeroing out their entire memory */
     RtlZeroMemory(&Context, sizeof(Context));

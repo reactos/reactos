@@ -92,7 +92,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
     CHAR IDString[5];
     WCHAR * TempFileName;
     BASE_API_MESSAGE ApiMessage;
-    PBASE_GET_TEMP_FILE GetTempFile = &ApiMessage.Data.GetTempFile;
+    PBASE_GET_TEMP_FILE GetTempFile = &ApiMessage.Data.GetTempFileRequest;
     DWORD FileAttributes, LastError;
     UNICODE_STRING PathNameString, PrefixString;
     static const WCHAR Ext[] = { L'.', 't', 'm', 'p', UNICODE_NULL };

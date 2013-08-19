@@ -52,7 +52,6 @@ HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup, DWORD n
 LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT wMask, UINT wFlags);
 HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent);
 HRESULT WINAPI ConnectToConnectionPoint(IUnknown *lpUnkSink, REFIID riid, BOOL bAdviseOnly, IUnknown *lpUnknown, LPDWORD lpCookie, IConnectionPoint **lppCP);
-DWORD WINAPI IUnknown_AtomicRelease(IUnknown **lpUnknown);
 BOOL WINAPI SHIsSameObject(IUnknown *lpInt1, IUnknown *lpInt2);
 HRESULT WINAPI IUnknown_GetWindow(IUnknown *lpUnknown, HWND *lphWnd);
 HRESULT WINAPI IUnknown_SetOwner(IUnknown *pUnk, ULONG arg);

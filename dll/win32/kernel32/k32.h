@@ -20,7 +20,6 @@
 #include <winreg.h>
 #include <wincon.h>
 #include <winuser.h>
-#include <winspool.h>
 #include <tlhelp32.h>
 
 /* Redefine NTDDI_VERSION to 2K3 SP1 to get correct NDK definitions */
