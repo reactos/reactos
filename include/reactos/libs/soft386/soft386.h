@@ -28,6 +28,12 @@
 #define SOFT386_CR0_CD (1 << 30)
 #define SOFT386_CR0_PG (1 << 31)
 
+#define SOFT386_IDT_TASK_GATE 0x5
+#define SOFT386_IDT_INT_GATE 0x6
+#define SOFT386_IDT_TRAP_GATE 0x7
+#define SOFT386_IDT_INT_GATE_32 0xE
+#define SOFT386_IDT_TRAP_GATE_32 0xF
+
 struct _SOFT386_STATE;
 typedef struct _SOFT386_STATE SOFT386_STATE, *PSOFT386_STATE;
 
@@ -75,6 +81,26 @@ enum _SOFT386_DBG_REGS
     SOFT386_REG_DR5,
     SOFT386_REG_DR6,
     SOFT386_REG_DR7
+};
+
+enum _SOFT386_EXCEPTIONS
+{
+    SOFT386_EXCEPTION_DE = 0x00,
+    SOFT386_EXCEPTION_DB = 0x01,
+    SOFT386_EXCEPTION_BP = 0x03,
+    SOFT386_EXCEPTION_OF = 0x04,
+    SOFT386_EXCEPTION_BR = 0x05,
+    SOFT386_EXCEPTION_UD = 0x06,
+    SOFT386_EXCEPTION_NM = 0x07,
+    SOFT386_EXCEPTION_DF = 0x08,
+    SOFT386_EXCEPTION_TS = 0x0A,
+    SOFT386_EXCEPTION_NP = 0x0B,
+    SOFT386_EXCEPTION_SS = 0x0C,
+    SOFT386_EXCEPTION_GP = 0x0D,
+    SOFT386_EXCEPTION_PF = 0x0E,
+    SOFT386_EXCEPTION_MF = 0x10,
+    SOFT386_EXCEPTION_AC = 0x11,
+    SOFT386_EXCEPTION_MC = 0x12
 };
 
 typedef
@@ -162,7 +188,7 @@ typedef struct
     ULONG Size : 1;
     ULONG Granularity : 1;
     ULONG BaseHigh : 8;
-} SOFT386_GDT_ENTRY;
+} SOFT386_GDT_ENTRY, *PSOFT386_GDT_ENTRY;
 
 typedef struct
 {
@@ -174,12 +200,12 @@ typedef struct
     ULONG Dpl : 2;
     ULONG Present : 1;
     ULONG OffsetHigh : 16;
-} SOFT386_IDT_ENTRY;
+} SOFT386_IDT_ENTRY, *PSOFT386_IDT_ENTRY;
 
 typedef struct _SOFT386_TABLE_REG
 {
     USHORT Size;
-    ULONG  Address;
+    ULONG Address;
 } SOFT386_TABLE_REG, *PSOFT386_TABLE_REG;
 
 typedef union _SOFT386_FLAGS_REG
@@ -255,6 +281,7 @@ struct _SOFT386_STATE
     ULONGLONG TimeStampCounter;
     ULONG ControlRegisters[SOFT386_NUM_CTRL_REGS];
     ULONG DebugRegisters[SOFT386_NUM_DBG_REGS];
+    ULONG ExceptionCount;
 };
 
 /* FUNCTIONS ******************************************************************/

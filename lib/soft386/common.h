@@ -61,7 +61,58 @@ Soft386LoadSegment
 (
     PSOFT386_STATE State,
     INT Segment,
-    WORD Selector
+    USHORT Selector
+);
+
+inline
+BOOLEAN
+Soft386FetchByte
+(
+    PSOFT386_STATE State,
+    PUCHAR Data
+);
+
+inline
+BOOLEAN
+Soft386FetchWord
+(
+    PSOFT386_STATE State,
+    PUSHORT Data
+);
+
+inline
+BOOLEAN
+Soft386FetchDword
+(
+    PSOFT386_STATE State,
+    PULONG Data
+);
+
+inline
+BOOLEAN
+Soft386InterruptInternal
+(
+    PSOFT386_STATE State,
+    USHORT SegmentSelector,
+    ULONG Offset,
+    BOOLEAN InterruptGate
+);
+
+inline
+BOOLEAN
+Soft386GetIntVector
+(
+    PSOFT386_STATE State,
+    UCHAR Number,
+    PSOFT386_IDT_ENTRY IdtEntry
+);
+
+VOID
+__fastcall
+Soft386Exception
+(
+    PSOFT386_STATE State,
+    INT ExceptionCode
 );
 
 #endif // _COMMON_H_

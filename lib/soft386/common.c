@@ -50,7 +50,7 @@ Soft386ReadMemory(PSOFT386_STATE State,
     if ((Offset + Size) >= CachedDescriptor->Limit)
     {
         /* Read beyond limit */
-        // TODO: Generate exception #GP
+        Soft386Exception(State, SOFT386_EXCEPTION_GP);
 
         return FALSE;
     }
@@ -62,13 +62,13 @@ Soft386ReadMemory(PSOFT386_STATE State,
 
         if (!CachedDescriptor->Present)
         {
-            // TODO: Generate exception #NP
+            Soft386Exception(State, SOFT386_EXCEPTION_NP);
             return FALSE;
         }
 
         if (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
         {
-            // TODO: Generate exception #GP
+            Soft386Exception(State, SOFT386_EXCEPTION_GP);
             return FALSE;
         }
 
@@ -78,7 +78,7 @@ Soft386ReadMemory(PSOFT386_STATE State,
             {
                 /* Data segment not executable */
 
-                // TODO: Generate exception #GP
+                Soft386Exception(State, SOFT386_EXCEPTION_GP);
                 return FALSE;
             }
         }
@@ -88,7 +88,7 @@ Soft386ReadMemory(PSOFT386_STATE State,
             {
                 /* Code segment not readable */
 
-                // TODO: Generate exception #GP
+                Soft386Exception(State, SOFT386_EXCEPTION_GP);
                 return FALSE;
             }
         }
@@ -133,7 +133,7 @@ Soft386WriteMemory(PSOFT386_STATE State,
     if ((Offset + Size) >= CachedDescriptor->Limit)
     {
         /* Write beyond limit */
-        // TODO: Generate exception #GP
+        Soft386Exception(State, SOFT386_EXCEPTION_GP);
 
         return FALSE;
     }
@@ -145,13 +145,13 @@ Soft386WriteMemory(PSOFT386_STATE State,
 
         if (!CachedDescriptor->Present)
         {
-            // TODO: Generate exception #NP
+            Soft386Exception(State, SOFT386_EXCEPTION_NP);
             return FALSE;
         }
 
         if (GET_SEGMENT_RPL(CachedDescriptor->Selector) > CachedDescriptor->Dpl)
         {
-            // TODO: Generate exception #GP
+            Soft386Exception(State, SOFT386_EXCEPTION_GP);
             return FALSE;
         }
 
@@ -159,14 +159,14 @@ Soft386WriteMemory(PSOFT386_STATE State,
         {
             /* Code segment not writable */
 
-            // TODO: Generate exception #GP
+            Soft386Exception(State, SOFT386_EXCEPTION_GP);
             return FALSE;
         }
         else if (!CachedDescriptor->ReadWrite)
         {
             /* Data segment not writeable */
 
-            // TODO: Generate exception #GP
+            Soft386Exception(State, SOFT386_EXCEPTION_GP);
             return FALSE;
         }
     }
@@ -207,7 +207,7 @@ Soft386StackPush(PSOFT386_STATE State, ULONG Value)
         if (State->GeneralRegs[SOFT386_REG_ESP].Long >= 1
             && State->GeneralRegs[SOFT386_REG_ESP].Long <= 3)
         {
-            // TODO: Exception #SS
+            Soft386Exception(State, SOFT386_EXCEPTION_SS);
             return FALSE;
         }
 
@@ -229,7 +229,7 @@ Soft386StackPush(PSOFT386_STATE State, ULONG Value)
         /* Check if SP is 1 */
         if (State->GeneralRegs[SOFT386_REG_ESP].Long == 1)
         {
-            // TODO: Exception #SS
+            Soft386Exception(State, SOFT386_EXCEPTION_SS);
             return FALSE;
         }
 
@@ -262,7 +262,7 @@ Soft386StackPop(PSOFT386_STATE State, PULONG Value)
         /* Check if ESP is 0xFFFFFFFF */
         if (State->GeneralRegs[SOFT386_REG_ESP].Long == 0xFFFFFFFF)
         {
-            // TODO: Exception #SS
+            Soft386Exception(State, SOFT386_EXCEPTION_SS);
             return FALSE;
         }
 
@@ -291,7 +291,7 @@ Soft386StackPop(PSOFT386_STATE State, PULONG Value)
         /* Check if SP is 0xFFFF */
         if (State->GeneralRegs[SOFT386_REG_ESP].LowWord == 0xFFFF)
         {
-            // TODO: Exception #SS
+            Soft386Exception(State, SOFT386_EXCEPTION_SS);
             return FALSE;
         }
 
@@ -319,7 +319,7 @@ Soft386StackPop(PSOFT386_STATE State, PULONG Value)
 
 inline
 BOOLEAN
-Soft386LoadSegment(PSOFT386_STATE State, INT Segment, WORD Selector)
+Soft386LoadSegment(PSOFT386_STATE State, INT Segment, USHORT Selector)
 {
     PSOFT386_SEG_REG CachedDescriptor;
     SOFT386_GDT_ENTRY GdtEntry;
@@ -335,7 +335,7 @@ Soft386LoadSegment(PSOFT386_STATE State, INT Segment, WORD Selector)
         /* Make sure the GDT contains the entry */
         if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
         {
-            // TODO: Exception #GP
+            Soft386Exception(State, SOFT386_EXCEPTION_GP);
             return FALSE;
         }
 
@@ -362,26 +362,26 @@ Soft386LoadSegment(PSOFT386_STATE State, INT Segment, WORD Selector)
         {
             if (GET_SEGMENT_INDEX(Selector) == 0)
             {
-                // TODO: Exception #GP
+                Soft386Exception(State, SOFT386_EXCEPTION_GP);
                 return FALSE;
             }
 
             if (GdtEntry.Executable || !GdtEntry.ReadWrite)
             {
-                // TODO: Exception #GP
+                Soft386Exception(State, SOFT386_EXCEPTION_GP);
                 return FALSE;
             }
 
             if ((GET_SEGMENT_RPL(Selector) != Soft386GetCurrentPrivLevel(State))
                 || (GET_SEGMENT_RPL(Selector) != GdtEntry.Dpl))
             {
-                // TODO: Exception #GP
+                Soft386Exception(State, SOFT386_EXCEPTION_GP);
                 return FALSE;
             }
 
             if (!GdtEntry.Present)
             {
-                // TODO: Exception #SS
+                Soft386Exception(State, SOFT386_EXCEPTION_SS);
                 return FALSE;
             }
         }
@@ -390,13 +390,13 @@ Soft386LoadSegment(PSOFT386_STATE State, INT Segment, WORD Selector)
             if ((GET_SEGMENT_RPL(Selector) > GdtEntry.Dpl)
                 && (Soft386GetCurrentPrivLevel(State) > GdtEntry.Dpl))
             {
-                // TODO: Exception #GP
+                Soft386Exception(State, SOFT386_EXCEPTION_GP);
                 return FALSE;
             }
 
             if (!GdtEntry.Present)
             {
-                // TODO: Exception #NP
+                Soft386Exception(State, SOFT386_EXCEPTION_NP);
                 return FALSE;
             }
         }
@@ -425,6 +425,331 @@ Soft386LoadSegment(PSOFT386_STATE State, INT Segment, WORD Selector)
     }
 
     return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386FetchByte(PSOFT386_STATE State, PUCHAR Data)
+{
+    PSOFT386_SEG_REG CachedDescriptor;
+
+    /* Get the cached descriptor of CS */
+    CachedDescriptor = &State->SegmentRegs[SOFT386_REG_CS];
+
+    /* Read from memory */
+    if (!Soft386ReadMemory(State,
+                           SOFT386_REG_CS,
+                           (CachedDescriptor->Size) ? State->InstPtr.Long
+                                                    : State->InstPtr.LowWord,
+                           TRUE,
+                           Data,
+                           sizeof(UCHAR)))
+    {
+        /* Exception occurred during instruction fetch */
+        return FALSE;
+    }
+
+    /* Advance the instruction pointer */
+    if (CachedDescriptor->Size) State->InstPtr.Long++;
+    else State->InstPtr.LowWord++;
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386FetchWord(PSOFT386_STATE State, PUSHORT Data)
+{
+    PSOFT386_SEG_REG CachedDescriptor;
+
+    /* Get the cached descriptor of CS */
+    CachedDescriptor = &State->SegmentRegs[SOFT386_REG_CS];
+
+    /* Read from memory */
+    // FIXME: Fix byte order on big-endian machines
+    if (!Soft386ReadMemory(State,
+                           SOFT386_REG_CS,
+                           (CachedDescriptor->Size) ? State->InstPtr.Long
+                                                    : State->InstPtr.LowWord,
+                           TRUE,
+                           Data,
+                           sizeof(USHORT)))
+    {
+        /* Exception occurred during instruction fetch */
+        return FALSE;
+    }
+
+    /* Advance the instruction pointer */
+    if (CachedDescriptor->Size) State->InstPtr.Long += sizeof(USHORT);
+    else State->InstPtr.LowWord += sizeof(USHORT);
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386FetchDword(PSOFT386_STATE State, PULONG Data)
+{
+    PSOFT386_SEG_REG CachedDescriptor;
+
+    /* Get the cached descriptor of CS */
+    CachedDescriptor = &State->SegmentRegs[SOFT386_REG_CS];
+
+    /* Read from memory */
+    // FIXME: Fix byte order on big-endian machines
+    if (!Soft386ReadMemory(State,
+                           SOFT386_REG_CS,
+                           (CachedDescriptor->Size) ? State->InstPtr.Long
+                                                    : State->InstPtr.LowWord,
+                           TRUE,
+                           Data,
+                           sizeof(ULONG)))
+    {
+        /* Exception occurred during instruction fetch */
+        return FALSE;
+    }
+
+    /* Advance the instruction pointer */
+    if (CachedDescriptor->Size) State->InstPtr.Long += sizeof(ULONG);
+    else State->InstPtr.LowWord += sizeof(ULONG);
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386InterruptInternal(PSOFT386_STATE State,
+                         USHORT SegmentSelector,
+                         ULONG Offset,
+                         BOOLEAN InterruptGate)
+{
+    /* Check for protected mode */
+    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+    {
+        SOFT386_TSS Tss;
+        USHORT OldSs = State->SegmentRegs[SOFT386_REG_SS].Selector;
+        ULONG OldEsp = State->GeneralRegs[SOFT386_REG_ESP].Long;
+
+        /* Check if the interrupt handler is more privileged */
+        if (Soft386GetCurrentPrivLevel(State) > GET_SEGMENT_RPL(SegmentSelector))
+        {
+            /* Read the TSS */
+            // FIXME: This code is only correct when paging is disabled!!!
+            if (State->MemReadCallback)
+            {
+                State->MemReadCallback(State,
+                                       State->Tss.Address,
+                                       &Tss,
+                                       sizeof(Tss));
+            }
+            else
+            {
+                RtlMoveMemory(&Tss, (PVOID)State->Tss.Address, sizeof(Tss));
+            }
+
+            /* Check the new (higher) privilege level */
+            switch (GET_SEGMENT_RPL(SegmentSelector))
+            {
+                case 0:
+                {
+                    if (!Soft386LoadSegment(State, SOFT386_REG_SS, Tss.Ss0))
+                    {
+                        /* Exception occurred */
+                        return FALSE;
+                    }
+                    State->GeneralRegs[SOFT386_REG_ESP].Long = Tss.Esp0;
+
+                    break;
+                }
+
+                case 1:
+                {
+                    if (!Soft386LoadSegment(State, SOFT386_REG_SS, Tss.Ss1))
+                    {
+                        /* Exception occurred */
+                        return FALSE;
+                    }
+                    State->GeneralRegs[SOFT386_REG_ESP].Long = Tss.Esp1;
+
+                    break;
+                }
+
+                case 2:
+                {
+                    if (!Soft386LoadSegment(State, SOFT386_REG_SS, Tss.Ss2))
+                    {
+                        /* Exception occurred */
+                        return FALSE;
+                    }
+                    State->GeneralRegs[SOFT386_REG_ESP].Long = Tss.Esp2;
+
+                    break;
+                }
+
+                default:
+                {
+                    /* Should never reach here! */
+                    ASSERT(FALSE);
+                }
+            }
+
+            /* Push SS selector */
+            if (!Soft386StackPush(State, OldSs)) return FALSE;
+
+            /* Push stack pointer */
+            if (Soft386StackPush(State, OldEsp)) return FALSE;
+        }
+    }
+
+    /* Push EFLAGS */
+    if (!Soft386StackPush(State, State->Flags.Long)) return FALSE;
+
+    /* Push CS selector */
+    if (!Soft386StackPush(State, State->SegmentRegs[SOFT386_REG_CS].Selector)) return FALSE;
+
+    /* Push the instruction pointer */
+    if (!Soft386StackPush(State, State->InstPtr.Long)) return FALSE;
+
+    if (InterruptGate)
+    {
+        /* Disable interrupts after a jump to an interrupt gate handler */
+        State->Flags.If = FALSE;
+    }
+
+    /* Load new CS */
+    if (!Soft386LoadSegment(State, SOFT386_REG_CS, SegmentSelector))
+    {
+        /* An exception occurred during the jump */
+        return FALSE;
+    }
+
+    if (State->SegmentRegs[SOFT386_REG_CS].Size)
+    {
+        /* 32-bit code segment, use EIP */
+        State->InstPtr.Long = Offset;
+    }
+    else
+    {
+        /* 16-bit code segment, use IP */
+        State->InstPtr.LowWord = LOWORD(Offset);
+    }
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386GetIntVector(PSOFT386_STATE State,
+                    UCHAR Number,
+                    PSOFT386_IDT_ENTRY IdtEntry)
+{
+    ULONG FarPointer;
+
+    /* Check for protected mode */
+    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+    {
+        /* Read from the IDT */
+        // FIXME: This code is only correct when paging is disabled!!!
+        if (State->MemReadCallback)
+        {
+            State->MemReadCallback(State,
+                                   State->Idtr.Address
+                                   + Number * sizeof(*IdtEntry),
+                                   IdtEntry,
+                                   sizeof(*IdtEntry));
+        }
+        else
+        {
+            RtlMoveMemory(IdtEntry,
+                          (PVOID)(State->Idtr.Address
+                          + Number * sizeof(*IdtEntry)),
+                          sizeof(*IdtEntry));
+        }
+    }
+    else
+    {
+        /* Read from the real-mode IVT */
+        
+        /* Paging is always disabled in real mode */
+        if (State->MemReadCallback)
+        {
+            State->MemReadCallback(State,
+                                   State->Idtr.Address
+                                   + Number * sizeof(FarPointer),
+                                   &FarPointer,
+                                   sizeof(FarPointer));
+        }
+        else
+        {
+            RtlMoveMemory(IdtEntry,
+                          (PVOID)(State->Idtr.Address
+                          + Number * sizeof(FarPointer)),
+                          sizeof(FarPointer));
+        }
+
+        /* Fill a fake IDT entry */
+        IdtEntry->Offset = LOWORD(FarPointer);
+        IdtEntry->Selector = HIWORD(FarPointer);
+        IdtEntry->Zero = 0;
+        IdtEntry->Type = SOFT386_IDT_INT_GATE;
+        IdtEntry->Storage = FALSE;
+        IdtEntry->Dpl = 0;
+        IdtEntry->Present = TRUE;
+        IdtEntry->OffsetHigh = 0;
+    }
+
+    /*
+     * Once paging support is implemented this function
+     * will not always return true
+     */
+    return TRUE;
+}
+
+VOID
+__fastcall
+Soft386Exception(PSOFT386_STATE State, INT ExceptionCode)
+{
+    SOFT386_IDT_ENTRY IdtEntry;
+
+    /* Increment the exception count */
+    State->ExceptionCount++;
+
+    /* Check if the exception occurred more than once */
+    if (State->ExceptionCount > 1)
+    {
+        /* Then this is a double fault */
+        ExceptionCode = SOFT386_EXCEPTION_DF;
+    }
+
+    /* Check if this is a triple fault */
+    if (State->ExceptionCount == 3)
+    {
+        /* Reset the CPU */
+        Soft386Reset(State);
+        return;
+    }
+
+    if (!Soft386GetIntVector(State, ExceptionCode, &IdtEntry))
+    {
+        /*
+         * If this function failed, that means Soft386Exception
+         * was called again, so just return in this case.
+         */
+        return;
+    }
+
+    /* Perform the interrupt */
+    if (!Soft386InterruptInternal(State,
+                                  IdtEntry.Selector,
+                                  MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
+                                  IdtEntry.Type))
+    {
+        /*
+         * If this function failed, that means Soft386Exception
+         * was called again, so just return in this case.
+         */
+        return;
+    }
 }
 
 /* EOF */
