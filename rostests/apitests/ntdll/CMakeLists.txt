@@ -18,6 +18,7 @@ list(APPEND SOURCE
     RtlGetLongestNtPathLength.c
     RtlInitializeBitMap.c
     SystemInfo.c
+    Timer.c
     ZwContinue.c
     testlist.c)
 
