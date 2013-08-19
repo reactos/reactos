@@ -18,6 +18,7 @@ add_definitions(
 spec2def(glu32.dll glu32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    glu32.rc
     src/libutil/error.c
     src/libutil/glue.c
     src/libutil/mipmap.c
