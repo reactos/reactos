@@ -242,8 +242,40 @@ NtQueryTimerResolution(OUT PULONG MinimumResolution,
                        OUT PULONG MaximumResolution,
                        OUT PULONG ActualResolution)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    /* Check if the call came from user mode */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe the parameters */
+            ProbeForWriteUlong(MinimumResolution);
+            ProbeForWriteUlong(MaximumResolution);
+            ProbeForWriteUlong(ActualResolution);
+
+            /* Try to set the parameters to the actual values */
+            *MinimumResolution = KeMinimumIncrement;
+            *MaximumResolution = KeMaximumIncrement;
+            *ActualResolution = KeTimeIncrement;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* The call came from kernel mode. Use the pointers directly */
+        *MinimumResolution = KeMinimumIncrement;
+        *MaximumResolution = KeMaximumIncrement;
+        *ActualResolution = KeTimeIncrement;
+    }
+
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
