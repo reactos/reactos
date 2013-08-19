@@ -107,7 +107,7 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
     SecurityQos.EffectiveOnly = TRUE;
 
     /* Setup the connection info */
-    ConnectionInfo.Version = 0x10000;
+    ConnectionInfo.Version = CSRSRV_VERSION;
 
     /* Create a SID for us */
     Status = RtlAllocateAndInitializeSid(&NtSidAuthority,

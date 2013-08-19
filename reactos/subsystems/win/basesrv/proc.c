@@ -18,7 +18,7 @@
 CSR_API(BaseSrvGetTempFile)
 {
     static UINT BaseGetTempFileUnique = 0;
-    PBASE_GET_TEMP_FILE GetTempFile = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetTempFile;
+    PBASE_GET_TEMP_FILE GetTempFile = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetTempFileRequest;
 
     /* Return 16-bits ID */
     GetTempFile->UniqueID = (++BaseGetTempFileUnique & 0xFFFF);
@@ -211,24 +211,24 @@ CSR_API(BaseSrvExitProcess)
 
 CSR_API(BaseSrvGetProcessShutdownParam)
 {
-    PBASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetShutdownParametersRequest;
+    PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.ShutdownParametersRequest;
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
 
-    GetShutdownParametersRequest->Level = CsrThread->Process->ShutdownLevel;
-    GetShutdownParametersRequest->Flags = CsrThread->Process->ShutdownFlags;
+    ShutdownParametersRequest->ShutdownLevel = CsrThread->Process->ShutdownLevel;
+    ShutdownParametersRequest->ShutdownFlags = CsrThread->Process->ShutdownFlags;
 
     return STATUS_SUCCESS;
 }
 
 CSR_API(BaseSrvSetProcessShutdownParam)
 {
-    PBASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.SetShutdownParametersRequest;
+    PBASE_GETSET_PROCESS_SHUTDOWN_PARAMS ShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.ShutdownParametersRequest;
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
 
-    CsrThread->Process->ShutdownLevel = SetShutdownParametersRequest->Level;
-    CsrThread->Process->ShutdownFlags = SetShutdownParametersRequest->Flags;
+    CsrThread->Process->ShutdownLevel = ShutdownParametersRequest->ShutdownLevel;
+    CsrThread->Process->ShutdownFlags = ShutdownParametersRequest->ShutdownFlags;
 
     return STATUS_SUCCESS;
 }

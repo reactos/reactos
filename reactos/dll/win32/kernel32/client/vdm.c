@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Win32 Base API
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/kernel32/client/vdm.c
- * PURPOSE:         Virtual Dos Machine (VDM) Support
+ * PURPOSE:         Virtual DOS Machines (VDM) Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
@@ -49,17 +49,18 @@ BaseIsDosApplication(IN PUNICODE_STRING PathName,
     /* Is it a .com? */
     String.Length = BaseDotComSuffixName.Length;
     String.Buffer = &PathName->Buffer[(PathName->Length - String.Length) / sizeof(WCHAR)];
-    if (RtlEqualUnicodeString(&String, &BaseDotComSuffixName, TRUE)) return 2;
+    if (RtlEqualUnicodeString(&String, &BaseDotComSuffixName, TRUE)) return BINARY_TYPE_COM;
 
     /* Is it a .pif? */
     String.Length = BaseDotPifSuffixName.Length;
     String.Buffer = &PathName->Buffer[(PathName->Length - String.Length) / sizeof(WCHAR)];
-    if (RtlEqualUnicodeString(&String, &BaseDotPifSuffixName, TRUE)) return 3;
+    if (RtlEqualUnicodeString(&String, &BaseDotPifSuffixName, TRUE)) return BINARY_TYPE_PIF;
 
     /* Is it an exe? */
     String.Length = BaseDotExeSuffixName.Length;
     String.Buffer = &PathName->Buffer[(PathName->Length - String.Length) / sizeof(WCHAR)];
-    if (RtlEqualUnicodeString(&String, &BaseDotExeSuffixName, TRUE)) return 1;
+    if (RtlEqualUnicodeString(&String, &BaseDotExeSuffixName, TRUE)) return BINARY_TYPE_EXE;
+
     return 0;
 }
 

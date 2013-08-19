@@ -32,13 +32,6 @@ typedef enum _CSRSRV_API_NUMBER
 } CSRSRV_API_NUMBER, *PCSRSRV_API_NUMBER;
 
 
-/*
-typedef struct _CSR_API_NUMBER
-{
-    WORD Index;
-    WORD Subsystem;
-} CSR_API_NUMBER, *PCSR_API_NUMBER;
-*/
 typedef ULONG CSR_API_NUMBER;
 
 #define CSR_CREATE_API_NUMBER(ServerId, ApiId) \
@@ -63,6 +56,8 @@ typedef struct _CSR_CONNECTION_INFO
     ULONG Unknown2[3];
     HANDLE ProcessId;
 } CSR_CONNECTION_INFO, *PCSR_CONNECTION_INFO;
+
+#define CSRSRV_VERSION 0x10000
 
 // We must have a size at most equal to the maximum acceptable LPC data size.
 C_ASSERT(sizeof(CSR_CONNECTION_INFO) <= LPC_MAX_DATA_LENGTH);
