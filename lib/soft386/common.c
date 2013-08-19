@@ -597,7 +597,7 @@ Soft386InterruptInternal(PSOFT386_STATE State,
             if (!Soft386StackPush(State, OldSs)) return FALSE;
 
             /* Push stack pointer */
-            if (Soft386StackPush(State, OldEsp)) return FALSE;
+            if (!Soft386StackPush(State, OldEsp)) return FALSE;
         }
     }
 
