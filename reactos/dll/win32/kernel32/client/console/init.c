@@ -175,7 +175,7 @@ BasepInitConsole(VOID)
     ULONG SessionId = NtCurrentPeb()->SessionId;
     BOOLEAN InServer;
 
-    CONSOLE_CONNECTION_INFO ConnectInfo;
+    CONSRV_API_CONNECTINFO ConnectInfo;
     ULONG ConnectInfoSize = sizeof(ConnectInfo);
 
     DPRINT("BasepInitConsole for : %wZ\n", &Parameters->ImagePathName);

@@ -44,7 +44,7 @@ typedef ULONG CSR_API_NUMBER;
     (ULONG)((ULONG)(ApiNumber) & 0xFFFF)
 
 
-typedef struct _CSR_CONNECTION_INFO
+typedef struct _CSR_API_CONNECTINFO
 {
     ULONG Version;
     ULONG Unknown;
@@ -55,12 +55,12 @@ typedef struct _CSR_CONNECTION_INFO
     ULONG DebugFlags;
     ULONG Unknown2[3];
     HANDLE ProcessId;
-} CSR_CONNECTION_INFO, *PCSR_CONNECTION_INFO;
+} CSR_API_CONNECTINFO, *PCSR_API_CONNECTINFO;
 
 #define CSRSRV_VERSION 0x10000
 
 // We must have a size at most equal to the maximum acceptable LPC data size.
-C_ASSERT(sizeof(CSR_CONNECTION_INFO) <= LPC_MAX_DATA_LENGTH);
+C_ASSERT(sizeof(CSR_API_CONNECTINFO) <= LPC_MAX_DATA_LENGTH);
 
 
 typedef struct _CSR_IDENTIFY_ALTERTABLE_THREAD
@@ -102,7 +102,7 @@ typedef struct _CSR_API_MESSAGE
     PORT_MESSAGE Header;
     union
     {
-        CSR_CONNECTION_INFO ConnectionInfo; // Uniquely used in CSRSRV for internal signaling (opening a new connection).
+        CSR_API_CONNECTINFO ConnectionInfo; // Uniquely used in CSRSRV for internal signaling (opening a new connection).
         struct
         {
             PCSR_CAPTURE_BUFFER CsrCaptureData;

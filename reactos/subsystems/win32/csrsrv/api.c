@@ -134,7 +134,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     PCSR_THREAD CsrThread = NULL;
     PCSR_PROCESS CsrProcess = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    PCSR_CONNECTION_INFO ConnectInfo = &ApiMessage->ConnectionInfo;
+    PCSR_API_CONNECTINFO ConnectInfo = &ApiMessage->ConnectionInfo;
     BOOLEAN AllowConnection = FALSE;
     REMOTE_PORT_VIEW RemotePortView;
     HANDLE ServerPort;
@@ -913,7 +913,7 @@ CsrApiPortInitialize(VOID)
     {
         DPRINT1("CSRSS: Creating %wZ port and associated threads\n", &CsrApiPortName);
         DPRINT1("CSRSS: sizeof( CONNECTINFO ) == %ld  sizeof( API_MSG ) == %ld\n",
-                sizeof(CSR_CONNECTION_INFO), sizeof(CSR_API_MESSAGE));
+                sizeof(CSR_API_CONNECTINFO), sizeof(CSR_API_MESSAGE));
     }
 
     /* FIXME: Create a Security Descriptor */
@@ -928,7 +928,7 @@ CsrApiPortInitialize(VOID)
     /* Create the Port Object */
     Status = NtCreatePort(&CsrApiPort,
                           &ObjectAttributes,
-                          sizeof(CSR_CONNECTION_INFO),
+                          sizeof(CSR_API_CONNECTINFO),
                           sizeof(CSR_API_MESSAGE),
                           16 * PAGE_SIZE);
     if (NT_SUCCESS(Status))

@@ -53,7 +53,7 @@ typedef enum _BASESRV_API_NUMBER
 } BASESRV_API_NUMBER, *PBASESRV_API_NUMBER;
 
 
-typedef struct
+typedef struct _BASESRV_API_CONNECTINFO
 {
     ULONG  ExpectedVersion;
     HANDLE DefaultObjectDirectory;

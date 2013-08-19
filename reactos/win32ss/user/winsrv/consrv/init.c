@@ -397,12 +397,12 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
      **************************************************************************/
 
     NTSTATUS Status = STATUS_SUCCESS;
-    PCONSOLE_CONNECTION_INFO ConnectInfo = (PCONSOLE_CONNECTION_INFO)ConnectionInfo;
+    PCONSRV_API_CONNECTINFO ConnectInfo = (PCONSRV_API_CONNECTINFO)ConnectionInfo;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
 
     if ( ConnectionInfo       == NULL ||
          ConnectionInfoLength == NULL ||
-        *ConnectionInfoLength != sizeof(CONSOLE_CONNECTION_INFO) )
+        *ConnectionInfoLength != sizeof(CONSRV_API_CONNECTINFO) )
     {
         DPRINT1("CONSRV: Connection failed\n");
         return STATUS_UNSUCCESSFUL;

@@ -126,7 +126,7 @@ typedef struct _CONSOLE_START_INFO
     INT   IconIndex;                    // Index of the icon
 } CONSOLE_START_INFO, *PCONSOLE_START_INFO;
 
-typedef struct _CONSOLE_CONNECTION_INFO
+typedef struct _CONSRV_API_CONNECTINFO
 {
     BOOL ConsoleNeeded; // Used for GUI apps only.
 
@@ -140,7 +140,7 @@ typedef struct _CONSOLE_CONNECTION_INFO
     HANDLE InputWaitHandle;
     LPTHREAD_START_ROUTINE CtrlDispatcher;
     LPTHREAD_START_ROUTINE PropDispatcher;
-} CONSOLE_CONNECTION_INFO, *PCONSOLE_CONNECTION_INFO;
+} CONSRV_API_CONNECTINFO, *PCONSRV_API_CONNECTINFO;
 
 
 typedef struct

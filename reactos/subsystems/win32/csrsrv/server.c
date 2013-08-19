@@ -444,7 +444,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
 NTSTATUS
 NTAPI
 CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
-                          OUT PCSR_CONNECTION_INFO ConnectInfo)
+                          OUT PCSR_API_CONNECTINFO ConnectInfo)
 {
     NTSTATUS Status;
     ULONG ViewSize = 0;
