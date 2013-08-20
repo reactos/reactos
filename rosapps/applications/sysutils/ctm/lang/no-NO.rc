@@ -4,7 +4,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-   IDS_APP_TITLE           "Konsoll oppgavebehandler v0.1 av Aleksey Bragin <aleksey@studiocerebral.com>"
+   IDS_APP_TITLE           "Konsoll oppgavebehandler av Aleksey Bragin <aleksey@reactos.org>"
 
    IDS_COLUMN_NUMBER       "# "
    IDS_COLUMN_IMAGENAME    "Bilde navn                  "

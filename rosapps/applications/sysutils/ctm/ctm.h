@@ -2,7 +2,7 @@
 
    ctm.h - header file for main program
 
-   Written by: Aleksey Bragin (aleksey@studiocerebral.com)
+   Written by: Aleksey Bragin (aleksey@reactos.org)
 
    Most of this file content is taken from
    ReactOS Task Manager written by Brian Palmer (brianp@reactos.org)

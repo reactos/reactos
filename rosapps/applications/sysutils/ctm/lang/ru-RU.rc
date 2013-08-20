@@ -4,7 +4,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-   IDS_APP_TITLE           "Консольный Диспетчер задач v0.1 от Aleksey Bragin <aleksey@studiocerebral.com>"
+   IDS_APP_TITLE           "Консольный Диспетчер задач от Алексея Брагина <aleksey@reactos.org>"
 
    IDS_COLUMN_NUMBER       "# "
    IDS_COLUMN_IMAGENAME    "Имя образа                  "

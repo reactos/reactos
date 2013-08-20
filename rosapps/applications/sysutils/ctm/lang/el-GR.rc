@@ -4,7 +4,7 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-   IDS_APP_TITLE           "Console TaskManager v0.1 by Aleksey Bragin <aleksey@studiocerebral.com>"
+   IDS_APP_TITLE           "Console TaskManager by Aleksey Bragin <aleksey@reactos.org>"
 
    IDS_COLUMN_NUMBER       "# "
    IDS_COLUMN_IMAGENAME    "Image name                  "

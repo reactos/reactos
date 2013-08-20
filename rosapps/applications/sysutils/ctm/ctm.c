@@ -2,7 +2,7 @@
 
    ctm.c - main program file
 
-   Written by: Aleksey Bragin (aleksey@studiocerebral.com)
+   Written by: Aleksey Bragin (aleksey@reactos.org)
 
    Most of the code dealing with getting system parameters is taken from
    ReactOS Task Manager written by Brian Palmer (brianp@reactos.org)
