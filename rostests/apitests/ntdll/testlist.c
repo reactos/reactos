@@ -21,8 +21,8 @@ extern void func_RtlGetFullPathName_Ustr(void);
 extern void func_RtlGetFullPathName_UstrEx(void);
 extern void func_RtlGetLongestNtPathLength(void);
 extern void func_RtlInitializeBitMap(void);
-extern void func_ZwContinue(void);
 extern void func_TimerResolution(void);
+extern void func_ZwContinue(void);
 
 const struct test winetest_testlist[] =
 {
@@ -44,8 +44,8 @@ const struct test winetest_testlist[] =
     { "RtlGetFullPathName_UstrEx",      func_RtlGetFullPathName_UstrEx },
     { "RtlGetLongestNtPathLength",      func_RtlGetLongestNtPathLength },
     { "RtlInitializeBitMap",            func_RtlInitializeBitMap },
-    { "ZwContinue",                     func_ZwContinue },
     { "TimerResolution",                func_TimerResolution },
+    { "ZwContinue",                     func_ZwContinue },
 
     { 0, 0 }
 };

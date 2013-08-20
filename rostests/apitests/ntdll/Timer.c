@@ -26,8 +26,8 @@ START_TEST(TimerResolution)
                                   &CurrentResolution);
 
     /*
-     * When not setting the resolution, it always
-     * returns STATUS_TIMER_RESOLUTION_NOT_SET
+     * If the timer resolution hasn't been changed for this process,
+     * it returns STATUS_TIMER_RESOLUTION_NOT_SET
      */
     ok_hex(Status, STATUS_TIMER_RESOLUTION_NOT_SET);
 
@@ -42,6 +42,9 @@ START_TEST(TimerResolution)
     /* This function should always return STATUS_SUCCESS */
     ok_hex(Status, STATUS_SUCCESS);
 
+    /* The MinimumResolution should be higher than the MaximumResolution */
+    ok(MinimumResolution >= MaximumResolution, "MaximumResolution higher than MinimumResolution!");
+
     /* These two values should be the same */
     ok_hex(CurrentResolution, CurrentResolution2);
 
@@ -50,17 +53,25 @@ START_TEST(TimerResolution)
      * NtSetTimerResolution will return STATUS_SUCCESS,
      * but it will not change the resolution.
      */
-    Status = NtSetTimerResolution(MinimumResolution - 1,
+    Status = NtSetTimerResolution(MinimumResolution + 1,
                                   TRUE,
                                   &CurrentResolution);
     ok_hex(Status, STATUS_SUCCESS);
     printf("Current resolution: %d ; minimum resolution: %d\n", CurrentResolution, MinimumResolution);
-    ok(CurrentResolution >= MinimumResolution, "Current resolution: %d became too low! (minimum resolution: %d)\n", CurrentResolution, MinimumResolution);
+    ok(CurrentResolution <= MinimumResolution, "Current resolution: %d became too high! (minimum resolution: %d)\n", CurrentResolution, MinimumResolution);
 
-    Status = NtSetTimerResolution(MaximumResolution + 1,
+    Status = NtSetTimerResolution(MaximumResolution - 1,
                                   TRUE,
                                   &CurrentResolution);
     ok_hex(Status, STATUS_SUCCESS);
     printf("Current resolution: %d ; maximum resolution: %d\n", CurrentResolution, MaximumResolution);
-    ok(CurrentResolution <= MaximumResolution, "Current resolution: %d became too high! (maximum resolution: %d)\n", CurrentResolution, MaximumResolution);
+    ok(CurrentResolution >= MaximumResolution, "Current resolution: %d became too low! (maximum resolution: %d)\n", CurrentResolution, MaximumResolution);
+
+    /* Get the current timer resolution */
+    Status = NtSetTimerResolution(0,        /* Ignored */
+                                  FALSE,    /* Don't change resolution */
+                                  &CurrentResolution);
+
+    /* Since we have changed the resolution earlier, it returns STATUS_SUCCESS. */
+    ok_hex(Status, STATUS_SUCCESS);
 }
