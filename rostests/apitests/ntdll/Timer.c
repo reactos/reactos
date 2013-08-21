@@ -43,7 +43,7 @@ START_TEST(TimerResolution)
     ok_hex(Status, STATUS_SUCCESS);
 
     /* The MinimumResolution should be higher than the MaximumResolution */
-    ok(MinimumResolution >= MaximumResolution, "MaximumResolution higher than MinimumResolution!");
+    ok(MinimumResolution >= MaximumResolution, "MaximumResolution higher than MinimumResolution!\n");
 
     /* These two values should be the same */
     ok_hex(CurrentResolution, CurrentResolution2);
