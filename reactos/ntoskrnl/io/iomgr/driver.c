@@ -1822,169 +1822,169 @@ IoGetDriverObjectExtension(IN PDRIVER_OBJECT DriverObject,
 VOID NTAPI
 IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
 {
-   RTL_QUERY_REGISTRY_TABLE QueryTable[3];
-   UNICODE_STRING ImagePath;
-   UNICODE_STRING ServiceName;
-   NTSTATUS Status;
-   ULONG Type;
-   PDEVICE_NODE DeviceNode;
-   PDRIVER_OBJECT DriverObject;
-   PLDR_DATA_TABLE_ENTRY ModuleObject;
-   PVOID BaseAddress;
-   WCHAR *cur;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
+    UNICODE_STRING ImagePath;
+    UNICODE_STRING ServiceName;
+    NTSTATUS Status;
+    ULONG Type;
+    PDEVICE_NODE DeviceNode;
+    PDRIVER_OBJECT DriverObject;
+    PLDR_DATA_TABLE_ENTRY ModuleObject;
+    PVOID BaseAddress;
+    WCHAR *cur;
 
-   /* Check if it's an unload request */
-   if (LoadParams->DriverObject)
-   {
-       (*LoadParams->DriverObject->DriverUnload)(LoadParams->DriverObject);
+    /* Check if it's an unload request */
+    if (LoadParams->DriverObject)
+    {
+        (*LoadParams->DriverObject->DriverUnload)(LoadParams->DriverObject);
 
-       /* Return success and signal the event */
-       LoadParams->Status = STATUS_SUCCESS;
-      (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-       return;
-   }
+        /* Return success and signal the event */
+        LoadParams->Status = STATUS_SUCCESS;
+        KeSetEvent(&LoadParams->Event, 0, FALSE);
+        return;
+    }
 
-   RtlInitUnicodeString(&ImagePath, NULL);
+    RtlInitUnicodeString(&ImagePath, NULL);
 
-   /*
-    * Get the service name from the registry key name.
-    */
-   ASSERT(LoadParams->ServiceName->Length >= sizeof(WCHAR));
+    /*
+     * Get the service name from the registry key name.
+     */
+    ASSERT(LoadParams->ServiceName->Length >= sizeof(WCHAR));
 
-   ServiceName = *LoadParams->ServiceName;
-   cur = LoadParams->ServiceName->Buffer +
-       (LoadParams->ServiceName->Length / sizeof(WCHAR)) - 1;
-   while (LoadParams->ServiceName->Buffer != cur)
-   {
-      if(*cur == L'\\')
-      {
-         ServiceName.Buffer = cur + 1;
-         ServiceName.Length = LoadParams->ServiceName->Length -
-                              (USHORT)((ULONG_PTR)ServiceName.Buffer -
-                                       (ULONG_PTR)LoadParams->ServiceName->Buffer);
-         break;
-      }
-      cur--;
-   }
+    ServiceName = *LoadParams->ServiceName;
+    cur = LoadParams->ServiceName->Buffer +
+         (LoadParams->ServiceName->Length / sizeof(WCHAR)) - 1;
+    while (LoadParams->ServiceName->Buffer != cur)
+    {
+        if (*cur == L'\\')
+        {
+            ServiceName.Buffer = cur + 1;
+            ServiceName.Length = LoadParams->ServiceName->Length -
+                                 (USHORT)((ULONG_PTR)ServiceName.Buffer -
+                                          (ULONG_PTR)LoadParams->ServiceName->Buffer);
+            break;
+        }
+        cur--;
+    }
 
-   /*
+    /*
     * Get service type.
     */
 
-   RtlZeroMemory(&QueryTable, sizeof(QueryTable));
+    RtlZeroMemory(&QueryTable, sizeof(QueryTable));
 
-   RtlInitUnicodeString(&ImagePath, NULL);
+    RtlInitUnicodeString(&ImagePath, NULL);
 
-   QueryTable[0].Name = L"Type";
-   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-   QueryTable[0].EntryContext = &Type;
+    QueryTable[0].Name = L"Type";
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+    QueryTable[0].EntryContext = &Type;
 
-   QueryTable[1].Name = L"ImagePath";
-   QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
-   QueryTable[1].EntryContext = &ImagePath;
+    QueryTable[1].Name = L"ImagePath";
+    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[1].EntryContext = &ImagePath;
 
-   Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-      LoadParams->ServiceName->Buffer, QueryTable, NULL, NULL);
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                    LoadParams->ServiceName->Buffer,
+                                    QueryTable, NULL, NULL);
 
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-      if (ImagePath.Buffer)
-         ExFreePool(ImagePath.Buffer);
-      LoadParams->Status = Status;
-      (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-      return;
-   }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+        if (ImagePath.Buffer) ExFreePool(ImagePath.Buffer);
+        LoadParams->Status = Status;
+        KeSetEvent(&LoadParams->Event, 0, FALSE);
+        return;
+    }
 
-   /*
+    /*
     * Normalize the image path for all later processing.
     */
 
-   Status = IopNormalizeImagePath(&ImagePath, &ServiceName);
+    Status = IopNormalizeImagePath(&ImagePath, &ServiceName);
 
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IopNormalizeImagePath() failed (Status %x)\n", Status);
-      LoadParams->Status = Status;
-      (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-      return;
-   }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopNormalizeImagePath() failed (Status %x)\n", Status);
+        LoadParams->Status = Status;
+        KeSetEvent(&LoadParams->Event, 0, FALSE);
+        return;
+    }
 
-   DPRINT("FullImagePath: '%wZ'\n", &ImagePath);
-   DPRINT("Type: %lx\n", Type);
+    DPRINT("FullImagePath: '%wZ'\n", &ImagePath);
+    DPRINT("Type: %lx\n", Type);
 
-   /* Get existing DriverObject pointer (in case the driver has
+    /* Get existing DriverObject pointer (in case the driver has
       already been loaded and initialized) */
-   Status = IopGetDriverObject(
-       &DriverObject,
-       &ServiceName,
-       (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
-        Type == 8 /* SERVICE_RECOGNIZER_DRIVER */));
+    Status = IopGetDriverObject(
+        &DriverObject,
+        &ServiceName,
+        (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
+         Type == 8 /* SERVICE_RECOGNIZER_DRIVER */));
 
-   if (!NT_SUCCESS(Status))
-   {
-       /*
-        * Load the driver module
-        */
+    if (!NT_SUCCESS(Status))
+    {
+        /*
+         * Load the driver module
+         */
 
-       DPRINT("Loading module from %wZ\n", &ImagePath);
-       Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
+        DPRINT("Loading module from %wZ\n", &ImagePath);
+        Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
 
-       if (!NT_SUCCESS(Status))
-       {
-           DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
-           LoadParams->Status = Status;
-           (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-           return;
-       }
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
+            LoadParams->Status = Status;
+            KeSetEvent(&LoadParams->Event, 0, FALSE);
+            return;
+        }
 
-       /*
+        /*
         * Initialize the driver module if it's loaded for the first time
         */
-       Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
-       if (!NT_SUCCESS(Status))
-       {
-           DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
-           MmUnloadSystemImage(ModuleObject);
-           LoadParams->Status = Status;
-           (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-           return;
-       }
+        Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
+            MmUnloadSystemImage(ModuleObject);
+            LoadParams->Status = Status;
+            KeSetEvent(&LoadParams->Event, 0, FALSE);
+            return;
+        }
 
-       IopDisplayLoadingMessage(&DeviceNode->ServiceName);
+        IopDisplayLoadingMessage(&DeviceNode->ServiceName);
 
-       Status = IopInitializeDriverModule(DeviceNode,
-                                          ModuleObject,
-                                          &DeviceNode->ServiceName,
-                                          (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
-                                           Type == 8 /* SERVICE_RECOGNIZER_DRIVER */),
-                                          &DriverObject);
-       if (!NT_SUCCESS(Status))
-       {
-           DPRINT1("IopInitializeDriver() failed (Status %lx)\n", Status);
-           MmUnloadSystemImage(ModuleObject);
-           IopFreeDeviceNode(DeviceNode);
-           LoadParams->Status = Status;
-           (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
-           return;
-       }
+        Status = IopInitializeDriverModule(DeviceNode,
+                                           ModuleObject,
+                                           &DeviceNode->ServiceName,
+                                           (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
+                                            Type == 8 /* SERVICE_RECOGNIZER_DRIVER */),
+                                           &DriverObject);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("IopInitializeDriverModule() failed (Status %lx)\n", Status);
+            MmUnloadSystemImage(ModuleObject);
+            IopFreeDeviceNode(DeviceNode);
+            LoadParams->Status = Status;
+            KeSetEvent(&LoadParams->Event, 0, FALSE);
+            return;
+        }
 
-       /* Initialize and start device */
-       IopInitializeDevice(DeviceNode, DriverObject);
-       Status = IopStartDevice(DeviceNode);
-   }
-   else
-   {
-      DPRINT("DriverObject already exist in ObjectManager\n");
-      Status = STATUS_IMAGE_ALREADY_LOADED;
+        /* Initialize and start device */
+        IopInitializeDevice(DeviceNode, DriverObject);
+        Status = IopStartDevice(DeviceNode);
+    }
+    else
+    {
+        DPRINT("DriverObject already exist in ObjectManager\n");
+        Status = STATUS_IMAGE_ALREADY_LOADED;
 
-      /* IopGetDriverObject references the DriverObject, so dereference it */
-      ObDereferenceObject(DriverObject);
-   }
+        /* IopGetDriverObject references the DriverObject, so dereference it */
+        ObDereferenceObject(DriverObject);
+    }
 
-   /* Pass status to the caller and signal the event */
-   LoadParams->Status = Status;
-   (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
+    /* Pass status to the caller and signal the event */
+    LoadParams->Status = Status;
+    KeSetEvent(&LoadParams->Event, 0, FALSE);
 }
 
 /*
