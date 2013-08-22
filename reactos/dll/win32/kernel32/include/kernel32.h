@@ -61,41 +61,6 @@
 #define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
 #endif
 
-//
-// This stuff maybe should go in a vdm.h?
-//
-typedef enum _VDM_ENTRY_CODE
-{
-    VdmEntryUndo,
-    VdmEntryUpdateProcess,
-    VdmEntryUpdateControlCHandler
-} VDM_ENTRY_CODE;
-
-//
-// Undo States
-//
-#define VDM_UNDO_PARTIAL    0x01
-#define VDM_UNDO_FULL       0x02
-#define VDM_UNDO_REUSE      0x04
-#define VDM_UNDO_COMPLETED  0x08
-
-//
-// Binary Types to share with VDM
-//
-#define BINARY_TYPE_EXE     0x01
-#define BINARY_TYPE_COM     0x02
-#define BINARY_TYPE_PIF     0x03
-#define BINARY_TYPE_DOS     0x10
-#define BINARY_TYPE_SEPARATE_WOW 0x20
-#define BINARY_TYPE_WOW     0x40
-#define BINARY_TYPE_WOW_EX  0x80
-
-//
-// VDM States
-//
-#define VDM_NOT_LOADED      0x01
-#define VDM_NOT_READY       0x02
-#define VDM_READY           0x04
 
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
@@ -366,31 +331,6 @@ IsShimInfrastructureDisabled(
     VOID
 );
 
-BOOL
-NTAPI
-BaseDestroyVDMEnvironment(
-    IN PANSI_STRING AnsiEnv,
-    IN PUNICODE_STRING UnicodeEnv
-);
-
-BOOL
-WINAPI
-BaseGetVdmConfigInfo(
-    IN LPCWSTR CommandLineReserved,
-    IN ULONG DosSeqId,
-    IN ULONG BinaryType,
-    IN PUNICODE_STRING CmdLineString,
-    OUT PULONG VdmSize
-);
-
-BOOL
-NTAPI
-BaseCreateVDMEnvironment(
-    IN PWCHAR lpEnvironment,
-    IN PANSI_STRING AnsiEnv,
-    IN PUNICODE_STRING UnicodeEnv
-);
-
 VOID
 WINAPI
 InitCommandLines(VOID);
@@ -468,42 +408,11 @@ BasepConfigureAppCertDlls(
 extern LIST_ENTRY BasepAppCertDllsList;
 extern RTL_CRITICAL_SECTION gcsAppCert;
 
-BOOL
-WINAPI
-BaseUpdateVDMEntry(
-    IN ULONG UpdateIndex,
-    IN OUT PHANDLE WaitHandle,
-    IN ULONG IndexInfo,
-    IN ULONG BinaryType
-);
-
 VOID
 WINAPI
 BaseMarkFileForDelete(
     IN HANDLE FileHandle,
     IN ULONG FileAttributes
-);
-
-BOOL
-WINAPI
-BaseCheckForVDM(
-    IN HANDLE ProcessHandle,
-    OUT LPDWORD ExitCode
-);
-
-BOOL
-WINAPI
-BaseCheckVDM(
-    IN ULONG BinaryType,
-    IN PCWCH ApplicationName,
-    IN PCWCH CommandLine,
-    IN PCWCH CurrentDirectory,
-    IN PANSI_STRING AnsiEnvironment,
-    IN PCSR_API_MESSAGE ApiMessage,
-    IN OUT PULONG iTask,
-    IN DWORD CreationFlags,
-    IN LPSTARTUPINFOW StartupInfo,
-    IN HANDLE hUserToken OPTIONAL
 );
 
 

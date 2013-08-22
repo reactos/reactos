@@ -101,7 +101,7 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
         case VdmEntryUndo:
         {
             /* Tell the server how far we had gotten along */
-            UpdateVdmEntry->iTask = (ULONG)*WaitHandle;
+            UpdateVdmEntry->iTask = HandleToUlong(*WaitHandle);
             UpdateVdmEntry->VDMCreationState = IndexInfo;
             break;
         }
@@ -186,7 +186,7 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
     /* Call CSRSS */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMExitCode /* BasepCheckVDM */),
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMExitCode),
                                  sizeof(BASE_GET_VDM_EXIT_CODE));
     if (!NT_SUCCESS(Status)) return FALSE;
 
