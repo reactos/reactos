@@ -14,6 +14,7 @@
 
 #include <soft386.h>
 #include "common.h"
+#include "opcodes.h"
 
 // #define NDEBUG
 #include <debug.h>
@@ -36,8 +37,31 @@ VOID
 NTAPI
 Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
 {
-    // TODO: NOT IMPLEMENTED!!!
-    UNIMPLEMENTED;
+    BYTE Opcode;
+    INT ProcedureCallCount = 0;
+
+    /* Main execution loop */
+    do
+    {
+        /* Perform an instruction fetch */
+        if (!Soft386FetchByte(State, &Opcode)) continue;
+
+        // TODO: Check for CALL/RET to update ProcedureCallCount.
+
+        if (Soft386OpcodeHandlers[Opcode] != NULL)
+        {
+            /* Call the opcode handler */
+            Soft386OpcodeHandlers[Opcode](State);
+        }
+        else
+        {
+            /* This is not a valid opcode */
+            Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        }
+    }
+    while ((Command == SOFT386_CONTINUE)
+           || (Command == SOFT386_STEP_OVER && ProcedureCallCount > 0)
+           || (Command == SOFT386_STEP_OUT && ProcedureCallCount >= 0));
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
