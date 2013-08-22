@@ -376,7 +376,7 @@ BaseDestroyVDMEnvironment(
 BOOL
 WINAPI
 BaseGetVdmConfigInfo(
-    IN LPCWSTR Reserved,
+    IN LPCWSTR CommandLineReserved,
     IN ULONG DosSeqId,
     IN ULONG BinaryType,
     IN PUNICODE_STRING CmdLineString,
