@@ -1191,7 +1191,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
    ObjectName.Buffer = ExAllocatePool(PagedPool, ObjectName.MaximumLength);
    if (!ObjectName.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
-   wcscpy(ObjectName.Buffer, L"\\Driver\\");
+   wcscpy(ObjectName.Buffer, DRIVER_ROOT_NAME);
    memcpy(ObjectName.Buffer + 8, Start, ObjectName.Length - 8 * sizeof(WCHAR));
    ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = 0;
 
@@ -1452,7 +1452,7 @@ try_again:
     {
         /* Create a random name and set up the string*/
         NameLength = (USHORT)swprintf(NameBuffer,
-                                      L"\\Driver\\%08u",
+                                      DRIVER_ROOT_NAME L"%08u",
                                       KeTickCount);
         LocalDriverName.Length = NameLength * sizeof(WCHAR);
         LocalDriverName.MaximumLength = LocalDriverName.Length + sizeof(UNICODE_NULL);
@@ -1886,7 +1886,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
     Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                     LoadParams->ServiceName->Buffer,
                                     QueryTable, NULL, NULL);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
@@ -1901,7 +1900,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
     */
 
     Status = IopNormalizeImagePath(&ImagePath, &ServiceName);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IopNormalizeImagePath() failed (Status %x)\n", Status);
@@ -1913,13 +1911,14 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
     DPRINT("FullImagePath: '%wZ'\n", &ImagePath);
     DPRINT("Type: %lx\n", Type);
 
-    /* Get existing DriverObject pointer (in case the driver has
-      already been loaded and initialized) */
-    Status = IopGetDriverObject(
-        &DriverObject,
-        &ServiceName,
-        (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
-         Type == 8 /* SERVICE_RECOGNIZER_DRIVER */));
+    /*
+     * Get existing DriverObject pointer (in case the driver
+     * has already been loaded and initialized).
+     */
+    Status = IopGetDriverObject(&DriverObject,
+                                &ServiceName,
+                                (Type == 2 /* SERVICE_FILE_SYSTEM_DRIVER */ ||
+                                 Type == 8 /* SERVICE_RECOGNIZER_DRIVER */));
 
     if (!NT_SUCCESS(Status))
     {
@@ -1929,7 +1928,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
 
         DPRINT("Loading module from %wZ\n", &ImagePath);
         Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
-
         if (!NT_SUCCESS(Status))
         {
             DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
@@ -1939,8 +1937,8 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
         }
 
         /*
-        * Initialize the driver module if it's loaded for the first time
-        */
+         * Initialize the driver module if it's loaded for the first time
+         */
         Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
         if (!NT_SUCCESS(Status))
         {
@@ -2015,8 +2013,8 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
     PreviousMode = KeGetPreviousMode();
 
     /*
-    * Check security privileges
-    */
+     * Check security privileges
+     */
 
     /* FIXME: Uncomment when privileges will be correctly implemented. */
 #if 0
