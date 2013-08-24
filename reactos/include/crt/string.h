@@ -978,10 +978,10 @@ extern "C" {
   errno_t
   __cdecl
   wcsncpy_s(
-    _Out_writes_z_(SizeInWords) wchar_t *_Dest,
-    _In_ size_t SizeInWords,
-    _In_z_ const wchar_t *_Source,
-    _In_ size_t _Count);
+    _Out_writes_z_(_DstSizeInChars) wchar_t *_Dst,
+    _In_ size_t _DstSizeInChars,
+    _In_z_ const wchar_t *_Src,
+    _In_ size_t _MaxCount);
 
   _Check_return_wat_
   _CRTIMP
