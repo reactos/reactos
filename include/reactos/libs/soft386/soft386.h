@@ -34,6 +34,13 @@
 #define SOFT386_IDT_INT_GATE_32 0xE
 #define SOFT386_IDT_TRAP_GATE_32 0xF
 
+#define SOFT386_PREFIX_SEG (1 << 0)
+#define SOFT386_PREFIX_OPSIZE (1 << 1)
+#define SOFT386_PREFIX_ADSIZE (1 << 2)
+#define SOFT386_PREFIX_LOCK (1 << 3)
+#define SOFT386_PREFIX_REPNZ (1 << 4)
+#define SOFT386_PREFIX_REP (1 << 5)
+
 struct _SOFT386_STATE;
 typedef struct _SOFT386_STATE SOFT386_STATE, *PSOFT386_STATE;
 
@@ -282,6 +289,8 @@ struct _SOFT386_STATE
     ULONG ControlRegisters[SOFT386_NUM_CTRL_REGS];
     ULONG DebugRegisters[SOFT386_NUM_DBG_REGS];
     ULONG ExceptionCount;
+    ULONG PrefixFlags;
+    INT SegmentOverride;
 };
 
 /* FUNCTIONS ******************************************************************/

@@ -37,7 +37,7 @@ VOID
 NTAPI
 Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
 {
-    BYTE Opcode;
+    UCHAR Opcode;
     INT ProcedureCallCount = 0;
 
     /* Main execution loop */
@@ -51,7 +51,7 @@ Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
         if (Soft386OpcodeHandlers[Opcode] != NULL)
         {
             /* Call the opcode handler */
-            Soft386OpcodeHandlers[Opcode](State);
+            Soft386OpcodeHandlers[Opcode](State, Opcode);
         }
         else
         {

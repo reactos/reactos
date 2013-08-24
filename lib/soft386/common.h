@@ -11,6 +11,10 @@
 
 /* DEFINES ********************************************************************/
 
+#ifndef FASTCALL
+#define FASTCALL __fastcall
+#endif
+
 #define GET_SEGMENT_RPL(s) ((s) & 3)
 #define GET_SEGMENT_INDEX(s) ((s) & 0xFFF8)
 

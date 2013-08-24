@@ -11,12 +11,24 @@
 
 /* DEFINES ********************************************************************/
 
+#ifndef FASTCALL
+#define FASTCALL __fastcall
+#endif
+
 #define SOFT386_NUM_OPCODE_HANDLERS 256
 
-typedef BOOLEAN (__fastcall *SOFT386_OPCODE_HANDLER_PROC)(PSOFT386_STATE);
+typedef BOOLEAN (FASTCALL *SOFT386_OPCODE_HANDLER_PROC)(PSOFT386_STATE, UCHAR);
 
 extern
 SOFT386_OPCODE_HANDLER_PROC
 Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS];
+
+BOOLEAN
+FASTCALL
+Soft386OpcodePrefix
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
 
 #endif // _OPCODES_H_

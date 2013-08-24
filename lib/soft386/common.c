@@ -197,7 +197,8 @@ Soft386StackPush(PSOFT386_STATE State, ULONG Value)
 {
     BOOLEAN Size = State->SegmentRegs[SOFT386_REG_SS].Size;
 
-    // TODO: Handle OPSIZE prefix.
+    /* The OPSIZE prefix toggles the size */
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE) Size = !Size;
 
     if (Size)
     {
@@ -253,7 +254,8 @@ Soft386StackPop(PSOFT386_STATE State, PULONG Value)
     USHORT ShortValue;
     BOOLEAN Size = State->SegmentRegs[SOFT386_REG_SS].Size;
 
-    // TODO: Handle OPSIZE prefix.
+    /* The OPSIZE prefix toggles the size */
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE) Size = !Size;
 
     if (Size)
     {
@@ -706,7 +708,7 @@ Soft386GetIntVector(PSOFT386_STATE State,
 }
 
 VOID
-__fastcall
+FASTCALL
 Soft386Exception(PSOFT386_STATE State, INT ExceptionCode)
 {
     SOFT386_IDT_ENTRY IdtEntry;
