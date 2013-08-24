@@ -609,8 +609,8 @@ IF       Exécute un traitement conditionnel dans des programmes batch.\n\
 LABEL    Crée, change, ou supprime le nom de volume d'un disque.\n\
 MD       Crée un répertoire.\n\
 MKDIR    Crée un répertoire.\n\
-MKLINK   Crée des liens symboliques ou réels.\n\
-MOVE     Déplace un ou plusieurs fichiers d'un répertoire vers un autre\n\
+MKLINK   Crée des liens symboliques ou réels.\n"
+STRING_HELP2, "MOVE     Déplace un ou plusieurs fichiers d'un répertoire vers un autre\n\
          répertoire.\n\
 PATH     Affiche ou définit un chemin de recherche pour les fichiers exécutables.\n\
 PAUSE    Suspend l'exécution d'un fichier batch et affiche un message.\n\
@@ -626,8 +626,8 @@ REPLACE  Remplace un fichier.\n\
 RMDIR    Supprime un répertoire.\n\
 SCREEN   Déplace le curseur, optionnellement affiche du texte.\n\
 SET      Affiche, définit, ou supprime des variables d'environnement de ReactOS.\n\
-SHIFT    Déplace la position des paramètres remplacables dans un fichier batch.\n"
-STRING_HELP2, "START    Démarre une fenêtre séparée pour lancer un programme spécifié ou une commande.\n\
+SHIFT    Déplace la position des paramètres remplacables dans un fichier batch.\n\
+START    Démarre une fenêtre séparée pour lancer un programme spécifié ou une commande.\n\
          Exécute la commande.\n\
 TIME     Affiche ou définit l'heure du système.\n\
 TIMER    Permet l'utilisation de dix chronomètres.\n\
