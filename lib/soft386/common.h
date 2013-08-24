@@ -15,6 +15,9 @@
 #define FASTCALL __fastcall
 #endif
 
+#define SIGN_FLAG_BYTE 0x80
+#define SIGN_FLAG_WORD 0x8000
+#define SIGN_FLAG_LONG 0x80000000
 #define GET_SEGMENT_RPL(s) ((s) & 3)
 #define GET_SEGMENT_INDEX(s) ((s) & 0xFFF8)
 
@@ -117,6 +120,13 @@ Soft386Exception
 (
     PSOFT386_STATE State,
     INT ExceptionCode
+);
+
+inline
+BOOLEAN
+Soft386CalculateParity
+(
+    UCHAR Number
 );
 
 #endif // _COMMON_H_

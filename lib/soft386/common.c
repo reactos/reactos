@@ -754,4 +754,14 @@ Soft386Exception(PSOFT386_STATE State, INT ExceptionCode)
     }
 }
 
+inline
+BOOLEAN
+Soft386CalculateParity(UCHAR Number)
+{
+    Number ^= Number >> 1;
+    Number ^= Number >> 2;
+    Number ^= Number >> 4;
+    return !(Number & 1);
+}
+
 /* EOF */

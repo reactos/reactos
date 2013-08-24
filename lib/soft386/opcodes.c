@@ -88,22 +88,22 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0x3D NOT SUPPORTED
     Soft386OpcodePrefix,
     NULL, // TODO: OPCODE 0x3F NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x40 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x41 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x42 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x43 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x44 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x45 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x46 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x47 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x48 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x49 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x4A NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x4B NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x4C NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x4D NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x4E NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x4F NOT SUPPORTED
+    Soft386OpcodeIncrement,
+    Soft386OpcodeIncrement,
+    Soft386OpcodeIncrement,
+    Soft386OpcodeIncrement,
+    Soft386OpcodeIncrement,
+    Soft386OpcodeIncrement,
+    Soft386OpcodeIncrement,
+    Soft386OpcodeIncrement,
+    Soft386OpcodeDecrement,
+    Soft386OpcodeDecrement,
+    Soft386OpcodeDecrement,
+    Soft386OpcodeDecrement,
+    Soft386OpcodeDecrement,
+    Soft386OpcodeDecrement,
+    Soft386OpcodeDecrement,
+    Soft386OpcodeDecrement,
     NULL, // TODO: OPCODE 0x50 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x51 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x52 NOT SUPPORTED
@@ -442,5 +442,95 @@ Soft386OpcodePrefix(PSOFT386_STATE State, UCHAR Opcode)
         return FALSE;
     }
 
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeIncrement(PSOFT386_STATE State, UCHAR Opcode)
+{
+    ULONG Value;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF8) == 0x40);
+
+    if (Size)
+    {
+        Value = ++State->GeneralRegs[Opcode & 0x07].Long;
+
+        State->Flags.Of = (Value == SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Sf = (Value & SIGN_FLAG_LONG) ? TRUE : FALSE;
+    }
+    else
+    {
+        Value = ++State->GeneralRegs[Opcode & 0x07].LowWord;
+
+        State->Flags.Of = (Value == SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Sf = (Value & SIGN_FLAG_WORD) ? TRUE : FALSE;
+    }
+
+    State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
+    State->Flags.Af = ((Value & 0x0F) == 0) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(LOBYTE(Value));
+
+    /* Return success */
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeDecrement(PSOFT386_STATE State, UCHAR Opcode)
+{
+    ULONG Value;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF8) == 0x48);
+
+    if (Size)
+    {
+        Value = --State->GeneralRegs[Opcode & 0x07].Long;
+
+        State->Flags.Of = (Value == (SIGN_FLAG_LONG - 1)) ? TRUE : FALSE;
+        State->Flags.Sf = (Value & SIGN_FLAG_LONG) ? TRUE : FALSE;
+    }
+    else
+    {
+        Value = --State->GeneralRegs[Opcode & 0x07].LowWord;
+
+        State->Flags.Of = (Value == (SIGN_FLAG_WORD - 1)) ? TRUE : FALSE;
+        State->Flags.Sf = (Value & SIGN_FLAG_WORD) ? TRUE : FALSE;
+    }
+
+    State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
+    State->Flags.Af = ((Value & 0x0F) == 0x0F) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(LOBYTE(Value));
+
+    /* Return success */
     return TRUE;
 }
