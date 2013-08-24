@@ -314,10 +314,14 @@ GuiConsoleHandleSysMenuCommand(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM 
             LPWSTR WindowTitle = NULL;
             SIZE_T Length = 0;
 
+            /*
+             * We select all the characters from line 1 to
+             * the line where the cursor is positioned.
+             */
             Console->Selection.dwSelectionAnchor.X = 0;
             Console->Selection.dwSelectionAnchor.Y = 0;
             Console->dwSelectionCursor.X = ActiveBuffer->ViewSize.X - 1;
-            Console->dwSelectionCursor.Y = ActiveBuffer->ViewSize.Y - 1;
+            Console->dwSelectionCursor.Y = ActiveBuffer->CursorPosition.Y;
             Console->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS | CONSOLE_MOUSE_SELECTION;
             GuiConsoleUpdateSelection(Console, &Console->dwSelectionCursor);
 
