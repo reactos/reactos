@@ -361,6 +361,66 @@ typedef struct _JOB_INFO_2W {
   DWORD PagesPrinted;
 } JOB_INFO_2W, *PJOB_INFO_2W, *LPJOB_INFO_2W;
 
+typedef struct _JOB_INFO_3 {
+  DWORD JobId;
+  DWORD NextJobId;
+  DWORD Reserved;
+} JOB_INFO_3, *PJOB_INFO_3, *LPJOB_INFO_3;
+
+typedef struct _JOB_INFO_4A {
+  DWORD JobId;
+  LPSTR pPrinterName;
+  LPSTR pMachineName;
+  LPSTR pUserName;
+  LPSTR pDocument;
+  LPSTR pNotifyName;
+  LPSTR pDatatype;
+  LPSTR pPrintProcessor;
+  LPSTR pParameters;
+  LPSTR pDriverName;
+  LPDEVMODEA pDevMode;
+  LPSTR pStatus;
+  PSECURITY_DESCRIPTOR pSecurityDescriptor;
+  DWORD Status;
+  DWORD Priority;
+  DWORD Position;
+  DWORD StartTime;
+  DWORD UntilTime;
+  DWORD TotalPages;
+  DWORD Size;
+  SYSTEMTIME Submitted;
+  DWORD Time;
+  DWORD PagesPrinted;
+  LONG SizeHigh;
+} JOB_INFO_4A, *PJOB_INFO_4A, *LPJOB_INFO_4A;
+
+typedef struct _JOB_INFO_4W {
+  DWORD JobId;
+  LPWSTR pPrinterName;
+  LPWSTR pMachineName;
+  LPWSTR pUserName;
+  LPWSTR pDocument;
+  LPWSTR pNotifyName;
+  LPWSTR pDatatype;
+  LPWSTR pPrintProcessor;
+  LPWSTR pParameters;
+  LPWSTR pDriverName;
+  LPDEVMODEW pDevMode;
+  LPWSTR pStatus;
+  PSECURITY_DESCRIPTOR pSecurityDescriptor;
+  DWORD Status;
+  DWORD Priority;
+  DWORD Position;
+  DWORD StartTime;
+  DWORD UntilTime;
+  DWORD TotalPages;
+  DWORD Size;
+  SYSTEMTIME Submitted;
+  DWORD Time;
+  DWORD PagesPrinted;
+  LONG SizeHigh;
+} JOB_INFO_4W, *PJOB_INFO_4W, *LPJOB_INFO_4W;
+
 typedef struct _DOC_INFO_1A {
   LPSTR pDocName;
   LPSTR pOutputFile;
@@ -763,6 +823,32 @@ typedef struct _PRINTER_INFO_6 {
   DWORD dwStatus;
 } PRINTER_INFO_6, *PPRINTER_INFO_6, *LPPRINTER_INFO_6;
 
+typedef struct _PRINTER_INFO_7A {
+  LPSTR pszObjectGUID;
+  DWORD dwAction;
+} PRINTER_INFO_7A, *PPRINTER_INFO_7A, *LPPRINTER_INFO_7A;
+
+typedef struct _PRINTER_INFO_7W {
+  LPWSTR pszObjectGUID;
+  DWORD dwAction;
+} PRINTER_INFO_7W, *PPRINTER_INFO_7W, *LPPRINTER_INFO_7W;
+
+typedef struct _PRINTER_INFO_8A {
+  LPDEVMODEA pDevMode;
+} PRINTER_INFO_8A, *PPRINTER_INFO_8A, *LPPRINTER_INFO_8A;
+
+typedef struct _PRINTER_INFO_8W {
+  LPDEVMODEW pDevMode;
+} PRINTER_INFO_8W, *PPRINTER_INFO_8W, *LPPRINTER_INFO_8W;
+
+typedef struct _PRINTER_INFO_9A {
+  LPDEVMODEA pDevMode;
+} PRINTER_INFO_9A, *PPRINTER_INFO_9A, *LPPRINTER_INFO_9A;
+
+typedef struct _PRINTER_INFO_9W {
+  LPDEVMODEW pDevMode;
+} PRINTER_INFO_9W, *PPRINTER_INFO_9W, *LPPRINTER_INFO_9W;
+
 typedef struct _PRINTPROCESSOR_INFO_1A {
   LPSTR pName;
 } PRINTPROCESSOR_INFO_1A, *PPRINTPROCESSOR_INFO_1A, *LPPRINTPROCESSOR_INFO_1A;
@@ -805,6 +891,36 @@ typedef struct _FORM_INFO_1W {
   SIZEL Size;
   RECTL ImageableArea;
 } FORM_INFO_1W, *PFORM_INFO_1W, *LPFORM_INFO_1W;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef struct _FORM_INFO_2A {
+  DWORD Flags;
+  LPCSTR pName;
+  SIZEL Size;
+  RECTL ImageableArea;
+  LPCSTR pKeyword;
+  DWORD StringType;
+  LPCSTR pMuiDll;
+  DWORD dwResourceId;
+  LPCSTR pDisplayName;
+  LANGID wLangId;
+} FORM_INFO_2A, *PFORM_INFO_2A, *LPFORM_INFO_2A;
+
+typedef struct _FORM_INFO_2W {
+  DWORD Flags;
+  LPCWSTR pName;
+  SIZEL Size;
+  RECTL ImageableArea;
+  LPCSTR pKeyword;
+  DWORD StringType;
+  LPCWSTR pMuiDll;
+  DWORD dwResourceId;
+  LPCWSTR pDisplayName;
+  LANGID wLangId;
+} FORM_INFO_2W, *PFORM_INFO_2W, *LPFORM_INFO_2W;
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 typedef struct _PRINTER_DEFAULTSA {
   LPSTR pDatatype;
@@ -885,6 +1001,7 @@ typedef struct _BIDI_RESPONSE_CONTAINER {
 
 typedef JOB_INFO_1W JOB_INFO_1, *PJOB_INFO_1, *LPJOB_INFO_1;
 typedef JOB_INFO_2W JOB_INFO_2, *PJOB_INFO_2, *LPJOB_INFO_2;
+typedef JOB_INFO_4W JOB_INFO_4, *PJOB_INFO_4, *LPJOB_INFO_4;
 typedef ADDJOB_INFO_1W ADDJOB_INFO_1, *PADDJOB_INFO_1, *LPADDJOB_INFO_1;
 typedef DATATYPES_INFO_1W DATATYPES_INFO_1, *PDATATYPES_INFO_1, *LPDATATYPES_INFO_1;
 typedef MONITOR_INFO_1W MONITOR_INFO_1, *PMONITOR_INFO_1, *LPMONITOR_INFO_1;
@@ -903,18 +1020,23 @@ typedef PRINTER_INFO_1W PRINTER_INFO_1, *PPRINTER_INFO_1, *LPPRINTER_INFO_1;
 typedef PRINTER_INFO_2W PRINTER_INFO_2, *PPRINTER_INFO_2, *LPPRINTER_INFO_2;
 typedef PRINTER_INFO_4W PRINTER_INFO_4, *PPRINTER_INFO_4, *LPPRINTER_INFO_4;
 typedef PRINTER_INFO_5W PRINTER_INFO_5, *PPRINTER_INFO_5, *LPPRINTER_INFO_5;
+typedef PRINTER_INFO_7W PRINTER_INFO_7, *PPRINTER_INFO_7, *LPPRINTER_INFO_7;
+typedef PRINTER_INFO_8W PRINTER_INFO_8, *PPRINTER_INFO_8, *LPPRINTER_INFO_8;
+typedef PRINTER_INFO_9W PRINTER_INFO_9, *PPRINTER_INFO_9, *LPPRINTER_INFO_9;
 typedef PRINTPROCESSOR_INFO_1W PRINTPROCESSOR_INFO_1, *PPRINTPROCESSOR_INFO_1, *LPPRINTPROCESSOR_INFO_1;
 typedef FORM_INFO_1W FORM_INFO_1, *PFORM_INFO_1, *LPFORM_INFO_1;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef FORM_INFO_2W FORM_INFO_2, *PFORM_INFO_2, *LPFORM_INFO_2;
+#endif
 typedef PRINTER_DEFAULTSW PRINTER_DEFAULTS, *PPRINTER_DEFAULTS, *LPPRINTER_DEFAULTS;
-typedef PROVIDOR_INFO_1W PROVIDOR_INFO_1;
-typedef LPPROVIDOR_INFO_1W LPPROVIDOR_INFO_1;
-typedef PROVIDOR_INFO_2W PROVIDOR_INFO_2;
-typedef LPPROVIDOR_INFO_2W LPPROVIDOR_INFO_2;
+typedef PROVIDOR_INFO_1W PROVIDOR_INFO_1, *PPROVIDOR_INFO_1, *LPPROVIDOR_INFO_1;
+typedef PROVIDOR_INFO_2W PROVIDOR_INFO_2, *PPROVIDOR_INFO_2, *LPPROVIDOR_INFO_2;
 
 #else /* UNICODE */
 
 typedef JOB_INFO_1A JOB_INFO_1, *PJOB_INFO_1, *LPJOB_INFO_1;
 typedef JOB_INFO_2A JOB_INFO_2, *PJOB_INFO_2, *LPJOB_INFO_2;
+typedef JOB_INFO_4A JOB_INFO_4, *PJOB_INFO_4, *LPJOB_INFO_4;
 typedef ADDJOB_INFO_1A ADDJOB_INFO_1, *PADDJOB_INFO_1, *LPADDJOB_INFO_1;
 typedef DATATYPES_INFO_1A DATATYPES_INFO_1, *PDATATYPES_INFO_1, *LPDATATYPES_INFO_1;
 typedef MONITOR_INFO_1A MONITOR_INFO_1, *PMONITOR_INFO_1, *LPMONITOR_INFO_1;
@@ -933,9 +1055,17 @@ typedef PRINTER_INFO_1A PRINTER_INFO_1, *PPRINTER_INFO_1, *LPPRINTER_INFO_1;
 typedef PRINTER_INFO_2A PRINTER_INFO_2, *PPRINTER_INFO_2, *LPPRINTER_INFO_2;
 typedef PRINTER_INFO_4A PRINTER_INFO_4, *PPRINTER_INFO_4, *LPPRINTER_INFO_4;
 typedef PRINTER_INFO_5A PRINTER_INFO_5, *PPRINTER_INFO_5, *LPPRINTER_INFO_5;
+typedef PRINTER_INFO_7A PRINTER_INFO_7, *PPRINTER_INFO_7, *LPPRINTER_INFO_7;
+typedef PRINTER_INFO_8A PRINTER_INFO_8, *PPRINTER_INFO_8, *LPPRINTER_INFO_8;
+typedef PRINTER_INFO_9A PRINTER_INFO_9, *PPRINTER_INFO_9, *LPPRINTER_INFO_9;
 typedef PRINTPROCESSOR_INFO_1A PRINTPROCESSOR_INFO_1, *PPRINTPROCESSOR_INFO_1, *LPPRINTPROCESSOR_INFO_1;
 typedef FORM_INFO_1A FORM_INFO_1, *PFORM_INFO_1, *LPFORM_INFO_1;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef FORM_INFO_2A FORM_INFO_2, *PFORM_INFO_2, *LPFORM_INFO_2;
+#endif
 typedef PRINTER_DEFAULTSA PRINTER_DEFAULTS, *PPRINTER_DEFAULTS, *LPPRINTER_DEFAULTS;
+typedef PROVIDOR_INFO_1A PROVIDOR_INFO_1, *PPROVIDOR_INFO_1, *LPPROVIDOR_INFO_1;
+typedef PROVIDOR_INFO_2A PROVIDOR_INFO_2, *PPROVIDOR_INFO_2, *LPPROVIDOR_INFO_2;
 
 #endif /* UNICODE */
 
@@ -947,7 +1077,9 @@ AddFormA(
   _In_ HANDLE hPrinter,
   _In_range_(1, 2) DWORD Level,
   _When_(Level == 1, _In_reads_bytes_(sizeof(FORM_INFO_1A)))
+#if (NTDDI_VERSION >= NTDDI_VISTA)
   _When_(Level == 2, _In_reads_bytes_(sizeof(FORM_INFO_2A)))
+#endif
     LPBYTE pForm);
 
 BOOL
@@ -956,7 +1088,9 @@ AddFormW(
   _In_ HANDLE hPrinter,
   _In_range_(1, 2) DWORD Level,
   _When_(Level == 1, _In_reads_bytes_(sizeof(FORM_INFO_1W)))
+#if (NTDDI_VERSION >= NTDDI_VISTA)
   _When_(Level == 2, _In_reads_bytes_(sizeof(FORM_INFO_2W)))
+#endif
   LPBYTE pForm);
 
 BOOL
@@ -1616,8 +1750,8 @@ SetJobA(
   _When_(Level == 0, _Reserved_)
   _When_(Level == 1, _In_reads_bytes_opt_(sizeof(JOB_INFO_1)))
   _When_(Level == 2, _In_reads_bytes_opt_(sizeof(JOB_INFO_2)))
-  _When_(Level == 4, _In_reads_bytes_opt_(sizeof(JOB_INFO_4)))
   _When_(Level == 3, _In_reads_bytes_opt_(sizeof(JOB_INFO_3)))
+  _When_(Level == 4, _In_reads_bytes_opt_(sizeof(JOB_INFO_4)))
     LPBYTE pJob,
   _In_ DWORD Command);
 
@@ -1630,8 +1764,8 @@ SetJobW(
   _When_(Level == 0, _Reserved_)
   _When_(Level == 1, _In_reads_bytes_opt_(sizeof(JOB_INFO_1)))
   _When_(Level == 2, _In_reads_bytes_opt_(sizeof(JOB_INFO_2)))
-  _When_(Level == 4, _In_reads_bytes_opt_(sizeof(JOB_INFO_4)))
   _When_(Level == 3, _In_reads_bytes_opt_(sizeof(JOB_INFO_3)))
+  _When_(Level == 4, _In_reads_bytes_opt_(sizeof(JOB_INFO_4)))
     LPBYTE pJob,
   _In_ DWORD Command);
 
