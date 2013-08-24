@@ -3644,7 +3644,7 @@ NetUserSetInfo(LPCWSTR servername,
     /* Open the Account Domain */
     Status = OpenAccountDomain(ServerHandle,
                                (servername != NULL) ? &ServerName : NULL,
-                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP | DOMAIN_READ_PASSWORD_PARAMETERS,
                                &AccountDomainHandle);
     if (!NT_SUCCESS(Status))
     {
