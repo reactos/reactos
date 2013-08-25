@@ -158,6 +158,8 @@
 #define SAC_MAX_MESSAGES                    200
 #define SAC_VTUTF8_COL_WIDTH                80
 #define SAC_VTUTF8_COL_HEIGHT               25
+#define SAC_VTUTF8_ROW_HEIGHT               24
+#define MAX_UTF8_ENCODE_BLOCK_LENGTH        (Utf8ConversionBufferSize / 3 - 1)
 
 //
 // Channel flags
@@ -1010,6 +1012,17 @@ VerifyEventWaitable(
     IN HANDLE Handle,
     OUT PVOID *WaitObject,
     OUT PVOID *ActualWaitObject
+);
+
+BOOLEAN
+NTAPI
+SacTranslateUnicodeToUtf8(
+    IN PWCHAR SourceBuffer,
+    IN ULONG SourceBufferLength,
+    OUT PCHAR DestinationBuffer,
+    IN ULONG DestinationBufferSize,
+    OUT PULONG UTF8Count,
+    OUT PULONG ProcessedCount
 );
 
 //
