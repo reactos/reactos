@@ -47,4 +47,20 @@ Soft386OpcodeDecrement
     UCHAR Opcode
 );
 
+BOOLEAN
+FASTCALL
+Soft386OpcodePushReg
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodePopReg
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
 #endif // _OPCODES_H_

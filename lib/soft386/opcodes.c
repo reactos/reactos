@@ -104,22 +104,22 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeDecrement,
     Soft386OpcodeDecrement,
     Soft386OpcodeDecrement,
-    NULL, // TODO: OPCODE 0x50 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x51 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x52 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x53 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x54 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x55 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x56 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x57 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x58 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x59 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x5A NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x5B NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x5C NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x5D NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x5E NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x5F NOT SUPPORTED
+    Soft386OpcodePushReg,
+    Soft386OpcodePushReg,
+    Soft386OpcodePushReg,
+    Soft386OpcodePushReg,
+    Soft386OpcodePushReg,
+    Soft386OpcodePushReg,
+    Soft386OpcodePushReg,
+    Soft386OpcodePushReg,
+    Soft386OpcodePopReg,
+    Soft386OpcodePopReg,
+    Soft386OpcodePopReg,
+    Soft386OpcodePopReg,
+    Soft386OpcodePopReg,
+    Soft386OpcodePopReg,
+    Soft386OpcodePopReg,
+    Soft386OpcodePopReg,
     NULL, // TODO: OPCODE 0x60 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x61 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x62 NOT SUPPORTED
@@ -530,6 +530,58 @@ Soft386OpcodeDecrement(PSOFT386_STATE State, UCHAR Opcode)
     State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
     State->Flags.Af = ((Value & 0x0F) == 0x0F) ? TRUE : FALSE;
     State->Flags.Pf = Soft386CalculateParity(LOBYTE(Value));
+
+    /* Return success */
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodePushReg(PSOFT386_STATE State, UCHAR Opcode)
+{
+    if ((State->PrefixFlags != SOFT386_PREFIX_OPSIZE)
+        && (State->PrefixFlags != 0))
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF8) == 0x50);
+
+    /* Call the internal function */
+    return Soft386StackPush(State, State->GeneralRegs[Opcode & 0x07].Long);
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodePopReg(PSOFT386_STATE State, UCHAR Opcode)
+{
+    ULONG Value;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_SS].Size;
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF8) == 0x58);
+
+    /* Call the internal function */
+    if (!Soft386StackPop(State, &Value)) return FALSE;
+
+    /* Store the value */
+    if (Size) State->GeneralRegs[Opcode & 0x07].Long = Value;
+    else State->GeneralRegs[Opcode & 0x07].LowWord = Value;
 
     /* Return success */
     return TRUE;
