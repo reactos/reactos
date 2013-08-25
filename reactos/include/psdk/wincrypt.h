@@ -21,6 +21,8 @@
 #ifndef __WINE_WINCRYPT_H
 #define __WINE_WINCRYPT_H
 
+#include <specstrings.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
