@@ -235,8 +235,10 @@ typedef enum _SAC_ANSI_COMMANDS
     SacEraseScreen,
     SacSetCursorPosition,
     SacSetScrollRegion,
-    SacSetBackgroundColor = 21,
-    SacSetFontColor
+    SacSetColors,
+    SacSetBackgroundColor,
+    SacSetFontColor,
+    SacSetColorsAndAttributes
 } SAC_ANSI_COMMANDS;
 
 //
@@ -1325,3 +1327,154 @@ ChannelHasNewIBufferData(IN PSAC_CHANNEL Channel)
     /* Return if there's any new data in the input buffer */
     return Channel->ChannelHasNewIBufferData;
 }
+
+//
+// FIXME: ANSI.H
+//
+//
+// Source: http://en.wikipedia.org/wiki/ANSI_escape_code
+//
+typedef enum _VT_ANSI_ATTRIBUTES
+{
+    //
+    // Attribute modifiers (mostly supported)
+    //
+    Normal,
+    Bold,
+    Faint,
+    Italic,
+    Underline,
+    SlowBlink,
+    FastBlink,
+    Inverse,
+    Conceal,
+    Strikethrough,
+
+    //
+    // Font selectors (not supported)
+    //
+    PrimaryFont,
+    AlternateFont1,
+    AlternateFont2,
+    AlternateFont3,
+    Alternatefont4,
+    AlteronateFont5,
+    AlteronateFont6,
+    AlternateFont7,
+    AlternatEfont8,
+    Alternatefont9,
+
+    //
+    // Additional attributes (not supported)
+    //
+    Fraktur,
+    DoubleUnderline,
+
+    //
+    // Attribute Un-modifiers (mostly supported)
+    //
+    BoldOff,
+    ItalicOff,
+    UnderlineOff,
+    BlinkOff,
+    Reserved,
+    InverseOff,
+    ConcealOff,
+    StrikethroughOff,
+
+    //
+    // Standard Text Color
+    //
+    SetColorStart,
+    SetColorBlack = SetColorStart,
+    SetColorRed,
+    SetColorGreen,
+    SetColorYellow,
+    SetColorBlue,
+    SetcolorMAgent,
+    SetColorCyan,
+    SetColorWhite,
+    SetColorMax = SetColorWhite,
+
+    //
+    // Extended Text Color (not supported)
+    //
+    SetColor256,
+    SeTextColorDefault,
+
+    //
+    // Standard Background Color
+    //
+    SetBackColorStart,
+    SetBackColorBlack = SetBackColorStart,
+    SetBackColorRed,
+    SetBackColorGreen,
+    SetBackColorYellow,
+    SetBackColorBlue,
+    SetBackcolorMAgent,
+    SetBackColorCyan,
+    SetBackColorWhite,
+    SetBackColorMax = SetBackColorWhite,
+
+    //
+    // Extended Background Color (not supported)
+    //
+    SetBackColor256,
+    SetBackColorDefault,
+
+    //
+    // Extra Attributes (not supported)
+    //
+    Reserved1,
+    Framed,
+    Encircled,
+    Overlined,
+    FramedOff,
+    OverlinedOff,
+    Reserved2,
+    Reserved3,
+    Reserved4,
+    Reserved5
+
+    //
+    // Ideograms (not supported)
+    //
+} VT_ANSI_ATTRIBUTES;
+
+//
+// The following site is a good reference on VT100/ANSI escape codes
+// http://www.termsys.demon.co.uk/vtansi.htm
+//
+#define VT_ANSI_ESCAPE              L'\x1B'
+#define VT_ANSI_COMMAND             L'['
+
+#define VT_ANSI_CURSOR_UP_CHAR      L'A'
+#define VT_ANSI_CURSOR_UP           L"[A"
+
+#define VT_ANSI_CURSOR_DOWN_CHAR    L'B'
+#define VT_ANSI_CURSOR_DOWN         L"[B"
+
+#define VT_ANSI_CURSOR_RIGHT_CHAR   L'C'
+#define VT_ANSI_CURSOR_RIGHT        L"[C"
+
+#define VT_ANSI_CURSOR_LEFT_CHAR    L'D'
+#define VT_ANSI_CURSOR_LEFT         L"[D"
+
+#define VT_ANSI_ERASE_LINE_CHAR     L'K'
+#define VT_ANSI_ERASE_END_LINE      L"[K"
+#define VT_ANSI_ERASE_START_LINE    L"[1K"
+#define VT_ANSI_ERASE_ENTIRE_LINE   L"[2K"
+
+#define VT_ANSI_ERASE_SCREEN_CHAR   L'J'
+#define VT_ANSI_ERASE_DOWN_SCREEN   L"[J"
+#define VT_ANSI_ERASE_UP_SCREEN     L"[1J"
+#define VT_ANSI_ERASE_ENTIRE_SCREEN L"[2J"
+
+#define VT_ANSI_BACKTAB_CHAR        L'Z'
+#define VT_220_BACKTAB              L"[0Z"
+
+#define VT_ANSI_SET_ATTRIBUTE_CHAR  L'm'
+#define VT_ANSI_SEPARATOR_CHAR      L';'
+#define VT_ANSI_HVP_CURSOR_CHAR     L'f'
+#define VT_ANSI_CUP_CURSOR_CHAR     L'H'
+#define VT_ANSI_SCROLL_CHAR         L'r'

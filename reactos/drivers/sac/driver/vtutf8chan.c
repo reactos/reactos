@@ -15,156 +15,6 @@
 CHAR IncomingUtf8ConversionBuffer[4];
 WCHAR IncomingUnicodeValue;
 
-/* FUNCTIONS *****************************************************************/
-
-//
-// Source: http://en.wikipedia.org/wiki/ANSI_escape_code
-//
-typedef enum _VT_ANSI_ATTRIBUTES
-{
-    //
-    // Attribute modifiers (mostly supported)
-    //
-    Normal,
-    Bold,
-    Faint,
-    Italic,
-    Underline,
-    SlowBlink,
-    FastBlink,
-    Inverse,
-    Conceal,
-    Strikethrough,
-
-    //
-    // Font selectors (not supported)
-    //
-    PrimaryFont,
-    AlternateFont1,
-    AlternateFont2,
-    AlternateFont3,
-    Alternatefont4,
-    AlteronateFont5,
-    AlteronateFont6,
-    AlternateFont7,
-    AlternatEfont8,
-    Alternatefont9,
-
-    //
-    // Additional attributes (not supported)
-    //
-    Fraktur,
-    DoubleUnderline,
-
-    //
-    // Attribute Un-modifiers (mostly supported)
-    //
-    BoldOff,
-    ItalicOff,
-    UnderlineOff,
-    BlinkOff,
-    Reserved,
-    InverseOff,
-    ConcealOff,
-    StrikethroughOff,
-
-    //
-    // Standard Text Color
-    //
-    SetColorStart,
-    SetColorBlack = SetColorStart,
-    SetColorRed,
-    SetColorGreen,
-    SetColorYellow,
-    SetColorBlue,
-    SetcolorMAgent,
-    SetColorCyan,
-    SetColorWhite,
-    SetColorMax = SetColorWhite,
-
-    //
-    // Extended Text Color (not supported)
-    //
-    SetColor256,
-    SeTextColorDefault,
-
-    //
-    // Standard Background Color
-    //
-    SetBackColorStart,
-    SetBackColorBlack = SetBackColorStart,
-    SetBackColorRed,
-    SetBackColorGreen,
-    SetBackColorYellow,
-    SetBackColorBlue,
-    SetBackcolorMAgent,
-    SetBackColorCyan,
-    SetBackColorWhite,
-    SetBackColorMax = SetBackColorWhite,
-
-    //
-    // Extended Background Color (not supported)
-    //
-    SetBackColor256,
-    SetBackColorDefault,
-
-    //
-    // Extra Attributes (not supported)
-    //
-    Reserved1,
-    Framed,
-    Encircled,
-    Overlined,
-    FramedOff,
-    OverlinedOff,
-    Reserved2,
-    Reserved3,
-    Reserved4,
-    Reserved5
-
-    //
-    // Ideograms (not supported)
-    //
-} VT_ANSI_ATTRIBUTES;
-
-//
-// The following site is a good reference on VT100/ANSI escape codes
-// http://www.termsys.demon.co.uk/vtansi.htm
-//
-#define VT_ANSI_ESCAPE              L'\x1B'
-#define VT_ANSI_COMMAND             L'['
-
-#define VT_ANSI_CURSOR_UP_CHAR      L'A'
-#define VT_ANSI_CURSOR_UP           L"[A"
-
-#define VT_ANSI_CURSOR_DOWN_CHAR    L'B'
-#define VT_ANSI_CURSOR_DOWN         L"[B"
-
-#define VT_ANSI_CURSOR_RIGHT_CHAR   L'C'
-#define VT_ANSI_CURSOR_RIGHT        L"[C"
-
-#define VT_ANSI_CURSOR_LEFT_CHAR    L'D'
-#define VT_ANSI_CURSOR_LEFT         L"[D"
-
-#define VT_ANSI_ERASE_LINE_CHAR     L'K'
-#define VT_ANSI_ERASE_END_LINE      L"[K"
-#define VT_ANSI_ERASE_START_LINE    L"[1K"
-#define VT_ANSI_ERASE_ENTIRE_LINE   L"[2K"
-
-#define VT_ANSI_ERASE_SCREEN_CHAR   L'J'
-#define VT_ANSI_ERASE_DOWN_SCREEN   L"[J"
-#define VT_ANSI_ERASE_UP_SCREEN     L"[1J"
-#define VT_ANSI_ERASE_ENTIRE_SCREEN L"[2J"
-
-#define VT_ANSI_BACKTAB_CHAR        L'Z'
-#define VT_220_BACKTAB              L"[0Z"
-
-#define VT_ANSI_SET_ATTRIBUTE_CHAR  L'm'
-#define VT_ANSI_SEPARATOR_CHAR      L';'
-#define VT_ANSI_HVP_CURSOR_CHAR     L'f'
-#define VT_ANSI_CUP_CURSOR_CHAR     L'H'
-#define VT_ANSI_SCROLL_CHAR         L'r'
-
 SAC_STATIC_ESCAPE_STRING SacStaticEscapeStrings [] =
 {
     { VT_ANSI_CURSOR_UP, 2, SacCursorUp },
@@ -179,6 +29,16 @@ SAC_STATIC_ESCAPE_STRING SacStaticEscapeStrings [] =
     { VT_ANSI_ERASE_UP_SCREEN, 3, SacEraseStartOfScreen },
     { VT_ANSI_ERASE_ENTIRE_SCREEN, 3, SacEraseScreen },
 };
+
+/* FUNCTIONS *****************************************************************/
+
+FORCEINLINE
+VOID
+VTUTF8ChannelAssertCursor(IN PSAC_CHANNEL Channel)
+{
+    ASSERT(Channel->CursorRow < SAC_VTUTF8_ROW_HEIGHT);
+    ASSERT(Channel->CursorCol < SAC_VTUTF8_COL_WIDTH);
+}
 
 BOOLEAN
 NTAPI
@@ -225,16 +85,14 @@ VTUTF8ChannelProcessAttributes(
 	return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
-VOID
-VTUTF8ChannelAssertCursor(IN PSAC_CHANNEL Channel)
-{
-    ASSERT(Channel->CursorRow < SAC_VTUTF8_ROW_HEIGHT);
-    ASSERT(Channel->CursorCol < SAC_VTUTF8_COL_WIDTH);
-}
-
 //
-// Not a
+// This function is the guts of the sequences that SAC supports.
+//
+// It is written to conform to the way that Microsoft's SAC driver interprets
+// the ANSI standard. If you want to extend and/or "fix" it, please use a flag
+// that can be set in the Registry to enable "extended" ANSI support or etc...
+//
+// Hermes, I'm looking at you, buddy.
 //
 ULONG
 NTAPI
@@ -246,12 +104,18 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
     PSAC_CURSOR_DATA Cursor;
     ASSERT(String[0] == VT_ANSI_ESCAPE);
 
+    /* Microsoft's driver does this after the O(n) check below. Be smarter. */
+    if (String[1] != VT_ANSI_COMMAND) return 0;
+
+    /* Now that we know it's a valid command, look through the common cases */
     for (i = 0; i < RTL_NUMBER_OF(SacStaticEscapeStrings); i++)
     {
+        /* Check if an optimized sequence was detected */
         if (!wcsncmp(String + 1,
                      SacStaticEscapeStrings[i].Sequence,
                      SacStaticEscapeStrings[i].Size))
         {
+            /* Yep, return the right action, length, and set optionals to 1 */
             Action = SacStaticEscapeStrings[i].Action;
             Result = SacStaticEscapeStrings[i].Size + 1;
             Number = Number2 = Number3 = 1;
@@ -259,10 +123,11 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
         }
     }
 
-    if (String[1] != VT_ANSI_COMMAND) return 0;
-
+    /* It's a more complex sequence, start parsing it */
     Result = 0;
     Sequence = String + 2;
+
+    /* First, check for the cursor sequences. This is useless due to above. */
     switch (*Sequence)
     {
         case VT_ANSI_CURSOR_UP_CHAR:
@@ -289,113 +154,154 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
             break;
     }
 
+    /* This must be a sequence starting with ESC[# */
     if (!VTUTF8ChannelScanForNumber(Sequence, &Number)) return 0;
     while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
 
+    /* Check if this is ESC[#m */
     if (*Sequence == VT_ANSI_SET_ATTRIBUTE_CHAR)
     {
+        /* Some attribute is being set, go over the ones we support */
         switch (Number)
         {
+            /* Make the font standard */
             case Normal:
                 Action = SacFontNormal;
                 break;
 
+            /* Make the font bold */
             case Bold:
                 Action = SacFontBold;
                 break;
 
+            /* Make the font blink */
             case SlowBlink:
                 Action = SacFontBlink;
                 break;
 
+            /* Make the font colors inverted */
             case Inverse:
                 Action = SacFontInverse;
                 break;
 
+            /* Make the font standard intensity */
             case BoldOff:
                 Action = SacFontBoldOff;
                 break;
 
+            /* Turn off blinking */
             case BlinkOff:
                 Action = SacFontBlinkOff;
                 break;
 
+            /* Turn off inverted colors */
             case InverseOff:
                 Action = SacFontInverseOff;
                 break;
 
+            /* Something else... */
             default:
+
+                /* Is a background color being set? */
                 if ((Number < SetBackColorStart) || (Number > SetBackColorMax))
                 {
+                    /* Nope... is it the foreground color? */
                     if ((Number < SetColorStart) || (Number > SetColorMax))
                     {
+                        /* Nope. SAC expects no other attributes so bail out */
                         ASSERT(FALSE);
                         return 0;
                     }
 
+                    /* Yep -- the number will tell us which */
                     Action = SacSetFontColor;
                 }
                 else
                 {
+                    /* Yep -- the number will tell us which */
                     Action = SacSetBackgroundColor;
                 }
                 break;
         }
 
+        /* In all cases, we're done here */
         goto ProcessString;
     }
 
+    /* The only allowed possibility now is ESC[#;# */
     if (*Sequence != VT_ANSI_SEPARATOR_CHAR) return 0;
-
     Sequence++;
     if (!VTUTF8ChannelScanForNumber(Sequence, &Number2)) return 0;
     while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
 
-    if (*Sequence == VT_ANSI_SET_ATTRIBUTE_CHAR)
+    /* There's two valid forms accepted at this point: ESC[#;#m and ESC[#;#H */
+    switch (*Sequence)
     {
-        Action = 20;
-        goto ProcessString;
+        /* This is ESC[#;#m -- used to set both colors at once */
+        case VT_ANSI_SET_ATTRIBUTE_CHAR:
+            Action = SacSetColors;
+            goto ProcessString;
+
+        /* This is ESC[#;#H -- used to set the cursor position */
+        case VT_ANSI_CUP_CURSOR_CHAR:
+            Action = SacSetCursorPosition;
+            goto ProcessString;
+
+        /* Finally, this *could* be ESC[#;#; -- we'll keep parsing */
+        case VT_ANSI_SEPARATOR_CHAR:
+            Sequence++;
+            break;
+
+        /* Abandon anything else */
+        default:
+            return 0;
     }
 
-    if (*Sequence == VT_ANSI_CUP_CURSOR_CHAR)
+    /* The SAC seems to accept a few more possibilities if a ';' follows... */
+    switch (*Sequence)
     {
-        Action = SacSetCursorPosition;
-        goto ProcessString;
+        /* Both ESC[#;#;H and ESC[#;#;f are really the same command */
+        case VT_ANSI_CUP_CURSOR_CHAR:
+        case VT_ANSI_HVP_CURSOR_CHAR:
+            /* It's unclear why MS doesn't allow the HVP sequence on its own */
+            Action = SacSetCursorPosition;
+            goto ProcessString;
+
+        /* And this is the ESC[#;#;r command to set the scroll region... */
+        case VT_ANSI_SCROLL_CHAR:
+            /* Again, not clear why ESC[#;#r isn't supported */
+            Action = SacSetScrollRegion;
+            goto ProcessString;
+
+        /* Anything else must be ESC[#;#;# */
+        default:
+            break;
     }
 
-    if (*Sequence != VT_ANSI_SEPARATOR_CHAR) return 0;
-
-    Sequence++;
-
-    if ((*Sequence == VT_ANSI_CUP_CURSOR_CHAR) ||
-        (*Sequence == VT_ANSI_HVP_CURSOR_CHAR))
-    {
-        Action = SacSetCursorPosition;
-        goto ProcessString;
-    }
-
-    if (*Sequence == VT_ANSI_SCROLL_CHAR)
-    {
-        Action = SacSetScrollRegion;
-        goto ProcessString;
-    }
-
+    /* Get the last "#" */
     if (!VTUTF8ChannelScanForNumber(Sequence, &Number3)) return 0;
     while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
 
+    /* And now the only remaining possibility is ESC[#;#;#;m */
     if (*Sequence == VT_ANSI_SET_ATTRIBUTE_CHAR)
     {
-        Action = 23;
+        /* Which sets both color and attributes in one command */
+        Action = SacSetColorsAndAttributes;
         goto ProcessString;
     }
 
+    /* No other sequences supported */
     return 0;
 
 ProcessString:
+    /* Unless we got here from the optimized path, calculate the length */
     if (!Result) Result = Sequence - String + 1;
 
+    /* Get the current cell buffer */
     Cursor = (PSAC_CURSOR_DATA)Channel->OBuffer;
     VTUTF8ChannelAssertCursor(Channel);
+
+    /* Handle all the supported SAC ANSI commands */
     switch (Action)
     {
         case SacCursorUp:
@@ -519,21 +425,26 @@ ProcessString:
             break;
 
         case SacEraseEndOfScreen:
+            ASSERT(FALSE); // todo
             break;
 
         case SacEraseStartOfScreen:
+            ASSERT(FALSE); // todo
             break;
 
         case SacEraseScreen:
+            ASSERT(FALSE); // todo
             break;
 
         case SacSetCursorPosition:
+            ASSERT(FALSE); // todo
             break;
 
         case SacSetScrollRegion:
+            ASSERT(FALSE); // todo
             break;
 
-        case 20:
+        case SacSetColors:
             Channel->CursorColor = Number;
             Channel->CursorBackColor = Number2;
             break;
@@ -546,7 +457,7 @@ ProcessString:
             Channel->CursorColor = Number;
             break;
 
-        case 23:
+        case SacSetColorsAndAttributes:
             Channel->CursorFlags = Number;
             Channel->CursorColor = Number2;
             Channel->CursorBackColor = Number3;
@@ -555,6 +466,7 @@ ProcessString:
             break;
     }
 
+    /* Return the length of the sequence */
     return Result;
 }
 
