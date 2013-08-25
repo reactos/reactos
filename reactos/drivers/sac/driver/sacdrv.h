@@ -176,6 +176,13 @@
 #define SAC_CHANNEL_FLAG_APPLICATION        0x20
 
 //
+// Cursor Flags
+//
+#define SAC_CURSOR_FLAG_BLINK               1
+#define SAC_CURSOR_FLAG_BOLD                2
+#define SAC_CURSOR_FLAG_INVERTED            4
+
+//
 // Forward definitions
 //
 struct _SAC_CHANNEL;
@@ -226,6 +233,8 @@ typedef enum _SAC_ANSI_COMMANDS
     SacEraseEndOfScreen,
     SacEraseStartOfScreen,
     SacEraseScreen,
+    SacSetCursorPosition,
+    SacSetScrollRegion,
     SacSetBackgroundColor = 21,
     SacSetFontColor
 } SAC_ANSI_COMMANDS;
@@ -272,9 +281,9 @@ typedef struct _SAC_CHANNEL_LOCK
 //
 typedef struct _SAC_CURSOR_DATA
 {
-    UCHAR CursorX;
-    UCHAR CursorY;
-    UCHAR CursorVisible;
+    UCHAR CursorBackColor;
+    UCHAR CursorColor;
+    UCHAR CursorFlags;
     WCHAR CursorValue;
 } SAC_CURSOR_DATA, *PSAC_CURSOR_DATA;
 C_ASSERT(sizeof(SAC_CURSOR_DATA) == 6);
@@ -403,9 +412,9 @@ typedef struct _SAC_CHANNEL
     LONG ChannelHasNewIBufferData;
     UCHAR CursorRow;
     UCHAR CursorCol;
-    UCHAR CursorY;
-    UCHAR CursorX;
-    UCHAR CursorVisible;
+    UCHAR CursorColor;
+    UCHAR CursorBackColor;
+    UCHAR CursorFlags;
     PCHAR OBuffer;
     ULONG OBufferIndex;
     ULONG OBufferFirstGoodIndex;

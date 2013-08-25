@@ -161,6 +161,9 @@ typedef enum _VT_ANSI_ATTRIBUTES
 
 #define VT_ANSI_SET_ATTRIBUTE_CHAR  L'm'
 #define VT_ANSI_SEPARATOR_CHAR      L';'
+#define VT_ANSI_HVP_CURSOR_CHAR     L'f'
+#define VT_ANSI_CUP_CURSOR_CHAR     L'H'
+#define VT_ANSI_SCROLL_CHAR         L'r'
 
 SAC_STATIC_ESCAPE_STRING SacStaticEscapeStrings [] =
 {
@@ -343,8 +346,8 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
     }
 
     if (*Sequence != VT_ANSI_SEPARATOR_CHAR) return 0;
-    Sequence++;
 
+    Sequence++;
     if (!VTUTF8ChannelScanForNumber(Sequence, &Number2)) return 0;
     while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
 
@@ -354,9 +357,9 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
         goto ProcessString;
     }
 
-    if (*Sequence == L'H')
+    if (*Sequence == VT_ANSI_CUP_CURSOR_CHAR)
     {
-        Action = 18;
+        Action = SacSetCursorPosition;
         goto ProcessString;
     }
 
@@ -364,15 +367,16 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
 
     Sequence++;
 
-    if ((*Sequence == L'H') || (*Sequence == L'f'))
+    if ((*Sequence == VT_ANSI_CUP_CURSOR_CHAR) ||
+        (*Sequence == VT_ANSI_HVP_CURSOR_CHAR))
     {
-        Action = 18;
+        Action = SacSetCursorPosition;
         goto ProcessString;
     }
 
-    if (*Sequence == L'r')
+    if (*Sequence == VT_ANSI_SCROLL_CHAR)
     {
-        Action = 19;
+        Action = SacSetScrollRegion;
         goto ProcessString;
     }
 
@@ -394,7 +398,7 @@ ProcessString:
     VTUTF8ChannelAssertCursor(Channel);
     switch (Action)
     {
-        case 0:
+        case SacCursorUp:
             if (Channel->CursorRow < Number)
             {
                 Channel->CursorRow = 0;
@@ -406,7 +410,7 @@ ProcessString:
             VTUTF8ChannelAssertCursor(Channel);
             break;
 
-        case 1:
+        case SacCursorDown:
             if (Channel->CursorRow >= SAC_VTUTF8_ROW_HEIGHT)
             {
                 Channel->CursorRow = SAC_VTUTF8_ROW_HEIGHT;
@@ -418,7 +422,7 @@ ProcessString:
             VTUTF8ChannelAssertCursor(Channel);
             break;
 
-        case 3:
+        case SacCursorLeft:
             if (Channel->CursorCol < Number)
             {
                 Channel->CursorCol = 0;
@@ -430,7 +434,7 @@ ProcessString:
             VTUTF8ChannelAssertCursor(Channel);
             break;
 
-        case 2:
+        case SacCursorRight:
             if (Channel->CursorCol >= SAC_VTUTF8_COL_WIDTH)
             {
                 Channel->CursorCol = SAC_VTUTF8_COL_WIDTH;
@@ -442,110 +446,110 @@ ProcessString:
             VTUTF8ChannelAssertCursor(Channel);
             break;
 
-        case 4:
-            Channel->CursorVisible = 0;
-            Channel->CursorX = 40;
-            Channel->CursorY = 37;
+        case SacFontNormal:
+            Channel->CursorFlags = 0;
+            Channel->CursorBackColor = SetBackColorBlack;
+            Channel->CursorColor = SetColorWhite;
             break;
 
-        case 5:
-            Channel->CursorVisible |= 1;
+        case SacFontBlink:
+            Channel->CursorFlags |= SAC_CURSOR_FLAG_BLINK;
             break;
 
-        case 6:
-            Channel->CursorVisible &= ~1;
+        case SacFontBlinkOff:
+            Channel->CursorFlags &= ~SAC_CURSOR_FLAG_BLINK;
             break;
 
-        case 7:
-            Channel->CursorVisible |= 2;
+        case SacFontBold:
+            Channel->CursorFlags |= SAC_CURSOR_FLAG_BOLD;
             break;
 
-        case 8:
-            Channel->CursorVisible &= ~2;
+        case SacFontBoldOff:
+            Channel->CursorFlags &= ~SAC_CURSOR_FLAG_BOLD;
             break;
 
-        case 9:
-            Channel->CursorVisible |= 4;
+        case SacFontInverse:
+            Channel->CursorFlags |= SAC_CURSOR_FLAG_INVERTED;
             break;
 
-        case 10:
-            Channel->CursorVisible &= ~4;
+        case SacFontInverseOff:
+            Channel->CursorFlags &= ~SAC_CURSOR_FLAG_INVERTED;
             break;
 
-        case 12:
+        case SacEraseEndOfLine:
             for (i = Channel->CursorCol; i < SAC_VTUTF8_COL_WIDTH; i++)
             {
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorVisible = Channel->CursorVisible;
+                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorFlags = Channel->CursorFlags;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorX = Channel->CursorY;
+                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor = Channel->CursorColor;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorY = Channel->CursorX;
+                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorColor = Channel->CursorBackColor;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
                        (i * SAC_VTUTF8_ROW_HEIGHT)].CursorValue = ' ';
             }
             break;
 
-        case 13:
+        case SacEraseStartOfLine:
             for (i = 0; i < (Channel->CursorCol + 1); i++)
             {
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorVisible = Channel->CursorVisible;
+                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorFlags = Channel->CursorFlags;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorX = Channel->CursorY;
+                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor = Channel->CursorColor;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorY = Channel->CursorX;
+                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorColor = Channel->CursorBackColor;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
                        (i * SAC_VTUTF8_ROW_HEIGHT)].CursorValue = ' ';
             }
             break;
 
-        case 14:
+        case SacEraseLine:
             for (i = 0; i < SAC_VTUTF8_COL_WIDTH; i++)
             {
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorVisible = Channel->CursorVisible;
+                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorFlags = Channel->CursorFlags;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorX = Channel->CursorY;
+                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor = Channel->CursorColor;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorY = Channel->CursorX;
+                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorColor = Channel->CursorBackColor;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
                        (i * SAC_VTUTF8_ROW_HEIGHT)].CursorValue = ' ';
             }
             break;
 
-        case 15:
+        case SacEraseEndOfScreen:
             break;
 
-        case 16:
+        case SacEraseStartOfScreen:
             break;
 
-        case 17:
+        case SacEraseScreen:
             break;
 
-        case 18:
+        case SacSetCursorPosition:
             break;
 
-        case 19:
+        case SacSetScrollRegion:
             break;
 
         case 20:
-            Channel->CursorY = Number;
-            Channel->CursorX = Number2;
+            Channel->CursorColor = Number;
+            Channel->CursorBackColor = Number2;
             break;
 
-        case 21:
-            Channel->CursorX = Number;
+        case SacSetBackgroundColor:
+            Channel->CursorBackColor = Number;
             break;
 
-        case 22:
-            Channel->CursorY = Number;
+        case SacSetFontColor:
+            Channel->CursorColor = Number;
             break;
 
         case 23:
-            Channel->CursorVisible = Number;
-            Channel->CursorY = Number2;
-            Channel->CursorX = Number3;
+            Channel->CursorFlags = Number;
+            Channel->CursorColor = Number2;
+            Channel->CursorBackColor = Number3;
             break;
         default:
             break;
@@ -563,13 +567,13 @@ VTUTF8ChannelOInit(IN PSAC_CHANNEL Channel)
     CHECK_PARAMETER(Channel);
 
     /* Set the current channel cursor parameters */
-    Channel->CursorVisible = 0;
-    Channel->CursorX = 40;
-    Channel->CursorY = 37;
+    Channel->CursorFlags = 0;
+    Channel->CursorBackColor = SetBackColorBlack;
+    Channel->CursorColor = SetColorWhite;
 
     /* Loop the output buffer height by width */
     Cursor = (PSAC_CURSOR_DATA)Channel->OBuffer;
-    y = SAC_VTUTF8_COL_HEIGHT - 1;
+    y = SAC_VTUTF8_ROW_HEIGHT;
     do
     {
         x = SAC_VTUTF8_COL_WIDTH;
@@ -577,8 +581,8 @@ VTUTF8ChannelOInit(IN PSAC_CHANNEL Channel)
         {
             /* For every character, set the defaults */
             Cursor->CursorValue = ' ';
-            Cursor->CursorX = 40;
-            Cursor->CursorY = 38;
+            Cursor->CursorBackColor = SetBackColorBlack;
+            Cursor->CursorColor = SetColorWhite;
 
             /* Move to the next character */
             Cursor++;
