@@ -17,40 +17,165 @@ WCHAR IncomingUnicodeValue;
 
 /* FUNCTIONS *****************************************************************/
 
-typedef struct _SAC_CURSOR_DATA
+//
+// Source: http://en.wikipedia.org/wiki/ANSI_escape_code
+//
+typedef enum _VT_ANSI_ATTRIBUTES
 {
-    UCHAR CursorX;
-    UCHAR CursorY;
-    UCHAR CursorVisible;
-    WCHAR CursorValue;
-} SAC_CURSOR_DATA, *PSAC_CURSOR_DATA;
+    //
+    // Attribute modifiers (mostly supported)
+    //
+    Normal,
+    Bold,
+    Faint,
+    Italic,
+    Underline,
+    SlowBlink,
+    FastBlink,
+    Inverse,
+    Conceal,
+    Strikethrough,
 
-C_ASSERT(sizeof(SAC_CURSOR_DATA) == 6);
+    //
+    // Font selectors (not supported)
+    //
+    PrimaryFont,
+    AlternateFont1,
+    AlternateFont2,
+    AlternateFont3,
+    Alternatefont4,
+    AlteronateFont5,
+    AlteronateFont6,
+    AlternateFont7,
+    AlternatEfont8,
+    Alternatefont9,
 
-typedef struct _SAC_STATIC_ESCAPE_STRING
-{
-    WCHAR Sequence[10];
-    ULONG Size;
-    ULONG Action;
-} SAC_STATIC_ESCAPE_STRING, *PSAC_STATIC_ESCAPE_STRING;
+    //
+    // Additional attributes (not supported)
+    //
+    Fraktur,
+    DoubleUnderline,
+
+    //
+    // Attribute Un-modifiers (mostly supported)
+    //
+    BoldOff,
+    ItalicOff,
+    UnderlineOff,
+    BlinkOff,
+    Reserved,
+    InverseOff,
+    ConcealOff,
+    StrikethroughOff,
+
+    //
+    // Standard Text Color
+    //
+    SetColorStart,
+    SetColorBlack = SetColorStart,
+    SetColorRed,
+    SetColorGreen,
+    SetColorYellow,
+    SetColorBlue,
+    SetcolorMAgent,
+    SetColorCyan,
+    SetColorWhite,
+    SetColorMax = SetColorWhite,
+
+    //
+    // Extended Text Color (not supported)
+    //
+    SetColor256,
+    SeTextColorDefault,
+
+    //
+    // Standard Background Color
+    //
+    SetBackColorStart,
+    SetBackColorBlack = SetBackColorStart,
+    SetBackColorRed,
+    SetBackColorGreen,
+    SetBackColorYellow,
+    SetBackColorBlue,
+    SetBackcolorMAgent,
+    SetBackColorCyan,
+    SetBackColorWhite,
+    SetBackColorMax = SetBackColorWhite,
+
+    //
+    // Extended Background Color (not supported)
+    //
+    SetBackColor256,
+    SetBackColorDefault,
+
+    //
+    // Extra Attributes (not supported)
+    //
+    Reserved1,
+    Framed,
+    Encircled,
+    Overlined,
+    FramedOff,
+    OverlinedOff,
+    Reserved2,
+    Reserved3,
+    Reserved4,
+    Reserved5
+
+    //
+    // Ideograms (not supported)
+    //
+} VT_ANSI_ATTRIBUTES;
+
+//
+// The following site is a good reference on VT100/ANSI escape codes
+// http://www.termsys.demon.co.uk/vtansi.htm
+//
+#define VT_ANSI_ESCAPE              L'\x1B'
+#define VT_ANSI_COMMAND             L'['
+
+#define VT_ANSI_CURSOR_UP_CHAR      L'A'
+#define VT_ANSI_CURSOR_UP           L"[A"
+
+#define VT_ANSI_CURSOR_DOWN_CHAR    L'B'
+#define VT_ANSI_CURSOR_DOWN         L"[B"
+
+#define VT_ANSI_CURSOR_RIGHT_CHAR   L'C'
+#define VT_ANSI_CURSOR_RIGHT        L"[C"
+
+#define VT_ANSI_CURSOR_LEFT_CHAR    L'D'
+#define VT_ANSI_CURSOR_LEFT         L"[D"
+
+#define VT_ANSI_ERASE_LINE_CHAR     L'K'
+#define VT_ANSI_ERASE_END_LINE      L"[K"
+#define VT_ANSI_ERASE_START_LINE    L"[1K"
+#define VT_ANSI_ERASE_ENTIRE_LINE   L"[2K"
+
+#define VT_ANSI_ERASE_SCREEN_CHAR   L'J'
+#define VT_ANSI_ERASE_DOWN_SCREEN   L"[J"
+#define VT_ANSI_ERASE_UP_SCREEN     L"[1J"
+#define VT_ANSI_ERASE_ENTIRE_SCREEN L"[2J"
+
+#define VT_ANSI_BACKTAB_CHAR        L'Z'
+#define VT_220_BACKTAB              L"[0Z"
+
+#define VT_ANSI_SET_ATTRIBUTE_CHAR  L'm'
+#define VT_ANSI_SEPARATOR_CHAR      L';'
 
 SAC_STATIC_ESCAPE_STRING SacStaticEscapeStrings [] =
 {
-    { L"[A", 2, 0 },
-    { L"[B", 2, 1 },
-    { L"[C", 2, 2 },
-    { L"[D", 2, 3 },
-    { L"[0Z", 3, 11 },
-    { L"[K", 2, 12 },
-    { L"[1K", 3, 13 },
-    { L"[2K", 3, 14 },
-    { L"[J", 2, 15 },
-    { L"[1J", 3, 16 },
-    { L"[2J", 3, 17 },
+    { VT_ANSI_CURSOR_UP, 2, SacCursorUp },
+    { VT_ANSI_CURSOR_DOWN, 2, SacCursorDown },
+    { VT_ANSI_CURSOR_RIGHT, 2, SacCursorRight },
+    { VT_ANSI_CURSOR_LEFT, 2, SacCursorLeft },
+    { VT_220_BACKTAB, 3, SacBackTab },
+    { VT_ANSI_ERASE_END_LINE, 2, SacEraseEndOfLine },
+    { VT_ANSI_ERASE_START_LINE, 3, SacEraseStartOfLine },
+    { VT_ANSI_ERASE_ENTIRE_LINE, 3, SacEraseLine },
+    { VT_ANSI_ERASE_DOWN_SCREEN, 2, SacEraseEndOfScreen },
+    { VT_ANSI_ERASE_UP_SCREEN, 3, SacEraseStartOfScreen },
+    { VT_ANSI_ERASE_ENTIRE_SCREEN, 3, SacEraseScreen },
 };
-
-#define SAC_VTUTF8_OBUFFER_SIZE 0x2D00
-#define SAC_VTUTF8_IBUFFER_SIZE 0x2000
 
 BOOLEAN
 NTAPI
@@ -105,6 +230,9 @@ VTUTF8ChannelAssertCursor(IN PSAC_CHANNEL Channel)
     ASSERT(Channel->CursorCol < SAC_VTUTF8_COL_WIDTH);
 }
 
+//
+// Not a
+//
 ULONG
 NTAPI
 VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
@@ -113,7 +241,7 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
     ULONG Number, Number2, Number3, i, Action, Result;
     PWCHAR Sequence;
     PSAC_CURSOR_DATA Cursor;
-    ASSERT(String[0] == L'\x1B');
+    ASSERT(String[0] == VT_ANSI_ESCAPE);
 
     for (i = 0; i < RTL_NUMBER_OF(SacStaticEscapeStrings); i++)
     {
@@ -128,133 +256,140 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
         }
     }
 
-    if (String[1] != L'[') return 0;
+    if (String[1] != VT_ANSI_COMMAND) return 0;
 
+    Result = 0;
     Sequence = String + 2;
     switch (*Sequence)
     {
-        case L'A':
-            Action = 0;
-            break;
-        case L'B':
-            Action = 1;
-            break;
-        case L'C':
-            Action = 3; //bug
-            break;
-        case L'D':
-            Action = 2; //bug
-            break;
-        case L'K':
-            Action = 12;
-            break;
+        case VT_ANSI_CURSOR_UP_CHAR:
+            Action = SacCursorUp;
+            goto ProcessString;
+
+        case VT_ANSI_CURSOR_DOWN_CHAR:
+            Action = SacCursorDown;
+            goto ProcessString;
+
+        case VT_ANSI_CURSOR_RIGHT_CHAR:
+            Action = SacCursorLeft; //bug
+            goto ProcessString;
+
+        case VT_ANSI_CURSOR_LEFT_CHAR:
+            Action = SacCursorRight; //bug
+            goto ProcessString;
+
+        case VT_ANSI_ERASE_LINE_CHAR:
+            Action = SacEraseEndOfLine;
+            goto ProcessString;
+
         default:
-            if (!VTUTF8ChannelScanForNumber(Sequence, &Number)) return 0;
+            break;
+    }
 
-            while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
+    if (!VTUTF8ChannelScanForNumber(Sequence, &Number)) return 0;
+    while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
 
-            if (*Sequence == 'm')
-            {
-                switch (Number)
+    if (*Sequence == VT_ANSI_SET_ATTRIBUTE_CHAR)
+    {
+        switch (Number)
+        {
+            case Normal:
+                Action = SacFontNormal;
+                break;
+
+            case Bold:
+                Action = SacFontBold;
+                break;
+
+            case SlowBlink:
+                Action = SacFontBlink;
+                break;
+
+            case Inverse:
+                Action = SacFontInverse;
+                break;
+
+            case BoldOff:
+                Action = SacFontBoldOff;
+                break;
+
+            case BlinkOff:
+                Action = SacFontBlinkOff;
+                break;
+
+            case InverseOff:
+                Action = SacFontInverseOff;
+                break;
+
+            default:
+                if ((Number < SetBackColorStart) || (Number > SetBackColorMax))
                 {
-                    case 0:
-                        Action = 4;
-                        break;
-                    case 1:
-                        Action = 7;
-                        break;
+                    if ((Number < SetColorStart) || (Number > SetColorMax))
+                    {
+                        ASSERT(FALSE);
+                        return 0;
+                    }
 
-                    case 5:
-                        Action = 5;
-                        break;
-
-                    case 7:
-                        Action = 9;
-                        break;
-
-                    case 22:
-                        Action = 8;
-                        break;
-
-                    case 25:
-                        Action = 6;
-                        break;
-
-                    case 27:
-                        Action = 10;
-                        break;
-
-                    default:
-                        if ((Number < 40) || (Number > 47))
-                        {
-                            if ((Number < 30) || (Number > 39))
-                            {
-                                ASSERT(FALSE);
-                                return 0;
-                            }
-
-                            Action = 22;
-                        }
-                        else
-                        {
-                            Action = 21;
-                        }
-                }
-            }
-            else
-            {
-                if (*Sequence != L';') return 0;
-                Sequence++;
-
-                if (!VTUTF8ChannelScanForNumber(Sequence, &Number2)) return 0;
-
-                while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
-
-                if (*Sequence == L'm')
-                {
-                    Action = 20;
+                    Action = SacSetFontColor;
                 }
                 else
                 {
-                    if (*Sequence == L'H')
-                    {
-                        Action = 18;
-                    }
-
-                    if (*Sequence != L';') return 0;
-
-                    Sequence++;
-
-                    if ((*Sequence == L'H') || (*Sequence == L'f'))
-                    {
-                        Action = 18;
-                    }
-                    else if (*Sequence == L'r')
-                    {
-                        Action = 19;
-                    }
-                    else
-                    {
-                        if (!VTUTF8ChannelScanForNumber(Sequence, &Number3)) return 0;
-
-                        while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
-
-                        if (*Sequence == L'm')
-                        {
-                            Action = 23;
-                        }
-                        else
-                        {
-                            return 0;
-                        }
-                    }
+                    Action = SacSetBackgroundColor;
                 }
-            }
+                break;
+        }
+
+        goto ProcessString;
     }
 
-    Result = Sequence - String + 1;
+    if (*Sequence != VT_ANSI_SEPARATOR_CHAR) return 0;
+    Sequence++;
+
+    if (!VTUTF8ChannelScanForNumber(Sequence, &Number2)) return 0;
+    while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
+
+    if (*Sequence == VT_ANSI_SET_ATTRIBUTE_CHAR)
+    {
+        Action = 20;
+        goto ProcessString;
+    }
+
+    if (*Sequence == L'H')
+    {
+        Action = 18;
+        goto ProcessString;
+    }
+
+    if (*Sequence != VT_ANSI_SEPARATOR_CHAR) return 0;
+
+    Sequence++;
+
+    if ((*Sequence == L'H') || (*Sequence == L'f'))
+    {
+        Action = 18;
+        goto ProcessString;
+    }
+
+    if (*Sequence == L'r')
+    {
+        Action = 19;
+        goto ProcessString;
+    }
+
+    if (!VTUTF8ChannelScanForNumber(Sequence, &Number3)) return 0;
+    while ((*Sequence >= L'0') && (*Sequence <= L'9')) Sequence++;
+
+    if (*Sequence == VT_ANSI_SET_ATTRIBUTE_CHAR)
+    {
+        Action = 23;
+        goto ProcessString;
+    }
+
+    return 0;
 
 ProcessString:
+    if (!Result) Result = Sequence - String + 1;
+
     Cursor = (PSAC_CURSOR_DATA)Channel->OBuffer;
     VTUTF8ChannelAssertCursor(Channel);
     switch (Action)

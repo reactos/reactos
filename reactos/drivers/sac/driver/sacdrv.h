@@ -160,6 +160,10 @@
 #define SAC_VTUTF8_COL_HEIGHT               25
 #define SAC_VTUTF8_ROW_HEIGHT               24
 #define MAX_UTF8_ENCODE_BLOCK_LENGTH        (Utf8ConversionBufferSize / 3 - 1)
+#define SAC_VTUTF8_OBUFFER_SIZE             0x2D00
+#define SAC_VTUTF8_IBUFFER_SIZE             0x2000
+#define SAC_RAW_OBUFFER_SIZE                0x2000
+#define SAC_RAW_IBUFFER_SIZE                0x2000
 
 //
 // Channel flags
@@ -200,6 +204,33 @@ typedef struct _SAC_MESSAGE_ENTRY
 } SAC_MESSAGE_ENTRY, *PSAC_MESSAGE_ENTRY;
 
 //
+// These are the VT-100/220/ANSI Escape Codes supported by SAC
+//
+typedef enum _SAC_ANSI_COMMANDS
+{
+    SacCursorUp,
+    SacCursorDown,
+    SacCursorRight,
+    SacCursorLeft,
+    SacFontNormal,
+    SacFontBlink,
+    SacFontBlinkOff,
+    SacFontBold,
+    SacFontBoldOff,
+    SacFontInverse,
+    SacFontInverseOff,
+    SacBackTab,
+    SacEraseEndOfLine,
+    SacEraseStartOfLine,
+    SacEraseLine,
+    SacEraseEndOfScreen,
+    SacEraseStartOfScreen,
+    SacEraseScreen,
+    SacSetBackgroundColor = 21,
+    SacSetFontColor
+} SAC_ANSI_COMMANDS;
+
+//
 // SAC supports 3 different channel output types
 //
 typedef enum _SAC_CHANNEL_TYPE
@@ -235,6 +266,28 @@ typedef struct _SAC_CHANNEL_LOCK
     LONG RefCount;
     KSEMAPHORE Lock;
 } SAC_CHANNEL_LOCK, *PSAC_CHANNEL_LOCK;
+
+//
+// Structure of the cell-buffer when in VT-UTF8 Mode
+//
+typedef struct _SAC_CURSOR_DATA
+{
+    UCHAR CursorX;
+    UCHAR CursorY;
+    UCHAR CursorVisible;
+    WCHAR CursorValue;
+} SAC_CURSOR_DATA, *PSAC_CURSOR_DATA;
+C_ASSERT(sizeof(SAC_CURSOR_DATA) == 6);
+
+//
+// Small optimization to easily recognize the most common VT-100/ANSI codes
+//
+typedef struct _SAC_STATIC_ESCAPE_STRING
+{
+    WCHAR Sequence[10];
+    ULONG Size;
+    ULONG Action;
+} SAC_STATIC_ESCAPE_STRING, *PSAC_STATIC_ESCAPE_STRING;
 
 //
 // Channel callbacks

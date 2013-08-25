@@ -14,9 +14,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-#define SAC_RAW_OBUFFER_SIZE 0x2000
-#define SAC_RAW_IBUFFER_SIZE 0x2000
-
 NTSTATUS
 NTAPI
 RawChannelCreate(IN PSAC_CHANNEL Channel)
