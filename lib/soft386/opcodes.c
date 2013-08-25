@@ -168,14 +168,14 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0x8D NOT SUPPORTED
     NULL, // TODO: OPCODE 0x8E NOT SUPPORTED
     NULL, // TODO: OPCODE 0x8F NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x90 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x91 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x92 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x93 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x94 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x95 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x96 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x97 NOT SUPPORTED
+    Soft386OpcodeNop,
+    Soft386OpcodeExchangeEax,
+    Soft386OpcodeExchangeEax,
+    Soft386OpcodeExchangeEax,
+    Soft386OpcodeExchangeEax,
+    Soft386OpcodeExchangeEax,
+    Soft386OpcodeExchangeEax,
+    Soft386OpcodeExchangeEax,
     NULL, // TODO: OPCODE 0x98 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x99 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x9A NOT SUPPORTED
@@ -584,5 +584,67 @@ Soft386OpcodePopReg(PSOFT386_STATE State, UCHAR Opcode)
     else State->GeneralRegs[Opcode & 0x07].LowWord = Value;
 
     /* Return success */
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeNop(PSOFT386_STATE State, UCHAR Opcode)
+{
+    if (State->PrefixFlags & ~(SOFT386_PREFIX_OPSIZE | SOFT386_PREFIX_REP))
+    {
+        /* Allowed prefixes are REP and OPSIZE */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_REP)
+    {
+        // TODO: Handle PAUSE instruction.
+    }
+
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeExchangeEax(PSOFT386_STATE State, UCHAR Opcode)
+{
+    INT Reg = Opcode & 0x07;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF8) == 0x90);
+
+    /* Exchange the values */
+    if (Size)
+    {
+        ULONG Value;
+
+        Value = State->GeneralRegs[Reg].Long;
+        State->GeneralRegs[Reg].Long = State->GeneralRegs[SOFT386_REG_EAX].Long;
+        State->GeneralRegs[SOFT386_REG_EAX].Long = Value;
+    }
+    else
+    {
+        USHORT Value;
+
+        Value = State->GeneralRegs[Reg].LowWord;
+        State->GeneralRegs[Reg].LowWord = State->GeneralRegs[SOFT386_REG_EAX].LowWord;
+        State->GeneralRegs[SOFT386_REG_EAX].LowWord = Value;
+    }
+
     return TRUE;
 }

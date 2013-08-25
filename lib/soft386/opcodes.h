@@ -63,4 +63,20 @@ Soft386OpcodePopReg
     UCHAR Opcode
 );
 
+BOOLEAN
+FASTCALL
+Soft386OpcodeNop
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeExchangeEax
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
 #endif // _OPCODES_H_
