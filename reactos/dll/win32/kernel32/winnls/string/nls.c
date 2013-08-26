@@ -1465,6 +1465,7 @@ MultiByteToWideChar(UINT CodePage,
 {
     /* Check the parameters. */
     if (MultiByteString == NULL ||
+        MultiByteCount == 0 ||
         (WideCharString == NULL && WideCharCount > 0) ||
         (PVOID)MultiByteString == (PVOID)WideCharString)
     {
@@ -1899,6 +1900,7 @@ WideCharToMultiByte(UINT CodePage,
 {
     /* Check the parameters. */
     if (WideCharString == NULL ||
+        WideCharCount == 0 ||
         (MultiByteString == NULL && MultiByteCount > 0) ||
         (PVOID)WideCharString == (PVOID)MultiByteString ||
         MultiByteCount < 0)
@@ -1916,6 +1918,11 @@ WideCharToMultiByte(UINT CodePage,
     switch (CodePage)
     {
         case CP_UTF8:
+            if (DefaultChar != NULL || UsedDefaultChar != NULL)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
             return IntWideCharToMultiByteUTF8(CodePage,
                                               Flags,
                                               WideCharString,
