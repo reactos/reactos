@@ -94,7 +94,8 @@ MyAllocatePool(IN SIZE_T PoolSize,
                IN ULONG Line)
 {
     PVOID p;
-    p = ExAllocatePoolWithTag(NonPagedPool, PoolSize, Tag);
+    p = ExAllocatePoolWithTag(NonPagedPool, PoolSize, 'HACK');
+    RtlZeroMemory(p, PoolSize);
     SAC_DBG(SAC_DBG_MM, "Returning block 0x%X.\n", p);
     return p;
 #if 0
@@ -342,7 +343,7 @@ MyFreePool(IN PVOID *Block)
     /* Release the lock, delete the address, and return */
     KeReleaseSpinLock(&MemoryLock, OldIrql);
 #endif
-    ExFreePool(*Block);
+    SAC_DBG(SAC_DBG_MM, "exiting: 0x%p.\n", *Block);
+    ExFreePoolWithTag(*Block, 'HACK');
     *Block = NULL;
-    SAC_DBG(SAC_DBG_MM, "exiting.\n");
 }

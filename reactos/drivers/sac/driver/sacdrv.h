@@ -311,6 +311,14 @@ typedef struct _SAC_CURSOR_DATA
 C_ASSERT(sizeof(SAC_CURSOR_DATA) == 6);
 
 //
+// Screen buffer when in VT-UTF8 Mode
+//
+typedef struct _SAC_VTUTF8_SCREEN
+{
+    SAC_CURSOR_DATA Cell[SAC_VTUTF8_ROW_HEIGHT][SAC_VTUTF8_COL_WIDTH];
+} SAC_VTUTF8_SCREEN, *PSAC_VTUTF8_SCREEN;
+
+//
 // Small optimization to easily recognize the most common VT-100/ANSI codes
 //
 typedef struct _SAC_STATIC_ESCAPE_STRING

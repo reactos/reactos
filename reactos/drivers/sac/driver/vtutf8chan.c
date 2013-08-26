@@ -71,7 +71,7 @@ VTUTF8ChannelAnsiDispatch(IN PSAC_CHANNEL Channel,
                           IN ULONG Length)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCHAR LocalBuffer = NULL;
+    PCHAR LocalBuffer = NULL, Tmp;
     INT l;
     CHECK_PARAMETER1(Channel);
 
@@ -80,17 +80,17 @@ VTUTF8ChannelAnsiDispatch(IN PSAC_CHANNEL Channel,
     {
         /* Send the [2J (Clear Screen and Reset Cursor) */
         case SacAnsiClearScreen:
-            LocalBuffer = "\x1B[2J";
+            Tmp = "\x1B[2J";
             break;
 
         /* Send the [0J (Clear From Position Till End Of Screen) */
         case SacAnsiClearEndOfScreen:
-            LocalBuffer = "\x1B[0J";
+            Tmp = "\x1B[0J";
             break;
 
         /* Send the [0K (Clear from Position Till End Of Line) */
         case SacAnsiClearEndOfLine:
-            LocalBuffer = "\x1B[0K";
+            Tmp = "\x1B[0K";
             break;
 
         /* Send a combination of two [#m attribute changes */
@@ -111,6 +111,7 @@ VTUTF8ChannelAnsiDispatch(IN PSAC_CHANNEL Channel,
             l = sprintf(LocalBuffer, "\x1B[%dm\x1B[%dm", Data[1], Data[0]);
             ASSERT((l + 1)*sizeof(UCHAR) < SAC_VTUTF8_COL_WIDTH);
             ASSERT(LocalBuffer);
+            Tmp = LocalBuffer;
             break;
 
         /* Send the [#;#H (Cursor Positio) sequence */
@@ -131,41 +132,42 @@ VTUTF8ChannelAnsiDispatch(IN PSAC_CHANNEL Channel,
             l = sprintf(LocalBuffer, "\x1B[%d;%dH", Data[1] + 1, Data[0] + 1);
             ASSERT((l + 1)*sizeof(UCHAR) < SAC_VTUTF8_COL_WIDTH);
             ASSERT(LocalBuffer);
+            Tmp = LocalBuffer;
             break;
 
         /* Send the [0m sequence (Set Attribute 0) */
         case SacAnsiClearAttributes:
-            LocalBuffer = "\x1B[0m";
+            Tmp = "\x1B[0m";
             break;
 
         /* Send the [7m sequence (Set Attribute 7) */
         case SacAnsiSetInverseAttribute:
-            LocalBuffer = "\x1B[7m";
+            Tmp = "\x1B[7m";
             break;
 
         /* Send the [27m sequence (Set Attribute 27) */
         case SacAnsiClearInverseAttribute:
-            LocalBuffer = "\x1B[27m";
+            Tmp = "\x1B[27m";
             break;
 
         /* Send the [5m sequence (Set Attribute 5) */
         case SacAnsiSetBlinkAttribute:
-            LocalBuffer = "\x1B[5m";
+            Tmp = "\x1B[5m";
             break;
 
         /* Send the [25m sequence (Set Attribute 25) */
         case SacAnsiClearBlinkAttribute:
-            LocalBuffer = "\x1B[25m";
+            Tmp = "\x1B[25m";
             break;
 
         /* Send the [1m sequence (Set Attribute 1) */
         case SacAnsiSetBoldAttribute:
-            LocalBuffer = "\x1B[1m";
+            Tmp = "\x1B[1m";
             break;
 
         /* Send the [22m sequence (Set Attribute 22) */
         case SacAnsiClearBoldAttribute:
-            LocalBuffer = "\x1B[22m";
+            Tmp = "\x1B[22m";
             break;
 
         /* We don't recognize it */
@@ -178,7 +180,7 @@ VTUTF8ChannelAnsiDispatch(IN PSAC_CHANNEL Channel,
     if (NT_SUCCESS(Status))
     {
         /* Go write out the sequence */
-        Status = ConMgrWriteData(Channel, LocalBuffer, strlen(LocalBuffer));
+        Status = ConMgrWriteData(Channel, Tmp, strlen(Tmp));
         if (NT_SUCCESS(Status))
         {
             /* Now flush it */
@@ -242,7 +244,7 @@ VTUTF8ChannelConsumeEscapeSequence(IN PSAC_CHANNEL Channel,
 {
     ULONG Number, Number2, Number3, i, Action, Result;
     PWCHAR Sequence;
-    PSAC_CURSOR_DATA Cursor;
+    PSAC_VTUTF8_SCREEN Cursor;
     ASSERT(String[0] == VT_ANSI_ESCAPE);
 
     /* Microsoft's driver does this after the O(n) check below. Be smarter. */
@@ -439,7 +441,7 @@ ProcessString:
     if (!Result) Result = Sequence - String + 1;
 
     /* Get the current cell buffer */
-    Cursor = (PSAC_CURSOR_DATA)Channel->OBuffer;
+    Cursor = (PSAC_VTUTF8_SCREEN)Channel->OBuffer;
     VTUTF8ChannelAssertCursor(Channel);
 
     /* Handle all the supported SAC ANSI commands */
@@ -555,14 +557,10 @@ ProcessString:
             for (i = Channel->CursorCol; i < SAC_VTUTF8_COL_WIDTH; i++)
             {
                 /* Replace everything after the current position with blanks */
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorFlags = Channel->CursorFlags;
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor = Channel->CursorColor;
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorColor = Channel->CursorBackColor;
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorValue = ' ';
+                Cursor->Cell[Channel->CursorRow][i].CursorFlags = Channel->CursorFlags;
+                Cursor->Cell[Channel->CursorRow][i].CursorBackColor = Channel->CursorColor;
+                Cursor->Cell[Channel->CursorRow][i].CursorColor = Channel->CursorBackColor;
+                Cursor->Cell[Channel->CursorRow][i].CursorValue = ' ';
             }
             break;
 
@@ -571,14 +569,10 @@ ProcessString:
             for (i = 0; i < (Channel->CursorCol + 1); i++)
             {
                 /* Replace everything after the current position with blanks */
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorFlags = Channel->CursorFlags;
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor = Channel->CursorColor;
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorColor = Channel->CursorBackColor;
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorValue = ' ';
+                Cursor->Cell[Channel->CursorRow][i].CursorFlags = Channel->CursorFlags;
+                Cursor->Cell[Channel->CursorRow][i].CursorBackColor = Channel->CursorColor;
+                Cursor->Cell[Channel->CursorRow][i].CursorColor = Channel->CursorBackColor;
+                Cursor->Cell[Channel->CursorRow][i].CursorValue = ' ';
             }
             break;
 
@@ -587,14 +581,10 @@ ProcessString:
             for (i = 0; i < SAC_VTUTF8_COL_WIDTH; i++)
             {
                 /* Replace them all with blanks */
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorFlags = Channel->CursorFlags;
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor = Channel->CursorColor;
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorColor = Channel->CursorBackColor;
-                Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
-                       (i * SAC_VTUTF8_ROW_HEIGHT)].CursorValue = ' ';
+                Cursor->Cell[Channel->CursorRow][i].CursorFlags = Channel->CursorFlags;
+                Cursor->Cell[Channel->CursorRow][i].CursorBackColor = Channel->CursorColor;
+                Cursor->Cell[Channel->CursorRow][i].CursorColor = Channel->CursorBackColor;
+                Cursor->Cell[Channel->CursorRow][i].CursorValue = ' ';
             }
             break;
 
@@ -738,7 +728,7 @@ NTAPI
 VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
 {
     NTSTATUS Status;
-    PSAC_CURSOR_DATA Cursor;
+    PSAC_VTUTF8_SCREEN Cursor;
     INT Color[2], Position[2];
     ULONG Utf8ProcessedCount, Utf8Count, R, C, ForeColor, BackColor, Attribute;
     PWCHAR TmpBuffer;
@@ -746,7 +736,7 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
     CHECK_PARAMETER(Channel);
 
     /* Set the cell buffer position */
-    Cursor = (PSAC_CURSOR_DATA)Channel->OBuffer;
+    Cursor = (PSAC_VTUTF8_SCREEN)Channel->OBuffer;
 
     /* Allocate a temporary buffer */
     TmpBuffer = SacAllocatePool(40, GLOBAL_BLOCK_TAG);
@@ -802,10 +792,8 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
         for (C = 0; C < SAC_VTUTF8_COL_WIDTH; C++)
         {
             /* Check if there's been a change in colors */
-            if ((Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
-                        (C * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor != BackColor) ||
-                (Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
-                        (C * SAC_VTUTF8_ROW_HEIGHT)].CursorColor != ForeColor))
+            if ((Cursor->Cell[R][C].CursorBackColor != BackColor) ||
+                (Cursor->Cell[R][C].CursorColor != ForeColor))
             {
                 /* New colors are being drawn -- are we also on a new row now? */
                 if (Overflow)
@@ -822,10 +810,8 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
                 }
 
                 /* Cache the new colors */
-                ForeColor = Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
-                                   (C * SAC_VTUTF8_ROW_HEIGHT)].CursorColor;
-                BackColor = Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
-                                   (C * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor;
+                ForeColor = Cursor->Cell[R][C].CursorColor;
+                BackColor = Cursor->Cell[R][C].CursorBackColor;
 
                 /* Set them on the screen */
                 Color[1] = BackColor;
@@ -837,8 +823,8 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
                 if (!NT_SUCCESS(Status)) goto Quickie;
             }
 
-            /* Check if there's been a chance in attributes */
-            if (Cursor->CursorFlags != Attribute)
+            /* Check if there's been a change in attributes */
+            if (Cursor->Cell[R][C].CursorFlags != Attribute)
             {
                 /* Yep! Are we also on a new row now? */
                 if (Overflow)
@@ -855,7 +841,7 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
                 }
 
                 /* Set the new attributes on screen */
-                Attribute = Cursor->CursorFlags;
+                Attribute = Cursor->Cell[R][C].CursorFlags;
                 Status = VTUTF8ChannelProcessAttributes(Channel, Attribute);
                 if (!NT_SUCCESS(Status)) goto Quickie;
             }
@@ -867,16 +853,15 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
                 Position[1] = R;
                 Position[0] = C;
                 Status = VTUTF8ChannelAnsiDispatch(Channel,
-                                                    SacAnsiSetPosition,
-                                                    Position,
-                                                    sizeof(Position));
+                                                   SacAnsiSetPosition,
+                                                   Position,
+                                                   sizeof(Position));
                 if (!NT_SUCCESS(Status)) goto Quickie;
                 Overflow = FALSE;
             }
 
             /* Write the character into our temporary buffer */
-            *TmpBuffer = Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
-                                (C * SAC_VTUTF8_ROW_HEIGHT)].CursorValue;
+            *TmpBuffer = Cursor->Cell[R][C].CursorValue;
             TmpBuffer[1] = UNICODE_NULL;
 
             /* Convert it to UTF-8 */
@@ -896,6 +881,7 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
             if (Utf8Count)
             {
                 /* Write it out on the wire */
+                SAC_DBG(1, "Row: %d\tCol : %d\t\tValue : (%c) -> (%c)\n", R, C, *TmpBuffer, *Utf8ConversionBuffer);
                 Status = ConMgrWriteData(Channel, Utf8ConversionBuffer, Utf8Count);
                 if (!NT_SUCCESS(Status)) goto Quickie;
             }
@@ -947,10 +933,10 @@ Quickie:
 NTSTATUS
 NTAPI
 VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
-                     IN PCHAR String,
+                     IN PWCHAR String,
                      IN ULONG Size)
 {
-    PSAC_CURSOR_DATA Cursor;
+    PSAC_VTUTF8_SCREEN Cursor;
     ULONG i, EscapeSize, R, C;
     PWSTR pwch;
     CHECK_PARAMETER1(Channel);
@@ -958,11 +944,12 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
     VTUTF8ChannelAssertCursor(Channel);
 
     /* Loop every character */
-    Cursor = (PSAC_CURSOR_DATA)Channel->OBuffer;
+    Cursor = (PSAC_VTUTF8_SCREEN) Channel->OBuffer;
     for (i = 0; i < Size; i++)
     {
         /* Check what the character is */
-        pwch = (PWSTR)&String[i];
+        pwch = &String[i];
+        SAC_DBG(1, "Writing on VT-UTF8: (%lx)\n", *pwch);
         switch (*pwch)
         {
             /* It's an escape sequence... */
@@ -1010,17 +997,13 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
                         for (C = 0; C < SAC_VTUTF8_COL_WIDTH; C++)
                         {
                             /* And replace it with one from the row below */
-                            Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
-                                   (C * SAC_VTUTF8_ROW_HEIGHT)] = 
-                            Cursor[((R + 1)* SAC_VTUTF8_COL_WIDTH) +
-                                   (C * SAC_VTUTF8_ROW_HEIGHT)];
+                            Cursor->Cell[R][C] = Cursor->Cell[R + 1][C];
                         }
                     }
 
                     /* Now we're left with the before-last row, zero it out */
                     ASSERT(R == (SAC_VTUTF8_ROW_HEIGHT - 1));
-                    RtlZeroMemory(&Cursor[SAC_VTUTF8_COL_WIDTH * R],
-                                  sizeof(SAC_CURSOR_DATA) * SAC_VTUTF8_COL_WIDTH);
+                    RtlZeroMemory(&Cursor[R], sizeof(Cursor[R]));
 
                     /* Reset the row back by one */
                     Channel->CursorRow--;
@@ -1037,14 +1020,10 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
                 {
                     /* Fill each remaining character with a space */
                     VTUTF8ChannelAssertCursor(Channel);
-                    Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
-                           (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorFlags = Channel->CursorFlags;
-                    Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
-                           (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorBackColor = Channel->CursorBackColor;
-                    Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
-                           (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorColor = Channel->CursorColor;
-                    Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
-                           (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorValue = ' ';
+                    Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorFlags = Channel->CursorFlags;
+                    Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorBackColor = Channel->CursorBackColor;
+                    Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorColor = Channel->CursorColor;
+                    Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorValue = ' ';
 
                     /* Move to the next character position, but don't overflow */
                     Channel->CursorCol++;
@@ -1075,14 +1054,10 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
 
                 /* Otherwise, print it out with the current attributes */
                 VTUTF8ChannelAssertCursor(Channel);
-                Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
-                       (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorFlags = Channel->CursorFlags;
-                Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
-                       (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorBackColor = Channel->CursorBackColor;
-                Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
-                       (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorColor = Channel->CursorColor;
-                Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
-                       (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorValue = *pwch;
+                Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorFlags = Channel->CursorFlags;
+                Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorBackColor = Channel->CursorBackColor;
+                Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorColor = Channel->CursorColor;
+                Cursor->Cell[Channel->CursorRow][Channel->CursorCol].CursorValue = *pwch;
 
                 /* Move forward one character, but make sure not to overflow */
                 Channel->CursorCol++;
@@ -1203,7 +1178,8 @@ VTUTF8ChannelOWrite(IN PSAC_CHANNEL Channel,
     CHECK_PARAMETER2(String);
 
     /* Call the lower level function */
-    Status = VTUTF8ChannelOWrite2(Channel, String, Length / sizeof(WCHAR));
+    SAC_DBG(1, "Writing on VT-UTF8: %S\n", String);
+    Status = VTUTF8ChannelOWrite2(Channel, (PWCHAR)String, Length / sizeof(WCHAR));
     if (NT_SUCCESS(Status))
     {
         /* Is the channel enabled for output? */
@@ -1266,7 +1242,7 @@ VTUTF8ChannelIRead(IN PSAC_CHANNEL Channel,
                    IN ULONG BufferSize,
                    IN PULONG ReturnBufferSize)
 {
-    ULONG CopyChars;
+    ULONG CopyChars, ReadLength;
     CHECK_PARAMETER1(Channel);
     CHECK_PARAMETER2(Buffer);
     CHECK_PARAMETER_WITH_STATUS(BufferSize > 0, STATUS_INVALID_BUFFER_SIZE);
@@ -1283,29 +1259,33 @@ VTUTF8ChannelIRead(IN PSAC_CHANNEL Channel,
     else
     {
         /* Use the smallest number of bytes either in the buffer or requested */
-        CopyChars = min(Channel->ChannelInputBufferLength(Channel) * sizeof(WCHAR),
-                        BufferSize);
+        ReadLength = min(Channel->ChannelInputBufferLength(Channel) * sizeof(WCHAR),
+                         BufferSize);
+
+        /* Do some cheezy buffer alignment */
+        CopyChars = ReadLength / sizeof(WCHAR);
+        ReadLength = CopyChars * sizeof(WCHAR);
         ASSERT(CopyChars <= Channel->ChannelInputBufferLength(Channel));
 
         /* Copy them into the caller's buffer */
-        RtlCopyMemory(Buffer, Channel->IBuffer, CopyChars);
+        RtlCopyMemory(Buffer, Channel->IBuffer, ReadLength);
 
         /* Update the channel's index past the copied (read) bytes */
         VTUTF8ChannelSetIBufferIndex(Channel,
-                                     VTUTF8ChannelGetIBufferIndex(Channel) - CopyChars);
+            VTUTF8ChannelGetIBufferIndex(Channel) - ReadLength);
 
         /* Are there still bytes that haven't been read yet? */
         if (Channel->ChannelInputBufferLength(Channel))
         {
             /* Shift them up in the buffer */
             RtlMoveMemory(Channel->IBuffer,
-                          &Channel->IBuffer[CopyChars],
+                          &Channel->IBuffer[ReadLength],
                           Channel->ChannelInputBufferLength(Channel) *
                           sizeof(WCHAR));
         }
 
         /* Return the number of bytes we actually copied */
-        *ReturnBufferSize = CopyChars;
+        *ReturnBufferSize = ReadLength;
     }
 
     /* Return success */
