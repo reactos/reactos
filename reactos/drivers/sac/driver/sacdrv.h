@@ -11,6 +11,7 @@
 #include <ntifs.h>
 #include <intrin.h>
 #include <wchar.h>
+#include <stdio.h>
 #include <ndk/obtypes.h>
 #include <ndk/exfuncs.h>
 #include <ndk/rtlfuncs.h>
@@ -211,7 +212,7 @@ typedef struct _SAC_MESSAGE_ENTRY
 } SAC_MESSAGE_ENTRY, *PSAC_MESSAGE_ENTRY;
 
 //
-// These are the VT-100/220/ANSI Escape Codes supported by SAC
+// These are the VT-100/220/ANSI Escape Codes supported by SAC as input
 //
 typedef enum _SAC_ANSI_COMMANDS
 {
@@ -240,6 +241,25 @@ typedef enum _SAC_ANSI_COMMANDS
     SacSetFontColor,
     SacSetColorsAndAttributes
 } SAC_ANSI_COMMANDS;
+
+//
+// These are the VT-100/220/ANSI Escape Codes send by SAC as output
+//
+typedef enum _SAC_ANSI_DISPATCH
+{
+    SacAnsiClearScreen,
+    SacAnsiClearEndOfScreen,
+    SacAnsiClearEndOfLine,
+    SacAnsiSetColors,
+    SacAnsiSetPosition,
+    SacAnsiClearAttributes,
+    SacAnsiSetInverseAttribute,
+    SacAnsiClearInverseAttribute,
+    SacAnsiSetBlinkAttribute,
+    SacAnsiClearBlinkAttribute,
+    SacAnsiSetBoldAttribute,
+    SacAnsiClearBoldAttribute
+} SAC_ANSI_DISPATCH;
 
 //
 // SAC supports 3 different channel output types

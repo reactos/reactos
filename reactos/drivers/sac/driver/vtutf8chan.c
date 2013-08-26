@@ -65,14 +65,130 @@ VTUTF8ChannelScanForNumber(IN PWCHAR String,
 
 NTSTATUS
 NTAPI
-VTUTF8ChannelAnsiDispatch(
-	IN NTSTATUS Status,
-	IN ULONG AnsiCode,
-	IN PWCHAR Data,
-	IN ULONG Length
-	)
+VTUTF8ChannelAnsiDispatch(IN PSAC_CHANNEL Channel,
+                          IN SAC_ANSI_DISPATCH AnsiCode,
+                          IN INT* Data,
+                          IN ULONG Length)
 {
-	return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCHAR LocalBuffer = NULL;
+    INT l;
+    CHECK_PARAMETER1(Channel);
+
+    /* Check which ANSI sequence we should output */
+    switch (AnsiCode)
+    {
+        /* Send the [2J (Clear Screen and Reset Cursor) */
+        case SacAnsiClearScreen:
+            LocalBuffer = "\x1B[2J";
+            break;
+
+        /* Send the [0J (Clear From Position Till End Of Screen) */
+        case SacAnsiClearEndOfScreen:
+            LocalBuffer = "\x1B[0J";
+            break;
+
+        /* Send the [0K (Clear from Position Till End Of Line) */
+        case SacAnsiClearEndOfLine:
+            LocalBuffer = "\x1B[0K";
+            break;
+
+        /* Send a combination of two [#m attribute changes */
+        case SacAnsiSetColors:
+
+            /* Allocate a small local buffer for it */
+            LocalBuffer = SacAllocatePool(SAC_VTUTF8_COL_WIDTH, GLOBAL_BLOCK_TAG);
+            CHECK_ALLOCATION(LocalBuffer);
+
+            /* Caller should have sent two colors as two integers */
+            if (!(Data) || (Length != 8))
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Create the escape sequence string */
+            l = sprintf(LocalBuffer, "\x1B[%dm\x1B[%dm", Data[1], Data[0]);
+            ASSERT((l + 1)*sizeof(UCHAR) < SAC_VTUTF8_COL_WIDTH);
+            ASSERT(LocalBuffer);
+            break;
+
+        /* Send the [#;#H (Cursor Positio) sequence */
+        case SacAnsiSetPosition:
+
+            /* Allocate a small local buffer for it */
+            LocalBuffer = SacAllocatePool(SAC_VTUTF8_COL_WIDTH, GLOBAL_BLOCK_TAG);
+            CHECK_ALLOCATION(LocalBuffer);
+
+            /* Caller should have sent the position as two integers */
+            if (!(Data) || (Length != 8))
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Create the escape sequence string */
+            l = sprintf(LocalBuffer, "\x1B[%d;%dH", Data[1] + 1, Data[0] + 1);
+            ASSERT((l + 1)*sizeof(UCHAR) < SAC_VTUTF8_COL_WIDTH);
+            ASSERT(LocalBuffer);
+            break;
+
+        /* Send the [0m sequence (Set Attribute 0) */
+        case SacAnsiClearAttributes:
+            LocalBuffer = "\x1B[0m";
+            break;
+
+        /* Send the [7m sequence (Set Attribute 7) */
+        case SacAnsiSetInverseAttribute:
+            LocalBuffer = "\x1B[7m";
+            break;
+
+        /* Send the [27m sequence (Set Attribute 27) */
+        case SacAnsiClearInverseAttribute:
+            LocalBuffer = "\x1B[27m";
+            break;
+
+        /* Send the [5m sequence (Set Attribute 5) */
+        case SacAnsiSetBlinkAttribute:
+            LocalBuffer = "\x1B[5m";
+            break;
+
+        /* Send the [25m sequence (Set Attribute 25) */
+        case SacAnsiClearBlinkAttribute:
+            LocalBuffer = "\x1B[25m";
+            break;
+
+        /* Send the [1m sequence (Set Attribute 1) */
+        case SacAnsiSetBoldAttribute:
+            LocalBuffer = "\x1B[1m";
+            break;
+
+        /* Send the [22m sequence (Set Attribute 22) */
+        case SacAnsiClearBoldAttribute:
+            LocalBuffer = "\x1B[22m";
+            break;
+
+        /* We don't recognize it */
+        default:
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+    }
+
+    /* Did everything work above? */
+    if (NT_SUCCESS(Status))
+    {
+        /* Go write out the sequence */
+        Status = ConMgrWriteData(Channel, LocalBuffer, strlen(LocalBuffer));
+        if (NT_SUCCESS(Status))
+        {
+            /* Now flush it */
+            Status = ConMgrFlushData(Channel);
+        }
+    }
+
+    /* Free the temporary buffer, if any, and return the status */
+    if (LocalBuffer) SacFreePool(LocalBuffer);
+    return Status;
 }
 
 NTSTATUS

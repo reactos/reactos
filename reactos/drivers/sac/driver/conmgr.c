@@ -169,7 +169,7 @@ ConMgrInitialize(VOID)
 
     /* Setup the attributes for the raw SAC channel */
     RtlZeroMemory(&SacChannelAttributes, sizeof(SacChannelAttributes));
-    SacChannelAttributes.ChannelType = Raw; /* FIXME: Should be VtUtf8 */
+    SacChannelAttributes.ChannelType = VtUtf8;
 
     /* Get the right name for it */
     pcwch = GetMessage(SAC_CHANNEL_NAME);
@@ -725,7 +725,7 @@ DoLineParsing:
                 /* Read every character in the channel, and strip whitespace */
                 ChannelIRead(CurrentChannel,
                              ReadBuffer,
-                             sizeof(CHAR), /* FIXME: Should be sizeof(ReadBuffer) */
+                             sizeof(ReadBuffer),
                              &ReadBufferSize);
             } while ((ReadBufferSize) &&
                      ((ReadBuffer[0] == ' ') || (ReadBuffer[0] == '\t')));
@@ -740,7 +740,7 @@ DoLineParsing:
                 /* Read each character -- there should be max 80 */
                 ChannelIRead(CurrentChannel,
                              ReadBuffer,
-                             sizeof(CHAR), /* FIXME: Should be sizeof(ReadBuffer) */
+                             sizeof(ReadBuffer),
                              &ReadBufferSize);
                 ASSERT(i < SAC_VTUTF8_COL_WIDTH);
                 InputBuffer[i++] = ReadBuffer[0];
