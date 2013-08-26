@@ -305,86 +305,115 @@ ProcessString:
     switch (Action)
     {
         case SacCursorUp:
+            /* Check if we are scrolling too high */
             if (Channel->CursorRow < Number)
             {
+                /* Reset the row to the top */
                 Channel->CursorRow = 0;
             }
             else
             {
+                /* We're fine -- scroll up by that much */
                 Channel->CursorRow -= Number;
             }
+
+            /* All done */
             VTUTF8ChannelAssertCursor(Channel);
             break;
 
         case SacCursorDown:
+            /* Check if we are scrolling too low */
             if (Channel->CursorRow >= SAC_VTUTF8_ROW_HEIGHT)
             {
+                /* Reset the row to the bottom */
                 Channel->CursorRow = SAC_VTUTF8_ROW_HEIGHT;
             }
             else
             {
+                /* We're fine -- scroll down by that much */
                 Channel->CursorRow += Number;
             }
+
+            /* All done */
             VTUTF8ChannelAssertCursor(Channel);
             break;
 
         case SacCursorLeft:
+            /* Check if we're scrolling too much to the left */
             if (Channel->CursorCol < Number)
             {
+                /* Reset the column to the left-most margin */
                 Channel->CursorCol = 0;
             }
             else
             {
+                /* We're fine -- scroll left by that much */
                 Channel->CursorCol -= Number;
             }
+
+            /* All done */
             VTUTF8ChannelAssertCursor(Channel);
             break;
 
         case SacCursorRight:
+            /* Check if we're scrolling too much to the right */
             if (Channel->CursorCol >= SAC_VTUTF8_COL_WIDTH)
             {
+                /* Reset the column to the right-most margin */
                 Channel->CursorCol = SAC_VTUTF8_COL_WIDTH;
             }
             else
             {
+                /* We're fine -- scroll right by that much */
                 Channel->CursorCol += Number;
             }
+
+            /* All done */
             VTUTF8ChannelAssertCursor(Channel);
             break;
 
         case SacFontNormal:
+            /* Reset the cursor attributes */
             Channel->CursorFlags = 0;
             Channel->CursorBackColor = SetBackColorBlack;
             Channel->CursorColor = SetColorWhite;
             break;
 
         case SacFontBlink:
+            /* Set the appropriate flag */
             Channel->CursorFlags |= SAC_CURSOR_FLAG_BLINK;
             break;
 
         case SacFontBlinkOff:
+            /* Clear the appropriate flag */
             Channel->CursorFlags &= ~SAC_CURSOR_FLAG_BLINK;
             break;
 
         case SacFontBold:
+            /* Set the appropriate flag */
             Channel->CursorFlags |= SAC_CURSOR_FLAG_BOLD;
             break;
 
         case SacFontBoldOff:
+            /* Clear the appropriate flag */
             Channel->CursorFlags &= ~SAC_CURSOR_FLAG_BOLD;
             break;
 
         case SacFontInverse:
+            /* Set the appropriate flag */
             Channel->CursorFlags |= SAC_CURSOR_FLAG_INVERTED;
             break;
 
         case SacFontInverseOff:
+            /* Clear the appropriate flag */
             Channel->CursorFlags &= ~SAC_CURSOR_FLAG_INVERTED;
             break;
 
         case SacEraseEndOfLine:
+            /* Loop all columns in this line past the current position */
             for (i = Channel->CursorCol; i < SAC_VTUTF8_COL_WIDTH; i++)
             {
+                /* Replace everything after the current position with blanks */
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
                        (i * SAC_VTUTF8_ROW_HEIGHT)].CursorFlags = Channel->CursorFlags;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
@@ -397,8 +426,10 @@ ProcessString:
             break;
 
         case SacEraseStartOfLine:
+            /* Loop all columns in this line, before the current position */
             for (i = 0; i < (Channel->CursorCol + 1); i++)
             {
+                /* Replace everything after the current position with blanks */
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
                        (i * SAC_VTUTF8_ROW_HEIGHT)].CursorFlags = Channel->CursorFlags;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
@@ -411,8 +442,10 @@ ProcessString:
             break;
 
         case SacEraseLine:
+            /* Loop all the columns in this line */
             for (i = 0; i < SAC_VTUTF8_COL_WIDTH; i++)
             {
+                /* Replace them all with blanks */
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
                        (i * SAC_VTUTF8_ROW_HEIGHT)].CursorFlags = Channel->CursorFlags;
                 Cursor[(Channel->CursorRow * SAC_VTUTF8_COL_WIDTH) +
@@ -445,24 +478,30 @@ ProcessString:
             break;
 
         case SacSetColors:
+            /* Set the cursor colors */
             Channel->CursorColor = Number;
             Channel->CursorBackColor = Number2;
             break;
 
         case SacSetBackgroundColor:
+            /* Set the cursor back color */
             Channel->CursorBackColor = Number;
             break;
 
         case SacSetFontColor:
+            /* Set the cursor text color */
             Channel->CursorColor = Number;
             break;
 
         case SacSetColorsAndAttributes:
+            /* Set the cursor flag and colors */
             Channel->CursorFlags = Number;
             Channel->CursorColor = Number2;
             Channel->CursorBackColor = Number3;
             break;
+
         default:
+            /* Unknown, do nothing */
             break;
     }
 
@@ -549,16 +588,16 @@ VTUTF8ChannelORead(IN PSAC_CHANNEL Channel,
                    IN ULONG BufferSize,
                    OUT PULONG ByteCount)
 {
+    ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
 NTAPI
-VTUTF8ChannelOFlush(
-	IN PSAC_CHANNEL Channel
-	)
+VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
 {
-	return STATUS_NOT_IMPLEMENTED;
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -567,7 +606,156 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
                      IN PCHAR String,
                      IN ULONG Size)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    PSAC_CURSOR_DATA Cursor;
+    ULONG i, EscapeSize, R, C;
+    PWSTR pwch;
+    CHECK_PARAMETER1(Channel);
+    CHECK_PARAMETER2(String);
+    VTUTF8ChannelAssertCursor(Channel);
+
+    /* Loop every character */
+    Cursor = (PSAC_CURSOR_DATA)Channel->OBuffer;
+    for (i = 0; i < Size; i++)
+    {
+        /* Check what the character is */
+        pwch = (PWSTR)&String[i];
+        switch (*pwch)
+        {
+            /* It's an escape sequence... */
+            case L'\x1B':
+
+                /* Send it to the parser, see how long the sequence was */
+                EscapeSize = VTUTF8ChannelConsumeEscapeSequence(Channel, pwch);
+                if (EscapeSize)
+                {
+                    /* Consume that many characters for next time*/
+                    i += EscapeSize - 1;
+                }
+                else
+                {
+                    /* Invalid escape sequence, skip just the ESC character */
+                    i++;
+                }
+
+                /* Keep going*/
+                break;
+
+            /* It's a line feed */
+            case L'\n':
+
+                /* Simply reset the column to zero on the current line */
+                Channel->CursorCol = 0;
+                break;
+
+            /* It's a carriage feed */
+            case L'\r':
+
+                /* Move to the next row */
+                Channel->CursorRow++;
+
+                /* Check if we hit the last row on the screen */
+                if (Channel->CursorRow >= SAC_VTUTF8_ROW_HEIGHT)
+                {
+                    /* Go over every row before the last one */
+                    for (R = 0; R < (SAC_VTUTF8_ROW_HEIGHT - 1); R++)
+                    {
+                        /* Sanity check, since we always copy one row below */
+                        ASSERT((R + 1) < SAC_VTUTF8_ROW_HEIGHT);
+
+                        /* Loop every character on the row */
+                        for (C = 0; C < SAC_VTUTF8_COL_WIDTH; C++)
+                        {
+                            /* And replace it with one from the row below */
+                            Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
+                                   (C * SAC_VTUTF8_ROW_HEIGHT)] = 
+                            Cursor[((R + 1)* SAC_VTUTF8_COL_WIDTH) +
+                                   (C * SAC_VTUTF8_ROW_HEIGHT)];
+                        }
+                    }
+
+                    /* Now we're left with the before-last row, zero it out */
+                    ASSERT(R == (SAC_VTUTF8_ROW_HEIGHT - 1));
+                    RtlZeroMemory(&Cursor[SAC_VTUTF8_COL_WIDTH * R],
+                                  sizeof(SAC_CURSOR_DATA) * SAC_VTUTF8_COL_WIDTH);
+
+                    /* Reset the row back by one */
+                    Channel->CursorRow--;
+                    VTUTF8ChannelAssertCursor(Channel);
+                }
+                break;
+
+            /* It's a TAB character */
+            case L'\t':
+
+                /* Loop the remaining characters until a multiple of 4 */
+                VTUTF8ChannelAssertCursor(Channel);
+                for (C = (4 - Channel->CursorCol % 4); C; C--)
+                {
+                    /* Fill each remaining character with a space */
+                    VTUTF8ChannelAssertCursor(Channel);
+                    Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
+                           (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorFlags = Channel->CursorFlags;
+                    Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
+                           (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorBackColor = Channel->CursorBackColor;
+                    Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
+                           (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorColor = Channel->CursorColor;
+                    Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
+                           (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorValue = ' ';
+
+                    /* Move to the next character position, but don't overflow */
+                    Channel->CursorCol++;
+                    if (Channel->CursorCol >= SAC_VTUTF8_COL_WIDTH)
+                    {
+                        Channel->CursorCol = SAC_VTUTF8_COL_WIDTH - 1;
+                    }
+                }
+
+                /* All done, move to the next one */
+                VTUTF8ChannelAssertCursor(Channel);
+                break;
+
+            /* It's a backspace or delete character */
+            case L'\b':
+            case L'\x7F':
+
+                /* Move back one character, unless we had nothing typed */
+                if (Channel->CursorCol) Channel->CursorCol--;
+                VTUTF8ChannelAssertCursor(Channel);
+                break;
+
+            /* It's some other character */
+            default:
+
+                /* Is it non-printable? Ignore it and keep parsing */
+                if (*pwch < L' ') continue;
+
+                /* Otherwise, print it out with the current attributes */
+                VTUTF8ChannelAssertCursor(Channel);
+                Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
+                       (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorFlags = Channel->CursorFlags;
+                Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
+                       (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorBackColor = Channel->CursorBackColor;
+                Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
+                       (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorColor = Channel->CursorColor;
+                Cursor[(SAC_VTUTF8_COL_WIDTH * Channel->CursorRow) +
+                       (SAC_VTUTF8_ROW_HEIGHT * Channel->CursorCol)].CursorValue = *pwch;
+
+                /* Move forward one character, but make sure not to overflow */
+                Channel->CursorCol++;
+                if (Channel->CursorCol == SAC_VTUTF8_COL_WIDTH)
+                {
+                    Channel->CursorCol = SAC_VTUTF8_COL_WIDTH - 1;
+                }
+
+                /* All done, move to the next one */
+                VTUTF8ChannelAssertCursor(Channel);
+                break;
+            }
+    }
+
+    /* Parsing of the input string completed -- string was written */
+    VTUTF8ChannelAssertCursor(Channel);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
