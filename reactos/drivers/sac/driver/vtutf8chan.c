@@ -193,12 +193,37 @@ VTUTF8ChannelAnsiDispatch(IN PSAC_CHANNEL Channel,
 
 NTSTATUS
 NTAPI
-VTUTF8ChannelProcessAttributes(
-	IN PSAC_CHANNEL Channel,
-	IN UCHAR Attribute
-	)
+VTUTF8ChannelProcessAttributes(IN PSAC_CHANNEL Channel,
+                               IN UCHAR Attribute)
 {
-	return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    CHECK_PARAMETER(Channel);
+
+    /* Set bold if needed */
+    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                       Attribute & SAC_CURSOR_FLAG_BOLD ?
+                                       SacAnsiSetBoldAttribute :
+                                       SacAnsiClearBoldAttribute,
+                                       NULL,
+                                       0);
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Set blink if needed */
+    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                       Attribute & SAC_CURSOR_FLAG_BLINK ?
+                                       SacAnsiSetBlinkAttribute :
+                                       SacAnsiClearBlinkAttribute,
+                                       NULL,
+                                       0);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Set inverse if needed */
+    return VTUTF8ChannelAnsiDispatch(Channel,
+                                     Attribute & SAC_CURSOR_FLAG_INVERTED ?
+                                     SacAnsiSetInverseAttribute :
+                                     SacAnsiClearInverseAttribute,
+                                     NULL,
+                                     0);
 }
 
 //
@@ -712,8 +737,211 @@ NTSTATUS
 NTAPI
 VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
 {
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PSAC_CURSOR_DATA Cursor;
+    INT Color[2], Position[2];
+    ULONG Utf8ProcessedCount, Utf8Count, R, C, ForeColor, BackColor, Attribute;
+    PWCHAR TmpBuffer;
+    BOOLEAN Overflow = FALSE;
+    CHECK_PARAMETER(Channel);
+
+    /* Set the cell buffer position */
+    Cursor = (PSAC_CURSOR_DATA)Channel->OBuffer;
+
+    /* Allocate a temporary buffer */
+    TmpBuffer = SacAllocatePool(40, GLOBAL_BLOCK_TAG);
+    if (!TmpBuffer)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* First, clear the screen */
+    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                       SacAnsiClearScreen,
+                                       NULL,
+                                       0);
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Next, reset the cursor position */
+    Position[1] = 0;
+    Position[0] = 0;
+    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                       SacAnsiSetPosition,
+                                       Position,
+                                       sizeof(Position));
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Finally, reset the attributes */
+    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                       SacAnsiClearAttributes,
+                                       NULL,
+                                       0);
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Now set the current cursor attributes */
+    Attribute = Channel->CursorFlags;
+    Status = VTUTF8ChannelProcessAttributes(Channel, Attribute);
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* And set the current cursor colors */
+    ForeColor = Channel->CursorColor;
+    BackColor = Channel->CursorBackColor;
+    Color[1] = BackColor;
+    Color[0] = ForeColor;
+    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                       SacAnsiSetColors,
+                                       Color,
+                                       sizeof(Color));
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Now loop all the characters in the cell buffer */
+    for (R = 0; R < SAC_VTUTF8_ROW_HEIGHT; R++)
+    {
+        /* Accross every row */
+        for (C = 0; C < SAC_VTUTF8_COL_WIDTH; C++)
+        {
+            /* Check if there's been a change in colors */
+            if ((Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
+                        (C * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor != BackColor) ||
+                (Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
+                        (C * SAC_VTUTF8_ROW_HEIGHT)].CursorColor != ForeColor))
+            {
+                /* New colors are being drawn -- are we also on a new row now? */
+                if (Overflow)
+                {
+                    /* Reposition the cursor correctly */
+                    Position[1] = R;
+                    Position[0] = C;
+                    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                                       SacAnsiSetPosition,
+                                                       Position,
+                                                       sizeof(Position));
+                    if (!NT_SUCCESS(Status)) goto Quickie;
+                    Overflow = FALSE;
+                }
+
+                /* Cache the new colors */
+                ForeColor = Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
+                                   (C * SAC_VTUTF8_ROW_HEIGHT)].CursorColor;
+                BackColor = Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
+                                   (C * SAC_VTUTF8_ROW_HEIGHT)].CursorBackColor;
+
+                /* Set them on the screen */
+                Color[1] = BackColor;
+                Color[0] = ForeColor;
+                Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                                   SacAnsiSetColors,
+                                                   Color,
+                                                   sizeof(Color));
+                if (!NT_SUCCESS(Status)) goto Quickie;
+            }
+
+            /* Check if there's been a chance in attributes */
+            if (Cursor->CursorFlags != Attribute)
+            {
+                /* Yep! Are we also on a new row now? */
+                if (Overflow)
+                {
+                    /* Reposition the cursor correctly */
+                    Position[1] = R;
+                    Position[0] = C;
+                    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                                       SacAnsiSetPosition,
+                                                       Position,
+                                                       sizeof(Position));
+                    if (!NT_SUCCESS(Status)) goto Quickie;
+                    Overflow = FALSE;
+                }
+
+                /* Set the new attributes on screen */
+                Attribute = Cursor->CursorFlags;
+                Status = VTUTF8ChannelProcessAttributes(Channel, Attribute);
+                if (!NT_SUCCESS(Status)) goto Quickie;
+            }
+
+            /* Time to write the character -- are we on a new row now? */
+            if (Overflow)
+            {
+                /* Reposition the cursor correctly */
+                Position[1] = R;
+                Position[0] = C;
+                Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                                    SacAnsiSetPosition,
+                                                    Position,
+                                                    sizeof(Position));
+                if (!NT_SUCCESS(Status)) goto Quickie;
+                Overflow = FALSE;
+            }
+
+            /* Write the character into our temporary buffer */
+            *TmpBuffer = Cursor[(R * SAC_VTUTF8_COL_WIDTH) +
+                                (C * SAC_VTUTF8_ROW_HEIGHT)].CursorValue;
+            TmpBuffer[1] = UNICODE_NULL;
+
+            /* Convert it to UTF-8 */
+            if (!SacTranslateUnicodeToUtf8(TmpBuffer,
+                                           1,
+                                           Utf8ConversionBuffer,
+                                           Utf8ConversionBufferSize,
+                                           &Utf8Count,
+                                           &Utf8ProcessedCount))
+            {
+                /* Bail out if this failed */
+                Status = STATUS_UNSUCCESSFUL;
+                goto Quickie;
+            }
+
+            /* Make sure we have a remaining valid character */
+            if (Utf8Count)
+            {
+                /* Write it out on the wire */
+                Status = ConMgrWriteData(Channel, Utf8ConversionBuffer, Utf8Count);
+                if (!NT_SUCCESS(Status)) goto Quickie;
+            }
+        }
+
+        /* All the characters on the row are done, indicate we need a reset */
+        Overflow = TRUE;
+    }
+
+    /* Everything is done, set the positition one last time */
+    Position[1] = Channel->CursorRow;
+    Position[0] = Channel->CursorCol;
+    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                       SacAnsiSetPosition,
+                                       Position,
+                                       sizeof(Position));
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Set the current attribute one last time */
+    Status = VTUTF8ChannelProcessAttributes(Channel, Channel->CursorFlags);
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Set the current colors one last time */
+    Color[1] = Channel->CursorBackColor;
+    Color[0] = Channel->CursorColor;
+    Status = VTUTF8ChannelAnsiDispatch(Channel,
+                                       SacAnsiSetColors,
+                                       Color,
+                                       sizeof(Color));
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Flush all the data out on the wire */
+    Status = ConMgrFlushData(Channel);
+
+Quickie:
+    /* We're done, free the temporary buffer */
+    if (TmpBuffer) SacFreePool(TmpBuffer);
+
+    /* Indicate that all new data has been flushed now */
+    if (NT_SUCCESS(Status))
+    {
+        _InterlockedExchange(&Channel->ChannelHasNewOBufferData, 0);
+    }
+
+    /* Return the result */
+    return Status;
 }
 
 NTSTATUS
