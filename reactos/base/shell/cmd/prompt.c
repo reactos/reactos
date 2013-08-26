@@ -52,7 +52,7 @@
 static TCHAR InfoLine[] = _T("  ReactOS Command Prompt                                      Type HELP = Help  ");
 
 /* The default prompt */
-static TCHAR DefaultPrompt[] = _T("$I$P$G");
+static TCHAR DefaultPrompt[] = _T("$P$G");
 
 
 /*
@@ -256,18 +256,13 @@ INT cmd_prompt(LPTSTR param)
     }
 
     /*
-     * If 'param' is NULL, then we need to set it to default,
-     * because that means the user entered "prompt" only.
-     * So even if 'param' is null you _must_ still set prompt
-     * to the default.  There seems to be some kind of difference
-     * between winxp and 2k in this matter and this way will
-     * cover both. Do not use fixed size of 'szParam' for 'param';
-     * the buffers are 8192 bytes and will later change to dynamic buffer.
+     * Set the PROMPT environment variable. If 'param' is NULL or is
+     * an empty string (the user entered "prompt" only), then remove
+     * the environment variable and therefore use the default prompt.
+     * Otherwise, use the new prompt.
      */
-
-    /* Set the PROMPT environment variable */
     if (!SetEnvironmentVariable(_T("PROMPT"),
-                                (param[0] != _T('\0') ? param : DefaultPrompt)))
+                                (param && param[0] != _T('\0') ? param : NULL)))
     {
         return 1;
     }
