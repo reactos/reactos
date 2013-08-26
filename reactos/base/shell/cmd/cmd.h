@@ -137,7 +137,6 @@ typedef struct tagCOMMAND
 extern COMMAND cmds[];  /* The internal command table */
 
 VOID PrintCommandList (VOID);
-VOID PrintCommandListDetail (VOID);
 
 
 LPCTSTR GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA );
@@ -295,7 +294,6 @@ INT  cmd_rmdir (LPTSTR);
 INT  CommandExit (LPTSTR);
 INT  CommandRem (LPTSTR);
 INT  CommandShowCommands (LPTSTR);
-INT  CommandShowCommandsDetail (LPTSTR);
 
 /* Prototypes for LABEL.C */
 INT cmd_label (LPTSTR);
