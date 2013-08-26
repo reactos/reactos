@@ -262,6 +262,17 @@ typedef enum _SAC_ANSI_DISPATCH
 } SAC_ANSI_DISPATCH;
 
 //
+// Commands that the consumer and producer share
+//
+typedef enum _SAC_POST_COMMANDS
+{
+    Nothing,
+    Shutdown,
+    Close,
+    Restart
+} SAC_POST_COMMANDS;
+
+//
 // SAC supports 3 different channel output types
 //
 typedef enum _SAC_CHANNEL_TYPE
@@ -1232,7 +1243,7 @@ extern LONG CurrentChannelRefCount;
 extern PCHAR SerialPortBuffer;
 extern LONG SerialPortConsumerIndex, SerialPortProducerIndex;
 extern PCHAR Utf8ConversionBuffer;
-extern BOOLEAN GlobalPagingNeeded;
+extern BOOLEAN GlobalPagingNeeded, GlobalDoThreads;
 extern ULONG Utf8ConversionBufferSize;
 extern BOOLEAN CommandConsoleLaunchingEnabled;
 

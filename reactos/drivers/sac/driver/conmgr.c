@@ -30,6 +30,8 @@ PSAC_CHANNEL ExecutePostConsumerCommandData;
 BOOLEAN InputInEscape, InputInEscTab, ConMgrLastCharWasCR;
 CHAR InputBuffer[80];
 
+BOOLEAN GlobalPagingNeeded, GlobalDoThreads;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -447,11 +449,6 @@ ConMgrChannelOWrite(IN PSAC_CHANNEL Channel,
     return Status;
 }
 
-#define Shutdown    1
-#define Restart     3
-#define Nothing     0
-BOOLEAN GlobalPagingNeeded;
-
 VOID
 NTAPI
 ConMgrProcessInputLine(VOID)
@@ -566,7 +563,7 @@ ConMgrProcessInputLine(VOID)
     }
     else if ((InputBuffer[0] != '\n') && (InputBuffer[0] != ANSI_NULL))
     {
-        SacPutSimpleMessage(105);
+        SacPutSimpleMessage(SAC_UNKNOWN_COMMAND);
     }
 }
 
@@ -851,25 +848,25 @@ ConMgrWorkerProcessEvents(IN PSAC_DEVICE_EXTENSION DeviceExtension)
         ConMgrSerialPortConsumer();
         switch (ExecutePostConsumerCommand)
         {
-            case 1:
+            case Restart:
                 /* A reboot was sent, do it  */
                 DoRebootCommand(FALSE);
                 break;
 
-            case 2:
+            case Close:
                 /* A close was sent, do it */
                 ChanMgrCloseChannel(ExecutePostConsumerCommandData);
                 ChanMgrReleaseChannel(ExecutePostConsumerCommandData);
                 break;
 
-            case 3:
+            case Shutdown:
                 /* A shutdown was sent, do it */
                 DoRebootCommand(TRUE);
                 break;
         }
 
         /* Clear the serial port consumer state */
-        ExecutePostConsumerCommand = 0;
+        ExecutePostConsumerCommand = Nothing;
         ExecutePostConsumerCommandData = NULL;
     }
 }

@@ -881,7 +881,6 @@ VTUTF8ChannelOFlush(IN PSAC_CHANNEL Channel)
             if (Utf8Count)
             {
                 /* Write it out on the wire */
-                SAC_DBG(1, "Row: %d\tCol : %d\t\tValue : (%c) -> (%c)\n", R, C, *TmpBuffer, *Utf8ConversionBuffer);
                 Status = ConMgrWriteData(Channel, Utf8ConversionBuffer, Utf8Count);
                 if (!NT_SUCCESS(Status)) goto Quickie;
             }
@@ -949,7 +948,6 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
     {
         /* Check what the character is */
         pwch = &String[i];
-        SAC_DBG(1, "Writing on VT-UTF8: (%lx)\n", *pwch);
         switch (*pwch)
         {
             /* It's an escape sequence... */
@@ -1003,7 +1001,7 @@ VTUTF8ChannelOWrite2(IN PSAC_CHANNEL Channel,
 
                     /* Now we're left with the before-last row, zero it out */
                     ASSERT(R == (SAC_VTUTF8_ROW_HEIGHT - 1));
-                    RtlZeroMemory(&Cursor[R], sizeof(Cursor[R]));
+                    RtlZeroMemory(&Cursor->Cell[R], sizeof(Cursor->Cell[R]));
 
                     /* Reset the row back by one */
                     Channel->CursorRow--;
@@ -1178,7 +1176,6 @@ VTUTF8ChannelOWrite(IN PSAC_CHANNEL Channel,
     CHECK_PARAMETER2(String);
 
     /* Call the lower level function */
-    SAC_DBG(1, "Writing on VT-UTF8: %S\n", String);
     Status = VTUTF8ChannelOWrite2(Channel, (PWCHAR)String, Length / sizeof(WCHAR));
     if (NT_SUCCESS(Status))
     {

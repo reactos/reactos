@@ -513,7 +513,7 @@ Computer identification information is unavailable.
 .
 
 MessageId=105
-SymbolicName=SACDRV_105
+SymbolicName=SAC_UNKNOWN_COMMAND
 Language=English
 Unrecognized command.  Try the 'help' command for more details.
 .
