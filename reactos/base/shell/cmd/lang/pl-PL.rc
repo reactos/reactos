@@ -275,10 +275,6 @@ GOTO etykieta\n\n\
   etykieta  Ciąg znaków, użyty w programie wsadowym do oznaczenia linii.\n\n\
 Możesz oznaczyć linie dowolną etykietą, zaczynając od dwukropka."
 
-STRING_HELP_HELP1, "Provides Help information for ReactOS commands.\n\n\
-HELP [command]\n\n\
-  command - Display help information for this command.\n"
-
 STRING_IF_HELP1, "Wykonuje przetwarzanie warunkowe w programach wsadowych.\n\n\
   IF [NOT] ERRORLEVEL numer komenda\n\
   IF [NOT] ciąg_znaków1==ciąg_znaków2 komenda\n\
@@ -563,65 +559,6 @@ MIN           minimalizuje okno\n\
 MAX           maksymalizuje okno\n\
 RESTORE       odtwarza standardowe ustawienia okna\n\
 title         nowy tytuł okna\n"
-
-
-STRING_HELP1, "Lista wszystkich dostępnych komend (+opisy)\n\n\
-  help komenda\n\
-  komenda /?     Wyświetla dokładny opis danej komendy\n\n\
-?        Lista wszystkich dostępnych komend (bez opisów).\n\
-ALIAS    Ustawia, pokazuje lub usuwa aliasy.\n\
-ATTRIB   Wyświetla lub zmienia atrybuty plików.\n\
-BEEP     Sygnał przez głośnik PC.\n\
-CALL     Wywołuje program wsadowy z poziomu innego.\n\
-CD       Wyświetla ścieżkę lub przechodzi do innego katalogu.\n\
-CHCP     Wyświetla lub ustawia bieżącą stronę kodową.\n\
-CHOICE   Przedstawia użytkownikowi kilka możliwości i czeka na wybór.\n\
-CLS      Czyści ekran.\n\
-CMD      Uruchamia kolejne okno konsoli ReactOS.\n\
-COLOR    Ustawia kolory tła i tekstu w oknie konsoli.\n\
-COPY     Kopiuje jeden lub więcej plików w inne miejsce.\n\
-DATE     Wyświetla lub ustawia datę.\n\
-DELETE   Kasuje jeden lub więcej plików.\n\
-DIR      Wyświetla listę plików i podkatalogów w danym katalogu.\n\
-ECHO     Wyświetla wiadomości albo włącza/wyłącza komendę ECHO.\n\
-ERASE    Kasuje jeden lub więcej plików.\n\
-EXIT     Zamyka bieżące okno konsoli.\n\
-FOR      Wykonuje określoną komendę dla każdego pliku z określonej listy.\n\
-FREE     Wolne miejsce na dysku.\n\
-GOTO     Kieruje interpreter poleceń do określonej linii,\n\
-         oznaczonej, w danym programie wsadowym.\n\
-HELP     Lista komend konsoli ReactOS wraz z opisem.\n\
-HISTORY  Lista użytych komend.\n\
-IF       Przetwarzanie warunkowe w programach wsadowych.\n\
-LABEL    Tworzy, zmienia lub kasuje etykietę woluminu w danym napędzie.\n\
-MD       Tworzy katalog.\n\
-MKDIR    Tworzy katalog.\n\
-MKLINK   Tworzy dowiązanie obiektu w systemie plików.\n\
-MOVE     Przenosi jeden lub więcej plików z jednego katalogu do drugiego.\n\
-PATH     Wyświetla lub ustawia ścieżki dostępu dla programów.\n\
-PAUSE    Zawiesza przetwarzanie programu wsadowego i wyświetla komunikat.\n\
-POPD     Odtwarza poprzednią nazwę danego katalogu, zapisaną przez\n\
-         PUSHD.\n\
-PROMPT   Zmienia znak zachęty w linii poleceń.\n\
-PUSHD    Zapisuje obecną nazwę katalogu, po czym zmienia ją.\n\
-RD       Usuwa katalog.\n\
-REM      Oznaczenie linii komentarza w programie wsadowym.\n\
-REN      Zmienia nazwę pliku lub plików.\n\
-RENAME   Zmienia nazwę pliku lub plików.\n\
-RMDIR    Usuwa katalog.\n\
-SCREEN   Przenosi kursor i opcjonalnie wyświetla tekst.\n\
-SET      Wyświetla, ustawia lub usuwa zmienne środowiskowe.\n\
-SHIFT    Przenosi zamienne parametry w programach wsadowych.\n"
-STRING_HELP2, "START    Uruchamia oddzielne okno do wykonania określonego polecenia lub komendy.\n\
-         Wykonuje polecenie.\n\
-TIME     Wyświetla lub zmienia czas systemowy.\n\
-TIMER    Pozwala na użycie do 10 stoperów.\n\
-TITLE    Ustanawia tytuł dla danej sesji CMD.EXE.\n\
-TYPE     Wyświetla zawartość pliku tekstowego.\n\
-VER      Wyświetla wersję systemu ReactOS.\n\
-VERIFY   Decyduje czy ReactOS ma sprawdzać poprawność zapisu plików\n\
-         na dysku.\n\
-VOL      Wyświetla etykietę woluminu na danym napędzie i numer seryjny.\n"
 
 
 STRING_CHOICE_OPTION,         "TN"
