@@ -1645,6 +1645,49 @@ typedef enum {
 #define CONTAINING_RECORD(address, type, field) \
   ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 #endif
+
+#define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
+#define RTL_SIZEOF_THROUGH_FIELD(type, field) \
+    (FIELD_OFFSET(type, field) + RTL_FIELD_SIZE(type, field))
+#define RTL_CONTAINS_FIELD(Struct, Size, Field) \
+    ((((PCHAR) (&(Struct)->Field)) + sizeof((Struct)->Field)) <= (((PCHAR) (Struct)) + (Size)))
+#define RTL_NUMBER_OF_V1(A) (sizeof(A)/sizeof((A)[0]))
+
+#if defined(__cplusplus) && \
+    !defined(MIDL_PASS) && \
+    !defined(RC_INVOKED) && \
+    !defined(_PREFAST_) && \
+    (_MSC_FULL_VER >= 13009466) && \
+    !defined(SORTPP_PASS)
+#define RTL_NUMBER_OF_V2(A) (sizeof(*RtlpNumberOf(A)))
+#else
+#define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
+#endif
+
+#ifdef ENABLE_RTL_NUMBER_OF_V2
+#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V2(A)
+#else
+#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
+#endif
+//#define ARRAYSIZE(A)    RTL_NUMBER_OF_V2(A)
+//#define _ARRAYSIZE(A)   RTL_NUMBER_OF_V1(A)
+
+#define RTL_FIELD_TYPE(type, field) (((type*)0)->field)
+#define RTL_NUMBER_OF_FIELD(type, field) (RTL_NUMBER_OF(RTL_FIELD_TYPE(type, field)))
+#define RTL_PADDING_BETWEEN_FIELDS(T, F1, F2) \
+    ((FIELD_OFFSET(T, F2) > FIELD_OFFSET(T, F1)) \
+    ? (FIELD_OFFSET(T, F2) - FIELD_OFFSET(T, F1) - RTL_FIELD_SIZE(T, F1)) \
+    : (FIELD_OFFSET(T, F1) - FIELD_OFFSET(T, F2) - RTL_FIELD_SIZE(T, F2)))
+
+#if defined(__cplusplus)
+#define RTL_CONST_CAST(type) const_cast<type>
+#else
+#define RTL_CONST_CAST(type) (type)
+#endif
+
+#define RTL_BITS_OF(sizeOfArg) (sizeof(sizeOfArg) * 8)
+#define RTL_BITS_OF_FIELD(type, field) (RTL_BITS_OF(RTL_FIELD_TYPE(type, field)))
+
 /* end winddk.h */
 #define IMAGE_SIZEOF_FILE_HEADER	20
 #define IMAGE_FILE_RELOCS_STRIPPED	1
