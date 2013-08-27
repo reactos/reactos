@@ -36,7 +36,6 @@
 #include <ndk/rtlfuncs.h>
 #include <initguid.h>
 
-#define RTL_NUMBER_OF(x) (sizeof(x) / sizeof(x[0]))
 typedef IUnknown *PUNKNOWN;
 
 typedef struct _CLASS_AND_INTERFACES
