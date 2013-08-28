@@ -45,6 +45,9 @@ endif()
 
 if(MSVC_IDE)
     add_compile_flags("/MP")
+    if(NOT DEFINED USE_FOLDER_STRUCTURE)
+        set(USE_FOLDER_STRUCTURE FALSE)
+    endif()
 endif()
 
 if(${_MACHINE_ARCH_FLAG} MATCHES X86)
