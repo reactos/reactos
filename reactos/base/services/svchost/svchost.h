@@ -8,8 +8,8 @@
 
 #pragma once
 #define WIN32_NO_STATUS
-#include <Windows.h>
-#include <AclAPI.h>
+#include <windows.h>
+#include <aclapi.h>
 #include <ntndk.h>
 #include <lmerr.h>
 
