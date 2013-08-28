@@ -31,7 +31,7 @@ MAIN_MENU MENU
   MENUITEM "&Aç...",                   MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Yazdır...",               MNID_FILE_PRINT
-  MENUITEM "Ya&zıcı seçenekleri...",   MNID_FILE_SETUP
+  MENUITEM "Ya&zıcı Ayarları...",      MNID_FILE_SETUP
   MENUITEM SEPARATOR
   MENUITEM "&Çıkış",                   MNID_FILE_EXIT
  }

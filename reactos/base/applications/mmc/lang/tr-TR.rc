@@ -1,5 +1,5 @@
 /*
- * TRANSLATORS: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -8,7 +8,7 @@ IDM_CONSOLE_SMALL MENU DISCARDABLE
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM "&Yeni\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış\tAlt+F4", IDM_FILE_EXIT
     END
@@ -23,14 +23,14 @@ IDM_CONSOLE_LARGE MENU DISCARDABLE
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "New\tStrg+N", IDM_FILE_NEW
+        MENUITEM "&Yeni\tStrg+N", IDM_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış\tAlt+F4", IDM_FILE_EXIT
     END
 
-    POPUP "&Windows"
+    POPUP "&Pencereler"
     BEGIN
-        MENUITEM "List", IDM_WINDOWS_LIST
+        MENUITEM "&Dizelgele", IDM_WINDOWS_LIST
     END
 
     POPUP "&Yardım"

@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "&Dizelge",            ID_VIEW_LIST
         MENUITEM "&Ayrıntılar",         ID_VIEW_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "D&eğiştir...",        ID_VIEW_CUST, GRAYED
+        MENUITEM "&Husûsileştir...",    ID_VIEW_CUST, GRAYED
     END
     POPUP "&Yardım"
     BEGIN
@@ -200,7 +200,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_SERVICES_STARTED "Başladı"
     IDS_SERVICES_STOPPED "Durdu"
-    IDS_SERVICES_AUTO "Kendi Kendine"
+    IDS_SERVICES_AUTO "Kendiliğinden"
     IDS_SERVICES_MAN "Elle"
     IDS_SERVICES_DIS "Devre Dışı"
 END

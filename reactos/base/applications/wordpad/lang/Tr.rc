@@ -1,8 +1,8 @@
 /*
  * Turkish Resources for ReactOS Wordpad
  *
- * Copyright: 2006 Fatih Aşıcı (fasici@linux-sevenler.org)
- *            2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org)
+ *             2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -72,7 +72,7 @@ BEGIN
         MENUITEM "&Çizgilik",          ID_TOGGLE_RULER
         MENUITEM "&Durum Çubuğu",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Seçenekler...",     ID_VIEWPROPERTIES
+        MENUITEM "&Husûsiyetler...",   ID_VIEWPROPERTIES
     END
     POPUP "&Ekle"
     BEGIN
@@ -225,7 +225,7 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_VIEWPROPS_TITLE,           "Seçenekler"
+    STRING_VIEWPROPS_TITLE,           "Husûsiyetler"
     STRING_VIEWPROPS_TEXT,            "Metin"
     STRING_VIEWPROPS_RICHTEXT,        "Gelişmiş Metin"
 END

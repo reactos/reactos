@@ -50,7 +50,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Sayfa Yapısı...",        CMD_PAGE_SETUP
         MENUITEM "Ya&zdır...\tCtrl+P",      CMD_PRINT
-        MENUITEM "Yaz&ıcı Seçenekleri...",  CMD_PRINTER_SETUP
+        MENUITEM "Yaz&ıcı Ayarları...",     CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                  CMD_EXIT
     END

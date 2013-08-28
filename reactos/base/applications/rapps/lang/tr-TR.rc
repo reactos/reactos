@@ -8,7 +8,7 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Seçenekler...",                     ID_SETTINGS
+        MENUITEM "&Ayarlar...",                        ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış",                             ID_EXIT
     END
@@ -59,7 +59,7 @@ END
 
 IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Seçenekler"
+CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Umûmî", -1, 4, 2, 240, 61
@@ -117,7 +117,7 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Kur"
     IDS_TOOLTIP_UNINSTALL "Kaldır"
     IDS_TOOLTIP_MODIFY "Değiştir"
-    IDS_TOOLTIP_SETTINGS "Seçenekler"
+    IDS_TOOLTIP_SETTINGS "Ayarlar"
     IDS_TOOLTIP_REFRESH "Yenile"
     IDS_TOOLTIP_EXIT "Çıkış"
 END

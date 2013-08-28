@@ -520,7 +520,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED        "Görev Yöneticisi'ndeki bilgilerin kendiliğinden yenilenmesini durdurur. "
+    ID_VIEW_UPDATESPEED_PAUSED        "Görev Yöneticisi'ndeki bilgilerin kendiliğinden yenilenmesini durdurur."
     ID_WINDOWS_TILEHORIZONTALLY       "Masaüstündeki pencereleri yatay olarak sıralar."
     ID_WINDOWS_TILEVERTICALLY         "Masaüstündeki pencereleri dikey olarak sıralar."
     ID_WINDOWS_MINIMIZE               "Pencereleri simge durumuna küçültür."
