@@ -38,8 +38,19 @@ typedef struct tagREGISTERWORDW {
     LPWSTR lpWord;
 } REGISTERWORDW, *PREGISTERWORDW, *NPREGISTERWORDW, *LPREGISTERWORDW;
 
-typedef int (CALLBACK *REGISTERWORDENUMPROCA)(LPCSTR, DWORD, LPCSTR, LPVOID);
-typedef int (CALLBACK *REGISTERWORDENUMPROCW)(LPCWSTR, DWORD, LPCWSTR, LPVOID);
+typedef int
+(CALLBACK *REGISTERWORDENUMPROCA)(
+  _In_ LPCSTR,
+  _In_ DWORD,
+  _In_ LPCSTR,
+  _In_ LPVOID);
+
+typedef int
+(CALLBACK *REGISTERWORDENUMPROCW)(
+  _In_ LPCWSTR,
+  _In_ DWORD,
+  _In_ LPCWSTR,
+  _In_ LPVOID);
 
 typedef struct tagCANDIDATEFORM
 {
@@ -602,90 +613,311 @@ DWORD WINAPI ImeGetImeMenuItems(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMEN
 #define SOFTKEYBOARD_TYPE_C1            0x0002
 
 
-HIMC   WINAPI ImmAssociateContext(HWND, HIMC);
-BOOL   WINAPI ImmAssociateContextEx(HWND, HIMC, DWORD);
-BOOL   WINAPI ImmConfigureIMEA(HKL, HWND, DWORD, LPVOID);
-BOOL   WINAPI ImmConfigureIMEW(HKL, HWND, DWORD, LPVOID);
-#define  ImmConfigureIME WINELIB_NAME_AW(ImmConfigureIME)
-HIMC   WINAPI ImmCreateContext(void);
-BOOL   WINAPI ImmDestroyContext(HIMC hIMC);
-BOOL   WINAPI ImmDisableIME(DWORD idThread);
-BOOL   WINAPI ImmEnumInputContext(DWORD, IMCENUMPROC, LPARAM);
-UINT   WINAPI ImmEnumRegisterWordA(HKL, REGISTERWORDENUMPROCA, LPCSTR, DWORD, LPCSTR, LPVOID);
-UINT   WINAPI ImmEnumRegisterWordW(HKL, REGISTERWORDENUMPROCW, LPCWSTR, DWORD, LPCWSTR, LPVOID);
-#define  ImmEnumRegisterWord WINELIB_NAME_AW(ImmEnumRegisterWord)
-LRESULT  WINAPI ImmEscapeA(HKL, HIMC, UINT, LPVOID);
-LRESULT  WINAPI ImmEscapeW(HKL, HIMC, UINT, LPVOID);
-#define  ImmEscape WINELIB_NAME_AW(ImmEscape)
-DWORD    WINAPI ImmGetCandidateListA(HIMC, DWORD, LPCANDIDATELIST, DWORD);
-DWORD    WINAPI ImmGetCandidateListW(HIMC, DWORD, LPCANDIDATELIST, DWORD);
-#define  ImmGetCandidateList WINELIB_NAME_AW(ImmGetCandidateList)
-DWORD    WINAPI ImmGetCandidateListCountA(HIMC, LPDWORD);
-DWORD    WINAPI ImmGetCandidateListCountW(HIMC, LPDWORD);
-#define  ImmGetCandidateListCount WINELIB_NAME_AW(ImmGetCandidateListCount)
-BOOL   WINAPI ImmGetCandidateWindow(HIMC, DWORD, LPCANDIDATEFORM);
+HIMC WINAPI ImmAssociateContext(_In_ HWND, _In_ HIMC);
+BOOL WINAPI ImmAssociateContextEx(_In_ HWND, _In_ HIMC, _In_ DWORD);
+
+BOOL WINAPI ImmConfigureIMEA(_In_ HKL, _In_ HWND, _In_ DWORD, _In_ LPVOID);
+BOOL WINAPI ImmConfigureIMEW(_In_ HKL, _In_ HWND, _In_ DWORD, _In_ LPVOID);
+#define ImmConfigureIME WINELIB_NAME_AW(ImmConfigureIME)
+
+HIMC WINAPI ImmCreateContext(void);
+BOOL WINAPI ImmDestroyContext(_In_ HIMC hIMC);
+BOOL WINAPI ImmDisableIME(_In_ DWORD idThread);
+BOOL WINAPI ImmEnumInputContext(_In_ DWORD, _In_ IMCENUMPROC, _In_ LPARAM);
+
+UINT
+WINAPI
+ImmEnumRegisterWordA(
+  _In_ HKL,
+  _In_ REGISTERWORDENUMPROCA,
+  _In_opt_ LPCSTR lpszReading,
+  _In_ DWORD,
+  _In_opt_ LPCSTR lpszRegister,
+  _In_ LPVOID);
+
+UINT
+WINAPI
+ImmEnumRegisterWordW(
+  _In_ HKL,
+  _In_ REGISTERWORDENUMPROCW,
+  _In_opt_ LPCWSTR lpszReading,
+  _In_ DWORD,
+  _In_opt_ LPCWSTR lpszRegister,
+  _In_ LPVOID);
+
+#define ImmEnumRegisterWord WINELIB_NAME_AW(ImmEnumRegisterWord)
+
+LRESULT WINAPI ImmEscapeA(_In_ HKL, _In_ HIMC, _In_ UINT, _In_ LPVOID);
+LRESULT WINAPI ImmEscapeW(_In_ HKL, _In_ HIMC, _In_ UINT, _In_ LPVOID);
+#define ImmEscape WINELIB_NAME_AW(ImmEscape)
+
+DWORD
+WINAPI
+ImmGetCandidateListA(
+  _In_ HIMC,
+  _In_ DWORD deIndex,
+  _Out_writes_bytes_opt_(dwBufLen) LPCANDIDATELIST lpCandList,
+  _In_ DWORD dwBufLen);
+
+DWORD
+WINAPI
+ImmGetCandidateListW(
+  _In_ HIMC,
+  _In_ DWORD deIndex,
+  _Out_writes_bytes_opt_(dwBufLen) LPCANDIDATELIST lpCandList,
+  _In_ DWORD dwBufLen);
+
+#define ImmGetCandidateList WINELIB_NAME_AW(ImmGetCandidateList)
+
+DWORD WINAPI ImmGetCandidateListCountA(_In_ HIMC, _Out_ LPDWORD);
+DWORD WINAPI ImmGetCandidateListCountW(_In_ HIMC, _Out_ LPDWORD);
+#define ImmGetCandidateListCount WINELIB_NAME_AW(ImmGetCandidateListCount)
+
+BOOL
+WINAPI
+ImmGetCandidateWindow(
+  _In_ HIMC,
+  _In_ DWORD,
+  _Out_ LPCANDIDATEFORM lpCandidate);
+
 #if defined(_WINGDI_) && !defined(NOGDI)
-BOOL   WINAPI ImmGetCompositionFontA(HIMC, LPLOGFONTA);
-BOOL   WINAPI ImmGetCompositionFontW(HIMC, LPLOGFONTW);
-#define  ImmGetCompositionFont WINELIB_NAME_AW(ImmGetCompositionFont)
-BOOL   WINAPI ImmSetCompositionFontA(HIMC, LPLOGFONTA);
-BOOL   WINAPI ImmSetCompositionFontW(HIMC, LPLOGFONTW);
-#define  ImmSetCompositionFont WINELIB_NAME_AW(ImmSetCompositionFont)
+
+BOOL WINAPI ImmGetCompositionFontA(_In_ HIMC, _Out_ LPLOGFONTA);
+BOOL WINAPI ImmGetCompositionFontW(_In_ HIMC, _Out_ LPLOGFONTW);
+#define ImmGetCompositionFont WINELIB_NAME_AW(ImmGetCompositionFont)
+
+BOOL WINAPI ImmSetCompositionFontA(_In_ HIMC, _In_ LPLOGFONTA);
+BOOL WINAPI ImmSetCompositionFontW(_In_ HIMC, _In_ LPLOGFONTW);
+#define ImmSetCompositionFont WINELIB_NAME_AW(ImmSetCompositionFont)
+
 #endif
-LONG     WINAPI ImmGetCompositionStringA(HIMC, DWORD, LPVOID, DWORD);
-LONG     WINAPI ImmGetCompositionStringW(HIMC, DWORD, LPVOID, DWORD);
-#define  ImmGetCompositionString WINELIB_NAME_AW(ImmGetCompositionString)
-BOOL   WINAPI ImmGetCompositionWindow(HIMC, LPCOMPOSITIONFORM);
-HIMC   WINAPI ImmGetContext(HWND);
-DWORD    WINAPI ImmGetConversionListA(HKL, HIMC, LPCSTR, LPCANDIDATELIST, DWORD, UINT);
-DWORD    WINAPI ImmGetConversionListW(HKL, HIMC, LPCWSTR, LPCANDIDATELIST, DWORD, UINT);
-#define  ImmGetConversionList WINELIB_NAME_AW(ImmGetConversionList)
-BOOL   WINAPI ImmGetConversionStatus(HIMC, LPDWORD, LPDWORD);
-HWND   WINAPI ImmGetDefaultIMEWnd(HWND);
-UINT   WINAPI ImmGetDescriptionA(HKL, LPSTR, UINT);
-UINT   WINAPI ImmGetDescriptionW(HKL, LPWSTR, UINT);
-#define  ImmGetDescription WINELIB_NAME_AW(ImmGetDescription)
-DWORD    WINAPI ImmGetGuideLineA(HIMC, DWORD, LPSTR, DWORD);
-DWORD    WINAPI ImmGetGuideLineW(HIMC, DWORD, LPWSTR, DWORD);
-#define  ImmGetGuideLine WINELIB_NAME_AW(ImmGetGuideLine)
-UINT   WINAPI ImmGetIMEFileNameA(HKL, LPSTR, UINT);
-UINT   WINAPI ImmGetIMEFileNameW(HKL, LPWSTR, UINT);
-#define  ImmGetIMEFileName WINELIB_NAME_AW(ImmGetIMEFileName)
-DWORD  WINAPI ImmGetImeMenuItemsA(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOA, LPIMEMENUITEMINFOA, DWORD);
-DWORD  WINAPI ImmGetImeMenuItemsW(HIMC, DWORD, DWORD, LPIMEMENUITEMINFOW, LPIMEMENUITEMINFOW, DWORD);
-#define ImmGetImeMenuItems  WINELIB_NAME_AW(ImmGetImeMenuItems)
-BOOL   WINAPI ImmGetOpenStatus(HIMC);
-DWORD    WINAPI ImmGetProperty(HKL, DWORD);
-UINT   WINAPI ImmGetRegisterWordStyleA(HKL, UINT, LPSTYLEBUFA);
-UINT   WINAPI ImmGetRegisterWordStyleW(HKL, UINT, LPSTYLEBUFW);
-#define  ImmGetRegisterWordStyle WINELIB_NAME_AW(ImmGetRegisterWordStyle)
-BOOL   WINAPI ImmGetStatusWindowPos(HIMC, LPPOINT);
-UINT   WINAPI ImmGetVirtualKey(HWND);
-HKL    WINAPI ImmInstallIMEA(LPCSTR, LPCSTR);
-HKL    WINAPI ImmInstallIMEW(LPCWSTR, LPCWSTR);
-#define  ImmInstallIME WINELIB_NAME_AW(ImmInstallIME)
-BOOL   WINAPI ImmIsIME(HKL);
-BOOL   WINAPI ImmIsUIMessageA(HWND, UINT, WPARAM, LPARAM);
-BOOL   WINAPI ImmIsUIMessageW(HWND, UINT, WPARAM, LPARAM);
-#define  ImmIsUIMessage WINELIB_NAME_AW(ImmIsUIMessage)
-BOOL   WINAPI ImmNotifyIME(HIMC, DWORD, DWORD, DWORD);
+
+LONG
+WINAPI
+ImmGetCompositionStringA(
+  _In_ HIMC,
+  _In_ DWORD,
+  _Out_writes_bytes_opt_(dwBufLen) LPVOID lpBuf,
+  _In_ DWORD dwBufLen);
+
+LONG
+WINAPI
+ImmGetCompositionStringW(
+  _In_ HIMC,
+  _In_ DWORD,
+  _Out_writes_bytes_opt_(dwBufLen) LPVOID lpBuf,
+  _In_ DWORD dwBufLen);
+
+#define ImmGetCompositionString WINELIB_NAME_AW(ImmGetCompositionString)
+
+BOOL WINAPI ImmGetCompositionWindow(_In_ HIMC, _Out_ LPCOMPOSITIONFORM);
+HIMC WINAPI ImmGetContext(_In_ HWND);
+
+DWORD
+WINAPI
+ImmGetConversionListA(
+  _In_ HKL,
+  _In_ HIMC,
+  _In_ LPCSTR lpSrc,
+  _Out_writes_bytes_(dwBufLen) LPCANDIDATELIST lpDst,
+  _In_ DWORD dwBufLen,
+  _In_ UINT uFlag);
+
+DWORD
+WINAPI
+ImmGetConversionListW(
+  _In_ HKL,
+  _In_ HIMC,
+  _In_ LPCWSTR lpSrc,
+  _Out_writes_bytes_(dwBufLen) LPCANDIDATELIST lpDst,
+  _In_ DWORD dwBufLen,
+  _In_ UINT uFlag);
+
+#define ImmGetConversionList WINELIB_NAME_AW(ImmGetConversionList)
+
+BOOL
+WINAPI
+ImmGetConversionStatus(
+  _In_ HIMC,
+  _Out_opt_ LPDWORD lpfdwConversion,
+  _Out_opt_ LPDWORD lpfdwSentence);
+
+HWND WINAPI ImmGetDefaultIMEWnd(_In_ HWND);
+
+UINT
+WINAPI
+ImmGetDescriptionA(
+  _In_ HKL,
+  _Out_writes_opt_(uBufLen) LPSTR lpszDescription,
+  _In_ UINT uBufLen);
+
+UINT
+WINAPI
+ImmGetDescriptionW(
+  _In_ HKL,
+  _Out_writes_opt_(uBufLen) LPWSTR lpszDescription,
+  _In_ UINT uBufLen);
+
+#define ImmGetDescription WINELIB_NAME_AW(ImmGetDescription)
+
+DWORD
+WINAPI
+ImmGetGuideLineA(
+  _In_ HIMC,
+  _In_ DWORD dwIndex,
+  _Out_writes_bytes_opt_(dwBufLen) LPSTR lpBuf,
+  _In_ DWORD dwBufLen);
+
+DWORD
+WINAPI
+ImmGetGuideLineW(
+  _In_ HIMC,
+  _In_ DWORD dwIndex,
+  _Out_writes_bytes_opt_(dwBufLen) LPWSTR lpBuf,
+  _In_ DWORD dwBufLen);
+
+#define ImmGetGuideLine WINELIB_NAME_AW(ImmGetGuideLine)
+
+UINT
+WINAPI
+ImmGetIMEFileNameA(
+  _In_ HKL,
+  _Out_writes_opt_(uBufLen) LPSTR lpszFileName,
+  _In_ UINT uBufLen);
+
+UINT
+WINAPI
+ImmGetIMEFileNameW(
+  _In_ HKL,
+  _Out_writes_opt_(uBufLen) LPWSTR lpszFileName,
+  _In_ UINT uBufLen);
+
+#define ImmGetIMEFileName WINELIB_NAME_AW(ImmGetIMEFileName)
+
+DWORD
+WINAPI
+ImmGetImeMenuItemsA(
+  _In_ HIMC,
+  _In_ DWORD,
+  _In_ DWORD,
+  _Out_opt_ LPIMEMENUITEMINFOA lpImeParentMenu,
+  _Out_writes_bytes_opt_(dwSize) LPIMEMENUITEMINFOA lpImeMenu,
+  _In_ DWORD dwSize);
+
+DWORD
+WINAPI
+ImmGetImeMenuItemsW(
+  _In_ HIMC,
+  _In_ DWORD,
+  _In_ DWORD,
+  _Out_opt_ LPIMEMENUITEMINFOW lpImeParentMenu,
+  _Out_writes_bytes_opt_(dwSize) LPIMEMENUITEMINFOW lpImeMenu,
+  _In_ DWORD dwSize);
+
+#define ImmGetImeMenuItems WINELIB_NAME_AW(ImmGetImeMenuItems)
+
+BOOL WINAPI ImmGetOpenStatus(_In_ HIMC);
+DWORD WINAPI ImmGetProperty(_In_ HKL, _In_ DWORD);
+
+UINT
+WINAPI
+ImmGetRegisterWordStyleA(
+  _In_ HKL,
+  _In_ UINT nItem,
+  _Out_writes_(nItem) LPSTYLEBUFA lpStyleBuf);
+
+UINT
+WINAPI
+ImmGetRegisterWordStyleW(
+  _In_ HKL,
+  _In_ UINT nItem,
+  _Out_writes_(nItem) LPSTYLEBUFW lpStyleBuf);
+
+#define ImmGetRegisterWordStyle WINELIB_NAME_AW(ImmGetRegisterWordStyle)
+
+BOOL WINAPI ImmGetStatusWindowPos(_In_ HIMC, _Out_ LPPOINT);
+UINT WINAPI ImmGetVirtualKey(_In_ HWND);
+
+HKL WINAPI ImmInstallIMEA(_In_ LPCSTR, _In_ LPCSTR);
+HKL WINAPI ImmInstallIMEW(_In_ LPCWSTR, _In_ LPCWSTR);
+#define ImmInstallIME WINELIB_NAME_AW(ImmInstallIME)
+
+BOOL WINAPI ImmIsIME(_In_ HKL);
+
+BOOL WINAPI ImmIsUIMessageA(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+BOOL WINAPI ImmIsUIMessageW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+#define ImmIsUIMessage WINELIB_NAME_AW(ImmIsUIMessage)
+
+BOOL WINAPI ImmNotifyIME(_In_ HIMC, _In_ DWORD, _In_ DWORD, _In_ DWORD);
+
 BOOL   WINAPI ImmProcessKey(HWND, HKL, UINT, LPARAM, DWORD);
-BOOL   WINAPI ImmRegisterWordA(HKL, LPCSTR, DWORD, LPCSTR);
-BOOL   WINAPI ImmRegisterWordW(HKL, LPCWSTR, DWORD, LPCWSTR);
-#define  ImmRegisterWord WINELIB_NAME_AW(ImmRegisterWord)
-BOOL   WINAPI ImmReleaseContext(HWND, HIMC);
-BOOL   WINAPI ImmSetCandidateWindow(HIMC, LPCANDIDATEFORM);
-BOOL   WINAPI ImmSetCompositionStringA(HIMC, DWORD, LPCVOID, DWORD, LPCVOID, DWORD);
-BOOL   WINAPI ImmSetCompositionStringW(HIMC, DWORD, LPCVOID, DWORD, LPCVOID, DWORD);
-#define  ImmSetCompositionString WINELIB_NAME_AW(ImmSetCompositionString)
-BOOL   WINAPI ImmSetCompositionWindow(HIMC, LPCOMPOSITIONFORM);
-BOOL   WINAPI ImmSetConversionStatus(HIMC, DWORD, DWORD);
-BOOL   WINAPI ImmSetOpenStatus(HIMC, BOOL);
-BOOL   WINAPI ImmSetStatusWindowPos(HIMC, LPPOINT);
-BOOL   WINAPI ImmSimulateHotKey(HWND, DWORD);
-BOOL   WINAPI ImmUnregisterWordA(HKL, LPCSTR, DWORD, LPCSTR);
-BOOL   WINAPI ImmUnregisterWordW(HKL, LPCWSTR, DWORD, LPCWSTR);
-#define  ImmUnregisterWord WINELIB_NAME_AW(ImmUnregisterWord)
+
+BOOL
+WINAPI
+ImmRegisterWordA(
+  _In_ HKL,
+  _In_ LPCSTR lpszReading,
+  _In_ DWORD,
+  _In_ LPCSTR lpszRegister);
+
+BOOL
+WINAPI
+ImmRegisterWordW(
+  _In_ HKL,
+  _In_ LPCWSTR lpszReading,
+  _In_ DWORD,
+  _In_ LPCWSTR lpszRegister);
+
+#define ImmRegisterWord WINELIB_NAME_AW(ImmRegisterWord)
+
+BOOL WINAPI ImmReleaseContext(_In_ HWND, _In_ HIMC);
+BOOL WINAPI ImmSetCandidateWindow(_In_ HIMC, _In_ LPCANDIDATEFORM);
+
+BOOL
+WINAPI
+ImmSetCompositionStringA(
+  _In_ HIMC,
+  _In_ DWORD dwIndex,
+  _In_reads_bytes_opt_(dwCompLen) LPCVOID lpComp,
+  _In_ DWORD dwCompLen,
+  _In_reads_bytes_opt_(dwReadLen) LPCVOID lpRead,
+  _In_ DWORD dwReadLen);
+
+BOOL
+WINAPI
+ImmSetCompositionStringW(
+  _In_ HIMC,
+  _In_ DWORD dwIndex,
+  _In_reads_bytes_opt_(dwCompLen) LPCVOID lpComp,
+  _In_ DWORD dwCompLen,
+  _In_reads_bytes_opt_(dwReadLen) LPCVOID lpRead,
+  _In_ DWORD dwReadLen);
+
+#define ImmSetCompositionString WINELIB_NAME_AW(ImmSetCompositionString)
+
+BOOL WINAPI ImmSetCompositionWindow(_In_ HIMC, _In_ LPCOMPOSITIONFORM);
+BOOL WINAPI ImmSetConversionStatus(_In_ HIMC, _In_ DWORD, _In_ DWORD);
+BOOL WINAPI ImmSetOpenStatus(_In_ HIMC, _In_ BOOL);
+BOOL WINAPI ImmSetStatusWindowPos(_In_ HIMC, _In_ LPPOINT);
+BOOL WINAPI ImmSimulateHotKey(_In_ HWND, _In_ DWORD);
+
+BOOL
+WINAPI
+ImmUnregisterWordA(
+  _In_ HKL,
+  _In_ LPCSTR lpszReading,
+  _In_ DWORD,
+  _In_ LPCSTR lpszUnregister);
+
+BOOL
+WINAPI
+ImmUnregisterWordW(
+  _In_ HKL,
+  _In_ LPCWSTR lpszReading,
+  _In_ DWORD,
+  _In_ LPCWSTR lpszUnregister);
+
+#define ImmUnregisterWord WINELIB_NAME_AW(ImmUnregisterWord)
 
 
 #ifdef __cplusplus
