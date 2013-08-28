@@ -100,7 +100,11 @@ function(set_entrypoint _module _entrypoint)
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
-    add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM}")
+    if(NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 17)
+        add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.0")
+    else()
+        add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM}")
+    endif()
 endfunction()
 
 function(set_image_base MODULE IMAGE_BASE)
