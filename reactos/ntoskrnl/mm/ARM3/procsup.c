@@ -687,13 +687,12 @@ MmCreatePeb(IN PEPROCESS Process,
         Peb->NumberOfProcessors = KeNumberProcessors;
         Peb->BeingDebugged = (BOOLEAN)(Process->DebugPort != NULL);
         Peb->NtGlobalFlag = NtGlobalFlag;
-        /*Peb->HeapSegmentReserve = MmHeapSegmentReserve;
-         Peb->HeapSegmentCommit = MmHeapSegmentCommit;
-         Peb->HeapDeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
-         Peb->HeapDeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;*/
+        Peb->HeapSegmentReserve = MmHeapSegmentReserve;
+        Peb->HeapSegmentCommit = MmHeapSegmentCommit;
+        Peb->HeapDeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
+        Peb->HeapDeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
         Peb->CriticalSectionTimeout = MmCriticalSectionTimeout;
-        /*Peb->MinimumStackCommit = MmMinimumStackCommitInBytes;
-         */
+        Peb->MinimumStackCommit = MmMinimumStackCommitInBytes;
         Peb->MaximumNumberOfHeaps = (PAGE_SIZE - sizeof(PEB)) / sizeof(PVOID);
         Peb->ProcessHeaps = (PVOID*)(Peb + 1);
 

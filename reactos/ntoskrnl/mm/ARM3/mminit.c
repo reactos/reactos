@@ -359,6 +359,16 @@ SIZE_T MmAllocationFragment;
 SIZE_T MmTotalCommitLimit;
 SIZE_T MmTotalCommitLimitMaximum;
 
+/*
+ * These value tune certain user parameters. They have default values set here,
+ * as well as in the code, and can be overwritten by registry settings.
+ */
+SIZE_T MmHeapSegmentReserve = 1 * _1MB;
+SIZE_T MmHeapSegmentCommit = 2 * PAGE_SIZE;
+SIZE_T MmHeapDeCommitTotalFreeThreshold = 64 * _1KB;
+SIZE_T MmHeapDeCommitFreeBlockThreshold = PAGE_SIZE;
+SIZE_T MmMinimumStackCommitInBytes = 0;
+
 /* Internal setting used for debugging memory descriptors */
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
@@ -2175,6 +2185,27 @@ MmArmInitSystem(IN ULONG Phase,
 
         DPRINT("System PTE count has been tuned to %d (%d bytes)\n",
                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
+
+        /* Check if no values are set for the heap limits */
+        if (MmHeapSegmentReserve == 0)
+        {
+            MmHeapSegmentReserve = 2 * _1MB;
+        }
+
+        if (MmHeapSegmentCommit == 0)
+        {
+            MmHeapSegmentCommit = 2 * PAGE_SIZE;
+        }
+
+        if (MmHeapDeCommitTotalFreeThreshold == 0)
+        {
+            MmHeapDeCommitTotalFreeThreshold = 64 * _1KB;
+        }
+
+        if (MmHeapDeCommitFreeBlockThreshold == 0)
+        {
+            MmHeapDeCommitFreeBlockThreshold = PAGE_SIZE;
+        }
 
         /* Initialize the working set lock */
         ExInitializePushLock(&MmSystemCacheWs.WorkingSetMutex);

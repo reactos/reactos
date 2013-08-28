@@ -237,6 +237,17 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
 
 VOID
 NTAPI
+RtlpSetHeapParameters(IN PRTL_HEAP_PARAMETERS Parameters)
+{
+    /* Apply defaults for non-set parameters */
+    if (!Parameters->SegmentCommit) Parameters->SegmentCommit = MmHeapSegmentCommit;
+    if (!Parameters->SegmentReserve) Parameters->SegmentReserve = MmHeapSegmentReserve;
+    if (!Parameters->DeCommitFreeBlockThreshold) Parameters->DeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
+    if (!Parameters->DeCommitTotalFreeThreshold) Parameters->DeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
+}
+
+VOID
+NTAPI
 RtlpCheckLogException(IN PEXCEPTION_RECORD ExceptionRecord,
                       IN PCONTEXT ContextRecord,
                       IN PVOID ContextData,
