@@ -241,7 +241,7 @@ ScAllocateAndInitializeSid (
 {
     NTSTATUS Status;
 
-    /* Allocare toom for the SID */
+    /* Allocate room for the SID */
     *Sid = RtlAllocateHeap(RtlGetProcessHeap(),
                            0,
                            RtlLengthRequiredSid(SubAuthorityCount));
