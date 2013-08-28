@@ -2382,7 +2382,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     /* Zero out the initial core variables and handles */
     QuerySection = FALSE;
     InJob = FALSE;
-    SkipSaferAndAppCompat = FALSE;
+    SkipSaferAndAppCompat = TRUE; // HACK for making .bat/.cmd launch working again.
     ParameterFlags = 0;
     Flags = 0;
     DebugHandle = NULL;
@@ -3174,6 +3174,7 @@ StartScan:
     switch (Status)
     {
         case STATUS_INVALID_IMAGE_WIN_16:
+        {
             /* 16-bit binary. Should we use WOW or does the caller force VDM? */
             if (!(dwCreationFlags & CREATE_FORCEDOS))
             {
@@ -3308,9 +3309,12 @@ StartScan:
             }
 
             // There is no break here on purpose, so FORCEDOS drops down!
+        }
+
         case STATUS_INVALID_IMAGE_PROTECT:
         case STATUS_INVALID_IMAGE_NOT_MZ:
         case STATUS_INVALID_IMAGE_NE_FORMAT:
+        {
             /* We're launching an executable application */
             BinarySubType = BINARY_TYPE_EXE;
 
@@ -3493,21 +3497,27 @@ StartScan:
             /* We've already done all these checks, don't do them again */
             SkipSaferAndAppCompat = TRUE;
             goto AppNameRetry;
+        }
 
         case STATUS_INVALID_IMAGE_WIN_64:
+        {
             /* 64-bit binaries are not allowed to run on 32-bit ReactOS */
             DPRINT1("64-bit binary, failing\n");
             SetLastError(ERROR_EXE_MACHINE_TYPE_MISMATCH);
             Result = FALSE;
             goto Quickie;
+        }
 
         case STATUS_FILE_IS_OFFLINE:
+        {
             /* Set the correct last error for this */
             DPRINT1("File is offline, failing\n");
             SetLastError(ERROR_FILE_OFFLINE);
             break;
+        }
 
         default:
+        {
             /* Any other error, convert it to a generic Win32 error */
             if (!NT_SUCCESS(Status))
             {
@@ -3520,6 +3530,7 @@ StartScan:
             /* Otherwise, this must be success */
             ASSERT(Status == STATUS_SUCCESS);
             break;
+        }
     }
 
     /* Is this not a WOW application, but a WOW32 VDM was requested for it? */
