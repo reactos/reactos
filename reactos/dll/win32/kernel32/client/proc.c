@@ -629,8 +629,14 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
 
     /* Create the Parameter Block */
     ProcessParameters = NULL;
-    DPRINT1("Image Name: %wZ Dll Path: %wZ current directory: %wZ, CmdLine: %wZ, Title: %wZ, Desktop: %wZ, Shell: %wZ, Runtime: %wZ\n",
-        &ImageName, &DllPath, &CurrentDirectory, &CommandLine, &Title, &Desktop, &Shell, &Runtime);
+    DPRINT1("ImageName: '%wZ'\n", &ImageName);
+    DPRINT1("DllPath  : '%wZ'\n", &DllPath);
+    DPRINT1("CurDir   : '%wZ'\n", &CurrentDirectory);
+    DPRINT1("CmdLine  : '%wZ'\n", &CommandLine);
+    DPRINT1("Title    : '%wZ'\n", &Title);
+    DPRINT1("Desktop  : '%wZ'\n", &Desktop);
+    DPRINT1("Shell    : '%wZ'\n", &Shell);
+    DPRINT1("Runtime  : '%wZ'\n", &Runtime);
     Status = RtlCreateProcessParameters(&ProcessParameters,
                                         &ImageName,
                                         &DllPath,
