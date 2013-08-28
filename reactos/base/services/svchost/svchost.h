@@ -22,22 +22,22 @@
 // This prints out a SVCHOST-specific debug print, with the PID/TID
 //
 #if _EX_
-#define SvchostDbgPrint(l, x, ...)                  \
+#define SvchostDbgPrint(lev, fmt, ...)              \
     DbgPrintEx(DPFLTR_SVCHOST_ID,                   \
-               DPFLTR_MASK | l,                     \
-               "[SVCHOST] %lx.%lx: " # x,           \
+               DPFLTR_MASK | lev,                   \
+               "[SVCHOST] %lx.%lx: " fmt,           \
                GetCurrentProcessId(),               \
                GetCurrentThreadId(),                \
                __VA_ARGS__);
 #else
-#define SvchostDbgPrint(l, x, ...)                \
-    DbgPrint("[SVCHOST] %lx.%lx: " # x,           \
-             GetCurrentProcessId(),               \
-             GetCurrentThreadId(),                \
+#define SvchostDbgPrint(lev, fmt, ...)              \
+    DbgPrint("[SVCHOST] %lx.%lx: " fmt,             \
+             GetCurrentProcessId(),                 \
+             GetCurrentThreadId(),                  \
              __VA_ARGS__);
 #endif
-#define DBG_ERR(x, ...)     SvchostDbgPrint(1, x, __VA_ARGS__)
-#define DBG_TRACE(x, ...)   SvchostDbgPrint(4, x, __VA_ARGS__)
+#define DBG_ERR(fmt, ...)   SvchostDbgPrint(1, fmt, __VA_ARGS__)
+#define DBG_TRACE(fmt, ...) SvchostDbgPrint(4, fmt, __VA_ARGS__)
 
 //
 // This is the callback that a hosted service can register for stop notification
