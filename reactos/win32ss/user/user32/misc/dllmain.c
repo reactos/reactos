@@ -194,34 +194,28 @@ CleanupThread(VOID)
 {
 }
 
+PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
+{
+    User32CallWindowProcFromKernel,
+    User32CallSendAsyncProcForKernel,
+    User32LoadSysMenuTemplateForKernel,
+    User32SetupDefaultCursors,
+    User32CallHookProcFromKernel,
+    User32CallEventProcFromKernel,
+    User32CallLoadMenuFromKernel,
+    User32CallClientThreadSetupFromKernel,
+    User32CallClientLoadLibraryFromKernel,
+    User32CallGetCharsetInfo,
+};
+
 BOOL
 Init(VOID)
 {
    USERCONNECT UserCon;
-   PVOID *KernelCallbackTable;
  
-   /* Set up the kernel callbacks. */
-   KernelCallbackTable = NtCurrentPeb()->KernelCallbackTable;
-   KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
-      (PVOID)User32CallWindowProcFromKernel;
-   KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
-      (PVOID)User32CallSendAsyncProcForKernel;
-   KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
-      (PVOID)User32LoadSysMenuTemplateForKernel;
-   KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
-      (PVOID)User32SetupDefaultCursors;
-   KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
-      (PVOID)User32CallHookProcFromKernel;
-   KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
-      (PVOID)User32CallEventProcFromKernel;
-   KernelCallbackTable[USER32_CALLBACK_LOADMENU] =
-      (PVOID)User32CallLoadMenuFromKernel;
-   KernelCallbackTable[USER32_CALLBACK_CLIENTTHREADSTARTUP] =
-      (PVOID)User32CallClientThreadSetupFromKernel;
-   KernelCallbackTable[USER32_CALLBACK_CLIENTLOADLIBRARY] =
-      (PVOID)User32CallClientLoadLibraryFromKernel;
-   KernelCallbackTable[USER32_CALLBACK_GETCHARSETINFO] =
-      (PVOID)User32CallGetCharsetInfo;
+   /* Set PEB data */
+   NtCurrentPeb()->KernelCallbackTable = apfnDispatch;
+   NtCurrentPeb()->PostProcessInitRoutine = NULL;
 
    NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,

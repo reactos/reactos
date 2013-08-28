@@ -1696,18 +1696,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         return STATUS_NO_MEMORY;
     }
 
-    // FIXME: Is it located properly?
-    /* Initialize table of callbacks for the kernel. */
-    Peb->KernelCallbackTable = RtlAllocateHeap(RtlGetProcessHeap(),
-                                               0,
-                                               sizeof(PVOID) *
-                                                (USER32_CALLBACK_MAXIMUM + 1));
-    if (!Peb->KernelCallbackTable)
-    {
-        DPRINT1("Failed to create callback table\n");
-        ZwTerminateProcess(NtCurrentProcess(), STATUS_INSUFFICIENT_RESOURCES);
-    }
-
     /* Allocate an Activation Context Stack */
     Status = RtlAllocateActivationContextStack(&Teb->ActivationContextStackPointer);
     if (!NT_SUCCESS(Status)) return Status;
