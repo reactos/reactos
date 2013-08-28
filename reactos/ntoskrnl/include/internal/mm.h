@@ -216,18 +216,9 @@ typedef struct _MM_SECTION_SEGMENT
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
 {
-    ULONG_PTR ImageBase;
-    ULONG_PTR StackReserve;
-    ULONG_PTR StackCommit;
-    ULONG_PTR EntryPoint;
-    USHORT Subsystem;
-    USHORT ImageCharacteristics;
-    USHORT MinorSubsystemVersion;
-    USHORT MajorSubsystemVersion;
-    USHORT Machine;
-    BOOLEAN Executable;
+    SECTION_IMAGE_INFORMATION ImageInformation;
+    PVOID BasedAddress;
     ULONG NrSegments;
-    ULONG ImageSize;
     PMM_SECTION_SEGMENT Segments;
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
@@ -1547,6 +1538,12 @@ MmFindRegion(
 );
 
 /* section.c *****************************************************************/
+
+VOID
+NTAPI
+MmGetImageInformation(
+    OUT PSECTION_IMAGE_INFORMATION ImageInformation
+);
 
 PFILE_OBJECT
 NTAPI

@@ -343,11 +343,30 @@ typedef struct _SECTION_IMAGE_INFORMATION
     USHORT ImageCharacteristics;
     USHORT DllCharacteristics;
     USHORT Machine;
-    UCHAR ImageContainsCode;
-    UCHAR Spare1;
+    BOOLEAN ImageContainsCode;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    union
+    {
+        struct
+        {
+            UCHAR ComPlusNativeReady:1;
+            UCHAR ComPlusILOnly:1;
+            UCHAR ImageDynamicallyRelocated:1;
+            UCHAR ImageMappedFlat:1;
+            UCHAR Reserved:4;
+        };
+        UCHAR ImageFlags;
+    };
+#else
+    BOOLEAN Spare1;
+#endif
     ULONG LoaderFlags;
     ULONG ImageFileSize;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG CheckSum;
+#else
     ULONG Reserved[1];
+#endif
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 #ifndef NTOS_MODE_USER

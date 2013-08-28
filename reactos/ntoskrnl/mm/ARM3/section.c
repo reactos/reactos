@@ -1495,6 +1495,22 @@ MmGetFileObjectForSection(IN PVOID SectionObject)
     return ((PROS_SECTION_OBJECT)SectionObject)->FileObject;
 }
 
+VOID
+NTAPI
+MmGetImageInformation (OUT PSECTION_IMAGE_INFORMATION ImageInformation)
+{
+    PSECTION_OBJECT SectionObject;
+
+    /* Get the section object of this process*/
+    SectionObject = PsGetCurrentProcess()->SectionObject;
+    ASSERT(SectionObject != NULL);
+    ASSERT(MiIsRosSectionObject(SectionObject) == TRUE);
+
+    /* Return the image information */
+    DPRINT1("HERE!\n");
+    *ImageInformation = ((PROS_SECTION_OBJECT)SectionObject)->ImageSection->ImageInformation;
+}
+
 NTSTATUS
 NTAPI
 MmGetFileNameForFileObject(IN PFILE_OBJECT FileObject,

@@ -17,9 +17,6 @@
 /* FIXME: From winbase.h... what to do? */
 #define SEM_NOALIGNMENTFAULTEXCEPT 0x04
 
-/* Include Information Class Tables */
-#include "internal/ps_i.h"
-
 /* Debugging Level */
 ULONG PspTraceLevel = 0;
 
@@ -108,7 +105,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         _SEH2_END;
     }
 
-    if((ProcessInformationClass == ProcessCookie) &&
+    if (((ProcessInformationClass == ProcessCookie) ||
+         (ProcessInformationClass == ProcessImageInformation)) &&
         (ProcessHandle != NtCurrentProcess()))
     {
         /*
@@ -823,8 +821,30 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             break;
 
         case ProcessImageInformation:
-            DPRINT1("Image Information Query Not implemented: %lx\n", ProcessInformationClass);
-            Status = STATUS_NOT_IMPLEMENTED;
+
+            /* Set the length required and validate it */
+            Length = sizeof(SECTION_IMAGE_INFORMATION);
+            if (ProcessInformationLength != Length)
+            {
+                /* Break out */
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH to protect write */
+            _SEH2_TRY
+            {
+                MmGetImageInformation((PSECTION_IMAGE_INFORMATION)ProcessInformation);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* Indicate success */
+            Status = STATUS_SUCCESS;
             break;
 
         case ProcessDebugObjectHandle:

@@ -199,6 +199,7 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     ULONG cbHeadersSize = 0;
     ULONG nSectionAlignment;
     ULONG nFileAlignment;
+    ULONG ImageBase;
     const IMAGE_DOS_HEADER * pidhDosHeader;
     const IMAGE_NT_HEADERS32 * pinhNtHeader;
     const IMAGE_OPTIONAL_HEADER32 * piohOptHeader;
@@ -389,17 +390,54 @@ l_ReadHeaderFromFile:
         /* PE32 */
         case IMAGE_NT_OPTIONAL_HDR32_MAGIC:
         {
-            if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, ImageBase))
-                ImageSectionObject->ImageBase = piohOptHeader->ImageBase;
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, ImageBase))
+                ImageBase = piohOptHeader->ImageBase;
 
             if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfImage))
-                ImageSectionObject->ImageSize = piohOptHeader->SizeOfImage;
+                ImageSectionObject->ImageInformation.ImageFileSize = piohOptHeader->SizeOfImage;
 
             if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfStackReserve))
-                ImageSectionObject->StackReserve = piohOptHeader->SizeOfStackReserve;
+                ImageSectionObject->ImageInformation.MaximumStackSize = piohOptHeader->SizeOfStackReserve;
 
             if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfStackCommit))
-                ImageSectionObject->StackCommit = piohOptHeader->SizeOfStackCommit;
+                ImageSectionObject->ImageInformation.CommittedStackSize = piohOptHeader->SizeOfStackCommit;
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, Subsystem))
+            {
+                ImageSectionObject->ImageInformation.SubSystemType = piohOptHeader->Subsystem;
+
+                if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, MinorSubsystemVersion) &&
+                    RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, MajorSubsystemVersion))
+                {
+                    ImageSectionObject->ImageInformation.SubSystemMinorVersion = piohOptHeader->MinorSubsystemVersion;
+                    ImageSectionObject->ImageInformation.SubSystemMajorVersion = piohOptHeader->MajorSubsystemVersion;
+                }
+            }
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
+            {
+                ImageSectionObject->ImageInformation.TransferAddress = (PVOID) (ImageBase +
+                    piohOptHeader->AddressOfEntryPoint);
+            }
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfCode))
+                ImageSectionObject->ImageInformation.ImageContainsCode = piohOptHeader->SizeOfCode != 0;
+            else
+                ImageSectionObject->ImageInformation.ImageContainsCode = TRUE;
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
+            {
+                if (piohOptHeader->AddressOfEntryPoint == 0)
+                {
+                    ImageSectionObject->ImageInformation.ImageContainsCode = FALSE;
+                }
+            }
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, LoaderFlags))
+                ImageSectionObject->ImageInformation.LoaderFlags = piohOptHeader->LoaderFlags;
+
+            if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, DllCharacteristics))
+                ImageSectionObject->ImageInformation.DllCharacteristics = piohOptHeader->DllCharacteristics;
 
             break;
         }
@@ -413,10 +451,9 @@ l_ReadHeaderFromFile:
 
             if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, ImageBase))
             {
+                ImageBase = pioh64OptHeader->ImageBase;
                 if(pioh64OptHeader->ImageBase > MAXULONG_PTR)
                     DIE(("ImageBase exceeds the address space\n"));
-
-                ImageSectionObject->ImageBase = (ULONG_PTR)pioh64OptHeader->ImageBase;
             }
 
             if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfImage))
@@ -424,7 +461,7 @@ l_ReadHeaderFromFile:
                 if(pioh64OptHeader->SizeOfImage > MAXULONG_PTR)
                     DIE(("SizeOfImage exceeds the address space\n"));
 
-                ImageSectionObject->ImageSize = pioh64OptHeader->SizeOfImage;
+                ImageSectionObject->ImageInformation.ImageFileSize = pioh64OptHeader->SizeOfImage;
             }
 
             if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfStackReserve))
@@ -432,7 +469,7 @@ l_ReadHeaderFromFile:
                 if(pioh64OptHeader->SizeOfStackReserve > MAXULONG_PTR)
                     DIE(("SizeOfStackReserve exceeds the address space\n"));
 
-                ImageSectionObject->StackReserve = (ULONG_PTR)pioh64OptHeader->SizeOfStackReserve;
+                ImageSectionObject->ImageInformation.MaximumStackSize = (ULONG_PTR) pioh64OptHeader->SizeOfStackReserve;
             }
 
             if(RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfStackCommit))
@@ -440,42 +477,59 @@ l_ReadHeaderFromFile:
                 if(pioh64OptHeader->SizeOfStackCommit > MAXULONG_PTR)
                     DIE(("SizeOfStackCommit exceeds the address space\n"));
 
-                ImageSectionObject->StackCommit = (ULONG_PTR)pioh64OptHeader->SizeOfStackCommit;
+                ImageSectionObject->ImageInformation.CommittedStackSize = (ULONG_PTR) pioh64OptHeader->SizeOfStackCommit;
             }
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, Subsystem))
+            {
+                ImageSectionObject->ImageInformation.SubSystemType = pioh64OptHeader->Subsystem;
+
+                if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, MinorSubsystemVersion) &&
+                    RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, MajorSubsystemVersion))
+                {
+                    ImageSectionObject->ImageInformation.SubSystemMinorVersion = pioh64OptHeader->MinorSubsystemVersion;
+                    ImageSectionObject->ImageInformation.SubSystemMajorVersion = pioh64OptHeader->MajorSubsystemVersion;
+                }
+            }
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, AddressOfEntryPoint))
+            {
+                ImageSectionObject->ImageInformation.TransferAddress = (PVOID) (ImageBase +
+                    pioh64OptHeader->AddressOfEntryPoint);
+            }
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, SizeOfCode))
+                ImageSectionObject->ImageInformation.ImageContainsCode = pioh64OptHeader->SizeOfCode != 0;
+            else
+                ImageSectionObject->ImageInformation.ImageContainsCode = TRUE;
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, AddressOfEntryPoint))
+            {
+                if (pioh64OptHeader->AddressOfEntryPoint == 0)
+                {
+                    ImageSectionObject->ImageInformation.ImageContainsCode = FALSE;
+                }
+            }
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, LoaderFlags))
+                ImageSectionObject->ImageInformation.LoaderFlags = pioh64OptHeader->LoaderFlags;
+
+            if (RTL_CONTAINS_FIELD(pioh64OptHeader, cbOptHeaderSize, DllCharacteristics))
+                ImageSectionObject->ImageInformation.DllCharacteristics = pioh64OptHeader->DllCharacteristics;
 
             break;
         }
     }
 
     /* [1], section 3.4.2 */
-    if((ULONG_PTR)ImageSectionObject->ImageBase % 0x10000)
+    if((ULONG_PTR)ImageBase % 0x10000)
         DIE(("ImageBase is not aligned on a 64KB boundary"));
 
-    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, Subsystem))
-    {
-        ImageSectionObject->Subsystem = piohOptHeader->Subsystem;
-
-        if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, MinorSubsystemVersion) &&
-           RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, MajorSubsystemVersion))
-        {
-            ImageSectionObject->MinorSubsystemVersion = piohOptHeader->MinorSubsystemVersion;
-            ImageSectionObject->MajorSubsystemVersion = piohOptHeader->MajorSubsystemVersion;
-        }
-    }
-
-    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
-    {
-        ImageSectionObject->EntryPoint = ImageSectionObject->ImageBase +
-                                         piohOptHeader->AddressOfEntryPoint;
-    }
-
-    if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, SizeOfCode))
-        ImageSectionObject->Executable = piohOptHeader->SizeOfCode != 0;
-    else
-        ImageSectionObject->Executable = TRUE;
-
-    ImageSectionObject->ImageCharacteristics = pinhNtHeader->FileHeader.Characteristics;
-    ImageSectionObject->Machine = pinhNtHeader->FileHeader.Machine;
+    ImageSectionObject->ImageInformation.ImageCharacteristics = pinhNtHeader->FileHeader.Characteristics;
+    ImageSectionObject->ImageInformation.Machine = pinhNtHeader->FileHeader.Machine;
+    ImageSectionObject->ImageInformation.GpValue = 0;
+    ImageSectionObject->ImageInformation.ZeroBits = 0;
+    ImageSectionObject->BasedAddress = (PVOID)ImageBase;
 
     /* SECTION HEADERS */
     nStatus = STATUS_INVALID_IMAGE_FORMAT;
@@ -3597,18 +3651,18 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
     * Some defaults
     */
    /* FIXME? are these values platform-dependent? */
-   if(ImageSectionObject->StackReserve == 0)
-      ImageSectionObject->StackReserve = 0x40000;
+   if (ImageSectionObject->ImageInformation.MaximumStackSize == 0)
+       ImageSectionObject->ImageInformation.MaximumStackSize = 0x40000;
 
-   if(ImageSectionObject->StackCommit == 0)
-      ImageSectionObject->StackCommit = 0x1000;
+   if(ImageSectionObject->ImageInformation.CommittedStackSize == 0)
+       ImageSectionObject->ImageInformation.CommittedStackSize = 0x1000;
 
-   if(ImageSectionObject->ImageBase == 0)
+   if(ImageSectionObject->BasedAddress == NULL)
    {
-      if(ImageSectionObject->ImageCharacteristics & IMAGE_FILE_DLL)
-         ImageSectionObject->ImageBase = 0x10000000;
+      if(ImageSectionObject->ImageInformation.ImageCharacteristics & IMAGE_FILE_DLL)
+         ImageSectionObject->BasedAddress = (PVOID)0x10000000;
       else
-         ImageSectionObject->ImageBase = 0x00400000;
+         ImageSectionObject->BasedAddress = (PVOID)0x00400000;
    }
 
    /*
@@ -4237,21 +4291,12 @@ NtQuerySection(IN HANDLE SectionHandle,
 
             _SEH2_TRY
             {
-               memset(Sii, 0, sizeof(SECTION_IMAGE_INFORMATION));
                if (Section->AllocationAttributes & SEC_IMAGE)
                {
                   PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
                   ImageSectionObject = Section->ImageSection;
 
-                  Sii->TransferAddress = (PVOID)ImageSectionObject->EntryPoint;
-                  Sii->MaximumStackSize = ImageSectionObject->StackReserve;
-                  Sii->CommittedStackSize = ImageSectionObject->StackCommit;
-                  Sii->SubSystemType = ImageSectionObject->Subsystem;
-                  Sii->SubSystemMinorVersion = ImageSectionObject->MinorSubsystemVersion;
-                  Sii->SubSystemMajorVersion = ImageSectionObject->MajorSubsystemVersion;
-                  Sii->ImageCharacteristics = ImageSectionObject->ImageCharacteristics;
-                  Sii->Machine = ImageSectionObject->Machine;
-                  Sii->ImageContainsCode = ImageSectionObject->Executable;
+                  *Sii = ImageSectionObject->ImageInformation;
                }
 
                if (ResultLength != NULL)
@@ -4386,11 +4431,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
       SectionSegments = ImageSectionObject->Segments;
       NrSegments = ImageSectionObject->NrSegments;
 
-
       ImageBase = (ULONG_PTR)*BaseAddress;
       if (ImageBase == 0)
       {
-         ImageBase = ImageSectionObject->ImageBase;
+          ImageBase = (ULONG_PTR)ImageSectionObject->BasedAddress;
       }
 
       ImageSize = 0;
@@ -4405,7 +4449,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
          }
       }
 
-      ImageSectionObject->ImageSize = (ULONG)ImageSize;
+      ImageSectionObject->ImageInformation.ImageFileSize = (ULONG)ImageSize;
 
       /* Check for an illegal base address */
       if ((ImageBase + ImageSize) > (ULONG_PTR)MmHighestUserAddress)
