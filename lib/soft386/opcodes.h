@@ -79,4 +79,12 @@ Soft386OpcodeExchangeEax
     UCHAR Opcode
 );
 
+BOOLEAN
+FASTCALL
+Soft386OpcodeShortConditionalJmp
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
 #endif // _OPCODES_H_

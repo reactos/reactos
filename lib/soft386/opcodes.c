@@ -136,22 +136,22 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0x6D NOT SUPPORTED
     NULL, // TODO: OPCODE 0x6E NOT SUPPORTED
     NULL, // TODO: OPCODE 0x6F NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x70 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x71 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x72 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x73 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x74 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x75 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x76 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x77 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x78 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x79 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x7A NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x7B NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x7C NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x7D NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x7E NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x7F NOT SUPPORTED
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
+    Soft386OpcodeShortConditionalJmp,
     NULL, // TODO: OPCODE 0x80 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x81 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x82 NOT SUPPORTED
@@ -646,5 +646,97 @@ Soft386OpcodeExchangeEax(PSOFT386_STATE State, UCHAR Opcode)
         State->GeneralRegs[SOFT386_REG_EAX].LowWord = Value;
     }
 
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeShortConditionalJmp(PSOFT386_STATE State, UCHAR Opcode)
+{
+    BOOLEAN Jump = FALSE;
+    CHAR Offset = 0;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF0) == 0x70);
+
+    /* Fetch the offset */
+    if (!Soft386FetchByte(State, (PUCHAR)&Offset))
+    {
+        /* An exception occurred */
+        return FALSE;
+    }
+
+    switch ((Opcode & 0x0F) >> 1)
+    {
+        /* JO / JNO */
+        case 0:
+        {
+            Jump = State->Flags.Of;
+            break;
+        }
+
+        /* JC / JNC */
+        case 1:
+        {
+            Jump = State->Flags.Cf;
+            break;
+        }
+
+        /* JZ / JNZ */
+        case 2:
+        {
+            Jump = State->Flags.Zf;
+            break;
+        }
+
+        /* JBE / JNBE */
+        case 3:
+        {
+            Jump = State->Flags.Cf || State->Flags.Zf;
+            break;
+        }
+
+        /* JS / JNS */
+        case 4:
+        {
+            Jump = State->Flags.Sf;
+            break;
+        }
+
+        /* JP / JNP */
+        case 5:
+        {
+            Jump = State->Flags.Pf;
+            break;
+        }
+
+        /* JL / JNL */
+        case 6:
+        {
+            Jump = State->Flags.Sf != State->Flags.Of;
+            break;
+        }
+
+        /* JLE / JNLE */
+        case 7:
+        {
+            Jump = (State->Flags.Sf != State->Flags.Of) || State->Flags.Zf;
+            break;
+        }
+    }
+
+    if ((Opcode & 0xF0) & 1)
+    {
+        /* Invert the result */
+        Jump = !Jump;
+    }
+
+    if (Jump)
+    {
+        /* Move the instruction pointer */        
+        State->InstPtr.Long += Offset;
+    }
+
+    /* Return success */
     return TRUE;
 }
