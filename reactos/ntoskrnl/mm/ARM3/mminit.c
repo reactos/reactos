@@ -360,7 +360,7 @@ SIZE_T MmTotalCommitLimit;
 SIZE_T MmTotalCommitLimitMaximum;
 
 /*
- * These value tune certain user parameters. They have default values set here,
+ * These values tune certain user parameters. They have default values set here,
  * as well as in the code, and can be overwritten by registry settings.
  */
 SIZE_T MmHeapSegmentReserve = 1 * _1MB;
