@@ -76,11 +76,13 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
             ((ServerDll->ValidTable) && !(ServerDll->ValidTable[ApiId])))
         {
             /* We are beyond the Maximum API ID, or it doesn't exist */
+            DPRINT1("API: %d\n", ApiId);
             DPRINT1("CSRSS: %lx (%s) is invalid ApiTableIndex for %Z or is an "
                     "invalid API to call from the server.\n",
-                    ServerDll->ValidTable[ApiId],
+                    ApiId,
                     ((ServerDll->NameTable) && (ServerDll->NameTable[ApiId])) ?
-                    ServerDll->NameTable[ApiId] : "*** UNKNOWN ***", &ServerDll->Name);
+                    ServerDll->NameTable[ApiId] : "*** UNKNOWN ***",
+                    &ServerDll->Name);
             // DbgBreakPoint();
             ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
             return STATUS_ILLEGAL_FUNCTION;

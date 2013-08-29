@@ -46,6 +46,7 @@ typedef enum _BASESRV_API_NUMBER
     BasepNlsUpdateCacheCount,
     BasepSetTermsrvClientTimeZone,
     BasepSxsCreateActivationContext,
+    BasepUnknown,
     BasepRegisterThread,
     BasepNlsGetUserInfo,
     BasepMaxApiNumber
@@ -260,6 +261,13 @@ typedef struct
     UNICODE_STRING TargetPath;
 } BASE_DEFINE_DOS_DEVICE, *PBASE_DEFINE_DOS_DEVICE;
 
+typedef struct
+{
+    HANDLE SectionHandle;
+    ULONG Type;
+    ULONG LocaleId;
+} BASE_NLS_CREATE_SECTION, *PBASE_NLS_CREATE_SECTION;
+
 typedef struct _BASE_API_MESSAGE
 {
     PORT_MESSAGE Header;
@@ -288,6 +296,7 @@ typedef struct _BASE_API_MESSAGE
         BASE_SOUND_SENTRY SoundSentryRequest;
         BASE_REFRESH_INIFILE_MAPPING RefreshIniFileMappingRequest;
         BASE_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
+        BASE_NLS_CREATE_SECTION NlsCreateSection;
     } Data;
 } BASE_API_MESSAGE, *PBASE_API_MESSAGE;
 

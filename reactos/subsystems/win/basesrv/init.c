@@ -17,6 +17,7 @@
 /* GLOBALS ********************************************************************/
 
 HANDLE BaseSrvDllInstance = NULL;
+extern UNICODE_STRING BaseSrvKernel32DllPath;
 
 /* Memory */
 HANDLE BaseSrvHeap = NULL;          // Our own heap.
@@ -54,6 +55,7 @@ PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber - BASESRV_FIRST_AP
     BaseSrvNlsUpdateCacheCount,
     BaseSrvSetTermsrvClientTimeZone,
     BaseSrvSxsCreateActivationContext,
+    BaseSrvDebugProcess,
     BaseSrvRegisterThread,
     BaseSrvNlsGetUserInfo,
 };
@@ -84,12 +86,13 @@ BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMB
     TRUE,   // BaseSrvSoundSentryNotification
     TRUE,   // BaseSrvRefreshIniFileMapping
     TRUE,   // BaseSrvDefineDosDevice
-    FALSE,  // BaseSrvSetTermsrvAppInstallMode
-    FALSE,  // BaseSrvNlsUpdateCacheCount
-    FALSE,  // BaseSrvSetTermsrvClientTimeZone
-    FALSE,  // BaseSrvSxsCreateActivationContext
-    FALSE,  // BaseSrvRegisterThread
-    FALSE,  // BaseSrvNlsGetUserInfo
+    TRUE,   // BaseSrvSetTermsrvAppInstallMode
+    TRUE,   // BaseSrvNlsUpdateCacheCount
+    TRUE,   // BaseSrvSetTermsrvClientTimeZone
+    TRUE,   // BaseSrvSxsCreateActivationContext
+    TRUE,   // BasepDebugProcess
+    TRUE,   // BaseSrvRegisterThread
+    TRUE,   // BaseSrvNlsGetUserInfo
 };
 
 PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
@@ -308,6 +311,12 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
     /* Create the system directory */
     wcscat(SystemRootString.Buffer, L"\\System32");
     Status = RtlCreateUnicodeString(&BaseSrvWindowsSystemDirectory,
+                                    SystemRootString.Buffer);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Create the kernel32 path */
+    wcscat(SystemRootString.Buffer, L"\\kernel32.dll");
+    Status = RtlCreateUnicodeString(&BaseSrvKernel32DllPath,
                                     SystemRootString.Buffer);
     ASSERT(NT_SUCCESS(Status));
 
