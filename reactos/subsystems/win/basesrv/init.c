@@ -123,7 +123,7 @@ PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
     "BaseSetTermsrvClientTimeZone",
     "BaseSxsCreateActivationContext",
     "BaseRegisterThread",
-     "BaseNlsGetUserInfo",
+    "BaseNlsGetUserInfo",
 };
 
 
