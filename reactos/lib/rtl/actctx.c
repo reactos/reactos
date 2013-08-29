@@ -2099,14 +2099,14 @@ static NTSTATUS find_query_actctx( HANDLE *handle, DWORD flags, ULONG class )
 {
     NTSTATUS status = STATUS_SUCCESS;
 
-    if (flags & QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX)
+    if (flags & RTL_QUERY_ACTIVATION_CONTEXT_FLAG_USE_ACTIVE_ACTIVATION_CONTEXT)
     {
         if (*handle) return STATUS_INVALID_PARAMETER;
 
         if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
             *handle = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext;
     }
-    else if (flags & (QUERY_ACTCTX_FLAG_ACTCTX_IS_ADDRESS|QUERY_ACTCTX_FLAG_ACTCTX_IS_HMODULE))
+    else if (flags & (RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_ADDRESS | RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_HMODULE))
     {
         ULONG magic;
         LDR_DATA_TABLE_ENTRY *pldr;
@@ -2116,7 +2116,7 @@ static NTSTATUS find_query_actctx( HANDLE *handle, DWORD flags, ULONG class )
         LdrLockLoaderLock( 0, NULL, &magic );
         if (!LdrFindEntryForAddress( *handle, &pldr ))
         {
-            if ((flags & QUERY_ACTCTX_FLAG_ACTCTX_IS_HMODULE) && *handle != pldr->DllBase)
+            if ((flags & RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_HMODULE) && *handle != pldr->DllBase)
                 status = STATUS_DLL_NOT_FOUND;
             else
                 *handle = pldr->EntryPointActivationContext;
@@ -2417,7 +2417,7 @@ RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
     if (!frame)
         RtlRaiseStatus( STATUS_SXS_INVALID_DEACTIVATION );
 
-    if (frame != top && !(flags & DEACTIVATE_ACTCTX_FLAG_FORCE_EARLY_DEACTIVATION))
+    if (frame != top && !(flags & RTL_DEACTIVATE_ACTIVATION_CONTEXT_FLAG_FORCE_EARLY_DEACTIVATION))
         RtlRaiseStatus( STATUS_SXS_EARLY_DEACTIVATION );
 
     /* pop everything up to and including frame */
@@ -2524,7 +2524,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
 
             info->hActCtx = handle;
             info->dwFlags = 0;  /* FIXME */
-            if (!(flags & QUERY_ACTCTX_FLAG_NO_ADDREF)) RtlAddRefActivationContext( handle );
+            if (!(flags & RTL_QUERY_ACTIVATION_CONTEXT_FLAG_NO_ADDREF)) RtlAddRefActivationContext(handle);
         }
         break;
 
@@ -2707,7 +2707,7 @@ RtlQueryInformationActiveActivationContext(ULONG ulInfoClass,
                                            SIZE_T cbBuffer OPTIONAL,
                                            SIZE_T *pcbWrittenOrRequired OPTIONAL)
 {
-    return RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+    return RtlQueryInformationActivationContext(RTL_QUERY_ACTIVATION_CONTEXT_FLAG_USE_ACTIVE_ACTIVATION_CONTEXT,
                                                 NULL,
                                                 NULL,
                                                 ulInfoClass,

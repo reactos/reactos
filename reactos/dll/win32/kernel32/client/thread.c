@@ -260,8 +260,7 @@ CreateRemoteThread(IN HANDLE hProcess,
         Teb->ActivationContextStackPointer = ActivationContextStack;
 
         /* Query the Context */
-        // WARNING!!! THIS IS USING THE WIN32 FLAG BECAUSE REACTOS CONTINUES TO BE A POS!!! ///
-        Status = RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+        Status = RtlQueryInformationActivationContext(RTL_QUERY_ACTIVATION_CONTEXT_FLAG_USE_ACTIVE_ACTIVATION_CONTEXT,
                                                       NULL,
                                                       0,
                                                       ActivationContextBasicInformation,
@@ -934,8 +933,7 @@ QueueUserAPC(IN PAPCFUNC pfnAPC,
 
     /* Zero the activation context and query information on it */
     RtlZeroMemory(&ActCtxInfo, sizeof(ActCtxInfo));
-    // WARNING!!! THIS IS USING THE WIN32 FLAG BECAUSE REACTOS CONTINUES TO BE A POS!!! ///
-    Status = RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+    Status = RtlQueryInformationActivationContext(RTL_QUERY_ACTIVATION_CONTEXT_FLAG_USE_ACTIVE_ACTIVATION_CONTEXT,
                                                   NULL,
                                                   0,
                                                   ActivationContextBasicInformation,

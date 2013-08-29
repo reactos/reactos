@@ -4,6 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    client/actctx.c
     client/appcache.c
     client/atom.c
     client/compname.c
