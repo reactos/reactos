@@ -21,8 +21,34 @@ CSR_API(BaseSrvCreateThread);
 CSR_API(BaseSrvExitProcess);
 CSR_API(BaseSrvGetProcessShutdownParam);
 CSR_API(BaseSrvSetProcessShutdownParam);
+CSR_API(BaseSrvDebugProcess);
+CSR_API(BaseSrvRegisterThread);
+CSR_API(BaseSrvSxsCreateActivationContext);
+CSR_API(BaseSrvSetTermsrvAppInstallMode);
+CSR_API(BaseSrvSetTermsrvClientTimeZone);
 
 /* sndsntry.c */
 CSR_API(BaseSrvSoundSentryNotification);
+
+/* vdm.c */
+CSR_API(BaseSrvCheckVDM);
+CSR_API(BaseSrvUpdateVDMEntry);
+CSR_API(BaseSrvGetNextVDMCommand);
+CSR_API(BaseSrvExitVDM);
+CSR_API(BaseSrvIsFirstVDM);
+CSR_API(BaseSrvGetVDMExitCode);
+CSR_API(BaseSrvSetReenterCount);
+CSR_API(BaseSrvSetVDMCurDirs);
+CSR_API(BaseSrvGetVDMCurDirs);
+CSR_API(BaseSrvBatNotification);
+CSR_API(BaseSrvRegisterWowExec);
+CSR_API(BaseSrvRefreshIniFileMapping);
+
+/* nls.c */
+CSR_API(BaseSrvNlsSetUserInfo);
+CSR_API(BaseSrvNlsSetMultipleUserInfo);
+CSR_API(BaseSrvNlsCreateSection);
+CSR_API(BaseSrvNlsUpdateCacheCount);
+CSR_API(BaseSrvNlsGetUserInfo);
 
 /* EOF */

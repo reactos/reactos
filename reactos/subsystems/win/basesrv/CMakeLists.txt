@@ -8,6 +8,8 @@ list(APPEND SOURCE
     init.c
     proc.c
     sndsntry.c
+    vdm.c
+    nls.c
     basesrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/basesrv.def)
 

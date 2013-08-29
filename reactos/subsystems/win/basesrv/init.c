@@ -30,32 +30,32 @@ PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber - BASESRV_FIRST_AP
     BaseSrvCreateThread,
     BaseSrvGetTempFile,
     BaseSrvExitProcess,
-    // BaseSrvDebugProcess,
-    // BaseSrvCheckVDM,
-    // BaseSrvUpdateVDMEntry,
-    // BaseSrvGetNextVDMCommand,
-    // BaseSrvExitVDM,
-    // BaseSrvIsFirstVDM,
-    // BaseSrvGetVDMExitCode,
-    // BaseSrvSetReenterCount,
+    BaseSrvDebugProcess,
+    BaseSrvCheckVDM,
+    BaseSrvUpdateVDMEntry,
+    BaseSrvGetNextVDMCommand,
+    BaseSrvExitVDM,
+    BaseSrvIsFirstVDM,
+    BaseSrvGetVDMExitCode,
+    BaseSrvSetReenterCount,
     BaseSrvSetProcessShutdownParam,
     BaseSrvGetProcessShutdownParam,
-    // BaseSrvNlsSetUserInfo,
-    // BaseSrvNlsSetMultipleUserInfo,
-    // BaseSrvNlsCreateSection,
-    // BaseSrvSetVDMCurDirs,
-    // BaseSrvGetVDMCurDirs,
-    // BaseSrvBatNotification,
-    // BaseSrvRegisterWowExec,
+    BaseSrvNlsSetUserInfo,
+    BaseSrvNlsSetMultipleUserInfo,
+    BaseSrvNlsCreateSection,
+    BaseSrvSetVDMCurDirs,
+    BaseSrvGetVDMCurDirs,
+    BaseSrvBatNotification,
+    BaseSrvRegisterWowExec,
     BaseSrvSoundSentryNotification,
-    // BaseSrvRefreshIniFileMapping,
+    BaseSrvRefreshIniFileMapping,
     BaseSrvDefineDosDevice,
-    // BaseSrvSetTermsrvAppInstallMode,
-    // BaseSrvNlsUpdateCacheCount,
-    // BaseSrvSetTermsrvClientTimeZone,
-    // BaseSrvSxsCreateActivationContext,
-    // BaseSrvRegisterThread,
-    // BaseSrvNlsGetUserInfo,
+    BaseSrvSetTermsrvAppInstallMode,
+    BaseSrvNlsUpdateCacheCount,
+    BaseSrvSetTermsrvClientTimeZone,
+    BaseSrvSxsCreateActivationContext,
+    BaseSrvRegisterThread,
+    BaseSrvNlsGetUserInfo,
 };
 
 BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
@@ -64,32 +64,32 @@ BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMB
     TRUE,   // BaseSrvCreateThread
     TRUE,   // BaseSrvGetTempFile
     FALSE,  // BaseSrvExitProcess
-    // FALSE,  // BaseSrvDebugProcess
-    // TRUE,   // BaseSrvCheckVDM
-    // TRUE,   // BaseSrvUpdateVDMEntry
-    // TRUE,   // BaseSrvGetNextVDMCommand
-    // TRUE,   // BaseSrvExitVDM
-    // TRUE,   // BaseSrvIsFirstVDM
-    // TRUE,   // BaseSrvGetVDMExitCode
-    // TRUE,   // BaseSrvSetReenterCount
+    FALSE,  // BaseSrvDebugProcess
+    TRUE,   // BaseSrvCheckVDM
+    TRUE,   // BaseSrvUpdateVDMEntry
+    TRUE,   // BaseSrvGetNextVDMCommand
+    TRUE,   // BaseSrvExitVDM
+    TRUE,   // BaseSrvIsFirstVDM
+    TRUE,   // BaseSrvGetVDMExitCode
+    TRUE,   // BaseSrvSetReenterCount
     TRUE,   // BaseSrvSetProcessShutdownParam
     TRUE,   // BaseSrvGetProcessShutdownParam
-    // TRUE,   // BaseSrvNlsSetUserInfo
-    // TRUE,   // BaseSrvNlsSetMultipleUserInfo
-    // TRUE,   // BaseSrvNlsCreateSection
-    // TRUE,   // BaseSrvSetVDMCurDirs
-    // TRUE,   // BaseSrvGetVDMCurDirs
-    // TRUE,   // BaseSrvBatNotification
-    // TRUE,   // BaseSrvRegisterWowExec
+    TRUE,   // BaseSrvNlsSetUserInfo
+    TRUE,   // BaseSrvNlsSetMultipleUserInfo
+    TRUE,   // BaseSrvNlsCreateSection
+    TRUE,   // BaseSrvSetVDMCurDirs
+    TRUE,   // BaseSrvGetVDMCurDirs
+    TRUE,   // BaseSrvBatNotification
+    TRUE,   // BaseSrvRegisterWowExec
     TRUE,   // BaseSrvSoundSentryNotification
-    // TRUE,   // BaseSrvRefreshIniFileMapping
+    TRUE,   // BaseSrvRefreshIniFileMapping
     TRUE,   // BaseSrvDefineDosDevice
-    // FALSE,  // BaseSrvSetTermsrvAppInstallMode
-    // FALSE,  // BaseSrvNlsUpdateCacheCount
-    // FALSE,  // BaseSrvSetTermsrvClientTimeZone
-    // FALSE,  // BaseSrvSxsCreateActivationContext
-    // FALSE,  // BaseSrvRegisterThread
-    // FALSE,  // BaseSrvNlsGetUserInfo
+    FALSE,  // BaseSrvSetTermsrvAppInstallMode
+    FALSE,  // BaseSrvNlsUpdateCacheCount
+    FALSE,  // BaseSrvSetTermsrvClientTimeZone
+    FALSE,  // BaseSrvSxsCreateActivationContext
+    FALSE,  // BaseSrvRegisterThread
+    FALSE,  // BaseSrvNlsGetUserInfo
 };
 
 PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
@@ -98,32 +98,32 @@ PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
     "BaseCreateThread",
     "BaseGetTempFile",
     "BaseExitProcess",
-    // "BaseDebugProcess",
-    // "BaseCheckVDM",
-    // "BaseUpdateVDMEntry",
-    // "BaseGetNextVDMCommand",
-    // "BaseExitVDM",
-    // "BaseIsFirstVDM",
-    // "BaseGetVDMExitCode",
-    // "BaseSetReenterCount",
+    "BaseDebugProcess",
+    "BaseCheckVDM",
+    "BaseUpdateVDMEntry",
+    "BaseGetNextVDMCommand",
+    "BaseExitVDM",
+    "BaseIsFirstVDM",
+    "BaseGetVDMExitCode",
+    "BaseSetReenterCount",
     "BaseSetProcessShutdownParam",
     "BaseGetProcessShutdownParam",
-    // "BaseNlsSetUserInfo",
-    // "BaseNlsSetMultipleUserInfo",
-    // "BaseNlsCreateSection",
-    // "BaseSetVDMCurDirs",
-    // "BaseGetVDMCurDirs",
-    // "BaseBatNotification",
-    // "BaseRegisterWowExec",
+    "BaseNlsSetUserInfo",
+    "BaseNlsSetMultipleUserInfo",
+    "BaseNlsCreateSection",
+    "BaseSetVDMCurDirs",
+    "BaseGetVDMCurDirs",
+    "BaseBatNotification",
+    "BaseRegisterWowExec",
     "BaseSoundSentryNotification",
-    // "BaseRefreshIniFileMapping",
+    "BaseRefreshIniFileMapping",
     "BaseDefineDosDevice",
-    // "BaseSetTermsrvAppInstallMode",
-    // "BaseNlsUpdateCacheCount",
-    // "BaseSetTermsrvClientTimeZone",
-    // "BaseSxsCreateActivationContext",
-    // "BaseRegisterThread",
-    // "BaseNlsGetUserInfo",
+    "BaseSetTermsrvAppInstallMode",
+    "BaseNlsUpdateCacheCount",
+    "BaseSetTermsrvClientTimeZone",
+    "BaseSxsCreateActivationContext",
+    "BaseRegisterThread",
+     "BaseNlsGetUserInfo",
 };
 
 

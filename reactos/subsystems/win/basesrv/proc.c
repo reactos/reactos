@@ -15,6 +15,35 @@
 
 /* PUBLIC SERVER APIS *********************************************************/
 
+CSR_API(BaseSrvDebugProcess)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(BaseSrvRegisterThread)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+CSR_API(BaseSrvSxsCreateActivationContext)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(BaseSrvSetTermsrvAppInstallMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(BaseSrvSetTermsrvClientTimeZone)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 CSR_API(BaseSrvGetTempFile)
 {
     static UINT BaseGetTempFileUnique = 0;
