@@ -268,7 +268,7 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // Invalid
     Soft386OpcodePrefix,
     Soft386OpcodePrefix,
-    NULL, // TODO: OPCODE 0xF4 NOT SUPPORTED
+    Soft386OpcodeHalt,
     NULL, // TODO: OPCODE 0xF5 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xF6 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xF7 NOT SUPPORTED

@@ -135,4 +135,12 @@ Soft386OpcodeSetDir
     UCHAR Opcode
 );
 
+BOOLEAN
+FASTCALL
+Soft386OpcodeHalt
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
 #endif // _OPCODES_H_
