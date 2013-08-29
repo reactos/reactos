@@ -150,6 +150,13 @@ VOID
     ULONG Size
 );
 
+typedef
+VOID
+(NTAPI *SOFT386_IDLE_PROC)
+(
+    PSOFT386_STATE State
+);
+
 typedef union _SOFT386_REG
 {
     struct
@@ -280,6 +287,7 @@ struct _SOFT386_STATE
     SOFT386_MEM_WRITE_PROC MemWriteCallback;
     SOFT386_IO_READ_PROC IoReadCallback;
     SOFT386_IO_WRITE_PROC IoWriteCallback;
+    SOFT386_IDLE_PROC IdleCallback;
     SOFT386_REG GeneralRegs[SOFT386_NUM_GEN_REGS];
     SOFT386_SEG_REG SegmentRegs[SOFT386_NUM_SEG_REGS];
     SOFT386_REG InstPtr;
@@ -291,6 +299,7 @@ struct _SOFT386_STATE
     ULONG ExceptionCount;
     ULONG PrefixFlags;
     INT SegmentOverride;
+    BOOLEAN HardwareInt;
 };
 
 /* FUNCTIONS ******************************************************************/

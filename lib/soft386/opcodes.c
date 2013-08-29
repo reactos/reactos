@@ -600,7 +600,8 @@ Soft386OpcodeNop(PSOFT386_STATE State, UCHAR Opcode)
 
     if (State->PrefixFlags & SOFT386_PREFIX_REP)
     {
-        // TODO: Handle PAUSE instruction.
+        /* Idle cycle */
+        State->IdleCallback(State);
     }
 
     return TRUE;
@@ -748,6 +749,13 @@ Soft386OpcodeClearCarry(PSOFT386_STATE State, UCHAR Opcode)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xF8);
 
+    /* No prefixes allowed */
+    if (State->PrefixFlags)
+    {
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
     /* Clear CF and return success */
     State->Flags.Cf = FALSE;
     return TRUE;
@@ -760,6 +768,13 @@ Soft386OpcodeSetCarry(PSOFT386_STATE State, UCHAR Opcode)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xF9);
 
+    /* No prefixes allowed */
+    if (State->PrefixFlags)
+    {
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
     /* Set CF and return success*/
     State->Flags.Cf = TRUE;
     return TRUE;
@@ -771,6 +786,13 @@ Soft386OpcodeClearInt(PSOFT386_STATE State, UCHAR Opcode)
 {
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xFA);
+
+    /* No prefixes allowed */
+    if (State->PrefixFlags)
+    {
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
 
     /* Check for protected mode */
     if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
@@ -805,6 +827,13 @@ Soft386OpcodeSetInt(PSOFT386_STATE State, UCHAR Opcode)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xFB);
 
+    /* No prefixes allowed */
+    if (State->PrefixFlags)
+    {
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
     /* Check for protected mode */
     if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
     {
@@ -838,6 +867,13 @@ Soft386OpcodeClearDir(PSOFT386_STATE State, UCHAR Opcode)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xFC);
 
+    /* No prefixes allowed */
+    if (State->PrefixFlags)
+    {
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
     /* Clear DF and return success */
     State->Flags.Df = FALSE;
     return TRUE;
@@ -850,7 +886,42 @@ Soft386OpcodeSetDir(PSOFT386_STATE State, UCHAR Opcode)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xFD);
 
+    /* No prefixes allowed */
+    if (State->PrefixFlags)
+    {
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
     /* Set DF and return success*/
     State->Flags.Df = TRUE;
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeHalt(PSOFT386_STATE State, UCHAR Opcode)
+{
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xF4);
+
+    /* No prefixes allowed */
+    if (State->PrefixFlags)
+    {
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Privileged instructions can only be executed under CPL = 0 */
+    if (State->SegmentRegs[SOFT386_REG_CS].Dpl != 0)
+    {
+        Soft386Exception(State, SOFT386_EXCEPTION_GP);
+        return FALSE;
+    }
+
+    /* Halt */
+    while (!State->HardwareInt) State->IdleCallback(State);
+
+    /* Return success */
     return TRUE;
 }
