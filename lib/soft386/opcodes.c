@@ -269,7 +269,7 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodePrefix,
     Soft386OpcodePrefix,
     Soft386OpcodeHalt,
-    NULL, // TODO: OPCODE 0xF5 NOT SUPPORTED
+    Soft386OpcodeComplCarry,
     NULL, // TODO: OPCODE 0xF6 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xF7 NOT SUPPORTED
     Soft386OpcodeClearCarry,
@@ -777,6 +777,25 @@ Soft386OpcodeSetCarry(PSOFT386_STATE State, UCHAR Opcode)
 
     /* Set CF and return success*/
     State->Flags.Cf = TRUE;
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeComplCarry(PSOFT386_STATE State, UCHAR Opcode)
+{
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xF5);
+
+    /* No prefixes allowed */
+    if (State->PrefixFlags)
+    {
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Toggle CF and return success */
+    State->Flags.Cf = !State->Flags.Cf;
     return TRUE;
 }
 

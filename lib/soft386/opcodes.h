@@ -105,6 +105,14 @@ Soft386OpcodeSetCarry
 
 BOOLEAN
 FASTCALL
+Soft386OpcodeComplCarry
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
 Soft386OpcodeClearInt
 (
     PSOFT386_STATE State,
