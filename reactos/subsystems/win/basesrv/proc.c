@@ -44,6 +44,12 @@ CSR_API(BaseSrvSetTermsrvClientTimeZone)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+CSR_API(BaseSrvUnknown)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 CSR_API(BaseSrvGetTempFile)
 {
     static UINT BaseGetTempFileUnique = 0;

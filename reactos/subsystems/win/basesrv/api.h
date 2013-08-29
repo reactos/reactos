@@ -26,6 +26,7 @@ CSR_API(BaseSrvRegisterThread);
 CSR_API(BaseSrvSxsCreateActivationContext);
 CSR_API(BaseSrvSetTermsrvAppInstallMode);
 CSR_API(BaseSrvSetTermsrvClientTimeZone);
+CSR_API(BaseSrvUnknown);
 
 /* sndsntry.c */
 CSR_API(BaseSrvSoundSentryNotification);
