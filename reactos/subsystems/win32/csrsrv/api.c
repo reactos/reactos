@@ -180,7 +180,12 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
                 Status = CsrSrvAttachSharedSection(CsrProcess, ConnectInfo);
 
                 /* Check how this went */
-                if (NT_SUCCESS(Status)) AllowConnection = TRUE;
+                if (NT_SUCCESS(Status))
+                {
+                    /* Allow the connection, and return debugging flag */
+                    ConnectInfo->DebugFlags = CsrDebug;
+                    AllowConnection = TRUE;
+                }
             }
 
             /* Dereference the project */
@@ -197,7 +202,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     RemotePortView.ViewBase = NULL;
 
     /* Save the Process ID */
-    ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
+    ConnectInfo->ServerProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     /* Accept the Connection */
     Status = NtAcceptConnectPort(&ServerPort,

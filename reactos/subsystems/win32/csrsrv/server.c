@@ -469,7 +469,7 @@ CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
     /* Write the values in the Connection Info structure */
     ConnectInfo->SharedSectionBase = CsrSrvSharedSectionBase;
     ConnectInfo->SharedSectionHeap = CsrSrvSharedSectionHeap;
-    ConnectInfo->SharedSectionData = CsrSrvSharedStaticServerData;
+    ConnectInfo->SharedStaticServerData = CsrSrvSharedStaticServerData;
 
     /* Return success */
     return STATUS_SUCCESS;

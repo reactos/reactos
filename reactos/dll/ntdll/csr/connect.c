@@ -107,7 +107,7 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
     SecurityQos.EffectiveOnly = TRUE;
 
     /* Setup the connection info */
-    ConnectionInfo.Version = CSRSRV_VERSION;
+    ConnectionInfo.DebugFlags = 0;
 
     /* Create a SID for us */
     Status = RtlAllocateAndInitializeSid(&NtSidAuthority,
@@ -153,12 +153,12 @@ CsrpConnectToServer(IN PWSTR ObjectDirectory)
                          (ULONG_PTR)LpcWrite.ViewBase;
 
     /* Save the Process */
-    CsrProcessId = ConnectionInfo.ProcessId;
+    CsrProcessId = ConnectionInfo.ServerProcessId;
 
     /* Save CSR Section data */
     NtCurrentPeb()->ReadOnlySharedMemoryBase = ConnectionInfo.SharedSectionBase;
     NtCurrentPeb()->ReadOnlySharedMemoryHeap = ConnectionInfo.SharedSectionHeap;
-    NtCurrentPeb()->ReadOnlyStaticServerData = ConnectionInfo.SharedSectionData;
+    NtCurrentPeb()->ReadOnlyStaticServerData = ConnectionInfo.SharedStaticServerData;
 
     /* Create the port heap */
     CsrPortHeap = RtlCreateHeap(0,

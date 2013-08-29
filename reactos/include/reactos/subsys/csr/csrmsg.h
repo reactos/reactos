@@ -46,15 +46,15 @@ typedef ULONG CSR_API_NUMBER;
 
 typedef struct _CSR_API_CONNECTINFO
 {
-    ULONG Version;
-    ULONG Unknown;
     HANDLE ObjectDirectory;
     PVOID SharedSectionBase;
+    PVOID SharedStaticServerData;
     PVOID SharedSectionHeap;
-    PVOID SharedSectionData;
     ULONG DebugFlags;
-    ULONG Unknown2[3];
-    HANDLE ProcessId;
+    ULONG SizeOfPebData;
+    ULONG SizeOfTebData;
+    ULONG NumberOfServerDllNames;
+    HANDLE ServerProcessId;
 } CSR_API_CONNECTINFO, *PCSR_API_CONNECTINFO;
 
 #define CSRSRV_VERSION 0x10000
