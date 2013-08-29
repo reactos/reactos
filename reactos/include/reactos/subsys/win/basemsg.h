@@ -46,7 +46,7 @@ typedef enum _BASESRV_API_NUMBER
     BasepNlsUpdateCacheCount,
     BasepSetTermsrvClientTimeZone,
     BasepSxsCreateActivationContext,
-    BasepDebugProcess,
+    BasepUnknown,
     BasepRegisterThread,
     BasepNlsGetUserInfo,
 
