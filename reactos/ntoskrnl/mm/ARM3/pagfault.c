@@ -24,6 +24,162 @@ BOOLEAN UserPdeFault = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+NTSTATUS
+NTAPI
+MiCheckForUserStackOverflow(IN PVOID Address,
+                            IN PVOID TrapInformation)
+{
+    PETHREAD CurrentThread = PsGetCurrentThread();
+    PTEB Teb = CurrentThread->Tcb.Teb;
+    PVOID StackBase, DeallocationStack, NextStackAddress;
+    ULONG GuranteedSize;
+    NTSTATUS Status;
+
+    /* Do we own the address space lock? */
+    if (CurrentThread->AddressSpaceOwner == 1)
+    {
+        /* This isn't valid */
+        DPRINT1("Process owns address space lock\n");
+        ASSERT(KeAreAllApcsDisabled() == TRUE);
+        return STATUS_GUARD_PAGE_VIOLATION;
+    }
+
+    /* Are we attached? */
+    if (KeIsAttachedProcess())
+    {
+        /* This isn't valid */
+        DPRINT1("Process is attached\n");
+        return STATUS_GUARD_PAGE_VIOLATION;
+    }
+
+    /* Read the current settings */
+    StackBase = Teb->NtTib.StackBase;
+    DeallocationStack = Teb->DeallocationStack;
+    GuranteedSize = Teb->GuaranteedStackBytes;
+    DPRINT1("Handling guard page fault with Stacks Addresses 0x%p and 0x%p, guarantee: %lx\n",
+            StackBase, DeallocationStack, GuranteedSize);
+
+    /* Guarantees make this code harder, for now, assume there aren't any */
+    ASSERT(GuranteedSize == 0);
+
+    /* So allocate only the minimum guard page size */
+    GuranteedSize = PAGE_SIZE;
+
+    /* Does this faulting stack address actually exist in the stack? */
+    if ((Address >= StackBase) || (Address < DeallocationStack))
+    {
+        /* That's odd... */
+        DPRINT1("Faulting address outside of stack bounds\n");
+        return STATUS_GUARD_PAGE_VIOLATION;
+    }
+
+    /* This is where the stack will start now */
+    NextStackAddress = (PVOID)((ULONG_PTR)PAGE_ALIGN(Address) - GuranteedSize);
+
+    /* Do we have at least one page between here and the end of the stack? */
+    if (((ULONG_PTR)NextStackAddress - PAGE_SIZE) <= (ULONG_PTR)DeallocationStack)
+    {
+        /* We don't -- Windows would try to make this guard page valid now */
+        DPRINT1("Close to our death...\n");
+        ASSERT(FALSE);
+        return STATUS_STACK_OVERFLOW;
+    }
+
+    /* Don't handle this flag yet */
+    ASSERT((PsGetCurrentProcess()->Peb->NtGlobalFlag & FLG_DISABLE_STACK_EXTENSION) == 0);
+
+    /* Update the stack limit */
+    Teb->NtTib.StackLimit = (PVOID)((ULONG_PTR)NextStackAddress + GuranteedSize);
+
+    /* Now move the guard page to the next page */
+    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                     &NextStackAddress,
+                                     0,
+                                     &GuranteedSize,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE | PAGE_GUARD);
+    if ((NT_SUCCESS(Status) || (Status == STATUS_ALREADY_COMMITTED)))
+    {
+        /* We did it! */
+        DPRINT1("Guard page handled successfully for %p\n", Address);
+        return STATUS_PAGE_FAULT_GUARD_PAGE;
+    }
+
+    /* Fail, we couldn't move the guard page */
+    DPRINT1("Guard page failure: %lx\n", Status);
+    ASSERT(FALSE);
+    return STATUS_STACK_OVERFLOW;
+}
+
+NTSTATUS
+NTAPI
+MiAccessCheck(IN PMMPTE PointerPte,
+              IN BOOLEAN StoreInstruction,
+              IN KPROCESSOR_MODE PreviousMode,
+              IN ULONG ProtectionCode,
+              IN PVOID TrapFrame,
+              IN BOOLEAN LockHeld)
+{
+    MMPTE TempPte;
+
+    /* Check for invalid user-mode access */
+    if ((PreviousMode == UserMode) && (PointerPte > MiHighestUserPte))
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    /* Capture the PTE -- is it valid? */
+    TempPte = *PointerPte;
+    if (TempPte.u.Hard.Valid)
+    {
+        /* Was someone trying to write to it? */
+        if (StoreInstruction)
+        {
+            /* Is it writable?*/
+            if ((TempPte.u.Hard.Write) || (TempPte.u.Hard.CopyOnWrite))
+            {
+                /* Then there's nothing to worry about */
+                return STATUS_SUCCESS;
+            }
+
+            /* Oops! This isn't allowed */
+            return STATUS_ACCESS_VIOLATION;
+        }
+
+        /* Someone was trying to read from a valid PTE, that's fine too */
+        return STATUS_SUCCESS;
+    }
+
+    /* Convert any fault flag to 1 only */
+    if (StoreInstruction) StoreInstruction = 1;
+
+#if 0
+    /* Check if the protection on the page allows what is being attempted */
+    if ((MmReadWrite[Protection] - StoreInstruction) < 10)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+#endif
+
+    /* Check if this is a guard page */
+    if (ProtectionCode & MM_DECOMMIT)
+    {
+        /* Attached processes can't expand their stack */
+        if (KeIsAttachedProcess()) return STATUS_ACCESS_VIOLATION;
+
+        /* No support for transition PTEs yet */
+        ASSERT(((TempPte.u.Soft.Transition == 1) &&
+                (TempPte.u.Soft.Prototype == 0)) == FALSE);
+
+        /* Remove the guard page bit, and return a guard page violation */
+        PointerPte->u.Soft.Protection = ProtectionCode & ~MM_DECOMMIT;
+        return STATUS_GUARD_PAGE_VIOLATION;
+    }
+
+    /* Nothing to do */
+    return STATUS_SUCCESS;
+}
+
 PMMPTE
 NTAPI
 MiCheckVirtualAddress(IN PVOID VirtualAddress,
@@ -800,7 +956,14 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     {
         if (!PteContents.u.Proto.ReadOnly)
         {
-            /* FIXME: CHECK FOR ACCESS  */
+            /* Check for page acess in software */
+            Status = MiAccessCheck(PointerProtoPte,
+                                   StoreInstruction,
+                                   KernelMode,
+                                   TempPte.u.Soft.Protection,
+                                   TrapInformation,
+                                   TRUE);
+            ASSERT(Status == STATUS_SUCCESS);
 
             /* Check for copy on write page */
             if ((TempPte.u.Soft.Protection & MM_WRITECOPY) == MM_WRITECOPY)
@@ -1682,9 +1845,6 @@ UserFault:
             return Status;
         }
 
-        /* No guard page support yet */
-        ASSERT((ProtectionCode & MM_DECOMMIT) == 0);
-
         /*
          * Check if this is a real user-mode address or actually a kernel-mode
          * page table for a user mode address
@@ -1693,6 +1853,24 @@ UserFault:
         {
             /* Add an additional page table reference */
             MiIncrementPageTableReferences(Address);
+        }
+
+        /* Is this a guard page? */
+        if (ProtectionCode & MM_DECOMMIT)
+        {
+            /* Remove the bit */
+            PointerPte->u.Soft.Protection = ProtectionCode & ~MM_DECOMMIT;
+
+            /* Not supported */
+            ASSERT(ProtoPte == NULL);
+            ASSERT(CurrentThread->ApcNeeded == 0);
+
+            /* Drop the working set lock */
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            ASSERT(KeGetCurrentIrql() == OldIrql);
+
+            /* Handle stack expansion */
+            return MiCheckForUserStackOverflow(Address, TrapInformation);
         }
 
         /* Did we get a prototype PTE back? */
@@ -1781,8 +1959,7 @@ UserFault:
             return STATUS_PAGE_FAULT_DEMAND_ZERO;
         }
 
-        /* No guard page support yet */
-        ASSERT((ProtectionCode & MM_DECOMMIT) == 0);
+        /* We should have a valid protection here */
         ASSERT(ProtectionCode != 0x100);
 
         /* Write the prototype PTE */
@@ -1831,7 +2008,36 @@ UserFault:
         }
     }
 
-    /* FIXME: Run MiAccessCheck */
+    /* Do we have a valid protection code? */
+    if (ProtectionCode != 0x100)
+    {
+        /* Run a software access check first, including to detect guard pages */
+        Status = MiAccessCheck(PointerPte,
+                               StoreInstruction,
+                               Mode,
+                               ProtectionCode,
+                               TrapInformation,
+                               FALSE);
+        if (Status != STATUS_SUCCESS)
+        {
+            /* Not supported */
+            ASSERT(CurrentThread->ApcNeeded == 0);
+
+            /* Drop the working set lock */
+            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+            ASSERT(KeGetCurrentIrql() == OldIrql);
+
+            /* Did we hit a guard page? */
+            if (Status == STATUS_GUARD_PAGE_VIOLATION)
+            {
+                /* Handle stack expansion */
+                return MiCheckForUserStackOverflow(Address, TrapInformation);
+            }
+
+            /* Otherwise, fail back to the caller directly */
+            return Status;
+        }
+    }
 
     /* Dispatch the fault */
     Status = MiDispatchFault(StoreInstruction,

@@ -1288,7 +1288,6 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  ULONG_PTR LowLimit;
   BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
@@ -1297,14 +1296,6 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   {
       WARN("IntCallWindowsProcW() called with WndProc = NULL!\n");
       return FALSE;
-  }
-
-  // Safeguard against excessive recursions.
-  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
-  if (((ULONG_PTR)&lParam - LowLimit) < PAGE_SIZE )
-  {
-     ERR("IntCallWindowsProcW() Exceeded Stack!\n");
-     return FALSE;
   }
 
   if (pWnd)
@@ -2766,7 +2757,6 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
   MSG KMMsg, UMMsg;
   PWND pWnd = NULL;
-  ULONG_PTR LowLimit;
   PCLIENTINFO pci = GetWin32ClientInfo();
 
   /* Make sure we don't try to access mem beyond what we were given */
@@ -2774,13 +2764,6 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
       return STATUS_INFO_LENGTH_MISMATCH;
     }
-
-  LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
-  if (((ULONG_PTR)&ArgumentLength - LowLimit) < PAGE_SIZE )
-  {
-     ERR("Callback from Win32k Exceeded Stack!\n");
-     return STATUS_BAD_STACK;
-  }
 
   CallbackArgs = (PWINDOWPROC_CALLBACK_ARGUMENTS) Arguments;
   KMMsg.hwnd = CallbackArgs->Wnd;
