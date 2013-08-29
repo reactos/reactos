@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/thread/thread.c
+ * FILE:            dll/win32/kernel32/client/thread.c
  * PURPOSE:         Thread functions
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Ariadne (ariadne@xs4all.nl)
  *
  */
 

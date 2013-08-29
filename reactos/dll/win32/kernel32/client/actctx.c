@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/thread/thread.c
- * PURPOSE:         Thread functions
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Ariadne ( ariadne@xs4all.nl)
+ * FILE:            dll/win32/kernel32/client/actctx.c
+ * PURPOSE:         Activation contexts - NT-compatible helpers
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *
+ * NOTE:            See also kernel32/wine/actctx.c
  */
 
 /* INCLUDES ******************************************************************/
