@@ -272,12 +272,12 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xF5 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xF6 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xF7 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xF8 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xF9 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xFA NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xFB NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xFC NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xFD NOT SUPPORTED
+    Soft386OpcodeClearCarry,
+    Soft386OpcodeSetCarry,
+    Soft386OpcodeClearInt,
+    Soft386OpcodeSetInt,
+    Soft386OpcodeClearDir,
+    Soft386OpcodeSetDir,
     NULL, // TODO: OPCODE 0xFE NOT SUPPORTED
     NULL, // TODO: OPCODE 0xFF NOT SUPPORTED
 };
@@ -738,5 +738,119 @@ Soft386OpcodeShortConditionalJmp(PSOFT386_STATE State, UCHAR Opcode)
     }
 
     /* Return success */
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeClearCarry(PSOFT386_STATE State, UCHAR Opcode)
+{
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xF8);
+
+    /* Clear CF and return success */
+    State->Flags.Cf = FALSE;
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeSetCarry(PSOFT386_STATE State, UCHAR Opcode)
+{
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xF9);
+
+    /* Set CF and return success*/
+    State->Flags.Cf = TRUE;
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeClearInt(PSOFT386_STATE State, UCHAR Opcode)
+{
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xFA);
+
+    /* Check for protected mode */
+    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+    {
+        /* Check IOPL */
+        if (State->Flags.Iopl >= State->SegmentRegs[SOFT386_REG_CS].Dpl)
+        {
+            /* Clear the interrupt flag */
+            State->Flags.If = FALSE;
+        }
+        else
+        {
+            /* General Protection Fault */
+            Soft386Exception(State, SOFT386_EXCEPTION_GP);
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Just clear the interrupt flag */
+        State->Flags.If = FALSE;
+    }
+
+    /* Return success */
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeSetInt(PSOFT386_STATE State, UCHAR Opcode)
+{
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xFB);
+
+    /* Check for protected mode */
+    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+    {
+        /* Check IOPL */
+        if (State->Flags.Iopl >= State->SegmentRegs[SOFT386_REG_CS].Dpl)
+        {
+            /* Set the interrupt flag */
+            State->Flags.If = TRUE;
+        }
+        else
+        {
+            /* General Protection Fault */
+            Soft386Exception(State, SOFT386_EXCEPTION_GP);
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Just set the interrupt flag */
+        State->Flags.If = TRUE;
+    }
+
+    /* Return success */
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeClearDir(PSOFT386_STATE State, UCHAR Opcode)
+{
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xFC);
+
+    /* Clear DF and return success */
+    State->Flags.Df = FALSE;
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeSetDir(PSOFT386_STATE State, UCHAR Opcode)
+{
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xFD);
+
+    /* Set DF and return success*/
+    State->Flags.Df = TRUE;
     return TRUE;
 }

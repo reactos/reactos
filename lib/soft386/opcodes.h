@@ -87,4 +87,52 @@ Soft386OpcodeShortConditionalJmp
     UCHAR Opcode
 );
 
+BOOLEAN
+FASTCALL
+Soft386OpcodeClearCarry
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeSetCarry
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeClearInt
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeSetInt
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeClearDir
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeSetDir
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
 #endif // _OPCODES_H_
