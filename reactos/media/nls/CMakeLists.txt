@@ -60,6 +60,13 @@ list(APPEND NLS_FILES
     c_28604.nls
     c_28605.nls
     c_28606.nls
+    unicode.nls
+    geo.nls
+    sorttbls.nls
+    locale.nls
+    sortkey.nls
+    ctype.nls
+    l_except.nls
 )
     
     
