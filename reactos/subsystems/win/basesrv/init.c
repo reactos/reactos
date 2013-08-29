@@ -125,6 +125,7 @@ PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
     "BaseNlsUpdateCacheCount",
     "BaseSetTermsrvClientTimeZone",
     "BaseSxsCreateActivationContext",
+    "BaseUnknown",
     "BaseRegisterThread",
     "BaseNlsGetUserInfo",
 };
