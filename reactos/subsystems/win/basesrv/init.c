@@ -55,7 +55,7 @@ PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber - BASESRV_FIRST_AP
     BaseSrvNlsUpdateCacheCount,
     BaseSrvSetTermsrvClientTimeZone,
     BaseSrvSxsCreateActivationContext,
-    BaseSrvDebugProcess,
+    BaseSrvUnknown,
     BaseSrvRegisterThread,
     BaseSrvNlsGetUserInfo,
 };
@@ -90,7 +90,7 @@ BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMB
     TRUE,   // BaseSrvNlsUpdateCacheCount
     TRUE,   // BaseSrvSetTermsrvClientTimeZone
     TRUE,   // BaseSrvSxsCreateActivationContext
-    TRUE,   // BasepDebugProcess
+    TRUE,   // BaseSrvUnknown
     TRUE,   // BaseSrvRegisterThread
     TRUE,   // BaseSrvNlsGetUserInfo
 };
