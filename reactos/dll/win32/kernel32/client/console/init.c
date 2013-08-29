@@ -64,8 +64,8 @@ PropDialogHandler(IN LPVOID lpThreadParameter)
     {
         WCHAR szBuffer[MAX_PATH];
 
-        GetWindowsDirectoryW(szBuffer, MAX_PATH);
-        wcscat(szBuffer, L"\\system32\\console.dll");
+        GetSystemDirectoryW(szBuffer, MAX_PATH);
+        wcscat(szBuffer, L"\\console.dll");
         ConsoleLibrary = LoadLibraryW(szBuffer);
 
         if (ConsoleLibrary == NULL)
