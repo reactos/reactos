@@ -179,7 +179,7 @@ BasepInitConsole(VOID)
     ULONG ConnectInfoSize = sizeof(ConnectInfo);
 
     DPRINT("BasepInitConsole for : %wZ\n", &Parameters->ImagePathName);
-    DPRINT("Our current console handles are: %lx, %lx, %lx %lx\n",
+    DPRINT("Our current console handles are: %p, %p, %p %p\n",
            Parameters->ConsoleHandle, Parameters->StandardInput,
            Parameters->StandardOutput, Parameters->StandardError);
 
@@ -240,7 +240,7 @@ BasepInitConsole(VOID)
             {
                 Parameters->ConsoleHandle = NULL;
             }
-            DPRINT("Using existing console: %x\n", Parameters->ConsoleHandle);
+            DPRINT("Using existing console: %p\n", Parameters->ConsoleHandle);
         }
     }
 
@@ -309,7 +309,7 @@ BasepInitConsole(VOID)
 
     InputWaitHandle = ConnectInfo.InputWaitHandle;
 
-    DPRINT("Console setup: %lx, %lx, %lx, %lx\n",
+    DPRINT("Console setup: %p, %p, %p, %p\n",
             Parameters->ConsoleHandle,
             Parameters->StandardInput,
             Parameters->StandardOutput,

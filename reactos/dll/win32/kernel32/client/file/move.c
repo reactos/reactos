@@ -91,7 +91,7 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
     WCHAR *p;
     NTSTATUS Status;
 
-    TRACE("add_boot_rename_entry( %S, %S, %d ) \n", source, dest, flags);
+    TRACE("add_boot_rename_entry( %S, %S, %lu ) \n", source, dest, flags);
 
     if(dest)
         DestLen = wcslen(dest);
@@ -990,7 +990,7 @@ Cleanup:
     /* If there was an error, set the error code */
     if(!Ret)
     {
-        TRACE("ReplaceFileW failed (error=%d)\n", Error);
+        TRACE("ReplaceFileW failed (error=%lu)\n", Error);
         SetLastError(Error);
     }
     return Ret;

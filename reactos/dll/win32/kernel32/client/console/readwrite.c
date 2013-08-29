@@ -275,7 +275,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
     }
 
     /* Return the read region */
-    DPRINT("read region: %lx\n", ReadOutputRequest->ReadRegion);
+    DPRINT("read region: %p\n", ReadOutputRequest->ReadRegion);
     *lpReadRegion = ReadOutputRequest->ReadRegion;
 
     /* Release the capture buffer */
@@ -592,7 +592,7 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
     }
 
     /* Return the read region */
-    DPRINT("read region: %lx\n", WriteOutputRequest->WriteRegion);
+    DPRINT("read region: %p\n", WriteOutputRequest->WriteRegion);
     *lpWriteRegion = WriteOutputRequest->WriteRegion;
 
     /* Release the capture buffer */

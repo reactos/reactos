@@ -1713,7 +1713,7 @@ GetLocalisedText(DWORD dwResId, WCHAR *lpszDest)
         }
     }
 
-    DPRINT1("Could not get codepage name. dwResId = %ld\n", dwResId);
+    DPRINT1("Could not get codepage name. dwResId = %lu\n", dwResId);
     return FALSE;
 }
 

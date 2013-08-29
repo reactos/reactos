@@ -253,7 +253,7 @@ GetVolumeInformationW(IN LPCWSTR lpRootPathName,
       return FALSE;
     }
 
-  TRACE("hFile: %x\n", hFile);
+  TRACE("hFile: %p\n", hFile);
   errCode = NtQueryVolumeInformationFile(hFile,
                                          &IoStatusBlock,
                                          FileFsVolume,

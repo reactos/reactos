@@ -29,7 +29,7 @@ WriteFile(IN HANDLE hFile,
 {
     NTSTATUS Status;
 
-    TRACE("WriteFile(hFile %x)\n", hFile);
+    TRACE("WriteFile(hFile %p)\n", hFile);
 
     if (lpNumberOfBytesWritten != NULL) *lpNumberOfBytesWritten = 0;
 
@@ -128,7 +128,7 @@ ReadFile(IN HANDLE hFile,
 {
     NTSTATUS Status;
 
-    TRACE("ReadFile(hFile %x)\n", hFile);
+    TRACE("ReadFile(hFile %p)\n", hFile);
 
     if (lpNumberOfBytesRead != NULL) *lpNumberOfBytesRead = 0;
     if (!nNumberOfBytesToRead) return TRUE;

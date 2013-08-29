@@ -1123,7 +1123,7 @@ BaseQueryModuleData(IN LPSTR ModuleName,
                     IN PVOID Unknown3,
                     IN PVOID Unknown4)
 {
-    DPRINT1("BaseQueryModuleData called: %s %s %x %x %x\n",
+    DPRINT1("BaseQueryModuleData called: %s %s %p %p %p\n",
             ModuleName,
             Unknown,
             Unknown2,

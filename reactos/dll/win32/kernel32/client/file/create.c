@@ -394,7 +394,7 @@ OpenFile(LPCSTR lpFileName,
 	PWCHAR FilePart;
 	ULONG Len;
 
-	TRACE("OpenFile('%s', lpReOpenBuff %x, uStyle %x)\n", lpFileName, lpReOpenBuff, uStyle);
+	TRACE("OpenFile('%s', lpReOpenBuff %p, uStyle %x)\n", lpFileName, lpReOpenBuff, uStyle);
 
 	if (lpReOpenBuff == NULL)
 	{

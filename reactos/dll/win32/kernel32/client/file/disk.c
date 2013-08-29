@@ -416,7 +416,7 @@ GetDriveTypeW(IN LPCWSTR lpRootPathName)
 			return DRIVE_FIXED;
         }
 
-        ERR("Returning DRIVE_UNKNOWN for device type %d\n", FileFsDevice.DeviceType);
+        ERR("Returning DRIVE_UNKNOWN for device type %lu\n", FileFsDevice.DeviceType);
 
 	return DRIVE_UNKNOWN;
 }

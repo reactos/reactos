@@ -149,7 +149,7 @@ CopyLoop (
     }
     else
     {
-        TRACE("Error 0x%08x allocating buffer of %d bytes\n", errCode, RegionSize);
+        TRACE("Error 0x%08x allocating buffer of %lu bytes\n", errCode, RegionSize);
     }
 
     return errCode;
@@ -293,7 +293,7 @@ CopyFileExW (
                 }
                 else
                 {
-                    WARN("Error %d during opening of dest file\n", GetLastError());
+                    WARN("Error %lu during opening of dest file\n", GetLastError());
                 }
             }
         }
@@ -301,7 +301,7 @@ CopyFileExW (
     }
     else
     {
-        WARN("Error %d during opening of source file\n", GetLastError());
+        WARN("Error %lu during opening of source file\n", GetLastError());
     }
 
     return RC;

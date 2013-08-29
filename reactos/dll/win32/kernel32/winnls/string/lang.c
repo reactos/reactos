@@ -2702,7 +2702,7 @@ NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
     NTSTATUS Status;
     int Ret;
 
-    swprintf(szPath, L"\\REGISTRY\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%d", Location);
+    swprintf(szPath, L"\\REGISTRY\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%lu", Location);
 
     hKey = NLS_RegOpenKey(0, szPath);
     if (!hKey)

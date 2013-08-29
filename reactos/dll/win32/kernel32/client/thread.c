@@ -175,8 +175,8 @@ CreateRemoteThread(IN HANDLE hProcess,
     ACTIVATION_CONTEXT_BASIC_INFORMATION ActCtxInfo;
     ULONG_PTR Cookie;
     ULONG ReturnLength;
-    DPRINT("CreateRemoteThread: hProcess: %ld dwStackSize: %ld lpStartAddress"
-            ": %p lpParameter: %lx, dwCreationFlags: %lx\n", hProcess,
+    DPRINT("CreateRemoteThread: hProcess: %p dwStackSize: %lu lpStartAddress"
+            ": %p lpParameter: %p, dwCreationFlags: %lx\n", hProcess,
             dwStackSize, lpStartAddress, lpParameter, dwCreationFlags);
 
     /* Clear the Context */

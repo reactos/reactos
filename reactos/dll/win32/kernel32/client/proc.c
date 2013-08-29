@@ -503,7 +503,7 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
     BASE_API_MESSAGE ApiMessage;
     PBASE_CREATE_THREAD CreateThreadRequest = &ApiMessage.Data.CreateThreadRequest;
 
-    DPRINT("BasepNotifyCsrOfThread: Thread: %lx, Handle %lx\n",
+    DPRINT("BasepNotifyCsrOfThread: Thread: %p, Handle %p\n",
             ClientId->UniqueThread, ThreadHandle);
 
     /* Fill out the request */
@@ -2891,7 +2891,7 @@ StartScan:
     }
 
     /* Now use the path name, and the root path, to try opening the app */
-    DPRINT1("Path: %wZ. Dir: %lx\n", &PathName, SxsWin32RelativePath.ContainingDirectory);
+    DPRINT1("Path: %wZ. Dir: %p\n", &PathName, SxsWin32RelativePath.ContainingDirectory);
     InitializeObjectAttributes(&LocalObjectAttributes,
                                &PathName,
                                OBJ_CASE_INSENSITIVE,
@@ -3722,7 +3722,7 @@ StartScan:
     if (!Result)
     {
         /* It was not, bail out */
-        DPRINT1("Invalid subsystem version: %d.%d\n",
+        DPRINT1("Invalid subsystem version: %hu.%hu\n",
                 ImageInformation.SubSystemMajorVersion,
                 ImageInformation.SubSystemMinorVersion);
         SetLastError(ERROR_BAD_EXE_FORMAT);
@@ -4657,8 +4657,8 @@ CreateProcessInternalA(HANDLE hToken,
     BOOL bRetVal;
     STARTUPINFOW StartupInfo;
 
-    DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
-            "lpStartupInfo %x, lpProcessInformation %x\n",
+    DPRINT("dwCreationFlags %x, lpEnvironment %p, lpCurrentDirectory %p, "
+            "lpStartupInfo %p, lpProcessInformation %p\n",
             dwCreationFlags, lpEnvironment, lpCurrentDirectory,
             lpStartupInfo, lpProcessInformation);
 
