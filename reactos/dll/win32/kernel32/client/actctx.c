@@ -392,6 +392,7 @@ QueryActCtxW(IN DWORD dwFlags,
             /* Bail out */
             DPRINT1("SXS: %s(dwFlags=0x%lx) more than one flag in 0x%lx was passed\n",
                     __FUNCTION__,
+                    dwFlags,
                     0x1C);
             BaseSetLastNTError(STATUS_INVALID_PARAMETER_1);
             return FALSE;
