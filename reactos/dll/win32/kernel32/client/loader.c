@@ -13,6 +13,14 @@
 
 /* FUNCTIONS ****************************************************************/
 
+NTSTATUS
+WINAPI
+BasepInitializeTermsrvFpns(VOID)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 DWORD
 WINAPI
 BasepGetModuleHandleExParameterValidation(DWORD dwFlags,
@@ -1125,12 +1133,20 @@ BaseQueryModuleData(IN LPSTR ModuleName,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
 BaseProcessInitPostImport(VOID)
 {
+    /* Check if this is a terminal server */
+    DPRINT1("Post-init called\n");
+    if (SharedUserData->SuiteMask & VER_SUITE_TERMINAL)
+    {
+        /* Initialize TS pointers */
+        return BasepInitializeTermsrvFpns();
+    }
+
     /* FIXME: Initialize TS pointers */
     return STATUS_SUCCESS;
 }
