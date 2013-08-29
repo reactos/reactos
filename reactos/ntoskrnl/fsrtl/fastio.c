@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/fsrtl/fastio.c
  * PURPOSE:         Provides Fast I/O entrypoints to the Cache Manager
  * PROGRAMMERS:     buzdelabuz2@gmail.com,alex.ionescu@reactos.org
+ *                  Aleksey Bragin <aleksey@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -1558,6 +1559,40 @@ Cleanup:
     return Result;
 }
 
+NTSTATUS
+NTAPI
+FsRtlAcquireFileExclusiveCommon(IN PFILE_OBJECT FileObject,
+                                IN FS_FILTER_SECTION_SYNC_TYPE SyncType,
+                                IN ULONG Reserved)
+{
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+    PDEVICE_OBJECT DeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+
+    /* Get Device Object and Fast Calls */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Get master FsRtl lock */
+    FsRtlEnterFileSystem();
+
+    /* Check if Fast Calls are supported, and check AcquireFileForNtCreateSection */
+    if (FastDispatch &&
+        FastDispatch->AcquireFileForNtCreateSection)
+    {
+        /* Call the AcquireFileForNtCreateSection FastIo handler */
+        FastDispatch->AcquireFileForNtCreateSection(FileObject);
+    }
+    else
+    {
+        /* No FastIo handler, acquire file's resource exclusively */
+        if (FcbHeader && FcbHeader->Resource) ExAcquireResourceExclusiveLite(FcbHeader->Resource, TRUE);
+    }
+
+    return STATUS_SUCCESS;
+}
+
 /*
 * @implemented
 */
@@ -1565,9 +1600,10 @@ VOID
 NTAPI
 FsRtlAcquireFileExclusive(IN PFILE_OBJECT FileObject)
 {
-    /* PAGED_CODE(); */
-    /* FsRtlAcquireFileExclusiveCommon(FileObject, 0, 0); */
-    KeBugCheck(FILE_SYSTEM);
+    PAGED_CODE();
+
+    /* Call the common routine. Don't care about the result */
+    (VOID)FsRtlAcquireFileExclusiveCommon(FileObject, SyncTypeOther, 0);
 }
 
 /*
@@ -1577,7 +1613,127 @@ VOID
 NTAPI
 FsRtlReleaseFile(IN PFILE_OBJECT FileObject)
 {
-    KeBugCheck(FILE_SYSTEM);
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+    PDEVICE_OBJECT DeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+
+    /* Get Device Object and Fast Calls */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Check if Fast Calls are supported and check ReleaseFileForNtCreateSection */
+    if (FastDispatch &&
+        FastDispatch->ReleaseFileForNtCreateSection)
+    {
+        /* Call the ReleaseFileForNtCreateSection FastIo handler */
+        FastDispatch->ReleaseFileForNtCreateSection(FileObject);
+    }
+    else
+    {
+        /* No FastIo handler, release file's resource */
+        if (FcbHeader && FcbHeader->Resource) ExReleaseResourceLite(FcbHeader->Resource);
+    }
+
+    /* Release master FsRtl lock */
+    FsRtlExitFileSystem();
+}
+
+/*
+* @implemented
+*/
+NTSTATUS
+NTAPI
+FsRtlAcquireFileForCcFlushEx(IN PFILE_OBJECT FileObject)
+{
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+    PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+
+    /* Get the Base File System (Volume) and Fast Calls */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Get master FsRtl lock */
+    FsRtlEnterFileSystem();
+
+    /* Check if Fast Calls are supported, and check AcquireForCcFlush */
+    if (FastDispatch &&
+        FastDispatch->AcquireForCcFlush)
+    {
+        /* Call the AcquireForCcFlush FastIo handler */
+        FastDispatch->AcquireForCcFlush(FileObject, BaseDeviceObject);
+    }
+    else
+    {
+        /* No FastIo handler, acquire file's resource */
+        if (FcbHeader->Resource)
+        {
+            /* Acquire it - either shared if it's already acquired
+               or exclusively if we are the first */
+            if (ExIsResourceAcquiredSharedLite(FcbHeader->Resource))
+                ExAcquireResourceSharedLite(FcbHeader->Resource, TRUE);
+            else
+                ExAcquireResourceExclusiveLite(FcbHeader->Resource, TRUE);
+        }
+
+        /* Also acquire its Paging I/O resource */
+        if (FcbHeader->PagingIoResource)
+            ExAcquireResourceSharedLite(FcbHeader->PagingIoResource, TRUE);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/*
+* @implemented
+*/
+VOID
+NTAPI
+FsRtlAcquireFileForCcFlush(IN PFILE_OBJECT FileObject)
+{
+    PAGED_CODE();
+
+    /* Call the common routine. Don't care about the result */
+    (VOID)FsRtlAcquireFileForCcFlushEx(FileObject);
+}
+
+
+/*
+* @implemented
+*/
+VOID
+NTAPI
+FsRtlReleaseFileForCcFlush(IN PFILE_OBJECT FileObject)
+{
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+    PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+
+    /* Get Device Object and Fast Calls */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Check if Fast Calls are supported, and check ReleaseForCcFlush */
+    if (FastDispatch &&
+        FastDispatch->ReleaseForCcFlush)
+    {
+        /* Call the ReleaseForCcFlush FastIo handler */
+        FastDispatch->ReleaseForCcFlush(FileObject, BaseDeviceObject);
+    }
+    else
+    {
+        /* No FastIo handler, release PagingIO and then file's resource */
+        if (FcbHeader->PagingIoResource) ExReleaseResourceLite(FcbHeader->PagingIoResource);
+        if (FcbHeader->Resource) ExReleaseResourceLite(FcbHeader->Resource);
+    }
+
+    /* Release master FsRtl lock */
+    FsRtlExitFileSystem();
 }
 
 /*++
