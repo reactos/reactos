@@ -310,14 +310,14 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
         if ((ShowSnaps) || (LdrpShowRecursiveLoads) || (LdrpBreakOnRecursiveDllLoads))
         {
             /* Print out debug messages */
-            DPRINT1("[%lx, %lx] LDR: Recursive DLL Load\n",
+            DPRINT1("[%p, %p] LDR: Recursive DLL Load\n",
                     Teb->RealClientId.UniqueProcess,
                     Teb->RealClientId.UniqueThread);
-            DPRINT1("[%lx, %lx]      Previous DLL being loaded \"%wZ\"\n",
+            DPRINT1("[%p, %p]      Previous DLL being loaded \"%wZ\"\n",
                     Teb->RealClientId.UniqueProcess,
                     Teb->RealClientId.UniqueThread,
                     OldTldDll);
-            DPRINT1("[%lx, %lx]      DLL being requested \"%wZ\"\n",
+            DPRINT1("[%p, %p]      DLL being requested \"%wZ\"\n",
                     Teb->RealClientId.UniqueProcess,
                     Teb->RealClientId.UniqueThread,
                     DllName);
@@ -325,13 +325,13 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
             /* Was it initializing too? */
             if (!LdrpCurrentDllInitializer)
             {
-                DPRINT1("[%lx, %lx] LDR: No DLL Initializer was running\n",
+                DPRINT1("[%p, %p] LDR: No DLL Initializer was running\n",
                         Teb->RealClientId.UniqueProcess,
                         Teb->RealClientId.UniqueThread);
             }
             else
             {
-                DPRINT1("[%lx, %lx]      DLL whose initializer was currently running \"%wZ\"\n",
+                DPRINT1("[%p, %p]      DLL whose initializer was currently running \"%wZ\"\n",
                         Teb->ClientId.UniqueProcess,
                         Teb->ClientId.UniqueThread,
                         &LdrpCurrentDllInitializer->BaseDllName);
@@ -1247,7 +1247,7 @@ quickie:
                             (Status != STATUS_DLL_NOT_FOUND) &&
                             (Status != STATUS_OBJECT_NAME_NOT_FOUND)))
         {
-            DPRINT1("LDR: LdrAddRefDll(%p) 0x%08lx\n", BaseAddress);
+            DPRINT1("LDR: LdrAddRefDll(%p) 0x%08lx\n", BaseAddress, Status);
         }
     }
 
@@ -1345,7 +1345,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
             /* Show message */
             if (ShowSnaps)
             {
-                DPRINT1("(%d) [%ws] %ws (%lx) deinit %lx\n",
+                DPRINT1("(%lu) [%ws] %ws (%lx) deinit %p\n",
                         LdrpActiveUnloadCount,
                         LdrEntry->BaseDllName.Buffer,
                         LdrEntry->FullDllName.Buffer,
@@ -1407,7 +1407,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
             /* Show message */
             if (ShowSnaps)
             {
-                DPRINT1("LDR: Calling deinit %lx\n", EntryPoint);
+                DPRINT1("LDR: Calling deinit %p\n", EntryPoint);
             }
 
             /* Set up the Act Ctx */

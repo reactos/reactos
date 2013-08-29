@@ -501,7 +501,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
     NTSTATUS Status;
     PVOID EntryPoint;
 
-    DPRINT("LdrpInitializeThread() called for %wZ (%lx/%lx)\n",
+    DPRINT("LdrpInitializeThread() called for %wZ (%p/%p)\n",
             &LdrpImageEntry->BaseDllName,
             NtCurrentTeb()->RealClientId.UniqueProcess,
             NtCurrentTeb()->RealClientId.UniqueThread);
@@ -566,7 +566,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
                     if (!LdrpShutdownInProgress)
                     {
                         /* Call the Entrypoint */
-                        DPRINT("%wZ - Calling entry point at %p for thread attaching, %lx/%lx\n",
+                        DPRINT("%wZ - Calling entry point at %p for thread attaching, %p/%p\n",
                                 &LdrEntry->BaseDllName, LdrEntry->EntryPoint,
                                 NtCurrentTeb()->RealClientId.UniqueProcess,
                                 NtCurrentTeb()->RealClientId.UniqueThread);
@@ -626,7 +626,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     PTEB OldTldTeb;
     BOOLEAN DllStatus;
 
-    DPRINT("LdrpRunInitializeRoutines() called for %wZ (%lx/%lx)\n",
+    DPRINT("LdrpRunInitializeRoutines() called for %wZ (%p/%p)\n",
         &LdrpImageEntry->BaseDllName,
         NtCurrentTeb()->RealClientId.UniqueProcess,
         NtCurrentTeb()->RealClientId.UniqueThread);
@@ -661,7 +661,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     /* Show debug message */
     if (ShowSnaps)
     {
-        DPRINT1("[%x,%x] LDR: Real INIT LIST for Process %wZ\n",
+        DPRINT1("[%p,%p] LDR: Real INIT LIST for Process %wZ\n",
                 NtCurrentTeb()->RealClientId.UniqueThread,
                 NtCurrentTeb()->RealClientId.UniqueProcess,
                 &Peb->ProcessParameters->ImagePathName);
@@ -695,7 +695,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
                     /* Display debug message */
                     if (ShowSnaps)
                     {
-                        DPRINT1("[%x,%x] LDR: %wZ init routine %p\n",
+                        DPRINT1("[%p,%p] LDR: %wZ init routine %p\n",
                                 NtCurrentTeb()->RealClientId.UniqueThread,
                                 NtCurrentTeb()->RealClientId.UniqueProcess,
                                 &LdrEntry->FullDllName,
@@ -963,7 +963,7 @@ LdrShutdownProcess(VOID)
                 }
 
                 /* Call the Entrypoint */
-                DPRINT("%wZ - Calling entry point at %x for thread detaching\n",
+                DPRINT("%wZ - Calling entry point at %p for thread detaching\n",
                         &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
                 LdrpCallInitRoutine(EntryPoint,
                                  LdrEntry->DllBase,
@@ -1078,7 +1078,7 @@ LdrShutdownThread(VOID)
                     if (!LdrpShutdownInProgress)
                     {
                         /* Call the Entrypoint */
-                        DPRINT("%wZ - Calling entry point at %x for thread detaching\n",
+                        DPRINT("%wZ - Calling entry point at %p for thread detaching\n",
                                 &LdrEntry->BaseDllName, LdrEntry->EntryPoint);
                         LdrpCallInitRoutine(EntryPoint,
                                          LdrEntry->DllBase,
@@ -1253,7 +1253,7 @@ LdrpAllocateTls(VOID)
         /* Show debug message */
         if (ShowSnaps)
         {
-            DPRINT1("LDR: TlsVector %x Index %d = %x copied from %x to %x\n",
+            DPRINT1("LDR: TlsVector %p Index %lu = %p copied from %x to %p\n",
                     TlsVector,
                     TlsData->TlsDirectory.Characteristics,
                     &TlsVector[TlsData->TlsDirectory.Characteristics],
@@ -1605,7 +1605,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Start verbose debugging messages right now if they were requested */
     if (ShowSnaps)
     {
-        DPRINT1("LDR: PID: 0x%x started - '%wZ'\n",
+        DPRINT1("LDR: PID: 0x%p started - '%wZ'\n",
                 Teb->ClientId.UniqueProcess,
                 &CommandLine);
     }
@@ -2146,7 +2146,7 @@ LdrpInit(PCONTEXT Context,
     MEMORY_BASIC_INFORMATION MemoryBasicInfo;
     PPEB Peb = NtCurrentPeb();
 
-    DPRINT("LdrpInit() %lx/%lx\n",
+    DPRINT("LdrpInit() %p/%p\n",
         NtCurrentTeb()->RealClientId.UniqueProcess,
         NtCurrentTeb()->RealClientId.UniqueThread);
 

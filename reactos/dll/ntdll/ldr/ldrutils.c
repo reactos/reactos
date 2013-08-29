@@ -303,7 +303,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                         /* Show snaps */
                         if (ShowSnaps)
                         {
-                            DPRINT1("LDR: Flags %d  %wZ (%lx)\n", Flags, ImportNameUnic, Entry->LoadCount);
+                            DPRINT1("LDR: Flags %lu  %wZ (%lx)\n", Flags, ImportNameUnic, Entry->LoadCount);
                         }
                     }
 
@@ -347,7 +347,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                             /* Show snaps */
                             if (ShowSnaps)
                             {
-                                DPRINT1("LDR: Flags %d  %wZ (%lx)\n", Flags, ImportNameUnic, Entry->LoadCount);
+                                DPRINT1("LDR: Flags %lu  %wZ (%lx)\n", Flags, ImportNameUnic, Entry->LoadCount);
                             }
                         }
 
@@ -416,7 +416,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                         /* Show snaps */
                         if (ShowSnaps)
                         {
-                            DPRINT1("LDR: Flags %d  %wZ (%lx)\n", Flags, ImportNameUnic, Entry->LoadCount);
+                            DPRINT1("LDR: Flags %lu  %wZ (%lx)\n", Flags, ImportNameUnic, Entry->LoadCount);
                         }
                     }
 
@@ -1319,7 +1319,7 @@ SkipCheck:
         ImageBase = (ULONG_PTR)NtHeaders->OptionalHeader.ImageBase;
         ImageEnd = ImageBase + ViewSize;
 
-        DPRINT1("LDR: LdrpMapDll Relocating Image Name %ws (%p -> %p)\n", DllName, ImageBase, ViewBase);
+        DPRINT1("LDR: LdrpMapDll Relocating Image Name %ws (%lu -> %p)\n", DllName, ImageBase, ViewBase);
 
         /* Scan all the modules */
         ListHead = &Peb->Ldr->InLoadOrderModuleList;
@@ -1978,7 +1978,7 @@ LdrpCheckForLoadedDll(IN PWSTR DllPath,
     PVOID ViewBase = NULL;
     SIZE_T ViewSize = 0;
     PIMAGE_NT_HEADERS NtHeader, NtHeader2;
-    DPRINT("LdrpCheckForLoadedDll('%S' '%wZ' %d %d %p)\n", DllPath ? ((ULONG_PTR)DllPath == 1 ? L"" : DllPath) : L"", DllName, Flag, RedirectedDll, LdrEntry);
+    DPRINT("LdrpCheckForLoadedDll('%S' '%wZ' %u %u %p)\n", DllPath ? ((ULONG_PTR)DllPath == 1 ? L"" : DllPath) : L"", DllName, Flag, RedirectedDll, LdrEntry);
 
     /* Check if a dll name was provided */
     if (!(DllName->Buffer) || !(DllName->Buffer[0])) return FALSE;
