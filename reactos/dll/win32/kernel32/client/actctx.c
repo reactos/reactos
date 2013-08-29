@@ -390,7 +390,9 @@ QueryActCtxW(IN DWORD dwFlags,
         /* More than one flag is set... */
         default:
             /* Bail out */
-            DPRINT1("SXS: %s(dwFlags=0x%lx) more than one flag in 0x%lx was passed\n", 0x1C);
+            DPRINT1("SXS: %s(dwFlags=0x%lx) more than one flag in 0x%lx was passed\n",
+                    __FUNCTION__,
+                    0x1C);
             BaseSetLastNTError(STATUS_INVALID_PARAMETER_1);
             return FALSE;
     }
