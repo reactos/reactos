@@ -386,6 +386,8 @@ QueryActCtxW(IN DWORD dwFlags,
         case QUERY_ACTCTX_FLAG_ACTCTX_IS_ADDRESS:
             NativeFlags = RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_ADDRESS;
             break;
+        case 0:
+            break;
 
         /* More than one flag is set... */
         default:
