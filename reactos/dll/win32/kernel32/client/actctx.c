@@ -336,6 +336,7 @@ QueryActCtxW(IN DWORD dwFlags,
                 BaseSetLastNTError(STATUS_INVALID_PARAMETER_3);
                 return FALSE;
             }
+            break;
 
         default:
 
@@ -373,7 +374,7 @@ QueryActCtxW(IN DWORD dwFlags,
     }
 
     /* These 3 flags are mutually exclusive -- only one should be present */
-    switch (dwFlags & (QUERY_ACTCTX_FLAG_VALID & ~ QUERY_ACTCTX_FLAG_NO_ADDREF))
+    switch (dwFlags & (QUERY_ACTCTX_FLAG_VALID & ~QUERY_ACTCTX_FLAG_NO_ADDREF))
     {
         /* Convert into native format */
         case QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX:
@@ -401,6 +402,10 @@ QueryActCtxW(IN DWORD dwFlags,
     }
 
     /* Now call the native API */
+    DPRINT1("SXS: %s() Calling Native API with Native Flags %lx for Win32 Flags %lx\n",
+            __FUNCTION__,
+            NativeFlags,
+            dwFlags);
     Status = RtlQueryInformationActivationContext(NativeFlags,
                                                   hActCtx,
                                                   pvSubInstance,
