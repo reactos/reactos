@@ -3,8 +3,9 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fsrtl/fastio.c
  * PURPOSE:         Provides Fast I/O entrypoints to the Cache Manager
- * PROGRAMMERS:     buzdelabuz2@gmail.com,alex.ionescu@reactos.org
- *                  Aleksey Bragin <aleksey@reactos.org>
+ * PROGRAMMERS:     Dominique Cote (buzdelabuz2@gmail.com)
+ *                  Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Aleksey Bragin (aleksey@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
