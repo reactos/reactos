@@ -15,6 +15,9 @@
 
 /* GLOBALS ********************************************************************/
 
+RTL_CRITICAL_SECTION NlsCacheCriticalSection;
+PNLS_USER_INFO pNlsRegUserInfo;
+
 BOOLEAN BaseSrvKernel32DelayLoadComplete;
 HANDLE BaseSrvKernel32DllHandle;
 UNICODE_STRING BaseSrvKernel32DllPath;
@@ -100,6 +103,29 @@ BaseSrvDelayLoadKernel32(VOID)
 
     /* Nope, fail */
     return Status;
+}
+
+VOID
+WINAPI
+BaseSrvNLSInit(IN PBASE_STATIC_SERVER_DATA StaticData)
+{
+    /* Initialize the lock */
+    RtlInitializeCriticalSection(&NlsCacheCriticalSection);
+
+    /* Initialize the data with all F's */
+    pNlsRegUserInfo = &StaticData->NlsUserInfo;
+    RtlFillMemory(&StaticData->NlsUserInfo, 0xFF, sizeof(StaticData->NlsUserInfo));
+
+    /* Set empty LCID */
+    pNlsRegUserInfo->UserLocaleId = 0;
+
+    /* Reset the cache update counter */
+    RtlEnterCriticalSection(&NlsCacheCriticalSection);
+    pNlsRegUserInfo->ulCacheUpdateCount = 0;
+    RtlLeaveCriticalSection(&NlsCacheCriticalSection);
+
+    /* Get the LCID */
+    NtQueryDefaultLocale(0, &pNlsRegUserInfo->UserLocaleId);
 }
 
 /* PUBLIC SERVER APIS *********************************************************/
@@ -268,8 +294,32 @@ CSR_API(BaseSrvNlsUpdateCacheCount)
 
 CSR_API(BaseSrvNlsGetUserInfo)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PBASE_NLS_GET_USER_INFO NlsMsg = &((PBASE_API_MESSAGE)ApiMessage)->Data.NlsGetUserInfo;
+
+    /* Make sure the buffer is valid and of the right size */
+    if ((CsrValidateMessageBuffer(ApiMessage, &NlsMsg->NlsUserInfo, NlsMsg->Size, TRUE)) &&
+        (NlsMsg->Size == sizeof(NLS_USER_INFO)))
+    {
+        /* Acquire the lock to prevent updates while we copy */
+        Status = RtlEnterCriticalSection(&NlsCacheCriticalSection);
+        if (NT_SUCCESS(Status))
+        {
+            /* Do the copy now, then drop the lock */
+            RtlCopyMemory(&NlsMsg->NlsUserInfo, pNlsRegUserInfo, NlsMsg->Size);
+            DPRINT1("NLS Data copy complete\n");
+            RtlLeaveCriticalSection(&NlsCacheCriticalSection);
+        }
+    }
+    else
+    {
+        /* The data was invalid, bail out */
+        DPRINT1("NLS: Size of info is invalid: %lx vs %lx\n", NlsMsg->Size, sizeof(NLS_USER_INFO));
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* All done */
+    return Status;
 }
 
 /* EOF */

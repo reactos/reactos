@@ -17,6 +17,7 @@ NTSTATUS WINAPI BaseSetProcessCreateNotify(BASE_PROCESS_CREATE_NOTIFY_ROUTINE);
 
 typedef struct _NLS_USER_INFO
 {
+    WCHAR sLanguage[80];
     WCHAR iCountry[80];
     WCHAR sCountry[80];
     WCHAR sList[80];
@@ -29,7 +30,7 @@ typedef struct _NLS_USER_INFO
     WCHAR iLZero[80];
     WCHAR iNegNumber[80];
     WCHAR sNativeDigits[80];
-    WCHAR iDigitSubstitution[80];
+    WCHAR NumShape[80];
     WCHAR sCurrency[80];
     WCHAR sMonDecSep[80];
     WCHAR sMonThouSep[80];
@@ -37,25 +38,29 @@ typedef struct _NLS_USER_INFO
     WCHAR iCurrDigits[80];
     WCHAR iCurrency[80];
     WCHAR iNegCurr[80];
-    WCHAR sPosSign[80];
-    WCHAR sNegSign[80];
+    WCHAR sPositiveSign[80];
+    WCHAR sNegativeSign[80];
     WCHAR sTimeFormat[80];
+    WCHAR sTime[80];
+    WCHAR iTime[80];
+    WCHAR iTLZero[80];
+    WCHAR iTimePrefix[80];
     WCHAR s1159[80];
     WCHAR s2359[80];
     WCHAR sShortDate[80];
+    WCHAR sDate[80];
+    WCHAR iDate[80];
     WCHAR sYearMonth[80];
     WCHAR sLongDate[80];
     WCHAR iCalType[80];
-    WCHAR iFirstDay[80];
-    WCHAR iFirstWeek[80];
-    WCHAR sLocale[80];
-    WCHAR sLocaleName[85];
+    WCHAR iFirstDayOfWeek[80];
+    WCHAR iFirstWeekOfYear[80];
+    WCHAR Locale[80];
     LCID UserLocaleId;
     LUID InteractiveUserLuid;
-    CHAR InteractiveUserSid[68]; // SECURITY_MAX_SID_SIZE to make ROS happy
     ULONG ulCacheUpdateCount;
 } NLS_USER_INFO, *PNLS_USER_INFO;
-
+C_ASSERT(sizeof(NLS_USER_INFO) == 0x1870);
 
 typedef struct _BASE_STATIC_SERVER_DATA
 {
@@ -82,6 +87,9 @@ typedef struct _BASE_STATIC_SERVER_DATA
     BOOLEAN LUIDDeviceMapsEnabled;
     ULONG TermsrvClientTimeZoneChangeNum;
 } BASE_STATIC_SERVER_DATA, *PBASE_STATIC_SERVER_DATA;
+C_ASSERT(sizeof(BASE_STATIC_SERVER_DATA) == 0x1AC8);
+
+VOID WINAPI BaseSrvNLSInit(IN PBASE_STATIC_SERVER_DATA StaticData);
 
 #endif // _BASE_H
 

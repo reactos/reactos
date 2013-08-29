@@ -525,6 +525,9 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
         ASSERT(NT_SUCCESS(Status));
     }
 
+    /* Initialize NLS */
+    BaseSrvNLSInit(BaseStaticServerData);
+
     /* Finally, set the pointer */
     LoadedServerDll->SharedSection = BaseStaticServerData;
 }

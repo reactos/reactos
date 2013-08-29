@@ -268,6 +268,12 @@ typedef struct
     ULONG LocaleId;
 } BASE_NLS_CREATE_SECTION, *PBASE_NLS_CREATE_SECTION;
 
+typedef struct
+{
+    PVOID /*PNLS_USER_INFO*/ NlsUserInfo;
+    ULONG Size;
+} BASE_NLS_GET_USER_INFO, *PBASE_NLS_GET_USER_INFO;
+
 typedef struct _BASE_API_MESSAGE
 {
     PORT_MESSAGE Header;
@@ -297,6 +303,7 @@ typedef struct _BASE_API_MESSAGE
         BASE_REFRESH_INIFILE_MAPPING RefreshIniFileMappingRequest;
         BASE_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
         BASE_NLS_CREATE_SECTION NlsCreateSection;
+        BASE_NLS_GET_USER_INFO NlsGetUserInfo;
     } Data;
 } BASE_API_MESSAGE, *PBASE_API_MESSAGE;
 
