@@ -130,7 +130,7 @@ typedef struct
     ULONG  CodePage;
     ULONG  dwCreationFlags;
     PCHAR  CmdLine;
-    PCHAR  appName;
+    PCHAR  AppName;
     PCHAR  PifFile;
     PCHAR  CurDirectory;
     PCHAR  Env;
