@@ -2279,12 +2279,13 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
          */
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USESHOWWINDOW)
         {
-            TermInfo.ShowWindow = ConsoleStartInfo->ShowWindow;
+            TermInfo.ShowWindow = ConsoleStartInfo->wShowWindow;
         }
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USEPOSITION)
         {
             TermInfo.AutoPosition = FALSE;
-            TermInfo.WindowOrigin = ConsoleStartInfo->ConsoleWindowOrigin;
+            TermInfo.WindowOrigin.x = ConsoleStartInfo->dwWindowOrigin.X;
+            TermInfo.WindowOrigin.y = ConsoleStartInfo->dwWindowOrigin.Y;
         }
         if (ConsoleStartInfo->dwStartupFlags & STARTF_RUNFULLSCREEN)
         {
@@ -2868,7 +2869,7 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
 
                     /* Get the window showing command */
                     hRes = IShellLinkW_GetShowCmd(pshl, &ShowCmd);
-                    if (SUCCEEDED(hRes)) ConsoleStartInfo->ShowWindow = (WORD)ShowCmd;
+                    if (SUCCEEDED(hRes)) ConsoleStartInfo->wShowWindow = (WORD)ShowCmd;
 
                     /* Get the hotkey */
                     // hRes = pshl->GetHotkey(&ShowCmd);

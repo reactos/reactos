@@ -121,26 +121,26 @@ InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
     ConsoleStartInfo->dwStartupFlags = si.dwFlags;
     if (si.dwFlags & STARTF_USEFILLATTRIBUTE)
     {
-        ConsoleStartInfo->FillAttribute = si.dwFillAttribute;
+        ConsoleStartInfo->wFillAttribute = si.dwFillAttribute;
     }
     if (si.dwFlags & STARTF_USECOUNTCHARS)
     {
-        ConsoleStartInfo->ScreenBufferSize.X = (SHORT)(si.dwXCountChars);
-        ConsoleStartInfo->ScreenBufferSize.Y = (SHORT)(si.dwYCountChars);
+        ConsoleStartInfo->dwScreenBufferSize.X = (SHORT)(si.dwXCountChars);
+        ConsoleStartInfo->dwScreenBufferSize.Y = (SHORT)(si.dwYCountChars);
     }
     if (si.dwFlags & STARTF_USESHOWWINDOW)
     {
-        ConsoleStartInfo->ShowWindow = si.wShowWindow;
+        ConsoleStartInfo->wShowWindow = si.wShowWindow;
     }
     if (si.dwFlags & STARTF_USEPOSITION)
     {
-        ConsoleStartInfo->ConsoleWindowOrigin.x = (LONG)(si.dwX);
-        ConsoleStartInfo->ConsoleWindowOrigin.y = (LONG)(si.dwY);
+        ConsoleStartInfo->dwWindowOrigin.X = (LONG)(si.dwX);
+        ConsoleStartInfo->dwWindowOrigin.Y = (LONG)(si.dwY);
     }
     if (si.dwFlags & STARTF_USESIZE)
     {
-        ConsoleStartInfo->ConsoleWindowSize.cx = (LONG)(si.dwXSize);
-        ConsoleStartInfo->ConsoleWindowSize.cy = (LONG)(si.dwYSize);
+        ConsoleStartInfo->dwWindowSize.X = (LONG)(si.dwXSize);
+        ConsoleStartInfo->dwWindowSize.Y = (LONG) (si.dwYSize);
     }
 
     /* Set up the title for the console */
@@ -194,7 +194,7 @@ BasepInitConsole(VOID)
     {
         DPRINT("Image is not a console application\n");
         Parameters->ConsoleHandle = NULL;
-        ConnectInfo.ConsoleNeeded = FALSE; // ConsoleNeeded is used for knowing whether or not this is a CUI app.
+        ConnectInfo.ConsoleStartInfo.ConsoleNeeded = FALSE; // ConsoleNeeded is used for knowing whether or not this is a CUI app.
 
         ConnectInfo.ConsoleStartInfo.ConsoleTitle[0] = L'\0';
         ConnectInfo.ConsoleStartInfo.AppPath[0] = L'\0';
@@ -211,7 +211,7 @@ BasepInitConsole(VOID)
         if (ExeName) SetConsoleInputExeNameW(ExeName + 1);
 
         /* Assume one is needed */
-        ConnectInfo.ConsoleNeeded = TRUE;
+        ConnectInfo.ConsoleStartInfo.ConsoleNeeded = TRUE;
 
         /* Handle the special flags given to us by BasePushProcessParameters */
         if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
@@ -219,7 +219,7 @@ BasepInitConsole(VOID)
             /* No console to create */
             DPRINT("No console to create\n");
             Parameters->ConsoleHandle = NULL;
-            ConnectInfo.ConsoleNeeded = FALSE;
+            ConnectInfo.ConsoleStartInfo.ConsoleNeeded = FALSE;
         }
         else if (Parameters->ConsoleHandle == HANDLE_CREATE_NEW_CONSOLE)
         {
@@ -232,7 +232,7 @@ BasepInitConsole(VOID)
             /* We'll get the real one soon */
             DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
-            ConnectInfo.ConsoleStartInfo.ShowWindow = SW_HIDE;
+            ConnectInfo.ConsoleStartInfo.wShowWindow = SW_HIDE;
         }
         else
         {
@@ -249,10 +249,10 @@ BasepInitConsole(VOID)
 
     /* Initialize the Console Ctrl Handler */
     InitConsoleCtrlHandling();
-    ConnectInfo.CtrlDispatcher = ConsoleControlDispatcher;
+    ConnectInfo.ConsoleStartInfo.CtrlDispatcher = ConsoleControlDispatcher;
 
     /* Initialize the Property Dialog Handler */
-    ConnectInfo.PropDispatcher = PropDialogHandler;
+    ConnectInfo.ConsoleStartInfo.PropDispatcher = PropDialogHandler;
 
     /* Setup the right Object Directory path */
     if (!SessionId)
@@ -287,7 +287,7 @@ BasepInitConsole(VOID)
     if (InServer) return TRUE;
 
     /* Nothing to do if not a console app */
-    if (!ConnectInfo.ConsoleNeeded) return TRUE;
+    if (!ConnectInfo.ConsoleStartInfo.ConsoleNeeded) return TRUE;
 
     /* We got the handles, let's set them */
     if ((Parameters->ConsoleHandle = ConnectInfo.ConsoleHandle))

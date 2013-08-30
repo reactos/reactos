@@ -249,17 +249,15 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
          */
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USEFILLATTRIBUTE)
         {
-            ConsoleInfo.ScreenAttrib = (USHORT)ConsoleStartInfo->FillAttribute;
+            ConsoleInfo.ScreenAttrib = (USHORT)ConsoleStartInfo->wFillAttribute;
         }
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USECOUNTCHARS)
         {
-            ConsoleInfo.ScreenBufferSize = ConsoleStartInfo->ScreenBufferSize;
+            ConsoleInfo.ScreenBufferSize = ConsoleStartInfo->dwScreenBufferSize;
         }
         if (ConsoleStartInfo->dwStartupFlags & STARTF_USESIZE)
         {
-            // ConsoleInfo.ConsoleSize = ConsoleStartInfo->ConsoleWindowSize;
-            ConsoleInfo.ConsoleSize.X = (SHORT)ConsoleStartInfo->ConsoleWindowSize.cx;
-            ConsoleInfo.ConsoleSize.Y = (SHORT)ConsoleStartInfo->ConsoleWindowSize.cy;
+            ConsoleInfo.ConsoleSize = ConsoleStartInfo->dwWindowSize;
         }
     }
 

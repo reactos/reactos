@@ -413,7 +413,7 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
     }
 
     /* If we don't need a console, then get out of here */
-    if (!ConnectInfo->ConsoleNeeded || !ProcessData->ConsoleApp) // In fact, it is for GUI apps.
+    if (!ConnectInfo->ConsoleStartInfo.ConsoleNeeded || !ProcessData->ConsoleApp) // In fact, it is for GUI apps.
     {
         return STATUS_SUCCESS;
     }
@@ -470,8 +470,8 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
     ConnectInfo->InputWaitHandle = ProcessData->ConsoleEvent;
 
     /* Set the Property-Dialog and Control-Dispatcher handlers */
-    ProcessData->PropDispatcher = ConnectInfo->PropDispatcher;
-    ProcessData->CtrlDispatcher = ConnectInfo->CtrlDispatcher;
+    ProcessData->PropDispatcher = ConnectInfo->ConsoleStartInfo.PropDispatcher;
+    ProcessData->CtrlDispatcher = ConnectInfo->ConsoleStartInfo.CtrlDispatcher;
 
     return STATUS_SUCCESS;
 }

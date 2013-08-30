@@ -110,38 +110,84 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepMaxApiNumber
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;
 
+//
+// See http://msdn.microsoft.com/en-us/library/windows/desktop/bb773359(v=vs.85).aspx
+//
+typedef struct _CONSOLE_PROPERTIES
+{
+    WORD wFillAttribute;
+    WORD wPopupFillAttribute;
 
+    //
+    // Not on MSDN, but show up in binary
+    //
+    WORD wShowWindow;
+    WORD wUnknown;
+
+    COORD dwScreenBufferSize;
+    COORD dwWindowSize;
+    COORD dwWindowOrigin;
+    DWORD nFont;
+    DWORD nInputBufferSize;
+    COORD dwFontSize;
+    UINT uFontFamily;
+    UINT uFontWeight;
+    WCHAR FaceName[LF_FACESIZE];
+    UINT uCursorSize;
+    BOOL bFullScreen;
+    BOOL bQuickEdit;
+    BOOL bInsertMode;
+    BOOL bAutoPosition;
+    UINT uHistoryBufferSize;
+    UINT uNumberOfHistoryBuffers;
+    BOOL bHistoryNoDup;
+    COLORREF ColorTable[16];
+
+    //NT_FE_CONSOLE_PROPS
+    UINT uCodePage;
+} CONSOLE_PROPERTIES;
+
+//
+// To minimize code changes, some fields were put here even though they really only belong in
+// CONSRV_API_CONNECTINFO. Do not change the ordering however, as it's required for Windows
+// compatibility.
+//
 typedef struct _CONSOLE_START_INFO
 {
+    INT IconIndex;
+    HICON IconHandle1;
+    HICON IconHandle2;
+    DWORD dwHotKey;
     DWORD dwStartupFlags;
-    DWORD FillAttribute;
-    COORD ScreenBufferSize;
-    WORD  ShowWindow;
-    POINT ConsoleWindowOrigin;
-    SIZE  ConsoleWindowSize;
-    // UNICODE_STRING ConsoleTitle;
+    CONSOLE_PROPERTIES;
+    BOOL ConsoleNeeded; // Used for GUI apps only.
+    LPTHREAD_START_ROUTINE CtrlDispatcher;
+    LPTHREAD_START_ROUTINE ImeDispatcher;
+    LPTHREAD_START_ROUTINE PropDispatcher;
+    ULONG TitleLength;
     WCHAR ConsoleTitle[MAX_PATH + 1];   // Console title or full path to the startup shortcut
-    WCHAR AppPath[MAX_PATH + 1];        // Full path of the launched app
+    ULONG DesktopLength;
+    PWCHAR DesktopPath;
+    ULONG AppNameLength;
+    WCHAR AppPath[128];        // Full path of the launched app
+    ULONG IconPathLength;
     WCHAR IconPath[MAX_PATH + 1];       // Path to the file containing the icon
-    INT   IconIndex;                    // Index of the icon
 } CONSOLE_START_INFO, *PCONSOLE_START_INFO;
 
 typedef struct _CONSRV_API_CONNECTINFO
 {
-    BOOL ConsoleNeeded; // Used for GUI apps only.
-
-    /* Adapted from CONSOLE_ALLOCCONSOLE */
-    CONSOLE_START_INFO ConsoleStartInfo;
-
     HANDLE ConsoleHandle;
+    HANDLE InputWaitHandle;
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;
-    HANDLE InputWaitHandle;
-    LPTHREAD_START_ROUTINE CtrlDispatcher;
-    LPTHREAD_START_ROUTINE PropDispatcher;
+    HANDLE Event1;
+    HANDLE Event2;
+    /* Adapted from CONSOLE_ALLOCCONSOLE */
+    CONSOLE_START_INFO ConsoleStartInfo;
 } CONSRV_API_CONNECTINFO, *PCONSRV_API_CONNECTINFO;
 
+//C_ASSERT(sizeof(CONSRV_API_CONNECTINFO) == 0x638);
 
 typedef struct
 {
