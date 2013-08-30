@@ -693,7 +693,7 @@ GetBinaryTypeW (
     }
   }
 
-  DPRINT1("Invalid binary type returned!\n", BinType);
+  DPRINT1("Invalid binary type %lu returned!\n", BinType);
   return FALSE;
 }
 
