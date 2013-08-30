@@ -23,6 +23,56 @@ ULONG AlternateResourceModuleCount;
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+LdrFindCreateProcessManifest(IN ULONG Flags,
+                             IN PVOID Image,
+                             IN PVOID IdPath,
+                             IN ULONG IdPathLength,
+                             IN PVOID OutDataEntry)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrDestroyOutOfProcessImage(IN PVOID Image)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrCreateOutOfProcessImage(IN ULONG Flags,
+                           IN HANDLE ProcessHandle,
+                           IN HANDLE DllHandle,
+                           IN PVOID Unknown3)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrAccessOutOfProcessResource(IN PVOID Unknown,
+                              IN PVOID Image,
+                              IN PVOID Unknown1,
+                              IN PVOID Unknown2,
+                              IN PVOID Unknown3)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+NTAPI
+LdrSetDllManifestProber(IN PVOID ProberFunction)
+{
+    UNIMPLEMENTED;
+}
+
 BOOLEAN
 NTAPI
 LdrAlternateResourcesEnabled(VOID)

@@ -400,6 +400,37 @@ RtlpSkipUNCPrefix(PCWSTR FileNameBuffer)
     return (UncPath - FileNameBuffer);
 }
 
+NTSTATUS
+NTAPI
+RtlpApplyLengthFunction(IN ULONG Flags,
+                        IN ULONG Type,
+                        IN PVOID UnicodeStringOrUnicodeStringBuffer,
+                        IN PVOID LengthFunction)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+RtlGetLengthWithoutLastFullDosOrNtPathElement(IN ULONG Flags,
+                                              IN PWCHAR Path,
+                                              OUT PULONG LengthOut)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+RtlComputePrivatizedDllName_U(IN PUNICODE_STRING DllName,
+                              IN PUNICODE_STRING a2,
+                              IN PUNICODE_STRING a3)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 ULONG
 NTAPI
 RtlGetFullPathName_Ustr(

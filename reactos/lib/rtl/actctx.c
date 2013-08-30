@@ -2778,6 +2778,14 @@ RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG sect
     return status;
 }
 
+NTSTATUS
+NTAPI
+RtlFindActivationContextSectionGuid(ULONG flags, const GUID *guid, ULONG section_kind, UNICODE_STRING *section_name, PVOID ptr)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* Stubs */
 
 NTSTATUS

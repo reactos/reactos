@@ -60,6 +60,14 @@ RtlpConvertToAutoInheritSecurityObject(IN PSECURITY_DESCRIPTOR ParentDescriptor,
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+NTSTATUS
+NTAPI
+RtlDefaultNpAcl(OUT PACL Acl)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*
  * @unimplemented
  */

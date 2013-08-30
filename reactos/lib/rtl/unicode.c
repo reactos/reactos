@@ -28,6 +28,16 @@ extern USHORT NlsUnicodeDefaultChar;
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+RtlMultiAppendUnicodeStringBuffer(IN PVOID Unknown,
+                                  IN ULONG Unknown2,
+                                  IN PVOID Unknown3)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*
 * @implemented
 */
