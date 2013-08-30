@@ -320,7 +320,7 @@ hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
        {
           if (pBrush_Attr->AttrFlags & ATTR_CACHED)
           {
-             DPRINT("Get Handle! Type %d Count %d PEB 0x%x\n", Type, GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
+             DPRINT("Get Handle! Type %d Count %lu PEB 0x%p\n", Type, GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
              pBrush_Attr->AttrFlags &= ~ATTR_CACHED;
              hPtr[Number - 1] = NULL;
              GdiHandleCache->ulNumHandles[Type]--;

@@ -1082,7 +1082,7 @@ GetOutlineTextMetricsA(
         goto end;
     }
 
-    DPRINT("needed = %d\n", needed);
+    DPRINT("needed = %u\n", needed);
     if(needed > cbData)
     {
         /* Since the supplied buffer isn't big enough, we'll alloc one
@@ -1801,7 +1801,7 @@ TranslateCharsetInfo(
         return FALSE;
     }
     if (index >= MAXTCIINDEX || FONT_tci[index].ciCharset == DEFAULT_CHARSET) return FALSE;
-    DPRINT("Index %d Charset %d CodePage %d FontSig %d\n",
+    DPRINT("Index %d Charset %u CodePage %u FontSig %lu\n",
              index,FONT_tci[index].ciCharset,FONT_tci[index].ciACP,FONT_tci[index].fs.fsCsb[0]);
     memcpy(lpCs, &FONT_tci[index], sizeof(CHARSETINFO));
     return TRUE;

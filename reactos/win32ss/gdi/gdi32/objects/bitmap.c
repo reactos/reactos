@@ -129,7 +129,7 @@ DIB_GetBitmapInfo(const BITMAPINFOHEADER *header,
         *size   = v5hdr->bV5SizeImage;
         return 5;
     }
-    DPRINT("(%ld): wrong size for header\n", header->biSize );
+    DPRINT("(%lu): wrong size for header\n", header->biSize );
     return -1;
 }
 
@@ -527,7 +527,7 @@ CreateDIBitmap( HDC hDC,
         return NULL;
     }
 
-    DPRINT("pBMI %x, Size bpp %d, dibsize %d, Conv %d, BSS %d\n", Data,bpp,dibsize,InfoSize,cjBmpScanSize);
+    DPRINT("pBMI %p, Size bpp %u, dibsize %d, Conv %u, BSS %u\n", Data,bpp,dibsize,InfoSize,cjBmpScanSize);
 
     if ( !width || !height )
         hBmp = GetStockObject(DEFAULT_BITMAP);
@@ -742,9 +742,9 @@ SetDIBitsToDevice(
 		{
 			// We don't die, we continue on with a allocated safe pointer to kernel
 			// space.....
-			DPRINT1("SetDIBitsToDevice fail to read BitMapInfo: %x or Bits: %x & Size: %d\n",pConvertedInfo,Bits,cjBmpScanSize);
+			DPRINT1("SetDIBitsToDevice fail to read BitMapInfo: %p or Bits: %p & Size: %u\n",pConvertedInfo,Bits,cjBmpScanSize);
 		}
-		DPRINT("SetDIBitsToDevice Allocate Bits %d!!!\n", cjBmpScanSize);
+		DPRINT("SetDIBitsToDevice Allocate Bits %u!!!\n", cjBmpScanSize);
 	}
 
     if (!GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
@@ -813,7 +813,7 @@ StretchDIBits(HDC hdc,
     PVOID pvSafeBits = NULL;
     BOOL Hit = FALSE;
 
-    DPRINT("StretchDIBits %x : %x : %d\n", lpBits, lpBitsInfo, iUsage);
+    DPRINT("StretchDIBits %p : %p : %u\n", lpBits, lpBitsInfo, iUsage);
 #if 0
 // Handle something other than a normal dc object.
     if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
@@ -888,9 +888,9 @@ StretchDIBits(HDC hdc,
             {
                 // We don't die, we continue on with a allocated safe pointer to kernel
                 // space.....
-                DPRINT1("StretchDIBits fail to read BitMapInfo: %x or Bits: %x & Size: %d\n",pConvertedInfo,lpBits,cjBmpScanSize);
+                DPRINT1("StretchDIBits fail to read BitMapInfo: %p or Bits: %p & Size: %u\n",pConvertedInfo,lpBits,cjBmpScanSize);
             }
-            DPRINT("StretchDIBits Allocate Bits %d!!!\n", cjBmpScanSize);
+            DPRINT("StretchDIBits Allocate Bits %u!!!\n", cjBmpScanSize);
         }
     }
 
