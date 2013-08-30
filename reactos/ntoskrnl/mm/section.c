@@ -437,7 +437,22 @@ l_ReadHeaderFromFile:
                 ImageSectionObject->ImageInformation.LoaderFlags = piohOptHeader->LoaderFlags;
 
             if (RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, DllCharacteristics))
+            {
                 ImageSectionObject->ImageInformation.DllCharacteristics = piohOptHeader->DllCharacteristics;
+
+                /*
+                 * Since we don't really implement SxS yet and LD doesn't supoprt /ALLOWISOLATION:NO, hard-code
+                 * this flag here, which will prevent the loader and other code from doing any .manifest or SxS
+                 * magic to any binary.
+                 *
+                 * This will break applications that depend on SxS when running with real Windows Kernel32/SxS/etc
+                 * but honestly that's not tested. It will also break them when running no ReactOS once we implement
+                 * the SxS support -- at which point, duh, this should be removed.
+                 *
+                 * But right now, any app depending on SxS is already broken anyway, so this flag only helps.
+                 */
+                ImageSectionObject->ImageInformation.DllCharacteristics |= IMAGE_DLLCHARACTERISTICS_NO_ISOLATION;
+            }
 
             break;
         }
