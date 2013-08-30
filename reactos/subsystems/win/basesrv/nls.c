@@ -306,7 +306,7 @@ CSR_API(BaseSrvNlsGetUserInfo)
         if (NT_SUCCESS(Status))
         {
             /* Do the copy now, then drop the lock */
-            RtlCopyMemory(&NlsMsg->NlsUserInfo, pNlsRegUserInfo, NlsMsg->Size);
+            RtlCopyMemory(NlsMsg->NlsUserInfo, pNlsRegUserInfo, NlsMsg->Size);
             DPRINT1("NLS Data copy complete\n");
             RtlLeaveCriticalSection(&NlsCacheCriticalSection);
         }
