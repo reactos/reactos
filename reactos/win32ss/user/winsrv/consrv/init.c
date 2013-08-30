@@ -404,7 +404,11 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
          ConnectionInfoLength == NULL ||
         *ConnectionInfoLength != sizeof(CONSRV_API_CONNECTINFO) )
     {
-        DPRINT1("CONSRV: Connection failed\n");
+        DPRINT1("CONSRV: Connection failed - ConnectionInfo = 0x%p ; ConnectionInfoLength = 0x%p (%lu), wanted %lu\n",
+                ConnectionInfo,
+                ConnectionInfoLength,
+                ConnectionInfoLength ? *ConnectionInfoLength : (ULONG)-1,
+                sizeof(CONSRV_API_CONNECTINFO));
         return STATUS_UNSUCCESSFUL;
     }
 
