@@ -1236,12 +1236,14 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         }
         else
         {
+#if 0
             /* Do what windows does and issue an invalid access violation */
             KiDispatchException2Args(KI_EXCEPTION_ACCESS_VIOLATION,
                                      TrapFrame->Eip,
                                      TrapFrame->ErrCode & 2 ? TRUE : FALSE,
                                      Cr2,
                                      TrapFrame);
+#endif
         }
     }
 
