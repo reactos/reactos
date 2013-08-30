@@ -104,7 +104,7 @@ endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
     if(NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 17)
-        add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.0")
+        add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM},5.01")
     else()
         add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM}")
     endif()
