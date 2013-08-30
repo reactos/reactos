@@ -16,7 +16,6 @@
 #define CONSRV_FIRST_API_NUMBER     512
 
 // Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
-// plus a little bit of Windows 7.
 typedef enum _CONSRV_API_NUMBER
 {
     ConsolepOpenConsole = CONSRV_FIRST_API_NUMBER,
@@ -28,14 +27,14 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepWriteConsoleOutputString,
     ConsolepFillConsoleOutput,
     ConsolepGetMode,
-    // ConsolepGetNumberOfFonts,
+    ConsolepGetNumberOfFonts,
     ConsolepGetNumberOfInputEvents,
     ConsolepGetScreenBufferInfo,
     ConsolepGetCursorInfo,
-    // ConsolepGetMouseInfo,
-    // ConsolepGetFontInfo,
-    // ConsolepGetFontSize,
-    // ConsolepGetCurrentFont,
+    ConsolepGetMouseInfo,
+    ConsolepGetFontInfo,
+    ConsolepGetFontSize,
+    ConsolepGetCurrentFont,
     ConsolepSetMode,
     ConsolepSetActiveScreenBuffer,
     ConsolepFlushInputBuffer,
@@ -46,28 +45,28 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepSetWindowInfo,
     ConsolepScrollScreenBuffer,
     ConsolepSetTextAttribute,
-    // ConsolepSetFont,
+    ConsolepSetFont,
     ConsolepSetIcon,
     ConsolepReadConsole,
     ConsolepWriteConsole,
     ConsolepDuplicateHandle,
-    // ConsolepGetHandleInformation,
-    // ConsolepSetHandleInformation,
+    ConsolepGetHandleInformation,
+    ConsolepSetHandleInformation,
     ConsolepCloseHandle,
     ConsolepVerifyIoHandle,
-    ConsolepAlloc,
-    ConsolepFree,
+    ConsolepAlloc,                          // Not present in Win7
+    ConsolepFree,                           // Not present in Win7
     ConsolepGetTitle,
     ConsolepSetTitle,
     ConsolepCreateScreenBuffer,
     ConsolepInvalidateBitMapRect,
-    // ConsolepVDMOperation,
+    ConsolepVDMOperation,
     ConsolepSetCursor,
     ConsolepShowCursor,
     ConsolepMenuControl,
     ConsolepSetPalette,
     ConsolepSetDisplayMode,
-    // ConsolepRegisterVDM,
+    ConsolepRegisterVDM,
     ConsolepGetHardwareState,
     ConsolepSetHardwareState,
     ConsolepGetDisplayMode,
@@ -81,31 +80,36 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepSetNumberOfCommands,
     ConsolepGetCommandHistoryLength,
     ConsolepGetCommandHistory,
-    // ConsolepSetCommandHistoryMode,
+    ConsolepSetCommandHistoryMode,          // Not present in Vista+
     ConsolepGetCP,
     ConsolepSetCP,
-    // ConsolepSetKeyShortcuts,
+    ConsolepSetKeyShortcuts,
     ConsolepSetMenuClose,
-    // ConsolepNotifyLastClose,
+    ConsolepNotifyLastClose,
     ConsolepGenerateCtrlEvent,
-    // ConsolepGetKeyboardLayoutName,
+    ConsolepGetKeyboardLayoutName,
     ConsolepGetConsoleWindow,
-    // ConsolepCharType,
-    // ConsolepSetLocalEUDC,
-    // ConsolepSetCursorMode,
-    // ConsolepGetCursorMode,
-    // ConsolepRegisterOS2,
-    // ConsolepSetOS2OemFormat,
-    // ConsolepGetNlsMode,
-    // ConsolepSetNlsMode,
-    // ConsolepRegisterConsoleIME,
-    // ConsolepUnregisterConsoleIME,
-    // ConsolepGetLangId,
-    ConsolepAttach,
+    ConsolepCharType,
+    ConsolepSetLocalEUDC,
+    ConsolepSetCursorMode,
+    ConsolepGetCursorMode,
+    ConsolepRegisterOS2,
+    ConsolepSetOS2OemFormat,
+    ConsolepGetNlsMode,
+    ConsolepSetNlsMode,
+    ConsolepRegisterConsoleIME,             // Not present in Win7
+    ConsolepUnregisterConsoleIME,           // Not present in Win7
+    // ConsolepQueryConsoleIME,                // Added only in Vista and Win2k8, not present in Win7
+    ConsolepGetLangId,
+    ConsolepAttach,                         // Not present in Win7
     ConsolepGetSelectionInfo,
     ConsolepGetProcessList,
-    ConsolepGetHistory,
-    ConsolepSetHistory,
+
+    ConsolepGetHistory,                     // Added in Vista+
+    ConsolepSetHistory,                     // Added in Vista+
+    // ConsolepSetCurrentFont,                 // Added in Vista+
+    // ConsolepSetScreenBufferInfo,            // Added in Vista+
+    // ConsolepClientConnect,                  // Added in Win7
 
     ConsolepMaxApiNumber
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;

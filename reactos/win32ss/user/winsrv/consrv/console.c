@@ -647,4 +647,72 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
     return Status;
 }
 
+CSR_API(SrvConsoleNotifyLastClose)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+
+CSR_API(SrvGetConsoleMouseInfo)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvSetConsoleKeyShortcuts)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleKeyboardLayoutName)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleCharType)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvSetConsoleLocalEUDC)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvSetConsoleCursorMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleCursorMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleNlsMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvSetConsoleNlsMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleLangId)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

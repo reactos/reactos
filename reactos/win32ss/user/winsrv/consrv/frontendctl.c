@@ -328,4 +328,36 @@ CSR_API(SrvGetConsoleSelectionInfo)
     return Status;
 }
 
+
+
+CSR_API(SrvGetConsoleNumberOfFonts)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleFontInfo)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleFontSize)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvGetConsoleCurrentFont)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+CSR_API(SrvSetConsoleFont)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

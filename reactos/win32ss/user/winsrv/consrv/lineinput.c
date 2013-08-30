@@ -641,4 +641,10 @@ CSR_API(SrvSetConsoleHistory)
     return Status;
 }
 
+CSR_API(SrvSetConsoleCommandHistoryMode)
+{
+    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */
