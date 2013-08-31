@@ -222,7 +222,7 @@ NTAPI
 KdpPollByte(OUT PUCHAR OutByte)
 {
     /* Poll the byte */
-    if (CpGetByte(&KdDebugComPort, OutByte, FALSE, TRUE) == CP_GET_SUCCESS)
+    if (CpGetByte(&KdDebugComPort, OutByte, FALSE, FALSE) == CP_GET_SUCCESS)
     {
         return KDP_PACKET_RECEIVED;
     }
