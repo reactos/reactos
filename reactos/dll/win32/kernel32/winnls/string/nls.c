@@ -1747,6 +1747,7 @@ GetCPInfo(UINT CodePage,
                 return TRUE;
         }
 
+        DPRINT1("Invalid CP!: %lx\n", CodePage);
         SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
