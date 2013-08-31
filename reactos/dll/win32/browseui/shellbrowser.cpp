@@ -798,17 +798,12 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
                     _AtlBaseModule.GetModuleInstance(), 0);
     fStatusBarVisible = true;
 
-    LPITEMIDLIST                            desktopPIDL;
     FOLDERSETTINGS                          newFolderSettings;
 
-    // browse desktop
-    hResult = SHGetFolderLocation(NULL, CSIDL_DESKTOP, NULL, 0, &desktopPIDL);
-    if (FAILED(hResult))
-        return hResult;
+    // browse 
     newFolderSettings.ViewMode = FVM_LIST;
     newFolderSettings.fFlags = 0;
-    hResult = BrowseToPIDL(desktopPIDL, BTP_UPDATE_NEXT_HISTORY);
-    ILFree(desktopPIDL);
+    hResult = BrowseToPIDL(pidl, BTP_UPDATE_NEXT_HISTORY);
     if (FAILED(hResult))
         return hResult;
 

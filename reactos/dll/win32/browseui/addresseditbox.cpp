@@ -50,7 +50,7 @@ CAddressEditBox::~CAddressEditBox()
 HRESULT STDMETHODCALLTYPE CAddressEditBox::SetOwner(IUnknown *)
 {
     // connect to browser connection point
-    return E_NOTIMPL;
+    return 0;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::FileSysChange(long param8, long paramC)
