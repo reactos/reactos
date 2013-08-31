@@ -15,8 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-//#define USING_PROPER_NPFS_WAIT_SEMANTICS
-
 /* FUNCTIONS *****************************************************************/
 
 static DRIVER_CANCEL NpfsListeningCancelRoutine;
@@ -319,108 +317,8 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
     return Status;
 }
 
-static NTSTATUS
-NpfsWaitPipe(PIRP Irp,
-             PNPFS_CCB Ccb)
-{
-    PLIST_ENTRY current_entry;
-    PNPFS_FCB Fcb;
-    PNPFS_CCB ServerCcb;
-    PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
-    PLARGE_INTEGER TimeOut;
-    NTSTATUS Status;
-    PEXTENDED_IO_STACK_LOCATION IoStack;
-    PFILE_OBJECT FileObject;
-    PNPFS_VCB Vcb;
-
-    IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack);
-    FileObject = IoStack->FileObject;
-    ASSERT(FileObject);
-
-    DPRINT("Waiting on Pipe %wZ\n", &FileObject->FileName);
-
-    WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-
-    ASSERT(Ccb->Fcb);
-    ASSERT(Ccb->Fcb->Vcb);
-
-    /* Get the VCB */
-    Vcb = Ccb->Fcb->Vcb;
-
-    /* Lock the pipe list */
-    KeLockMutex(&Vcb->PipeListLock);
-
-    /* File a pipe with the given name */
-    Fcb = NpfsFindPipe(Vcb,
-                       &FileObject->FileName);
-
-    /* Unlock the pipe list */
-    KeUnlockMutex(&Vcb->PipeListLock);
-
-    /* Fail if not pipe was found */
-    if (Fcb == NULL)
-    {
-        DPRINT("No pipe found!\n");
-        return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
-    /* search for listening server */
-    current_entry = Fcb->ServerCcbListHead.Flink;
-    while (current_entry != &Fcb->ServerCcbListHead)
-    {
-        ServerCcb = CONTAINING_RECORD(current_entry,
-                                      NPFS_CCB,
-                                      CcbListEntry);
-
-        if (ServerCcb->PipeState == FILE_PIPE_LISTENING_STATE)
-        {
-            /* found a listening server CCB */
-            DPRINT("Listening server CCB found -- connecting\n");
-            NpfsDereferenceFcb(Fcb);
-            return STATUS_SUCCESS;
-        }
-
-        current_entry = current_entry->Flink;
-    }
-
-    /* No listening server fcb found, so wait for one */
-
-    /* If a timeout specified */
-    if (WaitPipe->TimeoutSpecified)
-    {
-        /* NMPWAIT_USE_DEFAULT_WAIT = 0 */
-        if (WaitPipe->Timeout.QuadPart == 0)
-        {
-            TimeOut = &Fcb->TimeOut;
-        }
-        else
-        {
-            TimeOut = &WaitPipe->Timeout;
-        }
-    }
-    else
-    {
-        /* Wait forever */
-        TimeOut = NULL;
-    }
-    NpfsDereferenceFcb(Fcb);
-
-    Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
-                                   UserRequest,
-                                   Irp->RequestorMode,
-                                   (Ccb->FileObject->Flags & FO_ALERTABLE_IO) != 0,
-                                   TimeOut);
-    if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
-        Status = STATUS_CANCELLED;
-
-    DPRINT("KeWaitForSingleObject() returned (Status %lx)\n", Status);
-
-    return Status;
-}
-
 NTSTATUS
-NpfsWaitPipe2(PIRP Irp,
+NpfsWaitPipe(PIRP Irp,
              PNPFS_CCB Ccb)
 {
     PLIST_ENTRY current_entry;
@@ -429,16 +327,12 @@ NpfsWaitPipe2(PIRP Irp,
     PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
     LARGE_INTEGER TimeOut;
     NTSTATUS Status;
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
     PNPFS_VCB Vcb;
     UNICODE_STRING PipeName;
-#endif
-
     DPRINT("NpfsWaitPipe\n");
 
     WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
 
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
     /* Fail, if the CCB does not represent the root directory */
     if (Ccb->Type != CCB_DIRECTORY)
         return STATUS_ILLEGAL_FUNCTION;
@@ -488,15 +382,6 @@ NpfsWaitPipe2(PIRP Irp,
     }
 
     DPRINT("Fcb %p\n", Fcb);
-#else
-    Fcb = Ccb->Fcb;
-
-    if (Ccb->PipeState != 0)
-    {
-        DPRINT("Pipe is not in passive (waiting) state!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-#endif
 
     /* search for listening server */
     current_entry = Fcb->ServerCcbListHead.Flink;
@@ -510,9 +395,7 @@ NpfsWaitPipe2(PIRP Irp,
         {
             /* found a listening server CCB */
             DPRINT("Listening server CCB found -- connecting\n");
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
             NpfsDereferenceFcb(Fcb);
-#endif
             return STATUS_SUCCESS;
         }
 
@@ -526,9 +409,8 @@ NpfsWaitPipe2(PIRP Irp,
         TimeOut = WaitPipe->Timeout;
     else
         TimeOut = Fcb->TimeOut;
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
+
     NpfsDereferenceFcb(Fcb);
-#endif
 
     /* Wait for one */
     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
