@@ -133,7 +133,7 @@ typedef struct _CSR_API_MESSAGE
                 // Finally, the overall message structure size must be at most
                 // equal to the maximum acceptable LPC message size.
                 //
-                ULONG_PTR Padding[35];
+                ULONG_PTR ApiMessageData[39];
             } Data;
         };
     };

@@ -321,6 +321,33 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     return Status;
 }
 
+#if 0 
+//
+// Structures can be padded at the end, causing the size of the entire structure
+// minus the size of the last field, not to be equal to the offset of the last
+// field.
+//
+typedef struct _TEST_EMBEDDED
+{
+    ULONG One;
+    ULONG Two;
+    ULONG Three;
+} TEST_EMBEDDED;
+
+typedef struct _TEST
+{
+    PORT_MESSAGE h;
+    TEST_EMBEDDED Three;
+} TEST;
+
+C_ASSERT(sizeof(PORT_MESSAGE) == 0x18);
+C_ASSERT(FIELD_OFFSET(TEST, Three) == 0x18);
+C_ASSERT(sizeof(TEST_EMBEDDED) == 0xC);
+
+C_ASSERT(sizeof(TEST) != (sizeof(TEST_EMBEDDED) + sizeof(PORT_MESSAGE)));
+C_ASSERT((sizeof(TEST) - sizeof(TEST_EMBEDDED)) != FIELD_OFFSET(TEST, Three));
+#endif
+
 /*
  * @implemented
  */
@@ -337,10 +364,10 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
 
     /* Fill out the Port Message Header */
     ApiMessage->Header.u2.ZeroInit = 0;
-    ApiMessage->Header.u1.s1.TotalLength =
-        FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
-    ApiMessage->Header.u1.s1.DataLength =
-        ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
+    ApiMessage->Header.u1.s1.TotalLength = DataLength +
+        sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data); // FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
+    ApiMessage->Header.u1.s1.DataLength = DataLength +
+        FIELD_OFFSET(CSR_API_MESSAGE, Data) - sizeof(ApiMessage->Header);// ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
 
     /* Fill out the CSR Header */
     ApiMessage->ApiNumber = ApiNumber;
