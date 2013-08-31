@@ -288,7 +288,7 @@ CpGetByte(IN  PCPPORT Port,
             if (Port->Flags & CPPORT_FLAG_MODEM_CONTROL)
             {
                 /* Not implemented yet */
-                DPRINT1("CP: CPPORT_FLAG_MODEM_CONTROL unexpected\n");
+                //DPRINT1("CP: CPPORT_FLAG_MODEM_CONTROL unexpected\n");
             }
 
             /* Byte was read */
@@ -311,7 +311,7 @@ CpPutByte(IN PCPPORT Port,
     if (Port->Flags & CPPORT_FLAG_MODEM_CONTROL)    // To be removed when this becomes implemented.
     {
         /* Not implemented yet */
-        DPRINT1("CP: CPPORT_FLAG_MODEM_CONTROL unexpected\n");
+        //DPRINT1("CP: CPPORT_FLAG_MODEM_CONTROL unexpected\n");
     }
 
     /* Wait for LSR to say we can go ahead */
