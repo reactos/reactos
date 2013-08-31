@@ -22,7 +22,7 @@ NTAPI
 IoWMIRegistrationControl(IN PDEVICE_OBJECT DeviceObject,
                          IN ULONG Action)
 {
-    DPRINT1("IoWMIRegistrationControl() called for DO %p, requesting %d action, returning success\n",
+    DPRINT1("IoWMIRegistrationControl() called for DO %p, requesting %lu action, returning success\n",
         DeviceObject, Action);
 
     return STATUS_SUCCESS;

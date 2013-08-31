@@ -235,7 +235,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     REG_ENUMERATE_KEY_INFORMATION EnumerateKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
-    DPRINT("NtEnumerateKey() KH 0x%x, Index 0x%x, KIC %d, Length %d\n",
+    DPRINT("NtEnumerateKey() KH 0x%p, Index 0x%x, KIC %d, Length %lu\n",
            KeyHandle, Index, KeyInformationClass, Length);
 
     /* Reject classes we don't know about */
@@ -319,7 +319,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
     REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
-    DPRINT("NtEnumerateValueKey() KH 0x%x, Index 0x%x, KVIC %d, Length %d\n",
+    DPRINT("NtEnumerateValueKey() KH 0x%p, Index 0x%x, KVIC %d, Length %lu\n",
            KeyHandle, Index, KeyValueInformationClass, Length);
 
     /* Reject classes we don't know about */
@@ -404,7 +404,7 @@ NtQueryKey(IN HANDLE KeyHandle,
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     OBJECT_HANDLE_INFORMATION HandleInfo;
     PAGED_CODE();
-    DPRINT("NtQueryKey() KH 0x%x, KIC %d, Length %d\n",
+    DPRINT("NtQueryKey() KH 0x%p, KIC %d, Length %lu\n",
            KeyHandle, KeyInformationClass, Length);
 
     /* Reject invalid classes */
@@ -517,7 +517,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     UNICODE_STRING ValueNameCopy = *ValueName;
     PAGED_CODE();
-    DPRINT("NtQueryValueKey() KH 0x%x, VN '%wZ', KVIC %d, Length %d\n",
+    DPRINT("NtQueryValueKey() KH 0x%p, VN '%wZ', KVIC %d, Length %lu\n",
         KeyHandle, ValueName, KeyValueInformationClass, Length);
 
     /* Verify that the handle is valid and is a registry key */
@@ -610,7 +610,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     UNICODE_STRING ValueNameCopy = *ValueName;
     PAGED_CODE();
-    DPRINT("NtSetValueKey() KH 0x%x, VN '%wZ', TI %x, T %d, DS %d\n",
+    DPRINT("NtSetValueKey() KH 0x%p, VN '%wZ', TI %x, T %lu, DS %lu\n",
         KeyHandle, ValueName, TitleIndex, Type, DataSize);
 
     /* Verify that the handle is valid and is a registry key */

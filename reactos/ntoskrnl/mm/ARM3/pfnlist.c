@@ -212,7 +212,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     {
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
 
-        DPRINT1("Running low on pages: %d remaining\n", MmAvailablePages);
+        DPRINT1("Running low on pages: %lu remaining\n", MmAvailablePages);
 
         /* Call RosMm and see if it can release any pages for us */
         MmRebalanceMemoryConsumers();
@@ -273,7 +273,7 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
         if (--MmAvailablePages < MmMinimumFreePages)
         {
             /* FIXME: Should wake up the MPW and working set manager, if we had one */
-            DPRINT1("Running low on pages: %d remaining\n", MmAvailablePages);
+            DPRINT1("Running low on pages: %lu remaining\n", MmAvailablePages);
 
             /* Call RosMm and see if it can release any pages for us */
             MmRebalanceMemoryConsumers();
@@ -459,7 +459,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     {
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
 
-        DPRINT1("Running low on pages: %d remaining\n", MmAvailablePages);
+        DPRINT1("Running low on pages: %lu remaining\n", MmAvailablePages);
 
         /* Call RosMm and see if it can release any pages for us */
         MmRebalanceMemoryConsumers();
@@ -1184,7 +1184,7 @@ MiAllocatePfn(IN PMMPTE PointerPte,
     /* Check if we're running low on pages */
     if (MmAvailablePages < 128)
     {
-        DPRINT1("Warning, running low on memory: %d pages left\n", MmAvailablePages);
+        DPRINT1("Warning, running low on memory: %lu pages left\n", MmAvailablePages);
 
         //MiEnsureAvailablePageOrWait(NULL, OldIrql);
 

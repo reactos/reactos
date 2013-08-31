@@ -1613,7 +1613,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             //
             if (ExpPoolFlags & POOL_FLAG_DBGPRINT_ON_FAILURE)
             {
-                DPRINT1("EX: ExAllocatePool (%p, 0x%x) returning NULL\n",
+                DPRINT1("EX: ExAllocatePool (%lu, 0x%x) returning NULL\n",
                         NumberOfBytes,
                         OriginalType);
                 if (ExpPoolFlags & POOL_FLAG_CRASH_ON_FAILURE) DbgBreakPoint();
@@ -1937,7 +1937,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         if (ExpPoolFlags & POOL_FLAG_DBGPRINT_ON_FAILURE)
         {
-            DPRINT1("EX: ExAllocatePool (%p, 0x%x) returning NULL\n",
+            DPRINT1("EX: ExAllocatePool (%lu, 0x%x) returning NULL\n",
                     NumberOfBytes,
                     OriginalType);
             if (ExpPoolFlags & POOL_FLAG_CRASH_ON_FAILURE) DbgBreakPoint();

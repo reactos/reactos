@@ -227,7 +227,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
             /* Otherwise, quit */
             ObDereferenceObject(ServerPort);
             DPRINT1("Client section mapping failed: %lx\n", Status);
-            DPRINT1("View base, offset, size: %lx %lx %lx\n",
+            DPRINT1("View base, offset, size: %p %lx %p\n",
                     ServerPort->ClientSectionBase,
                     ConnectMessage->ClientView.ViewSize,
                     SectionOffset);
@@ -270,7 +270,7 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
     /* Return the handle to user mode */
     *PortHandle = Handle;
     LPCTRACE(LPC_COMPLETE_DEBUG,
-             "Handle: %lx. Messages: %p/%p. Ports: %p/%p/%p\n",
+             "Handle: %p. Messages: %p/%p. Ports: %p/%p/%p\n",
              Handle,
              Message,
              ConnectMessage,
@@ -327,7 +327,7 @@ NtCompleteConnectPort(IN HANDLE PortHandle)
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD Thread;
     PAGED_CODE();
-    LPCTRACE(LPC_COMPLETE_DEBUG, "Handle: %lx\n", PortHandle);
+    LPCTRACE(LPC_COMPLETE_DEBUG, "Handle: %p\n", PortHandle);
 
     /* Get the Port Object */
     Status = ObReferenceObjectByHandle(PortHandle,

@@ -86,7 +86,7 @@ PspTerminateProcess(IN PEPROCESS Process,
     NTSTATUS Status = STATUS_NOTHING_TO_TERMINATE;
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG,
-            "Process: %p ExitStatus: %p\n", Process, ExitStatus);
+            "Process: %p ExitStatus: %d\n", Process, ExitStatus);
     PSREFTRACE(Process);
 
     /* Check if this is a Critical Process */
@@ -461,7 +461,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     PKAPC Apc;
     PTOKEN PrimaryToken;
     PAGED_CODE();
-    PSTRACE(PS_KILL_DEBUG, "ExitStatus: %p\n", ExitStatus);
+    PSTRACE(PS_KILL_DEBUG, "ExitStatus: %d\n", ExitStatus);
 
     /* Get the Current Thread and Process */
     Thread = PsGetCurrentThread();
@@ -991,7 +991,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG Flags;
     PAGED_CODE();
-    PSTRACE(PS_KILL_DEBUG, "Thread: %p ExitStatus: %p\n", Thread, ExitStatus);
+    PSTRACE(PS_KILL_DEBUG, "Thread: %p ExitStatus: %d\n", Thread, ExitStatus);
     PSREFTRACE(Thread);
 
     /* Check if this is a Critical Thread, and Bugcheck */
@@ -1076,7 +1076,7 @@ PspExitProcess(IN BOOLEAN LastThread,
     ULONG Actual;
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG,
-            "LastThread: %p Process: %p\n", LastThread, Process);
+            "LastThread: %u Process: %p\n", LastThread, Process);
     PSREFTRACE(Process);
 
     /* Set Process Exit flag */
@@ -1165,7 +1165,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
     BOOLEAN KillByHandle;
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG,
-            "ProcessHandle: %p ExitStatus: %p\n", ProcessHandle, ExitStatus);
+            "ProcessHandle: %p ExitStatus: %d\n", ProcessHandle, ExitStatus);
 
     /* Were we passed a process handle? */
     if (ProcessHandle)
@@ -1282,7 +1282,7 @@ NtTerminateThread(IN HANDLE ThreadHandle,
     NTSTATUS Status;
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG,
-            "ThreadHandle: %p ExitStatus: %p\n", ThreadHandle, ExitStatus);
+            "ThreadHandle: %p ExitStatus: %d\n", ThreadHandle, ExitStatus);
 
     /* Handle the special NULL case */
     if (!ThreadHandle)

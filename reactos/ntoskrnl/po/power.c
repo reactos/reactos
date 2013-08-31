@@ -679,8 +679,8 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
 
     PAGED_CODE();
 
-    DPRINT("NtPowerInformation(PowerInformationLevel 0x%x, InputBuffer 0x%x, "
-           "InputBufferLength 0x%x, OutputBuffer 0x%x, OutputBufferLength 0x%x)\n",
+    DPRINT("NtPowerInformation(PowerInformationLevel 0x%x, InputBuffer 0x%p, "
+           "InputBufferLength 0x%x, OutputBuffer 0x%p, OutputBufferLength 0x%x)\n",
            PowerInformationLevel,
            InputBuffer, InputBufferLength,
            OutputBuffer, OutputBufferLength);
@@ -914,7 +914,7 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 #endif
 
         /* Flush all volumes and the registry */
-        DPRINT1("Flushing volumes, cache flushed %d pages\n", Dummy);
+        DPRINT1("Flushing volumes, cache flushed %lu pages\n", Dummy);
         PopFlushVolumes(PopAction.Shutdown);
 
         /* Set IRP for drivers */

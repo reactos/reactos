@@ -978,7 +978,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
             }
             
             /* Check for privileged instructions */
-            DPRINT("Instruction (%d) at fault: %lx %lx %lx %lx\n",
+            DPRINT("Instruction (%lu) at fault: %lx %lx %lx %lx\n",
                     i,
                     Instructions[i],
                     Instructions[i + 1],

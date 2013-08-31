@@ -445,7 +445,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     ULONG Pte;
     PULONG Pt;
 
-    DPRINT("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
+    DPRINT("MmDeleteVirtualMapping(%p, %p, %u, %p, %p)\n",
            Process, Address, FreePage, WasDirty, Page);
 
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
@@ -792,7 +792,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     ULONG oldPdeOffset, PdeOffset;
     PULONG Pt = NULL;
     ULONG Pte;
-    DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
+    DPRINT("MmCreateVirtualMappingUnsafe(%p, %p, %lu, %p (%x), %lu)\n",
            Process, Address, flProtect, Pages, *Pages, PageCount);
 
     ASSERT(((ULONG_PTR)Address % PAGE_SIZE) == 0);
@@ -847,7 +847,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         if (!(Attributes & PA_PRESENT) && Pages[i] != 0)
         {
             DPRINT1("Setting physical address but not allowing access at address "
-                    "0x%.8X with attributes %x/%x.\n",
+                    "0x%p with attributes %x/%x.\n",
                     Addr, Attributes, flProtect);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
@@ -969,7 +969,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     PULONG Pt;
     ULONG Pte;
 
-    DPRINT("MmSetPageProtect(Process %x  Address %x  flProtect %x)\n",
+    DPRINT("MmSetPageProtect(Process %p  Address %p  flProtect %x)\n",
            Process, Address, flProtect);
 
     Attributes = ProtectToPTE(flProtect);
@@ -1016,7 +1016,7 @@ MmGetPhysicalAddress(PVOID vaddr)
     PHYSICAL_ADDRESS p;
     ULONG Pte;
 
-    DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
+    DPRINT("MmGetPhysicalAddress(vaddr %p)\n", vaddr);
     Pte = MmGetPageEntryForProcess(NULL, vaddr);
     if (Pte != 0 && (Pte & PA_PRESENT))
     {

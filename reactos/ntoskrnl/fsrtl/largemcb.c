@@ -60,7 +60,7 @@ static PVOID NTAPI McbMappingAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
     PVOID Result;
     PBASE_MCB Mcb = (PBASE_MCB)Table->TableContext;
     Result = ExAllocatePoolWithTag(Mcb->PoolType, Bytes, 'LMCB');
-    DPRINT("McbMappingAllocate(%d) => %p\n", Bytes, Result);
+    DPRINT("McbMappingAllocate(%lu) => %p\n", Bytes, Result);
     return Result;
 }
 
@@ -227,7 +227,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
 
     /* finally insert the resulting run */
     Existing = RtlInsertElementGenericTable(&Mcb->Mapping->Table, &Node, sizeof(Node), &NewElement);
-    DPRINT("Existing %x, NewElement %d\n", Existing, NewElement);
+    DPRINT("Existing %p, NewElement %u\n", Existing, NewElement);
     ASSERT(NewElement);
 
     // NB: Two consecutive runs can only be merged, if actual LBNs also match!
@@ -294,7 +294,7 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    DPRINT("Mcb %x Vbn %lld Lbn %lld SectorCount %lld\n", Mcb, Vbn, Lbn, SectorCount);
+    DPRINT("Mcb %p Vbn %lld Lbn %lld SectorCount %lld\n", Mcb, Vbn, Lbn, SectorCount);
 
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlAddBaseMcbEntry(&(Mcb->BaseMcb),
@@ -303,7 +303,7 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
                                   SectorCount);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
-    DPRINT("Done %d\n", Result);
+    DPRINT("Done %u\n", Result);
 
     return Result;
 }
@@ -390,9 +390,9 @@ FsRtlGetNextBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
         break;
     }
 
-    if (RunFound) DPRINT("RunFound(%d %d %d)\n", RunFound->RunStartVbn.LowPart, RunFound->RunEndVbn.LowPart, RunFound->StartingLbn.LowPart);
-    if (RunFoundLower) DPRINT("RunFoundLower(%d %d %d)\n", RunFoundLower->RunStartVbn.LowPart, RunFoundLower->RunEndVbn.LowPart, RunFoundLower->StartingLbn.LowPart);
-    if (RunFoundHigher) DPRINT("RunFoundHigher(%d %d %d)\n", RunFoundHigher->RunStartVbn.LowPart, RunFoundHigher->RunEndVbn.LowPart, RunFoundHigher->StartingLbn.LowPart);
+    if (RunFound) DPRINT("RunFound(%lu %lu %lu)\n", RunFound->RunStartVbn.LowPart, RunFound->RunEndVbn.LowPart, RunFound->StartingLbn.LowPart);
+    if (RunFoundLower) DPRINT("RunFoundLower(%lu %lu %lu)\n", RunFoundLower->RunStartVbn.LowPart, RunFoundLower->RunEndVbn.LowPart, RunFoundLower->StartingLbn.LowPart);
+    if (RunFoundHigher) DPRINT("RunFoundHigher(%lu %lu %lu)\n", RunFoundHigher->RunStartVbn.LowPart, RunFoundHigher->RunEndVbn.LowPart, RunFoundHigher->StartingLbn.LowPart);
 
     if (RunFound)
     {
@@ -440,7 +440,7 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    DPRINT("FsRtlGetNextLargeMcbEntry Mcb %p RunIndex %d\n", Mcb, RunIndex);
+    DPRINT("FsRtlGetNextLargeMcbEntry Mcb %p RunIndex %lu\n", Mcb, RunIndex);
 
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlGetNextBaseMcbEntry(&(Mcb->BaseMcb),
@@ -450,7 +450,7 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
                                       SectorCount);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
-    DPRINT("Done %d\n", Result);
+    DPRINT("Done %u\n", Result);
 
     return Result;
 }
@@ -660,7 +660,7 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    DPRINT("FsRtlLookupLargeMcbEntry Mcb %x Vbn %x\n", Mcb, (ULONG)Vbn);
+    DPRINT("FsRtlLookupLargeMcbEntry Mcb %p Vbn %x\n", Mcb, (ULONG)Vbn);
 
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlLookupBaseMcbEntry(&(Mcb->BaseMcb),
@@ -672,7 +672,7 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
                                      Index);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
-    DPRINT("Done %d\n", Result);
+    DPRINT("Done %u\n", Result);
 
     return Result;
 }
@@ -753,7 +753,7 @@ FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
 {
     BOOLEAN Result;
 
-    DPRINT("FsRtlLookupLastLargeMcbEntryAndIndex %x\n", OpaqueMcb);
+    DPRINT("FsRtlLookupLastLargeMcbEntryAndIndex %p\n", OpaqueMcb);
 
     KeAcquireGuardedMutex(OpaqueMcb->GuardedMutex);
     Result = FsRtlLookupLastBaseMcbEntryAndIndex(&(OpaqueMcb->BaseMcb),
@@ -762,7 +762,7 @@ FsRtlLookupLastLargeMcbEntryAndIndex(IN PLARGE_MCB OpaqueMcb,
                                                  Index);
     KeReleaseGuardedMutex(OpaqueMcb->GuardedMutex);
 
-    DPRINT("Done %d\n", Result);
+    DPRINT("Done %u\n", Result);
 
     return Result;
 }
@@ -792,7 +792,7 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    DPRINT("FsRtlLookupLastLargeMcbEntry Mcb %x\n", Mcb);
+    DPRINT("FsRtlLookupLastLargeMcbEntry Mcb %p\n", Mcb);
 
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlLookupLastBaseMcbEntry(&(Mcb->BaseMcb),
@@ -800,7 +800,7 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
                                          Lbn);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
-    DPRINT("Done %d\n", Result);
+    DPRINT("Done %u\n", Result);
 
     return Result;
 }
@@ -841,14 +841,14 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 {
     ULONG NumberOfRuns;
 
-    DPRINT("FsRtlNumberOfRunsInLargeMcb Mcb %x\n", Mcb);
+    DPRINT("FsRtlNumberOfRunsInLargeMcb Mcb %p\n", Mcb);
 
     /* Read the number of runs while holding the MCB lock */
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     NumberOfRuns = FsRtlNumberOfRunsInBaseMcb(&(Mcb->BaseMcb));
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
-    DPRINT("Done %d\n", NumberOfRuns);
+    DPRINT("Done %lu\n", NumberOfRuns);
 
     /* Return the count */
     return NumberOfRuns;
@@ -920,7 +920,7 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
                          IN LONGLONG Vbn,
                          IN LONGLONG SectorCount)
 {
-    DPRINT("FsRtlRemoveLargeMcbEntry Mcb %x, Vbn %I64d, SectorCount %I64d\n", Mcb, Vbn, SectorCount);
+    DPRINT("FsRtlRemoveLargeMcbEntry Mcb %p, Vbn %I64d, SectorCount %I64d\n", Mcb, Vbn, SectorCount);
 
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     FsRtlRemoveBaseMcbEntry(&(Mcb->BaseMcb), Vbn, SectorCount);
@@ -1033,7 +1033,7 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
 {
     BOOLEAN Result;
 
-    DPRINT("FsRtlSplitLargeMcb %x, Vbn %x, Amount %x\n", Mcb, (ULONG)Vbn, (ULONG)Amount);
+    DPRINT("FsRtlSplitLargeMcb %p, Vbn %x, Amount %x\n", Mcb, (ULONG)Vbn, (ULONG)Amount);
 
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     Result = FsRtlSplitBaseMcb(&(Mcb->BaseMcb),
@@ -1041,7 +1041,7 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
                                Amount);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);
 
-    DPRINT("Done %d\n", Result);
+    DPRINT("Done %u\n", Result);
 
     return Result;
 }
@@ -1066,7 +1066,7 @@ NTAPI
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
                       IN LONGLONG Vbn)
 {
-    DPRINT("FsRtlTruncateLargeMcb %x Vbn %x\n", Mcb, (ULONG)Vbn);
+    DPRINT("FsRtlTruncateLargeMcb %p Vbn %x\n", Mcb, (ULONG)Vbn);
     KeAcquireGuardedMutex(Mcb->GuardedMutex);
     FsRtlTruncateBaseMcb(&(Mcb->BaseMcb), Vbn);
     KeReleaseGuardedMutex(Mcb->GuardedMutex);

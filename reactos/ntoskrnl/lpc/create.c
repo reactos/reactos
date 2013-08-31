@@ -143,7 +143,7 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
                             PortHandle);
 
     /* Return success or the error */
-    LPCTRACE(LPC_CREATE_DEBUG, "Port: %p. Handle: %lx\n", Port, *PortHandle);
+    LPCTRACE(LPC_CREATE_DEBUG, "Port: %p. Handle: %p\n", Port, *PortHandle);
     return Status;
 }
 

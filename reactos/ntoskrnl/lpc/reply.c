@@ -152,7 +152,7 @@ NtReplyPort(IN HANDLE PortHandle,
 
     PAGED_CODE();
     LPCTRACE(LPC_REPLY_DEBUG,
-             "Handle: %lx. Message: %p.\n",
+             "Handle: %p. Message: %p.\n",
              PortHandle,
              ReplyMessage);
 
@@ -329,7 +329,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
 
     PAGED_CODE();
     LPCTRACE(LPC_REPLY_DEBUG,
-             "Handle: %lx. Messages: %p/%p. Context: %p\n",
+             "Handle: %p. Messages: %p/%p. Context: %p\n",
              PortHandle,
              ReplyMessage,
              ReceiveMessage,
@@ -670,7 +670,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
 Cleanup:
     /* All done, dereference the port and return the status */
     LPCTRACE(LPC_REPLY_DEBUG,
-             "Port: %p. Status: %p\n",
+             "Port: %p. Status: %d\n",
              Port,
              Status);
     if (ConnectionPort) ObDereferenceObject(ConnectionPort);

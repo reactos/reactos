@@ -656,7 +656,7 @@ ExpWaitForResource(IN PERESOURCE Resource,
             ExAcquireResourceLock(Resource, &LockHandle);
 
             /* Dump debug information */
-            DPRINT1("Resource @ %lx\n", Resource);
+            DPRINT1("Resource @ %p\n", Resource);
             DPRINT1(" ActiveEntries = %04lx  Flags = %s%s%s\n",
                     Resource->ActiveEntries,
                     IsOwnedExclusive(Resource) ? "IsOwnedExclusive " : "",

@@ -647,7 +647,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     * bytes) to the physical location of cluster 3042 then. */
    if (BytesPerAllocationUnit % PAGE_SIZE)
    {
-      DPRINT1("BytesPerAllocationUnit %d is not a multiple of PAGE_SIZE %d\n",
+      DPRINT1("BytesPerAllocationUnit %lu is not a multiple of PAGE_SIZE %d\n",
               BytesPerAllocationUnit, PAGE_SIZE);
       ZwClose(FileHandle);
       return STATUS_UNSUCCESSFUL;
@@ -784,7 +784,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       ZwClose(FileHandle);
       return(STATUS_NO_MEMORY);
    }
-   DPRINT("ExtentCount: %d\n", ExtentCount);
+   DPRINT("ExtentCount: %lu\n", ExtentCount);
    Size = sizeof(RETRIEVAL_POINTERS_BUFFER) + ExtentCount * 2 * sizeof(LARGE_INTEGER);
    PagingFile->RetrievalPointers = ExAllocatePool(NonPagedPool, Size);
    if (PagingFile->RetrievalPointers == NULL)

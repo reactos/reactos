@@ -427,7 +427,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
 
     /* All done */
     LPCTRACE(LPC_SEND_DEBUG,
-             "Port: %p. Status: %p\n",
+             "Port: %p. Status: %d\n",
              Port,
              Status);
 
@@ -454,7 +454,7 @@ NtRequestPort(IN HANDLE PortHandle,
     ULONG MessageType;
     PAGED_CODE();
     LPCTRACE(LPC_SEND_DEBUG,
-             "Handle: %lx. Message: %p. Type: %lx\n",
+             "Handle: %p. Message: %p. Type: %lx\n",
              PortHandle,
              LpcRequest,
              LpcpGetMessageType(LpcRequest));
@@ -621,7 +621,7 @@ NtRequestPort(IN HANDLE PortHandle,
 
     /* All done with a failure*/
     LPCTRACE(LPC_SEND_DEBUG,
-             "Port: %p. Status: %p\n",
+             "Port: %p. Status: %d\n",
              Port,
              Status);
 
@@ -652,7 +652,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     ULONG MessageType;
     PAGED_CODE();
     LPCTRACE(LPC_SEND_DEBUG,
-             "Handle: %lx. Messages: %p/%p. Type: %lx\n",
+             "Handle: %p. Messages: %p/%p. Type: %lx\n",
              PortHandle,
              LpcRequest,
              LpcReply,
@@ -914,7 +914,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
 
     /* All done */
     LPCTRACE(LPC_SEND_DEBUG,
-             "Port: %p. Status: %p\n",
+             "Port: %p. Status: %d\n",
              Port,
              Status);
     ObDereferenceObject(Port);

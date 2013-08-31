@@ -1167,7 +1167,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    LPWSTR Start;
    BOOLEAN SafeToUnload = TRUE;
 
-   DPRINT("IopUnloadDriver('%wZ', %d)\n", DriverServiceName, UnloadPnpDrivers);
+   DPRINT("IopUnloadDriver('%wZ', %u)\n", DriverServiceName, UnloadPnpDrivers);
 
    PAGED_CODE();
 
@@ -1608,7 +1608,7 @@ try_again:
         if (!DriverObject->MajorFunction[i])
         {
             /* Print a warning in the debug log */
-            DPRINT1("Driver <%wZ> set DriverObject->MajorFunction[%d] to NULL!\n",
+            DPRINT1("Driver <%wZ> set DriverObject->MajorFunction[%lu] to NULL!\n",
                     &DriverObject->DriverName, i);
 
             /* Fix it up */

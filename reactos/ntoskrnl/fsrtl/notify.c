@@ -508,7 +508,7 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
 
     PAGED_CODE();
 
-    DPRINT("FsRtlNotifyFilterChangeDirectory(): %p, %p, %p, %wZ, %d, %d, %u, %p, %p, %p, %p\n",
+    DPRINT("FsRtlNotifyFilterChangeDirectory(): %p, %p, %p, %wZ, %u, %u, %u, %p, %p, %p, %p\n",
     NotifySync, NotifyList, FsContext, FullDirectoryName, WatchTree, IgnoreBuffer, CompletionFilter, NotifyIrp,
     TraverseCallback, SubjectContext, FilterCallback);
 

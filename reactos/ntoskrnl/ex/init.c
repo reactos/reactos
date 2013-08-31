@@ -866,7 +866,7 @@ ExBurnMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PLIST_ENTRY ListEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MemDescriptor;
 
-    DPRINT1("Burn RAM amount: %d pages\n", PagesToDestroy);
+    DPRINT1("Burn RAM amount: %lu pages\n", PagesToDestroy);
 
     /* Loop the memory descriptors, beginning at the end */
     for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Blink;

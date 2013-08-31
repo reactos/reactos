@@ -503,7 +503,7 @@ MiTestSpecialPool()
     {
         ByteSize = (100 * (i+1)) % (PAGE_SIZE - sizeof(POOL_HEADER));
         p1 = MmAllocateSpecialPool(ByteSize, 'TEST', PoolType, 0);
-        DPRINT1("p1 %p size %d\n", p1, ByteSize);
+        DPRINT1("p1 %p size %lu\n", p1, ByteSize);
         MmFreeSpecialPool(p1);
     }
 
@@ -512,7 +512,7 @@ MiTestSpecialPool()
     {
         ByteSize = (100 * (i+1)) % (PAGE_SIZE - sizeof(POOL_HEADER));
         p2[i] = MmAllocateSpecialPool(ByteSize, 'TEST', PoolType, 0);
-        DPRINT1("p2[%d] %p size %d\n", i, p1, ByteSize);
+        DPRINT1("p2[%lu] %p size %lu\n", i, p1, ByteSize);
     }
     for (i=0; i<100; i++)
     {

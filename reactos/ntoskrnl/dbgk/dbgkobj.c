@@ -133,7 +133,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
         if (!DebugObject->DebuggerInactive)
         {
             /* Add the event into the object's list */
-            DBGKTRACE(DBGK_MESSAGE_DEBUG, "Inserting: %lx %p\n",
+            DBGKTRACE(DBGK_MESSAGE_DEBUG, "Inserting: %p %d\n",
                       DebugEvent, Message->ApiNumber);
             InsertTailList(&DebugObject->EventList, &DebugEvent->EventList);
 
@@ -326,7 +326,7 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     BOOLEAN UseLpc = FALSE;
     PAGED_CODE();
     DBGKTRACE(DBGK_EXCEPTION_DEBUG,
-              "ExceptionRecord: %p Port: %p\n", ExceptionRecord, DebugPort);
+              "ExceptionRecord: %p Port: %u\n", ExceptionRecord, DebugPort);
 
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
@@ -1657,7 +1657,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
     BOOLEAN NeedsWake = FALSE;
     CLIENT_ID ClientId;
     PAGED_CODE();
-    DBGKTRACE(DBGK_OBJECT_DEBUG, "Handle: %p Status: %p\n",
+    DBGKTRACE(DBGK_OBJECT_DEBUG, "Handle: %p Status: %d\n",
               DebugHandle, ContinueStatus);
 
     /* Check if we were called from user mode*/

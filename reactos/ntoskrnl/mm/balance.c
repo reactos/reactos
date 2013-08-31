@@ -172,7 +172,7 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
         /* Now swap the pages out */
         Status = MiMemoryConsumers[Consumer].Trim(Target, 0, &NrFreedPages);
 
-        DPRINT("Trimming consumer %d: Freed %d pages with a target of %d pages\n", Consumer, NrFreedPages, Target);
+        DPRINT("Trimming consumer %lu: Freed %lu pages with a target of %lu pages\n", Consumer, NrFreedPages, Target);
 
         if (!NT_SUCCESS(Status))
         {

@@ -271,7 +271,7 @@ tryagain:
     Status = LocateChildDevice(DeviceExtension, DevicePath, InstancePath, &Device);
     if (Status != STATUS_NO_SUCH_DEVICE || NextInstance > 9999)
     {
-        DPRINT1("NextInstance value is corrupt! (%d)\n", NextInstance);
+        DPRINT1("NextInstance value is corrupt! (%lu)\n", NextInstance);
         RtlDeleteRegistryValue(RTL_REGISTRY_HANDLE,
                                (PWSTR)DeviceKeyHandle,
                                L"NextInstance");

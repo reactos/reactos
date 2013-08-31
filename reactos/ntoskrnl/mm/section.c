@@ -60,7 +60,7 @@
 
 #undef MmSetPageEntrySectionSegment
 #define MmSetPageEntrySectionSegment(S,O,E) do { \
-        DPRINT("SetPageEntrySectionSegment(old,%x,%x,%x)\n",(S),(O)->LowPart,E); \
+        DPRINT("SetPageEntrySectionSegment(old,%p,%x,%x)\n",(S),(O)->LowPart,E); \
         _MmSetPageEntrySectionSegment((S),(O),(E),__FILE__,__LINE__);   \
 	} while (0)
 
@@ -805,7 +805,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
       {
          if (SectionSegments[i].ReferenceCount != 0)
          {
-            DPRINT1("Image segment %d still referenced (was %d)\n", i,
+            DPRINT1("Image segment %lu still referenced (was %lu)\n", i,
                     SectionSegments[i].ReferenceCount);
             KeBugCheck(MEMORY_MANAGEMENT);
          }
@@ -1084,7 +1084,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
    ASSERT(Bcb);
 
-   DPRINT("%S %x\n", FileObject->FileName.Buffer, FileOffset);
+   DPRINT("%S %I64x\n", FileObject->FileName.Buffer, FileOffset);
 
    /*
     * If the file system is letting us go directly to the cache and the
@@ -1345,7 +1345,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmUnlockAddressSpace(AddressSpace);
       MiWaitForPageEvent(NULL, NULL);
       MmLockAddressSpace(AddressSpace);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_MM_RESTART_OPERATION);
    }
 
@@ -1429,7 +1429,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
        * Finish the operation
        */
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
 
@@ -1459,7 +1459,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
        * Cleanup and release locks
        */
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
 
@@ -1517,7 +1517,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
           */
          MmLockAddressSpace(AddressSpace);
          MiSetPageEvent(Process, Address);
-         DPRINT("Address 0x%.8X\n", Address);
+         DPRINT("Address 0x%p\n", Address);
          return(Status);
       }
 
@@ -1548,7 +1548,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmInsertRmap(Page, Process, Address);
 
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
    else if (IS_SWAP_FROM_SSE(Entry))
@@ -1619,7 +1619,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       MmInsertRmap(Page, Process, Address);
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
    else
@@ -1646,7 +1646,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       MmInsertRmap(Page, Process, Address);
       MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
 }
@@ -1669,14 +1669,14 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
    SWAPENTRY SwapEntry;
 
-   DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address);
+   DPRINT("MmAccessFaultSectionView(%p, %p, %p)\n", AddressSpace, MemoryArea, Address);
 
    /*
     * Check if the page has already been set readwrite
     */
    if (MmGetPageProtect(Process, Address) & PAGE_READWRITE)
    {
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_SUCCESS);
    }
 
@@ -1710,7 +1710,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
          (Region->Protect == PAGE_READWRITE ||
           Region->Protect == PAGE_EXECUTE_READWRITE)))
    {
-      DPRINT("Address 0x%.8X\n", Address);
+      DPRINT("Address 0x%p\n", Address);
       return(STATUS_ACCESS_VIOLATION);
    }
 
@@ -1743,7 +1743,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
         * Restart the operation
         */
        MmLockAddressSpace(AddressSpace);
-       DPRINT("Address 0x%.8X\n", Address);
+       DPRINT("Address 0x%p\n", Address);
        return(STATUS_MM_RESTART_OPERATION);
    }
 
@@ -1802,7 +1802,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    MmUnlockSectionSegment(Segment);
 
    MiSetPageEvent(Process, Address);
-   DPRINT("Address 0x%.8X\n", Address);
+   DPRINT("Address 0x%p\n", Address);
    return(STATUS_SUCCESS);
 }
 
@@ -1917,8 +1917,8 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    if (Context.Section->AllocationAttributes & SEC_PHYSICALMEMORY)
    {
-      DPRINT1("Trying to page out from physical memory section address 0x%X "
-              "process %d\n", Address,
+      DPRINT1("Trying to page out from physical memory section address 0x%p "
+              "process %p\n", Address,
               Process ? Process->UniqueProcessId : 0);
        KeBugCheck(MEMORY_MANAGEMENT);
    }
@@ -1928,7 +1928,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    if (!MmIsPagePresent(Process, Address))
    {
-      DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
+      DPRINT1("Trying to page out not-present page at (%p,0x%p).\n",
               Process ? Process->UniqueProcessId : 0, Address);
        KeBugCheck(MEMORY_MANAGEMENT);
    }
@@ -1940,7 +1940,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     */
    if (MmGetReferenceCountPage(Page) != 1)
    {
-       DPRINT("Cannot page out locked section page: 0x%p (RefCount: %d)\n",
+       DPRINT("Cannot page out locked section page: 0x%lu (RefCount: %lu)\n",
                Page, MmGetReferenceCountPage(Page));
        MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
        MmUnlockSectionSegment(Context.Segment);
@@ -2014,7 +2014,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       if (Context.Private)
       {
-         DPRINT1("Found a %s private page (address %x) in a pagefile segment.\n",
+         DPRINT1("Found a %s private page (address %p) in a pagefile segment.\n",
                  Context.WasDirty ? "dirty" : "clean", Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, SwapEntry, (ULONG_PTR)Process, (ULONG_PTR)Address, 0);
       }
@@ -2033,7 +2033,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       if (Context.Private)
       {
-         DPRINT1("Found a %s private page (address %x) in a shared section segment.\n",
+         DPRINT1("Found a %s private page (address %p) in a shared section segment.\n",
                  Context.WasDirty ? "dirty" : "clean", Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, Page, (ULONG_PTR)Process, (ULONG_PTR)Address, 0);
       }
@@ -2055,7 +2055,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       if (SwapEntry != 0)
       {
-         DPRINT1("Found a swapentry for a non private and direct mapped page (address %x)\n",
+         DPRINT1("Found a swapentry for a non private and direct mapped page (address %p)\n",
                  Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, STATUS_UNSUCCESSFUL, SwapEntry, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
@@ -2078,7 +2078,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    {
       if (SwapEntry != 0)
       {
-         DPRINT1("Found a swap entry for a non dirty, non private and not direct mapped page (address %x)\n",
+         DPRINT1("Found a swap entry for a non dirty, non private and not direct mapped page (address %p)\n",
                  Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, SwapEntry, Page, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
@@ -2312,8 +2312,8 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     */
    if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
    {
-      DPRINT1("Trying to write back page from physical memory mapped at %X "
-              "process %d\n", Address,
+      DPRINT1("Trying to write back page from physical memory mapped at %p "
+              "process %p\n", Address,
               Process ? Process->UniqueProcessId : 0);
       KeBugCheck(MEMORY_MANAGEMENT);
    }
@@ -2324,7 +2324,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
    if (!MmIsPagePresent(Process, Address))
    {
-      DPRINT1("Trying to page out not-present page at (%d,0x%.8X).\n",
+      DPRINT1("Trying to page out not-present page at (%p,0x%p).\n",
               Process ? Process->UniqueProcessId : 0, Address);
       KeBugCheck(MEMORY_MANAGEMENT);
    }
@@ -2705,8 +2705,7 @@ MmpCloseSection(IN PEPROCESS Process OPTIONAL,
                 IN ULONG ProcessHandleCount,
                 IN ULONG SystemHandleCount)
 {
-   DPRINT("MmpCloseSection(OB %x, HC %d)\n",
-          Object, ProcessHandleCount);
+    DPRINT("MmpCloseSection(OB %p, HC %lu)\n", Object, ProcessHandleCount);
 }
 
 NTSTATUS
@@ -3937,7 +3936,7 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Mapping between 0x%.8X and 0x%.8X failed (%X).\n",
+      DPRINT1("Mapping between 0x%p and 0x%p failed (%X).\n",
               (*BaseAddress), (char*)(*BaseAddress) + ViewSize, Status);
       return(Status);
    }
@@ -4123,7 +4122,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
    PROS_SECTION_OBJECT Section;
    PVOID ImageBaseAddress = 0;
 
-   DPRINT("Opening memory area Process %x BaseAddress %x\n",
+   DPRINT("Opening memory area Process %p BaseAddress %p\n",
           Process, BaseAddress);
 
    ASSERT(Process);

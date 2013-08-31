@@ -138,7 +138,7 @@ HeadlessInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HeadlessGlobals->IsMMIODevice = HeadlessBlock->IsMMIODevice;
     HeadlessGlobals->TerminalType = HeadlessBlock->TerminalType;
     HeadlessGlobals->SystemGUID = HeadlessBlock->SystemGUID;
-    DPRINT1("EMS on Port %d (0x%lx) at %d bps\n",
+    DPRINT1("EMS on Port %lu (0x%p) at %lu bps\n",
              HeadlessGlobals->TerminalPortNumber,
              HeadlessGlobals->TerminalPortAddress,
              HeadlessGlobals->TerminalBaudRate);

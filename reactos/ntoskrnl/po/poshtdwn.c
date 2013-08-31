@@ -132,7 +132,7 @@ PopGracefulShutdown(IN PVOID Context)
         if ((Process != PsInitialSystemProcess) && (Process != PsIdleProcess))
         {
             /* Print it */
-            DPRINT1("%15s is still RUNNING (%lx)\n", Process->ImageFileName, Process->UniqueProcessId);
+            DPRINT1("%15s is still RUNNING (%p)\n", Process->ImageFileName, Process->UniqueProcessId);
         }
 
         /* Get the next process */

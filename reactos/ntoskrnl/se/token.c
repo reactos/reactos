@@ -623,7 +623,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
                             (PVOID*)&AccessToken);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ObCreateObject() failed (Status %lx)\n");
+        DPRINT1("ObCreateObject() failed (Status %lx)\n", Status);
         return Status;
     }
 

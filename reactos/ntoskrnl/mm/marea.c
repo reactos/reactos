@@ -1132,7 +1132,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
    PVOID Address;
    PMEMORY_AREA MemoryArea;
 
-   DPRINT("MmDeleteProcessAddressSpace(Process %x (%s))\n", Process,
+   DPRINT("MmDeleteProcessAddressSpace(Process %p (%s))\n", Process,
           Process->ImageFileName);
 
 #ifndef _M_AMD64

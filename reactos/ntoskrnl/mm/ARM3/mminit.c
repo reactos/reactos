@@ -2003,7 +2003,7 @@ MiDbgDumpMemoryDescriptors(VOID)
         TotalPages += Md->PageCount;
     }
 
-    DPRINT1("Total: %08lX (%d MB)\n", (ULONG)TotalPages, (ULONG)(TotalPages * PAGE_SIZE) / 1024 / 1024);
+    DPRINT1("Total: %08lX (%lu MB)\n", (ULONG)TotalPages, (ULONG)(TotalPages * PAGE_SIZE) / 1024 / 1024);
 }
 
 BOOLEAN
@@ -2183,7 +2183,7 @@ MmArmInitSystem(IN ULONG Phase,
             }
         }
 
-        DPRINT("System PTE count has been tuned to %d (%d bytes)\n",
+        DPRINT("System PTE count has been tuned to %lu (%lu bytes)\n",
                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
 
         /* Check if no values are set for the heap limits */

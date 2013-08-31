@@ -90,7 +90,7 @@ MmWithdrawSectionPage(PMM_SECTION_SEGMENT Segment,
 {
     ULONG_PTR Entry;
 
-    DPRINT("MmWithdrawSectionPage(%x,%08x%08x,%x)\n",
+    DPRINT("MmWithdrawSectionPage(%p,%08x%08x,%p)\n",
            Segment,
            FileOffset->HighPart,
            FileOffset->LowPart,
@@ -133,7 +133,7 @@ MmWithdrawSectionPage(PMM_SECTION_SEGMENT Segment,
     }
     else
     {
-        DPRINT1("SWAP ENTRY?! (%x:%08x%08x)\n",
+        DPRINT1("SWAP ENTRY?! (%p:%08x%08x)\n",
                 Segment,
                 FileOffset->HighPart,
                 FileOffset->LowPart);
@@ -174,7 +174,7 @@ MmFinalizeSectionPageOut(PMM_SECTION_SEGMENT Segment,
     /* Bail early if the reference count isn't where we need it */
     if (MmGetReferenceCountPage(Page) != 1)
     {
-        DPRINT1("Cannot page out locked page %x with ref count %d\n",
+        DPRINT1("Cannot page out locked page %x with ref count %lu\n",
                 Page,
                 MmGetReferenceCountPage(Page));
         return STATUS_UNSUCCESSFUL;
@@ -185,8 +185,8 @@ MmFinalizeSectionPageOut(PMM_SECTION_SEGMENT Segment,
 
     if (Dirty)
     {
-        DPRINT("Finalize (dirty) Segment %x Page %x\n", Segment, Page);
-        DPRINT("Segment->FileObject %x\n", Segment->FileObject);
+        DPRINT("Finalize (dirty) Segment %p Page %x\n", Segment, Page);
+        DPRINT("Segment->FileObject %p\n", Segment->FileObject);
         DPRINT("Segment->Flags %x\n", Segment->Flags);
 
         WriteZero = TRUE;
@@ -203,7 +203,7 @@ MmFinalizeSectionPageOut(PMM_SECTION_SEGMENT Segment,
 
     if (WritePage)
     {
-        DPRINT("MiWriteBackPage(Segment %x FileObject %x Offset %x)\n",
+        DPRINT("MiWriteBackPage(Segment %p FileObject %p Offset %x)\n",
                Segment,
                Segment->FileObject,
                FileOffset->LowPart);
@@ -218,7 +218,7 @@ MmFinalizeSectionPageOut(PMM_SECTION_SEGMENT Segment,
 
     if (WriteZero && NT_SUCCESS(Status))
     {
-        DPRINT("Setting page entry in segment %x:%x to swap %x\n",
+        DPRINT("Setting page entry in segment %p:%x to swap %x\n",
                Segment,
                FileOffset->LowPart,
                Swap);
@@ -229,7 +229,7 @@ MmFinalizeSectionPageOut(PMM_SECTION_SEGMENT Segment,
     }
     else
     {
-        DPRINT("Setting page entry in segment %x:%x to page %x\n",
+        DPRINT("Setting page entry in segment %p:%x to page %x\n",
                Segment,
                FileOffset->LowPart,
                Page);
@@ -361,7 +361,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
     ExAcquireFastMutex(&MiGlobalPageOperation);
     if ((Segment = MmGetSectionAssociation(Page, &FileOffset)))
     {
-        DPRINTC("Withdrawing page (%x) %x:%x\n",
+        DPRINTC("Withdrawing page (%x) %p:%x\n",
                 Page,
                 Segment,
                 FileOffset.LowPart);
@@ -407,7 +407,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
         Process = entry->Process;
         Address = entry->Address;
 
-        DPRINTC("Process %x Address %x Page %x\n", Process, Address, Page);
+        DPRINTC("Process %p Address %p Page %x\n", Process, Address, Page);
 
         if (RMAP_IS_SEGMENT(Address))
         {
@@ -454,7 +454,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
                 goto bail;
             }
 
-            DPRINTC("Type %x (%x -> %x)\n",
+            DPRINTC("Type %x (%p -> %p)\n",
                     MemoryArea->Type,
                     MemoryArea->StartingAddress,
                     MemoryArea->EndingAddress);
@@ -464,7 +464,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 
             ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
-            DPRINT("%x:%x, page %x %x\n",
+            DPRINT("%p:%p, page %x %x\n",
                    Process,
                    Address,
                    Page,
@@ -494,7 +494,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
             }
             else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
             {
-                DPRINTC("DoAcquisition %x\n", Resources.DoAcquisition);
+                DPRINTC("DoAcquisition %p\n", Resources.DoAcquisition);
 
                 Status = Resources.DoAcquisition(AddressSpace,
                                                  MemoryArea,
@@ -524,7 +524,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
         ASSERT(!MM_IS_WAIT_PTE(MmGetPfnForProcess(Process, Address)));
         entry = MmGetRmapListHeadPage(Page);
 
-        DPRINTC("Entry %x\n", entry);
+        DPRINTC("Entry %p\n", entry);
     }
 
     ExReleaseFastMutex(&RmapListLock);
@@ -536,7 +536,7 @@ bail:
     {
         ULONG RefCount;
 
-        DPRINTC("About to finalize section page %x (%x:%x) Status %x %s\n",
+        DPRINTC("About to finalize section page %x (%p:%x) Status %x %s\n",
                 Page,
                 Segment,
                 FileOffset.LowPart,
@@ -638,7 +638,7 @@ MiRosTrimCache(ULONG Target,
     PMM_SECTION_SEGMENT Segment;
     *NrFreed = 0;
 
-    DPRINT1("Need to trim %d cache pages\n", Target);
+    DPRINT1("Need to trim %lu cache pages\n", Target);
     for (Entry = MiSegmentList.Flink;
          *NrFreed < Target && Entry != &MiSegmentList;
          Entry = Entry->Flink) {
@@ -647,7 +647,7 @@ MiRosTrimCache(ULONG Target,
         Freed = MiCacheEvictPages(Segment, Target);
         *NrFreed += Freed;
     }
-    DPRINT1("Evicted %d cache pages\n", Target);
+    DPRINT1("Evicted %lu cache pages\n", Target);
 
     if (!IsListEmpty(&MiSegmentList)) {
         Entry = MiSegmentList.Flink;

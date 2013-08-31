@@ -791,7 +791,7 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     PMMPFN Pfn1;
     MMPTE TempPte;
     PMMPTE PointerToPteForProtoPage;
-    DPRINT1("Transition fault on 0x%p with PTE 0x%lx in process %s\n", FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
+    DPRINT1("Transition fault on 0x%p with PTE 0x%p in process %s\n", FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
 
     /* Windowss does this check */
     ASSERT(*InPageBlock == NULL);

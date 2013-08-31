@@ -205,7 +205,7 @@ PopFlushVolumeWorker(IN PVOID Context)
             if (NT_SUCCESS(Status))
             {
                 /* Flush it and close it */
-                DPRINT1("Sending flush to: %lx\n", VolumeHandle);
+                DPRINT1("Sending flush to: %p\n", VolumeHandle);
                 ZwFlushBuffersFile(VolumeHandle, &IoStatusBlock);
                 ZwClose(VolumeHandle);
             }

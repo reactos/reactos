@@ -482,7 +482,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Get the page bit count
             //
             i = ((SizeInPages - 1) / PTE_COUNT) + 1;
-            DPRINT1("Paged pool expansion: %d %x\n", i, SizeInPages);
+            DPRINT1("Paged pool expansion: %lu %x\n", i, SizeInPages);
 
             //
             // Check if there is enougn paged pool expansion space left
