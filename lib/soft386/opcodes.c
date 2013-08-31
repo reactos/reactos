@@ -726,7 +726,7 @@ Soft386OpcodeShortConditionalJmp(PSOFT386_STATE State, UCHAR Opcode)
         }
     }
 
-    if ((Opcode & 0xF0) & 1)
+    if (Opcode & 1)
     {
         /* Invert the result */
         Jump = !Jump;

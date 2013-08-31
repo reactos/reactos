@@ -58,6 +58,12 @@ Soft386ExecutionControl(PSOFT386_STATE State, INT Command)
             /* This is not a valid opcode */
             Soft386Exception(State, SOFT386_EXCEPTION_UD);
         }
+
+        if (Soft386OpcodeHandlers[Opcode] != Soft386OpcodePrefix)
+        {
+            /* A non-prefix opcode has been executed, reset the prefix flags */
+            State->PrefixFlags = 0;
+        }
     }
     while ((Command == SOFT386_CONTINUE)
            || (Command == SOFT386_STEP_OVER && ProcedureCallCount > 0)
@@ -244,6 +250,21 @@ Soft386Interrupt(PSOFT386_STATE State, UCHAR Number)
 {
     // TODO: NOT IMPLEMENTED!!!
     UNIMPLEMENTED;
+}
+
+VOID
+NTAPI
+Soft386ExecuteAt(PSOFT386_STATE State, USHORT Segment, ULONG Offset)
+{
+    /* Load the new CS */
+    if (!Soft386LoadSegment(State, SOFT386_REG_CS, Segment))
+    {
+        /* An exception occurred, let the handler execute instead */
+        return;
+    }
+
+    /* Set the new IP */
+    State->InstPtr.Long = Offset;
 }
 
 /* EOF */

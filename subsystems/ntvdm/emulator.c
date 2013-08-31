@@ -31,8 +31,6 @@ static BOOLEAN A20Line = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-#ifndef NEW_EMULATOR
-
 static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     UNREFERENCED_PARAMETER(Context);
@@ -230,6 +228,8 @@ static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size
     }
 }
 
+#ifndef NEW_EMULATOR
+
 static VOID EmulatorBop(WORD Code)
 {
     WORD StackSegment, StackPointer, CodeSegment, InstructionPointer;
@@ -407,7 +407,14 @@ BOOLEAN EmulatorInitialize()
     /* Connect the emulated FPU to the emulated CPU */
     softx87_connect_to_CPU(&EmulatorContext, &FpuEmulatorContext);
 #else
-    // TODO: NOT IMPLEMENTED
+    /* Set the callbacks */
+    EmulatorContext.MemReadCallback = (SOFT386_MEM_READ_PROC)EmulatorReadMemory;
+    EmulatorContext.MemWriteCallback = (SOFT386_MEM_WRITE_PROC)EmulatorWriteMemory;
+    EmulatorContext.IoReadCallback = (SOFT386_IO_READ_PROC)EmulatorReadIo;
+    EmulatorContext.IoWriteCallback = (SOFT386_IO_WRITE_PROC)EmulatorWriteIo;
+
+    /* Reset the CPU */
+    Soft386Reset(&EmulatorContext);
 #endif
 
     /* Enable interrupts */
@@ -426,13 +433,15 @@ VOID EmulatorSetStack(WORD Segment, DWORD Offset)
 #endif
 }
 
+// FIXME: This function assumes 16-bit mode!!!
 VOID EmulatorExecute(WORD Segment, WORD Offset)
 {
 #ifndef NEW_EMULATOR
     /* Call the softx86 API */
     softx86_set_instruction_ptr(&EmulatorContext, Segment, Offset);
 #else
-    // TODO: NOT IMPLEMENTED
+    /* Tell Soft386 to move the instruction pointer */
+    Soft386ExecuteAt(&EmulatorContext, Segment, Offset);
 #endif
 }
 
@@ -572,7 +581,11 @@ VOID EmulatorStep(VOID)
         EmulatorInterrupt(EMULATOR_EXCEPTION_INVALID_OPCODE);
     }
 #else
-    // TODO: NOT IMPLEMENTED
+    /* Dump the state for debugging purposes */
+    Soft386DumpState(&EmulatorContext);
+
+    /* Execute the next instruction */
+    Soft386StepInto(&EmulatorContext);
 #endif
 }
 
