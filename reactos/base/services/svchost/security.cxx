@@ -8,7 +8,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#define __callback
 extern "C"
 {
 #include "svchost.h"

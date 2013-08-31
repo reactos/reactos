@@ -1733,3 +1733,4 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 
 #endif // ] _USE_ATTRIBUTES_FOR_SAL
 
+#define __callback __inner_callback
