@@ -151,6 +151,8 @@ CSR_API(BaseSrvNlsCreateSection)
     PWCHAR NlsFileName;
     UCHAR SecurityDescriptor[52];
     OBJECT_ATTRIBUTES ObjectAttributes;
+    WCHAR FileNameBuffer[32];
+    WCHAR NlsSectionNameBuffer[32];
     PBASE_NLS_CREATE_SECTION NlsMsg = &((PBASE_API_MESSAGE)ApiMessage)->Data.NlsCreateSection;
 
     /* Load kernel32 first and import the NLS routines */
@@ -211,8 +213,34 @@ CSR_API(BaseSrvNlsCreateSection)
             DPRINT1("This type not yet supported\n");
             return STATUS_NOT_IMPLEMENTED;
         case 11:
-            DPRINT1("This type not yet supported\n");
-            return STATUS_NOT_IMPLEMENTED;
+            /* Get the filename for this locale */
+            if (!pGetCPFileNameFromRegistry(NlsMsg->LocaleId,
+                                            FileNameBuffer,
+                                            RTL_NUMBER_OF(FileNameBuffer)))
+            {
+                DPRINT1("File name query failed\n");
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            /* Get the name of the section for this locale */
+            DPRINT1("File name: %S\n", FileNameBuffer);
+            Status = pGetNlsSectionName(NlsMsg->LocaleId,
+                                        10,
+                                        0,
+                                        L"\\NLS\\NlsSectionCP",
+                                        NlsSectionNameBuffer,
+                                        RTL_NUMBER_OF(NlsSectionNameBuffer));
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Section name query failed: %lx\n", Status);
+                return Status;
+            }
+
+            /* Setup the name and go open it */
+            NlsFileName = FileNameBuffer;
+            DPRINT1("Section name: %S\n", NlsSectionNameBuffer);
+            RtlInitUnicodeString(&NlsSectionName, NlsSectionNameBuffer);
+            break;
         case 12:
             RtlInitUnicodeString(&NlsSectionName, L"\\NLS\\NlsSectionGeo");
             NlsFileName = L"geo.nls";

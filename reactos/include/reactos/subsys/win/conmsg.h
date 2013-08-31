@@ -164,7 +164,7 @@ typedef struct _CONSOLE_START_INFO
     DWORD dwHotKey;
     DWORD dwStartupFlags;
     CONSOLE_PROPERTIES;
-    BOOL ConsoleNeeded; // Used for GUI apps only.
+    BOOLEAN ConsoleNeeded; // Used for GUI apps only.
     LPTHREAD_START_ROUTINE CtrlDispatcher;
     LPTHREAD_START_ROUTINE ImeDispatcher;
     LPTHREAD_START_ROUTINE PropDispatcher;

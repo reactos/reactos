@@ -43,8 +43,8 @@ typedef BOOL(*WINAPI PGET_CP_FILE_NAME_FROM_REGISTRY)(UINT 	CodePage,
 typedef BOOL(*WINAPI PGET_NLS_SECTION_NAME)(UINT 	CodePage,
     UINT 	Base,
     ULONG 	Unknown,
-    LPSTR 	BaseName,
-    LPSTR 	Result,
+    LPWSTR 	BaseName,
+    LPWSTR 	Result,
     ULONG 	ResultSize
     );
 
