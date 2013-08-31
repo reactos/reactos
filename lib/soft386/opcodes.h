@@ -151,4 +151,36 @@ Soft386OpcodeHalt
     UCHAR Opcode
 );
 
+BOOLEAN
+FASTCALL
+Soft386OpcodeInByte
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeIn
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeOutByte
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeOut
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
 #endif // _OPCODES_H_

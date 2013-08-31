@@ -252,18 +252,18 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xE1 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xE2 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xE3 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xE4 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xE5 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xE6 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xE7 NOT SUPPORTED
+    Soft386OpcodeInByte,
+    Soft386OpcodeIn,
+    Soft386OpcodeOutByte,
+    Soft386OpcodeOut,
     NULL, // TODO: OPCODE 0xE8 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xE9 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xEA NOT SUPPORTED
     NULL, // TODO: OPCODE 0xEB NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xEC NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xED NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xEE NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xEF NOT SUPPORTED
+    Soft386OpcodeInByte,
+    Soft386OpcodeIn,
+    Soft386OpcodeOutByte,
+    Soft386OpcodeOut,
     Soft386OpcodePrefix,
     NULL, // Invalid
     Soft386OpcodePrefix,
@@ -942,5 +942,207 @@ Soft386OpcodeHalt(PSOFT386_STATE State, UCHAR Opcode)
     while (!State->HardwareInt) State->IdleCallback(State);
 
     /* Return success */
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeInByte(PSOFT386_STATE State, UCHAR Opcode)
+{
+    UCHAR Data;
+    ULONG Port;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF7) == 0xE4);
+
+    if (Opcode == 0xE4)
+    {
+        /* Fetch the parameter */
+        if (!Soft386FetchByte(State, &Data))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Set the port number to the parameter */
+        Port = Data;
+    }
+    else
+    {
+        /* The port number is in DX */
+        Port = State->GeneralRegs[SOFT386_REG_EDX].LowWord;
+    }
+
+    /* Read a byte from the I/O port */
+    State->IoReadCallback(State, Port, &Data, sizeof(UCHAR));
+
+    /* Store the result in AL */
+    State->GeneralRegs[SOFT386_REG_EAX].LowByte = Data;
+
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeIn(PSOFT386_STATE State, UCHAR Opcode)
+{
+    ULONG Port;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF7) == 0xE5);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Opcode == 0xE5)
+    {
+        UCHAR Data;
+
+        /* Fetch the parameter */
+        if (!Soft386FetchByte(State, &Data))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Set the port number to the parameter */
+        Port = Data;
+    }
+    else
+    {
+        /* The port number is in DX */
+        Port = State->GeneralRegs[SOFT386_REG_EDX].LowWord;
+    }
+
+    if (Size)
+    {
+        ULONG Data;
+
+        /* Read a dword from the I/O port */
+        State->IoReadCallback(State, Port, &Data, sizeof(ULONG));
+
+        /* Store the value in EAX */
+        State->GeneralRegs[SOFT386_REG_EAX].Long = Data;
+    }
+    else
+    {
+        USHORT Data;
+
+        /* Read a word from the I/O port */
+        State->IoReadCallback(State, Port, &Data, sizeof(USHORT));
+
+        /* Store the value in AX */
+        State->GeneralRegs[SOFT386_REG_EAX].LowWord = Data;
+    }
+
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeOutByte(PSOFT386_STATE State, UCHAR Opcode)
+{
+    UCHAR Data;
+    ULONG Port;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF7) == 0xE6);
+
+    if (Opcode == 0xE6)
+    {
+        /* Fetch the parameter */
+        if (!Soft386FetchByte(State, &Data))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Set the port number to the parameter */
+        Port = Data;
+    }
+    else
+    {
+        /* The port number is in DX */
+        Port = State->GeneralRegs[SOFT386_REG_EDX].LowWord;
+    }
+
+    /* Read the value from AL */
+    Data = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+    
+    /* Write the byte to the I/O port */
+    State->IoWriteCallback(State, Port, &Data, sizeof(UCHAR));
+
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeOut(PSOFT386_STATE State, UCHAR Opcode)
+{
+    ULONG Port;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF7) == 0xE7);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Opcode == 0xE7)
+    {
+        UCHAR Data;
+
+        /* Fetch the parameter */
+        if (!Soft386FetchByte(State, &Data))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Set the port number to the parameter */
+        Port = Data;
+    }
+    else
+    {
+        /* The port number is in DX */
+        Port = State->GeneralRegs[SOFT386_REG_EDX].LowWord;
+    }
+
+    if (Size)
+    {
+        /* Get the value from EAX */
+        ULONG Data = State->GeneralRegs[SOFT386_REG_EAX].Long;
+
+        /* Write a dword to the I/O port */
+        State->IoReadCallback(State, Port, &Data, sizeof(ULONG));
+    }
+    else
+    {
+        /* Get the value from AX */
+        USHORT Data = State->GeneralRegs[SOFT386_REG_EAX].LowWord;
+
+        /* Write a word to the I/O port */
+        State->IoWriteCallback(State, Port, &Data, sizeof(USHORT));
+    }
+
     return TRUE;
 }
