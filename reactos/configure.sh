@@ -21,14 +21,14 @@ while [ $# -gt 0 ]; do
 		-D)
 			shift
 			if echo "x$1" | grep 'x?*=*' > /dev/null; then
-				ROS_CMAKEOPTS+=" -D $1"
+				ROS_CMAKEOPTS=$ROS_CMAKEOPTS" -D $1"
 			else
 				usage
 			fi
 		;;
 
 		-D?*=*|-D?*)
-			ROS_CMAKEOPTS+=" $1"
+			ROS_CMAKEOPTS=$ROS_CMAKEOPTS" $1"
 		;;
 		makefiles|Makefiles)
 			CMAKE_GENERATOR="Unix Makefiles"
