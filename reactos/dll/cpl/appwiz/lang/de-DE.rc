@@ -61,9 +61,9 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMEN
 CAPTION "Wine Gecko Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS konnte kein Gecko-Paket finden, welches für die korrekte Ausführung von Anwendungen mit eingebettetem HTML benötigt wird. ReactOS kann es automatisch für Sie herunterladen und installieren.\n\nAnmerkung: es wir empfohlen das entsprechende Paket Ihrer Distribution zu verwenden. Weitere Details auf: <a href=""http://wiki.winehq.org/Gecko"">http://wiki.winehq.org/Gecko</a>",
+    CONTROL "ReactOS konnte kein Gecko-Paket finden, welches für die korrekte Ausführung von Anwendungen mit eingebettetem HTML benötigt wird. ReactOS kann es automatisch für Sie herunterladen und installieren.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Install", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Cancel", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "&Installieren", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Abbrechen", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END
