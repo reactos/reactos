@@ -183,4 +183,12 @@ Soft386OpcodeOut
     UCHAR Opcode
 );
 
+BOOLEAN
+FASTCALL
+Soft386OpcodeShortJump
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
 #endif // _OPCODES_H_

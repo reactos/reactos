@@ -259,7 +259,7 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xE8 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xE9 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xEA NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xEB NOT SUPPORTED
+    Soft386OpcodeShortJump,
     Soft386OpcodeInByte,
     Soft386OpcodeIn,
     Soft386OpcodeOutByte,
@@ -1143,6 +1143,28 @@ Soft386OpcodeOut(PSOFT386_STATE State, UCHAR Opcode)
         /* Write a word to the I/O port */
         State->IoWriteCallback(State, Port, &Data, sizeof(USHORT));
     }
+
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeShortJump(PSOFT386_STATE State, UCHAR Opcode)
+{
+    CHAR Offset = 0;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xEB);
+
+    /* Fetch the offset */
+    if (!Soft386FetchByte(State, (PUCHAR)&Offset))
+    {
+        /* An exception occurred */
+        return FALSE;
+    }
+
+    /* Move the instruction pointer */        
+    State->InstPtr.Long += Offset;
 
     return TRUE;
 }
