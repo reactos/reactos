@@ -229,7 +229,7 @@ FsRtlCopyRead(IN PFILE_OBJECT FileObject,
         /* Update the current file offset */
         if (Result == TRUE)
         {
-            FileObject->CurrentByteOffset.QuadPart += IoStatus->Information;
+            FileObject->CurrentByteOffset.QuadPart = FileOffset->QuadPart + IoStatus->Information;
         }
     }
     _SEH2_EXCEPT(FsRtlIsNtstatusExpected(_SEH2_GetExceptionCode()) ?
@@ -282,7 +282,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
     BOOLEAN FileOffsetAppend = (FileOffset->HighPart == (LONG)0xffffffff) &&
                                (FileOffset->LowPart == 0xffffffff);
 
-    BOOLEAN ResourceAquiredShared = FALSE;
+    BOOLEAN ResourceAcquiredShared = FALSE;
     BOOLEAN b_4GB = FALSE;
     BOOLEAN FileSizeModified = FALSE;
     LARGE_INTEGER OldFileSize;
@@ -337,7 +337,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
             (Offset.LowPart <= FcbHeader->ValidDataLength.LowPart))
         {
             ExAcquireResourceSharedLite(FcbHeader->Resource, TRUE);
-            ResourceAquiredShared = TRUE;
+            ResourceAcquiredShared = TRUE;
         }
         else
         {
@@ -380,7 +380,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
              * release the lock and acquire it exclusively, because
              * we are going to need to update the FcbHeader.
              */
-            if (ResourceAquiredShared &&
+            if (ResourceAcquiredShared &&
                 (NewSize.LowPart > FcbHeader->ValidDataLength.LowPart + 0x2000))
             {
                 /* Then we need to acquire the resource exclusive */
@@ -566,7 +566,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
             {
                 goto LeaveCriticalAndFail;
             }
-            ResourceAquiredShared = TRUE;
+            ResourceAcquiredShared = TRUE;
         }
         else
         {
@@ -602,7 +602,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
             (FcbHeader->AllocationSize.QuadPart >= NewSize.QuadPart))
         {
             /* Check if we can keep the lock shared */
-            if (ResourceAquiredShared &&
+            if (ResourceAcquiredShared &&
                 (NewSize.QuadPart > FcbHeader->ValidDataLength.QuadPart))
             {
                 ExReleaseResourceLite(FcbHeader->Resource);
@@ -653,7 +653,7 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
                                                             &FcbHeader->FileSize :
                                                             FileOffset,
                                                            Length,
-                                                           TRUE,
+                                                           Wait,
                                                            LockKey,
                                                            FALSE,
                                                            &FastIoCheckIfPossibleStatus,
@@ -708,8 +708,8 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
                                               &Offset,
                                               Wait)))
                     {
-                        /* If this operation fails, then we have to exit. We can jump
-                         * outside the SEH, so I a using a variable to exit normally.
+                        /* If this operation fails, then we have to exit. We can't jump
+                         * outside the SEH, so I am using a variable to exit normally.
                          */
                         CallCc = FALSE;
                     }
@@ -1303,7 +1303,7 @@ FsRtlPrepareMdlWriteDev(IN PFILE_OBJECT FileObject,
                                (FileOffset->LowPart == 0xffffffff);
 
     BOOLEAN FileSizeModified = FALSE;
-    BOOLEAN ResourceAquiredShared = FALSE;
+    BOOLEAN ResourceAcquiredShared = FALSE;
 
     /* Initialize some of the vars and pointers */
     OldFileSize.QuadPart = 0;
@@ -1339,7 +1339,7 @@ FsRtlPrepareMdlWriteDev(IN PFILE_OBJECT FileObject,
     {
         /* Acquire the resource shared */
         ExAcquireResourceSharedLite(FcbHeader->Resource, TRUE);
-        ResourceAquiredShared = TRUE;
+        ResourceAcquiredShared = TRUE;
     }
     else
     {
@@ -1365,7 +1365,7 @@ FsRtlPrepareMdlWriteDev(IN PFILE_OBJECT FileObject,
         (NewSize.QuadPart <= FcbHeader->AllocationSize.QuadPart))
     {
         /* Check if we can keep the lock shared */
-        if (ResourceAquiredShared &&
+        if (ResourceAcquiredShared &&
             (NewSize.QuadPart > FcbHeader->ValidDataLength.QuadPart))
         {
             ExReleaseResourceLite(FcbHeader->Resource);
@@ -1650,6 +1650,7 @@ FsRtlAcquireFileForCcFlushEx(IN PFILE_OBJECT FileObject)
     PFSRTL_COMMON_FCB_HEADER FcbHeader;
     PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
+    NTSTATUS Status;
 
     /* Get the Base File System (Volume) and Fast Calls */
     FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
@@ -1665,25 +1666,31 @@ FsRtlAcquireFileForCcFlushEx(IN PFILE_OBJECT FileObject)
         FastDispatch->AcquireForCcFlush)
     {
         /* Call the AcquireForCcFlush FastIo handler */
-        FastDispatch->AcquireForCcFlush(FileObject, BaseDeviceObject);
-    }
-    else
-    {
-        /* No FastIo handler, acquire file's resource */
-        if (FcbHeader->Resource)
-        {
-            /* Acquire it - either shared if it's already acquired
-               or exclusively if we are the first */
-            if (ExIsResourceAcquiredSharedLite(FcbHeader->Resource))
-                ExAcquireResourceSharedLite(FcbHeader->Resource, TRUE);
-            else
-                ExAcquireResourceExclusiveLite(FcbHeader->Resource, TRUE);
-        }
+        Status = FastDispatch->AcquireForCcFlush(FileObject, BaseDeviceObject);
 
-        /* Also acquire its Paging I/O resource */
-        if (FcbHeader->PagingIoResource)
-            ExAcquireResourceSharedLite(FcbHeader->PagingIoResource, TRUE);
+        /* Return either success or inability to wait.
+           In case of other failure - fall through */
+        if (Status == STATUS_SUCCESS ||
+            Status == STATUS_CANT_WAIT)
+        {
+            return Status;
+        }
     }
+
+    /* No FastIo handler (or it failed). Acquire Main resource */
+    if (FcbHeader->Resource)
+    {
+        /* Acquire it - either shared if it's already acquired
+            or exclusively if we are the first */
+        if (ExIsResourceAcquiredSharedLite(FcbHeader->Resource))
+            ExAcquireResourceSharedLite(FcbHeader->Resource, TRUE);
+        else
+            ExAcquireResourceExclusiveLite(FcbHeader->Resource, TRUE);
+    }
+
+    /* Also acquire its PagingIO resource */
+    if (FcbHeader->PagingIoResource)
+        ExAcquireResourceSharedLite(FcbHeader->PagingIoResource, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -1712,6 +1719,7 @@ FsRtlReleaseFileForCcFlush(IN PFILE_OBJECT FileObject)
     PFSRTL_COMMON_FCB_HEADER FcbHeader;
     PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
+    NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
 
     /* Get Device Object and Fast Calls */
     FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
@@ -1724,11 +1732,13 @@ FsRtlReleaseFileForCcFlush(IN PFILE_OBJECT FileObject)
         FastDispatch->ReleaseForCcFlush)
     {
         /* Call the ReleaseForCcFlush FastIo handler */
-        FastDispatch->ReleaseForCcFlush(FileObject, BaseDeviceObject);
+        Status = FastDispatch->ReleaseForCcFlush(FileObject, BaseDeviceObject);
     }
-    else
+
+    if (!NT_SUCCESS(Status))
     {
-        /* No FastIo handler, release PagingIO and then file's resource */
+        /* No FastIo handler (or it failed). Release PagingIO resource and
+           then Main resource */
         if (FcbHeader->PagingIoResource) ExReleaseResourceLite(FcbHeader->PagingIoResource);
         if (FcbHeader->Resource) ExReleaseResourceLite(FcbHeader->Resource);
     }
@@ -1736,6 +1746,192 @@ FsRtlReleaseFileForCcFlush(IN PFILE_OBJECT FileObject)
     /* Release master FsRtl lock */
     FsRtlExitFileSystem();
 }
+
+/*
+* @implemented
+*/
+NTSTATUS
+NTAPI
+FsRtlAcquireFileForModWriteEx(IN PFILE_OBJECT FileObject,
+                              IN PLARGE_INTEGER EndingOffset,
+                              IN PERESOURCE *ResourceToRelease)
+{
+    PFSRTL_COMMON_FCB_HEADER FcbHeader;
+    PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+    PERESOURCE ResourceToAcquire = NULL;
+    BOOLEAN Exclusive = FALSE;
+    BOOLEAN Result;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Get Device Object and Fast Calls */
+    FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Check if Fast Calls are supported, and check AcquireForModWrite */
+    if (FastDispatch &&
+        FastDispatch->AcquireForModWrite)
+    {
+        /* Call the AcquireForModWrite FastIo handler */
+        Status = FastDispatch->AcquireForModWrite(FileObject,
+                                                  EndingOffset,
+                                                  ResourceToRelease,
+                                                  BaseDeviceObject);
+
+        /* Return either success or inability to wait.
+           In case of other failure - fall through */
+        if (Status == STATUS_SUCCESS ||
+            Status == STATUS_CANT_WAIT)
+        {
+            return Status;
+        }
+    }
+
+    Status = STATUS_SUCCESS;
+
+    /* No FastIo handler, use algorithm from Nagar p.550. */
+    if (!FcbHeader->Resource)
+    {
+        *ResourceToRelease = NULL;
+        return STATUS_SUCCESS;
+    }
+
+    /* Default condition - shared acquiring of Paging IO Resource */
+    ResourceToAcquire = FcbHeader->PagingIoResource;
+
+    /* Decide on type of locking and type of resource based on historical magic
+       well explain by Nagar in p. 550-551 */
+    if ((EndingOffset->QuadPart > FcbHeader->ValidDataLength.QuadPart &&
+         FcbHeader->FileSize.QuadPart != FcbHeader->ValidDataLength.QuadPart) ||
+         (FcbHeader->Flags & FSRTL_FLAG_ACQUIRE_MAIN_RSRC_EX))
+    {
+        /* Either exclusive flag is set or write operation is extending
+           the valid data length. Prefer exclusive acquire then */
+        Exclusive = TRUE;
+        ResourceToAcquire = FcbHeader->Resource;
+    }
+    else if (!FcbHeader->PagingIoResource || 
+             (FcbHeader->Flags & FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH))
+    {
+        /* Acquire main resource shared if flag is specified or
+           if PagingIo resource is missing */
+        Exclusive = FALSE;
+        ResourceToAcquire = FcbHeader->Resource;
+    }
+
+    /* Acquire the resource in the loop, since the above code is unsafe */
+    while (TRUE)
+    {
+        Result = FALSE;
+
+        if (Exclusive)
+            Result = ExAcquireResourceExclusiveLite(ResourceToAcquire, FALSE);
+        else
+            Result = ExAcquireSharedWaitForExclusive(ResourceToAcquire, FALSE);
+
+        if (!Result) {
+            Status = STATUS_CANT_WAIT;
+            break;
+        }
+
+        /* Do the magic ifs again */
+        if ((EndingOffset->QuadPart > FcbHeader->ValidDataLength.QuadPart) ||
+             (FcbHeader->Flags & FSRTL_FLAG_ACQUIRE_MAIN_RSRC_EX))
+        {
+            /* Check what we have */
+            if (Exclusive)
+            {
+                /* Asked for exclusive, got exclusive! */
+                break;
+            }
+            else
+            {
+                /* Asked for exclusive, got shared. Release it and retry. */
+                ExReleaseResourceLite(ResourceToAcquire);
+                Exclusive = TRUE;
+                ResourceToAcquire = FcbHeader->Resource;
+            }
+        }
+        else if (FcbHeader->Flags & FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH)
+        {
+            if (Exclusive)
+            {
+                /* Asked for shared, got exclusive - convert */
+                ExConvertExclusiveToSharedLite(ResourceToAcquire);
+                break;
+            }
+            else if (ResourceToAcquire != FcbHeader->Resource)
+            {
+                /* Asked for main resource, got something else */
+                ExReleaseResourceLite(ResourceToAcquire);
+                ResourceToAcquire = FcbHeader->Resource;
+                Exclusive = TRUE;
+            }
+        }
+        else if (FcbHeader->PagingIoResource &&
+                 ResourceToAcquire != FcbHeader->PagingIoResource)
+        {
+            /* There is PagingIo resource, but other resource was acquired */
+            ResourceToAcquire = FcbHeader->PagingIoResource;
+            if (!ExAcquireSharedWaitForExclusive(ResourceToAcquire, FALSE))
+            {
+                Status = STATUS_CANT_WAIT;
+                ExReleaseResourceLite(FcbHeader->Resource);
+            }
+
+            break;
+        }
+        else if (Exclusive)
+        {
+            /* Asked for shared got exclusive - convert */
+            ExConvertExclusiveToSharedLite(ResourceToAcquire);
+            break;
+        }
+    }
+
+    /* If the resource was acquired successfully - pass it to the caller */
+    if (NT_SUCCESS(Status))
+        *ResourceToRelease = ResourceToAcquire;
+
+    return Status;
+}
+
+/*
+* @implemented
+*/
+VOID
+NTAPI
+FsRtlReleaseFileForModWrite(IN PFILE_OBJECT FileObject,
+                            IN PERESOURCE ResourceToRelease)
+{
+    PDEVICE_OBJECT DeviceObject, BaseDeviceObject;
+    PFAST_IO_DISPATCH FastDispatch;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Get Device Object and Fast Calls */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    BaseDeviceObject = IoGetBaseFileSystemDeviceObject(FileObject);
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* Check if Fast Calls are supported and check ReleaseFileForNtCreateSection */
+    if (FastDispatch &&
+        FastDispatch->ReleaseForModWrite)
+    {
+        /* Call the ReleaseForModWrite FastIo handler */
+        Status = FastDispatch->ReleaseForModWrite(FileObject,
+                                                  ResourceToRelease,
+                                                  BaseDeviceObject);
+    }
+
+    /* Just release the resource if previous op failed */
+    if (!NT_SUCCESS(Status))
+    {
+        ExReleaseResourceLite(ResourceToRelease);
+    }
+}
+
 
 /*++
  * @name FsRtlRegisterFileSystemFilterCallbacks
