@@ -261,7 +261,12 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::TranslateAcceleratorSB(LPMSG lpmsg, W
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
 {
-    return E_NOTIMPL;
+    /* 
+     * We should use IShellWindows interface here in order to attempt to 
+     * find an open shell window that shows the requested pidl and activate it
+     */
+
+    return SHOpenNewFrame((LPITEMIDLIST)pidl, NULL, 0, 0);
 }
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::GetViewStateStream(DWORD grfMode, IStream **ppStrm)
