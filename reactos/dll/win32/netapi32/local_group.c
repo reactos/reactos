@@ -447,7 +447,7 @@ NetLocalGroupAdd(
     TRACE("Created alias \"%wZ\" (RID: %lu)\n", &AliasName, RelativeId);
 
     /* Set the admin comment */
-    if (level == 1)
+    if (aliascomment != NULL)
     {
         RtlInitUnicodeString(&AdminComment.AdminComment, aliascomment);
 
