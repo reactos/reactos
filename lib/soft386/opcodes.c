@@ -200,14 +200,14 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xAD NOT SUPPORTED
     NULL, // TODO: OPCODE 0xAE NOT SUPPORTED
     NULL, // TODO: OPCODE 0xAF NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB0 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB1 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB2 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB3 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB4 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB5 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB6 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB7 NOT SUPPORTED
+    Soft386OpcodeMovByteRegImm,
+    Soft386OpcodeMovByteRegImm,
+    Soft386OpcodeMovByteRegImm,
+    Soft386OpcodeMovByteRegImm,
+    Soft386OpcodeMovByteRegImm,
+    Soft386OpcodeMovByteRegImm,
+    Soft386OpcodeMovByteRegImm,
+    Soft386OpcodeMovByteRegImm,
     Soft386OpcodeMovRegImm,
     Soft386OpcodeMovRegImm,
     Soft386OpcodeMovRegImm,
@@ -1217,6 +1217,43 @@ Soft386OpcodeMovRegImm(PSOFT386_STATE State, UCHAR Opcode)
 
         /* Store the value in the register */
         State->GeneralRegs[Opcode & 0x07].LowWord = Value;
+    }
+
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeMovByteRegImm(PSOFT386_STATE State, UCHAR Opcode)
+{
+    UCHAR Value;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF8) == 0xB0);
+
+    if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Fetch the byte */
+    if (!Soft386FetchByte(State, &Value))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (Opcode & 0x04)
+    {
+        /* AH, CH, DH or BH */
+        State->GeneralRegs[Opcode & 0x03].HighByte = Value;
+    }
+    else
+    {
+        /* AL, CL, DL or BL */
+        State->GeneralRegs[Opcode & 0x03].LowByte = Value;
     }
 
     return TRUE;

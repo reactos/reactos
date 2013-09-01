@@ -199,4 +199,12 @@ Soft386OpcodeMovRegImm
     UCHAR Opcode
 );
 
+BOOLEAN
+FASTCALL
+Soft386OpcodeMovByteRegImm
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
 #endif // _OPCODES_H_
