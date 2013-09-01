@@ -101,11 +101,8 @@ SampAddMemberToAlias(IN PSAM_DB_OBJECT AliasObject,
     }
 
 done:
-    if (MemberKeyHandle != NULL)
-        SampRegCloseKey(MemberKeyHandle);
-
-    if (MembersKeyHandle != NULL)
-        SampRegCloseKey(MembersKeyHandle);
+    SampRegCloseKey(&MemberKeyHandle);
+    SampRegCloseKey(&MembersKeyHandle);
 
     if (MemberIdString != NULL)
         LocalFree(MemberIdString);
@@ -160,8 +157,7 @@ SampRemoveMemberFromAlias(IN PSAM_DB_OBJECT AliasObject,
 
     if (ulValueCount == 0)
     {
-        SampRegCloseKey(MemberKeyHandle);
-        MemberKeyHandle = NULL;
+        SampRegCloseKey(&MemberKeyHandle);
 
         Status = SampRegDeleteKey(AliasObject->MembersKeyHandle,
                                   MemberIdString);
@@ -201,8 +197,7 @@ SampRemoveMemberFromAlias(IN PSAM_DB_OBJECT AliasObject,
 
     if (ulValueCount == 0)
     {
-        SampRegCloseKey(MembersKeyHandle);
-        MembersKeyHandle = NULL;
+        SampRegCloseKey(&MembersKeyHandle);
 
         Status = SampRegDeleteKey(AliasObject->KeyHandle,
                                   L"Members");
@@ -214,11 +209,8 @@ SampRemoveMemberFromAlias(IN PSAM_DB_OBJECT AliasObject,
     }
 
 done:
-    if (MemberKeyHandle != NULL)
-        SampRegCloseKey(MemberKeyHandle);
-
-    if (MembersKeyHandle != NULL)
-        SampRegCloseKey(MembersKeyHandle);
+    SampRegCloseKey(&MemberKeyHandle);
+    SampRegCloseKey(&MembersKeyHandle);
 
     if (MemberIdString != NULL)
         LocalFree(MemberIdString);

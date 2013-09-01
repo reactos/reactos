@@ -28,6 +28,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
 ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
 ENCRYPTED_LM_OWF_PASSWORD EmptyLmHash;
+RTL_RESOURCE SampResource;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -116,6 +117,8 @@ SamIInitialize(VOID)
         if (!NT_SUCCESS(Status))
             return Status;
     }
+
+    RtlInitializeResource(&SampResource);
 
     /* Initialize the SAM database */
     Status = SampInitDatabase();

@@ -140,12 +140,11 @@ SampSetupCreateAliasAccount(HANDLE hDomainKey,
                             sizeof(ULONG));
 
 done:
-    if (hNamesKey != NULL)
-        SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     if (hAccountKey != NULL)
     {
-        SampRegCloseKey(hAccountKey);
+        SampRegCloseKey(&hAccountKey);
 
         if (!NT_SUCCESS(Status))
             SampRegDeleteKey(hDomainKey,
@@ -229,8 +228,7 @@ done:
     if (MembersBuffer != NULL)
         midl_user_free(MembersBuffer);
 
-    if (hGroupKey != NULL)
-        SampRegCloseKey(hGroupKey);
+    SampRegCloseKey(&hGroupKey);
 
     return Status;
 }
@@ -302,12 +300,11 @@ SampSetupCreateGroupAccount(HANDLE hDomainKey,
                             sizeof(ULONG));
 
 done:
-    if (hNamesKey != NULL)
-        SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     if (hAccountKey != NULL)
     {
-        SampRegCloseKey(hAccountKey);
+        SampRegCloseKey(&hAccountKey);
 
         if (!NT_SUCCESS(Status))
             SampRegDeleteKey(hDomainKey,
@@ -530,12 +527,11 @@ SampSetupCreateUserAccount(HANDLE hDomainKey,
                             sizeof(ULONG));
 
 done:
-    if (hNamesKey != NULL)
-        SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     if (hAccountKey != NULL)
     {
-        SampRegCloseKey(hAccountKey);
+        SampRegCloseKey(&hAccountKey);
 
         if (!NT_SUCCESS(Status))
             SampRegDeleteKey(hDomainKey,
@@ -659,7 +655,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     /* Create the Groups container */
     Status = SampRegCreateKey(hDomainKey,
@@ -676,7 +672,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     /* Create the Users container */
     Status = SampRegCreateKey(hDomainKey,
@@ -713,7 +709,7 @@ SampSetupCreateDomain(IN HANDLE hServerKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    SampRegCloseKey(hNamesKey);
+    SampRegCloseKey(&hNamesKey);
 
     if (lpDomainKey != NULL)
         *lpDomainKey = hDomainKey;
@@ -722,20 +718,12 @@ done:
     if (Sd != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, Sd);
 
-    if (hAliasesKey != NULL)
-        SampRegCloseKey(hAliasesKey);
-
-    if (hGroupsKey != NULL)
-        SampRegCloseKey(hGroupsKey);
-
-    if (hUsersKey != NULL)
-        SampRegCloseKey(hUsersKey);
+    SampRegCloseKey(&hAliasesKey);
+    SampRegCloseKey(&hGroupsKey);
+    SampRegCloseKey(&hUsersKey);
 
     if (!NT_SUCCESS(Status))
-    {
-        if (hDomainKey != NULL)
-            SampRegCloseKey(hDomainKey);
-    }
+        SampRegCloseKey(&hDomainKey);
 
     return Status;
 }
@@ -781,7 +769,7 @@ SampSetupCreateServer(IN HANDLE hSamKey,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    SampRegCloseKey(hDomainsKey);
+    SampRegCloseKey(&hDomainsKey);
 
     *lpServerKey = hServerKey;
 
@@ -1012,17 +1000,10 @@ done:
     if (pBuiltinSid)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pBuiltinSid);
 
-    if (hAccountDomainKey != NULL)
-        SampRegCloseKey(hAccountDomainKey);
-
-    if (hBuiltinDomainKey != NULL)
-        SampRegCloseKey(hBuiltinDomainKey);
-
-    if (hServerKey != NULL)
-        SampRegCloseKey(hServerKey);
-
-    if (hSamKey != NULL)
-        SampRegCloseKey(hSamKey);
+    SampRegCloseKey(&hAccountDomainKey);
+    SampRegCloseKey(&hBuiltinDomainKey);
+    SampRegCloseKey(&hServerKey);
+    SampRegCloseKey(&hSamKey);
 
     TRACE("SampInitializeSAM() done\n");
 

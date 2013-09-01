@@ -121,6 +121,7 @@ typedef struct _SAM_USER_FIXED_DATA
 extern PGENERIC_MAPPING pServerMapping;
 extern ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
 extern ENCRYPTED_LM_OWF_PASSWORD EmptyLmHash;
+extern RTL_RESOURCE SampResource;
 
 
 /* alias.c */
@@ -238,13 +239,13 @@ SampRemoveMemberFromGroup(IN PSAM_DB_OBJECT GroupObject,
 /* registry.h */
 
 NTSTATUS
-SampRegCloseKey(IN HANDLE KeyHandle);
+SampRegCloseKey(IN OUT PHANDLE KeyHandle);
 
 NTSTATUS
 SampRegCreateKey(IN HANDLE ParentKeyHandle,
                  IN LPCWSTR KeyName,
                  IN ACCESS_MASK DesiredAccess,
-                 OUT HANDLE KeyHandle);
+                 OUT PHANDLE KeyHandle);
 
 NTSTATUS
 SampRegDeleteKey(IN HANDLE ParentKeyHandle,
@@ -260,7 +261,7 @@ NTSTATUS
 SampRegOpenKey(IN HANDLE ParentKeyHandle,
                IN LPCWSTR KeyName,
                IN ACCESS_MASK DesiredAccess,
-               OUT HANDLE KeyHandle);
+               OUT PHANDLE KeyHandle);
 
 NTSTATUS
 SampRegQueryKeyInfo(IN HANDLE KeyHandle,
