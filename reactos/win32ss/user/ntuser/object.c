@@ -23,7 +23,7 @@ void DbgUserDumpHandleTable()
                           L"Accel", L"DDEaccess", L"DDEconv", L"DDExact", L"Monitor", L"KBDlayout", L"KBDfile",
                           L"Event", L"Timer", L"InputContext", L"HidData", L"DeviceInfo", L"TouchInput",L"GestureInfo"};
 
-    ERR("Total handles count: %d\n", gpsi->cHandleEntries);
+    ERR("Total handles count: %lu\n", gpsi->cHandleEntries);
 
     memset(HandleCounts, 0, sizeof(HandleCounts));
 
@@ -31,13 +31,13 @@ void DbgUserDumpHandleTable()
     ppiList = gppiList;
     while (ppiList)
     {
-        ERR("Process %s (%d) handles count: %d\n\t", ppiList->peProcess->ImageFileName, ppiList->peProcess->UniqueProcessId, ppiList->UserHandleCount);
+        ERR("Process %s (%p) handles count: %d\n\t", ppiList->peProcess->ImageFileName, ppiList->peProcess->UniqueProcessId, ppiList->UserHandleCount);
 
         for (i = 1 ;i < TYPE_CTYPES; i++)
         {
             HandleCounts[i] += ppiList->DbgHandleCount[i];
 
-            DbgPrint("%S: %d, ", TypeNames[i], ppiList->DbgHandleCount[i]);
+            DbgPrint("%S: %lu, ", TypeNames[i], ppiList->DbgHandleCount[i]);
             if (i % 6 == 0)
                 DbgPrint("\n\t");
         }
@@ -97,7 +97,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
-   TRACE("handles used %i\n",gpsi->cHandleEntries);
+   TRACE("handles used %lu\n", gpsi->cHandleEntries);
 
    if (ht->freelist)
    {
@@ -111,7 +111,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 
    if (ht->nb_handles >= ht->allocated_handles)  /* Need to grow the array */
    {
-       ERR("Out of user handles! Used -> %i, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
+       ERR("Out of user handles! Used -> %lu, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
 
 #if DBG
        DbgUserDumpHandleTable();
@@ -420,10 +420,10 @@ UserDereferenceObject(PVOID object)
 
      if (!entry)
      {
-        ERR("Warning! Dereference Object without ENTRY! Obj -> 0x%x\n", object);
+        ERR("Warning! Dereference Object without ENTRY! Obj -> %p\n", object);
         return FALSE;
      }
-     TRACE("Warning! Dereference to zero! Obj -> 0x%x\n", object);
+     TRACE("Warning! Dereference to zero! Obj -> %p\n", object);
 
      ((PHEAD)object)->cLockObj = 0;
 

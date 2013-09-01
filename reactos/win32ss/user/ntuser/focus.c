@@ -373,7 +373,7 @@ co_IntSetForegroundAndFocusWindow(
 
    hWnd = UserHMGetHandle(Wnd);
 
-   TRACE("SetForegroundAndFocusWindow(%x, %s)\n", hWnd, (MouseActivate ? "TRUE" : "FALSE"));
+   TRACE("SetForegroundAndFocusWindow(%p, %s)\n", hWnd, (MouseActivate ? "TRUE" : "FALSE"));
 
    PrevForegroundQueue = IntGetFocusMessageQueue(); // Use this active desktop.
    pti = PsGetCurrentThreadWin32Thread();
@@ -710,7 +710,7 @@ co_UserSetFocus(PWND Window)
 
       IntSendFocusMessages( pti, Window);
 
-      TRACE("Focus: %d -> %d\n", hWndPrev, Window->head.h);
+      TRACE("Focus: %p -> %p\n", hWndPrev, Window->head.h);
    }
    else /* NULL hwnd passed in */
    {
@@ -761,7 +761,7 @@ IntGetCapture(VOID)
    RETURN( ThreadQueue ? (ThreadQueue->spwndCapture ? UserHMGetHandle(ThreadQueue->spwndCapture) : 0) : 0);
 
 CLEANUP:
-   TRACE("Leave IntGetCapture, ret=%i\n",_ret_);
+   TRACE("Leave IntGetCapture, ret=%p\n", _ret_);
    END_CLEANUP;
 }
 
@@ -962,7 +962,7 @@ NtUserGetForegroundWindow(VOID)
    RETURN( UserGetForegroundWindow());
 
 CLEANUP:
-   TRACE("Leave NtUserGetForegroundWindow, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetForegroundWindow, ret=%p\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -975,7 +975,7 @@ NtUserSetActiveWindow(HWND hWnd)
    PWND Window;
    DECLARE_RETURN(HWND);
 
-   TRACE("Enter NtUserSetActiveWindow(%x)\n", hWnd);
+   TRACE("Enter NtUserSetActiveWindow(%p)\n", hWnd);
    UserEnterExclusive();
 
    Window = NULL;
@@ -1013,13 +1013,13 @@ NtUserSetCapture(HWND hWnd)
 {
    DECLARE_RETURN(HWND);
 
-   TRACE("Enter NtUserSetCapture(%x)\n", hWnd);
+   TRACE("Enter NtUserSetCapture(%p)\n", hWnd);
    UserEnterExclusive();
 
    RETURN( co_UserSetCapture(hWnd));
 
 CLEANUP:
-   TRACE("Leave NtUserSetCapture, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetCapture, ret=%p\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1035,7 +1035,7 @@ NtUserSetFocus(HWND hWnd)
    DECLARE_RETURN(HWND);
    HWND ret;
 
-   TRACE("Enter NtUserSetFocus(%x)\n", hWnd);
+   TRACE("Enter NtUserSetFocus(%p)\n", hWnd);
    UserEnterExclusive();
 
    if (hWnd)

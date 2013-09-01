@@ -1514,7 +1514,7 @@ NtUserCheckMenuItem(
    RETURN( IntCheckMenuItem(Menu, uIDCheckItem, uCheck));
 
 CLEANUP:
-   TRACE("Leave NtUserCheckMenuItem, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCheckMenuItem, ret=%lu\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1540,8 +1540,8 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
 
        if (!NT_SUCCESS(Status))
        {
-          ERR("Validation of window station handle (0x%X) failed\n",
-             CurrentProcess->Win32WindowStation);
+          ERR("Validation of window station handle (%p) failed\n",
+              CurrentProcess->Win32WindowStation);
           SetLastNtError(Status);
           return (HMENU)0;
        }
@@ -1647,7 +1647,7 @@ NtUserGetTitleBarInfo(
     RETURN( retValue );
 
 CLEANUP:
-    TRACE("Leave NtUserGetTitleBarInfo, ret=%i\n",_ret_);
+    TRACE("Leave NtUserGetTitleBarInfo, ret=%u\n",_ret_);
     UserLeave();
     END_CLEANUP;
 }
@@ -1728,7 +1728,7 @@ NtUserEnableMenuItem(
    RETURN( IntEnableMenuItem(Menu, uIDEnableItem, uEnable));
 
 CLEANUP:
-   TRACE("Leave NtUserEnableMenuItem, ret=%i\n",_ret_);
+   TRACE("Leave NtUserEnableMenuItem, ret=%u\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1993,7 +1993,7 @@ NtUserGetMenuIndex(
    RETURN(0xFFFFFFFF);
 
 CLEANUP:
-   TRACE("Leave NtUserGetMenuIndex, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetMenuIndex, ret=%u\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -2105,7 +2105,7 @@ NtUserHiliteMenuItem(
    RETURN(FALSE);
 
 CLEANUP:
-   TRACE("Leave NtUserHiliteMenuItem, ret=%i\n",_ret_);
+   TRACE("Leave NtUserHiliteMenuItem, ret=%u\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -2516,7 +2516,7 @@ NtUserBuildMenuItemList(
    RETURN( res);
 
 CLEANUP:
-   TRACE("Leave NtUserBuildMenuItemList, ret=%i\n",_ret_);
+   TRACE("Leave NtUserBuildMenuItemList, ret=%lu\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -2545,7 +2545,7 @@ NtUserGetMenuDefaultItem(
    RETURN( IntGetMenuDefaultItem(Menu, fByPos, gmdiFlags, &gismc));
 
 CLEANUP:
-   TRACE("Leave NtUserGetMenuDefaultItem, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetMenuDefaultItem, ret=%u\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

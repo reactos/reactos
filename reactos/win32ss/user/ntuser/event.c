@@ -136,7 +136,7 @@ IntRemoveEvent(PEVENTHOOK pEH)
 {
    if (pEH)
    {
-      TRACE("IntRemoveEvent pEH 0x%x\n",pEH);
+      TRACE("IntRemoveEvent pEH %p\n", pEH);
       KeEnterCriticalRegion();
       RemoveEntryList(&pEH->Chain);
       GlobalEvents->Counts--;
@@ -224,7 +224,7 @@ IntNotifyWinEvent(
    PLIST_ENTRY pLE;
    PTHREADINFO pti, ptiCurrent;
 
-   TRACE("IntNotifyWinEvent GlobalEvents = 0x%x pWnd 0x%x\n",GlobalEvents, pWnd);
+   TRACE("IntNotifyWinEvent GlobalEvents = %p pWnd %p\n", GlobalEvents, pWnd);
 
    if (!GlobalEvents || !GlobalEvents->Counts) return;
 
@@ -334,7 +334,7 @@ NtUserSetWinEventHook(
    HANDLE Handle;
    PETHREAD Thread = NULL;
 
-   TRACE("NtUserSetWinEventHook hmod 0x%x, pfn 0x%x\n",hmodWinEventProc, lpfnWinEventProc);
+   TRACE("NtUserSetWinEventHook hmod %p, pfn %p\n", hmodWinEventProc, lpfnWinEventProc);
 
    UserEnterExclusive();
 

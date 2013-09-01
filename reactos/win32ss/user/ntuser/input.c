@@ -62,7 +62,7 @@ DoTheScreenSaver(VOID)
         TO = 1000 * gspv.iScrSaverTimeout;
         if (Test > TO)
         {
-            TRACE("Screensaver Message Start! Tick %d Timeout %d \n", Test, gspv.iScrSaverTimeout);
+            TRACE("Screensaver Message Start! Tick %lu Timeout %d \n", Test, gspv.iScrSaverTimeout);
 
             if (ppiScrnSaver) // We are or we are not the screensaver, prevent reentry...
             {
@@ -146,7 +146,7 @@ RawInputThreadMain()
     ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
     ptiRawInput->pClientInfo->dwTIFlags = ptiRawInput->TIF_flags;
 
-    TRACE("Raw Input Thread 0x%x\n", ptiRawInput);
+    TRACE("Raw Input Thread %p\n", ptiRawInput);
 
     KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                         LOW_REALTIME_PRIORITY + 3);
@@ -461,7 +461,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         ptiFrom->MessageQueue = ptiTo->MessageQueue;
 
         ptiFrom->MessageQueue->cThreads++;
-        ERR("ptiTo S Share count %d\n", ptiFrom->MessageQueue->cThreads);
+        ERR("ptiTo S Share count %lu\n", ptiFrom->MessageQueue->cThreads);
 
         // FIXME: conditions?
         if (ptiFrom->pqAttach == gpqForeground)
@@ -525,7 +525,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
             if (pai->pti1 == ptiFrom) 
             {
                 ptiFrom->MessageQueue->cThreads--;
-                ERR("ptiTo L Share count %d\n", ptiFrom->MessageQueue->cThreads);
+                ERR("ptiTo L Share count %lu\n", ptiFrom->MessageQueue->cThreads);
                 /* Use the message queue of the last attachment */
                 ptiFrom->MessageQueue = pai->pti2->MessageQueue;
                 ptiFrom->MessageQueue->CursorObject = NULL;
@@ -538,7 +538,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         }
 
         ptiFrom->MessageQueue->cThreads--;
-        ERR("ptiTo E Share count %d\n", ptiFrom->MessageQueue->cThreads);
+        ERR("ptiTo E Share count %lu\n", ptiFrom->MessageQueue->cThreads);
         ptiFrom->MessageQueue = ptiFrom->pqAttach;
         // FIXME: conditions?
         ptiFrom->MessageQueue->CursorObject = NULL;
@@ -639,7 +639,7 @@ NtUserSendInput(
     }
 
 cleanup:
-    TRACE("Leave NtUserSendInput, ret=%i\n", uRet);
+    TRACE("Leave NtUserSendInput, ret=%u\n", uRet);
     UserLeave();
     return uRet;
 }

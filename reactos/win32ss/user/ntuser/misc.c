@@ -273,7 +273,7 @@ NtUserGetThreadState(
          break;
    }
 
-   TRACE("Leave NtUserGetThreadState, ret=%i\n", ret);
+   TRACE("Leave NtUserGetThreadState, ret=%lu\n", ret);
    UserLeave();
 
    return ret;
@@ -318,7 +318,7 @@ NtUserGetDoubleClickTime(VOID)
    // FIXME: Check if this works on non-interactive winsta
    Result = gspv.iDblClickTime;
 
-   TRACE("Leave NtUserGetDoubleClickTime, ret=%i\n", Result);
+   TRACE("Leave NtUserGetDoubleClickTime, ret=%u\n", Result);
    UserLeave();
    return Result;
 }
@@ -425,7 +425,7 @@ NtUserGetGUIThreadInfo(
    RETURN( TRUE);
 
 CLEANUP:
-   TRACE("Leave NtUserGetGUIThreadInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetGUIThreadInfo, ret=%u\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -491,7 +491,7 @@ NtUserGetGuiResources(
    RETURN( Ret);
 
 CLEANUP:
-   TRACE("Leave NtUserGetGuiResources, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetGuiResources, ret=%lu\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

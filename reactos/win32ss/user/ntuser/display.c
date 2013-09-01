@@ -197,7 +197,7 @@ InitVideo()
     if (NT_SUCCESS(Status))
     {
         iVGACompatible = _wtoi(&awcDeviceName[13]);
-        ERR("VGA adapter = %ld\n", iVGACompatible);
+        ERR("VGA adapter = %lu\n", iVGACompatible);
     }
 
     /* Get the maximum mumber of adapters */
@@ -206,7 +206,7 @@ InitVideo()
         ERR("Could not read MaxObjectNumber, defaulting to 0.\n");
     }
 
-    TRACE("Found %ld devices\n", ulMaxObjectNumber + 1);
+    TRACE("Found %lu devices\n", ulMaxObjectNumber + 1);
 
     /* Loop through all adapters */
     for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
@@ -350,8 +350,8 @@ NtUserEnumDisplayDevices(
     DISPLAY_DEVICEW dispdev;
     NTSTATUS Status;
 
-    TRACE("Enter NtUserEnumDisplayDevices(%wZ, %ld)\n",
-           pustrDevice, iDevNum);
+    TRACE("Enter NtUserEnumDisplayDevices(%wZ, %lu)\n",
+          pustrDevice, iDevNum);
 
     dispdev.cb = sizeof(dispdev);
 
@@ -463,8 +463,8 @@ UserEnumDisplaySettings(
     PDEVMODEENTRY pdmentry;
     ULONG i, iFoundMode;
 
-    TRACE("Enter UserEnumDisplaySettings('%wZ', %ld)\n",
-            pustrDevice, iModeNum);
+    TRACE("Enter UserEnumDisplaySettings('%wZ', %lu)\n",
+          pustrDevice, iModeNum);
 
     /* Ask GDI for the GRAPHICS_DEVICE */
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
@@ -568,8 +568,8 @@ NtUserEnumDisplaySettings(
     ULONG cbSize, cbExtra;
     DEVMODEW dmReg, *pdm;
 
-    TRACE("Enter NtUserEnumDisplaySettings(%wZ, %ld, %p, 0x%lx)\n",
-            pustrDevice, iModeNum, lpDevMode, dwFlags);
+    TRACE("Enter NtUserEnumDisplaySettings(%wZ, %lu, %p, 0x%lx)\n",
+          pustrDevice, iModeNum, lpDevMode, dwFlags);
 
     if (pustrDevice)
     {

@@ -174,7 +174,7 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
    RETURN(Data);
 
 CLEANUP:
-   TRACE("Leave NtUserRemoveProp, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRemoveProp, ret=%p\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }

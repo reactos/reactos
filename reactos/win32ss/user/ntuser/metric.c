@@ -181,7 +181,7 @@ UserGetSystemMetrics(ULONG Index)
 {
     ASSERT(gpsi);
     ASSERT(Setup);
-    TRACE("UserGetSystemMetrics(%d)\n", Index);
+    TRACE("UserGetSystemMetrics(%lu)\n", Index);
 
     /* Get metrics from array */
     if (Index < SM_CMETRICS)
@@ -202,7 +202,7 @@ UserGetSystemMetrics(ULONG Index)
             return 0; // FIXME
     }
 
-    ERR("UserGetSystemMetrics() called with invalid index %d\n", Index);
+    ERR("UserGetSystemMetrics() called with invalid index %lu\n", Index);
     return 0;
 }
 

@@ -260,7 +260,7 @@ UserGetKeyState(DWORD dwKey)
 static VOID
 UpdateKeyState(PUSER_MESSAGE_QUEUE MessageQueue, WORD wVk, BOOL bIsDown)
 {
-    TRACE("UpdateKeyState wVk: %d, bIsDown: %d\n", wVk, bIsDown);
+    TRACE("UpdateKeyState wVk: %u, bIsDown: %d\n", wVk, bIsDown);
 
     if (bIsDown)
     {
@@ -282,7 +282,7 @@ UpdateKeyStateFromMsg(PUSER_MESSAGE_QUEUE MessageQueue, MSG* msg)
     UCHAR key;
     BOOL down = FALSE;
 
-    TRACE("UpdateKeyStateFromMsg message:%d\n", msg->message);
+    TRACE("UpdateKeyStateFromMsg message:%u\n", msg->message);
 
     switch (msg->message)
     {
@@ -626,7 +626,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        }
        else
        {
-           TRACE("Posting mouse message to hwnd=0x%x!\n", UserHMGetHandle(pwnd));
+           TRACE("Posting mouse message to hwnd=%p!\n", UserHMGetHandle(pwnd));
            MsqPostMessage(pti, Msg, TRUE, QS_MOUSEBUTTON, 0);
        }
    }
@@ -1011,7 +1011,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
     if (pti->TIF_flags & TIF_INCLEANUP || ptirec->TIF_flags & TIF_INCLEANUP)
     {
         if (uResult) *uResult = -1;
-        ERR("MsqSM: Current pti %d or Rec pti %d\n",pti->TIF_flags & TIF_INCLEANUP, ptirec->TIF_flags & TIF_INCLEANUP);
+        ERR("MsqSM: Current pti %lu or Rec pti %lu\n", pti->TIF_flags & TIF_INCLEANUP, ptirec->TIF_flags & TIF_INCLEANUP);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -1387,7 +1387,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         pwndMsg = co_WinPosWindowFromPoint(NULL, &msg->pt, &hittest);
     }
 
-    TRACE("Got mouse message for 0x%x, hittest: 0x%x\n", msg->hwnd, hittest );
+    TRACE("Got mouse message for %p, hittest: 0x%x\n", msg->hwnd, hittest);
 
     if (pwndMsg == NULL || pwndMsg->head.pti != pti)
     {

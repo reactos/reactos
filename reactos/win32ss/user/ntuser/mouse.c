@@ -402,7 +402,7 @@ IntTrackMouseEvent(
                              lpEventTrack->dwFlags & TME_NONCLIENT ? WM_NCMOUSELEAVE : WM_MOUSELEAVE,
                              0, 0);
         }
-        TRACE("IntTrackMouseEvent spwndTrack 0x%x pwnd 0x%x\n", pDesk->spwndTrack, pWnd);
+        TRACE("IntTrackMouseEvent spwndTrack %p pwnd %p\n", pDesk->spwndTrack, pWnd);
         return TRUE;
     }
 

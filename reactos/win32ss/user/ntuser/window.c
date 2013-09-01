@@ -814,7 +814,7 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
       Current = WThread->WindowListHead.Flink;
       Wnd = CONTAINING_RECORD(Current, WND, ThreadListEntry);
 
-      TRACE("thread cleanup: while destroy wnds, wnd=0x%x\n",Wnd);
+      TRACE("thread cleanup: while destroy wnds, wnd=%p\n", Wnd);
 
       /* Window removes itself from the list */
 
@@ -828,7 +828,7 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
       UserRefObjectCo(Wnd, &Ref); // FIXME: Temp HACK??
       if (!co_UserDestroyWindow(Wnd))
       {
-         ERR("Unable to destroy window 0x%x at thread cleanup... This is _VERY_ bad!\n", Wnd);
+         ERR("Unable to destroy window %p at thread cleanup... This is _VERY_ bad!\n", Wnd);
       }
       UserDerefObjectCo(Wnd); // FIXME: Temp HACK??
    }
@@ -1727,7 +1727,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       goto AllocError;
    }
 
-   TRACE("Created window object with handle %X\n", hWnd);
+   TRACE("Created window object with handle %p\n", hWnd);
 
    if (pdeskCreated && pdeskCreated->DesktopWindow == NULL )
    {  /* HACK: Helper for win32csr/desktopbg.c */
@@ -1837,7 +1837,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       if (!CallProc)
       {
          EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-         ERR("Warning: Unable to create CallProc for edit control. Control may not operate correctly! hwnd %x\n",hWnd);
+         ERR("Warning: Unable to create CallProc for edit control. Control may not operate correctly! hwnd %p\n", hWnd);
       }
       else
       {
@@ -2330,7 +2330,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       }
    }
 
-   TRACE("co_UserCreateWindowEx(): Created window %X\n", hWnd);
+   TRACE("co_UserCreateWindowEx(): Created window %p\n", hWnd);
    ret = Window;
 
 cleanup:
@@ -2742,7 +2742,7 @@ NtUserDestroyWindow(HWND Wnd)
    RETURN(ret);
 
 CLEANUP:
-   TRACE("Leave NtUserDestroyWindow, ret=%i\n",_ret_);
+   TRACE("Leave NtUserDestroyWindow, ret=%u\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -3022,7 +3022,7 @@ NtUserFindWindowEx(HWND hwndParent,
    RETURN( Ret);
 
 CLEANUP:
-   TRACE("Leave NtUserFindWindowEx, ret %i\n",_ret_);
+   TRACE("Leave NtUserFindWindowEx, ret %p\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -3119,7 +3119,7 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
    RETURN(Ancestor ? Ancestor->head.h : NULL);
 
 CLEANUP:
-   TRACE("Leave NtUserGetAncestor, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetAncestor, ret=%p\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -3186,7 +3186,7 @@ NtUserGetListBoxInfo(
    RETURN( (DWORD) co_IntSendMessage( Wnd->head.h, LB_GETLISTBOXINFO, 0, 0 ));
 
 CLEANUP:
-   TRACE("Leave NtUserGetListBoxInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetListBoxInfo, ret=%lu\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -3231,7 +3231,7 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
    RETURN( co_UserSetParent(hWndChild, hWndNewParent));
 
 CLEANUP:
-   TRACE("Leave NtUserSetParent, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetParent, ret=%p\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -3418,7 +3418,7 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
    RETURN(Menu->MenuInfo.Self);
 
 CLEANUP:
-   TRACE("Leave NtUserGetSystemMenu, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetSystemMenu, ret=%p\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -3598,7 +3598,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             break;
 
          default:
-            ERR("NtUserSetWindowLong(): Unsupported index %d\n", Index);
+            ERR("NtUserSetWindowLong(): Unsupported index %lu\n", Index);
             EngSetLastError(ERROR_INVALID_INDEX);
             OldValue = 0;
             break;
@@ -3697,7 +3697,7 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
    RETURN( OldValue);
 
 CLEANUP:
-   TRACE("Leave NtUserSetWindowWord, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetWindowWord, ret=%u\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -3798,7 +3798,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
    RETURN( Result);
 
 CLEANUP:
-   TRACE("Leave NtUserQueryWindow, ret=%i\n",_ret_);
+   TRACE("Leave NtUserQueryWindow, ret=%u\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -3837,7 +3837,7 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
    RETURN( Ret);
 
 CLEANUP:
-   TRACE("Leave NtUserRegisterWindowMessage, ret=%i\n",_ret_);
+   TRACE("Leave NtUserRegisterWindowMessage, ret=%u\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }

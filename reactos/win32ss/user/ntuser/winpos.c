@@ -1612,7 +1612,7 @@ co_WinPosSetWindowPos(
 
    WvrFlags = co_WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
 
-   TRACE("co_WinPosDoNCCALCSize returned %d\n", WvrFlags);
+   TRACE("co_WinPosDoNCCALCSize returned %lu\n", WvrFlags);
 
    /* Validate link windows. (also take into account shell window in hwndShellWindow) */
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != UserGetShellWindow())
@@ -2723,7 +2723,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
    Ret = IntDeferWindowPos(WinPosInfo, Wnd, WndInsertAfter, x, y, cx, cy, Flags);
 
 Exit:
-   TRACE("Leave NtUserDeferWindowPos, ret=%i\n", Ret);
+   TRACE("Leave NtUserDeferWindowPos, ret=%p\n", Ret);
    UserLeave();
    return Ret;
 }
@@ -3312,7 +3312,7 @@ CLEANUP:
    if (Window) UserDereferenceObject(Window);
    if (DesktopWindow) UserDerefObjectCo(DesktopWindow);
 
-   TRACE("Leave NtUserWindowFromPoint, ret=%i\n",_ret_);
+   TRACE("Leave NtUserWindowFromPoint, ret=%p\n", _ret_);
    UserLeave();
    END_CLEANUP;
 }

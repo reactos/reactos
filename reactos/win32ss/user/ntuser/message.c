@@ -526,7 +526,7 @@ IdlePing(VOID)
       }
    }
 
-   TRACE("IdlePing ppi 0x%x\n",ppi);
+   TRACE("IdlePing ppi %p\n", ppi);
    if ( ppi && ppi->InputIdleEvent )
    {
       TRACE("InputIdleEvent\n");
@@ -539,7 +539,7 @@ IdlePong(VOID)
 {
    PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
 
-   TRACE("IdlePong ppi 0x%x\n",ppi);
+   TRACE("IdlePong ppi %p\n", ppi);
    if ( ppi && ppi->InputIdleEvent )
    {
       KeClearEvent(ppi->InputIdleEvent);
@@ -608,7 +608,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
          pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
        return 0;
 
-    TRACE("Internal Event Msg %p hWnd 0x%x\n",msg,pWnd->head.h);
+    TRACE("Internal Event Msg %u hWnd %p\n", msg, pWnd->head.h);
 
     switch(msg)
     {
@@ -1202,13 +1202,13 @@ UserPostMessage( HWND Wnd,
         pti = Window->head.pti;
         if ( pti->TIF_flags & TIF_INCLEANUP )
         {
-            ERR("Attempted to post message to window 0x%x when the thread is in cleanup!\n", Wnd);
+            ERR("Attempted to post message to window %p when the thread is in cleanup!\n", Wnd);
             return FALSE;
         }
 
         if ( Window->state & WNDS_DESTROYED )
         {
-            ERR("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
+            ERR("Attempted to post message to window %p that is being destroyed!\n", Wnd);
             /* FIXME: Last error code? */
             return FALSE;
         }
@@ -1366,7 +1366,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     if (Window->state & WNDS_DESTROYED)
     {
         /* FIXME: Last error? */
-        ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
+        ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
         RETURN( FALSE);
     }
 
@@ -1531,7 +1531,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     if (Window->state & WNDS_DESTROYED)
     {
         /* FIXME: last error? */
-        ERR("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
+        ERR("Attempted to send message to window %p that is being destroyed!\n", hWnd);
         RETURN(FALSE);
     }
 
@@ -1900,7 +1900,7 @@ NtUserDragDetect(
     ULONG wDragWidth, wDragHeight;
     DECLARE_RETURN(BOOL);
 
-    TRACE("Enter NtUserDragDetect(%x)\n", hWnd);
+    TRACE("Enter NtUserDragDetect(%p)\n", hWnd);
     UserEnterExclusive();
 
     wDragWidth = UserGetSystemMetrics(SM_CXDRAG);
@@ -2190,7 +2190,7 @@ NtUserTranslateMessage(LPMSG lpMsg, UINT flags)
     }
     else
     {
-        TRACE("No Window for Translate. hwnd 0x%p Msg %d\n",SafeMsg.hwnd,SafeMsg.message);
+        TRACE("No Window for Translate. hwnd 0x%p Msg %u\n", SafeMsg.hwnd, SafeMsg.message);
         Ret = FALSE;
     }
     UserLeave();
@@ -2691,7 +2691,7 @@ NtUserMessageCall( HWND hWnd,
                 CWP.message = Msg;
                 CWP.wParam  = wParam;
                 CWP.lParam  = lParam;
-                TRACE("WH_CALLWNDPROC: Hook %x NextHook %x\n", Hook, NextObj );
+                TRACE("WH_CALLWNDPROC: Hook %p NextHook %p\n", Hook, NextObj);
 
                 lResult = co_IntCallHookProc( Hook->HookId,
                                               HC_ACTION,
@@ -2819,7 +2819,7 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
 
-    TRACE("WFII: ppi 0x%x\n",W32Process);
+    TRACE("WFII: ppi %p\n", W32Process);
     TRACE("WFII: waiting for %p\n", Handles[1] );
     do
     {

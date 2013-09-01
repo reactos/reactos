@@ -281,8 +281,8 @@ VOID
 CALLBACK
 SystemTimerProc(HWND hwnd,
                 UINT uMsg,
-         UINT_PTR idEvent,
-             DWORD dwTime)
+                UINT_PTR idEvent,
+                DWORD dwTime)
 {
   PDESKTOP pDesk;
   PWND pWnd = NULL;
@@ -292,7 +292,7 @@ SystemTimerProc(HWND hwnd,
      pWnd = UserGetWindowObject(hwnd);
      if (!pWnd)
      {
-        ERR( "System Timer Proc has invalid window handle! 0x%x Id: %d\n", hwnd, idEvent);
+        ERR("System Timer Proc has invalid window handle! %p Id: %u\n", hwnd, idEvent);
         return;
      }
   }
@@ -348,7 +348,7 @@ SystemTimerProc(HWND hwnd,
        return; // Not this window so just return.
 
      default:
-       ERR( "System Timer Proc invalid id %d!\n", idEvent );
+       ERR("System Timer Proc invalid id %u!\n", idEvent);
        break;
   }
   IntKillTimer(pWnd, idEvent, TRUE);
@@ -561,8 +561,8 @@ BOOL FASTCALL
 IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer)
 {
    PTIMER pTmr = NULL;
-   TRACE("IntKillTimer Window %x id %p systemtimer %s\n",
-          Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
+   TRACE("IntKillTimer Window %p id %p systemtimer %s\n",
+         Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
    TimerEnterExclusive();
    pTmr = FindTimer(Window, IDEvent, SystemTimer ? TMRF_SYSTEM : 0);
@@ -633,7 +633,7 @@ NtUserSetTimer
    RETURN(IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND));
 
 CLEANUP:
-   TRACE("Leave NtUserSetTimer, ret=%i\n", _ret_);
+   TRACE("Leave NtUserSetTimer, ret=%u\n", _ret_);
 
    END_CLEANUP;
 }
@@ -679,7 +679,7 @@ NtUserSetSystemTimer(
    RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, NULL, TMRF_SYSTEM));
 
 CLEANUP:
-   TRACE("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);
+   TRACE("Leave NtUserSetSystemTimer, ret=%u\n", _ret_);
    END_CLEANUP;
 }
 

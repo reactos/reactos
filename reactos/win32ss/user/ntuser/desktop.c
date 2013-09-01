@@ -235,12 +235,12 @@ static int GetSystemVersionString(LPWSTR buffer)
 
    if (versionInfo.dwMajorVersion <= 4)
       len = swprintf(buffer,
-                     L"ReactOS Version %d.%d %s Build %d",
+                     L"ReactOS Version %lu.%lu %s Build %lu",
                      versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
                      versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
    else
       len = swprintf(buffer,
-                     L"ReactOS %s (Build %d)",
+                     L"ReactOS %s (Build %lu)",
                      versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
 
    return len;

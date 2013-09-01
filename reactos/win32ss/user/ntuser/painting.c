@@ -767,7 +767,7 @@ IntGetPaintMessage(
 
    if (Message->hwnd == NULL)
    {
-      ERR("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found! Counts %d\n",Thread->cPaintsReady);
+      ERR("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found! Counts %u\n",Thread->cPaintsReady);
       /* Hack to stop spamming the debuglog ! */
       Thread->cPaintsReady = 0;
       return FALSE;
@@ -1583,7 +1583,7 @@ NtUserScrollDC(
    RETURN(TRUE);
 
 CLEANUP:
-   TRACE("Leave NtUserScrollDC, ret=%i\n",_ret_);
+   TRACE("Leave NtUserScrollDC, ret=%lu\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1819,7 +1819,7 @@ CLEANUP:
    if (Window)
       UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserScrollWindowEx, ret=%i\n",_ret_);
+   TRACE("Leave NtUserScrollWindowEx, ret=%lu\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }

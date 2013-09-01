@@ -98,7 +98,7 @@ DceAllocDCE(PWND Window OPTIONAL, DCE_TYPE Type)
   }
   else
   {
-     TRACE("FREE DCATTR!!!! NOT DCE_WINDOW_DC!!!!! hDC-> %x\n", pDce->hDC);
+     TRACE("FREE DCATTR!!!! NOT DCE_WINDOW_DC!!!!! hDC-> %p\n", pDce->hDC);
      GreSetDCOwner(pDce->hDC, GDI_OBJ_HMGR_NONE);
      pDce->ptiOwner = NULL;
   }
@@ -296,7 +296,7 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
          }
       }
       dce->DCXFlags &= ~DCX_DCEBUSY;
-      TRACE("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);
+      TRACE("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %p \n", dce->hDC);
       if (!GreSetDCOwner(dce->hDC, GDI_OBJ_HMGR_NONE))
          return 0;
       dce->ptiOwner = NULL; // Reset ownership.
@@ -515,7 +515,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
    if (!GreIsHandleValid(Dce->hDC))
    {
-      ERR("FIXME: Got DCE with invalid hDC! 0x%x\n", Dce->hDC);
+      ERR("FIXME: Got DCE with invalid hDC! %p\n", Dce->hDC);
       Dce->hDC = DceCreateDisplayDC();
       /* FIXME: Handle error */
    }
@@ -577,7 +577,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
    if (Dce->DCXFlags & DCX_CACHE)
    {
-      TRACE("ENTER!!!!!! DCX_CACHE!!!!!!   hDC-> %x\n", Dce->hDC);
+      TRACE("ENTER!!!!!! DCX_CACHE!!!!!!   hDC-> %p\n", Dce->hDC);
       // Need to set ownership so Sync dcattr will work.
       GreSetDCOwner(Dce->hDC, GDI_OBJ_HMGR_POWNED);
       Dce->ptiOwner = GetW32ThreadInfo(); // Set the temp owning
@@ -621,7 +621,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   if (Force &&
       GreGetObjectOwner(pdce->hDC) != GDI_OBJ_HMGR_POWNED)
   {
-     TRACE("Change ownership for DCE! -> %x\n" , pdce);
+     TRACE("Change ownership for DCE! -> %p\n" , pdce);
      // NOTE: Windows sets W32PF_OWNDCCLEANUP and moves on.
      if (GreIsHandleValid(pdce->hDC))
      {
@@ -629,7 +629,8 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
      }
      else
      {
-         ERR("Attempted to change ownership of an DCEhDC 0x%x currently being destroyed!!!\n",pdce->hDC);
+         ERR("Attempted to change ownership of an DCEhDC %p currently being destroyed!!!\n",
+             pdce->hDC);
          Hit = TRUE;
      }
   }
@@ -651,7 +652,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 
   if (IsListEmpty(&pdce->List))
   {
-      ERR("List is Empty! DCE! -> %x\n" , pdce);
+      ERR("List is Empty! DCE! -> %p\n" , pdce);
       return NULL;
   }
 
@@ -710,10 +711,11 @@ DceFreeWindowDCE(PWND Window)
               pDCE->hwndCurrent = 0;
               pDCE->pwndOrg = pDCE->pwndClip = NULL;
 
-              TRACE("POWNED DCE going Cheap!! DCX_CACHE!! hDC-> %x \n", pDCE->hDC);
+              TRACE("POWNED DCE going Cheap!! DCX_CACHE!! hDC-> %p \n",
+                    pDCE->hDC);
               if (!GreSetDCOwner( pDCE->hDC, GDI_OBJ_HMGR_NONE))
               {
-                  ERR("Fail Owner Switch hDC-> %x \n", pDCE->hDC);
+                  ERR("Fail Owner Switch hDC-> %p \n", pDCE->hDC);
                   break;
               }
               /* Do not change owner so thread can clean up! */
@@ -726,7 +728,8 @@ DceFreeWindowDCE(PWND Window)
            }
            else
            {
-              ERR("Not POWNED or CLASSDC hwndCurrent -> %x \n", pDCE->hwndCurrent);
+              ERR("Not POWNED or CLASSDC hwndCurrent -> %p \n",
+                  pDCE->hwndCurrent);
               // ASSERT(FALSE); /* bug 5320 */
            }
         }
@@ -1017,7 +1020,7 @@ NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
   RETURN( UserGetDCEx(Wnd, ClipRegion, Flags));
 
 CLEANUP:
-  TRACE("Leave NtUserGetDCEx, ret=%i\n",_ret_);
+  TRACE("Leave NtUserGetDCEx, ret=%p\n", _ret_);
   UserLeave();
   END_CLEANUP;
 }
@@ -1043,7 +1046,7 @@ NtUserGetWindowDC(HWND hWnd)
 HDC APIENTRY
 NtUserGetDC(HWND hWnd)
 {
- TRACE("NtUGetDC -> %x:%x\n", hWnd, !hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE );
+ TRACE("NtUGetDC -> %p:%x\n", hWnd, !hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 
   return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }

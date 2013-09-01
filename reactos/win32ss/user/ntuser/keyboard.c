@@ -361,7 +361,7 @@ IntTranslateChar(WORD wVirtKey,
                 *pbLigature = (wch == WCH_LGTR);
                 *pwcTranslatedChar = wch;
 
-                TRACE("%d %04x: dwModNumber %08x Char %04x\n",
+                TRACE("%lu %04x: dwModNumber %08x Char %04x\n",
                       i, wVirtKey, dwModNumber, wch);
 
                 if (*pbDead)
@@ -614,7 +614,7 @@ NtUserGetAsyncKeyState(INT Key)
 
     UserLeave();
 
-    TRACE("Leave NtUserGetAsyncKeyState, ret=%i\n", wRet);
+    TRACE("Leave NtUserGetAsyncKeyState, ret=%u\n", wRet);
     return wRet;
 }
 
@@ -1257,7 +1257,7 @@ NtUserMapVirtualKeyEx(UINT uCode, UINT uType, DWORD keyboardId, HKL dwhkl)
         ret = IntMapVirtualKeyEx(uCode, uType, pKbdTbl);
 
     UserLeave();
-    TRACE("Leave NtUserMapVirtualKeyEx, ret=%i\n", ret);
+    TRACE("Leave NtUserMapVirtualKeyEx, ret=%u\n", ret);
     return ret;
 }
 
@@ -1315,7 +1315,7 @@ NtUserToUnicodeEx(
     pwszBuff = ExAllocatePoolWithTag(NonPagedPool, sizeof(WCHAR) * cchBuff, TAG_STRING);
     if (!pwszBuff)
     {
-        ERR("ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
+        ERR("ExAllocatePoolWithTag(%u) failed\n", sizeof(WCHAR) * cchBuff);
         return 0;
     }
     RtlZeroMemory(pwszBuff, sizeof(WCHAR) * cchBuff);
@@ -1443,7 +1443,7 @@ NtUserGetKeyNameText(LONG lParam, LPWSTR lpString, int cchSize)
 
 cleanup:
     UserLeave();
-    TRACE("Leave NtUserGetKeyNameText, ret=%i\n", dwRet);
+    TRACE("Leave NtUserGetKeyNameText, ret=%lu\n", dwRet);
     return dwRet;
 }
 
@@ -1489,7 +1489,7 @@ NtUserVkKeyScanEx(
     PKL pKl = NULL;
     DWORD i, dwModBits = 0, dwModNumber = 0, Ret = (DWORD)-1;
 
-    TRACE("NtUserVkKeyScanEx() wch %d, KbdLayout 0x%p\n", wch, dwhkl);
+    TRACE("NtUserVkKeyScanEx() wch %u, KbdLayout 0x%p\n", wch, dwhkl);
     UserEnterShared();
 
     if (bUsehKL)
@@ -1523,7 +1523,7 @@ NtUserVkKeyScanEx(
                 if (pVkToWch->wch[dwModNumber] == wch)
                 {
                     dwModBits = pKbdTbl->pCharModifiers->ModNumber[dwModNumber];
-                    TRACE("i %d wC %04x: dwModBits %08x dwModNumber %08x MaxModBits %08x\n",
+                    TRACE("i %lu wC %04x: dwModBits %08x dwModNumber %08x MaxModBits %08x\n",
                           i, wch, dwModBits, dwModNumber, pKbdTbl->pCharModifiers->wMaxModBits);
                     Ret = (dwModBits << 8) | (pVkToWch->VirtualKey & 0xFF);
                     goto Exit;

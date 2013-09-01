@@ -65,7 +65,7 @@ UserCreateWinstaDirectory()
     else
     {
         swprintf(wstrWindowStationsDir,
-                 L"%ws\\%ld%ws",
+                 L"%ws\\%lu%ws",
                  SESSION_DIR,
                  Peb->SessionId,
                  WINSTA_OBJ_DIR);
@@ -88,7 +88,7 @@ UserCreateWinstaDirectory()
       return Status;
    }
 
-   TRACE("Created directory %wZ for session %d\n", &gustrWindowStationsDir, Peb->SessionId);
+   TRACE("Created directory %wZ for session %lu\n", &gustrWindowStationsDir, Peb->SessionId);
 
    return Status;
 }
@@ -100,7 +100,7 @@ IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)Parameters->Object;
 
-   TRACE("Deleting window station (0x%X)\n", WinSta);
+   TRACE("Deleting window station (0x%p)\n", WinSta);
 
    UserEmptyClipboardData(WinSta);
 
@@ -457,7 +457,7 @@ NtUserCreateWindowStation(
       InitCursorImpl();
    }
 
-   TRACE("NtUserCreateWindowStation created object 0x%x with name %wZ handle 0x%x\n",
+   TRACE("NtUserCreateWindowStation created object %p with name %wZ handle %p\n",
           WindowStation, &WindowStationObject->Name, WindowStation);
    return WindowStation;
 }
@@ -510,7 +510,7 @@ NtUserOpenWindowStation(
       return 0;
    }
 
-   TRACE("Opened window station %wZ with handle 0x%x\n", ObjectAttributes->ObjectName, hwinsta);
+   TRACE("Opened window station %wZ with handle %p\n", ObjectAttributes->ObjectName, hwinsta);
 
    return hwinsta;
 }
@@ -544,7 +544,7 @@ NtUserCloseWindowStation(
    PWINSTATION_OBJECT Object;
    NTSTATUS Status;
 
-   TRACE("NtUserCloseWindowStation called (0x%x)\n", hWinSta);
+   TRACE("NtUserCloseWindowStation called (%p)\n", hWinSta);
 
 	if (hWinSta == UserGetProcessWindowStation())
 	{
@@ -560,13 +560,13 @@ NtUserCloseWindowStation(
 
    if (!NT_SUCCESS(Status))
    {
-      ERR("Validation of window station handle (0x%x) failed\n", hWinSta);
+      ERR("Validation of window station handle (%p) failed\n", hWinSta);
       return FALSE;
    }
 
    ObDereferenceObject(Object);
 
-   TRACE("Closing window station handle (0x%x)\n", hWinSta);
+   TRACE("Closing window station handle (%p)\n", hWinSta);
 
    Status = ObCloseHandle(hWinSta, UserMode);
    if (!NT_SUCCESS(Status))
@@ -633,7 +633,7 @@ NtUserGetObjectInformation(
    DWORD nDataSize = 0;
 
    /* try windowstation */
-   TRACE("Trying to open window station 0x%x\n", hObject);
+   TRACE("Trying to open window station %p\n", hObject);
    Status = ObReferenceObjectByHandle(
                hObject,
                0,
@@ -645,7 +645,7 @@ NtUserGetObjectInformation(
    if (Status == STATUS_OBJECT_TYPE_MISMATCH)
    {
       /* try desktop */
-      TRACE("Trying to open desktop 0x%x\n", hObject);
+      TRACE("Trying to open desktop %p\n", hObject);
       Status = IntValidateDesktopHandle(
                   hObject,
                   UserMode,
@@ -717,7 +717,7 @@ NtUserGetObjectInformation(
    /* try to copy data to caller */
    if (Status == STATUS_SUCCESS)
    {
-      TRACE("Trying to copy data to caller (len = %d, len needed = %d)\n", nLength, nDataSize);
+      TRACE("Trying to copy data to caller (len = %lu, len needed = %lu)\n", nLength, nDataSize);
       *nLengthNeeded = nDataSize;
       if (nLength >= nDataSize)
          Status = MmCopyToCaller(pvInformation, pvData, nDataSize);
@@ -835,8 +835,8 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
                                                  &NewWinSta);
        if (!NT_SUCCESS(Status))
        {
-          TRACE("Validation of window station handle (0x%X) failed\n",
-                 hWindowStation);
+          TRACE("Validation of window station handle (%p) failed\n",
+                hWindowStation);
           SetLastNtError(Status);
           return FALSE;
        }
@@ -914,8 +914,8 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
    PWINSTATION_OBJECT Object;
    NTSTATUS Status;
 
-   TRACE("About to set process window station with handle (0x%X)\n",
-          hWindowStation);
+   TRACE("About to set process window station with handle (%p)\n",
+         hWindowStation);
 
    if(PsGetCurrentProcessWin32Process() != LogonProcess)
    {
@@ -931,8 +931,8 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
                &Object);
    if (!NT_SUCCESS(Status))
    {
-      TRACE("Validation of window station handle (0x%X) failed\n",
-             hWindowStation);
+      TRACE("Validation of window station handle (%p) failed\n",
+            hWindowStation);
       SetLastNtError(Status);
       return FALSE;
    }
@@ -959,8 +959,8 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
    NTSTATUS Status;
    BOOL Ret;
 
-   TRACE("About to set process window station with handle (0x%X)\n",
-          hWindowStation);
+   TRACE("About to set process window station with handle (%p)\n",
+         hWindowStation);
 
    if(PsGetCurrentProcessWin32Process() != LogonProcess)
    {
@@ -976,8 +976,8 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
                &Object);
    if (!NT_SUCCESS(Status))
    {
-      TRACE("Validation of window station handle (0x%X) failed\n",
-             hWindowStation);
+      TRACE("Validation of window station handle (%p) failed\n",
+            hWindowStation);
       SetLastNtError(Status);
       return FALSE;
    }
@@ -1086,7 +1086,7 @@ BuildWindowStationNameList(
       ReturnLength += DirEntry->Name.Length + sizeof(WCHAR);
       EntryCount++;
    }
-   TRACE("Required size: %d Entry count: %d\n", ReturnLength, EntryCount);
+   TRACE("Required size: %lu Entry count: %lu\n", ReturnLength, EntryCount);
    if (NULL != pRequiredSize)
    {
       Status = MmCopyToCaller(pRequiredSize, &ReturnLength, sizeof(ULONG));
@@ -1205,7 +1205,7 @@ BuildDesktopNameList(
       if (DesktopName) ReturnLength += DesktopName->Length + sizeof(WCHAR);
       EntryCount++;
    }
-   TRACE("Required size: %d Entry count: %d\n", ReturnLength, EntryCount);
+   TRACE("Required size: %lu Entry count: %lu\n", ReturnLength, EntryCount);
    if (NULL != pRequiredSize)
    {
       Status = MmCopyToCaller(pRequiredSize, &ReturnLength, sizeof(ULONG));

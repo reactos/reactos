@@ -575,7 +575,7 @@ co_IntCreateScrollBars(PWND Window)
    Size = 3 * (sizeof(SBINFOEX));
    if(!(Window->pSBInfoex = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
    {
-      ERR("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->head.h);
+      ERR("Unable to allocate memory for scrollbar information for window %p\n", Window->head.h);
       return FALSE;
    }
 
@@ -583,7 +583,7 @@ co_IntCreateScrollBars(PWND Window)
 
    if(!(Window->pSBInfo = DesktopHeapAlloc( Window->head.rpdesk, sizeof(SBINFO))))
    {
-      ERR("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->head.h);
+      ERR("Unable to allocate memory for scrollbar information for window %p\n", Window->head.h);
       return FALSE;
    }
 
@@ -888,7 +888,7 @@ NtUserEnableScrollBar(
    if(wSBflags != SB_BOTH && !SBID_IS_VALID(wSBflags))
    {
       EngSetLastError(ERROR_INVALID_PARAMETER);
-      ERR("Trying to set scrollinfo for unknown scrollbar type %d", wSBflags);
+      ERR("Trying to set scrollinfo for unknown scrollbar type %u", wSBflags);
       RETURN(FALSE);
    }
 
@@ -913,7 +913,7 @@ NtUserEnableScrollBar(
    if(InfoH)
       Chg = (IntEnableScrollBar(TRUE, InfoH, wArrows) || Chg);
 
-   ERR("FIXME: EnableScrollBar wSBflags %d wArrows %d Chg %d\n",wSBflags,wArrows, Chg);
+   ERR("FIXME: EnableScrollBar wSBflags %u wArrows %u Chg %d\n", wSBflags, wArrows, Chg);
 // Done in user32:
 //   SCROLL_RefreshScrollBar( hwnd, nBar, TRUE, TRUE );
 
@@ -968,7 +968,7 @@ CLEANUP:
    if (Window)
       UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserSetScrollInfo, ret=%i\n",_ret_);
+   TRACE("Leave NtUserSetScrollInfo, ret=%lu\n", _ret_);
    UserLeave();
    END_CLEANUP;
 
@@ -998,7 +998,7 @@ NtUserShowScrollBar(HWND hWnd, int nBar, DWORD bShow)
    RETURN(ret);
 
 CLEANUP:
-   TRACE("Leave NtUserShowScrollBar,  ret%i\n",_ret_);
+   TRACE("Leave NtUserShowScrollBar,  ret%lu\n", _ret_);
    UserLeave();
    END_CLEANUP;
 
