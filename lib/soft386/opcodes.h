@@ -191,4 +191,12 @@ Soft386OpcodeShortJump
     UCHAR Opcode
 );
 
+BOOLEAN
+FASTCALL
+Soft386OpcodeMovRegImm
+(
+    PSOFT386_STATE State,
+    UCHAR Opcode
+);
+
 #endif // _OPCODES_H_

@@ -208,14 +208,14 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xB5 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xB6 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xB7 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB8 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xB9 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xBA NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xBB NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xBC NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xBD NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xBE NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xBF NOT SUPPORTED
+    Soft386OpcodeMovRegImm,
+    Soft386OpcodeMovRegImm,
+    Soft386OpcodeMovRegImm,
+    Soft386OpcodeMovRegImm,
+    Soft386OpcodeMovRegImm,
+    Soft386OpcodeMovRegImm,
+    Soft386OpcodeMovRegImm,
+    Soft386OpcodeMovRegImm,
     NULL, // TODO: OPCODE 0xC0 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xC1 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xC2 NOT SUPPORTED
@@ -1165,6 +1165,59 @@ Soft386OpcodeShortJump(PSOFT386_STATE State, UCHAR Opcode)
 
     /* Move the instruction pointer */        
     State->InstPtr.Long += Offset;
+
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeMovRegImm(PSOFT386_STATE State, UCHAR Opcode)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xF8) == 0xB8);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Size)
+    {
+        ULONG Value;
+
+        /* Fetch the dword */
+        if (!Soft386FetchDword(State, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Store the value in the register */
+        State->GeneralRegs[Opcode & 0x07].Long = Value;
+    }
+    else
+    {
+        USHORT Value;
+
+        /* Fetch the word */
+        if (!Soft386FetchWord(State, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Store the value in the register */
+        State->GeneralRegs[Opcode & 0x07].LowWord = Value;
+    }
 
     return TRUE;
 }
