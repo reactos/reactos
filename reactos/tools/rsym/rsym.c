@@ -914,12 +914,18 @@ CreateOutputFile(FILE *OutFile, void *InData,
     /* Each coff symbol is 18 bytes and the string table follows */
     char *StringTable = (char *)InData + 
         InFileHeader->PointerToSymbolTable + 18 * InFileHeader->NumberOfSymbols;
+    ULONG StringTableLength = 0;
+    ULONG StringTableLocation;
 
     StartOfRawData = 0;
     for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
     {
         const BYTE *SectionName = GetSectionName(StringTable,
                                                  InSectionHeaders[Section].Name);
+        if (InSectionHeaders[Section].Name[0] == '/')
+        {
+            StringTableLength = atoi(InSectionHeaders[Section].Name+1) + strlen(SectionName) + 1;
+        }
         if ((StartOfRawData == 0 || InSectionHeaders[Section].PointerToRawData < StartOfRawData)
             && InSectionHeaders[Section].PointerToRawData != 0
             && (strncmp((char *) SectionName, ".stab", 5)) != 0
@@ -979,6 +985,9 @@ CreateOutputFile(FILE *OutFile, void *InData,
     OutOptHeader->SizeOfImage = 0;
     RosSymOffset = 0;
     OutRelocSection = NULL;
+
+    StringTableLocation = StartOfRawData;
+
     for (Section = 0; Section < InFileHeader->NumberOfSections; Section++)
     {
         const BYTE *SectionName = GetSectionName(StringTable,
@@ -1004,6 +1013,7 @@ CreateOutputFile(FILE *OutFile, void *InData,
             {
                 OutRelocSection = CurrentSectionHeader;
             }
+            StringTableLocation = CurrentSectionHeader->PointerToRawData + CurrentSectionHeader->SizeOfRawData;
             (OutFileHeader->NumberOfSections)++;
             CurrentSectionHeader++;
         }
@@ -1062,11 +1072,22 @@ CreateOutputFile(FILE *OutFile, void *InData,
         memset((char *) PaddedRosSym + RosSymLength,
                '\0',
                RosSymFileLength - RosSymLength);
+
+        /* Position the string table after our new section */
+        StringTableLocation = RosSymOffset + RosSymFileLength;
     }
     else
     {
         PaddedRosSym = NULL;
     }
+
+    /* Set the string table area in the header if we need it */
+    if (StringTableLength)
+    {
+        OutFileHeader->PointerToSymbolTable = StringTableLocation;
+        OutFileHeader->NumberOfSymbols = 0;
+    }
+
     CheckSum = 0;
     for (i = 0; i < StartOfRawData / 2; i++)
     {
@@ -1139,6 +1160,14 @@ CreateOutputFile(FILE *OutFile, void *InData,
             }
         }
     }
+
+    fseek(OutFile, OutFileHeader->PointerToSymbolTable, 0);
+    /* COFF string section is preceeded by a length */
+    fwrite((char*)&StringTableLength, 1, sizeof(StringTableLength), OutFile);
+    /* We just copy enough of the string table to contain the strings we want
+       The string table length technically counts as part of the string table
+       space itself. */
+    fwrite(StringTable+4, 1, StringTableLength, OutFile);
 
     if (PaddedRosSym)
     {
