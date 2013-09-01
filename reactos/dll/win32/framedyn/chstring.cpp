@@ -1328,7 +1328,7 @@ WCHAR CHString::operator[](int nIndex) const
 /*
  * @implemented
  */
-CHString::operator LPWSTR()
+CHString::operator LPCWSTR() const
 {
     return m_pchData;
 }

@@ -84,7 +84,7 @@ public:
 
     WCHAR operator[](int nIndex) const;
 
-    operator LPWSTR();
+    operator LPCWSTR() const;
 
     friend CHString WINAPI operator+(WCHAR ch, const CHString& string) throw (CHeap_Exception);
     friend CHString WINAPI operator+(const CHString& string, WCHAR ch) throw (CHeap_Exception);
@@ -108,5 +108,23 @@ protected:
     int LoadStringW(UINT nID, LPWSTR lpszBuf, UINT nMaxBuf) throw (CHeap_Exception);
     static int WINAPI SafeStrlen(LPCWSTR lpsz);
 };
+
+inline BOOL operator==(const CHString& s1, LPCWSTR s2) { return s1.Compare(s2) == 0; }
+inline BOOL operator==(const CHString& s1, const CHString& s2) { return s1.Compare(s2) == 0; }
+
+inline BOOL operator!=(const CHString& s1, LPCWSTR s2) { return s1.Compare(s2) != 0; }
+inline BOOL operator!=(const CHString& s1, const CHString& s2) { return s1.Compare(s2) != 0; }
+
+inline BOOL operator<(const CHString& s1, LPCWSTR s2) { return s1.Compare(s2) < 0; }
+inline BOOL operator<(const CHString& s1, const CHString& s2) { return s1.Compare(s2) < 0; }
+
+inline BOOL operator>(const CHString& s1, LPCWSTR s2) { return s1.Compare(s2) > 0; }
+inline BOOL operator>(const CHString& s1, const CHString& s2) { return s1.Compare(s2) > 0; }
+
+inline BOOL operator<=(const CHString& s1, LPCWSTR s2) { return s1.Compare(s2) <= 0; }
+inline BOOL operator<=(const CHString& s1, const CHString& s2) { return s1.Compare(s2) <= 0; }
+
+inline BOOL operator>=(const CHString& s1, LPCWSTR s2) { return s1.Compare(s2) >= 0; }
+inline BOOL operator>=(const CHString& s1, const CHString& s2) { return s1.Compare(s2) >= 0; }
 
 #endif
