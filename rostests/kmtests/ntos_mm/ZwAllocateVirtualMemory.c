@@ -238,8 +238,7 @@ SimpleAllocation(VOID)
     //////////////////////////////////////////////////////////////////////////
     // GUARD PAGES
     //////////////////////////////////////////////////////////////////////////
-/* FIXME: We don't support guard pages. See CORE-6639, ROSTESTS-107 */
-#ifdef ROSTESTS_107_FIXED
+
     RegionSize = 1000;
     Base = NULL;
     ZwAllocateVirtualMemory(NtCurrentProcess(), &Base, 0, &RegionSize, (MEM_COMMIT | MEM_RESERVE), (PAGE_GUARD | PAGE_READWRITE));
@@ -257,7 +256,6 @@ SimpleAllocation(VOID)
 
     RegionSize = 0;
     ZwFreeVirtualMemory(NtCurrentProcess(), &Base, &RegionSize, MEM_RELEASE);
-#endif /* ROSTESTS_107_FIXED */
 
     return Status;
 }
