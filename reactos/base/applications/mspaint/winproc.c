@@ -20,7 +20,7 @@ selectTool(int tool)
     ShowWindow(hSelection, SW_HIDE);
     activeTool = tool;
     pointSP = 0;                // resets the point-buffer of the polygon and bezier functions
-    SendMessage(hToolSettings, WM_PAINT, 0, 0);
+    InvalidateRect(hToolSettings, NULL, TRUE);
     ShowWindow(hTrackbarZoom, (tool == 6) ? SW_SHOW : SW_HIDE);
 }
 
@@ -133,6 +133,31 @@ alignChildrenToMainWindow()
     MoveWindow(hPalWin, x, 9, 255, 32, TRUE);
 }
 
+void
+saveImage(BOOL overwrite)
+{
+    if (isAFile && overwrite)
+    {
+        SaveDIBToFile(hBms[currInd], filepathname, hDrawingDC, &fileTime, &fileSize, fileHPPM,
+                      fileVPPM);
+        imageSaved = TRUE;
+    }
+    else if (GetSaveFileName(&sfn) != 0)
+    {
+        TCHAR tempstr[1000];
+        TCHAR resstr[100];
+        SaveDIBToFile(hBms[currInd], sfn.lpstrFile, hDrawingDC, &fileTime, &fileSize,
+                      fileHPPM, fileVPPM);
+        CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
+        CopyMemory(filepathname, sfn.lpstrFile, sizeof(filepathname));
+        LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
+        _stprintf(tempstr, resstr, filename);
+        SetWindowText(hMainWnd, tempstr);
+        isAFile = TRUE;
+        imageSaved = TRUE;
+    }
+}
+
 BOOL drawing;
 
 LRESULT CALLBACK
@@ -170,8 +195,9 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         DestroyWindow(hwnd);
                         break;
                     case IDYES:
-                        SendMessage(hwnd, WM_COMMAND, IDM_FILESAVEAS, 0);
-                        DestroyWindow(hwnd);
+                        saveImage(FALSE);
+                        if (imageSaved)
+                            DestroyWindow(hwnd);
                         break;
                 }
             }
@@ -271,6 +297,10 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM800,
                           (zoom == 8000) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
 
+            CheckMenuItem(GetMenu(hMainWnd), IDM_COLORSMODERNPALETTE,
+                          (selectedPalette == 1) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
+            CheckMenuItem(GetMenu(hMainWnd), IDM_COLORSOLDPALETTE,
+                          (selectedPalette == 2) ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
             break;
 
         case WM_SIZE:
@@ -280,6 +310,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
                 SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
                 alignChildrenToMainWindow();
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             if (hwnd == hImageArea)
             {
@@ -431,8 +462,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     DeleteObject(SelectObject(hdc, oldPen));
                 }
                 ReleaseDC(hImageArea, hdc);
-                SendMessage(hSelection, WM_PAINT, 0, 0);
-                SendMessage(hwndMiniature, WM_PAINT, 0, 0);
+                InvalidateRect(hSelection, NULL, FALSE);
+                InvalidateRect(hwndMiniature, NULL, FALSE);
             }
             else if (hwnd == hwndMiniature)
             {
@@ -490,7 +521,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SendMessage(hwnd, WM_LBUTTONUP, wParam, lParam);
                     undo();
                 }
-                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                InvalidateRect(hImageArea, NULL, FALSE);
                 if ((activeTool == TOOL_ZOOM) && (zoom < 8000))
                     zoomTo(zoom * 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             }
@@ -511,7 +542,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SendMessage(hwnd, WM_RBUTTONUP, wParam, lParam);
                     undo();
                 }
-                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                InvalidateRect(hImageArea, NULL, FALSE);
                 if ((activeTool == TOOL_ZOOM) && (zoom > 125))
                     zoomTo(zoom / 2, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             }
@@ -524,14 +555,14 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 drawing = FALSE;
                 endPaintingL(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom, fgColor,
                              bgColor);
-                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                InvalidateRect(hImageArea, NULL, FALSE);
                 if (activeTool == TOOL_COLOR)
                 {
                     int tempColor =
                         GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom);
                     if (tempColor != CLR_INVALID)
                         fgColor = tempColor;
-                    SendMessage(hPalWin, WM_PAINT, 0, 0);
+                    InvalidateRect(hPalWin, NULL, FALSE);
                 }
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
             }
@@ -544,14 +575,14 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 drawing = FALSE;
                 endPaintingR(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom, fgColor,
                              bgColor);
-                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                InvalidateRect(hImageArea, NULL, FALSE);
                 if (activeTool == TOOL_COLOR)
                 {
                     int tempColor =
                         GetPixel(hDrawingDC, GET_X_LPARAM(lParam) * 1000 / zoom, GET_Y_LPARAM(lParam) * 1000 / zoom);
                     if (tempColor != CLR_INVALID)
                         bgColor = tempColor;
-                    SendMessage(hPalWin, WM_PAINT, 0, 0);
+                    InvalidateRect(hPalWin, NULL, FALSE);
                 }
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) "");
             }
@@ -586,7 +617,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                     if (activeTool == TOOL_ZOOM)
                     {
-                        SendMessage(hImageArea, WM_PAINT, 0, 0);
+                        InvalidateRect(hImageArea, NULL, FALSE);
+                        UpdateWindow(hImageArea);
                         drawZoomFrame(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
                     }
 
@@ -606,19 +638,19 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (drawing)
                 {
                     /* values displayed in statusbar */
-                    LONG xRel = xNow - startX;
-                    LONG yRel = yNow - startY;
+                    LONG xRel = xNow - start.x;
+                    LONG yRel = yNow - start.y;
                     /* freesel, rectsel and text tools always show numbers limited to fit into image area */
                     if ((activeTool == TOOL_FREESEL) || (activeTool == TOOL_RECTSEL) || (activeTool == TOOL_TEXT))
                     {
                         if (xRel < 0)
-                            xRel = (xNow < 0) ? -startX : xRel;
+                            xRel = (xNow < 0) ? -start.x : xRel;
                         else if (xNow > imgXRes)
-                            xRel = imgXRes-startX;
+                            xRel = imgXRes-start.x;
                         if (yRel < 0)
-                            yRel = (yNow < 0) ? -startY : yRel;
+                            yRel = (yNow < 0) ? -start.y : yRel;
                         else if (yNow > imgYRes)
-                             yRel = imgYRes-startY;
+                             yRel = imgYRes-start.y;
                     }
                     /* rectsel and shape tools always show non-negative numbers when drawing */
                     if ((activeTool == TOOL_RECTSEL) || (activeTool == TOOL_SHAPE))
@@ -646,7 +678,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if ((wParam & MK_LBUTTON) != 0)
                     {
                         whilePaintingL(hDrawingDC, xNow, yNow, fgColor, bgColor);
-                        SendMessage(hImageArea, WM_PAINT, 0, 0);
+                        InvalidateRect(hImageArea, NULL, FALSE);
                         if ((activeTool >= TOOL_TEXT) || (activeTool == TOOL_RECTSEL) || (activeTool == TOOL_FREESEL))
                         {
                             TCHAR sizeStr[100];
@@ -659,7 +691,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if ((wParam & MK_RBUTTON) != 0)
                     {
                         whilePaintingR(hDrawingDC, xNow, yNow, fgColor, bgColor);
-                        SendMessage(hImageArea, WM_PAINT, 0, 0);
+                        InvalidateRect(hImageArea, NULL, FALSE);
                         if (activeTool >= TOOL_TEXT)
                         {
                             TCHAR sizeStr[100];
@@ -676,7 +708,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_MOUSELEAVE:
             SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) _T(""));
             if (activeTool == TOOL_ZOOM)
-                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                InvalidateRect(hImageArea, NULL, FALSE);
             break;
 
         // menu and button events
@@ -726,7 +758,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 imageSaved = TRUE;
                                 break;
                             case IDYES:
-                                SendMessage(hwnd, WM_COMMAND, IDM_FILESAVEAS, 0);
+                                saveImage(FALSE);
                                 break;
                             case IDCANCEL:
                                 reset = FALSE;
@@ -736,7 +768,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (reset && imageSaved)
                     {
                         Rectangle(hDrawingDC, 0 - 1, 0 - 1, imgXRes + 1, imgYRes + 1);
-                        SendMessage(hImageArea, WM_PAINT, 0, 0);
+                        InvalidateRect(hImageArea, NULL, FALSE);
                         updateCanvasAndScrollbars();
                         clearHistory();
                     }
@@ -764,30 +796,10 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                     break;
                 case IDM_FILESAVE:
-                    if (isAFile)
-                    {
-                        SaveDIBToFile(hBms[currInd], filepathname, hDrawingDC, &fileTime, &fileSize, fileHPPM,
-                                      fileVPPM);
-                        imageSaved = TRUE;
-                    }
-                    else
-                        SendMessage(hwnd, WM_COMMAND, IDM_FILESAVEAS, 0);
+                    saveImage(TRUE);
                     break;
                 case IDM_FILESAVEAS:
-                    if (GetSaveFileName(&sfn) != 0)
-                    {
-                        TCHAR tempstr[1000];
-                        TCHAR resstr[100];
-                        SaveDIBToFile(hBms[currInd], sfn.lpstrFile, hDrawingDC, &fileTime, &fileSize,
-                                      fileHPPM, fileVPPM);
-                        CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
-                        CopyMemory(filepathname, sfn.lpstrFile, sizeof(filepathname));
-                        LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
-                        _stprintf(tempstr, resstr, filename);
-                        SetWindowText(hMainWnd, tempstr);
-                        isAFile = TRUE;
-                        imageSaved = TRUE;
-                    }
+                    saveImage(FALSE);
                     break;
                 case IDM_FILEASWALLPAPERPLANE:
                     SetWallpaper(filepathname, 1, 1);
@@ -800,11 +812,11 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 case IDM_EDITUNDO:
                     undo();
-                    SendMessage(hImageArea, WM_PAINT, 0, 0);
+                    InvalidateRect(hImageArea, NULL, FALSE);
                     break;
                 case IDM_EDITREDO:
                     redo();
-                    SendMessage(hImageArea, WM_PAINT, 0, 0);
+                    InvalidateRect(hImageArea, NULL, FALSE);
                     break;
                 case IDM_EDITCOPY:
                     OpenClipboard(hMainWnd);
@@ -877,8 +889,18 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (ChooseColor(&choosecolor))
                     {
                         fgColor = choosecolor.rgbResult;
-                        SendMessage(hPalWin, WM_PAINT, 0, 0);
+                        InvalidateRect(hPalWin, NULL, FALSE);
                     }
+                    break;
+                case IDM_COLORSMODERNPALETTE:
+                    selectedPalette = 1;
+                    CopyMemory(palColors, modernPalColors, sizeof(palColors));
+                    InvalidateRect(hPalWin, NULL, FALSE);
+                    break;
+                case IDM_COLORSOLDPALETTE:
+                    selectedPalette = 2;
+                    CopyMemory(palColors, oldPalColors, sizeof(palColors));
+                    InvalidateRect(hPalWin, NULL, FALSE);
                     break;
                 case IDM_IMAGEINVERTCOLORS:
                 {
@@ -886,13 +908,13 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     newReversible();
                     SetRect(&tempRect, 0, 0, imgXRes, imgYRes);
                     InvertRect(hDrawingDC, &tempRect);
-                    SendMessage(hImageArea, WM_PAINT, 0, 0);
+                    InvalidateRect(hImageArea, NULL, FALSE);
                     break;
                 }
                 case IDM_IMAGEDELETEIMAGE:
                     newReversible();
                     Rect(hDrawingDC, 0, 0, imgXRes, imgYRes, bgColor, bgColor, 0, TRUE);
-                    SendMessage(hImageArea, WM_PAINT, 0, 0);
+                    InvalidateRect(hImageArea, NULL, FALSE);
                     break;
                 case IDM_IMAGEROTATEMIRROR:
                     switch (mirrorRotateDlg())
@@ -916,7 +938,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 newReversible();
                                 StretchBlt(hDrawingDC, imgXRes - 1, 0, -imgXRes, imgYRes, hDrawingDC, 0, 0,
                                            imgXRes, imgYRes, SRCCOPY);
-                                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                                InvalidateRect(hImageArea, NULL, FALSE);
                             }
                             break;
                         case 2: /* flip vertically */
@@ -937,7 +959,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 newReversible();
                                 StretchBlt(hDrawingDC, 0, imgYRes - 1, imgXRes, -imgYRes, hDrawingDC, 0, 0,
                                            imgXRes, imgYRes, SRCCOPY);
-                                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                                InvalidateRect(hImageArea, NULL, FALSE);
                             }
                             break;
                         case 3: /* rotate 90 degrees */
@@ -960,7 +982,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 newReversible();
                                 StretchBlt(hDrawingDC, imgXRes - 1, imgYRes - 1, -imgXRes, -imgYRes, hDrawingDC,
                                            0, 0, imgXRes, imgYRes, SRCCOPY);
-                                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                                InvalidateRect(hImageArea, NULL, FALSE);
                             }
                             break;
                         case 5: /* rotate 270 degrees */
@@ -969,29 +991,27 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 case IDM_IMAGEATTRIBUTES:
                 {
-                    int retVal = attributesDlg();
-                    if ((LOWORD(retVal) != 0) && (HIWORD(retVal) != 0))
+                    if (attributesDlg())
                     {
-                        cropReversible(LOWORD(retVal), HIWORD(retVal), 0, 0);
+                        cropReversible(widthSetInDlg, heightSetInDlg, 0, 0);
                         updateCanvasAndScrollbars();
                     }
                     break;
                 }
-                case IDM_IMAGECHANGESIZE:
+                case IDM_IMAGESTRETCHSKEW:
                 {
-                    int retVal = changeSizeDlg();
-                    if ((LOWORD(retVal) != 0) && (HIWORD(retVal) != 0))
+                    if (changeSizeDlg())
                     {
                         insertReversible(CopyImage(hBms[currInd], IMAGE_BITMAP,
-                                                   imgXRes * LOWORD(retVal) / 100,
-                                                   imgYRes * HIWORD(retVal) / 100, 0));
+                                                   imgXRes * stretchSkew.percentage.x / 100,
+                                                   imgYRes * stretchSkew.percentage.y / 100, 0));
                         updateCanvasAndScrollbars();
                     }
                     break;
                 }
                 case IDM_IMAGEDRAWOPAQUE:
                     transpBg = 1 - transpBg;
-                    SendMessage(hToolSettings, WM_PAINT, 0, 0);
+                    InvalidateRect(hToolSettings, NULL, TRUE);
                     break;
                 case IDM_IMAGECROP:
                     insertReversible(CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
@@ -1013,7 +1033,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_VIEWSHOWGRID:
                     showGrid = !showGrid;
-                    SendMessage(hImageArea, WM_PAINT, 0, 0);
+                    InvalidateRect(hImageArea, NULL, FALSE);
                     break;
                 case IDM_VIEWSHOWMINIATURE:
                     showMiniature = !showMiniature;

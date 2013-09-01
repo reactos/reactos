@@ -77,10 +77,13 @@ ATTDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             TCHAR strrc[100];
             TCHAR res[100];
 
+            widthSetInDlg = imgXRes;
+            heightSetInDlg = imgYRes;
+
             CheckDlgButton(hwnd, IDD_ATTRIBUTESRB3, BST_CHECKED);
             CheckDlgButton(hwnd, IDD_ATTRIBUTESRB5, BST_CHECKED);
-            SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, imgXRes, FALSE);
-            SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, imgYRes, FALSE);
+            SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, widthSetInDlg, FALSE);
+            SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, heightSetInDlg, FALSE);
 
             if (isAFile)
             {
@@ -108,19 +111,84 @@ ATTDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwnd,
-                              GetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, NULL,
-                                            FALSE) | (GetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, NULL,
-                                                                    FALSE) << 16));
+                    EndDialog(hwnd, 1);
                     break;
                 case IDCANCEL:
                     EndDialog(hwnd, 0);
                     break;
                 case IDD_ATTRIBUTESSTANDARD:
+                    widthSetInDlg = imgXRes;
+                    heightSetInDlg = imgYRes;
                     CheckDlgButton(hwnd, IDD_ATTRIBUTESRB3, BST_CHECKED);
                     CheckDlgButton(hwnd, IDD_ATTRIBUTESRB5, BST_CHECKED);
-                    SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, imgXRes, FALSE);
-                    SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, imgYRes, FALSE);
+                    SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, widthSetInDlg, FALSE);
+                    SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, heightSetInDlg, FALSE);
+                    break;
+                case IDD_ATTRIBUTESRB1:
+                {
+                    TCHAR number[100];
+                    _stprintf(number, _T("%.3lf"), widthSetInDlg / (0.0254 * fileHPPM));
+                    SetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT1, number);
+                    _stprintf(number, _T("%.3lf"), heightSetInDlg / (0.0254 * fileVPPM));
+                    SetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT2, number);
+                    break;
+                }
+                case IDD_ATTRIBUTESRB2:
+                {
+                    TCHAR number[100];
+                    _stprintf(number, _T("%.3lf"), widthSetInDlg * 100.0 / fileHPPM);
+                    SetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT1, number);
+                    _stprintf(number, _T("%.3lf"), heightSetInDlg * 100.0 / fileVPPM);
+                    SetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT2, number);
+                    break;
+                }
+                case IDD_ATTRIBUTESRB3:
+                    SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, widthSetInDlg, FALSE);
+                    SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, heightSetInDlg, FALSE);
+                    break;
+                case IDD_ATTRIBUTESEDIT1:
+                    if (Edit_GetModify((HWND)lParam))
+                    {
+                        TCHAR tempS[100];
+                        if (IsDlgButtonChecked(hwnd, IDD_ATTRIBUTESRB1))
+                        {
+                            GetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT1, tempS, SIZEOF(tempS));
+                            widthSetInDlg = max(1, (int) (_tcstod(tempS, NULL) * fileHPPM * 0.0254));
+                        }
+                        else if (IsDlgButtonChecked(hwnd, IDD_ATTRIBUTESRB2))
+                        {
+                            GetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT1, tempS, SIZEOF(tempS));
+                            widthSetInDlg = max(1, (int) (_tcstod(tempS, NULL) * fileHPPM / 100));
+                        }
+                        else if (IsDlgButtonChecked(hwnd, IDD_ATTRIBUTESRB3))
+                        {
+                            GetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT1, tempS, SIZEOF(tempS));
+                            widthSetInDlg = max(1, _tstoi(tempS));
+                        }
+                        Edit_SetModify((HWND)lParam, FALSE);
+                    }
+                    break;
+                case IDD_ATTRIBUTESEDIT2:
+                    if (Edit_GetModify((HWND)lParam))
+                    {
+                        TCHAR tempS[100];
+                        if (IsDlgButtonChecked(hwnd, IDD_ATTRIBUTESRB1))
+                        {
+                            GetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT2, tempS, SIZEOF(tempS));
+                            heightSetInDlg = max(1, (int) (_tcstod(tempS, NULL) * fileVPPM * 0.0254));
+                        }
+                        else if (IsDlgButtonChecked(hwnd, IDD_ATTRIBUTESRB2))
+                        {
+                            GetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT2, tempS, SIZEOF(tempS));
+                            heightSetInDlg = max(1, (int) (_tcstod(tempS, NULL) * fileVPPM / 100));
+                        }
+                        else if (IsDlgButtonChecked(hwnd, IDD_ATTRIBUTESRB3))
+                        {
+                            GetDlgItemText(hwnd, IDD_ATTRIBUTESEDIT2, tempS, SIZEOF(tempS));
+                            heightSetInDlg = max(1, _tstoi(tempS));
+                        }
+                        Edit_SetModify((HWND)lParam, FALSE);
+                    }
                     break;
             }
             break;
@@ -142,8 +210,10 @@ CHSIZEDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
         case WM_INITDIALOG:
-            SetDlgItemInt(hwnd, IDD_CHANGESIZEEDIT1, 100, FALSE);
-            SetDlgItemInt(hwnd, IDD_CHANGESIZEEDIT2, 100, FALSE);
+            SetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITHSTRETCH, 100, FALSE);
+            SetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITVSTRETCH, 100, FALSE);
+            SetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITHSKEW, 0, FALSE);
+            SetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITVSKEW, 0, FALSE);
             return TRUE;
         case WM_CLOSE:
             EndDialog(hwnd, 0);
@@ -152,11 +222,34 @@ CHSIZEDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwnd,
-                              GetDlgItemInt(hwnd, IDD_CHANGESIZEEDIT1, NULL,
-                                            FALSE) | (GetDlgItemInt(hwnd, IDD_CHANGESIZEEDIT2, NULL,
-                                                                    FALSE) << 16));
+                {
+                    TCHAR strrcIntNumbers[100];
+                    TCHAR strrcPercentage[100];
+                    TCHAR strrcAngle[100];
+                    BOOL tr1, tr2, tr3, tr4;
+
+                    LoadString(hProgInstance, IDS_INTNUMBERS, strrcIntNumbers, sizeof(strrcIntNumbers));
+                    LoadString(hProgInstance, IDS_PERCENTAGE, strrcPercentage, sizeof(strrcPercentage));
+                    LoadString(hProgInstance, IDS_ANGLE, strrcAngle, sizeof(strrcAngle));
+
+                    stretchSkew.percentage.x = GetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITHSTRETCH, &tr1, FALSE);
+                    stretchSkew.percentage.y = GetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITVSTRETCH, &tr2, FALSE);
+                    stretchSkew.angle.x = GetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITHSKEW, &tr3, TRUE);
+                    stretchSkew.angle.y = GetDlgItemInt(hwnd, IDD_STRETCHSKEWEDITVSKEW, &tr4, TRUE);
+
+                    if (!(tr1 && tr2 && tr3 && tr4))
+                        MessageBox(hwnd, strrcIntNumbers, NULL, MB_ICONEXCLAMATION);
+                    else if (stretchSkew.percentage.x < 1 || stretchSkew.percentage.x > 500
+                        || stretchSkew.percentage.y < 1 || stretchSkew.percentage.y > 500)
+                        MessageBox(hwnd, strrcPercentage, NULL, MB_ICONEXCLAMATION);
+                    else if (stretchSkew.angle.x < -89 || stretchSkew.angle.x > 89
+                        || stretchSkew.angle.y < -89 || stretchSkew.angle.y > 89)
+                        MessageBox(hwnd, strrcAngle, NULL, MB_ICONEXCLAMATION);
+                    else
+                        EndDialog(hwnd, 1);
+
                     break;
+                }
                 case IDCANCEL:
                     EndDialog(hwnd, 0);
                     break;
@@ -171,5 +264,5 @@ CHSIZEDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 int
 changeSizeDlg()
 {
-    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_CHANGESIZE), hMainWnd, (DLGPROC) CHSIZEDlgWinProc);
+    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_STRETCHSKEW), hMainWnd, (DLGPROC) CHSIZEDlgWinProc);
 }

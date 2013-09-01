@@ -63,37 +63,37 @@ PalWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
         case WM_LBUTTONDOWN:
-            if (LOWORD(lParam) >= 31)
+            if (GET_X_LPARAM(lParam) >= 31)
             {
-                fgColor = palColors[(LOWORD(lParam) - 31) / 16 + (HIWORD(lParam) / 16) * 14];
-                SendMessage(hwnd, WM_PAINT, 0, 0);
+                fgColor = palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14];
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         case WM_RBUTTONDOWN:
-            if (LOWORD(lParam) >= 31)
+            if (GET_X_LPARAM(lParam) >= 31)
             {
-                bgColor = palColors[(LOWORD(lParam) - 31) / 16 + (HIWORD(lParam) / 16) * 14];
-                SendMessage(hwnd, WM_PAINT, 0, 0);
+                bgColor = palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14];
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         case WM_LBUTTONDBLCLK:
-            if (LOWORD(lParam) >= 31)
+            if (GET_X_LPARAM(lParam) >= 31)
                 if (ChooseColor(&choosecolor))
                 {
-                    palColors[(LOWORD(lParam) - 31) / 16 + (HIWORD(lParam) / 16) * 14] =
+                    palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14] =
                         choosecolor.rgbResult;
                     fgColor = choosecolor.rgbResult;
-                    SendMessage(hwnd, WM_PAINT, 0, 0);
+                    InvalidateRect(hwnd, NULL, FALSE);
                 }
             break;
         case WM_RBUTTONDBLCLK:
-            if (LOWORD(lParam) >= 31)
+            if (GET_X_LPARAM(lParam) >= 31)
                 if (ChooseColor(&choosecolor))
                 {
-                    palColors[(LOWORD(lParam) - 31) / 16 + (HIWORD(lParam) / 16) * 14] =
+                    palColors[(GET_X_LPARAM(lParam) - 31) / 16 + (GET_Y_LPARAM(lParam) / 16) * 14] =
                         choosecolor.rgbResult;
                     bgColor = choosecolor.rgbResult;
-                    SendMessage(hwnd, WM_PAINT, 0, 0);
+                    InvalidateRect(hwnd, NULL, FALSE);
                 }
             break;
 

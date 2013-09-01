@@ -72,8 +72,8 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
         case WM_LBUTTONDOWN:
-            xPos = LOWORD(lParam);
-            yPos = HIWORD(lParam);
+            xPos = GET_X_LPARAM(lParam);
+            yPos = GET_Y_LPARAM(lParam);
             SetCapture(hwnd);
             if (action != 0)
                 SetCursor(LoadCursor(NULL, cursors[action]));
@@ -86,8 +86,8 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 int xDelta;
                 int yDelta;
                 resetToU1();
-                xFrac += (short)LOWORD(lParam) - xPos;
-                yFrac += (short)HIWORD(lParam) - yPos;
+                xFrac += GET_X_LPARAM(lParam) - xPos;
+                yFrac += GET_Y_LPARAM(lParam) - yPos;
                 if (zoom < 1000)
                 {
                     xDelta = xFrac * 1000 / zoom;
@@ -170,17 +170,17 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                             hSelDC, 0, 0, tempMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
                     DeleteObject(tempMask);
                 }
-                SendMessage(hImageArea, WM_PAINT, 0, 0);
-                xPos = LOWORD(lParam);
-                yPos = HIWORD(lParam);
+                InvalidateRect(hImageArea, NULL, FALSE);
+                xPos = GET_X_LPARAM(lParam);
+                yPos = GET_Y_LPARAM(lParam);
                 //SendMessage(hwnd, WM_PAINT, 0, 0);
             }
             else
             {
                 int w = rectSel_dest[2] * zoom / 1000 + 6;
                 int h = rectSel_dest[3] * zoom / 1000 + 6;
-                xPos = LOWORD(lParam);
-                yPos = HIWORD(lParam);
+                xPos = GET_X_LPARAM(lParam);
+                yPos = GET_Y_LPARAM(lParam);
                 SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);
                 action = identifyCorner(xPos, yPos, w, h);
                 if (action != 0)
