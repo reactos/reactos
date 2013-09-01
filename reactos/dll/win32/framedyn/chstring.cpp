@@ -771,7 +771,7 @@ int CHString::GetLength() const
  */
 void CHString::Init()
 {
-    m_pchData == afxPchNil;
+    m_pchData = afxPchNil;
 }
 
 /*
@@ -1336,7 +1336,7 @@ CHString::operator LPWSTR()
 /*
  * @implemented
  */
-CHString operator+(WCHAR ch, const CHString& string) throw (CHeap_Exception)
+CHString WINAPI operator+(WCHAR ch, const CHString& string) throw (CHeap_Exception)
 {
     CHString NewString;
 
@@ -1349,7 +1349,7 @@ CHString operator+(WCHAR ch, const CHString& string) throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString operator+(const CHString& string, WCHAR ch) throw (CHeap_Exception)
+CHString WINAPI operator+(const CHString& string, WCHAR ch) throw (CHeap_Exception)
 {
     CHString NewString;
 
@@ -1362,7 +1362,7 @@ CHString operator+(const CHString& string, WCHAR ch) throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString operator+(const CHString& string, LPCWSTR lpsz) throw (CHeap_Exception)
+CHString WINAPI operator+(const CHString& string, LPCWSTR lpsz) throw (CHeap_Exception)
 {
     int Len;
     CHString NewString;
@@ -1378,7 +1378,7 @@ CHString operator+(const CHString& string, LPCWSTR lpsz) throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString operator+(LPCWSTR lpsz, const CHString& string) throw (CHeap_Exception)
+CHString WINAPI operator+(LPCWSTR lpsz, const CHString& string) throw (CHeap_Exception)
 {
     int Len;
     CHString NewString;
@@ -1394,7 +1394,7 @@ CHString operator+(LPCWSTR lpsz, const CHString& string) throw (CHeap_Exception)
 /*
  * @implemented
  */
-CHString operator+(const CHString& string1, const CHString& string2) throw (CHeap_Exception)
+CHString WINAPI operator+(const CHString& string1, const CHString& string2) throw (CHeap_Exception)
 {
     CHString NewString;
 
