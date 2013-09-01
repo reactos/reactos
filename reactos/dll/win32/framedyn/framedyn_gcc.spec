@@ -1,5 +1,5 @@
 @ thiscall ?AllocBeforeWrite@CHString@@IAEXH@Z(long) _ZN8CHString16AllocBeforeWriteEi
-@ thiscall ?AllocBuffer@CHString@@IAEXH@Zlong(long) _ZN8CHString11AllocBufferEi
+@ thiscall ?AllocBuffer@CHString@@IAEXH@Z(long) _ZN8CHString11AllocBufferEi
 @ thiscall ?AllocCopy@CHString@@IBEXAAV1@HHH@Z(ptr long long long) _ZNK8CHString9AllocCopyERS_iii
 @ thiscall ?AllocSysString@CHString@@QBEPAGXZ() _ZNK8CHString14AllocSysStringEv
 @ thiscall ?AssignCopy@CHString@@IAEXHPBG@Z(long wstr) _ZN8CHString10AssignCopyEiPKw
