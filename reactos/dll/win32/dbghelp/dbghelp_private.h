@@ -363,6 +363,13 @@ struct module_format
     } u;
 };
 
+struct symt_idx_to_ptr
+{
+    struct hash_table_elt hash_elt;
+    DWORD idx;
+    const struct symt *sym;
+};
+
 extern const struct wine_rb_functions source_rb_functions DECLSPEC_HIDDEN;
 struct module
 {
@@ -387,6 +394,9 @@ struct module
     unsigned                    sorttab_size;
     struct symt_ht**            addr_sorttab;
     struct hash_table           ht_symbols;
+#ifdef __x86_64__
+    struct hash_table           ht_symaddr;
+#endif
 
     /* types */
     struct hash_table           ht_types;

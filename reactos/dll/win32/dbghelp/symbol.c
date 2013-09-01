@@ -72,16 +72,37 @@ DWORD             symt_ptr2index(struct module* module, const struct symt* sym)
 {
 #ifdef __x86_64__
     const struct symt** c;
-    int                 len = vector_length(&module->vsymt), i;
+    int len = vector_length(&module->vsymt);
+    struct hash_table_iter hti;
+    void *ptr;
+    struct symt_idx_to_ptr *idx_to_ptr;
+    /* place enough storage on the stack to represent a pointer in %p form */
+    char ptrbuf[3 + (sizeof(void *) * 2)];
 
-    /* FIXME: this is inefficient */
-    for (i = 0; i < len; i++)
-    {
-        if (*(struct symt**)vector_at(&module->vsymt, i) == sym)
-            return i + 1;
+    /* make a string representation of the pointer to use as a hash key */
+    sprintf(ptrbuf, "%p", sym);
+    hash_table_iter_init(&module->ht_symaddr, &hti, ptrbuf);
+
+    /* try to find the pointer in our ht */
+    while ((ptr = hash_table_iter_up(&hti))) {
+        idx_to_ptr = GET_ENTRY(ptr, struct symt_idx_to_ptr, hash_elt);
+        if (idx_to_ptr->sym == sym)
+            return idx_to_ptr->idx;
     }
+
     /* not found */
+    /* add the symbol to our symbol vector */
     c = vector_add(&module->vsymt, &module->pool);
+
+    /* add an idx to ptr mapping so we can find it again by address */
+    if ((idx_to_ptr = pool_alloc(&module->pool, sizeof(*idx_to_ptr)))) 
+    {
+        idx_to_ptr->hash_elt.name = pool_strdup(&module->pool, ptrbuf);
+        idx_to_ptr->sym = sym;
+        idx_to_ptr->idx = len + 1;
+        hash_table_add(&module->ht_symaddr, &idx_to_ptr->hash_elt);
+    }
+
     if (c) *c = sym;
     return len + 1;
 #else
