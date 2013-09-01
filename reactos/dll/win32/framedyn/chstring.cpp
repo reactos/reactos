@@ -844,7 +844,7 @@ void CHString::MakeLower() throw (CHeap_Exception)
     CopyBeforeWrite();
 
     // Let's use appropriate helper
-    wcslwr(m_pchData);
+    _wcslwr(m_pchData);
 }
 
 /*
@@ -856,7 +856,7 @@ void CHString::MakeReverse() throw (CHeap_Exception)
     CopyBeforeWrite();
 
     // Let's use appropriate helper
-    wcsrev(m_pchData);
+    _wcsrev(m_pchData);
 }
 
 /*
@@ -868,7 +868,7 @@ void CHString::MakeUpper() throw (CHeap_Exception)
     CopyBeforeWrite();
 
     // Let's use appropriate helper
-    wcsupr(m_pchData);
+    _wcsupr(m_pchData);
 }
 
 /*
