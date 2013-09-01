@@ -7,14 +7,8 @@
 #ifdef LANGUAGE_EL_GR
     #include "lang/el-GR.rc"
 #endif
-#ifdef LANGUAGE_EN_US
-    #include "lang/en-US.rc"
-#endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/fr-FR.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
@@ -33,6 +27,12 @@
 #pragma code_page(65001)
 #ifdef LANGUAGE_CS_CZ
     #include "lang/cs-CZ.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
