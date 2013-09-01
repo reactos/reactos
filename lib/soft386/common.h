@@ -21,6 +21,17 @@
 #define GET_SEGMENT_RPL(s) ((s) & 3)
 #define GET_SEGMENT_INDEX(s) ((s) & 0xFFF8)
 
+typedef struct _SOFT386_MOD_REG_RM
+{
+    INT Register;
+    BOOLEAN Memory;
+    union
+    {
+        INT SecondRegister;
+        ULONG MemoryAddress;
+    };
+} SOFT386_MOD_REG_RM, *PSOFT386_MOD_REG_RM;
+
 /* FUNCTIONS ******************************************************************/
 
 inline
@@ -127,6 +138,15 @@ BOOLEAN
 Soft386CalculateParity
 (
     UCHAR Number
+);
+
+inline
+BOOLEAN
+Soft386ParseModRegRm
+(
+    PSOFT386_STATE State,
+    BOOLEAN AddressSize,
+    PSOFT386_MOD_REG_RM ModRegRm
 );
 
 #endif // _COMMON_H_

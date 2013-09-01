@@ -764,4 +764,227 @@ Soft386CalculateParity(UCHAR Number)
     return !(Number & 1);
 }
 
+inline
+BOOLEAN
+Soft386ParseModRegRm(PSOFT386_STATE State,
+                     BOOLEAN AddressSize,
+                     PSOFT386_MOD_REG_RM ModRegRm)
+{
+    UCHAR ModRmByte, Mode, RegMem;
+
+    /* Fetch the MOD REG R/M byte */
+    if (!Soft386FetchByte(State, &ModRmByte))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Unpack the mode and R/M */
+    Mode = ModRmByte >> 6;
+    RegMem = ModRmByte & 0x07;
+
+    /* Set the register operand */
+    ModRegRm->Register = (ModRmByte >> 3) & 0x07;
+
+    /* Check the mode */
+    if ((ModRmByte >> 6) == 3)
+    {
+        /* The second operand is also a register */
+        ModRegRm->Memory = FALSE;
+        ModRegRm->SecondRegister = RegMem;
+
+        /* Done parsing */
+        return TRUE;
+    }
+
+    /* The second operand is memory */
+    ModRegRm->Memory = TRUE;
+
+    if (AddressSize)
+    {
+        if (RegMem == SOFT386_REG_ESP)
+        {
+            UCHAR SibByte;
+            ULONG Scale, Index, Base;
+
+            /* Fetch the SIB byte */
+            if (!Soft386FetchByte(State, &SibByte))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Unpack the scale, index and base */
+            Scale = 1 << (SibByte >> 6);
+            Index = (SibByte >> 3) & 0x07;
+            if (Index != SOFT386_REG_ESP) Index = State->GeneralRegs[Index].Long;
+            else Index = 0;
+            Base = State->GeneralRegs[SibByte & 0x07].Long;
+
+            /* Calculate the address */
+            ModRegRm->MemoryAddress = Base + Index * Scale;
+        }
+        else if (RegMem == SOFT386_REG_EBP)
+        {
+            if (Mode) ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBP].Long;
+            else ModRegRm->MemoryAddress = 0;
+        }
+        else
+        {
+            /* Get the base from the register */
+            ModRegRm->MemoryAddress = State->GeneralRegs[RegMem].Long;
+        }
+
+        /* Check if there is no segment override */
+        if (!(State->PrefixFlags & SOFT386_PREFIX_SEG))
+        {
+            /* Check if the default segment should be SS */
+            if ((RegMem == SOFT386_REG_EBP) && Mode)
+            {
+                /* Add a SS: prefix */
+                State->PrefixFlags |= SOFT386_PREFIX_SEG;
+                State->SegmentOverride = SOFT386_REG_SS;
+            }
+        }
+
+        if (Mode == 1)
+        {
+            CHAR Offset;
+            
+            /* Fetch the byte */
+            if (!Soft386FetchByte(State, (PUCHAR)&Offset))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Add the signed offset to the address */
+            ModRegRm->MemoryAddress += (LONG)Offset;
+        }
+        else if ((Mode == 2) || ((Mode == 0) && (RegMem == SOFT386_REG_EBP)))
+        {
+            LONG Offset;
+            
+            /* Fetch the dword */
+            if (!Soft386FetchDword(State, (PULONG)&Offset))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Add the signed offset to the address */
+            ModRegRm->MemoryAddress += Offset;
+        }
+    }
+    else
+    {
+        /* Check the operand */
+        switch (RegMem)
+        {
+            case 0:
+            case 2:
+            {
+                /* (SS:)[BX + SI] */
+                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBX].LowWord
+                                           + State->GeneralRegs[SOFT386_REG_ESI].LowWord;
+
+                break;
+            }
+
+            case 1:
+            case 3:
+            {
+                /* (SS:)[BX + DI] */
+                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBX].LowWord
+                                           + State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+
+                break;
+            }
+
+            case 4:
+            {
+                /* [SI] */
+                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_ESI].LowWord;
+
+                break;
+            }
+
+            case 5:
+            {
+                /* [DI] */
+                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EDI].LowWord;
+
+                break;
+            }
+
+            case 6:
+            {
+                if (Mode)
+                {
+                    /* [BP] */
+                    ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBP].LowWord;
+                }
+                else
+                {
+                    /* [constant] (added later) */
+                    ModRegRm->MemoryAddress = 0;
+                }
+
+                break;
+            }
+
+            case 7:
+            {
+                /* [BX] */
+                ModRegRm->MemoryAddress = State->GeneralRegs[SOFT386_REG_EBX].LowWord;
+
+                break;
+            }
+        }
+
+        /* Check if there is no segment override */
+        if (!(State->PrefixFlags & SOFT386_PREFIX_SEG))
+        {
+            /* Check if the default segment should be SS */
+            if ((RegMem == 2) || (RegMem == 3) || ((RegMem == 6) && Mode))
+            {
+                /* Add a SS: prefix */
+                State->PrefixFlags |= SOFT386_PREFIX_SEG;
+                State->SegmentOverride = SOFT386_REG_SS;
+            }
+        }
+
+        if (Mode == 1)
+        {
+            CHAR Offset;
+            
+            /* Fetch the byte */
+            if (!Soft386FetchByte(State, (PUCHAR)&Offset))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Add the signed offset to the address */
+            ModRegRm->MemoryAddress += (LONG)Offset;
+        }
+        else if ((Mode == 2) || ((Mode == 0) && (RegMem == 6)))
+        {
+            SHORT Offset;
+            
+            /* Fetch the word */
+            if (!Soft386FetchWord(State, (PUSHORT)&Offset))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Add the signed offset to the address */
+            ModRegRm->MemoryAddress += (LONG)Offset;
+        }
+    }
+
+    return TRUE;
+}
+
 /* EOF */
