@@ -1161,13 +1161,18 @@ CreateOutputFile(FILE *OutFile, void *InData,
         }
     }
 
-    fseek(OutFile, OutFileHeader->PointerToSymbolTable, 0);
-    /* COFF string section is preceeded by a length */
-    fwrite((char*)&StringTableLength, 1, sizeof(StringTableLength), OutFile);
-    /* We just copy enough of the string table to contain the strings we want
-       The string table length technically counts as part of the string table
-       space itself. */
-    fwrite(StringTable+4, 1, StringTableLength, OutFile);
+    if (OutFileHeader->PointerToSymbolTable)
+    {
+        fseek(OutFile, OutFileHeader->PointerToSymbolTable, 0);
+
+        /* COFF string section is preceeded by a length */
+        assert(sizeof(StringTableLength) == 4);
+        fwrite((char*)&StringTableLength, 1, sizeof(StringTableLength), OutFile);
+        /* We just copy enough of the string table to contain the strings we want
+           The string table length technically counts as part of the string table
+           space itself. */
+        fwrite(StringTable + 4, 1, StringTableLength - 4, OutFile);
+    }
 
     if (PaddedRosSym)
     {
