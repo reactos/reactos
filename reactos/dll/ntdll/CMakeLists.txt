@@ -39,6 +39,10 @@ add_asm_files(ntdll_asm ${ASM_SOURCE})
 add_library(ntdll SHARED ${SOURCE} ${ntdll_asm})
 
 set_module_type(ntdll win32dll ENTRYPOINT 0)
+#############################################
+## HACK FOR MSVC COMPILATION WITH win32dll ##
+set_subsystem(ntdll console)
+################# END  HACK #################
 
 if(MSVC)
     add_target_link_flags(ntdll "/RELEASE")

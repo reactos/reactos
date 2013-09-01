@@ -15,16 +15,19 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/winsrv.def)
 
 add_library(winsrv SHARED ${SOURCE})
+set_module_type(winsrv win32dll UNICODE ENTRYPOINT DllMain 12)
+#############################################
+## HACK FOR MSVC COMPILATION WITH win32dll ##
+set_subsystem(winsrv console)
+################# END  HACK #################
 
 # Add the components
 target_link_libraries(winsrv consrv usersrv)
 # Add win32ksys because of NtUser...()
-target_link_libraries(winsrv win32ksys ${PSEH_LIB} ${CONSRV_TARGET_LINK_LIBS})
+target_link_libraries(winsrv win32ksys libcntpr ${PSEH_LIB} ${CONSRV_TARGET_LINK_LIBS})
 
-set_module_type(winsrv win32dll UNICODE)
-
-add_importlibs(winsrv msvcrt kernel32 ntdll csrsrv ${CONSRV_IMPORT_LIBS})
-add_delay_importlibs(winsrv user32 gdi32 advapi32 ${CONSRV_DELAY_IMPORT_LIBS})
+add_delay_importlibs(winsrv advapi32 gdi32 user32 ${CONSRV_DELAY_IMPORT_LIBS})
+add_importlibs(winsrv csrsrv kernel32 ntdll ${CONSRV_IMPORT_LIBS})
 
 add_dependencies(winsrv bugcodes)
 add_cd_file(TARGET winsrv DESTINATION reactos/system32 FOR all)

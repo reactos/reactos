@@ -16,10 +16,9 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)
 
 add_library(csrsrv SHARED ${SOURCE})
+set_module_type(csrsrv nativedll)
 
 target_link_libraries(csrsrv ${PSEH_LIB} smlib)
-
-set_module_type(csrsrv nativedll)
 
 add_importlibs(csrsrv ntdll smdll)
 
