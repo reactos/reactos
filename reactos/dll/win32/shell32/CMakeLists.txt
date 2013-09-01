@@ -24,6 +24,7 @@ list(APPEND SOURCE
     clipboard.cpp
     control.cpp
     CMenuBand.cpp
+    CMenuDeskBar.cpp
     dataobject.cpp
     dde.cpp
     debughlp.cpp

@@ -72,6 +72,7 @@
 #include "filedefext.h"
 #include "drvdefext.h"
 #include "CMenuBand.h"
+#include "CMenuDeskBar.h"
 
 #include <wine/debug.h>
 

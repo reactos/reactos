@@ -538,5 +538,6 @@
 #define IDR_FILEDEFEXT          147
 #define IDR_DRVDEFEXT           148
 #define IDR_MENUBAND            149
+#define IDR_MENUDESKBAR         150
 
 #endif
