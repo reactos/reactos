@@ -110,9 +110,10 @@ void
 Erase(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG radius)
 {
     LONG a, b;
-    b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
     HPEN oldPen;
     HBRUSH oldBrush = SelectObject(hdc, CreateSolidBrush(color));
+
+    b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
     oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 1, color));
     for(a = 0; a <= b; a++)
         Rectangle(hdc, (x1 * (b - a) + x2 * a) / b - radius + 1,
@@ -194,10 +195,10 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
         case 10:
         case 11:
         {
-            POINT offsTop[] = {{.x = 4, .y = -3}, {.x = 2, .y = -2}, {.x = 0, .y = 0},
-                               {.x = -3, .y = -3}, {.x = -2, .y = -2}, {.x = -1, .y = 0}};
-            POINT offsBtm[] = {{.x = -3, .y = 4}, {.x = -2, .y = 2}, {.x = -1, .y = 1},
-                               {.x = 4, .y = 4}, {.x = 2, .y = 2}, {.x = 0, .y = 1}};
+            POINT offsTop[] = {{4, 3}, {2, -2}, {0, 0}, 
+                               {-3, -3}, {-2, -2}, {-1, 0}};
+            POINT offsBtm[] = {{-3, 4}, {-2, 2}, {-1, 1},
+                               {4, 4}, {2, 2}, {0, 1}};
             LONG idx = style - 6;
             POINT pts[4];
             pts[0].x = x1 + offsTop[idx].x;
