@@ -3,7 +3,7 @@ set_cpp(WITH_RUNTIME)
 if(NOT MSVC)
 spec2def(framedyn.dll framedyn_gcc.spec ADD_IMPORTLIB)
 else()
-spec2def(framedyn.dll framedyn_msvc.spec ADD_IMPORTLIB)
+#spec2def(framedyn.dll framedyn_msvc.spec ADD_IMPORTLIB)
 endif()
 
 list(APPEND SOURCE
