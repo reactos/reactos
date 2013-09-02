@@ -1489,7 +1489,7 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticSh
 {
     LPSHELLBROWSER lpSB;
     HWND hwndTree;
-    LPWSTR FlagsName;
+    LPCWSTR FlagsName;
     WCHAR wszKey[256];
     HRESULT hr;
     DWORD wFlags;
