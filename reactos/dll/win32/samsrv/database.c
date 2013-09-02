@@ -533,7 +533,7 @@ SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
 NTSTATUS
 SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
                              LPWSTR AttributeName,
-                             RPC_UNICODE_STRING *String)
+                             PRPC_UNICODE_STRING String)
 {
     ULONG Length = 0;
     NTSTATUS Status;
@@ -546,6 +546,16 @@ SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
     if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
     {
         TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    if (Length == 0)
+    {
+        String->Length = 0;
+        String->MaximumLength = 0;
+        String->Buffer = NULL;
+
+        Status = STATUS_SUCCESS;
         goto done;
     }
 
@@ -582,6 +592,29 @@ done:
 
     return Status;
 }
+
+
+NTSTATUS
+SampSetObjectAttributeString(PSAM_DB_OBJECT DbObject,
+                             LPWSTR AttributeName,
+                             PRPC_UNICODE_STRING String)
+{
+    PWCHAR Buffer = NULL;
+    USHORT Length = 0;
+
+    if ((String != NULL) && (String->Buffer != NULL))
+    {
+        Buffer = String->Buffer;
+        Length = String->Length + sizeof(WCHAR);
+    }
+
+    return SampSetObjectAttribute(DbObject,
+                                  AttributeName,
+                                  REG_SZ,
+                                  Buffer,
+                                  Length);
+}
+
 
 /* EOF */
 

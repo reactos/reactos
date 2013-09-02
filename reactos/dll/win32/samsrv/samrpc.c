@@ -1714,27 +1714,21 @@ SamrSetInformationDomain(IN SAMPR_HANDLE DomainHandle,
             break;
 
         case DomainOemInformation:
-            Status = SampSetObjectAttribute(DomainObject,
-                                            L"OemInformation",
-                                            REG_SZ,
-                                            DomainInformation->Oem.OemInformation.Buffer,
-                                            DomainInformation->Oem.OemInformation.Length + sizeof(WCHAR));
+            Status = SampSetObjectAttributeString(DomainObject,
+                                                  L"OemInformation",
+                                                  &DomainInformation->Oem.OemInformation);
             break;
 
         case DomainNameInformation:
-            Status = SampSetObjectAttribute(DomainObject,
-                                            L"Name",
-                                            REG_SZ,
-                                            DomainInformation->Name.DomainName.Buffer,
-                                            DomainInformation->Name.DomainName.Length + sizeof(WCHAR));
+            Status = SampSetObjectAttributeString(DomainObject,
+                                                  L"Name",
+                                                  &DomainInformation->Name.DomainName);
             break;
 
         case DomainReplicationInformation:
-            Status = SampSetObjectAttribute(DomainObject,
-                                            L"ReplicaSourceNodeName",
-                                            REG_SZ,
-                                            DomainInformation->Replication.ReplicaSourceNodeName.Buffer,
-                                            DomainInformation->Replication.ReplicaSourceNodeName.Length + sizeof(WCHAR));
+            Status = SampSetObjectAttributeString(DomainObject,
+                                                  L"ReplicaSourceNodeName",
+                                                  &DomainInformation->Replication.ReplicaSourceNodeName);
             break;
 
         case DomainServerRoleInformation:
@@ -1772,7 +1766,6 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
                         OUT SAMPR_HANDLE *GroupHandle,
                         OUT unsigned long *RelativeId)
 {
-    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
     SAM_DOMAIN_FIXED_DATA FixedDomainData;
     SAM_GROUP_FIXED_DATA FixedGroupData;
     PSAM_DB_OBJECT DomainObject;
@@ -1840,10 +1833,10 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
 
     /* Store the fixed domain attributes */
     Status = SampSetObjectAttribute(DomainObject,
-                           L"F",
-                           REG_BINARY,
-                           &FixedDomainData,
-                           ulSize);
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedDomainData,
+                                    ulSize);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -1898,11 +1891,9 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the Name attribute */
-    Status = SampSetObjectAttribute(GroupObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    (LPVOID)Name->Buffer,
-                                    Name->MaximumLength);
+    Status = SampSetObjectAttributeString(GroupObject,
+                                          L"Name",
+                                          Name);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -1910,11 +1901,9 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the AdminComment attribute */
-    Status = SampSetObjectAttribute(GroupObject,
-                                    L"AdminComment",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(GroupObject,
+                                          L"AdminComment",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2150,7 +2139,6 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
                        OUT SAMPR_HANDLE *UserHandle,
                        OUT unsigned long *RelativeId)
 {
-    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
     SAM_DOMAIN_FIXED_DATA FixedDomainData;
     SAM_USER_FIXED_DATA FixedUserData;
     PSAM_DB_OBJECT DomainObject;
@@ -2302,11 +2290,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the Name attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    (LPVOID)Name->Buffer,
-                                    Name->MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          Name);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2314,11 +2300,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the FullName attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"FullName",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"FullName",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2326,11 +2310,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the HomeDirectory attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"HomeDirectory",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"HomeDirectory",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2338,11 +2320,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the HomeDirectoryDrive attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"HomeDirectoryDrive",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"HomeDirectoryDrive",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2350,11 +2330,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the ScriptPath attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"ScriptPath",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"ScriptPath",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2362,11 +2340,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the ProfilePath attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"ProfilePath",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"ProfilePath",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2374,11 +2350,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the AdminComment attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"AdminComment",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"AdminComment",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2386,11 +2360,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the UserComment attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"UserComment",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"UserComment",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2398,11 +2370,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the WorkStations attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"WorkStations",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"WorkStations",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2410,11 +2380,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the Parameters attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"Parameters",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"Parameters",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2736,7 +2704,6 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     SAM_DOMAIN_FIXED_DATA FixedDomainData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT AliasObject;
-    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
@@ -2841,11 +2808,9 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the Name attribute */
-    Status = SampSetObjectAttribute(AliasObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    (LPVOID)AccountName->Buffer,
-                                    AccountName->MaximumLength);
+    Status = SampSetObjectAttributeString(AliasObject,
+                                          L"Name",
+                                          AccountName);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2853,11 +2818,9 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the Description attribute */
-    Status = SampSetObjectAttribute(AliasObject,
-                                    L"Description",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(AliasObject,
+                                          L"Description",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -4141,11 +4104,9 @@ SampSetGroupName(PSAM_DB_OBJECT GroupObject,
         goto done;
     }
 
-    Status = SampSetObjectAttribute(GroupObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    NewGroupName.Buffer,
-                                    NewGroupName.Length + sizeof(WCHAR));
+    Status = SampSetObjectAttributeString(GroupObject,
+                                          L"Name",
+                                          (PRPC_UNICODE_STRING)&NewGroupName);
     if (!NT_SUCCESS(Status))
     {
         TRACE("SampSetObjectAttribute failed (Status 0x%08lx)\n", Status);
@@ -4226,11 +4187,9 @@ SamrSetInformationGroup(IN SAMPR_HANDLE GroupHandle,
             break;
 
         case GroupAdminCommentInformation:
-            Status = SampSetObjectAttribute(GroupObject,
-                                            L"Description",
-                                            REG_SZ,
-                                            Buffer->AdminComment.AdminComment.Buffer,
-                                            Buffer->AdminComment.AdminComment.Length + sizeof(WCHAR));
+            Status = SampSetObjectAttributeString(GroupObject,
+                                                  L"Description",
+                                                  &Buffer->AdminComment.AdminComment);
             break;
 
         default:
@@ -4926,11 +4885,9 @@ SampSetAliasName(PSAM_DB_OBJECT AliasObject,
         goto done;
     }
 
-    Status = SampSetObjectAttribute(AliasObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    NewAliasName.Buffer,
-                                    NewAliasName.Length + sizeof(WCHAR));
+    Status = SampSetObjectAttributeString(AliasObject,
+                                          L"Name",
+                                          (PRPC_UNICODE_STRING)&NewAliasName);
     if (!NT_SUCCESS(Status))
     {
         TRACE("SampSetObjectAttribute failed (Status 0x%08lx)\n", Status);
@@ -4976,11 +4933,9 @@ SamrSetInformationAlias(IN SAMPR_HANDLE AliasHandle,
             break;
 
         case AliasAdminCommentInformation:
-            Status = SampSetObjectAttribute(AliasObject,
-                                            L"Description",
-                                            REG_SZ,
-                                            Buffer->AdminComment.AdminComment.Buffer,
-                                            Buffer->AdminComment.AdminComment.Length + sizeof(WCHAR));
+            Status = SampSetObjectAttributeString(AliasObject,
+                                                  L"Description",
+                                                  &Buffer->AdminComment.AdminComment);
             break;
 
         default:
@@ -7039,11 +6994,9 @@ SampSetUserName(PSAM_DB_OBJECT UserObject,
         goto done;
     }
 
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    NewUserName->Buffer,
-                                    NewUserName->Length + sizeof(WCHAR));
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          NewUserName);
     if (!NT_SUCCESS(Status))
     {
         TRACE("SampSetObjectAttribute failed (Status 0x%08lx)\n", Status);
@@ -7089,27 +7042,21 @@ SampSetUserGeneral(PSAM_DB_OBJECT UserObject,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"FullName",
-                                    REG_SZ,
-                                    Buffer->General.FullName.Buffer,
-                                    Buffer->General.FullName.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"FullName",
+                                          &Buffer->General.FullName);
     if (!NT_SUCCESS(Status))
         goto done;
 
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"AdminComment",
-                                    REG_SZ,
-                                    Buffer->General.AdminComment.Buffer,
-                                    Buffer->General.AdminComment.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"AdminComment",
+                                          &Buffer->General.AdminComment);
     if (!NT_SUCCESS(Status))
         goto done;
 
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"UserComment",
-                                    REG_SZ,
-                                    Buffer->General.UserComment.Buffer,
-                                    Buffer->General.UserComment.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"UserComment",
+                                          &Buffer->General.UserComment);
 
 done:
     return Status;
@@ -7144,11 +7091,9 @@ SampSetUserPreferences(PSAM_DB_OBJECT UserObject,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"UserComment",
-                                    REG_SZ,
-                                    Buffer->Preferences.UserComment.Buffer,
-                                    Buffer->Preferences.UserComment.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"UserComment",
+                                          &Buffer->Preferences.UserComment);
 
 done:
     return Status;
@@ -7337,99 +7282,81 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
 
     if (WhichFields & USER_ALL_FULLNAME)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"FullName",
-                                        REG_SZ,
-                                        Buffer->All.FullName.Buffer,
-                                        Buffer->All.FullName.MaximumLength);
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"FullName",
+                                              &Buffer->All.FullName);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
     if (WhichFields & USER_ALL_ADMINCOMMENT)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"AdminComment",
-                                        REG_SZ,
-                                        Buffer->All.AdminComment.Buffer,
-                                        Buffer->All.AdminComment.MaximumLength);
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"AdminComment",
+                                              &Buffer->All.AdminComment);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
     if (WhichFields & USER_ALL_USERCOMMENT)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"UserComment",
-                                        REG_SZ,
-                                        Buffer->All.UserComment.Buffer,
-                                        Buffer->All.UserComment.MaximumLength);
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"UserComment",
+                                              &Buffer->All.UserComment);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
     if (WhichFields & USER_ALL_HOMEDIRECTORY)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"HomeDirectory",
-                                        REG_SZ,
-                                        Buffer->All.HomeDirectory.Buffer,
-                                        Buffer->All.HomeDirectory.MaximumLength);
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"HomeDirectory",
+                                              &Buffer->All.HomeDirectory);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
     if (WhichFields & USER_ALL_HOMEDIRECTORYDRIVE)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"HomeDirectoryDrive",
-                                        REG_SZ,
-                                        Buffer->All.HomeDirectoryDrive.Buffer,
-                                        Buffer->All.HomeDirectoryDrive.MaximumLength);
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"HomeDirectoryDrive",
+                                              &Buffer->All.HomeDirectoryDrive);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
     if (WhichFields & USER_ALL_SCRIPTPATH)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"ScriptPath",
-                                        REG_SZ,
-                                        Buffer->All.ScriptPath.Buffer,
-                                        Buffer->All.ScriptPath.MaximumLength);
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"ScriptPath",
+                                              &Buffer->All.ScriptPath);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
     if (WhichFields & USER_ALL_PROFILEPATH)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"ProfilePath",
-                                        REG_SZ,
-                                        Buffer->All.ProfilePath.Buffer,
-                                        Buffer->All.ProfilePath.MaximumLength);
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"ProfilePath",
+                                              &Buffer->All.ProfilePath);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
     if (WhichFields & USER_ALL_WORKSTATIONS)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"WorkStations",
-                                        REG_SZ,
-                                        Buffer->All.WorkStations.Buffer,
-                                        Buffer->All.WorkStations.MaximumLength);
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"WorkStations",
+                                              &Buffer->All.WorkStations);
         if (!NT_SUCCESS(Status))
             goto done;
     }
 
     if (WhichFields & USER_ALL_PARAMETERS)
     {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"Parameters",
-                                        REG_SZ,
-                                        Buffer->All.Parameters.Buffer,
-                                        Buffer->All.Parameters.MaximumLength);
+        Status = SampSetObjectAttributeString(UserObject,
+                                              L"Parameters",
+                                              &Buffer->All.Parameters);
         if (!NT_SUCCESS(Status))
             goto done;
     }
@@ -7630,11 +7557,9 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             if (!NT_SUCCESS(Status))
                 break;
 
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"FullName",
-                                            REG_SZ,
-                                            Buffer->Name.FullName.Buffer,
-                                            Buffer->Name.FullName.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"FullName",
+                                                  &Buffer->Name.FullName);
             break;
 
         case UserAccountNameInformation:
@@ -7643,11 +7568,9 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserFullNameInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"FullName",
-                                            REG_SZ,
-                                            Buffer->FullName.FullName.Buffer,
-                                            Buffer->FullName.FullName.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"FullName",
+                                                  &Buffer->FullName.FullName);
             break;
 
         case UserPrimaryGroupInformation:
@@ -7656,62 +7579,48 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserHomeInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"HomeDirectory",
-                                            REG_SZ,
-                                            Buffer->Home.HomeDirectory.Buffer,
-                                            Buffer->Home.HomeDirectory.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"HomeDirectory",
+                                                  &Buffer->Home.HomeDirectory);
             if (!NT_SUCCESS(Status))
                 break;
 
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"HomeDirectoryDrive",
-                                            REG_SZ,
-                                            Buffer->Home.HomeDirectoryDrive.Buffer,
-                                            Buffer->Home.HomeDirectoryDrive.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"HomeDirectoryDrive",
+                                                  &Buffer->Home.HomeDirectoryDrive);
             break;
 
         case UserScriptInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"ScriptPath",
-                                            REG_SZ,
-                                            Buffer->Script.ScriptPath.Buffer,
-                                            Buffer->Script.ScriptPath.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"ScriptPath",
+                                                  &Buffer->Script.ScriptPath);
             break;
 
         case UserProfileInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"ProfilePath",
-                                            REG_SZ,
-                                            Buffer->Profile.ProfilePath.Buffer,
-                                            Buffer->Profile.ProfilePath.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"ProfilePath",
+                                                  &Buffer->Profile.ProfilePath);
             break;
 
         case UserAdminCommentInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"AdminComment",
-                                            REG_SZ,
-                                            Buffer->AdminComment.AdminComment.Buffer,
-                                            Buffer->AdminComment.AdminComment.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"AdminComment",
+                                                  &Buffer->AdminComment.AdminComment);
             break;
 
         case UserWorkStationsInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"WorkStations",
-                                            REG_SZ,
-                                            Buffer->WorkStations.WorkStations.Buffer,
-                                            Buffer->WorkStations.WorkStations.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"WorkStations",
+                                                  &Buffer->WorkStations.WorkStations);
             break;
 
         case UserSetPasswordInformation:
             TRACE("Password: %S\n", Buffer->SetPassword.Password.Buffer);
             TRACE("PasswordExpired: %d\n", Buffer->SetPassword.PasswordExpired);
 
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"Password",
-                                            REG_SZ,
-                                            Buffer->SetPassword.Password.Buffer,
-                                            Buffer->SetPassword.Password.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"Password",
+                                                  &Buffer->SetPassword.Password);
             break;
 
         case UserControlInformation:
@@ -7730,11 +7639,9 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserParametersInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"Parameters",
-                                            REG_SZ,
-                                            Buffer->Parameters.Parameters.Buffer,
-                                            Buffer->Parameters.Parameters.MaximumLength);
+            Status = SampSetObjectAttributeString(UserObject,
+                                                  L"Parameters",
+                                                  &Buffer->Parameters.Parameters);
             break;
 
         case UserAllInformation:
@@ -8378,7 +8285,6 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
                         OUT unsigned long *GrantedAccess,
                         OUT unsigned long *RelativeId)
 {
-    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
     SAM_DOMAIN_FIXED_DATA FixedDomainData;
     SAM_USER_FIXED_DATA FixedUserData;
     PSAM_DB_OBJECT DomainObject;
@@ -8537,11 +8443,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the Name attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    (LPVOID)Name->Buffer,
-                                    Name->MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          Name);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -8549,11 +8453,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the FullName attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"FullName",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"FullName",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -8561,11 +8463,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the HomeDirectory attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"HomeDirectory",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"HomeDirectory",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -8573,11 +8473,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the HomeDirectoryDrive attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"HomeDirectoryDrive",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"HomeDirectoryDrive",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -8585,11 +8483,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the ScriptPath attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"ScriptPath",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"ScriptPath",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -8597,11 +8493,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the ProfilePath attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"ProfilePath",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"ProfilePath",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -8609,11 +8503,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the AdminComment attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"AdminComment",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"AdminComment",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -8621,11 +8513,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the UserComment attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"UserComment",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"UserComment",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -8633,11 +8523,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the WorkStations attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"WorkStations",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"WorkStations",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -8645,11 +8533,9 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Set the Parameters attribute */
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"Parameters",
-                                    REG_SZ,
-                                    EmptyString.Buffer,
-                                    EmptyString.MaximumLength);
+    Status = SampSetObjectAttributeString(UserObject,
+                                          L"Parameters",
+                                          NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);

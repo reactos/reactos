@@ -194,8 +194,12 @@ SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
 NTSTATUS
 SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
                              LPWSTR AttributeName,
-                             RPC_UNICODE_STRING *String);
+                             PRPC_UNICODE_STRING String);
 
+NTSTATUS
+SampSetObjectAttributeString(PSAM_DB_OBJECT DbObject,
+                             LPWSTR AttributeName,
+                             PRPC_UNICODE_STRING String);
 
 /* domain.c */
 
