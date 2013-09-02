@@ -50,14 +50,17 @@ LpcExitThread(IN PETHREAD Thread)
 VOID
 NTAPI
 LpcpFreeToPortZone(IN PLPCP_MESSAGE Message,
-                   IN ULONG Flags)
+                   IN ULONG LockFlags)
 {
     PLPCP_CONNECTION_MESSAGE ConnectMessage;
     PLPCP_PORT_OBJECT ClientPort = NULL;
     PETHREAD Thread = NULL;
-    BOOLEAN LockHeld = Flags & 1, ReleaseLock = Flags & 2;
+    BOOLEAN LockHeld = (LockFlags & LPCP_LOCK_OWNED);
+    BOOLEAN ReleaseLock = (LockFlags & LPCP_LOCK_RELEASE);
+
     PAGED_CODE();
-    LPCTRACE(LPC_CLOSE_DEBUG, "Message: %p. Flags: %lx\n", Message, Flags);
+
+    LPCTRACE(LPC_CLOSE_DEBUG, "Message: %p. LockFlags: %lx\n", Message, LockFlags);
 
     /* Acquire the lock if not already */
     if (!LockHeld) KeAcquireGuardedMutex(&LpcpLock);
@@ -183,7 +186,7 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
                 Thread->LpcReplyMessage = NULL;
 
                 /* And remove the message from the port zone */
-                LpcpFreeToPortZone(Message, 1);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED);
                 NextEntry = Port->LpcReplyChainHead.Flink;
             }
 
@@ -210,7 +213,7 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
         InitializeListHead(&Message->Entry);
 
         /* Remove it from the port zone */
-        LpcpFreeToPortZone(Message, 1);
+        LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED);
     }
 
     /* Release the lock */
@@ -404,7 +407,7 @@ LpcpDeletePort(IN PVOID ObjectBody)
                 /* Free queued messages */
                 RemoveEntryList(&Message->Entry);
                 InitializeListHead(&Message->Entry);
-                LpcpFreeToPortZone(Message, 1);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED);
 
                 /* Restart at the head */
                 NextEntry = ListHead->Flink;
@@ -417,7 +420,7 @@ LpcpDeletePort(IN PVOID ObjectBody)
                 /* Remove it */
                 RemoveEntryList(&Message->Entry);
                 InitializeListHead(&Message->Entry);
-                LpcpFreeToPortZone(Message, 1);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED);
 
                 /* Restart at the head */
                 NextEntry = ListHead->Flink;
