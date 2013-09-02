@@ -104,7 +104,7 @@ LpcRequestPort(IN PVOID PortObject,
                 if (!ConnectionPort)
                 {
                     /* Fail */
-                    LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                    LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                     return STATUS_PORT_DISCONNECTED;
                 }
             }
@@ -115,7 +115,7 @@ LpcRequestPort(IN PVOID PortObject,
                 if (!ConnectionPort)
                 {
                     /* Fail */
-                    LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                    LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                     return STATUS_PORT_DISCONNECTED;
                 }
             }
@@ -134,7 +134,7 @@ LpcRequestPort(IN PVOID PortObject,
     if (QueuePort)
     {
         /* Generate the Message ID and set it */
-        Message->Request.MessageId =  LpcpNextMessageId++;
+        Message->Request.MessageId = LpcpNextMessageId++;
         if (!LpcpNextMessageId) LpcpNextMessageId = 1;
         Message->Request.CallbackId = 0;
 
@@ -144,7 +144,7 @@ LpcRequestPort(IN PVOID PortObject,
         /* Insert the message in our chain */
         InsertTailList(&QueuePort->MsgQueue.ReceiveHead, &Message->Entry);
 
-        /* Release the lock and release the semaphore */
+        /* Release the lock and the semaphore */
         KeEnterCriticalRegion();
         KeReleaseGuardedMutex(&LpcpLock);
         LpcpCompleteWait(QueuePort->MsgQueue.Semaphore);
@@ -156,15 +156,16 @@ LpcRequestPort(IN PVOID PortObject,
             KeSetEvent(&QueuePort->WaitEvent, IO_NO_INCREMENT, FALSE);
         }
 
-        /* We're done */
         KeLeaveCriticalRegion();
+
+        /* We're done */
         if (ConnectionPort) ObDereferenceObject(ConnectionPort);
         LPCTRACE(LPC_SEND_DEBUG, "Port: %p. Message: %p\n", QueuePort, Message);
         return STATUS_SUCCESS;
     }
 
     /* If we got here, then free the message and fail */
-    LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+    LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
     if (ConnectionPort) ObDereferenceObject(ConnectionPort);
     return STATUS_PORT_DISCONNECTED;
 }
@@ -284,7 +285,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
             if (!QueuePort)
             {
                 /* We have no connected port, fail */
-                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                 return STATUS_PORT_DISCONNECTED;
             }
 
@@ -300,7 +301,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
                 if (!ConnectionPort)
                 {
                     /* Fail */
-                    LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                    LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                     return STATUS_PORT_DISCONNECTED;
                 }
             }
@@ -312,7 +313,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
                 if (!ConnectionPort)
                 {
                     /* Fail */
-                    LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                    LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                     return STATUS_PORT_DISCONNECTED;
                 }
             }
@@ -331,7 +332,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
         Message->SenderPort = Port;
 
         /* Generate the Message ID and set it */
-        Message->Request.MessageId =  LpcpNextMessageId++;
+        Message->Request.MessageId = LpcpNextMessageId++;
         if (!LpcpNextMessageId) LpcpNextMessageId = 1;
         Message->Request.CallbackId = 0;
 
@@ -413,7 +414,7 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
             }
 
             /* Free the message */
-            LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+            LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
         }
         else
         {
@@ -452,7 +453,6 @@ NtRequestPort(IN HANDLE PortHandle,
     PLPCP_MESSAGE Message;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD Thread = PsGetCurrentThread();
-    PKSEMAPHORE Semaphore;
 
     PAGED_CODE();
 
@@ -536,7 +536,7 @@ NtRequestPort(IN HANDLE PortHandle,
         if (!QueuePort)
         {
             /* We have no connected port, fail */
-            LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+            LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
             ObDereferenceObject(Port);
             return STATUS_PORT_DISCONNECTED;
         }
@@ -550,7 +550,7 @@ NtRequestPort(IN HANDLE PortHandle,
             if (!ConnectionPort)
             {
                 /* Fail */
-                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                 ObDereferenceObject(Port);
                 return STATUS_PORT_DISCONNECTED;
             }
@@ -563,7 +563,7 @@ NtRequestPort(IN HANDLE PortHandle,
             if (!ConnectionPort)
             {
                 /* Fail */
-                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                 ObDereferenceObject(Port);
                 return STATUS_PORT_DISCONNECTED;
             }
@@ -585,7 +585,7 @@ NtRequestPort(IN HANDLE PortHandle,
         Message->SenderPort = Port;
 
         /* Generate the Message ID and set it */
-        Message->Request.MessageId =  LpcpNextMessageId++;
+        Message->Request.MessageId = LpcpNextMessageId++;
         if (!LpcpNextMessageId) LpcpNextMessageId = 1;
         Message->Request.CallbackId = 0;
 
@@ -595,13 +595,10 @@ NtRequestPort(IN HANDLE PortHandle,
         /* Insert the message in our chain */
         InsertTailList(&QueuePort->MsgQueue.ReceiveHead, &Message->Entry);
 
-        /* Release the lock and get the semaphore we'll use later */
+        /* Release the lock and the semaphore */
         KeEnterCriticalRegion();
         KeReleaseGuardedMutex(&LpcpLock);
-
-        /* Now release the semaphore */
-        Semaphore = QueuePort->MsgQueue.Semaphore;
-        LpcpCompleteWait(Semaphore);
+        LpcpCompleteWait(QueuePort->MsgQueue.Semaphore);
 
         /* If this is a waitable port, wake it up */
         if (QueuePort->Flags & LPCP_WAITABLE_PORT)
@@ -629,7 +626,7 @@ NtRequestPort(IN HANDLE PortHandle,
              Status);
 
     /* The wait failed, free the message */
-    if (Message) LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+    if (Message) LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
 
     ObDereferenceObject(Port);
     if (ConnectionPort) ObDereferenceObject(ConnectionPort);
@@ -762,7 +759,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
             if (!QueuePort)
             {
                 /* We have no connected port, fail */
-                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                 ObDereferenceObject(Port);
                 return STATUS_PORT_DISCONNECTED;
             }
@@ -779,7 +776,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
                 if (!ConnectionPort)
                 {
                     /* Fail */
-                    LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                    LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                     ObDereferenceObject(Port);
                     return STATUS_PORT_DISCONNECTED;
                 }
@@ -792,7 +789,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
                 if (!ConnectionPort)
                 {
                     /* Fail */
-                    LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED | LPCP_LOCK_RELEASE);
+                    LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
                     ObDereferenceObject(Port);
                     return STATUS_PORT_DISCONNECTED;
                 }
@@ -812,7 +809,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
         Message->SenderPort = Port;
 
         /* Generate the Message ID and set it */
-        Message->Request.MessageId =  LpcpNextMessageId++;
+        Message->Request.MessageId = LpcpNextMessageId++;
         if (!LpcpNextMessageId) LpcpNextMessageId = 1;
         Message->Request.CallbackId = 0;
 

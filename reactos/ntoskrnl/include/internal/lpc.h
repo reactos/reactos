@@ -60,7 +60,7 @@
 //
 // LPC Locking Flags
 //
-#define LPCP_LOCK_OWNED     1
+#define LPCP_LOCK_HELD      1
 #define LPCP_LOCK_RELEASE   2
 
 //

@@ -55,7 +55,7 @@ LpcpFreeToPortZone(IN PLPCP_MESSAGE Message,
     PLPCP_CONNECTION_MESSAGE ConnectMessage;
     PLPCP_PORT_OBJECT ClientPort = NULL;
     PETHREAD Thread = NULL;
-    BOOLEAN LockHeld = (LockFlags & LPCP_LOCK_OWNED);
+    BOOLEAN LockHeld = (LockFlags & LPCP_LOCK_HELD);
     BOOLEAN ReleaseLock = (LockFlags & LPCP_LOCK_RELEASE);
 
     PAGED_CODE();
@@ -186,7 +186,7 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
                 Thread->LpcReplyMessage = NULL;
 
                 /* And remove the message from the port zone */
-                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_HELD);
                 NextEntry = Port->LpcReplyChainHead.Flink;
             }
 
@@ -213,7 +213,7 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
         InitializeListHead(&Message->Entry);
 
         /* Remove it from the port zone */
-        LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED);
+        LpcpFreeToPortZone(Message, LPCP_LOCK_HELD);
     }
 
     /* Release the lock */
@@ -407,7 +407,7 @@ LpcpDeletePort(IN PVOID ObjectBody)
                 /* Free queued messages */
                 RemoveEntryList(&Message->Entry);
                 InitializeListHead(&Message->Entry);
-                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_HELD);
 
                 /* Restart at the head */
                 NextEntry = ListHead->Flink;
@@ -420,7 +420,7 @@ LpcpDeletePort(IN PVOID ObjectBody)
                 /* Remove it */
                 RemoveEntryList(&Message->Entry);
                 InitializeListHead(&Message->Entry);
-                LpcpFreeToPortZone(Message, LPCP_LOCK_OWNED);
+                LpcpFreeToPortZone(Message, LPCP_LOCK_HELD);
 
                 /* Restart at the head */
                 NextEntry = ListHead->Flink;
