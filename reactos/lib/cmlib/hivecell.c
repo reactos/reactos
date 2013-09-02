@@ -109,7 +109,7 @@ HvMarkCellDirty(
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
 
-   CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx, HoldingLock %b\n",
+   CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx, HoldingLock %u\n",
        __FUNCTION__, RegistryHive, CellIndex, HoldingLock);
 
    if ((CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT != Stable)
