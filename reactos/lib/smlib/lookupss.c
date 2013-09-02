@@ -84,9 +84,9 @@ SmLookupSubsystem (IN     PWSTR   Name,
 					  & ResultLength);
 		if(NT_SUCCESS(Status))
 		{
-			DPRINT("nkvpi.TitleIndex = %ld\n", kvpi->TitleIndex);
-			DPRINT("kvpi.Type        = %ld\n", kvpi->Type);
-			DPRINT("kvpi.DataLength  = %ld\n", kvpi->DataLength);
+			DPRINT("nkvpi.TitleIndex = %lu\n", kvpi->TitleIndex);
+			DPRINT("kvpi.Type        = %lu\n", kvpi->Type);
+			DPRINT("kvpi.DataLength  = %lu\n", kvpi->DataLength);
 
 			if((NULL != Data) && (NULL != DataLength) && (NULL != DataType))
 			{

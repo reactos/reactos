@@ -36,7 +36,7 @@ SmExecuteProgram (IN HANDLE          hSmApiPort,
   SM_PORT_MESSAGE  SmReqMsg;
 
 
-  DPRINT("SMLIB: %s(%08lx,'%S') called\n",
+  DPRINT("SMLIB: %s(%p,'%S') called\n",
 	__FUNCTION__, hSmApiPort, Pgm->Buffer);
 
   /* Check Pgm's length */
@@ -63,7 +63,7 @@ SmExecuteProgram (IN HANDLE          hSmApiPort,
 	  "  u2.s2.Type = %d\n"
 	  "  u1.s1.DataLength    = %d\n"
 	  "  u1.s1.TotalLength = %d\n"
-	  "  sizeof(PORT_MESSAGE)==%d\n",
+	  "  sizeof(PORT_MESSAGE)==%u\n",
 	  __FUNCTION__,
 	  SmReqMsg.Header.u2.s2.Type,
 	  SmReqMsg.Header.u1.s1.DataLength,
