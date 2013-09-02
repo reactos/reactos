@@ -1,8 +1,90 @@
-Index: commctrl.c
-===================================================================
---- commctrl.c	(revision 55577)
-+++ commctrl.c	(working copy)
-@@ -71,6 +71,19 @@
+diff -prudN e:\Wine\dlls\comctl32/comctl32.spec e:\reactos\dll\win32\comctl32/comctl32.spec
+--- e:\Wine\dlls\comctl32/comctl32.spec	2011-09-16 23:22:35.964767000 +0100
++++ e:\reactos\dll\win32\comctl32/comctl32.spec	2012-06-04 11:26:55.545450700 +0100
+@@ -15,7 +15,7 @@
+  11 stdcall -noname DPA_Merge(ptr ptr long ptr ptr long)
+ #12 stub Cctl1632_ThunkData32
+  13 stdcall MakeDragList(long)
+- 14 stdcall LBItemFromPt(long int64 long)
++ 14 stdcall LBItemFromPt(long double long) #(long int64 long)
+  15 stdcall DrawInsert(long long long)
+  16 stdcall CreateUpDownControl(long long long long long long long long long long long long)
+  17 stdcall InitCommonControls()
+@@ -30,8 +30,8 @@
+ 155 stdcall -noname FindMRUStringA(long str ptr)
+ 156 stdcall -noname DelMRUString(long long)
+ 157 stdcall -noname CreateMRUListLazyA(ptr long long long)
+-163 stub -noname CreatePage
+-164 stub -noname CreateProxyPage
++163 stdcall -noname CreatePage(long ptr)
++164 stdcall -noname CreateProxyPage(long long)
+ 167 stdcall -noname AddMRUData(long ptr long)
+ 169 stdcall -noname FindMRUData(long ptr long ptr)
+ 233 stdcall -noname Str_GetPtrA(str str long)
+@@ -88,13 +88,13 @@
+ 376 stdcall -noname IntlStrEqWorkerA(long str str long)
+ 377 stdcall -noname IntlStrEqWorkerW(long wstr wstr long)
+ 382 stdcall -noname SmoothScrollWindow(ptr)
+-383 stub -noname DoReaderMode
++383 stdcall -noname DoReaderMode(ptr)
+ 384 stdcall -noname SetPathWordBreakProc(ptr long)
+ 385 stdcall -ordinal DPA_EnumCallback(long long long)
+ 386 stdcall -ordinal DPA_DestroyCallback(ptr ptr long)
+ 387 stdcall -ordinal DSA_EnumCallback(ptr ptr long)
+ 388 stdcall -ordinal DSA_DestroyCallback(ptr ptr long)
+-389 stub -noname SHGetProcessDword
++389 stdcall -noname SHGetProcessDword(long long)
+ 390 stdcall -noname ImageList_SetColorTable(ptr long long ptr)
+ 400 stdcall -ordinal CreateMRUListW(ptr)
+ 401 stdcall -ordinal AddMRUStringW(long wstr)
+@@ -188,6 +188,7 @@
+ @ stdcall PropertySheet(ptr) PropertySheetA
+ @ stdcall PropertySheetA(ptr)
+ @ stdcall PropertySheetW(ptr)
++@ stdcall RegisterClassNameW(wstr)
+ @ stdcall TaskDialogIndirect(ptr ptr ptr ptr)
+ @ stdcall UninitializeFlatSB(long)
+ @ stdcall _TrackMouseEvent(ptr)
+
+diff -prudN e:\Wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commctrl.c
+--- e:\Wine\dlls\comctl32/commctrl.c	2011-11-24 17:55:01.900415100 +0100
++++ e:\reactos\dll\win32\comctl32/commctrl.c	2013-01-25 14:12:39.829654200 +0100
+@@ -52,25 +52,42 @@
+  *   -- ICC_WIN95_CLASSES
+  */
+ 
++#define WIN32_NO_STATUS
++#define _INC_WINDOWS
++#define COM_NO_WINDOWS_H
++
+ #include <stdarg.h>
+-#include <string.h>
+-#include <stdlib.h>
++//#include <string.h>
++//#include <stdlib.h>
+ 
+-#include "windef.h"
+-#include "winbase.h"
+-#include "wingdi.h"
+-#include "winuser.h"
+-#include "winnls.h"
+-#include "commctrl.h"
+-#include "winerror.h"
+-#include "winreg.h"
++#include <windef.h>
++#include <winbase.h>
++//#include "wingdi.h"
++//#include "winuser.h"
++#include <winnls.h>
++//#include "commctrl.h"
++//#include "winerror.h"
++#include <winreg.h>
+ #define NO_SHLWAPI_STREAM
+-#include "shlwapi.h"
++#include <shlwapi.h>
+ #include "comctl32.h"
+-#include "wine/debug.h"
++#include <wine/debug.h>
  
  WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
  
@@ -22,7 +104,7 @@ Index: commctrl.c
  
  static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
  
-@@ -92,6 +105,67 @@
+@@ -92,6 +109,67 @@ static const WCHAR strCC32SubclassInfo[]
      'C','C','3','2','S','u','b','c','l','a','s','s','I','n','f','o',0
  };
  
@@ -90,7 +172,7 @@ Index: commctrl.c
  
  /***********************************************************************
   * DllMain [Internal]
-@@ -930,6 +1004,12 @@
+@@ -930,6 +1008,12 @@ HRESULT WINAPI DllGetVersion (DLLVERSION
  HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
  {
      TRACE("(%u, %s): stub\n", bInstall, debugstr_w(cmdline));
@@ -103,7 +185,7 @@ Index: commctrl.c
      return S_OK;
  }
  
-@@ -1593,12 +1673,114 @@
+@@ -1593,12 +1677,114 @@ LRESULT WINAPI SetPathWordBreakProc(HWND
   *
   * Draw text with shadow.
   */
@@ -222,7 +304,7 @@ Index: commctrl.c
  }
  
  /***********************************************************************
-@@ -1821,3 +1821,15 @@
+@@ -1639,3 +1825,15 @@ HRESULT WINAPI TaskDialogIndirect(const 
      if (pfVerificationFlagChecked) *pfVerificationFlagChecked = TRUE;
      return S_OK;
  }
@@ -239,11 +321,97 @@ Index: commctrl.c
 +    return TRUE;
 +}
 
-Index: propsheet.c
-===================================================================
---- propsheet.c	(revision 38890)
-+++ propsheet.c	(working copy)
-@@ -2425,6 +2425,9 @@
+diff -prudN e:\Wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listview.c
+--- e:\Wine\dlls\comctl32/listview.c	2013-03-16 11:54:52.374454400 +0100
++++ e:\reactos\dll\win32\comctl32/listview.c	2013-03-17 19:12:46.522399200 +0100
+@@ -314,6 +314,7 @@ typedef struct tagLISTVIEW_INFO
+   COLORREF clrBk;
+   COLORREF clrText;
+   COLORREF clrTextBk;
++  BOOL bDefaultBkColor;
+ 
+   /* font */
+   HFONT hDefaultFont;
+@@ -1700,8 +1701,19 @@ static inline BOOL LISTVIEW_GetItemW(con
+ /* used to handle collapse main item column case */
+ static inline BOOL LISTVIEW_DrawFocusRect(const LISTVIEW_INFO *infoPtr, HDC hdc)
+ {
+-    return (infoPtr->rcFocus.left < infoPtr->rcFocus.right) ?
+-            DrawFocusRect(hdc, &infoPtr->rcFocus) : FALSE;
++    BOOL Ret = FALSE;
++
++    if (infoPtr->rcFocus.left < infoPtr->rcFocus.right)
++    {
++        DWORD dwOldBkColor, dwOldTextColor;
++
++        dwOldBkColor = SetBkColor(hdc, RGB(255, 255, 255));
++        dwOldTextColor = SetBkColor(hdc, RGB(0, 0, 0));
++        Ret = DrawFocusRect(hdc, &infoPtr->rcFocus);
++        SetBkColor(hdc, dwOldBkColor);
++        SetBkColor(hdc, dwOldTextColor);
++    }
++    return Ret;
+ }
+ 
+ /* Listview invalidation functions: use _only_ these functions to invalidate */
+@@ -4734,7 +4746,10 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_I
+     if (infoPtr->uView == LV_VIEW_DETAILS && infoPtr->dwLvExStyle & LVS_EX_GRIDLINES)
+         rcLabel.bottom--;
+ 
+-    DrawTextW(hdc, lvItem.pszText, -1, &rcLabel, uFormat);
++    if ((!(lvItem.state & LVIS_SELECTED) || !infoPtr->bFocus) && (infoPtr->dwLvExStyle & LVS_EX_TRANSPARENTSHADOWTEXT))
++        DrawShadowText(hdc, lvItem.pszText, -1, &rcLabel, uFormat, RGB(255, 255, 255), RGB(0, 0, 0), 2, 2);
++    else
++        DrawTextW(hdc, lvItem.pszText, -1, &rcLabel, uFormat);
+ 
+ postpaint:
+     if (cdsubitemmode & CDRF_NOTIFYPOSTPAINT)
+@@ -5143,7 +5158,11 @@ enddraw:
+ 
+     /* Draw marquee rectangle if appropriate */
+     if (infoPtr->bMarqueeSelect)
++    {
++        SetBkColor(hdc, RGB(255, 255, 255));
++        SetTextColor(hdc, RGB(0, 0, 0));
+         DrawFocusRect(hdc, &infoPtr->marqueeDrawRect);
++    }
+ 
+     if (cdmode & CDRF_NOTIFYPOSTPAINT)
+ 	notify_postpaint(infoPtr, &nmlvcd);
+@@ -7952,6 +7971,7 @@ static BOOL LISTVIEW_SetBkColor(LISTVIEW
+ {
+     TRACE("(color=%x)\n", color);
+ 
++    infoPtr->bDefaultBkColor = FALSE;
+     if(infoPtr->clrBk != color) {
+ 	if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);
+ 	infoPtr->clrBk = color;
+@@ -9362,6 +9382,7 @@ static LRESULT LISTVIEW_NCCreate(HWND hw
+   infoPtr->clrText = CLR_DEFAULT;
+   infoPtr->clrTextBk = CLR_DEFAULT;
+   LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
++  infoPtr->bDefaultBkColor = TRUE;
+ 
+   /* set default values */
+   infoPtr->nFocusedItem = -1;
+@@ -11644,6 +11665,12 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg
+ 
+   case WM_SYSCOLORCHANGE:
+     COMCTL32_RefreshSysColors();
++    if (infoPtr->bDefaultBkColor)
++    {
++        LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
++        infoPtr->bDefaultBkColor = TRUE;
++        LISTVIEW_InvalidateList(infoPtr);
++    }
+     return 0;
+ 
+ /*	case WM_TIMER: */
+
+diff -prudN e:\Wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/propsheet.c
+--- e:\Wine\dlls\comctl32/propsheet.c	2013-03-02 14:17:59.122793000 +0100
++++ e:\reactos\dll\win32\comctl32/propsheet.c	2013-03-16 12:21:47.383897000 +0100
+@@ -2430,6 +2430,9 @@ static void PROPSHEET_SetWizButtons(HWND
    HWND hwndBack   = GetDlgItem(hwndDlg, IDC_BACK_BUTTON);
    HWND hwndNext   = GetDlgItem(hwndDlg, IDC_NEXT_BUTTON);
    HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
@@ -253,7 +421,7 @@ Index: propsheet.c
  
    TRACE("%d\n", dwFlags);
  
-@@ -2432,17 +2435,6 @@
+@@ -2437,17 +2440,6 @@ static void PROPSHEET_SetWizButtons(HWND
    EnableWindow(hwndNext, FALSE);
    EnableWindow(hwndFinish, FALSE);
  
@@ -271,7 +439,7 @@ Index: propsheet.c
    if (dwFlags & PSWIZB_BACK)
      EnableWindow(hwndBack, TRUE);
  
-@@ -2472,6 +2464,22 @@
+@@ -2477,6 +2469,22 @@ static void PROPSHEET_SetWizButtons(HWND
    }
    else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
      EnableWindow(hwndFinish, TRUE);
@@ -294,20 +462,229 @@ Index: propsheet.c
  }
  
  /******************************************************************************
-Index: tooltips.c
-===================================================================
---- tooltips.c	(revision 38890)
-+++ tooltips.c	(working copy)
-@@ -2488,8 +2488,33 @@
- static LRESULT
- TOOLTIPS_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
- {
--    FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
-+    TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
-+    TTTOOL_INFO *toolPtr = infoPtr->tools;
-+    INT nResult;
+diff -prudN e:\Wine\dlls\comctl32/rebar.c e:\reactos\dll\win32\comctl32/rebar.c
+--- e:\Wine\dlls\comctl32/rebar.c	2013-03-02 14:17:59.125795000 +0100
++++ e:\reactos\dll\win32\comctl32/rebar.c	2013-09-02 13:40:15.983276500 +0100
+@@ -51,7 +51,6 @@
+  *   - WM_QUERYNEWPALETTE
+  *   - WM_RBUTTONDOWN
+  *   - WM_RBUTTONUP
+- *   - WM_SYSCOLORCHANGE
+  *   - WM_VKEYTOITEM
+  *   - WM_WININICHANGE
+  *   Notifications:
+
+@@ -2544,10 +2543,8 @@ REBAR_InsertBandT(REBAR_INFO *infoPtr, I
  
-+    TRACE("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
+     /* initialize band */
+     memset(lpBand, 0, sizeof(*lpBand));
+-    lpBand->clrFore = infoPtr->clrText == CLR_NONE ? infoPtr->clrBtnText :
+-                                                     infoPtr->clrText;
+-    lpBand->clrBack = infoPtr->clrBk == CLR_NONE ? infoPtr->clrBtnFace :
+-                                                   infoPtr->clrBk;
++    lpBand->clrFore = infoPtr->clrText;
++    lpBand->clrBack = infoPtr->clrBk;
+     lpBand->iImage = -1;
+ 
+     REBAR_CommonSetupBand(infoPtr->hwndSelf, lprbbi, lpBand);
+@@ -2927,12 +2924,20 @@ REBAR_ShowBand (REBAR_INFO *infoPtr, INT
+ 
+ 
+ static LRESULT
+-REBAR_SizeToRect (REBAR_INFO *infoPtr, const RECT *lpRect)
++REBAR_SizeToRect (REBAR_INFO *infoPtr, WPARAM flags, RECT *lpRect)
+ {
+     if (!lpRect) return FALSE;
+ 
+     TRACE("[%s]\n", wine_dbgstr_rect(lpRect));
+     REBAR_SizeToHeight(infoPtr, get_rect_cy(infoPtr, lpRect));
++
++    /* Note that this undocumented flag is available on comctl32 v6 or later */
++    if ((flags & RBSTR_CHANGERECT) != 0)
++    {
++        RECT rcRebar;
++        GetClientRect(infoPtr->hwndSelf, &rcRebar);
++        lpRect->bottom = lpRect->top + (rcRebar.bottom - rcRebar.top);
++    }
+     return TRUE;
+ }
+ 
+@@ -3713,7 +3718,7 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, 
+ 	    return REBAR_ShowBand (infoPtr, wParam, lParam);
+ 
+ 	case RB_SIZETORECT:
+-	    return REBAR_SizeToRect (infoPtr, (LPCRECT)lParam);
++	    return REBAR_SizeToRect (infoPtr, wParam, (LPRECT)lParam);
+ 
+ 
+ /*    Messages passed to parent */
+@@ -3797,6 +3802,8 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, 
+ 
+         case WM_SYSCOLORCHANGE:
+             COMCTL32_RefreshSysColors();
++            infoPtr->clrBtnText = comctl32_color.clrBtnText;
++            infoPtr->clrBtnFace = comctl32_color.clrBtnFace;
+             return 0;
+ 
+ /*      case WM_VKEYTOITEM:     supported according to ControlSpy */
+
+--- e:\Wine\dlls\comctl32/tests/v6util.h	2011-09-16 23:22:36.002769200 +0100
++++ e:\reactos\dll\win32\comctl32/tests/v6util.h	1970-01-01 01:00:00.000000000 +0100
+@@ -1,142 +0,0 @@
+-/*
+- * Utility routines for comctl32 v6 tests
+- *
+- * Copyright 2006 Mike McCormack for CodeWeavers
+- * Copyright 2007 George Gov
+- * Copyright 2009 Owen Rudge for CodeWeavers
+- *
+- * This library is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU Lesser General Public
+- * License as published by the Free Software Foundation; either
+- * version 2.1 of the License, or (at your option) any later version.
+- *
+- * This library is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * Lesser General Public License for more details.
+- *
+- * You should have received a copy of the GNU Lesser General Public
+- * License along with this library; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+- */
+-
+-#define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
+-
+-#ifdef __i386__
+-#define ARCH "x86"
+-#elif defined __x86_64__
+-#define ARCH "amd64"
+-#else
+-#define ARCH "none"
+-#endif
+-
+-static const CHAR manifest_name[] = "cc6.manifest";
+-
+-static const CHAR manifest[] =
+-    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+-    "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">\n"
+-    "  <assemblyIdentity\n"
+-    "      type=\"win32\"\n"
+-    "      name=\"Wine.ComCtl32.Tests\"\n"
+-    "      version=\"1.0.0.0\"\n"
+-    "      processorArchitecture=\"" ARCH "\"\n"
+-    "  />\n"
+-    "<description>Wine comctl32 test suite</description>\n"
+-    "<dependency>\n"
+-    "  <dependentAssembly>\n"
+-    "    <assemblyIdentity\n"
+-    "        type=\"win32\"\n"
+-    "        name=\"microsoft.windows.common-controls\"\n"
+-    "        version=\"6.0.0.0\"\n"
+-    "        processorArchitecture=\"" ARCH "\"\n"
+-    "        publicKeyToken=\"6595b64144ccf1df\"\n"
+-    "        language=\"*\"\n"
+-    "    />\n"
+-    "</dependentAssembly>\n"
+-    "</dependency>\n"
+-    "</assembly>\n";
+-
+-static void unload_v6_module(ULONG_PTR cookie, HANDLE hCtx)
+-{
+-    HANDLE hKernel32;
+-    BOOL (WINAPI *pDeactivateActCtx)(DWORD, ULONG_PTR);
+-    VOID (WINAPI *pReleaseActCtx)(HANDLE);
+-
+-    hKernel32 = GetModuleHandleA("kernel32.dll");
+-    pDeactivateActCtx = (void*)GetProcAddress(hKernel32, "DeactivateActCtx");
+-    pReleaseActCtx = (void*)GetProcAddress(hKernel32, "ReleaseActCtx");
+-    if (!pDeactivateActCtx || !pReleaseActCtx)
+-    {
+-        win_skip("Activation contexts unsupported\n");
+-        return;
+-    }
+-
+-    pDeactivateActCtx(0, cookie);
+-    pReleaseActCtx(hCtx);
+-
+-    DeleteFileA(manifest_name);
+-}
+-
+-static BOOL load_v6_module(ULONG_PTR *pcookie, HANDLE *hCtx)
+-{
+-    HANDLE hKernel32;
+-    HANDLE (WINAPI *pCreateActCtxA)(ACTCTXA*);
+-    BOOL (WINAPI *pActivateActCtx)(HANDLE, ULONG_PTR*);
+-
+-    ACTCTXA ctx;
+-    BOOL ret;
+-    HANDLE file;
+-    DWORD written;
+-
+-    hKernel32 = GetModuleHandleA("kernel32.dll");
+-    pCreateActCtxA = (void*)GetProcAddress(hKernel32, "CreateActCtxA");
+-    pActivateActCtx = (void*)GetProcAddress(hKernel32, "ActivateActCtx");
+-    if (!(pCreateActCtxA && pActivateActCtx))
+-    {
+-        win_skip("Activation contexts unsupported. No version 6 tests possible.\n");
+-        return FALSE;
+-    }
+-
+-    /* create manifest */
+-    file = CreateFileA( manifest_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
+-    if (file != INVALID_HANDLE_VALUE)
+-    {
+-        ret = (WriteFile( file, manifest, sizeof(manifest)-1, &written, NULL ) &&
+-               written == sizeof(manifest)-1);
+-        CloseHandle( file );
+-        if (!ret)
+-        {
+-            DeleteFileA( manifest_name );
+-            skip("Failed to fill manifest file. Skipping comctl32 V6 tests.\n");
+-            return FALSE;
+-        }
+-        else
+-            trace("created %s\n", manifest_name);
+-    }
+-    else
+-    {
+-        skip("Failed to create manifest file. Skipping comctl32 V6 tests.\n");
+-        return FALSE;
+-    }
+-
+-    memset(&ctx, 0, sizeof(ctx));
+-    ctx.cbSize = sizeof(ctx);
+-    ctx.lpSource = manifest_name;
+-
+-    *hCtx = pCreateActCtxA(&ctx);
+-    ok(*hCtx != 0, "Expected context handle\n");
+-
+-    ret = pActivateActCtx(*hCtx, pcookie);
+-    expect(TRUE, ret);
+-
+-    if (!ret)
+-    {
+-        win_skip("A problem during context activation occurred.\n");
+-        DeleteFileA(manifest_name);
+-    }
+-
+-    return ret;
+-}
+-
+-#undef expect
+-#undef ARCH
+diff -prudN e:\Wine\dlls\comctl32/tooltips.c e:\reactos\dll\win32\comctl32/tooltips.c
+--- e:\Wine\dlls\comctl32/tooltips.c	2013-03-02 14:17:59.178196600 +0100
++++ e:\reactos\dll\win32\comctl32/tooltips.c	2013-03-16 12:24:45.122483600 +0100
+@@ -2002,7 +2002,32 @@ TOOLTIPS_NCHitTest (const TOOLTIPS_INFO 
+ static LRESULT
+ TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+ {
+-    FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", infoPtr->hwndSelf, wParam, lParam);
++    TTTOOL_INFO *toolPtr = infoPtr->tools;
++    LRESULT nResult;
++
++    TRACE("infoPtr=%p wParam=%lx lParam=%p\n", infoPtr, wParam, (PVOID)lParam);
 +
 +    if (lParam == NF_QUERY) {
 +        if (toolPtr->bNotifyUnicode) {
@@ -317,8 +694,8 @@ Index: tooltips.c
 +        }
 +    }
 +    else if (lParam == NF_REQUERY) {
-+        nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
-+                    (WPARAM)hwnd, (LPARAM)NF_QUERY);
++        nResult = SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
++                    (WPARAM)infoPtr->hwndSelf, (LPARAM)NF_QUERY);
 +        if (nResult == NFR_ANSI) {
 +            toolPtr->bNotifyUnicode = FALSE;
 +            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
@@ -330,14 +707,14 @@ Index: tooltips.c
 +        }
 +        return nResult;
 +    }
+ 
      return 0;
  }
- 
-Index: treeview.c
-===================================================================
---- treeview.c	(revision 38890)
-+++ treeview.c	(working copy)
-@@ -2830,7 +2830,12 @@
+
+diff -prudN e:\Wine\dlls\comctl32/treeview.c e:\reactos\dll\win32\comctl32/treeview.c
+--- e:\Wine\dlls\comctl32/treeview.c	2013-03-02 14:17:59.181198600 +0100
++++ e:\reactos\dll\win32\comctl32/treeview.c	2013-03-16 12:26:03.285023200 +0100
+@@ -2921,7 +2921,12 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr,
  	}
      }
  
@@ -351,151 +728,3 @@ Index: treeview.c
  
      if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
  	infoPtr->cdmode =
-Index: listview.c
-===================================================================
---- listview.c	(revision 51320)
-+++ listview.c	(working copy)
-@@ -315,6 +315,7 @@
-   COLORREF clrBk;
-   COLORREF clrText;
-   COLORREF clrTextBk;
-+  BOOL bDefaultBkColor;
- 
-   /* font */
-   HFONT hDefaultFont;
-@@ -1699,8 +1700,19 @@
- /* used to handle collapse main item column case */
- static inline BOOL LISTVIEW_DrawFocusRect(const LISTVIEW_INFO *infoPtr, HDC hdc)
- {
--    return (infoPtr->rcFocus.left < infoPtr->rcFocus.right) ?
--            DrawFocusRect(hdc, &infoPtr->rcFocus) : FALSE;
-+    BOOL Ret = FALSE;
-+
-+    if (infoPtr->rcFocus.left < infoPtr->rcFocus.right)
-+    {
-+        DWORD dwOldBkColor, dwOldTextColor;
-+
-+        dwOldBkColor = SetBkColor(hdc, RGB(255, 255, 255));
-+        dwOldTextColor = SetBkColor(hdc, RGB(0, 0, 0));
-+        Ret = DrawFocusRect(hdc, &infoPtr->rcFocus);
-+        SetBkColor(hdc, dwOldBkColor);
-+        SetBkColor(hdc, dwOldTextColor);
-+    }
-+    return Ret;
- }
- 
- /* Listview invalidation functions: use _only_ these functions to invalidate */
-@@ -4698,7 +4710,10 @@
-     if (infoPtr->uView == LV_VIEW_DETAILS && infoPtr->dwLvExStyle & LVS_EX_GRIDLINES)
-         rcLabel.bottom--;
- 
--    DrawTextW(hdc, lvItem.pszText, -1, &rcLabel, uFormat);
-+    if ((!(lvItem.state & LVIS_SELECTED) || !infoPtr->bFocus) && (infoPtr->dwLvExStyle & LVS_EX_TRANSPARENTSHADOWTEXT))
-+        DrawShadowText(hdc, lvItem.pszText, -1, &rcLabel, uFormat, RGB(255, 255, 255), RGB(0, 0, 0), 2, 2);
-+    else
-+        DrawTextW(hdc, lvItem.pszText, -1, &rcLabel, uFormat);
- 
- postpaint:
-     if (cdsubitemmode & CDRF_NOTIFYPOSTPAINT)
-@@ -5117,7 +5132,11 @@
- 
-     /* Draw marquee rectangle if appropriate */
-     if (infoPtr->bMarqueeSelect)
-+    {
-+        SetBkColor(hdc, RGB(255, 255, 255));
-+        SetTextColor(hdc, RGB(0, 0, 0));
-         DrawFocusRect(hdc, &infoPtr->marqueeDrawRect);
-+    }
- 
-     if (cdmode & CDRF_NOTIFYPOSTPAINT)
- 	notify_postpaint(infoPtr, &nmlvcd);
-@@ -7927,6 +7946,7 @@
- {
-     TRACE("(color=%x)\n", color);
- 
-+    infoPtr->bDefaultBkColor = FALSE;
-     if(infoPtr->clrBk != color) {
- 	if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);
- 	infoPtr->clrBk = color;
-@@ -9314,6 +9334,7 @@
-   infoPtr->clrText = CLR_DEFAULT;
-   infoPtr->clrTextBk = CLR_DEFAULT;
-   LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
-+  infoPtr->bDefaultBkColor = TRUE;
- 
-   /* set default values */
-   infoPtr->nFocusedItem = -1;
-@@ -11570,6 +11591,12 @@
- 
-   case WM_SYSCOLORCHANGE:
-     COMCTL32_RefreshSysColors();
-+    if (infoPtr->bDefaultBkColor)
-+    {
-+        LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
-+        infoPtr->bDefaultBkColor = TRUE;
-+        LISTVIEW_InvalidateList(infoPtr);
-+    }
-     return 0;
- 
- /*	case WM_TIMER: */
-Index: rebar.c
-===================================================================
---- rebar.c	(revision 51320)
-+++ rebar.c	(working copy)
-@@ -51,7 +51,6 @@
-  *   - WM_QUERYNEWPALETTE
-  *   - WM_RBUTTONDOWN
-  *   - WM_RBUTTONUP
-- *   - WM_SYSCOLORCHANGE
-  *   - WM_VKEYTOITEM
-  *   - WM_WININICHANGE
-  *   Notifications:
-@@ -2540,10 +2539,8 @@
- 
-     /* initialize band */
-     memset(lpBand, 0, sizeof(*lpBand));
--    lpBand->clrFore = infoPtr->clrText == CLR_NONE ? infoPtr->clrBtnText :
--                                                     infoPtr->clrText;
--    lpBand->clrBack = infoPtr->clrBk == CLR_NONE ? infoPtr->clrBtnFace :
--                                                   infoPtr->clrBk;
-+    lpBand->clrFore = infoPtr->clrText;
-+    lpBand->clrBack = infoPtr->clrBk;
-     lpBand->iImage = -1;
- 
-     REBAR_CommonSetupBand(infoPtr->hwndSelf, lprbbi, lpBand);
-@@ -3793,6 +3790,8 @@
- 
-         case WM_SYSCOLORCHANGE:
-             COMCTL32_RefreshSysColors();
-+            infoPtr->clrBtnText = comctl32_color.clrBtnText;
-+            infoPtr->clrBtnFace = comctl32_color.clrBtnFace;
-             return 0;
- 
- /*      case WM_VKEYTOITEM:     supported according to ControlSpy */
-Index: monthcal.c
-===================================================================
---- monthcal.c	(Revision 51719)
-+++ monthcal.c	(Arbeitskopie)
-@@ -143,8 +143,8 @@
- /* empty SYSTEMTIME const */
- static const SYSTEMTIME st_null;
- /* valid date limits */
--static const SYSTEMTIME max_allowed_date = { .wYear = 9999, .wMonth = 12, .wDay = 31 };
--static const SYSTEMTIME min_allowed_date = { .wYear = 1752, .wMonth = 9,  .wDay = 14 };
-+static const SYSTEMTIME max_allowed_date = { 9999, 12, 0, 31, 0, 0, 0, 0 };
-+static const SYSTEMTIME min_allowed_date = { 1752, 9, 0, 14, 0, 0, 0, 0 };
-
- /* Prev/Next buttons */
- enum nav_direction
-Index: comctl32.spec
-===================================================================
---- comctl32.spec       (revision 56653)
-+++ comctl32.spec       (working copy)
-@@ -188,6 +188,7 @@
- @ stdcall PropertySheet(ptr) PropertySheetA
- @ stdcall PropertySheetA(ptr)
- @ stdcall PropertySheetW(ptr)
-+@ stdcall RegisterClassNameW(wstr)
- @ stdcall TaskDialogIndirect(ptr ptr ptr ptr)
- @ stdcall UninitializeFlatSB(long)
- @ stdcall _TrackMouseEvent(ptr)

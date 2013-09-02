@@ -2924,12 +2924,20 @@ REBAR_ShowBand (REBAR_INFO *infoPtr, INT iBand, BOOL show)
 
 
 static LRESULT
-REBAR_SizeToRect (REBAR_INFO *infoPtr, const RECT *lpRect)
+REBAR_SizeToRect (REBAR_INFO *infoPtr, WPARAM flags, RECT *lpRect)
 {
     if (!lpRect) return FALSE;
 
     TRACE("[%s]\n", wine_dbgstr_rect(lpRect));
     REBAR_SizeToHeight(infoPtr, get_rect_cy(infoPtr, lpRect));
+
+    /* Note that this undocumented flag is available on comctl32 v6 or later */
+    if ((flags & RBSTR_CHANGERECT) != 0)
+    {
+        RECT rcRebar;
+        GetClientRect(infoPtr->hwndSelf, &rcRebar);
+        lpRect->bottom = lpRect->top + (rcRebar.bottom - rcRebar.top);
+    }
     return TRUE;
 }
 
@@ -3710,7 +3718,7 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return REBAR_ShowBand (infoPtr, wParam, lParam);
 
 	case RB_SIZETORECT:
-	    return REBAR_SizeToRect (infoPtr, (LPCRECT)lParam);
+	    return REBAR_SizeToRect (infoPtr, wParam, (LPRECT)lParam);
 
 
 /*    Messages passed to parent */
