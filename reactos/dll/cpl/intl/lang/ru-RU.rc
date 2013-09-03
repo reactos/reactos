@@ -21,7 +21,7 @@ BEGIN
     EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    GROUPBOX "Географического расположение", -1, 5, 171, 234, 55
+    GROUPBOX "Расположение", -1, 5, 171, 234, 55
     LTEXT "&Укажите ваше расположение для того, чтобы службы могли снабжать вас местной информацией, например, новостями и сводками погоды:", -1, 14, 180, 217, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
@@ -81,7 +81,7 @@ BEGIN
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Разделитель &элементов списка:", -1, 8, 181, 125, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Система едениц:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Система единиц:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -129,7 +129,7 @@ BEGIN
     COMBOBOX IDC_TIMEPMSYMBOL, 152, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
     LTEXT "Обозначение формата времени\n\n\
-h = час    m = минута    s = секунда    t = am или pm\n\n\
+h = час    m = минута    s = секунда    t = AM или PM\n\n\
 h = 12-часовой формат суток\n\
 H = 24-часовой формат суток\n\
 hh, mm, ss = с выводом нулей в начале\n\
@@ -155,7 +155,7 @@ BEGIN
     GROUPBOX "Краткий формат даты", -1, 7, 83, 230, 81
     LTEXT "Образец:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Образец - справа на лево:", -1, 13, 111, 60, 16
+    LTEXT "Образец - справа налево:", -1, 13, 111, 60, 16
     EDITTEXT IDC_SHRTDATERTOL_EDIT, 77, 111, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
     LTEXT "Краткий формат:", -1, 13, 131, 60, 10
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
@@ -164,7 +164,7 @@ BEGIN
     GROUPBOX "Полный формат даты", -1, 7, 167, 230, 64
     LTEXT "Образец:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Образец - справа на лево:", -1, 13, 195, 61, 16
+    LTEXT "Образец - справа налево:", -1, 13, 195, 61, 16
     EDITTEXT IDC_LONGDATERTOL_EDIT, 77, 195, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
     LTEXT "&Полный формат:", -1, 13, 215, 60, 10
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE

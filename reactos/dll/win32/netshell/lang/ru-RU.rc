@@ -15,7 +15,7 @@ BEGIN
 	PUSHBUTTON "&Свойства", IDC_PROPERTIES, 174, 130, 65, 14
 	GROUPBOX "Описание", -1, 9, 153, 230, 46, BS_GROUPBOX
 	LTEXT "Свойства компонента перечислены ниже...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-	CHECKBOX "Отображать значек в трее при установленом соединении", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+	CHECKBOX "Отображать значок в трее при установленом соединении", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 	CHECKBOX "Оповещать в случае разрыва соединения", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
@@ -40,8 +40,8 @@ BEGIN
         ICON "", IDC_NETSTAT, 110, 85, 32, 32
 	LTEXT "Принято", -1, 158, 90, 37, 8
 	LTEXT "Байт:", -1, 17, 115, 32, 8
-	RTEXT "000.000.000", IDC_SEND, 54, 115, 44, 8
-	RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 46, 8
+	RTEXT "000 000 000", IDC_SEND, 54, 115, 44, 8
+	RTEXT "000 000 000", IDC_RECEIVED, 139, 115, 46, 8
 	PUSHBUTTON "&Свойства", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
 	PUSHBUTTON "&Отключить", IDC_ENDISABLE, 66, 150, 50, 14
 	RTEXT "", IDC_STATUS, 100, 20, 98, 8
@@ -60,7 +60,7 @@ BEGIN
     LTEXT "Маска подсети:", -1, 22, 48, 80, 8
     LTEXT "Шлюз по умолчанию:", -1, 22, 62, 80, 8
 
-    RTEXT "н/а", IDC_DETAILSTYPE, 122, 20, 80, 8
+    RTEXT "н/д", IDC_DETAILSTYPE, 122, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
     RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
@@ -119,7 +119,7 @@ BEGIN
     IDS_FORMAT_MBIT             "%u Мбит/с"
     IDS_FORMAT_GBIT             "%u Гбит/с"
     IDS_DURATION_DAY            "%d день %s"
-    IDS_DURATION_DAYS           "%d дней %s"
+    IDS_DURATION_DAYS           "%d дня(ей) %s"
     IDS_ASSIGNED_DHCP           "Присвоен DHCP"
     IDS_ASSIGNED_MANUAL         "Настроен вручную"
 END

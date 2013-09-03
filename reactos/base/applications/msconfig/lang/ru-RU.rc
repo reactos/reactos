@@ -69,7 +69,7 @@ BEGIN
  GROUPBOX "Варианты запуска", -1, 10, 10, 340, 150,0,WS_EX_TRANSPARENT
  CONTROL "&Обычный запуск - загрузка всех драйверов устройств и запуск всех служб", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 280, 10
  CONTROL "&Диагностический запуск - загрузка только основных драйверов и запуск основных служб", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 325, 10
- CONTROL "&Выборочный запуск", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 100, 10
+ CONTROL "&Выборочный запуск:", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 100, 10
  AUTOCHECKBOX "О&брабатывать файл SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 130, 10
  AUTOCHECKBOX "&Загружать системные службы", IDC_CBX_SYSTEM_SERVICE, 30, 95, 130, 10
  AUTOCHECKBOX "З&агружать элементы автозагрузки", IDC_CBX_STARTUP_ITEM, 30, 110, 140, 10
@@ -154,7 +154,7 @@ BEGIN
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
     IDS_TOOLS_REGEDIT_NAME   "Редактор реестра"
-    IDS_TOOLS_REGEDIT_DESCR  "Открытый редактор реестра."
+    IDS_TOOLS_REGEDIT_DESCR  "Открыть редактор реестра."
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
     IDS_TOOLS_SYSDM_NAME     "Настройки системы"
