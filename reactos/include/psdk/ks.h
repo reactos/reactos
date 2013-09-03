@@ -4257,7 +4257,7 @@ KsLoadResource(
   _In_ POOL_TYPE PoolType,
   _In_ ULONG_PTR ResourceName,
   _In_ ULONG ResourceType,
-  _Outptr_result_bytebuffer_(ResourceSize) PVOID *Resource,
+  _Outptr_result_bytebuffer_(*ResourceSize) PVOID *Resource,
   _Out_opt_ PULONG ResourceSize);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
