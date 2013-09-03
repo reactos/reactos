@@ -133,7 +133,6 @@ CHString::CHString(WCHAR ch, int nRepeat) throw (CHeap_Exception)
  */
 CHString::CHString(LPCWSTR lpsz) throw (CHeap_Exception)
 {
-    int Len;
     // Allow null initialize, in case something goes wrong
     m_pchData = afxPchNil;
 
@@ -141,7 +140,7 @@ CHString::CHString(LPCWSTR lpsz) throw (CHeap_Exception)
     if (lpsz != 0)
     {
         // Get its length
-        Len = SafeStrlen(lpsz);
+        int Len = SafeStrlen(lpsz);
         // Then, allocate a big enough buffer and copy string
         // Note that here, we don't null terminate the string...
         if (Len)
@@ -174,7 +173,6 @@ CHString::CHString(LPCWSTR lpch, int nLength) throw (CHeap_Exception)
  */
 CHString::CHString(LPCSTR lpsz) throw (CHeap_Exception)
 {
-    int Len;
     // Allow null initialize, in case something goes wrong
     m_pchData = afxPchNil;
 
@@ -182,7 +180,7 @@ CHString::CHString(LPCSTR lpsz) throw (CHeap_Exception)
     if (lpsz != 0)
     {
         // Get its length
-        Len = strlen(lpsz);
+        int Len = strlen(lpsz);
         if (Len)
         {
             // Allocate and convert the string
