@@ -420,7 +420,7 @@ SmpUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
     UNICODE_STRING DestinationString;
 
     /* Print and breakpoint into the debugger */
-    DbgPrint("SMSS: Unhandled exception - Status == %x  IP == %x\n",
+    DbgPrint("SMSS: Unhandled exception - Status == %x  IP == %p\n",
              ExceptionInfo->ExceptionRecord->ExceptionCode,
              ExceptionInfo->ExceptionRecord->ExceptionAddress);
     DbgPrint("      Memory Address: %x  Read/Write: %x\n",

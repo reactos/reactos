@@ -184,7 +184,7 @@ SmpGetProcessMuSessionId(IN HANDLE ProcessHandle,
     else
     {
         /* Failure -- assume session zero */
-        DPRINT1("SMSS: GetProcessMuSessionId, Process=%x, Status=%x\n",
+        DPRINT1("SMSS: GetProcessMuSessionId, Process=%p, Status=%x\n",
                 ProcessHandle, Status);
         *SessionId = 0;
     }
@@ -207,7 +207,7 @@ SmpSetProcessMuSessionId(IN HANDLE ProcessHandle,
                                      sizeof(SessionId));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("SMSS: SetProcessMuSessionId, Process=%x, Status=%x\n",
+        DPRINT1("SMSS: SetProcessMuSessionId, Process=%p, Status=%x\n",
                 ProcessHandle, Status);
     }
 

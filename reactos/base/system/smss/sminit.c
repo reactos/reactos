@@ -236,7 +236,7 @@ SmpConfigureProtectionMode(IN PWSTR ValueName,
 
     /* Recreate the security descriptors to take into account security mode */
     SmpCreateSecurityDescriptors(FALSE);
-    DPRINT("SmpProtectionMode: %d\n", SmpProtectionMode);
+    DPRINT("SmpProtectionMode: %lu\n", SmpProtectionMode);
     return STATUS_SUCCESS;
 }
 
@@ -261,7 +261,7 @@ SmpConfigureAllowProtectedRenames(IN PWSTR ValueName,
         SmpAllowProtectedRenames = 0;
     }
 
-    DPRINT("SmpAllowProtectedRenames: %d\n", SmpAllowProtectedRenames);
+    DPRINT("SmpAllowProtectedRenames: %lu\n", SmpAllowProtectedRenames);
     return STATUS_SUCCESS;
 }
 
@@ -1819,13 +1819,13 @@ SmpCreateDynamicEnvironmentVariables(VOID)
     {
         /* To combine it into a single string */
         swprintf((PWCHAR)PartialInfo->Data + wcslen((PWCHAR)PartialInfo->Data),
-                 L", %ws",
+                 L", %S",
                  PartialInfo2->Data);
     }
 
     /* So that we can set this as the PROCESSOR_IDENTIFIER variable */
     RtlInitUnicodeString(&ValueName, L"PROCESSOR_IDENTIFIER");
-    DPRINT("Setting %wZ to %S\n", &ValueName, PartialInfo->Data);
+    DPRINT("Setting %wZ to %s\n", &ValueName, PartialInfo->Data);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
@@ -1884,7 +1884,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
 
     /* And finally, write the number of CPUs */
     RtlInitUnicodeString(&ValueName, L"NUMBER_OF_PROCESSORS");
-    swprintf(ValueBuffer, L"%u", BasicInfo.NumberOfProcessors);
+    swprintf(ValueBuffer, L"%d", BasicInfo.NumberOfProcessors);
     DPRINT("Setting %wZ to %S\n", &ValueName, ValueBuffer);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,

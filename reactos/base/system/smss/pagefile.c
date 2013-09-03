@@ -94,7 +94,7 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     /* Make sure we don't have too many */
     if (SmpNumberOfPagingFiles >= 16)
     {
-        DPRINT1("SMSS:PFILE: Too many paging files specified - %d\n",
+        DPRINT1("SMSS:PFILE: Too many paging files specified - %lu\n",
                 SmpNumberOfPagingFiles);
         return STATUS_TOO_MANY_PAGING_FILES;
     }
