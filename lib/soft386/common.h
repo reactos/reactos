@@ -149,6 +149,66 @@ Soft386ParseModRegRm
     PSOFT386_MOD_REG_RM ModRegRm
 );
 
+inline
+BOOLEAN
+Soft386ReadModrmByteOperands
+(
+    PSOFT386_STATE State,
+    PSOFT386_MOD_REG_RM ModRegRm,
+    PUCHAR RegValue,
+    PUCHAR RmValue
+);
+
+inline
+BOOLEAN
+Soft386ReadModrmWordOperands
+(
+    PSOFT386_STATE State,
+    PSOFT386_MOD_REG_RM ModRegRm,
+    PUSHORT RegValue,
+    PUSHORT RmValue
+);
+
+inline
+BOOLEAN
+Soft386ReadModrmDwordOperands
+(
+    PSOFT386_STATE State,
+    PSOFT386_MOD_REG_RM ModRegRm,
+    PULONG RegValue,
+    PULONG RmValue
+);
+
+inline
+BOOLEAN
+Soft386WriteModrmByteOperands
+(
+    PSOFT386_STATE State,
+    PSOFT386_MOD_REG_RM ModRegRm,
+    BOOLEAN WriteRegister,
+    UCHAR Value
+);
+
+inline
+BOOLEAN
+Soft386WriteModrmWordOperands
+(
+    PSOFT386_STATE State,
+    PSOFT386_MOD_REG_RM ModRegRm,
+    BOOLEAN WriteRegister,
+    USHORT Value
+);
+
+inline
+BOOLEAN
+Soft386WriteModrnDwordOperands
+(
+    PSOFT386_STATE State,
+    PSOFT386_MOD_REG_RM ModRegRm,
+    BOOLEAN WriteRegister,
+    ULONG Value
+);
+
 #endif // _COMMON_H_
 
 /* EOF */

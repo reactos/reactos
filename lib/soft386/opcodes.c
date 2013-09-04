@@ -24,9 +24,9 @@
 SOFT386_OPCODE_HANDLER_PROC
 Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
 {
-    NULL, // TODO: OPCODE 0x00 NOT SUPPORTED
+    Soft386OpcodeAddByteModrm, // TODO: OPCODE 0x00 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x01 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x02 NOT SUPPORTED
+    Soft386OpcodeAddByteModrm, // TODO: OPCODE 0x02 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x03 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x04 NOT SUPPORTED
     NULL, // TODO: OPCODE 0x05 NOT SUPPORTED
@@ -1257,4 +1257,65 @@ Soft386OpcodeMovByteRegImm(PSOFT386_STATE State, UCHAR Opcode)
     }
 
     return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+Soft386OpcodeAddByteModrm(PSOFT386_STATE State, UCHAR Opcode)
+{
+    UCHAR FirstValue, SecondValue, Result;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFD) == 0x00);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+    else if (State->PrefixFlags
+             & ~(SOFT386_PREFIX_ADSIZE
+             | SOFT386_PREFIX_SEG
+             | SOFT386_PREFIX_LOCK))
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!Soft386ReadModrmByteOperands(State,
+                                      &ModRegRm,
+                                      &FirstValue,
+                                      &SecondValue))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    Result = FirstValue + SecondValue;
+
+    /* Update the flags */
+    State->Flags.Cf = (Result < FirstValue) && (Result < SecondValue);
+    State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) == (SecondValue & SIGN_FLAG_BYTE))
+                      && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+    State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* Write back the result */
+    return Soft386WriteModrmByteOperands(State,
+                                         &ModRegRm,
+                                         Opcode & SOFT386_OPCODE_WRITE_REG,
+                                         Result);
 }

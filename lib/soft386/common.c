@@ -987,4 +987,304 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
     return TRUE;
 }
 
+inline
+BOOLEAN
+Soft386ReadModrmByteOperands(PSOFT386_STATE State,
+                             PSOFT386_MOD_REG_RM ModRegRm,
+                             PUCHAR RegValue,
+                             PUCHAR RmValue)
+{
+    INT Segment = SOFT386_REG_DS;
+
+    /* Get the register value */
+    if (ModRegRm->Register & 0x04)
+    {
+        /* AH, CH, DH, BH */
+        *RegValue = State->GeneralRegs[ModRegRm->Register & 0x03].HighByte;
+    }
+    else
+    {
+        /* AL, CL, DL, BL */
+        *RegValue = State->GeneralRegs[ModRegRm->Register & 0x03].LowByte;
+    }
+
+    if (!ModRegRm->Memory)
+    {
+        /* Get the second register value */
+        if (ModRegRm->SecondRegister & 0x04)
+        {
+            /* AH, CH, DH, BH */
+            *RmValue = State->GeneralRegs[ModRegRm->SecondRegister & 0x03].HighByte;
+        }
+        else
+        {
+            /* AL, CL, DL, BL */
+            *RmValue = State->GeneralRegs[ModRegRm->SecondRegister & 0x03].LowByte;
+        }
+    }
+    else
+    {
+        /* Check for the segment override */
+        if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+        {
+            /* Use the override segment instead */
+            Segment = State->SegmentOverride;
+        }
+
+        /* Read memory */
+        if (!Soft386ReadMemory(State,
+                               Segment,
+                               ModRegRm->MemoryAddress,
+                               FALSE,
+                               RmValue,
+                               sizeof(UCHAR)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386ReadModrmWordOperands(PSOFT386_STATE State,
+                              PSOFT386_MOD_REG_RM ModRegRm,
+                              PUSHORT RegValue,
+                              PUSHORT RmValue)
+{
+    INT Segment = SOFT386_REG_DS;
+
+    /* Get the register value */
+    *RegValue = State->GeneralRegs[ModRegRm->Register].LowWord;
+
+    if (!ModRegRm->Memory)
+    {
+        /* Get the second register value */
+        *RmValue = State->GeneralRegs[ModRegRm->SecondRegister].LowWord;
+    }
+    else
+    {
+        /* Check for the segment override */
+        if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+        {
+            /* Use the override segment instead */
+            Segment = State->SegmentOverride;
+        }
+
+        /* Read memory */
+        if (!Soft386ReadMemory(State,
+                               Segment,
+                               ModRegRm->MemoryAddress,
+                               FALSE,
+                               RmValue,
+                               sizeof(USHORT)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386ReadModrmDwordOperands(PSOFT386_STATE State,
+                              PSOFT386_MOD_REG_RM ModRegRm,
+                              PULONG RegValue,
+                              PULONG RmValue)
+{
+    INT Segment = SOFT386_REG_DS;
+
+    /* Get the register value */
+    *RegValue = State->GeneralRegs[ModRegRm->Register].Long;
+
+    if (!ModRegRm->Memory)
+    {
+        /* Get the second register value */
+        *RmValue = State->GeneralRegs[ModRegRm->SecondRegister].Long;
+    }
+    else
+    {
+        /* Check for the segment override */
+        if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+        {
+            /* Use the override segment instead */
+            Segment = State->SegmentOverride;
+        }
+
+        /* Read memory */
+        if (!Soft386ReadMemory(State,
+                               Segment,
+                               ModRegRm->MemoryAddress,
+                               FALSE,
+                               RmValue,
+                               sizeof(ULONG)))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386WriteModrmByteOperands(PSOFT386_STATE State,
+                             PSOFT386_MOD_REG_RM ModRegRm,
+                             BOOLEAN WriteRegister,
+                             UCHAR Value)
+{
+    INT Segment = SOFT386_REG_DS;
+
+    if (WriteRegister)
+    {
+        /* Store the value in the register */
+        if (ModRegRm->Register & 0x04)
+        {
+            /* AH, CH, DH, BH */
+            State->GeneralRegs[ModRegRm->Register & 0x03].HighByte = Value;
+        }
+        else
+        {
+            /* AL, CL, DL, BL */
+            State->GeneralRegs[ModRegRm->Register & 0x03].LowByte = Value;
+        }
+    }
+    else
+    {
+        if (!ModRegRm->Memory)
+        {
+            /* Store the value in the second register */
+            if (ModRegRm->SecondRegister & 0x04)
+            {
+                /* AH, CH, DH, BH */
+                State->GeneralRegs[ModRegRm->SecondRegister & 0x03].HighByte = Value;
+            }
+            else
+            {
+                /* AL, CL, DL, BL */
+                State->GeneralRegs[ModRegRm->SecondRegister & 0x03].LowByte = Value;
+            }
+        }
+        else
+        {
+            /* Check for the segment override */
+            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Write memory */
+            if (!Soft386WriteMemory(State,
+                                    Segment,
+                                    ModRegRm->MemoryAddress,
+                                    &Value,
+                                    sizeof(UCHAR)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386WriteModrmWordOperands(PSOFT386_STATE State,
+                              PSOFT386_MOD_REG_RM ModRegRm,
+                              BOOLEAN WriteRegister,
+                              USHORT Value)
+{
+    INT Segment = SOFT386_REG_DS;
+
+    if (WriteRegister)
+    {
+        /* Store the value in the register */
+        State->GeneralRegs[ModRegRm->Register].LowWord = Value;
+    }
+    else
+    {
+        if (!ModRegRm->Memory)
+        {
+            /* Store the value in the second register */
+            State->GeneralRegs[ModRegRm->SecondRegister].LowWord = Value;
+        }
+        else
+        {
+            /* Check for the segment override */
+            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Write memory */
+            if (!Soft386WriteMemory(State,
+                                    Segment,
+                                    ModRegRm->MemoryAddress,
+                                    &Value,
+                                    sizeof(USHORT)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+inline
+BOOLEAN
+Soft386WriteModrnDwordOperands(PSOFT386_STATE State,
+                               PSOFT386_MOD_REG_RM ModRegRm,
+                               BOOLEAN WriteRegister,
+                               ULONG Value)
+{
+    INT Segment = SOFT386_REG_DS;
+
+    if (WriteRegister)
+    {
+        /* Store the value in the register */
+        State->GeneralRegs[ModRegRm->Register].Long = Value;
+    }
+    else
+    {
+        if (!ModRegRm->Memory)
+        {
+            /* Store the value in the second register */
+            State->GeneralRegs[ModRegRm->SecondRegister].Long = Value;
+        }
+        else
+        {
+            /* Check for the segment override */
+            if (State->PrefixFlags & SOFT386_PREFIX_SEG)
+            {
+                /* Use the override segment instead */
+                Segment = State->SegmentOverride;
+            }
+
+            /* Write memory */
+            if (!Soft386WriteMemory(State,
+                                    Segment,
+                                    ModRegRm->MemoryAddress,
+                                    &Value,
+                                    sizeof(ULONG)))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+
 /* EOF */
