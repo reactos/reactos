@@ -17,6 +17,9 @@
 
 #define SOFT386_NUM_OPCODE_HANDLERS 256
 #define SOFT386_OPCODE_WRITE_REG (1 << 1)
+#define SOFT386_OPCODE_HANDLER(x) BOOLEAN\
+                                  FASTCALL\
+                                  (x)(PSOFT386_STATE State, UCHAR Opcode)
 
 typedef BOOLEAN (FASTCALL *SOFT386_OPCODE_HANDLER_PROC)(PSOFT386_STATE, UCHAR);
 
@@ -24,196 +27,32 @@ extern
 SOFT386_OPCODE_HANDLER_PROC
 Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS];
 
-BOOLEAN
-FASTCALL
-Soft386OpcodePrefix
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeIncrement
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeDecrement
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodePushReg
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodePopReg
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeNop
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeExchangeEax
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeShortConditionalJmp
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeClearCarry
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeSetCarry
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeComplCarry
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeClearInt
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeSetInt
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeClearDir
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeSetDir
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeHalt
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeInByte
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeIn
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeOutByte
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeOut
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeShortJump
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeMovRegImm
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeMovByteRegImm
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
-
-BOOLEAN
-FASTCALL
-Soft386OpcodeAddByteModrm
-(
-    PSOFT386_STATE State,
-    UCHAR Opcode
-);
+SOFT386_OPCODE_HANDLER(Soft386OpcodePrefix);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeIncrement);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeDecrement);
+SOFT386_OPCODE_HANDLER(Soft386OpcodePushReg);
+SOFT386_OPCODE_HANDLER(Soft386OpcodePopReg);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeNop);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeExchangeEax);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeShortConditionalJmp);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeClearCarry);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeSetCarry);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeComplCarry);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeClearInt);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeSetInt);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeClearDir);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeSetDir);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeHalt);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeInByte);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeIn);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeOutByte);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeOut);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeShortJump);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovRegImm);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovByteRegImm);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAddByteModrm);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAddModrm);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAddAl);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAddEax);
 
 #endif // _OPCODES_H_

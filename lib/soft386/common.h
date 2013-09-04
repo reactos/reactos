@@ -201,7 +201,7 @@ Soft386WriteModrmWordOperands
 
 inline
 BOOLEAN
-Soft386WriteModrnDwordOperands
+Soft386WriteModrmDwordOperands
 (
     PSOFT386_STATE State,
     PSOFT386_MOD_REG_RM ModRegRm,
