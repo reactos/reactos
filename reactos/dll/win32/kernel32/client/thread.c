@@ -571,8 +571,10 @@ TerminateThread(IN HANDLE hThread,
                 IN DWORD dwExitCode)
 {
     NTSTATUS Status;
+#if DBG
     PRTL_CRITICAL_SECTION LoaderLock;
     THREAD_BASIC_INFORMATION ThreadInfo;
+#endif /* DBG */
 
     /* Check for invalid thread handle */
     if (!hThread)
@@ -582,6 +584,7 @@ TerminateThread(IN HANDLE hThread,
         return FALSE;
     }
 
+#if DBG
     /* Get the loader lock */
     LoaderLock = NtCurrentPeb()->LoaderLock;
     if (LoaderLock)
@@ -592,13 +595,14 @@ TerminateThread(IN HANDLE hThread,
                                           &ThreadInfo,
                                           sizeof(ThreadInfo),
                                           NULL);
-        if (!NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
-            /* Assert that we don't hold the loader lock */
-            ASSERT(NtCurrentTeb()->ClientId.UniqueThread != ThreadInfo.ClientId.UniqueThread);
-            ASSERT(NtCurrentTeb()->ClientId.UniqueThread != LoaderLock->OwningThread);
+            /* If terminating the current thread, we must not hold the loader lock */
+            if (NtCurrentTeb()->ClientId.UniqueThread == ThreadInfo.ClientId.UniqueThread)
+                ASSERT(NtCurrentTeb()->ClientId.UniqueThread != LoaderLock->OwningThread);
         }
     }
+#endif /* DBG */
 
     /* Now terminate the thread */
     Status = NtTerminateThread(hThread, dwExitCode);
