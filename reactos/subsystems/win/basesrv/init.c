@@ -139,7 +139,7 @@ NTAPI
 BaseSrvInitializeIniFileMappings(IN PBASE_STATIC_SERVER_DATA StaticServerData)
 {
     /* Allocate the mapping blob */
-    BaseSrvIniFileMapping = RtlAllocateHeap(BaseSrvHeap,
+    BaseSrvIniFileMapping = RtlAllocateHeap(BaseSrvSharedHeap,
                                             HEAP_ZERO_MEMORY,
                                             sizeof(*BaseSrvIniFileMapping));
     if (BaseSrvIniFileMapping == NULL)
