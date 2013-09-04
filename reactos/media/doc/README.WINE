@@ -45,10 +45,10 @@ reactos/dll/win32/advpack         # Synced to Wine-1.5.26
 reactos/dll/win32/atl             # Synced to Wine-1.5.19
 reactos/dll/win32/atl100          # Synced to Wine-1.5.19
 reactos/dll/win32/avifil32        # Synced to Wine-1.5.26
-reactos/dll/win32/bcrypt          # Synced to Wine-1.5.19
+reactos/dll/win32/bcrypt          # Synced to Wine-1.5.26
 reactos/dll/win32/browseui        # Out of sync
 reactos/dll/win32/cabinet         # Synced to Wine-1.5.26
-reactos/dll/win32/clusapi         # Synced to Wine-1.5.19
+reactos/dll/win32/clusapi         # Synced to Wine-1.5.26
 reactos/dll/win32/comcat          # Synced to Wine-1.5.4
 reactos/dll/win32/comctl32        # Synced to Wine 1.5.26
 reactos/dll/win32/comdlg32        # Synced to Wine 1.3.37
