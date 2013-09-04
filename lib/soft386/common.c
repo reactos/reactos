@@ -1243,7 +1243,7 @@ Soft386WriteModrmWordOperands(PSOFT386_STATE State,
 
 inline
 BOOLEAN
-Soft386WriteModrnDwordOperands(PSOFT386_STATE State,
+Soft386WriteModrmDwordOperands(PSOFT386_STATE State,
                                PSOFT386_MOD_REG_RM ModRegRm,
                                BOOLEAN WriteRegister,
                                ULONG Value)
