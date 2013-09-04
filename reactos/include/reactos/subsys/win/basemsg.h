@@ -106,8 +106,8 @@ typedef struct
 
 typedef struct
 {
-    CLIENT_ID ClientId;
     HANDLE ThreadHandle;
+    CLIENT_ID ClientId;
 } BASE_CREATE_THREAD, *PBASE_CREATE_THREAD;
 
 typedef struct
