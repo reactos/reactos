@@ -403,9 +403,6 @@ BaseCreateStack(HANDLE hProcess,
     StackCommit = ROUND_UP(StackCommit, PageSize);
     StackReserve = ROUND_UP(StackReserve, AllocationGranularity);
 
-    /* ROS Hack until we support guard page stack expansion */
-    StackCommit = StackReserve;
-
     /* Reserve memory for the stack */
     Stack = 0;
     Status = NtAllocateVirtualMemory(hProcess,
