@@ -1,0 +1,72 @@
+#include "npfs.h"
+
+NODE_TYPE_CODE
+NTAPI
+NpDecodeFileObject(IN PFILE_OBJECT FileObject,
+                   OUT PVOID* PrimaryContext OPTIONAL,
+                   OUT PNP_CCB* Ccb,
+                   OUT PBOOLEAN ServerSide OPTIONAL)
+{
+    ULONG_PTR Context;
+    PNP_CCB Node;
+    PAGED_CODE();
+
+    Context = (ULONG_PTR)FileObject->FsContext;
+    if ((Context) && (Context != 1))
+    {
+        if (ServerSide) *ServerSide = Context & 1;
+
+        Node = (PVOID)(Context & ~1);
+
+        switch (Node->NodeType)
+        {
+            case NPFS_NTC_VCB:
+                return NPFS_NTC_VCB;
+
+            case NPFS_NTC_ROOT_DCB:
+                *Ccb = FileObject->FsContext2;
+                if (PrimaryContext) *PrimaryContext = Node;
+                return NPFS_NTC_ROOT_DCB;
+
+            case NPFS_NTC_CCB:
+                *Ccb = Node;
+                if (PrimaryContext) *PrimaryContext = Node->Fcb;
+                return NPFS_NTC_CCB;
+
+            default:
+                KeBugCheckEx(NPFS_FILE_SYSTEM, 0xB0108, Node->NodeType, 0, 0);
+                break;
+            }
+    }
+
+    return 0;
+}
+
+VOID
+NTAPI
+NpSetFileObject(IN PFILE_OBJECT FileObject,
+                IN PVOID PrimaryContext,
+                IN PVOID Ccb,
+                IN BOOLEAN ServerSide)
+{
+    BOOLEAN FileIsPipe;
+    PAGED_CODE();
+
+    if (!FileObject) return;
+
+    if ((PrimaryContext) && (((PNP_CCB)PrimaryContext)->NodeType == NPFS_NTC_CCB))
+    {
+        FileIsPipe = TRUE;
+        if (ServerSide) PrimaryContext = (PVOID)((ULONG_PTR)PrimaryContext | 1);
+    }
+    else
+    {
+        FileIsPipe = FALSE;
+    }
+
+    FileObject->FsContext = PrimaryContext;
+    FileObject->FsContext2 = Ccb;
+    FileObject->PrivateCacheMap = (PVOID)1;
+    if (FileIsPipe) FileObject->Flags |= FO_NAMED_PIPE;
+}
+
