@@ -2,13 +2,13 @@
 
 [Section]
 Name = Notepad++
-Version = 6.4.1
+Version = 6.4.5
 Licence = GPL
 Description = A text editor.
 Size = 7.1MB
 Category = 6
 URLSite = http://notepad-plus-plus.org/
-URLDownload = http://download.tuxfamily.org/notepadplus/6.4.1/npp.6.4.1.Installer.exe
+URLDownload = http://download.tuxfamily.org/notepadplus/6.4.5/npp.6.4.5.Installer.exe
 CDPath = none
 
 [Section.0407]

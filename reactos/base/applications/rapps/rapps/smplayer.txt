@@ -2,13 +2,13 @@
 
 [Section]
 Name = SMPlayer
-Version = 0.8.5
+Version = 0.8.6
 Licence = GPL
 Description = Graphical Frontend for MPlayer.
-Size = 16.09MB
+Size = 16.98MB
 Category = 1
 URLSite = http://smplayer.sourceforge.net/
-URLDownload = http://freefr.dl.sourceforge.net/project/smplayer/SMPlayer/0.8.5/smplayer-0.8.5-win32.exe
+URLDownload = http://freefr.dl.sourceforge.net/project/smplayer/SMPlayer/0.8.6/smplayer-0.8.6-win32.exe
 CDPath = none
 
 [Section.0407]
@@ -20,7 +20,7 @@ URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=es
 Description = Interfaz gráfico para Mplayer (reproductor multimedia).
 
 [Section.040c]
-Size = 16,09 Mo
+Size = 16,98 Mo
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=fr
 
 [Section.0410]
@@ -36,7 +36,7 @@ Description = Graficzna nakładka na MPlayer, otwarty odtwarzacz filmów.
 
 [Section.0418]
 Description = Lector multimedia (interfață pentru MPlayer).
-Size = 16,09 Mo
+Size = 16,98 Mo
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=ro
 
 [Section.0422]

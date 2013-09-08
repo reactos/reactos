@@ -2,7 +2,7 @@
 
 [Section]
 Name = IrfanView Plugins
-Version = 4.35
+Version = 4.36
 Licence = Freeware (for personal use)
 Description = Additional Plugins for supporting more file types.
 Size = 9.85MB
