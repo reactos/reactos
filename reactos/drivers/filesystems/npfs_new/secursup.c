@@ -2,24 +2,44 @@
 
 VOID
 NTAPI
-NpUninitializeSecurity(IN PNP_CCB Ccb)
+NpFreeClientSecurityContext(IN PSECURITY_CLIENT_CONTEXT ClientContext)
 {
-    PACCESS_TOKEN ClientToken;
-    PSECURITY_CLIENT_CONTEXT ClientContext;
     TOKEN_TYPE TokenType;
-    PAGED_CODE();
+    PVOID ClientToken;
 
-    ClientContext = Ccb->ClientContext;
     if (!ClientContext) return;
 
     TokenType = SeTokenType(ClientContext->ClientToken);
-    ClientToken = Ccb->ClientContext->ClientToken;
+    ClientToken = ClientContext->ClientToken;
     if ((TokenType == TokenPrimary) || (ClientToken))
     {
         ObfDereferenceObject(ClientToken);
     }
-    ExFreePool(Ccb->ClientContext);
-    Ccb->ClientContext = 0;
+    ExFreePool(ClientContext);
+}
+
+VOID
+NTAPI
+NpCopyClientContext(IN PNP_CCB Ccb,
+                    IN PNP_DATA_QUEUE_ENTRY DataQueueEntry)
+{
+    PAGED_CODE();
+
+    if (!DataQueueEntry->ClientSecurityContext) return;
+
+    NpFreeClientSecurityContext(Ccb->ClientContext);
+    Ccb->ClientContext = DataQueueEntry->ClientSecurityContext;
+    DataQueueEntry->ClientSecurityContext = NULL;
+}
+
+VOID
+NTAPI
+NpUninitializeSecurity(IN PNP_CCB Ccb)
+{
+    PAGED_CODE();
+
+    NpFreeClientSecurityContext(Ccb->ClientContext);
+    Ccb->ClientContext = NULL;
 }
 
 NTSTATUS
@@ -61,5 +81,38 @@ NpInitializeSecurity(IN PNP_CCB Ccb,
     if (Status >= 0) return Status;
     ExFreePool(Ccb->ClientContext);
     Ccb->ClientContext = 0;
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NpGetClientSecurityContext(IN BOOLEAN ServerSide,
+                           IN PNP_CCB Ccb,
+                           IN PETHREAD Thread,
+                           IN PSECURITY_CLIENT_CONTEXT *Context)
+{
+   
+    PSECURITY_CLIENT_CONTEXT NewContext;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    if ( ServerSide || Ccb->ClientQos.ContextTrackingMode != 1 )
+    {
+        NewContext = NULL;
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        NewContext = ExAllocatePoolWithQuotaTag(PagedPool, sizeof(*NewContext), 'sFpN');
+        if ( !NewContext ) return STATUS_INSUFFICIENT_RESOURCES;
+
+        Status = SeCreateClientSecurity(Thread, &Ccb->ClientQos, 0, NewContext);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePool(NewContext);
+            NewContext = NULL;
+        }
+    }
+    *Context = NewContext;
     return Status;
 }

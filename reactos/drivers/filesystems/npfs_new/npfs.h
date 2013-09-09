@@ -3,6 +3,7 @@
 //
 #include <ntifs.h>
 #include <ntndk.h>
+#include <pseh/pseh2.h>
 #define UNIMPLEMENTED
 #define DPRINT1 DbgPrint
 
@@ -31,15 +32,26 @@ typedef USHORT NODE_TYPE_CODE, *PNODE_TYPE_CODE;
 //
 typedef enum _NP_DATA_QUEUE_STATE
 {
+    ReadEntries = 0,
+    WriteEntries = 1,
     Empty = 2
 } NP_DATA_QUEUE_STATE;
+
+//
+// Data Queue Entry Types
+//
+typedef enum _NP_DATA_QUEUE_ENTRY_TYPE
+{
+    Buffered = 0,
+    Unbuffered
+} NP_DATA_QUEUE_ENTRY_TYPE;
 
 //
 // An Input or Output Data Queue. Each CCB has two of these.
 //
 typedef struct _NP_DATA_QUEUE
 {
-    LIST_ENTRY List;
+    LIST_ENTRY Queue;
     ULONG QueueState;
     ULONG BytesInQueue;
     ULONG EntriesInQueue;
@@ -49,6 +61,19 @@ typedef struct _NP_DATA_QUEUE
 } NP_DATA_QUEUE, *PNP_DATA_QUEUE;
 
 //
+// The Entries that go into the Queue
+//
+typedef struct _NP_DATA_QUEUE_ENTRY
+{
+    LIST_ENTRY QueueEntry;
+    ULONG DataEntryType;
+    PIRP Irp;
+    ULONG QuotaInEntry;
+    PSECURITY_CLIENT_CONTEXT ClientSecurityContext;
+    ULONG DataSize;
+} NP_DATA_QUEUE_ENTRY, *PNP_DATA_QUEUE_ENTRY;
+
+//
 // A Wait Queue. Only the VCB has one of these.
 //
 typedef struct _NP_WAIT_QUEUE
@@ -56,6 +81,14 @@ typedef struct _NP_WAIT_QUEUE
     LIST_ENTRY WaitList;
     KSPIN_LOCK WaitLock;
 } NP_WAIT_QUEUE, *PNP_WAIT_QUEUE;
+
+//
+// The event buffer in the NonPaged CCB
+//
+typedef struct _NP_EVENT_BUFFER
+{
+    PKEVENT Event;
+} NP_EVENT_BUFFER, *PNP_EVENT_BUFFER;
 
 //
 // The CCB for the Root DCB
@@ -76,7 +109,7 @@ typedef struct _NP_CB_HEADER
     LIST_ENTRY DcbEntry;
     PVOID ParentDcb;
     ULONG CurrentInstances;
-    ULONG OtherCount;
+    ULONG ServerOpenCount;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
 } NP_CB_HEADER, *PNP_CB_HEADER;
 
@@ -144,8 +177,8 @@ typedef struct _NP_FCB
 typedef struct _NP_NONPAGED_CCB
 {
     NODE_TYPE_CODE NodeType;
-    PVOID EventBufferClient;
-    PVOID EventBufferServer;
+    PNP_EVENT_BUFFER EventBufferClient;
+    PNP_EVENT_BUFFER EventBufferServer;
     ERESOURCE Lock;
 } NP_NONPAGED_CCB, *PNP_NONPAGED_CCB;
 
@@ -200,6 +233,34 @@ NpInitializeWaitQueue(IN PNP_WAIT_QUEUE WaitQueue);
 NTSTATUS
 NTAPI
 NpUninitializeDataQueue(IN PNP_DATA_QUEUE DataQueue);
+
+PNP_DATA_QUEUE_ENTRY
+NTAPI
+NpGetNextRealDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
+                            IN PLIST_ENTRY List);
+
+PIRP
+NTAPI
+NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
+                       IN BOOLEAN Flag,
+                       IN PLIST_ENTRY List);
+
+NTSTATUS
+NTAPI
+NpAddDataQueueEntry(IN BOOLEAN ServerSide,
+                    IN PNP_CCB Ccb,
+                    IN PNP_DATA_QUEUE DataQueue,
+                    IN ULONG Who, 
+                    IN ULONG Type,
+                    IN ULONG DataSize,
+                    IN PIRP Irp,
+                    IN PVOID Buffer,
+                    IN ULONG ByteOffset);
+
+VOID
+NTAPI
+NpCompleteStalledWrites(IN PNP_DATA_QUEUE DataQueue,
+                        IN PLIST_ENTRY List);
 
 NTSTATUS
 NTAPI
@@ -267,6 +328,15 @@ NpSetConnectedPipeState(IN PNP_CCB Ccb,
 
 VOID
 NTAPI
+NpFreeClientSecurityContext(IN PSECURITY_CLIENT_CONTEXT ClientContext);
+
+VOID
+NTAPI
+NpCopyClientContext(IN PNP_CCB Ccb,
+                    IN PNP_DATA_QUEUE_ENTRY DataQueueEntry);
+
+VOID
+NTAPI
 NpUninitializeSecurity(IN PNP_CCB Ccb);
 
 NTSTATUS
@@ -274,6 +344,13 @@ NTAPI
 NpInitializeSecurity(IN PNP_CCB Ccb,
                      IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
                      IN PETHREAD Thread);
+
+NTSTATUS
+NTAPI
+NpGetClientSecurityContext(IN BOOLEAN ServerSide,
+                           IN PNP_CCB Ccb,
+                           IN PETHREAD Thread,
+                           IN PSECURITY_CLIENT_CONTEXT *Context);
 
 VOID
 NTAPI
@@ -315,4 +392,21 @@ NpCancelWaiter(IN PNP_WAIT_QUEUE WaitQueue,
                IN PUNICODE_STRING PipeName,
                IN NTSTATUS Status,
                IN PLIST_ENTRY ListEntry);
+
+
+IO_STATUS_BLOCK
+NTAPI
+NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue, 
+                IN BOOLEAN Peek,
+                IN BOOLEAN ReadOverflowOperation,
+                IN PVOID Buffer,
+                IN ULONG BufferSize, 
+                IN ULONG Mode, 
+                IN PNP_CCB Ccb,
+                IN PLIST_ENTRY List);
+
+NTSTATUS
+NTAPI
+NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
+          IN PIRP Irp);
 

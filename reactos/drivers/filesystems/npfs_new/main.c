@@ -18,20 +18,6 @@ NpFsdClose(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
 NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp)
 {
