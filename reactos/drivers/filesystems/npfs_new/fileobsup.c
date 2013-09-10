@@ -5,7 +5,7 @@ NTAPI
 NpDecodeFileObject(IN PFILE_OBJECT FileObject,
                    OUT PVOID* PrimaryContext OPTIONAL,
                    OUT PNP_CCB* Ccb,
-                   OUT PBOOLEAN ServerSide OPTIONAL)
+                   OUT PULONG NamedPipeEnd OPTIONAL)
 {
     ULONG_PTR Context;
     PNP_CCB Node;
@@ -14,7 +14,7 @@ NpDecodeFileObject(IN PFILE_OBJECT FileObject,
     Context = (ULONG_PTR)FileObject->FsContext;
     if ((Context) && (Context != 1))
     {
-        if (ServerSide) *ServerSide = Context & 1;
+        if (NamedPipeEnd) *NamedPipeEnd = Context & 1;
 
         Node = (PVOID)(Context & ~1);
 
@@ -47,7 +47,7 @@ NTAPI
 NpSetFileObject(IN PFILE_OBJECT FileObject,
                 IN PVOID PrimaryContext,
                 IN PVOID Ccb,
-                IN BOOLEAN ServerSide)
+                IN ULONG NamedPipeEnd)
 {
     BOOLEAN FileIsPipe;
     PAGED_CODE();
@@ -57,7 +57,10 @@ NpSetFileObject(IN PFILE_OBJECT FileObject,
     if ((PrimaryContext) && (((PNP_CCB)PrimaryContext)->NodeType == NPFS_NTC_CCB))
     {
         FileIsPipe = TRUE;
-        if (ServerSide) PrimaryContext = (PVOID)((ULONG_PTR)PrimaryContext | 1);
+        if (NamedPipeEnd == FILE_PIPE_SERVER_END)
+        {
+            PrimaryContext = (PVOID) ((ULONG_PTR) PrimaryContext | 1);
+        }
     }
     else
     {

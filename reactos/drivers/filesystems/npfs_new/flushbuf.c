@@ -7,7 +7,7 @@ NpCommonFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
 {
     NODE_TYPE_CODE NodeTypeCode;
     PNP_CCB Ccb;
-    BOOLEAN ServerSide;
+    ULONG NamedPipeEnd;
     NTSTATUS Status;
     PNP_DATA_QUEUE FlushQueue;
     PAGED_CODE();
@@ -15,22 +15,27 @@ NpCommonFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
     NodeTypeCode = NpDecodeFileObject(IoGetCurrentIrpStackLocation(Irp)->FileObject,
                                       NULL,
                                       &Ccb,
-                                      &ServerSide);
-    if (NodeTypeCode != NPFS_NTC_CCB ) return STATUS_PIPE_DISCONNECTED;
+                                      &NamedPipeEnd);
+    if (NodeTypeCode != NPFS_NTC_CCB) return STATUS_PIPE_DISCONNECTED;
 
     ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
-    //ms_exc.registration.TryLevel = 0;
 
-    FlushQueue = &Ccb->OutQueue;
-    if ( ServerSide != 1 ) FlushQueue = &Ccb->InQueue;
-
-    if ( FlushQueue->QueueState == WriteEntries)
+    if (NamedPipeEnd == FILE_PIPE_SERVER_END)
     {
-        Status = NpAddDataQueueEntry(ServerSide,
+        FlushQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
+    }
+    else
+    {
+        FlushQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
+    }
+
+    if (FlushQueue->QueueState == WriteEntries)
+    {
+        Status = NpAddDataQueueEntry(NamedPipeEnd,
                                      Ccb,
                                      FlushQueue,
-                                     1,
-                                     2u,
+                                     WriteEntries,
+                                     2,
                                      0,
                                      Irp,
                                      NULL,
@@ -41,9 +46,7 @@ NpCommonFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
         Status = STATUS_SUCCESS;
     }
 
-   // ms_exc.registration.TryLevel = -1;
     ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
-
     return Status;
 }
 

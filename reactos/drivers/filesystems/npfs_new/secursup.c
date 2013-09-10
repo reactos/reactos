@@ -58,35 +58,36 @@ NpInitializeSecurity(IN PNP_CCB Ccb,
     }
     else
     {
-        Ccb->ClientQos.Length = 12;
-        Ccb->ClientQos.ImpersonationLevel = 2;
-        Ccb->ClientQos.ContextTrackingMode = 1;
-        Ccb->ClientQos.EffectiveOnly = 1;
+        Ccb->ClientQos.Length = sizeof(Ccb->ClientQos);
+        Ccb->ClientQos.ImpersonationLevel = SecurityImpersonation;
+        Ccb->ClientQos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+        Ccb->ClientQos.EffectiveOnly = TRUE;
     }
 
     NpUninitializeSecurity(Ccb);
 
-    if (Ccb->ClientQos.ContextTrackingMode)
+    if (Ccb->ClientQos.ContextTrackingMode == SECURITY_DYNAMIC_TRACKING)
     {
-        Status = 0;
-        Ccb->ClientContext = 0;
+        Status = STATUS_SUCCESS;
+        Ccb->ClientContext = NULL;
         return Status;
     }
 
-    ClientContext = ExAllocatePoolWithTag(PagedPool, sizeof(*ClientContext), 'sFpN');
+    ClientContext = ExAllocatePoolWithTag(PagedPool, sizeof(*ClientContext), NPFS_CLIENT_SEC_CTX_TAG);
     Ccb->ClientContext = ClientContext;
     if (!ClientContext) return STATUS_INSUFFICIENT_RESOURCES;
 
     Status = SeCreateClientSecurity(Thread, &Ccb->ClientQos, 0, ClientContext);
-    if (Status >= 0) return Status;
+    if (!NT_SUCCESS(Status)) return Status;
+
     ExFreePool(Ccb->ClientContext);
-    Ccb->ClientContext = 0;
+    Ccb->ClientContext = NULL;
     return Status;
 }
 
 NTSTATUS
 NTAPI
-NpGetClientSecurityContext(IN BOOLEAN ServerSide,
+NpGetClientSecurityContext(IN ULONG NamedPipeEnd,
                            IN PNP_CCB Ccb,
                            IN PETHREAD Thread,
                            IN PSECURITY_CLIENT_CONTEXT *Context)
@@ -96,15 +97,15 @@ NpGetClientSecurityContext(IN BOOLEAN ServerSide,
     NTSTATUS Status;
     PAGED_CODE();
 
-    if ( ServerSide || Ccb->ClientQos.ContextTrackingMode != 1 )
+    if (NamedPipeEnd == FILE_PIPE_SERVER_END || Ccb->ClientQos.ContextTrackingMode != SECURITY_DYNAMIC_TRACKING)
     {
         NewContext = NULL;
         Status = STATUS_SUCCESS;
     }
     else
     {
-        NewContext = ExAllocatePoolWithQuotaTag(PagedPool, sizeof(*NewContext), 'sFpN');
-        if ( !NewContext ) return STATUS_INSUFFICIENT_RESOURCES;
+        NewContext = ExAllocatePoolWithQuotaTag(PagedPool, sizeof(*NewContext), NPFS_CLIENT_SEC_CTX_TAG);
+        if (!NewContext) return STATUS_INSUFFICIENT_RESOURCES;
 
         Status = SeCreateClientSecurity(Thread, &Ccb->ClientQos, 0, NewContext);
         if (!NT_SUCCESS(Status))
@@ -116,3 +117,4 @@ NpGetClientSecurityContext(IN BOOLEAN ServerSide,
     *Context = NewContext;
     return Status;
 }
+

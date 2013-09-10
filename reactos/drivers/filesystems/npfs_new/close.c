@@ -10,7 +10,7 @@ NpCommonClose(IN PDEVICE_OBJECT DeviceObject,
     LIST_ENTRY List;
     PNP_FCB Fcb;
     PNP_CCB Ccb;
-    BOOLEAN ServerSide;
+    ULONG NamedPipeEnd;
     PLIST_ENTRY ThisEntry, NextEntry;
     PAGED_CODE();
 
@@ -21,7 +21,7 @@ NpCommonClose(IN PDEVICE_OBJECT DeviceObject,
     NodeTypeCode = NpDecodeFileObject(IoStack->FileObject,
                                       (PVOID*)&Fcb,
                                       &Ccb,
-                                      &ServerSide);
+                                      &NamedPipeEnd);
     if (NodeTypeCode == NPFS_NTC_ROOT_DCB)
     {
         --Fcb->CurrentInstances;

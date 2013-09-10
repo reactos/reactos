@@ -12,17 +12,17 @@ NpCommonRead(IN PFILE_OBJECT FileObject,
              IN PLIST_ENTRY List)
 {
     NODE_TYPE_CODE NodeType;
-    PNP_DATA_QUEUE Queue;
+    PNP_DATA_QUEUE ReadQueue;
     PNP_EVENT_BUFFER EventBuffer;
     NTSTATUS Status;
-    BOOLEAN ServerSide;
+    ULONG NamedPipeEnd;
     PNP_CCB Ccb;
     PNP_NONPAGED_CCB NonPagedCcb;
     BOOLEAN ReadOk;
     PAGED_CODE();
 
     IoStatus->Information = 0;
-    NodeType = NpDecodeFileObject(FileObject, NULL, &Ccb, &ServerSide);
+    NodeType = NpDecodeFileObject(FileObject, NULL, &Ccb, &NamedPipeEnd);
 
     if (!NodeType)
     {
@@ -30,7 +30,7 @@ NpCommonRead(IN PFILE_OBJECT FileObject,
         return TRUE;
     }
 
-    if ( NodeType != NPFS_NTC_CCB )
+    if (NodeType != NPFS_NTC_CCB)
     {
         IoStatus->Status = STATUS_INVALID_PARAMETER;
         return TRUE;
@@ -39,9 +39,7 @@ NpCommonRead(IN PFILE_OBJECT FileObject,
     NonPagedCcb = Ccb->NonPagedCcb;
     ExAcquireResourceExclusiveLite(&NonPagedCcb->Lock, TRUE);
 
-    //ms_exc.registration.TryLevel = 0;
-
-    if ( Ccb->NamedPipeState == FILE_PIPE_DISCONNECTED_STATE || Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE )
+    if (Ccb->NamedPipeState == FILE_PIPE_DISCONNECTED_STATE || Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE)
     {
         IoStatus->Status = Ccb->NamedPipeState != FILE_PIPE_DISCONNECTED_STATE ? STATUS_PIPE_LISTENING : STATUS_PIPE_DISCONNECTED;
         ReadOk = TRUE;
@@ -50,33 +48,33 @@ NpCommonRead(IN PFILE_OBJECT FileObject,
 
     ASSERT((Ccb->NamedPipeState == FILE_PIPE_CONNECTED_STATE) || (Ccb->NamedPipeState == FILE_PIPE_CLOSING_STATE));
 
-    if ((ServerSide == 1 && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_OUTBOUND) ||
-        (ServerSide == 0 && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_INBOUND ))
+    if ((NamedPipeEnd == FILE_PIPE_SERVER_END && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_OUTBOUND) ||
+        (NamedPipeEnd == FILE_PIPE_CLIENT_END && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_INBOUND))
     {
         IoStatus->Status = STATUS_INVALID_PARAMETER;
         ReadOk = TRUE;
         goto Quickie;
     }
 
-    if ( ServerSide == 1 )
+    if (NamedPipeEnd == FILE_PIPE_SERVER_END)
     {
-        Queue = &Ccb->InQueue;
-        EventBuffer = NonPagedCcb->EventBufferClient;
+        ReadQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
     }
     else
     {
-        Queue = &Ccb->OutQueue;
-        EventBuffer = NonPagedCcb->EventBufferServer;
+        ReadQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
     }
 
-    if ( Queue->QueueState == WriteEntries )
+    EventBuffer = NonPagedCcb->EventBuffer[NamedPipeEnd];
+
+    if (ReadQueue->QueueState == WriteEntries)
     {
-        *IoStatus = NpReadDataQueue(Queue,
+        *IoStatus = NpReadDataQueue(ReadQueue,
                                     FALSE,
                                     FALSE,
                                     Buffer,
                                     BufferSize,
-                                    ServerSide ? Ccb->ServerReadMode : Ccb->ClientReadMode,
+                                    Ccb->ReadMode[NamedPipeEnd],
                                     Ccb,
                                     List);
         if (!NT_SUCCESS(IoStatus->Status))
@@ -86,41 +84,41 @@ NpCommonRead(IN PFILE_OBJECT FileObject,
         }
 
         ReadOk = TRUE;
-        if ( EventBuffer ) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
+        if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
         goto Quickie;
     }
 
-    if ( Ccb->NamedPipeState == FILE_PIPE_CLOSING_STATE )
+    if (Ccb->NamedPipeState == FILE_PIPE_CLOSING_STATE)
     {
         IoStatus->Status = STATUS_PIPE_BROKEN;
         ReadOk = TRUE;
-        if ( EventBuffer ) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
+        if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
         goto Quickie;
     }
 
-    if ((ServerSide ? Ccb->ServerCompletionMode : Ccb->ServerCompletionMode) == FILE_PIPE_COMPLETE_OPERATION)
+    if (Ccb->CompletionMode[NamedPipeEnd] == FILE_PIPE_COMPLETE_OPERATION)
     {
         IoStatus->Status = STATUS_PIPE_EMPTY;
         ReadOk = TRUE;
-        if ( EventBuffer ) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
+        if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
         goto Quickie;
     }
 
-    if ( !Irp )
+    if (!Irp)
     {
         ReadOk = FALSE;
         goto Quickie;
-
     }
-    Status = NpAddDataQueueEntry(ServerSide,
-                                    Ccb,
-                                    Queue,
-                                    0,
-                                    0,
-                                    BufferSize,
-                                    Irp,
-                                    0,
-                                    0);
+
+    Status = NpAddDataQueueEntry(NamedPipeEnd,
+                                 Ccb,
+                                 ReadQueue,
+                                 ReadEntries,
+                                 Buffered,
+                                 BufferSize,
+                                 Irp,
+                                 NULL,
+                                 0);
     IoStatus->Status = Status;
     if (!NT_SUCCESS(Status))
     {
@@ -129,11 +127,10 @@ NpCommonRead(IN PFILE_OBJECT FileObject,
     else
     {
         ReadOk = TRUE;
-        if ( EventBuffer ) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
+        if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
     }
 
 Quickie:
-    //ms_exc.registration.TryLevel = -1;
     ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
     return ReadOk;
 }
@@ -177,7 +174,7 @@ NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
 
     FsRtlExitFileSystem();
 
-    if ( IoStatus.Status != STATUS_PENDING )
+    if (IoStatus.Status != STATUS_PENDING)
     {
         Irp->IoStatus.Information = IoStatus.Information;
         Irp->IoStatus.Status = IoStatus.Status;

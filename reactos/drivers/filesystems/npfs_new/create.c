@@ -400,15 +400,15 @@ NpCreateExistingNamedPipe(IN PNP_FCB Fcb,
                            &AccessState->GenerateOnClose);
 
     SeUnlockSubjectContext(SubjectSecurityContext);
-    if ( !AccessGranted ) return IoStatus;
+    if (!AccessGranted) return IoStatus;
 
-    if ( Fcb->CurrentInstances >= Fcb->MaximumInstances )
+    if (Fcb->CurrentInstances >= Fcb->MaximumInstances)
     {
         IoStatus.Status = STATUS_INSTANCE_NOT_AVAILABLE;
         return IoStatus;
     }
 
-    if ( Disposition == FILE_CREATE )
+    if (Disposition == FILE_CREATE)
     {
         IoStatus.Status = STATUS_ACCESS_DENIED;
         return IoStatus;
@@ -428,7 +428,7 @@ NpCreateExistingNamedPipe(IN PNP_FCB Fcb,
         CheckShareAccess = FILE_SHARE_WRITE;
     }
 
-    if ( CheckShareAccess != ShareAccess )
+    if (CheckShareAccess != ShareAccess)
     {
         IoStatus.Status = STATUS_ACCESS_DENIED;
         return IoStatus;
@@ -456,7 +456,7 @@ NpCreateExistingNamedPipe(IN PNP_FCB Fcb,
     }
 
     NpSetFileObject(FileObject, Ccb, Ccb->NonPagedCcb, TRUE);
-    Ccb->ServerFileObject = FileObject;
+    Ccb->FileObject[FILE_PIPE_SERVER_END] = FileObject;
     NpCheckForNotify(Fcb->ParentDcb, 0, List);
 
     IoStatus.Status = STATUS_SUCCESS;
@@ -518,7 +518,7 @@ NpCreateNewNamedPipe(IN PNP_DCB Dcb,
         goto Quickie;
     }
 
-    if ( !Parameters->NamedPipeType && Parameters->ReadMode == 1 )
+    if (!Parameters->NamedPipeType && Parameters->ReadMode == 1)
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Quickie;
@@ -580,11 +580,11 @@ NpCreateNewNamedPipe(IN PNP_DCB Dcb,
     Fcb->SecurityDescriptor = CachedSecurityDescriptor;
 
     NpSetFileObject(FileObject, Ccb, Ccb->NonPagedCcb, TRUE);
-    Ccb->ServerFileObject = FileObject;
+    Ccb->FileObject[FILE_PIPE_SERVER_END] = FileObject;
 
     NpCheckForNotify(Dcb, 1, List);
 
-    IoStatus->Status = 0;
+    IoStatus->Status = STATUS_SUCCESS;
     IoStatus->Information = 2;
     return STATUS_SUCCESS;
 
@@ -638,7 +638,7 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     DPRINT1("FileName %wZ\n", &FileObject->FileName);
     DPRINT1("FileName->Length: %hu  RelatedFileObject: %p\n", FileName.Length, RelatedFileObject);
 
-    if ( RelatedFileObject )
+    if (RelatedFileObject)
     {
         Fcb = (PNP_FCB)((ULONG_PTR)RelatedFileObject->FsContext & ~1);
         if (!(Fcb) ||
@@ -659,7 +659,7 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     }
     else
     {
-        if ( FileName.Length <= 2u || *FileName.Buffer != '\\' )
+        if (FileName.Length <= 2u || *FileName.Buffer != '\\')
         {
             IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
             goto Quickie;
@@ -667,9 +667,9 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
         Fcb = NpFindPrefix(&FileName, 1u, &Prefix);
     }
 
-    if ( Prefix.Length )
+    if (Prefix.Length)
     {
-        if (Fcb->NodeType == NPFS_NTC_ROOT_DCB )
+        if (Fcb->NodeType == NPFS_NTC_ROOT_DCB)
         {
             IoStatus.Status = NpCreateNewNamedPipe((PNP_DCB)Fcb,
                                                    FileObject,
@@ -692,7 +692,7 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
             goto Quickie;
         }
     }
-    if (Fcb->NodeType != NPFS_NTC_FCB )
+    if (Fcb->NodeType != NPFS_NTC_FCB)
     {
         IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
         goto Quickie;

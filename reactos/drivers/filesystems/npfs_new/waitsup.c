@@ -16,10 +16,10 @@ NpCancelWaitQueueIrp(IN PDEVICE_OBJECT DeviceObject,
     OldIrql = KfAcquireSpinLock(&WaitQueue->WaitLock);
 
     WaitEntry = (PNP_WAIT_QUEUE_ENTRY)Irp->Tail.Overlay.DriverContext[1];
-    if ( WaitEntry )
+    if (WaitEntry)
     {
         RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
-        if ( !KeCancelTimer(&WaitEntry->Timer) )
+        if (!KeCancelTimer(&WaitEntry->Timer))
         {
             WaitEntry->Irp = NULL;
             WaitEntry = NULL;
@@ -28,7 +28,7 @@ NpCancelWaitQueueIrp(IN PDEVICE_OBJECT DeviceObject,
 
     KfReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
 
-    if ( WaitEntry )
+    if (WaitEntry)
     {
         ObfDereferenceObject(WaitEntry->FileObject);
         ExFreePool(WaitEntry);
@@ -36,7 +36,7 @@ NpCancelWaitQueueIrp(IN PDEVICE_OBJECT DeviceObject,
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_CANCELLED;
-    IofCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
+    IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
 }
  
 VOID
@@ -52,23 +52,23 @@ NpTimerDispatch(IN PKDPC Dpc,
 
     OldIrql = KfAcquireSpinLock(&WaitEntry->WaitQueue->WaitLock);
     Irp = WaitEntry->Irp;
-    if ( Irp);
+    if (Irp)
     {
         RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
-        if ( !IoSetCancelRoutine(Irp, NULL))
+        if (!IoSetCancelRoutine(Irp, NULL))
         {
             Irp->Tail.Overlay.DriverContext[1] = NULL;
             Irp = NULL;
         }
     }
     KfReleaseSpinLock(&WaitEntry->WaitQueue->WaitLock, OldIrql);
-    if ( Irp )
+    if (Irp)
     {
         Irp->IoStatus.Status = STATUS_IO_TIMEOUT;
-        IofCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
+        IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
     }
     ObfDereferenceObject(WaitEntry->FileObject);
-    ExFreePoolWithTag(WaitEntry, 0);
+    ExFreePool(WaitEntry);
 }
 
 VOID
@@ -90,7 +90,7 @@ NpCancelWaiter(IN PNP_WAIT_QUEUE WaitQueue,
     KIRQL OldIrql;
     PWCHAR Buffer;
 
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, PipeName->Length,'tFpN');
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, PipeName->Length, NPFS_WAIT_BLOCK_TAG);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlInitEmptyUnicodeString(&DestinationString, Buffer, PipeName->Length);
@@ -122,13 +122,13 @@ NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    WaitEntry = ExAllocatePoolWithQuotaTag(NonPagedPool, sizeof(*WaitEntry), 'wFpN');
-    if ( WaitEntry )
+    WaitEntry = ExAllocatePoolWithQuotaTag(NonPagedPool, sizeof(*WaitEntry), NPFS_WRITE_BLOCK_TAG);
+    if (WaitEntry)
     {
         KeInitializeDpc(&WaitEntry->Dpc, NpTimerDispatch, WaitEntry);
         KeInitializeTimer(&WaitEntry->Timer);
 
-        if ( Name )
+        if (Name)
         {
             WaitEntry->String = *Name;
         }
@@ -142,7 +142,7 @@ NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
         WaitEntry->Irp = Irp;
 
         WaitBuffer = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-        if ( WaitBuffer->TimeoutSpecified )
+        if (WaitBuffer->TimeoutSpecified)
         {
             DueTime = WaitBuffer->Timeout;
         }
@@ -162,7 +162,7 @@ NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
 
         IoSetCancelRoutine(Irp, NpCancelWaitQueueIrp);
 
-        if ( Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
+        if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
         {
             Status = STATUS_CANCELLED;
         }
@@ -181,7 +181,7 @@ NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
 
         }
         KfReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
-        if ( WaitEntry ) ExFreePool(WaitEntry);
+        if (WaitEntry) ExFreePool(WaitEntry);
     }
     else
     {

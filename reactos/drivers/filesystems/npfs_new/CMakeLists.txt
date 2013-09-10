@@ -13,8 +13,10 @@ list(APPEND SOURCE
      read.c
      readsup.c
      secursup.c
+     seinfo.c
      statesup.c
      strucsup.c
+     volinfo.c
      waitsup.c
      write.c
      writesup.c)

@@ -51,7 +51,7 @@ NpFindRelativePrefix(IN PNP_DCB Dcb,
 
     ASSERT(Dcb->NodeType == NPFS_NTC_ROOT_DCB);
 
-    Buffer = ExAllocatePoolWithTag(PagedPool, MaximumLength, 'nFpN');
+    Buffer = ExAllocatePoolWithTag(PagedPool, MaximumLength, NPFS_NAME_BLOCK_TAG);
     if (!Buffer)
     {
         return STATUS_INSUFFICIENT_RESOURCES;

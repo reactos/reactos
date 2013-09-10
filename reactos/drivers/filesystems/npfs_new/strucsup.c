@@ -62,7 +62,7 @@ NpDeleteFcb(IN PNP_FCB Fcb,
     
     RemoveEntryList(&Fcb->DcbEntry);
 
-    if ( Fcb->SecurityDescriptor )
+    if (Fcb->SecurityDescriptor)
     {
         ObDereferenceSecurityDescriptor(Fcb->SecurityDescriptor, 1);
     }
@@ -82,28 +82,28 @@ NpDeleteCcb(IN PNP_CCB Ccb,
     PAGED_CODE();
 
     RootDcbCcb = (PNP_ROOT_DCB_FCB)Ccb;
-    if ( Ccb->NodeType == NPFS_NTC_CCB )
+    if (Ccb->NodeType == NPFS_NTC_CCB)
     {
         RemoveEntryList(&Ccb->CcbEntry);
         --Ccb->Fcb->CurrentInstances;
 
         NpDeleteEventTableEntry(&NpVcb->EventTable,
-                                Ccb->NonPagedCcb->EventBufferClient);
+                                Ccb->NonPagedCcb->EventBuffer[FILE_PIPE_CLIENT_END]);
         NpDeleteEventTableEntry(&NpVcb->EventTable,
-                                Ccb->NonPagedCcb->EventBufferServer);
-        NpUninitializeDataQueue(&Ccb->InQueue);
-        NpUninitializeDataQueue(&Ccb->OutQueue);
-        NpCheckForNotify(Ccb->Fcb->ParentDcb, 0, ListEntry);
+                                Ccb->NonPagedCcb->EventBuffer[FILE_PIPE_SERVER_END]);
+        NpUninitializeDataQueue(&Ccb->DataQueue[FILE_PIPE_INBOUND]);
+        NpUninitializeDataQueue(&Ccb->DataQueue[FILE_PIPE_OUTBOUND]);
+        NpCheckForNotify(Ccb->Fcb->ParentDcb, FALSE, ListEntry);
         ExDeleteResourceLite(&Ccb->NonPagedCcb->Lock);
         NpUninitializeSecurity(Ccb);
-        if ( Ccb->ClientSession )
+        if (Ccb->ClientSession)
         {
             ExFreePool(Ccb->ClientSession);
-            Ccb->ClientSession = 0;
+            Ccb->ClientSession = NULL;
         }
         ExFreePool(Ccb->NonPagedCcb);
     }
-    else if ( RootDcbCcb->NodeType == NPFS_NTC_ROOT_DCB_CCB && RootDcbCcb->Unknown)
+    else if (RootDcbCcb->NodeType == NPFS_NTC_ROOT_DCB_CCB && RootDcbCcb->Unknown)
     {
         ExFreePool(RootDcbCcb->Unknown);
     }
@@ -137,7 +137,7 @@ NpCreateRootDcbCcb(IN PNP_ROOT_DCB_FCB* NewRootCcb)
     PNP_ROOT_DCB_FCB RootCcb;
     PAGED_CODE();
 
-    RootCcb = ExAllocatePoolWithTag(PagedPool, sizeof(*RootCcb), 'CFpN');
+    RootCcb = ExAllocatePoolWithTag(PagedPool, sizeof(*RootCcb), NPFS_ROOT_DCB_CCB_TAG);
     if (!RootCcb) return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlZeroMemory(RootCcb, sizeof(*RootCcb));
@@ -155,10 +155,10 @@ NpCreateRootDcb(VOID)
 
     if (NpVcb->RootDcb)
     {
-        KeBugCheckEx(0x25, 0x1700F3, 0, 0, 0);
+        KeBugCheckEx(NPFS_FILE_SYSTEM, 0x1700F3, 0, 0, 0);
     }
 
-    NpVcb->RootDcb = ExAllocatePoolWithTag(PagedPool, sizeof(*Dcb), 'DFpN');
+    NpVcb->RootDcb = ExAllocatePoolWithTag(PagedPool, sizeof(*Dcb), NPFS_DCB_TAG);
     if (!NpVcb->RootDcb)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -185,7 +185,7 @@ NpCreateRootDcb(VOID)
                                 &Dcb->FullName,
                                 &Dcb->PrefixTableEntry))
     {
-        KeBugCheckEx(0x25u, 0x170128, 0, 0, 0);
+        KeBugCheckEx(NPFS_FILE_SYSTEM, 0x170128, 0, 0, 0);
     }
 
     return STATUS_SUCCESS;
@@ -224,7 +224,7 @@ NpCreateFcb(IN PNP_DCB Dcb,
         PipeNameLength += sizeof(WCHAR);
     }
 
-    Fcb = ExAllocatePoolWithTag(PagedPool, sizeof(*Fcb), 'FfpN');
+    Fcb = ExAllocatePoolWithTag(PagedPool, sizeof(*Fcb), NPFS_FCB_TAG);
     if (!Fcb) return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlZeroMemory(Fcb, sizeof(*Fcb));
@@ -236,7 +236,7 @@ NpCreateFcb(IN PNP_DCB Dcb,
 
     NameBuffer = ExAllocatePoolWithTag(PagedPool,
                                        PipeName->Length + (RootPipe ? 4 : 2),
-                                       'nFpN');
+                                       NPFS_NAME_BLOCK_TAG);
     if (!NameBuffer)
     {
         ExFreePool(Fcb);
@@ -292,10 +292,10 @@ NpCreateCcb(IN PNP_FCB Fcb,
     NTSTATUS Status;
     PAGED_CODE();
 
-    Ccb = ExAllocatePoolWithTag(PagedPool, sizeof(*Ccb), 'cFpN');
+    Ccb = ExAllocatePoolWithTag(PagedPool, sizeof(*Ccb), NPFS_CCB_TAG);
     if (!Ccb) return STATUS_INSUFFICIENT_RESOURCES;
 
-    CcbNonPaged = ExAllocatePoolWithTag(NonPagedPool, sizeof(*CcbNonPaged), 'cFpN');
+    CcbNonPaged = ExAllocatePoolWithTag(NonPagedPool, sizeof(*CcbNonPaged), NPFS_CCB_TAG);
     if (!CcbNonPaged)
     {
         ExFreePool(Ccb);
@@ -308,13 +308,13 @@ NpCreateCcb(IN PNP_FCB Fcb,
     RtlZeroMemory(Ccb, sizeof(*Ccb));
     Ccb->NodeType = NPFS_NTC_CCB;
     Ccb->NonPagedCcb = CcbNonPaged;
-    Ccb->ServerFileObject = FileObject;
+    Ccb->FileObject[FILE_PIPE_SERVER_END] = FileObject;
     Ccb->Fcb = Fcb;
     Ccb->NamedPipeState = State;
-    Ccb->ServerReadMode = ReadMode;
-    Ccb->ServerCompletionMode = CompletionMode;
+    Ccb->ReadMode[FILE_PIPE_SERVER_END] = ReadMode;
+    Ccb->CompletionMode[FILE_PIPE_SERVER_END] = CompletionMode;
 
-    Status = NpInitializeDataQueue(&Ccb->InQueue, InQuota);
+    Status = NpInitializeDataQueue(&Ccb->DataQueue[FILE_PIPE_INBOUND], InQuota);
     if (!NT_SUCCESS(Status))
     {
         ExFreePool(CcbNonPaged);
@@ -322,10 +322,10 @@ NpCreateCcb(IN PNP_FCB Fcb,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Status = NpInitializeDataQueue(&Ccb->OutQueue, InQuota);
+    Status = NpInitializeDataQueue(&Ccb->DataQueue[FILE_PIPE_OUTBOUND], OutQuota);
     if (!NT_SUCCESS(Status))
     {
-        NpUninitializeDataQueue(&Ccb->InQueue);
+        NpUninitializeDataQueue(&Ccb->DataQueue[FILE_PIPE_INBOUND]);
         ExFreePool(CcbNonPaged);
         ExFreePool(Ccb);
         return STATUS_INSUFFICIENT_RESOURCES;

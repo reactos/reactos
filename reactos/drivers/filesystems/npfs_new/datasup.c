@@ -45,7 +45,7 @@ NpCompleteStalledWrites(IN PNP_DATA_QUEUE DataQueue,
     NextEntry = DataQueue->Queue.Flink;
     while (NextEntry != &DataQueue->Queue)
     {
-        if ( !QuotaLeft ) break;
+        if (!QuotaLeft) break;
 
         DataQueueEntry = CONTAINING_RECORD(NextEntry, NP_DATA_QUEUE_ENTRY, Irp);
 
@@ -55,10 +55,10 @@ NpCompleteStalledWrites(IN PNP_DATA_QUEUE DataQueue,
         {
             DataLeft = DataQueueEntry->DataSize - ByteOffset;
 
-            if ( DataQueueEntry->QuotaInEntry < DataLeft )
+            if (DataQueueEntry->QuotaInEntry < DataLeft)
             {
                 NewQuotaLeft = DataLeft - DataQueueEntry->QuotaInEntry;
-                if ( NewQuotaLeft > QuotaLeft ) NewQuotaLeft = QuotaLeft;
+                if (NewQuotaLeft > QuotaLeft) NewQuotaLeft = QuotaLeft;
 
                 QuotaLeft -= NewQuotaLeft;
                 DataQueueEntry->QuotaInEntry += NewQuotaLeft;
@@ -93,7 +93,7 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
     PNP_DATA_QUEUE_ENTRY QueueEntry;
     BOOLEAN HasWrites;
 
-    if ( DataQueue->QueueState == Empty)
+    if (DataQueue->QueueState == Empty)
     {
         Irp = NULL;
         ASSERT(IsListEmpty(&DataQueue->Queue));
@@ -111,7 +111,7 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
         --DataQueue->EntriesInQueue;
 
         HasWrites = 1;
-        if ( !DataQueue->QueueState != WriteEntries || DataQueue->QuotaUsed < DataQueue->Quota || !QueueEntry->QuotaInEntry )
+        if (!DataQueue->QueueState != WriteEntries || DataQueue->QuotaUsed < DataQueue->Quota || !QueueEntry->QuotaInEntry)
         {
             HasWrites = 0;
         }
@@ -134,12 +134,12 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
 
         ExFreePool(QueueEntry);
 
-        if ( Flag )
+        if (Flag)
         {
             NpGetNextRealDataQueueEntry(DataQueue, List);
         }
 
-        if ( HasWrites )
+        if (HasWrites)
         {
             NpCompleteStalledWrites(DataQueue, List);
         }
@@ -168,10 +168,10 @@ NpGetNextRealDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
         DataEntry = CONTAINING_RECORD(NextEntry, NP_DATA_QUEUE_ENTRY, QueueEntry);
 
         Type = DataEntry->DataEntryType;
-        if ( Type == Buffered || Type == Unbuffered ) break;
+        if (Type == Buffered || Type == Unbuffered) break;
 
-        Irp = NpRemoveDataQueueEntry(DataQueue, 0, List);
-        if ( Irp )
+        Irp = NpRemoveDataQueueEntry(DataQueue, FALSE, List);
+        if (Irp)
         {
             Irp->IoStatus.Status = STATUS_SUCCESS;
             InsertTailList(List, &Irp->Tail.Overlay.ListEntry);
@@ -193,23 +193,23 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN CompleteWrites, FirstEntry;
     PLIST_ENTRY NextEntry, ThisEntry;
 
-    if ( DeviceObject ) IoReleaseCancelSpinLock(Irp->CancelIrql);
+    if (DeviceObject) IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     InitializeListHead(&List);
 
     DataQueue = (PNP_DATA_QUEUE)Irp->Tail.Overlay.DriverContext[2];
     ClientSecurityContext = NULL;
 
-    if ( DeviceObject )
+    if (DeviceObject)
     {
         FsRtlEnterFileSystem();
         ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
     }
 
     DataEntry = (PNP_DATA_QUEUE_ENTRY)Irp->Tail.Overlay.DriverContext[3];
-    if ( DataEntry )
+    if (DataEntry)
     {
-        if (DataEntry->QueueEntry.Blink == &DataQueue->Queue )
+        if (DataEntry->QueueEntry.Blink == &DataQueue->Queue)
         {
             DataQueue->ByteOffset = 0;
             FirstEntry = 1;
@@ -224,7 +224,7 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
         ClientSecurityContext = DataEntry->ClientSecurityContext;
 
         CompleteWrites = 1;
-        if ( !DataQueue->QueueState != WriteEntries || DataQueue->QuotaUsed < DataQueue->Quota || !DataEntry->QuotaInEntry )
+        if (!DataQueue->QueueState != WriteEntries || DataQueue->QuotaUsed < DataQueue->Quota || !DataEntry->QuotaInEntry)
         {
             CompleteWrites = 0;
         }
@@ -233,7 +233,7 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
         DataQueue->QuotaUsed -= DataEntry->QuotaInEntry;
         --DataQueue->EntriesInQueue;
 
-        if (DataQueue->Queue.Flink == &DataQueue->Queue )
+        if (DataQueue->Queue.Flink == &DataQueue->Queue)
         {
             DataQueue->QueueState = Empty;
             ASSERT(DataQueue->BytesInQueue == 0);
@@ -242,28 +242,28 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
         }
         else
         {
-            if ( FirstEntry )
+            if (FirstEntry)
             {
                 NpGetNextRealDataQueueEntry(DataQueue, &List);
             }
-            if ( CompleteWrites )
+            if (CompleteWrites)
             {
                 NpCompleteStalledWrites(DataQueue, &List);
             }
         }
     }
 
-    if ( DeviceObject )
+    if (DeviceObject)
     {
         ExReleaseResourceLite(&NpVcb->Lock);
         FsRtlExitFileSystem();
     }
 
-    if ( DataEntry ) ExFreePool(DataEntry);
+    if (DataEntry) ExFreePool(DataEntry);
 
     NpFreeClientSecurityContext(ClientSecurityContext);
     Irp->IoStatus.Status = STATUS_CANCELLED;
-    IofCompleteRequest(Irp, IO_DISK_INCREMENT);
+    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 
     NextEntry = List.Flink;
     while (NextEntry != &List)
@@ -278,7 +278,7 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-NpAddDataQueueEntry(IN BOOLEAN ServerSide,
+NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
                     IN PNP_CCB Ccb,
                     IN PNP_DATA_QUEUE DataQueue,
                     IN ULONG Who, 
@@ -302,7 +302,7 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
 
     if ((Type != 2) && (Who == WriteEntries))
     {
-        Status = NpGetClientSecurityContext(ServerSide,
+        Status = NpGetClientSecurityContext(NamedPipeEnd,
                                             Ccb,
                                             Irp ? Irp->Tail.Overlay.Thread :
                                             PsGetCurrentThread(),
@@ -317,8 +317,8 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
         case 3:
 
             ASSERT(Irp != NULL);
-            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool, sizeof(*DataEntry), 'rFpN');
-            if ( DataEntry )
+            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool, sizeof(*DataEntry), NPFS_DATA_ENTRY_TAG);
+            if (DataEntry)
             {
                 DataEntry->DataEntryType = Type;
                 DataEntry->QuotaInEntry = 0;
@@ -336,10 +336,10 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
         case Buffered:
 
             EntrySize = sizeof(*DataEntry);
-            if ( Who != Empty)
+            if (Who != Empty)
             {
                 EntrySize = DataSize + sizeof(*DataEntry);
-                if ((DataSize + sizeof(*DataEntry)) < DataSize )
+                if ((DataSize + sizeof(*DataEntry)) < DataSize)
                 {
                     NpFreeClientSecurityContext(ClientContext);
                     return STATUS_INVALID_PARAMETER;
@@ -347,7 +347,7 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
             }
 
             QuotaInEntry = DataSize - ByteOffset;
-            if ( DataQueue->Quota - DataQueue->QuotaUsed < QuotaInEntry )
+            if (DataQueue->Quota - DataQueue->QuotaUsed < QuotaInEntry)
             {
                 QuotaInEntry = DataQueue->Quota - DataQueue->QuotaUsed;
                 HasSpace = 1;
@@ -357,8 +357,8 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
                 HasSpace = 0;
             }
 
-            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool, EntrySize, 'rFpN');
-            if ( !DataEntry )
+            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool, EntrySize, NPFS_DATA_ENTRY_TAG);
+            if (!DataEntry)
             {
                 NpFreeClientSecurityContext(ClientContext);
                 return STATUS_INSUFFICIENT_RESOURCES;
@@ -370,7 +370,7 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
             DataEntry->ClientSecurityContext = ClientContext;
             DataEntry->DataSize = DataSize;
 
-            if ( Who == ReadEntries)
+            if (Who == ReadEntries)
             {
                 ASSERT(Irp);
 
@@ -393,7 +393,7 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
                 }
                 _SEH2_END;
 
-                if ( HasSpace && Irp )
+                if (HasSpace && Irp)
                 {
                     Status = STATUS_PENDING;
                 }
@@ -413,7 +413,7 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
     }
 
     ASSERT((DataQueue->QueueState == Empty) || (DataQueue->QueueState == Who));
-    if ( DataQueue->QueueState == Empty )
+    if (DataQueue->QueueState == Empty)
     {
         ASSERT(DataQueue->BytesInQueue == 0);
         ASSERT(DataQueue->EntriesInQueue == 0);
@@ -430,7 +430,7 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
     DataQueue->QueueState = Who;
     DataQueue->BytesInQueue += DataEntry->DataSize;
     ++DataQueue->EntriesInQueue;
-    if ( ByteOffset )
+    if (ByteOffset)
     {
         DataQueue->ByteOffset = ByteOffset;
         ASSERT(Who == WriteEntries);
@@ -440,7 +440,7 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
                     
     InsertTailList(&DataQueue->Queue, &DataEntry->QueueEntry);
 
-    if ( Status == STATUS_PENDING )
+    if (Status == STATUS_PENDING)
     {
         IoMarkIrpPending(Irp);
         Irp->Tail.Overlay.DriverContext[2] = DataQueue;
@@ -448,10 +448,10 @@ NpAddDataQueueEntry(IN BOOLEAN ServerSide,
 
         IoSetCancelRoutine(Irp, NpCancelDataQueueIrp);
 
-        if ( Irp->Cancel )
+        if (Irp->Cancel)
         {
             IoSetCancelRoutine(Irp, NULL);
-            NpCancelDataQueueIrp(0, Irp);
+            NpCancelDataQueueIrp(NULL, Irp);
         }
     }
 

@@ -4,48 +4,6 @@ PDEVICE_OBJECT NpfsDeviceObject;
 
 NTSTATUS
 NTAPI
-NpFsdSetSecurity(IN PDEVICE_OBJECT DeviceObject,
-                 IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NpFsdQuerySecurity(IN PDEVICE_OBJECT DeviceObject,
-                   IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NpFsdQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
 NpFsdDirectoryControl(IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp)
 {

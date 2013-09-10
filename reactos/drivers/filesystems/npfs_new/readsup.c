@@ -19,13 +19,13 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
     BOOLEAN CompleteWrites = FALSE;
     PAGED_CODE();
 
-    if ( ReadOverflowOperation ) Peek = TRUE;
+    if (ReadOverflowOperation) Peek = TRUE;
 
     RemainingSize = BufferSize;
-    Status.Status = 0;
+    Status.Status = STATUS_SUCCESS;
     TotalBytesCopied = 0;
 
-    if ( Peek )
+    if (Peek)
     {
         DataEntry = CONTAINING_RECORD(DataQueue->Queue.Flink,
                                       NP_DATA_QUEUE_ENTRY,
@@ -36,11 +36,13 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
         DataEntry = NpGetNextRealDataQueueEntry(DataQueue, List);
     }
 
-    while (&DataEntry->QueueEntry != &DataQueue->Queue && RemainingSize )
+    while ((&DataEntry->QueueEntry != &DataQueue->Queue) && (RemainingSize))
     {
-        if ( !Peek || (DataEntry->DataEntryType == Buffered || DataEntry->DataEntryType == Unbuffered ))
+        if (!Peek ||
+            DataEntry->DataEntryType == Buffered ||
+            DataEntry->DataEntryType == Unbuffered)
         {
-            if ( DataEntry->DataEntryType == Unbuffered )
+            if (DataEntry->DataEntryType == Unbuffered)
             {
                 DataBuffer = DataEntry->Irp->AssociatedIrp.SystemBuffer;
             }
@@ -48,16 +50,17 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
             {
                 DataBuffer = &DataEntry[1];
             }
+
             DataSize = DataEntry->DataSize;
             Offset = DataSize;
 
             if (&DataEntry->QueueEntry == DataQueue->Queue.Flink)
             {
-                Offset = DataSize - DataQueue->ByteOffset;
+                Offset -= DataQueue->ByteOffset;
             }
 
             DataLength = Offset;
-            if ( Offset >= RemainingSize ) DataLength = RemainingSize;
+            if (Offset >= RemainingSize) DataLength = RemainingSize;
 
             _SEH2_TRY
             {
@@ -75,19 +78,20 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
             RemainingSize -= DataLength;
             Offset -= DataLength;
             TotalBytesCopied += DataLength;
-            if ( !Peek )
+
+            if (!Peek)
             {
                 DataEntry->QuotaInEntry -= DataLength;
                 DataQueue->QuotaUsed -= DataLength;
                 DataQueue->ByteOffset += DataLength;
-                CompleteWrites = TRUE;;
+                CompleteWrites = TRUE;
             }
 
             NpCopyClientContext(Ccb, DataEntry);
 
-            if ( Offset || (ReadOverflowOperation && !TotalBytesCopied ))
+            if ((Offset) || (ReadOverflowOperation && !TotalBytesCopied))
             {
-                if ( Mode == FILE_PIPE_MESSAGE_MODE )
+                if (Mode == FILE_PIPE_MESSAGE_MODE)
                 {
                     Status.Status = STATUS_BUFFER_OVERFLOW;
                     break;
@@ -95,23 +99,23 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
             }
             else
             {
-                if ( !Peek || ReadOverflowOperation )
+                if (!Peek || ReadOverflowOperation)
                 {
-                    if ( ReadOverflowOperation)
+                    if (ReadOverflowOperation)
                     {
                         TempDataEntry = NpGetNextRealDataQueueEntry(DataQueue, List);
                         ASSERT(TempDataEntry == DataEntry);
                     }
 
                     Irp = NpRemoveDataQueueEntry(DataQueue, TRUE, List);
-                    if ( Irp )
+                    if (Irp)
                     {
                         Irp->IoStatus.Information = DataSize;
                         Irp->IoStatus.Status = STATUS_SUCCESS;
                         InsertTailList(List, &Irp->Tail.Overlay.ListEntry);
                     }
                 }
-                if ( Mode == FILE_PIPE_MESSAGE_MODE )
+                if (Mode == FILE_PIPE_MESSAGE_MODE)
                 {
                     Status.Status = STATUS_SUCCESS;
                     break;
@@ -119,7 +123,7 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
                 ASSERT(!ReadOverflowOperation);
             }
         }
-        if ( Peek )
+        if (Peek)
         {
             DataEntry = CONTAINING_RECORD(DataEntry->QueueEntry.Flink,
                                           NP_DATA_QUEUE_ENTRY,
@@ -132,7 +136,7 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
     }
 
     Status.Information = TotalBytesCopied;
-    if ( CompleteWrites ) NpCompleteStalledWrites(DataQueue, List);
+    if (CompleteWrites) NpCompleteStalledWrites(DataQueue, List);
     return Status;
 }
 

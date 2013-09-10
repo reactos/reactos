@@ -84,7 +84,7 @@ NpDisconnect(IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp,
              IN PLIST_ENTRY List)
 {
-    BOOLEAN ServerSide;
+    ULONG NamedPipeEnd;
     PNP_CCB Ccb;
     NTSTATUS Status;
     NODE_TYPE_CODE NodeTypeCode;
@@ -93,10 +93,10 @@ NpDisconnect(IN PDEVICE_OBJECT DeviceObject,
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &ServerSide);
+    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
     if (NodeTypeCode == NPFS_NTC_CCB)
     {
-        if ( ServerSide == 1 )
+        if (NamedPipeEnd == FILE_PIPE_SERVER_END)
         {
             ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
 
@@ -125,7 +125,7 @@ NpListen(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp,
          IN PLIST_ENTRY List)
 {
-    BOOLEAN ServerSide;
+    ULONG NamedPipeEnd;
     PNP_CCB Ccb;
     NTSTATUS Status;
     NODE_TYPE_CODE NodeTypeCode;
@@ -134,10 +134,10 @@ NpListen(IN PDEVICE_OBJECT DeviceObject,
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &ServerSide);
+    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
     if (NodeTypeCode == NPFS_NTC_CCB)
     {
-        if ( ServerSide == 1 )
+        if (NamedPipeEnd == FILE_PIPE_SERVER_END)
         {
             ExAcquireResourceExclusiveLite(&Ccb->NonPagedCcb->Lock, TRUE);
 
@@ -169,7 +169,7 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStack;
     NODE_TYPE_CODE Type;
     ULONG InputLength;
-    BOOLEAN ServerSide;
+    ULONG NamedPipeEnd;
     PNP_CCB Ccb;
     PFILE_PIPE_PEEK_BUFFER PeekBuffer;
     PNP_DATA_QUEUE DataQueue;
@@ -181,8 +181,12 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     InputLength = IoStack->Parameters.FileSystemControl.OutputBufferLength;
-    Type = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &ServerSide);
-    if (!Type) return STATUS_PIPE_DISCONNECTED;
+    Type = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
+
+    if (!Type)
+    {
+        return STATUS_PIPE_DISCONNECTED;
+    }
 
     if ((Type != NPFS_NTC_CCB) && (InputLength < sizeof(*PeekBuffer)))
     {
@@ -190,26 +194,28 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
     }
 
     PeekBuffer = (PFILE_PIPE_PEEK_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-    if ( ServerSide )
+    if (NamedPipeEnd != FILE_PIPE_CLIENT_END)
     {
-        if ( ServerSide != 1 )
+        if (NamedPipeEnd != FILE_PIPE_SERVER_END)
         {
-            KeBugCheckEx(NPFS_FILE_SYSTEM, 0xD02E5, ServerSide, 0, 0);
+            KeBugCheckEx(NPFS_FILE_SYSTEM, 0xD02E5, NamedPipeEnd, 0, 0);
         }
-        DataQueue = &Ccb->InQueue;
+
+        DataQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
     }
     else
     {
-        DataQueue = &Ccb->OutQueue;
+        DataQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
     }
 
-    if ( Ccb->NamedPipeState != FILE_PIPE_CONNECTED_STATE )
+    if (Ccb->NamedPipeState != FILE_PIPE_CONNECTED_STATE)
     {
-        if ( Ccb->NamedPipeState != FILE_PIPE_CLOSING_STATE )
+        if (Ccb->NamedPipeState != FILE_PIPE_CLOSING_STATE)
         {
             return STATUS_INVALID_PIPE_STATE;
         }
-        if ( DataQueue->QueueState != WriteEntries)
+
+        if (DataQueue->QueueState != WriteEntries)
         {
             return STATUS_PIPE_BROKEN;
         }
@@ -222,7 +228,7 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
     PeekBuffer->NamedPipeState = Ccb->NamedPipeState;
     BytesPeeked = sizeof(*PeekBuffer);
 
-    if ( DataQueue->QueueState == WriteEntries)
+    if (DataQueue->QueueState == WriteEntries)
     {
         DataEntry = CONTAINING_RECORD(DataQueue->Queue.Flink,
                                       NP_DATA_QUEUE_ENTRY,
@@ -230,14 +236,14 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
         ASSERT((DataEntry->DataEntryType == Buffered) || (DataEntry->DataEntryType == Unbuffered));
 
         PeekBuffer->ReadDataAvailable = DataQueue->BytesInQueue - DataQueue->ByteOffset;
-        if ( Ccb->Fcb->NamedPipeType == FILE_PIPE_MESSAGE_TYPE)
+        if (Ccb->Fcb->NamedPipeType == FILE_PIPE_MESSAGE_TYPE)
         {
             PeekBuffer->NumberOfMessages = DataQueue->EntriesInQueue;
             PeekBuffer->MessageLength = DataEntry->DataSize - DataQueue->ByteOffset;
         }
-        if ( InputLength == sizeof(*PeekBuffer) )
+        if (InputLength == sizeof(*PeekBuffer))
         {
-            Status = PeekBuffer->ReadDataAvailable != 0 ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS;
+            Status = PeekBuffer->ReadDataAvailable ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS;
         }
         else
         {
@@ -270,7 +276,7 @@ NpCompleteTransceiveIrp(IN PDEVICE_OBJECT DeviceObject,
 {
     PAGED_CODE();
 
-    if ( Irp->AssociatedIrp.SystemBuffer )
+    if (Irp->AssociatedIrp.SystemBuffer)
     {
         ExFreePool(Irp->AssociatedIrp.SystemBuffer);
     }
@@ -287,10 +293,10 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION IoStack;
     PVOID InBuffer, OutBuffer;
-    ULONG InLength, OutLength, ReadMode, BytesWritten;
+    ULONG InLength, OutLength, BytesWritten;
     NODE_TYPE_CODE NodeTypeCode;
     PNP_CCB Ccb;
-    BOOLEAN ServerSide;
+    ULONG NamedPipeEnd;
     PNP_NONPAGED_CCB NonPagedCcb;
     PNP_DATA_QUEUE ReadQueue, WriteQueue;
     PNP_EVENT_BUFFER EventBuffer;
@@ -304,7 +310,7 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
     OutLength = IoStack->Parameters.FileSystemControl.OutputBufferLength;
     OutBuffer = Irp->UserBuffer;
 
-    if ( Irp->RequestorMode  == UserMode)
+    if (Irp->RequestorMode == UserMode)
     {
         _SEH2_TRY
         {
@@ -313,13 +319,13 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ASSERT(FALSE);
+            return _SEH2_GetExceptionCode();
         }
         _SEH2_END;
     }
 
-    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &ServerSide);
-    if (NodeTypeCode != NPFS_NTC_CCB )
+    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
+    if (NodeTypeCode != NPFS_NTC_CCB)
     {
         return STATUS_PIPE_DISCONNECTED;
     }
@@ -327,39 +333,37 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
     NonPagedCcb = Ccb->NonPagedCcb;
     ExAcquireResourceExclusiveLite(&NonPagedCcb->Lock, TRUE);
 
-    //ms_exc.registration.TryLevel = 1;
-    if ( Ccb->NamedPipeState != FILE_PIPE_CONNECTED_STATE )
+    if (Ccb->NamedPipeState != FILE_PIPE_CONNECTED_STATE)
     {
         Status = STATUS_INVALID_PIPE_STATE;
         goto Quickie;
     }
 
-    if ( ServerSide )
+    if (NamedPipeEnd != FILE_PIPE_CLIENT_END)
     {
-        if ( ServerSide != 1 ) KeBugCheckEx(NPFS_FILE_SYSTEM, 0xD0538, ServerSide, 0, 0);
-        ReadQueue = &Ccb->InQueue;
-        WriteQueue = &Ccb->OutQueue;
-        WriteQueue = &Ccb->OutQueue;
-        EventBuffer = NonPagedCcb->EventBufferServer;
-        ReadMode = Ccb->ServerReadMode;
+        if (NamedPipeEnd != FILE_PIPE_SERVER_END)
+        {
+            KeBugCheckEx(NPFS_FILE_SYSTEM, 0xD0538, NamedPipeEnd, 0, 0);
+        }
+        ReadQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
+        WriteQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
     }
     else
     {
-        ReadQueue = &Ccb->OutQueue;
-        WriteQueue = &Ccb->InQueue;
-        EventBuffer = NonPagedCcb->EventBufferClient;
-        ReadMode = Ccb->ClientReadMode;
-        WriteQueue = &Ccb->InQueue;
+        ReadQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
+        WriteQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
     }
 
+    EventBuffer = NonPagedCcb->EventBuffer[NamedPipeEnd];
+
     if (Ccb->Fcb->NamedPipeConfiguration != FILE_PIPE_FULL_DUPLEX ||
-        ReadMode != FILE_PIPE_MESSAGE_MODE )
+        Ccb->ReadMode[NamedPipeEnd] != FILE_PIPE_MESSAGE_MODE)
     {
         Status = STATUS_INVALID_PIPE_STATE;
         goto Quickie;
     }
 
-    if ( ReadQueue->QueueState != Empty)
+    if (ReadQueue->QueueState != Empty)
     {
         Status = STATUS_PIPE_BUSY;
         goto Quickie;
@@ -372,14 +376,14 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
                               Ccb->Fcb->NamedPipeType,
                               &BytesWritten,
                               Ccb,
-                              ServerSide,
+                              NamedPipeEnd,
                               Irp->Tail.Overlay.Thread,
                               List);
-    if ( Status == STATUS_MORE_PROCESSING_REQUIRED )
+    if (Status == STATUS_MORE_PROCESSING_REQUIRED)
     {
         ASSERT(WriteQueue->QueueState != ReadEntries);
         NewIrp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-        if ( !NewIrp )
+        if (!NewIrp)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Quickie;
@@ -387,20 +391,28 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
 
         IoSetCompletionRoutine(Irp, NpCompleteTransceiveIrp, NULL, TRUE, TRUE, TRUE);
 
-        if ( BytesWritten )
+        if (BytesWritten)
         {
-            NewIrp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithQuotaTag(PagedPool, BytesWritten, 'wFpN');
-            if ( !NewIrp->AssociatedIrp.SystemBuffer )
+            NewIrp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithQuotaTag(PagedPool, BytesWritten, NPFS_WRITE_BLOCK_TAG);
+            if (!NewIrp->AssociatedIrp.SystemBuffer)
             {
                 IoFreeIrp(NewIrp);
                 Status = STATUS_INSUFFICIENT_RESOURCES;
                 goto Quickie;
             }
 
-            RtlCopyMemory(NewIrp->AssociatedIrp.SystemBuffer,
-                          (PVOID)((ULONG_PTR)InBuffer + InLength - BytesWritten),
-                          BytesWritten);
-            //ms_exc.registration.TryLevel = 1;
+            _SEH2_TRY
+            {
+                RtlCopyMemory(NewIrp->AssociatedIrp.SystemBuffer,
+                              (PVOID)((ULONG_PTR)InBuffer + InLength - BytesWritten),
+                              BytesWritten);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+                goto Quickie;
+            }
+            _SEH2_END;
         }
         else
         {
@@ -416,19 +428,19 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
         IoStack->Parameters.Read.Length = BytesWritten;
         IoStack->MajorFunction = IRP_MJ_WRITE;
 
-        if ( BytesWritten > 0 ) NewIrp->Flags = IRP_DEALLOCATE_BUFFER | IRP_BUFFERED_IO;
+        if (BytesWritten > 0) NewIrp->Flags = IRP_DEALLOCATE_BUFFER | IRP_BUFFERED_IO;
         NewIrp->UserIosb = &NpUserIoStatusBlock;
 
-        Status = NpAddDataQueueEntry(ServerSide,
+        Status = NpAddDataQueueEntry(NamedPipeEnd,
                                      Ccb,
                                      WriteQueue,
                                      WriteEntries,
-                                     1,
+                                     Unbuffered,
                                      BytesWritten,
                                      NewIrp,
                                      NULL,
                                      0);
-        if ( Status != STATUS_PENDING )
+        if (Status != STATUS_PENDING)
         {
             NewIrp->IoStatus.Status = Status;
             InsertTailList(List, &NewIrp->Tail.Overlay.ListEntry);
@@ -437,24 +449,23 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
 
     if (!NT_SUCCESS(Status)) goto Quickie;
  
-    if ( EventBuffer ) KeSetEvent(EventBuffer->Event, 0, 0);
+    if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
     ASSERT(ReadQueue->QueueState == Empty);
-    Status = NpAddDataQueueEntry(ServerSide,
+    Status = NpAddDataQueueEntry(NamedPipeEnd,
                                  Ccb,
                                  ReadQueue,
                                  ReadEntries,
-                                 0,
+                                 Buffered,
                                  OutLength,
                                  Irp,
                                  NULL,
                                  0);
     if (NT_SUCCESS(Status))
     {
-        if ( EventBuffer ) KeSetEvent(EventBuffer->Event, 0, 0);
+        if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
     }
 
 Quickie:
-    //ms_exc.registration.TryLevel = -1;
     ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
     return Status;
 }
@@ -467,7 +478,7 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStack;
     ULONG InLength, NameLength;
     UNICODE_STRING SourceString, Prefix;
-    BOOLEAN ServerSide;
+    ULONG NamedPipeEnd;
     PNP_CCB Ccb;
     PFILE_PIPE_WAIT_FOR_BUFFER Buffer;
     NTSTATUS Status;
@@ -481,9 +492,7 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
 
     SourceString.Buffer = NULL;
 
-    //ms_exc.registration.TryLevel = 0;
-
-    if (NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &ServerSide) != NPFS_NTC_ROOT_DCB )
+    if (NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd) != NPFS_NTC_ROOT_DCB)
     {
         Status = STATUS_ILLEGAL_FUNCTION;
         goto Quickie;
@@ -497,15 +506,15 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     }
 
     NameLength = Buffer->NameLength;
-    if ((NameLength > 0xFFFD) || ((NameLength + sizeof(*Buffer)) > InLength ))
+    if ((NameLength > 0xFFFD) || ((NameLength + sizeof(*Buffer)) > InLength))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Quickie;
     }
 
     SourceString.Length = (USHORT)NameLength + sizeof(OBJ_NAME_PATH_SEPARATOR);
-    SourceString.Buffer = ExAllocatePoolWithTag(PagedPool, SourceString.Length, 'WFpN');
-    if (!SourceString.Buffer )
+    SourceString.Buffer = ExAllocatePoolWithTag(PagedPool, SourceString.Length, NPFS_WRITE_BLOCK_TAG);
+    if (!SourceString.Buffer)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Quickie;
@@ -522,7 +531,7 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     Fcb = (PNP_FCB)((ULONG_PTR)Fcb & ~1);
 
     NodeTypeCode = Fcb ? Fcb->NodeType : 0;
-    if ( NodeTypeCode != NPFS_NTC_FCB )
+    if (NodeTypeCode != NPFS_NTC_FCB)
     {
         Status = STATUS_OBJECT_NAME_NOT_FOUND;
         goto Quickie;
@@ -533,10 +542,10 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
          NextEntry = NextEntry->Flink)
     {
         Ccb = CONTAINING_RECORD(NextEntry, NP_CCB, CcbEntry);
-        if ( Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE ) break;
+        if (Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE) break;
     }
 
-    if ( NextEntry == &Fcb->CcbList )
+    if (NextEntry == &Fcb->CcbList)
     {
         Status = STATUS_SUCCESS;
     }
@@ -549,8 +558,7 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     }
 
 Quickie:
-    //ms_exc.registration.TryLevel = -1;
-    if ( SourceString.Buffer ) ExFreePool(SourceString.Buffer);
+    if (SourceString.Buffer) ExFreePool(SourceString.Buffer);
     return Status;
 }
 
@@ -572,22 +580,22 @@ NpCommonFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
     switch (Fsctl)
     {
         case FSCTL_PIPE_PEEK:
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
             Status = NpPeek(DeviceObject, Irp, &List);
             break;
 
         case FSCTL_PIPE_INTERNAL_WRITE:
-            ExAcquireResourceSharedLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
             Status = NpInternalWrite(DeviceObject, Irp, &List);
             break;
 
         case FSCTL_PIPE_TRANSCEIVE:
-            ExAcquireResourceSharedLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
             Status = NpTransceive(DeviceObject, Irp, &List);
             break;
 
         case FSCTL_PIPE_INTERNAL_TRANSCEIVE:
-            ExAcquireResourceSharedLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
             Status = NpInternalTransceive(DeviceObject, Irp, &List);
             break;
  
@@ -596,54 +604,54 @@ NpCommonFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
             // on purpose
 
         case FSCTL_PIPE_INTERNAL_READ:
-            ExAcquireResourceSharedLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
             Status = NpInternalRead(DeviceObject, Irp, Overflow, &List);
             break;
 
         case FSCTL_PIPE_QUERY_CLIENT_PROCESS:
 
-            ExAcquireResourceSharedLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
             Status = NpQueryClientProcess(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_ASSIGN_EVENT:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
             Status = NpAssignEvent(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_DISCONNECT:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
             Status = NpDisconnect(DeviceObject, Irp, &List);
             break;
 
         case FSCTL_PIPE_LISTEN:
 
-            ExAcquireResourceSharedLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
             Status = NpListen(DeviceObject, Irp, &List);
             break;
 
         case FSCTL_PIPE_QUERY_EVENT:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
             Status = NpQueryEvent(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_WAIT:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
             Status = NpWaitForNamedPipe(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_IMPERSONATE:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
             Status = NpImpersonate(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_SET_CLIENT_PROCESS:
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, 1u);
+            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
             Status = NpSetClientProcess(DeviceObject, Irp);
             break;
 
@@ -680,7 +688,7 @@ NpFsdFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
 
     FsRtlExitFileSystem();
 
-    if ( Status != STATUS_PENDING )
+    if (Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);

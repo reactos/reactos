@@ -13,17 +13,17 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
               IN PLIST_ENTRY List)
 {
     NODE_TYPE_CODE NodeType;
-    BOOLEAN WriteOk, ServerSide;
+    BOOLEAN WriteOk;
     PNP_CCB Ccb;
     PNP_NONPAGED_CCB NonPagedCcb;
     PNP_DATA_QUEUE WriteQueue;
     NTSTATUS Status;
     PNP_EVENT_BUFFER EventBuffer;
-    ULONG BytesWritten;
+    ULONG BytesWritten, NamedPipeEnd;
     PAGED_CODE();
 
     IoStatus->Information = 0;
-    NodeType = NpDecodeFileObject(FileObject, NULL, &Ccb, &ServerSide);
+    NodeType = NpDecodeFileObject(FileObject, NULL, &Ccb, &NamedPipeEnd);
 
     if (!NodeType)
     {
@@ -31,7 +31,7 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
         return TRUE;
     }
 
-    if ( NodeType != NPFS_NTC_CCB )
+    if (NodeType != NPFS_NTC_CCB)
     {
         IoStatus->Status = STATUS_INVALID_PARAMETER;
         return TRUE;
@@ -40,16 +40,14 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
     NonPagedCcb = Ccb->NonPagedCcb;
     ExAcquireResourceExclusiveLite(&NonPagedCcb->Lock, TRUE);
 
-   // ms_exc.registration.TryLevel = 0;
-
-    if ( Ccb->NamedPipeState == FILE_PIPE_DISCONNECTED_STATE )
+    if (Ccb->NamedPipeState == FILE_PIPE_DISCONNECTED_STATE)
     {
         IoStatus->Status = STATUS_PIPE_DISCONNECTED;
         WriteOk = TRUE;
         goto Quickie;
     }
 
-    if ( Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE || Ccb->NamedPipeState == FILE_PIPE_CLOSING_STATE )
+    if (Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE || Ccb->NamedPipeState == FILE_PIPE_CLOSING_STATE)
     {
         IoStatus->Status = Ccb->NamedPipeState != FILE_PIPE_LISTENING_STATE ? STATUS_PIPE_LISTENING : STATUS_PIPE_CLOSING;
         WriteOk = TRUE;
@@ -58,96 +56,90 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
 
     ASSERT(Ccb->NamedPipeState == FILE_PIPE_CONNECTED_STATE);
 
-    if ((ServerSide == 1 && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_INBOUND) ||
-        (ServerSide == 0 && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_OUTBOUND))
+    if ((NamedPipeEnd == FILE_PIPE_SERVER_END && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_INBOUND) ||
+        (NamedPipeEnd == FILE_PIPE_CLIENT_END && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_OUTBOUND))
     {
         IoStatus->Status = STATUS_INVALID_PARAMETER;
         WriteOk = TRUE;
         goto Quickie;
     }
 
-    IoStatus->Status = 0;
+    IoStatus->Status = STATUS_SUCCESS;
     IoStatus->Information = DataSize;
 
-    if ( ServerSide == 1 )
+    if (NamedPipeEnd == FILE_PIPE_SERVER_END)
     {
-        WriteQueue = &Ccb->OutQueue;
-        EventBuffer = NonPagedCcb->EventBufferClient;
+        WriteQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
     }
     else
     {
-        WriteQueue = &Ccb->InQueue;
-        EventBuffer = NonPagedCcb->EventBufferServer;
+        WriteQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
     }
 
-    if (WriteQueue->QueueState != ReadEntries ||
-        WriteQueue->BytesInQueue >= DataSize ||
-        WriteQueue->Quota >= DataSize - WriteQueue->BytesInQueue )
+    EventBuffer = NonPagedCcb->EventBuffer[NamedPipeEnd];
+
+    if ((WriteQueue->QueueState == ReadEntries &&
+        WriteQueue->BytesInQueue < DataSize &&
+        WriteQueue->Quota < DataSize - WriteQueue->BytesInQueue) ||
+        (WriteQueue->QueueState == ReadEntries &&
+        WriteQueue->Quota - WriteQueue->QuotaUsed < DataSize))
     {
-        if (WriteQueue->QueueState != ReadEntries ||
-            WriteQueue->Quota - WriteQueue->QuotaUsed >= DataSize )
+        if (Ccb->Fcb->NamedPipeType == FILE_PIPE_MESSAGE_TYPE &&
+            Ccb->CompletionMode[NamedPipeEnd] == FILE_PIPE_COMPLETE_OPERATION)
         {
-            goto DoWrite;
+            IoStatus->Information = 0;
+            IoStatus->Status = STATUS_SUCCESS;
+            WriteOk = TRUE;
+            goto Quickie;
+        }
+
+        if (!Irp)
+        {
+            WriteOk = FALSE;
+            goto Quickie;
         }
     }
 
-    if (Ccb->Fcb->NamedPipeType == FILE_PIPE_BYTE_STREAM_TYPE &&
-        Ccb->ServerCompletionMode & FILE_PIPE_COMPLETE_OPERATION)
-    {
-        IoStatus->Information = 0;
-        IoStatus->Status = 0;
-        WriteOk = TRUE;
-        goto Quickie;
-    }
-
-    if (!Irp )
-    {
-        WriteOk = 0;
-        goto Quickie;
-    }
-
-DoWrite:
     Status = NpWriteDataQueue(WriteQueue,
-                              ServerSide ? Ccb->ClientReadMode : Ccb->ServerReadMode,
+                              Ccb->ReadMode[NamedPipeEnd],
                               Buffer,
                               DataSize,
                               Ccb->Fcb->NamedPipeType,
                               &BytesWritten,
                               Ccb,
-                              ServerSide,
+                              NamedPipeEnd,
                               Thread,
                               List);
     IoStatus->Status = Status;
-    if ( Status == STATUS_MORE_PROCESSING_REQUIRED )
+    if (Status == STATUS_MORE_PROCESSING_REQUIRED)
     {
         ASSERT(WriteQueue->QueueState != ReadEntries);
-        if ( (Ccb->ServerCompletionMode & FILE_PIPE_COMPLETE_OPERATION || !Irp)
-            && WriteQueue->Quota - WriteQueue->QuotaUsed < BytesWritten )
+        if ((Ccb->CompletionMode[NamedPipeEnd] == FILE_PIPE_COMPLETE_OPERATION || !Irp)
+            && WriteQueue->Quota - WriteQueue->QuotaUsed < BytesWritten)
         {
             IoStatus->Information = DataSize - BytesWritten;
-            IoStatus->Status = 0;
+            IoStatus->Status = STATUS_SUCCESS;
         }
         else
         {
             ASSERT(WriteQueue->QueueState != ReadEntries);
 
-            IoStatus->Status = NpAddDataQueueEntry(ServerSide,
-                                                    Ccb,
-                                                    WriteQueue,
-                                                    WriteEntries,
-                                                    0,
-                                                    DataSize,
-                                                    Irp,
-                                                    Buffer,
-                                                    DataSize - BytesWritten);
+            IoStatus->Status = NpAddDataQueueEntry(NamedPipeEnd,
+                                                   Ccb,
+                                                   WriteQueue,
+                                                   WriteEntries,
+                                                   Buffered,
+                                                   DataSize,
+                                                   Irp,
+                                                   Buffer,
+                                                   DataSize - BytesWritten);
         }
     }
 
-    if ( EventBuffer ) KeSetEvent(EventBuffer->Event, 0, 0);
-    WriteOk = 1;
+    if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
+    WriteOk = TRUE;
 
 Quickie:
-    //ms_exc.registration.TryLevel = -1;
     ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
     return WriteOk;
 }
@@ -192,7 +184,7 @@ NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
 
     FsRtlExitFileSystem();
 
-    if ( IoStatus.Status != STATUS_PENDING )
+    if (IoStatus.Status != STATUS_PENDING)
     {
         Irp->IoStatus.Information = IoStatus.Information;
         Irp->IoStatus.Status = IoStatus.Status;

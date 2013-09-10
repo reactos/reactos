@@ -10,7 +10,7 @@ NpCommonCleanup(IN PDEVICE_OBJECT DeviceObject,
     LIST_ENTRY List;
     PNP_FCB Fcb;
     PNP_CCB Ccb;
-    BOOLEAN ServerSide;
+    ULONG NamedPipeEnd;
     PLIST_ENTRY ThisEntry, NextEntry;
     PAGED_CODE();
 
@@ -21,16 +21,16 @@ NpCommonCleanup(IN PDEVICE_OBJECT DeviceObject,
     NodeTypeCode = NpDecodeFileObject(IoStack->FileObject,
                                       (PVOID*)&Fcb,
                                       &Ccb,
-                                      &ServerSide);
-    if (NodeTypeCode == NPFS_NTC_CCB )
+                                      &NamedPipeEnd);
+    if (NodeTypeCode == NPFS_NTC_CCB)
     {
-        if ( ServerSide == 1 )
+        if (NamedPipeEnd == FILE_PIPE_SERVER_END)
         {
             ASSERT(Ccb->Fcb->ServerOpenCount != 0);
             --Ccb->Fcb->ServerOpenCount;
         }
 
-        NpSetClosingPipeState(Ccb, Irp, ServerSide, &List);
+        NpSetClosingPipeState(Ccb, Irp, NamedPipeEnd, &List);
     }
 
     ExReleaseResourceLite(&NpVcb->Lock);
@@ -62,7 +62,7 @@ NpFsdCleanup(IN PDEVICE_OBJECT DeviceObject,
 
     FsRtlExitFileSystem();
 
-    if ( Status != STATUS_PENDING )
+    if (Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);

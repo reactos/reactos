@@ -17,6 +17,35 @@
 #endif
 
 //
+// Pool Tags for NPFS (from pooltag.txt)
+//
+//  Npf* -npfs.sys - Npfs Allocations
+//  NpFc - npfs.sys - CCB, client control block
+//  NpFf - npts.sys - FCB, file control block
+//  NpFC - npfs.sys - ROOT_DCB CCB
+//  NpFD - npfs.sys - DCB, directory block
+//  NpFg - npfs.sys - Global storage
+//  NpFi - npfs.sys - NPFS client info buffer.
+//  NpFn - npfs.sys - Name block
+//  NpFq - npfs.sys - Query template buffer used for directory query
+//  NpFr - npfs.sys - DATA_ENTRY records(read / write buffers)
+//  NpFs - npfs.sys - Client security context
+//  NpFw - npfs.sys - Write block
+//  NpFW - npfs.sys - Write block
+#define NPFS_CCB_TAG            'NpFc'
+#define NPFS_ROOT_DCB_CCB_TAG   'NpFC'
+#define NPFS_DCB_TAG            'NpFD'
+#define NPFS_FCB_TAG            'NpFf'
+#define NPFS_GLOBAL_TAG         'NpFg'
+#define NPFS_CLIENT_INFO_TAG    'NpFi'
+#define NPFS_NAME_BLOCK_TAG     'NpFn'
+#define NPFS_QUERY_TEMPLATE_TAG 'NpFq'
+#define NPFS_DATA_ENTRY_TAG     'NpFr'
+#define NPFS_CLIENT_SEC_CTX_TAG 'NpFs'
+#define NPFS_WAIT_BLOCK_TAG     'NpFt'
+#define NPFS_WRITE_BLOCK_TAG    'NpFw'
+
+//
 // Node Type Codes for NPFS
 //
 #define NPFS_NTC_VCB            1
@@ -190,8 +219,7 @@ typedef struct _NP_FCB
 typedef struct _NP_NONPAGED_CCB
 {
     NODE_TYPE_CODE NodeType;
-    PNP_EVENT_BUFFER EventBufferClient;
-    PNP_EVENT_BUFFER EventBufferServer;
+    PNP_EVENT_BUFFER EventBuffer[2];
     ERESOURCE Lock;
 } NP_NONPAGED_CCB, *PNP_NONPAGED_CCB;
 
@@ -202,22 +230,16 @@ typedef struct _NP_CCB
 {
     NODE_TYPE_CODE NodeType;
     UCHAR NamedPipeState;
-    UCHAR ClientReadMode:1;
-    UCHAR ClientCompletionMode:1;
-    UCHAR ServerReadMode:1;
-    UCHAR ClientReservedFlags:6;
-    UCHAR ServerCompletionMode:1;
-    UCHAR ServerReservedFlags:6;
+    UCHAR ReadMode[2];
+    UCHAR CompletionMode[2];
     SECURITY_QUALITY_OF_SERVICE ClientQos;
     LIST_ENTRY CcbEntry;
     PNP_FCB Fcb;
-    PFILE_OBJECT ClientFileObject;
-    PFILE_OBJECT ServerFileObject;
+    PFILE_OBJECT FileObject[2];
     PEPROCESS Process;
     PVOID ClientSession;
     PNP_NONPAGED_CCB NonPagedCcb;
-    NP_DATA_QUEUE InQueue;
-    NP_DATA_QUEUE OutQueue;
+    NP_DATA_QUEUE DataQueue[2];
     PSECURITY_CLIENT_CONTEXT ClientContext;
     LIST_ENTRY IrpList;
 } NP_CCB, *PNP_CCB;
@@ -265,7 +287,7 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
 
 NTSTATUS
 NTAPI
-NpAddDataQueueEntry(IN BOOLEAN ServerSide,
+NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
                     IN PNP_CCB Ccb,
                     IN PNP_DATA_QUEUE DataQueue,
                     IN ULONG Who, 
@@ -400,7 +422,7 @@ NpInitializeSecurity(IN PNP_CCB Ccb,
 
 NTSTATUS
 NTAPI
-NpGetClientSecurityContext(IN BOOLEAN ServerSide,
+NpGetClientSecurityContext(IN ULONG NamedPipeEnd,
                            IN PNP_CCB Ccb,
                            IN PETHREAD Thread,
                            IN PSECURITY_CLIENT_CONTEXT *Context);
@@ -410,14 +432,14 @@ NTAPI
 NpSetFileObject(IN PFILE_OBJECT FileObject,
                 IN PVOID PrimaryContext,
                 IN PVOID Ccb,
-                IN BOOLEAN ServerSide);
+                IN ULONG NamedPipeEnd);
 
 NODE_TYPE_CODE
 NTAPI
 NpDecodeFileObject(IN PFILE_OBJECT FileObject,
                    OUT PVOID* PrimaryContext OPTIONAL,
                    OUT PNP_CCB* Ccb,
-                   OUT PBOOLEAN ServerSide OPTIONAL);
+                   OUT PULONG NamedPipeEnd OPTIONAL);
 
 PNP_FCB
 NTAPI
@@ -475,7 +497,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
                  IN ULONG PipeType, 
                  OUT PULONG BytesWritten, 
                  IN PNP_CCB Ccb, 
-                 IN BOOLEAN ServerSide, 
+                 IN ULONG NamedPipeEnd, 
                  IN PETHREAD Thread, 
                  IN PLIST_ENTRY List);
 
@@ -504,4 +526,20 @@ NTSTATUS
 NTAPI
 NpFsdQueryInformation(IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp);
+
+
+NTSTATUS
+NTAPI
+NpFsdQuerySecurity(IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+NpFsdSetSecurity(IN PDEVICE_OBJECT DeviceObject,
+                 IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+NpFsdQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
+                            IN PIRP Irp);
 
