@@ -189,7 +189,7 @@ macro(dir_to_num dir var)
         set(${var} 16)
     elseif(${dir} STREQUAL reactos/system32/wbem)
         set(${var} 17)
-	else()
+    else()
         message(FATAL_ERROR "Wrong destination: ${dir}")
     endif()
 endmacro()
@@ -207,7 +207,7 @@ function(add_cd_file)
     endif()
 
     if(NOT _CD_FOR)
-        message(FATAL_ERROR "You must provide a cd name (or "all" for all of them) to install the file on!")
+        message(FATAL_ERROR "You must provide a cd name (or \"all\" for all of them) to install the file on!")
     endif()
 
     #get file if we need to
