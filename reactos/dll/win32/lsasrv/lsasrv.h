@@ -14,6 +14,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <winuser.h>
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/kefuncs.h>
@@ -39,6 +40,7 @@
 
 #include <wine/debug.h>
 
+#include "resources.h"
 
 typedef enum _LSA_DB_OBJECT_TYPE
 {
@@ -380,5 +382,12 @@ LsapCreateAccountSd(PSECURITY_DESCRIPTOR *AccountSd,
 NTSTATUS
 LsapCreateSecretSd(PSECURITY_DESCRIPTOR *SecretSd,
                    PULONG SecretSdSize);
+
+/* utils.c */
+INT
+LsapLoadString(HINSTANCE hInstance,
+               UINT uId,
+               LPWSTR lpBuffer,
+               INT nBufferMax);
 
 /* EOF */
