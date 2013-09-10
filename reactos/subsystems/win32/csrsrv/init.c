@@ -32,7 +32,6 @@ ULONG SessionId;
 HANDLE BNOLinksDirectory;
 HANDLE SessionObjectDirectory;
 HANDLE DosDevicesDirectory;
-HANDLE CsrInitializationEvent;
 SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
 
 
@@ -963,19 +962,6 @@ CsrServerInitialization(IN ULONG ArgumentCount,
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    /* Create the Init Event */
-    Status = NtCreateEvent(&CsrInitializationEvent,
-                           EVENT_ALL_ACCESS,
-                           NULL,
-                           SynchronizationEvent,
-                           FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSRSRV:%s: NtCreateEvent failed (Status=%08lx)\n",
-                __FUNCTION__, Status);
-        return Status;
-    }
-
     /* Cache System Basic Information so we don't always request it */
     Status = NtQuerySystemInformation(SystemBasicInformation,
                                       &CsrNtSysInfo,
@@ -1065,18 +1051,6 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                 __FUNCTION__, Status);
         return Status;
     }
-
-    /* Finito! Signal the event */
-    Status = NtSetEvent(CsrInitializationEvent, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSRSRV:%s: NtSetEvent failed (Status=%08lx)\n",
-                __FUNCTION__, Status);
-        return Status;
-    }
-
-    /* Close the event handle now */
-    NtClose(CsrInitializationEvent);
 
     /* Have us handle Hard Errors */
     Status = NtSetDefaultHardErrorPort(CsrApiPort);

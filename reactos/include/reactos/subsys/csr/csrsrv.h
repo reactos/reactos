@@ -208,7 +208,6 @@ ULONG
 typedef struct _CSR_SERVER_DLL
 {
     ULONG Length;
-    HANDLE Event;
     ANSI_STRING Name;
     HANDLE ServerHandle;
     ULONG ServerId;
@@ -227,7 +226,7 @@ typedef struct _CSR_SERVER_DLL
     PCSR_SHUTDOWNPROCESS_CALLBACK ShutdownProcessCallback;
     ULONG Unknown2[3];
 } CSR_SERVER_DLL, *PCSR_SERVER_DLL;
-
+C_ASSERT(FIELD_OFFSET(CSR_SERVER_DLL, SharedSection) == 0x3C);
 
 typedef
 NTSTATUS

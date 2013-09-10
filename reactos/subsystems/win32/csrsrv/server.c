@@ -168,7 +168,6 @@ CsrLoadServerDll(IN PCHAR DllString,
     /* Set up the Object */
     ServerDll->Length = Size;
     ServerDll->SharedSection = CsrSrvSharedSectionHeap; // Send to the server dll our shared heap pointer.
-    ServerDll->Event = CsrInitializationEvent;
     ServerDll->Name.Length = DllName.Length;
     ServerDll->Name.MaximumLength = DllName.MaximumLength;
     ServerDll->Name.Buffer = (PCHAR)(ServerDll + 1);
