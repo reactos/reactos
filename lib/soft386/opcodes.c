@@ -30,32 +30,32 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeAddModrm,
     Soft386OpcodeAddAl,
     Soft386OpcodeAddEax,
-    NULL, // TODO: OPCODE 0x06 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x07 NOT SUPPORTED
+    Soft386OpcodePushEs,
+    Soft386OpcodePopEs,
     Soft386OpcodeOrByteModrm,
     Soft386OpcodeOrModrm,
     Soft386OpcodeOrByteModrm,
     Soft386OpcodeOrModrm,
     Soft386OpcodeOrAl,
     Soft386OpcodeOrEax,
-    NULL, // TODO: OPCODE 0x0E NOT SUPPORTED
+    Soft386OpcodePushCs,
     NULL, // TODO: OPCODE 0x0F NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x10 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x11 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x12 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x13 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x14 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x15 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x16 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x17 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x18 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x19 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x1A NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x1B NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x1C NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x1D NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x1E NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x1F NOT SUPPORTED
+    Soft386OpcodeAdcByteModrm,
+    Soft386OpcodeAdcModrm,
+    Soft386OpcodeAdcByteModrm,
+    Soft386OpcodeAdcModrm,
+    Soft386OpcodeAdcAl,
+    Soft386OpcodeAdcEax,
+    Soft386OpcodePushSs,
+    Soft386OpcodePopSs,
+    Soft386OpcodeSbbByteModrm,
+    Soft386OpcodeSbbModrm,
+    Soft386OpcodeSbbByteModrm,
+    Soft386OpcodeSbbModrm,
+    Soft386OpcodeSbbAl,
+    Soft386OpcodeSbbEax,
+    Soft386OpcodePushDs,
+    Soft386OpcodePopDs,
     Soft386OpcodeAndByteModrm,
     Soft386OpcodeAndModrm,
     Soft386OpcodeAndByteModrm,
@@ -63,15 +63,15 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeAndAl,
     Soft386OpcodeAndEax,
     Soft386OpcodePrefix,
-    NULL, // TODO: OPCODE 0x27 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x28 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x29 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x2A NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x2B NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x2C NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x2D NOT SUPPORTED
+    Soft386OpcodeDaa,
+    Soft386OpcodeCmpSubByteModrm,
+    Soft386OpcodeCmpSubModrm,
+    Soft386OpcodeCmpSubByteModrm,
+    Soft386OpcodeCmpSubModrm,
+    Soft386OpcodeCmpSubAl,
+    Soft386OpcodeCmpSubEax,
     Soft386OpcodePrefix,
-    NULL, // TODO: OPCODE 0x2F NOT SUPPORTED
+    Soft386OpcodeDas,
     Soft386OpcodeXorByteModrm,
     Soft386OpcodeXorModrm,
     Soft386OpcodeXorByteModrm,
@@ -79,15 +79,15 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeXorAl,
     Soft386OpcodeXorEax,
     Soft386OpcodePrefix,
-    NULL, // TODO: OPCODE 0x37 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x38 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x39 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x3A NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x3B NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x3C NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x3D NOT SUPPORTED
+    Soft386OpcodeAaa,
+    Soft386OpcodeCmpSubByteModrm,
+    Soft386OpcodeCmpSubModrm,
+    Soft386OpcodeCmpSubByteModrm,
+    Soft386OpcodeCmpSubModrm,
+    Soft386OpcodeCmpSubAl,
+    Soft386OpcodeCmpSubEax,
     Soft386OpcodePrefix,
-    NULL, // TODO: OPCODE 0x3F NOT SUPPORTED
+    Soft386OpcodeAas,
     Soft386OpcodeIncrement,
     Soft386OpcodeIncrement,
     Soft386OpcodeIncrement,
@@ -120,18 +120,18 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodePopReg,
     Soft386OpcodePopReg,
     Soft386OpcodePopReg,
-    NULL, // TODO: OPCODE 0x60 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x61 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x62 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x63 NOT SUPPORTED
-    Soft386OpcodePrefix,
-    Soft386OpcodePrefix,
+    Soft386OpcodePushAll,
+    Soft386OpcodePopAll,
+    Soft386OpcodeBound,
+    Soft386OpcodeArpl,
     Soft386OpcodePrefix,
     Soft386OpcodePrefix,
-    NULL, // TODO: OPCODE 0x68 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x69 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x6A NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x6B NOT SUPPORTED
+    Soft386OpcodePrefix,
+    Soft386OpcodePrefix,
+    Soft386OpcodePushImm,
+    Soft386OpcodeImulModrmImm,
+    Soft386OpcodePushByteImm,
+    Soft386OpcodeImulModrmByteImm,
     NULL, // TODO: OPCODE 0x6C NOT SUPPORTED
     NULL, // TODO: OPCODE 0x6D NOT SUPPORTED
     NULL, // TODO: OPCODE 0x6E NOT SUPPORTED
@@ -160,13 +160,13 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeTestModrm,
     Soft386OpcodeXchgByteModrm,
     Soft386OpcodeXchgModrm,
-    NULL, // TODO: OPCODE 0x88 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x89 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x8A NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x8B NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x8C NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x8D NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x8E NOT SUPPORTED
+    Soft386OpcodeMovByteModrm,
+    Soft386OpcodeMovModrm,
+    Soft386OpcodeMovByteModrm,
+    Soft386OpcodeMovModrm,
+    Soft386OpcodeMovStoreSeg,
+    Soft386OpcodeLea,
+    Soft386OpcodeMovLoadSeg,
     NULL, // TODO: OPCODE 0x8F NOT SUPPORTED
     Soft386OpcodeNop,
     Soft386OpcodeExchangeEax,
@@ -176,14 +176,14 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeExchangeEax,
     Soft386OpcodeExchangeEax,
     Soft386OpcodeExchangeEax,
-    NULL, // TODO: OPCODE 0x98 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x99 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x9A NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x9B NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x9C NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x9D NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x9E NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x9F NOT SUPPORTED
+    Soft386OpcodeCwde,
+    Soft386OpcodeCdq,
+    Soft386OpcodeCallAbs,
+    Soft386OpcodeWait,
+    Soft386OpcodePushFlags,
+    Soft386OpcodePopFlags,
+    Soft386OpcodeSahf,
+    Soft386OpcodeLahf,
     NULL, // TODO: OPCODE 0xA0 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xA1 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xA2 NOT SUPPORTED
@@ -192,8 +192,8 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xA5 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xA6 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xA7 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xA8 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xA9 NOT SUPPORTED
+    Soft386OpcodeTestAl,
+    Soft386OpcodeTestEax,
     NULL, // TODO: OPCODE 0xAA NOT SUPPORTED
     NULL, // TODO: OPCODE 0xAB NOT SUPPORTED
     NULL, // TODO: OPCODE 0xAC NOT SUPPORTED
@@ -218,28 +218,28 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeMovRegImm,
     NULL, // TODO: OPCODE 0xC0 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xC1 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xC2 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xC3 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xC4 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xC5 NOT SUPPORTED
+    Soft386OpcodeRetImm,
+    Soft386OpcodeRet,
+    Soft386OpcodeLes,
+    Soft386OpcodeLds,
     NULL, // TODO: OPCODE 0xC6 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xC7 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xC8 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xC9 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xCA NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xCB NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xCC NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xCD NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xCE NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xCF NOT SUPPORTED
+    Soft386OpcodeEnter,
+    Soft386OpcodeLeave,
+    Soft386OpcodeRetFarImm,
+    Soft386OpcodeRetFar,
+    Soft386OpcodeInt3,
+    Soft386OpcodeInt,
+    Soft386OpcodeIntOverflow,
+    Soft386OpcodeIret,
     NULL, // TODO: OPCODE 0xD0 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xD1 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xD2 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xD3 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xD4 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xD5 NOT SUPPORTED
+    Soft386OpcodeAam,
+    Soft386OpcodeAad,
     NULL, // TODO: OPCODE 0xD6 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xD7 NOT SUPPORTED
+    Soft386OpcodeXlat,
     NULL, // TODO: OPCODE 0xD8 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xD9 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xDA NOT SUPPORTED
@@ -248,17 +248,17 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xDD NOT SUPPORTED
     NULL, // TODO: OPCODE 0xDE NOT SUPPORTED
     NULL, // TODO: OPCODE 0xDF NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xE0 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xE1 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xE2 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xE3 NOT SUPPORTED
+    Soft386OpcodeLoopnz,
+    Soft386OpcodeLoopz,
+    Soft386OpcodeLoop,
+    Soft386OpcodeJecxz,
     Soft386OpcodeInByte,
     Soft386OpcodeIn,
     Soft386OpcodeOutByte,
     Soft386OpcodeOut,
-    NULL, // TODO: OPCODE 0xE8 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xE9 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xEA NOT SUPPORTED
+    Soft386OpcodeCall,
+    Soft386OpcodeJmp,
+    Soft386OpcodeJmpAbs,
     Soft386OpcodeShortJump,
     Soft386OpcodeInByte,
     Soft386OpcodeIn,
@@ -2609,4 +2609,1287 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeXchgModrm)
 
     /* The result is discarded */
     return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePushEs)
+{
+    /* Call the internal API */
+    return Soft386StackPush(State, State->SegmentRegs[SOFT386_REG_ES].Selector);
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePopEs)
+{
+    ULONG NewSelector;
+
+    if (!Soft386StackPop(State, &NewSelector))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Call the internal API */
+    return Soft386LoadSegment(State, SOFT386_REG_ES, LOWORD(NewSelector));
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePushCs)
+{
+    /* Call the internal API */
+    return Soft386StackPush(State, State->SegmentRegs[SOFT386_REG_CS].Selector);
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAdcByteModrm)
+{
+    UCHAR FirstValue, SecondValue, Result;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFD) == 0x10);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+    else if (State->PrefixFlags
+             & ~(SOFT386_PREFIX_ADSIZE
+             | SOFT386_PREFIX_SEG
+             | SOFT386_PREFIX_LOCK))
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!Soft386ReadModrmByteOperands(State,
+                                      &ModRegRm,
+                                      &FirstValue,
+                                      &SecondValue))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    Result = FirstValue + SecondValue + State->Flags.Cf;
+
+    /* Special exception for CF */
+    State->Flags.Cf = State->Flags.Cf
+                      && ((FirstValue == 0xFF) || (SecondValue == 0xFF));
+
+    /* Update the flags */
+    State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
+    State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) == (SecondValue & SIGN_FLAG_BYTE))
+                      && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+    State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* Write back the result */
+    return Soft386WriteModrmByteOperands(State,
+                                         &ModRegRm,
+                                         Opcode & SOFT386_OPCODE_WRITE_REG,
+                                         Result);
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAdcModrm)
+{
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFD) == 0x11);
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the address size */
+        AddressSize = !AddressSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the operand size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags
+             & ~(SOFT386_PREFIX_ADSIZE
+             | SOFT386_PREFIX_OPSIZE
+             | SOFT386_PREFIX_SEG
+             | SOFT386_PREFIX_LOCK))
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check the operand size */
+    if (OperandSize)
+    {
+        ULONG FirstValue, SecondValue, Result;
+
+        if (!Soft386ReadModrmDwordOperands(State,
+                                          &ModRegRm,
+                                          &FirstValue,
+                                          &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    
+        /* Calculate the result */
+        Result = FirstValue + SecondValue + State->Flags.Cf;
+
+        /* Special exception for CF */
+        State->Flags.Cf = State->Flags.Cf
+                          && ((FirstValue == 0xFFFFFFFF) || (SecondValue == 0xFFFFFFFF));
+
+        /* Update the flags */
+        State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
+        State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) == (SecondValue & SIGN_FLAG_LONG))
+                          && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
+        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+
+        /* Write back the result */
+        return Soft386WriteModrmDwordOperands(State,
+                                              &ModRegRm,
+                                              Opcode & SOFT386_OPCODE_WRITE_REG,
+                                              Result);
+    }
+    else
+    {
+        USHORT FirstValue, SecondValue, Result;
+
+        if (!Soft386ReadModrmWordOperands(State,
+                                          &ModRegRm,
+                                          &FirstValue,
+                                          &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    
+        /* Calculate the result */
+        Result = FirstValue + SecondValue + State->Flags.Cf;
+
+        /* Special exception for CF */
+        State->Flags.Cf = State->Flags.Cf
+                          && ((FirstValue == 0xFFFF) || (SecondValue == 0xFFFF));
+
+        /* Update the flags */
+        State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
+        State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) == (SecondValue & SIGN_FLAG_WORD))
+                          && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
+        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+
+        /* Write back the result */
+        return Soft386WriteModrmWordOperands(State,
+                                              &ModRegRm,
+                                              Opcode & SOFT386_OPCODE_WRITE_REG,
+                                              Result);
+    }
+
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAdcAl)
+{
+    UCHAR FirstValue = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+    UCHAR SecondValue, Result;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x14);
+
+    if (State->PrefixFlags)
+    {
+        /* This opcode doesn't take any prefixes */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (!Soft386FetchByte(State, &SecondValue))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    Result = FirstValue + SecondValue + State->Flags.Cf;
+
+    /* Special exception for CF */
+    State->Flags.Cf = State->Flags.Cf &&
+                      ((FirstValue == 0xFF) || (SecondValue == 0xFF));
+
+    /* Update the flags */
+    State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
+    State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) == (SecondValue & SIGN_FLAG_BYTE))
+                      && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+    State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* Write back the result */
+    State->GeneralRegs[SOFT386_REG_EAX].LowByte = Result;
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAdcEax)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x15);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Size)
+    {
+        ULONG FirstValue = State->GeneralRegs[SOFT386_REG_EAX].Long;
+        ULONG SecondValue, Result;
+
+        if (!Soft386FetchDword(State, &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = FirstValue + SecondValue + State->Flags.Cf;
+
+        /* Special exception for CF */
+        State->Flags.Cf = State->Flags.Cf &&
+                          ((FirstValue == 0xFFFFFFFF) || (SecondValue == 0xFFFFFFFF));
+
+        /* Update the flags */
+        State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
+        State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) == (SecondValue & SIGN_FLAG_LONG))
+                          && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
+        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+
+        /* Write back the result */
+        State->GeneralRegs[SOFT386_REG_EAX].Long = Result;
+    }
+    else
+    {
+        USHORT FirstValue = State->GeneralRegs[SOFT386_REG_EAX].LowWord;
+        USHORT SecondValue, Result;
+
+        if (!Soft386FetchWord(State, &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = FirstValue + SecondValue + State->Flags.Cf;
+
+        /* Special exception for CF */
+        State->Flags.Cf = State->Flags.Cf &&
+                          ((FirstValue == 0xFFFF) || (SecondValue == 0xFFFF));
+
+        /* Update the flags */
+        State->Flags.Cf = State->Flags.Cf || ((Result < FirstValue) && (Result < SecondValue));
+        State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) == (SecondValue & SIGN_FLAG_WORD))
+                          && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
+        State->Flags.Af = (((FirstValue & 0x0F) + (SecondValue & 0x0F)) & 0x10) ? TRUE : FALSE;
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+
+        /* Write back the result */
+        State->GeneralRegs[SOFT386_REG_EAX].LowWord = Result;
+    }
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePushSs)
+{
+    /* Call the internal API */
+    return Soft386StackPush(State, State->SegmentRegs[SOFT386_REG_SS].Selector);
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePopSs)
+{
+    ULONG NewSelector;
+
+    if (!Soft386StackPop(State, &NewSelector))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Call the internal API */
+    return Soft386LoadSegment(State, SOFT386_REG_SS, LOWORD(NewSelector));
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeSbbByteModrm)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeSbbModrm)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeSbbAl)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeSbbEax)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePushDs)
+{
+    /* Call the internal API */
+    return Soft386StackPush(State, State->SegmentRegs[SOFT386_REG_DS].Selector);
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePopDs)
+{
+    ULONG NewSelector;
+
+    if (!Soft386StackPop(State, &NewSelector))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Call the internal API */
+    return Soft386LoadSegment(State, SOFT386_REG_DS, LOWORD(NewSelector));
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeDaa)
+{
+    UCHAR Value = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+    BOOLEAN Carry = State->Flags.Cf;
+
+    /* Clear the carry flag */
+    State->Flags.Cf = FALSE;
+
+    /* Check if the first BCD digit is invalid or there was a carry from it */
+    if (((Value & 0x0F) > 9) || State->Flags.Af)
+    {
+        /* Correct it */
+        State->GeneralRegs[SOFT386_REG_EAX].LowByte += 0x06;
+        if (State->GeneralRegs[SOFT386_REG_EAX].LowByte < 0x06)
+        {
+            /* A carry occurred */
+            State->Flags.Cf = TRUE;
+        }
+
+        /* Set the adjust flag */
+        State->Flags.Af = TRUE;
+    }
+
+    /* Check if the second BCD digit is invalid or there was a carry from it */
+    if ((Value > 0x99) || Carry)
+    {
+        /* Correct it */
+        State->GeneralRegs[SOFT386_REG_EAX].LowByte += 0x60;
+
+        /* There was a carry */
+        State->Flags.Cf = TRUE;
+    }
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeCmpSubByteModrm)
+{
+    UCHAR FirstValue, SecondValue, Result;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xED) == 0x28);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+    else if (State->PrefixFlags
+             & ~(SOFT386_PREFIX_ADSIZE
+             | SOFT386_PREFIX_SEG
+             | SOFT386_PREFIX_LOCK))
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!Soft386ReadModrmByteOperands(State,
+                                      &ModRegRm,
+                                      &FirstValue,
+                                      &SecondValue))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check if this is the instruction that writes to R/M */
+    if (!(Opcode & SOFT386_OPCODE_WRITE_REG))
+    {
+        /* Swap the order */
+        FirstValue ^= SecondValue;
+        SecondValue ^= FirstValue;
+        FirstValue ^= SecondValue;
+    }
+
+    /* Calculate the result */
+    Result = FirstValue - SecondValue;
+
+    /* Update the flags */
+    State->Flags.Cf = FirstValue < SecondValue;
+    State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) != (SecondValue & SIGN_FLAG_BYTE))
+                      && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+    State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* Check if this is not a CMP */
+    if (!(Opcode & 0x10))
+    {
+        /* Write back the result */
+        return Soft386WriteModrmByteOperands(State,
+                                             &ModRegRm,
+                                             Opcode & SOFT386_OPCODE_WRITE_REG,
+                                             Result);
+    }
+    else
+    {
+        /* Discard the result */
+        return TRUE;
+    }
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeCmpSubModrm)
+{
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xED) == 0x29);
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the address size */
+        AddressSize = !AddressSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the operand size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags
+             & ~(SOFT386_PREFIX_ADSIZE
+             | SOFT386_PREFIX_OPSIZE
+             | SOFT386_PREFIX_SEG
+             | SOFT386_PREFIX_LOCK))
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check the operand size */
+    if (OperandSize)
+    {
+        ULONG FirstValue, SecondValue, Result;
+
+        if (!Soft386ReadModrmDwordOperands(State,
+                                          &ModRegRm,
+                                          &FirstValue,
+                                          &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Check if this is the instruction that writes to R/M */
+        if (!(Opcode & SOFT386_OPCODE_WRITE_REG))
+        {
+            /* Swap the order */
+            FirstValue ^= SecondValue;
+            SecondValue ^= FirstValue;
+            FirstValue ^= SecondValue;
+        }
+    
+        /* Calculate the result */
+        Result = FirstValue - SecondValue;
+
+        /* Update the flags */
+        State->Flags.Cf = FirstValue < SecondValue;
+        State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) != (SecondValue & SIGN_FLAG_LONG))
+                          && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
+        State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+
+        /* Check if this is not a CMP */
+        if (!(Opcode & 0x10))
+        {
+            /* Write back the result */
+            return Soft386WriteModrmDwordOperands(State,
+                                                  &ModRegRm,
+                                                  Opcode & SOFT386_OPCODE_WRITE_REG,
+                                                  Result);
+        }
+        else
+        {
+            /* Discard the result */
+            return TRUE;
+        }
+    }
+    else
+    {
+        USHORT FirstValue, SecondValue, Result;
+
+        if (!Soft386ReadModrmWordOperands(State,
+                                          &ModRegRm,
+                                          &FirstValue,
+                                          &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    
+        /* Check if this is the instruction that writes to R/M */
+        if (!(Opcode & SOFT386_OPCODE_WRITE_REG))
+        {
+            /* Swap the order */
+            FirstValue ^= SecondValue;
+            SecondValue ^= FirstValue;
+            FirstValue ^= SecondValue;
+        }
+    
+        /* Calculate the result */
+        Result = FirstValue - SecondValue;
+
+        /* Update the flags */
+        State->Flags.Cf = FirstValue < SecondValue;
+        State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) != (SecondValue & SIGN_FLAG_WORD))
+                          && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
+        State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+
+        /* Check if this is not a CMP */
+        if (!(Opcode & 0x10))
+        {
+            /* Write back the result */
+            return Soft386WriteModrmWordOperands(State,
+                                                 &ModRegRm,
+                                                 Opcode & SOFT386_OPCODE_WRITE_REG,
+                                                 Result);
+        }
+        else
+        {
+            /* Discard the result */
+            return TRUE;
+        }
+    }
+
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeCmpSubAl)
+{
+    UCHAR FirstValue = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+    UCHAR SecondValue, Result;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xEF) == 0x2C);
+
+    if (State->PrefixFlags)
+    {
+        /* This opcode doesn't take any prefixes */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (!Soft386FetchByte(State, &SecondValue))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    Result = FirstValue - SecondValue;
+
+    /* Update the flags */
+    State->Flags.Cf = FirstValue < SecondValue;
+    State->Flags.Of = ((FirstValue & SIGN_FLAG_BYTE) != (SecondValue & SIGN_FLAG_BYTE))
+                      && ((FirstValue & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+    State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* Check if this is not a CMP */
+    if (!(Opcode & 0x10))
+    {
+        /* Write back the result */
+        State->GeneralRegs[SOFT386_REG_EAX].LowByte = Result;
+    }
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeCmpSubEax)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xEF) == 0x2D);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Size)
+    {
+        ULONG FirstValue = State->GeneralRegs[SOFT386_REG_EAX].Long;
+        ULONG SecondValue, Result;
+
+        if (!Soft386FetchDword(State, &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = FirstValue - SecondValue;
+
+        /* Update the flags */
+        State->Flags.Cf = FirstValue < SecondValue;
+        State->Flags.Of = ((FirstValue & SIGN_FLAG_LONG) != (SecondValue & SIGN_FLAG_LONG))
+                          && ((FirstValue & SIGN_FLAG_LONG) != (Result & SIGN_FLAG_LONG));
+        State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+
+        /* Check if this is not a CMP */
+        if (!(Opcode & 0x10))
+        {
+            /* Write back the result */
+            State->GeneralRegs[SOFT386_REG_EAX].Long = Result;
+        }
+    }
+    else
+    {
+        USHORT FirstValue = State->GeneralRegs[SOFT386_REG_EAX].LowWord;
+        USHORT SecondValue, Result;
+
+        if (!Soft386FetchWord(State, &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = FirstValue - SecondValue;
+
+        /* Update the flags */
+        State->Flags.Cf = FirstValue < SecondValue;
+        State->Flags.Of = ((FirstValue & SIGN_FLAG_WORD) != (SecondValue & SIGN_FLAG_WORD))
+                          && ((FirstValue & SIGN_FLAG_WORD) != (Result & SIGN_FLAG_WORD));
+        State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+
+        /* Write back the result */
+        State->GeneralRegs[SOFT386_REG_EAX].LowWord = Result;
+    }
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeDas)
+{
+    UCHAR Value = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+    BOOLEAN Carry = State->Flags.Cf;
+
+    /* Clear the carry flag */
+    State->Flags.Cf = FALSE;
+
+    /* Check if the first BCD digit is invalid or there was a borrow */
+    if (((Value & 0x0F) > 9) || State->Flags.Af)
+    {
+        /* Correct it */
+        State->GeneralRegs[SOFT386_REG_EAX].LowByte -= 0x06;
+        if (State->GeneralRegs[SOFT386_REG_EAX].LowByte > 0xFB)
+        {
+            /* A borrow occurred */
+            State->Flags.Cf = TRUE;
+        }
+
+        /* Set the adjust flag */
+        State->Flags.Af = TRUE;
+    }
+
+    /* Check if the second BCD digit is invalid or there was a borrow */
+    if ((Value > 0x99) || Carry)
+    {
+        /* Correct it */
+        State->GeneralRegs[SOFT386_REG_EAX].LowByte -= 0x60;
+
+        /* There was a borrow */
+        State->Flags.Cf = TRUE;
+    }
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAaa)
+{
+    UCHAR Value = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+
+    /*
+     * Check if the value in AL is not a valid BCD digit,
+     * or there was a carry from the lowest 4 bits of AL
+     */
+    if (((Value & 0x0F) > 9) || State->Flags.Af)
+    {
+        /* Correct it */
+        State->GeneralRegs[SOFT386_REG_EAX].LowByte += 0x06;
+        State->GeneralRegs[SOFT386_REG_EAX].HighByte++;
+
+        /* Set CF and AF */
+        State->Flags.Cf = State->Flags.Af = TRUE;
+    }
+    else
+    {
+        /* Clear CF and AF */
+        State->Flags.Cf = State->Flags.Af = FALSE;
+    }
+
+    /* Keep only the lowest 4 bits of AL */
+    State->GeneralRegs[SOFT386_REG_EAX].LowByte &= 0x0F;
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAas)
+{
+    UCHAR Value = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+
+    /*
+     * Check if the value in AL is not a valid BCD digit,
+     * or there was a borrow from the lowest 4 bits of AL
+     */
+    if (((Value & 0x0F) > 9) || State->Flags.Af)
+    {
+        /* Correct it */
+        State->GeneralRegs[SOFT386_REG_EAX].LowByte -= 0x06;
+        State->GeneralRegs[SOFT386_REG_EAX].HighByte--;
+
+        /* Set CF and AF */
+        State->Flags.Cf = State->Flags.Af = TRUE;
+    }
+    else
+    {
+        /* Clear CF and AF */
+        State->Flags.Cf = State->Flags.Af = FALSE;
+    }
+
+    /* Keep only the lowest 4 bits of AL */
+    State->GeneralRegs[SOFT386_REG_EAX].LowByte &= 0x0F;
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePushAll)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePopAll)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeBound)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeArpl)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePushImm)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeImulModrmImm)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePushByteImm)
+{
+    UCHAR Data;
+
+    if (!Soft386FetchByte(State, &Data))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Call the internal API */
+    return Soft386StackPush(State, Data);
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeImulModrmByteImm)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovByteModrm)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovModrm)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovStoreSeg)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLea)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovLoadSeg)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeCwde)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x98);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Size)
+    {
+        /* Sign extend AX to EAX */
+        State->GeneralRegs[SOFT386_REG_EAX].Long = MAKELONG
+        (
+            State->GeneralRegs[SOFT386_REG_EAX].LowWord,
+            (State->GeneralRegs[SOFT386_REG_EAX].LowWord & SIGN_FLAG_WORD)
+            ? 0xFFFF : 0x0000
+        );
+    }
+    else
+    {
+        /* Sign extend AL to AX */
+        State->GeneralRegs[SOFT386_REG_EAX].HighByte =
+        (State->GeneralRegs[SOFT386_REG_EAX].LowByte & SIGN_FLAG_BYTE)
+        ? 0xFF : 0x00;
+    }
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeCdq)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x99);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Size)
+    {
+        /* Sign extend EAX to EDX:EAX */
+        State->GeneralRegs[SOFT386_REG_EDX].Long =
+        (State->GeneralRegs[SOFT386_REG_EAX].Long & SIGN_FLAG_LONG)
+        ? 0xFFFFFFFF : 0x00000000;
+    }
+    else
+    {
+        /* Sign extend AX to DX:AX */
+        State->GeneralRegs[SOFT386_REG_EDX].LowWord =
+        (State->GeneralRegs[SOFT386_REG_EAX].LowWord & SIGN_FLAG_WORD)
+        ? 0xFFFF : 0x0000;
+    }
+
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeCallAbs)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeWait)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePushFlags)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodePopFlags)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeSahf)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLahf)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeRetImm)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeRet)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLes)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLds)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeEnter)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLeave)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeRetFarImm)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeRetFar)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeInt3)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeInt)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeIntOverflow)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeIret)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAam)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeAad)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeXlat)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLoopnz)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLoopz)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLoop)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeJecxz)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeCall)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeJmp)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeJmpAbs)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return FALSE;
 }
