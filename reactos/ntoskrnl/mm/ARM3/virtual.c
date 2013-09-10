@@ -1533,6 +1533,26 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
         KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
     }
 
+    /* Lock the address space and make sure the process isn't already dead */
+    MmLockAddressSpace(&TargetProcess->Vm);
+    if (TargetProcess->VmDeleted)
+    {
+        /* Unlock the address space of the process */
+        MmUnlockAddressSpace(&TargetProcess->Vm);
+
+        /* Check if we were attached */
+        if (ProcessHandle != NtCurrentProcess())
+        {
+            /* Detach and dereference the process */
+            KeUnstackDetachProcess(&ApcState);
+            ObDereferenceObject(TargetProcess);
+        }
+
+        /* Bail out */
+        DPRINT1("Process is dying\n");
+        return STATUS_PROCESS_IS_TERMINATING;
+    }
+
     /* Loop the VADs */
     ASSERT(TargetProcess->VadRoot.NumberGenericTableElements);
     if (TargetProcess->VadRoot.NumberGenericTableElements)
@@ -1609,6 +1629,9 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
             MemoryInfo.RegionSize = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1 - (PCHAR)Address;
         }
 
+        /* Unlock the address space of the process */
+        MmUnlockAddressSpace(&TargetProcess->Vm);
+
         /* Check if we were attached */
         if (ProcessHandle != NtCurrentProcess())
         {
@@ -1662,9 +1685,6 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     {
         MemoryInfo.Type = MEM_MAPPED;
     }
-
-    /* Lock the address space of the process */
-    MmLockAddressSpace(&TargetProcess->Vm);
 
     /* Find the memory area the specified address belongs to */
     MemoryArea = MmLocateMemoryAreaByAddress(&TargetProcess->Vm, BaseAddress);
