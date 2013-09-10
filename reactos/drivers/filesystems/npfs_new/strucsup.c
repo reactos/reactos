@@ -37,8 +37,10 @@ NTAPI
 NpDeleteEventTableEntry(IN PRTL_GENERIC_TABLE Table,
                         IN PVOID Buffer)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    if (!Buffer) return FALSE;
+
+    ObfDereferenceObject(((PNP_EVENT_BUFFER)Buffer)->Event);
+    return RtlDeleteElementGenericTable(Table, Buffer);
 }
 
 VOID

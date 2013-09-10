@@ -4,8 +4,8 @@ PDEVICE_OBJECT NpfsDeviceObject;
 
 NTSTATUS
 NTAPI
-NpFsdClose(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
+NpFsdSetSecurity(IN PDEVICE_OBJECT DeviceObject,
+                 IN PIRP Irp)
 {
     UNIMPLEMENTED;
 
@@ -18,36 +18,8 @@ NpFsdClose(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NpFsdQueryInformation(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NpFsdSetInformation(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
+NpFsdQuerySecurity(IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp)
 {
     UNIMPLEMENTED;
 
@@ -74,49 +46,7 @@ NpFsdQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-NpFsdCleanup(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NpFsdFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
 NpFsdDirectoryControl(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NpFsdFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp)
 {
     UNIMPLEMENTED;
@@ -152,14 +82,12 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpFsdFlushBuffers;
     DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = NpFsdDirectoryControl;
     DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = NpFsdFileSystemControl;
-    //   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] =
-    //     NpfsQuerySecurity;
-    //   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] =
-    //     NpfsSetSecurity;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = NpFsdQuerySecurity;
+    DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] = NpFsdSetSecurity;
 
     DriverObject->DriverUnload = NULL;
 
-    RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe");
+    RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe2");
     Status = IoCreateDevice(DriverObject,
                             sizeof(NP_VCB),
                             &DeviceName,

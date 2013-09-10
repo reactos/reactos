@@ -83,6 +83,19 @@ typedef struct _NP_WAIT_QUEUE
 } NP_WAIT_QUEUE, *PNP_WAIT_QUEUE;
 
 //
+// The Entries in the Queue above, one for each Waiter.
+//
+typedef struct _NP_WAIT_QUEUE_ENTRY
+{
+    PIRP Irp;
+    KDPC Dpc;
+    KTIMER Timer;
+    PNP_WAIT_QUEUE WaitQueue;
+    UNICODE_STRING String;
+    PFILE_OBJECT FileObject;
+} NP_WAIT_QUEUE_ENTRY, *PNP_WAIT_QUEUE_ENTRY;
+
+//
 // The event buffer in the NonPaged CCB
 //
 typedef struct _NP_EVENT_BUFFER
@@ -225,6 +238,11 @@ typedef struct _NP_VCB
 
 extern PNP_VCB NpVcb;
 
+BOOLEAN
+NTAPI
+NpDeleteEventTableEntry(IN PRTL_GENERIC_TABLE Table,
+                        IN PVOID Buffer);
+
 VOID
 NTAPI
 NpInitializeWaitQueue(IN PNP_WAIT_QUEUE WaitQueue);
@@ -322,9 +340,44 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
+NpFsdClose(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp);
+
+
+NTSTATUS
+NTAPI
+NpFsdCleanup(IN PDEVICE_OBJECT DeviceObject,
+                    IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+NpFsdFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp);
+
+NTSTATUS
+NTAPI
 NpSetConnectedPipeState(IN PNP_CCB Ccb,
                         IN PFILE_OBJECT FileObject,
                         IN PLIST_ENTRY List);
+
+NTSTATUS
+NTAPI
+NpSetListeningPipeState(IN PNP_CCB Ccb,
+                        IN PIRP Irp, 
+                        IN PLIST_ENTRY List);
+
+
+NTSTATUS
+NTAPI
+NpSetDisconnectedPipeState(IN PNP_CCB Ccb, 
+                           IN PLIST_ENTRY List);
+
+NTSTATUS
+NTAPI
+NpSetClosingPipeState(IN PNP_CCB Ccb,
+                      IN PIRP Irp, 
+                      IN ULONG NamedPipeEnd, 
+                      IN PLIST_ENTRY List);
 
 VOID
 NTAPI
@@ -388,6 +441,13 @@ NpCheckForNotify(IN PNP_DCB Dcb,
 
 NTSTATUS
 NTAPI
+NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
+            IN LARGE_INTEGER WaitTime,
+            IN PIRP Irp, 
+            IN PUNICODE_STRING Name);
+
+NTSTATUS
+NTAPI
 NpCancelWaiter(IN PNP_WAIT_QUEUE WaitQueue,
                IN PUNICODE_STRING PipeName,
                IN NTSTATUS Status,
@@ -405,8 +465,43 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
                 IN PNP_CCB Ccb,
                 IN PLIST_ENTRY List);
 
+
+NTSTATUS 
+NTAPI
+NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
+                 IN ULONG Mode, 
+                 IN PVOID OutBuffer, 
+                 IN ULONG OutBufferSize, 
+                 IN ULONG PipeType, 
+                 OUT PULONG BytesWritten, 
+                 IN PNP_CCB Ccb, 
+                 IN BOOLEAN ServerSide, 
+                 IN PETHREAD Thread, 
+                 IN PLIST_ENTRY List);
+
 NTSTATUS
 NTAPI
 NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
           IN PIRP Irp);
+
+
+NTSTATUS
+NTAPI
+NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
+           IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+NpFsdFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
+                  IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+NpFsdSetInformation(IN PDEVICE_OBJECT DeviceObject,
+                    IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+NpFsdQueryInformation(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp);
 

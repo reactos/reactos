@@ -12,7 +12,6 @@ NpCommonRead(IN PFILE_OBJECT FileObject,
              IN PLIST_ENTRY List)
 {
     NODE_TYPE_CODE NodeType;
-    ULONG NamedPipeConfiguation;
     PNP_DATA_QUEUE Queue;
     PNP_EVENT_BUFFER EventBuffer;
     NTSTATUS Status;
@@ -51,10 +50,8 @@ NpCommonRead(IN PFILE_OBJECT FileObject,
 
     ASSERT((Ccb->NamedPipeState == FILE_PIPE_CONNECTED_STATE) || (Ccb->NamedPipeState == FILE_PIPE_CLOSING_STATE));
 
-    NamedPipeConfiguation = Ccb->Fcb->NamedPipeConfiguration;
-
-    if ((ServerSide == 1 && NamedPipeConfiguation == FILE_PIPE_OUTBOUND) ||
-        (ServerSide == 0 && NamedPipeConfiguation == FILE_PIPE_INBOUND) )
+    if ((ServerSide == 1 && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_OUTBOUND) ||
+        (ServerSide == 0 && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_INBOUND ))
     {
         IoStatus->Status = STATUS_INVALID_PARAMETER;
         ReadOk = TRUE;
@@ -109,30 +106,32 @@ NpCommonRead(IN PFILE_OBJECT FileObject,
         goto Quickie;
     }
 
-    if ( Irp )
+    if ( !Irp )
     {
-        Status = NpAddDataQueueEntry(ServerSide,
-                                     Ccb,
-                                     Queue,
-                                     0,
-                                     0,
-                                     BufferSize,
-                                     Irp,
-                                     0,
-                                     0);
-        IoStatus->Status = Status;
-        if (!NT_SUCCESS(Status))
-        {
-            ReadOk = FALSE;
-            goto Quickie;
-        }
+        ReadOk = FALSE;
+        goto Quickie;
 
+    }
+    Status = NpAddDataQueueEntry(ServerSide,
+                                    Ccb,
+                                    Queue,
+                                    0,
+                                    0,
+                                    BufferSize,
+                                    Irp,
+                                    0,
+                                    0);
+    IoStatus->Status = Status;
+    if (!NT_SUCCESS(Status))
+    {
+        ReadOk = FALSE;
+    }
+    else
+    {
         ReadOk = TRUE;
         if ( EventBuffer ) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
-        goto Quickie;
     }
 
-    ReadOk = FALSE;
 Quickie:
     //ms_exc.registration.TryLevel = -1;
     ExReleaseResourceLite(&Ccb->NonPagedCcb->Lock);
@@ -182,7 +181,7 @@ NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
     {
         Irp->IoStatus.Information = IoStatus.Information;
         Irp->IoStatus.Status = IoStatus.Status;
-        IofCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
+        IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
     }
 
     return IoStatus.Status;

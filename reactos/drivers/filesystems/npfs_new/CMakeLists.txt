@@ -1,8 +1,13 @@
 
 list(APPEND SOURCE
+     cleanup.c
+     close.c
      create.c
      datasup.c
+     fileinfo.c
      fileobsup.c
+     flushbuf.c
+     fsctrl.c
      main.c
      prefxsup.c
      read.c
@@ -10,7 +15,9 @@ list(APPEND SOURCE
      secursup.c
      statesup.c
      strucsup.c
-     waitsup.c)
+     waitsup.c
+     write.c
+     writesup.c)
 
 add_library(npfs_new SHARED ${SOURCE})
 set_module_type(npfs_new kernelmodedriver)
