@@ -1,0 +1,14 @@
+﻿; UTF-8
+
+[Section]
+Name = Pengupop
+Version = 2.2.3
+Licence = GPL
+Description = The purpose of this game is to shoot colored orbs into your playfield, so they form groups of three or more.
+Size = 384KB
+Category = 4 
+URLDownload = http://svn.reactos.org/packages/Pengupop.exe
+CDPath = none
+
+[Section.0407]
+Description = Das Ziel des Spiels ist es farbige Orbs ins Spielfeld zu feuern, so dass diese Gruppen von drei oder mehr bilden.

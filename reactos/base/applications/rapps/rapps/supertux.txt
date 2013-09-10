@@ -1,0 +1,15 @@
+﻿; UTF-8
+
+[Section]
+Name = SuperTux
+Version = 0.1.3
+Licence = GPL
+Description = SuperTux is a free, open-source two-dimensional platform game.
+Size = 7.3MB
+Category = 4
+URLSite = http://www.supertux.lethargik.org
+URLDownload = http://files1.freesoft.ru/rep/694851/supertux-0.1.3-setup.exe
+CDPath = none
+
+[Section.0407]
+Description = SuperTux ist ein zweidimensionales, freies, Open Source Plattformspiel. 
