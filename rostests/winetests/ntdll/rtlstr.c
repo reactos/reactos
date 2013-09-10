@@ -30,6 +30,9 @@
 #include "winnls.h"
 #include "guiddef.h"
 
+#define HASH_STRING_ALGORITHM_X65599   1
+#define HASH_STRING_ALGORITHM_INVALID  0xffffffff
+
 /* Function ptrs for ntdll calls */
 static HMODULE hntdll = 0;
 static NTSTATUS (WINAPI *pRtlAnsiStringToUnicodeString)(PUNICODE_STRING, PCANSI_STRING, BOOLEAN);
@@ -64,6 +67,7 @@ static NTSTATUS (WINAPI *pRtlValidateUnicodeString)(LONG, UNICODE_STRING *);
 static NTSTATUS (WINAPI *pRtlGUIDFromString)(const UNICODE_STRING*,GUID*);
 static NTSTATUS (WINAPI *pRtlStringFromGUID)(const GUID*, UNICODE_STRING*);
 static BOOLEAN (WINAPI *pRtlIsTextUnicode)(LPVOID, INT, INT *);
+static NTSTATUS (WINAPI *pRtlHashUnicodeString)(PCUNICODE_STRING,BOOLEAN,ULONG,ULONG*);
 
 /*static VOID (WINAPI *pRtlFreeOemString)(PSTRING);*/
 /*static VOID (WINAPI *pRtlCopyUnicodeString)(UNICODE_STRING *, const UNICODE_STRING *);*/
@@ -132,9 +136,9 @@ static void InitFunctionPtrs(void)
 	pRtlGUIDFromString = (void *)GetProcAddress(hntdll, "RtlGUIDFromString");
 	pRtlStringFromGUID = (void *)GetProcAddress(hntdll, "RtlStringFromGUID");
 	pRtlIsTextUnicode = (void *)GetProcAddress(hntdll, "RtlIsTextUnicode");
+        pRtlHashUnicodeString = (void*)GetProcAddress(hntdll, "RtlHashUnicodeString");
     }
 }
-
 
 static void test_RtlInitString(void)
 {
@@ -191,6 +195,12 @@ static void test_RtlInitUnicodeStringEx(void)
     WCHAR *teststring2;
     UNICODE_STRING uni;
     NTSTATUS result;
+
+    if (!pRtlInitUnicodeStringEx)
+    {
+        win_skip("RtlInitUnicodeStringEx is not available\n");
+        return;
+    }
 
     teststring2 = HeapAlloc(GetProcessHeap(), 0, (TESTSTRING2_LEN + 1) * sizeof(WCHAR));
     memset(teststring2, 'X', TESTSTRING2_LEN * sizeof(WCHAR));
@@ -405,6 +415,12 @@ static void test_RtlDuplicateUnicodeString(void)
     STRING dest_ansi_str;
     NTSTATUS result;
     unsigned int test_num;
+
+    if (!pRtlDuplicateUnicodeString)
+    {
+        win_skip("RtlDuplicateUnicodeString is not available\n");
+        return;
+    }
 
     for (test_num = 0; test_num < NB_DUPL_USTR; test_num++) {
 	source_str.Length        = dupl_ustr[test_num].source_Length;
@@ -1180,6 +1196,12 @@ static void test_RtlFindCharInUnicodeString(void)
     unsigned int idx;
     unsigned int test_num;
 
+    if (!pRtlFindCharInUnicodeString)
+    {
+        win_skip("RtlFindCharInUnicodeString is not available\n");
+        return;
+    }
+
     for (test_num = 0; test_num < NB_FIND_CH_IN_USTR; test_num++) {
 	if (find_ch_in_ustr[test_num].main_str != NULL) {
 	    main_str.Length        = strlen(find_ch_in_ustr[test_num].main_str) * sizeof(WCHAR);
@@ -1710,6 +1732,12 @@ static void test_RtlIsTextUnicode(void)
     int flags;
     int i;
 
+    if (!pRtlIsTextUnicode)
+    {
+        win_skip("RtlIsTextUnicode is not available\n");
+        return;
+    }
+
     ok(!pRtlIsTextUnicode(ascii, sizeof(ascii), NULL), "ASCII text detected as Unicode\n");
 
     res = pRtlIsTextUnicode(unicode, sizeof(unicode), NULL);
@@ -1839,6 +1867,12 @@ static void test_RtlGUIDFromString(void)
   UNICODE_STRING str;
   NTSTATUS ret;
 
+  if (!pRtlGUIDFromString)
+  {
+      win_skip("RtlGUIDFromString is not available\n");
+      return;
+  }
+
   str.Length = str.MaximumLength = sizeof(szGuid) - sizeof(WCHAR);
   str.Buffer = (LPWSTR)szGuid;
 
@@ -1858,6 +1892,12 @@ static void test_RtlStringFromGUID(void)
   UNICODE_STRING str;
   NTSTATUS ret;
 
+  if (!pRtlStringFromGUID)
+  {
+      win_skip("RtlStringFromGUID is not available\n");
+      return;
+  }
+
   str.Length = str.MaximumLength = 0;
   str.Buffer = NULL;
 
@@ -1865,6 +1905,70 @@ static void test_RtlStringFromGUID(void)
   ok(ret == 0, "expected ret=0, got 0x%0x\n", ret);
   ok(str.Buffer && !lstrcmpiW(str.Buffer, szGuid), "Endianness broken\n");
   pRtlFreeUnicodeString(&str);
+}
+
+struct hash_unicodestring_test {
+    WCHAR str[50];
+    BOOLEAN case_insensitive;
+    ULONG hash;
+};
+
+static const struct hash_unicodestring_test hash_test[] = {
+    { {'T',0},                     FALSE, 0x00000054 },
+    { {'T','e','s','t',0},         FALSE, 0x766bb952 },
+    { {'T','e','S','t',0},         FALSE, 0x764bb172 },
+    { {'t','e','s','t',0},         FALSE, 0x4745d132 },
+    { {'t','e','s','t',0},         TRUE,  0x6689c132 },
+    { {'T','E','S','T',0},         TRUE,  0x6689c132 },
+    { {'T','E','S','T',0},         FALSE, 0x6689c132 },
+    { {'a','b','c','d','e','f',0}, FALSE, 0x971318c3 },
+    { { 0 } }
+};
+
+static void test_RtlHashUnicodeString(void)
+{
+    static const WCHAR strW[] = {'T','e','s','t',0,'1',0};
+    const struct hash_unicodestring_test *ptr;
+    UNICODE_STRING str;
+    NTSTATUS status;
+    ULONG hash;
+
+    if (!pRtlHashUnicodeString)
+    {
+        win_skip("RtlHashUnicodeString is not available\n");
+        return;
+    }
+
+    status = pRtlHashUnicodeString(NULL, FALSE, HASH_STRING_ALGORITHM_X65599, &hash);
+    ok(status == STATUS_INVALID_PARAMETER, "got status 0x%08x\n", status);
+
+    RtlInitUnicodeString(&str, strW);
+    status = pRtlHashUnicodeString(&str, FALSE, HASH_STRING_ALGORITHM_X65599, NULL);
+    ok(status == STATUS_INVALID_PARAMETER, "got status 0x%08x\n", status);
+
+    status = pRtlHashUnicodeString(&str, FALSE, HASH_STRING_ALGORITHM_INVALID, &hash);
+    ok(status == STATUS_INVALID_PARAMETER, "got status 0x%08x\n", status);
+
+    /* embedded null */
+    str.Buffer = (PWSTR)strW;
+    str.Length = sizeof(strW) - sizeof(WCHAR);
+    str.MaximumLength = sizeof(strW);
+    status = pRtlHashUnicodeString(&str, FALSE, HASH_STRING_ALGORITHM_X65599, &hash);
+    ok(status == STATUS_SUCCESS, "got status 0x%08x\n", status);
+    ok(hash == 0x32803083, "got 0x%08x\n", hash);
+
+    ptr = hash_test;
+    while (*ptr->str)
+    {
+        RtlInitUnicodeString(&str, ptr->str);
+        hash = 0;
+        status = pRtlHashUnicodeString(&str, ptr->case_insensitive, HASH_STRING_ALGORITHM_X65599, &hash);
+        ok(status == STATUS_SUCCESS, "got status 0x%08x for %s\n", status, wine_dbgstr_w(ptr->str));
+        ok(hash == ptr->hash, "got wrong hash 0x%08x, expected 0x%08x, for %s, mode %d\n", hash, ptr->hash,
+            wine_dbgstr_w(ptr->str), ptr->case_insensitive);
+
+        ptr++;
+    }
 }
 
 START_TEST(rtlstr)
@@ -1887,22 +1991,17 @@ START_TEST(rtlstr)
 	test_RtlAppendUnicodeStringToString();
     }
 
-    if (pRtlInitUnicodeStringEx)
-        test_RtlInitUnicodeStringEx();
-    if (pRtlDuplicateUnicodeString)
-        test_RtlDuplicateUnicodeString();
-    if (pRtlFindCharInUnicodeString)
-        test_RtlFindCharInUnicodeString();
-    if (pRtlGUIDFromString)
-        test_RtlGUIDFromString();
-    if (pRtlStringFromGUID)
-        test_RtlStringFromGUID();
-    if (pRtlIsTextUnicode)
-        test_RtlIsTextUnicode();
+    test_RtlInitUnicodeStringEx();
+    test_RtlDuplicateUnicodeString();
+    test_RtlFindCharInUnicodeString();
+    test_RtlGUIDFromString();
+    test_RtlStringFromGUID();
+    test_RtlIsTextUnicode();
     if(0)
     {
 	test_RtlUpcaseUnicodeChar();
 	test_RtlUpcaseUnicodeString();
 	test_RtlDowncaseUnicodeString();
     }
+    test_RtlHashUnicodeString();
 }

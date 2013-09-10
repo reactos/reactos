@@ -505,18 +505,51 @@ static void test_query_cache(void)
 {
     NTSTATUS status;
     ULONG ReturnLength;
-    SYSTEM_CACHE_INFORMATION sci;
+    BYTE buffer[128];
+    SYSTEM_CACHE_INFORMATION *sci = (SYSTEM_CACHE_INFORMATION *) buffer;
+    ULONG expected;
+    INT i;
 
-    status = pNtQuerySystemInformation(SystemCacheInformation, &sci, 0, &ReturnLength);
-    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+    /* the large SYSTEM_CACHE_INFORMATION on WIN64 is not documented */
+    expected = sizeof(SYSTEM_CACHE_INFORMATION);
+    for (i = sizeof(buffer); i>= expected; i--)
+    {
+        ReturnLength = 0xdeadbeef;
+        status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+        ok(!status && (ReturnLength == expected),
+            "%d: got 0x%x and %u (expected STATUS_SUCCESS and %u)\n", i, status, ReturnLength, expected);
+    }
 
-    status = pNtQuerySystemInformation(SystemCacheInformation, &sci, sizeof(sci), &ReturnLength);
-    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-    ok( sizeof(sci) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
+    /* buffer too small for the full result.
+       Up to win7, the function succeeds with a partial result. */
+    status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+    if (!status)
+    {
+        expected = offsetof(SYSTEM_CACHE_INFORMATION, MinimumWorkingSet);
+        for (; i>= expected; i--)
+        {
+            ReturnLength = 0xdeadbeef;
+            status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+            ok(!status && (ReturnLength == expected),
+                "%d: got 0x%x and %u (expected STATUS_SUCCESS and %u)\n", i, status, ReturnLength, expected);
+        }
+    }
 
-    status = pNtQuerySystemInformation(SystemCacheInformation, &sci, sizeof(sci) + 2, &ReturnLength);
-    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-    ok( sizeof(sci) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
+    /* buffer too small for the result, this call will always fail */
+    ReturnLength = 0xdeadbeef;
+    status = pNtQuerySystemInformation(SystemCacheInformation, sci, i, &ReturnLength);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH &&
+        ((ReturnLength == expected) || broken(!ReturnLength) || broken(ReturnLength == 0xfffffff0)),
+        "%d: got 0x%x and %u (expected STATUS_INFO_LENGTH_MISMATCH and %u)\n", i, status, ReturnLength, expected);
+
+    if (0) {
+        /* this crashes on some vista / win7 machines */
+        ReturnLength = 0xdeadbeef;
+        status = pNtQuerySystemInformation(SystemCacheInformation, sci, 0, &ReturnLength);
+        ok( status == STATUS_INFO_LENGTH_MISMATCH &&
+            ((ReturnLength == expected) || broken(!ReturnLength) || broken(ReturnLength == 0xfffffff0)),
+            "0: got 0x%x and %u (expected STATUS_INFO_LENGTH_MISMATCH and %u)\n", status, ReturnLength, expected);
+    }
 }
 
 static void test_query_interrupt(void)

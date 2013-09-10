@@ -162,11 +162,12 @@ static void tally_test_file(FILE_BOTH_DIRECTORY_INFORMATION *dir_info)
 }
 
 static void test_flags_NtQueryDirectoryFile(OBJECT_ATTRIBUTES *attr, const char *testdirA,
+                                            UNICODE_STRING *mask,
                                             BOOLEAN single_entry, BOOLEAN restart_flag)
 {
     HANDLE dirh;
     IO_STATUS_BLOCK io;
-    UINT data_pos;
+    UINT data_pos, data_size;
     UINT data_len;    /* length of dir data */
     BYTE data[8192];  /* directory data */
     FILE_BOTH_DIRECTORY_INFORMATION *dir_info;
@@ -175,6 +176,8 @@ static void test_flags_NtQueryDirectoryFile(OBJECT_ATTRIBUTES *attr, const char 
     int i;
 
     reset_found_files();
+
+    data_size = mask ? offsetof( FILE_BOTH_DIRECTORY_INFORMATION, FileName[256] ) : sizeof(data);
 
     /* Read the directory and note which files are found */
     status = pNtOpenFile( &dirh, SYNCHRONIZE | FILE_LIST_DIRECTORY, attr, &io, FILE_OPEN,
@@ -185,9 +188,9 @@ static void test_flags_NtQueryDirectoryFile(OBJECT_ATTRIBUTES *attr, const char 
        return;
     }
 
-    pNtQueryDirectoryFile( dirh, NULL, NULL, NULL, &io, data, sizeof(data),
-                       FileBothDirectoryInformation, single_entry, NULL, restart_flag );
-    ok (U(io).Status == STATUS_SUCCESS, "filed to query directory; status %x\n", U(io).Status);
+    pNtQueryDirectoryFile( dirh, NULL, NULL, NULL, &io, data, data_size,
+                       FileBothDirectoryInformation, single_entry, mask, restart_flag );
+    ok (U(io).Status == STATUS_SUCCESS, "failed to query directory; status %x\n", U(io).Status);
     data_len = io.Information;
     ok (data_len >= sizeof(FILE_BOTH_DIRECTORY_INFORMATION), "not enough data in directory\n");
 
@@ -199,11 +202,11 @@ static void test_flags_NtQueryDirectoryFile(OBJECT_ATTRIBUTES *attr, const char 
         tally_test_file(dir_info);
 
         if (dir_info->NextEntryOffset == 0) {
-            pNtQueryDirectoryFile( dirh, 0, NULL, NULL, &io, data, sizeof(data),
-                               FileBothDirectoryInformation, single_entry, NULL, FALSE );
+            pNtQueryDirectoryFile( dirh, 0, NULL, NULL, &io, data, data_size,
+                               FileBothDirectoryInformation, single_entry, mask, FALSE );
             if (U(io).Status == STATUS_NO_MORE_FILES)
                 break;
-            ok (U(io).Status == STATUS_SUCCESS, "filed to query directory; status %x\n", U(io).Status);
+            ok (U(io).Status == STATUS_SUCCESS, "failed to query directory; status %x\n", U(io).Status);
             data_len = io.Information;
             if (data_len < sizeof(FILE_BOTH_DIRECTORY_INFORMATION))
                 break;
@@ -215,10 +218,16 @@ static void test_flags_NtQueryDirectoryFile(OBJECT_ATTRIBUTES *attr, const char 
     }
     ok(numfiles < max_test_dir_size, "too many loops\n");
 
-    for (i=0; testfiles[i].name; i++)
-        ok(testfiles[i].nfound == 1, "Wrong number %d of %s files found (ReturnSingleEntry=%d,RestartScan=%d)\n",
-           testfiles[i].nfound, testfiles[i].description, single_entry, restart_flag);
-
+    if (mask)
+        for (i=0; testfiles[i].name; i++)
+            ok(testfiles[i].nfound == (testfiles[i].nameW == mask->Buffer),
+               "Wrong number %d of %s files found (single_entry=%d,mask=%s)\n",
+               testfiles[i].nfound, testfiles[i].description, single_entry,
+               wine_dbgstr_wn(mask->Buffer, mask->Length/sizeof(WCHAR) ));
+    else
+        for (i=0; testfiles[i].name; i++)
+            ok(testfiles[i].nfound == 1, "Wrong number %d of %s files found (single_entry=%d,restart=%d)\n",
+               testfiles[i].nfound, testfiles[i].description, single_entry, restart_flag);
     pNtClose(dirh);
 }
 
@@ -228,6 +237,7 @@ static void test_NtQueryDirectoryFile(void)
     UNICODE_STRING ntdirname;
     char testdirA[MAX_PATH];
     WCHAR testdirW[MAX_PATH];
+    int i;
 
     /* Clean up from prior aborted run, if any, then set up test files */
     ok(GetTempPathA(MAX_PATH, testdirA), "couldn't get temp dir\n");
@@ -243,10 +253,23 @@ static void test_NtQueryDirectoryFile(void)
     }
     InitializeObjectAttributes(&attr, &ntdirname, OBJ_CASE_INSENSITIVE, 0, NULL);
 
-    test_flags_NtQueryDirectoryFile(&attr, testdirA, FALSE, TRUE);
-    test_flags_NtQueryDirectoryFile(&attr, testdirA, FALSE, FALSE);
-    test_flags_NtQueryDirectoryFile(&attr, testdirA, TRUE, TRUE);
-    test_flags_NtQueryDirectoryFile(&attr, testdirA, TRUE, FALSE);
+    test_flags_NtQueryDirectoryFile(&attr, testdirA, NULL, FALSE, TRUE);
+    test_flags_NtQueryDirectoryFile(&attr, testdirA, NULL, FALSE, FALSE);
+    test_flags_NtQueryDirectoryFile(&attr, testdirA, NULL, TRUE, TRUE);
+    test_flags_NtQueryDirectoryFile(&attr, testdirA, NULL, TRUE, FALSE);
+
+    for (i = 0; testfiles[i].name; i++)
+    {
+        UNICODE_STRING mask;
+
+        if (testfiles[i].nameW[0] == '.') continue;  /* . and .. as masks are broken on Windows */
+        mask.Buffer = testfiles[i].nameW;
+        mask.Length = mask.MaximumLength = lstrlenW(testfiles[i].nameW) * sizeof(WCHAR);
+        test_flags_NtQueryDirectoryFile(&attr, testdirA, &mask, FALSE, TRUE);
+        test_flags_NtQueryDirectoryFile(&attr, testdirA, &mask, FALSE, FALSE);
+        test_flags_NtQueryDirectoryFile(&attr, testdirA, &mask, TRUE, TRUE);
+        test_flags_NtQueryDirectoryFile(&attr, testdirA, &mask, TRUE, FALSE);
+    }
 
 done:
     tear_down_attribute_test(testdirA);
