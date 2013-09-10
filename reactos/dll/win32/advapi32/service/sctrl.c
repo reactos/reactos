@@ -248,7 +248,7 @@ ScConnectControlPipe(HANDLE *hPipe)
 
     *hPipe = CreateFileW(NtControlPipeName,
                          GENERIC_READ | GENERIC_WRITE,
-                         0,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                          NULL,
                          OPEN_EXISTING,
                          FILE_ATTRIBUTE_NORMAL,
