@@ -20,7 +20,7 @@
  */
 
 #include <user32.h>
-#include <commctrl.h>
+#include <wine/commctrl.h>
 #include <commdlg.h>
 #include <richedit.h>
 #include <prsht.h>
