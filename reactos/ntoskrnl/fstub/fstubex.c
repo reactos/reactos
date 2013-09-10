@@ -86,6 +86,8 @@ typedef struct _MASTER_BOOT_RECORD
 #define EFI_HEADER_REVISION_1 0x00010000
 /* Defines system type for MBR showing that a GPT is following */
 #define EFI_PMBR_OSTYPE_EFI 0xEE
+/* Defines size to store a complete GUID + null char */
+#define EFI_GUID_STRING_SIZE 0x27
 
 #define IS_VALID_DISK_INFO(Disk) \
   (Disk)               &&        \
@@ -534,7 +536,7 @@ NTAPI
 FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
 {
     ULONG i;
-    CHAR Guid[38];
+    CHAR Guid[EFI_GUID_STRING_SIZE];
     PAGED_CODE();
 
     DPRINT("FSTUB: DRIVE_LAYOUT_INFORMATION_EX: %p\n", DriveLayout);
@@ -575,7 +577,7 @@ NTAPI
 FstubDbgPrintPartitionEx(IN PPARTITION_INFORMATION_EX PartitionEntry,
                          IN ULONG PartitionNumber)
 {
-    CHAR Guid[38];
+    CHAR Guid[EFI_GUID_STRING_SIZE];
     PAGED_CODE();
 
     DPRINT("Printing partition %lu\n", PartitionNumber);
@@ -614,7 +616,7 @@ NTAPI
 FstubDbgPrintSetPartitionEx(IN PSET_PARTITION_INFORMATION_EX PartitionEntry,
                             IN ULONG PartitionNumber)
 {
-    CHAR Guid[38];
+    CHAR Guid[EFI_GUID_STRING_SIZE];
     PAGED_CODE();
 
     DPRINT("FSTUB: SET_PARTITION_INFORMATION_EX: %p\n", PartitionEntry);
