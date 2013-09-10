@@ -4095,7 +4095,12 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     // Make sure this is an ARM3 section
     //
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)PAGE_ROUND_DOWN(PBaseAddress));
-    ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
+    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
+    {
+        DPRINT1("Illegal commit of non-ARM3 section!\n");
+        Status = STATUS_ALREADY_COMMITTED;
+        goto FailPath;
+    }
 
     // Is this a previously reserved section being committed? If so, enter the
     // special section path
