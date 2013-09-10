@@ -2744,7 +2744,7 @@ StartScan:
             }
         }
 
-        DPRINT1("Length: %lx Buffer: %S\n", Length, NameBuffer);
+        DPRINT1("Length: %lu Buffer: %S\n", Length, NameBuffer);
 
         /* Check if there was a failure in SearchPathW */
         if ((Length) && (Length < MAX_PATH))
