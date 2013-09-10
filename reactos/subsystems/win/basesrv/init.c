@@ -280,6 +280,7 @@ NTAPI
 BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
 {
     NTSTATUS Status;
+    BOOLEAN Success;
     WCHAR Buffer[MAX_PATH];
     PWCHAR HeapBuffer;
     UNICODE_STRING SystemRootString;
@@ -327,21 +328,21 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
 
     /* Create the base directory */
     Buffer[SystemRootString.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    Status = RtlCreateUnicodeString(&BaseSrvWindowsDirectory,
-                                    SystemRootString.Buffer);
-    ASSERT(NT_SUCCESS(Status));
+    Success = RtlCreateUnicodeString(&BaseSrvWindowsDirectory,
+                                     SystemRootString.Buffer);
+    ASSERT(Success);
 
     /* Create the system directory */
     wcscat(SystemRootString.Buffer, L"\\System32");
-    Status = RtlCreateUnicodeString(&BaseSrvWindowsSystemDirectory,
-                                    SystemRootString.Buffer);
-    ASSERT(NT_SUCCESS(Status));
+    Success = RtlCreateUnicodeString(&BaseSrvWindowsSystemDirectory,
+                                     SystemRootString.Buffer);
+    ASSERT(Success);
 
     /* Create the kernel32 path */
     wcscat(SystemRootString.Buffer, L"\\kernel32.dll");
-    Status = RtlCreateUnicodeString(&BaseSrvKernel32DllPath,
-                                    SystemRootString.Buffer);
-    ASSERT(NT_SUCCESS(Status));
+    Success = RtlCreateUnicodeString(&BaseSrvKernel32DllPath,
+                                     SystemRootString.Buffer);
+    ASSERT(Success);
 
     /* FIXME: Check Session ID */
     wcscpy(Buffer, L"\\BaseNamedObjects");
