@@ -64,12 +64,14 @@ extern void winetest_start_todo( const char* platform );
 extern int winetest_loop_todo(void);
 extern void winetest_end_todo( const char* platform );
 extern int winetest_get_mainargs( char*** pargv );
+extern LONG winetest_get_failures(void);
+extern void winetest_add_failures( LONG new_failures );
 extern void winetest_wait_child_process( HANDLE process );
 
 extern const char *wine_dbgstr_wn( const WCHAR *str, int n );
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 
-/* strcmpW is avaiable for tests compiled under Wine, but not in standalone
+/* strcmpW is available for tests compiled under Wine, but not in standalone
  * builds under Windows, so we reimplement it under a different name. */
 static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
 {
@@ -438,6 +440,17 @@ int winetest_get_mainargs( char*** pargv )
 {
     *pargv = winetest_argv;
     return winetest_argc;
+}
+
+LONG winetest_get_failures(void)
+{
+    return failures;
+}
+
+void winetest_add_failures( LONG new_failures )
+{
+    while (new_failures-- > 0)
+        InterlockedIncrement( &failures );
 }
 
 void winetest_wait_child_process( HANDLE process )
