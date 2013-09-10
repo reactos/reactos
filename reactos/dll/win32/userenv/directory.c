@@ -39,23 +39,20 @@ CopyProfileDirectoryA(LPCSTR lpSourcePath,
 {
     UNICODE_STRING SrcPath;
     UNICODE_STRING DstPath;
-    NTSTATUS Status;
     BOOL bResult;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&SrcPath,
-             (LPSTR)lpSourcePath);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&SrcPath,
+                                          (LPSTR)lpSourcePath))
     {
-        SetLastError (RtlNtStatusToDosError (Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&DstPath,
-             (LPSTR)lpDestinationPath);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&DstPath,
+                                          (LPSTR)lpDestinationPath))
     {
         RtlFreeUnicodeString(&SrcPath);
-        SetLastError (RtlNtStatusToDosError (Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 

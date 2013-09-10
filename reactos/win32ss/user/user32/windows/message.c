@@ -2675,11 +2675,9 @@ UINT WINAPI
 RegisterWindowMessageA(LPCSTR lpString)
 {
   UNICODE_STRING String;
-  BOOLEAN Result;
   UINT Atom;
 
-  Result = RtlCreateUnicodeStringFromAsciiz(&String, (PCSZ)lpString);
-  if (!Result)
+  if (!RtlCreateUnicodeStringFromAsciiz(&String, (PCSZ)lpString))
     {
       return(0);
     }

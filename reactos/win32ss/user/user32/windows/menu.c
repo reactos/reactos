@@ -5047,7 +5047,6 @@ SetMenuItemInfoA(
 {
   MENUITEMINFOW MenuItemInfoW;
   UNICODE_STRING UnicodeString;
-  NTSTATUS Status;
   ULONG Result = FALSE;
 
   RtlCopyMemory(&MenuItemInfoW, lpmii, min(lpmii->cbSize, sizeof(MENUITEMINFOW)));
@@ -5069,12 +5068,11 @@ SetMenuItemInfoA(
         && MenuItemInfoW.dwTypeData != NULL)
   {
 /* cch is ignored when the content of a menu item is set by calling SetMenuItemInfo. */
-    Status = RtlCreateUnicodeStringFromAsciiz(&UnicodeString,
-                                     (LPSTR)MenuItemInfoW.dwTypeData);
-    if (!NT_SUCCESS (Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&UnicodeString,
+                                          (LPSTR)MenuItemInfoW.dwTypeData))
     {
-      SetLastError (RtlNtStatusToDosError(Status));
-      return FALSE;
+        SetLastError (ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
     }
     MenuItemInfoW.dwTypeData = UnicodeString.Buffer;
     MenuItemInfoW.cch = UnicodeString.Length / sizeof(WCHAR);
