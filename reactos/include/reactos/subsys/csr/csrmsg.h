@@ -4,7 +4,7 @@
  * FILE:            include/reactos/subsys/csr/csrmsg.h
  * PURPOSE:         Public definitions for communication
  *                  between CSR Clients and Servers
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
