@@ -1763,7 +1763,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
 
         if (CreateOptions & ~FILE_VALID_OPTION_FLAGS)
         {
-            DPRINT1("File Create 'CreateOptions' Prameter contains invalid flags!\n");
+            DPRINT1("File Create 'CreateOptions' parameter contains invalid flags!\n");
             ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
@@ -1771,14 +1771,14 @@ IoCreateFile(OUT PHANDLE FileHandle,
         if ((CreateOptions & (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT)) &&
             (!(DesiredAccess & SYNCHRONIZE)))
         {
-            DPRINT1("File Create 'CreateOptions' Prameter FILE_SYNCHRONOUS_IO_* requested, but 'DesiredAccess' does not have SYNCHRONIZE!\n");
+            DPRINT1("File Create 'CreateOptions' parameter FILE_SYNCHRONOUS_IO_* requested, but 'DesiredAccess' does not have SYNCHRONIZE!\n");
             ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
 
         if ((CreateOptions & FILE_DELETE_ON_CLOSE) && (!(DesiredAccess & DELETE)))
         {
-            DPRINT1("File Create 'CreateOptions' Prameter FILE_DELETE_ON_CLOSE requested, but 'DesiredAccess' does not have DELETE!\n");
+            DPRINT1("File Create 'CreateOptions' parameter FILE_DELETE_ON_CLOSE requested, but 'DesiredAccess' does not have DELETE!\n");
             ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
@@ -1786,7 +1786,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
         if ((CreateOptions & (FILE_SYNCHRONOUS_IO_NONALERT | FILE_SYNCHRONOUS_IO_ALERT)) ==
             (FILE_SYNCHRONOUS_IO_NONALERT | FILE_SYNCHRONOUS_IO_ALERT))
         {
-            DPRINT1("File Create 'FileAttributes' Prameter both FILE_SYNCHRONOUS_IO_NONALERT and FILE_SYNCHRONOUS_IO_ALERT specified!\n");
+            DPRINT1("File Create 'FileAttributes' parameter both FILE_SYNCHRONOUS_IO_NONALERT and FILE_SYNCHRONOUS_IO_ALERT specified!\n");
             ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
@@ -1826,7 +1826,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
 
         if ((CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING) && (DesiredAccess & FILE_APPEND_DATA))
         {
-            DPRINT1("File Create 'CreateOptions' Prameter FILE_NO_INTERMEDIATE_BUFFERING requested, but 'DesiredAccess' FILE_APPEND_DATA requires it!\n");
+            DPRINT1("File Create 'CreateOptions' parameter FILE_NO_INTERMEDIATE_BUFFERING requested, but 'DesiredAccess' FILE_APPEND_DATA requires it!\n");
             ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
