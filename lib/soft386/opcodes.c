@@ -3485,18 +3485,92 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeAas)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodePushAll)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    INT i;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+    SOFT386_REG SavedEsp = State->GeneralRegs[SOFT386_REG_ESP];
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x60);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Push all the registers in order */
+    for (i = 0; i < SOFT386_NUM_GEN_REGS; i++)
+    {
+        if (i == SOFT386_REG_ESP)
+        {
+            /* Use the saved ESP instead */
+            if (!Soft386StackPush(State, Size ? SavedEsp.Long : SavedEsp.LowWord))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+        else
+        {
+            /* Push the register */
+            if (!Soft386StackPush(State, Size ? State->GeneralRegs[i].Long
+                                              : State->GeneralRegs[i].LowWord))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodePopAll)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    INT i;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+    ULONG Value;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x61);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Pop all the registers in reverse order */
+    for (i = SOFT386_NUM_GEN_REGS - 1; i >= 0; i--)
+    {
+        /* Pop the value */
+        if (!Soft386StackPop(State, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Don't modify ESP */
+        if (i != SOFT386_REG_ESP)
+        {
+            if (Size) State->GeneralRegs[i].Long = Value;
+            else State->GeneralRegs[i].LowWord = LOWORD(Value);
+        }
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeBound)
