@@ -60,34 +60,34 @@ STRINGTABLE
 
 
 /* @makedep: pd32_collate.ico */
-PD32_COLLATE ICON pd32_collate.ico
+PD32_COLLATE ICON "res/icons/pd32_collate.ico"
 
 /* @makedep: pd32_nocollate.ico */
-PD32_NOCOLLATE ICON pd32_nocollate.ico
+PD32_NOCOLLATE ICON "res/icons/pd32_nocollate.ico"
 
 /* @makedep: pd32_portrait.ico */
-PD32_PORTRAIT ICON pd32_portrait.ico
+PD32_PORTRAIT ICON "res/icons/pd32_portrait.ico"
 
 /* @makedep: pd32_landscape.ico */
-PD32_LANDSCAPE ICON pd32_landscape.ico
+PD32_LANDSCAPE ICON "res/icons/pd32_landscape.ico"
 
 /* @makedep: folder.ico */
-FOLDER ICON folder.ico
+FOLDER ICON "res/icons/folder.ico"
 
 /* @makedep: folder2.ico */
-FOLDER2 ICON folder2.ico
+FOLDER2 ICON "res/icons/folder2.ico"
 
 /* @makedep: floppy.ico */
-FLOPPY ICON floppy.ico
+FLOPPY ICON "res/icons/floppy.ico"
 
 /* @makedep: cdrom.ico */
-CDROM ICON cdrom.ico
+CDROM ICON "res/icons/cdrom.ico"
 
 /* @makedep: hdisk.ico */
-HDISK ICON hdisk.ico
+HDISK ICON "res/icons/hdisk.ico"
 
 /* @makedep: network.ico */
-NETWORK ICON network.ico
+NETWORK ICON "res/icons/network.ico"
 
 /* @makedep: fontpics.bmp */
-38 BITMAP fontpics.bmp
+38 BITMAP "res/bitmaps/fontpics.bmp"
