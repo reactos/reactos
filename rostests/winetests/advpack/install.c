@@ -244,6 +244,13 @@ static void test_LaunchINFSectionEx(void)
     hr = pLaunchINFSectionEx(NULL, NULL, cmdline, 0);
     ok(hr == 0, "Expected 0, got %d\n", hr);
 
+    /* try quoting the parameters */
+    lstrcpy(cmdline, "\"");
+    lstrcat(cmdline, CURR_DIR);
+    lstrcat(cmdline, "\\test.inf\",\"DefaultInstall\",\"c:,imacab.cab\",\"4\"");
+    hr = pLaunchINFSectionEx(NULL, NULL, cmdline, 0);
+    ok(hr == 0, "Expected 0, got %d\n", hr);
+
     /* The 'No UI' flag seems to have no effect whatsoever on Windows.
      * So only do this test in interactive mode.
      */
