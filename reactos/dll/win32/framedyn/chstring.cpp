@@ -940,7 +940,7 @@ void CHString::Release()
 /*
  * @implemented
  */
-void CHString::Release(CHStringData* pData)
+void WINAPI CHString::Release(CHStringData* pData)
 {
     // If empty string, ignore
     if (pData == &afxNullData)

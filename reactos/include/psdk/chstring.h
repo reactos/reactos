@@ -14,7 +14,7 @@ struct CHStringData
 
     WCHAR* data()
     {
-        return (WCHAR*)(this+1); 
+        return (WCHAR*)(this+1);
     }
 };
 
@@ -51,14 +51,13 @@ public:
     int GetLength() const;
     BOOL IsEmpty() const;
     CHString Left(int nCount) const throw (CHeap_Exception);
+    int LoadStringW(UINT nID) throw (CHeap_Exception);
     LPWSTR LockBuffer();
     void MakeLower() throw (CHeap_Exception);
     void MakeReverse() throw (CHeap_Exception);
     void MakeUpper() throw (CHeap_Exception);
     CHString Mid(int nFirst) const throw (CHeap_Exception);
     CHString Mid(int nFirst, int nCount) const throw (CHeap_Exception);
-    void Release();
-    void Release(CHStringData* pData);
     void ReleaseBuffer(int nNewLength = -1) throw (CHeap_Exception);
     int ReverseFind(WCHAR ch) const;
     CHString Right(int nCount) const throw (CHeap_Exception);
@@ -104,8 +103,9 @@ protected:
     void CopyBeforeWrite() throw (CHeap_Exception);
     CHStringData* GetData() const;
     void Init();
-    int LoadStringW(UINT nID) throw (CHeap_Exception);
     int LoadStringW(UINT nID, LPWSTR lpszBuf, UINT nMaxBuf) throw (CHeap_Exception);
+    void Release();
+    static void WINAPI Release(CHStringData* pData);
     static int WINAPI SafeStrlen(LPCWSTR lpsz);
 };
 
