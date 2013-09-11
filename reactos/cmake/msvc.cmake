@@ -23,13 +23,17 @@ add_definitions(/Dinline=__inline /D__STDC__=1)
 add_compile_flags("/X /GR- /EHs-c- /GS- /Zl /W3")
 
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
-# default for older compilers. See bug #7174
+# default for older compilers. See CORE-6507
 if (MSVC_VERSION GREATER 1699 AND ARCH STREQUAL "i386")
     add_compile_flags("/arch:IA32")
 endif ()
 
-# C4700 is almost always likely to result in broken code, so mark it as an error
-add_compile_flags("/we4700")
+# C++ exception specification ignored... yeah we don't care
+add_compile_flags("/wd4290")
+
+# different level of indirection, void function returning a value and
+# uninitialized variable usage should be errors.
+add_compile_flags("/we4047 /we4098 /we4700")
 
 # Debugging
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
