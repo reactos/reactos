@@ -21,7 +21,6 @@
 //
 // This prints out a SVCHOST-specific debug print, with the PID/TID
 //
-#if _EX_
 #define SvchostDbgPrint(lev, fmt, ...)              \
     DbgPrintEx(DPFLTR_SVCHOST_ID,                   \
                DPFLTR_MASK | lev,                   \
@@ -29,13 +28,7 @@
                GetCurrentProcessId(),               \
                GetCurrentThreadId(),                \
                __VA_ARGS__);
-#else
-#define SvchostDbgPrint(lev, fmt, ...)              \
-    DbgPrint("[SVCHOST] %lx.%lx: " fmt,             \
-             GetCurrentProcessId(),                 \
-             GetCurrentThreadId(),                  \
-             __VA_ARGS__);
-#endif
+
 #define DBG_ERR(fmt, ...)   SvchostDbgPrint(1, fmt, __VA_ARGS__)
 #define DBG_TRACE(fmt, ...) SvchostDbgPrint(4, fmt, __VA_ARGS__)
 
