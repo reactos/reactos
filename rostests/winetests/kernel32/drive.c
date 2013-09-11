@@ -114,18 +114,14 @@ static void test_GetDiskFreeSpaceA(void)
                    drive, ret, GetLastError());
             else
             {
-                ok(ret ||
-                   GetLastError() == ERROR_NOT_READY ||
-                   GetLastError() == ERROR_INVALID_FUNCTION ||
-                   GetLastError() == ERROR_INVALID_DRIVE ||
-                   GetLastError() == ERROR_PATH_NOT_FOUND ||
-                   GetLastError() == ERROR_REQUEST_ABORTED ||
-                   GetLastError() == ERROR_NETNAME_DELETED ||
-                   GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
-                   "GetDiskFreeSpaceA(%s): ret=%d GetLastError=%d\n",
-                   drive, ret, GetLastError());
+
+                if (!ret)
+                    /* GetDiskFreeSpaceA() should succeed, but it can fail with too many
+                       different GetLastError() results to be usable for a ok() */
+                    trace("GetDiskFreeSpaceA(%s) failed with %d\n", drive, GetLastError());
+
                 if( GetVersion() & 0x80000000)
-                    /* win3.0 thru winME */
+                    /* win3.0 through winME */
                     ok( total_clusters <= 65535,
                             "total clusters is %d > 65535\n", total_clusters);
                 else if (pGetDiskFreeSpaceExA) {
@@ -135,14 +131,12 @@ static void test_GetDiskFreeSpaceA(void)
                     tot.QuadPart = sectors_per_cluster;
                     tot.QuadPart = (tot.QuadPart * bytes_per_sector) * total_clusters;
                     ret = pGetDiskFreeSpaceExA( drive, &d, &totEx, NULL);
-                    ok( ret ||
-                        GetLastError() == ERROR_NOT_READY ||
-                        GetLastError() == ERROR_INVALID_FUNCTION ||
-                        GetLastError() == ERROR_PATH_NOT_FOUND ||
-                        GetLastError() == ERROR_REQUEST_ABORTED ||
-                        GetLastError() == ERROR_NETNAME_DELETED ||
-                        GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
-                        "GetDiskFreeSpaceExA( %s ) failed. GetLastError=%d\n", drive, GetLastError());
+
+                    if (!ret)
+                        /* GetDiskFreeSpaceExA() should succeed, but it can fail with too many
+                           different GetLastError() results to be usable for a ok() */
+                        trace("GetDiskFreeSpaceExA(%s) failed with %d\n", drive, GetLastError());
+
                     ok( bytes_per_sector == 0 || /* empty cd rom drive */
                         totEx.QuadPart <= tot.QuadPart,
                         "GetDiskFreeSpaceA should report at least as much bytes on disk %s as GetDiskFreeSpaceExA\n", drive);
@@ -196,15 +190,10 @@ static void test_GetDiskFreeSpaceW(void)
                 ok(!ret && GetLastError() == ERROR_PATH_NOT_FOUND,
                    "GetDiskFreeSpaceW(%c): ret=%d GetLastError=%d\n",
                    drive[0], ret, GetLastError());
-            else
-                ok( ret ||
-                    GetLastError() == ERROR_NOT_READY ||
-                    GetLastError() == ERROR_INVALID_FUNCTION ||
-                    GetLastError() == ERROR_PATH_NOT_FOUND ||
-                    GetLastError() == ERROR_REQUEST_ABORTED ||
-                    GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
-                   "GetDiskFreeSpaceW(%c): ret=%d GetLastError=%d\n",
-                   drive[0], ret, GetLastError());
+            else if (!ret)
+                /* GetDiskFreeSpaceW() should succeed, but it can fail with too many
+                   different GetLastError() results to be usable for a ok() */
+                trace("GetDiskFreeSpaceW(%c) failed with %d\n", drive[0], GetLastError());
         }
         logical_drives >>= 1;
     }

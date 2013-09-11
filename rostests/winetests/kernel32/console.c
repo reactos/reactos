@@ -2608,6 +2608,18 @@ START_TEST(console)
     ok(ret, "Getting sb info\n");
     if (!ret) return;
 
+    /* Reduce the size of the buffer to the visible area plus 3 lines to speed
+     * up the tests.
+     */
+    trace("Visible area: %dx%d - %dx%d Buffer size: %dx%d\n", sbi.srWindow.Left, sbi.srWindow.Top, sbi.srWindow.Right, sbi.srWindow.Bottom, sbi.dwSize.X, sbi.dwSize.Y);
+    sbi.dwSize.Y = size = (sbi.srWindow.Bottom + 1) + 3;
+    ret = SetConsoleScreenBufferSize(hConOut, sbi.dwSize);
+    ok(ret, "Setting sb info\n");
+    ret = GetConsoleScreenBufferInfo(hConOut, &sbi);
+    ok(ret, "Getting sb info\n");
+    ok(sbi.dwSize.Y == size, "Unexpected buffer size: %d instead of %d\n", sbi.dwSize.Y, size);
+    if (!ret) return;
+
     /* Non interactive tests */
     testCursor(hConOut, sbi.dwSize);
     /* test parameters (FIXME: test functionality) */

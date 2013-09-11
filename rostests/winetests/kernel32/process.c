@@ -1612,8 +1612,8 @@ static void test_GetProcessVersion(void)
     si.cb = sizeof(si);
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
-    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
     SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
     ok(ret, "CreateProcess error %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -1926,6 +1926,140 @@ static void test_RegistryQuota(void)
        "Expected GetSystemRegistryQuota to return TRUE, got %d\n", ret);
 }
 
+static void test_TerminateProcess(void)
+{
+    static char cmdline[] = "winver.exe";
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
+    DWORD ret;
+    HANDLE dummy, thread;
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    SetLastError(0xdeadbeef);
+    ret = CreateProcess(NULL, cmdline, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
+    ok(ret, "CreateProcess error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    thread = CreateRemoteThread(pi.hProcess, NULL, 0, (void *)0xdeadbeef, NULL, CREATE_SUSPENDED, &ret);
+    ok(thread != 0, "CreateRemoteThread error %d\n", GetLastError());
+
+    /* create a not closed thread handle duplicate in the target process */
+    SetLastError(0xdeadbeef);
+    ret = DuplicateHandle(GetCurrentProcess(), thread, pi.hProcess, &dummy,
+                          0, FALSE, DUPLICATE_SAME_ACCESS);
+    ok(ret, "DuplicateHandle error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = TerminateThread(thread, 0);
+    ok(ret, "TerminateThread error %u\n", GetLastError());
+    CloseHandle(thread);
+
+    SetLastError(0xdeadbeef);
+    ret = TerminateProcess(pi.hProcess, 0);
+    ok(ret, "TerminateProcess error %u\n", GetLastError());
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+}
+
+static void test_DuplicateHandle(void)
+{
+    char path[MAX_PATH], file_name[MAX_PATH];
+    HANDLE f, fmin, out;
+    DWORD info;
+    BOOL r;
+
+    r = DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(),
+            GetCurrentProcess(), &out, 0, FALSE,
+            DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+    ok(r, "DuplicateHandle error %u\n", GetLastError());
+    r = GetHandleInformation(out, &info);
+    ok(r, "GetHandleInformation error %u\n", GetLastError());
+    ok(info == 0, "info = %x\n", info);
+    ok(out != GetCurrentProcess(), "out = GetCurrentProcess()\n");
+    CloseHandle(out);
+
+    r = DuplicateHandle(GetCurrentProcess(), GetCurrentProcess(),
+            GetCurrentProcess(), &out, 0, TRUE,
+            DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+    ok(r, "DuplicateHandle error %u\n", GetLastError());
+    r = GetHandleInformation(out, &info);
+    ok(r, "GetHandleInformation error %u\n", GetLastError());
+    ok(info == HANDLE_FLAG_INHERIT, "info = %x\n", info);
+    ok(out != GetCurrentProcess(), "out = GetCurrentProcess()\n");
+    CloseHandle(out);
+
+    GetTempPath(MAX_PATH, path);
+    GetTempFileName(path, "wt", 0, file_name);
+    f = CreateFile(file_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    if (f == INVALID_HANDLE_VALUE)
+    {
+        ok(0, "could not create %s\n", file_name);
+        return;
+    }
+
+    r = DuplicateHandle(GetCurrentProcess(), f, GetCurrentProcess(), &out,
+            0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+    ok(r, "DuplicateHandle error %u\n", GetLastError());
+    ok(f == out, "f != out\n");
+    r = GetHandleInformation(out, &info);
+    ok(r, "GetHandleInformation error %u\n", GetLastError());
+    ok(info == 0, "info = %x\n", info);
+
+    r = DuplicateHandle(GetCurrentProcess(), f, GetCurrentProcess(), &out,
+            0, TRUE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+    ok(r, "DuplicateHandle error %u\n", GetLastError());
+    ok(f == out, "f != out\n");
+    r = GetHandleInformation(out, &info);
+    ok(r, "GetHandleInformation error %u\n", GetLastError());
+    ok(info == HANDLE_FLAG_INHERIT, "info = %x\n", info);
+
+    r = SetHandleInformation(f, HANDLE_FLAG_PROTECT_FROM_CLOSE, HANDLE_FLAG_PROTECT_FROM_CLOSE);
+    ok(r, "SetHandleInformation error %u\n", GetLastError());
+    r = DuplicateHandle(GetCurrentProcess(), f, GetCurrentProcess(), &out,
+                0, TRUE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+    ok(r, "DuplicateHandle error %u\n", GetLastError());
+    ok(f != out, "f == out\n");
+    r = GetHandleInformation(out, &info);
+    ok(r, "GetHandleInformation error %u\n", GetLastError());
+    ok(info == HANDLE_FLAG_INHERIT, "info = %x\n", info);
+    r = SetHandleInformation(f, HANDLE_FLAG_PROTECT_FROM_CLOSE, 0);
+    ok(r, "SetHandleInformation error %u\n", GetLastError());
+
+    /* Test if DuplicateHandle allocates first free handle */
+    if (f > out)
+    {
+        fmin = out;
+    }
+    else
+    {
+        fmin = f;
+        f = out;
+    }
+    CloseHandle(fmin);
+    r = DuplicateHandle(GetCurrentProcess(), f, GetCurrentProcess(), &out,
+            0, TRUE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+    ok(r, "DuplicateHandle error %u\n", GetLastError());
+    ok(f == out, "f != out\n");
+    CloseHandle(out);
+    DeleteFile(file_name);
+
+    f = CreateFile("CONIN$", GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+    if (!is_console(f))
+    {
+        skip("DuplicateHandle on console handle\n");
+        CloseHandle(f);
+        return;
+    }
+
+    r = DuplicateHandle(GetCurrentProcess(), f, GetCurrentProcess(), &out,
+            0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+    ok(r, "DuplicateHandle error %u\n", GetLastError());
+    todo_wine ok(f != out, "f == out\n");
+    CloseHandle(out);
+}
+
 START_TEST(process)
 {
     int b = init();
@@ -1937,6 +2071,7 @@ START_TEST(process)
         doChild(myARGV[2], (myARGC == 3) ? NULL : myARGV[3]);
         return;
     }
+    test_TerminateProcess();
     test_Startup();
     test_CommandLine();
     test_Directory();
@@ -1953,6 +2088,7 @@ START_TEST(process)
     test_Handles();
     test_SystemInfo();
     test_RegistryQuota();
+    test_DuplicateHandle();
     /* things that can be tested:
      *  lookup:         check the way program to be executed is searched
      *  handles:        check the handle inheritance stuff (+sec options)

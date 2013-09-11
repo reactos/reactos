@@ -652,11 +652,11 @@ static void test_CopyFileA(void)
         "copying from an r+w opened and r shared file failed (ret=%d, err=%d)\n", retok, GetLastError());
     CloseHandle(hfile);
 
-    /* copying from a delete-locked source is unreliable */
+    /* copying from a delete-locked source mostly succeeds */
     hfile = CreateFileA(source, DELETE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
     ok(hfile != INVALID_HANDLE_VALUE, "failed to open source file, error %d\n", GetLastError());
     retok = CopyFileA(source, dest, FALSE);
-    ok((!retok && GetLastError() == ERROR_SHARING_VIOLATION) || broken(retok) /* 98, Vista, 2k8, 7 */,
+    ok(retok || broken(!retok && GetLastError() == ERROR_SHARING_VIOLATION) /* NT, 2000, XP */,
         "copying from a delete-locked file failed (ret=%d, err=%d)\n", retok, GetLastError());
     CloseHandle(hfile);
 
@@ -1783,10 +1783,10 @@ static BOOL create_fake_dll( LPCSTR filename )
     nt->FileHeader.Machine = IMAGE_FILE_MACHINE_AMD64;
 #elif defined __powerpc__
     nt->FileHeader.Machine = IMAGE_FILE_MACHINE_POWERPC;
-#elif defined __sparc__
-    nt->FileHeader.Machine = IMAGE_FILE_MACHINE_SPARC;
 #elif defined __arm__
     nt->FileHeader.Machine = IMAGE_FILE_MACHINE_ARMNT;
+#elif defined __aarch64__
+    nt->FileHeader.Machine = IMAGE_FILE_MACHINE_ARM64;
 #else
 # error You must specify the machine type
 #endif
@@ -3296,7 +3296,8 @@ static void test_GetFileInformationByHandleEx(void)
     /* ensure the existence of a file in the temp folder */
     ret2 = GetTempFileNameA(tempPath, "abc", 0, tempFileName);
     ok(ret2, "GetFileInformationByHandleEx: GetTempFileNameA failed, got error %u.\n", GetLastError());
-    ok(GetFileAttributesA(tempFileName) != INVALID_FILE_ATTRIBUTES, "GetFileInformationByHandleEx: "
+    ret2 = GetFileAttributesA(tempFileName);
+    ok(ret2 != INVALID_FILE_ATTRIBUTES, "GetFileInformationByHandleEx: "
         "GetFileAttributesA failed to find the temp file, got error %u.\n", GetLastError());
 
     directory = CreateFileA(tempPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -3359,7 +3360,8 @@ static void test_OpenFileById(void)
     /* ensure the existence of a file in the temp folder */
     ret2 = GetTempFileNameA(tempPath, "abc", 0, tempFileName);
     ok(ret2, "OpenFileById: GetTempFileNameA failed, got error %u.\n", GetLastError());
-    ok(GetFileAttributesA(tempFileName) != INVALID_FILE_ATTRIBUTES,
+    ret2 = GetFileAttributesA(tempFileName);
+    ok(ret2 != INVALID_FILE_ATTRIBUTES,
         "OpenFileById: GetFileAttributesA failed to find the temp file, got error %u\n", GetLastError());
 
     ret2 = MultiByteToWideChar(CP_ACP, 0, tempFileName + strlen(tempPath), -1, tempFileNameW, sizeof(tempFileNameW)/sizeof(tempFileNameW[0]));
@@ -3502,7 +3504,8 @@ static void test_SetFileValidData(void)
 
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token) ||
         !LookupPrivilegeValue(NULL, SE_MANAGE_VOLUME_NAME, &privs.Privileges[0].Luid) ||
-        !AdjustTokenPrivileges(token, FALSE, &privs, sizeof(privs), NULL, NULL))
+        !AdjustTokenPrivileges(token, FALSE, &privs, sizeof(privs), NULL, NULL) ||
+        GetLastError() == ERROR_NOT_ALL_ASSIGNED)
     {
         win_skip("cannot enable SE_MANAGE_VOLUME_NAME privilege\n");
         CloseHandle(token);

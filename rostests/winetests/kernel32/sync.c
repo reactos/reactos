@@ -1164,7 +1164,7 @@ static void test_initonce(void)
 
     if (!pInitOnceInitialize || !pInitOnceExecuteOnce)
     {
-        skip("one-time initialization API not supported\n");
+        win_skip("one-time initialization API not supported\n");
         return;
     }
 
@@ -1177,7 +1177,7 @@ static void test_initonce(void)
     g_initcallback_ret = TRUE;
     g_initctxt = NULL;
     ret = pInitOnceExecuteOnce(&initonce, initonce_callback, (void*)0xdeadbeef, &g_initctxt);
-    ok(ret, "got wrong ret value %d\n", ret);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
     ok(initonce.Ptr == (void*)0x2, "got %p\n", initonce.Ptr);
     ok(g_initctxt == NULL, "got %p\n", g_initctxt);
     ok(g_initcallback_called, "got %d\n", g_initcallback_called);
@@ -1186,7 +1186,7 @@ static void test_initonce(void)
     g_initctxt = NULL;
     g_initcallback_called = FALSE;
     ret = pInitOnceExecuteOnce(&initonce, initonce_callback, (void*)0xdeadbeef, &g_initctxt);
-    ok(ret, "got wrong ret value %d\n", ret);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
     ok(initonce.Ptr == (void*)0x2, "got %p\n", initonce.Ptr);
     ok(g_initctxt == NULL, "got %p\n", g_initctxt);
     ok(!g_initcallback_called, "got %d\n", g_initcallback_called);
@@ -1196,7 +1196,7 @@ static void test_initonce(void)
     /* 2 lower order bits should never be used, you'll get a crash in result */
     g_initctxt = (void*)0xFFFFFFF0;
     ret = pInitOnceExecuteOnce(&initonce, initonce_callback, (void*)0xdeadbeef, &g_initctxt);
-    ok(ret, "got wrong ret value %d\n", ret);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
     ok(initonce.Ptr == (void*)0xFFFFFFF2, "got %p\n", initonce.Ptr);
     ok(g_initctxt == (void*)0xFFFFFFF0, "got %p\n", g_initctxt);
     ok(g_initcallback_called, "got %d\n", g_initcallback_called);
@@ -1206,18 +1206,19 @@ static void test_initonce(void)
     g_initcallback_called = FALSE;
     g_initctxt = NULL;
     pInitOnceInitialize(&initonce);
+    SetLastError( 0xdeadbeef );
     ret = pInitOnceExecuteOnce(&initonce, initonce_callback, (void*)0xdeadbeef, &g_initctxt);
-    ok(!ret, "got wrong ret value %d\n", ret);
+    ok(!ret && GetLastError() == 0xdeadbeef, "got wrong ret value %d err %u\n", ret, GetLastError());
     ok(initonce.Ptr == NULL, "got %p\n", initonce.Ptr);
     ok(g_initctxt == NULL, "got %p\n", g_initctxt);
     ok(g_initcallback_called, "got %d\n", g_initcallback_called);
 
-    /* blocking initialzation without a callback */
+    /* blocking initialization without a callback */
     pInitOnceInitialize(&initonce);
     g_initctxt = NULL;
     pending = FALSE;
     ret = pInitOnceBeginInitialize(&initonce, 0, &pending, &g_initctxt);
-    ok(ret, "got wrong ret value %d\n", ret);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
     ok(pending, "got %d\n", pending);
     ok(initonce.Ptr == (void*)1, "got %p\n", initonce.Ptr);
     ok(g_initctxt == NULL, "got %p\n", g_initctxt);
@@ -1225,41 +1226,192 @@ static void test_initonce(void)
 
     g_initctxt = NULL;
     pending = 0xf;
+    SetLastError( 0xdeadbeef );
     ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY, &pending, &g_initctxt);
-    ok(!ret, "got wrong ret value %d\n", ret);
+    ok(!ret && GetLastError() == ERROR_GEN_FAILURE, "wrong ret %d err %u\n", ret, GetLastError());
     ok(pending == 0xf, "got %d\n", pending);
     ok(initonce.Ptr == (void*)1, "got %p\n", initonce.Ptr);
     ok(g_initctxt == NULL, "got %p\n", g_initctxt);
 
     g_initctxt = (void*)0xdeadbee0;
+    SetLastError( 0xdeadbeef );
     ret = pInitOnceComplete(&initonce, INIT_ONCE_INIT_FAILED, g_initctxt);
-    ok(!ret, "got wrong ret value %d\n", ret);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
     ok(initonce.Ptr == (void*)1, "got %p\n", initonce.Ptr);
 
     /* once failed already */
     g_initctxt = (void*)0xdeadbee0;
     ret = pInitOnceComplete(&initonce, 0, g_initctxt);
-    ok(ret, "got wrong ret value %d\n", ret);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
     ok(initonce.Ptr == (void*)0xdeadbee2, "got %p\n", initonce.Ptr);
+
+    pInitOnceInitialize(&initonce);
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_INIT_FAILED, NULL);
+    ok(!ret && GetLastError() == ERROR_GEN_FAILURE, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == NULL, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_INIT_FAILED | INIT_ONCE_ASYNC, NULL);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == NULL, "got %p\n", initonce.Ptr);
+
+    ret = pInitOnceBeginInitialize(&initonce, 0, &pending, &g_initctxt);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(pending, "got %d\n", pending);
+    ok(initonce.Ptr == (void*)1, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_ASYNC, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_INIT_FAILED | INIT_ONCE_ASYNC, NULL);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == (void*)1, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceComplete(&initonce, 0, (void *)0xdeadbeef);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == (void*)1, "got %p\n", initonce.Ptr);
+
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_INIT_FAILED, NULL);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == NULL, "got %p\n", initonce.Ptr);
+
+    pInitOnceInitialize(&initonce);
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_ASYNC, &pending, &g_initctxt);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(pending, "got %d\n", pending);
+    ok(initonce.Ptr == (void*)3, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, 0, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_ASYNC, &pending, &g_initctxt);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(pending, "got %d\n", pending);
+    ok(initonce.Ptr == (void*)3, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_INIT_FAILED, NULL);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == (void*)3, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_INIT_FAILED | INIT_ONCE_ASYNC, NULL);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == (void*)3, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_ASYNC, (void *)0xdeadbeef);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == (void*)3, "got %p\n", initonce.Ptr);
+
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_ASYNC, (void *)0xdeadbee0);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == (void*)0xdeadbee2, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_INIT_FAILED | INIT_ONCE_ASYNC, NULL);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == (void*)0xdeadbee2, "got %p\n", initonce.Ptr);
+
+    pInitOnceInitialize(&initonce);
+    ret = pInitOnceBeginInitialize(&initonce, 0, &pending, &g_initctxt);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(pending, "got %d\n", pending);
+    ok(initonce.Ptr == (void*)1, "got %p\n", initonce.Ptr);
+
+    /* test INIT_ONCE_CHECK_ONLY */
+
+    pInitOnceInitialize(&initonce);
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_GEN_FAILURE, "wrong ret %d err %u\n", ret, GetLastError());
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY|INIT_ONCE_ASYNC, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+
+    ret = pInitOnceBeginInitialize(&initonce, 0, &pending, &g_initctxt);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(pending, "got %d\n", pending);
+    ok(initonce.Ptr == (void*)1, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_GEN_FAILURE, "wrong ret %d err %u\n", ret, GetLastError());
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY|INIT_ONCE_ASYNC, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+
+    ret = pInitOnceComplete(&initonce, 0, (void *)0xdeadbee0);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == (void*)0xdeadbee2, "got %p\n", initonce.Ptr);
+
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY, &pending, &g_initctxt);
+    ok(ret, "got wrong ret value %d err %u\n", ret, GetLastError());
+    ok(!pending, "got %d\n", pending);
+    ok(initonce.Ptr == (void*)0xdeadbee2, "got %p\n", initonce.Ptr);
+    ok(g_initctxt == (void*)0xdeadbee0, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY|INIT_ONCE_ASYNC, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+
+    pInitOnceInitialize(&initonce);
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_ASYNC, &pending, &g_initctxt);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(pending, "got %d\n", pending);
+    ok(initonce.Ptr == (void*)3, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_GEN_FAILURE, "wrong ret %d err %u\n", ret, GetLastError());
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY|INIT_ONCE_ASYNC, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
+
+    ret = pInitOnceComplete(&initonce, INIT_ONCE_ASYNC, (void *)0xdeadbee0);
+    ok(ret, "wrong ret %d err %u\n", ret, GetLastError());
+    ok(initonce.Ptr == (void*)0xdeadbee2, "got %p\n", initonce.Ptr);
+
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY, &pending, &g_initctxt);
+    ok(ret, "got wrong ret value %d err %u\n", ret, GetLastError());
+    ok(!pending, "got %d\n", pending);
+    ok(initonce.Ptr == (void*)0xdeadbee2, "got %p\n", initonce.Ptr);
+    ok(g_initctxt == (void*)0xdeadbee0, "got %p\n", initonce.Ptr);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitOnceBeginInitialize(&initonce, INIT_ONCE_CHECK_ONLY|INIT_ONCE_ASYNC, &pending, &g_initctxt);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "wrong ret %d err %u\n", ret, GetLastError());
 }
 
-static CONDITION_VARIABLE buffernotempty,buffernotfull;
+static CONDITION_VARIABLE buffernotempty = CONDITION_VARIABLE_INIT;
+static CONDITION_VARIABLE buffernotfull = CONDITION_VARIABLE_INIT;
 static CRITICAL_SECTION   buffercrit;
 static BOOL condvar_stop = FALSE, condvar_sleeperr = FALSE;
 static LONG bufferlen,totalproduced,totalconsumed;
 static LONG condvar_producer_sleepcnt,condvar_consumer_sleepcnt;
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 5
 
 static DWORD WINAPI condvar_producer(LPVOID x) {
+    DWORD sleepinterval = 5;
+
     while (1) {
-        Sleep(rand() % 10);
+        Sleep(sleepinterval);
+        if (sleepinterval > 1)
+            sleepinterval -= 1;
 
         EnterCriticalSection(&buffercrit);
         while ((bufferlen == BUFFER_SIZE) && !condvar_stop) {
             condvar_producer_sleepcnt++;
-            if (!pSleepConditionVariableCS(&buffernotfull, &buffercrit, 2000))
-                condvar_sleeperr = TRUE;
+            if (!pSleepConditionVariableCS(&buffernotfull, &buffercrit, sleepinterval)) {
+                if (GetLastError() != ERROR_TIMEOUT)
+                    condvar_sleeperr = TRUE;
+            }
         }
         if (condvar_stop) {
             LeaveCriticalSection(&buffercrit);
@@ -1275,13 +1427,16 @@ static DWORD WINAPI condvar_producer(LPVOID x) {
 
 static DWORD WINAPI condvar_consumer(LPVOID x) {
     DWORD *cnt = (DWORD*)x;
+    DWORD sleepinterval = 1;
 
     while (1) {
         EnterCriticalSection(&buffercrit);
         while ((bufferlen == 0) && !condvar_stop) {
             condvar_consumer_sleepcnt++;
-            if (!pSleepConditionVariableCS (&buffernotempty, &buffercrit, 2000))
-                condvar_sleeperr = TRUE;
+            if (!pSleepConditionVariableCS (&buffernotempty, &buffercrit, sleepinterval)) {
+                if (GetLastError() != ERROR_TIMEOUT)
+                    condvar_sleeperr = TRUE;
+            }
         }
         if (condvar_stop && (bufferlen == 0)) {
             LeaveCriticalSection(&buffercrit);
@@ -1292,16 +1447,17 @@ static DWORD WINAPI condvar_consumer(LPVOID x) {
         (*cnt)++;
         LeaveCriticalSection(&buffercrit);
         pWakeConditionVariable(&buffernotfull);
-        Sleep(rand() % 10);
+        Sleep(sleepinterval);
+        if (sleepinterval < 5) sleepinterval += 1;
     }
     return 0;
 }
 
-static void test_condvars(void)
+static void test_condvars_consumer_producer(void)
 {
-    HANDLE hp1,hp2,hc1,hc2;
+    HANDLE hp1,hp2,hp3,hc1,hc2,hc3;
     DWORD dummy;
-    DWORD cnt1,cnt2;
+    DWORD cnt1,cnt2,cnt3;
 
     if (!pInitializeConditionVariable) {
         /* function is not yet in XP, only in newer Windows */
@@ -1311,15 +1467,24 @@ static void test_condvars(void)
     }
 
     /* Implement a producer / consumer scheme with non-full / non-empty triggers */
-    pInitializeConditionVariable(&buffernotfull);
+
+    /* If we have static initialized condition variables, InitializeConditionVariable
+     * is not strictly necessary.
+     * pInitializeConditionVariable(&buffernotfull);
+     */
     pInitializeConditionVariable(&buffernotempty);
     InitializeCriticalSection(&buffercrit);
-    bufferlen = totalproduced = totalconsumed = cnt1 = cnt2 = 0;
+
+    /* Larger Test: consumer/producer example */
+
+    bufferlen = totalproduced = totalconsumed = cnt1 = cnt2 = cnt3 = 0;
 
     hp1 = CreateThread(NULL, 0, condvar_producer, NULL, 0, &dummy);
     hp2 = CreateThread(NULL, 0, condvar_producer, NULL, 0, &dummy);
+    hp3 = CreateThread(NULL, 0, condvar_producer, NULL, 0, &dummy);
     hc1 = CreateThread(NULL, 0, condvar_consumer, (PVOID)&cnt1, 0, &dummy);
     hc2 = CreateThread(NULL, 0, condvar_consumer, (PVOID)&cnt2, 0, &dummy);
+    hc3 = CreateThread(NULL, 0, condvar_consumer, (PVOID)&cnt3, 0, &dummy);
 
     /* Limit run to 0.5 seconds. */
     Sleep(500);
@@ -1331,10 +1496,16 @@ static void test_condvars(void)
     pWakeAllConditionVariable (&buffernotfull);
     pWakeAllConditionVariable (&buffernotempty);
 
+    /* (mostly an implementation detail)
+     * ok(buffernotfull.Ptr == NULL, "buffernotfull.Ptr is %p\n", buffernotfull.Ptr);
+     */
+
     WaitForSingleObject(hp1, 1000);
     WaitForSingleObject(hp2, 1000);
+    WaitForSingleObject(hp3, 1000);
     WaitForSingleObject(hc1, 1000);
     WaitForSingleObject(hc2, 1000);
+    WaitForSingleObject(hc3, 1000);
 
     ok(totalconsumed == totalproduced,
        "consumed %d != produced %d\n", totalconsumed, totalproduced);
@@ -1342,12 +1513,143 @@ static void test_condvars(void)
 
     /* Checking cnt1 - cnt2 for non-0 would be not good, the case where
      * one consumer does not get anything to do is possible. */
-    trace("produced %d, c1 %d, c2 %d\n", totalproduced, cnt1, cnt2);
+    trace("produced %d, c1 %d, c2 %d, c3 %d\n", totalproduced, cnt1, cnt2, cnt3);
     /* The sleeps of the producer or consumer should not go above 100* produced count,
      * otherwise the implementation does not sleep correctly. But yet again, this is
      * not hard defined. */
     trace("producer sleep %d, consumer sleep %d\n", condvar_producer_sleepcnt, condvar_consumer_sleepcnt);
 }
+
+/* Sample test for some sequence of events happening, sequenced using "condvar_seq" */
+static DWORD condvar_seq = 0;
+static CONDITION_VARIABLE condvar_base = CONDITION_VARIABLE_INIT;
+static CRITICAL_SECTION condvar_crit;
+
+/* Sequence of wake/sleep to check boundary conditions:
+ * 0: init
+ * 1: producer emits a WakeConditionVaribale without consumer waiting.
+ * 2: consumer sleeps without a wake expecting timeout
+ * 3: producer emits a WakeAllConditionVaribale without consumer waiting.
+ * 4: consumer sleeps without a wake expecting timeout
+ * 5: a wake is handed to a SleepConditionVariableCS
+ * 6: a wakeall is handed to a SleepConditionVariableCS
+ * 7: sleep after above should timeout
+ * 8: wake with crit section locked into the sleep timeout
+ * 9: end
+ */
+static DWORD WINAPI condvar_base_producer(LPVOID x) {
+    while (condvar_seq < 1) Sleep(1);
+
+    pWakeConditionVariable (&condvar_base);
+    condvar_seq = 2;
+
+    while (condvar_seq < 3) Sleep(1);
+    pWakeAllConditionVariable (&condvar_base);
+    condvar_seq = 4;
+
+    while (condvar_seq < 5) Sleep(1);
+    EnterCriticalSection (&condvar_crit);
+    pWakeConditionVariable (&condvar_base);
+    LeaveCriticalSection (&condvar_crit);
+    while (condvar_seq < 6) Sleep(1);
+    EnterCriticalSection (&condvar_crit);
+    pWakeAllConditionVariable (&condvar_base);
+    LeaveCriticalSection (&condvar_crit);
+
+    while (condvar_seq < 8) Sleep(1);
+    EnterCriticalSection (&condvar_crit);
+    pWakeConditionVariable (&condvar_base);
+    Sleep(50);
+    LeaveCriticalSection (&condvar_crit);
+
+    return 0;
+}
+
+static DWORD WINAPI condvar_base_consumer(LPVOID x) {
+    BOOL ret;
+
+    while (condvar_seq < 2) Sleep(1);
+
+    /* wake was emitted, but we were not sleeping */
+    EnterCriticalSection (&condvar_crit);
+    ret = pSleepConditionVariableCS(&condvar_base, &condvar_crit, 10);
+    LeaveCriticalSection (&condvar_crit);
+    ok (!ret, "SleepConditionVariableCS should return FALSE on out of band wake\n");
+    ok (GetLastError() == ERROR_TIMEOUT, "SleepConditionVariableCS should return ERROR_TIMEOUT on out of band wake, not %d\n", GetLastError());
+
+    condvar_seq = 3;
+    while (condvar_seq < 4) Sleep(1);
+
+    /* wake all was emitted, but we were not sleeping */
+    EnterCriticalSection (&condvar_crit);
+    ret = pSleepConditionVariableCS(&condvar_base, &condvar_crit, 10);
+    LeaveCriticalSection (&condvar_crit);
+    ok (!ret, "SleepConditionVariableCS should return FALSE on out of band wake\n");
+    ok (GetLastError() == ERROR_TIMEOUT, "SleepConditionVariableCS should return ERROR_TIMEOUT on out of band wake, not %d\n", GetLastError());
+
+    EnterCriticalSection (&condvar_crit);
+    condvar_seq = 5;
+    ret = pSleepConditionVariableCS(&condvar_base, &condvar_crit, 200);
+    LeaveCriticalSection (&condvar_crit);
+    ok (ret, "SleepConditionVariableCS should return TRUE on good wake\n");
+
+    EnterCriticalSection (&condvar_crit);
+    condvar_seq = 6;
+    ret = pSleepConditionVariableCS(&condvar_base, &condvar_crit, 200);
+    LeaveCriticalSection (&condvar_crit);
+    ok (ret, "SleepConditionVariableCS should return TRUE on good wakeall\n");
+    condvar_seq = 7;
+
+    EnterCriticalSection (&condvar_crit);
+    ret = pSleepConditionVariableCS(&condvar_base, &condvar_crit, 10);
+    LeaveCriticalSection (&condvar_crit);
+    ok (!ret, "SleepConditionVariableCS should return FALSE on out of band wake\n");
+    ok (GetLastError() == ERROR_TIMEOUT, "SleepConditionVariableCS should return ERROR_TIMEOUT on out of band wake, not %d\n", GetLastError());
+
+    EnterCriticalSection (&condvar_crit);
+    condvar_seq = 8;
+    ret = pSleepConditionVariableCS(&condvar_base, &condvar_crit, 20);
+    LeaveCriticalSection (&condvar_crit);
+    ok (ret, "SleepConditionVariableCS should still return TRUE on crit unlock delay\n");
+    condvar_seq = 9;
+
+    return 0;
+}
+
+static void test_condvars_base(void) {
+    HANDLE hp, hc;
+    DWORD dummy;
+    BOOL ret;
+
+
+    if (!pInitializeConditionVariable) {
+        /* function is not yet in XP, only in newer Windows */
+        /* and not yet implemented in Wine for some days/weeks */
+        todo_wine win_skip("no condition variable support.\n");
+        return;
+    }
+
+    InitializeCriticalSection (&condvar_crit);
+
+    EnterCriticalSection (&condvar_crit);
+    ret = pSleepConditionVariableCS(&condvar_base, &condvar_crit, 10);
+    LeaveCriticalSection (&condvar_crit);
+
+    ok (!ret, "SleepConditionVariableCS should return FALSE on untriggered condvar\n");
+    ok (GetLastError() == ERROR_TIMEOUT, "SleepConditionVariableCS should return ERROR_TIMEOUT on untriggered condvar, not %d\n", GetLastError());
+
+
+    hp = CreateThread(NULL, 0, condvar_base_producer, NULL, 0, &dummy);
+    hc = CreateThread(NULL, 0, condvar_base_consumer, NULL, 0, &dummy);
+
+    condvar_seq = 1; /* go */
+
+    while (condvar_seq < 9)
+        Sleep (5);
+    WaitForSingleObject(hp, 100);
+    WaitForSingleObject(hc, 100);
+}
+
 
 START_TEST(sync)
 {
@@ -1381,5 +1683,6 @@ START_TEST(sync)
     test_WaitForSingleObject();
     test_WaitForMultipleObjects();
     test_initonce();
-    test_condvars();
+    test_condvars_base();
+    test_condvars_consumer_producer();
 }

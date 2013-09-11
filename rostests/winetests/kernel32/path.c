@@ -21,6 +21,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <assert.h>
 #include "wine/test.h"
 #include "windef.h"
 #include "winbase.h"
@@ -558,9 +559,10 @@ static void test_ShortPathCase(const char *tmpdir, const char *dirname,
 {
     char buf[MAX_PATH], shortbuf[MAX_PATH];
     HANDLE hndl;
-    int i;
+    size_t i;
 
-    snprintf(buf,sizeof(buf),"%s\\%s\\%s",tmpdir,dirname,filename);
+    assert(strlen(tmpdir) + strlen(dirname) + strlen(filename) + 2 < sizeof(buf));
+    sprintf(buf,"%s\\%s\\%s",tmpdir,dirname,filename);
     GetShortPathNameA(buf,shortbuf,sizeof(shortbuf));
     hndl = CreateFileA(shortbuf,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,0,NULL);
     ok(hndl!=INVALID_HANDLE_VALUE,"CreateFileA failed (%d)\n",GetLastError());
@@ -1273,7 +1275,15 @@ static void test_GetShortPathNameW(void)
     ok( length, "GetShortPathNameW returned 0.\n" );
     ret = GetShortPathNameW( path, short_path, length );
     ok( ret, "GetShortPathNameW returned 0.\n" );
+
     lstrcatW( short_path, name );
+
+    /* GetShortPathName for a non-existent short file name should fail */
+    SetLastError(0xdeadbeef);
+    length = GetShortPathNameW( short_path, path, 0 );
+    ok(!length, "GetShortPathNameW should fail\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
     file = CreateFileW( short_path, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
     ok( file != INVALID_HANDLE_VALUE, "File was not created.\n" );
 

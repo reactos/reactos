@@ -86,6 +86,7 @@ static void test_heap(void)
     HGLOBAL gbl;
     HGLOBAL hsecond;
     SIZE_T  size, size2;
+    const SIZE_T max_size = 1024, init_size = 10;
 
     /* Heap*() functions */
     mem = HeapAlloc(GetProcessHeap(), 0, 0);
@@ -245,6 +246,28 @@ static void test_heap(void)
                "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
     }
 
+    /* GMEM_FIXED block expands in place only without flags */
+    for (size = 1; size <= max_size; size <<= 1) {
+        gbl = GlobalAlloc(GMEM_FIXED, init_size);
+        SetLastError(MAGIC_DEAD);
+        hsecond = GlobalReAlloc(gbl, size + init_size, 0);
+        ok(hsecond == gbl || (hsecond == NULL && GetLastError() == ERROR_NOT_ENOUGH_MEMORY),
+           "got %p with %x (expected %p or NULL) @%ld\n", hsecond, GetLastError(), gbl, size);
+        GlobalFree(gbl);
+    }
+
+    /* GMEM_FIXED block can be relocated with GMEM_MOVEABLE */
+    for (size = 1; size <= max_size; size <<= 1) {
+        gbl = GlobalAlloc(GMEM_FIXED, init_size);
+        SetLastError(MAGIC_DEAD);
+        hsecond = GlobalReAlloc(gbl, size + init_size, GMEM_MOVEABLE);
+        ok(hsecond != NULL,
+           "got %p with %x (expected non-NULL) @%ld\n", hsecond, GetLastError(), size);
+        mem = GlobalLock(hsecond);
+        ok(mem == hsecond, "got %p (expected %p) @%ld\n", mem, hsecond, size);
+        GlobalFree(hsecond);
+    }
+
     gbl = GlobalAlloc(GMEM_DDESHARE, 100);
 
     res = GlobalUnlock(gbl);
@@ -381,6 +404,28 @@ static void test_heap(void)
     ok(!res && (GetLastError() == ERROR_INVALID_HANDLE),
         "returned %d with %d (expected '0' with ERROR_INVALID_HANDLE)\n",
         res, GetLastError());
+
+    /* LMEM_FIXED block expands in place only without flags */
+    for (size = 1; size <= max_size; size <<= 1) {
+        gbl = LocalAlloc(LMEM_FIXED, init_size);
+        SetLastError(MAGIC_DEAD);
+        hsecond = LocalReAlloc(gbl, size + init_size, 0);
+        ok(hsecond == gbl || (hsecond == NULL && GetLastError() == ERROR_NOT_ENOUGH_MEMORY),
+           "got %p with %x (expected %p or NULL) @%ld\n", hsecond, GetLastError(), gbl, size);
+        LocalFree(gbl);
+    }
+
+    /* LMEM_FIXED memory can be relocated with LMEM_MOVEABLE */
+    for (size = 1; size <= max_size; size <<= 1) {
+        gbl = LocalAlloc(LMEM_FIXED, init_size);
+        SetLastError(MAGIC_DEAD);
+        hsecond = LocalReAlloc(gbl, size + init_size, LMEM_MOVEABLE);
+        ok(hsecond != NULL,
+           "got %p with %x (expected non-NULL) @%ld\n", hsecond, GetLastError(), size);
+        mem = LocalLock(hsecond);
+        ok(mem == hsecond, "got %p (expected %p) @%ld\n", mem, hsecond, size);
+        LocalFree(hsecond);
+    }
 
     /* trying to unlock pointer from LocalAlloc */
     gbl = LocalAlloc(LMEM_FIXED, 100);

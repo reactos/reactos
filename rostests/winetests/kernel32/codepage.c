@@ -285,7 +285,7 @@ static void test_string_conversion(LPBOOL bUsedDefaultChar)
     SetLastError(0xdeadbeef);
     ret = WideCharToMultiByte(1252, 0, &wc1, 1, &mbc, 1, NULL, bUsedDefaultChar);
     ok(ret == 1, "ret is %d\n", ret);
-    ok(mbc == -28, "mbc is %d\n", mbc);
+    ok(mbc == '\xe4', "mbc is %d\n", mbc);
     if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
     ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
 
@@ -301,7 +301,7 @@ static void test_string_conversion(LPBOOL bUsedDefaultChar)
         SetLastError(0xdeadbeef);
         ret = WideCharToMultiByte(1251, 0, &wc2, 1, &mbc, 1, NULL, bUsedDefaultChar);
         ok(ret == 1, "ret is %d\n", ret);
-        ok(mbc == -16, "mbc is %d\n", mbc);
+        ok(mbc == '\xf0', "mbc is %d\n", mbc);
         if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
         ok(GetLastError() == 0xdeadbeef ||
            broken(GetLastError() == 0), /* win95 */
