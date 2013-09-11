@@ -1740,45 +1740,93 @@ IoCreateFile(OUT PHANDLE FileHandle,
     if ((AccessMode != KernelMode) || (Options & IO_CHECK_CREATE_PARAMETERS))
     {
         /* Validate parameters */
-        if ((FileAttributes & ~FILE_ATTRIBUTE_VALID_FLAGS) ||
-
-            (ShareAccess & ~FILE_SHARE_VALID_FLAGS) ||
-
-            (Disposition > FILE_MAXIMUM_DISPOSITION) ||
-
-            (CreateOptions & ~FILE_VALID_OPTION_FLAGS) ||
-
-            ((CreateOptions & (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT)) &&
-             (!(DesiredAccess & SYNCHRONIZE))) ||
-
-            ((CreateOptions & FILE_DELETE_ON_CLOSE) && (!(DesiredAccess & DELETE))) ||
-
-            ((CreateOptions & (FILE_SYNCHRONOUS_IO_NONALERT | FILE_SYNCHRONOUS_IO_ALERT)) ==
-             (FILE_SYNCHRONOUS_IO_NONALERT | FILE_SYNCHRONOUS_IO_ALERT)) ||
-
-            ((CreateOptions & FILE_DIRECTORY_FILE) && !(CreateOptions & FILE_NON_DIRECTORY_FILE) &&
-             ((CreateOptions & ~(FILE_DIRECTORY_FILE |
-                                 FILE_SYNCHRONOUS_IO_ALERT |
-                                 FILE_SYNCHRONOUS_IO_NONALERT |
-                                 FILE_WRITE_THROUGH |
-                                 FILE_COMPLETE_IF_OPLOCKED |
-                                 FILE_OPEN_FOR_BACKUP_INTENT |
-                                 FILE_DELETE_ON_CLOSE |
-                                 FILE_OPEN_FOR_FREE_SPACE_QUERY |
-                                 FILE_OPEN_BY_FILE_ID |
-                                 FILE_NO_COMPRESSION |
-                                 FILE_OPEN_REPARSE_POINT)) ||
-             ((Disposition != FILE_CREATE) && (Disposition != FILE_OPEN) && (Disposition != FILE_OPEN_IF)))) ||
-
-            ((CreateOptions & FILE_COMPLETE_IF_OPLOCKED) && (CreateOptions & FILE_RESERVE_OPFILTER)) ||
-
-            ((CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING) && (DesiredAccess & FILE_APPEND_DATA)))
+        if (FileAttributes & ~FILE_ATTRIBUTE_VALID_FLAGS)
         {
-            /*
-            * Parameter failure. We'll be as unspecific as NT as to
-            * why this happened though, to make debugging a pain!
-            */
-            DPRINT1("File Create Parameter Failure!\n");
+            DPRINT1("File Create 'FileAttributes' Parameter contains invalid flags!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if (ShareAccess & ~FILE_SHARE_VALID_FLAGS)
+        {
+            DPRINT1("File Create 'ShareAccess' Parameter contains invalid flags!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if (Disposition > FILE_MAXIMUM_DISPOSITION)
+        {
+            DPRINT1("File Create 'Disposition' Parameter is out of range!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if (CreateOptions & ~FILE_VALID_OPTION_FLAGS)
+        {
+            DPRINT1("File Create 'CreateOptions' Prameter contains invalid flags!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT)) &&
+            (!(DesiredAccess & SYNCHRONIZE)))
+        {
+            DPRINT1("File Create 'CreateOptions' Prameter FILE_SYNCHRONOUS_IO_* requested, but 'DesiredAccess' does not have SYNCHRONIZE!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_DELETE_ON_CLOSE) && (!(DesiredAccess & DELETE)))
+        {
+            DPRINT1("File Create 'CreateOptions' Prameter FILE_DELETE_ON_CLOSE requested, but 'DesiredAccess' does not have DELETE!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & (FILE_SYNCHRONOUS_IO_NONALERT | FILE_SYNCHRONOUS_IO_ALERT)) ==
+            (FILE_SYNCHRONOUS_IO_NONALERT | FILE_SYNCHRONOUS_IO_ALERT))
+        {
+            DPRINT1("File Create 'FileAttributes' Prameter both FILE_SYNCHRONOUS_IO_NONALERT and FILE_SYNCHRONOUS_IO_ALERT specified!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_DIRECTORY_FILE) && !(CreateOptions & FILE_NON_DIRECTORY_FILE) &&
+            (CreateOptions & ~(FILE_DIRECTORY_FILE |
+                               FILE_SYNCHRONOUS_IO_ALERT |
+                               FILE_SYNCHRONOUS_IO_NONALERT |
+                               FILE_WRITE_THROUGH |
+                               FILE_COMPLETE_IF_OPLOCKED |
+                               FILE_OPEN_FOR_BACKUP_INTENT |
+                               FILE_DELETE_ON_CLOSE |
+                               FILE_OPEN_FOR_FREE_SPACE_QUERY |
+                               FILE_OPEN_BY_FILE_ID |
+                               FILE_NO_COMPRESSION |
+                               FILE_OPEN_REPARSE_POINT)))
+        {
+            DPRINT1("File Create 'CreateOptions' Parameter has flags incompatible with FILE_DIRECTORY_FILE!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_DIRECTORY_FILE) && !(CreateOptions & FILE_NON_DIRECTORY_FILE) &&
+            (Disposition != FILE_CREATE) && (Disposition != FILE_OPEN) && (Disposition != FILE_OPEN_IF))
+        {
+            DPRINT1("File Create 'CreateOptions' Parameter FILE_DIRECTORY_FILE requested, but 'Disposition' is not FILE_CREATE/FILE_OPEN/FILE_OPEN_IF!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_COMPLETE_IF_OPLOCKED) && (CreateOptions & FILE_RESERVE_OPFILTER))
+        {
+            DPRINT1("File Create 'CreateOptions' Parameter both FILE_COMPLETE_IF_OPLOCKED and FILE_RESERVE_OPFILTER specified!\n");
+            ExFreePool(OpenPacket);
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if ((CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING) && (DesiredAccess & FILE_APPEND_DATA))
+        {
+            DPRINT1("File Create 'CreateOptions' Prameter FILE_NO_INTERMEDIATE_BUFFERING requested, but 'DesiredAccess' FILE_APPEND_DATA requires it!\n");
             ExFreePool(OpenPacket);
             return STATUS_INVALID_PARAMETER;
         }
