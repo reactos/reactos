@@ -1,4 +1,16 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/volinfo.c
+ * PURPOSE:     Named Pipe FileSystem Volume Information
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
+
+/* FUNCTIONS ******************************************************************/
 
 NTSTATUS
 NTAPI
@@ -186,3 +198,5 @@ NpFsdQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
 
     return Status;
 }
+
+/* EOF */

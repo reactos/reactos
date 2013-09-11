@@ -1,4 +1,16 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/readsup.c
+ * PURPOSE:     Pipes Reading Support
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
+
+/* FUNCTIONS ******************************************************************/
 
 IO_STATUS_BLOCK
 NTAPI
@@ -140,3 +152,4 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
     return Status;
 }
 
+/* EOF */

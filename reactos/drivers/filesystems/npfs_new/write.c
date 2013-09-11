@@ -1,6 +1,20 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/write.c
+ * PURPOSE:     Pipes Writing
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
 
+/* GLOBALS ********************************************************************/
+
 LONG NpSlowWriteCalls;
+
+/* FUNCTIONS ******************************************************************/
 
 BOOLEAN
 NTAPI
@@ -188,3 +202,4 @@ NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
     return IoStatus.Status;
 }
 
+/* EOF */

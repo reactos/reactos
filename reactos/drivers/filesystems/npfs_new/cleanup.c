@@ -1,4 +1,16 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/cleanup.c
+ * PURPOSE:     Pipes Cleanup
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
+
+/* FUNCTIONS ******************************************************************/
 
 NTSTATUS
 NTAPI
@@ -61,3 +73,4 @@ NpFsdCleanup(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
+/* EOF */

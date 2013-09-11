@@ -1,4 +1,16 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/fileinfo.c
+ * PURPOSE:     Pipes Information
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
+
+/* FUNCTIONS ******************************************************************/
 
 NTSTATUS
 NTAPI
@@ -466,6 +478,4 @@ NpFsdQueryInformation(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
-//
-// volinfo.c
-//
+/* EOF */

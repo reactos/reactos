@@ -1,4 +1,16 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/fileobsup.c
+ * PURPOSE:     Pipes File Object Support
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
+
+/* FUNCTIONS ******************************************************************/
 
 NODE_TYPE_CODE
 NTAPI
@@ -73,3 +85,4 @@ NpSetFileObject(IN PFILE_OBJECT FileObject,
     if (FileIsPipe) FileObject->Flags |= FO_NAMED_PIPE;
 }
 
+/* EOF */

@@ -1,4 +1,16 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/writesup.c
+ * PURPOSE:     Pipes Writing Support
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
+
+/* FUNCTIONS ******************************************************************/
 
 NTSTATUS 
 NTAPI
@@ -153,3 +165,4 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
     return Status;
 }
 
+/* EOF */

@@ -1,6 +1,20 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/read.c
+ * PURPOSE:     Pipes Reading
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
 
+/* GLOBALS ********************************************************************/
+
 LONG NpSlowReadCalls;
+
+/* FUNCTIONS ******************************************************************/
 
 BOOLEAN
 NTAPI
@@ -172,3 +186,5 @@ NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
 
     return IoStatus.Status;
 }
+
+/* EOF */

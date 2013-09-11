@@ -1,6 +1,20 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/main.c
+ * PURPOSE:     Named Pipe FileSystem Driver Initialization
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
 
+/* GLOBALS ********************************************************************/
+
 PDEVICE_OBJECT NpfsDeviceObject;
+
+/* FUNCTIONS ******************************************************************/
 
 NTSTATUS
 NTAPI
@@ -70,3 +84,5 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     ASSERT(Status == STATUS_SUCCESS);
     return STATUS_SUCCESS;
 }
+
+/* EOF */

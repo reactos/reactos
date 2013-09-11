@@ -1,4 +1,16 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/seinfo.c
+ * PURPOSE:     Pipes Security Information
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
+
+/* FUNCTIONS ******************************************************************/
 
 NTSTATUS
 NTAPI
@@ -126,3 +138,4 @@ NpFsdSetSecurityInfo(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
+/* EOF */

@@ -1,4 +1,16 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/prefxsup.c
+ * PURPOSE:     Pipes Prefixes Support
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
+
+/* FUNCTIONS ******************************************************************/
 
 PNP_FCB
 NTAPI
@@ -75,3 +87,4 @@ NpFindRelativePrefix(IN PNP_DCB Dcb,
     return STATUS_SUCCESS;
 }
 
+/* EOF */

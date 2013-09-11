@@ -1,9 +1,23 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/strucsup.c
+ * PURPOSE:
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 #include "npfs.h"
+
+/* GLOBALS ********************************************************************/
 
 #define UNIMPLEMENTED
 
 PWCHAR NpRootDCBName = L"\\";
 PNP_VCB NpVcb;
+
+/* FUNCTIONS ******************************************************************/
 
 RTL_GENERIC_COMPARE_RESULTS
 NTAPI
@@ -344,3 +358,4 @@ NpCreateCcb(IN PNP_FCB Fcb,
     return STATUS_SUCCESS;
 }
 
+/* EOF */
