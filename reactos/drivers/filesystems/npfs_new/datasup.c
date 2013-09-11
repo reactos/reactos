@@ -129,7 +129,7 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
 
         if (Irp && IoSetCancelRoutine(Irp, NULL))
         {
-            Irp->Tail.Overlay.DriverContext[3] = 0;
+            Irp->Tail.Overlay.DriverContext[3] = NULL;
         }
 
         ExFreePool(QueueEntry);
@@ -188,15 +188,13 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
 {
     PNP_DATA_QUEUE DataQueue;
     PNP_DATA_QUEUE_ENTRY DataEntry;
-    LIST_ENTRY List;
+    LIST_ENTRY DeferredList;
     PSECURITY_CLIENT_CONTEXT ClientSecurityContext;
     BOOLEAN CompleteWrites, FirstEntry;
-    PLIST_ENTRY NextEntry, ThisEntry;
-    PIRP LocalIrp;
 
     if (DeviceObject) IoReleaseCancelSpinLock(Irp->CancelIrql);
 
-    InitializeListHead(&List);
+    InitializeListHead(&DeferredList);
 
     DataQueue = (PNP_DATA_QUEUE)Irp->Tail.Overlay.DriverContext[2];
     ClientSecurityContext = NULL;
@@ -204,7 +202,7 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
     if (DeviceObject)
     {
         FsRtlEnterFileSystem();
-        ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+        NpAcquireExclusiveVcb();
     }
 
     DataEntry = (PNP_DATA_QUEUE_ENTRY)Irp->Tail.Overlay.DriverContext[3];
@@ -245,18 +243,18 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
         {
             if (FirstEntry)
             {
-                NpGetNextRealDataQueueEntry(DataQueue, &List);
+                NpGetNextRealDataQueueEntry(DataQueue, &DeferredList);
             }
             if (CompleteWrites)
             {
-                NpCompleteStalledWrites(DataQueue, &List);
+                NpCompleteStalledWrites(DataQueue, &DeferredList);
             }
         }
     }
 
     if (DeviceObject)
     {
-        ExReleaseResourceLite(&NpVcb->Lock);
+        NpReleaseVcb();
         FsRtlExitFileSystem();
     }
 
@@ -266,15 +264,7 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Status = STATUS_CANCELLED;
     IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
 
-    NextEntry = List.Flink;
-    while (NextEntry != &List)
-    {
-        ThisEntry = NextEntry;
-        NextEntry = NextEntry->Flink;
-
-        LocalIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(LocalIrp, IO_NAMED_PIPE_INCREMENT);
-    }
+    NpCompleteDeferredIrps(&DeferredList);
 }
 
 NTSTATUS

@@ -263,6 +263,60 @@ typedef struct _NP_VCB
 
 extern PNP_VCB NpVcb;
 
+//
+// Functions to lock/unlock the global VCB lock
+//
+FORCEINLINE
+VOID
+NpAcquireSharedVcb(VOID)
+{
+    /* Acquire the lock in shared mode */
+    ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
+}
+
+FORCEINLINE
+VOID
+NpAcquireExclusiveVcb(VOID)
+{
+    /* Acquire the lock in exclusive mode */
+    ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+}
+
+FORCEINLINE
+VOID
+NpReleaseVcb(VOID)
+{
+    /* Release the lock */
+    ExReleaseResourceLite(&NpVcb->Lock);
+}
+
+//
+// Function to process deferred IRPs outside the VCB lock but still within the
+// critical region
+//
+VOID
+FORCEINLINE
+NpCompleteDeferredIrps(IN PLIST_ENTRY DeferredList)
+{
+    PLIST_ENTRY ThisEntry, NextEntry;
+    PIRP Irp;
+
+    /* Loop the list */
+    ThisEntry = DeferredList->Flink;
+    while (ThisEntry != DeferredList)
+    {
+        /* Remember the next entry, but don't switch to it yet */
+        NextEntry = ThisEntry->Flink;
+
+        /* Complete the IRP for this entry */
+        Irp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
+        IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
+
+        /* And now switch to the next one */
+        ThisEntry = NextEntry;
+    }
+}
+
 BOOLEAN
 NTAPI
 NpDeleteEventTableEntry(IN PRTL_GENERIC_TABLE Table,
@@ -533,13 +587,13 @@ NpFsdQueryInformation(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-NpFsdQuerySecurity(IN PDEVICE_OBJECT DeviceObject,
-                   IN PIRP Irp);
+NpFsdQuerySecurityInfo(IN PDEVICE_OBJECT DeviceObject,
+                       IN PIRP Irp);
 
 NTSTATUS
 NTAPI
-NpFsdSetSecurity(IN PDEVICE_OBJECT DeviceObject,
-                 IN PIRP Irp);
+NpFsdSetSecurityInfo(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp);
 
 NTSTATUS
 NTAPI

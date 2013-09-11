@@ -59,11 +59,11 @@ NpFsdFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
     PAGED_CODE();
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+    NpAcquireSharedVcb();
 
     Status = NpCommonFlushBuffers(DeviceObject, Irp);
 
-    ExReleaseResourceLite(&NpVcb->Lock);
+    NpReleaseVcb();
     FsRtlExitFileSystem();
 
     return Status;

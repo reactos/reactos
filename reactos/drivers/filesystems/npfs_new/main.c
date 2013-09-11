@@ -40,8 +40,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpFsdFlushBuffers;
     DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = NpFsdDirectoryControl;
     DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = NpFsdFileSystemControl;
-    DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = NpFsdQuerySecurity;
-    DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] = NpFsdSetSecurity;
+    DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = NpFsdQuerySecurityInfo;
+    DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] = NpFsdSetSecurityInfo;
 
     DriverObject->DriverUnload = NULL;
 

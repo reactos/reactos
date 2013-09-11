@@ -78,18 +78,18 @@ NpCommonSetSecurityInfo(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-NpFsdQuerySecurity(IN PDEVICE_OBJECT DeviceObject,
-                   IN PIRP Irp)
+NpFsdQuerySecurityInfo(IN PDEVICE_OBJECT DeviceObject,
+                       IN PIRP Irp)
 {
     NTSTATUS Status;
     PAGED_CODE();
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
+    NpAcquireExclusiveVcb();
 
     Status = NpCommonQuerySecurityInfo(DeviceObject, Irp);
 
-    ExReleaseResourceLite(&NpVcb->Lock);
+    NpReleaseVcb();
     FsRtlExitFileSystem();
 
     if (Status != STATUS_PENDING)
@@ -103,18 +103,18 @@ NpFsdQuerySecurity(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-NpFsdSetSecurity(IN PDEVICE_OBJECT DeviceObject,
-                 IN PIRP Irp)
+NpFsdSetSecurityInfo(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp)
 {
     NTSTATUS Status;
     PAGED_CODE();
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
+    NpAcquireExclusiveVcb();
 
     Status = NpCommonQuerySecurityInfo(DeviceObject, Irp);
 
-    ExReleaseResourceLite(&NpVcb->Lock);
+    NpReleaseVcb();
     FsRtlExitFileSystem();
 
     if (Status != STATUS_PENDING)

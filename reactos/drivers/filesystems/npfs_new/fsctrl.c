@@ -569,35 +569,33 @@ NpCommonFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
 {
     ULONG Fsctl;
     BOOLEAN Overflow = FALSE;
-    LIST_ENTRY List;
-    PLIST_ENTRY NextEntry, ThisEntry;
+    LIST_ENTRY DeferredList;
     NTSTATUS Status;
-    PIRP LocalIrp;
     PAGED_CODE();
 
-    InitializeListHead(&List);
+    InitializeListHead(&DeferredList);
     Fsctl = IoGetCurrentIrpStackLocation(Irp)->Parameters.FileSystemControl.FsControlCode;
 
     switch (Fsctl)
     {
         case FSCTL_PIPE_PEEK:
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
-            Status = NpPeek(DeviceObject, Irp, &List);
+            NpAcquireExclusiveVcb();
+            Status = NpPeek(DeviceObject, Irp, &DeferredList);
             break;
 
         case FSCTL_PIPE_INTERNAL_WRITE:
-            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
-            Status = NpInternalWrite(DeviceObject, Irp, &List);
+            NpAcquireSharedVcb();
+            Status = NpInternalWrite(DeviceObject, Irp, &DeferredList);
             break;
 
         case FSCTL_PIPE_TRANSCEIVE:
-            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
-            Status = NpTransceive(DeviceObject, Irp, &List);
+            NpAcquireSharedVcb();
+            Status = NpTransceive(DeviceObject, Irp, &DeferredList);
             break;
 
         case FSCTL_PIPE_INTERNAL_TRANSCEIVE:
-            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
-            Status = NpInternalTransceive(DeviceObject, Irp, &List);
+            NpAcquireSharedVcb();
+            Status = NpInternalTransceive(DeviceObject, Irp, &DeferredList);
             break;
  
         case FSCTL_PIPE_INTERNAL_READ_OVFLOW:
@@ -605,54 +603,54 @@ NpCommonFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
             // on purpose
 
         case FSCTL_PIPE_INTERNAL_READ:
-            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
-            Status = NpInternalRead(DeviceObject, Irp, Overflow, &List);
+            NpAcquireSharedVcb();
+            Status = NpInternalRead(DeviceObject, Irp, Overflow, &DeferredList);
             break;
 
         case FSCTL_PIPE_QUERY_CLIENT_PROCESS:
 
-            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
+            NpAcquireSharedVcb();
             Status = NpQueryClientProcess(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_ASSIGN_EVENT:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+            NpAcquireExclusiveVcb();
             Status = NpAssignEvent(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_DISCONNECT:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
-            Status = NpDisconnect(DeviceObject, Irp, &List);
+            NpAcquireExclusiveVcb();
+            Status = NpDisconnect(DeviceObject, Irp, &DeferredList);
             break;
 
         case FSCTL_PIPE_LISTEN:
 
-            ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
-            Status = NpListen(DeviceObject, Irp, &List);
+            NpAcquireSharedVcb();
+            Status = NpListen(DeviceObject, Irp, &DeferredList);
             break;
 
         case FSCTL_PIPE_QUERY_EVENT:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+            NpAcquireExclusiveVcb();
             Status = NpQueryEvent(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_WAIT:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+            NpAcquireExclusiveVcb();
             Status = NpWaitForNamedPipe(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_IMPERSONATE:
 
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+            NpAcquireExclusiveVcb();
             Status = NpImpersonate(DeviceObject, Irp);
             break;
 
         case FSCTL_PIPE_SET_CLIENT_PROCESS:
-            ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+            NpAcquireExclusiveVcb();
             Status = NpSetClientProcess(DeviceObject, Irp);
             break;
 
@@ -660,17 +658,8 @@ NpCommonFileSystemControl(IN PDEVICE_OBJECT DeviceObject,
             return STATUS_NOT_SUPPORTED;
     }
 
-    ExReleaseResourceLite(&NpVcb->Lock);
-
-    NextEntry = List.Flink;
-    while (NextEntry != &List)
-    {
-        ThisEntry = NextEntry;
-        NextEntry = NextEntry->Flink;
-
-        LocalIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(LocalIrp, IO_NAMED_PIPE_INCREMENT);
-    }
+    NpReleaseVcb();
+    NpCompleteDeferredIrps(&DeferredList);
 
     return Status;
 }

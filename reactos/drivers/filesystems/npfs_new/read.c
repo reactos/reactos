@@ -142,37 +142,25 @@ NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION IoStack;
     IO_STATUS_BLOCK IoStatus;
-    LIST_ENTRY List;
-    PLIST_ENTRY NextEntry, ThisEntry;
-    PIRP LocalIrp;
+    LIST_ENTRY DeferredList;
     PAGED_CODE();
     NpSlowReadCalls++;
 
-    InitializeListHead(&List);
+    InitializeListHead(&DeferredList);
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
+    NpAcquireSharedVcb();
 
     NpCommonRead(IoStack->FileObject,
                  Irp->UserBuffer,
                  IoStack->Parameters.Read.Length,
                  &IoStatus,
                  Irp,
-                 &List);
+                 &DeferredList);
 
-    ExReleaseResourceLite(&NpVcb->Lock);
-
-    NextEntry = List.Flink;
-    while (NextEntry != &List)
-    {
-        ThisEntry = NextEntry;
-        NextEntry = NextEntry->Flink;
-
-        LocalIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(LocalIrp, IO_NAMED_PIPE_INCREMENT);
-    }
-
+    NpReleaseVcb();
+    NpCompleteDeferredIrps(&DeferredList);
     FsRtlExitFileSystem();
 
     if (IoStatus.Status != STATUS_PENDING)

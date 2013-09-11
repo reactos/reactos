@@ -100,30 +100,18 @@ NpFsdSetInformation(IN PDEVICE_OBJECT DeviceObject,
                     IN PIRP Irp)
 {
     NTSTATUS Status;
-    LIST_ENTRY List;
-    PLIST_ENTRY NextEntry, ThisEntry;
-    PIRP LocalIrp;
+    LIST_ENTRY DeferredList;
     PAGED_CODE();
 
-    InitializeListHead(&List);
+    InitializeListHead(&DeferredList);
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
+    NpAcquireExclusiveVcb();
 
-    Status = NpCommonSetInformation(DeviceObject, Irp, &List);
+    Status = NpCommonSetInformation(DeviceObject, Irp, &DeferredList);
 
-    ExReleaseResourceLite(&NpVcb->Lock);
-
-    NextEntry = List.Flink;
-    while (NextEntry != &List)
-    {
-        ThisEntry = NextEntry;
-        NextEntry = NextEntry->Flink;
-
-        LocalIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(LocalIrp, IO_NAMED_PIPE_INCREMENT);
-    }
-
+    NpReleaseVcb();
+    NpCompleteDeferredIrps(&DeferredList);
     FsRtlExitFileSystem();
 
     if (Status != STATUS_PENDING)
@@ -462,11 +450,11 @@ NpFsdQueryInformation(IN PDEVICE_OBJECT DeviceObject,
     PAGED_CODE();
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
+    NpAcquireSharedVcb();
 
     Status = NpCommonQueryInformation(DeviceObject, Irp);
 
-    ExReleaseResourceLite(&NpVcb->Lock);
+    NpReleaseVcb();
     FsRtlExitFileSystem();
 
     if (Status != STATUS_PENDING)

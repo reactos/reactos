@@ -205,12 +205,10 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
     PNP_FCB Fcb;
     PNP_DCB Dcb;
     ACCESS_MASK DesiredAccess;
-    LIST_ENTRY List;
-    PLIST_ENTRY NextEntry, ThisEntry;
+    LIST_ENTRY DeferredList;
     UNICODE_STRING Prefix;
-    PIRP ListIrp;
 
-    InitializeListHead(&List);
+    InitializeListHead(&DeferredList);
     IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
     FileObject = IoStack->FileObject;
     RelatedFileObject = FileObject->RelatedFileObject;
@@ -240,7 +238,7 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
             Irp->IoStatus = NpOpenNamedPipeRootDirectory(NpVcb->RootDcb,
                                                             FileObject,
                                                             DesiredAccess,
-                                                            &List);
+                                                            &DeferredList);
             goto Quickie;
         }
     }
@@ -255,7 +253,7 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
         Irp->IoStatus = NpOpenNamedPipeRootDirectory(NpVcb->RootDcb,
                                                      FileObject,
                                                      DesiredAccess,
-                                                     &List);
+                                                     &DeferredList);
         goto Quickie;
     }
 
@@ -329,21 +327,11 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
                                       SL_FORCE_ACCESS_CHECK ?
                                       UserMode : Irp->RequestorMode,
                                       Irp->Tail.Overlay.Thread,
-                                      &List);
+                                      &DeferredList);
 
 Quickie:
     ExReleaseResourceLite(&NpVcb->Lock);
-
-    NextEntry = List.Flink;
-    while (NextEntry != &List)
-    {
-        ThisEntry = NextEntry;
-        NextEntry = NextEntry->Flink;
-
-        ListIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(ListIrp, IO_NAMED_PIPE_INCREMENT);
-    }
-
+    NpCompleteDeferredIrps(&DeferredList);
     FsRtlExitFileSystem();
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -622,16 +610,14 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     PFILE_OBJECT RelatedFileObject;
     USHORT Disposition, ShareAccess;
     PEPROCESS Process;
-    LIST_ENTRY LocalList;
-    PLIST_ENTRY NextEntry, ThisEntry;
+    LIST_ENTRY DeferredList;
     UNICODE_STRING FileName;
     PNP_FCB Fcb;
     UNICODE_STRING Prefix;
     PNAMED_PIPE_CREATE_PARAMETERS Parameters;
     IO_STATUS_BLOCK IoStatus;
-    PIRP ListIrp;
 
-    InitializeListHead(&LocalList);
+    InitializeListHead(&DeferredList);
     Process = IoGetRequestorProcess(Irp);
 
     IoStack = (PEXTENDED_IO_STACK_LOCATION) IoGetCurrentIrpStackLocation(Irp);
@@ -650,7 +636,7 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     IoStatus.Information = 0;
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+    NpAcquireExclusiveVcb();
 
     if (RelatedFileObject)
     {
@@ -701,7 +687,7 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
                                                    ShareAccess,
                                                    Parameters,
                                                    Process,
-                                                   &LocalList,
+                                                   &DeferredList,
                                                    &IoStatus);
             goto Quickie;
         }
@@ -731,21 +717,11 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
                                          ShareAccess,
                                          Parameters,
                                          Process,
-                                         &LocalList);
+                                         &DeferredList);
 
 Quickie:
-    ExReleaseResourceLite(&NpVcb->Lock);
-
-    NextEntry = LocalList.Flink;
-    while (NextEntry != &LocalList)
-    {
-        ThisEntry = NextEntry;
-        NextEntry = NextEntry->Flink;
-
-        ListIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(ListIrp, IO_NAMED_PIPE_INCREMENT);
-    }
-
+    NpReleaseVcb();
+    NpCompleteDeferredIrps(&DeferredList);
     FsRtlExitFileSystem();
 
     Irp->IoStatus = IoStatus;

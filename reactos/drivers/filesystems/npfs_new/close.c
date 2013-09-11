@@ -7,18 +7,16 @@ NpCommonClose(IN PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION IoStack;
     NODE_TYPE_CODE NodeTypeCode;
-    LIST_ENTRY List;
+    LIST_ENTRY DeferredList;
     PNP_FCB Fcb;
     PNP_CCB Ccb;
     ULONG NamedPipeEnd;
-    PLIST_ENTRY ThisEntry, NextEntry;
-    PIRP LocalIrp;
     PAGED_CODE();
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    InitializeListHead(&List);
+    InitializeListHead(&DeferredList);
 
-    ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+    NpAcquireExclusiveVcb();
     NodeTypeCode = NpDecodeFileObject(IoStack->FileObject,
                                       (PVOID*)&Fcb,
                                       &Ccb,
@@ -26,24 +24,15 @@ NpCommonClose(IN PDEVICE_OBJECT DeviceObject,
     if (NodeTypeCode == NPFS_NTC_ROOT_DCB)
     {
         --Fcb->CurrentInstances;
-        NpDeleteCcb(Ccb, &List);
+        NpDeleteCcb(Ccb, &DeferredList);
     }
     else if (NodeTypeCode == NPFS_NTC_VCB)
     {
         --NpVcb->ReferenceCount;
     }
 
-    ExReleaseResourceLite(&NpVcb->Lock);
-
-    NextEntry = List.Flink;
-    while (NextEntry != &List)
-    {
-        ThisEntry = NextEntry;
-        NextEntry = NextEntry->Flink;
-
-        LocalIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(LocalIrp, IO_NAMED_PIPE_INCREMENT);
-    }
+    NpReleaseVcb();
+    NpCompleteDeferredIrps(&DeferredList);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);

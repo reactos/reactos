@@ -6,12 +6,12 @@ NpCancelListeningQueueIrp(IN PDEVICE_OBJECT DeviceObject,
                           IN PIRP Irp)
 {
     FsRtlEnterFileSystem();
-    ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
+    NpAcquireExclusiveVcb();
 
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
     FsRtlExitFileSystem();
-    ExReleaseResourceLite(&NpVcb->Lock);
+    NpReleaseVcb();
 
     Irp->IoStatus.Status = STATUS_CANCELLED;
     IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);

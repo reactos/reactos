@@ -156,17 +156,15 @@ NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION IoStack;
     IO_STATUS_BLOCK IoStatus;
-    LIST_ENTRY List;
-    PLIST_ENTRY NextEntry, ThisEntry;
-    PIRP ListIrp;
+    LIST_ENTRY DeferredList;
     PAGED_CODE();
     NpSlowWriteCalls++;
 
-    InitializeListHead(&List);
+    InitializeListHead(&DeferredList);
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     FsRtlEnterFileSystem();
-    ExAcquireResourceSharedLite(&NpVcb->Lock, TRUE);
+    NpAcquireSharedVcb();
 
     NpCommonWrite(IoStack->FileObject,
                   Irp->UserBuffer,
@@ -174,20 +172,10 @@ NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
                   Irp->Tail.Overlay.Thread,
                   &IoStatus,
                   Irp,
-                  &List);
+                  &DeferredList);
 
-    ExReleaseResourceLite(&NpVcb->Lock);
-
-    NextEntry = List.Flink;
-    while (NextEntry != &List)
-    {
-        ThisEntry = NextEntry;
-        NextEntry = NextEntry->Flink;
-
-        ListIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(ListIrp, IO_NAMED_PIPE_INCREMENT);
-    }
-
+    NpReleaseVcb();
+    NpCompleteDeferredIrps(&DeferredList);
     FsRtlExitFileSystem();
 
     if (IoStatus.Status != STATUS_PENDING)
