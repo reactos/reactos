@@ -28,7 +28,7 @@ NTAPI
 WorkerProcessEvents(IN PSAC_DEVICE_EXTENSION DeviceExtension)
 {
     /* Call the worker function */
-    return ConMgrWorkerProcessEvents(DeviceExtension);
+    ConMgrWorkerProcessEvents(DeviceExtension);
 }
 
 VOID
