@@ -53,7 +53,7 @@ NpDeleteFcb(IN PNP_FCB Fcb,
     PAGED_CODE();
 
     Dcb = Fcb->ParentDcb;
-    if (!Fcb->CurrentInstances) KeBugCheckEx(NPFS_FILE_SYSTEM, 0x17025F, 0, 0, 0);
+    if (Fcb->CurrentInstances) KeBugCheckEx(NPFS_FILE_SYSTEM, 0x17025F, 0, 0, 0);
 
     NpCancelWaiter(&NpVcb->WaitQueue,
                    &Fcb->FullName,
@@ -205,23 +205,26 @@ NpCreateFcb(IN PNP_DCB Dcb,
     BOOLEAN RootPipe;
     PWCHAR NameBuffer;
     ULONG BufferOffset;
-    USHORT PipeNameLength;
+    USHORT Length, MaximumLength;
     PAGED_CODE();
 
-    PipeNameLength = PipeName->Length;
+    Length = PipeName->Length;
+    MaximumLength = Length + sizeof(UNICODE_NULL);
 
-    if ((PipeNameLength < sizeof(WCHAR)) ||
-        ((PipeNameLength + sizeof(WCHAR)) < PipeNameLength) ||
-        (PipeName->Buffer[0] != OBJ_NAME_PATH_SEPARATOR))
+    if ((Length < sizeof(WCHAR)) || (MaximumLength < Length))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
     RootPipe = FALSE;
-    if (PipeNameLength == sizeof(WCHAR))
+    if (PipeName->Buffer[0] != OBJ_NAME_PATH_SEPARATOR)
     {
+        MaximumLength += sizeof(OBJ_NAME_PATH_SEPARATOR);
         RootPipe = TRUE;
-        PipeNameLength += sizeof(WCHAR);
+        if (MaximumLength < sizeof(WCHAR))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
     }
 
     Fcb = ExAllocatePoolWithTag(PagedPool, sizeof(*Fcb), NPFS_FCB_TAG);
@@ -235,7 +238,7 @@ NpCreateFcb(IN PNP_DCB Dcb,
     InitializeListHead(&Fcb->CcbList);
 
     NameBuffer = ExAllocatePoolWithTag(PagedPool,
-                                       PipeName->Length + (RootPipe ? 4 : 2),
+                                       MaximumLength,
                                        NPFS_NAME_BLOCK_TAG);
     if (!NameBuffer)
     {
@@ -248,19 +251,19 @@ NpCreateFcb(IN PNP_DCB Dcb,
     BufferOffset = 0;
     if (RootPipe)
     {
-        *NameBuffer = OBJ_NAME_PATH_SEPARATOR;
+        NameBuffer[0] = OBJ_NAME_PATH_SEPARATOR;
         BufferOffset = 1;
     }
 
-    RtlCopyMemory(NameBuffer + BufferOffset, PipeName->Buffer, PipeNameLength);
-    NameBuffer[BufferOffset + (PipeNameLength / sizeof(WCHAR))] = UNICODE_NULL;
+    RtlCopyMemory(NameBuffer + BufferOffset, PipeName->Buffer, Length);
+    NameBuffer[BufferOffset + (Length / sizeof(WCHAR))] = UNICODE_NULL;
 
-    Fcb->FullName.Length = PipeNameLength - sizeof(WCHAR);
-    Fcb->FullName.MaximumLength = PipeNameLength;
+    Fcb->FullName.Length = Length;
+    Fcb->FullName.MaximumLength = MaximumLength;
     Fcb->FullName.Buffer = NameBuffer;
 
-    Fcb->ShortName.MaximumLength = PipeNameLength - sizeof(WCHAR);
-    Fcb->ShortName.Length = PipeNameLength - 2 * sizeof(WCHAR);
+    Fcb->ShortName.MaximumLength = Length;
+    Fcb->ShortName.Length = Length - sizeof(OBJ_NAME_PATH_SEPARATOR);
     Fcb->ShortName.Buffer = NameBuffer + 1;
 
     if (!RtlInsertUnicodePrefix(&NpVcb->PrefixTable,
@@ -333,6 +336,8 @@ NpCreateCcb(IN PNP_FCB Fcb,
 
     InsertTailList(&Fcb->CcbList, &Ccb->CcbEntry);
 
+    Fcb->CurrentInstances++;
+    Fcb->ServerOpenCount++;
     InitializeListHead(&Ccb->IrpList);
     ExInitializeResourceLite(&Ccb->NonPagedCcb->Lock);
     *NewCcb = Ccb;

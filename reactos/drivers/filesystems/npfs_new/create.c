@@ -14,6 +14,7 @@ NpCheckForNotify(IN PNP_DCB Dcb,
     ListHead = &Dcb->NotifyList;
     for (i = 0; i < 2; i++)
     {
+        ASSERT(IsListEmpty(ListHead));
         while (!IsListEmpty(ListHead))
         {
             NextEntry = RemoveHeadList(ListHead);
@@ -47,7 +48,7 @@ NpOpenNamedPipeFileSystem(IN PFILE_OBJECT FileObject,
     NpSetFileObject(FileObject, NpVcb, NULL, FALSE);
     ++NpVcb->ReferenceCount;
 
-    Status.Information = 1;
+    Status.Information = FILE_OPENED;
     Status.Status = STATUS_SUCCESS;
     return Status;
 }
@@ -69,7 +70,7 @@ NpOpenNamedPipeRootDirectory(IN PNP_DCB Dcb,
         NpSetFileObject(FileObject, Dcb, Ccb, FALSE);
         ++Dcb->CurrentInstances;
 
-        Status.Information = 1;
+        Status.Information = FILE_OPENED;
         Status.Status = STATUS_SUCCESS;
     }
     else
@@ -130,7 +131,7 @@ NpCreateClientEnd(IN PNP_FCB Fcb,
     if (AccessGranted)
     {
         AccessState->PreviouslyGrantedAccess |= GrantedAccess;
-        AccessState->RemainingDesiredAccess &= ~(GrantedAccess | 0x2000000);
+        AccessState->RemainingDesiredAccess &= ~(GrantedAccess | MAXIMUM_ALLOWED);
     }
 
     ObjectTypeName.Buffer = L"NamedPipe";
@@ -147,14 +148,14 @@ NpCreateClientEnd(IN PNP_FCB Fcb,
     SeUnlockSubjectContext(SubjectSecurityContext);
     if (!AccessGranted) return IoStatus;
 
-    if (((GrantedAccess & 1) && (NamedPipeConfiguration == FILE_PIPE_INBOUND)) ||
-        ((GrantedAccess & 2) && (NamedPipeConfiguration == FILE_PIPE_OUTBOUND)))
+    if (((AccessGranted & FILE_READ_DATA) && (NamedPipeConfiguration == FILE_PIPE_INBOUND)) ||
+        ((AccessGranted & FILE_WRITE_DATA) && (NamedPipeConfiguration == FILE_PIPE_OUTBOUND)))
     {
         IoStatus.Status = STATUS_ACCESS_DENIED;
         return IoStatus;
     }
 
-    if (!(GrantedAccess & 3)) SecurityQos = NULL;
+    if (!(GrantedAccess & (FILE_READ_DATA | FILE_WRITE_DATA))) SecurityQos = NULL;
 
     ListHead = &Fcb->CcbList;
     NextEntry = ListHead->Flink;
@@ -185,7 +186,7 @@ NpCreateClientEnd(IN PNP_FCB Fcb,
     Ccb->ClientSession = NULL;
     Ccb->Process = IoThreadToProcess(Thread);
 
-    IoStatus.Information = 1;
+    IoStatus.Information = FILE_OPENED;
     IoStatus.Status = STATUS_SUCCESS;
     return IoStatus;
 }
@@ -205,7 +206,9 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
     PNP_DCB Dcb;
     ACCESS_MASK DesiredAccess;
     LIST_ENTRY List;
+    PLIST_ENTRY NextEntry, ThisEntry;
     UNICODE_STRING Prefix;
+    PIRP ListIrp;
 
     InitializeListHead(&List);
     IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
@@ -235,20 +238,22 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
 
     if (FileName.Length)
     {
-        if ((FileName.Length == sizeof(WCHAR)) &&
+        if ((FileName.Length == sizeof(OBJ_NAME_PATH_SEPARATOR)) &&
             (FileName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR) &&
             !(RelatedFileObject))
         {
             Irp->IoStatus = NpOpenNamedPipeRootDirectory(NpVcb->RootDcb,
-                                                         FileObject,
-                                                         DesiredAccess,
-                                                         &List);
+                                                            FileObject,
+                                                            DesiredAccess,
+                                                            &List);
+            goto Quickie;
         }
     }
     else if (!(RelatedFileObject) || (Type == NPFS_NTC_VCB))
     {
         Irp->IoStatus = NpOpenNamedPipeFileSystem(FileObject,
                                                   DesiredAccess);
+        goto Quickie;
     }
     else if (Type == NPFS_NTC_ROOT_DCB)
     {
@@ -256,77 +261,94 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
                                                      FileObject,
                                                      DesiredAccess,
                                                      &List);
+        goto Quickie;
+    }
+
+    // Status = NpTranslateAlias(&FileName);; // ignore this for now
+    // if (!NT_SUCCESS(Status)) goto Quickie;
+    if (RelatedFileObject)
+    {
+        if (Type == NPFS_NTC_ROOT_DCB)
+        {
+            Dcb = (PNP_DCB)Ccb;
+            Irp->IoStatus.Status = NpFindRelativePrefix(Dcb,
+                                                        &FileName,
+                                                        1,
+                                                        &Prefix,
+                                                        &Fcb);
+            if (!NT_SUCCESS(Irp->IoStatus.Status))
+            {
+                goto Quickie;
+            }
+        }
+        else if ((Type != NPFS_NTC_CCB) || (FileName.Length))
+        {
+            Irp->IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
+            goto Quickie;
+        }
+        else
+        {
+            Prefix.Length = 0;
+        }
     }
     else
     {
-        // Status = NpTranslateAlias(&FileName);; // ignore this for now
-        // if (!NT_SUCCESS(Status)) goto Quickie;
-
-        if (RelatedFileObject)
+        if ((FileName.Length <= sizeof(OBJ_NAME_PATH_SEPARATOR)) ||
+            (FileName.Buffer[0] != OBJ_NAME_PATH_SEPARATOR))
         {
-            if (Type == NPFS_NTC_ROOT_DCB)
-            {
-                Dcb = (PNP_DCB)Ccb;
-                Irp->IoStatus.Status = NpFindRelativePrefix(Dcb,
-                                                            &FileName,
-                                                            1,
-                                                            &Prefix,
-                                                            &Fcb);
-                if (!NT_SUCCESS(Irp->IoStatus.Status)) goto Quickie;
-            }
-            else if ((Type != NPFS_NTC_CCB) || (FileName.Length))
-            {
-                Irp->IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
-                goto Quickie;
-            }
-            else
-            {
-                Prefix.Length = 0;
-            }
-        }
-        else
-        {
-            if ((FileName.Length <= sizeof(WCHAR)) ||
-                (FileName.Buffer[0] != OBJ_NAME_PATH_SEPARATOR))
-            {
-                Irp->IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
-                goto Quickie;
-            }
-
-            Fcb = NpFindPrefix(&FileName, 1, &Prefix);
+            Irp->IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
+            goto Quickie;
         }
 
-        if (Prefix.Length)
-        {
-            Irp->IoStatus.Status = Fcb->NodeType != NPFS_NTC_FCB ?
-                                   STATUS_OBJECT_NAME_NOT_FOUND :
-                                   STATUS_OBJECT_NAME_INVALID;
-        }
-
-        if (!Fcb->CurrentInstances)
-        {
-            Irp->IoStatus.Status = STATUS_OBJECT_NAME_NOT_FOUND;
-        }
-        else
-        {
-            Irp->IoStatus = NpCreateClientEnd(Fcb,
-                                              FileObject,
-                                              DesiredAccess,
-                                              IoStack->Parameters.CreatePipe.
-                                              SecurityContext->SecurityQos,
-                                              IoStack->Parameters.CreatePipe.
-                                              SecurityContext->AccessState,
-                                              IoStack->Flags &
-                                              SL_FORCE_ACCESS_CHECK ?
-                                              UserMode : Irp->RequestorMode,
-                                              Irp->Tail.Overlay.Thread,
-                                              &List);
-        }
+        Fcb = NpFindPrefix(&FileName, TRUE, &Prefix);
     }
+
+    if (Prefix.Length)
+    {
+        Irp->IoStatus.Status = Fcb->NodeType != NPFS_NTC_FCB ?
+                                STATUS_OBJECT_NAME_NOT_FOUND :
+                                STATUS_OBJECT_NAME_INVALID;
+        goto Quickie;
+    }
+
+    if (Fcb->NodeType != NPFS_NTC_FCB)
+    {
+        Irp->IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
+        goto Quickie;
+    }
+
+    if (!Fcb->ServerOpenCount)
+    {
+        Irp->IoStatus.Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Quickie;
+    }
+
+    Irp->IoStatus = NpCreateClientEnd(Fcb,
+                                      FileObject,
+                                      DesiredAccess,
+                                      IoStack->Parameters.CreatePipe.
+                                      SecurityContext->SecurityQos,
+                                      IoStack->Parameters.CreatePipe.
+                                      SecurityContext->AccessState,
+                                      IoStack->Flags &
+                                      SL_FORCE_ACCESS_CHECK ?
+                                      UserMode : Irp->RequestorMode,
+                                      Irp->Tail.Overlay.Thread,
+                                      &List);
 
 Quickie:
     ExReleaseResourceLite(&NpVcb->Lock);
-    ASSERT(IsListEmpty(&List) == TRUE);
+
+    NextEntry = List.Flink;
+    while (NextEntry != &List)
+    {
+        ThisEntry = NextEntry;
+        NextEntry = NextEntry->Flink;
+
+        ListIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
+        IoCompleteRequest(ListIrp, IO_DISK_INCREMENT);
+    }
+
     FsRtlExitFileSystem();
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -582,10 +604,11 @@ NpCreateNewNamedPipe(IN PNP_DCB Dcb,
     NpSetFileObject(FileObject, Ccb, Ccb->NonPagedCcb, TRUE);
     Ccb->FileObject[FILE_PIPE_SERVER_END] = FileObject;
 
-    NpCheckForNotify(Dcb, 1, List);
+    NpCheckForNotify(Dcb, TRUE, List);
 
     IoStatus->Status = STATUS_SUCCESS;
-    IoStatus->Information = 2;
+    IoStatus->Information = FILE_CREATED;
+
     return STATUS_SUCCESS;
 
 Quickie:
@@ -605,11 +628,13 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     USHORT Disposition, ShareAccess;
     PEPROCESS Process;
     LIST_ENTRY LocalList;
+    PLIST_ENTRY NextEntry, ThisEntry;
     UNICODE_STRING FileName;
     PNP_FCB Fcb;
     UNICODE_STRING Prefix;
     PNAMED_PIPE_CREATE_PARAMETERS Parameters;
     IO_STATUS_BLOCK IoStatus;
+    PIRP ListIrp;
 
     DPRINT1("NpFsdCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -655,16 +680,21 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
                                                TRUE,
                                                &Prefix,
                                                &Fcb);
-        if (!NT_SUCCESS(IoStatus.Status)) goto Quickie;
+        if (!NT_SUCCESS(IoStatus.Status))
+        {
+            goto Quickie;
+        }
     }
     else
     {
-        if (FileName.Length <= 2u || *FileName.Buffer != '\\')
+        if (FileName.Length <= sizeof(OBJ_NAME_PATH_SEPARATOR) ||
+            FileName.Buffer[0] != OBJ_NAME_PATH_SEPARATOR)
         {
             IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
             goto Quickie;
         }
-        Fcb = NpFindPrefix(&FileName, 1u, &Prefix);
+
+        Fcb = NpFindPrefix(&FileName, TRUE, &Prefix);
     }
 
     if (Prefix.Length)
@@ -683,7 +713,7 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
                                                    Parameters,
                                                    Process,
                                                    &LocalList,
-                                                   &Irp->IoStatus);
+                                                   &IoStatus);
             goto Quickie;
         }
         else
@@ -692,30 +722,40 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
             goto Quickie;
         }
     }
+
     if (Fcb->NodeType != NPFS_NTC_FCB)
     {
         IoStatus.Status = STATUS_OBJECT_NAME_INVALID;
         goto Quickie;
     }
 
-    Irp->IoStatus = NpCreateExistingNamedPipe(Fcb,
-                                              FileObject,
-                                              IoStack->Parameters.CreatePipe.
-                                              SecurityContext->DesiredAccess,
-                                              IoStack->Parameters.CreatePipe.
-                                              SecurityContext->AccessState,
-                                              IoStack->Flags &
-                                              SL_FORCE_ACCESS_CHECK ?
-                                              UserMode : Irp->RequestorMode,
-                                              Disposition,
-                                              ShareAccess,
-                                              Parameters,
-                                              Process,
-                                              &LocalList);
+    IoStatus = NpCreateExistingNamedPipe(Fcb,
+                                         FileObject,
+                                         IoStack->Parameters.CreatePipe.
+                                         SecurityContext->DesiredAccess,
+                                         IoStack->Parameters.CreatePipe.
+                                         SecurityContext->AccessState,
+                                         IoStack->Flags &
+                                         SL_FORCE_ACCESS_CHECK ?
+                                         UserMode : Irp->RequestorMode,
+                                         Disposition,
+                                         ShareAccess,
+                                         Parameters,
+                                         Process,
+                                         &LocalList);
 
 Quickie:
     ExReleaseResourceLite(&NpVcb->Lock);
-    ASSERT(IsListEmpty(&LocalList));
+
+    NextEntry = LocalList.Flink;
+    while (NextEntry != &LocalList)
+    {
+        ThisEntry = NextEntry;
+        NextEntry = NextEntry->Flink;
+
+        ListIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
+        IoCompleteRequest(ListIrp, IO_DISK_INCREMENT);
+    }
 
     FsRtlExitFileSystem();
 

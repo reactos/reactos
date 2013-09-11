@@ -437,7 +437,7 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
         ASSERT(ByteOffset < DataEntry->DataSize);
         ASSERT(DataQueue->EntriesInQueue == 1);
     }
-                    
+
     InsertTailList(&DataQueue->Queue, &DataEntry->QueueEntry);
 
     if (Status == STATUS_PENDING)

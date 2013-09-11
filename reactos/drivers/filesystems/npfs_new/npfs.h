@@ -181,6 +181,7 @@ typedef struct _NP_DCB
     LIST_ENTRY NotifyList;
     LIST_ENTRY NotifyList2;
     LIST_ENTRY FcbList;
+    ULONG Pad;
 
     //
     // Common Footer
@@ -212,6 +213,8 @@ typedef struct _NP_FCB
     //
     NP_CB_FOOTER;
 } NP_FCB, *PNP_FCB;
+
+C_ASSERT(FIELD_OFFSET(NP_FCB, PrefixTableEntry) == FIELD_OFFSET(NP_DCB, PrefixTableEntry));
 
 //
 // The nonpaged portion of the CCB

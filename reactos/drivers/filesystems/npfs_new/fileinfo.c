@@ -327,7 +327,7 @@ NpQueryPipeLocalInfo(IN PNP_FCB Fcb,
         {
             InfoBuffer->ReadDataAvailable = InQueue->BytesInQueue - InQueue->ByteOffset;
         }
-        InfoBuffer->WriteQuotaAvailable = OutQueue->QuotaUsed;
+        InfoBuffer->WriteQuotaAvailable = OutQueue->Quota - OutQueue->QuotaUsed;
     }
     else
     {
@@ -335,7 +335,7 @@ NpQueryPipeLocalInfo(IN PNP_FCB Fcb,
         {
             InfoBuffer->ReadDataAvailable = OutQueue->BytesInQueue - OutQueue->ByteOffset;
         }
-        InfoBuffer->WriteQuotaAvailable = InQueue->QuotaUsed;
+        InfoBuffer->WriteQuotaAvailable = OutQueue->Quota - InQueue->QuotaUsed;
     }
 
     return STATUS_SUCCESS;

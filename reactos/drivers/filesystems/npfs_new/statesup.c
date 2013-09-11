@@ -96,7 +96,7 @@ NpSetDisconnectedPipeState(IN PNP_CCB Ccb,
             break;
  
         case FILE_PIPE_CONNECTED_STATE:
-
+        
             EventBuffer = NonPagedCcb->EventBuffer[FILE_PIPE_CLIENT_END];
 
             while (Ccb->DataQueue[FILE_PIPE_INBOUND].QueueState != Empty)
@@ -121,12 +121,13 @@ NpSetDisconnectedPipeState(IN PNP_CCB Ccb,
 
             if (EventBuffer) KeSetEvent(EventBuffer->Event, IO_NO_INCREMENT, FALSE);
 
-            Status = STATUS_SUCCESS;
-            break;
+            // drop down on purpose... queue will be empty so flush code is nop
+            ASSERT(Ccb->DataQueue[FILE_PIPE_OUTBOUND].QueueState == Empty);
 
         case FILE_PIPE_CLOSING_STATE:
 
             EventBuffer = NonPagedCcb->EventBuffer[FILE_PIPE_CLIENT_END];
+
             while (Ccb->DataQueue[FILE_PIPE_INBOUND].QueueState != Empty)
             {
                 Irp = NpRemoveDataQueueEntry(&Ccb->DataQueue[FILE_PIPE_INBOUND], FALSE, List);
@@ -177,11 +178,11 @@ NpSetListeningPipeState(IN PNP_CCB Ccb,
     {
         case FILE_PIPE_DISCONNECTED_STATE:
 
-        Status = NpCancelWaiter(&NpVcb->WaitQueue,
-                                &Ccb->Fcb->FullName,
-                                STATUS_SUCCESS,
-                                List);
-        if (!NT_SUCCESS(Status)) return Status;
+            Status = NpCancelWaiter(&NpVcb->WaitQueue,
+                                    &Ccb->Fcb->FullName,
+                                    STATUS_SUCCESS,
+                                    List);
+            if (!NT_SUCCESS(Status)) return Status;
 
         //
         // Drop down on purpose
@@ -203,7 +204,7 @@ NpSetListeningPipeState(IN PNP_CCB Ccb,
 
             Ccb->NamedPipeState = FILE_PIPE_LISTENING_STATE;
             IoMarkIrpPending(Irp);
-            InsertTailList(List, &Irp->Tail.Overlay.ListEntry);
+            InsertTailList(&Ccb->IrpList, &Irp->Tail.Overlay.ListEntry);
             return STATUS_PENDING;
 
         case FILE_PIPE_CONNECTED_STATE:
