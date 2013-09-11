@@ -174,7 +174,10 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
       Flags |= FILE_SEQUENTIAL_ONLY;
 
    if(dwFlagsAndAttributes & FILE_FLAG_DELETE_ON_CLOSE)
+   {
       Flags |= FILE_DELETE_ON_CLOSE;
+      dwDesiredAccess |= DELETE;
+   }
 
    if(dwFlagsAndAttributes & FILE_FLAG_BACKUP_SEMANTICS)
    {
