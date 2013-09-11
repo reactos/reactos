@@ -159,6 +159,7 @@ reactos/dll/win32/rsabase         # Autosync
 reactos/dll/win32/rsaenh          # Synced to Wine-1.5.4
 reactos/dll/win32/sccbase         # Synced to Wine-1.5.19
 reactos/dll/win32/schannel        # Synced to Wine-1.5.19
+reactos/dll/win32/scrrun          # Synced to Wine-1.7.1
 reactos/dll/win32/secur32         # Forked
 reactos/dll/win32/security        # Forked (different .spec)
 reactos/dll/win32/sensapi         # Synced to Wine-1.5.4
