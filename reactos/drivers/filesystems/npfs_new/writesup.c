@@ -3,14 +3,14 @@
 NTSTATUS 
 NTAPI
 NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
-                 IN ULONG Mode, 
-                 IN PVOID OutBuffer, 
-                 IN ULONG OutBufferSize, 
-                 IN ULONG PipeType, 
-                 OUT PULONG BytesWritten, 
-                 IN PNP_CCB Ccb, 
-                 IN ULONG NamedPipeEnd, 
-                 IN PETHREAD Thread, 
+                 IN ULONG Mode,
+                 IN PVOID OutBuffer,
+                 IN ULONG OutBufferSize,
+                 IN ULONG PipeType,
+                 OUT PULONG BytesNotWritten,
+                 IN PNP_CCB Ccb,
+                 IN ULONG NamedPipeEnd,
+                 IN PETHREAD Thread,
                  IN PLIST_ENTRY List)
 {
     BOOLEAN HaveContext = FALSE, MoreProcessing, AllocatedBuffer;
@@ -23,7 +23,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
     PSECURITY_CLIENT_CONTEXT ClientContext;
     PAGED_CODE();
 
-    *BytesWritten = OutBufferSize;
+    *BytesNotWritten = OutBufferSize;
 
     MoreProcessing = TRUE;
     if ((PipeType != FILE_PIPE_MESSAGE_MODE) || (OutBufferSize))
@@ -33,7 +33,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
 
     for (DataEntry = NpGetNextRealDataQueueEntry(WriteQueue, List);
          ((WriteQueue->QueueState == ReadEntries) &&
-          ((*BytesWritten > 0) || (MoreProcessing)));
+         ((*BytesNotWritten > 0) || (MoreProcessing)));
          DataEntry = NpGetNextRealDataQueueEntry(WriteQueue, List))
     {
         DataSize = DataEntry->DataSize;
@@ -58,7 +58,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
              DataEntry->Irp->Overlay.AllocationSize.QuadPart = 0;
         }
         
-        BufferSize = *BytesWritten;
+        BufferSize = *BytesNotWritten;
         if (BufferSize >= DataSize) BufferSize = DataSize;
 
         if (DataEntry->DataEntryType != Unbuffered && BufferSize)
@@ -76,7 +76,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
         _SEH2_TRY
         {
              RtlCopyMemory(Buffer,
-                           (PVOID)((ULONG_PTR)OutBuffer + OutBufferSize - *BytesWritten),
+                           (PVOID)((ULONG_PTR)OutBuffer + OutBufferSize - *BytesNotWritten),
                            BufferSize);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -106,7 +106,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
         WriteIrp = NpRemoveDataQueueEntry(WriteQueue, TRUE, List);
         if (WriteIrp)
         {
-            *BytesWritten -= BufferSize;
+            *BytesNotWritten -= BufferSize;
             WriteIrp->IoStatus.Information = BufferSize;
 
             if (AllocatedBuffer)
@@ -115,7 +115,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
                 WriteIrp->Flags |= IRP_DEALLOCATE_BUFFER  | IRP_BUFFERED_IO | IRP_INPUT_OPERATION;
             }
 
-            if (!*BytesWritten)
+            if (!*BytesNotWritten)
             {
                 MoreProcessing = FALSE;
                 WriteIrp->IoStatus.Status = STATUS_SUCCESS;
@@ -140,7 +140,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
         }
     }
 
-    if (*BytesWritten > 0 || MoreProcessing)
+    if (*BytesNotWritten > 0 || MoreProcessing)
     {
         ASSERT(WriteQueue->QueueState != ReadEntries);
         Status = STATUS_MORE_PROCESSING_REQUIRED;

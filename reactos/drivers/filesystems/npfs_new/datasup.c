@@ -192,6 +192,7 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
     PSECURITY_CLIENT_CONTEXT ClientSecurityContext;
     BOOLEAN CompleteWrites, FirstEntry;
     PLIST_ENTRY NextEntry, ThisEntry;
+    PIRP LocalIrp;
 
     if (DeviceObject) IoReleaseCancelSpinLock(Irp->CancelIrql);
 
@@ -263,7 +264,7 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
 
     NpFreeClientSecurityContext(ClientSecurityContext);
     Irp->IoStatus.Status = STATUS_CANCELLED;
-    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
 
     NextEntry = List.Flink;
     while (NextEntry != &List)
@@ -271,8 +272,8 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
         ThisEntry = NextEntry;
         NextEntry = NextEntry->Flink;
 
-        Irp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        LocalIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
+        IoCompleteRequest(LocalIrp, IO_NAMED_PIPE_INCREMENT);
     }
 }
 
@@ -307,7 +308,10 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
                                             Irp ? Irp->Tail.Overlay.Thread :
                                             PsGetCurrentThread(),
                                             &ClientContext);
-        if (!NT_SUCCESS(Status)) return Status;
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
     }
 
     switch (Type)
@@ -317,29 +321,31 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
         case 3:
 
             ASSERT(Irp != NULL);
-            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool, sizeof(*DataEntry), NPFS_DATA_ENTRY_TAG);
-            if (DataEntry)
+            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool,
+                                                   sizeof(*DataEntry),
+                                                   NPFS_DATA_ENTRY_TAG);
+            if (!DataEntry)
             {
-                DataEntry->DataEntryType = Type;
-                DataEntry->QuotaInEntry = 0;
-                DataEntry->Irp = Irp;
-                DataEntry->DataSize = DataSize;
-                DataEntry->ClientSecurityContext = ClientContext;
-                ASSERT((DataQueue->QueueState == Empty) || (DataQueue->QueueState == Who));
-                Status = STATUS_PENDING;
-                break;
+                NpFreeClientSecurityContext(ClientContext);
+                return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            NpFreeClientSecurityContext(ClientContext);
-            return STATUS_INSUFFICIENT_RESOURCES;
-    
+            DataEntry->DataEntryType = Type;
+            DataEntry->QuotaInEntry = 0;
+            DataEntry->Irp = Irp;
+            DataEntry->DataSize = DataSize;
+            DataEntry->ClientSecurityContext = ClientContext;
+            ASSERT((DataQueue->QueueState == Empty) || (DataQueue->QueueState == Who));
+            Status = STATUS_PENDING;
+            break;
+
         case Buffered:
 
             EntrySize = sizeof(*DataEntry);
-            if (Who != Empty)
+            if (Who != ReadEntries)
             {
-                EntrySize = DataSize + sizeof(*DataEntry);
-                if ((DataSize + sizeof(*DataEntry)) < DataSize)
+                EntrySize += DataSize;
+                if (EntrySize < DataSize)
                 {
                     NpFreeClientSecurityContext(ClientContext);
                     return STATUS_INVALID_PARAMETER;
@@ -350,14 +356,16 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
             if (DataQueue->Quota - DataQueue->QuotaUsed < QuotaInEntry)
             {
                 QuotaInEntry = DataQueue->Quota - DataQueue->QuotaUsed;
-                HasSpace = 1;
+                HasSpace = TRUE;
             }
             else
             {
-                HasSpace = 0;
+                HasSpace = FALSE;
             }
 
-            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool, EntrySize, NPFS_DATA_ENTRY_TAG);
+            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool,
+                                                   EntrySize,
+                                                   NPFS_DATA_ENTRY_TAG);
             if (!DataEntry)
             {
                 NpFreeClientSecurityContext(ClientContext);
@@ -382,9 +390,9 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
             {
                 _SEH2_TRY
                 {
-                RtlCopyMemory(DataEntry + 1,
-                              Irp ? Irp->UserBuffer: Buffer,
-                              DataSize);
+                    RtlCopyMemory(DataEntry + 1,
+                                  Irp ? Irp->UserBuffer: Buffer,
+                                  DataSize);
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -399,12 +407,14 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
                 }
                 else
                 {
-                    DataEntry->Irp = 0;
+                    DataEntry->Irp = NULL;
                     Status = STATUS_SUCCESS;
                 }
-                
-                ASSERT((DataQueue->QueueState == Empty) || (DataQueue->QueueState == Who));
+
+                ASSERT((DataQueue->QueueState == Empty) ||
+                       (DataQueue->QueueState == Who));
             }
+            break;
 
         default:
             ASSERT(FALSE);
@@ -429,7 +439,8 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
     DataQueue->QuotaUsed += DataEntry->QuotaInEntry;
     DataQueue->QueueState = Who;
     DataQueue->BytesInQueue += DataEntry->DataSize;
-    ++DataQueue->EntriesInQueue;
+    DataQueue->EntriesInQueue++;
+
     if (ByteOffset)
     {
         DataQueue->ByteOffset = ByteOffset;
@@ -448,9 +459,8 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
 
         IoSetCancelRoutine(Irp, NpCancelDataQueueIrp);
 
-        if (Irp->Cancel)
+        if ((Irp->Cancel) && (IoSetCancelRoutine(Irp, NULL)))
         {
-            IoSetCancelRoutine(Irp, NULL);
             NpCancelDataQueueIrp(NULL, Irp);
         }
     }

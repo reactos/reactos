@@ -12,6 +12,7 @@ NpCommonCleanup(IN PDEVICE_OBJECT DeviceObject,
     PNP_CCB Ccb;
     ULONG NamedPipeEnd;
     PLIST_ENTRY ThisEntry, NextEntry;
+    PIRP LocalIrp;
     PAGED_CODE();
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -41,8 +42,8 @@ NpCommonCleanup(IN PDEVICE_OBJECT DeviceObject,
         ThisEntry = NextEntry;
         NextEntry = NextEntry->Flink;
 
-        Irp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        LocalIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
+        IoCompleteRequest(LocalIrp, IO_NAMED_PIPE_INCREMENT);
     }
 
     return STATUS_SUCCESS;

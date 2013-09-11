@@ -144,6 +144,7 @@ NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
     IO_STATUS_BLOCK IoStatus;
     LIST_ENTRY List;
     PLIST_ENTRY NextEntry, ThisEntry;
+    PIRP LocalIrp;
     PAGED_CODE();
     NpSlowReadCalls++;
 
@@ -168,8 +169,8 @@ NpFsdRead(IN PDEVICE_OBJECT DeviceObject,
         ThisEntry = NextEntry;
         NextEntry = NextEntry->Flink;
 
-        Irp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        LocalIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
+        IoCompleteRequest(LocalIrp, IO_NAMED_PIPE_INCREMENT);
     }
 
     FsRtlExitFileSystem();

@@ -61,8 +61,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     /* Initialize the device object */
     NpfsDeviceObject = DeviceObject;
-    DeviceObject->Flags |= DO_DIRECT_IO;
-    DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+    DeviceObject->Flags |= DO_LONG_TERM_REQUESTS;
 
     /* Initialize the Volume Control Block (VCB) */
     NpVcb = DeviceObject->DeviceExtension;

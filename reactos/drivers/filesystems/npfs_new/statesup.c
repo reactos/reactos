@@ -235,6 +235,7 @@ NpSetClosingPipeState(IN PNP_CCB Ccb,
     PLIST_ENTRY NextEntry;
     PNP_DATA_QUEUE ReadQueue, WriteQueue, DataQueue;
     PNP_EVENT_BUFFER EventBuffer;
+    PIRP ListIrp;
 
     NonPagedCcb = Ccb->NonPagedCcb;
     Fcb = Ccb->Fcb;
@@ -249,11 +250,11 @@ NpSetClosingPipeState(IN PNP_CCB Ccb,
             {
                 NextEntry = RemoveHeadList(&Ccb->IrpList);
 
-                Irp = CONTAINING_RECORD(NextEntry, IRP, Tail.Overlay.ListEntry);
+                ListIrp = CONTAINING_RECORD(NextEntry, IRP, Tail.Overlay.ListEntry);
 
-                if (IoSetCancelRoutine(Irp, NULL))
+                if (IoSetCancelRoutine(ListIrp, NULL))
                 {
-                    Irp->IoStatus.Status = STATUS_PIPE_BROKEN;
+                    ListIrp->IoStatus.Status = STATUS_PIPE_BROKEN;
                     InsertTailList(List, NextEntry);
                 }
                 else
@@ -297,11 +298,11 @@ NpSetClosingPipeState(IN PNP_CCB Ccb,
 
             while (DataQueue->QueueState != Empty)
             {
-                Irp = NpRemoveDataQueueEntry(DataQueue, FALSE, List);
-                if (Irp)
+                ListIrp = NpRemoveDataQueueEntry(DataQueue, FALSE, List);
+                if (ListIrp)
                 {
-                    Irp->IoStatus.Status = STATUS_PIPE_BROKEN;
-                    InsertTailList(List, &Irp->Tail.Overlay.ListEntry);
+                    ListIrp->IoStatus.Status = STATUS_PIPE_BROKEN;
+                    InsertTailList(List, &ListIrp->Tail.Overlay.ListEntry);
                 }
             }
 
@@ -342,21 +343,21 @@ NpSetClosingPipeState(IN PNP_CCB Ccb,
 
             while (ReadQueue->QueueState != Empty)
             {
-                Irp = NpRemoveDataQueueEntry(ReadQueue, FALSE, List);
-                if (Irp)
+                ListIrp = NpRemoveDataQueueEntry(ReadQueue, FALSE, List);
+                if (ListIrp)
                 {
-                    Irp->IoStatus.Status = STATUS_PIPE_BROKEN;
-                    InsertTailList(List, &Irp->Tail.Overlay.ListEntry);
+                    ListIrp->IoStatus.Status = STATUS_PIPE_BROKEN;
+                    InsertTailList(List, &ListIrp->Tail.Overlay.ListEntry);
                 }
             }
 
-            while (WriteQueue->QueueState == WriteEntries)
+            while (WriteQueue->QueueState == ReadEntries)
             {
-                Irp = NpRemoveDataQueueEntry(WriteQueue, FALSE, List);
-                if (Irp)
+                ListIrp = NpRemoveDataQueueEntry(WriteQueue, FALSE, List);
+                if (ListIrp)
                 {
-                    Irp->IoStatus.Status = STATUS_PIPE_BROKEN;
-                    InsertTailList(List, &Irp->Tail.Overlay.ListEntry);
+                    ListIrp->IoStatus.Status = STATUS_PIPE_BROKEN;
+                    InsertTailList(List, &ListIrp->Tail.Overlay.ListEntry);
                 }
             }
 

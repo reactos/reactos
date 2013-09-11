@@ -217,11 +217,6 @@ NpFsdCreate(IN PDEVICE_OBJECT DeviceObject,
     FileName = FileObject->FileName;
     DesiredAccess = IoStack->Parameters.CreatePipe.SecurityContext->DesiredAccess;
 
-    DPRINT1("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
-    DPRINT1("FileObject %p\n", FileObject);
-    DPRINT1("FileName %wZ\n", &FileObject->FileName);
-    DPRINT1("FileName->Length: %hu  RelatedFileObject: %p\n", FileName.Length, RelatedFileObject);
-
     FsRtlEnterFileSystem();
     ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
 
@@ -346,7 +341,7 @@ Quickie:
         NextEntry = NextEntry->Flink;
 
         ListIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(ListIrp, IO_DISK_INCREMENT);
+        IoCompleteRequest(ListIrp, IO_NAMED_PIPE_INCREMENT);
     }
 
     FsRtlExitFileSystem();
@@ -636,8 +631,6 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     IO_STATUS_BLOCK IoStatus;
     PIRP ListIrp;
 
-    DPRINT1("NpFsdCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
-
     InitializeListHead(&LocalList);
     Process = IoGetRequestorProcess(Irp);
 
@@ -658,10 +651,6 @@ NpFsdCreateNamedPipe(IN PDEVICE_OBJECT DeviceObject,
 
     FsRtlEnterFileSystem();
     ExAcquireResourceExclusiveLite(&NpVcb->Lock, TRUE);
-
-    DPRINT1("FileObject %p\n", FileObject);
-    DPRINT1("FileName %wZ\n", &FileObject->FileName);
-    DPRINT1("FileName->Length: %hu  RelatedFileObject: %p\n", FileName.Length, RelatedFileObject);
 
     if (RelatedFileObject)
     {
@@ -754,13 +743,13 @@ Quickie:
         NextEntry = NextEntry->Flink;
 
         ListIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(ListIrp, IO_DISK_INCREMENT);
+        IoCompleteRequest(ListIrp, IO_NAMED_PIPE_INCREMENT);
     }
 
     FsRtlExitFileSystem();
 
     Irp->IoStatus = IoStatus;
-    IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+    IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
     return IoStatus.Status;
 }
 

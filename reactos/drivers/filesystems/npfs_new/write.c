@@ -40,21 +40,25 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
     NonPagedCcb = Ccb->NonPagedCcb;
     ExAcquireResourceExclusiveLite(&NonPagedCcb->Lock, TRUE);
 
-    if (Ccb->NamedPipeState == FILE_PIPE_DISCONNECTED_STATE)
+    if (Ccb->NamedPipeState != FILE_PIPE_CONNECTED_STATE)
     {
-        IoStatus->Status = STATUS_PIPE_DISCONNECTED;
+        if (Ccb->NamedPipeState == FILE_PIPE_DISCONNECTED_STATE)
+        {
+            IoStatus->Status = STATUS_PIPE_DISCONNECTED;
+        }
+        else if (Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE)
+        {
+            IoStatus->Status = STATUS_PIPE_LISTENING;
+        }
+        else
+        {
+            ASSERT(Ccb->NamedPipeState == FILE_PIPE_CLOSING_STATE);
+            IoStatus->Status = STATUS_PIPE_CLOSING;
+        }
+
         WriteOk = TRUE;
         goto Quickie;
     }
-
-    if (Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE || Ccb->NamedPipeState == FILE_PIPE_CLOSING_STATE)
-    {
-        IoStatus->Status = Ccb->NamedPipeState != FILE_PIPE_LISTENING_STATE ? STATUS_PIPE_LISTENING : STATUS_PIPE_CLOSING;
-        WriteOk = TRUE;
-        goto Quickie;
-    }
-
-    ASSERT(Ccb->NamedPipeState == FILE_PIPE_CONNECTED_STATE);
 
     if ((NamedPipeEnd == FILE_PIPE_SERVER_END && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_INBOUND) ||
         (NamedPipeEnd == FILE_PIPE_CLIENT_END && Ccb->Fcb->NamedPipeConfiguration == FILE_PIPE_OUTBOUND))
@@ -111,6 +115,7 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
                               Thread,
                               List);
     IoStatus->Status = Status;
+
     if (Status == STATUS_MORE_PROCESSING_REQUIRED)
     {
         ASSERT(WriteQueue->QueueState != ReadEntries);
@@ -153,6 +158,7 @@ NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
     IO_STATUS_BLOCK IoStatus;
     LIST_ENTRY List;
     PLIST_ENTRY NextEntry, ThisEntry;
+    PIRP ListIrp;
     PAGED_CODE();
     NpSlowWriteCalls++;
 
@@ -178,8 +184,8 @@ NpFsdWrite(IN PDEVICE_OBJECT DeviceObject,
         ThisEntry = NextEntry;
         NextEntry = NextEntry->Flink;
 
-        Irp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
-        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        ListIrp = CONTAINING_RECORD(ThisEntry, IRP, Tail.Overlay.ListEntry);
+        IoCompleteRequest(ListIrp, IO_NAMED_PIPE_INCREMENT);
     }
 
     FsRtlExitFileSystem();
