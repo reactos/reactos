@@ -1890,7 +1890,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Return the exception code */
             if (OpenPacket->EaBuffer != NULL) ExFreePool(OpenPacket->EaBuffer);
             ExFreePool(OpenPacket);
-            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }
