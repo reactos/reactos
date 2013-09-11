@@ -1008,9 +1008,9 @@ InitializePool(IN POOL_TYPE PoolType,
         //
         // During development, print this out so we can see what's happening
         //
-        DPRINT1("EXPOOL: Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
+        DPRINT("EXPOOL: Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
                 PoolTrackTable, PoolTrackTableSize * sizeof(POOL_TRACKER_TABLE));
-        DPRINT1("EXPOOL: Big Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
+        DPRINT("EXPOOL: Big Pool Tracker Table at: 0x%p with 0x%lx bytes\n",
                 PoolBigPageTable, PoolBigPageTableSize * sizeof(POOL_TRACKER_BIG_PAGES));
 
         //

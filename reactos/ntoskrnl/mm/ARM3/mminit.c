@@ -1180,7 +1180,7 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Release the PFN lock and flush the TLB */
-    DPRINT1("Loader pages freed: %lx\n", LoaderPages);
+    DPRINT("Loader pages freed: %lx\n", LoaderPages);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     KeFlushCurrentTb();
 

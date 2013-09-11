@@ -56,7 +56,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     StackBase = Teb->NtTib.StackBase;
     DeallocationStack = Teb->DeallocationStack;
     GuranteedSize = Teb->GuaranteedStackBytes;
-    DPRINT1("Handling guard page fault with Stacks Addresses 0x%p and 0x%p, guarantee: %lx\n",
+    DPRINT("Handling guard page fault with Stacks Addresses 0x%p and 0x%p, guarantee: %lx\n",
             StackBase, DeallocationStack, GuranteedSize);
 
     /* Guarantees make this code harder, for now, assume there aren't any */
@@ -101,7 +101,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     if ((NT_SUCCESS(Status) || (Status == STATUS_ALREADY_COMMITTED)))
     {
         /* We did it! */
-        DPRINT1("Guard page handled successfully for %p\n", Address);
+        DPRINT("Guard page handled successfully for %p\n", Address);
         return STATUS_PAGE_FAULT_GUARD_PAGE;
     }
 
