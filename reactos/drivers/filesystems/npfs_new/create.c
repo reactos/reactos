@@ -148,8 +148,8 @@ NpCreateClientEnd(IN PNP_FCB Fcb,
     SeUnlockSubjectContext(SubjectSecurityContext);
     if (!AccessGranted) return IoStatus;
 
-    if (((AccessGranted & FILE_READ_DATA) && (NamedPipeConfiguration == FILE_PIPE_INBOUND)) ||
-        ((AccessGranted & FILE_WRITE_DATA) && (NamedPipeConfiguration == FILE_PIPE_OUTBOUND)))
+    if (((GrantedAccess & FILE_READ_DATA) && (NamedPipeConfiguration == FILE_PIPE_INBOUND)) ||
+        ((GrantedAccess & FILE_WRITE_DATA) && (NamedPipeConfiguration == FILE_PIPE_OUTBOUND)))
     {
         IoStatus.Status = STATUS_ACCESS_DENIED;
         return IoStatus;
@@ -391,7 +391,6 @@ NpCreateExistingNamedPipe(IN PNP_FCB Fcb,
         AccessState->RemainingDesiredAccess &= ~(GrantedAccess | 0x2000000);
     }
 
-    
     ObjectTypeName.Buffer = L"NamedPipe";
     ObjectTypeName.Length = 18;
     SeOpenObjectAuditAlarm(&ObjectTypeName,
