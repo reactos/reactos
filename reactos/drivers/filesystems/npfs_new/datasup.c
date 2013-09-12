@@ -175,9 +175,9 @@ NpGetNextRealDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
     PLIST_ENTRY NextEntry;
     PAGED_CODE();
 
-    DataEntry = NULL;
-
     NextEntry = DataQueue->Queue.Flink;
+    DataEntry = CONTAINING_RECORD(NextEntry, NP_DATA_QUEUE_ENTRY, QueueEntry);
+
     while (NextEntry != &DataQueue->Queue)
     {
         DataEntry = CONTAINING_RECORD(NextEntry, NP_DATA_QUEUE_ENTRY, QueueEntry);

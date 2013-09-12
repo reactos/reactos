@@ -351,6 +351,8 @@ NpReleaseVcb(VOID)
     ExReleaseResourceLite(&NpVcb->Lock);
 }
 
+
+
 //
 // Function to process deferred IRPs outside the VCB lock but still within the
 // critical region

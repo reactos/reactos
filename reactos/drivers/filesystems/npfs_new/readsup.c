@@ -75,7 +75,7 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
             }
 
             DataLength = Offset;
-            if (Offset >= RemainingSize) DataLength = RemainingSize;
+            if (DataLength >= RemainingSize) DataLength = RemainingSize;
 
             _SEH2_TRY
             {
@@ -130,14 +130,17 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
                         InsertTailList(List, &Irp->Tail.Overlay.ListEntry);
                     }
                 }
+
                 if (Mode == FILE_PIPE_MESSAGE_MODE)
                 {
                     Status.Status = STATUS_SUCCESS;
                     break;
                 }
+
                 ASSERT(!ReadOverflowOperation);
             }
         }
+
         if (Peek)
         {
             DataEntry = CONTAINING_RECORD(DataEntry->QueueEntry.Flink,

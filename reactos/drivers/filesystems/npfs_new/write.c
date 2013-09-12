@@ -36,7 +36,7 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
     PNP_DATA_QUEUE WriteQueue;
     NTSTATUS Status;
     PNP_EVENT_BUFFER EventBuffer;
-    ULONG BytesWritten, NamedPipeEnd;
+    ULONG BytesWritten, NamedPipeEnd, ReadMode;
     PAGED_CODE();
 
     IoStatus->Information = 0;
@@ -91,10 +91,12 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
     if (NamedPipeEnd == FILE_PIPE_SERVER_END)
     {
         WriteQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
+        ReadMode = Ccb->ReadMode[FILE_PIPE_CLIENT_END];
     }
     else
     {
         WriteQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
+        ReadMode = Ccb->ReadMode[FILE_PIPE_SERVER_END];
     }
 
     EventBuffer = NonPagedCcb->EventBuffer[NamedPipeEnd];
@@ -122,7 +124,7 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
     }
 
     Status = NpWriteDataQueue(WriteQueue,
-                              Ccb->ReadMode[NamedPipeEnd],
+                              ReadMode,
                               Buffer,
                               DataSize,
                               Ccb->Fcb->NamedPipeType,
@@ -136,8 +138,8 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
     if (Status == STATUS_MORE_PROCESSING_REQUIRED)
     {
         ASSERT(WriteQueue->QueueState != ReadEntries);
-        if ((Ccb->CompletionMode[NamedPipeEnd] == FILE_PIPE_COMPLETE_OPERATION || !Irp)
-            && WriteQueue->Quota - WriteQueue->QuotaUsed < BytesWritten)
+        if ((Ccb->CompletionMode[NamedPipeEnd] == FILE_PIPE_COMPLETE_OPERATION || !Irp) &&
+            ((WriteQueue->Quota - WriteQueue->QuotaUsed) < BytesWritten))
         {
             IoStatus->Information = DataSize - BytesWritten;
             IoStatus->Status = STATUS_SUCCESS;

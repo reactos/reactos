@@ -37,11 +37,11 @@ NpCommonFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
 
     if (NamedPipeEnd == FILE_PIPE_SERVER_END)
     {
-        FlushQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
+        FlushQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
     }
     else
     {
-        FlushQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
+        FlushQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
     }
 
     if (FlushQueue->QueueState == WriteEntries)
@@ -80,6 +80,12 @@ NpFsdFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
 
     NpReleaseVcb();
     FsRtlExitFileSystem();
+
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NAMED_PIPE_INCREMENT);
+    }
 
     return Status;
 }
