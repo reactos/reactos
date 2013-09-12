@@ -1838,7 +1838,7 @@ GetProcessVersion(IN DWORD ProcessId)
             ProcessHandle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION,
                                         FALSE,
                                         ProcessId);
-            if (!ProcessHandle) return 0;
+            if (!ProcessHandle) _SEH2_YIELD(return 0);
 
             /* Try to find out where its PEB lives */
             Status = NtQueryInformationProcess(ProcessHandle,

@@ -418,7 +418,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 #endif
 
             /* Validate them */
-            if (StackEnd <= StackBegin) return 0;
+            if (StackEnd <= StackBegin) _SEH2_YIELD(return 0);
             ProbeForRead((PVOID)StackBegin,
                          StackEnd - StackBegin,
                          sizeof(CHAR));

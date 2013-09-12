@@ -1109,7 +1109,7 @@ DoAgain:
                 
                 /* Try with exclusive KCB lock */
                 CmpConvertKcbSharedToExclusive(Kcb);
-                goto DoAgain;
+                _SEH2_YIELD(goto DoAgain);
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1278,7 +1278,7 @@ DoAgain:
 
             /* Try with exclusive KCB lock */
             CmpConvertKcbSharedToExclusive(Kcb);
-            goto DoAgain;
+            _SEH2_YIELD(goto DoAgain);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
