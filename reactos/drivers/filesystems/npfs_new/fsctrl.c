@@ -91,8 +91,29 @@ NTAPI
 NpImpersonate(IN PDEVICE_OBJECT DeviceObject,
               IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG NamedPipeEnd;
+    PNP_CCB Ccb;
+    NTSTATUS Status;
+    NODE_TYPE_CODE NodeTypeCode;
+    PIO_STACK_LOCATION IoStack;
+    PAGED_CODE();
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    NodeTypeCode = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
+    if (NodeTypeCode == NPFS_NTC_CCB)
+    {
+        if (NamedPipeEnd == FILE_PIPE_SERVER_END)
+        {
+            Status = NpImpersonateClientContext(Ccb);
+        }
+        else
+        {
+            Status = STATUS_ILLEGAL_FUNCTION;
+        }
+    }
+
+    return Status;
 }
 
 NTSTATUS

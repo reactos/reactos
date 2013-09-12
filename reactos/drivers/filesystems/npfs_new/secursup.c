@@ -15,6 +15,26 @@
 
 /* FUNCTIONS ******************************************************************/
 
+NTSTATUS
+NTAPI
+NpImpersonateClientContext(IN PNP_CCB Ccb)
+{
+    NTSTATUS Status;
+    PSECURITY_CLIENT_CONTEXT ClientContext;
+    PAGED_CODE();
+
+    ClientContext = Ccb->ClientContext;
+    if (ClientContext)
+    {
+        Status = SeImpersonateClientEx(ClientContext, NULL);
+    }
+    else
+    {
+        Status = STATUS_CANNOT_IMPERSONATE;
+    }
+    return Status;
+}
+
 VOID
 NTAPI
 NpFreeClientSecurityContext(IN PSECURITY_CLIENT_CONTEXT ClientContext)
