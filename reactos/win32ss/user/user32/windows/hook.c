@@ -211,7 +211,7 @@ CallNextHookEx(
   PHOOK pHook, phkNext;
   LRESULT lResult = 0;
 
-  GetConnected();
+  //GetConnected();
 
   ClientInfo = GetWin32ClientInfo();
 

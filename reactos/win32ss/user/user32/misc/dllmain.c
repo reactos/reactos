@@ -208,6 +208,47 @@ PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
     User32CallGetCharsetInfo,
 };
 
+/*
+* @unimplemented
+*/
+BOOL
+WINAPI
+ClientThreadSetup(VOID)
+{
+    //
+    // This routine, in Windows, does a lot of what Init does, but in a radically
+    // different way.
+    //
+    // In Windows, because CSRSS's threads have TIF_CSRSSTHREAD set (we have this
+    // flag in ROS but not sure if we use it), the xxxClientThreadSetup callback
+    // isn't made when CSRSS first loads WINSRV.DLL (which loads USER32.DLL).
+    //
+    // However, all the other calls are made as normal, and WINSRV.DLL loads
+    // USER32.dll, the DllMain runs, and eventually the first NtUser system call is
+    // made which initializes Win32k (and initializes the thread, but as mentioned
+    // above, the thread is marked as TIF_CSRSSTHREAD.
+    //
+    // In the DllMain of User32, there is also a CsrClientConnectToServer call to
+    // server 2 (winsrv). When this is done from CSRSS, the "InServer" flag is set,
+    // so user32 will remember that it's running inside of CSRSS. Also, another
+    // flag, called "FirstThread" is manually set by DllMain.
+    //
+    // Then, WINSRV finishes loading, and CSRSRV starts the API thread/loop. This
+    // code then calls CsrConnectToUser, which calls... ClientThreadStartup. Now
+    // this routine detects that it's in the server process, which means it's CSRSS
+    // and that the callback never happened. It does some first-time-Win32k connection
+    // initialization and caches a bunch of things -- if it's the first thread. It also
+    // acquires a critical section to initialize GDI -- and then resets the first thread
+    // flag.
+    //
+    // For now, we'll do none of this, but to support Windows' CSRSRV.DLL which calls
+    // CsrConnectToUser, we'll pretend we "did something" here. Then the rest will
+    // continue as normal.
+    //
+    UNIMPLEMENTED;
+    return TRUE;
+}
+
 BOOL
 Init(VOID)
 {
@@ -310,38 +351,12 @@ DllMain(
    return TRUE;
 }
 
-
-VOID
-FASTCALL
-GetConnected(VOID)
-{
-  USERCONNECT UserCon;
-//  ERR("GetConnected\n");
-
-  if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
-     NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-
-  if (gpsi && g_ppi) return;
-// FIXME HAX: Due to the "Dll Initialization Bug" we have to call this too.
-  GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
-
-  NtUserProcessConnect( NtCurrentProcess(),
-                         &UserCon,
-                         sizeof(USERCONNECT));
-
-  g_ppi = GetWin32ClientInfo()->ppi;
-  g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
-  gpsi = SharedPtrToUser(UserCon.siClient.psi);
-  gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
-  gHandleEntries = SharedPtrToUser(gHandleTable->handles);  
-  
-}
-
 NTSTATUS
 WINAPI
 User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   ERR("GetConnected\n");
+  ClientThreadSetup();
   return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);  
 }
 

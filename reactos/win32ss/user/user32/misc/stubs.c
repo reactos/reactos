@@ -222,17 +222,6 @@ GetAccCursorInfo ( PCURSORINFO pci )
 /*
  * @unimplemented
  */
-BOOL
-WINAPI
-ClientThreadSetup ( VOID )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 UINT
 WINAPI
 GetRawInputDeviceInfoW(

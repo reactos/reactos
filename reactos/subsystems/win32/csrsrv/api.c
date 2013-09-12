@@ -1016,7 +1016,6 @@ PCSR_THREAD
 NTAPI
 CsrConnectToUser(VOID)
 {
-#if 0 // FIXME: This code is OK, however it is ClientThreadSetup which sucks.
     NTSTATUS Status;
     ANSI_STRING DllName;
     UNICODE_STRING TempName;
@@ -1073,21 +1072,6 @@ CsrConnectToUser(VOID)
 
     /* Return it */
     return CsrThread;
-
-#else
-
-    PTEB Teb = NtCurrentTeb();
-    PCSR_THREAD CsrThread;
-
-    /* Save pointer to this thread in TEB */
-    CsrAcquireProcessLock();
-    CsrThread = CsrLocateThreadInProcess(NULL, &Teb->ClientId);
-    CsrReleaseProcessLock();
-    if (CsrThread) Teb->CsrClientThread = CsrThread;
-
-    /* Return it */
-    return CsrThread;
-#endif
 }
 
 /*++
