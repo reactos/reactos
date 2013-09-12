@@ -97,7 +97,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             if (AllocatedBuffer) ExFreePool(Buffer);
-            return _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
 

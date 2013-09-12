@@ -402,7 +402,7 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     NpFreeClientSecurityContext(ClientContext);
-                    return _SEH2_GetExceptionCode();
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
                 }
                 _SEH2_END;
 
