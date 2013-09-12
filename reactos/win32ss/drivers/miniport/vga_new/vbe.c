@@ -44,7 +44,7 @@ IsVesaBiosOk(IN PVIDEO_PORT_INT10_INTERFACE Interface,
     CHAR Version[21];
 
     /* If the broken VESA bios found, turn VESA off */
-    VideoPortDebugPrint(0, "Vendor: %s Product: %s Revision: %s (%lx)\n", Vendor, Product, Revision, OemRevision);
+    VideoDebugPrint(0, "Vendor: %s Product: %s Revision: %s (%lx)\n", Vendor, Product, Revision, OemRevision);
     for (i = 0; i < (sizeof(BrokenVesaBiosList) / sizeof(PCHAR)); i++)
     {
         if (!strncmp(Product, BrokenVesaBiosList[i], strlen(BrokenVesaBiosList[i]))) return FALSE;
@@ -69,7 +69,7 @@ IsVesaBiosOk(IN PVIDEO_PORT_INT10_INTERFACE Interface,
     }
 
     /* VESA ok */
-    //VideoPortDebugPrint(0, "Vesa ok\n");
+    VideoDebugPrint(0, "Vesa ok\n");
     return TRUE;
 }
 
@@ -153,7 +153,7 @@ VbeSetColorLookup(IN PHW_DEVICE_EXTENSION VgaExtension,
 
     Entries = ClutBuffer->NumEntries;
     
-    VideoPortDebugPrint(0, "Setting %lu entries.\n", Entries);
+    VideoDebugPrint(0, "Setting %lu entries.\n", Entries);
     
     /* 
      * For Vga compatible modes, write them directly.
@@ -209,7 +209,7 @@ VbeSetColorLookup(IN PHW_DEVICE_EXTENSION VgaExtension,
     Status = VgaExtension->Int10Interface.Int10CallBios(Context, &BiosArguments);
     if (Status != NO_ERROR) return ERROR_INVALID_PARAMETER;
     VideoPortFreePool(VgaExtension, VesaClut);
-    VideoPortDebugPrint(Error, "VBE Status: %lx\n", BiosArguments.Eax);
+    VideoDebugPrint(Error, "VBE Status: %lx\n", BiosArguments.Eax);
     if (VBE_GETRETURNCODE(BiosArguments.Eax) == VBE_SUCCESS)
         return NO_ERROR;
     return ERROR_INVALID_PARAMETER;
