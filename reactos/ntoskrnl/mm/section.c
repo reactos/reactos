@@ -161,6 +161,7 @@ static ULONG SectionCharacteristicsToProtect[16] =
     PAGE_EXECUTE_READWRITE, /* 15 = WRITABLE, READABLE, EXECUTABLE, SHARED */
 };
 
+extern ULONG MmMakeFileAccess [];
 ACCESS_MASK NTAPI MiArm3GetCorrectFileAccessMask(IN ACCESS_MASK SectionPageProtection);
 static GENERIC_MAPPING MmpSectionMapping = {
          STANDARD_RIGHTS_READ | SECTION_MAP_READ | SECTION_QUERY,
@@ -766,7 +767,7 @@ l_ReadHeaderFromFile:
         *Flags |= EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED;
 
     /* Success */
-    nStatus = STATUS_ROS_EXEFMT_LOADED_FORMAT | EXEFMT_LOADED_PE32;
+    nStatus = STATUS_SUCCESS;// STATUS_ROS_EXEFMT_LOADED_FORMAT | EXEFMT_LOADED_PE32;
 
 l_Return:
     if(pBuffer)
@@ -4867,8 +4868,19 @@ MmCreateSection (OUT PVOID  * Section,
                  IN PFILE_OBJECT  FileObject  OPTIONAL)
 {
     NTSTATUS Status;
-    ULONG Protection, FileAccess;
+    ULONG Protection;
     PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
+
+    /* Convert section flag to page flag */
+    if (AllocationAttributes & SEC_NOCACHE) SectionPageProtection |= PAGE_NOCACHE;
+
+    /* Check to make sure the protection is correct. Nt* does this already */
+    Protection = MiMakeProtectionMask(SectionPageProtection);
+    if (Protection == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("Page protection is invalid\n");
+        return STATUS_INVALID_PAGE_PROTECTION;
+    }
 
     /* Check if an ARM3 section is being created instead */
     if (!(AllocationAttributes & (SEC_IMAGE | SEC_PHYSICALMEMORY)))
@@ -4886,55 +4898,43 @@ MmCreateSection (OUT PVOID  * Section,
         }
     }
 
-    /*
-     * Check the protection
-     */
-    Protection = SectionPageProtection & ~(PAGE_GUARD | PAGE_NOCACHE);
-    if (Protection != PAGE_READONLY &&
-        Protection != PAGE_READWRITE &&
-        Protection != PAGE_WRITECOPY &&
-        Protection != PAGE_EXECUTE &&
-        Protection != PAGE_EXECUTE_READ &&
-        Protection != PAGE_EXECUTE_READWRITE &&
-        Protection != PAGE_EXECUTE_WRITECOPY)
+    /* Check if this is going to be a data or image backed file section */
+    if ((FileHandle) || (FileObject))
     {
-        return STATUS_INVALID_PAGE_PROTECTION;
-    }
+        /* These cannot be mapped with large pages */
+        if (AllocationAttributes & SEC_LARGE_PAGES)
+        {
+            DPRINT1("Large pages cannot be used with an image mapping\n");
+            return STATUS_INVALID_PARAMETER_6;
+        }
 
-    if ((DesiredAccess & SECTION_MAP_WRITE) &&
-        (Protection == PAGE_READWRITE ||
-         Protection == PAGE_EXECUTE_READWRITE) &&
-       !(AllocationAttributes & SEC_IMAGE))
-    {
-        DPRINT("Creating a section with WRITE access\n");
-        FileAccess = FILE_READ_DATA | FILE_WRITE_DATA | SYNCHRONIZE;
+        /* Did the caller pass an object? */
+        if (FileObject)
+        {
+            /* Reference the object directly */
+            ObReferenceObject(FileObject);
+        }
+        else
+        {
+            /* Reference the file handle to get the object */
+            Status = ObReferenceObjectByHandle(FileHandle,
+                                               MmMakeFileAccess[Protection],
+                                               IoFileObjectType,
+                                               ExGetPreviousMode(),
+                                               (PVOID*)&FileObject,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to get a handle to the FO: %lx\n", Status);
+                return Status;
+            }
+        }
     }
     else
     {
-        DPRINT("Creating a section with READ access\n");
-        FileAccess = FILE_READ_DATA | SYNCHRONIZE;
+        /* A handle must be supplied with SEC_IMAGE, as this is the no-handle path */
+        if (AllocationAttributes & SEC_IMAGE) return STATUS_INVALID_FILE_FOR_SECTION;
     }
-
-    /* FIXME: somehow combine this with the above checks */
-    if (AllocationAttributes & SEC_IMAGE)
-        FileAccess = MiArm3GetCorrectFileAccessMask(SectionPageProtection);
-
-    if (!FileObject && FileHandle)
-    {
-        Status = ObReferenceObjectByHandle(FileHandle,
-                                           FileAccess,
-                                           IoFileObjectType,
-                                           ExGetPreviousMode(),
-                                           (PVOID *)&FileObject,
-                                           NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("Failed: 0x%08lx\n", Status);
-            return Status;
-        }
-    }
-    else if (FileObject)
-        ObReferenceObject(FileObject);
 
 #ifndef NEWCC // A hack for initializing caching.
     // This is needed only in the old case.
@@ -4955,7 +4955,10 @@ MmCreateSection (OUT PVOID  * Section,
                             &ByteOffset,
                             NULL);
         if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
+        {
+            DPRINT1("CC failure: %lx\n", Status);
             return Status;
+        }
         // Caching is initialized...
     }
 #endif
