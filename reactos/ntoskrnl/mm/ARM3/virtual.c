@@ -883,7 +883,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
                 //
                 // Return the error
                 //
-                return STATUS_WORKING_SET_QUOTA;
+                _SEH2_YIELD(return STATUS_WORKING_SET_QUOTA);
             }
 
             //
@@ -3343,7 +3343,7 @@ NtGetWriteWatch(IN HANDLE ProcessHandle,
             //
             // Catch illegal base address
             //
-            if (BaseAddress > MM_HIGHEST_USER_ADDRESS) return STATUS_INVALID_PARAMETER_2;
+            if (BaseAddress > MM_HIGHEST_USER_ADDRESS) _SEH2_YIELD(return STATUS_INVALID_PARAMETER_2);
 
             //
             // Catch illegal region size
@@ -3353,7 +3353,7 @@ NtGetWriteWatch(IN HANDLE ProcessHandle,
                 //
                 // Fail
                 //
-                return STATUS_INVALID_PARAMETER_3;
+                _SEH2_YIELD(return STATUS_INVALID_PARAMETER_3);
             }
 
             //
@@ -3370,7 +3370,7 @@ NtGetWriteWatch(IN HANDLE ProcessHandle,
             //
             // Must have a count
             //
-            if (CapturedEntryCount == 0) return STATUS_INVALID_PARAMETER_5;
+            if (CapturedEntryCount == 0) _SEH2_YIELD(return STATUS_INVALID_PARAMETER_5);
 
             //
             // Can't be larger than the maximum
@@ -3380,7 +3380,7 @@ NtGetWriteWatch(IN HANDLE ProcessHandle,
                 //
                 // Fail
                 //
-                return STATUS_INVALID_PARAMETER_5;
+                _SEH2_YIELD(return STATUS_INVALID_PARAMETER_5);
             }
 
             //

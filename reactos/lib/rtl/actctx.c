@@ -1587,7 +1587,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             DPRINT1("Exception accessing buffer\n");
-            return STATUS_SXS_CANT_GEN_ACTCTX;
+            _SEH2_YIELD(return STATUS_SXS_CANT_GEN_ACTCTX);
         }
         _SEH2_END;
 

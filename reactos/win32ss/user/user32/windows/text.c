@@ -67,7 +67,7 @@ CharLowerA(LPSTR str)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return NULL;
+        _SEH2_YIELD(return NULL);
     }
     _SEH2_END;
 
@@ -267,7 +267,7 @@ LPSTR WINAPI CharUpperA(LPSTR str)
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return NULL;
+        _SEH2_YIELD(return NULL);
     }
     _SEH2_END;
 

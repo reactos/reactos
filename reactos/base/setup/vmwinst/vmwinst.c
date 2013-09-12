@@ -96,14 +96,14 @@ DetectVMware(int *Version)
 		}
 #elif defined(_MSC_VER) && defined(_M_AMD64)
     DPRINT1("DetectVMware stub\n");
-    return FALSE;
+    _SEH2_YIELD(return FALSE);
 #else
 #error TODO
 #endif
 	}
 	_SEH2_EXCEPT(_SEH2_GetExceptionCode() == EXCEPTION_PRIV_INSTRUCTION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
 	{
-		return FALSE;
+		_SEH2_YIELD(return FALSE);
 	}
 	_SEH2_END;
 
