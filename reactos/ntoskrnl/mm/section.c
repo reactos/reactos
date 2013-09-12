@@ -4871,17 +4871,6 @@ MmCreateSection (OUT PVOID  * Section,
     ULONG Protection;
     PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
 
-    /* Convert section flag to page flag */
-    if (AllocationAttributes & SEC_NOCACHE) SectionPageProtection |= PAGE_NOCACHE;
-
-    /* Check to make sure the protection is correct. Nt* does this already */
-    Protection = MiMakeProtectionMask(SectionPageProtection);
-    if (Protection == MM_INVALID_PROTECTION)
-    {
-        DPRINT1("Page protection is invalid\n");
-        return STATUS_INVALID_PAGE_PROTECTION;
-    }
-
     /* Check if an ARM3 section is being created instead */
     if (!(AllocationAttributes & (SEC_IMAGE | SEC_PHYSICALMEMORY)))
     {
@@ -4896,6 +4885,17 @@ MmCreateSection (OUT PVOID  * Section,
                                        FileHandle,
                                        FileObject);
         }
+    }
+
+    /* Convert section flag to page flag */
+    if (AllocationAttributes & SEC_NOCACHE) SectionPageProtection |= PAGE_NOCACHE;
+
+    /* Check to make sure the protection is correct. Nt* does this already */
+    Protection = MiMakeProtectionMask(SectionPageProtection);
+    if (Protection == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("Page protection is invalid\n");
+        return STATUS_INVALID_PAGE_PROTECTION;
     }
 
     /* Check if this is going to be a data or image backed file section */
