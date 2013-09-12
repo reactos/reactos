@@ -81,7 +81,7 @@ SmConnectToSm(IN PUNICODE_STRING SbApiPortName,
     SecurityQos.EffectiveOnly = TRUE;
 
     /* Set the SM API port name */
-    RtlInitUnicodeString(&DestinationString, L"\\SmApiPort2");
+    RtlInitUnicodeString(&DestinationString, L"\\SmApiPort");
 
     /* Check if this is a client connecting to SMSS, or SMSS to itself */
     if (SbApiPortName)
