@@ -91,7 +91,7 @@ ValidateVbeInfo(IN PHW_DEVICE_EXTENSION VgaExtension,
     Context = VgaExtension->Int10Interface.Context;
 
     /* Check magic and version */
-    if (VbeInfo->Info.Signature == VESA_MAGIC) return VesaBiosOk;
+    if (VbeInfo->Info.Signature != VESA_MAGIC) return VesaBiosOk;
     if (VbeInfo->Info.Version < 0x102) return VesaBiosOk;
 
     /* Read strings */
@@ -149,11 +149,31 @@ VbeSetColorLookup(IN PHW_DEVICE_EXTENSION VgaExtension,
     USHORT TrampolineMemorySegment, TrampolineMemoryOffset;
     VP_STATUS Status;
     USHORT i;
+    PVIDEOMODE CurrentMode = VgaExtension->CurrentMode;
 
     Entries = ClutBuffer->NumEntries;
+    
+    VideoPortDebugPrint(0, "Setting %lu entries.\n", Entries);
+    
+    /* 
+     * For Vga compatible modes, write them directly.
+     * Otherwise, the LGPL VGABIOS (used in bochs) fails!
+     * It is also said that this way is faster.
+     */
+    if(!CurrentMode->NonVgaMode)
+    {
+        for (i=ClutBuffer->FirstEntry; i<ClutBuffer->FirstEntry + Entries; i++)
+        {
+            VideoPortWritePortUchar((PUCHAR)0x03c8, i);
+            VideoPortWritePortUchar((PUCHAR)0x03c9, ClutBuffer->LookupTable[i].RgbArray.Red);
+            VideoPortWritePortUchar((PUCHAR)0x03c9, ClutBuffer->LookupTable[i].RgbArray.Green);
+            VideoPortWritePortUchar((PUCHAR)0x03c9, ClutBuffer->LookupTable[i].RgbArray.Blue);
+        }
+        return NO_ERROR;
+    }
 
     /* Allocate INT10 context/buffer */
-    VesaClut = VideoPortAllocatePool(VgaExtension, 1, sizeof(ULONG) * Entries, 0x20616756u);
+    VesaClut = VideoPortAllocatePool(VgaExtension, 1, sizeof(ULONG) * Entries, ' agV');
     if (!VesaClut) return ERROR_INVALID_PARAMETER;
     if (!VgaExtension->Int10Interface.Size) return ERROR_INVALID_PARAMETER;
     Context = VgaExtension->Int10Interface.Context;
@@ -178,7 +198,8 @@ VbeSetColorLookup(IN PHW_DEVICE_EXTENSION VgaExtension,
                                                          Entries * sizeof(ULONG));
     if (Status != NO_ERROR) return ERROR_INVALID_PARAMETER;
 
-    /* Write new palette */
+    /* Write the palette */
+    VideoPortZeroMemory(&BiosArguments, sizeof(BiosArguments));
     BiosArguments.Ebx = 0;
     BiosArguments.Ecx = Entries;
     BiosArguments.Edx = ClutBuffer->FirstEntry;
@@ -189,7 +210,8 @@ VbeSetColorLookup(IN PHW_DEVICE_EXTENSION VgaExtension,
     if (Status != NO_ERROR) return ERROR_INVALID_PARAMETER;
     VideoPortFreePool(VgaExtension, VesaClut);
     VideoPortDebugPrint(Error, "VBE Status: %lx\n", BiosArguments.Eax);
-    if (BiosArguments.Eax == VBE_SUCCESS) return NO_ERROR;
+    if (VBE_GETRETURNCODE(BiosArguments.Eax) == VBE_SUCCESS)
+        return NO_ERROR;
     return ERROR_INVALID_PARAMETER;
 }
 
