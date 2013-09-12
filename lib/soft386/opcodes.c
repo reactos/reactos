@@ -3583,10 +3583,46 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeBound)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeArpl)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    USHORT FirstValue, SecondValue;
+    SOFT386_MOD_REG_RM ModRegRm;
 
-    return FALSE;
+    if (!(State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+        || State->PrefixFlags)
+    {
+        /* No prefixes allowed, protected mode only */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Get the operands */
+    if (!Soft386ReadModrmWordOperands(State,
+                                      &ModRegRm,
+                                      &FirstValue,
+                                      &SecondValue))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check if the RPL needs adjusting */
+    if ((SecondValue & 3) < (FirstValue & 3))
+    {
+        /* Adjust the RPL */
+        SecondValue &= ~3;
+        SecondValue |= FirstValue & 3;
+
+        /* Set ZF */
+        State->Flags.Zf = TRUE;
+
+        /* Write back the result */
+        return Soft386WriteModrmWordOperands(State, &ModRegRm, FALSE, SecondValue);
+    }
+    else
+    {
+        /* Clear ZF */
+        State->Flags.Zf = FALSE;
+        return TRUE;
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodePushImm)
