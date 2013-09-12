@@ -79,6 +79,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(button);
 #define BUTTON_BTNPRESSED      0x40
 #define BUTTON_UNKNOWN2        0x20
 #define BUTTON_UNKNOWN3        0x10
+#define BUTTON_BMCLICK         0x100 // ReactOS Need to up to wine!
 
 #define BUTTON_NOTIFY_PARENT(hWnd, code) \
     do { /* Notify parent which has created this button control */ \
@@ -517,8 +518,20 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         break;
 
     case BM_CLICK:
+        //// ReactOS
+        state = get_button_state( hWnd );
+        if (state & BUTTON_BMCLICK)
+           break;
+        set_button_state( hWnd, state | BUTTON_BMCLICK ); // Tracked in STATE_GWL_OFFSET.
+        ////
 	SendMessageW( hWnd, WM_LBUTTONDOWN, 0, 0 );
 	SendMessageW( hWnd, WM_LBUTTONUP, 0, 0 );
+        ////
+        state = get_button_state( hWnd );
+        if (!(state & BUTTON_BMCLICK)) break;
+        state &= ~BUTTON_BMCLICK;
+        set_button_state( hWnd, state );
+        ////
 	break;
 
     case BM_SETIMAGE:
