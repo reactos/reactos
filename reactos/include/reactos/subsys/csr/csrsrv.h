@@ -148,7 +148,6 @@ typedef struct _CSR_WAIT_BLOCK
 {
     ULONG Size;                     // Size of the wait block (variable-sized)
     LIST_ENTRY WaitList;
-    LIST_ENTRY UserWaitList;
     PVOID WaitContext;
     PCSR_THREAD WaitThread;
     CSR_WAIT_FUNCTION WaitFunction;
@@ -285,8 +284,7 @@ CsrCreateWait(IN PLIST_ENTRY WaitList,
               IN CSR_WAIT_FUNCTION WaitFunction,
               IN PCSR_THREAD CsrWaitThread,
               IN OUT PCSR_API_MESSAGE WaitApiMessage,
-              IN PVOID WaitContext,
-              IN PLIST_ENTRY UserWaitList OPTIONAL);
+              IN PVOID WaitContext);
 
 NTSTATUS
 NTAPI

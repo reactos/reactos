@@ -380,7 +380,6 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
                                WriteConsoleThread,
                                ClientThread,
                                ApiMessage,
-                               NULL,
                                NULL))
             {
                 /* Fail */

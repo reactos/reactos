@@ -76,12 +76,11 @@ CsrInitializeWait(IN CSR_WAIT_FUNCTION WaitFunction,
     CsrWaitThread->WaitBlock = WaitBlock;
     WaitBlock->WaitContext = WaitContext;
     WaitBlock->WaitFunction = WaitFunction;
-    WaitBlock->UserWaitList.Flink = NULL;
-    WaitBlock->UserWaitList.Blink = NULL;
-    WaitBlock->WaitList = WaitBlock->UserWaitList;
+    WaitBlock->WaitList.Flink = NULL;
+    WaitBlock->WaitList.Blink = NULL;
 
     /* Copy the message */
-    RtlMoveMemory(&WaitBlock->WaitApiMessage,
+    RtlCopyMemory(&WaitBlock->WaitApiMessage,
                   WaitApiMessage,
                   WaitApiMessage->Header.u1.s1.TotalLength);
 
@@ -158,12 +157,6 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
                 RemoveEntryList(&WaitBlock->WaitList);
             }
 
-            /* Remove it from the User Wait List */
-            if (WaitBlock->UserWaitList.Flink)
-            {
-                RemoveEntryList(&WaitBlock->UserWaitList);
-            }
-
             /* Dereference the thread */
             CsrDereferenceThread(WaitBlock->WaitThread);
 
@@ -207,9 +200,6 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
  * @param WaitContext
  *        Pointer to a user-defined parameter associated to this wait.
  *
- * @param UserWaitList
- *        Pointer to a list entry of the user-defined waits to associate.
- *
  * @return TRUE in case of success, FALSE otherwise.
  *
  * @remarks None.
@@ -221,8 +211,7 @@ CsrCreateWait(IN PLIST_ENTRY WaitList,
               IN CSR_WAIT_FUNCTION WaitFunction,
               IN PCSR_THREAD CsrWaitThread,
               IN OUT PCSR_API_MESSAGE WaitApiMessage,
-              IN PVOID WaitContext,
-              IN PLIST_ENTRY UserWaitList OPTIONAL)
+              IN PVOID WaitContext)
 {
     PCSR_WAIT_BLOCK WaitBlock;
 
@@ -251,9 +240,6 @@ CsrCreateWait(IN PLIST_ENTRY WaitList,
 
     /* Insert the wait in the queue */
     InsertTailList(WaitList, &WaitBlock->WaitList);
-
-    /* Insert the User Wait too, if one was given */
-    if (UserWaitList) InsertTailList(UserWaitList, &WaitBlock->UserWaitList);
 
     /* Return */
     CsrReleaseWaitLock();
@@ -304,12 +290,6 @@ CsrDereferenceWait(IN PLIST_ENTRY WaitList)
             if (WaitBlock->WaitList.Flink)
             {
                 RemoveEntryList(&WaitBlock->WaitList);
-            }
-
-            /* Remove it from the User Wait List */
-            if (WaitBlock->UserWaitList.Flink)
-            {
-                RemoveEntryList(&WaitBlock->UserWaitList);
             }
 
             /* Dereference the thread waiting on it */

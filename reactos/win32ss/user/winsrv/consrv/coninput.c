@@ -60,8 +60,7 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
                            WaitFunction,
                            InputInfo->CallingThread,
                            ApiMessage,
-                           CapturedInputInfo,
-                           NULL))
+                           CapturedInputInfo))
         {
             ConsoleFreeHeap(CapturedInputInfo);
             return STATUS_NO_MEMORY;

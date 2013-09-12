@@ -4,7 +4,7 @@
 @ stdcall CsrCreateProcess(ptr ptr ptr ptr long ptr)
 @ stdcall CsrCreateRemoteThread(ptr ptr)
 @ stdcall CsrCreateThread(ptr ptr ptr long)
-@ stdcall CsrCreateWait(ptr ptr ptr ptr ptr ptr)
+@ stdcall CsrCreateWait(ptr ptr ptr ptr ptr)
 @ stdcall CsrDebugProcess(ptr)
 @ stdcall CsrDebugProcessStop(ptr)
 @ stdcall CsrDereferenceProcess(ptr)
