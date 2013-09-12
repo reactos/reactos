@@ -48,7 +48,9 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
     }
     else
     {
-        DataEntry = NpGetNextRealDataQueueEntry(DataQueue, List);
+        DataEntry = CONTAINING_RECORD(NpGetNextRealDataQueueEntry(DataQueue, List),
+                                      NP_DATA_QUEUE_ENTRY,
+                                      QueueEntry);
     }
 
     while ((&DataEntry->QueueEntry != &DataQueue->Queue) && (RemainingSize))
@@ -118,7 +120,9 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
                 {
                     if (ReadOverflowOperation)
                     {
-                        TempDataEntry = NpGetNextRealDataQueueEntry(DataQueue, List);
+                        TempDataEntry = CONTAINING_RECORD(NpGetNextRealDataQueueEntry(DataQueue, List),
+                                                          NP_DATA_QUEUE_ENTRY,
+                                                          QueueEntry);
                         ASSERT(TempDataEntry == DataEntry);
                     }
 
@@ -149,7 +153,9 @@ NpReadDataQueue(IN PNP_DATA_QUEUE DataQueue,
         }
         else
         {
-            DataEntry = NpGetNextRealDataQueueEntry(DataQueue, List);
+            DataEntry = CONTAINING_RECORD(NpGetNextRealDataQueueEntry(DataQueue, List),
+                                          NP_DATA_QUEUE_ENTRY,
+                                          QueueEntry);
         }
     }
 

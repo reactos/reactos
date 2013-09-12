@@ -126,7 +126,9 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
         --DataQueue->EntriesInQueue;
 
         HasWrites = 1;
-        if (!DataQueue->QueueState != WriteEntries || DataQueue->QuotaUsed < DataQueue->Quota || !QueueEntry->QuotaInEntry)
+        if (DataQueue->QueueState != WriteEntries ||
+            DataQueue->QuotaUsed < DataQueue->Quota ||
+            !QueueEntry->QuotaInEntry)
         {
             HasWrites = 0;
         }
@@ -164,7 +166,7 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
     return Irp;
 }
 
-PNP_DATA_QUEUE_ENTRY
+PLIST_ENTRY
 NTAPI
 NpGetNextRealDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
                             IN PLIST_ENTRY List)
@@ -175,10 +177,9 @@ NpGetNextRealDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
     PLIST_ENTRY NextEntry;
     PAGED_CODE();
 
-    NextEntry = DataQueue->Queue.Flink;
-    DataEntry = CONTAINING_RECORD(NextEntry, NP_DATA_QUEUE_ENTRY, QueueEntry);
-
-    while (NextEntry != &DataQueue->Queue)
+    for (NextEntry = DataQueue->Queue.Flink;
+         NextEntry != &DataQueue->Queue;
+         NextEntry = DataQueue->Queue.Flink)
     {
         DataEntry = CONTAINING_RECORD(NextEntry, NP_DATA_QUEUE_ENTRY, QueueEntry);
 
@@ -193,7 +194,7 @@ NpGetNextRealDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
         }
     }
 
-    return DataEntry;
+    return NextEntry;
 }
 
 VOID

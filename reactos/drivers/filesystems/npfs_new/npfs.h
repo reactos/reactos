@@ -394,7 +394,7 @@ NTSTATUS
 NTAPI
 NpUninitializeDataQueue(IN PNP_DATA_QUEUE DataQueue);
 
-PNP_DATA_QUEUE_ENTRY
+PLIST_ENTRY
 NTAPI
 NpGetNextRealDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
                             IN PLIST_ENTRY List);
@@ -524,6 +524,10 @@ NpSetClosingPipeState(IN PNP_CCB Ccb,
 VOID
 NTAPI
 NpFreeClientSecurityContext(IN PSECURITY_CLIENT_CONTEXT ClientContext);
+
+NTSTATUS
+NTAPI
+NpImpersonateClientContext(IN PNP_CCB Ccb);
 
 VOID
 NTAPI

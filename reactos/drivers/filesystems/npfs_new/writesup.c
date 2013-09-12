@@ -46,10 +46,14 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
         MoreProcessing = FALSE;
     }
 
-    for (DataEntry = NpGetNextRealDataQueueEntry(WriteQueue, List);
+    for (DataEntry = CONTAINING_RECORD(NpGetNextRealDataQueueEntry(WriteQueue, List),
+                                       NP_DATA_QUEUE_ENTRY,
+                                       QueueEntry);
          ((WriteQueue->QueueState == ReadEntries) &&
          ((*BytesNotWritten > 0) || (MoreProcessing)));
-         DataEntry = NpGetNextRealDataQueueEntry(WriteQueue, List))
+         DataEntry = CONTAINING_RECORD(NpGetNextRealDataQueueEntry(WriteQueue, List),
+                                       NP_DATA_QUEUE_ENTRY,
+                                       QueueEntry))
     {
         DataSize = DataEntry->DataSize;
 
