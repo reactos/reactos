@@ -10,6 +10,9 @@
 
 #include "npfs.h"
 
+// File ID number for NPFS bugchecking support
+#define NPFS_BUGCHECK_FILE_ID   (NPFS_BUGCHECK_FILEINFO)
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -42,7 +45,7 @@ NpSetPipeInfo(IN PNP_FCB Fcb,
     {
         if (NamedPipeEnd != FILE_PIPE_SERVER_END)
         {
-            KeBugCheckEx(NPFS_FILE_SYSTEM, 0xA04EFu, NamedPipeEnd, 0, 0);
+            NpBugCheck(NamedPipeEnd, 0, 0);
         }
         ReadQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
         WriteQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];
@@ -234,7 +237,7 @@ NpQueryNameInfo(IN PNP_CCB Ccb,
     if (*Length < NameLength)
     {
         Status = STATUS_BUFFER_OVERFLOW;
-        NameLength = *Length;
+        NameLength = (USHORT)*Length;
     }
     else
     {

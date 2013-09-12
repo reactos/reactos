@@ -10,6 +10,9 @@
 
 #include "npfs.h"
 
+// File ID number for NPFS bugchecking support
+#define NPFS_BUGCHECK_FILE_ID   (NPFS_BUGCHECK_STATESUP)
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -170,7 +173,7 @@ NpSetDisconnectedPipeState(IN PNP_CCB Ccb,
             break;
 
         default:
-            KeBugCheckEx(NPFS_FILE_SYSTEM, 0x1603DD, Ccb->NamedPipeState, 0, 0);
+            NpBugCheck(Ccb->NamedPipeState, 0, 0);
             break;
     }
 
@@ -228,7 +231,7 @@ NpSetListeningPipeState(IN PNP_CCB Ccb,
             break;
 
         default:
-            KeBugCheckEx(NPFS_FILE_SYSTEM, 0x160133, Ccb->NamedPipeState, 0, 0);
+            NpBugCheck(Ccb->NamedPipeState, 0, 0);
             break;
     }
 
@@ -377,7 +380,7 @@ NpSetClosingPipeState(IN PNP_CCB Ccb,
             break;
 
         default:
-            KeBugCheckEx(NPFS_FILE_SYSTEM, 0x1602F9, Ccb->NamedPipeState, 0, 0);
+            NpBugCheck(Ccb->NamedPipeState, 0, 0);
             break;
     }
     return STATUS_SUCCESS;

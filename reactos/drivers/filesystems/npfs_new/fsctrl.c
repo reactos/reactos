@@ -10,6 +10,9 @@
 
 #include "npfs.h"
 
+// File ID number for NPFS bugchecking support
+#define NPFS_BUGCHECK_FILE_ID   (NPFS_BUGCHECK_FSCTRL)
+
 /* GLOBALS ********************************************************************/
 
 IO_STATUS_BLOCK NpUserIoStatusBlock;
@@ -212,7 +215,7 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
     {
         if (NamedPipeEnd != FILE_PIPE_SERVER_END)
         {
-            KeBugCheckEx(NPFS_FILE_SYSTEM, 0xD02E5, NamedPipeEnd, 0, 0);
+            NpBugCheck(NamedPipeEnd, 0, 0);
         }
 
         DataQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
@@ -357,7 +360,7 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
     {
         if (NamedPipeEnd != FILE_PIPE_SERVER_END)
         {
-            KeBugCheckEx(NPFS_FILE_SYSTEM, 0xD0538, NamedPipeEnd, 0, 0);
+            NpBugCheck(NamedPipeEnd, 0, 0);
         }
         ReadQueue = &Ccb->DataQueue[FILE_PIPE_INBOUND];
         WriteQueue = &Ccb->DataQueue[FILE_PIPE_OUTBOUND];

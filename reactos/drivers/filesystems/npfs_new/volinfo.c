@@ -10,6 +10,9 @@
 
 #include "npfs.h"
 
+// File ID number for NPFS bugchecking support
+#define NPFS_BUGCHECK_FILE_ID   (NPFS_BUGCHECK_VOLINFO)
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -33,7 +36,7 @@ NpQueryFsVolumeInfo(IN PVOID Buffer,
 
     if (NameLength < 18)
     {
-        NameLength = *Length;
+        NameLength = (USHORT)*Length;
         Status = STATUS_BUFFER_OVERFLOW;
     }
     else
@@ -96,7 +99,7 @@ NpQueryFsAttributeInfo(IN PVOID Buffer,
     NTSTATUS Status;
     USHORT NameLength;
 
-    NameLength = *Length - 12;
+    NameLength = (USHORT)(*Length - 12);
     if (NameLength < 8)
     {
         *Length = 0;

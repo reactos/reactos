@@ -10,6 +10,9 @@
 
 #include "npfs.h"
 
+// File ID number for NPFS bugchecking support
+#define NPFS_BUGCHECK_FILE_ID   (NPFS_BUGCHECK_FILEOBSUP)
+
 /* FUNCTIONS ******************************************************************/
 
 NODE_TYPE_CODE
@@ -46,7 +49,7 @@ NpDecodeFileObject(IN PFILE_OBJECT FileObject,
                 return NPFS_NTC_CCB;
 
             default:
-                KeBugCheckEx(NPFS_FILE_SYSTEM, 0xB0108, Node->NodeType, 0, 0);
+                NpBugCheck(Node->NodeType, 0, 0);
                 break;
             }
     }

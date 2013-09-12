@@ -10,6 +10,9 @@
 
 #include "npfs.h"
 
+// File ID number for NPFS bugchecking support
+#define NPFS_BUGCHECK_FILE_ID   (NPFS_BUGCHECK_PREFXSUP)
+
 /* FUNCTIONS ******************************************************************/
 
 PNP_FCB
@@ -25,7 +28,7 @@ NpFindPrefix(IN PUNICODE_STRING Name,
     Entry = RtlFindUnicodePrefix(&NpVcb->PrefixTable,
                                  Name,
                                  CaseInsensitiveIndex);
-    if (!Entry) KeBugCheckEx(NPFS_FILE_SYSTEM, 0x100065u, 0, 0, 0);
+    if (!Entry) NpBugCheck(0, 0, 0);
 
     Fcb = CONTAINING_RECORD(Entry, NP_FCB, PrefixTableEntry);
 

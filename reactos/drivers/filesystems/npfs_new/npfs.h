@@ -1,3 +1,13 @@
+/*
+ * PROJECT:     ReactOS Named Pipe FileSystem
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ * FILE:        drivers/filesystems/npfs/npfs.h
+ * PURPOSE:     Named Pipe FileSystem Header
+ * PROGRAMMERS: ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
 //
 // System Headers
 //
@@ -15,6 +25,9 @@
 #pragma warning(disable:4214)
 #pragma warning(disable:4100)
 #endif
+
+
+/* TYPEDEFS & DEFINES *********************************************************/
 
 //
 // Pool Tags for NPFS (from pooltag.txt)
@@ -44,6 +57,51 @@
 #define NPFS_CLIENT_SEC_CTX_TAG 'NpFs'
 #define NPFS_WAIT_BLOCK_TAG     'NpFt'
 #define NPFS_WRITE_BLOCK_TAG    'NpFw'
+
+//
+// NPFS bugchecking support
+//
+// We define the NpBugCheck macro which triggers a NPFS_FILE_SYSTEM bugcheck
+// containing the source file ID number and the line where it was emitted, as
+// described in the MSDN article "Bug Check 0x25: NPFS_FILE_SYSTEM".
+//
+// The bugcheck emits 4 ULONGs; the first one is made, in its high word, by
+// the current source file ID and in its low word, by the line number; the
+// three other ones are user-defined.
+//
+// In order to avoid redefinition of the same file ID in different source files,
+// we gather all of them here, so that you will have to add (or remove) a new
+// one as soon as you add (or remove) a source file from the NPFS driver code.
+//
+// To use the NpBugCheck macro in a source file, define at its beginning
+// the constant NPFS_BUGCHECK_FILE_ID with one of the following file IDs,
+// then use the bugcheck macro wherever you want.
+//
+#define NPFS_BUGCHECK_CLEANUP   0x0001
+#define NPFS_BUGCHECK_CLOSE     0x0002
+#define NPFS_BUGCHECK_CREATE    0x0003
+#define NPFS_BUGCHECK_DATASUP   0x0004
+#define NPFS_BUGCHECK_FILEINFO  0x0005
+#define NPFS_BUGCHECK_FILEOBSUP 0x0006
+#define NPFS_BUGCHECK_FLUSHBUF  0x0007
+#define NPFS_BUGCHECK_FSCTRL    0x0008
+#define NPFS_BUGCHECK_MAIN      0x0009
+#define NPFS_BUGCHECK_PREFXSUP  0x000a
+#define NPFS_BUGCHECK_READ      0x000b
+#define NPFS_BUGCHECK_READSUP   0x000c
+#define NPFS_BUGCHECK_SECURSUP  0x000d
+#define NPFS_BUGCHECK_SEINFO    0x000e
+#define NPFS_BUGCHECK_STATESUP  0x000f
+#define NPFS_BUGCHECK_STRUCSUP  0x0010
+#define NPFS_BUGCHECK_VOLINFO   0x0011
+#define NPFS_BUGCHECK_WAITSUP   0x0012
+#define NPFS_BUGCHECK_WRITE     0x0013
+#define NPFS_BUGCHECK_WRITESUP  0x0014
+
+#define NpBugCheck(p1, p2, p3)                              \
+    KeBugCheckEx(NPFS_FILE_SYSTEM,                          \
+                 (NPFS_BUGCHECK_FILE_ID << 16) | __LINE__,  \
+                 (p1), (p2), (p3))
 
 //
 // Node Type Codes for NPFS
@@ -262,6 +320,9 @@ typedef struct _NP_VCB
 } NP_VCB, *PNP_VCB;
 
 extern PNP_VCB NpVcb;
+
+
+/* FUNCTIONS ******************************************************************/
 
 //
 // Functions to lock/unlock the global VCB lock
@@ -600,3 +661,4 @@ NTAPI
 NpFsdQueryVolumeInformation(IN PDEVICE_OBJECT DeviceObject,
                             IN PIRP Irp);
 
+/* EOF */

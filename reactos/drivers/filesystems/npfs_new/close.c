@@ -10,6 +10,9 @@
 
 #include "npfs.h"
 
+// File ID number for NPFS bugchecking support
+#define NPFS_BUGCHECK_FILE_ID   (NPFS_BUGCHECK_CLOSE)
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS

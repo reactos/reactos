@@ -10,6 +10,9 @@
 
 #include "npfs.h"
 
+// File ID number for NPFS bugchecking support
+#define NPFS_BUGCHECK_FILE_ID   (NPFS_BUGCHECK_STRUCSUP)
+
 /* GLOBALS ********************************************************************/
 
 #define UNIMPLEMENTED
@@ -67,7 +70,7 @@ NpDeleteFcb(IN PNP_FCB Fcb,
     PAGED_CODE();
 
     Dcb = Fcb->ParentDcb;
-    if (Fcb->CurrentInstances) KeBugCheckEx(NPFS_FILE_SYSTEM, 0x17025F, 0, 0, 0);
+    if (Fcb->CurrentInstances) NpBugCheck(0, 0, 0);
 
     NpCancelWaiter(&NpVcb->WaitQueue,
                    &Fcb->FullName,
@@ -169,7 +172,7 @@ NpCreateRootDcb(VOID)
 
     if (NpVcb->RootDcb)
     {
-        KeBugCheckEx(NPFS_FILE_SYSTEM, 0x1700F3, 0, 0, 0);
+        NpBugCheck(0, 0, 0);
     }
 
     NpVcb->RootDcb = ExAllocatePoolWithTag(PagedPool, sizeof(*Dcb), NPFS_DCB_TAG);
@@ -199,7 +202,7 @@ NpCreateRootDcb(VOID)
                                 &Dcb->FullName,
                                 &Dcb->PrefixTableEntry))
     {
-        KeBugCheckEx(NPFS_FILE_SYSTEM, 0x170128, 0, 0, 0);
+        NpBugCheck(0, 0, 0);
     }
 
     return STATUS_SUCCESS;
@@ -284,7 +287,7 @@ NpCreateFcb(IN PNP_DCB Dcb,
                                 &Fcb->FullName,
                                 &Fcb->PrefixTableEntry))
     {
-        KeBugCheckEx(NPFS_FILE_SYSTEM, 0x170222, 0, 0, 0);
+        NpBugCheck(0, 0, 0);
     }
 
     Fcb->NamedPipeConfiguration = NamedPipeConfiguration;
