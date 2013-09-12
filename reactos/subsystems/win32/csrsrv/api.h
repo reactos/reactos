@@ -137,10 +137,14 @@ BOOLEAN
 NTAPI
 UnProtectHandle(IN HANDLE ObjectHandle);
 
-VOID
+NTSTATUS
 NTAPI
 CsrInsertThread(IN PCSR_PROCESS Process,
                 IN PCSR_THREAD Thread);
+
+VOID
+NTAPI
+CsrDeallocateThread(IN PCSR_THREAD CsrThread);
 
 VOID
 NTAPI

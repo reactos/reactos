@@ -690,7 +690,15 @@ CsrCreateProcess(IN HANDLE hProcess,
     CsrThread->Flags = 0;
 
     /* Insert the Thread into the Process */
-    CsrInsertThread(CsrProcess, CsrThread);
+    Status = CsrInsertThread(CsrProcess, CsrThread);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out */
+        CsrDeallocateProcess(CsrProcess);
+        CsrDeallocateThread(CsrThread);
+        CsrReleaseProcessLock();
+        return Status;
+    }
 
     /* Reference the session */
     CsrReferenceNtSession(NtSession);

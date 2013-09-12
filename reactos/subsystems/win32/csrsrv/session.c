@@ -289,7 +289,15 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     CsrThread->Flags = 0;
 
     /* Insert it into the Process List */
-    CsrInsertThread(CsrProcess, CsrThread);
+    Status = CsrInsertThread(CsrProcess, CsrThread);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out */
+        CsrDeallocateProcess(CsrProcess);
+        CsrDeallocateThread(CsrThread);
+        CsrReleaseProcessLock();
+        return Status;
+    }
 
     /* Setup Process Data */
     CsrProcess->ClientId = CreateSession->ProcessInfo.ClientId;

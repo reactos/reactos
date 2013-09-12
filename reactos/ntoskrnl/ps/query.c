@@ -2412,6 +2412,7 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
         (PTHREAD_BASIC_INFORMATION)ThreadInformation;
     PKERNEL_USER_TIMES ThreadTime = (PKERNEL_USER_TIMES)ThreadInformation;
     KIRQL OldIrql;
+    ULONG ThreadTerminated;
     PAGED_CODE();
 
     /* Check if we were called from user mode */
@@ -2659,6 +2660,31 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
                 Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+            break;
+
+        case ThreadIsTerminated:
+
+            /* Set the return length*/
+            Length = sizeof(ThreadTerminated);
+
+            if (ThreadInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            ThreadTerminated = PsIsThreadTerminating(Thread);
+
+            _SEH2_TRY
+            {
+                *(PULONG)ThreadInformation = ThreadTerminated ? 1 : 0;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
             break;
 
         /* Anything else */
