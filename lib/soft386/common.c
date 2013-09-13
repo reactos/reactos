@@ -28,6 +28,18 @@ Soft386GetCurrentPrivLevel(PSOFT386_STATE State)
     return GET_SEGMENT_RPL(State->SegmentRegs[SOFT386_REG_CS].Selector);
 }
 
+static
+inline
+ULONG
+Soft386GetPageTableEntry(PSOFT386_STATE State,
+                         ULONG VirtualAddress)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+
+    return 0;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 inline
@@ -41,6 +53,7 @@ Soft386ReadMemory(PSOFT386_STATE State,
 {
     ULONG LinearAddress;
     PSOFT386_SEG_REG CachedDescriptor;
+    INT Cpl = Soft386GetCurrentPrivLevel(State);
 
     ASSERT(SegmentReg < SOFT386_NUM_SEG_REGS);
 
@@ -97,18 +110,75 @@ Soft386ReadMemory(PSOFT386_STATE State,
     /* Find the linear address */
     LinearAddress = CachedDescriptor->Base + Offset;
 
-    // TODO: Paging support!
-
-    /* Did the host provide a memory hook? */
-    if (State->MemReadCallback)
+    /* Check if paging is enabled */
+    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PG)
     {
-        /* Yes, call the host */
-        State->MemReadCallback(State, LinearAddress, Buffer, Size);
+        ULONG Page;
+        SOFT386_PAGE_TABLE TableEntry;
+
+        for (Page = PAGE_ALIGN(LinearAddress);
+             Page <= PAGE_ALIGN(LinearAddress + Size - 1);
+             Page += PAGE_SIZE)
+        {
+            ULONG PageOffset = 0, PageLength = PAGE_SIZE;
+
+            /* Get the table entry */
+            TableEntry.Value = Soft386GetPageTableEntry(State, Page);
+
+            if (!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
+            {
+                /* Exception */
+                Soft386ExceptionWithErrorCode(State,
+                                              SOFT386_EXCEPTION_PF,
+                                              TableEntry.Value & 0x07);
+                return FALSE;
+            }
+
+            /* Check if this is the first page */
+            if (Page == PAGE_ALIGN(LinearAddress))
+            {
+                /* Start copying from the offset from the beginning of the page */
+                PageOffset = PAGE_OFFSET(LinearAddress);
+            }
+
+            /* Check if this is the last page */
+            if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
+            {   
+                /* Copy only a part of the page */
+                PageLength = PAGE_OFFSET(LinearAddress + Size);
+            }
+
+            /* Did the host provide a memory hook? */
+            if (State->MemReadCallback)
+            {
+                /* Yes, call the host */
+                State->MemReadCallback(State,
+                                       (TableEntry.Address << 12) | PageOffset,
+                                       Buffer,
+                                       PageLength);
+            }
+            else
+            {
+                /* Read the memory directly */
+                RtlMoveMemory(Buffer,
+                              (PVOID)((TableEntry.Address << 12) | PageOffset),
+                              PageLength);
+            }
+        }
     }
     else
     {
-        /* Read the memory directly */
-        RtlMoveMemory(Buffer, (PVOID)LinearAddress, Size);
+        /* Did the host provide a memory hook? */
+        if (State->MemReadCallback)
+        {
+            /* Yes, call the host */
+            State->MemReadCallback(State, LinearAddress, Buffer, Size);
+        }
+        else
+        {
+            /* Read the memory directly */
+            RtlMoveMemory(Buffer, (PVOID)LinearAddress, Size);
+        }
     }
 
     return TRUE;
@@ -124,6 +194,7 @@ Soft386WriteMemory(PSOFT386_STATE State,
 {
     ULONG LinearAddress;
     PSOFT386_SEG_REG CachedDescriptor;
+    INT Cpl = Soft386GetCurrentPrivLevel(State);
 
     ASSERT(SegmentReg < SOFT386_NUM_SEG_REGS);
 
@@ -174,18 +245,77 @@ Soft386WriteMemory(PSOFT386_STATE State,
     /* Find the linear address */
     LinearAddress = CachedDescriptor->Base + Offset;
 
-    // TODO: Paging support!
-
-    /* Did the host provide a memory hook? */
-    if (State->MemWriteCallback)
+    /* Check if paging is enabled */
+    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PG)
     {
-        /* Yes, call the host */
-        State->MemWriteCallback(State, LinearAddress, Buffer, Size);
+        ULONG Page;
+        SOFT386_PAGE_TABLE TableEntry;
+
+        for (Page = PAGE_ALIGN(LinearAddress);
+             Page <= PAGE_ALIGN(LinearAddress + Size - 1);
+             Page += PAGE_SIZE)
+        {
+            ULONG PageOffset = 0, PageLength = PAGE_SIZE;
+
+            /* Get the table entry */
+            TableEntry.Value = Soft386GetPageTableEntry(State, Page);
+
+            if ((!TableEntry.Present || (!TableEntry.Usermode && (Cpl > 0)))
+                || ((State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_WP)
+                && !TableEntry.Writeable))
+            {
+                /* Exception */
+                Soft386ExceptionWithErrorCode(State,
+                                              SOFT386_EXCEPTION_PF,
+                                              TableEntry.Value & 0x07);
+                return FALSE;
+            }
+
+            /* Check if this is the first page */
+            if (Page == PAGE_ALIGN(LinearAddress))
+            {
+                /* Start copying from the offset from the beginning of the page */
+                PageOffset = PAGE_OFFSET(LinearAddress);
+            }
+
+            /* Check if this is the last page */
+            if (Page == PAGE_ALIGN(LinearAddress + Size - 1))
+            {   
+                /* Copy only a part of the page */
+                PageLength = PAGE_OFFSET(LinearAddress + Size);
+            }
+
+            /* Did the host provide a memory hook? */
+            if (State->MemWriteCallback)
+            {
+                /* Yes, call the host */
+                State->MemWriteCallback(State,
+                                        (TableEntry.Address << 12) | PageOffset,
+                                        Buffer,
+                                        PageLength);
+            }
+            else
+            {
+                /* Read the memory directly */
+                RtlMoveMemory((PVOID)((TableEntry.Address << 12) | PageOffset),
+                              Buffer,
+                              PageLength);
+            }
+        }
     }
     else
     {
-        /* Write the memory directly */
-        RtlMoveMemory((PVOID)LinearAddress, Buffer, Size);
+        /* Did the host provide a memory hook? */
+        if (State->MemWriteCallback)
+        {
+            /* Yes, call the host */
+            State->MemWriteCallback(State, LinearAddress, Buffer, Size);
+        }
+        else
+        {
+            /* Write the memory directly */
+            RtlMoveMemory((PVOID)LinearAddress, Buffer, Size);
+        }
     }
 
     return TRUE;
@@ -709,7 +839,7 @@ Soft386GetIntVector(PSOFT386_STATE State,
 
 VOID
 FASTCALL
-Soft386Exception(PSOFT386_STATE State, INT ExceptionCode)
+Soft386ExceptionWithErrorCode(PSOFT386_STATE State, INT ExceptionCode, ULONG ErrorCode)
 {
     SOFT386_IDT_ENTRY IdtEntry;
 
@@ -752,6 +882,20 @@ Soft386Exception(PSOFT386_STATE State, INT ExceptionCode)
          */
         return;
     }
+
+    if (EXCEPTION_HAS_ERROR_CODE(ExceptionCode))
+    {
+        /* Push the error code */
+        Soft386StackPush(State, ErrorCode);
+    }
+}
+
+inline
+VOID
+Soft386Exception(PSOFT386_STATE State, INT ExceptionCode)
+{
+    /* Call the internal function */
+    Soft386ExceptionWithErrorCode(State, ExceptionCode, 0);
 }
 
 inline
