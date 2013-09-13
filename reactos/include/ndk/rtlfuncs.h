@@ -2165,8 +2165,8 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlPrefixString(
-    PCANSI_STRING String1,
-    PCANSI_STRING String2,
+    PSTRING String1,
+    PSTRING String2,
     BOOLEAN CaseInsensitive
 );
 

@@ -382,7 +382,11 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 
     /* Start by making a unicode string of the name */
     TRACE("Sent path: %S\n", lpNamedPipeName);
-    RtlCreateUnicodeString(&NamedPipeName, lpNamedPipeName);
+    if (!RtlCreateUnicodeString(&NamedPipeName, lpNamedPipeName))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
     NameLength = NamedPipeName.Length / sizeof(WCHAR);
 
     /* All slashes must become backslashes */
@@ -401,7 +405,14 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     {
         /* Make sure it's a valid prefix */
         RtlInitUnicodeString(&PipePrefix, L"\\\\.\\pipe\\");
-        RtlPrefixString((PANSI_STRING)&PipePrefix, (PANSI_STRING)&NewName, TRUE);
+        if (!RtlPrefixUnicodeString(&PipePrefix, &NewName, TRUE))
+        {
+            /* The name is invalid */
+            WARN("Invalid name!\n");
+            RtlFreeUnicodeString(&NamedPipeName);
+            BaseSetLastNTError(STATUS_OBJECT_PATH_SYNTAX_BAD);
+            return FALSE;
+        }
 
         /* Move past it */
         NewName.Buffer += 9;
@@ -411,7 +422,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         TRACE("NewName: %wZ\n", &NewName);
         RtlInitUnicodeString(&DevicePath, L"\\DosDevices\\pipe\\");
     }
-    else if (Type == RtlPathTypeRootLocalDevice)
+    else if (Type == RtlPathTypeUncAbsolute)
     {
         /* The path is \\server\\pipe\name; find the pipename itself */
         p = &NewName.Buffer[2];
@@ -436,6 +447,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         {
             /* The name is invalid */
             WARN("Invalid name!\n");
+            RtlFreeUnicodeString(&NamedPipeName);
             BaseSetLastNTError(STATUS_OBJECT_PATH_SYNTAX_BAD);
             return FALSE;
         }
@@ -445,6 +457,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     else
     {
         WARN("Invalid path type\n");
+        RtlFreeUnicodeString(&NamedPipeName);
         BaseSetLastNTError(STATUS_OBJECT_PATH_SYNTAX_BAD);
         return FALSE;
     }
@@ -455,6 +468,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     WaitPipeInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, WaitPipeInfoSize);
     if (WaitPipeInfo == NULL)
     {
+        RtlFreeUnicodeString(&NamedPipeName);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
@@ -478,9 +492,9 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     {
         /* Fail; couldn't open */
         WARN("Status: %lx\n", Status);
-        BaseSetLastNTError(Status);
-        RtlFreeUnicodeString(&NamedPipeName);
         RtlFreeHeap(RtlGetProcessHeap(), 0, WaitPipeInfo);
+        RtlFreeUnicodeString(&NamedPipeName);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -537,7 +551,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     {
         /* Failure to wait on the pipe */
         WARN("Status: %lx\n", Status);
-        BaseSetLastNTError (Status);
+        BaseSetLastNTError(Status);
         return FALSE;
      }
 

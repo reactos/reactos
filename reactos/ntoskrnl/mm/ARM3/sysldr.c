@@ -827,9 +827,9 @@ MiSnapThunk(IN PVOID DllBase,
                                              InLoadOrderLinks);
 
                 /* Check if it matches */
-                if (RtlPrefixString((PSTRING)&ForwarderName,
-                                    (PSTRING)&LdrEntry->BaseDllName,
-                                    TRUE))
+                if (RtlPrefixUnicodeString(&ForwarderName,
+                                           &LdrEntry->BaseDllName,
+                                           TRUE))
                 {
                     /* Get the forwarder export directory */
                     ForwardExportDirectory =

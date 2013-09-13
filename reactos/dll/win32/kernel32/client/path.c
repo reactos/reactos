@@ -740,6 +740,19 @@ SkipPathTypeIndicator_U(IN LPWSTR Path)
     /* Check what kind of path this is and how many slashes to skip */
     switch (RtlDetermineDosPathNameType_U(Path))
     {
+        case RtlPathTypeUncAbsolute:
+        case RtlPathTypeLocalDevice:
+        {
+            /* Keep going until we bypass the path indicators */
+            for (ReturnPath = Path + 2, i = 2; (i > 0) && (*ReturnPath); ReturnPath++)
+            {
+                /* We look for 2 slashes, so keep at it until we find them */
+                if ((*ReturnPath == L'\\') || (*ReturnPath == L'/')) i--;
+            }
+
+            return ReturnPath;
+        }
+
         case RtlPathTypeDriveAbsolute:
             return Path + 3;
 
@@ -755,18 +768,6 @@ SkipPathTypeIndicator_U(IN LPWSTR Path)
         case RtlPathTypeRootLocalDevice:
         default:
             return NULL;
-
-        case RtlPathTypeUncAbsolute:
-        case RtlPathTypeLocalDevice:
-
-            /* Keep going until we bypass the path indicators */
-            for (ReturnPath = Path + 2, i = 2; (i > 0) && (*ReturnPath); ReturnPath++)
-            {
-                /* We look for 2 slashes, so keep at it until we find them */
-                if ((*ReturnPath == L'\\') || (*ReturnPath == L'/')) i--;
-            }
-
-            return ReturnPath;
     }
 }
 
