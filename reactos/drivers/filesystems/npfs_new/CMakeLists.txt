@@ -21,9 +21,9 @@ list(APPEND SOURCE
      write.c
      writesup.c)
 
-add_library(npfs_new SHARED ${SOURCE})
-set_module_type(npfs_new kernelmodedriver)
-target_link_libraries(npfs_new ${PSEH_LIB})
-add_importlibs(npfs_new ntoskrnl hal)
-add_pch(npfs_new npfs.h)
-add_cd_file(TARGET npfs_new DESTINATION reactos/system32/drivers FOR all)
+add_library(npfs SHARED ${SOURCE})
+set_module_type(npfs kernelmodedriver)
+target_link_libraries(npfs ${PSEH_LIB})
+add_importlibs(npfs ntoskrnl hal)
+add_pch(npfs npfs.h)
+add_cd_file(TARGET npfs DESTINATION reactos/system32/drivers FOR all)
