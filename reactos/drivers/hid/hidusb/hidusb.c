@@ -1649,7 +1649,7 @@ Hid_PnpStart(
         //
         // done
         //
-        DPRINT1("[HIDUSB] SelectConfiguration %x\n", Status);
+        DPRINT("[HIDUSB] SelectConfiguration %x\n", Status);
 
         if (NT_SUCCESS(Status))
         {

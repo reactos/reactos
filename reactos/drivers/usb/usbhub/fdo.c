@@ -231,8 +231,8 @@ DeviceStatusChangeThread(
             return;
         }
 
-        DPRINT1("Port %d Status %x\n", PortId, PortStatus.Status);
-        DPRINT1("Port %d Change %x\n", PortId, PortStatus.Change);
+        DPRINT("Port %d Status %x\n", PortId, PortStatus.Status);
+        DPRINT("Port %d Change %x\n", PortId, PortStatus.Change);
 
 
         //
@@ -322,8 +322,8 @@ DeviceStatusChangeThread(
                 return;
             }
 
-            DPRINT1("Port %d Status %x\n", PortId, PortStatus.Status);
-            DPRINT1("Port %d Change %x\n", PortId, PortStatus.Change);
+            DPRINT("Port %d Status %x\n", PortId, PortStatus.Status);
+            DPRINT("Port %d Change %x\n", PortId, PortStatus.Change);
 
             //
             // Check that reset was cleared
@@ -1268,8 +1268,8 @@ CreateUsbChildDeviceObject(
         goto Cleanup;
     }
 
-    DumpDeviceDescriptor(&UsbChildExtension->DeviceDesc);
-    DumpConfigurationDescriptor(&ConfigDesc);
+    //DumpDeviceDescriptor(&UsbChildExtension->DeviceDesc);
+    //DumpConfigurationDescriptor(&ConfigDesc);
 
     //
     // FIXME: Support more than one configuration and one interface?
