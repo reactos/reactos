@@ -137,7 +137,13 @@ extern void __winetest_cdecl winetest_trace( const char *msg, ... );
 #define todo(platform) for (winetest_start_todo(platform); \
                             winetest_loop_todo(); \
                             winetest_end_todo(platform))
+
+#define todo_ros       todo("reactos")
+#ifdef USE_WINE_TODOS
+#define todo_wine      todo_ros
+#else
 #define todo_wine      todo("wine")
+#endif
 
 
 #ifdef NONAMELESSUNION
