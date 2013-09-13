@@ -16,15 +16,7 @@
 
 EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 
-
-/* Define this macro to enable quota code testing. Once quota code is */
-/* stable and verified, remove this macro and checks for it. */
-/*#define PS_QUOTA_ENABLE_QUOTA_CODE*/
-
-
 /* PRIVATE FUNCTIONS *******************************************************/
-
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
 
 /*
  * Private helper to charge the specified process quota.
@@ -49,7 +41,9 @@ PspChargeProcessQuotaSpecifiedPool(IN PEPROCESS Process,
     if (Process->QuotaUsage[PoolIndex] + Amount >
         Process->QuotaBlock->QuotaEntry[PoolIndex].Limit)
     {
-        return STATUS_QUOTA_EXCEEDED; /* caller raises the exception */
+        DPRINT1("Quota exceeded, but ROS will let it slide...\n");
+        return STATUS_SUCCESS;
+        //return STATUS_QUOTA_EXCEEDED; /* caller raises the exception */
     }
 
     InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[PoolIndex], Amount);
@@ -62,7 +56,6 @@ PspChargeProcessQuotaSpecifiedPool(IN PEPROCESS Process,
 
     return STATUS_SUCCESS;
 }
-
 
 /*
  * Private helper to remove quota charge from the specified process quota.
@@ -90,9 +83,6 @@ PspReturnProcessQuotaSpecifiedPool(IN PEPROCESS Process,
                                -(LONG)Amount);
     }
 }
-
-#endif /* PS_QUOTA_ENABLE_QUOTA_CODE */
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -139,6 +129,9 @@ PspDestroyQuotaBlock(PEPROCESS Process)
     }
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 PsChargeProcessPageFileQuota(IN PEPROCESS Process,
@@ -147,13 +140,7 @@ PsChargeProcessPageFileQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
 
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
     return PspChargeProcessQuotaSpecifiedPool(Process, 2, Amount);
-#else
-    /* Otherwise, not implemented */
-    UNIMPLEMENTED;
-    return STATUS_SUCCESS;
-#endif
 }
 
 /*
@@ -166,12 +153,7 @@ PsChargePoolQuota(IN PEPROCESS Process,
                   IN SIZE_T Amount)
 {
     NTSTATUS Status;
-
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
-    /* MS-documented IRQL requirement. Not yet enabled as it */
-    /* needs verification that it does not break ReactOS, */
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
-#endif
 
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
@@ -217,18 +199,13 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
 
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
     return PspChargeProcessQuotaSpecifiedPool(Process,
                                               (PoolType & PAGED_POOL_MASK),
                                               Amount);
-#else
-    UNIMPLEMENTED;
-    return STATUS_SUCCESS;
-#endif
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
@@ -236,26 +213,16 @@ PsReturnPoolQuota(IN PEPROCESS Process,
                   IN POOL_TYPE PoolType,
                   IN SIZE_T Amount)
 {
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
-    /* MS-documented IRQL requirement. Not yet enabled as it */
-    /* needs verification that it does not break ReactOS, */
-    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
-#endif
-
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
 
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
     PspReturnProcessQuotaSpecifiedPool(Process,
                                        (PoolType & PAGED_POOL_MASK),
                                        Amount);
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
@@ -265,15 +232,11 @@ PsReturnProcessNonPagedPoolQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
 
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
     PsReturnPoolQuota(Process, NonPagedPool, Amount);
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
@@ -283,13 +246,12 @@ PsReturnProcessPagedPoolQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
 
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
     PsReturnPoolQuota(Process, PagedPool, Amount);
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 PsReturnProcessPageFileQuota(IN PEPROCESS Process,
@@ -298,12 +260,7 @@ PsReturnProcessPageFileQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
 
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
     PspReturnProcessQuotaSpecifiedPool(Process, 2, Amount);
-#else
-    /* Otherwise, not implemented */
-    UNIMPLEMENTED;
-#endif
     return STATUS_SUCCESS;
 }
 
