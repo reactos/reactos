@@ -473,7 +473,7 @@
 @ stdcall RtlCopyString(ptr ptr)
 @ stdcall RtlCopyUnicodeString(ptr ptr)
 @ stdcall RtlCreateAcl(ptr long long)
-@ stdcall RtlCreateActivationContext(ptr ptr)
+@ stdcall RtlCreateActivationContext(long ptr long ptr ptr ptr)
 @ stdcall RtlCreateAndSetSD(ptr long ptr ptr ptr)
 @ stdcall RtlCreateAtomTable(long ptr)
 @ stdcall RtlCreateBootStatusDataFile()

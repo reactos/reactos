@@ -903,6 +903,18 @@ typedef struct _ACTIVATION_CONTEXT_STACK
 } ACTIVATION_CONTEXT_STACK, *PACTIVATION_CONTEXT_STACK;
 #endif
 
+typedef struct _ACTIVATION_CONTEXT_DATA
+{
+    ULONG Magic;
+    ULONG HeaderSize;
+    ULONG FormatVersion;
+    ULONG TotalSize;
+    ULONG DefaultTocOffset;
+    ULONG ExtendedTocOffset;
+    ULONG AssemblyRosterOffset;
+    ULONG Flags;
+} ACTIVATION_CONTEXT_DATA, *PACTIVATION_CONTEXT_DATA;
+
 #endif /* NTOS_MODE_USER */
 
 //

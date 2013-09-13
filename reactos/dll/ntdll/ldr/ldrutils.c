@@ -38,7 +38,7 @@ NTSTATUS create_module_activation_context( LDR_DATA_TABLE_ENTRY *module )
         ctx.dwFlags  = ACTCTX_FLAG_RESOURCE_NAME_VALID | ACTCTX_FLAG_HMODULE_VALID;
         ctx.hModule  = module->DllBase;
         ctx.lpResourceName = (LPCWSTR)ISOLATIONAWARE_MANIFEST_RESOURCE_ID;
-        status = RtlCreateActivationContext( &module->EntryPointActivationContext, &ctx );
+        status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &module->EntryPointActivationContext);
     }
     return status;
 }

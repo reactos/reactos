@@ -21,7 +21,6 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-
 VOID
 NTAPI
 BasepFreeActivationContextActivationBlock(IN PBASEP_ACTCTX_BLOCK ActivationBlock)

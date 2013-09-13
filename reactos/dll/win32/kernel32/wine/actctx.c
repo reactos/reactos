@@ -107,7 +107,7 @@ HANDLE WINAPI CreateActCtxW(PCACTCTXW pActCtx)
 
     TRACE("%p %08x\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
 
-    if ((status = RtlCreateActivationContext(&hActCtx, (PVOID*)pActCtx)))
+    if ((status = RtlCreateActivationContext(0, (PVOID)pActCtx, 0, NULL, NULL, &hActCtx)))
     {
         SetLastError(RtlNtStatusToDosError(status));
         return INVALID_HANDLE_VALUE;

@@ -3511,8 +3511,12 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCreateActivationContext(
-    _Out_ PHANDLE Handle,
-    _Inout_ PVOID ReturnedData
+    _In_ ULONG Flags,
+    _In_ PACTIVATION_CONTEXT_DATA ActivationContextData,
+    _In_ ULONG ExtraBytes,
+    _In_ PVOID NotificationRoutine,
+    _In_ PVOID NotificationContext,
+    _Out_ PACTIVATION_CONTEXT *ActCtx
 );
 
 NTSYSAPI
