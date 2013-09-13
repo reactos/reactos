@@ -156,6 +156,7 @@ static HRESULT STDMETHODCALLTYPE dxgi_device_CreateSurface(IWineDXGIDevice *ifac
         const DXGI_SHARED_RESOURCE *shared_resource, IDXGISurface **surface)
 {
     struct wined3d_device_parent *device_parent;
+    struct wined3d_resource_desc surface_desc;
     IWineDXGIDeviceParent *dxgi_device_parent;
     HRESULT hr;
     UINT i;
@@ -174,6 +175,16 @@ static HRESULT STDMETHODCALLTYPE dxgi_device_CreateSurface(IWineDXGIDevice *ifac
     device_parent = IWineDXGIDeviceParent_get_wined3d_device_parent(dxgi_device_parent);
 
     FIXME("Implement DXGI<->wined3d usage conversion\n");
+    surface_desc.resource_type = WINED3D_RTYPE_SURFACE;
+    surface_desc.format = wined3dformat_from_dxgi_format(desc->Format);
+    surface_desc.multisample_type = desc->SampleDesc.Count > 1 ? desc->SampleDesc.Count : WINED3D_MULTISAMPLE_NONE;
+    surface_desc.multisample_quality = desc->SampleDesc.Quality;
+    surface_desc.usage = usage;
+    surface_desc.pool = WINED3D_POOL_DEFAULT;
+    surface_desc.width = desc->Width;
+    surface_desc.height = desc->Height;
+    surface_desc.depth = 1;
+    surface_desc.size = 0;
 
     memset(surface, 0, surface_count * sizeof(*surface));
     for (i = 0; i < surface_count; ++i)
@@ -181,13 +192,10 @@ static HRESULT STDMETHODCALLTYPE dxgi_device_CreateSurface(IWineDXGIDevice *ifac
         struct wined3d_surface *wined3d_surface;
         IUnknown *parent;
 
-        hr = device_parent->ops->create_swapchain_surface(device_parent, NULL,
-                desc->Width, desc->Height, wined3dformat_from_dxgi_format(desc->Format), usage,
-                desc->SampleDesc.Count > 1 ? desc->SampleDesc.Count : WINED3D_MULTISAMPLE_NONE,
-                desc->SampleDesc.Quality, &wined3d_surface);
-        if (FAILED(hr))
+        if (FAILED(hr = device_parent->ops->create_swapchain_surface(device_parent,
+                NULL, &surface_desc, &wined3d_surface)))
         {
-            ERR("CreateSurface failed, returning %#x\n", hr);
+            ERR("Failed to create surface, hr %#x.\n", hr);
             goto fail;
         }
 

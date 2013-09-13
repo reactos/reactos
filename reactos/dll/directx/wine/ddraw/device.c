@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1998-2004 Lionel Ulmer
  * Copyright (c) 2002-2005 Christian Costa
- * Copyright (c) 2006-2009, 2011-2012 Stefan Dösinger
+ * Copyright (c) 2006-2009, 2011-2013 Stefan Dösinger
  * Copyright (c) 2008 Alexander Dorofeyev
  *
  * This library is free software; you can redistribute it and/or
@@ -1111,7 +1111,7 @@ static HRESULT d3d_device7_EnumTextureFormats(IDirect3DDevice7 *iface,
 
             memset(&pformat, 0, sizeof(pformat));
             pformat.dwSize = sizeof(pformat);
-            PixelFormat_WineD3DtoDD(&pformat, FormatList[i]);
+            ddrawformat_from_wined3dformat(&pformat, FormatList[i]);
 
             TRACE("Enumerating WineD3DFormat %d\n", FormatList[i]);
             hr = callback(&pformat, context);
@@ -1134,7 +1134,7 @@ static HRESULT d3d_device7_EnumTextureFormats(IDirect3DDevice7 *iface,
 
             memset(&pformat, 0, sizeof(pformat));
             pformat.dwSize = sizeof(pformat);
-            PixelFormat_WineD3DtoDD(&pformat, BumpFormatList[i]);
+            ddrawformat_from_wined3dformat(&pformat, BumpFormatList[i]);
 
             TRACE("Enumerating WineD3DFormat %d\n", BumpFormatList[i]);
             hr = callback(&pformat, context);
@@ -1242,7 +1242,7 @@ static HRESULT WINAPI d3d_device2_EnumTextureFormats(IDirect3DDevice2 *iface,
             sdesc.dwFlags = DDSD_PIXELFORMAT | DDSD_CAPS;
             sdesc.ddsCaps.dwCaps = DDSCAPS_TEXTURE;
             sdesc.ddpfPixelFormat.dwSize = sizeof(sdesc.ddpfPixelFormat);
-            PixelFormat_WineD3DtoDD(&sdesc.ddpfPixelFormat, FormatList[i]);
+            ddrawformat_from_wined3dformat(&sdesc.ddpfPixelFormat, FormatList[i]);
 
             TRACE("Enumerating WineD3DFormat %d\n", FormatList[i]);
             hr = callback(&sdesc, context);
@@ -2190,43 +2190,6 @@ static HRESULT WINAPI d3d_device2_Index(IDirect3DDevice2 *iface, WORD index)
 }
 
 /*****************************************************************************
- * IDirect3DDevice3::End
- *
- * Ends a draw begun with IDirect3DDevice3::Begin or
- * IDirect3DDevice::BeginIndexed. The vertices specified with
- * IDirect3DDevice::Vertex or IDirect3DDevice::Index are drawn using
- * the IDirect3DDevice7::DrawPrimitive method. So far only
- * non-indexed mode is supported
- *
- * Version 2 and 3
- *
- * Params:
- *  Flags: Some flags, as usual. Don't know which are defined
- *
- * Returns:
- *  The return value of IDirect3DDevice7::DrawPrimitive
- *
- *****************************************************************************/
-static HRESULT WINAPI d3d_device3_End(IDirect3DDevice3 *iface, DWORD flags)
-{
-    struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
-
-    TRACE("iface %p, flags %#x.\n", iface, flags);
-
-    return IDirect3DDevice7_DrawPrimitive(&device->IDirect3DDevice7_iface, device->primitive_type,
-            device->vertex_type, device->sysmem_vertex_buffer, device->nb_vertices, device->render_flags);
-}
-
-static HRESULT WINAPI d3d_device2_End(IDirect3DDevice2 *iface, DWORD flags)
-{
-    struct d3d_device *device = impl_from_IDirect3DDevice2(iface);
-
-    TRACE("iface %p, flags %#x.\n", iface, flags);
-
-    return d3d_device3_End(&device->IDirect3DDevice3_iface, flags);
-}
-
-/*****************************************************************************
  * IDirect3DDevice7::GetRenderState
  *
  * Returns the value of a render state. The possible render states are
@@ -2463,7 +2426,7 @@ static HRESULT WINAPI d3d_device3_GetRenderState(IDirect3DDevice3 *iface,
 
                         wined3d_resource_get_desc(sub_resource, &desc);
                         ddfmt.dwSize = sizeof(ddfmt);
-                        PixelFormat_WineD3DtoDD(&ddfmt, desc.format);
+                        ddrawformat_from_wined3dformat(&ddfmt, desc.format);
                         if (ddfmt.u5.dwRGBAlphaBitMask) tex_alpha = TRUE;
                     }
                 }
@@ -2481,6 +2444,10 @@ static HRESULT WINAPI d3d_device3_GetRenderState(IDirect3DDevice3 *iface,
 
             return D3D_OK;
         }
+
+        case D3DRENDERSTATE_LIGHTING:
+            *value = 0xffffffff;
+            return D3D_OK;
 
         default:
             return IDirect3DDevice7_GetRenderState(&device->IDirect3DDevice7_iface, state, value);
@@ -2752,7 +2719,7 @@ static HRESULT WINAPI d3d_device3_SetRenderState(IDirect3DDevice3 *iface,
 
                             wined3d_resource_get_desc(sub_resource, &desc);
                             ddfmt.dwSize = sizeof(ddfmt);
-                            PixelFormat_WineD3DtoDD(&ddfmt, desc.format);
+                            ddrawformat_from_wined3dformat(&ddfmt, desc.format);
                             if (ddfmt.u5.dwRGBAlphaBitMask) tex_alpha = TRUE;
                         }
                     }
@@ -2836,6 +2803,10 @@ static HRESULT WINAPI d3d_device3_SetRenderState(IDirect3DDevice3 *iface,
             hr = D3D_OK;
             break;
         }
+
+        case D3DRENDERSTATE_LIGHTING:
+            hr = D3D_OK;
+            break;
 
         default:
             hr = IDirect3DDevice7_SetRenderState(&device->IDirect3DDevice7_iface, state, value);
@@ -3512,6 +3483,22 @@ static HRESULT WINAPI d3d_device7_DrawPrimitive_FPUPreserve(IDirect3DDevice7 *if
     return hr;
 }
 
+static void setup_lighting(const struct d3d_device *device, DWORD fvf, DWORD flags)
+{
+    BOOL enable;
+
+    /* Ignore the D3DFVF_XYZRHW case here, wined3d takes care of that */
+    if (flags & D3DDP_DONOTLIGHT)
+        enable = FALSE;
+    else if (!(fvf & D3DFVF_NORMAL))
+        enable = FALSE;
+    else
+        enable = TRUE;
+
+    wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_LIGHTING, enable);
+}
+
+
 static HRESULT WINAPI d3d_device3_DrawPrimitive(IDirect3DDevice3 *iface,
         D3DPRIMITIVETYPE primitive_type, DWORD fvf, void *vertices, DWORD vertex_count,
         DWORD flags)
@@ -3520,6 +3507,8 @@ static HRESULT WINAPI d3d_device3_DrawPrimitive(IDirect3DDevice3 *iface,
 
     TRACE("iface %p, primitive_type %#x, fvf %#x, vertices %p, vertex_count %u, flags %#x.\n",
             iface, primitive_type, fvf, vertices, vertex_count, flags);
+
+    setup_lighting(device, fvf, flags);
 
     return IDirect3DDevice7_DrawPrimitive(&device->IDirect3DDevice7_iface,
             primitive_type, fvf, vertices, vertex_count, flags);
@@ -3545,7 +3534,7 @@ static HRESULT WINAPI d3d_device2_DrawPrimitive(IDirect3DDevice2 *iface,
             return DDERR_INVALIDPARAMS;  /* Should never happen */
     }
 
-    return IDirect3DDevice7_DrawPrimitive(&device->IDirect3DDevice7_iface,
+    return d3d_device3_DrawPrimitive(&device->IDirect3DDevice3_iface,
             primitive_type, fvf, vertices, vertex_count, flags);
 }
 
@@ -3703,6 +3692,8 @@ static HRESULT WINAPI d3d_device3_DrawIndexedPrimitive(IDirect3DDevice3 *iface,
             "indices %p, index_count %u, flags %#x.\n",
             iface, primitive_type, fvf, vertices, vertex_count, indices, index_count, flags);
 
+    setup_lighting(device, fvf, flags);
+
     return IDirect3DDevice7_DrawIndexedPrimitive(&device->IDirect3DDevice7_iface,
             primitive_type, fvf, vertices, vertex_count, indices, index_count, flags);
 }
@@ -3728,8 +3719,45 @@ static HRESULT WINAPI d3d_device2_DrawIndexedPrimitive(IDirect3DDevice2 *iface,
             return DDERR_INVALIDPARAMS;  /* Should never happen */
     }
 
-    return IDirect3DDevice7_DrawIndexedPrimitive(&device->IDirect3DDevice7_iface,
+    return d3d_device3_DrawIndexedPrimitive(&device->IDirect3DDevice3_iface,
             primitive_type, fvf, vertices, vertex_count, indices, index_count, flags);
+}
+
+/*****************************************************************************
+ * IDirect3DDevice3::End
+ *
+ * Ends a draw begun with IDirect3DDevice3::Begin or
+ * IDirect3DDevice::BeginIndexed. The vertices specified with
+ * IDirect3DDevice::Vertex or IDirect3DDevice::Index are drawn using
+ * the IDirect3DDevice3::DrawPrimitive method. So far only
+ * non-indexed mode is supported
+ *
+ * Version 2 and 3
+ *
+ * Params:
+ *  Flags: Some flags, as usual. Don't know which are defined
+ *
+ * Returns:
+ *  The return value of IDirect3DDevice3::DrawPrimitive
+ *
+ *****************************************************************************/
+static HRESULT WINAPI d3d_device3_End(IDirect3DDevice3 *iface, DWORD flags)
+{
+    struct d3d_device *device = impl_from_IDirect3DDevice3(iface);
+
+    TRACE("iface %p, flags %#x.\n", iface, flags);
+
+    return d3d_device3_DrawPrimitive(&device->IDirect3DDevice3_iface, device->primitive_type,
+            device->vertex_type, device->sysmem_vertex_buffer, device->nb_vertices, device->render_flags);
+}
+
+static HRESULT WINAPI d3d_device2_End(IDirect3DDevice2 *iface, DWORD flags)
+{
+    struct d3d_device *device = impl_from_IDirect3DDevice2(iface);
+
+    TRACE("iface %p, flags %#x.\n", iface, flags);
+
+    return d3d_device3_End(&device->IDirect3DDevice3_iface, flags);
 }
 
 /*****************************************************************************
@@ -3972,6 +4000,8 @@ static HRESULT WINAPI d3d_device3_DrawPrimitiveStrided(IDirect3DDevice3 *iface,
     TRACE("iface %p, primitive_type %#x, FVF %#x, strided_data %p, vertex_count %u, flags %#x.\n",
             iface, PrimitiveType, VertexType, D3DDrawPrimStrideData, VertexCount, Flags);
 
+    setup_lighting(device, VertexType, Flags);
+
     return IDirect3DDevice7_DrawPrimitiveStrided(&device->IDirect3DDevice7_iface,
             PrimitiveType, VertexType, D3DDrawPrimStrideData, VertexCount, Flags);
 }
@@ -4097,6 +4127,8 @@ static HRESULT WINAPI d3d_device3_DrawIndexedPrimitiveStrided(IDirect3DDevice3 *
     TRACE("iface %p, primitive_type %#x, FVF %#x, strided_data %p, vertex_count %u, indices %p, index_count %u, flags %#x.\n",
             iface, PrimitiveType, VertexType, D3DDrawPrimStrideData, VertexCount, Indices, IndexCount, Flags);
 
+    setup_lighting(device, VertexType, Flags);
+
     return IDirect3DDevice7_DrawIndexedPrimitiveStrided(&device->IDirect3DDevice7_iface,
             PrimitiveType, VertexType, D3DDrawPrimStrideData, VertexCount, Indices, IndexCount, Flags);
 }
@@ -4188,6 +4220,8 @@ static HRESULT WINAPI d3d_device3_DrawPrimitiveVB(IDirect3DDevice3 *iface, D3DPR
 
     TRACE("iface %p, primitive_type %#x, vb %p, start_vertex %u, vertex_count %u, flags %#x.\n",
             iface, PrimitiveType, D3DVertexBuf, StartVertex, NumVertices, Flags);
+
+    setup_lighting(device, vb->fvf, Flags);
 
     return IDirect3DDevice7_DrawPrimitiveVB(&device->IDirect3DDevice7_iface,
             PrimitiveType, &vb->IDirect3DVertexBuffer7_iface, StartVertex, NumVertices, Flags);
@@ -4320,6 +4354,8 @@ static HRESULT WINAPI d3d_device3_DrawIndexedPrimitiveVB(IDirect3DDevice3 *iface
     TRACE("iface %p, primitive_type %#x, vb %p, indices %p, index_count %u, flags %#x.\n",
             iface, PrimitiveType, D3DVertexBuf, Indices, IndexCount, Flags);
 
+    setup_lighting(device, vb->fvf, Flags);
+
     return IDirect3DDevice7_DrawIndexedPrimitiveVB(&device->IDirect3DDevice7_iface, PrimitiveType,
             &vb->IDirect3DVertexBuffer7_iface, 0, IndexCount, Indices, IndexCount, Flags);
 }
@@ -4355,7 +4391,7 @@ static DWORD in_plane(UINT plane, D3DVECTOR normal, D3DVALUE origin_plane, D3DVE
 {
     float distance, norm;
 
-    norm = sqrt( normal.u1.x * normal.u1.x + normal.u2.y * normal.u2.y + normal.u3.z * normal.u3.z );
+    norm = sqrtf(normal.u1.x * normal.u1.x + normal.u2.y * normal.u2.y + normal.u3.z * normal.u3.z);
     distance = ( origin_plane + normal.u1.x * center.u1.x + normal.u2.y * center.u2.y + normal.u3.z * center.u3.z ) / norm;
 
     if ( fabs( distance ) < radius ) return D3DSTATUS_CLIPUNIONLEFT << plane;
@@ -4616,7 +4652,7 @@ static HRESULT WINAPI d3d_device3_SetTexture(IDirect3DDevice3 *iface,
 
                 wined3d_resource_get_desc(sub_resource, &desc);
                 ddfmt.dwSize = sizeof(ddfmt);
-                PixelFormat_WineD3DtoDD(&ddfmt, desc.format);
+                ddrawformat_from_wined3dformat(&ddfmt, desc.format);
                 if (ddfmt.u5.dwRGBAlphaBitMask) tex_alpha = TRUE;
             }
         }
@@ -6728,6 +6764,8 @@ static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw,
             d3d_device_update_depth_stencil(device));
     if (version == 1) /* Color keying is initially enabled for version 1 devices. */
         wined3d_device_set_render_state(ddraw->wined3d_device, WINED3D_RS_COLORKEYENABLE, TRUE);
+    else if (version == 2)
+        wined3d_device_set_render_state(ddraw->wined3d_device, WINED3D_RS_SPECULARENABLE, TRUE);
 
     return D3D_OK;
 }
@@ -6741,7 +6779,7 @@ HRESULT d3d_device_create(struct ddraw *ddraw, struct ddraw_surface *target,
     TRACE("ddraw %p, target %p, version %u, device %p, outer_unknown %p.\n",
             ddraw, target, version, device, outer_unknown);
 
-    if (DefaultSurfaceType != DDRAW_SURFACE_TYPE_OPENGL)
+    if (ddraw->flags & DDRAW_NO3D)
     {
         ERR_(winediag)("The application wants to create a Direct3D device, "
                 "but the current DirectDrawRenderer does not support this.\n");

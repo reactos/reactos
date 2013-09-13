@@ -164,7 +164,6 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    WORD preloaded = 0; /* MAX_STREAMS, 16 */
     unsigned int i;
 
     if (TRACE_ON(d3d_decl))
@@ -222,13 +221,6 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
             WARN("Declaration element %u is not 4 byte aligned(%u), returning E_FAIL.\n", i, e->offset);
             HeapFree(GetProcessHeap(), 0, declaration->elements);
             return E_FAIL;
-        }
-
-        if (!(preloaded & (1 << e->input_slot)))
-        {
-            declaration->streams[declaration->num_streams] = e->input_slot;
-            ++declaration->num_streams;
-            preloaded |= 1 << e->input_slot;
         }
 
         if (elements[i].format == WINED3DFMT_R16G16_FLOAT || elements[i].format == WINED3DFMT_R16G16B16A16_FLOAT)

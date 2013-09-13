@@ -428,10 +428,10 @@ static HRESULT WINAPI d3d_viewport_TransformVertices(IDirect3DViewport3 *iface,
     outH = lpData->lpHOut;
     for(i = 0; i < dwVertexCount; i++)
     {
-        x = (in[0] * mat._11) + (in[1] * mat._21) + (in[2] * mat._31) + (1.0 * mat._41);
-        y = (in[0] * mat._12) + (in[1] * mat._22) + (in[2] * mat._32) + (1.0 * mat._42);
-        z = (in[0] * mat._13) + (in[1] * mat._23) + (in[2] * mat._33) + (1.0 * mat._43);
-        w = (in[0] * mat._14) + (in[1] * mat._24) + (in[2] * mat._34) + (1.0 * mat._44);
+        x = (in[0] * mat._11) + (in[1] * mat._21) + (in[2] * mat._31) + mat._41;
+        y = (in[0] * mat._12) + (in[1] * mat._22) + (in[2] * mat._32) + mat._42;
+        z = (in[0] * mat._13) + (in[1] * mat._23) + (in[2] * mat._33) + mat._43;
+        w = (in[0] * mat._14) + (in[1] * mat._24) + (in[2] * mat._34) + mat._44;
 
         if(dwFlags & D3DTRANSFORM_CLIPPED)
         {

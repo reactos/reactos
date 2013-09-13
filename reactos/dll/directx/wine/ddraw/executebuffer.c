@@ -381,11 +381,10 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
 			    dst->u7.tu  = src->u7.tu;
 			    dst->u8.tv  = src->u8.tv;
 
-			    /* Now, the matrix multiplication */
-			    dst->u1.sx = (src->u1.x * mat._11) + (src->u2.y * mat._21) + (src->u3.z * mat._31) + (1.0 * mat._41);
-			    dst->u2.sy = (src->u1.x * mat._12) + (src->u2.y * mat._22) + (src->u3.z * mat._32) + (1.0 * mat._42);
-			    dst->u3.sz = (src->u1.x * mat._13) + (src->u2.y * mat._23) + (src->u3.z * mat._33) + (1.0 * mat._43);
-			    dst->u4.rhw = (src->u1.x * mat._14) + (src->u2.y * mat._24) + (src->u3.z * mat._34) + (1.0 * mat._44);
+                            dst->u1.sx = (src->u1.x * mat._11) + (src->u2.y * mat._21) + (src->u3.z * mat._31) + mat._41;
+                            dst->u2.sy = (src->u1.x * mat._12) + (src->u2.y * mat._22) + (src->u3.z * mat._32) + mat._42;
+                            dst->u3.sz = (src->u1.x * mat._13) + (src->u2.y * mat._23) + (src->u3.z * mat._33) + mat._43;
+                            dst->u4.rhw = (src->u1.x * mat._14) + (src->u2.y * mat._24) + (src->u3.z * mat._34) + mat._44;
 
 			    dst->u1.sx = dst->u1.sx / dst->u4.rhw * Viewport->dvScaleX
 				       + Viewport->dwX + Viewport->dwWidth / 2;
@@ -424,11 +423,10 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
 			    dst->u7.tu = src->u6.tu;
 			    dst->u8.tv = src->u7.tv;
 
-			    /* Now, the matrix multiplication */
-			    dst->u1.sx = (src->u1.x * mat._11) + (src->u2.y * mat._21) + (src->u3.z * mat._31) + (1.0 * mat._41);
-			    dst->u2.sy = (src->u1.x * mat._12) + (src->u2.y * mat._22) + (src->u3.z * mat._32) + (1.0 * mat._42);
-			    dst->u3.sz = (src->u1.x * mat._13) + (src->u2.y * mat._23) + (src->u3.z * mat._33) + (1.0 * mat._43);
-			    dst->u4.rhw = (src->u1.x * mat._14) + (src->u2.y * mat._24) + (src->u3.z * mat._34) + (1.0 * mat._44);
+                            dst->u1.sx = (src->u1.x * mat._11) + (src->u2.y * mat._21) + (src->u3.z * mat._31) + mat._41;
+                            dst->u2.sy = (src->u1.x * mat._12) + (src->u2.y * mat._22) + (src->u3.z * mat._32) + mat._42;
+                            dst->u3.sz = (src->u1.x * mat._13) + (src->u2.y * mat._23) + (src->u3.z * mat._33) + mat._43;
+                            dst->u4.rhw = (src->u1.x * mat._14) + (src->u2.y * mat._24) + (src->u3.z * mat._34) + mat._44;
 
 			    dst->u1.sx = dst->u1.sx / dst->u4.rhw * Viewport->dvScaleX
 				       + Viewport->dwX + Viewport->dwWidth / 2;

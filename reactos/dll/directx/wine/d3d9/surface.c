@@ -391,10 +391,9 @@ static const struct wined3d_parent_ops d3d9_surface_wined3d_parent_ops =
 };
 
 HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device, UINT width, UINT height,
-        D3DFORMAT format, BOOL lockable, BOOL discard, DWORD usage, D3DPOOL pool,
-        D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality)
+        D3DFORMAT format, DWORD flags, DWORD usage, D3DPOOL pool, D3DMULTISAMPLE_TYPE multisample_type,
+        DWORD multisample_quality)
 {
-    DWORD flags = 0;
     HRESULT hr;
 
     surface->IDirect3DSurface9_iface.lpVtbl = &d3d9_surface_vtbl;
@@ -422,11 +421,6 @@ HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device, U
         FIXME("Multisample quality set to %u, substituting 0.\n", multisample_quality);
         multisample_quality = 0;
     }
-
-    if (lockable)
-        flags |= WINED3D_SURFACE_MAPPABLE;
-    if (discard)
-        flags |= WINED3D_SURFACE_DISCARD;
 
     wined3d_mutex_lock();
     hr = wined3d_surface_create(device->wined3d_device, width, height, wined3dformat_from_d3dformat(format),

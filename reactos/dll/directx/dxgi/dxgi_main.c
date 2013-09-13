@@ -44,16 +44,8 @@ static struct dxgi_main dxgi_main;
 
 static void dxgi_main_cleanup(void)
 {
-    EnterCriticalSection(&dxgi_cs);
-
     HeapFree(GetProcessHeap(), 0, dxgi_main.device_layers);
-    dxgi_main.device_layers = NULL;
-    dxgi_main.layer_count = 0;
-
     FreeLibrary(dxgi_main.d3d10core);
-    dxgi_main.d3d10core = NULL;
-
-    LeaveCriticalSection(&dxgi_cs);
     DeleteCriticalSection(&dxgi_cs);
 }
 
@@ -68,6 +60,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
             break;
 
         case DLL_PROCESS_DETACH:
+            if (lpv) break;
             dxgi_main_cleanup();
             break;
     }

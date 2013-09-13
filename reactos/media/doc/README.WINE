@@ -35,10 +35,14 @@ reactos/dll/directx/dplay         # Synced to Wine-1.5.26
 reactos/dll/directx/dplayx        # Synced to Wine-1.5.26
 reactos/dll/directx/dsound        # Synced to Wine-1.5.26
 reactos/dll/directx/dxdiagn       # Synced to Wine-0_9_5
-reactos/dll/directx/dxgi          # Synced to Wine-1.5.26
+reactos/dll/directx/dxgi          # Synced to Wine-1.7.1
 reactos/dll/directx/msdmo         # Autosync
 reactos/dll/directx/qedit         # Autosync
 reactos/dll/directx/quartz        # Synced to Wine-1.5.26
+reactos/dll/directx/wine/d3d8     # Synced to Wine-1.7.1
+reactos/dll/directx/wine/d3d9     # Synced to Wine-1.7.1
+reactos/dll/directx/wine/ddraw    # Synced to Wine-1.7.1
+reactos/dll/directx/wine/wined3d  # Synced to Wine-1.7.1
 reactos/dll/win32/activeds        # Synced to Wine-1.1.43?
 reactos/dll/win32/actxprxy        # Synced to Wine-1.5.26
 reactos/dll/win32/advpack         # Synced to Wine-1.7.1

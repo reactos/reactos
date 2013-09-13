@@ -38,28 +38,9 @@ list(APPEND SOURCE
     wined3d_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
 
-add_library(wined3d SHARED
-    ${SOURCE}
-    version.rc)
+add_library(wined3d SHARED ${SOURCE} version.rc)
 set_module_type(wined3d win32dll)
-
 target_link_libraries(wined3d wine)
-
-add_importlibs(wined3d
-    user32
-    opengl32
-    gdi32
-    advapi32
-    msvcrt
-    kernel32
-    ntdll)
-
-add_dependencies(wined3d wineheaders)
+add_importlibs(wined3d user32 opengl32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(wined3d wined3d_private.h)
 add_cd_file(TARGET wined3d DESTINATION reactos/system32 FOR all)
-
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(wined3d)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()

@@ -1309,14 +1309,29 @@ static const struct wined3d_parent_ops d3d9_texture_wined3d_parent_ops =
 HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
         UINT width, UINT height, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool)
 {
+    struct wined3d_resource_desc desc;
+    DWORD surface_flags = 0;
     HRESULT hr;
 
     texture->IDirect3DBaseTexture9_iface.lpVtbl = (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_2d_vtbl;
     texture->refcount = 1;
 
+    desc.resource_type = WINED3D_RTYPE_TEXTURE;
+    desc.format = wined3dformat_from_d3dformat(format);
+    desc.multisample_type = WINED3D_MULTISAMPLE_NONE;
+    desc.multisample_quality = 0;
+    desc.usage = usage & WINED3DUSAGE_MASK;
+    desc.pool = pool;
+    desc.width = width;
+    desc.height = height;
+    desc.depth = 1;
+    desc.size = 0;
+
+    if (pool != D3DPOOL_DEFAULT || (usage & D3DUSAGE_DYNAMIC))
+        surface_flags |= WINED3D_SURFACE_MAPPABLE;
+
     wined3d_mutex_lock();
-    hr = wined3d_texture_create_2d(device->wined3d_device, width, height, levels,
-            usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(format), pool,
+    hr = wined3d_texture_create_2d(device->wined3d_device, &desc, levels, surface_flags,
             texture, &d3d9_texture_wined3d_parent_ops, &texture->wined3d_texture);
     wined3d_mutex_unlock();
     if (FAILED(hr))
@@ -1334,15 +1349,30 @@ HRESULT texture_init(struct d3d9_texture *texture, struct d3d9_device *device,
 HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *device,
         UINT edge_length, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool)
 {
+    struct wined3d_resource_desc desc;
+    DWORD surface_flags = 0;
     HRESULT hr;
 
     texture->IDirect3DBaseTexture9_iface.lpVtbl = (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_cube_vtbl;
     texture->refcount = 1;
 
+    desc.resource_type = WINED3D_RTYPE_CUBE_TEXTURE;
+    desc.format = wined3dformat_from_d3dformat(format);
+    desc.multisample_type = WINED3D_MULTISAMPLE_NONE;
+    desc.multisample_quality = 0;
+    desc.usage = usage & WINED3DUSAGE_MASK;
+    desc.pool = pool;
+    desc.width = edge_length;
+    desc.height = edge_length;
+    desc.depth = 1;
+    desc.size = 0;
+
+    if (pool != D3DPOOL_DEFAULT || (usage & D3DUSAGE_DYNAMIC))
+        surface_flags |= WINED3D_SURFACE_MAPPABLE;
+
     wined3d_mutex_lock();
-    hr = wined3d_texture_create_cube(device->wined3d_device, edge_length,
-            levels, usage, wined3dformat_from_d3dformat(format), pool, texture,
-            &d3d9_texture_wined3d_parent_ops, &texture->wined3d_texture);
+    hr = wined3d_texture_create_cube(device->wined3d_device, &desc, levels, surface_flags,
+            texture, &d3d9_texture_wined3d_parent_ops, &texture->wined3d_texture);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {
@@ -1359,15 +1389,26 @@ HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *devic
 HRESULT volumetexture_init(struct d3d9_texture *texture, struct d3d9_device *device,
         UINT width, UINT height, UINT depth, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool)
 {
+    struct wined3d_resource_desc desc;
     HRESULT hr;
 
     texture->IDirect3DBaseTexture9_iface.lpVtbl = (const IDirect3DBaseTexture9Vtbl *)&d3d9_texture_3d_vtbl;
     texture->refcount = 1;
 
+    desc.resource_type = WINED3D_RTYPE_VOLUME_TEXTURE;
+    desc.format = wined3dformat_from_d3dformat(format);
+    desc.multisample_type = WINED3D_MULTISAMPLE_NONE;
+    desc.multisample_quality = 0;
+    desc.usage = usage & WINED3DUSAGE_MASK;
+    desc.pool = pool;
+    desc.width = width;
+    desc.height = height;
+    desc.depth = depth;
+    desc.size = 0;
+
     wined3d_mutex_lock();
-    hr = wined3d_texture_create_3d(device->wined3d_device, width, height, depth, levels,
-            usage & WINED3DUSAGE_MASK, wined3dformat_from_d3dformat(format), pool, texture,
-            &d3d9_texture_wined3d_parent_ops, &texture->wined3d_texture);
+    hr = wined3d_texture_create_3d(device->wined3d_device, &desc, levels,
+            texture, &d3d9_texture_wined3d_parent_ops, &texture->wined3d_texture);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {

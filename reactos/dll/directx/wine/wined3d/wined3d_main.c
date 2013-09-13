@@ -74,7 +74,6 @@ struct wined3d_settings wined3d_settings =
 {
     TRUE,           /* Use of GLSL enabled by default */
     ORM_FBO,        /* Use FBOs to do offscreen rendering */
-    RTL_READTEX,    /* Default render target locking method */
     PCI_VENDOR_NONE,/* PCI Vendor ID */
     PCI_DEVICE_NONE,/* PCI Device ID */
     0,              /* The default of memory is set in init_driver_info */
@@ -85,6 +84,7 @@ struct wined3d_settings wined3d_settings =
     ~0U,            /* No VS shader model limit by default. */
     ~0U,            /* No GS shader model limit by default. */
     ~0U,            /* No PS shader model limit by default. */
+    FALSE,          /* 3D support enabled by default. */
 };
 
 /* Do not call while under the GL lock. */
@@ -99,6 +99,9 @@ struct wined3d * CDECL wined3d_create(UINT version, DWORD flags)
         ERR("Failed to allocate wined3d object memory.\n");
         return NULL;
     }
+
+    if (version == 7 && wined3d_settings.no_3d)
+        flags |= WINED3D_NO3D;
 
     hr = wined3d_init(object, version, flags);
     if (FAILED(hr))
@@ -219,19 +222,6 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
                 wined3d_settings.offscreen_rendering_mode = ORM_FBO;
             }
         }
-        if ( !get_config_key( hkey, appkey, "RenderTargetLockMode", buffer, size) )
-        {
-            if (!strcmp(buffer,"readdraw"))
-            {
-                TRACE("Using glReadPixels for render target reading and glDrawPixels for writing\n");
-                wined3d_settings.rendertargetlock_mode = RTL_READDRAW;
-            }
-            else if (!strcmp(buffer,"readtex"))
-            {
-                TRACE("Using glReadPixels for render target reading and textures for writing\n");
-                wined3d_settings.rendertargetlock_mode = RTL_READTEX;
-            }
-        }
         if ( !get_config_key_dword( hkey, appkey, "VideoPciDeviceID", &tmpvalue) )
         {
             int pci_device_id = tmpvalue;
@@ -309,6 +299,12 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             TRACE("Limiting GS shader model to %u.\n", wined3d_settings.max_sm_gs);
         if (!get_config_key_dword(hkey, appkey, "MaxShaderModelPS", &wined3d_settings.max_sm_ps))
             TRACE("Limiting PS shader model to %u.\n", wined3d_settings.max_sm_ps);
+        if (!get_config_key(hkey, appkey, "DirectDrawRenderer", buffer, size)
+                && !strcmp(buffer, "gdi"))
+        {
+            TRACE("Disabling 3D support.\n");
+            wined3d_settings.no_3d = TRUE;
+        }
     }
 
     if (appkey) RegCloseKey( appkey );
@@ -521,18 +517,15 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
             return wined3d_dll_init(hInstDLL);
 
         case DLL_PROCESS_DETACH:
+            if (lpv) break;
             return wined3d_dll_destroy(hInstDLL);
 
         case DLL_THREAD_DETACH:
-        {
             if (!context_set_current(NULL))
             {
                 ERR("Failed to clear current context.\n");
             }
             return TRUE;
-        }
-
-        default:
-            return TRUE;
     }
+    return TRUE;
 }
