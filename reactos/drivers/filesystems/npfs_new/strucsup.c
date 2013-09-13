@@ -56,7 +56,7 @@ NpDeleteEventTableEntry(IN PRTL_GENERIC_TABLE Table,
 {
     if (!Buffer) return FALSE;
 
-    ObfDereferenceObject(((PNP_EVENT_BUFFER)Buffer)->Event);
+    ObDereferenceObject(((PNP_EVENT_BUFFER)Buffer)->Event);
     return RtlDeleteElementGenericTable(Table, Buffer);
 }
 

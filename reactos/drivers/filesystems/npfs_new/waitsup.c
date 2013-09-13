@@ -28,7 +28,7 @@ NpCancelWaitQueueIrp(IN PDEVICE_OBJECT DeviceObject,
 
     WaitQueue = (PNP_WAIT_QUEUE)Irp->Tail.Overlay.DriverContext[0];
 
-    OldIrql = KfAcquireSpinLock(&WaitQueue->WaitLock);
+    KeAcquireSpinLock(&WaitQueue->WaitLock, &OldIrql);
 
     WaitEntry = (PNP_WAIT_QUEUE_ENTRY)Irp->Tail.Overlay.DriverContext[1];
     if (WaitEntry)
@@ -41,7 +41,7 @@ NpCancelWaitQueueIrp(IN PDEVICE_OBJECT DeviceObject,
         }
     }
 
-    KfReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
+    KeReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
 
     if (WaitEntry)
     {
@@ -65,7 +65,7 @@ NpTimerDispatch(IN PKDPC Dpc,
     KIRQL OldIrql;
     PNP_WAIT_QUEUE_ENTRY WaitEntry = Context;
 
-    OldIrql = KfAcquireSpinLock(&WaitEntry->WaitQueue->WaitLock);
+    KeAcquireSpinLock(&WaitEntry->WaitQueue->WaitLock, &OldIrql);
 
     Irp = WaitEntry->Irp;
     if (Irp)
@@ -79,7 +79,7 @@ NpTimerDispatch(IN PKDPC Dpc,
         }
     }
 
-    KfReleaseSpinLock(&WaitEntry->WaitQueue->WaitLock, OldIrql);
+    KeReleaseSpinLock(&WaitEntry->WaitQueue->WaitLock, OldIrql);
 
     if (Irp)
     {
@@ -125,7 +125,7 @@ NpCancelWaiter(IN PNP_WAIT_QUEUE WaitQueue,
     RtlInitEmptyUnicodeString(&DestinationString, Buffer, PipeName->Length);
     RtlUpcaseUnicodeString(&DestinationString, PipeName, FALSE);
 
-    OldIrql = KfAcquireSpinLock(&WaitQueue->WaitLock);
+    KeAcquireSpinLock(&WaitQueue->WaitLock, &OldIrql);
 
     for (NextEntry = WaitQueue->WaitList.Flink;
          NextEntry != &WaitQueue->WaitList;
@@ -187,7 +187,7 @@ CancelWait:
         }
     }
 
-    KfReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
+    KeReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
 
     ExFreePool(DestinationString.Buffer);
 
@@ -261,7 +261,7 @@ NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
     Irp->Tail.Overlay.DriverContext[0] = WaitQueue;
     Irp->Tail.Overlay.DriverContext[1] = WaitEntry;
 
-    OldIrql = KfAcquireSpinLock(&WaitQueue->WaitLock);
+    KeAcquireSpinLock(&WaitQueue->WaitLock, &OldIrql);
 
     IoSetCancelRoutine(Irp, NpCancelWaitQueueIrp);
 
@@ -284,7 +284,7 @@ NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
 
     }
 
-    KfReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
+    KeReleaseSpinLock(&WaitQueue->WaitLock, OldIrql);
     if (WaitEntry) ExFreePool(WaitEntry);
 
     return Status;

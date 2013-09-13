@@ -48,7 +48,7 @@ NpFreeClientSecurityContext(IN PSECURITY_CLIENT_CONTEXT ClientContext)
     ClientToken = ClientContext->ClientToken;
     if ((TokenType == TokenPrimary) || (ClientToken))
     {
-        ObfDereferenceObject(ClientToken);
+        ObDereferenceObject(ClientToken);
     }
     ExFreePool(ClientContext);
 }
