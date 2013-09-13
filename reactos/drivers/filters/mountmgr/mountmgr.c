@@ -169,19 +169,22 @@ CreateNewDriveLetterName(OUT PUNICODE_STRING DriveLetter,
         }
     }
 
-    /* If caller didn't provide a letter, let's find one for him.
-     * If device is a floppy, start with letter A
-     */
+    /* If caller didn't provide a letter, let's find one for him */
+
     if (RtlPrefixUnicodeString(&DeviceFloppy, DeviceName, TRUE))
     {
+        /* If the device is a floppy, start with letter A */
         Letter = 'A';
+    }
+    else if (RtlPrefixUnicodeString(&DeviceCdRom, DeviceName, TRUE))
+    {
+        /* If the device is a CD-ROM, start with letter D */
+        Letter = 'D';
     }
     else
     {
-        /* Otherwise, if device is a cd rom, then, start with D.
-         * Finally, if a disk, use C
-         */
-        Letter = RtlPrefixUnicodeString(&DeviceCdRom, DeviceName, TRUE) + 'C';
+        /* Finally, if it's a disk, use C */
+        Letter = 'C';
     }
 
     /* Try to affect a letter (up to Z, ofc) until it's possible */
