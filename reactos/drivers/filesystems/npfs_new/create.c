@@ -551,7 +551,7 @@ NpCreateNewNamedPipe(IN PNP_DCB Dcb,
                          Parameters->NamedPipeType & 0xFFFF,
                          &Fcb);
     if (!NT_SUCCESS(Status)) goto Quickie;
-    
+
     Status = NpCreateCcb(Fcb,
                          FileObject,
                          FILE_PIPE_LISTENING_STATE,

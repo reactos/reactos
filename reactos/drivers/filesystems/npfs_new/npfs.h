@@ -178,7 +178,7 @@ typedef struct _NP_WAIT_QUEUE_ENTRY
     KDPC Dpc;
     KTIMER Timer;
     PNP_WAIT_QUEUE WaitQueue;
-    UNICODE_STRING String;
+    UNICODE_STRING AliasName;
     PFILE_OBJECT FileObject;
 } NP_WAIT_QUEUE_ENTRY, *PNP_WAIT_QUEUE_ENTRY;
 
@@ -590,7 +590,7 @@ NTAPI
 NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
             IN LARGE_INTEGER WaitTime,
             IN PIRP Irp, 
-            IN PUNICODE_STRING Name);
+            IN PUNICODE_STRING AliasName);
 
 NTSTATUS
 NTAPI

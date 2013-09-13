@@ -206,7 +206,7 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
 {
     PIO_STACK_LOCATION IoStack;
     NODE_TYPE_CODE Type;
-    ULONG InputLength;
+    ULONG OutputLength;
     ULONG NamedPipeEnd;
     PNP_CCB Ccb;
     PFILE_PIPE_PEEK_BUFFER PeekBuffer;
@@ -218,7 +218,7 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
     PAGED_CODE();
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    InputLength = IoStack->Parameters.FileSystemControl.OutputBufferLength;
+    OutputLength = IoStack->Parameters.FileSystemControl.OutputBufferLength;
     Type = NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd);
 
     if (!Type)
@@ -226,7 +226,8 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
         return STATUS_PIPE_DISCONNECTED;
     }
 
-    if ((Type != NPFS_NTC_CCB) && (InputLength < sizeof(*PeekBuffer)))
+    if ((Type != NPFS_NTC_CCB) &&
+        (OutputLength < FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data)))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -264,7 +265,7 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
     PeekBuffer->NumberOfMessages = 0;
     PeekBuffer->MessageLength = 0;
     PeekBuffer->NamedPipeState = Ccb->NamedPipeState;
-    BytesPeeked = sizeof(*PeekBuffer);
+    BytesPeeked = FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data);
 
     if (DataQueue->QueueState == WriteEntries)
     {
@@ -279,7 +280,8 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
             PeekBuffer->NumberOfMessages = DataQueue->EntriesInQueue;
             PeekBuffer->MessageLength = DataEntry->DataSize - DataQueue->ByteOffset;
         }
-        if (InputLength == sizeof(*PeekBuffer))
+
+        if (OutputLength == FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data))
         {
             Status = PeekBuffer->ReadDataAvailable ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS;
         }
@@ -289,12 +291,12 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
                                        TRUE,
                                        FALSE,
                                        PeekBuffer->Data,
-                                       InputLength - sizeof(*PeekBuffer),
+                                       OutputLength - FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data),
                                        Ccb->Fcb->NamedPipeType == FILE_PIPE_MESSAGE_TYPE,
                                        Ccb,
                                        List);
             Status = IoStatus.Status;
-            BytesPeeked = IoStatus.Information + sizeof(*PeekBuffer);
+            BytesPeeked += IoStatus.Information;
         }
     }
     else
@@ -523,14 +525,18 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     NODE_TYPE_CODE NodeTypeCode;
     PLIST_ENTRY NextEntry;
     PNP_FCB Fcb;
+    PWCHAR OriginalBuffer;
     PAGED_CODE();
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    InLength = IoStack->Parameters.DeviceIoControl.InputBufferLength;
+    InLength = IoStack->Parameters.FileSystemControl.InputBufferLength;
 
     SourceString.Buffer = NULL;
 
-    if (NpDecodeFileObject(IoStack->FileObject, NULL, &Ccb, &NamedPipeEnd) != NPFS_NTC_ROOT_DCB)
+    if (NpDecodeFileObject(IoStack->FileObject,
+                           NULL,
+                           &Ccb,
+                           &NamedPipeEnd) != NPFS_NTC_ROOT_DCB)
     {
         Status = STATUS_ILLEGAL_FUNCTION;
         goto Quickie;
@@ -544,14 +550,17 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     }
 
     NameLength = Buffer->NameLength;
-    if ((NameLength > 0xFFFD) || ((NameLength + sizeof(*Buffer)) > InLength))
+    if ((NameLength > (0xFFFF - sizeof(UNICODE_NULL))) ||
+        ((NameLength + FIELD_OFFSET(FILE_PIPE_WAIT_FOR_BUFFER, Name)) > InLength))
     {
         Status = STATUS_INVALID_PARAMETER;
         goto Quickie;
     }
 
     SourceString.Length = (USHORT)NameLength + sizeof(OBJ_NAME_PATH_SEPARATOR);
-    SourceString.Buffer = ExAllocatePoolWithTag(PagedPool, SourceString.Length, NPFS_WRITE_BLOCK_TAG);
+    SourceString.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                SourceString.Length,
+                                                NPFS_WRITE_BLOCK_TAG);
     if (!SourceString.Buffer)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -562,6 +571,7 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
     RtlCopyMemory(&SourceString.Buffer[1], Buffer->Name, Buffer->NameLength);
 
     Status = STATUS_SUCCESS;
+    OriginalBuffer = SourceString.Buffer;
     //Status = NpTranslateAlias(&SourceString);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
@@ -583,7 +593,7 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
         if (Ccb->NamedPipeState == FILE_PIPE_LISTENING_STATE) break;
     }
 
-    if (NextEntry == &Fcb->CcbList)
+    if (NextEntry != &Fcb->CcbList)
     {
         Status = STATUS_SUCCESS;
     }
@@ -592,7 +602,8 @@ NpWaitForNamedPipe(IN PDEVICE_OBJECT DeviceObject,
         Status = NpAddWaiter(&NpVcb->WaitQueue,
                              Fcb->Timeout,
                              Irp,
-                             &SourceString);
+                             OriginalBuffer == SourceString.Buffer ?
+                             NULL : &SourceString);
     }
 
 Quickie:

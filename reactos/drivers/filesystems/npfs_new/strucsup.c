@@ -66,7 +66,6 @@ NpDeleteFcb(IN PNP_FCB Fcb,
             IN PLIST_ENTRY ListEntry)
 {
     PNP_DCB Dcb;
-
     PAGED_CODE();
 
     Dcb = Fcb->ParentDcb;
@@ -76,7 +75,7 @@ NpDeleteFcb(IN PNP_FCB Fcb,
                    &Fcb->FullName,
                    STATUS_OBJECT_NAME_NOT_FOUND,
                    ListEntry);
-    
+
     RemoveEntryList(&Fcb->DcbEntry);
 
     if (Fcb->SecurityDescriptor)

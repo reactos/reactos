@@ -62,7 +62,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     DriverObject->DriverUnload = NULL;
 
-    RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe2");
+    RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe");
     Status = IoCreateDevice(DriverObject,
                             sizeof(NP_VCB),
                             &DeviceName,
