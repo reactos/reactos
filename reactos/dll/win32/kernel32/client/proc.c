@@ -629,14 +629,14 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
 
     /* Create the Parameter Block */
     ProcessParameters = NULL;
-    DPRINT1("ImageName: '%wZ'\n", &ImageName);
-    DPRINT1("DllPath  : '%wZ'\n", &DllPath);
-    DPRINT1("CurDir   : '%wZ'\n", &CurrentDirectory);
-    DPRINT1("CmdLine  : '%wZ'\n", &CommandLine);
-    DPRINT1("Title    : '%wZ'\n", &Title);
-    DPRINT1("Desktop  : '%wZ'\n", &Desktop);
-    DPRINT1("Shell    : '%wZ'\n", &Shell);
-    DPRINT1("Runtime  : '%wZ'\n", &Runtime);
+    DPRINT("ImageName: '%wZ'\n", &ImageName);
+    DPRINT("DllPath  : '%wZ'\n", &DllPath);
+    DPRINT("CurDir   : '%wZ'\n", &CurrentDirectory);
+    DPRINT("CmdLine  : '%wZ'\n", &CommandLine);
+    DPRINT("Title    : '%wZ'\n", &Title);
+    DPRINT("Desktop  : '%wZ'\n", &Desktop);
+    DPRINT("Shell    : '%wZ'\n", &Shell);
+    DPRINT("Runtime  : '%wZ'\n", &Runtime);
     Status = RtlCreateProcessParameters(&ProcessParameters,
                                         &ImageName,
                                         &DllPath,
@@ -2468,7 +2468,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     PolicyPathPair.Nt = &SxsNtPolicyPath.String;
 #endif
 
-    DPRINT1("CreateProcessInternalW: %S %S %lx\n", lpApplicationName, lpCommandLine, dwCreationFlags);
+    DPRINT("CreateProcessInternalW: %S %S %lx\n", lpApplicationName, lpCommandLine, dwCreationFlags);
 
     /* Finally, set our TEB and PEB */
     Teb = NtCurrentTeb();
@@ -2710,7 +2710,7 @@ StartScan:
 
         /* Now compute the final EXE path based on the name */
         SearchPath = BaseComputeProcessExePath((LPWSTR)lpApplicationName);
-        DPRINT1("Search Path: %S\n", SearchPath);
+        DPRINT("Search Path: %S\n", SearchPath);
         if (!SearchPath)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -2744,7 +2744,7 @@ StartScan:
             }
         }
 
-        DPRINT1("Length: %lu Buffer: %S\n", Length, NameBuffer);
+        DPRINT("Length: %lu Buffer: %S\n", Length, NameBuffer);
 
         /* Check if there was a failure in SearchPathW */
         if ((Length) && (Length < MAX_PATH))
@@ -2891,7 +2891,7 @@ StartScan:
     }
 
     /* Now use the path name, and the root path, to try opening the app */
-    DPRINT1("Path: %wZ. Dir: %p\n", &PathName, SxsWin32RelativePath.ContainingDirectory);
+    DPRINT("Path: %wZ. Dir: %p\n", &PathName, SxsWin32RelativePath.ContainingDirectory);
     InitializeObjectAttributes(&LocalObjectAttributes,
                                &PathName,
                                OBJ_CASE_INSENSITIVE,
@@ -2956,7 +2956,7 @@ StartScan:
                              PAGE_EXECUTE,
                              SEC_IMAGE,
                              FileHandle);
-    DPRINT1("Section status: %lx\n", Status);
+    DPRINT("Section status: %lx\n", Status);
     if (NT_SUCCESS(Status))
     {
         /* Are we running on Windows Embedded, Datacenter, Blade or Starter? */

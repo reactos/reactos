@@ -401,7 +401,7 @@ WINAPI
 BaseComputeProcessExePath(IN LPWSTR FullPath)
 {
     PBASE_SEARCH_PATH_TYPE PathOrder;
-    DPRINT1("Computing EXE path: %S\n", FullPath);
+    DPRINT("Computing EXE path: %S\n", FullPath);
 
     /* Check if we should use the current directory */
     PathOrder = NeedCurrentDirectoryForExePathW(FullPath) ?
