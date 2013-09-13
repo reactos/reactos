@@ -135,7 +135,7 @@ NpRemoveDataQueueEntry(IN PNP_DATA_QUEUE DataQueue,
 
         DataQueue->QuotaUsed -= QueueEntry->QuotaInEntry;
 
-        if (DataQueue->Queue.Flink == &DataQueue->Queue)
+        if (IsListEmpty(&DataQueue->Queue))
         {
             DataQueue->QueueState = Empty;
             HasWrites = 0;
@@ -239,7 +239,9 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
         ClientSecurityContext = DataEntry->ClientSecurityContext;
 
         CompleteWrites = 1;
-        if (!DataQueue->QueueState != WriteEntries || DataQueue->QuotaUsed < DataQueue->Quota || !DataEntry->QuotaInEntry)
+        if (DataQueue->QueueState != WriteEntries ||
+            DataQueue->QuotaUsed < DataQueue->Quota ||
+            !DataEntry->QuotaInEntry)
         {
             CompleteWrites = 0;
         }
@@ -248,7 +250,7 @@ NpCancelDataQueueIrp(IN PDEVICE_OBJECT DeviceObject,
         DataQueue->QuotaUsed -= DataEntry->QuotaInEntry;
         --DataQueue->EntriesInQueue;
 
-        if (DataQueue->Queue.Flink == &DataQueue->Queue)
+        if (IsListEmpty(&DataQueue->Queue))
         {
             DataQueue->QueueState = Empty;
             ASSERT(DataQueue->BytesInQueue == 0);
@@ -288,7 +290,7 @@ NTAPI
 NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
                     IN PNP_CCB Ccb,
                     IN PNP_DATA_QUEUE DataQueue,
-                    IN ULONG Who, 
+                    IN ULONG Who,
                     IN ULONG Type,
                     IN ULONG DataSize,
                     IN PIRP Irp,
@@ -433,7 +435,7 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
     {
         ASSERT(DataQueue->BytesInQueue == 0);
         ASSERT(DataQueue->EntriesInQueue == 0);
-        ASSERT(IsListEmpty (&DataQueue->Queue));
+        ASSERT(IsListEmpty(&DataQueue->Queue));
     }
     else
     {
