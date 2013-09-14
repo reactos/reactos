@@ -3,7 +3,7 @@ add_definitions(
     -D__WINESRC__
     -D_ATL_VER=_ATL_VER_80)
 
-spec2def(atl80.dll atl80.spec)
+spec2def(atl80.dll atl80.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     atl80.c
