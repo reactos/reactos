@@ -13,9 +13,9 @@ if(MSVC)
 endif()
 
 list(APPEND SOURCE
-    lex.yy.c
     preproc.c
     wpp.c
+    ppl.yy.c
     ppy.tab.c)
 
 add_library(wpp ${SOURCE})

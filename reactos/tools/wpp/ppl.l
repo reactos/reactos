@@ -329,6 +329,7 @@ void pp_writestring(const char *format, ...)
 	va_start(valist, format);
 	len = vsnprintf(buffer, buffercapacity,
 			format, valist);
+	va_end(valist);
         /* If the string is longer than buffersize, vsnprintf returns
          * the string length with glibc >= 2.1, -1 with glibc < 2.1 */
 	while(len > buffercapacity || len < 0)
@@ -345,10 +346,11 @@ void pp_writestring(const char *format, ...)
 			return;
 		}
 		buffer = new_buffer;
+		va_start(valist, format);
 		len = vsnprintf(buffer, buffercapacity,
 				format, valist);
+		va_end(valist);
 	}
-	va_end(valist);
 
 	wpp_callbacks->write(buffer, len);
 }
@@ -772,7 +774,10 @@ void pp_writestring(const char *format, ...)
 		if(!bep)
 		{
 			if(YY_START != INITIAL)
+			{
 				ppy_error("Unexpected end of file during preprocessing");
+				BEGIN(INITIAL);
+			}
 			yyterminate();
 		}
 		else if(bep->should_pop == 2)
@@ -1596,7 +1601,7 @@ void pp_do_include(char *fname, int type)
 	/* Undo the effect of the quotation */
 	fname[n-1] = '\0';
 
-	if((fp = pp_open_include(fname+1, type ? pp_status.input : NULL, &newpath)) == NULL)
+	if((fp = pp_open_include(fname+1, type, pp_status.input, &newpath)) == NULL)
 	{
 		ppy_error("Unable to open include file %s", fname+1);
 		return;

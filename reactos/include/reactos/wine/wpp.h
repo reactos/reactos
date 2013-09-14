@@ -29,12 +29,12 @@ struct wpp_callbacks
     /* I/O callbacks */
 
     /* Looks for a file to include, returning the path where it is found */
-    /* parent_name is the directory of the parent source file (for local
-     * includes), includepath is an array of additional include paths */
-    char *(*lookup)( const char *filename, const char *parent_name,
+    /* The type param is true for local (#include "filename.h") includes */
+    /* parent_name is the directory of the parent source file, includepath
+     * is an array of additional include paths */
+    char *(*lookup)( const char *filename, int type, const char *parent_name,
                      char **include_path, int include_path_count );
     /* Opens an include file */
-    /* The type param is true if it is a local ("...") include */
     void *(*open)( const char *filename, int type );
     /* Closes a previously opened file */
     void (*close)( void *file );

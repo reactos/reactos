@@ -23,7 +23,7 @@ The following build tools are shared with Wine.
 
 reactos/tools/unicode             # Synced to Wine-1.5.19
 reactos/tools/widl                # Synced to Wine-1.5.11
-reactos/tools/wpp                 # Synced to Wine-1.3.26
+reactos/tools/wpp                 # Synced to Wine-1.7.1
 
 The following libraries are shared with Wine.
 

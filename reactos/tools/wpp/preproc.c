@@ -115,7 +115,7 @@ char *pp_xstrdup(const char *str)
 	return memcpy(s, str, len);
 }
 
-static char *wpp_default_lookup(const char *name, const char *parent_name,
+static char *wpp_default_lookup(const char *name, int type, const char *parent_name,
                                 char **include_path, int include_path_count)
 {
     char *cpy;
@@ -144,7 +144,7 @@ static char *wpp_default_lookup(const char *name, const char *parent_name,
     }
     *cptr = '\0';
 
-    if(parent_name)
+    if(type && parent_name)
     {
         /* Search directory of parent include and then -I path */
         const char *p;
@@ -507,17 +507,17 @@ int wpp_add_include_path(const char *path)
 
 char *wpp_find_include(const char *name, const char *parent_name)
 {
-    return wpp_default_lookup(name, parent_name, includepath, nincludepath);
+    return wpp_default_lookup(name, !!parent_name, parent_name, includepath, nincludepath);
 }
 
-void *pp_open_include(const char *name, const char *parent_name, char **newpath)
+void *pp_open_include(const char *name, int type, const char *parent_name, char **newpath)
 {
     char *path;
     void *fp;
 
-    if (!(path = wpp_callbacks->lookup(name, parent_name, includepath,
+    if (!(path = wpp_callbacks->lookup(name, type, parent_name, includepath,
                                        nincludepath))) return NULL;
-    fp = wpp_callbacks->open(path, parent_name == NULL ? 1 : 0);
+    fp = wpp_callbacks->open(path, type);
 
     if (fp)
     {

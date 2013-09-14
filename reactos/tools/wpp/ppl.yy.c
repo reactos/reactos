@@ -1,11 +1,11 @@
-#line 2 "lex.yy.c"
+#line 2 "ppl.yy.c"
 #line 125 "ppl.l"
 #include "config.h"
 #include "wine/port.h"
 
 
 
-#line 9 "lex.yy.c"
+#line 9 "ppl.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -1367,6 +1367,7 @@ void pp_writestring(const char *format, ...)
 	va_start(valist, format);
 	len = vsnprintf(buffer, buffercapacity,
 			format, valist);
+	va_end(valist);
         /* If the string is longer than buffersize, vsnprintf returns
          * the string length with glibc >= 2.1, -1 with glibc < 2.1 */
 	while(len > buffercapacity || len < 0)
@@ -1383,10 +1384,11 @@ void pp_writestring(const char *format, ...)
 			return;
 		}
 		buffer = new_buffer;
+		va_start(valist, format);
 		len = vsnprintf(buffer, buffercapacity,
 				format, valist);
+		va_end(valist);
 	}
-	va_end(valist);
 
 	wpp_callbacks->write(buffer, len);
 }
@@ -1396,7 +1398,7 @@ void pp_writestring(const char *format, ...)
  * The scanner starts here
  **************************************************************************
  */
-#line 1400 "lex.yy.c"
+#line 1402 "ppl.yy.c"
 
 #define INITIAL 0
 #define pp_pp 1
@@ -1615,7 +1617,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 364 "ppl.l"
+#line 366 "ppl.l"
 
 	/*
 	 * Catch line-continuations.
@@ -1629,7 +1631,7 @@ YY_DECL
 	/*
 	 * Detect the leading # of a preprocessor directive.
 	 */
-#line 1633 "lex.yy.c"
+#line 1635 "ppl.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -1711,7 +1713,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 377 "ppl.l"
+#line 379 "ppl.l"
 pp_incl_state.seen_junk++; yy_push_state(pp_pp);
 	YY_BREAK
 /*
@@ -1719,104 +1721,104 @@ pp_incl_state.seen_junk++; yy_push_state(pp_pp);
 	 */
 case 2:
 YY_RULE_SETUP
-#line 382 "ppl.l"
+#line 384 "ppl.l"
 if(yy_top_state() != pp_ignore) {yy_pp_state(pp_inc); return tINCLUDE;} else {yy_pp_state(pp_eol);}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 383 "ppl.l"
+#line 385 "ppl.l"
 yy_pp_state(yy_current_state() != pp_ignore ? pp_def : pp_eol);
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 384 "ppl.l"
+#line 386 "ppl.l"
 yy_pp_state(pp_eol);	if(yy_top_state() != pp_ignore) return tERROR;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 385 "ppl.l"
+#line 387 "ppl.l"
 yy_pp_state(pp_eol);	if(yy_top_state() != pp_ignore) return tWARNING;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 386 "ppl.l"
+#line 388 "ppl.l"
 yy_pp_state(pp_eol);	if(yy_top_state() != pp_ignore) return tPRAGMA;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 387 "ppl.l"
+#line 389 "ppl.l"
 yy_pp_state(pp_eol);	if(yy_top_state() != pp_ignore) return tPPIDENT;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 388 "ppl.l"
+#line 390 "ppl.l"
 if(yy_top_state() != pp_ignore) {yy_pp_state(pp_ifd); return tUNDEF;} else {yy_pp_state(pp_eol);}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 389 "ppl.l"
+#line 391 "ppl.l"
 yy_pp_state(pp_ifd);	return tIFDEF;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 390 "ppl.l"
+#line 392 "ppl.l"
 pp_incl_state.seen_junk--; yy_pp_state(pp_ifd);	return tIFNDEF;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 391 "ppl.l"
+#line 393 "ppl.l"
 yy_pp_state(pp_if);	return tIF;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 392 "ppl.l"
+#line 394 "ppl.l"
 yy_pp_state(pp_if);	return tELIF;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 393 "ppl.l"
+#line 395 "ppl.l"
 yy_pp_state(pp_endif);  return tELSE;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 394 "ppl.l"
+#line 396 "ppl.l"
 yy_pp_state(pp_endif);  return tENDIF;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 395 "ppl.l"
+#line 397 "ppl.l"
 if(yy_top_state() != pp_ignore) {yy_pp_state(pp_line); return tLINE;} else {yy_pp_state(pp_eol);}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 396 "ppl.l"
+#line 398 "ppl.l"
 if(yy_top_state() != pp_ignore) {yy_pp_state(pp_line); return tGCCLINE;} else {yy_pp_state(pp_eol);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 397 "ppl.l"
+#line 399 "ppl.l"
 ppy_error("Invalid preprocessor token '%s'", ppy_text);
 	YY_BREAK
 case 18:
 /* rule 18 can match eol */
 YY_RULE_SETUP
-#line 398 "ppl.l"
+#line 400 "ppl.l"
 newline(1); yy_pop_state(); return tNL;	/* This could be the null-token */
 	YY_BREAK
 case 19:
 /* rule 19 can match eol */
 YY_RULE_SETUP
-#line 399 "ppl.l"
+#line 401 "ppl.l"
 newline(0);
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 400 "ppl.l"
+#line 402 "ppl.l"
 ppy_error("Preprocessor junk '%s'", ppy_text);
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 401 "ppl.l"
+#line 403 "ppl.l"
 return *ppy_text;
 	YY_BREAK
 /*
@@ -1824,39 +1826,39 @@ return *ppy_text;
 	 */
 case 22:
 YY_RULE_SETUP
-#line 406 "ppl.l"
+#line 408 "ppl.l"
 return make_number(10, &ppy_lval, ppy_text, ppy_leng);
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 407 "ppl.l"
+#line 409 "ppl.l"
 new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_iqs);
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 408 "ppl.l"
+#line 410 "ppl.l"
 new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_dqs);
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 409 "ppl.l"
+#line 411 "ppl.l"
 ;
 	YY_BREAK
 case 26:
 /* rule 26 can match eol */
 YY_RULE_SETUP
-#line 410 "ppl.l"
+#line 412 "ppl.l"
 newline(1); yy_pop_state(); return tNL;
 	YY_BREAK
 case 27:
 /* rule 27 can match eol */
 YY_RULE_SETUP
-#line 411 "ppl.l"
+#line 413 "ppl.l"
 newline(0);
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 412 "ppl.l"
+#line 414 "ppl.l"
 ppy_error(yy_current_state() == pp_inc ? "Trailing junk in #include" : "Trailing junk in #line");
 	YY_BREAK
 /*
@@ -1864,24 +1866,24 @@ ppy_error(yy_current_state() == pp_inc ? "Trailing junk in #include" : "Trailing
 	 */
 case 29:
 YY_RULE_SETUP
-#line 417 "ppl.l"
+#line 419 "ppl.l"
 ;
 	YY_BREAK
 case 30:
 /* rule 30 can match eol */
 YY_RULE_SETUP
-#line 418 "ppl.l"
+#line 420 "ppl.l"
 newline(1);
 	YY_BREAK
 case 31:
 /* rule 31 can match eol */
 YY_RULE_SETUP
-#line 419 "ppl.l"
+#line 421 "ppl.l"
 newline(0);
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 420 "ppl.l"
+#line 422 "ppl.l"
 ;
 	YY_BREAK
 /*
@@ -1892,109 +1894,109 @@ YY_RULE_SETUP
 	 */
 case 33:
 YY_RULE_SETUP
-#line 429 "ppl.l"
+#line 431 "ppl.l"
 return make_number(8, &ppy_lval, ppy_text, ppy_leng);
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 430 "ppl.l"
+#line 432 "ppl.l"
 ppy_error("Invalid octal digit");
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 431 "ppl.l"
+#line 433 "ppl.l"
 return make_number(10, &ppy_lval, ppy_text, ppy_leng);
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 432 "ppl.l"
+#line 434 "ppl.l"
 return make_number(16, &ppy_lval, ppy_text, ppy_leng);
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 433 "ppl.l"
+#line 435 "ppl.l"
 ppy_error("Invalid hex number");
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 434 "ppl.l"
+#line 436 "ppl.l"
 yy_push_state(pp_defined); return tDEFINED;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 435 "ppl.l"
+#line 437 "ppl.l"
 return tLSHIFT;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 436 "ppl.l"
+#line 438 "ppl.l"
 return tRSHIFT;
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 437 "ppl.l"
+#line 439 "ppl.l"
 return tLOGAND;
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 438 "ppl.l"
+#line 440 "ppl.l"
 return tLOGOR;
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 439 "ppl.l"
+#line 441 "ppl.l"
 return tEQ;
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 440 "ppl.l"
+#line 442 "ppl.l"
 return tNE;
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 441 "ppl.l"
+#line 443 "ppl.l"
 return tLTE;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 442 "ppl.l"
+#line 444 "ppl.l"
 return tGTE;
 	YY_BREAK
 case 47:
 /* rule 47 can match eol */
 YY_RULE_SETUP
-#line 443 "ppl.l"
+#line 445 "ppl.l"
 newline(1); yy_pop_state(); return tNL;
 	YY_BREAK
 case 48:
 /* rule 48 can match eol */
 YY_RULE_SETUP
-#line 444 "ppl.l"
+#line 446 "ppl.l"
 newline(0);
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 445 "ppl.l"
+#line 447 "ppl.l"
 ppy_error("Junk in conditional expression");
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 446 "ppl.l"
+#line 448 "ppl.l"
 ;
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 447 "ppl.l"
+#line 449 "ppl.l"
 new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_sqs);
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 448 "ppl.l"
+#line 450 "ppl.l"
 ppy_error("String constants not allowed in conditionals");
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 449 "ppl.l"
+#line 451 "ppl.l"
 return *ppy_text;
 	YY_BREAK
 /*
@@ -2003,29 +2005,29 @@ return *ppy_text;
 	 */
 case 54:
 YY_RULE_SETUP
-#line 455 "ppl.l"
+#line 457 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); return tIDENT;
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 456 "ppl.l"
+#line 458 "ppl.l"
 ;
 	YY_BREAK
 case 56:
 /* rule 56 can match eol */
 YY_RULE_SETUP
-#line 457 "ppl.l"
+#line 459 "ppl.l"
 newline(1); yy_pop_state(); return tNL;
 	YY_BREAK
 case 57:
 /* rule 57 can match eol */
 YY_RULE_SETUP
-#line 458 "ppl.l"
+#line 460 "ppl.l"
 newline(0);
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 459 "ppl.l"
+#line 461 "ppl.l"
 ppy_error("Identifier expected");
 	YY_BREAK
 /*
@@ -2033,24 +2035,24 @@ ppy_error("Identifier expected");
 	 */
 case 59:
 YY_RULE_SETUP
-#line 464 "ppl.l"
+#line 466 "ppl.l"
 ;
 	YY_BREAK
 case 60:
 /* rule 60 can match eol */
 YY_RULE_SETUP
-#line 465 "ppl.l"
+#line 467 "ppl.l"
 newline(1); yy_pop_state(); return tNL;
 	YY_BREAK
 case 61:
 /* rule 61 can match eol */
 YY_RULE_SETUP
-#line 466 "ppl.l"
+#line 468 "ppl.l"
 newline(0);
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 467 "ppl.l"
+#line 469 "ppl.l"
 ppy_error("Garbage after #else or #endif.");
 	YY_BREAK
 /*
@@ -2060,29 +2062,29 @@ ppy_error("Garbage after #else or #endif.");
 	 */
 case 63:
 YY_RULE_SETUP
-#line 474 "ppl.l"
+#line 476 "ppl.l"
 yy_pop_state(); ppy_lval.cptr = pp_xstrdup(ppy_text); return tIDENT;
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 475 "ppl.l"
+#line 477 "ppl.l"
 ;
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 476 "ppl.l"
+#line 478 "ppl.l"
 return *ppy_text;
 	YY_BREAK
 case 66:
 /* rule 66 can match eol */
 YY_RULE_SETUP
-#line 477 "ppl.l"
+#line 479 "ppl.l"
 newline(0);
 	YY_BREAK
 case 67:
 /* rule 67 can match eol */
 YY_RULE_SETUP
-#line 478 "ppl.l"
+#line 480 "ppl.l"
 ppy_error("Identifier expected");
 	YY_BREAK
 /*
@@ -2093,30 +2095,30 @@ ppy_error("Identifier expected");
 	 */
 case 68:
 YY_RULE_SETUP
-#line 486 "ppl.l"
+#line 488 "ppl.l"
 if(yy_top_state() != pp_ignore) { ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL; }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 487 "ppl.l"
+#line 489 "ppl.l"
 if(yy_top_state() != pp_ignore) { ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL; }
 	YY_BREAK
 case 70:
 /* rule 70 can match eol */
 YY_RULE_SETUP
-#line 488 "ppl.l"
+#line 490 "ppl.l"
 if(yy_top_state() != pp_ignore) { ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL; }
 	YY_BREAK
 case 71:
 /* rule 71 can match eol */
 YY_RULE_SETUP
-#line 489 "ppl.l"
+#line 491 "ppl.l"
 newline(1); yy_pop_state(); if(yy_current_state() != pp_ignore) { return tNL; }
 	YY_BREAK
 case 72:
 /* rule 72 can match eol */
 YY_RULE_SETUP
-#line 490 "ppl.l"
+#line 492 "ppl.l"
 newline(0);
 	YY_BREAK
 /*
@@ -2124,29 +2126,29 @@ newline(0);
 	 */
 case 73:
 YY_RULE_SETUP
-#line 495 "ppl.l"
+#line 497 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); if(ppy_lval.cptr) ppy_lval.cptr[ppy_leng-1] = '\0'; yy_pp_state(pp_macro);  return tMACRO;
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 496 "ppl.l"
+#line 498 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); yy_pp_state(pp_define); return tDEFINE;
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 497 "ppl.l"
+#line 499 "ppl.l"
 ;
 	YY_BREAK
 case 76:
 /* rule 76 can match eol */
 YY_RULE_SETUP
-#line 498 "ppl.l"
+#line 500 "ppl.l"
 newline(0);
 	YY_BREAK
 case 77:
 /* rule 77 can match eol */
 YY_RULE_SETUP
-#line 499 "ppl.l"
+#line 501 "ppl.l"
 perror("Identifier expected");
 	YY_BREAK
 /*
@@ -2154,41 +2156,41 @@ perror("Identifier expected");
 	 */
 case 78:
 YY_RULE_SETUP
-#line 504 "ppl.l"
+#line 506 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
 	YY_BREAK
 case 79:
 /* rule 79 can match eol */
 YY_RULE_SETUP
-#line 505 "ppl.l"
+#line 507 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
 	YY_BREAK
 case 80:
 /* rule 80 can match eol */
 YY_RULE_SETUP
-#line 506 "ppl.l"
+#line 508 "ppl.l"
 newline(0); ppy_lval.cptr = pp_xstrdup(" "); return tLITERAL;
 	YY_BREAK
 case 81:
 /* rule 81 can match eol */
 YY_RULE_SETUP
-#line 507 "ppl.l"
+#line 509 "ppl.l"
 newline(0);
 	YY_BREAK
 case 82:
 /* rule 82 can match eol */
 YY_RULE_SETUP
-#line 508 "ppl.l"
+#line 510 "ppl.l"
 newline(1); yy_pop_state(); return tNL;
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 509 "ppl.l"
+#line 511 "ppl.l"
 new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_sqs);
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 510 "ppl.l"
+#line 512 "ppl.l"
 new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_dqs);
 	YY_BREAK
 /*
@@ -2196,39 +2198,39 @@ new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_dqs);
 	 */
 case 85:
 YY_RULE_SETUP
-#line 515 "ppl.l"
+#line 517 "ppl.l"
 yy_pp_state(pp_mbody); return tMACROEND;
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 516 "ppl.l"
+#line 518 "ppl.l"
 ;
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 517 "ppl.l"
+#line 519 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); return tIDENT;
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 518 "ppl.l"
+#line 520 "ppl.l"
 return ',';
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 519 "ppl.l"
+#line 521 "ppl.l"
 return tELIPSIS;
 	YY_BREAK
 case 90:
 /* rule 90 can match eol */
 YY_RULE_SETUP
-#line 520 "ppl.l"
+#line 522 "ppl.l"
 ppy_error("Argument identifier expected");
 	YY_BREAK
 case 91:
 /* rule 91 can match eol */
 YY_RULE_SETUP
-#line 521 "ppl.l"
+#line 523 "ppl.l"
 newline(0);
 	YY_BREAK
 /*
@@ -2236,60 +2238,60 @@ newline(0);
 	 */
 case 92:
 YY_RULE_SETUP
-#line 526 "ppl.l"
+#line 528 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 527 "ppl.l"
+#line 529 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); return tIDENT;
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 528 "ppl.l"
+#line 530 "ppl.l"
 return tCONCAT;
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 529 "ppl.l"
+#line 531 "ppl.l"
 return tSTRINGIZE;
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 530 "ppl.l"
+#line 532 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 531 "ppl.l"
+#line 533 "ppl.l"
 ppy_lval.cptr = pp_xstrdup(ppy_text); return tLITERAL;
 	YY_BREAK
 case 98:
 /* rule 98 can match eol */
 YY_RULE_SETUP
-#line 532 "ppl.l"
+#line 534 "ppl.l"
 newline(0); ppy_lval.cptr = pp_xstrdup(" "); return tLITERAL;
 	YY_BREAK
 case 99:
 /* rule 99 can match eol */
 YY_RULE_SETUP
-#line 533 "ppl.l"
+#line 535 "ppl.l"
 newline(0);
 	YY_BREAK
 case 100:
 /* rule 100 can match eol */
 YY_RULE_SETUP
-#line 534 "ppl.l"
+#line 536 "ppl.l"
 newline(1); yy_pop_state(); return tNL;
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 535 "ppl.l"
+#line 537 "ppl.l"
 new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_sqs);
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 536 "ppl.l"
+#line 538 "ppl.l"
 new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_dqs);
 	YY_BREAK
 /*
@@ -2306,13 +2308,13 @@ case 103:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up ppy_text again */
 YY_RULE_SETUP
-#line 547 "ppl.l"
+#line 549 "ppl.l"
 yy_pp_state(pp_macscan);
 	YY_BREAK
 case 104:
 /* rule 104 can match eol */
 YY_RULE_SETUP
-#line 548 "ppl.l"
+#line 550 "ppl.l"
 {
 		if(yy_top_state() != pp_macscan)
 			newline(0);
@@ -2321,12 +2323,12 @@ YY_RULE_SETUP
 case 105:
 /* rule 105 can match eol */
 YY_RULE_SETUP
-#line 552 "ppl.l"
+#line 554 "ppl.l"
 newline(0);
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 553 "ppl.l"
+#line 555 "ppl.l"
 {
 		macexpstackentry_t *mac = pop_macro();
 		yy_pop_state();
@@ -2341,7 +2343,7 @@ YY_RULE_SETUP
 	 */
 case 107:
 YY_RULE_SETUP
-#line 565 "ppl.l"
+#line 567 "ppl.l"
 {
 		if(++MACROPARENTHESES() > 1)
 			add_text_to_macro(ppy_text, ppy_leng);
@@ -2349,7 +2351,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-#line 569 "ppl.l"
+#line 571 "ppl.l"
 {
 		if(--MACROPARENTHESES() == 0)
 		{
@@ -2362,7 +2364,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
-#line 578 "ppl.l"
+#line 580 "ppl.l"
 {
 		if(MACROPARENTHESES() > 1)
 			add_text_to_macro(ppy_text, ppy_leng);
@@ -2372,34 +2374,34 @@ YY_RULE_SETUP
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 584 "ppl.l"
+#line 586 "ppl.l"
 new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_dqs);
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 585 "ppl.l"
+#line 587 "ppl.l"
 new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_sqs);
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 586 "ppl.l"
+#line 588 "ppl.l"
 yy_push_state(pp_comment); add_text_to_macro(" ", 1);
 	YY_BREAK
 case 113:
 /* rule 113 can match eol */
 YY_RULE_SETUP
-#line 587 "ppl.l"
+#line 589 "ppl.l"
 pp_status.line_number++; pp_status.char_number = 1; add_text_to_macro(ppy_text, ppy_leng);
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 588 "ppl.l"
+#line 590 "ppl.l"
 add_text_to_macro(ppy_text, ppy_leng);
 	YY_BREAK
 case 115:
 /* rule 115 can match eol */
 YY_RULE_SETUP
-#line 589 "ppl.l"
+#line 591 "ppl.l"
 newline(0);
 	YY_BREAK
 /*
@@ -2407,23 +2409,23 @@ newline(0);
 	 */
 case 116:
 YY_RULE_SETUP
-#line 594 "ppl.l"
+#line 596 "ppl.l"
 yy_push_state(pp_comment);
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
-#line 595 "ppl.l"
+#line 597 "ppl.l"
 ;
 	YY_BREAK
 case 118:
 /* rule 118 can match eol */
 YY_RULE_SETUP
-#line 596 "ppl.l"
+#line 598 "ppl.l"
 newline(0);
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
-#line 597 "ppl.l"
+#line 599 "ppl.l"
 yy_pop_state();
 	YY_BREAK
 /*
@@ -2431,7 +2433,7 @@ yy_pop_state();
 	 */
 case 120:
 YY_RULE_SETUP
-#line 602 "ppl.l"
+#line 604 "ppl.l"
 {
 		if(ppy_text[ppy_leng-1] == '\\')
 			ppy_warning("C++ style comment ends with an escaped newline (escape ignored)");
@@ -2442,22 +2444,22 @@ YY_RULE_SETUP
 	 */
 case 121:
 YY_RULE_SETUP
-#line 610 "ppl.l"
+#line 612 "ppl.l"
 pp_incl_state.seen_junk++; new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_dqs);
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 611 "ppl.l"
+#line 613 "ppl.l"
 pp_incl_state.seen_junk++; new_string(); add_string(ppy_text, ppy_leng); yy_push_state(pp_sqs);
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
-#line 612 "ppl.l"
+#line 614 "ppl.l"
 add_string(ppy_text, ppy_leng);
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 613 "ppl.l"
+#line 615 "ppl.l"
 {
 		add_string(ppy_text, ppy_leng);
 		yy_pop_state();
@@ -2481,12 +2483,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 633 "ppl.l"
+#line 635 "ppl.l"
 add_string(ppy_text, ppy_leng);
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 634 "ppl.l"
+#line 636 "ppl.l"
 {
 		add_string(ppy_text, ppy_leng);
 		yy_pop_state();
@@ -2504,12 +2506,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-#line 648 "ppl.l"
+#line 650 "ppl.l"
 add_string(ppy_text, ppy_leng);
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 649 "ppl.l"
+#line 651 "ppl.l"
 {
 		add_string(ppy_text, ppy_leng);
 		yy_pop_state();
@@ -2520,7 +2522,7 @@ YY_RULE_SETUP
 case 129:
 /* rule 129 can match eol */
 YY_RULE_SETUP
-#line 655 "ppl.l"
+#line 657 "ppl.l"
 {
 		/*
 		 * This is tricky; we need to remove the line-continuation
@@ -2548,17 +2550,17 @@ YY_RULE_SETUP
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 679 "ppl.l"
+#line 681 "ppl.l"
 add_string(ppy_text, ppy_leng);
 	YY_BREAK
 case 131:
 /* rule 131 can match eol */
 YY_RULE_SETUP
-#line 680 "ppl.l"
+#line 682 "ppl.l"
 {
 		newline(1);
 		add_string(ppy_text, ppy_leng);
-		ppy_warning("Newline in string constant encounterd (started line %d)", string_start());
+		ppy_warning("Newline in string constant encountered (started line %d)", string_start());
 	}
 	YY_BREAK
 /*
@@ -2566,7 +2568,7 @@ YY_RULE_SETUP
 	 */
 case 132:
 YY_RULE_SETUP
-#line 689 "ppl.l"
+#line 691 "ppl.l"
 {
 		pp_entry_t *ppp;
 		pp_incl_state.seen_junk++;
@@ -2615,29 +2617,29 @@ YY_RULE_SETUP
 	 */
 case 133:
 YY_RULE_SETUP
-#line 735 "ppl.l"
+#line 737 "ppl.l"
 pp_incl_state.seen_junk++; put_buffer(ppy_text, ppy_leng);
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 736 "ppl.l"
+#line 738 "ppl.l"
 put_buffer(ppy_text, ppy_leng);
 	YY_BREAK
 case 135:
 /* rule 135 can match eol */
 YY_RULE_SETUP
-#line 737 "ppl.l"
+#line 739 "ppl.l"
 newline(1);
 	YY_BREAK
 case 136:
 /* rule 136 can match eol */
 YY_RULE_SETUP
-#line 738 "ppl.l"
+#line 740 "ppl.l"
 newline(0);
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 739 "ppl.l"
+#line 741 "ppl.l"
 pp_incl_state.seen_junk++; put_buffer(ppy_text, ppy_leng);
 	YY_BREAK
 /*
@@ -2647,12 +2649,12 @@ pp_incl_state.seen_junk++; put_buffer(ppy_text, ppy_leng);
 case 138:
 /* rule 138 can match eol */
 YY_RULE_SETUP
-#line 745 "ppl.l"
+#line 747 "ppl.l"
 put_buffer(ppy_text, ppy_leng);
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-#line 747 "ppl.l"
+#line 749 "ppl.l"
 {
 		ppy_lval.cptr=pp_xstrdup(ppy_text);
         	yy_pop_state();
@@ -2661,12 +2663,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
-#line 753 "ppl.l"
+#line 755 "ppl.l"
 ;
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-#line 755 "ppl.l"
+#line 757 "ppl.l"
 {
 		new_string(); add_string(ppy_text,ppy_leng);yy_push_state(pp_dqs);
 	}
@@ -2677,7 +2679,7 @@ YY_RULE_SETUP
 	 */
 case 142:
 YY_RULE_SETUP
-#line 763 "ppl.l"
+#line 765 "ppl.l"
 pp_incl_state.seen_junk++; ppy_warning("Unmatched text '%c' (0x%02x); please report\n", isprint(*ppy_text & 0xff) ? *ppy_text : ' ', *ppy_text);
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
@@ -2702,7 +2704,7 @@ case YY_STATE_EOF(pp_line):
 case YY_STATE_EOF(pp_defined):
 case YY_STATE_EOF(pp_ignore):
 case YY_STATE_EOF(RCINCL):
-#line 765 "ppl.l"
+#line 767 "ppl.l"
 {
 		YY_BUFFER_STATE b = YY_CURRENT_BUFFER;
 		bufferstackentry_t *bep = pop_buffer();
@@ -2713,7 +2715,10 @@ case YY_STATE_EOF(RCINCL):
 		if(!bep)
 		{
 			if(YY_START != INITIAL)
+			{
 				ppy_error("Unexpected end of file during preprocessing");
+				BEGIN(INITIAL);
+			}
 			yyterminate();
 		}
 		else if(bep->should_pop == 2)
@@ -2727,10 +2732,10 @@ case YY_STATE_EOF(RCINCL):
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
-#line 787 "ppl.l"
+#line 792 "ppl.l"
 ECHO;
 	YY_BREAK
-#line 2734 "lex.yy.c"
+#line 2739 "ppl.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -3734,7 +3739,7 @@ void ppy_free (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 787 "ppl.l"
+#line 792 "ppl.l"
 
 
 /*
@@ -4548,7 +4553,7 @@ void pp_do_include(char *fname, int type)
 	/* Undo the effect of the quotation */
 	fname[n-1] = '\0';
 
-	if((fp = pp_open_include(fname+1, type ? pp_status.input : NULL, &newpath)) == NULL)
+	if((fp = pp_open_include(fname+1, type, pp_status.input, &newpath)) == NULL)
 	{
 		ppy_error("Unable to open include file %s", fname+1);
 		return;
