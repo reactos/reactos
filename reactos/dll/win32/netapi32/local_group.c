@@ -1515,27 +1515,27 @@ NetLocalGroupGetMembers(
         switch (level)
         {
             case 0:
-                Size = sizeof(LOCALGROUP_MEMBERS_INFO_0) +
-                       RtlLengthSid(EnumContext->Sids[i]);
+                Size += sizeof(LOCALGROUP_MEMBERS_INFO_0) +
+                        RtlLengthSid(EnumContext->Sids[i]);
                 break;
 
             case 1:
-                Size = sizeof(LOCALGROUP_MEMBERS_INFO_1) +
-                       RtlLengthSid(EnumContext->Sids[i]) +
-                       EnumContext->Names[i].Name.Length + sizeof(WCHAR);
+                Size += sizeof(LOCALGROUP_MEMBERS_INFO_1) +
+                        RtlLengthSid(EnumContext->Sids[i]) +
+                        EnumContext->Names[i].Name.Length + sizeof(WCHAR);
                 break;
 
             case 2:
-                Size = sizeof(LOCALGROUP_MEMBERS_INFO_2) +
-                       RtlLengthSid(EnumContext->Sids[i]) +
-                       EnumContext->Names[i].Name.Length + sizeof(WCHAR) +
-                       EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
+                Size += sizeof(LOCALGROUP_MEMBERS_INFO_2) +
+                        RtlLengthSid(EnumContext->Sids[i]) +
+                        EnumContext->Names[i].Name.Length + sizeof(WCHAR) +
+                        EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
                 break;
 
             case 3:
-                Size = sizeof(LOCALGROUP_MEMBERS_INFO_3) +
-                       EnumContext->Names[i].Name.Length + sizeof(WCHAR) +
-                       EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
+                Size += sizeof(LOCALGROUP_MEMBERS_INFO_3) +
+                        EnumContext->Names[i].Name.Length + sizeof(WCHAR) +
+                        EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
                 break;
 
             default:
