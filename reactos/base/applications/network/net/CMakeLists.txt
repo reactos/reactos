@@ -3,7 +3,7 @@ add_definitions(-D__USE_W32_SOCKETS)
 
 list(APPEND SOURCE
     main.c
-    cmdstart.c
+    cmdStart.c
     cmdStop.c
     cmdHelpMsg.c
     cmdPause.c

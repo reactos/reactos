@@ -142,7 +142,7 @@ StartOneService(INT argc, WCHAR **argv)
 
 done:
     if (lpArgVectors != NULL)
-        HeapFree(GetProcessHeap(), 0, lpArgVectors);
+        HeapFree(GetProcessHeap(), 0, (LPVOID)lpArgVectors);
 
     if (hService != NULL)
         CloseServiceHandle(hService);

@@ -37,7 +37,8 @@ add_compile_flags("/wd4290")
 #          for C++ programs, the compiler error C2440 is issued)
 # - C4098: void function returning a value
 # - C4700: uninitialized variable usage
-add_compile_flags("/we4047 /we4090 /we4098 /we4700")
+##add_compile_flags("/we4047 /we4090 /we4098 /we4700")
+add_compile_flags("/we4047 /we4098 /we4700")
 
 # Debugging
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
