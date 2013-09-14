@@ -669,8 +669,6 @@ static void save_message(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, 
         (message < WM_MOUSEFIRST || message > WM_MOUSEHWHEEL) &&
         message != 0x90)
     {
-        /*trace("check_message: %04x, %04x\n", message, receiver);*/
-
         msg.message = message;
         msg.flags = sent|wparam|lparam|id;
         msg.wParam = wParam;

@@ -461,8 +461,6 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         message != WM_GETICON &&
         message != WM_DEVICECHANGE)
     {
-        trace("parent: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
-
         msg.message = message;
         msg.flags = sent|wparam|lparam;
         if (defwndproc_counter) msg.flags |= defwinproc;
@@ -883,7 +881,6 @@ static void test_firstDay(void)
     /* check for locale first day */
     if(GetLocaleInfoA(lcid, LOCALE_IFIRSTDAYOFWEEK, b, 128)){
         fday = atoi(b);
-        trace("fday: %d\n", fday);
         res = SendMessage(hwnd, MCM_GETFIRSTDAYOFWEEK, 0, 0);
         expect(fday, res);
         prev = fday;
@@ -1329,6 +1326,9 @@ static void test_scroll(void)
     HWND hwnd;
 
     hwnd = create_monthcal_control(0);
+
+    res = SendMessage(hwnd, MCM_GETMONTHDELTA, 0, 0);
+    expect(2, res);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
@@ -1977,7 +1977,6 @@ static void test_sel_notify(void)
 
     for(i = 0; i < sizeof styles / sizeof styles[0]; i++)
     {
-        trace("%s\n", styles[i].name);
         hwnd = create_monthcal_control(styles[i].val);
         SetWindowLongPtr(hwnd, GWLP_ID, SEL_NOTIFY_TEST_ID);
         assert(hwnd);

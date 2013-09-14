@@ -30,7 +30,6 @@
 
 //#include <stdarg.h>
 #include <stdio.h>
-#include <assert.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -655,26 +654,26 @@ static struct my_IStream *impl_from_IStream(IStream *iface)
 static HRESULT STDMETHODCALLTYPE Test_Stream_QueryInterface(IStream *iface, REFIID riid,
                                                             void **ppvObject)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
 static ULONG STDMETHODCALLTYPE Test_Stream_AddRef(IStream *iface)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return 2;
 }
 
 static ULONG STDMETHODCALLTYPE Test_Stream_Release(IStream *iface)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return 1;
 }
 
 static HRESULT STDMETHODCALLTYPE Test_Stream_Read(IStream *iface, void *pv, ULONG cb,
                                                   ULONG *pcbRead)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -707,13 +706,13 @@ static HRESULT STDMETHODCALLTYPE Test_Stream_Write(IStream *iface, const void *p
 static HRESULT STDMETHODCALLTYPE Test_Stream_Seek(IStream *iface, LARGE_INTEGER dlibMove,
                                                   DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE Test_Stream_SetSize(IStream *iface, ULARGE_INTEGER libNewSize)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
@@ -721,46 +720,46 @@ static HRESULT STDMETHODCALLTYPE Test_Stream_CopyTo(IStream *iface, IStream *pst
                                                     ULARGE_INTEGER cb, ULARGE_INTEGER *pcbRead,
                                                     ULARGE_INTEGER *pcbWritten)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE Test_Stream_Commit(IStream *iface, DWORD grfCommitFlags)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE Test_Stream_Revert(IStream *iface)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE Test_Stream_LockRegion(IStream *iface, ULARGE_INTEGER libOffset,
                                                         ULARGE_INTEGER cb, DWORD dwLockType)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE Test_Stream_UnlockRegion(IStream *iface, ULARGE_INTEGER libOffset,
                                                           ULARGE_INTEGER cb, DWORD dwLockType)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE Test_Stream_Stat(IStream *iface, STATSTG *pstatstg,
                                                   DWORD grfStatFlag)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 
 static HRESULT STDMETHODCALLTYPE Test_Stream_Clone(IStream *iface, IStream **ppstm)
 {
-    assert(0);
+    ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }
 

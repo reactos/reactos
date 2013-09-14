@@ -22,6 +22,7 @@
 //#include <windows.h>
 
 #include <wine/test.h>
+#include "v6util.h"
 
 static PVOID (WINAPI * pAlloc)(LONG);
 static PVOID (WINAPI * pReAlloc)(PVOID, LONG);
@@ -186,13 +187,39 @@ static void test_Alloc(void)
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
 }
 
+static void test_TaskDialogIndirect(void)
+{
+    HINSTANCE hinst;
+    void *ptr, *ptr2;
+
+    hinst = LoadLibraryA("comctl32.dll");
+
+    ptr = GetProcAddress(hinst, "TaskDialogIndirect");
+    if (!ptr)
+    {
+        win_skip("TaskDialogIndirect not exported by name\n");
+        return;
+    }
+
+    ptr2 = GetProcAddress(hinst, (const CHAR*)345);
+    ok(ptr == ptr2, "got wrong pointer for ordinal 345, %p expected %p\n", ptr2, ptr);
+}
+
 START_TEST(misc)
 {
+    ULONG_PTR ctx_cookie;
+    HANDLE hCtx;
+
     if(!InitFunctionPtrs())
         return;
 
     test_GetPtrAW();
     test_Alloc();
 
-    FreeLibrary(hComctl32);
+    if (!load_v6_module(&ctx_cookie, &hCtx))
+        return;
+
+    test_TaskDialogIndirect();
+
+    unload_v6_module(ctx_cookie, hCtx);
 }

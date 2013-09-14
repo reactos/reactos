@@ -398,8 +398,6 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         message != WM_GETICON &&
         message != WM_DEVICECHANGE)
     {
-        trace("parent: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
-
         add_message(sequences, PARENT_SEQ_INDEX, &msg);
         add_message(sequences, COMBINED_SEQ_INDEX, &msg);
     }
@@ -586,8 +584,6 @@ static LRESULT WINAPI listview_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     LRESULT ret;
     struct message msg;
 
-    trace("listview: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
-
     /* some debug output for style changing */
     if ((message == WM_STYLECHANGING ||
          message == WM_STYLECHANGED) && lParam)
@@ -663,8 +659,6 @@ static LRESULT WINAPI header_subclass_proc(HWND hwnd, UINT message, WPARAM wPara
     static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
-
-    trace("header: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
@@ -1757,8 +1751,8 @@ static LRESULT WINAPI cd_wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     if(msg == WM_NOTIFY) {
         NMHDR *nmhdr = (PVOID)lp;
         if(nmhdr->code == NM_CUSTOMDRAW) {
-            NMLVCUSTOMDRAW *nmlvcd = (PVOID)nmhdr;
-            trace("NMCUSTOMDRAW (0x%.8x)\n", nmlvcd->nmcd.dwDrawStage);
+            NMLVCUSTOMDRAW *nmlvcd = (NMLVCUSTOMDRAW*)nmhdr;
+
             switch(nmlvcd->nmcd.dwDrawStage) {
             case CDDS_PREPAINT:
                 SetBkColor(nmlvcd->nmcd.hdc, c0ffee);

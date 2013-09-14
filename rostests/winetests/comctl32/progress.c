@@ -32,6 +32,11 @@
 static HWND hProgressParentWnd, hProgressWnd;
 static const char progressTestClass[] = "ProgressBarTestClass";
 
+static HWND create_progress(DWORD style)
+{
+    return CreateWindowExA(0, PROGRESS_CLASSA, "", WS_VISIBLE | style,
+      0, 0, 100, 20, NULL, NULL, GetModuleHandleA(NULL), 0);
+}
 
 /* try to make sure pending X events have been processed before continuing */
 static void flush_events(void)
@@ -224,12 +229,40 @@ static void test_redraw(void)
     ok(erased, "Progress bar should have erased the background\n");
 }
 
+static void test_setcolors(void)
+{
+    HWND progress;
+    COLORREF clr;
+
+    progress = create_progress(PBS_SMOOTH);
+
+    clr = SendMessageA(progress, PBM_SETBARCOLOR, 0, 0);
+    ok(clr == CLR_DEFAULT, "got %x\n", clr);
+
+    clr = SendMessageA(progress, PBM_SETBARCOLOR, 0, RGB(0, 255, 0));
+    ok(clr == 0, "got %x\n", clr);
+
+    clr = SendMessageA(progress, PBM_SETBARCOLOR, 0, CLR_DEFAULT);
+    ok(clr == RGB(0, 255, 0), "got %x\n", clr);
+
+    clr = SendMessageA(progress, PBM_SETBKCOLOR, 0, 0);
+    ok(clr == CLR_DEFAULT, "got %x\n", clr);
+
+    clr = SendMessageA(progress, PBM_SETBKCOLOR, 0, RGB(255, 0, 0));
+    ok(clr == 0, "got %x\n", clr);
+
+    clr = SendMessageA(progress, PBM_SETBKCOLOR, 0, CLR_DEFAULT);
+    ok(clr == RGB(255, 0, 0), "got %x\n", clr);
+
+    DestroyWindow(progress);
+}
 
 START_TEST(progress)
 {
     init();
     
     test_redraw();
-    
+    test_setcolors();
+
     cleanup();
 }

@@ -145,8 +145,6 @@ static LRESULT WINAPI datetime_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     LRESULT ret;
     struct message msg;
 
-    trace("datetime: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
-
     msg.message = message;
     msg.flags = sent|wparam|lparam;
     if (defwndproc_counter) msg.flags |= defwinproc;

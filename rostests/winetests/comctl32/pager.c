@@ -77,8 +77,6 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         message != WM_GETICON &&
         message != WM_DEVICECHANGE)
     {
-        trace("parent: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
-
         msg.message = message;
         msg.flags = sent|wparam|lparam|parent;
         if (defwndproc_counter) msg.flags |= defwinproc;
@@ -126,8 +124,6 @@ static LRESULT WINAPI pager_subclass_proc(HWND hwnd, UINT message, WPARAM wParam
 {
     WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     struct message msg;
-
-    trace("pager: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;

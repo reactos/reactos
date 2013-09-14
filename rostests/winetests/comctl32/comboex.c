@@ -280,8 +280,6 @@ static void test_WM_LBUTTONDOWN(void)
        GetLastError());
     hList = cbInfo.hwndList;
 
-    trace("hWnd=%p, hComboEx=%p, hCombo=%p, hList=%p, hEdit=%p\n",
-         hComboExParentWnd, hComboEx, hCombo, hList, hEdit);
     ok(GetFocus() == hComboExParentWnd,
        "Focus not on Main Window, instead on %p\n", GetFocus());
 
