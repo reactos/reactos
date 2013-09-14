@@ -12,8 +12,8 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 vwprintf_s(const wchar_t *format, va_list valist)
 {
-    return vfwprintf_s(stdout,format,valist);
+    return vfwprintf_s(stdout, format, valist);
 }

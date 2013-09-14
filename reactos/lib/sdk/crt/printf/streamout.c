@@ -307,7 +307,7 @@ streamout_wstring(FILE *stream, const wchar_t *string, size_t count)
 #endif
 
 int
-_cdecl
+__cdecl
 streamout(FILE *stream, const TCHAR *format, va_list argptr)
 {
     static const TCHAR digits_l[] = _T("0123456789abcdef0x");

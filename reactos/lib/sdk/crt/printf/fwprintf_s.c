@@ -12,7 +12,7 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 fwprintf_s(FILE* file, const wchar_t *format, ...)
 {
     va_list valist;

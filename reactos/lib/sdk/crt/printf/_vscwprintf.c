@@ -12,12 +12,12 @@
 #include <ntddk.h>
 #endif
 
-int _cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
+int __cdecl wstreamout(FILE *stream, const wchar_t *format, va_list argptr);
 
-int _vscwprintf(
+int
+_vscwprintf(
    const wchar_t *format,
-   va_list argptr
-)
+   va_list argptr)
 {
     int ret;
 #ifndef _LIBCNT_

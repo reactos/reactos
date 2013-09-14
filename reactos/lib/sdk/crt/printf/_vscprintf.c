@@ -8,12 +8,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-int _cdecl streamout(FILE *stream, const char *format, va_list argptr);
+int __cdecl streamout(FILE *stream, const char *format, va_list argptr);
 
-int _vscprintf(
+int
+_vscprintf(
    const char *format,
-   va_list argptr
-)
+   va_list argptr)
 {
     int ret;
     FILE* nulfile = fopen("nul", "w");

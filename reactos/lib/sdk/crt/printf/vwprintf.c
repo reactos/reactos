@@ -10,8 +10,8 @@
 #include <stdarg.h>
 
 int
-_cdecl
+__cdecl
 vwprintf(const wchar_t *format, va_list valist)
 {
-    return vfwprintf(stdout,format,valist);
+    return vfwprintf(stdout, format, valist);
 }
