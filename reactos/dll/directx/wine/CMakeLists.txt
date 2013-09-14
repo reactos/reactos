@@ -1,6 +1,7 @@
 
 add_subdirectory(d3d8)
 add_subdirectory(d3d9)
+add_subdirectory(d3dcompiler_43)
 add_subdirectory(d3dx9_24)
 if(NOT MSVC)
     add_subdirectory(d3dx9_25)

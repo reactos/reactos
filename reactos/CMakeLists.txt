@@ -233,6 +233,7 @@ else()
     add_subdirectory(modules)
     add_subdirectory(ntoskrnl)
     add_subdirectory(subsystems)
+    add_subdirectory(tools/wpp)
     add_subdirectory(win32ss)
 
     # Create {bootcd, livecd, bootcdregtest}.lst

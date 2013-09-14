@@ -35,4 +35,4 @@ add_definitions(-DINT16=SHORT)
 
 add_executable(widl ${SOURCE})
 
-target_link_libraries(widl wpp)
+target_link_libraries(widl wpphost)
