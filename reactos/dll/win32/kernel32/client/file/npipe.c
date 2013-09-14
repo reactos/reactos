@@ -415,8 +415,9 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         }
 
         /* Move past it */
-        NewName.Buffer += 9;
-        NewName.Length -= 9 * sizeof(WCHAR);
+        NewName.Buffer += PipePrefix.Length / sizeof(WCHAR);
+        NewName.Length -= PipePrefix.Length;
+        NewName.MaximumLength -= PipePrefix.Length;
 
         /* Initialize the Dos Devices name */
         TRACE("NewName: %wZ\n", &NewName);
@@ -438,10 +439,10 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
         } while (*p);
 
         /* Now make sure the full name contains "pipe\" */
-        if ((*p) && !(_wcsnicmp(p + 1, L"pipe\\", sizeof("pipe\\"))))
+        if ((*p) && !(_wcsnicmp(p + 1, L"pipe\\", sizeof("pipe\\") - sizeof(ANSI_NULL))))
         {
             /* Get to the pipe name itself now */
-            p += sizeof("pipe\\") - 1;
+            p += sizeof("pipe\\") - sizeof(ANSI_NULL);
         }
         else
         {
