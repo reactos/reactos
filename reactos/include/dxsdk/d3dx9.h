@@ -30,8 +30,12 @@
 #include "d3d9.h"
 #include "d3dx9math.h"
 #include "d3dx9core.h"
+#include "d3dx9xof.h"
 #include "d3dx9mesh.h"
 #include "d3dx9shader.h"
+#include "d3dx9effect.h"
+#include "d3dx9shape.h"
+#include "d3dx9anim.h"
 #include "d3dx9tex.h"
 
 #define _FACDD 0x876

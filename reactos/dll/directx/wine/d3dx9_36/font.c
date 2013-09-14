@@ -26,33 +26,55 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
-static HRESULT WINAPI ID3DXFontImpl_QueryInterface(LPD3DXFONT iface, REFIID riid, LPVOID *object)
+struct d3dx_font
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
+    ID3DXFont ID3DXFont_iface;
+    LONG ref;
 
-    TRACE("(%p): QueryInterface from %s\n", This, debugstr_guid(riid));
-    if(IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_ID3DXFont)) {
+    IDirect3DDevice9 *device;
+    D3DXFONT_DESCW desc;
+
+    HDC hdc;
+    HFONT hfont;
+};
+
+static inline struct d3dx_font *impl_from_ID3DXFont(ID3DXFont *iface)
+{
+    return CONTAINING_RECORD(iface, struct d3dx_font, ID3DXFont_iface);
+}
+
+static HRESULT WINAPI ID3DXFontImpl_QueryInterface(ID3DXFont *iface, REFIID riid, void **out)
+{
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
+
+    if (IsEqualGUID(riid, &IID_ID3DXFont)
+            || IsEqualGUID(riid, &IID_IUnknown))
+    {
         IUnknown_AddRef(iface);
-        *object=This;
+        *out = iface;
         return S_OK;
     }
-    WARN("(%p)->(%s, %p): not found\n", iface, debugstr_guid(riid), *object);
+
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+
+    *out = NULL;
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI ID3DXFontImpl_AddRef(LPD3DXFONT iface)
+static ULONG WINAPI ID3DXFontImpl_AddRef(ID3DXFont *iface)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
+    struct d3dx_font *This = impl_from_ID3DXFont(iface);
     ULONG ref=InterlockedIncrement(&This->ref);
-    TRACE("(%p): AddRef from %d\n", This, ref-1);
+    TRACE("%p increasing refcount to %u\n", iface, ref);
     return ref;
 }
 
-static ULONG WINAPI ID3DXFontImpl_Release(LPD3DXFONT iface)
+static ULONG WINAPI ID3DXFontImpl_Release(ID3DXFont *iface)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
+    struct d3dx_font *This = impl_from_ID3DXFont(iface);
     ULONG ref=InterlockedDecrement(&This->ref);
-    TRACE("(%p): ReleaseRef to %d\n", This, ref);
+
+    TRACE("%p decreasing refcount to %u\n", iface, ref);
 
     if(ref==0) {
         DeleteObject(This->hfont);
@@ -63,10 +85,11 @@ static ULONG WINAPI ID3DXFontImpl_Release(LPD3DXFONT iface)
     return ref;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_GetDevice(LPD3DXFONT iface, LPDIRECT3DDEVICE9 *device)
+static HRESULT WINAPI ID3DXFontImpl_GetDevice(ID3DXFont *iface, IDirect3DDevice9 **device)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    TRACE("(%p)\n", This);
+    struct d3dx_font *This = impl_from_ID3DXFont(iface);
+
+    TRACE("iface %p, device %p\n", iface, device);
 
     if( !device ) return D3DERR_INVALIDCALL;
     *device = This->device;
@@ -75,10 +98,11 @@ static HRESULT WINAPI ID3DXFontImpl_GetDevice(LPD3DXFONT iface, LPDIRECT3DDEVICE
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_GetDescA(LPD3DXFONT iface, D3DXFONT_DESCA *desc)
+static HRESULT WINAPI ID3DXFontImpl_GetDescA(ID3DXFont *iface, D3DXFONT_DESCA *desc)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    TRACE("(%p)\n", This);
+    struct d3dx_font *This = impl_from_ID3DXFont(iface);
+
+    TRACE("iface %p, desc %p\n", iface, desc);
 
     if( !desc ) return D3DERR_INVALIDCALL;
     memcpy(desc, &This->desc, FIELD_OFFSET(D3DXFONT_DESCA, FaceName));
@@ -87,10 +111,11 @@ static HRESULT WINAPI ID3DXFontImpl_GetDescA(LPD3DXFONT iface, D3DXFONT_DESCA *d
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_GetDescW(LPD3DXFONT iface, D3DXFONT_DESCW *desc)
+static HRESULT WINAPI ID3DXFontImpl_GetDescW(ID3DXFont *iface, D3DXFONT_DESCW *desc)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    TRACE("(%p)\n", This);
+    struct d3dx_font *This = impl_from_ID3DXFont(iface);
+
+    TRACE("iface %p, desc %p\n", iface, desc);
 
     if( !desc ) return D3DERR_INVALIDCALL;
     *desc = This->desc;
@@ -98,87 +123,84 @@ static HRESULT WINAPI ID3DXFontImpl_GetDescW(LPD3DXFONT iface, D3DXFONT_DESCW *d
     return D3D_OK;
 }
 
-static BOOL WINAPI ID3DXFontImpl_GetTextMetricsA(LPD3DXFONT iface, TEXTMETRICA *metrics)
+static BOOL WINAPI ID3DXFontImpl_GetTextMetricsA(ID3DXFont *iface, TEXTMETRICA *metrics)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    TRACE("(%p)\n", This);
+    struct d3dx_font *This = impl_from_ID3DXFont(iface);
+    TRACE("iface %p, metrics %p\n", iface, metrics);
     return GetTextMetricsA(This->hdc, metrics);
 }
 
-static BOOL WINAPI ID3DXFontImpl_GetTextMetricsW(LPD3DXFONT iface, TEXTMETRICW *metrics)
+static BOOL WINAPI ID3DXFontImpl_GetTextMetricsW(ID3DXFont *iface, TEXTMETRICW *metrics)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    TRACE("(%p)\n", This);
+    struct d3dx_font *This = impl_from_ID3DXFont(iface);
+    TRACE("iface %p, metrics %p\n", iface, metrics);
     return GetTextMetricsW(This->hdc, metrics);
 }
 
-static HDC WINAPI ID3DXFontImpl_GetDC(LPD3DXFONT iface)
+static HDC WINAPI ID3DXFontImpl_GetDC(ID3DXFont *iface)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    TRACE("(%p)\n", This);
+    struct d3dx_font *This = impl_from_ID3DXFont(iface);
+    TRACE("iface %p\n", iface);
     return This->hdc;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_GetGlyphData(LPD3DXFONT iface, UINT glyph, LPDIRECT3DTEXTURE9 *texture, RECT *blackbox, POINT *cellinc)
+static HRESULT WINAPI ID3DXFontImpl_GetGlyphData(ID3DXFont *iface, UINT glyph,
+        IDirect3DTexture9 **texture, RECT *blackbox, POINT *cellinc)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    FIXME("(%p): stub\n", This);
-    return D3D_OK;
+    FIXME("iface %p, glyph %#x, texture %p, blackbox %s, cellinc %s stub!\n",
+            iface, glyph, texture, wine_dbgstr_rect(blackbox), wine_dbgstr_point(cellinc));
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_PreloadCharacters(LPD3DXFONT iface, UINT first, UINT last)
+static HRESULT WINAPI ID3DXFontImpl_PreloadCharacters(ID3DXFont *iface, UINT first, UINT last)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    FIXME("(%p): stub\n", This);
-    return D3D_OK;
+    FIXME("iface %p, first %u, last %u stub!\n", iface, first, last);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_PreloadGlyphs(LPD3DXFONT iface, UINT first, UINT last)
+static HRESULT WINAPI ID3DXFontImpl_PreloadGlyphs(ID3DXFont *iface, UINT first, UINT last)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    FIXME("(%p): stub\n", This);
-    return D3D_OK;
+    FIXME("iface %p, first %u, last %u stub!\n", iface, first, last);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_PreloadTextA(LPD3DXFONT iface, LPCSTR string, INT count)
+static HRESULT WINAPI ID3DXFontImpl_PreloadTextA(ID3DXFont *iface, const char *string, INT count)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    FIXME("(%p): stub\n", This);
-    return D3D_OK;
+    FIXME("iface %p, string %s, count %d stub!\n", iface, debugstr_a(string), count);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_PreloadTextW(LPD3DXFONT iface, LPCWSTR string, INT count)
+static HRESULT WINAPI ID3DXFontImpl_PreloadTextW(ID3DXFont *iface, const WCHAR *string, INT count)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    FIXME("(%p): stub\n", This);
-    return D3D_OK;
+    FIXME("iface %p, string %s, count %d stub!\n", iface, debugstr_w(string), count);
+    return E_NOTIMPL;
 }
 
-static INT WINAPI ID3DXFontImpl_DrawTextA(LPD3DXFONT iface, LPD3DXSPRITE sprite, LPCSTR string, INT count, LPRECT rect, DWORD format, D3DCOLOR color)
+static INT WINAPI ID3DXFontImpl_DrawTextA(ID3DXFont *iface, ID3DXSprite *sprite,
+        const char *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    FIXME("(%p): stub\n", This);
+    FIXME("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x stub!\n",
+            iface,  sprite, debugstr_a(string), count, wine_dbgstr_rect(rect), format, color);
     return 1;
 }
 
-static INT WINAPI ID3DXFontImpl_DrawTextW(LPD3DXFONT iface, LPD3DXSPRITE sprite, LPCWSTR string, INT count, LPRECT rect, DWORD format, D3DCOLOR color)
+static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
+        const WCHAR *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    FIXME("(%p): stub\n", This);
+    FIXME("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x stub!\n",
+            iface,  sprite, debugstr_w(string), count, wine_dbgstr_rect(rect), format, color);
     return 1;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_OnLostDevice(LPD3DXFONT iface)
+static HRESULT WINAPI ID3DXFontImpl_OnLostDevice(ID3DXFont *iface)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    FIXME("(%p): stub\n", This);
+    FIXME("iface %p stub!\n", iface);
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXFontImpl_OnResetDevice(LPD3DXFONT iface)
+static HRESULT WINAPI ID3DXFontImpl_OnResetDevice(ID3DXFont *iface)
 {
-    ID3DXFontImpl *This=(ID3DXFontImpl*)iface;
-    FIXME("(%p): stub\n", This);
+    FIXME("iface %p stub\n", iface);
     return D3D_OK;
 }
 
@@ -206,8 +228,9 @@ static const ID3DXFontVtbl D3DXFont_Vtbl =
     ID3DXFontImpl_OnResetDevice
 };
 
-HRESULT WINAPI D3DXCreateFontA(LPDIRECT3DDEVICE9 device, INT height, UINT width, UINT weight, UINT miplevels, BOOL italic, DWORD charset,
-                               DWORD precision, DWORD quality, DWORD pitchandfamily, LPCSTR facename, LPD3DXFONT *font)
+HRESULT WINAPI D3DXCreateFontA(struct IDirect3DDevice9 *device, INT height, UINT width,
+        UINT weight, UINT miplevels, BOOL italic, DWORD charset, DWORD precision, DWORD quality,
+        DWORD pitchandfamily, const char *facename, struct ID3DXFont **font)
 {
     D3DXFONT_DESCA desc;
 
@@ -228,8 +251,8 @@ HRESULT WINAPI D3DXCreateFontA(LPDIRECT3DDEVICE9 device, INT height, UINT width,
     return D3DXCreateFontIndirectA(device, &desc, font);
 }
 
-HRESULT WINAPI D3DXCreateFontW(LPDIRECT3DDEVICE9 device, INT height, UINT width, UINT weight, UINT miplevels, BOOL italic, DWORD charset,
-                               DWORD precision, DWORD quality, DWORD pitchandfamily, LPCWSTR facename, LPD3DXFONT *font)
+HRESULT WINAPI D3DXCreateFontW(IDirect3DDevice9 *device, INT height, UINT width, UINT weight, UINT miplevels, BOOL italic, DWORD charset,
+                               DWORD precision, DWORD quality, DWORD pitchandfamily, const WCHAR *facename, ID3DXFont **font)
 {
     D3DXFONT_DESCW desc;
 
@@ -253,7 +276,7 @@ HRESULT WINAPI D3DXCreateFontW(LPDIRECT3DDEVICE9 device, INT height, UINT width,
 /***********************************************************************
  *           D3DXCreateFontIndirectA    (D3DX9_36.@)
  */
-HRESULT WINAPI D3DXCreateFontIndirectA(LPDIRECT3DDEVICE9 device, CONST D3DXFONT_DESCA *desc, LPD3DXFONT *font)
+HRESULT WINAPI D3DXCreateFontIndirectA(IDirect3DDevice9 *device, const D3DXFONT_DESCA *desc, ID3DXFont **font)
 {
     D3DXFONT_DESCW widedesc;
 
@@ -270,14 +293,15 @@ HRESULT WINAPI D3DXCreateFontIndirectA(LPDIRECT3DDEVICE9 device, CONST D3DXFONT_
 /***********************************************************************
  *           D3DXCreateFontIndirectW    (D3DX9_36.@)
  */
-HRESULT WINAPI D3DXCreateFontIndirectW(LPDIRECT3DDEVICE9 device, CONST D3DXFONT_DESCW *desc, LPD3DXFONT *font)
+HRESULT WINAPI D3DXCreateFontIndirectW(IDirect3DDevice9 *device, const D3DXFONT_DESCW *desc, ID3DXFont **font)
 {
     D3DDEVICE_CREATION_PARAMETERS cpars;
     D3DDISPLAYMODE mode;
-    ID3DXFontImpl *object;
+    struct d3dx_font *object;
     IDirect3D9 *d3d;
     HRESULT hr;
-    FIXME("stub\n");
+
+    TRACE("(%p, %p, %p)\n", device, desc, font);
 
     if( !device || !desc || !font ) return D3DERR_INVALIDCALL;
 
@@ -292,12 +316,12 @@ HRESULT WINAPI D3DXCreateFontIndirectW(LPDIRECT3DDEVICE9 device, CONST D3DXFONT_
     }
     IDirect3D9_Release(d3d);
 
-    object=HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ID3DXFontImpl));
+    object = HeapAlloc(GetProcessHeap(), 0, sizeof(struct d3dx_font));
     if(object==NULL) {
         *font=NULL;
         return E_OUTOFMEMORY;
     }
-    object->lpVtbl=&D3DXFont_Vtbl;
+    object->ID3DXFont_iface.lpVtbl = &D3DXFont_Vtbl;
     object->ref=1;
     object->device=device;
     object->desc=*desc;
@@ -318,7 +342,7 @@ HRESULT WINAPI D3DXCreateFontIndirectW(LPDIRECT3DDEVICE9 device, CONST D3DXFONT_
     SelectObject(object->hdc, object->hfont);
 
     IDirect3DDevice9_AddRef(device);
-    *font=(LPD3DXFONT)object;
+    *font=&object->ID3DXFont_iface;
 
     return D3D_OK;
 }

@@ -49,8 +49,6 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(inst);
         break;
-    case DLL_PROCESS_DETACH:
-        break;
     }
     return TRUE;
 }
@@ -80,7 +78,7 @@ BOOL WINAPI D3DXDebugMute(BOOL mute)
  * D3DXGetDriverLevel.
  * Returns always 900 (DX 9) for us
  */
-UINT WINAPI D3DXGetDriverLevel(LPDIRECT3DDEVICE9 device)
+UINT WINAPI D3DXGetDriverLevel(struct IDirect3DDevice9 *device)
 {
     return 900;
 }

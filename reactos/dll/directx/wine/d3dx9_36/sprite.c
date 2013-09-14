@@ -31,33 +31,76 @@ typedef struct _SPRITEVERTEX {
     D3DXVECTOR2 tex;
 } SPRITEVERTEX;
 
-static HRESULT WINAPI ID3DXSpriteImpl_QueryInterface(LPD3DXSPRITE iface, REFIID riid, LPVOID *object)
-{
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
+typedef struct _SPRITE {
+    IDirect3DTexture9 *texture;
+    UINT texw, texh;
+    RECT rect;
+    D3DXVECTOR3 center;
+    D3DXVECTOR3 pos;
+    D3DCOLOR color;
+    D3DXMATRIX transform;
+} SPRITE;
 
-    TRACE("(%p): QueryInterface from %s\n", This, debugstr_guid(riid));
-    if(IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_ID3DXSprite)) {
+typedef struct ID3DXSpriteImpl
+{
+    ID3DXSprite ID3DXSprite_iface;
+    LONG ref;
+
+    IDirect3DDevice9 *device;
+    IDirect3DVertexDeclaration9 *vdecl;
+    IDirect3DStateBlock9 *stateblock;
+    D3DXMATRIX transform;
+    D3DXMATRIX view;
+    DWORD flags;
+    BOOL ready;
+
+    /* Store the relevant caps to prevent multiple GetDeviceCaps calls */
+    DWORD texfilter_caps;
+    DWORD maxanisotropy;
+    DWORD alphacmp_caps;
+
+    SPRITE *sprites;
+    int sprite_count;      /* number of sprites to be drawn */
+    int allocated_sprites; /* number of (pre-)allocated sprites */
+} ID3DXSpriteImpl;
+
+static inline ID3DXSpriteImpl *impl_from_ID3DXSprite(ID3DXSprite *iface)
+{
+    return CONTAINING_RECORD(iface, ID3DXSpriteImpl, ID3DXSprite_iface);
+}
+
+static HRESULT WINAPI ID3DXSpriteImpl_QueryInterface(ID3DXSprite *iface, REFIID riid, void **out)
+{
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
+
+    if (IsEqualGUID(riid, &IID_ID3DXSprite)
+            || IsEqualGUID(riid, &IID_IUnknown))
+    {
         IUnknown_AddRef(iface);
-        *object=This;
+        *out = iface;
         return S_OK;
     }
-    WARN("(%p)->(%s, %p): not found\n", iface, debugstr_guid(riid), *object);
+
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+
+    *out = NULL;
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI ID3DXSpriteImpl_AddRef(LPD3DXSPRITE iface)
+static ULONG WINAPI ID3DXSpriteImpl_AddRef(ID3DXSprite *iface)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
     ULONG ref=InterlockedIncrement(&This->ref);
-    TRACE("(%p): AddRef from %d\n", This, ref-1);
+    TRACE("(%p)->(): AddRef from %d\n", This, ref-1);
     return ref;
 }
 
-static ULONG WINAPI ID3DXSpriteImpl_Release(LPD3DXSPRITE iface)
+static ULONG WINAPI ID3DXSpriteImpl_Release(ID3DXSprite *iface)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
     ULONG ref=InterlockedDecrement(&This->ref);
-    TRACE("(%p): ReleaseRef to %d\n", This, ref);
+
+    TRACE("(%p)->(): ReleaseRef to %d\n", This, ref);
 
     if(ref==0) {
         if(This->sprites) {
@@ -76,10 +119,11 @@ static ULONG WINAPI ID3DXSpriteImpl_Release(LPD3DXSPRITE iface)
     return ref;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_GetDevice(LPD3DXSPRITE iface, LPDIRECT3DDEVICE9 *device)
+static HRESULT WINAPI ID3DXSpriteImpl_GetDevice(struct ID3DXSprite *iface, struct IDirect3DDevice9 **device)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
-    TRACE("(%p): relay\n", This);
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
+
+    TRACE("(%p)->(%p)\n", This, device);
 
     if(device==NULL) return D3DERR_INVALIDCALL;
     *device=This->device;
@@ -88,10 +132,11 @@ static HRESULT WINAPI ID3DXSpriteImpl_GetDevice(LPD3DXSPRITE iface, LPDIRECT3DDE
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_GetTransform(LPD3DXSPRITE iface, D3DXMATRIX *transform)
+static HRESULT WINAPI ID3DXSpriteImpl_GetTransform(ID3DXSprite *iface, D3DXMATRIX *transform)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
-    TRACE("(%p)\n", This);
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
+
+    TRACE("(%p)->(%p)\n", This, transform);
 
     if(transform==NULL) return D3DERR_INVALIDCALL;
     *transform=This->transform;
@@ -99,10 +144,11 @@ static HRESULT WINAPI ID3DXSpriteImpl_GetTransform(LPD3DXSPRITE iface, D3DXMATRI
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_SetTransform(LPD3DXSPRITE iface, CONST D3DXMATRIX *transform)
+static HRESULT WINAPI ID3DXSpriteImpl_SetTransform(ID3DXSprite *iface, CONST D3DXMATRIX *transform)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
-    TRACE("(%p)\n", This);
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
+
+    TRACE("(%p)->(%p)\n", This, transform);
 
     if(transform==NULL) return D3DERR_INVALIDCALL;
     This->transform=*transform;
@@ -110,17 +156,19 @@ static HRESULT WINAPI ID3DXSpriteImpl_SetTransform(LPD3DXSPRITE iface, CONST D3D
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_SetWorldViewRH(LPD3DXSPRITE iface, CONST D3DXMATRIX *world, CONST D3DXMATRIX *view)
+static HRESULT WINAPI ID3DXSpriteImpl_SetWorldViewRH(ID3DXSprite *iface, CONST D3DXMATRIX *world,
+        CONST D3DXMATRIX *view)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
-    FIXME("(%p): stub\n", This);
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
+    FIXME("(%p)->(%p, %p): stub\n", This, world, view);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_SetWorldViewLH(LPD3DXSPRITE iface, CONST D3DXMATRIX *world, CONST D3DXMATRIX *view)
+static HRESULT WINAPI ID3DXSpriteImpl_SetWorldViewLH(ID3DXSprite *iface, CONST D3DXMATRIX *world,
+        CONST D3DXMATRIX *view)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
-    FIXME("(%p): stub\n", This);
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
+    FIXME("(%p)->(%p, %p): stub\n", This, world, view);
     return E_NOTIMPL;
 }
 
@@ -130,7 +178,7 @@ static void set_states(ID3DXSpriteImpl *object)
     D3DXMATRIX mat;
     D3DVIEWPORT9 vp;
 
-    /* Miscelaneous stuff */
+    /* Miscellaneous stuff */
     IDirect3DDevice9_SetVertexShader(object->device, NULL);
     IDirect3DDevice9_SetPixelShader(object->device, NULL);
     IDirect3DDevice9_SetNPatchMode(object->device, 0.0f);
@@ -200,22 +248,22 @@ static void set_states(ID3DXSpriteImpl *object)
     /* Matrices */
     D3DXMatrixIdentity(&mat);
     IDirect3DDevice9_SetTransform(object->device, D3DTS_WORLD, &mat);
-    IDirect3DDevice9_SetTransform(object->device, D3DTS_VIEW, &mat);
+    IDirect3DDevice9_SetTransform(object->device, D3DTS_VIEW, &object->view);
     IDirect3DDevice9_GetViewport(object->device, &vp);
     D3DXMatrixOrthoOffCenterLH(&mat, vp.X+0.5f, (float)vp.Width+vp.X+0.5f, (float)vp.Height+vp.Y+0.5f, vp.Y+0.5f, vp.MinZ, vp.MaxZ);
     IDirect3DDevice9_SetTransform(object->device, D3DTS_PROJECTION, &mat);
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_Begin(LPD3DXSPRITE iface, DWORD flags)
+static HRESULT WINAPI ID3DXSpriteImpl_Begin(ID3DXSprite *iface, DWORD flags)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
     HRESULT hr;
-    TRACE("(%p): relay\n", This);
+
+    TRACE("(%p)->(%#x)\n", This, flags);
 
     if(flags>D3DXSPRITE_FLAGLIMIT || This->ready) return D3DERR_INVALIDCALL;
 
 /* TODO: Implement flags:
-D3DXSPRITE_ALPHABLEND: enables alpha blending
 D3DXSPRITE_BILLBOARD: makes the sprite always face the camera
 D3DXSPRITE_DONOTMODIFY_RENDERSTATE: name says it all
 D3DXSPRITE_OBJECTSPACE: do not change device transforms
@@ -223,6 +271,15 @@ D3DXSPRITE_SORT_DEPTH_BACKTOFRONT: sort by position
 D3DXSPRITE_SORT_DEPTH_FRONTTOBACK: sort by position
 D3DXSPRITE_SORT_TEXTURE: sort by texture (so that it doesn't change too often)
 */
+/* Seems like alpha blending is always enabled, regardless of D3DXSPRITE_ALPHABLEND flag */
+    if(flags & (D3DXSPRITE_BILLBOARD |
+                D3DXSPRITE_DONOTMODIFY_RENDERSTATE | D3DXSPRITE_OBJECTSPACE |
+                D3DXSPRITE_SORT_DEPTH_BACKTOFRONT))
+        FIXME("Flags unsupported: %#x\n", flags);
+    /* These flags should only matter to performances */
+    else if(flags & (D3DXSPRITE_SORT_DEPTH_FRONTTOBACK | D3DXSPRITE_SORT_TEXTURE))
+        TRACE("Flags unsupported: %#x\n", flags);
+
     if(This->vdecl==NULL) {
         static const D3DVERTEXELEMENT9 elements[] =
         {
@@ -255,21 +312,20 @@ D3DXSPRITE_SORT_TEXTURE: sort by texture (so that it doesn't change too often)
     /* Apply device state */
     set_states(This);
 
-    D3DXMatrixIdentity(&This->transform);
-    D3DXMatrixIdentity(&This->view);
-
     This->flags=flags;
     This->ready=TRUE;
 
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_Draw(LPD3DXSPRITE iface, LPDIRECT3DTEXTURE9 texture, CONST RECT *rect, CONST D3DXVECTOR3 *center,
-                                           CONST D3DXVECTOR3 *position, D3DCOLOR color)
+static HRESULT WINAPI ID3DXSpriteImpl_Draw(ID3DXSprite *iface, IDirect3DTexture9 *texture,
+        const RECT *rect, const D3DXVECTOR3 *center, const D3DXVECTOR3 *position, D3DCOLOR color)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
     D3DSURFACE_DESC texdesc;
-    TRACE("(%p): relay\n", This);
+
+    TRACE("iface %p, texture %p, rect %s, center %p, position %p, color 0x%08x.\n",
+            iface, texture, wine_dbgstr_rect(rect), center, position, color);
 
     if(texture==NULL) return D3DERR_INVALIDCALL;
     if(!This->ready) return D3DERR_INVALIDCALL;
@@ -318,66 +374,72 @@ static HRESULT WINAPI ID3DXSpriteImpl_Draw(LPD3DXSPRITE iface, LPDIRECT3DTEXTURE
     } else This->sprites[This->sprite_count].pos=*position;
 
     This->sprites[This->sprite_count].color=color;
+    This->sprites[This->sprite_count].transform=This->transform;
     This->sprite_count++;
 
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_Flush(LPD3DXSPRITE iface)
+static HRESULT WINAPI ID3DXSpriteImpl_Flush(ID3DXSprite *iface)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
     SPRITEVERTEX *vertices;
-    int i;
-    TRACE("(%p): relay\n", This);
+    int i, count=0, start;
+
+    TRACE("(%p)->()\n", This);
 
     if(!This->ready) return D3DERR_INVALIDCALL;
     if(!This->sprite_count) return D3D_OK;
 
 /* TODO: use of a vertex buffer here */
-    vertices=HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SPRITEVERTEX)*4*This->sprite_count);
+    vertices=HeapAlloc(GetProcessHeap(), 0, sizeof(SPRITEVERTEX)*6*This->sprite_count);
 
-    for(i=0;i<This->sprite_count;i++) {
-        float spritewidth=(float)This->sprites[i].rect.right-(float)This->sprites[i].rect.left;
-        float spriteheight=(float)This->sprites[i].rect.bottom-(float)This->sprites[i].rect.top;
+    for(start=0;start<This->sprite_count;start+=count,count=0) {
+        i=start;
+        while(i<This->sprite_count &&
+              (count==0 || This->sprites[i].texture==This->sprites[i-1].texture)) {
+            float spritewidth=(float)This->sprites[i].rect.right-(float)This->sprites[i].rect.left;
+            float spriteheight=(float)This->sprites[i].rect.bottom-(float)This->sprites[i].rect.top;
 
-        vertices[4*i  ].pos.x = This->sprites[i].pos.x - This->sprites[i].center.x;
-        vertices[4*i  ].pos.y = This->sprites[i].pos.y - This->sprites[i].center.y;
-        vertices[4*i  ].pos.z = This->sprites[i].pos.z - This->sprites[i].center.z;
-        vertices[4*i+1].pos.x = spritewidth + This->sprites[i].pos.x - This->sprites[i].center.x;
-        vertices[4*i+1].pos.y = This->sprites[i].pos.y - This->sprites[i].center.y;
-        vertices[4*i+1].pos.z = This->sprites[i].pos.z - This->sprites[i].center.z;
-        vertices[4*i+2].pos.x = spritewidth + This->sprites[i].pos.x - This->sprites[i].center.x;
-        vertices[4*i+2].pos.y = spriteheight + This->sprites[i].pos.y - This->sprites[i].center.y;
-        vertices[4*i+2].pos.z = This->sprites[i].pos.z - This->sprites[i].center.z;
-        vertices[4*i+3].pos.x = This->sprites[i].pos.x - This->sprites[i].center.x;
-        vertices[4*i+3].pos.y = spriteheight + This->sprites[i].pos.y - This->sprites[i].center.y;
-        vertices[4*i+3].pos.z = This->sprites[i].pos.z - This->sprites[i].center.z;
-        vertices[4*i  ].col   = This->sprites[i].color;
-        vertices[4*i+1].col   = This->sprites[i].color;
-        vertices[4*i+2].col   = This->sprites[i].color;
-        vertices[4*i+3].col   = This->sprites[i].color;
-        vertices[4*i  ].tex.x = (float)This->sprites[i].rect.left / (float)This->sprites[i].texw;
-        vertices[4*i  ].tex.y = (float)This->sprites[i].rect.top / (float)This->sprites[i].texh;
-        vertices[4*i+1].tex.x = (float)This->sprites[i].rect.right / (float)This->sprites[i].texw;
-        vertices[4*i+1].tex.y = (float)This->sprites[i].rect.top / (float)This->sprites[i].texh;
-        vertices[4*i+2].tex.x = (float)This->sprites[i].rect.right / (float)This->sprites[i].texw;
-        vertices[4*i+2].tex.y = (float)This->sprites[i].rect.bottom / (float)This->sprites[i].texh;
-        vertices[4*i+3].tex.x = (float)This->sprites[i].rect.left / (float)This->sprites[i].texw;
-        vertices[4*i+3].tex.y = (float)This->sprites[i].rect.bottom / (float)This->sprites[i].texh;
-    }
+            vertices[6*i  ].pos.x = This->sprites[i].pos.x - This->sprites[i].center.x;
+            vertices[6*i  ].pos.y = This->sprites[i].pos.y - This->sprites[i].center.y;
+            vertices[6*i  ].pos.z = This->sprites[i].pos.z - This->sprites[i].center.z;
+            vertices[6*i+1].pos.x = spritewidth + This->sprites[i].pos.x - This->sprites[i].center.x;
+            vertices[6*i+1].pos.y = This->sprites[i].pos.y - This->sprites[i].center.y;
+            vertices[6*i+1].pos.z = This->sprites[i].pos.z - This->sprites[i].center.z;
+            vertices[6*i+2].pos.x = spritewidth + This->sprites[i].pos.x - This->sprites[i].center.x;
+            vertices[6*i+2].pos.y = spriteheight + This->sprites[i].pos.y - This->sprites[i].center.y;
+            vertices[6*i+2].pos.z = This->sprites[i].pos.z - This->sprites[i].center.z;
+            vertices[6*i+3].pos.x = This->sprites[i].pos.x - This->sprites[i].center.x;
+            vertices[6*i+3].pos.y = spriteheight + This->sprites[i].pos.y - This->sprites[i].center.y;
+            vertices[6*i+3].pos.z = This->sprites[i].pos.z - This->sprites[i].center.z;
+            vertices[6*i  ].col   = This->sprites[i].color;
+            vertices[6*i+1].col   = This->sprites[i].color;
+            vertices[6*i+2].col   = This->sprites[i].color;
+            vertices[6*i+3].col   = This->sprites[i].color;
+            vertices[6*i  ].tex.x = (float)This->sprites[i].rect.left / (float)This->sprites[i].texw;
+            vertices[6*i  ].tex.y = (float)This->sprites[i].rect.top / (float)This->sprites[i].texh;
+            vertices[6*i+1].tex.x = (float)This->sprites[i].rect.right / (float)This->sprites[i].texw;
+            vertices[6*i+1].tex.y = (float)This->sprites[i].rect.top / (float)This->sprites[i].texh;
+            vertices[6*i+2].tex.x = (float)This->sprites[i].rect.right / (float)This->sprites[i].texw;
+            vertices[6*i+2].tex.y = (float)This->sprites[i].rect.bottom / (float)This->sprites[i].texh;
+            vertices[6*i+3].tex.x = (float)This->sprites[i].rect.left / (float)This->sprites[i].texw;
+            vertices[6*i+3].tex.y = (float)This->sprites[i].rect.bottom / (float)This->sprites[i].texh;
 
-    D3DXVec3TransformCoordArray(&vertices[0].pos, sizeof(SPRITEVERTEX), &vertices[0].pos, sizeof(SPRITEVERTEX), &This->transform, 4*This->sprite_count);
-    D3DXVec3TransformCoordArray(&vertices[0].pos, sizeof(SPRITEVERTEX), &vertices[0].pos, sizeof(SPRITEVERTEX), &This->view,      4*This->sprite_count);
+            vertices[6*i+4]=vertices[6*i];
+            vertices[6*i+5]=vertices[6*i+2];
 
-    IDirect3DDevice9_SetVertexDeclaration(This->device, This->vdecl);
+            D3DXVec3TransformCoordArray(&vertices[6*i].pos, sizeof(SPRITEVERTEX),
+                                        &vertices[6*i].pos, sizeof(SPRITEVERTEX),
+                                        &This->sprites[i].transform, 6);
+            count++;
+            i++;
+        }
 
-    for(i=0;i<This->sprite_count;i++) {
-        if(!i)
-            IDirect3DDevice9_SetTexture(This->device, 0, (LPDIRECT3DBASETEXTURE9)(This->sprites[i].texture));
-        else if(This->sprites[i].texture!=This->sprites[i-1].texture)
-            IDirect3DDevice9_SetTexture(This->device, 0, (LPDIRECT3DBASETEXTURE9)(This->sprites[i].texture));
+        IDirect3DDevice9_SetTexture(This->device, 0, (struct IDirect3DBaseTexture9 *)This->sprites[start].texture);
+        IDirect3DDevice9_SetVertexDeclaration(This->device, This->vdecl);
 
-        IDirect3DDevice9_DrawPrimitiveUP(This->device, D3DPT_TRIANGLEFAN, 2, vertices+4*i, sizeof(SPRITEVERTEX));
+        IDirect3DDevice9_DrawPrimitiveUP(This->device, D3DPT_TRIANGLELIST, 2*count, vertices+6*start, sizeof(SPRITEVERTEX));
     }
     HeapFree(GetProcessHeap(), 0, vertices);
 
@@ -392,10 +454,11 @@ static HRESULT WINAPI ID3DXSpriteImpl_Flush(LPD3DXSPRITE iface)
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_End(LPD3DXSPRITE iface)
+static HRESULT WINAPI ID3DXSpriteImpl_End(ID3DXSprite *iface)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
-    TRACE("(%p): relay\n", This);
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
+
+    TRACE("(%p)->()\n", This);
 
     if(!This->ready) return D3DERR_INVALIDCALL;
 
@@ -409,10 +472,11 @@ static HRESULT WINAPI ID3DXSpriteImpl_End(LPD3DXSPRITE iface)
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_OnLostDevice(LPD3DXSPRITE iface)
+static HRESULT WINAPI ID3DXSpriteImpl_OnLostDevice(ID3DXSprite *iface)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
-    TRACE("(%p)\n", This);
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
+
+    TRACE("(%p)->()\n", This);
 
     if(This->stateblock) IDirect3DStateBlock9_Release(This->stateblock);
     if(This->vdecl) IDirect3DVertexDeclaration9_Release(This->vdecl);
@@ -425,12 +489,12 @@ static HRESULT WINAPI ID3DXSpriteImpl_OnLostDevice(LPD3DXSPRITE iface)
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXSpriteImpl_OnResetDevice(LPD3DXSPRITE iface)
+static HRESULT WINAPI ID3DXSpriteImpl_OnResetDevice(ID3DXSprite *iface)
 {
-    ID3DXSpriteImpl *This=(ID3DXSpriteImpl*)iface;
+    ID3DXSpriteImpl *This = impl_from_ID3DXSprite(iface);
     int i;
 
-    TRACE("(%p)\n", This);
+    TRACE("(%p)->()\n", This);
 
     for(i=0;i<This->sprite_count;i++)
         if(This->sprites[i].texture)
@@ -467,11 +531,12 @@ static const ID3DXSpriteVtbl D3DXSprite_Vtbl =
     ID3DXSpriteImpl_OnResetDevice
 };
 
-HRESULT WINAPI D3DXCreateSprite(LPDIRECT3DDEVICE9 device, LPD3DXSPRITE *sprite)
+HRESULT WINAPI D3DXCreateSprite(struct IDirect3DDevice9 *device, struct ID3DXSprite **sprite)
 {
     ID3DXSpriteImpl *object;
     D3DCAPS9 caps;
-    TRACE("(void): relay\n");
+
+    TRACE("(%p, %p)\n", device, sprite);
 
     if(device==NULL || sprite==NULL) return D3DERR_INVALIDCALL;
 
@@ -480,7 +545,7 @@ HRESULT WINAPI D3DXCreateSprite(LPDIRECT3DDEVICE9 device, LPD3DXSPRITE *sprite)
         *sprite=NULL;
         return E_OUTOFMEMORY;
     }
-    object->lpVtbl=&D3DXSprite_Vtbl;
+    object->ID3DXSprite_iface.lpVtbl = &D3DXSprite_Vtbl;
     object->ref=1;
     object->device=device;
     IUnknown_AddRef(device);
@@ -496,11 +561,11 @@ HRESULT WINAPI D3DXCreateSprite(LPDIRECT3DDEVICE9 device, LPD3DXSPRITE *sprite)
     object->maxanisotropy=caps.MaxAnisotropy;
     object->alphacmp_caps=caps.AlphaCmpCaps;
 
-    ID3DXSprite_OnResetDevice((ID3DXSprite*)object);
+    ID3DXSprite_OnResetDevice(&object->ID3DXSprite_iface);
 
     object->sprites=NULL;
     object->allocated_sprites=0;
-    *sprite=(ID3DXSprite*)object;
+    *sprite=&object->ID3DXSprite_iface;
 
     return D3D_OK;
 }

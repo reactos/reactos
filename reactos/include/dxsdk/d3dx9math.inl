@@ -557,13 +557,11 @@ inline D3DXQUATERNION& D3DXQUATERNION::operator -= (CONST D3DXQUATERNION& quat)
     return *this;
 }
 
-/* TODO: uncomment this when D3DXQuaternionMultiply has been implemented
 inline D3DXQUATERNION& D3DXQUATERNION::operator *= (CONST D3DXQUATERNION& quat)
 {
     D3DXQuaternionMultiply(this, this, &quat);
     return *this;
 }
-*/
 
 inline D3DXQUATERNION& D3DXQUATERNION::operator *= (FLOAT f)
 {
@@ -604,14 +602,12 @@ inline D3DXQUATERNION D3DXQUATERNION::operator - (CONST D3DXQUATERNION& quat) co
     return D3DXQUATERNION(x - quat.x, y - quat.y, z - quat.z, w - quat.w);
 }
 
-/* TODO: uncomment this when D3DXQuaternionMultiply has been implemented
 inline D3DXQUATERNION D3DXQUATERNION::operator * (CONST D3DXQUATERNION& quat) const
 {
     D3DXQUATERNION buf;
     D3DXQuaternionMultiply(&buf, this, &quat);
     return buf;
 }
-*/
 
 inline D3DXQUATERNION D3DXQUATERNION::operator * (FLOAT f) const
 {
@@ -851,6 +847,37 @@ inline BOOL D3DXCOLOR::operator != (CONST D3DXCOLOR& col) const
     return r != col.r || g != col.g || b != col.b || a != col.a;
 }
 
+inline D3DXFLOAT16::D3DXFLOAT16()
+{
+}
+
+inline D3DXFLOAT16::D3DXFLOAT16(FLOAT f)
+{
+    D3DXFloat32To16Array(this, &f, 1);
+}
+
+inline D3DXFLOAT16::D3DXFLOAT16(CONST D3DXFLOAT16 &f)
+{
+    value = f.value;
+}
+
+inline D3DXFLOAT16::operator FLOAT ()
+{
+    FLOAT f;
+    D3DXFloat16To32Array(&f, this, 1);
+    return f;
+}
+
+inline BOOL D3DXFLOAT16::operator == (CONST D3DXFLOAT16 &f) const
+{
+    return value == f.value;
+}
+
+inline BOOL D3DXFLOAT16::operator != (CONST D3DXFLOAT16 &f) const
+{
+    return value != f.value;
+}
+
 #endif /* __cplusplus */
 
 /*_______________D3DXCOLOR_____________________*/
@@ -940,7 +967,7 @@ static inline FLOAT D3DXVec2Dot(CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2)
 static inline FLOAT D3DXVec2Length(CONST D3DXVECTOR2 *pv)
 {
     if (!pv) return 0.0f;
-    return sqrt( (pv->x) * (pv->x) + (pv->y) * (pv->y) );
+    return sqrtf( pv->x * pv->x + pv->y * pv->y );
 }
 
 static inline FLOAT D3DXVec2LengthSq(CONST D3DXVECTOR2 *pv)
@@ -960,16 +987,16 @@ static inline D3DXVECTOR2* D3DXVec2Lerp(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv
 static inline D3DXVECTOR2* D3DXVec2Maximize(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
-    pout->x = max(pv1->x , pv2->x);
-    pout->y = max(pv1->y , pv2->y);
+    pout->x = pv1->x > pv2->x ? pv1->x : pv2->x;
+    pout->y = pv1->y > pv2->y ? pv1->y : pv2->y;
     return pout;
 }
 
 static inline D3DXVECTOR2* D3DXVec2Minimize(D3DXVECTOR2 *pout, CONST D3DXVECTOR2 *pv1, CONST D3DXVECTOR2 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
-    pout->x = min(pv1->x , pv2->x);
-    pout->y = min(pv1->y , pv2->y);
+    pout->x = pv1->x < pv2->x ? pv1->x : pv2->x;
+    pout->y = pv1->y < pv2->y ? pv1->y : pv2->y;
     return pout;
 }
 
@@ -1002,10 +1029,13 @@ static inline D3DXVECTOR3* D3DXVec3Add(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1
 
 static inline D3DXVECTOR3* D3DXVec3Cross(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
 {
+    D3DXVECTOR3 temp;
+
     if ( !pout || !pv1 || !pv2) return NULL;
-    pout->x = (pv1->y) * (pv2->z) - (pv1->z) * (pv2->y);
-    pout->y = (pv1->z) * (pv2->x) - (pv1->x) * (pv2->z);
-    pout->z = (pv1->x) * (pv2->y) - (pv1->y) * (pv2->x);
+    temp.x = (pv1->y) * (pv2->z) - (pv1->z) * (pv2->y);
+    temp.y = (pv1->z) * (pv2->x) - (pv1->x) * (pv2->z);
+    temp.z = (pv1->x) * (pv2->y) - (pv1->y) * (pv2->x);
+    *pout = temp;
     return pout;
 }
 
@@ -1018,7 +1048,7 @@ static inline FLOAT D3DXVec3Dot(CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
 static inline FLOAT D3DXVec3Length(CONST D3DXVECTOR3 *pv)
 {
     if (!pv) return 0.0f;
-    return sqrt( (pv->x) * (pv->x) + (pv->y) * (pv->y) + (pv->z) * (pv->z) );
+    return sqrtf( pv->x * pv->x + pv->y * pv->y + pv->z * pv->z );
 }
 
 static inline FLOAT D3DXVec3LengthSq(CONST D3DXVECTOR3 *pv)
@@ -1039,18 +1069,18 @@ static inline D3DXVECTOR3* D3DXVec3Lerp(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv
 static inline D3DXVECTOR3* D3DXVec3Maximize(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
-    pout->x = max(pv1->x , pv2->x);
-    pout->y = max(pv1->y , pv2->y);
-    pout->z = max(pv1->z , pv2->z);
+    pout->x = pv1->x > pv2->x ? pv1->x : pv2->x;
+    pout->y = pv1->y > pv2->y ? pv1->y : pv2->y;
+    pout->z = pv1->z > pv2->z ? pv1->z : pv2->z;
     return pout;
 }
 
 static inline D3DXVECTOR3* D3DXVec3Minimize(D3DXVECTOR3 *pout, CONST D3DXVECTOR3 *pv1, CONST D3DXVECTOR3 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
-    pout->x = min(pv1->x , pv2->x);
-    pout->y = min(pv1->y , pv2->y);
-    pout->z = min(pv1->z , pv2->z);
+    pout->x = pv1->x < pv2->x ? pv1->x : pv2->x;
+    pout->y = pv1->y < pv2->y ? pv1->y : pv2->y;
+    pout->z = pv1->z < pv2->z ? pv1->z : pv2->z;
     return pout;
 }
 
@@ -1092,7 +1122,7 @@ static inline FLOAT D3DXVec4Dot(CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2)
 static inline FLOAT D3DXVec4Length(CONST D3DXVECTOR4 *pv)
 {
     if (!pv) return 0.0f;
-    return sqrt( (pv->x) * (pv->x) + (pv->y) * (pv->y) + (pv->z) * (pv->z) + (pv->w) * (pv->w) );
+    return sqrtf( pv->x * pv->x + pv->y * pv->y + pv->z * pv->z + pv->w * pv->w );
 }
 
 static inline FLOAT D3DXVec4LengthSq(CONST D3DXVECTOR4 *pv)
@@ -1115,20 +1145,20 @@ static inline D3DXVECTOR4* D3DXVec4Lerp(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv
 static inline D3DXVECTOR4* D3DXVec4Maximize(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
-    pout->x = max(pv1->x , pv2->x);
-    pout->y = max(pv1->y , pv2->y);
-    pout->z = max(pv1->z , pv2->z);
-    pout->w = max(pv1->w , pv2->w);
+    pout->x = pv1->x > pv2->x ? pv1->x : pv2->x;
+    pout->y = pv1->y > pv2->y ? pv1->y : pv2->y;
+    pout->z = pv1->z > pv2->z ? pv1->z : pv2->z;
+    pout->w = pv1->w > pv2->w ? pv1->w : pv2->w;
     return pout;
 }
 
 static inline D3DXVECTOR4* D3DXVec4Minimize(D3DXVECTOR4 *pout, CONST D3DXVECTOR4 *pv1, CONST D3DXVECTOR4 *pv2)
 {
     if ( !pout || !pv1 || !pv2) return NULL;
-    pout->x = min(pv1->x , pv2->x);
-    pout->y = min(pv1->y , pv2->y);
-    pout->z = min(pv1->z , pv2->z);
-    pout->w = min(pv1->w , pv2->w);
+    pout->x = pv1->x < pv2->x ? pv1->x : pv2->x;
+    pout->y = pv1->y < pv2->y ? pv1->y : pv2->y;
+    pout->z = pv1->z < pv2->z ? pv1->z : pv2->z;
+    pout->w = pv1->w < pv2->w ? pv1->w : pv2->w;
     return pout;
 }
 
@@ -1256,7 +1286,7 @@ static inline BOOL D3DXQuaternionIsIdentity(D3DXQUATERNION *pq)
 static inline FLOAT D3DXQuaternionLength(CONST D3DXQUATERNION *pq)
 {
     if (!pq) return 0.0f;
-    return sqrt( (pq->x) * (pq->x) + (pq->y) * (pq->y) + (pq->z) * (pq->z) + (pq->w) * (pq->w) );
+    return sqrtf( pq->x * pq->x + pq->y * pq->y + pq->z * pq->z + pq->w * pq->w );
 }
 
 static inline FLOAT D3DXQuaternionLengthSq(CONST D3DXQUATERNION *pq)
