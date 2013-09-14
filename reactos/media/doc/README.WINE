@@ -42,7 +42,7 @@ reactos/dll/directx/quartz              # Synced to Wine-1.5.26
 reactos/dll/directx/wine/d3d8           # Synced to Wine-1.7.1
 reactos/dll/directx/wine/d3d9           # Synced to Wine-1.7.1
 reactos/dll/directx/wine/d3dcompiler_43 # Synced to Wine-1.7.1
-reactos/dll/directx/wine/d3dx9_24 => 42 # Synced to Wine-1.7.1
+reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to Wine-1.7.1
 reactos/dll/directx/wine/d3dxof         # Synced to Wine-1.7.1
 reactos/dll/directx/wine/ddraw          # Synced to Wine-1.7.1
 reactos/dll/directx/wine/wined3d        # Synced to Wine-1.7.1
