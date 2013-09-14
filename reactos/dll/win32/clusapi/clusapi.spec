@@ -70,7 +70,7 @@
 @ stub GetClusterFromResource
 @ stub GetClusterGroupKey
 @ stub GetClusterGroupState
-@ stub GetClusterInformation
+@ stdcall GetClusterInformation(ptr ptr ptr ptr)
 @ stub GetClusterKey
 @ stub GetClusterNetInterface
 @ stub GetClusterNetInterfaceKey

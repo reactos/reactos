@@ -26,7 +26,24 @@ extern "C" {
 typedef struct _HCLUSTER *HCLUSTER;
 typedef struct _HCLUSENUM *HCLUSENUM;
 
+
+typedef struct _CLUSTERVERSIONINFO
+{
+    DWORD   dwVersionInfoSize;
+    WORD    MajorVersion;
+    WORD    MinorVersion;
+    WORD    BuildNumber;
+    WCHAR   szVendorId[64];
+    WCHAR   szCSDVersion[64];
+    DWORD   dwClusterHighestVersion;
+    DWORD   dwClusterLowestVersion;
+    DWORD   dwFlags;
+    DWORD   dwReserved;
+} CLUSTERVERSIONINFO, *LPCLUSTERVERSIONINFO;
+
 BOOL WINAPI CloseCluster(HCLUSTER hCluster);
+DWORD WINAPI GetClusterInformation(HCLUSTER hCluster, LPWSTR lpszClusterName,
+                                   LPDWORD lpcchClusterName, LPCLUSTERVERSIONINFO lpClusterInfo);
 DWORD WINAPI GetNodeClusterState(LPCWSTR lpszNodeName, LPDWORD pdwClusterState);
 HCLUSTER WINAPI OpenCluster(LPCWSTR lpszClusterName);
 HCLUSENUM WINAPI ClusterOpenEnum(HCLUSTER hCluster, DWORD dwType);
