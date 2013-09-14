@@ -160,10 +160,10 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
             {
                 /* Use the rest of the arguments as a maximum size */
                 SecondArgument.Buffer = &Arguments.Buffer[i];
-                SecondArgument.Length = Arguments.Length -
-                                        i * sizeof(WCHAR);
-                SecondArgument.MaximumLength = Arguments.MaximumLength -
-                                               i * sizeof(WCHAR);
+                SecondArgument.Length = (USHORT)(Arguments.Length -
+                                        i * sizeof(WCHAR));
+                SecondArgument.MaximumLength = (USHORT)(Arguments.MaximumLength -
+                                               i * sizeof(WCHAR));
                 Status = RtlUnicodeStringToInteger(&SecondArgument, 0, &MaxSize);
                 if (!NT_SUCCESS(Status))
                 {
