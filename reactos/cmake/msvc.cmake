@@ -31,9 +31,13 @@ endif ()
 # C++ exception specification ignored... yeah we don't care
 add_compile_flags("/wd4290")
 
-# different level of indirection, void function returning a value and
-# uninitialized variable usage should be errors.
-add_compile_flags("/we4047 /we4098 /we4700")
+# The following warnings are treated as errors:
+# - C4047: different level of indirection
+# - C4090: different 'modifier' qualifiers (for C programs only;
+#          for C++ programs, the compiler error C2440 is issued)
+# - C4098: void function returning a value
+# - C4700: uninitialized variable usage
+add_compile_flags("/we4047 /we4090 /we4098 /we4700")
 
 # Debugging
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
