@@ -233,7 +233,7 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     if (InsideCsrProcess)
     {
         /* We're inside, so let's find csrsrv */
-        DPRINT1("Next-GEN CSRSS support\n");
+        DPRINT("Next-GEN CSRSS support\n");
         RtlInitUnicodeString(&CsrSrvName, L"csrsrv");
         Status = LdrGetDllHandle(NULL,
                                  NULL,
@@ -456,7 +456,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     else
     {
         /* This is a server-to-server call. Save our CID and do a direct call. */
-        DPRINT1("Next gen server-to-server call\n");
+        DPRINT("Next gen server-to-server call\n");
 
         /* We check this equality inside CsrValidateMessageBuffer */
         ApiMessage->Header.ClientId = NtCurrentTeb()->ClientId;
