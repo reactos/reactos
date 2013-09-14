@@ -52,6 +52,7 @@ reactos/dll/win32/actxprxy        # Synced to Wine-1.5.26
 reactos/dll/win32/advpack         # Synced to Wine-1.7.1
 reactos/dll/win32/atl             # Synced to Wine-1.5.19
 reactos/dll/win32/atl100          # Synced to Wine-1.7.1
+reactos/dll/win32/atl80           # Synced to Wine-1.7.1
 reactos/dll/win32/avifil32        # Synced to Wine-1.5.26
 reactos/dll/win32/bcrypt          # Synced to Wine-1.5.26
 reactos/dll/win32/browseui        # Out of sync
