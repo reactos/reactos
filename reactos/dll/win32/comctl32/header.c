@@ -293,6 +293,41 @@ static void HEADER_GetHotDividerRect(const HEADER_INFO *infoPtr, RECT *r)
     }
 }
 
+static void
+HEADER_FillItemFrame(HEADER_INFO *infoPtr, HDC hdc, RECT *r, const HEADER_ITEM *item, BOOL hottrack)
+{
+    HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
+
+    if (theme) {
+        int state = (item->bDown) ? HIS_PRESSED : (hottrack ? HIS_HOT : HIS_NORMAL);
+        DrawThemeBackground (theme, hdc, HP_HEADERITEM, state, r, NULL);
+        GetThemeBackgroundContentRect (theme, hdc, HP_HEADERITEM, state, r, r);
+    }
+    else
+    {
+        HBRUSH hbr = CreateSolidBrush(GetBkColor(hdc));
+        FillRect(hdc, r, hbr);
+        DeleteObject(hbr);
+    }
+}
+
+static void
+HEADER_DrawItemFrame(HEADER_INFO *infoPtr, HDC hdc, RECT *r, const HEADER_ITEM *item)
+{
+    if (GetWindowTheme(infoPtr->hwndSelf)) return;
+
+    if (!(infoPtr->dwStyle & HDS_FLAT))
+    {
+        if (infoPtr->dwStyle & HDS_BUTTONS) {
+            if (item->bDown)
+                DrawEdge (hdc, r, BDR_RAISEDOUTER, BF_RECT | BF_FLAT | BF_ADJUST);
+            else
+                DrawEdge (hdc, r, EDGE_RAISED, BF_RECT | BF_SOFT | BF_ADJUST);
+        }
+        else
+            DrawEdge (hdc, r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
+    }
+}
 
 static INT
 HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags)
@@ -329,43 +364,13 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
             return phdi->rect.right;
     }
 
-    if (theme != NULL) {
-        int state = (phdi->bDown) ? HIS_PRESSED :
-            (bHotTrack ? HIS_HOT : HIS_NORMAL);
-        DrawThemeBackground (theme, hdc, HP_HEADERITEM, state,
-            &r, NULL);
-        GetThemeBackgroundContentRect (theme, hdc, HP_HEADERITEM, state,
-            &r, &r);
-    }
-    else {
-        HBRUSH hbr;
+    /* Fill background, owner could draw over it. */
+    HEADER_FillItemFrame(infoPtr, hdc, &r, phdi, bHotTrack);
 
-        if (!(infoPtr->dwStyle & HDS_FLAT))
-        {
-            if (infoPtr->dwStyle & HDS_BUTTONS) {
-                if (phdi->bDown) {
-                    DrawEdge (hdc, &r, BDR_RAISEDOUTER,
-                                BF_RECT | BF_FLAT | BF_MIDDLE | BF_ADJUST);
-                }
-                else
-                    DrawEdge (hdc, &r, EDGE_RAISED,
-                                BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
-            }
-            else
-                DrawEdge (hdc, &r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
-        }
-
-        hbr = CreateSolidBrush(GetBkColor(hdc));
-        FillRect(hdc, &r, hbr);
-        DeleteObject(hbr);
-    }
-    if (phdi->bDown) {
-        r.left += 2;
-        r.top  += 2;
-    }
-
-    if (phdi->fmt & HDF_OWNERDRAW) {
+    if (phdi->fmt & HDF_OWNERDRAW)
+    {
 	DRAWITEMSTRUCT dis;
+        BOOL ret;
 
 	dis.CtlType    = ODT_HEADER;
 	dis.CtlID      = GetWindowLongPtrW (infoPtr->hwndSelf, GWLP_ID);
@@ -377,11 +382,32 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	dis.rcItem     = phdi->rect;
 	dis.itemData   = phdi->lParam;
         oldBkMode = SetBkMode(hdc, TRANSPARENT);
-        SendMessageW (infoPtr->hwndNotify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
+        ret = SendMessageW (infoPtr->hwndNotify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
         if (oldBkMode != TRANSPARENT)
             SetBkMode(hdc, oldBkMode);
+
+        if (!ret)
+            HEADER_FillItemFrame(infoPtr, hdc, &r, phdi, bHotTrack);
+
+        /* Edges are always drawn if we don't have attached theme. */
+        HEADER_DrawItemFrame(infoPtr, hdc, &r, phdi);
+        /* If application processed WM_DRAWITEM we should skip label painting,
+           edges are drawn no matter what. */
+        if (ret) return phdi->rect.right;
     }
-    else {
+    else
+    {
+        HEADER_FillItemFrame(infoPtr, hdc, &r, phdi, bHotTrack);
+        HEADER_DrawItemFrame(infoPtr, hdc, &r, phdi);
+    }
+
+    if (phdi->bDown) {
+        r.left += 2;
+        r.top  += 2;
+    }
+
+    /* Now text and image */
+    {
 	UINT rw, rh, /* width and height of r */
 	     *x = NULL, *w = NULL; /* x and width of the pic (bmp or img) which is part of cnt */
 	  /* cnt,txt,img,bmp */
@@ -499,7 +525,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	        SetBkMode(hdc, oldBkMode);
         }
         HEADER_FreeCallbackItems(phdi);
-    }/*Ownerdrawn*/
+    }
 
     return phdi->rect.right;
 }

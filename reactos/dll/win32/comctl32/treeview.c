@@ -2526,7 +2526,7 @@ TREEVIEW_DrawItem(const TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *item)
      * - Otherwise - use background color
      */
     if ((item->state & TVIS_DROPHILITED) || ((item == infoPtr->focusedItem) && !(item->state & TVIS_SELECTED)) ||
-	((item->state & TVIS_SELECTED) && (!infoPtr->focusedItem) &&
+	((item->state & TVIS_SELECTED) && (!infoPtr->focusedItem || item == infoPtr->focusedItem) &&
 	 (inFocus || (infoPtr->dwStyle & TVS_SHOWSELALWAYS))))
     {
 	if ((item->state & TVIS_DROPHILITED) || inFocus)
@@ -3301,6 +3301,8 @@ TREEVIEW_Collapse(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
 	TREEVIEW_RemoveAllChildren(infoPtr, item);
         item->cChildren = old_cChildren;
     }
+    if (!wasExpanded)
+        return FALSE;
 
     if (item->firstChild)
     {
