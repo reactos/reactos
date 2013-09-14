@@ -920,7 +920,7 @@ WINAPI
 SetThreadUILanguage(IN LANGID LangId)
 {
     UNIMPLEMENTED;
-    return NtCurrentTeb()->CurrentLocale;
+    return (LANGID)NtCurrentTeb()->CurrentLocale;
 }
 
 /*

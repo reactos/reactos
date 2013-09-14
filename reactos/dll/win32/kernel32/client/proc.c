@@ -102,7 +102,7 @@ BuildSubSysCommandLine(IN LPCWSTR SubsystemName,
     /* Allocate buffer for the output string */
     Length = CommandLineString.MaximumLength + ApplicationNameString.MaximumLength + 32;
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
-    RtlInitEmptyUnicodeString(SubsysCommandLine, Buffer, Length);
+    RtlInitEmptyUnicodeString(SubsysCommandLine, Buffer, (USHORT)Length);
     if (!Buffer)
     {
         /* Fail, no memory */
@@ -2295,7 +2295,8 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     SECTION_IMAGE_INFORMATION ImageInformation;
     IO_STATUS_BLOCK IoStatusBlock;
     CLIENT_ID ClientId;
-    ULONG NoWindow, RegionSize, StackSize, ImageMachine, ErrorCode, Flags;
+    ULONG NoWindow, RegionSize, StackSize, ErrorCode, Flags;
+    USHORT ImageMachine;
     ULONG ParameterFlags, PrivilegeValue, HardErrorMode, ErrorResponse;
     ULONG_PTR ErrorParameters[2];
     BOOLEAN InJob, SaferNeeded, UseLargePages, HavePrivilege;
@@ -2576,7 +2577,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
         }
 
         /* Use the allocated size and convert */
-        UnicodeEnv.MaximumLength = RegionSize;
+        UnicodeEnv.MaximumLength = (USHORT)RegionSize;
         Status = RtlAnsiStringToUnicodeString(&UnicodeEnv, &AnsiEnv, FALSE);
         if (!NT_SUCCESS(Status))
         {
@@ -3784,7 +3785,7 @@ StartScan:
         /* Set the length */
         RtlInitEmptyUnicodeString(&DebuggerString,
                                   DebuggerString.Buffer,
-                                  n);
+                                  (USHORT)n);
 
         /* Now perform the command line creation */
         ImageDbgStatus = RtlAppendUnicodeToString(&DebuggerString,

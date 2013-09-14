@@ -660,7 +660,7 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
     WriteOutputCodeRequest->CodeType = CodeType;
     WriteOutputCodeRequest->Coord = dwWriteCoord;
 
-    WriteOutputCodeRequest->Length = nLength;
+    WriteOutputCodeRequest->Length = (USHORT)nLength;
 
     /* Call the server */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,

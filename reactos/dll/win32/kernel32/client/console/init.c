@@ -121,7 +121,7 @@ InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
     ConsoleStartInfo->dwStartupFlags = si.dwFlags;
     if (si.dwFlags & STARTF_USEFILLATTRIBUTE)
     {
-        ConsoleStartInfo->wFillAttribute = si.dwFillAttribute;
+        ConsoleStartInfo->wFillAttribute = (WORD)si.dwFillAttribute;
     }
     if (si.dwFlags & STARTF_USECOUNTCHARS)
     {
@@ -134,13 +134,13 @@ InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
     }
     if (si.dwFlags & STARTF_USEPOSITION)
     {
-        ConsoleStartInfo->dwWindowOrigin.X = (LONG)(si.dwX);
-        ConsoleStartInfo->dwWindowOrigin.Y = (LONG)(si.dwY);
+        ConsoleStartInfo->dwWindowOrigin.X = (SHORT)(si.dwX);
+        ConsoleStartInfo->dwWindowOrigin.Y = (SHORT)(si.dwY);
     }
     if (si.dwFlags & STARTF_USESIZE)
     {
-        ConsoleStartInfo->dwWindowSize.X = (LONG)(si.dwXSize);
-        ConsoleStartInfo->dwWindowSize.Y = (LONG) (si.dwYSize);
+        ConsoleStartInfo->dwWindowSize.X = (SHORT)(si.dwXSize);
+        ConsoleStartInfo->dwWindowSize.Y = (SHORT)(si.dwYSize);
     }
 
     /* Set up the title for the console */

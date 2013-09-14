@@ -382,8 +382,8 @@ BaseCreateVDMEnvironment(IN PWCHAR lpEnvironment,
 
     /* Initialize the unicode string to hold it */
     EnvironmentSize = (p - NewEnvironment) * sizeof(WCHAR);
-    RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment, EnvironmentSize);
-    UnicodeEnv->Length = EnvironmentSize;
+    RtlInitEmptyUnicodeString(UnicodeEnv, NewEnvironment, (USHORT)EnvironmentSize);
+    UnicodeEnv->Length = (USHORT)EnvironmentSize;
 
     /* Create the ASCII version of it */
     Status = RtlUnicodeStringToAnsiString(AnsiEnv, UnicodeEnv, TRUE);

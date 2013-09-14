@@ -552,7 +552,7 @@ GetModuleFileNameA(HINSTANCE hModule,
     }
 
     /* Call unicode API */
-    FilenameW.Length = GetModuleFileNameW(hModule, FilenameW.Buffer, nSize) * sizeof(WCHAR);
+    FilenameW.Length = (USHORT)GetModuleFileNameW(hModule, FilenameW.Buffer, nSize) * sizeof(WCHAR);
     FilenameW.MaximumLength = FilenameW.Length + sizeof(WCHAR);
 
     if (FilenameW.Length)

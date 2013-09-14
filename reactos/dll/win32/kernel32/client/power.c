@@ -53,7 +53,7 @@ GetSystemPowerStatus(IN LPSYSTEM_POWER_STATUS PowerStatus)
     {
         if (Current <= Max)
         {
-            PowerStatus->BatteryLifePercent = (100 * Current + Max / 2) / Max;
+            PowerStatus->BatteryLifePercent = (UCHAR)((100 * Current + Max / 2) / Max);
         }
         else
         {

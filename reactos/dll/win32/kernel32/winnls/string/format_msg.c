@@ -212,7 +212,7 @@ static LPCWSTR format_insert( BOOL unicode_caller, int insert, LPCWSTR format,
              (unicode_caller && format[0] == 'C') ||
              (!unicode_caller && format[0] == 'c'))
     {
-        char ch = arg;
+        char ch = (char)arg;
         wstring = HeapAlloc( GetProcessHeap(), 0, 2 * sizeof(WCHAR) );
         MultiByteToWideChar( CP_ACP, 0, &ch, 1, wstring, 1 );
         wstring[1] = 0;
@@ -446,9 +446,9 @@ DWORD WINAPI FormatMessageA(
     else if (dwFlags & (FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM))
     {
         if (dwFlags & FORMAT_MESSAGE_FROM_HMODULE)
-            from = load_message( (HMODULE)lpSource, dwMessageId, dwLanguageId );
+            from = load_message( (HMODULE)lpSource, dwMessageId, (WORD)dwLanguageId );
         if (!from && (dwFlags & FORMAT_MESSAGE_FROM_SYSTEM))
-            from = load_message( kernel32_handle, dwMessageId, dwLanguageId );
+            from = load_message( kernel32_handle, dwMessageId, (WORD)dwLanguageId );
         if (!from) return 0;
     }
     else
@@ -549,9 +549,9 @@ DWORD WINAPI FormatMessageW(
     else if (dwFlags & (FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM))
     {
         if (dwFlags & FORMAT_MESSAGE_FROM_HMODULE)
-            from = load_message( (HMODULE)lpSource, dwMessageId, dwLanguageId );
+            from = load_message( (HMODULE)lpSource, dwMessageId, (WORD)dwLanguageId );
         if (!from && (dwFlags & FORMAT_MESSAGE_FROM_SYSTEM))
-            from = load_message( kernel32_handle, dwMessageId, dwLanguageId );
+            from = load_message( kernel32_handle, dwMessageId, (WORD)dwLanguageId );
         if (!from) return 0;
     }
     else

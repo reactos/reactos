@@ -418,7 +418,7 @@ OpenFile(LPCSTR lpFileName,
 						  lpReOpenBuff->szPathName,
 						  NULL))
 	{
-	    lpReOpenBuff->nErrCode = GetLastError();
+	    lpReOpenBuff->nErrCode = (WORD)GetLastError();
 		return HFILE_ERROR;
 	}
 
@@ -492,7 +492,7 @@ OpenFile(LPCSTR lpFileName,
 
 	if (Len == 0 || Len > OFS_MAXPATHNAME)
 	{
-		lpReOpenBuff->nErrCode = GetLastError();
+		lpReOpenBuff->nErrCode = (WORD)GetLastError();
 		return (HFILE)INVALID_HANDLE_VALUE;
 	}
 
@@ -500,7 +500,7 @@ OpenFile(LPCSTR lpFileName,
     {
         if (!DeleteFileW(PathNameW))
 		{
-			lpReOpenBuff->nErrCode = GetLastError();
+			lpReOpenBuff->nErrCode = (WORD)GetLastError();
 			return HFILE_ERROR;
 		}
         TRACE("(%s): OF_DELETE return = OK\n", lpFileName);
@@ -546,7 +546,7 @@ OpenFile(LPCSTR lpFileName,
 
 	RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameString.Buffer);
 
-	lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
+	lpReOpenBuff->nErrCode = (WORD)RtlNtStatusToDosError(errCode);
 
 	if (!NT_SUCCESS(errCode))
 	{
