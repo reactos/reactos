@@ -708,12 +708,12 @@ NtUserHardErrorControl(
 }
 
 DWORD
-APIENTRY
+NTAPI
 NtUserNotifyProcessCreate(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+    HANDLE NewProcessId,
+    HANDLE SourceThreadId,
+    DWORD dwUnknown,
+    ULONG CreateFlags)
 {
     STUB;
     return 0;

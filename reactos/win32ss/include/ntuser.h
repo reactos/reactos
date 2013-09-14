@@ -2439,10 +2439,10 @@ NtUserNotifyIMEStatus(
 DWORD
 NTAPI
 NtUserNotifyProcessCreate(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4);
+    HANDLE NewProcessId,
+    HANDLE SourceThreadId,
+    DWORD dwUnknown,
+    ULONG CreateFlags);
 
 VOID
 NTAPI
