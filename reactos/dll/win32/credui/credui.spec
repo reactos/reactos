@@ -2,7 +2,7 @@
 @ stub CredUICmdLinePromptForCredentialsW
 @ stub CredUIConfirmCredentialsA
 @ stdcall CredUIConfirmCredentialsW(wstr long)
-@ stub CredUIInitControls
+@ stdcall CredUIInitControls()
 @ stub CredUIParseUserNameA
 @ stdcall CredUIParseUserNameW(wstr ptr long ptr long)
 @ stub CredUIPromptForCredentialsA
