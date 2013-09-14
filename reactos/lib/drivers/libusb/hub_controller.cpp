@@ -2122,15 +2122,15 @@ CHubController::HandleClassInterface(
     UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
 
 
-    DPRINT1("URB_FUNCTION_CLASS_INTERFACE\n");
-    DPRINT1("TransferFlags %x\n", Urb->UrbControlVendorClassRequest.TransferFlags);
-    DPRINT1("TransferBufferLength %x\n", Urb->UrbControlVendorClassRequest.TransferBufferLength);
-    DPRINT1("TransferBuffer %x\n", Urb->UrbControlVendorClassRequest.TransferBuffer);
-    DPRINT1("TransferBufferMDL %x\n", Urb->UrbControlVendorClassRequest.TransferBufferMDL);
-    DPRINT1("RequestTypeReservedBits %x\n", Urb->UrbControlVendorClassRequest.RequestTypeReservedBits);
-    DPRINT1("Request %x\n", Urb->UrbControlVendorClassRequest.Request);
-    DPRINT1("Value %x\n", Urb->UrbControlVendorClassRequest.Value);
-    DPRINT1("Index %x\n", Urb->UrbControlVendorClassRequest.Index);
+    DPRINT("URB_FUNCTION_CLASS_INTERFACE\n");
+    DPRINT("TransferFlags %x\n", Urb->UrbControlVendorClassRequest.TransferFlags);
+    DPRINT("TransferBufferLength %x\n", Urb->UrbControlVendorClassRequest.TransferBufferLength);
+    DPRINT("TransferBuffer %x\n", Urb->UrbControlVendorClassRequest.TransferBuffer);
+    DPRINT("TransferBufferMDL %x\n", Urb->UrbControlVendorClassRequest.TransferBufferMDL);
+    DPRINT("RequestTypeReservedBits %x\n", Urb->UrbControlVendorClassRequest.RequestTypeReservedBits);
+    DPRINT("Request %x\n", Urb->UrbControlVendorClassRequest.Request);
+    DPRINT("Value %x\n", Urb->UrbControlVendorClassRequest.Value);
+    DPRINT("Index %x\n", Urb->UrbControlVendorClassRequest.Index);
 
     //
     // initialize setup packet

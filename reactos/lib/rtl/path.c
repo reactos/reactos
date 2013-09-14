@@ -649,7 +649,7 @@ RtlGetFullPathName_Ustr(
                 break;
             }
             /* Fall through */
-            DPRINT1("RtlPathTypeDriveRelative - Using fall-through to RtlPathTypeRelative\n");
+            DPRINT("RtlPathTypeDriveRelative - Using fall-through to RtlPathTypeRelative\n");
 
         case RtlPathTypeRelative:           /* foo     */
             Prefix       = CurDirName->Buffer;
