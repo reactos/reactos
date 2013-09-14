@@ -3118,7 +3118,7 @@ NetUserGetLocalGroups(LPCWSTR servername,
 
     for (i = 0; i < AccountMemberCount; i++)
     {
-        if (BuiltinNames[i].Length > 0)
+        if (AccountNames[i].Length > 0)
         {
             Size += (sizeof(LOCALGROUP_USERS_INFO_0) + AccountNames[i].Length + sizeof(UNICODE_NULL));
             Count++;
