@@ -3,7 +3,7 @@ list(APPEND SOURCE
     s_aaline.c
     s_aatriangle.c
     s_alpha.c
-    s_atifragshader.C
+    s_atifragshader.c
     s_bitmap.c
     s_blend.c
     s_blit.c
