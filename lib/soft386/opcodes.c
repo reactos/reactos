@@ -3665,18 +3665,140 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeImulModrmByteImm)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeMovByteModrm)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    UCHAR FirstValue, SecondValue, Result;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFD) == 0x88);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+    else if (State->PrefixFlags
+             & ~(SOFT386_PREFIX_ADSIZE
+             | SOFT386_PREFIX_SEG
+             | SOFT386_PREFIX_LOCK))
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!Soft386ReadModrmByteOperands(State,
+                                      &ModRegRm,
+                                      &FirstValue,
+                                      &SecondValue))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (Opcode & SOFT386_OPCODE_WRITE_REG) Result = SecondValue;
+    else Result = FirstValue;
+
+    /* Write back the result */
+    return Soft386WriteModrmByteOperands(State,
+                                         &ModRegRm,
+                                         Opcode & SOFT386_OPCODE_WRITE_REG,
+                                         Result);
+
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeMovModrm)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFD) == 0x89);
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the address size */
+        AddressSize = !AddressSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the operand size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags
+             & ~(SOFT386_PREFIX_ADSIZE
+             | SOFT386_PREFIX_OPSIZE
+             | SOFT386_PREFIX_SEG
+             | SOFT386_PREFIX_LOCK))
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check the operand size */
+    if (OperandSize)
+    {
+        ULONG FirstValue, SecondValue, Result;
+
+        if (!Soft386ReadModrmDwordOperands(State,
+                                          &ModRegRm,
+                                          &FirstValue,
+                                          &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        if (Opcode & SOFT386_OPCODE_WRITE_REG) Result = SecondValue;
+        else Result = FirstValue;
+    
+        /* Write back the result */
+        return Soft386WriteModrmDwordOperands(State,
+                                              &ModRegRm,
+                                              Opcode & SOFT386_OPCODE_WRITE_REG,
+                                              Result);
+    }
+    else
+    {
+        USHORT FirstValue, SecondValue, Result;
+
+        if (!Soft386ReadModrmWordOperands(State,
+                                          &ModRegRm,
+                                          &FirstValue,
+                                          &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    
+        if (Opcode & SOFT386_OPCODE_WRITE_REG) Result = SecondValue;
+        else Result = FirstValue;
+
+        /* Write back the result */
+        return Soft386WriteModrmWordOperands(State,
+                                             &ModRegRm,
+                                             Opcode & SOFT386_OPCODE_WRITE_REG,
+                                             Result);
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeMovStoreSeg)
