@@ -3627,10 +3627,49 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeArpl)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodePushImm)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x68);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Size)
+    {
+        ULONG Data;
+
+        if (!Soft386FetchDword(State, &Data))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Call the internal API */
+        return Soft386StackPush(State, Data);
+    }
+    else
+    {
+        USHORT Data;
+
+        if (!Soft386FetchWord(State, &Data))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Call the internal API */
+        return Soft386StackPush(State, Data);
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeImulModrmImm)
@@ -3644,6 +3683,9 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeImulModrmImm)
 SOFT386_OPCODE_HANDLER(Soft386OpcodePushByteImm)
 {
     UCHAR Data;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x6A);
 
     if (!Soft386FetchByte(State, &Data))
     {
@@ -3811,10 +3853,57 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovStoreSeg)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeLea)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x8D);
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the address size */
+        AddressSize = !AddressSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the operand size */
+        OperandSize = !OperandSize;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* The second operand must be memory */
+    if (!ModRegRm.Memory)
+    {
+        /* Invalid */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Write the address to the register */
+    if (OperandSize)
+    {
+        return Soft386WriteModrmDwordOperands(State,
+                                              &ModRegRm,
+                                              TRUE,
+                                              ModRegRm.MemoryAddress);
+    }
+    else
+    {
+        return Soft386WriteModrmWordOperands(State,
+                                             &ModRegRm,
+                                             TRUE,
+                                             ModRegRm.MemoryAddress);
+
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeMovLoadSeg)
@@ -3936,16 +4025,27 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodePopFlags)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeSahf)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x9E);
+
+    /* Set the low-order byte of FLAGS to AH */
+    State->Flags.Long &= 0xFFFFFF00;
+    State->Flags.Long |= State->GeneralRegs[SOFT386_REG_EAX].HighByte;
+
+    /* Restore the reserved bits of FLAGS */
+    State->Flags.AlwaysSet = TRUE;
+    State->Flags.Reserved0 = State->Flags.Reserved1 = FALSE;
 
     return FALSE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeLahf)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x9F);
+
+    /* Set AH to the low-order byte of FLAGS */
+    State->GeneralRegs[SOFT386_REG_EAX].HighByte = LOBYTE(State->Flags.Long);
 
     return FALSE;
 }
