@@ -822,6 +822,8 @@ SampInitializeSAM(VOID)
     HANDLE hBuiltinDomainKey = NULL;
     HANDLE hAccountDomainKey = NULL;
     PSID pBuiltinSid = NULL;
+    PSID pInteractiveSid = NULL;
+    PSID pAuthenticatedUserSid = NULL;
     BOOL bResult = TRUE;
     PSID pSid;
     HINSTANCE hInstance;
@@ -864,6 +866,30 @@ SampInitializeSAM(VOID)
 
     RtlInitializeSid(pBuiltinSid, &SecurityNtAuthority, 1);
     *(RtlSubAuthoritySid(pBuiltinSid, 0)) = SECURITY_BUILTIN_DOMAIN_RID;
+
+    /* Create and initialize the Interactive SID */
+    pInteractiveSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, RtlLengthRequiredSid(1));
+    if (pInteractiveSid == NULL)
+    {
+        ERR("Failed to alloacte the Interactive SID\n");
+        bResult = FALSE;
+        goto done;
+    }
+
+    RtlInitializeSid(pInteractiveSid, &SecurityNtAuthority, 1);
+    *(RtlSubAuthoritySid(pInteractiveSid, 0)) = SECURITY_INTERACTIVE_RID;
+
+    /* Create and initialize the Authenticated User SID */
+    pAuthenticatedUserSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, RtlLengthRequiredSid(1));
+    if (pAuthenticatedUserSid == NULL)
+    {
+        ERR("Failed to alloacte the Authenticated User SID\n");
+        bResult = FALSE;
+        goto done;
+    }
+
+    RtlInitializeSid(pAuthenticatedUserSid, &SecurityNtAuthority, 1);
+    *(RtlSubAuthoritySid(pAuthenticatedUserSid, 0)) = SECURITY_AUTHENTICATED_USER_RID;
 
     /* Get account domain information */
     Status = SampGetAccountDomainInfo(&AccountDomainInfo);
@@ -945,6 +971,15 @@ SampInitializeSAM(VOID)
             RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
         }
 
+    /* Add the Interactive SID to the Users alias */
+    SampSetupAddMemberToAlias(hBuiltinDomainKey,
+                              DOMAIN_ALIAS_RID_USERS,
+                              pInteractiveSid);
+
+    /* Add the Authenticated User SID to the Users alias */
+    SampSetupAddMemberToAlias(hBuiltinDomainKey,
+                              DOMAIN_ALIAS_RID_USERS,
+                              pAuthenticatedUserSid);
 
     /* Create the Account domain */
     Status = SampSetupCreateDomain(hServerKey,
@@ -996,6 +1031,12 @@ SampInitializeSAM(VOID)
 done:
     if (AccountDomainInfo)
         LsaFreeMemory(AccountDomainInfo);
+
+    if (pAuthenticatedUserSid)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pAuthenticatedUserSid);
+
+    if (pInteractiveSid)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pInteractiveSid);
 
     if (pBuiltinSid)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pBuiltinSid);
