@@ -64,17 +64,26 @@ WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 #endif
 
 /* This is an inlined version of lrintf. */
-#if defined(_M_IX86) && defined(_MSC_VER)
+#if defined(_MSC_VER)
+#if defined(_M_AMD64)
+#include <xmmintrin.h>
+#endif
+
 FORCEINLINE
 int
 lrintf(float f)
 {
+#if defined(_M_IX86)
     int result;
     __asm
     {
         fld f;
         fistp result;
     }
+    return result;
+#elif defined(_M_AMD64)
+    return _mm_cvtss_si32(_mm_load_ss(&f));
+#endif
 }
 #endif
 
