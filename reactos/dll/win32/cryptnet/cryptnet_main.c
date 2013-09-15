@@ -959,18 +959,12 @@ static BOOL WINAPI HTTP_RetrieveEncodedObjectW(LPCWSTR pszURL,
                     if (ret && !(dwRetrievalFlags & CRYPT_DONT_CACHE_RESULT))
                     {
                         SYSTEMTIME st;
+                        FILETIME ft;
                         DWORD len = sizeof(st);
 
-                        if (HttpQueryInfoW(hHttp,
-                         HTTP_QUERY_EXPIRES | HTTP_QUERY_FLAG_SYSTEMTIME, &st,
-                         &len, NULL))
-                        {
-                            FILETIME ft;
-
-                            SystemTimeToFileTime(&st, &ft);
-                            CRYPT_CacheURL(pszURL, pObject, dwRetrievalFlags,
-                             ft);
-                        }
+                        if (HttpQueryInfoW(hHttp, HTTP_QUERY_EXPIRES | HTTP_QUERY_FLAG_SYSTEMTIME,
+                                    &st, &len, NULL) && SystemTimeToFileTime(&st, &ft))
+                            CRYPT_CacheURL(pszURL, pObject, dwRetrievalFlags, ft);
                     }
                     InternetCloseHandle(hHttp);
                 }
