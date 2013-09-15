@@ -4212,10 +4212,53 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCall)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeJmp)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xE9);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else if (State->PrefixFlags != 0)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Size)
+    {
+        LONG Offset = 0;
+
+        /* Fetch the offset */
+        if (!Soft386FetchDword(State, (PULONG)&Offset))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        /* Move the instruction pointer */        
+        State->InstPtr.Long += Offset;
+    }
+    else
+    {
+        SHORT Offset = 0;
+
+        /* Fetch the offset */
+        if (!Soft386FetchWord(State, (PUSHORT)&Offset))
+        {
+            /* An exception occurred */
+            return FALSE;
+        }
+
+        /* Move the instruction pointer */        
+        State->InstPtr.LowWord += Offset;
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeJmpAbs)
