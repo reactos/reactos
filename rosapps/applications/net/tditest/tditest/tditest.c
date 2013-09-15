@@ -555,7 +555,7 @@ NTSTATUS TdiSendDatagram(
 		IoFreeMdl(Mdl);
 		IoFreeIrp(Irp);
 		ExFreePool(ConnectInfo);
-		return STATUS_UNSUCCESSFUL;
+		_SEH2_YIELD(return STATUS_UNSUCCESSFUL);
 	} _SEH2_END;
 
 	TdiBuildSendDatagram(
@@ -683,7 +683,7 @@ NTSTATUS TdiReceiveDatagram(
 		IoFreeIrp(Irp);
 		ExFreePool(MdlBuffer);
 		ExFreePool(ReceiveInfo);
-		return STATUS_INSUFFICIENT_RESOURCES;
+		_SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
 	} _SEH2_END;
 
 	TdiBuildReceiveDatagram(
