@@ -436,7 +436,7 @@ SetUnhandledExceptionFilter(IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionF
     PVOID EncodedPointer, EncodedOldPointer;
 
     EncodedPointer = RtlEncodePointer(lpTopLevelExceptionFilter);
-    EncodedOldPointer = InterlockedExchangePointer(&GlobalTopLevelExceptionFilter,
+    EncodedOldPointer = InterlockedExchangePointer((PVOID*)&GlobalTopLevelExceptionFilter,
                                             EncodedPointer);
     return RtlDecodePointer(EncodedOldPointer);
 }
