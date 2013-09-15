@@ -1,5 +1,5 @@
 
-spec2def(opengl32.dll opengl32.spec ADD_IMPORTLIB)
+spec2def(opengl32.dll opengl32.spec)
 
 add_definitions(
     -D_GDI32_ # prevent gl* being declared __declspec(dllimport) in MS headers
