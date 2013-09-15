@@ -328,13 +328,13 @@ HICON get_window_icon_small(HWND hwnd)
 {
 	HICON hIcon = 0;
 
-	SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
+	SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
 
 	if (!hIcon)
-		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
+		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
 
 	if (!hIcon)
-		SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
+		SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
 
 	if (!hIcon)
 		hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
@@ -343,7 +343,7 @@ HICON get_window_icon_small(HWND hwnd)
 		hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICON);
 
 	if (!hIcon)
-		SendMessageTimeout(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&hIcon);
+		SendMessageTimeout(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)&hIcon);
 
 	return hIcon;
 }
@@ -352,13 +352,13 @@ HICON get_window_icon_big(HWND hwnd, bool allow_from_class)
 {
 	HICON hIcon = 0;
 
-	SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
+	SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
 
 	if (!hIcon)
-		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
+		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
 
 	if (!hIcon)
-		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
+		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
 
 	if (allow_from_class) {
 		if (!hIcon)
@@ -369,7 +369,7 @@ HICON get_window_icon_big(HWND hwnd, bool allow_from_class)
 	}
 
 	if (!hIcon)
-		SendMessageTimeout(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&hIcon);
+		SendMessageTimeout(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)&hIcon);
 
 	return hIcon;
 }
@@ -519,7 +519,7 @@ void TaskBar::Refresh()
 			if (!SendMessage(_htoolbar, TB_DELETEBUTTON, idx, 0))
 				MessageBoxW(NULL, L"failed to delete button", NULL, MB_OK);
 
-			
+
 			for(TaskBarMap::iterator it2=_map.begin(); it2!=_map.end(); ++it2) {
 				TaskBarEntry& entry = it2->second;
 
@@ -528,7 +528,7 @@ void TaskBar::Refresh()
 					--entry._btn_idx;
 #if 0
 					--entry._bmp_idx;
-					
+
 					TBBUTTONINFO info;
 
 					info.cbSize = sizeof(TBBUTTONINFO);
@@ -540,7 +540,7 @@ void TaskBar::Refresh()
 #endif
 				}
 			}
-			
+
 		}
 
 		for(set<HBITMAP>::iterator it=hbmp_to_delete.begin(); it!=hbmp_to_delete.end(); ++it) {

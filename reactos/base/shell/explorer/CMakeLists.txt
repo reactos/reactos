@@ -26,7 +26,6 @@ list(APPEND SOURCE
     shell/winfs.cpp
     dialogs/searchprogram.cpp
     dialogs/settings.cpp
-    i386-stub-win32.c
     taskbar/taskbar.cpp
     taskbar/favorites.cpp
     taskbar/quicklaunch.cpp
@@ -46,6 +45,11 @@ list(APPEND SOURCE
     utility/xmlstorage.cpp
     utility/window.cpp
     utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
+
+if(ARCH MATCHES i386)
+    list(APPEND SOURCE
+        i386-stub-win32.c)
+endif()
 
 add_executable(explorer ${SOURCE})
 target_link_libraries(explorer comsupp wine uuid)

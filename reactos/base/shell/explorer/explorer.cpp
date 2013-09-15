@@ -1186,19 +1186,17 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
     if (_tcsstr(ext_options,TEXT("-break"))) {
         LOG(TEXT("debugger breakpoint"));
-#ifdef _MSC_VER
-        __asm int 3
-#else
-        asm("int3");
-#endif
+        __debugbreak();
     }
 
+#ifdef _M_IX86
     // activate GDB remote debugging stub if no other debugger is running
     if (use_gdb_stub) {
         LOG(TEXT("waiting for debugger connection...\n"));
 
         initialize_gdb_stub();
     }
+#endif
 
     g_Globals.init(hInstance);
 
