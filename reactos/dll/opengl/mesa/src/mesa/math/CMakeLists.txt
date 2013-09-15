@@ -1,0 +1,13 @@
+
+list(APPEND SOURCE
+    m_debug_clip.c
+    m_debug_norm.c
+    m_debug_xform.c
+    m_eval.c
+    m_matrix.c
+    m_translate.c
+    m_vector.c
+    m_xform.c
+)
+
+add_library(mesa_math STATIC ${SOURCE})
