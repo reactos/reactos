@@ -1528,14 +1528,16 @@ NetLocalGroupGetMembers(
             case 2:
                 Size += sizeof(LOCALGROUP_MEMBERS_INFO_2) +
                         RtlLengthSid(EnumContext->Sids[i]) +
-                        EnumContext->Names[i].Name.Length + sizeof(WCHAR) +
-                        EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
+                        EnumContext->Names[i].Name.Length + sizeof(WCHAR);
+                if (EnumContext->Names[i].DomainIndex >= 0)
+                    Size += EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
                 break;
 
             case 3:
                 Size += sizeof(LOCALGROUP_MEMBERS_INFO_3) +
-                        EnumContext->Names[i].Name.Length + sizeof(WCHAR) +
-                        EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
+                        EnumContext->Names[i].Name.Length + sizeof(WCHAR);
+                if (EnumContext->Names[i].DomainIndex >= 0)
+                    Size += EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length + sizeof(WCHAR);
                 break;
 
             default:
@@ -1609,6 +1611,7 @@ NetLocalGroupGetMembers(
                 memcpy(MembersInfo1->lgrmi1_name,
                        EnumContext->Names[i].Name.Buffer,
                        EnumContext->Names[i].Name.Length);
+                Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Names[i].Name.Length + sizeof(WCHAR));
                 MembersInfo1++;
                 break;
 
@@ -1625,37 +1628,47 @@ NetLocalGroupGetMembers(
                 MembersInfo2->lgrmi2_sidusage = EnumContext->Names[i].Use;
 
                 MembersInfo2->lgrmi2_domainandname = (LPWSTR)Ptr;
-                memcpy(MembersInfo2->lgrmi2_domainandname,
-                       EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Buffer,
-                       EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
 
-                Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
+                if (EnumContext->Names[i].DomainIndex >= 0)
+                {
+                    memcpy(MembersInfo2->lgrmi2_domainandname,
+                           EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Buffer,
+                           EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
 
-                *((LPWSTR)Ptr) = L'\\';
+                    Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
 
-                Ptr = (PVOID)((ULONG_PTR)Ptr + sizeof(WCHAR));
+                    *((LPWSTR)Ptr) = L'\\';
+
+                    Ptr = (PVOID)((ULONG_PTR)Ptr + sizeof(WCHAR));
+                }
 
                 memcpy(Ptr,
                        EnumContext->Names[i].Name.Buffer,
                        EnumContext->Names[i].Name.Length);
+                Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Names[i].Name.Length + sizeof(WCHAR));
                 MembersInfo2++;
                 break;
 
             case 3:
                 MembersInfo3->lgrmi3_domainandname = (PSID)Ptr;
-                memcpy(MembersInfo2->lgrmi2_domainandname,
-                       EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Buffer,
-                       EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
 
-                Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
+                if (EnumContext->Names[i].DomainIndex >= 0)
+                {
+                    memcpy(MembersInfo2->lgrmi2_domainandname,
+                           EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Buffer,
+                           EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
 
-                *((LPWSTR)Ptr) = L'\\';
+                    Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
 
-                Ptr = (PVOID)((ULONG_PTR)Ptr + sizeof(WCHAR));
+                    *((LPWSTR)Ptr) = L'\\';
+
+                    Ptr = (PVOID)((ULONG_PTR)Ptr + sizeof(WCHAR));
+                }
 
                 memcpy(Ptr,
                        EnumContext->Names[i].Name.Buffer,
                        EnumContext->Names[i].Name.Length);
+                Ptr = (PVOID)((ULONG_PTR)Ptr + EnumContext->Names[i].Name.Length + sizeof(WCHAR));
                 MembersInfo3++;
                 break;
         }
