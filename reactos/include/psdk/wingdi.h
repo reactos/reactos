@@ -4036,6 +4036,20 @@ BOOL WINAPI wglUseFontBitmapsW(HDC,DWORD,DWORD,DWORD);
 BOOL WINAPI wglUseFontOutlinesA(HDC,DWORD,DWORD,DWORD,FLOAT,FLOAT,int,LPGLYPHMETRICSFLOAT);
 BOOL WINAPI wglUseFontOutlinesW(HDC,DWORD,DWORD,DWORD,FLOAT,FLOAT,int,LPGLYPHMETRICSFLOAT);
 
+#if (WINVER >= 0x0500)
+
+typedef struct _WGLSWAP
+{
+    HDC hdc;
+    UINT uiFlags;
+} WGLSWAP, *PWGLSWAP, FAR *LPWGLSWAP;
+
+#define WGL_SWAPMULTIPLE_MAX 16
+
+DWORD WINAPI wglSwapMultipleBuffers(UINT, CONST WGLSWAP *);
+
+#endif // (WINVER >= 0x0500)
+
 #if (WINVER>= 0x0500)
 
 BOOL WINAPI AlphaBlend(_In_ HDC, _In_ int, _In_ int, _In_ int, _In_ int, _In_ HDC, _In_ int, _In_ int, _In_ int, _In_ int, _In_ BLENDFUNCTION);
