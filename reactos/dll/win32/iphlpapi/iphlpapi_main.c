@@ -2007,7 +2007,9 @@ DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 DWORD WINAPI NotifyAddrChange(PHANDLE Handle, LPOVERLAPPED overlapped)
 {
   FIXME("(Handle %p, overlapped %p): stub\n", Handle, overlapped);
-  return ERROR_NOT_SUPPORTED;
+  if (Handle) *Handle = INVALID_HANDLE_VALUE;
+  if (overlapped) ((IO_STATUS_BLOCK *) overlapped)->Status = STATUS_PENDING;
+  return ERROR_IO_PENDING;
 }
 
 
