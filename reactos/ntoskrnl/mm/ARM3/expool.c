@@ -2518,7 +2518,7 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
     PEPROCESS Process = PsGetCurrentProcess();
 
     //
-    // Check if we should fail intead of raising an exception
+    // Check if we should fail instead of raising an exception
     //
     if (PoolType & POOL_QUOTA_FAIL_INSTEAD_OF_RAISE)
     {
