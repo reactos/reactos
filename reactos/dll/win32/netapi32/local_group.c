@@ -1587,6 +1587,7 @@ NetLocalGroupGetMembers(
                        EnumContext->Sids[i],
                        SidLength);
                 Ptr = (PVOID)((ULONG_PTR)Ptr + SidLength);
+                MembersInfo0++;
                 break;
 
             case 1:
@@ -1608,6 +1609,7 @@ NetLocalGroupGetMembers(
                 memcpy(MembersInfo1->lgrmi1_name,
                        EnumContext->Names[i].Name.Buffer,
                        EnumContext->Names[i].Name.Length);
+                MembersInfo1++;
                 break;
 
             case 2:
@@ -1636,6 +1638,7 @@ NetLocalGroupGetMembers(
                 memcpy(Ptr,
                        EnumContext->Names[i].Name.Buffer,
                        EnumContext->Names[i].Name.Length);
+                MembersInfo2++;
                 break;
 
             case 3:
@@ -1653,6 +1656,7 @@ NetLocalGroupGetMembers(
                 memcpy(Ptr,
                        EnumContext->Names[i].Name.Buffer,
                        EnumContext->Names[i].Name.Length);
+                MembersInfo3++;
                 break;
         }
     }
