@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/console/console.c
  * PURPOSE:         initialization of DLL
- * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@student.tugraz.at)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include "console.h"

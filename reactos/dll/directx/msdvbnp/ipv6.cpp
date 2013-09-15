@@ -4,7 +4,7 @@
  * FILE:            dll/directx/msdvbnp/ipv6.cpp
  * PURPOSE:         IBDA_IPV6Filter interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

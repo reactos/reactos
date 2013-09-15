@@ -4,7 +4,7 @@
  * FILE:            dll/directx/dsound_new/primary.c
  * PURPOSE:         Primary IDirectSoundBuffer8 implementation
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 

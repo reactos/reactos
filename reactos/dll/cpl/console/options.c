@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/console/options.c
  * PURPOSE:         displays options dialog
- * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@student.tugraz.at)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
 #include "console.h"

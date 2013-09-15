@@ -5,7 +5,7 @@
  * PURPOSE:     Computer settings for startup and recovery
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *              Copyright 2006 Christoph von Wittich <Christoph@ApiViewer.de>
- *              Copyright 2007 Johannes Anderwald <johannes dot anderwald at student dot tugraz dot at>
+ *              Copyright 2007 Johannes Anderwald <johannes.anderwald@reactos.org>
  */
 
 #include "precomp.h"

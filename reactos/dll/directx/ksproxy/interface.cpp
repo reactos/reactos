@@ -4,7 +4,7 @@
  * FILE:            dll/directx/ksproxy/interface.cpp
  * PURPOSE:         IKsInterfaceHandler interface
  *
- * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 #include "precomp.h"
 

@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            tools/dbgprint/dbgprint.c
  * PURPOSE:         outputs a text via DbgPrint API
- * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@student.tugraz.at)
+ * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Christoph von Wittich (Christoph_vW@ReactOS.org)
  */
 
