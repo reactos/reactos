@@ -349,11 +349,19 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
     }
     else if (pexp->pcRedirection)
     {
-        int fDeco;
+        if (gbMSComp && (pexp->pcName[0] == '?'))
+        {
+            fprintf(stderr, "warning: ignoring C++ redirection %.*s -> %.*s\n",
+                    pexp->nNameLength, pexp->pcName, pexp->nRedirectionLength, pexp->pcRedirection);
+        }
+        else
+        {
+            int fDeco;
 
-        fDeco = ((giArch == ARCH_X86) && !ScanToken(pexp->pcRedirection, '.'));
-        fprintf(fileDest, "=");
-        PrintName(fileDest, pexp, "", 1, fDeco && !gbMSComp);
+            fDeco = ((giArch == ARCH_X86) && !ScanToken(pexp->pcRedirection, '.'));
+            fprintf(fileDest, "=");
+            PrintName(fileDest, pexp, "", 1, fDeco && !gbMSComp);
+        }
     }
     else if (((pexp->uFlags & FL_STUB) || (pexp->nCallingConvention == CC_STUB)) &&
              (pexp->pcName[0] == '?'))

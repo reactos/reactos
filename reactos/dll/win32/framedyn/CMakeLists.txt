@@ -12,7 +12,11 @@ list(APPEND SOURCE
     chstring.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/framedyn.def)
 
-add_library(framedyn SHARED ${SOURCE})
+if(MSVC)
+    add_asm_files(framedyn_asm fix_exports_msvc.s)
+endif()
+
+add_library(framedyn SHARED ${SOURCE} ${framedyn_asm})
 set_module_type(framedyn win32dll UNICODE)
 add_importlibs(framedyn oleaut32 msvcrt kernel32 ntdll)
 
