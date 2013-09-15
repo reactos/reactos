@@ -23,49 +23,49 @@
 //#include "cryptres.h"
 
 #ifdef LANGUAGE_DA_DK
-    #include "cryptdlg_Da.rc"
+    #include "lang/cryptdlg_Da.rc"
 #endif
 #ifdef LANGUAGE_EN_US
-    #include "cryptdlg_En.rc"
+    #include "lang/cryptdlg_En.rc"
 #endif
 #ifdef LANGUAGE_KO_KR
-    #include "cryptdlg_Ko.rc"
+    #include "lang/cryptdlg_Ko.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
-    #include "cryptdlg_Nl.rc"
+    #include "lang/cryptdlg_Nl.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
-    #include "cryptdlg_Pl.rc"
+    #include "lang/cryptdlg_Pl.rc"
 #endif
 
 /* UTF-8 */
 #ifdef LANGUAGE_DE_DE
-    #include "cryptdlg_De.rc"
+    #include "lang/cryptdlg_De.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "cryptdlg_Fr.rc"
+    #include "lang/cryptdlg_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "cryptdlg_He.rc"
+    #include "lang/cryptdlg_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
-    #include "cryptdlg_Hu.rc"
+    #include "lang/cryptdlg_Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "cryptdlg_It.rc"
+    #include "lang/cryptdlg_It.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "cryptdlg_Lt.rc"
+    #include "lang/cryptdlg_Lt.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "cryptdlg_No.rc"
+    #include "lang/cryptdlg_No.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "cryptdlg_Pt.rc"
+    #include "lang/cryptdlg_Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "cryptdlg_Ro.rc"
+    #include "lang/cryptdlg_Ro.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "cryptdlg_Uk.rc"
+    #include "lang/cryptdlg_Uk.rc"
 #endif
