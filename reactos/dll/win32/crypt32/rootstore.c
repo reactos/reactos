@@ -326,6 +326,7 @@ static BOOL import_certs_from_file(int fd, HCERTSTORE store)
 static BOOL import_certs_from_path(LPCSTR path, HCERTSTORE store,
  BOOL allow_dir);
 
+#ifdef HAVE_READDIR
 static BOOL check_buffer_resize(char **ptr_buf, size_t *buf_size, size_t check_size)
 {
     if (check_size > *buf_size)
@@ -351,6 +352,7 @@ static BOOL check_buffer_resize(char **ptr_buf, size_t *buf_size, size_t check_s
 
     return TRUE;
 }
+#endif
 
 /* Opens path, which must be a directory, and imports certificates from every
  * file in the directory into store.

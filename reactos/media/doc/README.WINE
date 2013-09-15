@@ -63,7 +63,7 @@ reactos/dll/win32/comctl32        # Synced to Wine 1.7.1
 reactos/dll/win32/comdlg32        # Synced to Wine 1.3.37
 reactos/dll/win32/compstui        # Synced to Wine-1.5.19
 reactos/dll/win32/credui          # Synced to Wine-1.7.1
-reactos/dll/win32/crypt32         # Synced to Wine-1.5.26
+reactos/dll/win32/crypt32         # Synced to Wine-1.7.1
 reactos/dll/win32/cryptdlg        # Synced to Wine-1.5.26
 reactos/dll/win32/cryptdll        # Synced to Wine-1.5.26
 reactos/dll/win32/cryptnet        # Synced to Wine-1.5.26

@@ -22,7 +22,14 @@
 //#include "winuser.h"
 //#include "cryptres.h"
 
-#include "version.rc"
+#define WINE_FILEDESCRIPTION_STR "Wine CryptoAPI Library"
+#define WINE_FILENAME_STR "crypt32.dll"
+#define WINE_FILEVERSION 5,131,2600,1243
+#define WINE_FILEVERSION_STR "5.131.2600.1243"
+#define WINE_PRODUCTVERSION 5,131,2600,1243
+#define WINE_PRODUCTVERSION_STR "5.131.2600.1243"
+
+#include <wine/wine_common_ver.rc>
 
 #ifdef LANGUAGE_EN_US
     #include "lang/crypt32_En.rc"
