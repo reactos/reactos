@@ -2536,7 +2536,7 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
     // this isn't the system process, which never gets charged quota
     //
     ASSERT(NumberOfBytes != 0);
-    if ((NumberOfBytes <= (PAGE_SIZE - sizeof(POOL_BLOCK_SIZE) - sizeof(PVOID))) &&
+    if ((NumberOfBytes <= (PAGE_SIZE - POOL_BLOCK_SIZE - sizeof(PVOID))) &&
         (Process != PsInitialSystemProcess))
     {
         //
@@ -2589,7 +2589,7 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
         Entry = POOL_ENTRY(Buffer);
         Status = PsChargeProcessPoolQuota(Process,
                                           PoolType & BASE_POOL_TYPE_MASK,
-                                          Entry->BlockSize * sizeof(POOL_BLOCK_SIZE));
+                                          Entry->BlockSize * POOL_BLOCK_SIZE);
         if (!NT_SUCCESS(Status))
         {
             //
