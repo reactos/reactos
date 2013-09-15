@@ -15,7 +15,9 @@ target_link_libraries(osmesa
     mesa_vbo
     mesa_program
     mesa_math
-    mesa_glsl)
+    mesa_glsl
+    ${mesa_asm_lib}
+)
 
 set_module_type(osmesa win32dll)
 add_importlibs(osmesa msvcrt kernel32 ntdll)

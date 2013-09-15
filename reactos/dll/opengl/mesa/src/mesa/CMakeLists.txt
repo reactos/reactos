@@ -14,6 +14,19 @@ add_definitions(
     -D_GLAPI_NO_EXPORTS # prevent _glapi_* from being declared __declspec(dllimport)
 )
 
+if((ARCH STREQUAL "i386") AND (NOT MSVC))
+    add_definitions(
+        -DUSE_X86_ASM
+        -DUSE_MMX_ASM
+        -DUSE_3DNOW_ASM
+        -DUSE_SSE_ASM
+    )
+    add_subdirectory(x86)
+    set(mesa_asm_lib mesa_x86)
+else()
+    set(mesa_asm_lib)
+endif()
+
 add_subdirectory(drivers/common)
 add_subdirectory(drivers/osmesa)
 add_subdirectory(main)
