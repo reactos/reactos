@@ -2220,3 +2220,25 @@ BOOL WINAPI SymFromIndexW(HANDLE hProcess, ULONG64 BaseOfDll, DWORD index, PSYMB
 
     return FALSE;
 }
+
+/******************************************************************
+ *		SymSetHomeDirectory (DBGHELP.@)
+ *
+ */
+PCHAR WINAPI SymSetHomeDirectory(HANDLE hProcess, PCSTR dir)
+{
+    FIXME("(%p, %s): stub\n", hProcess, dir);
+
+    return NULL;
+}
+
+/******************************************************************
+ *		SymSetHomeDirectoryW (DBGHELP.@)
+ *
+ */
+PWSTR WINAPI SymSetHomeDirectoryW(HANDLE hProcess, PCWSTR dir)
+{
+    FIXME("(%p, %s): stub\n", hProcess, debugstr_w(dir));
+
+    return NULL;
+}

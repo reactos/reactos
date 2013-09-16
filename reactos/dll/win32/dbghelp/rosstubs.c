@@ -36,7 +36,7 @@ EnumerateLoadedModulesEx(
     IN PVOID UserContext OPTIONAL)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -47,7 +47,7 @@ EnumerateLoadedModulesExW(
     IN PVOID UserContext OPTIONAL)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -56,7 +56,7 @@ DbgHelpCreateUserDump(LPSTR pszFileName,
                       PVOID pUserData)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -65,7 +65,7 @@ DbgHelpCreateUserDumpW(LPWSTR pszFileName,
                       PVOID pUserData)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -83,7 +83,7 @@ FindFileInPath(
     IN PVOID context)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -96,7 +96,7 @@ FindFileInSearchPath(HANDLE hProcess,
                      LPSTR pszFilePath)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -107,7 +107,7 @@ SymDeleteSymbol(HANDLE hProcess,
                 DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -118,7 +118,7 @@ SymDeleteSymbolW(HANDLE hProcess,
                  DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -130,7 +130,7 @@ SymEnumLinesW(HANDLE hProcess,
               PVOID pUserContext)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -138,7 +138,7 @@ SymEnumProcesses(PSYM_ENUMPROCESSES_CALLBACK Callback,
                       PVOID pUserContext)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -148,7 +148,7 @@ SymEnumSym(HANDLE hProcess,
            PVOID pUserContext)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -158,7 +158,7 @@ SymEnumSymbolsForAddr(HANDLE hProcess,
                       PVOID pUserContext)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -168,7 +168,7 @@ SymEnumSymbolsForAddrW(HANDLE hProcess,
                        PVOID pUserContext)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -178,7 +178,7 @@ SymEnumerateSymbolsW64(HANDLE hProcess,
              PVOID pUserContext)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -188,7 +188,7 @@ SymEnumerateSymbolsW(HANDLE hProcess,
              PVOID pUserContext)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -197,7 +197,7 @@ SymFromNameW(HANDLE hProcess,
              PSYMBOL_INFOW Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -207,17 +207,17 @@ SymFromToken(HANDLE hProcess,
              PSYMBOL_INFO Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
 SymFromTokenW(HANDLE hProcess,
               DWORD64 ModBase,
-			  DWORD Token,
+              DWORD Token,
               PSYMBOL_INFOW Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 ULONG WINAPI
@@ -228,7 +228,7 @@ SymGetFileLineOffsets64(HANDLE hProcess,
                         ULONG BufferLines)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 PCHAR WINAPI
@@ -237,7 +237,7 @@ SymGetHomeDirectory(DWORD dwType,
                     size_t Size)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 PWCHAR WINAPI
@@ -246,7 +246,7 @@ SymGetHomeDirectoryW(DWORD dwType,
                      size_t Size)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 BOOL WINAPI
@@ -254,7 +254,7 @@ SymGetLineNextW64(HANDLE hProcess,
                   PIMAGEHLP_LINEW64 Line)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -262,7 +262,7 @@ SymGetLinePrevW64(HANDLE hProcess,
                   PIMAGEHLP_LINEW64 Line)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -272,7 +272,7 @@ SymGetScope(HANDLE hProcess,
             PSYMBOL_INFO Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -282,7 +282,7 @@ SymGetScopeW(HANDLE hProcess,
              PSYMBOL_INFOW Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -294,7 +294,7 @@ SymGetSourceFile(HANDLE hProcess,
                  DWORD Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -305,7 +305,7 @@ SymGetSourceFileFromToken(HANDLE hProcess,
                           DWORD Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 
@@ -317,7 +317,7 @@ SymGetSourceFileFromTokenW(HANDLE hProcess,
                            DWORD Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -331,7 +331,7 @@ SymGetSourceFileW(
     DWORD Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 
@@ -346,7 +346,7 @@ SymGetSourceVarFromToken(
     DWORD Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -360,7 +360,7 @@ SymGetSourceVarFromTokenW(
     DWORD Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -374,7 +374,7 @@ SymGetSymbolFile(HANDLE hProcess,
                  size_t cDbgFile)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -388,7 +388,7 @@ SymGetSymbolFileW(HANDLE hProcess,
                   size_t cDbgFile)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -398,7 +398,7 @@ SymGetTypeFromNameW(HANDLE hProcess,
                     PSYMBOL_INFOW Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -407,7 +407,7 @@ SymGetTypeInfoEx(HANDLE hProcess,
                  PIMAGEHLP_GET_TYPE_INFO_PARAMS Params)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -415,7 +415,7 @@ SymNext(HANDLE hProcess,
         PSYMBOL_INFO Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -423,7 +423,7 @@ SymNextW(HANDLE hProcess,
          PSYMBOL_INFOW Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -431,7 +431,7 @@ SymPrev(HANDLE hProcess,
         PSYMBOL_INFO Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -439,23 +439,7 @@ SymPrevW(HANDLE hProcess,
          PSYMBOL_INFOW Symbol)
 {
     UNIMPLEMENTED;
-	return FALSE;
-}
-
-PCHAR WINAPI
-SymSetHomeDirectory(HANDLE hProcess,
-                    PCSTR pszDir)
-{
-    UNIMPLEMENTED;
-	return NULL;
-}
-
-PWCHAR WINAPI
-SymSetHomeDirectoryW(HANDLE hProcess,
-                     PCWSTR pszDir)
-{
-    UNIMPLEMENTED;
-	return NULL;
+    return FALSE;
 }
 
 BOOL
@@ -466,7 +450,7 @@ SymSetScopeFromIndex(
     DWORD Index)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 // SymSetSymWithAddr64
@@ -479,7 +463,7 @@ SymSrvDeltaName(HANDLE hProcess,
                 PCSTR pszFile2)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 PCWSTR WINAPI
@@ -490,7 +474,7 @@ SymSrvDeltaNameW(HANDLE hProcess,
                  PCWSTR pszFile2)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 BOOL WINAPI
@@ -502,7 +486,7 @@ SymSrvGetFileIndexString(HANDLE hProcess,
                          DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -514,7 +498,7 @@ SymSrvGetFileIndexStringW(HANDLE hProcess,
                           DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -525,7 +509,7 @@ SymSrvGetFileIndexes(PCSTR File,
                      DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -536,7 +520,7 @@ SymSrvGetFileIndexesW(PCWSTR File,
                       DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 PCSTR WINAPI
@@ -546,7 +530,7 @@ SymSrvGetSupplement(HANDLE hProcess,
                     PCSTR pszFile)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 PCWSTR WINAPI
@@ -556,7 +540,7 @@ SymSrvGetSupplementW(HANDLE hProcess,
                      PCWSTR pszFile)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 BOOL WINAPI
@@ -564,7 +548,7 @@ SymSrvIsStore(HANDLE hProcess,
               PCSTR pszPath)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL WINAPI
@@ -572,7 +556,7 @@ SymSrvIsStoreW(HANDLE hProcess,
                PCWSTR pszPath)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 PCSTR WINAPI
@@ -582,7 +566,7 @@ SymSrvStoreFile(HANDLE hProcess,
                 DWORD pszFlags)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 PCWSTR WINAPI
@@ -592,7 +576,7 @@ SymSrvStoreFileW(HANDLE hProcess,
                  DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 PCSTR WINAPI
@@ -603,7 +587,7 @@ SymSrvStoreSupplement(HANDLE hProcess,
                       DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 PCWSTR WINAPI
@@ -614,7 +598,7 @@ SymSrvStoreSupplementW(HANDLE hProcess,
                        DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return NULL;
+    return NULL;
 }
 
 DWORD WINAPI
@@ -624,7 +608,7 @@ UnDecorateSymbolNameW(PCWSTR DecoratedName,
                       DWORD dwFlags)
 {
     UNIMPLEMENTED;
-	return 0;
+    return 0;
 }
 
 HANDLE
@@ -637,7 +621,7 @@ FindDebugInfoFileExW(
     PVOID CallerData)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -650,7 +634,7 @@ SymAddSourceStream(
     size_t Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -663,7 +647,7 @@ SymAddSourceStreamW(
     size_t Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -674,7 +658,7 @@ SymEnumSourceFileTokens(
     PENUMSOURCEFILETOKENSCALLBACK Callback)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -687,7 +671,7 @@ SymAddSourceStreamA(
     size_t Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -700,7 +684,7 @@ SymEnumTypesByName(
     PVOID UserContext)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -713,7 +697,7 @@ SymEnumTypesByNameW(
     PVOID UserContext)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 
@@ -727,7 +711,7 @@ SymFindDebugInfoFile(
     PVOID CallerData)
 {
     UNIMPLEMENTED;
-	return 0;
+    return 0;
 }
 
 
@@ -741,7 +725,7 @@ SymFindDebugInfoFileW(
     PVOID CallerData)
 {
     UNIMPLEMENTED;
-	return 0;
+    return 0;
 }
 
 
@@ -755,7 +739,7 @@ SymFindExecutableImage(
     PVOID CallerData)
 {
     UNIMPLEMENTED;
-	return 0;
+    return 0;
 }
 
 
@@ -769,7 +753,7 @@ SymFindExecutableImageW(
     PVOID CallerData)
 {
     UNIMPLEMENTED;
-	return 0;
+    return 0;
 }
 
 
@@ -781,7 +765,7 @@ SymSrvGetFileIndexInfo(
     DWORD Flags)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -792,7 +776,7 @@ SymSrvGetFileIndexInfoW(
     DWORD Flags)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -806,7 +790,7 @@ SymGetOmaps(
     PDWORD64 cOmapFrom)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
 
 BOOL
@@ -818,6 +802,5 @@ SymGetUnwindInfo(
     PULONG Size)
 {
     UNIMPLEMENTED;
-	return FALSE;
+    return FALSE;
 }
-

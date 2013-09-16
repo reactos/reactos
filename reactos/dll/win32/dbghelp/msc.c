@@ -2528,6 +2528,7 @@ static BOOL pdb_init(const struct pdb_lookup* pdb_lookup, struct pdb_file_info* 
         if (pdb_lookup->kind != PDB_JG)
         {
             WARN("Found %s, but wrong PDB kind\n", pdb_lookup->filename);
+            pdb_free(root);
             return FALSE;
         }
         pdb_file->kind = PDB_JG;
