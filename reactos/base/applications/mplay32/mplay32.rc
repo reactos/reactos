@@ -22,4 +22,6 @@ IDB_SEEKFORWICON BITMAP "resources/seekforw.bmp"
 IDB_FORWARDICON  BITMAP "resources/forward.bmp"
 IDB_PAUSEICON    BITMAP "resources/pause.bmp"
 
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 #include "rsrc.rc"

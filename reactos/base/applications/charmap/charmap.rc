@@ -14,4 +14,6 @@ IDI_ICON ICON "res/charmap.ico"
 #define REACTOS_STR_ORIGINAL_FILENAME   "charmap.exe\0"
 #include <reactos/version.rc>
 
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 #include "rsrc.rc"

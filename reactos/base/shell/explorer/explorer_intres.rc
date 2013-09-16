@@ -27,30 +27,30 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // Bitmap
 //
 
-IDB_DRIVEBAR            BITMAP  MOVEABLE PURE   "res/drivebar.bmp"
-IDB_LOGOV               BITMAP  MOVEABLE PURE   "res/logov.bmp"
-IDB_LOGOV256            BITMAP  MOVEABLE PURE   "res/logov256.bmp"
-IDB_LOGOV16             BITMAP  MOVEABLE PURE   "res/logov16.bmp"
-IDB_ICON_ALIGN_0        BITMAP  MOVEABLE PURE   "res/icoalig0.bmp"
-IDB_ICON_ALIGN_1        BITMAP  MOVEABLE PURE   "res/icoalig1.bmp"
-IDB_ICON_ALIGN_2        BITMAP  MOVEABLE PURE   "res/icoalig2.bmp"
-IDB_ICON_ALIGN_3        BITMAP  MOVEABLE PURE   "res/icoalig3.bmp"
-IDB_ICON_ALIGN_4        BITMAP  MOVEABLE PURE   "res/icoalig4.bmp"
-IDB_ICON_ALIGN_5        BITMAP  MOVEABLE PURE   "res/icoalig5.bmp"
-IDB_ICON_ALIGN_6        BITMAP  MOVEABLE PURE   "res/icoalig6.bmp"
-IDB_ICON_ALIGN_7        BITMAP  MOVEABLE PURE   "res/icoalig7.bmp"
-IDB_ICON_ALIGN_8        BITMAP  MOVEABLE PURE   "res/icoalig8.bmp"
-IDB_ICON_ALIGN_9        BITMAP  MOVEABLE PURE   "res/icoalig9.bmp"
-IDB_ICON_ALIGN_10       BITMAP  MOVEABLE PURE   "res/icoali10.bmp"
-IDB_MDI                 BITMAP  MOVEABLE PURE   "res/mdi.bmp"
-IDB_SDI                 BITMAP  MOVEABLE PURE   "res/sdi.bmp"
+IDB_DRIVEBAR            BITMAP        "res/drivebar.bmp"
+IDB_LOGOV               BITMAP        "res/logov.bmp"
+IDB_LOGOV256            BITMAP        "res/logov256.bmp"
+IDB_LOGOV16             BITMAP        "res/logov16.bmp"
+IDB_ICON_ALIGN_0        BITMAP        "res/icoalig0.bmp"
+IDB_ICON_ALIGN_1        BITMAP        "res/icoalig1.bmp"
+IDB_ICON_ALIGN_2        BITMAP        "res/icoalig2.bmp"
+IDB_ICON_ALIGN_3        BITMAP        "res/icoalig3.bmp"
+IDB_ICON_ALIGN_4        BITMAP        "res/icoalig4.bmp"
+IDB_ICON_ALIGN_5        BITMAP        "res/icoalig5.bmp"
+IDB_ICON_ALIGN_6        BITMAP        "res/icoalig6.bmp"
+IDB_ICON_ALIGN_7        BITMAP        "res/icoalig7.bmp"
+IDB_ICON_ALIGN_8        BITMAP        "res/icoalig8.bmp"
+IDB_ICON_ALIGN_9        BITMAP        "res/icoalig9.bmp"
+IDB_ICON_ALIGN_10       BITMAP        "res/icoali10.bmp"
+IDB_MDI                 BITMAP        "res/mdi.bmp"
+IDB_SDI                 BITMAP        "res/sdi.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Accelerator
 //
 
-IDA_EXPLORER ACCELERATORS MOVEABLE PURE
+IDA_EXPLORER ACCELERATORS    
 BEGIN
     "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL,
                                                     NOINVERT
@@ -58,12 +58,12 @@ BEGIN
     "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
 END
 
-IDA_SEARCH_PROGRAM ACCELERATORS MOVEABLE PURE
+IDA_SEARCH_PROGRAM ACCELERATORS    
 BEGIN
     VK_F5,          ID_REFRESH,             VIRTKEY, NOINVERT
 END
 
-IDA_TRAYNOTIFY ACCELERATORS MOVEABLE PURE
+IDA_TRAYNOTIFY ACCELERATORS    
 BEGIN
     VK_F5,          ID_REFRESH,             VIRTKEY, NOINVERT
 END
@@ -75,18 +75,18 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE MOVEABLE PURE
+1 TEXTINCLUDE    
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE MOVEABLE PURE
+2 TEXTINCLUDE    
 BEGIN
     "#include <windows.h>\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE MOVEABLE PURE
+3 TEXTINCLUDE    
 BEGIN
     "#ifndef ROSSHELL\r\n"
     "IDB_IMAGES BITMAP DISCARDABLE ""res/images.bmp""\r\n"
@@ -105,7 +105,7 @@ BEGIN
     "END\r\n"
     "#endif\r\n"
     "#ifndef _DEBUG\r\n"
-    "CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE ""explorer.exe.manifest""\r\n"
+    "CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST ""explorer.exe.manifest""\r\n"
     "#endif\r\n"
     "\r\n"
     "#include ""explorer-bg.rc""\r\n"
@@ -211,7 +211,7 @@ IDS_EXPLORER_VERSION_STR "ROS Explorer Ansi%0s"
 END
 #endif
 #ifndef _DEBUG
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.manifest"
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE "explorer.exe.manifest"
 #endif
 
 #ifdef LANGUAGE_BG_BG

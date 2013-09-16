@@ -28,8 +28,9 @@
 
 #include <reactos/version.rc>
 
-
 IDI_NPICON ICON "res/notepad.ico"
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
 
 // UTF-8
 #pragma code_page(65001)

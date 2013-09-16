@@ -27,6 +27,8 @@
 /* @makedep: winhelp.ico */
 IDI_WINHELP ICON "res/winhelp.ico"
 
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/Bg.rc"
 #endif

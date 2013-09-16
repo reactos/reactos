@@ -20,6 +20,8 @@ IDB_WATERMARK BITMAP "res/watermark.bmp"
 IDB_HEADER    BITMAP "res/header.bmp"
 IDB_ROSLOGO   BITMAP "res/rosbitmap.bmp"
 
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 /* Language-specific resources */
 #include "rsrc.rc"
 
