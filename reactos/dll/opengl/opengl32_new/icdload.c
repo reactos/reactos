@@ -22,6 +22,31 @@ static CRITICAL_SECTION icdload_cs = {NULL, -1, 0, 0, 0, 0};
 static struct ICD_Data* ICD_Data_List = NULL;
 static const WCHAR OpenGLDrivers_Key[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers";
 
+static void APIENTRY wglSetCurrentValue(PVOID value)
+{
+#ifdef OPENGL32_USE_TLS
+    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
+    data->icdData = value;
+#else
+    NtCurrentTeb()->glReserved2 = value;
+#endif
+}
+
+static PVOID APIENTRY wglGetCurrentValue()
+{
+#ifdef OPENGL32_USE_TLS
+    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
+    return data->icdData;
+#else
+    return NtCurrentTeb()->glReserved2;
+#endif
+}
+
+static DHGLRC wglGetDHGLRC(struct wgl_context* context)
+{
+    return context->dhglrc;
+}
+
 /* Retrieves the ICD data (driver version + relevant DLL entry points) for a device context */
 struct ICD_Data* IntGetIcdData(HDC hdc)
 {
@@ -32,6 +57,7 @@ struct ICD_Data* IntGetIcdData(HDC hdc)
     HKEY OglKey, DrvKey;
     WCHAR DllName[MAX_PATH];
     BOOL (WINAPI *DrvValidateVersion)(DWORD);
+    void (WINAPI *DrvSetCallbackProcs)(int nProcs, PROC* pProcs);
     
     /* First, see if the driver supports this */
     dwInput = OPENGL_GETINFO;
@@ -190,6 +216,16 @@ struct ICD_Data* IntGetIcdData(HDC hdc)
             ERR("DrvValidateVersion failed!.\n");
             goto fail;
         }
+    }
+    
+    /* Pass the callbacks */
+    DrvSetCallbackProcs = (void*)GetProcAddress(data->hModule, "DrvSetCallbackProcs");
+    if(DrvSetCallbackProcs)
+    {
+        PROC callbacks[] = {(PROC)wglGetCurrentValue,
+            (PROC)wglSetCurrentValue,
+            (PROC)wglGetDHGLRC};
+        DrvSetCallbackProcs(3, callbacks);
     }
     
     /* Get the DLL exports */
