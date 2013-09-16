@@ -61,4 +61,6 @@ IDI_STOP_ICON       ICON "resources/stop.ico"
 /* Bitmaps */
 IDB_SPEAKIMG        BITMAP "resources/speaker.bmp"
 
+ISOLATIONAWARE_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 #include "rsrc.rc"

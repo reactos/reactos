@@ -21,6 +21,8 @@
 
 #include "inetcpl.h"
 
+ISOLATIONAWARE_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif

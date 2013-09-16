@@ -29,4 +29,6 @@ IDI_REPEAT_RATE     ICON "resources/repeat_rate.ico"
 IDI_REPEAT_DELAY    ICON "resources/repeat_delay.ico"
 IDI_LOOK_KEY        ICON "resources/look_key.ico"
 
+ISOLATIONAWARE_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 #include "rsrc.rc"

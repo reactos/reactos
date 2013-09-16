@@ -18,4 +18,6 @@ IDI_DC        ICON "resources/dc.ico"
 IDI_SCREEN    ICON "resources/screen.ico"
 IDI_HIBERNATE ICON "resources/hibernate.ico"
 
+ISOLATIONAWARE_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 #include "rsrc.rc"

@@ -19,4 +19,6 @@
 
 IDC_CPLICON ICON    DISCARDABLE "res/terminal.ico"
 
+ISOLATIONAWARE_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 #include "rsrc.rc"

@@ -12,4 +12,6 @@
 
 IDC_CPLICON ICON "resources/applet.ico"
 
+ISOLATIONAWARE_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
 #include "rsrc.rc"

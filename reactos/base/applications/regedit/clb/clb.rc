@@ -7,5 +7,6 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"clb.dll\0"
 #include <reactos/version.rc>
 
-#include "rsrc.rc"
+ISOLATIONAWARE_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
 
+#include "rsrc.rc"
