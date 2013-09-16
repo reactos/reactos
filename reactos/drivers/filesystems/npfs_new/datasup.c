@@ -329,7 +329,7 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
         case 3:
 
             ASSERT(Irp != NULL);
-            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool,
+            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
                                                    sizeof(*DataEntry),
                                                    NPFS_DATA_ENTRY_TAG);
             if (!DataEntry)
@@ -371,7 +371,7 @@ NpAddDataQueueEntry(IN ULONG NamedPipeEnd,
                 HasSpace = FALSE;
             }
 
-            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool,
+            DataEntry = ExAllocatePoolWithQuotaTag(NonPagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
                                                    EntrySize,
                                                    NPFS_DATA_ENTRY_TAG);
             if (!DataEntry)

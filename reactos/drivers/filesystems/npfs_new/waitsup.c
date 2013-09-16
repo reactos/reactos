@@ -219,7 +219,7 @@ NpAddWaiter(IN PNP_WAIT_QUEUE WaitQueue,
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    WaitEntry = ExAllocatePoolWithQuotaTag(NonPagedPool,
+    WaitEntry = ExAllocatePoolWithQuotaTag(NonPagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
                                            sizeof(*WaitEntry),
                                            NPFS_WRITE_BLOCK_TAG);
     if (!WaitEntry)

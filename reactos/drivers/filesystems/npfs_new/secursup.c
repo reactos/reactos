@@ -139,7 +139,9 @@ NpGetClientSecurityContext(IN ULONG NamedPipeEnd,
     }
     else
     {
-        NewContext = ExAllocatePoolWithQuotaTag(PagedPool, sizeof(*NewContext), NPFS_CLIENT_SEC_CTX_TAG);
+        NewContext = ExAllocatePoolWithQuotaTag(PagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                                sizeof(*NewContext),
+                                                NPFS_CLIENT_SEC_CTX_TAG);
         if (!NewContext) return STATUS_INSUFFICIENT_RESOURCES;
 
         Status = SeCreateClientSecurity(Thread, &Ccb->ClientQos, 0, NewContext);

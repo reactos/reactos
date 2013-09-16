@@ -433,7 +433,9 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
 
         if (BytesWritten)
         {
-            NewIrp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithQuotaTag(PagedPool, BytesWritten, NPFS_WRITE_BLOCK_TAG);
+            NewIrp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithQuotaTag(PagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                                                            BytesWritten,
+                                                                            NPFS_WRITE_BLOCK_TAG);
             if (!NewIrp->AssociatedIrp.SystemBuffer)
             {
                 IoFreeIrp(NewIrp);
