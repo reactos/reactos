@@ -10,6 +10,15 @@
 #define NDEBUG
 #include <debug.h>
 
+static
+LONG
+GetRefCount(
+    _In_ PVOID Object)
+{
+    POBJECT_HEADER Header = OBJECT_TO_OBJECT_HEADER(Object);
+    return Header->PointerCount;
+}
+
 #define TAG_POOLTEST 'tstP'
 
 static VOID PoolsTest(VOID)
@@ -172,9 +181,83 @@ TestPoolTags(VOID)
     ExFreePoolWithTag(Memory, 'MyTa');
 }
 
+static
+VOID
+TestPoolQuota(VOID)
+{
+    PEPROCESS Process = PsGetCurrentProcess();
+    PEPROCESS StoredProcess;
+    PVOID Memory;
+    LONG InitialRefCount;
+    LONG RefCount;
+    NTSTATUS ExceptionStatus;
+
+    InitialRefCount = GetRefCount(Process);
+
+    /* We get some memory from this function, and it's properly aligned.
+     * Also, it takes a reference to the process, and releases it on free */
+    Memory = ExAllocatePoolWithQuotaTag(PagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                        sizeof(LIST_ENTRY),
+                                        'tQmK');
+    ok(Memory != NULL, "ExAllocatePoolWithQuotaTag returned NULL\n");
+    if (!skip(Memory != NULL, "No memory\n"))
+    {
+        ok((ULONG_PTR)Memory % sizeof(LIST_ENTRY) == 0,
+           "Allocation %p is badly aligned\n",
+           Memory);
+        RefCount = GetRefCount(Process);
+        ok_eq_long(RefCount, InitialRefCount + 1);
+
+        /* A pointer to the process is found right before the next pool header */
+        StoredProcess = ((PVOID *)((ULONG_PTR)Memory + 2 * sizeof(LIST_ENTRY)))[-1];
+        ok_eq_pointer(StoredProcess, Process);
+
+        ExFreePoolWithTag(Memory, 'tQmK');
+        RefCount = GetRefCount(Process);
+        ok_eq_long(RefCount, InitialRefCount);
+    }
+
+    /* Large allocations are page-aligned, don't reference the process */
+    Memory = ExAllocatePoolWithQuotaTag(PagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                        PAGE_SIZE,
+                                        'tQmK');
+    ok(Memory != NULL, "ExAllocatePoolWithQuotaTag returned NULL\n");
+    if (!skip(Memory != NULL, "No memory\n"))
+    {
+        ok((ULONG_PTR)Memory % PAGE_SIZE == 0,
+           "Allocation %p is badly aligned\n",
+           Memory);
+        RefCount = GetRefCount(Process);
+        ok_eq_long(RefCount, InitialRefCount);
+        ExFreePoolWithTag(Memory, 'tQmK');
+        RefCount = GetRefCount(Process);
+        ok_eq_long(RefCount, InitialRefCount);
+    }
+
+    /* Function raises by default */
+    KmtStartSeh()
+        Memory = ExAllocatePoolWithQuotaTag(PagedPool,
+                                            0x7FFFFFFF,
+                                            'tQmK');
+        if (Memory)
+            ExFreePoolWithTag(Memory, 'tQmK');
+    KmtEndSeh(STATUS_INSUFFICIENT_RESOURCES);
+
+    /* Function returns NULL with POOL_QUOTA_FAIL_INSTEAD_OF_RAISE */
+    KmtStartSeh()
+        Memory = ExAllocatePoolWithQuotaTag(PagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                            0x7FFFFFFF,
+                                            'tQmK');
+        ok(Memory == NULL, "Successfully got 2GB block: %p\n", Memory);
+        if (Memory)
+            ExFreePoolWithTag(Memory, 'tQmK');
+    KmtEndSeh(STATUS_SUCCESS);
+}
+
 START_TEST(ExPools)
 {
     PoolsTest();
     PoolsCorruption();
     TestPoolTags();
+    TestPoolQuota();
 }
