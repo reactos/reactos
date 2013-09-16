@@ -44,6 +44,7 @@ list(APPEND NLS_FILES
     c_10029.nls
     c_10079.nls
     c_10081.nls
+    c_20127.nls
     c_20866.nls
     c_21866.nls
     c_28591.nls

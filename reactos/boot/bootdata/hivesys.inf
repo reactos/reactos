@@ -830,6 +830,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10007",0x00000000,"c_10007
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10029",0x00000000,"c_10029.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10079",0x00000000,"c_10079.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10081",0x00000000,"c_10081.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20127",0x00000000,"c_20127.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20866",0x00000000,"c_20866.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","21866",0x00000000,"c_21866.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","28591",0x00000000,"c_28591.nls"
