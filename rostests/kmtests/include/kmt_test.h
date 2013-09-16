@@ -131,6 +131,7 @@ extern PDRIVER_OBJECT KmtDriverObject;
 VOID KmtSetIrql(IN KIRQL NewIrql);
 BOOLEAN KmtAreInterruptsEnabled(VOID);
 ULONG KmtGetPoolTag(PVOID Memory);
+USHORT KmtGetPoolType(PVOID Memory);
 #elif defined KMT_USER_MODE
 DWORD KmtRunKernelTest(IN PCSTR TestName);
 
@@ -332,6 +333,20 @@ ULONG KmtGetPoolTag(PVOID Memory)
     Header--;
 
     return Header->PoolTag;
+}
+
+USHORT KmtGetPoolType(PVOID Memory)
+{
+    PPOOL_HEADER Header;
+
+    /* it's not so easy for allocations of PAGE_SIZE */
+    if (((ULONG_PTR)Memory & (PAGE_SIZE - 1)) == 0)
+        return 0;
+
+    Header = Memory;
+    Header--;
+
+    return Header->PoolType;
 }
 
 INT __cdecl KmtVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR Format, va_list Arguments) KMT_FORMAT(ms_printf, 3, 0);

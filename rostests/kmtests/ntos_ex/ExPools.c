@@ -10,6 +10,11 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TAG_POOLTEST 'tstP'
+
+#define BASE_POOL_TYPE_MASK 1
+#define QUOTA_POOL_MASK 8
+
 static
 LONG
 GetRefCount(
@@ -18,8 +23,6 @@ GetRefCount(
     POBJECT_HEADER Header = OBJECT_TO_OBJECT_HEADER(Object);
     return Header->PointerCount;
 }
-
-#define TAG_POOLTEST 'tstP'
 
 static VOID PoolsTest(VOID)
 {
@@ -190,6 +193,7 @@ TestPoolQuota(VOID)
     PVOID Memory;
     LONG InitialRefCount;
     LONG RefCount;
+    USHORT PoolType;
     NTSTATUS ExceptionStatus;
 
     InitialRefCount = GetRefCount(Process);
@@ -211,6 +215,13 @@ TestPoolQuota(VOID)
         /* A pointer to the process is found right before the next pool header */
         StoredProcess = ((PVOID *)((ULONG_PTR)Memory + 2 * sizeof(LIST_ENTRY)))[-1];
         ok_eq_pointer(StoredProcess, Process);
+
+        /* Pool type should have QUOTA_POOL_MASK set */
+        PoolType = KmtGetPoolType(Memory);
+        ok(PoolType != 0, "PoolType is 0\n");
+        PoolType--;
+        ok(PoolType & QUOTA_POOL_MASK, "PoolType = %x\n", PoolType);
+        ok((PoolType & BASE_POOL_TYPE_MASK) == PagedPool, "PoolType = %x\n", PoolType);
 
         ExFreePoolWithTag(Memory, 'tQmK');
         RefCount = GetRefCount(Process);
