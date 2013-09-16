@@ -18,20 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#include <wine/test.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "windns.h"
+//#include <stdarg.h>
 
-#include "wine/test.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winnls.h"
+#include <windns.h>
 
 static const struct
 {
     LPCSTR name;
     DNS_NAME_FORMAT format;
     DNS_STATUS status;
+    DNS_STATUS status_broken;
 }
 test_data[] =
 {
@@ -47,8 +48,8 @@ test_data[] =
     { "a.*", DnsNameDomain, DNS_ERROR_INVALID_NAME_CHAR },
     { "a ", DnsNameDomain, DNS_ERROR_INVALID_NAME_CHAR },
     { "a._b", DnsNameDomain, DNS_ERROR_NON_RFC_NAME },
-    { "123", DnsNameDomain, DNS_ERROR_NUMERIC_NAME },
-    { "123.456", DnsNameDomain, DNS_ERROR_NUMERIC_NAME },
+    { "123", DnsNameDomain, ERROR_SUCCESS, DNS_ERROR_NUMERIC_NAME },
+    { "123.456", DnsNameDomain, ERROR_SUCCESS, DNS_ERROR_NUMERIC_NAME },
     { "a.b", DnsNameDomain, ERROR_SUCCESS },
 
     { "", DnsNameDomainLabel, ERROR_INVALID_NAME },
@@ -79,8 +80,8 @@ test_data[] =
     { "e.*", DnsNameHostnameFull, DNS_ERROR_INVALID_NAME_CHAR },
     { "e ", DnsNameHostnameFull, DNS_ERROR_INVALID_NAME_CHAR },
     { "e._f", DnsNameHostnameFull, DNS_ERROR_NON_RFC_NAME },
-    { "789", DnsNameHostnameFull, DNS_ERROR_NUMERIC_NAME },
-    { "789.456", DnsNameHostnameFull, DNS_ERROR_NUMERIC_NAME },
+    { "789", DnsNameHostnameFull, ERROR_SUCCESS, DNS_ERROR_NUMERIC_NAME },
+    { "789.456", DnsNameHostnameFull, ERROR_SUCCESS, DNS_ERROR_NUMERIC_NAME },
     { "e.f", DnsNameHostnameFull, ERROR_SUCCESS },
 
     { "", DnsNameHostnameLabel, ERROR_INVALID_NAME },
@@ -93,7 +94,7 @@ test_data[] =
     { "*", DnsNameHostnameLabel, DNS_ERROR_INVALID_NAME_CHAR },
     { "g ", DnsNameHostnameLabel, DNS_ERROR_INVALID_NAME_CHAR },
     { "_g", DnsNameHostnameLabel, DNS_ERROR_NON_RFC_NAME },
-    { "123", DnsNameHostnameLabel, DNS_ERROR_NUMERIC_NAME },
+    { "123", DnsNameHostnameLabel, ERROR_SUCCESS, DNS_ERROR_NUMERIC_NAME },
     { "123.456", DnsNameHostnameLabel, ERROR_INVALID_NAME },
     { "g.h", DnsNameHostnameLabel, ERROR_INVALID_NAME },
 
@@ -146,8 +147,8 @@ static void test_DnsValidateName_A( void )
     for (i = 0; i < sizeof(test_data) / sizeof(test_data[0]); i++)
     {
         status = DnsValidateName_A( test_data[i].name, test_data[i].format );
-        ok( status == test_data[i].status, "%d: \'%s\': got %d, expected %d\n",
-            i, test_data[i].name, status, test_data[i].status );
+        ok( status == test_data[i].status || broken(status == test_data[i].status_broken),
+            "%d: \'%s\': got %d, expected %d\n", i, test_data[i].name, status, test_data[i].status );
     }
 }
 
