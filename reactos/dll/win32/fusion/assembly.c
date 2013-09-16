@@ -599,8 +599,7 @@ static HRESULT parse_clr_metadata(ASSEMBLY *assembly)
         else if (!lstrcmpA(stream, "#Blob") || !lstrcmpA(stream, "Blob"))
             assembly->blobs = assembly_data_offset(assembly, ofs);
 
-        ptr += lstrlenA(stream) + 1;
-        ptr = (BYTE *)(((UINT_PTR)ptr + 3) & ~3); /* align on DWORD boundary */
+        ptr += ((lstrlenA(stream) + 1) + 3) & ~3; /* align on DWORD boundary */
     }
 
     return S_OK;
