@@ -22,7 +22,7 @@ struct wgl_context
 {
     DWORD magic;
     volatile LONG lock;
-    
+
     DHGLRC dhglrc;
     struct ICD_Data* icd_data;
     INT pixelformat;
@@ -65,6 +65,7 @@ struct Opengl32_ThreadData
     HGLRC hglrc;
     HDC hdc;
     struct wgl_dc_data* dc_data;
+    PVOID* icdData;
 };
 
 static inline
