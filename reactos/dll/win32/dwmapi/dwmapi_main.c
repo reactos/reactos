@@ -212,3 +212,15 @@ HRESULT WINAPI DwmRegisterThumbnail(HWND dest, HWND src, PHTHUMBNAIL thumbnail_i
 
     return E_NOTIMPL;
 }
+
+/**********************************************************************
+ *           DwmGetCompositionTimingInfo         (DWMAPI.@)
+ */
+HRESULT WINAPI DwmGetCompositionTimingInfo(HWND hwnd, DWM_TIMING_INFO *info)
+{
+    static int i;
+
+    if(!i++) FIXME("(%p %p)\n", hwnd, info);
+
+    return E_NOTIMPL;
+}
