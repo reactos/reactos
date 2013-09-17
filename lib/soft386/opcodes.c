@@ -2436,6 +2436,107 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeTestModrm)
     return TRUE;
 }
 
+SOFT386_OPCODE_HANDLER(Soft386OpcodeTestAl)
+{
+    UCHAR FirstValue = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+    UCHAR SecondValue, Result;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xA8);
+
+    if (State->PrefixFlags)
+    {
+        /* This opcode doesn't take any prefixes */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (!Soft386FetchByte(State, &SecondValue))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    Result = FirstValue & SecondValue;
+
+    /* Update the flags */
+    State->Flags.Cf = FALSE;
+    State->Flags.Of = FALSE;
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* The result is discarded */
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeTestEax)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xA9);
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+    else
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (Size)
+    {
+        ULONG FirstValue = State->GeneralRegs[SOFT386_REG_EAX].Long;
+        ULONG SecondValue, Result;
+
+        if (!Soft386FetchDword(State, &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = FirstValue & SecondValue;
+
+        /* Update the flags */
+        State->Flags.Cf = FALSE;
+        State->Flags.Of = FALSE;
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_LONG) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+    }
+    else
+    {
+        USHORT FirstValue = State->GeneralRegs[SOFT386_REG_EAX].LowWord;
+        USHORT SecondValue, Result;
+
+        if (!Soft386FetchWord(State, &SecondValue))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Result = FirstValue & SecondValue;
+
+        /* Update the flags */
+        State->Flags.Cf = FALSE;
+        State->Flags.Of = FALSE;
+        State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+        State->Flags.Sf = (Result & SIGN_FLAG_WORD) ? TRUE : FALSE;
+        State->Flags.Pf = Soft386CalculateParity(Result);
+    }
+
+    /* The result is discarded */
+    return TRUE;
+}
+
 SOFT386_OPCODE_HANDLER(Soft386OpcodeXchgByteModrm)
 {
     UCHAR FirstValue, SecondValue;
