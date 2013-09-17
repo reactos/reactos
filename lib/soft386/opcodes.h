@@ -17,9 +17,8 @@
 
 #define SOFT386_NUM_OPCODE_HANDLERS 256
 #define SOFT386_OPCODE_WRITE_REG (1 << 1)
-#define SOFT386_OPCODE_HANDLER(x) BOOLEAN\
-                                  FASTCALL\
-                                  (x)(PSOFT386_STATE State, UCHAR Opcode)
+#define SOFT386_OPCODE_HANDLER(x)   \
+    BOOLEAN FASTCALL x(PSOFT386_STATE State, UCHAR Opcode)
 
 typedef BOOLEAN (FASTCALL *SOFT386_OPCODE_HANDLER_PROC)(PSOFT386_STATE, UCHAR);
 
