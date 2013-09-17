@@ -12,12 +12,12 @@
 // #define _INC_WINDOWS
 #include <windef.h>
 
+// #define NDEBUG
+#include <debug.h>
+
 #include <soft386.h>
 #include "common.h"
 #include "opcodes.h"
-
-// #define NDEBUG
-#include <debug.h>
 
 /* DEFINES ********************************************************************/
 

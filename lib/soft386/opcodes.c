@@ -12,12 +12,12 @@
 // #define _INC_WINDOWS
 #include <windef.h>
 
+// #define NDEBUG
+#include <debug.h>
+
 #include <soft386.h>
 #include "opcodes.h"
 #include "common.h"
-
-// #define NDEBUG
-#include <debug.h>
 
 /* PUBLIC VARIABLES ***********************************************************/
 

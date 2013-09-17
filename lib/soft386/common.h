@@ -32,11 +32,11 @@
 
 typedef struct _SOFT386_MOD_REG_RM
 {
-    INT Register;
+    SOFT386_GEN_REGS Register;
     BOOLEAN Memory;
     union
     {
-        INT SecondRegister;
+        SOFT386_GEN_REGS SecondRegister;
         ULONG MemoryAddress;
     };
 } SOFT386_MOD_REG_RM, *PSOFT386_MOD_REG_RM;
@@ -84,79 +84,27 @@ typedef union _SOFT386_PAGE_TABLE
 
 /* FUNCTIONS ******************************************************************/
 
-inline
 BOOLEAN
 Soft386ReadMemory
 (
     PSOFT386_STATE State,
-    INT SegmentReg,
+    SOFT386_SEG_REGS SegmentReg,
     ULONG Offset,
     BOOLEAN InstFetch,
     PVOID Buffer,
     ULONG Size
 );
 
-inline
 BOOLEAN
 Soft386WriteMemory
 (
     PSOFT386_STATE State,
-    INT SegmentReg,
+    SOFT386_SEG_REGS SegmentReg,
     ULONG Offset,
     PVOID Buffer,
     ULONG Size
 );
 
-inline
-BOOLEAN
-Soft386StackPush
-(
-    PSOFT386_STATE State,
-    ULONG Value
-);
-
-inline
-BOOLEAN
-Soft386StackPop
-(
-    PSOFT386_STATE State,
-    PULONG Value
-);
-
-inline
-BOOLEAN
-Soft386LoadSegment
-(
-    PSOFT386_STATE State,
-    INT Segment,
-    USHORT Selector
-);
-
-inline
-BOOLEAN
-Soft386FetchByte
-(
-    PSOFT386_STATE State,
-    PUCHAR Data
-);
-
-inline
-BOOLEAN
-Soft386FetchWord
-(
-    PSOFT386_STATE State,
-    PUSHORT Data
-);
-
-inline
-BOOLEAN
-Soft386FetchDword
-(
-    PSOFT386_STATE State,
-    PULONG Data
-);
-
-inline
 BOOLEAN
 Soft386InterruptInternal
 (
@@ -164,15 +112,6 @@ Soft386InterruptInternal
     USHORT SegmentSelector,
     ULONG Offset,
     BOOLEAN InterruptGate
-);
-
-inline
-BOOLEAN
-Soft386GetIntVector
-(
-    PSOFT386_STATE State,
-    UCHAR Number,
-    PSOFT386_IDT_ENTRY IdtEntry
 );
 
 VOID
@@ -184,89 +123,16 @@ Soft386ExceptionWithErrorCode
     ULONG ErrorCode
 );
 
-inline
-VOID
-Soft386Exception
-(
-    PSOFT386_STATE State,
-    INT ExceptionCode
-);
+/* INLINED FUNCTIONS **********************************************************/
 
-inline
-BOOLEAN
-Soft386CalculateParity
-(
-    UCHAR Number
-);
+/* static */ FORCEINLINE
+INT
+Soft386GetCurrentPrivLevel(PSOFT386_STATE State)
+{
+    return GET_SEGMENT_RPL(State->SegmentRegs[SOFT386_REG_CS].Selector);
+}
 
-inline
-BOOLEAN
-Soft386ParseModRegRm
-(
-    PSOFT386_STATE State,
-    BOOLEAN AddressSize,
-    PSOFT386_MOD_REG_RM ModRegRm
-);
-
-inline
-BOOLEAN
-Soft386ReadModrmByteOperands
-(
-    PSOFT386_STATE State,
-    PSOFT386_MOD_REG_RM ModRegRm,
-    PUCHAR RegValue,
-    PUCHAR RmValue
-);
-
-inline
-BOOLEAN
-Soft386ReadModrmWordOperands
-(
-    PSOFT386_STATE State,
-    PSOFT386_MOD_REG_RM ModRegRm,
-    PUSHORT RegValue,
-    PUSHORT RmValue
-);
-
-inline
-BOOLEAN
-Soft386ReadModrmDwordOperands
-(
-    PSOFT386_STATE State,
-    PSOFT386_MOD_REG_RM ModRegRm,
-    PULONG RegValue,
-    PULONG RmValue
-);
-
-inline
-BOOLEAN
-Soft386WriteModrmByteOperands
-(
-    PSOFT386_STATE State,
-    PSOFT386_MOD_REG_RM ModRegRm,
-    BOOLEAN WriteRegister,
-    UCHAR Value
-);
-
-inline
-BOOLEAN
-Soft386WriteModrmWordOperands
-(
-    PSOFT386_STATE State,
-    PSOFT386_MOD_REG_RM ModRegRm,
-    BOOLEAN WriteRegister,
-    USHORT Value
-);
-
-inline
-BOOLEAN
-Soft386WriteModrmDwordOperands
-(
-    PSOFT386_STATE State,
-    PSOFT386_MOD_REG_RM ModRegRm,
-    BOOLEAN WriteRegister,
-    ULONG Value
-);
+#include "common.inl"
 
 #endif // _COMMON_H_
 
