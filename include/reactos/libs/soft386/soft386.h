@@ -11,35 +11,35 @@
 
 /* DEFINES ********************************************************************/
 
-#define SOFT386_NUM_GEN_REGS 8
-#define SOFT386_NUM_SEG_REGS 6
-#define SOFT386_NUM_CTRL_REGS 8
-#define SOFT386_NUM_DBG_REGS 8
+#define SOFT386_NUM_GEN_REGS    8
+#define SOFT386_NUM_SEG_REGS    6
+#define SOFT386_NUM_CTRL_REGS   8
+#define SOFT386_NUM_DBG_REGS    8
 
-#define SOFT386_CR0_PE (1 << 0)
-#define SOFT386_CR0_MP (1 << 1)
-#define SOFT386_CR0_EM (1 << 2)
-#define SOFT386_CR0_TS (1 << 3)
-#define SOFT386_CR0_ET (1 << 4)
-#define SOFT386_CR0_NE (1 << 5)
-#define SOFT386_CR0_WP (1 << 16)
-#define SOFT386_CR0_AM (1 << 18)
-#define SOFT386_CR0_NW (1 << 29)
-#define SOFT386_CR0_CD (1 << 30)
-#define SOFT386_CR0_PG (1 << 31)
+#define SOFT386_CR0_PE  (1 << 0)
+#define SOFT386_CR0_MP  (1 << 1)
+#define SOFT386_CR0_EM  (1 << 2)
+#define SOFT386_CR0_TS  (1 << 3)
+#define SOFT386_CR0_ET  (1 << 4)
+#define SOFT386_CR0_NE  (1 << 5)
+#define SOFT386_CR0_WP  (1 << 16)
+#define SOFT386_CR0_AM  (1 << 18)
+#define SOFT386_CR0_NW  (1 << 29)
+#define SOFT386_CR0_CD  (1 << 30)
+#define SOFT386_CR0_PG  (1 << 31)
 
-#define SOFT386_IDT_TASK_GATE 0x5
-#define SOFT386_IDT_INT_GATE 0x6
-#define SOFT386_IDT_TRAP_GATE 0x7
-#define SOFT386_IDT_INT_GATE_32 0xE
-#define SOFT386_IDT_TRAP_GATE_32 0xF
+#define SOFT386_IDT_TASK_GATE       0x5
+#define SOFT386_IDT_INT_GATE        0x6
+#define SOFT386_IDT_TRAP_GATE       0x7
+#define SOFT386_IDT_INT_GATE_32     0xE
+#define SOFT386_IDT_TRAP_GATE_32    0xF
 
-#define SOFT386_PREFIX_SEG (1 << 0)
-#define SOFT386_PREFIX_OPSIZE (1 << 1)
-#define SOFT386_PREFIX_ADSIZE (1 << 2)
-#define SOFT386_PREFIX_LOCK (1 << 3)
-#define SOFT386_PREFIX_REPNZ (1 << 4)
-#define SOFT386_PREFIX_REP (1 << 5)
+#define SOFT386_PREFIX_SEG      (1 << 0)
+#define SOFT386_PREFIX_OPSIZE   (1 << 1)
+#define SOFT386_PREFIX_ADSIZE   (1 << 2)
+#define SOFT386_PREFIX_LOCK     (1 << 3)
+#define SOFT386_PREFIX_REPNZ    (1 << 4)
+#define SOFT386_PREFIX_REP      (1 << 5)
 
 struct _SOFT386_STATE;
 typedef struct _SOFT386_STATE SOFT386_STATE, *PSOFT386_STATE;
@@ -176,47 +176,47 @@ typedef struct _SOFT386_SEG_REG
     USHORT Selector;
 
     /* Descriptor cache */
-    ULONG Accessed : 1;
-    ULONG ReadWrite : 1;
-    ULONG DirConf : 1;
-    ULONG Executable : 1;
-    ULONG SystemType : 1;
-    ULONG Dpl : 2;
-    ULONG Present : 1;
-    ULONG Size : 1;
+    ULONG Accessed      : 1;
+    ULONG ReadWrite     : 1;
+    ULONG DirConf       : 1;
+    ULONG Executable    : 1;
+    ULONG SystemType    : 1;
+    ULONG Dpl           : 2;
+    ULONG Present       : 1;
+    ULONG Size          : 1;
     ULONG Limit;
     ULONG Base;
 } SOFT386_SEG_REG, *PSOFT386_SEG_REG;
 
 typedef struct
 {
-    ULONG Limit : 16;
-    ULONG Base : 24;
-    ULONG Accessed : 1;
-    ULONG ReadWrite : 1;
-    ULONG DirConf : 1;
-    ULONG Executable : 1;
-    ULONG SystemType : 1;
-    ULONG Dpl : 2;
-    ULONG Present : 1;
-    ULONG LimitHigh : 4;
-    ULONG Avl : 1;
-    ULONG Reserved : 1;
-    ULONG Size : 1;
-    ULONG Granularity : 1;
-    ULONG BaseHigh : 8;
+    ULONG Limit         : 16;
+    ULONG Base          : 24;
+    ULONG Accessed      : 1;
+    ULONG ReadWrite     : 1;
+    ULONG DirConf       : 1;
+    ULONG Executable    : 1;
+    ULONG SystemType    : 1;
+    ULONG Dpl           : 2;
+    ULONG Present       : 1;
+    ULONG LimitHigh     : 4;
+    ULONG Avl           : 1;
+    ULONG Reserved      : 1;
+    ULONG Size          : 1;
+    ULONG Granularity   : 1;
+    ULONG BaseHigh      : 8;
 } SOFT386_GDT_ENTRY, *PSOFT386_GDT_ENTRY;
 
 typedef struct
 {
-    ULONG Offset : 16;
-    ULONG Selector : 16;
-    ULONG Zero : 8;
-    ULONG Type : 4;
-    ULONG Storage : 1;
-    ULONG Dpl : 2;
-    ULONG Present : 1;
-    ULONG OffsetHigh : 16;
+    ULONG Offset        : 16;
+    ULONG Selector      : 16;
+    ULONG Zero          : 8;
+    ULONG Type          : 4;
+    ULONG Storage       : 1;
+    ULONG Dpl           : 2;
+    ULONG Present       : 1;
+    ULONG OffsetHigh    : 16;
 } SOFT386_IDT_ENTRY, *PSOFT386_IDT_ENTRY;
 
 typedef struct _SOFT386_TABLE_REG
@@ -230,27 +230,27 @@ typedef union _SOFT386_FLAGS_REG
     ULONG Long;
     struct
     {
-        ULONG Cf : 1;
+        ULONG Cf        : 1;
         ULONG AlwaysSet : 1;
-        ULONG Pf : 1;
+        ULONG Pf        : 1;
         ULONG Reserved0 : 1;
-        ULONG Af : 1;
+        ULONG Af        : 1;
         ULONG Reserved1 : 1;
-        ULONG Zf : 1;
-        ULONG Sf : 1;
-        ULONG Tf : 1;
-        ULONG If : 1;
-        ULONG Df : 1;
-        ULONG Of : 1;
-        ULONG Iopl : 2;
-        ULONG Nt : 1;
+        ULONG Zf        : 1;
+        ULONG Sf        : 1;
+        ULONG Tf        : 1;
+        ULONG If        : 1;
+        ULONG Df        : 1;
+        ULONG Of        : 1;
+        ULONG Iopl      : 2;
+        ULONG Nt        : 1;
         ULONG Reserved2 : 1;
-        ULONG Rf : 1;
-        ULONG Vm : 1;
-        ULONG Ac : 1;
-        ULONG Vif : 1;
-        ULONG Vip : 1;
-        ULONG Id : 1;
+        ULONG Rf        : 1;
+        ULONG Vm        : 1;
+        ULONG Ac        : 1;
+        ULONG Vif       : 1;
+        ULONG Vip       : 1;
+        ULONG Id        : 1;
 
         // ULONG Reserved : 10;
     };
