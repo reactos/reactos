@@ -41,9 +41,9 @@ typedef struct _SOFT386_MOD_REG_RM
 
 #pragma pack(push, 1)
 
-typedef struct _SOFT386_PAGE_DIR
+typedef union _SOFT386_PAGE_DIR
 {
-    union
+    struct
     {
         ULONG Present : 1;
         ULONG Writeable : 1;
