@@ -1084,6 +1084,7 @@ typedef enum {
 #define LANG_CATALAN   0x03
 #define LANG_CHINESE   0x04
 #define LANG_CHINESE_SIMPLIFIED   0x04
+#define LANG_CHINESE_TRADITIONAL  0x7c04
 #define LANG_CORSICAN   0x83
 #define LANG_CROATIAN   0x1a
 #define LANG_CROATIAN   0x1a
@@ -1156,6 +1157,7 @@ typedef enum {
 #define LANG_RUSSIAN   0x19
 #define LANG_SAMI   0x3b
 #define LANG_SANSKRIT   0x4f
+#define LANG_SCOTTISH_GAELIC   0x91
 #define LANG_SERBIAN   0x1a
 #define LANG_SOTHO   0x6c
 #define LANG_TSWANA   0x32
@@ -1197,11 +1199,13 @@ typedef enum {
 #define LANG_CORNISH        0x91
 
 /* FIXME: not present in the official headers */
+#define LANG_MALAGASY       0x8d
 #define LANG_GAELIC         0x94
 #define LANG_SAAMI          0x3b
 #define LANG_SUTU           0x30
 #define LANG_TSONGA         0x31
 #define LANG_VENDA          0x33
+#define LANG_MANX_GAELIC    0x94
 
 #define SUBLANG_CUSTOM_UNSPECIFIED   0x04
 #define SUBLANG_CUSTOM_DEFAULT   0x03
