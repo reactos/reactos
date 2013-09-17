@@ -2873,7 +2873,7 @@ StartScan:
         SxsWin32ExePath = PathBufferString;
         PathBuffer = PathBufferString.Buffer;
         PathBufferString.Buffer = NULL;
-        DPRINT1("SxS Path: %S\n", PathBuffer);
+        DPRINT("SxS Path: %S\n", PathBuffer);
     }
 
     /* Also set the .EXE path based on the path name */
