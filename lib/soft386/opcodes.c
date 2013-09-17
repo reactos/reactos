@@ -3686,16 +3686,31 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeArpl)
 {
     USHORT FirstValue, SecondValue;
     SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
     if (!(State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
-        || State->PrefixFlags)
+        || State->Flags.Vm
+        || (State->PrefixFlags & SOFT386_PREFIX_LOCK))
     {
-        /* No prefixes allowed, protected mode only */
+        /* Cannot be used in real mode or with a LOCK prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
         return FALSE;
     }
 
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
     /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Read the operands */
     if (!Soft386ReadModrmWordOperands(State,
                                       &ModRegRm,
                                       &FirstValue,

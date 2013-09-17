@@ -20,7 +20,8 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static /* FORCEINLINE */
+static
+inline
 ULONG
 Soft386GetPageTableEntry(PSOFT386_STATE State,
                          ULONG VirtualAddress)
