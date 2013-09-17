@@ -2096,7 +2096,12 @@ NetUserAdd(LPCWSTR servername,
 
 done:
     if (UserHandle != NULL)
-        SamCloseHandle(UserHandle);
+    {
+        if (ApiStatus != NERR_Success)
+            SamDeleteUser(UserHandle);
+        else
+            SamCloseHandle(UserHandle);
+    }
 
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
