@@ -29,7 +29,7 @@
 #define REACTOS_STR_ORIGINAL_FILENAME   "regedit.exe"
 #include <reactos/version.rc>
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+#include <reactos/manifest_exe.rc>
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 

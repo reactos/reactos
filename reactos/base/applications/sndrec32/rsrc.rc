@@ -18,7 +18,7 @@ IDB_BITMAP2_REC_DIS     BITMAP                  "resources/but_rec_dis.bmp"
 IDB_BITMAP2_START_DIS   BITMAP                  "resources/but_start_dis.bmp"
 IDB_BITMAP2_STOP_DIS    BITMAP                  "resources/but_stop_dis.bmp"
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+#include <reactos/manifest_exe.rc>
 
 // UTF-8
 #pragma code_page(65001)

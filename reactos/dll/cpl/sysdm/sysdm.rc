@@ -22,6 +22,6 @@ IDB_ROSBMP      BITMAP "resources/rosbitmap.bmp"
 
 RC_LICENSE RTDATA "resources/gpl.txt"
 
-ISOLATIONAWARE_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+#include <reactos/manifest_dll.rc>
 
 #include "rsrc.rc"

@@ -13,6 +13,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_ICON ICON "res/magnify.ico"
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+#include <reactos/manifest_exe.rc>
 
 #include "rsrc.rc"

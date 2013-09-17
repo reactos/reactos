@@ -44,7 +44,7 @@ IDI_CALC_SMALL          ICON    DISCARDABLE     "res/calc_sm.ico"
 
 IDB_BITMAP_ROS          BITMAP  DISCARDABLE     "res/ROS_logo.bmp"
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+#include <reactos/manifest_exe.rc>
 
 // UTF-8
 #pragma code_page(65001)

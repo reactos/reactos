@@ -11,6 +11,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME   "shutdown.exe"
 #include <reactos/version.rc>
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+#include <reactos/manifest_exe.rc>
 
 #include "rsrc.rc"

@@ -64,7 +64,7 @@ IDI_WORDPAD ICON "res/wordpad.ico"
 /* @makedep: zoom.cur */
 IDC_ZOOM CURSOR "res/zoom.cur"
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+#include <reactos/manifest_exe.rc>
 
 #ifdef LANGUAGE_EN_US
     #include "lang/En.rc"

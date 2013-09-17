@@ -10,6 +10,6 @@ IDI_WINDOWSM            ICON    DISCARDABLE "res/windowsm.ico"
 IDB_TRAYMASK            BITMAP  DISCARDABLE "res/traymask.bmp"
 IDB_TRAYICON            BITMAP  DISCARDABLE "res/trayicon.bmp"
 
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+#include <reactos/manifest_exe.rc>
 
 #include "rsrc.rc"
