@@ -159,12 +159,15 @@ VOID
 
 typedef union _SOFT386_REG
 {
-    struct
+    union
     {
-        UCHAR LowByte;
-        UCHAR HighByte;
+        struct
+        {
+            UCHAR LowByte;
+            UCHAR HighByte;
+        };
+        USHORT LowWord;
     };
-    USHORT LowWord;
     ULONG  Long;
 } SOFT386_REG, *PSOFT386_REG;
 
