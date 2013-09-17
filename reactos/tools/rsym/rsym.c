@@ -1163,6 +1163,8 @@ CreateOutputFile(FILE *OutFile, void *InData,
 
     if (OutFileHeader->PointerToSymbolTable)
     {
+        int PaddingFrom = (OutFileHeader->PointerToSymbolTable + StringTableLength) %
+                          OutOptHeader->FileAlignment;
         fseek(OutFile, OutFileHeader->PointerToSymbolTable, 0);
 
         /* COFF string section is preceeded by a length */
@@ -1172,6 +1174,15 @@ CreateOutputFile(FILE *OutFile, void *InData,
            The string table length technically counts as part of the string table
            space itself. */
         fwrite(StringTable + 4, 1, StringTableLength - 4, OutFile);
+
+        if (PaddingFrom)
+        {
+            int PaddingSize = OutOptHeader->FileAlignment - PaddingFrom;
+            char *Padding = (char *)malloc(PaddingSize);
+            memset(Padding, 0, PaddingFrom);
+            fwrite(Padding, 1, PaddingSize, OutFile);
+            free(Padding);
+        }
     }
 
     if (PaddedRosSym)
