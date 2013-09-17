@@ -9,6 +9,14 @@ if(NOT DEFINED SEPARATE_DBG)
     set(SEPARATE_DBG FALSE)
 endif()
 
+if(NOT DEFINED USE_PSEH3)
+    set(USE_PSEH3 0)
+endif()
+
+if(USE_PSEH3)
+    add_definitions(-D_USE_PSEH3=1)
+endif()
+
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
 if(GCC_VERSION VERSION_GREATER 4.7)

@@ -129,10 +129,6 @@ else()
         add_definitions(-D_WINKD_=1)
     endif()
 
-    if(USE_PSEH3)
-        add_definitions(-D_USE_PSEH3=1)
-    endif()
-
     # Version Options
     add_definitions(-DWINVER=0x502
                     -D_WIN32_IE=0x600
