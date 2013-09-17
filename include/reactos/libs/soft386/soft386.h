@@ -168,7 +168,7 @@ typedef union _SOFT386_REG
         };
         USHORT LowWord;
     };
-    ULONG  Long;
+    ULONG Long;
 } SOFT386_REG, *PSOFT386_REG;
 
 typedef struct _SOFT386_SEG_REG
@@ -251,6 +251,8 @@ typedef union _SOFT386_FLAGS_REG
         ULONG Vif : 1;
         ULONG Vip : 1;
         ULONG Id : 1;
+
+        // ULONG Reserved : 10;
     };
 } SOFT386_FLAGS_REG, *PSOFT386_FLAGS_REG;
 
