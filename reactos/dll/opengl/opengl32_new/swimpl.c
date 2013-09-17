@@ -13,6 +13,8 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(opengl32);
 
+#define WIDTH_BYTES_ALIGN32(cx, bpp) ((((cx) * (bpp) + 31) & ~31) >> 3)
+
 /* OSMesa stuff */
 static HMODULE hMesaDll = NULL;
 static OSMesaContext (GLAPIENTRY *pOSMesaCreateContextExt)(GLenum format, GLint depthBits, GLint stencilBits,
@@ -28,26 +30,45 @@ struct sw_context
     OSMesaContext mesa_ctx;
     HHOOK hook;
     struct sw_framebuffer* framebuffer;
+    GLenum readmode;
 };
 
 #define SW_FB_DOUBLEBUFFERED    0x1
 #define SW_FB_DIBSECTION        0x2
 #define SW_FB_FREE_BITS         0x4
+#define SW_FB_DIRTY_BITS        0x8
+#define SW_FB_DIRTY_SIZE        0x10
+#define SW_FB_DIRTY             (SW_FB_DIRTY_BITS | SW_FB_DIRTY_SIZE)
+
 struct sw_framebuffer
 {
     INT sw_format;
     UINT format_index;
-    void* bits;
+    union
+    {
+        void* backbuffer;
+        void* bits;
+    };
+    void* frontbuffer;
     DWORD flags;
     BITMAPINFO bmi;
 };
 
-/* For our special SB glFinish implementation */
+/* 
+ * Functions that we shadow to compensate with the impossibility 
+ * to use double buffered format in osmesa 
+ */
 static void (GLAPIENTRY * pFinish)(void);
+static void (GLAPIENTRY * pReadBuffer)(GLenum);
+static void (GLAPIENTRY * pGetBooleanv)(GLenum pname, GLboolean* params);
+static void (GLAPIENTRY * pGetFloatv)(GLenum pname, GLfloat* params);
+static void (GLAPIENTRY * pGetDoublev)(GLenum pname, GLdouble* params);
+static void (GLAPIENTRY * pGetIntegerv)(GLenum pname, GLint* params);
+static void (GLAPIENTRY * pReadPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels);
 
-/* Single buffered API table */
+/* API table for single buffered mode */
 static GLCLTPROCTABLE sw_table_sb;
-/* Double buffered API table */
+/* API table for double buffered mode */
 static GLCLTPROCTABLE sw_table_db;
 
 static const struct
@@ -77,12 +98,12 @@ static const struct
     { OSMESA_RGB_565,  16,  5, 0,  6, 5,  5, 11, 0, 0,   16, 16, 8 },
 };
 
-/* glFinish for single-buffered pixel formats */
+/* Single buffered format specifics */
 static void GLAPIENTRY sw_sb_Finish(void)
 {
     struct wgl_dc_data* dc_data = IntGetCurrentDcData();
     struct sw_framebuffer* fb;
-    HDC hdc;
+    HDC hdc = IntGetCurrentDC();
     
     /* Call osmesa */
     pFinish();
@@ -91,13 +112,9 @@ static void GLAPIENTRY sw_sb_Finish(void)
     fb = dc_data->sw_data;
     assert(fb != NULL);
     
+    /* osmesa directly updated the bits of the DIB section */
     if(fb->flags & SW_FB_DIBSECTION)
         return;
-    
-    if(dc_data->flags & WGL_DC_OBJ_DC)
-        hdc = GetDC(dc_data->owner.hwnd);
-    else
-        hdc = dc_data->owner.hdc;
     
     /* Upload the data to the device */
     SetDIBitsToDevice(hdc,
@@ -112,11 +129,178 @@ static void GLAPIENTRY sw_sb_Finish(void)
         fb->bits,
         &fb->bmi,
         DIB_RGB_COLORS);
-    
-    if(dc_data->flags & WGL_DC_OBJ_DC)
-        ReleaseDC(dc_data->owner.hwnd, hdc);
 }
 
+/* Double buffered format specifics */
+static void sw_db_update_frontbuffer(struct sw_framebuffer* fb, HDC hdc)
+{
+    unsigned int widthbytes = WIDTH_BYTES_ALIGN32(fb->bmi.bmiHeader.biWidth,
+        pixel_formats[fb->format_index].color_bits);
+    size_t buffer_size = widthbytes*fb->bmi.bmiHeader.biHeight;
+    if(fb->flags & SW_FB_DIRTY_SIZE)
+    {
+        if(fb->frontbuffer)
+            fb->frontbuffer = HeapReAlloc(GetProcessHeap(), 0, fb->frontbuffer, buffer_size);
+        else
+            fb->frontbuffer = HeapAlloc(GetProcessHeap(), 0, buffer_size);
+        fb->flags ^= SW_FB_DIRTY_SIZE;
+    }
+    
+    if(fb->flags & SW_FB_DIRTY_BITS)
+    {
+        /* On windows, there is SetDIBitsToDevice, but not FROM device... */
+        HBITMAP hbmp;
+        HDC hmemDC = CreateCompatibleDC(hdc);
+        void* DIBits;
+        hbmp = CreateDIBSection(hdc,
+            &fb->bmi,
+            DIB_RGB_COLORS,
+            &DIBits,
+            NULL, 0);
+        hbmp = SelectObject(hmemDC, hbmp);
+        BitBlt(hdc,
+            0,
+            0,
+            fb->bmi.bmiHeader.biWidth,
+            fb->bmi.bmiHeader.biHeight,
+            hmemDC,
+            0,
+            0,
+            SRCCOPY);
+        /* Copy the bits */
+        CopyMemory(fb->frontbuffer, DIBits, buffer_size);
+        /* Clean up */
+        hbmp = SelectObject(hmemDC, hbmp);
+        DeleteDC(hmemDC);
+        DeleteObject(hbmp);
+        /* We're clean */
+        fb->flags ^= SW_FB_DIRTY_BITS;
+    }
+}
+
+static void GLAPIENTRY sw_db_ReadBuffer(GLenum mode)
+{
+    struct sw_context* ctx = (struct sw_context*)IntGetCurrentDHGLRC();
+    
+    /* All good */
+    if(ctx->readmode == mode)
+        return;
+    
+    /* We don't support stereoscopic formats */
+    if(mode == GL_FRONT)
+        mode = GL_FRONT_LEFT;
+    
+    if(mode == GL_BACK)
+        mode = GL_BACK_LEFT;
+    
+    /* Validate the asked mode */
+    if((mode != GL_FRONT_LEFT) || (mode != GL_BACK_LEFT))
+    {
+        ERR("Incompatble mode passed: %lx.\n", mode);
+        return;
+    }
+
+    /* Save it */
+    ctx->readmode = mode;
+}
+
+static void GLAPIENTRY sw_db_GetBooleanv(GLenum pname, GLboolean* params)
+{
+    struct sw_context* ctx = (struct sw_context*)IntGetCurrentDHGLRC();
+    switch(pname)
+    {
+        case GL_READ_BUFFER:
+            /* Well, it's never 0, but eh, the spec you know */
+            *params = (ctx->readmode != 0);
+            return;
+        default:
+            pGetBooleanv(pname, params);
+            return;
+    }
+}
+
+static void GLAPIENTRY sw_db_GetDoublev(GLenum pname, GLdouble* params)
+{
+    struct sw_context* ctx = (struct sw_context*)IntGetCurrentDHGLRC();
+    switch(pname)
+    {
+        case GL_READ_BUFFER:
+            *params = (GLdouble)ctx->readmode;
+            return;
+        default:
+            pGetDoublev(pname, params);
+            return;
+    }
+}
+
+static void GLAPIENTRY sw_db_GetFloatv(GLenum pname, GLfloat* params)
+{
+    struct sw_context* ctx = (struct sw_context*)IntGetCurrentDHGLRC();
+    switch(pname)
+    {
+        case GL_READ_BUFFER:
+            *params = (GLfloat)ctx->readmode;
+            return;
+        default:
+            pGetFloatv(pname, params);
+            return;
+    }
+}
+
+static void GLAPIENTRY sw_db_GetIntegerv(GLenum pname, GLint* params)
+{
+    struct sw_context* ctx = (struct sw_context*)IntGetCurrentDHGLRC();
+    switch(pname)
+    {
+        case GL_READ_BUFFER:
+            *params = ctx->readmode;
+            return;
+        default:
+            pGetIntegerv(pname, params);
+            return;
+    }
+}
+
+static void GLAPIENTRY sw_db_ReadPixels(
+  GLint x,
+  GLint y,
+  GLsizei width,
+  GLsizei height,
+  GLenum format,
+  GLenum type,
+  GLvoid *pixels
+)
+{
+    struct sw_context* ctx = (struct sw_context*)IntGetCurrentDHGLRC();
+    struct wgl_dc_data* dc_data = IntGetCurrentDcData();
+    struct sw_framebuffer* fb = dc_data->sw_data;
+    
+    /* Quick path */
+    if(ctx->readmode == GL_BACK_LEFT)
+    {
+        pReadPixels(x, y, width, height, format, type, pixels);
+        return;
+    }
+    
+    assert(ctx->readmode == GL_FRONT_LEFT);
+    
+    /* Update frontbuffer */
+    if(fb->flags & SW_FB_DIRTY)
+        sw_db_update_frontbuffer(fb, IntGetCurrentDC());
+    
+    /* Finish wahtever is going on on backbuffer */
+    pFinish();
+    /* Tell osmesa we changed the buffer */
+    pOSMesaMakeCurrent(ctx->mesa_ctx, fb->frontbuffer, GL_UNSIGNED_BYTE, width, height);
+    
+    /* Go ahead */
+    pReadPixels(x, y, width, height, format, type, pixels);
+    
+    /* Go back to backbuffer operation */
+    pOSMesaMakeCurrent(ctx->mesa_ctx, fb->backbuffer, GL_UNSIGNED_BYTE, width, height);
+}
+
+/* WGL <-> OSMesa functions */
 static UINT index_from_format(struct wgl_dc_data* dc_data, INT format, BOOL* doubleBuffered)
 {
     UINT index, nb_win_compat = 0, start_win_compat = 0;
@@ -230,7 +414,7 @@ BOOL sw_SetPixelFormat(struct wgl_dc_data* dc_data, INT format)
 {
     struct sw_framebuffer* fb;
     BOOL doubleBuffered;
-    /* NOTE: we let the wgl implementation tracking the pixel format for us */
+
     if(hMesaDll != NULL)
         goto osmesa_loaded;
 
@@ -280,9 +464,27 @@ BOOL sw_SetPixelFormat(struct wgl_dc_data* dc_data, INT format)
     /* For completeness */
     sw_table_db.cEntries = sw_table_sb.cEntries = OPENGL_VERSION_110_ENTRIES;
     
-    /* We are not really single buffered. */
-    pFinish = sw_table_sb.glDispatchTable.Finish;
-    sw_table_sb.glDispatchTable.Finish = sw_sb_Finish;
+    /* We are not really single/double buffered. */
+#define SWAP_SB_FUNC(x)  do                     \
+{                                               \
+    p##x = sw_table_sb.glDispatchTable.x;       \
+    sw_table_sb.glDispatchTable.x = sw_sb_##x;  \
+} while(0)
+    SWAP_SB_FUNC(Finish);
+#undef SWAP_SB_FUNC
+#define SWAP_DB_FUNC(x)  do                     \
+{                                               \
+    p##x = sw_table_db.glDispatchTable.x;       \
+    sw_table_db.glDispatchTable.x = sw_db_##x;  \
+} while(0)
+    SWAP_DB_FUNC(ReadBuffer);
+    SWAP_DB_FUNC(ReadPixels);
+    SWAP_DB_FUNC(GetBooleanv);
+    SWAP_DB_FUNC(GetIntegerv);
+    SWAP_DB_FUNC(GetFloatv);
+    SWAP_DB_FUNC(GetDoublev);
+#undef SWAP_DB_FUNC
+
     /* OpenGL spec: flush == all pending commands are sent to the server, 
      * and the client will receive the data in finished time.
      * We will call this finish in our case */
@@ -320,7 +522,9 @@ DHGLRC sw_CreateContext(struct wgl_dc_data* dc_data)
         HeapFree( GetProcessHeap(), 0, context );
         return NULL;
     }
+    /* Set defaults */
     context->hook = NULL;
+    context->readmode = GL_BACK_LEFT;
     return (DHGLRC)context;
 }
 
@@ -352,7 +556,6 @@ void sw_ReleaseContext(DHGLRC dhglrc)
     }
 }
 
-#define WIDTH_BYTES_ALIGN32(cx, bpp) ((((cx) * (bpp) + 31) & ~31) >> 3)
 static
 LRESULT CALLBACK
 sw_call_window_proc(
@@ -397,6 +600,9 @@ sw_call_window_proc(
             /* Do not reallocate for minimized windows */
             if(width <= 0 || height <= 0)
                 goto end;
+            /* Do not bother with unchanged size */
+            if(width == fb->bmi.bmiHeader.biWidth && height == fb->bmi.bmiHeader.biHeight)
+                goto end;
             /* Resize the buffer accordingly */
             widthBytes = WIDTH_BYTES_ALIGN32(width, pixel_formats[fb->format_index].color_bits);
             fb->bits = HeapReAlloc(GetProcessHeap(), 0, fb->bits, widthBytes * height);
@@ -407,6 +613,8 @@ sw_call_window_proc(
             /* Re-enable osmesa */
             pOSMesaMakeCurrent(ctx->mesa_ctx, fb->bits, GL_UNSIGNED_BYTE, width, height);
             pOSMesaPixelStore(OSMESA_ROW_LENGTH, widthBytes * 8 / pixel_formats[fb->format_index].color_bits);
+            /* Mark dirty bit acordingly */
+            fb->flags |= SW_FB_DIRTY_SIZE;
         }
     }
 
@@ -481,6 +689,7 @@ const GLCLTPROCTABLE* sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
     
     if(bits)
     {
+        assert(!(fb->flags & SW_FB_DOUBLEBUFFERED));
         if(fb->flags & SW_FB_FREE_BITS)
         {
             fb->flags ^= SW_FB_FREE_BITS;
@@ -489,14 +698,14 @@ const GLCLTPROCTABLE* sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
         fb->flags |= SW_FB_DIBSECTION;
         fb->bits = bits;
     }
-    else
+    else if((width != fb->bmi.bmiHeader.biWidth) || (height != fb->bmi.bmiHeader.biHeight))
     {
         widthBytes = WIDTH_BYTES_ALIGN32(width, pixel_formats[fb->format_index].color_bits);
         if(fb->flags & SW_FB_FREE_BITS)
             fb->bits = HeapReAlloc(GetProcessHeap(), 0, fb->bits, widthBytes * height);
         else
             fb->bits = HeapAlloc(GetProcessHeap(), 0, widthBytes * height);
-        fb->flags |= SW_FB_FREE_BITS;
+        fb->flags |= (SW_FB_FREE_BITS | SW_FB_DIRTY_SIZE);
         fb->flags &= ~SW_FB_DIBSECTION;
     }
     
@@ -571,6 +780,9 @@ BOOL sw_SwapBuffers(HDC hdc, struct wgl_dc_data* dc_data)
     
     /* Finish before swapping */
     pFinish();
+    
+    /* We are now dirty */
+    fb->flags |= SW_FB_DIRTY_BITS;
     
     return (SetDIBitsToDevice(hdc,
         0,
