@@ -280,9 +280,13 @@ BOOL sw_SetPixelFormat(struct wgl_dc_data* dc_data, INT format)
     /* For completeness */
     sw_table_db.cEntries = sw_table_sb.cEntries = OPENGL_VERSION_110_ENTRIES;
     
-    /* We are not really single buffered, but this trick fits the bill */
+    /* We are not really single buffered. */
     pFinish = sw_table_sb.glDispatchTable.Finish;
     sw_table_sb.glDispatchTable.Finish = sw_sb_Finish;
+    /* OpenGL spec: flush == all pending commands are sent to the server, 
+     * and the client will receive the data in finished time.
+     * We will call this finish in our case */
+    sw_table_sb.glDispatchTable.Flush = sw_sb_Finish;
 
 osmesa_loaded:
     /* Now allocate our structure */
@@ -393,11 +397,10 @@ sw_call_window_proc(
             /* Do not reallocate for minimized windows */
             if(width <= 0 || height <= 0)
                 goto end;
-            /* Temporarily disable osmesa */
-            pOSMesaMakeCurrent(NULL, NULL, GL_UNSIGNED_BYTE, 0, 0);
             /* Resize the buffer accordingly */
             widthBytes = WIDTH_BYTES_ALIGN32(width, pixel_formats[fb->format_index].color_bits);
             fb->bits = HeapReAlloc(GetProcessHeap(), 0, fb->bits, widthBytes * height);
+            TRACE("New res: %lux%lu.\n", width, height);
             /* Update this */
             fb->bmi.bmiHeader.biWidth = width;
             fb->bmi.bmiHeader.biHeight = height;
@@ -474,6 +477,8 @@ const GLCLTPROCTABLE* sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
     if(!width) width = 1;
     if(!height) height = 1;
     
+    TRACE("Res: %lux%lu.\n", width, height);
+    
     if(bits)
     {
         if(fb->flags & SW_FB_FREE_BITS)
@@ -513,8 +518,10 @@ const GLCLTPROCTABLE* sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
         ERR("OSMesaMakeCurrent failed!\n");
         /* Damn! Free everything */
         if(fb->flags & SW_FB_FREE_BITS)
+        {
             HeapFree(GetProcessHeap(), 0, fb->bits);
-        fb->flags &= ~SW_FB_FREE_BITS;
+            fb->flags ^= ~SW_FB_FREE_BITS;
+        }
         fb->bits = NULL;
     
         /* Unhook */
@@ -561,6 +568,9 @@ BOOL sw_SwapBuffers(HDC hdc, struct wgl_dc_data* dc_data)
     
     if(!(fb->bits))
         return TRUE;
+    
+    /* Finish before swapping */
+    pFinish();
     
     return (SetDIBitsToDevice(hdc,
         0,

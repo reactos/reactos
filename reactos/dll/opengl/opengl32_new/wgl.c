@@ -348,27 +348,37 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     struct wgl_context* context;
     DHGLRC dhglrc;
     
+    TRACE("Creating context for %p, format %i\n", hdc);
+    
     if(!dc_data)
     {
+        WARN("Not a DC handle!\n");
         SetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
     
     if(!dc_data->pixelformat)
     {
-        release_dc_data(dc_data);
+        WARN("Pixel format not set!\n");
         SetLastError(ERROR_INVALID_PIXEL_FORMAT);
         return NULL;
     }
     
     if(!dc_data->icd_data)
+    {
+        TRACE("Calling SW implementation.\n");
         dhglrc = sw_CreateContext(dc_data);
+        TRACE("done\n");
+    }
     else
+    {
+        TRACE("Calling ICD.\n");
         dhglrc = dc_data->icd_data->DrvCreateContext(hdc);
+    }
     
     if(!dhglrc)
     {
-        release_dc_data(dc_data);
+        WARN("Failed!\n");
         SetLastError(ERROR_INVALID_PIXEL_FORMAT);
         return NULL;
     }
@@ -376,11 +386,11 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     context = HeapAlloc(GetProcessHeap(), 0, sizeof(*context));
     if(!context)
     {
+        WARN("Failed to allocate a context!\n");
         if(!dc_data->icd_data)
             sw_DeleteContext(dhglrc);
         else
             dc_data->icd_data->DrvDeleteContext(dhglrc);
-        release_dc_data(dc_data);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
@@ -391,8 +401,7 @@ HGLRC WINAPI wglCreateContext(HDC hdc)
     context->thread_id = 0;
     
     context->magic = 'GLRC';
-    
-    release_dc_data(dc_data);
+    TRACE("Success!\n");
     return (HGLRC)context;
 }
 
@@ -768,46 +777,56 @@ BOOL WINAPI wglSetPixelFormat(HDC hdc, INT format, const PIXELFORMATDESCRIPTOR *
     INT sw_format;
     BOOL ret;
     
+    TRACE("HDC %p, format %i.\n", hdc, format);
+    
     if(!dc_data)
     {
+        WARN("Not a valid DC!.\n");
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     
     if(!format)
     {
+        WARN("format == 0!\n");
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
     if(dc_data->pixelformat)
     {
+        TRACE("DC format already set, %i.\n", dc_data->pixelformat);
         return (format == dc_data->pixelformat);
     }
     
     if(format <= dc_data->nb_icd_formats)
     {
+        TRACE("Calling ICD.\n");
         ret = dc_data->icd_data->DrvSetPixelFormat(hdc, format);
         if(ret)
         {
+            TRACE("Success!\n");
             dc_data->pixelformat = format;
-            return TRUE;
         }
+        return ret;
     }
     
     sw_format = format - dc_data->nb_icd_formats;
     if(sw_format <= dc_data->nb_sw_formats)
     {
+        TRACE("Calling SW implementation.\n");
         ret = sw_SetPixelFormat(dc_data, sw_format);
         if(ret)
         {
+            TRACE("Success!\n");
             /* This is now officially a software-only HDC */
             dc_data->icd_data = NULL;
             dc_data->pixelformat = format;
-            return TRUE;
         }
+        return ret;
     }
 
+    TRACE("Invalid pixel format!\n");
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
 }
@@ -867,40 +886,4 @@ BOOL WINAPI wglSwapLayerBuffers(HDC hdc, UINT fuPlanes)
 DWORD WINAPI wglSwapMultipleBuffers(UINT count, CONST WGLSWAP * toSwap)
 {
     return 0;
-}
-
-BOOL WINAPI wglUseFontBitmapsA(HDC hdc, DWORD first, DWORD count, DWORD listBase)
-{
-    FIXME("stub.\n");
-    return FALSE;
-}
-
-BOOL WINAPI wglUseFontBitmapsW(HDC hdc, DWORD first, DWORD count, DWORD listBase)
-{
-    FIXME("stub.\n");
-    return FALSE;
-}
-
-BOOL WINAPI wglUseFontOutlinesA(HDC hdc,
-				DWORD first,
-				DWORD count,
-				DWORD listBase,
-				FLOAT deviation,
-				FLOAT extrusion,
-				int format,
-				LPGLYPHMETRICSFLOAT lpgmf)
-{
-    return FALSE;
-}
-
-BOOL WINAPI wglUseFontOutlinesW(HDC hdc,
-				DWORD first,
-				DWORD count,
-				DWORD listBase,
-				FLOAT deviation,
-				FLOAT extrusion,
-				int format,
-				LPGLYPHMETRICSFLOAT lpgmf)
-{
-    return FALSE;
 }
