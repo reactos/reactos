@@ -119,7 +119,7 @@ FASTCALL
 Soft386ExceptionWithErrorCode
 (
     PSOFT386_STATE State,
-    INT ExceptionCode,
+    SOFT386_EXCEPTIONS ExceptionCode,
     ULONG ErrorCode
 );
 

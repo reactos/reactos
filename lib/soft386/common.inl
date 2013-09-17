@@ -11,7 +11,7 @@
 FORCEINLINE
 VOID
 Soft386Exception(PSOFT386_STATE State,
-                 INT ExceptionCode)
+                 SOFT386_EXCEPTIONS ExceptionCode)
 {
     /* Call the internal function */
     Soft386ExceptionWithErrorCode(State, ExceptionCode, 0);

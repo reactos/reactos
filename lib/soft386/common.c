@@ -20,8 +20,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static
-inline
+static inline
 ULONG
 Soft386GetPageTableEntry(PSOFT386_STATE State,
                          ULONG VirtualAddress)
@@ -434,7 +433,7 @@ Soft386InterruptInternal(PSOFT386_STATE State,
 VOID
 FASTCALL
 Soft386ExceptionWithErrorCode(PSOFT386_STATE State,
-                              INT ExceptionCode,
+                              SOFT386_EXCEPTIONS ExceptionCode,
                               ULONG ErrorCode)
 {
     SOFT386_IDT_ENTRY IdtEntry;
