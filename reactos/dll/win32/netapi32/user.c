@@ -2350,7 +2350,7 @@ NetUserDel(LPCWSTR servername,
         {
             ERR("OpenUserByName failed (ApiStatus %lu)\n", ApiStatus);
             if (ApiStatus == ERROR_NONE_MAPPED)
-                ApiStatus = NERR_GroupNotFound;
+                ApiStatus = NERR_UserNotFound;
             goto done;
         }
     }
