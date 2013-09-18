@@ -1375,7 +1375,7 @@ NetLocalGroupGetMembers(
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    TRACE("(%s %s %d %p %d, %p %p %p)\n", debugstr_w(servername),
+    TRACE("(%s %s %d %p %d %p %p %p)\n", debugstr_w(servername),
           debugstr_w(localgroupname), level, bufptr, prefmaxlen, entriesread,
           totalentries, resumehandle);
 
@@ -1659,7 +1659,7 @@ NetLocalGroupGetMembers(
 
                 if (EnumContext->Names[i].DomainIndex >= 0)
                 {
-                    memcpy(MembersInfo2->lgrmi2_domainandname,
+                    memcpy(MembersInfo3->lgrmi3_domainandname,
                            EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Buffer,
                            EnumContext->Domains->Domains[EnumContext->Names[i].DomainIndex].Name.Length);
 
