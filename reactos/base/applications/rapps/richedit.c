@@ -25,7 +25,7 @@ RichEditOnLink(HWND hwnd, ENLINK *Link)
             pLink = (PWSTR) HeapAlloc(GetProcessHeap(),
                                       0,
                                       (max(Link->chrg.cpMin, Link->chrg.cpMax) -
-                                       min(Link->chrg.cpMin, Link->chrg.cpMax))*sizeof(WCHAR));
+                                       min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));
             if (!pLink)
             {
                 /* TODO: Error message */
