@@ -2692,7 +2692,10 @@ NetUserGetGroups(LPCWSTR servername,
     if (!NT_SUCCESS(Status))
     {
         ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
+        if (Status == STATUS_NONE_MAPPED)
+            ApiStatus = NERR_UserNotFound;
+        else
+            ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
 
@@ -2846,7 +2849,10 @@ NetUserGetInfo(LPCWSTR servername,
     if (!NT_SUCCESS(Status))
     {
         ERR("SamOpenDomain failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
+        if (Status == STATUS_NONE_MAPPED)
+            ApiStatus = NERR_UserNotFound;
+        else
+            ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
 
@@ -3029,7 +3035,10 @@ NetUserGetLocalGroups(LPCWSTR servername,
     if (!NT_SUCCESS(Status))
     {
         ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
+        if (Status == STATUS_NONE_MAPPED)
+            ApiStatus = NERR_UserNotFound;
+        else
+            ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
 

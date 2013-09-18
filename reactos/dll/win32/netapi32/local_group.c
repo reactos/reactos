@@ -468,7 +468,12 @@ NetLocalGroupAdd(
 
 done:
     if (AliasHandle != NULL)
-        SamCloseHandle(AliasHandle);
+    {
+        if (ApiStatus != NERR_Success)
+            SamDeleteAlias(AliasHandle);
+        else
+            SamCloseHandle(AliasHandle);
+    }
 
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
