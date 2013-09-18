@@ -4208,10 +4208,47 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeEnter)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeLeave)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xC9);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (Size)
+    {
+        /* Set the stack pointer (ESP) to the base pointer (EBP) */
+        State->GeneralRegs[SOFT386_REG_ESP].Long = State->GeneralRegs[SOFT386_REG_EBP].Long;
+
+        /* Pop the saved base pointer from the stack */
+        return Soft386StackPop(State, &State->GeneralRegs[SOFT386_REG_EBP].Long);
+    }
+    else
+    {
+        ULONG Value;
+
+        /* Set the stack pointer (SP) to the base pointer (BP) */
+        State->GeneralRegs[SOFT386_REG_ESP].LowWord = State->GeneralRegs[SOFT386_REG_EBP].LowWord;
+
+        /* Pop the saved base pointer from the stack */
+        if (Soft386StackPop(State, &Value))
+        {
+            State->GeneralRegs[SOFT386_REG_EBP].LowWord = LOWORD(Value);
+            return TRUE;
+        }
+        else return FALSE;
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeRetFarImm)
