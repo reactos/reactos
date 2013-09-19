@@ -55,6 +55,7 @@
 
 DEFINE_EXPECT(IsSystemMoniker);
 DEFINE_EXPECT(BindToStorage);
+DEFINE_EXPECT(BindToObject);
 DEFINE_EXPECT(GetDisplayName);
 
 DEFINE_EXPECT(ComposeWith);
@@ -64,6 +65,19 @@ DEFINE_EXPECT(Reduce);
 
 DEFINE_EXPECT(GetClassID);
 DEFINE_EXPECT(Save);
+
+DEFINE_EXPECT(HBC_QueryInterface_IHlinkHistory);
+DEFINE_EXPECT(HBC_GetObject);
+DEFINE_EXPECT(HBC_UpdateHlink);
+
+DEFINE_EXPECT(HT_SetBrowseContext);
+DEFINE_EXPECT(HT_GetBrowseContext);
+DEFINE_EXPECT(HT_Navigate);
+DEFINE_EXPECT(HT_GetFriendlyName);
+
+DEFINE_EXPECT(HLF_UpdateHlink);
+
+DEFINE_GUID(IID_IHlinkHistory,0x79eac9c8,0xbaf9,0x11ce,0x8c,0x82,0x00,0xaa,0x00,0x4b,0xa9,0x0b);
 
 static const char *debugstr_guid(REFIID riid)
 {
@@ -796,6 +810,229 @@ static IBindStatusCallbackVtbl BindStatusCallbackVtbl = {
 
 static IBindStatusCallback BindStatusCallback = { &BindStatusCallbackVtbl };
 
+static HRESULT WINAPI HlinkBrowseContext_QueryInterface(
+        IHlinkBrowseContext *iface, REFIID riid, void **ppv)
+{
+    *ppv = NULL;
+
+    if(IsEqualGUID(&IID_IHlinkHistory, riid)) {
+        CHECK_EXPECT(HBC_QueryInterface_IHlinkHistory);
+        return E_NOINTERFACE;
+    }
+
+    ok(0, "unexpected interface: %s\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI HlinkBrowseContext_AddRef(IHlinkBrowseContext *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI HlinkBrowseContext_Release(IHlinkBrowseContext *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_Register(IHlinkBrowseContext *iface,
+        DWORD reserved, IUnknown *piunk, IMoniker *pimk, DWORD *pdwRegister)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static IMoniker Moniker;
+static HRESULT WINAPI HlinkBrowseContext_GetObject(IHlinkBrowseContext *iface,
+        IMoniker *pimk, BOOL fBindIfRootRegistered, IUnknown **ppiunk)
+{
+    CHECK_EXPECT(HBC_GetObject);
+
+    ok(pimk == &Moniker, "pimk != &Moniker\n");
+    ok(fBindIfRootRegistered == 1, "fBindIfRootRegistered = %x\n", fBindIfRootRegistered);
+    *ppiunk = NULL;
+    return S_FALSE;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_Revoke(IHlinkBrowseContext *iface, DWORD dwRegister)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_SetBrowseWindowInfo(
+        IHlinkBrowseContext *iface, HLBWINFO *phlbwi)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_GetBrowseWindowInfo(
+        IHlinkBrowseContext *iface, HLBWINFO *phlbwi)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_SetInitialHlink(IHlinkBrowseContext *iface,
+        IMoniker *pimkTarget, LPCWSTR pwzLocation, LPCWSTR pwzFriendlyName)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_OnNavigateHlink(IHlinkBrowseContext *iface, DWORD grfHLNF,
+        IMoniker *pimkTarget, LPCWSTR pwzLocation, LPCWSTR pwzFriendlyName, ULONG *puHLID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_UpdateHlink(IHlinkBrowseContext *iface, ULONG uHLID,
+        IMoniker *pimkTarget, LPCWSTR location, LPCWSTR friendly_name)
+{
+    CHECK_EXPECT(HBC_UpdateHlink);
+    return S_OK;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_EnumNavigationStack(IHlinkBrowseContext *iface,
+        DWORD dwReserved, DWORD grfHLFNAMEF, IEnumHLITEM **ppienumhlitem)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_QueryHlink(IHlinkBrowseContext *iface,
+        DWORD grfHLQF, ULONG uHLID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_GetHlink(IHlinkBrowseContext *iface,
+        ULONG uHLID, IHlink **ppihl)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_SetCurrentHlink(
+        IHlinkBrowseContext *iface, ULONG uHLID)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_Clone(IHlinkBrowseContext *iface,
+        IUnknown *piunkOuter, REFIID riid, IUnknown **ppiunkObj)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkBrowseContext_Close(IHlinkBrowseContext *iface, DWORD reserved)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static IHlinkBrowseContextVtbl HlinkBrowseContextVtbl = {
+    HlinkBrowseContext_QueryInterface,
+    HlinkBrowseContext_AddRef,
+    HlinkBrowseContext_Release,
+    HlinkBrowseContext_Register,
+    HlinkBrowseContext_GetObject,
+    HlinkBrowseContext_Revoke,
+    HlinkBrowseContext_SetBrowseWindowInfo,
+    HlinkBrowseContext_GetBrowseWindowInfo,
+    HlinkBrowseContext_SetInitialHlink,
+    HlinkBrowseContext_OnNavigateHlink,
+    HlinkBrowseContext_UpdateHlink,
+    HlinkBrowseContext_EnumNavigationStack,
+    HlinkBrowseContext_QueryHlink,
+    HlinkBrowseContext_GetHlink,
+    HlinkBrowseContext_SetCurrentHlink,
+    HlinkBrowseContext_Clone,
+    HlinkBrowseContext_Close
+};
+
+static IHlinkBrowseContext HlinkBrowseContext = { &HlinkBrowseContextVtbl };
+
+static HRESULT WINAPI HlinkTarget_QueryInterface(IHlinkTarget *iface, REFIID riid, void **ppv)
+{
+    if(IsEqualGUID(&IID_IHlinkTarget, riid)) {
+        *ppv = iface;
+        return S_OK;
+    }
+
+    ok(0, "unexpected interface: %s\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI HlinkTarget_AddRef(IHlinkTarget *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI HlinkTarget_Release(IHlinkTarget *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI HlinkTarget_SetBrowseContext(IHlinkTarget *iface,
+        IHlinkBrowseContext *pihlbc)
+{
+    CHECK_EXPECT(HT_SetBrowseContext);
+
+    ok(pihlbc == &HlinkBrowseContext, "pihlbc != &HlinkBrowseContext (%p)\n", pihlbc);
+    return S_OK;
+}
+
+static HRESULT WINAPI HlinkTarget_GetBrowseContext(IHlinkTarget *iface,
+        IHlinkBrowseContext **ppihlbc)
+{
+    CHECK_EXPECT(HT_GetBrowseContext);
+
+    *ppihlbc = NULL;
+    return S_OK;
+}
+
+static HRESULT WINAPI HlinkTarget_Navigate(IHlinkTarget *iface,
+        DWORD grfHLNF, LPCWSTR pwzJumpLocation)
+{
+    CHECK_EXPECT(HT_Navigate);
+
+    ok(grfHLNF == 0, "grfHLNF = %x\n", grfHLNF);
+    ok(pwzJumpLocation == NULL, "pwzJumpLocation = %s\n", wine_dbgstr_w(pwzJumpLocation));
+    return S_OK;
+}
+
+static HRESULT WINAPI HlinkTarget_GetMoniker(IHlinkTarget *iface,
+        LPCWSTR pwzLocation, DWORD dwAssign, IMoniker **ppimkLocation)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HlinkTarget_GetFriendlyName(IHlinkTarget *iface,
+        LPCWSTR pwzLocation, LPWSTR *ppwzFriendlyName)
+{
+    CHECK_EXPECT(HT_GetFriendlyName);
+    return E_NOTIMPL;
+}
+
+static IHlinkTargetVtbl HlinkTargetVtbl = {
+    HlinkTarget_QueryInterface,
+    HlinkTarget_AddRef,
+    HlinkTarget_Release,
+    HlinkTarget_SetBrowseContext,
+    HlinkTarget_GetBrowseContext,
+    HlinkTarget_Navigate,
+    HlinkTarget_GetMoniker,
+    HlinkTarget_GetFriendlyName
+};
+
+static IHlinkTarget HlinkTarget = { &HlinkTargetVtbl };
+
 static HRESULT WINAPI Moniker_QueryInterface(IMoniker *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
@@ -845,11 +1082,19 @@ static HRESULT WINAPI Moniker_GetSizeMax(IMoniker *iface, ULARGE_INTEGER *pcbSiz
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI Moniker_BindToObject(IMoniker *iface, IBindCtx *pcb, IMoniker *pmkToLeft,
-        REFIID riidResult, void **ppvResult)
+static HRESULT WINAPI Moniker_BindToObject(IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft,
+        REFIID riid, void **ppv)
 {
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
+    CHECK_EXPECT(BindToObject);
+
+    ok(pbc != _bctx, "pbc != _bctx\n");
+    ok(pmkToLeft == NULL, "pmkToLeft = %p\n", pmkToLeft);
+    ok(IsEqualGUID(&IID_IUnknown, riid), "unexpected riid %s\n", debugstr_guid(riid));
+    ok(ppv != NULL, "ppv == NULL\n");
+    ok(*ppv == NULL, "*ppv = %p\n", *ppv);
+
+    *ppv = &HlinkTarget;
+    return S_OK;
 }
 
 static HRESULT WINAPI Moniker_BindToStorage(IMoniker *iface, IBindCtx *pbc, IMoniker *pmkToLeft,
@@ -950,7 +1195,7 @@ static HRESULT WINAPI Moniker_GetDisplayName(IMoniker *iface, IBindCtx *pbc,
             {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g',
 	     '/','s','i','t','e','/','a','b','o','u','t',0};
 
-    CHECK_EXPECT(GetDisplayName);
+    CHECK_EXPECT2(GetDisplayName);
 
     ok(pbc != NULL, "pbc == NULL\n");
     ok(pbc != _bctx, "pbc == _bctx\n");
@@ -1902,6 +2147,142 @@ static void test_StdHlink(void)
     IHlink_Release(hlink);
 }
 
+static void test_Hlink_Navigate(void)
+{
+    IHlink *hlink;
+    IBindCtx *pbc;
+    HRESULT hres;
+
+    hres = CreateBindCtx(0, &pbc);
+    ok(hres == S_OK, "CreateBindCtx failed: %08x\n", hres);
+    _bctx = pbc;
+
+    SET_EXPECT(Reduce);
+    SET_EXPECT(Enum);
+    SET_EXPECT(IsSystemMoniker);
+    SET_EXPECT(GetDisplayName);
+    hres = HlinkCreateFromMoniker(&Moniker, NULL, NULL, NULL,
+            0, NULL, &IID_IHlink, (void**)&hlink);
+    ok(hres == S_OK, "HlinkCreateFromMoniker failed: %08x\n", hres);
+    todo_wine CHECK_CALLED(Reduce);
+    todo_wine CHECK_CALLED(Enum);
+    todo_wine CHECK_CALLED(IsSystemMoniker);
+    CHECK_CALLED(GetDisplayName);
+
+    SET_EXPECT(IsSystemMoniker);
+    SET_EXPECT(GetDisplayName);
+    SET_EXPECT(HBC_GetObject);
+    SET_EXPECT(Reduce);
+    SET_EXPECT(BindToObject);
+    SET_EXPECT(HT_GetBrowseContext);
+    SET_EXPECT(HT_SetBrowseContext);
+    SET_EXPECT(HBC_QueryInterface_IHlinkHistory);
+    SET_EXPECT(HT_Navigate);
+    SET_EXPECT(HT_GetFriendlyName);
+    hres = IHlink_Navigate(hlink, 0, pbc, NULL, &HlinkBrowseContext);
+    ok(hres == S_OK, "Navigate failed: %08x\n", hres);
+    CHECK_CALLED(IsSystemMoniker);
+    todo_wine CHECK_CALLED(GetDisplayName);
+    todo_wine CHECK_CALLED(HBC_GetObject);
+    todo_wine CHECK_CALLED(Reduce);
+    CHECK_CALLED(BindToObject);
+    todo_wine CHECK_CALLED(HT_GetBrowseContext);
+    CHECK_CALLED(HT_SetBrowseContext);
+    todo_wine CHECK_CALLED(HBC_QueryInterface_IHlinkHistory);
+    CHECK_CALLED(HT_Navigate);
+    todo_wine CHECK_CALLED(HT_GetFriendlyName);
+
+    IHlink_Release(hlink);
+    IBindCtx_Release(pbc);
+    _bctx = NULL;
+}
+
+static HRESULT WINAPI hlinkframe_QueryInterface(IHlinkFrame *iface, REFIID riid, void **obj)
+{
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IHlinkFrame))
+    {
+        *obj = iface;
+        return S_OK;
+    }
+
+    *obj = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI hlinkframe_AddRef(IHlinkFrame *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI hlinkframe_Release(IHlinkFrame *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI hlinkframe_SetBrowseContext(IHlinkFrame *iface, IHlinkBrowseContext *bc)
+{
+    ok(0, "unexpected %p\n", bc);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI hlinkframe_GetBrowseContext(IHlinkFrame *iface, IHlinkBrowseContext **bc)
+{
+    *bc = NULL;
+    ok(0, "unexpected %p\n", bc);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI hlinkframe_Navigate(IHlinkFrame *iface, DWORD grfHLNF, LPBC pbc, IBindStatusCallback *bsc, IHlink *navigate)
+{
+    ok(0, "unexpected\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI hlinkframe_OnNavigate(IHlinkFrame *iface, DWORD grfHLNF, IMoniker *target, LPCWSTR location, LPCWSTR friendly_name,
+    DWORD reserved)
+{
+    ok(0, "unexpected\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI hlinkframe_UpdateHlink(IHlinkFrame *iface, ULONG uHLID, IMoniker *target, LPCWSTR location, LPCWSTR friendly_name)
+{
+    CHECK_EXPECT(HLF_UpdateHlink);
+    return S_OK;
+}
+
+static IHlinkFrameVtbl hlinkframevtbl = {
+    hlinkframe_QueryInterface,
+    hlinkframe_AddRef,
+    hlinkframe_Release,
+    hlinkframe_SetBrowseContext,
+    hlinkframe_GetBrowseContext,
+    hlinkframe_Navigate,
+    hlinkframe_OnNavigate,
+    hlinkframe_UpdateHlink
+};
+
+static IHlinkFrame testframe = { &hlinkframevtbl };
+
+static void test_HlinkUpdateStackItem(void)
+{
+    static const WCHAR location[] = {'l','o','c','a','t','i','o','n',0};
+    HRESULT hr;
+
+    hr = HlinkUpdateStackItem(NULL, NULL, HLID_CURRENT, &Moniker, location, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    SET_EXPECT(HBC_UpdateHlink);
+    hr = HlinkUpdateStackItem(NULL, &HlinkBrowseContext, HLID_CURRENT, &Moniker, location, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    CHECK_CALLED(HBC_UpdateHlink);
+
+    SET_EXPECT(HLF_UpdateHlink);
+    hr = HlinkUpdateStackItem(&testframe, &HlinkBrowseContext, HLID_CURRENT, &Moniker, location, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    CHECK_CALLED(HLF_UpdateHlink);
+}
+
 START_TEST(hlink)
 {
     CoInitialize(NULL);
@@ -1920,6 +2301,8 @@ START_TEST(hlink)
     test_HlinkSite();
     test_HlinkClone();
     test_StdHlink();
+    test_Hlink_Navigate();
+    test_HlinkUpdateStackItem();
 
     CoUninitialize();
 }

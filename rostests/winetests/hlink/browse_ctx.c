@@ -50,6 +50,19 @@ static void test_SetInitialHlink(void)
     hres = IHlinkBrowseContext_SetInitialHlink(bc, dummy, one, NULL);
     ok(hres == S_OK, "SetInitialHlink failed: 0x%08x\n", hres);
 
+    hres = IHlinkBrowseContext_SetInitialHlink(bc, dummy, one, NULL);
+    ok(hres == CO_E_ALREADYINITIALIZED, "got 0x%08x\n", hres);
+
+    hres = IHlinkBrowseContext_SetInitialHlink(bc, dummy, five, NULL);
+    ok(hres == CO_E_ALREADYINITIALIZED, "got 0x%08x\n", hres);
+
+    /* there's only one */
+    hres = IHlinkBrowseContext_GetHlink(bc, HLID_PREVIOUS, &found_hlink);
+    ok(hres == E_FAIL, "got 0x%08x\n", hres);
+
+    hres = IHlinkBrowseContext_GetHlink(bc, HLID_NEXT, &found_hlink);
+    ok(hres == E_FAIL, "got 0x%08x\n", hres);
+
     hres = IHlinkBrowseContext_GetHlink(bc, HLID_CURRENT, &found_hlink);
     ok(hres == S_OK, "GetHlink failed: 0x%08x\n", hres);
 
