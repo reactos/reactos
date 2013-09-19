@@ -13,6 +13,61 @@
 HINSTANCE hInst = 0;
 HWND hTabCtrlWnd;
 
+////////////////////////////////////////////////////////////////////////////////
+// Taken from WinSpy++ 1.7
+// http://www.catch22.net/software/winspy
+// Copyright (c) 2002 by J Brown
+//
+ 
+//
+//	Copied from uxtheme.h
+//  If you have this new header, then delete these and
+//  #include <uxtheme.h> instead!
+//
+#define ETDT_DISABLE        0x00000001
+#define ETDT_ENABLE         0x00000002
+#define ETDT_USETABTEXTURE  0x00000004
+#define ETDT_ENABLETAB      (ETDT_ENABLE  | ETDT_USETABTEXTURE)
+
+// 
+typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
+
+//
+//	Try to call EnableThemeDialogTexture, if uxtheme.dll is present
+//
+BOOL EnableDialogTheme(HWND hwnd)
+{
+    HMODULE hUXTheme;
+    ETDTProc fnEnableThemeDialogTexture;
+
+    hUXTheme = LoadLibraryA("uxtheme.dll");
+
+    if(hUXTheme)
+    {
+        fnEnableThemeDialogTexture = 
+            (ETDTProc)GetProcAddress(hUXTheme, "EnableThemeDialogTexture");
+
+        if(fnEnableThemeDialogTexture)
+        {
+            fnEnableThemeDialogTexture(hwnd, ETDT_ENABLETAB);
+
+            FreeLibrary(hUXTheme);
+            return TRUE;
+        }
+        else
+        {
+            // Failed to locate API!
+            FreeLibrary(hUXTheme);
+            return FALSE;
+        }
+    }
+    else
+    {
+        // Not running under XP? Just fail gracefully
+        return FALSE;
+    }
+}
+
 //---------------------------------------------------------------
 VOID
 DestroyTabCtrlDialogs(PDXDIAG_CONTEXT pContext)
@@ -119,11 +174,11 @@ InitializeTabCtrl(HWND hwndDlg, PDXDIAG_CONTEXT pContext)
     pContext->hTabCtrl = hTabCtrlWnd;
 
     /* create the dialogs */
-    pContext->hDialogs[0] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SYSTEM_DIALOG), pContext->hMainDialog, SystemPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), pContext->hMainDialog, MusicPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), pContext->hMainDialog, InputPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), pContext->hMainDialog, NetworkPageWndProc, (LPARAM)pContext);
-    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), pContext->hMainDialog, HelpPageWndProc, (LPARAM)pContext);
+    pContext->hDialogs[0] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_SYSTEM_DIALOG), pContext->hMainDialog, SystemPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[0]);
+    pContext->hDialogs[1] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_MUSIC_DIALOG), pContext->hMainDialog, MusicPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[1]);
+    pContext->hDialogs[2] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_INPUT_DIALOG), pContext->hMainDialog, InputPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[2]);
+    pContext->hDialogs[3] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_NETWORK_DIALOG), pContext->hMainDialog, NetworkPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[3]);
+    pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), pContext->hMainDialog, HelpPageWndProc, (LPARAM)pContext); EnableDialogTheme(pContext->hDialogs[4]);
 
     /* insert tab ctrl items */
     InsertTabCtrlItem(hTabCtrlWnd, 0, MAKEINTRESOURCEW(IDS_SYSTEM_DIALOG));
