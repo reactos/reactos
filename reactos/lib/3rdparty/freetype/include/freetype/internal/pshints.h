@@ -6,7 +6,7 @@
 /*    recorders (specification only).  These are used to support native    */
 /*    T1/T2 hints in the `type1', `cid', and `cff' font drivers.           */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2005, 2006, 2007, 2009 by                  */
+/*  Copyright 2001-2003, 2005-2007, 2009, 2012 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -679,30 +679,40 @@ FT_BEGIN_HEADER
 
   typedef PSHinter_Interface*  PSHinter_Service;
 
+
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_PSHINTER_INTERFACE(class_, get_globals_funcs_,             \
-                                     get_t1_funcs_, get_t2_funcs_)           \
-  static const PSHinter_Interface class_ =                                   \
-  {                                                                          \
-    get_globals_funcs_, get_t1_funcs_, get_t2_funcs_                         \
+#define FT_DEFINE_PSHINTER_INTERFACE(        \
+          class_,                            \
+          get_globals_funcs_,                \
+          get_t1_funcs_,                     \
+          get_t2_funcs_ )                    \
+  static const PSHinter_Interface  class_ =  \
+  {                                          \
+    get_globals_funcs_,                      \
+    get_t1_funcs_,                           \
+    get_t2_funcs_                            \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_PSHINTER_INTERFACE(class_, get_globals_funcs_,             \
-                                     get_t1_funcs_, get_t2_funcs_)           \
-  void                                                                       \
-  FT_Init_Class_##class_( FT_Library library,                                \
-                          PSHinter_Interface*  clazz)                        \
-  {                                                                          \
-    FT_UNUSED(library);                                                      \
-    clazz->get_globals_funcs = get_globals_funcs_;                           \
-    clazz->get_t1_funcs = get_t1_funcs_;                                     \
-    clazz->get_t2_funcs = get_t2_funcs_;                                     \
-  } 
+#define FT_DEFINE_PSHINTER_INTERFACE(                      \
+          class_,                                          \
+          get_globals_funcs_,                              \
+          get_t1_funcs_,                                   \
+          get_t2_funcs_ )                                  \
+  void                                                     \
+  FT_Init_Class_ ## class_( FT_Library           library,  \
+                            PSHinter_Interface*  clazz )   \
+  {                                                        \
+    FT_UNUSED( library );                                  \
+                                                           \
+    clazz->get_globals_funcs = get_globals_funcs_;         \
+    clazz->get_t1_funcs      = get_t1_funcs_;              \
+    clazz->get_t2_funcs      = get_t2_funcs_;              \
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
 FT_END_HEADER
 

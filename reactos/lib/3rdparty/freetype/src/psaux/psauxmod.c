@@ -123,7 +123,7 @@
   const FT_Module_Class  psaux_module_class =
   {
     0,
-    sizeof( FT_ModuleRec ),
+    sizeof ( FT_ModuleRec ),
     "psaux",
     0x20000L,
     0x20000L,

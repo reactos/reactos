@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    SFNT object management (base).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010 by */
+/*  Copyright 1996-2008, 2010-2013 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -64,13 +64,17 @@
     for ( n = 0; n < len; n++ )
     {
       code = FT_NEXT_USHORT( read );
+
+      if ( code == 0 )
+        break;
+
       if ( code < 32 || code > 127 )
         code = '?';
 
       string[n] = (char)code;
     }
 
-    string[len] = 0;
+    string[n] = 0;
 
     return string;
   }
@@ -95,13 +99,17 @@
     for ( n = 0; n < len; n++ )
     {
       code = *read++;
+
+      if ( code == 0 )
+        break;
+
       if ( code < 32 || code > 127 )
         code = '?';
 
       string[n] = (char)code;
     }
 
-    string[len] = 0;
+    string[n] = 0;
 
     return string;
   }
@@ -137,7 +145,7 @@
                     FT_String**  name )
   {
     FT_Memory         memory = face->root.memory;
-    FT_Error          error  = SFNT_Err_Ok;
+    FT_Error          error  = FT_Err_Ok;
     FT_String*        result = NULL;
     FT_UShort         n;
     TT_NameEntryRec*  rec;
@@ -356,7 +364,7 @@
 
       FT_FRAME_START( 8 ),
         FT_FRAME_LONG( version ),
-        FT_FRAME_LONG( count   ),
+        FT_FRAME_LONG( count   ),  /* this is ULong in the specs */
       FT_FRAME_END
     };
 
@@ -376,7 +384,10 @@
          tag != TTAG_true    &&
          tag != TTAG_typ1    &&
          tag != 0x00020000UL )
-      return SFNT_Err_Unknown_File_Format;
+    {
+      FT_TRACE2(( "  not a font using the SFNT container format\n" ));
+      return FT_THROW( Unknown_File_Format );
+    }
 
     face->ttc_header.tag = TTAG_ttcf;
 
@@ -389,6 +400,17 @@
 
       if ( FT_STREAM_READ_FIELDS( ttc_header_fields, &face->ttc_header ) )
         return error;
+
+      if ( face->ttc_header.count == 0 )
+        return FT_THROW( Invalid_Table );
+
+      /* a rough size estimate: let's conservatively assume that there   */
+      /* is just a single table info in each subfont header (12 + 16*1 = */
+      /* 28 bytes), thus we have (at least) `12 + 4*count' bytes for the */
+      /* size of the TTC header plus `28*count' bytes for all subfont    */
+      /* headers                                                         */
+      if ( (FT_ULong)face->ttc_header.count > stream->size / ( 28 + 4 ) )
+        return FT_THROW( Array_Too_Large );
 
       /* now read the offsets of each font in the file */
       if ( FT_NEW_ARRAY( face->ttc_header.offsets, face->ttc_header.count ) )
@@ -441,13 +463,18 @@
     {
       sfnt = (SFNT_Service)FT_Get_Module_Interface( library, "sfnt" );
       if ( !sfnt )
-        return SFNT_Err_Invalid_File_Format;
+      {
+        FT_ERROR(( "sfnt_init_face: cannot access `sfnt' module\n" ));
+        return FT_THROW( Missing_Module );
+      }
 
       face->sfnt       = sfnt;
       face->goto_table = sfnt->goto_table;
     }
 
     FT_FACE_FIND_GLOBAL_SERVICE( face, face->psnames, POSTSCRIPT_CMAPS );
+
+    FT_TRACE2(( "SFNT driver\n" ));
 
     error = sfnt_open_font( stream, face );
     if ( error )
@@ -459,7 +486,7 @@
       face_index = 0;
 
     if ( face_index >= face->ttc_header.count )
-      return SFNT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( FT_STREAM_SEEK( face->ttc_header.offsets[face_index] ) )
       return error;
@@ -476,42 +503,42 @@
   }
 
 
-#define LOAD_( x )                                            \
-  do {                                                        \
-    FT_TRACE2(( "`" #x "' " ));                               \
-    FT_TRACE3(( "-->\n" ));                                   \
-                                                              \
-    error = sfnt->load_##x( face, stream );                   \
-                                                              \
-    FT_TRACE2(( "%s\n", ( !error )                            \
-                        ? "loaded"                            \
-                        : ( error == SFNT_Err_Table_Missing ) \
-                          ? "missing"                         \
-                          : "failed to load" ));              \
-    FT_TRACE3(( "\n" ));                                      \
+#define LOAD_( x )                                          \
+  do {                                                      \
+    FT_TRACE2(( "`" #x "' " ));                             \
+    FT_TRACE3(( "-->\n" ));                                 \
+                                                            \
+    error = sfnt->load_ ## x( face, stream );               \
+                                                            \
+    FT_TRACE2(( "%s\n", ( !error )                          \
+                        ? "loaded"                          \
+                        : FT_ERR_EQ( error, Table_Missing ) \
+                          ? "missing"                       \
+                          : "failed to load" ));            \
+    FT_TRACE3(( "\n" ));                                    \
   } while ( 0 )
 
-#define LOADM_( x, vertical )                                 \
-  do {                                                        \
-    FT_TRACE2(( "`%s" #x "' ",                                \
-                vertical ? "vertical " : "" ));               \
-    FT_TRACE3(( "-->\n" ));                                   \
-                                                              \
-    error = sfnt->load_##x( face, stream, vertical );         \
-                                                              \
-    FT_TRACE2(( "%s\n", ( !error )                            \
-                        ? "loaded"                            \
-                        : ( error == SFNT_Err_Table_Missing ) \
-                          ? "missing"                         \
-                          : "failed to load" ));              \
-    FT_TRACE3(( "\n" ));                                      \
+#define LOADM_( x, vertical )                               \
+  do {                                                      \
+    FT_TRACE2(( "`%s" #x "' ",                              \
+                vertical ? "vertical " : "" ));             \
+    FT_TRACE3(( "-->\n" ));                                 \
+                                                            \
+    error = sfnt->load_ ## x( face, stream, vertical );     \
+                                                            \
+    FT_TRACE2(( "%s\n", ( !error )                          \
+                        ? "loaded"                          \
+                        : FT_ERR_EQ( error, Table_Missing ) \
+                          ? "missing"                       \
+                          : "failed to load" ));            \
+    FT_TRACE3(( "\n" ));                                    \
   } while ( 0 )
 
-#define GET_NAME( id, field )                                 \
-  do {                                                        \
-    error = tt_face_get_name( face, TT_NAME_ID_##id, field ); \
-    if ( error )                                              \
-      goto Exit;                                              \
+#define GET_NAME( id, field )                                   \
+  do {                                                          \
+    error = tt_face_get_name( face, TT_NAME_ID_ ## id, field ); \
+    if ( error )                                                \
+      goto Exit;                                                \
   } while ( 0 )
 
 
@@ -528,15 +555,16 @@
 #endif
     FT_Bool       has_outline;
     FT_Bool       is_apple_sbit;
-    FT_Bool       ignore_preferred_family = FALSE;
+    FT_Bool       ignore_preferred_family    = FALSE;
     FT_Bool       ignore_preferred_subfamily = FALSE;
 
     SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
 
     FT_UNUSED( face_index );
 
+
     /* Check parameters */
-    
+
     {
       FT_Int  i;
 
@@ -571,12 +599,12 @@
 
     /* do we have outlines in there? */
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-    has_outline   = FT_BOOL( face->root.internal->incremental_interface != 0 ||
-                             tt_face_lookup_table( face, TTAG_glyf )    != 0 ||
-                             tt_face_lookup_table( face, TTAG_CFF )     != 0 );
+    has_outline = FT_BOOL( face->root.internal->incremental_interface != 0 ||
+                           tt_face_lookup_table( face, TTAG_glyf )    != 0 ||
+                           tt_face_lookup_table( face, TTAG_CFF )     != 0 );
 #else
-    has_outline   = FT_BOOL( tt_face_lookup_table( face, TTAG_glyf ) != 0 ||
-                             tt_face_lookup_table( face, TTAG_CFF )  != 0 );
+    has_outline = FT_BOOL( tt_face_lookup_table( face, TTAG_glyf ) != 0 ||
+                           tt_face_lookup_table( face, TTAG_CFF )  != 0 );
 #endif
 
     is_apple_sbit = 0;
@@ -600,7 +628,7 @@
 
     if ( face->header.Units_Per_EM == 0 )
     {
-      error = SFNT_Err_Invalid_Table;
+      error = FT_THROW( Invalid_Table );
 
       goto Exit;
     }
@@ -628,9 +656,9 @@
       if ( !error )
       {
         LOADM_( hmtx, 0 );
-        if ( error == SFNT_Err_Table_Missing )
+        if ( FT_ERR_EQ( error, Table_Missing ) )
         {
-          error = SFNT_Err_Hmtx_Table_Missing;
+          error = FT_THROW( Hmtx_Table_Missing );
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
           /* If this is an incrementally loaded font and there are */
@@ -640,23 +668,24 @@
                  get_glyph_metrics                                 )
           {
             face->horizontal.number_Of_HMetrics = 0;
-            error = SFNT_Err_Ok;
+            error                               = FT_Err_Ok;
           }
 #endif
         }
       }
-      else if ( error == SFNT_Err_Table_Missing )
+      else if ( FT_ERR_EQ( error, Table_Missing ) )
       {
         /* No `hhea' table necessary for SFNT Mac fonts. */
         if ( face->format_tag == TTAG_true )
         {
           FT_TRACE2(( "This is an SFNT Mac font.\n" ));
+
           has_outline = 0;
-          error = SFNT_Err_Ok;
+          error       = FT_Err_Ok;
         }
         else
         {
-          error = SFNT_Err_Horiz_Header_Missing;
+          error = FT_THROW( Horiz_Header_Missing );
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
           /* If this is an incrementally loaded font and there are */
@@ -666,7 +695,7 @@
                  get_glyph_metrics                                 )
           {
             face->horizontal.number_Of_HMetrics = 0;
-            error = SFNT_Err_Ok;
+            error                               = FT_Err_Ok;
           }
 #endif
 
@@ -685,7 +714,7 @@
           face->vertical_info = 1;
       }
 
-      if ( error && error != SFNT_Err_Table_Missing )
+      if ( error && FT_ERR_NEQ( error, Table_Missing ) )
         goto Exit;
 
       LOAD_( os2 );
@@ -707,8 +736,8 @@
         /* a font which contains neither bitmaps nor outlines is */
         /* still valid (although rather useless in most cases);  */
         /* however, you can find such stripped fonts in PDFs     */
-        if ( error == SFNT_Err_Table_Missing )
-          error = SFNT_Err_Ok;
+        if ( FT_ERR_EQ( error, Table_Missing ) )
+          error = FT_Err_Ok;
         else
           goto Exit;
       }
@@ -717,7 +746,7 @@
     LOAD_( pclt );
     if ( error )
     {
-      if ( error != SFNT_Err_Table_Missing )
+      if ( FT_ERR_NEQ( error, Table_Missing ) )
         goto Exit;
 
       face->pclt.Version = 0;
@@ -783,7 +812,7 @@
                FT_FACE_FLAG_HORIZONTAL;   /* horizontal data   */
 
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-      if ( psnames_error == SFNT_Err_Ok               &&
+      if ( !psnames_error                             &&
            face->postscript.FormatType != 0x00030000L )
         flags |= FT_FACE_FLAG_GLYPH_NAMES;
 #endif
@@ -890,11 +919,7 @@
         FT_UInt  i, count;
 
 
-#ifndef FT_CONFIG_OPTION_OLD_INTERNALS
         count = face->sbit_num_strikes;
-#else
-        count = (FT_UInt)face->num_sbit_strikes;
-#endif
 
         if ( count > 0 )
         {
@@ -987,40 +1012,36 @@
         /*      table cannot be used to compute the text height reliably! */
         /*                                                                */
 
-        /* The ascender/descender/height are computed from the OS/2 table */
-        /* when found.  Otherwise, they're taken from the horizontal      */
-        /* header.                                                        */
-        /*                                                                */
+        /* The ascender and descender are taken from the `hhea' table. */
+        /* If zero, they are taken from the `OS/2' table.              */
 
         root->ascender  = face->horizontal.Ascender;
         root->descender = face->horizontal.Descender;
 
-        root->height    = (FT_Short)( root->ascender - root->descender +
-                                      face->horizontal.Line_Gap );
+        root->height = (FT_Short)( root->ascender - root->descender +
+                                   face->horizontal.Line_Gap );
 
-#if 0
-        /* if the line_gap is 0, we add an extra 15% to the text height --  */
-        /* this computation is based on various versions of Times New Roman */
-        if ( face->horizontal.Line_Gap == 0 )
-          root->height = (FT_Short)( ( root->height * 115 + 50 ) / 100 );
-#endif /* 0 */
-
-#if 0
-        /* some fonts have the OS/2 "sTypoAscender", "sTypoDescender" & */
-        /* "sTypoLineGap" fields set to 0, like ARIALNB.TTF             */
-        if ( face->os2.version != 0xFFFFU && root->ascender )
+        if ( !( root->ascender || root->descender ) )
         {
-          FT_Int  height;
+          if ( face->os2.version != 0xFFFFU )
+          {
+            if ( face->os2.sTypoAscender || face->os2.sTypoDescender )
+            {
+              root->ascender  = face->os2.sTypoAscender;
+              root->descender = face->os2.sTypoDescender;
 
+              root->height = (FT_Short)( root->ascender - root->descender +
+                                         face->os2.sTypoLineGap );
+            }
+            else
+            {
+              root->ascender  =  (FT_Short)face->os2.usWinAscent;
+              root->descender = -(FT_Short)face->os2.usWinDescent;
 
-          root->ascender  =  face->os2.sTypoAscender;
-          root->descender = -face->os2.sTypoDescender;
-
-          height = root->ascender + root->descender + face->os2.sTypoLineGap;
-          if ( height > root->height )
-            root->height = height;
+              root->height = (FT_UShort)( root->ascender - root->descender );
+            }
+          }
         }
-#endif /* 0 */
 
         root->max_advance_width  = face->horizontal.advance_Width_Max;
         root->max_advance_height = (FT_Short)( face->vertical_info
@@ -1099,7 +1120,6 @@
     }
 
     /* freeing the horizontal metrics */
-#ifndef FT_CONFIG_OPTION_OLD_INTERNALS
     {
       FT_Stream  stream = FT_FACE_STREAM( face );
 
@@ -1109,10 +1129,6 @@
       face->horz_metrics_size = 0;
       face->vert_metrics_size = 0;
     }
-#else
-    FT_FREE( face->horizontal.long_metrics );
-    FT_FREE( face->horizontal.short_metrics );
-#endif
 
     /* freeing the vertical ones, if any */
     if ( face->vertical_info )

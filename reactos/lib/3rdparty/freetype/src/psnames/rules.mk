@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2001, 2003 by
+# Copyright 1996-2000, 2001, 2003, 2011 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -25,14 +25,15 @@ PSNAMES_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(PSNAMES_DIR))
 
 # PSNames driver sources (i.e., C files)
 #
-PSNAMES_DRV_SRC := $(PSNAMES_DIR)/psmodule.c
+PSNAMES_DRV_SRC := $(PSNAMES_DIR)/psmodule.c \
+                   $(PSNAMES_DIR)/pspic.c
 
 
 # PSNames driver headers
 #
 PSNAMES_DRV_H := $(PSNAMES_DRV_SRC:%.c=%.h) \
-                 $(PSNAMES_DIR)/pstables.h  \
-                 $(PSNAMES_DIR)/psnamerr.h
+                 $(PSNAMES_DIR)/psnamerr.h  \
+                 $(PSNAMES_DIR)/pstables.h
 
 
 # PSNames driver object(s)

@@ -65,6 +65,22 @@
 #define  GXV_JUST_DATA( a )  GXV_TABLE_DATA( just, a )
 
 
+  /* GX just table does not define their subset of GID */
+  static void
+  gxv_just_check_max_gid( FT_UShort         gid,
+                          const FT_String*  msg_tag,
+                          GXV_Validator     valid )
+  {
+    if ( gid < valid->face->num_glyphs )
+      return;
+
+    GXV_TRACE(( "just table includes too large %s"
+                " GID=%d > %d (in maxp)\n",
+                msg_tag, gid, valid->face->num_glyphs ));
+    GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
+  }
+
+
   static void
   gxv_just_wdp_entry_validate( FT_Bytes       table,
                                FT_Bytes       limit,
@@ -72,24 +88,37 @@
   {
     FT_Bytes   p = table;
     FT_ULong   justClass;
+#ifdef GXV_LOAD_UNUSED_VARS
     FT_Fixed   beforeGrowLimit;
     FT_Fixed   beforeShrinkGrowLimit;
     FT_Fixed   afterGrowLimit;
     FT_Fixed   afterShrinkGrowLimit;
     FT_UShort  growFlags;
     FT_UShort  shrinkFlags;
+#endif
 
 
     GXV_LIMIT_CHECK( 4 + 4 + 4 + 4 + 4 + 2 + 2 );
     justClass             = FT_NEXT_ULONG( p );
+#ifndef GXV_LOAD_UNUSED_VARS
+    p += 4 + 4 + 4 + 4 + 2 + 2;
+#else
     beforeGrowLimit       = FT_NEXT_ULONG( p );
     beforeShrinkGrowLimit = FT_NEXT_ULONG( p );
     afterGrowLimit        = FT_NEXT_ULONG( p );
     afterShrinkGrowLimit  = FT_NEXT_ULONG( p );
     growFlags             = FT_NEXT_USHORT( p );
     shrinkFlags           = FT_NEXT_USHORT( p );
+#endif
 
-    /* TODO: decode flags for human readability */
+    /* According to Apple spec, only 7bits in justClass is used */
+    if ( ( justClass & 0xFFFFFF80 ) != 0 )
+    {
+      GXV_TRACE(( "just table includes non-zero value"
+                  " in unused justClass higher bits"
+                  " of WidthDeltaPair" ));
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
+    }
 
     valid->subtable_length = p - table;
   }
@@ -153,8 +182,9 @@
 
     FT_Fixed   lowerLimit;
     FT_Fixed   upperLimit;
-
+#ifdef GXV_LOAD_UNUSED_VARS
     FT_UShort  order;
+#endif
     FT_UShort  decomposedCount;
 
     FT_UInt    i;
@@ -163,8 +193,19 @@
     GXV_LIMIT_CHECK( 4 + 4 + 2 + 2 );
     lowerLimit      = FT_NEXT_ULONG( p );
     upperLimit      = FT_NEXT_ULONG( p );
+#ifdef GXV_LOAD_UNUSED_VARS
     order           = FT_NEXT_USHORT( p );
+#else
+    p += 2;
+#endif
     decomposedCount = FT_NEXT_USHORT( p );
+
+    if ( lowerLimit >= upperLimit )
+    {
+      GXV_TRACE(( "just table includes invalid range spec:"
+                  " lowerLimit(%d) > upperLimit(%d)\n"     ));
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
+    }
 
     for ( i = 0; i < decomposedCount; i++ )
     {
@@ -173,6 +214,7 @@
 
       GXV_LIMIT_CHECK( 2 );
       glyphs = FT_NEXT_USHORT( p );
+      gxv_just_check_max_gid( glyphs, "type0:glyphs", valid );
     }
 
     valid->subtable_length = p - table;
@@ -191,6 +233,8 @@
     GXV_LIMIT_CHECK( 2 );
     addGlyph = FT_NEXT_USHORT( p );
 
+    gxv_just_check_max_gid( addGlyph, "type1:addGlyph", valid );
+
     valid->subtable_length = p - table;
   }
 
@@ -201,15 +245,26 @@
                                         GXV_Validator  valid )
   {
     FT_Bytes   p = table;
+#ifdef GXV_LOAD_UNUSED_VARS
     FT_Fixed   substThreshhold; /* Apple misspelled "Threshhold" */
+#endif
     FT_UShort  addGlyph;
     FT_UShort  substGlyph;
 
 
     GXV_LIMIT_CHECK( 4 + 2 + 2 );
+#ifdef GXV_LOAD_UNUSED_VARS
     substThreshhold = FT_NEXT_ULONG( p );
+#else
+    p += 4;
+#endif
     addGlyph        = FT_NEXT_USHORT( p );
     substGlyph      = FT_NEXT_USHORT( p );
+
+    if ( addGlyph != 0xFFFF )
+      gxv_just_check_max_gid( addGlyph, "type2:addGlyph", valid );
+
+    gxv_just_check_max_gid( substGlyph, "type2:substGlyph", valid );
 
     valid->subtable_length = p - table;
   }
@@ -234,6 +289,21 @@
     maximumLimit   = FT_NEXT_ULONG( p );
 
     valid->subtable_length = p - table;
+
+    if ( variantsAxis != 0x64756374 ) /* 'duct' */
+      GXV_TRACE(( "variantsAxis 0x%08x is non default value",
+                   variantsAxis ));
+
+    if ( minimumLimit > noStretchValue )
+      GXV_TRACE(( "type4:minimumLimit 0x%08x > noStretchValue 0x%08x\n",
+                  minimumLimit, noStretchValue ));
+    else if ( noStretchValue > maximumLimit )
+      GXV_TRACE(( "type4:noStretchValue 0x%08x > maximumLimit 0x%08x\n",
+                  noStretchValue, maximumLimit ));
+    else if ( !IS_PARANOID_VALIDATION )
+      return;
+
+    FT_INVALID_DATA;
   }
 
 
@@ -250,6 +320,11 @@
     GXV_LIMIT_CHECK( 2 + 2 );
     flags = FT_NEXT_USHORT( p );
     glyph = FT_NEXT_USHORT( p );
+
+    if ( flags )
+      GXV_TRACE(( "type5: nonzero value 0x%04x in unused flags\n",
+                   flags ));
+    gxv_just_check_max_gid( glyph, "type5:glyph", valid );
 
     valid->subtable_length = p - table;
   }
@@ -273,6 +348,10 @@
     actionClass  = FT_NEXT_USHORT( p );
     actionType   = FT_NEXT_USHORT( p );
     actionLength = FT_NEXT_ULONG( p );
+
+    /* actionClass is related with justClass using 7bit only */
+    if ( ( actionClass & 0xFF80 ) != 0 )
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
 
     if ( actionType == 0 )
       gxv_just_actSubrecord_type0_validate( p, limit, valid );
@@ -389,10 +468,13 @@
     FT_Bytes                        limit,
     GXV_Validator                   valid )
   {
+#ifdef GXV_LOAD_UNUSED_VARS
+    /* TODO: validate markClass & currentClass */
     FT_UShort  setMark;
     FT_UShort  dontAdvance;
     FT_UShort  markClass;
     FT_UShort  currentClass;
+#endif
 
     FT_UNUSED( state );
     FT_UNUSED( glyphOffset_p );
@@ -400,13 +482,14 @@
     FT_UNUSED( limit );
     FT_UNUSED( valid );
 
-
+#ifndef GXV_LOAD_UNUSED_VARS
+    FT_UNUSED( flags );
+#else
     setMark      = (FT_UShort)( ( flags >> 15 ) & 1    );
     dontAdvance  = (FT_UShort)( ( flags >> 14 ) & 1    );
     markClass    = (FT_UShort)( ( flags >> 7  ) & 0x7F );
     currentClass = (FT_UShort)(   flags         & 0x7F );
-
-    /* TODO: validate markClass & currentClass */
+#endif
   }
 
 
@@ -428,9 +511,15 @@
     coverage        = FT_NEXT_USHORT( p );
     subFeatureFlags = FT_NEXT_ULONG( p );
 
-    GXV_TRACE(( "  justClassTable: coverage = 0x%04x (%s)",
-                coverage,
-                ( 0x4000 & coverage ) == 0 ? "ascending" : "descending" ));
+    GXV_TRACE(( "  justClassTable: coverage = 0x%04x (%s) ", coverage ));
+    if ( ( coverage & 0x4000 ) == 0  )
+      GXV_TRACE(( "ascending\n" ));
+    else
+      GXV_TRACE(( "descending\n" ));
+
+    if ( subFeatureFlags )
+      GXV_TRACE(( "  justClassTable: nonzero value (0x%08x)"
+                  " in unused subFeatureFlags\n", subFeatureFlags ));
 
     valid->statetable.optdata               = NULL;
     valid->statetable.optdata_load_func     = NULL;
@@ -557,7 +646,6 @@
   {
     FT_Bytes           p     = table;
     FT_Bytes           limit = 0;
-    FT_Offset          table_size;
 
     GXV_ValidatorRec   validrec;
     GXV_Validator      valid = &validrec;
@@ -582,7 +670,6 @@
     GXV_INIT;
 
     limit      = valid->root->limit;
-    table_size = limit - table;
 
     GXV_LIMIT_CHECK( 4 + 2 + 2 + 2 );
     version     = FT_NEXT_ULONG( p );

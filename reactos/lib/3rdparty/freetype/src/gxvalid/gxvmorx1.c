@@ -108,8 +108,10 @@
     FT_Bytes                        limit,
     GXV_Validator                   valid )
   {
+#ifdef GXV_LOAD_TRACE_VARS
     FT_UShort  setMark;
     FT_UShort  dontAdvance;
+#endif
     FT_UShort  reserved;
     FT_Short   markIndex;
     FT_Short   currentIndex;
@@ -122,8 +124,10 @@
     FT_UNUSED( limit );
 
 
+#ifdef GXV_LOAD_TRACE_VARS
     setMark      = (FT_UShort)( ( flags >> 15 ) & 1 );
     dontAdvance  = (FT_UShort)( ( flags >> 14 ) & 1 );
+#endif
 
     reserved = (FT_UShort)( flags & 0x3FFF );
 
@@ -136,8 +140,7 @@
     if ( 0 < reserved )
     {
       GXV_TRACE(( " non-zero bits found in reserved range\n" ));
-      if ( valid->root->level >= FT_VALIDATE_PARANOID )
-        FT_INVALID_DATA;
+      GXV_SET_ERR_IF_PARANOID( FT_INVALID_DATA );
     }
 
     GXV_TRACE(( "markIndex = %d, currentIndex = %d\n",

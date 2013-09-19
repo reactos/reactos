@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Some convenience conversions (body).                                 */
 /*                                                                         */
-/*  Copyright 2006, 2008, 2009 by                                          */
+/*  Copyright 2006, 2008, 2009, 2012-2013 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,9 +18,20 @@
 
 #include <ft2build.h>
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
+#include FT_INTERNAL_DEBUG_H
 
 #include "psconv.h"
 #include "psauxerr.h"
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
+  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
+  /* messages during execution.                                            */
+  /*                                                                       */
+#undef  FT_COMPONENT
+#define FT_COMPONENT  trace_psconv
 
 
   /* The following array is used by various functions to quickly convert */
@@ -69,18 +80,29 @@
 #endif /* 'A' == 193 */
 
 
-  FT_LOCAL_DEF( FT_Int )
+  FT_LOCAL_DEF( FT_Long )
   PS_Conv_Strtol( FT_Byte**  cursor,
                   FT_Byte*   limit,
-                  FT_Int     base )
+                  FT_Long    base )
   {
     FT_Byte*  p = *cursor;
-    FT_Int    num = 0;
-    FT_Bool   sign = 0;
+
+    FT_Long   num           = 0;
+    FT_Bool   sign          = 0;
+    FT_Bool   have_overflow = 0;
+
+    FT_Long   num_limit;
+    FT_Char   c_limit;
 
 
-    if ( p == limit || base < 2 || base > 36 )
+    if ( p >= limit )
+      goto Bad;
+
+    if ( base < 2 || base > 36 )
+    {
+      FT_TRACE4(( "!!!INVALID BASE:!!!" ));
       return 0;
+    }
 
     if ( *p == '-' || *p == '+' )
     {
@@ -88,8 +110,11 @@
 
       p++;
       if ( p == limit )
-        return 0;
+        goto Bad;
     }
+
+    num_limit = 0x7FFFFFFFL / base;
+    c_limit   = (FT_Char)( 0x7FFFFFFFL % base );
 
     for ( ; p < limit; p++ )
     {
@@ -104,11 +129,58 @@
       if ( c < 0 || c >= base )
         break;
 
-      num = num * base + c;
+      if ( num > num_limit || ( num == num_limit && c > c_limit ) )
+        have_overflow = 1;
+      else
+        num = num * base + c;
+    }
+
+    *cursor = p;
+
+    if ( have_overflow )
+    {
+      num = 0x7FFFFFFFL;
+      FT_TRACE4(( "!!!OVERFLOW:!!!" ));
     }
 
     if ( sign )
       num = -num;
+
+    return num;
+
+  Bad:
+    FT_TRACE4(( "!!!END OF DATA:!!!" ));
+    return 0;
+  }
+
+
+  FT_LOCAL_DEF( FT_Long )
+  PS_Conv_ToInt( FT_Byte**  cursor,
+                 FT_Byte*   limit )
+
+  {
+    FT_Byte*  p = *cursor;
+    FT_Byte*  curp;
+
+    FT_Long   num;
+
+
+    curp = p;
+    num  = PS_Conv_Strtol( &p, limit, 10 );
+
+    if ( p == curp )
+      return 0;
+
+    if ( p < limit && *p == '#' )
+    {
+      p++;
+
+      curp = p;
+      num  = PS_Conv_Strtol( &p, limit, num );
+
+      if ( p == curp )
+        return 0;
+    }
 
     *cursor = p;
 
@@ -116,42 +188,25 @@
   }
 
 
-  FT_LOCAL_DEF( FT_Int )
-  PS_Conv_ToInt( FT_Byte**  cursor,
-                 FT_Byte*   limit )
-
-  {
-    FT_Byte*  p;
-    FT_Int    num;
-
-
-    num = PS_Conv_Strtol( cursor, limit, 10 );
-    p   = *cursor;
-
-    if ( p < limit && *p == '#' )
-    {
-      *cursor = p + 1;
-
-      return PS_Conv_Strtol( cursor, limit, num );
-    }
-    else
-      return num;
-  }
-
-
   FT_LOCAL_DEF( FT_Fixed )
   PS_Conv_ToFixed( FT_Byte**  cursor,
                    FT_Byte*   limit,
-                   FT_Int     power_ten )
+                   FT_Long    power_ten )
   {
     FT_Byte*  p = *cursor;
-    FT_Fixed  integral;
-    FT_Long   decimal = 0, divider = 1;
-    FT_Bool   sign = 0;
+    FT_Byte*  curp;
+
+    FT_Fixed  integral = 0;
+    FT_Long   decimal  = 0;
+    FT_Long   divider  = 1;
+
+    FT_Bool   sign           = 0;
+    FT_Bool   have_overflow  = 0;
+    FT_Bool   have_underflow = 0;
 
 
-    if ( p == limit )
-      return 0;
+    if ( p >= limit )
+      goto Bad;
 
     if ( *p == '-' || *p == '+' )
     {
@@ -159,13 +214,23 @@
 
       p++;
       if ( p == limit )
-        return 0;
+        goto Bad;
     }
 
+    /* read the integer part */
     if ( *p != '.' )
-      integral = PS_Conv_ToInt( &p, limit ) << 16;
-    else
-      integral = 0;
+    {
+      curp     = p;
+      integral = PS_Conv_ToInt( &p, limit );
+
+      if ( p == curp )
+        return 0;
+
+      if ( integral > 0x7FFF )
+        have_overflow = 1;
+      else
+        integral = (FT_Fixed)( (FT_UInt32)integral << 16 );
+    }
 
     /* read the decimal part */
     if ( p < limit && *p == '.' )
@@ -185,18 +250,14 @@
         if ( c < 0 || c >= 10 )
           break;
 
-        if ( !integral && power_ten > 0 )
+        if ( decimal < 0xCCCCCCCL )
         {
-          power_ten--;
           decimal = decimal * 10 + c;
-        }
-        else
-        {
-          if ( divider < 10000000L )
-          {
-            decimal = decimal * 10 + c;
+
+          if ( !integral && power_ten > 0 )
+            power_ten--;
+          else
             divider *= 10;
-          }
         }
       }
     }
@@ -204,33 +265,94 @@
     /* read exponent, if any */
     if ( p + 1 < limit && ( *p == 'e' || *p == 'E' ) )
     {
+      FT_Long  exponent;
+
+
       p++;
-      power_ten += PS_Conv_ToInt( &p, limit );
+
+      curp     = p;
+      exponent = PS_Conv_ToInt( &p, limit );
+
+      if ( curp == p )
+        return 0;
+
+      /* arbitrarily limit exponent */
+      if ( exponent > 1000 )
+        have_overflow = 1;
+      else if ( exponent < -1000 )
+        have_underflow = 1;
+      else
+        power_ten += exponent;
     }
+
+    *cursor = p;
+
+    if ( !integral && !decimal )
+      return 0;
+
+    if ( have_overflow )
+      goto Overflow;
+    if ( have_underflow )
+      goto Underflow;
 
     while ( power_ten > 0 )
     {
+      if ( integral >= 0xCCCCCCCL )
+        goto Overflow;
       integral *= 10;
-      decimal  *= 10;
+
+      if ( decimal >= 0xCCCCCCCL )
+      {
+        if ( divider == 1 )
+          goto Overflow;
+        divider /= 10;
+      }
+      else
+        decimal *= 10;
+
       power_ten--;
     }
 
     while ( power_ten < 0 )
     {
       integral /= 10;
-      divider  *= 10;
+      if ( divider < 0xCCCCCCCL )
+        divider *= 10;
+      else
+        decimal /= 10;
+
+      if ( !integral && !decimal )
+        goto Underflow;
+
       power_ten++;
     }
 
     if ( decimal )
-      integral += FT_DivFix( decimal, divider );
+    {
+      decimal = FT_DivFix( decimal, divider );
+      /* it's not necessary to check this addition for overflow */
+      /* due to the structure of the real number representation */
+      integral += decimal;
+    }
 
+  Exit:
     if ( sign )
       integral = -integral;
 
-    *cursor = p;
-
     return integral;
+
+  Bad:
+    FT_TRACE4(( "!!!END OF DATA:!!!" ));
+    return 0;
+
+  Overflow:
+    integral = 0x7FFFFFFFL;
+    FT_TRACE4(( "!!!OVERFLOW:!!!" ));
+    goto Exit;
+
+  Underflow:
+    FT_TRACE4(( "!!!UNDERFLOW:!!!" ));
+    return 0;
   }
 
 
@@ -346,7 +468,11 @@
 
 #if 1
 
-    p  = *cursor;
+    p = *cursor;
+
+    if ( p >= limit )
+      return 0;
+
     if ( n > (FT_UInt)( limit - p ) )
       n = (FT_UInt)( limit - p );
 
@@ -434,6 +560,10 @@
 #if 1
 
     p = *cursor;
+
+    if ( p >= limit )
+      return 0;
+
     if ( n > (FT_UInt)(limit - p) )
       n = (FT_UInt)(limit - p);
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR driver interface (body).                                */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2006, 2008, 2010 by                        */
+/*  Copyright 2002-2004, 2006, 2008, 2010, 2011, 2013 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -51,7 +51,7 @@
                                             phys->metrics_resolution );
     }
 
-    return PFR_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -66,7 +66,7 @@
                    FT_Pos   *anadvance )
   {
     PFR_Face  face  = (PFR_Face)pfrface;
-    FT_Error  error = PFR_Err_Invalid_Argument;
+    FT_Error  error = FT_ERR( Invalid_Argument );
 
 
     *anadvance = 0;
@@ -84,7 +84,7 @@
       if ( gindex < phys->num_chars )
       {
         *anadvance = phys->chars[gindex].advance;
-        error = PFR_Err_Ok;
+        error      = FT_Err_Ok;
       }
     }
 
@@ -130,7 +130,7 @@
     if ( ametrics_y_scale )
       *ametrics_y_scale = y_scale;
 
-    return PFR_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -173,7 +173,7 @@
       FT_MODULE_FONT_DRIVER     |
       FT_MODULE_DRIVER_SCALABLE,
 
-      sizeof( FT_DriverRec ),
+      sizeof ( FT_DriverRec ),
 
       "pfr",
       0x10000L,
@@ -181,14 +181,14 @@
 
       NULL,
 
-      0,
-      0,
+      0,                /* FT_Module_Constructor */
+      0,                /* FT_Module_Destructor  */
       pfr_get_service
     },
 
-    sizeof( PFR_FaceRec ),
-    sizeof( PFR_SizeRec ),
-    sizeof( PFR_SlotRec ),
+    sizeof ( PFR_FaceRec ),
+    sizeof ( PFR_SizeRec ),
+    sizeof ( PFR_SlotRec ),
 
     pfr_face_init,
     pfr_face_done,
@@ -197,17 +197,13 @@
     pfr_slot_init,
     pfr_slot_done,
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    ft_stub_set_char_sizes,
-    ft_stub_set_pixel_sizes,
-#endif
     pfr_slot_load,
 
     pfr_get_kerning,
     0,                  /* FT_Face_AttachFunc      */
-    0,                   /* FT_Face_GetAdvancesFunc */
-    0,                  /* FT_Size_RequestFunc */
-    0,                  /* FT_Size_SelectFunc  */
+    0,                  /* FT_Face_GetAdvancesFunc */
+    0,                  /* FT_Size_RequestFunc     */
+    0,                  /* FT_Size_SelectFunc      */
   };
 
 

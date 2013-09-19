@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType BDF services (specification).                           */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
+/*  Copyright 2003, 2009, 2012 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -45,25 +45,30 @@ FT_BEGIN_HEADER
     FT_BDF_GetPropertyFunc   get_property;
   };
 
+
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define FT_DEFINE_SERVICE_BDFRec(class_, get_charset_id_, get_property_) \
-  static const FT_Service_BDFRec class_ =                                \
+#define FT_DEFINE_SERVICE_BDFRec( class_,                                \
+                                  get_charset_id_,                       \
+                                  get_property_ )                        \
+  static const FT_Service_BDFRec  class_ =                               \
   {                                                                      \
     get_charset_id_, get_property_                                       \
   };
 
-#else /* FT_CONFIG_OPTION_PIC */ 
+#else /* FT_CONFIG_OPTION_PIC */
 
-#define FT_DEFINE_SERVICE_BDFRec(class_, get_charset_id_, get_property_) \
+#define FT_DEFINE_SERVICE_BDFRec( class_,                                \
+                                  get_charset_id_,                       \
+                                  get_property_ )                        \
   void                                                                   \
-  FT_Init_Class_##class_( FT_Service_BDFRec*  clazz )                    \
+  FT_Init_Class_ ## class_( FT_Service_BDFRec*  clazz )                  \
   {                                                                      \
     clazz->get_charset_id = get_charset_id_;                             \
-    clazz->get_property = get_property_;                                 \
-  } 
+    clazz->get_property   = get_property_;                               \
+  }
 
-#endif /* FT_CONFIG_OPTION_PIC */ 
+#endif /* FT_CONFIG_OPTION_PIC */
 
   /* */
 

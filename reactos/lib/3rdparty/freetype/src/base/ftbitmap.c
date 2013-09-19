@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType utility functions for bitmaps (body).                       */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006, 2007, 2008, 2009 by                        */
+/*  Copyright 2004-2009, 2011, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,6 +17,8 @@
 
 
 #include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
+
 #include FT_BITMAP_H
 #include FT_IMAGE_H
 #include FT_INTERNAL_OBJECTS_H
@@ -105,7 +107,7 @@
     int             new_pitch;
     FT_UInt         bpp;
     FT_Int          i, width, height;
-    unsigned char*  buffer;
+    unsigned char*  buffer = NULL;
 
 
     width  = bitmap->width;
@@ -135,7 +137,7 @@
       new_pitch = ( width + xpixels );
       break;
     default:
-      return FT_Err_Invalid_Glyph_Format;
+      return FT_THROW( Invalid_Glyph_Format );
     }
 
     /* if no need to allocate memory */
@@ -223,22 +225,22 @@
 
 
     if ( !library )
-      return FT_Err_Invalid_Library_Handle;
+      return FT_THROW( Invalid_Library_Handle );
 
     if ( !bitmap || !bitmap->buffer )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( ( ( FT_PIX_ROUND( xStrength ) >> 6 ) > FT_INT_MAX ) ||
          ( ( FT_PIX_ROUND( yStrength ) >> 6 ) > FT_INT_MAX ) )
-      return FT_Err_Invalid_Argument;
-       
+      return FT_THROW( Invalid_Argument );
+
     xstr = (FT_Int)FT_PIX_ROUND( xStrength ) >> 6;
     ystr = (FT_Int)FT_PIX_ROUND( yStrength ) >> 6;
 
     if ( xstr == 0 && ystr == 0 )
       return FT_Err_Ok;
     else if ( xstr < 0 || ystr < 0 )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     switch ( bitmap->pixel_mode )
     {
@@ -277,6 +279,10 @@
     case FT_PIXEL_MODE_LCD_V:
       ystr *= 3;
       break;
+
+    case FT_PIXEL_MODE_BGRA:
+      /* We don't embolden color glyphs. */
+      return FT_Err_Ok;
     }
 
     error = ft_bitmap_assure_buffer( library->memory, bitmap, xstr, ystr );
@@ -369,6 +375,59 @@
   }
 
 
+  FT_Byte
+  ft_gray_for_premultiplied_srgb_bgra( const FT_Byte*  bgra )
+  {
+    FT_Long  a = bgra[3];
+    FT_Long  b = bgra[0];
+    FT_Long  g = bgra[1];
+    FT_Long  r = bgra[2];
+    FT_Long  l;
+
+
+    /*
+     * Luminosity for sRGB is defined using ~0.2126,0.7152,0.0722
+     * coefficients for RGB channels *on the linear colors*.
+     * A gamma of 2.2 is fair to assume.  And then, we need to
+     * undo the premultiplication too.
+     *
+     * http://accessibility.kde.org/hsl-adjusted.php
+     *
+     * We do the computation with integers only.
+     */
+
+    /* Undo premultification, get the number in a 16.16 form. */
+    b = FT_MulDiv( b, 65536, a );
+    g = FT_MulDiv( g, 65536, a );
+    r = FT_MulDiv( r, 65536, a );
+    a = a * 256;
+
+    /* Apply gamma of 2.0 instead of 2.2. */
+    b = FT_MulFix( b, b );
+    g = FT_MulFix( g, g );
+    r = FT_MulFix( r, r );
+
+    /* Apply coefficients. */
+    b = FT_MulFix( b,  4731 /* 0.0722 * 65536 */ );
+    g = FT_MulFix( g, 46871 /* 0.7152 * 65536 */ );
+    r = FT_MulFix( r, 13933 /* 0.2126 * 65536 */ );
+
+    l = r + g + b;
+
+    /*
+     * Final transparency can be determined this way:
+     *
+     * - If alpha is zero, we want 0.
+     * - If alpha is zero and luminosity is zero, we want 255.
+     * - If alpha is zero and luminosity is one, we want 0.
+     *
+     * So the formula is a * (1 - l).
+     */
+
+    return (FT_Byte)( FT_MulFix( 65535 - l, a ) >> 8 );
+  }
+
+
   /* documentation is in ftbitmap.h */
 
   FT_EXPORT_DEF( FT_Error )
@@ -382,7 +441,7 @@
 
 
     if ( !library )
-      return FT_Err_Invalid_Library_Handle;
+      return FT_THROW( Invalid_Library_Handle );
 
     memory = library->memory;
 
@@ -394,6 +453,7 @@
     case FT_PIXEL_MODE_GRAY4:
     case FT_PIXEL_MODE_LCD:
     case FT_PIXEL_MODE_LCD_V:
+    case FT_PIXEL_MODE_BGRA:
       {
         FT_Int   pad;
         FT_Long  old_size;
@@ -417,6 +477,10 @@
 
         target->pitch = source->width + pad;
 
+        if ( target->pitch > 0                                     &&
+             (FT_ULong)target->rows > FT_ULONG_MAX / target->pitch )
+          return FT_THROW( Invalid_Argument );
+
         if ( target->rows * target->pitch > old_size             &&
              FT_QREALLOC( target->buffer,
                           old_size, target->rows * target->pitch ) )
@@ -425,7 +489,7 @@
       break;
 
     default:
-      error = FT_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
     }
 
     switch ( source->pixel_mode )
@@ -602,6 +666,37 @@
       }
       break;
 
+    case FT_PIXEL_MODE_BGRA:
+      {
+        FT_Byte*  s       = source->buffer;
+        FT_Byte*  t       = target->buffer;
+        FT_Int    s_pitch = source->pitch;
+        FT_Int    t_pitch = target->pitch;
+        FT_Int    i;
+
+
+        target->num_grays = 256;
+
+        for ( i = source->rows; i > 0; i-- )
+        {
+          FT_Byte*  ss = s;
+          FT_Byte*  tt = t;
+          FT_Int    j;
+
+
+          for ( j = source->width; j > 0; j-- )
+          {
+            tt[0] = ft_gray_for_premultiplied_srgb_bgra( ss );
+
+            ss += 4;
+            tt += 1;
+          }
+
+          s += s_pitch;
+          t += t_pitch;
+        }
+      }
+      break;
 
     default:
       ;
@@ -646,10 +741,10 @@
 
 
     if ( !library )
-      return FT_Err_Invalid_Library_Handle;
+      return FT_THROW( Invalid_Library_Handle );
 
     if ( !bitmap )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     memory = library->memory;
 

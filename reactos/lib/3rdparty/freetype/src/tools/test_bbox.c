@@ -88,6 +88,26 @@
   };
 
 
+  /* dummy outline #3 with bbox of [0 100 128 128] precisely */
+  static FT_Vector  dummy_vec_3[4] =
+  {
+    XVEC( 100.0, 127.0 ),
+    XVEC( 200.0, 127.0 ),
+    XVEC(   0.0, 136.0 ),
+    XVEC(   0.0, 100.0 )
+  };
+
+  static FT_Outline  dummy_outline_3 =
+  {
+    1,
+    4,
+    dummy_vec_3,
+    dummy_tag_1,
+    dummy_contour_1,
+    0
+  };
+
+
   static void
   dump_outline( FT_Outline*  outline )
   {
@@ -125,12 +145,14 @@
       FT_Outline_Get_CBox( outline, &bbox );
 
     time0 = get_time() - time0;
-    printf( "time = %5.2f cbox = [%.2f %.2f %.2f %.2f]\n",
+    printf( "time = %6.3f cbox = [%8.4f %8.4f %8.4f %8.4f]\n",
              ((double)time0/10000.0),
              XVAL( bbox.xMin ),
              XVAL( bbox.yMin ),
              XVAL( bbox.xMax ),
              XVAL( bbox.yMax ) );
+    printf( "cbox_hex = [%08X %08X %08X %08X]\n",
+             bbox.xMin, bbox.yMin, bbox.xMax, bbox.yMax );
 
 
     time0 = get_time();
@@ -138,15 +160,17 @@
       FT_Outline_Get_BBox( outline, &bbox );
 
     time0 = get_time() - time0;
-    printf( "time = %5.2f bbox = [%.2f %.2f %.2f %.2f]\n",
+    printf( "time = %6.3f bbox = [%8.4f %8.4f %8.4f %8.4f]\n",
              ((double)time0/10000.0),
              XVAL( bbox.xMin ),
              XVAL( bbox.yMin ),
              XVAL( bbox.xMax ),
              XVAL( bbox.yMax ) );
+    printf( "bbox_hex = [%08X %08X %08X %08X]\n",
+             bbox.xMin, bbox.yMin, bbox.xMax, bbox.yMax );
   }
 
-#define REPEAT  100000L
+#define REPEAT  1000000L
 
   int  main( int  argc, char**  argv )
   {
@@ -155,6 +179,10 @@
 
     printf( "outline #2\n" );
     profile_outline( &dummy_outline_2, REPEAT );
+
+    printf( "outline #3\n" );
+    profile_outline( &dummy_outline_3, REPEAT );
+
     return 0;
   }
 

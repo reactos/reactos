@@ -549,7 +549,7 @@ class  HtmlFormatter( Formatter ):
                 if block.source.filename.find( f ) >= 0:
                     header = self.headers[f] + ' (' + f + ')'
                     break;
-                
+
 #           if not header:
 #               sys.stderr.write( \
 #                 'WARNING: No header macro for ' + block.source.filename + '.\n' )

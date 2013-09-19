@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded BDF properties (body).                */
 /*                                                                         */
-/*  Copyright 2005, 2006, 2010 by                                          */
+/*  Copyright 2005, 2006, 2010, 2013 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -74,7 +74,7 @@
          length < 8                             ||
          FT_FRAME_EXTRACT( length, bdf->table ) )
     {
-      error = SFNT_Err_Invalid_Table;
+      error = FT_THROW( Invalid_Table );
       goto Exit;
     }
 
@@ -131,7 +131,7 @@
   BadTable:
     FT_FRAME_RELEASE( bdf->table );
     FT_ZERO( bdf );
-    error = SFNT_Err_Invalid_Table;
+    error = FT_THROW( Invalid_Table );
     goto Exit;
   }
 
@@ -143,7 +143,7 @@
   {
     TT_BDF     bdf   = &face->bdf;
     FT_Size    size  = FT_FACE(face)->size;
-    FT_Error   error = SFNT_Err_Ok;
+    FT_Error   error = FT_Err_Ok;
     FT_Byte*   p;
     FT_UInt    count;
     FT_Byte*   strike;
@@ -163,7 +163,7 @@
     p      = bdf->table + 8;
     strike = p + 4 * count;
 
-    error = SFNT_Err_Invalid_Argument;
+    error = FT_ERR( Invalid_Argument );
 
     if ( size == NULL || property_name == NULL )
       goto Exit;
@@ -215,7 +215,7 @@
             {
               aprop->type   = BDF_PROPERTY_TYPE_ATOM;
               aprop->u.atom = (const char*)bdf->strings + value;
-              error         = SFNT_Err_Ok;
+              error         = FT_Err_Ok;
               goto Exit;
             }
             break;
@@ -223,13 +223,13 @@
           case 0x02:
             aprop->type      = BDF_PROPERTY_TYPE_INTEGER;
             aprop->u.integer = (FT_Int32)value;
-            error            = SFNT_Err_Ok;
+            error            = FT_Err_Ok;
             goto Exit;
 
           case 0x03:
             aprop->type       = BDF_PROPERTY_TYPE_CARDINAL;
             aprop->u.cardinal = value;
-            error             = SFNT_Err_Ok;
+            error             = FT_Err_Ok;
             goto Exit;
 
           default:

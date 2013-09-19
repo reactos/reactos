@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache subsystem (specification).                            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010 by */
+/*  Copyright 1996-2008, 2010, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -214,17 +214,6 @@ FT_BEGIN_HEADER
 
  /* */
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-
-  /* these macros are incompatible with LLP64, should not be used */
-
-#define FT_POINTER_TO_ULONG( p )  ( (FT_ULong)(FT_Pointer)(p) )
-
-#define FTC_FACE_ID_HASH( i )                                \
-          ((FT_UInt32)(( FT_POINTER_TO_ULONG( i ) >> 3 ) ^   \
-                       ( FT_POINTER_TO_ULONG( i ) << 7 ) ) )
-
-#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
   /*************************************************************************/
   /*************************************************************************/
@@ -381,7 +370,7 @@ FT_BEGIN_HEADER
   /*    should never try to discard it yourself.                           */
   /*                                                                       */
   /*    The @FT_Face object doesn't necessarily have a current size object */
-  /*    (i.e., face->size can be 0).  If you need a specific `font size',  */
+  /*    (i.e., face->size can be~0).  If you need a specific `font size',  */
   /*    use @FTC_Manager_LookupSize instead.                               */
   /*                                                                       */
   /*    Never change the face's transformation matrix (i.e., never call    */
@@ -705,17 +694,6 @@ FT_BEGIN_HEADER
             (d1)->width   == (d2)->width   && \
             (d1)->flags   == (d2)->flags   )
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-
-  /* this macro is incompatible with LLP64, should not be used */
-
-#define FTC_IMAGE_TYPE_HASH( d )                          \
-          (FT_UFast)( FTC_FACE_ID_HASH( (d)->face_id )  ^ \
-                      ( (d)->width << 8 ) ^ (d)->height ^ \
-                      ( (d)->flags << 4 )               )
-
-#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
-
 
   /*************************************************************************/
   /*                                                                       */
@@ -723,7 +701,7 @@ FT_BEGIN_HEADER
   /*    FTC_ImageCache                                                     */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A handle to an glyph image cache object.  They are designed to     */
+  /*    A handle to a glyph image cache object.  They are designed to      */
   /*    hold many distinct glyph images while not exceeding a certain      */
   /*    memory threshold.                                                  */
   /*                                                                       */
@@ -1067,67 +1045,6 @@ FT_BEGIN_HEADER
                               FT_UInt        gindex,
                               FTC_SBit      *sbit,
                               FTC_Node      *anode );
-
-
- /* */
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-
-  /*@***********************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    FTC_FontRec                                                        */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A simple structure used to describe a given `font' to the cache    */
-  /*    manager.  Note that a `font' is the combination of a given face    */
-  /*    with a given character size.                                       */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    face_id    :: The ID of the face to use.                           */
-  /*                                                                       */
-  /*    pix_width  :: The character width in integer pixels.               */
-  /*                                                                       */
-  /*    pix_height :: The character height in integer pixels.              */
-  /*                                                                       */
-  typedef struct  FTC_FontRec_
-  {
-    FTC_FaceID  face_id;
-    FT_UShort   pix_width;
-    FT_UShort   pix_height;
-
-  } FTC_FontRec;
-
-
-  /* */
-
-
-#define FTC_FONT_COMPARE( f1, f2 )                  \
-          ( (f1)->face_id    == (f2)->face_id    && \
-            (f1)->pix_width  == (f2)->pix_width  && \
-            (f1)->pix_height == (f2)->pix_height )
-
-  /* this macro is incompatible with LLP64, should not be used */
-#define FTC_FONT_HASH( f )                              \
-          (FT_UInt32)( FTC_FACE_ID_HASH((f)->face_id) ^ \
-                       ((f)->pix_width << 8)          ^ \
-                       ((f)->pix_height)              )
-
-  typedef FTC_FontRec*  FTC_Font;
-
-
-  FT_EXPORT( FT_Error )
-  FTC_Manager_Lookup_Face( FTC_Manager  manager,
-                           FTC_FaceID   face_id,
-                           FT_Face     *aface );
-
-  FT_EXPORT( FT_Error )
-  FTC_Manager_Lookup_Size( FTC_Manager  manager,
-                           FTC_Font     font,
-                           FT_Face     *aface,
-                           FT_Size     *asize );
-
-#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
  /* */

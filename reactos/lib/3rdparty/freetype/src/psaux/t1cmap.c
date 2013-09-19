@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 character map support (body).                                 */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2006, 2007 by                                    */
+/*  Copyright 2002, 2003, 2006, 2007, 2012 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -264,8 +264,8 @@
   /*************************************************************************/
 
   FT_CALLBACK_DEF( const char * )
-  t1_get_glyph_name( T1_Face  face,
-                     FT_UInt  idx )
+  psaux_get_glyph_name( T1_Face  face,
+                        FT_UInt  idx )
   {
     return face->type1.glyph_names[idx];
   }
@@ -282,7 +282,7 @@
     return psnames->unicodes_init( memory,
                                    unicodes,
                                    face->type1.num_glyphs,
-                                   (PS_GetGlyphNameFunc)&t1_get_glyph_name,
+                                   (PS_GetGlyphNameFunc)&psaux_get_glyph_name,
                                    (PS_FreeGlyphNameFunc)NULL,
                                    (FT_Pointer)face );
   }

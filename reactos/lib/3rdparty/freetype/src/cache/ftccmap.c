@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    FreeType CharMap cache (body)                                        */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
-/*            2010 by                                                      */
+/*  Copyright 2000-2013 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,6 +21,7 @@
 #include FT_CACHE_H
 #include "ftcmanag.h"
 #include FT_INTERNAL_MEMORY_H
+#include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_DEBUG_H
 
 #include "ftccback.h"
@@ -29,43 +29,6 @@
 
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_cache
-
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-
-  typedef enum  FTC_OldCMapType_
-  {
-    FTC_OLD_CMAP_BY_INDEX    = 0,
-    FTC_OLD_CMAP_BY_ENCODING = 1,
-    FTC_OLD_CMAP_BY_ID       = 2
-
-  } FTC_OldCMapType;
-
-
-  typedef struct  FTC_OldCMapIdRec_
-  {
-    FT_UInt  platform;
-    FT_UInt  encoding;
-
-  } FTC_OldCMapIdRec, *FTC_OldCMapId;
-
-
-  typedef struct  FTC_OldCMapDescRec_
-  {
-    FTC_FaceID       face_id;
-    FTC_OldCMapType  type;
-
-    union
-    {
-      FT_UInt           index;
-      FT_Encoding       encoding;
-      FTC_OldCMapIdRec  id;
-
-    } u;
-
-  } FTC_OldCMapDescRec, *FTC_OldCMapDesc;
-
-#endif /* FT_CONFIG_OLD_INTERNALS */
 
 
   /*************************************************************************/
@@ -120,7 +83,7 @@
 
   /* if (indices[n] == FTC_CMAP_UNKNOWN), we assume that the corresponding */
   /* glyph indices haven't been queried through FT_Get_Glyph_Index() yet   */
-#define FTC_CMAP_UNKNOWN  ( (FT_UInt16)-1 )
+#define FTC_CMAP_UNKNOWN  (FT_UInt16)~0
 
 
   /*************************************************************************/
@@ -190,13 +153,16 @@
   FT_CALLBACK_DEF( FT_Bool )
   ftc_cmap_node_compare( FTC_Node    ftcnode,
                          FT_Pointer  ftcquery,
-                         FTC_Cache   cache )
+                         FTC_Cache   cache,
+                         FT_Bool*    list_changed )
   {
     FTC_CMapNode   node  = (FTC_CMapNode)ftcnode;
     FTC_CMapQuery  query = (FTC_CMapQuery)ftcquery;
     FT_UNUSED( cache );
 
 
+    if ( list_changed )
+      *list_changed = FALSE;
     if ( node->face_id    == query->face_id    &&
          node->cmap_index == query->cmap_index )
     {
@@ -213,12 +179,16 @@
   FT_CALLBACK_DEF( FT_Bool )
   ftc_cmap_node_remove_faceid( FTC_Node    ftcnode,
                                FT_Pointer  ftcface_id,
-                               FTC_Cache   cache )
+                               FTC_Cache   cache,
+                               FT_Bool*    list_changed )
   {
     FTC_CMapNode  node    = (FTC_CMapNode)ftcnode;
     FTC_FaceID    face_id = (FTC_FaceID)ftcface_id;
     FT_UNUSED( cache );
 
+
+    if ( list_changed )
+      *list_changed = FALSE;
     return FT_BOOL( node->face_id == face_id );
   }
 
@@ -259,21 +229,6 @@
   }
 
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-
-  /*
-   *  Unfortunately, it is not possible to support binary backwards
-   *  compatibility in the cmap cache.  The FTC_CMapCache_Lookup signature
-   *  changes were too deep, and there is no clever hackish way to detect
-   *  what kind of structure we are being passed.
-   *
-   *  On the other hand it seems that no production code is using this
-   *  function on Unix distributions.
-   */
-
-#endif
-
-
   /* documentation is in ftcache.h */
 
   FT_EXPORT_DEF( FT_UInt )
@@ -308,57 +263,9 @@
       return 0;
     }
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-
-    /*
-     * If cmap_index is greater than the maximum number of cachable
-     * charmaps, we assume the request is from a legacy rogue client 
-     * using old internal header. See include/config/ftoption.h.
-     */
-    if ( cmap_index > FT_MAX_CHARMAP_CACHEABLE && !no_cmap_change )
-    {
-      FTC_OldCMapDesc  desc = (FTC_OldCMapDesc) face_id;
-
-
-      char_code     = (FT_UInt32)cmap_index;
-      query.face_id = desc->face_id;
-
-
-      switch ( desc->type )
-      {
-      case FTC_OLD_CMAP_BY_INDEX:
-        query.cmap_index = desc->u.index;
-        query.char_code  = (FT_UInt32)cmap_index;
-        break;
-
-      case FTC_OLD_CMAP_BY_ENCODING:
-        {
-          FT_Face  face;
-
-
-          error = FTC_Manager_LookupFace( cache->manager, desc->face_id,
-                                          &face );
-          if ( error )
-            return 0;
-
-          FT_Select_Charmap( face, desc->u.encoding );
-
-          return FT_Get_Char_Index( face, char_code );
-        }
-
-      default:
-        return 0;
-      }
-    }
-    else
-
-#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
-
-    {
-      query.face_id    = face_id;
-      query.cmap_index = (FT_UInt)cmap_index;
-      query.char_code  = char_code;
-    }
+    query.face_id    = face_id;
+    query.cmap_index = (FT_UInt)cmap_index;
+    query.char_code  = char_code;
 
     hash = FTC_CMAP_HASH( face_id, cmap_index, char_code );
 

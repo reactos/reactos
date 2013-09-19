@@ -5,7 +5,7 @@
 /*    Basic Type1/Type2 type definitions and interface (specification      */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
+/*  Copyright 1996-2004, 2006, 2008, 2009, 2011, 2013 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -76,17 +76,6 @@ FT_BEGIN_HEADER
     FT_String**  char_name;
 
   } T1_EncodingRec, *T1_Encoding;
-
-
-  typedef enum  T1_EncodingType_
-  {
-    T1_ENCODING_TYPE_NONE = 0,
-    T1_ENCODING_TYPE_ARRAY,
-    T1_ENCODING_TYPE_STANDARD,
-    T1_ENCODING_TYPE_ISOLATIN1,
-    T1_ENCODING_TYPE_EXPERT
-
-  } T1_EncodingType;
 
 
   /* used to hold extra data of PS_FontInfoRec that
@@ -215,10 +204,6 @@ FT_BEGIN_HEADER
     const void*     afm_data;
     FT_CharMapRec   charmaprecs[2];
     FT_CharMap      charmaps[2];
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    PS_Unicodes     unicode_map;
-#endif
 
     /* support for Multiple Masters fonts */
     PS_Blend        blend;

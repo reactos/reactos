@@ -8,7 +8,7 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2009, 2010 by                  */
+/*  Copyright 2002-2006, 2009-2013 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -32,6 +32,7 @@
 
 #undef __FTERRORS_H__
 
+#undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  Gzip_Err_
 #define FT_ERR_BASE    FT_Mod_Err_Gzip
 
@@ -42,7 +43,7 @@
 
 #ifdef FT_CONFIG_OPTION_PIC
 #error "gzip code does not support PIC yet"
-#endif 
+#endif
 
 #ifdef FT_CONFIG_OPTION_SYSTEM_ZLIB
 
@@ -67,6 +68,15 @@
 #undef  SLOW
 #define SLOW  1  /* we can't use asm-optimized sources here! */
 
+#if defined( _MSC_VER )      /* Visual C++ (and Intel C++)   */
+  /* We disable the warning `conversion from XXX to YYY,     */
+  /* possible loss of data' in order to compile cleanly with */
+  /* the maximum level of warnings: zlib is non-FreeType     */
+  /* code.                                                   */
+#pragma warning( push )
+#pragma warning( disable : 4244 )
+#endif /* _MSC_VER */
+
   /* Urgh.  `inflate_mask' must not be declared twice -- C++ doesn't like
      this.  We temporarily disable it and load all necessary header files. */
 #define NO_INFLATE_MASK
@@ -85,6 +95,10 @@
 #include "infblock.c"
 #include "inflate.c"
 #include "adler32.c"
+
+#if defined( _MSC_VER )
+#pragma warning( pop )
+#endif
 
 #endif /* !FT_CONFIG_OPTION_SYSTEM_ZLIB */
 
@@ -199,7 +213,7 @@
          head[2] != Z_DEFLATED        ||
         (head[3] & FT_GZIP_RESERVED)  )
     {
-      error = Gzip_Err_Invalid_File_Format;
+      error = FT_THROW( Invalid_File_Format );
       goto Exit;
     }
 
@@ -261,7 +275,7 @@
                      FT_Stream    source )
   {
     z_stream*  zstream = &zip->zstream;
-    FT_Error   error   = Gzip_Err_Ok;
+    FT_Error   error   = FT_Err_Ok;
 
 
     zip->stream = stream;
@@ -293,7 +307,7 @@
 
     if ( inflateInit2( zstream, -MAX_WBITS ) != Z_OK ||
          zstream->next_in == NULL                     )
-      error = Gzip_Err_Invalid_File_Format;
+      error = FT_THROW( Invalid_File_Format );
 
   Exit:
     return error;
@@ -364,7 +378,7 @@
       size = stream->read( stream, stream->pos, zip->input,
                            FT_GZIP_BUFFER_SIZE );
       if ( size == 0 )
-        return Gzip_Err_Invalid_Stream_Operation;
+        return FT_THROW( Invalid_Stream_Operation );
     }
     else
     {
@@ -373,7 +387,7 @@
         size = FT_GZIP_BUFFER_SIZE;
 
       if ( size == 0 )
-        return Gzip_Err_Invalid_Stream_Operation;
+        return FT_THROW( Invalid_Stream_Operation );
 
       FT_MEM_COPY( zip->input, stream->base + stream->pos, size );
     }
@@ -382,7 +396,7 @@
     zstream->next_in  = zip->input;
     zstream->avail_in = size;
 
-    return Gzip_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -390,7 +404,7 @@
   ft_gzip_file_fill_output( FT_GZipFile  zip )
   {
     z_stream*  zstream = &zip->zstream;
-    FT_Error   error   = Gzip_Err_Ok;
+    FT_Error   error   = FT_Err_Ok;
 
 
     zip->cursor        = zip->buffer;
@@ -415,12 +429,12 @@
       {
         zip->limit = zstream->next_out;
         if ( zip->limit == zip->cursor )
-          error = Gzip_Err_Invalid_Stream_Operation;
+          error = FT_THROW( Invalid_Stream_Operation );
         break;
       }
       else if ( err != Z_OK )
       {
-        error = Gzip_Err_Invalid_Stream_Operation;
+        error = FT_THROW( Invalid_Stream_Operation );
         break;
       }
     }
@@ -434,7 +448,7 @@
   ft_gzip_file_skip_output( FT_GZipFile  zip,
                             FT_ULong     count )
   {
-    FT_Error  error = Gzip_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     FT_ULong  delta;
 
 
@@ -571,7 +585,7 @@
     old_pos = stream->pos;
     if ( !FT_Stream_Seek( stream, stream->size - 4 ) )
     {
-      result = (FT_ULong)FT_Stream_ReadLong( stream, &error );
+      result = FT_Stream_ReadULong( stream, &error );
       if ( error )
         result = 0;
 
@@ -588,7 +602,7 @@
   {
     FT_Error     error;
     FT_Memory    memory = source->memory;
-    FT_GZipFile  zip;
+    FT_GZipFile  zip = NULL;
 
 
     /*
@@ -628,7 +642,7 @@
 
       if ( zip_size != 0 && zip_size < 40 * 1024 )
       {
-        FT_Byte*  zip_buff;
+        FT_Byte*  zip_buff = NULL;
 
 
         if ( !FT_ALLOC( zip_buff, zip_size ) )
@@ -656,7 +670,7 @@
           ft_gzip_file_io( zip, 0, NULL, 0 );
           FT_FREE( zip_buff );
         }
-        error = Gzip_Err_Ok;
+        error = FT_Err_Ok;
       }
     }
 
@@ -679,7 +693,7 @@
     FT_UNUSED( stream );
     FT_UNUSED( source );
 
-    return Gzip_Err_Unimplemented_Feature;
+    return FT_THROW( Unimplemented_Feature );
   }
 
 #endif /* !FT_CONFIG_OPTION_USE_ZLIB */

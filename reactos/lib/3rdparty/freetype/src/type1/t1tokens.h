@@ -96,7 +96,7 @@
                        T1_FIELD_DICT_PRIVATE )
   T1_FIELD_BOOL      ( "ForceBold",        force_bold,
                        T1_FIELD_DICT_PRIVATE )
-                         
+
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  T1_FontRec

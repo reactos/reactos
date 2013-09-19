@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT common tables validation (specification).             */
 /*                                                                         */
-/*  Copyright 2004, 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K., */
+/*  Copyright 2004, 2005, 2012                                             */
+/*  by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,6 +51,19 @@
 
 FT_BEGIN_HEADER
 
+
+  /* some variables are not evaluated or only used in trace */
+
+#ifdef  FT_DEBUG_LEVEL_TRACE
+#define GXV_LOAD_TRACE_VARS
+#else
+#undef  GXV_LOAD_TRACE_VARS
+#endif
+
+#undef GXV_LOAD_UNUSED_VARS /* debug purpose */
+
+#define IS_PARANOID_VALIDATION          ( valid->root->level >= FT_VALIDATE_PARANOID )
+#define GXV_SET_ERR_IF_PARANOID( err )  { if ( IS_PARANOID_VALIDATION ) ( err ); }
 
   /*************************************************************************/
   /*************************************************************************/
@@ -234,6 +248,9 @@ FT_BEGIN_HEADER
     GXV_Lookup_Fmt4_Transit_Func    lookupfmt4_trans;
     FT_Bytes                        lookuptbl_head;
 
+    FT_UShort  min_gid;
+    FT_UShort  max_gid;
+
     GXV_StateTable_ValidatorRec     statetable;
     GXV_XStateTable_ValidatorRec    xstatetable;
 
@@ -300,7 +317,7 @@ FT_BEGIN_HEADER
 #define GXV_32BIT_ALIGNMENT_VALIDATE( a ) \
           FT_BEGIN_STMNT                  \
             {                             \
-              if ( 0 != ( (a) % 4 ) )     \
+              if ( (a) & 3 )              \
                 FT_INVALID_OFFSET ;       \
             }                             \
           FT_END_STMNT

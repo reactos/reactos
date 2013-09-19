@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    ANSI-specific FreeType low-level system interface (body).            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2006, 2008, 2009, 2010 by                   */
+/*  Copyright 1996-2002, 2006, 2008-2011, 2013 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -137,6 +137,7 @@
   /*                                                                       */
   /*************************************************************************/
 
+#ifndef FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT
 
   /*************************************************************************/
   /*                                                                       */
@@ -227,7 +228,7 @@
 
 
     if ( !stream )
-      return FT_Err_Invalid_Stream_Handle;
+      return FT_THROW( Invalid_Stream_Handle );
 
     stream->descriptor.pointer = NULL;
     stream->pathname.pointer   = (char*)filepathname;
@@ -242,7 +243,7 @@
       FT_ERROR(( "FT_Stream_Open:"
                  " could not open `%s'\n", filepathname ));
 
-      return FT_Err_Cannot_Open_Resource;
+      return FT_THROW( Cannot_Open_Resource );
     }
 
     ft_fseek( file, 0, SEEK_END );
@@ -252,7 +253,7 @@
       FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " opened `%s' but zero-sized\n", filepathname ));
       ft_fclose( file );
-      return FT_Err_Cannot_Open_Stream;
+      return FT_THROW( Cannot_Open_Stream );
     }
     ft_fseek( file, 0, SEEK_SET );
 
@@ -267,6 +268,7 @@
     return FT_Err_Ok;
   }
 
+#endif /* !FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT */
 
 #ifdef FT_DEBUG_MEMORY
 

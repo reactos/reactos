@@ -1,6 +1,6 @@
 /*
  * Copyright 2000 Computing Research Labs, New Mexico State University
- * Copyright 2001, 2002, 2003, 2004 Francesco Zappa Nardelli
+ * Copyright 2001-2004, 2011 Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -226,8 +226,10 @@ FT_BEGIN_HEADER
 
     void*            internal;       /* Internal data for the font.         */
 
-    unsigned long    nmod[2048];     /* Bitmap indicating modified glyphs.  */
-    unsigned long    umod[2048];     /* Bitmap indicating modified          */
+    /* The size of the next two arrays must be in sync with the */
+    /* size of the `have' array in the `bdf_parse_t' structure. */
+    unsigned long    nmod[34816];    /* Bitmap indicating modified glyphs.  */
+    unsigned long    umod[34816];    /* Bitmap indicating modified          */
                                      /* unencoded glyphs.                   */
     unsigned short   modified;       /* Boolean indicating font modified.   */
     unsigned short   bpp;            /* Bits per pixel.                     */

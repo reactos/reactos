@@ -8,8 +8,7 @@
 /*  This file is for Mac OS X only; see builds/mac/ftoldmac.c for          */
 /*  classic platforms built by MPW.                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,         */
-/*            2009 by                                                      */
+/*  Copyright 1996-2009, 2013 by                                           */
 /*  Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -119,6 +118,8 @@
 #endif
 
 
+#ifdef FT_MACINTOSH
+
   /* This function is deprecated because FSSpec is deprecated in Mac OS X  */
   FT_EXPORT_DEF( FT_Error )
   FT_GetFile_From_Mac_Name( const char*  fontName,
@@ -129,7 +130,7 @@
     FT_UNUSED( pathSpec );
     FT_UNUSED( face_index );
 
-    return FT_Err_Unimplemented_Feature;
+    return FT_THROW( Unimplemented_Feature );
   }
 
 
@@ -144,7 +145,7 @@
   {
 #if defined( MAC_OS_X_VERSION_10_5 ) && \
     ( MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5 )
- 
+
     OSStatus  err;
 
     err = ATSFontGetFileReference( ats_font_id, ats_font_ref );
@@ -188,10 +189,10 @@
     CFRelease( cf_fontName );
 
     if ( ats_font_id == 0 || ats_font_id == 0xFFFFFFFFUL )
-      return FT_Err_Unknown_File_Format;
+      return FT_THROW( Unknown_File_Format );
 
     if ( noErr != FT_ATSFontGetFileReference( ats_font_id, ats_font_ref ) )
-      return FT_Err_Unknown_File_Format;
+      return FT_THROW( Unknown_File_Format );
 
     /* face_index calculation by searching preceding fontIDs */
     /* with same FSRef                                       */
@@ -227,11 +228,11 @@
 
 
     err = FT_GetFileRef_From_Mac_ATS_Name( fontName, &ref, face_index );
-    if ( FT_Err_Ok != err )
+    if ( err )
       return err;
 
     if ( noErr != FSRefMakePath( &ref, path, maxPathSize ) )
-      return FT_Err_Unknown_File_Format;
+      return FT_THROW( Unknown_File_Format );
 
     return FT_Err_Ok;
   }
@@ -249,19 +250,19 @@
     FT_UNUSED( pathSpec );
     FT_UNUSED( face_index );
 
-    return FT_Err_Unimplemented_Feature;
+    return FT_THROW( Unimplemented_Feature );
 #else
     FSRef     ref;
     FT_Error  err;
 
 
     err = FT_GetFileRef_From_Mac_ATS_Name( fontName, &ref, face_index );
-    if ( FT_Err_Ok != err )
+    if ( err )
       return err;
 
     if ( noErr != FSGetCatalogInfo( &ref, kFSCatInfoNone, NULL, NULL,
                                     pathSpec, NULL ) )
-      return FT_Err_Unknown_File_Format;
+      return FT_THROW( Unknown_File_Format );
 
     return FT_Err_Ok;
 #endif
@@ -277,7 +278,7 @@
 
 
     if ( noErr != FSPathMakeRef( pathname, &ref, FALSE ) )
-      return FT_Err_Cannot_Open_Resource;
+      return FT_THROW( Cannot_Open_Resource );
 
     /* at present, no support for dfont format */
     err = FSOpenResourceFile( &ref, 0, NULL, fsRdPerm, res );
@@ -357,11 +358,9 @@
   count_faces_scalable( char*  fond_data )
   {
     AsscEntry*  assoc;
-    FamRec*     fond;
     short       i, face, face_all;
 
 
-    fond     = (FamRec*)fond_data;
     face_all = EndianS16_BtoN( *( (short *)( fond_data +
                                              sizeof ( FamRec ) ) ) ) + 1;
     assoc    = (AsscEntry*)( fond_data + sizeof ( FamRec ) + 2 );
@@ -506,17 +505,17 @@
     /* We should not extract parent directory by string manipulation.      */
 
     if ( noErr != FSPathMakeRef( path_fond, &ref, FALSE ) )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( noErr != FSGetCatalogInfo( &ref, kFSCatInfoNone,
                                     NULL, NULL, NULL, &par_ref ) )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( noErr != FSRefMakePath( &par_ref, path_lwfn, path_size ) )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( ft_strlen( (char *)path_lwfn ) + 1 + base_lwfn[0] > path_size )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     /* now we have absolute dirname in path_lwfn */
     ft_strcat( (char *)path_lwfn, "/" );
@@ -525,11 +524,11 @@
     path_lwfn[dirname_len + base_lwfn[0]] = '\0';
 
     if ( noErr != FSPathMakeRef( path_lwfn, &ref, FALSE ) )
-      return FT_Err_Cannot_Open_Resource;
+      return FT_THROW( Cannot_Open_Resource );
 
     if ( noErr != FSGetCatalogInfo( &ref, kFSCatInfoNone,
                                     NULL, NULL, NULL, NULL ) )
-      return FT_Err_Cannot_Open_Resource;
+      return FT_THROW( Cannot_Open_Resource );
 
     return FT_Err_Ok;
   }
@@ -555,7 +554,7 @@
     {
       err = lookup_lwfn_by_fond( pathname, lwfn_file_name,
                                  buff, sizeof ( buff )  );
-      if ( FT_Err_Ok == err )
+      if ( !err )
         have_lwfn = 1;
     }
 
@@ -618,7 +617,7 @@
       /* detect integer overflows */
       if ( total_size < old_total_size )
       {
-        error = FT_Err_Array_Too_Large;
+        error = FT_THROW( Array_Too_Large );
         goto Error;
       }
 
@@ -703,7 +702,7 @@
 
 
     if ( noErr != FT_FSPathMakeRes( pathname, &res ) )
-      return FT_Err_Cannot_Open_Resource;
+      return FT_THROW( Cannot_Open_Resource );
 
     pfb_data = NULL;
     pfb_size = 0;
@@ -738,7 +737,7 @@
 
     sfnt = GetResource( TTAG_sfnt, sfnt_id );
     if ( sfnt == NULL )
-      return FT_Err_Invalid_Handle;
+      return FT_THROW( Invalid_Handle );
 
     sfnt_size = (FT_ULong)GetHandleSize( sfnt );
     if ( FT_ALLOC( sfnt_data, (FT_Long)sfnt_size ) )
@@ -795,23 +794,26 @@
                              FT_Long       face_index,
                              FT_Face*      aface )
   {
-    FT_Error       error = FT_Err_Cannot_Open_Resource;
+    FT_Error       error = FT_ERR( Cannot_Open_Resource );
     ResFileRefNum  res_ref;
     ResourceIndex  res_index;
     Handle         fond;
-    short          num_faces_in_res, num_faces_in_fond;
+    short          num_faces_in_res;
 
 
     if ( noErr != FT_FSPathMakeRes( pathname, &res_ref ) )
-      return FT_Err_Cannot_Open_Resource;
+      return FT_THROW( Cannot_Open_Resource );
 
     UseResFile( res_ref );
     if ( ResError() )
-      return FT_Err_Cannot_Open_Resource;
+      return FT_THROW( Cannot_Open_Resource );
 
     num_faces_in_res = 0;
     for ( res_index = 1; ; ++res_index )
     {
+      short  num_faces_in_fond;
+
+
       fond = Get1IndResource( TTAG_FOND, res_index );
       if ( ResError() )
         break;
@@ -826,7 +828,7 @@
     }
 
     CloseResFile( res_ref );
-    if ( FT_Err_Ok == error && NULL != aface && NULL != *aface )
+    if ( !error && aface && *aface )
       (*aface)->num_faces = num_faces_in_res;
     return error;
   }
@@ -852,7 +854,7 @@
 
     GetResInfo( fond, &fond_id, &fond_type, fond_name );
     if ( ResError() != noErr || fond_type != TTAG_FOND )
-      return FT_Err_Invalid_File_Format;
+      return FT_THROW( Invalid_File_Format );
 
     parse_fond( *fond, &have_sfnt, &sfnt_id, lwfn_file_name, face_index );
 
@@ -881,7 +883,7 @@
 
         error = lookup_lwfn_by_fond( path_fond, lwfn_file_name,
                                      path_lwfn, sizeof ( path_lwfn ) );
-        if ( FT_Err_Ok == error )
+        if ( !error )
           have_lwfn = 1;
       }
     }
@@ -892,10 +894,10 @@
                                      face_index,
                                      aface );
     else
-      error = FT_Err_Unknown_File_Format;
+      error = FT_THROW( Unknown_File_Format );
 
   found_no_lwfn_file:
-    if ( have_sfnt && FT_Err_Ok != error )
+    if ( have_sfnt && error )
       error = FT_New_Face_From_SFNT( library,
                                      sfnt_id,
                                      face_index,
@@ -959,7 +961,7 @@
 
     /* test for valid `library' and `aface' delayed to FT_Open_Face() */
     if ( !pathname )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     error  = FT_Err_Ok;
     *aface = NULL;
@@ -1001,11 +1003,11 @@
 
 
     if ( !ref )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     err = FSRefMakePath( ref, pathname, sizeof ( pathname ) );
     if ( err )
-      error = FT_Err_Cannot_Open_Resource;
+      error = FT_THROW( Cannot_Open_Resource );
 
     error = FT_New_Face_From_Resource( library, pathname, face_index, aface );
     if ( error != 0 || *aface != NULL )
@@ -1041,17 +1043,19 @@
     FT_UNUSED( face_index );
     FT_UNUSED( aface );
 
-    return FT_Err_Unimplemented_Feature;
+    return FT_THROW( Unimplemented_Feature );
 #else
     FSRef  ref;
 
 
     if ( !spec || FSpMakeFSRef( spec, &ref ) != noErr )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
     else
       return FT_New_Face_From_FSRef( library, &ref, face_index, aface );
 #endif
   }
+
+#endif /* FT_MACINTOSH */
 
 
 /* END */

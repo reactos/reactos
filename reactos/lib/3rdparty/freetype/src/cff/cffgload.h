@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (specification).                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 by       */
+/*  Copyright 1996-2004, 2006-2009, 2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -106,6 +106,41 @@ FT_BEGIN_HEADER
   } CFF_Builder;
 
 
+  FT_LOCAL( FT_Error )
+  cff_check_points( CFF_Builder*  builder,
+                    FT_Int        count );
+
+  FT_LOCAL( void )
+  cff_builder_add_point( CFF_Builder*  builder,
+                         FT_Pos        x,
+                         FT_Pos        y,
+                         FT_Byte       flag );
+  FT_LOCAL( FT_Error )
+  cff_builder_add_point1( CFF_Builder*  builder,
+                          FT_Pos        x,
+                          FT_Pos        y );
+  FT_LOCAL( FT_Error )
+  cff_builder_start_point( CFF_Builder*  builder,
+                           FT_Pos        x,
+                           FT_Pos        y );
+  FT_LOCAL( void )
+  cff_builder_close_contour( CFF_Builder*  builder );
+
+
+  FT_LOCAL( FT_Int )
+  cff_lookup_glyph_by_stdcharcode( CFF_Font  cff,
+                                   FT_Int    charcode );
+  FT_LOCAL( FT_Error )
+  cff_get_glyph_data( TT_Face    face,
+                      FT_UInt    glyph_index,
+                      FT_Byte**  pointer,
+                      FT_ULong*  length );
+  FT_LOCAL( void )
+  cff_free_glyph_data( TT_Face    face,
+                       FT_Byte**  pointer,
+                       FT_ULong   length );
+
+
   /* execution context charstring zone */
 
   typedef struct  CFF_Decoder_Zone_
@@ -156,6 +191,8 @@ FT_BEGIN_HEADER
 
     FT_Bool            seac;
 
+    CFF_SubFont        current_subfont; /* for current glyph_index */
+
   } CFF_Decoder;
 
 
@@ -181,10 +218,12 @@ FT_BEGIN_HEADER
 
 #endif /* 0 */
 
+#ifdef CFF_CONFIG_OPTION_OLD_ENGINE
   FT_LOCAL( FT_Error )
   cff_decoder_parse_charstrings( CFF_Decoder*  decoder,
                                  FT_Byte*      charstring_base,
                                  FT_ULong      charstring_len );
+#endif
 
   FT_LOCAL( FT_Error )
   cff_slot_load( CFF_GlyphSlot  glyph,

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Load the metrics tables common to TTF and OTF fonts (body).          */
 /*                                                                         */
-/*  Copyright 2006, 2007, 2008, 2009 by                                    */
+/*  Copyright 2006-2009, 2011-2013 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -35,13 +35,6 @@
 #define FT_COMPONENT  trace_ttmtx
 
 
-  /*
-   *  Unfortunately, we can't enable our memory optimizations if
-   *  FT_CONFIG_OPTION_OLD_INTERNALS is defined.  This is because at least
-   *  one rogue client (libXfont in the X.Org XServer) is directly accessing
-   *  the metrics.
-   */
-
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
@@ -60,8 +53,6 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-#ifndef FT_CONFIG_OPTION_OLD_INTERNALS
-
   FT_LOCAL_DEF( FT_Error )
   tt_face_load_hmtx( TT_Face    face,
                      FT_Stream  stream,
@@ -97,142 +88,6 @@
     return error;
   }
 
-#else /* !FT_CONFIG_OPTION_OLD_INTERNALS */
-
-  FT_LOCAL_DEF( FT_Error )
-  tt_face_load_hmtx( TT_Face    face,
-                     FT_Stream  stream,
-                     FT_Bool    vertical )
-  {
-    FT_Error   error;
-    FT_Memory  memory = stream->memory;
-
-    FT_ULong   table_len;
-    FT_Long    num_shorts, num_longs, num_shorts_checked;
-
-    TT_LongMetrics*    longs;
-    TT_ShortMetrics**  shorts;
-    FT_Byte*           p;
-
-
-    if ( vertical )
-    {
-      void*   lm = &face->vertical.long_metrics;
-      void**  sm = &face->vertical.short_metrics;
-
-
-      error = face->goto_table( face, TTAG_vmtx, stream, &table_len );
-      if ( error )
-        goto Fail;
-
-      num_longs = face->vertical.number_Of_VMetrics;
-      if ( (FT_ULong)num_longs > table_len / 4 )
-        num_longs = (FT_Long)( table_len / 4 );
-
-      face->vertical.number_Of_VMetrics = 0;
-
-      longs  = (TT_LongMetrics*)lm;
-      shorts = (TT_ShortMetrics**)sm;
-    }
-    else
-    {
-      void*   lm = &face->horizontal.long_metrics;
-      void**  sm = &face->horizontal.short_metrics;
-
-
-      error = face->goto_table( face, TTAG_hmtx, stream, &table_len );
-      if ( error )
-        goto Fail;
-
-      num_longs = face->horizontal.number_Of_HMetrics;
-      if ( (FT_ULong)num_longs > table_len / 4 )
-        num_longs = (FT_Long)( table_len / 4 );
-
-      face->horizontal.number_Of_HMetrics = 0;
-
-      longs  = (TT_LongMetrics*)lm;
-      shorts = (TT_ShortMetrics**)sm;
-    }
-
-    /* never trust derived values */
-
-    num_shorts         = face->max_profile.numGlyphs - num_longs;
-    num_shorts_checked = ( table_len - num_longs * 4L ) / 2;
-
-    if ( num_shorts < 0 )
-    {
-      FT_TRACE0(( "tt_face_load_hmtx:"
-                  " %cmtx has more metrics than glyphs.\n",
-                  vertical ? "v" : "h" ));
-
-      /* Adobe simply ignores this problem.  So we shall do the same. */
-#if 0
-      error = vertical ? SFNT_Err_Invalid_Vert_Metrics
-                       : SFNT_Err_Invalid_Horiz_Metrics;
-      goto Exit;
-#else
-      num_shorts = 0;
-#endif
-    }
-
-    if ( FT_QNEW_ARRAY( *longs,  num_longs  ) ||
-         FT_QNEW_ARRAY( *shorts, num_shorts ) )
-      goto Fail;
-
-    if ( FT_FRAME_ENTER( table_len ) )
-      goto Fail;
-
-    p = stream->cursor;
-
-    {
-      TT_LongMetrics  cur   = *longs;
-      TT_LongMetrics  limit = cur + num_longs;
-
-
-      for ( ; cur < limit; cur++ )
-      {
-        cur->advance = FT_NEXT_USHORT( p );
-        cur->bearing = FT_NEXT_SHORT( p );
-      }
-    }
-
-    /* do we have an inconsistent number of metric values? */
-    {
-      TT_ShortMetrics*  cur   = *shorts;
-      TT_ShortMetrics*  limit = cur +
-                                FT_MIN( num_shorts, num_shorts_checked );
-
-
-      for ( ; cur < limit; cur++ )
-        *cur = FT_NEXT_SHORT( p );
-
-      /* We fill up the missing left side bearings with the     */
-      /* last valid value.  Since this will occur for buggy CJK */
-      /* fonts usually only, nothing serious will happen.       */
-      if ( num_shorts > num_shorts_checked && num_shorts_checked > 0 )
-      {
-        FT_Short  val = (*shorts)[num_shorts_checked - 1];
-
-
-        limit = *shorts + num_shorts;
-        for ( ; cur < limit; cur++ )
-          *cur = val;
-      }
-    }
-
-    FT_FRAME_EXIT();
-
-    if ( vertical )
-      face->vertical.number_Of_VMetrics = (FT_UShort)num_longs;
-    else
-      face->horizontal.number_Of_HMetrics = (FT_UShort)num_longs;
-
-  Fail:
-    return error;
-  }
-
-#endif /* !FT_CONFIG_OPTION_OLD_INTERNALS */
-
 
   /*************************************************************************/
   /*                                                                       */
@@ -260,7 +115,7 @@
     FT_Error        error;
     TT_HoriHeader*  header;
 
-    const FT_Frame_Field  metrics_header_fields[] =
+    static const FT_Frame_Field  metrics_header_fields[] =
     {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  TT_HoriHeader
@@ -343,8 +198,6 @@
   /*                                                                       */
   /*    advance :: The advance width resp. advance height.                 */
   /*                                                                       */
-#ifndef FT_CONFIG_OPTION_OLD_INTERNALS
-
   FT_LOCAL_DEF( FT_Error )
   tt_face_get_metrics( TT_Face     face,
                        FT_Bool     vertical,
@@ -419,50 +272,8 @@
       *aadvance = 0;
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
-
-#else /* !FT_CONFIG_OPTION_OLD_INTERNALS */
-
-  FT_LOCAL_DEF( FT_Error )
-  tt_face_get_metrics( TT_Face     face,
-                       FT_Bool     vertical,
-                       FT_UInt     gindex,
-                       FT_Short*   abearing,
-                       FT_UShort*  aadvance )
-  {
-    void*           v = &face->vertical;
-    void*           h = &face->horizontal;
-    TT_HoriHeader*  header = vertical ? (TT_HoriHeader*)v
-                                      : (TT_HoriHeader*)h;
-    TT_LongMetrics  longs_m;
-    FT_UShort       k = header->number_Of_HMetrics;
-
-
-    if ( k == 0                                         ||
-         !header->long_metrics                          ||
-         gindex >= (FT_UInt)face->max_profile.numGlyphs )
-    {
-      *abearing = *aadvance = 0;
-      return SFNT_Err_Ok;
-    }
-
-    if ( gindex < (FT_UInt)k )
-    {
-      longs_m   = (TT_LongMetrics)header->long_metrics + gindex;
-      *abearing = longs_m->bearing;
-      *aadvance = longs_m->advance;
-    }
-    else
-    {
-      *abearing = ((TT_ShortMetrics*)header->short_metrics)[gindex - k];
-      *aadvance = ((TT_LongMetrics)header->long_metrics)[k - 1].advance;
-    }
-
-    return SFNT_Err_Ok;
-  }
-
-#endif /* !FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
 /* END */

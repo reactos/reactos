@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter glyph loading routines (specification).                  */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005 by                                          */
+/*  Copyright 2003-2005, 2011-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __AF_LOADER_H__
-#define __AF_LOADER_H__
+#ifndef __AFLOADER_H__
+#define __AFLOADER_H__
 
 #include "afhints.h"
 #include "afglobal.h"
@@ -25,11 +25,24 @@
 
 FT_BEGIN_HEADER
 
-  typedef struct AF_LoaderRec_
+  typedef struct AF_ModuleRec_*  AF_Module;
+
+  /*
+   *  The autofitter module's (global) data structure to communicate with
+   *  actual fonts.  If necessary, `local' data like the current face, the
+   *  current face's auto-hint data, or the current glyph's parameters
+   *  relevant to auto-hinting are `swapped in'.  Cf. functions like
+   *  `af_loader_reset' and `af_loader_load_g'.
+   */
+
+  typedef struct  AF_LoaderRec_
   {
-    FT_Face           face;           /* current face */
-    AF_FaceGlobals    globals;        /* current face globals */
-    FT_GlyphLoader    gloader;        /* glyph loader */
+    /* current face data */
+    FT_Face           face;
+    AF_FaceGlobals    globals;
+
+    /* current glyph data */
+    FT_GlyphLoader    gloader;
     AF_GlyphHintsRec  hints;
     AF_ScriptMetrics  metrics;
     FT_Bool           transformed;
@@ -43,31 +56,30 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  af_loader_init( AF_Loader  loader,
-                  FT_Memory  memory );
+  af_loader_init( AF_Module  module );
 
 
   FT_LOCAL( FT_Error )
-  af_loader_reset( AF_Loader  loader,
+  af_loader_reset( AF_Module  module,
                    FT_Face    face );
 
 
   FT_LOCAL( void )
-  af_loader_done( AF_Loader  loader );
+  af_loader_done( AF_Module  module );
 
 
   FT_LOCAL( FT_Error )
-  af_loader_load_glyph( AF_Loader  loader,
+  af_loader_load_glyph( AF_Module  module,
                         FT_Face    face,
                         FT_UInt    gindex,
-                        FT_UInt32  load_flags );
+                        FT_Int32   load_flags );
 
 /* */
 
 
 FT_END_HEADER
 
-#endif /* __AF_LOADER_H__ */
+#endif /* __AFLOADER_H__ */
 
 
 /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache Manager (specification).                              */
 /*                                                                         */
-/*  Copyright 2000-2001, 2003, 2004, 2006 by                               */
+/*  Copyright 2000-2001, 2003, 2004, 2006, 2010, 2013 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -94,8 +94,8 @@ FT_BEGIN_HEADER
     FT_Memory           memory;
 
     FTC_Node            nodes_list;
-    FT_ULong            max_weight;
-    FT_ULong            cur_weight;
+    FT_Offset           max_weight;
+    FT_Offset           cur_weight;
     FT_UInt             num_nodes;
 
     FTC_Cache           caches[FTC_MAX_CACHES];

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF character mapping table (cmap) support (body).                   */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2010 by                  */
+/*  Copyright 2002-2007, 2010, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,6 +16,8 @@
 /***************************************************************************/
 
 
+#include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
 #include "cffcmap.h"
 #include "cffload.h"
 
@@ -145,7 +147,7 @@
     /* can't build Unicode map for CID-keyed font */
     /* because we don't know glyph names.         */
     if ( !charset->sids )
-      return CFF_Err_No_Unicode_Glyph_Name;
+      return FT_THROW( No_Unicode_Glyph_Name );
 
     return psnames->unicodes_init( memory,
                                    unicodes,

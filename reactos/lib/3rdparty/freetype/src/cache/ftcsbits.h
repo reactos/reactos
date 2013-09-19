@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    A small-bitmap cache (specification).                                */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2006 by                               */
+/*  Copyright 2000-2001, 2002, 2003, 2006, 2011 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -83,10 +83,15 @@ FT_BEGIN_HEADER
 #endif
 
 
+#ifdef FTC_INLINE
+
   FT_LOCAL( FT_Bool )
   FTC_SNode_Compare( FTC_SNode   snode,
                      FTC_GQuery  gquery,
-                     FTC_Cache   cache );
+                     FTC_Cache   cache,
+                     FT_Bool*    list_changed);
+
+#endif
 
   /* */
 

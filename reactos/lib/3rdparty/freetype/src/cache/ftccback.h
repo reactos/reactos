@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Callback functions of the caching sub-system (specification only).   */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006 by                                          */
+/*  Copyright 2004-2006, 2011, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -57,13 +57,15 @@
   FT_LOCAL( FT_Bool )
   ftc_snode_compare( FTC_Node    snode,
                      FT_Pointer  gquery,
-                     FTC_Cache   cache );
+                     FTC_Cache   cache,
+                     FT_Bool*    list_changed );
 
 
   FT_LOCAL( FT_Bool )
   ftc_gnode_compare( FTC_Node    gnode,
                      FT_Pointer  gquery,
-                     FTC_Cache   cache );
+                     FTC_Cache   cache,
+                     FT_Bool*    list_changed );
 
 
   FT_LOCAL( FT_Error )
@@ -79,11 +81,10 @@
   FT_LOCAL( void )
   ftc_cache_done( FTC_Cache  cache );
 
-#ifndef FT_CONFIG_OPTION_OLD_INTERNALS
   FT_LOCAL( void )
   ftc_node_destroy( FTC_Node     node,
                     FTC_Manager  manager );
-#endif
+
 
 #endif /* __FTCCBACK_H__ */
 

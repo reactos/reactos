@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 1996-2009, 2011-2013 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -173,10 +173,13 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  TT_DefRecord_
   {
-    FT_Int   range;      /* in which code range is it located? */
-    FT_Long  start;      /* where does it start?               */
-    FT_UInt  opc;        /* function #, or instruction code    */
-    FT_Bool  active;     /* is it active?                      */
+    FT_Int    range;          /* in which code range is it located?     */
+    FT_Long   start;          /* where does it start?                   */
+    FT_Long   end;            /* where does it end?                     */
+    FT_UInt   opc;            /* function #, or instruction code        */
+    FT_Bool   active;         /* is it active?                          */
+    FT_Bool   inline_delta;   /* is function that defines inline delta? */
+    FT_ULong  sph_fdef_flags; /* flags to identify special functions    */
 
   } TT_DefRecord, *TT_DefArray;
 
@@ -189,7 +192,7 @@ FT_BEGIN_HEADER
   {
     FT_Fixed    xx, xy;     /* transformation matrix coefficients */
     FT_Fixed    yx, yy;
-    FT_F26Dot6  ox, oy;     /* offsets        */
+    FT_F26Dot6  ox, oy;     /* offsets                            */
 
   } TT_Transform;
 
@@ -344,11 +347,12 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  TT_DriverRec_
   {
-    FT_DriverRec     root;
+    FT_DriverRec  root;
+
     TT_ExecContext   context;  /* execution context        */
     TT_GlyphZoneRec  zone;     /* glyph loader points zone */
 
-    void*            extension_component;
+    FT_UInt  interpreter_version;
 
   } TT_DriverRec;
 
@@ -390,13 +394,16 @@ FT_BEGIN_HEADER
 #ifdef TT_USE_BYTECODE_INTERPRETER
 
   FT_LOCAL( FT_Error )
-  tt_size_run_fpgm( TT_Size  size );
+  tt_size_run_fpgm( TT_Size  size,
+                    FT_Bool  pedantic );
 
   FT_LOCAL( FT_Error )
-  tt_size_run_prep( TT_Size  size );
+  tt_size_run_prep( TT_Size  size,
+                    FT_Bool  pedantic );
 
   FT_LOCAL( FT_Error )
-  tt_size_ready_bytecode( TT_Size  size );
+  tt_size_ready_bytecode( TT_Size  size,
+                          FT_Bool  pedantic );
 
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 
@@ -421,6 +428,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_LOCAL( FT_Error )
   tt_slot_init( FT_GlyphSlot  slot );
+
+
+  /* auxiliary */
+#define IS_HINTED( flags )  ( ( flags & FT_LOAD_NO_HINTING ) == 0 )
 
 
 FT_END_HEADER

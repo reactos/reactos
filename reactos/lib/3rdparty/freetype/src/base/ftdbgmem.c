@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Memory debugger (body).                                              */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2009 by                  */
+/*  Copyright 2001-2006, 2009, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -344,85 +344,80 @@
   ft_mem_table_destroy( FT_MemTable  table )
   {
     FT_ULong  i;
+    FT_Long   leak_count = 0;
+    FT_ULong  leaks      = 0;
 
 
     FT_DumpMemory( table->memory );
 
-    if ( table )
+    /* remove all blocks from the table, revealing leaked ones */
+    for ( i = 0; i < table->size; i++ )
     {
-      FT_Long   leak_count = 0;
-      FT_ULong  leaks      = 0;
+      FT_MemNode  *pnode = table->buckets + i, next, node = *pnode;
 
 
-      /* remove all blocks from the table, revealing leaked ones */
-      for ( i = 0; i < table->size; i++ )
+      while ( node )
       {
-        FT_MemNode  *pnode = table->buckets + i, next, node = *pnode;
+        next       = node->link;
+        node->link = 0;
 
-
-        while ( node )
+        if ( node->size > 0 )
         {
-          next       = node->link;
-          node->link = 0;
+          printf(
+            "leaked memory block at address %p, size %8ld in (%s:%ld)\n",
+            node->address, node->size,
+            FT_FILENAME( node->source->file_name ),
+            node->source->line_no );
 
-          if ( node->size > 0 )
-          {
-            printf(
-              "leaked memory block at address %p, size %8ld in (%s:%ld)\n",
-              node->address, node->size,
-              FT_FILENAME( node->source->file_name ),
-              node->source->line_no );
+          leak_count++;
+          leaks += node->size;
 
-            leak_count++;
-            leaks += node->size;
-
-            ft_mem_table_free( table, node->address );
-          }
-
-          node->address = NULL;
-          node->size    = 0;
-
-          ft_mem_table_free( table, node );
-          node = next;
-        }
-        table->buckets[i] = 0;
-      }
-
-      ft_mem_table_free( table, table->buckets );
-      table->buckets = NULL;
-
-      table->size  = 0;
-      table->nodes = 0;
-
-      /* remove all sources */
-      for ( i = 0; i < FT_MEM_SOURCE_BUCKETS; i++ )
-      {
-        FT_MemSource  source, next;
-
-
-        for ( source = table->sources[i]; source != NULL; source = next )
-        {
-          next = source->link;
-          ft_mem_table_free( table, source );
+          ft_mem_table_free( table, node->address );
         }
 
-        table->sources[i] = NULL;
+        node->address = NULL;
+        node->size    = 0;
+
+        ft_mem_table_free( table, node );
+        node = next;
       }
-
-      printf(
-        "FreeType: total memory allocations = %ld\n", table->alloc_total );
-      printf(
-        "FreeType: maximum memory footprint = %ld\n", table->alloc_max );
-
-      ft_mem_table_free( table, table );
-
-      if ( leak_count > 0 )
-        ft_mem_debug_panic(
-          "FreeType: %ld bytes of memory leaked in %ld blocks\n",
-          leaks, leak_count );
-
-      printf( "FreeType: no memory leaks detected\n" );
+      table->buckets[i] = 0;
     }
+
+    ft_mem_table_free( table, table->buckets );
+    table->buckets = NULL;
+
+    table->size  = 0;
+    table->nodes = 0;
+
+    /* remove all sources */
+    for ( i = 0; i < FT_MEM_SOURCE_BUCKETS; i++ )
+    {
+      FT_MemSource  source, next;
+
+
+      for ( source = table->sources[i]; source != NULL; source = next )
+      {
+        next = source->link;
+        ft_mem_table_free( table, source );
+      }
+
+      table->sources[i] = NULL;
+    }
+
+    printf( "FreeType: total memory allocations = %ld\n",
+            table->alloc_total );
+    printf( "FreeType: maximum memory footprint = %ld\n",
+            table->alloc_max );
+
+    ft_mem_table_free( table, table );
+
+    if ( leak_count > 0 )
+      ft_mem_debug_panic(
+        "FreeType: %ld bytes of memory leaked in %ld blocks\n",
+        leaks, leak_count );
+
+    printf( "FreeType: no memory leaks detected\n" );
   }
 
 
