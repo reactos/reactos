@@ -10,7 +10,7 @@ CAPTION "Görüntülük Sürücüsü Kurulumu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "ReactOS Kur, VMWare(r)'de çalıştığını algıladı.", -1, 117, 8, 140, 24
-    LTEXT "VMware(r) SVGA sürücüsünü kurmak için ""İleri"" düğmesine tıklayınız. Eğer sürücüyü kurmak istemiyorsanız ""Vazgeç"" düğmesine tıklayınız.", -1, 117, 140, 140, 24
+    LTEXT "VMware(r) SVGA sürücüsünü kurmak için ""İleri"" düğmesine tıklayınız. Eğer sürücüyü kurmak istemiyorsanız ""İptal"" düğmesine tıklayınız.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -18,7 +18,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Görüntülük Sürücüsü Kurulumu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOS Kur, VMware(r) SVGA sürücüsüyle birlikte gelmez.\n\nBu yüzden, VMWare(r)'de bulunan ""Install VMware tools..."" seçeneğine tıklayınız.\n\n\nİşlemi sürdürmek için ""İleri"" düğmesine, sürücünün kurulumunu atlamak için ""Vazgeç"" düğmesine tıklayınız.",-1,25,25,225,85
+    LTEXT "ReactOS Kur, VMware(r) SVGA sürücüsüyle birlikte gelmez.\n\nBu yüzden, VMWare(r)'de bulunan ""Install VMware tools..."" seçeneğine tıklayınız.\n\n\nİşlemi sürdürmek için ""İleri"" düğmesine, sürücünün kurulumunu atlamak için ""İptal"" düğmesine tıklayınız.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -68,7 +68,7 @@ BEGIN
     PUSHBUTTON "Görüntülük Ayarlarını Yapılandırmak", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "Başka Bir Görüntülük Sürücüsü Kurmak", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "VMware(r) SVGA Sürücüsünü Kaldırmak", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-    LTEXT "Sürdürmek için ""İleri"" düğmesine, çıkmak için ""Vazgeç"" düğmesine tıklayınız.", -1, 25, 93, 225, 19
+    LTEXT "Sürdürmek için ""İleri"" düğmesine, çıkmak için ""İptal"" düğmesine tıklayınız.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -79,7 +79,7 @@ BEGIN
     LTEXT "Kullanmak istediğiniz görüntülük sürücüsünü seçiniz:",-1,25,25,225,15
     PUSHBUTTON "ReactOS VGA Sürücüsü", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "ReactOS VBE Sürücüsü (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
-    LTEXT "İşlemi bitirmek için ""Bitir"" düğmesine, hiçbir değişiklik yapmadan çıkmak için ""Vazgeç"" düğmesine tıklayınız.", -1, 25, 93, 225, 20
+    LTEXT "İşlemi bitirmek için ""Bitir"" düğmesine, hiçbir değişiklik yapmadan çıkmak için ""İptal"" düğmesine tıklayınız.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -87,7 +87,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Görüntülük Sürücüsü Kurulumu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOS Kur, VMware(r) SVGA sürücüsünü kaldırmak üzere.\n\n\nKaldırmayı bitirmek için ""Bitir"" düğmesine, hiçbir değişiklik yapılmadan çıkmak için ""Vazgeç"" düğmesine tıklayınız.",-1,25,25,225,85
+    LTEXT "ReactOS Kur, VMware(r) SVGA sürücüsünü kaldırmak üzere.\n\n\nKaldırmayı bitirmek için ""Bitir"" düğmesine, hiçbir değişiklik yapılmadan çıkmak için ""İptal"" düğmesine tıklayınız.",-1,25,25,225,85
 END
 
 STRINGTABLE

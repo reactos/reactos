@@ -46,7 +46,7 @@ MAIN_MENU MENU
  POPUP "&Seçenekler" {
    POPUP "&Her Zaman Üstte Olma"
    BEGIN
-     MENUITEM "&Ön Tanımlı",           MNID_OPTS_HELP_DEFAULT
+     MENUITEM "&Öntanımlı",            MNID_OPTS_HELP_DEFAULT
      MENUITEM "&Evet",                 MNID_OPTS_HELP_VISIBLE
      MENUITEM "&Hayır",                MNID_OPTS_HELP_NONVISIBLE
   END

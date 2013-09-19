@@ -247,7 +247,7 @@ CAPTION "CPU'larla İlişkisini Değiştir"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Tamam",IDOK,120,133,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,174,133,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,174,133,50,14
     LTEXT           "Bu seçenekler, bu işlemin hangi CPU'larla yürütüleceğini belirler.",
                     IDC_STATIC,5,5,220,16
     CONTROL         "0. CPU",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -322,7 +322,7 @@ CAPTION "Dikeçleri Seç"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Tamam",IDOK,84,178,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,138,178,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,138,178,50,14
     LTEXT           "Bu seçenekler, ""İşlemci"" sekmesindeki dikeçlerin hangisinin görüntülenip görüntülenmeyeceğini belirler.",
                     IDC_STATIC,7,7,181,17
     CONTROL         "Yansıma Adı",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
@@ -345,7 +345,7 @@ BEGIN
                     WS_TABSTOP,7,116,62,10
     CONTROL         "G/Ç Okuma",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,49,10
-    CONTROL         "G/Ç Okuma Sekizlikleri",IDC_IOREADBYTES,"Button",
+    CONTROL         "G/Ç Okuma Çokluları",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
     CONTROL         "Oturum Kimliği",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
@@ -369,11 +369,11 @@ BEGIN
                     WS_TABSTOP,107,105,55,10
     CONTROL         "G/Ç Yazma",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,116,49,10
-    CONTROL         "G/Ç Yazma Sekizlikleri",IDC_IOWRITEBYTES,"Button",
+    CONTROL         "G/Ç Yazma Çokluları",IDC_IOWRITEBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
     CONTROL         "G/Ç Diğer",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,138,46,10
-    CONTROL         "G/Ç Diğer Sekizlikler",IDC_IOOTHERBYTES,"Button",
+    CONTROL         "G/Ç Diğer Çoklular",IDC_IOOTHERBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
 END
 
@@ -585,9 +585,9 @@ BEGIN
     IDS_TAB_IOREADS               "G/Ç Okuma"
     IDS_TAB_IOWRITES              "G/Ç Yazma"
     IDS_TAB_IOOTHER               "G/Ç Diğer"
-    IDS_TAB_IOREADBYTES           "G/Ç Okuma Sekizlikleri"
-    IDS_TAB_IOWRITESBYTES         "G/Ç Yazma Sekizlikleri"
-    IDS_TAB_IOOTHERBYTES          "G/Ç Diğer Sekizlikler"
+    IDS_TAB_IOREADBYTES           "G/Ç Okuma Çokluları"
+    IDS_TAB_IOWRITESBYTES         "G/Ç Yazma Çokluları"
+    IDS_TAB_IOOTHERBYTES          "G/Ç Diğer Çoklular"
     IDS_MENU_SELECTCOLUMNS        "&Dikeçleri Seç..."
     IDS_MENU_16BITTASK            "&16 İkillik Görevleri Göster"
     IDS_MENU_WINDOWS              "&Pencereler"

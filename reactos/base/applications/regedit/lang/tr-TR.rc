@@ -129,7 +129,7 @@ BEGIN
             MENUITEM "D&izgi Değeri",                    ID_EDIT_NEW_STRINGVALUE
             MENUITEM "İ&kili Değer",                     ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&32 İkillik Değer",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Çoklu Dizeli Dizgi Değeri",       ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Çok Dizeli Dizgi Değeri",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Genişletilebilir Dizgi Değeri",   ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
@@ -143,7 +143,7 @@ BEGIN
             MENUITEM "D&izgi Değeri",                    ID_EDIT_NEW_STRINGVALUE
             MENUITEM "İ&kili Değer",                     ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&32 İkillik Değer",                ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Çoklu Dizeli Dizgi Değeri",       ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Çok Dizeli Dizgi Değeri",         ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Genişletilebilir Dizgi Değeri",   ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "A&ra...",                              ID_EDIT_FIND
@@ -183,13 +183,13 @@ BEGIN
     LTEXT           "D&eğer Bilgisi:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Tamam",IDOK,142,64,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,196,64,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,196,64,50,14
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Çoklu Dizeli Dizgi Değerini Düzenle"
+CAPTION "Çok Dizeli Dizgi Değerini Düzenle"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Değer Adı:",IDC_STATIC,6,6,134,8
@@ -197,7 +197,7 @@ BEGIN
     LTEXT           "D&eğer Bilgisi:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON   "Tamam",IDOK,142,154,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,196,154,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,196,154,50,14
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX  32, 24, 252, 174
@@ -211,7 +211,7 @@ BEGIN
     LTEXT           "D&eğer Bilgisi:",IDC_STATIC,6,35,161,8
     CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
     DEFPUSHBUTTON   "Tamam",IDOK,142,154,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,196,154,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,196,154,50,14
 END
 
 
@@ -229,7 +229,7 @@ BEGIN
     AUTORADIOBUTTON "&Onaltılık",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
     AUTORADIOBUTTON "O&nluk",IDC_FORMAT_DEC,141,59,60,10
     DEFPUSHBUTTON   "Tamam",IDOK,142,82,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,196,82,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,196,82,50,14
 END
 
 
@@ -368,7 +368,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_BINARY_EMPTY                      "(Bu değer sıfır uzunluktadır.)"
-    IDS_DEFAULT_VALUE_NAME                "(Ön tanımlı)"
+    IDS_DEFAULT_VALUE_NAME                "(Öntanımlı)"
     IDS_VALUE_NOT_SET                     "(Bu değer belirtilmemiştir.)"
     IDS_UNKNOWN_TYPE                      "Bilinmeyen tür: (0x%lx)"
     IDS_MY_COMPUTER                       "Bilgisayar"
@@ -386,7 +386,7 @@ BEGIN
     IDS_FLT_REGFILES_FLT                  "*.reg"
     IDS_FLT_HIVFILES                      "Yığın Dosyaları (*.*)"
     IDS_FLT_HIVFILES_FLT                  "*.*"
-    IDS_FLT_REGEDIT4                      "Windows 9x ve Windows NT 4.0 Türündeki Değer Kütükleri (*.reg)"
+    IDS_FLT_REGEDIT4                      "Pencereler 9x ve Pencereler NT 4.0 Türündeki Değer Kütükleri (*.reg)"
     IDS_FLT_REGEDIT4_FLT                  "*.reg"
     IDS_FLT_ALLFILES                      "Tüm Kütükler (*.*)"
     IDS_FLT_ALLFILES_FLT                  "*.*"
@@ -420,12 +420,12 @@ BEGIN
   IDS_EXPAND                     "&Genişlet"
   IDS_COLLAPSE                   "&Daralt"
   IDS_GOTO_SUGGESTED_KEY         "G&it: %s"
-  IDS_FINISHEDFIND               "Değer defterinde arama bitti."
+  IDS_FINISHEDFIND               "Değer Defteri'nde arama bitti."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Eklenen bilgiler, değerleri değiştirebilir veyâ bileşenlerin doğru çalışmasını engelleyebilir.\nEğer %s  kütüğündeki bilgilerin kaynağını bilmiyorsanız bu bilgileri değer defterine eklemeyiniz.\n\nSürdürmek istiyor musunuz?"
+  IDS_IMPORT_PROMPT              "Eklenen bilgiler, değerleri değiştirebilir veyâ bileşenlerin doğru çalışmasını engelleyebilir.\nEğer %s  kütüğündeki bilgilerin kaynağını bilmiyorsanız bu bilgileri Değer Defteri'ne eklemeyiniz.\n\nSürdürmek istiyor musunuz?"
   IDS_IMPORT_OK                  "Bilgiler, %s kütüğünden başarıyla alındı."
   IDS_IMPORT_ERROR               "%s alınamıyor. Disk yanlışlığı, kütük dizgesi yanlışlığı ya da belirtilen kütüğün olmamasından dolayı bilgi alınacak kütük açılamıyor."
   IDS_EXPORT_ERROR               "%s verilemiyor. Disk yanlışlığı ya da kütük dizgesi yanlışlığından dolayı belirtilen kütük oluşturulamıyor ya da bilgiler, bu kütüğün üzerine yazılamıyor."
@@ -513,7 +513,7 @@ FONT 8, "Ms Shell Dlg"
     LTEXT           "Dizin:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON   "Tamam", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Vazgeç", IDCANCEL, 89, 17, 50, 14
+    PUSHBUTTON      "İptal", IDCANCEL, 89, 17, 50, 14
 }
 
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
@@ -522,7 +522,7 @@ CAPTION "Yer İmlerine Ekleme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Tamam",IDOK,129,7,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,129,24,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,129,24,50,14
     LTEXT           "Yer İmi Adı:",IDC_STATIC,7,7,70,10
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
@@ -533,7 +533,7 @@ CAPTION "Yer İmlerini Silme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Tamam",IDOK,107,114,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,7,114,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,7,114,50,14
     CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
                     WS_BORDER | WS_TABSTOP,7,20,150,90
     LTEXT           "Yer İmlerini Seç:",IDC_STATIC,7,7,99,12
@@ -545,7 +545,7 @@ CAPTION "Ara"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "&Sonrakini Ara",IDOK,197,7,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,197,24,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,197,24,50,14
     GROUPBOX        "Şunlara Bak",IDC_STATIC,7,25,63,51
     LTEXT           "Şunu Ara:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
@@ -568,7 +568,7 @@ CAPTION "Arama"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    DEFPUSHBUTTON   "Vazgeç",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "İptal",IDCANCEL,93,29,45,14
     LTEXT           "Aranıyor...",IDC_STATIC,33,12,83,8
 END
 

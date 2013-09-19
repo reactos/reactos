@@ -25,7 +25,7 @@ BEGIN
     AUTOCHECKBOX    "&Durum çubuğu", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "Tamam", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "Vazgeç", IDCANCEL, 101, 97, 50, 14
+    PUSHBUTTON      "İptal", IDCANCEL, 101, 97, 50, 14
 END
 
 
@@ -47,7 +47,7 @@ BEGIN
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "Tamam", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Vazgeç", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON    "İptal", IDCANCEL, 126, 84, 54, 13
 END
 
 

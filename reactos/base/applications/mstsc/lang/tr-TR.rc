@@ -47,7 +47,7 @@ CAPTION "Uzak Masaüstü Bağlayıcısı"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Bağlan",IDOK,147,245,50,14
-    PUSHBUTTON      "Vazgeç",IDCANCEL,203,245,50,14
+    PUSHBUTTON      "İptal",IDCANCEL,203,245,50,14
     CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
 END
 

@@ -1,10 +1,12 @@
 /////////////////////////////////////////////////////////////////////////////
 // Turkish resources
+//
+// TRANSLATORS: 2005 - un.real, 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+//
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
-#pragma code_page(1252)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -14,23 +16,23 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDC_FDEBUG MENU DISCARDABLE
 BEGIN
-    POPUP "&Dosya"
+    POPUP "&KÃ¼tÃ¼k"
     BEGIN
-        MENUITEM "&Baðlan", IDM_FILE_CONNECT
-        MENUITEM "Baðlantýyý &Kes", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&BaÄŸlan", IDM_FILE_CONNECT
+        MENUITEM "B&aÄŸlantÄ±yÄ± Kes", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
+        MENUITEM "&GÃ¶rÃ¼ntÃ¼yÃ¼ Temizle", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Yakalamayý Baþlat", IDM_FILE_STARTCAPTURE
-        MENUITEM "Yakalamayý &Durdur", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&YakalamayÄ± BaÅŸlat", IDM_FILE_STARTCAPTURE
+        MENUITEM "Ya&kalamayÄ± Durdur", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Bölgesel &Yanký", IDM_FILE_LOCALECHO
+        MENUITEM "B&Ã¶lgevÃ® YankÄ±", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "&Çýkýþ", IDM_EXIT
+        MENUITEM "&Ã‡Ä±kÄ±ÅŸ", IDM_EXIT
     END
-    POPUP "&Yardým"
+    POPUP "&YardÄ±m"
     BEGIN
-        MENUITEM "&Hakkýnda ...", IDM_ABOUT
+        MENUITEM "&HakkÄ±nda...", IDM_ABOUT
     END
 END
 
@@ -118,10 +120,10 @@ END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "FreeLoader Debugger Hakkýnda"
+CAPTION "FreeLoader YanlÄ±ÅŸlÄ±k AyÄ±klayÄ±cÄ± HakkÄ±nda"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)",
+    CONTROL         "FreeLoader YanlÄ±ÅŸlÄ±k AyÄ±klayÄ±cÄ± - SÃ¼rÃ¼m 1.0\nTelif HakkÄ±: 2003 - Brian Palmer\n(brianp@reactos.org)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
                     122,26
     DEFPUSHBUTTON   "Tamam",IDOK,183,189,44,14,WS_GROUP
@@ -132,27 +134,27 @@ END
 
 IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Baðlantý Seçenekleri"
+CAPTION "BaÄŸlantÄ± SeÃ§enekleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "COM Port deðerini giriniz(örnek COM1):",IDC_STATIC,7,7,108,8
+    LTEXT           "COM giriÅŸini giriniz: (Ã–rnek: COM1)",IDC_STATIC,7,7,108,8
     EDITTEXT        IDC_COMPORT,7,17,182,14,ES_AUTOHSCROLL
-    LTEXT           "Baudrate deðerini giriniz (e.g. 115200):",IDC_STATIC,7,38,114,8
+    LTEXT           "Baud hÄ±zÄ±nÄ± giriniz: (Ã–rnek: 115200)",IDC_STATIC,7,38,114,8
     EDITTEXT        IDC_BAUTRATE,7,48,182,14,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Tamam",IDOK,45,79,50,14
-    PUSHBUTTON      "Ýptal",IDCANCEL,100,79,50,14
+    PUSHBUTTON      "Ä°ptal",IDCANCEL,100,79,50,14
 END
 
 IDD_CAPTURE DIALOGEX DISCARDABLE  0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dosya Yakalama"
+CAPTION "KÃ¼tÃ¼k Yakalama"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Yakalanacak Dosya Adý:",IDC_STATIC,7,17,62,8
+    LTEXT           "Yakalanacak KÃ¼tÃ¼k AdÄ±:",IDC_STATIC,7,17,62,8
     EDITTEXT        IDC_CAPTUREFILENAME,7,26,181,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Gözat",IDC_BROWSE,194,26,50,14
+    PUSHBUTTON      "&GÃ¶z At",IDC_BROWSE,194,26,50,14
     DEFPUSHBUTTON   "Tamam",IDOK,139,74,50,14
-    PUSHBUTTON      "Ýptal",IDCANCEL,194,74,50,14
+    PUSHBUTTON      "Ä°ptal",IDCANCEL,194,74,50,14
 END
 
 
@@ -163,14 +165,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "fdebug"
-    IDS_HELLO               "Merhaba Dünya!"
+    IDS_APP_TITLE           "FreeLoader AyÄ±klayÄ±cÄ±"
+    IDS_HELLO               "Merhaba DÃ¼nyÃ¢!"
     IDC_FDEBUG              "FDEBUG"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LICENSE             "Bu program özgür bir yazýlýmdýr; Özgür Yazýlým Vakfý'nýn (Free Software Foundation) yayýnladýðý GNU Genel Kamu Lisansý'nýn 2. versiyonu yada (dilerseniz) herhangi bir sonraki versiyonunun kurallarýna uyarak daðýtabilir ve deðiþtirebilirsiniz.\r\n\r\nBu program faydalý olacaðý umularak daðýtýlmaktadýr, fakat HÝÇBÝR GARANTÝ VERÝLMEZ; ve TÝCARÝ YADA DÝÐER AMAÇLARA UYGUNLUÐU hakkýnda açýktan yada imalý bir bildirim yapýlmaz.  Ayrýntýlar için lütfen GNU Genel Kamu Lisansý'ný (General Public License) inceleyiniz.\r\n\r\nBu programla birlikte GNU Genel Kamu Lisansý'nýn da bir kopyasýnýn size verilmiþ olmasý gerekir; aksi söz konusu ise, Özgür Yazýlým Vakfý'na yazýnýz: Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE             "Ã–NEMLÄ°: AÅŸaÄŸÄ±daki metin, Ã¶zgÃ¼n metnin resmÃ® olmayan Ã§evirisidir. Ã‡eviri metniyle Ã¶zgÃ¼n metin arasÄ±nda ayrÄ±m olabilir. Ã–zgÃ¼n metin, Ã§eviri metninin altÄ±ndadÄ±r.\r\n\r\n***\r\n\r\nBu yazÄ±lÄ±m Ã¶zgÃ¼rdÃ¼r, yÃ¢ni bu yazÄ±lÄ±mÄ± Ã–zgÃ¼r YazÄ±lÄ±m VakfÄ±'nÄ±n yayÄ±nladÄ±ÄŸÄ± GNU UmÃ»mÃ® Kamu RuhsatÄ±'nÄ±n 2. sÃ¼rÃ¼mÃ¼ veyÃ¢ daha sonraki sÃ¼rÃ¼mleri altÄ±nda yeniden daÄŸÄ±tabilir veyÃ¢ deÄŸiÅŸtirebilirsiniz.\r\n\r\nBu yazÄ±lÄ±m, kullanÄ±ÅŸlÄ± olabileceÄŸi beklentisiyle daÄŸÄ±tÄ±lmÄ±ÅŸtÄ±r ancak bilhassa SATILABÄ°LÄ°RLÄ°K ve BELÄ°RLÄ° BÄ°R AMACA UYGUNLUK aÃ§Ä±sÄ±ndan olmak Ã¼zere bu yazÄ±lÄ±mÄ±n HÄ°Ã‡BÄ°R GÃœVENCESÄ° YOKTUR. Daha Ã§ok bilgi iÃ§in GNU UmÃ»mÃ® Kamu RuhsatÄ±'na bakÄ±nÄ±z.\r\n\r\nBu yazÄ±lÄ±mla birlikte GNU UmÃ»mÃ® Kamu RuhsatÄ±'nÄ±n bir sÃ»retine de iye olmanÄ±z gerekir, eÄŸer yoksa Ã–zgÃ¼r YazÄ±lÄ±m VakfÄ± A.Åž.'ne (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazÄ±nÄ±z.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 #endif    // Turkish resources

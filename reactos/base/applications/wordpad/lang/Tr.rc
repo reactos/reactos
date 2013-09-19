@@ -141,7 +141,7 @@ BEGIN
     LTEXT        "Var Olan Biçimler:",-1,3,2,100,15
     LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
     PUSHBUTTON   "Tamam",IDOK,87,12,40,12
-    PUSHBUTTON   "Vazgeç",IDCANCEL,87,26,40,12
+    PUSHBUTTON   "İptal",IDCANCEL,87,26,40,12
 END
 
 IDD_NEWFILE DIALOG 30, 20, 140, 80
@@ -152,7 +152,7 @@ BEGIN
     LTEXT        "Yeni Belge Türü:",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     PUSHBUTTON   "Tamam",IDOK,97,12,40,12
-    PUSHBUTTON   "Vazgeç",IDCANCEL,97,26,40,12
+    PUSHBUTTON   "İptal",IDCANCEL,97,26,40,12
 END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
@@ -170,7 +170,7 @@ BEGIN
     LTEXT "Hizâlama", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "Tamam", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "Vazgeç", IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON "İptal", IDCANCEL, 137, 33, 50, 15
 END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
@@ -183,7 +183,7 @@ BEGIN
     DEFPUSHBUTTON "Ekle", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "Sil", ID_TAB_DEL, 72, 80, 45, 15
     PUSHBUTTON "Tamam", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "Vazgeç", IDCANCEL, 137, 33, 50, 15
+    PUSHBUTTON "İptal", IDCANCEL, 137, 33, 50, 15
     PUSHBUTTON "Hepsini Sil", ID_TAB_EMPTY, 137, 51, 50, 15
 END
 
@@ -261,6 +261,6 @@ BEGIN
     STRING_WRITE_ACCESS_DENIED,       "Bu belgeyi kaydetme yetkiniz yok."
     STRING_OPEN_FAILED,               "Belgenin açılması başarısız oldu."
     STRING_OPEN_ACCESS_DENIED,        "Bu belgeyi açma yetkiniz yok."
-    STRING_PRINTING_NOT_IMPLEMENTED,  "Yazdırma seçeneği daha bitirilmedi."
+    STRING_PRINTING_NOT_IMPLEMENTED,  "Yazdırma seçeneği daha bitirilmemiştir."
     STRING_MAX_TAB_STOPS,             "En çok 32 adet sekme durağı ekleyebilirsiniz."
 END
