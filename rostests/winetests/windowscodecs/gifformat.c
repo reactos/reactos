@@ -277,8 +277,9 @@ static void test_local_gif_palette(void)
     IWICBitmapDecoder *decoder;
     IWICBitmapFrameDecode *frame;
     IWICPalette *palette;
+    WICBitmapPaletteType type;
     GUID format;
-    UINT count, ret;
+    UINT count, ret, i;
     WICColor color[256];
 
     decoder = create_decoder(gif_local_palette, sizeof(gif_local_palette));
@@ -289,8 +290,27 @@ static void test_local_gif_palette(void)
 
     /* global palette */
     hr = IWICBitmapDecoder_CopyPalette(decoder, palette);
-    ok(hr == WINCODEC_ERR_FRAMEMISSING,
-       "expected WINCODEC_ERR_FRAMEMISSING, got %#x\n", hr);
+    ok(hr == S_OK || broken(hr == WINCODEC_ERR_FRAMEMISSING), "CopyPalette %#x\n", hr);
+    if (hr == S_OK)
+    {
+        type = -1;
+        hr = IWICPalette_GetType(palette, &type);
+        ok(hr == S_OK, "GetType error %#x\n", hr);
+        ok(type == WICBitmapPaletteTypeCustom, "expected WICBitmapPaletteTypeCustom, got %#x\n", type);
+
+        hr = IWICPalette_GetColorCount(palette, &count);
+        ok(hr == S_OK, "GetColorCount error %#x\n", hr);
+        ok(count == 256, "expected 256, got %u\n", count);
+
+        hr = IWICPalette_GetColors(palette, count, color, &ret);
+        ok(hr == S_OK, "GetColors error %#x\n", hr);
+        ok(ret == count, "expected %u, got %u\n", count, ret);
+        ok(color[0] == 0xff000000, "expected 0xff000000, got %#x\n", color[0]);
+        ok(color[1] == 0x00ffffff, "expected 0x00ffffff, got %#x\n", color[1]);
+
+        for (i = 2; i < 256; i++)
+            ok(color[i] == 0xff000000, "expected 0xff000000, got %#x\n", color[i]);
+    }
 
     /* frame palette */
     hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
@@ -307,6 +327,11 @@ static void test_local_gif_palette(void)
     hr = IWICPalette_GetColorCount(palette, &count);
     ok(hr == S_OK, "GetColorCount error %#x\n", hr);
     ok(count == 4, "expected 4, got %u\n", count);
+
+    type = -1;
+    hr = IWICPalette_GetType(palette, &type);
+    ok(hr == S_OK, "GetType error %#x\n", hr);
+    ok(type == WICBitmapPaletteTypeCustom, "expected WICBitmapPaletteTypeCustom, got %#x\n", type);
 
     hr = IWICPalette_GetColors(palette, count, color, &ret);
     ok(hr == S_OK, "GetColors error %#x\n", hr);
