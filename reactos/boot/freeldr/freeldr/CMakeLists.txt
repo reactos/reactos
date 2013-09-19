@@ -210,8 +210,8 @@ if(MSVC OR (NOT CMAKE_VERSION VERSION_GREATER 2.8.7))
     target_link_libraries(freeldr_pe_dbg freeldr_common)
 endif()
 
-target_link_libraries(freeldr_pe cportlib rossym cmlib rtl libcntpr)
-target_link_libraries(freeldr_pe_dbg cportlib rossym cmlib rtl libcntpr)
+target_link_libraries(freeldr_pe cportlib ${ROSSYM_LIB} cmlib rtl libcntpr)
+target_link_libraries(freeldr_pe_dbg cportlib ${ROSSYM_LIB} cmlib rtl libcntpr)
 
 # add_pch(freeldr_pe include/freeldr.h)
 
@@ -277,8 +277,8 @@ if(MSVC OR (NOT CMAKE_VERSION VERSION_GREATER 2.8.7))
     target_link_libraries(setupldr_pe_dbg freeldr_common)
 endif()
 
-target_link_libraries(setupldr_pe cportlib rossym cmlib rtl libcntpr)
-target_link_libraries(setupldr_pe_dbg cportlib rossym cmlib rtl libcntpr)
+target_link_libraries(setupldr_pe cportlib ${ROSSYM_LIB} cmlib rtl libcntpr)
+target_link_libraries(setupldr_pe_dbg cportlib ${ROSSYM_LIB} cmlib rtl libcntpr)
 
 add_dependencies(setupldr_pe asm)
 add_dependencies(setupldr_pe_dbg asm)
