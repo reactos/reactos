@@ -248,8 +248,8 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xDD NOT SUPPORTED
     NULL, // TODO: OPCODE 0xDE NOT SUPPORTED
     NULL, // TODO: OPCODE 0xDF NOT SUPPORTED
-    Soft386OpcodeLoopnz,
-    Soft386OpcodeLoopz,
+    Soft386OpcodeLoop,
+    Soft386OpcodeLoop,
     Soft386OpcodeLoop,
     Soft386OpcodeJecxz,
     Soft386OpcodeInByte,
@@ -4323,36 +4323,98 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeXlat)
     return FALSE;
 }
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeLoopnz)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-
-    return FALSE;
-}
-
-SOFT386_OPCODE_HANDLER(Soft386OpcodeLoopz)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-
-    return FALSE;
-}
-
 SOFT386_OPCODE_HANDLER(Soft386OpcodeLoop)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN Condition;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+    CHAR Offset = 0;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode >= 0xE0) && (Opcode <= 0xE2));
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (Size) Condition = ((--State->GeneralRegs[SOFT386_REG_ECX].Long) == 0);
+    else Condition = ((--State->GeneralRegs[SOFT386_REG_ECX].LowWord) == 0);
+
+    if (Opcode == 0xE0)
+    {
+        /* Additional rule for LOOPNZ */
+        if (State->Flags.Zf) Condition = FALSE;
+    }
+
+    if (Opcode == 0xE1)
+    {
+        /* Additional rule for LOOPZ */
+        if (!State->Flags.Zf) Condition = FALSE;
+    }
+
+    /* Fetch the offset */
+    if (!Soft386FetchByte(State, (PUCHAR)&Offset))
+    {
+        /* An exception occurred */
+        return FALSE;
+    }
+
+    if (Condition)
+    {
+        /* Move the instruction pointer */
+        State->InstPtr.Long += Offset;
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeJecxz)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN Condition;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+    CHAR Offset = 0;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xE3);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (Size) Condition = (State->GeneralRegs[SOFT386_REG_ECX].Long == 0);
+    else Condition = (State->GeneralRegs[SOFT386_REG_ECX].LowWord == 0);
+
+    /* Fetch the offset */
+    if (!Soft386FetchByte(State, (PUCHAR)&Offset))
+    {
+        /* An exception occurred */
+        return FALSE;
+    }
+
+    if (Condition)
+    {
+        /* Move the instruction pointer */        
+        State->InstPtr.Long += Offset;
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeCall)
