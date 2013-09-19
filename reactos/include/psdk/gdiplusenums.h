@@ -704,6 +704,8 @@ enum EmfPlusRecordType {
     EmfPlusRecordTypeMin = EmfPlusRecordTypeHeader
 };
 
+#define FlatnessDefault 0.25f
+
 #ifndef __cplusplus
 
 typedef enum Unit Unit;

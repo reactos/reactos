@@ -1138,110 +1138,323 @@ GpStatus WINGDIPAPI GdipPrivateAddFontFile(GpFontCollection* fontCollection,
     return NotImplemented;
 }
 
-/* Copied from msi/font.c */
+#define TT_PLATFORM_APPLE_UNICODE   0
+#define TT_PLATFORM_MACINTOSH       1
+#define TT_PLATFORM_MICROSOFT       3
 
-typedef struct _tagTT_OFFSET_TABLE {
-    USHORT uMajorVersion;
-    USHORT uMinorVersion;
-    USHORT uNumOfTables;
-    USHORT uSearchRange;
-    USHORT uEntrySelector;
-    USHORT uRangeShift;
-} TT_OFFSET_TABLE;
+#define TT_APPLE_ID_DEFAULT     0
+#define TT_APPLE_ID_ISO_10646   2
+#define TT_APPLE_ID_UNICODE_2_0 3
 
-typedef struct _tagTT_TABLE_DIRECTORY {
-    char szTag[4]; /* table name */
-    ULONG uCheckSum; /* Check sum */
-    ULONG uOffset; /* Offset from beginning of file */
-    ULONG uLength; /* length of the table in bytes */
-} TT_TABLE_DIRECTORY;
+#define TT_MS_ID_SYMBOL_CS  0
+#define TT_MS_ID_UNICODE_CS 1
 
-typedef struct _tagTT_NAME_TABLE_HEADER {
-    USHORT uFSelector; /* format selector. Always 0 */
-    USHORT uNRCount; /* Name Records count */
-    USHORT uStorageOffset; /* Offset for strings storage,
-                            * from start of the table */
-} TT_NAME_TABLE_HEADER;
+#define TT_MAC_ID_SIMPLIFIED_CHINESE    25
 
 #define NAME_ID_FULL_FONT_NAME  4
-#define NAME_ID_VERSION         5
 
-typedef struct _tagTT_NAME_RECORD {
-    USHORT uPlatformID;
-    USHORT uEncodingID;
-    USHORT uLanguageID;
-    USHORT uNameID;
-    USHORT uStringLength;
-    USHORT uStringOffset; /* from start of storage area */
-} TT_NAME_RECORD;
+typedef struct {
+    USHORT major_version;
+    USHORT minor_version;
+    USHORT tables_no;
+    USHORT search_range;
+    USHORT entry_selector;
+    USHORT range_shift;
+} tt_header;
 
-#define SWAPWORD(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
-#define SWAPLONG(x) MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
+typedef struct {
+    char tag[4];        /* table name */
+    ULONG check_sum;    /* Check sum */
+    ULONG offset;       /* Offset from beginning of file */
+    ULONG length;       /* length of the table in bytes */
+} tt_table_directory;
 
-/*
- * Code based off of code located here
- * http://www.codeproject.com/gdi/fontnamefromfile.asp
- */
-static WCHAR *load_ttf_name_id( const char *mem, DWORD_PTR size, DWORD id, WCHAR *ret, DWORD len )
+typedef struct {
+    USHORT format;          /* format selector. Always 0 */
+    USHORT count;           /* Name Records count */
+    USHORT string_offset;   /* Offset for strings storage, * from start of the table */
+} tt_name_table;
+
+typedef struct {
+    USHORT platform_id;
+    USHORT encoding_id;
+    USHORT language_id;
+    USHORT name_id;
+    USHORT length;
+    USHORT offset;      /* from start of storage area */
+} tt_name_record;
+
+/* Copied from gdi32/freetype.c */
+
+static const LANGID mac_langid_table[] =
 {
-    const TT_TABLE_DIRECTORY *tblDir;
-    TT_OFFSET_TABLE ttOffsetTable;
-    TT_NAME_TABLE_HEADER ttNTHeader;
-    TT_NAME_RECORD ttRecord;
-    DWORD ofs, pos;
-    int i;
+    MAKELANGID(LANG_ENGLISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_ENGLISH */
+    MAKELANGID(LANG_FRENCH,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_FRENCH */
+    MAKELANGID(LANG_GERMAN,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_GERMAN */
+    MAKELANGID(LANG_ITALIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_ITALIAN */
+    MAKELANGID(LANG_DUTCH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_DUTCH */
+    MAKELANGID(LANG_SWEDISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SWEDISH */
+    MAKELANGID(LANG_SPANISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SPANISH */
+    MAKELANGID(LANG_DANISH,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_DANISH */
+    MAKELANGID(LANG_PORTUGUESE,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_PORTUGUESE */
+    MAKELANGID(LANG_NORWEGIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_NORWEGIAN */
+    MAKELANGID(LANG_HEBREW,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_HEBREW */
+    MAKELANGID(LANG_JAPANESE,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_JAPANESE */
+    MAKELANGID(LANG_ARABIC,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_ARABIC */
+    MAKELANGID(LANG_FINNISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_FINNISH */
+    MAKELANGID(LANG_GREEK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_GREEK */
+    MAKELANGID(LANG_ICELANDIC,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_ICELANDIC */
+    MAKELANGID(LANG_MALTESE,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_MALTESE */
+    MAKELANGID(LANG_TURKISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_TURKISH */
+    MAKELANGID(LANG_CROATIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_CROATIAN */
+    MAKELANGID(LANG_CHINESE_TRADITIONAL,SUBLANG_DEFAULT),    /* TT_MAC_LANGID_CHINESE_TRADITIONAL */
+    MAKELANGID(LANG_URDU,SUBLANG_DEFAULT),                   /* TT_MAC_LANGID_URDU */
+    MAKELANGID(LANG_HINDI,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_HINDI */
+    MAKELANGID(LANG_THAI,SUBLANG_DEFAULT),                   /* TT_MAC_LANGID_THAI */
+    MAKELANGID(LANG_KOREAN,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_KOREAN */
+    MAKELANGID(LANG_LITHUANIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_LITHUANIAN */
+    MAKELANGID(LANG_POLISH,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_POLISH */
+    MAKELANGID(LANG_HUNGARIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_HUNGARIAN */
+    MAKELANGID(LANG_ESTONIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ESTONIAN */
+    MAKELANGID(LANG_LATVIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_LETTISH */
+    MAKELANGID(LANG_SAMI,SUBLANG_DEFAULT),                   /* TT_MAC_LANGID_SAAMISK */
+    MAKELANGID(LANG_FAEROESE,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_FAEROESE */
+    MAKELANGID(LANG_FARSI,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_FARSI */
+    MAKELANGID(LANG_RUSSIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_RUSSIAN */
+    MAKELANGID(LANG_CHINESE_SIMPLIFIED,SUBLANG_DEFAULT),     /* TT_MAC_LANGID_CHINESE_SIMPLIFIED */
+    MAKELANGID(LANG_DUTCH,SUBLANG_DUTCH_BELGIAN),            /* TT_MAC_LANGID_FLEMISH */
+    MAKELANGID(LANG_IRISH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_IRISH */
+    MAKELANGID(LANG_ALBANIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ALBANIAN */
+    MAKELANGID(LANG_ROMANIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ROMANIAN */
+    MAKELANGID(LANG_CZECH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_CZECH */
+    MAKELANGID(LANG_SLOVAK,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_SLOVAK */
+    MAKELANGID(LANG_SLOVENIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_SLOVENIAN */
+    0,                                                       /* TT_MAC_LANGID_YIDDISH */
+    MAKELANGID(LANG_SERBIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SERBIAN */
+    MAKELANGID(LANG_MACEDONIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_MACEDONIAN */
+    MAKELANGID(LANG_BULGARIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_BULGARIAN */
+    MAKELANGID(LANG_UKRAINIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_UKRAINIAN */
+    MAKELANGID(LANG_BELARUSIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_BYELORUSSIAN */
+    MAKELANGID(LANG_UZBEK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_UZBEK */
+    MAKELANGID(LANG_KAZAK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_KAZAKH */
+    MAKELANGID(LANG_AZERI,SUBLANG_AZERI_CYRILLIC),           /* TT_MAC_LANGID_AZERBAIJANI */
+    0,                                                       /* TT_MAC_LANGID_AZERBAIJANI_ARABIC_SCRIPT */
+    MAKELANGID(LANG_ARMENIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ARMENIAN */
+    MAKELANGID(LANG_GEORGIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_GEORGIAN */
+    0,                                                       /* TT_MAC_LANGID_MOLDAVIAN */
+    MAKELANGID(LANG_KYRGYZ,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_KIRGHIZ */
+    MAKELANGID(LANG_TAJIK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_TAJIKI */
+    MAKELANGID(LANG_TURKMEN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_TURKMEN */
+    MAKELANGID(LANG_MONGOLIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_MONGOLIAN */
+    MAKELANGID(LANG_MONGOLIAN,SUBLANG_MONGOLIAN_CYRILLIC_MONGOLIA), /* TT_MAC_LANGID_MONGOLIAN_CYRILLIC_SCRIPT */
+    MAKELANGID(LANG_PASHTO,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_PASHTO */
+    0,                                                       /* TT_MAC_LANGID_KURDISH */
+    MAKELANGID(LANG_KASHMIRI,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_KASHMIRI */
+    MAKELANGID(LANG_SINDHI,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_SINDHI */
+    MAKELANGID(LANG_TIBETAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_TIBETAN */
+    MAKELANGID(LANG_NEPALI,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_NEPALI */
+    MAKELANGID(LANG_SANSKRIT,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_SANSKRIT */
+    MAKELANGID(LANG_MARATHI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_MARATHI */
+    MAKELANGID(LANG_BENGALI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_BENGALI */
+    MAKELANGID(LANG_ASSAMESE,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ASSAMESE */
+    MAKELANGID(LANG_GUJARATI,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_GUJARATI */
+    MAKELANGID(LANG_PUNJABI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_PUNJABI */
+    MAKELANGID(LANG_ORIYA,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_ORIYA */
+    MAKELANGID(LANG_MALAYALAM,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_MALAYALAM */
+    MAKELANGID(LANG_KANNADA,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_KANNADA */
+    MAKELANGID(LANG_TAMIL,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_TAMIL */
+    MAKELANGID(LANG_TELUGU,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_TELUGU */
+    MAKELANGID(LANG_SINHALESE,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_SINHALESE */
+    0,                                                       /* TT_MAC_LANGID_BURMESE */
+    MAKELANGID(LANG_KHMER,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_KHMER */
+    MAKELANGID(LANG_LAO,SUBLANG_DEFAULT),                    /* TT_MAC_LANGID_LAO */
+    MAKELANGID(LANG_VIETNAMESE,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_VIETNAMESE */
+    MAKELANGID(LANG_INDONESIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_INDONESIAN */
+    0,                                                       /* TT_MAC_LANGID_TAGALOG */
+    MAKELANGID(LANG_MALAY,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_MALAY_ROMAN_SCRIPT */
+    0,                                                       /* TT_MAC_LANGID_MALAY_ARABIC_SCRIPT */
+    MAKELANGID(LANG_AMHARIC,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_AMHARIC */
+    MAKELANGID(LANG_TIGRIGNA,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_TIGRINYA */
+    0,                                                       /* TT_MAC_LANGID_GALLA */
+    0,                                                       /* TT_MAC_LANGID_SOMALI */
+    MAKELANGID(LANG_SWAHILI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SWAHILI */
+    0,                                                       /* TT_MAC_LANGID_RUANDA */
+    0,                                                       /* TT_MAC_LANGID_RUNDI */
+    0,                                                       /* TT_MAC_LANGID_CHEWA */
+    MAKELANGID(LANG_MALAGASY,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_MALAGASY */
+    MAKELANGID(LANG_ESPERANTO,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_ESPERANTO */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,       /* 95-111 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          /* 112-127 */
+    MAKELANGID(LANG_WELSH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_WELSH */
+    MAKELANGID(LANG_BASQUE,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_BASQUE */
+    MAKELANGID(LANG_CATALAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_CATALAN */
+    0,                                                       /* TT_MAC_LANGID_LATIN */
+    MAKELANGID(LANG_QUECHUA,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_QUECHUA */
+    0,                                                       /* TT_MAC_LANGID_GUARANI */
+    0,                                                       /* TT_MAC_LANGID_AYMARA */
+    MAKELANGID(LANG_TATAR,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_TATAR */
+    MAKELANGID(LANG_UIGHUR,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_UIGHUR */
+    0,                                                       /* TT_MAC_LANGID_DZONGKHA */
+    0,                                                       /* TT_MAC_LANGID_JAVANESE */
+    0,                                                       /* TT_MAC_LANGID_SUNDANESE */
+    MAKELANGID(LANG_GALICIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_GALICIAN */
+    MAKELANGID(LANG_AFRIKAANS,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_AFRIKAANS */
+    MAKELANGID(LANG_BRETON,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_BRETON */
+    MAKELANGID(LANG_INUKTITUT,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_INUKTITUT */
+    MAKELANGID(LANG_SCOTTISH_GAELIC,SUBLANG_DEFAULT),        /* TT_MAC_LANGID_SCOTTISH_GAELIC */
+    MAKELANGID(LANG_MANX_GAELIC,SUBLANG_DEFAULT),            /* TT_MAC_LANGID_MANX_GAELIC */
+    MAKELANGID(LANG_IRISH,SUBLANG_IRISH_IRELAND),            /* TT_MAC_LANGID_IRISH_GAELIC */
+    0,                                                       /* TT_MAC_LANGID_TONGAN */
+    0,                                                       /* TT_MAC_LANGID_GREEK_POLYTONIC */
+    MAKELANGID(LANG_GREENLANDIC,SUBLANG_DEFAULT),            /* TT_MAC_LANGID_GREELANDIC */
+    MAKELANGID(LANG_AZERI,SUBLANG_AZERI_LATIN),              /* TT_MAC_LANGID_AZERBAIJANI_ROMAN_SCRIPT */
+};
 
-    if (sizeof(TT_OFFSET_TABLE) > size)
-        return NULL;
-    ttOffsetTable = *(TT_OFFSET_TABLE*)mem;
-    ttOffsetTable.uNumOfTables = SWAPWORD(ttOffsetTable.uNumOfTables);
-    ttOffsetTable.uMajorVersion = SWAPWORD(ttOffsetTable.uMajorVersion);
-    ttOffsetTable.uMinorVersion = SWAPWORD(ttOffsetTable.uMinorVersion);
+static inline WORD get_mac_code_page( const tt_name_record *name )
+{
+    WORD encoding_id = GET_BE_WORD(name->encoding_id);
+    if (encoding_id == TT_MAC_ID_SIMPLIFIED_CHINESE) return 10008;  /* special case */
+    return 10000 + encoding_id;
+}
 
-    if (ttOffsetTable.uMajorVersion != 1 || ttOffsetTable.uMinorVersion != 0)
-        return NULL;
+static int match_name_table_language( const tt_name_record *name, LANGID lang )
+{
+    LANGID name_lang;
 
-    pos = sizeof(ttOffsetTable);
-    for (i = 0; i < ttOffsetTable.uNumOfTables; i++)
+    switch (GET_BE_WORD(name->platform_id))
     {
-        tblDir = (const TT_TABLE_DIRECTORY*)&mem[pos];
-        pos += sizeof(*tblDir);
-        if (memcmp(tblDir->szTag,"name",4)==0)
+    case TT_PLATFORM_MICROSOFT:
+        switch (GET_BE_WORD(name->encoding_id))
         {
-            ofs = SWAPLONG(tblDir->uOffset);
+        case TT_MS_ID_UNICODE_CS:
+        case TT_MS_ID_SYMBOL_CS:
+            name_lang = GET_BE_WORD(name->language_id);
+            break;
+        default:
+            return 0;
+        }
+        break;
+    case TT_PLATFORM_MACINTOSH:
+        if (!IsValidCodePage( get_mac_code_page( name ))) return 0;
+        name_lang = GET_BE_WORD(name->language_id);
+        if (name_lang >= sizeof(mac_langid_table)/sizeof(mac_langid_table[0])) return 0;
+        name_lang = mac_langid_table[name_lang];
+        break;
+    case TT_PLATFORM_APPLE_UNICODE:
+        switch (GET_BE_WORD(name->encoding_id))
+        {
+        case TT_APPLE_ID_DEFAULT:
+        case TT_APPLE_ID_ISO_10646:
+        case TT_APPLE_ID_UNICODE_2_0:
+            name_lang = GET_BE_WORD(name->language_id);
+            if (name_lang >= sizeof(mac_langid_table)/sizeof(mac_langid_table[0])) return 0;
+            name_lang = mac_langid_table[name_lang];
+            break;
+        default:
+            return 0;
+        }
+        break;
+    default:
+        return 0;
+    }
+    if (name_lang == lang) return 3;
+    if (PRIMARYLANGID( name_lang ) == PRIMARYLANGID( lang )) return 2;
+    if (name_lang == MAKELANGID( LANG_ENGLISH, SUBLANG_DEFAULT )) return 1;
+    return 0;
+}
+
+static WCHAR *copy_name_table_string( const tt_name_record *name, const BYTE *data, WCHAR *ret, DWORD len )
+{
+    WORD name_len = GET_BE_WORD(name->length);
+    WORD codepage;
+
+    switch (GET_BE_WORD(name->platform_id))
+    {
+    case TT_PLATFORM_APPLE_UNICODE:
+    case TT_PLATFORM_MICROSOFT:
+        if (name_len >= len*sizeof(WCHAR))
+            return NULL;
+        for (len = 0; len < name_len / 2; len++)
+            ret[len] = (data[len * 2] << 8) | data[len * 2 + 1];
+        ret[len] = 0;
+        return ret;
+    case TT_PLATFORM_MACINTOSH:
+        codepage = get_mac_code_page( name );
+        len = MultiByteToWideChar( codepage, 0, (char *)data, name_len, ret, len-1 );
+        if (!len)
+            return NULL;
+        ret[len] = 0;
+        return ret;
+    }
+    return NULL;
+}
+
+static WCHAR *load_ttf_name_id( const BYTE *mem, DWORD_PTR size, DWORD id, WCHAR *ret, DWORD len )
+{
+    LANGID lang = GetSystemDefaultLangID();
+    const tt_header *header;
+    const tt_name_table *name_table;
+    const tt_name_record *name_record;
+    DWORD pos, ofs, count;
+    int i, res, best_lang = 0, best_index = -1;
+
+    if (sizeof(tt_header) > size)
+        return NULL;
+    header = (const tt_header*)mem;
+    count = GET_BE_WORD(header->tables_no);
+
+    if (GET_BE_WORD(header->major_version) != 1 || GET_BE_WORD(header->minor_version) != 0)
+        return NULL;
+
+    pos = sizeof(*header);
+    for (i = 0; i < count; i++)
+    {
+        const tt_table_directory *table_directory = (const tt_table_directory*)&mem[pos];
+        pos += sizeof(*table_directory);
+        if (memcmp(table_directory->tag, "name", 4) == 0)
+        {
+            ofs = GET_BE_DWORD(table_directory->offset);
             break;
         }
     }
-    if (i >= ttOffsetTable.uNumOfTables)
+    if (i >= count)
         return NULL;
 
-    pos = ofs + sizeof(ttNTHeader);
+    if (ofs >= size)
+        return NULL;
+    pos = ofs + sizeof(*name_table);
     if (pos > size)
         return NULL;
-    ttNTHeader = *(TT_NAME_TABLE_HEADER*)&mem[ofs];
-    ttNTHeader.uNRCount = SWAPWORD(ttNTHeader.uNRCount);
-    ttNTHeader.uStorageOffset = SWAPWORD(ttNTHeader.uStorageOffset);
-    for(i=0; i<ttNTHeader.uNRCount; i++)
+    name_table = (const tt_name_table*)&mem[ofs];
+    count =  GET_BE_WORD(name_table->count);
+    if (GET_BE_WORD(name_table->string_offset) >= size - ofs) return NULL;
+    ofs += GET_BE_WORD(name_table->string_offset);
+    for (i=0; i<count; i++)
     {
-        ttRecord = *(TT_NAME_RECORD*)&mem[pos];
-        pos += sizeof(ttRecord);
+        name_record = (const tt_name_record*)&mem[pos];
+        pos += sizeof(*name_record);
         if (pos > size)
             return NULL;
 
-        ttRecord.uNameID = SWAPWORD(ttRecord.uNameID);
-        if (ttRecord.uNameID == id)
-        {
-            const char *buf;
+        if (GET_BE_WORD(name_record->name_id) != id) continue;
+        if (GET_BE_WORD(name_record->offset) >= size - ofs) return NULL;
+        if (GET_BE_WORD(name_record->length) > size - ofs - GET_BE_WORD(name_record->offset)) return NULL;
 
-            ttRecord.uStringLength = SWAPWORD(ttRecord.uStringLength);
-            ttRecord.uStringOffset = SWAPWORD(ttRecord.uStringOffset);
-            if (ofs + ttRecord.uStringOffset + ttNTHeader.uStorageOffset + ttRecord.uStringLength > size)
-                return NULL;
-            buf = mem + ofs + ttRecord.uStringOffset + ttNTHeader.uStorageOffset;
-            len = MultiByteToWideChar(CP_ACP, 0, buf, ttRecord.uStringLength, ret, len-1);
-            ret[len] = 0;
-            return ret;
+        res = match_name_table_language( name_record, lang );
+        if (res > best_lang)
+        {
+            best_lang = res;
+            best_index = i;
         }
+    }
+
+    if (best_lang)
+    {
+        name_record = (const tt_name_record*)(name_table + 1) + best_index;
+        ret = copy_name_table_string( name_record, mem+ofs+GET_BE_WORD(name_record->offset), ret, len );
+        TRACE( "name %u found platform %u lang %04x %s\n", GET_BE_WORD(name_record->name_id),
+                GET_BE_WORD(name_record->platform_id), GET_BE_WORD(name_record->language_id), debugstr_w( ret ));
+        return ret;
     }
     return NULL;
 }

@@ -716,7 +716,7 @@ GpStatus WINGDIPAPI GdipGetRegionBoundsI(GpRegion *region, GpGraphics *graphics,
     status = GdipGetRegionBounds(region, graphics, &rectf);
     if(status == Ok){
         rect->X = gdip_round(rectf.X);
-        rect->Y = gdip_round(rectf.X);
+        rect->Y = gdip_round(rectf.Y);
         rect->Width  = gdip_round(rectf.Width);
         rect->Height = gdip_round(rectf.Height);
     }

@@ -270,3 +270,20 @@ GpStatus WINGDIPAPI GdipSetImageAttributesToIdentity(GpImageAttributes *imageAtt
 
     return NotImplemented;
 }
+
+GpStatus WINGDIPAPI GdipResetImageAttributes(GpImageAttributes *imageAttr,
+    ColorAdjustType type)
+{
+    TRACE("(%p,%u)\n", imageAttr, type);
+
+    if(!imageAttr || type >= ColorAdjustTypeCount)
+        return InvalidParameter;
+
+    memset(&imageAttr->colorkeys[type], 0, sizeof(imageAttr->colorkeys[type]));
+    memset(&imageAttr->colormatrices[type], 0, sizeof(imageAttr->colormatrices[type]));
+    memset(&imageAttr->colorremaptables[type], 0, sizeof(imageAttr->colorremaptables[type]));
+    memset(&imageAttr->gamma_enabled[type], 0, sizeof(imageAttr->gamma_enabled[type]));
+    memset(&imageAttr->gamma[type], 0, sizeof(imageAttr->gamma[type]));
+
+    return Ok;
+}
