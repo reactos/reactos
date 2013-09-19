@@ -460,7 +460,7 @@ target_link_libraries(ntoskrnl
     ${PSEH_LIB}
     cmlib
     rtl
-    rossym
+    ${ROSSYM_LIB}
     libcntpr
     wdmguid
     ioevent)
@@ -504,7 +504,7 @@ if(BUILD_MP)
         add_target_link_flags(ntkrnlmp "-shared")
     endif()
 
-    target_link_libraries(ntkrnlmp cportlib csq ${PSEH_LIB} cmlib rtl rossym libcntpr wdmguid ioevent)
+    target_link_libraries(ntkrnlmp cportlib csq ${PSEH_LIB} cmlib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
     add_importlibs(ntkrnlmp hal kdcom bootvid)
     add_dependencies(ntkrnlmp psdk bugcodes asm)
     add_cd_file(TARGET ntkrnlmp DESTINATION reactos/system32 NO_CAB FOR all)
