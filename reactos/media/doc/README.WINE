@@ -80,7 +80,7 @@ reactos/dll/win32/hnetcfg         # Synced to Wine-1.7.1
 reactos/dll/win32/httpapi         # Synced to Wine-1.7.1
 reactos/dll/win32/iccvid          # Synced to Wine-1.7.1
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
-reactos/dll/win32/ieframe         # Synced to Wine-1.5.26
+reactos/dll/win32/ieframe         # Synced to Wine-1.7.1
 reactos/dll/win32/imaadp32.acm    # Synced to Wine-1.5.4
 reactos/dll/win32/imagehlp        # Synced to Wine-1.5.4
 reactos/dll/win32/imm32           # Synced to Wine-1.5.19

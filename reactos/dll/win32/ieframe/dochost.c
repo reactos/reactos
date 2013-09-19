@@ -20,6 +20,7 @@
 
 #include <exdispid.h>
 //#include "mshtml.h"
+#include <perhist.h>
 #include <initguid.h>
 
 #include <wine/debug.h>
@@ -120,15 +121,29 @@ static void object_available(DocHost *This)
     }
 
     hres = IUnknown_QueryInterface(This->document, &IID_IHlinkTarget, (void**)&hlink);
-    if(FAILED(hres)) {
-        FIXME("Could not get IHlinkTarget interface\n");
-        return;
-    }
+    if(SUCCEEDED(hres)) {
+        hres = IHlinkTarget_Navigate(hlink, 0, NULL);
+        IHlinkTarget_Release(hlink);
+        if(FAILED(hres))
+            FIXME("Navigate failed\n");
+    }else {
+        IOleObject *ole_object;
+        RECT rect;
 
-    hres = IHlinkTarget_Navigate(hlink, 0, NULL);
-    IHlinkTarget_Release(hlink);
-    if(FAILED(hres))
-        FIXME("Navigate failed\n");
+        TRACE("No IHlink iface\n");
+
+        hres = IUnknown_QueryInterface(This->document, &IID_IOleObject, (void**)&ole_object);
+        if(FAILED(hres)) {
+            FIXME("Could not get IOleObject iface: %08x\n", hres);
+            return;
+        }
+
+        GetClientRect(This->hwnd, &rect);
+        hres = IOleObject_DoVerb(ole_object, OLEIVERB_SHOW, NULL, &This->IOleClientSite_iface, -1, This->hwnd, &rect);
+        IOleObject_Release(ole_object);
+        if(FAILED(hres))
+            FIXME("DoVerb failed: %08x\n", hres);
+    }
 }
 
 static HRESULT get_doc_ready_state(DocHost *This, READYSTATE *ret)
@@ -195,6 +210,12 @@ void set_doc_state(DocHost *This, READYSTATE doc_state)
 
 static void update_ready_state(DocHost *This, READYSTATE ready_state)
 {
+    if(ready_state > READYSTATE_LOADING && This->travellog.loading_pos != -1) {
+        WARN("histupdate not notified\n");
+        This->travellog.position = This->travellog.loading_pos;
+        This->travellog.loading_pos = -1;
+    }
+
     if(ready_state > READYSTATE_LOADING && This->doc_state <= READYSTATE_LOADING && !This->browser_service /* FIXME */)
         notif_complete(This, DISPID_NAVIGATECOMPLETE2);
 
@@ -289,6 +310,10 @@ HRESULT dochost_object_available(DocHost *This, IUnknown *doc)
             push_ready_state_task(This, READYSTATE_COMPLETE);
         if(ready_state != READYSTATE_COMPLETE || This->doc_navigate)
             advise_prop_notif(This, TRUE);
+    }else if(!This->doc_navigate) {
+        /* If we can't get document's ready state, there is not much we can do.
+         * Assume that document is complete at this point. */
+        push_ready_state_task(This, READYSTATE_COMPLETE);
     }
 
     return S_OK;
@@ -327,37 +352,91 @@ static LRESULT WINAPI doc_view_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
+static void free_travellog_entry(travellog_entry_t *entry)
+{
+    if(entry->stream)
+        IStream_Release(entry->stream);
+    heap_free(entry->url);
+}
+
+static IStream *get_travellog_stream(DocHost *This)
+{
+    IPersistHistory *persist_history;
+    IStream *stream;
+    HRESULT hres;
+
+    hres = IUnknown_QueryInterface(This->document, &IID_IPersistHistory, (void**)&persist_history);
+    if(FAILED(hres))
+        return NULL;
+
+    hres = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    if(SUCCEEDED(hres))
+        hres = IPersistHistory_SaveHistory(persist_history, stream);
+    IPersistHistory_Release(persist_history);
+    if(FAILED(hres)) {
+        IStream_Release(stream);
+        return NULL;
+    }
+
+    return stream;
+}
+
+static void dump_travellog(DocHost *This)
+{
+    unsigned i;
+
+    for(i=0; i < This->travellog.length; i++)
+        TRACE("%d: %s %s\n", i, i == This->travellog.position ? "=>" : "  ", debugstr_w(This->travellog.log[i].url));
+    if(i == This->travellog.position)
+        TRACE("%d: =>\n", i);
+}
+
 static void update_travellog(DocHost *This)
 {
     travellog_entry_t *new_entry;
 
-    if(!This->travellog) {
-        This->travellog = heap_alloc(4 * sizeof(*This->travellog));
-        if(!This->travellog)
-            return;
+    if(This->travellog.loading_pos == -1) {
+        /* Clear forward history. */
+        if(!This->travellog.log) {
+            This->travellog.log = heap_alloc(4 * sizeof(*This->travellog.log));
+            if(!This->travellog.log)
+                return;
 
-        This->travellog_size = 4;
-    }else if(This->travellog_size < This->travellog_position+1) {
-        travellog_entry_t *new_travellog;
+            This->travellog.size = 4;
+        }else if(This->travellog.size < This->travellog.position+1) {
+            travellog_entry_t *new_travellog;
 
-        new_travellog = heap_realloc(This->travellog, This->travellog_size*2*sizeof(*This->travellog));
-        if(!new_travellog)
-            return;
+            new_travellog = heap_realloc(This->travellog.log, This->travellog.size*2*sizeof(*This->travellog.log));
+            if(!new_travellog)
+                return;
 
-        This->travellog = new_travellog;
-        This->travellog_size *= 2;
+            This->travellog.log = new_travellog;
+            This->travellog.size *= 2;
+        }
+
+        while(This->travellog.length > This->travellog.position)
+            free_travellog_entry(This->travellog.log + --This->travellog.length);
     }
 
-    while(This->travellog_length > This->travellog_position)
-        heap_free(This->travellog[--This->travellog_length].url);
-
-    new_entry = This->travellog + This->travellog_position;
+    new_entry = This->travellog.log + This->travellog.position;
 
     new_entry->url = heap_strdupW(This->url);
+    TRACE("Adding %s at %d\n", debugstr_w(This->url), This->travellog.position);
     if(!new_entry->url)
         return;
 
-    This->travellog_position++;
+    new_entry->stream = get_travellog_stream(This);
+
+    if(This->travellog.loading_pos == -1) {
+        This->travellog.position++;
+    }else {
+         This->travellog.position = This->travellog.loading_pos;
+         This->travellog.loading_pos = -1;
+    }
+    if(This->travellog.position > This->travellog.length)
+        This->travellog.length = This->travellog.position;
+
+    dump_travellog(This);
 }
 
 void create_doc_view_hwnd(DocHost *This)
@@ -975,6 +1054,8 @@ void DocHost_Init(DocHost *This, IWebBrowser2 *wb, const IDocHostContainerVtbl* 
     This->ready_state = READYSTATE_UNINITIALIZED;
     list_init(&This->task_queue);
 
+    This->travellog.loading_pos = -1;
+
     DocHost_ClientSite_Init(This);
     DocHost_Frame_Init(This);
 
@@ -994,9 +1075,9 @@ void DocHost_Release(DocHost *This)
 
     ConnectionPointContainer_Destroy(&This->cps);
 
-    while(This->travellog_length)
-        heap_free(This->travellog[--This->travellog_length].url);
-    heap_free(This->travellog);
+    while(This->travellog.length)
+        free_travellog_entry(This->travellog.log + --This->travellog.length);
+    heap_free(This->travellog.log);
 
     heap_free(This->url);
 }

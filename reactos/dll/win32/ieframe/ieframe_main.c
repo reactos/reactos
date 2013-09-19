@@ -218,6 +218,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
         DisableThreadLibraryCalls(ieframe_instance);
         break;
     case DLL_PROCESS_DETACH:
+        if (lpv) break;
         unregister_iewindow_class();
         release_typelib();
     }

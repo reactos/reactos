@@ -726,6 +726,7 @@ static HRESULT WINAPI DocObjectService_FireNavigateComplete2(
         DWORD dwFlags)
 {
     ShellBrowser *This = impl_from_IDocObjectService(iface);
+    DocHost *doc_host = This->doc_host;
     IHTMLPrivateWindow *priv_window;
     VARIANTARG params[2];
     DISPPARAMS dp = {params, NULL, 2, 0};
@@ -734,6 +735,12 @@ static HRESULT WINAPI DocObjectService_FireNavigateComplete2(
     HRESULT hres;
 
     TRACE("%p %p %x\n", This, pHTMLWindow2, dwFlags);
+
+    if(doc_host->travellog.loading_pos != -1) {
+        WARN("histupdate not notified\n");
+        doc_host->travellog.position = doc_host->travellog.loading_pos;
+        doc_host->travellog.loading_pos = -1;
+    }
 
     hres = IHTMLWindow2_QueryInterface(pHTMLWindow2, &IID_IHTMLPrivateWindow, (void**)&priv_window);
     if(FAILED(hres))
@@ -751,7 +758,7 @@ static HRESULT WINAPI DocObjectService_FireNavigateComplete2(
     V_VARIANTREF(params) = &url_var;
 
     V_VT(params+1) = VT_DISPATCH;
-    V_DISPATCH(params+1) = (IDispatch*)This->doc_host->wb;
+    V_DISPATCH(params+1) = (IDispatch*)doc_host->wb;
 
     V_VT(&url_var) = VT_BSTR;
     V_BSTR(&url_var) = url;
@@ -817,12 +824,18 @@ static HRESULT WINAPI DocObjectService_FireDocumentComplete(
     V_VT(&url_var) = VT_BSTR;
     V_BSTR(&url_var) = url;
 
+    /* Keep reference to This. It may be released in event handler. */
+    IShellBrowser_AddRef(&This->IShellBrowser_iface);
+
     TRACE(">>>\n");
     call_sink(This->doc_host->cps.wbe2, DISPID_DOCUMENTCOMPLETE, &dp);
     TRACE("<<<\n");
 
     SysFreeString(url);
-    This->doc_host->busy = VARIANT_FALSE;
+    if(This->doc_host)
+        This->doc_host->busy = VARIANT_FALSE;
+
+    IShellBrowser_Release(&This->IShellBrowser_iface);
     return S_OK;
 }
 
