@@ -16,6 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+enum type_id
+{
+    INetFwAuthorizedApplication_tid,
+    INetFwAuthorizedApplications_tid,
+    INetFwMgr_tid,
+    INetFwPolicy_tid,
+    INetFwProfile_tid,
+    last_tid
+};
+
+HRESULT get_typeinfo(enum type_id, ITypeInfo **) DECLSPEC_HIDDEN;
+
 HRESULT NetFwMgr_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
 HRESULT NetFwPolicy_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
 HRESULT NetFwProfile_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
