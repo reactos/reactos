@@ -218,7 +218,7 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeMovRegImm,
     NULL, // TODO: OPCODE 0xC0 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xC1 NOT SUPPORTED
-    Soft386OpcodeRetImm,
+    Soft386OpcodeRet,
     Soft386OpcodeRet,
     Soft386OpcodeLes,
     Soft386OpcodeLds,
@@ -4166,20 +4166,50 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLahf)
     return FALSE;
 }
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeRetImm)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-
-    return FALSE;
-}
-
 SOFT386_OPCODE_HANDLER(Soft386OpcodeRet)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    ULONG ReturnAddress;
+    USHORT BytesToPop = 0;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xC2);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (Opcode == 0xC2)
+    {
+        /* Fetch the number of bytes to pop after the return */
+        if (!Soft386FetchWord(State, &BytesToPop)) return FALSE;
+    }
+
+    /* Pop the return address */
+    if (!Soft386StackPop(State, &ReturnAddress)) return FALSE;
+
+    /* Return to the calling procedure, and if necessary, pop the parameters */
+    if (Size)
+    {
+        State->InstPtr.Long = ReturnAddress;
+        State->GeneralRegs[SOFT386_REG_ESP].Long += BytesToPop;
+    }
+    else
+    {
+        State->InstPtr.LowWord = LOWORD(ReturnAddress);
+        State->GeneralRegs[SOFT386_REG_ESP].LowWord += BytesToPop;
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeLes)
