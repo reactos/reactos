@@ -42,6 +42,60 @@ BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
 
 TASKMANAGER_SETTINGS TaskManagerSettings;
 
+////////////////////////////////////////////////////////////////////////////////
+// Taken from WinSpy++ 1.7
+// http://www.catch22.net/software/winspy
+// Copyright (c) 2002 by J Brown
+//
+ 
+//
+//	Copied from uxtheme.h
+//  If you have this new header, then delete these and
+//  #include <uxtheme.h> instead!
+//
+#define ETDT_DISABLE        0x00000001
+#define ETDT_ENABLE         0x00000002
+#define ETDT_USETABTEXTURE  0x00000004
+#define ETDT_ENABLETAB      (ETDT_ENABLE  | ETDT_USETABTEXTURE)
+
+// 
+typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
+
+//
+//	Try to call EnableThemeDialogTexture, if uxtheme.dll is present
+//
+BOOL EnableDialogTheme(HWND hwnd)
+{
+    HMODULE hUXTheme;
+    ETDTProc fnEnableThemeDialogTexture;
+
+    hUXTheme = LoadLibraryA("uxtheme.dll");
+
+    if(hUXTheme)
+    {
+        fnEnableThemeDialogTexture = 
+            (ETDTProc)GetProcAddress(hUXTheme, "EnableThemeDialogTexture");
+
+        if(fnEnableThemeDialogTexture)
+        {
+            fnEnableThemeDialogTexture(hwnd, ETDT_ENABLETAB);
+
+            FreeLibrary(hUXTheme);
+            return TRUE;
+        }
+        else
+        {
+            // Failed to locate API!
+            FreeLibrary(hUXTheme);
+            return FALSE;
+        }
+    }
+    else
+    {
+        // Not running under XP? Just fail gracefully
+        return FALSE;
+    }
+}
 
 int APIENTRY wWinMain(HINSTANCE hInstance,
                       HINSTANCE hPrevInstance,
@@ -490,13 +544,13 @@ BOOL OnCreate(HWND hWnd)
     /* Create tab pages */
     hTabWnd = GetDlgItem(hWnd, IDC_TAB);
 #if 1
-    hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hWnd, ApplicationPageWndProc);
-    hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hWnd, ProcessPageWndProc);
-    hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hWnd, PerformancePageWndProc);
+    hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hWnd, ApplicationPageWndProc); EnableDialogTheme(hApplicationPage);
+    hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hWnd, ProcessPageWndProc); EnableDialogTheme(hProcessPage);
+    hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hWnd, PerformancePageWndProc); EnableDialogTheme(hPerformancePage);
 #else
-    hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hTabWnd, ApplicationPageWndProc);
-    hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hTabWnd, ProcessPageWndProc);
-    hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hTabWnd, PerformancePageWndProc);
+    hApplicationPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_APPLICATION_PAGE), hTabWnd, ApplicationPageWndProc); EnableDialogTheme(hApplicationPage);
+    hProcessPage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PROCESS_PAGE), hTabWnd, ProcessPageWndProc); EnableDialogTheme(hProcessPage);
+    hPerformancePage = CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_PERFORMANCE_PAGE), hTabWnd, PerformancePageWndProc); EnableDialogTheme(hPerformancePage);
 #endif
 
     /* Insert tabs */
