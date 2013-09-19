@@ -36,6 +36,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <objbase.h>
+#include <oleauto.h>
 //#include "wincodec.h"
 #include <wincodecsdk.h>
 
@@ -48,6 +49,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 #ifdef SONAME_LIBTIFF
 
+/* Workaround for broken libtiff 4.x headers on some 64-bit hosts which
+ * define TIFF_UINT64_T/toff_t as 32-bit for 32-bit builds, while they
+ * are supposed to be always 64-bit.
+ * TIFF_UINT64_T doesn't exist in libtiff 3.x, it was introduced in 4.x.
+ */
+#ifdef TIFF_UINT64_T
+# undef toff_t
+# define toff_t UINT64
+#endif
+
 static CRITICAL_SECTION init_tiff_cs;
 static CRITICAL_SECTION_DEBUG init_tiff_cs_debug =
 {
@@ -57,6 +68,9 @@ static CRITICAL_SECTION_DEBUG init_tiff_cs_debug =
     0, 0, { (DWORD_PTR)(__FILE__ ": init_tiff_cs") }
 };
 static CRITICAL_SECTION init_tiff_cs = { &init_tiff_cs_debug, -1, 0, 0, 0, 0 };
+
+static const WCHAR wszTiffCompressionMethod[] = {'T','i','f','f','C','o','m','p','r','e','s','s','i','o','n','M','e','t','h','o','d',0};
+static const WCHAR wszCompressionQuality[] = {'C','o','m','p','r','e','s','s','i','o','n','Q','u','a','l','i','t','y',0};
 
 static void *libtiff_handle;
 #define MAKE_FUNCPTR(f) static typeof(f) * p##f
@@ -210,8 +224,8 @@ static TIFF* tiff_open_stream(IStream *stream, const char *mode)
     IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
 
     return pTIFFClientOpen("<IStream object>", mode, stream, tiff_stream_read,
-        tiff_stream_write, tiff_stream_seek, tiff_stream_close,
-        tiff_stream_size, tiff_stream_map, tiff_stream_unmap);
+        tiff_stream_write, (void *)tiff_stream_seek, tiff_stream_close,
+        (void *)tiff_stream_size, (void *)tiff_stream_map, (void *)tiff_stream_unmap);
 }
 
 typedef struct {
@@ -1913,7 +1927,31 @@ static HRESULT WINAPI TiffEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
 
     if (SUCCEEDED(hr))
     {
-        hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
+        PROPBAG2 opts[2]= {{0}};
+        opts[0].pstrName = (LPOLESTR)wszTiffCompressionMethod;
+        opts[0].vt = VT_UI1;
+        opts[0].dwType = PROPBAG2_TYPE_DATA;
+
+        opts[1].pstrName = (LPOLESTR)wszCompressionQuality;
+        opts[1].vt = VT_R4;
+        opts[1].dwType = PROPBAG2_TYPE_DATA;
+
+        hr = CreatePropertyBag2(opts, 2, ppIEncoderOptions);
+
+        if (SUCCEEDED(hr))
+        {
+            VARIANT v;
+            VariantInit(&v);
+            V_VT(&v) = VT_UI1;
+            V_UNION(&v, bVal) = WICTiffCompressionDontCare;
+            hr = IPropertyBag2_Write(*ppIEncoderOptions, 1, opts, &v);
+            VariantClear(&v);
+            if (FAILED(hr))
+            {
+                IPropertyBag2_Release(*ppIEncoderOptions);
+                *ppIEncoderOptions = NULL;
+            }
+        }
     }
 
     if (SUCCEEDED(hr))

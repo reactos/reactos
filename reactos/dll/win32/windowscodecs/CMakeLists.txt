@@ -27,6 +27,7 @@ list(APPEND SOURCE
     bitmap.c
     bmpdecode.c
     bmpencode.c
+    clipper.c
     clsfactory.c
     colorcontext.c
     colortransform.c

@@ -180,7 +180,7 @@ MAKE_FUNCPTR(png_get_tRNS);
 MAKE_FUNCPTR(png_set_bgr);
 MAKE_FUNCPTR(png_set_crc_action);
 MAKE_FUNCPTR(png_set_error_fn);
-#if HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8
+#ifdef HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8
 MAKE_FUNCPTR(png_set_expand_gray_1_2_4_to_8);
 #else
 MAKE_FUNCPTR(png_set_gray_1_2_4_to_8);
@@ -229,7 +229,7 @@ static void *load_libpng(void)
         LOAD_FUNCPTR(png_set_bgr);
         LOAD_FUNCPTR(png_set_crc_action);
         LOAD_FUNCPTR(png_set_error_fn);
-#if HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8
+#ifdef HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8
         LOAD_FUNCPTR(png_set_expand_gray_1_2_4_to_8);
 #else
         LOAD_FUNCPTR(png_set_gray_1_2_4_to_8);
@@ -471,7 +471,7 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
         {
             if (bit_depth < 8)
             {
-#if HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8
+#ifdef HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8
                 ppng_set_expand_gray_1_2_4_to_8(This->png_ptr);
 #else
                 ppng_set_gray_1_2_4_to_8(This->png_ptr);
@@ -870,7 +870,8 @@ static HRESULT WINAPI PngDecoder_Frame_GetColorContexts(IWICBitmapFrameDecode *i
     UINT cCount, IWICColorContext **ppIColorContexts, UINT *pcActualCount)
 {
     PngDecoder *This = impl_from_IWICBitmapFrameDecode(iface);
-    png_charp name, profile;
+    png_charp name;
+    BYTE *profile;
     png_uint_32 len;
     int compression_type;
     HRESULT hr;
@@ -881,11 +882,11 @@ static HRESULT WINAPI PngDecoder_Frame_GetColorContexts(IWICBitmapFrameDecode *i
 
     EnterCriticalSection(&This->lock);
 
-    if (ppng_get_iCCP(This->png_ptr, This->info_ptr, &name, &compression_type, &profile, &len))
+    if (ppng_get_iCCP(This->png_ptr, This->info_ptr, &name, &compression_type, (void *)&profile, &len))
     {
         if (cCount && ppIColorContexts)
         {
-            hr = IWICColorContext_InitializeFromMemory(*ppIColorContexts, (const BYTE *)profile, len);
+            hr = IWICColorContext_InitializeFromMemory(*ppIColorContexts, profile, len);
             if (FAILED(hr))
             {
                 LeaveCriticalSection(&This->lock);

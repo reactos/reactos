@@ -442,8 +442,8 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapScaler(IWICComponentFactory *
 static HRESULT WINAPI ComponentFactory_CreateBitmapClipper(IWICComponentFactory *iface,
     IWICBitmapClipper **ppIBitmapClipper)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIBitmapClipper);
-    return E_NOTIMPL;
+    TRACE("(%p,%p)\n", iface, ppIBitmapClipper);
+    return BitmapClipper_Create(ppIBitmapClipper);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateBitmapFlipRotator(IWICComponentFactory *iface,

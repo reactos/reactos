@@ -130,8 +130,16 @@ static HRESULT load_profile(const WCHAR *filename, BYTE **profile, UINT *len)
     }
     ret = ReadFile(handle, *profile, size.u.LowPart, &count, NULL);
     CloseHandle(handle);
-    if (!ret) return HRESULT_FROM_WIN32(GetLastError());
-    if (count != size.u.LowPart) return E_FAIL;
+    if (!ret) {
+        HeapFree (GetProcessHeap(),0,*profile);
+        *profile = NULL;
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+    if (count != size.u.LowPart) {
+        HeapFree (GetProcessHeap(),0,*profile);
+        *profile = NULL;
+        return E_FAIL;
+    }
     *len = count;
     return S_OK;
 }
