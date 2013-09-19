@@ -1,5 +1,5 @@
 @ stub HttpAddFragmentToCache
-@ stub HttpAddUrl
+@ stdcall HttpAddUrl(ptr wstr ptr)
 @ stub HttpAddUrlToConfigGroup
 @ stub HttpCancelHttpRequest
 @ stub HttpCreateAppPool
