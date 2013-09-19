@@ -1039,9 +1039,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpReserved)
         DisableThreadLibraryCalls(hModule);
         ICCVID_hModule = hModule;
         break;
-
-    case DLL_PROCESS_DETACH:
-        break;
     }
     return TRUE;
 }
