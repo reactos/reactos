@@ -888,26 +888,21 @@ todo_wine
     expect(Ok, status);
     expectf(0.0, bounds.X);
     expectf(0.0, bounds.Y);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(height, bounds.Height, 1.0);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, NULL, &bounds);
     expect(Ok, status);
     expectf(0.0, bounds.X);
-todo_wine
     expectf_(-100.0, bounds.Y, 0.05);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(height, bounds.Height, 0.5);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, matrix, &bounds);
     expect(Ok, status);
     expectf(0.0, bounds.X);
-todo_wine
     expectf_(-100.0, bounds.Y, 0.05);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(height, bounds.Height, 0.5);
 
     /* scale matrix */
     status = GdipScaleMatrix(matrix, 2.0, 3.0, MatrixOrderAppend);
@@ -937,17 +932,14 @@ todo_wine
     expect(Ok, status);
     expectf(0.0, bounds.X);
     expectf(0.0, bounds.Y);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(height, bounds.Height, 0.05);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, NULL, &bounds);
     expect(Ok, status);
     expectf(0.0, bounds.X);
-todo_wine
     expectf_(-100.0, bounds.Y, 0.05);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(height, bounds.Height, 0.2);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, matrix, &bounds);
@@ -986,17 +978,14 @@ todo_wine
     expect(Ok, status);
     expectf(0.0, bounds.X);
     expectf(0.0, bounds.Y);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(height, bounds.Height, 0.05);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, NULL, &bounds);
     expect(Ok, status);
     expectf(0.0, bounds.X);
-todo_wine
     expectf_(-100.0, bounds.Y, 0.05);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(height, bounds.Height, 0.2);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, matrix, &bounds);
@@ -1037,17 +1026,14 @@ todo_wine
     expect(Ok, status);
     expectf(0.0, bounds.X);
     expectf(0.0, bounds.Y);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(height, bounds.Height, 0.2);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, NULL, &bounds);
     expect(Ok, status);
     expectf(0.0, bounds.X);
-todo_wine
-    expectf_(-100.0, bounds.Y, 0.05);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(-100.0, bounds.Y, 0.2);
+    expectf_(height, bounds.Height, 0.2);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, matrix, &bounds);
@@ -1088,17 +1074,14 @@ todo_wine
     expect(Ok, status);
     expectf(0.0, bounds.X);
     expectf(0.0, bounds.Y);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(height, bounds.Height, 0.1);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, NULL, &bounds);
     expect(Ok, status);
     expectf(0.0, bounds.X);
-todo_wine
-    expectf_(-100.0, bounds.Y, 0.05);
-todo_wine
-    expectf(height, bounds.Height);
+    expectf_(-100.0, bounds.Y, 0.2);
+    expectf_(height, bounds.Height, 0.2);
     set_rect_empty(&bounds);
     status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
                                      DriverStringOptionsCmapLookup, matrix, &bounds);

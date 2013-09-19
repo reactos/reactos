@@ -2219,6 +2219,17 @@ static void test_colormatrix(void)
     expect(Ok, stat);
     ok(color_match(0xeeff40cc, color, 3), "expected 0xeeff40cc, got 0x%08x\n", color);
 
+    stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
+    expect(Ok, stat);
+
+    stat = GdipDrawImageRectRectI(graphics, (GpImage*)bitmap1, 0,0,1,1, 0,0,1,1,
+        UnitPixel, imageattr, NULL, NULL);
+    expect(Ok, stat);
+
+    stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
+    expect(Ok, stat);
+    ok(color_match(0xff40ccee, color, 1), "Expected ff40ccee, got %.8x\n", color);
+
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap1);
     GdipDisposeImage((GpImage*)bitmap2);
@@ -2280,6 +2291,17 @@ static void test_gamma(void)
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
     ok(color_match(0xff20ffff, color, 1), "Expected ff20ffff, got %.8x\n", color);
+
+    stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
+    expect(Ok, stat);
+
+    stat = GdipDrawImageRectRectI(graphics, (GpImage*)bitmap1, 0,0,1,1, 0,0,1,1,
+        UnitPixel, imageattr, NULL, NULL);
+    expect(Ok, stat);
+
+    stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
+    expect(Ok, stat);
+    ok(color_match(0xff80ffff, color, 1), "Expected ff80ffff, got %.8x\n", color);
 
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap1);
@@ -2612,6 +2634,17 @@ static void test_remaptable(void)
     expect(Ok, stat);
     ok(color_match(0xffff00ff, color, 1), "Expected ffff00ff, got %.8x\n", color);
 
+    stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
+    expect(Ok, stat);
+
+    stat = GdipDrawImageRectRectI(graphics, (GpImage*)bitmap1, 0,0,1,1, 0,0,1,1,
+        UnitPixel, imageattr, NULL, NULL);
+    expect(Ok, stat);
+
+    stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
+    expect(Ok, stat);
+    ok(color_match(0xff00ff00, color, 1), "Expected ff00ff00, got %.8x\n", color);
+
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap1);
     GdipDisposeImage((GpImage*)bitmap2);
@@ -2669,19 +2702,43 @@ static void test_colorkey(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0x00000000, color, 1), "Expected ffff00ff, got %.8x\n", color);
+    ok(color_match(0x00000000, color, 1), "Expected 00000000, got %.8x\n", color);
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 1, &color);
     expect(Ok, stat);
-    ok(color_match(0x00000000, color, 1), "Expected ffff00ff, got %.8x\n", color);
+    ok(color_match(0x00000000, color, 1), "Expected 00000000, got %.8x\n", color);
 
     stat = GdipBitmapGetPixel(bitmap2, 1, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0x00000000, color, 1), "Expected ffff00ff, got %.8x\n", color);
+    ok(color_match(0x00000000, color, 1), "Expected 00000000, got %.8x\n", color);
 
     stat = GdipBitmapGetPixel(bitmap2, 1, 1, &color);
     expect(Ok, stat);
-    ok(color_match(0xffffffff, color, 1), "Expected ffff00ff, got %.8x\n", color);
+    ok(color_match(0xffffffff, color, 1), "Expected ffffffff, got %.8x\n", color);
+
+    stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
+    expect(Ok, stat);
+
+    stat = GdipDrawImageRectRectI(graphics, (GpImage*)bitmap1, 0,0,2,2, 0,0,2,2,
+	UnitPixel, imageattr, NULL, NULL);
+    expect(Ok, stat);
+
+    stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
+    expect(Ok, stat);
+    ok(color_match(0x20405060, color, 1), "Expected 20405060, got %.8x\n", color);
+
+    stat = GdipBitmapGetPixel(bitmap2, 0, 1, &color);
+    expect(Ok, stat);
+    ok(color_match(0x40506070, color, 1), "Expected 40506070, got %.8x\n", color);
+
+    stat = GdipBitmapGetPixel(bitmap2, 1, 0, &color);
+    expect(Ok, stat);
+    ok(color_match(0x60708090, color, 1), "Expected 60708090, got %.8x\n", color);
+
+    stat = GdipBitmapGetPixel(bitmap2, 1, 1, &color);
+    expect(Ok, stat);
+    ok(color_match(0xffffffff, color, 1), "Expected ffffffff, got %.8x\n", color);
+
 
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap1);
