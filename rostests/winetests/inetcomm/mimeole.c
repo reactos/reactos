@@ -314,7 +314,7 @@ static void test_CreateMessage(void)
     ok(count == 2, "got %d\n", count);
     CoTaskMemFree(body_list);
 
-    hr = IMimeMessage_GetCharset(body, &hcs);
+    hr = IMimeBody_GetCharset(body, &hcs);
     ok(hr == S_OK, "ret %08x\n", hr);
     todo_wine
     {
