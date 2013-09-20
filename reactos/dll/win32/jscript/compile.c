@@ -771,6 +771,7 @@ static HRESULT compile_literal(compiler_ctx_t *ctx, literal_t *literal)
     }
     DEFAULT_UNREACHABLE;
     }
+    return E_FAIL;
 }
 
 static HRESULT literal_as_bstr(compiler_ctx_t *ctx, literal_t *literal, BSTR *str)

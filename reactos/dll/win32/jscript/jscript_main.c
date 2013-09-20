@@ -144,6 +144,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
             return FALSE;
         break;
     case DLL_PROCESS_DETACH:
+        if (lpv) break;
         free_strings();
     }
 

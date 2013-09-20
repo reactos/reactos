@@ -143,7 +143,8 @@ static IUnknown *create_activex_object(script_ctx_t *ctx, const WCHAR *progid)
 static HRESULT ActiveXObject_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    jsstr_t * progid;
+    jsstr_t * progid_str;
+    const WCHAR *progid;
     IDispatch *disp;
     IUnknown *obj;
     HRESULT hres;
@@ -166,12 +167,12 @@ static HRESULT ActiveXObject_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         return E_NOTIMPL;
     }
 
-    hres = to_string(ctx, argv[0], &progid);
+    hres = to_flat_string(ctx, argv[0], &progid_str, &progid);
     if(FAILED(hres))
         return hres;
 
-    obj = create_activex_object(ctx, progid->str);
-    jsstr_release(progid);
+    obj = create_activex_object(ctx, progid);
+    jsstr_release(progid_str);
     if(!obj)
         return throw_generic_error(ctx, JS_E_CANNOT_CREATE_OBJ, NULL);
 

@@ -326,6 +326,7 @@ HRESULT to_integer(script_ctx_t*,jsval_t,double*) DECLSPEC_HIDDEN;
 HRESULT to_int32(script_ctx_t*,jsval_t,INT*) DECLSPEC_HIDDEN;
 HRESULT to_uint32(script_ctx_t*,jsval_t,UINT32*) DECLSPEC_HIDDEN;
 HRESULT to_string(script_ctx_t*,jsval_t,jsstr_t**) DECLSPEC_HIDDEN;
+HRESULT to_flat_string(script_ctx_t*,jsval_t,jsstr_t**,const WCHAR**) DECLSPEC_HIDDEN;
 HRESULT to_object(script_ctx_t*,jsval_t,IDispatch**) DECLSPEC_HIDDEN;
 
 HRESULT variant_change_type(script_ctx_t*,VARIANT*,VARIANT*,VARTYPE) DECLSPEC_HIDDEN;

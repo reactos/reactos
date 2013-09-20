@@ -234,7 +234,7 @@ static HRESULT Array_concat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsi
 
 static HRESULT array_join(script_ctx_t *ctx, jsdisp_t *array, DWORD length, const WCHAR *sep, jsval_t *r)
 {
-    jsstr_t **str_tab, *ret = NULL;
+    jsstr_t **str_tab, *ret;
     jsval_t val;
     DWORD i;
     HRESULT hres = E_FAIL;
@@ -267,7 +267,6 @@ static HRESULT array_join(script_ctx_t *ctx, jsdisp_t *array, DWORD length, cons
 
     if(SUCCEEDED(hres)) {
         DWORD seplen = 0, len = 0;
-        WCHAR *ptr;
 
         seplen = strlenW(sep);
 
@@ -283,25 +282,26 @@ static HRESULT array_join(script_ctx_t *ctx, jsdisp_t *array, DWORD length, cons
             }
         }
 
-        if(SUCCEEDED(hres))
-            ret = jsstr_alloc_buf(len);
-        if(ret) {
-            ptr = ret->str;
+        if(SUCCEEDED(hres)) {
+            WCHAR *ptr = NULL;
 
-            if(str_tab[0])
-                ptr += jsstr_flush(str_tab[0], ptr);
+            ptr = jsstr_alloc_buf(len, &ret);
+            if(ptr) {
+                if(str_tab[0])
+                    ptr += jsstr_flush(str_tab[0], ptr);
 
-            for(i=1; i < length; i++) {
-                if(seplen) {
-                    memcpy(ptr, sep, seplen*sizeof(WCHAR));
-                    ptr += seplen;
+                for(i=1; i < length; i++) {
+                    if(seplen) {
+                        memcpy(ptr, sep, seplen*sizeof(WCHAR));
+                        ptr += seplen;
+                    }
+
+                    if(str_tab[i])
+                        ptr += jsstr_flush(str_tab[i], ptr);
                 }
-
-                if(str_tab[i])
-                    ptr += jsstr_flush(str_tab[i], ptr);
+            }else {
+                hres = E_OUTOFMEMORY;
             }
-        }else {
-            hres = E_OUTOFMEMORY;
         }
     }
 
@@ -337,15 +337,16 @@ static HRESULT Array_join(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigne
         return hres;
 
     if(argc) {
-        jsstr_t *sep;
+        const WCHAR *sep;
+        jsstr_t *sep_str;
 
-        hres = to_string(ctx, argv[0], &sep);
+        hres = to_flat_string(ctx, argv[0], &sep_str, &sep);
         if(FAILED(hres))
             return hres;
 
-        hres = array_join(ctx, jsthis, length, sep->str, r);
+        hres = array_join(ctx, jsthis, length, sep, r);
 
-        jsstr_release(sep);
+        jsstr_release(sep_str);
     }else {
         hres = array_join(ctx, jsthis, length, default_separatorW, r);
     }
