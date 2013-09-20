@@ -15,6 +15,6 @@ add_object_library(lib_hal_legacy ${HAL_LEGACY_SOURCE})
 add_dependencies(lib_hal_legacy bugcodes)
 #add_pch(lib_hal_legacy include/hal.h)
 
-if(MSVC OR (NOT CMAKE_VERSION VERSION_GREATER 2.8.7))
+if(MSVC)
     target_link_libraries(lib_hal_legacy lib_hal_generic)
 endif()

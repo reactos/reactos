@@ -14,7 +14,7 @@ function(add_hal _halname)
     spec2def(${_halname}.dll ../hal.spec ADD_IMPORTLIB)
 
     # Create the actual target
-    if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
+    if(NOT MSVC)
         foreach(_component ${_haldata_COMPONENTS})
             list(APPEND _haldata_SOURCES "$<TARGET_OBJECTS:lib_hal_${_component}>")
         endforeach()
