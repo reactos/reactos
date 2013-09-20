@@ -553,7 +553,7 @@ function(get_defines OUTPUT_VAR)
     set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
 endfunction()
 
-if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
+if(NOT MSVC)
     function(add_object_library _target)
         add_library(${_target} OBJECT ${ARGN})
     endfunction()
