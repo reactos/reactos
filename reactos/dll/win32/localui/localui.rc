@@ -38,67 +38,67 @@
 #include "wine/wine_common_ver.rc"
 
 #ifdef LANGUAGE_DA_DK
-    #include "ui_Da.rc"
+    #include "lang/ui_Da.rc"
 #endif
 #ifdef LANGUAGE_EN_US
-    #include "ui_En.rc"
+    #include "lang/ui_En.rc"
 #endif
 #ifdef LANGUAGE_KO_KR
-    #include "ui_Ko.rc"
+    #include "lang/ui_Ko.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
-    #include "ui_Nl.rc"
+    #include "lang/ui_Nl.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "ui_No.rc"
+    #include "lang/ui_No.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
-    #include "ui_Pl.rc"
+    #include "lang/ui_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "ui_Pt.rc"
+    #include "lang/ui_Pt.rc"
 #endif
 #ifdef LANGUAGE_SV_SE
-    #include "ui_Sv.rc"
+    #include "lang/ui_Sv.rc"
 #endif
 
 /* UTF-8 */
 #ifdef LANGUAGE_DE_DE
-    #include "ui_De.rc"
+    #include "lang/ui_De.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
-    #include "ui_Es.rc"
+    #include "lang/ui_Es.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "ui_Fr.rc"
+    #include "lang/ui_Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "ui_He.rc"
+    #include "lang/ui_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
-    #include "ui_Hu.rc"
+    #include "lang/ui_Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "ui_It.rc"
+    #include "lang/ui_It.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-    #include "ui_Ja.rc"
+    #include "lang/ui_Ja.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "ui_Lt.rc"
+    #include "lang/ui_Lt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "ui_Ro.rc"
+    #include "lang/ui_Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "ui_Ru.rc"
+    #include "lang/ui_Ru.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "ui_Si.rc"
+    #include "lang/ui_Si.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "ui_Uk.rc"
+    #include "lang/ui_Uk.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
-    #include "ui_Zh.rc"
+    #include "lang/ui_Zh.rc"
 #endif
