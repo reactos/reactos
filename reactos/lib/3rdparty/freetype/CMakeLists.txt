@@ -50,8 +50,3 @@ list(APPEND SOURCE
   src/winfonts/winfnt.c)
 
 add_library(freetype ${SOURCE})
-
-if(NOT MSVC)
-    allow_warnings(freetype)
-    add_target_compile_flags(freetype "-Wno-unused-but-set-variable")
-endif()
