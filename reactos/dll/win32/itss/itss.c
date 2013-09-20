@@ -62,8 +62,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
         DisableThreadLibraryCalls(hInstDLL);
         hInst = hInstDLL;
         break;
-    case DLL_PROCESS_DETACH:
-        break;
     }
     return TRUE;
 }
@@ -200,8 +198,8 @@ static HRESULT WINAPI ITStorageImpl_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown)
 	|| IsEqualGUID(riid, &IID_IITStorage))
     {
-	IClassFactory_AddRef(iface);
-	*ppvObject = This;
+	IITStorage_AddRef(iface);
+	*ppvObject = iface;
 	return S_OK;
     }
 
