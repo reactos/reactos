@@ -20,6 +20,8 @@ NTAPI
 NpCancelListeningQueueIrp(IN PDEVICE_OBJECT DeviceObject,
                           IN PIRP Irp)
 {
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+
     FsRtlEnterFileSystem();
     NpAcquireExclusiveVcb();
 
@@ -72,7 +74,7 @@ NpSetConnectedPipeState(IN PNP_CCB Ccb,
 
 NTSTATUS
 NTAPI
-NpSetDisconnectedPipeState(IN PNP_CCB Ccb, 
+NpSetDisconnectedPipeState(IN PNP_CCB Ccb,
                            IN PLIST_ENTRY List)
 {
     PIRP Irp;
@@ -109,9 +111,9 @@ NpSetDisconnectedPipeState(IN PNP_CCB Ccb,
 
             Status = STATUS_SUCCESS;
             break;
- 
+
         case FILE_PIPE_CONNECTED_STATE:
-        
+
             EventBuffer = NonPagedCcb->EventBuffer[FILE_PIPE_CLIENT_END];
 
             while (Ccb->DataQueue[FILE_PIPE_INBOUND].QueueState != Empty)
@@ -184,7 +186,7 @@ NpSetDisconnectedPipeState(IN PNP_CCB Ccb,
 NTSTATUS
 NTAPI
 NpSetListeningPipeState(IN PNP_CCB Ccb,
-                        IN PIRP Irp, 
+                        IN PIRP Irp,
                         IN PLIST_ENTRY List)
 {
     NTSTATUS Status;
@@ -241,8 +243,8 @@ NpSetListeningPipeState(IN PNP_CCB Ccb,
 NTSTATUS
 NTAPI
 NpSetClosingPipeState(IN PNP_CCB Ccb,
-                      IN PIRP Irp, 
-                      IN ULONG NamedPipeEnd, 
+                      IN PIRP Irp,
+                      IN ULONG NamedPipeEnd,
                       IN PLIST_ENTRY List)
 {
     PNP_NONPAGED_CCB NonPagedCcb;
