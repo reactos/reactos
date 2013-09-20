@@ -629,10 +629,10 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
 
     /* Create the Parameter Block */
     ProcessParameters = NULL;
-    DPRINT("ImageName: '%wZ'\n", &ImageName);
+    DPRINT1("ImageName: '%wZ'\n", &ImageName);
     DPRINT("DllPath  : '%wZ'\n", &DllPath);
     DPRINT("CurDir   : '%wZ'\n", &CurrentDirectory);
-    DPRINT("CmdLine  : '%wZ'\n", &CommandLine);
+    DPRINT1("CmdLine  : '%wZ'\n", &CommandLine);
     DPRINT("Title    : '%wZ'\n", &Title);
     DPRINT("Desktop  : '%wZ'\n", &Desktop);
     DPRINT("Shell    : '%wZ'\n", &Shell);
