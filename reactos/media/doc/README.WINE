@@ -89,7 +89,7 @@ reactos/dll/win32/inetmib1        # Synced to Wine-1.7.1
 reactos/dll/win32/initpki         # Synced to Wine-1.7.1
 reactos/dll/win32/inseng          # Synced to Wine-1.7.1
 reactos/dll/win32/iphlpapi        # Out of sync
-reactos/dll/win32/itircl          # Synced to Wine-1.5.19
+reactos/dll/win32/itircl          # Synced to Wine-1.7.1
 reactos/dll/win32/itss            # Synced to Wine-1.5.4
 reactos/dll/win32/jscript         # Synced to Wine-1.5.26
 reactos/dll/win32/loadperf        # Synced to Wine-1.5.19
