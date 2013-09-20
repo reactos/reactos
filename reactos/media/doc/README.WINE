@@ -84,7 +84,7 @@ reactos/dll/win32/ieframe         # Synced to Wine-1.7.1
 reactos/dll/win32/imaadp32.acm    # Synced to Wine-1.7.1
 reactos/dll/win32/imagehlp        # Synced to Wine-1.7.1
 reactos/dll/win32/imm32           # Synced to Wine-1.5.19
-reactos/dll/win32/inetcomm        # Synced to Wine-1.5.4
+reactos/dll/win32/inetcomm        # Synced to Wine-1.7.1
 reactos/dll/win32/inetmib1        # Synced to Wine-1.5.4
 reactos/dll/win32/initpki         # Synced to Wine-1.5.19
 reactos/dll/win32/inseng          # Synced to Wine-1.5.4

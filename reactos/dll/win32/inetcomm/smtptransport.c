@@ -536,7 +536,7 @@ static HRESULT WINAPI SMTPTransport_QueryInterface(ISMTPTransport2 *iface, REFII
         IsEqualIID(riid, &IID_ISMTPTransport2))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        ISMTPTransport2_AddRef(iface);
         return S_OK;
     }
     *ppv = NULL;
@@ -993,7 +993,7 @@ static HRESULT WINAPI SMTPTransportCF_QueryInterface(LPCLASSFACTORY iface,
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;
