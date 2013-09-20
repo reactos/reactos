@@ -27,3 +27,12 @@ lang.js 40 "lang.js"
 
 /* @makedep: regexp.js */
 regexp.js 40 "regexp.js"
+
+/* @makedep: sunspider-regexp-dna.js */
+dna.js 40 "sunspider-regexp-dna.js"
+
+/* @makedep: sunspider-string-base64.js */
+base64.js 40 "sunspider-string-base64.js"
+
+/* @makedep: sunspider-string-validate-input.js */
+validateinput.js 40 "sunspider-string-validate-input.js"

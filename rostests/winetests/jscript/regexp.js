@@ -648,4 +648,16 @@ ok(!("$10" in RegExp), "RegExp.$10 exists");
 RegExp.$1 = "a";
 ok(RegExp.$1 === "b", "RegExp.$1 = " + RegExp.$1);
 
+ok(/abc/.toString() === "/abc/", "/abc/.toString() = " + /abc/.toString());
+ok(/\//.toString() === "/\\//", "/\//.toString() = " + /\//.toString());
+tmp = new RegExp("abc/");
+ok(tmp.toString() === "/abc//", "(new RegExp(\"abc/\")).toString() = " + tmp.toString());
+ok(/abc/g.toString() === "/abc/g", "/abc/g.toString() = " + /abc/g.toString());
+ok(/abc/i.toString() === "/abc/i", "/abc/i.toString() = " + /abc/i.toString());
+ok(/abc/ig.toString() === "/abc/ig", "/abc/ig.toString() = " + /abc/ig.toString());
+ok(/abc/mgi.toString() === "/abc/igm", "/abc/mgi.toString() = " + /abc/mgi.toString());
+tmp = new RegExp("abc/", "mgi");
+ok(tmp.toString() === "/abc//igm", "(new RegExp(\"abc/\")).toString() = " + tmp.toString());
+ok(/abc/.toString(1, false, "3") === "/abc/", "/abc/.toString(1, false, \"3\") = " + /abc/.toString());
+
 reportSuccess();

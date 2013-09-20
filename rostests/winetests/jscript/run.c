@@ -1784,13 +1784,12 @@ static void run_from_file(const char *filename)
     ok(hres == S_OK, "parse_script failed: %08x\n", hres);
 }
 
-static void run_from_res(const char *name)
+static BSTR load_res(const char *name)
 {
     const char *data;
     DWORD size, len;
     BSTR str;
     HRSRC src;
-    HRESULT hres;
 
     strict_dispid_check = FALSE;
     test_name = name;
@@ -1804,6 +1803,16 @@ static void run_from_res(const char *name)
     len = MultiByteToWideChar(CP_ACP, 0, data, size, NULL, 0);
     str = SysAllocStringLen(NULL, len);
     MultiByteToWideChar(CP_ACP, 0, data, size, str, len);
+
+    return str;
+}
+
+static void run_from_res(const char *name)
+{
+    BSTR str;
+    HRESULT hres;
+
+    str = load_res(name);
 
     SET_EXPECT(global_success_d);
     SET_EXPECT(global_success_i);
@@ -2311,6 +2320,61 @@ static void run_encoded_tests(void)
     ok(hres == JS_E_INVALID_CHAR, "parse_script failed %08x\n", hres);
 }
 
+static void run_benchmark(const char *script_name)
+{
+    IActiveScriptParse *parser;
+    IActiveScript *engine;
+    ULONG start, end;
+    BSTR src;
+    HRESULT hres;
+
+    engine = create_script();
+    if(!engine)
+        return;
+
+    hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptParse, (void**)&parser);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+    if (FAILED(hres)) {
+        IActiveScript_Release(engine);
+        return;
+    }
+
+    hres = IActiveScriptParse_InitNew(parser);
+    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+
+    hres = IActiveScript_SetScriptSite(engine, &ActiveScriptSite);
+    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+
+    hres = IActiveScript_AddNamedItem(engine, testW,
+            SCRIPTITEM_ISVISIBLE|SCRIPTITEM_ISSOURCE);
+    ok(hres == S_OK, "AddNamedItem failed: %08x\n", hres);
+
+    hres = IActiveScript_SetScriptState(engine, SCRIPTSTATE_STARTED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_STARTED) failed: %08x\n", hres);
+
+    src = load_res(script_name);
+
+    start = GetTickCount();
+    hres = IActiveScriptParse_ParseScriptText(parser, src, NULL, NULL, NULL, 0, 0, 0, NULL, NULL);
+    end = GetTickCount();
+    ok(hres == S_OK, "%s: ParseScriptText failed: %08x\n", script_name, hres);
+
+    trace("%s ran in %u ms\n", script_name, end-start);
+
+    IActiveScript_Release(engine);
+    IActiveScriptParse_Release(parser);
+    SysFreeString(src);
+}
+
+static void run_benchmarks(void)
+{
+    trace("Running benchmarks...\n");
+
+    run_benchmark("dna.js");
+    run_benchmark("base64.js");
+    run_benchmark("validateinput.js");
+}
+
 static BOOL check_jscript(void)
 {
     IActiveScriptProperty *script_prop;
@@ -2357,6 +2421,9 @@ START_TEST(run)
             trace("ParseProcedureText tests...\n");
             test_parse_proc();
         }
+
+        if(winetest_interactive)
+            run_benchmarks();
     }
 
     CoUninitialize();
