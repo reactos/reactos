@@ -1708,7 +1708,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             // Get the real entry, write down its pool type, and track it
             //
             Entry--;
-            Entry->PoolType = PoolType + 1;
+            Entry->PoolType = OriginalType + 1;
             ExpInsertPoolTracker(Tag,
                                  Entry->BlockSize * POOL_BLOCK_SIZE,
                                  OriginalType);
@@ -1880,7 +1880,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             // We have found an entry for this allocation, so set the pool type
             // and release the lock since we're done
             //
-            Entry->PoolType = PoolType + 1;
+            Entry->PoolType = OriginalType + 1;
             ExpCheckPoolBlocks(Entry);
             ExUnlockPool(PoolDesc, OldIrql);
 
@@ -1910,7 +1910,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     // There were no free entries left, so we have to allocate a new fresh page
     //
-    Entry = MiAllocatePoolPages(PoolType, PAGE_SIZE);
+    Entry = MiAllocatePoolPages(OriginalType, PAGE_SIZE);
     if (!Entry)
     {
         //
@@ -1963,7 +1963,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     Entry->Ulong1 = 0;
     Entry->BlockSize = i;
-    Entry->PoolType = PoolType + 1;
+    Entry->PoolType = OriginalType + 1;
 
     //
     // This page will have two entries -- one for the allocation (which we just
@@ -2023,7 +2023,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     InterlockedIncrement((PLONG)&PoolDesc->RunningAllocs);
     ExpInsertPoolTracker(Tag,
                          Entry->BlockSize * POOL_BLOCK_SIZE,
-                         PoolType);
+                         OriginalType);
 
     //
     // And return the pool allocation
@@ -2065,6 +2065,7 @@ ExFreePoolWithTag(IN PVOID P,
     PFN_NUMBER PageCount, RealPageCount;
     PKPRCB Prcb = KeGetCurrentPrcb();
     PGENERAL_LOOKASIDE LookasideList;
+    PEPROCESS Process;
 
     //
     // Check if any of the debug flags are enabled
@@ -2254,6 +2255,30 @@ ExFreePoolWithTag(IN PVOID P,
     ExpRemovePoolTracker(Tag,
                          BlockSize * POOL_BLOCK_SIZE,
                          Entry->PoolType - 1);
+
+    //
+    // Release pool quota, if any
+    //
+    if ((Entry->PoolType - 1) & QUOTA_POOL_MASK)
+    {
+        Process = ((PVOID *)POOL_NEXT_BLOCK(Entry))[-1];
+        ASSERT(Process != NULL);
+        if (Process)
+        {
+            if (Process->Pcb.Header.Type != ProcessObject)
+            {
+                DPRINT1("Object %p is not a process. Type %u, pool type 0x%x, block size %u\n",
+                        Process, Process->Pcb.Header.Type, Entry->PoolType, BlockSize);
+                KeBugCheckEx(BAD_POOL_CALLER,
+                             0x0D,
+                             (ULONG_PTR)P,
+                             Tag,
+                             (ULONG_PTR)Process);
+            }
+            PsReturnPoolQuota(Process, PoolType, BlockSize * POOL_BLOCK_SIZE);
+            ObDereferenceObject(Process);
+        }
+    }
 
     //
     // Is this allocation small enough to have come from a lookaside list?
@@ -2595,7 +2620,7 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
             //
             // Quota failed, back out the allocation, clear the owner, and fail
             //
-            *(PVOID*)((ULONG_PTR)POOL_NEXT_BLOCK(Entry) - sizeof(PVOID)) = NULL;
+            ((PVOID *)POOL_NEXT_BLOCK(Entry))[-1] = NULL;
             ExFreePoolWithTag(Buffer, Tag);
             if (Raise) RtlRaiseStatus(Status);
             return NULL;
@@ -2604,7 +2629,7 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
         //
         // Quota worked, write the owner and then reference it before returning
         //
-        *(PVOID*)((ULONG_PTR)POOL_NEXT_BLOCK(Entry) - sizeof(PVOID)) = Process;
+        ((PVOID *)POOL_NEXT_BLOCK(Entry))[-1] = Process;
         ObReferenceObject(Process);
     }
     else if (!(Buffer) && (Raise))

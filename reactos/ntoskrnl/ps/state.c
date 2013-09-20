@@ -526,10 +526,10 @@ NtQueueApcThread(IN HANDLE ThreadHandle,
     }
 
     /* Allocate an APC */
-    Apc = ExAllocatePoolWithTag(NonPagedPool |
-                                POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
-                                sizeof(KAPC),
-                                TAG_PS_APC);
+    Apc = ExAllocatePoolWithQuotaTag(NonPagedPool |
+                                     POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                     sizeof(KAPC),
+                                     TAG_PS_APC);
     if (!Apc)
     {
         /* Fail */
