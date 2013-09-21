@@ -4132,10 +4132,32 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeWait)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodePushFlags)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* This OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    /* Check for VM86 mode when IOPL is not 3 */
+    if (State->Flags.Vm && (State->Flags.Iopl != 3))
+    {
+        /* Call the VM86 monitor */
+        Soft386ExceptionWithErrorCode(State, SOFT386_EXCEPTION_GP, 0);
+        return FALSE;
+    }
+
+    /* Push the flags */
+    if (Size) return Soft386StackPush(State, State->Flags.Long);
+    else return Soft386StackPush(State, LOWORD(State->Flags.Long));
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodePopFlags)
