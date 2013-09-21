@@ -184,10 +184,10 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodePopFlags,
     Soft386OpcodeSahf,
     Soft386OpcodeLahf,
-    NULL, // TODO: OPCODE 0xA0 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xA1 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xA2 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xA3 NOT SUPPORTED
+    Soft386OpcodeMovAlOffset,
+    Soft386OpcodeMovEaxOffset,
+    Soft386OpcodeMovOffsetAl,
+    Soft386OpcodeMovOffsetEax,
     NULL, // TODO: OPCODE 0xA4 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xA5 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xA6 NOT SUPPORTED
@@ -4638,4 +4638,197 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeJmpAbs)
     UNIMPLEMENTED;
 
     return FALSE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovAlOffset)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+    ULONG Offset;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xA0);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (Size)
+    {
+        if (!Soft386FetchDword(State, &Offset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        USHORT WordOffset;
+
+        if (!Soft386FetchWord(State, &WordOffset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        Offset = (ULONG)WordOffset;
+    }
+
+    /* Read from memory */
+    return Soft386ReadMemory(State,
+                             (State->PrefixFlags & SOFT386_PREFIX_SEG) ?
+                             State->SegmentOverride : SOFT386_REG_DS,
+                             Offset,
+                             FALSE,
+                             &State->GeneralRegs[SOFT386_REG_EAX].LowByte,
+                             sizeof(UCHAR));
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovEaxOffset)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xA1);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (Size)
+    {
+        ULONG Offset;
+
+        if (!Soft386FetchDword(State, &Offset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Read from memory */
+        return Soft386ReadMemory(State,
+                                 (State->PrefixFlags & SOFT386_PREFIX_SEG) ?
+                                 State->SegmentOverride : SOFT386_REG_DS,
+                                 Offset,
+                                 FALSE,
+                                 &State->GeneralRegs[SOFT386_REG_EAX].Long,
+                                 sizeof(ULONG));
+    }
+    else
+    {
+        USHORT Offset;
+
+        if (!Soft386FetchWord(State, &Offset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Read from memory */
+        return Soft386ReadMemory(State,
+                                 (State->PrefixFlags & SOFT386_PREFIX_SEG) ?
+                                 State->SegmentOverride : SOFT386_REG_DS,
+                                 Offset,
+                                 FALSE,
+                                 &State->GeneralRegs[SOFT386_REG_EAX].LowWord,
+                                 sizeof(USHORT));
+    }
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovOffsetAl)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+    ULONG Offset;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xA2);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (Size)
+    {
+        if (!Soft386FetchDword(State, &Offset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        USHORT WordOffset;
+
+        if (!Soft386FetchWord(State, &WordOffset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        Offset = (ULONG)WordOffset;
+    }
+
+    /* Write to memory */
+    return Soft386WriteMemory(State,
+                             (State->PrefixFlags & SOFT386_PREFIX_SEG) ?
+                             State->SegmentOverride : SOFT386_REG_DS,
+                             Offset,
+                             &State->GeneralRegs[SOFT386_REG_EAX].LowByte,
+                             sizeof(UCHAR));
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovOffsetEax)
+{
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xA3);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (Size)
+    {
+        ULONG Offset;
+
+        if (!Soft386FetchDword(State, &Offset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Write to memory */
+        return Soft386WriteMemory(State,
+                                  (State->PrefixFlags & SOFT386_PREFIX_SEG) ?
+                                  State->SegmentOverride : SOFT386_REG_DS,
+                                  Offset,
+                                  &State->GeneralRegs[SOFT386_REG_EAX].Long,
+                                  sizeof(ULONG));
+    }
+    else
+    {
+        USHORT Offset;
+
+        if (!Soft386FetchWord(State, &Offset))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Write to memory */
+        return Soft386WriteMemory(State,
+                                  (State->PrefixFlags & SOFT386_PREFIX_SEG) ?
+                                  State->SegmentOverride : SOFT386_REG_DS,
+                                  Offset,
+                                  &State->GeneralRegs[SOFT386_REG_EAX].LowWord,
+                                  sizeof(USHORT));
+    }
 }
