@@ -4506,13 +4506,6 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCall)
         return FALSE;
     }
 
-    /* Push the current value of the instruction pointer */
-    if (!Soft386StackPush(State, State->InstPtr.Long))
-    {
-        /* Exception occurred */
-        return FALSE;
-    }
-
     if (Size)
     {
         LONG Offset = 0;
@@ -4521,6 +4514,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCall)
         if (!Soft386FetchDword(State, (PULONG)&Offset))
         {
             /* An exception occurred */
+            return FALSE;
+        }
+
+        /* Push the current value of the instruction pointer */
+        if (!Soft386StackPush(State, State->InstPtr.Long))
+        {
+            /* Exception occurred */
             return FALSE;
         }
 
@@ -4535,6 +4535,13 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeCall)
         if (!Soft386FetchWord(State, (PUSHORT)&Offset))
         {
             /* An exception occurred */
+            return FALSE;
+        }
+
+        /* Push the current value of the instruction pointer */
+        if (!Soft386StackPush(State, State->InstPtr.Long))
+        {
+            /* Exception occurred */
             return FALSE;
         }
 
