@@ -1196,7 +1196,7 @@ typedef enum {
 /* FIXME: non-standard */
 #define LANG_ESPERANTO      0x8f
 #define LANG_WALON          0x90
-#define LANG_CORNISH        0x91
+#define LANG_CORNISH        0x92
 
 /* FIXME: not present in the official headers */
 #define LANG_MALAGASY       0x8d

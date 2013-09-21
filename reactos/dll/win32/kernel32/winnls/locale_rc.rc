@@ -381,7 +381,7 @@
 
 //#include "nls/wal.nls"   /* 0x0490  LANG_WALON, SUBLANG_DEFAULT */
 
-//#include "nls/cor.nls"   /* 0x0491  LANG_CORNISH, SUBLANG_DEFAULT */
+//#include "nls/cor.nls"   /* 0x0492  LANG_CORNISH, SUBLANG_DEFAULT */
 
 //#include "nls/gae.nls"   /* 0x0494  LANG_GAELIC, SUBLANG_GAELIC */
 //#include "nls/gdh.nls"   /* 0x0894  LANG_GAELIC, SUBLANG_GAELIC_SCOTTISH */
