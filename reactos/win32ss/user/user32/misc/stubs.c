@@ -559,6 +559,20 @@ GetReasonTitleFromReasonCode(DWORD dw1, DWORD dw2, DWORD dw3)
 
 BOOL
 WINAPI
+IsSETEnabled(VOID)
+{
+    /*
+     * Determines whether the Shutdown Event Tracker is enabled.
+     *
+     * See http://undoc.airesoft.co.uk/user32.dll/IsSETEnabled.php
+     * for more information.
+     */
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
 RecordShutdownReason(DWORD dw0)
 {
     UNIMPLEMENTED;

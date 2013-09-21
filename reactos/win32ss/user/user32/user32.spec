@@ -429,6 +429,7 @@
 @ stdcall IsMenu(long)
 @ stdcall IsRectEmpty(ptr)
 @ stdcall IsServerSideWindow(long)
+@ stdcall IsSETEnabled()
 @ stdcall IsWinEventHookInstalled(long)
 @ stdcall IsWindow(long)
 @ stdcall IsWindowEnabled(long)
