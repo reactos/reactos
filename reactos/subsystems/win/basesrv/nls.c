@@ -350,4 +350,23 @@ CSR_API(BaseSrvNlsGetUserInfo)
     return Status;
 }
 
+/* PUBLIC APIS ****************************************************************/
+
+NTSTATUS
+NTAPI
+BaseSrvNlsLogon(DWORD Unknown)
+{
+    DPRINT1("%s(%lu) not yet implemented\n", __FUNCTION__, Unknown);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+BaseSrvNlsUpdateRegistryCache(DWORD Unknown1,
+                              DWORD Unknown2)
+{
+    DPRINT1("%s(%lu, %lu) not yet implemented\n", __FUNCTION__, Unknown1, Unknown2);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */
