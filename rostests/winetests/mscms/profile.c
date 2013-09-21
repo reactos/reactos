@@ -254,17 +254,16 @@ static void test_GetColorProfileElement( char *standardprofile )
         ok( !ret, "GetColorProfileElement() succeeded (%d)\n", GetLastError() );
 
         size = 0;
-
         ret = pGetColorProfileElement( handle, tag, 0, &size, NULL, &ref );
-        ok( !ret && size > 0, "GetColorProfileElement() succeeded (%d)\n", GetLastError() );
-
-        size = sizeof(buffer);
+        ok( !ret, "GetColorProfileElement() succeeded\n" );
+        ok( size > 0, "wrong size\n" );
 
         /* Functional checks */
 
+        size = sizeof(buffer);
         ret = pGetColorProfileElement( handle, tag, 0, &size, buffer, &ref );
-        ok( ret && size > 0, "GetColorProfileElement() failed (%d)\n", GetLastError() );
-
+        ok( ret, "GetColorProfileElement() failed %u\n", GetLastError() );
+        ok( size > 0, "wrong size\n" );
         ok( !memcmp( buffer, expect, sizeof(expect) ), "Unexpected tag data\n" );
 
         pCloseColorProfile( handle );
@@ -1054,18 +1053,16 @@ static void test_SetColorProfileElement( char *testprofile )
         /* Functional checks */
 
         size = sizeof(data);
-
         ret = pSetColorProfileElement( handle, tag, 0, &size, data );
-        ok( ret, "SetColorProfileElement() failed (%d)\n", GetLastError() );
+        ok( ret, "SetColorProfileElement() failed %u\n", GetLastError() );
 
         size = sizeof(buffer);
-
         ret = pGetColorProfileElement( handle, tag, 0, &size, buffer, &ref );
-        ok( ret && size > 0, "GetColorProfileElement() failed (%d)\n", GetLastError() );
+        ok( ret, "GetColorProfileElement() failed %u\n", GetLastError() );
+        ok( size > 0, "wrong size\n" );
 
         ok( !memcmp( data, buffer, sizeof(data) ),
-            "Unexpected tag data, expected %s, got %s (%d)\n",
-            data, buffer, GetLastError() );
+            "Unexpected tag data, expected %s, got %s (%u)\n", data, buffer, GetLastError() );
 
         pCloseColorProfile( handle );
     }
