@@ -46,7 +46,7 @@
 #define IDC_USERS_REMOVE               320
 #define IDC_USERS_PROPERTIES           321
 #define IDC_USERS_STARTUP_REQUIRE      322
-#define IDC_USERS_ADMIN_RESET          323
+#define IDC_USERS_RESET                323
 
 #define IDC_GROUPS_ADD                 324
 #define IDC_GROUPS_REMOVE              325

@@ -18,7 +18,7 @@ BEGIN
     PUSHBUTTON "&Entfernen", IDC_USERS_REMOVE, 141, 98, 50, 14
     PUSHBUTTON "E&igenschaften", IDC_USERS_PROPERTIES, 195, 98, 50, 14
     AUTOCHECKBOX "Benut&zer müssen Benutzername und Kennwort zum Starten eingeben", IDC_USERS_STARTUP_REQUIRE, 10, 118, 235, 14, WS_DISABLED
-    PUSHBUTTON "Administrator Kenn&wort zurücksetzen", IDC_USERS_ADMIN_RESET, 120, 200, 125, 14, WS_DISABLED, 100, 16
+    PUSHBUTTON "Kenn&wort zurücksetzen", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED, 100, 16
 END
 
 
