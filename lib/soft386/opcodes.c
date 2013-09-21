@@ -228,9 +228,9 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeLeave,
     Soft386OpcodeRetFarImm,
     Soft386OpcodeRetFar,
-    Soft386OpcodeInt3,
     Soft386OpcodeInt,
-    Soft386OpcodeIntOverflow,
+    Soft386OpcodeInt,
+    Soft386OpcodeInt,
     Soft386OpcodeIret,
     NULL, // TODO: OPCODE 0xD0 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xD1 NOT SUPPORTED
@@ -4297,28 +4297,68 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeRetFar)
     return FALSE;
 }
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeInt3)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-
-    return FALSE;
-}
-
 SOFT386_OPCODE_HANDLER(Soft386OpcodeInt)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    UCHAR IntNum;
+    SOFT386_IDT_ENTRY IdtEntry;
 
-    return FALSE;
-}
+    switch (Opcode)
+    {
+        case 0xCC:
+        {
+            /* This is the INT3 instruction */
+            IntNum = 3;
+            break;
+        }
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeIntOverflow)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+        case 0xCD:
+        {
+            /* Fetch the interrupt number */
+            if (!Soft386FetchByte(State, &IntNum))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
 
-    return FALSE;
+            break;
+        }
+
+        case 0xCE:
+        {
+            /* Don't do anything if OF is cleared */
+            if (!State->Flags.Of) return TRUE;
+
+            /* Exception #OF */
+            IntNum = SOFT386_EXCEPTION_OF;
+
+            break;
+        }
+
+        default:
+        {
+            /* Should not happen */
+            ASSERT(FALSE);
+        }
+    }
+
+    /* Get the interrupt vector */
+    if (!Soft386GetIntVector(State, IntNum, &IdtEntry))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Perform the interrupt */
+    if (!Soft386InterruptInternal(State,
+                                  IdtEntry.Selector,
+                                  MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
+                                  IdtEntry.Type))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeIret)
