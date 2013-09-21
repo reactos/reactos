@@ -270,4 +270,20 @@ Soft386ExecuteAt(PSOFT386_STATE State, USHORT Segment, ULONG Offset)
     State->InstPtr.Long = Offset;
 }
 
+VOID
+NTAPI
+Soft386SetStack(PSOFT386_STATE State, USHORT Segment, ULONG Offset)
+{
+    /* Load the new SS */
+    if (!Soft386LoadSegment(State, SOFT386_REG_SS, Segment))
+    {
+        /* An exception occurred, let the handler execute instead */
+        return;
+    }
+
+    /* Set the new SP */
+    State->GeneralRegs[SOFT386_REG_ESP].Long = Offset;
+}
+
+
 /* EOF */

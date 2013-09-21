@@ -341,6 +341,10 @@ VOID
 NTAPI
 Soft386ExecuteAt(PSOFT386_STATE State, USHORT Segment, ULONG Offset);
 
+VOID
+NTAPI
+Soft386SetStack(PSOFT386_STATE State, USHORT Segment, ULONG Offset);
+
 #endif // _SOFT386_H_
 
 /* EOF */

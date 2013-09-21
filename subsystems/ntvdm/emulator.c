@@ -429,7 +429,7 @@ VOID EmulatorSetStack(WORD Segment, DWORD Offset)
     /* Call the softx86 API */
     softx86_set_stack_ptr(&EmulatorContext, Segment, Offset);
 #else
-    // TODO: NOT IMPLEMENTED
+    Soft386SetStack(&EmulatorContext, Segment, Offset);
 #endif
 }
 
