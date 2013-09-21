@@ -37,8 +37,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
-LONG MAPI_ObjectCount = 0;
-HINSTANCE hInstMAPI32;
+DECLSPEC_HIDDEN LONG MAPI_ObjectCount = 0;
+DECLSPEC_HIDDEN HINSTANCE hInstMAPI32;
 
 /***********************************************************************
  *              DllMain (MAPI32.init)
@@ -55,6 +55,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         load_mapi_providers();
         break;
     case DLL_PROCESS_DETACH:
+        if (fImpLoad) break;
 	TRACE("DLL_PROCESS_DETACH: %d objects remaining\n", MAPI_ObjectCount);
         unload_mapi_providers();
 	break;

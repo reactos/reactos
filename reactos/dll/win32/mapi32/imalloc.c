@@ -45,11 +45,11 @@ static const IMallocVtbl MAPI_IMalloc_vt;
 
 typedef struct
 {
-  const IMallocVtbl *lpVtbl;
+  IMalloc IMalloc_iface;
   LONG lRef;
 } MAPI_IMALLOC;
 
-static MAPI_IMALLOC MAPI_IMalloc = { &MAPI_IMalloc_vt, 0u };
+static MAPI_IMALLOC MAPI_IMalloc = { { &MAPI_IMalloc_vt }, 0 };
 
 extern LONG MAPI_ObjectCount; /* In mapi32_main.c */
 
@@ -71,8 +71,8 @@ LPMALLOC WINAPI MAPIGetDefaultMalloc(void)
     if (mapiFunctions.MAPIGetDefaultMalloc)
         return mapiFunctions.MAPIGetDefaultMalloc();
 
-    IMalloc_AddRef((LPMALLOC)&MAPI_IMalloc);
-    return (LPMALLOC)&MAPI_IMalloc;
+    IMalloc_AddRef(&MAPI_IMalloc.IMalloc_iface);
+    return &MAPI_IMalloc.IMalloc_iface;
 }
 
 /**************************************************************************

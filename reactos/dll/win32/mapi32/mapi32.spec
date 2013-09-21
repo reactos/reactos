@@ -16,8 +16,8 @@
  24 stub PRProviderInit
  25 stub LAUNCHWIZARD
  26 stub LaunchWizard@20
- 27 stdcall -private DllGetClassObject(ptr ptr ptr)
- 28 stdcall -private DllCanUnloadNow()
+ @ stdcall -private DllGetClassObject(ptr ptr ptr)
+ @ stdcall -private DllCanUnloadNow()
  29 stdcall MAPIOpenFormMgr(ptr ptr)
  30 stdcall MAPIOpenFormMgr@8(ptr ptr) MAPIOpenFormMgr
  31 stdcall MAPIOpenLocalFormContainer(ptr)
@@ -188,3 +188,4 @@
 253 stdcall FixMAPI@0() FixMAPI
 254 stdcall FGetComponentPath(str str ptr long long)
 255 stdcall FGetComponentPath@20(str str ptr long long) FGetComponentPath
+256 stdcall MAPISendMailW(ptr ptr ptr long long)
