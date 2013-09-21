@@ -121,6 +121,9 @@ static const WCHAR de_engb2[] ={'E','n','g','l','i','s','c','h',' ',
                                 'K',0xF6,'n','i','g','r','e','i','c',0};
 static const WCHAR de_enus[] = {'E','n','g','l','i','s','c','h',' ',
                                 '(','U','S','A',')',0};
+static const WCHAR de_enus2[] ={'E','n','g','l','i','s','c','h',' ',
+                                '(','V','e','r','e','i','n','i','g','t','e',' ',
+                                'S','t','a','a','t','e','n',')',0};
 static const WCHAR de_de[] =   {'D','e','u','t','s','c','h',' ',
                                 '(','D','e','u','t','s','c','h','l','a','n','d',')',0};
 static const WCHAR de_deat[] = {'D','e','u','t','s','c','h',' ',
@@ -184,11 +187,11 @@ static const info_table_entry  info_table[] = {
     {MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),        MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
          TODO_NAME, "en", de_en},
     {MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),        MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
-         TODO_NAME, "en-us", de_enus},
+         TODO_NAME, "en-us", de_enus, de_enus2},
     {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_UK),     MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
          TODO_NAME, "en-gb", de_engb, de_engb2},
     {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),     MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
-         TODO_NAME, "en-us", de_enus},
+         TODO_NAME, "en-us", de_enus, de_enus2},
     {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_CAN),    MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
          TODO_NAME, "en-ca", de_enca},
 
@@ -227,13 +230,7 @@ static BOOL init_function_ptrs(void)
 {
     HMODULE hMlang;
 
-    hMlang = LoadLibraryA("mlang.dll");
-    if (!hMlang)
-    {
-        skip("mlang not available\n");
-        return FALSE;
-    }
-
+    hMlang = GetModuleHandleA("mlang.dll");
     pConvertINetMultiByteToUnicode = (void *)GetProcAddress(hMlang, "ConvertINetMultiByteToUnicode");
     pConvertINetUnicodeToMultiByte = (void *)GetProcAddress(hMlang, "ConvertINetUnicodeToMultiByte");
     pRfc1766ToLcidA = (void *)GetProcAddress(hMlang, "Rfc1766ToLcidA");
@@ -677,7 +674,7 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
     n = 0;
     ret = IEnumCodePage_Next(iEnumCP, 1, &cpinfo2, &n);
     ok(n == 1 && ret == S_OK, "IEnumCodePage_Next: expected 1/S_OK, got %u/%08x\n", n, ret);
-    cpinfo_cmp(&cpinfo[0], &cpinfo2);
+    cpinfo_cmp(cpinfo, &cpinfo2);
 
     if (0)
     {
@@ -782,7 +779,7 @@ static void test_EnumScripts(IMultiLanguage2 *iML2, DWORD flags)
     n = 0;
     ret = IEnumScript_Next(iEnumScript, 1, &sinfo2, &n);
     ok(n == 1 && ret == S_OK, "IEnumScript_Next: expected 1/S_OK, got %u/%08x\n", n, ret);
-    scriptinfo_cmp(&sinfo[0], &sinfo2);
+    scriptinfo_cmp(sinfo, &sinfo2);
 
     if (0)
     {
@@ -861,7 +858,7 @@ static void IMLangFontLink_Test(IMLangFontLink* iMLFL)
 
     dwCodePages = 0;
     processed = 0;
-    ret = IMLangFontLink_GetStrCodePages(iMLFL, &str[0], 1, 0, &dwCodePages, &processed);
+    ret = IMLangFontLink_GetStrCodePages(iMLFL, str, 1, 0, &dwCodePages, &processed);
     ok(ret == S_OK, "IMLangFontLink_GetStrCodePages error %x\n", ret);
     ok(dwCodePages == dwCmpCodePages, "expected %x, got %x\n", dwCmpCodePages, dwCodePages);
     ok(processed == 1, "expected 1, got %d\n", processed);
@@ -1914,6 +1911,68 @@ todo_wine {
     }
 }
 
+static void test_IMLangConvertCharset(IMultiLanguage *ml)
+{
+    IMLangConvertCharset *convert;
+    WCHAR strW[] = {'a','b','c','d',0};
+    UINT cp, src_size, dst_size;
+    char strA[] = "abcd";
+    WCHAR buffW[20];
+    HRESULT hr;
+
+    hr = IMultiLanguage_CreateConvertCharset(ml, CP_ACP, CP_UTF8, 0, &convert);
+todo_wine
+    ok(hr == S_FALSE, "expected S_FALSE got 0x%08x\n", hr);
+
+    hr = IMLangConvertCharset_GetSourceCodePage(convert, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    cp = CP_UTF8;
+    hr = IMLangConvertCharset_GetSourceCodePage(convert, &cp);
+    ok(hr == S_OK, "expected S_OK got 0x%08x\n", hr);
+    ok(cp == CP_ACP, "got %d\n", cp);
+
+    hr = IMLangConvertCharset_GetDestinationCodePage(convert, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    cp = CP_ACP;
+    hr = IMLangConvertCharset_GetDestinationCodePage(convert, &cp);
+    ok(hr == S_OK, "expected S_OK got 0x%08x\n", hr);
+    ok(cp == CP_UTF8, "got %d\n", cp);
+
+    /* DoConversionToUnicode */
+    hr = IMLangConvertCharset_Initialize(convert, CP_UTF8, CP_UNICODE, 0);
+    ok(hr == S_OK, "expected S_OK got 0x%08x\n", hr);
+
+    hr = IMLangConvertCharset_DoConversionToUnicode(convert, NULL, NULL, NULL, NULL);
+    ok(hr == E_FAIL || broken(hr == S_OK) /* win2k */, "got 0x%08x\n", hr);
+
+    src_size = -1;
+    dst_size = 20;
+    buffW[0] = 0;
+    buffW[4] = 4;
+    hr = IMLangConvertCharset_DoConversionToUnicode(convert, strA, &src_size, buffW, &dst_size);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(!memcmp(buffW, strW, 4*sizeof(WCHAR)), "got converted string %s\n", wine_dbgstr_wn(buffW, dst_size));
+    ok(dst_size == 4, "got %d\n", dst_size);
+    ok(buffW[4] == 4, "got %d\n", buffW[4]);
+    ok(src_size == 4, "got %d\n", src_size);
+
+    src_size = -1;
+    dst_size = 0;
+    buffW[0] = 1;
+    hr = IMLangConvertCharset_DoConversionToUnicode(convert, strA, &src_size, buffW, &dst_size);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(buffW[0] == 1, "got %d\n", buffW[0]);
+    ok(dst_size == 4, "got %d\n", dst_size);
+    ok(src_size == 4, "got %d\n", src_size);
+
+    hr = IMLangConvertCharset_Initialize(convert, CP_UNICODE, CP_UNICODE, 0);
+    ok(hr == S_OK, "expected S_OK got 0x%08x\n", hr);
+
+    IMLangConvertCharset_Release(convert);
+}
+
 START_TEST(mlang)
 {
     IMultiLanguage  *iML = NULL;
@@ -1940,6 +1999,7 @@ START_TEST(mlang)
     if (ret != S_OK || !iML) return;
 
     test_GetNumberOfCodePageInfo((IMultiLanguage2 *)iML);
+    test_IMLangConvertCharset(iML);
     IMultiLanguage_Release(iML);
 
 
