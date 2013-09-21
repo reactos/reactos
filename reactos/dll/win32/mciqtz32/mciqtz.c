@@ -244,13 +244,13 @@ static DWORD MCIQTZ_mciOpen(UINT wDevID, DWORD dwFlags,
 
 err:
     if (wma->vidbasic)
-        IUnknown_Release(wma->vidbasic);
+        IBasicVideo_Release(wma->vidbasic);
     wma->vidbasic = NULL;
     if (wma->seek)
-        IUnknown_Release(wma->seek);
+        IMediaSeeking_Release(wma->seek);
     wma->seek = NULL;
     if (wma->vidwin)
-        IUnknown_Release(wma->vidwin);
+        IVideoWindow_Release(wma->vidwin);
     wma->vidwin = NULL;
     if (wma->pgraph)
         IGraphBuilder_Release(wma->pgraph);
@@ -285,9 +285,9 @@ static DWORD MCIQTZ_mciClose(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpP
     MCIQTZ_mciStop(wDevID, MCI_WAIT, NULL);
 
     if (wma->opened) {
-        IUnknown_Release(wma->vidwin);
-        IUnknown_Release(wma->vidbasic);
-        IUnknown_Release(wma->seek);
+        IVideoWindow_Release(wma->vidwin);
+        IBasicVideo_Release(wma->vidbasic);
+        IMediaSeeking_Release(wma->seek);
         IMediaEvent_Release(wma->mevent);
         IGraphBuilder_Release(wma->pgraph);
         IMediaControl_Release(wma->pmctrl);
