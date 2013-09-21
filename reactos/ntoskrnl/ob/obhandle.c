@@ -3172,6 +3172,36 @@ ObInsertObject(IN PVOID Object,
 }
 
 /*++
+* @name ObSetHandleAttributes
+* @implemented NT5.1
+*
+*     The ObSetHandleAttributes routine <FILLMEIN>
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @param HandleFlags
+*        <FILLMEIN>.
+*
+* @param PreviousMode
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+ObSetHandleAttributes(IN HANDLE Handle,
+                      IN POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags,
+                      IN KPROCESSOR_MODE PreviousMode)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*++
 * @name ObCloseHandle
 * @implemented NT5.1
 *

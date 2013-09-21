@@ -899,7 +899,7 @@
 @ stdcall ObCloseHandle(ptr long)
 @ stdcall ObCreateObject(long ptr ptr long ptr long long long ptr)
 @ stdcall ObCreateObjectType(ptr ptr ptr ptr)
-;ObDeleteCapturedInsertInfo
+@ stdcall ObDeleteCapturedInsertInfo(ptr)
 @ stdcall ObDereferenceObject(ptr)
 @ stdcall -arch=i386,arm ObDereferenceObjectDeferDelete(ptr)
 @ stdcall ObDereferenceSecurityDescriptor(ptr long)
@@ -918,7 +918,7 @@
 @ stdcall ObReferenceObjectByPointer(ptr long ptr long)
 @ stdcall ObReferenceSecurityDescriptor(ptr long)
 @ stdcall ObReleaseObjectSecurity(ptr long)
-;ObSetHandleAttributes@12
+@ stdcall ObSetHandleAttributes(ptr ptr long)
 @ stdcall ObSetSecurityDescriptorInfo(ptr ptr ptr ptr long ptr)
 @ stdcall ObSetSecurityObjectByPointer(ptr long ptr)
 @ fastcall ObfDereferenceObject(ptr)

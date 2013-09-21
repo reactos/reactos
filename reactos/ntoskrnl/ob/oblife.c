@@ -1271,6 +1271,14 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
 VOID
 NTAPI
+ObDeleteCapturedInsertInfo(IN PVOID Object)
+{
+    UNIMPLEMENTED;
+    return;
+}
+
+VOID
+NTAPI
 ObpDeleteObjectType(IN PVOID Object)
 {
     ULONG i;
