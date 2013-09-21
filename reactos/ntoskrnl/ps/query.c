@@ -419,7 +419,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 /* Write back the Session ID */
-                SessionInfo->SessionId = PtrToUlong(PsGetProcessSessionId(Process));
+                SessionInfo->SessionId = PsGetProcessSessionId(Process);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

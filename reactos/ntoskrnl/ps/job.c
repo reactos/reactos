@@ -527,12 +527,12 @@ PsGetJobLock ( PEJOB Job )
 /*
  * @implemented
  */
-PVOID
+ULONG
 NTAPI
 PsGetJobSessionId ( PEJOB Job )
 {
     ASSERT(Job);
-    return (PVOID)Job->SessionId;
+    return Job->SessionId;
 }
 
 

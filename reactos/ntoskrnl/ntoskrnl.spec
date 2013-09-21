@@ -963,11 +963,11 @@
 @ stdcall PsGetCurrentThread() KeGetCurrentThread
 @ stdcall PsGetCurrentThreadId()
 @ stdcall PsGetCurrentThreadPreviousMode()
-;PsGetCurrentThreadProcess
-;PsGetCurrentThreadProcessId
+@ stdcall PsGetCurrentThreadProcess()
+@ stdcall PsGetCurrentThreadProcessId()
 @ stdcall PsGetCurrentThreadStackBase()
 @ stdcall PsGetCurrentThreadStackLimit()
-;PsGetCurrentThreadTeb
+@ stdcall PsGetCurrentThreadTeb()
 @ stdcall PsGetCurrentThreadWin32Thread()
 ;PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion
 @ stdcall PsGetJobLock(ptr)
