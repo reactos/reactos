@@ -43,8 +43,13 @@
 #include "main/teximage.h"
 #include "s_context.h"
 #include "s_texfetch.h"
+#if 0
 #include "../../gallium/auxiliary/util/u_format_rgb9e5.h"
 #include "../../gallium/auxiliary/util/u_format_r11g11b10f.h"
+#else
+#include "../main/u_format_rgb9e5.h"
+#include "../main/u_format_r11g11b10f.h"
+#endif
 
 
 /**

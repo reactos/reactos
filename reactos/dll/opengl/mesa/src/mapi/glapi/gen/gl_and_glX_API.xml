@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
-
-<OpenGLAPI>
-<xi:include href="glX_API.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-<xi:include href="gl_API.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-</OpenGLAPI>

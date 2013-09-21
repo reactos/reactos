@@ -39,8 +39,13 @@
 #include "pack.h"
 #include "pixeltransfer.h"
 #include "imports.h"
+#if 0
 #include "../../gallium/auxiliary/util/u_format_rgb9e5.h"
 #include "../../gallium/auxiliary/util/u_format_r11g11b10f.h"
+#else
+#include "u_format_rgb9e5.h"
+#include "u_format_r11g11b10f.h"
+#endif
 
 
 /**

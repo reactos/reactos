@@ -2,8 +2,8 @@
 list(APPEND SOURCE
     api_arrayelt.c
     api_exec.c
-    api_exec_es1.c
-    api_exec_es2.c
+    # api_exec_es1.c
+    # api_exec_es2.c
     api_loopback.c
     api_validate.c
     accum.c
