@@ -629,10 +629,10 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
 
     /* Create the Parameter Block */
     ProcessParameters = NULL;
-    DPRINT1("ImageName: '%wZ'\n", &ImageName);
+    DPRINT("ImageName: '%wZ'\n", &ImageName);
     DPRINT("DllPath  : '%wZ'\n", &DllPath);
     DPRINT("CurDir   : '%wZ'\n", &CurrentDirectory);
-    DPRINT1("CmdLine  : '%wZ'\n", &CommandLine);
+    DPRINT("CmdLine  : '%wZ'\n", &CommandLine);
     DPRINT("Title    : '%wZ'\n", &Title);
     DPRINT("Desktop  : '%wZ'\n", &Desktop);
     DPRINT("Shell    : '%wZ'\n", &Shell);
@@ -3440,7 +3440,7 @@ StartScan:
                     ((_wcsnicmp(ExtBuffer, L".bat", 4)) &&
                      (_wcsnicmp(ExtBuffer, L".cmd", 4))))
                 {
-                    DPRINT1("Invalid EXE, and not a batch or script file\n");
+                    DPRINT1("'%wZ': Invalid EXE, and not a batch or script file\n", &PathName);
                     SetLastError(ERROR_BAD_EXE_FORMAT);
                     Result = FALSE;
                     goto Quickie;
