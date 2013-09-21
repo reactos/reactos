@@ -1169,7 +1169,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Getting VDM powers requires the SeTcbPrivilege */
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
-                /* Bail out */
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 DPRINT1("Need TCB privilege\n");
                 break;
@@ -1213,7 +1213,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Setting the error port requires the SeTcbPrivilege */
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
-                /* Can't set the session ID, bail out. */
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
@@ -1332,10 +1332,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Setting the session id requires the SeTcbPrivilege */
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
-                /* Can't set the session ID, bail out. */
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
+
+#if 0 // OLD AND DEPRECATED CODE!!!!
 
             /* FIXME - update the session id for the process token */
             //Status = PsLockProcess(Process, FALSE);
@@ -1372,6 +1374,27 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
             /* Unlock the process */
             //PsUnlockProcess(Process);
+
+#endif
+
+            /*
+             * Since we cannot change the session ID of the given
+             * process anymore because it is set once and for all
+             * at process creation time and because it is stored
+             * inside the Process->Session structure managed by MM,
+             * we fake changing it: we just return success if the
+             * user-defined value is the same as the session ID of
+             * the process, and otherwise we fail.
+             */
+            if (SessionInfo.SessionId == PsGetProcessSessionId(Process))
+            {
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                Status = STATUS_ACCESS_DENIED;
+            }
+
             break;
 
         case ProcessPriorityClass:
@@ -1612,6 +1635,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Setting 'break on termination' requires the SeDebugPrivilege */
             if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
             {
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }
@@ -1837,7 +1861,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Only TCB can do this */
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
             {
-                /* Fail */
+                /* We don't hold the privilege, bail out */
                 DPRINT1("Need TCB to set IOPL\n");
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
@@ -2366,6 +2390,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             /* Setting 'break on termination' requires the SeDebugPrivilege */
             if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
             {
+                /* We don't hold the privilege, bail out */
                 Status = STATUS_PRIVILEGE_NOT_HELD;
                 break;
             }

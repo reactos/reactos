@@ -169,8 +169,7 @@ NtAssignProcessToJobObject (
                 ExAcquireRundownProtection(&Process->RundownProtect);
                 if(NT_SUCCESS(Status))
                 {
-                     // FIXME: This is broken
-                    if(Process->Job == NULL && PtrToUlong(Process->Session) == Job->SessionId)
+                    if(Process->Job == NULL && PsGetProcessSessionId(Process) == Job->SessionId)
                     {
                         /* Just store the pointer to the job object in the process, we'll
                         assign it later. The reason we can't do this here is that locking
@@ -272,9 +271,12 @@ NtCreateJobObject (
         the list before it even gets added! */
         Job->JobLinks.Flink = NULL;
 
-        /* setup the job object */
+        /* setup the job object - FIXME: More to do! */
+        InitializeListHead(&Job->JobSetLinks);
         InitializeListHead(&Job->ProcessListHead);
-        Job->SessionId = PtrToUlong(CurrentProcess->Session); /* inherit the session id from the caller, FIXME: broken */
+
+        /* inherit the session id from the caller */
+        Job->SessionId = PsGetProcessSessionId(CurrentProcess);
 
         Status = ExInitializeResource(&Job->JobLock);
         if(!NT_SUCCESS(Status))

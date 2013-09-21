@@ -1576,7 +1576,7 @@ MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
 
     /* Get the session ID */
     SessionId = SessionGlobal->SessionId;
-    DPRINT1("Last process in sessino %lu going down!!!\n", SessionId);
+    DPRINT1("Last process in session %lu going down!!!\n", SessionId);
 
     /* Free the session page tables */
 #ifndef _M_AMD64
