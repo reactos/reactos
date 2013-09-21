@@ -24,22 +24,12 @@ static const WCHAR OpenGLDrivers_Key[] = L"SOFTWARE\\Microsoft\\Windows NT\\Curr
 
 static void APIENTRY wglSetCurrentValue(PVOID value)
 {
-#ifdef OPENGL32_USE_TLS
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    data->icdData = value;
-#else
-    NtCurrentTeb()->glReserved2 = value;
-#endif
+    IntSetCurrentICDPrivate(value);
 }
 
 static PVOID APIENTRY wglGetCurrentValue()
 {
-#ifdef OPENGL32_USE_TLS
-    struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->icdData;
-#else
-    return NtCurrentTeb()->glReserved2;
-#endif
+    return IntGetCurrentICDPrivate();
 }
 
 static DHGLRC wglGetDHGLRC(struct wgl_context* context)

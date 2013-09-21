@@ -31,11 +31,11 @@ DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
         /* Fall through */
         case DLL_THREAD_ATTACH:
 #ifdef OPENGL32_USE_TLS
-            ThreadData = HeapAlloc(GetProcessHeap(), 0, sizeof(*ThreadData));
+            ThreadData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ThreadData));
             if(!ThreadData)
                 return FALSE;
             TlsSetValue(OglTlsIndex, ThreadData);
-            ThreadData->ProcTable = &StubTable;
+            ThreadData->glDispatchTable = &StubTable.glDispatchTable;
             ThreadData->hglrc = NULL;
             ThreadData->hdc = NULL;
             ThreadData->dc_data = NULL;

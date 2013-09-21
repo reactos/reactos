@@ -2026,6 +2026,8 @@ const GLCLTPROCTABLE StubTable =
     }
 };
 
+
+#ifndef __i386__
 void GLAPIENTRY glNewList(GLuint list, GLenum mode)
 {
     IntGetCurrentDispatchTable()->NewList(list, mode);
@@ -3705,6 +3707,7 @@ void GLAPIENTRY glPushClientAttrib(GLbitfield mask)
 {
     IntGetCurrentDispatchTable()->PushClientAttrib(mask);
 }
+#endif //__i386__
 
 /* Unknown debug function */
 GLint GLAPIENTRY glDebugEntry(GLint unknown1, GLint unknown2)
