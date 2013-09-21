@@ -33,7 +33,7 @@ extern "C" {
 
 #ifndef RC_INVOKE
 typedef DWORD IP4_ADDRESS;
-typedef DWORD DNS_STATUS;
+typedef _Return_type_success_(return == 0) DWORD DNS_STATUS;
 #define DNS_TYPE_ZERO       0x0000
 
 #define DNS_TYPE_A          0x0001
@@ -501,34 +501,186 @@ typedef struct _DnsRRSet {
     _prrset->pLastRR->pNext = NULL;  \
 }
 
-DNS_STATUS WINAPI DnsAcquireContextHandle_A(DWORD,PVOID,HANDLE*);
-DNS_STATUS WINAPI DnsAcquireContextHandle_W(DWORD,PVOID,HANDLE*);
-DNS_STATUS WINAPI DnsExtractRecordsFromMessage_W(PDNS_MESSAGE_BUFFER,WORD,PDNS_RECORD*);
-DNS_STATUS WINAPI DnsExtractRecordsFromMessage_UTF8(PDNS_MESSAGE_BUFFER,WORD,PDNS_RECORD*);
-DNS_STATUS WINAPI DnsModifyRecordsInSet_A(PDNS_RECORD,PDNS_RECORD,DWORD,HANDLE,PIP4_ARRAY,PVOID);
-DNS_STATUS WINAPI DnsModifyRecordsInSet_W(PDNS_RECORD,PDNS_RECORD,DWORD,HANDLE,PIP4_ARRAY,PVOID);
-DNS_STATUS WINAPI DnsModifyRecordsInSet_UTF8(PDNS_RECORD,PDNS_RECORD,DWORD,HANDLE,PIP4_ARRAY,PVOID);
-BOOL WINAPI DnsNameCompare_A(PCSTR,PCSTR);
-BOOL WINAPI DnsNameCompare_W(PCWSTR,PCWSTR);
-DNS_STATUS WINAPI DnsQuery_A(PCSTR,WORD,DWORD,PIP4_ARRAY,PDNS_RECORD*,PVOID*);
-DNS_STATUS WINAPI DnsQuery_W(PCWSTR,WORD,DWORD,PIP4_ARRAY,PDNS_RECORD*,PVOID*);
-DNS_STATUS WINAPI DnsQuery_UTF8(PCSTR,WORD,DWORD,PIP4_ARRAY,PDNS_RECORD*,PVOID*);
-DNS_STATUS WINAPI DnsQueryConfig(DNS_CONFIG_TYPE,DWORD,PWSTR,PVOID,PVOID,PDWORD);
-BOOL WINAPI DnsRecordCompare(PDNS_RECORD,PDNS_RECORD);
-PDNS_RECORD WINAPI DnsRecordCopyEx(PDNS_RECORD,DNS_CHARSET,DNS_CHARSET);
-void WINAPI DnsRecordListFree(PDNS_RECORD,DNS_FREE_TYPE);
-BOOL WINAPI DnsRecordSetCompare(PDNS_RECORD,PDNS_RECORD,PDNS_RECORD*,PDNS_RECORD*);
-PDNS_RECORD WINAPI DnsRecordSetCopyEx(PDNS_RECORD,DNS_CHARSET,DNS_CHARSET);
-PDNS_RECORD WINAPI DnsRecordSetDetach(PDNS_RECORD);
-void WINAPI DnsReleaseContextHandle(HANDLE);
-DNS_STATUS WINAPI DnsReplaceRecordSetA(PDNS_RECORD,DWORD,HANDLE,PIP4_ARRAY,PVOID);
-DNS_STATUS WINAPI DnsReplaceRecordSetW(PDNS_RECORD,DWORD,HANDLE,PIP4_ARRAY,PVOID);
-DNS_STATUS WINAPI DnsReplaceRecordSetUTF8(PDNS_RECORD,DWORD,HANDLE,PIP4_ARRAY,PVOID);
-DNS_STATUS WINAPI DnsValidateName_A(LPCSTR,DNS_NAME_FORMAT);
-DNS_STATUS WINAPI DnsValidateName_W(LPCWSTR, DNS_NAME_FORMAT);
-DNS_STATUS WINAPI DnsValidateName_UTF8(LPCSTR,DNS_NAME_FORMAT);
-BOOL WINAPI DnsWriteQuestionToBuffer_W(PDNS_MESSAGE_BUFFER,LPDWORD,LPWSTR,WORD,WORD,BOOL);
-BOOL WINAPI DnsWriteQuestionToBuffer_UTF8(PDNS_MESSAGE_BUFFER,LPDWORD,LPSTR,WORD,WORD,BOOL);
+DNS_STATUS
+WINAPI
+DnsAcquireContextHandle_A(
+  _In_ DWORD CredentialFlags,
+  _In_opt_ PVOID Credentials,
+  _Outptr_ PHANDLE pContext);
+
+DNS_STATUS
+WINAPI
+DnsAcquireContextHandle_W(
+  _In_ DWORD CredentialFlags,
+  _In_opt_ PVOID Credentials,
+  _Outptr_ PHANDLE pContext);
+
+DNS_STATUS
+WINAPI
+DnsExtractRecordsFromMessage_W(
+  _In_ PDNS_MESSAGE_BUFFER pDnsBuffer,
+  _In_ WORD wMessageLength,
+  _Outptr_ PDNS_RECORD *ppRecord);
+
+DNS_STATUS
+WINAPI
+DnsExtractRecordsFromMessage_UTF8(
+  _In_ PDNS_MESSAGE_BUFFER pDnsBuffer,
+  _In_ WORD wMessageLength,
+  _Outptr_ PDNS_RECORD *ppRecord);
+
+DNS_STATUS
+WINAPI
+DnsModifyRecordsInSet_A(
+  _In_opt_ PDNS_RECORD pAddRecords,
+  _In_opt_ PDNS_RECORD pDeleteRecords,
+  _In_ DWORD Options,
+  _In_opt_ HANDLE hCredentials,
+  _Inout_opt_ PIP4_ARRAY pExtraList,
+  _Inout_opt_ PVOID pReserved);
+
+DNS_STATUS
+WINAPI
+DnsModifyRecordsInSet_W(
+  _In_opt_ PDNS_RECORD pAddRecords,
+  _In_opt_ PDNS_RECORD pDeleteRecords,
+  _In_ DWORD Options,
+  _In_opt_ HANDLE hCredentials,
+  _Inout_opt_ PIP4_ARRAY pExtraList,
+  _Inout_opt_ PVOID pReserved);
+
+DNS_STATUS
+WINAPI
+DnsModifyRecordsInSet_UTF8(
+  _In_opt_ PDNS_RECORD pAddRecords,
+  _In_opt_ PDNS_RECORD pDeleteRecords,
+  _In_ DWORD Options,
+  _In_opt_ HANDLE hCredentials,
+  _Inout_opt_ PIP4_ARRAY pExtraList,
+  _Inout_opt_ PVOID pReserved);
+
+BOOL WINAPI DnsNameCompare_A(_In_ PCSTR, _In_ PCSTR);
+BOOL WINAPI DnsNameCompare_W(_In_ PCWSTR, _In_ PCWSTR);
+
+DNS_STATUS
+WINAPI
+DnsQuery_A(
+  _In_ PCSTR pszName,
+  _In_ WORD wType,
+  _In_ DWORD Options,
+  _Inout_opt_ PIP4_ARRAY pExtra,
+  _Outptr_result_maybenull_ PDNS_RECORD *ppQueryResults,
+  _Outptr_opt_result_maybenull_ PVOID *pReserved);
+
+DNS_STATUS
+WINAPI
+DnsQuery_W(
+  _In_ PCWSTR pszName,
+  _In_ WORD wType,
+  _In_ DWORD Options,
+  _Inout_opt_ PIP4_ARRAY pExtra,
+  _Outptr_result_maybenull_ PDNS_RECORD *ppQueryResults,
+  _Outptr_opt_result_maybenull_ PVOID *pReserved);
+
+DNS_STATUS
+WINAPI
+DnsQuery_UTF8(
+  _In_ PCSTR pszName,
+  _In_ WORD wType,
+  _In_ DWORD Options,
+  _Inout_opt_ PIP4_ARRAY pExtra,
+  _Outptr_result_maybenull_ PDNS_RECORD *ppQueryResults,
+  _Outptr_opt_result_maybenull_ PVOID *pReserved);
+
+DNS_STATUS
+WINAPI
+DnsQueryConfig(
+  _In_ DNS_CONFIG_TYPE Config,
+  _In_ DWORD Flag,
+  _In_opt_ PWSTR pwsAdapterName,
+  _In_opt_ PVOID pReserved,
+  _Out_writes_bytes_to_opt_(*pBufLen, *pBufLen) PVOID pBuffer,
+  _Inout_ PDWORD pBufLen);
+
+BOOL WINAPI DnsRecordCompare(_In_ PDNS_RECORD, _In_ PDNS_RECORD);
+
+PDNS_RECORD
+WINAPI
+DnsRecordCopyEx(
+  _In_ PDNS_RECORD pRecord,
+  _In_ DNS_CHARSET CharSetIn,
+  _In_ DNS_CHARSET CharSetOut);
+
+void WINAPI DnsRecordListFree(_Inout_opt_ PDNS_RECORD, _In_ DNS_FREE_TYPE);
+
+BOOL
+WINAPI
+DnsRecordSetCompare(
+  _Inout_ PDNS_RECORD pRR1,
+  _Inout_ PDNS_RECORD pRR2,
+  _Outptr_opt_result_maybenull_ PDNS_RECORD *ppDiff1,
+  _Outptr_opt_result_maybenull_ PDNS_RECORD *ppDiff2);
+
+PDNS_RECORD
+WINAPI
+DnsRecordSetCopyEx(
+  _In_ PDNS_RECORD pRecordSet,
+  _In_ DNS_CHARSET CharSetIn,
+  _In_ DNS_CHARSET CharSetOut);
+
+PDNS_RECORD WINAPI DnsRecordSetDetach(_Inout_ PDNS_RECORD);
+void WINAPI DnsReleaseContextHandle(_In_ HANDLE);
+
+DNS_STATUS
+WINAPI
+DnsReplaceRecordSetA(
+  _In_ PDNS_RECORD pReplaceSet,
+  _In_ DWORD Options,
+  _In_opt_ HANDLE hContext,
+  _Inout_opt_ PIP4_ARRAY pExtraInfo,
+  _Inout_opt_ PVOID pReserved);
+
+DNS_STATUS
+WINAPI
+DnsReplaceRecordSetW(
+  _In_ PDNS_RECORD pReplaceSet,
+  _In_ DWORD Options,
+  _In_opt_ HANDLE hContext,
+  _Inout_opt_ PIP4_ARRAY pExtraInfo,
+  _Inout_opt_ PVOID pReserved);
+
+DNS_STATUS
+WINAPI
+DnsReplaceRecordSetUTF8(
+  _In_ PDNS_RECORD pReplaceSet,
+  _In_ DWORD Options,
+  _In_opt_ HANDLE hContext,
+  _Inout_opt_ PIP4_ARRAY pExtraInfo,
+  _Inout_opt_ PVOID pReserved);
+
+DNS_STATUS WINAPI DnsValidateName_A(_In_ LPCSTR, _In_ DNS_NAME_FORMAT);
+DNS_STATUS WINAPI DnsValidateName_W(_In_ LPCWSTR, _In_ DNS_NAME_FORMAT);
+DNS_STATUS WINAPI DnsValidateName_UTF8(_In_ LPCSTR, _In_ DNS_NAME_FORMAT);
+
+BOOL
+WINAPI
+DnsWriteQuestionToBuffer_W(
+  _Inout_ PDNS_MESSAGE_BUFFER pDnsBuffer,
+  _Inout_ PDWORD pdwBufferSize,
+  _In_ LPWSTR pszName,
+  _In_ WORD wType,
+  _In_ WORD Xid,
+  _In_ BOOL fRecursionDesired);
+
+BOOL
+WINAPI
+DnsWriteQuestionToBuffer_UTF8(
+  _Inout_ PDNS_MESSAGE_BUFFER pDnsBuffer,
+  _Inout_ PDWORD pdwBufferSize,
+  _In_ LPSTR pszName,
+  _In_ WORD wType,
+  _In_ WORD Xid,
+  _In_ BOOL fRecursionDesired);
 
 #ifdef UNICODE
 #define DNS_MINFO_DATA DNS_MINFO_DATAW
