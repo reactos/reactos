@@ -699,7 +699,7 @@ MmCreatePeb(IN PEPROCESS Process,
         //
         // Session ID
         //
-        MmGetSessionId(Process);
+        if (Process->Session) Peb->SessionId = MmGetSessionId(Process);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
