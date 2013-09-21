@@ -157,7 +157,7 @@ static inline unsigned char C168(short s)
 /***********************************************************************
  *           R16
  *
- * Read a 16 bit sample (correctly handles endianess)
+ * Read a 16 bit sample (correctly handles endianness)
  */
 static inline short  R16(const unsigned char* src)
 {
@@ -167,7 +167,7 @@ static inline short  R16(const unsigned char* src)
 /***********************************************************************
  *           W16
  *
- * Write a 16 bit sample (correctly handles endianess)
+ * Write a 16 bit sample (correctly handles endianness)
  */
 static inline void  W16(unsigned char* dst, short s)
 {
