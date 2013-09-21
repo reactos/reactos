@@ -238,7 +238,7 @@ Soft386Reset(PSOFT386_STATE State)
 
     /* Initialize CR0 */
     State->ControlRegisters[SOFT386_REG_CR0] |= SOFT386_CR0_ET;
-    
+
     /* Restore the callbacks */
     State->MemReadCallback = MemReadCallback;
     State->MemWriteCallback = MemWriteCallback;
