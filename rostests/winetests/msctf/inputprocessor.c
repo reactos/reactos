@@ -203,7 +203,7 @@ static HRESULT WINAPI TextStoreACP_QueryInterface(ITextStoreACP *iface, REFIID i
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITextStoreACP_AddRef(iface);
         return S_OK;
     }
 
@@ -492,7 +492,7 @@ static HRESULT WINAPI ThreadMgrEventSink_QueryInterface(ITfThreadMgrEventSink *i
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfThreadMgrEventSink_AddRef(iface);
         return S_OK;
     }
 
@@ -752,7 +752,7 @@ static HRESULT WINAPI TextService_QueryInterface(ITfTextInputProcessor *iface, R
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfTextInputProcessor_AddRef(iface);
         return S_OK;
     }
 
@@ -1079,7 +1079,7 @@ static HRESULT WINAPI KeyEventSink_QueryInterface(ITfKeyEventSink *iface, REFIID
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfKeyEventSink_AddRef(iface);
         return S_OK;
     }
 
@@ -1305,8 +1305,8 @@ static void test_EnumDocumentMgr(ITfThreadMgr *tm, ITfDocumentMgr *search, ITfDo
 
 static inline int check_context_refcount(ITfContext *iface)
 {
-    IUnknown_AddRef(iface);
-    return IUnknown_Release(iface);
+    ITfContext_AddRef(iface);
+    return ITfContext_Release(iface);
 }
 
 
@@ -1341,7 +1341,7 @@ static HRESULT WINAPI TextEditSink_QueryInterface(ITfTextEditSink *iface, REFIID
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfTextEditSink_AddRef(iface);
         return S_OK;
     }
 
@@ -1697,7 +1697,7 @@ static HRESULT WINAPI EditSession_QueryInterface(ITfEditSession *iface, REFIID i
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfEditSession_AddRef(iface);
         return S_OK;
     }
 
@@ -1901,10 +1901,9 @@ static void test_TStoApplicationText(void)
     {
         hr = ITfSource_UnadviseSink(source, editSinkCookie);
         ok(SUCCEEDED(hr),"Failed to unadvise Sink\n");
-        ITfTextEditSink_Release(sink);
         ITfSource_Release(source);
     }
-
+    ITfTextEditSink_Release(sink);
     ITfContext_Release(cxt);
     ITfDocumentMgr_Release(dm);
     ITfEditSession_Release(es);
