@@ -5027,7 +5027,7 @@ save_TrackMatrixNV(GLenum target, GLuint address,
 /*
  * GL_NV_fragment_program
  */
-#if FEATURE_NV_fragment_program
+#if FEATURE_NV_fragment_program || FEATURE_ARB_fragment_program
 static void GLAPIENTRY
 save_ProgramLocalParameter4fARB(GLenum target, GLuint index,
                                 GLfloat x, GLfloat y, GLfloat z, GLfloat w)
@@ -5148,6 +5148,7 @@ save_ProgramLocalParameter4dvARB(GLenum target, GLuint index,
    }
 }
 
+#if FEATURE_NV_fragment_program
 static void GLAPIENTRY
 save_ProgramNamedParameter4fNV(GLuint id, GLsizei len, const GLubyte * name,
                                GLfloat x, GLfloat y, GLfloat z, GLfloat w)
@@ -5178,7 +5179,6 @@ save_ProgramNamedParameter4fNV(GLuint id, GLsizei len, const GLubyte * name,
    }
 }
 
-
 static void GLAPIENTRY
 save_ProgramNamedParameter4fvNV(GLuint id, GLsizei len, const GLubyte * name,
                                 const float v[])
@@ -5204,7 +5204,7 @@ save_ProgramNamedParameter4dvNV(GLuint id, GLsizei len, const GLubyte * name,
                                   (GLfloat) v[1], (GLfloat) v[2],
                                   (GLfloat) v[3]);
 }
-
+#endif
 #endif /* FEATURE_NV_fragment_program */
 
 
@@ -10218,7 +10218,9 @@ _mesa_create_save_table(void)
    SET_GetVertexAttribdvARB(table, _mesa_GetVertexAttribdvARB);
    SET_GetVertexAttribfvARB(table, _mesa_GetVertexAttribfvARB);
    SET_GetVertexAttribivARB(table, _mesa_GetVertexAttribivARB);
+#if FEATURE_NV_vertex_program
    SET_GetVertexAttribPointervNV(table, _mesa_GetVertexAttribPointervNV);
+#endif
    SET_ProgramEnvParameter4dARB(table, save_ProgramEnvParameter4dARB);
    SET_ProgramEnvParameter4dvARB(table, save_ProgramEnvParameter4dvARB);
    SET_ProgramEnvParameter4fARB(table, save_ProgramEnvParameter4fARB);

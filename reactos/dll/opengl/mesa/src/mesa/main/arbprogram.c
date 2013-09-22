@@ -370,6 +370,7 @@ _mesa_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
 
       base = & prog->Base;
    }
+#if FEATURE_NV_vertex_program
    else if ((target == GL_VERTEX_PROGRAM_ARB
 	     || target == GL_VERTEX_STATE_PROGRAM_NV)
 	    && ctx->Extensions.NV_vertex_program) {
@@ -378,6 +379,7 @@ _mesa_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
 
       base = & prog->Base;
    }
+#endif
    else if (target == GL_FRAGMENT_PROGRAM_ARB
             && ctx->Extensions.ARB_fragment_program) {
       struct gl_fragment_program *prog = ctx->FragmentProgram.Current;
@@ -385,6 +387,7 @@ _mesa_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
 
       base = & prog->Base;
    }
+#if FEATURE_NV_fragment_program
    else if (target == GL_FRAGMENT_PROGRAM_NV
             && ctx->Extensions.NV_fragment_program) {
       struct gl_fragment_program *prog = ctx->FragmentProgram.Current;
@@ -392,6 +395,7 @@ _mesa_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
 
       base = & prog->Base;
    }
+#endif
    else {
       _mesa_error(ctx, GL_INVALID_ENUM, "glProgramStringARB(target)");
       return;

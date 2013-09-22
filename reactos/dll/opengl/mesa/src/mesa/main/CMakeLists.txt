@@ -8,7 +8,7 @@ list(APPEND SOURCE
     api_validate.c
     accum.c
     arbprogram.c
-    atifragshader.c
+    # atifragshader.c
     attrib.c
     arrayobj.c
     blend.c
@@ -54,7 +54,7 @@ list(APPEND SOURCE
     mipmap.c
     mm.c
     multisample.c
-    nvprogram.c
+    # nvprogram.c
     pack.c
     pbo.c
     pixel.c

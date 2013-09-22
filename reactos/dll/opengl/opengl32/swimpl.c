@@ -103,7 +103,9 @@ sw_get_string( struct gl_context *ctx, GLenum name )
     (void) ctx;
     if(name == GL_RENDERER)
         return (const GLubyte *) "ReactOS Software Implementation";
-    
+    /* Don't claim to support the fancy extensions that mesa supports, they will be slow anyway */
+    if(name == GL_EXTENSIONS)
+        return (const GLubyte *)"";
     return NULL;
 }
 
@@ -593,7 +595,7 @@ BOOL sw_DeleteContext(DHGLRC dhglrc)
 PROC sw_GetProcAddress(LPCSTR name)
 {
     /* We don't support any extensions */
-    assert(FALSE);
+    FIXME("Asking for proc address %s, returning NULL.\n", name);
     return NULL;
 }
 

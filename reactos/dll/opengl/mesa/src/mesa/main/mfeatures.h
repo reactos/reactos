@@ -132,10 +132,10 @@
 #define FEATURE_EXT_transform_feedback    FEATURE_GL
 
 #define FEATURE_APPLE_object_purgeable    FEATURE_GL
-#define FEATURE_ATI_fragment_shader       FEATURE_GL
+#define FEATURE_ATI_fragment_shader       0
 #define FEATURE_NV_fence                  FEATURE_GL
-#define FEATURE_NV_fragment_program       FEATURE_GL
-#define FEATURE_NV_vertex_program         FEATURE_GL
+#define FEATURE_NV_fragment_program       0
+#define FEATURE_NV_vertex_program         0
 
 #define FEATURE_OES_EGL_image             1
 #define FEATURE_OES_draw_texture          FEATURE_ES1

@@ -5,8 +5,8 @@ list(APPEND SOURCE
     arbprogparse.c
     hash_table.c
     ir_to_mesa.cpp
-    nvfragparse.c
-    nvvertparse.c
+    # nvfragparse.c
+    # nvvertparse.c
     program.c
     program_parse_extra.c
     prog_cache.c
