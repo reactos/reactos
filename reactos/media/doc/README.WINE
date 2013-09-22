@@ -120,7 +120,7 @@ reactos/dll/win32/msi             # Synced to Wine-1.7.1
 reactos/dll/win32/msimg32         # Synced to Wine-1.5.19
 reactos/dll/win32/msimtf          # Synced to Wine-1.7.1
 reactos/dll/win32/msisip          # Synced to Wine-1.7.1
-reactos/dll/win32/msisys.ocx      # Synced to Wine-1.5.4
+reactos/dll/win32/msisys.ocx      # Synced to Wine-1.7.1
 reactos/dll/win32/msnet32         # Synced to Wine-1.5.19
 reactos/dll/win32/msrle32         # Autosync
 reactos/dll/win32/mssign32        # Synced to Wine-1.5.19
