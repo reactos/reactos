@@ -5,8 +5,9 @@
  * PROGRAMMERS:     Giannis Adamopoulos
  */
 
+#include <apitest.h>
+
 #include <stdio.h>
-#include <wine/test.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include "helper.h"

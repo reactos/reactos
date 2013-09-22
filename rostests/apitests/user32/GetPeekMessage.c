@@ -5,7 +5,8 @@
  * PROGRAMMERS:     Thomas Faber
  */
 
-#include <wine/test.h>
+#include <apitest.h>
+
 #include <winuser.h>
 
 void Test_GetMessage(HWND hWnd)

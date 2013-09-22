@@ -5,7 +5,8 @@
  * PROGRAMMERS:     Magnus Olsen
  */
 
-#include <wine/test.h>
+#include <apitest.h>
+
 #include <winuser.h>
 
 typedef struct _LPK_LPEDITCONTROL_LIST
