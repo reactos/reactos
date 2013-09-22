@@ -5,14 +5,13 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#define UNICODE
+#include <apitest.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winsock2.h>
-#include <wine/test.h>
 #include <winhttp.h>
 
 struct hostent *(WINAPI *pgethostbyname)(const char *);
@@ -29,7 +28,7 @@ GetProc(
 {
     HMODULE ModuleHandle;
 
-    ModuleHandle = GetModuleHandle(L"ws2_32");
+    ModuleHandle = GetModuleHandleW(L"ws2_32");
     if (!ModuleHandle)
         return NULL;
     return GetProcAddress(ModuleHandle, FunctionName);
@@ -41,14 +40,14 @@ static
 BOOLEAN
 IsWinsockLoaded(VOID)
 {
-    return GetModuleHandle(L"ws2_32") != NULL;
+    return GetModuleHandleW(L"ws2_32") != NULL;
 }
 
 static
 BOOLEAN
 IsWininetLoaded(VOID)
 {
-    return GetModuleHandle(L"wininet") != NULL;
+    return GetModuleHandleW(L"wininet") != NULL;
 }
 
 static
@@ -93,9 +92,9 @@ START_TEST(WinHttpOpen)
     ok(!IsWinsockInitialized(), "Winsock initialized on startup\n");
     ok(!IsWininetLoaded(), "Wininet loaded on startup\n");
 
-    ModuleHandle = GetModuleHandle(L"winhttp");
+    ModuleHandle = GetModuleHandleW(L"winhttp");
     ok_ptr(ModuleHandle, NULL);
-    ModuleHandle = LoadLibrary(L"winhttp");
+    ModuleHandle = LoadLibraryW(L"winhttp");
     ok(ModuleHandle != NULL, "LoadLibrary failed, error %lu\n", GetLastError());
 
     pWinHttpOpen = (PVOID)GetProcAddress(ModuleHandle, "WinHttpOpen");
