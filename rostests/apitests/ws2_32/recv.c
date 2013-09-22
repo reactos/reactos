@@ -5,8 +5,10 @@
  * PROGRAMMERS:     Colin Finck
  */
 
+#include <apitest.h>
+
 #include <stdio.h>
-#include <wine/test.h>
+#include <ntstatus.h>
 #include <winternl.h>
 #include "ws2_32.h"
 

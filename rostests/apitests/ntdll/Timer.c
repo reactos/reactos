@@ -5,8 +5,9 @@
  * PROGRAMMER:      Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
 #include <ndk/ketypes.h>
 #include <ndk/kefuncs.h>
 

@@ -5,10 +5,9 @@
  * PROGRAMMER:      Timo Kreuzer
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#define UNICODE
-#include <wine/test.h>
-#include <pseh/pseh2.h>
 #include <ndk/ldrfuncs.h>
 
 typedef struct _TEST_RESOURCES

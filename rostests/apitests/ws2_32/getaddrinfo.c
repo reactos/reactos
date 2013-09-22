@@ -5,6 +5,8 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -12,12 +14,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <ws2tcpip.h>
-#include <wine/test.h>
-#include <pseh/pseh2.h>
 #include <ndk/umtypes.h>
-
-#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
 #define ok_addrinfo(ai, flags, family, socktype, protocol, addrlen) do  \
 {                                                                       \
@@ -39,8 +36,6 @@
         ok_dec(((SOCKADDR_IN *)(sockaddr))->sin_zero[_i], 0);           \
 } while (0)
 
-#define InvalidPointer ((PVOID)0x5555555555555555ULL)
-
 CHAR LocalAddress[sizeof("255.255.255.255")];
 
 static
@@ -50,7 +45,6 @@ TestNodeName(VOID)
     int Error;
     PADDRINFOA AddrInfo;
     ADDRINFOA Hints;
-    NTSTATUS ExceptionStatus;
     struct
     {
         PCSTR NodeName;
@@ -124,7 +118,6 @@ TestServiceName(VOID)
     int Error;
     PADDRINFOA AddrInfo;
     ADDRINFOA Hints;
-    NTSTATUS ExceptionStatus;
     struct
     {
         PCSTR ServiceName;
@@ -216,7 +209,6 @@ START_TEST(getaddrinfo)
     int Error;
     PADDRINFOA AddrInfo;
     ADDRINFOA Hints;
-    NTSTATUS ExceptionStatus;
     CHAR LocalHostName[128];
     struct hostent *Hostent;
 

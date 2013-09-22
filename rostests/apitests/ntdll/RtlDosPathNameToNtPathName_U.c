@@ -39,10 +39,9 @@
 # include <stdio.h>
 # include <stddef.h>
 #else /* Compile for ReactOS or wine */
+# include <apitest.h>
 # define WIN32_NO_STATUS
 # include <stdio.h>
-# include <wine/test.h>
-# include <pseh/pseh2.h>
 # include <ndk/rtlfuncs.h>
 #endif
 

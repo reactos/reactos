@@ -26,7 +26,7 @@ static void call_varargs(wchar_t* buf, size_t buf_size, int expected_ret, LPCWST
 START_TEST(_vsnwprintf)
 {
     wchar_t buffer[255];
-    NTSTATUS ExceptionStatus;
+
     /* Test basic functionality */
     call_varargs(buffer, 255, 19, L"%s world!", "hello");
     call_varargs(buffer, 255, 12, L"%s world!", L"hello");

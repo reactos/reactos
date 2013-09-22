@@ -1,8 +1,4 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_UNICODE -DUNICODE)
-
 add_executable(powrprof_apitest power.c testlist.c)
 set_module_type(powrprof_apitest win32cui)
 add_importlibs(powrprof_apitest advapi32 powrprof msvcrt kernel32 ntdll)

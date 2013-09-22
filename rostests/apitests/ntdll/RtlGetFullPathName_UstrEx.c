@@ -5,10 +5,9 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#define UNICODE
-#include <wine/test.h>
-#include <pseh/pseh2.h>
 #include <ndk/rtlfuncs.h>
 
 /*
@@ -38,9 +37,6 @@ NTSTATUS
     OUT RTL_PATH_TYPE* PathType,
     OUT PSIZE_T LengthNeeded OPTIONAL
 );
-
-#define StartSeh()                  ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)      } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
 #define ok_eq_ustr(str1, str2) do {                                                     \
         ok((str1)->Buffer        == (str2)->Buffer,        "Buffer modified\n");        \
@@ -115,7 +111,6 @@ CheckBuffer(
 }
 
 #define RtlPathTypeNotSet 123
-#define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
 
 /* winetest_platform is "windows" for us, so broken() doesn't do what it should :( */
 #undef broken
@@ -175,7 +170,7 @@ RunTestCases(VOID)
         { L"\\\\??\\C:\\test",   PrefixNone, L"\\\\??\\C:\\test", RtlPathTypeUncAbsolute, PrefixNone, sizeof(L"\\\\??\\C:\\") },
         { L"\\\\??\\C:\\test\\", PrefixNone, L"\\\\??\\C:\\test\\", RtlPathTypeUncAbsolute },
     };
-    NTSTATUS Status, ExceptionStatus;
+    NTSTATUS Status;
     UNICODE_STRING FileName;
     UNICODE_STRING FullPathName;
     WCHAR FullPathNameBuffer[MAX_PATH];
@@ -289,7 +284,7 @@ RunTestCases(VOID)
 
 START_TEST(RtlGetFullPathName_UstrEx)
 {
-    NTSTATUS Status, ExceptionStatus;
+    NTSTATUS Status;
     UNICODE_STRING FileName;
     UNICODE_STRING TempString;
     UNICODE_STRING StaticString;
@@ -301,7 +296,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     SIZE_T LengthNeeded;
     BOOLEAN Okay;
 
-    pRtlGetFullPathName_UstrEx = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlGetFullPathName_UstrEx");
+    pRtlGetFullPathName_UstrEx = (PVOID)GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlGetFullPathName_UstrEx");
     if (!pRtlGetFullPathName_UstrEx)
     {
         skip("RtlGetFullPathName_UstrEx unavailable\n");

@@ -9,7 +9,6 @@
 
 #include <wingdi.h>
 #include <winuser.h>
-#include <pseh/pseh2.h>
 
 #include "init.h"
 

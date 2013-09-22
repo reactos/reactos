@@ -5,18 +5,15 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winsock2.h>
-#include <wine/test.h>
-#include <pseh/pseh2.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/mmfuncs.h>
-
-#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
 static
 PVOID
@@ -136,7 +133,6 @@ AreLegacyFunctionsSupported(VOID)
 
 START_TEST(WSAStartup)
 {
-    NTSTATUS ExceptionStatus;
     BOOLEAN Okay;
     LPWSADATA WsaData;
     int Error;

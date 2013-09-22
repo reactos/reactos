@@ -7,11 +7,11 @@
  *                  Martin Rottensteiner
  */
 
+#include <apitest.h>
+
 #include <stdarg.h>
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
-#define STANDALONE
-#include <wine/test.h>
 #include <winreg.h>
 #include <powrprof.h>
 

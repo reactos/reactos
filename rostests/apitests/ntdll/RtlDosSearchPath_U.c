@@ -5,11 +5,10 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#define UNICODE
 #include <stdio.h>
-#include <wine/test.h>
-#include <pseh/pseh2.h>
 #include <ndk/rtlfuncs.h>
 
 /*
@@ -24,9 +23,6 @@ RtlDosSearchPath_U(
     OUT PWSTR *PartName
 );
 */
-
-#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
 static
 BOOLEAN
@@ -96,11 +92,8 @@ CheckBuffer(
     return TRUE;
 }
 
-#define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
-
 START_TEST(RtlDosSearchPath_U)
 {
-    NTSTATUS ExceptionStatus;
     ULONG Length = 0;
     WCHAR Buffer[MAX_PATH];
     PWSTR PartName;
@@ -112,18 +105,18 @@ START_TEST(RtlDosSearchPath_U)
 
     swprintf(FileName, L"C:\\%ls", CustomPath);
     /* Make sure this directory doesn't exist */
-    while (GetFileAttributes(FileName) != INVALID_FILE_ATTRIBUTES)
+    while (GetFileAttributesW(FileName) != INVALID_FILE_ATTRIBUTES)
     {
         wcscat(CustomPath, L"X");
         swprintf(FileName, L"C:\\%ls", CustomPath);
     }
-    Success = CreateDirectory(FileName, NULL);
+    Success = CreateDirectoryW(FileName, NULL);
     ok(Success, "CreateDirectory failed, results might not be accurate\n");
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
-    Success = CreateDirectory(FileName, NULL);
+    Success = CreateDirectoryW(FileName, NULL);
     ok(Success, "CreateDirectory failed, results might not be accurate\n");
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\ThisFileExists", CustomPath);
-    Handle = CreateFile(FileName, 0, 0, NULL, CREATE_NEW, 0, NULL);
+    Handle = CreateFileW(FileName, 0, 0, NULL, CREATE_NEW, 0, NULL);
     ok(Handle != INVALID_HANDLE_VALUE, "CreateFile failed, results might not be accurate\n");
     if (Handle != INVALID_HANDLE_VALUE)
         CloseHandle(Handle);
@@ -170,7 +163,7 @@ START_TEST(RtlDosSearchPath_U)
 
     /* Empty path string searches in current directory */
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
-    Success = SetCurrentDirectory(FileName);
+    Success = SetCurrentDirectoryW(FileName);
     ok(Success, "SetCurrentDirectory failed\n");
     PartName = InvalidPointer;
     RtlFillMemory(Buffer, sizeof(Buffer), 0x55);
@@ -206,14 +199,14 @@ START_TEST(RtlDosSearchPath_U)
     ok(Okay, "CheckStringBuffer failed\n");
 
     /* Clean up test folder */
-    SetCurrentDirectory(L"C:\\");
+    SetCurrentDirectoryW(L"C:\\");
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\ThisFileExists", CustomPath);
-    Success = DeleteFile(FileName);
+    Success = DeleteFileW(FileName);
     ok(Success, "DeleteFile failed, test might leave stale file\n");
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
-    Success = RemoveDirectory(FileName);
+    Success = RemoveDirectoryW(FileName);
     ok(Success, "RemoveDirectory failed %(lu), test might leave stale directory\n", GetLastError());
     swprintf(FileName, L"C:\\%ls", CustomPath);
-    Success = RemoveDirectory(FileName);
+    Success = RemoveDirectoryW(FileName);
     ok(Success, "RemoveDirectory failed (%lu), test might leave stale directory\n", GetLastError());
 }

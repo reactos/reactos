@@ -5,11 +5,11 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/mmfuncs.h>
-#include <pseh/pseh2.h>
 
 static PVOID Allocations[4096] = { NULL };
 static ULONG CurrentAllocation = 0;

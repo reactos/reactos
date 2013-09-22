@@ -16,7 +16,6 @@
 
 START_TEST(SaferIdentifyLevel)
 {
-    NTSTATUS ExceptionStatus;
     BOOL ret;
     DWORD error;
     SAFER_LEVEL_HANDLE handle;

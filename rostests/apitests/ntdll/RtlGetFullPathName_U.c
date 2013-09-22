@@ -5,9 +5,9 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
-#include <pseh/pseh2.h>
 #include <ndk/rtlfuncs.h>
 
 /*
@@ -20,9 +20,6 @@ RtlGetFullPathName_U(
     OUT PWSTR *ShortName
 );
 */
-
-#define StartSeh()                  ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)      } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
 static
 BOOLEAN
@@ -72,8 +69,6 @@ CheckStringBuffer(
 
     return Result;
 }
-
-#define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
 
 /* winetest_platform is "windows" for us, so broken() doesn't do what it should :( */
 #undef broken
@@ -132,7 +127,6 @@ RunTestCases(VOID)
         { L"\\\\??\\C:\\test",   PrefixNone, L"\\\\??\\C:\\test", PrefixNone, sizeof(L"\\\\??\\C:\\") },
         { L"\\\\??\\C:\\test\\", PrefixNone, L"\\\\??\\C:\\test\\" },
     };
-    NTSTATUS ExceptionStatus;
     WCHAR FullPathNameBuffer[MAX_PATH];
     PWSTR ShortName;
     SIZE_T Length;
@@ -226,7 +220,6 @@ RunTestCases(VOID)
 
 START_TEST(RtlGetFullPathName_U)
 {
-    NTSTATUS ExceptionStatus;
     PCWSTR FileName;
     PWSTR ShortName;
     ULONG Length;

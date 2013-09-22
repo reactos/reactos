@@ -5,12 +5,13 @@
  * PROGRAMMER:      Timo Kreuzer
  */
 
+#include <apitest.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <math.h>
 #include <stdarg.h>
-#include <wine/test.h>
 #include <windows.h>
 
 

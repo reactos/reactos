@@ -1,8 +1,8 @@
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
 #include <ndk/ntndk.h>
-#include <pseh/pseh2.h>
 
 NTSYSAPI
 NTSTATUS

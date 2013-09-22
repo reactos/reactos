@@ -5,9 +5,9 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
-#include <pseh/pseh2.h>
 #include <ndk/rtlfuncs.h>
 
 /*
@@ -26,9 +26,6 @@ RtlDosSearchPath_Ustr(
 );
 */
 
-#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
-
 #define ok_eq_ulong(value, expected) ok((value) == (expected), #value " = %lu, expected %lu\n", value, expected)
 #define ok_eq_hex(value, expected) ok((value) == (expected), #value " = 0x%lx, expected 0x%lx\n", value, expected)
 #define ok_eq_pointer(value, expected) ok((value) == (expected), #value " = %p, expected %p\n", value, expected)
@@ -39,11 +36,8 @@ RtlDosSearchPath_Ustr(
         ok((str1)->MaximumLength == (str2)->MaximumLength, "MaximumLength modified\n"); \
     } while (0)
 
-#define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
-
 START_TEST(RtlDosSearchPath_Ustr)
 {
-    NTSTATUS ExceptionStatus;
     NTSTATUS Status;
     UNICODE_STRING PathString;
     UNICODE_STRING FileNameString;

@@ -5,9 +5,10 @@
  * PROGRAMMER:     
  */
 
+#include <apitest.h>
+
 #include <setjmp.h>
 #include <time.h>
-#include <wine/test.h>
 
 #ifdef _M_IX86
 #define ZWC_SEGMENT_BITS (0xFFFF)

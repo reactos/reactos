@@ -71,7 +71,6 @@ FreeGuarded(
  *       user32's wsprintf. Make sure to test them all */
 START_TEST(sprintf)
 {
-    NTSTATUS ExceptionStatus;
     int Length;
     CHAR Buffer[128];
     PCHAR String;

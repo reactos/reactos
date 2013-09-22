@@ -1,8 +1,8 @@
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
 #include <ndk/rtlfuncs.h>
-#include <pseh/pseh2.h>
 
 void
 Test_RtlFindMostSignificantBit(void)

@@ -5,10 +5,9 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#define UNICODE
-#include <wine/test.h>
-#include <pseh/pseh2.h>
 #include <ndk/rtlfuncs.h>
 
 /*
@@ -46,9 +45,6 @@ ULONG
 //= (PVOID)0x77ef49f0 // 2003 sp1 x64
 //= (PVOID)0x7769a3dd // win7 sp1 wow64
 ;
-
-#define StartSeh()                  ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)      } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
 #define ok_eq_ustr(str1, str2) do {                                                     \
         ok((str1)->Buffer        == (str2)->Buffer,        "Buffer modified\n");        \
@@ -125,7 +121,6 @@ CheckBuffer(
 }
 
 #define RtlPathTypeNotSet 123
-#define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
 
 /* winetest_platform is "windows" for us, so broken() doesn't do what it should :( */
 #undef broken
@@ -185,7 +180,6 @@ RunTestCases(VOID)
         { L"\\\\??\\C:\\test",   PrefixNone, L"\\\\??\\C:\\test", RtlPathTypeUncAbsolute, PrefixNone, sizeof(L"\\\\??\\C:\\") },
         { L"\\\\??\\C:\\test\\", PrefixNone, L"\\\\??\\C:\\test\\", RtlPathTypeUncAbsolute },
     };
-    NTSTATUS ExceptionStatus;
     ULONG Length;
     UNICODE_STRING FileName;
     WCHAR FullPathNameBuffer[MAX_PATH];
@@ -300,7 +294,6 @@ RunTestCases(VOID)
 
 START_TEST(RtlGetFullPathName_Ustr)
 {
-    NTSTATUS ExceptionStatus;
     ULONG Length;
     UNICODE_STRING FileName;
     UNICODE_STRING TempString;
@@ -312,7 +305,7 @@ START_TEST(RtlGetFullPathName_Ustr)
 
     if (!RtlGetFullPathName_Ustr)
     {
-        RtlGetFullPathName_Ustr = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlGetFullPathName_Ustr");
+        RtlGetFullPathName_Ustr = (PVOID)GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlGetFullPathName_Ustr");
         if (!RtlGetFullPathName_Ustr)
         {
             skip("RtlGetFullPathName_Ustr unavailable\n");

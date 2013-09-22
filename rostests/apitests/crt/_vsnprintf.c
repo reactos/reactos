@@ -26,7 +26,7 @@ static void call_varargs(char* buf, size_t buf_size, int expected_ret, LPCSTR fo
 START_TEST(_vsnprintf)
 {
     char buffer[255];
-    NTSTATUS ExceptionStatus;
+
     /* Here you can mix wide and ANSI strings */
     call_varargs(buffer, 255, 12, "%S world!", L"hello");
     call_varargs(buffer, 255, 12, "%s world!", "hello");

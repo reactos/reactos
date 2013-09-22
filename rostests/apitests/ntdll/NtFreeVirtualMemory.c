@@ -1,5 +1,7 @@
+
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
 #include <ndk/pstypes.h>
 #include <ndk/mmfuncs.h>
 

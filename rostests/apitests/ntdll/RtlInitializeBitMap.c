@@ -5,8 +5,9 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
 #include <ndk/rtlfuncs.h>
 
 void Test_RtlInitializeBitmap()

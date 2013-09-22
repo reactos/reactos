@@ -5,15 +5,11 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#define WIN32_NO_STATUS
-#define UNICODE
-#include <stdio.h>
-#include <wine/test.h>
-#include <pseh/pseh2.h>
-#include <ndk/rtlfuncs.h>
+#include <apitest.h>
 
-#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
+#define WIN32_NO_STATUS
+#include <stdio.h>
+#include <ndk/rtlfuncs.h>
 
 #define ok_bool_file(value, expected, file) do {                                \
         if (expected)                                                           \
@@ -90,7 +86,6 @@ BOOLEAN
 
 START_TEST(RtlDoesFileExists)
 {
-    NTSTATUS ExceptionStatus;
     BOOLEAN Ret;
     struct
     {
@@ -168,21 +163,21 @@ START_TEST(RtlDoesFileExists)
 
     if (!RtlDoesFileExists_UEx)
     {
-        RtlDoesFileExists_UEx = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlDoesFileExists_UEx");
+        RtlDoesFileExists_UEx = (PVOID)GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlDoesFileExists_UEx");
         if (!RtlDoesFileExists_UEx)
             skip("RtlDoesFileExists_UEx unavailable\n");
     }
 
     if (!RtlDoesFileExists_UStr)
     {
-        RtlDoesFileExists_UStr = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlDoesFileExists_UStr");
+        RtlDoesFileExists_UStr = (PVOID)GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlDoesFileExists_UStr");
         if (!RtlDoesFileExists_UStr)
             skip("RtlDoesFileExists_UStr unavailable\n");
     }
 
     if (!RtlDoesFileExists_UstrEx)
     {
-        RtlDoesFileExists_UstrEx = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlDoesFileExists_UstrEx");
+        RtlDoesFileExists_UstrEx = (PVOID)GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlDoesFileExists_UstrEx");
         if (!RtlDoesFileExists_UstrEx)
             skip("RtlDoesFileExists_UstrEx unavailable\n");
     }
@@ -215,18 +210,18 @@ START_TEST(RtlDoesFileExists)
 
     swprintf(FileName, L"C:\\%ls", CustomPath);
     /* Make sure this directory doesn't exist */
-    while (GetFileAttributes(FileName) != INVALID_FILE_ATTRIBUTES)
+    while (GetFileAttributesW(FileName) != INVALID_FILE_ATTRIBUTES)
     {
         wcscat(CustomPath, L"X");
         swprintf(FileName, L"C:\\%ls", CustomPath);
     }
-    Success = CreateDirectory(FileName, NULL);
+    Success = CreateDirectoryW(FileName, NULL);
     ok(Success, "CreateDirectory failed, results might not be accurate\n");
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
-    Success = CreateDirectory(FileName, NULL);
+    Success = CreateDirectoryW(FileName, NULL);
     ok(Success, "CreateDirectory failed, results might not be accurate\n");
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\ThisFileExists", CustomPath);
-    Handle = CreateFile(FileName, 0, 0, NULL, CREATE_NEW, 0, NULL);
+    Handle = CreateFileW(FileName, 0, 0, NULL, CREATE_NEW, 0, NULL);
     ok(Handle != INVALID_HANDLE_VALUE, "CreateFile failed, results might not be accurate\n");
     if (Handle != INVALID_HANDLE_VALUE)
     {
@@ -307,12 +302,12 @@ START_TEST(RtlDoesFileExists)
     }
 
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists\\ThisFileExists", CustomPath);
-    Success = DeleteFile(FileName);
+    Success = DeleteFileW(FileName);
     ok(Success, "DeleteFile failed, test might leave stale file\n");
     swprintf(FileName, L"C:\\%ls\\ThisFolderExists", CustomPath);
-    Success = RemoveDirectory(FileName);
+    Success = RemoveDirectoryW(FileName);
     ok(Success, "RemoveDirectory failed, test might leave stale directory\n");
     swprintf(FileName, L"C:\\%ls", CustomPath);
-    Success = RemoveDirectory(FileName);
+    Success = RemoveDirectoryW(FileName);
     ok(Success, "RemoveDirectory failed, test might leave stale directory\n");
 }

@@ -8,7 +8,6 @@
 #include <apitest.h>
 
 #include <wingdi.h>
-#include <libs/pseh/pseh2.h>
 
 void Test_AddFontResourceExW()
 {

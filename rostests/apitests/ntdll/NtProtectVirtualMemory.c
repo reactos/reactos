@@ -4,14 +4,11 @@
  * PURPOSE:         Test for the NtProtectVirtualMemory API
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/mmfuncs.h>
-#include <pseh/pseh2.h>
-
-#define StartSeh              status = STATUS_SUCCESS; _SEH2_TRY
-#define EndSeh(ExpectedStatus)  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { status = _SEH2_GetExceptionCode(); } _SEH2_END; ok(status == ExpectedStatus, "Exception %lx, expected %lx\n", status, ExpectedStatus)
 
 START_TEST(NtProtectVirtualMemory)
 {
@@ -40,13 +37,13 @@ START_TEST(NtProtectVirtualMemory)
     ok(NT_SUCCESS(status), "Commiting memory failed\n");
     
     /* Try writing it */
-    StartSeh
+    StartSeh()
     {
         *allocationStart = 0xFF;
     } EndSeh(STATUS_SUCCESS);
     
     /* Try reading it */
-    StartSeh
+    StartSeh()
     {
         ok(*allocationStart == 0xFF, "Memory was not written\n");
     } EndSeh(STATUS_SUCCESS);
@@ -61,13 +58,13 @@ START_TEST(NtProtectVirtualMemory)
     ok(oldProtection == PAGE_READWRITE, "Expected PAGE_READWRITE, got %08x.\n", oldProtection);
     
     /* Try writing it */
-    StartSeh
+    StartSeh()
     {
         *allocationStart = 0xAA;
     } EndSeh(STATUS_ACCESS_VIOLATION);
     
     /* Try reading it */
-    StartSeh
+    StartSeh()
     {
         ok(*allocationStart == 0xFF, "read-only memory were changed.\n");
     } EndSeh(STATUS_SUCCESS);
@@ -82,13 +79,13 @@ START_TEST(NtProtectVirtualMemory)
     ok(oldProtection == PAGE_READONLY, "Expected PAGE_READONLY, got %08x.\n", oldProtection);
     
     /* Try writing it */
-    StartSeh
+    StartSeh()
     {
         *allocationStart = 0xAA;
     } EndSeh(STATUS_ACCESS_VIOLATION);
     
     /* Try reading it */
-    StartSeh
+    StartSeh()
     {
         ok(*allocationStart == 0, "Test should not go as far as this.\n");
     } EndSeh(STATUS_ACCESS_VIOLATION);

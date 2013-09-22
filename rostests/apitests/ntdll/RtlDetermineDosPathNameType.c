@@ -5,10 +5,9 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#define UNICODE
-#include <wine/test.h>
-#include <pseh/pseh2.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
 
@@ -104,12 +103,8 @@ FreeGuarded(
     ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
 }
 
-#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
-
 START_TEST(RtlDetermineDosPathNameType)
 {
-    NTSTATUS ExceptionStatus;
     RTL_PATH_TYPE PathType;
     struct
     {
@@ -189,7 +184,7 @@ START_TEST(RtlDetermineDosPathNameType)
 
     if (!RtlDetermineDosPathNameType_Ustr)
     {
-        RtlDetermineDosPathNameType_Ustr = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlDetermineDosPathNameType_Ustr");
+        RtlDetermineDosPathNameType_Ustr = (PVOID)GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlDetermineDosPathNameType_Ustr");
         if (!RtlDetermineDosPathNameType_Ustr)
             skip("RtlDetermineDosPathNameType_Ustr unavailable\n");
     }
