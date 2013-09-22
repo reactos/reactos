@@ -336,6 +336,8 @@ UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine,
         len = ptr2 - ptr;
         if (!len) return ERROR_INVALID_COMMAND_LINE;
 
+        while (ptr[len - 1] == ' ') len--;
+
         prop = msi_alloc( (len + 1) * sizeof(WCHAR) );
         memcpy( prop, ptr, len * sizeof(WCHAR) );
         prop[len] = 0;
@@ -411,18 +413,16 @@ static BOOL ui_sequence_exists( MSIPACKAGE *package )
     static const WCHAR query [] = {
         'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
         '`','I','n','s','t','a','l','l','U','I','S','e','q','u','e','n','c','e','`',' ',
-        'W','H','E','R','E',' ','`','S','e','q','u','e','n','c','e','`',' ','>',' ','0',' ',
-        'O','R','D','E','R',' ','B','Y',' ','`','S','e','q','u','e','n','c','e','`',0};
+        'W','H','E','R','E',' ','`','S','e','q','u','e','n','c','e','`',' ','>',' ','0',0};
     MSIQUERY *view;
-    UINT rc;
+    DWORD count = 0;
 
-    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
-    if (rc == ERROR_SUCCESS)
+    if (!(MSI_DatabaseOpenViewW( package->db, query, &view )))
     {
-        msiobj_release(&view->hdr);
-        return TRUE;
+        MSI_IterateRecords( view, &count, NULL, package );
+        msiobj_release( &view->hdr );
     }
-    return FALSE;
+    return count != 0;
 }
 
 UINT msi_set_sourcedir_props(MSIPACKAGE *package, BOOL replace)
@@ -639,14 +639,12 @@ static UINT ACTION_ProcessUISequence(MSIPACKAGE *package)
 /********************************************************
  * ACTION helper functions and functions that perform the actions
  *******************************************************/
-static BOOL ACTION_HandleCustomAction( MSIPACKAGE* package, LPCWSTR action,
-                                       UINT* rc, UINT script, BOOL force )
+static BOOL ACTION_HandleCustomAction( MSIPACKAGE *package, LPCWSTR action, UINT *rc, UINT script )
 {
     BOOL ret=FALSE;
     UINT arc;
 
-    arc = ACTION_CustomAction(package, action, script, force);
-
+    arc = ACTION_CustomAction( package, action, script );
     if (arc != ERROR_CALL_NOT_IMPLEMENTED)
     {
         *rc = arc;
@@ -2309,9 +2307,12 @@ static WCHAR *get_install_location( MSIPACKAGE *package )
     WCHAR *path;
 
     if (!package->ProductCode) return NULL;
-    if (MSIREG_OpenInstallProps( package->ProductCode, package->Context, NULL, &hkey, FALSE ))
-        return NULL;
-    path = msi_reg_get_val_str( hkey, szInstallLocation );
+    if (MSIREG_OpenInstallProps( package->ProductCode, package->Context, NULL, &hkey, FALSE )) return NULL;
+    if ((path = msi_reg_get_val_str( hkey, szInstallLocation )) && !path[0])
+    {
+        msi_free( path );
+        path = NULL;
+    }
     RegCloseKey( hkey );
     return path;
 }
@@ -2366,14 +2367,21 @@ void msi_resolve_target_folder( MSIPACKAGE *package, const WCHAR *name, BOOL loa
 
 static UINT ACTION_CostFinalize(MSIPACKAGE *package)
 {
-    static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-        '`','C','o','n','d','i','t','i','o','n','`',0};
-    static const WCHAR szOutOfDiskSpace[] = {
-        'O','u','t','O','f','D','i','s','k','S','p','a','c','e',0};
+    static const WCHAR query[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+         '`','C','o','n','d','i','t','i','o','n','`',0};
+    static const WCHAR szOutOfDiskSpace[] =
+        {'O','u','t','O','f','D','i','s','k','S','p','a','c','e',0};
+    static const WCHAR szPrimaryFolder[] =
+        {'P','R','I','M','A','R','Y','F','O','L','D','E','R',0};
+    static const WCHAR szPrimaryVolumePath[] =
+        {'P','r','i','m','a','r','y','V','o','l','u','m','e','P','a','t','h',0};
+    static const WCHAR szPrimaryVolumeSpaceAvailable[] =
+        {'P','r','i','m','a','r','y','V','o','l','u','m','e','S','p','a','c','e',
+         'A','v','a','i','l','a','b','l','e',0};
     MSICOMPONENT *comp;
     MSIQUERY *view;
-    LPWSTR level;
+    WCHAR *level, *primary_key, *primary_folder;
     UINT rc;
 
     TRACE("Building directory properties\n");
@@ -2416,9 +2424,34 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
     msi_set_property( package->db, szCostingComplete, szOne, -1 );
     /* set default run level if not set */
     level = msi_dup_property( package->db, szInstallLevel );
-    if (!level)
-        msi_set_property( package->db, szInstallLevel, szOne, -1 );
+    if (!level) msi_set_property( package->db, szInstallLevel, szOne, -1 );
     msi_free(level);
+
+    if ((primary_key = msi_dup_property( package->db, szPrimaryFolder )))
+    {
+        if ((primary_folder = msi_dup_property( package->db, primary_key )))
+        {
+            if (((primary_folder[0] >= 'A' && primary_folder[0] <= 'Z') ||
+                 (primary_folder[0] >= 'a' && primary_folder[0] <= 'z')) && primary_folder[1] == ':')
+            {
+                ULARGE_INTEGER free;
+
+                primary_folder[2] = 0;
+                if (GetDiskFreeSpaceExW( primary_folder, &free, NULL, NULL ))
+                {
+                    static const WCHAR fmtW[] = {'%','l','u',0};
+                    WCHAR buf[21];
+
+                    sprintfW( buf, fmtW, free.QuadPart / 512 );
+                    msi_set_property( package->db, szPrimaryVolumeSpaceAvailable, buf, -1 );
+                }
+                toupperW( primary_folder[0] );
+                msi_set_property( package->db, szPrimaryVolumePath, primary_folder, 2 );
+            }
+            msi_free( primary_folder );
+        }
+        msi_free( primary_key );
+    }
 
     /* FIXME: check volume disk space */
     msi_set_property( package->db, szOutOfDiskSpace, szZero, -1 );
@@ -7619,7 +7652,7 @@ UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, UINT script)
     handled = ACTION_HandleStandardAction(package, action, &rc);
 
     if (!handled)
-        handled = ACTION_HandleCustomAction(package, action, &rc, script, TRUE);
+        handled = ACTION_HandleCustomAction(package, action, &rc, script);
 
     if (!handled)
     {
@@ -7641,7 +7674,7 @@ UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action, UINT scrip
     handled = ACTION_HandleStandardAction(package, action, &rc);
 
     if (!handled)
-        handled = ACTION_HandleCustomAction(package, action, &rc, script, FALSE);
+        handled = ACTION_HandleCustomAction(package, action, &rc, script);
 
     if( !handled && ACTION_DialogBox(package, action) == ERROR_SUCCESS )
         handled = TRUE;

@@ -96,6 +96,19 @@ struct expr
     } u;
 };
 
+typedef struct
+{
+    MSIDATABASE *db;
+    LPCWSTR command;
+    DWORD n, len;
+    UINT r;
+    MSIVIEW **view;  /* View structure for the resulting query.  This value
+                      * tracks the view currently being created so we can free
+                      * this view on syntax error.
+                      */
+    struct list *mem;
+} SQL_input;
+
 UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phview,
                    struct list *mem ) DECLSPEC_HIDDEN;
 

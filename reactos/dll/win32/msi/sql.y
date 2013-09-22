@@ -34,29 +34,12 @@
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
-#define YYLEX_PARAM info
-#define YYPARSE_PARAM info
-
-static int sql_error(const char *str);
-
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
-
-typedef struct tag_SQL_input
-{
-    MSIDATABASE *db;
-    LPCWSTR command;
-    DWORD n, len;
-    UINT r;
-    MSIVIEW **view;  /* View structure for the resulting query.  This value
-                      * tracks the view currently being created so we can free
-                      * this view on syntax error.
-                      */
-    struct list *mem;
-} SQL_input;
 
 static UINT SQL_getstring( void *info, const struct sql_str *strdata, LPWSTR *str );
 static INT SQL_getint( void *info );
 static int sql_lex( void *SQL_lval, SQL_input *info );
+static int sql_error( SQL_input *info, const char *str);
 
 static LPWSTR parser_add_table( void *info, LPCWSTR list, LPCWSTR table );
 static void *parser_alloc( void *info, unsigned int sz );
@@ -77,6 +60,8 @@ static struct expr * EXPR_wildcard( void *info );
 
 %}
 
+%lex-param { SQL_input *info }
+%parse-param { SQL_input *info }
 %pure-parser
 
 %union
@@ -866,7 +851,7 @@ INT SQL_getint( void *info )
     return r;
 }
 
-static int sql_error( const char *str )
+static int sql_error( SQL_input *info, const char *str )
 {
     return 0;
 }

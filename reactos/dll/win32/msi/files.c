@@ -250,13 +250,15 @@ static UINT msi_create_directory( MSIPACKAGE *package, const WCHAR *dir )
     return ERROR_SUCCESS;
 }
 
-static MSIFILE *find_file( MSIPACKAGE *package, const WCHAR *filename )
+static MSIFILE *find_file( MSIPACKAGE *package, UINT disk_id, const WCHAR *filename )
 {
     MSIFILE *file;
 
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        if (file->state != msifs_installed && !strcmpiW( filename, file->File )) return file;
+        if (file->disk_id == disk_id &&
+            file->state != msifs_installed &&
+            !strcmpiW( filename, file->File )) return file;
     }
     return NULL;
 }
@@ -269,7 +271,7 @@ static BOOL installfiles_cb(MSIPACKAGE *package, LPCWSTR file, DWORD action,
 
     if (action == MSICABEXTRACT_BEGINEXTRACT)
     {
-        if (!(f = find_file( package, file )))
+        if (!(f = find_file( package, disk_id, file )))
         {
             TRACE("unknown file in cabinet (%s)\n", debugstr_w(file));
             return FALSE;
@@ -398,7 +400,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
         }
         else if (file->state != msifs_installed && !(file->Attributes & msidbFileAttributesPatchAdded))
         {
-            ERR("compressed file wasn't installed (%s)\n", debugstr_w(file->TargetPath));
+            ERR("compressed file wasn't installed (%s)\n", debugstr_w(file->File));
             rc = ERROR_INSTALL_FAILURE;
             goto done;
         }
