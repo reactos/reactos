@@ -5,16 +5,12 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#include <wine/test.h>
 #include <windows.h>
 #include <ndk/ntndk.h>
 #include <winsafer.h>
-
-#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
-
-#define InvalidPointer ((PVOID)0x5555555555555555ULL)
 
 #define SaferIdentifyLevel(c, p, h, r) SaferIdentifyLevel(c, (PSAFER_CODE_PROPERTIES)(p), h, r)
 

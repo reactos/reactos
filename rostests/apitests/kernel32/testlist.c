@@ -1,7 +1,7 @@
 #define __ROS_LONG64__
 
 #define STANDALONE
-#include <wine/test.h>
+#include <apitest.h>
 
 extern void func_FindFiles(void);
 extern void func_GetCurrentDirectory(void);

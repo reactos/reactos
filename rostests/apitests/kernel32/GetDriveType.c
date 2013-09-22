@@ -1,4 +1,4 @@
-#include <wine/test.h>
+#include <apitest.h>
 
 #define IS_DRIVE_TYPE_VALID(type) ((type) != DRIVE_UNKNOWN && (type) != DRIVE_NO_ROOT_DIR)
 

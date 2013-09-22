@@ -5,8 +5,9 @@
  * PROGRAMMER:      Thomas Faber
  */
 
-#define UNICODE
-#include <wine/test.h>
+#include <apitest.h>
+
+//#define UNICODE
 #include <strsafe.h>
 #include <shlobj.h>
 
@@ -128,8 +129,8 @@ START_TEST(SHExplorerParseCmdLine)
     WCHAR OriginalCommandLine[1024];
     int i;
 
-    CommandLine = GetCommandLine();
-    (VOID)StringCbCopy(OriginalCommandLine, sizeof(OriginalCommandLine), CommandLine);
+    CommandLine = GetCommandLineW();
+    StringCbCopyW(OriginalCommandLine, sizeof(OriginalCommandLine), CommandLine);
 
     for (i = 0; i < TestCount; i++)
     {

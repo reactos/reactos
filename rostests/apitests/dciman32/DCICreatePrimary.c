@@ -5,7 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <wine/test.h>
+#include <apitest.h>
 
 void Test_DCICreatePrimary()
 {

@@ -4,16 +4,14 @@
  * PURPOSE:         Test for _vsnprintf
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
 #include <stdio.h>
-#include <wine/test.h>
 #include <tchar.h>
 #include <pseh/pseh2.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
-
-#define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
 static void call_varargs(char* buf, size_t buf_size, int expected_ret, LPCSTR formatString, ...)
 {

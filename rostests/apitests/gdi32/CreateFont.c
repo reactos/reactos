@@ -5,7 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <wine/test.h>
+#include <apitest.h>
+
 #include <wingdi.h>
 
 #define INVALIDFONT "ThisFontDoesNotExist"

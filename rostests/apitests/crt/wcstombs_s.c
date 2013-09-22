@@ -4,10 +4,11 @@
  * PURPOSE:         Test for wcstombs_s
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
 #include <stdio.h>
 #include <stdlib.h>
-#include <wine/test.h>
 #include <specstrings.h>
 
 #define ok_errno(x) ok_hex(errno, (x))

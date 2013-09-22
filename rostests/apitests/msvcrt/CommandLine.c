@@ -5,10 +5,10 @@
  * PROGRAMMER:      Hermès BÉLUSCA - MAÏTO <hermes.belusca@sfr.fr>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
-#define UNICODE
 #include <stdio.h>
-#include <wine/test.h>
 #include <ndk/umtypes.h>
 
 #include "./CmdLineUtil/CmdLineUtil.h"

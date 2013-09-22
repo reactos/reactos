@@ -5,9 +5,10 @@
  * PROGRAMMER:      Mike "tamlin" Nordell
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
 #include <stdio.h>
-#include <wine/test.h>
 #include <ndk/rtltypes.h>
 #include <xmmintrin.h>
 

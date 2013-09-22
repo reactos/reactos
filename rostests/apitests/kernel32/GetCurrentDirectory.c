@@ -5,9 +5,10 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
 #include <stdio.h>
-#include <wine/test.h>
 #include <ndk/rtltypes.h>
 
 static

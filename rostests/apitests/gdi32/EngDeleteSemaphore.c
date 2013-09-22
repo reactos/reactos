@@ -5,7 +5,8 @@
  * PROGRAMMERS:     Magnus Olsen
  */
 
-#include <wine/test.h>
+#include <apitest.h>
+
 #include <wingdi.h>
 #include <winddi.h>
 

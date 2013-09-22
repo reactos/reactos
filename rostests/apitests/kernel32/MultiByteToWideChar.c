@@ -5,9 +5,9 @@
  * PROGRAMMER:      Mike "tamlin" Nordell
  */
 
-#include <wine/test.h>
-#include <winnls.h>
+#include <apitest.h>
 
+#include <winnls.h>
 
 START_TEST(MultiByteToWideChar)
 {

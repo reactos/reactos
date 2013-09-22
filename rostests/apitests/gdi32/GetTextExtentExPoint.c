@@ -5,8 +5,9 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
+#include <apitest.h>
+
 #include <stdio.h>
-#include <wine/test.h>
 #include <wingdi.h>
 #include <winuser.h>
 

@@ -4,8 +4,9 @@
  * PURPOSE:         Test for _vscprintf
  */
 
+#include <apitest.h>
+
 #include <stdio.h>
-#include <wine/test.h>
 #include <tchar.h>
 #include <errno.h>
 

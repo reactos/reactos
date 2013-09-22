@@ -5,7 +5,8 @@
  * PROGRAMMER:      Timo Kreuzer
  */
 
-#include <wine/test.h>
+#include <apitest.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>

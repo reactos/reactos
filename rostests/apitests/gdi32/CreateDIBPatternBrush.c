@@ -5,11 +5,10 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <wine/test.h>
+#include <apitest.h>
+
 #include <wingdi.h>
-
 #include "init.h"
-
 
 void Test_CreateDIBPatternBrush()
 {

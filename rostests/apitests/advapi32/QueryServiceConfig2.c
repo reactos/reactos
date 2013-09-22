@@ -5,7 +5,8 @@
  * PROGRAMMER:      Hermès BÉLUSCA - MAÏTO
  */
 
-#include <wine/test.h>
+#include <apitest.h>
+
 #include <winreg.h>
 #include <winsvc.h>
 #include <strsafe.h>

@@ -1,7 +1,7 @@
 #define __ROS_LONG64__
 
 #define STANDALONE
-#include <wine/test.h>
+#include <apitest.h>
 
 #if defined(TEST_MSVCRT)
 extern void func_mbstowcs_s(void);

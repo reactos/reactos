@@ -1,3 +1,5 @@
+include_directories(
+    include)
 
 add_library(apitest apitest.c)
 

@@ -1,9 +1,7 @@
-#define WIN32_LEAN_AND_MEAN
 #define __ROS_LONG64__
-#include <windows.h>
 
 #define STANDALONE
-#include "wine/test.h"
+#include <apitest.h>
 
 extern void func_browseui(void);
 extern void func_ieframe(void);

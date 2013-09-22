@@ -6,7 +6,8 @@
  * REFERENCES:      http://msdn.microsoft.com/en-US/library/h7zkk1bz%28v=VS.80%29.aspx
  */
 
-#include <wine/test.h>
+#include <apitest.h>
+
 #include <float.h>
 #include <math.h>
 

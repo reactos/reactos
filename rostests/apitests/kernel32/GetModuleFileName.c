@@ -5,12 +5,12 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <apitest.h>
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
-#define UNICODE
 #include <stdio.h>
-#include <wine/test.h>
 #include <winreg.h>
 #include <winnls.h>
 #include <shlwapi.h>
@@ -24,7 +24,7 @@ StartChild(char **argv)
     PWSTR FileName;
     PWSTR Slash;
     WCHAR CommandLine[MAX_PATH];
-    STARTUPINFO StartupInfo;
+    STARTUPINFOW StartupInfo;
     PROCESS_INFORMATION ProcessInfo;
     DWORD Ret;
     int Length;
@@ -48,7 +48,7 @@ StartChild(char **argv)
         FileName++;
         FileName[-1] = L'\0';
 
-        Success = SetCurrentDirectory(Path);
+        Success = SetCurrentDirectoryW(Path);
         ok(Success == TRUE, "SetCurrentDirectory failed for path '%ls'\n", Path);
 
         trace("Starting '%ls' in path '%ls'\n", FileName, Path);
@@ -64,16 +64,16 @@ StartChild(char **argv)
     RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
 
-    Success = CreateProcess(FileName,
-                            CommandLine,
-                            NULL,
-                            NULL,
-                            FALSE,
-                            0,
-                            NULL,
-                            NULL,
-                            &StartupInfo,
-                            &ProcessInfo);
+    Success = CreateProcessW(FileName,
+                             CommandLine,
+                             NULL,
+                             NULL,
+                             FALSE,
+                             0,
+                             NULL,
+                             NULL,
+                             &StartupInfo,
+                             &ProcessInfo);
     if (!Success)
     {
         skip("CreateProcess failed with %lu\n", GetLastError());

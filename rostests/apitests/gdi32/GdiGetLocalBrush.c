@@ -5,7 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <wine/test.h>
+#include <apitest.h>
+
 #include <wingdi.h>
 
 HBRUSH WINAPI GdiGetLocalBrush(HBRUSH hbr);

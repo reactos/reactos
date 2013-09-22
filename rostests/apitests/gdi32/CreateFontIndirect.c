@@ -5,9 +5,9 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <wine/test.h>
-#include <wingdi.h>
+#include <apitest.h>
 
+#include <wingdi.h>
 
 void
 Test_CreateFontIndirectA(void)
