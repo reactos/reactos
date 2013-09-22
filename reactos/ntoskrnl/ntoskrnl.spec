@@ -987,7 +987,7 @@
 @ stdcall PsGetProcessSectionBaseAddress(ptr)
 @ stdcall PsGetProcessSecurityPort(ptr)
 @ stdcall PsGetProcessSessionId(ptr)
-;PsGetProcessSessionIdEx
+@ stdcall PsGetProcessSessionIdEx(ptr)
 @ stdcall PsGetProcessWin32Process(ptr)
 @ stdcall PsGetProcessWin32WindowStation(ptr)
 ;@ cdecl -arch=x86_64 PsGetProcessWow64Process()

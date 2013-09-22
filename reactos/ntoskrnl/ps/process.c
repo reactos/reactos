@@ -1149,9 +1149,19 @@ PsGetProcessSecurityPort(PEPROCESS Process)
  */
 ULONG
 NTAPI
-PsGetProcessSessionId(PEPROCESS Process)
+PsGetProcessSessionId(IN PEPROCESS Process)
 {
     return MmGetSessionId(Process);
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+PsGetProcessSessionIdEx(IN PEPROCESS Process)
+{
+    return MmGetSessionIdEx(Process);
 }
 
 /*

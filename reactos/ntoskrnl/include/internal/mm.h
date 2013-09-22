@@ -493,6 +493,12 @@ MmGetSessionId(
     IN PEPROCESS Process
 );
 
+ULONG
+NTAPI
+MmGetSessionIdEx(
+    IN PEPROCESS Process
+);
+
 /* marea.c *******************************************************************/
 
 NTSTATUS

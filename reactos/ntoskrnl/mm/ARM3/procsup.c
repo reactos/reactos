@@ -1561,6 +1561,21 @@ MmGetSessionId(IN PEPROCESS Process)
     return SessionGlobal->SessionId;
 }
 
+ULONG
+NTAPI
+MmGetSessionIdEx(IN PEPROCESS Process)
+{
+    PMM_SESSION_SPACE SessionGlobal;
+
+    /* The session leader is always session zero */
+    if (Process->Vm.Flags.SessionLeader == 1) return 0;
+
+    /* Otherwise, get the session global, and read the session ID from it */
+    SessionGlobal = (PMM_SESSION_SPACE)Process->Session;
+    if (!SessionGlobal) return -1;
+    return SessionGlobal->SessionId;
+}
+
 VOID
 NTAPI
 MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
