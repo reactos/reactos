@@ -296,7 +296,9 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
         CsrDeallocateProcess(CsrProcess);
         CsrDeallocateThread(CsrThread);
         CsrReleaseProcessLock();
-        return Status;
+
+        /* Strange as it seems, NTSTATUSes are actually returned */
+        return (BOOLEAN)Status;
     }
 
     /* Setup Process Data */

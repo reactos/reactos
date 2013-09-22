@@ -225,7 +225,9 @@ typedef struct _CSR_SERVER_DLL
     PCSR_SHUTDOWNPROCESS_CALLBACK ShutdownProcessCallback;
     ULONG Unknown2[3];
 } CSR_SERVER_DLL, *PCSR_SERVER_DLL;
+#ifndef _WIN64
 C_ASSERT(FIELD_OFFSET(CSR_SERVER_DLL, SharedSection) == 0x3C);
+#endif
 
 typedef
 NTSTATUS

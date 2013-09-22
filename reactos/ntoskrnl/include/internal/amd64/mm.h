@@ -262,6 +262,20 @@ MiIsPdeForAddressValid(PVOID Address)
 /* Sign extend 48 bits */
 #define MiProtoPteToPte(x) (PMMPTE)(((LONG64)(x)->u.Long) >> 16)
 
+//
+// Decodes a Prototype PTE into the underlying PTE
+//
+#define MiSubsectionPteToSubsection(x)                              \
+        (PMMPTE)((x)->u.Subsect.SubsectionAddress >> 16)
+
+FORCEINLINE
+VOID
+MI_MAKE_SUBSECTION_PTE(IN PMMPTE NewPte,
+                       IN PVOID Segment)
+{
+    ASSERT(FALSE);
+}
+
 FORCEINLINE
 VOID
 MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,

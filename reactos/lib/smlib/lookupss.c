@@ -109,12 +109,12 @@ SmLookupSubsystem (IN     PWSTR   Name,
 					}
 					else
 					{
-						Source.Length        = kvpi->DataLength;
-						Source.MaximumLength = kvpi->DataLength;
+						Source.Length        = (USHORT)kvpi->DataLength;
+						Source.MaximumLength = (USHORT)kvpi->DataLength;
 						Source.Buffer        = (PWCHAR) & kvpi->Data;
 
 						Destination.Length        = 0;
-						Destination.MaximumLength = (2 * KeyValueInformationLength);
+						Destination.MaximumLength = (USHORT)(2 * KeyValueInformationLength);
 						Destination.Buffer        = DestinationBuffer;
 
 						Status = RtlExpandEnvironmentStrings_U (Environment,
