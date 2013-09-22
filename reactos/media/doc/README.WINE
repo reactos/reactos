@@ -118,7 +118,7 @@ reactos/dll/win32/mshtml          # Synced to Wine-1.5.26
 reactos/dll/win32/mshtml.tlb      # Synced to Wine-1.5.26
 reactos/dll/win32/msi             # Synced to Wine-1.7.1
 reactos/dll/win32/msimg32         # Synced to Wine-1.5.19
-reactos/dll/win32/msimtf          # Synced to Wine-1.5.19
+reactos/dll/win32/msimtf          # Synced to Wine-1.7.1
 reactos/dll/win32/msisip          # Synced to Wine-1.5.19
 reactos/dll/win32/msisys.ocx      # Synced to Wine-1.5.4
 reactos/dll/win32/msnet32         # Synced to Wine-1.5.19
