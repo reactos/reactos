@@ -230,4 +230,18 @@ do {                                                        \
 #define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql()==(x))
 #define ASSERT_IRQL_LESS(x) ASSERT(KeGetCurrentIrql()<(x))
 
+#define __STRING2__(x) #x
+#define __STRING__(x) __STRING2__(x)
+#define __STRLINE__ __STRING__(__LINE__)
+
+#define __TOKENPASTE2__(x, y) x ## y
+#define __TOKENPASTE__(x, y) __TOKENPASTE2__(x, y)
+
+#ifdef _MSC_VER
+#define _WARN(msg) __pragma(message("WARNING! Line " __STRLINE__ ": " msg))
+#else
+#define _WARN1(_func1, _func2, _msg) void __attribute__((warning (_msg))) _func1(void); void __attribute__((used)) _func2(void) { _func1(); }
+#define _WARN(_msg) _WARN1(__TOKENPASTE__(__warn_func1__, __LINE__), __TOKENPASTE__(__warn_func2__, __LINE__), _msg)
+#endif
+
 #endif /* __INTERNAL_DEBUG */

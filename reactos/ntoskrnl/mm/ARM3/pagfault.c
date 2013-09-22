@@ -32,7 +32,7 @@ MiCheckForUserStackOverflow(IN PVOID Address,
     PETHREAD CurrentThread = PsGetCurrentThread();
     PTEB Teb = CurrentThread->Tcb.Teb;
     PVOID StackBase, DeallocationStack, NextStackAddress;
-    ULONG GuranteedSize;
+    SIZE_T GuranteedSize;
     NTSTATUS Status;
 
     /* Do we own the address space lock? */
@@ -116,7 +116,7 @@ NTAPI
 MiAccessCheck(IN PMMPTE PointerPte,
               IN BOOLEAN StoreInstruction,
               IN KPROCESSOR_MODE PreviousMode,
-              IN ULONG ProtectionCode,
+              IN ULONG_PTR ProtectionCode,
               IN PVOID TrapFrame,
               IN BOOLEAN LockHeld)
 {
@@ -1496,7 +1496,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                 return STATUS_SUCCESS;
             }
         }
-
+#if (_MI_PAGING_LEVELS == 2)
         /* Check if this was a session PTE that needs to remap the session PDE */
         if (MI_IS_SESSION_PTE(Address))
         {
@@ -1512,6 +1512,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                              6);
             }
         }
+#else
+
+_WARN("Session space stuff is not implemented yet!")
+
+#endif
 
         /* Check for a fault on the page table or hyperspace */
         if (MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address))
@@ -1970,7 +1975,7 @@ UserFault:
     else
     {
         /* Get the protection code and check if this is a proto PTE */
-        ProtectionCode = TempPte.u.Soft.Protection;
+        ProtectionCode = (ULONG)TempPte.u.Soft.Protection;
         if (TempPte.u.Soft.Prototype)
         {
             /* Do we need to go find the real PTE? */
