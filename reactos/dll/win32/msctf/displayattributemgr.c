@@ -65,7 +65,7 @@ static HRESULT WINAPI DisplayAttributeMgr_QueryInterface(ITfDisplayAttributeMgr 
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfDisplayAttributeMgr_AddRef(iface);
         return S_OK;
     }
 

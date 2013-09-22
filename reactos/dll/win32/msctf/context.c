@@ -145,10 +145,10 @@ static void Context_Destructor(Context *This)
     }
 
     if (This->pITextStoreACP)
-        ITextStoreACPSink_Release(This->pITextStoreACP);
+        ITextStoreACP_Release(This->pITextStoreACP);
 
     if (This->pITfContextOwnerCompositionSink)
-        ITextStoreACPSink_Release(This->pITfContextOwnerCompositionSink);
+        ITfContextOwnerCompositionSink_Release(This->pITfContextOwnerCompositionSink);
 
     if (This->defaultCookie)
     {
@@ -220,7 +220,7 @@ static HRESULT WINAPI Context_QueryInterface(ITfContext *iface, REFIID iid, LPVO
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfContext_AddRef(iface);
         return S_OK;
     }
 
@@ -373,7 +373,7 @@ static HRESULT WINAPI Context_SetSelection (ITfContext *iface,
 {
     TS_SELECTION_ACP *acp;
     Context *This = (Context *)iface;
-    INT i;
+    ULONG i;
     HRESULT hr;
 
     TRACE("(%p) %i %i %p\n",This,ec,ulCount,pSelection);
@@ -646,7 +646,7 @@ static HRESULT WINAPI ContextSource_UnadviseSink(ITfSource *iface, DWORD pdwCook
     if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_CONTEXTSINK)
         return E_INVALIDARG;
 
-    sink = (ContextSink*)remove_Cookie(pdwCookie);
+    sink = remove_Cookie(pdwCookie);
     if (!sink)
         return CONNECT_E_NOCONNECTION;
 
@@ -900,7 +900,7 @@ static HRESULT WINAPI TextStoreACPSink_QueryInterface(ITextStoreACPSink *iface, 
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITextStoreACPSink_AddRef(iface);
         return S_OK;
     }
 

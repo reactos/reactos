@@ -39,6 +39,7 @@
 //#include "comcat.h"
 #include <rpcproxy.h>
 #include <msctf.h>
+#include <inputscope.h>
 
 #include "msctf_internal.h"
 
@@ -202,7 +203,7 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
  */
 DWORD generate_Cookie(DWORD magic, LPVOID data)
 {
-    int i;
+    UINT i;
 
     /* try to reuse IDs if possible */
     for (i = 0; i < id_last; i++)
@@ -286,7 +287,7 @@ LPVOID remove_Cookie(DWORD id)
 
 DWORD enumerate_Cookie(DWORD magic, DWORD *index)
 {
-    int i;
+    unsigned int i;
     for (i = *index; i < id_last; i++)
         if (cookies[i].id != 0 && cookies[i].magic == magic)
         {
@@ -530,6 +531,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
             tlsIndex = TlsAlloc();
             break;
         case DLL_PROCESS_DETACH:
+            if (fImpLoad) break;
             TlsFree(tlsIndex);
             break;
     }
@@ -605,7 +607,7 @@ HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim)
 /***********************************************************************
  *              SetInputScope(MSCTF.@)
  */
-HRESULT WINAPI SetInputScope(HWND hwnd, INT inputscope)
+HRESULT WINAPI SetInputScope(HWND hwnd, InputScope inputscope)
 {
     FIXME("STUB: %p %i\n",hwnd,inputscope);
     return S_OK;
@@ -614,16 +616,16 @@ HRESULT WINAPI SetInputScope(HWND hwnd, INT inputscope)
 /***********************************************************************
  *              SetInputScopes(MSCTF.@)
  */
-HRESULT WINAPI SetInputScopes(HWND hwnd, const INT *pInputScopes,
+HRESULT WINAPI SetInputScopes(HWND hwnd, const InputScope *pInputScopes,
                               UINT cInputScopes, WCHAR **ppszPhraseList,
                               UINT cPhrases, WCHAR *pszRegExp, WCHAR *pszSRGS)
 {
-    int i;
+    UINT i;
     FIXME("STUB: %p ... %s %s\n",hwnd, debugstr_w(pszRegExp), debugstr_w(pszSRGS));
     for (i = 0; i < cInputScopes; i++)
-        TRACE("\tScope[%i] = %i\n",i,pInputScopes[i]);
+        TRACE("\tScope[%u] = %i\n",i,pInputScopes[i]);
     for (i = 0; i < cPhrases; i++)
-        TRACE("\tPhrase[%i] = %s\n",i,debugstr_w(ppszPhraseList[i]));
+        TRACE("\tPhrase[%u] = %s\n",i,debugstr_w(ppszPhraseList[i]));
 
     return S_OK;
 }
@@ -653,4 +655,12 @@ HRESULT WINAPI TF_CreateLangBarMgr(ITfLangBarMgr **pppbm)
 {
     TRACE("\n");
     return LangBarMgr_Constructor(NULL,(IUnknown**)pppbm);
+}
+
+HRESULT WINAPI TF_CreateLangBarItemMgr(ITfLangBarItemMgr **pplbim)
+{
+    FIXME("stub %p\n", pplbim);
+    *pplbim = NULL;
+
+    return E_NOTIMPL;
 }

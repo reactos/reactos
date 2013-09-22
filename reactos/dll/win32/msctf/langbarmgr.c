@@ -65,7 +65,7 @@ static HRESULT WINAPI LangBarMgr_QueryInterface(ITfLangBarMgr *iface, REFIID iid
 
     if (*ppvOut)
     {
-        IUnknown_AddRef(iface);
+        ITfLangBarMgr_AddRef(iface);
         return S_OK;
     }
 
