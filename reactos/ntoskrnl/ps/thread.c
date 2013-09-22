@@ -799,6 +799,17 @@ PsGetCurrentThreadWin32Thread(VOID)
 /*
  * @implemented
  */
+PVOID
+NTAPI
+PsGetCurrentThreadWin32ThreadAndEnterCriticalRegion(VOID)
+{
+    KeEnterCriticalRegion();
+    return PsGetCurrentThread()->Tcb.Win32Thread;
+}
+
+/*
+ * @implemented
+ */
 KPROCESSOR_MODE
 NTAPI
 PsGetCurrentThreadPreviousMode(VOID)
