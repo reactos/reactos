@@ -820,10 +820,10 @@ PsDereferencePrimaryToken(IN PACCESS_TOKEN PrimaryToken)
 BOOLEAN
 NTAPI
 PsDisableImpersonation(IN PETHREAD Thread,
-                       IN PSE_IMPERSONATION_STATE ImpersonationState)
+                       OUT PSE_IMPERSONATION_STATE ImpersonationState)
 {
     PPS_IMPERSONATION_INFORMATION Impersonation = NULL;
-    LONG NewValue, OldValue;
+    LONG OldFlags;
     PAGED_CODE();
     PSTRACE(PS_SECURITY_DEBUG,
             "Thread: %p State: %p\n", Thread, ImpersonationState);
@@ -835,19 +835,11 @@ PsDisableImpersonation(IN PETHREAD Thread,
         PspLockThreadSecurityExclusive(Thread);
 
         /* Disable impersonation */
-        OldValue = Thread->CrossThreadFlags;
-        do
-        {
-            /* Attempt to change the flag */
-            NewValue =
-                InterlockedCompareExchange((PLONG)&Thread->CrossThreadFlags,
-                                           OldValue &~
-                                           CT_ACTIVE_IMPERSONATION_INFO_BIT,
-                                           OldValue);
-        } while (NewValue != OldValue);
+        OldFlags = PspClearCrossThreadFlag(Thread,
+                                           CT_ACTIVE_IMPERSONATION_INFO_BIT);
 
         /* Make sure nobody disabled it behind our back */
-        if (NewValue & CT_ACTIVE_IMPERSONATION_INFO_BIT)
+        if (OldFlags & CT_ACTIVE_IMPERSONATION_INFO_BIT)
         {
             /* Copy the old state */
             Impersonation = Thread->ImpersonationInfo;
