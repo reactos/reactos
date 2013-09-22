@@ -5,14 +5,13 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#define UNICODE
+#include <apitest.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #include <windef.h>
 #include <winsock2.h>
-#include <wine/test.h>
 #include <wininet.h>
 
 struct hostent *(WINAPI *pgethostbyname)(const char *);
@@ -29,7 +28,7 @@ GetProc(
 {
     HMODULE ModuleHandle;
 
-    ModuleHandle = GetModuleHandle(L"ws2_32");
+    ModuleHandle = GetModuleHandleW(L"ws2_32");
     if (!ModuleHandle)
         return NULL;
     return GetProcAddress(ModuleHandle, FunctionName);
@@ -41,7 +40,7 @@ static
 BOOLEAN
 IsWinsockLoaded(VOID)
 {
-    return GetModuleHandle(L"ws2_32") != NULL;
+    return GetModuleHandleW(L"ws2_32") != NULL;
 }
 
 static
@@ -85,9 +84,9 @@ START_TEST(InternetOpen)
     ok(!IsWinsockLoaded(), "Winsock loaded on startup\n");
     ok(!IsWinsockInitialized(), "Winsock initialized on startup\n");
 
-    ModuleHandle = GetModuleHandle(L"wininet");
+    ModuleHandle = GetModuleHandleW(L"wininet");
     ok_ptr(ModuleHandle, NULL);
-    ModuleHandle = LoadLibrary(L"wininet");
+    ModuleHandle = LoadLibraryW(L"wininet");
     ok(ModuleHandle != NULL, "LoadLibrary failed, error %lu\n", GetLastError());
 
     pInternetOpen = (PVOID)GetProcAddress(ModuleHandle, "InternetOpenW");
