@@ -223,7 +223,7 @@ static	LRESULT	GSM_FormatTagDetails(PACMFORMATTAGDETAILSW aftd, DWORD dwQuery)
             aftd->dwFormatTagIndex = 1;
 	    break;
 	}
-	/* fall thru */
+	/* fall through */
     case ACM_FORMATTAGDETAILSF_FORMATTAG:
 	switch (aftd->dwFormatTag)
         {
@@ -620,7 +620,7 @@ LRESULT CALLBACK GSM_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
     case ACMDM_STREAM_CONVERT:
 	return GSM_StreamConvert((PACMDRVSTREAMINSTANCE)dwParam1, (PACMDRVSTREAMHEADER)dwParam2);
 #else
-    case ACMDM_STREAM_OPEN: ERR("libgsm support not compiled in!\n");
+    case ACMDM_STREAM_OPEN: WARN("libgsm support not compiled in!\n");
     case ACMDM_STREAM_CLOSE:
     case ACMDM_STREAM_SIZE:
     case ACMDM_STREAM_CONVERT:
