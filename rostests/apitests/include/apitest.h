@@ -27,9 +27,9 @@
         ExceptionStatus = _SEH2_GetExceptionCode(); \
     }                                               \
     _SEH2_END;                                      \
-    ok(ExceptionStatus == ExpectedStatus,           \
+    ok(ExceptionStatus == (ExpectedStatus),         \
        "Exception 0x%08lx, expected 0x%08lx\n",     \
-       ExceptionStatus, ExpectedStatus);            \
+       ExceptionStatus, (ExpectedStatus));          \
 }
 
 #endif /* _APITEST_H */
