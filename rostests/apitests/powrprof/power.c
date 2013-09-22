@@ -9,6 +9,7 @@
 
 #include <apitest.h>
 
+#include <stdio.h>
 #include <stdarg.h>
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
