@@ -299,7 +299,7 @@ RtlpAllocateDebugInfo(VOID)
     }
 
     /* We are out of static buffer, allocate dynamic */
-    return RtlAllocateHeap(NtCurrentPeb()->ProcessHeap,
+    return RtlAllocateHeap(RtlGetProcessHeap(),
                            0,
                            sizeof(RTL_CRITICAL_SECTION_DEBUG));
 }
@@ -436,7 +436,7 @@ RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *     SpinCount is ignored on single-processor systems.
  *
  *--*/
-DWORD
+ULONG
 NTAPI
 RtlSetCriticalSectionSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
                                ULONG SpinCount)
@@ -616,6 +616,45 @@ RtlInitializeCriticalSectionAndSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
     }
 
     return STATUS_SUCCESS;
+}
+
+/*++
+ * RtlGetCriticalSectionRecursionCount
+ * @implemented NT5.2 SP1
+ *
+ *     Retrieves the recursion count of a given critical section.
+ *
+ * Params:
+ *     CriticalSection - Critical section to retrieve its recursion count.
+ *
+ * Returns:
+ *     The recursion count.
+ *
+ * Remarks:
+ *     We return the recursion count of the critical section if it is owned
+ *     by the current thread, and otherwise we return zero.
+ *
+ *--*/
+LONG
+NTAPI
+RtlGetCriticalSectionRecursionCount(PRTL_CRITICAL_SECTION CriticalSection)
+{
+    if (CriticalSection->OwningThread == NtCurrentTeb()->ClientId.UniqueThread)
+    {
+        /*
+         * The critical section is owned by the current thread,
+         * therefore retrieve its actual recursion count.
+         */
+        return CriticalSection->RecursionCount;
+    }
+    else
+    {
+        /*
+         * It is not owned by the current thread, so
+         * for this thread there is no recursion.
+         */
+        return 0;
+    }
 }
 
 /*++

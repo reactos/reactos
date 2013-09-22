@@ -614,7 +614,7 @@
 @ stdcall RtlGetCallersAddress(ptr ptr)
 @ stdcall RtlGetCompressionWorkSpaceSize(long ptr ptr)
 @ stdcall RtlGetControlSecurityDescriptor(ptr ptr ptr)
-;@ stdcall RtlGetCriticalSectionRecursionCount
+@ stdcall RtlGetCriticalSectionRecursionCount(ptr)
 @ stdcall RtlGetCurrentDirectory_U(long ptr)
 @ stdcall RtlGetCurrentPeb()
 @ stdcall RtlGetCurrentProcessorNumber() ; 5.2 SP1 and higher
@@ -780,7 +780,7 @@
 @ stdcall RtlQueryHeapInformation(long long ptr long ptr)
 @ stdcall RtlQueryInformationAcl(ptr ptr long long)
 @ stdcall RtlQueryInformationActivationContext(long long ptr long ptr long ptr)
-;@ stdcall RtlQueryInformationActiveActivationContext
+@ stdcall RtlQueryInformationActiveActivationContext(long ptr long ptr)
 ;@ stdcall RtlQueryInterfaceMemoryStream
 ;@ stdcall RtlQueryProcessBackTraceInformation
 @ stdcall RtlQueryProcessDebugInformation(long long ptr)
