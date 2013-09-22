@@ -418,8 +418,6 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
     Status = ZwMapViewOfSection(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, &SectionOffset, &ViewSize, ViewUnmap, 0, PAGE_READONLY);
     if (!skip(NT_SUCCESS(Status), "Error mapping view with READ priv. Error = %p\n", Status))
     {
-        NTSTATUS ExceptionStatus;
-
         Match = RtlCompareMemory(BaseAddress, TestString, TestStringSize);
         ok_eq_size(Match, TestStringSize);
 
@@ -439,8 +437,6 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
     Status = ZwMapViewOfSection(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, &SectionOffset, &ViewSize, ViewUnmap, 0, PAGE_NOACCESS);
     if (!skip(NT_SUCCESS(Status), "Error mapping view with PAGE_NOACCESS priv. Error = %p\n", Status))
     {
-        NTSTATUS ExceptionStatus;
-
         KmtStartSeh()
             RtlCompareMemory(BaseAddress, TestString, TestStringSize);
         KmtEndSeh(STATUS_ACCESS_VIOLATION);

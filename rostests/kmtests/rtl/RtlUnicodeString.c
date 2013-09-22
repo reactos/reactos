@@ -13,7 +13,6 @@ VOID
 TestFindCharInUnicodeString(VOID)
 {
 #ifdef KMT_USER_MODE
-    NTSTATUS ExceptionStatus;
     NTSTATUS Status;
     UNICODE_STRING String = RTL_CONSTANT_STRING(L"I am a string");
     UNICODE_STRING Chars = RTL_CONSTANT_STRING(L"a");

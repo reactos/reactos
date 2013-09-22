@@ -142,7 +142,6 @@ TestReference(
 START_TEST(ObReference)
 {
     NTSTATUS Status;
-    NTSTATUS ExceptionStatus;
     HANDLE DirectoryHandle = NULL;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name, *pName;
@@ -240,8 +239,7 @@ START_TEST(ObReference)
     Status = ObReferenceObjectByPointer(NULL, 0, NULL, UserMode);
     Status = ObReferenceObjectByPointer(NULL, 0, NULL, KernelMode);*/
 
-    ExceptionStatus = STATUS_SUCCESS;
-    _SEH2_TRY {
+    KmtStartSeh()
         /* TODO: this belongs in an ObHandle test if we ever have one */
         /* NtClose must accept everything */
         DPRINT("Closing null handle (NtClose)\n");
@@ -314,10 +312,7 @@ START_TEST(ObReference)
         /* INVALID_KERNEL_HANDLE, 0x7B, 1, 0, 0
         Status = ObCloseHandle((HANDLE)123, KernelMode);
         Status = ObCloseHandle((HANDLE)(123 | 0x80000000), KernelMode);*/
-    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-        ExceptionStatus = _SEH2_GetExceptionCode();
-    } _SEH2_END;
-    ok_eq_hex(ExceptionStatus, STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
 
     if (ObDirectoryObjectType)
     {

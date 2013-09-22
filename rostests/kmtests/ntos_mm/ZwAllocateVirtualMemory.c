@@ -64,7 +64,6 @@ static
 SIZE_T
 CheckBufferRead(CONST VOID *Source, CONST VOID *Destination, SIZE_T Length, NTSTATUS ExpectedStatus)
 {
-    NTSTATUS ExceptionStatus;
     SIZE_T Match = 0;
 
     KmtStartSeh()
@@ -79,7 +78,6 @@ VOID
 CheckBufferReadWrite(PVOID Destination, CONST VOID *Source, SIZE_T Length, NTSTATUS ExpectedStatus)
 {
     //do a little bit of writing/reading to memory
-    NTSTATUS ExceptionStatus;
     SIZE_T Match = 0;
 
     KmtStartSeh()
@@ -167,7 +165,6 @@ NTSTATUS
 SimpleAllocation(VOID)
 {
     NTSTATUS Status;
-    NTSTATUS ExceptionStatus;
     PVOID Base = NULL;
     SIZE_T RegionSize = DEFAULT_ALLOC_SIZE;
 

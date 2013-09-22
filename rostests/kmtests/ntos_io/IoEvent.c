@@ -35,7 +35,6 @@ TestCreateEvent(
     EVENT_TYPE Type)
 {
     NTSTATUS Status;
-    NTSTATUS ExceptionStatus;
     PKEVENT Event, Event2;
     HANDLE EventHandle, EventHandle2;
     LONG State;

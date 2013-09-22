@@ -194,7 +194,6 @@ TestPoolQuota(VOID)
     LONG InitialRefCount;
     LONG RefCount;
     USHORT PoolType;
-    NTSTATUS ExceptionStatus;
 
     InitialRefCount = GetRefCount(Process);
 

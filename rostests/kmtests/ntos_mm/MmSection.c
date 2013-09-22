@@ -77,7 +77,6 @@ TestCreateSection(
     IN PFILE_OBJECT FileObject2)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    NTSTATUS ExceptionStatus;
     PVOID SectionObject;
     LARGE_INTEGER MaximumSize;
     ULONG PointerCount1, PointerCount2;

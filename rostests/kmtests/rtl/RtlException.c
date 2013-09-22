@@ -9,7 +9,6 @@
 
 START_TEST(RtlException)
 {
-    NTSTATUS ExceptionStatus;
     PCHAR Buffer[128];
 
     /* Access a valid pointer - must not trigger SEH */
