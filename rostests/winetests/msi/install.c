@@ -38,8 +38,6 @@ static UINT (WINAPI *pMsiQueryComponentStateA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR, INSTALLSTATE*);
 static UINT (WINAPI *pMsiSourceListEnumSourcesA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, DWORD, LPSTR, LPDWORD);
-static UINT (WINAPI *pMsiSourceListGetInfoA)
-    (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, LPCSTR, LPSTR, LPDWORD);
 static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)
     (LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
 
@@ -158,6 +156,7 @@ static const CHAR property_dat[] = "Property\tValue\n"
                                    "InstallMode\tTypical\n"
                                    "Manufacturer\tWine\n"
                                    "PIDTemplate\t12345<###-%%%%%%%>@@@@@\n"
+                                   "PRIMARYFOLDER\tTARGETDIR\n"
                                    "ProductCode\t{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}\n"
                                    "ProductID\tnone\n"
                                    "ProductLanguage\t1033\n"
@@ -392,6 +391,13 @@ static const CHAR cc_media_dat[] = "DiskId\tLastSequence\tDiskPrompt\tCabinet\tV
                                    "2\t2\t\ttest2.cab\tDISK2\t\n"
                                    "3\t12\t\ttest3.cab\tDISK3\t\n";
 
+static const CHAR cc3_media_dat[] = "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
+                                    "i2\ti4\tL64\tS255\tS32\tS72\n"
+                                    "Media\tDiskId\n"
+                                    "1\t10\t\ttest1.cab\tDISK1\t\n"
+                                    "2\t2\t\ttest2_.cab\tDISK2\t\n"
+                                    "3\t12\t\ttest3.cab\tDISK3\t\n";
+
 static const CHAR co_file_dat[] = "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
                                   "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
                                   "File\tFile\n"
@@ -487,11 +493,6 @@ static const CHAR rofc_media_dat[] = "DiskId\tLastSequence\tDiskPrompt\tCabinet\
                                      "i2\ti4\tL64\tS255\tS32\tS72\n"
                                      "Media\tDiskId\n"
                                      "1\t1\t\ttest1.cab\tDISK1\t\n";
-
-static const CHAR lus2_media_dat[] = "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
-                                     "i2\ti4\tL64\tS255\tS32\tS72\n"
-                                     "Media\tDiskId\n"
-                                     "1\t1\t\t#test1.cab\tDISK1\t\n";
 
 static const CHAR sdp_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                                "s72\tS255\tI2\n"
@@ -593,33 +594,6 @@ static const CHAR ci2_file_dat[] = "File\tComponent_\tFileName\tFileSize\tVersio
                                    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
                                    "File\tFile\n"
                                    "augustus\taugustus\taugustus\t500\t\t\t8192\t1";
-
-static const CHAR spf_custom_action_dat[] = "Action\tType\tSource\tTarget\tISComments\n"
-                                            "s72\ti2\tS64\tS0\tS255\n"
-                                            "CustomAction\tAction\n"
-                                            "SetFolderProp\t51\tMSITESTDIR\t[ProgramFilesFolder]\\msitest\\added\t\n";
-
-static const CHAR spf_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
-                                               "s72\tS255\tI2\n"
-                                               "InstallExecuteSequence\tAction\n"
-                                               "CostFinalize\t\t1000\n"
-                                               "CostInitialize\t\t800\n"
-                                               "FileCost\t\t900\n"
-                                               "SetFolderProp\t\t950\n"
-                                               "InstallFiles\t\t4000\n"
-                                               "InstallServices\t\t5000\n"
-                                               "InstallFinalize\t\t6600\n"
-                                               "InstallInitialize\t\t1500\n"
-                                               "InstallValidate\t\t1400\n"
-                                               "LaunchConditions\t\t100";
-
-static const CHAR spf_install_ui_seq_dat[] = "Action\tCondition\tSequence\n"
-                                             "s72\tS255\tI2\n"
-                                             "InstallUISequence\tAction\n"
-                                             "CostInitialize\t\t800\n"
-                                             "FileCost\t\t900\n"
-                                             "CostFinalize\t\t1000\n"
-                                             "ExecuteAction\t\t1100\n";
 
 static const CHAR pp_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                               "s72\tS255\tI2\n"
@@ -1034,159 +1008,6 @@ static const CHAR fo_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
                                               "PublishProduct\t\t5200\n"
                                               "InstallFinalize\t\t6000\n";
 
-static const CHAR sd_file_dat[] = "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
-                                  "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
-                                  "File\tFile\n"
-                                  "sourcedir.txt\tsourcedir\tsourcedir.txt\t1000\t\t\t8192\t1\n";
-
-static const CHAR sd_feature_dat[] = "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
-                                     "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
-                                     "Feature\tFeature\n"
-                                     "sourcedir\t\t\tsourcedir feature\t1\t2\tMSITESTDIR\t0\n";
-
-static const CHAR sd_feature_comp_dat[] = "Feature_\tComponent_\n"
-                                          "s38\ts72\n"
-                                          "FeatureComponents\tFeature_\tComponent_\n"
-                                          "sourcedir\tsourcedir\n";
-
-static const CHAR sd_component_dat[] = "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
-                                       "s72\tS38\ts72\ti2\tS255\tS72\n"
-                                       "Component\tComponent\n"
-                                       "sourcedir\t{DD422F92-3ED8-49B5-A0B7-F266F98357DF}\tMSITESTDIR\t0\t\tsourcedir.txt\n";
-
-static const CHAR sd_install_ui_seq_dat[] = "Action\tCondition\tSequence\n"
-                                            "s72\tS255\tI2\n"
-                                            "InstallUISequence\tAction\n"
-                                            "TestSourceDirProp1\tnot SourceDir and not SOURCEDIR and not Installed\t99\n"
-                                            "AppSearch\t\t100\n"
-                                            "TestSourceDirProp2\tnot SourceDir and not SOURCEDIR and not Installed\t101\n"
-                                            "LaunchConditions\tnot Installed \t110\n"
-                                            "TestSourceDirProp3\tnot SourceDir and not SOURCEDIR and not Installed\t111\n"
-                                            "FindRelatedProducts\t\t120\n"
-                                            "TestSourceDirProp4\tnot SourceDir and not SOURCEDIR and not Installed\t121\n"
-                                            "CCPSearch\t\t130\n"
-                                            "TestSourceDirProp5\tnot SourceDir and not SOURCEDIR and not Installed\t131\n"
-                                            "RMCCPSearch\t\t140\n"
-                                            "TestSourceDirProp6\tnot SourceDir and not SOURCEDIR and not Installed\t141\n"
-                                            "ValidateProductID\t\t150\n"
-                                            "TestSourceDirProp7\tnot SourceDir and not SOURCEDIR and not Installed\t151\n"
-                                            "CostInitialize\t\t800\n"
-                                            "TestSourceDirProp8\tnot SourceDir and not SOURCEDIR and not Installed\t801\n"
-                                            "FileCost\t\t900\n"
-                                            "TestSourceDirProp9\tnot SourceDir and not SOURCEDIR and not Installed\t901\n"
-                                            "IsolateComponents\t\t1000\n"
-                                            "TestSourceDirProp10\tnot SourceDir and not SOURCEDIR and not Installed\t1001\n"
-                                            "CostFinalize\t\t1100\n"
-                                            "TestSourceDirProp11\tnot SourceDir and not SOURCEDIR and not Installed\t1101\n"
-                                            "MigrateFeatureStates\t\t1200\n"
-                                            "TestSourceDirProp12\tnot SourceDir and not SOURCEDIR and not Installed\t1201\n"
-                                            "ExecuteAction\t\t1300\n"
-                                            "TestSourceDirProp13\tnot SourceDir and not SOURCEDIR and not Installed\t1301\n";
-
-static const CHAR sd_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
-                                              "s72\tS255\tI2\n"
-                                              "InstallExecuteSequence\tAction\n"
-                                              "TestSourceDirProp14\tSourceDir and SOURCEDIR and not Installed\t99\n"
-                                              "LaunchConditions\t\t100\n"
-                                              "TestSourceDirProp15\tSourceDir and SOURCEDIR and not Installed\t101\n"
-                                              "ValidateProductID\t\t700\n"
-                                              "TestSourceDirProp16\tSourceDir and SOURCEDIR and not Installed\t701\n"
-                                              "CostInitialize\t\t800\n"
-                                              "TestSourceDirProp17\tSourceDir and SOURCEDIR and not Installed\t801\n"
-                                              "ResolveSource\tResolveSource and not Installed\t850\n"
-                                              "TestSourceDirProp18\tResolveSource and not SourceDir and not SOURCEDIR and not Installed\t851\n"
-                                              "TestSourceDirProp19\tnot ResolveSource and SourceDir and SOURCEDIR and not Installed\t852\n"
-                                              "FileCost\t\t900\n"
-                                              "TestSourceDirProp20\tSourceDir and SOURCEDIR and not Installed\t901\n"
-                                              "IsolateComponents\t\t1000\n"
-                                              "TestSourceDirProp21\tSourceDir and SOURCEDIR and not Installed\t1001\n"
-                                              "CostFinalize\t\t1100\n"
-                                              "TestSourceDirProp22\tSourceDir and SOURCEDIR and not Installed\t1101\n"
-                                              "MigrateFeatureStates\t\t1200\n"
-                                              "TestSourceDirProp23\tSourceDir and SOURCEDIR and not Installed\t1201\n"
-                                              "InstallValidate\t\t1400\n"
-                                              "TestSourceDirProp24\tSourceDir and SOURCEDIR and not Installed\t1401\n"
-                                              "InstallInitialize\t\t1500\n"
-                                              "TestSourceDirProp25\tSourceDir and SOURCEDIR and not Installed\t1501\n"
-                                              "ProcessComponents\t\t1600\n"
-                                              "TestSourceDirProp26\tnot SourceDir and not SOURCEDIR and not Installed\t1601\n"
-                                              "UnpublishFeatures\t\t1800\n"
-                                              "TestSourceDirProp27\tnot SourceDir and not SOURCEDIR and not Installed\t1801\n"
-                                              "RemoveFiles\t\t3500\n"
-                                              "TestSourceDirProp28\tnot SourceDir and not SOURCEDIR and not Installed\t3501\n"
-                                              "InstallFiles\t\t4000\n"
-                                              "TestSourceDirProp29\tnot SourceDir and not SOURCEDIR and not Installed\t4001\n"
-                                              "RegisterUser\t\t6000\n"
-                                              "TestSourceDirProp30\tnot SourceDir and not SOURCEDIR and not Installed\t6001\n"
-                                              "RegisterProduct\t\t6100\n"
-                                              "TestSourceDirProp31\tnot SourceDir and not SOURCEDIR and not Installed\t6101\n"
-                                              "PublishFeatures\t\t6300\n"
-                                              "TestSourceDirProp32\tnot SourceDir and not SOURCEDIR and not Installed\t6301\n"
-                                              "PublishProduct\t\t6400\n"
-                                              "TestSourceDirProp33\tnot SourceDir and not SOURCEDIR and not Installed\t6401\n"
-                                              "InstallExecute\t\t6500\n"
-                                              "TestSourceDirProp34\tnot SourceDir and not SOURCEDIR and not Installed\t6501\n"
-                                              "InstallFinalize\t\t6600\n"
-                                              "TestSourceDirProp35\tnot SourceDir and not SOURCEDIR and not Installed\t6601\n";
-
-static const CHAR sd_custom_action_dat[] = "Action\tType\tSource\tTarget\tISComments\n"
-                                           "s72\ti2\tS64\tS0\tS255\n"
-                                           "CustomAction\tAction\n"
-                                           "TestSourceDirProp1\t19\t\tTest 1 failed\t\n"
-                                           "TestSourceDirProp2\t19\t\tTest 2 failed\t\n"
-                                           "TestSourceDirProp3\t19\t\tTest 3 failed\t\n"
-                                           "TestSourceDirProp4\t19\t\tTest 4 failed\t\n"
-                                           "TestSourceDirProp5\t19\t\tTest 5 failed\t\n"
-                                           "TestSourceDirProp6\t19\t\tTest 6 failed\t\n"
-                                           "TestSourceDirProp7\t19\t\tTest 7 failed\t\n"
-                                           "TestSourceDirProp8\t19\t\tTest 8 failed\t\n"
-                                           "TestSourceDirProp9\t19\t\tTest 9 failed\t\n"
-                                           "TestSourceDirProp10\t19\t\tTest 10 failed\t\n"
-                                           "TestSourceDirProp11\t19\t\tTest 11 failed\t\n"
-                                           "TestSourceDirProp12\t19\t\tTest 12 failed\t\n"
-                                           "TestSourceDirProp13\t19\t\tTest 13 failed\t\n"
-                                           "TestSourceDirProp14\t19\t\tTest 14 failed\t\n"
-                                           "TestSourceDirProp15\t19\t\tTest 15 failed\t\n"
-                                           "TestSourceDirProp16\t19\t\tTest 16 failed\t\n"
-                                           "TestSourceDirProp17\t19\t\tTest 17 failed\t\n"
-                                           "TestSourceDirProp18\t19\t\tTest 18 failed\t\n"
-                                           "TestSourceDirProp19\t19\t\tTest 19 failed\t\n"
-                                           "TestSourceDirProp20\t19\t\tTest 20 failed\t\n"
-                                           "TestSourceDirProp21\t19\t\tTest 21 failed\t\n"
-                                           "TestSourceDirProp22\t19\t\tTest 22 failed\t\n"
-                                           "TestSourceDirProp23\t19\t\tTest 23 failed\t\n"
-                                           "TestSourceDirProp24\t19\t\tTest 24 failed\t\n"
-                                           "TestSourceDirProp25\t19\t\tTest 25 failed\t\n"
-                                           "TestSourceDirProp26\t19\t\tTest 26 failed\t\n"
-                                           "TestSourceDirProp27\t19\t\tTest 27 failed\t\n"
-                                           "TestSourceDirProp28\t19\t\tTest 28 failed\t\n"
-                                           "TestSourceDirProp29\t19\t\tTest 29 failed\t\n"
-                                           "TestSourceDirProp30\t19\t\tTest 30 failed\t\n"
-                                           "TestSourceDirProp31\t19\t\tTest 31 failed\t\n"
-                                           "TestSourceDirProp32\t19\t\tTest 32 failed\t\n"
-                                           "TestSourceDirProp33\t19\t\tTest 33 failed\t\n"
-                                           "TestSourceDirProp34\t19\t\tTest 34 failed\t\n"
-                                           "TestSourceDirProp35\t19\t\tTest 35 failed\t\n";
-
-static const CHAR cl_custom_action_dat[] = "Action\tType\tSource\tTarget\tISComments\n"
-                                           "s72\ti2\tS64\tS0\tS255\n"
-                                           "CustomAction\tAction\n"
-                                           "TestCommandlineProp\t19\t\tTest1\t\n";
-
-static const CHAR cl_install_exec_seq_dat[] = "Action\tCondition\tSequence\n"
-                                              "s72\tS255\tI2\n"
-                                              "InstallExecuteSequence\tAction\n"
-                                              "LaunchConditions\t\t100\n"
-                                              "ValidateProductID\t\t700\n"
-                                              "CostInitialize\t\t800\n"
-                                              "FileCost\t\t900\n"
-                                              "CostFinalize\t\t1000\n"
-                                              "TestCommandlineProp\tP=\"one\"\t1100\n"
-                                              "InstallInitialize\t\t1500\n"
-                                              "ProcessComponents\t\t1600\n"
-                                              "InstallValidate\t\t1400\n"
-                                              "InstallFinalize\t\t5000\n";
-
 static const CHAR uc_file_dat[] = "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
                                   "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
                                   "File\tFile\n"
@@ -1280,6 +1101,65 @@ static const char mixed_install_exec_seq_dat[] =
     "PublishFeatures\t\t1200\n"
     "PublishProduct\t\t1300\n"
     "InstallFinalize\t\t1400\n";
+
+static const char vp_file_dat[] =
+    "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
+    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
+    "File\tFile\n"
+    "volumeprop\tcomp\tvolumeprop.txt\t1000\t\t\t8192\t1\n";
+
+static const char vp_feature_dat[] =
+    "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
+    "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
+    "Feature\tFeature\n"
+    "feature\t\t\t\t1\t2\tMSITESTDIR\t0\n";
+
+static const char vp_feature_comp_dat[] =
+    "Feature_\tComponent_\n"
+    "s38\ts72\n"
+    "FeatureComponents\tFeature_\tComponent_\n"
+    "feature\tcomp\n";
+
+static const char vp_component_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "comp\t{24364AE7-5B7F-496C-AF5A-54893639C567}\tMSITESTDIR\t0\t\tvolumeprop\n";
+
+static const char vp_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\tISComments\n"
+    "s72\ti2\tS64\tS0\tS255\n"
+    "CustomAction\tAction\n"
+    "TestPrimaryVolumePath0\t19\t\tPrimaryVolumePath set before CostFinalize\t\n"
+    "TestPrimaryVolumeSpaceAvailable0\t19\t\tPrimaryVolumeSpaceAvailable set before CostFinalize\t\n"
+    "TestPrimaryVolumePath1\t19\t\tPrimaryVolumePath set before InstallValidate\t\n"
+    "TestPrimaryVolumeSpaceAvailable1\t19\t\tPrimaryVolumeSpaceAvailable not set before InstallValidate\t\n"
+    "TestPrimaryVolumePath2\t19\t\tPrimaryVolumePath not set after InstallValidate\t\n"
+    "TestPrimaryVolumeSpaceAvailable2\t19\t\tPrimaryVolumeSpaceAvailable not set after InstallValidate\t\n";
+
+static const char vp_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "LaunchConditions\t\t100\n"
+    "CostInitialize\t\t200\n"
+    "FileCost\t\t300\n"
+    "TestPrimaryVolumePath0\tPrimaryVolumePath AND NOT REMOVE\t400\n"
+    "TestPrimaryVolumeSpaceAvailable0\tPrimaryVolumeSpaceAvailable AND NOT REMOVE\t500\n"
+    "CostFinalize\t\t600\n"
+    "TestPrimaryVolumePath1\tPrimaryVolumePath AND NOT REMOVE\t600\n"
+    "TestPrimaryVolumeSpaceAvailable1\tNOT PrimaryVolumeSpaceAvailable AND NOT REMOVE\t800\n"
+    "InstallValidate\t\t900\n"
+    "TestPrimaryVolumePath2\tNOT PrimaryVolumePath AND NOT REMOVE\t1000\n"
+    "TestPrimaryVolumeSpaceAvailable2\tNOT PrimaryVolumeSpaceAvailable AND NOT REMOVE\t1100\n"
+    "InstallInitialize\t\t1200\n"
+    "ProcessComponents\t\t1300\n"
+    "RemoveFiles\t\t1400\n"
+    "InstallFiles\t\t1500\n"
+    "RegisterProduct\t\t1600\n"
+    "PublishFeatures\t\t1700\n"
+    "PublishProduct\t\t1800\n"
+    "InstallFinalize\t\t1900\n";
 
 typedef struct _msi_table
 {
@@ -1460,6 +1340,18 @@ static const msi_table cc2_tables[] =
     ADD_TABLE(property),
 };
 
+static const msi_table cc3_tables[] =
+{
+    ADD_TABLE(cc_component),
+    ADD_TABLE(directory),
+    ADD_TABLE(cc_feature),
+    ADD_TABLE(cc_feature_comp),
+    ADD_TABLE(cc_file),
+    ADD_TABLE(install_exec_seq),
+    ADD_TABLE(cc3_media),
+    ADD_TABLE(property),
+};
+
 static const msi_table co_tables[] =
 {
     ADD_TABLE(cc_component),
@@ -1593,56 +1485,6 @@ static const msi_table ci2_tables[] =
     ADD_TABLE(ci2_file),
     ADD_TABLE(install_exec_seq),
     ADD_TABLE(rof_media),
-    ADD_TABLE(property),
-};
-
-static const msi_table spf_tables[] =
-{
-    ADD_TABLE(ci_component),
-    ADD_TABLE(directory),
-    ADD_TABLE(rof_feature),
-    ADD_TABLE(rof_feature_comp),
-    ADD_TABLE(rof_file),
-    ADD_TABLE(spf_install_exec_seq),
-    ADD_TABLE(rof_media),
-    ADD_TABLE(property),
-    ADD_TABLE(spf_custom_action),
-    ADD_TABLE(spf_install_ui_seq),
-};
-
-static const msi_table lus0_tables[] =
-{
-    ADD_TABLE(ci_component),
-    ADD_TABLE(directory),
-    ADD_TABLE(rof_feature),
-    ADD_TABLE(rof_feature_comp),
-    ADD_TABLE(rof_file),
-    ADD_TABLE(pp_install_exec_seq),
-    ADD_TABLE(rof_media),
-    ADD_TABLE(property),
-};
-
-static const msi_table lus1_tables[] =
-{
-    ADD_TABLE(ci_component),
-    ADD_TABLE(directory),
-    ADD_TABLE(rof_feature),
-    ADD_TABLE(rof_feature_comp),
-    ADD_TABLE(rof_file),
-    ADD_TABLE(pp_install_exec_seq),
-    ADD_TABLE(rofc_media),
-    ADD_TABLE(property),
-};
-
-static const msi_table lus2_tables[] =
-{
-    ADD_TABLE(ci_component),
-    ADD_TABLE(directory),
-    ADD_TABLE(rof_feature),
-    ADD_TABLE(rof_feature_comp),
-    ADD_TABLE(rof_file),
-    ADD_TABLE(pp_install_exec_seq),
-    ADD_TABLE(lus2_media),
     ADD_TABLE(property),
 };
 
@@ -1883,20 +1725,6 @@ static const msi_table fiuc_tables[] =
     ADD_TABLE(property),
 };
 
-static const msi_table sd_tables[] =
-{
-    ADD_TABLE(directory),
-    ADD_TABLE(sd_component),
-    ADD_TABLE(sd_feature),
-    ADD_TABLE(sd_feature_comp),
-    ADD_TABLE(sd_file),
-    ADD_TABLE(sd_install_exec_seq),
-    ADD_TABLE(sd_install_ui_seq),
-    ADD_TABLE(sd_custom_action),
-    ADD_TABLE(media),
-    ADD_TABLE(property)
-};
-
 static const msi_table fo_tables[] =
 {
     ADD_TABLE(directory),
@@ -1935,19 +1763,6 @@ static const msi_table pv_tables[] =
     ADD_TABLE(property)
 };
 
-static const msi_table cl_tables[] =
-{
-    ADD_TABLE(component),
-    ADD_TABLE(directory),
-    ADD_TABLE(feature),
-    ADD_TABLE(feature_comp),
-    ADD_TABLE(file),
-    ADD_TABLE(cl_custom_action),
-    ADD_TABLE(cl_install_exec_seq),
-    ADD_TABLE(media),
-    ADD_TABLE(property)
-};
-
 static const msi_table uc_tables[] =
 {
     ADD_TABLE(directory),
@@ -1968,6 +1783,19 @@ static const msi_table mixed_tables[] =
     ADD_TABLE(mixed_feature_comp),
     ADD_TABLE(mixed_install_exec_seq),
     ADD_TABLE(mixed_registry),
+    ADD_TABLE(media),
+    ADD_TABLE(property)
+};
+
+static const msi_table vp_tables[] =
+{
+    ADD_TABLE(directory),
+    ADD_TABLE(vp_file),
+    ADD_TABLE(vp_component),
+    ADD_TABLE(vp_feature),
+    ADD_TABLE(vp_feature_comp),
+    ADD_TABLE(vp_custom_action),
+    ADD_TABLE(vp_install_exec_seq),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
@@ -2013,7 +1841,7 @@ static INT_PTR CDECL fci_open(char *pszFile, int oflag, int pmode, int *err, voi
     DWORD dwAccess = 0;
     DWORD dwShareMode = 0;
     DWORD dwCreateDisposition = OPEN_EXISTING;
-    
+
     dwAccess = GENERIC_READ | GENERIC_WRITE;
     /* FILE_SHARE_DELETE is not supported by Windows Me/98/95 */
     dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
@@ -2036,7 +1864,7 @@ static UINT CDECL fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv
     HANDLE handle = (HANDLE)hf;
     DWORD dwRead;
     BOOL res;
-    
+
     res = ReadFile(handle, memory, cb, &dwRead, NULL);
     ok(res, "Failed to ReadFile\n");
 
@@ -2095,7 +1923,6 @@ static void init_functionpointers(void)
 
     GET_PROC(hmsi, MsiQueryComponentStateA);
     GET_PROC(hmsi, MsiSourceListEnumSourcesA);
-    GET_PROC(hmsi, MsiSourceListGetInfoA);
     GET_PROC(hmsi, MsiGetComponentPathExA);
 
     GET_PROC(hadvapi32, ConvertSidToStringSidA);
@@ -2175,7 +2002,7 @@ static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
 
     res = GetFileInformationByHandle(handle, &finfo);
     ok(res, "Expected GetFileInformationByHandle to succeed\n");
-   
+
     FileTimeToLocalFileTime(&finfo.ftLastWriteTime, &filetime);
     FileTimeToDosDateTime(&filetime, pdate, ptime);
 
@@ -3025,11 +2852,18 @@ static void test_continuouscabs(void)
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
     r = MsiInstallProductA(msifile, NULL);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(delete_pf("msitest\\augustus", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\caesar", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+    }
+    else
+    {
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+        ok(delete_pf("msitest\\augustus", TRUE), "File not installed\n");
+        ok(delete_pf("msitest\\caesar", TRUE), "File not installed\n");
+        ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
+        ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    }
 
     delete_cab_files();
     DeleteFile(msifile);
@@ -3043,16 +2877,66 @@ static void test_continuouscabs(void)
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
     {
         skip("Not enough rights to perform tests\n");
-        goto error;
     }
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
-    ok(!delete_pf("msitest\\augustus", TRUE), "File installed\n");
-    ok(delete_pf("msitest\\tiberius", TRUE), "File not installed\n");
-    ok(delete_pf("msitest\\caesar", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    else
+    {
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+        ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
+        ok(!delete_pf("msitest\\augustus", TRUE), "File installed\n");
+        ok(delete_pf("msitest\\tiberius", TRUE), "File not installed\n");
+        ok(delete_pf("msitest\\caesar", TRUE), "File not installed\n");
+        ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    }
 
-error:
+    delete_cab_files();
+    DeleteFile(msifile);
+
+    /* Tests to show that only msi cab filename is taken in case of mismatch with the one given by previous cab */
+
+    /* Filename from cab is right and the one from msi is wrong */
+    create_cc_test_files();
+    create_database(msifile, cc3_tables, sizeof(cc3_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    r = MsiInstallProductA(msifile, NULL);
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+    }
+    else
+    {
+        ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAIRE, got %u\n", r);
+        todo_wine ok(!delete_pf("msitest\\augustus", TRUE), "File installed\n");
+        ok(!delete_pf("msitest\\caesar", TRUE), "File installed\n");
+        todo_wine ok(!delete_pf("msitest\\maximus", TRUE), "File installed\n");
+        todo_wine ok(!delete_pf("msitest", FALSE), "Directory created\n");
+    }
+
+    delete_cab_files();
+    DeleteFile(msifile);
+
+    /* Filename from msi is right and the one from cab is wrong */
+    create_cc_test_files();
+    ok(MoveFile("test2.cab", "test2_.cab"), "Cannot rename test2.cab to test2_.cab\n");
+    create_database(msifile, cc3_tables, sizeof(cc3_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    r = MsiInstallProductA(msifile, NULL);
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+    }
+    else
+    {
+        ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+        ok(delete_pf("msitest\\augustus", TRUE), "File not installed\n");
+        ok(delete_pf("msitest\\caesar", TRUE), "File not installed\n");
+        ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
+        ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    }
+
     delete_cab_files();
     DeleteFile(msifile);
 }
@@ -3355,167 +3239,6 @@ error:
     DeleteFile(msifile);
 }
 
-static BOOL add_cabinet_storage(LPCSTR db, LPCSTR cabinet)
-{
-    WCHAR dbW[MAX_PATH], cabinetW[MAX_PATH];
-    IStorage *stg;
-    IStream *stm;
-    HRESULT hr;
-    HANDLE handle;
-
-    MultiByteToWideChar(CP_ACP, 0, db, -1, dbW, MAX_PATH);
-    hr = StgOpenStorage(dbW, NULL, STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, NULL, 0, &stg);
-    if (FAILED(hr))
-        return FALSE;
-
-    MultiByteToWideChar(CP_ACP, 0, cabinet, -1, cabinetW, MAX_PATH);
-    hr = IStorage_CreateStream(stg, cabinetW, STGM_WRITE|STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
-    if (FAILED(hr))
-    {
-        IStorage_Release(stg);
-        return FALSE;
-    }
-
-    handle = CreateFileW(cabinetW, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
-    if (handle != INVALID_HANDLE_VALUE)
-    {
-        DWORD count;
-        char buffer[1024];
-        if (ReadFile(handle, buffer, sizeof(buffer), &count, NULL))
-            IStream_Write(stm, buffer, count, &count);
-        CloseHandle(handle);
-    }
-
-    IStream_Release(stm);
-    IStorage_Release(stg);
-
-    return TRUE;
-}
-
-static void test_lastusedsource(void)
-{
-    static char prodcode[] = "{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}";
-
-    UINT r;
-    char value[MAX_PATH], path[MAX_PATH];
-    DWORD size;
-
-    if (!pMsiSourceListGetInfoA)
-    {
-        win_skip("MsiSourceListGetInfoA is not available\n");
-        return;
-    }
-
-    CreateDirectoryA("msitest", NULL);
-    create_file("maximus", 500);
-    create_cab_file("test1.cab", MEDIA_SIZE, "maximus\0");
-    DeleteFile("maximus");
-
-    create_database("msifile0.msi", lus0_tables, sizeof(lus0_tables) / sizeof(msi_table));
-    create_database("msifile1.msi", lus1_tables, sizeof(lus1_tables) / sizeof(msi_table));
-    create_database("msifile2.msi", lus2_tables, sizeof(lus2_tables) / sizeof(msi_table));
-
-    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
-
-    /* no cabinet file */
-
-    size = MAX_PATH;
-    lstrcpyA(value, "aaa");
-    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
-    ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
-    ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
-
-    r = MsiInstallProductA("msifile0.msi", "PUBLISH_PRODUCT=1");
-    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
-    {
-        skip("Not enough rights to perform tests\n");
-        goto error;
-    }
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    lstrcpyA(path, CURR_DIR);
-    lstrcatA(path, "\\");
-
-    size = MAX_PATH;
-    lstrcpyA(value, "aaa");
-    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(!lstrcmpA(value, path), "Expected \"%s\", got \"%s\"\n", path, value);
-    ok(size == lstrlenA(path), "Expected %d, got %d\n", lstrlenA(path), size);
-
-    r = MsiInstallProductA("msifile0.msi", "REMOVE=ALL");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    /* separate cabinet file */
-
-    size = MAX_PATH;
-    lstrcpyA(value, "aaa");
-    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
-    ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
-    ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
-
-    r = MsiInstallProductA("msifile1.msi", "PUBLISH_PRODUCT=1");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    lstrcpyA(path, CURR_DIR);
-    lstrcatA(path, "\\");
-
-    size = MAX_PATH;
-    lstrcpyA(value, "aaa");
-    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(!lstrcmpA(value, path), "Expected \"%s\", got \"%s\"\n", path, value);
-    ok(size == lstrlenA(path), "Expected %d, got %d\n", lstrlenA(path), size);
-
-    r = MsiInstallProductA("msifile1.msi", "REMOVE=ALL");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    size = MAX_PATH;
-    lstrcpyA(value, "aaa");
-    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
-    ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
-    ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
-
-    /* embedded cabinet stream */
-
-    add_cabinet_storage("msifile2.msi", "test1.cab");
-
-    r = MsiInstallProductA("msifile2.msi", "PUBLISH_PRODUCT=1");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    size = MAX_PATH;
-    lstrcpyA(value, "aaa");
-    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(!lstrcmpA(value, path), "Expected \"%s\", got \"%s\"\n", path, value);
-    ok(size == lstrlenA(path), "Expected %d, got %d\n", lstrlenA(path), size);
-
-    r = MsiInstallProductA("msifile2.msi", "REMOVE=ALL");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    size = MAX_PATH;
-    lstrcpyA(value, "aaa");
-    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
-    ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
-    ok(!lstrcmpA(value, "aaa"), "Expected \"aaa\", got \"%s\"\n", value);
-
-error:
-    /* Delete the files in the temp (current) folder */
-    delete_cab_files();
-    DeleteFile("msitest\\maximus");
-    RemoveDirectory("msitest");
-    DeleteFile("msifile0.msi");
-    DeleteFile("msifile1.msi");
-    DeleteFile("msifile2.msi");
-}
-
 static void test_setdirproperty(void)
 {
     UINT r;
@@ -3594,109 +3317,6 @@ error:
     DeleteFile("augustus");
     DeleteFile("caesar");
     DeleteFile("msitest\\gaius");
-    RemoveDirectory("msitest");
-}
-
-static void test_concurrentinstall(void)
-{
-    UINT r;
-    CHAR path[MAX_PATH];
-
-    if (is_process_limited())
-    {
-        skip("process is limited\n");
-        return;
-    }
-
-    CreateDirectoryA("msitest", NULL);
-    CreateDirectoryA("msitest\\msitest", NULL);
-    create_file("msitest\\maximus", 500);
-    create_file("msitest\\msitest\\augustus", 500);
-
-    create_database(msifile, ci_tables, sizeof(ci_tables) / sizeof(msi_table));
-
-    lstrcpyA(path, CURR_DIR);
-    lstrcatA(path, "\\msitest\\concurrent.msi");
-    create_database(path, ci2_tables, sizeof(ci2_tables) / sizeof(msi_table));
-
-    MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
-
-    r = MsiInstallProductA(msifile, NULL);
-    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
-    {
-        skip("Not enough rights to perform tests\n");
-        DeleteFile(path);
-        goto error;
-    }
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    if (!delete_pf("msitest\\augustus", TRUE))
-        trace("concurrent installs not supported\n");
-    ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
-
-    DeleteFile(path);
-
-    r = MsiInstallProductA(msifile, NULL);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
-    ok(!delete_pf("msitest\\augustus", TRUE), "File installed\n");
-    ok(delete_pf("msitest", FALSE), "Directory not created\n");
-
-error:
-    DeleteFile(msifile);
-    DeleteFile("msitest\\msitest\\augustus");
-    DeleteFile("msitest\\maximus");
-    RemoveDirectory("msitest\\msitest");
-    RemoveDirectory("msitest");
-}
-
-static void test_setpropertyfolder(void)
-{
-    UINT r;
-    CHAR path[MAX_PATH];
-    DWORD attr;
-
-    if (is_process_limited())
-    {
-        skip("process is limited\n");
-        return;
-    }
-
-    lstrcpyA(path, PROG_FILES_DIR);
-    lstrcatA(path, "\\msitest\\added");
-
-    CreateDirectoryA("msitest", NULL);
-    create_file("msitest\\maximus", 500);
-
-    create_database(msifile, spf_tables, sizeof(spf_tables) / sizeof(msi_table));
-
-    MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
-
-    r = MsiInstallProductA(msifile, NULL);
-    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
-    {
-        skip("Not enough rights to perform tests\n");
-        goto error;
-    }
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-    attr = GetFileAttributesA(path);
-    if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
-    {
-        ok(delete_pf("msitest\\added\\maximus", TRUE), "File not installed\n");
-        ok(delete_pf("msitest\\added", FALSE), "Directory not created\n");
-        ok(delete_pf("msitest", FALSE), "Directory not created\n");
-    }
-    else
-    {
-        trace("changing folder property not supported\n");
-        ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
-        ok(delete_pf("msitest", FALSE), "Directory not created\n");
-    }
-
-error:
-    /* Delete the files in the temp (current) folder */
-    DeleteFile(msifile);
-    DeleteFile("msitest\\maximus");
     RemoveDirectory("msitest");
 }
 
@@ -5695,68 +5315,6 @@ static void test_icon_table(void)
     DeleteFile(msifile);
 }
 
-static void test_sourcedir_props(void)
-{
-    UINT r;
-
-    if (is_process_limited())
-    {
-        skip("process is limited\n");
-        return;
-    }
-
-    create_test_files();
-    create_file("msitest\\sourcedir.txt", 1000);
-    create_database(msifile, sd_tables, sizeof(sd_tables) / sizeof(msi_table));
-
-    MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
-
-    /* full UI, no ResolveSource action */
-    r = MsiInstallProductA(msifile, NULL);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiInstallProductA(msifile, "REMOVE=ALL");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    ok(!delete_pf("msitest\\sourcedir.txt", TRUE), "file not removed\n");
-    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
-
-    /* full UI, ResolveSource action */
-    r = MsiInstallProductA(msifile, "ResolveSource=1");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiInstallProductA(msifile, "REMOVE=ALL");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    ok(!delete_pf("msitest\\sourcedir.txt", TRUE), "file not removed\n");
-    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
-
-    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
-
-    /* no UI, no ResolveSource action */
-    r = MsiInstallProductA(msifile, NULL);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiInstallProductA(msifile, "REMOVE=ALL");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    ok(!delete_pf("msitest\\sourcedir.txt", TRUE), "file not removed\n");
-    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
-
-    /* no UI, ResolveSource action */
-    r = MsiInstallProductA(msifile, "ResolveSource=1");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    r = MsiInstallProductA(msifile, "REMOVE=ALL");
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    ok(!delete_pf("msitest\\sourcedir.txt", TRUE), "file not removed\n");
-    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
-
-    DeleteFileA("msitest\\sourcedir.txt");
-    DeleteFile(msifile);
-}
-
 static void test_package_validation(void)
 {
     UINT r;
@@ -5948,166 +5506,6 @@ error:
     RemoveDirectory("msitest");
 }
 
-static void test_command_line_parsing(void)
-{
-    UINT r;
-    const char *cmd;
-
-    if (is_process_limited())
-    {
-        skip("process is limited\n");
-        return;
-    }
-
-    create_test_files();
-    create_database(msifile, cl_tables, sizeof(cl_tables)/sizeof(msi_table));
-
-    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
-
-    cmd = " ";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "=";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "==";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "one";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "=one";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "P=";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "  P=";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=  ";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "P=\"\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"\"\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "P=\"\"\"\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\" ";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "P= \"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "P= \"\" ";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"  \"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=one";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
-
-    cmd = "P= one";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
-
-    cmd = "P=\"one";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "P=one\"";
-    r = MsiInstallProductA(msifile, cmd);
-    todo_wine ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"one\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
-
-    cmd = "P= \"one\" ";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
-
-    cmd = "P=\"one\"\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "P=\"\"one\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "P=\"\"one\"\"";
-    r = MsiInstallProductA(msifile, cmd);
-    todo_wine ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
-
-    cmd = "P=\"one two\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"\"\"one\"\" two\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"\"\"one\"\" two\" Q=three";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"\" Q=\"two\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"one\" Q=\"two\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
-
-    cmd = "P=\"one=two\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "Q=\"\" P=\"one\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
-
-    cmd = "P=\"\"\"one\"\"\" Q=\"two\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"one \"\"two\"\"\" Q=\"three\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    cmd = "P=\"\"\"one\"\" two\" Q=\"three\"";
-    r = MsiInstallProductA(msifile, cmd);
-    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
-
-    DeleteFile(msifile);
-    RemoveDirectory("msitest");
-}
-
 static void test_upgrade_code(void)
 {
     UINT r;
@@ -6217,7 +5615,32 @@ static void test_mixed_package(void)
 
 error:
     DeleteFileA( msifile );
-    return;
+}
+
+static void test_volume_props(void)
+{
+    UINT r;
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+    CreateDirectoryA("msitest", NULL);
+    create_file("msitest\\volumeprop.txt", 1000);
+    create_database(msifile, vp_tables, sizeof(vp_tables)/sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    r = MsiInstallProductA(msifile, NULL);
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+
+    DeleteFileA("msitest\\volumeprop.txt");
+    RemoveDirectoryA("msitest");
+    DeleteFile(msifile);
 }
 
 START_TEST(install)
@@ -6278,8 +5701,6 @@ START_TEST(install)
     test_readonlyfile_cab();
     test_setdirproperty();
     test_cabisextracted();
-    test_concurrentinstall();
-    test_setpropertyfolder();
     test_transformprop();
     test_currentworkingdir();
     test_admin();
@@ -6295,7 +5716,6 @@ START_TEST(install)
     test_propcase();
     test_int_widths();
     test_shortcut();
-    test_lastusedsource();
     test_preselected();
     test_installed_prop();
     test_file_in_use();
@@ -6303,11 +5723,10 @@ START_TEST(install)
     test_allusers_prop();
     test_feature_override();
     test_icon_table();
-    test_sourcedir_props();
     test_package_validation();
-    test_command_line_parsing();
     test_upgrade_code();
     test_mixed_package();
+    test_volume_props();
 
     DeleteFileA(log_file);
 

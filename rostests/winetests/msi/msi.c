@@ -19,6 +19,7 @@
  */
 
 #define _WIN32_MSI 300
+#define COBJMACROS
 
 #include <stdio.h>
 #include <windows.h>
@@ -26,6 +27,7 @@
 #include <msiquery.h>
 #include <msidefs.h>
 #include <sddl.h>
+#include <fci.h>
 
 #include "wine/test.h"
 
@@ -67,6 +69,8 @@ static UINT (WINAPI *pMsiEnumComponentsExA)
     (LPCSTR, DWORD, DWORD, CHAR[39], MSIINSTALLCONTEXT *, LPSTR, LPDWORD);
 static UINT (WINAPI *pMsiSetExternalUIRecord)
     (INSTALLUI_HANDLER_RECORD, DWORD, LPVOID, PINSTALLUI_HANDLER_RECORD);
+static UINT (WINAPI *pMsiSourceListGetInfoA)
+    (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, LPCSTR, LPSTR, LPDWORD);
 
 static void init_functionpointers(void)
 {
@@ -91,6 +95,7 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiGetPatchInfoExA)
     GET_PROC(hmsi, MsiEnumProductsExA)
     GET_PROC(hmsi, MsiEnumComponentsExA)
+    GET_PROC(hmsi, MsiSourceListGetInfoA)
 
     GET_PROC(hadvapi32, ConvertSidToStringSidA)
     GET_PROC(hadvapi32, OpenProcessToken);
@@ -174,6 +179,275 @@ static BOOL is_process_limited(void)
     ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
     CloseHandle(token);
     return (ret && type == TokenElevationTypeLimited);
+}
+
+/* cabinet definitions */
+
+/* make the max size large so there is only one cab file */
+#define MEDIA_SIZE          0x7FFFFFFF
+#define FOLDER_THRESHOLD    900000
+
+/* the FCI callbacks */
+
+static void * CDECL mem_alloc(ULONG cb)
+{
+    return HeapAlloc(GetProcessHeap(), 0, cb);
+}
+
+static void CDECL mem_free(void *memory)
+{
+    HeapFree(GetProcessHeap(), 0, memory);
+}
+
+static BOOL CDECL get_next_cabinet(PCCAB pccab, ULONG  cbPrevCab, void *pv)
+{
+    sprintf(pccab->szCab, pv, pccab->iCab);
+    return TRUE;
+}
+
+static LONG CDECL progress(UINT typeStatus, ULONG cb1, ULONG cb2, void *pv)
+{
+    return 0;
+}
+
+static int CDECL file_placed(PCCAB pccab, char *pszFile, LONG cbFile,
+                             BOOL fContinuation, void *pv)
+{
+    return 0;
+}
+
+static INT_PTR CDECL fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
+{
+    HANDLE handle;
+    DWORD dwAccess = 0;
+    DWORD dwShareMode = 0;
+    DWORD dwCreateDisposition = OPEN_EXISTING;
+
+    dwAccess = GENERIC_READ | GENERIC_WRITE;
+    /* FILE_SHARE_DELETE is not supported by Windows Me/98/95 */
+    dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+
+    if (GetFileAttributesA(pszFile) != INVALID_FILE_ATTRIBUTES)
+        dwCreateDisposition = OPEN_EXISTING;
+    else
+        dwCreateDisposition = CREATE_NEW;
+
+    handle = CreateFileA(pszFile, dwAccess, dwShareMode, NULL,
+                         dwCreateDisposition, 0, NULL);
+
+    ok(handle != INVALID_HANDLE_VALUE, "Failed to CreateFile %s\n", pszFile);
+
+    return (INT_PTR)handle;
+}
+
+static UINT CDECL fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
+{
+    HANDLE handle = (HANDLE)hf;
+    DWORD dwRead;
+    BOOL res;
+
+    res = ReadFile(handle, memory, cb, &dwRead, NULL);
+    ok(res, "Failed to ReadFile\n");
+
+    return dwRead;
+}
+
+static UINT CDECL fci_write(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
+{
+    HANDLE handle = (HANDLE)hf;
+    DWORD dwWritten;
+    BOOL res;
+
+    res = WriteFile(handle, memory, cb, &dwWritten, NULL);
+    ok(res, "Failed to WriteFile\n");
+
+    return dwWritten;
+}
+
+static int CDECL fci_close(INT_PTR hf, int *err, void *pv)
+{
+    HANDLE handle = (HANDLE)hf;
+    ok(CloseHandle(handle), "Failed to CloseHandle\n");
+
+    return 0;
+}
+
+static LONG CDECL fci_seek(INT_PTR hf, LONG dist, int seektype, int *err, void *pv)
+{
+    HANDLE handle = (HANDLE)hf;
+    DWORD ret;
+
+    ret = SetFilePointer(handle, dist, NULL, seektype);
+    ok(ret != INVALID_SET_FILE_POINTER, "Failed to SetFilePointer\n");
+
+    return ret;
+}
+
+static int CDECL fci_delete(char *pszFile, int *err, void *pv)
+{
+    BOOL ret = DeleteFileA(pszFile);
+    ok(ret, "Failed to DeleteFile %s\n", pszFile);
+
+    return 0;
+}
+
+static BOOL CDECL get_temp_file(char *pszTempName, int cbTempName, void *pv)
+{
+    LPSTR tempname;
+
+    tempname = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
+    GetTempFileNameA(".", "xx", 0, tempname);
+
+    if (tempname && (strlen(tempname) < (unsigned)cbTempName))
+    {
+        lstrcpyA(pszTempName, tempname);
+        HeapFree(GetProcessHeap(), 0, tempname);
+        return TRUE;
+    }
+
+    HeapFree(GetProcessHeap(), 0, tempname);
+
+    return FALSE;
+}
+
+static INT_PTR CDECL get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
+                                   USHORT *pattribs, int *err, void *pv)
+{
+    BY_HANDLE_FILE_INFORMATION finfo;
+    FILETIME filetime;
+    HANDLE handle;
+    DWORD attrs;
+    BOOL res;
+
+    handle = CreateFile(pszName, GENERIC_READ, FILE_SHARE_READ, NULL,
+                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+
+    ok(handle != INVALID_HANDLE_VALUE, "Failed to CreateFile %s\n", pszName);
+
+    res = GetFileInformationByHandle(handle, &finfo);
+    ok(res, "Expected GetFileInformationByHandle to succeed\n");
+
+    FileTimeToLocalFileTime(&finfo.ftLastWriteTime, &filetime);
+    FileTimeToDosDateTime(&filetime, pdate, ptime);
+
+    attrs = GetFileAttributes(pszName);
+    ok(attrs != INVALID_FILE_ATTRIBUTES, "Failed to GetFileAttributes\n");
+
+    return (INT_PTR)handle;
+}
+
+static BOOL add_file(HFCI hfci, const char *file, TCOMP compress)
+{
+    char path[MAX_PATH];
+    char filename[MAX_PATH];
+
+    lstrcpyA(path, CURR_DIR);
+    lstrcatA(path, "\\");
+    lstrcatA(path, file);
+
+    lstrcpyA(filename, file);
+
+    return FCIAddFile(hfci, path, filename, FALSE, get_next_cabinet,
+                      progress, get_open_info, compress);
+}
+
+static void set_cab_parameters(PCCAB pCabParams, const CHAR *name, DWORD max_size)
+{
+    ZeroMemory(pCabParams, sizeof(CCAB));
+
+    pCabParams->cb = max_size;
+    pCabParams->cbFolderThresh = FOLDER_THRESHOLD;
+    pCabParams->setID = 0xbeef;
+    pCabParams->iCab = 1;
+    lstrcpyA(pCabParams->szCabPath, CURR_DIR);
+    lstrcatA(pCabParams->szCabPath, "\\");
+    lstrcpyA(pCabParams->szCab, name);
+}
+
+static void create_cab_file(const CHAR *name, DWORD max_size, const CHAR *files)
+{
+    CCAB cabParams;
+    LPCSTR ptr;
+    HFCI hfci;
+    ERF erf;
+    BOOL res;
+
+    set_cab_parameters(&cabParams, name, max_size);
+
+    hfci = FCICreate(&erf, file_placed, mem_alloc, mem_free, fci_open,
+                      fci_read, fci_write, fci_close, fci_seek, fci_delete,
+                      get_temp_file, &cabParams, NULL);
+
+    ok(hfci != NULL, "Failed to create an FCI context\n");
+
+    ptr = files;
+    while (*ptr)
+    {
+        res = add_file(hfci, ptr, tcompTYPE_MSZIP);
+        ok(res, "Failed to add file: %s\n", ptr);
+        ptr += lstrlen(ptr) + 1;
+    }
+
+    res = FCIFlushCabinet(hfci, FALSE, get_next_cabinet, progress);
+    ok(res, "Failed to flush the cabinet\n");
+
+    res = FCIDestroy(hfci);
+    ok(res, "Failed to destroy the cabinet\n");
+}
+
+static BOOL add_cabinet_storage(LPCSTR db, LPCSTR cabinet)
+{
+    WCHAR dbW[MAX_PATH], cabinetW[MAX_PATH];
+    IStorage *stg;
+    IStream *stm;
+    HRESULT hr;
+    HANDLE handle;
+
+    MultiByteToWideChar(CP_ACP, 0, db, -1, dbW, MAX_PATH);
+    hr = StgOpenStorage(dbW, NULL, STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, NULL, 0, &stg);
+    if (FAILED(hr))
+        return FALSE;
+
+    MultiByteToWideChar(CP_ACP, 0, cabinet, -1, cabinetW, MAX_PATH);
+    hr = IStorage_CreateStream(stg, cabinetW, STGM_WRITE|STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
+    if (FAILED(hr))
+    {
+        IStorage_Release(stg);
+        return FALSE;
+    }
+
+    handle = CreateFileW(cabinetW, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (handle != INVALID_HANDLE_VALUE)
+    {
+        DWORD count;
+        char buffer[1024];
+        if (ReadFile(handle, buffer, sizeof(buffer), &count, NULL))
+            IStream_Write(stm, buffer, count, &count);
+        CloseHandle(handle);
+    }
+
+    IStream_Release(stm);
+    IStorage_Release(stg);
+
+    return TRUE;
+}
+
+static void delete_cab_files(void)
+{
+    SHFILEOPSTRUCT shfl;
+    CHAR path[MAX_PATH+10];
+
+    lstrcpyA(path, CURR_DIR);
+    lstrcatA(path, "\\*.cab");
+    path[strlen(path) + 1] = '\0';
+
+    shfl.hwnd = NULL;
+    shfl.wFunc = FO_DELETE;
+    shfl.pFrom = path;
+    shfl.pTo = NULL;
+    shfl.fFlags = FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NORECURSION | FOF_SILENT;
+
+    SHFileOperation(&shfl);
 }
 
 /* msi database data */
@@ -272,13 +546,314 @@ static const char mcp_feature_comp_dat[] =
     "heliox\thelium\n"
     "lithia\tlithium";
 
-static const CHAR mcp_file_dat[] =
+static const char mcp_file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
     "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
     "File\tFile\n"
     "hydrogen\thydrogen\thydrogen\t0\t\t\t8192\t1\n"
     "helium\thelium\thelium\t0\t\t\t8192\t1\n"
     "lithium\tlithium\tlithium\t0\t\t\t8192\t1";
+
+static const char lus_component_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "maximus\t{DF2CBABC-3BCC-47E5-A998-448D1C0C895B}\tMSITESTDIR\t0\tUILevel=5\tmaximus\n";
+
+static const char lus_feature_dat[] =
+    "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
+    "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
+    "Feature\tFeature\n"
+    "feature\t\tFeature\tFeature\t2\t1\tTARGETDIR\t0\n"
+    "montecristo\t\tFeature\tFeature\t2\t1\tTARGETDIR\t0";
+
+static const char lus_file_dat[] =
+    "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
+    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
+    "File\tFile\n"
+    "maximus\tmaximus\tmaximus\t500\t\t\t8192\t1";
+
+static const char lus_feature_comp_dat[] =
+    "Feature_\tComponent_\n"
+    "s38\ts72\n"
+    "FeatureComponents\tFeature_\tComponent_\n"
+    "feature\tmaximus\n"
+    "montecristo\tmaximus";
+
+static const char lus_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "ValidateProductID\t\t700\n"
+    "CostInitialize\t\t800\n"
+    "FileCost\t\t900\n"
+    "CostFinalize\t\t1000\n"
+    "InstallValidate\t\t1400\n"
+    "InstallInitialize\t\t1500\n"
+    "ProcessComponents\tPROCESS_COMPONENTS=1 Or FULL=1\t1600\n"
+    "UnpublishFeatures\tUNPUBLISH_FEATURES=1 Or FULL=1\t1800\n"
+    "RemoveFiles\t\t3500\n"
+    "InstallFiles\t\t4000\n"
+    "RegisterUser\tREGISTER_USER=1 Or FULL=1\t6000\n"
+    "RegisterProduct\tREGISTER_PRODUCT=1 Or FULL=1\t6100\n"
+    "PublishFeatures\tPUBLISH_FEATURES=1 Or FULL=1\t6300\n"
+    "PublishProduct\tPUBLISH_PRODUCT=1 Or FULL=1\t6400\n"
+    "InstallFinalize\t\t6600";
+
+static const char lus0_media_dat[] =
+    "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
+    "i2\ti4\tL64\tS255\tS32\tS72\n"
+    "Media\tDiskId\n"
+    "1\t1\t\t\tDISK1\t\n";
+
+static const char lus1_media_dat[] =
+    "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
+    "i2\ti4\tL64\tS255\tS32\tS72\n"
+    "Media\tDiskId\n"
+    "1\t1\t\ttest1.cab\tDISK1\t\n";
+
+static const char lus2_media_dat[] =
+    "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
+    "i2\ti4\tL64\tS255\tS32\tS72\n"
+    "Media\tDiskId\n"
+    "1\t1\t\t#test1.cab\tDISK1\t\n";
+
+static const char spf_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\tISComments\n"
+    "s72\ti2\tS64\tS0\tS255\n"
+    "CustomAction\tAction\n"
+    "SetFolderProp\t51\tMSITESTDIR\t[ProgramFilesFolder]\\msitest\\added\t\n";
+
+static const char spf_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "CostFinalize\t\t1000\n"
+    "CostInitialize\t\t800\n"
+    "FileCost\t\t900\n"
+    "SetFolderProp\t\t950\n"
+    "InstallFiles\t\t4000\n"
+    "InstallServices\t\t5000\n"
+    "InstallFinalize\t\t6600\n"
+    "InstallInitialize\t\t1500\n"
+    "InstallValidate\t\t1400\n"
+    "LaunchConditions\t\t100";
+
+static const char spf_install_ui_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallUISequence\tAction\n"
+    "CostInitialize\t\t800\n"
+    "FileCost\t\t900\n"
+    "CostFinalize\t\t1000\n"
+    "ExecuteAction\t\t1100\n";
+
+static const char sd_file_dat[] =
+    "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
+    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
+    "File\tFile\n"
+    "sourcedir.txt\tsourcedir\tsourcedir.txt\t1000\t\t\t8192\t1\n";
+
+static const char sd_feature_dat[] =
+    "Feature\tFeature_Parent\tTitle\tDescription\tDisplay\tLevel\tDirectory_\tAttributes\n"
+    "s38\tS38\tL64\tL255\tI2\ti2\tS72\ti2\n"
+    "Feature\tFeature\n"
+    "sourcedir\t\t\tsourcedir feature\t1\t2\tMSITESTDIR\t0\n";
+
+static const char sd_feature_comp_dat[] =
+    "Feature_\tComponent_\n"
+    "s38\ts72\n"
+    "FeatureComponents\tFeature_\tComponent_\n"
+    "sourcedir\tsourcedir\n";
+
+static const char sd_component_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "sourcedir\t{DD422F92-3ED8-49B5-A0B7-F266F98357DF}\tMSITESTDIR\t0\t\tsourcedir.txt\n";
+
+static const char sd_install_ui_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallUISequence\tAction\n"
+    "TestSourceDirProp1\tnot SourceDir and not SOURCEDIR and not Installed\t99\n"
+    "AppSearch\t\t100\n"
+    "TestSourceDirProp2\tnot SourceDir and not SOURCEDIR and not Installed\t101\n"
+    "LaunchConditions\tnot Installed \t110\n"
+    "TestSourceDirProp3\tnot SourceDir and not SOURCEDIR and not Installed\t111\n"
+    "FindRelatedProducts\t\t120\n"
+    "TestSourceDirProp4\tnot SourceDir and not SOURCEDIR and not Installed\t121\n"
+    "CCPSearch\t\t130\n"
+    "TestSourceDirProp5\tnot SourceDir and not SOURCEDIR and not Installed\t131\n"
+    "RMCCPSearch\t\t140\n"
+    "TestSourceDirProp6\tnot SourceDir and not SOURCEDIR and not Installed\t141\n"
+    "ValidateProductID\t\t150\n"
+    "TestSourceDirProp7\tnot SourceDir and not SOURCEDIR and not Installed\t151\n"
+    "CostInitialize\t\t800\n"
+    "TestSourceDirProp8\tnot SourceDir and not SOURCEDIR and not Installed\t801\n"
+    "FileCost\t\t900\n"
+    "TestSourceDirProp9\tnot SourceDir and not SOURCEDIR and not Installed\t901\n"
+    "IsolateComponents\t\t1000\n"
+    "TestSourceDirProp10\tnot SourceDir and not SOURCEDIR and not Installed\t1001\n"
+    "CostFinalize\t\t1100\n"
+    "TestSourceDirProp11\tnot SourceDir and not SOURCEDIR and not Installed\t1101\n"
+    "MigrateFeatureStates\t\t1200\n"
+    "TestSourceDirProp12\tnot SourceDir and not SOURCEDIR and not Installed\t1201\n"
+    "ExecuteAction\t\t1300\n"
+    "TestSourceDirProp13\tnot SourceDir and not SOURCEDIR and not Installed\t1301\n";
+
+static const char sd_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "TestSourceDirProp14\tSourceDir and SOURCEDIR and not Installed\t99\n"
+    "LaunchConditions\t\t100\n"
+    "TestSourceDirProp15\tSourceDir and SOURCEDIR and not Installed\t101\n"
+    "ValidateProductID\t\t700\n"
+    "TestSourceDirProp16\tSourceDir and SOURCEDIR and not Installed\t701\n"
+    "CostInitialize\t\t800\n"
+    "TestSourceDirProp17\tSourceDir and SOURCEDIR and not Installed\t801\n"
+    "ResolveSource\tResolveSource and not Installed\t850\n"
+    "TestSourceDirProp18\tResolveSource and not SourceDir and not SOURCEDIR and not Installed\t851\n"
+    "TestSourceDirProp19\tnot ResolveSource and SourceDir and SOURCEDIR and not Installed\t852\n"
+    "FileCost\t\t900\n"
+    "TestSourceDirProp20\tSourceDir and SOURCEDIR and not Installed\t901\n"
+    "IsolateComponents\t\t1000\n"
+    "TestSourceDirProp21\tSourceDir and SOURCEDIR and not Installed\t1001\n"
+    "CostFinalize\t\t1100\n"
+    "TestSourceDirProp22\tSourceDir and SOURCEDIR and not Installed\t1101\n"
+    "MigrateFeatureStates\t\t1200\n"
+    "TestSourceDirProp23\tSourceDir and SOURCEDIR and not Installed\t1201\n"
+    "InstallValidate\t\t1400\n"
+    "TestSourceDirProp24\tSourceDir and SOURCEDIR and not Installed\t1401\n"
+    "InstallInitialize\t\t1500\n"
+    "TestSourceDirProp25\tSourceDir and SOURCEDIR and not Installed\t1501\n"
+    "ProcessComponents\t\t1600\n"
+    "TestSourceDirProp26\tnot SourceDir and not SOURCEDIR and not Installed\t1601\n"
+    "UnpublishFeatures\t\t1800\n"
+    "TestSourceDirProp27\tnot SourceDir and not SOURCEDIR and not Installed\t1801\n"
+    "RemoveFiles\t\t3500\n"
+    "TestSourceDirProp28\tnot SourceDir and not SOURCEDIR and not Installed\t3501\n"
+    "InstallFiles\t\t4000\n"
+    "TestSourceDirProp29\tnot SourceDir and not SOURCEDIR and not Installed\t4001\n"
+    "RegisterUser\t\t6000\n"
+    "TestSourceDirProp30\tnot SourceDir and not SOURCEDIR and not Installed\t6001\n"
+    "RegisterProduct\t\t6100\n"
+    "TestSourceDirProp31\tnot SourceDir and not SOURCEDIR and not Installed\t6101\n"
+    "PublishFeatures\t\t6300\n"
+    "TestSourceDirProp32\tnot SourceDir and not SOURCEDIR and not Installed\t6301\n"
+    "PublishProduct\t\t6400\n"
+    "TestSourceDirProp33\tnot SourceDir and not SOURCEDIR and not Installed\t6401\n"
+    "InstallExecute\t\t6500\n"
+    "TestSourceDirProp34\tnot SourceDir and not SOURCEDIR and not Installed\t6501\n"
+    "InstallFinalize\t\t6600\n"
+    "TestSourceDirProp35\tnot SourceDir and not SOURCEDIR and not Installed\t6601\n";
+
+static const char sd_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\tISComments\n"
+    "s72\ti2\tS64\tS0\tS255\n"
+    "CustomAction\tAction\n"
+    "TestSourceDirProp1\t19\t\tTest 1 failed\t\n"
+    "TestSourceDirProp2\t19\t\tTest 2 failed\t\n"
+    "TestSourceDirProp3\t19\t\tTest 3 failed\t\n"
+    "TestSourceDirProp4\t19\t\tTest 4 failed\t\n"
+    "TestSourceDirProp5\t19\t\tTest 5 failed\t\n"
+    "TestSourceDirProp6\t19\t\tTest 6 failed\t\n"
+    "TestSourceDirProp7\t19\t\tTest 7 failed\t\n"
+    "TestSourceDirProp8\t19\t\tTest 8 failed\t\n"
+    "TestSourceDirProp9\t19\t\tTest 9 failed\t\n"
+    "TestSourceDirProp10\t19\t\tTest 10 failed\t\n"
+    "TestSourceDirProp11\t19\t\tTest 11 failed\t\n"
+    "TestSourceDirProp12\t19\t\tTest 12 failed\t\n"
+    "TestSourceDirProp13\t19\t\tTest 13 failed\t\n"
+    "TestSourceDirProp14\t19\t\tTest 14 failed\t\n"
+    "TestSourceDirProp15\t19\t\tTest 15 failed\t\n"
+    "TestSourceDirProp16\t19\t\tTest 16 failed\t\n"
+    "TestSourceDirProp17\t19\t\tTest 17 failed\t\n"
+    "TestSourceDirProp18\t19\t\tTest 18 failed\t\n"
+    "TestSourceDirProp19\t19\t\tTest 19 failed\t\n"
+    "TestSourceDirProp20\t19\t\tTest 20 failed\t\n"
+    "TestSourceDirProp21\t19\t\tTest 21 failed\t\n"
+    "TestSourceDirProp22\t19\t\tTest 22 failed\t\n"
+    "TestSourceDirProp23\t19\t\tTest 23 failed\t\n"
+    "TestSourceDirProp24\t19\t\tTest 24 failed\t\n"
+    "TestSourceDirProp25\t19\t\tTest 25 failed\t\n"
+    "TestSourceDirProp26\t19\t\tTest 26 failed\t\n"
+    "TestSourceDirProp27\t19\t\tTest 27 failed\t\n"
+    "TestSourceDirProp28\t19\t\tTest 28 failed\t\n"
+    "TestSourceDirProp29\t19\t\tTest 29 failed\t\n"
+    "TestSourceDirProp30\t19\t\tTest 30 failed\t\n"
+    "TestSourceDirProp31\t19\t\tTest 31 failed\t\n"
+    "TestSourceDirProp32\t19\t\tTest 32 failed\t\n"
+    "TestSourceDirProp33\t19\t\tTest 33 failed\t\n"
+    "TestSourceDirProp34\t19\t\tTest 34 failed\t\n"
+    "TestSourceDirProp35\t19\t\tTest 35 failed\t\n";
+
+static const char ci_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "CostFinalize\t\t1000\n"
+    "CostInitialize\t\t800\n"
+    "FileCost\t\t900\n"
+    "InstallFiles\t\t4000\n"
+    "InstallServices\t\t5000\n"
+    "InstallFinalize\t\t6600\n"
+    "InstallInitialize\t\t1500\n"
+    "RunInstall\t\t1600\n"
+    "InstallValidate\t\t1400\n"
+    "LaunchConditions\t\t100";
+
+static const char ci_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\tISComments\n"
+    "s72\ti2\tS64\tS0\tS255\n"
+    "CustomAction\tAction\n"
+    "RunInstall\t87\tmsitest\\concurrent.msi\tMYPROP=[UILevel]\t\n";
+
+static const char ci_component_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "maximus\t{DF2CBABC-3BCC-47E5-A998-448D1C0C895B}\tMSITESTDIR\t0\tUILevel=5\tmaximus\n";
+
+static const char ci2_component_dat[] =
+    "Component\tComponentId\tDirectory_\tAttributes\tCondition\tKeyPath\n"
+    "s72\tS38\ts72\ti2\tS255\tS72\n"
+    "Component\tComponent\n"
+    "augustus\t\tMSITESTDIR\t0\tUILevel=3 AND MYPROP=5\taugustus\n";
+
+static const char ci2_feature_comp_dat[] =
+    "Feature_\tComponent_\n"
+    "s38\ts72\n"
+    "FeatureComponents\tFeature_\tComponent_\n"
+    "feature\taugustus";
+
+static const char ci2_file_dat[] =
+    "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
+    "s72\ts72\tl255\ti4\tS72\tS20\tI2\ti2\n"
+    "File\tFile\n"
+    "augustus\taugustus\taugustus\t500\t\t\t8192\t1";
+
+static const char cl_custom_action_dat[] =
+    "Action\tType\tSource\tTarget\tISComments\n"
+    "s72\ti2\tS64\tS0\tS255\n"
+    "CustomAction\tAction\n"
+    "TestCommandlineProp\t19\t\tTest1\t\n";
+
+static const char cl_install_exec_seq_dat[] =
+    "Action\tCondition\tSequence\n"
+    "s72\tS255\tI2\n"
+    "InstallExecuteSequence\tAction\n"
+    "LaunchConditions\t\t100\n"
+    "ValidateProductID\t\t700\n"
+    "CostInitialize\t\t800\n"
+    "FileCost\t\t900\n"
+    "CostFinalize\t\t1000\n"
+    "TestCommandlineProp\tP=\"one\"\t1100\n"
+    "InstallInitialize\t\t1500\n"
+    "ProcessComponents\t\t1600\n"
+    "InstallValidate\t\t1400\n"
+    "InstallFinalize\t\t5000\n";
 
 typedef struct _msi_table
 {
@@ -309,6 +884,108 @@ static const msi_table mcp_tables[] =
     ADD_TABLE(mcp_feature_comp),
     ADD_TABLE(mcp_file),
     ADD_TABLE(install_exec_seq),
+    ADD_TABLE(media),
+    ADD_TABLE(property)
+};
+
+static const msi_table lus0_tables[] =
+{
+    ADD_TABLE(lus_component),
+    ADD_TABLE(directory),
+    ADD_TABLE(lus_feature),
+    ADD_TABLE(lus_feature_comp),
+    ADD_TABLE(lus_file),
+    ADD_TABLE(lus_install_exec_seq),
+    ADD_TABLE(lus0_media),
+    ADD_TABLE(property)
+};
+
+static const msi_table lus1_tables[] =
+{
+    ADD_TABLE(lus_component),
+    ADD_TABLE(directory),
+    ADD_TABLE(lus_feature),
+    ADD_TABLE(lus_feature_comp),
+    ADD_TABLE(lus_file),
+    ADD_TABLE(lus_install_exec_seq),
+    ADD_TABLE(lus1_media),
+    ADD_TABLE(property)
+};
+
+static const msi_table lus2_tables[] =
+{
+    ADD_TABLE(lus_component),
+    ADD_TABLE(directory),
+    ADD_TABLE(lus_feature),
+    ADD_TABLE(lus_feature_comp),
+    ADD_TABLE(lus_file),
+    ADD_TABLE(lus_install_exec_seq),
+    ADD_TABLE(lus2_media),
+    ADD_TABLE(property)
+};
+
+static const msi_table spf_tables[] =
+{
+    ADD_TABLE(lus_component),
+    ADD_TABLE(directory),
+    ADD_TABLE(lus_feature),
+    ADD_TABLE(lus_feature_comp),
+    ADD_TABLE(lus_file),
+    ADD_TABLE(lus0_media),
+    ADD_TABLE(property),
+    ADD_TABLE(spf_custom_action),
+    ADD_TABLE(spf_install_exec_seq),
+    ADD_TABLE(spf_install_ui_seq)
+};
+
+static const msi_table sd_tables[] =
+{
+    ADD_TABLE(directory),
+    ADD_TABLE(sd_component),
+    ADD_TABLE(sd_feature),
+    ADD_TABLE(sd_feature_comp),
+    ADD_TABLE(sd_file),
+    ADD_TABLE(sd_install_exec_seq),
+    ADD_TABLE(sd_install_ui_seq),
+    ADD_TABLE(sd_custom_action),
+    ADD_TABLE(media),
+    ADD_TABLE(property)
+};
+
+static const msi_table ci_tables[] =
+{
+    ADD_TABLE(ci_component),
+    ADD_TABLE(directory),
+    ADD_TABLE(lus_feature),
+    ADD_TABLE(lus_feature_comp),
+    ADD_TABLE(lus_file),
+    ADD_TABLE(ci_install_exec_seq),
+    ADD_TABLE(lus0_media),
+    ADD_TABLE(property),
+    ADD_TABLE(ci_custom_action),
+};
+
+static const msi_table ci2_tables[] =
+{
+    ADD_TABLE(ci2_component),
+    ADD_TABLE(directory),
+    ADD_TABLE(lus_feature),
+    ADD_TABLE(ci2_feature_comp),
+    ADD_TABLE(ci2_file),
+    ADD_TABLE(install_exec_seq),
+    ADD_TABLE(lus0_media),
+    ADD_TABLE(property),
+};
+
+static const msi_table cl_tables[] =
+{
+    ADD_TABLE(component),
+    ADD_TABLE(directory),
+    ADD_TABLE(feature),
+    ADD_TABLE(feature_comp),
+    ADD_TABLE(file),
+    ADD_TABLE(cl_custom_action),
+    ADD_TABLE(cl_install_exec_seq),
     ADD_TABLE(media),
     ADD_TABLE(property)
 };
@@ -709,6 +1386,40 @@ static void create_file(LPCSTR name, LPCSTR data, DWORD size)
     }
 
     CloseHandle(file);
+}
+
+static void create_test_files(void)
+{
+    CreateDirectoryA("msitest", NULL);
+    create_file("msitest\\one.txt", "msitest\\one.txt", 100);
+    CreateDirectoryA("msitest\\first", NULL);
+    create_file("msitest\\first\\two.txt", "msitest\\first\\two.txt", 100);
+    CreateDirectoryA("msitest\\second", NULL);
+    create_file("msitest\\second\\three.txt", "msitest\\second\\three.txt", 100);
+
+    create_file("four.txt", "four.txt", 100);
+    create_file("five.txt", "five.txt", 100);
+    create_cab_file("msitest.cab", MEDIA_SIZE, "four.txt\0five.txt\0");
+
+    create_file("msitest\\filename", "msitest\\filename", 100);
+    create_file("msitest\\service.exe", "msitest\\service.exe", 100);
+
+    DeleteFileA("four.txt");
+    DeleteFileA("five.txt");
+}
+
+static void delete_test_files(void)
+{
+    DeleteFileA("msitest.msi");
+    DeleteFileA("msitest.cab");
+    DeleteFileA("msitest\\second\\three.txt");
+    DeleteFileA("msitest\\first\\two.txt");
+    DeleteFileA("msitest\\one.txt");
+    DeleteFileA("msitest\\service.exe");
+    DeleteFileA("msitest\\filename");
+    RemoveDirectoryA("msitest\\second");
+    RemoveDirectoryA("msitest\\first");
+    RemoveDirectoryA("msitest");
 }
 
 #define HASHSIZE sizeof(MSIFILEHASHINFO)
@@ -3299,8 +4010,15 @@ static void test_MsiGetFileVersion(void)
     lstrcpyA(lang, "lang");
     r = MsiGetFileVersionA(path, version, &versz, lang, &langsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    if (langchecksz && !langsz)
+    {
+        win_skip("broken MsiGetFileVersionA detected\n");
+        HeapFree(GetProcessHeap(), 0, vercheck);
+        HeapFree(GetProcessHeap(), 0, langcheck);
+        return;
+    }
     ok(versz == verchecksz, "Expected %d, got %d\n", verchecksz, versz);
-    ok(strstr(lang, langcheck) != NULL, "Expected %s in %s\n", langcheck, lang);
+    ok(strstr(lang, langcheck) != NULL, "Expected \"%s\" in \"%s\"\n", langcheck, lang);
     ok(!lstrcmpA(version, vercheck),
         "Expected %s, got %s\n", vercheck, version);
 
@@ -3318,7 +4036,7 @@ static void test_MsiGetFileVersion(void)
     lstrcpyA(lang, "lang");
     r = MsiGetFileVersionA(path, NULL, NULL, lang, &langsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(strstr(lang, langcheck) != NULL, "Expected %s in %s\n", langcheck, lang);
+    ok(strstr(lang, langcheck) != NULL, "Expected \"%s\" in \"%s\"\n", langcheck, lang);
 
     /* check neither version nor language */
     r = MsiGetFileVersionA(path, NULL, NULL, NULL, NULL);
@@ -3342,7 +4060,7 @@ static void test_MsiGetFileVersion(void)
     r = MsiGetFileVersionA(path, version, &versz, NULL, NULL);
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!strncmp(version, vercheck, 4),
-       "Expected first 4 characters of %s, got %s\n", vercheck, version);
+       "Expected first 4 characters of \"%s\", got \"%s\"\n", vercheck, version);
     ok(versz == verchecksz, "Expected %d, got %d\n", verchecksz, versz);
 
     /* pcchLangBuf not big enough */
@@ -3351,7 +4069,7 @@ static void test_MsiGetFileVersion(void)
     r = MsiGetFileVersionA(path, NULL, NULL, lang, &langsz);
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!strncmp(lang, langcheck, 2),
-       "Expected first character of %s, got %s\n", langcheck, lang);
+       "Expected first character of \"%s\", got \"%s\"\n", langcheck, lang);
     ok(langsz >= langchecksz, "Expected %d >= %d\n", langsz, langchecksz);
 
     /* pcchVersionBuf big enough, pcchLangBuf not big enough */
@@ -3361,7 +4079,7 @@ static void test_MsiGetFileVersion(void)
     r = MsiGetFileVersionA(path, version, &versz, NULL, &langsz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(versz == verchecksz, "Expected %d, got %d\n", verchecksz, versz);
-    ok(!lstrcmpA(version, vercheck), "Expected %s, got %s\n", vercheck, version);
+    ok(!lstrcmpA(version, vercheck), "Expected \"%s\", got \"%s\"\n", vercheck, version);
     ok(langsz >= langchecksz && langsz < MAX_PATH, "Expected %d >= %d\n", langsz, langchecksz);
 
     /* pcchVersionBuf not big enough, pcchLangBuf big enough */
@@ -8044,6 +8762,8 @@ static void test_MsiOpenProduct(void)
     UINT r;
     REGSAM access = KEY_ALL_ACCESS;
 
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
     GetCurrentDirectoryA(MAX_PATH, path);
     lstrcatA(path, "\\");
 
@@ -8321,21 +9041,6 @@ static void test_MsiOpenProduct(void)
                          (const BYTE *)"winetest.msi", 13);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
-    /* LocalPackage has just the package name */
-    hprod = 0xdeadbeef;
-    r = MsiOpenProductA(prodcode, &hprod);
-    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
-    {
-        skip("Not enough rights to perform tests\n");
-        goto error;
-    }
-    ok(r == ERROR_INSTALL_PACKAGE_OPEN_FAILED || r == ERROR_SUCCESS,
-       "Expected ERROR_INSTALL_PACKAGE_OPEN_FAILED or ERROR_SUCCESS, got %d\n", r);
-    if (r == ERROR_SUCCESS)
-        MsiCloseHandle(hprod);
-    else
-        ok(hprod == 0xdeadbeef, "Expected hprod to be unchanged\n");
-
     lstrcpyA(val, path);
     lstrcatA(val, "\\winetest.msi");
     res = RegSetValueExA(props, "LocalPackage", 0, REG_SZ,
@@ -8351,7 +9056,6 @@ static void test_MsiOpenProduct(void)
        "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
     ok(hprod == 0xdeadbeef, "Expected hprod to be unchanged\n");
 
-error:
     RegDeleteValueA(props, "LocalPackage");
     delete_key(props, "", access & KEY_WOW64_64KEY);
     RegCloseKey(props);
@@ -13039,6 +13743,451 @@ static void test_MsiSetExternalUI(void)
     ok(!error, "MsiSetExternalUIRecord failed %u\n", error);
 }
 
+static void test_lastusedsource(void)
+{
+    static char prodcode[] = "{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}";
+    char value[MAX_PATH], path[MAX_PATH];
+    DWORD size;
+    UINT r;
+
+    if (!pMsiSourceListGetInfoA)
+    {
+        win_skip("MsiSourceListGetInfoA is not available\n");
+        return;
+    }
+
+    CreateDirectoryA("msitest", NULL);
+    create_file("maximus", "maximus", 500);
+    create_cab_file("test1.cab", MEDIA_SIZE, "maximus\0");
+    DeleteFile("maximus");
+
+    create_database("msifile0.msi", lus0_tables, sizeof(lus0_tables) / sizeof(msi_table));
+    create_database("msifile1.msi", lus1_tables, sizeof(lus1_tables) / sizeof(msi_table));
+    create_database("msifile2.msi", lus2_tables, sizeof(lus2_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    /* no cabinet file */
+
+    size = MAX_PATH;
+    lstrcpyA(value, "aaa");
+    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
+    ok(!lstrcmpA(value, "aaa"), "expected \"aaa\", got \"%s\"\n", value);
+
+    r = MsiInstallProductA("msifile0.msi", "PUBLISH_PRODUCT=1");
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        goto error;
+    }
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    lstrcpyA(path, CURR_DIR);
+    lstrcatA(path, "\\");
+
+    size = MAX_PATH;
+    lstrcpyA(value, "aaa");
+    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+    ok(!lstrcmpA(value, path), "expected \"%s\", got \"%s\"\n", path, value);
+    ok(size == lstrlenA(path), "expected %d, got %d\n", lstrlenA(path), size);
+
+    r = MsiInstallProductA("msifile0.msi", "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    /* separate cabinet file */
+
+    size = MAX_PATH;
+    lstrcpyA(value, "aaa");
+    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
+    ok(!lstrcmpA(value, "aaa"), "expected \"aaa\", got \"%s\"\n", value);
+
+    r = MsiInstallProductA("msifile1.msi", "PUBLISH_PRODUCT=1");
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    lstrcpyA(path, CURR_DIR);
+    lstrcatA(path, "\\");
+
+    size = MAX_PATH;
+    lstrcpyA(value, "aaa");
+    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+    ok(!lstrcmpA(value, path), "expected \"%s\", got \"%s\"\n", path, value);
+    ok(size == lstrlenA(path), "expected %d, got %d\n", lstrlenA(path), size);
+
+    r = MsiInstallProductA("msifile1.msi", "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    size = MAX_PATH;
+    lstrcpyA(value, "aaa");
+    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
+    ok(!lstrcmpA(value, "aaa"), "expected \"aaa\", got \"%s\"\n", value);
+
+    /* embedded cabinet stream */
+
+    add_cabinet_storage("msifile2.msi", "test1.cab");
+
+    r = MsiInstallProductA("msifile2.msi", "PUBLISH_PRODUCT=1");
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    size = MAX_PATH;
+    lstrcpyA(value, "aaa");
+    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+    ok(!lstrcmpA(value, path), "expected \"%s\", got \"%s\"\n", path, value);
+    ok(size == lstrlenA(path), "expected %d, got %d\n", lstrlenA(path), size);
+
+    r = MsiInstallProductA("msifile2.msi", "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+
+    size = MAX_PATH;
+    lstrcpyA(value, "aaa");
+    r = pMsiSourceListGetInfoA(prodcode, NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCE, value, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
+    ok(!lstrcmpA(value, "aaa"), "expected \"aaa\", got \"%s\"\n", value);
+
+error:
+    delete_cab_files();
+    DeleteFile("msitest\\maximus");
+    RemoveDirectory("msitest");
+    DeleteFile("msifile0.msi");
+    DeleteFile("msifile1.msi");
+    DeleteFile("msifile2.msi");
+}
+
+static void test_setpropertyfolder(void)
+{
+    UINT r;
+    CHAR path[MAX_PATH];
+    DWORD attr;
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+
+    lstrcpyA(path, PROG_FILES_DIR);
+    lstrcatA(path, "\\msitest\\added");
+
+    CreateDirectoryA("msitest", NULL);
+    create_file("msitest\\maximus", "msitest\\maximus", 500);
+
+    create_database(msifile, spf_tables, sizeof(spf_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
+
+    r = MsiInstallProductA(msifile, NULL);
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        goto error;
+    }
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    attr = GetFileAttributesA(path);
+    if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        ok(delete_pf("msitest\\added\\maximus", TRUE), "File not installed\n");
+        ok(delete_pf("msitest\\added", FALSE), "Directory not created\n");
+        ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    }
+    else
+    {
+        trace("changing folder property not supported\n");
+        ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
+        ok(delete_pf("msitest", FALSE), "Directory not created\n");
+    }
+
+error:
+    DeleteFile(msifile);
+    DeleteFile("msitest\\maximus");
+    RemoveDirectory("msitest");
+}
+
+static void test_sourcedir_props(void)
+{
+    UINT r;
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+
+    create_test_files();
+    create_file("msitest\\sourcedir.txt", "msitest\\sourcedir.txt", 1000);
+    create_database(msifile, sd_tables, sizeof(sd_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
+
+    /* full UI, no ResolveSource action */
+    r = MsiInstallProductA(msifile, NULL);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    ok(!delete_pf("msitest\\sourcedir.txt", TRUE), "file not removed\n");
+    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
+
+    /* full UI, ResolveSource action */
+    r = MsiInstallProductA(msifile, "ResolveSource=1");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    ok(!delete_pf("msitest\\sourcedir.txt", TRUE), "file not removed\n");
+    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    /* no UI, no ResolveSource action */
+    r = MsiInstallProductA(msifile, NULL);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    ok(!delete_pf("msitest\\sourcedir.txt", TRUE), "file not removed\n");
+    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
+
+    /* no UI, ResolveSource action */
+    r = MsiInstallProductA(msifile, "ResolveSource=1");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    ok(!delete_pf("msitest\\sourcedir.txt", TRUE), "file not removed\n");
+    ok(!delete_pf("msitest", FALSE), "directory not removed\n");
+
+    DeleteFileA("msitest\\sourcedir.txt");
+    delete_test_files();
+    DeleteFile(msifile);
+}
+
+static void test_concurrentinstall(void)
+{
+    UINT r;
+    CHAR path[MAX_PATH];
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+
+    CreateDirectoryA("msitest", NULL);
+    CreateDirectoryA("msitest\\msitest", NULL);
+    create_file("msitest\\maximus", "msitest\\maximus", 500);
+    create_file("msitest\\msitest\\augustus", "msitest\\msitest\\augustus", 500);
+
+    create_database(msifile, ci_tables, sizeof(ci_tables) / sizeof(msi_table));
+
+    lstrcpyA(path, CURR_DIR);
+    lstrcatA(path, "\\msitest\\concurrent.msi");
+    create_database(path, ci2_tables, sizeof(ci2_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_FULL, NULL);
+
+    r = MsiInstallProductA(msifile, NULL);
+    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
+    {
+        skip("Not enough rights to perform tests\n");
+        DeleteFile(path);
+        goto error;
+    }
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+    if (!delete_pf("msitest\\augustus", TRUE))
+        trace("concurrent installs not supported\n");
+    ok(delete_pf("msitest\\maximus", TRUE), "File not installed\n");
+    ok(delete_pf("msitest", FALSE), "Directory not created\n");
+
+    r = MsiConfigureProductA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}", INSTALLLEVEL_DEFAULT,
+                             INSTALLSTATE_ABSENT);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    DeleteFile(path);
+
+error:
+    DeleteFile(msifile);
+    DeleteFile("msitest\\msitest\\augustus");
+    DeleteFile("msitest\\maximus");
+    RemoveDirectory("msitest\\msitest");
+    RemoveDirectory("msitest");
+}
+
+static void test_command_line_parsing(void)
+{
+    UINT r;
+    const char *cmd;
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+
+    create_test_files();
+    create_database(msifile, cl_tables, sizeof(cl_tables)/sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    cmd = " ";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "=";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "==";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "one";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "=one";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "P=";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "  P=";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=  ";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "P=\"\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"\"\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "P=\"\"\"\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\" ";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "P= \"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "P= \"\" ";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"  \"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=one";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+
+    cmd = "P= one";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+
+    cmd = "P=\"one";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "P=one\"";
+    r = MsiInstallProductA(msifile, cmd);
+    todo_wine ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"one\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+
+    cmd = "P= \"one\" ";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+
+    cmd = "P=\"one\"\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "P=\"\"one\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "P=\"\"one\"\"";
+    r = MsiInstallProductA(msifile, cmd);
+    todo_wine ok(r == ERROR_INVALID_COMMAND_LINE, "Expected ERROR_INVALID_COMMAND_LINE, got %u\n", r);
+
+    cmd = "P=\"one two\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"\"\"one\"\" two\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"\"\"one\"\" two\" Q=three";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"\" Q=\"two\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"one\" Q=\"two\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+
+    cmd = "P=\"one=two\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "Q=\"\" P=\"one\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_INSTALL_FAILURE, "Expected ERROR_INSTALL_FAILURE, got %u\n", r);
+
+    cmd = "P=\"\"\"one\"\"\" Q=\"two\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"one \"\"two\"\"\" Q=\"three\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    cmd = "P=\"\"\"one\"\" two\" Q=\"three\"";
+    r = MsiInstallProductA(msifile, cmd);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    DeleteFile(msifile);
+    delete_test_files();
+}
+
 START_TEST(msi)
 {
     DWORD len;
@@ -13096,6 +14245,11 @@ START_TEST(msi)
     test_MsiSetFeatureAttributes();
     test_MsiGetFeatureInfo();
     test_MsiSetExternalUI();
+    test_lastusedsource();
+    test_setpropertyfolder();
+    test_sourcedir_props();
+    test_concurrentinstall();
+    test_command_line_parsing();
 
     SetCurrentDirectoryA(prev_path);
 }
