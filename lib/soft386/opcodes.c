@@ -11,6 +11,7 @@
 // #define WIN32_NO_STATUS
 // #define _INC_WINDOWS
 #include <windef.h>
+#include <limits.h>
 
 // #define NDEBUG
 #include <debug.h>
@@ -131,7 +132,7 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodePushImm,
     Soft386OpcodeImulModrmImm,
     Soft386OpcodePushByteImm,
-    Soft386OpcodeImulModrmByteImm,
+    Soft386OpcodeImulModrmImm,
     NULL, // TODO: OPCODE 0x6C NOT SUPPORTED
     NULL, // TODO: OPCODE 0x6D NOT SUPPORTED
     NULL, // TODO: OPCODE 0x6E NOT SUPPORTED
@@ -3797,10 +3798,125 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodePushImm)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeImulModrmImm)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN OperandSize, AddressSize;
+    SOFT386_MOD_REG_RM ModRegRm;
+    LONG Multiplier;
+    LONGLONG Product;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFD) == 0x69);
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the address size */
+        AddressSize = !AddressSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the operand size */
+        OperandSize = !OperandSize;
+    }
+
+    /* Fetch the parameters */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (Opcode == 0x6B)
+    {
+        CHAR Byte;
+
+        /* Fetch the immediate operand */
+        if (!Soft386FetchByte(State, (PUCHAR)&Byte))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        Multiplier = (LONG)Byte;
+    }
+    else
+    {
+        if (OperandSize)
+        {
+            LONG Dword;
+
+            /* Fetch the immediate operand */
+            if (!Soft386FetchDword(State, (PULONG)&Dword))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            Multiplier = Dword;
+        }
+        else
+        {
+            SHORT Word;
+
+            /* Fetch the immediate operand */
+            if (!Soft386FetchWord(State, (PUSHORT)&Word))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            Multiplier = (LONG)Word;
+        }
+    }
+
+    if (OperandSize)
+    {
+        LONG RegValue, Multiplicand;
+
+        /* Read the operands */
+        if (!Soft386ReadModrmDwordOperands(State,
+                                           &ModRegRm,
+                                           (PULONG)&RegValue,
+                                           (PULONG)&Multiplicand))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Multiply */
+        Product = (LONGLONG)Multiplicand * (LONGLONG)Multiplier;
+    }
+    else
+    {
+        SHORT RegValue, Multiplicand;
+
+        /* Read the operands */
+        if (!Soft386ReadModrmWordOperands(State,
+                                          &ModRegRm,
+                                          (PUSHORT)&RegValue,
+                                          (PUSHORT)&Multiplicand))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Multiply */
+        Product = (LONGLONG)Multiplicand * (LONGLONG)Multiplier;
+    }
+
+    /* Check for carry/overflow */
+    if ((Product < LONG_MIN) || (Product > LONG_MAX))
+    {
+        State->Flags.Cf = State->Flags.Of = TRUE;
+    }
+    else State->Flags.Cf = State->Flags.Of = FALSE;
+
+    /* Write-back the result */
+    return Soft386WriteModrmDwordOperands(State,
+                                          &ModRegRm,
+                                          TRUE,
+                                          (ULONG)((LONG)Product));
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodePushByteImm)
@@ -3818,14 +3934,6 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodePushByteImm)
 
     /* Call the internal API */
     return Soft386StackPush(State, Data);
-}
-
-SOFT386_OPCODE_HANDLER(Soft386OpcodeImulModrmByteImm)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-
-    return FALSE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeMovByteModrm)
