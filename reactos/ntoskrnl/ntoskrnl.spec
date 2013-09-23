@@ -758,7 +758,7 @@
 @ stdcall MmAllocatePagesForMdlEx(long long long long long long long long long)
 @ stdcall MmBuildMdlForNonPagedPool(ptr)
 @ stdcall MmCanFileBeTruncated(ptr ptr)
-;MmCommitSessionMappedView
+@ stdcall MmCommitSessionMappedView(ptr ptr)
 @ stdcall MmCreateMdl(ptr ptr long)
 ;MmCreateMirror
 @ stdcall MmCreateSection(ptr long ptr ptr long long ptr ptr)
