@@ -407,9 +407,11 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
     driver = reg_driver_list;
     while(driver)
         if (!compare_fourcc(fccType, driver->fccType) &&
-            !compare_fourcc(fccHandler, driver->fccHandler))
+            !compare_fourcc(fccHandler, driver->fccHandler)) {
+	    fccType = driver->fccType;
+	    fccHandler = driver->fccHandler;
 	    break;
-        else
+        } else
             driver = driver->next;
 
     if (driver && driver->proc)
@@ -430,7 +432,13 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
     icopen.dnDevNode            = 0; /* FIXME */
 	
     if (!driver) {
-        /* The driver is registered in the registry */
+        /* normalize to lower case as in 'vidc' */
+        ((char*)&fccType)[0] = tolower(((char*)&fccType)[0]);
+        ((char*)&fccType)[1] = tolower(((char*)&fccType)[1]);
+        ((char*)&fccType)[2] = tolower(((char*)&fccType)[2]);
+        ((char*)&fccType)[3] = tolower(((char*)&fccType)[3]);
+        icopen.fccType = fccType;
+        /* Seek the driver in the registry */
 	fourcc_to_string(codecname, fccType);
         codecname[4] = '.';
 	fourcc_to_string(codecname + 5, fccHandler);
@@ -534,7 +542,6 @@ LRESULT VFWAPI ICGetInfo(HIC hic, ICINFO *picinfo, DWORD cb)
 
     TRACE("(%p,%p,%d)\n", hic, picinfo, cb);
 
-    whic = MSVIDEO_GetHicPtr(hic);
     if (!whic) return ICERR_BADHANDLE;
     if (!picinfo) return MMSYSERR_INVALPARAM;
 
@@ -1370,7 +1377,7 @@ LPVOID VFWAPI ICSeqCompressFrame(PCOMPVARS pc, UINT uiFlags, LPVOID lpBits, BOOL
     icComp->lFrameNum = pc->lFrame++;
     icComp->lpOutput = pc->lpBitsOut;
     icComp->lpPrev = pc->lpBitsPrev;
-    ret = ICSendMessage(pc->hic, ICM_COMPRESS, (DWORD_PTR)icComp, sizeof(icComp));
+    ret = ICSendMessage(pc->hic, ICM_COMPRESS, (DWORD_PTR)icComp, sizeof(*icComp));
 
     if (icComp->dwFlags & AVIIF_KEYFRAME)
     {
@@ -1509,7 +1516,10 @@ static BOOL GetFileNamePreview(LPVOID lpofn,BOOL bSave,BOOL bUnicode)
 
   fnGetFileName = (LPVOID)GetProcAddress(hComdlg32, szFunctionName);
   if (fnGetFileName == NULL)
+  {
+    FreeLibrary(hComdlg32);
     return FALSE;
+  }
 
   /* FIXME: need to add OFN_ENABLEHOOK and our own handler */
   ret = fnGetFileName(lpofn);
