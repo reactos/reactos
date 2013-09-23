@@ -227,7 +227,9 @@ typedef struct _SOFT386_TABLE_REG
 
 typedef union _SOFT386_FLAGS_REG
 {
+    USHORT LowWord;
     ULONG Long;
+
     struct
     {
         ULONG Cf        : 1;

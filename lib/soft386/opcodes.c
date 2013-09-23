@@ -4162,10 +4162,135 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodePushFlags)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodePopFlags)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+    INT Cpl = Soft386GetCurrentPrivLevel(State);
+    ULONG NewFlags;
 
-    return FALSE;
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* This OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    /* Pop the new flags */
+    if (!Soft386StackPop(State, &NewFlags))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!State->Flags.Vm)
+    {
+        /* Check the current privilege level */
+        if (Cpl == 0)
+        {
+            /* Supervisor */
+
+            /* Set the flags */
+            if (Size)
+            {
+                /* Memorize the old state of RF */
+                BOOLEAN OldRf = State->Flags.Rf;
+
+                State->Flags.Long = NewFlags;
+
+                /* Restore VM and RF */
+                State->Flags.Vm = FALSE;
+                State->Flags.Rf = OldRf;
+
+                /* Clear VIF and VIP */
+                State->Flags.Vif = State->Flags.Vip = FALSE;
+            }
+            else State->Flags.LowWord = LOWORD(NewFlags);
+
+            /* Restore the reserved bits */
+            State->Flags.AlwaysSet = TRUE;
+            State->Flags.Reserved0 = FALSE;
+            State->Flags.Reserved1 = FALSE;
+        }
+        else
+        {
+            /* User */
+
+            /* Memorize the old state of IF and IOPL */
+            BOOLEAN OldIf = State->Flags.If;
+            UINT OldIopl = State->Flags.Iopl;
+
+            /* Set the flags */
+            if (Size)
+            {
+                /* Memorize the old state of RF */
+                BOOLEAN OldRf = State->Flags.Rf;
+
+                State->Flags.Long = NewFlags;
+
+                /* Restore VM and RF */
+                State->Flags.Vm = FALSE;
+                State->Flags.Rf = OldRf;
+
+                /* Clear VIF and VIP */
+                State->Flags.Vif = State->Flags.Vip = FALSE;
+            }
+            else State->Flags.LowWord = LOWORD(NewFlags);
+
+            /* Restore the reserved bits and IOPL */
+            State->Flags.AlwaysSet = TRUE;
+            State->Flags.Reserved0 = FALSE;
+            State->Flags.Reserved1 = FALSE;
+            State->Flags.Iopl = OldIopl;
+
+            /* Check if the user doesn't have the privilege to change IF */
+            if (Cpl > State->Flags.Iopl)
+            {
+                /* Restore IF */
+                State->Flags.If = OldIf;
+            }
+        }
+    }
+    else
+    {
+        /* Check the IOPL */
+        if (State->Flags.Iopl == 3)
+        {
+            if (Size)
+            {
+                /* Memorize the old state of RF, VIF and VIP */
+                BOOLEAN OldRf = State->Flags.Rf;
+                BOOLEAN OldVif = State->Flags.Vif;
+                BOOLEAN OldVip = State->Flags.Vip;
+
+                State->Flags.Long = NewFlags;
+
+                /* Restore VM, RF, VIF and VIP */
+                State->Flags.Vm = TRUE;
+                State->Flags.Rf = OldRf;
+                State->Flags.Vif = OldVif;
+                State->Flags.Vip = OldVip;
+            }
+            else State->Flags.LowWord = LOWORD(NewFlags);
+
+            /* Restore the reserved bits and IOPL */
+            State->Flags.AlwaysSet = TRUE;
+            State->Flags.Reserved0 = FALSE;
+            State->Flags.Reserved1 = FALSE;
+            State->Flags.Iopl = 3;
+        }
+        else
+        {
+            /* Call the VM86 monitor */
+            Soft386ExceptionWithErrorCode(State, SOFT386_EXCEPTION_GP, 0);
+        }
+        
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeSahf)
