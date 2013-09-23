@@ -129,7 +129,7 @@ reactos/dll/win32/mstask          # Synced to Wine-1.7.1
 reactos/dll/win32/msvcrt20        # Out of sync
 reactos/dll/win32/msvcrt40        # Out of sync
 reactos/dll/win32/msvfw32         # Synced to Wine-1.7.1
-reactos/dll/win32/msvidc32        # Autosync
+reactos/dll/win32/msvidc32        # Synced to Wine-1.7.1
 reactos/dll/win32/msxml           # Synced to Wine-1.5.19
 reactos/dll/win32/msxml2          # Synced to Wine-1.5.19
 reactos/dll/win32/msxml3          # Synced to Wine-1.5.26
