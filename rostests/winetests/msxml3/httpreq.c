@@ -1443,12 +1443,6 @@ static void test_XMLHTTP(void)
     HRESULT hr;
     HGLOBAL g;
 
-    if (!winetest_interactive)
-    {
-        skip("test_XMLHTTP skipped, ROSTESTS-100\n");
-        return;
-    }
-
     xhr = create_xhr();
 
     VariantInit(&dummy);
@@ -1699,58 +1693,28 @@ static void test_XMLHTTP(void)
     IDispatch_Release(event);
 
     /* interaction with object site */
-    EXPECT_REF(xhr, 1);
     hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectWithSite, (void**)&obj_site);
     EXPECT_HR(hr, S_OK);
-todo_wine {
-    EXPECT_REF(xhr, 1);
-    EXPECT_REF(obj_site, 1);
-}
 
     hr = IObjectWithSite_SetSite(obj_site, NULL);
     ok(hr == S_OK, "got 0x%08x\n", hr);
 
-    IObjectWithSite_AddRef(obj_site);
-todo_wine {
-    EXPECT_REF(obj_site, 2);
-    EXPECT_REF(xhr, 1);
-}
-    IObjectWithSite_Release(obj_site);
-
     hr = IXMLHttpRequest_QueryInterface(xhr, &IID_IObjectWithSite, (void**)&obj_site2);
     EXPECT_HR(hr, S_OK);
-todo_wine {
-    EXPECT_REF(xhr, 1);
-    EXPECT_REF(obj_site, 1);
-    EXPECT_REF(obj_site2, 1);
-    ok(obj_site != obj_site2, "expected new instance\n");
-}
-    IObjectWithSite_Release(obj_site);
+    ok(obj_site == obj_site2 || broken(obj_site != obj_site2), "got new instance\n");
+    IObjectWithSite_Release(obj_site2);
 
     set_xhr_site(xhr);
 
     /* try to set site another time */
-
-    /* to be removed once IObjectWithSite is properly separated */
     SET_EXPECT(site_qi_IServiceProvider);
     SET_EXPECT(sp_queryservice_SID_SContainerDispatch_htmldoc2);
 
-    hr = IObjectWithSite_SetSite(obj_site2, &testsite);
+    hr = IObjectWithSite_SetSite(obj_site, &testsite);
     EXPECT_HR(hr, S_OK);
 
-    todo_wine EXPECT_REF(xhr, 1);
+    IObjectWithSite_Release(obj_site);
     IXMLHttpRequest_Release(xhr);
-
-    /* still works after request is released */
-
-    /* to be removed once IObjectWithSite is properly separated */
-    SET_EXPECT(site_qi_IServiceProvider);
-    SET_EXPECT(sp_queryservice_SID_SContainerDispatch_htmldoc2);
-
-    hr = IObjectWithSite_SetSite(obj_site2, &testsite);
-    EXPECT_HR(hr, S_OK);
-    IObjectWithSite_Release(obj_site2);
-
     free_bstrs();
 }
 
