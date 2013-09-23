@@ -142,8 +142,6 @@ static HRESULT WINAPI MSTASK_ITaskTrigger_SetTrigger(
     if (pTrigger->MinutesDuration <= pTrigger->MinutesInterval &&
             pTrigger->MinutesInterval > 0)
         return E_INVALIDARG;
-    if (pTrigger->MinutesDuration > 0 && pTrigger->MinutesInterval == 0)
-        return E_INVALIDARG;
     tmp_trigger_cond.MinutesDuration = pTrigger->MinutesDuration;
     tmp_trigger_cond.MinutesInterval = pTrigger->MinutesInterval;
 
