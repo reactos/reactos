@@ -2117,7 +2117,7 @@ MiRemoveFromSystemSpace(IN PMMSESSION Session,
             if (++Count == 2)
             {
                 /* But if we overflew twice, then this is not a real mapping */
-                KeBugCheckEx(0xD7, //DRIVER_UNMAPPING_INVALID_VIEW,
+                KeBugCheckEx(DRIVER_UNMAPPING_INVALID_VIEW,
                              (ULONG_PTR)Base,
                              1,
                              0,
@@ -2821,7 +2821,7 @@ MmCommitSessionMappedView(IN PVOID MappedBase,
             if (++Count == 2)
             {
                 /* But if we overflew twice, then this is not a real mapping */
-                KeBugCheckEx(0xD7, //DRIVER_UNMAPPING_INVALID_VIEW,
+                KeBugCheckEx(DRIVER_UNMAPPING_INVALID_VIEW,
                              Base,
                              2,
                              0,
