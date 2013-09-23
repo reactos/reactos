@@ -2751,7 +2751,7 @@ MmCommitSessionMappedView(IN PVOID MappedBase,
                           IN SIZE_T ViewSize)
 {
     ULONG_PTR StartAddress, EndingAddress, Base;
-    ULONG Hash, Count, Size, QuotaCharge;
+    ULONG Hash, Count = 0, Size, QuotaCharge;
     PMMSESSION Session;
     PMMPTE LastProtoPte, PointerPte, ProtoPte;
     PCONTROL_AREA ControlArea;
