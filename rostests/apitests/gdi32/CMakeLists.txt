@@ -1,5 +1,4 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/win32ss)
 
 list(APPEND SOURCE
@@ -62,14 +61,8 @@ list(APPEND SOURCE
     init.c
     testlist.c)
 
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #allow_warnings(gdi32_apitest)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
-endif()
-
 add_executable(gdi32_apitest ${SOURCE})
-target_link_libraries(gdi32_apitest wine ${PSEH_LIB})
+target_link_libraries(gdi32_apitest ${PSEH_LIB})
 set_module_type(gdi32_apitest win32cui)
-add_importlibs(gdi32_apitest gdi32 user32 msvcrt kernel32 ntdll)
+add_importlibs(gdi32_apitest gdi32 user32 msvcrt kernel32)
 add_cd_file(TARGET gdi32_apitest DESTINATION reactos/bin FOR all)

@@ -5,9 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
+#include <stdio.h>
 #include <apitest.h>
-
-#include <wine/test.h>
 #include <wingdi.h>
 
 #define COUNT 26
