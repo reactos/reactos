@@ -4525,18 +4525,72 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIret)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeAam)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    UCHAR Base;
+    UCHAR Value = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
 
-    return FALSE;
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Fetch the base */
+    if (!Soft386FetchByte(State, &Base))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check if the base is zero */
+    if (Base == 0)
+    {
+        /* Divide error */
+        Soft386Exception(State, SOFT386_EXCEPTION_DE);
+        return FALSE;
+    }
+
+    /* Adjust */
+    State->GeneralRegs[SOFT386_REG_EAX].HighByte = Value / Base;
+    State->GeneralRegs[SOFT386_REG_EAX].LowByte = Value %= Base;
+
+    /* Update flags */
+    State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Value & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Value);
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeAad)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    UCHAR Base;
+    UCHAR Value = State->GeneralRegs[SOFT386_REG_EAX].LowByte;
 
-    return FALSE;
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Fetch the base */
+    if (!Soft386FetchByte(State, &Base))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Adjust */
+    Value += State->GeneralRegs[SOFT386_REG_EAX].HighByte * Base;
+    State->GeneralRegs[SOFT386_REG_EAX].LowByte = Value;
+
+    /* Update flags */
+    State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Value & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Value);
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeXlat)
