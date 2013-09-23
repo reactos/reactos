@@ -1,7 +1,7 @@
 /*
  *    MXWriter implementation
  *
- * Copyright 2011-2012 Nikolay Sivov for CodeWeavers
+ * Copyright 2011-2013 Nikolay Sivov for CodeWeavers
  * Copyright 2011 Thomas Mullaly
  *
  * This library is free software; you can redistribute it and/or
@@ -46,6 +46,8 @@ static const WCHAR emptyW[] = {0};
 static const WCHAR spaceW[] = {' '};
 static const WCHAR quotW[]  = {'\"'};
 static const WCHAR closetagW[] = {'>','\r','\n'};
+static const WCHAR crlfW[] = {'\r','\n'};
+static const WCHAR entityW[] = {'<','!','E','N','T','I','T','Y',' '};
 
 /* should be ordered as encoding names are sorted */
 typedef enum
@@ -148,6 +150,10 @@ typedef struct
     VARIANT_BOOL props[MXWriter_LastProp];
     BOOL prop_changed;
     BOOL cdata;
+
+    BOOL text; /* last node was text node, so we shouldn't indent next node */
+    BOOL newline; /* newline was already added as a part of previous call */
+    UINT indent; /* indentation level for next node */
 
     BSTR version;
 
@@ -457,14 +463,13 @@ static WCHAR *get_escaped_string(const WCHAR *str, escape_mode mode, int *len)
     return ret;
 }
 
-static void write_prolog_buffer(const mxwriter *This)
+static void write_prolog_buffer(mxwriter *This)
 {
     static const WCHAR versionW[] = {'<','?','x','m','l',' ','v','e','r','s','i','o','n','='};
     static const WCHAR encodingW[] = {' ','e','n','c','o','d','i','n','g','=','\"'};
     static const WCHAR standaloneW[] = {' ','s','t','a','n','d','a','l','o','n','e','=','\"'};
     static const WCHAR yesW[] = {'y','e','s','\"','?','>'};
     static const WCHAR noW[] = {'n','o','\"','?','>'};
-    static const WCHAR crlfW[] = {'\r','\n'};
 
     /* version */
     write_output_buffer(This->buffer, versionW, sizeof(versionW)/sizeof(WCHAR));
@@ -486,6 +491,7 @@ static void write_prolog_buffer(const mxwriter *This)
         write_output_buffer(This->buffer, noW, sizeof(noW)/sizeof(WCHAR));
 
     write_output_buffer(This->buffer, crlfW, sizeof(crlfW)/sizeof(WCHAR));
+    This->newline = TRUE;
 }
 
 /* Attempts to the write data from the mxwriter's buffer to
@@ -537,6 +543,41 @@ static void close_element_starttag(const mxwriter *This)
     static const WCHAR gtW[] = {'>'};
     if (!This->element) return;
     write_output_buffer(This->buffer, gtW, 1);
+}
+
+static void write_node_indent(mxwriter *This)
+{
+    static const WCHAR tabW[] = {'\t'};
+    int indent = This->indent;
+
+    if (!This->props[MXWriter_Indent] || This->text)
+    {
+        This->text = FALSE;
+        return;
+    }
+
+    /* This is to workaround PI output logic that always puts newline chars,
+       document prolog PI does that too. */
+    if (!This->newline)
+        write_output_buffer(This->buffer, crlfW, sizeof(crlfW)/sizeof(WCHAR));
+    while (indent--)
+        write_output_buffer(This->buffer, tabW, 1);
+
+    This->newline = FALSE;
+    This->text = FALSE;
+}
+
+static inline void writer_inc_indent(mxwriter *This)
+{
+    This->indent++;
+}
+
+static inline void writer_dec_indent(mxwriter *This)
+{
+    if (This->indent) This->indent--;
+    /* depth is decreased only when element is closed, meaning it's not a text node
+       at this point */
+    This->text = FALSE;
 }
 
 static void set_element_name(mxwriter *This, const WCHAR *name, int len)
@@ -1085,8 +1126,11 @@ static HRESULT WINAPI SAXContentHandler_startElement(
     set_element_name(This, QName ? QName  : emptyW,
                            QName ? nQName : 0);
 
+    write_node_indent(This);
+
     write_output_buffer(This->buffer, ltW, 1);
     write_output_buffer(This->buffer, QName, nQName);
+    writer_inc_indent(This);
 
     if (attr)
     {
@@ -1150,6 +1194,8 @@ static HRESULT WINAPI SAXContentHandler_endElement(
          (nQName == -1 && This->class_version == MSXML6))
         return E_INVALIDARG;
 
+    writer_dec_indent(This);
+
     if (This->element)
     {
         static const WCHAR closeW[] = {'/','>'};
@@ -1160,6 +1206,7 @@ static HRESULT WINAPI SAXContentHandler_endElement(
         static const WCHAR closetagW[] = {'<','/'};
         static const WCHAR gtW[] = {'>'};
 
+        write_node_indent(This);
         write_output_buffer(This->buffer, closetagW, 2);
         write_output_buffer(This->buffer, QName, nQName);
         write_output_buffer(This->buffer, gtW, 1);
@@ -1183,6 +1230,9 @@ static HRESULT WINAPI SAXContentHandler_characters(
 
     close_element_starttag(This);
     set_element_name(This, NULL, 0);
+
+    if (!This->cdata)
+        This->text = TRUE;
 
     if (nchars)
     {
@@ -1233,6 +1283,7 @@ static HRESULT WINAPI SAXContentHandler_processingInstruction(
 
     if (!target) return E_INVALIDARG;
 
+    write_node_indent(This);
     write_output_buffer(This->buffer, openpiW, sizeof(openpiW)/sizeof(WCHAR));
 
     if (*target)
@@ -1245,6 +1296,7 @@ static HRESULT WINAPI SAXContentHandler_processingInstruction(
     }
 
     write_output_buffer(This->buffer, closepiW, sizeof(closepiW)/sizeof(WCHAR));
+    This->newline = TRUE;
 
     return S_OK;
 }
@@ -1384,6 +1436,7 @@ static HRESULT WINAPI SAXLexicalHandler_startCDATA(ISAXLexicalHandler *iface)
 
     TRACE("(%p)\n", This);
 
+    write_node_indent(This);
     write_output_buffer(This->buffer, scdataW, sizeof(scdataW)/sizeof(WCHAR));
     This->cdata = TRUE;
 
@@ -1414,6 +1467,7 @@ static HRESULT WINAPI SAXLexicalHandler_comment(ISAXLexicalHandler *iface, const
     if (!chars) return E_INVALIDARG;
 
     close_element_starttag(This);
+    write_node_indent(This);
 
     write_output_buffer(This->buffer, copenW, sizeof(copenW)/sizeof(WCHAR));
     if (nchars)
@@ -1526,7 +1580,6 @@ static HRESULT WINAPI SAXDeclHandler_internalEntityDecl(ISAXDeclHandler *iface,
     const WCHAR *name, int n_name, const WCHAR *value, int n_value)
 {
     mxwriter *This = impl_from_ISAXDeclHandler( iface );
-    static const WCHAR entityW[] = {'<','!','E','N','T','I','T','Y',' '};
 
     TRACE("(%p)->(%s:%d %s:%d)\n", This, debugstr_wn(name, n_name), n_name,
         debugstr_wn(value, n_value), n_value);
@@ -1551,10 +1604,39 @@ static HRESULT WINAPI SAXDeclHandler_externalEntityDecl(ISAXDeclHandler *iface,
     const WCHAR *name, int n_name, const WCHAR *publicId, int n_publicId,
     const WCHAR *systemId, int n_systemId)
 {
+    static const WCHAR publicW[] = {'P','U','B','L','I','C',' '};
+    static const WCHAR systemW[] = {'S','Y','S','T','E','M',' '};
     mxwriter *This = impl_from_ISAXDeclHandler( iface );
-    FIXME("(%p)->(%s:%d %s:%d %s:%d): stub\n", This, debugstr_wn(name, n_name), n_name,
+
+    TRACE("(%p)->(%s:%d %s:%d %s:%d)\n", This, debugstr_wn(name, n_name), n_name,
         debugstr_wn(publicId, n_publicId), n_publicId, debugstr_wn(systemId, n_systemId), n_systemId);
-    return E_NOTIMPL;
+
+    if (!name) return E_INVALIDARG;
+    if (publicId && !systemId) return E_INVALIDARG;
+    if (!publicId && !systemId) return E_INVALIDARG;
+
+    write_output_buffer(This->buffer, entityW, sizeof(entityW)/sizeof(WCHAR));
+    if (n_name) {
+        write_output_buffer(This->buffer, name, n_name);
+        write_output_buffer(This->buffer, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+    }
+
+    if (publicId)
+    {
+        write_output_buffer(This->buffer, publicW, sizeof(publicW)/sizeof(WCHAR));
+        write_output_buffer_quoted(This->buffer, publicId, n_publicId);
+        write_output_buffer(This->buffer, spaceW, sizeof(spaceW)/sizeof(WCHAR));
+        write_output_buffer_quoted(This->buffer, systemId, n_systemId);
+    }
+    else
+    {
+        write_output_buffer(This->buffer, systemW, sizeof(systemW)/sizeof(WCHAR));
+        write_output_buffer_quoted(This->buffer, systemId, n_systemId);
+    }
+
+    write_output_buffer(This->buffer, closetagW, sizeof(closetagW)/sizeof(WCHAR));
+
+    return S_OK;
 }
 
 static const ISAXDeclHandlerVtbl SAXDeclHandlerVtbl = {
@@ -1612,6 +1694,9 @@ HRESULT MXWriter_create(MSXML_VERSION version, IUnknown *outer, void **ppObj)
 
     This->element = NULL;
     This->cdata = FALSE;
+    This->indent = 0;
+    This->text = FALSE;
+    This->newline = FALSE;
 
     This->dest = NULL;
     This->dest_written = 0;
@@ -1806,11 +1891,32 @@ static HRESULT WINAPI MXAttributes_clear(IMXAttributes *iface)
     return S_OK;
 }
 
+static mxattribute *get_attribute_byindex(mxattributes *attrs, int index)
+{
+    if (index < 0 || index >= attrs->length) return NULL;
+    return &attrs->attr[index];
+}
+
 static HRESULT WINAPI MXAttributes_removeAttribute(IMXAttributes *iface, int index)
 {
     mxattributes *This = impl_from_IMXAttributes( iface );
-    FIXME("(%p)->(%d): stub\n", This, index);
-    return E_NOTIMPL;
+    mxattribute *dst;
+
+    TRACE("(%p)->(%d)\n", This, index);
+
+    if (!(dst = get_attribute_byindex(This, index))) return E_INVALIDARG;
+
+    /* no need to remove last attribute, just make it inaccessible */
+    if (index + 1 == This->length)
+    {
+        This->length--;
+        return S_OK;
+    }
+
+    memmove(dst, dst + 1, (This->length-index-1)*sizeof(*dst));
+    This->length--;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI MXAttributes_setAttribute(IMXAttributes *iface, int index,
@@ -1833,29 +1939,61 @@ static HRESULT WINAPI MXAttributes_setLocalName(IMXAttributes *iface, int index,
     BSTR localName)
 {
     mxattributes *This = impl_from_IMXAttributes( iface );
-    FIXME("(%p)->(%d %s): stub\n", This, index, debugstr_w(localName));
-    return E_NOTIMPL;
+    mxattribute *attr;
+
+    TRACE("(%p)->(%d %s)\n", This, index, debugstr_w(localName));
+
+    if (!(attr = get_attribute_byindex(This, index))) return E_INVALIDARG;
+
+    SysFreeString(attr->local);
+    attr->local = SysAllocString(localName);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI MXAttributes_setQName(IMXAttributes *iface, int index, BSTR QName)
 {
     mxattributes *This = impl_from_IMXAttributes( iface );
-    FIXME("(%p)->(%d %s): stub\n", This, index, debugstr_w(QName));
-    return E_NOTIMPL;
+    mxattribute *attr;
+
+    TRACE("(%p)->(%d %s)\n", This, index, debugstr_w(QName));
+
+    if (!(attr = get_attribute_byindex(This, index))) return E_INVALIDARG;
+
+    SysFreeString(attr->qname);
+    attr->qname = SysAllocString(QName);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI MXAttributes_setURI(IMXAttributes *iface, int index, BSTR uri)
 {
     mxattributes *This = impl_from_IMXAttributes( iface );
-    FIXME("(%p)->(%d %s): stub\n", This, index, debugstr_w(uri));
-    return E_NOTIMPL;
+    mxattribute *attr;
+
+    TRACE("(%p)->(%d %s)\n", This, index, debugstr_w(uri));
+
+    if (!(attr = get_attribute_byindex(This, index))) return E_INVALIDARG;
+
+    SysFreeString(attr->uri);
+    attr->uri = SysAllocString(uri);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI MXAttributes_setValue(IMXAttributes *iface, int index, BSTR value)
 {
     mxattributes *This = impl_from_IMXAttributes( iface );
-    FIXME("(%p)->(%d %s): stub\n", This, index, debugstr_w(value));
-    return E_NOTIMPL;
+    mxattribute *attr;
+
+    TRACE("(%p)->(%d %s)\n", This, index, debugstr_w(value));
+
+    if (!(attr = get_attribute_byindex(This, index))) return E_INVALIDARG;
+
+    SysFreeString(attr->value);
+    attr->value = SysAllocString(value);
+
+    return S_OK;
 }
 
 static const IMXAttributesVtbl MXAttributesVtbl = {

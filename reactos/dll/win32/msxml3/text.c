@@ -333,7 +333,7 @@ static HRESULT WINAPI domtext_hasChildNodes(
 {
     domtext *This = impl_from_IXMLDOMText( iface );
     TRACE("(%p)->(%p)\n", This, ret);
-    return node_has_childnodes(&This->node, ret);
+    return return_var_false(ret);
 }
 
 static HRESULT WINAPI domtext_get_ownerDocument(

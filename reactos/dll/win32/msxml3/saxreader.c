@@ -1268,6 +1268,49 @@ static const struct ISAXAttributesVtbl isaxattributes_vtbl =
     isaxattributes_getValueFromQName
 };
 
+/* Libxml2 escapes '&' back to char reference '&#38;' in attribute value,
+   so when document has escaped value with '&amp;' it's parsed to '&' and then
+   escaped to '&#38;'. This function takes care of ampersands only. */
+static BSTR saxreader_get_unescaped_value(const xmlChar *buf, int len)
+{
+    static const WCHAR ampescW[] = {'&','#','3','8',';',0};
+    WCHAR *dest, *ptrW, *str;
+    DWORD str_len;
+    BSTR bstr;
+
+    if (!buf)
+        return NULL;
+
+    str_len = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)buf, len, NULL, 0);
+    if (len != -1) str_len++;
+
+    str = heap_alloc(str_len*sizeof(WCHAR));
+    if (!str) return NULL;
+
+    MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)buf, len, str, str_len);
+    if (len != -1) str[str_len-1] = 0;
+
+    ptrW = str;
+    while ((dest = strstrW(ptrW, ampescW)))
+    {
+        WCHAR *src;
+
+        /* leave first '&' from a reference as a value */
+        src = dest + (sizeof(ampescW)/sizeof(WCHAR) - 1);
+        dest++;
+
+        /* move together with null terminator */
+        memmove(dest, src, (strlenW(src) + 1)*sizeof(WCHAR));
+
+        ptrW++;
+    }
+
+    bstr = SysAllocString(str);
+    heap_free(str);
+
+    return bstr;
+}
+
 static HRESULT SAXAttributes_populate(saxlocator *locator,
         int nb_namespaces, const xmlChar **xmlNamespaces,
         int nb_attributes, const xmlChar **xmlAttributes)
@@ -1320,8 +1363,7 @@ static HRESULT SAXAttributes_populate(saxlocator *locator,
             attrs[i].szURI = find_element_uri(locator, xmlAttributes[i*5+2]);
 
         attrs[i].szLocalname = bstr_from_xmlChar(xmlAttributes[i*5]);
-        attrs[i].szValue = bstr_from_xmlCharN(xmlAttributes[i*5+3],
-                xmlAttributes[i*5+4]-xmlAttributes[i*5+3]);
+        attrs[i].szValue = saxreader_get_unescaped_value(xmlAttributes[i*5+3], xmlAttributes[i*5+4]-xmlAttributes[i*5+3]);
         attrs[i].szQName = QName_from_xmlChar(xmlAttributes[i*5+1],
                 xmlAttributes[i*5]);
     }

@@ -55,7 +55,7 @@ typedef struct
 static const tid_t domcdata_se_tids[] = {
     IXMLDOMNode_tid,
     IXMLDOMCDATASection_tid,
-    0
+    NULL_tid
 };
 
 static inline domcdata *impl_from_IXMLDOMCDATASection( IXMLDOMCDATASection *iface )
@@ -336,7 +336,7 @@ static HRESULT WINAPI domcdata_hasChildNodes(
 {
     domcdata *This = impl_from_IXMLDOMCDATASection( iface );
     TRACE("(%p)->(%p)\n", This, ret);
-    return node_has_childnodes(&This->node, ret);
+    return return_var_false(ret);
 }
 
 static HRESULT WINAPI domcdata_get_ownerDocument(

@@ -55,7 +55,7 @@ typedef struct _domcomment
 static const tid_t domcomment_se_tids[] = {
     IXMLDOMNode_tid,
     IXMLDOMComment_tid,
-    0
+    NULL_tid
 };
 
 static inline domcomment *impl_from_IXMLDOMComment( IXMLDOMComment *iface )
@@ -335,7 +335,7 @@ static HRESULT WINAPI domcomment_hasChildNodes(
 {
     domcomment *This = impl_from_IXMLDOMComment( iface );
     TRACE("(%p)->(%p)\n", This, ret);
-    return node_has_childnodes(&This->node, ret);
+    return return_var_false(ret);
 }
 
 static HRESULT WINAPI domcomment_get_ownerDocument(

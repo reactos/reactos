@@ -475,6 +475,15 @@ static inline HRESULT return_null_bstr(BSTR *p)
     return S_FALSE;
 }
 
+static inline HRESULT return_var_false(VARIANT_BOOL *p)
+{
+    if(!p)
+        return E_INVALIDARG;
+
+    *p = VARIANT_FALSE;
+    return S_FALSE;
+}
+
 extern IXMLDOMParseError *create_parseError( LONG code, BSTR url, BSTR reason, BSTR srcText,
                                              LONG line, LONG linepos, LONG filepos ) DECLSPEC_HIDDEN;
 extern HRESULT DOMDocument_create(MSXML_VERSION, IUnknown*, void**) DECLSPEC_HIDDEN;

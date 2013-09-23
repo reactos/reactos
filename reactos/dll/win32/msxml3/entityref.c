@@ -55,7 +55,7 @@ typedef struct _entityref
 static const tid_t domentityref_se_tids[] = {
     IXMLDOMNode_tid,
     IXMLDOMEntityReference_tid,
-    0
+    NULL_tid
 };
 
 static inline entityref *impl_from_IXMLDOMEntityReference( IXMLDOMEntityReference *iface )
