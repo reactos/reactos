@@ -42,7 +42,7 @@ static HINSTANCE MSRLE32_hModule = 0;
 #define QUALITY_to_DIST(q)    (ICQUALITY_HIGH - q)
 static inline WORD ColorCmp(WORD clr1, WORD clr2)
 {
-  register UINT a = (clr1-clr2);
+  UINT a = clr1 - clr2;
   return SQR(a);
 }
 static inline WORD Intensity(RGBQUAD clr)
@@ -1535,7 +1535,7 @@ static LRESULT Compress(CodecInfo *pi, ICCOMPRESS* lpic, DWORD dwSize)
 
   { /* swap buffer for current and previous frame */
     /* Don't free and alloc new -- costs to much time and they are of equal size ! */
-    register LPWORD pTmp = pi->pPrevFrame;
+    LPWORD pTmp = pi->pPrevFrame;
 
     pi->pPrevFrame = pi->pCurFrame;
     pi->pCurFrame  = pTmp;
@@ -1916,9 +1916,6 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpReserved)
   case DLL_PROCESS_ATTACH:
     DisableThreadLibraryCalls(hModule);
     MSRLE32_hModule = hModule;
-    break;
-
-  case DLL_PROCESS_DETACH:
     break;
   }
 
