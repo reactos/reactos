@@ -733,7 +733,7 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 	ret = TRUE;
 	if (gpp.mach.BroadcastCapacityResolution != gpp_compare.mach.BroadcastCapacityResolution)
 	{
-		printf("mach.BroadcastCapacityResolution failed %i != %i\n",gpp.mach.BroadcastCapacityResolution,gpp_compare.mach.BroadcastCapacityResolution);
+		printf("mach.BroadcastCapacityResolution failed %lu != %lu\n",gpp.mach.BroadcastCapacityResolution,gpp_compare.mach.BroadcastCapacityResolution);
 		ret = FALSE;
 	}
 	if (gpp.mach.LidOpenWakeAc != gpp_compare.mach.LidOpenWakeAc)
@@ -748,7 +748,7 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 	}
 	if (gpp.mach.Revision != gpp_compare.mach.Revision)
 	{
-		printf("mach.Revision failed %i != %i\n",gpp.mach.Revision,gpp_compare.mach.Revision);
+		printf("mach.Revision failed %lu != %lu\n",gpp.mach.Revision,gpp_compare.mach.Revision);
 		ret = FALSE;
 	}
 
@@ -759,12 +759,12 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 	}
 	if (gpp.user.PowerButtonAc.EventCode != gpp_compare.user.PowerButtonAc.EventCode)
 	{
-		printf("user.PowerButtonAc.EventCode failed %i != %i\n",gpp.user.PowerButtonAc.EventCode,gpp_compare.user.PowerButtonAc.EventCode);
+		printf("user.PowerButtonAc.EventCode failed %lu != %lu\n",gpp.user.PowerButtonAc.EventCode,gpp_compare.user.PowerButtonAc.EventCode);
 		ret = FALSE;
 	}
 	if (gpp.user.PowerButtonAc.Flags != gpp_compare.user.PowerButtonAc.Flags)
 	{
-		printf("user.PowerButtonAc.Flags failed %i != %i\n",gpp.user.PowerButtonAc.Flags,gpp_compare.user.PowerButtonAc.Flags);
+		printf("user.PowerButtonAc.Flags failed %lu != %lu\n",gpp.user.PowerButtonAc.Flags,gpp_compare.user.PowerButtonAc.Flags);
 		ret = FALSE;
 	}
 	if (gpp.user.PowerButtonDc.Action != gpp_compare.user.PowerButtonDc.Action)
@@ -774,12 +774,12 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 	}
 	if (gpp.user.PowerButtonDc.EventCode != gpp_compare.user.PowerButtonDc.EventCode)
 	{
-		printf("user.PowerButtonDc.EventCode failed %i != %i\n",gpp.user.PowerButtonDc.EventCode,gpp_compare.user.PowerButtonDc.EventCode);
+		printf("user.PowerButtonDc.EventCode failed %lu != %lu\n",gpp.user.PowerButtonDc.EventCode,gpp_compare.user.PowerButtonDc.EventCode);
 		ret = FALSE;
 	}
 	if (gpp.user.PowerButtonDc.Flags != gpp_compare.user.PowerButtonDc.Flags)
 	{
-		printf("user.PowerButtonDc.Flags failed %i != %i\n",gpp.user.PowerButtonDc.Flags,gpp_compare.user.PowerButtonDc.Flags);
+		printf("user.PowerButtonDc.Flags failed %lu != %lu\n",gpp.user.PowerButtonDc.Flags,gpp_compare.user.PowerButtonDc.Flags);
 		ret = FALSE;
 	}
     if (gpp.user.SleepButtonAc.Action != gpp_compare.user.SleepButtonAc.Action)
@@ -789,12 +789,12 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 	}
 	if (gpp.user.SleepButtonAc.EventCode != gpp_compare.user.SleepButtonAc.EventCode)
 	{
-		printf("user.SleepButtonAc.EventCode failed %i != %i\n",gpp.user.SleepButtonAc.EventCode,gpp_compare.user.SleepButtonAc.EventCode);
+		printf("user.SleepButtonAc.EventCode failed %lu != %lu\n",gpp.user.SleepButtonAc.EventCode,gpp_compare.user.SleepButtonAc.EventCode);
 		ret = FALSE;
 	}
 	if (gpp.user.SleepButtonAc.Flags != gpp_compare.user.SleepButtonAc.Flags)
 	{
-		printf("user.SleepButtonAc.Flags failed %i != %i\n",gpp.user.SleepButtonAc.Flags,gpp_compare.user.SleepButtonAc.Flags);
+		printf("user.SleepButtonAc.Flags failed %lu != %lu\n",gpp.user.SleepButtonAc.Flags,gpp_compare.user.SleepButtonAc.Flags);
 		ret = FALSE;
 	}
 	if (gpp.user.SleepButtonDc.Action != gpp_compare.user.SleepButtonDc.Action)
@@ -804,12 +804,12 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 	}
 	if (gpp.user.SleepButtonDc.EventCode != gpp_compare.user.SleepButtonDc.EventCode)
 	{
-		printf("user.SleepButtonDc.EventCode failed %i != %i\n",gpp.user.SleepButtonDc.EventCode,gpp_compare.user.SleepButtonDc.EventCode);
+		printf("user.SleepButtonDc.EventCode failed %lu != %lu\n",gpp.user.SleepButtonDc.EventCode,gpp_compare.user.SleepButtonDc.EventCode);
 		ret = FALSE;
 	}
 	if (gpp.user.SleepButtonDc.Flags != gpp_compare.user.SleepButtonDc.Flags)
 	{
-		printf("user.SleepButtonDc.Flags failed %i != %i\n",gpp.user.SleepButtonDc.Flags,gpp_compare.user.SleepButtonDc.Flags);
+		printf("user.SleepButtonDc.Flags failed %lu != %lu\n",gpp.user.SleepButtonDc.Flags,gpp_compare.user.SleepButtonDc.Flags);
 		ret = FALSE;
 	}
 	if (gpp.user.LidCloseAc.Action != gpp_compare.user.LidCloseAc.Action)
@@ -819,12 +819,12 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 	}
 	if (gpp.user.LidCloseAc.EventCode != gpp_compare.user.LidCloseAc.EventCode)
 	{
-		printf("user.LidCloseAc.EventCode failed %i != %i\n",gpp.user.LidCloseAc.EventCode,gpp_compare.user.LidCloseAc.EventCode);
+		printf("user.LidCloseAc.EventCode failed %lu != %lu\n",gpp.user.LidCloseAc.EventCode,gpp_compare.user.LidCloseAc.EventCode);
 		ret = FALSE;
 	}
 	if (gpp.user.LidCloseAc.Flags != gpp_compare.user.LidCloseAc.Flags)
 	{
-		printf("user.LidCloseAc.Flags failed %i != %i\n",gpp.user.LidCloseAc.Flags,gpp_compare.user.LidCloseAc.Flags);
+		printf("user.LidCloseAc.Flags failed %lu != %lu\n",gpp.user.LidCloseAc.Flags,gpp_compare.user.LidCloseAc.Flags);
 		ret = FALSE;
 	}
 	if (gpp.user.LidCloseDc.Action != gpp_compare.user.LidCloseDc.Action)
@@ -834,12 +834,12 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 	}
 	if (gpp.user.LidCloseDc.EventCode != gpp_compare.user.LidCloseDc.EventCode)
 	{
-		printf("user.LidCloseDc.EventCode failed %i != %i\n",gpp.user.LidCloseDc.EventCode,gpp_compare.user.LidCloseDc.EventCode);
+		printf("user.LidCloseDc.EventCode failed %lu != %lu\n",gpp.user.LidCloseDc.EventCode,gpp_compare.user.LidCloseDc.EventCode);
 		ret = FALSE;
 	}
 	if (gpp.user.LidCloseDc.Flags != gpp_compare.user.LidCloseDc.Flags)
 	{
-		printf("user.LidCloseDc.Flags failed %i != %i\n",gpp.user.LidCloseDc.Flags,gpp_compare.user.LidCloseDc.Flags);
+		printf("user.LidCloseDc.Flags failed %lu != %lu\n",gpp.user.LidCloseDc.Flags,gpp_compare.user.LidCloseDc.Flags);
 		ret = FALSE;
 	}
 
@@ -860,7 +860,7 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 		}
 		if (gpp.user.DischargePolicy[i].BatteryLevel != gpp_compare.user.DischargePolicy[i].BatteryLevel)
 		{
-			printf("user.DischargePolicy(%i).BatteryLevel failed %i != %i\n",i, gpp.user.DischargePolicy[i].BatteryLevel,gpp_compare.user.DischargePolicy[i].BatteryLevel);
+			printf("user.DischargePolicy(%i).BatteryLevel failed %lu != %lu\n",i, gpp.user.DischargePolicy[i].BatteryLevel,gpp_compare.user.DischargePolicy[i].BatteryLevel);
 		    ret = FALSE;
 		}
 		if (gpp.user.DischargePolicy[i].PowerPolicy.Action != gpp_compare.user.DischargePolicy[i].PowerPolicy.Action)
@@ -870,12 +870,12 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 		}
 		if (gpp.user.DischargePolicy[i].PowerPolicy.Flags != gpp_compare.user.DischargePolicy[i].PowerPolicy.Flags)
 		{
-			printf("user.DischargePolicy(%i).PowerPolicy.Flags failed %i != %i\n",i, gpp.user.DischargePolicy[i].PowerPolicy.Flags,gpp_compare.user.DischargePolicy[i].PowerPolicy.Flags);
+			printf("user.DischargePolicy(%i).PowerPolicy.Flags failed %lu != %lu\n",i, gpp.user.DischargePolicy[i].PowerPolicy.Flags,gpp_compare.user.DischargePolicy[i].PowerPolicy.Flags);
 		    ret = FALSE;
 		}
 		if (gpp.user.DischargePolicy[i].PowerPolicy.EventCode != gpp_compare.user.DischargePolicy[i].PowerPolicy.EventCode)
 		{
-			printf("user.DischargePolicy(%i).PowerPolicy.EventCode failed %i != %i\n",i, gpp.user.DischargePolicy[i].PowerPolicy.EventCode,gpp_compare.user.DischargePolicy[i].PowerPolicy.EventCode);
+			printf("user.DischargePolicy(%i).PowerPolicy.EventCode failed %lu != %lu\n",i, gpp.user.DischargePolicy[i].PowerPolicy.EventCode,gpp_compare.user.DischargePolicy[i].PowerPolicy.EventCode);
 		    ret = FALSE;
 		}
 		if (gpp.user.DischargePolicy[i].MinSystemState != gpp_compare.user.DischargePolicy[i].MinSystemState)
@@ -886,12 +886,12 @@ BOOLEAN globalcompare(GLOBAL_POWER_POLICY gpp, GLOBAL_POWER_POLICY gpp_compare)
 	}
     if (gpp.user.GlobalFlags != gpp_compare.user.GlobalFlags)
 	{
-		printf("user.GlobalFlags failed %i != %i\n",gpp.user.GlobalFlags,gpp_compare.user.GlobalFlags);
+		printf("user.GlobalFlags failed %lu != %lu\n",gpp.user.GlobalFlags,gpp_compare.user.GlobalFlags);
 		ret = FALSE;
 	}
 	if (gpp.user.Revision != gpp_compare.user.Revision)
 	{
-		printf("user.Revision failed %i != %i\n",gpp.user.Revision,gpp_compare.user.Revision);
+		printf("user.Revision failed %lu != %lu\n",gpp.user.Revision,gpp_compare.user.Revision);
 		ret = FALSE;
 	}
     return ret;
@@ -903,12 +903,12 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 
 	if (pp.mach.DozeS4TimeoutAc != pp_compare.mach.DozeS4TimeoutAc)
 	{
-		printf("mach.DozeS4TimeoutAc failed %i != %i\n",pp.mach.DozeS4TimeoutAc,pp_compare.mach.DozeS4TimeoutAc);
+		printf("mach.DozeS4TimeoutAc failed %lu != %lu\n",pp.mach.DozeS4TimeoutAc,pp_compare.mach.DozeS4TimeoutAc);
 		ret = FALSE;
 	}
 	if (pp.mach.DozeS4TimeoutDc != pp_compare.mach.DozeS4TimeoutDc)
 	{
-		printf("mach.DozeS4TimeoutDc failed %i != %i\n",pp.mach.DozeS4TimeoutDc,pp_compare.mach.DozeS4TimeoutDc);
+		printf("mach.DozeS4TimeoutDc failed %lu != %lu\n",pp.mach.DozeS4TimeoutDc,pp_compare.mach.DozeS4TimeoutDc);
 		ret = FALSE;
 	}
 	if (pp.mach.MinSleepAc != pp_compare.mach.MinSleepAc)
@@ -923,12 +923,12 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 	}
 	if (pp.mach.DozeTimeoutAc != pp_compare.mach.DozeTimeoutAc)
 	{
-		printf("mach.DozeTimeoutAc failed %i != %i\n",pp.mach.DozeTimeoutAc,pp_compare.mach.DozeTimeoutAc);
+		printf("mach.DozeTimeoutAc failed %lu != %lu\n",pp.mach.DozeTimeoutAc,pp_compare.mach.DozeTimeoutAc);
 		ret = FALSE;
 	}
 	if (pp.mach.DozeTimeoutDc != pp_compare.mach.DozeTimeoutDc)
 	{
-		printf("mach.DozeTimeoutDc failed %i != %i\n",pp.mach.DozeTimeoutDc,pp_compare.mach.DozeTimeoutDc);
+		printf("mach.DozeTimeoutDc failed %lu != %lu\n",pp.mach.DozeTimeoutDc,pp_compare.mach.DozeTimeoutDc);
 		ret = FALSE;
 	}
 	if (pp.mach.ReducedLatencySleepAc != pp_compare.mach.ReducedLatencySleepAc)
@@ -959,12 +959,12 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 	}
 	if (pp.mach.OverThrottledAc.Flags != pp_compare.mach.OverThrottledAc.Flags)
 	{
-		printf("mach.OverThrottledAc.Flags failed %i != %i\n",pp.mach.OverThrottledAc.Flags,pp_compare.mach.OverThrottledAc.Flags);
+		printf("mach.OverThrottledAc.Flags failed %lu != %lu\n",pp.mach.OverThrottledAc.Flags,pp_compare.mach.OverThrottledAc.Flags);
 		ret = FALSE;
 	}
 	if (pp.mach.OverThrottledAc.EventCode != pp_compare.mach.OverThrottledAc.EventCode)
 	{
-		printf("mach.OverThrottledAc.EventCode failed %i != %i\n",pp.mach.OverThrottledAc.EventCode,pp_compare.mach.OverThrottledAc.EventCode);
+		printf("mach.OverThrottledAc.EventCode failed %lu != %lu\n",pp.mach.OverThrottledAc.EventCode,pp_compare.mach.OverThrottledAc.EventCode);
 		ret = FALSE;
 	}
 	if (pp.mach.OverThrottledDc.Action != pp_compare.mach.OverThrottledDc.Action)
@@ -974,12 +974,12 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 	}
 	if (pp.mach.OverThrottledDc.Flags != pp_compare.mach.OverThrottledDc.Flags)
 	{
-		printf("mach.OverThrottledDc.Flags failed %i != %i\n",pp.mach.OverThrottledDc.Flags,pp_compare.mach.OverThrottledDc.Flags);
+		printf("mach.OverThrottledDc.Flags failed %lu != %lu\n",pp.mach.OverThrottledDc.Flags,pp_compare.mach.OverThrottledDc.Flags);
 		ret = FALSE;
 	}
 	if (pp.mach.OverThrottledDc.EventCode != pp_compare.mach.OverThrottledDc.EventCode)
 	{
-		printf("mach.OverThrottledDc.EventCode failed %i != %i\n",pp.mach.OverThrottledDc.EventCode,pp_compare.mach.OverThrottledDc.EventCode);
+		printf("mach.OverThrottledDc.EventCode failed %lu != %lu\n",pp.mach.OverThrottledDc.EventCode,pp_compare.mach.OverThrottledDc.EventCode);
 		ret = FALSE;
 	}
 
@@ -995,7 +995,7 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 	}
 	if (pp.mach.Revision != pp_compare.mach.Revision)
 	{
-		printf("mach.Revision failed %i != %i\n",pp.mach.Revision,pp_compare.mach.Revision);
+		printf("mach.Revision failed %lu != %lu\n",pp.mach.Revision,pp_compare.mach.Revision);
 		ret = FALSE;
 	}
 
@@ -1006,12 +1006,12 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 	}
 	if (pp.user.IdleAc.Flags != pp_compare.user.IdleAc.Flags)
 	{
-		printf("user.IdleAc.Flags failed %i != %i\n",pp.user.IdleAc.Flags,pp_compare.user.IdleAc.Flags);
+		printf("user.IdleAc.Flags failed %lu != %lu\n",pp.user.IdleAc.Flags,pp_compare.user.IdleAc.Flags);
 		ret = FALSE;
 	}
 	if (pp.user.IdleAc.EventCode != pp_compare.user.IdleAc.EventCode)
 	{
-		printf("user.IdleAc.EventCode failed %i != %i\n",pp.user.IdleAc.EventCode,pp_compare.user.IdleAc.EventCode);
+		printf("user.IdleAc.EventCode failed %lu != %lu\n",pp.user.IdleAc.EventCode,pp_compare.user.IdleAc.EventCode);
 		ret = FALSE;
 	}
 	if (pp.user.IdleDc.Action != pp_compare.user.IdleDc.Action)
@@ -1021,22 +1021,22 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 	}
 	if (pp.user.IdleDc.Flags != pp_compare.user.IdleDc.Flags)
 	{
-		printf("user.IdleDc.Flags failed %i != %i\n",pp.user.IdleDc.Flags,pp_compare.user.IdleDc.Flags);
+		printf("user.IdleDc.Flags failed %lu != %lu\n",pp.user.IdleDc.Flags,pp_compare.user.IdleDc.Flags);
 		ret = FALSE;
 	}
 	if (pp.user.IdleDc.EventCode != pp_compare.user.IdleDc.EventCode)
 	{
-		printf("user.IdleDc.EventCode failed %i != %i\n",pp.user.IdleDc.EventCode,pp_compare.user.IdleDc.EventCode);
+		printf("user.IdleDc.EventCode failed %lu != %lu\n",pp.user.IdleDc.EventCode,pp_compare.user.IdleDc.EventCode);
 		ret = FALSE;
 	}
 	if (pp.user.IdleTimeoutAc != pp_compare.user.IdleTimeoutAc)
 	{
-		printf("user.IdleTimeoutAc failed %i != %i\n",pp.user.IdleTimeoutAc,pp_compare.user.IdleTimeoutAc);
+		printf("user.IdleTimeoutAc failed %lu != %lu\n",pp.user.IdleTimeoutAc,pp_compare.user.IdleTimeoutAc);
 		ret = FALSE;
 	}
 	if (pp.user.IdleTimeoutDc != pp_compare.user.IdleTimeoutDc)
 	{
-		printf("user.IdleTimeoutDc failed %i != %i\n",pp.user.IdleTimeoutDc,pp_compare.user.IdleTimeoutDc);
+		printf("user.IdleTimeoutDc failed %lu != %lu\n",pp.user.IdleTimeoutDc,pp_compare.user.IdleTimeoutDc);
 		ret = FALSE;
 	}
 	if (pp.user.IdleSensitivityAc != pp_compare.user.IdleSensitivityAc)
@@ -1071,38 +1071,38 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 	}
 	if (pp.user.Reserved[0] != pp_compare.user.Reserved[0])
 	{
-		printf("user.Reserved[0] failed %i != %i\n",pp.user.Reserved[0],pp_compare.user.Reserved[0]);
+		printf("user.Reserved[0] failed %lu != %lu\n",pp.user.Reserved[0],pp_compare.user.Reserved[0]);
 		ret = FALSE;
 	}
 	if (pp.user.Reserved[1] != pp_compare.user.Reserved[1])
 	{
-		printf("user.Reserved[1] failed %i != %i\n",pp.user.Reserved[1],pp_compare.user.Reserved[1]);
+		printf("user.Reserved[1] failed %lu != %lu\n",pp.user.Reserved[1],pp_compare.user.Reserved[1]);
 		ret = FALSE;
 	}
 	if (pp.user.Reserved[2] != pp_compare.user.Reserved[2])
 	{
-		printf("user.Reserved[2] failed %i != %i\n",pp.user.Reserved[2],pp_compare.user.Reserved[2]);
+		printf("user.Reserved[2] failed %lu != %lu\n",pp.user.Reserved[2],pp_compare.user.Reserved[2]);
 		ret = FALSE;
 	}
 	if (pp.user.VideoTimeoutAc != pp_compare.user.VideoTimeoutAc)
 	{
-		printf("user.VideoTimeoutAc failed %i != %i\n",pp.user.VideoTimeoutAc,pp_compare.user.VideoTimeoutAc);
+		printf("user.VideoTimeoutAc failed %lu != %lu\n",pp.user.VideoTimeoutAc,pp_compare.user.VideoTimeoutAc);
 		ret = FALSE;
 	}
 	if (pp.user.VideoTimeoutDc != pp_compare.user.VideoTimeoutDc)
 	{
-		printf("user.VideoTimeoutDc failed %i != %i\n",pp.user.VideoTimeoutDc,pp_compare.user.VideoTimeoutDc);
+		printf("user.VideoTimeoutDc failed %lu != %lu\n",pp.user.VideoTimeoutDc,pp_compare.user.VideoTimeoutDc);
 		ret = FALSE;
 	}
 
 	if (pp.user.SpindownTimeoutAc != pp_compare.user.SpindownTimeoutAc)
 	{
-		printf("user.SpindownTimeoutAc failed %i != %i\n",pp.user.SpindownTimeoutAc,pp_compare.user.SpindownTimeoutAc);
+		printf("user.SpindownTimeoutAc failed %lu != %lu\n",pp.user.SpindownTimeoutAc,pp_compare.user.SpindownTimeoutAc);
 		ret = FALSE;
 	}
 	if (pp.user.SpindownTimeoutDc != pp_compare.user.SpindownTimeoutDc)
 	{
-		printf("user.SpindownTimeoutDc failed %i != %i\n",pp.user.SpindownTimeoutDc,pp_compare.user.SpindownTimeoutDc);
+		printf("user.SpindownTimeoutDc failed %lu != %lu\n",pp.user.SpindownTimeoutDc,pp_compare.user.SpindownTimeoutDc);
 		ret = FALSE;
 	}
 	if (pp.user.OptimizeForPowerAc != pp_compare.user.OptimizeForPowerAc)
@@ -1137,7 +1137,7 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 	}
 	if (pp.user.Revision != pp_compare.user.Revision)
 	{
-		printf("user.Revision failed %i != %i\n",pp.user.Revision,pp_compare.user.Revision);
+		printf("user.Revision failed %lu != %lu\n",pp.user.Revision,pp_compare.user.Revision);
 		ret = FALSE;
 	}
 
