@@ -630,7 +630,7 @@
 @ stdcall RtlGetLastWin32Error()
 @ stdcall RtlGetLengthWithoutLastFullDosOrNtPathElement(long ptr ptr)
 ; Yes, Microsoft really misspelled this one!
-;@ stdcall RtlGetLengthWithoutTrailingPathSeperators
+@ stdcall RtlGetLengthWithoutTrailingPathSeperators(long ptr ptr) RtlGetLengthWithoutTrailingPathSeparators
 @ stdcall RtlGetLongestNtPathLength()
 @ stdcall RtlGetNativeSystemInformation(long long long long) NtQuerySystemInformation
 @ stdcall RtlGetNextRange(ptr ptr long)

@@ -2726,6 +2726,15 @@ RtlGetFullPathName_UstrEx(
 );
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetLengthWithoutTrailingPathSeparators(
+    _In_ ULONG Flags,
+    _In_ PCUNICODE_STRING PathString,
+    _Out_ PULONG Length
+);
+
+NTSYSAPI
 ULONG
 NTAPI
 RtlGetLongestNtPathLength(

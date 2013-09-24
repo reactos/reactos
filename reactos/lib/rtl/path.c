@@ -1253,6 +1253,48 @@ RtlGetLongestNtPathLength(VOID)
 
 /*
  * @implemented
+ * @note: the export is called RtlGetLengthWithoutTrailingPathSeperators
+ *        (with a 'e' instead of a 'a' in "Seperators").
+ */
+NTSTATUS
+NTAPI
+RtlGetLengthWithoutTrailingPathSeparators(IN  ULONG Flags,
+                                          IN  PCUNICODE_STRING PathString,
+                                          OUT PULONG Length)
+{
+    ULONG NumChars;
+
+    /* Parameters validation */
+    if (Length == NULL) return STATUS_INVALID_PARAMETER;
+
+    *Length = 0;
+
+    if (PathString == NULL) return STATUS_INVALID_PARAMETER;
+
+    /* No flags are supported yet */
+    if (Flags != 0) return STATUS_INVALID_PARAMETER;
+
+    NumChars = PathString->Length / sizeof(WCHAR);
+
+    /*
+     * Notice that we skip the last character, therefore:
+     * - if we have: "some/path/f" we test for: "some/path/"
+     * - if we have: "some/path/"  we test for: "some/path"
+     * - if we have: "s" we test for: ""
+     * - if we have: "" then NumChars was already zero and we aren't there
+     */
+
+    while (NumChars > 0 && IS_PATH_SEPARATOR(PathString->Buffer[NumChars - 1]))
+    {
+        --NumChars;
+    }
+
+    *Length = NumChars;
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
  */
 RTL_PATH_TYPE
 NTAPI
