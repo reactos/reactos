@@ -11,7 +11,13 @@
 
 #pragma once
 
-typedef VOID (CALLBACK * BASE_PROCESS_CREATE_NOTIFY_ROUTINE)(PVOID);
+typedef
+BOOL
+(CALLBACK * BASE_PROCESS_CREATE_NOTIFY_ROUTINE)(
+    HANDLE NewProcessId,
+    HANDLE SourceThreadId,
+    DWORD dwUnknown,
+    ULONG CreateFlags);
 
 NTSTATUS WINAPI BaseSetProcessCreateNotify(BASE_PROCESS_CREATE_NOTIFY_ROUTINE);
 
@@ -62,7 +68,7 @@ typedef struct _NLS_USER_INFO
 } NLS_USER_INFO, *PNLS_USER_INFO;
 C_ASSERT(sizeof(NLS_USER_INFO) == 0x1870);
 
-typedef struct _INIFILE_MAPPING_TARGET 
+typedef struct _INIFILE_MAPPING_TARGET
 {
     struct _INIFILE_MAPPING_TARGET *Next;
     UNICODE_STRING RegistryPath;
@@ -125,7 +131,9 @@ typedef struct _BASE_STATIC_SERVER_DATA
     BOOLEAN LUIDDeviceMapsEnabled;
     ULONG TermsrvClientTimeZoneChangeNum;
 } BASE_STATIC_SERVER_DATA, *PBASE_STATIC_SERVER_DATA;
+#ifndef _WIN64
 C_ASSERT(sizeof(BASE_STATIC_SERVER_DATA) == 0x1AC8);
+#endif
 
 VOID WINAPI BaseSrvNLSInit(IN PBASE_STATIC_SERVER_DATA StaticData);
 

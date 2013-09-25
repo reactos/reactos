@@ -2436,7 +2436,7 @@ NtUserNotifyIMEStatus(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOL
 NTAPI
 NtUserNotifyProcessCreate(
     HANDLE NewProcessId,

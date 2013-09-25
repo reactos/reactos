@@ -707,7 +707,7 @@ NtUserHardErrorControl(
     return 0;
 }
 
-DWORD
+BOOL
 NTAPI
 NtUserNotifyProcessCreate(
     HANDLE NewProcessId,
@@ -716,7 +716,7 @@ NtUserNotifyProcessCreate(
     ULONG CreateFlags)
 {
     STUB;
-    return 0;
+    return FALSE;
 }
 
 NTSTATUS
