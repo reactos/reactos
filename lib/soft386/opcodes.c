@@ -4492,10 +4492,75 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLds)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeEnter)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    INT i;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
+    USHORT FrameSize;
+    UCHAR NestingLevel;
+    SOFT386_REG FramePointer;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xC8);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    if (!Soft386FetchWord(State, &FrameSize))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!Soft386FetchByte(State, &NestingLevel))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Push EBP */
+    if (!Soft386StackPush(State, State->GeneralRegs[SOFT386_REG_EBP].Long))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Save ESP */
+    FramePointer = State->GeneralRegs[SOFT386_REG_ESP];
+
+    /* Set up the nested procedure stacks */
+    for (i = 1; i < NestingLevel; i++)
+    {
+        if (Size)
+        {
+            State->GeneralRegs[SOFT386_REG_EBP].Long -= 4;
+            Soft386StackPush(State, State->GeneralRegs[SOFT386_REG_EBP].Long);
+        }
+        else
+        {
+            State->GeneralRegs[SOFT386_REG_EBP].LowWord -= 2;
+            Soft386StackPush(State, State->GeneralRegs[SOFT386_REG_EBP].LowWord);
+        }
+    }
+
+    if (NestingLevel > 0) Soft386StackPush(State, FramePointer.Long);
+
+    /* Set EBP to the frame pointer */
+    State->GeneralRegs[SOFT386_REG_EBP] = FramePointer;
+
+    /* Reserve space for the frame */
+    if (Size) State->GeneralRegs[SOFT386_REG_ESP].Long -= (ULONG)FrameSize;
+    else State->GeneralRegs[SOFT386_REG_ESP].LowWord -= FrameSize;
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeLeave)
