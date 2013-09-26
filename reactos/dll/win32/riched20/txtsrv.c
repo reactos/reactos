@@ -77,7 +77,7 @@ static HRESULT WINAPI ITextServicesImpl_QueryInterface(IUnknown *iface, REFIID r
 
    if (IsEqualIID(riid, &IID_IUnknown))
       *ppv = &This->IUnknown_inner;
-   else if IsEqualIID(riid, &IID_ITextServices)
+   else if (IsEqualIID(riid, &IID_ITextServices))
       *ppv = &This->ITextServices_iface;
    else {
       *ppv = NULL;
