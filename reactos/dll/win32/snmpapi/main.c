@@ -133,8 +133,6 @@ BOOL WINAPI DllMain(
         DisableThreadLibraryCalls(hInstDLL);
         startTime = GetTickCount64();
         break;
-    case DLL_PROCESS_DETACH:
-        break;
     }
 
     return TRUE;
