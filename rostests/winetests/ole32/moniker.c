@@ -103,6 +103,55 @@ static SIZE_T round_global_size(SIZE_T size)
     return ((size + global_size_alignment - 1) & ~(global_size_alignment - 1));
 }
 
+static DWORD external_connections;
+
+static HRESULT WINAPI ExternalConnection_QueryInterface(IExternalConnection *iface, REFIID riid, void **ppv)
+{
+    ok(0, "unxpected call\n");
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ExternalConnection_AddRef(IExternalConnection *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI ExternalConnection_Release(IExternalConnection *iface)
+{
+    return 1;
+}
+
+static DWORD WINAPI ExternalConnection_AddConnection(IExternalConnection *iface, DWORD extconn, DWORD reserved)
+{
+    trace("add connection\n");
+
+    ok(extconn == EXTCONN_STRONG, "extconn = %d\n", extconn);
+    ok(!reserved, "reserved = %x\n", reserved);
+    return ++external_connections;
+}
+
+static DWORD WINAPI ExternalConnection_ReleaseConnection(IExternalConnection *iface, DWORD extconn,
+        DWORD reserved, BOOL fLastReleaseCloses)
+{
+    trace("release connection\n");
+
+    ok(extconn == EXTCONN_STRONG, "extconn = %d\n", extconn);
+    ok(!reserved, "reserved = %x\n", reserved);
+
+    return --external_connections;
+}
+
+static const IExternalConnectionVtbl ExternalConnectionVtbl = {
+    ExternalConnection_QueryInterface,
+    ExternalConnection_AddRef,
+    ExternalConnection_Release,
+    ExternalConnection_AddConnection,
+    ExternalConnection_ReleaseConnection
+};
+
+static IExternalConnection ExternalConnection = { &ExternalConnectionVtbl };
+
 static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     LPCLASSFACTORY iface,
     REFIID riid,
@@ -115,6 +164,11 @@ static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     {
         *ppvObj = iface;
         IClassFactory_AddRef(iface);
+        return S_OK;
+    }
+
+    if(IsEqualGUID(riid, &IID_IExternalConnection)) {
+        *ppvObj = &ExternalConnection;
         return S_OK;
     }
 
@@ -594,11 +648,13 @@ static void test_ROT(void)
     ok_ole_success(hr, GetRunningObjectTable);
 
     expected_method_list = methods_register_no_ROTData;
+    external_connections = 0;
     /* try with our own moniker that doesn't support IROTData */
     hr = IRunningObjectTable_Register(pROT, ROTFLAGS_REGISTRATIONKEEPSALIVE,
         (IUnknown*)&Test_ClassFactory, &MonikerNoROTData, &dwCookie);
     ok_ole_success(hr, IRunningObjectTable_Register);
     ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
+    ok(external_connections == 1, "external_connections = %d\n", external_connections);
 
     ok_more_than_one_lock();
 
@@ -609,6 +665,7 @@ static void test_ROT(void)
 
     hr = IRunningObjectTable_Revoke(pROT, dwCookie);
     ok_ole_success(hr, IRunningObjectTable_Revoke);
+    ok(external_connections == 0, "external_connections = %d\n", external_connections);
 
     ok_no_locks();
 
@@ -635,9 +692,11 @@ static void test_ROT(void)
     ok_ole_success(hr, CreateClassMoniker);
 
     /* test flags: 0 */
+    external_connections = 0;
     hr = IRunningObjectTable_Register(pROT, 0, (IUnknown*)&Test_ClassFactory,
                                       pMoniker, &dwCookie);
     ok_ole_success(hr, IRunningObjectTable_Register);
+    ok(external_connections == 0, "external_connections = %d\n", external_connections);
 
     ok_more_than_one_lock();
 

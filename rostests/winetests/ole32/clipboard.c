@@ -748,8 +748,8 @@ static void test_cf_dataobject(IDataObject *data)
                         cfs_seen[count] = fmt.cfFormat;
                         ok(fmt_ptr->first_use_of_cf != seen_cf, "got %08x expected %08x\n",
                            fmt_ptr->first_use_of_cf, !seen_cf);
-                        ok(fmt_ptr->res[0] == 0, "got %08x\n", fmt_ptr->res[1]);
-                        ok(fmt_ptr->res[1] == 0, "got %08x\n", fmt_ptr->res[2]);
+                        ok(fmt_ptr->res[0] == 0, "got %08x\n", fmt_ptr->res[0]);
+                        ok(fmt_ptr->res[1] == 0, "got %08x\n", fmt_ptr->res[1]);
                         if(fmt.ptd)
                         {
                             DVTARGETDEVICE *target;

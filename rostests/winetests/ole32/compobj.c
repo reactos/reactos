@@ -26,12 +26,14 @@
 #define CONST_VTABLE
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <winreg.h>
 #define USE_COM_CONTEXT_DEF
-//#include "initguid.h"
+#include <initguid.h>
 //#include "objbase.h"
 //#include "shlguid.h"
 #include <ole2.h>
@@ -51,12 +53,23 @@ static HRESULT (WINAPI * pCoGetTreatAsClass)(REFCLSID clsidOld, LPCLSID pClsidNe
 static HRESULT (WINAPI * pCoGetContextToken)(ULONG_PTR *token);
 static LONG (WINAPI * pRegOverridePredefKey)(HKEY key, HKEY override);
 
+static BOOL   (WINAPI *pActivateActCtx)(HANDLE,ULONG_PTR*);
+static HANDLE (WINAPI *pCreateActCtxW)(PCACTCTXW);
+static BOOL   (WINAPI *pDeactivateActCtx)(DWORD,ULONG_PTR);
+static void   (WINAPI *pReleaseActCtx)(HANDLE);
+
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 #define ok_more_than_one_lock() ok(cLocks > 0, "Number of locks should be > 0, but actually is %d\n", cLocks)
 #define ok_no_locks() ok(cLocks == 0, "Number of locks should be 0, but actually is %d\n", cLocks)
 
 static const CLSID CLSID_non_existent =   { 0x12345678, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
 static const CLSID CLSID_StdFont = { 0x0be35203, 0x8f91, 0x11ce, { 0x9d, 0xe3, 0x00, 0xaa, 0x00, 0x4b, 0xb8, 0x51 } };
+static const GUID IID_Testiface = { 0x22222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
+static const GUID IID_Testiface2 = { 0x32222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
+static const GUID IID_Testiface3 = { 0x42222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
+static const GUID IID_Testiface4 = { 0x52222222, 0x1234, 0x1234, { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0 } };
+static const GUID IID_TestPS = { 0x66666666, 0x8888, 0x7777, { 0x66, 0x66, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55 } };
+
 static WCHAR stdfont[] = {'S','t','d','F','o','n','t',0};
 static const WCHAR wszNonExistent[] = {'N','o','n','E','x','i','s','t','e','n','t',0};
 static WCHAR wszCLSID_StdFont[] =
@@ -64,20 +77,22 @@ static WCHAR wszCLSID_StdFont[] =
     '{','0','b','e','3','5','2','0','3','-','8','f','9','1','-','1','1','c','e','-',
     '9','d','e','3','-','0','0','a','a','0','0','4','b','b','8','5','1','}',0
 };
+static const WCHAR progidW[] = {'P','r','o','g','I','d','.','P','r','o','g','I','d',0};
 
-static const IID IID_IWineTest =
+DEFINE_GUID(IID_IWineTest, 0x5201163f, 0x8164, 0x4fd0, 0xa1, 0xa2, 0x5d, 0x5a, 0x36, 0x54, 0xd3, 0xbd);
+DEFINE_GUID(CLSID_WineOOPTest, 0x5201163f, 0x8164, 0x4fd0, 0xa1, 0xa2, 0x5d, 0x5a, 0x36, 0x54, 0xd3, 0xbd);
+
+static const char *debugstr_guid(REFIID riid)
 {
-    0x5201163f,
-    0x8164,
-    0x4fd0,
-    {0xa1, 0xa2, 0x5d, 0x5a, 0x36, 0x54, 0xd3, 0xbd}
-}; /* 5201163f-8164-4fd0-a1a2-5d5a3654d3bd */
-static const CLSID CLSID_WineOOPTest = {
-    0x5201163f,
-    0x8164,
-    0x4fd0,
-    {0xa1, 0xa2, 0x5d, 0x5a, 0x36, 0x54, 0xd3, 0xbd}
-}; /* 5201163f-8164-4fd0-a1a2-5d5a3654d3bd */
+    static char buf[50];
+
+    sprintf(buf, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
+            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
+            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
+
+    return buf;
+}
 
 static LONG cLocks;
 
@@ -151,10 +166,117 @@ static const IClassFactoryVtbl TestClassFactory_Vtbl =
 
 static IClassFactory Test_ClassFactory = { &TestClassFactory_Vtbl };
 
+static WCHAR manifest_path[MAX_PATH];
+
+static BOOL create_manifest_file(const char *filename, const char *manifest)
+{
+    int manifest_len;
+    DWORD size;
+    HANDLE file;
+    WCHAR path[MAX_PATH];
+
+    MultiByteToWideChar( CP_ACP, 0, filename, -1, path, MAX_PATH );
+    GetFullPathNameW(path, sizeof(manifest_path)/sizeof(WCHAR), manifest_path, NULL);
+
+    manifest_len = strlen(manifest);
+    file = CreateFileW(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                       FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
+    if(file == INVALID_HANDLE_VALUE)
+        return FALSE;
+    WriteFile(file, manifest, manifest_len, &size, NULL);
+    CloseHandle(file);
+
+    return TRUE;
+}
+
+static HANDLE activate_context(const char *manifest, ULONG_PTR *cookie)
+{
+    WCHAR path[MAX_PATH];
+    ACTCTXW actctx;
+    HANDLE handle;
+    BOOL ret;
+
+    if (!pCreateActCtxW) return NULL;
+
+    create_manifest_file("file.manifest", manifest);
+
+    MultiByteToWideChar( CP_ACP, 0, "file.manifest", -1, path, MAX_PATH );
+    memset(&actctx, 0, sizeof(ACTCTXW));
+    actctx.cbSize = sizeof(ACTCTXW);
+    actctx.lpSource = path;
+
+    handle = pCreateActCtxW(&actctx);
+    ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+
+    ok(actctx.cbSize == sizeof(ACTCTXW), "actctx.cbSize=%d\n", actctx.cbSize);
+    ok(actctx.dwFlags == 0, "actctx.dwFlags=%d\n", actctx.dwFlags);
+    ok(actctx.lpSource == path, "actctx.lpSource=%p\n", actctx.lpSource);
+    ok(actctx.wProcessorArchitecture == 0, "actctx.wProcessorArchitecture=%d\n", actctx.wProcessorArchitecture);
+    ok(actctx.wLangId == 0, "actctx.wLangId=%d\n", actctx.wLangId);
+    ok(actctx.lpAssemblyDirectory == NULL, "actctx.lpAssemblyDirectory=%p\n", actctx.lpAssemblyDirectory);
+    ok(actctx.lpResourceName == NULL, "actctx.lpResourceName=%p\n", actctx.lpResourceName);
+    ok(actctx.lpApplicationName == NULL, "actctx.lpApplicationName=%p\n", actctx.lpApplicationName);
+    ok(actctx.hModule == NULL, "actctx.hModule=%p\n", actctx.hModule);
+
+    DeleteFileA("file.manifest");
+
+    ret = pActivateActCtx(handle, cookie);
+    ok(ret, "ActivateActCtx failed: %u\n", GetLastError());
+
+    return handle;
+}
+
+static const char actctx_manifest[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.2.3.4\"  name=\"Wine.Test\" type=\"win32\""
+" publicKeyToken=\"6595b6414666f1df\" />"
+"<file name=\"testlib.dll\">"
+"    <comClass description=\"Test com class\""
+"              clsid=\"{12345678-1234-1234-1234-56789abcdef0}\""
+"              progid=\"ProgId.ProgId\""
+"              miscStatusIcon=\"recomposeonresize\""
+"    />"
+"    <comClass clsid=\"{0be35203-8f91-11ce-9de3-00aa004bb851}\""
+"              progid=\"CustomFont\""
+"              miscStatusIcon=\"recomposeonresize\""
+"              miscStatusContent=\"insideout\""
+"    />"
+"    <comClass clsid=\"{0be35203-8f91-11ce-9de3-00aa004bb852}\""
+"              progid=\"StdFont\""
+"    />"
+"    <comInterfaceProxyStub "
+"        name=\"Iifaceps\""
+"        iid=\"{22222222-1234-1234-1234-56789abcdef0}\""
+"        proxyStubClsid32=\"{66666666-8888-7777-6666-555555555555}\""
+"    />"
+"</file>"
+"    <comInterfaceExternalProxyStub "
+"        name=\"Iifaceps2\""
+"        iid=\"{32222222-1234-1234-1234-56789abcdef0}\""
+"    />"
+"    <comInterfaceExternalProxyStub "
+"        name=\"Iifaceps3\""
+"        iid=\"{42222222-1234-1234-1234-56789abcdef0}\""
+"        proxyStubClsid32=\"{66666666-8888-7777-6666-555555555555}\""
+"    />"
+"    <comInterfaceExternalProxyStub "
+"        name=\"Iifaceps4\""
+"        iid=\"{52222222-1234-1234-1234-56789abcdef0}\""
+"        proxyStubClsid32=\"{00000000-0000-0000-0000-000000000000}\""
+"    />"
+"</assembly>";
+
+DEFINE_GUID(CLSID_Testclass, 0x12345678, 0x1234, 0x1234, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0);
+
 static void test_ProgIDFromCLSID(void)
 {
+    ULONG_PTR cookie = 0;
     LPWSTR progid;
-    HRESULT hr = ProgIDFromCLSID(&CLSID_StdFont, &progid);
+    HANDLE handle;
+    HRESULT hr;
+
+    hr = ProgIDFromCLSID(&CLSID_StdFont, &progid);
     ok(hr == S_OK, "ProgIDFromCLSID failed with error 0x%08x\n", hr);
     if (hr == S_OK)
     {
@@ -169,10 +291,37 @@ static void test_ProgIDFromCLSID(void)
 
     hr = ProgIDFromCLSID(&CLSID_StdFont, NULL);
     ok(hr == E_INVALIDARG, "ProgIDFromCLSID should return E_INVALIDARG instead of 0x%08x\n", hr);
+
+    if ((handle = activate_context(actctx_manifest, &cookie)))
+    {
+        static const WCHAR customfontW[] = {'C','u','s','t','o','m','F','o','n','t',0};
+
+        hr = ProgIDFromCLSID(&CLSID_non_existent, &progid);
+todo_wine
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        if (hr == S_OK)
+        {
+            ok(!lstrcmpiW(progid, progidW), "got %s\n", wine_dbgstr_w(progid));
+            CoTaskMemFree(progid);
+        }
+
+        /* try something registered and redirected */
+        progid = NULL;
+        hr = ProgIDFromCLSID(&CLSID_StdFont, &progid);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+todo_wine
+        ok(!lstrcmpiW(progid, customfontW), "got wrong progid %s\n", wine_dbgstr_w(progid));
+        CoTaskMemFree(progid);
+
+        pDeactivateActCtx(0, cookie);
+        pReleaseActCtx(handle);
+    }
 }
 
 static void test_CLSIDFromProgID(void)
 {
+    ULONG_PTR cookie = 0;
+    HANDLE handle;
     CLSID clsid;
     HRESULT hr = CLSIDFromProgID(stdfont, &clsid);
     ok(hr == S_OK, "CLSIDFromProgID failed with error 0x%08x\n", hr);
@@ -194,6 +343,40 @@ static void test_CLSIDFromProgID(void)
     hr = CLSIDFromProgID(wszNonExistent, &clsid);
     ok(hr == CO_E_CLASSSTRING, "CLSIDFromProgID on nonexistent ProgID should have returned CO_E_CLASSSTRING instead of 0x%08x\n", hr);
     ok(IsEqualCLSID(&clsid, &CLSID_NULL), "CLSIDFromProgID should have set clsid to all-zeros on failure\n");
+
+    /* fails without proper context */
+    memset(&clsid, 0xcc, sizeof(clsid));
+    hr = CLSIDFromProgID(progidW, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "got 0x%08x\n", hr);
+    ok(IsEqualCLSID(&clsid, &CLSID_NULL), "wrong clsid\n");
+
+    if ((handle = activate_context(actctx_manifest, &cookie)))
+    {
+        GUID clsid1;
+
+        clsid = CLSID_NULL;
+        hr = CLSIDFromProgID(progidW, &clsid);
+todo_wine
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        if (hr == S_OK)
+            /* it returns generated CLSID here */
+            ok(!IsEqualCLSID(&clsid, &CLSID_non_existent) && !IsEqualCLSID(&clsid, &CLSID_NULL),
+                "got wrong clsid %s\n", debugstr_guid(&clsid));
+
+        /* duplicate progid present in context - returns generated guid here too */
+        clsid = CLSID_NULL;
+        hr = CLSIDFromProgID(stdfont, &clsid);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        clsid1 = CLSID_StdFont;
+        /* that's where it differs from StdFont */
+        clsid1.Data4[7] = 0x52;
+todo_wine
+        ok(!IsEqualCLSID(&clsid, &CLSID_StdFont) && !IsEqualCLSID(&clsid, &CLSID_NULL) && !IsEqualCLSID(&clsid, &clsid1),
+            "got %s\n", debugstr_guid(&clsid));
+
+        pDeactivateActCtx(0, cookie);
+        pReleaseActCtx(handle);
+    }
 }
 
 static void test_CLSIDFromString(void)
@@ -439,6 +622,12 @@ static void test_CoGetClassObject(void)
     CloseHandle(info.wait);
     CloseHandle(info.stop);
 
+    if (!pRegOverridePredefKey)
+    {
+        win_skip("RegOverridePredefKey not available\n");
+        return;
+    }
+
     pCoInitializeEx(NULL, COINIT_MULTITHREADED);
 
     hr = CoGetClassObject(rclsid, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void **)&pUnk);
@@ -446,8 +635,9 @@ static void test_CoGetClassObject(void)
     {
         IUnknown_Release(pUnk);
 
-        res = RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Classes", 0, KEY_ALL_ACCESS, &hkey);
-        ok(!res, "RegOpenKeyExA returned %d\n", res);
+        res = RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Classes", 0, NULL, 0,
+                             KEY_ALL_ACCESS, NULL, &hkey, NULL);
+        ok(!res, "RegCreateKeyEx returned %d\n", res);
 
         res = pRegOverridePredefKey(HKEY_CLASSES_ROOT, hkey);
         ok(!res, "RegOverridePredefKey returned %d\n", res);
@@ -748,6 +938,8 @@ static void test_CoRegisterPSClsid(void)
 
 static void test_CoGetPSClsid(void)
 {
+    ULONG_PTR cookie;
+    HANDLE handle;
     HRESULT hr;
     CLSID clsid;
     HKEY hkey;
@@ -782,8 +974,9 @@ static void test_CoGetPSClsid(void)
     hr = CoGetPSClsid(&IID_IClassFactory, &clsid);
     ok_ole_success(hr, "CoGetPSClsid");
 
-    res = RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\Classes", 0, KEY_ALL_ACCESS, &hkey);
-    ok(!res, "RegOpenKeyExA returned %d\n", res);
+    res = RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Classes", 0, NULL, 0,
+                         KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    ok(!res, "RegCreateKeyEx returned %d\n", res);
 
     res = pRegOverridePredefKey(HKEY_CLASSES_ROOT, hkey);
     ok(!res, "RegOverridePredefKey returned %d\n", res);
@@ -795,6 +988,38 @@ static void test_CoGetPSClsid(void)
     ok(!res, "RegOverridePredefKey returned %d\n", res);
 
     RegCloseKey(hkey);
+
+    /* not registered CLSID */
+    hr = CoGetPSClsid(&IID_Testiface, &clsid);
+    ok(hr == REGDB_E_IIDNOTREG, "got 0x%08x\n", hr);
+
+    if ((handle = activate_context(actctx_manifest, &cookie)))
+    {
+todo_wine {
+        memset(&clsid, 0, sizeof(clsid));
+        hr = CoGetPSClsid(&IID_Testiface, &clsid);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(IsEqualGUID(&clsid, &IID_Testiface), "got clsid %s\n", debugstr_guid(&clsid));
+
+        memset(&clsid, 0, sizeof(clsid));
+        hr = CoGetPSClsid(&IID_Testiface2, &clsid);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(IsEqualGUID(&clsid, &IID_Testiface2), "got clsid %s\n", debugstr_guid(&clsid));
+
+        memset(&clsid, 0, sizeof(clsid));
+        hr = CoGetPSClsid(&IID_Testiface3, &clsid);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(IsEqualGUID(&clsid, &IID_TestPS), "got clsid %s\n", debugstr_guid(&clsid));
+
+        memset(&clsid, 0xaa, sizeof(clsid));
+        hr = CoGetPSClsid(&IID_Testiface4, &clsid);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(IsEqualGUID(&clsid, &GUID_NULL), "got clsid %s\n", debugstr_guid(&clsid));
+}
+        pDeactivateActCtx(0, cookie);
+        pReleaseActCtx(handle);
+    }
+
     CoUninitialize();
 }
 
@@ -1568,16 +1793,77 @@ static void test_CoInitializeEx(void)
     OleUninitialize();
 }
 
-START_TEST(compobj)
+static void test_OleRegGetMiscStatus(void)
 {
-    HMODULE hOle32 = GetModuleHandle("ole32");
-    HMODULE hAdvapi32 = GetModuleHandle("advapi32");
+    ULONG_PTR cookie;
+    HANDLE handle;
+    DWORD status;
+    HRESULT hr;
+
+    hr = OleRegGetMiscStatus(&CLSID_Testclass, DVASPECT_ICON, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+
+    status = 0xdeadbeef;
+    hr = OleRegGetMiscStatus(&CLSID_Testclass, DVASPECT_ICON, &status);
+    ok(hr == REGDB_E_CLASSNOTREG, "got 0x%08x\n", hr);
+    ok(status == 0, "got 0x%08x\n", status);
+
+    status = -1;
+    hr = OleRegGetMiscStatus(&CLSID_StdFont, DVASPECT_ICON, &status);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(status == 0, "got 0x%08x\n", status);
+
+    if ((handle = activate_context(actctx_manifest, &cookie)))
+    {
+        status = 0;
+        hr = OleRegGetMiscStatus(&CLSID_Testclass, DVASPECT_ICON, &status);
+todo_wine {
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(status == OLEMISC_RECOMPOSEONRESIZE, "got 0x%08x\n", status);
+}
+        /* context data takes precedence over registration info */
+        status = 0;
+        hr = OleRegGetMiscStatus(&CLSID_StdFont, DVASPECT_ICON, &status);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+todo_wine
+        ok(status == OLEMISC_RECOMPOSEONRESIZE, "got 0x%08x\n", status);
+
+        /* there's no such attribute in context */
+        status = -1;
+        hr = OleRegGetMiscStatus(&CLSID_Testclass, DVASPECT_DOCPRINT, &status);
+todo_wine
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(status == 0, "got 0x%08x\n", status);
+
+        pDeactivateActCtx(0, cookie);
+        pReleaseActCtx(handle);
+    }
+}
+
+static void init_funcs(void)
+{
+    HMODULE hOle32 = GetModuleHandleA("ole32");
+    HMODULE hAdvapi32 = GetModuleHandleA("advapi32");
+    HMODULE hkernel32 = GetModuleHandleA("kernel32");
+
     pCoGetObjectContext = (void*)GetProcAddress(hOle32, "CoGetObjectContext");
     pCoSwitchCallContext = (void*)GetProcAddress(hOle32, "CoSwitchCallContext");
     pCoGetTreatAsClass = (void*)GetProcAddress(hOle32,"CoGetTreatAsClass");
     pCoGetContextToken = (void*)GetProcAddress(hOle32, "CoGetContextToken");
     pRegOverridePredefKey = (void*)GetProcAddress(hAdvapi32, "RegOverridePredefKey");
-    if (!(pCoInitializeEx = (void*)GetProcAddress(hOle32, "CoInitializeEx")))
+    pCoInitializeEx = (void*)GetProcAddress(hOle32, "CoInitializeEx");
+
+    pActivateActCtx = (void*)GetProcAddress(hkernel32, "ActivateActCtx");
+    pCreateActCtxW = (void*)GetProcAddress(hkernel32, "CreateActCtxW");
+    pDeactivateActCtx = (void*)GetProcAddress(hkernel32, "DeactivateActCtx");
+    pReleaseActCtx = (void*)GetProcAddress(hkernel32, "ReleaseActCtx");
+}
+
+START_TEST(compobj)
+{
+    init_funcs();
+
+    if (!pCoInitializeEx)
     {
         trace("You need DCOM95 installed to run this test\n");
         return;
@@ -1605,4 +1891,5 @@ START_TEST(compobj)
     test_CoGetContextToken();
     test_CoGetTreatAsClass();
     test_CoInitializeEx();
+    test_OleRegGetMiscStatus();
 }

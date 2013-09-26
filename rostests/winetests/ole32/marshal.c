@@ -47,6 +47,7 @@ DEFINE_GUID(CLSID_ManualResetEvent,       0x0000032c,0x0000,0x0000,0xc0,0x00,0x0
 
 /* functions that are not present on all versions of Windows */
 static HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
+static HRESULT (WINAPI *pDllGetClassObject)(REFCLSID,REFIID,LPVOID);
 
 /* helper macros to make tests a bit leaner */
 #define ok_more_than_one_lock() ok(cLocks > 0, "Number of locks should be > 0, but actually is %d\n", cLocks)
@@ -2811,12 +2812,32 @@ static void test_globalinterfacetable(void)
 	struct git_params params;
 	DWORD ret;
         IUnknown *object;
+        IClassFactory *cf;
+        ULONG ref;
 
         trace("test_globalinterfacetable\n");
 	cLocks = 0;
 
+	hr = pDllGetClassObject(&CLSID_StdGlobalInterfaceTable, &IID_IClassFactory, (void**)&cf);
+	ok(hr == S_OK, "got 0x%08x\n", hr);
+
+	hr = IClassFactory_QueryInterface(cf, &IID_IGlobalInterfaceTable, (void**)&object);
+	ok(hr == E_NOINTERFACE, "got 0x%08x\n", hr);
+
+	IClassFactory_Release(cf);
+
 	hr = CoCreateInstance(&CLSID_StdGlobalInterfaceTable, NULL, CLSCTX_INPROC_SERVER, &IID_IGlobalInterfaceTable, (void **)&git);
 	ok_ole_success(hr, CoCreateInstance);
+
+	ref = IGlobalInterfaceTable_AddRef(git);
+	ok(ref == 1, "ref=%d\n", ref);
+	ref = IGlobalInterfaceTable_AddRef(git);
+	ok(ref == 1, "ref=%d\n", ref);
+
+	ref = IGlobalInterfaceTable_Release(git);
+	ok(ref == 1, "ref=%d\n", ref);
+	ref = IGlobalInterfaceTable_Release(git);
+	ok(ref == 1, "ref=%d\n", ref);
 
 	hr = IGlobalInterfaceTable_RegisterInterfaceInGlobal(git, (IUnknown *)&Test_ClassFactory, &IID_IClassFactory, &cookie);
 	ok_ole_success(hr, IGlobalInterfaceTable_RegisterInterfaceInGlobal);
@@ -3156,6 +3177,7 @@ START_TEST(marshal)
     }
 
     pCoInitializeEx = (void*)GetProcAddress(hOle32, "CoInitializeEx");
+    pDllGetClassObject = (void*)GetProcAddress(hOle32, "DllGetClassObject");
 
     argc = winetest_get_mainargs( &argv );
     if (argc > 2 && (!strcmp(argv[2], "-Embedding")))

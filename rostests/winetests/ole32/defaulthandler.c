@@ -59,8 +59,15 @@
         expect_ ## func = called_ ## func = FALSE; \
     }while(0)
 
+#define CHECK_NOT_CALLED(func) \
+    do { \
+        ok(!called_ ## func, "unexpected " #func "\n"); \
+        expect_ ## func = called_ ## func = FALSE; \
+    }while(0)
+
 DEFINE_EXPECT(CF_QueryInterface_ClassFactory);
 DEFINE_EXPECT(CF_CreateInstance);
+DEFINE_EXPECT(CF_QueryInterface_IMarshal);
 
 static const char *debugstr_guid(REFIID riid)
 {
@@ -169,7 +176,7 @@ static ULONG WINAPI test_class_Release(IUnknown *iface)
     return 1;
 }
 
-static IUnknownVtbl test_class_vtbl = {
+static const IUnknownVtbl test_class_vtbl = {
     test_class_QueryInterface,
     test_class_AddRef,
     test_class_Release,
@@ -183,6 +190,7 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID r
         *ppv = iface;
         return S_OK;
     }else if(IsEqualGUID(riid, &IID_IMarshal)) {
+        CHECK_EXPECT(CF_QueryInterface_IMarshal);
         *ppv = NULL;
         return E_NOINTERFACE;
     }else if(IsEqualGUID(riid, &IID_IClassFactory)) {
@@ -228,7 +236,7 @@ static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL fLock)
     return E_NOTIMPL;
 }
 
-static IClassFactoryVtbl ClassFactoryVtbl = {
+static const IClassFactoryVtbl ClassFactoryVtbl = {
     ClassFactory_QueryInterface,
     ClassFactory_AddRef,
     ClassFactory_Release,
@@ -244,6 +252,8 @@ static void test_default_handler_run(void)
 
     IUnknown *unk;
     IRunnableObject *ro;
+    IOleObject *oleobj;
+    IPersistStorage *persist;
     DWORD class_reg;
     HRESULT hres;
 
@@ -267,7 +277,9 @@ static void test_default_handler_run(void)
     ok(hres == REGDB_E_CLASSNOTREG, "Run returned: %x, expected REGDB_E_CLASSNOTREG\n", hres);
     IRunnableObject_Release(ro);
 
+    SET_EXPECT(CF_QueryInterface_IMarshal);
     CoRevokeClassObject(class_reg);
+    todo_wine CHECK_CALLED(CF_QueryInterface_IMarshal);
 
     hres = CoRegisterClassObject(&test_server_clsid, (IUnknown*)&ClassFactory,
             CLSCTX_LOCAL_SERVER, 0, &class_reg);
@@ -276,6 +288,14 @@ static void test_default_handler_run(void)
     hres = OleCreateDefaultHandler(&test_server_clsid, NULL, &IID_IUnknown, (void**)&unk);
     ok(hres == S_OK, "OleCreateDefaultHandler failed: %x\n", hres);
 
+    hres = IUnknown_QueryInterface(unk, &IID_IOleObject, (void**)&oleobj);
+    ok(hres == S_OK, "QueryInterface(IID_IOleObject) failed: %x\n", hres);
+
+    hres = IOleObject_QueryInterface(oleobj, &IID_IPersistStorage, (void**)&persist);
+    ok(hres == S_OK, "QueryInterface(IID_IPersistStorage) failed: %x\n", hres);
+    IPersistStorage_Release(persist);
+    IOleObject_Release(oleobj);
+
     hres = IUnknown_QueryInterface(unk, &IID_IRunnableObject, (void**)&ro);
     ok(hres == S_OK, "QueryInterface(IRunnableObject) failed: %x\n", hres);
     IUnknown_Release(unk);
@@ -283,12 +303,26 @@ static void test_default_handler_run(void)
     SET_EXPECT(CF_QueryInterface_ClassFactory);
     SET_EXPECT(CF_CreateInstance);
     hres = IRunnableObject_Run(ro, NULL);
-    todo_wine ok(hres == S_OK, "Run failed: %x\n", hres);
+todo_wine
+    ok(hres == S_OK, "Run failed: %x\n", hres);
     CHECK_CALLED(CF_QueryInterface_ClassFactory);
     CHECK_CALLED(CF_CreateInstance);
     IRunnableObject_Release(ro);
 
+    SET_EXPECT(CF_QueryInterface_ClassFactory);
+    SET_EXPECT(CF_CreateInstance);
+    hres = CoCreateInstance(&test_server_clsid, NULL, CLSCTX_LOCAL_SERVER,
+                            &IID_IOleObject, (void**)&oleobj);
+todo_wine
+    ok(hres == REGDB_E_CLASSNOTREG, "expected REGDB_E_CLASSNOTREG, got %x\n", hres);
+todo_wine
+    CHECK_NOT_CALLED(CF_QueryInterface_ClassFactory);
+todo_wine
+    CHECK_NOT_CALLED(CF_CreateInstance);
+
+    SET_EXPECT(CF_QueryInterface_IMarshal);
     CoRevokeClassObject(class_reg);
+    todo_wine CHECK_CALLED(CF_QueryInterface_IMarshal);
 }
 
 START_TEST(defaulthandler)
