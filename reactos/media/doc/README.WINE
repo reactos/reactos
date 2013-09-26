@@ -171,7 +171,7 @@ reactos/dll/win32/schannel        # Synced to Wine-1.5.19
 reactos/dll/win32/scrrun          # Synced to Wine-1.7.1
 reactos/dll/win32/secur32         # Forked
 reactos/dll/win32/security        # Forked (different .spec)
-reactos/dll/win32/sensapi         # Synced to Wine-1.5.4
+reactos/dll/win32/sensapi         # Synced to Wine-1.7.1
 reactos/dll/win32/setupapi        # Forked at Wine-20050524
 reactos/dll/win32/shdoclc         # Synced to Wine-1.5.19
 reactos/dll/win32/shdocvw         # Synced to Wine-1.5.26
