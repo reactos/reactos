@@ -37,9 +37,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* GLOBALS *******************************************************************/
 
-static const WORD wPattern_AA55[8] = { 0xaaaa, 0x5555, 0xaaaa, 0x5555,
-                                       0xaaaa, 0x5555, 0xaaaa, 0x5555 };
-
 /* These tables are used in:
  * UITOOLS_DrawDiagEdge()
  * UITOOLS_DrawRectEdge()
@@ -623,9 +620,7 @@ static void UITOOLS_DrawCheckedRect( HDC dc, LPRECT rect )
 {
     if(GetSysColor(COLOR_BTNHIGHLIGHT) == RGB(255, 255, 255))
     {
-//        HBITMAP hbm = CreateBitmap(8, 8, 1, 1, wPattern_AA55); gpsi->hbrGray
         HBRUSH hbsave;
-//        HBRUSH hb = CreatePatternBrush(hbm);
         COLORREF bg;
 
         FillRect(dc, rect, GetSysColorBrush(COLOR_BTNFACE));
@@ -634,8 +629,6 @@ static void UITOOLS_DrawCheckedRect( HDC dc, LPRECT rect )
         PatBlt(dc, rect->left, rect->top, rect->right-rect->left, rect->bottom-rect->top, 0x00FA0089);
         SelectObject(dc, hbsave);
         SetBkColor(dc, bg);
-//        DeleteObject(hb);
-//        DeleteObject(hbm);
     }
     else
     {
