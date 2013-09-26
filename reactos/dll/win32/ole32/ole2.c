@@ -885,11 +885,6 @@ HRESULT WINAPI OleRegGetMiscStatus(
   LONG    result;
 
   /*
-   * Initialize the out parameter.
-   */
-  *pdwStatus = 0;
-
-  /*
    * Build the key name we're looking for
    */
   sprintfW( keyName, clsidfmtW,
@@ -898,6 +893,10 @@ HRESULT WINAPI OleRegGetMiscStatus(
             clsid->Data4[4], clsid->Data4[5], clsid->Data4[6], clsid->Data4[7] );
 
   TRACE("(%s, %d, %p)\n", debugstr_w(keyName), dwAspect, pdwStatus);
+
+  if (!pdwStatus) return E_INVALIDARG;
+
+  *pdwStatus = 0;
 
   /*
    * Open the class id Key
@@ -913,7 +912,7 @@ HRESULT WINAPI OleRegGetMiscStatus(
   if (result != ERROR_SUCCESS)
   {
     RegCloseKey(clsidKey);
-    return REGDB_E_READREGDB;
+    return S_OK;
   }
 
   /*

@@ -44,16 +44,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-static inline void *heap_alloc(size_t len)
-{
-    return HeapAlloc(GetProcessHeap(), 0, len);
-}
-
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
-
 static inline WCHAR *heap_strdupW(const WCHAR *str)
 {
     WCHAR *ret = NULL;

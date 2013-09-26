@@ -166,6 +166,12 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
 HRESULT STORAGE_CreateOleStream(IStorage*, DWORD) DECLSPEC_HIDDEN;
 HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName) DECLSPEC_HIDDEN;
 
+enum swmr_mode
+{
+  SWMR_None,
+  SWMR_Writer,
+  SWMR_Reader
+};
 
 /****************************************************************************
  * StorageBaseImpl definitions.
@@ -180,6 +186,7 @@ struct StorageBaseImpl
 {
   IStorage IStorage_iface;
   IPropertySetStorage IPropertySetStorage_iface; /* interface for adding a properties stream */
+  IDirectWriterLock IDirectWriterLock_iface;
   LONG ref;
 
   /*
@@ -225,6 +232,7 @@ struct StorageBaseImpl
    * the transacted snapshot or cache.
    */
   StorageBaseImpl *transactedChild;
+  enum swmr_mode lockingrole;
 };
 
 /* virtual methods for StorageBaseImpl objects */
