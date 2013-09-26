@@ -29,7 +29,6 @@ list(APPEND SOURCE
     safearray.c
     tmarshal.c
     typelib.c
-    typelib2.c
     usrmarshal.c
     varformat.c
     variant.c
