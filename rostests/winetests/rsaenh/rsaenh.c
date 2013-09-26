@@ -773,7 +773,7 @@ static void test_3des112(void)
     HCRYPTKEY hKey;
     BOOL result;
     DWORD dwLen;
-    unsigned char pbData[16];
+    unsigned char pbData[16], enc_data[16], bad_data[16];
     int i;
 
     result = derive_key(CALG_3DES_112, &hKey, 0);
@@ -800,7 +800,43 @@ static void test_3des112(void)
       result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, cTestData[i].buflen);
       ok(result, "%08x\n", GetLastError());
       ok(dwLen==cTestData[i].buflen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].buflen);
+      memcpy(enc_data, pbData, cTestData[i].buflen);
 
+      result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
+      ok(result, "%08x\n", GetLastError());
+      ok(dwLen==cTestData[i].enclen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].enclen);
+      ok(memcmp(pbData,cTestData[i].decstr,cTestData[1].enclen)==0,"decryption incorrect %d\n",i);
+      if((dwLen != cTestData[i].enclen) ||
+         memcmp(pbData,cTestData[i].decstr,cTestData[i].enclen))
+      {
+          printBytes("expected",cTestData[i].decstr,cTestData[i].strlen);
+          printBytes("got",pbData,dwLen);
+      }
+
+      /* Test bad data:
+         Decrypting a block of bad data with Final = TRUE should restore the
+         initial state of the key as well as decrypting a block of good data.
+       */
+
+      /* Changing key state by setting Final = FALSE */
+      dwLen = cTestData[i].buflen;
+      memcpy(pbData, enc_data, cTestData[i].buflen);
+      result = CryptDecrypt(hKey, 0, FALSE, 0, pbData, &dwLen);
+      ok(result, "%08x\n", GetLastError());
+
+      /* Restoring key state by decrypting bad_data with Final = TRUE */
+      memcpy(bad_data, enc_data, cTestData[i].buflen);
+      bad_data[cTestData[i].buflen - 1] = ~bad_data[cTestData[i].buflen - 1];
+      SetLastError(0xdeadbeef);
+      result = CryptDecrypt(hKey, 0, TRUE, 0, bad_data, &dwLen);
+      ok(!result, "CryptDecrypt should failed!\n");
+      ok(GetLastError() == NTE_BAD_DATA, "%08x\n", GetLastError());
+      ok(dwLen==cTestData[i].buflen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].buflen);
+      ok(memcmp(pbData,cTestData[i].decstr,cTestData[1].enclen)==0,"decryption incorrect %d\n",i);
+
+      /* Checking key state */
+      dwLen = cTestData[i].buflen;
+      memcpy(pbData, enc_data, cTestData[i].buflen);
       result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
       ok(result, "%08x\n", GetLastError());
       ok(dwLen==cTestData[i].enclen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].enclen);
@@ -821,7 +857,7 @@ static void test_des(void)
     HCRYPTKEY hKey;
     BOOL result;
     DWORD dwLen, dwMode;
-    unsigned char pbData[16];
+    unsigned char pbData[16], enc_data[16], bad_data[16];
     int i;
 
     result = derive_key(CALG_DES, &hKey, 56);
@@ -856,11 +892,47 @@ static void test_des(void)
       result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, cTestData[i].buflen);
       ok(result, "%08x\n", GetLastError());
       ok(dwLen==cTestData[i].buflen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].buflen);
+      memcpy(enc_data, pbData, cTestData[i].buflen);
 
       result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
       ok(result, "%08x\n", GetLastError());
       ok(dwLen==cTestData[i].enclen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].enclen);
       ok(memcmp(pbData,cTestData[i].decstr,cTestData[i].enclen)==0,"decryption incorrect %d\n",i);
+      if((dwLen != cTestData[i].enclen) ||
+         memcmp(pbData,cTestData[i].decstr,cTestData[i].enclen))
+      {
+          printBytes("expected",cTestData[i].decstr,cTestData[i].strlen);
+          printBytes("got",pbData,dwLen);
+      }
+
+      /* Test bad data:
+         Decrypting a block of bad data with Final = TRUE should restore the
+         initial state of the key as well as decrypting a block of good data.
+       */
+
+      /* Changing key state by setting Final = FALSE */
+      dwLen = cTestData[i].buflen;
+      memcpy(pbData, enc_data, cTestData[i].buflen);
+      result = CryptDecrypt(hKey, 0, FALSE, 0, pbData, &dwLen);
+      ok(result, "%08x\n", GetLastError());
+
+      /* Restoring key state by decrypting bad_data with Final = TRUE */
+      memcpy(bad_data, enc_data, cTestData[i].buflen);
+      bad_data[cTestData[i].buflen - 1] = ~bad_data[cTestData[i].buflen - 1];
+      SetLastError(0xdeadbeef);
+      result = CryptDecrypt(hKey, 0, TRUE, 0, bad_data, &dwLen);
+      ok(!result, "CryptDecrypt should failed!\n");
+      ok(GetLastError() == NTE_BAD_DATA, "%08x\n", GetLastError());
+      ok(dwLen==cTestData[i].buflen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].buflen);
+      ok(memcmp(pbData,cTestData[i].decstr,cTestData[1].enclen)==0,"decryption incorrect %d\n",i);
+
+      /* Checking key state */
+      dwLen = cTestData[i].buflen;
+      memcpy(pbData, enc_data, cTestData[i].buflen);
+      result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
+      ok(result, "%08x\n", GetLastError());
+      ok(dwLen==cTestData[i].enclen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].enclen);
+      ok(memcmp(pbData,cTestData[i].decstr,cTestData[1].enclen)==0,"decryption incorrect %d\n",i);
       if((dwLen != cTestData[i].enclen) ||
          memcmp(pbData,cTestData[i].decstr,cTestData[i].enclen))
       {
@@ -878,7 +950,7 @@ static void test_3des(void)
     HCRYPTKEY hKey;
     BOOL result;
     DWORD dwLen;
-    unsigned char pbData[16];
+    unsigned char pbData[16], enc_data[16], bad_data[16];
     static const BYTE des3[16] = { 
         0x7b, 0xba, 0xdd, 0xa2, 0x39, 0xd3, 0x7b, 0xb3, 
         0xc7, 0x51, 0x81, 0x41, 0x53, 0xe8, 0xcf, 0xeb };
@@ -906,11 +978,47 @@ static void test_3des(void)
       result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, cTestData[i].buflen);
       ok(result, "%08x\n", GetLastError());
       ok(dwLen==cTestData[i].buflen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].buflen);
+      memcpy(enc_data, pbData, cTestData[i].buflen);
 
       result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
       ok(result, "%08x\n", GetLastError());
       ok(dwLen==cTestData[i].enclen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].enclen);
       ok(memcmp(pbData,cTestData[i].decstr,cTestData[i].enclen)==0,"decryption incorrect %d\n",i);
+      if((dwLen != cTestData[i].enclen) ||
+         memcmp(pbData,cTestData[i].decstr,cTestData[i].enclen))
+      {
+          printBytes("expected",cTestData[i].decstr,cTestData[i].strlen);
+          printBytes("got",pbData,dwLen);
+      }
+
+      /* Test bad data:
+         Decrypting a block of bad data with Final = TRUE should restore the
+         initial state of the key as well as decrypting a block of good data.
+       */
+
+      /* Changing key state by setting Final = FALSE */
+      dwLen = cTestData[i].buflen;
+      memcpy(pbData, enc_data, cTestData[i].buflen);
+      result = CryptDecrypt(hKey, 0, FALSE, 0, pbData, &dwLen);
+      ok(result, "%08x\n", GetLastError());
+
+      /* Restoring key state by decrypting bad_data with Final = TRUE */
+      memcpy(bad_data, enc_data, cTestData[i].buflen);
+      bad_data[cTestData[i].buflen - 1] = ~bad_data[cTestData[i].buflen - 1];
+      SetLastError(0xdeadbeef);
+      result = CryptDecrypt(hKey, 0, TRUE, 0, bad_data, &dwLen);
+      ok(!result, "CryptDecrypt should failed!\n");
+      ok(GetLastError() == NTE_BAD_DATA, "%08x\n", GetLastError());
+      ok(dwLen==cTestData[i].buflen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].buflen);
+      ok(memcmp(pbData,cTestData[i].decstr,cTestData[1].enclen)==0,"decryption incorrect %d\n",i);
+
+      /* Checking key state */
+      dwLen = cTestData[i].buflen;
+      memcpy(pbData, enc_data, cTestData[i].buflen);
+      result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
+      ok(result, "%08x\n", GetLastError());
+      ok(dwLen==cTestData[i].enclen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].enclen);
+      ok(memcmp(pbData,cTestData[i].decstr,cTestData[1].enclen)==0,"decryption incorrect %d\n",i);
       if((dwLen != cTestData[i].enclen) ||
          memcmp(pbData,cTestData[i].decstr,cTestData[i].enclen))
       {
@@ -927,7 +1035,7 @@ static void test_aes(int keylen)
     HCRYPTKEY hKey;
     BOOL result;
     DWORD dwLen;
-    unsigned char pbData[16];
+    unsigned char pbData[16], enc_data[16], bad_data[16];
     int i;
 
     switch (keylen)
@@ -969,7 +1077,43 @@ static void test_aes(int keylen)
       result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, cTestData[i].buflen);
       ok(result, "%08x\n", GetLastError());
       ok(dwLen==cTestData[i].buflen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].buflen);
+      memcpy(enc_data, pbData, cTestData[i].buflen);
 
+      result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
+      ok(result, "%08x\n", GetLastError());
+      ok(dwLen==cTestData[i].enclen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].enclen);
+      ok(memcmp(pbData,cTestData[i].decstr,cTestData[1].enclen)==0,"decryption incorrect %d\n",i);
+      if((dwLen != cTestData[i].enclen) ||
+         memcmp(pbData,cTestData[i].decstr,cTestData[i].enclen))
+      {
+          printBytes("expected",cTestData[i].decstr,cTestData[i].strlen);
+          printBytes("got",pbData,dwLen);
+      }
+
+      /* Test bad data:
+         Decrypting a block of bad data with Final = TRUE should restore the
+         initial state of the key as well as decrypting a block of good data.
+       */
+
+      /* Changing key state by setting Final = FALSE */
+      dwLen = cTestData[i].buflen;
+      memcpy(pbData, enc_data, cTestData[i].buflen);
+      result = CryptDecrypt(hKey, 0, FALSE, 0, pbData, &dwLen);
+      ok(result, "%08x\n", GetLastError());
+
+      /* Restoring key state by decrypting bad_data with Final = TRUE */
+      memcpy(bad_data, enc_data, cTestData[i].buflen);
+      bad_data[cTestData[i].buflen - 1] = ~bad_data[cTestData[i].buflen - 1];
+      SetLastError(0xdeadbeef);
+      result = CryptDecrypt(hKey, 0, TRUE, 0, bad_data, &dwLen);
+      ok(!result, "CryptDecrypt should failed!\n");
+      ok(GetLastError() == NTE_BAD_DATA, "%08x\n", GetLastError());
+      ok(dwLen==cTestData[i].buflen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].buflen);
+      ok(memcmp(pbData,cTestData[i].decstr,cTestData[1].enclen)==0,"decryption incorrect %d\n",i);
+
+      /* Checking key state */
+      dwLen = cTestData[i].buflen;
+      memcpy(pbData, enc_data, cTestData[i].buflen);
       result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwLen);
       ok(result, "%08x\n", GetLastError());
       ok(dwLen==cTestData[i].enclen,"length incorrect, got %d, expected %d\n",dwLen,cTestData[i].enclen);
