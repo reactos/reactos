@@ -217,68 +217,128 @@ static struct find_s find_tests2[] = {
   {0, -1, "wineWine wine", 0, -1},
 };
 
-static void check_EM_FINDTEXT(HWND hwnd, const char *name, struct find_s *f, int id) {
+static WCHAR *atowstr(const char *str)
+{
+    WCHAR *ret;
+    DWORD len;
+    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    ret = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+    return ret;
+}
+
+static void check_EM_FINDTEXT(HWND hwnd, const char *name, struct find_s *f, int id, BOOL unicode)
+{
   int findloc;
-  FINDTEXT ft;
-  memset(&ft, 0, sizeof(ft));
-  ft.chrg.cpMin = f->start;
-  ft.chrg.cpMax = f->end;
-  ft.lpstrText = f->needle;
-  findloc = SendMessage(hwnd, EM_FINDTEXT, f->flags, (LPARAM) &ft);
-  ok(findloc == f->expected_loc,
-     "EM_FINDTEXT(%s,%d) '%s' in range(%d,%d), flags %08x, got start at %d, expected %d\n",
-     name, id, f->needle, f->start, f->end, f->flags, findloc, f->expected_loc);
+
+  if(unicode){
+      FINDTEXTW ftw;
+      memset(&ftw, 0, sizeof(ftw));
+      ftw.chrg.cpMin = f->start;
+      ftw.chrg.cpMax = f->end;
+      ftw.lpstrText = atowstr(f->needle);
+
+      findloc = SendMessage(hwnd, EM_FINDTEXT, f->flags, (LPARAM) &ftw);
+      ok(findloc == f->expected_loc,
+         "EM_FINDTEXT(%s,%d,%u) '%s' in range(%d,%d), flags %08x, got start at %d, expected %d\n",
+         name, id, unicode, f->needle, f->start, f->end, f->flags, findloc, f->expected_loc);
+
+      findloc = SendMessage(hwnd, EM_FINDTEXTW, f->flags, (LPARAM) &ftw);
+      ok(findloc == f->expected_loc,
+         "EM_FINDTEXTW(%s,%d,%u) '%s' in range(%d,%d), flags %08x, got start at %d, expected %d\n",
+         name, id, unicode, f->needle, f->start, f->end, f->flags, findloc, f->expected_loc);
+
+      HeapFree(GetProcessHeap(), 0, (void*)ftw.lpstrText);
+  }else{
+      FINDTEXTA fta;
+      memset(&fta, 0, sizeof(fta));
+      fta.chrg.cpMin = f->start;
+      fta.chrg.cpMax = f->end;
+      fta.lpstrText = f->needle;
+
+      findloc = SendMessage(hwnd, EM_FINDTEXT, f->flags, (LPARAM) &fta);
+      ok(findloc == f->expected_loc,
+         "EM_FINDTEXT(%s,%d,%u) '%s' in range(%d,%d), flags %08x, got start at %d, expected %d\n",
+         name, id, unicode, f->needle, f->start, f->end, f->flags, findloc, f->expected_loc);
+  }
 }
 
 static void check_EM_FINDTEXTEX(HWND hwnd, const char *name, struct find_s *f,
-    int id) {
+    int id, BOOL unicode)
+{
   int findloc;
-  FINDTEXTEX ft;
   int expected_end_loc;
 
-  memset(&ft, 0, sizeof(ft));
-  ft.chrg.cpMin = f->start;
-  ft.chrg.cpMax = f->end;
-  ft.lpstrText = f->needle;
-  findloc = SendMessage(hwnd, EM_FINDTEXTEX, f->flags, (LPARAM) &ft);
-  ok(findloc == f->expected_loc,
-      "EM_FINDTEXTEX(%s,%d) '%s' in range(%d,%d), flags %08x, start at %d\n",
-      name, id, f->needle, f->start, f->end, f->flags, findloc);
-  ok(ft.chrgText.cpMin == f->expected_loc,
-      "EM_FINDTEXTEX(%s,%d) '%s' in range(%d,%d), flags %08x, start at %d\n",
-      name, id, f->needle, f->start, f->end, f->flags, ft.chrgText.cpMin);
-  expected_end_loc = ((f->expected_loc == -1) ? -1
-        : f->expected_loc + strlen(f->needle));
-  ok(ft.chrgText.cpMax == expected_end_loc,
-      "EM_FINDTEXTEX(%s,%d) '%s' in range(%d,%d), flags %08x, end at %d, expected %d\n",
-      name, id, f->needle, f->start, f->end, f->flags, ft.chrgText.cpMax, expected_end_loc);
+  if(unicode){
+      FINDTEXTEXW ftw;
+      memset(&ftw, 0, sizeof(ftw));
+      ftw.chrg.cpMin = f->start;
+      ftw.chrg.cpMax = f->end;
+      ftw.lpstrText = atowstr(f->needle);
+      findloc = SendMessage(hwnd, EM_FINDTEXTEX, f->flags, (LPARAM) &ftw);
+      ok(findloc == f->expected_loc,
+          "EM_FINDTEXTEX(%s,%d) '%s' in range(%d,%d), flags %08x, start at %d\n",
+          name, id, f->needle, f->start, f->end, f->flags, findloc);
+      ok(ftw.chrgText.cpMin == f->expected_loc,
+          "EM_FINDTEXTEX(%s,%d) '%s' in range(%d,%d), flags %08x, start at %d\n",
+          name, id, f->needle, f->start, f->end, f->flags, ftw.chrgText.cpMin);
+      expected_end_loc = ((f->expected_loc == -1) ? -1
+            : f->expected_loc + strlen(f->needle));
+      ok(ftw.chrgText.cpMax == expected_end_loc,
+          "EM_FINDTEXTEX(%s,%d) '%s' in range(%d,%d), flags %08x, end at %d, expected %d\n",
+          name, id, f->needle, f->start, f->end, f->flags, ftw.chrgText.cpMax, expected_end_loc);
+      HeapFree(GetProcessHeap(), 0, (void*)ftw.lpstrText);
+  }else{
+      FINDTEXTEXA fta;
+      memset(&fta, 0, sizeof(fta));
+      fta.chrg.cpMin = f->start;
+      fta.chrg.cpMax = f->end;
+      fta.lpstrText = f->needle;
+      findloc = SendMessage(hwnd, EM_FINDTEXTEX, f->flags, (LPARAM) &fta);
+      ok(findloc == f->expected_loc,
+          "EM_FINDTEXTEX(%s,%d) '%s' in range(%d,%d), flags %08x, start at %d\n",
+          name, id, f->needle, f->start, f->end, f->flags, findloc);
+      ok(fta.chrgText.cpMin == f->expected_loc,
+          "EM_FINDTEXTEX(%s,%d) '%s' in range(%d,%d), flags %08x, start at %d\n",
+          name, id, f->needle, f->start, f->end, f->flags, fta.chrgText.cpMin);
+      expected_end_loc = ((f->expected_loc == -1) ? -1
+            : f->expected_loc + strlen(f->needle));
+      ok(fta.chrgText.cpMax == expected_end_loc,
+          "EM_FINDTEXTEX(%s,%d) '%s' in range(%d,%d), flags %08x, end at %d, expected %d\n",
+          name, id, f->needle, f->start, f->end, f->flags, fta.chrgText.cpMax, expected_end_loc);
+  }
 }
 
 static void run_tests_EM_FINDTEXT(HWND hwnd, const char *name, struct find_s *find,
-    int num_tests)
+    int num_tests, BOOL unicode)
 {
   int i;
 
   for (i = 0; i < num_tests; i++) {
-      check_EM_FINDTEXT(hwnd, name, &find[i], i);
-      check_EM_FINDTEXTEX(hwnd, name, &find[i], i);
+      check_EM_FINDTEXT(hwnd, name, &find[i], i, unicode);
+      check_EM_FINDTEXTEX(hwnd, name, &find[i], i, unicode);
   }
 }
 
-static void test_EM_FINDTEXT(void)
+static void test_EM_FINDTEXT(BOOL unicode)
 {
-  HWND hwndRichEdit = new_richedit(NULL);
+  HWND hwndRichEdit;
   CHARFORMAT2 cf2;
+
+  if(unicode)
+       hwndRichEdit = new_richeditW(NULL);
+  else
+       hwndRichEdit = new_richedit(NULL);
 
   /* Empty rich edit control */
   run_tests_EM_FINDTEXT(hwndRichEdit, "1", find_tests,
-      sizeof(find_tests)/sizeof(struct find_s));
+      sizeof(find_tests)/sizeof(struct find_s), unicode);
 
   SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) haystack);
 
   /* Haystack text */
   run_tests_EM_FINDTEXT(hwndRichEdit, "2", find_tests2,
-      sizeof(find_tests2)/sizeof(struct find_s));
+      sizeof(find_tests2)/sizeof(struct find_s), unicode);
 
   /* Setting a format on an arbitrary range should have no effect in search
      results. This tests correct offset reporting across runs. */
@@ -291,7 +351,7 @@ static void test_EM_FINDTEXT(void)
 
   /* Haystack text, again */
   run_tests_EM_FINDTEXT(hwndRichEdit, "2-bis", find_tests2,
-      sizeof(find_tests2)/sizeof(struct find_s));
+      sizeof(find_tests2)/sizeof(struct find_s), unicode);
 
   /* Yet another range */
   cf2.dwMask = CFM_BOLD | cf2.dwMask;
@@ -301,7 +361,7 @@ static void test_EM_FINDTEXT(void)
 
   /* Haystack text, again */
   run_tests_EM_FINDTEXT(hwndRichEdit, "2-bisbis", find_tests2,
-      sizeof(find_tests2)/sizeof(struct find_s));
+      sizeof(find_tests2)/sizeof(struct find_s), unicode);
 
   DestroyWindow(hwndRichEdit);
 }
@@ -7303,7 +7363,8 @@ START_TEST( editor )
   ok(hmoduleRichEdit != NULL, "error: %d\n", (int) GetLastError());
 
   test_WM_CHAR();
-  test_EM_FINDTEXT();
+  test_EM_FINDTEXT(FALSE);
+  test_EM_FINDTEXT(TRUE);
   test_EM_GETLINE();
   test_EM_POSFROMCHAR();
   test_EM_SCROLLCARET();
