@@ -13,11 +13,10 @@ list(APPEND SOURCE
     qmgr.c
     qmgr_main.c
     service.c
-    rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/qmgr_local_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/qmgr.def)
 
-add_library(qmgr SHARED ${SOURCE})
+add_library(qmgr SHARED ${SOURCE} rsrc.rc)
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/qmgr.inf)
 add_idl_headers(qmgr_idlheader qmgr_local.idl)
 set_module_type(qmgr win32dll)
