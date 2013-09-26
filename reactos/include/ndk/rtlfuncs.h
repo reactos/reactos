@@ -2733,6 +2733,12 @@ RtlGetLengthWithoutTrailingPathSeparators(
     _In_ PCUNICODE_STRING PathString,
     _Out_ PULONG Length
 );
+/*
+ * NOTE: the export is called RtlGetLengthWithoutTrailingPathSeperators
+ *        (with a 'e' instead of a 'a' in "Seperators").
+ */
+#define RtlGetLengthWithoutTrailingPathSeperators   \
+        RtlGetLengthWithoutTrailingPathSeparators
 
 NTSYSAPI
 ULONG
