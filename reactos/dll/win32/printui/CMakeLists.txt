@@ -1,20 +1,15 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
-
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(printui.dll printui.spec)
 
 list(APPEND SOURCE
     printui.c
-    printui.rc
     ${CMAKE_CURRENT_BINARY_DIR}/printui_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/printui.def)
 
-add_library(printui SHARED ${SOURCE})
+add_library(printui SHARED ${SOURCE} printui.rc)
 set_module_type(printui win32dll)
-
 target_link_libraries(printui wine)
-
 add_importlibs(printui shell32 msvcrt kernel32 ntdll)
-add_dependencies(printui psdk)
 add_cd_file(TARGET printui DESTINATION reactos/system32 FOR all)
