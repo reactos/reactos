@@ -56,21 +56,11 @@ static HMODULE hOleaut32;
   if (!p##func) { \
     win_skip("function " # func " not available, not testing it\n"); return; }
 
-/* Is a given function exported from oleaut32? */
-#define HAVE_FUNC(func) ((void*)GetProcAddress(hOleaut32, #func) != NULL)
+/* Has I8/UI8 data type? */
+static BOOL has_i8;
+/* Has proper locale conversions? */
+static BOOL has_locales;
 
-/* Have IRecordInfo data type? */
-#define HAVE_OLEAUT32_RECORD  HAVE_FUNC(SafeArraySetRecordInfo)
-/* Have DECIMAL data type with new error checking? */
-#define HAVE_OLEAUT32_DECIMAL HAVE_FUNC(VarDecAdd)
-/* Have CY data type? */
-#define HAVE_OLEAUT32_CY      HAVE_FUNC(VarCyAdd)
-/* Have I8/UI8 data type? */
-#define HAVE_OLEAUT32_I8      HAVE_FUNC(VarI8FromI1)
-/* Have proper locale conversions? */
-#define HAVE_OLEAUT32_LOCALES (HAVE_FUNC(GetVarConversionLocaleSetting) && HAVE_OLEAUT32_I8)
-/* Is this an ancient version with support for only I2/I4/R4/R8/DATE? */
-#define IS_ANCIENT (!HAVE_FUNC(VarI1FromI2))
 /* Is vt a type unavailable to ancient versions? */
 #define IS_MODERN_VTYPE(vt) (vt==VT_VARIANT||vt==VT_DECIMAL|| \
     vt==VT_I1||vt==VT_UI2||vt==VT_UI4||vt == VT_INT||vt == VT_UINT)
@@ -119,13 +109,10 @@ static HMODULE hOleaut32;
 #define CONVERT_DEC64(func,scl,sgn,hi,mid,lo) SETDEC64(in,scl,sgn,hi,mid,lo); hres = p##func(&in, &out)
 
 #define CONVERT_BADDEC(func) \
-  if (HAVE_OLEAUT32_DECIMAL) \
-  { \
-    CONVERT_DEC(func,29,0,0,0);   EXPECT_INVALID; \
-    CONVERT_DEC(func,0,0x1,0,0);  EXPECT_INVALID; \
-    CONVERT_DEC(func,0,0x40,0,0); EXPECT_INVALID; \
-    CONVERT_DEC(func,0,0x7f,0,0); EXPECT_INVALID; \
-  }
+  CONVERT_DEC(func,29,0,0,0);   EXPECT_INVALID; \
+  CONVERT_DEC(func,0,0x1,0,0);  EXPECT_INVALID; \
+  CONVERT_DEC(func,0,0x40,0,0); EXPECT_INVALID; \
+  CONVERT_DEC(func,0,0x7f,0,0); EXPECT_INVALID;
 
 #define CONVERT_STR(func,str,flags) \
   SetLastError(0); \
@@ -166,23 +153,18 @@ static HMODULE hOleaut32;
   VariantInit(&vDst); \
   V_VT(&vSrc) = vt; \
   (val(&vSrc)) = in; \
-  if (!IS_ANCIENT) { \
-    TYPETEST(VT_I1, V_I1(&vDst), fs); \
-    TYPETEST(VT_UI2, V_UI2(&vDst), fs); \
-    TYPETEST(VT_UI4, V_UI4(&vDst), fs); \
-    TYPETEST(VT_INT, V_INT(&vDst), fs); \
-    TYPETEST(VT_UINT, V_UINT(&vDst), fs); \
-  } else {  \
-    BADVAR(VT_I1); BADVAR(VT_UI2); BADVAR(VT_UI4); \
-    BADVAR(VT_INT); BADVAR(VT_UINT); \
-  } \
+  TYPETEST(VT_I1, V_I1(&vDst), fs); \
+  TYPETEST(VT_UI2, V_UI2(&vDst), fs); \
+  TYPETEST(VT_UI4, V_UI4(&vDst), fs); \
+  TYPETEST(VT_INT, V_INT(&vDst), fs); \
+  TYPETEST(VT_UINT, V_UINT(&vDst), fs); \
   TYPETEST(VT_UI1, V_UI1(&vDst), fs); \
   TYPETEST(VT_I2, V_I2(&vDst), fs); \
   TYPETEST(VT_I4, V_I4(&vDst), fs); \
   TYPETEST(VT_R4, V_R4(&vDst), fs); \
   TYPETEST(VT_R8, V_R8(&vDst), fs); \
   TYPETEST(VT_DATE, V_DATE(&vDst), fs); \
-  if (HAVE_OLEAUT32_I8) \
+  if (has_i8) \
   { \
     TYPETEST(VT_I8, V_I8(&vDst), fs); \
     TYPETEST(VT_UI8, V_UI8(&vDst), fs); \
@@ -193,9 +175,7 @@ static HMODULE hOleaut32;
   VariantInit(&vDst); \
   V_VT(&vSrc) = vt; \
   (val(&vSrc)) = in; \
-  if (!IS_ANCIENT) { \
-    TYPETEST(vtneg, valneg(&vDst), fs); \
-  }
+  TYPETEST(vtneg, valneg(&vDst), fs);
 
 #define INITIAL_TYPETESTI8(vt, val) \
   VariantInit(&vSrc); \
@@ -222,13 +202,10 @@ static HMODULE hOleaut32;
      (V_BOOL(&vDst) == VARIANT_TRUE || (V_VT(&vSrc) == VT_BOOL && V_BOOL(&vDst) == 1)), \
      "->VT_BOOL hres=0x%X, type=%d (should be VT_BOOL), value %d (should be VARIANT_TRUE)\n", \
      hres, V_VT(&vDst), V_BOOL(&vDst)); \
-  if (HAVE_OLEAUT32_CY) \
-  { \
-    hres = VariantChangeTypeEx(&vDst, &vSrc, 0, 0, VT_CY); \
-    ok(hres == S_OK && V_VT(&vDst) == VT_CY && V_CY(&vDst).int64 == CY_MULTIPLIER, \
-       "->VT_CY hres=0x%X, type=%d (should be VT_CY), value (%08x,%08x) (should be CY_MULTIPLIER)\n", \
-       hres, V_VT(&vDst), S(V_CY(&vDst)).Hi, S(V_CY(&vDst)).Lo); \
-  } \
+  hres = VariantChangeTypeEx(&vDst, &vSrc, 0, 0, VT_CY); \
+  ok(hres == S_OK && V_VT(&vDst) == VT_CY && V_CY(&vDst).int64 == CY_MULTIPLIER, \
+     "->VT_CY hres=0x%X, type=%d (should be VT_CY), value (%08x,%08x) (should be CY_MULTIPLIER)\n", \
+     hres, V_VT(&vDst), S(V_CY(&vDst)).Hi, S(V_CY(&vDst)).Lo); \
   if (V_VT(&vSrc) != VT_DATE) \
   { \
     hres = VariantChangeTypeEx(&vDst, &vSrc, 0, 0, VT_BSTR); \
@@ -237,16 +214,13 @@ static HMODULE hOleaut32;
        "->VT_BSTR hres=0x%X, type=%d (should be VT_BSTR), *bstr='%c'\n", \
        hres, V_VT(&vDst), V_BSTR(&vDst) ? *V_BSTR(&vDst) : '?'); \
   } \
-  if (HAVE_OLEAUT32_DECIMAL) \
-  { \
-    hres = VariantChangeTypeEx(&vDst, &vSrc, 0, 0, VT_DECIMAL); \
-    ok(hres == S_OK && V_VT(&vDst) == VT_DECIMAL && \
-       S(U(V_DECIMAL(&vDst))).sign == 0 && S(U(V_DECIMAL(&vDst))).scale == 0 && \
-       V_DECIMAL(&vDst).Hi32 == 0 && U1(V_DECIMAL(&vDst)).Lo64 == (ULONGLONG)in, \
-       "->VT_DECIMAL hres=0x%X, type=%d (should be VT_DECIMAL), sign=%d, scale=%d, hi=%u, lo=(%8x %8x),\n", \
-       hres, V_VT(&vDst), S(U(V_DECIMAL(&vDst))).sign, S(U(V_DECIMAL(&vDst))).scale, \
-       V_DECIMAL(&vDst).Hi32, S1(U1(V_DECIMAL(&vDst))).Mid32, S1(U1(V_DECIMAL(&vDst))).Lo32); \
-  } \
+  hres = VariantChangeTypeEx(&vDst, &vSrc, 0, 0, VT_DECIMAL); \
+  ok(hres == S_OK && V_VT(&vDst) == VT_DECIMAL && \
+     S(U(V_DECIMAL(&vDst))).sign == 0 && S(U(V_DECIMAL(&vDst))).scale == 0 && \
+     V_DECIMAL(&vDst).Hi32 == 0 && U1(V_DECIMAL(&vDst)).Lo64 == (ULONGLONG)in, \
+     "->VT_DECIMAL hres=0x%X, type=%d (should be VT_DECIMAL), sign=%d, scale=%d, hi=%u, lo=(%8x %8x),\n", \
+     hres, V_VT(&vDst), S(U(V_DECIMAL(&vDst))).sign, S(U(V_DECIMAL(&vDst))).scale, \
+     V_DECIMAL(&vDst).Hi32, S1(U1(V_DECIMAL(&vDst))).Mid32, S1(U1(V_DECIMAL(&vDst))).Lo32); \
   hres = VariantChangeTypeEx(&vDst, &vSrc, 0, 0, VT_EMPTY); \
   ok(hres == S_OK && V_VT(&vDst) == VT_EMPTY, "->VT_EMPTY hres=0x%X, type=%d (should be VT_EMPTY)\n", hres, V_VT(&vDst)); \
   hres = VariantChangeTypeEx(&vDst, &vSrc, 0, 0, VT_NULL); \
@@ -254,11 +228,8 @@ static HMODULE hOleaut32;
   MISMATCH(VT_DISPATCH); \
   MISMATCH(VT_ERROR); \
   MISMATCH(VT_UNKNOWN); \
-  if (!IS_ANCIENT) { MISMATCH(VT_VARIANT); } else { BADVAR(VT_VARIANT); } \
-  if (HAVE_OLEAUT32_RECORD) \
-  { \
-    MISMATCH(VT_RECORD); \
-  } \
+  MISMATCH(VT_VARIANT); \
+  MISMATCH(VT_RECORD); \
   BADVAR(VT_VOID); \
   BADVAR(VT_HRESULT); \
   BADVAR(VT_SAFEARRAY); \
@@ -488,6 +459,7 @@ static HRESULT (WINAPI *pVarDecSub)(const DECIMAL*,const DECIMAL*,DECIMAL*);
 static HRESULT (WINAPI *pVarDecMul)(const DECIMAL*,const DECIMAL*,DECIMAL*);
 static HRESULT (WINAPI *pVarDecDiv)(const DECIMAL*,const DECIMAL*,DECIMAL*);
 static HRESULT (WINAPI *pVarDecCmp)(const DECIMAL*,const DECIMAL*);
+static HRESULT (WINAPI *pVarDecCmpR8)(const DECIMAL*,double);
 static HRESULT (WINAPI *pVarDecNeg)(const DECIMAL*,DECIMAL*);
 
 static HRESULT (WINAPI *pVarBoolFromUI1)(BYTE,VARIANT_BOOL*);
@@ -847,10 +819,7 @@ static void test_VarI1FromStr(void)
 
 static void test_VarI1Copy(void)
 {
-  if (!IS_ANCIENT)
-  {
-      COPYTEST(1, VT_I1, V_I1(&vSrc), V_I1(&vDst), V_I1REF(&vSrc), V_I1REF(&vDst), "%d");
-  }
+  COPYTEST(1, VT_I1, V_I1(&vSrc), V_I1(&vDst), V_I1REF(&vSrc), V_I1REF(&vDst), "%d");
 }
 
 static void test_VarI1ChangeTypeEx(void)
@@ -861,12 +830,9 @@ static void test_VarI1ChangeTypeEx(void)
 
   in = 1;
 
-  if (!IS_ANCIENT)
-  {
-      INITIAL_TYPETEST(VT_I1, V_I1, "%d");
-      COMMON_TYPETEST;
-      NEGATIVE_TYPETEST(VT_I1, V_I1, "%d", VT_UI1, V_UI1);
-  }
+  INITIAL_TYPETEST(VT_I1, V_I1, "%d");
+  COMMON_TYPETEST;
+  NEGATIVE_TYPETEST(VT_I1, V_I1, "%d", VT_UI1, V_UI1);
 }
 
 #undef CONV_TYPE
@@ -1620,10 +1586,7 @@ static void test_VarUI2FromStr(void)
 
 static void test_VarUI2Copy(void)
 {
-  if (!IS_ANCIENT)
-  {
-      COPYTEST(1, VT_UI2, V_UI2(&vSrc), V_UI2(&vDst), V_UI2REF(&vSrc), V_UI2REF(&vDst), "%d");
-  }
+  COPYTEST(1, VT_UI2, V_UI2(&vSrc), V_UI2(&vDst), V_UI2REF(&vSrc), V_UI2REF(&vDst), "%d");
 }
 
 static void test_VarUI2ChangeTypeEx(void)
@@ -1634,12 +1597,9 @@ static void test_VarUI2ChangeTypeEx(void)
 
   in = 1;
 
-  if (!IS_ANCIENT)
-  {
-    INITIAL_TYPETEST(VT_UI2, V_UI2, "%d");
-    COMMON_TYPETEST;
-    NEGATIVE_TYPETEST(VT_UI2, V_UI2, "%d", VT_I2, V_I2);
-  }
+  INITIAL_TYPETEST(VT_UI2, V_UI2, "%d");
+  COMMON_TYPETEST;
+  NEGATIVE_TYPETEST(VT_UI2, V_UI2, "%d", VT_I2, V_I2);
 }
 
 /*
@@ -2108,10 +2068,7 @@ static void test_VarUI4FromStr(void)
 
 static void test_VarUI4Copy(void)
 {
-  if (!IS_ANCIENT)
-  {
-      COPYTEST(1u, VT_UI4, V_UI4(&vSrc), V_UI4(&vDst), V_UI4REF(&vSrc), V_UI4REF(&vDst), "%u");
-  }
+  COPYTEST(1u, VT_UI4, V_UI4(&vSrc), V_UI4(&vDst), V_UI4REF(&vSrc), V_UI4REF(&vDst), "%u");
 }
 
 static void test_VarUI4ChangeTypeEx(void)
@@ -2122,12 +2079,9 @@ static void test_VarUI4ChangeTypeEx(void)
 
   in = 1;
 
-  if (!IS_ANCIENT)
-  {
-    INITIAL_TYPETEST(VT_UI4, V_UI4, "%u");
-    COMMON_TYPETEST;
-    NEGATIVE_TYPETEST(VT_UI4, V_UI4, "%u", VT_I4, V_I4);
-  }
+  INITIAL_TYPETEST(VT_UI4, V_UI4, "%u");
+  COMMON_TYPETEST;
+  NEGATIVE_TYPETEST(VT_UI4, V_UI4, "%u", VT_I4, V_I4);
 }
 
 /*
@@ -2363,7 +2317,7 @@ static void test_VarI8Copy(void)
   VARIANTARG vSrc, vDst;
   LONGLONG in = 1;
 
-  if (!HAVE_OLEAUT32_I8)
+  if (!has_i8)
   {
     win_skip("I8 and UI8 data types are not available\n");
     return;
@@ -2394,7 +2348,7 @@ static void test_VarI8ChangeTypeEx(void)
   LONG64 in;
   VARIANTARG vSrc, vDst;
 
-  if (!HAVE_OLEAUT32_I8)
+  if (!has_i8)
   {
     win_skip("I8 and UI8 data types are not available\n");
     return;
@@ -2632,7 +2586,7 @@ static void test_VarUI8Copy(void)
   VARIANTARG vSrc, vDst;
   ULONGLONG in = 1;
 
-  if (!HAVE_OLEAUT32_I8)
+  if (!has_i8)
   {
     win_skip("I8 and UI8 data types are not available\n");
     return;
@@ -2663,7 +2617,7 @@ static void test_VarUI8ChangeTypeEx(void)
   ULONG64 in;
   VARIANTARG vSrc, vDst;
 
-  if (!HAVE_OLEAUT32_I8)
+  if (!has_i8)
   {
     win_skip("I8 and UI8 data types are not available\n");
     return;
@@ -3523,7 +3477,7 @@ static void test_VarDateChangeTypeEx(void)
   VariantClear(&vDst);
 
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
-  if (HAVE_OLEAUT32_LOCALES)
+  if (has_locales)
   {
     hres = VariantChangeTypeEx(&vDst, &vSrc, lcid, VARIANT_NOUSEROVERRIDE|VARIANT_USE_NLS, VT_BSTR);
     ok(hres == S_OK && V_VT(&vDst) == VT_BSTR && V_BSTR(&vDst) && !lstrcmpW(V_BSTR(&vDst), sz25570Nls), 
@@ -4264,6 +4218,8 @@ static void test_VarDecFromCy(void)
 #define MATH1(func) hres = p##func(&l, &out)
 #undef MATH2
 #define MATH2(func) hres = p##func(&l, &r, &out)
+#undef MATH3
+#define MATH3(func) hres = p##func(&l, r)
 
 static void test_VarDecAbs(void)
 {
@@ -4337,6 +4293,9 @@ static void test_VarDecAdd(void)
   SETDEC64(l,0,0,0xffffffff,0xffffffff,0xffffffff);SETDEC(r,0,0,0,1); MATH2(VarDecAdd);
   ok(hres == DISP_E_OVERFLOW,"Expected overflow, got (%d,%d,%d,(%8x,%8x)x) hres 0x%08x\n",
      S(U(out)).scale, S(U(out)).sign, out.Hi32, S1(U1(out)).Mid32, S1(U1(out)).Lo32, hres);
+
+  SETDEC(l,3,128,0,123456); SETDEC64(r,0,0,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF);
+  MATH2(VarDecAdd); todo_wine EXPECTDEC64(0,0,-1,0xFFFFFFFF,0xFFFFFF84);
 
   /* Promotes to the highest scale, so here the results are in the scale of 2 */
   SETDEC(l,2,0,0,0);   SETDEC(r,0,0,0,0); MATH2(VarDecAdd); EXPECTDEC(2,0,0,0);
@@ -4558,6 +4517,38 @@ static void test_VarDecCmp(void)
   SETDEC(out,0,DECIMAL_NEG,-1,-1); SETDEC(l,0,DECIMAL_NEG,0,0); MATH1(VarDecCmp); EXPECT_GT;
   SETDEC(out,0,DECIMAL_NEG,-1,-1); SETDEC(l,0,DECIMAL_NEG,-1,-1); MATH1(VarDecCmp); EXPECT_EQ;
 
+  SETDEC(l,3,0,0,123456); SETDEC64(out,0,0,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF);
+  MATH1(VarDecCmp); todo_wine EXPECT_LT;
+}
+
+static void test_VarDecCmpR8(void)
+{
+  HRESULT hres;
+  DECIMAL l;
+  double r;
+
+  CHECKPTR(VarDecCmpR8);
+
+  SETDEC(l,0,0,0,1); r = 0.0;  MATH3(VarDecCmpR8); EXPECT_GT;
+  SETDEC(l,0,0,0,1); r = 0.1;  MATH3(VarDecCmpR8); EXPECT_GT;
+  SETDEC(l,0,0,0,1); r = -0.1; MATH3(VarDecCmpR8); EXPECT_GT;
+
+  SETDEC(l,0,DECIMAL_NEG,0,1); r = 0.0;  MATH3(VarDecCmpR8); EXPECT_LT;
+  SETDEC(l,0,DECIMAL_NEG,0,1); r = 0.1;  MATH3(VarDecCmpR8); EXPECT_LT;
+  SETDEC(l,0,DECIMAL_NEG,0,1); r = -0.1; MATH3(VarDecCmpR8); EXPECT_LT;
+
+  SETDEC(l,0,0,0,0); r = 0.0;  MATH3(VarDecCmpR8); EXPECT_EQ;
+  SETDEC(l,0,0,0,0); r = 0.1;  MATH3(VarDecCmpR8); EXPECT_LT;
+  SETDEC(l,0,0,0,0); r = -0.1; MATH3(VarDecCmpR8); EXPECT_GT;
+
+  SETDEC(l,0,DECIMAL_NEG,0,0); r = 0.0;  MATH3(VarDecCmpR8); EXPECT_EQ;
+  SETDEC(l,0,DECIMAL_NEG,0,0); r = 0.1;  MATH3(VarDecCmpR8); EXPECT_LT;
+  SETDEC(l,0,DECIMAL_NEG,0,0); r = -0.1; MATH3(VarDecCmpR8); EXPECT_GT;
+
+  SETDEC(l,0,0,0,1);             r = DECIMAL_NEG; MATH3(VarDecCmpR8); EXPECT_LT;
+  SETDEC(l,0,DECIMAL_NEG,0,0);   r = DECIMAL_NEG; MATH3(VarDecCmpR8); EXPECT_LT;
+  SETDEC(l,0,0,-1,-1);           r = DECIMAL_NEG; MATH3(VarDecCmpR8); EXPECT_GT;
+  SETDEC(l,0,DECIMAL_NEG,-1,-1); r = DECIMAL_NEG; MATH3(VarDecCmpR8); EXPECT_LT;
 }
 
 /*
@@ -4704,14 +4695,10 @@ static void test_VarBoolFromDec(void)
   CHECKPTR(VarBoolFromDec);
   CONVERT_BADDEC(VarBoolFromDec);
 
-  if (HAVE_OLEAUT32_DECIMAL)
-  {
-    /* Early versions of oleaut32 don't catch these errors */
-    CONVERT_DEC(VarBoolFromDec,29,0,0,0);   EXPECT_INVALID;
-    CONVERT_DEC(VarBoolFromDec,0,0x1,0,0);  EXPECT_INVALID;
-    CONVERT_DEC(VarBoolFromDec,0,0x40,0,0); EXPECT_INVALID;
-    CONVERT_DEC(VarBoolFromDec,0,0x7f,0,0); EXPECT_INVALID;
-  }
+  CONVERT_DEC(VarBoolFromDec,29,0,0,0);   EXPECT_INVALID;
+  CONVERT_DEC(VarBoolFromDec,0,0x1,0,0);  EXPECT_INVALID;
+  CONVERT_DEC(VarBoolFromDec,0,0x40,0,0); EXPECT_INVALID;
+  CONVERT_DEC(VarBoolFromDec,0,0x7f,0,0); EXPECT_INVALID;
 
   CONVERT_DEC(VarBoolFromDec,0,0x80,0,1); EXPECT(VARIANT_TRUE);
   CONVERT_DEC(VarBoolFromDec,0,0,0,0);    EXPECT(VARIANT_FALSE);
@@ -4773,7 +4760,7 @@ static void test_VarBoolFromStr(void)
   /* And is still not case sensitive */
   CONVERT_STR(VarBoolFromStr,"False",0); EXPECT(VARIANT_FALSE);
 
-  if (HAVE_OLEAUT32_LOCALES)
+  if (has_locales)
   {
     /* French is rejected without VARIANT_LOCALBOOL */
     CONVERT_STR(VarBoolFromStr,"faux",0); EXPECT_MISMATCH;
@@ -4793,7 +4780,7 @@ static void test_VarBoolFromStr(void)
   CONVERT_STR(VarBoolFromStr,"-1",0); EXPECT(VARIANT_TRUE);
   CONVERT_STR(VarBoolFromStr,"+1",0); EXPECT(VARIANT_TRUE);
 
-  if (HAVE_OLEAUT32_LOCALES)
+  if (has_locales)
   {
     /* Numeric strings are read as floating point numbers. The line below fails
      * because '.' is not a valid decimal separator for Polish numbers */
@@ -4838,14 +4825,11 @@ static void test_VarBoolChangeTypeEx(void)
   V_VT(&vSrc) = VT_BOOL;
   V_BOOL(&vSrc) = 1;
 
-  if (!IS_ANCIENT)
-  {
-      BOOL_STR(VARIANT_ALPHABOOL, szTrue);
-      V_BOOL(&vSrc) = 0;
-      BOOL_STR(VARIANT_ALPHABOOL, szFalse);
-  }
+  BOOL_STR(VARIANT_ALPHABOOL, szTrue);
+  V_BOOL(&vSrc) = 0;
+  BOOL_STR(VARIANT_ALPHABOOL, szFalse);
 
-  if (HAVE_OLEAUT32_LOCALES)
+  if (has_locales)
   {
     lcid = MAKELCID(MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT), SORT_DEFAULT);
 
@@ -5719,19 +5703,16 @@ static void test_IUnknownChangeTypeEx(void)
     {
       if (vt == VT_I8 || vt == VT_UI8)
       {
-        if (HAVE_OLEAUT32_I8)
+        if (has_i8)
           hExpected = DISP_E_TYPEMISMATCH;
       }
       else if (vt == VT_RECORD)
       {
-        if (HAVE_OLEAUT32_RECORD)
-          hExpected = DISP_E_TYPEMISMATCH;
+        hExpected = DISP_E_TYPEMISMATCH;
       }
       else if (vt  >= VT_I2 && vt <= VT_UINT && vt != (VARTYPE)15)
         hExpected = DISP_E_TYPEMISMATCH;
     }
-    if (IS_ANCIENT && IS_MODERN_VTYPE(vt))
-        hExpected = DISP_E_BADVARTYPE;
 
     hres = VariantChangeTypeEx(&vDst, &vSrc, lcid, 0, vt);
     ok(hres == hExpected,
@@ -5872,19 +5853,16 @@ static void test_ErrorChangeTypeEx(void)
     {
       if (vt == VT_I8 || vt == VT_UI8)
       {
-        if (HAVE_OLEAUT32_I8)
+        if (has_i8)
           hExpected = DISP_E_TYPEMISMATCH;
       }
       else if (vt == VT_RECORD)
       {
-        if (HAVE_OLEAUT32_RECORD)
-          hExpected = DISP_E_TYPEMISMATCH;
+        hExpected = DISP_E_TYPEMISMATCH;
       }
       else if (vt <= VT_UINT && vt != (VARTYPE)15)
         hExpected = DISP_E_TYPEMISMATCH;
     }
-    if (IS_ANCIENT && IS_MODERN_VTYPE(vt))
-        hExpected = DISP_E_BADVARTYPE;
 
     ok(hres == hExpected,
      "change err: vt %d expected 0x%08x, got 0x%08x\n", vt, hExpected, hres);
@@ -5911,13 +5889,12 @@ static void test_EmptyChangeTypeEx(void)
 
     if (vt == VT_I8 || vt == VT_UI8)
     {
-      if (HAVE_OLEAUT32_I8)
+      if (has_i8)
         hExpected = S_OK;
     }
     else if (vt == VT_RECORD)
     {
-      if (HAVE_OLEAUT32_RECORD)
-        hExpected = DISP_E_TYPEMISMATCH;
+      hExpected = DISP_E_TYPEMISMATCH;
     }
     else if (vt == VT_VARIANT || vt == VT_DISPATCH ||
               vt == VT_UNKNOWN || vt == VT_ERROR)
@@ -5926,9 +5903,6 @@ static void test_EmptyChangeTypeEx(void)
     }
     else if (vt <= VT_UINT && vt != (VARTYPE)15)
       hExpected = S_OK;
-
-    if (IS_ANCIENT && IS_MODERN_VTYPE(vt))
-        hExpected = DISP_E_BADVARTYPE;
 
     hres = VariantChangeTypeEx(&vDst, &vSrc, lcid, 0, vt);
 
@@ -5960,13 +5934,12 @@ static void test_NullChangeTypeEx(void)
 
     if (vt == VT_I8 || vt == VT_UI8)
     {
-      if (HAVE_OLEAUT32_I8)
+      if (has_i8)
         hExpected = DISP_E_TYPEMISMATCH;
     }
     else if (vt == VT_RECORD)
     {
-      if (HAVE_OLEAUT32_RECORD)
-        hExpected = DISP_E_TYPEMISMATCH;
+      hExpected = DISP_E_TYPEMISMATCH;
     }
     else if (vt == VT_NULL)
     {
@@ -5976,9 +5949,6 @@ static void test_NullChangeTypeEx(void)
               vt == VT_UNKNOWN || vt == VT_ERROR ||
               (vt <= VT_UINT && vt != (VARTYPE)15))
       hExpected = DISP_E_TYPEMISMATCH;
-
-    if (IS_ANCIENT && IS_MODERN_VTYPE(vt))
-        hExpected = DISP_E_BADVARTYPE;
 
     hres = VariantChangeTypeEx(&vDst, &vSrc, lcid, 0, vt);
 
@@ -6123,6 +6093,9 @@ static void test_bstr_cache(void)
 START_TEST(vartype)
 {
   hOleaut32 = GetModuleHandleA("oleaut32.dll");
+
+  has_i8 = GetProcAddress(hOleaut32, "VarI8FromI1") != NULL;
+  has_locales = has_i8 && GetProcAddress(hOleaut32, "GetVarConversionLocaleSetting") != NULL;
 
   trace("LCIDs: System=0x%08x, User=0x%08x\n", GetSystemDefaultLCID(),
         GetUserDefaultLCID());
@@ -6364,6 +6337,7 @@ START_TEST(vartype)
   test_VarDecAdd();
   test_VarDecSub();
   test_VarDecCmp();
+  test_VarDecCmpR8();
   test_VarDecMul();
   test_VarDecDiv();
 

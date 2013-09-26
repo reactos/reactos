@@ -48,11 +48,8 @@ static HRESULT (WINAPI *pVarFormatNumber)(LPVARIANT,int,int,int,int,ULONG,BSTR*)
 static HRESULT (WINAPI *pVarFormat)(LPVARIANT,LPOLESTR,int,int,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarWeekdayName)(int,int,int,ULONG,BSTR*);
 
-/* Have I8/UI8 data type? */
-#define HAVE_OLEAUT32_I8      HAVE_FUNC(VarI8FromI1)
-
-/* Is a given function exported from oleaut32? */
-#define HAVE_FUNC(func) ((void*)GetProcAddress(hOleaut32, #func) != NULL)
+/* Has I8/UI8 data type? */
+static BOOL has_i8;
 
 /* Get a conversion function ptr, return if function not available */
 #define CHECKPTR(func) p##func = (void*)GetProcAddress(hOleaut32, #func); \
@@ -100,7 +97,7 @@ static void test_VarFormatNumber(void)
   FMT_NUMBER(VT_UI2, V_UI2);
   FMT_NUMBER(VT_I4, V_I4);
   FMT_NUMBER(VT_UI4, V_UI4);
-  if (HAVE_OLEAUT32_I8)
+  if (has_i8)
   {
     FMT_NUMBER(VT_I8, V_I8);
     FMT_NUMBER(VT_UI8, V_UI8);
@@ -282,7 +279,7 @@ static void test_VarFormat(void)
   VNUMFMT(VT_I1,V_I1);
   VNUMFMT(VT_I2,V_I2);
   VNUMFMT(VT_I4,V_I4);
-  if (HAVE_OLEAUT32_I8)
+  if (has_i8)
   {
     VNUMFMT(VT_I8,V_I8);
   }
@@ -290,7 +287,7 @@ static void test_VarFormat(void)
   VNUMFMT(VT_UI1,V_UI1);
   VNUMFMT(VT_UI2,V_UI2);
   VNUMFMT(VT_UI4,V_UI4);
-  if (HAVE_OLEAUT32_I8)
+  if (has_i8)
   {
     VNUMFMT(VT_UI8,V_UI8);
   }
@@ -568,6 +565,8 @@ static void test_VarWeekdayName(void)
 START_TEST(varformat)
 {
   hOleaut32 = GetModuleHandleA("oleaut32.dll");
+
+  has_i8 = GetProcAddress(hOleaut32, "VarI8FromI1") != NULL;
 
   test_VarFormatNumber();
   test_VarFormat();

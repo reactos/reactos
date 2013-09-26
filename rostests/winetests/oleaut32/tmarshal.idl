@@ -22,7 +22,7 @@ import "ocidl.idl";
 
 [
   uuid(d96d8a3e-78b6-4c8d-8f27-059db959be8a),
-  version(1.0),
+  version(2.5),
   helpstring("Test Typelib")
 ]
 library TestTypelib
@@ -69,6 +69,17 @@ library TestTypelib
         uuid(3f7e06fe-0bce-46f0-8b7d-3a68393c7968)
     ]
     interface ITestSecondIface : IUnknown
+    {
+        HRESULT test();
+    }
+
+    [
+        odl,
+        oleautomation,
+        dual,
+        uuid(3f7e06fe-0bce-46f0-8b7d-3a68393c7969)
+    ]
+    interface ITestSecondDisp : IDispatch
     {
         HRESULT test();
     }

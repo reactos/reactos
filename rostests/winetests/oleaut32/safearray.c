@@ -56,22 +56,10 @@ static SAFEARRAY* (WINAPI *pSafeArrayCreateVector)(VARTYPE,LONG,ULONG);
 
 #define GETPTR(func) p##func = (void*)GetProcAddress(hOleaut32, #func)
 
-/* Is a given function exported from oleaut32? */
-#define HAVE_FUNC(func) ((void*)GetProcAddress(hOleaut32, #func) != NULL)
-
-/* Have IRecordInfo data type? */
-#define HAVE_OLEAUT32_RECORD  HAVE_FUNC(SafeArraySetRecordInfo)
-/* Have R8 data type? */
-#define HAVE_OLEAUT32_R8      HAVE_FUNC(VarR8FromI1)
-/* Have I8/UI8 data type? */
-#define HAVE_OLEAUT32_I8      HAVE_FUNC(VarI8FromI1)
-/* Have the decimal type? */
-#define HAVE_OLEAUT32_DECIMAL HAVE_FUNC(VarDecAdd)
-/* Have INT_PTR/UINT_PTR type? */
-static BOOL HAVE_OLEAUT32_INT_PTR;
-
-/* very old version? */
-#define IS_ANCIENT (!HAVE_FUNC(VarI1FromI2))
+/* Has I8/UI8 data type? */
+static BOOL has_i8;
+/* Has INT_PTR/UINT_PTR type? */
+static BOOL has_int_ptr;
 
 #define START_REF_COUNT 1
 #define RECORD_SIZE 64
@@ -189,19 +177,17 @@ static DWORD SAFEARRAY_GetVTSize(VARTYPE vt)
     case VT_UI4:
     case VT_R4:
     case VT_ERROR:    return sizeof(LONG);
-    case VT_R8:
-      if (HAVE_OLEAUT32_R8)
-        return sizeof(LONG64);
+    case VT_R8:       return sizeof(LONG64);
     case VT_I8:
     case VT_UI8:
-      if (HAVE_OLEAUT32_I8)
+      if (has_i8)
         return sizeof(LONG64);
       break;
     case VT_INT:
     case VT_UINT:     return sizeof(INT);
     case VT_INT_PTR:
     case VT_UINT_PTR: 
-      if (HAVE_OLEAUT32_INT_PTR)
+      if (has_int_ptr)
         return sizeof(UINT_PTR);
       break;
     case VT_CY:       return sizeof(CY);
@@ -210,10 +196,7 @@ static DWORD SAFEARRAY_GetVTSize(VARTYPE vt)
     case VT_DISPATCH: return sizeof(LPDISPATCH);
     case VT_VARIANT:  return sizeof(VARIANT);
     case VT_UNKNOWN:  return sizeof(LPUNKNOWN);
-    case VT_DECIMAL:
-      if (HAVE_OLEAUT32_DECIMAL)
-        return sizeof(DECIMAL);
-      break;
+    case VT_DECIMAL:  return sizeof(DECIMAL);
   }
   return 0;
 }
@@ -230,13 +213,13 @@ static void check_for_VT_INT_PTR(void)
     if (a) {
         HRESULT hres;
         trace("VT_INT_PTR is supported\n");
-        HAVE_OLEAUT32_INT_PTR = TRUE;
+        has_int_ptr = TRUE;
         hres = SafeArrayDestroy(a);
         ok(hres == S_OK, "got 0x%08x\n", hres);
     }
     else {
         trace("VT_INT_PTR is not supported\n");
-        HAVE_OLEAUT32_INT_PTR = FALSE;
+        has_int_ptr = FALSE;
     }        
 }
 
@@ -345,7 +328,8 @@ static void test_safearray(void)
         a->rgsabound[1].cElements = 4;
         a->rgsabound[1].lLbound = 1;
         a->cbElements = 2;
-        SafeArrayAllocData(a);
+        hres = SafeArrayAllocData(a);
+        ok(hres == S_OK, "SafeArrayAllocData failed with hres %x\n", hres);
 
         indices[0] = 4;
         indices[1] = 2;
@@ -477,7 +461,7 @@ static void test_safearray(void)
 	ok(hres == S_OK,"SAD failed with hres %x\n", hres);
 
 	for (i=0;i<sizeof(vttypes)/sizeof(vttypes[0]);i++) {
-	if ((i == VT_I8 || i == VT_UI8) && HAVE_OLEAUT32_I8)
+	if ((i == VT_I8 || i == VT_UI8) && has_i8)
 	{
 	  vttypes[i].elemsize = sizeof(LONG64);
 	}
@@ -485,17 +469,12 @@ static void test_safearray(void)
 	a = SafeArrayCreate(vttypes[i].vt, 1, &bound);
 
 	ok((!a && !vttypes[i].elemsize) ||
-	   (a && vttypes[i].elemsize == a->cbElements) ||
-	   (IS_ANCIENT && (vttypes[i].vt == VT_DECIMAL || vttypes[i].vt == VT_I1 ||
-	    vttypes[i].vt == VT_UI2 || vttypes[i].vt == VT_UI4 || vttypes[i].vt == VT_INT ||
-	    vttypes[i].vt == VT_UINT)),
+	   (a && vttypes[i].elemsize == a->cbElements),
 	   "SAC(%d,1,[1,0]), %p result %d, expected %d\n",
 	   vttypes[i].vt,a,(a?a->cbElements:0),vttypes[i].elemsize);
 
 	if (a)
 	{
-	  if (!HAVE_OLEAUT32_RECORD)
-	    vttypes[i].expflags = 0;
 	  ok(a->fFeatures == (vttypes[i].expflags | vttypes[i].addflags),
 	     "SAC of %d returned feature flags %x, expected %x\n",
 	  vttypes[i].vt, a->fFeatures,
@@ -688,8 +667,7 @@ static void test_SafeArrayAllocDestroyDescriptor(void)
   ok(hres == E_INVALIDARG, "0 dimensions gave hres 0x%x\n", hres);
 
   hres = SafeArrayAllocDescriptor(65536, &sa);
-  ok(IS_ANCIENT || hres == E_INVALIDARG,
-     "65536 dimensions gave hres 0x%x\n", hres);
+  ok(hres == E_INVALIDARG, "65536 dimensions gave hres 0x%x\n", hres);
 
   if (0)
   {
@@ -761,7 +739,7 @@ static void test_SafeArrayCreateLockDestroy(void)
   ok(sa == NULL, "NULL bounds didn't fail\n");
 */
   sa = SafeArrayCreate(VT_UI1, 65536, sab);
-  ok(IS_ANCIENT || !sa, "Max bounds didn't fail\n");
+  ok(!sa, "Max bounds didn't fail\n");
 
   memset(sab, 0, sizeof(sab));
 
@@ -780,9 +758,7 @@ static void test_SafeArrayCreateLockDestroy(void)
       sa = SafeArrayCreate(vt, dimension, sab);
 
       if (dwLen)
-        ok(sa || (IS_ANCIENT && (vt == VT_DECIMAL || vt == VT_I1 || vt == VT_UI2 ||
-           vt == VT_UI4 || vt == VT_INT || vt == VT_UINT)),
-           "VARTYPE %d (@%d dimensions) failed\n", vt, dimension);
+        ok(sa != NULL, "VARTYPE %d (@%d dimensions) failed\n", vt, dimension);
       else
         ok(sa == NULL || vt == VT_R8,
            "VARTYPE %d (@%d dimensions) succeeded!\n", vt, dimension);
@@ -810,7 +786,7 @@ static void test_SafeArrayCreateLockDestroy(void)
           {
             VARTYPE aVt;
 
-            ok(IS_ANCIENT || sa->fFeatures & FADF_HAVEVARTYPE,
+            ok(sa->fFeatures & FADF_HAVEVARTYPE,
                "Non interface type should have FADF_HAVEVARTYPE\n");
             if (pSafeArrayGetVartype)
             {
@@ -822,8 +798,7 @@ static void test_SafeArrayCreateLockDestroy(void)
         }
         else
         {
-          ok(IS_ANCIENT || sa->fFeatures & FADF_HAVEIID,
-             "Interface type should have FADF_HAVEIID\n");
+          ok(sa->fFeatures & FADF_HAVEIID, "Interface type should have FADF_HAVEIID\n");
           if (pSafeArraySetIID)
           {
             hres = pSafeArraySetIID(sa, &IID_IUnknown);
@@ -1812,6 +1787,8 @@ static void test_SafeArrayDestroyData (void)
 START_TEST(safearray)
 {
     hOleaut32 = GetModuleHandleA("oleaut32.dll");
+
+    has_i8 = GetProcAddress(hOleaut32, "VarI8FromI1") != NULL;
 
     GETPTR(SafeArrayAllocDescriptorEx);
     GETPTR(SafeArrayCopyData);
