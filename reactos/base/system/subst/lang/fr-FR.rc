@@ -5,11 +5,13 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Nombre incorrect de paramètres - %s\n"
     IDS_INVALID_PARAMETER "Nombre incorrect de paramètres - %s\n"
     IDS_INVALID_PARAMETER2 "Paramètre incorrect - %s\n"
-    IDS_DRIVE_ALREAD_SUBSTED "Disque déjà substitué\n"
-    IDS_FAILED_WITH_ERROCODE "Échoue avec le code d'erreur 0x%x: %s\n"
-    IDS_USAGE "Associe un chemin avec une lettre de lecteur.\n\nSUBST [disque1: [disque2:]chemin]\nSUBST dique1: /D\n\n   disque1:        \
-               Spécifie un lecteur virtuel auquel vous voulez affecter un chemin.\n   \
-               [disque2:]chemin  Spécifie un disque physique et le chemin que vous souhaitez attribuer à\n                  \
-               un disque virtuel.\n   /D             \
-               Supprime un disque (virtuel) substitué.\n\nTapez SUBST sans paramètres pour afficher la liste des lecteurs virtuels en cours.\n"
+    IDS_DRIVE_ALREADY_SUBSTED "Disque déjà substitué\n"
+    IDS_FAILED_WITH_ERRORCODE "Échoue avec le code d'erreur 0x%x: %s\n"
+    IDS_USAGE "Associe un chemin avec une lettre de lecteur.\n\n\
+SUBST [disque1: [disque2:]chemin]\n\
+SUBST dique1: /D\n\n\
+disque1:          Lecteur virtuel auquel vous voulez affecter un chemin.\n\
+[disque2:]chemin  Disque physique/chemin attribués à un disque virtuel.\n\
+/D          Supprime un disque (virtuel) substitué.\n\n\
+Tapez SUBST sans paramètre pour afficher la liste des lecteurs virtuels.\n"
 END
