@@ -4791,14 +4791,6 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIret)
             if (!Soft386StackPop(State, &Fs)) return FALSE;
             if (!Soft386StackPop(State, &Gs)) return FALSE;
 
-            /* Load the new segments */
-            if (!Soft386LoadSegment(State, SOFT386_REG_CS, CodeSel)) return FALSE;
-            if (!Soft386LoadSegment(State, SOFT386_REG_SS, StackSel)) return FALSE;
-            if (!Soft386LoadSegment(State, SOFT386_REG_ES, Es)) return FALSE;
-            if (!Soft386LoadSegment(State, SOFT386_REG_DS, Ds)) return FALSE;
-            if (!Soft386LoadSegment(State, SOFT386_REG_FS, Fs)) return FALSE;
-            if (!Soft386LoadSegment(State, SOFT386_REG_GS, Gs)) return FALSE;
-
             /* Set the new IP */
             State->InstPtr.Long = LOWORD(InstPtr);
 
@@ -4806,6 +4798,14 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIret)
             if (Size) State->Flags.Long = NewFlags.Long & REAL_MODE_FLAGS_MASK;
             else State->Flags.LowWord = NewFlags.LowWord & REAL_MODE_FLAGS_MASK;
             State->Flags.AlwaysSet = State->Flags.Vm = TRUE;
+
+            /* Load the new segments */
+            if (!Soft386LoadSegment(State, SOFT386_REG_CS, CodeSel)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_SS, StackSel)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_ES, Es)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_DS, Ds)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_FS, Fs)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_GS, Gs)) return FALSE;
 
             return TRUE;
         }
