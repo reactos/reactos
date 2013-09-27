@@ -162,7 +162,7 @@ Soft386LoadSegment(PSOFT386_STATE State,
     CachedDescriptor = &State->SegmentRegs[Segment];
 
     /* Check for protected mode */
-    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+    if ((State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE) && !State->Flags.Vm)
     {
         /* Make sure the GDT contains the entry */
         if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))

@@ -18,6 +18,8 @@
 #define SIGN_FLAG_BYTE  0x80
 #define SIGN_FLAG_WORD  0x8000
 #define SIGN_FLAG_LONG  0x80000000
+#define REAL_MODE_FLAGS_MASK 0x17FD5
+#define PROT_MODE_FLAGS_MASK 0x10DD5
 
 #define GET_SEGMENT_RPL(s)          ((s) & 3)
 #define GET_SEGMENT_INDEX(s)        ((s) & 0xFFF8)

@@ -4690,10 +4690,221 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeInt)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeIret)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    INT i;
+    ULONG InstPtr, CodeSel, StackPtr, StackSel;
+    SOFT386_FLAGS_REG NewFlags;
+    BOOLEAN Size = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xCF);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
+    }
+
+    /* Pop EIP */
+    if (!Soft386StackPop(State, &InstPtr))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Pop CS */
+    if (!Soft386StackPop(State, &CodeSel))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Pop EFLAGS */
+    if (!Soft386StackPop(State, &NewFlags.Long))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check for protected mode */
+    if (State->ControlRegisters[SOFT386_REG_CR0] & SOFT386_CR0_PE)
+    {
+        INT Cpl = Soft386GetCurrentPrivLevel(State);
+
+        if (State->Flags.Vm)
+        {
+            /* Return from VM86 mode */
+
+            /* Check the IOPL */
+            if (State->Flags.Iopl == 3)
+            {
+                /* Set new EIP */
+                State->InstPtr.Long = LOWORD(InstPtr);
+
+                /* Load new CS */
+                if (!Soft386LoadSegment(State, SOFT386_REG_CS, CodeSel))
+                {
+                    /* Exception occurred */
+                    return FALSE;
+                }
+
+                /* Set the new flags */
+                if (Size) State->Flags.Long = NewFlags.Long & REAL_MODE_FLAGS_MASK;
+                else State->Flags.LowWord = NewFlags.LowWord & REAL_MODE_FLAGS_MASK;
+                State->Flags.AlwaysSet = State->Flags.Vm = TRUE;
+                State->Flags.Iopl = 3;
+            }
+            else
+            {
+                /* Call the VM86 monitor */
+                Soft386ExceptionWithErrorCode(State, SOFT386_EXCEPTION_GP, 0);
+                return FALSE;
+            }
+
+            return TRUE;
+        }
+
+        if (State->Flags.Nt)
+        {
+            /* Nested task return */
+
+            UNIMPLEMENTED;
+            return FALSE;
+        }
+
+        if (NewFlags.Vm)
+        {
+            /* Return to VM86 mode */
+            ULONG Es, Ds, Fs, Gs;
+
+            /* Pop ESP, SS, ES, FS, GS */
+            if (!Soft386StackPop(State, &StackPtr)) return FALSE;
+            if (!Soft386StackPop(State, &StackSel)) return FALSE;
+            if (!Soft386StackPop(State, &Es)) return FALSE;
+            if (!Soft386StackPop(State, &Ds)) return FALSE;
+            if (!Soft386StackPop(State, &Fs)) return FALSE;
+            if (!Soft386StackPop(State, &Gs)) return FALSE;
+
+            /* Load the new segments */
+            if (!Soft386LoadSegment(State, SOFT386_REG_CS, CodeSel)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_SS, StackSel)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_ES, Es)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_DS, Ds)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_FS, Fs)) return FALSE;
+            if (!Soft386LoadSegment(State, SOFT386_REG_GS, Gs)) return FALSE;
+
+            /* Set the new IP */
+            State->InstPtr.Long = LOWORD(InstPtr);
+
+            /* Set the new flags */
+            if (Size) State->Flags.Long = NewFlags.Long & REAL_MODE_FLAGS_MASK;
+            else State->Flags.LowWord = NewFlags.LowWord & REAL_MODE_FLAGS_MASK;
+            State->Flags.AlwaysSet = State->Flags.Vm = TRUE;
+
+            return TRUE;
+        }
+
+        /* Load the new CS */
+        if (!Soft386LoadSegment(State, SOFT386_REG_CS, CodeSel))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Set EIP */
+        if (Size) State->InstPtr.Long = InstPtr;
+        else State->InstPtr.LowWord = LOWORD(InstPtr);
+
+        if (GET_SEGMENT_RPL(CodeSel) > Cpl)
+        {
+            /* Pop ESP */
+            if (!Soft386StackPop(State, &StackPtr))
+            {
+                /* Exception */
+                return FALSE;
+            }
+
+            /* Pop SS */
+            if (!Soft386StackPop(State, &StackSel))
+            {
+                /* Exception */
+                return FALSE;
+            }
+
+            /* Load new SS */
+            if (!Soft386LoadSegment(State, SOFT386_REG_SS, StackSel))
+            {
+                /* Exception */
+                return FALSE;
+            }
+
+            /* Set ESP */
+            if (Size) State->GeneralRegs[SOFT386_REG_ESP].Long = StackPtr;
+            else State->GeneralRegs[SOFT386_REG_ESP].LowWord = LOWORD(StackPtr);
+        }
+
+        /* Set the new flags */
+        if (Size) State->Flags.Long = NewFlags.Long & PROT_MODE_FLAGS_MASK;
+        else State->Flags.LowWord = NewFlags.LowWord & PROT_MODE_FLAGS_MASK;
+        State->Flags.AlwaysSet = TRUE;
+
+        /* Set additional flags */
+        if (Cpl <= State->Flags.Iopl) State->Flags.If = NewFlags.If;
+        if (Cpl == 0) State->Flags.Iopl = NewFlags.Iopl;
+
+        if (GET_SEGMENT_RPL(CodeSel) > Cpl)
+        {
+            /* Update the CPL */
+            Cpl = Soft386GetCurrentPrivLevel(State);
+
+            /* Check segment security */
+            for (i = 0; i <= SOFT386_NUM_SEG_REGS; i++)
+            {
+                /* Don't check CS or SS */
+                if ((i == SOFT386_REG_CS) || (i == SOFT386_REG_SS)) continue;
+
+                if ((Cpl > State->SegmentRegs[i].Dpl)
+                    && (!State->SegmentRegs[i].Executable
+                    || !State->SegmentRegs[i].DirConf))
+                {
+                    /* Load the NULL descriptor in the segment */
+                    if (!Soft386LoadSegment(State, i, 0)) return FALSE;
+                }
+            }
+        }
+    }
+    else
+    {
+        if (Size && (InstPtr & 0xFFFF0000))
+        {
+            /* Invalid */
+            Soft386ExceptionWithErrorCode(State, SOFT386_EXCEPTION_GP, 0);
+            return FALSE;
+        }
+
+        /* Set new EIP */
+        State->InstPtr.Long = InstPtr;
+
+        /* Load new CS */
+        if (!Soft386LoadSegment(State, SOFT386_REG_CS, CodeSel))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Set the new flags */
+        if (Size) State->Flags.Long = NewFlags.Long & REAL_MODE_FLAGS_MASK;
+        else State->Flags.LowWord = NewFlags.LowWord & REAL_MODE_FLAGS_MASK;
+        State->Flags.AlwaysSet = TRUE;
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeAam)
