@@ -131,6 +131,8 @@ DWORD FASTCALL IntGetCharDimensions(HDC, PTEXTMETRICW, PDWORD);
 BOOL FASTCALL GreGetTextExtentW(HDC,LPWSTR,INT,LPSIZE,UINT);
 BOOL FASTCALL GreGetTextExtentExW(HDC,LPWSTR,ULONG,ULONG,PULONG,PULONG,LPSIZE,FLONG);
 DWORD FASTCALL GreGetGlyphIndicesW(HDC,LPWSTR,INT,LPWORD,DWORD,DWORD);
+BOOL FASTCALL GreTextOutW(HDC,int,int,LPCWSTR,int);
+HFONT FASTCALL GreCreateFontIndirectW( LOGFONTW * );
 
 #define IntLockProcessPrivateFonts(W32Process) \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&W32Process->PrivateFontListLock)

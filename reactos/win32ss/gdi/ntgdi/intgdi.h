@@ -45,6 +45,12 @@ IntGdiPolylineTo(DC      *dc,
                  LPPOINT pt,
                  DWORD   Count);
 
+BOOL FASTCALL
+GreMoveTo( HDC hdc,
+           INT x,
+           INT y,
+           LPPOINT pptOut);
+
 /* Shape functions */
 
 BOOL

@@ -15,6 +15,17 @@
 
 /** Functions *****************************************************************/
 
+BOOL FASTCALL
+GreTextOutW(
+    HDC  hdc,
+    int  nXStart,
+    int  nYStart,
+    LPCWSTR  lpString,
+    int  cchString)
+{
+    return GreExtTextOutW(hdc, nXStart, nYStart, 0, NULL, (LPWSTR)lpString, cchString, NULL, 0);
+}
+
 /*
    flOpts :
    GetTextExtentPoint32W = 0

@@ -13,7 +13,33 @@
 #define NDEBUG
 #include <debug.h>
 
+HFONT APIENTRY HfontCreate( IN PENUMLOGFONTEXDVW pelfw,IN ULONG cjElfw,IN LFTYPE lft,IN FLONG fl,IN PVOID pvCliData );
+
 /** Internal ******************************************************************/
+
+HFONT FASTCALL
+GreCreateFontIndirectW( LOGFONTW *lplf )
+{
+    if (lplf)
+    {
+        ENUMLOGFONTEXDVW Logfont;
+
+        RtlCopyMemory( &Logfont.elfEnumLogfontEx.elfLogFont, lplf, sizeof(LOGFONTW));
+        RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfFullName,
+                       sizeof(Logfont.elfEnumLogfontEx.elfFullName));
+        RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfStyle,
+                       sizeof(Logfont.elfEnumLogfontEx.elfStyle));
+        RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfScript,
+                       sizeof(Logfont.elfEnumLogfontEx.elfScript));
+
+        Logfont.elfDesignVector.dvNumAxes = 0;
+
+        RtlZeroMemory( &Logfont.elfDesignVector, sizeof(DESIGNVECTOR));
+
+        return HfontCreate((PENUMLOGFONTEXDVW)&Logfont, 0, 0, 0, NULL );
+    }
+    else return NULL;
+}
 
 DWORD
 FASTCALL

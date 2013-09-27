@@ -3,6 +3,42 @@
 #define NDEBUG
 #include <debug.h>
 
+int FASTCALL
+GreGetBkMode(HDC hdc)
+{
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   return dc->pdcattr->lBkMode;
+}
+
+int FASTCALL
+GreGetMapMode(HDC hdc)
+{
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   return dc->pdcattr->iMapMode;
+}
+
+COLORREF FASTCALL
+GreGetTextColor(HDC hdc)
+{
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   return dc->pdcattr->ulForegroundClr;
+}
+
 COLORREF FASTCALL
 IntGdiSetBkColor(HDC hDC, COLORREF color)
 {
@@ -94,6 +130,53 @@ IntGdiSetTextColor(HDC hDC,
     DC_UnlockDc(pdc);
 
     return  crOldColor;
+}
+
+COLORREF FASTCALL
+IntSetDCBrushColor(HDC hdc, COLORREF crColor)
+{
+   COLORREF OldColor = CLR_INVALID;
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_HANDLE);
+      return CLR_INVALID;
+   }
+   else
+   {
+      OldColor = (COLORREF) dc->pdcattr->ulBrushClr;
+      dc->pdcattr->ulBrushClr = (ULONG) crColor;
+
+      if ( dc->pdcattr->crBrushClr != crColor )
+      {
+         dc->pdcattr->ulDirty_ |= DIRTY_FILL;
+         dc->pdcattr->crBrushClr = crColor;
+      }
+   }
+   return OldColor;
+}
+
+COLORREF FASTCALL
+IntSetDCPenColor(HDC hdc, COLORREF crColor)
+{
+   COLORREF OldColor;
+   PDC dc;
+   if (!(dc = DC_LockDc(hdc)))
+   {
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      return CLR_INVALID;
+   }
+
+   OldColor = (COLORREF)dc->pdcattr->ulPenClr;
+   dc->pdcattr->ulPenClr = (ULONG)crColor;
+
+   if (dc->pdcattr->crPenClr != crColor)
+   {
+      dc->pdcattr->ulDirty_ |= DIRTY_LINE;
+      dc->pdcattr->crPenClr = crColor;
+   }
+
+   return OldColor;
 }
 
 int
