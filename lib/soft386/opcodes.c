@@ -4076,10 +4076,54 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovModrm)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeMovStoreSeg)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN OperandSize, AddressSize;
+    SOFT386_MOD_REG_RM ModRegRm;
 
-    return FALSE;
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x8C);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the address size */
+        AddressSize = !AddressSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the operand size */
+        OperandSize = !OperandSize;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (ModRegRm.Register >= SOFT386_NUM_SEG_REGS)
+    {
+        /* Invalid */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        return Soft386WriteModrmDwordOperands(State,
+                                              &ModRegRm,
+                                              FALSE,
+                                              State->SegmentRegs[ModRegRm.Register].Selector);
+    }
+    else
+    {
+        return Soft386WriteModrmWordOperands(State,
+                                             &ModRegRm,
+                                             FALSE,
+                                             State->SegmentRegs[ModRegRm.Register].Selector);
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeLea)
@@ -4139,10 +4183,64 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLea)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeMovLoadSeg)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    BOOLEAN OperandSize, AddressSize;
+    SOFT386_MOD_REG_RM ModRegRm;
 
-    return FALSE;
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0x8E);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the address size */
+        AddressSize = !AddressSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the operand size */
+        OperandSize = !OperandSize;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (ModRegRm.Register >= SOFT386_NUM_SEG_REGS)
+    {
+        /* Invalid */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Dummy, Selector;
+
+        if (!Soft386ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Selector))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        return Soft386LoadSegment(State, ModRegRm.Register, LOWORD(Selector));
+    }
+    else
+    {
+        USHORT Dummy, Selector;
+
+        if (!Soft386ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Selector))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        return Soft386LoadSegment(State, ModRegRm.Register, Selector);
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeCwde)
