@@ -38,7 +38,7 @@
 
 #include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(jscript);
+WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
 /* FIXME: Better error handling */
 #define ReportRegExpError(a,b,c)
