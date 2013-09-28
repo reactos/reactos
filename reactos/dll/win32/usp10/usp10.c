@@ -1341,7 +1341,7 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
                         if (original == Script_Punctuation2)
                             break;
                     }
-                    if (scriptInformation[scripts[j]].props.fComplex || asian)
+                    if (j >= 0 && (scriptInformation[scripts[j]].props.fComplex || asian))
                         scripts[i] = scripts[j];
                 }
             }
