@@ -4503,7 +4503,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLdsLes)
         /* Check if this is a BOP and the host supports BOPs */
         if ((Opcode == 0xC4)
             && (ModRegRm.Register == SOFT386_REG_EAX)
-            && (ModRegRm.SecondRegister == SOFT386_REG_EBP)
+            && (ModRegRm.SecondRegister == SOFT386_REG_ESP)
             && (State->BopCallback != NULL))
         {
             USHORT BopCode;
