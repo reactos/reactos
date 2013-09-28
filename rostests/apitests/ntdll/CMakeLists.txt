@@ -3,6 +3,7 @@ list(APPEND SOURCE
     LdrEnumResources.c
     NtAllocateVirtualMemory.c
     NtContinue.c
+    NtCreateFile.c
     NtCreateThread.c
     NtFreeVirtualMemory.c
     NtMapViewOfSection.c

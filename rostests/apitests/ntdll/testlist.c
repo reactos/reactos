@@ -6,6 +6,7 @@
 extern void func_LdrEnumResources(void);
 extern void func_NtAllocateVirtualMemory(void);
 extern void func_NtContinue(void);
+extern void func_NtCreateFile(void);
 extern void func_NtCreateThread(void);
 extern void func_NtFreeVirtualMemory(void);
 extern void func_NtMapViewOfSection(void);
@@ -31,6 +32,7 @@ const struct test winetest_testlist[] =
     { "LdrEnumResources",               func_LdrEnumResources },
     { "NtAllocateVirtualMemory",        func_NtAllocateVirtualMemory },
     { "NtContinue",                     func_NtContinue },
+    { "NtCreateFile",                   func_NtCreateFile },
     { "NtCreateThread",                 func_NtCreateThread },
     { "NtFreeVirtualMemory",            func_NtFreeVirtualMemory },
     { "NtMapViewOfSection",             func_NtMapViewOfSection },
