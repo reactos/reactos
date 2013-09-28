@@ -478,9 +478,8 @@ BOOLEAN BiosInitialize(VOID)
         BiosCode[Offset++] = LOBYTE(EMULATOR_INT_BOP);
         BiosCode[Offset++] = HIBYTE(EMULATOR_INT_BOP);
 
-        BiosCode[Offset++] = 0x83; // add sp, 2
-        BiosCode[Offset++] = 0xC4;
-        BiosCode[Offset++] = 0x02;
+        BiosCode[Offset++] = 0x44; // inc sp
+        BiosCode[Offset++] = 0x44; // inc sp
 
         BiosCode[Offset++] = 0xCF; // iret
     }
