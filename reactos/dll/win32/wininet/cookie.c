@@ -238,6 +238,7 @@ static BOOL load_persistent_cookie(LPCWSTR domain, LPCWSTR path)
         heap_free(name);
         heap_free(data);
     }
+    heap_free(str);
     heap_free(name);
     heap_free(data);
 
@@ -537,8 +538,11 @@ static void COOKIE_deleteDomain(cookie_domain *deadDomain)
 
 DWORD get_cookie(const WCHAR *host, const WCHAR *path, WCHAR *cookie_data, DWORD *size)
 {
+    static const WCHAR empty_path[] = { '/',0 };
+
     unsigned cnt = 0, len, name_len, domain_count = 0, cookie_count = 0;
-    WCHAR *ptr = cookie_data;
+    WCHAR *ptr, subpath[INTERNET_MAX_PATH_LENGTH];
+    const WCHAR *p;
     cookie_domain *domain;
     FILETIME tm;
 
@@ -546,8 +550,30 @@ DWORD get_cookie(const WCHAR *host, const WCHAR *path, WCHAR *cookie_data, DWORD
 
     EnterCriticalSection(&cookie_cs);
 
-    load_persistent_cookie(host, path);
+    len = strlenW(host);
+    p = host+len;
+    while(p>host && p[-1]!='.') p--;
+    while(p != host) {
+        p--;
+        while(p>host && p[-1]!='.') p--;
+        if(p == host) break;
 
+        load_persistent_cookie(p, empty_path);
+    }
+
+    len = strlenW(path);
+    assert(len+1 < INTERNET_MAX_PATH_LENGTH);
+    memcpy(subpath, path, (len+1)*sizeof(WCHAR));
+    ptr = subpath+len;
+    do {
+        *ptr = 0;
+        load_persistent_cookie(host, subpath);
+
+        ptr--;
+        while(ptr>subpath && ptr[-1]!='/') ptr--;
+    }while(ptr != subpath);
+
+    ptr = cookie_data;
     LIST_FOR_EACH_ENTRY(domain, &domain_list, cookie_domain, entry) {
         struct list *cursor, *cursor2;
 

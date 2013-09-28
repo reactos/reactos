@@ -91,8 +91,15 @@ typedef struct
 {
     int socket;
     BOOL secure;
-    void *ssl_s;
+    CtxtHandle ssl_ctx;
+    SecPkgContext_StreamSizes ssl_sizes;
     server_t *server;
+    char *ssl_buf;
+    char *extra_buf;
+    size_t extra_len;
+    char *peek_msg;
+    char *peek_msg_mem;
+    size_t peek_len;
     DWORD security_flags;
     BOOL mask_errors;
 
@@ -134,6 +141,21 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
         DWORD size;
 
         size = (strlenW(str)+1)*sizeof(WCHAR);
+        ret = heap_alloc(size);
+        if(ret)
+            memcpy(ret, str, size);
+    }
+
+    return ret;
+}
+
+static inline char *heap_strdupA(const char *str)
+{
+    char *ret = NULL;
+
+    if(str) {
+        DWORD size = strlen(str)+1;
+
         ret = heap_alloc(size);
         if(ret)
             memcpy(ret, str, size);
@@ -321,7 +343,6 @@ typedef struct
     server_t *proxy;
     LPWSTR path;
     LPWSTR verb;
-    LPWSTR rawHeaders;
     netconn_t *netconn;
     DWORD security_flags;
     DWORD connect_timeout;
