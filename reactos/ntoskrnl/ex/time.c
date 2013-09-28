@@ -527,6 +527,7 @@ NtSetTimerResolution(IN ULONG DesiredResolution,
                      IN BOOLEAN SetResolution,
                      OUT PULONG CurrentResolution)
 {
+    NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PEPROCESS Process = PsGetCurrentProcess();
     ULONG NewResolution;
@@ -551,15 +552,21 @@ NtSetTimerResolution(IN ULONG DesiredResolution,
     NewResolution = ExSetTimerResolution(DesiredResolution, SetResolution);
     *CurrentResolution = NewResolution;
 
-    if (SetResolution)
+    if (SetResolution || Process->SetTimerResolution)
     {
-        /* Set the flag that the resolution has been changed */
-        Process->SetTimerResolution = TRUE;
+        /* The resolution has been changed now or in an earlier call */
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* The resolution hasn't been changed */
+        Status = STATUS_TIMER_RESOLUTION_NOT_SET;
     }
 
-    /* Return success if the process changed its timer resolution */
-    if (Process->SetTimerResolution) return STATUS_SUCCESS;
-    else return STATUS_TIMER_RESOLUTION_NOT_SET;
+    /* Update the flag */
+    Process->SetTimerResolution = SetResolution;
+
+    return Status;
 }
 
 /* EOF */
