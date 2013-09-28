@@ -75,4 +75,12 @@ START_TEST(TimerResolution)
 
     /* Since we have changed the resolution earlier, it returns STATUS_SUCCESS. */
     ok_hex(Status, STATUS_SUCCESS);
+
+    /* Get the current timer resolution again */
+    Status = NtSetTimerResolution(0,        /* Ignored */
+                                  FALSE,    /* Don't change resolution */
+                                  &CurrentResolution);
+
+    /* The resolution is not changed now, so it should return STATUS_TIMER_RESOLUTION_NOT_SET */
+    ok_hex(Status, STATUS_TIMER_RESOLUTION_NOT_SET);
 }
