@@ -61,7 +61,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
 
         if (IoStack->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL && 
             IoStack->Parameters.FileSystemControl.FsControlCode == FSCTL_PIPE_INTERNAL_READ_OVFLOW &&
-             (DataSize < OutBufferSize || MoreProcessing))
+            (DataSize < OutBufferSize || MoreProcessing))
         {
             WriteIrp = NpRemoveDataQueueEntry(WriteQueue, TRUE, List);
             if (WriteIrp)
@@ -74,7 +74,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
 
         if (DataEntry->DataEntryType == Unbuffered)
         {
-             DataEntry->Irp->Overlay.AllocationSize.QuadPart = 0;
+            DataEntry->Irp->Overlay.AllocationSize.QuadPart = 0;
         }
         
         BufferSize = *BytesNotWritten;
@@ -94,9 +94,9 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
 
         _SEH2_TRY
         {
-             RtlCopyMemory(Buffer,
-                           (PVOID)((ULONG_PTR)OutBuffer + OutBufferSize - *BytesNotWritten),
-                           BufferSize);
+            RtlCopyMemory(Buffer,
+                          (PVOID)((ULONG_PTR)OutBuffer + OutBufferSize - *BytesNotWritten),
+                          BufferSize);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {

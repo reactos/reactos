@@ -75,25 +75,25 @@ NpOpenNamedPipeRootDirectory(IN PNP_DCB Dcb,
                              IN ACCESS_MASK DesiredAccess,
                              IN PLIST_ENTRY List)
 {
-    IO_STATUS_BLOCK Status;
+    IO_STATUS_BLOCK IoStatus;
     PNP_ROOT_DCB_FCB Ccb;
     PAGED_CODE();
 
-    Status.Status = NpCreateRootDcbCcb(&Ccb);
-    if (NT_SUCCESS(Status.Status))
+    IoStatus.Status = NpCreateRootDcbCcb(&Ccb);
+    if (NT_SUCCESS(IoStatus.Status))
     {
         NpSetFileObject(FileObject, Dcb, Ccb, FALSE);
         ++Dcb->CurrentInstances;
 
-        Status.Information = FILE_OPENED;
-        Status.Status = STATUS_SUCCESS;
+        IoStatus.Information = FILE_OPENED;
+        IoStatus.Status = STATUS_SUCCESS;
     }
     else
     {
-        Status.Information = 0;
+        IoStatus.Information = 0;
     }
 
-    return Status;
+    return IoStatus;
 }
 
 IO_STATUS_BLOCK

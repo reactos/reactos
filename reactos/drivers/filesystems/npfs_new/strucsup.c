@@ -148,7 +148,7 @@ NpInitializeVcb(VOID)
 
 NTSTATUS
 NTAPI
-NpCreateRootDcbCcb(IN PNP_ROOT_DCB_FCB* NewRootCcb)
+NpCreateRootDcbCcb(IN PNP_ROOT_DCB_FCB *NewRootCcb)
 {
     PNP_ROOT_DCB_FCB RootCcb;
     PAGED_CODE();
@@ -304,7 +304,7 @@ NpCreateCcb(IN PNP_FCB Fcb,
             IN UCHAR CompletionMode,
             IN ULONG InQuota,
             IN ULONG OutQuota,
-            OUT PNP_CCB* NewCcb)
+            OUT PNP_CCB *NewCcb)
 {
     PNP_CCB Ccb;
     PNP_NONPAGED_CCB CcbNonPaged;

@@ -211,7 +211,7 @@ NpPeek(IN PDEVICE_OBJECT DeviceObject,
     PNP_CCB Ccb;
     PFILE_PIPE_PEEK_BUFFER PeekBuffer;
     PNP_DATA_QUEUE DataQueue;
-    ULONG BytesPeeked;
+    ULONG_PTR BytesPeeked;
     IO_STATUS_BLOCK IoStatus;
     NTSTATUS Status;
     PNP_DATA_QUEUE_ENTRY DataEntry;

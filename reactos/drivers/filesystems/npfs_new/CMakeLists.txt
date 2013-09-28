@@ -1,25 +1,25 @@
 
 list(APPEND SOURCE
-     cleanup.c
-     close.c
-     create.c
-     datasup.c
-     fileinfo.c
-     fileobsup.c
-     flushbuf.c
-     fsctrl.c
-     main.c
-     prefxsup.c
-     read.c
-     readsup.c
-     secursup.c
-     seinfo.c
-     statesup.c
-     strucsup.c
-     volinfo.c
-     waitsup.c
-     write.c
-     writesup.c)
+    cleanup.c
+    close.c
+    create.c
+    datasup.c
+    fileinfo.c
+    fileobsup.c
+    flushbuf.c
+    fsctrl.c
+    main.c
+    prefxsup.c
+    read.c
+    readsup.c
+    secursup.c
+    seinfo.c
+    statesup.c
+    strucsup.c
+    volinfo.c
+    waitsup.c
+    write.c
+    writesup.c)
 
 add_library(npfs SHARED ${SOURCE})
 set_module_type(npfs kernelmodedriver)

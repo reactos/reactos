@@ -34,7 +34,7 @@
 //
 //  Npf* -npfs.sys - Npfs Allocations
 //  NpFc - npfs.sys - CCB, client control block
-//  NpFf - npts.sys - FCB, file control block
+//  NpFf - npfs.sys - FCB, file control block
 //  NpFC - npfs.sys - ROOT_DCB CCB
 //  NpFD - npfs.sys - DCB, directory block
 //  NpFg - npfs.sys - Global storage
@@ -239,7 +239,9 @@ typedef struct _NP_DCB
     LIST_ENTRY NotifyList;
     LIST_ENTRY NotifyList2;
     LIST_ENTRY FcbList;
+#ifndef _WIN64
     ULONG Pad;
+#endif
 
     //
     // Common Footer
@@ -265,6 +267,9 @@ typedef struct _NP_FCB
     USHORT NamedPipeType;
     LARGE_INTEGER Timeout;
     LIST_ENTRY CcbList;
+#ifdef _WIN64
+    PVOID Pad[2];
+#endif
 
     //
     // Common Footer
@@ -436,7 +441,7 @@ NpCreateCcb(IN PNP_FCB Fcb,
             IN UCHAR CompletionMode,
             IN ULONG InQuota,
             IN ULONG OutQuota,
-            OUT PNP_CCB* NewCcb);
+            OUT PNP_CCB *NewCcb);
 
 NTSTATUS
 NTAPI
@@ -454,7 +459,7 @@ NpCreateRootDcb(VOID);
 
 NTSTATUS
 NTAPI
-NpCreateRootDcbCcb(IN PNP_ROOT_DCB_FCB* NewRootCcb);
+NpCreateRootDcbCcb(IN PNP_ROOT_DCB_FCB *NewRootCcb);
 
 VOID
 NTAPI
@@ -561,8 +566,8 @@ NpSetFileObject(IN PFILE_OBJECT FileObject,
 NODE_TYPE_CODE
 NTAPI
 NpDecodeFileObject(IN PFILE_OBJECT FileObject,
-                   OUT PVOID* PrimaryContext OPTIONAL,
-                   OUT PNP_CCB* Ccb,
+                   OUT PVOID *PrimaryContext OPTIONAL,
+                   OUT PNP_CCB *Ccb,
                    OUT PULONG NamedPipeEnd OPTIONAL);
 
 PNP_FCB
