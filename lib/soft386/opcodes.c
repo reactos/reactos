@@ -4210,7 +4210,8 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovLoadSeg)
         return FALSE;
     }
 
-    if (ModRegRm.Register >= SOFT386_NUM_SEG_REGS)
+    if ((ModRegRm.Register >= SOFT386_NUM_SEG_REGS)
+        || ((SOFT386_SEG_REGS)ModRegRm.Register == SOFT386_REG_CS))
     {
         /* Invalid */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
