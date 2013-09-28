@@ -211,6 +211,7 @@ Soft386Reset(PSOFT386_STATE State)
     SOFT386_IO_READ_PROC IoReadCallback = State->IoReadCallback;
     SOFT386_IO_WRITE_PROC IoWriteCallback = State->IoWriteCallback;
     SOFT386_IDLE_PROC IdleCallback = State->IdleCallback;
+    SOFT386_BOP_PROC BopCallback = State->BopCallback;
 
     /* Clear the entire structure */
     RtlZeroMemory(State, sizeof(*State));
@@ -245,6 +246,7 @@ Soft386Reset(PSOFT386_STATE State)
     State->IoReadCallback = IoReadCallback;
     State->IoWriteCallback = IoWriteCallback;
     State->IdleCallback = IdleCallback;
+    State->BopCallback = BopCallback;
 }
 
 VOID

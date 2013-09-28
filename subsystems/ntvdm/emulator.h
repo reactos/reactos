@@ -86,10 +86,16 @@ enum
 };
 
 #ifndef NEW_EMULATOR
+
+#define NTVDMCALL __cdecl
 extern softx86_ctx EmulatorContext;
 extern softx87_ctx FpuEmulatorContext;
+
 #else
+
+#define NTVDMCALL __stdcall
 extern SOFT386_STATE EmulatorContext;
+
 #endif
 
 /* FUNCTIONS ******************************************************************/

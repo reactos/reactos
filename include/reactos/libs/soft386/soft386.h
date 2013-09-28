@@ -157,6 +157,14 @@ VOID
     PSOFT386_STATE State
 );
 
+typedef
+VOID
+(NTAPI *SOFT386_BOP_PROC)
+(
+    PSOFT386_STATE State,
+    USHORT BopCode
+);
+
 typedef union _SOFT386_REG
 {
     union
@@ -295,6 +303,7 @@ struct _SOFT386_STATE
     SOFT386_IO_READ_PROC IoReadCallback;
     SOFT386_IO_WRITE_PROC IoWriteCallback;
     SOFT386_IDLE_PROC IdleCallback;
+    SOFT386_BOP_PROC BopCallback;
     SOFT386_REG GeneralRegs[SOFT386_NUM_GEN_REGS];
     SOFT386_SEG_REG SegmentRegs[SOFT386_NUM_SEG_REGS];
     SOFT386_REG InstPtr;

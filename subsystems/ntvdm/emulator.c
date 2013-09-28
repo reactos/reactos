@@ -31,7 +31,7 @@ static BOOLEAN A20Line = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID NTVDMCALL EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     UNREFERENCED_PARAMETER(Context);
 
@@ -56,7 +56,7 @@ static VOID EmulatorReadMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT S
     }
 }
 
-static VOID EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID NTVDMCALL EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     UNREFERENCED_PARAMETER(Context);
 
@@ -84,7 +84,7 @@ static VOID EmulatorWriteMemory(PVOID Context, UINT Address, LPBYTE Buffer, INT 
     }
 }
 
-static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID NTVDMCALL EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     UNREFERENCED_PARAMETER(Context);
     UNREFERENCED_PARAMETER(Size);
@@ -152,7 +152,7 @@ static VOID EmulatorReadIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
     }
 }
 
-static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
+static VOID NTVDMCALL EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size)
 {
     BYTE Byte = *Buffer;
 
@@ -228,8 +228,6 @@ static VOID EmulatorWriteIo(PVOID Context, UINT Address, LPBYTE Buffer, INT Size
     }
 }
 
-#ifndef NEW_EMULATOR
-
 static VOID EmulatorBop(WORD Code)
 {
     WORD StackSegment, StackPointer, CodeSegment, InstructionPointer;
@@ -241,8 +239,8 @@ static VOID EmulatorBop(WORD Code)
     StackSegment = EmulatorContext.state->segment_reg[SX86_SREG_SS].val;
     StackPointer = EmulatorContext.state->general_reg[SX86_REG_SP].val;
 #else
-    StackSegment = EmulatorContext.SegmentRegs[SOFT386_REG_SS].LowWord;
-    StackPointer = EmulatorContext.SegmentRegs[SOFT386_REG_SP].LowWord;
+    StackSegment = EmulatorContext.SegmentRegs[SOFT386_REG_SS].Selector;
+    StackPointer = EmulatorContext.GeneralRegs[SOFT386_REG_ESP].LowWord;
 #endif
 
     /* Get the stack */
@@ -341,6 +339,21 @@ static VOID EmulatorBop(WORD Code)
     }
 }
 
+#ifdef NEW_EMULATOR
+static VOID WINAPI EmulatorBiosOperation(PSOFT386_STATE State, WORD Code)
+{
+    /*
+     * HACK: To maintain softx86 compatbility, just call the old EmulatorBop here.
+     * Later on, when softx86 is no longer needed, the code from EmulatorBop should
+     * be moved here and should use the "State" variable.
+     */
+    EmulatorBop(Code);
+}
+
+#endif
+
+#ifndef NEW_EMULATOR
+
 static VOID EmulatorSoftwareInt(PVOID Context, BYTE Number)
 {
     UNREFERENCED_PARAMETER(Context);
@@ -412,6 +425,7 @@ BOOLEAN EmulatorInitialize()
     EmulatorContext.MemWriteCallback = (SOFT386_MEM_WRITE_PROC)EmulatorWriteMemory;
     EmulatorContext.IoReadCallback = (SOFT386_IO_READ_PROC)EmulatorReadIo;
     EmulatorContext.IoWriteCallback = (SOFT386_IO_WRITE_PROC)EmulatorWriteIo;
+    EmulatorContext.BopCallback = (SOFT386_BOP_PROC)EmulatorBiosOperation;
 
     /* Reset the CPU */
     Soft386Reset(&EmulatorContext);

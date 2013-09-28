@@ -221,8 +221,8 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     NULL, // TODO: OPCODE 0xC1 NOT SUPPORTED
     Soft386OpcodeRet,
     Soft386OpcodeRet,
-    Soft386OpcodeLes,
-    Soft386OpcodeLds,
+    Soft386OpcodeLdsLes,
+    Soft386OpcodeLdsLes,
     NULL, // TODO: OPCODE 0xC6 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xC7 NOT SUPPORTED
     Soft386OpcodeEnter,
@@ -4474,20 +4474,99 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeRet)
     return TRUE;
 }
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeLes)
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLdsLes)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    UCHAR FarPointer[6];
+    BOOLEAN OperandSize, AddressSize;
+    SOFT386_MOD_REG_RM ModRegRm;
 
-    return FALSE;
-}
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xC4);
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeLds)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
-    return FALSE;
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    /* Get the operands */
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (!ModRegRm.Memory)
+    {
+        /* Check if this is a BOP and the host supports BOPs */
+        if ((Opcode == 0xC4)
+            && (ModRegRm.Register == SOFT386_REG_EAX)
+            && (ModRegRm.SecondRegister == SOFT386_REG_EBP)
+            && (State->BopCallback != NULL))
+        {
+            USHORT BopCode;
+
+            /* Fetch the BOP code */
+            if (!Soft386FetchWord(State, &BopCode))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Call the BOP handler */
+            State->BopCallback(State, BopCode);
+
+            /* Return success */
+            return TRUE;
+        }
+
+        /* Invalid */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    if (!Soft386ReadMemory(State,
+                           (State->PrefixFlags & SOFT386_PREFIX_SEG)
+                           ? State->SegmentOverride : SOFT386_REG_DS,
+                           ModRegRm.MemoryAddress,
+                           FALSE,
+                           FarPointer,
+                           OperandSize ? 6 : 4))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Offset = *((PULONG)FarPointer);
+        USHORT Segment = *((PUSHORT)&FarPointer[sizeof(ULONG)]);
+
+        /* Set the register to the offset */
+        State->GeneralRegs[ModRegRm.Register].Long = Offset;
+
+        /* Load the segment */
+        return Soft386LoadSegment(State,
+                                  (Opcode == 0xC4)
+                                  ? SOFT386_REG_ES : SOFT386_REG_DS,
+                                  Segment);
+    }
+    else
+    {
+        USHORT Offset = *((PUSHORT)FarPointer);
+        USHORT Segment = *((PUSHORT)&FarPointer[sizeof(USHORT)]);
+
+        /* Set the register to the offset */
+        State->GeneralRegs[ModRegRm.Register].LowWord = Offset;
+
+        /* Load the segment */
+        return Soft386LoadSegment(State,
+                                  (Opcode == 0xC4)
+                                  ? SOFT386_REG_ES : SOFT386_REG_DS,
+                                  Segment);
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeEnter)
@@ -4508,7 +4587,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeEnter)
         return FALSE;
     }
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
@@ -4577,7 +4656,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLeave)
         return FALSE;
     }
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
@@ -4705,7 +4784,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeIret)
         return FALSE;
     }
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
@@ -5001,7 +5080,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLoop)
         return FALSE;
     }
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
     {
         /* The OPSIZE prefix toggles the size */
         Size = !Size;
