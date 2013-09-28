@@ -120,8 +120,6 @@ static inline BOOL is_strcmp( const struct complex_expr *expr )
             (expr->left->type == EXPR_SVAL && expr->right->type == EXPR_PROPVAL));
 }
 
-static HRESULT eval_cond( const struct table *, UINT, const struct expr *, LONGLONG * );
-
 static HRESULT eval_binary( const struct table *table, UINT row, const struct complex_expr *expr,
                             LONGLONG *val )
 {
@@ -217,8 +215,7 @@ static HRESULT eval_propval( const struct table *table, UINT row, const struct p
     return get_value( table, row, column, val );
 }
 
-static HRESULT eval_cond( const struct table *table, UINT row, const struct expr *cond,
-                          LONGLONG *val )
+HRESULT eval_cond( const struct table *table, UINT row, const struct expr *cond, LONGLONG *val )
 {
     if (!cond)
     {
@@ -247,11 +244,17 @@ static HRESULT eval_cond( const struct table *table, UINT row, const struct expr
     return WBEM_E_INVALID_QUERY;
 }
 
-static HRESULT execute_view( struct view *view )
+HRESULT execute_view( struct view *view )
 {
     UINT i, j = 0, len;
 
-    if (!view->table || !view->table->num_rows) return S_OK;
+    if (!view->table) return S_OK;
+    if (view->table->fill)
+    {
+        clear_table( view->table );
+        view->table->fill( view->table, view->cond );
+    }
+    if (!view->table->num_rows) return S_OK;
 
     len = min( view->table->num_rows, 16 );
     if (!(view->result = heap_alloc( len * sizeof(UINT) ))) return E_OUTOFMEMORY;
@@ -275,7 +278,7 @@ static HRESULT execute_view( struct view *view )
     return S_OK;
 }
 
-static struct query *create_query(void)
+struct query *create_query(void)
 {
     struct query *query;
 
@@ -285,15 +288,13 @@ static struct query *create_query(void)
     return query;
 }
 
-static void free_query( struct query *query )
+void free_query( struct query *query )
 {
     struct list *mem, *next;
 
+    if (!query) return;
     destroy_view( query->view );
-    LIST_FOR_EACH_SAFE( mem, next, &query->mem )
-    {
-        heap_free( mem );
-    }
+    LIST_FOR_EACH_SAFE( mem, next, &query->mem ) { heap_free( mem ); }
     heap_free( query );
 }
 
@@ -586,7 +587,7 @@ SAFEARRAY *to_safearray( const struct array *array, CIMTYPE type )
     VARTYPE vartype = to_vartype( type );
     LONG i;
 
-    if (!(ret = SafeArrayCreateVector( vartype, 0, array->count ))) return NULL;
+    if (!array || !(ret = SafeArrayCreateVector( vartype, 0, array->count ))) return NULL;
 
     for (i = 0; i < array->count; i++)
     {

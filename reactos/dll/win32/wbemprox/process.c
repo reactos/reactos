@@ -46,14 +46,14 @@ static HRESULT get_owner( VARIANT *user, VARIANT *domain, VARIANT *retval )
     len = 0;
     GetUserNameW( NULL, &len );
     if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) goto done;
-    if (!(V_BSTR( user ) = heap_alloc( len * sizeof(WCHAR) ))) goto done;
+    if (!(V_BSTR( user ) = SysAllocStringLen( NULL, len - 1 ))) goto done;
     if (!GetUserNameW( V_BSTR( user ), &len )) goto done;
     V_VT( user ) = VT_BSTR;
 
     len = 0;
     GetComputerNameW( NULL, &len );
     if (GetLastError() != ERROR_BUFFER_OVERFLOW) goto done;
-    if (!(V_BSTR( domain ) = heap_alloc( len * sizeof(WCHAR) ))) goto done;
+    if (!(V_BSTR( domain ) = SysAllocStringLen( NULL, len - 1 ))) goto done;
     if (!GetComputerNameW( V_BSTR( domain ), &len )) goto done;
     V_VT( domain ) = VT_BSTR;
 
