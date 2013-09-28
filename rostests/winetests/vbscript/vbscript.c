@@ -861,6 +861,10 @@ static void test_RegExp(void)
     ok(hres == S_OK, "QueryInterface(IID_IMatchCollection2) returned %x\n", hres);
     IDispatch_Release(disp);
 
+    hres = IMatchCollection2_QueryInterface(mc, &IID_IMatchCollection, (void**)&unk);
+    ok(hres == S_OK, "QueryInterface(IID_IMatchCollection) returned %x\n", hres);
+    IUnknown_Release(unk);
+
     hres = IMatchCollection2_get_Count(mc, NULL);
     ok(hres == E_POINTER, "get_Count returned %x, expected E_POINTER\n", hres);
 
@@ -879,6 +883,10 @@ static void test_RegExp(void)
     hres = IDispatch_QueryInterface(disp, &IID_IMatch2, (void**)&match);
     ok(hres == S_OK, "QueryInterface(IID_IMatch2) returned %x\n", hres);
     IDispatch_Release(disp);
+
+    hres = IMatch2_QueryInterface(match, &IID_IMatch, (void**)&unk);
+    ok(hres == S_OK, "QueryInterface(IID_IMatch) returned %x\n", hres);
+    IUnknown_Release(unk);
 
     hres = IMatch2_get_Value(match, NULL);
     ok(hres == E_POINTER, "get_Value returned %x, expected E_POINTER\n", hres);

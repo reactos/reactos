@@ -134,6 +134,8 @@ Call ok(getVT(Chr(120)) = "VT_BSTR", "getVT(Chr(120)) = " & getVT(Chr(120)))
 Call ok(getVT(Chr(255)) = "VT_BSTR", "getVT(Chr(255)) = " & getVT(Chr(255)))
 Call ok(Chr(120) = "x", "Chr(120) = " & Chr(120))
 Call ok(Chr(0) <> "", "Chr(0) = """"")
+Call ok(Chr(120.5) = "x", "Chr(120.5) = " & Chr(120.5))
+Call ok(Chr(119.5) = "x", "Chr(119.5) = " & Chr(119.5))
 
 Call ok(isObject(new EmptyClass), "isObject(new EmptyClass) is not true?")
 Set x = new EmptyClass
@@ -292,6 +294,9 @@ Call ok(Space(5) = "     ", "Space(5) = " & Space(5) & """")
 Call ok(Space(5.2) = "     ", "Space(5.2) = " & Space(5.2) & """")
 Call ok(Space(5.8) = "      ", "Space(5.8) = " & Space(5.8) & """")
 Call ok(Space(5.5) = "      ", "Space(5.5) = " & Space(5.5) & """")
+Call ok(Space(4.5) = "    ", "Space(4.5) = " & Space(4.5) & """")
+Call ok(Space(0.5) = "", "Space(0.5) = " & Space(0.5) & """")
+Call ok(Space(1.5) = "  ", "Space(1.5) = " & Space(1.5) & """")
 
 Sub TestStrReverse(str, ex)
     Call ok(StrReverse(str) = ex, "StrReverse(" & str & ") = " & StrReverse(str))
@@ -310,6 +315,8 @@ TestLeft "test", 2, "te"
 TestLeft "test", 5, "test"
 TestLeft "test", 0, ""
 TestLeft 123, 2, "12"
+TestLeft "123456", 1.5, "12"
+TestLeft "123456", 2.5, "12"
 if isEnglishLang then TestLeft true, 2, "Tr"
 
 Sub TestRight(str, len, ex)
@@ -383,6 +390,8 @@ if isEnglishLang then
     Call ok(WeekDayName(1, 10) = "Sun", "WeekDayName(1, 10) = " & WeekDayName(1, 10))
     Call ok(WeekDayName(1, true, 0) = "Sun", "WeekDayName(1, true, 0) = " & WeekDayName(1, true, 0))
     Call ok(WeekDayName(1, true, 2) = "Mon", "WeekDayName(1, true, 2) = " & WeekDayName(1, true, 2))
+    Call ok(WeekDayName(1, true, 2.5) = "Mon", "WeekDayName(1, true, 2.5) = " & WeekDayName(1, true, 2.5))
+    Call ok(WeekDayName(1, true, 1.5) = "Mon", "WeekDayName(1, true, 1.5) = " & WeekDayName(1, true, 1.5))
     Call ok(WeekDayName(1, true, 7) = "Sat", "WeekDayName(1, true, 7) = " & WeekDayName(1, true, 7))
     Call ok(WeekDayName(1, true, 7.1) = "Sat", "WeekDayName(1, true, 7.1) = " & WeekDayName(1, true, 7.1))
 
@@ -423,5 +432,36 @@ Call ok(vbYes = 6, "vbYes = " & vbYes)
 Call ok(getVT(vbYes) = "VT_I2", "getVT(vbYes) = " & getVT(vbYes))
 Call ok(vbNo = 7, "vbNo = " & vbNo)
 Call ok(getVT(vbNo) = "VT_I2", "getVT(vbNo) = " & getVT(vbNo))
+
+Call ok(CInt(-36.75) = -37, "CInt(-36.75) = " & CInt(-36.75))
+Call ok(getVT(CInt(-36.75)) = "VT_I2", "getVT(CInt(-36.75)) = " & getVT(CInt(-36.75)))
+Call ok(CInt(-36.50) = -36, "CInt(-36.50) = " & CInt(-36.50))
+Call ok(getVT(CInt(-36.50)) = "VT_I2", "getVT(CInt(-36.50)) = " & getVT(CInt(-36.50)))
+Call ok(CInt(-36.25) = -36, "CInt(-36.25) = " & CInt(-36.25))
+Call ok(getVT(CInt(-36.25)) = "VT_I2", "getVT(CInt(-36.25)) = " & getVT(CInt(-36.25)))
+Call ok(CInt(-36) = -36, "CInt(-36) = " & CInt(-36))
+Call ok(getVT(CInt(-36)) = "VT_I2", "getVT(CInt(-36)) = " & getVT(CInt(-36)))
+Call ok(CInt(0) = 0, "CInt(0) = " & CInt(0))
+Call ok(getVT(CInt(0)) = "VT_I2", "getVT(CInt(0)) = " & getVT(CInt(0)))
+Call ok(CInt(0.0) = 0, "CInt(0.0) = " & CInt(0))
+Call ok(getVT(CInt(0.0)) = "VT_I2", "getVT(CInt(0.0)) = " & getVT(CInt(0.0)))
+Call ok(CInt(0.5) = 0, "CInt(0.5) = " & CInt(0))
+Call ok(getVT(CInt(0.5)) = "VT_I2", "getVT(CInt(0.5)) = " & getVT(CInt(0.5)))
+Call ok(CInt(36) = 36, "CInt(36) = " & CInt(36))
+Call ok(getVT(CInt(36)) = "VT_I2", "getVT(CInt(36)) = " & getVT(CInt(36)))
+Call ok(CInt(36.25) = 36, "CInt(36.25) = " & CInt(36.25))
+Call ok(getVT(CInt(36.25)) = "VT_I2", "getVT(CInt(36.25)) = " & getVT(CInt(36.25)))
+Call ok(CInt(36.50) = 36, "CInt(36.50) = " & CInt(36.50))
+Call ok(getVT(CInt(36.50)) = "VT_I2", "getVT(CInt(36.50)) = " & getVT(CInt(36.50)))
+Call ok(CInt(36.75) = 37, "CInt(36.75) = " & CInt(36.75))
+Call ok(getVT(CInt(36.75)) = "VT_I2", "getVT(CInt(36.75)) = " & getVT(CInt(36.75)))
+
+
+Call ok(CBool(5) = true, "CBool(5) = " & CBool(5))
+Call ok(getVT(CBool(5)) = "VT_BOOL", "getVT(CBool(5)) = " & getVT(CBool(5)))
+Call ok(CBool(0) = false, "CBool(0) = " & CBool(0))
+Call ok(getVT(CBool(0)) = "VT_BOOL", "getVT(CBool(0)) = " & getVT(CBool(0)))
+Call ok(CBool(-5) = true, "CBool(-5) = " & CBool(-5))
+Call ok(getVT(CBool(-5)) = "VT_BOOL", "getVT(CBool(-5)) = " & getVT(CBool(-5)))
 
 Call reportSuccess()
