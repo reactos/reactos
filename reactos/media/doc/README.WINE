@@ -185,7 +185,7 @@ reactos/dll/win32/spoolss         # Synced to Wine-1.7.1
 reactos/dll/win32/stdole2.tlb     # Synced to Wine-1.5.19
 reactos/dll/win32/stdole32.tlb    # Synced to Wine-1.5.19
 reactos/dll/win32/sti             # Synced to Wine-1.7.1
-reactos/dll/win32/sxs             # Synced to Wine-1.5.4
+reactos/dll/win32/sxs             # Synced to Wine-1.7.1
 reactos/dll/win32/tapi32          # Autosync
 reactos/dll/win32/traffic         # Synced to Wine-1.5.19
 reactos/dll/win32/twain_32        # Out of sync

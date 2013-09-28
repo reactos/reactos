@@ -72,7 +72,7 @@ static HRESULT WINAPI name_QueryInterface(
     if (IsEqualIID( riid, &IID_IUnknown ) ||
         IsEqualIID( riid, &IID_IAssemblyName ))
     {
-        IUnknown_AddRef( iface );
+        IAssemblyName_AddRef( iface );
         *obj = name;
         return S_OK;
     }
