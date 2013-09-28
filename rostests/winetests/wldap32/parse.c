@@ -86,6 +86,43 @@ static void test_ldap_parse_sort_control( LDAP *ld )
     ldap_controls_free( server_ctrls );
 }
 
+static void test_ldap_search_extW( LDAP *ld )
+{
+    ULONG ret, message, timelimit;
+    WCHAR base[] = {0}, filter[] = {'o','u','=','*',0};
+
+    timelimit = 20;
+    ret = ldap_search_extW( ld, base, LDAP_SCOPE_SUBTREE, filter, NULL, 0, NULL, NULL, timelimit, 0, &message );
+    if (ret == LDAP_SERVER_DOWN || ret == LDAP_UNAVAILABLE)
+    {
+        skip("test server can't be reached\n");
+        return;
+    }
+    ok( !ret, "ldap_search_extW failed 0x%08x\n", ret );
+
+    timelimit = 0;
+    ret = ldap_search_extW( ld, base, LDAP_SCOPE_SUBTREE, filter, NULL, 0, NULL, NULL, timelimit, 0, &message );
+    ok( !ret, "ldap_search_extW failed 0x%08x\n", ret );
+}
+
+static void test_ldap_set_optionW( LDAP *ld )
+{
+    ULONG ret, oldvalue;
+
+    ret = ldap_get_optionW( ld, LDAP_OPT_REFERRALS, &oldvalue );
+    if (ret == LDAP_SERVER_DOWN || ret == LDAP_UNAVAILABLE)
+    {
+        skip("test server can't be reached\n");
+        return;
+    }
+
+    ret = ldap_set_optionW( ld, LDAP_OPT_REFERRALS, LDAP_OPT_OFF );
+    ok( !ret || broken(ret == LDAP_PARAM_ERROR) /* nt4, win2k */, "ldap_set_optionW failed 0x%08x\n", ret );
+
+    ret = ldap_set_optionW( ld, LDAP_OPT_REFERRALS, (void *)&oldvalue );
+    ok( !ret, "ldap_set_optionW failed 0x%08x\n", ret );
+}
+
 START_TEST (parse)
 {
     LDAP *ld;
@@ -94,5 +131,7 @@ START_TEST (parse)
     ok( ld != NULL, "ldap_init failed\n" );
 
     test_ldap_parse_sort_control( ld );
+    test_ldap_search_extW( ld );
+    test_ldap_set_optionW( ld );
     ldap_unbind( ld );
 }
