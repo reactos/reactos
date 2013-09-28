@@ -203,7 +203,7 @@ static void test_context(void)
 
     /* NULL GUID */
     ret = pCryptCATAdminAcquireContext(&hca, NULL, 0);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
     ok(hca != NULL, "Expected a context handle, got NULL\n");
 
     /* All NULL */
@@ -273,23 +273,23 @@ static void test_context(void)
     }
 
     ret = pCryptCATAdminReleaseContext(hca, 0);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
 
     /* Correct context handle and GUID */
     ret = pCryptCATAdminAcquireContext(&hca, &unknown, 0);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
     ok(hca != NULL, "Expected a context handle, got NULL\n");
 
     ret = pCryptCATAdminReleaseContext(hca, 0);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
 
     /* Flags not equal to 0 */
     ret = pCryptCATAdminAcquireContext(&hca, &unknown, 1);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
     ok(hca != NULL, "Expected a context handle, got NULL\n");
 
     ret = pCryptCATAdminReleaseContext(hca, 0);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
 }
 
 /* TODO: Check whether SHA-1 is the algorithm that's always used */
@@ -340,7 +340,7 @@ static void test_calchash(void)
     ok(file != INVALID_HANDLE_VALUE, "CreateFile failed %u\n", GetLastError());
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminCalcHashFromFileHandle(file, &hashsize, NULL, 0);
-    ok(ret, "Expected success %u\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
     ok(hashsize == 20," Expected a hash size of 20, got %d\n", hashsize);
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
        "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
@@ -354,7 +354,7 @@ static void test_calchash(void)
     hash = HeapAlloc(GetProcessHeap(), 0, hashsize);
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminCalcHashFromFileHandle(file, &hashsize, hash, 0);
-    ok(ret, "Expected success %u\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
     ok(hashsize == 20," Expected a hash size of 20, got %d\n", hashsize);
     ok(GetLastError() == ERROR_SUCCESS,
        "Expected ERROR_SUCCESS, got %d\n", GetLastError());
@@ -376,7 +376,7 @@ static void test_calchash(void)
     hash = HeapAlloc(GetProcessHeap(), 0, hashsize);
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminCalcHashFromFileHandle(file, &hashsize, hash, 0);
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
     ok(GetLastError() == ERROR_SUCCESS,
        "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok(hashsize == sizeof(expectedhash) &&
@@ -526,7 +526,7 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     ok(hcatinfo == NULL, "CryptCATAdminAddCatalog succeeded\n");
     ok(error == ERROR_INVALID_PARAMETER, "got %u expected ERROR_INVALID_PARAMETER\n", GetLastError());
 
-    MultiByteToWideChar(0, 0, tmpfile, -1, tmpfileW, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, tmpfile, -1, tmpfileW, MAX_PATH);
 
     SetLastError(0xdeadbeef);
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, tmpfileW, basenameW, 0);
@@ -558,6 +558,11 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
 
     /* Unique name will be created */
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, tmpfileW, NULL, 0);
+    if (!hcatinfo && (GetLastError() == ERROR_ACCESS_DENIED))
+    {
+        win_skip("Not enough rights\n");
+        goto cleanup;
+    }
     todo_wine ok(hcatinfo != NULL, "CryptCATAdminAddCatalog failed %u\n", GetLastError());
 
     info.cbStruct = sizeof(info);
@@ -568,10 +573,10 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     ok(ret, "CryptCATCatalogInfoFromContext failed %u\n", GetLastError());
     ok(info.wszCatalogFile[0] != 0, "Expected a filename\n");
     }
-    WideCharToMultiByte(CP_ACP, 0, info.wszCatalogFile, -1, catfile, MAX_PATH, 0, 0);
+    WideCharToMultiByte(CP_ACP, 0, info.wszCatalogFile, -1, catfile, MAX_PATH, NULL, NULL);
     if ((p = strrchr(catfile, '\\'))) p++;
     memset(catfileW, 0, sizeof(catfileW));
-    MultiByteToWideChar(0, 0, p, -1, catfileW, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, p, -1, catfileW, MAX_PATH);
 
     /* Set the file attributes so we can check what happens with them during the 'copy' */
     attrs = FILE_ATTRIBUTE_READONLY;
@@ -596,7 +601,7 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     ret = pCryptCATCatalogInfoFromContext(hcatinfo, &info, 0);
     ok(ret, "CryptCATCatalogInfoFromContext failed %u\n", GetLastError());
     ok(info.wszCatalogFile[0] != 0, "Expected a filename\n");
-    WideCharToMultiByte(CP_ACP, 0, info.wszCatalogFile, -1, catfile, MAX_PATH, 0, 0);
+    WideCharToMultiByte(CP_ACP, 0, info.wszCatalogFile, -1, catfile, MAX_PATH, NULL, NULL);
     if ((p = strrchr(catfile, '\\'))) p++;
     ok(!lstrcmpA(basename, p), "Expected %s, got %s\n", basename, p);
 
@@ -620,6 +625,7 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     attrs = GetFileAttributes(catfilepath);
     ok(attrs == INVALID_FILE_ATTRIBUTES, "Expected %s to be removed\n", catfilepath);
 
+cleanup:
     ret = pCryptCATAdminReleaseContext(hcatadmin, 0);
     ok(ret, "CryptCATAdminReleaseContext failed %u\n", GetLastError());
 
@@ -760,7 +766,7 @@ static void test_create_catalog_file(void)
     ret = pCryptCATCDFClose(catcdf);
     todo_wine
     {
-    ok(ret, "Expected success\n");
+    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     }
 
