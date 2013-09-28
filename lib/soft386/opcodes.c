@@ -18,6 +18,7 @@
 
 #include <soft386.h>
 #include "opcodes.h"
+#include "opgroups.h"
 #include "common.h"
 
 /* PUBLIC VARIABLES ***********************************************************/
@@ -153,10 +154,10 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeShortConditionalJmp,
     Soft386OpcodeShortConditionalJmp,
     Soft386OpcodeShortConditionalJmp,
-    NULL, // TODO: OPCODE 0x80 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x81 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x82 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x83 NOT SUPPORTED
+    Soft386OpcodeGroup80,
+    Soft386OpcodeGroup81,
+    Soft386OpcodeGroup82,
+    Soft386OpcodeGroup83,
     Soft386OpcodeTestByteModrm,
     Soft386OpcodeTestModrm,
     Soft386OpcodeXchgByteModrm,
@@ -168,7 +169,7 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeMovStoreSeg,
     Soft386OpcodeLea,
     Soft386OpcodeMovLoadSeg,
-    NULL, // TODO: OPCODE 0x8F NOT SUPPORTED
+    Soft386OpcodeGroup8F,
     Soft386OpcodeNop,
     Soft386OpcodeExchangeEax,
     Soft386OpcodeExchangeEax,
@@ -217,14 +218,14 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeMovRegImm,
     Soft386OpcodeMovRegImm,
     Soft386OpcodeMovRegImm,
-    NULL, // TODO: OPCODE 0xC0 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xC1 NOT SUPPORTED
+    Soft386OpcodeGroupC0,
+    Soft386OpcodeGroupC1,
     Soft386OpcodeRet,
     Soft386OpcodeRet,
     Soft386OpcodeLdsLes,
     Soft386OpcodeLdsLes,
-    NULL, // TODO: OPCODE 0xC6 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xC7 NOT SUPPORTED
+    Soft386OpcodeGroupC6,
+    Soft386OpcodeGroupC7,
     Soft386OpcodeEnter,
     Soft386OpcodeLeave,
     Soft386OpcodeRetFarImm,
@@ -233,10 +234,10 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeInt,
     Soft386OpcodeInt,
     Soft386OpcodeIret,
-    NULL, // TODO: OPCODE 0xD0 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xD1 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xD2 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xD3 NOT SUPPORTED
+    Soft386OpcodeGroupD0,
+    Soft386OpcodeGroupD1,
+    Soft386OpcodeGroupD2,
+    Soft386OpcodeGroupD3,
     Soft386OpcodeAam,
     Soft386OpcodeAad,
     NULL, // TODO: OPCODE 0xD6 NOT SUPPORTED
@@ -271,16 +272,16 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodePrefix,
     Soft386OpcodeHalt,
     Soft386OpcodeComplCarry,
-    NULL, // TODO: OPCODE 0xF6 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xF7 NOT SUPPORTED
+    Soft386OpcodeGroupF6,
+    Soft386OpcodeGroupF7,
     Soft386OpcodeClearCarry,
     Soft386OpcodeSetCarry,
     Soft386OpcodeClearInt,
     Soft386OpcodeSetInt,
     Soft386OpcodeClearDir,
     Soft386OpcodeSetDir,
-    NULL, // TODO: OPCODE 0xFE NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xFF NOT SUPPORTED
+    Soft386OpcodeGroupFE,
+    Soft386OpcodeGroupFF,
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
