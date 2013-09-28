@@ -28,6 +28,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <wininet.h>
 #include <winineti.h>
 
@@ -811,6 +812,164 @@ static void test_urlcacheA(void)
     }
 }
 
+static void test_urlcacheW(void)
+{
+    static struct test_data
+    {
+        DWORD err;
+        WCHAR url[128];
+        char encoded_url[128];
+        WCHAR extension[32];
+        WCHAR header_info[128];
+    }urls[] = {
+        {
+            0, {'h','t','t','p',':','/','/','T','.','p','l','/','t',0},
+            "http://T.pl/t", {0}, {0}
+        },
+        {
+            0, {'w','w','w','.','T','.','p','l','/','t',0},
+            "www.T.pl/t", {0}, {0}
+        },
+        {
+            0, {'h','t','t','p',':','/','/','w','w','w','.','t','e','s','t',0x15b,0x107,
+                '.','o','r','g','/','t','e','s','t','.','h','t','m','l',0},
+            "http://www.xn--test-ota71c.org/test.html", {'t','x','t',0}, {0}
+        },
+        {
+            0, {'w','w','w','.','T','e','s','t',0x15b,0x107,'.','o','r','g',
+                '/','t','e','s','t','.','h','t','m','l',0},
+            "www.Test\xc5\x9b\xc4\x87.org/test.html", {'a',0x106,'a',0}, {'b',0x106,'b',0}
+        },
+        {
+            0, {'H','t','t','p','s',':','/','/',0x15b,0x15b,0x107,'/','t',0x107,'/',
+                't','e','s','t','?','a','=','%','2','0',0x106,0},
+            "Https://xn--4da1oa/t\xc4\x87/test?a=%20\xc4\x86", {'a',0x15b,'a',0}, {'b',0x15b,'b',0}
+        },
+        {
+            12005, {'h','t','t','p','s',':','/','/','/','/',0x107,'.','o','r','g','/','t','e','s','t',0},
+            "", {0}, {0}
+        },
+        {
+            0, {'C','o','o','k','i','e',':',' ','u','s','e','r','@','h','t','t','p',
+                ':','/','/','t',0x15b,0x107,'.','o','r','g','/',0},
+            "Cookie: user@http://t\xc5\x9b\xc4\x87.org/", {0}, {0}
+        }
+    };
+    static const FILETIME filetime_zero;
+
+    WCHAR bufW[MAX_PATH];
+    DWORD i;
+    BOOL ret;
+
+    if(old_ie) {
+        win_skip("urlcache unicode functions\n");
+        return;
+    }
+
+    for(i=0; i<sizeof(urls)/sizeof(*urls); i++) {
+        INTERNET_CACHE_ENTRY_INFOA *entry_infoA;
+        INTERNET_CACHE_ENTRY_INFOW *entry_infoW;
+        DWORD size;
+
+        SetLastError(0xdeadbeef);
+        ret = CreateUrlCacheEntryW(urls[i].url, 0, NULL, bufW, 0);
+        if(urls[i].err != 0) {
+            ok(!ret, "%d) CreateUrlCacheEntryW succeeded\n", i);
+            ok(urls[i].err == GetLastError(), "%d) GetLastError() = %d\n", i, GetLastError());
+            continue;
+        }
+        ok(ret, "%d) CreateUrlCacheEntryW failed: %d\n", i, GetLastError());
+
+        /* dwHeaderSize is ignored, pass 0 to prove it */
+        ret = CommitUrlCacheEntryW(urls[i].url, bufW, filetime_zero, filetime_zero,
+                NORMAL_CACHE_ENTRY, urls[i].header_info, 0, urls[i].extension, NULL);
+        ok(ret, "%d) CommitUrlCacheEntryW failed: %d\n", i, GetLastError());
+
+        SetLastError(0xdeadbeef);
+        size = 0;
+        ret = GetUrlCacheEntryInfoW(urls[i].url, NULL, &size);
+        ok(!ret && GetLastError()==ERROR_INSUFFICIENT_BUFFER,
+                "%d) GetLastError() = %d\n", i, GetLastError());
+        entry_infoW = HeapAlloc(GetProcessHeap(), 0, size);
+        ret = GetUrlCacheEntryInfoW(urls[i].url, entry_infoW, &size);
+        ok(ret, "%d) GetUrlCacheEntryInfoW failed: %d\n", i, GetLastError());
+
+        ret = GetUrlCacheEntryInfoA(urls[i].encoded_url, NULL, &size);
+        ok(!ret && GetLastError()==ERROR_INSUFFICIENT_BUFFER,
+                "%d) GetLastError() = %d\n", i, GetLastError());
+        if(!ret && GetLastError()!=ERROR_INSUFFICIENT_BUFFER) {
+            win_skip("ANSI version of url is incorrect\n");
+            continue;
+        }
+        entry_infoA = HeapAlloc(GetProcessHeap(), 0, size);
+        ret = GetUrlCacheEntryInfoA(urls[i].encoded_url, entry_infoA, &size);
+        ok(ret, "%d) GetUrlCacheEntryInfoA failed: %d\n", i, GetLastError());
+
+        ok(entry_infoW->dwStructSize == entry_infoA->dwStructSize,
+                "%d) entry_infoW->dwStructSize = %d, expected %d\n",
+                i, entry_infoW->dwStructSize, entry_infoA->dwStructSize);
+        ok(!lstrcmpW(urls[i].url, entry_infoW->lpszSourceUrlName),
+                "%d) entry_infoW->lpszSourceUrlName = %s\n",
+                i, wine_dbgstr_w(entry_infoW->lpszSourceUrlName));
+        ok(!lstrcmpA(urls[i].encoded_url, entry_infoA->lpszSourceUrlName),
+                "%d) entry_infoA->lpszSourceUrlName = %s\n",
+                i, entry_infoA->lpszSourceUrlName);
+        ok(entry_infoW->CacheEntryType == entry_infoA->CacheEntryType,
+                "%d) entry_infoW->CacheEntryType = %x, expected %x\n",
+                i, entry_infoW->CacheEntryType, entry_infoA->CacheEntryType);
+        ok(entry_infoW->dwUseCount == entry_infoA->dwUseCount,
+                "%d) entry_infoW->dwUseCount = %d, expected %d\n",
+                i, entry_infoW->dwUseCount, entry_infoA->dwUseCount);
+        ok(entry_infoW->dwHitRate == entry_infoA->dwHitRate,
+                "%d) entry_infoW->dwHitRate = %d, expected %d\n",
+                i, entry_infoW->dwHitRate, entry_infoA->dwHitRate);
+        ok(entry_infoW->dwSizeLow == entry_infoA->dwSizeLow,
+                "%d) entry_infoW->dwSizeLow = %d, expected %d\n",
+                i, entry_infoW->dwSizeLow, entry_infoA->dwSizeLow);
+        ok(entry_infoW->dwSizeHigh == entry_infoA->dwSizeHigh,
+                "%d) entry_infoW->dwSizeHigh = %d, expected %d\n",
+                i, entry_infoW->dwSizeHigh, entry_infoA->dwSizeHigh);
+        ok(!memcmp(&entry_infoW->LastModifiedTime, &entry_infoA->LastModifiedTime, sizeof(FILETIME)),
+                "%d) entry_infoW->LastModifiedTime is incorrect\n", i);
+        ok(!memcmp(&entry_infoW->ExpireTime, &entry_infoA->ExpireTime, sizeof(FILETIME)),
+                "%d) entry_infoW->ExpireTime is incorrect\n", i);
+        ok(!memcmp(&entry_infoW->LastAccessTime, &entry_infoA->LastAccessTime, sizeof(FILETIME)),
+                "%d) entry_infoW->LastAccessTime is incorrect\n", i);
+        ok(!memcmp(&entry_infoW->LastSyncTime, &entry_infoA->LastSyncTime, sizeof(FILETIME)),
+                "%d) entry_infoW->LastSyncTime is incorrect\n", i);
+
+        MultiByteToWideChar(CP_ACP, 0, entry_infoA->lpszLocalFileName, -1, bufW, MAX_PATH);
+        ok(!lstrcmpW(entry_infoW->lpszLocalFileName, bufW),
+                "%d) entry_infoW->lpszLocalFileName = %s, expected %s\n",
+                i, wine_dbgstr_w(entry_infoW->lpszLocalFileName), wine_dbgstr_w(bufW));
+
+        if(!urls[i].header_info[0]) {
+            ok(!entry_infoW->lpHeaderInfo, "entry_infoW->lpHeaderInfo != NULL\n");
+        }else {
+            ok(!lstrcmpW((WCHAR*)entry_infoW->lpHeaderInfo, urls[i].header_info),
+                    "%d) entry_infoW->lpHeaderInfo = %s\n",
+                    i, wine_dbgstr_w((WCHAR*)entry_infoW->lpHeaderInfo));
+        }
+
+        if(!urls[i].extension[0]) {
+            ok(!entry_infoW->lpszFileExtension, "entry_infoW->lpszFileExtension != NULL\n");
+        }else {
+            MultiByteToWideChar(CP_ACP, 0, entry_infoA->lpszFileExtension, -1, bufW, MAX_PATH);
+            ok(!lstrcmpW(entry_infoW->lpszFileExtension, bufW),
+                    "%d) entry_infoW->lpszFileExtension = %s, expected %s\n",
+                    i, wine_dbgstr_w(entry_infoW->lpszFileExtension), wine_dbgstr_w(bufW));
+        }
+
+        HeapFree(GetProcessHeap(), 0, entry_infoW);
+        HeapFree(GetProcessHeap(), 0, entry_infoA);
+
+        if(pDeleteUrlCacheEntryA) {
+            ret = pDeleteUrlCacheEntryA(urls[i].encoded_url);
+            ok(ret, "%d) DeleteUrlCacheEntryW failed: %d\n", i, GetLastError());
+        }
+    }
+}
+
 static void test_FindCloseUrlCache(void)
 {
     BOOL r;
@@ -878,6 +1037,7 @@ START_TEST(urlcache)
     pDeleteUrlCacheEntryA = (void*)GetProcAddress(hdll, "DeleteUrlCacheEntryA");
     pUnlockUrlCacheEntryFileA = (void*)GetProcAddress(hdll, "UnlockUrlCacheEntryFileA");
     test_urlcacheA();
+    test_urlcacheW();
     test_FindCloseUrlCache();
     test_GetDiskInfoA();
 }
