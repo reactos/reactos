@@ -897,8 +897,12 @@ static HRESULT WINAPI ProtocolSinkHandler_ReportData(IInternetProtocolSink *ifac
 
         do {
             read = 0;
+            if(is_apartment_thread(This))
+                This->continue_call++;
             hres = IInternetProtocol_Read(This->protocol, buf,
                     sizeof(buf)-This->buf_size, &read);
+            if(is_apartment_thread(This))
+                This->continue_call--;
             if(FAILED(hres) && hres != E_PENDING)
                 return hres;
 

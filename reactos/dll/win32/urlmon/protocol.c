@@ -78,7 +78,7 @@ static HRESULT start_downloading(Protocol *protocol)
     if(FAILED(hres)) {
         protocol_close_connection(protocol);
         report_result(protocol, hres);
-        return S_OK;
+        return hres;
     }
 
     if(protocol->bindf & BINDF_NEEDFILE) {
