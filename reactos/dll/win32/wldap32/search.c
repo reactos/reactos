@@ -243,7 +243,7 @@ ULONG CDECL ldap_search_extW( WLDAP32_LDAP *ld, PWCHAR base, ULONG scope,
 #ifdef HAVE_LDAP
     char *baseU = NULL, *filterU = NULL, **attrsU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
-    struct timeval tv;
+    struct timeval tv, *tvp = NULL;
 
     ret = WLDAP32_LDAP_NO_MEMORY;
 
@@ -274,11 +274,15 @@ ULONG CDECL ldap_search_extW( WLDAP32_LDAP *ld, PWCHAR base, ULONG scope,
         if (!clientctrlsU) goto exit;
     }
 
-    tv.tv_sec = timelimit;
-    tv.tv_usec = 0;
+    if (timelimit)
+    {
+        tv.tv_sec = timelimit;
+        tv.tv_usec = 0;
+        tvp = &tv;
+    }
 
     ret = map_error( ldap_search_ext( ld, baseU, scope, filterU, attrsU, attrsonly,
-                                      serverctrlsU, clientctrlsU, &tv, sizelimit, (int *)message ));
+                                      serverctrlsU, clientctrlsU, tvp, sizelimit, (int *)message ));
 
 exit:
     strfreeU( baseU );

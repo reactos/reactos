@@ -40,8 +40,6 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
         hwldap32 = hinst;
         DisableThreadLibraryCalls( hinst );
         break;
-    case DLL_PROCESS_DETACH:
-        break;
     }
     return TRUE;
 }

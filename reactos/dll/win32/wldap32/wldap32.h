@@ -18,7 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-ULONG map_error( int );
+extern HINSTANCE hwldap32 DECLSPEC_HIDDEN;
+
+ULONG map_error( int ) DECLSPEC_HIDDEN;
 
 /* A set of helper functions to convert LDAP data structures
  * to and from ansi (A), wide character (W) and utf8 (U) encodings.
@@ -854,5 +856,4 @@ static inline void sortkeyarrayfreeU( LDAPSortKey **sortkeyarray )
         HeapFree( GetProcessHeap(), 0, sortkeyarray );
     }
 }
-
 #endif /* HAVE_LDAP */

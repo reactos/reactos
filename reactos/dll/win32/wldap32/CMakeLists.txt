@@ -24,11 +24,10 @@ list(APPEND SOURCE
     rename.c
     search.c
     value.c
-    wldap32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wldap32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/wldap32.def)
 
-add_library(wldap32 SHARED ${SOURCE})
+add_library(wldap32 SHARED ${SOURCE} wldap32.rc)
 set_module_type(wldap32 win32dll)
 target_link_libraries(wldap32 wine)
 add_importlibs(wldap32 user32 msvcrt kernel32 ntdll)
