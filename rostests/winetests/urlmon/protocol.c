@@ -3729,7 +3729,7 @@ START_TEST(protocol)
 
     if(!winetest_interactive)
     {
-        skip("protocol test skipped, bug 6381\n");
+        skip("protocol test skipped, ROSTESTS-38\n");
         return;
     }
 

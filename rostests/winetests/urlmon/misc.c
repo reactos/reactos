@@ -31,6 +31,7 @@
 //#include "windef.h"
 //#include "winbase.h"
 #include <winreg.h>
+#include <winnls.h>
 #include <ole2.h>
 //#include "urlmon.h"
 
@@ -84,6 +85,33 @@ static HRESULT (WINAPI *pCompareSecurityIds)(BYTE*,DWORD,BYTE*,DWORD,DWORD);
 static HRESULT (WINAPI *pCoInternetIsFeatureEnabled)(INTERNETFEATURELIST,DWORD);
 static HRESULT (WINAPI *pCoInternetSetFeatureEnabled)(INTERNETFEATURELIST,DWORD,BOOL);
 static HRESULT (WINAPI *pIEInstallScope)(DWORD*);
+
+static int strcmp_wa(const WCHAR *strw, const char *stra)
+{
+    WCHAR buf[512];
+    MultiByteToWideChar(CP_ACP, 0, stra, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    return lstrcmpW(strw, buf);
+}
+
+static void heap_free(void *mem)
+{
+    HeapFree(GetProcessHeap(), 0, mem);
+}
+
+static WCHAR *a2w(const char *str)
+{
+    WCHAR *ret;
+    int len;
+
+    if(!str)
+        return NULL;
+
+    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    ret = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+
+    return ret;
+}
 
 static void test_CreateFormatEnum(void)
 {
@@ -442,42 +470,14 @@ static void test_CoInternetQueryInfo(void)
     }
 }
 
-static const WCHAR mimeTextHtml[] = {'t','e','x','t','/','h','t','m','l',0};
-static const WCHAR mimeTextPlain[] = {'t','e','x','t','/','p','l','a','i','n',0};
-static const WCHAR mimeTextRichtext[] = {'t','e','x','t','/','r','i','c','h','t','e','x','t',0};
-static const WCHAR mimeTextXml[] = {'t','e','x','t','/','x','m','l',0};
-static const WCHAR mimeAppOctetStream[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-    'o','c','t','e','t','-','s','t','r','e','a','m',0};
-static const WCHAR mimeImagePjpeg[] = {'i','m','a','g','e','/','p','j','p','e','g',0};
-static const WCHAR mimeImageGif[] = {'i','m','a','g','e','/','g','i','f',0};
-static const WCHAR mimeImageBmp[] = {'i','m','a','g','e','/','b','m','p',0};
-static const WCHAR mimeImageXPng[] = {'i','m','a','g','e','/','x','-','p','n','g',0};
-static const WCHAR mimeImageTiff[] = {'i','m','a','g','e','/','t','i','f','f',0};
-static const WCHAR mimeVideoAvi[] = {'v','i','d','e','o','/','a','v','i',0};
-static const WCHAR mimeVideoMpeg[] = {'v','i','d','e','o','/','m','p','e','g',0};
-static const WCHAR mimeAppPostscript[] =
-    {'a','p','p','l','i','c','a','t','i','o','n','/','p','o','s','t','s','c','r','i','p','t',0};
-static const WCHAR mimeAppXCompressed[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-                                    'x','-','c','o','m','p','r','e','s','s','e','d',0};
-static const WCHAR mimeAppXZip[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-                                    'x','-','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
-static const WCHAR mimeAppXGzip[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-                                    'x','-','g','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
-static const WCHAR mimeAppJava[] = {'a','p','p','l','i','c','a','t','i','o','n','/','j','a','v','a',0};
-static const WCHAR mimeAppPdf[] = {'a','p','p','l','i','c','a','t','i','o','n','/','p','d','f',0};
-static const WCHAR mimeAppXMSDownload[] =
-    {'a','p','p','l','i','c','a','t','i','o','n','/','x','-','m','s','d','o','w','n','l','o','a','d',0};
-static const WCHAR mimeAudioWav[] = {'a','u','d','i','o','/','w','a','v',0};
-static const WCHAR mimeAudioBasic[] = {'a','u','d','i','o','/','b','a','s','i','c',0};
-
 static const struct {
-    LPCWSTR url;
-    LPCWSTR mime;
+    const WCHAR *url;
+    const char *mime;
     HRESULT hres;
 } mime_tests[] = {
-    {url1, mimeTextHtml, S_OK},
-    {url2, mimeTextHtml, S_OK},
-    {url3, mimeTextHtml, S_OK},
+    {url1, "text/html", S_OK},
+    {url2, "text/html", S_OK},
+    {url3, "text/html", S_OK},
     {url4, NULL, E_FAIL},
     {url5, NULL, __HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)},
     {url6, NULL, E_FAIL},
@@ -584,119 +584,140 @@ static BYTE data96[] = {'<','?','x','m','l',' '};
 static const struct {
     BYTE *data;
     DWORD size;
-    LPCWSTR mime, mime_pjpeg, broken_mime;
+    const char *mime;
+    const char *mime_pjpeg;
+    const char *broken_mime;
+    const char *url;
+    const char *proposed_mime;
 } mime_tests2[] = {
-    {data1, sizeof(data1), mimeTextPlain, mimeTextPlain},
-    {data2, sizeof(data2), mimeAppOctetStream, mimeImagePjpeg},
-    {data3, sizeof(data3), mimeAppOctetStream, mimeImagePjpeg},
-    {data4, sizeof(data4), mimeAppOctetStream, mimeImagePjpeg},
-    {data5, sizeof(data5), mimeTextPlain, mimeTextPlain},
-    {data6, sizeof(data6), mimeTextPlain, mimeTextPlain},
-    {data7, sizeof(data7), mimeTextHtml, mimeTextPlain},
-    {data8, sizeof(data8), mimeTextHtml, mimeTextPlain},
-    {data9, sizeof(data9), mimeTextHtml, mimeImagePjpeg},
-    {data10, sizeof(data10), mimeTextHtml, mimeTextPlain},
-    {data11, sizeof(data11), mimeTextHtml, mimeTextPlain},
-    {data12, sizeof(data12), mimeTextHtml, mimeTextPlain},
-    {data13, sizeof(data13), mimeTextPlain, mimeTextPlain},
-    {data14, sizeof(data14), mimeTextPlain, mimeTextPlain},
-    {data15, sizeof(data15), mimeTextPlain, mimeTextPlain},
-    {data16, sizeof(data16), mimeImagePjpeg, mimeImagePjpeg},
-    {data17, sizeof(data17), mimeAppOctetStream, mimeImagePjpeg},
-    {data18, sizeof(data18), mimeTextHtml, mimeImagePjpeg},
-    {data19, sizeof(data19), mimeImageGif, mimeImageGif},
-    {data20, sizeof(data20), mimeImageGif, mimeImageGif},
-    {data21, sizeof(data21), mimeTextPlain, mimeTextPlain},
-    {data22, sizeof(data22), mimeImageGif, mimeImageGif},
-    {data23, sizeof(data23), mimeTextPlain, mimeTextPlain},
-    {data24, sizeof(data24), mimeImageGif, mimeImageGif},
-    {data25, sizeof(data25), mimeImageGif, mimeImageGif},
-    {data26, sizeof(data26), mimeTextHtml, mimeImageGif},
-    {data27, sizeof(data27), mimeTextPlain, mimeTextPlain},
-    {data28, sizeof(data28), mimeImageBmp, mimeImageBmp},
-    {data29, sizeof(data29), mimeImageBmp, mimeImageBmp},
-    {data30, sizeof(data30), mimeAppOctetStream, mimeImagePjpeg},
-    {data31, sizeof(data31), mimeTextHtml, mimeImageBmp},
-    {data32, sizeof(data32), mimeAppOctetStream, mimeImagePjpeg},
-    {data33, sizeof(data33), mimeAppOctetStream, mimeImagePjpeg},
-    {data34, sizeof(data34), mimeImageXPng, mimeImageXPng},
-    {data35, sizeof(data35), mimeImageXPng, mimeImageXPng},
-    {data36, sizeof(data36), mimeAppOctetStream, mimeImagePjpeg},
-    {data37, sizeof(data37), mimeTextHtml, mimeImageXPng},
-    {data38, sizeof(data38), mimeAppOctetStream, mimeImagePjpeg},
-    {data39, sizeof(data39), mimeImageTiff, mimeImageTiff},
-    {data40, sizeof(data40), mimeTextHtml, mimeImageTiff},
-    {data41, sizeof(data41), mimeTextPlain, mimeTextPlain, mimeImageTiff},
-    {data42, sizeof(data42), mimeTextPlain, mimeTextPlain},
-    {data43, sizeof(data43), mimeAppOctetStream, mimeImagePjpeg},
-    {data44, sizeof(data44), mimeVideoAvi, mimeVideoAvi},
-    {data45, sizeof(data45), mimeTextPlain, mimeTextPlain},
-    {data46, sizeof(data46), mimeTextPlain, mimeTextPlain},
-    {data47, sizeof(data47), mimeTextPlain, mimeTextPlain},
-    {data48, sizeof(data48), mimeTextHtml, mimeVideoAvi},
-    {data49, sizeof(data49), mimeVideoAvi, mimeVideoAvi},
-    {data50, sizeof(data50), mimeVideoMpeg, mimeVideoMpeg},
-    {data51, sizeof(data51), mimeVideoMpeg, mimeVideoMpeg},
-    {data52, sizeof(data52), mimeAppOctetStream, mimeImagePjpeg},
-    {data53, sizeof(data53), mimeAppOctetStream, mimeImagePjpeg},
-    {data54, sizeof(data54), mimeTextHtml, mimeVideoMpeg},
-    {data55, sizeof(data55), mimeAppXGzip, mimeAppXGzip},
-    {data56, sizeof(data56), mimeTextPlain, mimeTextPlain},
-    {data57, sizeof(data57), mimeTextHtml, mimeAppXGzip},
-    {data58, sizeof(data58), mimeAppOctetStream, mimeImagePjpeg},
-    {data59, sizeof(data59), mimeAppXZip, mimeAppXZip},
-    {data60, sizeof(data60), mimeTextPlain, mimeTextPlain},
-    {data61, sizeof(data61), mimeTextHtml, mimeAppXZip},
-    {data62, sizeof(data62), mimeAppJava, mimeAppJava},
-    {data63, sizeof(data63), mimeTextPlain, mimeTextPlain},
-    {data64, sizeof(data64), mimeTextHtml, mimeAppJava},
-    {data65, sizeof(data65), mimeAppPdf, mimeAppPdf},
-    {data66, sizeof(data66), mimeTextPlain, mimeTextPlain},
-    {data67, sizeof(data67), mimeTextHtml, mimeAppPdf},
-    {data68, sizeof(data68), mimeAppXMSDownload, mimeAppXMSDownload},
-    {data69, sizeof(data69), mimeTextPlain, mimeTextPlain},
-    {data70, sizeof(data70), mimeTextHtml, mimeAppXMSDownload},
-    {data71, sizeof(data71), mimeTextRichtext, mimeTextRichtext},
-    {data72, sizeof(data72), mimeTextPlain, mimeTextPlain},
-    {data73, sizeof(data73), mimeTextPlain, mimeTextPlain},
-    {data74, sizeof(data74), mimeTextHtml, mimeTextRichtext},
-    {data75, sizeof(data75), mimeAudioWav, mimeAudioWav},
-    {data76, sizeof(data76), mimeTextPlain, mimeTextPlain},
-    {data77, sizeof(data77), mimeTextPlain, mimeTextPlain},
-    {data78, sizeof(data78), mimeTextHtml, mimeTextPlain},
-    {data79, sizeof(data79), mimeAppPostscript, mimeAppPostscript},
-    {data80, sizeof(data80), mimeTextPlain, mimeTextPlain},
-    {data81, sizeof(data81), mimeTextHtml, mimeAppPostscript},
-    {data82, sizeof(data82), mimeAudioBasic, mimeAudioBasic},
-    {data83, sizeof(data83), mimeTextPlain, mimeTextPlain},
-    {data84, sizeof(data84), mimeTextHtml, mimeAudioBasic},
-    {data85, sizeof(data85), mimeTextPlain, mimeTextPlain},
-    {data86, sizeof(data86), mimeImageTiff, mimeImageTiff, mimeTextPlain},
-    {data87, sizeof(data87), mimeTextPlain, mimeTextPlain},
-    {data88, sizeof(data88), mimeTextHtml, mimeTextPlain},
-    {data89, sizeof(data89), mimeTextHtml, mimeTextPlain},
-    {data90, sizeof(data90), mimeTextHtml, mimeTextPlain},
-    {data91, sizeof(data91), mimeTextXml, mimeTextPlain},
-    {data92, sizeof(data92), mimeTextXml, mimeTextPlain},
-    {data93, sizeof(data93), mimeTextXml, mimeTextPlain},
-    {data94, sizeof(data94), mimeTextHtml, mimeTextPlain},
-    {data95, sizeof(data95), mimeTextXml, mimeTextRichtext},
-    {data96, sizeof(data96), mimeTextPlain, mimeTextPlain}
+    {data1, sizeof(data1), "text/plain"},
+    {data2, sizeof(data2), "application/octet-stream", "image/pjpeg"},
+    {data3, sizeof(data3), "application/octet-stream", "image/pjpeg"},
+    {data4, sizeof(data4), "application/octet-stream", "image/pjpeg"},
+    {data5, sizeof(data5), "text/plain"},
+    {data6, sizeof(data6), "text/plain"},
+    {data7, sizeof(data7), "text/html", "text/plain"},
+    {data8, sizeof(data8), "text/html", "text/plain"},
+    {data9, sizeof(data9), "text/html", "image/pjpeg"},
+    {data10, sizeof(data10), "text/html", "text/plain"},
+    {data11, sizeof(data11), "text/html", "text/plain"},
+    {data12, sizeof(data12), "text/html", "text/plain"},
+    {data13, sizeof(data13), "text/plain"},
+    {data14, sizeof(data14), "text/plain"},
+    {data15, sizeof(data15), "text/plain"},
+    {data16, sizeof(data16), "image/pjpeg"},
+    {data17, sizeof(data17), "application/octet-stream", "image/pjpeg"},
+    {data18, sizeof(data18), "text/html", "image/pjpeg"},
+    {data19, sizeof(data19), "image/gif"},
+    {data20, sizeof(data20), "image/gif"},
+    {data21, sizeof(data21), "text/plain"},
+    {data22, sizeof(data22), "image/gif"},
+    {data23, sizeof(data23), "text/plain"},
+    {data24, sizeof(data24), "image/gif"},
+    {data25, sizeof(data25), "image/gif"},
+    {data26, sizeof(data26), "text/html", "image/gif"},
+    {data27, sizeof(data27), "text/plain"},
+    {data28, sizeof(data28), "image/bmp"},
+    {data29, sizeof(data29), "image/bmp"},
+    {data30, sizeof(data30), "application/octet-stream", "image/pjpeg"},
+    {data31, sizeof(data31), "text/html", "image/bmp"},
+    {data32, sizeof(data32), "application/octet-stream", "image/pjpeg"},
+    {data33, sizeof(data33), "application/octet-stream", "image/pjpeg"},
+    {data34, sizeof(data34), "image/x-png"},
+    {data35, sizeof(data35), "image/x-png"},
+    {data36, sizeof(data36), "application/octet-stream", "image/pjpeg"},
+    {data37, sizeof(data37), "text/html", "image/x-png"},
+    {data38, sizeof(data38), "application/octet-stream", "image/pjpeg"},
+    {data39, sizeof(data39), "image/tiff"},
+    {data40, sizeof(data40), "text/html", "image/tiff"},
+    {data41, sizeof(data41), "text/plain", NULL, "image/tiff"},
+    {data42, sizeof(data42), "text/plain"},
+    {data43, sizeof(data43), "application/octet-stream", "image/pjpeg"},
+    {data44, sizeof(data44), "video/avi"},
+    {data45, sizeof(data45), "text/plain"},
+    {data46, sizeof(data46), "text/plain"},
+    {data47, sizeof(data47), "text/plain"},
+    {data48, sizeof(data48), "text/html", "video/avi"},
+    {data49, sizeof(data49), "video/avi"},
+    {data50, sizeof(data50), "video/mpeg"},
+    {data51, sizeof(data51), "video/mpeg"},
+    {data52, sizeof(data52), "application/octet-stream", "image/pjpeg"},
+    {data53, sizeof(data53), "application/octet-stream", "image/pjpeg"},
+    {data54, sizeof(data54), "text/html", "video/mpeg"},
+    {data55, sizeof(data55), "application/x-gzip-compressed"},
+    {data56, sizeof(data56), "text/plain"},
+    {data57, sizeof(data57), "text/html", "application/x-gzip-compressed"},
+    {data58, sizeof(data58), "application/octet-stream", "image/pjpeg"},
+    {data59, sizeof(data59), "application/x-zip-compressed"},
+    {data60, sizeof(data60), "text/plain"},
+    {data61, sizeof(data61), "text/html", "application/x-zip-compressed"},
+    {data62, sizeof(data62), "application/java"},
+    {data63, sizeof(data63), "text/plain"},
+    {data64, sizeof(data64), "text/html", "application/java"},
+    {data65, sizeof(data65), "application/pdf"},
+    {data66, sizeof(data66), "text/plain"},
+    {data67, sizeof(data67), "text/html", "application/pdf"},
+    {data68, sizeof(data68), "application/x-msdownload"},
+    {data69, sizeof(data69), "text/plain"},
+    {data70, sizeof(data70), "text/html", "application/x-msdownload"},
+    {data71, sizeof(data71), "text/richtext"},
+    {data72, sizeof(data72), "text/plain"},
+    {data73, sizeof(data73), "text/plain"},
+    {data74, sizeof(data74), "text/html", "text/richtext"},
+    {data75, sizeof(data75), "audio/wav"},
+    {data76, sizeof(data76), "text/plain"},
+    {data77, sizeof(data77), "text/plain"},
+    {data78, sizeof(data78), "text/html", "text/plain"},
+    {data79, sizeof(data79), "application/postscript"},
+    {data80, sizeof(data80), "text/plain"},
+    {data81, sizeof(data81), "text/html", "application/postscript"},
+    {data82, sizeof(data82), "audio/basic"},
+    {data83, sizeof(data83), "text/plain"},
+    {data84, sizeof(data84), "text/html", "audio/basic"},
+    {data85, sizeof(data85), "text/plain"},
+    {data86, sizeof(data86), "image/tiff", NULL, "text/plain"},
+    {data87, sizeof(data87), "text/plain"},
+    {data88, sizeof(data88), "text/html", "text/plain"},
+    {data89, sizeof(data89), "text/html", "text/plain"},
+    {data90, sizeof(data90), "text/html", "text/plain"},
+    {data91, sizeof(data91), "text/xml", "text/plain"},
+    {data92, sizeof(data92), "text/xml", "text/plain"},
+    {data93, sizeof(data93), "text/xml", "text/plain"},
+    {data94, sizeof(data94), "text/html", "text/plain"},
+    {data95, sizeof(data95), "text/xml", "text/richtext"},
+    {data96, sizeof(data96), "text/plain"},
+    {data1, sizeof(data1), "text/plain", NULL, NULL, "res://mshtml.dll/blank.htm"},
+    {NULL, 0, "text/html", NULL, NULL, "res://mshtml.dll/blank.htm"},
+    {data1, sizeof(data1), "text/plain", NULL, NULL, "res://mshtml.dll/blank.htm", "application/octet-stream"},
+    {data1, sizeof(data1), "text/plain", NULL, NULL, "file:some%20file%2ejpg", "application/octet-stream"},
+    {NULL, sizeof(data1), "text/html", NULL, NULL, "res://mshtml.dll/blank.htm"},
+    {data1, sizeof(data1), "text/css", NULL, NULL, "http://www.winehq.org/test.css"},
+    {data2, sizeof(data2), "text/css", NULL, NULL, "http://www.winehq.org/test.css"},
+    {data10, sizeof(data10), "text/html", NULL, NULL, "http://www.winehq.org/test.css"},
+    {data1, sizeof(data1), "text/css", NULL, NULL, "http://www.winehq.org/test.css", "text/plain"},
+    {data1, sizeof(data1), "text/css", NULL, NULL, "http://www.winehq.org/test.css", "application/octet-stream"},
+    {data1, sizeof(data1), "text/test", NULL, NULL, "http://www.winehq.org/test.css", "text/test"}
 };
 
 static void test_FindMimeFromData(void)
 {
+    WCHAR *mime, *proposed_mime, *url;
     HRESULT hres;
-    LPWSTR mime;
     BYTE b;
     int i;
+
+    static const WCHAR app_octet_streamW[] =
+        {'a','p','p','l','i','c','a','t','i','o','n','/','o','c','t','e','t','-','s','t','r','e','a','m',0};
+    static const WCHAR image_pjpegW[] = {'i','m','a','g','e','/','p','j','p','e','g',0};
+    static const WCHAR text_htmlW[] = {'t','e','x','t','/','h','t','m','l',0};
+    static const WCHAR text_plainW[] = {'t','e','x','t','/','p','l','a','i','n',0};
 
     for(i=0; i<sizeof(mime_tests)/sizeof(mime_tests[0]); i++) {
         mime = (LPWSTR)0xf0f0f0f0;
         hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, NULL, 0, &mime, 0);
         if(mime_tests[i].mime) {
             ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-            ok(!lstrcmpW(mime, mime_tests[i].mime), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+            ok(!strcmp_wa(mime, mime_tests[i].mime), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
             CoTaskMemFree(mime);
         }else {
             ok(hres == E_FAIL || hres == mime_tests[i].hres,
@@ -706,107 +727,72 @@ static void test_FindMimeFromData(void)
         }
 
         mime = (LPWSTR)0xf0f0f0f0;
-        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, mimeTextPlain, 0, &mime, 0);
+        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, text_plainW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        ok(!lstrcmpW(mime, mimeTextPlain), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+        ok(!strcmp_wa(mime, "text/plain"), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
 
         mime = (LPWSTR)0xf0f0f0f0;
-        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, mimeAppOctetStream, 0, &mime, 0);
+        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, app_octet_streamW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        ok(!lstrcmpW(mime, mimeAppOctetStream), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+        ok(!strcmp_wa(mime, "application/octet-stream"), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
     }
 
     for(i=0; i < sizeof(mime_tests2)/sizeof(mime_tests2[0]); i++) {
-        hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
-                NULL, 0, &mime, 0);
+        url = a2w(mime_tests2[i].url);
+        proposed_mime = a2w(mime_tests2[i].proposed_mime);
+        hres = pFindMimeFromData(NULL, url, mime_tests2[i].data, mime_tests2[i].size,
+                proposed_mime, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        b = !lstrcmpW(mime, mime_tests2[i].mime);
-        ok(b || broken(mime_tests2[i].broken_mime && !lstrcmpW(mime, mime_tests2[i].broken_mime)),
+        b = !strcmp_wa(mime, mime_tests2[i].mime);
+        ok(b || broken(mime_tests2[i].broken_mime && !strcmp_wa(mime, mime_tests2[i].broken_mime)),
             "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+        heap_free(proposed_mime);
+        heap_free(url);
         CoTaskMemFree(mime);
-        if(!b)
+        if(!b || url || proposed_mime)
             continue;
 
         hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
-                mimeAppOctetStream, 0, &mime, 0);
+                app_octet_streamW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        ok(!lstrcmpW(mime, mime_tests2[i].mime) || broken(mime_tests2[i].broken_mime
-                        && !lstrcmpW(mime, mime_tests2[i].broken_mime)),
+        ok(!strcmp_wa(mime, mime_tests2[i].mime) || broken(mime_tests2[i].broken_mime
+                        && !strcmp_wa(mime, mime_tests2[i].broken_mime)),
                     "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
 
         hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
-                mimeTextPlain, 0, &mime, 0);
+                text_plainW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        ok(!lstrcmpW(mime, mime_tests2[i].mime) || broken(mime_tests2[i].broken_mime
-                    && !lstrcmpW(mime, mime_tests2[i].broken_mime)),
+        ok(!strcmp_wa(mime, mime_tests2[i].mime) || broken(mime_tests2[i].broken_mime
+                    && !strcmp_wa(mime, mime_tests2[i].broken_mime)),
                 "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
 
         hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
-                mimeTextHtml, 0, &mime, 0);
+                text_htmlW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        if(!lstrcmpW(mimeAppOctetStream, mime_tests2[i].mime)
-           || !lstrcmpW(mimeTextPlain, mime_tests2[i].mime) || i==92)
-            ok(!lstrcmpW(mime, mimeTextHtml), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+        if(!strcmp("application/octet-stream", mime_tests2[i].mime)
+           || !strcmp("text/plain", mime_tests2[i].mime) || i==92)
+            ok(!strcmp_wa(mime, "text/html"), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         else
-            ok(!lstrcmpW(mime, mime_tests2[i].mime), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+            ok(!strcmp_wa(mime, mime_tests2[i].mime), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
 
         hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
-                mimeImagePjpeg, 0, &mime, 0);
+                image_pjpegW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        ok(!lstrcmpW(mime, mime_tests2[i].mime_pjpeg) || broken(!lstrcmpW(mime, mime_tests2[i].mime)),
-                "[%d] wrong mime, got %s\n", i, wine_dbgstr_w(mime));
+        ok(!strcmp_wa(mime, mime_tests2[i].mime_pjpeg ? mime_tests2[i].mime_pjpeg : mime_tests2[i].mime)
+           || broken(!strcmp_wa(mime, mime_tests2[i].mime)),
+           "[%d] wrong mime, got %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
     }
-
-    hres = pFindMimeFromData(NULL, url1, data1, sizeof(data1), NULL, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
-    ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime: %s\n", wine_dbgstr_w(mime));
-    CoTaskMemFree(mime);
-
-    hres = pFindMimeFromData(NULL, url1, data1, sizeof(data1), mimeAppOctetStream, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
-    ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime: %s\n", wine_dbgstr_w(mime));
-    CoTaskMemFree(mime);
-
-    hres = pFindMimeFromData(NULL, url4, data1, sizeof(data1), mimeAppOctetStream, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
-    ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime: %s\n", wine_dbgstr_w(mime));
-    CoTaskMemFree(mime);
-
-    hres = pFindMimeFromData(NULL, url1, NULL, 0, NULL, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x, expected S_OK\n", hres);
-    ok(!lstrcmpW(mime, mimeTextHtml), "wrong mime: %s\n", wine_dbgstr_w(mime));
-    CoTaskMemFree(mime);
-
-    hres = pFindMimeFromData(NULL, url1, NULL, sizeof(data1), NULL, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x, expected S_OK\n", hres);
-    ok(!lstrcmpW(mime, mimeTextHtml), "wrong mime: %s\n", wine_dbgstr_w(mime));
-    CoTaskMemFree(mime);
-
-    hres = pFindMimeFromData(NULL, url1, 0, 0, NULL, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x, expected S_OK\n", hres);
-    ok(!lstrcmpW(mime, mimeTextHtml), "wrong mime: %s\n", wine_dbgstr_w(mime));
-    CoTaskMemFree(mime);
-
-    hres = pFindMimeFromData(NULL, url1, 0, sizeof(data1), NULL, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x, expected S_OK\n", hres);
-    ok(!lstrcmpW(mime, mimeTextHtml), "wrong mime: %s\n", wine_dbgstr_w(mime));
-    CoTaskMemFree(mime);
-
-    hres = pFindMimeFromData(NULL, url1, data1, sizeof(data1), NULL, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x, expected S_OK\n", hres);
-    ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime: %s\n", wine_dbgstr_w(mime));
-    CoTaskMemFree(mime);
 
     hres = pFindMimeFromData(NULL, NULL, NULL, 0, NULL, 0, &mime, 0);
     ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, expected E_INVALIDARG\n", hres);
 
-    hres = pFindMimeFromData(NULL, NULL, NULL, 0, mimeTextPlain, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, NULL, NULL, 0, text_plainW, 0, &mime, 0);
     ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, expected E_INVALIDARG\n", hres);
 
     hres = pFindMimeFromData(NULL, NULL, data1, 0, NULL, 0, &mime, 0);
@@ -815,12 +801,12 @@ static void test_FindMimeFromData(void)
     hres = pFindMimeFromData(NULL, url1, data1, 0, NULL, 0, &mime, 0);
     ok(hres == E_FAIL, "FindMimeFromData failed: %08x, expected E_FAIL\n", hres);
 
-    hres = pFindMimeFromData(NULL, NULL, data1, 0, mimeTextPlain, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, NULL, data1, 0, text_plainW, 0, &mime, 0);
     ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
-    ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime: %s\n", wine_dbgstr_w(mime));
+    ok(!strcmp_wa(mime, "text/plain"), "wrong mime: %s\n", wine_dbgstr_w(mime));
     CoTaskMemFree(mime);
 
-    hres = pFindMimeFromData(NULL, NULL, data1, 0, mimeTextPlain, 0, NULL, 0);
+    hres = pFindMimeFromData(NULL, NULL, data1, 0, text_plainW, 0, NULL, 0);
     ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, expected E_INVALIDARG\n", hres);
 }
 

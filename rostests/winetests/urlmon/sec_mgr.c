@@ -27,6 +27,7 @@
 #define NONAMELESSUNION
 
 /* needed for IInternetZoneManagerEx2 */
+#undef _WIN32_IE
 #define _WIN32_IE 0x0700
 
 #include <wine/test.h>
