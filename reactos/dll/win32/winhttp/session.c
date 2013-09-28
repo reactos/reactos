@@ -560,6 +560,9 @@ static void request_destroy( object_header_t *hdr )
 
     release_object( &request->connect->hdr );
 
+    destroy_authinfo( request->authinfo );
+    destroy_authinfo( request->proxy_authinfo );
+
     heap_free( request->verb );
     heap_free( request->path );
     heap_free( request->version );
