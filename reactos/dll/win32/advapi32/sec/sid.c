@@ -1439,6 +1439,7 @@ WINAPI
 EqualSid(PSID pSid1,
          PSID pSid2)
 {
+    SetLastError(ERROR_SUCCESS);
     return RtlEqualSid (pSid1, pSid2);
 }
 
