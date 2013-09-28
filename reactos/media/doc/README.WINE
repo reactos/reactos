@@ -200,7 +200,7 @@ reactos/dll/win32/version         # Autosync
 reactos/dll/win32/wbemprox        # Synced to Wine-1.7.1
 reactos/dll/win32/wer             # Autosync
 reactos/dll/win32/windowscodecs   # Synced to Wine-1.7.1
-reactos/dll/win32/winemp3.acm     # Synced to Wine-1.5.19
+reactos/dll/win32/winemp3.acm     # Synced to Wine-1.7.1
 reactos/dll/win32/wing32          # Out of sync
 reactos/dll/win32/winhttp         # Synced to Wine-1.5.26
 reactos/dll/win32/wininet         # Synced to Wine-1.5.26
