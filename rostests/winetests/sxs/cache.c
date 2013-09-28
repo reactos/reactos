@@ -104,17 +104,17 @@ static void test_QueryAssemblyInfo( void )
 
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, wine2W, NULL );
     ok( hr == HRESULT_FROM_WIN32( ERROR_SXS_MISSING_ASSEMBLY_IDENTITY_ATTRIBUTE ) ||
-        broken(hr == 0x80070490) /* winxp */, "got %08x\n", hr );
+        broken(hr == HRESULT_FROM_WIN32( ERROR_NOT_FOUND )) /* winxp */, "got %08x\n", hr );
 
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, wine3W, NULL );
     ok( hr == HRESULT_FROM_WIN32( ERROR_SXS_MISSING_ASSEMBLY_IDENTITY_ATTRIBUTE ) ||
-        broken(hr == 0x80070490) /* winxp */, "got %08x\n", hr );
+        broken(hr == HRESULT_FROM_WIN32( ERROR_NOT_FOUND )) /* winxp */, "got %08x\n", hr );
 
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, wine4W, NULL );
-    todo_wine ok( hr == 0x80070490, "got %08x\n", hr );
+    todo_wine ok( hr == HRESULT_FROM_WIN32( ERROR_NOT_FOUND ), "got %08x\n", hr );
 
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, wine5W, NULL );
-    todo_wine ok( hr == 0x80070490, "got %08x\n", hr );
+    todo_wine ok( hr == HRESULT_FROM_WIN32( ERROR_NOT_FOUND ), "got %08x\n", hr );
 
     GetWindowsDirectoryA( comctl_path1, MAX_PATH );
     lstrcatA( comctl_path1, "\\winsxs\\x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef" );
@@ -141,7 +141,7 @@ static void test_QueryAssemblyInfo( void )
     memset( &info, 0, sizeof(info) );
     info.cbAssemblyInfo = sizeof(info);
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, wine5W, &info );
-    todo_wine ok( hr == 0x80070490, "got %08x\n", hr );
+    todo_wine ok( hr == HRESULT_FROM_WIN32( ERROR_NOT_FOUND ), "got %08x\n", hr );
 
     memset( &info, 0, sizeof(info) );
     info.cbAssemblyInfo = sizeof(info);
