@@ -212,10 +212,10 @@ reactos/dll/win32/wldap32         # Synced to Wine-1.7.1
 reactos/dll/win32/wmi             # Synced to Wine-1.7.1
 reactos/dll/win32/wtsapi32        # Synced to Wine-1.7.1
 reactos/dll/win32/wuapi           # Synced to Wine-1.7.1
-reactos/dll/win32/xinput1_1       # Synced to Wine-1.5.19
-reactos/dll/win32/xinput1_2       # Synced to Wine-1.5.19
-reactos/dll/win32/xinput1_3       # Synced to Wine-1.5.19
-reactos/dll/win32/xinput9_1_0     # Synced to Wine-1.5.19
+reactos/dll/win32/xinput1_1       # Synced to Wine-1.7.1
+reactos/dll/win32/xinput1_2       # Synced to Wine-1.7.1
+reactos/dll/win32/xinput1_3       # Synced to Wine-1.7.1
+reactos/dll/win32/xinput9_1_0     # Synced to Wine-1.7.1
 reactos/dll/win32/xmllite         # Synced to Wine-1.5.26
 
 reactos/dll/cpl/inetcpl           # Synced to Wine-1.3.21
