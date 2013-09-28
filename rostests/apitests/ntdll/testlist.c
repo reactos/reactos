@@ -5,6 +5,7 @@
 
 extern void func_LdrEnumResources(void);
 extern void func_NtAllocateVirtualMemory(void);
+extern void func_NtContinue(void);
 extern void func_NtCreateThread(void);
 extern void func_NtFreeVirtualMemory(void);
 extern void func_NtMapViewOfSection(void);
@@ -24,12 +25,12 @@ extern void func_RtlGetLengthWithoutTrailingPathSeperators(void);
 extern void func_RtlGetLongestNtPathLength(void);
 extern void func_RtlInitializeBitMap(void);
 extern void func_TimerResolution(void);
-extern void func_ZwContinue(void);
 
 const struct test winetest_testlist[] =
 {
     { "LdrEnumResources",               func_LdrEnumResources },
     { "NtAllocateVirtualMemory",        func_NtAllocateVirtualMemory },
+    { "NtContinue",                     func_NtContinue },
     { "NtCreateThread",                 func_NtCreateThread },
     { "NtFreeVirtualMemory",            func_NtFreeVirtualMemory },
     { "NtMapViewOfSection",             func_NtMapViewOfSection },
@@ -49,7 +50,6 @@ const struct test winetest_testlist[] =
     { "RtlGetLongestNtPathLength",      func_RtlGetLongestNtPathLength },
     { "RtlInitializeBitMap",            func_RtlInitializeBitMap },
     { "TimerResolution",                func_TimerResolution },
-    { "ZwContinue",                     func_ZwContinue },
 
     { 0, 0 }
 };

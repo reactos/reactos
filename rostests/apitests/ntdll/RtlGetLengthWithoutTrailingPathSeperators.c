@@ -104,19 +104,19 @@ START_TEST(RtlGetLengthWithoutTrailingPathSeperators)
             &str, pentry->input);
 
         len = 0xDEADBEEF;
-        
+
         StartSeh()
             res = RtlGetLengthWithoutTrailingPathSeperators(0, &str, &len);
         EndSeh(STATUS_SUCCESS);
-         
-        ok(res == pentry->expected_result, 
+
+        ok(res == pentry->expected_result,
             "Unexpected result 0x%08x (expected 0x%08x) in [%d:%d]\n",
             res, pentry->expected_result,
             i, pentry->line);
         ok(len == pentry->expected_output,
-            "Unexpected length %d (expected %d) in [%d:%d]\n", 
+            "Unexpected length %d (expected %d) in [%d:%d]\n",
             len, pentry->expected_output,
-            i, pentry->line);          
+            i, pentry->line);
     }
 
     // Invalid parameters
@@ -127,10 +127,10 @@ START_TEST(RtlGetLengthWithoutTrailingPathSeperators)
         res = RtlGetLengthWithoutTrailingPathSeperators(0, NULL, &len);
     EndSeh(STATUS_SUCCESS);
 
-    ok(res == STATUS_INVALID_PARAMETER, 
+    ok(res == STATUS_INVALID_PARAMETER,
         "Unexpected result 0x%08x (expected STATUS_INVALID_PARAMETER)\n",
         res);
-    ok(len == 0, 
+    ok(len == 0,
         "Unexpected length %08x (expected 0)\n",
         len);
 
@@ -138,7 +138,7 @@ START_TEST(RtlGetLengthWithoutTrailingPathSeperators)
         res = RtlGetLengthWithoutTrailingPathSeperators(0, &str, NULL);
     EndSeh(STATUS_SUCCESS);
 
-    ok(res == STATUS_INVALID_PARAMETER, 
+    ok(res == STATUS_INVALID_PARAMETER,
         "Unexpected result 0x%08x (expected STATUS_INVALID_PARAMETER)\n",
         res);
 
@@ -146,7 +146,7 @@ START_TEST(RtlGetLengthWithoutTrailingPathSeperators)
         res = RtlGetLengthWithoutTrailingPathSeperators(0, NULL, NULL);
     EndSeh(STATUS_SUCCESS);
 
-    ok(res == STATUS_INVALID_PARAMETER, 
+    ok(res == STATUS_INVALID_PARAMETER,
         "Unexpected result 0x%08x (expected STATUS_INVALID_PARAMETER)\n",
         res);
 
@@ -158,11 +158,11 @@ START_TEST(RtlGetLengthWithoutTrailingPathSeperators)
             res = RtlGetLengthWithoutTrailingPathSeperators(1<<i, &str, &len);
         EndSeh(STATUS_SUCCESS);
 
-        ok(res == STATUS_INVALID_PARAMETER, 
+        ok(res == STATUS_INVALID_PARAMETER,
             "Unexpected result 0x%08x (expected STATUS_INVALID_PARAMETER)\n",
             res);
 
-        ok(len == 0, 
+        ok(len == 0,
             "Unexpected length %08x (expected 0)\n",
             len);
     }
@@ -173,11 +173,11 @@ START_TEST(RtlGetLengthWithoutTrailingPathSeperators)
         res = RtlGetLengthWithoutTrailingPathSeperators(0xFFFFFFFF, &str, &len);
     EndSeh(STATUS_SUCCESS);
 
-    ok(res == STATUS_INVALID_PARAMETER, 
+    ok(res == STATUS_INVALID_PARAMETER,
         "Unexpected result 0x%08x (expected STATUS_INVALID_PARAMETER)\n",
         res);
-        
-    ok(len == 0, 
+
+    ok(len == 0,
         "Unexpected length %08x (expected 0)\n",
         len);
 }

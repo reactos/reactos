@@ -1,22 +1,22 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for ZwContinue
- * PROGRAMMER:     
+ * PURPOSE:         Test for NtContinue
+ * PROGRAMMER:
  */
 
 #include <apitest.h>
+#include <ndk/kefuncs.h>
 
 #include <setjmp.h>
 #include <time.h>
 
 #ifdef _M_IX86
-#define ZWC_SEGMENT_BITS (0xFFFF)
-#define ZWC_EFLAGS_BITS  (0x3C0CD5)
+#define NTC_SEGMENT_BITS (0xFFFF)
+#define NTC_EFLAGS_BITS  (0x3C0CD5)
 #endif
 
 void continuePoint(void);
-LONG NTAPI ZwContinue(IN CONTEXT *, IN BOOLEAN);
 
 static jmp_buf jmpbuf;
 static CONTEXT continueContext;
@@ -66,24 +66,24 @@ void check(CONTEXT * pContext)
        "ContextFlags=0x%lx\n", pContext->ContextFlags);
 
     /* Random data segments */
-    ok((pContext->SegGs & ZWC_SEGMENT_BITS) ==
-       (continueContext.SegGs & ZWC_SEGMENT_BITS),
+    ok((pContext->SegGs & NTC_SEGMENT_BITS) ==
+       (continueContext.SegGs & NTC_SEGMENT_BITS),
        "SegGs=0x%lx / 0x%lx\n", pContext->SegGs, continueContext.SegGs);
 
-    ok((pContext->SegFs & ZWC_SEGMENT_BITS) ==
-       (continueContext.SegFs & ZWC_SEGMENT_BITS),
+    ok((pContext->SegFs & NTC_SEGMENT_BITS) ==
+       (continueContext.SegFs & NTC_SEGMENT_BITS),
        "SegFs=0x%lx / 0x%lx\n", pContext->SegFs, continueContext.SegFs);
 
-    ok((pContext->SegEs & ZWC_SEGMENT_BITS) ==
-       (continueContext.SegEs & ZWC_SEGMENT_BITS),
+    ok((pContext->SegEs & NTC_SEGMENT_BITS) ==
+       (continueContext.SegEs & NTC_SEGMENT_BITS),
        "SegEs=0x%lx / 0x%lx\n", pContext->SegEs, continueContext.SegEs);
 
-    ok((pContext->SegDs & ZWC_SEGMENT_BITS) ==
-       (continueContext.SegDs & ZWC_SEGMENT_BITS),
+    ok((pContext->SegDs & NTC_SEGMENT_BITS) ==
+       (continueContext.SegDs & NTC_SEGMENT_BITS),
        "SegDs=0x%lx / 0x%lx\n", pContext->SegDs, continueContext.SegDs);
 
     /* Integer registers */
-    ok(pContext->Edi == continueContext.Edi, 
+    ok(pContext->Edi == continueContext.Edi,
        "Edi: 0x%lx != 0x%lx\n", pContext->Edi, continueContext.Edi);
     ok(pContext->Esi == continueContext.Esi,
        "Esi: 0x%lx != 0x%lx\n", pContext->Esi, continueContext.Esi);
@@ -104,16 +104,16 @@ void check(CONTEXT * pContext)
     ok(pContext->Esp == continueContext.Esp,
        "Esp: 0x%lx != 0x%lx\n", pContext->Esp, continueContext.Esp);
 
-    ok((pContext->SegCs & ZWC_SEGMENT_BITS) ==
-       (continueContext.SegCs & ZWC_SEGMENT_BITS),
+    ok((pContext->SegCs & NTC_SEGMENT_BITS) ==
+       (continueContext.SegCs & NTC_SEGMENT_BITS),
        "SegCs: 0x%lx != 0x%lx\n", pContext->SegCs, continueContext.SegCs);
 
-    ok((pContext->EFlags & ZWC_EFLAGS_BITS) ==
-       (continueContext.EFlags & ZWC_EFLAGS_BITS),
+    ok((pContext->EFlags & NTC_EFLAGS_BITS) ==
+       (continueContext.EFlags & NTC_EFLAGS_BITS),
        "EFlags: 0x%lx != 0x%lx\n", pContext->EFlags, continueContext.EFlags);
 
-    ok((pContext->SegSs & ZWC_SEGMENT_BITS) ==
-       (continueContext.SegSs & ZWC_SEGMENT_BITS),
+    ok((pContext->SegSs & NTC_SEGMENT_BITS) ==
+       (continueContext.SegSs & NTC_SEGMENT_BITS),
        "SegSs: 0x%lx != 0x%lx\n", pContext->SegSs, continueContext.SegSs);
 #endif
 
@@ -121,7 +121,7 @@ void check(CONTEXT * pContext)
     longjmp(jmpbuf, 1);
 }
 
-void Test_ZwContinue()
+START_TEST(NtContinue)
 {
     initrand();
 
@@ -158,16 +158,10 @@ void Test_ZwContinue()
         /* Can't do a lot about segments */
 #endif
 
-        ZwContinue(&continueContext, FALSE);
+        NtContinue(&continueContext, FALSE);
         ok(0, "should never get here\n");
     }
 
     /* Second time */
     return;
 }
-
-START_TEST(ZwContinue)
-{
-    Test_ZwContinue();
-}
-
