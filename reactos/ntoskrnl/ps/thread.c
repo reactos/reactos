@@ -317,19 +317,30 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             return Status;
         }
 
-        /* Set the Start Addresses */
-        Thread->StartAddress = (PVOID)KeGetContextPc(ThreadContext);
-        Thread->Win32StartAddress = (PVOID)KeGetContextReturnRegister(ThreadContext);
+        /* Set the Start Addresses from the untrusted ThreadContext */
+        _SEH2_TRY
+        {
+            Thread->StartAddress = (PVOID)KeGetContextPc(ThreadContext);
+            Thread->Win32StartAddress = (PVOID)KeGetContextReturnRegister(ThreadContext);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
 
         /* Let the kernel intialize the Thread */
-        Status = KeInitThread(&Thread->Tcb,
-                              NULL,
-                              PspUserThreadStartup,
-                              NULL,
-                              Thread->StartAddress,
-                              ThreadContext,
-                              TebBase,
-                              &Process->Pcb);
+        if (NT_SUCCESS(Status))
+        {
+            Status = KeInitThread(&Thread->Tcb,
+                                  NULL,
+                                  PspUserThreadStartup,
+                                  NULL,
+                                  Thread->StartAddress,
+                                  ThreadContext,
+                                  TebBase,
+                                  &Process->Pcb);
+        }
     }
     else
     {

@@ -417,7 +417,7 @@ HdlspDispatch(IN HEADLESS_CMD Command,
             HeadlessInfo = OutputBuffer;
             HeadlessInfo->PortType = HeadlessSerialPort;
             HeadlessInfo->Serial.TerminalAttached = TRUE;
-            HeadlessInfo->Serial.UsedBiosSettings = HeadlessGlobals->UsedBiosSettings;
+            HeadlessInfo->Serial.UsedBiosSettings = HeadlessGlobals->UsedBiosSettings != 0;
             HeadlessInfo->Serial.TerminalBaudRate = HeadlessGlobals->TerminalBaudRate;
             HeadlessInfo->Serial.TerminalType = HeadlessGlobals->TerminalType;
 
