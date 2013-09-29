@@ -163,8 +163,7 @@ CcSetFileSizes (
                                         CACHE_SEGMENT,
                                         BcbSegmentListEntry);
             current_entry = current_entry->Flink;
-            if (current->FileOffset > FileSizes->AllocationSize.QuadPart ||
-                    (current->FileOffset == 0 && FileSizes->AllocationSize.QuadPart == 0))
+            if (current->FileOffset >= FileSizes->AllocationSize.QuadPart)
             {
                 if ((current->ReferenceCount == 0) || ((current->ReferenceCount == 1) && current->Dirty))
                 {

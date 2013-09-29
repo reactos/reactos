@@ -487,6 +487,8 @@ CcRosLookupCacheSegment (
                                   NULL);
             return current;
         }
+        if (current->FileOffset > FileOffset)
+            break;
         current_entry = current_entry->Flink;
     }
 
@@ -686,18 +688,12 @@ CcRosCreateCacheSegment (
         }
         if (current->FileOffset < FileOffset)
         {
-            if (previous == NULL)
-            {
-                previous = current;
-            }
-            else
-            {
-                if (previous->FileOffset < current->FileOffset)
-                {
-                    previous = current;
-                }
-            }
+            ASSERT(previous == NULL ||
+                   previous->FileOffset < current->FileOffset);
+            previous = current;
         }
+        if (current->FileOffset > FileOffset)
+            break;
         current_entry = current_entry->Flink;
     }
     /* There was no existing segment. */

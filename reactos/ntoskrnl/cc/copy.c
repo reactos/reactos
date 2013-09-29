@@ -371,6 +371,8 @@ CcCopyRead (
                 IoStatus->Information = 0;
                 return FALSE;
             }
+            if (current->FileOffset >= ReadOffset + Length)
+                break;
             current_entry = current_entry->Flink;
         }
         KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
@@ -484,6 +486,8 @@ CcCopyWrite (
                 /* datas not available */
                 return FALSE;
             }
+            if (CacheSeg->FileOffset >= WriteOffset + Length)
+                break;
             current_entry = current_entry->Flink;
         }
         KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
@@ -683,7 +687,7 @@ CcZeroData (
         ULONG TempLength;
 
         Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-        if (Wait)
+        if (!Wait)
         {
             /* testing, if the requested datas are available */
             KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
@@ -702,6 +706,8 @@ CcZeroData (
                     /* datas not available */
                     return FALSE;
                 }
+                if (CacheSeg->FileOffset >= WriteOffset.u.LowPart + Length)
+                    break;
                 current_entry = current_entry->Flink;
             }
             KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
