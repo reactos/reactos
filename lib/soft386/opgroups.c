@@ -19,6 +19,143 @@
 #include "opcodes.h"
 #include "common.h"
 
+/* PRIVATE FUNCTIONS **********************************************************/
+
+static
+inline
+ULONG
+Soft386RotateOperation(PSOFT386_STATE State,
+                       INT Operation,
+                       ULONG Value,
+                       UCHAR Bits,
+                       UCHAR Count)
+{
+    ULONG HighestBit = 1 << (Bits - 1);
+    ULONG Result;
+
+    if ((Operation != 2) && (Operation != 3))
+    {
+        /* Mask the count */
+        Count &= Bits - 1;
+    }
+    else
+    {
+        /* For RCL and RCR, the CF is included in the value */
+        Count %= Bits + 1;
+    }
+
+    /* Check which operation is this */
+    switch (Operation)
+    {
+        /* ROL */
+        case 0:
+        {
+            Result = (Value << Count) | (Value >> (Bits - Count));
+
+            /* Update CF and OF */
+            State->Flags.Cf = Result & 1;
+            if (Count == 1) State->Flags.Of = ((Result & HighestBit) ? TRUE : FALSE)
+                                              ^ State->Flags.Cf;
+
+            break;
+        }
+
+        /* ROR */
+        case 1:
+        {
+            Result = (Value >> Count) | (Value << (Bits - Count));
+
+            /* Update CF and OF */
+            State->Flags.Cf = (Result & HighestBit) ? TRUE : FALSE;
+            if (Count == 1) State->Flags.Of = State->Flags.Cf
+                                              ^ ((Result & (HighestBit >> 1))
+                                              ? TRUE : FALSE);
+
+            break;
+        }
+
+        /* RCL */
+        case 2:
+        {
+            Result = (Value << Count)
+                     | (State->Flags.Cf << (Count - 1))
+                     | (Value >> (Bits - Count + 1));
+
+            /* Update CF and OF */
+            State->Flags.Cf = (Value & (1 << (Bits - Count))) ? TRUE : FALSE;
+            if (Count == 1) State->Flags.Of = ((Result & HighestBit) ? TRUE : FALSE)
+                                              ^ State->Flags.Cf;
+
+            break;
+        }
+
+        /* RCR */
+        case 3:
+        {
+            Result = (Value >> Count)
+                     | (State->Flags.Cf << (Bits - Count))
+                     | (Value << (Bits - Count + 1));
+
+            /* Update CF and OF */
+            State->Flags.Cf = (Value & (1 << (Bits - Count))) ? TRUE : FALSE;
+            if (Count == 1) State->Flags.Of = State->Flags.Cf
+                                              ^ ((Result & (HighestBit >> 1))
+                                              ? TRUE : FALSE);
+
+            break;
+        }
+
+        /* SHL/SAL */
+        case 4:
+        case 6:
+        {
+            Result = Value << Count;
+
+            /* Update CF and OF */
+            State->Flags.Cf = (Value & (1 << (Bits - Count))) ? TRUE : FALSE;
+            if (Count == 1) State->Flags.Of = ((Result & HighestBit) ? TRUE : FALSE)
+                                              ^ (State->Flags.Cf ? TRUE : FALSE);
+
+            break;
+        }
+
+        /* SHR */
+        case 5:
+        {
+            Result = Value >> Count;
+
+            /* Update CF and OF */
+            State->Flags.Cf = (Value & (1 << (Count - 1))) ? TRUE : FALSE;
+            if (Count == 1) State->Flags.Of = (Value & HighestBit) ? TRUE : FALSE;
+
+            break;
+        }
+
+        /* SAR */
+        case 7:
+        {
+            Result = Value >> Count;
+
+            /* Fill the top Count bits with the sign bit */
+            if (Value & HighestBit) Result |= ((1 << Count) - 1) << (Bits - Count);
+
+            /* Update CF and OF */
+            State->Flags.Cf = Value & 1;
+            if (Count == 1) State->Flags.Of = FALSE;
+
+            break;
+        }
+    }
+
+    /* Update ZF, SF and PF */
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & HighestBit) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* Return the result */
+    return Result;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup8082)
@@ -347,7 +484,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupC7)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD0)
 {
-    UCHAR Result, Dummy, Value;
+    UCHAR Dummy, Value;
     SOFT386_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
@@ -370,104 +507,8 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD0)
         return FALSE;
     }
 
-    /* Check which operation is this */
-    switch (ModRegRm.Register)
-    {
-        /* ROL */
-        case 0:
-        {
-            Result = (Value << 1) | (Value >> 7);
-
-            /* Update CF and OF */
-            State->Flags.Cf = Value >> 7;
-            State->Flags.Of = ((Result & SIGN_FLAG_BYTE) ? TRUE : FALSE)
-                              ^ (State->Flags.Cf ? TRUE : FALSE);
-
-            break;
-        }
-
-        /* ROR */
-        case 1:
-        {
-            Result = (Value >> 1) | (Value << 7);
-
-            /* Update CF and OF */
-            State->Flags.Cf = Value & 1;
-            State->Flags.Of = ((Result & SIGN_FLAG_BYTE) ? TRUE : FALSE)
-                              ^ ((Result & (SIGN_FLAG_BYTE >> 1)) ? TRUE : FALSE);
-
-            break;
-        }
-
-        /* RCL */
-        case 2:
-        {
-            Result = (Value << 1) | (State->Flags.Cf ? 1 : 0);
-
-            /* Update CF and OF */
-            State->Flags.Cf = (Value & SIGN_FLAG_BYTE) ? TRUE : FALSE;
-            State->Flags.Of = ((Result & SIGN_FLAG_BYTE) ? TRUE : FALSE)
-                              ^ (State->Flags.Cf ? TRUE : FALSE);
-
-            break;
-        }
-
-        /* RCR */
-        case 3:
-        {
-            Result = (Value >> 1) | (State->Flags.Cf ? SIGN_FLAG_BYTE : 0);
-
-            /* Update CF and OF */
-            State->Flags.Cf = Value & 1;
-            State->Flags.Of = ((Result & SIGN_FLAG_BYTE) ? TRUE : FALSE)
-                              ^ ((Result & (SIGN_FLAG_BYTE >> 1)) ? TRUE : FALSE);
-
-            break;
-        }
-
-        /* SHL/SAL */
-        case 4:
-        case 6:
-        {
-            Result = Value << 1;
-
-            /* Update CF and OF */
-            State->Flags.Cf = (Value & SIGN_FLAG_BYTE) ? TRUE : FALSE;
-            State->Flags.Of = ((Result & SIGN_FLAG_BYTE) ? TRUE : FALSE)
-                              ^ (State->Flags.Cf ? TRUE : FALSE);
-
-            break;
-        }
-
-        /* SHR */
-        case 5:
-        {
-            Result = Value >> 1;
-
-            /* Update CF and OF */
-            State->Flags.Cf = Value & 1;
-            State->Flags.Of = (Value & SIGN_FLAG_BYTE) ? TRUE : FALSE;
-
-            break;
-        }
-
-        /* SAR */
-        case 7:
-        {
-            Result = (Value >> 1) | (Value & SIGN_FLAG_BYTE);
-
-            /* Update CF and OF */
-            State->Flags.Cf = Value & 1;
-            State->Flags.Of = FALSE;
-
-            break;
-        }
-    }
-
-    /* Update ZF, SF and PF */
-    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
-    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
-    State->Flags.Pf = Soft386CalculateParity(Result);
+    /* Calculate the result */
+    Value = LOBYTE(Soft386RotateOperation(State, ModRegRm.Register, Value, 8, 1));
 
     /* Write back the result */
     return Soft386WriteModrmByteOperands(State,
@@ -479,20 +520,174 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD0)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD1)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+    
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Dummy, Value;
+
+        /* Read the operands */
+        if (!Soft386ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Value = Soft386RotateOperation(State, ModRegRm.Register, Value, 32, 1);
+
+        /* Write back the result */
+        return Soft386WriteModrmDwordOperands(State, &ModRegRm, FALSE, Value);
+    }
+    else
+    {
+        USHORT Dummy, Value;
+
+        /* Read the operands */
+        if (!Soft386ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Value = LOWORD(Soft386RotateOperation(State, ModRegRm.Register, Value, 16, 1));
+
+        /* Write back the result */
+        return Soft386WriteModrmWordOperands(State, &ModRegRm, FALSE, Value);
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD2)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    UCHAR Dummy, Value;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Read the operands */
+    if (!Soft386ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    Value = LOBYTE(Soft386RotateOperation(State,
+                                          ModRegRm.Register,
+                                          Value,
+                                          8,
+                                          State->GeneralRegs[SOFT386_REG_ECX].LowByte));
+
+    /* Write back the result */
+    return Soft386WriteModrmByteOperands(State,
+                                         &ModRegRm,
+                                         FALSE,
+                                         Value);
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD3)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+    
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Dummy, Value;
+
+        /* Read the operands */
+        if (!Soft386ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Value = Soft386RotateOperation(State,
+                                       ModRegRm.Register,
+                                       Value,
+                                       32,
+                                       State->GeneralRegs[SOFT386_REG_ECX].LowByte);
+
+        /* Write back the result */
+        return Soft386WriteModrmDwordOperands(State, &ModRegRm, FALSE, Value);
+    }
+    else
+    {
+        USHORT Dummy, Value;
+
+        /* Read the operands */
+        if (!Soft386ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Value = LOWORD(Soft386RotateOperation(State,
+                                              ModRegRm.Register,
+                                              Value,
+                                              16,
+                                              State->GeneralRegs[SOFT386_REG_ECX].LowByte));
+
+        /* Write back the result */
+        return Soft386WriteModrmWordOperands(State, &ModRegRm, FALSE, Value);
+    }
+
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF6)
