@@ -607,7 +607,7 @@ bool CCabinet::SetCompressionCodec(char* CodecName)
         SelectCodec(CAB_CODEC_MSZIP);
     else
     {
-        printf("Invalid codec specified!\n");
+        printf("ERROR: Invalid codec specified!\n");
         return false;
     }
 
