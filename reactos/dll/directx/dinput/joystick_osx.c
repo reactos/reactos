@@ -24,6 +24,11 @@
 //#include "wine/port.h"
 
 #if defined(HAVE_IOKIT_HID_IOHIDLIB_H)
+#define DWORD UInt32
+#define LPDWORD UInt32*
+#define LONG SInt32
+#define LPLONG SInt32*
+#define E_PENDING __carbon_E_PENDING
 #define ULONG __carbon_ULONG
 #define E_INVALIDARG __carbon_E_INVALIDARG
 #define E_OUTOFMEMORY __carbon_E_OUTOFMEMORY
@@ -44,7 +49,9 @@
 #define MAKE_HRESULT __carbon_MAKE_HRESULT
 #define HRESULT __carbon_HRESULT
 #define STDMETHODCALLTYPE __carbon_STDMETHODCALLTYPE
+#include <IOKit/IOKitLib.h>
 #include <IOKit/hid/IOHIDLib.h>
+#include <ForceFeedback/ForceFeedback.h>
 #undef ULONG
 #undef E_INVALIDARG
 #undef E_OUTOFMEMORY
@@ -65,6 +72,11 @@
 #undef MAKE_HRESULT
 #undef HRESULT
 #undef STDMETHODCALLTYPE
+#undef DWORD
+#undef LPDWORD
+#undef LONG
+#undef LPLONG
+#undef E_PENDING
 #endif /* HAVE_IOKIT_HID_IOHIDLIB_H */
 
 //#include "wine/debug.h"
@@ -98,6 +110,8 @@ struct JoystickImpl
     int                    id;
     CFMutableArrayRef      elementCFArrayRef;
     ObjProps               **propmap;
+    FFDeviceObjectReference ff;
+    struct list effects;
 };
 
 static inline JoystickImpl *impl_from_IDirectInputDevice8A(IDirectInputDevice8A *iface)
@@ -111,13 +125,114 @@ static inline JoystickImpl *impl_from_IDirectInputDevice8W(IDirectInputDevice8W 
            JoystickGenericImpl, base), JoystickImpl, generic);
 }
 
+typedef struct _EffectImpl {
+    IDirectInputEffect IDirectInputEffect_iface;
+    LONG ref;
+
+    JoystickImpl *device;
+    FFEffectObjectReference effect;
+    GUID guid;
+
+    struct list entry;
+} EffectImpl;
+
+static EffectImpl *impl_from_IDirectInputEffect(IDirectInputEffect *iface)
+{
+    return CONTAINING_RECORD(iface, EffectImpl, IDirectInputEffect_iface);
+}
+
+static const IDirectInputEffectVtbl EffectVtbl;
+
 static const GUID DInput_Wine_OsX_Joystick_GUID = { /* 59CAD8F6-E617-41E2-8EB7-47B23EEEDC5A */
   0x59CAD8F6, 0xE617, 0x41E2, {0x8E, 0xB7, 0x47, 0xB2, 0x3E, 0xEE, 0xDC, 0x5A}
 };
 
+static HRESULT osx_to_win32_hresult(HRESULT in)
+{
+    /* OSX returns 16-bit COM runtime errors, which we should
+     * convert to win32 */
+    switch(in){
+    case 0x80000001:
+        return E_NOTIMPL;
+    case 0x80000002:
+        return E_OUTOFMEMORY;
+    case 0x80000003:
+        return E_INVALIDARG;
+    case 0x80000004:
+        return E_NOINTERFACE;
+    case 0x80000005:
+        return E_POINTER;
+    case 0x80000006:
+        return E_HANDLE;
+    case 0x80000007:
+        return E_ABORT;
+    case 0x80000008:
+        return E_FAIL;
+    case 0x80000009:
+        return E_ACCESSDENIED;
+    case 0x8000FFFF:
+        return E_UNEXPECTED;
+    }
+    return in;
+}
+
 static void CFSetApplierFunctionCopyToCFArray(const void *value, void *context)
 {
     CFArrayAppendValue( ( CFMutableArrayRef ) context, value );
+}
+
+static IOHIDDeviceRef get_device_ref(int id)
+{
+    IOHIDElementRef tIOHIDElementRef;
+    IOHIDDeviceRef tIOHIDDeviceRef;
+
+    if (!gCollections)
+        return 0;
+
+    tIOHIDElementRef = (IOHIDElementRef)CFArrayGetValueAtIndex(gCollections, id);
+    if (!tIOHIDElementRef)
+    {
+        ERR("Invalid Element requested %i\n",id);
+        return 0;
+    }
+
+    tIOHIDDeviceRef = IOHIDElementGetDevice(tIOHIDElementRef);
+    if (!tIOHIDDeviceRef)
+    {
+        ERR("Invalid Device requested %i\n",id);
+        return 0;
+    }
+
+    return tIOHIDDeviceRef;
+}
+
+static HRESULT get_ff(IOHIDDeviceRef device, FFDeviceObjectReference *ret)
+{
+    io_service_t service;
+    CFMutableDictionaryRef matching;
+    CFTypeRef type;
+
+    matching = IOServiceMatching(kIOHIDDeviceKey);
+    if(!matching){
+        WARN("IOServiceMatching failed, force feedback disabled\n");
+        return DIERR_DEVICENOTREG;
+    }
+
+    type = IOHIDDeviceGetProperty(device, CFSTR(kIOHIDLocationIDKey));
+    if(!matching){
+        CFRelease(matching);
+        WARN("IOHIDDeviceGetProperty failed, force feedback disabled\n");
+        return DIERR_DEVICENOTREG;
+    }
+
+    CFDictionaryAddValue(matching, CFSTR(kIOHIDLocationIDKey), type);
+
+    service = IOServiceGetMatchingService(kIOMasterPortDefault, matching);
+
+    if(!ret)
+        return FFIsForceFeedback(service) == FF_OK ? S_OK : S_FALSE;
+
+    return osx_to_win32_hresult(FFCreateDevice(service, ret));
 }
 
 static CFMutableDictionaryRef creates_osx_device_match(int usage)
@@ -298,30 +413,15 @@ static int find_osx_devices(void)
 static int get_osx_device_name(int id, char *name, int length)
 {
     CFStringRef str;
-    IOHIDElementRef tIOHIDElementRef;
     IOHIDDeviceRef tIOHIDDeviceRef;
 
-    if (!gCollections)
-        return 0;
-
-    tIOHIDElementRef = (IOHIDElementRef)CFArrayGetValueAtIndex(gCollections, id);
-
-    if (!tIOHIDElementRef)
-    {
-        ERR("Invalid Element requested %i\n",id);
-        return 0;
-    }
-
-    tIOHIDDeviceRef = IOHIDElementGetDevice(tIOHIDElementRef);
+    tIOHIDDeviceRef = get_device_ref(id);
 
     if (name)
         name[0] = 0;
 
     if (!tIOHIDDeviceRef)
-    {
-        ERR("Invalid Device requested %i\n",id);
         return 0;
-    }
 
     str = IOHIDDeviceGetProperty(tIOHIDDeviceRef, CFSTR( kIOHIDProductKey ));
     if (str)
@@ -651,19 +751,21 @@ static INT find_joystick_devices(void)
     return  joystick_devices_count;
 }
 
-static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
+static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
 {
-    if (id >= find_joystick_devices()) return FALSE;
-
-    if (dwFlags & DIEDFL_FORCEFEEDBACK) {
-        WARN("force feedback not supported\n");
-        return FALSE;
-    }
+    if (id >= find_joystick_devices()) return E_FAIL;
 
     if ((dwDevType == 0) ||
     ((dwDevType == DIDEVTYPE_JOYSTICK) && (version > 0x0300 && version < 0x0800)) ||
     (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800)))
     {
+        if (dwFlags & DIEDFL_FORCEFEEDBACK) {
+            IOHIDDeviceRef device = get_device_ref(id);
+            if(!device)
+                return S_FALSE;
+            if(get_ff(device, NULL) != S_OK)
+                return S_FALSE;
+        }
         /* Return joystick */
         lpddi->guidInstance = DInput_Wine_OsX_Joystick_GUID;
         lpddi->guidInstance.Data3 = id;
@@ -679,27 +781,29 @@ static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
         get_osx_device_name(id, lpddi->tszProductName, MAX_PATH);
 
         lpddi->guidFFDriver = GUID_NULL;
-        return TRUE;
+        return S_OK;
     }
 
-    return FALSE;
+    return S_FALSE;
 }
 
-static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
+static HRESULT joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
 {
     char name[MAX_PATH];
     char friendly[32];
 
-    if (id >= find_joystick_devices()) return FALSE;
-
-    if (dwFlags & DIEDFL_FORCEFEEDBACK) {
-        WARN("force feedback not supported\n");
-        return FALSE;
-    }
+    if (id >= find_joystick_devices()) return E_FAIL;
 
     if ((dwDevType == 0) ||
     ((dwDevType == DIDEVTYPE_JOYSTICK) && (version > 0x0300 && version < 0x0800)) ||
     (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))) {
+        if (dwFlags & DIEDFL_FORCEFEEDBACK) {
+            IOHIDDeviceRef device = get_device_ref(id);
+            if(!device)
+                return S_FALSE;
+            if(get_ff(device, NULL) != S_OK)
+                return S_FALSE;
+        }
         /* Return joystick */
         lpddi->guidInstance = DInput_Wine_OsX_Joystick_GUID;
         lpddi->guidInstance.Data3 = id;
@@ -716,16 +820,41 @@ static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
 
         MultiByteToWideChar(CP_ACP, 0, name, -1, lpddi->tszProductName, MAX_PATH);
         lpddi->guidFFDriver = GUID_NULL;
-        return TRUE;
+        return S_OK;
     }
 
-    return FALSE;
+    return S_FALSE;
+}
+
+static const char *osx_ff_axis_name(UInt8 axis)
+{
+    static char ret[6];
+    switch(axis){
+    case FFJOFS_X:
+        return "FFJOFS_X";
+    case FFJOFS_Y:
+        return "FFJOFS_Y";
+    case FFJOFS_Z:
+        return "FFJOFS_Z";
+    }
+    sprintf(ret, "%u", (unsigned int)axis);
+    return ret;
+}
+
+static int osx_axis_has_ff(FFCAPABILITIES *ffcaps, UInt8 axis)
+{
+    int i;
+    for(i = 0; i < ffcaps->numFfAxes; ++i)
+        if(ffcaps->ffAxes[i] == axis)
+            return 1;
+    return 0;
 }
 
 static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,
                             JoystickImpl **pdev, unsigned short index)
 {
     DWORD i;
+    IOHIDDeviceRef device;
     JoystickImpl* newDevice;
     char name[MAX_PATH];
     HRESULT hr;
@@ -733,6 +862,7 @@ static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,
     int idx = 0;
     int axis_map[8]; /* max axes */
     int slider_count = 0;
+    FFCAPABILITIES ffcaps;
 
     TRACE("%s %p %p %hu\n", debugstr_guid(rguid), dinput, pdev, index);
 
@@ -757,6 +887,38 @@ static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,
     /* copy the device name */
     newDevice->generic.name = HeapAlloc(GetProcessHeap(),0,strlen(name) + 1);
     strcpy(newDevice->generic.name, name);
+
+    list_init(&newDevice->effects);
+    device = get_device_ref(index);
+    if(get_ff(device, &newDevice->ff) == S_OK){
+        newDevice->generic.devcaps.dwFlags |= DIDC_FORCEFEEDBACK;
+
+        hr = FFDeviceGetForceFeedbackCapabilities(newDevice->ff, &ffcaps);
+        if(SUCCEEDED(hr)){
+            TRACE("FF Capabilities:\n");
+            TRACE("\tsupportedEffects: 0x%x\n", (unsigned int)ffcaps.supportedEffects);
+            TRACE("\temulatedEffects: 0x%x\n", (unsigned int)ffcaps.emulatedEffects);
+            TRACE("\tsubType: 0x%x\n", (unsigned int)ffcaps.subType);
+            TRACE("\tnumFfAxes: %u\n", (unsigned int)ffcaps.numFfAxes);
+            TRACE("\tffAxes: [");
+            for(i = 0; i < ffcaps.numFfAxes; ++i){
+                TRACE("%s", osx_ff_axis_name(ffcaps.ffAxes[i]));
+                if(i < ffcaps.numFfAxes - 1)
+                    TRACE(", ");
+            }
+            TRACE("]\n");
+            TRACE("\tstorageCapacity: %u\n", (unsigned int)ffcaps.storageCapacity);
+            TRACE("\tplaybackCapacity: %u\n", (unsigned int)ffcaps.playbackCapacity);
+        }
+
+        hr = FFDeviceSendForceFeedbackCommand(newDevice->ff, FFSFFC_RESET);
+        if(FAILED(hr))
+            WARN("FFDeviceSendForceFeedbackCommand(FFSFFC_RESET) failed: %08x\n", hr);
+
+        hr = FFDeviceSendForceFeedbackCommand(newDevice->ff, FFSFFC_SETACTUATORSON);
+        if(FAILED(hr))
+            WARN("FFDeviceSendForceFeedbackCommand(FFSFFC_SETACTUATORSON) failed: %08x\n", hr);
+    }
 
     memset(axis_map, 0, sizeof(axis_map));
     get_osx_device_elements(newDevice, axis_map);
@@ -786,24 +948,46 @@ static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,
 
     for (i = 0; i < newDevice->generic.devcaps.dwAxes; i++)
     {
-        int wine_obj = -1;
+        int wine_obj = -1, has_ff = 0;
         switch (axis_map[i])
         {
-            case kHIDUsage_GD_X: wine_obj = 0; break;
-            case kHIDUsage_GD_Y: wine_obj = 1; break;
-            case kHIDUsage_GD_Z: wine_obj = 2; break;
-            case kHIDUsage_GD_Rx: wine_obj = 3; break;
-            case kHIDUsage_GD_Ry: wine_obj = 4; break;
-            case kHIDUsage_GD_Rz: wine_obj = 5; break;
+            case kHIDUsage_GD_X:
+                wine_obj = 0;
+                has_ff = (newDevice->ff != 0) && osx_axis_has_ff(&ffcaps, FFJOFS_X);
+                break;
+            case kHIDUsage_GD_Y:
+                wine_obj = 1;
+                has_ff = (newDevice->ff != 0) && osx_axis_has_ff(&ffcaps, FFJOFS_Y);
+                break;
+            case kHIDUsage_GD_Z:
+                wine_obj = 2;
+                has_ff = (newDevice->ff != 0) && osx_axis_has_ff(&ffcaps, FFJOFS_Z);
+                break;
+            case kHIDUsage_GD_Rx:
+                wine_obj = 3;
+                has_ff = (newDevice->ff != 0) && osx_axis_has_ff(&ffcaps, FFJOFS_RX);
+                break;
+            case kHIDUsage_GD_Ry:
+                wine_obj = 4;
+                has_ff = (newDevice->ff != 0) && osx_axis_has_ff(&ffcaps, FFJOFS_RY);
+                break;
+            case kHIDUsage_GD_Rz:
+                wine_obj = 5;
+                has_ff = (newDevice->ff != 0) && osx_axis_has_ff(&ffcaps, FFJOFS_RZ);
+                break;
             case kHIDUsage_GD_Slider:
                 wine_obj = 6 + slider_count;
+                has_ff = (newDevice->ff != 0) && osx_axis_has_ff(&ffcaps, FFJOFS_SLIDER(slider_count));
                 slider_count++;
                 break;
         }
         if (wine_obj < 0 ) continue;
 
         memcpy(&df->rgodf[idx], &c_dfDIJoystick2.rgodf[wine_obj], df->dwObjSize);
-        df->rgodf[idx++].dwType = DIDFT_MAKEINSTANCE(wine_obj) | DIDFT_ABSAXIS;
+        df->rgodf[idx].dwType = DIDFT_MAKEINSTANCE(wine_obj) | DIDFT_ABSAXIS;
+        if(has_ff)
+            df->rgodf[idx].dwFlags |= DIDOI_FFACTUATOR;
+        ++idx;
     }
 
     for (i = 0; i < newDevice->generic.devcaps.dwPOVs; i++)
@@ -830,7 +1014,7 @@ static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,
     LeaveCriticalSection(&dinput->crit);
 
     newDevice->generic.devcaps.dwSize = sizeof(newDevice->generic.devcaps);
-    newDevice->generic.devcaps.dwFlags = DIDC_ATTACHED;
+    newDevice->generic.devcaps.dwFlags |= DIDC_ATTACHED;
     if (newDevice->generic.base.dinput->dwVersion >= 0x0800)
         newDevice->generic.devcaps.dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
     else
@@ -934,6 +1118,174 @@ static HRESULT joydev_create_device(IDirectInputImpl *dinput, REFGUID rguid, REF
     return DIERR_DEVICENOTREG;
 }
 
+static HRESULT osx_set_autocenter(JoystickImpl *This,
+        const DIPROPDWORD *header)
+{
+    UInt32 v;
+    HRESULT hr;
+    if(!This->ff)
+        return DIERR_UNSUPPORTED;
+    v = header->dwData;
+    hr = osx_to_win32_hresult(FFDeviceSetForceFeedbackProperty(This->ff, FFPROP_AUTOCENTER, &v));
+    TRACE("returning: %08x\n", hr);
+    return hr;
+}
+
+static HRESULT osx_set_ffgain(JoystickImpl *This, const DIPROPDWORD *header)
+{
+    UInt32 v;
+    HRESULT hr;
+    if(!This->ff)
+        return DIERR_UNSUPPORTED;
+    v = header->dwData;
+    hr = osx_to_win32_hresult(FFDeviceSetForceFeedbackProperty(This->ff, FFPROP_FFGAIN, &v));
+    TRACE("returning: %08x\n", hr);
+    return hr;
+}
+
+static HRESULT WINAPI JoystickWImpl_SetProperty(IDirectInputDevice8W *iface,
+        const GUID *prop, const DIPROPHEADER *header)
+{
+    JoystickImpl *This = impl_from_IDirectInputDevice8W(iface);
+
+    TRACE("%p %s %p\n", This, debugstr_guid(prop), header);
+
+    switch(LOWORD(prop))
+    {
+    case (DWORD_PTR)DIPROP_AUTOCENTER:
+        return osx_set_autocenter(This, (const DIPROPDWORD *)header);
+    case (DWORD_PTR)DIPROP_FFGAIN:
+        return osx_set_ffgain(This, (const DIPROPDWORD *)header);
+    }
+
+    return JoystickWGenericImpl_SetProperty(iface, prop, header);
+}
+
+static HRESULT WINAPI JoystickAImpl_SetProperty(IDirectInputDevice8A *iface,
+        const GUID *prop, const DIPROPHEADER *header)
+{
+    JoystickImpl *This = impl_from_IDirectInputDevice8A(iface);
+
+    TRACE("%p %s %p\n", This, debugstr_guid(prop), header);
+
+    switch(LOWORD(prop))
+    {
+    case (DWORD_PTR)DIPROP_AUTOCENTER:
+        return osx_set_autocenter(This, (const DIPROPDWORD *)header);
+    case (DWORD_PTR)DIPROP_FFGAIN:
+        return osx_set_ffgain(This, (const DIPROPDWORD *)header);
+    }
+
+    return JoystickAGenericImpl_SetProperty(iface, prop, header);
+}
+
+static CFUUIDRef effect_win_to_mac(const GUID *effect)
+{
+#define DO_MAP(X) \
+    if(IsEqualGUID(&GUID_##X, effect)) \
+        return kFFEffectType_##X##_ID;
+    DO_MAP(ConstantForce)
+    DO_MAP(RampForce)
+    DO_MAP(Square)
+    DO_MAP(Sine)
+    DO_MAP(Triangle)
+    DO_MAP(SawtoothUp)
+    DO_MAP(SawtoothDown)
+    DO_MAP(Spring)
+    DO_MAP(Damper)
+    DO_MAP(Inertia)
+    DO_MAP(Friction)
+    DO_MAP(CustomForce)
+#undef DO_MAP
+    WARN("Unknown effect GUID! %s\n", debugstr_guid(effect));
+    return 0;
+}
+
+static HRESULT WINAPI JoystickWImpl_CreateEffect(IDirectInputDevice8W *iface,
+        const GUID *type, const DIEFFECT *params, IDirectInputEffect **out,
+        IUnknown *outer)
+{
+    JoystickImpl *This = impl_from_IDirectInputDevice8W(iface);
+    EffectImpl *effect;
+    HRESULT hr;
+
+    TRACE("%p %s %p %p %p\n", iface, debugstr_guid(type), params, out, outer);
+    dump_DIEFFECT(params, type, 0);
+
+    if(!This->ff){
+        TRACE("No force feedback support\n");
+        *out = NULL;
+        return S_OK;
+    }
+
+    if(outer)
+        WARN("aggregation not implemented\n");
+
+    effect = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*This));
+    effect->IDirectInputEffect_iface.lpVtbl = &EffectVtbl;
+    effect->ref = 1;
+    effect->guid = *type;
+    effect->device = This;
+
+    /* Mac's FFEFFECT and Win's DIEFFECT are binary identical. */
+    hr = osx_to_win32_hresult(FFDeviceCreateEffect(This->ff,
+                effect_win_to_mac(type), (FFEFFECT*)params, &effect->effect));
+    if(FAILED(hr)){
+        WARN("FFDeviceCreateEffect failed: %08x\n", hr);
+        HeapFree(GetProcessHeap(), 0, effect);
+        return hr;
+    }
+
+    list_add_tail(&This->effects, &effect->entry);
+    *out = &effect->IDirectInputEffect_iface;
+
+    TRACE("allocated effect: %p\n", effect);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI JoystickAImpl_CreateEffect(IDirectInputDevice8A *iface,
+        const GUID *type, const DIEFFECT *params, IDirectInputEffect **out,
+        IUnknown *outer)
+{
+    JoystickImpl *This = impl_from_IDirectInputDevice8A(iface);
+
+    TRACE("%p %s %p %p %p\n", iface, debugstr_guid(type), params, out, outer);
+
+    return JoystickWImpl_CreateEffect(&This->generic.base.IDirectInputDevice8W_iface,
+            type, params, out, outer);
+}
+
+static HRESULT WINAPI JoystickWImpl_SendForceFeedbackCommand(IDirectInputDevice8W *iface,
+        DWORD flags)
+{
+    JoystickImpl *This = impl_from_IDirectInputDevice8W(iface);
+    HRESULT hr;
+
+    TRACE("%p 0x%x\n", This, flags);
+
+    if(!This->ff)
+        return DI_NOEFFECT;
+
+    hr = osx_to_win32_hresult(FFDeviceSendForceFeedbackCommand(This->ff, flags));
+    if(FAILED(hr)){
+        WARN("FFDeviceSendForceFeedbackCommand failed: %08x\n", hr);
+        return hr;
+    }
+
+    return S_OK;
+}
+
+static HRESULT WINAPI JoystickAImpl_SendForceFeedbackCommand(IDirectInputDevice8A *iface,
+        DWORD flags)
+{
+    JoystickImpl *This = impl_from_IDirectInputDevice8A(iface);
+
+    TRACE("%p 0x%x\n", This, flags);
+
+    return JoystickWImpl_SendForceFeedbackCommand(&This->generic.base.IDirectInputDevice8W_iface, flags);
+}
+
 const struct dinput_device joystick_osx_device = {
   "Wine OS X joystick driver",
   joydev_enum_deviceA,
@@ -949,7 +1301,7 @@ static const IDirectInputDevice8AVtbl JoystickAvt =
     JoystickAGenericImpl_GetCapabilities,
     IDirectInputDevice2AImpl_EnumObjects,
     JoystickAGenericImpl_GetProperty,
-    JoystickAGenericImpl_SetProperty,
+    JoystickAImpl_SetProperty,
     IDirectInputDevice2AImpl_Acquire,
     IDirectInputDevice2AImpl_Unacquire,
     JoystickAGenericImpl_GetDeviceState,
@@ -961,11 +1313,11 @@ static const IDirectInputDevice8AVtbl JoystickAvt =
     JoystickAGenericImpl_GetDeviceInfo,
     IDirectInputDevice2AImpl_RunControlPanel,
     IDirectInputDevice2AImpl_Initialize,
-    IDirectInputDevice2AImpl_CreateEffect,
+    JoystickAImpl_CreateEffect,
     IDirectInputDevice2AImpl_EnumEffects,
     IDirectInputDevice2AImpl_GetEffectInfo,
     IDirectInputDevice2AImpl_GetForceFeedbackState,
-    IDirectInputDevice2AImpl_SendForceFeedbackCommand,
+    JoystickAImpl_SendForceFeedbackCommand,
     IDirectInputDevice2AImpl_EnumCreatedEffectObjects,
     IDirectInputDevice2AImpl_Escape,
     JoystickAGenericImpl_Poll,
@@ -985,7 +1337,7 @@ static const IDirectInputDevice8WVtbl JoystickWvt =
     JoystickWGenericImpl_GetCapabilities,
     IDirectInputDevice2WImpl_EnumObjects,
     JoystickWGenericImpl_GetProperty,
-    JoystickWGenericImpl_SetProperty,
+    JoystickWImpl_SetProperty,
     IDirectInputDevice2WImpl_Acquire,
     IDirectInputDevice2WImpl_Unacquire,
     JoystickWGenericImpl_GetDeviceState,
@@ -997,11 +1349,11 @@ static const IDirectInputDevice8WVtbl JoystickWvt =
     JoystickWGenericImpl_GetDeviceInfo,
     IDirectInputDevice2WImpl_RunControlPanel,
     IDirectInputDevice2WImpl_Initialize,
-    IDirectInputDevice2WImpl_CreateEffect,
+    JoystickWImpl_CreateEffect,
     IDirectInputDevice2WImpl_EnumEffects,
     IDirectInputDevice2WImpl_GetEffectInfo,
     IDirectInputDevice2WImpl_GetForceFeedbackState,
-    IDirectInputDevice2WImpl_SendForceFeedbackCommand,
+    JoystickWImpl_SendForceFeedbackCommand,
     IDirectInputDevice2WImpl_EnumCreatedEffectObjects,
     IDirectInputDevice2WImpl_Escape,
     JoystickWGenericImpl_Poll,
@@ -1011,6 +1363,137 @@ static const IDirectInputDevice8WVtbl JoystickWvt =
     JoystickWGenericImpl_BuildActionMap,
     JoystickWGenericImpl_SetActionMap,
     IDirectInputDevice8WImpl_GetImageInfo
+};
+
+static HRESULT WINAPI effect_QueryInterface(IDirectInputEffect *iface,
+        const GUID *guid, void **out)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+
+    TRACE("%p %s %p\n", This, debugstr_guid(guid), out);
+
+    if(IsEqualIID(guid, &IID_IDirectInputEffect)){
+        *out = iface;
+        IDirectInputEffect_AddRef(iface);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI effect_AddRef(IDirectInputEffect *iface)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+    TRACE("%p, ref is now: %u\n", This, ref);
+    return ref;
+}
+
+static ULONG WINAPI effect_Release(IDirectInputEffect *iface)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+    TRACE("%p, ref is now: %u\n", This, ref);
+
+    if(!ref){
+        list_remove(&This->entry);
+        FFDeviceReleaseEffect(This->device->ff, This->effect);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI effect_Initialize(IDirectInputEffect *iface, HINSTANCE hinst,
+        DWORD version, const GUID *guid)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p %p 0x%x, %s\n", This, hinst, version, debugstr_guid(guid));
+    return S_OK;
+}
+
+static HRESULT WINAPI effect_GetEffectGuid(IDirectInputEffect *iface, GUID *out)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p %p\n", This, out);
+    *out = This->guid;
+    return S_OK;
+}
+
+static HRESULT WINAPI effect_GetParameters(IDirectInputEffect *iface,
+        DIEFFECT *effect, DWORD flags)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p %p 0x%x\n", This, effect, flags);
+    return osx_to_win32_hresult(FFEffectGetParameters(This->effect, (FFEFFECT*)effect, flags));
+}
+
+static HRESULT WINAPI effect_SetParameters(IDirectInputEffect *iface,
+        const DIEFFECT *effect, DWORD flags)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p %p 0x%x\n", This, effect, flags);
+    dump_DIEFFECT(effect, &This->guid, flags);
+    return osx_to_win32_hresult(FFEffectSetParameters(This->effect, (FFEFFECT*)effect, flags));
+}
+
+static HRESULT WINAPI effect_Start(IDirectInputEffect *iface, DWORD iterations,
+        DWORD flags)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p 0x%x 0x%x\n", This, iterations, flags);
+    return osx_to_win32_hresult(FFEffectStart(This->effect, iterations, flags));
+}
+
+static HRESULT WINAPI effect_Stop(IDirectInputEffect *iface)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p\n", This);
+    return osx_to_win32_hresult(FFEffectStop(This->effect));
+}
+
+static HRESULT WINAPI effect_GetEffectStatus(IDirectInputEffect *iface, DWORD *flags)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p %p\n", This, flags);
+    return osx_to_win32_hresult(FFEffectGetEffectStatus(This->effect, (UInt32*)flags));
+}
+
+static HRESULT WINAPI effect_Download(IDirectInputEffect *iface)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p\n", This);
+    return osx_to_win32_hresult(FFEffectDownload(This->effect));
+}
+
+static HRESULT WINAPI effect_Unload(IDirectInputEffect *iface)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p\n", This);
+    return osx_to_win32_hresult(FFEffectUnload(This->effect));
+}
+
+static HRESULT WINAPI effect_Escape(IDirectInputEffect *iface, DIEFFESCAPE *escape)
+{
+    EffectImpl *This = impl_from_IDirectInputEffect(iface);
+    TRACE("%p %p\n", This, escape);
+    return osx_to_win32_hresult(FFEffectEscape(This->effect, (FFEFFESCAPE*)escape));
+}
+
+static const IDirectInputEffectVtbl EffectVtbl = {
+    effect_QueryInterface,
+    effect_AddRef,
+    effect_Release,
+    effect_Initialize,
+    effect_GetEffectGuid,
+    effect_GetParameters,
+    effect_SetParameters,
+    effect_Start,
+    effect_Stop,
+    effect_GetEffectStatus,
+    effect_Download,
+    effect_Unload,
+    effect_Escape
 };
 
 #else /* HAVE_IOHIDMANAGERCREATE */

@@ -145,13 +145,13 @@ void _dump_DIPROPHEADER(LPCDIPROPHEADER diph) {
 }
 
 void _dump_OBJECTINSTANCEA(const DIDEVICEOBJECTINSTANCEA *ddoi) {
-    TRACE("    - enumerating : %s ('%s') - %2d - 0x%08x - %s\n",
-        debugstr_guid(&ddoi->guidType), _dump_dinput_GUID(&ddoi->guidType), ddoi->dwOfs, ddoi->dwType, ddoi->tszName);
+    TRACE("    - enumerating : %s ('%s') - %2d - 0x%08x - %s - 0x%x\n",
+        debugstr_guid(&ddoi->guidType), _dump_dinput_GUID(&ddoi->guidType), ddoi->dwOfs, ddoi->dwType, ddoi->tszName, ddoi->dwFlags);
 }
 
 void _dump_OBJECTINSTANCEW(const DIDEVICEOBJECTINSTANCEW *ddoi) {
-    TRACE("    - enumerating : %s ('%s'), - %2d - 0x%08x - %s\n",
-        debugstr_guid(&ddoi->guidType), _dump_dinput_GUID(&ddoi->guidType), ddoi->dwOfs, ddoi->dwType, debugstr_w(ddoi->tszName));
+    TRACE("    - enumerating : %s ('%s'), - %2d - 0x%08x - %s - 0x%x\n",
+        debugstr_guid(&ddoi->guidType), _dump_dinput_GUID(&ddoi->guidType), ddoi->dwOfs, ddoi->dwType, debugstr_w(ddoi->tszName), ddoi->dwFlags);
 }
 
 /* This function is a helper to convert a GUID into any possible DInput GUID out there */

@@ -159,10 +159,10 @@ static void fill_mouse_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD versio
     memcpy(lpddi, &ddi, (dwSize < sizeof(ddi) ? dwSize : sizeof(ddi)));
 }
 
-static BOOL mousedev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
+static HRESULT mousedev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
 {
     if (id != 0)
-        return FALSE;
+        return E_FAIL;
 
     if ((dwDevType == 0) ||
 	((dwDevType == DIDEVTYPE_MOUSE) && (version < 0x0800)) ||
@@ -171,16 +171,16 @@ static BOOL mousedev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINST
 	
 	fill_mouse_dideviceinstanceA(lpddi, version);
 	
-	return TRUE;
+	return S_OK;
     }
     
-    return FALSE;
+    return S_FALSE;
 }
 
-static BOOL mousedev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
+static HRESULT mousedev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
 {
     if (id != 0)
-        return FALSE;
+        return E_FAIL;
 
     if ((dwDevType == 0) ||
 	((dwDevType == DIDEVTYPE_MOUSE) && (version < 0x0800)) ||
@@ -189,10 +189,10 @@ static BOOL mousedev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINST
 	
 	fill_mouse_dideviceinstanceW(lpddi, version);
 	
-	return TRUE;
+	return S_OK;
     }
     
-    return FALSE;
+    return S_FALSE;
 }
 
 static SysMouseImpl *alloc_device(REFGUID rguid, IDirectInputImpl *dinput)

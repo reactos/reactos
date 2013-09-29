@@ -220,15 +220,15 @@ static INT find_joystick_devices(void)
     return joystick_devices_count;
 }
 
-static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
+static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
 {
     int fd = -1;
 
-    if (id >= find_joystick_devices()) return FALSE;
+    if (id >= find_joystick_devices()) return E_FAIL;
 
     if (dwFlags & DIEDFL_FORCEFEEDBACK) {
         WARN("force feedback not supported\n");
-        return FALSE;
+        return S_FALSE;
     }
 
     if ((dwDevType == 0) ||
@@ -238,7 +238,7 @@ static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
         if ((fd = open(joystick_devices[id].device, O_RDONLY)) < 0)
         {
             WARN("open(%s, O_RDONLY) failed: %s\n", joystick_devices[id].name, strerror(errno));
-            return FALSE;
+            return S_FALSE;
         }
 
         /* Return joystick */
@@ -257,21 +257,21 @@ static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
         lpddi->guidFFDriver = GUID_NULL;
         close(fd);
         TRACE("Enumerating the linux Joystick device: %s (%s)\n", joystick_devices[id].device, lpddi->tszProductName);
-        return TRUE;
+        return S_OK;
     }
 
-    return FALSE;
+    return S_FALSE;
 }
 
-static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
+static HRESULT joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
 {
     int fd = -1;
 
-    if (id >= find_joystick_devices()) return FALSE;
+    if (id >= find_joystick_devices()) return E_FAIL;
 
     if (dwFlags & DIEDFL_FORCEFEEDBACK) {
         WARN("force feedback not supported\n");
-        return FALSE;
+        return S_FALSE;
     }
 
     if ((dwDevType == 0) ||
@@ -281,7 +281,7 @@ static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
         if ((fd = open(joystick_devices[id].device, O_RDONLY)) < 0)
         {
             WARN("open(%s,O_RDONLY) failed: %s\n", joystick_devices[id].device, strerror(errno));
-            return FALSE;
+            return S_FALSE;
         }
 
         /* Return joystick */
@@ -299,10 +299,10 @@ static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
         lpddi->guidFFDriver = GUID_NULL;
         close(fd);
         TRACE("Enumerating the linux Joystick device: %s (%s)\n", joystick_devices[id].device, joystick_devices[id].name);
-        return TRUE;
+        return S_OK;
     }
 
-    return FALSE;
+    return S_FALSE;
 }
 
 static HRESULT alloc_device(REFGUID rguid, IDirectInputImpl *dinput,

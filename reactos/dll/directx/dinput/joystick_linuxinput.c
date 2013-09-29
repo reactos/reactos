@@ -43,7 +43,7 @@
 # include <linux/input.h>
 # undef SW_MAX
 # if defined(EVIOCGBIT) && defined(EV_ABS) && defined(BTN_PINKIE)
-#  define HAVE_CORRECT_LINUXINPUT_H
+#  define HAS_PROPER_HEADER
 # endif
 #endif
 #ifdef HAVE_SYS_POLL_H
@@ -65,7 +65,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
-#ifdef HAVE_CORRECT_LINUXINPUT_H
+#ifdef HAS_PROPER_HEADER
 
 #define EVDEVPREFIX "/dev/input/event"
 #define EVDEVDRIVER " (event)"
@@ -363,54 +363,54 @@ static void fill_joystick_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD ver
     MultiByteToWideChar(CP_ACP, 0, joydevs[id].name, -1, lpddi->tszProductName, MAX_PATH);
 }
 
-static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
+static HRESULT joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
 {
   find_joydevs();
 
   if (id >= have_joydevs) {
-    return FALSE;
+    return E_FAIL;
   }
 
   if (!((dwDevType == 0) ||
         ((dwDevType == DIDEVTYPE_JOYSTICK) && (version > 0x0300 && version < 0x0800)) ||
         (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))))
-    return FALSE;
+    return S_FALSE;
 
 #ifndef HAVE_STRUCT_FF_EFFECT_DIRECTION
   if (dwFlags & DIEDFL_FORCEFEEDBACK)
-    return FALSE;
+    return S_FALSE;
 #endif
 
   if (!(dwFlags & DIEDFL_FORCEFEEDBACK) || joydevs[id].has_ff) {
     fill_joystick_dideviceinstanceA(lpddi, version, id);
-    return TRUE;
+    return S_OK;
   }
-  return FALSE;
+  return S_FALSE;
 }
 
-static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
+static HRESULT joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
 {
   find_joydevs();
 
   if (id >= have_joydevs) {
-    return FALSE;
+    return E_FAIL;
   }
 
   if (!((dwDevType == 0) ||
         ((dwDevType == DIDEVTYPE_JOYSTICK) && (version > 0x0300 && version < 0x0800)) ||
         (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))))
-    return FALSE;
+    return S_FALSE;
 
 #ifndef HAVE_STRUCT_FF_EFFECT_DIRECTION
   if (dwFlags & DIEDFL_FORCEFEEDBACK)
-    return FALSE;
+    return S_FALSE;
 #endif
 
   if (!(dwFlags & DIEDFL_FORCEFEEDBACK) || joydevs[id].has_ff) {
     fill_joystick_dideviceinstanceW(lpddi, version, id);
-    return TRUE;
+    return S_OK;
   }
-  return FALSE;
+  return S_FALSE;
 }
 
 static JoystickImpl *alloc_device(REFGUID rguid, IDirectInputImpl *dinput, unsigned short index)
@@ -445,9 +445,10 @@ static JoystickImpl *alloc_device(REFGUID rguid, IDirectInputImpl *dinput, unsig
     newDevice->generic.base.crit.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": JoystickImpl*->base.crit");
 
     /* Count number of available axes - supported Axis & POVs */
-    for (i = 0; i < WINE_JOYSTICK_MAX_AXES; i++)
+    for (i = 0; i < ABS_MAX; i++)
     {
-        if (test_bit(newDevice->joydev->absbits, i))
+        if (i < WINE_JOYSTICK_MAX_AXES &&
+            test_bit(newDevice->joydev->absbits, i))
         {
             newDevice->generic.device_axis_count++;
             newDevice->dev_axes_to_di[i] = idx;
@@ -1477,7 +1478,7 @@ static const IDirectInputDevice8WVtbl JoystickWvt =
     IDirectInputDevice8WImpl_GetImageInfo
 };
 
-#else  /* HAVE_CORRECT_LINUXINPUT_H */
+#else  /* HAS_PROPER_HEADER */
 
 const struct dinput_device joystick_linuxinput_device = {
   "Wine Linux-input joystick driver",
@@ -1486,4 +1487,4 @@ const struct dinput_device joystick_linuxinput_device = {
   NULL
 };
 
-#endif  /* HAVE_CORRECT_LINUXINPUT_H */
+#endif  /* HAS_PROPER_HEADER */

@@ -49,6 +49,184 @@ static inline IDirectInputDevice8W *IDirectInputDevice8W_from_impl(JoystickGener
     return &This->base.IDirectInputDevice8W_iface;
 }
 
+DWORD typeFromGUID(REFGUID guid)
+{
+    if (IsEqualGUID(guid, &GUID_ConstantForce)) {
+        return DIEFT_CONSTANTFORCE;
+    } else if (IsEqualGUID(guid, &GUID_Square)
+            || IsEqualGUID(guid, &GUID_Sine)
+            || IsEqualGUID(guid, &GUID_Triangle)
+            || IsEqualGUID(guid, &GUID_SawtoothUp)
+            || IsEqualGUID(guid, &GUID_SawtoothDown)) {
+        return DIEFT_PERIODIC;
+    } else if (IsEqualGUID(guid, &GUID_RampForce)) {
+        return DIEFT_RAMPFORCE;
+    } else if (IsEqualGUID(guid, &GUID_Spring)
+            || IsEqualGUID(guid, &GUID_Damper)
+            || IsEqualGUID(guid, &GUID_Inertia)
+            || IsEqualGUID(guid, &GUID_Friction)) {
+        return DIEFT_CONDITION;
+    } else if (IsEqualGUID(guid, &GUID_CustomForce)) {
+        return DIEFT_CUSTOMFORCE;
+    } else {
+        WARN("GUID (%s) is not a known force type\n", _dump_dinput_GUID(guid));
+        return 0;
+    }
+}
+
+static void _dump_DIEFFECT_flags(DWORD dwFlags)
+{
+    if (TRACE_ON(dinput)) {
+        unsigned int   i;
+        static const struct {
+            DWORD       mask;
+            const char  *name;
+        } flags[] = {
+#define FE(x) { x, #x}
+            FE(DIEFF_CARTESIAN),
+            FE(DIEFF_OBJECTIDS),
+            FE(DIEFF_OBJECTOFFSETS),
+            FE(DIEFF_POLAR),
+            FE(DIEFF_SPHERICAL)
+#undef FE
+        };
+        for (i = 0; i < (sizeof(flags) / sizeof(flags[0])); i++)
+            if (flags[i].mask & dwFlags)
+                TRACE("%s ", flags[i].name);
+        TRACE("\n");
+    }
+}
+
+static void _dump_DIENVELOPE(LPCDIENVELOPE env)
+{
+    if (env->dwSize != sizeof(DIENVELOPE)) {
+        WARN("Non-standard DIENVELOPE structure size %d.\n", env->dwSize);
+    }
+    TRACE("Envelope has attack (level: %d time: %d), fade (level: %d time: %d)\n",
+          env->dwAttackLevel, env->dwAttackTime, env->dwFadeLevel, env->dwFadeTime);
+}
+
+static void _dump_DICONSTANTFORCE(LPCDICONSTANTFORCE frc)
+{
+    TRACE("Constant force has magnitude %d\n", frc->lMagnitude);
+}
+
+static void _dump_DIPERIODIC(LPCDIPERIODIC frc)
+{
+    TRACE("Periodic force has magnitude %d, offset %d, phase %d, period %d\n",
+          frc->dwMagnitude, frc->lOffset, frc->dwPhase, frc->dwPeriod);
+}
+
+static void _dump_DIRAMPFORCE(LPCDIRAMPFORCE frc)
+{
+    TRACE("Ramp force has start %d, end %d\n",
+          frc->lStart, frc->lEnd);
+}
+
+static void _dump_DICONDITION(LPCDICONDITION frc)
+{
+    TRACE("Condition has offset %d, pos/neg coefficients %d and %d, pos/neg saturations %d and %d, deadband %d\n",
+          frc->lOffset, frc->lPositiveCoefficient, frc->lNegativeCoefficient,
+          frc->dwPositiveSaturation, frc->dwNegativeSaturation, frc->lDeadBand);
+}
+
+static void _dump_DICUSTOMFORCE(LPCDICUSTOMFORCE frc)
+{
+    unsigned int i;
+    TRACE("Custom force uses %d channels, sample period %d.  Has %d samples at %p.\n",
+          frc->cChannels, frc->dwSamplePeriod, frc->cSamples, frc->rglForceData);
+    if (frc->cSamples % frc->cChannels != 0)
+        WARN("Custom force has a non-integral samples-per-channel count!\n");
+    if (TRACE_ON(dinput)) {
+        TRACE("Custom force data (time aligned, axes in order):\n");
+        for (i = 1; i <= frc->cSamples; ++i) {
+            TRACE("%d ", frc->rglForceData[i]);
+            if (i % frc->cChannels == 0)
+                TRACE("\n");
+        }
+    }
+}
+
+void dump_DIEFFECT(LPCDIEFFECT eff, REFGUID guid, DWORD dwFlags)
+{
+    DWORD type = typeFromGUID(guid);
+    unsigned int i;
+
+    TRACE("Dumping DIEFFECT structure:\n");
+    TRACE("  - dwSize: %d\n", eff->dwSize);
+    if ((eff->dwSize != sizeof(DIEFFECT)) && (eff->dwSize != sizeof(DIEFFECT_DX5))) {
+        WARN("Non-standard DIEFFECT structure size %d\n", eff->dwSize);
+    }
+    TRACE("  - dwFlags: %d\n", eff->dwFlags);
+    TRACE("    ");
+    _dump_DIEFFECT_flags(eff->dwFlags);
+    TRACE("  - dwDuration: %d\n", eff->dwDuration);
+    TRACE("  - dwGain: %d\n", eff->dwGain);
+
+    if (eff->dwGain > 10000)
+        WARN("dwGain is out of range (>10,000)\n");
+
+    TRACE("  - dwTriggerButton: %d\n", eff->dwTriggerButton);
+    TRACE("  - dwTriggerRepeatInterval: %d\n", eff->dwTriggerRepeatInterval);
+    TRACE("  - rglDirection: %p\n", eff->rglDirection);
+    TRACE("  - cbTypeSpecificParams: %d\n", eff->cbTypeSpecificParams);
+    TRACE("  - lpvTypeSpecificParams: %p\n", eff->lpvTypeSpecificParams);
+
+    /* Only trace some members if dwFlags indicates they have data */
+    if (dwFlags & DIEP_AXES) {
+        TRACE("  - cAxes: %d\n", eff->cAxes);
+        TRACE("  - rgdwAxes: %p\n", eff->rgdwAxes);
+
+        if (TRACE_ON(dinput) && eff->rgdwAxes) {
+            TRACE("    ");
+            for (i = 0; i < eff->cAxes; ++i)
+                TRACE("%d ", eff->rgdwAxes[i]);
+            TRACE("\n");
+        }
+    }
+
+    if (dwFlags & DIEP_ENVELOPE) {
+        TRACE("  - lpEnvelope: %p\n", eff->lpEnvelope);
+        if (eff->lpEnvelope != NULL)
+            _dump_DIENVELOPE(eff->lpEnvelope);
+    }
+
+    if (eff->dwSize > sizeof(DIEFFECT_DX5))
+        TRACE("  - dwStartDelay: %d\n", eff->dwStartDelay);
+
+    if (type == DIEFT_CONSTANTFORCE) {
+        if (eff->cbTypeSpecificParams != sizeof(DICONSTANTFORCE)) {
+            WARN("Effect claims to be a constant force but the type-specific params are the wrong size!\n");
+        } else {
+            _dump_DICONSTANTFORCE(eff->lpvTypeSpecificParams);
+        }
+    } else if (type == DIEFT_PERIODIC) {
+        if (eff->cbTypeSpecificParams != sizeof(DIPERIODIC)) {
+            WARN("Effect claims to be a periodic force but the type-specific params are the wrong size!\n");
+        } else {
+            _dump_DIPERIODIC(eff->lpvTypeSpecificParams);
+        }
+    } else if (type == DIEFT_RAMPFORCE) {
+        if (eff->cbTypeSpecificParams != sizeof(DIRAMPFORCE)) {
+            WARN("Effect claims to be a ramp force but the type-specific params are the wrong size!\n");
+        } else {
+            _dump_DIRAMPFORCE(eff->lpvTypeSpecificParams);
+        }
+    } else if (type == DIEFT_CONDITION) {
+        if (eff->cbTypeSpecificParams != sizeof(DICONDITION)) {
+            WARN("Effect claims to be a condition but the type-specific params are the wrong size!\n");
+        } else {
+            _dump_DICONDITION(eff->lpvTypeSpecificParams);
+        }
+    } else if (type == DIEFT_CUSTOMFORCE) {
+        if (eff->cbTypeSpecificParams != sizeof(DICUSTOMFORCE)) {
+            WARN("Effect claims to be a custom force but the type-specific params are the wrong size!\n");
+        } else {
+            _dump_DICUSTOMFORCE(eff->lpvTypeSpecificParams);
+        }
+    }
+}
+
 BOOL device_disabled_registry(const char* name)
 {
     static const char disabled_str[] = "disabled";
@@ -94,6 +272,7 @@ HRESULT WINAPI JoystickWGenericImpl_SetProperty(LPDIRECTINPUTDEVICE8W iface, REF
 {
     JoystickGenericImpl *This = impl_from_IDirectInputDevice8W(iface);
     DWORD i;
+    ObjProps remap_props;
 
     TRACE("(%p,%s,%p)\n",This,debugstr_guid(rguid),ph);
 
@@ -112,6 +291,28 @@ HRESULT WINAPI JoystickWGenericImpl_SetProperty(LPDIRECTINPUTDEVICE8W iface, REF
             if (ph->dwHow == DIPH_DEVICE) {
                 TRACE("proprange(%d,%d) all\n", pr->lMin, pr->lMax);
                 for (i = 0; i < This->base.data_format.wine_df->dwNumObjs; i++) {
+
+                    remap_props.lDevMin = This->props[i].lMin;
+                    remap_props.lDevMax = This->props[i].lMax;
+
+                    remap_props.lDeadZone = This->props[i].lDeadZone;
+                    remap_props.lSaturation = This->props[i].lSaturation;
+
+                    remap_props.lMin = pr->lMin;
+                    remap_props.lMax = pr->lMax;
+
+                    switch (This->base.data_format.wine_df->rgodf[i].dwOfs) {
+                    case DIJOFS_X        : This->js.lX  = joystick_map_axis(&remap_props, This->js.lX); break;
+                    case DIJOFS_Y        : This->js.lY  = joystick_map_axis(&remap_props, This->js.lY); break;
+                    case DIJOFS_Z        : This->js.lZ  = joystick_map_axis(&remap_props, This->js.lZ); break;
+                    case DIJOFS_RX       : This->js.lRx = joystick_map_axis(&remap_props, This->js.lRx); break;
+                    case DIJOFS_RY       : This->js.lRy = joystick_map_axis(&remap_props, This->js.lRy); break;
+                    case DIJOFS_RZ       : This->js.lRz = joystick_map_axis(&remap_props, This->js.lRz); break;
+                    case DIJOFS_SLIDER(0): This->js.rglSlider[0] = joystick_map_axis(&remap_props, This->js.rglSlider[0]); break;
+                    case DIJOFS_SLIDER(1): This->js.rglSlider[1] = joystick_map_axis(&remap_props, This->js.rglSlider[1]); break;
+	            default: break;
+                    }
+
                     This->props[i].lMin = pr->lMin;
                     This->props[i].lMax = pr->lMax;
                 }
@@ -120,6 +321,30 @@ HRESULT WINAPI JoystickWGenericImpl_SetProperty(LPDIRECTINPUTDEVICE8W iface, REF
 
                 TRACE("proprange(%d,%d) obj=%d\n", pr->lMin, pr->lMax, obj);
                 if (obj >= 0) {
+
+                    /*ePSXe polls the joystick immediately after setting the range for calibration purposes, so the old values need to be remapped to the new range before it does so*/
+
+                    remap_props.lDevMin = This->props[obj].lMin;
+                    remap_props.lDevMax = This->props[obj].lMax;
+
+                    remap_props.lDeadZone = This->props[obj].lDeadZone;
+                    remap_props.lSaturation = This->props[obj].lSaturation;
+
+                    remap_props.lMin = pr->lMin;
+                    remap_props.lMax = pr->lMax;
+
+                    switch (ph->dwObj) {
+                    case DIJOFS_X        : This->js.lX  = joystick_map_axis(&remap_props, This->js.lX); break;
+                    case DIJOFS_Y        : This->js.lY  = joystick_map_axis(&remap_props, This->js.lY); break;
+                    case DIJOFS_Z        : This->js.lZ  = joystick_map_axis(&remap_props, This->js.lZ); break;
+                    case DIJOFS_RX       : This->js.lRx = joystick_map_axis(&remap_props, This->js.lRx); break;
+                    case DIJOFS_RY       : This->js.lRy = joystick_map_axis(&remap_props, This->js.lRy); break;
+                    case DIJOFS_RZ       : This->js.lRz = joystick_map_axis(&remap_props, This->js.lRz); break;
+                    case DIJOFS_SLIDER(0): This->js.rglSlider[0] = joystick_map_axis(&remap_props, This->js.rglSlider[0]); break;
+                    case DIJOFS_SLIDER(1): This->js.rglSlider[1] = joystick_map_axis(&remap_props, This->js.rglSlider[1]); break;
+		    default: break;
+                    }
+
                     This->props[obj].lMin = pr->lMin;
                     This->props[obj].lMax = pr->lMax;
                     return DI_OK;

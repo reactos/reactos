@@ -375,17 +375,17 @@ static HRESULT WINAPI IDirectInputAImpl_EnumDevices(
 
     for (i = 0; i < NB_DINPUT_DEVICES; i++) {
         if (!dinput_devices[i]->enum_deviceA) continue;
-        for (j = 0, r = -1; r != 0; j++) {
-	    devInstance.dwSize = sizeof(devInstance);
-	    TRACE("  - checking device %u ('%s')\n", i, dinput_devices[i]->name);
-	    if ((r = dinput_devices[i]->enum_deviceA(dwDevType, dwFlags, &devInstance, This->dwVersion, j))) {
-	        if (lpCallback(&devInstance,pvRef) == DIENUM_STOP)
-		    return 0;
-	    }
-	}
+        for (j = 0, r = S_OK; SUCCEEDED(r); j++) {
+            devInstance.dwSize = sizeof(devInstance);
+            TRACE("  - checking device %u ('%s')\n", i, dinput_devices[i]->name);
+            r = dinput_devices[i]->enum_deviceA(dwDevType, dwFlags, &devInstance, This->dwVersion, j);
+            if (r == S_OK)
+                if (lpCallback(&devInstance,pvRef) == DIENUM_STOP)
+                    return S_OK;
+        }
     }
-    
-    return 0;
+
+    return S_OK;
 }
 /******************************************************************************
  *	IDirectInputW_EnumDevices
@@ -397,7 +397,8 @@ static HRESULT WINAPI IDirectInputWImpl_EnumDevices(
     IDirectInputImpl *This = impl_from_IDirectInput7W( iface );
     DIDEVICEINSTANCEW devInstance;
     unsigned int i;
-    int j, r;
+    int j;
+    HRESULT r;
 
     TRACE("(this=%p,0x%04x '%s',%p,%p,%04x)\n",
 	  This, dwDevType, _dump_DIDEVTYPE_value(dwDevType),
@@ -414,17 +415,17 @@ static HRESULT WINAPI IDirectInputWImpl_EnumDevices(
 
     for (i = 0; i < NB_DINPUT_DEVICES; i++) {
         if (!dinput_devices[i]->enum_deviceW) continue;
-        for (j = 0, r = -1; r != 0; j++) {
-	    devInstance.dwSize = sizeof(devInstance);
-	    TRACE("  - checking device %u ('%s')\n", i, dinput_devices[i]->name);
-	    if ((r = dinput_devices[i]->enum_deviceW(dwDevType, dwFlags, &devInstance, This->dwVersion, j))) {
-	        if (lpCallback(&devInstance,pvRef) == DIENUM_STOP)
-		    return 0;
-	    }
-	}
+        for (j = 0, r = S_OK; SUCCEEDED(r); j++) {
+            devInstance.dwSize = sizeof(devInstance);
+            TRACE("  - checking device %u ('%s')\n", i, dinput_devices[i]->name);
+            r = dinput_devices[i]->enum_deviceW(dwDevType, dwFlags, &devInstance, This->dwVersion, j);
+            if (r == S_OK)
+                if (lpCallback(&devInstance,pvRef) == DIENUM_STOP)
+                    return S_OK;
+        }
     }
-    
-    return 0;
+
+    return S_OK;
 }
 
 static ULONG WINAPI IDirectInputAImpl_AddRef(LPDIRECTINPUT7A iface)
@@ -913,18 +914,18 @@ static HRESULT WINAPI IDirectInput8AImpl_EnumDevicesBySemantics(
     /* Enumerate all the joysticks */
     for (i = 0; i < NB_DINPUT_DEVICES; i++)
     {
-        BOOL enumSuccess;
+        HRESULT enumSuccess;
 
         if (!dinput_devices[i]->enum_deviceA) continue;
 
-        for (j = 0, enumSuccess = -1; enumSuccess != 0; j++)
+        for (j = 0, enumSuccess = S_OK; SUCCEEDED(enumSuccess); j++)
         {
             TRACE(" - checking device %u ('%s')\n", i, dinput_devices[i]->name);
 
             callbackFlags = diactionformat_priorityA(lpdiActionFormat, lpdiActionFormat->dwGenre);
             /* Default behavior is to enumerate attached game controllers */
             enumSuccess = dinput_devices[i]->enum_deviceA(DI8DEVCLASS_GAMECTRL, DIEDFL_ATTACHEDONLY | dwFlags, &didevi, This->dwVersion, j);
-            if (enumSuccess)
+            if (enumSuccess == S_OK)
             {
                 IDirectInput_CreateDevice(iface, &didevi.guidInstance, &lpdid, NULL);
 
@@ -973,18 +974,18 @@ static HRESULT WINAPI IDirectInput8WImpl_EnumDevicesBySemantics(
     /* Enumerate all the joysticks */
     for (i = 0; i < NB_DINPUT_DEVICES; i++)
     {
-        BOOL enumSuccess;
+        HRESULT enumSuccess;
 
         if (!dinput_devices[i]->enum_deviceW) continue;
 
-        for (j = 0, enumSuccess = -1; enumSuccess != 0; j++)
+        for (j = 0, enumSuccess = S_OK; SUCCEEDED(enumSuccess); j++)
         {
             TRACE(" - checking device %u ('%s')\n", i, dinput_devices[i]->name);
 
             callbackFlags = diactionformat_priorityW(lpdiActionFormat, lpdiActionFormat->dwGenre);
             /* Default behavior is to enumerate attached game controllers */
             enumSuccess = dinput_devices[i]->enum_deviceW(DI8DEVCLASS_GAMECTRL, DIEDFL_ATTACHEDONLY | dwFlags, &didevi, This->dwVersion, j);
-            if (enumSuccess)
+            if (enumSuccess == S_OK)
             {
                 IDirectInput_CreateDevice(iface, &didevi.guidInstance, &lpdid, NULL);
 
@@ -1152,7 +1153,8 @@ static HRESULT WINAPI JoyConfig8Impl_GetConfig(IDirectInputJoyConfig8 *iface, UI
 {
     IDirectInputImpl *di = impl_from_IDirectInputJoyConfig8(iface);
     UINT found = 0;
-    int i, j, r;
+    int i, j;
+    HRESULT r;
 
     FIXME("(%p)->(%d, %p, 0x%08x): semi-stub!\n", iface, id, info, flags);
 
@@ -1168,11 +1170,11 @@ static HRESULT WINAPI JoyConfig8Impl_GetConfig(IDirectInputJoyConfig8 *iface, UI
     {
         if (!dinput_devices[i]->enum_deviceA) continue;
 
-        for (j = 0, r = -1; r != 0; j++)
+        for (j = 0, r = S_OK; SUCCEEDED(r); j++)
         {
             DIDEVICEINSTANCEA dev;
             dev.dwSize = sizeof(dev);
-            if ((r = dinput_devices[i]->enum_deviceA(DI8DEVCLASS_GAMECTRL, 0, &dev, di->dwVersion, j)))
+            if ((r = dinput_devices[i]->enum_deviceA(DI8DEVCLASS_GAMECTRL, 0, &dev, di->dwVersion, j)) == S_OK)
             {
                 /* Only take into account the chosen id */
                 if (found == id)
@@ -1639,7 +1641,7 @@ void check_dinput_hooks(LPDIRECTINPUTDEVICE8W iface)
     LeaveCriticalSection(&dinput_hook_crit);
 }
 
-BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserv)
+BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved)
 {
     switch(reason)
     {
@@ -1648,6 +1650,7 @@ BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserv)
         DINPUT_instance = inst;
         break;
       case DLL_PROCESS_DETACH:
+        if (reserved) break;
         DeleteCriticalSection(&dinput_hook_crit);
         break;
     }
