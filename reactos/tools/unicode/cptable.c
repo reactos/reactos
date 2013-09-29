@@ -63,11 +63,21 @@ extern union cptable cptable_1257;
 extern union cptable cptable_1258;
 extern union cptable cptable_1361;
 extern union cptable cptable_10000;
+extern union cptable cptable_10001;
+extern union cptable cptable_10002;
+extern union cptable cptable_10003;
+extern union cptable cptable_10004;
+extern union cptable cptable_10005;
 extern union cptable cptable_10006;
 extern union cptable cptable_10007;
+extern union cptable cptable_10008;
+extern union cptable cptable_10010;
+extern union cptable cptable_10017;
+extern union cptable cptable_10021;
 extern union cptable cptable_10029;
 extern union cptable cptable_10079;
 extern union cptable cptable_10081;
+extern union cptable cptable_10082;
 extern union cptable cptable_20127;
 extern union cptable cptable_20866;
 extern union cptable cptable_20932;
@@ -87,7 +97,7 @@ extern union cptable cptable_28604;
 extern union cptable cptable_28605;
 extern union cptable cptable_28606;
 
-static const union cptable * const cptables[62] =
+static const union cptable * const cptables[72] =
 {
     &cptable_037,
     &cptable_424,
@@ -128,11 +138,21 @@ static const union cptable * const cptables[62] =
     &cptable_1258,
     &cptable_1361,
     &cptable_10000,
+    &cptable_10001,
+    &cptable_10002,
+    &cptable_10003,
+    &cptable_10004,
+    &cptable_10005,
     &cptable_10006,
     &cptable_10007,
+    &cptable_10008,
+    &cptable_10010,
+    &cptable_10017,
+    &cptable_10021,
     &cptable_10029,
     &cptable_10079,
     &cptable_10081,
+    &cptable_10082,
     &cptable_20127,
     &cptable_20866,
     &cptable_20932,
