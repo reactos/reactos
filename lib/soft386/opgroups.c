@@ -175,8 +175,58 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup83)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup8F)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    ULONG Value;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+    
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (ModRegRm.Register != 0)
+    {
+        /* Invalid */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Pop a value from the stack */
+    if (!Soft386StackPop(State, &Value))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        return Soft386WriteModrmDwordOperands(State,
+                                              &ModRegRm,
+                                              FALSE,
+                                              Value);
+    }
+    else
+    {
+        return Soft386WriteModrmWordOperands(State,
+                                             &ModRegRm,
+                                             FALSE,
+                                             LOWORD(Value));
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupC0)
