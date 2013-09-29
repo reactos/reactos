@@ -141,6 +141,14 @@ NTAPI
 SampRemoveMemberFromAlias(IN PSAM_DB_OBJECT AliasObject,
                           IN PRPC_SID MemberId);
 
+NTSTATUS
+SampGetMembersInAlias(IN PSAM_DB_OBJECT AliasObject,
+                      OUT PULONG MemberCount,
+                      OUT PSAMPR_SID_INFORMATION *MemberArray);
+
+NTSTATUS
+SampRemoveAllMembersFromAlias(IN PSAM_DB_OBJECT AliasObject);
+
 
 /* database.c */
 

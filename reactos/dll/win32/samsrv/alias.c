@@ -218,4 +218,159 @@ done:
     return Status;
 }
 
+
+NTSTATUS
+SampGetMembersInAlias(IN PSAM_DB_OBJECT AliasObject,
+                      OUT PULONG MemberCount,
+                      OUT PSAMPR_SID_INFORMATION *MemberArray)
+{
+    HANDLE MembersKeyHandle = NULL;
+    PSAMPR_SID_INFORMATION Members = NULL;
+    ULONG Count = 0;
+    ULONG DataLength;
+    ULONG Index;
+    NTSTATUS Status;
+
+    /* Open the members key of the alias object */
+    Status = SampRegOpenKey(AliasObject->KeyHandle,
+                            L"Members",
+                            KEY_READ,
+                            &MembersKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampRegOpenKey failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the number of members */
+    Status = SampRegQueryKeyInfo(MembersKeyHandle,
+                                 NULL,
+                                 &Count);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampRegQueryKeyInfo failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Allocate the member array */
+    Members = midl_user_allocate(Count * sizeof(SAMPR_SID_INFORMATION));
+    if (Members == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Enumerate the members */
+    Index = 0;
+    while (TRUE)
+    {
+        /* Get the size of the next SID */
+        DataLength = 0;
+        Status = SampRegEnumerateValue(MembersKeyHandle,
+                                       Index,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &DataLength);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_SUCCESS;
+            break;
+        }
+
+        /* Allocate a buffer for the SID */
+        Members[Index].SidPointer = midl_user_allocate(DataLength);
+        if (Members[Index].SidPointer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        /* Read the SID into the buffer */
+        Status = SampRegEnumerateValue(MembersKeyHandle,
+                                       Index,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       (PVOID)Members[Index].SidPointer,
+                                       &DataLength);
+        if (!NT_SUCCESS(Status))
+        {
+            goto done;
+        }
+
+        Index++;
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        *MemberCount = Count;
+        *MemberArray = Members;
+    }
+
+done:
+    return Status;
+}
+
+
+NTSTATUS
+SampRemoveAllMembersFromAlias(IN PSAM_DB_OBJECT AliasObject)
+{
+    HANDLE MembersKeyHandle = NULL;
+    PSAMPR_SID_INFORMATION MemberArray = NULL;
+    ULONG MemberCount = 0;
+    ULONG Index;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", AliasObject);
+
+    /* Open the members key of the alias object */
+    Status = SampRegOpenKey(AliasObject->KeyHandle,
+                            L"Members",
+                            KEY_READ,
+                            &MembersKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampRegOpenKey failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Get a list of all members of the alias */
+    Status = SampGetMembersInAlias(AliasObject,
+                                   &MemberCount,
+                                   &MemberArray);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampGetMembersInAlias failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Remove all members from the alias */
+    for (Index = 0; Index < MemberCount; Index++)
+    {
+        Status = SampRemoveMemberFromAlias(AliasObject,
+                                           MemberArray[Index].SidPointer);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+done:
+    if (MemberArray != NULL)
+    {
+        for (Index = 0; Index < MemberCount; Index++)
+        {
+            if (MemberArray[Index].SidPointer != NULL)
+                midl_user_free(MemberArray[Index].SidPointer);
+        }
+
+        midl_user_free(MemberArray);
+    }
+
+    SampRegCloseKey(&MembersKeyHandle);
+
+    return Status;
+}
+
 /* EOF */

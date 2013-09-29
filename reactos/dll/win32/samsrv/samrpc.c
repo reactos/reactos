@@ -4980,7 +4980,13 @@ SamrDeleteAlias(IN OUT SAMPR_HANDLE *AliasHandle)
         goto done;
     }
 
-    /* FIXME: Remove all members from the alias */
+    /* Remove all members from the alias */
+    Status = SampRemoveAllMembersFromAlias(AliasObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRemoveAllMembersFromAlias() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
 
     /* Delete the alias from the database */
     Status = SampDeleteAccountDbObject(AliasObject);
@@ -5085,10 +5091,8 @@ SamrGetMembersInAlias(IN SAMPR_HANDLE AliasHandle,
                       OUT PSAMPR_PSID_ARRAY_OUT Members)
 {
     PSAM_DB_OBJECT AliasObject;
-    HANDLE MembersKeyHandle = NULL;
     PSAMPR_SID_INFORMATION MemberArray = NULL;
-    ULONG ValueCount = 0;
-    ULONG DataLength;
+    ULONG MemberCount = 0;
     ULONG Index;
     NTSTATUS Status;
 
@@ -5109,83 +5113,14 @@ SamrGetMembersInAlias(IN SAMPR_HANDLE AliasHandle,
         goto done;
     }
 
-    /* Open the members key of the alias objct */
-    Status = SampRegOpenKey(AliasObject->KeyHandle,
-                            L"Members",
-                            KEY_READ,
-                            &MembersKeyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("SampRegOpenKey failed with status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    /* Get the number of members */
-    Status = SampRegQueryKeyInfo(MembersKeyHandle,
-                                 NULL,
-                                 &ValueCount);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("SampRegQueryKeyInfo failed with status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    /* Allocate the member array */
-    MemberArray = midl_user_allocate(ValueCount * sizeof(SAMPR_SID_INFORMATION));
-    if (MemberArray == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    /* Enumerate the members */
-    Index = 0;
-    while (TRUE)
-    {
-        /* Get the size of the next SID */
-        DataLength = 0;
-        Status = SampRegEnumerateValue(MembersKeyHandle,
-                                       Index,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       &DataLength);
-        if (!NT_SUCCESS(Status))
-        {
-            if (Status == STATUS_NO_MORE_ENTRIES)
-                Status = STATUS_SUCCESS;
-            break;
-        }
-
-        /* Allocate a buffer for the SID */
-        MemberArray[Index].SidPointer = midl_user_allocate(DataLength);
-        if (MemberArray[Index].SidPointer == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto done;
-        }
-
-        /* Read the SID into the buffer */
-        Status = SampRegEnumerateValue(MembersKeyHandle,
-                                       Index,
-                                       NULL,
-                                       NULL,
-                                       NULL,
-                                       (PVOID)MemberArray[Index].SidPointer,
-                                       &DataLength);
-        if (!NT_SUCCESS(Status))
-        {
-            goto done;
-        }
-
-        Index++;
-    }
+    Status = SampGetMembersInAlias(AliasObject,
+                                   &MemberCount,
+                                   &MemberArray);
 
     /* Return the number of members and the member array */
     if (NT_SUCCESS(Status))
     {
-        Members->Count = ValueCount;
+        Members->Count = MemberCount;
         Members->Sids = MemberArray;
     }
 
@@ -5195,7 +5130,7 @@ done:
     {
         if (MemberArray != NULL)
         {
-            for (Index = 0; Index < ValueCount; Index++)
+            for (Index = 0; Index < MemberCount; Index++)
             {
                 if (MemberArray[Index].SidPointer != NULL)
                     midl_user_free(MemberArray[Index].SidPointer);
@@ -5204,9 +5139,6 @@ done:
             midl_user_free(MemberArray);
         }
     }
-
-    /* Close the members key */
-    SampRegCloseKey(&MembersKeyHandle);
 
     RtlReleaseResource(&SampResource);
 
