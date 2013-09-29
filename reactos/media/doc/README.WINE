@@ -27,24 +27,24 @@ reactos/tools/wpp                 # Synced to Wine-1.7.1
 
 The following libraries are shared with Wine.
 
-reactos/dll/directx/amstream            # Synced to Wine-1.3.37
-reactos/dll/directx/dinput              # Synced to Wine-1.7.1
-reactos/dll/directx/dinput8             # Synced to Wine-1.5.26
-reactos/dll/directx/dmusic              # Synced to Wine-1.5.26
-reactos/dll/directx/dplay               # Synced to Wine-1.5.26
-reactos/dll/directx/dplayx              # Synced to Wine-1.5.26
-reactos/dll/directx/dsound              # Synced to Wine-1.5.26
-reactos/dll/directx/dxdiagn             # Synced to Wine-0_9_5
-reactos/dll/directx/dxgi                # Synced to Wine-1.7.1
-reactos/dll/directx/msdmo               # Autosync
-reactos/dll/directx/qedit               # Autosync
-reactos/dll/directx/quartz              # Synced to Wine-1.5.26
+reactos/dll/directx/wine/amstream       # Synced to Wine-1.3.37
 reactos/dll/directx/wine/d3d8           # Synced to Wine-1.7.1
 reactos/dll/directx/wine/d3d9           # Synced to Wine-1.7.1
 reactos/dll/directx/wine/d3dcompiler_43 # Synced to Wine-1.7.1
 reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to Wine-1.7.1
 reactos/dll/directx/wine/d3dxof         # Synced to Wine-1.7.1
 reactos/dll/directx/wine/ddraw          # Synced to Wine-1.7.1
+reactos/dll/directx/wine/dinput         # Synced to Wine-1.7.1
+reactos/dll/directx/wine/dinput8        # Synced to Wine-1.5.26
+reactos/dll/directx/wine/dmusic         # Synced to Wine-1.5.26
+reactos/dll/directx/wine/dplay          # Synced to Wine-1.5.26
+reactos/dll/directx/wine/dplayx         # Synced to Wine-1.5.26
+reactos/dll/directx/wine/dsound         # Synced to Wine-1.5.26
+reactos/dll/directx/wine/dxdiagn        # Synced to Wine-0_9_5
+reactos/dll/directx/wine/dxgi           # Synced to Wine-1.7.1
+reactos/dll/directx/wine/msdmo          # Autosync
+reactos/dll/directx/wine/qedit          # Autosync
+reactos/dll/directx/wine/quartz         # Synced to Wine-1.5.26
 reactos/dll/directx/wine/wined3d        # Synced to Wine-1.7.1
 
 reactos/dll/win32/activeds        # Synced to Wine-1.1.43?
