@@ -368,14 +368,125 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup8F)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupC0)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    UCHAR Dummy, Value, Count;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Read the operands */
+    if (!Soft386ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Fetch the count */
+    if (!Soft386FetchByte(State, &Count))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    Value = LOBYTE(Soft386RotateOperation(State,
+                                          ModRegRm.Register,
+                                          Value,
+                                          8,
+                                          Count));
+
+    /* Write back the result */
+    return Soft386WriteModrmByteOperands(State,
+                                         &ModRegRm,
+                                         FALSE,
+                                         Value);
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupC1)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    UCHAR Count;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+    
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Fetch the count */
+    if (!Soft386FetchByte(State, &Count))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (OperandSize)
+    {
+        ULONG Dummy, Value;
+
+        /* Read the operands */
+        if (!Soft386ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Value = Soft386RotateOperation(State,
+                                       ModRegRm.Register,
+                                       Value,
+                                       32,
+                                       Count);
+
+        /* Write back the result */
+        return Soft386WriteModrmDwordOperands(State, &ModRegRm, FALSE, Value);
+    }
+    else
+    {
+        USHORT Dummy, Value;
+
+        /* Read the operands */
+        if (!Soft386ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        /* Calculate the result */
+        Value = LOWORD(Soft386RotateOperation(State,
+                                              ModRegRm.Register,
+                                              Value,
+                                              16,
+                                              Count));
+
+        /* Write back the result */
+        return Soft386WriteModrmWordOperands(State, &ModRegRm, FALSE, Value);
+    }
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupC6)
@@ -632,7 +743,6 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD3)
         OperandSize = !OperandSize;
     }
 
-
     if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
     {
         /* The ADSIZE prefix toggles the size */
@@ -687,7 +797,6 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD3)
         /* Write back the result */
         return Soft386WriteModrmWordOperands(State, &ModRegRm, FALSE, Value);
     }
-
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF6)
