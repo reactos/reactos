@@ -118,7 +118,7 @@ EngAlphaBlend(
     OutputRect.top += Translate.y;
     OutputRect.bottom += Translate.y;
 
-    ASSERT(InputRect.left < InputRect.right && InputRect.top < InputRect.bottom);
+    ASSERT(InputRect.left <= InputRect.right && InputRect.top <= InputRect.bottom);
 
     Ret = FALSE;
     ClippingType = (ClipRegion == NULL) ? DC_TRIVIAL : ClipRegion->iDComplexity;
@@ -141,7 +141,6 @@ EngAlphaBlend(
                 Rect.right = InputRect.right + (CombinedRect.right - OutputRect.right) * (InputRect.right - InputRect.left) / (OutputRect.right - OutputRect.left);
                 Rect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
                 Rect.bottom = InputRect.bottom + (CombinedRect.bottom - OutputRect.bottom) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
-                ASSERT(InputRect.left < InputRect.right && InputRect.top < InputRect.bottom);
 
                 /* Aplha blend one rect */
                 Ret = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_AlphaBlend(
@@ -170,7 +169,6 @@ EngAlphaBlend(
                         Rect.right = InputRect.right + (CombinedRect.right - OutputRect.right) * (InputRect.right - InputRect.left) / (OutputRect.right - OutputRect.left);
                         Rect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
                         Rect.bottom = InputRect.bottom + (CombinedRect.bottom - OutputRect.bottom) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
-                        ASSERT(InputRect.left < InputRect.right && InputRect.top < InputRect.bottom);
 
                         /* Alpha blend one rect */
                         Ret = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_AlphaBlend(
