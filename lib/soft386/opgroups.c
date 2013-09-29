@@ -383,8 +383,60 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF7)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFE)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    UCHAR Dummy, Value;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (ModRegRm.Register > 1)
+    {
+        /* Invalid */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Read the operands */
+    if (!Soft386ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (ModRegRm.Register == 0)
+    {
+        /* Increment and update OF */
+        Value++;
+        State->Flags.Of = (Value == SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    }
+    else
+    {
+        /* Decrement and update OF */
+        State->Flags.Of = (Value == SIGN_FLAG_BYTE) ? TRUE : FALSE;
+        Value--;
+    }
+
+    /* Update flags */
+    State->Flags.Sf = (Value & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
+    State->Flags.Af = ((Value & 0x0F) == 0) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Value);
+
+    /* Write back the result */
+    return Soft386WriteModrmByteOperands(State,
+                                         &ModRegRm,
+                                         FALSE,
+                                         Value);
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
