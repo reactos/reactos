@@ -159,7 +159,9 @@ CcSetFileSizes (
         current_entry = Bcb->BcbSegmentListHead.Flink;
         while (current_entry != &Bcb->BcbSegmentListHead)
         {
-            current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
+            current = CONTAINING_RECORD(current_entry,
+                                        CACHE_SEGMENT,
+                                        BcbSegmentListEntry);
             current_entry = current_entry->Flink;
             if (current->FileOffset > FileSizes->AllocationSize.QuadPart ||
                     (current->FileOffset == 0 && FileSizes->AllocationSize.QuadPart == 0))

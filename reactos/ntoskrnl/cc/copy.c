@@ -355,13 +355,16 @@ CcCopyRead (
     if (!Wait)
     {
         KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+        /* FIXME: this loop doesn't take into account areas that don't have
+         * a segment in the list yet */
         current_entry = Bcb->BcbSegmentListHead.Flink;
         while (current_entry != &Bcb->BcbSegmentListHead)
         {
             current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                         BcbSegmentListEntry);
-            if (!current->Valid && current->FileOffset < ReadOffset + Length
-                    && current->FileOffset + Bcb->CacheSegmentSize > ReadOffset)
+            if (!current->Valid &&
+                DoSegmentsIntersect(current->FileOffset, Bcb->CacheSegmentSize,
+                                    ReadOffset, Length))
             {
                 KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
                 IoStatus->Status = STATUS_UNSUCCESSFUL;
@@ -466,23 +469,20 @@ CcCopyWrite (
     {
         /* testing, if the requested datas are available */
         KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+        /* FIXME: this loop doesn't take into account areas that don't have
+         * a segment in the list yet */
         current_entry = Bcb->BcbSegmentListHead.Flink;
         while (current_entry != &Bcb->BcbSegmentListHead)
         {
             CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                          BcbSegmentListEntry);
-            if (!CacheSeg->Valid)
+            if (!CacheSeg->Valid &&
+                DoSegmentsIntersect(CacheSeg->FileOffset, Bcb->CacheSegmentSize,
+                                    WriteOffset, Length))
             {
-                if (((WriteOffset >= CacheSeg->FileOffset) &&
-                     (WriteOffset < CacheSeg->FileOffset + Bcb->CacheSegmentSize))
-                 || ((WriteOffset + Length > CacheSeg->FileOffset) &&
-                     (WriteOffset + Length <= CacheSeg->FileOffset +
-                            Bcb->CacheSegmentSize)))
-                {
-                    KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-                    /* datas not available */
-                    return FALSE;
-                }
+                KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+                /* datas not available */
+                return FALSE;
             }
             current_entry = current_entry->Flink;
         }
@@ -687,23 +687,20 @@ CcZeroData (
         {
             /* testing, if the requested datas are available */
             KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+            /* FIXME: this loop doesn't take into account areas that don't have
+             * a segment in the list yet */
             current_entry = Bcb->BcbSegmentListHead.Flink;
             while (current_entry != &Bcb->BcbSegmentListHead)
             {
                 CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                              BcbSegmentListEntry);
-                if (!CacheSeg->Valid)
+                if (!CacheSeg->Valid &&
+                    DoSegmentsIntersect(CacheSeg->FileOffset, Bcb->CacheSegmentSize,
+                                        WriteOffset.u.LowPart, Length))
                 {
-                    if (((WriteOffset.u.LowPart >= CacheSeg->FileOffset) &&
-                         (WriteOffset.u.LowPart < CacheSeg->FileOffset + Bcb->CacheSegmentSize))
-                     || ((WriteOffset.u.LowPart + Length > CacheSeg->FileOffset) &&
-                         (WriteOffset.u.LowPart + Length <=
-                                CacheSeg->FileOffset + Bcb->CacheSegmentSize)))
-                    {
-                        KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-                        /* datas not available */
-                        return FALSE;
-                    }
+                    KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+                    /* datas not available */
+                    return FALSE;
                 }
                 current_entry = current_entry->Flink;
             }

@@ -261,7 +261,7 @@ CcUnpinRepinnedBcb (
             {
                 IoStatus->Status = STATUS_SUCCESS;
             }
-            KeReleaseMutex(&iBcb->CacheSegment->Mutex, 0);
+            KeReleaseMutex(&iBcb->CacheSegment->Mutex, FALSE);
         }
         else
         {

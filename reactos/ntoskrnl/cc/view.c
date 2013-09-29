@@ -236,7 +236,7 @@ CcRosFlushDirtyPages (
         /* One reference is added above */
         if (current->ReferenceCount > 2)
         {
-            KeReleaseMutex(&current->Mutex, 0);
+            KeReleaseMutex(&current->Mutex, FALSE);
             current->Bcb->Callbacks->ReleaseFromLazyWrite(
                 current->Bcb->LazyWriteContext);
             CcRosCacheSegmentDecRefCount(current);
@@ -249,7 +249,7 @@ CcRosFlushDirtyPages (
 
         Status = CcRosFlushCacheSegment(current);
 
-        KeReleaseMutex(&current->Mutex, 0);
+        KeReleaseMutex(&current->Mutex, FALSE);
         current->Bcb->Callbacks->ReleaseFromLazyWrite(
             current->Bcb->LazyWriteContext);
 
@@ -446,7 +446,7 @@ CcRosReleaseCacheSegment (
 
     KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
-    KeReleaseMutex(&CacheSeg->Mutex, 0);
+    KeReleaseMutex(&CacheSeg->Mutex, FALSE);
 
     return(STATUS_SUCCESS);
 }
@@ -474,8 +474,8 @@ CcRosLookupCacheSegment (
     {
         current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                     BcbSegmentListEntry);
-        if ((current->FileOffset <= FileOffset) &&
-            ((current->FileOffset + Bcb->CacheSegmentSize) > FileOffset))
+        if (IsPointInSegment(current->FileOffset, Bcb->CacheSegmentSize,
+                             FileOffset))
         {
             CcRosCacheSegmentIncRefCount(current);
             KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
@@ -485,7 +485,7 @@ CcRosLookupCacheSegment (
                                   KernelMode,
                                   FALSE,
                                   NULL);
-            return(current);
+            return current;
         }
         current_entry = current_entry->Flink;
     }
@@ -493,7 +493,7 @@ CcRosLookupCacheSegment (
     KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
 
-    return(NULL);
+    return NULL;
 }
 
 NTSTATUS
@@ -536,7 +536,7 @@ CcRosMarkDirtyCacheSegment (
 
     KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
-    KeReleaseMutex(&CacheSeg->Mutex, 0);
+    KeReleaseMutex(&CacheSeg->Mutex, FALSE);
 
     return(STATUS_SUCCESS);
 }
@@ -589,7 +589,7 @@ CcRosUnmapCacheSegment (
 
     KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
-    KeReleaseMutex(&CacheSeg->Mutex, 0);
+    KeReleaseMutex(&CacheSeg->Mutex, FALSE);
 
     return(STATUS_SUCCESS);
 }
@@ -659,8 +659,8 @@ CcRosCreateCacheSegment (
     {
         current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                     BcbSegmentListEntry);
-        if (current->FileOffset <= FileOffset &&
-                (current->FileOffset + Bcb->CacheSegmentSize) > FileOffset)
+        if (IsPointInSegment(current->FileOffset, Bcb->CacheSegmentSize,
+                             FileOffset))
         {
             CcRosCacheSegmentIncRefCount(current);
             KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
@@ -673,7 +673,7 @@ CcRosCreateCacheSegment (
                         current );
             }
 #endif
-            KeReleaseMutex(&(*CacheSeg)->Mutex, 0);
+            KeReleaseMutex(&(*CacheSeg)->Mutex, FALSE);
             KeReleaseGuardedMutex(&ViewLock);
             ExFreeToNPagedLookasideList(&CacheSegLookasideList, *CacheSeg);
             *CacheSeg = current;
@@ -996,38 +996,6 @@ CcRosInternalFreeCacheSegment (
     return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-NTAPI
-CcRosFreeCacheSegment (
-    PBCB Bcb,
-    PCACHE_SEGMENT CacheSeg)
-{
-    NTSTATUS Status;
-    KIRQL oldIrql;
-
-    ASSERT(Bcb);
-
-    DPRINT("CcRosFreeCacheSegment(Bcb 0x%p, CacheSeg 0x%p)\n",
-           Bcb, CacheSeg);
-
-    KeAcquireGuardedMutex(&ViewLock);
-    KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
-    RemoveEntryList(&CacheSeg->BcbSegmentListEntry);
-    RemoveEntryList(&CacheSeg->CacheSegmentListEntry);
-    RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
-    if (CacheSeg->Dirty)
-    {
-        RemoveEntryList(&CacheSeg->DirtySegmentListEntry);
-        DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
-
-    }
-    KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
-    KeReleaseGuardedMutex(&ViewLock);
-
-    Status = CcRosInternalFreeCacheSegment(CacheSeg);
-    return(Status);
-}
-
 /*
  * @implemented
  */
@@ -1081,7 +1049,7 @@ CcFlushCache (
                         IoStatus->Status = Status;
                     }
                 }
-                KeReleaseMutex(&current->Mutex, 0);
+                KeReleaseMutex(&current->Mutex, FALSE);
 
                 KeAcquireGuardedMutex(&ViewLock);
                 KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
@@ -1148,7 +1116,6 @@ CcRosDeleteFileCache (
          */
         InitializeListHead(&FreeList);
         KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
-        current_entry = Bcb->BcbSegmentListHead.Flink;
         while (!IsListEmpty(&Bcb->BcbSegmentListHead))
         {
             current_entry = RemoveTailList(&Bcb->BcbSegmentListHead);

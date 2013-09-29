@@ -205,13 +205,6 @@ CcInitView(VOID);
 
 NTSTATUS
 NTAPI
-CcRosFreeCacheSegment(
-    PBCB,
-    PCACHE_SEGMENT
-);
-
-NTSTATUS
-NTAPI
 ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
 
 NTSTATUS
@@ -315,3 +308,28 @@ CcRosReleaseFileCache(
 NTSTATUS
 NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
+
+FORCEINLINE
+BOOLEAN
+DoSegmentsIntersect(
+    _In_ ULONG Offset1,
+    _In_ ULONG Length1,
+    _In_ ULONG Offset2,
+    _In_ ULONG Length2)
+{
+    if (Offset1 + Length1 <= Offset2)
+        return FALSE;
+    if (Offset2 + Length2 <= Offset1)
+        return FALSE;
+    return TRUE;
+}
+
+FORCEINLINE
+BOOLEAN
+IsPointInSegment(
+    _In_ ULONG Offset1,
+    _In_ ULONG Length1,
+    _In_ ULONG Point)
+{
+    return DoSegmentsIntersect(Offset1, Length1, Point, 1);
+}
