@@ -464,13 +464,6 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup83)
         USHORT Immediate = (USHORT)((SHORT)ImmByte); // Sign extend
         USHORT Value, Dummy;
 
-        /* Fetch the immediate operand */
-        if (!Soft386FetchWord(State, &Immediate))
-        {
-            /* Exception occurred */
-            return FALSE;
-        }
-
         /* Read the operands */
         if (!Soft386ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
         {
