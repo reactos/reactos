@@ -11,9 +11,8 @@
 
 /* DEFINES ********************************************************************/
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup80);
+SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup8082);
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup81);
-SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup82);
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup83);
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup8F);
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupC0);

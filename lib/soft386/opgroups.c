@@ -21,19 +21,147 @@
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup80)
+SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup8082)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    UCHAR Immediate, Result, Dummy, Value;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Fetch the immediate operand */
+    if (!Soft386FetchByte(State, &Immediate))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Read the operands */
+    if (!Soft386ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check which operation is this */
+    switch (ModRegRm.Register)
+    {
+        /* ADD */
+        case 0:
+        {
+            Result = Value + Immediate;
+
+            /* Update CF, OF and AF */
+            State->Flags.Cf = (Result < Value) && (Result < Immediate);
+            State->Flags.Of = ((Value & SIGN_FLAG_BYTE) == (Immediate & SIGN_FLAG_BYTE))
+                              && ((Value & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+            State->Flags.Af = (((Value & 0x0F) + (Immediate & 0x0F)) & 0x10) ? TRUE : FALSE;
+
+            break;
+        }
+
+        /* OR */
+        case 1:
+        {
+            Result = Value | Immediate;
+            break;
+        }
+
+        /* ADC */
+        case 2:
+        {
+            INT Carry = State->Flags.Cf ? 1 : 0;
+
+            Result = Value + Immediate + Carry;
+
+            /* Update CF, OF and AF */
+            State->Flags.Cf = ((Immediate == 0xFF) && (Carry == 1))
+                              || ((Result < Value) && (Result < (Immediate + Carry)));
+            State->Flags.Of = ((Value & SIGN_FLAG_BYTE) == (Immediate & SIGN_FLAG_BYTE))
+                              && ((Value & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+            State->Flags.Af = (((Value & 0x0F) + ((Immediate + Carry) & 0x0F)) & 0x10)
+                              ? TRUE : FALSE;
+
+            break;
+        }
+
+        /* SBB */
+        case 3:
+        {
+            INT Carry = State->Flags.Cf ? 1 : 0;
+
+            Result = Value - Immediate - Carry;
+
+            /* Update CF, OF and AF */
+            State->Flags.Cf = Value < (Immediate + Carry);
+            State->Flags.Of = ((Value & SIGN_FLAG_BYTE) != (Immediate & SIGN_FLAG_BYTE))
+                              && ((Value & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+            State->Flags.Af = (Value & 0x0F) < ((Immediate + Carry) & 0x0F);
+
+            break;
+        }
+
+        /* AND */
+        case 4:
+        {
+            Result = Value & Immediate;
+            break;
+        }
+
+        /* SUB or CMP */
+        case 5:
+        case 7:
+        {
+            Result = Value - Immediate;
+
+            /* Update CF, OF and AF */
+            State->Flags.Cf = Value < Immediate;
+            State->Flags.Of = ((Value & SIGN_FLAG_BYTE) != (Immediate & SIGN_FLAG_BYTE))
+                              && ((Value & SIGN_FLAG_BYTE) != (Result & SIGN_FLAG_BYTE));
+            State->Flags.Af = (Value & 0x0F) < (Immediate & 0x0F);
+
+            break;
+        }
+
+        /* XOR */
+        case 6:
+        {
+            Value ^= Immediate;
+            break;
+        }
+
+        default:
+        {
+            /* Shouldn't happen */
+            ASSERT(FALSE);
+        }
+    }
+
+    /* Update ZF, SF and PF */
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* Unless this is CMP, write back the result */
+    if (ModRegRm.Register != 7)
+    {
+        return Soft386WriteModrmByteOperands(State, &ModRegRm, FALSE, Result);
+    }
+    
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup81)
-{
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
-}
-
-SOFT386_OPCODE_HANDLER(Soft386OpcodeGroup82)
 {
     UNIMPLEMENTED;
     return FALSE; // TODO: NOT IMPLEMENTED
