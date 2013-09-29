@@ -384,15 +384,15 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupC0)
         return FALSE;
     }
 
-    /* Read the operands */
-    if (!Soft386ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    /* Fetch the count */
+    if (!Soft386FetchByte(State, &Count))
     {
         /* Exception occurred */
         return FALSE;
     }
 
-    /* Fetch the count */
-    if (!Soft386FetchByte(State, &Count))
+    /* Read the operands */
+    if (!Soft386ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
     {
         /* Exception occurred */
         return FALSE;
