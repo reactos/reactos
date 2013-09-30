@@ -649,7 +649,7 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
         }
 
         /* Clear the top 16 bits */
-        ModRegRm->MemoryAddress &= 0xFFFF0000;
+        ModRegRm->MemoryAddress &= 0x0000FFFF;
     }
 
     return TRUE;
