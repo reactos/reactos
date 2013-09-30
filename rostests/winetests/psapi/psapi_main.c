@@ -102,11 +102,11 @@ static void test_EnumProcesses(void)
 
 static void test_EnumProcessModules(void)
 {
-    win_skip("Stack corruption - ROSTEST-122\n");
-    return;
-
     HMODULE hMod = GetModuleHandle(NULL);
     DWORD ret, cbNeeded = 0xdeadbeef;
+
+    win_skip("Stack corruption - ROSTEST-122\n");
+    return;
 
     SetLastError(0xdeadbeef);
     pEnumProcessModules(NULL, NULL, 0, &cbNeeded);
