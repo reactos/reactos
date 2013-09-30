@@ -88,7 +88,7 @@ CcMapData (
         }
     }
 
-    *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + (ReadOffset % VACB_MAPPING_GRANULARITY));
+    *pBuffer = (PVOID)((ULONG_PTR)(*pBuffer) + ReadOffset % VACB_MAPPING_GRANULARITY);
     iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
     if (iBcb == NULL)
     {
@@ -96,7 +96,7 @@ CcMapData (
         return FALSE;
     }
 
-    memset(iBcb, 0, sizeof(INTERNAL_BCB));
+    RtlZeroMemory(iBcb, sizeof(*iBcb));
     iBcb->PFCB.NodeTypeCode = 0xDE45; /* Undocumented (CAPTIVE_PUBLIC_BCB_NODETYPECODE) */
     iBcb->PFCB.NodeByteSize = sizeof(PUBLIC_BCB);
     iBcb->PFCB.MappedLength = Length;

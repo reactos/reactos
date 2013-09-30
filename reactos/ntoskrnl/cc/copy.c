@@ -19,6 +19,7 @@ static PFN_NUMBER CcZeroPage = 0;
 
 #define MAX_ZERO_LENGTH    (256 * 1024)
 #define MAX_RW_LENGTH    (256 * 1024)
+C_ASSERT(MAX_RW_LENGTH <= VACB_MAPPING_GRANULARITY);
 
 ULONG CcFastMdlReadWait;
 ULONG CcFastMdlReadNotPossible;
@@ -88,7 +89,7 @@ ReadCacheSegmentChain (
         if (current->Valid)
         {
             TempLength = min(VACB_MAPPING_GRANULARITY, Length);
-            memcpy(Buffer, current->BaseAddress, TempLength);
+            RtlCopyMemory(Buffer, current->BaseAddress, TempLength);
 
             Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
 
@@ -130,7 +131,7 @@ ReadCacheSegmentChain (
             while ((current2 != NULL) && !current2->Valid && (current_size < MAX_RW_LENGTH))
             {
                 PVOID address = current2->BaseAddress;
-                for (i = 0; i < (VACB_MAPPING_GRANULARITY / PAGE_SIZE); i++, address = RVA(address, PAGE_SIZE))
+                for (i = 0; i < VACB_MAPPING_GRANULARITY / PAGE_SIZE; i++, address = RVA(address, PAGE_SIZE))
                 {
                     *MdlPages++ = MmGetPfnForProcess(NULL, address);
                 }
@@ -173,7 +174,7 @@ ReadCacheSegmentChain (
                 previous = current;
                 current = current->NextInChain;
                 TempLength = min(VACB_MAPPING_GRANULARITY, Length);
-                memcpy(Buffer, previous->BaseAddress, TempLength);
+                RtlCopyMemory(Buffer, previous->BaseAddress, TempLength);
 
                 Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
 
@@ -229,7 +230,7 @@ ReadCacheSegment (
         return Status;
     }
 
-    if (VACB_MAPPING_GRANULARITY > Size)
+    if (Size < VACB_MAPPING_GRANULARITY)
     {
         RtlZeroMemory((char*)CacheSeg->BaseAddress + Size,
                       VACB_MAPPING_GRANULARITY - Size);
@@ -381,10 +382,10 @@ CcCopyRead (
     TempLength = ReadOffset % VACB_MAPPING_GRANULARITY;
     if (TempLength != 0)
     {
-        TempLength = min (Length, VACB_MAPPING_GRANULARITY - TempLength);
+        TempLength = min(Length, VACB_MAPPING_GRANULARITY - TempLength);
         Status = CcRosRequestCacheSegment(Bcb,
                                           ROUND_DOWN(ReadOffset,
-                                                  VACB_MAPPING_GRANULARITY),
+                                                     VACB_MAPPING_GRANULARITY),
                                           &BaseAddress, &Valid, &CacheSeg);
         if (!NT_SUCCESS(Status))
         {
@@ -404,8 +405,9 @@ CcCopyRead (
                 return FALSE;
             }
         }
-        memcpy (Buffer, (char*)BaseAddress + ReadOffset % VACB_MAPPING_GRANULARITY,
-                TempLength);
+        RtlCopyMemory(Buffer,
+                      (char*)BaseAddress + ReadOffset % VACB_MAPPING_GRANULARITY,
+                      TempLength);
         CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
         ReadLength += TempLength;
         Length -= TempLength;
@@ -415,7 +417,7 @@ CcCopyRead (
 
     while (Length > 0)
     {
-        TempLength = min(max(VACB_MAPPING_GRANULARITY, MAX_RW_LENGTH), Length);
+        TempLength = min(VACB_MAPPING_GRANULARITY, Length);
         Status = ReadCacheSegmentChain(Bcb, ReadOffset, TempLength, Buffer);
         if (!NT_SUCCESS(Status))
         {
@@ -498,7 +500,7 @@ CcCopyWrite (
     {
         ULONG ROffset;
         ROffset = ROUND_DOWN(WriteOffset, VACB_MAPPING_GRANULARITY);
-        TempLength = min (Length, VACB_MAPPING_GRANULARITY - TempLength);
+        TempLength = min(Length, VACB_MAPPING_GRANULARITY - TempLength);
         Status = CcRosRequestCacheSegment(Bcb, ROffset,
                                           &BaseAddress, &Valid, &CacheSeg);
         if (!NT_SUCCESS(Status))
@@ -512,8 +514,9 @@ CcCopyWrite (
                 return FALSE;
             }
         }
-        memcpy ((char*)BaseAddress + WriteOffset % VACB_MAPPING_GRANULARITY,
-                Buffer, TempLength);
+        RtlCopyMemory((char*)BaseAddress + WriteOffset % VACB_MAPPING_GRANULARITY,
+                      Buffer,
+                      TempLength);
         CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, TRUE, FALSE);
 
         Length -= TempLength;
@@ -524,7 +527,7 @@ CcCopyWrite (
 
     while (Length > 0)
     {
-        TempLength = min (VACB_MAPPING_GRANULARITY, Length);
+        TempLength = min(VACB_MAPPING_GRANULARITY, Length);
         Status = CcRosRequestCacheSegment(Bcb,
                                           WriteOffset,
                                           &BaseAddress,
@@ -542,7 +545,7 @@ CcCopyWrite (
                 return FALSE;
             }
         }
-        memcpy (BaseAddress, Buffer, TempLength);
+        RtlCopyMemory(BaseAddress, Buffer, TempLength);
         CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, TRUE, FALSE);
         Length -= TempLength;
         WriteOffset += TempLength;
@@ -749,13 +752,14 @@ CcZeroData (
                                     Status);
                         }
                     }
-                    TempLength = min (CurrentLength, VACB_MAPPING_GRANULARITY - Offset);
+                    TempLength = min(CurrentLength, VACB_MAPPING_GRANULARITY - Offset);
                 }
                 else
                 {
                     TempLength = VACB_MAPPING_GRANULARITY;
                 }
-                memset ((PUCHAR)current->BaseAddress + Offset, 0, TempLength);
+                RtlZeroMemory((PUCHAR)current->BaseAddress + Offset,
+                              TempLength);
 
                 WriteOffset.QuadPart += TempLength;
                 CurrentLength -= TempLength;

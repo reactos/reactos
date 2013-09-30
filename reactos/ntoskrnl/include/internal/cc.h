@@ -108,7 +108,6 @@ typedef struct _BCB
     BOOLEAN RemoveOnClose;
     ULONG TimeStamp;
     PFILE_OBJECT FileObject;
-    ULONG CacheSegmentSize;
     LARGE_INTEGER AllocationSize;
     LARGE_INTEGER FileSize;
     PCACHE_MANAGER_CALLBACKS Callbacks;
@@ -294,7 +293,6 @@ NTSTATUS
 NTAPI
 CcRosInitializeFileCache(
     PFILE_OBJECT FileObject,
-    ULONG CacheSegmentSize,
     PCACHE_MANAGER_CALLBACKS CallBacks,
     PVOID LazyWriterContext
 );
