@@ -22,15 +22,14 @@
 #include <wine/debug.h>
 
 //#include "lobbysp.h"
-//#include "dplay_global.h"
-#include "dpinit.h"
+#include "dplay_global.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
 /* Prototypes */
 static BOOL DPLSP_CreateIUnknown( LPVOID lpSP );
 static BOOL DPLSP_DestroyIUnknown( LPVOID lpSP );
-static BOOL DPLSP_CreateDPLobbySP( LPVOID lpSP, IDirectPlay2Impl* dp );
+static BOOL DPLSP_CreateDPLobbySP( void *lpSP, IDirectPlayImpl *dp );
 static BOOL DPLSP_DestroyDPLobbySP( LPVOID lpSP );
 
 
@@ -45,7 +44,7 @@ typedef struct tagDPLobbySPIUnknownData
 
 typedef struct tagDPLobbySPData
 {
-  IDirectPlay2Impl* dplay;
+  IDirectPlayImpl *dplay;
 } DPLobbySPData;
 
 #define DPLSP_IMPL_FIELDS \
@@ -62,7 +61,7 @@ struct IDPLobbySPImpl
 /* Forward declaration of virtual tables */
 static const IDPLobbySPVtbl dpLobbySPVT;
 
-HRESULT DPLSP_CreateInterface( REFIID riid, LPVOID* ppvObj, IDirectPlay2Impl* dp )
+HRESULT DPLSP_CreateInterface( REFIID riid, void **ppvObj, IDirectPlayImpl *dp )
 {
   TRACE( " for %s\n", debugstr_guid( riid ) );
 
@@ -135,7 +134,7 @@ static BOOL DPLSP_DestroyIUnknown( LPVOID lpSP )
   return TRUE;
 }
 
-static BOOL DPLSP_CreateDPLobbySP( LPVOID lpSP, IDirectPlay2Impl* dp )
+static BOOL DPLSP_CreateDPLobbySP( void *lpSP, IDirectPlayImpl *dp )
 {
   IDPLobbySPImpl *This = lpSP;
 
@@ -147,22 +146,6 @@ static BOOL DPLSP_CreateDPLobbySP( LPVOID lpSP, IDirectPlay2Impl* dp )
   }
 
   This->sp->dplay = dp;
-
-  /* Normally we should be keeping a reference, but since only the dplay
-   * interface that created us can destroy us, we do not keep a reference
-   * to it (ie we'd be stuck with always having one reference to the dplay
-   * object, and hence us, around).
-   * NOTE: The dp object does reference count us.
-   *
-   * FIXME: This is a kludge to get around a problem where a queryinterface
-   *        is used to get a new interface and then is closed. We will then
-   *        reference garbage. However, with this we will never deallocate
-   *        the interface we store. The correct fix is to require all
-   *        DP internal interfaces to use the This->dp2 interface which
-   *        should be changed to This->dp
-   */
-  IDirectPlayX_AddRef( (LPDIRECTPLAY2)dp );
-
 
   return TRUE;
 }

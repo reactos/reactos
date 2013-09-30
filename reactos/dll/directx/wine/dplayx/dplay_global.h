@@ -34,22 +34,6 @@ extern HRESULT DPL_EnumAddress( LPDPENUMADDRESSCALLBACK lpEnumAddressCallback,
                                 LPCVOID lpAddress, DWORD dwAddressSize,
                                 LPVOID lpContext ) DECLSPEC_HIDDEN;
 
-/*****************************************************************************
- * Predeclare the interface implementation structures
- */
-typedef struct IDirectPlay2Impl IDirectPlay2AImpl;
-typedef struct IDirectPlay2Impl IDirectPlay2Impl;
-typedef struct IDirectPlay3Impl IDirectPlay3AImpl;
-typedef struct IDirectPlay3Impl IDirectPlay3Impl;
-typedef struct IDirectPlay4Impl IDirectPlay4AImpl;
-typedef struct IDirectPlay4Impl IDirectPlay4Impl;
-
-typedef struct tagDirectPlayIUnknownData
-{
-  LONG              ulObjRef;
-  CRITICAL_SECTION  DP_lock;
-} DirectPlayIUnknownData;
-
 typedef struct tagEnumSessionAsyncCallbackData
 {
   LPSPINITDATA lpSpData;
@@ -199,50 +183,35 @@ typedef struct tagDirectPlay2Data
   DPQ_HEAD( tagDP_MSG_REPLY_STRUCT_LIST ) repliesExpected;
 } DirectPlay2Data;
 
-typedef struct tagDirectPlay3Data
+typedef struct IDirectPlayImpl
 {
-  BOOL dummy;
-} DirectPlay3Data;
-typedef struct tagDirectPlay4Data
-{
-  BOOL dummy;
-} DirectPlay4Data;
+  IDirectPlay IDirectPlay_iface;
+  IDirectPlay2A IDirectPlay2A_iface;
+  IDirectPlay2 IDirectPlay2_iface;
+  IDirectPlay3A IDirectPlay3A_iface;
+  IDirectPlay3 IDirectPlay3_iface;
+  IDirectPlay4A IDirectPlay4A_iface;
+  IDirectPlay4  IDirectPlay4_iface;
+  LONG numIfaces; /* "in use interfaces" refcount */
+  LONG ref, ref2A, ref2, ref3A, ref3, ref4A, ref4;
+  CRITICAL_SECTION lock;
+  DirectPlay2Data *dp2;
+} IDirectPlayImpl;
 
-#define DP_IMPL_FIELDS \
-  LONG ulInterfaceRef; \
-  DirectPlayIUnknownData*  unk; \
-  DirectPlay2Data*         dp2; \
-  DirectPlay3Data*         dp3; \
-  DirectPlay4Data*         dp4;
-
-struct IDirectPlay2Impl
-{
-  const IDirectPlay2Vtbl *lpVtbl;
-  DP_IMPL_FIELDS
-};
-
-struct IDirectPlay3Impl
-{
-  const IDirectPlay3Vtbl *lpVtbl;
-  DP_IMPL_FIELDS
-};
-
-struct IDirectPlay4Impl
-{
-  const IDirectPlay4Vtbl *lpVtbl;
-  DP_IMPL_FIELDS
-};
-
-HRESULT DP_HandleMessage( IDirectPlay2Impl* This, LPCVOID lpMessageBody,
-                          DWORD  dwMessageBodySize, LPCVOID lpMessageHeader,
-                          WORD wCommandId, WORD wVersion,
-                          LPVOID* lplpReply, LPDWORD lpdwMsgSize ) DECLSPEC_HIDDEN;
+HRESULT DP_HandleMessage( IDirectPlayImpl *This, const void *lpMessageBody,
+        DWORD  dwMessageBodySize, const void *lpMessageHeader, WORD wCommandId, WORD wVersion,
+        void **lplpReply, DWORD *lpdwMsgSize ) DECLSPEC_HIDDEN;
 
 /* DP SP external interfaces into DirectPlay */
-extern HRESULT DP_GetSPPlayerData( IDirectPlay2Impl* lpDP, DPID idPlayer, LPVOID* lplpData ) DECLSPEC_HIDDEN;
-extern HRESULT DP_SetSPPlayerData( IDirectPlay2Impl* lpDP, DPID idPlayer, LPVOID lpData ) DECLSPEC_HIDDEN;
+extern HRESULT DP_GetSPPlayerData( IDirectPlayImpl *lpDP, DPID idPlayer, void **lplpData ) DECLSPEC_HIDDEN;
+extern HRESULT DP_SetSPPlayerData( IDirectPlayImpl *lpDP, DPID idPlayer, void *lpData ) DECLSPEC_HIDDEN;
 
 /* DP external interfaces to call into DPSP interface */
 extern LPVOID DPSP_CreateSPPlayerData(void) DECLSPEC_HIDDEN;
+
+extern HRESULT dplay_create( REFIID riid, void **ppv ) DECLSPEC_HIDDEN;
+extern HRESULT dplobby_create( REFIID riid, void **ppv ) DECLSPEC_HIDDEN;
+extern HRESULT DPSP_CreateInterface( REFIID riid, void **ppvObj, IDirectPlayImpl *dp ) DECLSPEC_HIDDEN;
+extern HRESULT DPLSP_CreateInterface( REFIID riid, void **ppvObj, IDirectPlayImpl *dp ) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_DPLAY_GLOBAL_INCLUDED */

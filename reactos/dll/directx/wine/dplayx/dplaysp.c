@@ -22,7 +22,6 @@
 //#include "winerror.h"
 #include <wine/debug.h>
 
-//#include "dpinit.h"
 //#include "dplaysp.h"
 //#include "dplay_global.h"
 #include "name_server.h"
@@ -37,7 +36,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 /* Prototypes */
 static BOOL DPSP_CreateIUnknown( LPVOID lpSP );
 static BOOL DPSP_DestroyIUnknown( LPVOID lpSP );
-static BOOL DPSP_CreateDirectPlaySP( LPVOID lpSP, IDirectPlay2Impl* dp );
+static BOOL DPSP_CreateDirectPlaySP( void *lpSP, IDirectPlayImpl *dp );
 static BOOL DPSP_DestroyDirectPlaySP( LPVOID lpSP );
 
 /* Predefine the interface */
@@ -57,7 +56,7 @@ typedef struct tagDirectPlaySPData
   LPVOID lpSpLocalData;
   DWORD  dwSpLocalDataSize; /* Size of data pointed to by lpSpLocalData */
 
-  IDirectPlay2Impl* dplay; /* FIXME: This should perhaps be iface not impl */
+  IDirectPlayImpl *dplay; /* FIXME: This should perhaps be iface not impl */
 
 } DirectPlaySPData;
 
@@ -86,7 +85,7 @@ typedef struct tagDP_SPPLAYERDATA
 } DP_SPPLAYERDATA, *LPDP_SPPLAYERDATA;
 
 /* Create the SP interface */
-HRESULT DPSP_CreateInterface( REFIID riid, LPVOID* ppvObj, IDirectPlay2Impl* dp )
+HRESULT DPSP_CreateInterface( REFIID riid, void **ppvObj, IDirectPlayImpl *dp )
 {
   TRACE( " for %s\n", debugstr_guid( riid ) );
 
@@ -160,7 +159,7 @@ static BOOL DPSP_DestroyIUnknown( LPVOID lpSP )
 }
 
 
-static BOOL DPSP_CreateDirectPlaySP( LPVOID lpSP, IDirectPlay2Impl* dp )
+static BOOL DPSP_CreateDirectPlaySP( void *lpSP, IDirectPlayImpl *dp )
 {
   IDirectPlaySPImpl *This = lpSP;
 
@@ -173,35 +172,12 @@ static BOOL DPSP_CreateDirectPlaySP( LPVOID lpSP, IDirectPlay2Impl* dp )
 
   This->sp->dplay = dp;
 
-  /* Normally we should be keeping a reference, but since only the dplay
-   * interface that created us can destroy us, we do not keep a reference
-   * to it (ie we'd be stuck with always having one reference to the dplay
-   * object, and hence us, around).
-   * NOTE: The dp object does reference count us.
-   *
-   * FIXME: This is a kludge to get around a problem where a queryinterface
-   *        is used to get a new interface and then is closed. We will then
-   *        reference garbage. However, with this we will never deallocate
-   *        the interface we store. The correct fix is to require all
-   *        DP internal interfaces to use the This->dp2 interface which
-   *        should be changed to This->dp
-   */
-  IDirectPlayX_AddRef( (LPDIRECTPLAY2)dp );
-
   return TRUE;
 }
 
 static BOOL DPSP_DestroyDirectPlaySP( LPVOID lpSP )
 {
   IDirectPlaySPImpl *This = lpSP;
-
-  /* Normally we should be keeping a reference, but since only the dplay
-   * interface that created us can destroy us, we do not keep a reference
-   * to it (ie we'd be stuck with always having one reference to the dplay
-   * object, and hence us, around).
-   * NOTE: The dp object does reference count us.
-   */
-  /*IDirectPlayX_Release( (LPDIRECTPLAY2)This->sp->dplay ); */
 
   HeapFree( GetProcessHeap(), 0, This->sp->lpSpRemoteData );
   HeapFree( GetProcessHeap(), 0, This->sp->lpSpLocalData );
@@ -408,13 +384,11 @@ static HRESULT WINAPI IDirectPlaySPImpl_GetSPPlayerData
   /* What to do in the case where there is nothing set yet? */
   if( dwFlags == DPSET_LOCAL )
   {
-    HeapFree( GetProcessHeap(), 0, lpPlayerData->lpPlayerLocalData );
     *lplpData     = lpPlayerData->lpPlayerLocalData;
     *lpdwDataSize = lpPlayerData->dwPlayerLocalDataSize;
   }
   else if( dwFlags == DPSET_REMOTE )
   {
-    HeapFree( GetProcessHeap(), 0, lpPlayerData->lpPlayerRemoteData );
     *lplpData     = lpPlayerData->lpPlayerRemoteData;
     *lpdwDataSize = lpPlayerData->dwPlayerRemoteDataSize;
   }

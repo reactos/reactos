@@ -30,20 +30,15 @@
 //#include "dplay.h"
 //#include "dplobby.h"
 //#include "initguid.h"
-#include "dpinit.h"
+#include "dplay_global.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
 
-/*******************************************************************************
- * DirectPlayLobby ClassFactory
- */
-
 typedef struct
 {
-    /* IUnknown fields */
     IClassFactory IClassFactory_iface;
-    LONG          ref;
+    HRESULT (*createinstance)(REFIID riid, void **ppv);
 } IClassFactoryImpl;
 
 static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
@@ -51,61 +46,62 @@ static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
     return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
 }
 
-static HRESULT WINAPI
-DP_and_DPL_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
-        IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+static HRESULT WINAPI IClassFactoryImpl_QueryInterface(IClassFactory *iface, REFIID riid,
+        void **ppv)
+{
+    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppv);
 
-        FIXME("(%p)->(%s,%p),stub!\n",This,debugstr_guid(riid),ppobj);
-
-        return E_NOINTERFACE;
-}
-
-static ULONG WINAPI
-DP_and_DPL_AddRef(LPCLASSFACTORY iface) {
-        IClassFactoryImpl *This = impl_from_IClassFactory(iface);
-        return InterlockedIncrement(&This->ref);
-}
-
-static ULONG WINAPI DP_and_DPL_Release(LPCLASSFACTORY iface) {
-        IClassFactoryImpl *This = impl_from_IClassFactory(iface);
-        /* static class (reference starts @ 1), won't ever be freed */
-        return InterlockedDecrement(&This->ref);
-}
-
-static HRESULT WINAPI DP_and_DPL_CreateInstance(
-        LPCLASSFACTORY iface,LPUNKNOWN pOuter,REFIID riid,LPVOID *ppobj
-) {
-        IClassFactoryImpl *This = impl_from_IClassFactory(iface);
-
-        TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
-
-        if ( DPL_CreateInterface( riid, ppobj ) == S_OK )
-        {
-           return S_OK;
-        }
-        else if ( DP_CreateInterface( riid, ppobj ) == S_OK )
-        {
-           return S_OK;
-        }
-
-        return E_NOINTERFACE;
-}
-
-static HRESULT WINAPI DP_and_DPL_LockServer(LPCLASSFACTORY iface,BOOL dolock) {
-        IClassFactoryImpl *This = impl_from_IClassFactory(iface);
-        FIXME("(%p)->(%d),stub!\n",This,dolock);
+    if (IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IClassFactory, riid))
+    {
+        *ppv = iface;
+        IClassFactory_AddRef(iface);
         return S_OK;
+    }
+
+    *ppv = NULL;
+    WARN("no interface for %s\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
 }
 
-static const IClassFactoryVtbl DP_and_DPL_Vtbl = {
-        DP_and_DPL_QueryInterface,
-        DP_and_DPL_AddRef,
-        DP_and_DPL_Release,
-        DP_and_DPL_CreateInstance,
-        DP_and_DPL_LockServer
+static ULONG WINAPI IClassFactoryImpl_AddRef(IClassFactory *iface)
+{
+    return 2; /* non-heap based object */
+}
+
+static ULONG WINAPI IClassFactoryImpl_Release(IClassFactory *iface)
+{
+    return 1; /* non-heap based object */
+}
+
+static HRESULT WINAPI IClassFactoryImpl_CreateInstance(IClassFactory *iface, IUnknown *pOuter,
+        REFIID riid, void **ppv)
+{
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+
+    TRACE("(%p)->(%p,%s,%p)\n", iface, pOuter, debugstr_guid(riid), ppv);
+
+    if (pOuter)
+        return CLASS_E_NOAGGREGATION;
+
+    return This->createinstance(riid, ppv);
+}
+
+static HRESULT WINAPI IClassFactoryImpl_LockServer(IClassFactory *iface, BOOL dolock)
+{
+    FIXME("(%p)->(%d),stub!\n", iface, dolock);
+    return S_OK;
+}
+
+static const IClassFactoryVtbl cf_vt = {
+    IClassFactoryImpl_QueryInterface,
+    IClassFactoryImpl_AddRef,
+    IClassFactoryImpl_Release,
+    IClassFactoryImpl_CreateInstance,
+    IClassFactoryImpl_LockServer
 };
 
-static IClassFactoryImpl DP_and_DPL_CF = {{&DP_and_DPL_Vtbl}, 1 };
+static IClassFactoryImpl dplay_cf = {{&cf_vt}, dplay_create};
+static IClassFactoryImpl dplaylobby_cf = {{&cf_vt}, dplobby_create};
 
 
 /*******************************************************************************
@@ -129,14 +125,12 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
 
-    if ( IsEqualCLSID( riid, &IID_IClassFactory ) )
-    {
-        *ppv = &DP_and_DPL_CF;
-        IClassFactory_AddRef( (IClassFactory*)*ppv );
+    if (IsEqualCLSID(&CLSID_DirectPlay, rclsid))
+        return IClassFactory_QueryInterface(&dplay_cf.IClassFactory_iface, riid, ppv);
 
-        return S_OK;
-    }
+    if (IsEqualCLSID(&CLSID_DirectPlayLobby, rclsid))
+        return IClassFactory_QueryInterface(&dplaylobby_cf.IClassFactory_iface, riid, ppv);
 
-    ERR("(%s,%s,%p): no interface found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+    FIXME("(%s,%s,%p): no class found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     return CLASS_E_CLASSNOTAVAILABLE;
 }

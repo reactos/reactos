@@ -40,7 +40,7 @@ void NS_SetLocalAddr( LPVOID lpNSInfo, LPCVOID lpHdr, DWORD dwHdrSize ) DECLSPEC
 void NS_ReplyToEnumSessionsRequest( LPCVOID lpcMsg,
                                     LPVOID* lplpReplyData,
                                     LPDWORD lpdwReplySize,
-                                    IDirectPlay2Impl* lpDP ) DECLSPEC_HIDDEN;
+                                    IDirectPlayImpl *lpDP ) DECLSPEC_HIDDEN;
 
 HRESULT NS_SendSessionRequestBroadcast( LPCGUID lpcGuid,
                                         DWORD dwFlags,

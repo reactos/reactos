@@ -45,9 +45,8 @@ typedef struct tagMSGTHREADINFO
 } MSGTHREADINFO, *LPMSGTHREADINFO;
 
 static DWORD CALLBACK DPL_MSG_ThreadMain( LPVOID lpContext );
-static LPVOID DP_MSG_ExpectReply( IDirectPlay2AImpl* This, LPDPSP_SENDDATA data,
-                                  DWORD dwWaitTime, WORD wReplyCommandId,
-                                  LPVOID* lplpReplyMsg, LPDWORD lpdwMsgBodySize );
+static void *DP_MSG_ExpectReply( IDirectPlayImpl *This, DPSP_SENDDATA *data, DWORD dwWaitTime,
+        WORD wReplyCommandId, void **lplpReplyMsg, DWORD *lpdwMsgBodySize );
 
 
 /* Create the message reception thread to allow the application to receive
@@ -154,16 +153,8 @@ end_of_thread:
 }
 
 /* DP messaging stuff */
-static HANDLE DP_MSG_BuildAndLinkReplyStruct( IDirectPlay2Impl* This,
-                                              LPDP_MSG_REPLY_STRUCT_LIST lpReplyStructList,
-                                              WORD wReplyCommandId );
-static LPVOID DP_MSG_CleanReplyStruct( LPDP_MSG_REPLY_STRUCT_LIST lpReplyStructList,
-                                       LPVOID* lplpReplyMsg, LPDWORD lpdwMsgBodySize );
-
-
-static
-HANDLE DP_MSG_BuildAndLinkReplyStruct( IDirectPlay2Impl* This,
-                                       LPDP_MSG_REPLY_STRUCT_LIST lpReplyStructList, WORD wReplyCommandId )
+static HANDLE DP_MSG_BuildAndLinkReplyStruct( IDirectPlayImpl *This,
+        DP_MSG_REPLY_STRUCT_LIST *lpReplyStructList, WORD wReplyCommandId )
 {
   lpReplyStructList->replyExpected.hReceipt       = CreateEventW( NULL, FALSE, FALSE, NULL );
   lpReplyStructList->replyExpected.wExpectedReply = wReplyCommandId;
@@ -171,9 +162,9 @@ HANDLE DP_MSG_BuildAndLinkReplyStruct( IDirectPlay2Impl* This,
   lpReplyStructList->replyExpected.dwMsgBodySize  = 0;
 
   /* Insert into the message queue while locked */
-  EnterCriticalSection( &This->unk->DP_lock );
+  EnterCriticalSection( &This->lock );
     DPQ_INSERT( This->dp2->repliesExpected, lpReplyStructList, repliesExpected );
-  LeaveCriticalSection( &This->unk->DP_lock );
+  LeaveCriticalSection( &This->lock );
 
   return lpReplyStructList->replyExpected.hReceipt;
 }
@@ -190,8 +181,7 @@ LPVOID DP_MSG_CleanReplyStruct( LPDP_MSG_REPLY_STRUCT_LIST lpReplyStructList,
   return lpReplyStructList->replyExpected.lpReplyMsg;
 }
 
-HRESULT DP_MSG_SendRequestPlayerId( IDirectPlay2AImpl* This, DWORD dwFlags,
-                                    LPDPID lpdpidAllocatedId )
+HRESULT DP_MSG_SendRequestPlayerId( IDirectPlayImpl *This, DWORD dwFlags, DPID *lpdpidAllocatedId )
 {
   LPVOID                     lpMsg;
   LPDPMSG_REQUESTNEWPLAYERID lpMsgBody;
@@ -257,7 +247,7 @@ HRESULT DP_MSG_SendRequestPlayerId( IDirectPlay2AImpl* This, DWORD dwFlags,
   return hr;
 }
 
-HRESULT DP_MSG_ForwardPlayerCreation( IDirectPlay2AImpl* This, DPID dpidServer )
+HRESULT DP_MSG_ForwardPlayerCreation( IDirectPlayImpl *This, DPID dpidServer )
 {
   LPVOID                   lpMsg;
   LPDPMSG_FORWARDADDPLAYER lpMsgBody;
@@ -375,10 +365,8 @@ HRESULT DP_MSG_ForwardPlayerCreation( IDirectPlay2AImpl* This, DPID dpidServer )
  * ordering issues on sends and receives from the opposite machine. No wonder MS is not
  * a networking company.
  */
-static
-LPVOID DP_MSG_ExpectReply( IDirectPlay2AImpl* This, LPDPSP_SENDDATA lpData,
-                           DWORD dwWaitTime, WORD wReplyCommandId,
-                           LPVOID* lplpReplyMsg, LPDWORD lpdwMsgBodySize )
+static void *DP_MSG_ExpectReply( IDirectPlayImpl *This, DPSP_SENDDATA *lpData, DWORD dwWaitTime,
+        WORD wReplyCommandId, void **lplpReplyMsg, DWORD *lpdwMsgBodySize )
 {
   HRESULT                  hr;
   HANDLE                   hMsgReceipt;
@@ -417,8 +405,8 @@ LPVOID DP_MSG_ExpectReply( IDirectPlay2AImpl* This, LPDPSP_SENDDATA lpData,
  * all important data. It is quite silly to have to copy the message, but the documents
  * indicate that a copy is taken. Silly really.
  */
-void DP_MSG_ReplyReceived( IDirectPlay2AImpl* This, WORD wCommandId,
-                           LPCVOID lpcMsgBody, DWORD dwMsgBodySize )
+void DP_MSG_ReplyReceived( IDirectPlayImpl *This, WORD wCommandId, const void *lpcMsgBody,
+        DWORD dwMsgBodySize )
 {
   LPDP_MSG_REPLY_STRUCT_LIST lpReplyList;
 
@@ -432,10 +420,10 @@ void DP_MSG_ReplyReceived( IDirectPlay2AImpl* This, WORD wCommandId,
   /* Find, and immediately remove (to avoid double triggering), the appropriate entry. Call locked to
    * avoid problems.
    */
-  EnterCriticalSection( &This->unk->DP_lock );
+  EnterCriticalSection( &This->lock );
     DPQ_REMOVE_ENTRY( This->dp2->repliesExpected, repliesExpected, replyExpected.wExpectedReply,
                      ==, wCommandId, lpReplyList );
-  LeaveCriticalSection( &This->unk->DP_lock );
+  LeaveCriticalSection( &This->lock );
 
   if( lpReplyList != NULL )
   {
@@ -456,7 +444,7 @@ void DP_MSG_ReplyReceived( IDirectPlay2AImpl* This, WORD wCommandId,
   }
 }
 
-void DP_MSG_ToSelf( IDirectPlay2AImpl* This, DPID dpidSelf )
+void DP_MSG_ToSelf( IDirectPlayImpl *This, DPID dpidSelf )
 {
   LPVOID                   lpMsg;
   LPDPMSG_SENDENVELOPE     lpMsgBody;
@@ -493,8 +481,8 @@ void DP_MSG_ToSelf( IDirectPlay2AImpl* This, DPID dpidSelf )
   }
 }
 
-void DP_MSG_ErrorReceived( IDirectPlay2AImpl* This, WORD wCommandId,
-                           LPCVOID lpMsgBody, DWORD dwMsgBodySize )
+void DP_MSG_ErrorReceived( IDirectPlayImpl *This, WORD wCommandId, const void *lpMsgBody,
+        DWORD dwMsgBodySize )
 {
   LPCDPMSG_FORWARDADDPLAYERNACK lpcErrorMsg;
 

@@ -353,10 +353,8 @@ void NS_PruneSessionCache( LPVOID lpNSInfo )
 }
 
 /* NAME SERVER Message stuff */
-void NS_ReplyToEnumSessionsRequest( LPCVOID lpcMsg,
-                                    LPVOID* lplpReplyData,
-                                    LPDWORD lpdwReplySize,
-                                    IDirectPlay2Impl* lpDP )
+void NS_ReplyToEnumSessionsRequest( const void *lpcMsg, void **lplpReplyData, DWORD *lpdwReplySize,
+        IDirectPlayImpl *lpDP )
 {
   LPDPMSG_ENUMSESSIONSREPLY rmsg;
   DWORD dwVariableSize;
