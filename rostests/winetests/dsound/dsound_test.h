@@ -18,6 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <wingdi.h>
+#include <mmreg.h>
+#include <mmsystem.h>
+
 static const unsigned int formats[][4]={
     { 8000,  8, 1, 0 },
     { 8000,  8, 2, 0 },
@@ -70,11 +74,14 @@ static const unsigned int formats[][4]={
 };
 #define NB_FORMATS (sizeof(formats)/sizeof(*formats))
 
+static const unsigned int format_tags[] = {WAVE_FORMAT_PCM, WAVE_FORMAT_IEEE_FLOAT};
+#define NB_TAGS (sizeof(format_tags)/sizeof(*format_tags))
+
 /* The time slice determines how often we will service the buffer */
 #define TIME_SLICE     31
 #define BUFFER_LEN    400
 
-extern char* wave_generate_la(WAVEFORMATEX*,double,DWORD*);
+extern char* wave_generate_la(WAVEFORMATEX*,double,DWORD*,BOOL);
 extern HWND get_hwnd(void);
 extern void init_format(WAVEFORMATEX*,int,int,int,int);
 extern void test_buffer(LPDIRECTSOUND,LPDIRECTSOUNDBUFFER*,
