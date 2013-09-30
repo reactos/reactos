@@ -5186,8 +5186,8 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLoop)
         Size = !Size;
     }
 
-    if (Size) Condition = ((--State->GeneralRegs[SOFT386_REG_ECX].Long) == 0);
-    else Condition = ((--State->GeneralRegs[SOFT386_REG_ECX].LowWord) == 0);
+    if (Size) Condition = ((--State->GeneralRegs[SOFT386_REG_ECX].Long) != 0);
+    else Condition = ((--State->GeneralRegs[SOFT386_REG_ECX].LowWord) != 0);
 
     if (Opcode == 0xE0)
     {
