@@ -164,7 +164,7 @@ CcRosFlushCacheSegment (
 
         CacheSegment->Dirty = FALSE;
         RemoveEntryList(&CacheSegment->DirtySegmentListEntry);
-        DirtyPageCount -= CacheSegment->Bcb->CacheSegmentSize / PAGE_SIZE;
+        DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
         CcRosCacheSegmentDecRefCount(CacheSegment);
 
         KeReleaseSpinLock(&CacheSegment->Bcb->BcbLock, oldIrql);
@@ -243,7 +243,7 @@ CcRosFlushDirtyPages (
             continue;
         }
 
-        PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
+        PagesPerSegment = VACB_MAPPING_GRANULARITY / PAGE_SIZE;
 
         KeReleaseGuardedMutex(&ViewLock);
 
@@ -329,7 +329,7 @@ retry:
             KeReleaseGuardedMutex(&ViewLock);
 
             /* Page out the segment */
-            for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
+            for (i = 0; i < VACB_MAPPING_GRANULARITY / PAGE_SIZE; i++)
             {
                 Page = (PFN_NUMBER)(MmGetPhysicalAddress((PUCHAR)current->BaseAddress + (i * PAGE_SIZE)).QuadPart >> PAGE_SHIFT);
 
@@ -356,7 +356,7 @@ retry:
             InsertHeadList(&FreeList, &current->BcbSegmentListEntry);
 
             /* Calculate how many pages we freed for Mm */
-            PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
+            PagesPerSegment = VACB_MAPPING_GRANULARITY / PAGE_SIZE;
             PagesFreed = min(PagesPerSegment, Target);
             Target -= PagesFreed;
             (*NrFreed) += PagesFreed;
@@ -427,7 +427,7 @@ CcRosReleaseCacheSegment (
     if (!WasDirty && CacheSeg->Dirty)
     {
         InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
-        DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
+        DirtyPageCount += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
 
     if (Mapped)
@@ -474,7 +474,7 @@ CcRosLookupCacheSegment (
     {
         current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                     BcbSegmentListEntry);
-        if (IsPointInSegment(current->FileOffset, Bcb->CacheSegmentSize,
+        if (IsPointInSegment(current->FileOffset, VACB_MAPPING_GRANULARITY,
                              FileOffset))
         {
             CcRosCacheSegmentIncRefCount(current);
@@ -523,7 +523,7 @@ CcRosMarkDirtyCacheSegment (
     if (!CacheSeg->Dirty)
     {
         InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
-        DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
+        DirtyPageCount += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
     else
     {
@@ -576,7 +576,7 @@ CcRosUnmapCacheSegment (
     if (!WasDirty && NowDirty)
     {
         InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
-        DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
+        DirtyPageCount += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
 
     CcRosCacheSegmentDecRefCount(CacheSeg);
@@ -628,7 +628,7 @@ CcRosCreateCacheSegment (
     current->Valid = FALSE;
     current->Dirty = FALSE;
     current->PageOut = FALSE;
-    current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
+    current->FileOffset = ROUND_DOWN(FileOffset, VACB_MAPPING_GRANULARITY);
     current->Bcb = Bcb;
 #if DBG
     if ( Bcb->Trace )
@@ -661,7 +661,7 @@ CcRosCreateCacheSegment (
     {
         current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                     BcbSegmentListEntry);
-        if (IsPointInSegment(current->FileOffset, Bcb->CacheSegmentSize,
+        if (IsPointInSegment(current->FileOffset, VACB_MAPPING_GRANULARITY,
                              FileOffset))
         {
             CcRosCacheSegmentIncRefCount(current);
@@ -713,7 +713,7 @@ CcRosCreateCacheSegment (
 #ifdef CACHE_BITMAP
     KeAcquireSpinLock(&CiCacheSegMappingRegionLock, &oldIrql);
 
-    StartingOffset = RtlFindClearBitsAndSet(&CiCacheSegMappingRegionAllocMap, Bcb->CacheSegmentSize / PAGE_SIZE, CiCacheSegMappingRegionHint);
+    StartingOffset = RtlFindClearBitsAndSet(&CiCacheSegMappingRegionAllocMap, VACB_MAPPING_GRANULARITY / PAGE_SIZE, CiCacheSegMappingRegionHint);
 
     if (StartingOffset == 0xffffffff)
     {
@@ -725,7 +725,7 @@ CcRosCreateCacheSegment (
 
     if (CiCacheSegMappingRegionHint == StartingOffset)
     {
-        CiCacheSegMappingRegionHint += Bcb->CacheSegmentSize / PAGE_SIZE;
+        CiCacheSegMappingRegionHint += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     }
 
     KeReleaseSpinLock(&CiCacheSegMappingRegionLock, oldIrql);
@@ -735,7 +735,7 @@ CcRosCreateCacheSegment (
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 0, // nothing checks for cache_segment mareas, so set to 0
                                 &current->BaseAddress,
-                                Bcb->CacheSegmentSize,
+                                VACB_MAPPING_GRANULARITY,
                                 PAGE_READWRITE,
                                 (PMEMORY_AREA*)&current->MemoryArea,
                                 FALSE,
@@ -761,7 +761,7 @@ CcRosCreateCacheSegment (
     }
 #endif
 
-    MmMapMemoryArea(current->BaseAddress, Bcb->CacheSegmentSize,
+    MmMapMemoryArea(current->BaseAddress, VACB_MAPPING_GRANULARITY,
                     MC_CACHE, PAGE_READWRITE);
 
     return(STATUS_SUCCESS);
@@ -784,17 +784,17 @@ CcRosGetCacheSegmentChain (
 
     DPRINT("CcRosGetCacheSegmentChain()\n");
 
-    Length = ROUND_UP(Length, Bcb->CacheSegmentSize);
+    Length = ROUND_UP(Length, VACB_MAPPING_GRANULARITY);
 
     CacheSegList = _alloca(sizeof(PCACHE_SEGMENT) *
-                           (Length / Bcb->CacheSegmentSize));
+                           (Length / VACB_MAPPING_GRANULARITY));
 
     /*
      * Look for a cache segment already mapping the same data.
      */
-    for (i = 0; i < (Length / Bcb->CacheSegmentSize); i++)
+    for (i = 0; i < (Length / VACB_MAPPING_GRANULARITY); i++)
     {
-        ULONG CurrentOffset = FileOffset + (i * Bcb->CacheSegmentSize);
+        ULONG CurrentOffset = FileOffset + (i * VACB_MAPPING_GRANULARITY);
         current = CcRosLookupCacheSegment(Bcb, CurrentOffset);
         if (current != NULL)
         {
@@ -815,7 +815,7 @@ CcRosGetCacheSegmentChain (
         }
     }
 
-    for (i = 0; i < (Length / Bcb->CacheSegmentSize); i++)
+    for (i = 0; i < (Length / VACB_MAPPING_GRANULARITY); i++)
     {
         if (i == 0)
         {
@@ -902,10 +902,10 @@ CcRosRequestCacheSegment (
 
     ASSERT(Bcb);
 
-    if ((FileOffset % Bcb->CacheSegmentSize) != 0)
+    if ((FileOffset % VACB_MAPPING_GRANULARITY) != 0)
     {
         DPRINT1("Bad fileoffset %x should be multiple of %x",
-                FileOffset, Bcb->CacheSegmentSize);
+                FileOffset, VACB_MAPPING_GRANULARITY);
         KeBugCheck(CACHE_MANAGER);
     }
 
@@ -958,7 +958,7 @@ CcRosInternalFreeCacheSegment (
     }
 #endif
 #ifdef CACHE_BITMAP
-    RegionSize = CacheSeg->Bcb->CacheSegmentSize / PAGE_SIZE;
+    RegionSize = VACB_MAPPING_GRANULARITY / PAGE_SIZE;
 
     /* Unmap all the pages. */
     for (i = 0; i < RegionSize; i++)
@@ -1054,10 +1054,10 @@ CcFlushCache (
                 KeReleaseGuardedMutex(&ViewLock);
             }
 
-            Offset.QuadPart += Bcb->CacheSegmentSize;
-            if (Length > Bcb->CacheSegmentSize)
+            Offset.QuadPart += VACB_MAPPING_GRANULARITY;
+            if (Length > VACB_MAPPING_GRANULARITY)
             {
-                Length -= Bcb->CacheSegmentSize;
+                Length -= VACB_MAPPING_GRANULARITY;
             }
             else
             {
@@ -1121,7 +1121,7 @@ CcRosDeleteFileCache (
             if (current->Dirty)
             {
                 RemoveEntryList(&current->DirtySegmentListEntry);
-                DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
+                DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
                 DPRINT1("Freeing dirty segment\n");
             }
             InsertHeadList(&FreeList, &current->BcbSegmentListEntry);

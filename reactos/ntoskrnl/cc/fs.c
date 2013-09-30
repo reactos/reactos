@@ -173,7 +173,7 @@ CcSetFileSizes (
                     if (current->Dirty)
                     {
                         RemoveEntryList(&current->DirtySegmentListEntry);
-                        DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
+                        DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
                     }
                     InsertHeadList(&FreeListHead, &current->BcbSegmentListEntry);
                 }

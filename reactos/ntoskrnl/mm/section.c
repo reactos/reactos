@@ -1177,7 +1177,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
       Process = PsGetCurrentProcess();
       PageAddr = MiMapPageInHyperSpace(Process, *Page, &Irql);
-      CacheSegOffset = (ULONG_PTR)(BaseOffset + CacheSeg->Bcb->CacheSegmentSize - FileOffset);
+      CacheSegOffset = (ULONG_PTR)(BaseOffset + VACB_MAPPING_GRANULARITY - FileOffset);
       Length = RawLength - SegOffset;
       if (Length <= CacheSegOffset && Length <= PAGE_SIZE)
       {

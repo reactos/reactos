@@ -87,7 +87,7 @@ ReadCacheSegmentChain (
          */
         if (current->Valid)
         {
-            TempLength = min(Bcb->CacheSegmentSize, Length);
+            TempLength = min(VACB_MAPPING_GRANULARITY, Length);
             memcpy(Buffer, current->BaseAddress, TempLength);
 
             Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
@@ -116,7 +116,7 @@ ReadCacheSegmentChain (
             while ((current2 != NULL) && !current2->Valid && (current_size < MAX_RW_LENGTH))
             {
                 current2 = current2->NextInChain;
-                current_size += Bcb->CacheSegmentSize;
+                current_size += VACB_MAPPING_GRANULARITY;
             }
 
             /*
@@ -130,12 +130,12 @@ ReadCacheSegmentChain (
             while ((current2 != NULL) && !current2->Valid && (current_size < MAX_RW_LENGTH))
             {
                 PVOID address = current2->BaseAddress;
-                for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++, address = RVA(address, PAGE_SIZE))
+                for (i = 0; i < (VACB_MAPPING_GRANULARITY / PAGE_SIZE); i++, address = RVA(address, PAGE_SIZE))
                 {
                     *MdlPages++ = MmGetPfnForProcess(NULL, address);
                 }
                 current2 = current2->NextInChain;
-                current_size += Bcb->CacheSegmentSize;
+                current_size += VACB_MAPPING_GRANULARITY;
             }
 
             /*
@@ -172,14 +172,14 @@ ReadCacheSegmentChain (
             {
                 previous = current;
                 current = current->NextInChain;
-                TempLength = min(Bcb->CacheSegmentSize, Length);
+                TempLength = min(VACB_MAPPING_GRANULARITY, Length);
                 memcpy(Buffer, previous->BaseAddress, TempLength);
 
                 Buffer = (PVOID)((ULONG_PTR)Buffer + TempLength);
 
                 Length = Length - TempLength;
                 CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
-                current_size += Bcb->CacheSegmentSize;
+                current_size += VACB_MAPPING_GRANULARITY;
             }
         }
     }
@@ -200,9 +200,9 @@ ReadCacheSegment (
 
     SegOffset.QuadPart = CacheSeg->FileOffset;
     Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
-    if (Size > CacheSeg->Bcb->CacheSegmentSize)
+    if (Size > VACB_MAPPING_GRANULARITY)
     {
-        Size = CacheSeg->Bcb->CacheSegmentSize;
+        Size = VACB_MAPPING_GRANULARITY;
     }
 
     Mdl = IoAllocateMdl(CacheSeg->BaseAddress, Size, FALSE, FALSE, NULL);
@@ -229,10 +229,10 @@ ReadCacheSegment (
         return Status;
     }
 
-    if (CacheSeg->Bcb->CacheSegmentSize > Size)
+    if (VACB_MAPPING_GRANULARITY > Size)
     {
         RtlZeroMemory((char*)CacheSeg->BaseAddress + Size,
-                      CacheSeg->Bcb->CacheSegmentSize - Size);
+                      VACB_MAPPING_GRANULARITY - Size);
     }
 
     return STATUS_SUCCESS;
@@ -253,9 +253,9 @@ WriteCacheSegment (
     CacheSeg->Dirty = FALSE;
     SegOffset.QuadPart = CacheSeg->FileOffset;
     Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
-    if (Size > CacheSeg->Bcb->CacheSegmentSize)
+    if (Size > VACB_MAPPING_GRANULARITY)
     {
-        Size = CacheSeg->Bcb->CacheSegmentSize;
+        Size = VACB_MAPPING_GRANULARITY;
     }
     //
     // Nonpaged pool PDEs in ReactOS must actually be synchronized between the
@@ -363,7 +363,7 @@ CcCopyRead (
             current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                         BcbSegmentListEntry);
             if (!current->Valid &&
-                DoSegmentsIntersect(current->FileOffset, Bcb->CacheSegmentSize,
+                DoSegmentsIntersect(current->FileOffset, VACB_MAPPING_GRANULARITY,
                                     ReadOffset, Length))
             {
                 KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
@@ -378,13 +378,13 @@ CcCopyRead (
         KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
     }
 
-    TempLength = ReadOffset % Bcb->CacheSegmentSize;
+    TempLength = ReadOffset % VACB_MAPPING_GRANULARITY;
     if (TempLength != 0)
     {
-        TempLength = min (Length, Bcb->CacheSegmentSize - TempLength);
+        TempLength = min (Length, VACB_MAPPING_GRANULARITY - TempLength);
         Status = CcRosRequestCacheSegment(Bcb,
                                           ROUND_DOWN(ReadOffset,
-                                                  Bcb->CacheSegmentSize),
+                                                  VACB_MAPPING_GRANULARITY),
                                           &BaseAddress, &Valid, &CacheSeg);
         if (!NT_SUCCESS(Status))
         {
@@ -404,7 +404,7 @@ CcCopyRead (
                 return FALSE;
             }
         }
-        memcpy (Buffer, (char*)BaseAddress + ReadOffset % Bcb->CacheSegmentSize,
+        memcpy (Buffer, (char*)BaseAddress + ReadOffset % VACB_MAPPING_GRANULARITY,
                 TempLength);
         CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
         ReadLength += TempLength;
@@ -415,7 +415,7 @@ CcCopyRead (
 
     while (Length > 0)
     {
-        TempLength = min(max(Bcb->CacheSegmentSize, MAX_RW_LENGTH), Length);
+        TempLength = min(max(VACB_MAPPING_GRANULARITY, MAX_RW_LENGTH), Length);
         Status = ReadCacheSegmentChain(Bcb, ReadOffset, TempLength, Buffer);
         if (!NT_SUCCESS(Status))
         {
@@ -479,7 +479,7 @@ CcCopyWrite (
             CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                          BcbSegmentListEntry);
             if (!CacheSeg->Valid &&
-                DoSegmentsIntersect(CacheSeg->FileOffset, Bcb->CacheSegmentSize,
+                DoSegmentsIntersect(CacheSeg->FileOffset, VACB_MAPPING_GRANULARITY,
                                     WriteOffset, Length))
             {
                 KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
@@ -493,12 +493,12 @@ CcCopyWrite (
         KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
     }
 
-    TempLength = WriteOffset % Bcb->CacheSegmentSize;
+    TempLength = WriteOffset % VACB_MAPPING_GRANULARITY;
     if (TempLength != 0)
     {
         ULONG ROffset;
-        ROffset = ROUND_DOWN(WriteOffset, Bcb->CacheSegmentSize);
-        TempLength = min (Length, Bcb->CacheSegmentSize - TempLength);
+        ROffset = ROUND_DOWN(WriteOffset, VACB_MAPPING_GRANULARITY);
+        TempLength = min (Length, VACB_MAPPING_GRANULARITY - TempLength);
         Status = CcRosRequestCacheSegment(Bcb, ROffset,
                                           &BaseAddress, &Valid, &CacheSeg);
         if (!NT_SUCCESS(Status))
@@ -512,7 +512,7 @@ CcCopyWrite (
                 return FALSE;
             }
         }
-        memcpy ((char*)BaseAddress + WriteOffset % Bcb->CacheSegmentSize,
+        memcpy ((char*)BaseAddress + WriteOffset % VACB_MAPPING_GRANULARITY,
                 Buffer, TempLength);
         CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, TRUE, FALSE);
 
@@ -524,7 +524,7 @@ CcCopyWrite (
 
     while (Length > 0)
     {
-        TempLength = min (Bcb->CacheSegmentSize, Length);
+        TempLength = min (VACB_MAPPING_GRANULARITY, Length);
         Status = CcRosRequestCacheSegment(Bcb,
                                           WriteOffset,
                                           &BaseAddress,
@@ -534,7 +534,7 @@ CcCopyWrite (
         {
             return FALSE;
         }
-        if (!Valid && TempLength < Bcb->CacheSegmentSize)
+        if (!Valid && TempLength < VACB_MAPPING_GRANULARITY)
         {
             if (!NT_SUCCESS(ReadCacheSegment(CacheSeg)))
             {
@@ -699,7 +699,7 @@ CcZeroData (
                 CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                              BcbSegmentListEntry);
                 if (!CacheSeg->Valid &&
-                    DoSegmentsIntersect(CacheSeg->FileOffset, Bcb->CacheSegmentSize,
+                    DoSegmentsIntersect(CacheSeg->FileOffset, VACB_MAPPING_GRANULARITY,
                                         WriteOffset.u.LowPart, Length))
                 {
                     KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
@@ -716,7 +716,7 @@ CcZeroData (
         while (Length > 0)
         {
             ULONG Offset;
-            Offset = WriteOffset.u.LowPart % Bcb->CacheSegmentSize;
+            Offset = WriteOffset.u.LowPart % VACB_MAPPING_GRANULARITY;
             if (Length + Offset > MAX_ZERO_LENGTH)
             {
                 CurrentLength = MAX_ZERO_LENGTH - Offset;
@@ -735,9 +735,9 @@ CcZeroData (
 
             while (current != NULL)
             {
-                Offset = WriteOffset.u.LowPart % Bcb->CacheSegmentSize;
+                Offset = WriteOffset.u.LowPart % VACB_MAPPING_GRANULARITY;
                 if ((Offset != 0) ||
-                    (Offset + CurrentLength < Bcb->CacheSegmentSize))
+                    (Offset + CurrentLength < VACB_MAPPING_GRANULARITY))
                 {
                     if (!current->Valid)
                     {
@@ -749,11 +749,11 @@ CcZeroData (
                                     Status);
                         }
                     }
-                    TempLength = min (CurrentLength, Bcb->CacheSegmentSize - Offset);
+                    TempLength = min (CurrentLength, VACB_MAPPING_GRANULARITY - Offset);
                 }
                 else
                 {
-                    TempLength = Bcb->CacheSegmentSize;
+                    TempLength = VACB_MAPPING_GRANULARITY;
                 }
                 memset ((PUCHAR)current->BaseAddress + Offset, 0, TempLength);
 
