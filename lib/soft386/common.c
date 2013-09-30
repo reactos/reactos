@@ -50,7 +50,7 @@ Soft386ReadMemory(PSOFT386_STATE State,
     /* Get the cached descriptor */
     CachedDescriptor = &State->SegmentRegs[SegmentReg];
 
-    if ((Offset + Size) >= CachedDescriptor->Limit)
+    if ((Offset + Size) > CachedDescriptor->Limit)
     {
         /* Read beyond limit */
         Soft386Exception(State, SOFT386_EXCEPTION_GP);
