@@ -705,7 +705,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupC7)
 {
     SOFT386_MOD_REG_RM ModRegRm;
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
 
     if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)

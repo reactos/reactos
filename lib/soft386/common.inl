@@ -647,6 +647,9 @@ Soft386ParseModRegRm(PSOFT386_STATE State,
             /* Add the signed offset to the address */
             ModRegRm->MemoryAddress += (LONG)Offset;
         }
+
+        /* Clear the top 16 bits */
+        ModRegRm->MemoryAddress &= 0xFFFF0000;
     }
 
     return TRUE;
