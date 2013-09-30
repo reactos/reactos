@@ -105,6 +105,7 @@ static void test_EnumProcessModules(void)
     HMODULE hMod = GetModuleHandle(NULL);
     DWORD ret, cbNeeded = 0xdeadbeef;
 
+    if(!winetest_interactive)
     win_skip("Stack corruption - ROSTEST-122\n");
     return;
 
