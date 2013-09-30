@@ -3757,16 +3757,17 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodePushImm)
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x68);
 
-    if (State->PrefixFlags == SOFT386_PREFIX_OPSIZE)
-    {
-        /* The OPSIZE prefix toggles the size */
-        Size = !Size;
-    }
-    else
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
     {
         /* Invalid prefix */
         Soft386Exception(State, SOFT386_EXCEPTION_UD);
         return FALSE;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        Size = !Size;
     }
 
     if (Size)
