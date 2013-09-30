@@ -106,8 +106,10 @@ static void test_EnumProcessModules(void)
     DWORD ret, cbNeeded = 0xdeadbeef;
 
     if(!winetest_interactive)
-    win_skip("Stack corruption - ROSTEST-122\n");
-    return;
+    {
+        win_skip("Stack corruption - ROSTEST-122\n");
+        return;
+    }
 
     SetLastError(0xdeadbeef);
     pEnumProcessModules(NULL, NULL, 0, &cbNeeded);
