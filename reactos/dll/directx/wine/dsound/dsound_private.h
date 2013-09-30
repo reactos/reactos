@@ -261,6 +261,5 @@ HRESULT get_mmdevice(EDataFlow flow, const GUID *tgt, IMMDevice **device) DECLSP
 
 BOOL DSOUND_check_supported(IAudioClient *client, DWORD rate,
         DWORD depth, WORD channels) DECLSPEC_HIDDEN;
-UINT DSOUND_create_timer(LPTIMECALLBACK cb, DWORD_PTR user) DECLSPEC_HIDDEN;
 HRESULT enumerate_mmdevices(EDataFlow flow, GUID *guids,
         LPDSENUMCALLBACKW cb, void *user) DECLSPEC_HIDDEN;

@@ -62,6 +62,8 @@ typedef struct IDirectSoundCaptureBufferImpl
     /* IDirectSoundNotify fields */
     DSBPOSITIONNOTIFY                   *notifies;
     int                                 nrofnotifies;
+    HANDLE thread;
+    HANDLE sleepev;
 } IDirectSoundCaptureBufferImpl;
 
 /* DirectSoundCaptureDevice implementation structure */
@@ -75,7 +77,6 @@ struct DirectSoundCaptureDevice
     WAVEFORMATEX                  *pwfx;
     IDirectSoundCaptureBufferImpl *capture_buffer;
     DWORD                         state;
-    UINT                          timerID;
     CRITICAL_SECTION              lock;
     IMMDevice                     *mmdevice;
     IAudioClient                  *client;
@@ -83,11 +84,19 @@ struct DirectSoundCaptureDevice
     struct list                   entry;
 };
 
+static DWORD WINAPI DSOUND_capture_thread(void *user);
 
 static void capturebuffer_destroy(IDirectSoundCaptureBufferImpl *This)
 {
     if (This->device->state == STATE_CAPTURING)
         This->device->state = STATE_STOPPING;
+
+    if(This->thread){
+        SetEvent(This->sleepev);
+        WaitForSingleObject(This->thread, INFINITE);
+        CloseHandle(This->thread);
+    }
+    CloseHandle(This->sleepev);
 
     HeapFree(GetProcessHeap(),0, This->pdscbd);
 
@@ -742,8 +751,8 @@ static HRESULT IDirectSoundCaptureBufferImpl_Create(
         }
 
         err = IAudioClient_Initialize(device->client,
-                AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_NOPERSIST,
-                200 * 100000, 50000, device->pwfx, NULL);
+                AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_NOPERSIST | AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+                200 * 100000, 0, device->pwfx, NULL);
         if(FAILED(err)){
             WARN("Initialize failed: %08x\n", err);
             IAudioClient_Release(device->client);
@@ -756,12 +765,27 @@ static HRESULT IDirectSoundCaptureBufferImpl_Create(
             return err;
         }
 
+        This->sleepev = CreateEventW(NULL, 0, 0, NULL);
+
+        err = IAudioClient_SetEventHandle(device->client, This->sleepev);
+        if(FAILED(err)){
+            WARN("SetEventHandle failed: %08x\n", err);
+            IAudioClient_Release(device->client);
+            device->client = NULL;
+            CloseHandle(This->sleepev);
+            HeapFree(GetProcessHeap(), 0, This->pdscbd);
+            This->device->capture_buffer = 0;
+            HeapFree( GetProcessHeap(), 0, This );
+            return err;
+        }
+
         err = IAudioClient_GetService(device->client, &IID_IAudioCaptureClient,
                 (void**)&device->capture);
         if(FAILED(err)){
             WARN("GetService failed: %08x\n", err);
             IAudioClient_Release(device->client);
             device->client = NULL;
+            CloseHandle(This->sleepev);
             HeapFree(GetProcessHeap(), 0, This->pdscbd);
             This->device->capture_buffer = 0;
             HeapFree( GetProcessHeap(), 0, This );
@@ -779,6 +803,7 @@ static HRESULT IDirectSoundCaptureBufferImpl_Create(
             device->client = NULL;
             IAudioCaptureClient_Release(device->capture);
             device->capture = NULL;
+            CloseHandle(This->sleepev);
             HeapFree(GetProcessHeap(), 0, This->pdscbd);
             This->device->capture_buffer = 0;
             HeapFree( GetProcessHeap(), 0, This );
@@ -786,6 +811,7 @@ static HRESULT IDirectSoundCaptureBufferImpl_Create(
         }
         device->buffer = newbuf;
         device->buflen = buflen;
+        This->thread = CreateThread(NULL, 0, DSOUND_capture_thread, This, 0, NULL);
     }
 
     IDirectSoundCaptureBuffer_AddRef(&This->IDirectSoundCaptureBuffer8_iface);
@@ -833,9 +859,6 @@ static ULONG DirectSoundCaptureDevice_Release(
     if (!ref) {
         TRACE("deleting object\n");
 
-        timeKillEvent(device->timerID);
-        timeEndPeriod(DS_TIME_RES);
-
         EnterCriticalSection(&DSOUND_capturers_lock);
         list_remove(&device->entry);
         LeaveCriticalSection(&DSOUND_capturers_lock);
@@ -854,29 +877,19 @@ static ULONG DirectSoundCaptureDevice_Release(
     return ref;
 }
 
-static void CALLBACK DSOUND_capture_timer(UINT timerID, UINT msg, DWORD_PTR user,
-                                          DWORD_PTR dw1, DWORD_PTR dw2)
+static HRESULT DSOUND_capture_data(DirectSoundCaptureDevice *device)
 {
-    DirectSoundCaptureDevice *device = (DirectSoundCaptureDevice*)user;
-    UINT32 packet_frames, packet_bytes, avail_bytes;
+    HRESULT hr;
+    UINT32 packet_frames, packet_bytes, avail_bytes, skip_bytes = 0;
     DWORD flags;
     BYTE *buf;
-    HRESULT hr;
 
-    if(!device->ref)
-        return;
-
-    EnterCriticalSection(&device->lock);
-
-    if(!device->capture_buffer || device->state == STATE_STOPPED){
-        LeaveCriticalSection(&device->lock);
-        return;
-    }
+    if(!device->capture_buffer || device->state == STATE_STOPPED)
+        return S_FALSE;
 
     if(device->state == STATE_STOPPING){
         device->state = STATE_STOPPED;
-        LeaveCriticalSection(&device->lock);
-        return;
+        return S_FALSE;
     }
 
     if(device->state == STATE_STARTING)
@@ -885,24 +898,28 @@ static void CALLBACK DSOUND_capture_timer(UINT timerID, UINT msg, DWORD_PTR user
     hr = IAudioCaptureClient_GetBuffer(device->capture, &buf, &packet_frames,
             &flags, NULL, NULL);
     if(FAILED(hr)){
-        LeaveCriticalSection(&device->lock);
         WARN("GetBuffer failed: %08x\n", hr);
-        return;
+        return hr;
     }
 
     packet_bytes = packet_frames * device->pwfx->nBlockAlign;
+    if(packet_bytes > device->buflen){
+        TRACE("audio glitch: dsound buffer too small for data\n");
+        skip_bytes = packet_bytes - device->buflen;
+        packet_bytes = device->buflen;
+    }
 
     avail_bytes = device->buflen - device->write_pos_bytes;
     if(avail_bytes > packet_bytes)
         avail_bytes = packet_bytes;
 
-    memcpy(device->buffer + device->write_pos_bytes, buf, avail_bytes);
+    memcpy(device->buffer + device->write_pos_bytes, buf + skip_bytes, avail_bytes);
     capture_CheckNotify(device->capture_buffer, device->write_pos_bytes, avail_bytes);
 
     packet_bytes -= avail_bytes;
     if(packet_bytes > 0){
         if(device->capture_buffer->flags & DSCBSTART_LOOPING){
-            memcpy(device->buffer, buf + avail_bytes, packet_bytes);
+            memcpy(device->buffer, buf + skip_bytes + avail_bytes, packet_bytes);
             capture_CheckNotify(device->capture_buffer, 0, packet_bytes);
         }else{
             device->state = STATE_STOPPED;
@@ -915,12 +932,44 @@ static void CALLBACK DSOUND_capture_timer(UINT timerID, UINT msg, DWORD_PTR user
 
     hr = IAudioCaptureClient_ReleaseBuffer(device->capture, packet_frames);
     if(FAILED(hr)){
-        LeaveCriticalSection(&device->lock);
         WARN("ReleaseBuffer failed: %08x\n", hr);
-        return;
+        return hr;
     }
 
-    LeaveCriticalSection(&device->lock);
+    return S_OK;
+}
+
+static DWORD WINAPI DSOUND_capture_thread(void *user)
+{
+    IDirectSoundCaptureBufferImpl *buffer = user;
+    HRESULT hr;
+    DWORD ret, wait_ms;
+    REFERENCE_TIME period;
+
+    hr = IAudioClient_GetDevicePeriod(buffer->device->client, &period, NULL);
+    if(FAILED(hr)){
+        WARN("GetDevicePeriod failed: %08x\n", hr);
+        wait_ms = 5;
+    }else
+        wait_ms = MulDiv(5, period, 10000);
+
+    while(buffer->ref){
+        ret = WaitForSingleObject(buffer->sleepev, wait_ms);
+
+        if(!buffer->device->ref)
+            break;
+
+        if(ret == WAIT_OBJECT_0){
+            EnterCriticalSection(&buffer->device->lock);
+
+            DSOUND_capture_data(buffer->device);
+
+            LeaveCriticalSection(&buffer->device->lock);
+        }else if(ret != WAIT_TIMEOUT)
+            WARN("WaitForSingleObject failed: %u\n", GetLastError());
+    }
+
+    return 0;
 }
 
 static struct _TestFormat {
@@ -984,14 +1033,6 @@ static HRESULT DirectSoundCaptureDevice_Initialize(
 
     EnterCriticalSection(&DSOUND_capturers_lock);
 
-    LIST_FOR_EACH_ENTRY(device, &DSOUND_capturers, DirectSoundCaptureDevice, entry){
-        if(IsEqualGUID(&device->guid, &devGUID)){
-            IMMDevice_Release(mmdevice);
-            LeaveCriticalSection(&DSOUND_capturers_lock);
-            return DSERR_ALLOCATED;
-        }
-    }
-
     hr = DirectSoundCaptureDevice_Create(&device);
     if (hr != DS_OK) {
         WARN("DirectSoundCaptureDevice_Create failed\n");
@@ -1025,8 +1066,6 @@ static HRESULT DirectSoundCaptureDevice_Initialize(
         }
     }
     IAudioClient_Release(client);
-
-    device->timerID = DSOUND_create_timer(DSOUND_capture_timer, (DWORD_PTR)device);
 
     list_add_tail(&DSOUND_capturers, &device->entry);
 

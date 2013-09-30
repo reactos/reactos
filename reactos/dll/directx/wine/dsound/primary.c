@@ -443,35 +443,24 @@ HRESULT DSOUND_PrimaryGetPosition(DirectSoundDevice *device, LPDWORD playpos, LP
 	return DS_OK;
 }
 
-static DWORD DSOUND_GetFormatSize(LPCWAVEFORMATEX wfex)
+WAVEFORMATEX *DSOUND_CopyFormat(const WAVEFORMATEX *wfex)
 {
-	if (wfex->wFormatTag == WAVE_FORMAT_PCM)
-		return sizeof(WAVEFORMATEX);
-	else
-		return sizeof(WAVEFORMATEX) + wfex->cbSize;
-}
+    WAVEFORMATEX *pwfx;
+    if(wfex->wFormatTag == WAVE_FORMAT_PCM){
+        pwfx = HeapAlloc(GetProcessHeap(), 0, sizeof(WAVEFORMATEX));
+        CopyMemory(pwfx, wfex, sizeof(PCMWAVEFORMAT));
+        pwfx->cbSize = 0;
+    }else{
+        pwfx = HeapAlloc(GetProcessHeap(), 0, sizeof(WAVEFORMATEX) + wfex->cbSize);
+        CopyMemory(pwfx, wfex, sizeof(WAVEFORMATEX) + wfex->cbSize);
+    }
 
-LPWAVEFORMATEX DSOUND_CopyFormat(LPCWAVEFORMATEX wfex)
-{
-	DWORD size = DSOUND_GetFormatSize(wfex);
-	LPWAVEFORMATEX pwfx = HeapAlloc(GetProcessHeap(),0,size);
-	if (pwfx == NULL) {
-		WARN("out of memory\n");
-	} else if (wfex->wFormatTag != WAVE_FORMAT_PCM) {
-		CopyMemory(pwfx, wfex, size);
-	} else {
-		CopyMemory(pwfx, wfex, sizeof(PCMWAVEFORMAT));
-		pwfx->cbSize=0;
-		if (pwfx->nBlockAlign != pwfx->nChannels * pwfx->wBitsPerSample/8) {
-			WARN("Fixing bad nBlockAlign (%u)\n", pwfx->nBlockAlign);
-			pwfx->nBlockAlign  = pwfx->nChannels * pwfx->wBitsPerSample/8;
-		}
-		if (pwfx->nAvgBytesPerSec != pwfx->nSamplesPerSec * pwfx->nBlockAlign) {
-			WARN("Fixing bad nAvgBytesPerSec (%u)\n", pwfx->nAvgBytesPerSec);
-			pwfx->nAvgBytesPerSec  = pwfx->nSamplesPerSec * pwfx->nBlockAlign;
-		}
-	}
-	return pwfx;
+    if(pwfx->wFormatTag == WAVE_FORMAT_PCM ||
+            (pwfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE &&
+             IsEqualGUID(&((const WAVEFORMATEXTENSIBLE*)pwfx)->SubFormat, &KSDATAFORMAT_SUBTYPE_PCM)))
+        pwfx->nBlockAlign = (pwfx->nChannels * pwfx->wBitsPerSample) / 8;
+
+    return pwfx;
 }
 
 HRESULT primarybuffer_SetFormat(DirectSoundDevice *device, LPCWAVEFORMATEX passed_fmt)
@@ -548,27 +537,9 @@ done:
 			device->primary_pwfx = old_fmt;
 		else
 			HeapFree(GetProcessHeap(), 0, old_fmt);
-	} else if (passed_fmt->wFormatTag == WAVE_FORMAT_PCM ||
-		   passed_fmt->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
-		/* Fill in "real" values to primary_pwfx */
-		WAVEFORMATEX *fmt = device->primary_pwfx;
-
-		*fmt = *device->pwfx;
-		fmtex = (void*)device->pwfx;
-
-		if (IsEqualGUID(&fmtex->SubFormat, &KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) &&
-		    passed_fmt->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
-			fmt->wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
-		} else {
-			fmt->wFormatTag = WAVE_FORMAT_PCM;
-			fmt->wBitsPerSample = 16;
-		}
-		fmt->nBlockAlign = fmt->nChannels * fmt->wBitsPerSample / 8;
-		fmt->nAvgBytesPerSec = fmt->nBlockAlign * fmt->nSamplesPerSec;
-		fmt->cbSize = 0;
 	} else {
-		device->primary_pwfx = HeapReAlloc(GetProcessHeap(), 0, device->primary_pwfx, sizeof(*fmtex));
-		memcpy(device->primary_pwfx, device->pwfx, sizeof(*fmtex));
+		HeapFree(GetProcessHeap(), 0, device->primary_pwfx);
+		device->primary_pwfx = DSOUND_CopyFormat(passed_fmt);
 	}
 
 out:

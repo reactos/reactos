@@ -738,30 +738,6 @@ BOOL DSOUND_check_supported(IAudioClient *client, DWORD rate,
     return hr == S_OK;
 }
 
-UINT DSOUND_create_timer(LPTIMECALLBACK cb, DWORD_PTR user)
-{
-    UINT triggertime = DS_TIME_DEL, res = DS_TIME_RES, id;
-    TIMECAPS time;
-
-    timeGetDevCaps(&time, sizeof(TIMECAPS));
-    TRACE("Minimum timer resolution: %u, max timer: %u\n", time.wPeriodMin, time.wPeriodMax);
-    if (triggertime < time.wPeriodMin)
-        triggertime = time.wPeriodMin;
-    if (res < time.wPeriodMin)
-        res = time.wPeriodMin;
-    if (timeBeginPeriod(res) == TIMERR_NOCANDO)
-        WARN("Could not set minimum resolution, don't expect sound\n");
-    id = timeSetEvent(triggertime, res, cb, user, TIME_PERIODIC | TIME_KILL_SYNCHRONOUS);
-    if (!id)
-    {
-        WARN("Timer not created! Retrying without TIME_KILL_SYNCHRONOUS\n");
-        id = timeSetEvent(triggertime, res, cb, user, TIME_PERIODIC);
-        if (!id)
-            ERR("Could not create timer, sound playback will not occur\n");
-    }
-    return id;
-}
-
 HRESULT DirectSoundDevice_Initialize(DirectSoundDevice ** ppDevice, LPCGUID lpcGUID)
 {
     HRESULT hr = DS_OK;
