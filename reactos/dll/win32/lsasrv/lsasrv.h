@@ -383,6 +383,18 @@ NTSTATUS
 LsapCreateSecretSd(PSECURITY_DESCRIPTOR *SecretSd,
                    PULONG SecretSdSize);
 
+/* session.c */
+VOID
+LsapInitLogonSessions(VOID);
+
+NTSTATUS
+NTAPI
+LsapCreateLogonSession(IN PLUID LogonId);
+
+NTSTATUS
+NTAPI
+LsapDeleteLogonSession(IN PLUID LogonId);
+
 /* utils.c */
 INT
 LsapLoadString(HINSTANCE hInstance,

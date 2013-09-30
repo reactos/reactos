@@ -137,6 +137,9 @@ LsapInitLsa(VOID)
     /* Initialize the LSA database */
     LsapInitDatabase();
 
+    /* Initialize logon sessions */
+    LsapInitLogonSessions();
+
     /* Initialize registered authentication packages */
     Status = LsapInitAuthPackages();
     if (!NT_SUCCESS(Status))
