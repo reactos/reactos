@@ -557,37 +557,6 @@ end:
    free(rgba);
 }
 
-
-/**
- * Apply X/Y/Z/W/0/1 swizzle to an array of colors/texels.
- * See GL_EXT_texture_swizzle.
- */
-static void
-swizzle_texels(GLuint swizzle, GLuint count, float4_array texels)
-{
-   const GLuint swzR = GET_SWZ(swizzle, 0);
-   const GLuint swzG = GET_SWZ(swizzle, 1);
-   const GLuint swzB = GET_SWZ(swizzle, 2);
-   const GLuint swzA = GET_SWZ(swizzle, 3);
-   GLfloat vector[6];
-   GLuint i;
-
-   vector[SWIZZLE_ZERO] = 0;
-   vector[SWIZZLE_ONE] = 1.0F;
-
-   for (i = 0; i < count; i++) {
-      vector[SWIZZLE_X] = texels[i][0];
-      vector[SWIZZLE_Y] = texels[i][1];
-      vector[SWIZZLE_Z] = texels[i][2];
-      vector[SWIZZLE_W] = texels[i][3];
-      texels[i][RCOMP] = vector[swzR];
-      texels[i][GCOMP] = vector[swzG];
-      texels[i][BCOMP] = vector[swzB];
-      texels[i][ACOMP] = vector[swzA];
-   }
-}
-
-
 /**
  * Apply texture mapping to a span of fragments.
  */
@@ -758,11 +727,6 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
          /* Sample the texture (span->end = number of fragments) */
          swrast->TextureSample[unit]( ctx, texUnit->_Current, span->end,
                                       texcoords, lambda, texels );
-
-         /* GL_EXT_texture_swizzle */
-         if (curObj->_Swizzle != SWIZZLE_NOOP) {
-            swizzle_texels(curObj->_Swizzle, span->end, texels);
-         }
       }
    }
 

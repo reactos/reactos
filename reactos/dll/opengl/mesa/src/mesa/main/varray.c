@@ -59,8 +59,6 @@
 #define DOUBLE_BIT           0x200
 #define FIXED_ES_BIT         0x400
 #define FIXED_GL_BIT         0x800
-#define UNSIGNED_INT_2_10_10_10_REV_BIT 0x1000
-#define INT_2_10_10_10_REV_BIT 0x2000
 
 
 /** Convert GL datatype enum into a <type>_BIT value seen above */
@@ -93,10 +91,6 @@ type_to_bit(const struct gl_context *ctx, GLenum type)
       return DOUBLE_BIT;
    case GL_FIXED:
       return ctx->API == API_OPENGL ? FIXED_GL_BIT : FIXED_ES_BIT;
-   case GL_UNSIGNED_INT_2_10_10_10_REV:
-      return UNSIGNED_INT_2_10_10_10_REV_BIT;
-   case GL_INT_2_10_10_10_REV:
-      return INT_2_10_10_10_REV_BIT;
    default:
       return 0;
    }
@@ -140,10 +134,6 @@ update_array(struct gl_context *ctx,
    if (!ctx->Extensions.ARB_ES2_compatibility) {
       legalTypesMask &= ~FIXED_GL_BIT;
    }
-   if (!ctx->Extensions.ARB_vertex_type_2_10_10_10_rev) {
-      legalTypesMask &= ~(UNSIGNED_INT_2_10_10_10_REV_BIT |
-                          INT_2_10_10_10_REV_BIT);
-   }
 
    typeBit = type_to_bit(ctx, type);
    if (typeBit == 0x0 || (typeBit & legalTypesMask) == 0x0) {
@@ -159,17 +149,7 @@ update_array(struct gl_context *ctx,
    if (ctx->Extensions.EXT_vertex_array_bgra &&
        sizeMax == BGRA_OR_4 &&
        size == GL_BGRA) {
-      GLboolean bgra_error = GL_FALSE;
-
-      if (ctx->Extensions.ARB_vertex_type_2_10_10_10_rev) {
-         if (type != GL_UNSIGNED_INT_2_10_10_10_REV &&
-             type != GL_INT_2_10_10_10_REV &&
-             type != GL_UNSIGNED_BYTE)
-            bgra_error = GL_TRUE;
-      } else if (type != GL_UNSIGNED_BYTE)
-         bgra_error = GL_TRUE;
-
-      if (bgra_error) {
+      if (type != GL_UNSIGNED_BYTE){
          _mesa_error(ctx, GL_INVALID_VALUE, "%s(GL_BGRA/GLubyte)", func);
          return;
       }
@@ -178,13 +158,6 @@ update_array(struct gl_context *ctx,
    }
    else if (size < sizeMin || size > sizeMax || size > 4) {
       _mesa_error(ctx, GL_INVALID_VALUE, "%s(size=%d)", func, size);
-      return;
-   }
-
-   if (ctx->Extensions.ARB_vertex_type_2_10_10_10_rev &&
-       (type == GL_UNSIGNED_INT_2_10_10_10_REV ||
-        type == GL_INT_2_10_10_10_REV) && size != 4) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "%s(size=%d)", func, size);
       return;
    }
 
@@ -229,9 +202,7 @@ void GLAPIENTRY
 _mesa_VertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr)
 {
    GLbitfield legalTypes = (SHORT_BIT | INT_BIT | FLOAT_BIT |
-                            DOUBLE_BIT | HALF_BIT | FIXED_ES_BIT |
-                            UNSIGNED_INT_2_10_10_10_REV_BIT |
-                            INT_2_10_10_10_REV_BIT);
+                            DOUBLE_BIT | HALF_BIT | FIXED_ES_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
@@ -249,9 +220,7 @@ _mesa_NormalPointer(GLenum type, GLsizei stride, const GLvoid *ptr )
 {
    const GLbitfield legalTypes = (BYTE_BIT | SHORT_BIT | INT_BIT |
                                   HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-                                  FIXED_ES_BIT |
-                                  UNSIGNED_INT_2_10_10_10_REV_BIT |
-                                  INT_2_10_10_10_REV_BIT);
+                                  FIXED_ES_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
@@ -268,9 +237,7 @@ _mesa_ColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr)
                                   SHORT_BIT | UNSIGNED_SHORT_BIT |
                                   INT_BIT | UNSIGNED_INT_BIT |
                                   HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-                                  FIXED_ES_BIT |
-                                  UNSIGNED_INT_2_10_10_10_REV_BIT |
-                                  INT_2_10_10_10_REV_BIT);
+                                  FIXED_ES_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
@@ -314,9 +281,7 @@ _mesa_SecondaryColorPointerEXT(GLint size, GLenum type,
    const GLbitfield legalTypes = (BYTE_BIT | UNSIGNED_BYTE_BIT |
                                   SHORT_BIT | UNSIGNED_SHORT_BIT |
                                   INT_BIT | UNSIGNED_INT_BIT |
-                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-                                  UNSIGNED_INT_2_10_10_10_REV_BIT |
-                                  INT_2_10_10_10_REV_BIT);
+                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
@@ -332,9 +297,7 @@ _mesa_TexCoordPointer(GLint size, GLenum type, GLsizei stride,
 {
    GLbitfield legalTypes = (SHORT_BIT | INT_BIT |
                             HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-                            FIXED_ES_BIT |
-                            UNSIGNED_INT_2_10_10_10_REV_BIT |
-                            INT_2_10_10_10_REV_BIT);
+                            FIXED_ES_BIT);
    GET_CURRENT_CONTEXT(ctx);
    const GLuint unit = ctx->Array.ActiveTexture;
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
@@ -432,9 +395,7 @@ _mesa_VertexAttribPointerARB(GLuint index, GLint size, GLenum type,
                                   SHORT_BIT | UNSIGNED_SHORT_BIT |
                                   INT_BIT | UNSIGNED_INT_BIT |
                                   HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-                                  FIXED_ES_BIT | FIXED_GL_BIT |
-                                  UNSIGNED_INT_2_10_10_10_REV_BIT |
-                                  INT_2_10_10_10_REV_BIT);
+                                  FIXED_ES_BIT | FIXED_GL_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 

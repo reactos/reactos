@@ -979,52 +979,6 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
    vfmt->EdgeFlag = vbo_EdgeFlag;
    vfmt->Indexf = vbo_Indexf;
    vfmt->Indexfv = vbo_Indexfv;
-
-   /* ARB_vertex_type_2_10_10_10_rev */
-   vfmt->VertexP2ui = vbo_VertexP2ui;
-   vfmt->VertexP2uiv = vbo_VertexP2uiv;
-   vfmt->VertexP3ui = vbo_VertexP3ui;
-   vfmt->VertexP3uiv = vbo_VertexP3uiv;
-   vfmt->VertexP4ui = vbo_VertexP4ui;
-   vfmt->VertexP4uiv = vbo_VertexP4uiv;
-
-   vfmt->TexCoordP1ui = vbo_TexCoordP1ui;
-   vfmt->TexCoordP1uiv = vbo_TexCoordP1uiv;
-   vfmt->TexCoordP2ui = vbo_TexCoordP2ui;
-   vfmt->TexCoordP2uiv = vbo_TexCoordP2uiv;
-   vfmt->TexCoordP3ui = vbo_TexCoordP3ui;
-   vfmt->TexCoordP3uiv = vbo_TexCoordP3uiv;
-   vfmt->TexCoordP4ui = vbo_TexCoordP4ui;
-   vfmt->TexCoordP4uiv = vbo_TexCoordP4uiv;
-
-   vfmt->MultiTexCoordP1ui = vbo_MultiTexCoordP1ui;
-   vfmt->MultiTexCoordP1uiv = vbo_MultiTexCoordP1uiv;
-   vfmt->MultiTexCoordP2ui = vbo_MultiTexCoordP2ui;
-   vfmt->MultiTexCoordP2uiv = vbo_MultiTexCoordP2uiv;
-   vfmt->MultiTexCoordP3ui = vbo_MultiTexCoordP3ui;
-   vfmt->MultiTexCoordP3uiv = vbo_MultiTexCoordP3uiv;
-   vfmt->MultiTexCoordP4ui = vbo_MultiTexCoordP4ui;
-   vfmt->MultiTexCoordP4uiv = vbo_MultiTexCoordP4uiv;
-   
-   vfmt->NormalP3ui = vbo_NormalP3ui;
-   vfmt->NormalP3uiv = vbo_NormalP3uiv;
-
-   vfmt->ColorP3ui = vbo_ColorP3ui;
-   vfmt->ColorP3uiv = vbo_ColorP3uiv;
-   vfmt->ColorP4ui = vbo_ColorP4ui;
-   vfmt->ColorP4uiv = vbo_ColorP4uiv;
-
-   vfmt->SecondaryColorP3ui = vbo_SecondaryColorP3ui;
-   vfmt->SecondaryColorP3uiv = vbo_SecondaryColorP3uiv;
-
-   vfmt->VertexAttribP1ui = vbo_VertexAttribP1ui;
-   vfmt->VertexAttribP1uiv = vbo_VertexAttribP1uiv;
-   vfmt->VertexAttribP2ui = vbo_VertexAttribP2ui;
-   vfmt->VertexAttribP2uiv = vbo_VertexAttribP2uiv;
-   vfmt->VertexAttribP3ui = vbo_VertexAttribP3ui;
-   vfmt->VertexAttribP3uiv = vbo_VertexAttribP3uiv;
-   vfmt->VertexAttribP4ui = vbo_VertexAttribP4ui;
-   vfmt->VertexAttribP4uiv = vbo_VertexAttribP4uiv;
 }
 
 

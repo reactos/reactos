@@ -1352,52 +1352,6 @@ _save_vtxfmt_init(struct gl_context *ctx)
    vfmt->VertexAttribI3uiv = _save_VertexAttribI3uiv;
    vfmt->VertexAttribI4uiv = _save_VertexAttribI4uiv;
 
-   vfmt->VertexP2ui = _save_VertexP2ui;
-   vfmt->VertexP3ui = _save_VertexP3ui;
-   vfmt->VertexP4ui = _save_VertexP4ui;
-   vfmt->VertexP2uiv = _save_VertexP2uiv;
-   vfmt->VertexP3uiv = _save_VertexP3uiv;
-   vfmt->VertexP4uiv = _save_VertexP4uiv;
-
-   vfmt->TexCoordP1ui = _save_TexCoordP1ui;
-   vfmt->TexCoordP2ui = _save_TexCoordP2ui;
-   vfmt->TexCoordP3ui = _save_TexCoordP3ui;
-   vfmt->TexCoordP4ui = _save_TexCoordP4ui;
-   vfmt->TexCoordP1uiv = _save_TexCoordP1uiv;
-   vfmt->TexCoordP2uiv = _save_TexCoordP2uiv;
-   vfmt->TexCoordP3uiv = _save_TexCoordP3uiv;
-   vfmt->TexCoordP4uiv = _save_TexCoordP4uiv;
-
-   vfmt->MultiTexCoordP1ui = _save_MultiTexCoordP1ui;
-   vfmt->MultiTexCoordP2ui = _save_MultiTexCoordP2ui;
-   vfmt->MultiTexCoordP3ui = _save_MultiTexCoordP3ui;
-   vfmt->MultiTexCoordP4ui = _save_MultiTexCoordP4ui;
-   vfmt->MultiTexCoordP1uiv = _save_MultiTexCoordP1uiv;
-   vfmt->MultiTexCoordP2uiv = _save_MultiTexCoordP2uiv;
-   vfmt->MultiTexCoordP3uiv = _save_MultiTexCoordP3uiv;
-   vfmt->MultiTexCoordP4uiv = _save_MultiTexCoordP4uiv;
-
-   vfmt->NormalP3ui = _save_NormalP3ui;
-   vfmt->NormalP3uiv = _save_NormalP3uiv;
-
-   vfmt->ColorP3ui = _save_ColorP3ui;
-   vfmt->ColorP4ui = _save_ColorP4ui;
-   vfmt->ColorP3uiv = _save_ColorP3uiv;
-   vfmt->ColorP4uiv = _save_ColorP4uiv;
-
-   vfmt->SecondaryColorP3ui = _save_SecondaryColorP3ui;
-   vfmt->SecondaryColorP3uiv = _save_SecondaryColorP3uiv;
-
-   vfmt->VertexAttribP1ui = _save_VertexAttribP1ui;
-   vfmt->VertexAttribP2ui = _save_VertexAttribP2ui;
-   vfmt->VertexAttribP3ui = _save_VertexAttribP3ui;
-   vfmt->VertexAttribP4ui = _save_VertexAttribP4ui;
-
-   vfmt->VertexAttribP1uiv = _save_VertexAttribP1uiv;
-   vfmt->VertexAttribP2uiv = _save_VertexAttribP2uiv;
-   vfmt->VertexAttribP3uiv = _save_VertexAttribP3uiv;
-   vfmt->VertexAttribP4uiv = _save_VertexAttribP4uiv;
-
    /* This will all require us to fallback to saving the list as opcodes:
     */
    _MESA_INIT_DLIST_VTXFMT(vfmt, _save_);       /* inside begin/end */

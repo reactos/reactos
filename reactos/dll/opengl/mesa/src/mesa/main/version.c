@@ -171,9 +171,7 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.ARB_occlusion_query2 &&
                               ctx->Extensions.ARB_sampler_objects &&
                               ctx->Extensions.ARB_texture_rgb10_a2ui &&
-                              ctx->Extensions.ARB_timer_query &&
-                              ctx->Extensions.ARB_vertex_type_2_10_10_10_rev &&
-                              ctx->Extensions.EXT_texture_swizzle);
+                              ctx->Extensions.ARB_timer_query);
 
    if (ver_3_3) {
       major = 3;

@@ -145,53 +145,6 @@ install_vtxfmt( struct _glapi_table *tab, const GLvertexformat *vfmt )
    SET_VertexAttribI2uivEXT(tab, vfmt->VertexAttribI2uiv);
    SET_VertexAttribI3uivEXT(tab, vfmt->VertexAttribI3uiv);
    SET_VertexAttribI4uivEXT(tab, vfmt->VertexAttribI4uiv);
-
-   /* GL_ARB_vertex_type_10_10_10_2_rev / GL 3.3 */
-   SET_VertexP2ui(tab, vfmt->VertexP2ui);
-   SET_VertexP2uiv(tab, vfmt->VertexP2uiv);
-   SET_VertexP3ui(tab, vfmt->VertexP3ui);
-   SET_VertexP3uiv(tab, vfmt->VertexP3uiv);
-   SET_VertexP4ui(tab, vfmt->VertexP4ui);
-   SET_VertexP4uiv(tab, vfmt->VertexP4uiv);
-
-   SET_TexCoordP1ui(tab, vfmt->TexCoordP1ui);
-   SET_TexCoordP1uiv(tab, vfmt->TexCoordP1uiv);
-   SET_TexCoordP2ui(tab, vfmt->TexCoordP2ui);
-   SET_TexCoordP2uiv(tab, vfmt->TexCoordP2uiv);
-   SET_TexCoordP3ui(tab, vfmt->TexCoordP3ui);
-   SET_TexCoordP3uiv(tab, vfmt->TexCoordP3uiv);
-   SET_TexCoordP4ui(tab, vfmt->TexCoordP4ui);
-   SET_TexCoordP4uiv(tab, vfmt->TexCoordP4uiv);
-
-   SET_MultiTexCoordP1ui(tab, vfmt->MultiTexCoordP1ui);
-   SET_MultiTexCoordP2ui(tab, vfmt->MultiTexCoordP2ui);
-   SET_MultiTexCoordP3ui(tab, vfmt->MultiTexCoordP3ui);
-   SET_MultiTexCoordP4ui(tab, vfmt->MultiTexCoordP4ui);
-   SET_MultiTexCoordP1uiv(tab, vfmt->MultiTexCoordP1uiv);
-   SET_MultiTexCoordP2uiv(tab, vfmt->MultiTexCoordP2uiv);
-   SET_MultiTexCoordP3uiv(tab, vfmt->MultiTexCoordP3uiv);
-   SET_MultiTexCoordP4uiv(tab, vfmt->MultiTexCoordP4uiv);
-
-   SET_NormalP3ui(tab, vfmt->NormalP3ui);
-   SET_NormalP3uiv(tab, vfmt->NormalP3uiv);
-
-   SET_ColorP3ui(tab, vfmt->ColorP3ui);
-   SET_ColorP4ui(tab, vfmt->ColorP4ui);
-   SET_ColorP3uiv(tab, vfmt->ColorP3uiv);
-   SET_ColorP4uiv(tab, vfmt->ColorP4uiv);
-
-   SET_SecondaryColorP3ui(tab, vfmt->SecondaryColorP3ui);
-   SET_SecondaryColorP3uiv(tab, vfmt->SecondaryColorP3uiv);
-
-   SET_VertexAttribP1ui(tab, vfmt->VertexAttribP1ui);
-   SET_VertexAttribP2ui(tab, vfmt->VertexAttribP2ui);
-   SET_VertexAttribP3ui(tab, vfmt->VertexAttribP3ui);
-   SET_VertexAttribP4ui(tab, vfmt->VertexAttribP4ui);
-
-   SET_VertexAttribP1uiv(tab, vfmt->VertexAttribP1uiv);
-   SET_VertexAttribP2uiv(tab, vfmt->VertexAttribP2uiv);
-   SET_VertexAttribP3uiv(tab, vfmt->VertexAttribP3uiv);
-   SET_VertexAttribP4uiv(tab, vfmt->VertexAttribP4uiv);
 }
 
 

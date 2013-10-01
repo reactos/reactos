@@ -135,7 +135,6 @@ static const struct extension extension_table[] = {
    { "GL_ARB_texture_rgb10_a2ui",                  o(ARB_texture_rgb10_a2ui),                  GL,             2009 },
    { "GL_ARB_texture_rg",                          o(ARB_texture_rg),                          GL,             2008 },
    { "GL_ARB_texture_storage",                     o(ARB_texture_storage),                     GL,             2011 },
-   { "GL_ARB_texture_swizzle",                     o(EXT_texture_swizzle),                     GL,             2008 },
    { "GL_ARB_transform_feedback2",                 o(ARB_transform_feedback2),                 GL,             2010 },
    { "GL_ARB_transpose_matrix",                    o(ARB_transpose_matrix),                    GL,             1999 },
    { "GL_ARB_uniform_buffer_object",               o(ARB_uniform_buffer_object),               GL,             2002 },
@@ -144,7 +143,6 @@ static const struct extension extension_table[] = {
    { "GL_ARB_vertex_buffer_object",                o(dummy_true),                              GL,             2003 },
    { "GL_ARB_vertex_program",                      o(ARB_vertex_program),                      GL,             2002 },
    { "GL_ARB_vertex_shader",                       o(ARB_vertex_shader),                       GL,             2002 },
-   { "GL_ARB_vertex_type_2_10_10_10_rev",          o(ARB_vertex_type_2_10_10_10_rev),          GL,             2009 },
    { "GL_ARB_window_pos",                          o(ARB_window_pos),                          GL,             2001 },
    /* EXT extensions */
    { "GL_EXT_abgr",                                o(dummy_true),                              GL,             1995 },
@@ -205,7 +203,6 @@ static const struct extension extension_table[] = {
    { "GL_EXT_texture_snorm",                       o(EXT_texture_snorm),                       GL,             2009 },
    { "GL_EXT_texture_sRGB",                        o(EXT_texture_sRGB),                        GL,             2004 },
    { "GL_EXT_texture_sRGB_decode",                 o(EXT_texture_sRGB_decode),                        GL,      2006 },
-   { "GL_EXT_texture_swizzle",                     o(EXT_texture_swizzle),                     GL,             2008 },
    { "GL_EXT_texture_type_2_10_10_10_REV",         o(dummy_true),                                         ES2, 2008 },
    { "GL_EXT_timer_query",                         o(EXT_timer_query),                         GL,             2006 },
    { "GL_EXT_transform_feedback",                  o(EXT_transform_feedback),                  GL,             2011 },
@@ -479,7 +476,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.EXT_texture_sRGB = GL_TRUE;
    ctx->Extensions.EXT_texture_sRGB_decode = GL_TRUE;
 #endif
-   ctx->Extensions.EXT_texture_swizzle = GL_TRUE;
 #if FEATURE_EXT_transform_feedback
    /*ctx->Extensions.EXT_transform_feedback = GL_TRUE;*/
 #endif

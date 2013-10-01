@@ -1067,7 +1067,6 @@ _swrast_choose_triangle( struct gl_context *ctx )
              && ctx->Texture.Unit[0]._ReallyEnabled == TEXTURE_2D_BIT
              && texObj2D->Sampler.WrapS == GL_REPEAT
              && texObj2D->Sampler.WrapT == GL_REPEAT
-             && texObj2D->_Swizzle == SWIZZLE_NOOP
              && swImg->_IsPowerOfTwo
              && texImg->Border == 0
              && texImg->Width == swImg->RowStride

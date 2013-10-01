@@ -1356,8 +1356,6 @@ struct gl_texture_object
    GLint _MaxLevel;		/**< actual max mipmap level (q in the spec) */
    GLfloat _MaxLambda;		/**< = _MaxLevel - BaseLevel (q - b in spec) */
    GLint CropRect[4];           /**< GL_OES_draw_texture */
-   GLenum Swizzle[4];           /**< GL_EXT_texture_swizzle */
-   GLuint _Swizzle;             /**< same as Swizzle, but SWIZZLE_* format */
    GLboolean GenerateMipmap;    /**< GL_SGIS_generate_mipmap */
    GLboolean _Complete;		/**< Is texture object complete? */
    GLboolean _RenderToTexture;  /**< Any rendering to this texture? */
@@ -2909,7 +2907,6 @@ struct gl_extensions
    GLboolean ARB_vertex_array_object;
    GLboolean ARB_vertex_program;
    GLboolean ARB_vertex_shader;
-   GLboolean ARB_vertex_type_2_10_10_10_rev;
    GLboolean ARB_window_pos;
    GLboolean EXT_blend_color;
    GLboolean EXT_blend_equation_separate;
@@ -2949,7 +2946,6 @@ struct gl_extensions
    GLboolean EXT_texture_snorm;
    GLboolean EXT_texture_sRGB;
    GLboolean EXT_texture_sRGB_decode;
-   GLboolean EXT_texture_swizzle;
    GLboolean EXT_transform_feedback;
    GLboolean EXT_timer_query;
    GLboolean EXT_vertex_array_bgra;

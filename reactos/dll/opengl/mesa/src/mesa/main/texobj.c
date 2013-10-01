@@ -147,11 +147,6 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
    obj->Sampler.CompareFailValue = 0.0F;       /* ARB_shadow_ambient */
    obj->Sampler.DepthMode = GL_LUMINANCE;      /* ARB_depth_texture */
    obj->Sampler.CubeMapSeamless = GL_FALSE;
-   obj->Swizzle[0] = GL_RED;
-   obj->Swizzle[1] = GL_GREEN;
-   obj->Swizzle[2] = GL_BLUE;
-   obj->Swizzle[3] = GL_ALPHA;
-   obj->_Swizzle = SWIZZLE_NOOP;
    obj->Sampler.sRGBDecode = GL_DECODE_EXT;
 }
 
@@ -263,8 +258,6 @@ _mesa_copy_texture_object( struct gl_texture_object *dest,
    dest->_MaxLambda = src->_MaxLambda;
    dest->GenerateMipmap = src->GenerateMipmap;
    dest->_Complete = src->_Complete;
-   COPY_4V(dest->Swizzle, src->Swizzle);
-   dest->_Swizzle = src->_Swizzle;
 
    dest->RequiredTextureImageUnits = src->RequiredTextureImageUnits;
 }

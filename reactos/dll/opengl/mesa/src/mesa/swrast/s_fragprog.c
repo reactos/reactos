@@ -45,32 +45,6 @@ _swrast_use_fragment_program(struct gl_context *ctx)
 }
 
 /**
- * Apply texture object's swizzle (X/Y/Z/W/0/1) to incoming 'texel'
- * and return results in 'colorOut'.
- */
-static inline void
-swizzle_texel(const GLfloat texel[4], GLfloat colorOut[4], GLuint swizzle)
-{
-   if (swizzle == SWIZZLE_NOOP) {
-      COPY_4V(colorOut, texel);
-   }
-   else {
-      GLfloat vector[6];
-      vector[SWIZZLE_X] = texel[0];
-      vector[SWIZZLE_Y] = texel[1];
-      vector[SWIZZLE_Z] = texel[2];
-      vector[SWIZZLE_W] = texel[3];
-      vector[SWIZZLE_ZERO] = 0.0F;
-      vector[SWIZZLE_ONE] = 1.0F;
-      colorOut[0] = vector[GET_SWZ(swizzle, 0)];
-      colorOut[1] = vector[GET_SWZ(swizzle, 1)];
-      colorOut[2] = vector[GET_SWZ(swizzle, 2)];
-      colorOut[3] = vector[GET_SWZ(swizzle, 3)];
-   }
-}
-
-
-/**
  * Fetch a texel with given lod.
  * Called via machine->FetchTexelLod()
  */
@@ -89,7 +63,7 @@ fetch_texel_lod( struct gl_context *ctx, const GLfloat texcoord[4], GLfloat lamb
       swrast->TextureSample[unit](ctx, texObj, 1,
                                   (const GLfloat (*)[4]) texcoord,
                                   &lambda, &rgba);
-      swizzle_texel(rgba, color, texObj->_Swizzle);
+      COPY_4V(color, rgba);
    }
    else {
       ASSIGN_4V(color, 0.0F, 0.0F, 0.0F, 1.0F);
@@ -137,7 +111,7 @@ fetch_texel_deriv( struct gl_context *ctx, const GLfloat texcoord[4],
       swrast->TextureSample[unit](ctx, texObj, 1,
                                   (const GLfloat (*)[4]) texcoord,
                                   &lambda, &rgba);
-      swizzle_texel(rgba, color, texObj->_Swizzle);
+      COPY_4V(color, rgba);
    }
    else {
       ASSIGN_4V(color, 0.0F, 0.0F, 0.0F, 1.0F);

@@ -160,45 +160,6 @@ get_texobj(struct gl_context *ctx, GLenum target, GLboolean get)
 
 
 /**
- * Convert GL_RED/GREEN/BLUE/ALPHA/ZERO/ONE to SWIZZLE_X/Y/Z/W/ZERO/ONE.
- * \return -1 if error.
- */
-static GLint
-comp_to_swizzle(GLenum comp)
-{
-   switch (comp) {
-   case GL_RED:
-      return SWIZZLE_X;
-   case GL_GREEN:
-      return SWIZZLE_Y;
-   case GL_BLUE:
-      return SWIZZLE_Z;
-   case GL_ALPHA:
-      return SWIZZLE_W;
-   case GL_ZERO:
-      return SWIZZLE_ZERO;
-   case GL_ONE:
-      return SWIZZLE_ONE;
-   default:
-      return -1;
-   }
-}
-
-
-static void
-set_swizzle_component(GLuint *swizzle, GLuint comp, GLuint swz)
-{
-   ASSERT(comp < 4);
-   ASSERT(swz <= SWIZZLE_NIL);
-   {
-      GLuint mask = 0x7 << (3 * comp);
-      GLuint s = (*swizzle & ~mask) | (swz << (3 * comp));
-      *swizzle = s;
-   }
-}
-
-
-/**
  * This is called just prior to changing any texture object state which
  * will not effect texture completeness.
  */
@@ -405,47 +366,6 @@ set_tex_parameteri(struct gl_context *ctx,
       texObj->CropRect[3] = params[3];
       return GL_TRUE;
 #endif
-
-   case GL_TEXTURE_SWIZZLE_R_EXT:
-   case GL_TEXTURE_SWIZZLE_G_EXT:
-   case GL_TEXTURE_SWIZZLE_B_EXT:
-   case GL_TEXTURE_SWIZZLE_A_EXT:
-      if (ctx->Extensions.EXT_texture_swizzle) {
-         const GLuint comp = pname - GL_TEXTURE_SWIZZLE_R_EXT;
-         const GLint swz = comp_to_swizzle(params[0]);
-         if (swz < 0) {
-            _mesa_error(ctx, GL_INVALID_OPERATION,
-                        "glTexParameter(swizzle 0x%x)", params[0]);
-            return GL_FALSE;
-         }
-         ASSERT(comp < 4);
-
-         flush(ctx);
-         texObj->Swizzle[comp] = params[0];
-         set_swizzle_component(&texObj->_Swizzle, comp, swz);
-         return GL_TRUE;
-      }
-      goto invalid_pname;
-
-   case GL_TEXTURE_SWIZZLE_RGBA_EXT:
-      if (ctx->Extensions.EXT_texture_swizzle) {
-         GLuint comp;
-         flush(ctx);
-         for (comp = 0; comp < 4; comp++) {
-            const GLint swz = comp_to_swizzle(params[comp]);
-            if (swz >= 0) {
-               texObj->Swizzle[comp] = params[comp];
-               set_swizzle_component(&texObj->_Swizzle, comp, swz);
-            }
-            else {
-               _mesa_error(ctx, GL_INVALID_OPERATION,
-                           "glTexParameter(swizzle 0x%x)", params[comp]);
-               return GL_FALSE;
-            }
-         }
-         return GL_TRUE;
-      }
-      goto invalid_pname;
 
    case GL_TEXTURE_SRGB_DECODE_EXT:
       if (ctx->Extensions.EXT_texture_sRGB_decode) {
@@ -1165,27 +1085,6 @@ _mesa_GetTexParameterfv( GLenum target, GLenum pname, GLfloat *params )
          break;
 #endif
 
-      case GL_TEXTURE_SWIZZLE_R_EXT:
-      case GL_TEXTURE_SWIZZLE_G_EXT:
-      case GL_TEXTURE_SWIZZLE_B_EXT:
-      case GL_TEXTURE_SWIZZLE_A_EXT:
-         if (!ctx->Extensions.EXT_texture_swizzle)
-            goto invalid_pname;
-         *params = (GLfloat) obj->Swizzle[pname - GL_TEXTURE_SWIZZLE_R_EXT];
-         break;
-
-      case GL_TEXTURE_SWIZZLE_RGBA_EXT:
-         if (!ctx->Extensions.EXT_texture_swizzle) {
-            goto invalid_pname;
-         }
-         else {
-            GLuint comp;
-            for (comp = 0; comp < 4; comp++) {
-               params[comp] = (GLfloat) obj->Swizzle[comp];
-            }
-         }
-         break;
-
       case GL_TEXTURE_CUBE_MAP_SEAMLESS:
          if (!ctx->Extensions.AMD_seamless_cubemap_per_texture)
             goto invalid_pname;
@@ -1310,20 +1209,6 @@ _mesa_GetTexParameteriv( GLenum target, GLenum pname, GLint *params )
          params[3] = obj->CropRect[3];
          break;
 #endif
-      case GL_TEXTURE_SWIZZLE_R_EXT:
-      case GL_TEXTURE_SWIZZLE_G_EXT:
-      case GL_TEXTURE_SWIZZLE_B_EXT:
-      case GL_TEXTURE_SWIZZLE_A_EXT:
-         if (!ctx->Extensions.EXT_texture_swizzle)
-            goto invalid_pname;
-         *params = obj->Swizzle[pname - GL_TEXTURE_SWIZZLE_R_EXT];
-         break;
-
-      case GL_TEXTURE_SWIZZLE_RGBA_EXT:
-         if (!ctx->Extensions.EXT_texture_swizzle)
-            goto invalid_pname;
-         COPY_4V(params, obj->Swizzle);
-         break;
 
       case GL_TEXTURE_CUBE_MAP_SEAMLESS:
          if (!ctx->Extensions.AMD_seamless_cubemap_per_texture)
