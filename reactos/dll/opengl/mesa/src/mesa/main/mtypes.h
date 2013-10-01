@@ -1579,7 +1579,6 @@ struct gl_client_array
    GLboolean Enabled;		/**< Enabled flag is a boolean */
    GLboolean Normalized;        /**< GL_ARB_vertex_program */
    GLboolean Integer;           /**< Integer-valued? */
-   GLuint InstanceDivisor;      /**< GL_ARB_instanced_arrays */
    GLuint _ElementSize;         /**< size of each element in bytes */
 
    struct gl_buffer_object *BufferObj;/**< GL_ARB_vertex_buffer_object */
@@ -1825,54 +1824,6 @@ struct prog_instruction;
 struct gl_program_parameter_list;
 struct gl_uniform_list;
 
-struct gl_transform_feedback_varying_info {
-   char *Name;
-   GLenum Type;
-   GLint Size;
-};
-
-struct gl_transform_feedback_output {
-   unsigned OutputRegister;
-   unsigned OutputBuffer;
-   unsigned NumComponents;
-
-   /** offset (in DWORDs) of this output within the interleaved structure */
-   unsigned DstOffset;
-
-   /**
-    * Offset into the output register of the data to output.  For example,
-    * if NumComponents is 2 and ComponentOffset is 1, then the data to
-    * offset is in the y and z components of the output register.
-    */
-   unsigned ComponentOffset;
-};
-
-/** Post-link transform feedback info. */
-struct gl_transform_feedback_info {
-   unsigned NumOutputs;
-
-   /**
-    * Number of transform feedback buffers in use by this program.
-    */
-   unsigned NumBuffers;
-
-   struct gl_transform_feedback_output *Outputs;
-
-   /** Transform feedback varyings used for the linking of this shader program.
-    *
-    * Use for glGetTransformFeedbackVarying().
-    */
-   struct gl_transform_feedback_varying_info *Varyings;
-   GLint NumVarying;
-
-   /**
-    * Total number of components stored in each buffer.  This may be used by
-    * hardware back-ends to determine the correct stride when interleaving
-    * multiple transform feedback outputs in the same buffer.
-    */
-   unsigned BufferStride[MAX_FEEDBACK_ATTRIBS];
-};
-
 /**
  * Base class for any kind of program object
  */
@@ -2070,100 +2021,6 @@ struct gl_fragment_program_state
    struct gl_program_cache *Cache;
 };
 
-
-/**
- * ATI_fragment_shader runtime state
- */
-#define ATI_FS_INPUT_PRIMARY 0
-#define ATI_FS_INPUT_SECONDARY 1
-
-struct atifs_instruction;
-struct atifs_setupinst;
-
-/**
- * ATI fragment shader
- */
-struct ati_fragment_shader
-{
-   GLuint Id;
-   GLint RefCount;
-   struct atifs_instruction *Instructions[2];
-   struct atifs_setupinst *SetupInst[2];
-   GLfloat Constants[8][4];
-   GLbitfield LocalConstDef;  /**< Indicates which constants have been set */
-   GLubyte numArithInstr[2];
-   GLubyte regsAssigned[2];
-   GLubyte NumPasses;         /**< 1 or 2 */
-   GLubyte cur_pass;
-   GLubyte last_optype;
-   GLboolean interpinp1;
-   GLboolean isValid;
-   GLuint swizzlerq;
-};
-
-/**
- * Context state for GL_ATI_fragment_shader
- */
-struct gl_ati_fragment_shader_state
-{
-   GLboolean Enabled;
-   GLboolean _Enabled;                  /**< enabled and valid shader? */
-   GLboolean Compiling;
-   GLfloat GlobalConstants[8][4];
-   struct ati_fragment_shader *Current;
-};
-
-
-/**
- * Occlusion/timer query object.
- */
-struct gl_query_object
-{
-   GLenum Target;      /**< The query target, when active */
-   GLuint Id;          /**< hash table ID/name */
-   GLuint64EXT Result; /**< the counter */
-   GLboolean Active;   /**< inside Begin/EndQuery */
-   GLboolean Ready;    /**< result is ready? */
-};
-
-
-/**
- * Context state for query objects.
- */
-struct gl_query_state
-{
-   struct _mesa_HashTable *QueryObjects;
-   struct gl_query_object *CurrentOcclusionObject; /* GL_ARB_occlusion_query */
-
-   /** GL_NV_conditional_render */
-   struct gl_query_object *CondRenderQuery;
-
-   /** GL_EXT_transform_feedback */
-   struct gl_query_object *PrimitivesGenerated;
-   struct gl_query_object *PrimitivesWritten;
-
-   /** GL_ARB_timer_query */
-   struct gl_query_object *TimeElapsed;
-
-   GLenum CondRenderMode;
-};
-
-
-/** Sync object state */
-struct gl_sync_object {
-   struct simple_node link;
-   GLenum Type;               /**< GL_SYNC_FENCE */
-   GLuint Name;               /**< Fence name */
-   GLint RefCount;            /**< Reference count */
-   GLboolean DeletePending;   /**< Object was deleted while there were still
-			       * live references (e.g., sync not yet finished)
-			       */
-   GLenum SyncCondition;
-   GLbitfield Flags;          /**< Flags passed to glFenceSync */
-   GLuint StatusFlag:1;       /**< Has the sync object been signaled? */
-};
-
-
 /** Set by #pragma directives */
 struct gl_sl_pragmas
 {
@@ -2261,22 +2118,6 @@ struct gl_shader_program
     * and they are \b not the values returned by \c glGetFragDataLocation.
     */
    struct string_to_uint_map *FragDataBindings;
-
-   /**
-    * Transform feedback varyings last specified by
-    * glTransformFeedbackVaryings().
-    *
-    * For the current set of transform feeedback varyings used for transform
-    * feedback output, see LinkedTransformFeedback.
-    */
-   struct {
-      GLenum BufferMode;
-      GLuint NumVarying;
-      GLchar **VaryingNames;  /**< Array [NumVarying] of char * */
-   } TransformFeedback;
-
-   /** Post-link transform feedback info. */
-   struct gl_transform_feedback_info LinkedTransformFeedback;
 
    /** Post-link gl_FragDepth layout for ARB_conservative_depth. */
    enum gl_frag_depth_layout FragDepthLayout;
@@ -2410,51 +2251,6 @@ struct gl_shader_compiler_options
 };
 
 /**
- * Transform feedback object state
- */
-struct gl_transform_feedback_object
-{
-   GLuint Name;  /**< AKA the object ID */
-   GLint RefCount;
-   GLboolean Active;  /**< Is transform feedback enabled? */
-   GLboolean Paused;  /**< Is transform feedback paused? */
-   GLboolean EndedAnytime; /**< Has EndTransformFeedback been called
-                                at least once? */
-
-   /** The feedback buffers */
-   GLuint BufferNames[MAX_FEEDBACK_ATTRIBS];
-   struct gl_buffer_object *Buffers[MAX_FEEDBACK_ATTRIBS];
-
-   /** Start of feedback data in dest buffer */
-   GLintptr Offset[MAX_FEEDBACK_ATTRIBS];
-   /** Max data to put into dest buffer (in bytes) */
-   GLsizeiptr Size[MAX_FEEDBACK_ATTRIBS];
-};
-
-
-/**
- * Context state for transform feedback.
- */
-struct gl_transform_feedback
-{
-   GLenum Mode;       /**< GL_POINTS, GL_LINES or GL_TRIANGLES */
-
-   /** The general binding point (GL_TRANSFORM_FEEDBACK_BUFFER) */
-   struct gl_buffer_object *CurrentBuffer;
-
-   /** The table of all transform feedback objects */
-   struct _mesa_HashTable *Objects;
-
-   /** The current xform-fb object (GL_TRANSFORM_FEEDBACK_BINDING) */
-   struct gl_transform_feedback_object *CurrentObject;
-
-   /** The default xform-fb object (Name==0) */
-   struct gl_transform_feedback_object *DefaultObject;
-};
-
-
-
-/**
  * State which can be shared by multiple contexts:
  */
 struct gl_shared_state
@@ -2494,10 +2290,6 @@ struct gl_shared_state
    struct gl_geometry_program *DefaultGeometryProgram;
    /*@}*/
 
-   /* GL_ATI_fragment_shader */
-   struct _mesa_HashTable *ATIShaders;
-   struct ati_fragment_shader *DefaultFragmentShader;
-
    struct _mesa_HashTable *BufferObjects;
 
    /** Table of both gl_shader and gl_shader_program objects */
@@ -2506,9 +2298,6 @@ struct gl_shared_state
    /* GL_EXT_framebuffer_object */
    struct _mesa_HashTable *RenderBuffers;
    struct _mesa_HashTable *FrameBuffers;
-
-   /* GL_ARB_sync */
-   struct simple_node SyncObjects;
 
    void *DriverData;  /**< Device driver shared state */
 };
@@ -2777,11 +2566,6 @@ struct gl_constants
    /** Which texture units support GL_ATI_envmap_bumpmap as targets */
    GLbitfield SupportedBumpUnits;
 
-   /**
-    * Maximum amount of time, measured in nanseconds, that the server can wait.
-    */
-   GLuint64 MaxServerWaitTimeout;
-
    /** GL_EXT_provoking_vertex */
    GLboolean QuadsFollowProvokingVertexConvention;
 
@@ -2790,11 +2574,6 @@ struct gl_constants
 
    /** OpenGL version 3.2 */
    GLbitfield ProfileMask;   /**< Mask of CONTEXT_x_PROFILE_BIT */
-
-   /** GL_EXT_transform_feedback */
-   GLuint MaxTransformFeedbackSeparateAttribs;
-   GLuint MaxTransformFeedbackSeparateComponents;
-   GLuint MaxTransformFeedbackInterleavedComponents;
 
    /** GL_EXT_gpu_shader4 */
    GLint MinProgramTexelOffset, MaxProgramTexelOffset;
@@ -2858,17 +2637,13 @@ struct gl_extensions
    GLboolean ARB_geometry_shader4;
    GLboolean ARB_half_float_pixel;
    GLboolean ARB_half_float_vertex;
-   GLboolean ARB_instanced_arrays;
    GLboolean ARB_map_buffer_range;
-   GLboolean ARB_occlusion_query;
-   GLboolean ARB_occlusion_query2;
    GLboolean ARB_point_sprite;
    GLboolean ARB_seamless_cube_map;
    GLboolean ARB_shader_objects;
    GLboolean ARB_shader_stencil_export;
    GLboolean ARB_shader_texture_lod;
    GLboolean ARB_shading_language_100;
-   GLboolean ARB_sync;
    GLboolean ARB_texture_border_clamp;
    GLboolean ARB_texture_buffer_object;
    GLboolean ARB_texture_compression_rgtc;
@@ -2881,7 +2656,6 @@ struct gl_extensions
    GLboolean ARB_texture_non_power_of_two;
    GLboolean ARB_texture_rg;
    GLboolean ARB_texture_storage;
-   GLboolean ARB_transform_feedback2;
    GLboolean ARB_transpose_matrix;
    GLboolean ARB_uniform_buffer_object;
    GLboolean ARB_vertex_array_object;
@@ -2895,7 +2669,6 @@ struct gl_extensions
    GLboolean EXT_clip_volume_hint;
    GLboolean EXT_compiled_vertex_array;
    GLboolean EXT_depth_bounds_test;
-   GLboolean EXT_draw_buffers2;
    GLboolean EXT_draw_range_elements;
    GLboolean EXT_fog_coord;
    GLboolean EXT_framebuffer_blit;
@@ -2925,8 +2698,6 @@ struct gl_extensions
    GLboolean EXT_texture_mirror_clamp;
    GLboolean EXT_texture_snorm;
    GLboolean EXT_texture_sRGB;
-   GLboolean EXT_transform_feedback;
-   GLboolean EXT_timer_query;
    GLboolean EXT_vertex_array_bgra;
    GLboolean OES_standard_derivatives;
    /* vendor extensions */
@@ -2938,7 +2709,6 @@ struct gl_extensions
    GLboolean ATI_texture_compression_3dc;
    GLboolean ATI_texture_mirror_once;
    GLboolean ATI_texture_env_combine3;
-   GLboolean ATI_fragment_shader;
    GLboolean ATI_separate_stencil;
    GLboolean IBM_rasterpos_clip;
    GLboolean IBM_multimode_draw_arrays;
@@ -2947,7 +2717,6 @@ struct gl_extensions
    GLboolean MESA_ycbcr_texture;
    GLboolean MESA_texture_array;
    GLboolean NV_blend_square;
-   GLboolean NV_conditional_render;
    GLboolean NV_fog_distance;
    GLboolean NV_fragment_program;
    GLboolean NV_fragment_program_option;
@@ -3037,7 +2806,6 @@ struct gl_matrix_stack
 #define _NEW_PROGRAM_CONSTANTS (1 << 27)
 #define _NEW_BUFFER_OBJECT     (1 << 28)
 #define _NEW_FRAG_CLAMP        (1 << 29)
-#define _NEW_TRANSFORM_FEEDBACK (1 << 30) /**< gl_context::TransformFeedback */
 #define _NEW_ALL ~0
 
 /**
@@ -3305,14 +3073,9 @@ struct gl_context
    struct gl_vertex_program_state VertexProgram;
    struct gl_fragment_program_state FragmentProgram;
    struct gl_geometry_program_state GeometryProgram;
-   struct gl_ati_fragment_shader_state ATIFragmentShader;
 
    struct gl_shader_state Shader; /**< GLSL shader object state */
    struct gl_shader_compiler_options ShaderCompilerOptions[MESA_SHADER_TYPES];
-
-   struct gl_query_state Query;  /**< occlusion, timer queries */
-
-   struct gl_transform_feedback TransformFeedback;
 
    struct gl_buffer_object *CopyReadBuffer; /**< GL_ARB_copy_buffer */
    struct gl_buffer_object *CopyWriteBuffer; /**< GL_ARB_copy_buffer */

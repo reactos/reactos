@@ -521,11 +521,6 @@ get_vertex_array_attrib(struct gl_context *ctx, GLuint index, GLenum pname,
          return array->Integer;
       }
       goto error;
-   case GL_VERTEX_ATTRIB_ARRAY_DIVISOR_ARB:
-      if (ctx->Extensions.ARB_instanced_arrays) {
-         return array->InstanceDivisor;
-      }
-      goto error;
    default:
       ; /* fall-through */
    }
@@ -1057,34 +1052,6 @@ _mesa_PrimitiveRestartIndex(GLuint index)
 }
 
 
-/**
- * See GL_ARB_instanced_arrays.
- * Note that the instance divisor only applies to generic arrays, not
- * the legacy vertex arrays.
- */
-void GLAPIENTRY
-_mesa_VertexAttribDivisor(GLuint index, GLuint divisor)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   if (!ctx->Extensions.ARB_instanced_arrays) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "glVertexAttribDivisor()");
-      return;
-   }
-
-   if (index >= ctx->Const.VertexProgram.MaxAttribs) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glVertexAttribDivisor(index = %u)",
-                  index);
-      return;
-   }
-
-   ASSERT(VERT_ATTRIB_GENERIC(index) < Elements(ctx->Array.ArrayObj->VertexAttrib));
-
-   ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_GENERIC(index)].InstanceDivisor = divisor;
-}
-
-
 
 /**
  * Copy one client vertex array to another.
@@ -1103,7 +1070,6 @@ _mesa_copy_client_array(struct gl_context *ctx,
    dst->Enabled = src->Enabled;
    dst->Normalized = src->Normalized;
    dst->Integer = src->Integer;
-   dst->InstanceDivisor = src->InstanceDivisor;
    dst->_ElementSize = src->_ElementSize;
    _mesa_reference_buffer_object(ctx, &dst->BufferObj, src->BufferObj);
    dst->_MaxElement = src->_MaxElement;

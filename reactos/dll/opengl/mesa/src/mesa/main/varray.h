@@ -249,10 +249,6 @@ extern void GLAPIENTRY
 _mesa_PrimitiveRestartIndex(GLuint index);
 
 
-extern void GLAPIENTRY
-_mesa_VertexAttribDivisor(GLuint index, GLuint divisor);
-
-
 extern void
 _mesa_copy_client_array(struct gl_context *ctx,
                         struct gl_client_array *dst,

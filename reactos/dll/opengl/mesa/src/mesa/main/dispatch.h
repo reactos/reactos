@@ -508,7 +508,6 @@
 #define _gloffset_FramebufferTexture 437
 #define _gloffset_GetBufferParameteri64v 438
 #define _gloffset_GetInteger64i_v 439
-#define _gloffset_VertexAttribDivisor 440
 #define _gloffset_LoadTransposeMatrixdARB 441
 #define _gloffset_LoadTransposeMatrixfARB 442
 #define _gloffset_MultTransposeMatrixdARB 443
@@ -639,7 +638,6 @@
 #define _gloffset_FramebufferTextureARB 576
 #define _gloffset_FramebufferTextureFaceARB 577
 #define _gloffset_ProgramParameteriARB 578
-#define _gloffset_VertexAttribDivisorARB 579
 #define _gloffset_FlushMappedBufferRange 580
 #define _gloffset_MapBufferRange 581
 #define _gloffset_TexBufferARB 582
@@ -1435,7 +1433,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_FramebufferTexture driDispatchRemapTable[FramebufferTexture_remap_index]
 #define _gloffset_GetBufferParameteri64v driDispatchRemapTable[GetBufferParameteri64v_remap_index]
 #define _gloffset_GetInteger64i_v driDispatchRemapTable[GetInteger64i_v_remap_index]
-#define _gloffset_VertexAttribDivisor driDispatchRemapTable[VertexAttribDivisor_remap_index]
 #define _gloffset_LoadTransposeMatrixdARB driDispatchRemapTable[LoadTransposeMatrixdARB_remap_index]
 #define _gloffset_LoadTransposeMatrixfARB driDispatchRemapTable[LoadTransposeMatrixfARB_remap_index]
 #define _gloffset_MultTransposeMatrixdARB driDispatchRemapTable[MultTransposeMatrixdARB_remap_index]
@@ -1566,7 +1563,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_FramebufferTextureARB driDispatchRemapTable[FramebufferTextureARB_remap_index]
 #define _gloffset_FramebufferTextureFaceARB driDispatchRemapTable[FramebufferTextureFaceARB_remap_index]
 #define _gloffset_ProgramParameteriARB driDispatchRemapTable[ProgramParameteriARB_remap_index]
-#define _gloffset_VertexAttribDivisorARB driDispatchRemapTable[VertexAttribDivisorARB_remap_index]
 #define _gloffset_FlushMappedBufferRange driDispatchRemapTable[FlushMappedBufferRange_remap_index]
 #define _gloffset_MapBufferRange driDispatchRemapTable[MapBufferRange_remap_index]
 #define _gloffset_TexBufferARB driDispatchRemapTable[TexBufferARB_remap_index]
@@ -6706,17 +6702,6 @@ static inline void SET_GetInteger64i_v(struct _glapi_table *disp, void (GLAPIENT
    SET_by_offset(disp, _gloffset_GetInteger64i_v, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_VertexAttribDivisor)(GLuint, GLuint);
-#define CALL_VertexAttribDivisor(disp, parameters) \
-    (* GET_VertexAttribDivisor(disp)) parameters
-static inline _glptr_VertexAttribDivisor GET_VertexAttribDivisor(struct _glapi_table *disp) {
-   return (_glptr_VertexAttribDivisor) (GET_by_offset(disp, _gloffset_VertexAttribDivisor));
-}
-
-static inline void SET_VertexAttribDivisor(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint)) {
-   SET_by_offset(disp, _gloffset_VertexAttribDivisor, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_LoadTransposeMatrixdARB)(const GLdouble *);
 #define CALL_LoadTransposeMatrixdARB(disp, parameters) \
     (* GET_LoadTransposeMatrixdARB(disp)) parameters
@@ -8145,17 +8130,6 @@ static inline _glptr_ProgramParameteriARB GET_ProgramParameteriARB(struct _glapi
 
 static inline void SET_ProgramParameteriARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLint)) {
    SET_by_offset(disp, _gloffset_ProgramParameteriARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_VertexAttribDivisorARB)(GLuint, GLuint);
-#define CALL_VertexAttribDivisorARB(disp, parameters) \
-    (* GET_VertexAttribDivisorARB(disp)) parameters
-static inline _glptr_VertexAttribDivisorARB GET_VertexAttribDivisorARB(struct _glapi_table *disp) {
-   return (_glptr_VertexAttribDivisorARB) (GET_by_offset(disp, _gloffset_VertexAttribDivisorARB));
-}
-
-static inline void SET_VertexAttribDivisorARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint)) {
-   SET_by_offset(disp, _gloffset_VertexAttribDivisorARB, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_FlushMappedBufferRange)(GLenum, GLintptr, GLsizeiptr);

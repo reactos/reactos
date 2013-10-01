@@ -159,8 +159,7 @@ compute_version(struct gl_context *ctx)
    const GLboolean ver_3_3 = (ver_3_2 &&
                               ctx->Const.GLSLVersion >= 330 &&
                               ctx->Extensions.ARB_blend_func_extended &&
-                              ctx->Extensions.ARB_explicit_attrib_location &&
-                              ctx->Extensions.ARB_instanced_arrays);
+                              ctx->Extensions.ARB_explicit_attrib_location);
 
    if (ver_3_3) {
       major = 3;

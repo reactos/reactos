@@ -418,9 +418,6 @@ typedef enum
    OPCODE_ACTIVE_PROGRAM_EXT,
    OPCODE_USE_SHADER_PROGRAM_EXT,
 
-   /* GL_ARB_instanced_arrays */
-   OPCODE_VERTEX_ATTRIB_DIVISOR,
-
    /* GL_NV_texture_barrier */
    OPCODE_TEXTURE_BARRIER_NV,
 
@@ -6889,24 +6886,6 @@ exec_GetTexParameterIuiv(GLenum target, GLenum pname, GLuint *params)
 }
 
 
-/* GL_ARB_instanced_arrays */
-static void GLAPIENTRY
-save_VertexAttribDivisor(GLuint index, GLuint divisor)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_VERTEX_ATTRIB_DIVISOR, 2);
-   if (n) {
-      n[1].ui = index;
-      n[2].ui = divisor;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_VertexAttribDivisorARB(ctx->Exec, (index, divisor));
-   }
-}
-
-
 /* GL_NV_texture_barrier */
 static void GLAPIENTRY
 save_TextureBarrierNV(void)
@@ -8111,11 +8090,6 @@ execute_list(struct gl_context *ctx, GLuint list)
                params[3] = n[6].ui;
                CALL_TexParameterIuivEXT(ctx->Exec, (n[1].e, n[2].e, params));
             }
-            break;
-
-         case OPCODE_VERTEX_ATTRIB_DIVISOR:
-            /* GL_ARB_instanced_arrays */
-            CALL_VertexAttribDivisorARB(ctx->Exec, (n[1].ui, n[2].ui));
             break;
 
          case OPCODE_TEXTURE_BARRIER_NV:
@@ -9802,9 +9776,6 @@ _mesa_create_save_table(void)
    (void) save_Uniform3uiv;
    (void) save_Uniform4uiv;
 #endif
-
-   /* GL_ARB_instanced_arrays */
-   SET_VertexAttribDivisorARB(table, save_VertexAttribDivisor);
 
    /* GL_NV_texture_barrier */
    SET_TextureBarrierNV(table, save_TextureBarrierNV);
