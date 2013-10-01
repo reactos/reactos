@@ -1,6 +1,6 @@
-/*
+/* 
  * DXDiag
- *
+ * 
  * Copyright 2004 Raphael Junqueira
  *
  * This library is free software; you can redistribute it and/or
@@ -15,24 +15,38 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
 
+#define COBJMACROS
+
 #include <config.h>
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <oleauto.h>
+#include <oleidl.h>
+#include <rpcproxy.h>
+#include <initguid.h>
 #include "dxdiag_private.h"
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dxdiag);
+
+HINSTANCE dxdiagn_instance = 0;
 
 LONG DXDIAGN_refCount = 0;
 
 /* At process attach */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-  TRACE("%p,%lx,%p\n", hInstDLL, fdwReason, lpvReserved);
+  TRACE("%p,%x,%p\n", hInstDLL, fdwReason, lpvReserved);
   if (fdwReason == DLL_PROCESS_ATTACH) {
-    DisableThreadLibraryCalls(hInstDLL);
+      dxdiagn_instance = hInstDLL;
+      DisableThreadLibraryCalls(hInstDLL);
   }
   return TRUE;
 }
@@ -41,46 +55,60 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
  * DXDiag ClassFactory
  */
 typedef struct {
-  const IClassFactoryVtbl *lpVtbl;
-  REFCLSID   rclsid;
-  HRESULT   (*pfnCreateInstanceFactory)(LPCLASSFACTORY iface, LPUNKNOWN punkOuter, REFIID riid, LPVOID *ppobj);
+  IClassFactory IClassFactory_iface;
 } IClassFactoryImpl;
 
-static HRESULT WINAPI DXDiagCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
-  FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+static HRESULT WINAPI DXDiagCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
+{
+  if (ppv == NULL)
+    return E_POINTER;
 
-  if (ppobj == NULL) return E_POINTER;
+  if (IsEqualGUID(&IID_IUnknown, riid))
+    TRACE("(%p)->(IID_IUnknown %p)\n", iface, ppv);
+  else if (IsEqualGUID(&IID_IClassFactory, riid))
+    TRACE("(%p)->(IID_IClassFactory %p)\n", iface, ppv);
+  else {
+    FIXME("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppv);
+    *ppv = NULL;
+    return E_NOINTERFACE;
+  }
 
-  return E_NOINTERFACE;
+  *ppv = iface;
+  IClassFactory_AddRef(iface);
+  return S_OK;
 }
 
-static ULONG WINAPI DXDiagCF_AddRef(LPCLASSFACTORY iface) {
+static ULONG WINAPI DXDiagCF_AddRef(IClassFactory *iface)
+{
   DXDIAGN_LockModule();
 
   return 2; /* non-heap based object */
 }
 
-static ULONG WINAPI DXDiagCF_Release(LPCLASSFACTORY iface) {
+static ULONG WINAPI DXDiagCF_Release(IClassFactory * iface)
+{
   DXDIAGN_UnlockModule();
 
   return 1; /* non-heap based object */
 }
 
-static HRESULT WINAPI DXDiagCF_CreateInstance(LPCLASSFACTORY iface,LPUNKNOWN pOuter,REFIID riid,LPVOID *ppobj) {
-  IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-  TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
+static HRESULT WINAPI DXDiagCF_CreateInstance(IClassFactory *iface, IUnknown *pOuter, REFIID riid,
+        void **ppv)
+{
+  TRACE("(%p)->(%p,%s,%p)\n", iface, pOuter, debugstr_guid(riid), ppv);
 
-  return This->pfnCreateInstanceFactory(iface, pOuter, riid, ppobj);
+  return DXDiag_CreateDXDiagProvider(iface, pOuter, riid, ppv);
 }
 
-static HRESULT WINAPI DXDiagCF_LockServer(LPCLASSFACTORY iface,BOOL dolock) {
+static HRESULT WINAPI DXDiagCF_LockServer(IClassFactory *iface, BOOL dolock)
+{
   TRACE("(%d)\n", dolock);
 
   if (dolock)
     DXDIAGN_LockModule();
   else
     DXDIAGN_UnlockModule();
-
+  
   return S_OK;
 }
 
@@ -92,10 +120,7 @@ static const IClassFactoryVtbl DXDiagCF_Vtbl = {
   DXDiagCF_LockServer
 };
 
-static IClassFactoryImpl DXDiag_CFS[] = {
-  { &DXDiagCF_Vtbl, &CLSID_DxDiagProvider, DXDiag_CreateDXDiagProvider },
-  { NULL, NULL, NULL }
-};
+static IClassFactoryImpl DXDiag_CF = { { &DXDiagCF_Vtbl } };
 
 /***********************************************************************
  *             DllCanUnloadNow (DXDIAGN.@)
@@ -110,18 +135,30 @@ HRESULT WINAPI DllCanUnloadNow(void)
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    int i = 0;
+    TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
 
-    TRACE("(%p,%p,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-    while (NULL != DXDiag_CFS[i].rclsid) {
-      if (IsEqualGUID(rclsid, DXDiag_CFS[i].rclsid)) {
-	      DXDiagCF_AddRef((IClassFactory*) &DXDiag_CFS[i]);
-	      *ppv = &DXDiag_CFS[i];
-	      return S_OK;
-      }
-      ++i;
+    if (IsEqualGUID(rclsid, &CLSID_DxDiagProvider)) {
+      IClassFactory_AddRef(&DXDiag_CF.IClassFactory_iface);
+      *ppv = &DXDiag_CF.IClassFactory_iface;
+      return S_OK;
     }
 
-    FIXME("(%p,%p,%p): no interface found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+    FIXME("(%s,%s,%p): no interface found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     return CLASS_E_CLASSNOTAVAILABLE;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (DXDIAGN.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( dxdiagn_instance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (DXDIAGN.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( dxdiagn_instance );
 }

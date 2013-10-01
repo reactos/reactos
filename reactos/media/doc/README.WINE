@@ -40,7 +40,7 @@ reactos/dll/directx/wine/dmusic         # Synced to Wine-1.5.26
 reactos/dll/directx/wine/dplay          # Synced to Wine-1.7.1
 reactos/dll/directx/wine/dplayx         # Synced to Wine-1.7.1
 reactos/dll/directx/wine/dsound         # Synced to Wine-1.7.1
-reactos/dll/directx/wine/dxdiagn        # Synced to Wine-0_9_5
+reactos/dll/directx/wine/dxdiagn        # Synced to Wine-1.7.1
 reactos/dll/directx/wine/dxgi           # Synced to Wine-1.7.1
 reactos/dll/directx/wine/msdmo          # Autosync
 reactos/dll/directx/wine/qedit          # Autosync
