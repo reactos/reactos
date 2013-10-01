@@ -602,11 +602,6 @@ test_attachment_completeness(const struct gl_context *ctx, GLenum format,
          if (baseFormat == GL_DEPTH_COMPONENT) {
             /* OK */
          }
-         else if (ctx->Extensions.EXT_packed_depth_stencil &&
-                  ctx->Extensions.ARB_depth_texture &&
-                  baseFormat == GL_DEPTH_STENCIL_EXT) {
-            /* OK */
-         }
          else {
             att->Complete = GL_FALSE;
             att_incomplete("bad depth format");
@@ -614,13 +609,7 @@ test_attachment_completeness(const struct gl_context *ctx, GLenum format,
          }
       }
       else {
-         ASSERT(format == GL_STENCIL);
-         if (ctx->Extensions.EXT_packed_depth_stencil &&
-             ctx->Extensions.ARB_depth_texture &&
-             baseFormat == GL_DEPTH_STENCIL_EXT) {
-            /* OK */
-         }
-         else {
+         {
             /* no such thing as stencil-only textures */
             att_incomplete("illegal stencil texture");
             att->Complete = GL_FALSE;
@@ -1293,8 +1282,6 @@ _mesa_base_fbo_format(struct gl_context *ctx, GLenum internalFormat)
       return ctx->Extensions.EXT_texture_integer &&
              ctx->Extensions.ARB_framebuffer_object ? GL_LUMINANCE_ALPHA : 0;
 
-   case GL_RGB10_A2UI:
-      return ctx->Extensions.ARB_texture_rgb10_a2ui ? GL_RGBA : 0;
    default:
       return 0;
    }

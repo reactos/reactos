@@ -1306,7 +1306,6 @@ typedef enum
    MAX_FACES = 6
 } gl_face_index;
 
-
 /**
  * Sampler object state.  These objects are new with GL_ARB_sampler_objects
  * and OpenGL 3.3.  Legacy texture objects also contain a sampler object.
@@ -1326,14 +1325,8 @@ struct gl_sampler_object
    GLfloat MaxLod;		/**< max lambda, OpenGL 1.2 */
    GLfloat LodBias;		/**< OpenGL 1.4 */
    GLfloat MaxAnisotropy;	/**< GL_EXT_texture_filter_anisotropic */
-   GLenum CompareMode;		/**< GL_ARB_shadow */
-   GLenum CompareFunc;		/**< GL_ARB_shadow */
-   GLfloat CompareFailValue;    /**< GL_ARB_shadow_ambient */
-   GLenum sRGBDecode;           /**< GL_DECODE_EXT or GL_SKIP_DECODE_EXT */
    GLboolean CubeMapSeamless;   /**< GL_AMD_seamless_cubemap_per_texture */
 
-   /* deprecated sampler state */
-   GLenum DepthMode;		/**< GL_ARB_depth_texture */
 };
 
 
@@ -1433,9 +1426,6 @@ struct gl_texture_unit
    GLfloat LodBias;		/**< for biasing mipmap levels */
    GLenum BumpTarget;
    GLfloat RotMatrix[4]; /* 2x2 matrix */
-
-   /** Current sampler object (GL_ARB_sampler_objects) */
-   struct gl_sampler_object *Sampler;
 
    /** 
     * \name GL_EXT_texture_env_combine 
@@ -2144,7 +2134,6 @@ struct gl_query_state
 {
    struct _mesa_HashTable *QueryObjects;
    struct gl_query_object *CurrentOcclusionObject; /* GL_ARB_occlusion_query */
-   struct gl_query_object *CurrentTimerObject;     /* GL_EXT_timer_query */
 
    /** GL_NV_conditional_render */
    struct gl_query_object *CondRenderQuery;
@@ -2521,9 +2510,6 @@ struct gl_shared_state
    /* GL_ARB_sync */
    struct simple_node SyncObjects;
 
-   /** GL_ARB_sampler_objects */
-   struct _mesa_HashTable *SamplerObjects;
-
    void *DriverData;  /**< Device driver shared state */
 };
 
@@ -2860,7 +2846,6 @@ struct gl_extensions
    GLboolean ARB_copy_buffer;
    GLboolean ARB_depth_buffer_float;
    GLboolean ARB_depth_clamp;
-   GLboolean ARB_depth_texture;
    GLboolean ARB_draw_buffers_blend;
    GLboolean ARB_draw_elements_base_vertex;
    GLboolean ARB_draw_instanced;
@@ -2878,14 +2863,11 @@ struct gl_extensions
    GLboolean ARB_occlusion_query;
    GLboolean ARB_occlusion_query2;
    GLboolean ARB_point_sprite;
-   GLboolean ARB_sampler_objects;
    GLboolean ARB_seamless_cube_map;
    GLboolean ARB_shader_objects;
    GLboolean ARB_shader_stencil_export;
    GLboolean ARB_shader_texture_lod;
    GLboolean ARB_shading_language_100;
-   GLboolean ARB_shadow;
-   GLboolean ARB_shadow_ambient;
    GLboolean ARB_sync;
    GLboolean ARB_texture_border_clamp;
    GLboolean ARB_texture_buffer_object;
@@ -2898,9 +2880,7 @@ struct gl_extensions
    GLboolean ARB_texture_multisample;
    GLboolean ARB_texture_non_power_of_two;
    GLboolean ARB_texture_rg;
-   GLboolean ARB_texture_rgb10_a2ui;
-   GLboolean ARB_texture_storage;
-   GLboolean ARB_timer_query;
+   GLboolean ARB_texture_storage;;
    GLboolean ARB_transform_feedback2;
    GLboolean ARB_transpose_matrix;
    GLboolean ARB_uniform_buffer_object;
@@ -2945,7 +2925,6 @@ struct gl_extensions
    GLboolean EXT_texture_mirror_clamp;
    GLboolean EXT_texture_snorm;
    GLboolean EXT_texture_sRGB;
-   GLboolean EXT_texture_sRGB_decode;
    GLboolean EXT_transform_feedback;
    GLboolean EXT_timer_query;
    GLboolean EXT_vertex_array_bgra;

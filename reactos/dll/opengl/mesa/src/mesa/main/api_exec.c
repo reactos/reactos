@@ -76,9 +76,6 @@
 #include "polygon.h"
 #include "queryobj.h"
 #include "readpix.h"
-#if FEATURE_ARB_sampler_objects
-#include "samplerobj.h"
-#endif
 #include "scissor.h"
 #include "stencil.h"
 #include "texenv.h"
@@ -746,10 +743,6 @@ _mesa_create_exec_table(void)
    SET_TextureStorage1DEXT(exec, _mesa_TextureStorage1DEXT);
    SET_TextureStorage2DEXT(exec, _mesa_TextureStorage2DEXT);
    SET_TextureStorage3DEXT(exec, _mesa_TextureStorage3DEXT);
-
-#if FEATURE_ARB_sampler_objects
-   _mesa_init_sampler_object_dispatch(exec);
-#endif
 
    return exec;
 }

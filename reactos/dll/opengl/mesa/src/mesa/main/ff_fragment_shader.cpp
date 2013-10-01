@@ -110,7 +110,6 @@ struct state_key {
    struct {
       GLuint enabled:1;
       GLuint source_index:4;   /**< TEXTURE_x_INDEX */
-      GLuint shadow:1;
       GLuint ScaleShiftRGB:2;
       GLuint ScaleShiftA:2;
 
@@ -439,11 +438,6 @@ static GLuint make_state_key( struct gl_context *ctx,  struct state_key *key )
 
       key->unit[i].source_index =
          translate_tex_src_bit(texUnit->_ReallyEnabled);
-
-      key->unit[i].shadow =
-         ((texObj->Sampler.CompareMode == GL_COMPARE_R_TO_TEXTURE) &&
-          ((format == GL_DEPTH_COMPONENT) || 
-           (format == GL_DEPTH_STENCIL_EXT)));
 
       key->unit[i].NumArgsRGB = comb->_NumArgsRGB;
       key->unit[i].NumArgsA = comb->_NumArgsA;
@@ -1006,54 +1000,34 @@ static void load_texture( struct texenv_fragment_program *p, GLuint unit )
 
    switch (texTarget) {
    case TEXTURE_1D_INDEX:
-      if (p->state->unit[unit].shadow)
-	 sampler_type = p->shader->symbols->get_type("sampler1DShadow");
-      else
 	 sampler_type = p->shader->symbols->get_type("sampler1D");
       coords = 1;
       break;
    case TEXTURE_1D_ARRAY_INDEX:
-      if (p->state->unit[unit].shadow)
-	 sampler_type = p->shader->symbols->get_type("sampler1DArrayShadow");
-      else
 	 sampler_type = p->shader->symbols->get_type("sampler1DArray");
       coords = 2;
       break;
    case TEXTURE_2D_INDEX:
-      if (p->state->unit[unit].shadow)
-	 sampler_type = p->shader->symbols->get_type("sampler2DShadow");
-      else
 	 sampler_type = p->shader->symbols->get_type("sampler2D");
       coords = 2;
       break;
    case TEXTURE_2D_ARRAY_INDEX:
-      if (p->state->unit[unit].shadow)
-	 sampler_type = p->shader->symbols->get_type("sampler2DArrayShadow");
-      else
 	 sampler_type = p->shader->symbols->get_type("sampler2DArray");
       coords = 3;
       break;
    case TEXTURE_RECT_INDEX:
-      if (p->state->unit[unit].shadow)
-	 sampler_type = p->shader->symbols->get_type("sampler2DRectShadow");
-      else
 	 sampler_type = p->shader->symbols->get_type("sampler2DRect");
       coords = 2;
       break;
    case TEXTURE_3D_INDEX:
-      assert(!p->state->unit[unit].shadow);
       sampler_type = p->shader->symbols->get_type("sampler3D");
       coords = 3;
       break;
    case TEXTURE_CUBE_INDEX:
-      if (p->state->unit[unit].shadow)
-	 sampler_type = p->shader->symbols->get_type("samplerCubeShadow");
-      else
 	 sampler_type = p->shader->symbols->get_type("samplerCube");
       coords = 3;
       break;
    case TEXTURE_EXTERNAL_INDEX:
-      assert(!p->state->unit[unit].shadow);
       sampler_type = p->shader->symbols->get_type("samplerExternalOES");
       coords = 2;
       break;
@@ -1076,14 +1050,6 @@ static void load_texture( struct texenv_fragment_program *p, GLuint unit )
    tex->set_sampler(deref, glsl_type::vec4_type);
 
    tex->coordinate = new(p->mem_ctx) ir_swizzle(texcoord, 0, 1, 2, 3, coords);
-
-   if (p->state->unit[unit].shadow) {
-      texcoord = texcoord->clone(p->mem_ctx, NULL);
-      tex->shadow_comparitor = new(p->mem_ctx) ir_swizzle(texcoord,
-							  coords, 0, 0, 0,
-							  1);
-      coords++;
-   }
 
    texcoord = texcoord->clone(p->mem_ctx, NULL);
    tex->projector = new(p->mem_ctx) ir_swizzle(texcoord, 3, 0, 0, 0, 1);

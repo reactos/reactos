@@ -90,8 +90,6 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.ARB_texture_env_combine &&
                               ctx->Extensions.ARB_texture_env_dot3);
    const GLboolean ver_1_4 = (ver_1_3 &&
-                              ctx->Extensions.ARB_depth_texture &&
-                              ctx->Extensions.ARB_shadow &&
                               ctx->Extensions.ARB_texture_env_crossbar &&
                               ctx->Extensions.ARB_window_pos &&
                               ctx->Extensions.EXT_blend_color &&
@@ -168,10 +166,7 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.ARB_blend_func_extended &&
                               ctx->Extensions.ARB_explicit_attrib_location &&
                               ctx->Extensions.ARB_instanced_arrays &&
-                              ctx->Extensions.ARB_occlusion_query2 &&
-                              ctx->Extensions.ARB_sampler_objects &&
-                              ctx->Extensions.ARB_texture_rgb10_a2ui &&
-                              ctx->Extensions.ARB_timer_query);
+                              ctx->Extensions.ARB_occlusion_query2);
 
    if (ver_3_3) {
       major = 3;

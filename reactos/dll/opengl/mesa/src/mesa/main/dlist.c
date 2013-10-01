@@ -58,7 +58,6 @@
 #include "pack.h"
 #include "pbo.h"
 #include "queryobj.h"
-#include "samplerobj.h"
 #include "shaderapi.h"
 #include "syncobj.h"
 #include "teximage.h"
@@ -449,13 +448,6 @@ typedef enum
 
    /* GL_NV_texture_barrier */
    OPCODE_TEXTURE_BARRIER_NV,
-
-   /* GL_ARB_sampler_object */
-   OPCODE_BIND_SAMPLER,
-   OPCODE_SAMPLER_PARAMETERIV,
-   OPCODE_SAMPLER_PARAMETERFV,
-   OPCODE_SAMPLER_PARAMETERIIV,
-   OPCODE_SAMPLER_PARAMETERUIV,
 
    /* GL_ARB_geometry_shader4 */
    OPCODE_PROGRAM_PARAMETERI,
@@ -7173,136 +7165,6 @@ save_TextureBarrierNV(void)
    }
 }
 
-
-/* GL_ARB_sampler_objects */
-static void GLAPIENTRY
-save_BindSampler(GLuint unit, GLuint sampler)
-{
-   Node *n;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_BIND_SAMPLER, 2);
-   if (n) {
-      n[1].ui = unit;
-      n[2].ui = sampler;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_BindSampler(ctx->Exec, (unit, sampler));
-   }
-}
-
-static void GLAPIENTRY
-save_SamplerParameteriv(GLuint sampler, GLenum pname, const GLint *params)
-{
-   Node *n;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_SAMPLER_PARAMETERIV, 6);
-   if (n) {
-      n[1].ui = sampler;
-      n[2].e = pname;
-      n[3].i = params[0];
-      if (pname == GL_TEXTURE_BORDER_COLOR) {
-         n[4].i = params[1];
-         n[5].i = params[2];
-         n[6].i = params[3];
-      }
-      else {
-         n[4].i = n[5].i = n[6].i = 0;
-      }
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_SamplerParameteriv(ctx->Exec, (sampler, pname, params));
-   }
-}
-
-static void GLAPIENTRY
-save_SamplerParameteri(GLuint sampler, GLenum pname, GLint param)
-{
-   save_SamplerParameteriv(sampler, pname, &param);
-}
-
-static void GLAPIENTRY
-save_SamplerParameterfv(GLuint sampler, GLenum pname, const GLfloat *params)
-{
-   Node *n;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_SAMPLER_PARAMETERFV, 6);
-   if (n) {
-      n[1].ui = sampler;
-      n[2].e = pname;
-      n[3].f = params[0];
-      if (pname == GL_TEXTURE_BORDER_COLOR) {
-         n[4].f = params[1];
-         n[5].f = params[2];
-         n[6].f = params[3];
-      }
-      else {
-         n[4].f = n[5].f = n[6].f = 0.0F;
-      }
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_SamplerParameterfv(ctx->Exec, (sampler, pname, params));
-   }
-}
-
-static void GLAPIENTRY
-save_SamplerParameterf(GLuint sampler, GLenum pname, GLfloat param)
-{
-   save_SamplerParameterfv(sampler, pname, &param);
-}
-
-static void GLAPIENTRY
-save_SamplerParameterIiv(GLuint sampler, GLenum pname, const GLint *params)
-{
-   Node *n;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_SAMPLER_PARAMETERIIV, 6);
-   if (n) {
-      n[1].ui = sampler;
-      n[2].e = pname;
-      n[3].i = params[0];
-      if (pname == GL_TEXTURE_BORDER_COLOR) {
-         n[4].i = params[1];
-         n[5].i = params[2];
-         n[6].i = params[3];
-      }
-      else {
-         n[4].i = n[5].i = n[6].i = 0;
-      }
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_SamplerParameterIiv(ctx->Exec, (sampler, pname, params));
-   }
-}
-
-static void GLAPIENTRY
-save_SamplerParameterIuiv(GLuint sampler, GLenum pname, const GLuint *params)
-{
-   Node *n;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_SAMPLER_PARAMETERUIV, 6);
-   if (n) {
-      n[1].ui = sampler;
-      n[2].e = pname;
-      n[3].ui = params[0];
-      if (pname == GL_TEXTURE_BORDER_COLOR) {
-         n[4].ui = params[1];
-         n[5].ui = params[2];
-         n[6].ui = params[3];
-      }
-      else {
-         n[4].ui = n[5].ui = n[6].ui = 0;
-      }
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_SamplerParameterIuiv(ctx->Exec, (sampler, pname, params));
-   }
-}
-
 /* GL_ARB_geometry_shader4 */
 static void GLAPIENTRY
 save_ProgramParameteri(GLuint program, GLenum pname, GLint value)
@@ -8608,51 +8470,6 @@ execute_list(struct gl_context *ctx, GLuint list)
             break;
          case OPCODE_DRAW_TRANSFORM_FEEDBACK:
             CALL_DrawTransformFeedback(ctx->Exec, (n[1].e, n[2].ui));
-            break;
-
-
-         case OPCODE_BIND_SAMPLER:
-            CALL_BindSampler(ctx->Exec, (n[1].ui, n[2].ui));
-            break;
-         case OPCODE_SAMPLER_PARAMETERIV:
-            {
-               GLint params[4];
-               params[0] = n[3].i;
-               params[1] = n[4].i;
-               params[2] = n[5].i;
-               params[3] = n[6].i;
-               CALL_SamplerParameteriv(ctx->Exec, (n[1].ui, n[2].e, params));
-            }
-            break;
-         case OPCODE_SAMPLER_PARAMETERFV:
-            {
-               GLfloat params[4];
-               params[0] = n[3].f;
-               params[1] = n[4].f;
-               params[2] = n[5].f;
-               params[3] = n[6].f;
-               CALL_SamplerParameterfv(ctx->Exec, (n[1].ui, n[2].e, params));
-            }
-            break;
-         case OPCODE_SAMPLER_PARAMETERIIV:
-            {
-               GLint params[4];
-               params[0] = n[3].i;
-               params[1] = n[4].i;
-               params[2] = n[5].i;
-               params[3] = n[6].i;
-               CALL_SamplerParameterIiv(ctx->Exec, (n[1].ui, n[2].e, params));
-            }
-            break;
-         case OPCODE_SAMPLER_PARAMETERUIV:
-            {
-               GLuint params[4];
-               params[0] = n[3].ui;
-               params[1] = n[4].ui;
-               params[2] = n[5].ui;
-               params[3] = n[6].ui;
-               CALL_SamplerParameterIuiv(ctx->Exec, (n[1].ui, n[2].e, params));
-            }
             break;
 
          /* GL_ARB_geometry_shader4 */
@@ -10389,16 +10206,6 @@ _mesa_create_save_table(void)
 
    /* GL_NV_texture_barrier */
    SET_TextureBarrierNV(table, save_TextureBarrierNV);
-
-   /* GL_ARB_sampler_objects */
-   _mesa_init_sampler_object_dispatch(table); /* plug in Gen/Get/etc functions */
-   SET_BindSampler(table, save_BindSampler);
-   SET_SamplerParameteri(table, save_SamplerParameteri);
-   SET_SamplerParameterf(table, save_SamplerParameterf);
-   SET_SamplerParameteriv(table, save_SamplerParameteriv);
-   SET_SamplerParameterfv(table, save_SamplerParameterfv);
-   SET_SamplerParameterIiv(table, save_SamplerParameterIiv);
-   SET_SamplerParameterIuiv(table, save_SamplerParameterIuiv);
 
    /* GL_ARB_draw_buffer_blend */
    SET_BlendFunciARB(table, save_BlendFunci);

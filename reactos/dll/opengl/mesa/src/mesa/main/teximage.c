@@ -139,18 +139,6 @@ _mesa_base_tex_format( struct gl_context *ctx, GLint internalFormat )
       }
    }
 
-   if (ctx->Extensions.ARB_depth_texture) {
-      switch (internalFormat) {
-         case GL_DEPTH_COMPONENT:
-         case GL_DEPTH_COMPONENT16:
-         case GL_DEPTH_COMPONENT24:
-         case GL_DEPTH_COMPONENT32:
-            return GL_DEPTH_COMPONENT;
-         default:
-            ; /* fallthrough */
-      }
-   }
-
    switch (internalFormat) {
    case GL_COMPRESSED_ALPHA:
       return GL_ALPHA;

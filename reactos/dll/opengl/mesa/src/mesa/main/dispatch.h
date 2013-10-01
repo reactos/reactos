@@ -669,20 +669,6 @@
 #define _gloffset_BlendEquationiARB 598
 #define _gloffset_BlendFuncSeparateiARB 599
 #define _gloffset_BlendFunciARB 600
-#define _gloffset_BindSampler 601
-#define _gloffset_DeleteSamplers 602
-#define _gloffset_GenSamplers 603
-#define _gloffset_GetSamplerParameterIiv 604
-#define _gloffset_GetSamplerParameterIuiv 605
-#define _gloffset_GetSamplerParameterfv 606
-#define _gloffset_GetSamplerParameteriv 607
-#define _gloffset_IsSampler 608
-#define _gloffset_SamplerParameterIiv 609
-#define _gloffset_SamplerParameterIuiv 610
-#define _gloffset_SamplerParameterf 611
-#define _gloffset_SamplerParameterfv 612
-#define _gloffset_SamplerParameteri 613
-#define _gloffset_SamplerParameteriv 614
 #define _gloffset_BindTransformFeedback 653
 #define _gloffset_DeleteTransformFeedbacks 654
 #define _gloffset_DrawTransformFeedback 655
@@ -999,8 +985,6 @@
 #define _gloffset_StencilFuncSeparateATI 966
 #define _gloffset_ProgramEnvParameters4fvEXT 967
 #define _gloffset_ProgramLocalParameters4fvEXT 968
-#define _gloffset_GetQueryObjecti64vEXT 969
-#define _gloffset_GetQueryObjectui64vEXT 970
 #define _gloffset_EGLImageTargetRenderbufferStorageOES 971
 #define _gloffset_EGLImageTargetTexture2DOES 972
 
@@ -1202,20 +1186,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define BlendEquationiARB_remap_index 190
 #define BlendFuncSeparateiARB_remap_index 191
 #define BlendFunciARB_remap_index 192
-#define BindSampler_remap_index 193
-#define DeleteSamplers_remap_index 194
-#define GenSamplers_remap_index 195
-#define GetSamplerParameterIiv_remap_index 196
-#define GetSamplerParameterIuiv_remap_index 197
-#define GetSamplerParameterfv_remap_index 198
-#define GetSamplerParameteriv_remap_index 199
-#define IsSampler_remap_index 200
-#define SamplerParameterIiv_remap_index 201
-#define SamplerParameterIuiv_remap_index 202
-#define SamplerParameterf_remap_index 203
-#define SamplerParameterfv_remap_index 204
-#define SamplerParameteri_remap_index 205
-#define SamplerParameteriv_remap_index 206
 #define BindTransformFeedback_remap_index 245
 #define DeleteTransformFeedbacks_remap_index 246
 #define DrawTransformFeedback_remap_index 247
@@ -1532,8 +1502,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define StencilFuncSeparateATI_remap_index 558
 #define ProgramEnvParameters4fvEXT_remap_index 559
 #define ProgramLocalParameters4fvEXT_remap_index 560
-#define GetQueryObjecti64vEXT_remap_index 561
-#define GetQueryObjectui64vEXT_remap_index 562
 #define EGLImageTargetRenderbufferStorageOES_remap_index 563
 #define EGLImageTargetTexture2DOES_remap_index 564
 
@@ -1730,20 +1698,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_BlendEquationiARB driDispatchRemapTable[BlendEquationiARB_remap_index]
 #define _gloffset_BlendFuncSeparateiARB driDispatchRemapTable[BlendFuncSeparateiARB_remap_index]
 #define _gloffset_BlendFunciARB driDispatchRemapTable[BlendFunciARB_remap_index]
-#define _gloffset_BindSampler driDispatchRemapTable[BindSampler_remap_index]
-#define _gloffset_DeleteSamplers driDispatchRemapTable[DeleteSamplers_remap_index]
-#define _gloffset_GenSamplers driDispatchRemapTable[GenSamplers_remap_index]
-#define _gloffset_GetSamplerParameterIiv driDispatchRemapTable[GetSamplerParameterIiv_remap_index]
-#define _gloffset_GetSamplerParameterIuiv driDispatchRemapTable[GetSamplerParameterIuiv_remap_index]
-#define _gloffset_GetSamplerParameterfv driDispatchRemapTable[GetSamplerParameterfv_remap_index]
-#define _gloffset_GetSamplerParameteriv driDispatchRemapTable[GetSamplerParameteriv_remap_index]
-#define _gloffset_IsSampler driDispatchRemapTable[IsSampler_remap_index]
-#define _gloffset_SamplerParameterIiv driDispatchRemapTable[SamplerParameterIiv_remap_index]
-#define _gloffset_SamplerParameterIuiv driDispatchRemapTable[SamplerParameterIuiv_remap_index]
-#define _gloffset_SamplerParameterf driDispatchRemapTable[SamplerParameterf_remap_index]
-#define _gloffset_SamplerParameterfv driDispatchRemapTable[SamplerParameterfv_remap_index]
-#define _gloffset_SamplerParameteri driDispatchRemapTable[SamplerParameteri_remap_index]
-#define _gloffset_SamplerParameteriv driDispatchRemapTable[SamplerParameteriv_remap_index]
 #define _gloffset_BindTransformFeedback driDispatchRemapTable[BindTransformFeedback_remap_index]
 #define _gloffset_DeleteTransformFeedbacks driDispatchRemapTable[DeleteTransformFeedbacks_remap_index]
 #define _gloffset_DrawTransformFeedback driDispatchRemapTable[DrawTransformFeedback_remap_index]
@@ -2060,8 +2014,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_StencilFuncSeparateATI driDispatchRemapTable[StencilFuncSeparateATI_remap_index]
 #define _gloffset_ProgramEnvParameters4fvEXT driDispatchRemapTable[ProgramEnvParameters4fvEXT_remap_index]
 #define _gloffset_ProgramLocalParameters4fvEXT driDispatchRemapTable[ProgramLocalParameters4fvEXT_remap_index]
-#define _gloffset_GetQueryObjecti64vEXT driDispatchRemapTable[GetQueryObjecti64vEXT_remap_index]
-#define _gloffset_GetQueryObjectui64vEXT driDispatchRemapTable[GetQueryObjectui64vEXT_remap_index]
 #define _gloffset_EGLImageTargetRenderbufferStorageOES driDispatchRemapTable[EGLImageTargetRenderbufferStorageOES_remap_index]
 #define _gloffset_EGLImageTargetTexture2DOES driDispatchRemapTable[EGLImageTargetTexture2DOES_remap_index]
 
@@ -8678,160 +8630,6 @@ static inline void SET_BlendFunciARB(struct _glapi_table *disp, void (GLAPIENTRY
    SET_by_offset(disp, _gloffset_BlendFunciARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_BindSampler)(GLuint, GLuint);
-#define CALL_BindSampler(disp, parameters) \
-    (* GET_BindSampler(disp)) parameters
-static inline _glptr_BindSampler GET_BindSampler(struct _glapi_table *disp) {
-   return (_glptr_BindSampler) (GET_by_offset(disp, _gloffset_BindSampler));
-}
-
-static inline void SET_BindSampler(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint)) {
-   SET_by_offset(disp, _gloffset_BindSampler, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_DeleteSamplers)(GLsizei, const GLuint *);
-#define CALL_DeleteSamplers(disp, parameters) \
-    (* GET_DeleteSamplers(disp)) parameters
-static inline _glptr_DeleteSamplers GET_DeleteSamplers(struct _glapi_table *disp) {
-   return (_glptr_DeleteSamplers) (GET_by_offset(disp, _gloffset_DeleteSamplers));
-}
-
-static inline void SET_DeleteSamplers(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, const GLuint *)) {
-   SET_by_offset(disp, _gloffset_DeleteSamplers, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GenSamplers)(GLsizei, GLuint *);
-#define CALL_GenSamplers(disp, parameters) \
-    (* GET_GenSamplers(disp)) parameters
-static inline _glptr_GenSamplers GET_GenSamplers(struct _glapi_table *disp) {
-   return (_glptr_GenSamplers) (GET_by_offset(disp, _gloffset_GenSamplers));
-}
-
-static inline void SET_GenSamplers(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
-   SET_by_offset(disp, _gloffset_GenSamplers, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetSamplerParameterIiv)(GLuint, GLenum, GLint *);
-#define CALL_GetSamplerParameterIiv(disp, parameters) \
-    (* GET_GetSamplerParameterIiv(disp)) parameters
-static inline _glptr_GetSamplerParameterIiv GET_GetSamplerParameterIiv(struct _glapi_table *disp) {
-   return (_glptr_GetSamplerParameterIiv) (GET_by_offset(disp, _gloffset_GetSamplerParameterIiv));
-}
-
-static inline void SET_GetSamplerParameterIiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLint *)) {
-   SET_by_offset(disp, _gloffset_GetSamplerParameterIiv, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetSamplerParameterIuiv)(GLuint, GLenum, GLuint *);
-#define CALL_GetSamplerParameterIuiv(disp, parameters) \
-    (* GET_GetSamplerParameterIuiv(disp)) parameters
-static inline _glptr_GetSamplerParameterIuiv GET_GetSamplerParameterIuiv(struct _glapi_table *disp) {
-   return (_glptr_GetSamplerParameterIuiv) (GET_by_offset(disp, _gloffset_GetSamplerParameterIuiv));
-}
-
-static inline void SET_GetSamplerParameterIuiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLuint *)) {
-   SET_by_offset(disp, _gloffset_GetSamplerParameterIuiv, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetSamplerParameterfv)(GLuint, GLenum, GLfloat *);
-#define CALL_GetSamplerParameterfv(disp, parameters) \
-    (* GET_GetSamplerParameterfv(disp)) parameters
-static inline _glptr_GetSamplerParameterfv GET_GetSamplerParameterfv(struct _glapi_table *disp) {
-   return (_glptr_GetSamplerParameterfv) (GET_by_offset(disp, _gloffset_GetSamplerParameterfv));
-}
-
-static inline void SET_GetSamplerParameterfv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLfloat *)) {
-   SET_by_offset(disp, _gloffset_GetSamplerParameterfv, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetSamplerParameteriv)(GLuint, GLenum, GLint *);
-#define CALL_GetSamplerParameteriv(disp, parameters) \
-    (* GET_GetSamplerParameteriv(disp)) parameters
-static inline _glptr_GetSamplerParameteriv GET_GetSamplerParameteriv(struct _glapi_table *disp) {
-   return (_glptr_GetSamplerParameteriv) (GET_by_offset(disp, _gloffset_GetSamplerParameteriv));
-}
-
-static inline void SET_GetSamplerParameteriv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLint *)) {
-   SET_by_offset(disp, _gloffset_GetSamplerParameteriv, fn);
-}
-
-typedef GLboolean (GLAPIENTRYP _glptr_IsSampler)(GLuint);
-#define CALL_IsSampler(disp, parameters) \
-    (* GET_IsSampler(disp)) parameters
-static inline _glptr_IsSampler GET_IsSampler(struct _glapi_table *disp) {
-   return (_glptr_IsSampler) (GET_by_offset(disp, _gloffset_IsSampler));
-}
-
-static inline void SET_IsSampler(struct _glapi_table *disp, GLboolean (GLAPIENTRYP fn)(GLuint)) {
-   SET_by_offset(disp, _gloffset_IsSampler, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_SamplerParameterIiv)(GLuint, GLenum, const GLint *);
-#define CALL_SamplerParameterIiv(disp, parameters) \
-    (* GET_SamplerParameterIiv(disp)) parameters
-static inline _glptr_SamplerParameterIiv GET_SamplerParameterIiv(struct _glapi_table *disp) {
-   return (_glptr_SamplerParameterIiv) (GET_by_offset(disp, _gloffset_SamplerParameterIiv));
-}
-
-static inline void SET_SamplerParameterIiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, const GLint *)) {
-   SET_by_offset(disp, _gloffset_SamplerParameterIiv, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_SamplerParameterIuiv)(GLuint, GLenum, const GLuint *);
-#define CALL_SamplerParameterIuiv(disp, parameters) \
-    (* GET_SamplerParameterIuiv(disp)) parameters
-static inline _glptr_SamplerParameterIuiv GET_SamplerParameterIuiv(struct _glapi_table *disp) {
-   return (_glptr_SamplerParameterIuiv) (GET_by_offset(disp, _gloffset_SamplerParameterIuiv));
-}
-
-static inline void SET_SamplerParameterIuiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, const GLuint *)) {
-   SET_by_offset(disp, _gloffset_SamplerParameterIuiv, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_SamplerParameterf)(GLuint, GLenum, GLfloat);
-#define CALL_SamplerParameterf(disp, parameters) \
-    (* GET_SamplerParameterf(disp)) parameters
-static inline _glptr_SamplerParameterf GET_SamplerParameterf(struct _glapi_table *disp) {
-   return (_glptr_SamplerParameterf) (GET_by_offset(disp, _gloffset_SamplerParameterf));
-}
-
-static inline void SET_SamplerParameterf(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLfloat)) {
-   SET_by_offset(disp, _gloffset_SamplerParameterf, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_SamplerParameterfv)(GLuint, GLenum, const GLfloat *);
-#define CALL_SamplerParameterfv(disp, parameters) \
-    (* GET_SamplerParameterfv(disp)) parameters
-static inline _glptr_SamplerParameterfv GET_SamplerParameterfv(struct _glapi_table *disp) {
-   return (_glptr_SamplerParameterfv) (GET_by_offset(disp, _gloffset_SamplerParameterfv));
-}
-
-static inline void SET_SamplerParameterfv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, const GLfloat *)) {
-   SET_by_offset(disp, _gloffset_SamplerParameterfv, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_SamplerParameteri)(GLuint, GLenum, GLint);
-#define CALL_SamplerParameteri(disp, parameters) \
-    (* GET_SamplerParameteri(disp)) parameters
-static inline _glptr_SamplerParameteri GET_SamplerParameteri(struct _glapi_table *disp) {
-   return (_glptr_SamplerParameteri) (GET_by_offset(disp, _gloffset_SamplerParameteri));
-}
-
-static inline void SET_SamplerParameteri(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLint)) {
-   SET_by_offset(disp, _gloffset_SamplerParameteri, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_SamplerParameteriv)(GLuint, GLenum, const GLint *);
-#define CALL_SamplerParameteriv(disp, parameters) \
-    (* GET_SamplerParameteriv(disp)) parameters
-static inline _glptr_SamplerParameteriv GET_SamplerParameteriv(struct _glapi_table *disp) {
-   return (_glptr_SamplerParameteriv) (GET_by_offset(disp, _gloffset_SamplerParameteriv));
-}
-
-static inline void SET_SamplerParameteriv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, const GLint *)) {
-   SET_by_offset(disp, _gloffset_SamplerParameteriv, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_BindTransformFeedback)(GLenum, GLuint);
 #define CALL_BindTransformFeedback(disp, parameters) \
     (* GET_BindTransformFeedback(disp)) parameters
@@ -12306,28 +12104,6 @@ static inline _glptr_ProgramLocalParameters4fvEXT GET_ProgramLocalParameters4fvE
 
 static inline void SET_ProgramLocalParameters4fvEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLsizei, const GLfloat *)) {
    SET_by_offset(disp, _gloffset_ProgramLocalParameters4fvEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetQueryObjecti64vEXT)(GLuint, GLenum, GLint64EXT *);
-#define CALL_GetQueryObjecti64vEXT(disp, parameters) \
-    (* GET_GetQueryObjecti64vEXT(disp)) parameters
-static inline _glptr_GetQueryObjecti64vEXT GET_GetQueryObjecti64vEXT(struct _glapi_table *disp) {
-   return (_glptr_GetQueryObjecti64vEXT) (GET_by_offset(disp, _gloffset_GetQueryObjecti64vEXT));
-}
-
-static inline void SET_GetQueryObjecti64vEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLint64EXT *)) {
-   SET_by_offset(disp, _gloffset_GetQueryObjecti64vEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetQueryObjectui64vEXT)(GLuint, GLenum, GLuint64EXT *);
-#define CALL_GetQueryObjectui64vEXT(disp, parameters) \
-    (* GET_GetQueryObjectui64vEXT(disp)) parameters
-static inline _glptr_GetQueryObjectui64vEXT GET_GetQueryObjectui64vEXT(struct _glapi_table *disp) {
-   return (_glptr_GetQueryObjectui64vEXT) (GET_by_offset(disp, _gloffset_GetQueryObjectui64vEXT));
-}
-
-static inline void SET_GetQueryObjectui64vEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLuint64EXT *)) {
-   SET_by_offset(disp, _gloffset_GetQueryObjectui64vEXT, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_EGLImageTargetRenderbufferStorageOES)(GLenum, GLvoid *);

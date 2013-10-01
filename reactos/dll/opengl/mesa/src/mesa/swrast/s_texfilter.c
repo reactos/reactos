@@ -3384,203 +3384,6 @@ shadow_compare4(GLenum function, GLfloat coord,
    }
 }
 
-
-/**
- * Choose the mipmap level to use when sampling from a depth texture.
- */
-static int
-choose_depth_texture_level(const struct gl_texture_object *tObj, GLfloat lambda)
-{
-   GLint level;
-
-   if (tObj->Sampler.MinFilter == GL_NEAREST || tObj->Sampler.MinFilter == GL_LINEAR) {
-      /* no mipmapping - use base level */
-      level = tObj->BaseLevel;
-   }
-   else {
-      /* choose mipmap level */
-      lambda = CLAMP(lambda, tObj->Sampler.MinLod, tObj->Sampler.MaxLod);
-      level = (GLint) lambda;
-      level = CLAMP(level, tObj->BaseLevel, tObj->_MaxLevel);
-   }
-
-   return level;
-}
-
-
-/**
- * Sample a shadow/depth texture.  This function is incomplete.  It doesn't
- * check for minification vs. magnification, etc.
- */
-static void
-sample_depth_texture( struct gl_context *ctx,
-                      const struct gl_texture_object *tObj, GLuint n,
-                      const GLfloat texcoords[][4], const GLfloat lambda[],
-                      GLfloat texel[][4] )
-{
-   const GLint level = choose_depth_texture_level(tObj, lambda[0]);
-   const struct gl_texture_image *img = tObj->Image[0][level];
-   const struct swrast_texture_image *swImg = swrast_texture_image_const(img);
-   const GLint width = img->Width;
-   const GLint height = img->Height;
-   const GLint depth = img->Depth;
-   const GLuint compare_coord = (tObj->Target == GL_TEXTURE_2D_ARRAY_EXT)
-       ? 3 : 2;
-   GLfloat ambient;
-   GLenum function;
-   GLfloat result;
-
-   ASSERT(img->_BaseFormat == GL_DEPTH_COMPONENT ||
-          img->_BaseFormat == GL_DEPTH_STENCIL_EXT);
-
-   ASSERT(tObj->Target == GL_TEXTURE_1D ||
-          tObj->Target == GL_TEXTURE_2D ||
-          tObj->Target == GL_TEXTURE_RECTANGLE_NV ||
-          tObj->Target == GL_TEXTURE_1D_ARRAY_EXT ||
-          tObj->Target == GL_TEXTURE_2D_ARRAY_EXT ||
-          tObj->Target == GL_TEXTURE_CUBE_MAP);
-
-   ambient = tObj->Sampler.CompareFailValue;
-
-   /* XXXX if tObj->Sampler.MinFilter != tObj->Sampler.MagFilter, we're ignoring lambda */
-
-   function = (tObj->Sampler.CompareMode == GL_COMPARE_R_TO_TEXTURE_ARB) ?
-      tObj->Sampler.CompareFunc : GL_NONE;
-
-   if (tObj->Sampler.MagFilter == GL_NEAREST) {
-      GLuint i;
-      for (i = 0; i < n; i++) {
-         GLfloat depthSample, depthRef;
-         GLint col, row, slice;
-
-         nearest_texcoord(tObj, level, texcoords[i], &col, &row, &slice);
-
-         if (col >= 0 && row >= 0 && col < width && row < height && 
-             slice >= 0 && slice < depth) {
-            swImg->FetchTexel(swImg, col, row, slice, &depthSample);
-         }
-         else {
-            depthSample = tObj->Sampler.BorderColor.f[0];
-         }
-
-         depthRef = CLAMP(texcoords[i][compare_coord], 0.0F, 1.0F);
-
-         result = shadow_compare(function, depthRef, depthSample, ambient);
-
-         switch (tObj->Sampler.DepthMode) {
-         case GL_LUMINANCE:
-            ASSIGN_4V(texel[i], result, result, result, 1.0F);
-            break;
-         case GL_INTENSITY:
-            ASSIGN_4V(texel[i], result, result, result, result);
-            break;
-         case GL_ALPHA:
-            ASSIGN_4V(texel[i], 0.0F, 0.0F, 0.0F, result);
-            break;
-         case GL_RED:
-            ASSIGN_4V(texel[i], result, 0.0F, 0.0F, 1.0F);
-            break;
-         default:
-            _mesa_problem(ctx, "Bad depth texture mode");
-            break;
-         }
-      }
-   }
-   else {
-      GLuint i;
-      ASSERT(tObj->Sampler.MagFilter == GL_LINEAR);
-      for (i = 0; i < n; i++) {
-         GLfloat depth00, depth01, depth10, depth11, depthRef;
-         GLint i0, i1, j0, j1;
-         GLint slice;
-         GLfloat wi, wj;
-         GLuint useBorderTexel;
-
-         linear_texcoord(tObj, level, texcoords[i], &i0, &i1, &j0, &j1, &slice,
-                         &wi, &wj);
-
-         useBorderTexel = 0;
-         if (img->Border) {
-            i0 += img->Border;
-            i1 += img->Border;
-            if (tObj->Target != GL_TEXTURE_1D_ARRAY_EXT) {
-               j0 += img->Border;
-               j1 += img->Border;
-            }
-         }
-         else {
-            if (i0 < 0 || i0 >= (GLint) width)   useBorderTexel |= I0BIT;
-            if (i1 < 0 || i1 >= (GLint) width)   useBorderTexel |= I1BIT;
-            if (j0 < 0 || j0 >= (GLint) height)  useBorderTexel |= J0BIT;
-            if (j1 < 0 || j1 >= (GLint) height)  useBorderTexel |= J1BIT;
-         }
-
-         if (slice < 0 || slice >= (GLint) depth) {
-            depth00 = tObj->Sampler.BorderColor.f[0];
-            depth01 = tObj->Sampler.BorderColor.f[0];
-            depth10 = tObj->Sampler.BorderColor.f[0];
-            depth11 = tObj->Sampler.BorderColor.f[0];
-         }
-         else {
-            /* get four depth samples from the texture */
-            if (useBorderTexel & (I0BIT | J0BIT)) {
-               depth00 = tObj->Sampler.BorderColor.f[0];
-            }
-            else {
-               swImg->FetchTexel(swImg, i0, j0, slice, &depth00);
-            }
-            if (useBorderTexel & (I1BIT | J0BIT)) {
-               depth10 = tObj->Sampler.BorderColor.f[0];
-            }
-            else {
-               swImg->FetchTexel(swImg, i1, j0, slice, &depth10);
-            }
-
-            if (tObj->Target != GL_TEXTURE_1D_ARRAY_EXT) {
-               if (useBorderTexel & (I0BIT | J1BIT)) {
-                  depth01 = tObj->Sampler.BorderColor.f[0];
-               }
-               else {
-                  swImg->FetchTexel(swImg, i0, j1, slice, &depth01);
-               }
-               if (useBorderTexel & (I1BIT | J1BIT)) {
-                  depth11 = tObj->Sampler.BorderColor.f[0];
-               }
-               else {
-                  swImg->FetchTexel(swImg, i1, j1, slice, &depth11);
-               }
-            }
-            else {
-               depth01 = depth00;
-               depth11 = depth10;
-            }
-         }
-
-         depthRef = CLAMP(texcoords[i][compare_coord], 0.0F, 1.0F);
-
-         result = shadow_compare4(function, depthRef,
-                                  depth00, depth01, depth10, depth11,
-                                  ambient, wi, wj);
-
-         switch (tObj->Sampler.DepthMode) {
-         case GL_LUMINANCE:
-            ASSIGN_4V(texel[i], result, result, result, 1.0F);
-            break;
-         case GL_INTENSITY:
-            ASSIGN_4V(texel[i], result, result, result, result);
-            break;
-         case GL_ALPHA:
-            ASSIGN_4V(texel[i], 0.0F, 0.0F, 0.0F, result);
-            break;
-         default:
-            _mesa_problem(ctx, "Bad depth texture mode");
-         }
-
-      }  /* for */
-   }  /* if filter */
-}
-
-
 /**
  * We use this function when a texture object is in an "incomplete" state.
  * When a fragment program attempts to sample an incomplete texture we
@@ -3620,14 +3423,10 @@ _swrast_choose_texture_sample_func( struct gl_context *ctx,
    else {
       const GLboolean needLambda =
          (GLboolean) (t->Sampler.MinFilter != t->Sampler.MagFilter);
-      const GLenum format = t->Image[0][t->BaseLevel]->_BaseFormat;
 
       switch (t->Target) {
       case GL_TEXTURE_1D:
-         if (format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL_EXT) {
-            return &sample_depth_texture;
-         }
-         else if (needLambda) {
+         if (needLambda) {
             return &sample_lambda_1d;
          }
          else if (t->Sampler.MinFilter == GL_LINEAR) {
@@ -3638,10 +3437,7 @@ _swrast_choose_texture_sample_func( struct gl_context *ctx,
             return &sample_nearest_1d;
          }
       case GL_TEXTURE_2D:
-         if (format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL_EXT) {
-            return &sample_depth_texture;
-         }
-         else if (needLambda) {
+         if (needLambda) {
             /* Anisotropic filtering extension. Activated only if mipmaps are used */
             if (t->Sampler.MaxAnisotropy > 1.0 &&
                 t->Sampler.MinFilter == GL_LINEAR_MIPMAP_LINEAR) {
@@ -3685,10 +3481,7 @@ _swrast_choose_texture_sample_func( struct gl_context *ctx,
             return &sample_nearest_3d;
          }
       case GL_TEXTURE_CUBE_MAP:
-         if (format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL_EXT) {
-	    return &sample_depth_texture;
-	 }
-	 else if (needLambda) {
+         if (needLambda) {
             return &sample_lambda_cube;
          }
          else if (t->Sampler.MinFilter == GL_LINEAR) {
@@ -3699,10 +3492,7 @@ _swrast_choose_texture_sample_func( struct gl_context *ctx,
             return &sample_nearest_cube;
          }
       case GL_TEXTURE_RECTANGLE_NV:
-         if (format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL_EXT) {
-            return &sample_depth_texture;
-         }
-         else if (needLambda) {
+         if (needLambda) {
             return &sample_lambda_rect;
          }
          else if (t->Sampler.MinFilter == GL_LINEAR) {
@@ -3713,10 +3503,7 @@ _swrast_choose_texture_sample_func( struct gl_context *ctx,
             return &sample_nearest_rect;
          }
       case GL_TEXTURE_1D_ARRAY_EXT:
-         if (format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL_EXT) {
-            return &sample_depth_texture;
-         }
-	 else if (needLambda) {
+         if (needLambda) {
             return &sample_lambda_1d_array;
          }
          else if (t->Sampler.MinFilter == GL_LINEAR) {
@@ -3727,10 +3514,7 @@ _swrast_choose_texture_sample_func( struct gl_context *ctx,
             return &sample_nearest_1d_array;
          }
       case GL_TEXTURE_2D_ARRAY_EXT:
-         if (format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL_EXT) {
-            return &sample_depth_texture;
-         }
-	 else if (needLambda) {
+         if (needLambda) {
             return &sample_lambda_2d_array;
          }
          else if (t->Sampler.MinFilter == GL_LINEAR) {

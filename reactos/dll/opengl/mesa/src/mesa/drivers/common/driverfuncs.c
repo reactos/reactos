@@ -42,7 +42,6 @@
 #include "main/texstore.h"
 #include "main/bufferobj.h"
 #include "main/fbobject.h"
-#include "main/samplerobj.h"
 #include "main/syncobj.h"
 #include "main/texturebarrier.h"
 #include "main/transformfeedback.h"
@@ -198,8 +197,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    _mesa_init_shader_object_functions(driver);
 
    _mesa_init_transform_feedback_functions(driver);
-
-   _mesa_init_sampler_object_functions(driver);
 
    /* T&L stuff */
    driver->CurrentExecPrimitive = 0;

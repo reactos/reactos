@@ -385,10 +385,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
       if (format == GL_RGB) {
          break; /* OK */
       }
-      if (format == GL_RGB_INTEGER_EXT &&
-          ctx->Extensions.ARB_texture_rgb10_a2ui) {
-         break; /* OK */
-      }
       return GL_INVALID_OPERATION;
 
    case GL_UNSIGNED_SHORT_4_4_4_4:
@@ -402,10 +398,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
       if (format == GL_RGBA ||
           format == GL_BGRA ||
           format == GL_ABGR_EXT) {
-         break; /* OK */
-      }
-      if ((format == GL_RGBA_INTEGER_EXT || format == GL_BGRA_INTEGER_EXT) &&
-          ctx->Extensions.ARB_texture_rgb10_a2ui) {
          break; /* OK */
       }
       return GL_INVALID_OPERATION;
@@ -633,12 +625,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
                return (ctx->VersionMajor >= 3 ||
                        ctx->Extensions.EXT_texture_integer)
                   ? GL_NO_ERROR : GL_INVALID_ENUM;
-            case GL_UNSIGNED_BYTE_3_3_2:
-            case GL_UNSIGNED_BYTE_2_3_3_REV:
-            case GL_UNSIGNED_SHORT_5_6_5:
-            case GL_UNSIGNED_SHORT_5_6_5_REV:
-               return ctx->Extensions.ARB_texture_rgb10_a2ui
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
             default:
                return GL_INVALID_ENUM;
          }
@@ -670,16 +656,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             case GL_UNSIGNED_INT:
                return (ctx->VersionMajor >= 3 ||
                        ctx->Extensions.EXT_texture_integer)
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
-            case GL_UNSIGNED_SHORT_4_4_4_4:
-            case GL_UNSIGNED_SHORT_4_4_4_4_REV:
-            case GL_UNSIGNED_SHORT_5_5_5_1:
-            case GL_UNSIGNED_SHORT_1_5_5_5_REV:
-            case GL_UNSIGNED_INT_8_8_8_8:
-            case GL_UNSIGNED_INT_8_8_8_8_REV:
-            case GL_UNSIGNED_INT_10_10_10_2:
-            case GL_UNSIGNED_INT_2_10_10_10_REV:
-               return ctx->Extensions.ARB_texture_rgb10_a2ui
                   ? GL_NO_ERROR : GL_INVALID_ENUM;
             default:
                return GL_INVALID_ENUM;

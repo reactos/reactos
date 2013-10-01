@@ -715,7 +715,7 @@ getteximage_error_check(struct gl_context *ctx, GLenum target, GLint level,
       return GL_TRUE;
    }
 
-   if (!ctx->Extensions.ARB_depth_texture && _mesa_is_depth_format(format)) {
+   if (_mesa_is_depth_format(format)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexImage(format)");
       return GL_TRUE;
    }

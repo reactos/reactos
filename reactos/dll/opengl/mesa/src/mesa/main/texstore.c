@@ -4013,61 +4013,6 @@ _mesa_texstore_z32f_x24s8(TEXSTORE_PARAMS)
 }
 
 static GLboolean
-_mesa_texstore_argb2101010_uint(TEXSTORE_PARAMS)
-{
-   const GLenum baseFormat = _mesa_get_format_base_format(dstFormat);
-
-   ASSERT(dstFormat == MESA_FORMAT_ARGB2101010_UINT);
-   ASSERT(_mesa_get_format_bytes(dstFormat) == 4);
-
-   if (!srcPacking->SwapBytes &&
-       dstFormat == MESA_FORMAT_ARGB2101010_UINT &&
-       srcFormat == GL_BGRA_INTEGER_EXT &&
-       srcType == GL_UNSIGNED_INT_2_10_10_10_REV &&
-       baseInternalFormat == GL_RGBA) {
-      /* simple memcpy path */
-      memcpy_texture(ctx, dims,
-                     dstFormat,
-                     dstRowStride, dstSlices,
-                     srcWidth, srcHeight, srcDepth, srcFormat, srcType,
-                     srcAddr, srcPacking);
-   }
-   else {
-      /* general path */
-      const GLuint *tempImage = make_temp_uint_image(ctx, dims,
-                                                     baseInternalFormat,
-                                                     baseFormat,
-                                                     srcWidth, srcHeight,
-                                                     srcDepth, srcFormat,
-                                                     srcType, srcAddr,
-                                                     srcPacking);
-      const GLuint *src = tempImage;
-      GLint img, row, col;
-      if (!tempImage)
-         return GL_FALSE;
-      for (img = 0; img < srcDepth; img++) {
-         GLubyte *dstRow = dstSlices[img];
-
-         for (row = 0; row < srcHeight; row++) {
-            GLuint *dstUI = (GLuint *) dstRow;
-            for (col = 0; col < srcWidth; col++) {
-               GLushort a,r,g,b;
-               r = src[RCOMP];
-               g = src[GCOMP];
-               b = src[BCOMP];
-               a = src[ACOMP];
-               dstUI[col] = (a << 30) | (r << 20) | (g << 10) | (b);
-               src += 4;
-            }
-            dstRow += dstRowStride;
-         }
-      }
-      free((void *) tempImage);
-   }
-   return GL_TRUE;
-}
-
-static GLboolean
 _mesa_texstore_null(TEXSTORE_PARAMS)
 {
    (void) ctx; (void) dims;
@@ -4257,7 +4202,6 @@ _mesa_get_texstore_func(gl_format format)
       table[MESA_FORMAT_RGB_UINT32] = _mesa_texstore_rgba_uint32;
       table[MESA_FORMAT_RGBA_UINT32] = _mesa_texstore_rgba_uint32;
 
-      table[MESA_FORMAT_ARGB2101010_UINT] = _mesa_texstore_argb2101010_uint;
       initialized = GL_TRUE;
    }
 

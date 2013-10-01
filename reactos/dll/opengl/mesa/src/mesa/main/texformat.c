@@ -204,24 +204,6 @@ _mesa_choose_tex_format( struct gl_context *ctx, GLint internalFormat,
          ; /* fallthrough */
    }
 
-   if (ctx->Extensions.ARB_depth_texture) {
-      switch (internalFormat) {
-         case GL_DEPTH_COMPONENT:
-         case GL_DEPTH_COMPONENT24:
-         case GL_DEPTH_COMPONENT32:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_Z32);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_X8_Z24);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_S8_Z24);
-	    break;
-         case GL_DEPTH_COMPONENT16:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_Z16);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_X8_Z24);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_S8_Z24);
-         default:
-            ; /* fallthrough */
-      }
-   }
-
    switch (internalFormat) {
       case GL_COMPRESSED_ALPHA_ARB:
 	 RETURN_IF_SUPPORTED(MESA_FORMAT_A8);
@@ -853,15 +835,6 @@ _mesa_choose_tex_format( struct gl_context *ctx, GLint internalFormat,
       }
    }
 
-   if (ctx->Extensions.ARB_texture_rgb10_a2ui) {
-      switch (internalFormat) {
-      case GL_RGB10_A2UI:
-         RETURN_IF_SUPPORTED(MESA_FORMAT_ARGB2101010_UINT);
-         break;
-      default:
-         break;
-      }
-   }
    /* GL_BGRA can be an internal format *only* in OpenGL ES (1.x or 2.0).
     */
    if (ctx->API != API_OPENGL) {

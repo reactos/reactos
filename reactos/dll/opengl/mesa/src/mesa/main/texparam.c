@@ -300,64 +300,6 @@ set_tex_parameteri(struct gl_context *ctx,
       }
       return GL_FALSE;
 
-   case GL_TEXTURE_COMPARE_MODE_ARB:
-      if (ctx->Extensions.ARB_shadow) {
-         if (texObj->Sampler.CompareMode == params[0])
-            return GL_FALSE;
-         if (params[0] == GL_NONE ||
-             params[0] == GL_COMPARE_R_TO_TEXTURE_ARB) {
-            flush(ctx);
-            texObj->Sampler.CompareMode = params[0];
-            return GL_TRUE;
-         }
-         goto invalid_param;
-      }
-      goto invalid_pname;
-
-   case GL_TEXTURE_COMPARE_FUNC_ARB:
-      if (ctx->Extensions.ARB_shadow) {
-         if (texObj->Sampler.CompareFunc == params[0])
-            return GL_FALSE;
-         switch (params[0]) {
-         case GL_LEQUAL:
-         case GL_GEQUAL:
-            flush(ctx);
-            texObj->Sampler.CompareFunc = params[0];
-            return GL_TRUE;
-         case GL_EQUAL:
-         case GL_NOTEQUAL:
-         case GL_LESS:
-         case GL_GREATER:
-         case GL_ALWAYS:
-         case GL_NEVER:
-            if (ctx->Extensions.EXT_shadow_funcs) {
-               flush(ctx);
-               texObj->Sampler.CompareFunc = params[0];
-               return GL_TRUE;
-            }
-            /* fall-through */
-         default:
-            goto invalid_param;
-         }
-      }
-      goto invalid_pname;
-
-   case GL_DEPTH_TEXTURE_MODE_ARB:
-      if (ctx->Extensions.ARB_depth_texture) {
-         if (texObj->Sampler.DepthMode == params[0])
-            return GL_FALSE;
-         if (params[0] == GL_LUMINANCE ||
-             params[0] == GL_INTENSITY ||
-             params[0] == GL_ALPHA ||
-             (ctx->Extensions.ARB_texture_rg && params[0] == GL_RED)) {
-            flush(ctx);
-            texObj->Sampler.DepthMode = params[0];
-            return GL_TRUE;
-         }
-         goto invalid_param;
-      }
-      goto invalid_pname;
-
 #if FEATURE_OES_draw_texture
    case GL_TEXTURE_CROP_RECT_OES:
       texObj->CropRect[0] = params[0];
@@ -366,19 +308,6 @@ set_tex_parameteri(struct gl_context *ctx,
       texObj->CropRect[3] = params[3];
       return GL_TRUE;
 #endif
-
-   case GL_TEXTURE_SRGB_DECODE_EXT:
-      if (ctx->Extensions.EXT_texture_sRGB_decode) {
-	 GLenum decode = params[0];
-	 if (decode == GL_DECODE_EXT || decode == GL_SKIP_DECODE_EXT) {
-	    if (texObj->Sampler.sRGBDecode != decode) {
-	       flush(ctx);
-	       texObj->Sampler.sRGBDecode = decode;
-	    }
-	    return GL_TRUE;
-	 }
-      }
-      goto invalid_pname;
 
    case GL_TEXTURE_CUBE_MAP_SEAMLESS:
       if (ctx->Extensions.AMD_seamless_cubemap_per_texture) {
@@ -461,20 +390,6 @@ set_tex_parameterf(struct gl_context *ctx,
       }
       return GL_FALSE;
 
-   case GL_TEXTURE_COMPARE_FAIL_VALUE_ARB:
-      if (ctx->Extensions.ARB_shadow_ambient) {
-         if (texObj->Sampler.CompareFailValue != params[0]) {
-            flush(ctx);
-            texObj->Sampler.CompareFailValue = CLAMP(params[0], 0.0F, 1.0F);
-            return GL_TRUE;
-         }
-      }
-      else {
-         _mesa_error(ctx, GL_INVALID_ENUM,
-                    "glTexParameter(pname=GL_TEXTURE_COMPARE_FAIL_VALUE_ARB)");
-      }
-      return GL_FALSE;
-
    case GL_TEXTURE_LOD_BIAS:
       /* NOTE: this is really part of OpenGL 1.4, not EXT_texture_lod_bias */
       if (texObj->Sampler.LodBias != params[0]) {
@@ -531,7 +446,6 @@ _mesa_TexParameterf(GLenum target, GLenum pname, GLfloat param)
    case GL_TEXTURE_COMPARE_MODE_ARB:
    case GL_TEXTURE_COMPARE_FUNC_ARB:
    case GL_DEPTH_TEXTURE_MODE_ARB:
-   case GL_TEXTURE_SRGB_DECODE_EXT:
    case GL_TEXTURE_CUBE_MAP_SEAMLESS:
       {
          /* convert float param to int */
@@ -592,7 +506,6 @@ _mesa_TexParameterfv(GLenum target, GLenum pname, const GLfloat *params)
    case GL_TEXTURE_COMPARE_MODE_ARB:
    case GL_TEXTURE_COMPARE_FUNC_ARB:
    case GL_DEPTH_TEXTURE_MODE_ARB:
-   case GL_TEXTURE_SRGB_DECODE_EXT:
    case GL_TEXTURE_CUBE_MAP_SEAMLESS:
       {
          /* convert float param to int */
@@ -924,11 +837,6 @@ _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
             *params = 0;
          }
          break;
-      case GL_TEXTURE_DEPTH_SIZE_ARB:
-         if (!ctx->Extensions.ARB_depth_texture)
-            goto invalid_pname;
-         *params = _mesa_get_format_bits(texFormat, pname);
-         break;
       case GL_TEXTURE_STENCIL_SIZE_EXT:
          if (!ctx->Extensions.EXT_packed_depth_stencil &&
              !ctx->Extensions.ARB_framebuffer_object)
@@ -1050,28 +958,8 @@ _mesa_GetTexParameterfv( GLenum target, GLenum pname, GLfloat *params )
             goto invalid_pname;
          *params = obj->Sampler.MaxAnisotropy;
          break;
-      case GL_TEXTURE_COMPARE_FAIL_VALUE_ARB:
-         if (!ctx->Extensions.ARB_shadow_ambient)
-            goto invalid_pname;
-         *params = obj->Sampler.CompareFailValue;
-         break;
       case GL_GENERATE_MIPMAP_SGIS:
 	 *params = (GLfloat) obj->GenerateMipmap;
-         break;
-      case GL_TEXTURE_COMPARE_MODE_ARB:
-         if (!ctx->Extensions.ARB_shadow)
-            goto invalid_pname;
-         *params = (GLfloat) obj->Sampler.CompareMode;
-         break;
-      case GL_TEXTURE_COMPARE_FUNC_ARB:
-         if (!ctx->Extensions.ARB_shadow)
-            goto invalid_pname;
-         *params = (GLfloat) obj->Sampler.CompareFunc;
-         break;
-      case GL_DEPTH_TEXTURE_MODE_ARB:
-         if (!ctx->Extensions.ARB_depth_texture)
-            goto invalid_pname;
-         *params = (GLfloat) obj->Sampler.DepthMode;
          break;
       case GL_TEXTURE_LOD_BIAS:
          *params = obj->Sampler.LodBias;
@@ -1175,28 +1063,8 @@ _mesa_GetTexParameteriv( GLenum target, GLenum pname, GLint *params )
             goto invalid_pname;
          *params = (GLint) obj->Sampler.MaxAnisotropy;
          break;
-      case GL_TEXTURE_COMPARE_FAIL_VALUE_ARB:
-         if (!ctx->Extensions.ARB_shadow_ambient)
-            goto invalid_pname;
-         *params = (GLint) FLOAT_TO_INT(obj->Sampler.CompareFailValue);
-         break;
       case GL_GENERATE_MIPMAP_SGIS:
 	 *params = (GLint) obj->GenerateMipmap;
-         break;
-      case GL_TEXTURE_COMPARE_MODE_ARB:
-         if (!ctx->Extensions.ARB_shadow)
-            goto invalid_pname;
-         *params = (GLint) obj->Sampler.CompareMode;
-         break;
-      case GL_TEXTURE_COMPARE_FUNC_ARB:
-         if (!ctx->Extensions.ARB_shadow)
-            goto invalid_pname;
-         *params = (GLint) obj->Sampler.CompareFunc;
-         break;
-      case GL_DEPTH_TEXTURE_MODE_ARB:
-         if (!ctx->Extensions.ARB_depth_texture)
-            goto invalid_pname;
-         *params = (GLint) obj->Sampler.DepthMode;
          break;
       case GL_TEXTURE_LOD_BIAS:
          *params = (GLint) obj->Sampler.LodBias;

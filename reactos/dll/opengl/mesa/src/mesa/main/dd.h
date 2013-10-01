@@ -929,14 +929,6 @@ struct dd_function_table {
     * \name GL_NV_texture_barrier interface
     */
    void (*TextureBarrier)(struct gl_context *ctx);
-
-   /**
-    * \name GL_ARB_sampler_objects
-    */
-   struct gl_sampler_object * (*NewSamplerObject)(struct gl_context *ctx,
-                                                  GLuint name);
-   void (*DeleteSamplerObject)(struct gl_context *ctx,
-                               struct gl_sampler_object *samp);
 };
 
 

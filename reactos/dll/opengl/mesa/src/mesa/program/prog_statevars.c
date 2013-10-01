@@ -573,20 +573,6 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
          value[3] = ctx->Pixel.AlphaBias;
          return;
 
-      case STATE_SHADOW_AMBIENT:
-         {
-            const int unit = (int) state[2];
-            const struct gl_texture_object *texObj
-               = ctx->Texture.Unit[unit]._Current;
-            if (texObj) {
-               value[0] =
-               value[1] =
-               value[2] =
-               value[3] = texObj->Sampler.CompareFailValue;
-            }
-         }
-         return;
-
       case STATE_FB_SIZE:
          value[0] = (GLfloat) (ctx->DrawBuffer->Width - 1);
          value[1] = (GLfloat) (ctx->DrawBuffer->Height - 1);

@@ -402,9 +402,6 @@ update_tex_combine(struct gl_context *ctx, struct gl_texture_unit *texUnit)
       const struct gl_texture_object *texObj = texUnit->_Current;
       GLenum format = texObj->Image[0][texObj->BaseLevel]->_BaseFormat;
 
-      if (format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL_EXT) {
-         format = texObj->Sampler.DepthMode;
-      }
       calculate_derived_texenv(&texUnit->_EnvMode, texUnit->EnvMode, format);
       texUnit->_CurrentCombine = & texUnit->_EnvMode;
    }

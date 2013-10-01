@@ -1077,12 +1077,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_1d_z32f_x24s8,
       fetch_texel_2d_z32f_x24s8,
       fetch_texel_3d_z32f_x24s8
-   },
-   {
-      MESA_FORMAT_ARGB2101010_UINT,
-      NULL,
-      NULL,
-      NULL
    }
 };
 
@@ -1126,8 +1120,7 @@ set_fetch_functions(struct swrast_texture_image *texImage, GLuint dims)
 
    ASSERT(dims == 1 || dims == 2 || dims == 3);
 
-   if (texImage->Base.TexObject->Sampler.sRGBDecode == GL_SKIP_DECODE_EXT &&
-       _mesa_get_format_color_encoding(format) == GL_SRGB) {
+   if (_mesa_get_format_color_encoding(format) == GL_SRGB) {
       format = _mesa_get_srgb_format_linear(format);
    }
 
