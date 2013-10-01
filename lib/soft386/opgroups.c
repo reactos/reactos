@@ -1058,8 +1058,121 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFE)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFF)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+    
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    if (ModRegRm.Register == 7)
+    {
+        /* Invalid */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Read the operands */
+    if (OperandSize)
+    {
+        ULONG Dummy, Value;
+
+        if (!Soft386ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        if (ModRegRm.Register == 0)
+        {
+            /* Increment and update OF */
+            Value++;
+            State->Flags.Of = (Value == SIGN_FLAG_LONG) ? TRUE : FALSE;
+        }
+        else if (ModRegRm.Register == 1)
+        {
+            /* Decrement and update OF */
+            State->Flags.Of = (Value == SIGN_FLAG_LONG) ? TRUE : FALSE;
+            Value--;
+        }
+
+        if (ModRegRm.Register <= 1)
+        {
+            /* Update flags */
+            State->Flags.Sf = (Value & SIGN_FLAG_LONG) ? TRUE : FALSE;
+            State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
+            State->Flags.Af = ((Value & 0x0F) == 0) ? TRUE : FALSE;
+            State->Flags.Pf = Soft386CalculateParity(Value);
+
+            /* Write back the result */
+            return Soft386WriteModrmDwordOperands(State,
+                                                  &ModRegRm,
+                                                  FALSE,
+                                                  Value);
+        }
+    }
+    else
+    {
+        USHORT Dummy, Value;
+
+        if (!Soft386ReadModrmWordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+
+        if (ModRegRm.Register == 0)
+        {
+            /* Increment and update OF */
+            Value++;
+            State->Flags.Of = (Value == SIGN_FLAG_WORD) ? TRUE : FALSE;
+        }
+        else if (ModRegRm.Register == 1)
+        {
+            /* Decrement and update OF */
+            State->Flags.Of = (Value == SIGN_FLAG_WORD) ? TRUE : FALSE;
+            Value--;
+        }
+
+        if (ModRegRm.Register <= 1)
+        {
+            /* Update flags */
+            State->Flags.Sf = (Value & SIGN_FLAG_WORD) ? TRUE : FALSE;
+            State->Flags.Zf = (Value == 0) ? TRUE : FALSE;
+            State->Flags.Af = ((Value & 0x0F) == 0) ? TRUE : FALSE;
+            State->Flags.Pf = Soft386CalculateParity(Value);
+
+            /* Write back the result */
+            return Soft386WriteModrmWordOperands(State,
+                                                 &ModRegRm,
+                                                 FALSE,
+                                                 Value);
+        }
+    }
+
+    if (ModRegRm.Register > 1)
+    {
+        UNIMPLEMENTED;
+        return FALSE; // NOT IMPLEMENTED
+    }
+    
+    return TRUE;
 }
 
 /* EOF */
