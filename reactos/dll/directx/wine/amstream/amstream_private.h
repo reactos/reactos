@@ -33,10 +33,14 @@
 //#include "winuser.h"
 #include <dshow.h>
 #include <mmstream.h>
+#include <austream.h>
 
 HRESULT AM_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
+HRESULT AMAudioData_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
 HRESULT MediaStreamFilter_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
-HRESULT mediastream_create(IMultiMediaStream *Parent, const MSPID *pPurposeId,
+HRESULT ddrawmediastream_create(IMultiMediaStream *Parent, const MSPID *pPurposeId,
         STREAM_TYPE StreamType, IMediaStream **ppMediaStream) DECLSPEC_HIDDEN;
+HRESULT audiomediastream_create(IMultiMediaStream *parent, const MSPID *purpose_id,
+        STREAM_TYPE stream_type, IMediaStream **media_stream) DECLSPEC_HIDDEN;
 
 #endif /* __AMSTREAM_PRIVATE_INCLUDED__ */

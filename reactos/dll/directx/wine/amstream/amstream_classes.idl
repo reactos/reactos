@@ -38,3 +38,10 @@ coclass AMDirectDrawStream { interface IAMMultiMediaStream; }
     uuid(49c47ce5-9ba4-11d0-8212-00c04fc32c45)
 ]
 coclass AMMultiMediaStream { interface IAMMultiMediaStream; }
+
+[
+    helpstring("AuStream Class"),
+    threading(both),
+    uuid(f2468580-af8a-11d0-8212-00c04fc32c45)
+]
+coclass AMAudioData { interface IAudioData; }

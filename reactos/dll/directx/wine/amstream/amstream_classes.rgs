@@ -17,5 +17,9 @@ HKCR
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }
+        '{F2468580-AF8A-11D0-8212-00C04FC32C45}' = s 'AuStream Class'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
     }
 }
