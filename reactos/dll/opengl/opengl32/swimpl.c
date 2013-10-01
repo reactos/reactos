@@ -13,6 +13,7 @@
 #include <main/framebuffer.h>
 #include <main/renderbuffer.h>
 #include <main/shared.h>
+#include <main/viewport.h>
 #include <swrast/s_context.h>
 #include <swrast/s_renderbuffer.h>
 #include <swrast_setup/swrast_setup.h>
@@ -757,6 +758,15 @@ BOOL sw_SetContext(struct wgl_dc_data* dc_data, DHGLRC dhglrc)
     {
         ERR("_mesa_make_current filaed!\n");
         return FALSE;
+    }
+    
+    /* Set the viewport if this is the first time we initialize this context */
+    if(sw_ctx->mesa.Viewport.X == 0 && 
+       sw_ctx->mesa.Viewport.Y == 0 &&
+       sw_ctx->mesa.Viewport.Width == 0 &&
+       sw_ctx->mesa.Viewport.Height == 0)
+    {
+        _mesa_set_viewport(&sw_ctx->mesa, 0, 0, width, height);
     }
 
     /* update the framebuffer size */
