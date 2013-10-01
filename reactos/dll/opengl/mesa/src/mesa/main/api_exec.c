@@ -459,9 +459,6 @@ _mesa_create_exec_table(void)
    /* ???. GL_EXT_depth_bounds_test */
    SET_DepthBoundsEXT(exec, _mesa_DepthBoundsEXT);
 
-   /* 364. GL_EXT_provoking_vertex */
-   SET_ProvokingVertexEXT(exec, _mesa_ProvokingVertexEXT);
-
    /* ARB 1. GL_ARB_multitexture */
 #if _HAVE_FULL_GL
    SET_ActiveTextureARB(exec, _mesa_ActiveTextureARB);
@@ -625,11 +622,6 @@ _mesa_create_exec_table(void)
    SET_ProgramLocalParameters4fvEXT(exec, _mesa_ProgramLocalParameters4fvEXT);
 #endif
 
-   /* GL_MESA_texture_array / GL_EXT_texture_array */
-#if FEATURE_EXT_framebuffer_object
-   SET_FramebufferTextureLayerEXT(exec, _mesa_FramebufferTextureLayerEXT);
-#endif
-
    /* GL_ATI_separate_stencil */
    SET_StencilFuncSeparateATI(exec, _mesa_StencilFuncSeparateATI);
 
@@ -661,11 +653,6 @@ _mesa_create_exec_table(void)
    SET_ObjectPurgeableAPPLE(exec, _mesa_ObjectPurgeableAPPLE);
    SET_ObjectUnpurgeableAPPLE(exec, _mesa_ObjectUnpurgeableAPPLE);
    SET_GetObjectParameterivAPPLE(exec, _mesa_GetObjectParameterivAPPLE);
-#endif
-
-#if FEATURE_ARB_geometry_shader4
-   SET_FramebufferTextureARB(exec, _mesa_FramebufferTextureARB);
-   SET_FramebufferTextureFaceARB(exec, _mesa_FramebufferTextureFaceARB);
 #endif
 
    SET_ClampColorARB(exec, _mesa_ClampColorARB);

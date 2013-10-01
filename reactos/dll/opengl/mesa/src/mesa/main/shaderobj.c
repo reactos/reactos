@@ -105,8 +105,7 @@ struct gl_shader *
 _mesa_new_shader(struct gl_context *ctx, GLuint name, GLenum type)
 {
    struct gl_shader *shader;
-   assert(type == GL_FRAGMENT_SHADER || type == GL_VERTEX_SHADER ||
-          type == GL_GEOMETRY_SHADER_ARB);
+   assert(type == GL_FRAGMENT_SHADER || type == GL_VERTEX_SHADER);
    shader = rzalloc(NULL, struct gl_shader);
    if (shader) {
       shader->Type = type;
@@ -242,12 +241,6 @@ _mesa_init_shader_program(struct gl_context *ctx, struct gl_shader_program *prog
 
    prog->AttributeBindings = string_to_uint_map_ctor();
    prog->FragDataBindings = string_to_uint_map_ctor();
-
-#if FEATURE_ARB_geometry_shader4
-   prog->Geom.VerticesOut = 0;
-   prog->Geom.InputType = GL_TRIANGLES;
-   prog->Geom.OutputType = GL_TRIANGLE_STRIP;
-#endif
 
    prog->InfoLog = ralloc_strdup(prog, "");
 }

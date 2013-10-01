@@ -309,20 +309,6 @@ set_tex_parameteri(struct gl_context *ctx,
       return GL_TRUE;
 #endif
 
-   case GL_TEXTURE_CUBE_MAP_SEAMLESS:
-      if (ctx->Extensions.AMD_seamless_cubemap_per_texture) {
-         GLenum param = params[0];
-         if (param != GL_TRUE && param != GL_FALSE) {
-            goto invalid_param;
-         }
-         if (param != texObj->Sampler.CubeMapSeamless) {
-            flush(ctx);
-            texObj->Sampler.CubeMapSeamless = param;
-         }
-         return GL_TRUE;
-      }
-      goto invalid_pname;
-
    default:
       goto invalid_pname;
    }
@@ -973,12 +959,6 @@ _mesa_GetTexParameterfv( GLenum target, GLenum pname, GLfloat *params )
          break;
 #endif
 
-      case GL_TEXTURE_CUBE_MAP_SEAMLESS:
-         if (!ctx->Extensions.AMD_seamless_cubemap_per_texture)
-            goto invalid_pname;
-         *params = (GLfloat) obj->Sampler.CubeMapSeamless;
-         break;
-
       case GL_TEXTURE_IMMUTABLE_FORMAT:
          if (!ctx->Extensions.ARB_texture_storage)
             goto invalid_pname;
@@ -1077,12 +1057,6 @@ _mesa_GetTexParameteriv( GLenum target, GLenum pname, GLint *params )
          params[3] = obj->CropRect[3];
          break;
 #endif
-
-      case GL_TEXTURE_CUBE_MAP_SEAMLESS:
-         if (!ctx->Extensions.AMD_seamless_cubemap_per_texture)
-            goto invalid_pname;
-         *params = (GLint) obj->Sampler.CubeMapSeamless;
-         break;
 
       case GL_TEXTURE_IMMUTABLE_FORMAT:
          if (!ctx->Extensions.ARB_texture_storage)

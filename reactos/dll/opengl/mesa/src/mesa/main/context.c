@@ -346,8 +346,6 @@ dummy_enum_func(void)
    gl_texture_index ti = TEXTURE_2D_ARRAY_INDEX;
    gl_vert_attrib va = VERT_ATTRIB_POS;
    gl_vert_result vr = VERT_RESULT_HPOS;
-   gl_geom_attrib ga = GEOM_ATTRIB_POSITION;
-   gl_geom_result gr = GEOM_RESULT_POS;
 
    (void) bi;
    (void) fi;
@@ -356,8 +354,6 @@ dummy_enum_func(void)
    (void) ti;
    (void) va;
    (void) vr;
-   (void) ga;
-   (void) gr;
 }
 
 
@@ -486,12 +482,6 @@ init_program_limits(GLenum type, struct gl_program_constants *prog)
       prog->MaxAddressRegs = MAX_FRAGMENT_PROGRAM_ADDRESS_REGS;
       prog->MaxUniformComponents = 4 * MAX_UNIFORMS;
       break;
-   case MESA_GEOMETRY_PROGRAM:
-      prog->MaxParameters = MAX_NV_VERTEX_PROGRAM_PARAMS;
-      prog->MaxAttribs = MAX_NV_VERTEX_PROGRAM_INPUTS;
-      prog->MaxAddressRegs = MAX_VERTEX_PROGRAM_ADDRESS_REGS;
-      prog->MaxUniformComponents = MAX_GEOMETRY_UNIFORM_COMPONENTS;
-      break;
    default:
       assert(0 && "Bad program type in init_program_limits()");
    }
@@ -578,9 +568,6 @@ _mesa_init_constants(struct gl_context *ctx)
 #if FEATURE_ARB_fragment_program
    init_program_limits(GL_FRAGMENT_PROGRAM_ARB, &ctx->Const.FragmentProgram);
 #endif
-#if FEATURE_ARB_geometry_shader4
-   init_program_limits(MESA_GEOMETRY_PROGRAM, &ctx->Const.GeometryProgram);
-#endif
    ctx->Const.MaxProgramMatrices = MAX_PROGRAM_MATRICES;
    ctx->Const.MaxProgramMatrixStackDepth = MAX_PROGRAM_MATRIX_STACK_DEPTH;
 
@@ -600,13 +587,6 @@ _mesa_init_constants(struct gl_context *ctx)
    ctx->Const.MaxCombinedTextureImageUnits = MAX_COMBINED_TEXTURE_IMAGE_UNITS;
    ctx->Const.MaxVarying = MAX_VARYING;
 #endif
-#if FEATURE_ARB_geometry_shader4
-   ctx->Const.MaxGeometryTextureImageUnits = MAX_GEOMETRY_TEXTURE_IMAGE_UNITS;
-   ctx->Const.MaxVertexVaryingComponents = MAX_VERTEX_VARYING_COMPONENTS;
-   ctx->Const.MaxGeometryVaryingComponents = MAX_GEOMETRY_VARYING_COMPONENTS;
-   ctx->Const.MaxGeometryOutputVertices = MAX_GEOMETRY_OUTPUT_VERTICES;
-   ctx->Const.MaxGeometryTotalOutputComponents = MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS;
-#endif
 
    /* Shading language version */
    if (ctx->API == API_OPENGL) {
@@ -625,9 +605,6 @@ _mesa_init_constants(struct gl_context *ctx)
 
    /* GL_ATI_envmap_bumpmap */
    ctx->Const.SupportedBumpUnits = SUPPORTED_ATI_BUMP_UNITS;
-
-   /* GL_EXT_provoking_vertex */
-   ctx->Const.QuadsFollowProvokingVertexConvention = GL_TRUE;
 
    /* GL 3.2: hard-coded for now: */
    ctx->Const.ProfileMask = GL_CONTEXT_COMPATIBILITY_PROFILE_BIT;
@@ -1680,7 +1657,6 @@ GLboolean
 _mesa_valid_to_render(struct gl_context *ctx, const char *where)
 {
    bool vert_from_glsl_shader = false;
-   bool geom_from_glsl_shader = false;
    bool frag_from_glsl_shader = false;
 
    /* This depends on having up to date derived state (shaders) */
@@ -1703,27 +1679,6 @@ _mesa_valid_to_render(struct gl_context *ctx, const char *where)
                                             errMsg)) {
             _mesa_warning(ctx, "Shader program %u is invalid: %s",
                           ctx->Shader.CurrentVertexProgram->Name, errMsg);
-         }
-      }
-#endif
-   }
-
-   if (ctx->Shader.CurrentGeometryProgram) {
-      geom_from_glsl_shader = true;
-
-      if (!ctx->Shader.CurrentGeometryProgram->LinkStatus) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "%s(shader not linked)", where);
-         return GL_FALSE;
-      }
-#if 0 /* not normally enabled */
-      {
-         char errMsg[100];
-         if (!_mesa_validate_shader_program(ctx,
-					    ctx->Shader.CurrentGeometryProgram,
-                                            errMsg)) {
-            _mesa_warning(ctx, "Shader program %u is invalid: %s",
-                          ctx->Shader.CurrentGeometryProgram->Name, errMsg);
          }
       }
 #endif
@@ -1760,11 +1715,6 @@ _mesa_valid_to_render(struct gl_context *ctx, const char *where)
       return GL_FALSE;
    }
 
-   /* FINISHME: If GL_NV_geometry_program4 is ever supported, the current
-    * FINISHME: geometry program should validated here.
-    */
-   (void) geom_from_glsl_shader;
-
    if (!frag_from_glsl_shader) {
       if (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled) {
 	 _mesa_error(ctx, GL_INVALID_OPERATION,
@@ -1794,7 +1744,6 @@ _mesa_valid_to_render(struct gl_context *ctx, const char *where)
       gl_shader_type i;
 
       shProg[MESA_SHADER_VERTEX] = ctx->Shader.CurrentVertexProgram;
-      shProg[MESA_SHADER_GEOMETRY] = ctx->Shader.CurrentGeometryProgram;
       shProg[MESA_SHADER_FRAGMENT] = ctx->Shader.CurrentFragmentProgram;
 
       for (i = 0; i < MESA_SHADER_TYPES; i++) {

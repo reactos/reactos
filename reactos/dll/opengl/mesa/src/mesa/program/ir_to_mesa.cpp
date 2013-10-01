@@ -2988,10 +2988,6 @@ get_mesa_program(struct gl_context *ctx,
       target = GL_FRAGMENT_PROGRAM_ARB;
       target_string = "fragment";
       break;
-   case GL_GEOMETRY_SHADER:
-      target = GL_GEOMETRY_PROGRAM_NV;
-      target_string = "geometry";
-      break;
    default:
       assert(!"should not be reached");
       return NULL;
@@ -3280,8 +3276,7 @@ _mesa_ir_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
       if (linked_prog) {
 	 static const GLenum targets[] = {
 	    GL_VERTEX_PROGRAM_ARB,
-	    GL_FRAGMENT_PROGRAM_ARB,
-	    GL_GEOMETRY_PROGRAM_NV
+	    GL_FRAGMENT_PROGRAM_ARB
 	 };
 
 	 if (i == MESA_SHADER_VERTEX) {

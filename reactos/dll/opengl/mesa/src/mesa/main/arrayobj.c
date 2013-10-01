@@ -185,7 +185,6 @@ init_array(struct gl_context *ctx,
 {
    array->Size = size;
    array->Type = type;
-   array->Format = GL_RGBA; /* only significant for GL_EXT_vertex_array_bgra */
    array->Stride = 0;
    array->StrideB = 0;
    array->Ptr = NULL;

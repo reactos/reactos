@@ -771,7 +771,6 @@ _swrast_CreateContext( struct gl_context *ctx )
    swrast->PointSpan.array = swrast->SpanArrays;
 
    init_program_native_limits(&ctx->Const.VertexProgram);
-   init_program_native_limits(&ctx->Const.GeometryProgram);
    init_program_native_limits(&ctx->Const.FragmentProgram);
 
    ctx->swrast_context = swrast;

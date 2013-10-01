@@ -992,8 +992,6 @@ _mesa_glsl_initialize_variables(exec_list *instructions,
    case vertex_shader:
       initialize_vs_variables(instructions, state);
       break;
-   case geometry_shader:
-      break;
    case fragment_shader:
       initialize_fs_variables(instructions, state);
       break;

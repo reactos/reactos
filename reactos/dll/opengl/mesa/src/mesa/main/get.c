@@ -303,13 +303,11 @@ EXTRA_EXT(EXT_depth_bounds_test);
 EXTRA_EXT(ARB_depth_clamp);
 EXTRA_EXT(EXT_framebuffer_blit);
 EXTRA_EXT(ARB_shader_objects);
-EXTRA_EXT(EXT_provoking_vertex);
 EXTRA_EXT(ARB_fragment_shader);
 EXTRA_EXT(ARB_fragment_program);
 EXTRA_EXT2(ARB_framebuffer_object, EXT_framebuffer_multisample);
 EXTRA_EXT(EXT_framebuffer_object);
 EXTRA_EXT(APPLE_vertex_array_object);
-EXTRA_EXT(ARB_seamless_cube_map);
 EXTRA_EXT(EXT_compiled_vertex_array);
 EXTRA_EXT(ARB_vertex_shader);
 EXTRA_EXT(EXT_pixel_buffer_object);
@@ -318,7 +316,6 @@ EXTRA_EXT2(NV_point_sprite, ARB_point_sprite);
 EXTRA_EXT2(ARB_fragment_program, NV_fragment_program);
 EXTRA_EXT2(ARB_vertex_program, NV_vertex_program);
 EXTRA_EXT2(ARB_vertex_program, ARB_fragment_program);
-EXTRA_EXT(ARB_geometry_shader4);
 EXTRA_EXT(ARB_color_buffer_float);
 EXTRA_EXT(ARB_copy_buffer);
 EXTRA_EXT(EXT_framebuffer_sRGB);
@@ -1154,13 +1151,6 @@ static const struct value_desc values[] = {
    { GL_READ_FRAMEBUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
      extra_EXT_framebuffer_blit },
 
-   /* GL_EXT_provoking_vertex */
-   { GL_PROVOKING_VERTEX_EXT,
-     CONTEXT_ENUM(Light.ProvokingVertex), extra_EXT_provoking_vertex },
-   { GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION_EXT,
-     CONTEXT_BOOL(Const.QuadsFollowProvokingVertexConvention),
-     extra_EXT_provoking_vertex },
-
    /* GL_ARB_framebuffer_object */
    { GL_MAX_SAMPLES, CONTEXT_INT(Const.MaxSamples),
      extra_ARB_framebuffer_object_EXT_framebuffer_multisample },
@@ -1169,33 +1159,9 @@ static const struct value_desc values[] = {
    { GL_VERTEX_ARRAY_BINDING_APPLE, ARRAY_INT(Name),
      extra_APPLE_vertex_array_object },
 
-   /* GL_ARB_seamless_cube_map */
-   { GL_TEXTURE_CUBE_MAP_SEAMLESS,
-     CONTEXT_BOOL(Texture.CubeMapSeamless), extra_ARB_seamless_cube_map },
-
    /* GL_EXT_texture_integer */
    { GL_RGBA_INTEGER_MODE_EXT, BUFFER_BOOL(_IntegerColor),
      extra_EXT_texture_integer },
-
-   /* GL_ARB_geometry_shader4 */
-   { GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS_ARB,
-     CONTEXT_INT(Const.MaxGeometryTextureImageUnits),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB,
-     CONTEXT_INT(Const.MaxGeometryOutputVertices),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS_ARB,
-     CONTEXT_INT(Const.MaxGeometryTotalOutputComponents),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_GEOMETRY_UNIFORM_COMPONENTS_ARB,
-     CONTEXT_INT(Const.GeometryProgram.MaxUniformComponents),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_GEOMETRY_VARYING_COMPONENTS_ARB,
-     CONTEXT_INT(Const.MaxGeometryVaryingComponents),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_VERTEX_VARYING_COMPONENTS_ARB,
-     CONTEXT_INT(Const.MaxVertexVaryingComponents),
-     extra_ARB_geometry_shader4 },
 
    /* GL_ARB_color_buffer_float */
    { GL_RGBA_FLOAT_MODE_ARB, BUFFER_FIELD(Visual.floatMode, TYPE_BOOLEAN), 0 },

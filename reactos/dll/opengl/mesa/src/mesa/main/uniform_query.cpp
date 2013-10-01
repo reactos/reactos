@@ -346,7 +346,7 @@ static void
 log_program_parameters(const struct gl_shader_program *shProg)
 {
    static const char *stages[] = {
-      "vertex", "fragment", "geometry"
+      "vertex", "fragment"
    };
 
    assert(Elements(stages) == MESA_SHADER_TYPES);

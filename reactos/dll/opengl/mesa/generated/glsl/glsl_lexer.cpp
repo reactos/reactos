@@ -2009,7 +2009,6 @@ YY_RULE_SETUP
 		  if ((yyextra->language_version >= 140)
 		      || yyextra->AMD_conservative_depth_enable
 		      || yyextra->ARB_conservative_depth_enable
-		      || yyextra->ARB_explicit_attrib_location_enable
 		      || yyextra->ARB_fragment_coord_conventions_enable) {
 		      return LAYOUT_TOK;
 		   } else {

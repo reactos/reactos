@@ -225,11 +225,9 @@ static GLbitfield
 update_program(struct gl_context *ctx)
 {
    const struct gl_shader_program *vsProg = ctx->Shader.CurrentVertexProgram;
-   const struct gl_shader_program *gsProg = ctx->Shader.CurrentGeometryProgram;
    struct gl_shader_program *fsProg = ctx->Shader.CurrentFragmentProgram;
    const struct gl_vertex_program *prevVP = ctx->VertexProgram._Current;
    const struct gl_fragment_program *prevFP = ctx->FragmentProgram._Current;
-   const struct gl_geometry_program *prevGP = ctx->GeometryProgram._Current;
    GLbitfield new_state = 0x0;
 
    /*
@@ -291,17 +289,6 @@ update_program(struct gl_context *ctx)
 			       NULL);
    }
 
-   if (gsProg && gsProg->LinkStatus
-       && gsProg->_LinkedShaders[MESA_SHADER_GEOMETRY]) {
-      /* Use GLSL geometry shader */
-      _mesa_reference_geomprog(ctx, &ctx->GeometryProgram._Current,
-			       (struct gl_geometry_program *)
-			       gsProg->_LinkedShaders[MESA_SHADER_GEOMETRY]->Program);
-   } else {
-      /* No geometry program */
-      _mesa_reference_geomprog(ctx, &ctx->GeometryProgram._Current, NULL);
-   }
-
    /* Examine vertex program after fragment program as
     * _mesa_get_fixed_func_vertex_program() needs to know active
     * fragprog inputs.
@@ -340,14 +327,6 @@ update_program(struct gl_context *ctx)
       }
    }
 
-   if (ctx->GeometryProgram._Current != prevGP) {
-      new_state |= _NEW_PROGRAM;
-      if (ctx->Driver.BindProgram) {
-         ctx->Driver.BindProgram(ctx, MESA_GEOMETRY_PROGRAM,
-                            (struct gl_program *) ctx->GeometryProgram._Current);
-      }
-   }
-
    if (ctx->VertexProgram._Current != prevVP) {
       new_state |= _NEW_PROGRAM;
       if (ctx->Driver.BindProgram) {
@@ -372,16 +351,6 @@ update_program_constants(struct gl_context *ctx)
       const struct gl_program_parameter_list *params =
          ctx->FragmentProgram._Current->Base.Parameters;
       if (params && params->StateFlags & ctx->NewState) {
-         new_state |= _NEW_PROGRAM_CONSTANTS;
-      }
-   }
-
-   if (ctx->GeometryProgram._Current) {
-      const struct gl_program_parameter_list *params =
-         ctx->GeometryProgram._Current->Base.Parameters;
-      /*FIXME: StateFlags is always 0 because we have unnamed constant
-       *       not state changes */
-      if (params /*&& params->StateFlags & ctx->NewState*/) {
          new_state |= _NEW_PROGRAM_CONSTANTS;
       }
    }

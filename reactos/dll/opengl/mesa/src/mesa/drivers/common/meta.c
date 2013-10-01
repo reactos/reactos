@@ -129,7 +129,6 @@ struct save_state
    GLboolean FragmentProgramEnabled;
    struct gl_fragment_program *FragmentProgram;
    struct gl_shader_program *VertexShader;
-   struct gl_shader_program *GeometryShader;
    struct gl_shader_program *FragmentShader;
    struct gl_shader_program *ActiveShader;
 
@@ -540,8 +539,6 @@ _mesa_meta_begin(struct gl_context *ctx, GLbitfield state)
       if (ctx->Extensions.ARB_shader_objects) {
 	 _mesa_reference_shader_program(ctx, &save->VertexShader,
 					ctx->Shader.CurrentVertexProgram);
-	 _mesa_reference_shader_program(ctx, &save->GeometryShader,
-					ctx->Shader.CurrentGeometryProgram);
 	 _mesa_reference_shader_program(ctx, &save->FragmentShader,
 					ctx->Shader.CurrentFragmentProgram);
 	 _mesa_reference_shader_program(ctx, &save->ActiveShader,
@@ -813,10 +810,6 @@ _mesa_meta_end(struct gl_context *ctx)
       if (ctx->Extensions.ARB_vertex_shader)
 	 _mesa_use_shader_program(ctx, GL_VERTEX_SHADER, save->VertexShader);
 
-      if (ctx->Extensions.ARB_geometry_shader4)
-	 _mesa_use_shader_program(ctx, GL_GEOMETRY_SHADER_ARB,
-				  save->GeometryShader);
-
       if (ctx->Extensions.ARB_fragment_shader)
 	 _mesa_use_shader_program(ctx, GL_FRAGMENT_SHADER,
 				  save->FragmentShader);
@@ -825,7 +818,6 @@ _mesa_meta_end(struct gl_context *ctx)
 				     save->ActiveShader);
 
       _mesa_reference_shader_program(ctx, &save->VertexShader, NULL);
-      _mesa_reference_shader_program(ctx, &save->GeometryShader, NULL);
       _mesa_reference_shader_program(ctx, &save->FragmentShader, NULL);
       _mesa_reference_shader_program(ctx, &save->ActiveShader, NULL);
    }

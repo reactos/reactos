@@ -505,7 +505,6 @@
 #define _gloffset_ClearBufferuiv 434
 #define _gloffset_GetStringi 435
 #define _gloffset_TexBuffer 436
-#define _gloffset_FramebufferTexture 437
 #define _gloffset_GetBufferParameteri64v 438
 #define _gloffset_GetInteger64i_v 439
 #define _gloffset_LoadTransposeMatrixdARB 441
@@ -635,9 +634,6 @@
 #define _gloffset_DrawArraysInstancedARB 573
 #define _gloffset_DrawElementsInstancedARB 574
 #define _gloffset_RenderbufferStorageMultisample 575
-#define _gloffset_FramebufferTextureARB 576
-#define _gloffset_FramebufferTextureFaceARB 577
-#define _gloffset_ProgramParameteriARB 578
 #define _gloffset_FlushMappedBufferRange 580
 #define _gloffset_MapBufferRange 581
 #define _gloffset_TexBufferARB 582
@@ -912,14 +908,12 @@
 #define _gloffset_VertexAttribI4uivEXT 931
 #define _gloffset_VertexAttribI4usvEXT 932
 #define _gloffset_VertexAttribIPointerEXT 933
-#define _gloffset_FramebufferTextureLayerEXT 934
 #define _gloffset_ClearColorIiEXT 941
 #define _gloffset_ClearColorIuiEXT 942
 #define _gloffset_GetTexParameterIivEXT 943
 #define _gloffset_GetTexParameterIuivEXT 944
 #define _gloffset_TexParameterIivEXT 945
 #define _gloffset_TexParameterIuivEXT 946
-#define _gloffset_ProvokingVertexEXT 956
 #define _gloffset_GetTexParameterPointervAPPLE 957
 #define _gloffset_TextureRangeAPPLE 958
 #define _gloffset_GetObjectParameterivAPPLE 959
@@ -969,7 +963,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define ClearBufferuiv_remap_index 26
 #define GetStringi_remap_index 27
 #define TexBuffer_remap_index 28
-#define FramebufferTexture_remap_index 29
 #define GetBufferParameteri64v_remap_index 30
 #define GetInteger64i_v_remap_index 31
 #define VertexAttribDivisor_remap_index 32
@@ -1100,9 +1093,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define DrawArraysInstancedARB_remap_index 165
 #define DrawElementsInstancedARB_remap_index 166
 #define RenderbufferStorageMultisample_remap_index 167
-#define FramebufferTextureARB_remap_index 168
-#define FramebufferTextureFaceARB_remap_index 169
-#define ProgramParameteriARB_remap_index 170
 #define VertexAttribDivisorARB_remap_index 171
 #define FlushMappedBufferRange_remap_index 172
 #define MapBufferRange_remap_index 173
@@ -1378,14 +1368,12 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define VertexAttribI4uivEXT_remap_index 523
 #define VertexAttribI4usvEXT_remap_index 524
 #define VertexAttribIPointerEXT_remap_index 525
-#define FramebufferTextureLayerEXT_remap_index 526
 #define ClearColorIiEXT_remap_index 533
 #define ClearColorIuiEXT_remap_index 534
 #define GetTexParameterIivEXT_remap_index 535
 #define GetTexParameterIuivEXT_remap_index 536
 #define TexParameterIivEXT_remap_index 537
 #define TexParameterIuivEXT_remap_index 538
-#define ProvokingVertexEXT_remap_index 548
 #define GetTexParameterPointervAPPLE_remap_index 549
 #define TextureRangeAPPLE_remap_index 550
 #define GetObjectParameterivAPPLE_remap_index 551
@@ -1560,9 +1548,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_DrawArraysInstancedARB driDispatchRemapTable[DrawArraysInstancedARB_remap_index]
 #define _gloffset_DrawElementsInstancedARB driDispatchRemapTable[DrawElementsInstancedARB_remap_index]
 #define _gloffset_RenderbufferStorageMultisample driDispatchRemapTable[RenderbufferStorageMultisample_remap_index]
-#define _gloffset_FramebufferTextureARB driDispatchRemapTable[FramebufferTextureARB_remap_index]
-#define _gloffset_FramebufferTextureFaceARB driDispatchRemapTable[FramebufferTextureFaceARB_remap_index]
-#define _gloffset_ProgramParameteriARB driDispatchRemapTable[ProgramParameteriARB_remap_index]
 #define _gloffset_FlushMappedBufferRange driDispatchRemapTable[FlushMappedBufferRange_remap_index]
 #define _gloffset_MapBufferRange driDispatchRemapTable[MapBufferRange_remap_index]
 #define _gloffset_TexBufferARB driDispatchRemapTable[TexBufferARB_remap_index]
@@ -1837,14 +1822,12 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_VertexAttribI4uivEXT driDispatchRemapTable[VertexAttribI4uivEXT_remap_index]
 #define _gloffset_VertexAttribI4usvEXT driDispatchRemapTable[VertexAttribI4usvEXT_remap_index]
 #define _gloffset_VertexAttribIPointerEXT driDispatchRemapTable[VertexAttribIPointerEXT_remap_index]
-#define _gloffset_FramebufferTextureLayerEXT driDispatchRemapTable[FramebufferTextureLayerEXT_remap_index]
 #define _gloffset_ClearColorIiEXT driDispatchRemapTable[ClearColorIiEXT_remap_index]
 #define _gloffset_ClearColorIuiEXT driDispatchRemapTable[ClearColorIuiEXT_remap_index]
 #define _gloffset_GetTexParameterIivEXT driDispatchRemapTable[GetTexParameterIivEXT_remap_index]
 #define _gloffset_GetTexParameterIuivEXT driDispatchRemapTable[GetTexParameterIuivEXT_remap_index]
 #define _gloffset_TexParameterIivEXT driDispatchRemapTable[TexParameterIivEXT_remap_index]
 #define _gloffset_TexParameterIuivEXT driDispatchRemapTable[TexParameterIuivEXT_remap_index]
-#define _gloffset_ProvokingVertexEXT driDispatchRemapTable[ProvokingVertexEXT_remap_index]
 #define _gloffset_GetTexParameterPointervAPPLE driDispatchRemapTable[GetTexParameterPointervAPPLE_remap_index]
 #define _gloffset_TextureRangeAPPLE driDispatchRemapTable[TextureRangeAPPLE_remap_index]
 #define _gloffset_GetObjectParameterivAPPLE driDispatchRemapTable[GetObjectParameterivAPPLE_remap_index]
@@ -6669,17 +6652,6 @@ static inline void SET_TexBuffer(struct _glapi_table *disp, void (GLAPIENTRYP fn
    SET_by_offset(disp, _gloffset_TexBuffer, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_FramebufferTexture)(GLenum, GLenum, GLuint, GLint);
-#define CALL_FramebufferTexture(disp, parameters) \
-    (* GET_FramebufferTexture(disp)) parameters
-static inline _glptr_FramebufferTexture GET_FramebufferTexture(struct _glapi_table *disp) {
-   return (_glptr_FramebufferTexture) (GET_by_offset(disp, _gloffset_FramebufferTexture));
-}
-
-static inline void SET_FramebufferTexture(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLuint, GLint)) {
-   SET_by_offset(disp, _gloffset_FramebufferTexture, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_GetBufferParameteri64v)(GLenum, GLenum, GLint64 *);
 #define CALL_GetBufferParameteri64v(disp, parameters) \
     (* GET_GetBufferParameteri64v(disp)) parameters
@@ -8097,39 +8069,6 @@ static inline _glptr_RenderbufferStorageMultisample GET_RenderbufferStorageMulti
 
 static inline void SET_RenderbufferStorageMultisample(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLenum, GLsizei, GLsizei)) {
    SET_by_offset(disp, _gloffset_RenderbufferStorageMultisample, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_FramebufferTextureARB)(GLenum, GLenum, GLuint, GLint);
-#define CALL_FramebufferTextureARB(disp, parameters) \
-    (* GET_FramebufferTextureARB(disp)) parameters
-static inline _glptr_FramebufferTextureARB GET_FramebufferTextureARB(struct _glapi_table *disp) {
-   return (_glptr_FramebufferTextureARB) (GET_by_offset(disp, _gloffset_FramebufferTextureARB));
-}
-
-static inline void SET_FramebufferTextureARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLuint, GLint)) {
-   SET_by_offset(disp, _gloffset_FramebufferTextureARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_FramebufferTextureFaceARB)(GLenum, GLenum, GLuint, GLint, GLenum);
-#define CALL_FramebufferTextureFaceARB(disp, parameters) \
-    (* GET_FramebufferTextureFaceARB(disp)) parameters
-static inline _glptr_FramebufferTextureFaceARB GET_FramebufferTextureFaceARB(struct _glapi_table *disp) {
-   return (_glptr_FramebufferTextureFaceARB) (GET_by_offset(disp, _gloffset_FramebufferTextureFaceARB));
-}
-
-static inline void SET_FramebufferTextureFaceARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLuint, GLint, GLenum)) {
-   SET_by_offset(disp, _gloffset_FramebufferTextureFaceARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ProgramParameteriARB)(GLuint, GLenum, GLint);
-#define CALL_ProgramParameteriARB(disp, parameters) \
-    (* GET_ProgramParameteriARB(disp)) parameters
-static inline _glptr_ProgramParameteriARB GET_ProgramParameteriARB(struct _glapi_table *disp) {
-   return (_glptr_ProgramParameteriARB) (GET_by_offset(disp, _gloffset_ProgramParameteriARB));
-}
-
-static inline void SET_ProgramParameteriARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLint)) {
-   SET_by_offset(disp, _gloffset_ProgramParameteriARB, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_FlushMappedBufferRange)(GLenum, GLintptr, GLsizeiptr);
@@ -11146,17 +11085,6 @@ static inline void SET_VertexAttribIPointerEXT(struct _glapi_table *disp, void (
    SET_by_offset(disp, _gloffset_VertexAttribIPointerEXT, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_FramebufferTextureLayerEXT)(GLenum, GLenum, GLuint, GLint, GLint);
-#define CALL_FramebufferTextureLayerEXT(disp, parameters) \
-    (* GET_FramebufferTextureLayerEXT(disp)) parameters
-static inline _glptr_FramebufferTextureLayerEXT GET_FramebufferTextureLayerEXT(struct _glapi_table *disp) {
-   return (_glptr_FramebufferTextureLayerEXT) (GET_by_offset(disp, _gloffset_FramebufferTextureLayerEXT));
-}
-
-static inline void SET_FramebufferTextureLayerEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLuint, GLint, GLint)) {
-   SET_by_offset(disp, _gloffset_FramebufferTextureLayerEXT, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_ClearColorIiEXT)(GLint, GLint, GLint, GLint);
 #define CALL_ClearColorIiEXT(disp, parameters) \
     (* GET_ClearColorIiEXT(disp)) parameters
@@ -11221,17 +11149,6 @@ static inline _glptr_TexParameterIuivEXT GET_TexParameterIuivEXT(struct _glapi_t
 
 static inline void SET_TexParameterIuivEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, const GLuint *)) {
    SET_by_offset(disp, _gloffset_TexParameterIuivEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ProvokingVertexEXT)(GLenum);
-#define CALL_ProvokingVertexEXT(disp, parameters) \
-    (* GET_ProvokingVertexEXT(disp)) parameters
-static inline _glptr_ProvokingVertexEXT GET_ProvokingVertexEXT(struct _glapi_table *disp) {
-   return (_glptr_ProvokingVertexEXT) (GET_by_offset(disp, _gloffset_ProvokingVertexEXT));
-}
-
-static inline void SET_ProvokingVertexEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum)) {
-   SET_by_offset(disp, _gloffset_ProvokingVertexEXT, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_GetTexParameterPointervAPPLE)(GLenum, GLenum, GLvoid **);

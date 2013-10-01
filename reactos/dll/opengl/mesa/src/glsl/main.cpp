@@ -117,7 +117,7 @@ usage_fail(const char *name)
 {
 
    const char *header =
-      "usage: %s [options] <file.vert | file.geom | file.frag>\n"
+      "usage: %s [options] <file.vert | file.frag>\n"
       "\n"
       "Possible options are:\n";
    printf(header, name, name);
@@ -240,8 +240,6 @@ main(int argc, char **argv)
       const char *const ext = & argv[optind][len - 5];
       if (strncmp(".vert", ext, 5) == 0)
 	 shader->Type = GL_VERTEX_SHADER;
-      else if (strncmp(".geom", ext, 5) == 0)
-	 shader->Type = GL_GEOMETRY_SHADER;
       else if (strncmp(".frag", ext, 5) == 0)
 	 shader->Type = GL_FRAGMENT_SHADER;
       else

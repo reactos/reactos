@@ -405,9 +405,6 @@ typedef enum
    OPCODE_EVAL_P1,
    OPCODE_EVAL_P2,
 
-   /* GL_EXT_provoking_vertex */
-   OPCODE_PROVOKING_VERTEX,
-
    /* GL_EXT_texture_integer */
    OPCODE_CLEARCOLOR_I,
    OPCODE_CLEARCOLOR_UI,
@@ -420,11 +417,6 @@ typedef enum
 
    /* GL_NV_texture_barrier */
    OPCODE_TEXTURE_BARRIER_NV,
-
-   /* GL_ARB_geometry_shader4 */
-   OPCODE_PROGRAM_PARAMETERI,
-   OPCODE_FRAMEBUFFER_TEXTURE,
-   OPCODE_FRAMEBUFFER_TEXTURE_FACE,
 
    /* The following three are meta instructions */
    OPCODE_ERROR,                /* raise compiled-in error */
@@ -6094,23 +6086,6 @@ save_BlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
 #endif
 
 
-/** GL_EXT_provoking_vertex */
-static void GLAPIENTRY
-save_ProvokingVertexEXT(GLenum mode)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_PROVOKING_VERTEX, 1);
-   if (n) {
-      n[1].e = mode;
-   }
-   if (ctx->ExecuteFlag) {
-      /*CALL_ProvokingVertexEXT(ctx->Exec, (mode));*/
-      _mesa_ProvokingVertexEXT(mode);
-   }
-}
-
 /* aka UseProgram() */
 static void GLAPIENTRY
 save_UseProgramObjectARB(GLhandleARB program)
@@ -6898,65 +6873,6 @@ save_TextureBarrierNV(void)
    }
 }
 
-/* GL_ARB_geometry_shader4 */
-static void GLAPIENTRY
-save_ProgramParameteri(GLuint program, GLenum pname, GLint value)
-{
-   Node *n;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_PROGRAM_PARAMETERI, 3);
-   if (n) {
-      n[1].ui = program;
-      n[2].e = pname;
-      n[3].i = value;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ProgramParameteriARB(ctx->Exec, (program, pname, value));
-   }
-}
-
-static void GLAPIENTRY
-save_FramebufferTexture(GLenum target, GLenum attachment,
-                        GLuint texture, GLint level)
-{
-   Node *n;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_FRAMEBUFFER_TEXTURE, 4);
-   if (n) {
-      n[1].e = target;
-      n[2].e = attachment;
-      n[3].ui = texture;
-      n[4].i = level;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_FramebufferTextureARB(ctx->Exec, (target, attachment, texture, level));
-   }
-}
-
-static void GLAPIENTRY
-save_FramebufferTextureFace(GLenum target, GLenum attachment,
-                            GLuint texture, GLint level, GLenum face)
-{
-   Node *n;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_FRAMEBUFFER_TEXTURE_FACE, 5);
-   if (n) {
-      n[1].e = target;
-      n[2].e = attachment;
-      n[3].ui = texture;
-      n[4].i = level;
-      n[5].e = face;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_FramebufferTextureFaceARB(ctx->Exec, (target, attachment, texture,
-                                                 level, face));
-   }
-}
-
-
 /**
  * Save an error-generating command into display list.
  *
@@ -7571,9 +7487,6 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_SHADE_MODEL:
             CALL_ShadeModel(ctx->Exec, (n[1].e));
             break;
-         case OPCODE_PROVOKING_VERTEX:
-            CALL_ProvokingVertexEXT(ctx->Exec, (n[1].e));
-            break;
          case OPCODE_STENCIL_FUNC:
             CALL_StencilFunc(ctx->Exec, (n[1].e, n[2].i, n[3].ui));
             break;
@@ -8094,19 +8007,6 @@ execute_list(struct gl_context *ctx, GLuint list)
 
          case OPCODE_TEXTURE_BARRIER_NV:
             CALL_TextureBarrierNV(ctx->Exec, ());
-            break;
-
-         /* GL_ARB_geometry_shader4 */
-         case OPCODE_PROGRAM_PARAMETERI:
-            CALL_ProgramParameteriARB(ctx->Exec, (n[1].ui, n[2].e, n[3].i));
-            break;
-         case OPCODE_FRAMEBUFFER_TEXTURE:
-            CALL_FramebufferTextureARB(ctx->Exec, (n[1].e, n[2].e,
-                                                   n[3].ui, n[4].i));
-            break;
-         case OPCODE_FRAMEBUFFER_TEXTURE_FACE:
-            CALL_FramebufferTextureFaceARB(ctx->Exec, (n[1].e, n[2].e,
-                                                       n[3].ui, n[4].i, n[5].e));
             break;
 
          case OPCODE_CONTINUE:
@@ -9726,9 +9626,6 @@ _mesa_create_save_table(void)
    /* ARB 59. GL_ARB_copy_buffer */
    SET_CopyBufferSubData(table, _mesa_CopyBufferSubData); /* no dlist save */
 
-   /* 364. GL_EXT_provoking_vertex */
-   SET_ProvokingVertexEXT(table, save_ProvokingVertexEXT);
-
    /* 371. GL_APPLE_object_purgeable */
 #if FEATURE_APPLE_object_purgeable
    SET_ObjectPurgeableAPPLE(table, _mesa_ObjectPurgeableAPPLE);
@@ -9785,11 +9682,6 @@ _mesa_create_save_table(void)
    SET_BlendFuncSeparateiARB(table, save_BlendFuncSeparatei);
    SET_BlendEquationiARB(table, save_BlendEquationi);
    SET_BlendEquationSeparateiARB(table, save_BlendEquationSeparatei);
-
-   /* GL_ARB_geometry_shader4 */
-   SET_ProgramParameteriARB(table, save_ProgramParameteri);
-   SET_FramebufferTextureARB(table, save_FramebufferTexture);
-   SET_FramebufferTextureFaceARB(table, save_FramebufferTextureFace);
 
    /* GL_ARB_texture_storage (no dlist support) */
    SET_TexStorage1D(table, _mesa_TexStorage1D);
@@ -10031,11 +9923,6 @@ print_list(struct gl_context *ctx, GLuint list)
             break;
          case OPCODE_EVAL_P2:
             printf("EVAL_P2 %d %d\n", n[1].i, n[2].i);
-            break;
-
-         case OPCODE_PROVOKING_VERTEX:
-            printf("ProvokingVertex %s\n",
-                         _mesa_lookup_enum_by_nr(n[1].ui));
             break;
 
             /*

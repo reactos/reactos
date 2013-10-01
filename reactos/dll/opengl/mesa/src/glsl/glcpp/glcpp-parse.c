@@ -3448,9 +3448,6 @@ glcpp_parser_create (const struct gl_extensions *extensions, int api)
 	      add_builtin_define(parser, "GL_ARB_fragment_coord_conventions",
 				 1);
 
-	   if (extensions->ARB_explicit_attrib_location)
-	      add_builtin_define(parser, "GL_ARB_explicit_attrib_location", 1);
-
 	   if (extensions->ARB_shader_texture_lod)
 	      add_builtin_define(parser, "GL_ARB_shader_texture_lod", 1);
 

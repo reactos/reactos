@@ -912,8 +912,6 @@ _mesa_fprint_program_opt(FILE *f,
       else
          fprintf(f, "# Fragment Program/Shader %u\n", prog->Id);
       break;
-   case MESA_GEOMETRY_PROGRAM:
-      fprintf(f, "# Geometry Shader\n");
    }
 
    for (i = 0; i < prog->NumInstructions; i++) {
@@ -1072,8 +1070,6 @@ _mesa_write_shader_to_file(const struct gl_shader *shader)
       type = "frag";
    else if (shader->Type == GL_VERTEX_SHADER)
       type = "vert";
-   else
-      type = "geom";
 
    _mesa_snprintf(filename, sizeof(filename), "shader_%u.%s", shader->Name, type);
    f = fopen(filename, "w");

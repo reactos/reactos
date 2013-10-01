@@ -142,7 +142,6 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
    obj->Sampler.MaxLod = 1000.0;
    obj->Sampler.LodBias = 0.0;
    obj->Sampler.MaxAnisotropy = 1.0;
-   obj->Sampler.CubeMapSeamless = GL_FALSE;
 }
 
 
@@ -243,7 +242,6 @@ _mesa_copy_texture_object( struct gl_texture_object *dest,
    dest->BaseLevel = src->BaseLevel;
    dest->MaxLevel = src->MaxLevel;
    dest->Sampler.MaxAnisotropy = src->Sampler.MaxAnisotropy;
-   dest->Sampler.CubeMapSeamless = src->Sampler.CubeMapSeamless;
    dest->_MaxLevel = src->_MaxLevel;
    dest->_MaxLambda = src->_MaxLambda;
    dest->GenerateMipmap = src->GenerateMipmap;

@@ -1991,10 +1991,6 @@ apply_type_qualifier_to_variable(const struct ast_type_qualifier *qual,
 	 if (var->mode == ir_var_out)
 	    var->invariant = true;
 	 break;
-      case geometry_shader:
-	 if ((var->mode == ir_var_in) || (var->mode == ir_var_out))
-	    var->invariant = true;
-	 break;
       case fragment_shader:
 	 if (var->mode == ir_var_in)
 	    var->invariant = true;
@@ -2064,12 +2060,6 @@ apply_type_qualifier_to_variable(const struct ast_type_qualifier *qual,
 	    fail = true;
 	    string = "input";
 	 }
-	 break;
-
-      case geometry_shader:
-	 _mesa_glsl_error(loc, state,
-			  "geometry shader variables cannot be given "
-			  "explicit locations\n");
 	 break;
 
       case fragment_shader:
@@ -2590,7 +2580,6 @@ ast_declarator_list::hir(exec_list *instructions,
        * that adds the 'layout' keyword.
        */
       if ((state->language_version < 130)
-	  && !state->ARB_explicit_attrib_location_enable
 	  && !state->ARB_fragment_coord_conventions_enable) {
 	 if (this->type->qualifier.flags.q.out) {
 	    _mesa_glsl_error(& loc, state,

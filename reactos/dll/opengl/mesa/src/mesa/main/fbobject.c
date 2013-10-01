@@ -2153,17 +2153,6 @@ _mesa_FramebufferTexture3DEXT(GLenum target, GLenum attachment,
 
 
 void GLAPIENTRY
-_mesa_FramebufferTextureLayerEXT(GLenum target, GLenum attachment,
-                                 GLuint texture, GLint level, GLint layer)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   framebuffer_texture(ctx, "Layer", target, attachment, 0, texture,
-                       level, layer);
-}
-
-
-void GLAPIENTRY
 _mesa_FramebufferRenderbufferEXT(GLenum target, GLenum attachment,
                                  GLenum renderbufferTarget,
                                  GLuint renderbuffer)
@@ -2842,26 +2831,3 @@ _mesa_BlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
 }
 #endif /* FEATURE_EXT_framebuffer_blit */
 
-
-#if FEATURE_ARB_geometry_shader4
-void GLAPIENTRY
-_mesa_FramebufferTextureARB(GLenum target, GLenum attachment,
-                            GLuint texture, GLint level)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   _mesa_error(ctx, GL_INVALID_OPERATION,
-               "glFramebufferTextureARB "
-               "not implemented!");
-}
-
-
-void GLAPIENTRY
-_mesa_FramebufferTextureFaceARB(GLenum target, GLenum attachment,
-                                GLuint texture, GLint level, GLenum face)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   _mesa_error(ctx, GL_INVALID_OPERATION,
-               "glFramebufferTextureFaceARB "
-               "not implemented!");
-}
-#endif /* FEATURE_ARB_geometry_shader4 */

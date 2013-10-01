@@ -150,22 +150,9 @@ compute_version(struct gl_context *ctx)
                               ctx->Const.GLSLVersion >= 150 &&
                               ctx->Extensions.ARB_depth_clamp &&
                               ctx->Extensions.ARB_draw_elements_base_vertex &&
-                              ctx->Extensions.ARB_fragment_coord_conventions &&
-                              ctx->Extensions.ARB_geometry_shader4 &&
-                              ctx->Extensions.EXT_provoking_vertex &&
-                              ctx->Extensions.ARB_seamless_cube_map &&
-                              ctx->Extensions.ARB_texture_multisample &&
-                              ctx->Extensions.EXT_vertex_array_bgra);
-   const GLboolean ver_3_3 = (ver_3_2 &&
-                              ctx->Const.GLSLVersion >= 330 &&
-                              ctx->Extensions.ARB_blend_func_extended &&
-                              ctx->Extensions.ARB_explicit_attrib_location);
+                              ctx->Extensions.ARB_fragment_coord_conventions);
 
-   if (ver_3_3) {
-      major = 3;
-      minor = 3;
-   }
-   else if (ver_3_2) {
+   if (ver_3_2) {
       major = 3;
       minor = 2;
    }

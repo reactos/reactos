@@ -63,38 +63,6 @@ _mesa_ShadeModel( GLenum mode )
       ctx->Driver.ShadeModel( ctx, mode );
 }
 
-
-/**
- * Set the provoking vertex (the vertex which specifies the prim's
- * color when flat shading) to either the first or last vertex of the
- * triangle or line.
- */
-void GLAPIENTRY
-_mesa_ProvokingVertexEXT(GLenum mode)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   if (MESA_VERBOSE&VERBOSE_API)
-      _mesa_debug(ctx, "glProvokingVertexEXT 0x%x\n", mode);
-
-   switch (mode) {
-   case GL_FIRST_VERTEX_CONVENTION_EXT:
-   case GL_LAST_VERTEX_CONVENTION_EXT:
-      break;
-   default:
-      _mesa_error(ctx, GL_INVALID_ENUM, "glProvokingVertexEXT(0x%x)", mode);
-      return;
-   }
-
-   if (ctx->Light.ProvokingVertex == mode)
-      return;
-
-   FLUSH_VERTICES(ctx, _NEW_LIGHT);
-   ctx->Light.ProvokingVertex = mode;
-}
-
-
 /**
  * Helper function called by _mesa_Lightfv and _mesa_PopAttrib to set
  * per-light state.
@@ -1372,7 +1340,6 @@ _mesa_init_lighting( struct gl_context *ctx )
    init_lightmodel( &ctx->Light.Model );
    init_material( &ctx->Light.Material );
    ctx->Light.ShadeModel = GL_SMOOTH;
-   ctx->Light.ProvokingVertex = GL_LAST_VERTEX_CONVENTION_EXT;
    ctx->Light.Enabled = GL_FALSE;
    ctx->Light.ColorMaterialFace = GL_FRONT_AND_BACK;
    ctx->Light.ColorMaterialMode = GL_AMBIENT_AND_DIFFUSE;

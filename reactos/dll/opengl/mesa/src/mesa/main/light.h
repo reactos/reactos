@@ -38,9 +38,6 @@ struct gl_material;
 extern void GLAPIENTRY
 _mesa_ShadeModel( GLenum mode );
 
-extern void GLAPIENTRY
-_mesa_ProvokingVertexEXT(GLenum mode);
-
 
 #if _HAVE_FULL_GL
 extern void GLAPIENTRY

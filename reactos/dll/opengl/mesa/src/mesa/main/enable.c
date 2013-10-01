@@ -868,14 +868,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          }
          break;
 
-      case GL_TEXTURE_CUBE_MAP_SEAMLESS:
-	 CHECK_EXTENSION(ARB_seamless_cube_map, cap);
-	 if (ctx->Texture.CubeMapSeamless != state) {
-	    FLUSH_VERTICES(ctx, _NEW_TEXTURE);
-	    ctx->Texture.CubeMapSeamless = state;
-	 }
-	 break;
-
       /* GL 3.1 primitive restart.  Note: this enum is different from
        * GL_PRIMITIVE_RESTART_NV (which is client state).
        */
@@ -1289,10 +1281,6 @@ _mesa_IsEnabled( GLenum cap )
       case GL_DEPTH_CLAMP:
          CHECK_EXTENSION(ARB_depth_clamp);
          return ctx->Transform.DepthClamp;
-
-      case GL_TEXTURE_CUBE_MAP_SEAMLESS:
-	 CHECK_EXTENSION(ARB_seamless_cube_map);
-	 return ctx->Texture.CubeMapSeamless;
 
       /* GL_NV_primitive_restart */
       case GL_PRIMITIVE_RESTART_NV:

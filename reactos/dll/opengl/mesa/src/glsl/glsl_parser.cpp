@@ -4153,49 +4153,6 @@ yyreduce:
 	;}
     break;
 
-  case 151:
-
-/* Line 1464 of yacc.c  */
-#line 1169 "glsl_parser.yy"
-    {
-	   bool got_one = false;
-
-	   memset(& (yyval.type_qualifier), 0, sizeof((yyval.type_qualifier)));
-
-	   if (state->ARB_explicit_attrib_location_enable) {
-	      /* FINISHME: Handle 'index' once GL_ARB_blend_func_exteneded and
-	       * FINISHME: GLSL 1.30 (or later) are supported.
-	       */
-	      if (strcmp("location", (yyvsp[(1) - (3)].identifier)) == 0) {
-		 got_one = true;
-
-		 (yyval.type_qualifier).flags.q.explicit_location = 1;
-
-		 if ((yyvsp[(3) - (3)].n) >= 0) {
-		    (yyval.type_qualifier).location = (yyvsp[(3) - (3)].n);
-		 } else {
-		    _mesa_glsl_error(& (yylsp[(3) - (3)]), state,
-				     "invalid location %d specified\n", (yyvsp[(3) - (3)].n));
-		    YYERROR;
-		 }
-	      }
-	   }
-
-	   /* If the identifier didn't match any known layout identifiers,
-	    * emit an error.
-	    */
-	   if (!got_one) {
-	      _mesa_glsl_error(& (yylsp[(1) - (3)]), state, "unrecognized layout identifier "
-			       "`%s'\n", (yyvsp[(1) - (3)].identifier));
-	      YYERROR;
-	   } else if (state->ARB_explicit_attrib_location_warn) {
-	      _mesa_glsl_warning(& (yylsp[(1) - (3)]), state,
-				 "GL_ARB_explicit_attrib_location layout "
-				 "identifier `%s' used\n", (yyvsp[(1) - (3)].identifier));
-	   }
-	;}
-    break;
-
   case 152:
 
 /* Line 1464 of yacc.c  */

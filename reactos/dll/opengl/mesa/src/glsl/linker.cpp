@@ -1619,19 +1619,17 @@ static bool
 check_resources(struct gl_context *ctx, struct gl_shader_program *prog)
 {
    static const char *const shader_names[MESA_SHADER_TYPES] = {
-      "vertex", "fragment", "geometry"
+      "vertex", "fragment"
    };
 
    const unsigned max_samplers[MESA_SHADER_TYPES] = {
       ctx->Const.MaxVertexTextureImageUnits,
-      ctx->Const.MaxTextureImageUnits,
-      ctx->Const.MaxGeometryTextureImageUnits
+      ctx->Const.MaxTextureImageUnits
    };
 
    const unsigned max_uniform_components[MESA_SHADER_TYPES] = {
       ctx->Const.VertexProgram.MaxUniformComponents,
-      ctx->Const.FragmentProgram.MaxUniformComponents,
-      0          /* FINISHME: Geometry shaders. */
+      ctx->Const.FragmentProgram.MaxUniformComponents
    };
 
    for (unsigned i = 0; i < MESA_SHADER_TYPES; i++) {
@@ -1700,10 +1698,6 @@ link_shaders(struct gl_context *ctx, struct gl_shader_program *prog)
       case GL_FRAGMENT_SHADER:
 	 frag_shader_list[num_frag_shaders] = prog->Shaders[i];
 	 num_frag_shaders++;
-	 break;
-      case GL_GEOMETRY_SHADER:
-	 /* FINISHME: Support geometry shaders. */
-	 assert(prog->Shaders[i]->Type != GL_GEOMETRY_SHADER);
 	 break;
       }
    }
@@ -1851,20 +1845,6 @@ link_shaders(struct gl_context *ctx, struct gl_shader_program *prog)
        * demoted.
        */
       while (do_dead_code(prog->_LinkedShaders[MESA_SHADER_VERTEX]->ir, false))
-	 ;
-   }
-
-   if (prog->_LinkedShaders[MESA_SHADER_GEOMETRY] != NULL) {
-      gl_shader *const sh = prog->_LinkedShaders[MESA_SHADER_GEOMETRY];
-
-      demote_shader_inputs_and_outputs(sh, ir_var_in);
-      demote_shader_inputs_and_outputs(sh, ir_var_inout);
-      demote_shader_inputs_and_outputs(sh, ir_var_out);
-
-      /* Eliminate code that is now dead due to unused geometry outputs being
-       * demoted.
-       */
-      while (do_dead_code(prog->_LinkedShaders[MESA_SHADER_GEOMETRY]->ir, false))
 	 ;
    }
 

@@ -65,7 +65,6 @@ static void init_legacy_currval(struct gl_context *ctx)
       cl->StrideB = 0;
       cl->Enabled = 1;
       cl->Type = GL_FLOAT;
-      cl->Format = GL_RGBA;
       cl->Ptr = (const void *)ctx->Current.Attrib[i];
       cl->_ElementSize = cl->Size * sizeof(GLfloat);
       _mesa_reference_buffer_object(ctx, &cl->BufferObj,
@@ -89,7 +88,6 @@ static void init_generic_currval(struct gl_context *ctx)
        */
       cl->Size = 1;
       cl->Type = GL_FLOAT;
-      cl->Format = GL_RGBA;
       cl->Ptr = (const void *)ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + i];
       cl->Stride = 0;
       cl->StrideB = 0;
@@ -136,7 +134,6 @@ static void init_mat_currval(struct gl_context *ctx)
 
       cl->Ptr = (const void *)ctx->Light.Material.Attrib[i];
       cl->Type = GL_FLOAT;
-      cl->Format = GL_RGBA;
       cl->Stride = 0;
       cl->StrideB = 0;
       cl->Enabled = 1;

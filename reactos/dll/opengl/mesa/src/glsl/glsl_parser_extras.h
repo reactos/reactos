@@ -36,7 +36,6 @@
 
 enum _mesa_glsl_parser_targets {
    vertex_shader,
-   geometry_shader,
    fragment_shader
 };
 
@@ -181,8 +180,6 @@ struct _mesa_glsl_parse_state {
    bool ARB_draw_buffers_warn;
    bool ARB_draw_instanced_enable;
    bool ARB_draw_instanced_warn;
-   bool ARB_explicit_attrib_location_enable;
-   bool ARB_explicit_attrib_location_warn;
    bool ARB_fragment_coord_conventions_enable;
    bool ARB_fragment_coord_conventions_warn;
    bool ARB_texture_rectangle_enable;

@@ -75,11 +75,6 @@ _mesa_init_fragment_program(struct gl_context *ctx,
                             GLenum target, GLuint id);
 
 extern struct gl_program *
-_mesa_init_geometry_program(struct gl_context *ctx,
-                            struct gl_geometry_program *prog,
-                            GLenum target, GLuint id);
-
-extern struct gl_program *
 _mesa_new_program(struct gl_context *ctx, GLenum target, GLuint id);
 
 extern void
@@ -120,15 +115,6 @@ _mesa_reference_fragprog(struct gl_context *ctx,
                            (struct gl_program *) prog);
 }
 
-static inline void
-_mesa_reference_geomprog(struct gl_context *ctx,
-                         struct gl_geometry_program **ptr,
-                         struct gl_geometry_program *prog)
-{
-   _mesa_reference_program(ctx, (struct gl_program **) ptr,
-                           (struct gl_program *) prog);
-}
-
 extern struct gl_program *
 _mesa_clone_program(struct gl_context *ctx, const struct gl_program *prog);
 
@@ -137,13 +123,6 @@ _mesa_clone_vertex_program(struct gl_context *ctx,
                            const struct gl_vertex_program *prog)
 {
    return (struct gl_vertex_program *) _mesa_clone_program(ctx, &prog->Base);
-}
-
-static inline struct gl_geometry_program *
-_mesa_clone_geometry_program(struct gl_context *ctx,
-                             const struct gl_geometry_program *prog)
-{
-   return (struct gl_geometry_program *) _mesa_clone_program(ctx, &prog->Base);
 }
 
 static inline struct gl_fragment_program *
@@ -194,8 +173,6 @@ _mesa_program_target_to_index(GLenum v)
       return MESA_SHADER_VERTEX;
    case GL_FRAGMENT_PROGRAM_ARB:
       return MESA_SHADER_FRAGMENT;
-   case GL_GEOMETRY_PROGRAM_NV:
-      return MESA_SHADER_GEOMETRY;
    default:
       ASSERT(0);
       return ~0;
@@ -207,8 +184,7 @@ _mesa_program_index_to_target(GLuint i)
 {
    GLenum enums[MESA_SHADER_TYPES] = {
          GL_VERTEX_PROGRAM_ARB,
-         GL_FRAGMENT_PROGRAM_ARB,
-         GL_GEOMETRY_PROGRAM_NV,
+         GL_FRAGMENT_PROGRAM_ARB
    };
    if(i >= MESA_SHADER_TYPES)
       return 0;

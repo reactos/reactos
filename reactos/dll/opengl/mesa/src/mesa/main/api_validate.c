@@ -206,11 +206,7 @@ check_index_bounds(struct gl_context *ctx, GLsizei count, GLenum type,
 GLboolean
 _mesa_valid_prim_mode(const struct gl_context *ctx, GLenum mode)
 {
-   if (ctx->Extensions.ARB_geometry_shader4 &&
-       mode > GL_TRIANGLE_STRIP_ADJACENCY_ARB) {
-      return GL_FALSE;
-   }
-   else if (mode > GL_POLYGON) {
+   if (mode > GL_POLYGON) {
       return GL_FALSE;
    }
    else {
