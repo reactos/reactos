@@ -253,7 +253,7 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeGroupD3,
     Soft386OpcodeAam,
     Soft386OpcodeAad,
-    NULL, // TODO: OPCODE 0xD6 NOT SUPPORTED
+    Soft386OpcodeSalc,
     Soft386OpcodeXlat,
     NULL, // TODO: OPCODE 0xD8 NOT SUPPORTED
     NULL, // TODO: OPCODE 0xD9 NOT SUPPORTED
@@ -5587,4 +5587,22 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovOffsetEax)
                                   &State->GeneralRegs[SOFT386_REG_EAX].LowWord,
                                   sizeof(USHORT));
     }
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeSalc)
+{
+    /* Make sure this is the right instruction */
+    ASSERT(Opcode == 0xD6);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_LOCK)
+    {
+        /* Invalid prefix */
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Set all the bits of AL to CF */
+    State->GeneralRegs[SOFT386_REG_EAX].LowByte = State->Flags.Cf ? 0xFF : 0x00;
+
+    return TRUE;
 }
