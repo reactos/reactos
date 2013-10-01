@@ -24,7 +24,7 @@
 
 
 #include "main/glheader.h"
-#include "main/condrender.h"
+#include "main/formats.h"
 #include "main/image.h"
 #include "main/macros.h"
 #include "main/format_unpack.h"

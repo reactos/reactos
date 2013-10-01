@@ -196,8 +196,7 @@ flush( struct copy_context *copy )
 	       &copy->dstib,
 	       GL_TRUE,
 	       0,
-	       copy->dstbuf_nr - 1,
-	       NULL );
+	       copy->dstbuf_nr - 1);
 
    /* Reset all pointers: 
     */

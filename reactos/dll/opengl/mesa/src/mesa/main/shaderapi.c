@@ -242,26 +242,6 @@ validate_shader_target(const struct gl_context *ctx, GLenum type)
    }
 }
 
-
-/**
- * Find the length of the longest transform feedback varying name
- * which was specified with glTransformFeedbackVaryings().
- */
-static GLint
-longest_feedback_varying_name(const struct gl_shader_program *shProg)
-{
-   GLuint i;
-   GLint max = 0;
-   for (i = 0; i < shProg->TransformFeedback.NumVarying; i++) {
-      GLint len = strlen(shProg->TransformFeedback.VaryingNames[i]);
-      if (len > max)
-         max = len;
-   }
-   return max;
-}
-
-
-
 static GLboolean
 is_program(struct gl_context *ctx, GLuint name)
 {
@@ -578,17 +558,6 @@ get_programiv(struct gl_context *ctx, GLuint program, GLenum pname, GLint *param
    case GL_PROGRAM_BINARY_LENGTH_OES:
       *params = 0;
       break;
-#if FEATURE_EXT_transform_feedback
-   case GL_TRANSFORM_FEEDBACK_VARYINGS:
-      *params = shProg->TransformFeedback.NumVarying;
-      break;
-   case GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH:
-      *params = longest_feedback_varying_name(shProg) + 1;
-      break;
-   case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
-      *params = shProg->TransformFeedback.BufferMode;
-      break;
-#endif
 #if FEATURE_ARB_geometry_shader4
    case GL_GEOMETRY_VERTICES_OUT_ARB:
       *params = shProg->Geom.VerticesOut;
@@ -742,21 +711,10 @@ static void
 link_program(struct gl_context *ctx, GLuint program)
 {
    struct gl_shader_program *shProg;
-   struct gl_transform_feedback_object *obj =
-      ctx->TransformFeedback.CurrentObject;
 
    shProg = _mesa_lookup_shader_program_err(ctx, program, "glLinkProgram");
    if (!shProg)
       return;
-
-   if (obj->Active
-       && (shProg == ctx->Shader.CurrentVertexProgram
-	   || shProg == ctx->Shader.CurrentGeometryProgram
-	   || shProg == ctx->Shader.CurrentFragmentProgram)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glLinkProgram(transform feedback active)");
-      return;
-   }
 
    FLUSH_VERTICES(ctx, _NEW_PROGRAM);
 
@@ -1399,16 +1357,8 @@ _mesa_UseProgramObjectARB(GLhandleARB program)
 {
    GET_CURRENT_CONTEXT(ctx);
    struct gl_shader_program *shProg;
-   struct gl_transform_feedback_object *obj =
-      ctx->TransformFeedback.CurrentObject;
 
    ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   if (obj->Active && !obj->Paused) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glUseProgram(transform feedback active)");
-      return;
-   }
 
    if (program) {
       shProg = _mesa_lookup_shader_program_err(ctx, program, "glUseProgram");
@@ -1603,13 +1553,6 @@ _mesa_UseShaderProgramEXT(GLenum type, GLuint program)
 
    if (!validate_shader_target(ctx, type)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glUseShaderProgramEXT(type)");
-      return;
-   }
-
-   if (ctx->TransformFeedback.CurrentObject->Active &&
-       !ctx->TransformFeedback.CurrentObject->Paused) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glUseShaderProgramEXT(transform feedback is active)");
       return;
    }
 

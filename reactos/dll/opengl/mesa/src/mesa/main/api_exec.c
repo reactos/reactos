@@ -36,7 +36,6 @@
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
 #include "arbprogram.h"
 #endif
-#include "atifragshader.h"
 #include "attrib.h"
 #include "blend.h"
 #include "bufferobj.h"
@@ -47,7 +46,6 @@
 #include "clear.h"
 #include "clip.h"
 #include "colortab.h"
-#include "condrender.h"
 #include "context.h"
 #include "convolve.h"
 #include "depth.h"
@@ -74,7 +72,6 @@
 #include "pixelstore.h"
 #include "points.h"
 #include "polygon.h"
-#include "queryobj.h"
 #include "readpix.h"
 #include "scissor.h"
 #include "stencil.h"
@@ -87,7 +84,6 @@
 #include "texstate.h"
 #include "texstorage.h"
 #include "texturebarrier.h"
-#include "transformfeedback.h"
 #include "mtypes.h"
 #include "varray.h"
 #include "viewport.h"
@@ -98,7 +94,6 @@
 #include "shaderapi.h"
 #include "uniforms.h"
 #endif
-#include "syncobj.h"
 #include "main/dispatch.h"
 
 
@@ -464,10 +459,6 @@ _mesa_create_exec_table(void)
    /* ???. GL_EXT_depth_bounds_test */
    SET_DepthBoundsEXT(exec, _mesa_DepthBoundsEXT);
 
-   /* 352. GL_EXT_transform_feedback */
-   /* ARB 93. GL_ARB_transform_feedback2 */
-   _mesa_init_transform_feedback_dispatch(exec);
-
    /* 364. GL_EXT_provoking_vertex */
    SET_ProvokingVertexEXT(exec, _mesa_ProvokingVertexEXT);
 
@@ -587,9 +578,6 @@ _mesa_create_exec_table(void)
    SET_MapBufferARB(exec, _mesa_MapBufferARB);
    SET_UnmapBufferARB(exec, _mesa_UnmapBufferARB);
 
-   /* ARB 29. GL_ARB_occlusion_query */
-   _mesa_init_queryobj_dispatch(exec);
-
    /* ARB 37. GL_ARB_draw_buffers */
 #if FEATURE_draw_read_buffer
    SET_DrawBuffersARB(exec, _mesa_DrawBuffersARB);
@@ -600,12 +588,6 @@ _mesa_create_exec_table(void)
    SET_GetnPolygonStippleARB(exec, _mesa_GetnPolygonStippleARB);
    SET_GetnTexImageARB(exec, _mesa_GetnTexImageARB);
    SET_ReadnPixelsARB(exec, _mesa_ReadnPixelsARB);
-
-   /* GL_ARB_sync */
-   _mesa_init_sync_dispatch(exec);
-
-  /* GL_ATI_fragment_shader */
-   _mesa_init_ati_fragment_shader_dispatch(exec);
 
   /* GL_ATI_envmap_bumpmap */
    SET_GetTexBumpParameterivATI(exec, _mesa_GetTexBumpParameterivATI);
@@ -669,18 +651,6 @@ _mesa_create_exec_table(void)
    /* GL_ARB_vertex_array_object */
    SET_BindVertexArray(exec, _mesa_BindVertexArray);
    SET_GenVertexArrays(exec, _mesa_GenVertexArrays);
-
-   /* GL_EXT_draw_buffers2 */
-   SET_ColorMaskIndexedEXT(exec, _mesa_ColorMaskIndexed);
-   SET_GetBooleanIndexedvEXT(exec, _mesa_GetBooleanIndexedv);
-   SET_GetIntegerIndexedvEXT(exec, _mesa_GetIntegerIndexedv);
-   SET_EnableIndexedEXT(exec, _mesa_EnableIndexed);
-   SET_DisableIndexedEXT(exec, _mesa_DisableIndexed);
-   SET_IsEnabledIndexedEXT(exec, _mesa_IsEnabledIndexed);
-
-   /* GL_NV_conditional_render */
-   SET_BeginConditionalRenderNV(exec, _mesa_BeginConditionalRender);
-   SET_EndConditionalRenderNV(exec, _mesa_EndConditionalRender);
 
 #if FEATURE_OES_EGL_image
    SET_EGLImageTargetTexture2DOES(exec, _mesa_EGLImageTargetTexture2DOES);

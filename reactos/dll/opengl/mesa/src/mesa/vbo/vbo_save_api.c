@@ -1056,16 +1056,6 @@ _save_MultiDrawElementsBaseVertex(GLenum mode, const GLsizei *count,
 
 
 static void GLAPIENTRY
-_save_DrawTransformFeedback(GLenum mode, GLuint name)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   (void) mode;
-   (void) name;
-   _mesa_compile_error(ctx, GL_INVALID_OPERATION, "glDrawTransformFeedback");
-}
-
-
-static void GLAPIENTRY
 _save_Rectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -1368,7 +1358,6 @@ _save_vtxfmt_init(struct gl_context *ctx)
    vfmt->DrawRangeElements = _save_DrawRangeElements;
    vfmt->DrawElementsBaseVertex = _save_DrawElementsBaseVertex;
    vfmt->DrawRangeElementsBaseVertex = _save_DrawRangeElementsBaseVertex;
-   vfmt->DrawTransformFeedback = _save_DrawTransformFeedback;
    vfmt->MultiDrawElementsEXT = _save_MultiDrawElements;
    vfmt->MultiDrawElementsBaseVertex = _save_MultiDrawElementsBaseVertex;
 }

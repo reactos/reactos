@@ -24,7 +24,6 @@
 
 #include "glheader.h"
 #include "accum.h"
-#include "condrender.h"
 #include "context.h"
 #include "format_unpack.h"
 #include "format_pack.h"
@@ -458,9 +457,6 @@ _mesa_accum(struct gl_context *ctx, GLenum op, GLfloat value)
       _mesa_warning(ctx, "Calling glAccum() without an accumulation buffer");
       return;
    }
-
-   if (!_mesa_check_conditional_render(ctx))
-      return;
 
    xpos = ctx->DrawBuffer->_Xmin;
    ypos = ctx->DrawBuffer->_Ymin;

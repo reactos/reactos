@@ -42,7 +42,6 @@
 #include "mfeatures.h"
 #include "mtypes.h"
 #include "texobj.h"
-#include "transformfeedback.h"
 
 
 /* Debug flags */
@@ -80,13 +79,6 @@ get_buffer_target(struct gl_context *ctx, GLenum target)
       return &ctx->CopyReadBuffer;
    case GL_COPY_WRITE_BUFFER:
       return &ctx->CopyWriteBuffer;
-#if FEATURE_EXT_transform_feedback
-   case GL_TRANSFORM_FEEDBACK_BUFFER:
-      if (ctx->Extensions.EXT_transform_feedback) {
-         return &ctx->TransformFeedback.CurrentBuffer;
-      }
-      break;
-#endif
    case GL_TEXTURE_BUFFER:
       if (ctx->Extensions.ARB_texture_buffer_object) {
          return &ctx->Texture.BufferObject;
@@ -798,16 +790,6 @@ _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
          }
          if (ctx->CopyWriteBuffer == bufObj) {
             _mesa_BindBufferARB( GL_COPY_WRITE_BUFFER, 0 );
-         }
-
-         /* unbind transform feedback binding points */
-         if (ctx->TransformFeedback.CurrentBuffer == bufObj) {
-            _mesa_BindBufferARB( GL_TRANSFORM_FEEDBACK_BUFFER, 0 );
-         }
-         for (j = 0; j < MAX_FEEDBACK_ATTRIBS; j++) {
-            if (ctx->TransformFeedback.CurrentObject->Buffers[j] == bufObj) {
-               _mesa_BindBufferBase( GL_TRANSFORM_FEEDBACK_BUFFER, j, 0 );
-            }
          }
 
          /* unbind any pixel pack/unpack pointers bound to this buffer */

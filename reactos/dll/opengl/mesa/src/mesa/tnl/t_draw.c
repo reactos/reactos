@@ -27,7 +27,6 @@
 
 #include "main/glheader.h"
 #include "main/bufferobj.h"
-#include "main/condrender.h"
 #include "main/context.h"
 #include "main/imports.h"
 #include "main/mtypes.h"
@@ -414,8 +413,7 @@ void _tnl_vbo_draw_prims(struct gl_context *ctx,
 			 const struct _mesa_index_buffer *ib,
 			 GLboolean index_bounds_valid,
 			 GLuint min_index,
-			 GLuint max_index,
-			 struct gl_transform_feedback_object *tfb_vertcount)
+			 GLuint max_index)
 {
    if (!index_bounds_valid)
       vbo_get_minmax_index(ctx, prim, ib, &min_index, &max_index);
@@ -443,9 +441,6 @@ void _tnl_draw_prims( struct gl_context *ctx,
 
    /* Mesa core state should have been validated already */
    assert(ctx->NewState == 0x0);
-
-   if (!_mesa_check_conditional_render(ctx))
-      return; /* don't draw */
 
    for (i = 1; i < nr_prims; i++)
       max_basevertex = MAX2(max_basevertex, prim[i].basevertex);

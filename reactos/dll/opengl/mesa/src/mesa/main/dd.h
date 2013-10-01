@@ -872,25 +872,6 @@ struct dd_function_table {
    /**@}*/
 
    /**
-    * \name GL_ARB_sync interfaces
-    */
-   /*@{*/
-   struct gl_sync_object * (*NewSyncObject)(struct gl_context *, GLenum);
-   void (*FenceSync)(struct gl_context *, struct gl_sync_object *, GLenum, GLbitfield);
-   void (*DeleteSyncObject)(struct gl_context *, struct gl_sync_object *);
-   void (*CheckSync)(struct gl_context *, struct gl_sync_object *);
-   void (*ClientWaitSync)(struct gl_context *, struct gl_sync_object *,
-			  GLbitfield, GLuint64);
-   void (*ServerWaitSync)(struct gl_context *, struct gl_sync_object *,
-			  GLbitfield, GLuint64);
-   /*@}*/
-
-   /** GL_NV_conditional_render */
-   void (*BeginConditionalRender)(struct gl_context *ctx, struct gl_query_object *q,
-                                  GLenum mode);
-   void (*EndConditionalRender)(struct gl_context *ctx, struct gl_query_object *q);
-
-   /**
     * \name GL_OES_draw_texture interface
     */
    /*@{*/
@@ -908,22 +889,6 @@ struct dd_function_table {
    void (*EGLImageTargetRenderbufferStorage)(struct gl_context *ctx,
 					     struct gl_renderbuffer *rb,
 					     void *image_handle);
-
-   /**
-    * \name GL_EXT_transform_feedback interface
-    */
-   struct gl_transform_feedback_object *
-        (*NewTransformFeedback)(struct gl_context *ctx, GLuint name);
-   void (*DeleteTransformFeedback)(struct gl_context *ctx,
-                                   struct gl_transform_feedback_object *obj);
-   void (*BeginTransformFeedback)(struct gl_context *ctx, GLenum mode,
-                                  struct gl_transform_feedback_object *obj);
-   void (*EndTransformFeedback)(struct gl_context *ctx,
-                                struct gl_transform_feedback_object *obj);
-   void (*PauseTransformFeedback)(struct gl_context *ctx,
-                                  struct gl_transform_feedback_object *obj);
-   void (*ResumeTransformFeedback)(struct gl_context *ctx,
-                                   struct gl_transform_feedback_object *obj);
 
    /**
     * \name GL_NV_texture_barrier interface
@@ -1080,7 +1045,6 @@ typedef struct {
    void (GLAPIENTRYP DrawElementsInstancedBaseVertex)(GLenum mode, GLsizei count,
                                             GLenum type, const GLvoid *indices,
                                             GLsizei primcount, GLint basevertex);
-   void (GLAPIENTRYP DrawTransformFeedback)(GLenum mode, GLuint name);
    /*@}*/
 
    /**

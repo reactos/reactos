@@ -113,7 +113,6 @@ setup_vertex_format(struct gl_context *ctx)
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    SScontext *swsetup = SWSETUP_CONTEXT(ctx);
    GLboolean intColors = !ctx->FragmentProgram._Current
-                      && !ctx->ATIFragmentShader._Enabled
                       && ctx->RenderMode == GL_RENDER
                       && CHAN_TYPE != GL_FLOAT;
 

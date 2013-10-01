@@ -72,13 +72,4 @@ _mesa_validate_DrawElementsInstanced(struct gl_context *ctx,
                                      const GLvoid *indices, GLsizei primcount,
                                      GLint basevertex);
 
-#if FEATURE_EXT_transform_feedback
-
-extern GLboolean
-_mesa_validate_DrawTransformFeedback(struct gl_context *ctx,
-                                     GLenum mode,
-                                     struct gl_transform_feedback_object *obj);
-
-#endif
-
 #endif

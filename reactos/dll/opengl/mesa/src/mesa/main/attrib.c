@@ -492,15 +492,7 @@ pop_enable_group(struct gl_context *ctx, const struct gl_enable_attrib *enable)
 
    TEST_AND_UPDATE(ctx->Color.AlphaEnabled, enable->AlphaTest, GL_ALPHA_TEST);
    if (ctx->Color.BlendEnabled != enable->Blend) {
-      if (ctx->Extensions.EXT_draw_buffers2) {
-         GLuint i;
-         for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
-            _mesa_set_enablei(ctx, GL_BLEND, i, (enable->Blend >> i) & 1);
-         }
-      }
-      else {
-         _mesa_set_enable(ctx, GL_BLEND, (enable->Blend & 1));
-      }
+      _mesa_set_enable(ctx, GL_BLEND, (enable->Blend & 1));
    }
 
    for (i=0;i<ctx->Const.MaxClipPlanes;i++) {
@@ -865,22 +857,10 @@ _mesa_PopAttrib(void)
                                 color->ClearColor.f[2],
                                 color->ClearColor.f[3]);
                _mesa_IndexMask(color->IndexMask);
-               if (!ctx->Extensions.EXT_draw_buffers2) {
-                  _mesa_ColorMask((GLboolean) (color->ColorMask[0][0] != 0),
-                                  (GLboolean) (color->ColorMask[0][1] != 0),
-                                  (GLboolean) (color->ColorMask[0][2] != 0),
-                                  (GLboolean) (color->ColorMask[0][3] != 0));
-               }
-               else {
-                  GLuint i;
-                  for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
-                     _mesa_ColorMaskIndexed(i, 
-                                  (GLboolean) (color->ColorMask[i][0] != 0),
-                                  (GLboolean) (color->ColorMask[i][1] != 0),
-                                  (GLboolean) (color->ColorMask[i][2] != 0),
-                                  (GLboolean) (color->ColorMask[i][3] != 0));
-                  }
-               }
+               _mesa_ColorMask((GLboolean) (color->ColorMask[0][0] != 0),
+                               (GLboolean) (color->ColorMask[0][1] != 0),
+                               (GLboolean) (color->ColorMask[0][2] != 0),
+                               (GLboolean) (color->ColorMask[0][3] != 0));
                {
                   /* Need to determine if more than one color output is
                    * specified.  If so, call glDrawBuffersARB, else call
@@ -913,16 +893,7 @@ _mesa_PopAttrib(void)
                _mesa_set_enable(ctx, GL_ALPHA_TEST, color->AlphaEnabled);
                _mesa_AlphaFunc(color->AlphaFunc, color->AlphaRefUnclamped);
                if (ctx->Color.BlendEnabled != color->BlendEnabled) {
-                  if (ctx->Extensions.EXT_draw_buffers2) {
-                     GLuint i;
-                     for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
-                        _mesa_set_enablei(ctx, GL_BLEND, i,
-                                          (color->BlendEnabled >> i) & 1);
-                     }
-                  }
-                  else {
-                     _mesa_set_enable(ctx, GL_BLEND, (color->BlendEnabled & 1));
-                  }
+                  _mesa_set_enable(ctx, GL_BLEND, (color->BlendEnabled & 1));
                }
                if (ctx->Color._BlendFuncPerBuffer ||
                    ctx->Color._BlendEquationPerBuffer) {

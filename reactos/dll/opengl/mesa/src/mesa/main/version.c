@@ -99,7 +99,6 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.EXT_point_parameters &&
                               ctx->Extensions.EXT_secondary_color);
    const GLboolean ver_1_5 = (ver_1_4 &&
-                              ctx->Extensions.ARB_occlusion_query &&
                               ctx->Extensions.EXT_shadow_funcs);
    const GLboolean ver_2_0 = (ver_1_5 &&
                               ctx->Extensions.ARB_point_sprite &&
@@ -134,12 +133,9 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.ARB_texture_rg &&
                               ctx->Extensions.ARB_texture_compression_rgtc &&
                               ctx->Extensions.APPLE_vertex_array_object &&
-                              ctx->Extensions.EXT_draw_buffers2 &&
                               ctx->Extensions.ARB_framebuffer_object &&
                               ctx->Extensions.EXT_framebuffer_sRGB &&
-                              ctx->Extensions.EXT_texture_array &&
-                              ctx->Extensions.EXT_transform_feedback &&
-                              ctx->Extensions.NV_conditional_render);
+                              ctx->Extensions.EXT_texture_array);
    const GLboolean ver_3_1 = (ver_3_0 &&
                               ctx->Const.GLSLVersion >= 140 &&
                               ctx->Extensions.ARB_copy_buffer &&
@@ -158,15 +154,13 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.ARB_geometry_shader4 &&
                               ctx->Extensions.EXT_provoking_vertex &&
                               ctx->Extensions.ARB_seamless_cube_map &&
-                              ctx->Extensions.ARB_sync &&
                               ctx->Extensions.ARB_texture_multisample &&
                               ctx->Extensions.EXT_vertex_array_bgra);
    const GLboolean ver_3_3 = (ver_3_2 &&
                               ctx->Const.GLSLVersion >= 330 &&
                               ctx->Extensions.ARB_blend_func_extended &&
                               ctx->Extensions.ARB_explicit_attrib_location &&
-                              ctx->Extensions.ARB_instanced_arrays &&
-                              ctx->Extensions.ARB_occlusion_query2);
+                              ctx->Extensions.ARB_instanced_arrays);
 
    if (ver_3_3) {
       major = 3;

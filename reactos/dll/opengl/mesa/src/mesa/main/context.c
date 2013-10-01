@@ -109,10 +109,7 @@
 #include "pixelstore.h"
 #include "points.h"
 #include "polygon.h"
-#include "queryobj.h"
-#include "syncobj.h"
 #include "rastpos.h"
-#include "remap.h"
 #include "scissor.h"
 #include "shared.h"
 #include "shaderobj.h"
@@ -121,7 +118,6 @@
 #include "stencil.h"
 #include "texcompress_s3tc.h"
 #include "texstate.h"
-#include "transformfeedback.h"
 #include "mtypes.h"
 #include "varray.h"
 #include "version.h"
@@ -425,18 +421,6 @@ one_time_init( struct gl_context *ctx )
 #endif
    }
 
-   /* per-API one-time init */
-   if (!(api_init_mask & (1 << ctx->API))) {
-      /*
-       * This is fine as ES does not use the remap table, but it may not be
-       * future-proof.  We cannot always initialize the remap table because
-       * when an app is linked to libGLES*, there are not enough dynamic
-       * entries.
-       */
-      if (ctx->API == API_OPENGL)
-         _mesa_init_remap_table();
-   }
-
    api_init_mask |= 1 << ctx->API;
 
    _glthread_UNLOCK_MUTEX(OneTimeLock);
@@ -639,19 +623,11 @@ _mesa_init_constants(struct gl_context *ctx)
    /* GL_ARB_framebuffer_object */
    ctx->Const.MaxSamples = 0;
 
-   /* GL_ARB_sync */
-   ctx->Const.MaxServerWaitTimeout = (GLuint64) ~0;
-
    /* GL_ATI_envmap_bumpmap */
    ctx->Const.SupportedBumpUnits = SUPPORTED_ATI_BUMP_UNITS;
 
    /* GL_EXT_provoking_vertex */
    ctx->Const.QuadsFollowProvokingVertexConvention = GL_TRUE;
-
-   /* GL_EXT_transform_feedback */
-   ctx->Const.MaxTransformFeedbackSeparateAttribs = MAX_FEEDBACK_ATTRIBS;
-   ctx->Const.MaxTransformFeedbackSeparateComponents = 4 * MAX_FEEDBACK_ATTRIBS;
-   ctx->Const.MaxTransformFeedbackInterleavedComponents = 4 * MAX_FEEDBACK_ATTRIBS;
 
    /* GL 3.2: hard-coded for now: */
    ctx->Const.ProfileMask = GL_CONTEXT_COMPATIBILITY_PROFILE_BIT;
@@ -778,14 +754,11 @@ init_attrib_groups(struct gl_context *ctx)
    _mesa_init_point( ctx );
    _mesa_init_polygon( ctx );
    _mesa_init_program( ctx );
-   _mesa_init_queryobj( ctx );
-   _mesa_init_sync( ctx );
    _mesa_init_rastpos( ctx );
    _mesa_init_scissor( ctx );
    _mesa_init_shader_state( ctx );
    _mesa_init_stencil( ctx );
    _mesa_init_transform( ctx );
-   _mesa_init_transform_feedback( ctx );
    _mesa_init_varray( ctx );
    _mesa_init_viewport( ctx );
 
@@ -1117,10 +1090,7 @@ _mesa_free_context_data( struct gl_context *ctx )
    _mesa_free_viewport_data( ctx );
    _mesa_free_program_data(ctx);
    _mesa_free_shader_state(ctx);
-   _mesa_free_queryobj_data(ctx);
-   _mesa_free_sync_data(ctx);
    _mesa_free_varray_data(ctx);
-   _mesa_free_transform_feedback(ctx);
 
    _mesa_delete_array_object(ctx, ctx->Array.DefaultArrayObj);
 

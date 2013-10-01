@@ -101,8 +101,6 @@ static const struct extension extension_table[] = {
    { "GL_ARB_map_buffer_range",                    o(ARB_map_buffer_range),                    GL,             2008 },
    { "GL_ARB_multisample",                         o(dummy_true),                              GL,             1994 },
    { "GL_ARB_multitexture",                        o(dummy_true),                              GL,             1998 },
-   { "GL_ARB_occlusion_query2",                    o(ARB_occlusion_query2),                    GL,             2003 },
-   { "GL_ARB_occlusion_query",                     o(ARB_occlusion_query),                     GL,             2001 },
    { "GL_ARB_pixel_buffer_object",                 o(EXT_pixel_buffer_object),                 GL,             2004 },
    { "GL_ARB_point_parameters",                    o(EXT_point_parameters),                    GL,             1997 },
    { "GL_ARB_point_sprite",                        o(ARB_point_sprite),                        GL,             2003 },
@@ -113,7 +111,6 @@ static const struct extension extension_table[] = {
    { "GL_ARB_shader_stencil_export",               o(ARB_shader_stencil_export),               GL,             2009 },
    { "GL_ARB_shader_texture_lod",                  o(ARB_shader_texture_lod),                  GL,             2009 },
    { "GL_ARB_shading_language_100",                o(ARB_shading_language_100),                GL,             2003 },
-   { "GL_ARB_sync",                                o(ARB_sync),                                GL,             2003 },
    { "GL_ARB_texture_border_clamp",                o(ARB_texture_border_clamp),                GL,             2000 },
    { "GL_ARB_texture_buffer_object",               o(ARB_texture_buffer_object),               GL,             2008 },
    { "GL_ARB_texture_compression",                 o(dummy_true),                              GL,             2000 },
@@ -130,7 +127,6 @@ static const struct extension extension_table[] = {
    { "GL_ARB_texture_rectangle",                   o(NV_texture_rectangle),                    GL,             2004 },
    { "GL_ARB_texture_rg",                          o(ARB_texture_rg),                          GL,             2008 },
    { "GL_ARB_texture_storage",                     o(ARB_texture_storage),                     GL,             2011 },
-   { "GL_ARB_transform_feedback2",                 o(ARB_transform_feedback2),                 GL,             2010 },
    { "GL_ARB_transpose_matrix",                    o(ARB_transpose_matrix),                    GL,             1999 },
    { "GL_ARB_uniform_buffer_object",               o(ARB_uniform_buffer_object),               GL,             2002 },
    { "GL_ARB_vertex_array_bgra",                   o(EXT_vertex_array_bgra),                   GL,             2008 },
@@ -151,7 +147,6 @@ static const struct extension extension_table[] = {
    { "GL_EXT_compiled_vertex_array",               o(EXT_compiled_vertex_array),               GL,             1996 },
    { "GL_EXT_copy_texture",                        o(dummy_true),                              GL,             1995 },
    { "GL_EXT_depth_bounds_test",                   o(EXT_depth_bounds_test),                   GL,             2002 },
-   { "GL_EXT_draw_buffers2",                       o(EXT_draw_buffers2),                       GL,             2006 },
    { "GL_EXT_draw_instanced",                      o(ARB_draw_instanced),                      GL,             2006 },
    { "GL_EXT_draw_range_elements",                 o(EXT_draw_range_elements),                 GL,             1997 },
    { "GL_EXT_fog_coord",                           o(EXT_fog_coord),                           GL,             1999 },
@@ -198,7 +193,6 @@ static const struct extension extension_table[] = {
    { "GL_EXT_texture_snorm",                       o(EXT_texture_snorm),                       GL,             2009 },
    { "GL_EXT_texture_sRGB",                        o(EXT_texture_sRGB),                        GL,             2004 },
    { "GL_EXT_texture_type_2_10_10_10_REV",         o(dummy_true),                                         ES2, 2008 },
-   { "GL_EXT_transform_feedback",                  o(EXT_transform_feedback),                  GL,             2011 },
    { "GL_EXT_vertex_array_bgra",                   o(EXT_vertex_array_bgra),                   GL,             2008 },
    { "GL_EXT_vertex_array",                        o(dummy_true),                              GL,             1995 },
 
@@ -254,7 +248,6 @@ static const struct extension extension_table[] = {
    { "GL_ATI_blend_equation_separate",             o(EXT_blend_equation_separate),             GL,             2003 },
    { "GL_ATI_draw_buffers",                        o(dummy_true),                              GL,             2002 },
    { "GL_ATI_envmap_bumpmap",                      o(ATI_envmap_bumpmap),                      GL,             2001 },
-   { "GL_ATI_fragment_shader",                     o(ATI_fragment_shader),                     GL,             2001 },
    { "GL_ATI_separate_stencil",                    o(ATI_separate_stencil),                    GL,             2006 },
    { "GL_ATI_texture_compression_3dc",             o(ATI_texture_compression_3dc),             GL,             2004 },
    { "GL_ATI_texture_env_combine3",                o(ATI_texture_env_combine3),                GL,             2002 },
@@ -271,7 +264,6 @@ static const struct extension extension_table[] = {
    { "GL_MESA_window_pos",                         o(ARB_window_pos),                          GL,             2000 },
    { "GL_MESA_ycbcr_texture",                      o(MESA_ycbcr_texture),                      GL,             2002 },
    { "GL_NV_blend_square",                         o(NV_blend_square),                         GL,             1999 },
-   { "GL_NV_conditional_render",                   o(NV_conditional_render),                   GL,             2008 },
    { "GL_NV_depth_clamp",                          o(ARB_depth_clamp),                         GL,             2001 },
    { "GL_NV_draw_buffers",                         o(dummy_true),                                         ES2, 2011 },
    { "GL_NV_fbo_color_attachments",                o(EXT_framebuffer_object),                             ES2, 2010 },
@@ -387,10 +379,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.ARB_half_float_pixel = GL_TRUE;
    ctx->Extensions.ARB_half_float_vertex = GL_TRUE;
    ctx->Extensions.ARB_map_buffer_range = GL_TRUE;
-#if FEATURE_queryobj
-   ctx->Extensions.ARB_occlusion_query = GL_TRUE;
-   ctx->Extensions.ARB_occlusion_query2 = GL_TRUE;
-#endif
    ctx->Extensions.ARB_point_sprite = GL_TRUE;
 #if FEATURE_ARB_shader_objects
    ctx->Extensions.ARB_shader_objects = GL_TRUE;
@@ -416,17 +404,11 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
 #if FEATURE_ARB_vertex_shader
    ctx->Extensions.ARB_vertex_shader = GL_TRUE;
 #endif
-#if FEATURE_ARB_sync
-   ctx->Extensions.ARB_sync = GL_TRUE;
-#endif
    ctx->Extensions.APPLE_vertex_array_object = GL_TRUE;
 #if FEATURE_APPLE_object_purgeable
    ctx->Extensions.APPLE_object_purgeable = GL_TRUE;
 #endif
    ctx->Extensions.ATI_envmap_bumpmap = GL_TRUE;
-#if FEATURE_ATI_fragment_shader
-   ctx->Extensions.ATI_fragment_shader = GL_TRUE;
-#endif
    ctx->Extensions.ATI_texture_compression_3dc = GL_TRUE;
    ctx->Extensions.ATI_texture_env_combine3 = GL_TRUE;
    ctx->Extensions.ATI_texture_mirror_once = GL_TRUE;
@@ -436,7 +418,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.EXT_blend_func_separate = GL_TRUE;
    ctx->Extensions.EXT_blend_minmax = GL_TRUE;
    ctx->Extensions.EXT_depth_bounds_test = GL_TRUE;
-   ctx->Extensions.EXT_draw_buffers2 = GL_TRUE;
    ctx->Extensions.EXT_fog_coord = GL_TRUE;
 #if FEATURE_EXT_framebuffer_object
    ctx->Extensions.EXT_framebuffer_object = GL_TRUE;
@@ -464,9 +445,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
 #if FEATURE_EXT_texture_sRGB
    ctx->Extensions.EXT_texture_sRGB = GL_TRUE;
 #endif
-#if FEATURE_EXT_transform_feedback
-   /*ctx->Extensions.EXT_transform_feedback = GL_TRUE;*/
-#endif
    ctx->Extensions.EXT_vertex_array_bgra = GL_TRUE;
    /*ctx->Extensions.IBM_multimode_draw_arrays = GL_TRUE;*/
    ctx->Extensions.MESA_pack_invert = GL_TRUE;
@@ -474,7 +452,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.MESA_texture_array = GL_TRUE;
    ctx->Extensions.MESA_ycbcr_texture = GL_TRUE;
    ctx->Extensions.NV_blend_square = GL_TRUE;
-   ctx->Extensions.NV_conditional_render = GL_TRUE;
    /*ctx->Extensions.NV_light_max_exponent = GL_TRUE;*/
    ctx->Extensions.NV_point_sprite = GL_TRUE;
    ctx->Extensions.NV_texture_env_combine4 = GL_TRUE;
@@ -546,7 +523,6 @@ _mesa_enable_1_4_extensions(struct gl_context *ctx)
 void
 _mesa_enable_1_5_extensions(struct gl_context *ctx)
 {
-   ctx->Extensions.ARB_occlusion_query = GL_TRUE;
    ctx->Extensions.EXT_shadow_funcs = GL_TRUE;
 }
 

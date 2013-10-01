@@ -853,16 +853,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
 	 ctx->Transform.DepthClamp = state;
 	 break;
 
-#if FEATURE_ATI_fragment_shader
-      case GL_FRAGMENT_SHADER_ATI:
-        CHECK_EXTENSION(ATI_fragment_shader, cap);
-	if (ctx->ATIFragmentShader.Enabled == state)
-	  return;
-	FLUSH_VERTICES(ctx, _NEW_PROGRAM);
-	ctx->ATIFragmentShader.Enabled = state;
-        break;
-#endif
-
       /* GL_MESA_texture_array */
       case GL_TEXTURE_1D_ARRAY_EXT:
          CHECK_EXTENSION(MESA_texture_array, cap);
@@ -885,16 +875,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
 	    ctx->Texture.CubeMapSeamless = state;
 	 }
 	 break;
-
-#if FEATURE_EXT_transform_feedback
-      case GL_RASTERIZER_DISCARD:
-	 CHECK_EXTENSION(EXT_transform_feedback, cap);
-         if (ctx->RasterDiscard != state) {
-            FLUSH_VERTICES(ctx, _NEW_RASTERIZER_DISCARD);
-            ctx->RasterDiscard = state;
-         }
-         break;
-#endif
 
       /* GL 3.1 primitive restart.  Note: this enum is different from
        * GL_PRIMITIVE_RESTART_NV (which is client state).
@@ -966,86 +946,6 @@ _mesa_Disable( GLenum cap )
 
    _mesa_set_enable( ctx, cap, GL_FALSE );
 }
-
-
-
-/**
- * Enable/disable an indexed state var.
- */
-void
-_mesa_set_enablei(struct gl_context *ctx, GLenum cap,
-                  GLuint index, GLboolean state)
-{
-   ASSERT(state == 0 || state == 1);
-   switch (cap) {
-   case GL_BLEND:
-      if (!ctx->Extensions.EXT_draw_buffers2) {
-         goto invalid_enum_error;
-      }
-      if (index >= ctx->Const.MaxDrawBuffers) {
-         _mesa_error(ctx, GL_INVALID_VALUE, "%s(index=%u)",
-                     state ? "glEnableIndexed" : "glDisableIndexed", index);
-         return;
-      }
-      if (((ctx->Color.BlendEnabled >> index) & 1) != state) {
-         FLUSH_VERTICES(ctx, _NEW_COLOR);
-         if (state)
-            ctx->Color.BlendEnabled |= (1 << index);
-         else
-            ctx->Color.BlendEnabled &= ~(1 << index);
-      }
-      break;
-   default:
-      goto invalid_enum_error;
-   }
-   return;
-
-invalid_enum_error:
-    _mesa_error(ctx, GL_INVALID_ENUM, "%s(cap=%s)",
-                state ? "glEnablei" : "glDisablei",
-                _mesa_lookup_enum_by_nr(cap));
-}
-
-
-void GLAPIENTRY
-_mesa_DisableIndexed( GLenum cap, GLuint index )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-   _mesa_set_enablei(ctx, cap, index, GL_FALSE);
-}
-
-
-void GLAPIENTRY
-_mesa_EnableIndexed( GLenum cap, GLuint index )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-   _mesa_set_enablei(ctx, cap, index, GL_TRUE);
-}
-
-
-GLboolean GLAPIENTRY
-_mesa_IsEnabledIndexed( GLenum cap, GLuint index )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, 0);
-   switch (cap) {
-   case GL_BLEND:
-      if (index >= ctx->Const.MaxDrawBuffers) {
-         _mesa_error(ctx, GL_INVALID_VALUE, "glIsEnabledIndexed(index=%u)",
-                     index);
-         return GL_FALSE;
-      }
-      return (ctx->Color.BlendEnabled >> index) & 1;
-   default:
-      _mesa_error(ctx, GL_INVALID_ENUM, "glIsEnabledIndexed(cap=%s)",
-                  _mesa_lookup_enum_by_nr(cap));
-      return GL_FALSE;
-   }
-}
-
-
 
 
 #undef CHECK_EXTENSION
@@ -1390,21 +1290,9 @@ _mesa_IsEnabled( GLenum cap )
          CHECK_EXTENSION(ARB_depth_clamp);
          return ctx->Transform.DepthClamp;
 
-#if FEATURE_ATI_fragment_shader
-      case GL_FRAGMENT_SHADER_ATI:
-	 CHECK_EXTENSION(ATI_fragment_shader);
-	 return ctx->ATIFragmentShader.Enabled;
-#endif /* FEATURE_ATI_fragment_shader */
-
       case GL_TEXTURE_CUBE_MAP_SEAMLESS:
 	 CHECK_EXTENSION(ARB_seamless_cube_map);
 	 return ctx->Texture.CubeMapSeamless;
-
-#if FEATURE_EXT_transform_feedback
-      case GL_RASTERIZER_DISCARD:
-	 CHECK_EXTENSION(EXT_transform_feedback);
-         return ctx->RasterDiscard;
-#endif
 
       /* GL_NV_primitive_restart */
       case GL_PRIMITIVE_RESTART_NV:

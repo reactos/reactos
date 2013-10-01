@@ -82,9 +82,6 @@ _swrast_update_rasterflags( struct gl_context *ctx )
       rasterMask |= CLIP_BIT;
    }
 
-   if (ctx->Query.CurrentOcclusionObject)
-      rasterMask |= OCCLUSION_BIT;
-
 
    /* If we're not drawing to exactly one color buffer set the
     * MULTI_DRAW_BIT flag.  Also set it if we're drawing to no
@@ -108,10 +105,6 @@ _swrast_update_rasterflags( struct gl_context *ctx )
 
    if (_swrast_use_fragment_program(ctx)) {
       rasterMask |= FRAGPROG_BIT;
-   }
-
-   if (ctx->ATIFragmentShader._Enabled) {
-      rasterMask |= ATIFRAGSHADER_BIT;
    }
 
 #if CHAN_TYPE == GL_FLOAT
@@ -231,10 +224,6 @@ _swrast_update_deferred_texture(struct gl_context *ctx)
       else if (use_fprog && fprog->UsesKill) {
          swrast->_DeferredTexture = GL_FALSE;
       }
-      else if (ctx->Query.CurrentOcclusionObject) {
-         /* occlusion query depends on shader discard/kill results */
-         swrast->_DeferredTexture = GL_FALSE;
-      }
       else {
          swrast->_DeferredTexture = GL_TRUE;
       }
@@ -290,8 +279,7 @@ _swrast_update_specular_vertex_add(struct gl_context *ctx)
 
    swrast->SpecularVertexAdd = (separateSpecular
                                 && ctx->Texture._EnabledUnits == 0x0
-                                && !_swrast_use_fragment_program(ctx)
-                                && !ctx->ATIFragmentShader._Enabled);
+                                && !_swrast_use_fragment_program(ctx));
 }
 
 
@@ -505,9 +493,6 @@ _swrast_update_active_attribs(struct gl_context *ctx)
       /* fragment program/shader */
       attribsMask = ctx->FragmentProgram._Current->Base.InputsRead;
       attribsMask &= ~FRAG_BIT_WPOS; /* WPOS is always handled specially */
-   }
-   else if (ctx->ATIFragmentShader._Enabled) {
-      attribsMask = ~0;  /* XXX fix me */
    }
    else {
       /* fixed function */

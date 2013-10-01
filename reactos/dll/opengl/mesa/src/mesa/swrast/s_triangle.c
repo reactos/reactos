@@ -873,40 +873,6 @@ fast_persp_span(struct gl_context *ctx, SWspan *span,
 
 
 
-
-/*
- * Special tri function for occlusion testing
- */
-#define NAME occlusion_zless_16_triangle
-#define INTERP_Z 1
-#define SETUP_CODE							\
-   struct gl_renderbuffer *rb =                                         \
-      ctx->DrawBuffer->Attachment[BUFFER_DEPTH].Renderbuffer;           \
-   struct gl_query_object *q = ctx->Query.CurrentOcclusionObject;	\
-   ASSERT(ctx->Depth.Test);						\
-   ASSERT(!ctx->Depth.Mask);						\
-   ASSERT(ctx->Depth.Func == GL_LESS);					\
-   assert(rb->Format == MESA_FORMAT_Z16);                               \
-   if (!q) {								\
-      return;								\
-   }
-#define RENDER_SPAN( span )						\
-   {                                                                    \
-      GLuint i;								\
-      const GLushort *zRow = (const GLushort *)				\
-         _swrast_pixel_address(rb, span.x, span.y);                     \
-      for (i = 0; i < span.end; i++) {					\
-         GLuint z = FixedToDepth(span.z);				\
-         if (z < zRow[i]) {						\
-            q->Result++;						\
-         }								\
-         span.z += span.zStep;						\
-      }									\
-   }
-#include "s_tritemp.h"
-
-
-
 static void
 nodraw_triangle( struct gl_context *ctx,
                  const SWvertex *v0,
@@ -1008,30 +974,11 @@ _swrast_choose_triangle( struct gl_context *ctx )
    }
 
    if (ctx->RenderMode==GL_RENDER) {
-      struct gl_renderbuffer *depthRb =
-         ctx->DrawBuffer->Attachment[BUFFER_DEPTH].Renderbuffer;
 
       if (ctx->Polygon.SmoothFlag) {
          _swrast_set_aa_triangle_function(ctx);
          ASSERT(swrast->Triangle);
          return;
-      }
-
-      /* special case for occlusion testing */
-      if (ctx->Query.CurrentOcclusionObject &&
-          ctx->Depth.Test &&
-          ctx->Depth.Mask == GL_FALSE &&
-          ctx->Depth.Func == GL_LESS &&
-          !ctx->Stencil._Enabled &&
-          depthRb &&
-          depthRb->Format == MESA_FORMAT_Z16) {
-         if (ctx->Color.ColorMask[0][0] == 0 &&
-	     ctx->Color.ColorMask[0][1] == 0 &&
-	     ctx->Color.ColorMask[0][2] == 0 &&
-	     ctx->Color.ColorMask[0][3] == 0) {
-            USE(occlusion_zless_16_triangle);
-            return;
-         }
       }
 
       /*
@@ -1040,7 +987,6 @@ _swrast_choose_triangle( struct gl_context *ctx )
        */
       if (ctx->Texture._EnabledCoordUnits ||
 	  _swrast_use_fragment_program(ctx) ||
-          ctx->ATIFragmentShader._Enabled ||
           _mesa_need_secondary_color(ctx) ||
           swrast->_FogEnabled) {
          /* Ugh, we do a _lot_ of tests to pick the best textured tri func */
@@ -1062,7 +1008,6 @@ _swrast_choose_triangle( struct gl_context *ctx )
          /* First see if we can use an optimized 2-D texture function */
          if (ctx->Texture._EnabledCoordUnits == 0x1
              && !_swrast_use_fragment_program(ctx)
-             && !ctx->ATIFragmentShader._Enabled
              && ctx->Texture._EnabledUnits == 0x1
              && ctx->Texture.Unit[0]._ReallyEnabled == TEXTURE_2D_BIT
              && texObj2D->Sampler.WrapS == GL_REPEAT

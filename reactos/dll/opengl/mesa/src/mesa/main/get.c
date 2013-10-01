@@ -301,7 +301,6 @@ EXTRA_EXT(EXT_stencil_two_side);
 EXTRA_EXT(NV_light_max_exponent);
 EXTRA_EXT(EXT_depth_bounds_test);
 EXTRA_EXT(ARB_depth_clamp);
-EXTRA_EXT(ATI_fragment_shader);
 EXTRA_EXT(EXT_framebuffer_blit);
 EXTRA_EXT(ARB_shader_objects);
 EXTRA_EXT(EXT_provoking_vertex);
@@ -312,10 +311,7 @@ EXTRA_EXT(EXT_framebuffer_object);
 EXTRA_EXT(APPLE_vertex_array_object);
 EXTRA_EXT(ARB_seamless_cube_map);
 EXTRA_EXT(EXT_compiled_vertex_array);
-EXTRA_EXT(ARB_sync);
 EXTRA_EXT(ARB_vertex_shader);
-EXTRA_EXT(EXT_transform_feedback);
-EXTRA_EXT(ARB_transform_feedback2);
 EXTRA_EXT(EXT_pixel_buffer_object);
 EXTRA_EXT(ARB_vertex_program);
 EXTRA_EXT2(NV_point_sprite, ARB_point_sprite);
@@ -1153,17 +1149,6 @@ static const struct value_desc values[] = {
    { GL_DEPTH_CLAMP, CONTEXT_BOOL(Transform.DepthClamp),
      extra_ARB_depth_clamp },
 
-   /* GL_ATI_fragment_shader */
-   { GL_NUM_FRAGMENT_REGISTERS_ATI, CONST(6), extra_ATI_fragment_shader },
-   { GL_NUM_FRAGMENT_CONSTANTS_ATI, CONST(8), extra_ATI_fragment_shader },
-   { GL_NUM_PASSES_ATI, CONST(2), extra_ATI_fragment_shader },
-   { GL_NUM_INSTRUCTIONS_PER_PASS_ATI, CONST(8), extra_ATI_fragment_shader },
-   { GL_NUM_INSTRUCTIONS_TOTAL_ATI, CONST(16), extra_ATI_fragment_shader },
-   { GL_COLOR_ALPHA_PAIRING_ATI, CONST(GL_TRUE), extra_ATI_fragment_shader },
-   { GL_NUM_LOOPBACK_COMPONENTS_ATI, CONST(3), extra_ATI_fragment_shader },
-   { GL_NUM_INPUT_INTERPOLATOR_COMPONENTS_ATI,
-     CONST(3), extra_ATI_fragment_shader },
-
    /* GL_EXT_framebuffer_blit
     * NOTE: GL_DRAW_FRAMEBUFFER_BINDING_EXT == GL_FRAMEBUFFER_BINDING_EXT */
    { GL_READ_FRAMEBUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
@@ -1188,36 +1173,9 @@ static const struct value_desc values[] = {
    { GL_TEXTURE_CUBE_MAP_SEAMLESS,
      CONTEXT_BOOL(Texture.CubeMapSeamless), extra_ARB_seamless_cube_map },
 
-   /* GL_ARB_sync */
-   { GL_MAX_SERVER_WAIT_TIMEOUT,
-     CONTEXT_INT64(Const.MaxServerWaitTimeout), extra_ARB_sync },
-
    /* GL_EXT_texture_integer */
    { GL_RGBA_INTEGER_MODE_EXT, BUFFER_BOOL(_IntegerColor),
      extra_EXT_texture_integer },
-
-   /* GL_EXT_transform_feedback */
-   { GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_transform_feedback },
-   { GL_RASTERIZER_DISCARD, CONTEXT_BOOL(RasterDiscard),
-     extra_EXT_transform_feedback },
-   { GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS,
-     CONTEXT_INT(Const.MaxTransformFeedbackInterleavedComponents),
-     extra_EXT_transform_feedback },
-   { GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
-     CONTEXT_INT(Const.MaxTransformFeedbackSeparateAttribs),
-     extra_EXT_transform_feedback },
-   { GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS,
-     CONTEXT_INT(Const.MaxTransformFeedbackSeparateComponents),
-     extra_EXT_transform_feedback },
-
-   /* GL_ARB_transform_feedback2 */
-   { GL_TRANSFORM_FEEDBACK_BUFFER_PAUSED, LOC_CUSTOM, TYPE_BOOLEAN, 0,
-     extra_ARB_transform_feedback2 },
-   { GL_TRANSFORM_FEEDBACK_BUFFER_ACTIVE, LOC_CUSTOM, TYPE_BOOLEAN, 0,
-     extra_ARB_transform_feedback2 },
-   { GL_TRANSFORM_FEEDBACK_BINDING, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_transform_feedback2 },
 
    /* GL_ARB_geometry_shader4 */
    { GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS_ARB,
@@ -1645,18 +1603,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       break;
    case GL_PIXEL_UNPACK_BUFFER_BINDING_EXT:
       v->value_int = ctx->Unpack.BufferObj->Name;
-      break;
-   case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-      v->value_int = ctx->TransformFeedback.CurrentBuffer->Name;
-      break;
-   case GL_TRANSFORM_FEEDBACK_BUFFER_PAUSED:
-      v->value_int = ctx->TransformFeedback.CurrentObject->Paused;
-      break;
-   case GL_TRANSFORM_FEEDBACK_BUFFER_ACTIVE:
-      v->value_int = ctx->TransformFeedback.CurrentObject->Active;
-      break;
-   case GL_TRANSFORM_FEEDBACK_BINDING:
-      v->value_int = ctx->TransformFeedback.CurrentObject->Name;
       break;
    case GL_CURRENT_PROGRAM:
       v->value_int =
@@ -2200,102 +2146,6 @@ _mesa_GetIntegerv(GLenum pname, GLint *params)
    }
 }
 
-#if FEATURE_ARB_sync
-void GLAPIENTRY
-_mesa_GetInteger64v(GLenum pname, GLint64 *params)
-{
-   const struct value_desc *d;
-   union value v;
-   GLmatrix *m;
-   int shift, i;
-   void *p;
-   GET_CURRENT_CONTEXT(ctx);
-
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   d = find_value("glGetInteger64v", pname, &p, &v);
-   switch (d->type) {
-   case TYPE_INVALID:
-      break;
-   case TYPE_CONST:
-      params[0] = d->offset;
-      break;
-
-   case TYPE_FLOAT_4:
-      params[3] = IROUND64(((GLfloat *) p)[3]);
-   case TYPE_FLOAT_3:
-      params[2] = IROUND64(((GLfloat *) p)[2]);
-   case TYPE_FLOAT_2:
-      params[1] = IROUND64(((GLfloat *) p)[1]);
-   case TYPE_FLOAT:
-      params[0] = IROUND64(((GLfloat *) p)[0]);
-      break;
-
-   case TYPE_FLOATN_4:
-      params[3] = FLOAT_TO_INT64(((GLfloat *) p)[3]);
-   case TYPE_FLOATN_3:
-      params[2] = FLOAT_TO_INT64(((GLfloat *) p)[2]);
-   case TYPE_FLOATN_2:
-      params[1] = FLOAT_TO_INT64(((GLfloat *) p)[1]);
-   case TYPE_FLOATN:
-      params[0] = FLOAT_TO_INT64(((GLfloat *) p)[0]);
-      break;
-
-   case TYPE_DOUBLEN:
-      params[0] = FLOAT_TO_INT64(((GLdouble *) p)[0]);
-      break;
-
-   case TYPE_INT_4:
-      params[3] = ((GLint *) p)[3];
-   case TYPE_INT_3:
-      params[2] = ((GLint *) p)[2];
-   case TYPE_INT_2:
-   case TYPE_ENUM_2:
-      params[1] = ((GLint *) p)[1];
-   case TYPE_INT:
-   case TYPE_ENUM:
-      params[0] = ((GLint *) p)[0];
-      break;
-
-   case TYPE_INT_N:
-      for (i = 0; i < v.value_int_n.n; i++)
-	 params[i] = INT_TO_BOOLEAN(v.value_int_n.ints[i]);
-      break;
-
-   case TYPE_INT64:
-      params[0] = ((GLint64 *) p)[0];
-      break;
-
-   case TYPE_BOOLEAN:
-      params[0] = ((GLboolean*) p)[0];
-      break;		
-
-   case TYPE_MATRIX:
-      m = *(GLmatrix **) p;
-      for (i = 0; i < 16; i++)
-	 params[i] = FLOAT_TO_INT64(m->m[i]);
-      break;
-
-   case TYPE_MATRIX_T:
-      m = *(GLmatrix **) p;
-      for (i = 0; i < 16; i++)
-	 params[i] = FLOAT_TO_INT64(m->m[transpose[i]]);
-      break;
-
-   case TYPE_BIT_0:
-   case TYPE_BIT_1:
-   case TYPE_BIT_2:
-   case TYPE_BIT_3:
-   case TYPE_BIT_4:
-   case TYPE_BIT_5:
-   case TYPE_BIT_6:
-   case TYPE_BIT_7:
-      shift = d->type - TYPE_BIT_0;
-      params[0] = (*(GLbitfield *) p >> shift) & 1;
-      break;
-   }
-}
-#endif /* FEATURE_ARB_sync */
 
 void GLAPIENTRY
 _mesa_GetDoublev(GLenum pname, GLdouble *params)
@@ -2385,191 +2235,6 @@ _mesa_GetDoublev(GLenum pname, GLdouble *params)
       break;
    }
 }
-
-static enum value_type
-find_value_indexed(const char *func, GLenum pname, int index, union value *v)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   switch (pname) {
-
-   case GL_BLEND:
-      if (index >= ctx->Const.MaxDrawBuffers)
-	 goto invalid_value;
-      if (!ctx->Extensions.EXT_draw_buffers2)
-	 goto invalid_enum;
-      v->value_int = (ctx->Color.BlendEnabled >> index) & 1;
-      return TYPE_INT;
-
-   case GL_BLEND_SRC:
-      /* fall-through */
-   case GL_BLEND_SRC_RGB:
-      if (index >= ctx->Const.MaxDrawBuffers)
-	 goto invalid_value;
-      if (!ctx->Extensions.ARB_draw_buffers_blend)
-	 goto invalid_enum;
-      v->value_int = ctx->Color.Blend[index].SrcRGB;
-      return TYPE_INT;
-   case GL_BLEND_SRC_ALPHA:
-      if (index >= ctx->Const.MaxDrawBuffers)
-	 goto invalid_value;
-      if (!ctx->Extensions.ARB_draw_buffers_blend)
-	 goto invalid_enum;
-      v->value_int = ctx->Color.Blend[index].SrcA;
-      return TYPE_INT;
-   case GL_BLEND_DST:
-      /* fall-through */
-   case GL_BLEND_DST_RGB:
-      if (index >= ctx->Const.MaxDrawBuffers)
-	 goto invalid_value;
-      if (!ctx->Extensions.ARB_draw_buffers_blend)
-	 goto invalid_enum;
-      v->value_int = ctx->Color.Blend[index].DstRGB;
-      return TYPE_INT;
-   case GL_BLEND_DST_ALPHA:
-      if (index >= ctx->Const.MaxDrawBuffers)
-	 goto invalid_value;
-      if (!ctx->Extensions.ARB_draw_buffers_blend)
-	 goto invalid_enum;
-      v->value_int = ctx->Color.Blend[index].DstA;
-      return TYPE_INT;
-   case GL_BLEND_EQUATION_RGB:
-      if (index >= ctx->Const.MaxDrawBuffers)
-	 goto invalid_value;
-      if (!ctx->Extensions.ARB_draw_buffers_blend)
-	 goto invalid_enum;
-      v->value_int = ctx->Color.Blend[index].EquationRGB;
-      return TYPE_INT;
-   case GL_BLEND_EQUATION_ALPHA:
-      if (index >= ctx->Const.MaxDrawBuffers)
-	 goto invalid_value;
-      if (!ctx->Extensions.ARB_draw_buffers_blend)
-	 goto invalid_enum;
-      v->value_int = ctx->Color.Blend[index].EquationA;
-      return TYPE_INT;
-
-   case GL_COLOR_WRITEMASK:
-      if (index >= ctx->Const.MaxDrawBuffers)
-	 goto invalid_value;
-      if (!ctx->Extensions.EXT_draw_buffers2)
-	 goto invalid_enum;
-      v->value_int_4[0] = ctx->Color.ColorMask[index][RCOMP] ? 1 : 0;
-      v->value_int_4[1] = ctx->Color.ColorMask[index][GCOMP] ? 1 : 0;
-      v->value_int_4[2] = ctx->Color.ColorMask[index][BCOMP] ? 1 : 0;
-      v->value_int_4[3] = ctx->Color.ColorMask[index][ACOMP] ? 1 : 0;
-      return TYPE_INT_4;
-
-   case GL_TRANSFORM_FEEDBACK_BUFFER_START:
-      if (index >= ctx->Const.MaxTransformFeedbackSeparateAttribs)
-	 goto invalid_value;
-      if (!ctx->Extensions.EXT_transform_feedback)
-	 goto invalid_enum;
-      v->value_int64 = ctx->TransformFeedback.CurrentObject->Offset[index];
-      return TYPE_INT64;
-
-   case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
-      if (index >= ctx->Const.MaxTransformFeedbackSeparateAttribs)
-	 goto invalid_value;
-      if (!ctx->Extensions.EXT_transform_feedback)
-	 goto invalid_enum;
-      v->value_int64 = ctx->TransformFeedback.CurrentObject->Size[index];
-      return TYPE_INT64;
-
-   case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-      if (index >= ctx->Const.MaxTransformFeedbackSeparateAttribs)
-	 goto invalid_value;
-      if (!ctx->Extensions.EXT_transform_feedback)
-	 goto invalid_enum;
-      v->value_int = ctx->TransformFeedback.CurrentObject->BufferNames[index];
-      return TYPE_INT;
-   }
-
- invalid_enum:
-   _mesa_error(ctx, GL_INVALID_ENUM, "%s(pname=%s)", func,
-               _mesa_lookup_enum_by_nr(pname));
-   return TYPE_INVALID;
- invalid_value:
-   _mesa_error(ctx, GL_INVALID_VALUE, "%s(pname=%s)", func,
-               _mesa_lookup_enum_by_nr(pname));
-   return TYPE_INVALID;
-}
-
-void GLAPIENTRY
-_mesa_GetBooleanIndexedv( GLenum pname, GLuint index, GLboolean *params )
-{
-   union value v;
-   enum value_type type =
-      find_value_indexed("glGetBooleanIndexedv", pname, index, &v);
-
-   switch (type) {
-   case TYPE_INT:
-      params[0] = INT_TO_BOOLEAN(v.value_int);
-      break;
-   case TYPE_INT_4:
-      params[0] = INT_TO_BOOLEAN(v.value_int_4[0]);
-      params[1] = INT_TO_BOOLEAN(v.value_int_4[1]);
-      params[2] = INT_TO_BOOLEAN(v.value_int_4[2]);
-      params[3] = INT_TO_BOOLEAN(v.value_int_4[3]);
-      break;
-   case TYPE_INT64:
-      params[0] = INT64_TO_BOOLEAN(v.value_int);
-      break;
-   default:
-      ; /* nothing - GL error was recorded */
-   }
-}
-
-void GLAPIENTRY
-_mesa_GetIntegerIndexedv( GLenum pname, GLuint index, GLint *params )
-{
-   union value v;
-   enum value_type type =
-      find_value_indexed("glGetIntegerIndexedv", pname, index, &v);
-
-   switch (type) {
-   case TYPE_INT:
-      params[0] = v.value_int;
-      break;
-   case TYPE_INT_4:
-      params[0] = v.value_int_4[0];
-      params[1] = v.value_int_4[1];
-      params[2] = v.value_int_4[2];
-      params[3] = v.value_int_4[3];
-      break;
-   case TYPE_INT64:
-      params[0] = INT64_TO_INT(v.value_int);
-      break;
-   default:
-      ; /* nothing - GL error was recorded */
-   }
-}
-
-#if FEATURE_ARB_sync
-void GLAPIENTRY
-_mesa_GetInteger64Indexedv( GLenum pname, GLuint index, GLint64 *params )
-{
-   union value v;
-   enum value_type type =
-      find_value_indexed("glGetIntegerIndexedv", pname, index, &v);      
-
-   switch (type) {
-   case TYPE_INT:
-      params[0] = v.value_int;
-      break;
-   case TYPE_INT_4:
-      params[0] = v.value_int_4[0];
-      params[1] = v.value_int_4[1];
-      params[2] = v.value_int_4[2];
-      params[3] = v.value_int_4[3];
-      break;
-   case TYPE_INT64:
-      params[0] = v.value_int;
-      break;
-   default:
-      ; /* nothing - GL error was recorded */
-   }
-}
-#endif /* FEATURE_ARB_sync */
 
 #if FEATURE_ES1
 void GLAPIENTRY

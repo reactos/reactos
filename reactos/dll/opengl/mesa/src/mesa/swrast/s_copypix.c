@@ -26,7 +26,6 @@
 #include "main/glheader.h"
 #include "main/context.h"
 #include "main/colormac.h"
-#include "main/condrender.h"
 #include "main/macros.h"
 #include "main/pixeltransfer.h"
 #include "main/imports.h"
@@ -611,9 +610,6 @@ _swrast_CopyPixels( struct gl_context *ctx,
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    struct gl_renderbuffer *rb;
-      
-   if (!_mesa_check_conditional_render(ctx))
-      return; /* don't copy */
 
    if (swrast->NewState)
       _swrast_validate_derived( ctx );

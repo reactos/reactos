@@ -24,7 +24,6 @@
 
 #include "main/glheader.h"
 #include "main/accum.h"
-#include "main/condrender.h"
 #include "main/format_pack.h"
 #include "main/macros.h"
 #include "main/imports.h"
@@ -218,9 +217,6 @@ _swrast_Clear(struct gl_context *ctx, GLbitfield buffers)
       assert((buffers & (~legalBits)) == 0);
    }
 #endif
-
-   if (!_mesa_check_conditional_render(ctx))
-      return; /* don't clear */
 
    if (SWRAST_CONTEXT(ctx)->NewState)
       _swrast_validate_derived(ctx);

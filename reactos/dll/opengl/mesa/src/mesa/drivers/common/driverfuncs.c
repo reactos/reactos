@@ -30,7 +30,6 @@
 #include "main/context.h"
 #include "main/framebuffer.h"
 #include "main/mipmap.h"
-#include "main/queryobj.h"
 #include "main/readpix.h"
 #include "main/renderbuffer.h"
 #include "main/shaderobj.h"
@@ -42,9 +41,7 @@
 #include "main/texstore.h"
 #include "main/bufferobj.h"
 #include "main/fbobject.h"
-#include "main/syncobj.h"
 #include "main/texturebarrier.h"
-#include "main/transformfeedback.h"
 
 #include "program/program.h"
 #include "tnl/tnl.h"
@@ -171,11 +168,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    /* buffer objects */
    _mesa_init_buffer_object_functions(driver);
 
-   /* query objects */
-   _mesa_init_query_object_functions(driver);
-
-   _mesa_init_sync_object_functions(driver);
-
    driver->NewFramebuffer = _mesa_new_framebuffer;
    driver->NewRenderbuffer = _swrast_new_soft_renderbuffer;
    driver->MapRenderbuffer = _swrast_map_soft_renderbuffer;
@@ -195,8 +187,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->BindArrayObject = NULL;
 
    _mesa_init_shader_object_functions(driver);
-
-   _mesa_init_transform_feedback_functions(driver);
 
    /* T&L stuff */
    driver->CurrentExecPrimitive = 0;

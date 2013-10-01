@@ -31,15 +31,11 @@
 #include "mfeatures.h"
 #include "mtypes.h"
 #include "hash.h"
-#if FEATURE_ATI_fragment_shader
-#include "atifragshader.h"
-#endif
 #include "bufferobj.h"
 #include "shared.h"
 #include "program/program.h"
 #include "dlist.h"
 #include "shaderobj.h"
-#include "syncobj.h"
 
 
 /**
@@ -75,11 +71,6 @@ _mesa_alloc_shared_state(struct gl_context *ctx)
 #if FEATURE_ARB_fragment_program
    shared->DefaultFragmentProgram = (struct gl_fragment_program *)
       ctx->Driver.NewProgram(ctx, GL_FRAGMENT_PROGRAM_ARB, 0);
-#endif
-
-#if FEATURE_ATI_fragment_shader
-   shared->ATIShaders = _mesa_NewHashTable();
-   shared->DefaultFragmentShader = _mesa_new_ati_fragment_shader(ctx, 0);
 #endif
 
 #if FEATURE_ARB_shader_objects
@@ -120,8 +111,6 @@ _mesa_alloc_shared_state(struct gl_context *ctx)
    shared->FrameBuffers = _mesa_NewHashTable();
    shared->RenderBuffers = _mesa_NewHashTable();
 #endif
-
-   make_empty_list(& shared->SyncObjects);
 
    return shared;
 }
@@ -165,21 +154,6 @@ delete_program_cb(GLuint id, void *data, void *userData)
       ctx->Driver.DeleteProgram(ctx, prog);
    }
 }
-
-
-#if FEATURE_ATI_fragment_shader
-/**
- * Callback for deleting an ATI fragment shader object.
- * Called by _mesa_HashDeleteAll().
- */
-static void
-delete_fragshader_cb(GLuint id, void *data, void *userData)
-{
-   struct ati_fragment_shader *shader = (struct ati_fragment_shader *) data;
-   struct gl_context *ctx = (struct gl_context *) userData;
-   _mesa_delete_ati_fragment_shader(ctx, shader);
-}
-#endif
 
 
 /**
@@ -312,12 +286,6 @@ free_shared_state(struct gl_context *ctx, struct gl_shared_state *shared)
    _mesa_reference_fragprog(ctx, &shared->DefaultFragmentProgram, NULL);
 #endif
 
-#if FEATURE_ATI_fragment_shader
-   _mesa_HashDeleteAll(shared->ATIShaders, delete_fragshader_cb, ctx);
-   _mesa_DeleteHashTable(shared->ATIShaders);
-   _mesa_delete_ati_fragment_shader(ctx, shared->DefaultFragmentShader);
-#endif
-
    _mesa_HashDeleteAll(shared->BufferObjects, delete_bufferobj_cb, ctx);
    _mesa_DeleteHashTable(shared->BufferObjects);
 
@@ -329,15 +297,6 @@ free_shared_state(struct gl_context *ctx, struct gl_shared_state *shared)
 #endif
 
    _mesa_reference_buffer_object(ctx, &shared->NullBufferObj, NULL);
-
-   {
-      struct simple_node *node;
-      struct simple_node *temp;
-
-      foreach_s(node, temp, & shared->SyncObjects) {
-	 _mesa_unref_sync_object(ctx, (struct gl_sync_object *) node);
-      }
-   }
 
    /*
     * Free texture objects (after FBOs since some textures might have

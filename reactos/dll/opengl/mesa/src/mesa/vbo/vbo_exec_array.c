@@ -34,7 +34,6 @@
 #include "main/bufferobj.h"
 #include "main/enums.h"
 #include "main/macros.h"
-#include "main/transformfeedback.h"
 
 #include "vbo_context.h"
 
@@ -588,7 +587,7 @@ vbo_draw_arrays(struct gl_context *ctx, GLenum mode, GLint start,
          /* draw one or two prims */
          check_buffers_are_unmapped(exec->array.inputs);
          vbo->draw_prims(ctx, exec->array.inputs, prim, primCount, NULL,
-                         GL_TRUE, start, start + count - 1, NULL);
+                         GL_TRUE, start, start + count - 1);
       }
    }
    else {
@@ -598,8 +597,7 @@ vbo_draw_arrays(struct gl_context *ctx, GLenum mode, GLint start,
 
       check_buffers_are_unmapped(exec->array.inputs);
       vbo->draw_prims(ctx, exec->array.inputs, prim, 1, NULL,
-                      GL_TRUE, start, start + count - 1,
-                      NULL);
+                      GL_TRUE, start, start + count - 1);
    }
 }
 
@@ -809,7 +807,7 @@ vbo_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
 
    check_buffers_are_unmapped(exec->array.inputs);
    vbo->draw_prims( ctx, exec->array.inputs, prim, 1, &ib,
-		    index_bounds_valid, start, end, NULL );
+		    index_bounds_valid, start, end );
 }
 
 
@@ -1108,7 +1106,7 @@ vbo_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
 
       check_buffers_are_unmapped(exec->array.inputs);
       vbo->draw_prims(ctx, exec->array.inputs, prim, primcount, &ib,
-		      GL_FALSE, ~0, ~0, NULL);
+		      GL_FALSE, ~0, ~0);
    } else {
       /* render one prim at a time */
       for (i = 0; i < primcount; i++) {
@@ -1133,7 +1131,7 @@ vbo_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
 
          check_buffers_are_unmapped(exec->array.inputs);
          vbo->draw_prims(ctx, exec->array.inputs, prim, 1, &ib,
-                         GL_FALSE, ~0, ~0, NULL);
+                         GL_FALSE, ~0, ~0);
       }
    }
 
@@ -1185,77 +1183,6 @@ vbo_exec_MultiDrawElementsBaseVertex(GLenum mode,
 				   basevertex);
 }
 
-#if FEATURE_EXT_transform_feedback
-
-static void
-vbo_draw_transform_feedback(struct gl_context *ctx, GLenum mode,
-                            struct gl_transform_feedback_object *obj,
-                            GLuint numInstances)
-{
-   struct vbo_context *vbo = vbo_context(ctx);
-   struct vbo_exec_context *exec = &vbo->exec;
-   struct _mesa_prim prim[2];
-
-   vbo_bind_arrays(ctx);
-
-   /* Again... because we may have changed the bitmask of per-vertex varying
-    * attributes.  If we regenerate the fixed-function vertex program now
-    * we may be able to prune down the number of vertex attributes which we
-    * need in the shader.
-    */
-   if (ctx->NewState)
-      _mesa_update_state(ctx);
-
-   /* init most fields to zero */
-   memset(prim, 0, sizeof(prim));
-   prim[0].begin = 1;
-   prim[0].end = 1;
-   prim[0].mode = mode;
-   prim[0].num_instances = numInstances;
-
-   /* Maybe we should do some primitive splitting for primitive restart
-    * (like in DrawArrays), but we have no way to know how many vertices
-    * will be rendered. */
-
-   check_buffers_are_unmapped(exec->array.inputs);
-   vbo->draw_prims(ctx, exec->array.inputs, prim, 1, NULL,
-                   GL_TRUE, 0, 0, obj);
-}
-
-/**
- * Like DrawArrays, but take the count from a transform feedback object.
- * \param mode  GL_POINTS, GL_LINES, GL_TRIANGLE_STRIP, etc.
- * \param name  the transform feedback object
- * User still has to setup of the vertex attribute info with
- * glVertexPointer, glColorPointer, etc.
- * Part of GL_ARB_transform_feedback2.
- */
-static void GLAPIENTRY
-vbo_exec_DrawTransformFeedback(GLenum mode, GLuint name)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   struct gl_transform_feedback_object *obj =
-      _mesa_lookup_transform_feedback_object(ctx, name);
-
-   if (MESA_VERBOSE & VERBOSE_DRAW)
-      _mesa_debug(ctx, "glDrawTransformFeedback(%s, %d)\n",
-                  _mesa_lookup_enum_by_nr(mode), name);
-
-   if (!_mesa_validate_DrawTransformFeedback(ctx, mode, obj)) {
-      return;
-   }
-
-   FLUSH_CURRENT(ctx, 0);
-
-   if (!_mesa_valid_to_render(ctx, "glDrawTransformFeedback")) {
-      return;
-   }
-
-   vbo_draw_transform_feedback(ctx, mode, obj, 1);
-}
-
-#endif
-
 /**
  * Plug in the immediate-mode vertex array drawing commands into the
  * givven vbo_exec_context object.
@@ -1273,9 +1200,6 @@ vbo_exec_array_init( struct vbo_exec_context *exec )
    exec->vtxfmt.DrawArraysInstanced = vbo_exec_DrawArraysInstanced;
    exec->vtxfmt.DrawElementsInstanced = vbo_exec_DrawElementsInstanced;
    exec->vtxfmt.DrawElementsInstancedBaseVertex = vbo_exec_DrawElementsInstancedBaseVertex;
-#if FEATURE_EXT_transform_feedback
-   exec->vtxfmt.DrawTransformFeedback = vbo_exec_DrawTransformFeedback;
-#endif
 }
 
 
@@ -1351,13 +1275,3 @@ _mesa_MultiDrawElementsBaseVertex(GLenum mode,
    vbo_exec_MultiDrawElementsBaseVertex(mode, count, type, indices,
 					primcount, basevertex);
 }
-
-#if FEATURE_EXT_transform_feedback
-
-void GLAPIENTRY
-_mesa_DrawTransformFeedback(GLenum mode, GLuint name)
-{
-   vbo_exec_DrawTransformFeedback(mode, name);
-}
-
-#endif

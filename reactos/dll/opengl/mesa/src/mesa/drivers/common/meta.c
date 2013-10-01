@@ -40,7 +40,7 @@
 #include "main/bufferobj.h"
 #include "main/buffers.h"
 #include "main/colortab.h"
-#include "main/condrender.h"
+#include "main/context.h"
 #include "main/depth.h"
 #include "main/enable.h"
 #include "main/fbobject.h"
@@ -65,7 +65,6 @@
 #include "main/teximage.h"
 #include "main/texparam.h"
 #include "main/texstate.h"
-#include "main/transformfeedback.h"
 #include "main/uniforms.h"
 #include "main/varray.h"
 #include "main/viewport.h"
@@ -170,10 +169,6 @@ struct save_state
    /** MESA_META_CLAMP_VERTEX_COLOR */
    GLenum ClampVertexColor;
 
-   /** MESA_META_CONDITIONAL_RENDER */
-   struct gl_query_object *CondRenderQuery;
-   GLenum CondRenderMode;
-
    /** MESA_META_SELECT_FEEDBACK */
    GLenum RenderMode;
    struct gl_selection Select;
@@ -182,7 +177,6 @@ struct save_state
    /** Miscellaneous (always disabled) */
    GLboolean Lighting;
    GLboolean RasterDiscard;
-   GLboolean TransformFeedbackNeedsResume;
 };
 
 /**
@@ -439,15 +433,6 @@ _mesa_meta_begin(struct gl_context *ctx, GLbitfield state)
    memset(save, 0, sizeof(*save));
    save->SavedState = state;
 
-   /* Pausing transform feedback needs to be done early, or else we won't be
-    * able to change other state.
-    */
-   save->TransformFeedbackNeedsResume =
-      ctx->TransformFeedback.CurrentObject->Active &&
-      !ctx->TransformFeedback.CurrentObject->Paused;
-   if (save->TransformFeedbackNeedsResume)
-      _mesa_PauseTransformFeedback();
-
    if (state & MESA_META_ALPHA_TEST) {
       save->AlphaEnabled = ctx->Color.AlphaEnabled;
       save->AlphaFunc = ctx->Color.AlphaFunc;
@@ -459,15 +444,7 @@ _mesa_meta_begin(struct gl_context *ctx, GLbitfield state)
    if (state & MESA_META_BLEND) {
       save->BlendEnabled = ctx->Color.BlendEnabled;
       if (ctx->Color.BlendEnabled) {
-         if (ctx->Extensions.EXT_draw_buffers2) {
-            GLuint i;
-            for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
-               _mesa_set_enablei(ctx, GL_BLEND, i, GL_FALSE);
-            }
-         }
-         else {
-            _mesa_set_enable(ctx, GL_BLEND, GL_FALSE);
-         }
+         _mesa_set_enable(ctx, GL_BLEND, GL_FALSE);
       }
       save->ColorLogicOpEnabled = ctx->Color.ColorLogicOpEnabled;
       if (ctx->Color.ColorLogicOpEnabled)
@@ -706,14 +683,6 @@ _mesa_meta_begin(struct gl_context *ctx, GLbitfield state)
       _mesa_ClampColorARB(GL_CLAMP_VERTEX_COLOR, GL_FALSE);
    }
 
-   if (state & MESA_META_CONDITIONAL_RENDER) {
-      save->CondRenderQuery = ctx->Query.CondRenderQuery;
-      save->CondRenderMode = ctx->Query.CondRenderMode;
-
-      if (ctx->Query.CondRenderQuery)
-	 _mesa_EndConditionalRender();
-   }
-
    if (state & MESA_META_SELECT_FEEDBACK) {
       save->RenderMode = ctx->RenderMode;
       if (ctx->RenderMode == GL_SELECT) {
@@ -754,15 +723,7 @@ _mesa_meta_end(struct gl_context *ctx)
 
    if (state & MESA_META_BLEND) {
       if (ctx->Color.BlendEnabled != save->BlendEnabled) {
-         if (ctx->Extensions.EXT_draw_buffers2) {
-            GLuint i;
-            for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
-               _mesa_set_enablei(ctx, GL_BLEND, i, (save->BlendEnabled >> i) & 1);
-            }
-         }
-         else {
-            _mesa_set_enable(ctx, GL_BLEND, (save->BlendEnabled & 1));
-         }
+         _mesa_set_enable(ctx, GL_BLEND, (save->BlendEnabled & 1));
       }
       if (ctx->Color.ColorLogicOpEnabled != save->ColorLogicOpEnabled)
          _mesa_set_enable(ctx, GL_COLOR_LOGIC_OP, save->ColorLogicOpEnabled);
@@ -992,22 +953,6 @@ _mesa_meta_end(struct gl_context *ctx)
       _mesa_ClampColorARB(GL_CLAMP_VERTEX_COLOR, save->ClampVertexColor);
    }
 
-   if (state & MESA_META_CONDITIONAL_RENDER) {
-      if (save->CondRenderQuery)
-	 _mesa_BeginConditionalRender(save->CondRenderQuery->Id,
-				      save->CondRenderMode);
-   }
-
-   if (state & MESA_META_SELECT_FEEDBACK) {
-      if (save->RenderMode == GL_SELECT) {
-	 _mesa_RenderMode(GL_SELECT);
-	 ctx->Select = save->Select;
-      } else if (save->RenderMode == GL_FEEDBACK) {
-	 _mesa_RenderMode(GL_FEEDBACK);
-	 ctx->Feedback = save->Feedback;
-      }
-   }
-
    /* misc */
    if (save->Lighting) {
       _mesa_set_enable(ctx, GL_LIGHTING, GL_TRUE);
@@ -1015,8 +960,6 @@ _mesa_meta_end(struct gl_context *ctx)
    if (save->RasterDiscard) {
       _mesa_set_enable(ctx, GL_RASTERIZER_DISCARD, GL_TRUE);
    }
-   if (save->TransformFeedbackNeedsResume)
-      _mesa_ResumeTransformFeedback();
 }
 
 
@@ -1637,8 +1580,7 @@ _mesa_meta_Clear(struct gl_context *ctx, GLbitfield buffers)
    /* save all state but scissor, pixel pack/unpack */
    GLbitfield metaSave = (MESA_META_ALL -
 			  MESA_META_SCISSOR -
-			  MESA_META_PIXEL_STORE -
-			  MESA_META_CONDITIONAL_RENDER);
+			  MESA_META_PIXEL_STORE);
    const GLuint stencilMax = (1 << ctx->DrawBuffer->Visual.stencilBits) - 1;
 
    if (buffers & BUFFER_BITS_COLOR) {

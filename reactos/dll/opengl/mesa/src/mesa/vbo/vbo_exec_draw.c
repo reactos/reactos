@@ -411,8 +411,7 @@ vbo_exec_vtx_flush(struct vbo_exec_context *exec, GLboolean keepUnmapped)
 				       NULL,
 				       GL_TRUE,
 				       0,
-				       exec->vtx.vert_count - 1,
-				       NULL);
+				       exec->vtx.vert_count - 1);
 
 	 /* If using a real VBO, get new storage -- unless asked not to.
           */

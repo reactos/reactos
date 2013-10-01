@@ -302,8 +302,7 @@ vbo_save_playback_vertex_list(struct gl_context *ctx, void *data)
                                       NULL,
                                       GL_TRUE,
                                       0,    /* Node is a VBO, so this is ok */
-                                      node->count - 1,
-                                      NULL);
+                                      node->count - 1);
       }
    }
 

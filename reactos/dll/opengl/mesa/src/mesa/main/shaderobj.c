@@ -332,14 +332,6 @@ _mesa_free_shader_program_data(struct gl_context *ctx,
       shProg->Shaders = NULL;
    }
 
-   /* Transform feedback varying vars */
-   for (i = 0; i < shProg->TransformFeedback.NumVarying; i++) {
-      free(shProg->TransformFeedback.VaryingNames[i]);
-   }
-   free(shProg->TransformFeedback.VaryingNames);
-   shProg->TransformFeedback.VaryingNames = NULL;
-   shProg->TransformFeedback.NumVarying = 0;
-
 
    for (sh = 0; sh < MESA_SHADER_TYPES; sh++) {
       if (shProg->_LinkedShaders[sh] != NULL) {

@@ -90,10 +90,8 @@ typedef void (*validate_texture_image_func)(struct gl_context *ctx,
 #define MASKING_BIT		0x080	/**< Do glColorMask or glIndexMask */
 #define MULTI_DRAW_BIT		0x400	/**< Write to more than one color- */
                                         /**< buffer or no buffers. */
-#define OCCLUSION_BIT           0x800   /**< GL_HP_occlusion_test enabled */
 #define TEXTURE_BIT		0x1000	/**< Texturing really enabled */
 #define FRAGPROG_BIT            0x2000  /**< Fragment program enabled */
-#define ATIFRAGSHADER_BIT       0x4000  /**< ATI Fragment shader enabled */
 #define CLAMPING_BIT            0x8000  /**< Clamp colors to [0,1] */
 /*@}*/
 

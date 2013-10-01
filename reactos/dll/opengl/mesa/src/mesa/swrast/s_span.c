@@ -39,7 +39,6 @@
 #include "main/imports.h"
 #include "main/image.h"
 
-#include "s_atifragshader.h"
 #include "s_alpha.h"
 #include "s_blend.h"
 #include "s_context.h"
@@ -139,8 +138,7 @@ _swrast_span_default_attribs(struct gl_context *ctx, SWspan *span)
       for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
          const GLuint attr = FRAG_ATTRIB_TEX0 + i;
          const GLfloat *tc = ctx->Current.RasterTexCoords[i];
-         if (_swrast_use_fragment_program(ctx) ||
-             ctx->ATIFragmentShader._Enabled) {
+         if (_swrast_use_fragment_program(ctx)) {
             COPY_4V(span->attrStart[attr], tc);
          }
          else if (tc[3] > 0.0F) {
@@ -519,8 +517,7 @@ interpolate_texcoords(struct gl_context *ctx, SWspan *span)
 
          if (needLambda) {
             GLuint i;
-            if (_swrast_use_fragment_program(ctx)
-                || ctx->ATIFragmentShader._Enabled) {
+            if (_swrast_use_fragment_program(ctx)) {
                /* do perspective correction but don't divide s, t, r by q */
                const GLfloat dwdx = span->attrStepX[FRAG_ATTRIB_WPOS][3];
                GLfloat w = span->attrStart[FRAG_ATTRIB_WPOS][3] + span->leftClip * dwdx;
@@ -560,8 +557,7 @@ interpolate_texcoords(struct gl_context *ctx, SWspan *span)
          }
          else {
             GLuint i;
-            if (_swrast_use_fragment_program(ctx) ||
-                ctx->ATIFragmentShader._Enabled) {
+            if (_swrast_use_fragment_program(ctx)) {
                /* do perspective correction but don't divide s, t, r by q */
                const GLfloat dwdx = span->attrStepX[FRAG_ATTRIB_WPOS][3];
                GLfloat w = span->attrStart[FRAG_ATTRIB_WPOS][3] + span->leftClip * dwdx;
@@ -972,8 +968,7 @@ convert_color_type(SWspan *span, GLenum newType, GLuint output)
 static inline void
 shade_texture_span(struct gl_context *ctx, SWspan *span)
 {
-   if (_swrast_use_fragment_program(ctx) ||
-       ctx->ATIFragmentShader._Enabled) {
+   if (_swrast_use_fragment_program(ctx)) {
       /* programmable shading */
       if (span->primitive == GL_BITMAP && span->array->ChanType != GL_FLOAT) {
          convert_color_type(span, GL_FLOAT, 0);
@@ -1001,13 +996,7 @@ shade_texture_span(struct gl_context *ctx, SWspan *span)
          interpolate_wpos(ctx, span);
 
       /* Run fragment program/shader now */
-      if (_swrast_use_fragment_program(ctx)) {
-         _swrast_exec_fragment_program(ctx, span);
-      }
-      else {
-         ASSERT(ctx->ATIFragmentShader._Enabled);
-         _swrast_exec_fragment_shader(ctx, span);
-      }
+      _swrast_exec_fragment_program(ctx, span);
    }
    else if (ctx->Texture._EnabledCoordUnits) {
       /* conventional texturing */
@@ -1134,8 +1123,7 @@ _swrast_write_rgba_span( struct gl_context *ctx, SWspan *span)
    const GLbitfield64 origArrayAttribs = span->arrayAttribs;
    const GLenum origChanType = span->array->ChanType;
    void * const origRgba = span->array->rgba;
-   const GLboolean shader = (_swrast_use_fragment_program(ctx)
-                             || ctx->ATIFragmentShader._Enabled);
+   const GLboolean shader = (_swrast_use_fragment_program(ctx));
    const GLboolean shaderOrTexture = shader || ctx->Texture._EnabledCoordUnits;
    struct gl_framebuffer *fb = ctx->DrawBuffer;
 
@@ -1233,14 +1221,6 @@ _swrast_write_rgba_span( struct gl_context *ctx, SWspan *span)
             goto end;
          }
       }
-   }
-
-   if (ctx->Query.CurrentOcclusionObject) {
-      /* update count of 'passed' fragments */
-      struct gl_query_object *q = ctx->Query.CurrentOcclusionObject;
-      GLuint i;
-      for (i = 0; i < span->end; i++)
-         q->Result += span->array->mask[i];
    }
 
    /* We had to wait until now to check for glColorMask(0,0,0,0) because of

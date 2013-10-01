@@ -14,7 +14,6 @@ list(APPEND SOURCE
     clear.c
     clip.c
     colortab.c
-    condrender.c
     context.c
     convolve.c
     cpuinfo.c
@@ -59,10 +58,8 @@ list(APPEND SOURCE
     points.c
     polygon.c
     querymatrix.c
-    queryobj.c
     rastpos.c
     readpix.c
-    remap.c
     renderbuffer.c
     scissor.c
     shaderapi.c
@@ -71,7 +68,6 @@ list(APPEND SOURCE
     shared.c
     state.c
     stencil.c
-    syncobj.c
     texcompress.c
     texcompress_rgtc.c
     texcompress_s3tc.c
@@ -88,7 +84,6 @@ list(APPEND SOURCE
     texstorage.c
     texstore.c
     texturebarrier.c
-    transformfeedback.c
     uniform_query.cpp
     uniforms.c
     varray.c

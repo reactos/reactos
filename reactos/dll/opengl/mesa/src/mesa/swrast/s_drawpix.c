@@ -26,7 +26,6 @@
 #include "main/glheader.h"
 #include "main/bufferobj.h"
 #include "main/colormac.h"
-#include "main/condrender.h"
 #include "main/context.h"
 #include "main/format_pack.h"
 #include "main/image.h"
@@ -644,9 +643,6 @@ _swrast_DrawPixels( struct gl_context *ctx,
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLboolean save_vp_override = ctx->VertexProgram._Overriden;
-
-   if (!_mesa_check_conditional_render(ctx))
-      return; /* don't draw */
 
    /* We are creating fragments directly, without going through vertex
     * programs.
