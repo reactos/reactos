@@ -20,9 +20,20 @@
 
 #pragma code_page(65001)
 
-#include "windef.h"
+//#include "windef.h"
 //#include "winbase.h"
 //#include "winnls.h"
+#include "devenum_private.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_DEVENUM_DSDEFAULT  "Default DirectSound"
+    IDS_DEVENUM_DS         "DirectSound: %s"
+    IDS_DEVENUM_WODEFAULT  "Default WaveOut Device"
+    IDS_DEVENUM_MIDEFAULT  "Default MidiOut Device"
+}
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -33,4 +44,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_PRODUCTVERSION 6,5,1,902
 #define WINE_PRODUCTVERSION_STR "6.5"
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>
+
+1 WINE_REGISTRY devenum_classes.rgs

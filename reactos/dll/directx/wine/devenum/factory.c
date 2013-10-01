@@ -28,12 +28,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 /**********************************************************************
  * DEVENUM_IClassFactory_QueryInterface (also IUnknown)
  */
-static HRESULT WINAPI DEVENUM_IClassFactory_QueryInterface(
-    LPCLASSFACTORY iface,
-    REFIID riid,
-    LPVOID *ppvObj)
+static HRESULT WINAPI DEVENUM_IClassFactory_QueryInterface(IClassFactory *iface, REFIID riid,
+    void **ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), ppvObj);
 
     if (ppvObj == NULL) return E_POINTER;
 
@@ -56,7 +54,7 @@ static HRESULT WINAPI DEVENUM_IClassFactory_QueryInterface(
 /**********************************************************************
  * DEVENUM_IClassFactory_AddRef (also IUnknown)
  */
-static ULONG WINAPI DEVENUM_IClassFactory_AddRef(LPCLASSFACTORY iface)
+static ULONG WINAPI DEVENUM_IClassFactory_AddRef(IClassFactory *iface)
 {
     TRACE("\n");
 
@@ -68,7 +66,7 @@ static ULONG WINAPI DEVENUM_IClassFactory_AddRef(LPCLASSFACTORY iface)
 /**********************************************************************
  * DEVENUM_IClassFactory_Release (also IUnknown)
  */
-static ULONG WINAPI DEVENUM_IClassFactory_Release(LPCLASSFACTORY iface)
+static ULONG WINAPI DEVENUM_IClassFactory_Release(IClassFactory *iface)
 {
     TRACE("\n");
 
@@ -80,13 +78,10 @@ static ULONG WINAPI DEVENUM_IClassFactory_Release(LPCLASSFACTORY iface)
 /**********************************************************************
  * DEVENUM_IClassFactory_CreateInstance
  */
-static HRESULT WINAPI DEVENUM_IClassFactory_CreateInstance(
-    LPCLASSFACTORY iface,
-    LPUNKNOWN pUnkOuter,
-    REFIID riid,
-    LPVOID *ppvObj)
+static HRESULT WINAPI DEVENUM_IClassFactory_CreateInstance(IClassFactory *iface,
+        IUnknown *pUnkOuter, REFIID riid, void **ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("(%p)->(%p, %s, %p)\n", iface, pUnkOuter, debugstr_guid(riid), ppvObj);
 
     if (ppvObj == NULL) return E_POINTER;
 
@@ -110,9 +105,7 @@ static HRESULT WINAPI DEVENUM_IClassFactory_CreateInstance(
 /**********************************************************************
  * DEVENUM_IClassFactory_LockServer
  */
-static HRESULT WINAPI DEVENUM_IClassFactory_LockServer(
-    LPCLASSFACTORY iface,
-    BOOL fLock)
+static HRESULT WINAPI DEVENUM_IClassFactory_LockServer(IClassFactory *iface, BOOL fLock)
 {
     TRACE("\n");
 
@@ -138,4 +131,4 @@ static const IClassFactoryVtbl IClassFactory_Vtbl =
 /**********************************************************************
  * static ClassFactory instance
  */
-ClassFactoryImpl DEVENUM_ClassFactory = { &IClassFactory_Vtbl };
+ClassFactoryImpl DEVENUM_ClassFactory = { { &IClassFactory_Vtbl } };

@@ -20,13 +20,13 @@
  */
 
 #include "devenum_private.h"
+#include <rpcproxy.h>
 #include <wine/debug.h>
-//#include "winreg.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
-LONG dll_refs;
-HINSTANCE DEVENUM_hInstance;
+DECLSPEC_HIDDEN LONG dll_refs;
+DECLSPEC_HIDDEN HINSTANCE DEVENUM_hInstance;
 
 typedef struct
 {
@@ -35,7 +35,6 @@ typedef struct
     BOOL instance;
 } register_info;
 
-static HRESULT register_clsids(int count, const register_info * pRegInfo, LPCWSTR pszThreadingModel);
 static void DEVENUM_RegisterQuartz(void);
 
 /***********************************************************************
@@ -55,10 +54,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         DEVENUM_hInstance = hinstDLL;
         DisableThreadLibraryCalls(hinstDLL);
 	break;
-
-    case DLL_PROCESS_DETACH:
-        DEVENUM_hInstance = 0;
-	break;
     }
     return TRUE;
 }
@@ -76,7 +71,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
      * Oh well - works just fine as it is */
     if (IsEqualGUID(rclsid, &CLSID_SystemDeviceEnum) ||
         IsEqualGUID(rclsid, &CLSID_CDeviceMoniker))
-        return IClassFactory_QueryInterface((IClassFactory*)&DEVENUM_ClassFactory, iid, ppv);
+        return IClassFactory_QueryInterface(&DEVENUM_ClassFactory.IClassFactory_iface, iid, ppv);
 
     FIXME("CLSID: %s, IID: %s\n", debugstr_guid(rclsid), debugstr_guid(iid));
     return CLASS_E_CLASSNOTAVAILABLE;
@@ -96,42 +91,12 @@ HRESULT WINAPI DllCanUnloadNow(void)
 HRESULT WINAPI DllRegisterServer(void)
 {
     HRESULT res;
-    HKEY hkeyClsid = NULL;
-    HKEY hkey1 = NULL;
-    HKEY hkey2 = NULL;
-    LPOLESTR pszClsidDevMon = NULL;
     IFilterMapper2 * pMapper = NULL;
     LPVOID mapvptr;
-    static const WCHAR threadingModel[] = {'B','o','t','h',0};
-    static const WCHAR sysdevenum[] = {'S','y','s','t','e','m',' ','D','e','v','i','c','e',' ','E','n','u','m',0};
-    static const WCHAR devmon[] = {'D','e','v','i','c','e','M','o','n','i','k','e','r',0};
-    static const WCHAR acmcat[] = {'A','C','M',' ','C','l','a','s','s',' ','M','a','n','a','g','e','r',0};
-    static const WCHAR vidcat[] = {'I','C','M',' ','C','l','a','s','s',' ','M','a','n','a','g','e','r',0};
-    static const WCHAR filtcat[] = {'A','c','t','i','v','e','M','o','v','i','e',' ','F','i','l','t','e','r',' ','C','l','a','s','s',' ','M','a','n','a','g','e','r',0};
-    static const WCHAR vfwcat[] = {'V','F','W',' ','C','a','p','t','u','r','e',' ','C','l','a','s','s',' ','M','a','n','a','g','e','r',0};
-    static const WCHAR wavein[] = {'W','a','v','e','I','n',' ','C','l','a','s','s',' ','M','a','n','a','g','e','r', 0};
-    static const WCHAR waveout[] = {'W','a','v','e','O','u','t',' ','a','n','d',' ','D','S','o','u','n','d',' ','C','l','a','s','s',' ','M','a','n','a','g','e','r',0};
-    static const WCHAR midiout[] = {'M','i','d','i','O','u','t',' ','C','l','a','s','s',' ','M','a','n','a','g','e','r',0};
-    static const WCHAR amcat[] = {'A','c','t','i','v','e','M','o','v','i','e',' ','F','i','l','t','e','r',' ','C','a','t','e','g','o','r','i','e','s',0};
-    static const WCHAR device[] = {'d','e','v','i','c','e',0};
-    static const WCHAR device_1[] = {'d','e','v','i','c','e','.','1',0};
-    static const register_info ri[] =
-    {
-        {&CLSID_SystemDeviceEnum, sysdevenum, FALSE},
-	{&CLSID_CDeviceMoniker, devmon, FALSE},
-	{&CLSID_AudioCompressorCategory, acmcat, TRUE},
-	{&CLSID_VideoCompressorCategory, vidcat, TRUE},
-	{&CLSID_LegacyAmFilterCategory, filtcat, TRUE},
-	{&CLSID_VideoInputDeviceCategory, vfwcat, FALSE},
-	{&CLSID_AudioInputDeviceCategory, wavein, FALSE},
-	{&CLSID_AudioRendererCategory, waveout, FALSE},
-	{&CLSID_MidiRendererCategory, midiout, FALSE},
-	{&CLSID_ActiveMovieCategories, amcat, TRUE}
-    };
 
     TRACE("\n");
 
-    res = register_clsids(sizeof(ri) / sizeof(register_info), ri, threadingModel);
+    res = __wine_register_resources( DEVENUM_hInstance );
 
     /* Quartz is needed for IFilterMapper2 */
     DEVENUM_RegisterQuartz();
@@ -169,116 +134,6 @@ HRESULT WINAPI DllRegisterServer(void)
         IFilterMapper2_Release(pMapper);
     }
 
-/*** CDeviceMoniker ***/
-    if (SUCCEEDED(res))
-    {
-	res = StringFromCLSID(&CLSID_CDeviceMoniker, &pszClsidDevMon);
-    }
-    if (SUCCEEDED(res))
-    {
-        res = RegOpenKeyW(HKEY_CLASSES_ROOT, clsid_keyname, &hkeyClsid)
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-    if (SUCCEEDED(res))
-    {
-        res = RegOpenKeyW(hkeyClsid, pszClsidDevMon, &hkey1)
-	       == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-    if (SUCCEEDED(res))
-    {
-        static const WCHAR wszProgID[] = {'P','r','o','g','I','D',0};
-        res = RegCreateKeyW(hkey1, wszProgID, &hkey2)
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-    if (SUCCEEDED(res))
-    {
-        res = RegSetValueW(hkey2, NULL, REG_SZ, device_1, (lstrlenW(device_1) + 1) * sizeof(WCHAR))
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-
-    if (hkey2)
-    {
-        RegCloseKey(hkey2);
-        hkey2 = NULL;
-    }
-
-    if (SUCCEEDED(res))
-    {
-        static const WCHAR wszVProgID[] = {'V','e','r','s','i','o','n','I','n','d','e','p','e','d','e','n','t','P','r','o','g','I','D',0};
-	res = RegCreateKeyW(hkey1, wszVProgID, &hkey2)
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-    if (SUCCEEDED(res))
-    {
-        res = RegSetValueW(hkey2, NULL, REG_SZ, device, (lstrlenW(device) + 1) * sizeof(WCHAR))
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-
-    if (hkey2)
-    {
-        RegCloseKey(hkey2);
-        hkey2 = NULL;
-    }
-
-    if (hkey1)
-    {
-        RegCloseKey(hkey1);
-        hkey1 = NULL;
-    }
-
-    if (SUCCEEDED(res))
-    {
-        res = RegCreateKeyW(HKEY_CLASSES_ROOT, device, &hkey1)
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-    if (SUCCEEDED(res))
-    {
-        res = RegCreateKeyW(hkey1, clsid_keyname, &hkey2)
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-    if (SUCCEEDED(res))
-    {
-        res = RegSetValueW(hkey2, NULL, REG_SZ, pszClsidDevMon, (lstrlenW(pszClsidDevMon) + 1) * sizeof(WCHAR))
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-    if (hkey2)
-    {
-        RegCloseKey(hkey2);
-        hkey2 = NULL;
-    }
-
-    if (hkey1)
-    {
-        RegCloseKey(hkey1);
-        hkey1 = NULL;
-    }
-
-    if (SUCCEEDED(res))
-    {
-        res = RegCreateKeyW(HKEY_CLASSES_ROOT, device_1, &hkey1)
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-    if (SUCCEEDED(res))
-    {
-        res = RegCreateKeyW(hkey1, clsid_keyname, &hkey2)
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-    if (SUCCEEDED(res))
-    {
-        res = RegSetValueW(hkey2, NULL, REG_SZ, pszClsidDevMon, (lstrlenW(pszClsidDevMon) + 1) * sizeof(WCHAR))
-	      == ERROR_SUCCESS ? S_OK : E_FAIL;
-    }
-
-    if (hkey2)
-        RegCloseKey(hkey2);
-
-    if (hkey1)
-        RegCloseKey(hkey1);
-
-    if (hkeyClsid)
-        RegCloseKey(hkeyClsid);
-
-    CoTaskMemFree(pszClsidDevMon);
     CoUninitialize();
 
     return res;
@@ -289,77 +144,8 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-	FIXME("stub!\n");
-	return E_FAIL;
-}
-
-static HRESULT register_clsids(int count, const register_info * pRegInfo, LPCWSTR pszThreadingModel)
-{
-    HRESULT res = S_OK;
-    LPOLESTR clsidString = NULL;
-    HKEY hkeyClsid;
-    HKEY hkeySub;
-    HKEY hkeyInproc32;
-    HKEY hkeyInstance = NULL;
-    int i;
-    static const WCHAR wcszInproc32[] = {'I','n','p','r','o','c','S','e','r','v','e','r','3','2',0};
-    static const WCHAR wcszThreadingModel[] = {'T','h','r','e','a','d','i','n','g','M','o','d','e','l',0};
-    static const WCHAR dll_module[] = {'d','e','v','e','n','u','m','.','d','l','l',0};
-
-    res = RegOpenKeyW(HKEY_CLASSES_ROOT, clsid_keyname, &hkeyClsid)
-          == ERROR_SUCCESS ? S_OK : E_FAIL;
-
-    for (i = 0; i < count; i++)
-    {
-	hkeySub = 0;
-        if (SUCCEEDED(res))
-	{
-	    res = StringFromCLSID(pRegInfo[i].clsid, &clsidString);
-	}
-	if (SUCCEEDED(res))
-	{
-	    res = RegCreateKeyW(hkeyClsid, clsidString, &hkeySub)
-	          == ERROR_SUCCESS ? S_OK : E_FAIL;
-	}
-	if (pRegInfo[i].instance && SUCCEEDED(res))
-	{
-	    res = RegCreateKeyW(hkeySub, wszInstanceKeyName, &hkeyInstance)
-	          == ERROR_SUCCESS ? S_OK : E_FAIL;
-            RegCloseKey(hkeyInstance);
-	}
-	if (SUCCEEDED(res))
-	{
-	    RegSetValueW(hkeySub,
-	                 NULL,
-		         REG_SZ,
-	                 pRegInfo->friendly_name ? pRegInfo[i].friendly_name : clsidString,
-		         (lstrlenW(pRegInfo[i].friendly_name ? pRegInfo->friendly_name : clsidString) + 1) * sizeof(WCHAR));
-	    res = RegCreateKeyW(hkeySub, wcszInproc32, &hkeyInproc32)
-	          == ERROR_SUCCESS ? S_OK : E_FAIL;
-	}
-	if (SUCCEEDED(res))
-	{
-	    RegSetValueW(hkeyInproc32,
-	                 NULL,
-	                 REG_SZ,
-			 dll_module,
-			 (lstrlenW(dll_module) + 1) * sizeof(WCHAR));
-	    RegSetValueExW(hkeyInproc32,
-	                   wcszThreadingModel,
-			   0,
-			   REG_SZ,
-			   (LPCVOID)pszThreadingModel,
-			   (lstrlenW(pszThreadingModel) + 1) * sizeof(WCHAR));
-            RegCloseKey(hkeyInproc32);
-        }
-        if (hkeySub) RegCloseKey(hkeySub);
-	CoTaskMemFree(clsidString);
-	clsidString = NULL;
-    }
-
-    RegCloseKey(hkeyClsid);
-
-    return res;
+    FIXME("stub!\n");
+    return __wine_unregister_resources( DEVENUM_hInstance );
 }
 
 typedef HRESULT (WINAPI *DllRegisterServer_func)(void);

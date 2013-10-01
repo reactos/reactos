@@ -27,31 +27,28 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
-static HRESULT WINAPI DEVENUM_IParseDisplayName_QueryInterface(
-    LPPARSEDISPLAYNAME iface,
-    REFIID riid,
-    LPVOID *ppvObj)
+static HRESULT WINAPI DEVENUM_IParseDisplayName_QueryInterface(IParseDisplayName *iface,
+        REFIID riid, void **ppv)
 {
     TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
 
-    if (ppvObj == NULL) return E_POINTER;
+    if (!ppv)
+        return E_POINTER;
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IParseDisplayName))
     {
-        *ppvObj = iface;
-	IParseDisplayName_AddRef(iface);
-	return S_OK;
+        *ppv = iface;
+        IParseDisplayName_AddRef(iface);
+        return S_OK;
     }
 
     FIXME("- no interface IID: %s\n", debugstr_guid(riid));
+    *ppv = NULL;
     return E_NOINTERFACE;
 }
 
-/**********************************************************************
- * DEVENUM_IParseDisplayName_AddRef (also IUnknown)
- */
-static ULONG WINAPI DEVENUM_IParseDisplayName_AddRef(LPPARSEDISPLAYNAME iface)
+static ULONG WINAPI DEVENUM_IParseDisplayName_AddRef(IParseDisplayName *iface)
 {
     TRACE("\n");
 
@@ -60,10 +57,7 @@ static ULONG WINAPI DEVENUM_IParseDisplayName_AddRef(LPPARSEDISPLAYNAME iface)
     return 2; /* non-heap based object */
 }
 
-/**********************************************************************
- * DEVENUM_IParseDisplayName_Release (also IUnknown)
- */
-static ULONG WINAPI DEVENUM_IParseDisplayName_Release(LPPARSEDISPLAYNAME iface)
+static ULONG WINAPI DEVENUM_IParseDisplayName_Release(IParseDisplayName *iface)
 {
     TRACE("\n");
 
@@ -81,12 +75,8 @@ static ULONG WINAPI DEVENUM_IParseDisplayName_Release(LPPARSEDISPLAYNAME iface)
  *  Might not handle more complicated strings properly (ie anything
  *  not in "@device:sw:{CLSID1}\<filter name or CLSID>" format
  */
-static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(
-    LPPARSEDISPLAYNAME iface,
-    IBindCtx *pbc,
-    LPOLESTR pszDisplayName,
-    ULONG *pchEaten,
-    IMoniker **ppmkOut)
+static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(IParseDisplayName *iface,
+        IBindCtx *pbc, LPOLESTR pszDisplayName, ULONG *pchEaten, IMoniker **ppmkOut)
 {
     LPOLESTR pszBetween = NULL;
     LPOLESTR pszClass = NULL;
@@ -136,10 +126,10 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(
             strcatW(wszRegKeyName, pszBetween);
 
             if (RegCreateKeyW(hbasekey, wszRegKeyName, &pMoniker->hkey) == ERROR_SUCCESS)
-                *ppmkOut = (LPMONIKER)pMoniker;
+                *ppmkOut = &pMoniker->IMoniker_iface;
             else
             {
-                IMoniker_Release((LPMONIKER)pMoniker);
+                IMoniker_Release(&pMoniker->IMoniker_iface);
                 res = MK_E_NOOBJECT;
             }
         }
@@ -163,4 +153,4 @@ static const IParseDisplayNameVtbl IParseDisplayName_Vtbl =
 };
 
 /* The one instance of this class */
-ParseDisplayNameImpl DEVENUM_ParseDisplayName = { &IParseDisplayName_Vtbl };
+IParseDisplayName DEVENUM_ParseDisplayName = { &IParseDisplayName_Vtbl };
