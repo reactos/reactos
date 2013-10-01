@@ -85,9 +85,6 @@ static const struct extension extension_table[] = {
    { "GL_ARB_depth_clamp",                         o(ARB_depth_clamp),                         GL,             2003 },
    { "GL_ARB_draw_buffers",                        o(dummy_true),                              GL,             2002 },
    { "GL_ARB_draw_buffers_blend",                  o(ARB_draw_buffers_blend),                  GL,             2009 },
-   { "GL_ARB_draw_elements_base_vertex",           o(ARB_draw_elements_base_vertex),           GL,             2009 },
-   { "GL_ARB_draw_instanced",                      o(ARB_draw_instanced),                      GL,             2008 },
-   { "GL_ARB_fragment_coord_conventions",          o(ARB_fragment_coord_conventions),          GL,             2009 },
    { "GL_ARB_fragment_program",                    o(ARB_fragment_program),                    GL,             2002 },
    { "GL_ARB_fragment_program_shadow",             o(ARB_fragment_program_shadow),             GL,             2003 },
    { "GL_ARB_fragment_shader",                     o(ARB_fragment_shader),                     GL,             2002 },
@@ -348,9 +345,7 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
 {
    /*ctx->Extensions.ARB_copy_buffer = GL_TRUE;*/
    ctx->Extensions.ARB_depth_clamp = GL_TRUE;
-   ctx->Extensions.ARB_draw_elements_base_vertex = GL_TRUE;
    ctx->Extensions.ARB_draw_instanced = GL_TRUE;
-   ctx->Extensions.ARB_fragment_coord_conventions = GL_TRUE;
 #if FEATURE_ARB_fragment_program
    ctx->Extensions.ARB_fragment_program = GL_TRUE;
    ctx->Extensions.ARB_fragment_program_shadow = GL_TRUE;

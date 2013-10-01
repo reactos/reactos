@@ -407,7 +407,6 @@ add_variable(exec_list *instructions, glsl_symbol_table *symtab,
    }
 
    var->location = slot;
-   var->explicit_location = (slot >= 0);
 
    /* Once the variable is created an initialized, add it to the symbol table
     * and add the declaration to the IR stream.

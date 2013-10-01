@@ -116,8 +116,6 @@ _mesa_parse_arb_fragment_program(struct gl_context* ctx, GLenum target,
          program->Base.SamplersUsed |= (1 << i);
    }
    program->Base.ShadowSamplers = prog.ShadowSamplers;
-   program->OriginUpperLeft = state.option.OriginUpperLeft;
-   program->PixelCenterInteger = state.option.PixelCenterInteger;
 
    program->UsesKill            = state.fragment.UsesKill;
 

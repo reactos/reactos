@@ -640,10 +640,6 @@
 #define _gloffset_BindVertexArray 583
 #define _gloffset_GenVertexArrays 584
 #define _gloffset_CopyBufferSubData 585
-#define _gloffset_DrawElementsBaseVertex 593
-#define _gloffset_DrawElementsInstancedBaseVertex 594
-#define _gloffset_DrawRangeElementsBaseVertex 595
-#define _gloffset_MultiDrawElementsBaseVertex 596
 #define _gloffset_BlendEquationSeparateiARB 597
 #define _gloffset_BlendEquationiARB 598
 #define _gloffset_BlendFuncSeparateiARB 599
@@ -1100,10 +1096,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define BindVertexArray_remap_index 175
 #define GenVertexArrays_remap_index 176
 #define CopyBufferSubData_remap_index 177
-#define DrawElementsBaseVertex_remap_index 185
-#define DrawElementsInstancedBaseVertex_remap_index 186
-#define DrawRangeElementsBaseVertex_remap_index 187
-#define MultiDrawElementsBaseVertex_remap_index 188
 #define BlendEquationSeparateiARB_remap_index 189
 #define BlendEquationiARB_remap_index 190
 #define BlendFuncSeparateiARB_remap_index 191
@@ -1554,10 +1546,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_BindVertexArray driDispatchRemapTable[BindVertexArray_remap_index]
 #define _gloffset_GenVertexArrays driDispatchRemapTable[GenVertexArrays_remap_index]
 #define _gloffset_CopyBufferSubData driDispatchRemapTable[CopyBufferSubData_remap_index]
-#define _gloffset_DrawElementsBaseVertex driDispatchRemapTable[DrawElementsBaseVertex_remap_index]
-#define _gloffset_DrawElementsInstancedBaseVertex driDispatchRemapTable[DrawElementsInstancedBaseVertex_remap_index]
-#define _gloffset_DrawRangeElementsBaseVertex driDispatchRemapTable[DrawRangeElementsBaseVertex_remap_index]
-#define _gloffset_MultiDrawElementsBaseVertex driDispatchRemapTable[MultiDrawElementsBaseVertex_remap_index]
 #define _gloffset_BlendEquationSeparateiARB driDispatchRemapTable[BlendEquationSeparateiARB_remap_index]
 #define _gloffset_BlendEquationiARB driDispatchRemapTable[BlendEquationiARB_remap_index]
 #define _gloffset_BlendFuncSeparateiARB driDispatchRemapTable[BlendFuncSeparateiARB_remap_index]
@@ -8135,50 +8123,6 @@ static inline _glptr_CopyBufferSubData GET_CopyBufferSubData(struct _glapi_table
 
 static inline void SET_CopyBufferSubData(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLintptr, GLintptr, GLsizeiptr)) {
    SET_by_offset(disp, _gloffset_CopyBufferSubData, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_DrawElementsBaseVertex)(GLenum, GLsizei, GLenum, const GLvoid *, GLint);
-#define CALL_DrawElementsBaseVertex(disp, parameters) \
-    (* GET_DrawElementsBaseVertex(disp)) parameters
-static inline _glptr_DrawElementsBaseVertex GET_DrawElementsBaseVertex(struct _glapi_table *disp) {
-   return (_glptr_DrawElementsBaseVertex) (GET_by_offset(disp, _gloffset_DrawElementsBaseVertex));
-}
-
-static inline void SET_DrawElementsBaseVertex(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLenum, const GLvoid *, GLint)) {
-   SET_by_offset(disp, _gloffset_DrawElementsBaseVertex, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_DrawElementsInstancedBaseVertex)(GLenum, GLsizei, GLenum, const GLvoid *, GLsizei, GLint);
-#define CALL_DrawElementsInstancedBaseVertex(disp, parameters) \
-    (* GET_DrawElementsInstancedBaseVertex(disp)) parameters
-static inline _glptr_DrawElementsInstancedBaseVertex GET_DrawElementsInstancedBaseVertex(struct _glapi_table *disp) {
-   return (_glptr_DrawElementsInstancedBaseVertex) (GET_by_offset(disp, _gloffset_DrawElementsInstancedBaseVertex));
-}
-
-static inline void SET_DrawElementsInstancedBaseVertex(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLenum, const GLvoid *, GLsizei, GLint)) {
-   SET_by_offset(disp, _gloffset_DrawElementsInstancedBaseVertex, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_DrawRangeElementsBaseVertex)(GLenum, GLuint, GLuint, GLsizei, GLenum, const GLvoid *, GLint);
-#define CALL_DrawRangeElementsBaseVertex(disp, parameters) \
-    (* GET_DrawRangeElementsBaseVertex(disp)) parameters
-static inline _glptr_DrawRangeElementsBaseVertex GET_DrawRangeElementsBaseVertex(struct _glapi_table *disp) {
-   return (_glptr_DrawRangeElementsBaseVertex) (GET_by_offset(disp, _gloffset_DrawRangeElementsBaseVertex));
-}
-
-static inline void SET_DrawRangeElementsBaseVertex(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLuint, GLsizei, GLenum, const GLvoid *, GLint)) {
-   SET_by_offset(disp, _gloffset_DrawRangeElementsBaseVertex, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_MultiDrawElementsBaseVertex)(GLenum, const GLsizei *, GLenum, const GLvoid **, GLsizei, const GLint *);
-#define CALL_MultiDrawElementsBaseVertex(disp, parameters) \
-    (* GET_MultiDrawElementsBaseVertex(disp)) parameters
-static inline _glptr_MultiDrawElementsBaseVertex GET_MultiDrawElementsBaseVertex(struct _glapi_table *disp) {
-   return (_glptr_MultiDrawElementsBaseVertex) (GET_by_offset(disp, _gloffset_MultiDrawElementsBaseVertex));
-}
-
-static inline void SET_MultiDrawElementsBaseVertex(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, const GLsizei *, GLenum, const GLvoid **, GLsizei, const GLint *)) {
-   SET_by_offset(disp, _gloffset_MultiDrawElementsBaseVertex, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_BlendEquationSeparateiARB)(GLuint, GLenum, GLenum);

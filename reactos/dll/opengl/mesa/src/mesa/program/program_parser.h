@@ -208,8 +208,6 @@ struct asm_parser_state {
       unsigned TexRect:1;
       unsigned TexArray:1;
       unsigned NV_fragment:1;
-      unsigned OriginUpperLeft:1;
-      unsigned PixelCenterInteger:1;
    } option;
 
    struct {

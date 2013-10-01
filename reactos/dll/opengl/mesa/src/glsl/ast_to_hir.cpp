@@ -2030,119 +2030,6 @@ apply_type_qualifier_to_variable(const struct ast_type_qualifier *qual,
 
    }
 
-   var->pixel_center_integer = qual->flags.q.pixel_center_integer;
-   var->origin_upper_left = qual->flags.q.origin_upper_left;
-   if ((qual->flags.q.origin_upper_left || qual->flags.q.pixel_center_integer)
-       && (strcmp(var->name, "gl_FragCoord") != 0)) {
-      const char *const qual_string = (qual->flags.q.origin_upper_left)
-	 ? "origin_upper_left" : "pixel_center_integer";
-
-      _mesa_glsl_error(loc, state,
-		       "layout qualifier `%s' can only be applied to "
-		       "fragment shader input `gl_FragCoord'",
-		       qual_string);
-   }
-
-   if (qual->flags.q.explicit_location) {
-      const bool global_scope = (state->current_function == NULL);
-      bool fail = false;
-      const char *string = "";
-
-      /* In the vertex shader only shader inputs can be given explicit
-       * locations.
-       *
-       * In the fragment shader only shader outputs can be given explicit
-       * locations.
-       */
-      switch (state->target) {
-      case vertex_shader:
-	 if (!global_scope || (var->mode != ir_var_in)) {
-	    fail = true;
-	    string = "input";
-	 }
-	 break;
-
-      case fragment_shader:
-	 if (!global_scope || (var->mode != ir_var_out)) {
-	    fail = true;
-	    string = "output";
-	 }
-	 break;
-      };
-
-      if (fail) {
-	 _mesa_glsl_error(loc, state,
-			  "only %s shader %s variables can be given an "
-			  "explicit location\n",
-			  _mesa_glsl_shader_target_name(state->target),
-			  string);
-      } else {
-	 var->explicit_location = true;
-
-	 /* This bit of silliness is needed because invalid explicit locations
-	  * are supposed to be flagged during linking.  Small negative values
-	  * biased by VERT_ATTRIB_GENERIC0 or FRAG_RESULT_DATA0 could alias
-	  * built-in values (e.g., -16+VERT_ATTRIB_GENERIC0 = VERT_ATTRIB_POS).
-	  * The linker needs to be able to differentiate these cases.  This
-	  * ensures that negative values stay negative.
-	  */
-	 if (qual->location >= 0) {
-	    var->location = (state->target == vertex_shader)
-	       ? (qual->location + VERT_ATTRIB_GENERIC0)
-	       : (qual->location + FRAG_RESULT_DATA0);
-	 } else {
-	    var->location = qual->location;
-	 }
-      }
-   }
-
-   /* Does the declaration use the 'layout' keyword?
-    */
-   const bool uses_layout = qual->flags.q.pixel_center_integer
-      || qual->flags.q.origin_upper_left
-      || qual->flags.q.explicit_location;
-
-   /* Does the declaration use the deprecated 'attribute' or 'varying'
-    * keywords?
-    */
-   const bool uses_deprecated_qualifier = qual->flags.q.attribute
-      || qual->flags.q.varying;
-
-   /* Is the 'layout' keyword used with parameters that allow relaxed checking.
-    * Many implementations of GL_ARB_fragment_coord_conventions_enable and some
-    * implementations (only Mesa?) GL_ARB_explicit_attrib_location_enable
-    * allowed the layout qualifier to be used with 'varying' and 'attribute'.
-    * These extensions and all following extensions that add the 'layout'
-    * keyword have been modified to require the use of 'in' or 'out'.
-    *
-    * The following extension do not allow the deprecated keywords:
-    *
-    *    GL_AMD_conservative_depth
-    *    GL_ARB_conservative_depth
-    *    GL_ARB_gpu_shader5
-    *    GL_ARB_separate_shader_objects
-    *    GL_ARB_tesselation_shader
-    *    GL_ARB_transform_feedback3
-    *    GL_ARB_uniform_buffer_object
-    *
-    * It is unknown whether GL_EXT_shader_image_load_store or GL_NV_gpu_shader5
-    * allow layout with the deprecated keywords.
-    */
-   const bool relaxed_layout_qualifier_checking =
-      state->ARB_fragment_coord_conventions_enable;
-
-   if (uses_layout && uses_deprecated_qualifier) {
-      if (relaxed_layout_qualifier_checking) {
-	 _mesa_glsl_warning(loc, state,
-			    "`layout' qualifier may not be used with "
-			    "`attribute' or `varying'");
-      } else {
-	 _mesa_glsl_error(loc, state,
-			  "`layout' qualifier may not be used with "
-			  "`attribute' or `varying'");
-      }
-   }
-
    /* Layout qualifiers for gl_FragDepth, which are enabled by extension
     * AMD_conservative_depth.
     */
@@ -2236,26 +2123,6 @@ get_variable_being_redeclared(ir_variable *var, ast_declaration *decl,
       earlier->type = var->type;
       delete var;
       var = NULL;
-   } else if (state->ARB_fragment_coord_conventions_enable
-	      && strcmp(var->name, "gl_FragCoord") == 0
-	      && earlier->type == var->type
-	      && earlier->mode == var->mode) {
-      /* Allow redeclaration of gl_FragCoord for ARB_fcc layout
-       * qualifiers.
-       */
-      earlier->origin_upper_left = var->origin_upper_left;
-      earlier->pixel_center_integer = var->pixel_center_integer;
-
-      /* According to section 4.3.7 of the GLSL 1.30 spec,
-       * the following built-in varaibles can be redeclared with an
-       * interpolation qualifier:
-       *    * gl_FrontColor
-       *    * gl_BackColor
-       *    * gl_FrontSecondaryColor
-       *    * gl_BackSecondaryColor
-       *    * gl_Color
-       *    * gl_SecondaryColor
-       */
    } else if (state->language_version >= 130
 	      && (strcmp(var->name, "gl_FrontColor") == 0
 		  || strcmp(var->name, "gl_BackColor") == 0
@@ -2579,8 +2446,7 @@ ast_declarator_list::hir(exec_list *instructions,
        * This is relaxed in GLSL 1.30.  It is also relaxed by any extension
        * that adds the 'layout' keyword.
        */
-      if ((state->language_version < 130)
-	  && !state->ARB_fragment_coord_conventions_enable) {
+      if (state->language_version < 130) {
 	 if (this->type->qualifier.flags.q.out) {
 	    _mesa_glsl_error(& loc, state,
 			     "`out' qualifier in declaration of `%s' "

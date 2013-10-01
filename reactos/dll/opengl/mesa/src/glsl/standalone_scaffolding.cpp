@@ -68,7 +68,6 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Extensions.dummy_true = true;
    ctx->Extensions.ARB_ES2_compatibility = true;
    ctx->Extensions.ARB_draw_instanced = true;
-   ctx->Extensions.ARB_fragment_coord_conventions = true;
    ctx->Extensions.EXT_texture_array = true;
    ctx->Extensions.NV_texture_rectangle = true;
    ctx->Extensions.EXT_texture3D = true;

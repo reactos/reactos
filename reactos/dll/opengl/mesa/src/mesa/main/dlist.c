@@ -1273,19 +1273,6 @@ save_DrawElementsInstancedARB(GLenum mode,
 	       "glDrawElementsInstanced() during display list compile");
 }
 
-static void GLAPIENTRY
-save_DrawElementsInstancedBaseVertexARB(GLenum mode,
-					GLsizei count,
-					GLenum type,
-					const GLvoid *indices,
-					GLsizei primcount,
-					GLint basevertex)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   _mesa_error(ctx, GL_INVALID_OPERATION,
-	       "glDrawElementsInstancedBaseVertex() during display list compile");
-}
-
 static void invalidate_saved_current_state( struct gl_context *ctx )
 {
    GLint i;
@@ -10050,9 +10037,6 @@ _mesa_save_vtxfmt_init(GLvertexformat * vfmt)
    /* GL_ARB_draw_instanced */
    vfmt->DrawArraysInstanced = save_DrawArraysInstancedARB;
    vfmt->DrawElementsInstanced = save_DrawElementsInstancedARB;
-
-   /* GL_ARB_draw_elements_base_vertex */
-   vfmt->DrawElementsInstancedBaseVertex = save_DrawElementsInstancedBaseVertexARB;
 
    /* The driver is required to implement these as
     * 1) They can probably do a better job.

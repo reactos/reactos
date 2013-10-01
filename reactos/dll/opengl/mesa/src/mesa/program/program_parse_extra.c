@@ -216,18 +216,6 @@ _mesa_ARBfp_parse_option(struct asm_parser_state *state, const char *option)
 	    state->option.Shadow = 1;
 	    return 1;
 	 }
-      } else if (strncmp(option, "fragment_coord_", 15) == 0) {
-         option += 15;
-         if (state->ctx->Extensions.ARB_fragment_coord_conventions) {
-            if (strcmp(option, "origin_upper_left") == 0) {
-               state->option.OriginUpperLeft = 1;
-               return 1;
-            }
-            else if (strcmp(option, "pixel_center_integer") == 0) {
-               state->option.PixelCenterInteger = 1;
-               return 1;
-            }
-         }
       }
    } else if (strncmp(option, "ATI_", 4) == 0) {
       option += 4;

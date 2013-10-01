@@ -680,13 +680,6 @@ ir_to_mesa_visitor::find_variable_storage(ir_variable *var)
 void
 ir_to_mesa_visitor::visit(ir_variable *ir)
 {
-   if (strcmp(ir->name, "gl_FragCoord") == 0) {
-      struct gl_fragment_program *fp = (struct gl_fragment_program *)this->prog;
-
-      fp->OriginUpperLeft = ir->origin_upper_left;
-      fp->PixelCenterInteger = ir->pixel_center_integer;
-   }
-
    if (ir->mode == ir_var_uniform && strncmp(ir->name, "gl_", 3) == 0) {
       unsigned int i;
       const ir_state_slot *const slots = ir->state_slots;

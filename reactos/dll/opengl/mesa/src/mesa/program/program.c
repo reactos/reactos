@@ -480,8 +480,6 @@ _mesa_clone_program(struct gl_context *ctx, const struct gl_program *prog)
             = (const struct gl_fragment_program *) prog;
          struct gl_fragment_program *fpc = (struct gl_fragment_program *) clone;
          fpc->UsesKill = fp->UsesKill;
-         fpc->OriginUpperLeft = fp->OriginUpperLeft;
-         fpc->PixelCenterInteger = fp->PixelCenterInteger;
       }
       break;
    default:

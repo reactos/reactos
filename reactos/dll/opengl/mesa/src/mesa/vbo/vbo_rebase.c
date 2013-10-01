@@ -138,22 +138,7 @@ void vbo_rebase_prims( struct gl_context *ctx,
       printf("%s %d..%d\n", __FUNCTION__, min_index, max_index);
 
 
-   /* XXX this path is disabled for now.
-    * There's rendering corruption in some apps when it's enabled.
-    */
-   if (0 && ib && ctx->Extensions.ARB_draw_elements_base_vertex) {
-      /* If we can just tell the hardware or the TNL to interpret our
-       * indices with a different base, do so.
-       */
-      tmp_prims = (struct _mesa_prim *)malloc(sizeof(*prim) * nr_prims);
-
-      for (i = 0; i < nr_prims; i++) {
-	 tmp_prims[i] = prim[i];
-	 tmp_prims[i].basevertex -= min_index;
-      }
-
-      prim = tmp_prims;
-   } else if (ib) {
+   if (ib) {
       /* Unfortunately need to adjust each index individually.
        */
       GLboolean map_ib = ib->obj->Name && !ib->obj->Pointer;

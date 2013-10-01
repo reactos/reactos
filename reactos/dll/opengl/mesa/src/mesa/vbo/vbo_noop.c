@@ -371,12 +371,6 @@ _mesa_noop_DrawElements(GLenum mode, GLsizei count, GLenum type,
 {
 }
 
-static void GLAPIENTRY
-_mesa_noop_DrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type,
-                                  const GLvoid * indices, GLint basevertex)
-{
-}
-
 
 static void GLAPIENTRY
 _mesa_noop_DrawRangeElements(GLenum mode,
@@ -389,24 +383,6 @@ _mesa_noop_DrawRangeElements(GLenum mode,
 static void GLAPIENTRY
 _mesa_noop_MultiDrawElements(GLenum mode, const GLsizei * count, GLenum type,
                              const GLvoid ** indices, GLsizei primcount)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_DrawRangeElementsBaseVertex(GLenum mode,
-                                       GLuint start, GLuint end,
-                                       GLsizei count, GLenum type,
-                                       const GLvoid * indices,
-                                       GLint basevertex)
-{
-}
-
-static void GLAPIENTRY
-_mesa_noop_MultiDrawElementsBaseVertex(GLenum mode, const GLsizei * count,
-                                       GLenum type,
-                                       const GLvoid ** indices,
-                                       GLsizei primcount,
-                                       const GLint * basevertex)
 {
 }
 
@@ -500,9 +476,6 @@ _mesa_noop_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->DrawElements = _mesa_noop_DrawElements;
    vfmt->DrawRangeElements = _mesa_noop_DrawRangeElements;
    vfmt->MultiDrawElementsEXT = _mesa_noop_MultiDrawElements;
-   vfmt->DrawElementsBaseVertex = _mesa_noop_DrawElementsBaseVertex;
-   vfmt->DrawRangeElementsBaseVertex = _mesa_noop_DrawRangeElementsBaseVertex;
-   vfmt->MultiDrawElementsBaseVertex = _mesa_noop_MultiDrawElementsBaseVertex;
 }
 
 

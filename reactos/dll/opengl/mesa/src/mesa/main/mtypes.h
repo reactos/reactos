@@ -1824,8 +1824,6 @@ struct gl_fragment_program
 {
    struct gl_program Base;   /**< base class */
    GLboolean UsesKill;          /**< shader uses KIL instruction */
-   GLboolean OriginUpperLeft;
-   GLboolean PixelCenterInteger;
    enum gl_frag_depth_layout FragDepthLayout;
 
    /**
@@ -2495,9 +2493,7 @@ struct gl_extensions
    GLboolean ARB_depth_buffer_float;
    GLboolean ARB_depth_clamp;
    GLboolean ARB_draw_buffers_blend;
-   GLboolean ARB_draw_elements_base_vertex;
    GLboolean ARB_draw_instanced;
-   GLboolean ARB_fragment_coord_conventions;
    GLboolean ARB_fragment_program;
    GLboolean ARB_fragment_program_shadow;
    GLboolean ARB_fragment_shader;

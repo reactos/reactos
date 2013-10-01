@@ -148,9 +148,7 @@ compute_version(struct gl_context *ctx)
                               ctx->Const.MaxVertexTextureImageUnits >= 16);
    const GLboolean ver_3_2 = (ver_3_1 &&
                               ctx->Const.GLSLVersion >= 150 &&
-                              ctx->Extensions.ARB_depth_clamp &&
-                              ctx->Extensions.ARB_draw_elements_base_vertex &&
-                              ctx->Extensions.ARB_fragment_coord_conventions);
+                              ctx->Extensions.ARB_depth_clamp);
 
    if (ver_3_2) {
       major = 3;

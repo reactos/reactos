@@ -347,22 +347,7 @@ public:
     */
    unsigned interpolation:2;
 
-   /**
-    * \name ARB_fragment_coord_conventions
-    * @{
-    */
-   unsigned origin_upper_left:1;
-   unsigned pixel_center_integer:1;
    /*@}*/
-
-   /**
-    * Was the location explicitly set in the shader?
-    *
-    * If the location is explicitly set in the shader, it \b cannot be changed
-    * by the linker or by the API (e.g., calls to \c glBindAttribLocation have
-    * no effect).
-    */
-   unsigned explicit_location:1;
 
    /**
     * Does this variable have an initializer?

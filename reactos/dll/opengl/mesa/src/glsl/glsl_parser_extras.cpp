@@ -260,7 +260,6 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    EXT(ARB_conservative_depth,         false, false, true,  true,  false,     ARB_conservative_depth),
    EXT(ARB_draw_buffers,               false, false, true,  true,  false,     dummy_true),
    EXT(ARB_draw_instanced,             true,  false, false, true,  false,     ARB_draw_instanced),
-   EXT(ARB_fragment_coord_conventions, true,  false, true,  true,  false,     ARB_fragment_coord_conventions),
    EXT(ARB_texture_rectangle,          true,  false, true,  true,  false,     dummy_true),
    EXT(EXT_texture_array,              true,  false, true,  true,  false,     EXT_texture_array),
    EXT(ARB_shader_texture_lod,         true,  false, true,  true,  false,     ARB_shader_texture_lod),

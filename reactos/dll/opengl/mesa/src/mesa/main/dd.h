@@ -1022,29 +1022,11 @@ typedef struct {
 					    GLenum type,
 					    const GLvoid **indices,
 					    GLsizei primcount);
-   void (GLAPIENTRYP DrawElementsBaseVertex)( GLenum mode, GLsizei count,
-					      GLenum type,
-					      const GLvoid *indices,
-					      GLint basevertex );
-   void (GLAPIENTRYP DrawRangeElementsBaseVertex)( GLenum mode, GLuint start,
-						   GLuint end, GLsizei count,
-						   GLenum type,
-						   const GLvoid *indices,
-						   GLint basevertex);
-   void (GLAPIENTRYP MultiDrawElementsBaseVertex)( GLenum mode,
-						   const GLsizei *count,
-						   GLenum type,
-						   const GLvoid **indices,
-						   GLsizei primcount,
-						   const GLint *basevertex);
    void (GLAPIENTRYP DrawArraysInstanced)(GLenum mode, GLint first,
                                           GLsizei count, GLsizei primcount);
    void (GLAPIENTRYP DrawElementsInstanced)(GLenum mode, GLsizei count,
                                             GLenum type, const GLvoid *indices,
                                             GLsizei primcount);
-   void (GLAPIENTRYP DrawElementsInstancedBaseVertex)(GLenum mode, GLsizei count,
-                                            GLenum type, const GLvoid *indices,
-                                            GLsizei primcount, GLint basevertex);
    /*@}*/
 
    /**

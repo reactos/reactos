@@ -164,7 +164,7 @@ check_valid_to_render(struct gl_context *ctx, const char *function)
  */
 static GLboolean
 check_index_bounds(struct gl_context *ctx, GLsizei count, GLenum type,
-		   const GLvoid *indices, GLint basevertex)
+		   const GLvoid *indices)
 {
    struct _mesa_prim prim;
    struct _mesa_index_buffer ib;
@@ -186,8 +186,7 @@ check_index_bounds(struct gl_context *ctx, GLsizei count, GLenum type,
 
    vbo_get_minmax_index(ctx, &prim, &ib, &min, &max);
 
-   if ((int)(min + basevertex) < 0 ||
-       max + basevertex >= ctx->Array.ArrayObj->_MaxElement) {
+   if (max >= ctx->Array.ArrayObj->_MaxElement) {
       /* the max element is out of bounds of one or more enabled arrays */
       _mesa_warning(ctx, "glDrawElements() index=%u is out of bounds (max=%u)",
                     max, ctx->Array.ArrayObj->_MaxElement);
@@ -223,7 +222,7 @@ _mesa_valid_prim_mode(const struct gl_context *ctx, GLenum mode)
 GLboolean
 _mesa_validate_DrawElements(struct gl_context *ctx,
 			    GLenum mode, GLsizei count, GLenum type,
-			    const GLvoid *indices, GLint basevertex)
+			    const GLvoid *indices)
 {
    ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, GL_FALSE);
 
@@ -264,7 +263,7 @@ _mesa_validate_DrawElements(struct gl_context *ctx,
          return GL_FALSE;
    }
 
-   if (!check_index_bounds(ctx, count, type, indices, basevertex))
+   if (!check_index_bounds(ctx, count, type, indices))
       return GL_FALSE;
 
    return GL_TRUE;
@@ -280,7 +279,7 @@ GLboolean
 _mesa_validate_DrawRangeElements(struct gl_context *ctx, GLenum mode,
 				 GLuint start, GLuint end,
 				 GLsizei count, GLenum type,
-				 const GLvoid *indices, GLint basevertex)
+				 const GLvoid *indices)
 {
    ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, GL_FALSE);
 
@@ -325,7 +324,7 @@ _mesa_validate_DrawRangeElements(struct gl_context *ctx, GLenum mode,
          return GL_FALSE;
    }
 
-   if (!check_index_bounds(ctx, count, type, indices, basevertex))
+   if (!check_index_bounds(ctx, count, type, indices))
       return GL_FALSE;
 
    return GL_TRUE;
@@ -413,8 +412,7 @@ _mesa_validate_DrawArraysInstanced(struct gl_context *ctx, GLenum mode, GLint fi
 GLboolean
 _mesa_validate_DrawElementsInstanced(struct gl_context *ctx,
                                      GLenum mode, GLsizei count, GLenum type,
-                                     const GLvoid *indices, GLsizei numInstances,
-                                     GLint basevertex)
+                                     const GLvoid *indices, GLsizei numInstances)
 {
    ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, GL_FALSE);
 
@@ -465,7 +463,7 @@ _mesa_validate_DrawElementsInstanced(struct gl_context *ctx,
          return GL_FALSE;
    }
 
-   if (!check_index_bounds(ctx, count, type, indices, basevertex))
+   if (!check_index_bounds(ctx, count, type, indices))
       return GL_FALSE;
 
    return GL_TRUE;

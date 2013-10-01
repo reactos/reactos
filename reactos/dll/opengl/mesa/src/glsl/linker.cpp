@@ -202,7 +202,7 @@ link_invalidate_variable_locations(gl_shader *sh, enum ir_variable_mode mode,
 
       /* Only assign locations for generic attributes / varyings / etc.
        */
-      if ((var->location >= generic_base) && !var->explicit_location)
+      if (var->location >= generic_base)
 	  var->location = -1;
    }
 }
@@ -407,19 +407,6 @@ cross_validate_globals(struct gl_shader_program *prog,
 			       existing->type->name);
 		  return false;
 	       }
-	    }
-
-	    if (var->explicit_location) {
-	       if (existing->explicit_location
-		   && (var->location != existing->location)) {
-		     linker_error(prog, "explicit locations for %s "
-				  "`%s' have differing values\n",
-				  mode_string(var), var->name);
-		     return false;
-	       }
-
-	       existing->location = var->location;
-	       existing->explicit_location = true;
 	    }
 
 	    /* Validate layout qualifiers for gl_FragDepth.
@@ -1214,17 +1201,7 @@ assign_attribute_or_color_locations(gl_shader_program *prog,
       if ((var == NULL) || (var->mode != (unsigned) direction))
 	 continue;
 
-      if (var->explicit_location) {
-	 if ((var->location >= (int)(max_index + generic_base))
-	     || (var->location < 0)) {
-	    linker_error(prog,
-			 "invalid explicit location %d specified for `%s'\n",
-			 (var->location < 0)
-			 ? var->location : var->location - generic_base,
-			 var->name);
-	    return false;
-	 }
-      } else if (target_index == MESA_SHADER_VERTEX) {
+      if (target_index == MESA_SHADER_VERTEX) {
 	 unsigned binding;
 
 	 if (prog->AttributeBindings->get(binding, var->name)) {

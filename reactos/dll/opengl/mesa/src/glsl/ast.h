@@ -352,18 +352,6 @@ struct ast_type_qualifier {
 	 unsigned flat:1;
 	 unsigned noperspective:1;
 
-	 /** \name Layout qualifiers for GL_ARB_fragment_coord_conventions */
-	 /*@{*/
-	 unsigned origin_upper_left:1;
-	 unsigned pixel_center_integer:1;
-	 /*@}*/
-
-	 /**
-	  * Flag set if GL_ARB_explicit_attrib_location "location" layout
-	  * qualifier is used.
-	  */
-	 unsigned explicit_location:1;
-
          /** \name Layout qualifiers for GL_AMD_conservative_depth */
          /** \{ */
          unsigned depth_any:1;
@@ -378,14 +366,6 @@ struct ast_type_qualifier {
       /** \brief Set of flags, accessed as a bitmask. */
       unsigned i;
    } flags;
-
-   /**
-    * Location specified via GL_ARB_explicit_attrib_location layout
-    *
-    * \note
-    * This field is only valid if \c explicit_location is set.
-    */
-   int location;
 
    /**
     * Return true if and only if an interpolation qualifier is present.

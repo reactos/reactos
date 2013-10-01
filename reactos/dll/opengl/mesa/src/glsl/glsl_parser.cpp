@@ -4080,12 +4080,6 @@ yyreduce:
 	   }
 
 	   (yyval.type_qualifier).flags.i = (yyvsp[(1) - (3)].type_qualifier).flags.i | (yyvsp[(3) - (3)].type_qualifier).flags.i;
-
-	   if ((yyvsp[(1) - (3)].type_qualifier).flags.q.explicit_location)
-	      (yyval.type_qualifier).location = (yyvsp[(1) - (3)].type_qualifier).location;
-
-	   if ((yyvsp[(3) - (3)].type_qualifier).flags.q.explicit_location)
-	      (yyval.type_qualifier).location = (yyvsp[(3) - (3)].type_qualifier).location;
 	;}
     break;
 
@@ -4097,23 +4091,6 @@ yyreduce:
 	   bool got_one = false;
 
 	   memset(& (yyval.type_qualifier), 0, sizeof((yyval.type_qualifier)));
-
-	   /* Layout qualifiers for ARB_fragment_coord_conventions. */
-	   if (!got_one && state->ARB_fragment_coord_conventions_enable) {
-	      if (strcmp((yyvsp[(1) - (1)].identifier), "origin_upper_left") == 0) {
-		 got_one = true;
-		 (yyval.type_qualifier).flags.q.origin_upper_left = 1;
-	      } else if (strcmp((yyvsp[(1) - (1)].identifier), "pixel_center_integer") == 0) {
-		 got_one = true;
-		 (yyval.type_qualifier).flags.q.pixel_center_integer = 1;
-	      }
-
-	      if (got_one && state->ARB_fragment_coord_conventions_warn) {
-		 _mesa_glsl_warning(& (yylsp[(1) - (1)]), state,
-				    "GL_ARB_fragment_coord_conventions layout "
-				    "identifier `%s' used\n", (yyvsp[(1) - (1)].identifier));
-	      }
-	   }
 
 	   /* Layout qualifiers for AMD/ARB_conservative_depth. */
 	   if (!got_one &&

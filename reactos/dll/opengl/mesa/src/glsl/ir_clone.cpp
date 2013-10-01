@@ -47,9 +47,6 @@ ir_variable::clone(void *mem_ctx, struct hash_table *ht) const
    var->interpolation = this->interpolation;
    var->location = this->location;
    var->warn_extension = this->warn_extension;
-   var->origin_upper_left = this->origin_upper_left;
-   var->pixel_center_integer = this->pixel_center_integer;
-   var->explicit_location = this->explicit_location;
    var->has_initializer = this->has_initializer;
    var->depth_layout = this->depth_layout;
 
@@ -63,9 +60,6 @@ ir_variable::clone(void *mem_ctx, struct hash_table *ht) const
       memcpy(var->state_slots, this->state_slots,
 	     sizeof(this->state_slots[0]) * var->num_state_slots);
    }
-
-   if (this->explicit_location)
-      var->location = this->location;
 
    if (this->constant_value)
       var->constant_value = this->constant_value->clone(mem_ctx, ht);

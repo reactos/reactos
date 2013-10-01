@@ -53,13 +53,13 @@ _mesa_validate_DrawArrays(struct gl_context *ctx,
 extern GLboolean
 _mesa_validate_DrawElements(struct gl_context *ctx,
 			    GLenum mode, GLsizei count, GLenum type,
-			    const GLvoid *indices, GLint basevertex);
+			    const GLvoid *indices);
 
 extern GLboolean
 _mesa_validate_DrawRangeElements(struct gl_context *ctx, GLenum mode,
 				 GLuint start, GLuint end,
 				 GLsizei count, GLenum type,
-				 const GLvoid *indices, GLint basevertex);
+				 const GLvoid *indices);
 
 
 extern GLboolean
@@ -69,7 +69,6 @@ _mesa_validate_DrawArraysInstanced(struct gl_context *ctx, GLenum mode, GLint fi
 extern GLboolean
 _mesa_validate_DrawElementsInstanced(struct gl_context *ctx,
                                      GLenum mode, GLsizei count, GLenum type,
-                                     const GLvoid *indices, GLsizei primcount,
-                                     GLint basevertex);
+                                     const GLvoid *indices, GLsizei primcount);
 
 #endif
