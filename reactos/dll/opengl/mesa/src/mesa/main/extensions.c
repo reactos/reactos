@@ -170,7 +170,6 @@ static const struct extension extension_table[] = {
    { "GL_EXT_gpu_shader4",                         o(EXT_gpu_shader4),                         GL,             2006 },
    { "GL_EXT_multi_draw_arrays",                   o(dummy_true),                              GL | ES1 | ES2, 1999 },
    { "GL_EXT_packed_depth_stencil",                o(EXT_packed_depth_stencil),                GL,             2005 },
-   { "GL_EXT_packed_float",                        o(EXT_packed_float),                        GL,             2004 },
    { "GL_EXT_packed_pixels",                       o(EXT_packed_pixels),                       GL,             1997 },
    { "GL_EXT_pixel_buffer_object",                 o(EXT_pixel_buffer_object),                 GL,             2004 },
    { "GL_EXT_point_parameters",                    o(EXT_point_parameters),                    GL,             1997 },
@@ -203,7 +202,6 @@ static const struct extension extension_table[] = {
    { "GL_EXT_texture_object",                      o(dummy_true),                              GL,             1995 },
    { "GL_EXT_texture",                             o(dummy_true),                              GL,             1996 },
    { "GL_EXT_texture_rectangle",                   o(NV_texture_rectangle),                    GL,             2004 },
-   { "GL_EXT_texture_shared_exponent",             o(EXT_texture_shared_exponent),             GL,             2004 },
    { "GL_EXT_texture_snorm",                       o(EXT_texture_snorm),                       GL,             2009 },
    { "GL_EXT_texture_sRGB",                        o(EXT_texture_sRGB),                        GL,             2004 },
    { "GL_EXT_texture_sRGB_decode",                 o(EXT_texture_sRGB_decode),                        GL,      2006 },
@@ -219,7 +217,6 @@ static const struct extension extension_table[] = {
    { "GL_OES_blend_func_separate",                 o(EXT_blend_func_separate),                      ES1,       2009 },
    { "GL_OES_blend_subtract",                      o(dummy_true),                                   ES1,       2009 },
    { "GL_OES_byte_coordinates",                    o(dummy_true),                                   ES1,       2002 },
-   { "GL_OES_compressed_ETC1_RGB8_texture",        o(OES_compressed_ETC1_RGB8_texture),             ES1 | ES2, 2005 },
    { "GL_OES_compressed_paletted_texture",         o(dummy_true),                                   ES1,       2003 },
    { "GL_OES_depth24",                             o(EXT_framebuffer_object),                       ES1 | ES2, 2005 },
    { "GL_OES_depth32",                             o(dummy_false),                     DISABLE,                2005 },
@@ -478,7 +475,6 @@ _mesa_enable_sw_extensions(struct gl_context *ctx)
    ctx->Extensions.EXT_texture_env_dot3 = GL_TRUE;
    ctx->Extensions.EXT_texture_filter_anisotropic = GL_TRUE;
    ctx->Extensions.EXT_texture_mirror_clamp = GL_TRUE;
-   ctx->Extensions.EXT_texture_shared_exponent = GL_TRUE;
 #if FEATURE_EXT_texture_sRGB
    ctx->Extensions.EXT_texture_sRGB = GL_TRUE;
    ctx->Extensions.EXT_texture_sRGB_decode = GL_TRUE;

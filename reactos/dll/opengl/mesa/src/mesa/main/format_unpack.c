@@ -25,13 +25,6 @@
 #include "colormac.h"
 #include "format_unpack.h"
 #include "macros.h"
-#if 0
-#include "../../gallium/auxiliary/util/u_format_rgb9e5.h"
-#include "../../gallium/auxiliary/util/u_format_r11g11b10f.h"
-#else
-#include "u_format_rgb9e5.h"
-#include "u_format_r11g11b10f.h"
-#endif
 
 
 
@@ -1315,12 +1308,6 @@ unpack_SIGNED_LA_LATC2(const void *src, GLfloat dst[][4], GLuint n)
 }
 
 static void
-unpack_ETC1_RGB8(const void *src, GLfloat dst[][4], GLuint n)
-{
-   /* XXX to do */
-}
-
-static void
 unpack_SIGNED_A8(const void *src, GLfloat dst[][4], GLuint n)
 {
    const GLbyte *s = ((const GLbyte *) src);
@@ -1421,28 +1408,6 @@ unpack_SIGNED_I16(const void *src, GLfloat dst[][4], GLuint n)
       dst[i][GCOMP] =
       dst[i][BCOMP] =
       dst[i][ACOMP] = SHORT_TO_FLOAT_TEX( s[i] );
-   }
-}
-
-static void
-unpack_RGB9_E5_FLOAT(const void *src, GLfloat dst[][4], GLuint n)
-{
-   const GLuint *s = (const GLuint *) src;
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      rgb9e5_to_float3(s[i], dst[i]);
-      dst[i][ACOMP] = 1.0F;
-   }
-}
-
-static void
-unpack_R11_G11_B10_FLOAT(const void *src, GLfloat dst[][4], GLuint n)
-{
-   const GLuint *s = (const GLuint *) src;
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      r11g11b10f_to_float3(s[i], dst[i]);
-      dst[i][ACOMP] = 1.0F;
    }
 }
 
@@ -1567,8 +1532,6 @@ get_unpack_rgba_function(gl_format format)
       table[MESA_FORMAT_LA_LATC2] = unpack_LA_LATC2;
       table[MESA_FORMAT_SIGNED_LA_LATC2] = unpack_SIGNED_LA_LATC2;
 
-      table[MESA_FORMAT_ETC1_RGB8] = unpack_ETC1_RGB8;
-
       table[MESA_FORMAT_SIGNED_A8] = unpack_SIGNED_A8;
       table[MESA_FORMAT_SIGNED_L8] = unpack_SIGNED_L8;
       table[MESA_FORMAT_SIGNED_AL88] = unpack_SIGNED_AL88;
@@ -1577,9 +1540,6 @@ get_unpack_rgba_function(gl_format format)
       table[MESA_FORMAT_SIGNED_L16] = unpack_SIGNED_L16;
       table[MESA_FORMAT_SIGNED_AL1616] = unpack_SIGNED_AL1616;
       table[MESA_FORMAT_SIGNED_I16] = unpack_SIGNED_I16;
-
-      table[MESA_FORMAT_RGB9_E5_FLOAT] = unpack_RGB9_E5_FLOAT;
-      table[MESA_FORMAT_R11_G11_B10_FLOAT] = unpack_R11_G11_B10_FLOAT;
 
       table[MESA_FORMAT_Z32_FLOAT] = unpack_Z32_FLOAT;
       table[MESA_FORMAT_Z32_FLOAT_X24S8] = unpack_Z32_FLOAT_X24S8;

@@ -40,7 +40,6 @@
 #include "texcompress_fxt1.h"
 #include "texcompress_rgtc.h"
 #include "texcompress_s3tc.h"
-#include "texcompress_etc.h"
 #include "swrast/s_context.h"
 
 
@@ -91,7 +90,6 @@ _mesa_gl_compressed_format_base_format(GLenum format)
    case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
    case GL_COMPRESSED_RGB_FXT1_3DFX:
    case GL_COMPRESSED_SRGB_S3TC_DXT1_EXT:
-   case GL_ETC1_RGB8_OES:
       return GL_RGB;
 
    case GL_COMPRESSED_RGBA:
@@ -266,15 +264,6 @@ _mesa_get_compressed_formats(struct gl_context *ctx, GLint *formats)
       }
    }
 
-   if (ctx->Extensions.OES_compressed_ETC1_RGB8_texture) {
-      if (formats) {
-         formats[n++] = GL_ETC1_RGB8_OES;
-      }
-      else {
-         n += 1;
-      }
-   }
-
 #if FEATURE_ES1
    if (ctx->API == API_OPENGLES) {
       if (formats) {
@@ -352,9 +341,6 @@ _mesa_glenum_to_compressed_format(GLenum format)
    case GL_COMPRESSED_SIGNED_LUMINANCE_ALPHA_LATC2_EXT:
       return MESA_FORMAT_SIGNED_LA_LATC2;
 
-   case GL_ETC1_RGB8_OES:
-      return MESA_FORMAT_ETC1_RGB8;
-
    default:
       return MESA_FORMAT_NONE;
    }
@@ -419,9 +405,6 @@ _mesa_compressed_format_to_glenum(struct gl_context *ctx, GLuint mesaFormat)
       return GL_COMPRESSED_LUMINANCE_ALPHA_LATC2_EXT;
    case MESA_FORMAT_SIGNED_LA_LATC2:
       return GL_COMPRESSED_SIGNED_LUMINANCE_ALPHA_LATC2_EXT;
-
-   case MESA_FORMAT_ETC1_RGB8:
-      return GL_ETC1_RGB8_OES;
 
    default:
       _mesa_problem(ctx, "Unexpected mesa texture format in"
@@ -530,11 +513,6 @@ _mesa_decompress_image(gl_format format, GLuint width, GLuint height,
       break;
    case MESA_FORMAT_SIGNED_LA_LATC2:
       fetch = _mesa_fetch_texel_2d_f_signed_la_latc2;
-      break;
-
-   /* ETC1 formats */
-   case MESA_FORMAT_ETC1_RGB8:
-      fetch = _mesa_fetch_texel_2d_f_etc1_rgb8;
       break;
 
    default:

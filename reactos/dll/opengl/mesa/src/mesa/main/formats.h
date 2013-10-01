@@ -258,8 +258,6 @@ typedef enum
    MESA_FORMAT_SIGNED_LA_LATC2,
    /*@}*/
 
-   MESA_FORMAT_ETC1_RGB8,
-
    MESA_FORMAT_SIGNED_A8,         /*                               AAAA AAAA */
    MESA_FORMAT_SIGNED_L8,         /*                               LLLL LLLL */
    MESA_FORMAT_SIGNED_AL88,       /*                     AAAA AAAA LLLL LLLL */
@@ -268,9 +266,6 @@ typedef enum
    MESA_FORMAT_SIGNED_L16,        /*                     LLLL LLLL LLLL LLLL */
    MESA_FORMAT_SIGNED_AL1616,     /* AAAA AAAA AAAA AAAA LLLL LLLL LLLL LLLL */
    MESA_FORMAT_SIGNED_I16,        /*                     IIII IIII IIII IIII */
-
-   MESA_FORMAT_RGB9_E5_FLOAT,
-   MESA_FORMAT_R11_G11_B10_FLOAT,
 
    MESA_FORMAT_Z32_FLOAT,
    MESA_FORMAT_Z32_FLOAT_X24S8,

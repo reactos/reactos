@@ -81,7 +81,6 @@ list(APPEND SOURCE
     texcompress_rgtc.c
     texcompress_s3tc.c
     texcompress_fxt1.c
-    texcompress_etc.c
     texenv.c
     texformat.c
     texgen.c

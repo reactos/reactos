@@ -461,15 +461,8 @@ _mesa_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
             fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED;
             return;
 
-         default:
-            switch (rb->Format) {
-            /* XXX This list is likely incomplete. */
-            case MESA_FORMAT_RGB9_E5_FLOAT:
-               fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED;
-               return;
-            default:;
-               /* render buffer format is supported by software rendering */
-            }
+         default:;
+            /* render buffer format is supported by software rendering */
          }
       }
    }
@@ -1234,10 +1227,6 @@ _mesa_base_fbo_format(struct gl_context *ctx, GLenum internalFormat)
    case GL_INTENSITY32F_ARB:
       return ctx->Extensions.ARB_texture_float &&
              ctx->Extensions.ARB_framebuffer_object ? GL_INTENSITY : 0;
-   case GL_RGB9_E5:
-      return ctx->Extensions.EXT_texture_shared_exponent ? GL_RGB : 0;
-   case GL_R11F_G11F_B10F:
-      return ctx->Extensions.EXT_packed_float ? GL_RGB : 0;
 
    case GL_RGBA8UI_EXT:
    case GL_RGBA16UI_EXT:

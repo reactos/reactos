@@ -1015,12 +1015,6 @@ _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
             goto invalid_pname;
          *params = _mesa_get_format_bits(texFormat, pname);
          break;
-      case GL_TEXTURE_SHARED_SIZE:
-         if (ctx->VersionMajor < 3 &&
-             !ctx->Extensions.EXT_texture_shared_exponent)
-            goto invalid_pname;
-         *params = texFormat == MESA_FORMAT_RGB9_E5_FLOAT ? 5 : 0;
-         break;
 
       /* GL_ARB_texture_compression */
       case GL_TEXTURE_COMPRESSED_IMAGE_SIZE:

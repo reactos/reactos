@@ -139,9 +139,7 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.EXT_draw_buffers2 &&
                               ctx->Extensions.ARB_framebuffer_object &&
                               ctx->Extensions.EXT_framebuffer_sRGB &&
-                              ctx->Extensions.EXT_packed_float &&
                               ctx->Extensions.EXT_texture_array &&
-                              ctx->Extensions.EXT_texture_shared_exponent &&
                               ctx->Extensions.EXT_transform_feedback &&
                               ctx->Extensions.NV_conditional_render);
    const GLboolean ver_3_1 = (ver_3_0 &&

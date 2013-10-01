@@ -38,13 +38,6 @@
 #include "colormac.h"
 #include "format_pack.h"
 #include "macros.h"
-#if 0
-#include "../../gallium/auxiliary/util/u_format_rgb9e5.h"
-#include "../../gallium/auxiliary/util/u_format_r11g11b10f.h"
-#else
-#include "u_format_rgb9e5.h"
-#include "u_format_r11g11b10f.h"
-#endif
 
 
 typedef void (*pack_ubyte_rgba_row_func)(GLuint n,
@@ -1593,53 +1586,6 @@ pack_float_SIGNED_AL1616(const GLfloat src[4], void *dst)
 }
 
 
-/*
- * MESA_FORMAT_RGB9_E5_FLOAT;
- */
-
-static void
-pack_float_RGB9_E5_FLOAT(const GLfloat src[4], void *dst)
-{
-   GLuint *d = (GLuint *) dst;
-   *d = float3_to_rgb9e5(src);
-}
-
-static void
-pack_ubyte_RGB9_E5_FLOAT(const GLubyte src[4], void *dst)
-{
-   GLuint *d = (GLuint *) dst;
-   GLfloat rgb[3];
-   rgb[0] = UBYTE_TO_FLOAT(src[RCOMP]);
-   rgb[1] = UBYTE_TO_FLOAT(src[GCOMP]);
-   rgb[2] = UBYTE_TO_FLOAT(src[BCOMP]);
-   *d = float3_to_rgb9e5(rgb);
-}
-
-
-
-/*
- * MESA_FORMAT_R11_G11_B10_FLOAT;
- */
-
-static void
-pack_ubyte_R11_G11_B10_FLOAT(const GLubyte src[4], void *dst)
-{
-   GLuint *d = (GLuint *) dst;
-   GLfloat rgb[3];
-   rgb[0] = UBYTE_TO_FLOAT(src[RCOMP]);
-   rgb[1] = UBYTE_TO_FLOAT(src[GCOMP]);
-   rgb[2] = UBYTE_TO_FLOAT(src[BCOMP]);
-   *d = float3_to_r11g11b10f(rgb);
-}
-
-static void
-pack_float_R11_G11_B10_FLOAT(const GLfloat src[4], void *dst)
-{
-   GLuint *d = (GLuint *) dst;
-   *d = float3_to_r11g11b10f(src);
-}
-
-
 
 /**
  * Return a function that can pack a GLubyte rgba[4] color.
@@ -1773,9 +1719,6 @@ _mesa_get_pack_ubyte_rgba_function(gl_format format)
 
 
       table[MESA_FORMAT_RGBA_16] = pack_ubyte_RGBA_16;
-
-      table[MESA_FORMAT_RGB9_E5_FLOAT] = pack_ubyte_RGB9_E5_FLOAT;
-      table[MESA_FORMAT_R11_G11_B10_FLOAT] = pack_ubyte_R11_G11_B10_FLOAT;
 
       initialized = GL_TRUE;
    }
@@ -1915,8 +1858,6 @@ _mesa_get_pack_float_rgba_function(gl_format format)
       table[MESA_FORMAT_SIGNED_AL1616] = pack_float_SIGNED_AL1616;
       table[MESA_FORMAT_SIGNED_I16] = pack_float_SIGNED_L16; /* reused */
 
-      table[MESA_FORMAT_RGB9_E5_FLOAT] = pack_float_RGB9_E5_FLOAT;
-      table[MESA_FORMAT_R11_G11_B10_FLOAT] = pack_float_R11_G11_B10_FLOAT;
 
       initialized = GL_TRUE;
    }

@@ -1525,34 +1525,6 @@ static void FETCH(f_s8_z24)( const struct swrast_texture_image *texImage,
 }
 
 
-
-
-/* MESA_FORMAT_RGB9_E5 ******************************************************/
-
-static void FETCH(rgb9_e5)( const struct swrast_texture_image *texImage,
-                            GLint i, GLint j, GLint k, GLfloat *texel )
-{
-   const GLuint *src = TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
-   rgb9e5_to_float3(*src, texel);
-   texel[ACOMP] = 1.0F;
-}
-
-
-
-
-/* MESA_FORMAT_R11_G11_B10_FLOAT *********************************************/
-
-static void FETCH(r11_g11_b10f)( const struct swrast_texture_image *texImage,
-                                 GLint i, GLint j, GLint k, GLfloat *texel )
-{
-   const GLuint *src = TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
-   r11g11b10f_to_float3(*src, texel);
-   texel[ACOMP] = 1.0F;
-}
-
-
-
-
 /* MESA_FORMAT_Z32_FLOAT_X24S8 ***********************************************/
 
 static void FETCH(z32f_x24s8)(const struct swrast_texture_image *texImage,

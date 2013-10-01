@@ -435,24 +435,6 @@ _mesa_base_tex_format( struct gl_context *ctx, GLint internalFormat )
       }
    }
 
-   if (ctx->Extensions.EXT_texture_shared_exponent) {
-      switch (internalFormat) {
-      case GL_RGB9_E5_EXT:
-         return GL_RGB;
-      default:
-         ; /* fallthrough */
-      }
-   }
-
-   if (ctx->Extensions.EXT_packed_float) {
-      switch (internalFormat) {
-      case GL_R11F_G11F_B10F_EXT:
-         return GL_RGB;
-      default:
-         ; /* fallthrough */
-      }
-   }
-
    if (ctx->Extensions.ARB_depth_buffer_float) {
       switch (internalFormat) {
       case GL_DEPTH_COMPONENT32F:
@@ -494,15 +476,6 @@ _mesa_base_tex_format( struct gl_context *ctx, GLint internalFormat )
       switch (internalFormat) {
       case GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI:
          return GL_LUMINANCE_ALPHA;
-      default:
-         ; /* fallthrough */
-      }
-   }
-
-   if (ctx->Extensions.OES_compressed_ETC1_RGB8_texture) {
-      switch (internalFormat) {
-      case GL_ETC1_RGB8_OES:
-         return GL_RGB;
       default:
          ; /* fallthrough */
       }
@@ -1381,21 +1354,6 @@ legal_texture_size(struct gl_context *ctx, gl_format format,
 
 
 /**
- * Return true if the format is only valid for glCompressedTexImage.
- */
-static GLboolean
-compressedteximage_only_format(const struct gl_context *ctx, GLenum format)
-{
-   switch (format) {
-   case GL_ETC1_RGB8_OES:
-      return GL_TRUE;
-   default:
-      return GL_FALSE;
-   }
-}
-
-
-/**
  * Helper function to determine whether a target and specific compression
  * format are supported.
  */
@@ -1740,11 +1698,6 @@ texture_error_check( struct gl_context *ctx,
                         "glTexImage%dD(target)", dimensions);
          return GL_TRUE;
       }
-      if (compressedteximage_only_format(ctx, internalFormat)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-               "glTexImage%dD(no compression for format)", dimensions);
-         return GL_TRUE;
-      }
       if (border != 0) {
          if (!isProxy) {
             _mesa_error(ctx, GL_INVALID_OPERATION,
@@ -1896,12 +1849,6 @@ subtexture_error_check2( struct gl_context *ctx, GLuint dimensions,
 
    if (_mesa_is_format_compressed(destTex->TexFormat)) {
       GLuint bw, bh;
-
-      if (compressedteximage_only_format(ctx, destTex->InternalFormat)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-               "glTexSubImage%dD(no compression for format)", dimensions);
-         return GL_TRUE;
-      }
 
       /* do tests which depend on compression block size */
       _mesa_get_format_block_size(destTex->TexFormat, &bw, &bh);
@@ -2069,11 +2016,6 @@ copytexture_error_check( struct gl_context *ctx, GLuint dimensions,
                      "glCopyTexImage%dD(target)", dimensions);
          return GL_TRUE;
       }
-      if (compressedteximage_only_format(ctx, internalFormat)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-               "glCopyTexImage%dD(no compression for format)", dimensions);
-         return GL_TRUE;
-      }
       if (border != 0) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glCopyTexImage%dD(border!=0)", dimensions);
@@ -2220,11 +2162,6 @@ copytexsubimage_error_check2( struct gl_context *ctx, GLuint dimensions,
    }
 
    if (_mesa_is_format_compressed(teximage->TexFormat)) {
-      if (compressedteximage_only_format(ctx, teximage->InternalFormat)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-               "glCopyTexSubImage%dD(no compression for format)", dimensions);
-         return GL_TRUE;
-      }
       /* offset must be multiple of 4 */
       if ((xoffset & 3) || (yoffset & 3)) {
          _mesa_error(ctx, GL_INVALID_VALUE,
@@ -3429,13 +3366,6 @@ compressed_subtexture_error_check2(struct gl_context *ctx, GLuint dims,
    if ((GLint) format != texImage->InternalFormat) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glCompressedTexSubImage%uD(format=0x%x)", dims, format);
-      return GL_TRUE;
-   }
-
-   if (compressedteximage_only_format(ctx, format)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glCompressedTexSubImage%uD(format=0x%x cannot be updated)"
-                  , dims, format);
       return GL_TRUE;
    }
 

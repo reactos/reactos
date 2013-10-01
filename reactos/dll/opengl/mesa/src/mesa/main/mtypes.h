@@ -2928,7 +2928,6 @@ struct gl_extensions
    GLboolean EXT_gpu_program_parameters;
    GLboolean EXT_gpu_shader4;
    GLboolean EXT_packed_depth_stencil;
-   GLboolean EXT_packed_float;
    GLboolean EXT_packed_pixels;
    GLboolean EXT_pixel_buffer_object;
    GLboolean EXT_point_parameters;
@@ -2947,7 +2946,6 @@ struct gl_extensions
    GLboolean EXT_texture_filter_anisotropic;
    GLboolean EXT_texture_integer;
    GLboolean EXT_texture_mirror_clamp;
-   GLboolean EXT_texture_shared_exponent;
    GLboolean EXT_texture_snorm;
    GLboolean EXT_texture_sRGB;
    GLboolean EXT_texture_sRGB_decode;
@@ -2993,7 +2991,6 @@ struct gl_extensions
    GLboolean OES_EGL_image;
    GLboolean OES_draw_texture;
    GLboolean OES_EGL_image_external;
-   GLboolean OES_compressed_ETC1_RGB8_texture;
    GLboolean extension_sentinel;
    /** The extension string */
    const GLubyte *String;

@@ -139,10 +139,6 @@ typedef void *GLeglImageOES;
 #define GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI 0x8837
 #endif
 
-#ifndef GL_OES_compressed_ETC1_RGB8_texture
-#define GL_ETC1_RGB8_OES                                        0x8D64
-#endif
-
 
 /**
  * Internal token to represent a GLSL shader program (a collection of

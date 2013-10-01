@@ -428,15 +428,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
       }
       return GL_NO_ERROR;
 
-   case GL_UNSIGNED_INT_10F_11F_11F_REV:
-      if (!ctx->Extensions.EXT_packed_float) {
-         return GL_INVALID_ENUM;
-      }
-      if (format != GL_RGB) {
-         return GL_INVALID_OPERATION;
-      }
-      return GL_NO_ERROR;
-
    default:
       ; /* fall-through */
    }
@@ -523,12 +514,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
                return GL_NO_ERROR;
             case GL_HALF_FLOAT:
                return ctx->Extensions.ARB_half_float_pixel
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
-            case GL_UNSIGNED_INT_5_9_9_9_REV:
-               return ctx->Extensions.EXT_texture_shared_exponent
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
-            case GL_UNSIGNED_INT_10F_11F_11F_REV:
-               return ctx->Extensions.EXT_packed_float
                   ? GL_NO_ERROR : GL_INVALID_ENUM;
             default:
                return GL_INVALID_ENUM;
@@ -848,7 +833,6 @@ _mesa_is_color_format(GLenum format)
       case GL_COMPRESSED_LUMINANCE_ALPHA_LATC2_EXT:
       case GL_COMPRESSED_SIGNED_LUMINANCE_ALPHA_LATC2_EXT:
       case GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI:
-      case GL_ETC1_RGB8_OES:
       /* generic integer formats */
       case GL_RED_INTEGER_EXT:
       case GL_GREEN_INTEGER_EXT:
@@ -935,7 +919,6 @@ _mesa_is_color_format(GLenum format)
       case GL_INTENSITY_SNORM:
       case GL_INTENSITY8_SNORM:
       case GL_INTENSITY16_SNORM:
-      case GL_RGB9_E5:
       case GL_R11F_G11F_B10F:
       case GL_RGB10_A2UI:
          return GL_TRUE;
@@ -1172,8 +1155,6 @@ _mesa_is_compressed_format(struct gl_context *ctx, GLenum format)
       return ctx->Extensions.EXT_texture_compression_latc;
    case GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI:
       return ctx->Extensions.ATI_texture_compression_3dc;
-   case GL_ETC1_RGB8_OES:
-      return ctx->Extensions.OES_compressed_ETC1_RGB8_texture;
 #if FEATURE_ES
    case GL_PALETTE4_RGB8_OES:
    case GL_PALETTE4_RGBA8_OES:
