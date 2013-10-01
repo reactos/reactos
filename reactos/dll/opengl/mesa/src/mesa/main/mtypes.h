@@ -2880,7 +2880,7 @@ struct gl_extensions
    GLboolean ARB_texture_multisample;
    GLboolean ARB_texture_non_power_of_two;
    GLboolean ARB_texture_rg;
-   GLboolean ARB_texture_storage;;
+   GLboolean ARB_texture_storage;
    GLboolean ARB_transform_feedback2;
    GLboolean ARB_transpose_matrix;
    GLboolean ARB_uniform_buffer_object;
