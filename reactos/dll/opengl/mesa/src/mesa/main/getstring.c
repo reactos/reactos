@@ -39,14 +39,12 @@
 static const GLubyte *
 shading_language_version(struct gl_context *ctx)
 {
-   switch (ctx->API) {
-   case API_OPENGL:
-      if (!ctx->Extensions.ARB_shader_objects) {
-         _mesa_error(ctx, GL_INVALID_ENUM, "glGetString");
-         return (const GLubyte *) 0;
-      }
+   if (!ctx->Extensions.ARB_shader_objects) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glGetString");
+      return (const GLubyte *) 0;
+   }
 
-      switch (ctx->Const.GLSLVersion) {
+   switch (ctx->Const.GLSLVersion) {
       case 110:
          return (const GLubyte *) "1.10";
       case 120:
@@ -57,18 +55,6 @@ shading_language_version(struct gl_context *ctx)
          _mesa_problem(ctx,
                        "Invalid GLSL version in shading_language_version()");
          return (const GLubyte *) 0;
-      }
-      break;
-
-   case API_OPENGLES2:
-      return (const GLubyte *) "OpenGL ES GLSL ES 1.0.16";
-
-   case API_OPENGLES:
-      /* fall-through */
-
-   default:
-      _mesa_problem(ctx, "Unexpected API value in shading_language_version()");
-      return (const GLubyte *) 0;
    }
 }
 

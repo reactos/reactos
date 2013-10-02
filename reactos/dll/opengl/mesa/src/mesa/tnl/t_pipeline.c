@@ -32,7 +32,6 @@
 
 #include "t_context.h"
 #include "t_pipeline.h"
-#include "t_vp_build.h"
 #include "t_vertex.h"
 
 void _tnl_install_pipeline( struct gl_context *ctx,
@@ -126,8 +125,6 @@ void _tnl_run_pipeline( struct gl_context *ctx )
     * (ie const or non-const).
     */
    if (check_input_changes( ctx ) || tnl->pipeline.new_state) {
-      if (ctx->VertexProgram._MaintainTnlProgram)
-	 _tnl_UpdateFixedFunctionProgram( ctx );
 
       for (i = 0; i < tnl->pipeline.nr_stages ; i++) {
 	 struct tnl_pipeline_stage *s = &tnl->pipeline.stages[i];
@@ -209,14 +206,7 @@ const struct tnl_pipeline_stage *_tnl_default_pipeline[] = {
    &_tnl_texgen_stage,
    &_tnl_texture_transform_stage,
    &_tnl_point_attenuation_stage,
-   &_tnl_vertex_program_stage, 
    &_tnl_fog_coordinate_stage,
    &_tnl_render_stage,
    NULL 
-};
-
-const struct tnl_pipeline_stage *_tnl_vp_pipeline[] = {
-   &_tnl_vertex_program_stage,
-   &_tnl_render_stage,
-   NULL
 };

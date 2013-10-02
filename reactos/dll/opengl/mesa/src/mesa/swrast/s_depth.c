@@ -155,55 +155,6 @@ depth_test_span32( struct gl_context *ctx, GLuint n,
 
 
 /**
- * Clamp fragment Z values to the depth near/far range (glDepthRange()).
- * This is used when GL_ARB_depth_clamp/GL_DEPTH_CLAMP is turned on.
- * In that case, vertexes are not clipped against the near/far planes
- * so rasterization will produce fragment Z values outside the usual
- * [0,1] range.
- */
-void
-_swrast_depth_clamp_span( struct gl_context *ctx, SWspan *span )
-{
-   struct gl_framebuffer *fb = ctx->DrawBuffer;
-   const GLuint count = span->end;
-   GLint *zValues = (GLint *) span->array->z; /* sign change */
-   GLint min, max;
-   GLfloat min_f, max_f;
-   GLuint i;
-
-   if (ctx->Viewport.Near < ctx->Viewport.Far) {
-      min_f = ctx->Viewport.Near;
-      max_f = ctx->Viewport.Far;
-   } else {
-      min_f = ctx->Viewport.Far;
-      max_f = ctx->Viewport.Near;
-   }
-
-   /* Convert floating point values in [0,1] to device Z coordinates in
-    * [0, DepthMax].
-    * ex: If the Z buffer has 24 bits, DepthMax = 0xffffff.
-    * 
-    * XXX this all falls apart if we have 31 or more bits of Z because
-    * the triangle rasterization code produces unsigned Z values.  Negative
-    * vertex Z values come out as large fragment Z uints.
-    */
-   min = (GLint) (min_f * fb->_DepthMaxF);
-   max = (GLint) (max_f * fb->_DepthMaxF);
-   if (max < 0)
-      max = 0x7fffffff; /* catch over flow for 30-bit z */
-
-   /* Note that we do the comparisons here using signed integers.
-    */
-   for (i = 0; i < count; i++) {
-      if (zValues[i] < min)
-	 zValues[i] = min;
-      if (zValues[i] > max)
-	 zValues[i] = max;
-   }
-}
-
-
-/**
  * Get array of 32-bit z values from the depth buffer.  With clipping.
  * Note: the returned values are always in the range [0, 2^32-1].
  */

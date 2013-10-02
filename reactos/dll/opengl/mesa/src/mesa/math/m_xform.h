@@ -103,8 +103,7 @@ typedef GLvector4f * (_XFORMAPIP clip_func)( GLvector4f *vClip,
 					     GLvector4f *vProj,
 					     GLubyte clipMask[],
 					     GLubyte *orMask,
-					     GLubyte *andMask,
-					     GLboolean viewport_z_clip );
+					     GLubyte *andMask );
 
 typedef void (*dotprod_func)( GLfloat *out,
 			      GLuint out_stride,

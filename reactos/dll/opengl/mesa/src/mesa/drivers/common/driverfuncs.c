@@ -115,7 +115,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->FreeTextureImageBuffer = _swrast_free_texture_image_buffer;
    driver->MapTextureImage = _swrast_map_teximage;
    driver->UnmapTextureImage = _swrast_unmap_teximage;
-   driver->DrawTex = _mesa_meta_DrawTex;
 
    /* Vertex/fragment programs */
    driver->BindProgram = NULL;
@@ -194,7 +193,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->NeedFlush = 0;
    driver->SaveNeedFlush = 0;
 
-   driver->ProgramStringNotify = _tnl_program_string;
    driver->FlushVertices = NULL;
    driver->SaveFlushVertices = NULL;
    driver->PrepareExecBegin = NULL;

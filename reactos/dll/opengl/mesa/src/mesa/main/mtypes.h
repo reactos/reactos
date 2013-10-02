@@ -1119,7 +1119,6 @@ typedef enum
    TEXTURE_BUFFER_INDEX,
    TEXTURE_2D_ARRAY_INDEX,
    TEXTURE_1D_ARRAY_INDEX,
-   TEXTURE_EXTERNAL_INDEX,
    TEXTURE_CUBE_INDEX,
    TEXTURE_3D_INDEX,
    TEXTURE_RECT_INDEX,
@@ -1137,7 +1136,6 @@ typedef enum
 #define TEXTURE_BUFFER_BIT   (1 << TEXTURE_BUFFER_INDEX)
 #define TEXTURE_2D_ARRAY_BIT (1 << TEXTURE_2D_ARRAY_INDEX)
 #define TEXTURE_1D_ARRAY_BIT (1 << TEXTURE_1D_ARRAY_INDEX)
-#define TEXTURE_EXTERNAL_BIT (1 << TEXTURE_EXTERNAL_INDEX)
 #define TEXTURE_CUBE_BIT     (1 << TEXTURE_CUBE_INDEX)
 #define TEXTURE_3D_BIT       (1 << TEXTURE_3D_INDEX)
 #define TEXTURE_RECT_BIT     (1 << TEXTURE_RECT_INDEX)
@@ -1275,7 +1273,6 @@ struct gl_texture_object
    GLint MaxLevel;		/**< max mipmap level, OpenGL 1.2 */
    GLint _MaxLevel;		/**< actual max mipmap level (q in the spec) */
    GLfloat _MaxLambda;		/**< = _MaxLevel - BaseLevel (q - b in spec) */
-   GLint CropRect[4];           /**< GL_OES_draw_texture */
    GLboolean GenerateMipmap;    /**< GL_SGIS_generate_mipmap */
    GLboolean _Complete;		/**< Is texture object complete? */
    GLboolean _RenderToTexture;  /**< Any rendering to this texture? */
@@ -1428,7 +1425,6 @@ struct gl_transform_attrib
    GLboolean Normalize;				/**< Normalize all normals? */
    GLboolean RescaleNormals;			/**< GL_EXT_rescale_normal */
    GLboolean RasterPositionUnclipped;           /**< GL_IBM_rasterpos_clip */
-   GLboolean DepthClamp;			/**< GL_ARB_depth_clamp */
 
    GLfloat CullEyePos[4];
    GLfloat CullObjPos[4];
@@ -1870,12 +1866,6 @@ struct gl_vertex_program_state
    GLenum TrackMatrix[MAX_PROGRAM_ENV_PARAMS / 4];
    GLenum TrackMatrixTransform[MAX_PROGRAM_ENV_PARAMS / 4];
 
-   /** Should fixed-function T&L be implemented with a vertex prog? */
-   GLboolean _MaintainTnlProgram;
-
-   /** Program to emulate fixed-function T&L (see above) */
-   struct gl_vertex_program *_TnlProgram;
-
    /** Cache of fixed-function programs */
    struct gl_program_cache *Cache;
 
@@ -1899,12 +1889,6 @@ struct gl_fragment_program_state
    struct gl_fragment_program *_Current;
 
    GLfloat Parameters[MAX_PROGRAM_ENV_PARAMS][4]; /**< Env params */
-
-   /** Should fixed-function texturing be implemented with a fragment prog? */
-   GLboolean _MaintainTexEnvProgram;
-
-   /** Program to emulate fixed-function texture env/combine (see above) */
-   struct gl_fragment_program *_TexEnvProgram;
 
    /** Cache of fixed-function programs */
    struct gl_program_cache *Cache;
@@ -2558,7 +2542,6 @@ struct gl_extensions
    GLboolean EXT_texture_mirror_clamp;
    GLboolean EXT_texture_snorm;
    GLboolean EXT_texture_sRGB;
-   GLboolean OES_standard_derivatives;
    /* vendor extensions */
    GLboolean APPLE_packed_pixels;
    GLboolean APPLE_vertex_array_object;
@@ -2590,9 +2573,6 @@ struct gl_extensions
    GLboolean SGIS_texture_lod;
    GLboolean TDFX_texture_compression_FXT1;
    GLboolean S3_s3tc;
-   GLboolean OES_EGL_image;
-   GLboolean OES_draw_texture;
-   GLboolean OES_EGL_image_external;
    GLboolean extension_sentinel;
    /** The extension string */
    const GLubyte *String;
@@ -2797,17 +2777,6 @@ struct gl_dlist_state
 
 
 /**
- * Enum for the OpenGL APIs we know about and may support.
- */
-typedef enum
-{
-   API_OPENGL,
-   API_OPENGLES,
-   API_OPENGLES2
-} gl_api;
-
-
-/**
  * Mesa rendering context.
  *
  * This is the central context data structure for Mesa.  Almost all
@@ -2824,7 +2793,6 @@ struct gl_context
 
    /** \name API function pointer tables */
    /*@{*/
-   gl_api API;
    struct _glapi_table *Save;	/**< Display list save functions */
    struct _glapi_table *Exec;	/**< Execute functions */
    struct _glapi_table *CurrentDispatch;  /**< == Save or Exec !! */

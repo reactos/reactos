@@ -30,7 +30,6 @@
 #include "s_aaline.h"
 #include "s_context.h"
 #include "s_feedback.h"
-#include "s_fragprog.h"
 #include "s_lines.h"
 #include "s_span.h"
 
@@ -237,7 +236,6 @@ _swrast_choose_line( struct gl_context *ctx )
          ASSERT(swrast->Line);
       }
       else if (ctx->Texture._EnabledCoordUnits
-               || _swrast_use_fragment_program(ctx)
                || swrast->_FogEnabled
                || specular) {
          USE(general_line);

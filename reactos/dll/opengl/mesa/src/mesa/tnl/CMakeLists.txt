@@ -8,7 +8,6 @@ list(APPEND SOURCE
     t_vb_light.c
     t_vb_normals.c
     t_vb_points.c
-    t_vb_program.c
     t_vb_render.c
     t_vb_texgen.c
     t_vb_texmat.c
@@ -16,7 +15,6 @@ list(APPEND SOURCE
     t_vertex.c
     t_vertex_generic.c
     t_vertex_sse.c
-    t_vp_build.c
 )
 
 add_library(mesa_tnl STATIC ${SOURCE})

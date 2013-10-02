@@ -922,8 +922,6 @@
 #define _gloffset_StencilFuncSeparateATI 966
 #define _gloffset_ProgramEnvParameters4fvEXT 967
 #define _gloffset_ProgramLocalParameters4fvEXT 968
-#define _gloffset_EGLImageTargetRenderbufferStorageOES 971
-#define _gloffset_EGLImageTargetTexture2DOES 972
 
 #else /* !FEATURE_remap_table */
 
@@ -1378,8 +1376,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define StencilFuncSeparateATI_remap_index 558
 #define ProgramEnvParameters4fvEXT_remap_index 559
 #define ProgramLocalParameters4fvEXT_remap_index 560
-#define EGLImageTargetRenderbufferStorageOES_remap_index 563
-#define EGLImageTargetTexture2DOES_remap_index 564
 
 #define _gloffset_AttachShader driDispatchRemapTable[AttachShader_remap_index]
 #define _gloffset_CreateProgram driDispatchRemapTable[CreateProgram_remap_index]
@@ -1828,8 +1824,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_StencilFuncSeparateATI driDispatchRemapTable[StencilFuncSeparateATI_remap_index]
 #define _gloffset_ProgramEnvParameters4fvEXT driDispatchRemapTable[ProgramEnvParameters4fvEXT_remap_index]
 #define _gloffset_ProgramLocalParameters4fvEXT driDispatchRemapTable[ProgramLocalParameters4fvEXT_remap_index]
-#define _gloffset_EGLImageTargetRenderbufferStorageOES driDispatchRemapTable[EGLImageTargetRenderbufferStorageOES_remap_index]
-#define _gloffset_EGLImageTargetTexture2DOES driDispatchRemapTable[EGLImageTargetTexture2DOES_remap_index]
 
 #endif /* !FEATURE_remap_table */
 
@@ -11225,28 +11219,6 @@ static inline _glptr_ProgramLocalParameters4fvEXT GET_ProgramLocalParameters4fvE
 
 static inline void SET_ProgramLocalParameters4fvEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLsizei, const GLfloat *)) {
    SET_by_offset(disp, _gloffset_ProgramLocalParameters4fvEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_EGLImageTargetRenderbufferStorageOES)(GLenum, GLvoid *);
-#define CALL_EGLImageTargetRenderbufferStorageOES(disp, parameters) \
-    (* GET_EGLImageTargetRenderbufferStorageOES(disp)) parameters
-static inline _glptr_EGLImageTargetRenderbufferStorageOES GET_EGLImageTargetRenderbufferStorageOES(struct _glapi_table *disp) {
-   return (_glptr_EGLImageTargetRenderbufferStorageOES) (GET_by_offset(disp, _gloffset_EGLImageTargetRenderbufferStorageOES));
-}
-
-static inline void SET_EGLImageTargetRenderbufferStorageOES(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_EGLImageTargetRenderbufferStorageOES, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_EGLImageTargetTexture2DOES)(GLenum, GLvoid *);
-#define CALL_EGLImageTargetTexture2DOES(disp, parameters) \
-    (* GET_EGLImageTargetTexture2DOES(disp)) parameters
-static inline _glptr_EGLImageTargetTexture2DOES GET_EGLImageTargetTexture2DOES(struct _glapi_table *disp) {
-   return (_glptr_EGLImageTargetTexture2DOES) (GET_by_offset(disp, _gloffset_EGLImageTargetTexture2DOES));
-}
-
-static inline void SET_EGLImageTargetTexture2DOES(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_EGLImageTargetTexture2DOES, fn);
 }
 
 

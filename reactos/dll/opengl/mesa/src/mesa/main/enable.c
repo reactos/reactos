@@ -845,14 +845,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          ctx->Depth.BoundsTest = state;
          break;
 
-      case GL_DEPTH_CLAMP:
-         if (ctx->Transform.DepthClamp == state)
-            return;
-	 CHECK_EXTENSION(ARB_depth_clamp, cap);
-         FLUSH_VERTICES(ctx, _NEW_TRANSFORM);
-	 ctx->Transform.DepthClamp = state;
-	 break;
-
       /* GL_MESA_texture_array */
       case GL_TEXTURE_1D_ARRAY_EXT:
          CHECK_EXTENSION(MESA_texture_array, cap);
@@ -886,14 +878,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          CHECK_EXTENSION(EXT_framebuffer_sRGB, cap);
          FLUSH_VERTICES(ctx, _NEW_BUFFERS);
          ctx->Color.sRGBEnabled = state;
-         break;
-
-      /* GL_OES_EGL_image_external */
-      case GL_TEXTURE_EXTERNAL_OES:
-         CHECK_EXTENSION(OES_EGL_image_external, cap);
-         if (!enable_texture(ctx, state, TEXTURE_EXTERNAL_BIT)) {
-            return;
-         }
          break;
 
       default:
@@ -1277,11 +1261,6 @@ _mesa_IsEnabled( GLenum cap )
          CHECK_EXTENSION(EXT_depth_bounds_test);
          return ctx->Depth.BoundsTest;
 
-      /* GL_ARB_depth_clamp */
-      case GL_DEPTH_CLAMP:
-         CHECK_EXTENSION(ARB_depth_clamp);
-         return ctx->Transform.DepthClamp;
-
       /* GL_NV_primitive_restart */
       case GL_PRIMITIVE_RESTART_NV:
 	 if (!ctx->Extensions.NV_primitive_restart) {
@@ -1300,11 +1279,6 @@ _mesa_IsEnabled( GLenum cap )
       case GL_FRAMEBUFFER_SRGB_EXT:
 	 CHECK_EXTENSION(EXT_framebuffer_sRGB);
 	 return ctx->Color.sRGBEnabled;
-
-      /* GL_OES_EGL_image_external */
-      case GL_TEXTURE_EXTERNAL_OES:
-	 CHECK_EXTENSION(OES_EGL_image_external);
-         return is_texture_enabled(ctx, TEXTURE_EXTERNAL_BIT);
 
       default:
          goto invalid_enum_error;

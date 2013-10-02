@@ -686,7 +686,6 @@ alloc_proxy_textures( struct gl_context *ctx )
       GL_TEXTURE_BUFFER,
       GL_TEXTURE_2D_ARRAY_EXT,
       GL_TEXTURE_1D_ARRAY_EXT,
-      GL_TEXTURE_EXTERNAL_OES,
       GL_TEXTURE_CUBE_MAP_ARB,
       GL_TEXTURE_3D,
       GL_TEXTURE_RECTANGLE_NV,

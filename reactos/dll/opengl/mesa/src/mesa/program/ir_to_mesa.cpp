@@ -2243,9 +2243,6 @@ ir_to_mesa_visitor::visit(ir_texture *ir)
    case GLSL_SAMPLER_DIM_BUF:
       assert(!"FINISHME: Implement ARB_texture_buffer_object");
       break;
-   case GLSL_SAMPLER_DIM_EXTERNAL:
-      inst->tex_target = TEXTURE_EXTERNAL_INDEX;
-      break;
    default:
       assert(!"Should not get here.");
    }
@@ -3267,10 +3264,6 @@ _mesa_ir_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
       linked_prog = get_mesa_program(ctx, prog, prog->_LinkedShaders[i]);
 
       if (linked_prog) {
-	 static const GLenum targets[] = {
-	    GL_VERTEX_PROGRAM_ARB,
-	    GL_FRAGMENT_PROGRAM_ARB
-	 };
 
 	 if (i == MESA_SHADER_VERTEX) {
             ((struct gl_vertex_program *)linked_prog)->UsesClipDistance
@@ -3279,9 +3272,6 @@ _mesa_ir_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
 
 	 _mesa_reference_program(ctx, &prog->_LinkedShaders[i]->Program,
 				 linked_prog);
-         if (!ctx->Driver.ProgramStringNotify(ctx, targets[i], linked_prog)) {
-            return GL_FALSE;
-         }
       }
 
       _mesa_reference_program(ctx, &linked_prog, NULL);
@@ -3310,7 +3300,7 @@ _mesa_glsl_compile_shader(struct gl_context *ctx, struct gl_shader *shader)
    }
 
    state->error = preprocess(state, &source, &state->info_log,
-			     &ctx->Extensions, ctx->API);
+			     &ctx->Extensions);
 
    if (ctx->Shader.Flags & GLSL_DUMP) {
       printf("GLSL source for %s shader %d:\n",

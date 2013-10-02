@@ -537,7 +537,6 @@ DHGLRC sw_CreateContext(struct wgl_dc_data* dc_data)
     
     /* Initialize the context */
     if(!_mesa_initialize_context(&sw_ctx->mesa,
-                                 API_OPENGL,
                                  fb->gl_visual,
                                  NULL,
                                  &mesa_drv_functions,

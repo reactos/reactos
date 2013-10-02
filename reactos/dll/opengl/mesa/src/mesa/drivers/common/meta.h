@@ -137,8 +137,4 @@ _mesa_meta_GetTexImage(struct gl_context *ctx,
                        GLenum format, GLenum type, GLvoid *pixels,
                        struct gl_texture_image *texImage);
 
-extern void
-_mesa_meta_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
-                   GLfloat width, GLfloat height);
-
 #endif /* META_H */

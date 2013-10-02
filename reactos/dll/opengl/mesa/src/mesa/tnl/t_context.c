@@ -62,11 +62,7 @@ _tnl_CreateContext( struct gl_context *ctx )
 
    /* Initialize tnl state.
     */
-   if (ctx->VertexProgram._MaintainTnlProgram) {
-      _tnl_install_pipeline( ctx, _tnl_vp_pipeline );
-   } else {
-      _tnl_install_pipeline( ctx, _tnl_default_pipeline );
-   }
+   _tnl_install_pipeline( ctx, _tnl_default_pipeline );
 
    tnl->NeedNdcCoords = GL_TRUE;
    tnl->AllowVertexFog = GL_TRUE;

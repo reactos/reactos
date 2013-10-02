@@ -59,13 +59,6 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *ctx,
    this->es_shader = false;
    this->ARB_texture_rectangle_enable = true;
 
-   /* OpenGL ES 2.0 has different defaults from desktop GL. */
-   if (ctx->API == API_OPENGLES2) {
-      this->language_version = 100;
-      this->es_shader = true;
-      this->ARB_texture_rectangle_enable = false;
-   }
-
    this->extensions = &ctx->Extensions;
 
    this->Const.MaxLights = ctx->Const.MaxLights;
@@ -86,19 +79,13 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *ctx,
     * Core context is supported, this logic will need change.  Older versions of
     * GLSL are no longer supported outside the compatibility contexts of 3.x.
     */
-   this->Const.GLSL_100ES = (ctx->API == API_OPENGLES2)
-      || ctx->Extensions.ARB_ES2_compatibility;
-   this->Const.GLSL_110 = (ctx->API == API_OPENGL);
-   this->Const.GLSL_120 = (ctx->API == API_OPENGL)
-      && (ctx->Const.GLSLVersion >= 120);
-   this->Const.GLSL_130 = (ctx->API == API_OPENGL)
-      && (ctx->Const.GLSLVersion >= 130);
+   this->Const.GLSL_100ES = ctx->Extensions.ARB_ES2_compatibility;
+   this->Const.GLSL_110 = true;
+   this->Const.GLSL_120 = (ctx->Const.GLSLVersion >= 120);
+   this->Const.GLSL_130 = (ctx->Const.GLSLVersion >= 130);
 
-   const unsigned lowest_version =
-      (ctx->API == API_OPENGLES2) || ctx->Extensions.ARB_ES2_compatibility
-      ? 100 : 110;
-   const unsigned highest_version =
-      (ctx->API == API_OPENGL) ? ctx->Const.GLSLVersion : 100;
+   const unsigned lowest_version = ctx->Extensions.ARB_ES2_compatibility ? 100 : 110;
+   const unsigned highest_version = ctx->Const.GLSLVersion;
    char *supported = ralloc_strdup(this, "");
 
    for (unsigned ver = lowest_version; ver <= highest_version; ver += 10) {
@@ -267,7 +254,6 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    EXT(AMD_conservative_depth,         false, false, true,  true,  false,     ARB_conservative_depth),
    EXT(AMD_shader_stencil_export,      false, false, true,  true,  false,     ARB_shader_stencil_export),
    EXT(OES_texture_3D,                 true,  false, true,  false, true,      EXT_texture3D),
-   EXT(OES_EGL_image_external,         true,  false, true,  false, true,      OES_EGL_image_external),
 };
 
 #undef EXT

@@ -187,10 +187,10 @@ get_framebuffer_target(struct gl_context *ctx, GLenum target)
 {
    switch (target) {
    case GL_DRAW_FRAMEBUFFER:
-      return ctx->Extensions.EXT_framebuffer_blit && ctx->API == API_OPENGL
+      return ctx->Extensions.EXT_framebuffer_blit
 	 ? ctx->DrawBuffer : NULL;
    case GL_READ_FRAMEBUFFER:
-      return ctx->Extensions.EXT_framebuffer_blit && ctx->API == API_OPENGL
+      return ctx->Extensions.EXT_framebuffer_blit
 	 ? ctx->ReadBuffer : NULL;
    case GL_FRAMEBUFFER_EXT:
       return ctx->DrawBuffer;
@@ -238,15 +238,11 @@ _mesa_get_attachment(struct gl_context *ctx, struct gl_framebuffer *fb,
        * hardware is used.
        */
       i = attachment - GL_COLOR_ATTACHMENT0_EXT;
-      if (i >= ctx->Const.MaxColorAttachments
-	  || (i > 0 && ctx->API == API_OPENGLES)) {
+      if (i >= ctx->Const.MaxColorAttachments) {
 	 return NULL;
       }
       return &fb->Attachment[BUFFER_COLOR0 + i];
    case GL_DEPTH_STENCIL_ATTACHMENT:
-      if (ctx->API != API_OPENGL)
-	 return NULL;
-      /* fall-through */
    case GL_DEPTH_ATTACHMENT_EXT:
       return &fb->Attachment[BUFFER_DEPTH];
    case GL_STENCIL_ATTACHMENT_EXT:
@@ -817,8 +813,7 @@ _mesa_test_framebuffer_completeness(struct gl_context *ctx,
       }
    }
 
-#if FEATURE_GL
-   if (ctx->API == API_OPENGL && !ctx->Extensions.ARB_ES2_compatibility) {
+   if (!ctx->Extensions.ARB_ES2_compatibility) {
       /* Check that all DrawBuffers are present */
       for (j = 0; j < ctx->Const.MaxDrawBuffers; j++) {
 	 if (fb->ColorDrawBuffer[j] != GL_NONE) {
@@ -845,9 +840,6 @@ _mesa_test_framebuffer_completeness(struct gl_context *ctx,
 	 }
       }
    }
-#else
-   (void) j;
-#endif
 
    if (numImages == 0) {
       fb->_Status = GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT;
@@ -1411,41 +1403,6 @@ renderbuffer_storage(GLenum target, GLenum internalFormat,
       _mesa_HashWalk(ctx->Shared->FrameBuffers, invalidate_rb, rb);
    }
 }
-
-
-#if FEATURE_OES_EGL_image
-void GLAPIENTRY
-_mesa_EGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImageOES image)
-{
-   struct gl_renderbuffer *rb;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   if (!ctx->Extensions.OES_EGL_image) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glEGLImageTargetRenderbufferStorageOES(unsupported)");
-      return;
-   }
-
-   if (target != GL_RENDERBUFFER) {
-      _mesa_error(ctx, GL_INVALID_ENUM,
-                  "EGLImageTargetRenderbufferStorageOES");
-      return;
-   }
-
-   rb = ctx->CurrentRenderbuffer;
-   if (!rb) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "EGLImageTargetRenderbufferStorageOES");
-      return;
-   }
-
-   FLUSH_VERTICES(ctx, _NEW_BUFFERS);
-
-   ctx->Driver.EGLImageTargetRenderbufferStorage(ctx, rb, image);
-}
-#endif
-
 
 /**
  * Helper function for _mesa_GetRenderbufferParameterivEXT() and
@@ -2242,13 +2199,9 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
 {
    const struct gl_renderbuffer_attachment *att;
    struct gl_framebuffer *buffer;
-   GLenum err;
    GET_CURRENT_CONTEXT(ctx);
 
    ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   /* The error differs in GL andd GLES. */
-   err = ctx->API == API_OPENGL ? GL_INVALID_OPERATION : GL_INVALID_ENUM;
 
    buffer = get_framebuffer_target(ctx, target);
    if (!buffer) {
@@ -2268,7 +2221,7 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
        * OES_framebuffer_object spec refers to the EXT_framebuffer_object
        * spec.
        */
-      if (ctx->API != API_OPENGL || !ctx->Extensions.ARB_framebuffer_object) {
+      if (!ctx->Extensions.ARB_framebuffer_object) {
 	 _mesa_error(ctx, GL_INVALID_OPERATION,
 		     "glGetFramebufferAttachmentParameteriv(bound FBO = 0)");
 	 return;
@@ -2315,12 +2268,7 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
       }
       else {
          assert(att->Type == GL_NONE);
-         if (ctx->API == API_OPENGL) {
-            *params = 0;
-         } else {
-            _mesa_error(ctx, GL_INVALID_ENUM,
-                        "glGetFramebufferAttachmentParameterivEXT(pname)");
-         }
+         *params = 0;
       }
       return;
    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL_EXT:
@@ -2328,7 +2276,7 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
 	 *params = att->TextureLevel;
       }
       else if (att->Type == GL_NONE) {
-         _mesa_error(ctx, err,
+         _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glGetFramebufferAttachmentParameterivEXT(pname)");
       }
       else {
@@ -2346,7 +2294,7 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
          }
       }
       else if (att->Type == GL_NONE) {
-         _mesa_error(ctx, err,
+         _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glGetFramebufferAttachmentParameterivEXT(pname)");
       }
       else {
@@ -2364,7 +2312,7 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
          }
       }
       else if (att->Type == GL_NONE) {
-         _mesa_error(ctx, err,
+         _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glGetFramebufferAttachmentParameterivEXT(pname)");
       }
       else {
@@ -2378,7 +2326,7 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
                      "glGetFramebufferAttachmentParameterivEXT(pname)");
       }
       else if (att->Type == GL_NONE) {
-         _mesa_error(ctx, err,
+         _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glGetFramebufferAttachmentParameterivEXT(pname)");
       }
       else {
@@ -2399,7 +2347,7 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
          return;
       }
       else if (att->Type == GL_NONE) {
-         _mesa_error(ctx, err,
+         _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glGetFramebufferAttachmentParameterivEXT(pname)");
       }
       else {
@@ -2433,7 +2381,7 @@ _mesa_GetFramebufferAttachmentParameterivEXT(GLenum target, GLenum attachment,
                      "glGetFramebufferAttachmentParameterivEXT(pname)");
       }
       else if (att->Type == GL_NONE) {
-         _mesa_error(ctx, err,
+         _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glGetFramebufferAttachmentParameterivEXT(pname)");
       }
       else if (att->Texture) {

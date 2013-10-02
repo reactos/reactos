@@ -61,10 +61,6 @@ validate_texture_wrap_mode(struct gl_context * ctx, GLenum target, GLenum wrap)
           (wrap == GL_CLAMP_TO_BORDER && e->ARB_texture_border_clamp))
          return GL_TRUE;
    }
-   else if (target == GL_TEXTURE_EXTERNAL_OES) {
-      if (wrap == GL_CLAMP_TO_EDGE)
-         return GL_TRUE;
-   }
    else {
       switch (wrap) {
       case GL_CLAMP:
@@ -144,11 +140,6 @@ get_texobj(struct gl_context *ctx, GLenum target, GLboolean get)
          return texUnit->CurrentTex[TEXTURE_2D_ARRAY_INDEX];
       }
       break;
-   case GL_TEXTURE_EXTERNAL_OES:
-      if (ctx->Extensions.OES_EGL_image_external) {
-         return texUnit->CurrentTex[TEXTURE_EXTERNAL_INDEX];
-      }
-      break;
    default:
       ;
    }
@@ -209,8 +200,7 @@ set_tex_parameteri(struct gl_context *ctx,
       case GL_LINEAR_MIPMAP_NEAREST:
       case GL_NEAREST_MIPMAP_LINEAR:
       case GL_LINEAR_MIPMAP_LINEAR:
-         if (texObj->Target != GL_TEXTURE_RECTANGLE_NV &&
-             texObj->Target != GL_TEXTURE_EXTERNAL_OES) {
+         if (texObj->Target != GL_TEXTURE_RECTANGLE_NV) {
             incomplete(ctx, texObj);
             texObj->Sampler.MinFilter = params[0];
             return GL_TRUE;
@@ -291,23 +281,12 @@ set_tex_parameteri(struct gl_context *ctx,
       return GL_TRUE;
 
    case GL_GENERATE_MIPMAP_SGIS:
-      if (params[0] && texObj->Target == GL_TEXTURE_EXTERNAL_OES)
-         goto invalid_param;
       if (texObj->GenerateMipmap != params[0]) {
          /* no flush() */
 	 texObj->GenerateMipmap = params[0] ? GL_TRUE : GL_FALSE;
 	 return GL_TRUE;
       }
       return GL_FALSE;
-
-#if FEATURE_OES_draw_texture
-   case GL_TEXTURE_CROP_RECT_OES:
-      texObj->CropRect[0] = params[0];
-      texObj->CropRect[1] = params[1];
-      texObj->CropRect[2] = params[2];
-      texObj->CropRect[3] = params[3];
-      return GL_TRUE;
-#endif
 
    default:
       goto invalid_pname;
@@ -501,20 +480,6 @@ _mesa_TexParameterfv(GLenum target, GLenum pname, const GLfloat *params)
          need_update = set_tex_parameteri(ctx, texObj, pname, p);
       }
       break;
-
-#if FEATURE_OES_draw_texture
-   case GL_TEXTURE_CROP_RECT_OES:
-      {
-         /* convert float params to int */
-         GLint iparams[4];
-         iparams[0] = (GLint) params[0];
-         iparams[1] = (GLint) params[1];
-         iparams[2] = (GLint) params[2];
-         iparams[3] = (GLint) params[3];
-         need_update = set_tex_parameteri(ctx, texObj, pname, iparams);
-      }
-      break;
-#endif
 
    case GL_TEXTURE_SWIZZLE_R_EXT:
    case GL_TEXTURE_SWIZZLE_G_EXT:
@@ -950,14 +915,6 @@ _mesa_GetTexParameterfv( GLenum target, GLenum pname, GLfloat *params )
       case GL_TEXTURE_LOD_BIAS:
          *params = obj->Sampler.LodBias;
          break;
-#if FEATURE_OES_draw_texture
-      case GL_TEXTURE_CROP_RECT_OES:
-         params[0] = obj->CropRect[0];
-         params[1] = obj->CropRect[1];
-         params[2] = obj->CropRect[2];
-         params[3] = obj->CropRect[3];
-         break;
-#endif
 
       case GL_TEXTURE_IMMUTABLE_FORMAT:
          if (!ctx->Extensions.ARB_texture_storage)
@@ -1049,25 +1006,11 @@ _mesa_GetTexParameteriv( GLenum target, GLenum pname, GLint *params )
       case GL_TEXTURE_LOD_BIAS:
          *params = (GLint) obj->Sampler.LodBias;
          break;
-#if FEATURE_OES_draw_texture
-      case GL_TEXTURE_CROP_RECT_OES:
-         params[0] = obj->CropRect[0];
-         params[1] = obj->CropRect[1];
-         params[2] = obj->CropRect[2];
-         params[3] = obj->CropRect[3];
-         break;
-#endif
 
       case GL_TEXTURE_IMMUTABLE_FORMAT:
          if (!ctx->Extensions.ARB_texture_storage)
             goto invalid_pname;
          *params = (GLint) obj->Immutable;
-         break;
-
-      case GL_REQUIRED_TEXTURE_IMAGE_UNITS_OES:
-         if (!ctx->Extensions.OES_EGL_image_external)
-            goto invalid_pname;
-         *params = obj->RequiredTextureImageUnits;
          break;
 
       default:

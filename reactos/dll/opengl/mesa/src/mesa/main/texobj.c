@@ -107,7 +107,6 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
           target == GL_TEXTURE_RECTANGLE_NV ||
           target == GL_TEXTURE_1D_ARRAY_EXT ||
           target == GL_TEXTURE_2D_ARRAY_EXT ||
-          target == GL_TEXTURE_EXTERNAL_OES ||
           target == GL_TEXTURE_BUFFER);
 
    memset(obj, 0, sizeof(*obj));
@@ -124,8 +123,7 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
    obj->RequiredTextureImageUnits = 1;
 
    /* sampler state */
-   if (target == GL_TEXTURE_RECTANGLE_NV ||
-       target == GL_TEXTURE_EXTERNAL_OES) {
+   if (target == GL_TEXTURE_RECTANGLE_NV) {
       obj->Sampler.WrapS = GL_CLAMP_TO_EDGE;
       obj->Sampler.WrapT = GL_CLAMP_TO_EDGE;
       obj->Sampler.WrapR = GL_CLAMP_TO_EDGE;
@@ -155,8 +153,7 @@ finish_texture_init(struct gl_context *ctx, GLenum target,
 {
    assert(obj->Target == 0);
 
-   if (target == GL_TEXTURE_RECTANGLE_NV ||
-       target == GL_TEXTURE_EXTERNAL_OES) {
+   if (target == GL_TEXTURE_RECTANGLE_NV) {
       /* have to init wrap and filter state here - kind of klunky */
       obj->Sampler.WrapS = GL_CLAMP_TO_EDGE;
       obj->Sampler.WrapT = GL_CLAMP_TO_EDGE;
@@ -295,7 +292,6 @@ valid_texture_object(const struct gl_texture_object *tex)
    case GL_TEXTURE_1D_ARRAY_EXT:
    case GL_TEXTURE_2D_ARRAY_EXT:
    case GL_TEXTURE_BUFFER:
-   case GL_TEXTURE_EXTERNAL_OES:
       return GL_TRUE;
    case 0x99:
       _mesa_problem(NULL, "invalid reference to a deleted texture object");
@@ -456,8 +452,7 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
                      t->Image[0][baseLevel]->HeightLog2);
       maxLevels = ctx->Const.MaxCubeTextureLevels;
    }
-   else if (t->Target == GL_TEXTURE_RECTANGLE_NV ||
-            t->Target == GL_TEXTURE_EXTERNAL_OES) {
+   else if (t->Target == GL_TEXTURE_RECTANGLE_NV) {
       maxLog2 = 0;  /* not applicable */
       maxLevels = 1;  /* no mipmapping */
    }
@@ -1003,8 +998,6 @@ target_enum_to_index(GLenum target)
       return TEXTURE_2D_ARRAY_INDEX;
    case GL_TEXTURE_BUFFER_ARB:
       return TEXTURE_BUFFER_INDEX;
-   case GL_TEXTURE_EXTERNAL_OES:
-      return TEXTURE_EXTERNAL_INDEX;
    default:
       return -1;
    }

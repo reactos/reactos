@@ -196,8 +196,6 @@ struct _mesa_glsl_parse_state {
    bool AMD_shader_stencil_export_warn;
    bool OES_texture_3D_enable;
    bool OES_texture_3D_warn;
-   bool OES_EGL_image_external_enable;
-   bool OES_EGL_image_external_warn;
    /*@}*/
 
    /** Extensions supported by the OpenGL implementation. */
@@ -290,7 +288,7 @@ extern "C" {
 #endif
 
 extern int preprocess(void *ctx, const char **shader, char **info_log,
-                      const struct gl_extensions *extensions, int api);
+                      const struct gl_extensions *extensions);
 
 extern void _mesa_destroy_shader_compiler(void);
 extern void _mesa_destroy_shader_compiler_caches(void);

@@ -36,7 +36,6 @@
 #include "context.h"
 #include "debug.h"
 #include "macros.h"
-#include "ffvertex_prog.h"
 #include "framebuffer.h"
 #include "light.h"
 #include "matrix.h"
@@ -255,8 +254,6 @@ update_program(struct gl_context *ctx)
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
 			       (struct gl_fragment_program *)
 			       fsProg->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program);
-      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram,
-			       NULL);
    }
    else if (ctx->FragmentProgram._Enabled) {
       /* Use user-defined fragment program */
@@ -265,28 +262,10 @@ update_program(struct gl_context *ctx)
 				     NULL);
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
                                ctx->FragmentProgram.Current);
-      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram,
-			       NULL);
-   }
-   else if (ctx->FragmentProgram._MaintainTexEnvProgram) {
-      /* Use fragment program generated from fixed-function state */
-      struct gl_shader_program *f = _mesa_get_fixed_func_fragment_program(ctx);
-
-      _mesa_reference_shader_program(ctx,
-				     &ctx->Shader._CurrentFragmentProgram,
-				     f);
-      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
-			       (struct gl_fragment_program *)
-                               f->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program);
-      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram,
-			       (struct gl_fragment_program *)
-                               f->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program);
    }
    else {
       /* No fragment program */
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current, NULL);
-      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram,
-			       NULL);
    }
 
    /* Examine vertex program after fragment program as
@@ -304,13 +283,6 @@ update_program(struct gl_context *ctx)
       /* Use user-defined vertex program */
       _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current,
                                ctx->VertexProgram.Current);
-   }
-   else if (ctx->VertexProgram._MaintainTnlProgram) {
-      /* Use vertex program generated from fixed-function state */
-      _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current,
-                               _mesa_get_fixed_func_vertex_program(ctx));
-      _mesa_reference_vertprog(ctx, &ctx->VertexProgram._TnlProgram,
-                               ctx->VertexProgram._Current);
    }
    else {
       /* no vertex program */
@@ -573,19 +545,6 @@ _mesa_update_state_locked( struct gl_context *ctx )
 
    if (MESA_VERBOSE & VERBOSE_STATE)
       _mesa_print_state("_mesa_update_state", new_state);
-
-   /* Determine which state flags effect vertex/fragment program state */
-   if (ctx->FragmentProgram._MaintainTexEnvProgram) {
-      prog_flags |= (_NEW_BUFFERS | _NEW_TEXTURE | _NEW_FOG |
-		     _NEW_ARRAY | _NEW_LIGHT | _NEW_POINT | _NEW_RENDERMODE |
-		     _NEW_PROGRAM | _NEW_FRAG_CLAMP | _NEW_COLOR);
-   }
-   if (ctx->VertexProgram._MaintainTnlProgram) {
-      prog_flags |= (_NEW_ARRAY | _NEW_TEXTURE | _NEW_TEXTURE_MATRIX |
-                     _NEW_TRANSFORM | _NEW_POINT |
-                     _NEW_FOG | _NEW_LIGHT |
-                     _MESA_NEW_NEED_EYE_COORDS);
-   }
 
    /*
     * Now update derived state info

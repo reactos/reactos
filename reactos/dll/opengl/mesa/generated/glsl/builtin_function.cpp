@@ -36,7 +36,6 @@ gl_shader *
 read_builtins(GLenum target, const char *protos, const char **functions, unsigned count)
 {
    struct gl_context fakeCtx;
-   fakeCtx.API = API_OPENGL;
    fakeCtx.Const.GLSLVersion = 130;
    fakeCtx.Extensions.ARB_ES2_compatibility = true;
    gl_shader *sh = _mesa_new_shader(NULL, 0, target);
@@ -47,7 +46,6 @@ read_builtins(GLenum target, const char *protos, const char **functions, unsigne
    st->symbols->language_version = 130;
    st->ARB_texture_rectangle_enable = true;
    st->EXT_texture_array_enable = true;
-   st->OES_EGL_image_external_enable = true;
    _mesa_glsl_initialize_types(st);
 
    sh->ir = new(sh) exec_list;
@@ -16066,54 +16064,6 @@ static const char *functions_for_EXT_texture_array_vert [] = {
    builtin_texture2DArray,
    builtin_texture2DArrayLod,
 };
-static const char prototypes_for_OES_EGL_image_external_frag[] =
-   "(\n"
-   "(function texture2D\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) samplerExternalOES sampler)\n"
-   "      (declare (in) vec2 coord))\n"
-   "    ()))\n"
-   "(function texture2DProj\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) samplerExternalOES sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ())\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) samplerExternalOES sampler)\n"
-   "      (declare (in) vec4 coord))\n"
-   "    ())))"
-;
-static const char *functions_for_OES_EGL_image_external_frag [] = {
-   builtin_texture2D,
-   builtin_texture2DProj,
-};
-static const char prototypes_for_OES_EGL_image_external_vert[] =
-   "(\n"
-   "(function texture2D\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) samplerExternalOES sampler)\n"
-   "      (declare (in) vec2 coord))\n"
-   "    ()))\n"
-   "(function texture2DProj\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) samplerExternalOES sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ())\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) samplerExternalOES sampler)\n"
-   "      (declare (in) vec4 coord))\n"
-   "    ())))"
-;
-static const char *functions_for_OES_EGL_image_external_vert [] = {
-   builtin_texture2D,
-   builtin_texture2DProj,
-};
 static const char prototypes_for_OES_texture_3D_frag[] =
    "(\n"
    "(function texture3D\n"
@@ -16319,20 +16269,6 @@ _mesa_glsl_initialize_functions(struct _mesa_glsl_parse_state *state)
                          prototypes_for_EXT_texture_array_vert,
                          functions_for_EXT_texture_array_vert,
                          Elements(functions_for_EXT_texture_array_vert));
-   }
-
-   if (state->target == fragment_shader && state->OES_EGL_image_external_enable) {
-      _mesa_read_profile(state, 14,
-                         prototypes_for_OES_EGL_image_external_frag,
-                         functions_for_OES_EGL_image_external_frag,
-                         Elements(functions_for_OES_EGL_image_external_frag));
-   }
-
-   if (state->target == vertex_shader && state->OES_EGL_image_external_enable) {
-      _mesa_read_profile(state, 15,
-                         prototypes_for_OES_EGL_image_external_vert,
-                         functions_for_OES_EGL_image_external_vert,
-                         Elements(functions_for_OES_EGL_image_external_vert));
    }
 
    if (state->target == fragment_shader && state->OES_texture_3D_enable) {

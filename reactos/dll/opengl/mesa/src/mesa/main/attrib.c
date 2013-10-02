@@ -74,7 +74,6 @@ struct gl_enable_attrib
    GLbitfield ClipPlanes;
    GLboolean ColorMaterial;
    GLboolean CullFace;
-   GLboolean DepthClamp;
    GLboolean DepthTest;
    GLboolean Dither;
    GLboolean Fog;
@@ -134,7 +133,6 @@ struct gl_enable_attrib
 
    /* GL_ARB_point_sprite / GL_NV_point_sprite */
    GLboolean PointSprite;
-   GLboolean FragmentShaderATI;
 };
 
 
@@ -264,7 +262,6 @@ _mesa_PushAttrib(GLbitfield mask)
       attr->ClipPlanes = ctx->Transform.ClipPlanesEnabled;
       attr->ColorMaterial = ctx->Light.ColorMaterialEnabled;
       attr->CullFace = ctx->Polygon.CullFlag;
-      attr->DepthClamp = ctx->Transform.DepthClamp;
       attr->DepthTest = ctx->Depth.Test;
       attr->Dither = ctx->Color.DitherFlag;
       attr->Fog = ctx->Fog.Enabled;
@@ -505,8 +502,6 @@ pop_enable_group(struct gl_context *ctx, const struct gl_enable_attrib *enable)
    TEST_AND_UPDATE(ctx->Light.ColorMaterialEnabled, enable->ColorMaterial,
                    GL_COLOR_MATERIAL);
    TEST_AND_UPDATE(ctx->Polygon.CullFlag, enable->CullFace, GL_CULL_FACE);
-   TEST_AND_UPDATE(ctx->Transform.DepthClamp, enable->DepthClamp,
-		   GL_DEPTH_CLAMP);
    TEST_AND_UPDATE(ctx->Depth.Test, enable->DepthTest, GL_DEPTH_TEST);
    TEST_AND_UPDATE(ctx->Color.DitherFlag, enable->Dither, GL_DITHER);
    TEST_AND_UPDATE(ctx->Fog.Enabled, enable->Fog, GL_FOG);
@@ -760,8 +755,6 @@ pop_texture_group(struct gl_context *ctx, struct texture_state *texstate)
             continue;
          }
          else if (obj->Target == GL_TEXTURE_BUFFER)
-            continue;
-         else if (obj->Target == GL_TEXTURE_EXTERNAL_OES)
             continue;
 
          target = obj->Target;
@@ -1210,9 +1203,6 @@ _mesa_PopAttrib(void)
                if (xform->RescaleNormals != ctx->Transform.RescaleNormals)
                   _mesa_set_enable(ctx, GL_RESCALE_NORMAL_EXT,
                                    ctx->Transform.RescaleNormals);
-               if (xform->DepthClamp != ctx->Transform.DepthClamp)
-                  _mesa_set_enable(ctx, GL_DEPTH_CLAMP,
-                                   ctx->Transform.DepthClamp);
             }
             break;
          case GL_TEXTURE_BIT:

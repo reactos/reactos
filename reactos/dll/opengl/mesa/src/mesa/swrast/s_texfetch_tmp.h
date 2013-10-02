@@ -668,23 +668,6 @@ static void FETCH(f_argb1555_rev)( const struct swrast_texture_image *texImage,
 
 
 
-/* MESA_FORMAT_ARGB2101010 ***************************************************/
-
-/* Fetch texel from 1D, 2D or 3D argb2101010 texture, return 4 GLchans */
-static void FETCH(f_argb2101010)( const struct swrast_texture_image *texImage,
-                                  GLint i, GLint j, GLint k, GLfloat *texel )
-{
-   const GLuint *src = TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
-   const GLuint s = *src;
-   texel[RCOMP] = ((s >> 20) & 0x3ff) * (1.0F / 1023.0F);
-   texel[GCOMP] = ((s >> 10) & 0x3ff) * (1.0F / 1023.0F);
-   texel[BCOMP] = ((s >>  0) & 0x3ff) * (1.0F / 1023.0F);
-   texel[ACOMP] = ((s >> 30) & 0x03) * (1.0F / 3.0F);
-}
-
-
-
-
 /* MESA_FORMAT_GR88 **********************************************************/
 
 /* Fetch texel from 1D, 2D or 3D rg88 texture, return 4 GLchans */

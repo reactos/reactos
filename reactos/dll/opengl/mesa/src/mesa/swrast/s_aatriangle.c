@@ -36,7 +36,6 @@
 #include "main/state.h"
 #include "s_aatriangle.h"
 #include "s_context.h"
-#include "s_fragprog.h"
 #include "s_span.h"
 
 
@@ -300,7 +299,6 @@ _swrast_set_aa_triangle_function(struct gl_context *ctx)
    ASSERT(ctx->Polygon.SmoothFlag);
 
    if (ctx->Texture._EnabledCoordUnits != 0
-       || _swrast_use_fragment_program(ctx)
        || swrast->_FogEnabled
        || _mesa_need_secondary_color(ctx)) {
       SWRAST_CONTEXT(ctx)->Triangle = general_aa_tri;

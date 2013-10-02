@@ -86,7 +86,6 @@
 
 enum value_type {
    TYPE_INVALID,
-   TYPE_API_MASK,
    TYPE_INT,
    TYPE_INT_2,
    TYPE_INT_3,
@@ -131,7 +130,6 @@ enum value_extra {
    EXTRA_VERSION_30,
    EXTRA_VERSION_31,
    EXTRA_VERSION_32,
-   EXTRA_VERSION_ES2,
    EXTRA_NEW_BUFFERS, 
    EXTRA_NEW_FRAG_CLAMP,
    EXTRA_VALID_DRAW_BUFFER,
@@ -300,7 +298,6 @@ EXTRA_EXT(NV_texture_rectangle);
 EXTRA_EXT(EXT_stencil_two_side);
 EXTRA_EXT(NV_light_max_exponent);
 EXTRA_EXT(EXT_depth_bounds_test);
-EXTRA_EXT(ARB_depth_clamp);
 EXTRA_EXT(EXT_framebuffer_blit);
 EXTRA_EXT(ARB_shader_objects);
 EXTRA_EXT(ARB_fragment_shader);
@@ -320,7 +317,6 @@ EXTRA_EXT(ARB_color_buffer_float);
 EXTRA_EXT(ARB_copy_buffer);
 EXTRA_EXT(EXT_framebuffer_sRGB);
 EXTRA_EXT(ARB_texture_buffer_object);
-EXTRA_EXT(OES_EGL_image_external);
 
 static const int
 extra_ARB_vertex_program_ARB_fragment_program_NV_vertex_program[] = {
@@ -349,16 +345,7 @@ static const int extra_version_30[] = { EXTRA_VERSION_30, EXTRA_END };
 static const int extra_version_31[] = { EXTRA_VERSION_31, EXTRA_END };
 static const int extra_version_32[] = { EXTRA_VERSION_32, EXTRA_END };
 
-static const int
-extra_ARB_vertex_program_version_es2[] = {
-   EXT(ARB_vertex_program),
-   EXTRA_VERSION_ES2,
-   EXTRA_END
-};
-
 #define API_OPENGL_BIT (1 << API_OPENGL)
-#define API_OPENGLES_BIT (1 << API_OPENGLES)
-#define API_OPENGLES2_BIT (1 << API_OPENGLES2)
 
 /* This is the big table describing all the enums we accept in
  * glGet*v().  The table is partitioned into six parts: enums
@@ -371,9 +358,6 @@ extra_ARB_vertex_program_version_es2[] = {
  * need. */
 
 static const struct value_desc values[] = {
-   /* Enums shared between OpenGL, GLES1 and GLES2 */
-   { 0, 0, TYPE_API_MASK,
-     API_OPENGL_BIT | API_OPENGLES_BIT | API_OPENGLES2_BIT, NO_EXTRA},
    { GL_ALPHA_BITS, BUFFER_INT(Visual.alphaBits), extra_new_buffers },
    { GL_BLEND, CONTEXT_BIT0(Color.BlendEnabled), NO_EXTRA },
    { GL_BLEND_SRC, CONTEXT_ENUM(Color.Blend[0].SrcRGB), NO_EXTRA },
@@ -500,9 +484,6 @@ static const struct value_desc values[] = {
     * GLSL: */
    { GL_MAX_CLIP_PLANES, CONTEXT_INT(Const.MaxClipPlanes), NO_EXTRA },
 
-#if FEATURE_GL || FEATURE_ES1
-   /* Enums in OpenGL and GLES1 */
-   { 0, 0, TYPE_API_MASK, API_OPENGL_BIT | API_OPENGLES_BIT, NO_EXTRA },
    { GL_MAX_LIGHTS, CONTEXT_INT(Const.MaxLights), NO_EXTRA },
    { GL_LIGHT0, CONTEXT_BOOL(Light.Light[0].Enabled), NO_EXTRA },
    { GL_LIGHT1, CONTEXT_BOOL(Light.Light[1].Enabled), NO_EXTRA },
@@ -654,24 +635,7 @@ static const struct value_desc values[] = {
    { GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT,
      CONTEXT_FLOAT(Const.MaxTextureMaxAnisotropy),
      extra_EXT_texture_filter_anisotropic },
-#endif /* FEATURE_GL || FEATURE_ES1 */
 
-#if FEATURE_ES1
-   { 0, 0, TYPE_API_MASK, API_OPENGLES_BIT },
-   /* XXX: OES_matrix_get */
-   { GL_MODELVIEW_MATRIX_FLOAT_AS_INT_BITS_OES },
-   { GL_PROJECTION_MATRIX_FLOAT_AS_INT_BITS_OES },
-   { GL_TEXTURE_MATRIX_FLOAT_AS_INT_BITS_OES },
-
-   /* OES_point_size_array */
-   { GL_POINT_SIZE_ARRAY_OES, ARRAY_FIELD(VertexAttrib[VERT_ATTRIB_POINT_SIZE].Enabled, TYPE_BOOLEAN) },
-   { GL_POINT_SIZE_ARRAY_TYPE_OES, ARRAY_FIELD(VertexAttrib[VERT_ATTRIB_POINT_SIZE].Type, TYPE_ENUM) },
-   { GL_POINT_SIZE_ARRAY_STRIDE_OES, ARRAY_FIELD(VertexAttrib[VERT_ATTRIB_POINT_SIZE].Stride, TYPE_INT) },
-   { GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES, LOC_CUSTOM, TYPE_INT, 0 },
-#endif /* FEATURE_ES1 */
-
-#if FEATURE_GL || FEATURE_ES2
-   { 0, 0, TYPE_API_MASK, API_OPENGL_BIT | API_OPENGLES2_BIT, NO_EXTRA },
    { GL_MAX_TEXTURE_COORDS_ARB, /* == GL_MAX_TEXTURE_COORDS_NV */
      CONTEXT_INT(Const.MaxTextureCoordUnits),
      extra_ARB_fragment_program_NV_fragment_program },
@@ -725,10 +689,6 @@ static const struct value_desc values[] = {
    { GL_STENCIL_BACK_PASS_DEPTH_FAIL, CONTEXT_ENUM(Stencil.ZFailFunc[1]), NO_EXTRA },
    { GL_STENCIL_BACK_PASS_DEPTH_PASS, CONTEXT_ENUM(Stencil.ZPassFunc[1]), NO_EXTRA },
 
-   { GL_MAX_VERTEX_ATTRIBS_ARB,
-     CONTEXT_INT(Const.VertexProgram.MaxAttribs),
-     extra_ARB_vertex_program_version_es2 },
-
    /* OES_texture_3D */
    { GL_TEXTURE_BINDING_3D, LOC_CUSTOM, TYPE_INT, TEXTURE_3D_INDEX, NO_EXTRA },
    { GL_MAX_3D_TEXTURE_SIZE, LOC_CUSTOM, TYPE_INT,
@@ -737,29 +697,7 @@ static const struct value_desc values[] = {
    /* GL_ARB_fragment_program/OES_standard_derivatives */
    { GL_FRAGMENT_SHADER_DERIVATIVE_HINT_ARB,
      CONTEXT_ENUM(Hint.FragmentShaderDerivative), extra_ARB_fragment_shader },
-#endif /* FEATURE_GL || FEATURE_ES2 */
 
-#if FEATURE_ES2
-   /* Enums unique to OpenGL ES 2.0 */
-   { 0, 0, TYPE_API_MASK, API_OPENGLES2_BIT, NO_EXTRA },
-   { GL_MAX_FRAGMENT_UNIFORM_VECTORS, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-   { GL_MAX_VARYING_VECTORS, CONTEXT_INT(Const.MaxVarying), NO_EXTRA },
-   { GL_MAX_VERTEX_UNIFORM_VECTORS, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-   { GL_SHADER_COMPILER, CONST(1), NO_EXTRA },
-   /* OES_get_program_binary */
-   { GL_NUM_SHADER_BINARY_FORMATS, CONST(0), NO_EXTRA },
-   { GL_SHADER_BINARY_FORMATS, CONST(0), NO_EXTRA },
-#endif /* FEATURE_ES2 */
-
-   /* GL_OES_EGL_image_external */
-   { GL_TEXTURE_BINDING_EXTERNAL_OES, LOC_CUSTOM,
-     TYPE_INT, TEXTURE_EXTERNAL_INDEX, extra_OES_EGL_image_external },
-   { GL_TEXTURE_EXTERNAL_OES, LOC_CUSTOM,
-     TYPE_BOOLEAN, 0, extra_OES_EGL_image_external },
-
-#if FEATURE_GL
-   /* Remaining enums are only in OpenGL */
-   { 0, 0, TYPE_API_MASK, API_OPENGL_BIT, NO_EXTRA },
    { GL_ACCUM_RED_BITS, BUFFER_INT(Visual.accumRedBits), NO_EXTRA },
    { GL_ACCUM_GREEN_BITS, BUFFER_INT(Visual.accumGreenBits), NO_EXTRA },
    { GL_ACCUM_BLUE_BITS, BUFFER_INT(Visual.accumBlueBits), NO_EXTRA },
@@ -1142,10 +1080,6 @@ static const struct value_desc values[] = {
    { GL_DEPTH_BOUNDS_EXT, CONTEXT_FLOAT2(Depth.BoundsMin),
      extra_EXT_depth_bounds_test },
 
-   /* GL_ARB_depth_clamp*/
-   { GL_DEPTH_CLAMP, CONTEXT_BOOL(Transform.DepthClamp),
-     extra_ARB_depth_clamp },
-
    /* GL_EXT_framebuffer_blit
     * NOTE: GL_DRAW_FRAMEBUFFER_BINDING_EXT == GL_FRAMEBUFFER_BINDING_EXT */
    { GL_READ_FRAMEBUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
@@ -1212,7 +1146,6 @@ static const struct value_desc values[] = {
 
    /* GL_ARB_robustness */
    { GL_RESET_NOTIFICATION_STRATEGY_ARB, CONTEXT_ENUM(Const.ResetStrategy), NO_EXTRA },
-#endif /* FEATURE_GL */
 };
 
 /* All we need now is a way to look up the value struct from the enum.
@@ -1281,18 +1214,10 @@ print_table_stats(void)
 void _mesa_init_get_hash(struct gl_context *ctx)
 {
    int i, hash, index, mask;
-   int api_mask = 0, api_bit;
 
    mask = Elements(table) - 1;
-   api_bit = 1 << ctx->API;
 
    for (i = 0; i < Elements(values); i++) {
-      if (values[i].type == TYPE_API_MASK) {
-	 api_mask = values[i].offset;
-	 continue;
-      }
-      if (!(api_mask & api_bit))
-	 continue;
 
       hash = (values[i].pname * prime_factor) & mask;
       while (1) {
@@ -1341,7 +1266,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_TEXTURE_2D_ARRAY_EXT:
    case GL_TEXTURE_CUBE_MAP_ARB:
    case GL_TEXTURE_RECTANGLE_NV:
-   case GL_TEXTURE_EXTERNAL_OES:
       v->value_bool = _mesa_IsEnabled(d->pname);
       break;
 
@@ -1692,11 +1616,6 @@ check_extra(struct gl_context *ctx, const char *func, const struct value_desc *d
          if (ctx->NewState & (_NEW_BUFFERS | _NEW_FRAG_CLAMP))
             _mesa_update_state(ctx);
          break;
-      case EXTRA_VERSION_ES2:
-	 if (ctx->API == API_OPENGLES2) {
-	    total++;
-	    enabled++;
-	 }
 	 break;
       case EXTRA_NEW_BUFFERS:
 	 if (ctx->NewState & _NEW_BUFFERS)
@@ -1787,14 +1706,6 @@ find_value(const char *func, GLenum pname, void **p, union value *v)
    hash = (pname * prime_factor);
    while (1) {
       d = &values[table[hash & mask]];
-
-      /* If the enum isn't valid, the hash walk ends with index 0,
-       * which is the API mask entry at the beginning of values[]. */
-      if (unlikely(d->type == TYPE_API_MASK)) {
-	 _mesa_error(ctx, GL_INVALID_ENUM, "%s(pname=%s)", func,
-                     _mesa_lookup_enum_by_nr(pname));
-	 return &error_value;
-      }
 
       if (likely(d->pname == pname))
 	 break;

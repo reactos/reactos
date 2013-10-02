@@ -421,15 +421,6 @@ static struct gl_format_info format_info[MESA_FORMAT_COUNT] =
       1, 1, 4
    },
    {
-      MESA_FORMAT_ARGB2101010,
-      "MESA_FORMAT_ARGB2101010",
-      GL_RGBA,
-      GL_UNSIGNED_NORMALIZED,
-      10, 10, 10, 2,
-      0, 0, 0, 0, 0,
-      1, 1, 4
-   },
-   {
       MESA_FORMAT_Z24_S8,          /* Name */
       "MESA_FORMAT_Z24_S8",        /* StrName */
       GL_DEPTH_STENCIL,            /* BaseFormat */
@@ -2038,11 +2029,6 @@ _mesa_format_to_type_and_comps(gl_format format,
       *comps = 4;
       return;
 
-   case MESA_FORMAT_ARGB2101010:
-      *datatype = GL_UNSIGNED_INT_2_10_10_10_REV;
-      *comps = 4;
-      return;
-
    case MESA_FORMAT_RGBA5551:
       *datatype = GL_UNSIGNED_SHORT_5_5_5_1;
       *comps = 4;
@@ -2585,9 +2571,6 @@ _mesa_format_matches_format_and_type(gl_format gl_format,
       return format == GL_RG && type == GL_UNSIGNED_SHORT && littleEndian;
    case MESA_FORMAT_RG1616_REV:
       return GL_FALSE;
-
-   case MESA_FORMAT_ARGB2101010:
-      return format == GL_BGRA && type == GL_UNSIGNED_INT_2_10_10_10_REV;
 
    case MESA_FORMAT_Z24_S8:
       return format == GL_DEPTH_STENCIL && type == GL_UNSIGNED_INT_24_8;

@@ -120,24 +120,8 @@ get_buffer(struct gl_context *ctx, const char *func, GLenum target)
 static inline GLenum
 default_access_mode(const struct gl_context *ctx)
 {
-   /* Table 2.6 on page 31 (page 44 of the PDF) of the OpenGL 1.5 spec says:
-    *
-    * Name           Type  Initial Value  Legal Values
-    * ...            ...   ...            ...
-    * BUFFER_ACCESS  enum  READ_WRITE     READ_ONLY, WRITE_ONLY
-    *                                     READ_WRITE
-    *
-    * However, table 6.8 in the GL_OES_mapbuffer extension says:
-    *
-    * Get Value         Type Get Command          Value          Description
-    * ---------         ---- -----------          -----          -----------
-    * BUFFER_ACCESS_OES Z1   GetBufferParameteriv WRITE_ONLY_OES buffer map flag
-    *
-    * The difference is because GL_OES_mapbuffer only supports mapping buffers
-    * write-only.
-    */
-   return (ctx->API == API_OPENGLES)
-      ? GL_MAP_WRITE_BIT : (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT);
+   (void)ctx;
+   return GL_MAP_READ_BIT | GL_MAP_WRITE_BIT;
 }
 
 

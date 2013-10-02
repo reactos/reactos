@@ -50,8 +50,7 @@ tex_target_name(GLenum tgt)
       { GL_TEXTURE_CUBE_MAP, "GL_TEXTURE_CUBE_MAP" },
       { GL_TEXTURE_RECTANGLE, "GL_TEXTURE_RECTANGLE" },
       { GL_TEXTURE_1D_ARRAY_EXT, "GL_TEXTURE_1D_ARRAY" },
-      { GL_TEXTURE_2D_ARRAY_EXT, "GL_TEXTURE_2D_ARRAY" },
-      { GL_TEXTURE_EXTERNAL_OES, "GL_TEXTURE_EXTERNAL_OES" }
+      { GL_TEXTURE_2D_ARRAY_EXT, "GL_TEXTURE_2D_ARRAY" }
    };
    GLuint i;
    for (i = 0; i < Elements(tex_targets); i++) {

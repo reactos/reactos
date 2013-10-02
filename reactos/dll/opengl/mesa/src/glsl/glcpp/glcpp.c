@@ -111,7 +111,7 @@ main (int argc, char *argv[])
 	if (shader == NULL)
 	   return 1;
 
-	ret = preprocess(ctx, &shader, &info_log, NULL, API_OPENGL);
+	ret = preprocess(ctx, &shader, &info_log, NULL);
 
 	printf("%s", shader);
 	fprintf(stderr, "%s", info_log);

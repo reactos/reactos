@@ -41,7 +41,6 @@
 #include "s_aatriangle.h"
 #include "s_context.h"
 #include "s_feedback.h"
-#include "s_fragprog.h"
 #include "s_span.h"
 #include "s_triangle.h"
 
@@ -986,7 +985,6 @@ _swrast_choose_triangle( struct gl_context *ctx )
        * needs to be interpolated.
        */
       if (ctx->Texture._EnabledCoordUnits ||
-	  _swrast_use_fragment_program(ctx) ||
           _mesa_need_secondary_color(ctx) ||
           swrast->_FogEnabled) {
          /* Ugh, we do a _lot_ of tests to pick the best textured tri func */
@@ -1007,7 +1005,6 @@ _swrast_choose_triangle( struct gl_context *ctx )
 
          /* First see if we can use an optimized 2-D texture function */
          if (ctx->Texture._EnabledCoordUnits == 0x1
-             && !_swrast_use_fragment_program(ctx)
              && ctx->Texture._EnabledUnits == 0x1
              && ctx->Texture.Unit[0]._ReallyEnabled == TEXTURE_2D_BIT
              && texObj2D->Sampler.WrapS == GL_REPEAT

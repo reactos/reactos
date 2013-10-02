@@ -69,9 +69,6 @@ _tnl_allow_vertex_fog( struct gl_context *ctx, GLboolean value );
 extern void
 _tnl_allow_pixel_fog( struct gl_context *ctx, GLboolean value );
 
-extern GLboolean
-_tnl_program_string(struct gl_context *ctx, GLenum target, struct gl_program *program);
-
 struct _mesa_prim;
 struct _mesa_index_buffer;
 

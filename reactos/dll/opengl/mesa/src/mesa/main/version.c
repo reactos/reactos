@@ -146,15 +146,9 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.NV_primitive_restart &&
                               ctx->Extensions.NV_texture_rectangle &&
                               ctx->Const.MaxVertexTextureImageUnits >= 16);
-   const GLboolean ver_3_2 = (ver_3_1 &&
-                              ctx->Const.GLSLVersion >= 150 &&
-                              ctx->Extensions.ARB_depth_clamp);
 
-   if (ver_3_2) {
-      major = 3;
-      minor = 2;
-   }
-   else if (ver_3_1) {
+
+   if (ver_3_1) {
       major = 3;
       minor = 1;
    }
@@ -204,65 +198,6 @@ compute_version(struct gl_context *ctx)
    }
 }
 
-static void
-compute_version_es1(struct gl_context *ctx)
-{
-   static const int max = 100;
-
-   /* OpenGL ES 1.0 is derived from OpenGL 1.3 */
-   const GLboolean ver_1_0 = (ctx->Extensions.ARB_texture_env_combine &&
-                              ctx->Extensions.ARB_texture_env_dot3);
-   /* OpenGL ES 1.1 is derived from OpenGL 1.5 */
-   const GLboolean ver_1_1 = (ver_1_0 &&
-                              ctx->Extensions.EXT_point_parameters);
-
-   if (ver_1_1) {
-      ctx->VersionMajor = 1;
-      ctx->VersionMinor = 1;
-   } else if (ver_1_0) {
-      ctx->VersionMajor = 1;
-      ctx->VersionMinor = 0;
-   } else {
-      _mesa_problem(ctx, "Incomplete OpenGL ES 1.0 support.");
-   }
-
-   ctx->VersionString = (char *) malloc(max);
-   if (ctx->VersionString) {
-      _mesa_snprintf(ctx->VersionString, max,
-		     "OpenGL ES-CM 1.%d Mesa " MESA_VERSION_STRING,
-		     ctx->VersionMinor);
-   }
-}
-
-static void
-compute_version_es2(struct gl_context *ctx)
-{
-   static const int max = 100;
-
-   /* OpenGL ES 2.0 is derived from OpenGL 2.0 */
-   const GLboolean ver_2_0 = (ctx->Extensions.ARB_texture_cube_map &&
-                              ctx->Extensions.EXT_blend_color &&
-                              ctx->Extensions.EXT_blend_func_separate &&
-                              ctx->Extensions.EXT_blend_minmax &&
-                              ctx->Extensions.ARB_shader_objects &&
-                              ctx->Extensions.ARB_vertex_shader &&
-                              ctx->Extensions.ARB_fragment_shader &&
-                              ctx->Extensions.ARB_texture_non_power_of_two &&
-                              ctx->Extensions.EXT_blend_equation_separate);
-   if (ver_2_0) {
-      ctx->VersionMajor = 2;
-      ctx->VersionMinor = 0;
-   } else {
-      _mesa_problem(ctx, "Incomplete OpenGL ES 2.0 support.");
-   }
-
-   ctx->VersionString = (char *) malloc(max);
-   if (ctx->VersionString) {
-      _mesa_snprintf(ctx->VersionString, max,
-		     "OpenGL ES 2.0 Mesa " MESA_VERSION_STRING);
-   }
-}
-
 /**
  * Set the context's VersionMajor, VersionMinor, VersionString fields.
  * This should only be called once as part of context initialization
@@ -274,16 +209,5 @@ _mesa_compute_version(struct gl_context *ctx)
    if (ctx->VersionMajor)
       return;
 
-   switch (ctx->API) {
-   case API_OPENGL:
-      compute_version(ctx);
-      break;
-   case API_OPENGLES:
-      compute_version_es1(ctx);
-      break;
-   case API_OPENGLES2:
-      compute_version_es2(ctx);
-      break;
-   }
-
+   compute_version(ctx);
 }

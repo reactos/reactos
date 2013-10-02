@@ -180,7 +180,7 @@ struct glcpp_parser {
 struct gl_extensions;
 
 glcpp_parser_t *
-glcpp_parser_create (const struct gl_extensions *extensions, int api);
+glcpp_parser_create (const struct gl_extensions *extensions);
 
 int
 glcpp_parser_parse (glcpp_parser_t *parser);
@@ -190,7 +190,7 @@ glcpp_parser_destroy (glcpp_parser_t *parser);
 
 int
 preprocess(void *ralloc_ctx, const char **shader, char **info_log,
-	   const struct gl_extensions *extensions, int api);
+	   const struct gl_extensions *extensions);
 
 /* Functions for writing to the info log */
 

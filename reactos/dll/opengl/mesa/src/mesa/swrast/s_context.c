@@ -36,7 +36,6 @@
 #include "swrast.h"
 #include "s_blend.h"
 #include "s_context.h"
-#include "s_fragprog.h"
 #include "s_lines.h"
 #include "s_points.h"
 #include "s_span.h"
@@ -102,11 +101,6 @@ _swrast_update_rasterflags( struct gl_context *ctx )
       }
    }
 
-
-   if (_swrast_use_fragment_program(ctx)) {
-      rasterMask |= FRAGPROG_BIT;
-   }
-
 #if CHAN_TYPE == GL_FLOAT
    if (ctx->Color.ClampFragmentColor == GL_TRUE) {
       rasterMask |= CLAMPING_BIT;
@@ -164,7 +158,6 @@ _swrast_update_fog_hint( struct gl_context *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    swrast->_PreferPixelFog = (!swrast->AllowVertexFog ||
-			      _swrast_use_fragment_program(ctx) ||
 			      (ctx->Hint.Fog == GL_NICEST &&
 			       swrast->AllowPixelFog));
 }
@@ -214,19 +207,7 @@ _swrast_update_deferred_texture(struct gl_context *ctx)
       swrast->_DeferredTexture = GL_FALSE;
    }
    else {
-      GLboolean use_fprog = _swrast_use_fragment_program(ctx);
-      const struct gl_fragment_program *fprog
-         = ctx->FragmentProgram._Current;
-      if (use_fprog && (fprog->Base.OutputsWritten & (1 << FRAG_RESULT_DEPTH))) {
-         /* Z comes from fragment program/shader */
-         swrast->_DeferredTexture = GL_FALSE;
-      }
-      else if (use_fprog && fprog->UsesKill) {
-         swrast->_DeferredTexture = GL_FALSE;
-      }
-      else {
-         swrast->_DeferredTexture = GL_TRUE;
-      }
+      swrast->_DeferredTexture = GL_TRUE;
    }
 }
 
@@ -245,23 +226,7 @@ _swrast_update_fog_state( struct gl_context *ctx )
           (fp->Base.Target == GL_FRAGMENT_PROGRAM_NV));
 
    /* determine if fog is needed, and if so, which fog mode */
-   swrast->_FogEnabled = (!_swrast_use_fragment_program(ctx) &&
-			  ctx->Fog.Enabled);
-}
-
-
-/**
- * Update state for running fragment programs.  Basically, load the
- * program parameters with current state values.
- */
-static void
-_swrast_update_fragment_program(struct gl_context *ctx, GLbitfield newState)
-{
-   if (!_swrast_use_fragment_program(ctx))
-      return;
-
-   _mesa_load_state_parameters(ctx,
-                               ctx->FragmentProgram._Current->Base.Parameters);
+   swrast->_FogEnabled = ctx->Fog.Enabled;
 }
 
 
@@ -278,8 +243,7 @@ _swrast_update_specular_vertex_add(struct gl_context *ctx)
        ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR);
 
    swrast->SpecularVertexAdd = (separateSpecular
-                                && ctx->Texture._EnabledUnits == 0x0
-                                && !_swrast_use_fragment_program(ctx));
+                                && ctx->Texture._EnabledUnits == 0x0);
 }
 
 
@@ -489,30 +453,22 @@ _swrast_update_active_attribs(struct gl_context *ctx)
    /*
     * Compute _ActiveAttribsMask = which fragment attributes are needed.
     */
-   if (_swrast_use_fragment_program(ctx)) {
-      /* fragment program/shader */
-      attribsMask = ctx->FragmentProgram._Current->Base.InputsRead;
-      attribsMask &= ~FRAG_BIT_WPOS; /* WPOS is always handled specially */
-   }
-   else {
-      /* fixed function */
-      attribsMask = 0x0;
+   attribsMask = 0x0;
 
 #if CHAN_TYPE == GL_FLOAT
-      attribsMask |= FRAG_BIT_COL0;
+   attribsMask |= FRAG_BIT_COL0;
 #endif
 
-      if (ctx->Fog.ColorSumEnabled ||
-          (ctx->Light.Enabled &&
-           ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)) {
-         attribsMask |= FRAG_BIT_COL1;
-      }
-
-      if (swrast->_FogEnabled)
-         attribsMask |= FRAG_BIT_FOGC;
-
-      attribsMask |= (ctx->Texture._EnabledUnits << FRAG_ATTRIB_TEX0);
+   if (ctx->Fog.ColorSumEnabled ||
+       (ctx->Light.Enabled &&
+        ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)) {
+      attribsMask |= FRAG_BIT_COL1;
    }
+
+   if (swrast->_FogEnabled)
+      attribsMask |= FRAG_BIT_FOGC;
+
+   attribsMask |= (ctx->Texture._EnabledUnits << FRAG_ATTRIB_TEX0);
 
    swrast->_ActiveAttribMask = attribsMask;
 
@@ -551,9 +507,6 @@ _swrast_validate_derived( struct gl_context *ctx )
 
       if (swrast->NewState & (_NEW_FOG | _NEW_PROGRAM))
          _swrast_update_fog_state( ctx );
-
-      if (swrast->NewState & (_NEW_PROGRAM_CONSTANTS | _NEW_PROGRAM))
-	 _swrast_update_fragment_program( ctx, swrast->NewState );
 
       if (swrast->NewState & (_NEW_TEXTURE | _NEW_PROGRAM)) {
          _swrast_update_texture_samplers( ctx );

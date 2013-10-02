@@ -128,17 +128,6 @@ _mesa_base_tex_format( struct gl_context *ctx, GLint internalFormat )
          ; /* fallthrough */
    }
 
-   /* GL_BGRA can be an internal format *only* in OpenGL ES (1.x or 2.0).
-    */
-   if (ctx->API != API_OPENGL) {
-      switch (internalFormat) {
-         case GL_BGRA:
-            return GL_RGBA;
-         default:
-            ; /* fallthrough */
-      }
-   }
-
    switch (internalFormat) {
    case GL_COMPRESSED_ALPHA:
       return GL_ALPHA;
@@ -469,25 +458,6 @@ _mesa_base_tex_format( struct gl_context *ctx, GLint internalFormat )
       }
    }
 
-   if (ctx->API == API_OPENGLES) {
-      switch (internalFormat) {
-      case GL_PALETTE4_RGB8_OES:
-      case GL_PALETTE4_R5_G6_B5_OES:
-      case GL_PALETTE8_RGB8_OES:
-      case GL_PALETTE8_R5_G6_B5_OES:
-	 return GL_RGB;
-      case GL_PALETTE4_RGBA8_OES:
-      case GL_PALETTE8_RGB5_A1_OES:
-      case GL_PALETTE4_RGBA4_OES:
-      case GL_PALETTE4_RGB5_A1_OES:
-      case GL_PALETTE8_RGBA8_OES:
-      case GL_PALETTE8_RGBA4_OES:
-	 return GL_RGBA;
-      default:
-         ; /* fallthrough */
-      }
-   }
-
    return -1; /* error */
 }
 
@@ -551,7 +521,7 @@ set_tex_image(struct gl_texture_object *tObj,
 
    ASSERT(tObj);
    ASSERT(texImage);
-   if (target == GL_TEXTURE_RECTANGLE_NV || target == GL_TEXTURE_EXTERNAL_OES)
+   if (target == GL_TEXTURE_RECTANGLE_NV)
       assert(level == 0);
 
    tObj->Image[face][level] = texImage;
@@ -728,9 +698,6 @@ _mesa_select_tex_object(struct gl_context *ctx,
       case GL_TEXTURE_BUFFER:
          return ctx->Extensions.ARB_texture_buffer_object
             ? texUnit->CurrentTex[TEXTURE_BUFFER_INDEX] : NULL;
-      case GL_TEXTURE_EXTERNAL_OES:
-         return ctx->Extensions.OES_EGL_image_external
-            ? texUnit->CurrentTex[TEXTURE_EXTERNAL_INDEX] : NULL;
       default:
          _mesa_problem(NULL, "bad target in _mesa_select_tex_object()");
          return NULL;
@@ -918,7 +885,6 @@ _mesa_max_texture_levels(struct gl_context *ctx, GLenum target)
               ctx->Extensions.EXT_texture_array)
          ? ctx->Const.MaxTextureLevels : 0;
    case GL_TEXTURE_BUFFER:
-   case GL_TEXTURE_EXTERNAL_OES:
       /* fall-through */
    default:
       return 0; /* bad target */
@@ -950,7 +916,6 @@ _mesa_get_texture_dimensions(GLenum target)
    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
    case GL_TEXTURE_1D_ARRAY:
    case GL_PROXY_TEXTURE_1D_ARRAY:
-   case GL_TEXTURE_EXTERNAL_OES:
       return 2;
    case GL_TEXTURE_3D:
    case GL_PROXY_TEXTURE_3D:
@@ -1121,7 +1086,6 @@ _mesa_init_teximage_fields(struct gl_context *ctx,
    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-   case GL_TEXTURE_EXTERNAL_OES:
    case GL_PROXY_TEXTURE_2D:
    case GL_PROXY_TEXTURE_RECTANGLE:
    case GL_PROXY_TEXTURE_CUBE_MAP:
@@ -2614,50 +2578,6 @@ _mesa_TexImage3DEXT( GLenum target, GLint level, GLenum internalFormat,
    _mesa_TexImage3D(target, level, (GLint) internalFormat, width, height,
                     depth, border, format, type, pixels);
 }
-
-
-#if FEATURE_OES_EGL_image
-void GLAPIENTRY
-_mesa_EGLImageTargetTexture2DOES (GLenum target, GLeglImageOES image)
-{
-   struct gl_texture_object *texObj;
-   struct gl_texture_image *texImage;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   if ((target == GL_TEXTURE_2D &&
-        !ctx->Extensions.OES_EGL_image) ||
-       (target == GL_TEXTURE_EXTERNAL_OES &&
-        !ctx->Extensions.OES_EGL_image_external)) {
-      _mesa_error(ctx, GL_INVALID_ENUM,
-		  "glEGLImageTargetTexture2D(target=%d)", target);
-      return;
-   }
-
-   if (ctx->NewState & _NEW_PIXEL)
-      _mesa_update_state(ctx);
-
-   texObj = _mesa_get_current_tex_object(ctx, target);
-   _mesa_lock_texture(ctx, texObj);
-
-   texImage = _mesa_get_tex_image(ctx, texObj, target, 0);
-   if (!texImage) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glEGLImageTargetTexture2D");
-   } else {
-      ctx->Driver.FreeTextureImageBuffer(ctx, texImage);
-
-      ctx->Driver.EGLImageTargetTexture2D(ctx, target,
-					  texObj, texImage, image);
-
-      /* state update */
-      texObj->_Complete = GL_FALSE;
-      ctx->NewState |= _NEW_TEXTURE;
-   }
-   _mesa_unlock_texture(ctx, texObj);
-
-}
-#endif
-
 
 
 /**

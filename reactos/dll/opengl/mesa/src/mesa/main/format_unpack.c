@@ -586,19 +586,6 @@ unpack_RG1616_REV(const void *src, GLfloat dst[][4], GLuint n)
    }
 }
 
-static void
-unpack_ARGB2101010(const void *src, GLfloat dst[][4], GLuint n)
-{
-   const GLuint *s = ((const GLuint *) src);
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      dst[i][RCOMP] = ((s[i] >> 20) & 0x3ff) * (1.0F / 1023.0F);
-      dst[i][GCOMP] = ((s[i] >> 10) & 0x3ff) * (1.0F / 1023.0F);
-      dst[i][BCOMP] = ((s[i] >>  0) & 0x3ff) * (1.0F / 1023.0F);
-      dst[i][ACOMP] = ((s[i] >> 30) &  0x03) * (1.0F / 3.0F);
-   }
-}
-
 
 static void
 unpack_Z24_S8(const void *src, GLfloat dst[][4], GLuint n)
@@ -1461,7 +1448,6 @@ get_unpack_rgba_function(gl_format format)
       table[MESA_FORMAT_R16] = unpack_R16;
       table[MESA_FORMAT_RG1616] = unpack_RG1616;
       table[MESA_FORMAT_RG1616_REV] = unpack_RG1616_REV;
-      table[MESA_FORMAT_ARGB2101010] = unpack_ARGB2101010;
       table[MESA_FORMAT_Z24_S8] = unpack_Z24_S8;
       table[MESA_FORMAT_S8_Z24] = unpack_S8_Z24;
       table[MESA_FORMAT_Z16] = unpack_Z16;

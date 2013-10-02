@@ -1979,9 +1979,6 @@ case 94:
 YY_RULE_SETUP
 #line 299 "glsl_lexer.ll"
 {
-			  if (yyextra->OES_EGL_image_external_enable)
-			     return SAMPLEREXTERNALOES;
-			  else
 			     return IDENTIFIER;
 			}
 	YY_BREAK

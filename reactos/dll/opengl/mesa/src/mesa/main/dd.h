@@ -505,13 +505,6 @@ struct dd_function_table {
    struct gl_program * (*NewProgram)(struct gl_context *ctx, GLenum target, GLuint id);
    /** Delete a program */
    void (*DeleteProgram)(struct gl_context *ctx, struct gl_program *prog);   
-   /**
-    * Notify driver that a program string (and GPU code) has been specified
-    * or modified.  Return GL_TRUE or GL_FALSE to indicate if the program is
-    * supported by the driver.
-    */
-   GLboolean (*ProgramStringNotify)(struct gl_context *ctx, GLenum target, 
-                                    struct gl_program *prog);
 
    /** Query if program can be loaded onto hardware */
    GLboolean (*IsProgramNative)(struct gl_context *ctx, GLenum target, 
@@ -870,25 +863,6 @@ struct dd_function_table {
    void (*EndCallList)( struct gl_context *ctx );
 
    /**@}*/
-
-   /**
-    * \name GL_OES_draw_texture interface
-    */
-   /*@{*/
-   void (*DrawTex)(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
-                   GLfloat width, GLfloat height);
-   /*@}*/
-
-   /**
-    * \name GL_OES_EGL_image interface
-    */
-   void (*EGLImageTargetTexture2D)(struct gl_context *ctx, GLenum target,
-				   struct gl_texture_object *texObj,
-				   struct gl_texture_image *texImage,
-				   GLeglImageOES image_handle);
-   void (*EGLImageTargetRenderbufferStorage)(struct gl_context *ctx,
-					     struct gl_renderbuffer *rb,
-					     void *image_handle);
 
    /**
     * \name GL_NV_texture_barrier interface

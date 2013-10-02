@@ -3456,7 +3456,7 @@ static void add_builtin_define(glcpp_parser_t *parser,
 }
 
 glcpp_parser_t *
-glcpp_parser_create (const struct gl_extensions *extensions, int api)
+glcpp_parser_create (const struct gl_extensions *extensions)
 {
 	glcpp_parser_t *parser;
 	int language_version;
@@ -3486,9 +3486,6 @@ glcpp_parser_create (const struct gl_extensions *extensions, int api)
 	add_builtin_define(parser, "GL_ARB_draw_buffers", 1);
 	add_builtin_define(parser, "GL_ARB_texture_rectangle", 1);
 
-	if (api == API_OPENGLES2)
-		add_builtin_define(parser, "GL_ES", 1);
-
 	if (extensions != NULL) {
 	   if (extensions->EXT_texture_array) {
 	      add_builtin_define(parser, "GL_EXT_texture_array", 1);
@@ -3504,9 +3501,6 @@ glcpp_parser_create (const struct gl_extensions *extensions, int api)
 	      add_builtin_define(parser, "GL_AMD_conservative_depth", 1);
 	      add_builtin_define(parser, "GL_ARB_conservative_depth", 1);
 	   }
-
-	   if (extensions->OES_EGL_image_external)
-	      add_builtin_define(parser, "GL_OES_EGL_image_external", 1);
 	}
 
 	language_version = 110;

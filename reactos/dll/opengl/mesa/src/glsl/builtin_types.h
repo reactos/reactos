@@ -300,13 +300,3 @@ const glsl_type glsl_type::builtin_EXT_texture_buffer_object_types[] = {
 	     GLSL_SAMPLER_DIM_BUF, 0, 0,  GLSL_TYPE_UINT, "usamplerBuffer"),
 };
 /*@}*/
-
-/** \name Sampler types added by GL_OES_EGL_image_external
- */
-/*@{*/
-
-const glsl_type glsl_type::builtin_OES_EGL_image_external_types[] = {
-   glsl_type(GL_SAMPLER_EXTERNAL_OES,
-	     GLSL_SAMPLER_DIM_EXTERNAL, 0, 0, GLSL_TYPE_FLOAT, "samplerExternalOES"),
-};
-/*@}*/

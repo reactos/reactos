@@ -418,13 +418,7 @@ recalculate_input_bindings(struct gl_context *ctx)
          const_inputs |= VERT_BIT_GENERIC(i);
       }
 
-      /* There is no need to make _NEW_ARRAY dirty here for the TnL program,
-       * because it already takes care of invalidating the state necessary
-       * to revalidate vertex arrays. Not marking the state as dirty also
-       * improves performance (quite significantly in some apps).
-       */
-      if (!ctx->VertexProgram._MaintainTnlProgram)
-         ctx->NewState |= _NEW_ARRAY;
+      ctx->NewState |= _NEW_ARRAY;
       break;
 
    case VP_NV:

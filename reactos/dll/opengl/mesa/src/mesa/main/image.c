@@ -58,8 +58,6 @@ _mesa_type_is_packed(GLenum type)
    case GL_UNSIGNED_SHORT_1_5_5_5_REV:
    case GL_UNSIGNED_INT_8_8_8_8:
    case GL_UNSIGNED_INT_8_8_8_8_REV:
-   case GL_UNSIGNED_INT_10_10_10_2:
-   case GL_UNSIGNED_INT_2_10_10_10_REV:
    case GL_UNSIGNED_SHORT_8_8_MESA:
    case GL_UNSIGNED_SHORT_8_8_REV_MESA:
    case GL_UNSIGNED_INT_24_8_EXT:
@@ -190,8 +188,6 @@ _mesa_sizeof_packed_type( GLenum type )
          return sizeof(GLushort);
       case GL_UNSIGNED_INT_8_8_8_8:
       case GL_UNSIGNED_INT_8_8_8_8_REV:
-      case GL_UNSIGNED_INT_10_10_10_2:
-      case GL_UNSIGNED_INT_2_10_10_10_REV:
       case GL_UNSIGNED_INT_24_8_EXT:
       case GL_UNSIGNED_INT_5_9_9_9_REV:
       case GL_UNSIGNED_INT_10F_11F_11F_REV:
@@ -316,8 +312,6 @@ _mesa_bytes_per_pixel( GLenum format, GLenum type )
             return -1;
       case GL_UNSIGNED_INT_8_8_8_8:
       case GL_UNSIGNED_INT_8_8_8_8_REV:
-      case GL_UNSIGNED_INT_10_10_10_2:
-      case GL_UNSIGNED_INT_2_10_10_10_REV:
          if (format == GL_RGBA || format == GL_BGRA || format == GL_ABGR_EXT ||
              format == GL_RGBA_INTEGER_EXT || format == GL_BGRA_INTEGER_EXT)
             return sizeof(GLuint);
@@ -393,8 +387,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
    case GL_UNSIGNED_SHORT_1_5_5_5_REV:
    case GL_UNSIGNED_INT_8_8_8_8:
    case GL_UNSIGNED_INT_8_8_8_8_REV:
-   case GL_UNSIGNED_INT_10_10_10_2:
-   case GL_UNSIGNED_INT_2_10_10_10_REV:
       if (format == GL_RGBA ||
           format == GL_BGRA ||
           format == GL_ABGR_EXT) {
@@ -548,8 +540,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             case GL_UNSIGNED_SHORT_1_5_5_5_REV:
             case GL_UNSIGNED_INT_8_8_8_8:
             case GL_UNSIGNED_INT_8_8_8_8_REV:
-            case GL_UNSIGNED_INT_10_10_10_2:
-            case GL_UNSIGNED_INT_2_10_10_10_REV:
                return GL_NO_ERROR;
             case GL_HALF_FLOAT:
                return ctx->Extensions.ARB_half_float_pixel
@@ -1131,19 +1121,6 @@ _mesa_is_compressed_format(struct gl_context *ctx, GLenum format)
       return ctx->Extensions.EXT_texture_compression_latc;
    case GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI:
       return ctx->Extensions.ATI_texture_compression_3dc;
-#if FEATURE_ES
-   case GL_PALETTE4_RGB8_OES:
-   case GL_PALETTE4_RGBA8_OES:
-   case GL_PALETTE4_R5_G6_B5_OES:
-   case GL_PALETTE4_RGBA4_OES:
-   case GL_PALETTE4_RGB5_A1_OES:
-   case GL_PALETTE8_RGB8_OES:
-   case GL_PALETTE8_RGBA8_OES:
-   case GL_PALETTE8_R5_G6_B5_OES:
-   case GL_PALETTE8_RGBA4_OES:
-   case GL_PALETTE8_RGB5_A1_OES:
-      return ctx->API == API_OPENGLES;
-#endif
    default:
       return GL_FALSE;
    }

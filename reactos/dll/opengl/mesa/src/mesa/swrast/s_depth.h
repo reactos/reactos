@@ -37,9 +37,6 @@ struct gl_renderbuffer;
 extern GLuint
 _swrast_depth_test_span( struct gl_context *ctx, SWspan *span);
 
-extern void
-_swrast_depth_clamp_span( struct gl_context *ctx, SWspan *span );
-
 extern GLboolean
 _swrast_depth_bounds_test( struct gl_context *ctx, SWspan *span );
 

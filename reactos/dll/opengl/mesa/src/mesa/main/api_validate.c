@@ -106,53 +106,25 @@ check_valid_to_render(struct gl_context *ctx, const char *function)
       return GL_FALSE;
    }
 
-   switch (ctx->API) {
-#if FEATURE_es2_glsl
-   case API_OPENGLES2:
-      /* For ES2, we can draw if any vertex array is enabled (and we
-       * should always have a vertex program/shader). */
-      if (ctx->Array.ArrayObj->_Enabled == 0x0 || !ctx->VertexProgram._Current)
-	 return GL_FALSE;
-      break;
-#endif
-
-#if FEATURE_ES1
-   case API_OPENGLES:
-      /* For OpenGL ES, only draw if we have vertex positions
-       */
-      if (!ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POS].Enabled)
-	 return GL_FALSE;
-      break;
-#endif
-
-#if FEATURE_GL
-   case API_OPENGL:
-      {
-         const struct gl_shader_program *vsProg =
-            ctx->Shader.CurrentVertexProgram;
-         GLboolean haveVertexShader = (vsProg && vsProg->LinkStatus);
-         GLboolean haveVertexProgram = ctx->VertexProgram._Enabled;
-         if (haveVertexShader || haveVertexProgram) {
-            /* Draw regardless of whether or not we have any vertex arrays.
-             * (Ex: could draw a point using a constant vertex pos)
-             */
-            return GL_TRUE;
-         }
-         else {
-            /* Draw if we have vertex positions (GL_VERTEX_ARRAY or generic
-             * array [0]).
-             */
-            return (ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POS].Enabled ||
-                    ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_GENERIC0].Enabled);
-         }
+   {
+      const struct gl_shader_program *vsProg =
+         ctx->Shader.CurrentVertexProgram;
+      GLboolean haveVertexShader = (vsProg && vsProg->LinkStatus);
+      GLboolean haveVertexProgram = ctx->VertexProgram._Enabled;
+      if (haveVertexShader || haveVertexProgram) {
+         /* Draw regardless of whether or not we have any vertex arrays.
+          * (Ex: could draw a point using a constant vertex pos)
+          */
+         return GL_TRUE;
       }
-      break;
-#endif
-
-   default:
-      ASSERT_NO_FEATURE();
+      else {
+         /* Draw if we have vertex positions (GL_VERTEX_ARRAY or generic
+          * array [0]).
+          */
+         return (ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POS].Enabled ||
+                 ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_GENERIC0].Enabled);
+      }
    }
-
    return GL_TRUE;
 }
 

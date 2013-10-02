@@ -53,8 +53,7 @@
 #define HALF_BIT             0x80
 #define FLOAT_BIT            0x100
 #define DOUBLE_BIT           0x200
-#define FIXED_ES_BIT         0x400
-#define FIXED_GL_BIT         0x800
+#define FIXED_GL_BIT         0x400
 
 
 /** Convert GL datatype enum into a <type>_BIT value seen above */
@@ -86,7 +85,7 @@ type_to_bit(const struct gl_context *ctx, GLenum type)
    case GL_DOUBLE:
       return DOUBLE_BIT;
    case GL_FIXED:
-      return ctx->API == API_OPENGL ? FIXED_GL_BIT : FIXED_ES_BIT;
+      return FIXED_GL_BIT;
    default:
       return 0;
    }
@@ -122,10 +121,6 @@ update_array(struct gl_context *ctx,
    GLbitfield typeBit;
    GLsizei elementSize;
 
-   if (ctx->API != API_OPENGLES && ctx->API != API_OPENGLES2) {
-      /* fixed point arrays / data is only allowed with OpenGL ES 1.x/2.0 */
-      legalTypesMask &= ~FIXED_ES_BIT;
-   }
    if (!ctx->Extensions.ARB_ES2_compatibility) {
       legalTypesMask &= ~FIXED_GL_BIT;
    }
@@ -183,12 +178,9 @@ void GLAPIENTRY
 _mesa_VertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr)
 {
    GLbitfield legalTypes = (SHORT_BIT | INT_BIT | FLOAT_BIT |
-                            DOUBLE_BIT | HALF_BIT | FIXED_ES_BIT);
+                            DOUBLE_BIT | HALF_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   if (ctx->API == API_OPENGLES)
-      legalTypes |= BYTE_BIT;
 
    update_array(ctx, "glVertexPointer", VERT_ATTRIB_POS,
                 legalTypes, 2, 4,
@@ -200,8 +192,7 @@ void GLAPIENTRY
 _mesa_NormalPointer(GLenum type, GLsizei stride, const GLvoid *ptr )
 {
    const GLbitfield legalTypes = (BYTE_BIT | SHORT_BIT | INT_BIT |
-                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-                                  FIXED_ES_BIT);
+                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
@@ -217,8 +208,7 @@ _mesa_ColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr)
    const GLbitfield legalTypes = (BYTE_BIT | UNSIGNED_BYTE_BIT |
                                   SHORT_BIT | UNSIGNED_SHORT_BIT |
                                   INT_BIT | UNSIGNED_INT_BIT |
-                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-                                  FIXED_ES_BIT);
+                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
@@ -277,14 +267,10 @@ _mesa_TexCoordPointer(GLint size, GLenum type, GLsizei stride,
                       const GLvoid *ptr)
 {
    GLbitfield legalTypes = (SHORT_BIT | INT_BIT |
-                            HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-                            FIXED_ES_BIT);
+                            HALF_BIT | FLOAT_BIT | DOUBLE_BIT);
    GET_CURRENT_CONTEXT(ctx);
    const GLuint unit = ctx->Array.ActiveTexture;
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   if (ctx->API == API_OPENGLES)
-      legalTypes |= BYTE_BIT;
 
    update_array(ctx, "glTexCoordPointer", VERT_ATTRIB_TEX(unit),
                 legalTypes, 1, 4,
@@ -305,25 +291,6 @@ _mesa_EdgeFlagPointer(GLsizei stride, const GLvoid *ptr)
    update_array(ctx, "glEdgeFlagPointer", VERT_ATTRIB_EDGEFLAG,
                 legalTypes, 1, 1,
                 1, GL_UNSIGNED_BYTE, stride, GL_FALSE, integer, ptr);
-}
-
-
-void GLAPIENTRY
-_mesa_PointSizePointer(GLenum type, GLsizei stride, const GLvoid *ptr)
-{
-   const GLbitfield legalTypes = (FLOAT_BIT | FIXED_ES_BIT);
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   if (ctx->API != API_OPENGLES) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glPointSizePointer(ES 1.x only)");
-      return;
-   }
-      
-   update_array(ctx, "glPointSizePointer", VERT_ATTRIB_POINT_SIZE,
-                legalTypes, 1, 1,
-                1, type, stride, GL_FALSE, GL_FALSE, ptr);
 }
 
 
@@ -375,8 +342,7 @@ _mesa_VertexAttribPointerARB(GLuint index, GLint size, GLenum type,
    const GLbitfield legalTypes = (BYTE_BIT | UNSIGNED_BYTE_BIT |
                                   SHORT_BIT | UNSIGNED_SHORT_BIT |
                                   INT_BIT | UNSIGNED_INT_BIT |
-                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT |
-                                  FIXED_ES_BIT | FIXED_GL_BIT);
+                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT | FIXED_GL_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
@@ -516,10 +482,8 @@ static const GLfloat *
 get_current_attrib(struct gl_context *ctx, GLuint index, const char *function)
 {
    if (index == 0) {
-      if (ctx->API != API_OPENGLES2) {
 	 _mesa_error(ctx, GL_INVALID_OPERATION, "%s(index==0)", function);
 	 return NULL;
-      }
    }
    else if (index >= ctx->Const.VertexProgram.MaxAttribs) {
       _mesa_error(ctx, GL_INVALID_VALUE,

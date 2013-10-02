@@ -141,10 +141,10 @@ remove_line_continuations(glcpp_parser_t *ctx, const char *shader)
 
 int
 preprocess(void *ralloc_ctx, const char **shader, char **info_log,
-	   const struct gl_extensions *extensions, int api)
+	   const struct gl_extensions *extensions)
 {
 	int errors;
-	glcpp_parser_t *parser = glcpp_parser_create (extensions, api);
+	glcpp_parser_t *parser = glcpp_parser_create (extensions);
 	*shader = remove_line_continuations(parser, *shader);
 
 	glcpp_lex_set_source_string (parser, *shader);

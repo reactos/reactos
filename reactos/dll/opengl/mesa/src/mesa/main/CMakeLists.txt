@@ -22,7 +22,6 @@ list(APPEND SOURCE
     dlist.c
     dlopen.c
     drawpix.c
-    drawtex.c
     enable.c
     enums.c
     eval.c
@@ -30,8 +29,6 @@ list(APPEND SOURCE
     extensions.c
     fbobject.c
     feedback.c
-    ff_fragment_shader.cpp
-    ffvertex_prog.c
     fog.c
     formats.c
     format_pack.c

@@ -343,12 +343,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_3d_f_rg1616_rev
    },
    {
-      MESA_FORMAT_ARGB2101010,
-      fetch_texel_1d_f_argb2101010,
-      fetch_texel_2d_f_argb2101010,
-      fetch_texel_3d_f_argb2101010
-   },
-   {
       MESA_FORMAT_Z24_S8,
       fetch_texel_1d_f_z24_s8,
       fetch_texel_2d_f_z24_s8,

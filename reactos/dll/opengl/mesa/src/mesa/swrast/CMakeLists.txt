@@ -13,7 +13,6 @@ list(APPEND SOURCE
     s_drawpix.c
     s_feedback.c
     s_fog.c
-    s_fragprog.c
     s_lines.c
     s_logic.c
     s_masking.c

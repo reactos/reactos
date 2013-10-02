@@ -644,11 +644,6 @@ _mesa_create_exec_table(void)
    SET_BindVertexArray(exec, _mesa_BindVertexArray);
    SET_GenVertexArrays(exec, _mesa_GenVertexArrays);
 
-#if FEATURE_OES_EGL_image
-   SET_EGLImageTargetTexture2DOES(exec, _mesa_EGLImageTargetTexture2DOES);
-   SET_EGLImageTargetRenderbufferStorageOES(exec, _mesa_EGLImageTargetRenderbufferStorageOES);
-#endif
-
 #if FEATURE_APPLE_object_purgeable
    SET_ObjectPurgeableAPPLE(exec, _mesa_ObjectPurgeableAPPLE);
    SET_ObjectUnpurgeableAPPLE(exec, _mesa_ObjectUnpurgeableAPPLE);

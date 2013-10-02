@@ -386,11 +386,9 @@ _tnl_RasterPos(struct gl_context *ctx, const GLfloat vObj[4])
       TRANSFORM_POINT( clip, ctx->ProjectionMatrixStack.Top->m, eye );
 
       /* clip to view volume. */
-      if (!ctx->Transform.DepthClamp) {
-         if (viewclip_point_z(clip) == 0) {
-            ctx->Current.RasterPosValid = GL_FALSE;
-            return;
-         }
+      if (viewclip_point_z(clip) == 0) {
+         ctx->Current.RasterPosValid = GL_FALSE;
+         return;
       }
       if (!ctx->Transform.RasterPositionUnclipped) {
          if (viewclip_point_xy(clip) == 0) {
@@ -419,12 +417,6 @@ _tnl_RasterPos(struct gl_context *ctx, const GLfloat vObj[4])
                                    + ctx->Viewport._WindowMap.m[MAT_TZ])
                                   / ctx->DrawBuffer->_DepthMaxF;
       ctx->Current.RasterPos[3] = clip[3];
-
-      if (ctx->Transform.DepthClamp) {
-	 ctx->Current.RasterPos[3] = CLAMP(ctx->Current.RasterPos[3],
-					   ctx->Viewport.Near,
-					   ctx->Viewport.Far);
-      }
 
       /* compute raster distance */
       if (ctx->Fog.FogCoordinateSource == GL_FOG_COORDINATE_EXT)

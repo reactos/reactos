@@ -378,12 +378,12 @@ _glthread_DECLARE_STATIC_MUTEX(OneTimeLock);
 static void
 one_time_init( struct gl_context *ctx )
 {
-   static GLbitfield api_init_mask = 0x0;
+   static GLboolean api_init = GL_FALSE;
 
    _glthread_LOCK_MUTEX(OneTimeLock);
 
    /* truly one-time init */
-   if (!api_init_mask) {
+   if (!api_init) {
       GLuint i;
 
       /* do some implementation tests */
@@ -416,8 +416,8 @@ one_time_init( struct gl_context *ctx )
       _mesa_test_formats();
 #endif
    }
-
-   api_init_mask |= 1 << ctx->API;
+   
+   api_init = GL_TRUE;
 
    _glthread_UNLOCK_MUTEX(OneTimeLock);
 
@@ -588,17 +588,8 @@ _mesa_init_constants(struct gl_context *ctx)
    ctx->Const.MaxVarying = MAX_VARYING;
 #endif
 
-   /* Shading language version */
-   if (ctx->API == API_OPENGL) {
-      ctx->Const.GLSLVersion = 120;
-      _mesa_override_glsl_version(ctx);
-   }
-   else if (ctx->API == API_OPENGLES2) {
-      ctx->Const.GLSLVersion = 100;
-   }
-   else if (ctx->API == API_OPENGLES) {
-      ctx->Const.GLSLVersion = 0; /* GLSL not supported */
-   }
+   ctx->Const.GLSLVersion = 120;
+   _mesa_override_glsl_version(ctx);
 
    /* GL_ARB_framebuffer_object */
    ctx->Const.MaxSamples = 0;
@@ -847,20 +838,17 @@ _mesa_alloc_dispatch_table(int size)
  */
 GLboolean
 _mesa_initialize_context(struct gl_context *ctx,
-                         gl_api api,
                          const struct gl_config *visual,
                          struct gl_context *share_list,
                          const struct dd_function_table *driverFunctions,
                          void *driverContext)
 {
    struct gl_shared_state *shared;
-   int i;
 
    /*ASSERT(driverContext);*/
    assert(driverFunctions->NewTextureObject);
    assert(driverFunctions->FreeTextureImageBuffer);
 
-   ctx->API = api;
    ctx->Visual = *visual;
    ctx->DrawBuffer = NULL;
    ctx->ReadBuffer = NULL;
@@ -896,45 +884,13 @@ _mesa_initialize_context(struct gl_context *ctx,
       return GL_FALSE;
    }
 
-#if FEATURE_dispatch
-   /* setup the API dispatch tables */
-   switch (ctx->API) {
-#if FEATURE_GL
-   case API_OPENGL:
-      ctx->Exec = _mesa_create_exec_table();
-      break;
-#endif
-#if FEATURE_ES1
-   case API_OPENGLES:
-      ctx->Exec = _mesa_create_exec_table_es1();
-      break;
-#endif
-#if FEATURE_ES2
-   case API_OPENGLES2:
-      ctx->Exec = _mesa_create_exec_table_es2();
-      break;
-#endif
-   default:
-      _mesa_problem(ctx, "unknown or unsupported API");
-      break;
-   }
+   ctx->Exec = _mesa_create_exec_table();
 
    if (!ctx->Exec) {
       _mesa_reference_shared_state(ctx, &ctx->Shared, NULL);
       return GL_FALSE;
    }
-#endif
    ctx->CurrentDispatch = ctx->Exec;
-
-   ctx->FragmentProgram._MaintainTexEnvProgram
-      = (_mesa_getenv("MESA_TEX_PROG") != NULL);
-
-   ctx->VertexProgram._MaintainTnlProgram
-      = (_mesa_getenv("MESA_TNL_PROG") != NULL);
-   if (ctx->VertexProgram._MaintainTnlProgram) {
-      /* this is required... */
-      ctx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
-   }
 
    /* Mesa core handles all the formats that mesa core knows about.
     * Drivers will want to override this list with just the formats
@@ -944,40 +900,14 @@ _mesa_initialize_context(struct gl_context *ctx,
    memset(&ctx->TextureFormatSupported, GL_TRUE,
 	  sizeof(ctx->TextureFormatSupported));
 
-   switch (ctx->API) {
-   case API_OPENGL:
-#if FEATURE_dlist
-      ctx->Save = _mesa_create_save_table();
-      if (!ctx->Save) {
-         _mesa_reference_shared_state(ctx, &ctx->Shared, NULL);
-	 free(ctx->Exec);
-	 return GL_FALSE;
-      }
-
-      _mesa_install_save_vtxfmt( ctx, &ctx->ListState.ListVtxfmt );
-#endif
-      break;
-   case API_OPENGLES:
-      /**
-       * GL_OES_texture_cube_map says
-       * "Initially all texture generation modes are set to REFLECTION_MAP_OES"
-       */
-      for (i = 0; i < MAX_TEXTURE_UNITS; i++) {
-	 struct gl_texture_unit *texUnit = &ctx->Texture.Unit[i];
-	 texUnit->GenS.Mode = GL_REFLECTION_MAP_NV;
-	 texUnit->GenT.Mode = GL_REFLECTION_MAP_NV;
-	 texUnit->GenR.Mode = GL_REFLECTION_MAP_NV;
-	 texUnit->GenS._ModeBit = TEXGEN_REFLECTION_MAP_NV;
-	 texUnit->GenT._ModeBit = TEXGEN_REFLECTION_MAP_NV;
-	 texUnit->GenR._ModeBit = TEXGEN_REFLECTION_MAP_NV;
-      }
-      break;
-   case API_OPENGLES2:
-      ctx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
-      ctx->VertexProgram._MaintainTnlProgram = GL_TRUE;
-      ctx->Point.PointSprite = GL_TRUE;  /* always on for ES 2.x */
-      break;
+   ctx->Save = _mesa_create_save_table();
+   if (!ctx->Save) {
+      _mesa_reference_shared_state(ctx, &ctx->Shared, NULL);
+      free(ctx->Exec);
+      return GL_FALSE;
    }
+
+   _mesa_install_save_vtxfmt( ctx, &ctx->ListState.ListVtxfmt );
 
    ctx->FirstTimeCurrent = GL_TRUE;
 
@@ -1001,8 +931,7 @@ _mesa_initialize_context(struct gl_context *ctx,
  * \return pointer to a new __struct gl_contextRec or NULL if error.
  */
 struct gl_context *
-_mesa_create_context(gl_api api,
-                     const struct gl_config *visual,
+_mesa_create_context(const struct gl_config *visual,
                      struct gl_context *share_list,
                      const struct dd_function_table *driverFunctions,
                      void *driverContext)
@@ -1016,7 +945,7 @@ _mesa_create_context(gl_api api,
    if (!ctx)
       return NULL;
 
-   if (_mesa_initialize_context(ctx, api, visual, share_list,
+   if (_mesa_initialize_context(ctx, visual, share_list,
                                 driverFunctions, driverContext)) {
       return ctx;
    }
@@ -1052,11 +981,9 @@ _mesa_free_context_data( struct gl_context *ctx )
 
    _mesa_reference_vertprog(ctx, &ctx->VertexProgram.Current, NULL);
    _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current, NULL);
-   _mesa_reference_vertprog(ctx, &ctx->VertexProgram._TnlProgram, NULL);
 
    _mesa_reference_fragprog(ctx, &ctx->FragmentProgram.Current, NULL);
    _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current, NULL);
-   _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram, NULL);
 
    _mesa_free_attrib_data(ctx);
    _mesa_free_buffer_objects(ctx);

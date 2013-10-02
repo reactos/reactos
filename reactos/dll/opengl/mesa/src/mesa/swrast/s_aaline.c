@@ -29,7 +29,6 @@
 #include "main/mtypes.h"
 #include "swrast/s_aaline.h"
 #include "swrast/s_context.h"
-#include "swrast/s_fragprog.h"
 #include "swrast/s_span.h"
 #include "swrast/swrast.h"
 
@@ -480,7 +479,6 @@ _swrast_choose_aa_line_function(struct gl_context *ctx)
    ASSERT(ctx->Line.SmoothFlag);
 
    if (ctx->Texture._EnabledCoordUnits != 0
-       || _swrast_use_fragment_program(ctx)
        || (ctx->Light.Enabled &&
            ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)
        || ctx->Fog.ColorSumEnabled

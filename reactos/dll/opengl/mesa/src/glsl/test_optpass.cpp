@@ -219,7 +219,7 @@ int test_optpass(int argc, char **argv)
       shader->Source = input.c_str();
       const char *source = shader->Source;
       state->error = preprocess(state, &source, &state->info_log,
-                                state->extensions, ctx->API) != 0;
+                                state->extensions) != 0;
 
       if (!state->error) {
          _mesa_glsl_lexer_ctor(state, source);

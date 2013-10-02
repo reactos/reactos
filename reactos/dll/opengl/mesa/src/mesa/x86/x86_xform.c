@@ -59,16 +59,14 @@ _mesa_x86_cliptest_points4( GLvector4f *clip_vec,
 			    GLvector4f *proj_vec,
 			    GLubyte clipMask[],
 			    GLubyte *orMask,
-			    GLubyte *andMask,
-			    GLboolean viewport_z_clip );
+			    GLubyte *andMask );
 
 extern GLvector4f * _ASMAPI
 _mesa_x86_cliptest_points4_np( GLvector4f *clip_vec,
 			       GLvector4f *proj_vec,
 			       GLubyte clipMask[],
 			       GLubyte *orMask,
-			       GLubyte *andMask,
-			       GLboolean viewport_z_clip );
+			       GLubyte *andMask);
 
 extern void _ASMAPI
 _mesa_v16_x86_cliptest_points4( GLfloat *first_vert,
