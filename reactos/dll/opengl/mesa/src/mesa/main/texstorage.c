@@ -67,10 +67,6 @@ legal_texobj_target(struct gl_context *ctx, GLuint dims, GLenum target)
       case GL_TEXTURE_CUBE_MAP:
       case GL_PROXY_TEXTURE_CUBE_MAP:
          return ctx->Extensions.ARB_texture_cube_map;
-      case GL_TEXTURE_1D_ARRAY:
-      case GL_PROXY_TEXTURE_1D_ARRAY:
-         return (ctx->Extensions.MESA_texture_array ||
-                 ctx->Extensions.EXT_texture_array);
       default:
          return GL_FALSE;
       }
@@ -79,10 +75,6 @@ legal_texobj_target(struct gl_context *ctx, GLuint dims, GLenum target)
       case GL_TEXTURE_3D:
       case GL_PROXY_TEXTURE_3D:
          return GL_TRUE;
-      case GL_TEXTURE_2D_ARRAY:
-      case GL_PROXY_TEXTURE_2D_ARRAY:
-         return (ctx->Extensions.MESA_texture_array ||
-                 ctx->Extensions.EXT_texture_array);
       default:
          return GL_FALSE;
       }
@@ -104,11 +96,11 @@ next_mipmap_level_size(GLenum target,
       *width /= 2;
    }
 
-   if ((*height > 1) && (target != GL_TEXTURE_1D_ARRAY)) {
+   if (*height > 1) {
       *height /= 2;
    }
 
-   if ((*depth > 1) && (target != GL_TEXTURE_2D_ARRAY)) {
+   if (*depth > 1) {
       *depth /= 2;
    }
 }

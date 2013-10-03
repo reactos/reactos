@@ -79,7 +79,6 @@ struct glsl_type {
 
    unsigned sampler_dimensionality:3; /**< \see glsl_sampler_dim */
    unsigned sampler_shadow:1;
-   unsigned sampler_array:1;
    unsigned sampler_type:2;    /**< Type of data returned using this sampler.
 				* only \c GLSL_TYPE_FLOAT, \c GLSL_TYPE_INT,
 				* and \c GLSL_TYPE_UINT are valid.
@@ -498,8 +497,6 @@ private:
    static const glsl_type builtin_110_types[];
    static const glsl_type builtin_120_types[];
    static const glsl_type builtin_130_types[];
-   static const glsl_type builtin_EXT_texture_array_types[];
-   static const glsl_type builtin_EXT_texture_buffer_object_types[];
    /*@}*/
 
    /**
@@ -515,7 +512,6 @@ private:
    static void generate_110_types(glsl_symbol_table *);
    static void generate_120_types(glsl_symbol_table *);
    static void generate_130_types(glsl_symbol_table *);
-   static void generate_EXT_texture_array_types(glsl_symbol_table *, bool);
    static void generate_OES_texture_3D_types(glsl_symbol_table *, bool);
    /*@}*/
 

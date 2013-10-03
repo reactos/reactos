@@ -665,12 +665,6 @@ struct dd_function_table {
 			     GLintptrARB offset, GLsizeiptrARB size,
 			     GLvoid *data, struct gl_buffer_object *obj );
 
-   void (*CopyBufferSubData)( struct gl_context *ctx,
-                              struct gl_buffer_object *src,
-                              struct gl_buffer_object *dst,
-                              GLintptr readOffset, GLintptr writeOffset,
-                              GLsizeiptr size );
-
    /* May return NULL if MESA_MAP_NOWAIT_BIT is set in access:
     */
    void * (*MapBufferRange)( struct gl_context *ctx, GLintptr offset,
@@ -995,11 +989,6 @@ typedef struct {
 					    GLenum type,
 					    const GLvoid **indices,
 					    GLsizei primcount);
-   void (GLAPIENTRYP DrawArraysInstanced)(GLenum mode, GLint first,
-                                          GLsizei count, GLsizei primcount);
-   void (GLAPIENTRYP DrawElementsInstanced)(GLenum mode, GLsizei count,
-                                            GLenum type, const GLvoid *indices,
-                                            GLsizei primcount);
    /*@}*/
 
    /**

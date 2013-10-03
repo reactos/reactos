@@ -55,9 +55,5 @@ void
 _mesa_unpack_ubyte_stencil_row(gl_format format, GLuint n,
 			       const void *src, GLubyte *dst);
 
-void
-_mesa_unpack_uint_24_8_depth_stencil_row(gl_format format, GLuint n,
-					 const void *src, GLuint *dst);
-
 
 #endif /* FORMAT_UNPACK_H */

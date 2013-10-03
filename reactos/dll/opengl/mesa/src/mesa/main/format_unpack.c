@@ -581,32 +581,6 @@ unpack_Z32(const void *src, GLfloat dst[][4], GLuint n)
    }
 }
 
-static void
-unpack_Z32_FLOAT(const void *src, GLfloat dst[][4], GLuint n)
-{
-   const GLfloat *s = ((const GLfloat *) src);
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      dst[i][0] =
-      dst[i][1] =
-      dst[i][2] = s[i * 2];
-      dst[i][3] = 1.0F;
-   }
-}
-
-static void
-unpack_Z32_FLOAT_X24S8(const void *src, GLfloat dst[][4], GLuint n)
-{
-   const GLfloat *s = ((const GLfloat *) src);
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      dst[i][0] =
-      dst[i][1] =
-      dst[i][2] = s[i];
-      dst[i][3] = 1.0F;
-   }
-}
-
 
 static void
 unpack_S8(const void *src, GLfloat dst[][4], GLuint n)
@@ -620,47 +594,6 @@ unpack_S8(const void *src, GLfloat dst[][4], GLuint n)
       dst[i][3] = 1.0F;
    }
 }
-
-
-static void
-unpack_SRGB8(const void *src, GLfloat dst[][4], GLuint n)
-{
-   const GLubyte *s = (const GLubyte *) src;
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      dst[i][RCOMP] = nonlinear_to_linear(s[i*3+2]);
-      dst[i][GCOMP] = nonlinear_to_linear(s[i*3+1]);
-      dst[i][BCOMP] = nonlinear_to_linear(s[i*3+0]);
-      dst[i][ACOMP] = 1.0F;
-   }
-}
-
-static void
-unpack_SRGBA8(const void *src, GLfloat dst[][4], GLuint n)
-{
-   const GLuint *s = ((const GLuint *) src);
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      dst[i][RCOMP] = nonlinear_to_linear( (s[i] >> 24) );
-      dst[i][GCOMP] = nonlinear_to_linear( (s[i] >> 16) & 0xff );
-      dst[i][BCOMP] = nonlinear_to_linear( (s[i] >>  8) & 0xff );
-      dst[i][ACOMP] = UBYTE_TO_FLOAT( s[i] & 0xff ); /* linear! */
-   }
-}
-
-static void
-unpack_SARGB8(const void *src, GLfloat dst[][4], GLuint n)
-{
-   const GLuint *s = ((const GLuint *) src);
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      dst[i][RCOMP] = nonlinear_to_linear( (s[i] >> 16) & 0xff );
-      dst[i][GCOMP] = nonlinear_to_linear( (s[i] >>  8) & 0xff );
-      dst[i][BCOMP] = nonlinear_to_linear( (s[i]      ) & 0xff );
-      dst[i][ACOMP] = UBYTE_TO_FLOAT( s[i] >> 24 ); /* linear! */
-   }
-}
-
 
 static void
 unpack_RGBA_FLOAT32(const void *src, GLfloat dst[][4], GLuint n)
@@ -979,16 +912,11 @@ get_unpack_rgba_function(gl_format format)
       table[MESA_FORMAT_I16] = unpack_I16;
       table[MESA_FORMAT_YCBCR] = unpack_YCBCR;
       table[MESA_FORMAT_YCBCR_REV] = unpack_YCBCR_REV;
-      table[MESA_FORMAT_Z24_S8] = unpack_Z24_S8;
-      table[MESA_FORMAT_S8_Z24] = unpack_S8_Z24;
       table[MESA_FORMAT_Z16] = unpack_Z16;
       table[MESA_FORMAT_X8_Z24] = unpack_X8_Z24;
       table[MESA_FORMAT_Z24_X8] = unpack_Z24_X8;
       table[MESA_FORMAT_Z32] = unpack_Z32;
       table[MESA_FORMAT_S8] = unpack_S8;
-      table[MESA_FORMAT_SRGB8] = unpack_SRGB8;
-      table[MESA_FORMAT_SRGBA8] = unpack_SRGBA8;
-      table[MESA_FORMAT_SARGB8] = unpack_SARGB8;
 
       table[MESA_FORMAT_RGBA_FLOAT32] = unpack_RGBA_FLOAT32;
       table[MESA_FORMAT_RGBA_FLOAT16] = unpack_RGBA_FLOAT16;
@@ -1013,9 +941,6 @@ get_unpack_rgba_function(gl_format format)
       table[MESA_FORMAT_DUDV8] = unpack_DUDV8;
       table[MESA_FORMAT_SIGNED_RGBA_16] = unpack_SIGNED_RGBA_16;
       table[MESA_FORMAT_RGBA_16] = unpack_RGBA_16;
-
-      table[MESA_FORMAT_Z32_FLOAT] = unpack_Z32_FLOAT;
-      table[MESA_FORMAT_Z32_FLOAT_X24S8] = unpack_Z32_FLOAT_X24S8;
 
       initialized = GL_TRUE;
    }
@@ -2021,22 +1946,6 @@ unpack_float_z_Z32(GLuint n, const void *src, GLfloat *dst)
    }
 }
 
-static void
-unpack_float_z_Z32F(GLuint n, const void *src, GLfloat *dst)
-{
-   memcpy(dst, src, n * sizeof(float));
-}
-
-static void
-unpack_float_z_Z32X24S8(GLuint n, const void *src, GLfloat *dst)
-{
-   const GLfloat *s = ((const GLfloat *) src);
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      dst[i] = s[i * 2];
-   }
-}
-
 
 
 /**
@@ -2050,11 +1959,9 @@ _mesa_unpack_float_z_row(gl_format format, GLuint n,
    unpack_float_z_func unpack;
 
    switch (format) {
-   case MESA_FORMAT_Z24_S8:
    case MESA_FORMAT_Z24_X8:
       unpack = unpack_float_z_Z24_X8;
       break;
-   case MESA_FORMAT_S8_Z24:
    case MESA_FORMAT_X8_Z24:
       unpack = unpack_float_z_X8_Z24;
       break;
@@ -2063,12 +1970,6 @@ _mesa_unpack_float_z_row(gl_format format, GLuint n,
       break;
    case MESA_FORMAT_Z32:
       unpack = unpack_float_z_Z32;
-      break;
-   case MESA_FORMAT_Z32_FLOAT:
-      unpack = unpack_float_z_Z32F;
-      break;
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      unpack = unpack_float_z_Z32X24S8;
       break;
    default:
       _mesa_problem(NULL, "bad format %s in _mesa_unpack_float_z_row",
@@ -2121,32 +2022,6 @@ unpack_uint_z_Z32(const void *src, GLuint *dst, GLuint n)
    memcpy(dst, src, n * sizeof(GLuint));
 }
 
-static void
-unpack_uint_z_Z32_FLOAT(const void *src, GLuint *dst, GLuint n)
-{
-   const float *s = (const float *)src;
-   GLuint i;
-   for (i = 0; i < n; i++) {
-      dst[i] = FLOAT_TO_UINT(CLAMP(s[i], 0.0F, 1.0F));
-   }
-}
-
-static void
-unpack_uint_z_Z32_FLOAT_X24S8(const void *src, GLuint *dst, GLuint n)
-{
-   struct z32f_x24s8 {
-      float z;
-      uint32_t x24s8;
-   };
-
-   const struct z32f_x24s8 *s = (const struct z32f_x24s8 *) src;
-   GLuint i;
-
-   for (i = 0; i < n; i++) {
-      dst[i] = FLOAT_TO_UINT(CLAMP(s[i].z, 0.0F, 1.0F));
-   }
-}
-
 
 /**
  * Unpack Z values.
@@ -2160,11 +2035,9 @@ _mesa_unpack_uint_z_row(gl_format format, GLuint n,
    const GLubyte *srcPtr = (GLubyte *) src;
 
    switch (format) {
-   case MESA_FORMAT_Z24_S8:
    case MESA_FORMAT_Z24_X8:
       unpack = unpack_uint_z_Z24_X8;
       break;
-   case MESA_FORMAT_S8_Z24:
    case MESA_FORMAT_X8_Z24:
       unpack = unpack_uint_z_X8_Z24;
       break;
@@ -2173,12 +2046,6 @@ _mesa_unpack_uint_z_row(gl_format format, GLuint n,
       break;
    case MESA_FORMAT_Z32:
       unpack = unpack_uint_z_Z32;
-      break;
-   case MESA_FORMAT_Z32_FLOAT:
-      unpack = unpack_uint_z_Z32_FLOAT;
-      break;
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      unpack = unpack_uint_z_Z32_FLOAT_X24S8;
       break;
    default:
       _mesa_problem(NULL, "bad format %s in _mesa_unpack_uint_z_row",
@@ -2196,36 +2063,6 @@ unpack_ubyte_s_S8(const void *src, GLubyte *dst, GLuint n)
    memcpy(dst, src, n);
 }
 
-static void
-unpack_ubyte_s_Z24_S8(const void *src, GLubyte *dst, GLuint n)
-{
-   GLuint i;
-   const GLuint *src32 = src;
-
-   for (i = 0; i < n; i++)
-      dst[i] = src32[i] & 0xff;
-}
-
-static void
-unpack_ubyte_s_S8_Z24(const void *src, GLubyte *dst, GLuint n)
-{
-   GLuint i;
-   const GLuint *src32 = src;
-
-   for (i = 0; i < n; i++)
-      dst[i] = src32[i] >> 24;
-}
-
-static void
-unpack_ubyte_s_Z32_FLOAT_X24S8(const void *src, GLubyte *dst, GLuint n)
-{
-   GLuint i;
-   const GLuint *src32 = src;
-
-   for (i = 0; i < n; i++)
-      dst[i] = src32[i * 2 + 1] & 0xff;
-}
-
 void
 _mesa_unpack_ubyte_stencil_row(gl_format format, GLuint n,
 			       const void *src, GLubyte *dst)
@@ -2234,53 +2071,8 @@ _mesa_unpack_ubyte_stencil_row(gl_format format, GLuint n,
    case MESA_FORMAT_S8:
       unpack_ubyte_s_S8(src, dst, n);
       break;
-   case MESA_FORMAT_Z24_S8:
-      unpack_ubyte_s_Z24_S8(src, dst, n);
-      break;
-   case MESA_FORMAT_S8_Z24:
-      unpack_ubyte_s_S8_Z24(src, dst, n);
-      break;
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      unpack_ubyte_s_Z32_FLOAT_X24S8(src, dst, n);
-      break;
    default:
       _mesa_problem(NULL, "bad format %s in _mesa_unpack_ubyte_s_row",
-                    _mesa_get_format_name(format));
-      return;
-   }
-}
-
-static void
-unpack_uint_24_8_depth_stencil_S8_Z24(const GLuint *src, GLuint *dst, GLuint n)
-{
-   GLuint i;
-
-   for (i = 0; i < n; i++) {
-      GLuint val = src[i];
-      dst[i] = val >> 24 | val << 8;
-   }
-}
-
-static void
-unpack_uint_24_8_depth_stencil_Z24_S8(const GLuint *src, GLuint *dst, GLuint n)
-{
-   memcpy(dst, src, n * 4);
-}
-
-void
-_mesa_unpack_uint_24_8_depth_stencil_row(gl_format format, GLuint n,
-					 const void *src, GLuint *dst)
-{
-   switch (format) {
-   case MESA_FORMAT_Z24_S8:
-      unpack_uint_24_8_depth_stencil_Z24_S8(src, dst, n);
-      break;
-   case MESA_FORMAT_S8_Z24:
-      unpack_uint_24_8_depth_stencil_S8_Z24(src, dst, n);
-      break;
-   default:
-      _mesa_problem(NULL,
-                    "bad format %s in _mesa_unpack_uint_24_8_depth_stencil_row",
                     _mesa_get_format_name(format));
       return;
    }

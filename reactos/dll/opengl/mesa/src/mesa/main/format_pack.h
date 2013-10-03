@@ -90,10 +90,6 @@ extern void
 _mesa_pack_ubyte_stencil_row(gl_format format, GLuint n,
                              const GLubyte *src, void *dst);
 
-extern void
-_mesa_pack_uint_24_8_depth_stencil_row(gl_format format, GLuint n,
-                                       const GLuint *src, void *dst);
-
 
 extern void
 _mesa_pack_colormask(gl_format format, const GLubyte colorMask[4], void *dst);

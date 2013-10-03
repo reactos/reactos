@@ -616,9 +616,6 @@ _mesa_create_exec_table(void)
    SET_FlushMappedBufferRange(exec, _mesa_FlushMappedBufferRange);
 #endif
 
-   /* GL_ARB_copy_buffer */
-   SET_CopyBufferSubData(exec, _mesa_CopyBufferSubData);
-
    /* GL_ARB_vertex_array_object */
    SET_BindVertexArray(exec, _mesa_BindVertexArray);
    SET_GenVertexArrays(exec, _mesa_GenVertexArrays);
@@ -645,10 +642,6 @@ _mesa_create_exec_table(void)
    SET_VertexAttribIPointerEXT(exec, _mesa_VertexAttribIPointer);
 
    /* GL 3.0 (functions not covered by other extensions) */
-   SET_ClearBufferiv(exec, _mesa_ClearBufferiv);
-   SET_ClearBufferuiv(exec, _mesa_ClearBufferuiv);
-   SET_ClearBufferfv(exec, _mesa_ClearBufferfv);
-   SET_ClearBufferfi(exec, _mesa_ClearBufferfi);
    SET_GetStringi(exec, _mesa_GetStringi);
    SET_ClampColor(exec, _mesa_ClampColorARB);
 
@@ -660,9 +653,6 @@ _mesa_create_exec_table(void)
 
    /* GL_NV_texture_barrier */
    SET_TextureBarrierNV(exec, _mesa_TextureBarrierNV);
- 
-   /* GL_ARB_texture_buffer_object */
-   SET_TexBufferARB(exec, _mesa_TexBuffer);
 
    /* GL_ARB_texture_storage */
    SET_TexStorage1D(exec, _mesa_TexStorage1D);

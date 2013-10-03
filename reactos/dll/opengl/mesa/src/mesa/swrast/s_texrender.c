@@ -74,26 +74,19 @@ update_wrapper(struct gl_context *ctx, struct gl_renderbuffer_attachment *att)
 
    format = swImage->Base.TexFormat;
 
-   if (att->Texture->Target == GL_TEXTURE_1D_ARRAY_EXT) {
-      zOffset = 0;
-   }
-   else {
-      zOffset = att->Zoffset;
-   }
+   zOffset = att->Zoffset;
 
    rb->Width = swImage->Base.Width;
    rb->Height = swImage->Base.Height;
    rb->InternalFormat = swImage->Base.InternalFormat;
    rb->_BaseFormat = _mesa_get_format_base_format(format);
 
-   /* Want to store linear values, not sRGB */
-   rb->Format = _mesa_get_srgb_format_linear(format);
+   rb->Format = format;
  
    /* Set the gl_renderbuffer::Buffer field so that mapping the buffer
     * succeeds.
      */
-   if (att->Texture->Target == GL_TEXTURE_3D ||
-       att->Texture->Target == GL_TEXTURE_2D_ARRAY_EXT) {
+   if (att->Texture->Target == GL_TEXTURE_3D) {
       srb->Buffer = swImage->Buffer +
          swImage->ImageOffsets[zOffset] * _mesa_get_format_bytes(format);
    }

@@ -43,7 +43,6 @@ read_builtins(GLenum target, const char *protos, const char **functions, unsigne
 
    st->language_version = 130;
    st->symbols->language_version = 130;
-   st->EXT_texture_array_enable = true;
    _mesa_glsl_initialize_types(st);
 
    sh->ir = new(sh) exec_list;
@@ -15878,114 +15877,6 @@ static const char *functions_for_ARB_shader_texture_lod_vert [] = {
    builtin_texture3DProjGradARB,
    builtin_textureCubeGradARB,
 };
-static const char prototypes_for_EXT_texture_array_frag[] =
-   "(\n"
-   "(function texture1DArray\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler1DArray sampler)\n"
-   "      (declare (in) vec2 coord))\n"
-   "    ())\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler1DArray sampler)\n"
-   "      (declare (in) vec2 coord)\n"
-   "      (declare (in) float bias))\n"
-   "    ()))\n"
-   "(function texture2DArray\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DArray sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ())\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DArray sampler)\n"
-   "      (declare (in) vec3 coord)\n"
-   "      (declare (in) float bias))\n"
-   "    ()))\n"
-   "(function shadow1DArray\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler1DArrayShadow sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ())\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler1DArrayShadow sampler)\n"
-   "      (declare (in) vec3 coord)\n"
-   "      (declare (in) float bias))\n"
-   "    ()))\n"
-   "(function shadow2DArray\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DArrayShadow sampler)\n"
-   "      (declare (in) vec4 coord))\n"
-   "    ())))"
-;
-static const char *functions_for_EXT_texture_array_frag [] = {
-   builtin_shadow1DArray,
-   builtin_shadow2DArray,
-   builtin_texture1DArray,
-   builtin_texture2DArray,
-};
-static const char prototypes_for_EXT_texture_array_vert[] =
-   "(\n"
-   "(function texture1DArray\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler1DArray sampler)\n"
-   "      (declare (in) vec2 coord))\n"
-   "    ()))\n"
-   "(function texture1DArrayLod\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler1DArray sampler)\n"
-   "      (declare (in) vec2 coord)\n"
-   "      (declare (in) float lod))\n"
-   "    ()))\n"
-   "(function texture2DArray\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DArray sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ()))\n"
-   "(function texture2DArrayLod\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DArray sampler)\n"
-   "      (declare (in) vec3 coord)\n"
-   "      (declare (in) float lod))\n"
-   "    ()))\n"
-   "(function shadow1DArray\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler1DArrayShadow sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ()))\n"
-   "(function shadow1DArrayLod\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler1DArrayShadow sampler)\n"
-   "      (declare (in) vec3 coord)\n"
-   "      (declare (in) float lod))\n"
-   "    ()))\n"
-   "(function shadow2DArray\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DArrayShadow sampler)\n"
-   "      (declare (in) vec4 coord))\n"
-   "    ())))"
-;
-static const char *functions_for_EXT_texture_array_vert [] = {
-   builtin_shadow1DArray,
-   builtin_shadow1DArrayLod,
-   builtin_shadow2DArray,
-   builtin_texture1DArray,
-   builtin_texture1DArrayLod,
-   builtin_texture2DArray,
-   builtin_texture2DArrayLod,
-};
 static const char prototypes_for_OES_texture_3D_frag[] =
    "(\n"
    "(function texture3D\n"
@@ -16163,20 +16054,6 @@ _mesa_glsl_initialize_functions(struct _mesa_glsl_parse_state *state)
                          prototypes_for_ARB_shader_texture_lod_vert,
                          functions_for_ARB_shader_texture_lod_vert,
                          Elements(functions_for_ARB_shader_texture_lod_vert));
-   }
-
-   if (state->target == fragment_shader && state->EXT_texture_array_enable) {
-      _mesa_read_profile(state, 12,
-                         prototypes_for_EXT_texture_array_frag,
-                         functions_for_EXT_texture_array_frag,
-                         Elements(functions_for_EXT_texture_array_frag));
-   }
-
-   if (state->target == vertex_shader && state->EXT_texture_array_enable) {
-      _mesa_read_profile(state, 13,
-                         prototypes_for_EXT_texture_array_vert,
-                         functions_for_EXT_texture_array_vert,
-                         Elements(functions_for_EXT_texture_array_vert));
    }
 
    if (state->target == fragment_shader && state->OES_texture_3D_enable) {

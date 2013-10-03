@@ -103,10 +103,7 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
           target == GL_TEXTURE_1D ||
           target == GL_TEXTURE_2D ||
           target == GL_TEXTURE_3D ||
-          target == GL_TEXTURE_CUBE_MAP_ARB ||
-          target == GL_TEXTURE_1D_ARRAY_EXT ||
-          target == GL_TEXTURE_2D_ARRAY_EXT ||
-          target == GL_TEXTURE_BUFFER);
+          target == GL_TEXTURE_CUBE_MAP_ARB);
 
    memset(obj, 0, sizeof(*obj));
    /* init the non-zero fields */
@@ -117,9 +114,6 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
    obj->Priority = 1.0F;
    obj->BaseLevel = 0;
    obj->MaxLevel = 1000;
-
-   /* must be one; no support for (YUV) planes in separate buffers */
-   obj->RequiredTextureImageUnits = 1;
 
    /* sampler state */
    obj->Sampler.WrapS = GL_REPEAT;
@@ -163,8 +157,6 @@ _mesa_delete_texture_object(struct gl_context *ctx,
       }
    }
 
-   _mesa_reference_buffer_object(ctx, &texObj->BufferObject, NULL);
-
    /* destroy the mutex -- it may have allocated memory (eg on bsd) */
    _glthread_DESTROY_MUTEX(texObj->Mutex);
 
@@ -207,8 +199,6 @@ _mesa_copy_texture_object( struct gl_texture_object *dest,
    dest->_MaxLambda = src->_MaxLambda;
    dest->GenerateMipmap = src->GenerateMipmap;
    dest->_Complete = src->_Complete;
-
-   dest->RequiredTextureImageUnits = src->RequiredTextureImageUnits;
 }
 
 
@@ -252,9 +242,6 @@ valid_texture_object(const struct gl_texture_object *tex)
    case GL_TEXTURE_2D:
    case GL_TEXTURE_3D:
    case GL_TEXTURE_CUBE_MAP_ARB:
-   case GL_TEXTURE_1D_ARRAY_EXT:
-   case GL_TEXTURE_2D_ARRAY_EXT:
-   case GL_TEXTURE_BUFFER:
       return GL_TRUE;
    case 0x99:
       _mesa_problem(NULL, "invalid reference to a deleted texture object");
@@ -393,13 +380,11 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
    }
 
    /* Compute _MaxLevel */
-   if ((t->Target == GL_TEXTURE_1D) ||
-       (t->Target == GL_TEXTURE_1D_ARRAY_EXT)) {
+   if (t->Target == GL_TEXTURE_1D) {
       maxLog2 = t->Image[0][baseLevel]->WidthLog2;
       maxLevels = ctx->Const.MaxTextureLevels;
    }
-   else if ((t->Target == GL_TEXTURE_2D) ||
-            (t->Target == GL_TEXTURE_2D_ARRAY_EXT)) {
+   else if (t->Target == GL_TEXTURE_2D) {
       maxLog2 = MAX2(t->Image[0][baseLevel]->WidthLog2,
                      t->Image[0][baseLevel]->HeightLog2);
       maxLevels = ctx->Const.MaxTextureLevels;
@@ -488,8 +473,7 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
       }
 
       /* Test things which depend on number of texture image dimensions */
-      if ((t->Target == GL_TEXTURE_1D) ||
-          (t->Target == GL_TEXTURE_1D_ARRAY_EXT)) {
+      if (t->Target == GL_TEXTURE_1D) {
          /* Test 1-D mipmaps */
          GLuint width = t->Image[0][baseLevel]->Width2;
          for (i = baseLevel + 1; i < maxLevels; i++) {
@@ -512,8 +496,7 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
             }
          }
       }
-      else if ((t->Target == GL_TEXTURE_2D) ||
-               (t->Target == GL_TEXTURE_2D_ARRAY_EXT)) {
+      else if (t->Target == GL_TEXTURE_2D) {
          /* Test 2-D mipmaps */
          GLuint width = t->Image[0][baseLevel]->Width2;
          GLuint height = t->Image[0][baseLevel]->Height2;
@@ -946,12 +929,6 @@ target_enum_to_index(GLenum target)
       return TEXTURE_3D_INDEX;
    case GL_TEXTURE_CUBE_MAP_ARB:
       return TEXTURE_CUBE_INDEX;
-   case GL_TEXTURE_1D_ARRAY_EXT:
-      return TEXTURE_1D_ARRAY_INDEX;
-   case GL_TEXTURE_2D_ARRAY_EXT:
-      return TEXTURE_2D_ARRAY_INDEX;
-   case GL_TEXTURE_BUFFER_ARB:
-      return TEXTURE_BUFFER_INDEX;
    default:
       return -1;
    }

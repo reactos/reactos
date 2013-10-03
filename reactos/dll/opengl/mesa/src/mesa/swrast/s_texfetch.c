@@ -303,18 +303,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_3d_f_ycbcr_rev
    },
    {
-      MESA_FORMAT_Z24_S8,
-      fetch_texel_1d_f_z24_s8,
-      fetch_texel_2d_f_z24_s8,
-      fetch_texel_3d_f_z24_s8
-   },
-   {
-      MESA_FORMAT_S8_Z24,
-      fetch_texel_1d_f_s8_z24,
-      fetch_texel_2d_f_s8_z24,
-      fetch_texel_3d_f_s8_z24
-   },
-   {
       MESA_FORMAT_Z16,
       fetch_texel_1d_f_z16,
       fetch_texel_2d_f_z16,
@@ -343,36 +331,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       NULL,
       NULL,
       NULL
-   },
-   {
-      MESA_FORMAT_SRGB8,
-      fetch_texel_1d_srgb8,
-      fetch_texel_2d_srgb8,
-      fetch_texel_3d_srgb8
-   },
-   {
-      MESA_FORMAT_SRGBA8,
-      fetch_texel_1d_srgba8,
-      fetch_texel_2d_srgba8,
-      fetch_texel_3d_srgba8
-   },
-   {
-      MESA_FORMAT_SARGB8,
-      fetch_texel_1d_sargb8,
-      fetch_texel_2d_sargb8,
-      fetch_texel_3d_sargb8
-   },
-   {
-      MESA_FORMAT_SL8,
-      fetch_texel_1d_sl8,
-      fetch_texel_2d_sl8,
-      fetch_texel_3d_sl8
-   },
-   {
-      MESA_FORMAT_SLA8,
-      fetch_texel_1d_sla8,
-      fetch_texel_2d_sla8,
-      fetch_texel_3d_sla8
    },
    {
       MESA_FORMAT_RGBA_FLOAT32,
@@ -715,18 +673,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_1d_rgba_16,
       fetch_texel_2d_rgba_16,
       fetch_texel_3d_rgba_16
-   },
-   {
-      MESA_FORMAT_Z32_FLOAT,
-      fetch_texel_1d_f_r_f32, /* Reuse the R32F functions. */
-      fetch_texel_2d_f_r_f32,
-      fetch_texel_3d_f_r_f32
-   },
-   {
-      MESA_FORMAT_Z32_FLOAT_X24S8,
-      fetch_texel_1d_z32f_x24s8,
-      fetch_texel_2d_z32f_x24s8,
-      fetch_texel_3d_z32f_x24s8
    }
 };
 
@@ -769,10 +715,6 @@ set_fetch_functions(struct swrast_texture_image *texImage, GLuint dims)
    gl_format format = texImage->Base.TexFormat;
 
    ASSERT(dims == 1 || dims == 2 || dims == 3);
-
-   if (_mesa_get_format_color_encoding(format) == GL_SRGB) {
-      format = _mesa_get_srgb_format_linear(format);
-   }
 
    texImage->FetchTexel = _mesa_get_texel_fetch_func(format, dims);
    ASSERT(texImage->FetchTexel);

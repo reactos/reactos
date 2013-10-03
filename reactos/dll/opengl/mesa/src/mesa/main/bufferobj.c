@@ -75,15 +75,6 @@ get_buffer_target(struct gl_context *ctx, GLenum target)
       return &ctx->Pack.BufferObj;
    case GL_PIXEL_UNPACK_BUFFER_EXT:
       return &ctx->Unpack.BufferObj;
-   case GL_COPY_READ_BUFFER:
-      return &ctx->CopyReadBuffer;
-   case GL_COPY_WRITE_BUFFER:
-      return &ctx->CopyWriteBuffer;
-   case GL_TEXTURE_BUFFER:
-      if (ctx->Extensions.ARB_texture_buffer_object) {
-         return &ctx->Texture.BufferObject;
-      }
-      break;
    default:
       return NULL;
    }
@@ -491,54 +482,6 @@ _mesa_buffer_unmap( struct gl_context *ctx, struct gl_buffer_object *bufObj )
 
 
 /**
- * Default fallback for \c dd_function_table::CopyBufferSubData().
- * Called via glCopyBuffserSubData().
- */
-static void
-_mesa_copy_buffer_subdata(struct gl_context *ctx,
-                          struct gl_buffer_object *src,
-                          struct gl_buffer_object *dst,
-                          GLintptr readOffset, GLintptr writeOffset,
-                          GLsizeiptr size)
-{
-   GLubyte *srcPtr, *dstPtr;
-
-   /* the buffers should not be mapped */
-   assert(!_mesa_bufferobj_mapped(src));
-   assert(!_mesa_bufferobj_mapped(dst));
-
-   if (src == dst) {
-      srcPtr = dstPtr = ctx->Driver.MapBufferRange(ctx, 0, src->Size,
-						   GL_MAP_READ_BIT |
-						   GL_MAP_WRITE_BIT, src);
-
-      if (!srcPtr)
-	 return;
-
-      srcPtr += readOffset;
-      dstPtr += writeOffset;
-   } else {
-      srcPtr = ctx->Driver.MapBufferRange(ctx, readOffset, size,
-					  GL_MAP_READ_BIT, src);
-      dstPtr = ctx->Driver.MapBufferRange(ctx, writeOffset, size,
-					  (GL_MAP_WRITE_BIT |
-					   GL_MAP_INVALIDATE_RANGE_BIT), dst);
-   }
-
-   /* Note: the src and dst regions will never overlap.  Trying to do so
-    * would generate GL_INVALID_VALUE earlier.
-    */
-   if (srcPtr && dstPtr)
-      memcpy(dstPtr, srcPtr, size);
-
-   ctx->Driver.UnmapBuffer(ctx, src);
-   if (dst != src)
-      ctx->Driver.UnmapBuffer(ctx, dst);
-}
-
-
-
-/**
  * Initialize the state associated with buffer objects
  */
 void
@@ -550,11 +493,6 @@ _mesa_init_buffer_objects( struct gl_context *ctx )
 
    _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj,
                                  ctx->Shared->NullBufferObj);
-
-   _mesa_reference_buffer_object(ctx, &ctx->CopyReadBuffer,
-                                 ctx->Shared->NullBufferObj);
-   _mesa_reference_buffer_object(ctx, &ctx->CopyWriteBuffer,
-                                 ctx->Shared->NullBufferObj);
 }
 
 
@@ -562,9 +500,6 @@ void
 _mesa_free_buffer_objects( struct gl_context *ctx )
 {
    _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj, NULL);
-
-   _mesa_reference_buffer_object(ctx, &ctx->CopyReadBuffer, NULL);
-   _mesa_reference_buffer_object(ctx, &ctx->CopyWriteBuffer, NULL);
 }
 
 
@@ -695,9 +630,6 @@ _mesa_init_buffer_object_functions(struct dd_function_table *driver)
    /* GL_ARB_map_buffer_range */
    driver->MapBufferRange = _mesa_buffer_map_range;
    driver->FlushMappedBufferRange = _mesa_buffer_flush_mapped_range;
-
-   /* GL_ARB_copy_buffer */
-   driver->CopyBufferSubData = _mesa_copy_buffer_subdata;
 }
 
 
@@ -766,14 +698,6 @@ _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
          }
          if (arrayObj->ElementArrayBufferObj == bufObj) {
             _mesa_BindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
-         }
-
-         /* unbind ARB_copy_buffer binding points */
-         if (ctx->CopyReadBuffer == bufObj) {
-            _mesa_BindBufferARB( GL_COPY_READ_BUFFER, 0 );
-         }
-         if (ctx->CopyWriteBuffer == bufObj) {
-            _mesa_BindBufferARB( GL_COPY_WRITE_BUFFER, 0 );
          }
 
          /* unbind any pixel pack/unpack pointers bound to this buffer */
@@ -1253,87 +1177,6 @@ _mesa_GetBufferPointervARB(GLenum target, GLenum pname, GLvoid **params)
 
    *params = bufObj->Pointer;
 }
-
-
-void GLAPIENTRY
-_mesa_CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
-                        GLintptr readOffset, GLintptr writeOffset,
-                        GLsizeiptr size)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   struct gl_buffer_object *src, *dst;
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   src = get_buffer(ctx, "glCopyBuffserSubData", readTarget);
-   if (!src)
-      return;
-
-   dst = get_buffer(ctx, "glCopyBuffserSubData", writeTarget);
-   if (!dst)
-      return;
-
-   if (_mesa_bufferobj_mapped(src)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glCopyBuffserSubData(readBuffer is mapped)");
-      return;
-   }
-
-   if (_mesa_bufferobj_mapped(dst)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glCopyBuffserSubData(writeBuffer is mapped)");
-      return;
-   }
-
-   if (readOffset < 0) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyBuffserSubData(readOffset = %d)", (int) readOffset);
-      return;
-   }
-
-   if (writeOffset < 0) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyBuffserSubData(writeOffset = %d)", (int) writeOffset);
-      return;
-   }
-
-   if (size < 0) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyBufferSubData(writeOffset = %d)", (int) size);
-      return;
-   }
-
-   if (readOffset + size > src->Size) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyBuffserSubData(readOffset + size = %d)",
-                  (int) (readOffset + size));
-      return;
-   }
-
-   if (writeOffset + size > dst->Size) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyBuffserSubData(writeOffset + size = %d)",
-                  (int) (writeOffset + size));
-      return;
-   }
-
-   if (src == dst) {
-      if (readOffset + size <= writeOffset) {
-         /* OK */
-      }
-      else if (writeOffset + size <= readOffset) {
-         /* OK */
-      }
-      else {
-         /* overlapping src/dst is illegal */
-         _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glCopyBuffserSubData(overlapping src/dst)");
-         return;
-      }
-   }
-
-   ctx->Driver.CopyBufferSubData(ctx, src, dst, readOffset, writeOffset, size);
-}
-
 
 /**
  * See GL_ARB_map_buffer_range spec

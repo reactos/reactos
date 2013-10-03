@@ -112,9 +112,6 @@
 /** Number of cube texture mipmap levels - GL_ARB_texture_cube_map */
 #define MAX_CUBE_TEXTURE_LEVELS 15
 
-/** Maximum number of layers in a 1D or 2D array texture - GL_MESA_texture_array */
-#define MAX_ARRAY_TEXTURE_LAYERS 64
-
 /**
  * Max number of texture coordinate units.  This mainly just applies to
  * the fixed-function vertex code.  This will be difficult to raise above

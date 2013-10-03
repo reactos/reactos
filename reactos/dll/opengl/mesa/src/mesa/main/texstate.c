@@ -683,9 +683,6 @@ alloc_proxy_textures( struct gl_context *ctx )
     * values!
     */
    static const GLenum targets[] = {
-      GL_TEXTURE_BUFFER,
-      GL_TEXTURE_2D_ARRAY_EXT,
-      GL_TEXTURE_1D_ARRAY_EXT,
       GL_TEXTURE_CUBE_MAP_ARB,
       GL_TEXTURE_3D,
       GL_TEXTURE_2D,
@@ -790,10 +787,6 @@ _mesa_init_texture(struct gl_context *ctx)
    if (!alloc_proxy_textures( ctx ))
       return GL_FALSE;
 
-   /* GL_ARB_texture_buffer_object */
-   _mesa_reference_buffer_object(ctx, &ctx->Texture.BufferObject,
-                                 ctx->Shared->NullBufferObj);
-
    return GL_TRUE;
 }
 
@@ -819,9 +812,6 @@ _mesa_free_texture_data(struct gl_context *ctx)
    /* Free proxy texture objects */
    for (tgt = 0; tgt < NUM_TEXTURE_TARGETS; tgt++)
       ctx->Driver.DeleteTexture(ctx, ctx->Texture.ProxyTex[tgt]);
-
-   /* GL_ARB_texture_buffer_object */
-   _mesa_reference_buffer_object(ctx, &ctx->Texture.BufferObject, NULL);
 
 #if FEATURE_sampler_objects
    for (u = 0; u < Elements(ctx->Texture.Unit); u++) {

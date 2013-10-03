@@ -127,7 +127,6 @@ blit_nearest(struct gl_context *ctx,
    enum mode {
       DIRECT,
       UNPACK_RGBA_FLOAT,
-      UNPACK_Z_FLOAT,
       UNPACK_Z_INT,
       UNPACK_S,
    } mode;
@@ -161,17 +160,7 @@ blit_nearest(struct gl_context *ctx,
    case GL_DEPTH_BUFFER_BIT:
       readRb = ctx->ReadBuffer->Attachment[BUFFER_DEPTH].Renderbuffer;
       drawRb = ctx->DrawBuffer->Attachment[BUFFER_DEPTH].Renderbuffer;
-
-      /* Note that for depth/stencil, the formats of src/dst must match.  By
-       * using the core helpers for pack/unpack, we avoid needing to handle
-       * masking for things like DEPTH copies of Z24S8.
-       */
-      if (readRb->Format == MESA_FORMAT_Z32_FLOAT ||
-	  readRb->Format == MESA_FORMAT_Z32_FLOAT_X24S8) {
-	 mode = UNPACK_Z_FLOAT;
-      } else {
-	 mode = UNPACK_Z_INT;
-      }
+	  mode = UNPACK_Z_INT;
       pixelSize = 4;
       break;
    case GL_STENCIL_BUFFER_BIT:
@@ -300,10 +289,6 @@ blit_nearest(struct gl_context *ctx,
 	    _mesa_unpack_rgba_row(readRb->Format, srcWidth, srcRowStart,
 				  srcBuffer);
 	    break;
-	 case UNPACK_Z_FLOAT:
-	    _mesa_unpack_float_z_row(readRb->Format, srcWidth, srcRowStart,
-				     srcBuffer);
-	    break;
 	 case UNPACK_Z_INT:
 	    _mesa_unpack_uint_z_row(readRb->Format, srcWidth, srcRowStart,
 				    srcBuffer);
@@ -326,10 +311,6 @@ blit_nearest(struct gl_context *ctx,
       case UNPACK_RGBA_FLOAT:
 	 _mesa_pack_float_rgba_row(drawRb->Format, dstWidth, dstBuffer,
 				   dstRowStart);
-	 break;
-      case UNPACK_Z_FLOAT:
-	 _mesa_pack_float_z_row(drawRb->Format, dstWidth, dstBuffer,
-				dstRowStart);
 	 break;
       case UNPACK_Z_INT:
 	 _mesa_pack_uint_z_row(drawRb->Format, dstWidth, dstBuffer,
@@ -513,8 +494,8 @@ blit_linear(struct gl_context *ctx,
    GLint srcBufferY0 = -1, srcBufferY1 = -1;
    GLvoid *dstBuffer;
 
-   gl_format readFormat = _mesa_get_srgb_format_linear(readRb->Format);
-   gl_format drawFormat = _mesa_get_srgb_format_linear(drawRb->Format);
+   gl_format readFormat = readRb->Format;
+   gl_format drawFormat = drawRb->Format;
    GLuint bpp = _mesa_get_format_bytes(readFormat);
 
    GLenum pixelType;

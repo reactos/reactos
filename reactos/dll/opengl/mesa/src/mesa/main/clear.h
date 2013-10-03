@@ -48,17 +48,4 @@ extern void GLAPIENTRY
 _mesa_Clear( GLbitfield mask );
 
 
-extern void GLAPIENTRY
-_mesa_ClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint *value);
-
-extern void GLAPIENTRY
-_mesa_ClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint *value);
-
-extern void GLAPIENTRY
-_mesa_ClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *value);
-
-extern void GLAPIENTRY
-_mesa_ClearBufferfi(GLenum buffer, GLint drawbuffer,
-                    GLfloat depth, GLint stencil);
-
 #endif

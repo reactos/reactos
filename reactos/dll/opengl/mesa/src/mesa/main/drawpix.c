@@ -179,8 +179,7 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
     */
    if (type != GL_COLOR &&
        type != GL_DEPTH &&
-       type != GL_STENCIL &&
-       type != GL_DEPTH_STENCIL) {
+       type != GL_STENCIL) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glCopyPixels(type=%s)",
                   _mesa_lookup_enum_by_nr(type));
       return;

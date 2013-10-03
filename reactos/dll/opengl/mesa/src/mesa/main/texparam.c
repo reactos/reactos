@@ -115,18 +115,6 @@ get_texobj(struct gl_context *ctx, GLenum target, GLboolean get)
          return texUnit->CurrentTex[TEXTURE_CUBE_INDEX];
       }
       break;
-   case GL_TEXTURE_1D_ARRAY_EXT:
-      if (ctx->Extensions.MESA_texture_array ||
-          ctx->Extensions.EXT_texture_array) {
-         return texUnit->CurrentTex[TEXTURE_1D_ARRAY_INDEX];
-      }
-      break;
-   case GL_TEXTURE_2D_ARRAY_EXT:
-      if (ctx->Extensions.MESA_texture_array ||
-          ctx->Extensions.EXT_texture_array) {
-         return texUnit->CurrentTex[TEXTURE_2D_ARRAY_INDEX];
-      }
-      break;
    default:
       ;
    }
@@ -750,12 +738,6 @@ _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
          else {
             *params = 0;
          }
-         break;
-      case GL_TEXTURE_STENCIL_SIZE_EXT:
-         if (!ctx->Extensions.EXT_packed_depth_stencil &&
-             !ctx->Extensions.ARB_framebuffer_object)
-            goto invalid_pname;
-         *params = _mesa_get_format_bits(texFormat, pname);
          break;
 
       /* GL_ARB_texture_float */

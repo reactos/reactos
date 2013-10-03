@@ -34,11 +34,6 @@ static void generate_ARB_draw_buffers_variables(exec_list *,
 						struct _mesa_glsl_parse_state *,
 						bool, _mesa_glsl_parser_targets);
 
-static void
-generate_ARB_draw_instanced_variables(exec_list *,
-                                      struct _mesa_glsl_parse_state *,
-                                      bool, _mesa_glsl_parser_targets);
-
 struct builtin_variable {
    enum ir_variable_mode mode;
    int slot;
@@ -759,10 +754,6 @@ initialize_vs_variables(exec_list *instructions,
       generate_130_vs_variables(instructions, state);
       break;
    }
-
-   if (state->ARB_draw_instanced_enable)
-      generate_ARB_draw_instanced_variables(instructions, state, false,
-                                            vertex_shader);
 }
 
 
@@ -856,26 +847,6 @@ generate_ARB_draw_buffers_variables(exec_list *instructions,
 
       if (warn)
 	 fd->warn_extension = "GL_ARB_draw_buffers";
-   }
-}
-
-
-static void
-generate_ARB_draw_instanced_variables(exec_list *instructions,
-                                      struct _mesa_glsl_parse_state *state,
-                                      bool warn,
-                                      _mesa_glsl_parser_targets target)
-{
-   /* gl_InstanceIDARB is only available in the vertex shader.
-    */
-   if (target == vertex_shader) {
-      ir_variable *const inst =
-         add_variable(instructions, state->symbols,
-		      "gl_InstanceIDARB", glsl_type::int_type,
-		      ir_var_system_value, SYSTEM_VALUE_INSTANCE_ID);
-
-      if (warn)
-         inst->warn_extension = "GL_ARB_draw_instanced";
    }
 }
 

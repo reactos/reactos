@@ -2451,34 +2451,6 @@ yyreduce:
     { (yyval.integer) = -TEXTURE_2D_INDEX; ;}
     break;
 
-  case 43:
-
-/* Line 1464 of yacc.c  */
-#line 532 "program/program_parse.y"
-    { (yyval.integer) = TEXTURE_1D_ARRAY_INDEX; ;}
-    break;
-
-  case 44:
-
-/* Line 1464 of yacc.c  */
-#line 533 "program/program_parse.y"
-    { (yyval.integer) = TEXTURE_2D_ARRAY_INDEX; ;}
-    break;
-
-  case 45:
-
-/* Line 1464 of yacc.c  */
-#line 534 "program/program_parse.y"
-    { (yyval.integer) = -TEXTURE_1D_ARRAY_INDEX; ;}
-    break;
-
-  case 46:
-
-/* Line 1464 of yacc.c  */
-#line 535 "program/program_parse.y"
-    { (yyval.integer) = -TEXTURE_2D_ARRAY_INDEX; ;}
-    break;
-
   case 47:
 
 /* Line 1464 of yacc.c  */

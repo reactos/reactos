@@ -238,15 +238,6 @@ _mesa_ARBfp_parse_option(struct asm_parser_state *state, const char *option)
 	    return 1;
 	 }
       }
-   } else if (strncmp(option, "MESA_", 5) == 0) {
-      option += 5;
-
-      if (strcmp(option, "texture_array") == 0) {
-	 if (state->ctx->Extensions.MESA_texture_array) {
-	    state->option.TexArray = 1;
-	    return 1;
-	 }
-      }
    }
 
    return 0;

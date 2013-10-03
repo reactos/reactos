@@ -129,14 +129,6 @@ _mesa_pack_depth_span(struct gl_context *ctx, GLuint n, GLvoid *dest,
                       const struct gl_pixelstore_attrib *dstPacking);
 
 
-extern void
-_mesa_pack_depth_stencil_span(struct gl_context *ctx,GLuint n,
-                              GLenum dstType, GLuint *dest,
-                              const GLfloat *depthVals,
-                              const GLubyte *stencilVals,
-                              const struct gl_pixelstore_attrib *dstPacking);
-
-
 extern void *
 _mesa_unpack_image(GLuint dimensions,
                    GLsizei width, GLsizei height, GLsizei depth,

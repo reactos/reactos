@@ -499,12 +499,7 @@
 #define _gloffset_UniformMatrix4x2fv 428
 #define _gloffset_UniformMatrix4x3fv 429
 #define _gloffset_ClampColor 430
-#define _gloffset_ClearBufferfi 431
-#define _gloffset_ClearBufferfv 432
-#define _gloffset_ClearBufferiv 433
-#define _gloffset_ClearBufferuiv 434
 #define _gloffset_GetStringi 435
-#define _gloffset_TexBuffer 436
 #define _gloffset_GetBufferParameteri64v 438
 #define _gloffset_GetInteger64i_v 439
 #define _gloffset_LoadTransposeMatrixdARB 441
@@ -624,15 +619,11 @@
 #define _gloffset_GetAttribLocationARB 570
 #define _gloffset_DrawBuffersARB 571
 #define _gloffset_ClampColorARB 572
-#define _gloffset_DrawArraysInstancedARB 573
-#define _gloffset_DrawElementsInstancedARB 574
 #define _gloffset_RenderbufferStorageMultisample 575
 #define _gloffset_FlushMappedBufferRange 580
 #define _gloffset_MapBufferRange 581
-#define _gloffset_TexBufferARB 582
 #define _gloffset_BindVertexArray 583
 #define _gloffset_GenVertexArrays 584
-#define _gloffset_CopyBufferSubData 585
 #define _gloffset_BlendEquationSeparateiARB 597
 #define _gloffset_BlendEquationiARB 598
 #define _gloffset_BlendFuncSeparateiARB 599
@@ -936,10 +927,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define UniformMatrix4x2fv_remap_index 20
 #define UniformMatrix4x3fv_remap_index 21
 #define ClampColor_remap_index 22
-#define ClearBufferfi_remap_index 23
-#define ClearBufferfv_remap_index 24
-#define ClearBufferiv_remap_index 25
-#define ClearBufferuiv_remap_index 26
 #define GetStringi_remap_index 27
 #define TexBuffer_remap_index 28
 #define GetBufferParameteri64v_remap_index 30
@@ -1062,16 +1049,12 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define GetAttribLocationARB_remap_index 162
 #define DrawBuffersARB_remap_index 163
 #define ClampColorARB_remap_index 164
-#define DrawArraysInstancedARB_remap_index 165
-#define DrawElementsInstancedARB_remap_index 166
 #define RenderbufferStorageMultisample_remap_index 167
 #define VertexAttribDivisorARB_remap_index 171
 #define FlushMappedBufferRange_remap_index 172
 #define MapBufferRange_remap_index 173
-#define TexBufferARB_remap_index 174
 #define BindVertexArray_remap_index 175
 #define GenVertexArrays_remap_index 176
-#define CopyBufferSubData_remap_index 177
 #define BlendEquationSeparateiARB_remap_index 189
 #define BlendEquationiARB_remap_index 190
 #define BlendFuncSeparateiARB_remap_index 191
@@ -1370,12 +1353,7 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_UniformMatrix4x2fv driDispatchRemapTable[UniformMatrix4x2fv_remap_index]
 #define _gloffset_UniformMatrix4x3fv driDispatchRemapTable[UniformMatrix4x3fv_remap_index]
 #define _gloffset_ClampColor driDispatchRemapTable[ClampColor_remap_index]
-#define _gloffset_ClearBufferfi driDispatchRemapTable[ClearBufferfi_remap_index]
-#define _gloffset_ClearBufferfv driDispatchRemapTable[ClearBufferfv_remap_index]
-#define _gloffset_ClearBufferiv driDispatchRemapTable[ClearBufferiv_remap_index]
-#define _gloffset_ClearBufferuiv driDispatchRemapTable[ClearBufferuiv_remap_index]
 #define _gloffset_GetStringi driDispatchRemapTable[GetStringi_remap_index]
-#define _gloffset_TexBuffer driDispatchRemapTable[TexBuffer_remap_index]
 #define _gloffset_FramebufferTexture driDispatchRemapTable[FramebufferTexture_remap_index]
 #define _gloffset_GetBufferParameteri64v driDispatchRemapTable[GetBufferParameteri64v_remap_index]
 #define _gloffset_GetInteger64i_v driDispatchRemapTable[GetInteger64i_v_remap_index]
@@ -1496,15 +1474,11 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_GetAttribLocationARB driDispatchRemapTable[GetAttribLocationARB_remap_index]
 #define _gloffset_DrawBuffersARB driDispatchRemapTable[DrawBuffersARB_remap_index]
 #define _gloffset_ClampColorARB driDispatchRemapTable[ClampColorARB_remap_index]
-#define _gloffset_DrawArraysInstancedARB driDispatchRemapTable[DrawArraysInstancedARB_remap_index]
-#define _gloffset_DrawElementsInstancedARB driDispatchRemapTable[DrawElementsInstancedARB_remap_index]
 #define _gloffset_RenderbufferStorageMultisample driDispatchRemapTable[RenderbufferStorageMultisample_remap_index]
 #define _gloffset_FlushMappedBufferRange driDispatchRemapTable[FlushMappedBufferRange_remap_index]
 #define _gloffset_MapBufferRange driDispatchRemapTable[MapBufferRange_remap_index]
-#define _gloffset_TexBufferARB driDispatchRemapTable[TexBufferARB_remap_index]
 #define _gloffset_BindVertexArray driDispatchRemapTable[BindVertexArray_remap_index]
 #define _gloffset_GenVertexArrays driDispatchRemapTable[GenVertexArrays_remap_index]
-#define _gloffset_CopyBufferSubData driDispatchRemapTable[CopyBufferSubData_remap_index]
 #define _gloffset_BlendEquationSeparateiARB driDispatchRemapTable[BlendEquationSeparateiARB_remap_index]
 #define _gloffset_BlendEquationiARB driDispatchRemapTable[BlendEquationiARB_remap_index]
 #define _gloffset_BlendFuncSeparateiARB driDispatchRemapTable[BlendFuncSeparateiARB_remap_index]
@@ -6523,50 +6497,6 @@ static inline void SET_ClampColor(struct _glapi_table *disp, void (GLAPIENTRYP f
    SET_by_offset(disp, _gloffset_ClampColor, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_ClearBufferfi)(GLenum, GLint, GLfloat, GLint);
-#define CALL_ClearBufferfi(disp, parameters) \
-    (* GET_ClearBufferfi(disp)) parameters
-static inline _glptr_ClearBufferfi GET_ClearBufferfi(struct _glapi_table *disp) {
-   return (_glptr_ClearBufferfi) (GET_by_offset(disp, _gloffset_ClearBufferfi));
-}
-
-static inline void SET_ClearBufferfi(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLfloat, GLint)) {
-   SET_by_offset(disp, _gloffset_ClearBufferfi, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ClearBufferfv)(GLenum, GLint, const GLfloat *);
-#define CALL_ClearBufferfv(disp, parameters) \
-    (* GET_ClearBufferfv(disp)) parameters
-static inline _glptr_ClearBufferfv GET_ClearBufferfv(struct _glapi_table *disp) {
-   return (_glptr_ClearBufferfv) (GET_by_offset(disp, _gloffset_ClearBufferfv));
-}
-
-static inline void SET_ClearBufferfv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, const GLfloat *)) {
-   SET_by_offset(disp, _gloffset_ClearBufferfv, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ClearBufferiv)(GLenum, GLint, const GLint *);
-#define CALL_ClearBufferiv(disp, parameters) \
-    (* GET_ClearBufferiv(disp)) parameters
-static inline _glptr_ClearBufferiv GET_ClearBufferiv(struct _glapi_table *disp) {
-   return (_glptr_ClearBufferiv) (GET_by_offset(disp, _gloffset_ClearBufferiv));
-}
-
-static inline void SET_ClearBufferiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, const GLint *)) {
-   SET_by_offset(disp, _gloffset_ClearBufferiv, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ClearBufferuiv)(GLenum, GLint, const GLuint *);
-#define CALL_ClearBufferuiv(disp, parameters) \
-    (* GET_ClearBufferuiv(disp)) parameters
-static inline _glptr_ClearBufferuiv GET_ClearBufferuiv(struct _glapi_table *disp) {
-   return (_glptr_ClearBufferuiv) (GET_by_offset(disp, _gloffset_ClearBufferuiv));
-}
-
-static inline void SET_ClearBufferuiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, const GLuint *)) {
-   SET_by_offset(disp, _gloffset_ClearBufferuiv, fn);
-}
-
 typedef const GLubyte * (GLAPIENTRYP _glptr_GetStringi)(GLenum, GLuint);
 #define CALL_GetStringi(disp, parameters) \
     (* GET_GetStringi(disp)) parameters
@@ -6576,17 +6506,6 @@ static inline _glptr_GetStringi GET_GetStringi(struct _glapi_table *disp) {
 
 static inline void SET_GetStringi(struct _glapi_table *disp, const GLubyte * (GLAPIENTRYP fn)(GLenum, GLuint)) {
    SET_by_offset(disp, _gloffset_GetStringi, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_TexBuffer)(GLenum, GLenum, GLuint);
-#define CALL_TexBuffer(disp, parameters) \
-    (* GET_TexBuffer(disp)) parameters
-static inline _glptr_TexBuffer GET_TexBuffer(struct _glapi_table *disp) {
-   return (_glptr_TexBuffer) (GET_by_offset(disp, _gloffset_TexBuffer));
-}
-
-static inline void SET_TexBuffer(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLuint)) {
-   SET_by_offset(disp, _gloffset_TexBuffer, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_GetBufferParameteri64v)(GLenum, GLenum, GLint64 *);
@@ -7898,28 +7817,6 @@ static inline void SET_ClampColorARB(struct _glapi_table *disp, void (GLAPIENTRY
    SET_by_offset(disp, _gloffset_ClampColorARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_DrawArraysInstancedARB)(GLenum, GLint, GLsizei, GLsizei);
-#define CALL_DrawArraysInstancedARB(disp, parameters) \
-    (* GET_DrawArraysInstancedARB(disp)) parameters
-static inline _glptr_DrawArraysInstancedARB GET_DrawArraysInstancedARB(struct _glapi_table *disp) {
-   return (_glptr_DrawArraysInstancedARB) (GET_by_offset(disp, _gloffset_DrawArraysInstancedARB));
-}
-
-static inline void SET_DrawArraysInstancedARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLsizei, GLsizei)) {
-   SET_by_offset(disp, _gloffset_DrawArraysInstancedARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_DrawElementsInstancedARB)(GLenum, GLsizei, GLenum, const GLvoid *, GLsizei);
-#define CALL_DrawElementsInstancedARB(disp, parameters) \
-    (* GET_DrawElementsInstancedARB(disp)) parameters
-static inline _glptr_DrawElementsInstancedARB GET_DrawElementsInstancedARB(struct _glapi_table *disp) {
-   return (_glptr_DrawElementsInstancedARB) (GET_by_offset(disp, _gloffset_DrawElementsInstancedARB));
-}
-
-static inline void SET_DrawElementsInstancedARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLenum, const GLvoid *, GLsizei)) {
-   SET_by_offset(disp, _gloffset_DrawElementsInstancedARB, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_RenderbufferStorageMultisample)(GLenum, GLsizei, GLenum, GLsizei, GLsizei);
 #define CALL_RenderbufferStorageMultisample(disp, parameters) \
     (* GET_RenderbufferStorageMultisample(disp)) parameters
@@ -7953,17 +7850,6 @@ static inline void SET_MapBufferRange(struct _glapi_table *disp, GLvoid * (GLAPI
    SET_by_offset(disp, _gloffset_MapBufferRange, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_TexBufferARB)(GLenum, GLenum, GLuint);
-#define CALL_TexBufferARB(disp, parameters) \
-    (* GET_TexBufferARB(disp)) parameters
-static inline _glptr_TexBufferARB GET_TexBufferARB(struct _glapi_table *disp) {
-   return (_glptr_TexBufferARB) (GET_by_offset(disp, _gloffset_TexBufferARB));
-}
-
-static inline void SET_TexBufferARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLuint)) {
-   SET_by_offset(disp, _gloffset_TexBufferARB, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_BindVertexArray)(GLuint);
 #define CALL_BindVertexArray(disp, parameters) \
     (* GET_BindVertexArray(disp)) parameters
@@ -7984,17 +7870,6 @@ static inline _glptr_GenVertexArrays GET_GenVertexArrays(struct _glapi_table *di
 
 static inline void SET_GenVertexArrays(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
    SET_by_offset(disp, _gloffset_GenVertexArrays, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_CopyBufferSubData)(GLenum, GLenum, GLintptr, GLintptr, GLsizeiptr);
-#define CALL_CopyBufferSubData(disp, parameters) \
-    (* GET_CopyBufferSubData(disp)) parameters
-static inline _glptr_CopyBufferSubData GET_CopyBufferSubData(struct _glapi_table *disp) {
-   return (_glptr_CopyBufferSubData) (GET_by_offset(disp, _gloffset_CopyBufferSubData));
-}
-
-static inline void SET_CopyBufferSubData(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLintptr, GLintptr, GLsizeiptr)) {
-   SET_by_offset(disp, _gloffset_CopyBufferSubData, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_BlendEquationSeparateiARB)(GLuint, GLenum, GLenum);

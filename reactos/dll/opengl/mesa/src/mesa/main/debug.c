@@ -47,9 +47,7 @@ tex_target_name(GLenum tgt)
       { GL_TEXTURE_1D, "GL_TEXTURE_1D" },
       { GL_TEXTURE_2D, "GL_TEXTURE_2D" },
       { GL_TEXTURE_3D, "GL_TEXTURE_3D" },
-      { GL_TEXTURE_CUBE_MAP, "GL_TEXTURE_CUBE_MAP" },
-      { GL_TEXTURE_1D_ARRAY_EXT, "GL_TEXTURE_1D_ARRAY" },
-      { GL_TEXTURE_2D_ARRAY_EXT, "GL_TEXTURE_2D_ARRAY" }
+      { GL_TEXTURE_CUBE_MAP, "GL_TEXTURE_CUBE_MAP" }
    };
    GLuint i;
    for (i = 0; i < Elements(tex_targets); i++) {
@@ -297,10 +295,6 @@ _mesa_write_renderbuffer_image(const struct gl_renderbuffer *rb)
        rb->_BaseFormat == GL_RGBA) {
       format = GL_RGBA;
       type = GL_UNSIGNED_BYTE;
-   }
-   else if (rb->_BaseFormat == GL_DEPTH_STENCIL) {
-      format = GL_DEPTH_STENCIL;
-      type = GL_UNSIGNED_INT_24_8;
    }
    else {
       _mesa_debug(NULL,

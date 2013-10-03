@@ -46,40 +46,6 @@ typedef void (*pack_ubyte_rgba_row_func)(GLuint n,
 typedef void (*pack_float_rgba_row_func)(GLuint n,
                                          const GLfloat src[][4], void *dst);
 
-
-
-static inline GLfloat
-linear_to_srgb(GLfloat cl)
-{
-   if (cl < 0.0f)
-      return 0.0f;
-   else if (cl < 0.0031308f)
-      return 12.92f * cl;
-   else if (cl < 1.0f)
-      return 1.055f * powf(cl, 0.41666f) - 0.055f;
-   else
-      return 1.0f;
-}
-
-
-static inline GLubyte
-linear_float_to_srgb_ubyte(GLfloat cl)
-{
-   GLubyte res = FLOAT_TO_UBYTE(linear_to_srgb(cl));
-   return res;
-}
-
-
-static inline GLubyte
-linear_ubyte_to_srgb_ubyte(GLubyte cl)
-{
-   GLubyte res = FLOAT_TO_UBYTE(linear_to_srgb(cl / 255.0f));
-   return res;
-}
-
-
-
-
 /*
  * MESA_FORMAT_RGBA8888
  */
@@ -848,115 +814,6 @@ pack_float_YCBCR_REV(const GLfloat src[4], void *dst)
 }
 
 
-/* MESA_FORMAT_SRGB8 */
-
-static void
-pack_ubyte_SRGB8(const GLubyte src[4], void *dst)
-{
-   GLubyte *d = ((GLubyte *) dst);
-   d[2] = linear_ubyte_to_srgb_ubyte(src[RCOMP]);
-   d[1] = linear_ubyte_to_srgb_ubyte(src[RCOMP]);
-   d[0] = linear_ubyte_to_srgb_ubyte(src[RCOMP]);
-}
-
-static void
-pack_float_SRGB8(const GLfloat src[4], void *dst)
-{
-   GLubyte *d = ((GLubyte *) dst);
-   d[2] = linear_float_to_srgb_ubyte(src[RCOMP]);
-   d[1] = linear_float_to_srgb_ubyte(src[GCOMP]);
-   d[0] = linear_float_to_srgb_ubyte(src[BCOMP]);
-}
-
-
-/* MESA_FORMAT_SRGBA8 */
-
-static void
-pack_ubyte_SRGBA8(const GLubyte src[4], void *dst)
-{
-   GLuint *d = ((GLuint *) dst);
-   GLubyte r = linear_ubyte_to_srgb_ubyte(src[RCOMP]);
-   GLubyte g = linear_ubyte_to_srgb_ubyte(src[GCOMP]);
-   GLubyte b = linear_ubyte_to_srgb_ubyte(src[BCOMP]);
-   *d = PACK_COLOR_8888(r, g, b, src[ACOMP]);
-}
-
-static void
-pack_float_SRGBA8(const GLfloat src[4], void *dst)
-{
-   GLuint *d = ((GLuint *) dst);
-   GLubyte r, g, b, a;
-   r = linear_float_to_srgb_ubyte(src[RCOMP]);
-   g = linear_float_to_srgb_ubyte(src[GCOMP]);
-   b = linear_float_to_srgb_ubyte(src[BCOMP]);
-   UNCLAMPED_FLOAT_TO_UBYTE(a, src[ACOMP]);
-   *d = PACK_COLOR_8888(r, g, b, a);
-}
-
-
-/* MESA_FORMAT_SARGB8 */
-
-static void
-pack_ubyte_SARGB8(const GLubyte src[4], void *dst)
-{
-   GLuint *d = ((GLuint *) dst);
-   GLubyte r = linear_ubyte_to_srgb_ubyte(src[RCOMP]);
-   GLubyte g = linear_ubyte_to_srgb_ubyte(src[RCOMP]);
-   GLubyte b = linear_ubyte_to_srgb_ubyte(src[RCOMP]);
-   *d = PACK_COLOR_8888(src[ACOMP], r, g, b);
-}
-
-static void
-pack_float_SARGB8(const GLfloat src[4], void *dst)
-{
-   GLuint *d = ((GLuint *) dst);
-   GLubyte r, g, b, a;
-   r = linear_float_to_srgb_ubyte(src[RCOMP]);
-   g = linear_float_to_srgb_ubyte(src[GCOMP]);
-   b = linear_float_to_srgb_ubyte(src[BCOMP]);
-   UNCLAMPED_FLOAT_TO_UBYTE(a, src[ACOMP]);
-   *d = PACK_COLOR_8888(a, r, g, b);
-}
-
-
-/* MESA_FORMAT_SL8 */
-
-static void
-pack_ubyte_SL8(const GLubyte src[4], void *dst)
-{
-   GLubyte *d = ((GLubyte *) dst);
-   *d = linear_ubyte_to_srgb_ubyte(src[RCOMP]);
-}
-
-static void
-pack_float_SL8(const GLfloat src[4], void *dst)
-{
-   GLubyte *d = ((GLubyte *) dst);
-   GLubyte l = linear_float_to_srgb_ubyte(src[RCOMP]);
-   *d = l;
-}
-
-
-/* MESA_FORMAT_SLA8 */
-
-static void
-pack_ubyte_SLA8(const GLubyte src[4], void *dst)
-{
-   GLushort *d = ((GLushort *) dst);
-   GLubyte l = linear_ubyte_to_srgb_ubyte(src[RCOMP]);
-   *d = PACK_COLOR_88(src[ACOMP], l);
-}
-
-static void
-pack_float_SLA8(const GLfloat src[4], void *dst)
-{
-   GLushort *d = ((GLushort *) dst);
-   GLubyte a, l = linear_float_to_srgb_ubyte(src[RCOMP]);
-   CLAMPED_FLOAT_TO_UBYTE(a, src[ACOMP]);
-   *d = PACK_COLOR_88(a, l);
-}
-
-
 /* MESA_FORMAT_RGBA_FLOAT32 */
 
 static void
@@ -1257,20 +1114,11 @@ _mesa_get_pack_ubyte_rgba_function(gl_format format)
       table[MESA_FORMAT_YCBCR_REV] = pack_ubyte_YCBCR_REV;
 
       /* should never convert RGBA to these formats */
-      table[MESA_FORMAT_Z24_S8] = NULL;
-      table[MESA_FORMAT_S8_Z24] = NULL;
       table[MESA_FORMAT_Z16] = NULL;
       table[MESA_FORMAT_X8_Z24] = NULL;
       table[MESA_FORMAT_Z24_X8] = NULL;
       table[MESA_FORMAT_Z32] = NULL;
       table[MESA_FORMAT_S8] = NULL;
-
-      /* sRGB */
-      table[MESA_FORMAT_SRGB8] = pack_ubyte_SRGB8;
-      table[MESA_FORMAT_SRGBA8] = pack_ubyte_SRGBA8;
-      table[MESA_FORMAT_SARGB8] = pack_ubyte_SARGB8;
-      table[MESA_FORMAT_SL8] = pack_ubyte_SL8;
-      table[MESA_FORMAT_SLA8] = pack_ubyte_SLA8;
 
       table[MESA_FORMAT_RGBA_FLOAT32] = pack_ubyte_RGBA_FLOAT32;
       table[MESA_FORMAT_RGBA_FLOAT16] = pack_ubyte_RGBA_FLOAT16;
@@ -1358,19 +1206,11 @@ _mesa_get_pack_float_rgba_function(gl_format format)
       table[MESA_FORMAT_YCBCR_REV] = pack_float_YCBCR_REV;
 
       /* should never convert RGBA to these formats */
-      table[MESA_FORMAT_Z24_S8] = NULL;
-      table[MESA_FORMAT_S8_Z24] = NULL;
       table[MESA_FORMAT_Z16] = NULL;
       table[MESA_FORMAT_X8_Z24] = NULL;
       table[MESA_FORMAT_Z24_X8] = NULL;
       table[MESA_FORMAT_Z32] = NULL;
       table[MESA_FORMAT_S8] = NULL;
-
-      table[MESA_FORMAT_SRGB8] = pack_float_SRGB8;
-      table[MESA_FORMAT_SRGBA8] = pack_float_SRGBA8;
-      table[MESA_FORMAT_SARGB8] = pack_float_SARGB8;
-      table[MESA_FORMAT_SL8] = pack_float_SL8;
-      table[MESA_FORMAT_SLA8] = pack_float_SLA8;
 
       table[MESA_FORMAT_RGBA_FLOAT32] = pack_float_RGBA_FLOAT32;
       table[MESA_FORMAT_RGBA_FLOAT16] = pack_float_RGBA_FLOAT16;
@@ -1581,30 +1421,18 @@ pack_float_z_Z32(const GLfloat *src, void *dst)
    *d = (GLuint) (*src * scale);
 }
 
-static void
-pack_float_z_Z32_FLOAT(const GLfloat *src, void *dst)
-{
-   GLfloat *d = (GLfloat *) dst;
-   *d = *src;
-}
-
 gl_pack_float_z_func
 _mesa_get_pack_float_z_func(gl_format format)
 {
    switch (format) {
-   case MESA_FORMAT_Z24_S8:
    case MESA_FORMAT_Z24_X8:
       return pack_float_z_Z24_S8;
-   case MESA_FORMAT_S8_Z24:
    case MESA_FORMAT_X8_Z24:
       return pack_float_z_S8_Z24;
    case MESA_FORMAT_Z16:
       return pack_float_z_Z16;
    case MESA_FORMAT_Z32:
       return pack_float_z_Z32;
-   case MESA_FORMAT_Z32_FLOAT:
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      return pack_float_z_Z32_FLOAT;
    default:
       _mesa_problem(NULL,
                     "unexpected format in _mesa_get_pack_float_z_func()");
@@ -1653,44 +1481,18 @@ pack_uint_z_Z32(const GLuint *src, void *dst)
    *d = *src;
 }
 
-static void
-pack_uint_z_Z32_FLOAT(const GLuint *src, void *dst)
-{
-   GLuint *d = ((GLuint *) dst);
-   const GLdouble scale = 1.0 / (GLdouble) 0xffffffff;
-   *d = *src * scale;
-   assert(*d >= 0.0f);
-   assert(*d <= 1.0f);
-}
-
-static void
-pack_uint_z_Z32_FLOAT_X24S8(const GLuint *src, void *dst)
-{
-   GLfloat *d = ((GLfloat *) dst);
-   const GLdouble scale = 1.0 / (GLdouble) 0xffffffff;
-   *d = *src * scale;
-   assert(*d >= 0.0f);
-   assert(*d <= 1.0f);
-}
-
 gl_pack_uint_z_func
 _mesa_get_pack_uint_z_func(gl_format format)
 {
    switch (format) {
-   case MESA_FORMAT_Z24_S8:
    case MESA_FORMAT_Z24_X8:
       return pack_uint_z_Z24_S8;
-   case MESA_FORMAT_S8_Z24:
    case MESA_FORMAT_X8_Z24:
       return pack_uint_z_S8_Z24;
    case MESA_FORMAT_Z16:
       return pack_uint_z_Z16;
    case MESA_FORMAT_Z32:
       return pack_uint_z_Z32;
-   case MESA_FORMAT_Z32_FLOAT:
-      return pack_uint_z_Z32_FLOAT;
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      return pack_uint_z_Z32_FLOAT_X24S8;
    default:
       _mesa_problem(NULL, "unexpected format in _mesa_get_pack_uint_z_func()");
       return NULL;
@@ -1703,57 +1505,17 @@ _mesa_get_pack_uint_z_func(gl_format format)
  **/
 
 static void
-pack_ubyte_stencil_Z24_S8(const GLubyte *src, void *dst)
-{
-   /* don't disturb the Z values */
-   GLuint *d = ((GLuint *) dst);
-   GLuint s = *src;
-   GLuint z = *d & 0xffffff00;
-   *d = z | s;
-}
-
-static void
-pack_ubyte_stencil_S8_Z24(const GLubyte *src, void *dst)
-{
-   /* don't disturb the Z values */
-   GLuint *d = ((GLuint *) dst);
-   GLuint s = *src << 24;
-   GLuint z = *d & 0xffffff;
-   *d = s | z;
-}
-
-static void
 pack_ubyte_stencil_S8(const GLubyte *src, void *dst)
 {
    GLubyte *d = (GLubyte *) dst;
    *d = *src;
 }
 
-static void
-pack_ubyte_stencil_Z32_FLOAT_X24S8(const GLubyte *src, void *dst)
-{
-   GLfloat *d = ((GLfloat *) dst);
-   d[1] = *src;
-}
-
 
 gl_pack_ubyte_stencil_func
 _mesa_get_pack_ubyte_stencil_func(gl_format format)
 {
-   switch (format) {
-   case MESA_FORMAT_Z24_S8:
-      return pack_ubyte_stencil_Z24_S8;
-   case MESA_FORMAT_S8_Z24:
-      return pack_ubyte_stencil_S8_Z24;
-   case MESA_FORMAT_S8:
-      return pack_ubyte_stencil_S8;
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      return pack_ubyte_stencil_Z32_FLOAT_X24S8;
-   default:
-      _mesa_problem(NULL,
-                    "unexpected format in _mesa_pack_ubyte_stencil_func()");
-      return NULL;
-   }
+   return pack_ubyte_stencil_S8;
 }
 
 
@@ -1763,7 +1525,6 @@ _mesa_pack_float_z_row(gl_format format, GLuint n,
                        const GLfloat *src, void *dst)
 {
    switch (format) {
-   case MESA_FORMAT_Z24_S8:
    case MESA_FORMAT_Z24_X8:
       {
          /* don't disturb the stencil values */
@@ -1778,7 +1539,6 @@ _mesa_pack_float_z_row(gl_format format, GLuint n,
          }
       }
       break;
-   case MESA_FORMAT_S8_Z24:
    case MESA_FORMAT_X8_Z24:
       {
          /* don't disturb the stencil values */
@@ -1813,18 +1573,6 @@ _mesa_pack_float_z_row(gl_format format, GLuint n,
          }
       }
       break;
-   case MESA_FORMAT_Z32_FLOAT:
-      memcpy(dst, src, n * sizeof(GLfloat));
-      break;
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      {
-         GLfloat *d = ((GLfloat *) dst);
-         GLuint i;
-         for (i = 0; i < n; i++) {
-            d[i * 2] = src[i];
-         }
-      }
-      break;
    default:
       _mesa_problem(NULL, "unexpected format in _mesa_pack_float_z_row()");
    }
@@ -1839,7 +1587,6 @@ _mesa_pack_uint_z_row(gl_format format, GLuint n,
                       const GLuint *src, void *dst)
 {
    switch (format) {
-   case MESA_FORMAT_Z24_S8:
    case MESA_FORMAT_Z24_X8:
       {
          /* don't disturb the stencil values */
@@ -1852,7 +1599,6 @@ _mesa_pack_uint_z_row(gl_format format, GLuint n,
          }
       }
       break;
-   case MESA_FORMAT_S8_Z24:
    case MESA_FORMAT_X8_Z24:
       {
          /* don't disturb the stencil values */
@@ -1877,30 +1623,6 @@ _mesa_pack_uint_z_row(gl_format format, GLuint n,
    case MESA_FORMAT_Z32:
       memcpy(dst, src, n * sizeof(GLfloat));
       break;
-   case MESA_FORMAT_Z32_FLOAT:
-      {
-         GLuint *d = ((GLuint *) dst);
-         const GLdouble scale = 1.0 / (GLdouble) 0xffffffff;
-         GLuint i;
-         for (i = 0; i < n; i++) {
-            d[i] = src[i] * scale;
-            assert(d[i] >= 0.0f);
-            assert(d[i] <= 1.0f);
-         }
-      }
-      break;
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      {
-         GLfloat *d = ((GLfloat *) dst);
-         const GLdouble scale = 1.0 / (GLdouble) 0xffffffff;
-         GLuint i;
-         for (i = 0; i < n; i++) {
-            d[i * 2] = src[i] * scale;
-            assert(d[i * 2] >= 0.0f);
-            assert(d[i * 2] <= 1.0f);
-         }
-      }
-      break;
    default:
       _mesa_problem(NULL, "unexpected format in _mesa_pack_uint_z_row()");
    }
@@ -1911,78 +1633,8 @@ void
 _mesa_pack_ubyte_stencil_row(gl_format format, GLuint n,
                              const GLubyte *src, void *dst)
 {
-   switch (format) {
-   case MESA_FORMAT_Z24_S8:
-      {
-         /* don't disturb the Z values */
-         GLuint *d = ((GLuint *) dst);
-         GLuint i;
-         for (i = 0; i < n; i++) {
-            GLuint s = src[i];
-            GLuint z = d[i] & 0xffffff00;
-            d[i] = z | s;
-         }
-      }
-      break;
-   case MESA_FORMAT_S8_Z24:
-      {
-         /* don't disturb the Z values */
-         GLuint *d = ((GLuint *) dst);
-         GLuint i;
-         for (i = 0; i < n; i++) {
-            GLuint s = src[i] << 24;
-            GLuint z = d[i] & 0xffffff;
-            d[i] = s | z;
-         }
-      }
-      break;
-   case MESA_FORMAT_S8:
-      memcpy(dst, src, n * sizeof(GLubyte));
-      break;
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      {
-         GLuint *d = dst;
-         GLuint i;
-         for (i = 0; i < n; i++) {
-            d[i * 2 + 1] = src[i];
-         }
-      }
-      break;
-   default:
-      _mesa_problem(NULL, "unexpected format in _mesa_pack_ubyte_stencil_row()");
-   }
+   memcpy(dst, src, n * sizeof(GLubyte));
 }
-
-
-/**
- * Incoming Z/stencil values are always in uint_24_8 format.
- */
-void
-_mesa_pack_uint_24_8_depth_stencil_row(gl_format format, GLuint n,
-                                       const GLuint *src, void *dst)
-{
-   switch (format) {
-   case MESA_FORMAT_Z24_S8:
-      memcpy(dst, src, n * sizeof(GLuint));
-      break;
-   case MESA_FORMAT_S8_Z24:
-      {
-         GLuint *d = ((GLuint *) dst);
-         GLuint i;
-         for (i = 0; i < n; i++) {
-            GLuint s = src[i] << 24;
-            GLuint z = src[i] >> 8;
-            d[i] = s | z;
-         }
-      }
-      break;
-   default:
-      _mesa_problem(NULL, "bad format %s in _mesa_pack_ubyte_s_row",
-                    _mesa_get_format_name(format));
-      return;
-   }
-}
-
 
 
 /**

@@ -310,25 +310,6 @@ static void FETCH(f_intensity_f16)( const struct swrast_texture_image *texImage,
 
 
 
-
-/* MESA_FORMAT_R_FLOAT32 *****************************************************/
-
-/* Fetch texel from 1D, 2D or 3D R_FLOAT32 texture,
- * returning 4 GLfloats.
- */
-static void FETCH(f_r_f32)( const struct swrast_texture_image *texImage,
-                            GLint i, GLint j, GLint k, GLfloat *texel )
-{
-   const GLfloat *src = TEXEL_ADDR(GLfloat, texImage, i, j, k, 1);
-   texel[RCOMP] = src[0];
-   texel[GCOMP] = 0.0F;
-   texel[BCOMP] = 0.0F;
-   texel[ACOMP] = 1.0F;
-}
-
-
-
-
 /*
  * Begin Hardware formats
  */
@@ -805,75 +786,6 @@ static void FETCH(f_i16)( const struct swrast_texture_image *texImage,
 }
 
 
-
-
-/* Fetch texel from 1D, 2D or 3D srgb8 texture, return 4 GLfloats */
-/* Note: component order is same as for MESA_FORMAT_RGB888 */
-static void FETCH(srgb8)(const struct swrast_texture_image *texImage,
-                         GLint i, GLint j, GLint k, GLfloat *texel )
-{
-   const GLubyte *src = TEXEL_ADDR(GLubyte, texImage, i, j, k, 3);
-   texel[RCOMP] = nonlinear_to_linear(src[2]);
-   texel[GCOMP] = nonlinear_to_linear(src[1]);
-   texel[BCOMP] = nonlinear_to_linear(src[0]);
-   texel[ACOMP] = 1.0F;
-}
-
-
-
-/* Fetch texel from 1D, 2D or 3D srgba8 texture, return 4 GLfloats */
-static void FETCH(srgba8)(const struct swrast_texture_image *texImage,
-                          GLint i, GLint j, GLint k, GLfloat *texel )
-{
-   const GLuint s = *TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
-   texel[RCOMP] = nonlinear_to_linear( (s >> 24) );
-   texel[GCOMP] = nonlinear_to_linear( (s >> 16) & 0xff );
-   texel[BCOMP] = nonlinear_to_linear( (s >>  8) & 0xff );
-   texel[ACOMP] = UBYTE_TO_FLOAT( (s      ) & 0xff ); /* linear! */
-}
-
-
-
-/* Fetch texel from 1D, 2D or 3D sargb8 texture, return 4 GLfloats */
-static void FETCH(sargb8)(const struct swrast_texture_image *texImage,
-                          GLint i, GLint j, GLint k, GLfloat *texel )
-{
-   const GLuint s = *TEXEL_ADDR(GLuint, texImage, i, j, k, 1);
-   texel[RCOMP] = nonlinear_to_linear( (s >> 16) & 0xff );
-   texel[GCOMP] = nonlinear_to_linear( (s >>  8) & 0xff );
-   texel[BCOMP] = nonlinear_to_linear( (s      ) & 0xff );
-   texel[ACOMP] = UBYTE_TO_FLOAT( (s >> 24) ); /* linear! */
-}
-
-
-
-/* Fetch texel from 1D, 2D or 3D sl8 texture, return 4 GLfloats */
-static void FETCH(sl8)(const struct swrast_texture_image *texImage,
-                       GLint i, GLint j, GLint k, GLfloat *texel )
-{
-   const GLubyte *src = TEXEL_ADDR(GLubyte, texImage, i, j, k, 1);
-   texel[RCOMP] = 
-   texel[GCOMP] = 
-   texel[BCOMP] = nonlinear_to_linear(src[0]);
-   texel[ACOMP] = 1.0F;
-}
-
-
-
-/* Fetch texel from 1D, 2D or 3D sla8 texture, return 4 GLfloats */
-static void FETCH(sla8)(const struct swrast_texture_image *texImage,
-                       GLint i, GLint j, GLint k, GLfloat *texel )
-{
-   const GLubyte *src = TEXEL_ADDR(GLubyte, texImage, i, j, k, 2);
-   texel[RCOMP] =
-   texel[GCOMP] =
-   texel[BCOMP] = nonlinear_to_linear(src[0]);
-   texel[ACOMP] = UBYTE_TO_FLOAT(src[1]); /* linear */
-}
-
-
-
-
 /* MESA_FORMAT_RGBA_INT8 **************************************************/
 
 static void
@@ -1110,19 +1022,6 @@ static void FETCH(f_s8_z24)( const struct swrast_texture_image *texImage,
 	  texImage->Base.TexFormat == MESA_FORMAT_X8_Z24);
    ASSERT(texel[0] >= 0.0F);
    ASSERT(texel[0] <= 1.0F);
-}
-
-
-/* MESA_FORMAT_Z32_FLOAT_X24S8 ***********************************************/
-
-static void FETCH(z32f_x24s8)(const struct swrast_texture_image *texImage,
-			      GLint i, GLint j, GLint k, GLfloat *texel)
-{
-   const GLfloat *src = TEXEL_ADDR(GLfloat, texImage, i, j, k, 2);
-   texel[RCOMP] = src[0];
-   texel[GCOMP] = 0.0F;
-   texel[BCOMP] = 0.0F;
-   texel[ACOMP] = 1.0F;
 }
 
 

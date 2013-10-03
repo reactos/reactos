@@ -50,7 +50,7 @@ glsl_type::glsl_type(GLenum gl_type,
 		     unsigned matrix_columns, const char *name) :
    gl_type(gl_type),
    base_type(base_type),
-   sampler_dimensionality(0), sampler_shadow(0), sampler_array(0),
+   sampler_dimensionality(0), sampler_shadow(0),
    sampler_type(0),
    vector_elements(vector_elements), matrix_columns(matrix_columns),
    length(0)
@@ -69,7 +69,7 @@ glsl_type::glsl_type(GLenum gl_type,
    gl_type(gl_type),
    base_type(GLSL_TYPE_SAMPLER),
    sampler_dimensionality(dim), sampler_shadow(shadow),
-   sampler_array(array), sampler_type(type),
+   sampler_type(type),
    vector_elements(0), matrix_columns(0),
    length(0)
 {
@@ -81,7 +81,7 @@ glsl_type::glsl_type(GLenum gl_type,
 glsl_type::glsl_type(const glsl_struct_field *fields, unsigned num_fields,
 		     const char *name) :
    base_type(GLSL_TYPE_STRUCT),
-   sampler_dimensionality(0), sampler_shadow(0), sampler_array(0),
+   sampler_dimensionality(0), sampler_shadow(0),
    sampler_type(0),
    vector_elements(0), matrix_columns(0),
    length(num_fields)
@@ -136,19 +136,16 @@ glsl_type::sampler_index() const
 
    switch (t->sampler_dimensionality) {
    case GLSL_SAMPLER_DIM_1D:
-      return (t->sampler_array) ? TEXTURE_1D_ARRAY_INDEX : TEXTURE_1D_INDEX;
+      return TEXTURE_1D_INDEX;
    case GLSL_SAMPLER_DIM_2D:
-      return (t->sampler_array) ? TEXTURE_2D_ARRAY_INDEX : TEXTURE_2D_INDEX;
+      return TEXTURE_2D_INDEX;
    case GLSL_SAMPLER_DIM_3D:
       return TEXTURE_3D_INDEX;
    case GLSL_SAMPLER_DIM_CUBE:
       return TEXTURE_CUBE_INDEX;
-   case GLSL_SAMPLER_DIM_BUF:
-      assert(!"FINISHME: Implement ARB_texture_buffer_object");
-      return TEXTURE_BUFFER_INDEX;
    default:
       assert(!"Should not get here.");
-      return TEXTURE_BUFFER_INDEX;
+      return TEXTURE_2D_INDEX;
    }
 }
 
@@ -196,17 +193,6 @@ glsl_type::generate_130_types(glsl_symbol_table *symtab)
 
    add_types_to_symbol_table(symtab, builtin_130_types,
 			     Elements(builtin_130_types), false);
-   generate_EXT_texture_array_types(symtab, false);
-}
-
-
-void
-glsl_type::generate_EXT_texture_array_types(glsl_symbol_table *symtab,
-					    bool warn)
-{
-   add_types_to_symbol_table(symtab, builtin_EXT_texture_array_types,
-			     Elements(builtin_EXT_texture_array_types),
-			     warn);
 }
 
 
@@ -237,12 +223,6 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
    if (state->OES_texture_3D_enable && state->language_version == 100) {
       glsl_type::generate_OES_texture_3D_types(state->symbols,
 					       state->OES_texture_3D_warn);
-   }
-
-   if (state->EXT_texture_array_enable && state->language_version < 130) {
-      // These are already included in 130; don't create twice.
-      glsl_type::generate_EXT_texture_array_types(state->symbols,
-				       state->EXT_texture_array_warn);
    }
 }
 
@@ -304,7 +284,7 @@ _mesa_glsl_release_types(void)
 
 glsl_type::glsl_type(const glsl_type *array, unsigned length) :
    base_type(GLSL_TYPE_ARRAY),
-   sampler_dimensionality(0), sampler_shadow(0), sampler_array(0),
+   sampler_dimensionality(0), sampler_shadow(0),
    sampler_type(0),
    vector_elements(0), matrix_columns(0),
    name(NULL), length(length)

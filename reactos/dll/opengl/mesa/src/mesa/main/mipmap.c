@@ -42,10 +42,6 @@ bytes_per_pixel(GLenum datatype, GLuint comps)
 {
    GLint b;
 
-   if (datatype == GL_UNSIGNED_INT_8_24_REV_MESA ||
-       datatype == GL_UNSIGNED_INT_24_8_MESA)
-      return 4;
-
    b = _mesa_sizeof_packed_type(datatype);
    assert(b >= 0);
 
@@ -640,47 +636,6 @@ do_row(GLenum datatype, GLuint comps, GLint srcWidth,
       }
    }
 
-   else if (datatype == GL_FLOAT_32_UNSIGNED_INT_24_8_REV && comps == 1) {
-      GLuint i, j, k;
-      const GLfloat *rowA = (const GLfloat *) srcRowA;
-      const GLfloat *rowB = (const GLfloat *) srcRowB;
-      GLfloat *dst = (GLfloat *) dstRow;
-      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
-           i++, j += colStride, k += colStride) {
-         dst[i*2] = (rowA[j*2] + rowA[k*2] + rowB[j*2] + rowB[k*2]) * 0.25F;
-      }
-   }
-
-   else if (datatype == GL_UNSIGNED_INT_24_8_MESA && comps == 2) {
-      GLuint i, j, k;
-      const GLuint *rowA = (const GLuint *) srcRowA;
-      const GLuint *rowB = (const GLuint *) srcRowB;
-      GLuint *dst = (GLuint *) dstRow;
-      /* note: averaging stencil values seems weird, but what else? */
-      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
-           i++, j += colStride, k += colStride) {
-         GLuint z = (((rowA[j] >> 8) + (rowA[k] >> 8) +
-                      (rowB[j] >> 8) + (rowB[k] >> 8)) / 4) << 8;
-         GLuint s = ((rowA[j] & 0xff) + (rowA[k] & 0xff) +
-                     (rowB[j] & 0xff) + (rowB[k] & 0xff)) / 4;
-         dst[i] = z | s;
-      }
-   }
-   else if (datatype == GL_UNSIGNED_INT_8_24_REV_MESA && comps == 2) {
-      GLuint i, j, k;
-      const GLuint *rowA = (const GLuint *) srcRowA;
-      const GLuint *rowB = (const GLuint *) srcRowB;
-      GLuint *dst = (GLuint *) dstRow;
-      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
-           i++, j += colStride, k += colStride) {
-         GLuint z = ((rowA[j] & 0xffffff) + (rowA[k] & 0xffffff) +
-                     (rowB[j] & 0xffffff) + (rowB[k] & 0xffffff)) / 4;
-         GLuint s = (((rowA[j] >> 24) + (rowA[k] >> 24) +
-                      (rowB[j] >> 24) + (rowB[k] >> 24)) / 4) << 24;
-         dst[i] = z | s;
-      }
-   }
-
    else {
       _mesa_problem(NULL, "bad format in do_row()");
    }
@@ -1213,15 +1168,6 @@ do_row_3D(GLenum datatype, GLuint comps, GLint srcWidth,
       }
    }
 
-   else if (datatype == GL_FLOAT_32_UNSIGNED_INT_24_8_REV && comps == 1) {
-      DECLARE_ROW_POINTERS(GLfloat, 2);
-
-      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
-           i++, j += colStride, k += colStride) {
-         FILTER_F_3D(0);
-      }
-   }
-
    else {
       _mesa_problem(NULL, "bad format in do_row()");
    }
@@ -1533,8 +1479,6 @@ _mesa_generate_mipmap_level(GLenum target,
                             GLubyte **dstData,
                             GLint dstRowStride)
 {
-   int i;
-
    switch (target) {
    case GL_TEXTURE_1D:
       make_1d_mipmap(datatype, comps, border,
@@ -1559,22 +1503,6 @@ _mesa_generate_mipmap_level(GLenum target,
                      dstWidth, dstHeight, dstDepth,
                      dstData, dstRowStride);
       break;
-   case GL_TEXTURE_1D_ARRAY_EXT:
-      assert(srcHeight == 1);
-      assert(dstHeight == 1);
-      for (i = 0; i < dstDepth; i++) {
-	 make_1d_mipmap(datatype, comps, border,
-			srcWidth, srcData[i],
-			dstWidth, dstData[i]);
-      }
-      break;
-   case GL_TEXTURE_2D_ARRAY_EXT:
-      for (i = 0; i < dstDepth; i++) {
-	 make_2d_mipmap(datatype, comps, border,
-			srcWidth, srcHeight, srcData[i], srcRowStride,
-			dstWidth, dstHeight, dstData[i], dstRowStride);
-      }
-      break;
    default:
       _mesa_problem(NULL, "bad tex target in _mesa_generate_mipmaps");
       return;
@@ -1598,16 +1526,14 @@ next_mipmap_level_size(GLenum target, GLint border,
       *dstWidth = srcWidth; /* can't go smaller */
    }
 
-   if ((srcHeight - 2 * border > 1) && 
-       (target != GL_TEXTURE_1D_ARRAY_EXT)) {
+   if (srcHeight - 2 * border > 1) {
       *dstHeight = (srcHeight - 2 * border) / 2 + 2 * border;
    }
    else {
       *dstHeight = srcHeight; /* can't go smaller */
    }
 
-   if ((srcDepth - 2 * border > 1) &&
-       (target != GL_TEXTURE_2D_ARRAY_EXT)) {
+   if (srcDepth - 2 * border > 1) {
       *dstDepth = (srcDepth - 2 * border) / 2 + 2 * border;
    }
    else {
@@ -1749,13 +1675,6 @@ generate_mipmap_uncompressed(struct gl_context *ctx, GLenum target,
       if (!dstImage) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "generating mipmaps");
          return;
-      }
-
-      if (target == GL_TEXTURE_1D_ARRAY) {
-	 srcDepth = srcHeight;
-	 dstDepth = dstHeight;
-	 srcHeight = 1;
-	 dstHeight = 1;
       }
 
       /* Map src texture image slices */

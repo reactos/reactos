@@ -146,14 +146,7 @@ _mesa_sizeof_glsl_type(GLenum type)
    case GL_SAMPLER_CUBE:
    case GL_SAMPLER_1D_SHADOW:
    case GL_SAMPLER_2D_SHADOW:
-   case GL_SAMPLER_2D_RECT_ARB:
-   case GL_SAMPLER_2D_RECT_SHADOW_ARB:
-   case GL_SAMPLER_1D_ARRAY_EXT:
-   case GL_SAMPLER_2D_ARRAY_EXT:
-   case GL_SAMPLER_1D_ARRAY_SHADOW_EXT:
-   case GL_SAMPLER_2D_ARRAY_SHADOW_EXT:
    case GL_SAMPLER_CUBE_SHADOW_EXT:
-   case GL_SAMPLER_EXTERNAL_OES:
       return 1;
    case GL_FLOAT_VEC2:
    case GL_INT_VEC2:

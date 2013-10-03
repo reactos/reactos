@@ -451,29 +451,10 @@ swrast_fast_copy_pixels(struct gl_context *ctx,
       srcRb = srcFb->Attachment[BUFFER_DEPTH].Renderbuffer;
       dstRb = dstFb->Attachment[BUFFER_DEPTH].Renderbuffer;
    }
-   else {
-      ASSERT(type == GL_DEPTH_STENCIL_EXT);
-      /* XXX correct? */
-      srcRb = srcFb->Attachment[BUFFER_DEPTH].Renderbuffer;
-      dstRb = dstFb->Attachment[BUFFER_DEPTH].Renderbuffer;
-   }
 
    /* src and dst renderbuffers must be same format */
    if (!srcRb || !dstRb || srcRb->Format != dstRb->Format) {
       return GL_FALSE;
-   }
-
-   if (type == GL_STENCIL || type == GL_DEPTH_COMPONENT) {
-      /* can't handle packed depth+stencil here */
-      if (_mesa_is_format_packed_depth_stencil(srcRb->Format) ||
-          _mesa_is_format_packed_depth_stencil(dstRb->Format))
-         return GL_FALSE;
-   }
-   else if (type == GL_DEPTH_STENCIL) {
-      /* can't handle separate depth/stencil buffers */
-      if (srcRb != srcFb->Attachment[BUFFER_STENCIL].Renderbuffer ||
-          dstRb != dstFb->Attachment[BUFFER_STENCIL].Renderbuffer)
-         return GL_FALSE;
    }
 
    /* clipping not supported */
@@ -573,7 +554,6 @@ map_readbuffer(struct gl_context *ctx, GLenum type)
       rb = fb->Attachment[fb->_ColorReadBufferIndex].Renderbuffer;
       break;
    case GL_DEPTH:
-   case GL_DEPTH_STENCIL:
       rb = fb->Attachment[BUFFER_DEPTH].Renderbuffer;
       break;
    case GL_STENCIL:
@@ -636,11 +616,6 @@ _swrast_CopyPixels( struct gl_context *ctx,
       break;
    case GL_STENCIL:
       copy_stencil_pixels( ctx, srcx, srcy, width, height, destx, desty );
-      break;
-   case GL_DEPTH_STENCIL_EXT:
-      /* Copy buffers separately (if the fast copy path wasn't taken) */
-      copy_depth_pixels(ctx, srcx, srcy, width, height, destx, desty);
-      copy_stencil_pixels(ctx, srcx, srcy, width, height, destx, desty);
       break;
    default:
       _mesa_problem(ctx, "unexpected type in _swrast_CopyPixels");

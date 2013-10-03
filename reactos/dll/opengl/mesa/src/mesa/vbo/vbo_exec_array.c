@@ -556,39 +556,6 @@ vbo_exec_DrawArrays(GLenum mode, GLint start, GLsizei count)
 
 
 /**
- * Called from glDrawArraysInstanced when in immediate mode (not
- * display list mode).
- */
-static void GLAPIENTRY
-vbo_exec_DrawArraysInstanced(GLenum mode, GLint start, GLsizei count,
-                             GLsizei numInstances)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (MESA_VERBOSE & VERBOSE_DRAW)
-      _mesa_debug(ctx, "glDrawArraysInstanced(%s, %d, %d, %d)\n",
-                  _mesa_lookup_enum_by_nr(mode), start, count, numInstances);
-
-   if (!_mesa_validate_DrawArraysInstanced(ctx, mode, start, count, numInstances))
-      return;
-
-   FLUSH_CURRENT( ctx, 0 );
-
-   if (!_mesa_valid_to_render(ctx, "glDrawArraysInstanced")) {
-      return;
-   }
-
-   if (0)
-      check_draw_arrays_data(ctx, start, count);
-
-   vbo_draw_arrays(ctx, mode, start, count, numInstances);
-
-   if (0)
-      print_draw_arrays(ctx, mode, start, count);
-}
-
-
-/**
  * Map GL_ELEMENT_ARRAY_BUFFER and print contents.
  * For debugging.
  */
@@ -828,28 +795,6 @@ vbo_exec_DrawElements(GLenum mode, GLsizei count, GLenum type,
 }
 
 
-/**
- * Called by glDrawElementsInstanced() in immediate mode.
- */
-static void GLAPIENTRY
-vbo_exec_DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
-                               const GLvoid *indices, GLsizei numInstances)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (MESA_VERBOSE & VERBOSE_DRAW)
-      _mesa_debug(ctx, "glDrawElementsInstanced(%s, %d, %s, %p, %d)\n",
-                  _mesa_lookup_enum_by_nr(mode), count,
-                  _mesa_lookup_enum_by_nr(type), indices, numInstances);
-
-   if (!_mesa_validate_DrawElementsInstanced(ctx, mode, count, type, indices,
-                                             numInstances))
-      return;
-
-   vbo_validated_drawrangeelements(ctx, mode, GL_FALSE, ~0, ~0,
-				   count, type, indices, numInstances);
-}
-
 
 /**
  * Inner support for both _mesa_MultiDrawElements() and
@@ -1004,8 +949,6 @@ vbo_exec_array_init( struct vbo_exec_context *exec )
    exec->vtxfmt.DrawElements = vbo_exec_DrawElements;
    exec->vtxfmt.DrawRangeElements = vbo_exec_DrawRangeElements;
    exec->vtxfmt.MultiDrawElementsEXT = vbo_exec_MultiDrawElements;
-   exec->vtxfmt.DrawArraysInstanced = vbo_exec_DrawArraysInstanced;
-   exec->vtxfmt.DrawElementsInstanced = vbo_exec_DrawElementsInstanced;
 }
 
 

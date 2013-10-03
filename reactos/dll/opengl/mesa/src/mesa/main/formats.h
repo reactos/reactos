@@ -98,24 +98,11 @@ typedef enum
    MESA_FORMAT_I16,             /*                     IIII IIII IIII IIII */
    MESA_FORMAT_YCBCR,		/*                     YYYY YYYY UorV UorV */
    MESA_FORMAT_YCBCR_REV,	/*                     UorV UorV YYYY YYYY */
-   MESA_FORMAT_Z24_S8,          /* ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ SSSS SSSS */
-   MESA_FORMAT_S8_Z24,          /* SSSS SSSS ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ */
    MESA_FORMAT_Z16,             /*                     ZZZZ ZZZZ ZZZZ ZZZZ */
    MESA_FORMAT_X8_Z24,          /* xxxx xxxx ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ */
    MESA_FORMAT_Z24_X8,          /* ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ xxxx xxxx */
    MESA_FORMAT_Z32,             /* ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ */
    MESA_FORMAT_S8,              /*                               SSSS SSSS */
-   /*@}*/
-
-   /**
-    * \name 8-bit/channel sRGB formats
-    */
-   /*@{*/
-   MESA_FORMAT_SRGB8,           /*           RRRR RRRR GGGG GGGG BBBB BBBB */
-   MESA_FORMAT_SRGBA8,          /* RRRR RRRR GGGG GGGG BBBB BBBB AAAA AAAA */
-   MESA_FORMAT_SARGB8,          /* AAAA AAAA RRRR RRRR GGGG GGGG BBBB BBBB */
-   MESA_FORMAT_SL8,             /*                               LLLL LLLL */
-   MESA_FORMAT_SLA8,            /*                     AAAA AAAA LLLL LLLL */
    /*@}*/
 
    /**
@@ -197,9 +184,6 @@ typedef enum
    MESA_FORMAT_RGBA_16,           /* ... */
    /*@}*/
 
-   MESA_FORMAT_Z32_FLOAT,
-   MESA_FORMAT_Z32_FLOAT_X24S8,
-
    MESA_FORMAT_COUNT
 } gl_format;
 
@@ -226,13 +210,7 @@ extern void
 _mesa_get_format_block_size(gl_format format, GLuint *bw, GLuint *bh);
 
 extern GLboolean
-_mesa_is_format_packed_depth_stencil(gl_format format);
-
-extern GLboolean
 _mesa_is_format_integer_color(gl_format format);
-
-extern GLenum
-_mesa_get_format_color_encoding(gl_format format);
 
 extern GLuint
 _mesa_format_image_size(gl_format format, GLsizei width,
@@ -251,9 +229,6 @@ _mesa_format_to_type_and_comps(gl_format format,
 
 extern void
 _mesa_test_formats(void);
-
-extern gl_format
-_mesa_get_srgb_format_linear(gl_format format);
 
 extern GLuint
 _mesa_format_num_components(gl_format format);

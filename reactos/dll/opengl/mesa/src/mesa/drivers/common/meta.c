@@ -1242,7 +1242,6 @@ blitframebuffer_texture(struct gl_context *ctx,
          const GLint maxLevelSave = texObj->MaxLevel;
          const GLenum wrapSSave = texObj->Sampler.WrapS;
          const GLenum wrapTSave = texObj->Sampler.WrapT;
-         const GLenum fbo_srgb_save = ctx->Color.sRGBEnabled;
          const GLenum target = texObj->Target;
 
          if (drawAtt->Texture == readAtt->Texture) {
@@ -1272,11 +1271,6 @@ blitframebuffer_texture(struct gl_context *ctx,
          _mesa_TexParameteri(target, GL_TEXTURE_MAX_LEVEL, srcLevel);
          _mesa_TexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
          _mesa_TexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	 /* Always do our blits with no sRGB decode or encode.*/
-         if (ctx->Extensions.EXT_framebuffer_sRGB) {
-            _mesa_set_enable(ctx, GL_FRAMEBUFFER_SRGB_EXT, GL_FALSE);
-         }
 
          _mesa_TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
          _mesa_set_enable(ctx, target, GL_TRUE);
@@ -1328,9 +1322,6 @@ blitframebuffer_texture(struct gl_context *ctx,
          _mesa_TexParameteri(target, GL_TEXTURE_MAX_LEVEL, maxLevelSave);
          _mesa_TexParameteri(target, GL_TEXTURE_WRAP_S, wrapSSave);
          _mesa_TexParameteri(target, GL_TEXTURE_WRAP_T, wrapTSave);
-	 if (ctx->Extensions.EXT_framebuffer_sRGB && fbo_srgb_save) {
-	    _mesa_set_enable(ctx, GL_FRAMEBUFFER_SRGB_EXT, GL_TRUE);
-	 }
 
          /* Done with color buffer */
          mask &= ~GL_COLOR_BUFFER_BIT;
@@ -2546,23 +2537,13 @@ _mesa_meta_check_generate_mipmap_fallback(struct gl_context *ctx, GLenum target,
 
    /* check for fallbacks */
    if (!ctx->Extensions.EXT_framebuffer_object ||
-       target == GL_TEXTURE_3D ||
-       target == GL_TEXTURE_1D_ARRAY ||
-       target == GL_TEXTURE_2D_ARRAY) {
+       target == GL_TEXTURE_3D) {
       return GL_TRUE;
    }
 
    srcLevel = texObj->BaseLevel;
    baseImage = _mesa_select_tex_image(ctx, texObj, target, srcLevel);
    if (!baseImage) {
-      return GL_TRUE;
-   }
-
-   if (_mesa_get_format_color_encoding(baseImage->TexFormat) == GL_SRGB) {
-      /* The texture format is sRGB but we can't turn off sRGB->linear
-       * texture sample conversion.  So we won't be able to generate the
-       * right colors when rendering.  Need to use a fallback.
-       */
       return GL_TRUE;
    }
 
@@ -2635,7 +2616,6 @@ setup_texture_coords(GLenum faceTarget,
    case GL_TEXTURE_1D:
    case GL_TEXTURE_2D:
    case GL_TEXTURE_3D:
-   case GL_TEXTURE_2D_ARRAY:
       if (faceTarget == GL_TEXTURE_3D)
          r = 1.0F / slice;
       else if (faceTarget == GL_TEXTURE_2D_ARRAY)
@@ -2654,20 +2634,6 @@ setup_texture_coords(GLenum faceTarget,
       coords3[0] = 0.0F;
       coords3[1] = 1.0F;
       coords3[2] = r;
-      break;
-   case GL_TEXTURE_1D_ARRAY:
-      coords0[0] = 0.0F; /* s */
-      coords0[1] = slice; /* t */
-      coords0[2] = 0.0F; /* r */
-      coords1[0] = 1.0f;
-      coords1[1] = slice;
-      coords1[2] = 0.0F;
-      coords2[0] = 1.0F;
-      coords2[1] = slice;
-      coords2[2] = 0.0F;
-      coords3[0] = 0.0F;
-      coords3[1] = slice;
-      coords3[2] = 0.0F;
       break;
 
    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
@@ -2769,7 +2735,6 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
    const GLenum wrapSSave = texObj->Sampler.WrapS;
    const GLenum wrapTSave = texObj->Sampler.WrapT;
    const GLenum wrapRSave = texObj->Sampler.WrapR;
-   const GLenum srgbBufferSave = ctx->Color.sRGBEnabled;
    const GLuint fboSave = ctx->DrawBuffer->Name;
    const GLuint original_active_unit = ctx->Texture.CurrentUnit;
    GLenum faceTarget;
@@ -2831,11 +2796,6 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
    _mesa_TexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
    _mesa_TexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
    _mesa_TexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-   /* We don't want to encode or decode sRGB values; treat them as linear */
-   if (ctx->Extensions.EXT_framebuffer_sRGB) {
-      _mesa_set_enable(ctx, GL_FRAMEBUFFER_SRGB_EXT, GL_FALSE);
-   }
 
    _mesa_set_enable(ctx, target, GL_TRUE);
 
@@ -2958,10 +2918,6 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
       _mesa_DrawArrays(GL_TRIANGLE_FAN, 0, 4);
    }
 
-   if (ctx->Extensions.EXT_framebuffer_sRGB && srgbBufferSave) {
-      _mesa_set_enable(ctx, GL_FRAMEBUFFER_SRGB_EXT, GL_TRUE);
-   }
-
    _mesa_lock_texture(ctx, texObj); /* relock */
 
    _mesa_meta_end(ctx);
@@ -3002,8 +2958,6 @@ get_temp_image_type(struct gl_context *ctx, GLenum baseFormat)
          return GL_FLOAT;
    case GL_DEPTH_COMPONENT:
       return GL_UNSIGNED_INT;
-   case GL_DEPTH_STENCIL:
-      return GL_UNSIGNED_INT_24_8;
    default:
       _mesa_problem(ctx, "Unexpected format %d in get_temp_image_type()",
 		    baseFormat);

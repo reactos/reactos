@@ -828,28 +828,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          ctx->Depth.BoundsTest = state;
          break;
 
-      /* GL_MESA_texture_array */
-      case GL_TEXTURE_1D_ARRAY_EXT:
-         CHECK_EXTENSION(MESA_texture_array, cap);
-         if (!enable_texture(ctx, state, TEXTURE_1D_ARRAY_BIT)) {
-            return;
-         }
-         break;
-
-      case GL_TEXTURE_2D_ARRAY_EXT:
-         CHECK_EXTENSION(MESA_texture_array, cap);
-         if (!enable_texture(ctx, state, TEXTURE_2D_ARRAY_BIT)) {
-            return;
-         }
-         break;
-
-      /* GL3.0 - GL_framebuffer_sRGB */
-      case GL_FRAMEBUFFER_SRGB_EXT:
-         CHECK_EXTENSION(EXT_framebuffer_sRGB, cap);
-         FLUSH_VERTICES(ctx, _NEW_BUFFERS);
-         ctx->Color.sRGBEnabled = state;
-         break;
-
       default:
          goto invalid_enum_error;
    }
@@ -1225,11 +1203,6 @@ _mesa_IsEnabled( GLenum cap )
       case GL_DEPTH_BOUNDS_TEST_EXT:
          CHECK_EXTENSION(EXT_depth_bounds_test);
          return ctx->Depth.BoundsTest;
-
-      /* GL3.0 - GL_framebuffer_sRGB */
-      case GL_FRAMEBUFFER_SRGB_EXT:
-	 CHECK_EXTENSION(EXT_framebuffer_sRGB);
-	 return ctx->Color.sRGBEnabled;
 
       default:
          goto invalid_enum_error;

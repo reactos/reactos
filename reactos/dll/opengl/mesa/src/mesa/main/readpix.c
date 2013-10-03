@@ -306,7 +306,7 @@ slow_read_rgba_pixels( struct gl_context *ctx,
 		       GLbitfield transferOps )
 {
    struct gl_renderbuffer *rb = ctx->ReadBuffer->_ColorReadBuffer;
-   const gl_format rbFormat = _mesa_get_srgb_format_linear(rb->Format);
+   const gl_format rbFormat = rb->Format;
    void *rgba;
    GLubyte *dst, *map;
    int dstStride, stride, j;
@@ -384,213 +384,6 @@ read_rgba_pixels( struct gl_context *ctx,
 }
 
 /**
- * For a packed depth/stencil buffer being read as depth/stencil, just memcpy the
- * data (possibly swapping 8/24 vs 24/8 as we go).
- */
-static GLboolean
-fast_read_depth_stencil_pixels(struct gl_context *ctx,
-			       GLint x, GLint y,
-			       GLsizei width, GLsizei height,
-			       GLubyte *dst, int dstStride)
-{
-   struct gl_framebuffer *fb = ctx->ReadBuffer;
-   struct gl_renderbuffer *rb = fb->Attachment[BUFFER_DEPTH].Renderbuffer;
-   struct gl_renderbuffer *stencilRb = fb->Attachment[BUFFER_STENCIL].Renderbuffer;
-   GLubyte *map;
-   int stride, i;
-
-   if (rb != stencilRb)
-      return GL_FALSE;
-
-   if (rb->Format != MESA_FORMAT_Z24_S8 &&
-       rb->Format != MESA_FORMAT_S8_Z24)
-      return GL_FALSE;
-
-   ctx->Driver.MapRenderbuffer(ctx, rb, x, y, width, height, GL_MAP_READ_BIT,
-			       &map, &stride);
-   if (!map) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glReadPixels");
-      return GL_TRUE;  /* don't bother trying the slow path */
-   }
-
-   for (i = 0; i < height; i++) {
-      _mesa_unpack_uint_24_8_depth_stencil_row(rb->Format, width,
-					       map, (GLuint *)dst);
-      map += stride;
-      dst += dstStride;
-   }
-
-   ctx->Driver.UnmapRenderbuffer(ctx, rb);
-
-   return GL_TRUE;
-}
-
-
-/**
- * For non-float-depth and stencil buffers being read as 24/8 depth/stencil,
- * copy the integer data directly instead of converting depth to float and
- * re-packing.
- */
-static GLboolean
-fast_read_depth_stencil_pixels_separate(struct gl_context *ctx,
-					GLint x, GLint y,
-					GLsizei width, GLsizei height,
-					uint32_t *dst, int dstStride)
-{
-   struct gl_framebuffer *fb = ctx->ReadBuffer;
-   struct gl_renderbuffer *depthRb = fb->Attachment[BUFFER_DEPTH].Renderbuffer;
-   struct gl_renderbuffer *stencilRb = fb->Attachment[BUFFER_STENCIL].Renderbuffer;
-   GLubyte *depthMap, *stencilMap;
-   int depthStride, stencilStride, i, j;
-
-   if (_mesa_get_format_datatype(depthRb->Format) != GL_UNSIGNED_NORMALIZED)
-      return GL_FALSE;
-
-   ctx->Driver.MapRenderbuffer(ctx, depthRb, x, y, width, height,
-			       GL_MAP_READ_BIT, &depthMap, &depthStride);
-   if (!depthMap) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glReadPixels");
-      return GL_TRUE;  /* don't bother trying the slow path */
-   }
-
-   ctx->Driver.MapRenderbuffer(ctx, stencilRb, x, y, width, height,
-			       GL_MAP_READ_BIT, &stencilMap, &stencilStride);
-   if (!stencilMap) {
-      ctx->Driver.UnmapRenderbuffer(ctx, depthRb);
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glReadPixels");
-      return GL_TRUE;  /* don't bother trying the slow path */
-   }
-
-   for (j = 0; j < height; j++) {
-      GLubyte stencilVals[MAX_WIDTH];
-
-      _mesa_unpack_uint_z_row(depthRb->Format, width, depthMap, dst);
-      _mesa_unpack_ubyte_stencil_row(stencilRb->Format, width,
-				     stencilMap, stencilVals);
-
-      for (i = 0; i < width; i++) {
-	 dst[i] = (dst[i] & 0xffffff00) | stencilVals[i];
-      }
-
-      depthMap += depthStride;
-      stencilMap += stencilStride;
-      dst += dstStride / 4;
-   }
-
-   ctx->Driver.UnmapRenderbuffer(ctx, depthRb);
-   ctx->Driver.UnmapRenderbuffer(ctx, stencilRb);
-
-   return GL_TRUE;
-}
-
-static void
-slow_read_depth_stencil_pixels_separate(struct gl_context *ctx,
-					GLint x, GLint y,
-					GLsizei width, GLsizei height,
-					GLenum type,
-					const struct gl_pixelstore_attrib *packing,
-					GLubyte *dst, int dstStride)
-{
-   struct gl_framebuffer *fb = ctx->ReadBuffer;
-   struct gl_renderbuffer *depthRb = fb->Attachment[BUFFER_DEPTH].Renderbuffer;
-   struct gl_renderbuffer *stencilRb = fb->Attachment[BUFFER_STENCIL].Renderbuffer;
-   GLubyte *depthMap, *stencilMap;
-   int depthStride, stencilStride, j;
-
-   /* The depth and stencil buffers might be separate, or a single buffer.
-    * If one buffer, only map it once.
-    */
-   ctx->Driver.MapRenderbuffer(ctx, depthRb, x, y, width, height,
-			       GL_MAP_READ_BIT, &depthMap, &depthStride);
-   if (!depthMap) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glReadPixels");
-      return;
-   }
-
-   if (stencilRb != depthRb) {
-      ctx->Driver.MapRenderbuffer(ctx, stencilRb, x, y, width, height,
-                                  GL_MAP_READ_BIT, &stencilMap,
-                                  &stencilStride);
-      if (!stencilMap) {
-         ctx->Driver.UnmapRenderbuffer(ctx, depthRb);
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glReadPixels");
-         return;
-      }
-   }
-   else {
-      stencilMap = depthMap;
-      stencilStride = depthStride;
-   }
-
-   for (j = 0; j < height; j++) {
-      GLubyte stencilVals[MAX_WIDTH];
-      GLfloat depthVals[MAX_WIDTH];
-
-      _mesa_unpack_float_z_row(depthRb->Format, width, depthMap, depthVals);
-      _mesa_unpack_ubyte_stencil_row(stencilRb->Format, width,
-				     stencilMap, stencilVals);
-
-      _mesa_pack_depth_stencil_span(ctx, width, type, (GLuint *)dst,
-				    depthVals, stencilVals, packing);
-
-      depthMap += depthStride;
-      stencilMap += stencilStride;
-      dst += dstStride;
-   }
-
-   ctx->Driver.UnmapRenderbuffer(ctx, depthRb);
-   if (stencilRb != depthRb) {
-      ctx->Driver.UnmapRenderbuffer(ctx, stencilRb);
-   }
-}
-
-
-/**
- * Read combined depth/stencil values.
- * We'll have already done error checking to be sure the expected
- * depth and stencil buffers really exist.
- */
-static void
-read_depth_stencil_pixels(struct gl_context *ctx,
-                          GLint x, GLint y,
-                          GLsizei width, GLsizei height,
-                          GLenum type, GLvoid *pixels,
-                          const struct gl_pixelstore_attrib *packing )
-{
-   const GLboolean scaleOrBias
-      = ctx->Pixel.DepthScale != 1.0 || ctx->Pixel.DepthBias != 0.0;
-   const GLboolean stencilTransfer = ctx->Pixel.IndexShift
-      || ctx->Pixel.IndexOffset || ctx->Pixel.MapStencilFlag;
-   GLubyte *dst;
-   int dstStride;
-
-   dst = (GLubyte *) _mesa_image_address2d(packing, pixels,
-					   width, height,
-					   GL_DEPTH_STENCIL_EXT,
-					   type, 0, 0);
-   dstStride = _mesa_image_row_stride(packing, width,
-				      GL_DEPTH_STENCIL_EXT, type);
-
-   /* Fast 24/8 reads. */
-   if (type == GL_UNSIGNED_INT_24_8 &&
-       !scaleOrBias && !stencilTransfer && !packing->SwapBytes) {
-      if (fast_read_depth_stencil_pixels(ctx, x, y, width, height,
-					 dst, dstStride))
-	 return;
-
-      if (fast_read_depth_stencil_pixels_separate(ctx, x, y, width, height,
-						  (uint32_t *)dst, dstStride))
-	 return;
-   }
-
-   slow_read_depth_stencil_pixels_separate(ctx, x, y, width, height,
-					   type, packing,
-					   dst, dstStride);
-}
-
-
-
-/**
  * Software fallback routine for ctx->Driver.ReadPixels().
  * By time we get here, all error checking will have been done.
  */
@@ -621,10 +414,6 @@ _mesa_readpixels(struct gl_context *ctx,
             read_depth_pixels(ctx, x, y, width, height, type, pixels,
                               &clippedPacking);
             break;
-         case GL_DEPTH_STENCIL_EXT:
-            read_depth_stencil_pixels(ctx, x, y, width, height, type, pixels,
-                                      &clippedPacking);
-            break;
          default:
             /* all other formats should be color formats */
             read_rgba_pixels(ctx, x, y, width, height, format, type, pixels,
@@ -654,22 +443,6 @@ _mesa_error_check_format_type(struct gl_context *ctx, GLenum format,
 
    /* state validation should have already been done */
    ASSERT(ctx->NewState == 0x0);
-
-   if (ctx->Extensions.EXT_packed_depth_stencil
-       && type == GL_UNSIGNED_INT_24_8_EXT
-       && format != GL_DEPTH_STENCIL_EXT) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "gl%sPixels(format is not GL_DEPTH_STENCIL_EXT)", readDraw);
-      return GL_TRUE;
-   }
-
-   if (ctx->Extensions.ARB_depth_buffer_float
-       && type == GL_FLOAT_32_UNSIGNED_INT_24_8_REV
-       && format != GL_DEPTH_STENCIL_EXT) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "gl%sPixels(format is not GL_DEPTH_STENCIL_EXT)", readDraw);
-      return GL_TRUE;
-   }
 
    /* basic combinations test */
    err = _mesa_error_check_format_and_type(ctx, format, type);
@@ -748,32 +521,6 @@ _mesa_error_check_format_type(struct gl_context *ctx, GLenum format,
       if ((drawing && !_mesa_dest_buffer_exists(ctx, format))) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "gl%sPixels(no depth buffer)", readDraw);
-         return GL_TRUE;
-      }
-      break;
-   case GL_DEPTH_STENCIL_EXT:
-      /* Check validity of the type first. */
-      switch (type) {
-         case GL_UNSIGNED_INT_24_8_EXT:
-            if (!ctx->Extensions.EXT_packed_depth_stencil) {
-               _mesa_error(ctx, GL_INVALID_ENUM, "gl%sPixels(type)", readDraw);
-               return GL_TRUE;
-            }
-            break;
-         case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
-            if (!ctx->Extensions.ARB_depth_buffer_float) {
-               _mesa_error(ctx, GL_INVALID_ENUM, "gl%sPixels(type)", readDraw);
-               return GL_TRUE;
-            }
-            break;
-         default:
-            _mesa_error(ctx, GL_INVALID_ENUM, "gl%sPixels(type)", readDraw);
-            return GL_TRUE;
-      }
-      if ((drawing && !_mesa_dest_buffer_exists(ctx, format)) ||
-          (reading && !_mesa_source_buffer_exists(ctx, format))) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "gl%sPixels(no depth or stencil buffer)", readDraw);
          return GL_TRUE;
       }
       break;

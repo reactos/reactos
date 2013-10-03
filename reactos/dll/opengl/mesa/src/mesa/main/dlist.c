@@ -203,10 +203,6 @@ typedef enum
    OPCODE_CLEAR_DEPTH,
    OPCODE_CLEAR_INDEX,
    OPCODE_CLEAR_STENCIL,
-   OPCODE_CLEAR_BUFFER_IV,
-   OPCODE_CLEAR_BUFFER_UIV,
-   OPCODE_CLEAR_BUFFER_FV,
-   OPCODE_CLEAR_BUFFER_FI,
    OPCODE_CLIP_PLANE,
    OPCODE_COLOR_MASK,
    OPCODE_COLOR_MATERIAL,
@@ -1217,31 +1213,6 @@ save_BlendEquationSeparatei(GLuint buf, GLenum modeRGB, GLenum modeA)
    }
 }
 
-
-/* GL_ARB_draw_instanced. */
-static void GLAPIENTRY
-save_DrawArraysInstancedARB(GLenum mode,
-			    GLint first,
-			    GLsizei count,
-			    GLsizei primcount)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   _mesa_error(ctx, GL_INVALID_OPERATION,
-	       "glDrawArraysInstanced() during display list compile");
-}
-
-static void GLAPIENTRY
-save_DrawElementsInstancedARB(GLenum mode,
-			      GLsizei count,
-			      GLenum type,
-			      const GLvoid *indices,
-			      GLsizei primcount)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   _mesa_error(ctx, GL_INVALID_OPERATION,
-	       "glDrawElementsInstanced() during display list compile");
-}
-
 static void invalidate_saved_current_state( struct gl_context *ctx )
 {
    GLint i;
@@ -1338,110 +1309,6 @@ save_Clear(GLbitfield mask)
    }
    if (ctx->ExecuteFlag) {
       CALL_Clear(ctx->Exec, (mask));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint *value)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_CLEAR_BUFFER_IV, 6);
-   if (n) {
-      n[1].e = buffer;
-      n[2].i = drawbuffer;
-      n[3].i = value[0];
-      if (buffer == GL_COLOR) {
-         n[4].i = value[1];
-         n[5].i = value[2];
-         n[6].i = value[3];
-      }
-      else {
-         n[4].i = 0;
-         n[5].i = 0;
-         n[6].i = 0;
-      }
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ClearBufferiv(ctx->Exec, (buffer, drawbuffer, value));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint *value)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_CLEAR_BUFFER_UIV, 6);
-   if (n) {
-      n[1].e = buffer;
-      n[2].i = drawbuffer;
-      n[3].ui = value[0];
-      if (buffer == GL_COLOR) {
-         n[4].ui = value[1];
-         n[5].ui = value[2];
-         n[6].ui = value[3];
-      }
-      else {
-         n[4].ui = 0;
-         n[5].ui = 0;
-         n[6].ui = 0;
-      }
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ClearBufferuiv(ctx->Exec, (buffer, drawbuffer, value));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *value)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_CLEAR_BUFFER_FV, 6);
-   if (n) {
-      n[1].e = buffer;
-      n[2].i = drawbuffer;
-      n[3].f = value[0];
-      if (buffer == GL_COLOR) {
-         n[4].f = value[1];
-         n[5].f = value[2];
-         n[6].f = value[3];
-      }
-      else {
-         n[4].f = 0.0F;
-         n[5].f = 0.0F;
-         n[6].f = 0.0F;
-      }
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ClearBufferfv(ctx->Exec, (buffer, drawbuffer, value));
-   }
-}
-
-
-static void GLAPIENTRY
-save_ClearBufferfi(GLenum buffer, GLint drawbuffer,
-                   GLfloat depth, GLint stencil)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_CLEAR_BUFFER_FI, 4);
-   if (n) {
-      n[1].e = buffer;
-      n[2].i = drawbuffer;
-      n[3].f = depth;
-      n[4].i = stencil;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ClearBufferfi(ctx->Exec, (buffer, drawbuffer, depth, stencil));
    }
 }
 
@@ -6776,39 +6643,6 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_CLEAR:
             CALL_Clear(ctx->Exec, (n[1].bf));
             break;
-         case OPCODE_CLEAR_BUFFER_IV:
-            {
-               GLint value[4];
-               value[0] = n[3].i;
-               value[1] = n[4].i;
-               value[2] = n[5].i;
-               value[3] = n[6].i;
-               CALL_ClearBufferiv(ctx->Exec, (n[1].e, n[2].i, value));
-            }
-            break;
-         case OPCODE_CLEAR_BUFFER_UIV:
-            {
-               GLuint value[4];
-               value[0] = n[3].ui;
-               value[1] = n[4].ui;
-               value[2] = n[5].ui;
-               value[3] = n[6].ui;
-               CALL_ClearBufferuiv(ctx->Exec, (n[1].e, n[2].i, value));
-            }
-            break;
-         case OPCODE_CLEAR_BUFFER_FV:
-            {
-               GLfloat value[4];
-               value[0] = n[3].f;
-               value[1] = n[4].f;
-               value[2] = n[5].f;
-               value[3] = n[6].f;
-               CALL_ClearBufferfv(ctx->Exec, (n[1].e, n[2].i, value));
-            }
-            break;
-         case OPCODE_CLEAR_BUFFER_FI:
-            CALL_ClearBufferfi(ctx->Exec, (n[1].e, n[2].i, n[3].f, n[4].i));
-            break;
          case OPCODE_CLEAR_COLOR:
             CALL_ClearColor(ctx->Exec, (n[1].f, n[2].f, n[3].f, n[4].f));
             break;
@@ -9308,9 +9142,6 @@ _mesa_create_save_table(void)
    SET_FlushMappedBufferRange(table, _mesa_FlushMappedBufferRange); /* no dl */
 #endif
 
-   /* ARB 59. GL_ARB_copy_buffer */
-   SET_CopyBufferSubData(table, _mesa_CopyBufferSubData); /* no dlist save */
-
    /* 371. GL_APPLE_object_purgeable */
 #if FEATURE_APPLE_object_purgeable
    SET_ObjectPurgeableAPPLE(table, _mesa_ObjectPurgeableAPPLE);
@@ -9334,11 +9165,6 @@ _mesa_create_save_table(void)
    SET_ClampColorARB(table, save_ClampColorARB);
    SET_ClampColor(table, save_ClampColorARB);
 
-   /* GL 3.0 */
-   SET_ClearBufferiv(table, save_ClearBufferiv);
-   SET_ClearBufferuiv(table, save_ClearBufferuiv);
-   SET_ClearBufferfv(table, save_ClearBufferfv);
-   SET_ClearBufferfi(table, save_ClearBufferfi);
 #if 0
    SET_Uniform1ui(table, save_Uniform1ui);
    SET_Uniform2ui(table, save_Uniform2ui);
@@ -9731,10 +9557,6 @@ _mesa_save_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->VertexAttrib4fvARB = save_VertexAttrib4fvARB;
 
    vfmt->Rectf = save_Rectf;
-
-   /* GL_ARB_draw_instanced */
-   vfmt->DrawArraysInstanced = save_DrawArraysInstancedARB;
-   vfmt->DrawElementsInstanced = save_DrawElementsInstancedARB;
 
    /* The driver is required to implement these as
     * 1) They can probably do a better job.

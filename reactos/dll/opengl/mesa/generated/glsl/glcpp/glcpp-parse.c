@@ -3486,15 +3486,9 @@ glcpp_parser_create (const struct gl_extensions *extensions)
 	add_builtin_define(parser, "GL_ARB_draw_buffers", 1);
 
 	if (extensions != NULL) {
-	   if (extensions->EXT_texture_array) {
-	      add_builtin_define(parser, "GL_EXT_texture_array", 1);
-	   }
 
 	   if (extensions->ARB_shader_texture_lod)
 	      add_builtin_define(parser, "GL_ARB_shader_texture_lod", 1);
-
-	   if (extensions->ARB_draw_instanced)
-	      add_builtin_define(parser, "GL_ARB_draw_instanced", 1);
 
 	   if (extensions->ARB_conservative_depth) {
 	      add_builtin_define(parser, "GL_AMD_conservative_depth", 1);

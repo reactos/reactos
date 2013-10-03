@@ -286,31 +286,6 @@ _mesa_choose_tex_format( struct gl_context *ctx, GLint internalFormat,
       }
    }
 
-   if (ctx->Extensions.EXT_packed_depth_stencil) {
-      switch (internalFormat) {
-         case GL_DEPTH_STENCIL_EXT:
-         case GL_DEPTH24_STENCIL8_EXT:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_Z24_S8);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_S8_Z24);
-	    break;
-         default:
-            ; /* fallthrough */
-      }
-   }
-
-   if (ctx->Extensions.ARB_depth_buffer_float) {
-      switch (internalFormat) {
-         case GL_DEPTH_COMPONENT32F:
-            ASSERT(ctx->TextureFormatSupported[MESA_FORMAT_Z32_FLOAT]);
-            return MESA_FORMAT_Z32_FLOAT;
-         case GL_DEPTH32F_STENCIL8:
-            ASSERT(ctx->TextureFormatSupported[MESA_FORMAT_Z32_FLOAT_X24S8]);
-            return MESA_FORMAT_Z32_FLOAT_X24S8;
-         default:
-            ; /* fallthrough */
-      }
-   }
-
    if (ctx->Extensions.ATI_envmap_bumpmap) {
       switch (internalFormat) {
          case GL_DUDV_ATI:
@@ -321,43 +296,6 @@ _mesa_choose_tex_format( struct gl_context *ctx, GLint internalFormat,
             ; /* fallthrough */
       }
    }
-
-#if FEATURE_EXT_texture_sRGB
-   if (ctx->Extensions.EXT_texture_sRGB) {
-      switch (internalFormat) {
-         case GL_SRGB_EXT:
-         case GL_SRGB8_EXT:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SRGB8);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SARGB8);
-	    break;
-         case GL_SRGB_ALPHA_EXT:
-         case GL_SRGB8_ALPHA8_EXT:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SRGBA8);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SARGB8);
-	    break;
-         case GL_SLUMINANCE_EXT:
-         case GL_SLUMINANCE8_EXT:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SL8);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SARGB8);
-	    break;
-         case GL_SLUMINANCE_ALPHA_EXT:
-         case GL_SLUMINANCE8_ALPHA8_EXT:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SLA8);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SARGB8);
-	    break;
-         case GL_COMPRESSED_SLUMINANCE_EXT:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SL8);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SARGB8);
-	    break;
-         case GL_COMPRESSED_SLUMINANCE_ALPHA_EXT:
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SLA8);
-	    RETURN_IF_SUPPORTED(MESA_FORMAT_SARGB8);
-	    break;
-         default:
-            ; /* fallthrough */
-      }
-   }
-#endif /* FEATURE_EXT_texture_sRGB */
 
    if (ctx->Extensions.EXT_texture_integer) {
       switch (internalFormat) {

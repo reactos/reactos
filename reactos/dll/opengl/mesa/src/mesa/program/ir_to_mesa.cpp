@@ -2163,9 +2163,6 @@ ir_to_mesa_visitor::visit(ir_texture *ir)
 	    tmp_src = get_temp(glsl_type::vec4_type);
 	    dst_reg tmp_dst = dst_reg(tmp_src);
 
-	    /* Projective division not allowed for array samplers. */
-	    assert(!sampler_type->sampler_array);
-
 	    tmp_dst.writemask = WRITEMASK_Z;
 	    emit(ir, OPCODE_MOV, tmp_dst, this->result);
 
@@ -2192,12 +2189,7 @@ ir_to_mesa_visitor::visit(ir_texture *ir)
       ir->shadow_comparitor->accept(this);
 
       /* XXX This will need to be updated for cubemap array samplers. */
-      if (sampler_type->sampler_dimensionality == GLSL_SAMPLER_DIM_2D &&
-          sampler_type->sampler_array) {
-         coord_dst.writemask = WRITEMASK_W;
-      } else {
-         coord_dst.writemask = WRITEMASK_Z;
-      }
+      coord_dst.writemask = WRITEMASK_Z;
 
       emit(ir, OPCODE_MOV, coord_dst, this->result);
       coord_dst.writemask = WRITEMASK_XYZW;
@@ -2224,21 +2216,16 @@ ir_to_mesa_visitor::visit(ir_texture *ir)
 
    switch (sampler_type->sampler_dimensionality) {
    case GLSL_SAMPLER_DIM_1D:
-      inst->tex_target = (sampler_type->sampler_array)
-	 ? TEXTURE_1D_ARRAY_INDEX : TEXTURE_1D_INDEX;
+      inst->tex_target = TEXTURE_1D_INDEX;
       break;
    case GLSL_SAMPLER_DIM_2D:
-      inst->tex_target = (sampler_type->sampler_array)
-	 ? TEXTURE_2D_ARRAY_INDEX : TEXTURE_2D_INDEX;
+      inst->tex_target = TEXTURE_2D_INDEX;
       break;
    case GLSL_SAMPLER_DIM_3D:
       inst->tex_target = TEXTURE_3D_INDEX;
       break;
    case GLSL_SAMPLER_DIM_CUBE:
       inst->tex_target = TEXTURE_CUBE_INDEX;
-      break;
-   case GLSL_SAMPLER_DIM_BUF:
-      assert(!"FINISHME: Implement ARB_texture_buffer_object");
       break;
    default:
       assert(!"Should not get here.");

@@ -60,10 +60,8 @@ _mesa_type_is_packed(GLenum type)
    case GL_UNSIGNED_INT_8_8_8_8_REV:
    case GL_UNSIGNED_SHORT_8_8_MESA:
    case GL_UNSIGNED_SHORT_8_8_REV_MESA:
-   case GL_UNSIGNED_INT_24_8_EXT:
    case GL_UNSIGNED_INT_5_9_9_9_REV:
    case GL_UNSIGNED_INT_10F_11F_11F_REV:
-   case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
       return GL_TRUE;
    }
 
@@ -188,12 +186,9 @@ _mesa_sizeof_packed_type( GLenum type )
          return sizeof(GLushort);
       case GL_UNSIGNED_INT_8_8_8_8:
       case GL_UNSIGNED_INT_8_8_8_8_REV:
-      case GL_UNSIGNED_INT_24_8_EXT:
       case GL_UNSIGNED_INT_5_9_9_9_REV:
       case GL_UNSIGNED_INT_10F_11F_11F_REV:
          return sizeof(GLuint);
-      case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
-         return 8;
       default:
          return -1;
    }
@@ -231,7 +226,6 @@ _mesa_components_in_format( GLenum format )
       case GL_LUMINANCE_ALPHA_INTEGER_EXT:
       case GL_RG:
       case GL_YCBCR_MESA:
-      case GL_DEPTH_STENCIL_EXT:
       case GL_DUDV_ATI:
       case GL_DU8DV8_ATI:
       case GL_RG_INTEGER:
@@ -323,11 +317,6 @@ _mesa_bytes_per_pixel( GLenum format, GLenum type )
             return sizeof(GLushort);
          else
             return -1;
-      case GL_UNSIGNED_INT_24_8_EXT:
-         if (format == GL_DEPTH_STENCIL_EXT)
-            return sizeof(GLuint);
-         else
-            return -1;
       case GL_UNSIGNED_INT_5_9_9_9_REV:
          if (format == GL_RGB)
             return sizeof(GLuint);
@@ -336,11 +325,6 @@ _mesa_bytes_per_pixel( GLenum format, GLenum type )
       case GL_UNSIGNED_INT_10F_11F_11F_REV:
          if (format == GL_RGB)
             return sizeof(GLuint);
-         else
-            return -1;
-      case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
-         if (format == GL_DEPTH_STENCIL)
-            return 8;
          else
             return -1;
       default:
@@ -393,24 +377,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
          break; /* OK */
       }
       return GL_INVALID_OPERATION;
-
-   case GL_UNSIGNED_INT_24_8:
-      if (!ctx->Extensions.EXT_packed_depth_stencil) {
-         return GL_INVALID_ENUM;
-      }
-      if (format != GL_DEPTH_STENCIL) {
-         return GL_INVALID_OPERATION;
-      }
-      return GL_NO_ERROR;
-
-   case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
-      if (!ctx->Extensions.ARB_depth_buffer_float) {
-         return GL_INVALID_ENUM;
-      }
-      if (format != GL_DEPTH_STENCIL) {
-         return GL_INVALID_OPERATION;
-      }
-      return GL_NO_ERROR;
 
    default:
       ; /* fall-through */
@@ -537,16 +503,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             return GL_NO_ERROR;
          else
             return GL_INVALID_OPERATION;
-
-      case GL_DEPTH_STENCIL_EXT:
-         if (ctx->Extensions.EXT_packed_depth_stencil &&
-             type == GL_UNSIGNED_INT_24_8)
-            return GL_NO_ERROR;
-         else if (ctx->Extensions.ARB_depth_buffer_float &&
-             type == GL_FLOAT_32_UNSIGNED_INT_24_8_REV)
-            return GL_NO_ERROR;
-         else
-            return GL_INVALID_ENUM;
 
       case GL_DUDV_ATI:
       case GL_DU8DV8_ATI:
@@ -734,16 +690,6 @@ _mesa_is_color_format(GLenum format)
       case GL_RGB32F_ARB:
       case GL_RGBA16F_ARB:
       case GL_RGBA32F_ARB:
-#if FEATURE_EXT_texture_sRGB
-      case GL_SRGB_EXT:
-      case GL_SRGB8_EXT:
-      case GL_SRGB_ALPHA_EXT:
-      case GL_SRGB8_ALPHA8_EXT:
-      case GL_SLUMINANCE_ALPHA_EXT:
-      case GL_SLUMINANCE8_ALPHA8_EXT:
-      case GL_SLUMINANCE_EXT:
-      case GL_SLUMINANCE8_EXT:
-#endif /* FEATURE_EXT_texture_sRGB */
       /* generic integer formats */
       case GL_RED_INTEGER_EXT:
       case GL_GREEN_INTEGER_EXT:
@@ -814,7 +760,6 @@ _mesa_is_depth_format(GLenum format)
       case GL_DEPTH_COMPONENT16:
       case GL_DEPTH_COMPONENT24:
       case GL_DEPTH_COMPONENT32:
-      case GL_DEPTH_COMPONENT32F:
          return GL_TRUE;
       default:
          return GL_FALSE;
@@ -853,23 +798,6 @@ _mesa_is_ycbcr_format(GLenum format)
 
 
 /**
- * Test if the given image format is a depth+stencil format.
- */
-GLboolean
-_mesa_is_depthstencil_format(GLenum format)
-{
-   switch (format) {
-      case GL_DEPTH24_STENCIL8_EXT:
-      case GL_DEPTH_STENCIL_EXT:
-      case GL_DEPTH32F_STENCIL8:
-         return GL_TRUE;
-      default:
-         return GL_FALSE;
-   }
-}
-
-
-/**
  * Test if the given image format is a depth or stencil format.
  */
 GLboolean
@@ -885,10 +813,6 @@ _mesa_is_depth_or_stencil_format(GLenum format)
       case GL_STENCIL_INDEX4_EXT:
       case GL_STENCIL_INDEX8_EXT:
       case GL_STENCIL_INDEX16_EXT:
-      case GL_DEPTH_STENCIL_EXT:
-      case GL_DEPTH24_STENCIL8_EXT:
-      case GL_DEPTH_COMPONENT32F:
-      case GL_DEPTH32F_STENCIL8:
          return GL_TRUE;
       default:
          return GL_FALSE;
@@ -1053,15 +977,13 @@ _mesa_base_format_has_channel(GLenum base_format, GLenum pname)
    case GL_TEXTURE_DEPTH_TYPE:
    case GL_RENDERBUFFER_DEPTH_SIZE_EXT:
    case GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
-      if (base_format == GL_DEPTH_STENCIL ||
-	  base_format == GL_DEPTH_COMPONENT) {
+      if (base_format == GL_DEPTH_COMPONENT) {
 	 return GL_TRUE;
       }
       return GL_FALSE;
    case GL_RENDERBUFFER_STENCIL_SIZE_EXT:
    case GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
-      if (base_format == GL_DEPTH_STENCIL ||
-	  base_format == GL_STENCIL_INDEX) {
+      if (base_format == GL_STENCIL_INDEX) {
 	 return GL_TRUE;
       }
       return GL_FALSE;

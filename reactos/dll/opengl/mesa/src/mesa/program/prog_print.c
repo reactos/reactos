@@ -712,8 +712,6 @@ _mesa_fprint_instruction_opt(FILE *f,
       case TEXTURE_2D_INDEX:   fprintf(f, "2D");    break;
       case TEXTURE_3D_INDEX:   fprintf(f, "3D");    break;
       case TEXTURE_CUBE_INDEX: fprintf(f, "CUBE");  break;
-      case TEXTURE_1D_ARRAY_INDEX: fprintf(f, "1D_ARRAY"); break;
-      case TEXTURE_2D_ARRAY_INDEX: fprintf(f, "2D_ARRAY"); break;
       default:
          ;
       }

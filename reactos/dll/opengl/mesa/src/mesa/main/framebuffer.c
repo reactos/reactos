@@ -526,8 +526,6 @@ _mesa_update_framebuffer_visual(struct gl_context *ctx,
                + fb->Visual.greenBits + fb->Visual.blueBits;
             fb->Visual.samples = rb->NumSamples;
             fb->Visual.sampleBuffers = rb->NumSamples > 0 ? 1 : 0;
-            if (_mesa_get_format_color_encoding(fmt) == GL_SRGB)
-                fb->Visual.sRGBCapable = ctx->Const.sRGBCapable;
             break;
          }
       }
@@ -814,12 +812,6 @@ renderbuffer_exists(struct gl_context *ctx,
    case GL_STENCIL:
    case GL_STENCIL_INDEX:
       if (att[BUFFER_STENCIL].Type == GL_NONE) {
-         return GL_FALSE;
-      }
-      break;
-   case GL_DEPTH_STENCIL_EXT:
-      if (att[BUFFER_DEPTH].Type == GL_NONE ||
-          att[BUFFER_STENCIL].Type == GL_NONE) {
          return GL_FALSE;
       }
       break;

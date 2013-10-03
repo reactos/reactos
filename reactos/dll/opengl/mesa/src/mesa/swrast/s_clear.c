@@ -201,8 +201,6 @@ clear_color_buffers(struct gl_context *ctx)
 void
 _swrast_Clear(struct gl_context *ctx, GLbitfield buffers)
 {
-   const GLbitfield BUFFER_DS = BUFFER_BIT_DEPTH | BUFFER_BIT_STENCIL;
-
 #ifdef DEBUG_FOO
    {
       const GLbitfield legalBits =
@@ -230,24 +228,10 @@ _swrast_Clear(struct gl_context *ctx, GLbitfield buffers)
       _mesa_clear_accum_buffer(ctx);
    }
 
-   if (buffers & BUFFER_DS) {
-      struct gl_renderbuffer *depthRb =
-         ctx->DrawBuffer->Attachment[BUFFER_DEPTH].Renderbuffer;
-      struct gl_renderbuffer *stencilRb =
-         ctx->DrawBuffer->Attachment[BUFFER_STENCIL].Renderbuffer;
-
-      if ((buffers & BUFFER_DS) == BUFFER_DS && depthRb == stencilRb) {
-         /* clear depth and stencil together */
-         _swrast_clear_depth_stencil_buffer(ctx);
-      }
-      else {
-         /* clear depth, stencil separately */
-         if (buffers & BUFFER_BIT_DEPTH) {
-            _swrast_clear_depth_buffer(ctx);
-         }
-         if (buffers & BUFFER_BIT_STENCIL) {
-            _swrast_clear_stencil_buffer(ctx);
-         }
-      }
+   if (buffers & BUFFER_BIT_DEPTH) {
+      _swrast_clear_depth_buffer(ctx);
+   }
+   if (buffers & BUFFER_BIT_STENCIL) {
+      _swrast_clear_stencil_buffer(ctx);
    }
 }

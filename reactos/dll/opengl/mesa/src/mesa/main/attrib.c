@@ -619,12 +619,6 @@ pop_enable_group(struct gl_context *ctx, const struct gl_enable_attrib *enable)
             _mesa_set_enable(ctx, GL_TEXTURE_CUBE_MAP,
                              !!(enabled & TEXTURE_CUBE_BIT));
          }
-         if (ctx->Extensions.MESA_texture_array) {
-            _mesa_set_enable(ctx, GL_TEXTURE_1D_ARRAY_EXT,
-                             !!(enabled & TEXTURE_1D_ARRAY_BIT));
-            _mesa_set_enable(ctx, GL_TEXTURE_2D_ARRAY_EXT,
-                             !!(enabled & TEXTURE_2D_ARRAY_BIT));
-         }
       }
 
       if (ctx->Texture.Unit[i].TexGenEnabled != genEnabled) {
@@ -661,12 +655,6 @@ pop_texture_group(struct gl_context *ctx, struct texture_state *texstate)
       if (ctx->Extensions.ARB_texture_cube_map) {
          _mesa_set_enable(ctx, GL_TEXTURE_CUBE_MAP_ARB,
                           !!(unit->Enabled & TEXTURE_CUBE_BIT));
-      }
-      if (ctx->Extensions.MESA_texture_array) {
-         _mesa_set_enable(ctx, GL_TEXTURE_1D_ARRAY_EXT,
-                          !!(unit->Enabled & TEXTURE_1D_ARRAY_BIT));
-         _mesa_set_enable(ctx, GL_TEXTURE_2D_ARRAY_EXT,
-                          !!(unit->Enabled & TEXTURE_2D_ARRAY_BIT));
       }
 
       _mesa_TexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, unit->EnvMode);
@@ -737,13 +725,6 @@ pop_texture_group(struct gl_context *ctx, struct texture_state *texstate)
              !ctx->Extensions.ARB_texture_cube_map) {
             continue;
          }
-         else if ((obj->Target == GL_TEXTURE_1D_ARRAY_EXT ||
-                   obj->Target == GL_TEXTURE_2D_ARRAY_EXT) &&
-                  !ctx->Extensions.MESA_texture_array) {
-            continue;
-         }
-         else if (obj->Target == GL_TEXTURE_BUFFER)
-            continue;
 
          target = obj->Target;
 

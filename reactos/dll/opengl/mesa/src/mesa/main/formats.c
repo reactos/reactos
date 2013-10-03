@@ -367,24 +367,6 @@ static struct gl_format_info format_info[MESA_FORMAT_COUNT] =
       1, 1, 2                      /* BlockWidth/Height,Bytes */
    },
    {
-      MESA_FORMAT_Z24_S8,          /* Name */
-      "MESA_FORMAT_Z24_S8",        /* StrName */
-      GL_DEPTH_STENCIL,            /* BaseFormat */
-      GL_UNSIGNED_NORMALIZED,      /* DataType */
-      0, 0, 0, 0,                  /* Red/Green/Blue/AlphaBits */
-      0, 0, 0, 24, 8,              /* Lum/Int/Index/Depth/StencilBits */
-      1, 1, 4                      /* BlockWidth/Height,Bytes */
-   },
-   {
-      MESA_FORMAT_S8_Z24,          /* Name */
-      "MESA_FORMAT_S8_Z24",        /* StrName */
-      GL_DEPTH_STENCIL,            /* BaseFormat */
-      GL_UNSIGNED_NORMALIZED,      /* DataType */
-      0, 0, 0, 0,                  /* Red/Green/Blue/AlphaBits */
-      0, 0, 0, 24, 8,              /* Lum/Int/Index/Depth/StencilBits */
-      1, 1, 4                      /* BlockWidth/Height,Bytes */
-   },
-   {
       MESA_FORMAT_Z16,             /* Name */
       "MESA_FORMAT_Z16",           /* StrName */
       GL_DEPTH_COMPONENT,          /* BaseFormat */
@@ -428,51 +410,6 @@ static struct gl_format_info format_info[MESA_FORMAT_COUNT] =
       0, 0, 0, 0,                  /* Red/Green/Blue/AlphaBits */
       0, 0, 0, 0, 8,               /* Lum/Int/Index/Depth/StencilBits */
       1, 1, 1                      /* BlockWidth/Height,Bytes */
-   },
-   {
-      MESA_FORMAT_SRGB8,
-      "MESA_FORMAT_SRGB8",
-      GL_RGB,
-      GL_UNSIGNED_NORMALIZED,
-      8, 8, 8, 0,
-      0, 0, 0, 0, 0,
-      1, 1, 3
-   },
-   {
-      MESA_FORMAT_SRGBA8,
-      "MESA_FORMAT_SRGBA8",
-      GL_RGBA,
-      GL_UNSIGNED_NORMALIZED,    
-      8, 8, 8, 8,
-      0, 0, 0, 0, 0,
-      1, 1, 4
-   },
-   {
-      MESA_FORMAT_SARGB8,
-      "MESA_FORMAT_SARGB8",
-      GL_RGBA,
-      GL_UNSIGNED_NORMALIZED,    
-      8, 8, 8, 8,
-      0, 0, 0, 0, 0,
-      1, 1, 4
-   },
-   {
-      MESA_FORMAT_SL8,
-      "MESA_FORMAT_SL8",
-      GL_LUMINANCE,
-      GL_UNSIGNED_NORMALIZED,    
-      0, 0, 0, 0,
-      8, 0, 0, 0, 0,
-      1, 1, 1
-   },
-   {
-      MESA_FORMAT_SLA8,
-      "MESA_FORMAT_SLA8",
-      GL_LUMINANCE_ALPHA,
-      GL_UNSIGNED_NORMALIZED,    
-      0, 0, 0, 8,
-      8, 0, 0, 0, 0,
-      1, 1, 2
    },
    {
       MESA_FORMAT_RGBA_FLOAT32,
@@ -937,28 +874,6 @@ static struct gl_format_info format_info[MESA_FORMAT_COUNT] =
       16, 16, 16, 16,
       0, 0, 0, 0, 0,
       1, 1, 8
-   },
-   /* ARB_depth_buffer_float */
-   {
-      MESA_FORMAT_Z32_FLOAT,       /* Name */
-      "MESA_FORMAT_Z32_FLOAT",     /* StrName */
-      GL_DEPTH_COMPONENT,          /* BaseFormat */
-      GL_FLOAT,                    /* DataType */
-      0, 0, 0, 0,                  /* Red/Green/Blue/AlphaBits */
-      0, 0, 0, 32, 0,              /* Lum/Int/Index/Depth/StencilBits */
-      1, 1, 4                      /* BlockWidth/Height,Bytes */
-   },
-   {
-      MESA_FORMAT_Z32_FLOAT_X24S8, /* Name */
-      "MESA_FORMAT_Z32_FLOAT_X24S8", /* StrName */
-      GL_DEPTH_STENCIL,            /* BaseFormat */
-      /* DataType here is used to answer GL_TEXTURE_DEPTH_TYPE queries, and is
-       * never used for stencil because stencil is always GL_UNSIGNED_INT.
-       */
-      GL_FLOAT,                    /* DataType */
-      0, 0, 0, 0,                  /* Red/Green/Blue/AlphaBits */
-      0, 0, 0, 32, 8,              /* Lum/Int/Index/Depth/StencilBits */
-      1, 1, 8                      /* BlockWidth/Height,Bytes */
    }
 };
 
@@ -1043,7 +958,6 @@ _mesa_get_format_bits(gl_format format, GLenum pname)
    case GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
       return info->DepthBits;
    case GL_STENCIL_BITS:
-   case GL_TEXTURE_STENCIL_SIZE_EXT:
    case GL_RENDERBUFFER_STENCIL_SIZE_EXT:
    case GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
       return info->StencilBits;
@@ -1117,18 +1031,6 @@ _mesa_get_format_block_size(gl_format format, GLuint *bw, GLuint *bh)
 
 
 /**
- * Determine if the given format represents a packed depth/stencil buffer.
- */
-GLboolean
-_mesa_is_format_packed_depth_stencil(gl_format format)
-{
-   const struct gl_format_info *info = _mesa_get_format_info(format);
-
-   return info->BaseFormat == GL_DEPTH_STENCIL;
-}
-
-
-/**
  * Is the given format a signed/unsigned integer color format?
  */
 GLboolean
@@ -1137,59 +1039,7 @@ _mesa_is_format_integer_color(gl_format format)
    const struct gl_format_info *info = _mesa_get_format_info(format);
    return (info->DataType == GL_INT || info->DataType == GL_UNSIGNED_INT) &&
       info->BaseFormat != GL_DEPTH_COMPONENT &&
-      info->BaseFormat != GL_DEPTH_STENCIL &&
       info->BaseFormat != GL_STENCIL_INDEX;
-}
-
-
-/**
- * Return color encoding for given format.
- * \return GL_LINEAR or GL_SRGB
- */
-GLenum
-_mesa_get_format_color_encoding(gl_format format)
-{
-   /* XXX this info should be encoded in gl_format_info */
-   switch (format) {
-   case MESA_FORMAT_SRGB8:
-   case MESA_FORMAT_SRGBA8:
-   case MESA_FORMAT_SARGB8:
-   case MESA_FORMAT_SL8:
-   case MESA_FORMAT_SLA8:
-      return GL_SRGB;
-   default:
-      return GL_LINEAR;
-   }
-}
-
-
-/**
- * For an sRGB format, return the corresponding linear color space format.
- * For non-sRGB formats, return the format as-is.
- */
-gl_format
-_mesa_get_srgb_format_linear(gl_format format)
-{
-   switch (format) {
-   case MESA_FORMAT_SRGB8:
-      format = MESA_FORMAT_RGB888;
-      break;
-   case MESA_FORMAT_SRGBA8:
-      format = MESA_FORMAT_RGBA8888;
-      break;
-   case MESA_FORMAT_SARGB8:
-      format = MESA_FORMAT_ARGB8888;
-      break;
-   case MESA_FORMAT_SL8:
-      format = MESA_FORMAT_L8;
-      break;
-   case MESA_FORMAT_SLA8:
-      format = MESA_FORMAT_AL88;
-      break;
-   default:
-      break;
-   }
-   return format;
 }
 
 
@@ -1489,16 +1339,6 @@ _mesa_format_to_type_and_comps(gl_format format,
       *comps = 2;
       return;
 
-   case MESA_FORMAT_Z24_S8:
-      *datatype = GL_UNSIGNED_INT_24_8_MESA;
-      *comps = 2;
-      return;
-
-   case MESA_FORMAT_S8_Z24:
-      *datatype = GL_UNSIGNED_INT_8_24_REV_MESA;
-      *comps = 2;
-      return;
-
    case MESA_FORMAT_Z16:
       *datatype = GL_UNSIGNED_SHORT;
       *comps = 1;
@@ -1519,16 +1359,6 @@ _mesa_format_to_type_and_comps(gl_format format,
       *comps = 1;
       return;
 
-   case MESA_FORMAT_Z32_FLOAT:
-      *datatype = GL_FLOAT;
-      *comps = 1;
-      return;
-
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
-      *datatype = GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
-      *comps = 1;
-      return;
-
    case MESA_FORMAT_DUDV8:
       *datatype = GL_BYTE;
       *comps = 2;
@@ -1543,26 +1373,6 @@ _mesa_format_to_type_and_comps(gl_format format,
       *datatype = GL_SHORT;
       *comps = 4;
       return;
-
-#if FEATURE_EXT_texture_sRGB
-   case MESA_FORMAT_SRGB8:
-      *datatype = GL_UNSIGNED_BYTE;
-      *comps = 3;
-      return;
-   case MESA_FORMAT_SRGBA8:
-   case MESA_FORMAT_SARGB8:
-      *datatype = GL_UNSIGNED_BYTE;
-      *comps = 4;
-      return;
-   case MESA_FORMAT_SL8:
-      *datatype = GL_UNSIGNED_BYTE;
-      *comps = 1;
-      return;
-   case MESA_FORMAT_SLA8:
-      *datatype = GL_UNSIGNED_BYTE;
-      *comps = 2;
-      return;
-#endif
 
    case MESA_FORMAT_RGBA_FLOAT32:
       *datatype = GL_FLOAT;
@@ -1848,10 +1658,7 @@ _mesa_format_matches_format_and_type(gl_format gl_format,
    case MESA_FORMAT_YCBCR_REV:
       return GL_FALSE;
 
-   case MESA_FORMAT_Z24_S8:
-      return format == GL_DEPTH_STENCIL && type == GL_UNSIGNED_INT_24_8;
    case MESA_FORMAT_Z24_X8:
-   case MESA_FORMAT_S8_Z24:
       return GL_FALSE;
 
    case MESA_FORMAT_Z16:
@@ -1864,13 +1671,6 @@ _mesa_format_matches_format_and_type(gl_format gl_format,
       return format == GL_DEPTH_COMPONENT && type == GL_UNSIGNED_INT;
 
    case MESA_FORMAT_S8:
-      return GL_FALSE;
-
-   case MESA_FORMAT_SRGB8:
-   case MESA_FORMAT_SRGBA8:
-   case MESA_FORMAT_SARGB8:
-   case MESA_FORMAT_SL8:
-   case MESA_FORMAT_SLA8:
       return GL_FALSE;
 
    case MESA_FORMAT_RGBA_FLOAT32:
@@ -1956,12 +1756,6 @@ _mesa_format_matches_format_and_type(gl_format gl_format,
    case MESA_FORMAT_SIGNED_RGBA_16:
    case MESA_FORMAT_RGBA_16:
       /* FINISHME: SNORM */
-      return GL_FALSE;
-
-   case MESA_FORMAT_Z32_FLOAT:
-      return format == GL_DEPTH_COMPONENT && type == GL_FLOAT;
-
-   case MESA_FORMAT_Z32_FLOAT_X24S8:
       return GL_FALSE;
    }
 

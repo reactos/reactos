@@ -498,9 +498,6 @@ struct gl_config
    GLint bindToMipmapTexture;
    GLint bindToTextureTargets;
    GLint yInverted;
-
-   /* EXT_framebuffer_sRGB */
-   GLint sRGBCapable;
 };
 
 
@@ -730,8 +727,6 @@ struct gl_colorbuffer_attrib
    GLboolean _ClampFragmentColor; /** < with GL_FIXED_ONLY_ARB resolved */
    GLenum ClampReadColor;     /**< GL_TRUE, GL_FALSE or GL_FIXED_ONLY_ARB */
    GLboolean _ClampReadColor;     /** < with GL_FIXED_ONLY_ARB resolved */
-
-   GLboolean sRGBEnabled;	/**< Framebuffer sRGB blending/updating requested */
 };
 
 
@@ -1116,9 +1111,6 @@ struct gl_stencil_attrib
  */
 typedef enum
 {
-   TEXTURE_BUFFER_INDEX,
-   TEXTURE_2D_ARRAY_INDEX,
-   TEXTURE_1D_ARRAY_INDEX,
    TEXTURE_CUBE_INDEX,
    TEXTURE_3D_INDEX,
    TEXTURE_2D_INDEX,
@@ -1132,9 +1124,6 @@ typedef enum
  * Used for Texture.Unit[]._ReallyEnabled flags.
  */
 /*@{*/
-#define TEXTURE_BUFFER_BIT   (1 << TEXTURE_BUFFER_INDEX)
-#define TEXTURE_2D_ARRAY_BIT (1 << TEXTURE_2D_ARRAY_INDEX)
-#define TEXTURE_1D_ARRAY_BIT (1 << TEXTURE_1D_ARRAY_INDEX)
 #define TEXTURE_CUBE_BIT     (1 << TEXTURE_CUBE_INDEX)
 #define TEXTURE_3D_BIT       (1 << TEXTURE_3D_INDEX)
 #define TEXTURE_2D_BIT       (1 << TEXTURE_2D_INDEX)
@@ -1279,13 +1268,6 @@ struct gl_texture_object
 
    /** Actual texture images, indexed by [cube face] and [mipmap level] */
    struct gl_texture_image *Image[MAX_FACES][MAX_TEXTURE_LEVELS];
-
-   /** GL_ARB_texture_buffer_object */
-   struct gl_buffer_object *BufferObject;
-   GLenum BufferObjectFormat;
-
-   /** GL_OES_EGL_image_external */
-   GLint RequiredTextureImageUnits;
 };
 
 
@@ -1383,9 +1365,6 @@ struct gl_texture_attrib
    struct gl_texture_unit Unit[MAX_COMBINED_TEXTURE_IMAGE_UNITS];
 
    struct gl_texture_object *ProxyTex[NUM_TEXTURE_TARGETS];
-
-   /** GL_ARB_texture_buffer_object */
-   struct gl_buffer_object *BufferObject;
 
    /** Texture units/samplers used by vertex or fragment texturing */
    GLbitfield _EnabledUnits;
@@ -2341,7 +2320,6 @@ struct gl_constants
    GLint MaxTextureLevels;      /**< Max mipmap levels. */ 
    GLint Max3DTextureLevels;    /**< Max mipmap levels for 3D textures */
    GLint MaxCubeTextureLevels;  /**< Max mipmap levels for cube textures */
-   GLint MaxArrayTextureLayers; /**< Max layers in array textures */
    GLuint MaxTextureCoordUnits;
    GLuint MaxTextureImageUnits;
    GLuint MaxVertexTextureImageUnits;
@@ -2349,7 +2327,6 @@ struct gl_constants
    GLuint MaxTextureUnits;           /**< = MIN(CoordUnits, ImageUnits) */
    GLfloat MaxTextureMaxAnisotropy;  /**< GL_EXT_texture_filter_anisotropic */
    GLfloat MaxTextureLodBias;        /**< GL_EXT_texture_lod_bias */
-   GLuint MaxTextureBufferSize;      /**< GL_ARB_texture_buffer_object */
 
    GLuint MaxArrayLockSize;
 
@@ -2420,9 +2397,6 @@ struct gl_constants
    /** GL_EXT_gpu_shader4 */
    GLint MinProgramTexelOffset, MaxProgramTexelOffset;
 
-   /* GL_EXT_framebuffer_sRGB */
-   GLboolean sRGBCapable; /* can enable sRGB blend/update on FBOs */
-
    /* GL_ARB_robustness */
    GLenum ResetStrategy;
 
@@ -2462,11 +2436,8 @@ struct gl_extensions
    GLboolean dummy_false; /* Set false by _mesa_init_extensions(). */
    GLboolean ARB_color_buffer_float;
    GLboolean ARB_conservative_depth;
-   GLboolean ARB_copy_buffer;
-   GLboolean ARB_depth_buffer_float;
    GLboolean ARB_depth_clamp;
    GLboolean ARB_draw_buffers_blend;
-   GLboolean ARB_draw_instanced;
    GLboolean ARB_fragment_program;
    GLboolean ARB_fragment_program_shadow;
    GLboolean ARB_fragment_shader;
@@ -2480,7 +2451,6 @@ struct gl_extensions
    GLboolean ARB_shader_texture_lod;
    GLboolean ARB_shading_language_100;
    GLboolean ARB_texture_border_clamp;
-   GLboolean ARB_texture_buffer_object;
    GLboolean ARB_texture_cube_map;
    GLboolean ARB_texture_env_combine;
    GLboolean ARB_texture_env_crossbar;
@@ -2489,7 +2459,6 @@ struct gl_extensions
    GLboolean ARB_texture_non_power_of_two;
    GLboolean ARB_texture_storage;
    GLboolean ARB_transpose_matrix;
-   GLboolean ARB_uniform_buffer_object;
    GLboolean ARB_vertex_array_object;
    GLboolean ARB_vertex_program;
    GLboolean ARB_vertex_shader;
@@ -2506,10 +2475,8 @@ struct gl_extensions
    GLboolean EXT_framebuffer_blit;
    GLboolean EXT_framebuffer_multisample;
    GLboolean EXT_framebuffer_object;
-   GLboolean EXT_framebuffer_sRGB;
    GLboolean EXT_gpu_program_parameters;
    GLboolean EXT_gpu_shader4;
-   GLboolean EXT_packed_depth_stencil;
    GLboolean EXT_packed_pixels;
    GLboolean EXT_pixel_buffer_object;
    GLboolean EXT_point_parameters;
@@ -2520,12 +2487,10 @@ struct gl_extensions
    GLboolean EXT_separate_specular_color;
    GLboolean EXT_stencil_two_side;
    GLboolean EXT_texture3D;
-   GLboolean EXT_texture_array;
    GLboolean EXT_texture_env_dot3;
    GLboolean EXT_texture_filter_anisotropic;
    GLboolean EXT_texture_integer;
    GLboolean EXT_texture_mirror_clamp;
-   GLboolean EXT_texture_sRGB;
    /* vendor extensions */
    GLboolean APPLE_packed_pixels;
    GLboolean APPLE_vertex_array_object;
@@ -2539,7 +2504,6 @@ struct gl_extensions
    GLboolean MESA_pack_invert;
    GLboolean MESA_resize_buffers;
    GLboolean MESA_ycbcr_texture;
-   GLboolean MESA_texture_array;
    GLboolean NV_blend_square;
    GLboolean NV_fog_distance;
    GLboolean NV_fragment_program;
@@ -2880,9 +2844,6 @@ struct gl_context
 
    struct gl_shader_state Shader; /**< GLSL shader object state */
    struct gl_shader_compiler_options ShaderCompilerOptions[MESA_SHADER_TYPES];
-
-   struct gl_buffer_object *CopyReadBuffer; /**< GL_ARB_copy_buffer */
-   struct gl_buffer_object *CopyWriteBuffer; /**< GL_ARB_copy_buffer */
    /*@}*/
 
    struct gl_meta_state *Meta;  /**< for "meta" operations */

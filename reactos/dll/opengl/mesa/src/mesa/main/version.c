@@ -118,36 +118,21 @@ compute_version(struct gl_context *ctx)
 			       || ctx->Extensions.ATI_separate_stencil));
    const GLboolean ver_2_1 = (ver_2_0 &&
                               ctx->Const.GLSLVersion >= 120 &&
-                              ctx->Extensions.EXT_pixel_buffer_object &&
-                              ctx->Extensions.EXT_texture_sRGB);
+                              ctx->Extensions.EXT_pixel_buffer_object);
    const GLboolean ver_3_0 = (ver_2_1 &&
                               ctx->Const.GLSLVersion >= 130 &&
                               ctx->Const.MaxSamples >= 4 &&
                               ctx->Extensions.ARB_color_buffer_float &&
-                              ctx->Extensions.ARB_depth_buffer_float &&
                               ctx->Extensions.ARB_half_float_pixel &&
                               ctx->Extensions.ARB_half_float_vertex &&
                               ctx->Extensions.ARB_map_buffer_range &&
                               ctx->Extensions.ARB_shader_texture_lod &&
                               ctx->Extensions.ARB_texture_float &&
                               ctx->Extensions.APPLE_vertex_array_object &&
-                              ctx->Extensions.ARB_framebuffer_object &&
-                              ctx->Extensions.EXT_framebuffer_sRGB &&
-                              ctx->Extensions.EXT_texture_array);
-   const GLboolean ver_3_1 = (ver_3_0 &&
-                              ctx->Const.GLSLVersion >= 140 &&
-                              ctx->Extensions.ARB_copy_buffer &&
-                              ctx->Extensions.ARB_draw_instanced &&
-                              ctx->Extensions.ARB_texture_buffer_object &&
-                              ctx->Extensions.ARB_uniform_buffer_object &&
-                              ctx->Const.MaxVertexTextureImageUnits >= 16);
+                              ctx->Extensions.ARB_framebuffer_object);
 
 
-   if (ver_3_1) {
-      major = 3;
-      minor = 1;
-   }
-   else if (ver_3_0) {
+   if (ver_3_0) {
       major = 3;
       minor = 0;
    }

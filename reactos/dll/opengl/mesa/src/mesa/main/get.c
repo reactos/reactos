@@ -282,7 +282,6 @@ static const int extra_GLSL_130[] = {
 
 
 EXTRA_EXT(ARB_texture_cube_map);
-EXTRA_EXT(MESA_texture_array);
 EXTRA_EXT2(EXT_secondary_color, ARB_vertex_program);
 EXTRA_EXT(EXT_secondary_color);
 EXTRA_EXT(EXT_fog_coord);
@@ -311,9 +310,6 @@ EXTRA_EXT2(ARB_fragment_program, NV_fragment_program);
 EXTRA_EXT2(ARB_vertex_program, NV_vertex_program);
 EXTRA_EXT2(ARB_vertex_program, ARB_fragment_program);
 EXTRA_EXT(ARB_color_buffer_float);
-EXTRA_EXT(ARB_copy_buffer);
-EXTRA_EXT(EXT_framebuffer_sRGB);
-EXTRA_EXT(ARB_texture_buffer_object);
 
 static const int
 extra_ARB_vertex_program_ARB_fragment_program_NV_vertex_program[] = {
@@ -452,10 +448,6 @@ static const struct value_desc values[] = {
    { GL_CLAMP_VERTEX_COLOR, CONTEXT_ENUM(Light.ClampVertexColor), extra_ARB_color_buffer_float },
    { GL_CLAMP_FRAGMENT_COLOR, CONTEXT_ENUM(Color.ClampFragmentColor), extra_ARB_color_buffer_float },
    { GL_CLAMP_READ_COLOR, CONTEXT_ENUM(Color.ClampReadColor), extra_ARB_color_buffer_float },
-
-   /* GL_ARB_copy_buffer */
-   { GL_COPY_READ_BUFFER, LOC_CUSTOM, TYPE_INT, 0, extra_ARB_copy_buffer },
-   { GL_COPY_WRITE_BUFFER, LOC_CUSTOM, TYPE_INT, 0, extra_ARB_copy_buffer },
 
    /* GL_OES_read_format */
    { GL_IMPLEMENTATION_COLOR_READ_TYPE_OES, LOC_CUSTOM, TYPE_INT, 0,
@@ -802,16 +794,8 @@ static const struct value_desc values[] = {
 
    { GL_TEXTURE_1D, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
    { GL_TEXTURE_3D, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
-   { GL_TEXTURE_1D_ARRAY_EXT, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
-   { GL_TEXTURE_2D_ARRAY_EXT, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
 
    { GL_TEXTURE_BINDING_1D, LOC_CUSTOM, TYPE_INT, TEXTURE_1D_INDEX, NO_EXTRA },
-   { GL_TEXTURE_BINDING_1D_ARRAY, LOC_CUSTOM, TYPE_INT,
-     TEXTURE_1D_ARRAY_INDEX, extra_MESA_texture_array },
-   { GL_TEXTURE_BINDING_2D_ARRAY, LOC_CUSTOM, TYPE_INT,
-     TEXTURE_1D_ARRAY_INDEX, extra_MESA_texture_array },
-   { GL_MAX_ARRAY_TEXTURE_LAYERS_EXT,
-     CONTEXT_INT(Const.MaxArrayTextureLayers), extra_MESA_texture_array },
 
    { GL_TEXTURE_GEN_S, LOC_TEXUNIT, TYPE_BIT_0,
      offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA },
@@ -1076,27 +1060,11 @@ static const struct value_desc values[] = {
      CONTEXT_INT(Const.MaxProgramTexelOffset),
      extra_GLSL_130 },
 
-   /* GL_ARB_texture_buffer_object */
-   { GL_MAX_TEXTURE_BUFFER_SIZE_ARB, CONTEXT_INT(Const.MaxTextureBufferSize),
-     extra_ARB_texture_buffer_object },
-   { GL_TEXTURE_BINDING_BUFFER_ARB, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_texture_buffer_object },
-   { GL_TEXTURE_BUFFER_DATA_STORE_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     TEXTURE_BUFFER_INDEX, extra_ARB_texture_buffer_object },
-   { GL_TEXTURE_BUFFER_FORMAT_ARB, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_texture_buffer_object },
-   { GL_TEXTURE_BUFFER_ARB, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_texture_buffer_object },
-
    /* GL 3.0 */
    { GL_NUM_EXTENSIONS, LOC_CUSTOM, TYPE_INT, 0, extra_version_30 },
    { GL_MAJOR_VERSION, CONTEXT_INT(VersionMajor), extra_version_30 },
    { GL_MINOR_VERSION, CONTEXT_INT(VersionMinor), extra_version_30  },
    { GL_CONTEXT_FLAGS, CONTEXT_INT(Const.ContextFlags), extra_version_30  },
-
-   /* GL3.0 / GL_EXT_framebuffer_sRGB */
-   { GL_FRAMEBUFFER_SRGB_EXT, CONTEXT_BOOL(Color.sRGBEnabled), extra_EXT_framebuffer_sRGB },
-   { GL_FRAMEBUFFER_SRGB_CAPABLE_EXT, BUFFER_INT(Visual.sRGBCapable), extra_EXT_framebuffer_sRGB },
  
 
    /* GL 3.2 */
@@ -1221,8 +1189,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_TEXTURE_1D:
    case GL_TEXTURE_2D:
    case GL_TEXTURE_3D:
-   case GL_TEXTURE_1D_ARRAY_EXT:
-   case GL_TEXTURE_2D_ARRAY_EXT:
    case GL_TEXTURE_CUBE_MAP_ARB:
       v->value_bool = _mesa_IsEnabled(d->pname);
       break;
@@ -1388,11 +1354,7 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_TEXTURE_BINDING_1D:
    case GL_TEXTURE_BINDING_2D:
    case GL_TEXTURE_BINDING_3D:
-   case GL_TEXTURE_BINDING_1D_ARRAY_EXT:
-   case GL_TEXTURE_BINDING_2D_ARRAY_EXT:
    case GL_TEXTURE_BINDING_CUBE_MAP_ARB:
-   case GL_TEXTURE_BINDING_RECTANGLE_NV:
-   case GL_TEXTURE_BINDING_EXTERNAL_OES:
       unit = ctx->Texture.CurrentUnit;
       v->value_int =
 	 ctx->Texture.Unit[unit].CurrentTex[d->offset]->Name;
@@ -1419,14 +1381,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       break;
    case GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB:
       v->value_int = ctx->Array.ArrayObj->ElementArrayBufferObj->Name;
-      break;
-
-   /* ARB_copy_buffer */
-   case GL_COPY_READ_BUFFER:
-      v->value_int = ctx->CopyReadBuffer->Name;
-      break;
-   case GL_COPY_WRITE_BUFFER:
-      v->value_int = ctx->CopyWriteBuffer->Name;
       break;
 
    case GL_FRAGMENT_PROGRAM_BINDING_NV:
@@ -1491,28 +1445,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
 
    case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
       v->value_int = ctx->Const.FragmentProgram.MaxUniformComponents / 4;
-      break;
-
-   /* GL_ARB_texture_buffer_object */
-   case GL_TEXTURE_BUFFER_ARB:
-      v->value_int = ctx->Texture.BufferObject->Name;
-      break;
-   case GL_TEXTURE_BINDING_BUFFER_ARB:
-      unit = ctx->Texture.CurrentUnit;
-      v->value_int =
-         ctx->Texture.Unit[unit].CurrentTex[TEXTURE_BUFFER_INDEX]->Name;
-      break;
-   case GL_TEXTURE_BUFFER_DATA_STORE_BINDING_ARB:
-      {
-         struct gl_buffer_object *buf =
-            ctx->Texture.Unit[ctx->Texture.CurrentUnit]
-            .CurrentTex[TEXTURE_BUFFER_INDEX]->BufferObject;
-         v->value_int = buf ? buf->Name : 0;
-      }
-      break;
-   case GL_TEXTURE_BUFFER_FORMAT_ARB:
-      v->value_int = ctx->Texture.Unit[ctx->Texture.CurrentUnit]
-         .CurrentTex[TEXTURE_BUFFER_INDEX]->BufferObjectFormat;
       break;
    }   
 }

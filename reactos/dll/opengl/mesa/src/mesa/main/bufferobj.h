@@ -134,11 +134,6 @@ _mesa_GetBufferParameteri64v(GLenum target, GLenum pname, GLint64 *params);
 extern void GLAPIENTRY
 _mesa_GetBufferPointervARB(GLenum target, GLenum pname, GLvoid **params);
 
-extern void GLAPIENTRY
-_mesa_CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
-                        GLintptr readOffset, GLintptr writeOffset,
-                        GLsizeiptr size);
-
 extern void * GLAPIENTRY
 _mesa_MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length,
                      GLbitfield access);

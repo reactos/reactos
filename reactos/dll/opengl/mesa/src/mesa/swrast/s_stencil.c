@@ -605,32 +605,6 @@ _swrast_clear_stencil_buffer(struct gl_context *ctx)
          }
       }
       break;
-   case MESA_FORMAT_S8_Z24:
-      {
-         GLuint clear = (ctx->Stencil.Clear & writeMask & 0xff) << 24;
-         GLuint mask = (((~writeMask) & 0xff) << 24) | 0xffffff;
-         for (i = 0; i < height; i++) {
-            GLuint *row = (GLuint *) map;
-            for (j = 0; j < width; j++) {
-               row[j] = (row[j] & mask) | clear;
-            }
-            map += rowStride;
-         }
-      }
-      break;
-   case MESA_FORMAT_Z24_S8:
-      {
-         GLuint clear = ctx->Stencil.Clear & writeMask & 0xff;
-         GLuint mask = 0xffffff00 | ((~writeMask) & 0xff);
-         for (i = 0; i < height; i++) {
-            GLuint *row = (GLuint *) map;
-            for (j = 0; j < width; j++) {
-               row[j] = (row[j] & mask) | clear;
-            }
-            map += rowStride;
-         }
-      }
-      break;
    default:
       _mesa_problem(ctx, "Unexpected stencil buffer format %s"
                     " in _swrast_clear_stencil_buffer()",

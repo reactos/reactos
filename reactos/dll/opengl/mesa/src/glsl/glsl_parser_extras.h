@@ -176,10 +176,6 @@ struct _mesa_glsl_parse_state {
    /*@{*/
    bool ARB_draw_buffers_enable;
    bool ARB_draw_buffers_warn;
-   bool ARB_draw_instanced_enable;
-   bool ARB_draw_instanced_warn;
-   bool EXT_texture_array_enable;
-   bool EXT_texture_array_warn;
    bool ARB_shader_texture_lod_enable;
    bool ARB_shader_texture_lod_warn;
    bool ARB_shader_stencil_export_enable;
