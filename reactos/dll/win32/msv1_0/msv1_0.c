@@ -882,13 +882,17 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
           Confidentiality, AuthenticationPackageName);
 
     /* Get the dispatch table entries */
+    DispatchTable.CreateLogonSession = LsaDispatchTable->CreateLogonSession;
+    DispatchTable.DeleteLogonSession = LsaDispatchTable->DeleteLogonSession;
+    DispatchTable.AddCredential = LsaDispatchTable->AddCredential;
+    DispatchTable.GetCredentials = LsaDispatchTable->GetCredentials;
+    DispatchTable.DeleteCredential = LsaDispatchTable->DeleteCredential;
     DispatchTable.AllocateLsaHeap = LsaDispatchTable->AllocateLsaHeap;
     DispatchTable.FreeLsaHeap = LsaDispatchTable->FreeLsaHeap;
     DispatchTable.AllocateClientBuffer = LsaDispatchTable->AllocateClientBuffer;
     DispatchTable.FreeClientBuffer = LsaDispatchTable->FreeClientBuffer;
     DispatchTable.CopyToClientBuffer = LsaDispatchTable->CopyToClientBuffer;
     DispatchTable.CopyFromClientBuffer = LsaDispatchTable->CopyFromClientBuffer;
-
 
     /* Return the package name */
     NameString = DispatchTable.AllocateLsaHeap(sizeof(LSA_STRING));
@@ -953,6 +957,7 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     SAMPR_ULONG_ARRAY Use = {0, NULL};
     PSAMPR_USER_INFO_BUFFER UserInfo = NULL;
     UNICODE_STRING LogonServer;
+    BOOLEAN SessionCreated = FALSE;
     NTSTATUS Status;
 
     TRACE("()\n");
@@ -960,7 +965,6 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     TRACE("LogonType: %lu\n", LogonType);
     TRACE("AuthenticationInformation: %p\n", AuthenticationInformation);
     TRACE("AuthenticationInformationLength: %lu\n", AuthenticationInformationLength);
-
 
     *ProfileBuffer = NULL;
     *ProfileBufferLength = 0;
@@ -977,9 +981,9 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         /* Fix-up pointers in the authentication info */
         PtrOffset = (ULONG_PTR)AuthenticationInformation - (ULONG_PTR)ClientAuthenticationBase;
 
-        LogonInfo->LogonDomainName.Buffer = (PWSTR)((ULONG_PTR)LogonInfo->LogonDomainName.Buffer + PtrOffset);
-        LogonInfo->UserName.Buffer = (PWSTR)((ULONG_PTR)LogonInfo->UserName.Buffer + PtrOffset);
-        LogonInfo->Password.Buffer = (PWSTR)((ULONG_PTR)LogonInfo->Password.Buffer + PtrOffset);
+        LogonInfo->LogonDomainName.Buffer = FIXUP_POINTER(LogonInfo->LogonDomainName.Buffer, PtrOffset);
+        LogonInfo->UserName.Buffer = FIXUP_POINTER(LogonInfo->UserName.Buffer, PtrOffset);
+        LogonInfo->Password.Buffer = FIXUP_POINTER(LogonInfo->Password.Buffer, PtrOffset);
 
         TRACE("Domain: %S\n", LogonInfo->LogonDomainName.Buffer);
         TRACE("User: %S\n", LogonInfo->UserName.Buffer);
@@ -1090,6 +1094,16 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         goto done;
     }
 
+    /* Create the logon session */
+    Status = DispatchTable.CreateLogonSession(LogonId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("CreateLogonSession failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    SessionCreated = TRUE;
+
     /* Build and fill the interactve profile buffer */
     Status = BuildInteractiveProfileBuffer(ClientRequest,
                                            UserInfo,
@@ -1135,6 +1149,9 @@ done:
 
     if (!NT_SUCCESS(Status))
     {
+        if (SessionCreated == TRUE)
+            DispatchTable.DeleteLogonSession(LogonId);
+
         if (*ProfileBuffer != NULL)
         {
             DispatchTable.FreeClientBuffer(ClientRequest,
@@ -1169,6 +1186,7 @@ done:
 /*
  * @unimplemented
  */
+#if 0
 NTSTATUS
 NTAPI
 LsaApLogonUserEx(IN PLSA_CLIENT_REQUEST ClientRequest,
@@ -1227,5 +1245,6 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     return STATUS_NOT_IMPLEMENTED;
 }
+#endif
 
 /* EOF */

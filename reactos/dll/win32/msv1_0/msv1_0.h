@@ -36,6 +36,10 @@
 
 #include <wine/debug.h>
 
+
+#define FIXUP_POINTER(Pointer, Offset) ((Pointer != NULL) ? ((PWSTR)((ULONG_PTR)Pointer + Offset)) : NULL)
+
+
 typedef struct _RPC_SID
 {
     UCHAR Revision;
