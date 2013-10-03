@@ -203,18 +203,18 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeMovEaxOffset,
     Soft386OpcodeMovOffsetAl,
     Soft386OpcodeMovOffsetEax,
-    NULL, // TODO: OPCODE 0xA4 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xA5 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xA6 NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xA7 NOT SUPPORTED
+    Soft386OpcodeMovs,
+    Soft386OpcodeMovs,
+    Soft386OpcodeCmps,
+    Soft386OpcodeCmps,
     Soft386OpcodeTestAl,
     Soft386OpcodeTestEax,
-    NULL, // TODO: OPCODE 0xAA NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xAB NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xAC NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xAD NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xAE NOT SUPPORTED
-    NULL, // TODO: OPCODE 0xAF NOT SUPPORTED
+    Soft386OpcodeStos,
+    Soft386OpcodeStos,
+    Soft386OpcodeLods,
+    Soft386OpcodeLods,
+    Soft386OpcodeScas,
+    Soft386OpcodeScas,
     Soft386OpcodeMovByteRegImm,
     Soft386OpcodeMovByteRegImm,
     Soft386OpcodeMovByteRegImm,
@@ -5605,4 +5605,264 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeSalc)
     State->GeneralRegs[SOFT386_REG_EAX].LowByte = State->Flags.Cf ? 0xFF : 0x00;
 
     return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeMovs)
+{
+    ULONG Data, DataSize;
+    BOOLEAN OperandSize, AddressSize;
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xA4);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
+        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
+    {
+        // TODO: The REP/REPZ/REPNZ prefixes need to be implemented!
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Calculate the size */
+    if (Opcode == 0xA4) DataSize = sizeof(UCHAR);
+    else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
+
+    /* Read from the source operand */
+    if (!Soft386ReadMemory(State,
+                           SOFT386_REG_DS,
+                           AddressSize ? State->GeneralRegs[SOFT386_REG_ESI].Long
+                                       : State->GeneralRegs[SOFT386_REG_ESI].LowWord,
+                           FALSE,
+                           &Data,
+                           DataSize))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Write to the destination operand */
+    if (!Soft386WriteMemory(State,
+                            SOFT386_REG_ES,
+                            AddressSize ? State->GeneralRegs[SOFT386_REG_EDI].Long
+                                        : State->GeneralRegs[SOFT386_REG_EDI].LowWord,
+                            &Data,
+                            DataSize))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Increment/decrement ESI and EDI */
+    if (OperandSize)
+    {
+        if (State->Flags.Df)
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+        }
+        else
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
+        }
+    }
+    else
+    {
+        if (State->Flags.Df)
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+        }
+        else
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
+        }
+    }
+
+    /* Return success */
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeCmps)
+{
+    UNIMPLEMENTED;
+    return FALSE; // TODO: NOT IMPLEMENTED
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeStos)
+{
+    ULONG DataSize;
+    BOOLEAN OperandSize, AddressSize;
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xAA);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
+        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
+    {
+        // TODO: The REP/REPZ/REPNZ prefixes need to be implemented!
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Calculate the size */
+    if (Opcode == 0xAA) DataSize = sizeof(UCHAR);
+    else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
+
+    /* Write to the destination operand */
+    if (!Soft386WriteMemory(State,
+                            SOFT386_REG_ES,
+                            AddressSize ? State->GeneralRegs[SOFT386_REG_EDI].Long
+                                        : State->GeneralRegs[SOFT386_REG_EDI].LowWord,
+                            &State->GeneralRegs[SOFT386_REG_EAX].Long,
+                            DataSize))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Increment/decrement ESI and EDI */
+    if (OperandSize)
+    {
+        if (State->Flags.Df)
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+        }
+        else
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
+        }
+    }
+    else
+    {
+        if (State->Flags.Df)
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+        }
+        else
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
+        }
+    }
+
+    /* Return success */
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeLods)
+{
+    ULONG DataSize;
+    BOOLEAN OperandSize, AddressSize;
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xAC);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
+        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
+    {
+        // TODO: The REP/REPZ/REPNZ prefixes need to be implemented!
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Calculate the size */
+    if (Opcode == 0xAC) DataSize = sizeof(UCHAR);
+    else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
+
+    /* Read from the source operand */
+    if (!Soft386ReadMemory(State,
+                           SOFT386_REG_DS,
+                           AddressSize ? State->GeneralRegs[SOFT386_REG_ESI].Long
+                                       : State->GeneralRegs[SOFT386_REG_ESI].LowWord,
+                           FALSE,
+                           &State->GeneralRegs[SOFT386_REG_EAX].Long,
+                           DataSize))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Increment/decrement ESI and EDI */
+    if (OperandSize)
+    {
+        if (State->Flags.Df)
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+        }
+        else
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
+        }
+    }
+    else
+    {
+        if (State->Flags.Df)
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+        }
+        else
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
+        }
+    }
+
+    /* Return success */
+    return TRUE;
+}
+
+SOFT386_OPCODE_HANDLER(Soft386OpcodeScas)
+{
+    UNIMPLEMENTED;
+    return FALSE; // TODO: NOT IMPLEMENTED
 }
