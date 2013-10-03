@@ -1333,6 +1333,10 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
             LocalFree((HLOCAL)pSid1);
     }
 
+    /* Succeed, if no ACL needs to be allocated */
+    if (SizeInformation.AclBytesInUse == 0)
+        goto Cleanup;
+
     /* OK, now create the new ACL */
     DPRINT("Allocating %u bytes for the new ACL\n", SizeInformation.AclBytesInUse);
     pNew = (PACL)LocalAlloc(LMEM_FIXED, SizeInformation.AclBytesInUse);
