@@ -116,7 +116,6 @@
 #include "simple_list.h"
 #include "state.h"
 #include "stencil.h"
-#include "texcompress_s3tc.h"
 #include "texstate.h"
 #include "mtypes.h"
 #include "varray.h"
@@ -497,25 +496,6 @@ init_program_limits(GLenum type, struct gl_program_constants *prog)
    prog->MaxNativeTemps = 0;
    prog->MaxNativeAddressRegs = 0;
    prog->MaxNativeParameters = 0;
-
-   /* Set GLSL datatype range/precision info assuming IEEE float values.
-    * Drivers should override these defaults as needed.
-    */
-   prog->MediumFloat.RangeMin = 127;
-   prog->MediumFloat.RangeMax = 127;
-   prog->MediumFloat.Precision = 23;
-   prog->LowFloat = prog->HighFloat = prog->MediumFloat;
-
-   /* Assume ints are stored as floats for now, since this is the least-common
-    * denominator.  The OpenGL ES spec implies (page 132) that the precision
-    * of integer types should be 0.  Practically speaking, IEEE
-    * single-precision floating point values can only store integers in the
-    * range [-0x01000000, 0x01000000] without loss of precision.
-    */
-   prog->MediumInt.RangeMin = 24;
-   prog->MediumInt.RangeMax = 24;
-   prog->MediumInt.Precision = 0;
-   prog->LowInt = prog->HighInt = prog->MediumInt;
 }
 
 
@@ -534,7 +514,6 @@ _mesa_init_constants(struct gl_context *ctx)
    ctx->Const.MaxTextureLevels = MAX_TEXTURE_LEVELS;
    ctx->Const.Max3DTextureLevels = MAX_3D_TEXTURE_LEVELS;
    ctx->Const.MaxCubeTextureLevels = MAX_CUBE_TEXTURE_LEVELS;
-   ctx->Const.MaxTextureRectSize = MAX_TEXTURE_RECT_SIZE;
    ctx->Const.MaxArrayTextureLayers = MAX_ARRAY_TEXTURE_LAYERS;
    ctx->Const.MaxTextureCoordUnits = MAX_TEXTURE_COORD_UNITS;
    ctx->Const.MaxTextureImageUnits = MAX_TEXTURE_IMAGE_UNITS;
@@ -654,7 +633,6 @@ check_context_limits(struct gl_context *ctx)
    assert(ctx->Const.MaxTextureLevels <= MAX_TEXTURE_LEVELS);
    assert(ctx->Const.Max3DTextureLevels <= MAX_3D_TEXTURE_LEVELS);
    assert(ctx->Const.MaxCubeTextureLevels <= MAX_CUBE_TEXTURE_LEVELS);
-   assert(ctx->Const.MaxTextureRectSize <= MAX_TEXTURE_RECT_SIZE);
 
    /* make sure largest texture image is <= MAX_WIDTH in size */
    assert((1 << (ctx->Const.MaxTextureLevels - 1)) <= MAX_WIDTH);
@@ -732,8 +710,6 @@ init_attrib_groups(struct gl_context *ctx)
 
    if (!_mesa_init_texture( ctx ))
       return GL_FALSE;
-
-   _mesa_init_texture_s3tc( ctx );
 
    /* Miscellaneous */
    ctx->NewState = _NEW_ALL;

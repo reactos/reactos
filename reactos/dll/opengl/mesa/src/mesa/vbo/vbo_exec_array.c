@@ -104,8 +104,6 @@ vbo_get_minmax_index(struct gl_context *ctx,
 		     const struct _mesa_index_buffer *ib,
 		     GLuint *min_index, GLuint *max_index)
 {
-   const GLboolean restart = ctx->Array.PrimitiveRestart;
-   const GLuint restartIndex = ctx->Array.RestartIndex;
    const GLuint count = prim->count;
    const void *indices;
    GLuint i;
@@ -123,19 +121,9 @@ vbo_get_minmax_index(struct gl_context *ctx,
       const GLuint *ui_indices = (const GLuint *)indices;
       GLuint max_ui = 0;
       GLuint min_ui = ~0U;
-      if (restart) {
-         for (i = 0; i < count; i++) {
-            if (ui_indices[i] != restartIndex) {
-               if (ui_indices[i] > max_ui) max_ui = ui_indices[i];
-               if (ui_indices[i] < min_ui) min_ui = ui_indices[i];
-            }
-         }
-      }
-      else {
-         for (i = 0; i < count; i++) {
-            if (ui_indices[i] > max_ui) max_ui = ui_indices[i];
-            if (ui_indices[i] < min_ui) min_ui = ui_indices[i];
-         }
+      for (i = 0; i < count; i++) {
+         if (ui_indices[i] > max_ui) max_ui = ui_indices[i];
+         if (ui_indices[i] < min_ui) min_ui = ui_indices[i];
       }
       *min_index = min_ui;
       *max_index = max_ui;
@@ -145,19 +133,9 @@ vbo_get_minmax_index(struct gl_context *ctx,
       const GLushort *us_indices = (const GLushort *)indices;
       GLuint max_us = 0;
       GLuint min_us = ~0U;
-      if (restart) {
-         for (i = 0; i < count; i++) {
-            if (us_indices[i] != restartIndex) {
-               if (us_indices[i] > max_us) max_us = us_indices[i];
-               if (us_indices[i] < min_us) min_us = us_indices[i];
-            }
-         }
-      }
-      else {
-         for (i = 0; i < count; i++) {
-            if (us_indices[i] > max_us) max_us = us_indices[i];
-            if (us_indices[i] < min_us) min_us = us_indices[i];
-         }
+      for (i = 0; i < count; i++) {
+         if (us_indices[i] > max_us) max_us = us_indices[i];
+         if (us_indices[i] < min_us) min_us = us_indices[i];
       }
       *min_index = min_us;
       *max_index = max_us;
@@ -167,19 +145,9 @@ vbo_get_minmax_index(struct gl_context *ctx,
       const GLubyte *ub_indices = (const GLubyte *)indices;
       GLuint max_ub = 0;
       GLuint min_ub = ~0U;
-      if (restart) {
-         for (i = 0; i < count; i++) {
-            if (ub_indices[i] != restartIndex) {
-               if (ub_indices[i] > max_ub) max_ub = ub_indices[i];
-               if (ub_indices[i] < min_ub) min_ub = ub_indices[i];
-            }
-         }
-      }
-      else {
-         for (i = 0; i < count; i++) {
-            if (ub_indices[i] > max_ub) max_ub = ub_indices[i];
-            if (ub_indices[i] < min_ub) min_ub = ub_indices[i];
-         }
+      for (i = 0; i < count; i++) {
+         if (ub_indices[i] > max_ub) max_ub = ub_indices[i];
+         if (ub_indices[i] < min_ub) min_ub = ub_indices[i];
       }
       *min_index = min_ub;
       *max_index = max_ub;
@@ -545,54 +513,13 @@ vbo_draw_arrays(struct gl_context *ctx, GLenum mode, GLint start,
    prim[0].mode = mode;
    prim[0].num_instances = numInstances;
 
-   /* Implement the primitive restart index */
-   if (ctx->Array.PrimitiveRestart && ctx->Array.RestartIndex < count) {
-      GLuint primCount = 0;
+   /* no prim restart */
+   prim[0].start = start;
+   prim[0].count = count;
 
-      if (ctx->Array.RestartIndex == start) {
-         /* special case: RestartIndex at beginning */
-         if (count > 1) {
-            prim[0].start = start + 1;
-            prim[0].count = count - 1;
-            primCount = 1;
-         }
-      }
-      else if (ctx->Array.RestartIndex == start + count - 1) {
-         /* special case: RestartIndex at end */
-         if (count > 1) {
-            prim[0].start = start;
-            prim[0].count = count - 1;
-            primCount = 1;
-         }
-      }
-      else {
-         /* general case: RestartIndex in middle, split into two prims */
-         prim[0].start = start;
-         prim[0].count = ctx->Array.RestartIndex - start;
-
-         prim[1] = prim[0];
-         prim[1].start = ctx->Array.RestartIndex + 1;
-         prim[1].count = count - prim[1].start;
-
-         primCount = 2;
-      }
-
-      if (primCount > 0) {
-         /* draw one or two prims */
-         check_buffers_are_unmapped(exec->array.inputs);
-         vbo->draw_prims(ctx, exec->array.inputs, prim, primCount, NULL,
-                         GL_TRUE, start, start + count - 1);
-      }
-   }
-   else {
-      /* no prim restart */
-      prim[0].start = start;
-      prim[0].count = count;
-
-      check_buffers_are_unmapped(exec->array.inputs);
-      vbo->draw_prims(ctx, exec->array.inputs, prim, 1, NULL,
-                      GL_TRUE, start, start + count - 1);
-   }
+   check_buffers_are_unmapped(exec->array.inputs);
+   vbo->draw_prims(ctx, exec->array.inputs, prim, 1, NULL,
+                   GL_TRUE, start, start + count - 1);
 }
 
 
@@ -803,7 +730,7 @@ vbo_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
 }
 
 /**
- * Called by glDrawRangeElementsBaseVertex() in immediate mode.
+ * Called by glDrawRangeElements() in immediate mode.
  */
 static void GLAPIENTRY
 vbo_exec_DrawRangeElements(GLenum mode,
@@ -817,7 +744,7 @@ vbo_exec_DrawRangeElements(GLenum mode,
 
    if (MESA_VERBOSE & VERBOSE_DRAW)
       _mesa_debug(ctx,
-                "glDrawRangeElementsBaseVertex(%s, %u, %u, %d, %s, %p)\n",
+                "glDrawRangeElements(%s, %u, %u, %d, %s, %p)\n",
                 _mesa_lookup_enum_by_nr(mode), start, end, count,
                 _mesa_lookup_enum_by_nr(type), indices);
 

@@ -2966,10 +2966,6 @@ yyreduce:
 	   bool supported = false;
 
 	   switch ((yyvsp[(2) - (3)].n)) {
-	   case 100:
-	      state->es_shader = true;
-	      supported = state->Const.GLSL_100ES;
-	      break;
 	   case 110:
 	      supported = state->Const.GLSL_110;
 	      break;
@@ -2986,8 +2982,7 @@ yyreduce:
 
 	   state->language_version = (yyvsp[(2) - (3)].n);
 	   state->version_string =
-	      ralloc_asprintf(state, "GLSL%s %d.%02d",
-			      state->es_shader ? " ES" : "",
+	      ralloc_asprintf(state, "GLSL %d.%02d",
 			      state->language_version / 100,
 			      state->language_version % 100);
 
@@ -4806,7 +4801,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 1420 "src/glsl/glsl_parser.yy"
     {
-		     if (!state->es_shader && state->language_version < 130)
+		     if (state->language_version < 130)
 			_mesa_glsl_error(& (yylsp[(1) - (1)]), state,
 				         "precision qualifier forbidden "
 					 "in %s (1.30 or later "
@@ -4822,7 +4817,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 1430 "src/glsl/glsl_parser.yy"
     {
-		     if (!state->es_shader && state->language_version < 130)
+		     if (state->language_version < 130)
 			_mesa_glsl_error(& (yylsp[(1) - (1)]), state,
 					 "precision qualifier forbidden "
 					 "in %s (1.30 or later "
@@ -4838,7 +4833,7 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 1440 "src/glsl/glsl_parser.yy"
     {
-		     if (!state->es_shader && state->language_version < 130)
+		     if (state->language_version < 130)
 			_mesa_glsl_error(& (yylsp[(1) - (1)]), state,
 					 "precision qualifier forbidden "
 					 "in %s (1.30 or later "

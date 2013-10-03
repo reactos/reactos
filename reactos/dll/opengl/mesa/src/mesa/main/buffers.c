@@ -347,15 +347,12 @@ _mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers)
 static void
 updated_drawbuffers(struct gl_context *ctx)
 {
+   struct gl_framebuffer *fb = ctx->DrawBuffer;
    FLUSH_VERTICES(ctx, _NEW_BUFFERS);
 
-   if (!ctx->Extensions.ARB_ES2_compatibility) {
-      struct gl_framebuffer *fb = ctx->DrawBuffer;
-
-      /* Flag the FBO as requiring validation. */
-      if (fb->Name != 0) {
-	 fb->_Status = 0;
-      }
+   /* Flag the FBO as requiring validation. */
+   if (fb->Name != 0) {
+      fb->_Status = 0;
    }
 }
 

@@ -33,7 +33,6 @@
 #include "main/readpix.h"
 #include "main/renderbuffer.h"
 #include "main/shaderobj.h"
-#include "main/texcompress.h"
 #include "main/texformat.h"
 #include "main/texgetimage.h"
 #include "main/teximage.h"
@@ -93,19 +92,12 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->TexSubImage1D = _mesa_store_texsubimage1d;
    driver->TexSubImage2D = _mesa_store_texsubimage2d;
    driver->TexSubImage3D = _mesa_store_texsubimage3d;
-   driver->GetTexImage = _mesa_meta_GetTexImage;
+   driver->GetTexImage = _mesa_get_teximage;
    driver->CopyTexSubImage1D = _mesa_meta_CopyTexSubImage1D;
    driver->CopyTexSubImage2D = _mesa_meta_CopyTexSubImage2D;
    driver->CopyTexSubImage3D = _mesa_meta_CopyTexSubImage3D;
    driver->GenerateMipmap = _mesa_meta_GenerateMipmap;
    driver->TestProxyTexImage = _mesa_test_proxy_teximage;
-   driver->CompressedTexImage1D = _mesa_store_compressed_teximage1d;
-   driver->CompressedTexImage2D = _mesa_store_compressed_teximage2d;
-   driver->CompressedTexImage3D = _mesa_store_compressed_teximage3d;
-   driver->CompressedTexSubImage1D = _mesa_store_compressed_texsubimage1d;
-   driver->CompressedTexSubImage2D = _mesa_store_compressed_texsubimage2d;
-   driver->CompressedTexSubImage3D = _mesa_store_compressed_texsubimage3d;
-   driver->GetCompressedTexImage = _mesa_get_compressed_teximage;
    driver->BindTexture = NULL;
    driver->NewTextureObject = _mesa_new_texture_object;
    driver->DeleteTexture = _mesa_delete_texture_object;
@@ -269,7 +261,6 @@ _mesa_init_driver_state(struct gl_context *ctx)
    ctx->Driver.Enable(ctx, GL_STENCIL_TEST, ctx->Stencil._Enabled);
    ctx->Driver.Enable(ctx, GL_TEXTURE_1D, GL_FALSE);
    ctx->Driver.Enable(ctx, GL_TEXTURE_2D, GL_FALSE);
-   ctx->Driver.Enable(ctx, GL_TEXTURE_RECTANGLE_NV, GL_FALSE);
    ctx->Driver.Enable(ctx, GL_TEXTURE_3D, GL_FALSE);
    ctx->Driver.Enable(ctx, GL_TEXTURE_CUBE_MAP, GL_FALSE);
 

@@ -259,18 +259,6 @@ const glsl_type *const glsl_type::uvec3_type = & builtin_130_types[2];
 const glsl_type *const glsl_type::uvec4_type = & builtin_130_types[3];
 /*@}*/
 
-/** \name Sampler types added by GL_ARB_texture_rectangle
- */
-/*@{*/
-
-const glsl_type glsl_type::builtin_ARB_texture_rectangle_types[] = {
-   glsl_type(GL_SAMPLER_2D_RECT,
-	     GLSL_SAMPLER_DIM_RECT, 0, 0, GLSL_TYPE_FLOAT, "sampler2DRect"),
-   glsl_type(GL_SAMPLER_2D_RECT_SHADOW,
-	     GLSL_SAMPLER_DIM_RECT, 1, 0, GLSL_TYPE_FLOAT, "sampler2DRectShadow"),
-};
-/*@}*/
-
 /** \name Sampler types added by GL_EXT_texture_array
  */
 /*@{*/

@@ -603,9 +603,6 @@ Parse_TextureImageId(struct parse_state *parseState,
    else if (Parse_String(parseState, "CUBE")) {
       *texTarget = TEXTURE_CUBE_INDEX;
    }
-   else if (Parse_String(parseState, "RECT")) {
-      *texTarget = TEXTURE_RECT_INDEX;
-   }
    else {
       RETURN_ERROR1("Invalid texture target token");
    }

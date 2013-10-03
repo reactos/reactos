@@ -172,18 +172,6 @@ extern void GLAPIENTRY
 _mesa_GetShaderInfoLog(GLuint shader, GLsizei bufSize,
                        GLsizei *length, GLchar *infoLog);
 
-
-extern void GLAPIENTRY
-_mesa_GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype,
-                               GLint *range, GLint *precision);
-
-extern void GLAPIENTRY
-_mesa_ReleaseShaderCompiler(void);
-
-extern void GLAPIENTRY
-_mesa_ShaderBinary(GLint n, const GLuint *shaders, GLenum binaryformat,
-                   const void* binary, GLint length);
-
 extern void GLAPIENTRY
 _mesa_ProgramParameteriARB(GLuint program, GLenum pname,
                            GLint value);

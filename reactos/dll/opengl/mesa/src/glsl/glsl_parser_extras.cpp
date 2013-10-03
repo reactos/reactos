@@ -56,8 +56,6 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *ctx,
 
    /* Set default language version and extensions */
    this->language_version = 110;
-   this->es_shader = false;
-   this->ARB_texture_rectangle_enable = true;
 
    this->extensions = &ctx->Extensions;
 
@@ -79,12 +77,11 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *ctx,
     * Core context is supported, this logic will need change.  Older versions of
     * GLSL are no longer supported outside the compatibility contexts of 3.x.
     */
-   this->Const.GLSL_100ES = ctx->Extensions.ARB_ES2_compatibility;
    this->Const.GLSL_110 = true;
    this->Const.GLSL_120 = (ctx->Const.GLSLVersion >= 120);
    this->Const.GLSL_130 = (ctx->Const.GLSLVersion >= 130);
 
-   const unsigned lowest_version = ctx->Extensions.ARB_ES2_compatibility ? 100 : 110;
+   const unsigned lowest_version = 110;
    const unsigned highest_version = ctx->Const.GLSLVersion;
    char *supported = ralloc_strdup(this, "");
 
@@ -247,7 +244,6 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    EXT(ARB_conservative_depth,         false, false, true,  true,  false,     ARB_conservative_depth),
    EXT(ARB_draw_buffers,               false, false, true,  true,  false,     dummy_true),
    EXT(ARB_draw_instanced,             true,  false, false, true,  false,     ARB_draw_instanced),
-   EXT(ARB_texture_rectangle,          true,  false, true,  true,  false,     dummy_true),
    EXT(EXT_texture_array,              true,  false, true,  true,  false,     EXT_texture_array),
    EXT(ARB_shader_texture_lod,         true,  false, true,  true,  false,     ARB_shader_texture_lod),
    EXT(ARB_shader_stencil_export,      false, false, true,  true,  false,     ARB_shader_stencil_export),
@@ -288,11 +284,7 @@ bool _mesa_glsl_extension::compatible_with_state(const _mesa_glsl_parse_state *
    /* Check that this extension matches whether we are compiling
     * for desktop GL or GLES.
     */
-   if (state->es_shader) {
-      if (!this->avail_in_ES) return false;
-   } else {
-      if (!this->avail_in_GL) return false;
-   }
+   if (!this->avail_in_GL) return false;
 
    /* Check that this extension is supported by the OpenGL
     * implementation.

@@ -93,7 +93,6 @@ install_vtxfmt( struct _glapi_table *tab, const GLvertexformat *vfmt )
 
    SET_Begin(tab, vfmt->Begin);
    SET_End(tab, vfmt->End);
-   SET_PrimitiveRestartNV(tab, vfmt->PrimitiveRestartNV);
 
    SET_Rectf(tab, vfmt->Rectf);
 

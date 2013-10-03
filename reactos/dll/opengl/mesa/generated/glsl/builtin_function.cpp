@@ -37,14 +37,12 @@ read_builtins(GLenum target, const char *protos, const char **functions, unsigne
 {
    struct gl_context fakeCtx;
    fakeCtx.Const.GLSLVersion = 130;
-   fakeCtx.Extensions.ARB_ES2_compatibility = true;
    gl_shader *sh = _mesa_new_shader(NULL, 0, target);
    struct _mesa_glsl_parse_state *st =
       new(sh) _mesa_glsl_parse_state(&fakeCtx, target, sh);
 
    st->language_version = 130;
    st->symbols->language_version = 130;
-   st->ARB_texture_rectangle_enable = true;
    st->EXT_texture_array_enable = true;
    _mesa_glsl_initialize_types(st);
 
@@ -15880,82 +15878,6 @@ static const char *functions_for_ARB_shader_texture_lod_vert [] = {
    builtin_texture3DProjGradARB,
    builtin_textureCubeGradARB,
 };
-static const char prototypes_for_ARB_texture_rectangle_frag[] =
-   "(\n"
-   "(function texture2DRect\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRect sampler)\n"
-   "      (declare (in) vec2 coord))\n"
-   "    ()))\n"
-   "(function texture2DRectProj\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRect sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ())\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRect sampler)\n"
-   "      (declare (in) vec4 coord))\n"
-   "    ()))\n"
-   "(function shadow2DRect\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRectShadow sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ()))\n"
-   "(function shadow2DRectProj\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRectShadow sampler)\n"
-   "      (declare (in) vec4 coord))\n"
-   "    ())))"
-;
-static const char *functions_for_ARB_texture_rectangle_frag [] = {
-   builtin_shadow2DRect,
-   builtin_shadow2DRectProj,
-   builtin_texture2DRect,
-   builtin_texture2DRectProj,
-};
-static const char prototypes_for_ARB_texture_rectangle_vert[] =
-   "(\n"
-   "(function texture2DRect\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRect sampler)\n"
-   "      (declare (in) vec2 coord))\n"
-   "    ()))\n"
-   "(function texture2DRectProj\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRect sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ())\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRect sampler)\n"
-   "      (declare (in) vec4 coord))\n"
-   "    ()))\n"
-   "(function shadow2DRect\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRectShadow sampler)\n"
-   "      (declare (in) vec3 coord))\n"
-   "    ()))\n"
-   "(function shadow2DRectProj\n"
-   "  (signature vec4\n"
-   "    (parameters\n"
-   "      (declare (in) sampler2DRectShadow sampler)\n"
-   "      (declare (in) vec4 coord))\n"
-   "    ())))"
-;
-static const char *functions_for_ARB_texture_rectangle_vert [] = {
-   builtin_shadow2DRect,
-   builtin_shadow2DRectProj,
-   builtin_texture2DRect,
-   builtin_texture2DRectProj,
-};
 static const char prototypes_for_EXT_texture_array_frag[] =
    "(\n"
    "(function texture1DArray\n"
@@ -16241,20 +16163,6 @@ _mesa_glsl_initialize_functions(struct _mesa_glsl_parse_state *state)
                          prototypes_for_ARB_shader_texture_lod_vert,
                          functions_for_ARB_shader_texture_lod_vert,
                          Elements(functions_for_ARB_shader_texture_lod_vert));
-   }
-
-   if (state->target == fragment_shader && state->ARB_texture_rectangle_enable) {
-      _mesa_read_profile(state, 10,
-                         prototypes_for_ARB_texture_rectangle_frag,
-                         functions_for_ARB_texture_rectangle_frag,
-                         Elements(functions_for_ARB_texture_rectangle_frag));
-   }
-
-   if (state->target == vertex_shader && state->ARB_texture_rectangle_enable) {
-      _mesa_read_profile(state, 11,
-                         prototypes_for_ARB_texture_rectangle_vert,
-                         functions_for_ARB_texture_rectangle_vert,
-                         Elements(functions_for_ARB_texture_rectangle_vert));
    }
 
    if (state->target == fragment_shader && state->EXT_texture_array_enable) {

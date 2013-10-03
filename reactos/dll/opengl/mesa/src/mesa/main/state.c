@@ -45,7 +45,6 @@
 #include "shaderobj.h"
 #include "state.h"
 #include "stencil.h"
-#include "texenvprogram.h"
 #include "texobj.h"
 #include "texstate.h"
 #include "varray.h"

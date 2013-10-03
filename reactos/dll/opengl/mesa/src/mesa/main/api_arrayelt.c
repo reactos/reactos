@@ -1643,14 +1643,6 @@ void GLAPIENTRY _ae_ArrayElement( GLint elt )
    const struct _glapi_table * const disp = GET_DISPATCH();
    GLboolean do_map;
 
-   /* If PrimitiveRestart is enabled and the index is the RestartIndex
-    * then we call PrimitiveRestartNV and return.
-    */
-   if (ctx->Array.PrimitiveRestart && (elt == ctx->Array.RestartIndex)) {
-      CALL_PrimitiveRestartNV((struct _glapi_table *)disp, ());
-      return;
-   }
-
    if (actx->NewState) {
       assert(!actx->mapped_vbos);
       _ae_update_state( ctx );

@@ -112,9 +112,6 @@
 /** Number of cube texture mipmap levels - GL_ARB_texture_cube_map */
 #define MAX_CUBE_TEXTURE_LEVELS 15
 
-/** Maximum rectangular texture size - GL_NV_texture_rectangle */
-#define MAX_TEXTURE_RECT_SIZE 16384
-
 /** Maximum number of layers in a 1D or 2D array texture - GL_MESA_texture_array */
 #define MAX_ARRAY_TEXTURE_LAYERS 64
 
@@ -165,7 +162,6 @@
 #define MAX_TEXTURE_LEVELS 13
 #define MAX_3D_TEXTURE_LEVELS 9
 #define MAX_CUBE_TEXTURE_LEVELS 13
-#define MAX_TEXTURE_RECT_SIZE 4096
 #define MAX_WIDTH 4096
 #define MAX_HEIGHT 4096
 #endif

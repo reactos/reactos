@@ -40,7 +40,6 @@
 #include "mtypes.h"
 #include "pack.h"
 #include "pbo.h"
-#include "texcompress.h"
 #include "texgetimage.h"
 #include "teximage.h"
 
@@ -214,86 +213,6 @@ get_tex_ycbcr(struct gl_context *ctx, GLuint dimensions,
    }
 }
 
-
-/**
- * Get a color texture image with decompression.
- */
-static void
-get_tex_rgba_compressed(struct gl_context *ctx, GLuint dimensions,
-                        GLenum format, GLenum type, GLvoid *pixels,
-                        struct gl_texture_image *texImage,
-                        GLbitfield transferOps)
-{
-   /* don't want to apply sRGB -> RGB conversion here so override the format */
-   const gl_format texFormat =
-      _mesa_get_srgb_format_linear(texImage->TexFormat);
-   const GLenum baseFormat = _mesa_get_format_base_format(texFormat);
-   const GLuint width = texImage->Width;
-   const GLuint height = texImage->Height;
-   const GLuint depth = texImage->Depth;
-   GLfloat *tempImage, *srcRow;
-   GLuint row;
-
-   /* Decompress into temp float buffer, then pack into user buffer */
-   tempImage = (GLfloat *) malloc(width * height * depth
-                                  * 4 * sizeof(GLfloat));
-   if (!tempImage) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glGetTexImage()");
-      return;
-   }
-
-   /* Decompress the texture image - results in 'tempImage' */
-   {
-      GLubyte *srcMap;
-      GLint srcRowStride;
-      GLuint bytes, bw, bh;
-
-      bytes = _mesa_get_format_bytes(texFormat);
-      _mesa_get_format_block_size(texFormat, &bw, &bh);
-
-      ctx->Driver.MapTextureImage(ctx, texImage, 0,
-                                  0, 0, width, height,
-                                  GL_MAP_READ_BIT,
-                                  &srcMap, &srcRowStride);
-      if (srcMap) {
-         /* XXX This line is a bit of a hack to work around the
-          * mismatch of compressed row strides as returned by
-          * MapTextureImage() vs. what the texture decompression code
-          * uses.  This will be fixed in the future.
-          */
-         srcRowStride = srcRowStride * bh / bytes;
-
-         _mesa_decompress_image(texFormat, width, height,
-                                srcMap, srcRowStride, tempImage);
-
-         ctx->Driver.UnmapTextureImage(ctx, texImage, 0);
-      }
-      else {
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glGetTexImage");
-      }
-   }
-
-   if (baseFormat == GL_LUMINANCE ||
-       baseFormat == GL_LUMINANCE_ALPHA) {
-      _mesa_rebase_rgba_float(width * height, (GLfloat (*)[4]) tempImage,
-                              baseFormat);
-   }
-
-   srcRow = tempImage;
-   for (row = 0; row < height; row++) {
-      void *dest = _mesa_image_address(dimensions, &ctx->Pack, pixels,
-                                       width, height, format, type,
-                                       0, row, 0);
-
-      _mesa_pack_rgba_span_float(ctx, width, (GLfloat (*)[4]) srcRow,
-                                 format, type, dest, &ctx->Pack, transferOps);
-      srcRow += width * 4;
-   }
-
-   free(tempImage);
-}
-
-
 /**
  * Get an uncompressed color texture image.
  */
@@ -428,15 +347,8 @@ get_tex_rgba(struct gl_context *ctx, GLuint dimensions,
             dataType == GL_UNSIGNED_NORMALIZED) {
       transferOps |= IMAGE_CLAMP_BIT;
    }
-
-   if (_mesa_is_format_compressed(texImage->TexFormat)) {
-      get_tex_rgba_compressed(ctx, dimensions, format, type,
-                              pixels, texImage, transferOps);
-   }
-   else {
-      get_tex_rgba_uncompressed(ctx, dimensions, format, type,
-                                pixels, texImage, transferOps);
-   }
+   get_tex_rgba_uncompressed(ctx, dimensions, format, type,
+                             pixels, texImage, transferOps);
 }
 
 
@@ -460,7 +372,6 @@ get_tex_memcpy(struct gl_context *ctx, GLenum format, GLenum type,
     */
    if (target == GL_TEXTURE_1D ||
        target == GL_TEXTURE_2D ||
-       target == GL_TEXTURE_RECTANGLE ||
        _mesa_is_cube_face(target)) {
       if ((texImage->TexFormat == MESA_FORMAT_ARGB8888 ||
              texImage->TexFormat == MESA_FORMAT_SARGB8) &&
@@ -608,75 +519,6 @@ _mesa_get_teximage(struct gl_context *ctx,
       ctx->Driver.UnmapBuffer(ctx, ctx->Pack.BufferObj);
    }
 }
-
-
-
-/**
- * This is the software fallback for Driver.GetCompressedTexImage().
- * All error checking will have been done before this routine is called.
- */
-void
-_mesa_get_compressed_teximage(struct gl_context *ctx,
-                              struct gl_texture_image *texImage,
-                              GLvoid *img)
-{
-   const GLuint row_stride =
-      _mesa_format_row_stride(texImage->TexFormat, texImage->Width);
-   GLuint i;
-   GLubyte *src;
-   GLint srcRowStride;
-
-   if (_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
-      /* pack texture image into a PBO */
-      GLubyte *buf = (GLubyte *)
-         ctx->Driver.MapBufferRange(ctx, 0, ctx->Pack.BufferObj->Size,
-				    GL_MAP_WRITE_BIT, ctx->Pack.BufferObj);
-      if (!buf) {
-         /* out of memory or other unexpected error */
-         _mesa_error(ctx, GL_OUT_OF_MEMORY,
-                     "glGetCompresssedTexImage(map PBO failed)");
-         return;
-      }
-      img = ADD_POINTERS(buf, img);
-   }
-
-   /* map src texture buffer */
-   ctx->Driver.MapTextureImage(ctx, texImage, 0,
-                               0, 0, texImage->Width, texImage->Height,
-                               GL_MAP_READ_BIT, &src, &srcRowStride);
-
-   if (src) {
-      /* no pixelstore or pixel transfer, but respect stride */
-
-      if (row_stride == srcRowStride) {
-         const GLuint size = _mesa_format_image_size(texImage->TexFormat,
-                                                     texImage->Width,
-                                                     texImage->Height,
-                                                     texImage->Depth);
-         memcpy(img, src, size);
-      }
-      else {
-         GLuint bw, bh;
-         _mesa_get_format_block_size(texImage->TexFormat, &bw, &bh);
-         for (i = 0; i < (texImage->Height + bh - 1) / bh; i++) {
-            memcpy((GLubyte *)img + i * row_stride,
-                   (GLubyte *)src + i * srcRowStride,
-                   row_stride);
-         }
-      }
-
-      ctx->Driver.UnmapTextureImage(ctx, texImage, 0);
-   }
-   else {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glGetCompresssedTexImage");
-   }
-
-   if (_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
-      ctx->Driver.UnmapBuffer(ctx, ctx->Pack.BufferObj);
-   }
-}
-
-
 
 /**
  * Do error checking for a glGetTexImage() call.
@@ -873,137 +715,4 @@ _mesa_GetTexImage( GLenum target, GLint level, GLenum format,
                    GLenum type, GLvoid *pixels )
 {
    _mesa_GetnTexImageARB(target, level, format, type, INT_MAX, pixels);
-}
-
-
-/**
- * Do error checking for a glGetCompressedTexImage() call.
- * \return GL_TRUE if any error, GL_FALSE if no errors.
- */
-static GLboolean
-getcompressedteximage_error_check(struct gl_context *ctx, GLenum target,
-                                  GLint level, GLsizei clientMemSize, GLvoid *img)
-{
-   struct gl_texture_object *texObj;
-   struct gl_texture_image *texImage;
-   const GLint maxLevels = _mesa_max_texture_levels(ctx, target);
-   GLuint compressedSize;
-
-   if (maxLevels == 0) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetCompressedTexImage(target=0x%x)",
-                  target);
-      return GL_TRUE;
-   }
-
-   if (level < 0 || level >= maxLevels) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glGetCompressedTexImageARB(bad level = %d)", level);
-      return GL_TRUE;
-   }
-
-   if (_mesa_is_proxy_texture(target)) {
-      _mesa_error(ctx, GL_INVALID_ENUM,
-                  "glGetCompressedTexImageARB(bad target = %s)",
-                  _mesa_lookup_enum_by_nr(target));
-      return GL_TRUE;
-   }
-
-   texObj = _mesa_get_current_tex_object(ctx, target);
-   if (!texObj) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetCompressedTexImageARB(target)");
-      return GL_TRUE;
-   }
-
-   texImage = _mesa_select_tex_image(ctx, texObj, target, level);
-
-   if (!texImage) {
-      /* probably invalid mipmap level */
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glGetCompressedTexImageARB(level)");
-      return GL_TRUE;
-   }
-
-   if (!_mesa_is_format_compressed(texImage->TexFormat)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glGetCompressedTexImageARB(texture is not compressed)");
-      return GL_TRUE;
-   }
-
-   compressedSize = _mesa_format_image_size(texImage->TexFormat,
-                                            texImage->Width,
-                                            texImage->Height,
-                                            texImage->Depth);
-
-   if (!_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
-      /* do bounds checking on writing to client memory */
-      if (clientMemSize < compressedSize) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glGetnCompressedTexImageARB(out of bounds access:"
-                     " bufSize (%d) is too small)", clientMemSize);
-         return GL_TRUE;
-      }
-   } else {
-      /* do bounds checking on PBO write */
-      if ((const GLubyte *) img + compressedSize >
-          (const GLubyte *) ctx->Pack.BufferObj->Size) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glGetCompressedTexImage(out of bounds PBO access)");
-         return GL_TRUE;
-      }
-
-      /* make sure PBO is not mapped */
-      if (_mesa_bufferobj_mapped(ctx->Pack.BufferObj)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glGetCompressedTexImage(PBO is mapped)");
-         return GL_TRUE;
-      }
-   }
-
-   return GL_FALSE;
-}
-
-
-void GLAPIENTRY
-_mesa_GetnCompressedTexImageARB(GLenum target, GLint level, GLsizei bufSize,
-                                GLvoid *img)
-{
-   struct gl_texture_object *texObj;
-   struct gl_texture_image *texImage;
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   if (getcompressedteximage_error_check(ctx, target, level, bufSize, img)) {
-      return;
-   }
-
-   if (!_mesa_is_bufferobj(ctx->Pack.BufferObj) && !img) {
-      /* not an error, do nothing */
-      return;
-   }
-
-   texObj = _mesa_get_current_tex_object(ctx, target);
-   texImage = _mesa_select_tex_image(ctx, texObj, target, level);
-
-   if (_mesa_is_zero_size_texture(texImage))
-      return;
-
-   if (MESA_VERBOSE & (VERBOSE_API | VERBOSE_TEXTURE)) {
-      _mesa_debug(ctx,
-                  "glGetCompressedTexImage(tex %u) format = %s, w=%d, h=%d\n",
-                  texObj->Name,
-                  _mesa_get_format_name(texImage->TexFormat),
-                  texImage->Width, texImage->Height);
-   }
-
-   _mesa_lock_texture(ctx, texObj);
-   {
-      ctx->Driver.GetCompressedTexImage(ctx, texImage, img);
-   }
-   _mesa_unlock_texture(ctx, texObj);
-}
-
-void GLAPIENTRY
-_mesa_GetCompressedTexImageARB(GLenum target, GLint level, GLvoid *img)
-{
-   _mesa_GetnCompressedTexImageARB(target, level, INT_MAX, img);
 }

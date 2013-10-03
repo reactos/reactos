@@ -301,7 +301,7 @@ match_function_by_name(exec_list *instructions, const char *name,
       if (is_exact)
 	 goto done;
 
-      if (!state->es_shader && f->has_user_signature()) {
+      if (f->has_user_signature()) {
 	 /* In desktop GL, the presence of a user-defined signature hides any
 	  * built-in signatures, so we must ignore them.  In contrast, in ES2
 	  * user-defined signatures add new overloads, so we must proceed.

@@ -65,10 +65,6 @@ list(APPEND SOURCE
     shared.c
     state.c
     stencil.c
-    texcompress.c
-    texcompress_rgtc.c
-    texcompress_s3tc.c
-    texcompress_fxt1.c
     texenv.c
     texformat.c
     texgen.c

@@ -143,8 +143,6 @@ glsl_type::sampler_index() const
       return TEXTURE_3D_INDEX;
    case GLSL_SAMPLER_DIM_CUBE:
       return TEXTURE_CUBE_INDEX;
-   case GLSL_SAMPLER_DIM_RECT:
-      return TEXTURE_RECT_INDEX;
    case GLSL_SAMPLER_DIM_BUF:
       assert(!"FINISHME: Implement ARB_texture_buffer_object");
       return TEXTURE_BUFFER_INDEX;
@@ -203,16 +201,6 @@ glsl_type::generate_130_types(glsl_symbol_table *symtab)
 
 
 void
-glsl_type::generate_ARB_texture_rectangle_types(glsl_symbol_table *symtab,
-						bool warn)
-{
-   add_types_to_symbol_table(symtab, builtin_ARB_texture_rectangle_types,
-			     Elements(builtin_ARB_texture_rectangle_types),
-			     warn);
-}
-
-
-void
 glsl_type::generate_EXT_texture_array_types(glsl_symbol_table *symtab,
 					    bool warn)
 {
@@ -232,10 +220,6 @@ void
 _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
 {
    switch (state->language_version) {
-   case 100:
-      assert(state->es_shader);
-      glsl_type::generate_100ES_types(state->symbols);
-      break;
    case 110:
       glsl_type::generate_110_types(state->symbols);
       break;
@@ -250,10 +234,6 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
       break;
    }
 
-   if (state->ARB_texture_rectangle_enable) {
-      glsl_type::generate_ARB_texture_rectangle_types(state->symbols,
-					   state->ARB_texture_rectangle_warn);
-   }
    if (state->OES_texture_3D_enable && state->language_version == 100) {
       glsl_type::generate_OES_texture_3D_types(state->symbols,
 					       state->OES_texture_3D_warn);

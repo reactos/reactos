@@ -40,7 +40,6 @@
 #include "main/mfeatures.h"
 #include "main/mtypes.h"
 #include "main/state.h"
-#include "main/texcompress.h"
 #include "main/texparam.h"
 #include "main/teximage.h"
 #include "main/texstate.h"
@@ -56,34 +55,27 @@ validate_texture_wrap_mode(struct gl_context * ctx, GLenum target, GLenum wrap)
 {
    const struct gl_extensions * const e = & ctx->Extensions;
 
-   if (target == GL_TEXTURE_RECTANGLE_NV) {
-      if (wrap == GL_CLAMP || wrap == GL_CLAMP_TO_EDGE ||
-          (wrap == GL_CLAMP_TO_BORDER && e->ARB_texture_border_clamp))
+   switch (wrap) {
+   case GL_CLAMP:
+   case GL_REPEAT:
+   case GL_CLAMP_TO_EDGE:
+   case GL_MIRRORED_REPEAT:
+      return GL_TRUE;
+   case GL_CLAMP_TO_BORDER:
+      if (e->ARB_texture_border_clamp)
          return GL_TRUE;
-   }
-   else {
-      switch (wrap) {
-      case GL_CLAMP:
-      case GL_REPEAT:
-      case GL_CLAMP_TO_EDGE:
-      case GL_MIRRORED_REPEAT:
+      break;
+   case GL_MIRROR_CLAMP_EXT:
+   case GL_MIRROR_CLAMP_TO_EDGE_EXT:
+      if (e->ATI_texture_mirror_once || e->EXT_texture_mirror_clamp)
          return GL_TRUE;
-      case GL_CLAMP_TO_BORDER:
-         if (e->ARB_texture_border_clamp)
-            return GL_TRUE;
-         break;
-      case GL_MIRROR_CLAMP_EXT:
-      case GL_MIRROR_CLAMP_TO_EDGE_EXT:
-         if (e->ATI_texture_mirror_once || e->EXT_texture_mirror_clamp)
-            return GL_TRUE;
-         break;
-      case GL_MIRROR_CLAMP_TO_BORDER_EXT:
-         if (e->EXT_texture_mirror_clamp)
-            return GL_TRUE;
-         break;
-      default:
-         break;
-      }
+      break;
+   case GL_MIRROR_CLAMP_TO_BORDER_EXT:
+      if (e->EXT_texture_mirror_clamp)
+         return GL_TRUE;
+      break;
+   default:
+      break;
    }
 
    _mesa_error( ctx, GL_INVALID_ENUM, "glTexParameter(param=0x%x)", wrap );
@@ -121,11 +113,6 @@ get_texobj(struct gl_context *ctx, GLenum target, GLboolean get)
    case GL_TEXTURE_CUBE_MAP:
       if (ctx->Extensions.ARB_texture_cube_map) {
          return texUnit->CurrentTex[TEXTURE_CUBE_INDEX];
-      }
-      break;
-   case GL_TEXTURE_RECTANGLE_NV:
-      if (ctx->Extensions.NV_texture_rectangle) {
-         return texUnit->CurrentTex[TEXTURE_RECT_INDEX];
       }
       break;
    case GL_TEXTURE_1D_ARRAY_EXT:
@@ -200,11 +187,9 @@ set_tex_parameteri(struct gl_context *ctx,
       case GL_LINEAR_MIPMAP_NEAREST:
       case GL_NEAREST_MIPMAP_LINEAR:
       case GL_LINEAR_MIPMAP_LINEAR:
-         if (texObj->Target != GL_TEXTURE_RECTANGLE_NV) {
-            incomplete(ctx, texObj);
-            texObj->Sampler.MinFilter = params[0];
-            return GL_TRUE;
-         }
+         incomplete(ctx, texObj);
+         texObj->Sampler.MinFilter = params[0];
+         return GL_TRUE;
          /* fall-through */
       default:
          goto invalid_param;
@@ -258,8 +243,7 @@ set_tex_parameteri(struct gl_context *ctx,
    case GL_TEXTURE_BASE_LEVEL:
       if (texObj->BaseLevel == params[0])
          return GL_FALSE;
-      if (params[0] < 0 ||
-          (texObj->Target == GL_TEXTURE_RECTANGLE_ARB && params[0] != 0)) {
+      if (params[0] < 0) {
          _mesa_error(ctx, GL_INVALID_VALUE,
                      "glTexParameter(param=%d)", params[0]);
          return GL_FALSE;
@@ -271,7 +255,7 @@ set_tex_parameteri(struct gl_context *ctx,
    case GL_TEXTURE_MAX_LEVEL:
       if (texObj->MaxLevel == params[0])
          return GL_FALSE;
-      if (params[0] < 0 || texObj->Target == GL_TEXTURE_RECTANGLE_ARB) {
+      if (params[0] < 0) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glTexParameter(param=%d)", params[0]);
          return GL_FALSE;
@@ -737,28 +721,7 @@ _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
          *params = img->Depth;
          break;
       case GL_TEXTURE_INTERNAL_FORMAT:
-         if (_mesa_is_format_compressed(texFormat)) {
-            /* need to return the actual compressed format */
-            *params = _mesa_compressed_format_to_glenum(ctx, texFormat);
-         }
-         else {
-	    /* If the true internal format is not compressed but the user
-	     * requested a generic compressed format, we have to return the
-	     * generic base format that matches.
-	     *
-	     * From page 119 (page 129 of the PDF) of the OpenGL 1.3 spec:
-	     *
-	     *     "If no specific compressed format is available,
-	     *     internalformat is instead replaced by the corresponding base
-	     *     internal format."
-	     *
-	     * Otherwise just return the user's requested internal format
-	     */
-	    const GLenum f =
-	       _mesa_gl_compressed_format_base_format(img->InternalFormat);
-
-	    *params = (f != 0) ? f : img->InternalFormat;
-	 }
+         *params = img->InternalFormat;
          break;
       case GL_TEXTURE_BORDER:
          *params = img->Border;
@@ -793,22 +756,6 @@ _mesa_GetTexLevelParameteriv( GLenum target, GLint level,
              !ctx->Extensions.ARB_framebuffer_object)
             goto invalid_pname;
          *params = _mesa_get_format_bits(texFormat, pname);
-         break;
-
-      /* GL_ARB_texture_compression */
-      case GL_TEXTURE_COMPRESSED_IMAGE_SIZE:
-	 if (_mesa_is_format_compressed(texFormat) &&
-             !_mesa_is_proxy_texture(target)) {
-            *params = _mesa_format_image_size(texFormat, img->Width,
-                                              img->Height, img->Depth);
-	 }
-	 else {
-	    _mesa_error(ctx, GL_INVALID_OPERATION,
-			"glGetTexLevelParameter[if]v(pname)");
-	 }
-         break;
-      case GL_TEXTURE_COMPRESSED:
-         *params = (GLint) _mesa_is_format_compressed(texFormat);
          break;
 
       /* GL_ARB_texture_float */

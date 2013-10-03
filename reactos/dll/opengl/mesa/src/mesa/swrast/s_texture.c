@@ -123,17 +123,9 @@ _swrast_init_texture_image(struct gl_texture_image *texImage, GLsizei width,
       swImg->_IsPowerOfTwo = GL_FALSE;
 
    /* Compute Width/Height/DepthScale for mipmap lod computation */
-   if (texImage->TexObject->Target == GL_TEXTURE_RECTANGLE_NV) {
-      /* scale = 1.0 since texture coords directly map to texels */
-      swImg->WidthScale = 1.0;
-      swImg->HeightScale = 1.0;
-      swImg->DepthScale = 1.0;
-   }
-   else {
-      swImg->WidthScale = (GLfloat) texImage->Width;
-      swImg->HeightScale = (GLfloat) texImage->Height;
-      swImg->DepthScale = (GLfloat) texImage->Depth;
-   }
+   swImg->WidthScale = (GLfloat) texImage->Width;
+   swImg->HeightScale = (GLfloat) texImage->Height;
+   swImg->DepthScale = (GLfloat) texImage->Depth;
 }
 
 

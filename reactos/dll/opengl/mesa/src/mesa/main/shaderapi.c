@@ -1353,82 +1353,6 @@ _mesa_ValidateProgramARB(GLhandleARB program)
    validate_program(ctx, program);
 }
 
-#ifdef FEATURE_ES2
-
-void GLAPIENTRY
-_mesa_GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype,
-                               GLint* range, GLint* precision)
-{
-   const struct gl_program_constants *limits;
-   const struct gl_precision *p;
-   GET_CURRENT_CONTEXT(ctx);
-
-   switch (shadertype) {
-   case GL_VERTEX_SHADER:
-      limits = &ctx->Const.VertexProgram;
-      break;
-   case GL_FRAGMENT_SHADER:
-      limits = &ctx->Const.FragmentProgram;
-      break;
-   default:
-      _mesa_error(ctx, GL_INVALID_ENUM,
-                  "glGetShaderPrecisionFormat(shadertype)");
-      return;
-   }
-
-   switch (precisiontype) {
-   case GL_LOW_FLOAT:
-      p = &limits->LowFloat;
-      break;
-   case GL_MEDIUM_FLOAT:
-      p = &limits->MediumFloat;
-      break;
-   case GL_HIGH_FLOAT:
-      p = &limits->HighFloat;
-      break;
-   case GL_LOW_INT:
-      p = &limits->LowInt;
-      break;
-   case GL_MEDIUM_INT:
-      p = &limits->MediumInt;
-      break;
-   case GL_HIGH_INT:
-      p = &limits->HighInt;
-      break;
-   default:
-      _mesa_error(ctx, GL_INVALID_ENUM,
-                  "glGetShaderPrecisionFormat(precisiontype)");
-      return;
-   }
-
-   range[0] = p->RangeMin;
-   range[1] = p->RangeMax;
-   precision[0] = p->Precision;
-}
-
-
-void GLAPIENTRY
-_mesa_ReleaseShaderCompiler(void)
-{
-   _mesa_destroy_shader_compiler_caches();
-}
-
-
-void GLAPIENTRY
-_mesa_ShaderBinary(GLint n, const GLuint* shaders, GLenum binaryformat,
-                   const void* binary, GLint length)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   (void) n;
-   (void) shaders;
-   (void) binaryformat;
-   (void) binary;
-   (void) length;
-   _mesa_error(ctx, GL_INVALID_OPERATION, __FUNCTION__);
-}
-
-#endif /* FEATURE_ES2 */
-
 
 void
 _mesa_use_shader_program(struct gl_context *ctx, GLenum type,
@@ -1578,10 +1502,6 @@ _mesa_init_shader_dispatch(struct _glapi_table *exec)
    /* GL_EXT_gpu_shader4 / GL 3.0 */
    SET_BindFragDataLocationEXT(exec, _mesa_BindFragDataLocation);
    SET_GetFragDataLocationEXT(exec, _mesa_GetFragDataLocation);
-
-   /* GL_ARB_ES2_compatibility */
-   SET_ReleaseShaderCompiler(exec, _mesa_ReleaseShaderCompiler);
-   SET_GetShaderPrecisionFormat(exec, _mesa_GetShaderPrecisionFormat);
 
 #endif /* FEATURE_GL */
 }

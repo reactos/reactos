@@ -32,7 +32,6 @@
 #include "mfeatures.h"
 #include "mtypes.h"
 #include "state.h"
-#include "texcompress.h"
 #include "framebuffer.h"
 
 /* This is a table driven implemetation of the glGet*v() functions.
@@ -282,7 +281,6 @@ static const int extra_GLSL_130[] = {
 };
 
 
-EXTRA_EXT(ARB_ES2_compatibility);
 EXTRA_EXT(ARB_texture_cube_map);
 EXTRA_EXT(MESA_texture_array);
 EXTRA_EXT2(EXT_secondary_color, ARB_vertex_program);
@@ -294,7 +292,6 @@ EXTRA_EXT(IBM_rasterpos_clip);
 EXTRA_EXT(NV_point_sprite);
 EXTRA_EXT(NV_vertex_program);
 EXTRA_EXT(NV_fragment_program);
-EXTRA_EXT(NV_texture_rectangle);
 EXTRA_EXT(EXT_stencil_two_side);
 EXTRA_EXT(NV_light_max_exponent);
 EXTRA_EXT(EXT_depth_bounds_test);
@@ -332,12 +329,6 @@ extra_NV_vertex_program_ARB_vertex_program_ARB_fragment_program_NV_vertex_progra
    EXT(ARB_vertex_program),
    EXT(ARB_fragment_program),
    EXT(NV_vertex_program),
-   EXTRA_END
-};
-
-static const int
-extra_NV_primitive_restart[] = {
-   EXT(NV_primitive_restart),
    EXTRA_END
 };
 
@@ -577,15 +568,6 @@ static const struct value_desc values[] = {
      LOC_CUSTOM, TYPE_ENUM, offsetof(struct gl_client_array, Type), NO_EXTRA },
    { GL_TEXTURE_COORD_ARRAY_STRIDE,
      LOC_CUSTOM, TYPE_INT, offsetof(struct gl_client_array, Stride), NO_EXTRA },
-
-   /* GL_ARB_ES2_compatibility */
-   { GL_SHADER_COMPILER, CONST(1), extra_ARB_ES2_compatibility },
-   { GL_MAX_VARYING_VECTORS, CONTEXT_INT(Const.MaxVarying),
-     extra_ARB_ES2_compatibility },
-   { GL_MAX_VERTEX_UNIFORM_VECTORS, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_ES2_compatibility },
-   { GL_MAX_FRAGMENT_UNIFORM_VECTORS, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_ES2_compatibility },
 
    /* GL_ARB_multitexture */
    { GL_MAX_TEXTURE_UNITS, CONTEXT_INT(Const.MaxTextureUnits), NO_EXTRA },
@@ -998,14 +980,6 @@ static const struct value_desc values[] = {
      CONST(MAX_NV_FRAGMENT_PROGRAM_PARAMS),
      extra_NV_fragment_program },
 
-   /* GL_NV_texture_rectangle */
-   { GL_TEXTURE_RECTANGLE_NV,
-     LOC_CUSTOM, TYPE_BOOLEAN, 0, extra_NV_texture_rectangle },
-   { GL_TEXTURE_BINDING_RECTANGLE_NV,
-     LOC_CUSTOM, TYPE_INT, TEXTURE_RECT_INDEX, extra_NV_texture_rectangle },
-   { GL_MAX_RECTANGLE_TEXTURE_SIZE_NV,
-     CONTEXT_INT(Const.MaxTextureRectSize), extra_NV_texture_rectangle },
-
    /* GL_EXT_stencil_two_side */
    { GL_STENCIL_TEST_TWO_SIDE_EXT, CONTEXT_BOOL(Stencil.TestTwoSide),
 	 extra_EXT_stencil_two_side },
@@ -1016,12 +990,6 @@ static const struct value_desc values[] = {
      extra_NV_light_max_exponent },
    { GL_MAX_SPOT_EXPONENT_NV, CONTEXT_FLOAT(Const.MaxSpotExponent),
      extra_NV_light_max_exponent },
-     
-   /* GL_NV_primitive_restart */
-   { GL_PRIMITIVE_RESTART_NV, CONTEXT_BOOL(Array.PrimitiveRestart),
-     extra_NV_primitive_restart },
-   { GL_PRIMITIVE_RESTART_INDEX_NV, CONTEXT_INT(Array.RestartIndex),
-     extra_NV_primitive_restart },
  
    /* GL_ARB_vertex_buffer_object */
    { GL_INDEX_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
@@ -1129,15 +1097,6 @@ static const struct value_desc values[] = {
    /* GL3.0 / GL_EXT_framebuffer_sRGB */
    { GL_FRAMEBUFFER_SRGB_EXT, CONTEXT_BOOL(Color.sRGBEnabled), extra_EXT_framebuffer_sRGB },
    { GL_FRAMEBUFFER_SRGB_CAPABLE_EXT, BUFFER_INT(Visual.sRGBCapable), extra_EXT_framebuffer_sRGB },
-
-   /* GL 3.1 */
-   /* NOTE: different enum values for GL_PRIMITIVE_RESTART_NV
-    * vs. GL_PRIMITIVE_RESTART!
-    */
-   { GL_PRIMITIVE_RESTART, CONTEXT_BOOL(Array.PrimitiveRestart),
-     extra_version_31 },
-   { GL_PRIMITIVE_RESTART_INDEX, CONTEXT_INT(Array.RestartIndex),
-     extra_version_31 },
  
 
    /* GL 3.2 */
@@ -1265,7 +1224,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_TEXTURE_1D_ARRAY_EXT:
    case GL_TEXTURE_2D_ARRAY_EXT:
    case GL_TEXTURE_CUBE_MAP_ARB:
-   case GL_TEXTURE_RECTANGLE_NV:
       v->value_bool = _mesa_IsEnabled(d->pname);
       break;
 
@@ -1419,15 +1377,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_CURRENT_MATRIX_ARB:
    case GL_TRANSPOSE_CURRENT_MATRIX_ARB:
       v->value_matrix = ctx->CurrentStack->Top;
-      break;
-
-   case GL_NUM_COMPRESSED_TEXTURE_FORMATS_ARB:
-      v->value_int = _mesa_get_compressed_formats(ctx, NULL);
-      break;
-   case GL_COMPRESSED_TEXTURE_FORMATS_ARB:
-      v->value_int_n.n = 
-	 _mesa_get_compressed_formats(ctx, v->value_int_n.ints);
-      ASSERT(v->value_int_n.n <= 100);
       break;
 
    case GL_MAX_VARYING_FLOATS_ARB:

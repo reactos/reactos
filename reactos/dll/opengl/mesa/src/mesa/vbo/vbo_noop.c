@@ -348,11 +348,6 @@ _mesa_noop_End(void)
 {
 }
 
-static void GLAPIENTRY
-_mesa_noop_PrimitiveRestartNV(void)
-{
-}
-
 
 static void GLAPIENTRY
 _mesa_noop_Rectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
@@ -417,8 +412,6 @@ _mesa_noop_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->Color4fv = _mesa_noop_Color4fv;
    vfmt->EdgeFlag = _mesa_noop_EdgeFlag;
    vfmt->End = _mesa_noop_End;
-
-   vfmt->PrimitiveRestartNV = _mesa_noop_PrimitiveRestartNV;
 
    _MESA_INIT_EVAL_VTXFMT(vfmt, _mesa_noop_);
 

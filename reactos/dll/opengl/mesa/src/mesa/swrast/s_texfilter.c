@@ -508,11 +508,6 @@ nearest_texcoord(const struct gl_texture_object *texObj,
    const GLint depth = img->Depth;
 
    switch (texObj->Target) {
-   case GL_TEXTURE_RECTANGLE_ARB:
-      *i = clamp_rect_coord_nearest(texObj->Sampler.WrapS, texcoord[0], width);
-      *j = clamp_rect_coord_nearest(texObj->Sampler.WrapT, texcoord[1], height);
-      *k = 0;
-      break;
    case GL_TEXTURE_1D:
       *i = nearest_texel_location(texObj->Sampler.WrapS, img, width, texcoord[0]);
       *j = 0;
@@ -557,14 +552,6 @@ linear_texcoord(const struct gl_texture_object *texObj,
    const GLint depth = img->Depth;
 
    switch (texObj->Target) {
-   case GL_TEXTURE_RECTANGLE_ARB:
-      clamp_rect_coord_linear(texObj->Sampler.WrapS, texcoord[0],
-                              width, i0, i1, wi);
-      clamp_rect_coord_linear(texObj->Sampler.WrapT, texcoord[1],
-                              height, j0, j1, wj);
-      *slice = 0;
-      break;
-
    case GL_TEXTURE_1D:
    case GL_TEXTURE_2D:
       linear_texel_locations(texObj->Sampler.WrapS, img, width,
@@ -2557,149 +2544,6 @@ sample_lambda_cube(struct gl_context *ctx,
    }
 }
 
-
-/**********************************************************************/
-/*               Texture Rectangle Sampling Functions                 */
-/**********************************************************************/
-
-
-static void
-sample_nearest_rect(struct gl_context *ctx,
-		    const struct gl_texture_object *tObj, GLuint n,
-                    const GLfloat texcoords[][4], const GLfloat lambda[],
-                    GLfloat rgba[][4])
-{
-   const struct gl_texture_image *img = tObj->Image[0][0];
-   const struct swrast_texture_image *swImg = swrast_texture_image_const(img);
-   const GLint width = img->Width;
-   const GLint height = img->Height;
-   GLuint i;
-
-   (void) ctx;
-   (void) lambda;
-
-   ASSERT(tObj->Sampler.WrapS == GL_CLAMP ||
-          tObj->Sampler.WrapS == GL_CLAMP_TO_EDGE ||
-          tObj->Sampler.WrapS == GL_CLAMP_TO_BORDER);
-   ASSERT(tObj->Sampler.WrapT == GL_CLAMP ||
-          tObj->Sampler.WrapT == GL_CLAMP_TO_EDGE ||
-          tObj->Sampler.WrapT == GL_CLAMP_TO_BORDER);
-
-   for (i = 0; i < n; i++) {
-      GLint row, col;
-      col = clamp_rect_coord_nearest(tObj->Sampler.WrapS, texcoords[i][0], width);
-      row = clamp_rect_coord_nearest(tObj->Sampler.WrapT, texcoords[i][1], height);
-      if (col < 0 || col >= width || row < 0 || row >= height)
-         get_border_color(tObj, img, rgba[i]);
-      else
-         swImg->FetchTexel(swImg, col, row, 0, rgba[i]);
-   }
-}
-
-
-static void
-sample_linear_rect(struct gl_context *ctx,
-		   const struct gl_texture_object *tObj, GLuint n,
-                   const GLfloat texcoords[][4],
-		   const GLfloat lambda[], GLfloat rgba[][4])
-{
-   const struct gl_texture_image *img = tObj->Image[0][0];
-   const struct swrast_texture_image *swImg = swrast_texture_image_const(img);
-   const GLint width = img->Width;
-   const GLint height = img->Height;
-   GLuint i;
-
-   (void) ctx;
-   (void) lambda;
-
-   ASSERT(tObj->Sampler.WrapS == GL_CLAMP ||
-          tObj->Sampler.WrapS == GL_CLAMP_TO_EDGE ||
-          tObj->Sampler.WrapS == GL_CLAMP_TO_BORDER);
-   ASSERT(tObj->Sampler.WrapT == GL_CLAMP ||
-          tObj->Sampler.WrapT == GL_CLAMP_TO_EDGE ||
-          tObj->Sampler.WrapT == GL_CLAMP_TO_BORDER);
-
-   for (i = 0; i < n; i++) {
-      GLint i0, j0, i1, j1;
-      GLfloat t00[4], t01[4], t10[4], t11[4];
-      GLfloat a, b;
-      GLbitfield useBorderColor = 0x0;
-
-      clamp_rect_coord_linear(tObj->Sampler.WrapS, texcoords[i][0], width,
-                              &i0, &i1, &a);
-      clamp_rect_coord_linear(tObj->Sampler.WrapT, texcoords[i][1], height,
-                              &j0, &j1, &b);
-
-      /* compute integer rows/columns */
-      if (i0 < 0 || i0 >= width)   useBorderColor |= I0BIT;
-      if (i1 < 0 || i1 >= width)   useBorderColor |= I1BIT;
-      if (j0 < 0 || j0 >= height)  useBorderColor |= J0BIT;
-      if (j1 < 0 || j1 >= height)  useBorderColor |= J1BIT;
-
-      /* get four texel samples */
-      if (useBorderColor & (I0BIT | J0BIT))
-         get_border_color(tObj, img, t00);
-      else
-         swImg->FetchTexel(swImg, i0, j0, 0, t00);
-
-      if (useBorderColor & (I1BIT | J0BIT))
-         get_border_color(tObj, img, t10);
-      else
-         swImg->FetchTexel(swImg, i1, j0, 0, t10);
-
-      if (useBorderColor & (I0BIT | J1BIT))
-         get_border_color(tObj, img, t01);
-      else
-         swImg->FetchTexel(swImg, i0, j1, 0, t01);
-
-      if (useBorderColor & (I1BIT | J1BIT))
-         get_border_color(tObj, img, t11);
-      else
-         swImg->FetchTexel(swImg, i1, j1, 0, t11);
-
-      lerp_rgba_2d(rgba[i], a, b, t00, t10, t01, t11);
-   }
-}
-
-
-/** Sample Rect texture, using lambda to choose between min/magnification */
-static void
-sample_lambda_rect(struct gl_context *ctx,
-		   const struct gl_texture_object *tObj, GLuint n,
-		   const GLfloat texcoords[][4], const GLfloat lambda[],
-		   GLfloat rgba[][4])
-{
-   GLuint minStart, minEnd, magStart, magEnd;
-
-   /* We only need lambda to decide between minification and magnification.
-    * There is no mipmapping with rectangular textures.
-    */
-   compute_min_mag_ranges(tObj, n, lambda,
-                          &minStart, &minEnd, &magStart, &magEnd);
-
-   if (minStart < minEnd) {
-      if (tObj->Sampler.MinFilter == GL_NEAREST) {
-         sample_nearest_rect(ctx, tObj, minEnd - minStart,
-                             texcoords + minStart, NULL, rgba + minStart);
-      }
-      else {
-         sample_linear_rect(ctx, tObj, minEnd - minStart,
-                            texcoords + minStart, NULL, rgba + minStart);
-      }
-   }
-   if (magStart < magEnd) {
-      if (tObj->Sampler.MagFilter == GL_NEAREST) {
-         sample_nearest_rect(ctx, tObj, magEnd - magStart,
-                             texcoords + magStart, NULL, rgba + magStart);
-      }
-      else {
-         sample_linear_rect(ctx, tObj, magEnd - magStart,
-                            texcoords + magStart, NULL, rgba + magStart);
-      }
-   }
-}
-
-
 /**********************************************************************/
 /*                2D Texture Array Sampling Functions                 */
 /**********************************************************************/
@@ -3490,17 +3334,6 @@ _swrast_choose_texture_sample_func( struct gl_context *ctx,
          else {
             ASSERT(t->Sampler.MinFilter == GL_NEAREST);
             return &sample_nearest_cube;
-         }
-      case GL_TEXTURE_RECTANGLE_NV:
-         if (needLambda) {
-            return &sample_lambda_rect;
-         }
-         else if (t->Sampler.MinFilter == GL_LINEAR) {
-            return &sample_linear_rect;
-         }
-         else {
-            ASSERT(t->Sampler.MinFilter == GL_NEAREST);
-            return &sample_nearest_rect;
          }
       case GL_TEXTURE_1D_ARRAY_EXT:
          if (needLambda) {

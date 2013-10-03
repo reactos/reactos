@@ -941,7 +941,6 @@ typedef struct {
    void (GLAPIENTRYP CallLists)( GLsizei, GLenum, const GLvoid * );
    void (GLAPIENTRYP Begin)( GLenum );
    void (GLAPIENTRYP End)( void );
-   void (GLAPIENTRYP PrimitiveRestartNV)( void );
    /* GL_NV_vertex_program */
    void (GLAPIENTRYP VertexAttrib1fNV)( GLuint index, GLfloat x );
    void (GLAPIENTRYP VertexAttrib1fvNV)( GLuint index, const GLfloat *v );

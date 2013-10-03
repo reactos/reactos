@@ -80,7 +80,6 @@ struct _mesa_glsl_parse_state {
    exec_list translation_unit;
    glsl_symbol_table *symbols;
 
-   bool es_shader;
    unsigned language_version;
    const char *version_string;
    enum _mesa_glsl_parser_targets target;
@@ -127,7 +126,6 @@ struct _mesa_glsl_parse_state {
        * supported.
        */
       /*@{*/
-      unsigned GLSL_100ES:1;
       unsigned GLSL_110:1;
       unsigned GLSL_120:1;
       unsigned GLSL_130:1;
@@ -180,8 +178,6 @@ struct _mesa_glsl_parse_state {
    bool ARB_draw_buffers_warn;
    bool ARB_draw_instanced_enable;
    bool ARB_draw_instanced_warn;
-   bool ARB_texture_rectangle_enable;
-   bool ARB_texture_rectangle_warn;
    bool EXT_texture_array_enable;
    bool EXT_texture_array_warn;
    bool ARB_shader_texture_lod_enable;

@@ -91,7 +91,6 @@ _mesa_alloc_shared_state(struct gl_context *ctx)
          GL_TEXTURE_1D_ARRAY_EXT,
          GL_TEXTURE_CUBE_MAP,
          GL_TEXTURE_3D,
-         GL_TEXTURE_RECTANGLE_NV,
          GL_TEXTURE_2D,
          GL_TEXTURE_1D
       };

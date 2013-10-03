@@ -1068,16 +1068,6 @@ static int classify_identifier(struct _mesa_glsl_parse_state *, const char *);
       }									\
    } while (0)
 
-/* The ES macro can be used in KEYWORD checks:
- *
- *    word      KEYWORD(110 || ES, 400, TOKEN)
- * ...means the word is reserved in GLSL ES 1.00, while
- *
- *    word      KEYWORD(110, 130 || ES, TOKEN)
- * ...means the word is a legal keyword in GLSL ES 1.00.
- */
-#define ES yyextra->es_shader
-
 static int
 literal_integer(char *text, int len, struct _mesa_glsl_parse_state *state,
 		YYSTYPE *lval, YYLTYPE *lloc, int base)
@@ -1850,12 +1840,12 @@ KEYWORD(120, 120, CENTROID);
 case 67:
 YY_RULE_SETUP
 #line 270 "src/glsl/glsl_lexer.ll"
-KEYWORD(120 || ES, 120 || ES, INVARIANT);
+KEYWORD(120, 120, INVARIANT);
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
 #line 271 "src/glsl/glsl_lexer.ll"
-KEYWORD(130 || ES, 130, FLAT);
+KEYWORD(130, 130, FLAT);
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
@@ -2199,182 +2189,182 @@ YY_RULE_SETUP
 case 129:
 YY_RULE_SETUP
 #line 388 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, ASM);
+KEYWORD(110, 999, ASM);
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
 #line 389 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, CLASS);
+KEYWORD(110, 999, CLASS);
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
 #line 390 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, UNION);
+KEYWORD(110, 999, UNION);
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
 #line 391 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, ENUM);
+KEYWORD(110, 999, ENUM);
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
 #line 392 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, TYPEDEF);
+KEYWORD(110, 999, TYPEDEF);
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
 #line 393 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, TEMPLATE);
+KEYWORD(110, 999, TEMPLATE);
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
 #line 394 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, THIS);
+KEYWORD(110, 999, THIS);
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
 #line 395 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, PACKED_TOK);
+KEYWORD(110, 999, PACKED_TOK);
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
 #line 396 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, GOTO);
+KEYWORD(110, 999, GOTO);
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
 #line 397 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 130, SWITCH);
+KEYWORD(110, 130, SWITCH);
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
 #line 398 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 130, DEFAULT);
+KEYWORD(110, 130, DEFAULT);
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
 #line 399 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, INLINE_TOK);
+KEYWORD(110, 999, INLINE_TOK);
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
 #line 400 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, NOINLINE);
+KEYWORD(110, 999, NOINLINE);
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
 #line 401 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, VOLATILE);
+KEYWORD(110, 999, VOLATILE);
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
 #line 402 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, PUBLIC_TOK);
+KEYWORD(110, 999, PUBLIC_TOK);
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
 #line 403 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, STATIC);
+KEYWORD(110, 999, STATIC);
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
 #line 404 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, EXTERN);
+KEYWORD(110, 999, EXTERN);
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
 #line 405 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, EXTERNAL);
+KEYWORD(110, 999, EXTERNAL);
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
 #line 406 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, INTERFACE);
+KEYWORD(110, 999, INTERFACE);
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
 #line 407 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, LONG_TOK);
+KEYWORD(110, 999, LONG_TOK);
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
 #line 408 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, SHORT_TOK);
+KEYWORD(110, 999, SHORT_TOK);
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
 #line 409 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 400, DOUBLE_TOK);
+KEYWORD(110, 400, DOUBLE_TOK);
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
 #line 410 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, HALF);
+KEYWORD(110, 999, HALF);
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
 #line 411 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, FIXED_TOK);
+KEYWORD(110, 999, FIXED_TOK);
 	YY_BREAK
 case 153:
 YY_RULE_SETUP
 #line 412 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, UNSIGNED);
+KEYWORD(110, 999, UNSIGNED);
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
 #line 413 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, INPUT_TOK);
+KEYWORD(110, 999, INPUT_TOK);
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
 #line 414 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, OUTPUT);
+KEYWORD(110, 999, OUTPUT);
 	YY_BREAK
 case 156:
 YY_RULE_SETUP
 #line 415 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, HVEC2);
+KEYWORD(110, 999, HVEC2);
 	YY_BREAK
 case 157:
 YY_RULE_SETUP
 #line 416 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, HVEC3);
+KEYWORD(110, 999, HVEC3);
 	YY_BREAK
 case 158:
 YY_RULE_SETUP
 #line 417 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, HVEC4);
+KEYWORD(110, 999, HVEC4);
 	YY_BREAK
 case 159:
 YY_RULE_SETUP
 #line 418 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 400, DVEC2);
+KEYWORD(110, 400, DVEC2);
 	YY_BREAK
 case 160:
 YY_RULE_SETUP
 #line 419 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 400, DVEC3);
+KEYWORD(110, 400, DVEC3);
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
 #line 420 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 400, DVEC4);
+KEYWORD(110, 400, DVEC4);
 	YY_BREAK
 case 162:
 YY_RULE_SETUP
 #line 421 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, FVEC2);
+KEYWORD(110, 999, FVEC2);
 	YY_BREAK
 case 163:
 YY_RULE_SETUP
 #line 422 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, FVEC3);
+KEYWORD(110, 999, FVEC3);
 	YY_BREAK
 case 164:
 YY_RULE_SETUP
 #line 423 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, FVEC4);
+KEYWORD(110, 999, FVEC4);
 	YY_BREAK
 case 165:
 YY_RULE_SETUP
@@ -2384,7 +2374,7 @@ return SAMPLER2DRECT;
 case 166:
 YY_RULE_SETUP
 #line 425 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, SAMPLER3DRECT);
+KEYWORD(110, 999, SAMPLER3DRECT);
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
@@ -2394,43 +2384,43 @@ return SAMPLER2DRECTSHADOW;
 case 168:
 YY_RULE_SETUP
 #line 427 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, SIZEOF);
+KEYWORD(110, 999, SIZEOF);
 	YY_BREAK
 case 169:
 YY_RULE_SETUP
 #line 428 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, CAST);
+KEYWORD(110, 999, CAST);
 	YY_BREAK
 case 170:
 YY_RULE_SETUP
 #line 429 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, NAMESPACE);
+KEYWORD(110, 999, NAMESPACE);
 	YY_BREAK
 case 171:
 YY_RULE_SETUP
 #line 430 "src/glsl/glsl_lexer.ll"
-KEYWORD(110 || ES, 999, USING);
+KEYWORD(110, 999, USING);
 	YY_BREAK
 /* Additional reserved words in GLSL 1.20. */
 case 172:
 YY_RULE_SETUP
 #line 433 "src/glsl/glsl_lexer.ll"
-KEYWORD(120, 130 || ES, LOWP);
+KEYWORD(120, 130, LOWP);
 	YY_BREAK
 case 173:
 YY_RULE_SETUP
 #line 434 "src/glsl/glsl_lexer.ll"
-KEYWORD(120, 130 || ES, MEDIUMP);
+KEYWORD(120, 130, MEDIUMP);
 	YY_BREAK
 case 174:
 YY_RULE_SETUP
 #line 435 "src/glsl/glsl_lexer.ll"
-KEYWORD(120, 130 || ES, HIGHP);
+KEYWORD(120, 130, HIGHP);
 	YY_BREAK
 case 175:
 YY_RULE_SETUP
 #line 436 "src/glsl/glsl_lexer.ll"
-KEYWORD(120, 130 || ES, PRECISION);
+KEYWORD(120, 130, PRECISION);
 	YY_BREAK
 /* Additional reserved words in GLSL 1.30. */
 case 176:
@@ -2456,7 +2446,7 @@ KEYWORD(130, 999, ACTIVE);
 case 180:
 YY_RULE_SETUP
 #line 443 "src/glsl/glsl_lexer.ll"
-KEYWORD(130 || ES, 999, SUPERP);
+KEYWORD(130, 999, SUPERP);
 	YY_BREAK
 case 181:
 YY_RULE_SETUP

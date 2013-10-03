@@ -2190,9 +2190,6 @@ yyreduce:
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid vertex program header");
 	   }
 	   state->mode = ARB_fragment;
-
-	   state->option.TexRect =
-	      (state->ctx->Extensions.NV_texture_rectangle != GL_FALSE);
 	}
     break;
 
@@ -2471,13 +2468,6 @@ yyreduce:
     { (yyval.integer) = TEXTURE_CUBE_INDEX; }
     break;
 
-  case 39:
-
-/* Line 1806 of yacc.c  */
-#line 528 "src/mesa/program/program_parse.y"
-    { (yyval.integer) = TEXTURE_RECT_INDEX; }
-    break;
-
   case 40:
 
 /* Line 1806 of yacc.c  */
@@ -2490,13 +2480,6 @@ yyreduce:
 /* Line 1806 of yacc.c  */
 #line 530 "src/mesa/program/program_parse.y"
     { (yyval.integer) = -TEXTURE_2D_INDEX; }
-    break;
-
-  case 42:
-
-/* Line 1806 of yacc.c  */
-#line 531 "src/mesa/program/program_parse.y"
-    { (yyval.integer) = -TEXTURE_RECT_INDEX; }
     break;
 
   case 43:

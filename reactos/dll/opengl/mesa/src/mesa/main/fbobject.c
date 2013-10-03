@@ -509,9 +509,6 @@ _mesa_is_legal_color_format(const struct gl_context *ctx, GLenum baseFormat)
    case GL_INTENSITY:
    case GL_ALPHA:
       return ctx->Extensions.ARB_framebuffer_object;
-   case GL_RED:
-   case GL_RG:
-      return ctx->Extensions.ARB_texture_rg;
    default:
       return GL_FALSE;
    }
@@ -585,11 +582,6 @@ test_attachment_completeness(const struct gl_context *ctx, GLenum format,
       if (format == GL_COLOR) {
          if (!_mesa_is_legal_color_format(ctx, baseFormat)) {
             att_incomplete("bad format");
-            att->Complete = GL_FALSE;
-            return;
-         }
-         if (_mesa_is_format_compressed(texImage->TexFormat)) {
-            att_incomplete("compressed internalformat");
             att->Complete = GL_FALSE;
             return;
          }
@@ -813,7 +805,6 @@ _mesa_test_framebuffer_completeness(struct gl_context *ctx,
       }
    }
 
-   if (!ctx->Extensions.ARB_ES2_compatibility) {
       /* Check that all DrawBuffers are present */
       for (j = 0; j < ctx->Const.MaxDrawBuffers; j++) {
 	 if (fb->ColorDrawBuffer[j] != GL_NONE) {
@@ -839,7 +830,6 @@ _mesa_test_framebuffer_completeness(struct gl_context *ctx,
 	    return;
 	 }
       }
-   }
 
    if (numImages == 0) {
       fb->_Status = GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT;
@@ -1133,59 +1123,6 @@ _mesa_base_fbo_format(struct gl_context *ctx, GLenum internalFormat)
          return GL_DEPTH_STENCIL;
       else
          return 0;
-   case GL_RED:
-   case GL_R8:
-   case GL_R16:
-      return ctx->Extensions.ARB_texture_rg ? GL_RED : 0;
-   case GL_RG:
-   case GL_RG8:
-   case GL_RG16:
-      return ctx->Extensions.ARB_texture_rg ? GL_RG : 0;
-   /* signed normalized texture formats */
-   case GL_RED_SNORM:
-   case GL_R8_SNORM:
-   case GL_R16_SNORM:
-      return ctx->Extensions.EXT_texture_snorm ? GL_RED : 0;
-   case GL_RG_SNORM:
-   case GL_RG8_SNORM:
-   case GL_RG16_SNORM:
-      return ctx->Extensions.EXT_texture_snorm ? GL_RG : 0;
-   case GL_RGB_SNORM:
-   case GL_RGB8_SNORM:
-   case GL_RGB16_SNORM:
-      return ctx->Extensions.EXT_texture_snorm ? GL_RGB : 0;
-   case GL_RGBA_SNORM:
-   case GL_RGBA8_SNORM:
-   case GL_RGBA16_SNORM:
-      return ctx->Extensions.EXT_texture_snorm ? GL_RGBA : 0;
-   case GL_ALPHA_SNORM:
-   case GL_ALPHA8_SNORM:
-   case GL_ALPHA16_SNORM:
-      return ctx->Extensions.EXT_texture_snorm &&
-             ctx->Extensions.ARB_framebuffer_object ? GL_ALPHA : 0;
-   case GL_LUMINANCE_SNORM:
-   case GL_LUMINANCE8_SNORM:
-   case GL_LUMINANCE16_SNORM:
-      return ctx->Extensions.EXT_texture_snorm &&
-             ctx->Extensions.ARB_framebuffer_object ? GL_LUMINANCE : 0;
-   case GL_LUMINANCE_ALPHA_SNORM:
-   case GL_LUMINANCE8_ALPHA8_SNORM:
-   case GL_LUMINANCE16_ALPHA16_SNORM:
-      return ctx->Extensions.EXT_texture_snorm &&
-             ctx->Extensions.ARB_framebuffer_object ? GL_LUMINANCE_ALPHA : 0;
-   case GL_INTENSITY_SNORM:
-   case GL_INTENSITY8_SNORM:
-   case GL_INTENSITY16_SNORM:
-      return ctx->Extensions.EXT_texture_snorm &&
-             ctx->Extensions.ARB_framebuffer_object ? GL_INTENSITY : 0;
-   case GL_R16F:
-   case GL_R32F:
-      return ctx->Extensions.ARB_texture_rg &&
-             ctx->Extensions.ARB_texture_float ? GL_RED : 0;
-   case GL_RG16F:
-   case GL_RG32F:
-      return ctx->Extensions.ARB_texture_rg &&
-             ctx->Extensions.ARB_texture_float ? GL_RG : 0;
    case GL_RGB16F:
    case GL_RGB32F:
       return ctx->Extensions.ARB_texture_float ? GL_RGB : 0;
@@ -1226,26 +1163,6 @@ _mesa_base_fbo_format(struct gl_context *ctx, GLenum internalFormat)
    case GL_RGB32I_EXT:
       return ctx->VersionMajor >= 3 ||
              ctx->Extensions.EXT_texture_integer ? GL_RGB : 0;
-
-   case GL_R8UI:
-   case GL_R8I:
-   case GL_R16UI:
-   case GL_R16I:
-   case GL_R32UI:
-   case GL_R32I:
-      return ctx->VersionMajor >= 3 ||
-             (ctx->Extensions.ARB_texture_rg &&
-              ctx->Extensions.EXT_texture_integer) ? GL_RED : 0;
-
-   case GL_RG8UI:
-   case GL_RG8I:
-   case GL_RG16UI:
-   case GL_RG16I:
-   case GL_RG32UI:
-   case GL_RG32I:
-      return ctx->VersionMajor >= 3 ||
-             (ctx->Extensions.ARB_texture_rg &&
-              ctx->Extensions.EXT_texture_integer) ? GL_RG : 0;
 
    case GL_INTENSITY8I_EXT:
    case GL_INTENSITY8UI_EXT:
@@ -2059,9 +1976,6 @@ _mesa_FramebufferTexture2DEXT(GLenum target, GLenum attachment,
       switch (textarget) {
       case GL_TEXTURE_2D:
          error = GL_FALSE;
-         break;
-      case GL_TEXTURE_RECTANGLE:
-         error = !ctx->Extensions.NV_texture_rectangle;
          break;
       case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
       case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:

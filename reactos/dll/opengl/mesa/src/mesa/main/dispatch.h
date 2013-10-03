@@ -512,13 +512,6 @@
 #define _gloffset_MultTransposeMatrixdARB 443
 #define _gloffset_MultTransposeMatrixfARB 444
 #define _gloffset_SampleCoverageARB 445
-#define _gloffset_CompressedTexImage1DARB 446
-#define _gloffset_CompressedTexImage2DARB 447
-#define _gloffset_CompressedTexImage3DARB 448
-#define _gloffset_CompressedTexSubImage1DARB 449
-#define _gloffset_CompressedTexSubImage2DARB 450
-#define _gloffset_CompressedTexSubImage3DARB 451
-#define _gloffset_GetCompressedTexImageARB 452
 #define _gloffset_DisableVertexAttribArrayARB 453
 #define _gloffset_EnableVertexAttribArrayARB 454
 #define _gloffset_GetProgramEnvParameterdvARB 455
@@ -644,14 +637,8 @@
 #define _gloffset_BlendEquationiARB 598
 #define _gloffset_BlendFuncSeparateiARB 599
 #define _gloffset_BlendFunciARB 600
-#define _gloffset_ClearDepthf 660
-#define _gloffset_DepthRangef 661
-#define _gloffset_GetShaderPrecisionFormat 662
-#define _gloffset_ReleaseShaderCompiler 663
-#define _gloffset_ShaderBinary 664
 #define _gloffset_GetGraphicsResetStatusARB 665
 #define _gloffset_GetnColorTableARB 666
-#define _gloffset_GetnCompressedTexImageARB 667
 #define _gloffset_GetnConvolutionFilterARB 668
 #define _gloffset_GetnHistogramARB 669
 #define _gloffset_GetnMapdvARB 670
@@ -846,8 +833,6 @@
 #define _gloffset_ProgramNamedParameter4dvNV 873
 #define _gloffset_ProgramNamedParameter4fNV 874
 #define _gloffset_ProgramNamedParameter4fvNV 875
-#define _gloffset_PrimitiveRestartIndexNV 876
-#define _gloffset_PrimitiveRestartNV 877
 #define _gloffset_DepthBoundsEXT 878
 #define _gloffset_BlendEquationSeparateEXT 879
 #define _gloffset_BindFramebufferEXT 880
@@ -965,13 +950,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define MultTransposeMatrixdARB_remap_index 35
 #define MultTransposeMatrixfARB_remap_index 36
 #define SampleCoverageARB_remap_index 37
-#define CompressedTexImage1DARB_remap_index 38
-#define CompressedTexImage2DARB_remap_index 39
-#define CompressedTexImage3DARB_remap_index 40
-#define CompressedTexSubImage1DARB_remap_index 41
-#define CompressedTexSubImage2DARB_remap_index 42
-#define CompressedTexSubImage3DARB_remap_index 43
-#define GetCompressedTexImageARB_remap_index 44
 #define DisableVertexAttribArrayARB_remap_index 45
 #define EnableVertexAttribArrayARB_remap_index 46
 #define GetProgramEnvParameterdvARB_remap_index 47
@@ -1098,14 +1076,8 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define BlendEquationiARB_remap_index 190
 #define BlendFuncSeparateiARB_remap_index 191
 #define BlendFunciARB_remap_index 192
-#define ClearDepthf_remap_index 252
-#define DepthRangef_remap_index 253
-#define GetShaderPrecisionFormat_remap_index 254
-#define ReleaseShaderCompiler_remap_index 255
-#define ShaderBinary_remap_index 256
 #define GetGraphicsResetStatusARB_remap_index 257
 #define GetnColorTableARB_remap_index 258
-#define GetnCompressedTexImageARB_remap_index 259
 #define GetnConvolutionFilterARB_remap_index 260
 #define GetnHistogramARB_remap_index 261
 #define GetnMapdvARB_remap_index 262
@@ -1300,8 +1272,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define ProgramNamedParameter4dvNV_remap_index 465
 #define ProgramNamedParameter4fNV_remap_index 466
 #define ProgramNamedParameter4fvNV_remap_index 467
-#define PrimitiveRestartIndexNV_remap_index 468
-#define PrimitiveRestartNV_remap_index 469
 #define DepthBoundsEXT_remap_index 470
 #define BlendEquationSeparateEXT_remap_index 471
 #define BindFramebufferEXT_remap_index 472
@@ -1414,13 +1384,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_MultTransposeMatrixdARB driDispatchRemapTable[MultTransposeMatrixdARB_remap_index]
 #define _gloffset_MultTransposeMatrixfARB driDispatchRemapTable[MultTransposeMatrixfARB_remap_index]
 #define _gloffset_SampleCoverageARB driDispatchRemapTable[SampleCoverageARB_remap_index]
-#define _gloffset_CompressedTexImage1DARB driDispatchRemapTable[CompressedTexImage1DARB_remap_index]
-#define _gloffset_CompressedTexImage2DARB driDispatchRemapTable[CompressedTexImage2DARB_remap_index]
-#define _gloffset_CompressedTexImage3DARB driDispatchRemapTable[CompressedTexImage3DARB_remap_index]
-#define _gloffset_CompressedTexSubImage1DARB driDispatchRemapTable[CompressedTexSubImage1DARB_remap_index]
-#define _gloffset_CompressedTexSubImage2DARB driDispatchRemapTable[CompressedTexSubImage2DARB_remap_index]
-#define _gloffset_CompressedTexSubImage3DARB driDispatchRemapTable[CompressedTexSubImage3DARB_remap_index]
-#define _gloffset_GetCompressedTexImageARB driDispatchRemapTable[GetCompressedTexImageARB_remap_index]
 #define _gloffset_DisableVertexAttribArrayARB driDispatchRemapTable[DisableVertexAttribArrayARB_remap_index]
 #define _gloffset_EnableVertexAttribArrayARB driDispatchRemapTable[EnableVertexAttribArrayARB_remap_index]
 #define _gloffset_GetProgramEnvParameterdvARB driDispatchRemapTable[GetProgramEnvParameterdvARB_remap_index]
@@ -1546,14 +1509,8 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_BlendEquationiARB driDispatchRemapTable[BlendEquationiARB_remap_index]
 #define _gloffset_BlendFuncSeparateiARB driDispatchRemapTable[BlendFuncSeparateiARB_remap_index]
 #define _gloffset_BlendFunciARB driDispatchRemapTable[BlendFunciARB_remap_index]
-#define _gloffset_ClearDepthf driDispatchRemapTable[ClearDepthf_remap_index]
-#define _gloffset_DepthRangef driDispatchRemapTable[DepthRangef_remap_index]
-#define _gloffset_GetShaderPrecisionFormat driDispatchRemapTable[GetShaderPrecisionFormat_remap_index]
-#define _gloffset_ReleaseShaderCompiler driDispatchRemapTable[ReleaseShaderCompiler_remap_index]
-#define _gloffset_ShaderBinary driDispatchRemapTable[ShaderBinary_remap_index]
 #define _gloffset_GetGraphicsResetStatusARB driDispatchRemapTable[GetGraphicsResetStatusARB_remap_index]
 #define _gloffset_GetnColorTableARB driDispatchRemapTable[GetnColorTableARB_remap_index]
-#define _gloffset_GetnCompressedTexImageARB driDispatchRemapTable[GetnCompressedTexImageARB_remap_index]
 #define _gloffset_GetnConvolutionFilterARB driDispatchRemapTable[GetnConvolutionFilterARB_remap_index]
 #define _gloffset_GetnHistogramARB driDispatchRemapTable[GetnHistogramARB_remap_index]
 #define _gloffset_GetnMapdvARB driDispatchRemapTable[GetnMapdvARB_remap_index]
@@ -1748,8 +1705,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_ProgramNamedParameter4dvNV driDispatchRemapTable[ProgramNamedParameter4dvNV_remap_index]
 #define _gloffset_ProgramNamedParameter4fNV driDispatchRemapTable[ProgramNamedParameter4fNV_remap_index]
 #define _gloffset_ProgramNamedParameter4fvNV driDispatchRemapTable[ProgramNamedParameter4fvNV_remap_index]
-#define _gloffset_PrimitiveRestartIndexNV driDispatchRemapTable[PrimitiveRestartIndexNV_remap_index]
-#define _gloffset_PrimitiveRestartNV driDispatchRemapTable[PrimitiveRestartNV_remap_index]
 #define _gloffset_DepthBoundsEXT driDispatchRemapTable[DepthBoundsEXT_remap_index]
 #define _gloffset_BlendEquationSeparateEXT driDispatchRemapTable[BlendEquationSeparateEXT_remap_index]
 #define _gloffset_BindFramebufferEXT driDispatchRemapTable[BindFramebufferEXT_remap_index]
@@ -6711,83 +6666,6 @@ static inline void SET_SampleCoverageARB(struct _glapi_table *disp, void (GLAPIE
    SET_by_offset(disp, _gloffset_SampleCoverageARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_CompressedTexImage1DARB)(GLenum, GLint, GLenum, GLsizei, GLint, GLsizei, const GLvoid *);
-#define CALL_CompressedTexImage1DARB(disp, parameters) \
-    (* GET_CompressedTexImage1DARB(disp)) parameters
-static inline _glptr_CompressedTexImage1DARB GET_CompressedTexImage1DARB(struct _glapi_table *disp) {
-   return (_glptr_CompressedTexImage1DARB) (GET_by_offset(disp, _gloffset_CompressedTexImage1DARB));
-}
-
-static inline void SET_CompressedTexImage1DARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLenum, GLsizei, GLint, GLsizei, const GLvoid *)) {
-   SET_by_offset(disp, _gloffset_CompressedTexImage1DARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_CompressedTexImage2DARB)(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, const GLvoid *);
-#define CALL_CompressedTexImage2DARB(disp, parameters) \
-    (* GET_CompressedTexImage2DARB(disp)) parameters
-static inline _glptr_CompressedTexImage2DARB GET_CompressedTexImage2DARB(struct _glapi_table *disp) {
-   return (_glptr_CompressedTexImage2DARB) (GET_by_offset(disp, _gloffset_CompressedTexImage2DARB));
-}
-
-static inline void SET_CompressedTexImage2DARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, const GLvoid *)) {
-   SET_by_offset(disp, _gloffset_CompressedTexImage2DARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_CompressedTexImage3DARB)(GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLsizei, const GLvoid *);
-#define CALL_CompressedTexImage3DARB(disp, parameters) \
-    (* GET_CompressedTexImage3DARB(disp)) parameters
-static inline _glptr_CompressedTexImage3DARB GET_CompressedTexImage3DARB(struct _glapi_table *disp) {
-   return (_glptr_CompressedTexImage3DARB) (GET_by_offset(disp, _gloffset_CompressedTexImage3DARB));
-}
-
-static inline void SET_CompressedTexImage3DARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLsizei, const GLvoid *)) {
-   SET_by_offset(disp, _gloffset_CompressedTexImage3DARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_CompressedTexSubImage1DARB)(GLenum, GLint, GLint, GLsizei, GLenum, GLsizei, const GLvoid *);
-#define CALL_CompressedTexSubImage1DARB(disp, parameters) \
-    (* GET_CompressedTexSubImage1DARB(disp)) parameters
-static inline _glptr_CompressedTexSubImage1DARB GET_CompressedTexSubImage1DARB(struct _glapi_table *disp) {
-   return (_glptr_CompressedTexSubImage1DARB) (GET_by_offset(disp, _gloffset_CompressedTexSubImage1DARB));
-}
-
-static inline void SET_CompressedTexSubImage1DARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLint, GLsizei, GLenum, GLsizei, const GLvoid *)) {
-   SET_by_offset(disp, _gloffset_CompressedTexSubImage1DARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_CompressedTexSubImage2DARB)(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid *);
-#define CALL_CompressedTexSubImage2DARB(disp, parameters) \
-    (* GET_CompressedTexSubImage2DARB(disp)) parameters
-static inline _glptr_CompressedTexSubImage2DARB GET_CompressedTexSubImage2DARB(struct _glapi_table *disp) {
-   return (_glptr_CompressedTexSubImage2DARB) (GET_by_offset(disp, _gloffset_CompressedTexSubImage2DARB));
-}
-
-static inline void SET_CompressedTexSubImage2DARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid *)) {
-   SET_by_offset(disp, _gloffset_CompressedTexSubImage2DARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_CompressedTexSubImage3DARB)(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid *);
-#define CALL_CompressedTexSubImage3DARB(disp, parameters) \
-    (* GET_CompressedTexSubImage3DARB(disp)) parameters
-static inline _glptr_CompressedTexSubImage3DARB GET_CompressedTexSubImage3DARB(struct _glapi_table *disp) {
-   return (_glptr_CompressedTexSubImage3DARB) (GET_by_offset(disp, _gloffset_CompressedTexSubImage3DARB));
-}
-
-static inline void SET_CompressedTexSubImage3DARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid *)) {
-   SET_by_offset(disp, _gloffset_CompressedTexSubImage3DARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetCompressedTexImageARB)(GLenum, GLint, GLvoid *);
-#define CALL_GetCompressedTexImageARB(disp, parameters) \
-    (* GET_GetCompressedTexImageARB(disp)) parameters
-static inline _glptr_GetCompressedTexImageARB GET_GetCompressedTexImageARB(struct _glapi_table *disp) {
-   return (_glptr_GetCompressedTexImageARB) (GET_by_offset(disp, _gloffset_GetCompressedTexImageARB));
-}
-
-static inline void SET_GetCompressedTexImageARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_GetCompressedTexImageARB, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_DisableVertexAttribArrayARB)(GLuint);
 #define CALL_DisableVertexAttribArrayARB(disp, parameters) \
     (* GET_DisableVertexAttribArrayARB(disp)) parameters
@@ -8163,61 +8041,6 @@ static inline void SET_BlendFunciARB(struct _glapi_table *disp, void (GLAPIENTRY
    SET_by_offset(disp, _gloffset_BlendFunciARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_ClearDepthf)(GLclampf);
-#define CALL_ClearDepthf(disp, parameters) \
-    (* GET_ClearDepthf(disp)) parameters
-static inline _glptr_ClearDepthf GET_ClearDepthf(struct _glapi_table *disp) {
-   return (_glptr_ClearDepthf) (GET_by_offset(disp, _gloffset_ClearDepthf));
-}
-
-static inline void SET_ClearDepthf(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLclampf)) {
-   SET_by_offset(disp, _gloffset_ClearDepthf, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_DepthRangef)(GLclampf, GLclampf);
-#define CALL_DepthRangef(disp, parameters) \
-    (* GET_DepthRangef(disp)) parameters
-static inline _glptr_DepthRangef GET_DepthRangef(struct _glapi_table *disp) {
-   return (_glptr_DepthRangef) (GET_by_offset(disp, _gloffset_DepthRangef));
-}
-
-static inline void SET_DepthRangef(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLclampf, GLclampf)) {
-   SET_by_offset(disp, _gloffset_DepthRangef, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetShaderPrecisionFormat)(GLenum, GLenum, GLint *, GLint *);
-#define CALL_GetShaderPrecisionFormat(disp, parameters) \
-    (* GET_GetShaderPrecisionFormat(disp)) parameters
-static inline _glptr_GetShaderPrecisionFormat GET_GetShaderPrecisionFormat(struct _glapi_table *disp) {
-   return (_glptr_GetShaderPrecisionFormat) (GET_by_offset(disp, _gloffset_GetShaderPrecisionFormat));
-}
-
-static inline void SET_GetShaderPrecisionFormat(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLint *, GLint *)) {
-   SET_by_offset(disp, _gloffset_GetShaderPrecisionFormat, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ReleaseShaderCompiler)(void);
-#define CALL_ReleaseShaderCompiler(disp, parameters) \
-    (* GET_ReleaseShaderCompiler(disp)) parameters
-static inline _glptr_ReleaseShaderCompiler GET_ReleaseShaderCompiler(struct _glapi_table *disp) {
-   return (_glptr_ReleaseShaderCompiler) (GET_by_offset(disp, _gloffset_ReleaseShaderCompiler));
-}
-
-static inline void SET_ReleaseShaderCompiler(struct _glapi_table *disp, void (GLAPIENTRYP fn)(void)) {
-   SET_by_offset(disp, _gloffset_ReleaseShaderCompiler, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ShaderBinary)(GLsizei, const GLuint *, GLenum, const GLvoid *, GLsizei);
-#define CALL_ShaderBinary(disp, parameters) \
-    (* GET_ShaderBinary(disp)) parameters
-static inline _glptr_ShaderBinary GET_ShaderBinary(struct _glapi_table *disp) {
-   return (_glptr_ShaderBinary) (GET_by_offset(disp, _gloffset_ShaderBinary));
-}
-
-static inline void SET_ShaderBinary(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, const GLuint *, GLenum, const GLvoid *, GLsizei)) {
-   SET_by_offset(disp, _gloffset_ShaderBinary, fn);
-}
-
 typedef GLenum (GLAPIENTRYP _glptr_GetGraphicsResetStatusARB)(void);
 #define CALL_GetGraphicsResetStatusARB(disp, parameters) \
     (* GET_GetGraphicsResetStatusARB(disp)) parameters
@@ -8238,17 +8061,6 @@ static inline _glptr_GetnColorTableARB GET_GetnColorTableARB(struct _glapi_table
 
 static inline void SET_GetnColorTableARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLsizei, GLvoid *)) {
    SET_by_offset(disp, _gloffset_GetnColorTableARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnCompressedTexImageARB)(GLenum, GLint, GLsizei, GLvoid *);
-#define CALL_GetnCompressedTexImageARB(disp, parameters) \
-    (* GET_GetnCompressedTexImageARB(disp)) parameters
-static inline _glptr_GetnCompressedTexImageARB GET_GetnCompressedTexImageARB(struct _glapi_table *disp) {
-   return (_glptr_GetnCompressedTexImageARB) (GET_by_offset(disp, _gloffset_GetnCompressedTexImageARB));
-}
-
-static inline void SET_GetnCompressedTexImageARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLsizei, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_GetnCompressedTexImageARB, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_GetnConvolutionFilterARB)(GLenum, GLenum, GLenum, GLsizei, GLvoid *);
@@ -10383,28 +10195,6 @@ static inline _glptr_ProgramNamedParameter4fvNV GET_ProgramNamedParameter4fvNV(s
 
 static inline void SET_ProgramNamedParameter4fvNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, const GLubyte *, const GLfloat *)) {
    SET_by_offset(disp, _gloffset_ProgramNamedParameter4fvNV, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_PrimitiveRestartIndexNV)(GLuint);
-#define CALL_PrimitiveRestartIndexNV(disp, parameters) \
-    (* GET_PrimitiveRestartIndexNV(disp)) parameters
-static inline _glptr_PrimitiveRestartIndexNV GET_PrimitiveRestartIndexNV(struct _glapi_table *disp) {
-   return (_glptr_PrimitiveRestartIndexNV) (GET_by_offset(disp, _gloffset_PrimitiveRestartIndexNV));
-}
-
-static inline void SET_PrimitiveRestartIndexNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
-   SET_by_offset(disp, _gloffset_PrimitiveRestartIndexNV, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_PrimitiveRestartNV)(void);
-#define CALL_PrimitiveRestartNV(disp, parameters) \
-    (* GET_PrimitiveRestartNV(disp)) parameters
-static inline _glptr_PrimitiveRestartNV GET_PrimitiveRestartNV(struct _glapi_table *disp) {
-   return (_glptr_PrimitiveRestartNV) (GET_by_offset(disp, _gloffset_PrimitiveRestartNV));
-}
-
-static inline void SET_PrimitiveRestartNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(void)) {
-   SET_by_offset(disp, _gloffset_PrimitiveRestartNV, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_DepthBoundsEXT)(GLclampd, GLclampd);

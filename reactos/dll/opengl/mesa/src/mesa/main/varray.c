@@ -53,7 +53,6 @@
 #define HALF_BIT             0x80
 #define FLOAT_BIT            0x100
 #define DOUBLE_BIT           0x200
-#define FIXED_GL_BIT         0x400
 
 
 /** Convert GL datatype enum into a <type>_BIT value seen above */
@@ -84,8 +83,6 @@ type_to_bit(const struct gl_context *ctx, GLenum type)
       return FLOAT_BIT;
    case GL_DOUBLE:
       return DOUBLE_BIT;
-   case GL_FIXED:
-      return FIXED_GL_BIT;
    default:
       return 0;
    }
@@ -120,10 +117,6 @@ update_array(struct gl_context *ctx,
    struct gl_client_array *array;
    GLbitfield typeBit;
    GLsizei elementSize;
-
-   if (!ctx->Extensions.ARB_ES2_compatibility) {
-      legalTypesMask &= ~FIXED_GL_BIT;
-   }
 
    typeBit = type_to_bit(ctx, type);
    if (typeBit == 0x0 || (typeBit & legalTypesMask) == 0x0) {
@@ -342,7 +335,7 @@ _mesa_VertexAttribPointerARB(GLuint index, GLint size, GLenum type,
    const GLbitfield legalTypes = (BYTE_BIT | UNSIGNED_BYTE_BIT |
                                   SHORT_BIT | UNSIGNED_SHORT_BIT |
                                   INT_BIT | UNSIGNED_INT_BIT |
-                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT | FIXED_GL_BIT);
+                                  HALF_BIT | FLOAT_BIT | DOUBLE_BIT);
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
@@ -973,29 +966,6 @@ _mesa_MultiModeDrawElementsIBM( const GLenum * mode, const GLsizei * count,
       }
    }
 }
-
-
-/**
- * GL_NV_primitive_restart and GL 3.1
- */
-void GLAPIENTRY
-_mesa_PrimitiveRestartIndex(GLuint index)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   if (!ctx->Extensions.NV_primitive_restart &&
-       ctx->VersionMajor * 10 + ctx->VersionMinor < 31) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "glPrimitiveRestartIndexNV()");
-      return;
-   }
-
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   FLUSH_VERTICES(ctx, _NEW_TRANSFORM);
-
-   ctx->Array.RestartIndex = index;
-}
-
 
 
 /**

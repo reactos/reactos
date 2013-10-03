@@ -67,9 +67,6 @@ legal_texobj_target(struct gl_context *ctx, GLuint dims, GLenum target)
       case GL_TEXTURE_CUBE_MAP:
       case GL_PROXY_TEXTURE_CUBE_MAP:
          return ctx->Extensions.ARB_texture_cube_map;
-      case GL_TEXTURE_RECTANGLE:
-      case GL_PROXY_TEXTURE_RECTANGLE:
-         return ctx->Extensions.NV_texture_rectangle;
       case GL_TEXTURE_1D_ARRAY:
       case GL_PROXY_TEXTURE_1D_ARRAY:
          return (ctx->Extensions.MESA_texture_array ||

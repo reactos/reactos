@@ -866,28 +866,6 @@ static void GLAPIENTRY vbo_exec_End( void )
 }
 
 
-/**
- * Called via glPrimitiveRestartNV()
- */
-static void GLAPIENTRY
-vbo_exec_PrimitiveRestartNV(void)
-{
-   GLenum curPrim;
-   GET_CURRENT_CONTEXT( ctx ); 
-
-   curPrim = ctx->Driver.CurrentExecPrimitive;
-
-   if (curPrim == PRIM_OUTSIDE_BEGIN_END) {
-      _mesa_error( ctx, GL_INVALID_OPERATION, "glPrimitiveRestartNV" );
-   }
-   else {
-      vbo_exec_End();
-      vbo_exec_Begin(curPrim);
-   }
-}
-
-
-
 static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
 {
    GLvertexformat *vfmt = &exec->vtxfmt;
@@ -896,7 +874,6 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
 
    vfmt->Begin = vbo_exec_Begin;
    vfmt->End = vbo_exec_End;
-   vfmt->PrimitiveRestartNV = vbo_exec_PrimitiveRestartNV;
 
    _MESA_INIT_DLIST_VTXFMT(vfmt, _mesa_);
    _MESA_INIT_EVAL_VTXFMT(vfmt, vbo_exec_);

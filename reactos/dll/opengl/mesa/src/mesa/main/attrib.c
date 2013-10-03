@@ -615,10 +615,6 @@ pop_enable_group(struct gl_context *ctx, const struct gl_enable_attrib *enable)
          _mesa_set_enable(ctx, GL_TEXTURE_1D, !!(enabled & TEXTURE_1D_BIT));
          _mesa_set_enable(ctx, GL_TEXTURE_2D, !!(enabled & TEXTURE_2D_BIT));
          _mesa_set_enable(ctx, GL_TEXTURE_3D, !!(enabled & TEXTURE_3D_BIT));
-         if (ctx->Extensions.NV_texture_rectangle) {
-            _mesa_set_enable(ctx, GL_TEXTURE_RECTANGLE_ARB,
-                             !!(enabled & TEXTURE_RECT_BIT));
-         }
          if (ctx->Extensions.ARB_texture_cube_map) {
             _mesa_set_enable(ctx, GL_TEXTURE_CUBE_MAP,
                              !!(enabled & TEXTURE_CUBE_BIT));
@@ -665,10 +661,6 @@ pop_texture_group(struct gl_context *ctx, struct texture_state *texstate)
       if (ctx->Extensions.ARB_texture_cube_map) {
          _mesa_set_enable(ctx, GL_TEXTURE_CUBE_MAP_ARB,
                           !!(unit->Enabled & TEXTURE_CUBE_BIT));
-      }
-      if (ctx->Extensions.NV_texture_rectangle) {
-         _mesa_set_enable(ctx, GL_TEXTURE_RECTANGLE_NV,
-                          !!(unit->Enabled & TEXTURE_RECT_BIT));
       }
       if (ctx->Extensions.MESA_texture_array) {
          _mesa_set_enable(ctx, GL_TEXTURE_1D_ARRAY_EXT,
@@ -745,10 +737,6 @@ pop_texture_group(struct gl_context *ctx, struct texture_state *texstate)
              !ctx->Extensions.ARB_texture_cube_map) {
             continue;
          }
-         else if (obj->Target == GL_TEXTURE_RECTANGLE_NV &&
-                  !ctx->Extensions.NV_texture_rectangle) {
-            continue;
-         }
          else if ((obj->Target == GL_TEXTURE_1D_ARRAY_EXT ||
                    obj->Target == GL_TEXTURE_2D_ARRAY_EXT) &&
                   !ctx->Extensions.MESA_texture_array) {
@@ -774,8 +762,7 @@ pop_texture_group(struct gl_context *ctx, struct texture_state *texstate)
          _mesa_TexParameterf(target, GL_TEXTURE_LOD_BIAS, samp->LodBias);
          _mesa_TexParameterf(target, GL_TEXTURE_PRIORITY, obj->Priority);
          _mesa_TexParameteri(target, GL_TEXTURE_BASE_LEVEL, obj->BaseLevel);
-         if (target != GL_TEXTURE_RECTANGLE_ARB)
-            _mesa_TexParameteri(target, GL_TEXTURE_MAX_LEVEL, obj->MaxLevel);
+         _mesa_TexParameteri(target, GL_TEXTURE_MAX_LEVEL, obj->MaxLevel);
          if (ctx->Extensions.EXT_texture_filter_anisotropic) {
             _mesa_TexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT,
                                 samp->MaxAnisotropy);
@@ -1326,8 +1313,6 @@ copy_array_attrib(struct gl_context *ctx,
    dest->ActiveTexture = src->ActiveTexture;
    dest->LockFirst = src->LockFirst;
    dest->LockCount = src->LockCount;
-   dest->PrimitiveRestart = src->PrimitiveRestart;
-   dest->RestartIndex = src->RestartIndex;
    /* skip NewState */
    /* skip RebindArrays */
 

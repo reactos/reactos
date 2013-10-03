@@ -1887,12 +1887,6 @@ process_array_type(YYLTYPE *loc, const glsl_type *base, ast_node *array_size,
 	    }
 	 }
       }
-   } else if (state->es_shader) {
-      /* Section 10.17 of the GLSL ES 1.00 specification states that unsized
-       * array declarations have been removed from the language.
-       */
-      _mesa_glsl_error(loc, state, "unsized array declarations are not "
-		       "allowed in GLSL ES 1.00.");
    }
 
    return glsl_type::get_array_instance(base, length);
@@ -2688,15 +2682,13 @@ ast_declarator_list::hir(exec_list *instructions,
       if (this->type->specifier->precision != ast_precision_none
           && !var->type->is_float()
           && !var->type->is_integer()
-          && !(var->type->is_sampler() && state->es_shader)
           && !(var->type->is_array()
                && (var->type->fields.array->is_float()
                    || var->type->fields.array->is_integer()))) {
 
          _mesa_glsl_error(&loc, state,
                           "precision qualifiers apply only to floating point"
-                          "%s types", state->es_shader ? ", integer, and sampler"
-						       : "and integer");
+                          "and integer types");
       }
 
       /* From page 17 (page 23 of the PDF) of the GLSL 1.20 spec:
@@ -3058,7 +3050,7 @@ ast_function::hir(exec_list *instructions,
     * that the previously seen signature does not have an associated definition.
     */
    f = state->symbols->get_function(name);
-   if (f != NULL && (state->es_shader || f->has_user_signature())) {
+   if (f != NULL && f->has_user_signature()) {
       sig = f->exact_matching_signature(&hir_parameters);
       if (sig != NULL) {
 	 const char *badvar = sig->qualifiers_match(&hir_parameters);
@@ -3794,15 +3786,6 @@ ast_struct_specifier::hir(exec_list *instructions,
       const char *type_name;
 
       decl_list->type->specifier->hir(instructions, state);
-
-      /* Section 10.9 of the GLSL ES 1.00 specification states that
-       * embedded structure definitions have been removed from the language.
-       */
-      if (state->es_shader && decl_list->type->specifier->structure != NULL) {
-	 YYLTYPE loc = this->get_location();
-	 _mesa_glsl_error(&loc, state, "Embedded structure definitions are "
-			  "not allowed in GLSL ES 1.00.");
-      }
 
       const glsl_type *decl_type =
 	 decl_list->type->specifier->glsl_type(& type_name, state);

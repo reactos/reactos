@@ -356,10 +356,6 @@ _mesa_create_exec_table(void)
    SET_PointParameterfvEXT(exec, _mesa_PointParameterfv);
 #endif
 
-   /* 95. GL_ARB_ES2_compatibility */
-   SET_ClearDepthf(exec, _mesa_ClearDepthf);
-   SET_DepthRangef(exec, _mesa_DepthRangef);
-
    /* 97. GL_EXT_compiled_vertex_array */
 #if _HAVE_FULL_GL
    SET_LockArraysEXT(exec, _mesa_LockArraysEXT);
@@ -453,9 +449,6 @@ _mesa_create_exec_table(void)
    SET_ActiveStencilFaceEXT(exec, _mesa_ActiveStencilFaceEXT);
 #endif
 
-   /* 285. GL_NV_primitive_restart */
-   SET_PrimitiveRestartIndexNV(exec, _mesa_PrimitiveRestartIndex);
-
    /* ???. GL_EXT_depth_bounds_test */
    SET_DepthBoundsEXT(exec, _mesa_DepthBoundsEXT);
 
@@ -476,20 +469,6 @@ _mesa_create_exec_table(void)
    /* ARB 5. GL_ARB_multisample */
 #if _HAVE_FULL_GL
    SET_SampleCoverageARB(exec, _mesa_SampleCoverageARB);
-#endif
-
-   /* ARB 12. GL_ARB_texture_compression */
-#if _HAVE_FULL_GL
-   SET_CompressedTexImage3DARB(exec, _mesa_CompressedTexImage3DARB);
-   SET_CompressedTexImage2DARB(exec, _mesa_CompressedTexImage2DARB);
-   SET_CompressedTexImage1DARB(exec, _mesa_CompressedTexImage1DARB);
-   SET_CompressedTexSubImage3DARB(exec, _mesa_CompressedTexSubImage3DARB);
-   SET_CompressedTexSubImage2DARB(exec, _mesa_CompressedTexSubImage2DARB);
-   SET_CompressedTexSubImage1DARB(exec, _mesa_CompressedTexSubImage1DARB);
-   SET_GetCompressedTexImageARB(exec, _mesa_GetCompressedTexImageARB);
-
-   /* ARB 104. GL_ARB_robustness */
-   SET_GetnCompressedTexImageARB(exec, _mesa_GetnCompressedTexImageARB);
 #endif
 
    /* ARB 14. GL_ARB_point_parameters */

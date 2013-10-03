@@ -848,127 +848,6 @@ pack_float_YCBCR_REV(const GLfloat src[4], void *dst)
 }
 
 
-/* MESA_FORMAT_R8 */
-
-static void
-pack_ubyte_R8(const GLubyte src[4], void *dst)
-{
-   GLubyte *d = ((GLubyte *) dst);
-   *d = src[RCOMP];
-}
-
-static void
-pack_float_R8(const GLfloat src[4], void *dst)
-{
-   GLubyte *d = ((GLubyte *) dst);
-   GLubyte r;
-   UNCLAMPED_FLOAT_TO_UBYTE(r, src[RCOMP]);
-   d[0] = r;
-}
-
-
-/* MESA_FORMAT_GR88 */
-
-static void
-pack_ubyte_GR88(const GLubyte src[4], void *dst)
-{
-   GLubyte *d = ((GLubyte *) dst);
-   *d = PACK_COLOR_88(src[GCOMP], src[RCOMP]);
-}
-
-static void
-pack_float_GR88(const GLfloat src[4], void *dst)
-{
-   GLushort *d = ((GLushort *) dst);
-   GLubyte r, g;
-   UNCLAMPED_FLOAT_TO_UBYTE(r, src[RCOMP]);
-   UNCLAMPED_FLOAT_TO_UBYTE(g, src[GCOMP]);
-   *d = PACK_COLOR_88(g, r);
-}
-
-
-/* MESA_FORMAT_RG88 */
-
-static void
-pack_ubyte_RG88(const GLubyte src[4], void *dst)
-{
-   GLubyte *d = ((GLubyte *) dst);
-   *d = PACK_COLOR_88(src[RCOMP], src[GCOMP]);
-}
-
-static void
-pack_float_RG88(const GLfloat src[4], void *dst)
-{
-   GLushort *d = ((GLushort *) dst);
-   GLubyte r, g;
-   UNCLAMPED_FLOAT_TO_UBYTE(r, src[RCOMP]);
-   UNCLAMPED_FLOAT_TO_UBYTE(g, src[GCOMP]);
-   *d = PACK_COLOR_88(r, g);
-}
-
-
-/* MESA_FORMAT_R16 */
-
-static void
-pack_ubyte_R16(const GLubyte src[4], void *dst)
-{
-   GLushort *d = ((GLushort *) dst);
-   *d = UBYTE_TO_USHORT(src[RCOMP]);
-}
-
-static void
-pack_float_R16(const GLfloat src[4], void *dst)
-{
-   GLushort *d = ((GLushort *) dst);
-   UNCLAMPED_FLOAT_TO_USHORT(d[0], src[RCOMP]);
-}
-
-
-/* MESA_FORMAT_RG1616 */
-
-static void
-pack_ubyte_RG1616(const GLubyte src[4], void *dst)
-{
-   GLuint *d = ((GLuint *) dst);
-   GLushort r = UBYTE_TO_USHORT(src[RCOMP]);
-   GLushort g = UBYTE_TO_USHORT(src[GCOMP]);
-   *d = PACK_COLOR_1616(g, r);
-}
-
-static void
-pack_float_RG1616(const GLfloat src[4], void *dst)
-{
-   GLuint *d = ((GLuint *) dst);
-   GLushort r, g;
-   UNCLAMPED_FLOAT_TO_USHORT(r, src[RCOMP]);
-   UNCLAMPED_FLOAT_TO_USHORT(g, src[GCOMP]);
-   *d = PACK_COLOR_1616(g, r);
-}
-
-
-/* MESA_FORMAT_RG1616_REV */
-
-static void
-pack_ubyte_RG1616_REV(const GLubyte src[4], void *dst)
-{
-   GLuint *d = ((GLuint *) dst);
-   GLushort r = UBYTE_TO_USHORT(src[RCOMP]);
-   GLushort g = UBYTE_TO_USHORT(src[GCOMP]);
-   *d = PACK_COLOR_1616(r, g);
-}
-
-
-static void
-pack_float_RG1616_REV(const GLfloat src[4], void *dst)
-{
-   GLuint *d = ((GLuint *) dst);
-   GLushort r, g;
-   UNCLAMPED_FLOAT_TO_USHORT(r, src[RCOMP]);
-   UNCLAMPED_FLOAT_TO_USHORT(g, src[GCOMP]);
-   *d = PACK_COLOR_1616(r, g);
-}
-
-
 /* MESA_FORMAT_SRGB8 */
 
 static void
@@ -1272,44 +1151,6 @@ pack_float_LUMINANCE_ALPHA_FLOAT16(const GLfloat src[4], void *dst)
 }
 
 
-/* MESA_FORMAT_RG_FLOAT32 */
-
-static void
-pack_ubyte_RG_FLOAT32(const GLubyte src[4], void *dst)
-{
-   GLfloat *d = ((GLfloat *) dst);
-   d[0] = UBYTE_TO_FLOAT(src[RCOMP]);
-   d[1] = UBYTE_TO_FLOAT(src[GCOMP]);
-}
-
-static void
-pack_float_RG_FLOAT32(const GLfloat src[4], void *dst)
-{
-   GLfloat *d = ((GLfloat *) dst);
-   d[0] = src[RCOMP];
-   d[1] = src[GCOMP];
-}
-
-
-/* MESA_FORMAT_RG_FLOAT16 */
-
-static void
-pack_ubyte_RG_FLOAT16(const GLubyte src[4], void *dst)
-{
-   GLhalfARB *d = ((GLhalfARB *) dst);
-   d[0] = _mesa_float_to_half(UBYTE_TO_FLOAT(src[RCOMP]));
-   d[1] = _mesa_float_to_half(UBYTE_TO_FLOAT(src[GCOMP]));
-}
-
-static void
-pack_float_RG_FLOAT16(const GLfloat src[4], void *dst)
-{
-   GLhalfARB *d = ((GLhalfARB *) dst);
-   d[0] = _mesa_float_to_half(src[RCOMP]);
-   d[1] = _mesa_float_to_half(src[GCOMP]);
-}
-
-
 /* MESA_FORMAT_DUDV8 */
 
 static void
@@ -1353,122 +1194,6 @@ pack_float_RGBA_16(const GLfloat src[4], void *dst)
    UNCLAMPED_FLOAT_TO_USHORT(d[3], src[ACOMP]);
 }
 
-
-
-/*
- * MESA_FORMAT_SIGNED_R8
- */
-
-static void
-pack_float_SIGNED_R8(const GLfloat src[4], void *dst)
-{
-   GLbyte *d = (GLbyte *) dst;
-   *d = FLOAT_TO_BYTE(CLAMP(src[RCOMP], -1.0f, 1.0f));
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_RG88_REV
- */
-
-static void
-pack_float_SIGNED_RG88_REV(const GLfloat src[4], void *dst)
-{
-   GLushort *d = (GLushort *) dst;
-   GLbyte r = FLOAT_TO_BYTE(CLAMP(src[RCOMP], -1.0f, 1.0f));
-   GLbyte g = FLOAT_TO_BYTE(CLAMP(src[GCOMP], -1.0f, 1.0f));
-   *d = (g << 8) | r;
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_RGBX8888
- */
-
-static void
-pack_float_SIGNED_RGBX8888(const GLfloat src[4], void *dst)
-{
-   GLuint *d = (GLuint *) dst;
-   GLbyte r = FLOAT_TO_BYTE(CLAMP(src[RCOMP], -1.0f, 1.0f));
-   GLbyte g = FLOAT_TO_BYTE(CLAMP(src[GCOMP], -1.0f, 1.0f));
-   GLbyte b = FLOAT_TO_BYTE(CLAMP(src[BCOMP], -1.0f, 1.0f));
-   GLbyte a = 127;
-   *d = PACK_COLOR_8888(r, g, b, a);
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_RGBA8888
- */
-
-static void
-pack_float_SIGNED_RGBA8888(const GLfloat src[4], void *dst)
-{
-   GLuint *d = (GLuint *) dst;
-   GLbyte r = FLOAT_TO_BYTE(CLAMP(src[RCOMP], -1.0f, 1.0f));
-   GLbyte g = FLOAT_TO_BYTE(CLAMP(src[GCOMP], -1.0f, 1.0f));
-   GLbyte b = FLOAT_TO_BYTE(CLAMP(src[BCOMP], -1.0f, 1.0f));
-   GLbyte a = FLOAT_TO_BYTE(CLAMP(src[ACOMP], -1.0f, 1.0f));
-   *d = PACK_COLOR_8888(r, g, b, a);
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_RGBA8888_REV
- */
-
-static void
-pack_float_SIGNED_RGBA8888_REV(const GLfloat src[4], void *dst)
-{
-   GLuint *d = (GLuint *) dst;
-   GLbyte r = FLOAT_TO_BYTE(CLAMP(src[RCOMP], -1.0f, 1.0f));
-   GLbyte g = FLOAT_TO_BYTE(CLAMP(src[GCOMP], -1.0f, 1.0f));
-   GLbyte b = FLOAT_TO_BYTE(CLAMP(src[BCOMP], -1.0f, 1.0f));
-   GLbyte a = FLOAT_TO_BYTE(CLAMP(src[ACOMP], -1.0f, 1.0f));
-   *d = PACK_COLOR_8888(a, b, g, r);
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_R16
- */
-
-static void
-pack_float_SIGNED_R16(const GLfloat src[4], void *dst)
-{
-   GLshort *d = (GLshort *) dst;
-   *d = FLOAT_TO_SHORT(CLAMP(src[RCOMP], -1.0f, 1.0f));
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_GR1616
- */
-
-static void
-pack_float_SIGNED_GR1616(const GLfloat src[4], void *dst)
-{
-   GLuint *d = (GLuint *) dst;
-   GLshort r = FLOAT_TO_SHORT(CLAMP(src[RCOMP], -1.0f, 1.0f));
-   GLshort g = FLOAT_TO_SHORT(CLAMP(src[GCOMP], -1.0f, 1.0f));
-   *d = (g << 16) | (r & 0xffff);
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_RGB_16
- */
-
-static void
-pack_float_SIGNED_RGB_16(const GLfloat src[4], void *dst)
-{
-   GLshort *d = (GLshort *) dst;
-   d[0] = FLOAT_TO_SHORT(CLAMP(src[RCOMP], -1.0f, 1.0f));
-   d[1] = FLOAT_TO_SHORT(CLAMP(src[GCOMP], -1.0f, 1.0f));
-   d[2] = FLOAT_TO_SHORT(CLAMP(src[BCOMP], -1.0f, 1.0f));
-}
-
-
 /*
  * MESA_FORMAT_SIGNED_RGBA_16
  */
@@ -1481,82 +1206,6 @@ pack_float_SIGNED_RGBA_16(const GLfloat src[4], void *dst)
    d[1] = FLOAT_TO_SHORT(CLAMP(src[GCOMP], -1.0f, 1.0f));
    d[2] = FLOAT_TO_SHORT(CLAMP(src[BCOMP], -1.0f, 1.0f));
    d[3] = FLOAT_TO_SHORT(CLAMP(src[ACOMP], -1.0f, 1.0f));
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_A8
- */
-
-static void
-pack_float_SIGNED_A8(const GLfloat src[4], void *dst)
-{
-   GLbyte *d = (GLbyte *) dst;
-   *d = FLOAT_TO_BYTE(CLAMP(src[ACOMP], -1.0f, 1.0f));
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_L8
- */
-
-static void
-pack_float_SIGNED_L8(const GLfloat src[4], void *dst)
-{
-   GLbyte *d = (GLbyte *) dst;
-   *d = FLOAT_TO_BYTE(CLAMP(src[RCOMP], -1.0f, 1.0f));
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_AL88
- */
-
-static void
-pack_float_SIGNED_AL88(const GLfloat src[4], void *dst)
-{
-   GLushort *d = (GLushort *) dst;
-   GLbyte l = FLOAT_TO_BYTE(CLAMP(src[RCOMP], -1.0f, 1.0f));
-   GLbyte a = FLOAT_TO_BYTE(CLAMP(src[ACOMP], -1.0f, 1.0f));
-   *d = (a << 8) | l;
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_A16
- */
-
-static void
-pack_float_SIGNED_A16(const GLfloat src[4], void *dst)
-{
-   GLshort *d = (GLshort *) dst;
-   *d = FLOAT_TO_SHORT(CLAMP(src[ACOMP], -1.0f, 1.0f));
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_L16
- */
-
-static void
-pack_float_SIGNED_L16(const GLfloat src[4], void *dst)
-{
-   GLshort *d = (GLshort *) dst;
-   *d = FLOAT_TO_SHORT(CLAMP(src[RCOMP], -1.0f, 1.0f));
-}
-
-
-/*
- * MESA_FORMAT_SIGNED_AL1616
- */
-
-static void
-pack_float_SIGNED_AL1616(const GLfloat src[4], void *dst)
-{
-   GLuint *d = (GLuint *) dst;
-   GLshort l = FLOAT_TO_SHORT(CLAMP(src[RCOMP], -1.0f, 1.0f));
-   GLshort a = FLOAT_TO_SHORT(CLAMP(src[ACOMP], -1.0f, 1.0f));
-   *d = PACK_COLOR_1616(a, l);
 }
 
 
@@ -1606,12 +1255,6 @@ _mesa_get_pack_ubyte_rgba_function(gl_format format)
       table[MESA_FORMAT_I16] = pack_ubyte_L16; /* reuse pack_ubyte_L16 */
       table[MESA_FORMAT_YCBCR] = pack_ubyte_YCBCR;
       table[MESA_FORMAT_YCBCR_REV] = pack_ubyte_YCBCR_REV;
-      table[MESA_FORMAT_R8] = pack_ubyte_R8;
-      table[MESA_FORMAT_GR88] = pack_ubyte_GR88;
-      table[MESA_FORMAT_RG88] = pack_ubyte_RG88;
-      table[MESA_FORMAT_R16] = pack_ubyte_R16;
-      table[MESA_FORMAT_RG1616] = pack_ubyte_RG1616;
-      table[MESA_FORMAT_RG1616_REV] = pack_ubyte_RG1616_REV;
 
       /* should never convert RGBA to these formats */
       table[MESA_FORMAT_Z24_S8] = NULL;
@@ -1629,19 +1272,6 @@ _mesa_get_pack_ubyte_rgba_function(gl_format format)
       table[MESA_FORMAT_SL8] = pack_ubyte_SL8;
       table[MESA_FORMAT_SLA8] = pack_ubyte_SLA8;
 
-      /* n/a */
-      table[MESA_FORMAT_SRGB_DXT1] = NULL; /* pack_ubyte_SRGB_DXT1; */
-      table[MESA_FORMAT_SRGBA_DXT1] = NULL; /* pack_ubyte_SRGBA_DXT1; */
-      table[MESA_FORMAT_SRGBA_DXT3] = NULL; /* pack_ubyte_SRGBA_DXT3; */
-      table[MESA_FORMAT_SRGBA_DXT5] = NULL; /* pack_ubyte_SRGBA_DXT5; */
-
-      table[MESA_FORMAT_RGB_FXT1] = NULL; /* pack_ubyte_RGB_FXT1; */
-      table[MESA_FORMAT_RGBA_FXT1] = NULL; /* pack_ubyte_RGBA_FXT1; */
-      table[MESA_FORMAT_RGB_DXT1] = NULL; /* pack_ubyte_RGB_DXT1; */
-      table[MESA_FORMAT_RGBA_DXT1] = NULL; /* pack_ubyte_RGBA_DXT1; */
-      table[MESA_FORMAT_RGBA_DXT3] = NULL; /* pack_ubyte_RGBA_DXT3; */
-      table[MESA_FORMAT_RGBA_DXT5] = NULL; /* pack_ubyte_RGBA_DXT5; */
-
       table[MESA_FORMAT_RGBA_FLOAT32] = pack_ubyte_RGBA_FLOAT32;
       table[MESA_FORMAT_RGBA_FLOAT16] = pack_ubyte_RGBA_FLOAT16;
       table[MESA_FORMAT_RGB_FLOAT32] = pack_ubyte_RGB_FLOAT32;
@@ -1654,10 +1284,6 @@ _mesa_get_pack_ubyte_rgba_function(gl_format format)
       table[MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16] = pack_ubyte_LUMINANCE_ALPHA_FLOAT16;
       table[MESA_FORMAT_INTENSITY_FLOAT32] = pack_ubyte_LUMINANCE_FLOAT32;
       table[MESA_FORMAT_INTENSITY_FLOAT16] = pack_ubyte_LUMINANCE_FLOAT16;
-      table[MESA_FORMAT_R_FLOAT32] = pack_ubyte_LUMINANCE_FLOAT32;
-      table[MESA_FORMAT_R_FLOAT16] = pack_ubyte_LUMINANCE_FLOAT16;
-      table[MESA_FORMAT_RG_FLOAT32] = pack_ubyte_RG_FLOAT32;
-      table[MESA_FORMAT_RG_FLOAT16] = pack_ubyte_RG_FLOAT16;
 
       /* n/a */
       table[MESA_FORMAT_RGBA_INT8] = NULL; /* pack_ubyte_RGBA_INT8 */
@@ -1671,24 +1297,7 @@ _mesa_get_pack_ubyte_rgba_function(gl_format format)
 
       table[MESA_FORMAT_RGBA_16] = pack_ubyte_RGBA_16;
 
-      /* n/a */
-      table[MESA_FORMAT_SIGNED_R8] = NULL;
-      table[MESA_FORMAT_SIGNED_RG88_REV] = NULL;
-      table[MESA_FORMAT_SIGNED_RGBX8888] = NULL;
-      table[MESA_FORMAT_SIGNED_RGBA8888] = NULL;
-      table[MESA_FORMAT_SIGNED_RGBA8888_REV] = NULL;
-      table[MESA_FORMAT_SIGNED_R16] = NULL;
-      table[MESA_FORMAT_SIGNED_GR1616] = NULL;
-      table[MESA_FORMAT_SIGNED_RGB_16] = NULL;
       table[MESA_FORMAT_SIGNED_RGBA_16] = NULL;
-      table[MESA_FORMAT_SIGNED_A8] = NULL;
-      table[MESA_FORMAT_SIGNED_L8] = NULL;
-      table[MESA_FORMAT_SIGNED_AL88] = NULL;
-      table[MESA_FORMAT_SIGNED_I8] = NULL;
-      table[MESA_FORMAT_SIGNED_A16] = NULL;
-      table[MESA_FORMAT_SIGNED_L16] = NULL;
-      table[MESA_FORMAT_SIGNED_AL1616] = NULL;
-      table[MESA_FORMAT_SIGNED_I16] = NULL;
 
 
       table[MESA_FORMAT_RGBA_16] = pack_ubyte_RGBA_16;
@@ -1747,12 +1356,6 @@ _mesa_get_pack_float_rgba_function(gl_format format)
       table[MESA_FORMAT_I16] = pack_float_L16; /* reuse pack_float_L16 */
       table[MESA_FORMAT_YCBCR] = pack_float_YCBCR;
       table[MESA_FORMAT_YCBCR_REV] = pack_float_YCBCR_REV;
-      table[MESA_FORMAT_R8] = pack_float_R8;
-      table[MESA_FORMAT_GR88] = pack_float_GR88;
-      table[MESA_FORMAT_RG88] = pack_float_RG88;
-      table[MESA_FORMAT_R16] = pack_float_R16;
-      table[MESA_FORMAT_RG1616] = pack_float_RG1616;
-      table[MESA_FORMAT_RG1616_REV] = pack_float_RG1616_REV;
 
       /* should never convert RGBA to these formats */
       table[MESA_FORMAT_Z24_S8] = NULL;
@@ -1769,19 +1372,6 @@ _mesa_get_pack_float_rgba_function(gl_format format)
       table[MESA_FORMAT_SL8] = pack_float_SL8;
       table[MESA_FORMAT_SLA8] = pack_float_SLA8;
 
-      /* n/a */
-      table[MESA_FORMAT_SRGB_DXT1] = NULL;
-      table[MESA_FORMAT_SRGBA_DXT1] = NULL;
-      table[MESA_FORMAT_SRGBA_DXT3] = NULL;
-      table[MESA_FORMAT_SRGBA_DXT5] = NULL;
-
-      table[MESA_FORMAT_RGB_FXT1] = NULL;
-      table[MESA_FORMAT_RGBA_FXT1] = NULL;
-      table[MESA_FORMAT_RGB_DXT1] = NULL;
-      table[MESA_FORMAT_RGBA_DXT1] = NULL;
-      table[MESA_FORMAT_RGBA_DXT3] = NULL;
-      table[MESA_FORMAT_RGBA_DXT5] = NULL;
-
       table[MESA_FORMAT_RGBA_FLOAT32] = pack_float_RGBA_FLOAT32;
       table[MESA_FORMAT_RGBA_FLOAT16] = pack_float_RGBA_FLOAT16;
       table[MESA_FORMAT_RGB_FLOAT32] = pack_float_RGB_FLOAT32;
@@ -1795,10 +1385,6 @@ _mesa_get_pack_float_rgba_function(gl_format format)
 
       table[MESA_FORMAT_INTENSITY_FLOAT32] = pack_float_LUMINANCE_FLOAT32;
       table[MESA_FORMAT_INTENSITY_FLOAT16] = pack_float_LUMINANCE_FLOAT16;
-      table[MESA_FORMAT_R_FLOAT32] = pack_float_LUMINANCE_FLOAT32;
-      table[MESA_FORMAT_R_FLOAT16] = pack_float_LUMINANCE_FLOAT16;
-      table[MESA_FORMAT_RG_FLOAT32] = pack_float_RG_FLOAT32;
-      table[MESA_FORMAT_RG_FLOAT16] = pack_float_RG_FLOAT16;
 
       /* n/a */
       table[MESA_FORMAT_RGBA_INT8] = NULL;
@@ -1812,23 +1398,7 @@ _mesa_get_pack_float_rgba_function(gl_format format)
 
       table[MESA_FORMAT_RGBA_16] = pack_float_RGBA_16;
 
-      table[MESA_FORMAT_SIGNED_R8] = pack_float_SIGNED_R8;
-      table[MESA_FORMAT_SIGNED_RG88_REV] = pack_float_SIGNED_RG88_REV;
-      table[MESA_FORMAT_SIGNED_RGBX8888] = pack_float_SIGNED_RGBX8888;
-      table[MESA_FORMAT_SIGNED_RGBA8888] = pack_float_SIGNED_RGBA8888;
-      table[MESA_FORMAT_SIGNED_RGBA8888_REV] = pack_float_SIGNED_RGBA8888_REV;
-      table[MESA_FORMAT_SIGNED_R16] = pack_float_SIGNED_R16;
-      table[MESA_FORMAT_SIGNED_GR1616] = pack_float_SIGNED_GR1616;
-      table[MESA_FORMAT_SIGNED_RGB_16] = pack_float_SIGNED_RGB_16;
       table[MESA_FORMAT_SIGNED_RGBA_16] = pack_float_SIGNED_RGBA_16;
-      table[MESA_FORMAT_SIGNED_A8] = pack_float_SIGNED_A8;
-      table[MESA_FORMAT_SIGNED_L8] = pack_float_SIGNED_L8;
-      table[MESA_FORMAT_SIGNED_AL88] = pack_float_SIGNED_AL88;
-      table[MESA_FORMAT_SIGNED_I8] = pack_float_SIGNED_L8; /* reused */
-      table[MESA_FORMAT_SIGNED_A16] = pack_float_SIGNED_A16;
-      table[MESA_FORMAT_SIGNED_L16] = pack_float_SIGNED_L16;
-      table[MESA_FORMAT_SIGNED_AL1616] = pack_float_SIGNED_AL1616;
-      table[MESA_FORMAT_SIGNED_I16] = pack_float_SIGNED_L16; /* reused */
 
 
       initialized = GL_TRUE;

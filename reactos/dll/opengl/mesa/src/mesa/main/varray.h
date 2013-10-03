@@ -225,19 +225,6 @@ extern void GLAPIENTRY
 _mesa_DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
                         GLenum type, const GLvoid *indices);
 
-extern void GLAPIENTRY
-_mesa_DrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type,
-			     const GLvoid *indices, GLint basevertex);
-
-extern void GLAPIENTRY
-_mesa_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end,
-				  GLsizei count, GLenum type,
-				  const GLvoid *indices,
-				  GLint basevertex);
-
-extern void GLAPIENTRY
-_mesa_PrimitiveRestartIndex(GLuint index);
-
 
 extern void
 _mesa_copy_client_array(struct gl_context *ctx,

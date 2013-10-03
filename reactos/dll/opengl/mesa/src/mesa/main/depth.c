@@ -60,13 +60,6 @@ _mesa_ClearDepth( GLclampd depth )
 
 
 void GLAPIENTRY
-_mesa_ClearDepthf( GLclampf depth )
-{
-   _mesa_ClearDepth(depth);
-}
-
-
-void GLAPIENTRY
 _mesa_DepthFunc( GLenum func )
 {
    GET_CURRENT_CONTEXT(ctx);

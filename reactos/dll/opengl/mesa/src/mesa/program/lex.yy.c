@@ -1045,7 +1045,6 @@ static yyconst flex_int16_t yy_chk[1368] =
 #define require_ARB_fp (yyextra->mode == ARB_fragment)
 #define require_NV_fp  (yyextra->option.NV_fragment)
 #define require_shadow (yyextra->option.Shadow)
-#define require_rect   (yyextra->option.TexRect)
 #define require_texarray        (yyextra->option.TexArray)
 
 #ifndef HAVE_UNISTD_H
@@ -2156,7 +2155,7 @@ YY_RULE_SETUP
 case 131:
 YY_RULE_SETUP
 #line 321 "program/program_lexer.l"
-{ return_token_or_IDENTIFIER(require_ARB_fp && require_rect, TEX_RECT); }
+{ return_token_or_IDENTIFIER(GL_FALSE, TEX_RECT); }
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
@@ -2171,7 +2170,7 @@ YY_RULE_SETUP
 case 134:
 YY_RULE_SETUP
 #line 324 "program/program_lexer.l"
-{ return_token_or_IDENTIFIER(require_ARB_fp && require_shadow && require_rect, TEX_SHADOWRECT); }
+{ return_token_or_IDENTIFIER(GL_FALSE, TEX_SHADOWRECT); }
 	YY_BREAK
 case 135:
 YY_RULE_SETUP

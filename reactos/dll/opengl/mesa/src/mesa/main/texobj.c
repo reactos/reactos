@@ -104,7 +104,6 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
           target == GL_TEXTURE_2D ||
           target == GL_TEXTURE_3D ||
           target == GL_TEXTURE_CUBE_MAP_ARB ||
-          target == GL_TEXTURE_RECTANGLE_NV ||
           target == GL_TEXTURE_1D_ARRAY_EXT ||
           target == GL_TEXTURE_2D_ARRAY_EXT ||
           target == GL_TEXTURE_BUFFER);
@@ -123,51 +122,16 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
    obj->RequiredTextureImageUnits = 1;
 
    /* sampler state */
-   if (target == GL_TEXTURE_RECTANGLE_NV) {
-      obj->Sampler.WrapS = GL_CLAMP_TO_EDGE;
-      obj->Sampler.WrapT = GL_CLAMP_TO_EDGE;
-      obj->Sampler.WrapR = GL_CLAMP_TO_EDGE;
-      obj->Sampler.MinFilter = GL_LINEAR;
-   }
-   else {
-      obj->Sampler.WrapS = GL_REPEAT;
-      obj->Sampler.WrapT = GL_REPEAT;
-      obj->Sampler.WrapR = GL_REPEAT;
-      obj->Sampler.MinFilter = GL_NEAREST_MIPMAP_LINEAR;
-   }
+   obj->Sampler.WrapS = GL_REPEAT;
+   obj->Sampler.WrapT = GL_REPEAT;
+   obj->Sampler.WrapR = GL_REPEAT;
+   obj->Sampler.MinFilter = GL_NEAREST_MIPMAP_LINEAR;
+
    obj->Sampler.MagFilter = GL_LINEAR;
    obj->Sampler.MinLod = -1000.0;
    obj->Sampler.MaxLod = 1000.0;
    obj->Sampler.LodBias = 0.0;
    obj->Sampler.MaxAnisotropy = 1.0;
-}
-
-
-/**
- * Some texture initialization can't be finished until we know which
- * target it's getting bound to (GL_TEXTURE_1D/2D/etc).
- */
-static void
-finish_texture_init(struct gl_context *ctx, GLenum target,
-                    struct gl_texture_object *obj)
-{
-   assert(obj->Target == 0);
-
-   if (target == GL_TEXTURE_RECTANGLE_NV) {
-      /* have to init wrap and filter state here - kind of klunky */
-      obj->Sampler.WrapS = GL_CLAMP_TO_EDGE;
-      obj->Sampler.WrapT = GL_CLAMP_TO_EDGE;
-      obj->Sampler.WrapR = GL_CLAMP_TO_EDGE;
-      obj->Sampler.MinFilter = GL_LINEAR;
-      if (ctx->Driver.TexParameter) {
-         static const GLfloat fparam_wrap[1] = {(GLfloat) GL_CLAMP_TO_EDGE};
-         static const GLfloat fparam_filter[1] = {(GLfloat) GL_LINEAR};
-         ctx->Driver.TexParameter(ctx, target, obj, GL_TEXTURE_WRAP_S, fparam_wrap);
-         ctx->Driver.TexParameter(ctx, target, obj, GL_TEXTURE_WRAP_T, fparam_wrap);
-         ctx->Driver.TexParameter(ctx, target, obj, GL_TEXTURE_WRAP_R, fparam_wrap);
-         ctx->Driver.TexParameter(ctx, target, obj, GL_TEXTURE_MIN_FILTER, fparam_filter);
-      }
-   }
 }
 
 
@@ -288,7 +252,6 @@ valid_texture_object(const struct gl_texture_object *tex)
    case GL_TEXTURE_2D:
    case GL_TEXTURE_3D:
    case GL_TEXTURE_CUBE_MAP_ARB:
-   case GL_TEXTURE_RECTANGLE_NV:
    case GL_TEXTURE_1D_ARRAY_EXT:
    case GL_TEXTURE_2D_ARRAY_EXT:
    case GL_TEXTURE_BUFFER:
@@ -451,10 +414,6 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
       maxLog2 = MAX2(t->Image[0][baseLevel]->WidthLog2,
                      t->Image[0][baseLevel]->HeightLog2);
       maxLevels = ctx->Const.MaxCubeTextureLevels;
-   }
-   else if (t->Target == GL_TEXTURE_RECTANGLE_NV) {
-      maxLog2 = 0;  /* not applicable */
-      maxLevels = 1;  /* no mipmapping */
    }
    else {
       _mesa_problem(ctx, "Bad t->Target in _mesa_test_texobj_completeness");
@@ -666,9 +625,6 @@ _mesa_test_texobj_completeness( const struct gl_context *ctx,
 	       return;  /* found smallest needed mipmap, all done! */
             }
          }
-      }
-      else if (t->Target == GL_TEXTURE_RECTANGLE_NV) {
-         /* XXX special checking? */
       }
       else {
          /* Target = ??? */
@@ -990,8 +946,6 @@ target_enum_to_index(GLenum target)
       return TEXTURE_3D_INDEX;
    case GL_TEXTURE_CUBE_MAP_ARB:
       return TEXTURE_CUBE_INDEX;
-   case GL_TEXTURE_RECTANGLE_NV:
-      return TEXTURE_RECT_INDEX;
    case GL_TEXTURE_1D_ARRAY_EXT:
       return TEXTURE_1D_ARRAY_INDEX;
    case GL_TEXTURE_2D_ARRAY_EXT:
@@ -1056,9 +1010,6 @@ _mesa_BindTexture( GLenum target, GLuint texName )
             _mesa_error( ctx, GL_INVALID_OPERATION,
                          "glBindTexture(target mismatch)" );
             return;
-         }
-         if (newTexObj->Target == 0) {
-            finish_texture_init(ctx, target, newTexObj);
          }
       }
       else {

@@ -44,9 +44,6 @@ extern void GLAPIENTRY
 _mesa_ClearDepth( GLclampd depth );
 
 extern void GLAPIENTRY
-_mesa_ClearDepthf( GLclampf depth );
-
-extern void GLAPIENTRY
 _mesa_DepthFunc( GLenum func );
 
 extern void GLAPIENTRY

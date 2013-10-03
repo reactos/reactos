@@ -35,10 +35,6 @@
 
 #include "main/colormac.h"
 #include "main/macros.h"
-#include "main/texcompress.h"
-#include "main/texcompress_fxt1.h"
-#include "main/texcompress_s3tc.h"
-#include "main/texcompress_rgtc.h"
 #include "main/teximage.h"
 #include "s_context.h"
 #include "s_texfetch.h"
@@ -307,42 +303,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_3d_f_ycbcr_rev
    },
    {
-      MESA_FORMAT_R8,
-      fetch_texel_1d_f_r8,
-      fetch_texel_2d_f_r8,
-      fetch_texel_3d_f_r8
-   },
-   {
-      MESA_FORMAT_GR88,
-      fetch_texel_1d_f_gr88,
-      fetch_texel_2d_f_gr88,
-      fetch_texel_3d_f_gr88
-   },
-   {
-      MESA_FORMAT_RG88,
-      fetch_texel_1d_f_rg88,
-      fetch_texel_2d_f_rg88,
-      fetch_texel_3d_f_rg88
-   },
-   {
-      MESA_FORMAT_R16,
-      fetch_texel_1d_f_r16,
-      fetch_texel_2d_f_r16,
-      fetch_texel_3d_f_r16
-   },
-   {
-      MESA_FORMAT_RG1616,
-      fetch_texel_1d_f_rg1616,
-      fetch_texel_2d_f_rg1616,
-      fetch_texel_3d_f_rg1616
-   },
-   {
-      MESA_FORMAT_RG1616_REV,
-      fetch_texel_1d_f_rg1616_rev,
-      fetch_texel_2d_f_rg1616_rev,
-      fetch_texel_3d_f_rg1616_rev
-   },
-   {
       MESA_FORMAT_Z24_S8,
       fetch_texel_1d_f_z24_s8,
       fetch_texel_2d_f_z24_s8,
@@ -415,67 +375,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_3d_sla8
    },
    {
-      MESA_FORMAT_SRGB_DXT1,
-      NULL,
-      _mesa_fetch_texel_2d_f_srgb_dxt1,
-      NULL
-   },
-   {
-      MESA_FORMAT_SRGBA_DXT1,
-      NULL,
-      _mesa_fetch_texel_2d_f_srgba_dxt1,
-      NULL
-   },
-   {
-      MESA_FORMAT_SRGBA_DXT3,
-      NULL,
-      _mesa_fetch_texel_2d_f_srgba_dxt3,
-      NULL
-   },
-   {
-      MESA_FORMAT_SRGBA_DXT5,
-      NULL,
-      _mesa_fetch_texel_2d_f_srgba_dxt5,
-      NULL
-   },
-
-   {
-      MESA_FORMAT_RGB_FXT1,
-      NULL,
-      _mesa_fetch_texel_2d_f_rgb_fxt1,
-      NULL
-   },
-   {
-      MESA_FORMAT_RGBA_FXT1,
-      NULL,
-      _mesa_fetch_texel_2d_f_rgba_fxt1,
-      NULL
-   },
-   {
-      MESA_FORMAT_RGB_DXT1,
-      NULL,
-      _mesa_fetch_texel_2d_f_rgb_dxt1,
-      NULL
-   },
-   {
-      MESA_FORMAT_RGBA_DXT1,
-      NULL,
-      _mesa_fetch_texel_2d_f_rgba_dxt1,
-      NULL
-   },
-   {
-      MESA_FORMAT_RGBA_DXT3,
-      NULL,
-      _mesa_fetch_texel_2d_f_rgba_dxt3,
-      NULL
-   },
-   {
-      MESA_FORMAT_RGBA_DXT5,
-      NULL,
-      _mesa_fetch_texel_2d_f_rgba_dxt5,
-      NULL
-   },
-   {
       MESA_FORMAT_RGBA_FLOAT32,
       fetch_texel_1d_f_rgba_f32,
       fetch_texel_2d_f_rgba_f32,
@@ -546,30 +445,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_1d_f_intensity_f16,
       fetch_texel_2d_f_intensity_f16,
       fetch_texel_3d_f_intensity_f16
-   },
-   {
-      MESA_FORMAT_R_FLOAT32,
-      fetch_texel_1d_f_r_f32,
-      fetch_texel_2d_f_r_f32,
-      fetch_texel_3d_f_r_f32
-   },
-   {
-      MESA_FORMAT_R_FLOAT16,
-      fetch_texel_1d_f_r_f16,
-      fetch_texel_2d_f_r_f16,
-      fetch_texel_3d_f_r_f16
-   },
-   {
-      MESA_FORMAT_RG_FLOAT32,
-      fetch_texel_1d_f_rg_f32,
-      fetch_texel_2d_f_rg_f32,
-      fetch_texel_3d_f_rg_f32
-   },
-   {
-      MESA_FORMAT_RG_FLOAT16,
-      fetch_texel_1d_f_rg_f16,
-      fetch_texel_2d_f_rg_f16,
-      fetch_texel_3d_f_rg_f16
    },
 
    {
@@ -743,21 +618,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       NULL
    },
 
-
-   {
-      MESA_FORMAT_R_INT8,
-      NULL,
-      NULL,
-      NULL
-   },
-
-   {
-      MESA_FORMAT_RG_INT8,
-      NULL,
-      NULL,
-      NULL
-   },
-
    {
       MESA_FORMAT_RGB_INT8,
       NULL,
@@ -773,18 +633,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_3d_rgba_int8
    },
    {
-      MESA_FORMAT_R_INT16,
-      NULL,
-      NULL,
-      NULL
-   },
-   {
-      MESA_FORMAT_RG_INT16,
-      NULL,
-      NULL,
-      NULL
-   },
-   {
       MESA_FORMAT_RGB_INT16,
       NULL,
       NULL,
@@ -795,18 +643,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_1d_rgba_int16,
       fetch_texel_2d_rgba_int16,
       fetch_texel_3d_rgba_int16
-   },
-   {
-      MESA_FORMAT_R_INT32,
-      NULL,
-      NULL,
-      NULL
-   },
-   {
-      MESA_FORMAT_RG_INT32,
-      NULL,
-      NULL,
-      NULL
    },
    {
       MESA_FORMAT_RGB_INT32,
@@ -823,18 +659,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
 
    /* non-normalized, unsigned int */
    {
-      MESA_FORMAT_R_UINT8,
-      NULL,
-      NULL,
-      NULL
-   },
-   {
-      MESA_FORMAT_RG_UINT8,
-      NULL,
-      NULL,
-      NULL
-   },
-   {
       MESA_FORMAT_RGB_UINT8,
       NULL,
       NULL,
@@ -847,18 +671,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_3d_rgba_uint8
    },
    {
-      MESA_FORMAT_R_UINT16,
-      NULL,
-      NULL,
-      NULL
-   },
-   {
-      MESA_FORMAT_RG_UINT16,
-      NULL,
-      NULL,
-      NULL
-   },
-   {
       MESA_FORMAT_RGB_UINT16,
       NULL,
       NULL,
@@ -869,18 +681,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_1d_rgba_uint16,
       fetch_texel_2d_rgba_uint16,
       fetch_texel_3d_rgba_uint16
-   },
-   {
-      MESA_FORMAT_R_UINT32,
-      NULL,
-      NULL,
-      NULL
-   },
-   {
-      MESA_FORMAT_RG_UINT32,
-      NULL,
-      NULL,
-      NULL
    },
    {
       MESA_FORMAT_RGB_UINT32,
@@ -905,54 +705,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
 
    /* signed, normalized */
    {
-      MESA_FORMAT_SIGNED_R8,
-      fetch_texel_1d_signed_r8,
-      fetch_texel_2d_signed_r8,
-      fetch_texel_3d_signed_r8
-   },
-   {
-      MESA_FORMAT_SIGNED_RG88_REV,
-      fetch_texel_1d_signed_rg88_rev,
-      fetch_texel_2d_signed_rg88_rev,
-      fetch_texel_3d_signed_rg88_rev
-   },
-   {
-      MESA_FORMAT_SIGNED_RGBX8888,
-      fetch_texel_1d_signed_rgbx8888,
-      fetch_texel_2d_signed_rgbx8888,
-      fetch_texel_3d_signed_rgbx8888
-   },
-   {
-      MESA_FORMAT_SIGNED_RGBA8888,
-      fetch_texel_1d_signed_rgba8888,
-      fetch_texel_2d_signed_rgba8888,
-      fetch_texel_3d_signed_rgba8888
-   },
-   {
-      MESA_FORMAT_SIGNED_RGBA8888_REV,
-      fetch_texel_1d_signed_rgba8888_rev,
-      fetch_texel_2d_signed_rgba8888_rev,
-      fetch_texel_3d_signed_rgba8888_rev
-   },
-   {
-      MESA_FORMAT_SIGNED_R16,
-      fetch_texel_1d_signed_r16,
-      fetch_texel_2d_signed_r16,
-      fetch_texel_3d_signed_r16
-   },
-   {
-      MESA_FORMAT_SIGNED_GR1616,
-      fetch_texel_1d_signed_rg1616,
-      fetch_texel_2d_signed_rg1616,
-      fetch_texel_3d_signed_rg1616
-   },
-   {
-      MESA_FORMAT_SIGNED_RGB_16,
-      fetch_texel_1d_signed_rgb_16,
-      fetch_texel_2d_signed_rgb_16,
-      fetch_texel_3d_signed_rgb_16
-   },
-   {
       MESA_FORMAT_SIGNED_RGBA_16,
       fetch_texel_1d_signed_rgba_16,
       fetch_texel_2d_signed_rgba_16,
@@ -963,102 +715,6 @@ texfetch_funcs[MESA_FORMAT_COUNT] =
       fetch_texel_1d_rgba_16,
       fetch_texel_2d_rgba_16,
       fetch_texel_3d_rgba_16
-   },
-   {
-      MESA_FORMAT_RED_RGTC1,
-      NULL,
-      _mesa_fetch_texel_2d_f_red_rgtc1,
-      NULL
-   },
-   {
-      MESA_FORMAT_SIGNED_RED_RGTC1,
-      NULL,
-      _mesa_fetch_texel_2d_f_signed_red_rgtc1,
-      NULL
-   },
-   {
-      MESA_FORMAT_RG_RGTC2,
-      NULL,
-      _mesa_fetch_texel_2d_f_rg_rgtc2,
-      NULL
-   },
-   {
-      MESA_FORMAT_SIGNED_RG_RGTC2,
-      NULL,
-      _mesa_fetch_texel_2d_f_signed_rg_rgtc2,
-      NULL
-   },
-   {
-      MESA_FORMAT_L_LATC1,
-      NULL,
-      _mesa_fetch_texel_2d_f_l_latc1,
-      NULL
-   },
-   {
-      MESA_FORMAT_SIGNED_L_LATC1,
-      NULL,
-      _mesa_fetch_texel_2d_f_signed_l_latc1,
-      NULL
-   },
-   {
-      MESA_FORMAT_LA_LATC2,
-      NULL,
-      _mesa_fetch_texel_2d_f_la_latc2,
-      NULL
-   },
-   {
-      MESA_FORMAT_SIGNED_LA_LATC2,
-      NULL,
-      _mesa_fetch_texel_2d_f_signed_la_latc2,
-      NULL
-   },
-   {
-      MESA_FORMAT_SIGNED_A8,
-      fetch_texel_1d_signed_a8,
-      fetch_texel_2d_signed_a8,
-      fetch_texel_3d_signed_a8
-   },
-   {
-      MESA_FORMAT_SIGNED_L8,
-      fetch_texel_1d_signed_l8,
-      fetch_texel_2d_signed_l8,
-      fetch_texel_3d_signed_l8
-   },
-   {
-      MESA_FORMAT_SIGNED_AL88,
-      fetch_texel_1d_signed_al88,
-      fetch_texel_2d_signed_al88,
-      fetch_texel_3d_signed_al88
-   },
-   {
-      MESA_FORMAT_SIGNED_I8,
-      fetch_texel_1d_signed_i8,
-      fetch_texel_2d_signed_i8,
-      fetch_texel_3d_signed_i8
-   },
-   {
-      MESA_FORMAT_SIGNED_A16,
-      fetch_texel_1d_signed_a16,
-      fetch_texel_2d_signed_a16,
-      fetch_texel_3d_signed_a16
-   },
-   {
-      MESA_FORMAT_SIGNED_L16,
-      fetch_texel_1d_signed_l16,
-      fetch_texel_2d_signed_l16,
-      fetch_texel_3d_signed_l16
-   },
-   {
-      MESA_FORMAT_SIGNED_AL1616,
-      fetch_texel_1d_signed_al1616,
-      fetch_texel_2d_signed_al1616,
-      fetch_texel_3d_signed_al1616
-   },
-   {
-      MESA_FORMAT_SIGNED_I16,
-      fetch_texel_1d_signed_i16,
-      fetch_texel_2d_signed_i16,
-      fetch_texel_3d_signed_i16
    },
    {
       MESA_FORMAT_Z32_FLOAT,

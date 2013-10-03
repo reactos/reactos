@@ -3434,7 +3434,6 @@ glcpp_parser_create (const struct gl_extensions *extensions)
 
 	/* Add pre-defined macros. */
 	add_builtin_define(parser, "GL_ARB_draw_buffers", 1);
-	add_builtin_define(parser, "GL_ARB_texture_rectangle", 1);
 
 	if (extensions != NULL) {
 	   if (extensions->EXT_texture_array) {

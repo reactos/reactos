@@ -1049,19 +1049,6 @@ _save_Begin(GLenum mode)
 }
 
 
-static void GLAPIENTRY
-_save_PrimitiveRestartNV(void)
-{
-   GLenum curPrim;
-   GET_CURRENT_CONTEXT(ctx);
-
-   curPrim = ctx->Driver.CurrentSavePrimitive;
-
-   _save_End();
-   _save_Begin(curPrim);
-}
-
-
 /* Unlike the functions above, these are to be hooked into the vtxfmt
  * maintained in ctx->ListState, active when the list is known or
  * suspected to be outside any begin/end primitive.
@@ -1204,7 +1191,6 @@ _save_vtxfmt_init(struct gl_context *ctx)
    vfmt->Color4fv = _save_Color4fv;
    vfmt->EdgeFlag = _save_EdgeFlag;
    vfmt->End = _save_End;
-   vfmt->PrimitiveRestartNV = _save_PrimitiveRestartNV;
    vfmt->FogCoordfEXT = _save_FogCoordfEXT;
    vfmt->FogCoordfvEXT = _save_FogCoordfvEXT;
    vfmt->Indexf = _save_Indexf;

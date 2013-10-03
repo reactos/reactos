@@ -463,25 +463,6 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
                return GL_INVALID_ENUM;
          }
 
-      case GL_RG:
-	 if (!ctx->Extensions.ARB_texture_rg)
-	    return GL_INVALID_ENUM;
-         switch (type) {
-            case GL_BYTE:
-            case GL_UNSIGNED_BYTE:
-            case GL_SHORT:
-            case GL_UNSIGNED_SHORT:
-            case GL_INT:
-            case GL_UNSIGNED_INT:
-            case GL_FLOAT:
-               return GL_NO_ERROR;
-            case GL_HALF_FLOAT:
-               return ctx->Extensions.ARB_half_float_pixel
-                  ? GL_NO_ERROR : GL_INVALID_ENUM;
-            default:
-               return GL_INVALID_ENUM;
-         }
-
       case GL_RGB:
          switch (type) {
             case GL_BYTE:
@@ -753,25 +734,6 @@ _mesa_is_color_format(GLenum format)
       case GL_RGB32F_ARB:
       case GL_RGBA16F_ARB:
       case GL_RGBA32F_ARB:
-      /* compressed formats */
-      case GL_COMPRESSED_ALPHA:
-      case GL_COMPRESSED_LUMINANCE:
-      case GL_COMPRESSED_LUMINANCE_ALPHA:
-      case GL_COMPRESSED_INTENSITY:
-      case GL_COMPRESSED_RED:
-      case GL_COMPRESSED_RG:
-      case GL_COMPRESSED_RGB:
-      case GL_COMPRESSED_RGBA:
-      case GL_RGB_S3TC:
-      case GL_RGB4_S3TC:
-      case GL_RGBA_S3TC:
-      case GL_RGBA4_S3TC:
-      case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-      case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-      case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-      case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-      case GL_COMPRESSED_RGB_FXT1_3DFX:
-      case GL_COMPRESSED_RGBA_FXT1_3DFX:
 #if FEATURE_EXT_texture_sRGB
       case GL_SRGB_EXT:
       case GL_SRGB8_EXT:
@@ -781,24 +743,7 @@ _mesa_is_color_format(GLenum format)
       case GL_SLUMINANCE8_ALPHA8_EXT:
       case GL_SLUMINANCE_EXT:
       case GL_SLUMINANCE8_EXT:
-      case GL_COMPRESSED_SRGB_EXT:
-      case GL_COMPRESSED_SRGB_S3TC_DXT1_EXT:
-      case GL_COMPRESSED_SRGB_ALPHA_EXT:
-      case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
-      case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:
-      case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:
-      case GL_COMPRESSED_SLUMINANCE_EXT:
-      case GL_COMPRESSED_SLUMINANCE_ALPHA_EXT:
 #endif /* FEATURE_EXT_texture_sRGB */
-      case GL_COMPRESSED_RED_RGTC1:
-      case GL_COMPRESSED_SIGNED_RED_RGTC1:
-      case GL_COMPRESSED_RG_RGTC2:
-      case GL_COMPRESSED_SIGNED_RG_RGTC2:
-      case GL_COMPRESSED_LUMINANCE_LATC1_EXT:
-      case GL_COMPRESSED_SIGNED_LUMINANCE_LATC1_EXT:
-      case GL_COMPRESSED_LUMINANCE_ALPHA_LATC2_EXT:
-      case GL_COMPRESSED_SIGNED_LUMINANCE_ALPHA_LATC2_EXT:
-      case GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI:
       /* generic integer formats */
       case GL_RED_INTEGER_EXT:
       case GL_GREEN_INTEGER_EXT:
@@ -808,83 +753,45 @@ _mesa_is_color_format(GLenum format)
       case GL_RGBA_INTEGER_EXT:
       case GL_BGR_INTEGER_EXT:
       case GL_BGRA_INTEGER_EXT:
-      case GL_RG_INTEGER:
       case GL_LUMINANCE_INTEGER_EXT:
       case GL_LUMINANCE_ALPHA_INTEGER_EXT:
       /* sized integer formats */
       case GL_RGBA32UI_EXT:
       case GL_RGB32UI_EXT:
-      case GL_RG32UI:
-      case GL_R32UI:
       case GL_ALPHA32UI_EXT:
       case GL_INTENSITY32UI_EXT:
       case GL_LUMINANCE32UI_EXT:
       case GL_LUMINANCE_ALPHA32UI_EXT:
       case GL_RGBA16UI_EXT:
       case GL_RGB16UI_EXT:
-      case GL_RG16UI:
-      case GL_R16UI:
       case GL_ALPHA16UI_EXT:
       case GL_INTENSITY16UI_EXT:
       case GL_LUMINANCE16UI_EXT:
       case GL_LUMINANCE_ALPHA16UI_EXT:
       case GL_RGBA8UI_EXT:
       case GL_RGB8UI_EXT:
-      case GL_RG8UI:
-      case GL_R8UI:
       case GL_ALPHA8UI_EXT:
       case GL_INTENSITY8UI_EXT:
       case GL_LUMINANCE8UI_EXT:
       case GL_LUMINANCE_ALPHA8UI_EXT:
       case GL_RGBA32I_EXT:
       case GL_RGB32I_EXT:
-      case GL_RG32I:
-      case GL_R32I:
       case GL_ALPHA32I_EXT:
       case GL_INTENSITY32I_EXT:
       case GL_LUMINANCE32I_EXT:
       case GL_LUMINANCE_ALPHA32I_EXT:
       case GL_RGBA16I_EXT:
       case GL_RGB16I_EXT:
-      case GL_RG16I:
-      case GL_R16I:
       case GL_ALPHA16I_EXT:
       case GL_INTENSITY16I_EXT:
       case GL_LUMINANCE16I_EXT:
       case GL_LUMINANCE_ALPHA16I_EXT:
       case GL_RGBA8I_EXT:
       case GL_RGB8I_EXT:
-      case GL_RG8I:
-      case GL_R8I:
       case GL_ALPHA8I_EXT:
       case GL_INTENSITY8I_EXT:
       case GL_LUMINANCE8I_EXT:
       case GL_LUMINANCE_ALPHA8I_EXT:
-      /* signed, normalized texture formats */
-      case GL_RED_SNORM:
-      case GL_R8_SNORM:
-      case GL_R16_SNORM:
-      case GL_RG_SNORM:
-      case GL_RG8_SNORM:
-      case GL_RG16_SNORM:
-      case GL_RGB_SNORM:
-      case GL_RGB8_SNORM:
-      case GL_RGB16_SNORM:
-      case GL_RGBA_SNORM:
-      case GL_RGBA8_SNORM:
-      case GL_RGBA16_SNORM:
-      case GL_ALPHA_SNORM:
-      case GL_ALPHA8_SNORM:
-      case GL_ALPHA16_SNORM:
-      case GL_LUMINANCE_SNORM:
-      case GL_LUMINANCE8_SNORM:
-      case GL_LUMINANCE16_SNORM:
-      case GL_LUMINANCE_ALPHA_SNORM:
-      case GL_LUMINANCE8_ALPHA8_SNORM:
-      case GL_LUMINANCE16_ALPHA16_SNORM:
-      case GL_INTENSITY_SNORM:
-      case GL_INTENSITY8_SNORM:
-      case GL_INTENSITY16_SNORM:
       case GL_R11F_G11F_B10F:
       case GL_RGB10_A2UI:
          return GL_TRUE;
@@ -1075,52 +982,6 @@ _mesa_is_integer_format(GLenum format)
    case GL_LUMINANCE_ALPHA8I_EXT:
    case GL_RGB10_A2UI:
       return GL_TRUE;
-   default:
-      return GL_FALSE;
-   }
-}
-
-
-/**
- * Test if an image format is a supported compressed format.
- * \param format the internal format token provided by the user.
- * \return GL_TRUE if compressed, GL_FALSE if uncompressed
- */
-GLboolean
-_mesa_is_compressed_format(struct gl_context *ctx, GLenum format)
-{
-   switch (format) {
-   case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-   case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-   case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-   case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-      return ctx->Extensions.EXT_texture_compression_s3tc;
-   case GL_RGB_S3TC:
-   case GL_RGB4_S3TC:
-   case GL_RGBA_S3TC:
-   case GL_RGBA4_S3TC:
-      return ctx->Extensions.S3_s3tc;
-   case GL_COMPRESSED_SRGB_S3TC_DXT1_EXT:
-   case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
-   case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:
-   case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:
-      return ctx->Extensions.EXT_texture_sRGB
-         && ctx->Extensions.EXT_texture_compression_s3tc;
-   case GL_COMPRESSED_RGB_FXT1_3DFX:
-   case GL_COMPRESSED_RGBA_FXT1_3DFX:
-      return ctx->Extensions.TDFX_texture_compression_FXT1;
-   case GL_COMPRESSED_RED_RGTC1:
-   case GL_COMPRESSED_SIGNED_RED_RGTC1:
-   case GL_COMPRESSED_RG_RGTC2:
-   case GL_COMPRESSED_SIGNED_RG_RGTC2:
-      return ctx->Extensions.ARB_texture_compression_rgtc;
-   case GL_COMPRESSED_LUMINANCE_LATC1_EXT:
-   case GL_COMPRESSED_SIGNED_LUMINANCE_LATC1_EXT:
-   case GL_COMPRESSED_LUMINANCE_ALPHA_LATC2_EXT:
-   case GL_COMPRESSED_SIGNED_LUMINANCE_ALPHA_LATC2_EXT:
-      return ctx->Extensions.EXT_texture_compression_latc;
-   case GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI:
-      return ctx->Extensions.ATI_texture_compression_3dc;
    default:
       return GL_FALSE;
    }

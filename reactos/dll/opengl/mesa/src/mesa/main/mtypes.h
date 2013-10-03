@@ -1121,7 +1121,6 @@ typedef enum
    TEXTURE_1D_ARRAY_INDEX,
    TEXTURE_CUBE_INDEX,
    TEXTURE_3D_INDEX,
-   TEXTURE_RECT_INDEX,
    TEXTURE_2D_INDEX,
    TEXTURE_1D_INDEX,
    NUM_TEXTURE_TARGETS
@@ -1138,7 +1137,6 @@ typedef enum
 #define TEXTURE_1D_ARRAY_BIT (1 << TEXTURE_1D_ARRAY_INDEX)
 #define TEXTURE_CUBE_BIT     (1 << TEXTURE_CUBE_INDEX)
 #define TEXTURE_3D_BIT       (1 << TEXTURE_3D_INDEX)
-#define TEXTURE_RECT_BIT     (1 << TEXTURE_RECT_INDEX)
 #define TEXTURE_2D_BIT       (1 << TEXTURE_2D_INDEX)
 #define TEXTURE_1D_BIT       (1 << TEXTURE_1D_INDEX)
 /*@}*/
@@ -1571,10 +1569,6 @@ struct gl_array_attrib
    GLint ActiveTexture;		/**< Client Active Texture */
    GLuint LockFirst;            /**< GL_EXT_compiled_vertex_array */
    GLuint LockCount;            /**< GL_EXT_compiled_vertex_array */
-
-   /** GL 3.1 (slightly different from GL_NV_primitive_restart) */
-   GLboolean PrimitiveRestart;
-   GLuint RestartIndex;
 
    GLbitfield64 NewState;		/**< mask of VERT_BIT_* values */
    GLboolean RebindArrays; /**< whether the VBO module should rebind arrays */
@@ -2334,9 +2328,6 @@ struct gl_program_constants
    GLuint MaxNativeParameters;
    /* For shaders */
    GLuint MaxUniformComponents;  /**< Usually == MaxParameters * 4 */
-   /* ES 2.0 and GL_ARB_ES2_compatibility */
-   struct gl_precision LowFloat, MediumFloat, HighFloat;
-   struct gl_precision LowInt, MediumInt, HighInt;
 };
 
 
@@ -2351,7 +2342,6 @@ struct gl_constants
    GLint Max3DTextureLevels;    /**< Max mipmap levels for 3D textures */
    GLint MaxCubeTextureLevels;  /**< Max mipmap levels for cube textures */
    GLint MaxArrayTextureLayers; /**< Max layers in array textures */
-   GLint MaxTextureRectSize;    /**< Max rectangle texture size, in pixes */
    GLuint MaxTextureCoordUnits;
    GLuint MaxTextureImageUnits;
    GLuint MaxVertexTextureImageUnits;
@@ -2470,7 +2460,6 @@ struct gl_extensions
    GLboolean dummy;  /* don't remove this! */
    GLboolean dummy_true;  /* Set true by _mesa_init_extensions(). */
    GLboolean dummy_false; /* Set false by _mesa_init_extensions(). */
-   GLboolean ARB_ES2_compatibility;
    GLboolean ARB_color_buffer_float;
    GLboolean ARB_conservative_depth;
    GLboolean ARB_copy_buffer;
@@ -2492,14 +2481,12 @@ struct gl_extensions
    GLboolean ARB_shading_language_100;
    GLboolean ARB_texture_border_clamp;
    GLboolean ARB_texture_buffer_object;
-   GLboolean ARB_texture_compression_rgtc;
    GLboolean ARB_texture_cube_map;
    GLboolean ARB_texture_env_combine;
    GLboolean ARB_texture_env_crossbar;
    GLboolean ARB_texture_env_dot3;
    GLboolean ARB_texture_float;
    GLboolean ARB_texture_non_power_of_two;
-   GLboolean ARB_texture_rg;
    GLboolean ARB_texture_storage;
    GLboolean ARB_transpose_matrix;
    GLboolean ARB_uniform_buffer_object;
@@ -2534,20 +2521,16 @@ struct gl_extensions
    GLboolean EXT_stencil_two_side;
    GLboolean EXT_texture3D;
    GLboolean EXT_texture_array;
-   GLboolean EXT_texture_compression_latc;
-   GLboolean EXT_texture_compression_s3tc;
    GLboolean EXT_texture_env_dot3;
    GLboolean EXT_texture_filter_anisotropic;
    GLboolean EXT_texture_integer;
    GLboolean EXT_texture_mirror_clamp;
-   GLboolean EXT_texture_snorm;
    GLboolean EXT_texture_sRGB;
    /* vendor extensions */
    GLboolean APPLE_packed_pixels;
    GLboolean APPLE_vertex_array_object;
    GLboolean APPLE_object_purgeable;
    GLboolean ATI_envmap_bumpmap;
-   GLboolean ATI_texture_compression_3dc;
    GLboolean ATI_texture_mirror_once;
    GLboolean ATI_texture_env_combine3;
    GLboolean ATI_separate_stencil;
@@ -2563,16 +2546,12 @@ struct gl_extensions
    GLboolean NV_fragment_program_option;
    GLboolean NV_light_max_exponent;
    GLboolean NV_point_sprite;
-   GLboolean NV_primitive_restart;
    GLboolean NV_texture_barrier;
    GLboolean NV_texgen_reflection;
    GLboolean NV_texture_env_combine4;
-   GLboolean NV_texture_rectangle;
    GLboolean NV_vertex_program;
    GLboolean NV_vertex_program1_1;
    GLboolean SGIS_texture_lod;
-   GLboolean TDFX_texture_compression_FXT1;
-   GLboolean S3_s3tc;
    GLboolean extension_sentinel;
    /** The extension string */
    const GLubyte *String;

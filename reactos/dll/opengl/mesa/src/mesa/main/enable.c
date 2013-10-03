@@ -125,15 +125,6 @@ client_state(struct gl_context *ctx, GLenum cap, GLboolean state)
          break;
 #endif /* FEATURE_NV_vertex_program */
 
-      /* GL_NV_primitive_restart */
-      case GL_PRIMITIVE_RESTART_NV:
-	 if (!ctx->Extensions.NV_primitive_restart) {
-            goto invalid_enum_error;
-         }
-         var = &ctx->Array.PrimitiveRestart;
-         flag = 0;
-         break;
-
       default:
          goto invalid_enum_error;
    }
@@ -802,14 +793,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          break;
 #endif /* FEATURE_NV_fragment_program */
 
-      /* GL_NV_texture_rectangle */
-      case GL_TEXTURE_RECTANGLE_NV:
-         CHECK_EXTENSION(NV_texture_rectangle, cap);
-         if (!enable_texture(ctx, state, TEXTURE_RECT_BIT)) {
-            return;
-         }
-         break;
-
       /* GL_EXT_stencil_two_side */
       case GL_STENCIL_TEST_TWO_SIDE_EXT:
          CHECK_EXTENSION(EXT_stencil_two_side, cap);
@@ -857,19 +840,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          CHECK_EXTENSION(MESA_texture_array, cap);
          if (!enable_texture(ctx, state, TEXTURE_2D_ARRAY_BIT)) {
             return;
-         }
-         break;
-
-      /* GL 3.1 primitive restart.  Note: this enum is different from
-       * GL_PRIMITIVE_RESTART_NV (which is client state).
-       */
-      case GL_PRIMITIVE_RESTART:
-         if (ctx->VersionMajor * 10 + ctx->VersionMinor < 31) {
-            goto invalid_enum_error;
-         }
-         if (ctx->Array.PrimitiveRestart != state) {
-            FLUSH_VERTICES(ctx, _NEW_TRANSFORM);
-            ctx->Array.PrimitiveRestart = state;
          }
          break;
 
@@ -1241,11 +1211,6 @@ _mesa_IsEnabled( GLenum cap )
          return ctx->FragmentProgram.Enabled;
 #endif /* FEATURE_NV_fragment_program */
 
-      /* GL_NV_texture_rectangle */
-      case GL_TEXTURE_RECTANGLE_NV:
-         CHECK_EXTENSION(NV_texture_rectangle);
-         return is_texture_enabled(ctx, TEXTURE_RECT_BIT);
-
       /* GL_EXT_stencil_two_side */
       case GL_STENCIL_TEST_TWO_SIDE_EXT:
          CHECK_EXTENSION(EXT_stencil_two_side);
@@ -1260,20 +1225,6 @@ _mesa_IsEnabled( GLenum cap )
       case GL_DEPTH_BOUNDS_TEST_EXT:
          CHECK_EXTENSION(EXT_depth_bounds_test);
          return ctx->Depth.BoundsTest;
-
-      /* GL_NV_primitive_restart */
-      case GL_PRIMITIVE_RESTART_NV:
-	 if (!ctx->Extensions.NV_primitive_restart) {
-            goto invalid_enum_error;
-         }
-         return ctx->Array.PrimitiveRestart;
-
-      /* GL 3.1 primitive restart */
-      case GL_PRIMITIVE_RESTART:
-         if (ctx->VersionMajor * 10 + ctx->VersionMinor < 31) {
-            goto invalid_enum_error;
-         }
-         return ctx->Array.PrimitiveRestart;
 
       /* GL3.0 - GL_framebuffer_sRGB */
       case GL_FRAMEBUFFER_SRGB_EXT:

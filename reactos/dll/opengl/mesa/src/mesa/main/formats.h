@@ -98,12 +98,6 @@ typedef enum
    MESA_FORMAT_I16,             /*                     IIII IIII IIII IIII */
    MESA_FORMAT_YCBCR,		/*                     YYYY YYYY UorV UorV */
    MESA_FORMAT_YCBCR_REV,	/*                     UorV UorV YYYY YYYY */
-   MESA_FORMAT_R8,		/*                               RRRR RRRR */
-   MESA_FORMAT_GR88,		/*                     GGGG GGGG RRRR RRRR */
-   MESA_FORMAT_RG88,    	/*                     RRRR RRRR GGGG GGGG */
-   MESA_FORMAT_R16,		/*                     RRRR RRRR RRRR RRRR */
-   MESA_FORMAT_RG1616,		/* GGGG GGGG GGGG GGGG RRRR RRRR RRRR RRRR */
-   MESA_FORMAT_RG1616_REV,	/* RRRR RRRR RRRR RRRR GGGG GGGG GGGG GGGG */
    MESA_FORMAT_Z24_S8,          /* ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ SSSS SSSS */
    MESA_FORMAT_S8_Z24,          /* SSSS SSSS ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ ZZZZ */
    MESA_FORMAT_Z16,             /*                     ZZZZ ZZZZ ZZZZ ZZZZ */
@@ -122,22 +116,6 @@ typedef enum
    MESA_FORMAT_SARGB8,          /* AAAA AAAA RRRR RRRR GGGG GGGG BBBB BBBB */
    MESA_FORMAT_SL8,             /*                               LLLL LLLL */
    MESA_FORMAT_SLA8,            /*                     AAAA AAAA LLLL LLLL */
-   MESA_FORMAT_SRGB_DXT1,
-   MESA_FORMAT_SRGBA_DXT1,
-   MESA_FORMAT_SRGBA_DXT3,
-   MESA_FORMAT_SRGBA_DXT5,
-   /*@}*/
-
-   /**
-    * \name Compressed texture formats.
-    */
-   /*@{*/
-   MESA_FORMAT_RGB_FXT1,
-   MESA_FORMAT_RGBA_FXT1,
-   MESA_FORMAT_RGB_DXT1,
-   MESA_FORMAT_RGBA_DXT1,
-   MESA_FORMAT_RGBA_DXT3,
-   MESA_FORMAT_RGBA_DXT5,
    /*@}*/
 
    /**
@@ -156,10 +134,6 @@ typedef enum
    MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16,
    MESA_FORMAT_INTENSITY_FLOAT32,
    MESA_FORMAT_INTENSITY_FLOAT16,
-   MESA_FORMAT_R_FLOAT32,
-   MESA_FORMAT_R_FLOAT16,
-   MESA_FORMAT_RG_FLOAT32,
-   MESA_FORMAT_RG_FLOAT16,
    /*@}*/
 
    /**
@@ -195,32 +169,20 @@ typedef enum
    MESA_FORMAT_LUMINANCE_ALPHA_INT16,
    MESA_FORMAT_LUMINANCE_ALPHA_INT32,
 
-   MESA_FORMAT_R_INT8,
-   MESA_FORMAT_RG_INT8,
    MESA_FORMAT_RGB_INT8,
    MESA_FORMAT_RGBA_INT8,
-   MESA_FORMAT_R_INT16,
-   MESA_FORMAT_RG_INT16,
    MESA_FORMAT_RGB_INT16,
    MESA_FORMAT_RGBA_INT16,
-   MESA_FORMAT_R_INT32,
-   MESA_FORMAT_RG_INT32,
    MESA_FORMAT_RGB_INT32,
    MESA_FORMAT_RGBA_INT32,
 
    /**
     * \name Non-normalized unsigned integer formats.
     */
-   MESA_FORMAT_R_UINT8,
-   MESA_FORMAT_RG_UINT8,
    MESA_FORMAT_RGB_UINT8,
    MESA_FORMAT_RGBA_UINT8,
-   MESA_FORMAT_R_UINT16,
-   MESA_FORMAT_RG_UINT16,
    MESA_FORMAT_RGB_UINT16,
    MESA_FORMAT_RGBA_UINT16,
-   MESA_FORMAT_R_UINT32,
-   MESA_FORMAT_RG_UINT32,
    MESA_FORMAT_RGB_UINT32,
    MESA_FORMAT_RGBA_UINT32,
 
@@ -231,40 +193,9 @@ typedef enum
     */
    /*@{*/
    MESA_FORMAT_DUDV8,             /*                     DUDU DUDU DVDV DVDV */
-   MESA_FORMAT_SIGNED_R8,         /*                               RRRR RRRR */
-   MESA_FORMAT_SIGNED_RG88_REV,   /*                     GGGG GGGG RRRR RRRR */
-   MESA_FORMAT_SIGNED_RGBX8888,   /* RRRR RRRR GGGG GGGG BBBB BBBB xxxx xxxx */
-   MESA_FORMAT_SIGNED_RGBA8888,   /* RRRR RRRR GGGG GGGG BBBB BBBB AAAA AAAA */
-   MESA_FORMAT_SIGNED_RGBA8888_REV,/*AAAA AAAA BBBB BBBB GGGG GGGG RRRR RRRR */
-   MESA_FORMAT_SIGNED_R16,        /*                     RRRR RRRR RRRR RRRR */
-   MESA_FORMAT_SIGNED_GR1616,     /* GGGG GGGG GGGG GGGG RRRR RRRR RRRR RRRR */
-   MESA_FORMAT_SIGNED_RGB_16,     /* ushort[0]=R, ushort[1]=G, ushort[2]=B */
    MESA_FORMAT_SIGNED_RGBA_16,    /* ... */
    MESA_FORMAT_RGBA_16,           /* ... */
    /*@}*/
-
-   /*@{*/
-   MESA_FORMAT_RED_RGTC1,
-   MESA_FORMAT_SIGNED_RED_RGTC1,
-   MESA_FORMAT_RG_RGTC2,
-   MESA_FORMAT_SIGNED_RG_RGTC2,
-   /*@}*/
-
-   /*@{*/
-   MESA_FORMAT_L_LATC1,
-   MESA_FORMAT_SIGNED_L_LATC1,
-   MESA_FORMAT_LA_LATC2,
-   MESA_FORMAT_SIGNED_LA_LATC2,
-   /*@}*/
-
-   MESA_FORMAT_SIGNED_A8,         /*                               AAAA AAAA */
-   MESA_FORMAT_SIGNED_L8,         /*                               LLLL LLLL */
-   MESA_FORMAT_SIGNED_AL88,       /*                     AAAA AAAA LLLL LLLL */
-   MESA_FORMAT_SIGNED_I8,         /*                               IIII IIII */
-   MESA_FORMAT_SIGNED_A16,        /*                     AAAA AAAA AAAA AAAA */
-   MESA_FORMAT_SIGNED_L16,        /*                     LLLL LLLL LLLL LLLL */
-   MESA_FORMAT_SIGNED_AL1616,     /* AAAA AAAA AAAA AAAA LLLL LLLL LLLL LLLL */
-   MESA_FORMAT_SIGNED_I16,        /*                     IIII IIII IIII IIII */
 
    MESA_FORMAT_Z32_FLOAT,
    MESA_FORMAT_Z32_FLOAT_X24S8,
@@ -295,9 +226,6 @@ extern void
 _mesa_get_format_block_size(gl_format format, GLuint *bw, GLuint *bh);
 
 extern GLboolean
-_mesa_is_format_compressed(gl_format format);
-
-extern GLboolean
 _mesa_is_format_packed_depth_stencil(gl_format format);
 
 extern GLboolean
@@ -326,9 +254,6 @@ _mesa_test_formats(void);
 
 extern gl_format
 _mesa_get_srgb_format_linear(gl_format format);
-
-extern gl_format
-_mesa_get_uncompressed_format(gl_format format);
 
 extern GLuint
 _mesa_format_num_components(gl_format format);
