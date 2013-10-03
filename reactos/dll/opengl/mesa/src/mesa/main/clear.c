@@ -217,10 +217,7 @@ _mesa_Clear( GLbitfield mask )
        */
       bufferMask = 0;
       if (mask & GL_COLOR_BUFFER_BIT) {
-         GLuint i;
-         for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++) {
-            bufferMask |= (1 << ctx->DrawBuffer->_ColorDrawBufferIndexes[i]);
-         }
+         bufferMask |= (1 << ctx->DrawBuffer->_ColorDrawBufferIndex);
       }
 
       if ((mask & GL_DEPTH_BUFFER_BIT)

@@ -554,11 +554,6 @@ _mesa_create_exec_table(void)
    SET_MapBufferARB(exec, _mesa_MapBufferARB);
    SET_UnmapBufferARB(exec, _mesa_UnmapBufferARB);
 
-   /* ARB 37. GL_ARB_draw_buffers */
-#if FEATURE_draw_read_buffer
-   SET_DrawBuffersARB(exec, _mesa_DrawBuffersARB);
-#endif
-
    /* ARB 104. GL_ARB_robustness */
    SET_GetGraphicsResetStatusARB(exec, _mesa_GetGraphicsResetStatusARB);
    SET_GetnPolygonStippleARB(exec, _mesa_GetnPolygonStippleARB);
@@ -644,12 +639,6 @@ _mesa_create_exec_table(void)
    /* GL 3.0 (functions not covered by other extensions) */
    SET_GetStringi(exec, _mesa_GetStringi);
    SET_ClampColor(exec, _mesa_ClampColorARB);
-
-   /* GL_ARB_draw_buffer_blend */
-   SET_BlendFunciARB(exec, _mesa_BlendFunci);
-   SET_BlendFuncSeparateiARB(exec, _mesa_BlendFuncSeparatei);
-   SET_BlendEquationiARB(exec, _mesa_BlendEquationi);
-   SET_BlendEquationSeparateiARB(exec, _mesa_BlendEquationSeparatei);
 
    /* GL_NV_texture_barrier */
    SET_TextureBarrierNV(exec, _mesa_TextureBarrierNV);

@@ -122,7 +122,7 @@ _swrast_culltriangle( struct gl_context *ctx,
 #define T_SCALE theight
 
 #define SETUP_CODE							\
-   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0];	\
+   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffer;	\
    const struct gl_texture_object *obj = 				\
       ctx->Texture.Unit[0].CurrentTex[TEXTURE_2D_INDEX];		\
    const struct gl_texture_image *texImg =				\
@@ -180,7 +180,7 @@ _swrast_culltriangle( struct gl_context *ctx,
 #define T_SCALE theight
 
 #define SETUP_CODE							\
-   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0];	\
+   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffer;	\
    const struct gl_texture_object *obj = 				\
       ctx->Texture.Unit[0].CurrentTex[TEXTURE_2D_INDEX];		\
    const struct gl_texture_image *texImg = 				\

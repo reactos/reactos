@@ -71,7 +71,7 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *ctx,
    this->Const.MaxTextureImageUnits = ctx->Const.MaxTextureImageUnits;
    this->Const.MaxFragmentUniformComponents = ctx->Const.FragmentProgram.MaxUniformComponents;
 
-   this->Const.MaxDrawBuffers = ctx->Const.MaxDrawBuffers;
+   this->Const.MaxDrawBuffers = 1;
 
    /* Note: Once the OpenGL 3.0 'forward compatible' context or the OpenGL 3.2
     * Core context is supported, this logic will need change.  Older versions of

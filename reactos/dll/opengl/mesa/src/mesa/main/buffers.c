@@ -255,89 +255,13 @@ _mesa_DrawBuffer(GLenum buffer)
    }
 
    /* if we get here, there's no error so set new state */
-   _mesa_drawbuffers(ctx, 1, &buffer, &destMask);
+   _mesa_drawbuffer(ctx, buffer, destMask);
 
    /*
     * Call device driver function.
     */
-   if (ctx->Driver.DrawBuffers)
-      ctx->Driver.DrawBuffers(ctx, 1, &buffer);
-   else if (ctx->Driver.DrawBuffer)
+   if (ctx->Driver.DrawBuffer)
       ctx->Driver.DrawBuffer(ctx, buffer);
-}
-
-
-/**
- * Called by glDrawBuffersARB; specifies the destination color renderbuffers
- * for N fragment program color outputs.
- * \sa _mesa_DrawBuffer
- * \param n  number of outputs
- * \param buffers  array [n] of renderbuffer names.  Unlike glDrawBuffer, the
- *                 names cannot specify more than one buffer.  For example,
- *                 GL_FRONT_AND_BACK is illegal.
- */
-void GLAPIENTRY
-_mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers)
-{
-   GLint output;
-   GLbitfield usedBufferMask, supportedMask;
-   GLbitfield destMask[MAX_DRAW_BUFFERS];
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   /* Turns out n==0 is a valid input that should not produce an error.
-    * The remaining code below correctly handles the n==0 case.
-    */
-   if (n < 0 || n > (GLsizei) ctx->Const.MaxDrawBuffers) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "glDrawBuffersARB(n)");
-      return;
-   }
-
-   supportedMask = supported_buffer_bitmask(ctx, ctx->DrawBuffer);
-   usedBufferMask = 0x0;
-
-   /* complicated error checking... */
-   for (output = 0; output < n; output++) {
-      if (buffers[output] == GL_NONE) {
-         destMask[output] = 0x0;
-      }
-      else {
-         destMask[output] = draw_buffer_enum_to_bitmask(buffers[output]);
-         if (destMask[output] == BAD_MASK
-             || _mesa_bitcount(destMask[output]) > 1) {
-            _mesa_error(ctx, GL_INVALID_ENUM, "glDrawBuffersARB(buffer)");
-            return;
-         }         
-         destMask[output] &= supportedMask;
-         if (destMask[output] == 0) {
-            _mesa_error(ctx, GL_INVALID_OPERATION,
-                        "glDrawBuffersARB(unsupported buffer)");
-            return;
-         }
-         if (destMask[output] & usedBufferMask) {
-            /* can't specify a dest buffer more than once! */
-            _mesa_error(ctx, GL_INVALID_OPERATION,
-                        "glDrawBuffersARB(duplicated buffer)");
-            return;
-         }
-
-         /* update bitmask */
-         usedBufferMask |= destMask[output];
-      }
-   }
-
-   /* OK, if we get here, there were no errors so set the new state */
-   _mesa_drawbuffers(ctx, n, buffers, destMask);
-
-   /*
-    * Call device driver function.  Note that n can be equal to 0,
-    * in which case we don't want to reference buffers[0], which
-    * may not be valid.
-    */
-   if (ctx->Driver.DrawBuffers)
-      ctx->Driver.DrawBuffers(ctx, n, buffers);
-   else if (ctx->Driver.DrawBuffer)
-      ctx->Driver.DrawBuffer(ctx, n > 0 ? buffers[0] : GL_NONE);
 }
 
 /**
@@ -371,85 +295,31 @@ updated_drawbuffers(struct gl_context *ctx)
  *                  BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT).
  */
 void
-_mesa_drawbuffers(struct gl_context *ctx, GLuint n, const GLenum *buffers,
-                  const GLbitfield *destMask)
+_mesa_drawbuffer(struct gl_context *ctx, const GLenum buffers, GLbitfield destMask)
 {
    struct gl_framebuffer *fb = ctx->DrawBuffer;
-   GLbitfield mask[MAX_DRAW_BUFFERS];
-   GLuint buf;
+   GLint bufIndex;
 
    if (!destMask) {
       /* compute destMask values now */
       const GLbitfield supportedMask = supported_buffer_bitmask(ctx, fb);
-      GLuint output;
-      for (output = 0; output < n; output++) {
-         mask[output] = draw_buffer_enum_to_bitmask(buffers[output]);
-         ASSERT(mask[output] != BAD_MASK);
-         mask[output] &= supportedMask;
-      }
-      destMask = mask;
+      destMask = draw_buffer_enum_to_bitmask(buffers);
+      ASSERT(destmask != BAD_MASK);
+      destMask &= supportedMask;
    }
+   
+   bufIndex = _mesa_ffs(destMask) - 1;
 
-   /*
-    * If n==1, destMask[0] may have up to four bits set.
-    * Otherwise, destMask[x] can only have one bit set.
-    */
-   if (n == 1) {
-      GLuint count = 0, destMask0 = destMask[0];
-      while (destMask0) {
-         GLint bufIndex = _mesa_ffs(destMask0) - 1;
-         if (fb->_ColorDrawBufferIndexes[count] != bufIndex) {
-            updated_drawbuffers(ctx);
-            fb->_ColorDrawBufferIndexes[count] = bufIndex;
-         }
-         count++;
-         destMask0 &= ~(1 << bufIndex);
-      }
-      fb->ColorDrawBuffer[0] = buffers[0];
-      fb->_NumColorDrawBuffers = count;
+   if (fb->_ColorDrawBufferIndex != bufIndex) {
+      updated_drawbuffers(ctx);
+      fb->_ColorDrawBufferIndex = bufIndex;
    }
-   else {
-      GLuint count = 0;
-      for (buf = 0; buf < n; buf++ ) {
-         if (destMask[buf]) {
-            GLint bufIndex = _mesa_ffs(destMask[buf]) - 1;
-            /* only one bit should be set in the destMask[buf] field */
-            ASSERT(_mesa_bitcount(destMask[buf]) == 1);
-            if (fb->_ColorDrawBufferIndexes[buf] != bufIndex) {
-	       updated_drawbuffers(ctx);
-               fb->_ColorDrawBufferIndexes[buf] = bufIndex;
-            }
-            count = buf + 1;
-         }
-         else {
-            if (fb->_ColorDrawBufferIndexes[buf] != -1) {
-	       updated_drawbuffers(ctx);
-               fb->_ColorDrawBufferIndexes[buf] = -1;
-            }
-         }
-         fb->ColorDrawBuffer[buf] = buffers[buf];
-      }
-      fb->_NumColorDrawBuffers = count;
-   }
-
-   /* set remaining outputs to -1 (GL_NONE) */
-   for (buf = fb->_NumColorDrawBuffers; buf < ctx->Const.MaxDrawBuffers; buf++) {
-      if (fb->_ColorDrawBufferIndexes[buf] != -1) {
-         updated_drawbuffers(ctx);
-         fb->_ColorDrawBufferIndexes[buf] = -1;
-      }
-   }
-   for (buf = n; buf < ctx->Const.MaxDrawBuffers; buf++) {
-      fb->ColorDrawBuffer[buf] = GL_NONE;
-   }
+   fb->ColorDrawBuffer = buffers;
 
    if (fb->Name == 0) {
-      /* also set context drawbuffer state */
-      for (buf = 0; buf < ctx->Const.MaxDrawBuffers; buf++) {
-         if (ctx->Color.DrawBuffer[buf] != fb->ColorDrawBuffer[buf]) {
-	    updated_drawbuffers(ctx);
-            ctx->Color.DrawBuffer[buf] = fb->ColorDrawBuffer[buf];
-         }
+      if (ctx->Color.DrawBuffer != fb->ColorDrawBuffer) {
+         updated_drawbuffers(ctx);
+         ctx->Color.DrawBuffer = fb->ColorDrawBuffer;
       }
    }
 }
@@ -461,18 +331,12 @@ _mesa_drawbuffers(struct gl_context *ctx, GLuint n, const GLenum *buffers,
  * Use when changing contexts.
  */
 void
-_mesa_update_draw_buffers(struct gl_context *ctx)
+_mesa_update_draw_buffer(struct gl_context *ctx)
 {
-   GLenum buffers[MAX_DRAW_BUFFERS];
-   GLuint i;
-
    /* should be a window system FBO */
    assert(ctx->DrawBuffer->Name == 0);
 
-   for (i = 0; i < ctx->Const.MaxDrawBuffers; i++)
-      buffers[i] = ctx->Color.DrawBuffer[i];
-
-   _mesa_drawbuffers(ctx, ctx->Const.MaxDrawBuffers, buffers, NULL);
+   _mesa_drawbuffer(ctx, ctx->Color.DrawBuffer, 0);
 }
 
 

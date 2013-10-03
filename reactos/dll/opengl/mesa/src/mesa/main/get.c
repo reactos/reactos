@@ -131,7 +131,6 @@ enum value_extra {
    EXTRA_VERSION_32,
    EXTRA_NEW_BUFFERS, 
    EXTRA_NEW_FRAG_CLAMP,
-   EXTRA_VALID_DRAW_BUFFER,
    EXTRA_VALID_TEXTURE_UNIT,
    EXTRA_VALID_CLIP_DISTANCE,
    EXTRA_FLUSH_CURRENT,
@@ -229,11 +228,6 @@ static const int extra_new_buffers[] = {
 
 static const int extra_new_frag_clamp[] = {
    EXTRA_NEW_FRAG_CLAMP,
-   EXTRA_END
-};
-
-static const int extra_valid_draw_buffer[] = {
-   EXTRA_VALID_DRAW_BUFFER,
    EXTRA_END
 };
 
@@ -347,7 +341,7 @@ static const int extra_version_32[] = { EXTRA_VERSION_32, EXTRA_END };
 static const struct value_desc values[] = {
    { GL_ALPHA_BITS, BUFFER_INT(Visual.alphaBits), extra_new_buffers },
    { GL_BLEND, CONTEXT_BIT0(Color.BlendEnabled), NO_EXTRA },
-   { GL_BLEND_SRC, CONTEXT_ENUM(Color.Blend[0].SrcRGB), NO_EXTRA },
+   { GL_BLEND_SRC, CONTEXT_ENUM(Color.SrcRGB), NO_EXTRA },
    { GL_BLUE_BITS, BUFFER_INT(Visual.blueBits), extra_new_buffers },
    { GL_COLOR_CLEAR_VALUE, LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp },
    { GL_COLOR_WRITEMASK, LOC_CUSTOM, TYPE_INT_4, 0, NO_EXTRA },
@@ -409,15 +403,15 @@ static const struct value_desc values[] = {
      extra_ARB_texture_cube_map }, /* XXX: OES_texture_cube_map */
 
    /* XXX: OES_blend_subtract */
-   { GL_BLEND_SRC_RGB_EXT, CONTEXT_ENUM(Color.Blend[0].SrcRGB), NO_EXTRA },
-   { GL_BLEND_DST_RGB_EXT, CONTEXT_ENUM(Color.Blend[0].DstRGB), NO_EXTRA },
-   { GL_BLEND_SRC_ALPHA_EXT, CONTEXT_ENUM(Color.Blend[0].SrcA), NO_EXTRA },
-   { GL_BLEND_DST_ALPHA_EXT, CONTEXT_ENUM(Color.Blend[0].DstA), NO_EXTRA },
+   { GL_BLEND_SRC_RGB_EXT, CONTEXT_ENUM(Color.SrcRGB), NO_EXTRA },
+   { GL_BLEND_DST_RGB_EXT, CONTEXT_ENUM(Color.DstRGB), NO_EXTRA },
+   { GL_BLEND_SRC_ALPHA_EXT, CONTEXT_ENUM(Color.SrcA), NO_EXTRA },
+   { GL_BLEND_DST_ALPHA_EXT, CONTEXT_ENUM(Color.DstA), NO_EXTRA },
 
    /* GL_BLEND_EQUATION_RGB, which is what we're really after, is
     * defined identically to GL_BLEND_EQUATION. */
-   { GL_BLEND_EQUATION, CONTEXT_ENUM(Color.Blend[0].EquationRGB), NO_EXTRA },
-   { GL_BLEND_EQUATION_ALPHA_EXT, CONTEXT_ENUM(Color.Blend[0].EquationA), NO_EXTRA },
+   { GL_BLEND_EQUATION, CONTEXT_ENUM(Color.EquationRGB), NO_EXTRA },
+   { GL_BLEND_EQUATION_ALPHA_EXT, CONTEXT_ENUM(Color.EquationA), NO_EXTRA },
 
    /* GL_ARB_texture_compression */
    { GL_NUM_COMPRESSED_TEXTURE_FORMATS_ARB, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
@@ -483,7 +477,7 @@ static const struct value_desc values[] = {
    { GL_ALPHA_TEST, CONTEXT_BOOL(Color.AlphaEnabled), NO_EXTRA },
    { GL_ALPHA_TEST_FUNC, CONTEXT_ENUM(Color.AlphaFunc), NO_EXTRA },
    { GL_ALPHA_TEST_REF, LOC_CUSTOM, TYPE_FLOATN, 0, extra_new_frag_clamp },
-   { GL_BLEND_DST, CONTEXT_ENUM(Color.Blend[0].DstRGB), NO_EXTRA },
+   { GL_BLEND_DST, CONTEXT_ENUM(Color.DstRGB), NO_EXTRA },
    { GL_CLIP_DISTANCE0, CONTEXT_BIT0(Transform.ClipPlanesEnabled), extra_valid_clip_distance },
    { GL_CLIP_DISTANCE1, CONTEXT_BIT1(Transform.ClipPlanesEnabled), extra_valid_clip_distance },
    { GL_CLIP_DISTANCE2, CONTEXT_BIT2(Transform.ClipPlanesEnabled), extra_valid_clip_distance },
@@ -614,29 +608,9 @@ static const struct value_desc values[] = {
      CONTEXT_INT(Const.MaxTextureCoordUnits),
      extra_ARB_fragment_program_NV_fragment_program },
 
-   /* GL_ARB_draw_buffers */
-   { GL_MAX_DRAW_BUFFERS_ARB, CONTEXT_INT(Const.MaxDrawBuffers), NO_EXTRA },
-
    /* GL_EXT_framebuffer_object / GL_NV_fbo_color_attachments */
    { GL_MAX_COLOR_ATTACHMENTS, CONTEXT_INT(Const.MaxColorAttachments),
      extra_EXT_framebuffer_object },
-
-   /* GL_ARB_draw_buffers / GL_NV_draw_buffers (for ES 2.0) */
-   { GL_DRAW_BUFFER0_ARB, BUFFER_ENUM(ColorDrawBuffer[0]), NO_EXTRA },
-   { GL_DRAW_BUFFER1_ARB, BUFFER_ENUM(ColorDrawBuffer[1]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER2_ARB, BUFFER_ENUM(ColorDrawBuffer[2]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER3_ARB, BUFFER_ENUM(ColorDrawBuffer[3]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER4_ARB, BUFFER_ENUM(ColorDrawBuffer[4]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER5_ARB, BUFFER_ENUM(ColorDrawBuffer[5]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER6_ARB, BUFFER_ENUM(ColorDrawBuffer[6]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER7_ARB, BUFFER_ENUM(ColorDrawBuffer[7]),
-     extra_valid_draw_buffer },
 
    { GL_BLEND_COLOR_EXT, LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp },
    /* GL_ARB_fragment_program */
@@ -703,7 +677,7 @@ static const struct value_desc values[] = {
    { GL_DEPTH_BIAS, CONTEXT_FLOAT(Pixel.DepthBias), NO_EXTRA },
    { GL_DEPTH_SCALE, CONTEXT_FLOAT(Pixel.DepthScale), NO_EXTRA },
    { GL_DOUBLEBUFFER, BUFFER_INT(Visual.doubleBufferMode), NO_EXTRA },
-   { GL_DRAW_BUFFER, BUFFER_ENUM(ColorDrawBuffer[0]), NO_EXTRA },
+   { GL_DRAW_BUFFER, BUFFER_ENUM(ColorDrawBuffer), NO_EXTRA },
    { GL_EDGE_FLAG, LOC_CUSTOM, TYPE_BOOLEAN, 0, NO_EXTRA },
    { GL_FEEDBACK_BUFFER_SIZE, CONTEXT_INT(Feedback.BufferSize), NO_EXTRA },
    { GL_FEEDBACK_BUFFER_TYPE, CONTEXT_ENUM(Feedback.Type), NO_EXTRA },
@@ -1216,10 +1190,10 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       break;
 
    case GL_COLOR_WRITEMASK:
-      v->value_int_4[0] = ctx->Color.ColorMask[0][RCOMP] ? 1 : 0;
-      v->value_int_4[1] = ctx->Color.ColorMask[0][GCOMP] ? 1 : 0;
-      v->value_int_4[2] = ctx->Color.ColorMask[0][BCOMP] ? 1 : 0;
-      v->value_int_4[3] = ctx->Color.ColorMask[0][ACOMP] ? 1 : 0;
+      v->value_int_4[0] = ctx->Color.ColorMask[RCOMP] ? 1 : 0;
+      v->value_int_4[1] = ctx->Color.ColorMask[GCOMP] ? 1 : 0;
+      v->value_int_4[2] = ctx->Color.ColorMask[BCOMP] ? 1 : 0;
+      v->value_int_4[3] = ctx->Color.ColorMask[ACOMP] ? 1 : 0;
       break;
 
    case GL_EDGE_FLAG:
@@ -1504,13 +1478,6 @@ check_extra(struct gl_context *ctx, const char *func, const struct value_desc *d
 	 break;
       case EXTRA_FLUSH_CURRENT:
 	 FLUSH_CURRENT(ctx, 0);
-	 break;
-      case EXTRA_VALID_DRAW_BUFFER:
-	 if (d->pname - GL_DRAW_BUFFER0_ARB >= ctx->Const.MaxDrawBuffers) {
-	    _mesa_error(ctx, GL_INVALID_OPERATION, "%s(draw buffer %u)",
-			func, d->pname - GL_DRAW_BUFFER0_ARB);
-	    return GL_FALSE;
-	 }
 	 break;
       case EXTRA_VALID_TEXTURE_UNIT:
 	 if (ctx->Texture.CurrentUnit >= ctx->Const.MaxTextureCoordUnits) {

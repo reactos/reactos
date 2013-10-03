@@ -264,12 +264,6 @@
 /*@}*/
 
 
-/** For GL_ARB_draw_buffers */
-/*@{*/
-#define MAX_DRAW_BUFFERS 8
-/*@}*/
-
-
 /** For GL_EXT_framebuffer_object */
 /*@{*/
 #define MAX_COLOR_ATTACHMENTS 8

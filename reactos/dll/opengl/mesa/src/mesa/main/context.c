@@ -549,9 +549,6 @@ _mesa_init_constants(struct gl_context *ctx)
    /* CheckArrayBounds is overriden by drivers/x11 for X server */
    ctx->Const.CheckArrayBounds = GL_FALSE;
 
-   /* GL_ARB_draw_buffers */
-   ctx->Const.MaxDrawBuffers = MAX_DRAW_BUFFERS;
-
 #if FEATURE_EXT_framebuffer_object
    ctx->Const.MaxColorAttachments = MAX_COLOR_ATTACHMENTS;
    ctx->Const.MaxRenderbufferSize = MAX_WIDTH;
@@ -645,10 +642,8 @@ check_context_limits(struct gl_context *ctx)
    assert(ctx->Const.MaxViewportWidth <= MAX_WIDTH);
    assert(ctx->Const.MaxViewportHeight <= MAX_WIDTH);
 
-   assert(ctx->Const.MaxDrawBuffers <= MAX_DRAW_BUFFERS);
-
    /* if this fails, add more enum values to gl_buffer_index */
-   assert(BUFFER_COLOR0 + MAX_DRAW_BUFFERS <= BUFFER_COUNT);
+   assert(BUFFER_COLOR0 + 1 <= BUFFER_COUNT);
 
    /* XXX probably add more tests */
 }
@@ -1302,7 +1297,7 @@ _mesa_make_current( struct gl_context *newCtx,
              * For winsys FBOs this comes from the GL state (which may have
              * changed since the last time this FBO was bound).
              */
-            _mesa_update_draw_buffers(newCtx);
+            _mesa_update_draw_buffer(newCtx);
          }
          if (!newCtx->ReadBuffer || newCtx->ReadBuffer->Name == 0) {
             _mesa_reference_framebuffer(&newCtx->ReadBuffer, readBuffer);

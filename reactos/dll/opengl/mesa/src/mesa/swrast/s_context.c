@@ -55,7 +55,6 @@ _swrast_update_rasterflags( struct gl_context *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLbitfield rasterMask = 0;
-   GLuint i;
 
    if (ctx->Color.AlphaEnabled)           rasterMask |= ALPHATEST_BIT;
    if (ctx->Color.BlendEnabled)           rasterMask |= BLEND_BIT;
@@ -63,15 +62,13 @@ _swrast_update_rasterflags( struct gl_context *ctx )
    if (swrast->_FogEnabled)               rasterMask |= FOG_BIT;
    if (ctx->Scissor.Enabled)              rasterMask |= CLIP_BIT;
    if (ctx->Stencil._Enabled)             rasterMask |= STENCIL_BIT;
-   for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
-      if (!ctx->Color.ColorMask[i][0] ||
-          !ctx->Color.ColorMask[i][1] ||
-          !ctx->Color.ColorMask[i][2] ||
-          !ctx->Color.ColorMask[i][3]) {
-         rasterMask |= MASKING_BIT;
-         break;
-      }
+   if (!ctx->Color.ColorMask[0] ||
+       !ctx->Color.ColorMask[1] ||
+       !ctx->Color.ColorMask[2] ||
+       !ctx->Color.ColorMask[3]) {
+      rasterMask |= MASKING_BIT;
    }
+
    if (ctx->Color.ColorLogicOpEnabled) rasterMask |= LOGIC_OP_BIT;
    if (ctx->Texture._EnabledUnits)     rasterMask |= TEXTURE_BIT;
    if (   ctx->Viewport.X < 0
@@ -81,24 +78,11 @@ _swrast_update_rasterflags( struct gl_context *ctx )
       rasterMask |= CLIP_BIT;
    }
 
-
-   /* If we're not drawing to exactly one color buffer set the
-    * MULTI_DRAW_BIT flag.  Also set it if we're drawing to no
-    * buffers or the RGBA or CI mask disables all writes.
-    */
-   if (ctx->DrawBuffer->_NumColorDrawBuffers != 1) {
-      /* more than one color buffer designated for writing (or zero buffers) */
-      rasterMask |= MULTI_DRAW_BIT;
-   }
-
-   for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
-      if (ctx->Color.ColorMask[i][0] +
-          ctx->Color.ColorMask[i][1] +
-          ctx->Color.ColorMask[i][2] +
-          ctx->Color.ColorMask[i][3] == 0) {
-         rasterMask |= MULTI_DRAW_BIT; /* all RGBA channels disabled */
-         break;
-      }
+   if (ctx->Color.ColorMask[0] +
+       ctx->Color.ColorMask[1] +
+       ctx->Color.ColorMask[2] +
+       ctx->Color.ColorMask[3] == 0) {
+      rasterMask |= MULTI_DRAW_BIT; /* all RGBA channels disabled */
    }
 
 #if CHAN_TYPE == GL_FLOAT

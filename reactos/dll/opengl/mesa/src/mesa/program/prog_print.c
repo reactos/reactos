@@ -272,14 +272,6 @@ arb_output_attrib_string(GLint index, GLenum progType)
       "result.depth", /* FRAG_RESULT_DEPTH */
       "result.(one)", /* FRAG_RESULT_STENCIL */
       "result.color", /* FRAG_RESULT_COLOR */
-      "result.color[0]", /* FRAG_RESULT_DATA0 (named for GLSL's gl_FragData) */
-      "result.color[1]",
-      "result.color[2]",
-      "result.color[3]",
-      "result.color[4]",
-      "result.color[5]",
-      "result.color[6]",
-      "result.color[7]" /* MAX_DRAW_BUFFERS = 8 */
    };
 
    /* sanity checks */

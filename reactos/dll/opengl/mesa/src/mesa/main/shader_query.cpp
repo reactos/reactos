@@ -255,7 +255,7 @@ _mesa_BindFragDataLocation(GLuint program, GLuint colorNumber,
       return;
    }
 
-   if (colorNumber >= ctx->Const.MaxDrawBuffers) {
+   if (colorNumber > 0) {
       _mesa_error(ctx, GL_INVALID_VALUE, "glBindFragDataLocation(index)");
       return;
    }

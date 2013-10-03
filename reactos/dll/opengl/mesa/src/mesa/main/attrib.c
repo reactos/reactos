@@ -226,13 +226,11 @@ _mesa_PushAttrib(GLbitfield mask)
    }
 
    if (mask & GL_COLOR_BUFFER_BIT) {
-      GLuint i;
       struct gl_colorbuffer_attrib *attr;
       attr = MALLOC_STRUCT( gl_colorbuffer_attrib );
       memcpy( attr, &ctx->Color, sizeof(struct gl_colorbuffer_attrib) );
       /* push the Draw FBO's DrawBuffer[] state, not ctx->Color.DrawBuffer[] */
-      for (i = 0; i < ctx->Const.MaxDrawBuffers; i ++)
-         attr->DrawBuffer[i] = ctx->DrawBuffer->ColorDrawBuffer[i];
+      attr->DrawBuffer = ctx->DrawBuffer->ColorDrawBuffer;
       save_attrib_data(&head, GL_COLOR_BUFFER_BIT, attr);
    }
 
@@ -818,76 +816,31 @@ _mesa_PopAttrib(void)
                                 color->ClearColor.f[2],
                                 color->ClearColor.f[3]);
                _mesa_IndexMask(color->IndexMask);
-               _mesa_ColorMask((GLboolean) (color->ColorMask[0][0] != 0),
-                               (GLboolean) (color->ColorMask[0][1] != 0),
-                               (GLboolean) (color->ColorMask[0][2] != 0),
-                               (GLboolean) (color->ColorMask[0][3] != 0));
-               {
-                  /* Need to determine if more than one color output is
-                   * specified.  If so, call glDrawBuffersARB, else call
-                   * glDrawBuffer().  This is a subtle, but essential point
-                   * since GL_FRONT (for example) is illegal for the former
-                   * function, but legal for the later.
-                   */
-                  GLboolean multipleBuffers = GL_FALSE;
-		  GLuint i;
-
-		  for (i = 1; i < ctx->Const.MaxDrawBuffers; i++) {
-		     if (color->DrawBuffer[i] != GL_NONE) {
-			multipleBuffers = GL_TRUE;
-			break;
-		     }
-                  }
-                  /* Call the API_level functions, not _mesa_drawbuffers()
-                   * since we need to do error checking on the pop'd
-                   * GL_DRAW_BUFFER.
-                   * Ex: if GL_FRONT were pushed, but we're popping with a
-                   * user FBO bound, GL_FRONT will be illegal and we'll need
-                   * to record that error.  Per OpenGL ARB decision.
-                   */
-                  if (multipleBuffers)
-                     _mesa_DrawBuffersARB(ctx->Const.MaxDrawBuffers,
-                                          color->DrawBuffer);
-                  else
-                     _mesa_DrawBuffer(color->DrawBuffer[0]);
-               }
+               _mesa_ColorMask((GLboolean) (color->ColorMask[0] != 0),
+                               (GLboolean) (color->ColorMask[1] != 0),
+                               (GLboolean) (color->ColorMask[2] != 0),
+                               (GLboolean) (color->ColorMask[3] != 0));
+               _mesa_DrawBuffer(color->DrawBuffer);
                _mesa_set_enable(ctx, GL_ALPHA_TEST, color->AlphaEnabled);
                _mesa_AlphaFunc(color->AlphaFunc, color->AlphaRefUnclamped);
                if (ctx->Color.BlendEnabled != color->BlendEnabled) {
                   _mesa_set_enable(ctx, GL_BLEND, (color->BlendEnabled & 1));
                }
-               if (ctx->Color._BlendFuncPerBuffer ||
-                   ctx->Color._BlendEquationPerBuffer) {
-                  /* set blend per buffer */
-                  GLuint buf;
-                  for (buf = 0; buf < ctx->Const.MaxDrawBuffers; buf++) {
-                     _mesa_BlendFuncSeparatei(buf, color->Blend[buf].SrcRGB,
-                                              color->Blend[buf].DstRGB,
-                                              color->Blend[buf].SrcA,
-                                              color->Blend[buf].DstA);
-                     _mesa_BlendEquationSeparatei(buf,
-                                                  color->Blend[buf].EquationRGB,
-                                                  color->Blend[buf].EquationA);
-                  }
+               /* set same blend modes for all buffers */
+               _mesa_BlendFuncSeparateEXT(color->SrcRGB,
+                                          color->DstRGB,
+                                          color->SrcA,
+                                          color->DstA);
+               /* This special case is because glBlendEquationSeparateEXT
+                * cannot take GL_LOGIC_OP as a parameter.
+                */
+               if (color->EquationRGB == color->EquationA) {
+                  _mesa_BlendEquation(color->EquationRGB);
                }
                else {
-                  /* set same blend modes for all buffers */
-                  _mesa_BlendFuncSeparateEXT(color->Blend[0].SrcRGB,
-                                             color->Blend[0].DstRGB,
-                                             color->Blend[0].SrcA,
-                                             color->Blend[0].DstA);
-                  /* This special case is because glBlendEquationSeparateEXT
-                   * cannot take GL_LOGIC_OP as a parameter.
-                   */
-                  if (color->Blend[0].EquationRGB ==
-                      color->Blend[0].EquationA) {
-                     _mesa_BlendEquation(color->Blend[0].EquationRGB);
-                  }
-                  else {
-                     _mesa_BlendEquationSeparateEXT(
-                                                 color->Blend[0].EquationRGB,
-                                                 color->Blend[0].EquationA);
-                  }
+                  _mesa_BlendEquationSeparateEXT(
+                                              color->EquationRGB,
+                                              color->EquationA);
                }
                _mesa_BlendColor(color->BlendColorUnclamped[0],
                                 color->BlendColorUnclamped[1],

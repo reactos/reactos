@@ -72,34 +72,9 @@ extern GLboolean
 _mesa_meta_in_progress(struct gl_context *ctx);
 
 extern void
-_mesa_meta_BlitFramebuffer(struct gl_context *ctx,
-                           GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
-                           GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
-                           GLbitfield mask, GLenum filter);
-
-extern void
-_mesa_meta_Clear(struct gl_context *ctx, GLbitfield buffers);
-
-extern void
-_mesa_meta_glsl_Clear(struct gl_context *ctx, GLbitfield buffers);
-
-extern void
 _mesa_meta_CopyPixels(struct gl_context *ctx, GLint srcx, GLint srcy,
                       GLsizei width, GLsizei height,
                       GLint dstx, GLint dsty, GLenum type);
-
-extern void
-_mesa_meta_DrawPixels(struct gl_context *ctx,
-                      GLint x, GLint y, GLsizei width, GLsizei height,
-                      GLenum format, GLenum type,
-                      const struct gl_pixelstore_attrib *unpack,
-                      const GLvoid *pixels);
-
-extern void
-_mesa_meta_Bitmap(struct gl_context *ctx,
-                  GLint x, GLint y, GLsizei width, GLsizei height,
-                  const struct gl_pixelstore_attrib *unpack,
-                  const GLubyte *bitmap);
 
 extern GLboolean
 _mesa_meta_check_generate_mipmap_fallback(struct gl_context *ctx, GLenum target,

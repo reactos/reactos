@@ -69,8 +69,6 @@ static const struct extension extension_table[] = {
    /* ARB Extensions */
    { "GL_ARB_color_buffer_float",                  o(ARB_color_buffer_float),                  2004 },
    { "GL_ARB_conservative_depth",                  o(ARB_conservative_depth),                  2011 },
-   { "GL_ARB_draw_buffers",                        o(dummy_true),                              2002 },
-   { "GL_ARB_draw_buffers_blend",                  o(ARB_draw_buffers_blend),                  2009 },
    { "GL_ARB_fragment_program",                    o(ARB_fragment_program),                    2002 },
    { "GL_ARB_fragment_program_shadow",             o(ARB_fragment_program_shadow),             2003 },
    { "GL_ARB_fragment_shader",                     o(ARB_fragment_shader),                     2002 },
@@ -152,7 +150,6 @@ static const struct extension extension_table[] = {
 
    /* Vendor extensions */
    { "GL_AMD_conservative_depth",                  o(ARB_conservative_depth),                  2009 },
-   { "GL_AMD_draw_buffers_blend",                  o(ARB_draw_buffers_blend),                  2009 },
    { "GL_AMD_shader_stencil_export",               o(ARB_shader_stencil_export),               2009 },
    { "GL_APPLE_object_purgeable",                  o(APPLE_object_purgeable),                  2006 },
    { "GL_APPLE_packed_pixels",                     o(APPLE_packed_pixels),                     2002 },

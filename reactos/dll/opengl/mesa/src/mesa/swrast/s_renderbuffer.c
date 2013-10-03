@@ -592,7 +592,6 @@ _swrast_map_renderbuffers(struct gl_context *ctx)
 {
    struct gl_framebuffer *fb = ctx->DrawBuffer;
    struct gl_renderbuffer *depthRb, *stencilRb;
-   GLuint buf;
 
    depthRb = fb->Attachment[BUFFER_DEPTH].Renderbuffer;
    if (depthRb) {
@@ -606,10 +605,8 @@ _swrast_map_renderbuffers(struct gl_context *ctx)
       map_attachment(ctx, fb, BUFFER_STENCIL);
    }
 
-   for (buf = 0; buf < fb->_NumColorDrawBuffers; buf++) {
-      map_attachment(ctx, fb, fb->_ColorDrawBufferIndexes[buf]);
-      find_renderbuffer_colortype(fb->_ColorDrawBuffers[buf]);
-   }
+   map_attachment(ctx, fb, fb->_ColorDrawBufferIndex);
+   find_renderbuffer_colortype(fb->_ColorDrawBuffer);
 }
  
  
@@ -621,7 +618,6 @@ _swrast_unmap_renderbuffers(struct gl_context *ctx)
 {
    struct gl_framebuffer *fb = ctx->DrawBuffer;
    struct gl_renderbuffer *depthRb, *stencilRb;
-   GLuint buf;
 
    depthRb = fb->Attachment[BUFFER_DEPTH].Renderbuffer;
    if (depthRb) {
@@ -635,7 +631,5 @@ _swrast_unmap_renderbuffers(struct gl_context *ctx)
       unmap_attachment(ctx, fb, BUFFER_STENCIL);
    }
 
-   for (buf = 0; buf < fb->_NumColorDrawBuffers; buf++) {
-      unmap_attachment(ctx, fb, fb->_ColorDrawBufferIndexes[buf]);
-   }
+   unmap_attachment(ctx, fb, fb->_ColorDrawBufferIndex);
 }

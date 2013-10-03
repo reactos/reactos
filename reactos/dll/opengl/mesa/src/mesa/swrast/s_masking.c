@@ -41,7 +41,7 @@
  */
 void
 _swrast_mask_rgba_span(struct gl_context *ctx, struct gl_renderbuffer *rb,
-                       SWspan *span, GLuint buf)
+                       SWspan *span)
 {
    const GLuint n = span->end;
    void *rbPixels;
@@ -57,7 +57,7 @@ _swrast_mask_rgba_span(struct gl_context *ctx, struct gl_renderbuffer *rb,
     */
    if (span->array->ChanType == GL_UNSIGNED_BYTE) {
       /* treat 4xGLubyte as 1xGLuint */
-      const GLuint srcMask = *((GLuint *) ctx->Color.ColorMask[buf]);
+      const GLuint srcMask = *((GLuint *) ctx->Color.ColorMask);
       const GLuint dstMask = ~srcMask;
       const GLuint *dst = (const GLuint *) rbPixels;
       GLuint *src = (GLuint *) span->array->rgba8;
@@ -69,10 +69,10 @@ _swrast_mask_rgba_span(struct gl_context *ctx, struct gl_renderbuffer *rb,
    else if (span->array->ChanType == GL_UNSIGNED_SHORT) {
       /* 2-byte components */
       /* XXX try to use 64-bit arithmetic someday */
-      const GLushort rMask = ctx->Color.ColorMask[buf][RCOMP] ? 0xffff : 0x0;
-      const GLushort gMask = ctx->Color.ColorMask[buf][GCOMP] ? 0xffff : 0x0;
-      const GLushort bMask = ctx->Color.ColorMask[buf][BCOMP] ? 0xffff : 0x0;
-      const GLushort aMask = ctx->Color.ColorMask[buf][ACOMP] ? 0xffff : 0x0;
+      const GLushort rMask = ctx->Color.ColorMask[RCOMP] ? 0xffff : 0x0;
+      const GLushort gMask = ctx->Color.ColorMask[GCOMP] ? 0xffff : 0x0;
+      const GLushort bMask = ctx->Color.ColorMask[BCOMP] ? 0xffff : 0x0;
+      const GLushort aMask = ctx->Color.ColorMask[ACOMP] ? 0xffff : 0x0;
       const GLushort (*dst)[4] = (const GLushort (*)[4]) rbPixels;
       GLushort (*src)[4] = span->array->rgba16;
       GLuint i;
@@ -85,10 +85,10 @@ _swrast_mask_rgba_span(struct gl_context *ctx, struct gl_renderbuffer *rb,
    }
    else {
       /* 4-byte components */
-      const GLuint rMask = ctx->Color.ColorMask[buf][RCOMP] ? ~0x0 : 0x0;
-      const GLuint gMask = ctx->Color.ColorMask[buf][GCOMP] ? ~0x0 : 0x0;
-      const GLuint bMask = ctx->Color.ColorMask[buf][BCOMP] ? ~0x0 : 0x0;
-      const GLuint aMask = ctx->Color.ColorMask[buf][ACOMP] ? ~0x0 : 0x0;
+      const GLuint rMask = ctx->Color.ColorMask[RCOMP] ? ~0x0 : 0x0;
+      const GLuint gMask = ctx->Color.ColorMask[GCOMP] ? ~0x0 : 0x0;
+      const GLuint bMask = ctx->Color.ColorMask[BCOMP] ? ~0x0 : 0x0;
+      const GLuint aMask = ctx->Color.ColorMask[ACOMP] ? ~0x0 : 0x0;
       const GLuint (*dst)[4] = (const GLuint (*)[4]) rbPixels;
       GLuint (*src)[4] = (GLuint (*)[4]) span->array->attribs[FRAG_ATTRIB_COL0];
       GLuint i;

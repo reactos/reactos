@@ -562,8 +562,6 @@ struct dd_function_table {
    /** Enable and disable writing of frame buffer color components */
    void (*ColorMask)(struct gl_context *ctx, GLboolean rmask, GLboolean gmask,
                      GLboolean bmask, GLboolean amask );
-   void (*ColorMaskIndexed)(struct gl_context *ctx, GLuint buf, GLboolean rmask,
-                            GLboolean gmask, GLboolean bmask, GLboolean amask);
    /** Cause a material color to track the current color */
    void (*ColorMaterial)(struct gl_context *ctx, GLenum face, GLenum mode);
    /** Specify whether front- or back-facing facets can be culled */
@@ -578,8 +576,6 @@ struct dd_function_table {
    void (*DepthRange)(struct gl_context *ctx, GLclampd nearval, GLclampd farval);
    /** Specify the current buffer for writing */
    void (*DrawBuffer)( struct gl_context *ctx, GLenum buffer );
-   /** Specify the buffers for writing for fragment programs*/
-   void (*DrawBuffers)( struct gl_context *ctx, GLsizei n, const GLenum *buffers );
    /** Enable or disable server-side gl capabilities */
    void (*Enable)(struct gl_context *ctx, GLenum cap, GLboolean state);
    /** Specify fog parameters */

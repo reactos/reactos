@@ -137,16 +137,14 @@ _mesa_initialize_window_framebuffer(struct gl_framebuffer *fb,
 
    /* Init read/draw renderbuffer state */
    if (visual->doubleBufferMode) {
-      fb->_NumColorDrawBuffers = 1;
-      fb->ColorDrawBuffer[0] = GL_BACK;
-      fb->_ColorDrawBufferIndexes[0] = BUFFER_BACK_LEFT;
+      fb->ColorDrawBuffer = GL_BACK;
+      fb->_ColorDrawBufferIndex = BUFFER_BACK_LEFT;
       fb->ColorReadBuffer = GL_BACK;
       fb->_ColorReadBufferIndex = BUFFER_BACK_LEFT;
    }
    else {
-      fb->_NumColorDrawBuffers = 1;
-      fb->ColorDrawBuffer[0] = GL_FRONT;
-      fb->_ColorDrawBufferIndexes[0] = BUFFER_FRONT_LEFT;
+      fb->ColorDrawBuffer = GL_FRONT;
+      fb->_ColorDrawBufferIndex = BUFFER_FRONT_LEFT;
       fb->ColorReadBuffer = GL_FRONT;
       fb->_ColorReadBufferIndex = BUFFER_FRONT_LEFT;
    }
@@ -172,9 +170,8 @@ _mesa_initialize_user_framebuffer(struct gl_framebuffer *fb, GLuint name)
 
    fb->Name = name;
    fb->RefCount = 1;
-   fb->_NumColorDrawBuffers = 1;
-   fb->ColorDrawBuffer[0] = GL_COLOR_ATTACHMENT0_EXT;
-   fb->_ColorDrawBufferIndexes[0] = BUFFER_COLOR0;
+   fb->ColorDrawBuffer = GL_COLOR_ATTACHMENT0_EXT;
+   fb->_ColorDrawBufferIndex = BUFFER_COLOR0;
    fb->ColorReadBuffer = GL_COLOR_ATTACHMENT0_EXT;
    fb->_ColorReadBufferIndex = BUFFER_COLOR0;
    fb->Delete = _mesa_destroy_framebuffer;
@@ -628,19 +625,12 @@ _mesa_update_framebuffer_visual(struct gl_context *ctx,
 static void
 update_color_draw_buffers(struct gl_context *ctx, struct gl_framebuffer *fb)
 {
-   GLuint output;
-
-   /* set 0th buffer to NULL now in case _NumColorDrawBuffers is zero */
-   fb->_ColorDrawBuffers[0] = NULL;
-
-   for (output = 0; output < fb->_NumColorDrawBuffers; output++) {
-      GLint buf = fb->_ColorDrawBufferIndexes[output];
-      if (buf >= 0) {
-         fb->_ColorDrawBuffers[output] = fb->Attachment[buf].Renderbuffer;
-      }
-      else {
-         fb->_ColorDrawBuffers[output] = NULL;
-      }
+   GLint buf = fb->_ColorDrawBufferIndex;
+   if (buf >= 0) {
+      fb->_ColorDrawBuffer = fb->Attachment[buf].Renderbuffer;
+   }
+   else {
+      fb->_ColorDrawBuffer = NULL;
    }
 }
 
@@ -690,10 +680,7 @@ update_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
       /* Need to update the FB's GL_DRAW_BUFFER state to match the
        * context state (GL_READ_BUFFER too).
        */
-      if (fb->ColorDrawBuffer[0] != ctx->Color.DrawBuffer[0]) {
-         _mesa_drawbuffers(ctx, ctx->Const.MaxDrawBuffers,
-                           ctx->Color.DrawBuffer, NULL);
-      }
+      _mesa_drawbuffer(ctx, ctx->Color.DrawBuffer, 0);
    }
    else {
       /* This is a user-created framebuffer.

@@ -277,11 +277,9 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          break;
       case GL_BLEND:
          {
-            GLbitfield newEnabled =
-               state * ((1 << ctx->Const.MaxDrawBuffers) - 1);
-            if (newEnabled != ctx->Color.BlendEnabled) {
+            if (state != ctx->Color.BlendEnabled) {
                FLUSH_VERTICES(ctx, _NEW_COLOR);
-               ctx->Color.BlendEnabled = newEnabled;
+               ctx->Color.BlendEnabled = state;
             }
          }
          break;

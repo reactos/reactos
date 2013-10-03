@@ -438,10 +438,8 @@ swrast_fast_copy_pixels(struct gl_context *ctx,
    GLint srcRowStride, dstRowStride;
 
    if (type == GL_COLOR) {
-      if (dstFb->_NumColorDrawBuffers != 1)
-         return GL_FALSE;
       srcRb = srcFb->_ColorReadBuffer;
-      dstRb = dstFb->_ColorDrawBuffers[0];
+      dstRb = dstFb->_ColorDrawBuffer;
    }
    else if (type == GL_STENCIL) {
       srcRb = srcFb->Attachment[BUFFER_STENCIL].Renderbuffer;

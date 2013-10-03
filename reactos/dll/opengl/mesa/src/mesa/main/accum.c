@@ -344,7 +344,12 @@ accum_return(struct gl_context *ctx, GLfloat value,
    struct gl_renderbuffer *accRb = fb->Attachment[BUFFER_ACCUM].Renderbuffer;
    GLubyte *accMap, *colorMap;
    GLint accRowStride, colorRowStride;
-   GLuint buffer;
+   struct gl_renderbuffer *colorRb = fb->_ColorDrawBuffer;
+   const GLboolean masking = (!ctx->Color.ColorMask[RCOMP] ||
+                              !ctx->Color.ColorMask[GCOMP] ||
+                              !ctx->Color.ColorMask[BCOMP] ||
+                              !ctx->Color.ColorMask[ACOMP]);
+   GLbitfield mappingFlags = GL_MAP_WRITE_BIT;
 
    /* Map accum buffer */
    ctx->Driver.MapRenderbuffer(ctx, accRb, xpos, ypos, width, height,
@@ -355,89 +360,79 @@ accum_return(struct gl_context *ctx, GLfloat value,
       return;
    }
 
-   /* Loop over destination buffers */
-   for (buffer = 0; buffer < fb->_NumColorDrawBuffers; buffer++) {
-      struct gl_renderbuffer *colorRb = fb->_ColorDrawBuffers[buffer];
-      const GLboolean masking = (!ctx->Color.ColorMask[buffer][RCOMP] ||
-                                 !ctx->Color.ColorMask[buffer][GCOMP] ||
-                                 !ctx->Color.ColorMask[buffer][BCOMP] ||
-                                 !ctx->Color.ColorMask[buffer][ACOMP]);
-      GLbitfield mappingFlags = GL_MAP_WRITE_BIT;
-
-      if (masking)
-         mappingFlags |= GL_MAP_READ_BIT;
+   if (masking)
+      mappingFlags |= GL_MAP_READ_BIT;
 
       /* Map color buffer */
-      ctx->Driver.MapRenderbuffer(ctx, colorRb, xpos, ypos, width, height,
-                                  mappingFlags, &colorMap, &colorRowStride);
-      if (!colorMap) {
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glAccum");
-         continue;
-      }
-
-      if (accRb->Format == MESA_FORMAT_SIGNED_RGBA_16) {
-         const GLfloat scale = value / 32767.0f;
-         GLint i, j;
-         GLfloat (*rgba)[4], (*dest)[4];
-
-         rgba = (GLfloat (*)[4]) malloc(width * 4 * sizeof(GLfloat));
-         dest = (GLfloat (*)[4]) malloc(width * 4 * sizeof(GLfloat));
-
-         if (rgba && dest) {
-            for (j = 0; j < height; j++) {
-               GLshort *acc = (GLshort *) accMap;
-
-               for (i = 0; i < width; i++) {
-                  rgba[i][0] = acc[i * 4 + 0] * scale;
-                  rgba[i][1] = acc[i * 4 + 1] * scale;
-                  rgba[i][2] = acc[i * 4 + 2] * scale;
-                  rgba[i][3] = acc[i * 4 + 3] * scale;
-               }
-
-               if (masking) {
-
-                  /* get existing colors from dest buffer */
-                  _mesa_unpack_rgba_row(colorRb->Format, width, colorMap, dest);
-
-                  /* use the dest colors where mask[channel] = 0 */
-                  if (ctx->Color.ColorMask[buffer][RCOMP] == 0) {
-                     for (i = 0; i < width; i++)
-                        rgba[i][RCOMP] = dest[i][RCOMP];
-                  }
-                  if (ctx->Color.ColorMask[buffer][GCOMP] == 0) {
-                     for (i = 0; i < width; i++)
-                        rgba[i][GCOMP] = dest[i][GCOMP];
-                  }
-                  if (ctx->Color.ColorMask[buffer][BCOMP] == 0) {
-                     for (i = 0; i < width; i++)
-                        rgba[i][BCOMP] = dest[i][BCOMP];
-                  }
-                  if (ctx->Color.ColorMask[buffer][ACOMP] == 0) {
-                     for (i = 0; i < width; i++)
-                        rgba[i][ACOMP] = dest[i][ACOMP];
-                  }
-               }
-
-               _mesa_pack_float_rgba_row(colorRb->Format, width,
-                                         (const GLfloat (*)[4]) rgba, colorMap);
-
-               accMap += accRowStride;
-               colorMap += colorRowStride;
-            }
-         }
-         else {
-            _mesa_error(ctx, GL_OUT_OF_MEMORY, "glAccum");
-         }
-         free(rgba);
-         free(dest);
-      }
-      else {
-         /* other types someday? */
-      }
-
-      ctx->Driver.UnmapRenderbuffer(ctx, colorRb);
+   ctx->Driver.MapRenderbuffer(ctx, colorRb, xpos, ypos, width, height,
+                               mappingFlags, &colorMap, &colorRowStride);
+   if (!colorMap) {
+      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glAccum");
+      ctx->Driver.UnmapRenderbuffer(ctx, accRb);
+      return;
    }
 
+   if (accRb->Format == MESA_FORMAT_SIGNED_RGBA_16) {
+      const GLfloat scale = value / 32767.0f;
+      GLint i, j;
+      GLfloat (*rgba)[4], (*dest)[4];
+
+      rgba = (GLfloat (*)[4]) malloc(width * 4 * sizeof(GLfloat));
+      dest = (GLfloat (*)[4]) malloc(width * 4 * sizeof(GLfloat));
+
+      if (rgba && dest) {
+         for (j = 0; j < height; j++) {
+            GLshort *acc = (GLshort *) accMap;
+
+            for (i = 0; i < width; i++) {
+               rgba[i][0] = acc[i * 4 + 0] * scale;
+               rgba[i][1] = acc[i * 4 + 1] * scale;
+               rgba[i][2] = acc[i * 4 + 2] * scale;
+               rgba[i][3] = acc[i * 4 + 3] * scale;
+            }
+
+            if (masking) {
+
+               /* get existing colors from dest buffer */
+               _mesa_unpack_rgba_row(colorRb->Format, width, colorMap, dest);
+
+               /* use the dest colors where mask[channel] = 0 */
+               if (ctx->Color.ColorMask[RCOMP] == 0) {
+                  for (i = 0; i < width; i++)
+                     rgba[i][RCOMP] = dest[i][RCOMP];
+               }
+               if (ctx->Color.ColorMask[GCOMP] == 0) {
+                  for (i = 0; i < width; i++)
+                     rgba[i][GCOMP] = dest[i][GCOMP];
+               }
+               if (ctx->Color.ColorMask[BCOMP] == 0) {
+                  for (i = 0; i < width; i++)
+                     rgba[i][BCOMP] = dest[i][BCOMP];
+               }
+               if (ctx->Color.ColorMask[ACOMP] == 0) {
+                  for (i = 0; i < width; i++)
+                     rgba[i][ACOMP] = dest[i][ACOMP];
+               }
+            }
+
+            _mesa_pack_float_rgba_row(colorRb->Format, width,
+                                      (const GLfloat (*)[4]) rgba, colorMap);
+
+            accMap += accRowStride;
+            colorMap += colorRowStride;
+         }
+      }
+      else {
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glAccum");
+      }
+      free(rgba);
+      free(dest);
+   }
+   else {
+      /* other types someday? */
+   }
+
+   ctx->Driver.UnmapRenderbuffer(ctx, colorRb);
    ctx->Driver.UnmapRenderbuffer(ctx, accRb);
 }
 

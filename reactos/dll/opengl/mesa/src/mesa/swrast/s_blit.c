@@ -146,7 +146,7 @@ blit_nearest(struct gl_context *ctx,
    switch (buffer) {
    case GL_COLOR_BUFFER_BIT:
       readRb = ctx->ReadBuffer->_ColorReadBuffer;
-      drawRb = ctx->DrawBuffer->_ColorDrawBuffers[0];
+      drawRb = ctx->DrawBuffer->_ColorDrawBuffer;
 
       if (readRb->Format == drawRb->Format) {
 	 mode = DIRECT;
@@ -471,7 +471,7 @@ blit_linear(struct gl_context *ctx,
             GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1)
 {
    struct gl_renderbuffer *readRb = ctx->ReadBuffer->_ColorReadBuffer;
-   struct gl_renderbuffer *drawRb = ctx->DrawBuffer->_ColorDrawBuffers[0];
+   struct gl_renderbuffer *drawRb = ctx->DrawBuffer->_ColorDrawBuffer;
 
    const GLint srcWidth = ABS(srcX1 - srcX0);
    const GLint dstWidth = ABS(dstX1 - dstX0);

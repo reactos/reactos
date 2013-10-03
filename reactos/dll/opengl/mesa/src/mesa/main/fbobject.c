@@ -648,7 +648,6 @@ _mesa_test_framebuffer_completeness(struct gl_context *ctx,
    GLuint minWidth = ~0, minHeight = ~0, maxWidth = 0, maxHeight = 0;
    GLint numSamples = -1;
    GLint i;
-   GLuint j;
 
    assert(is_user_fbo(fb));
 
@@ -775,18 +774,16 @@ _mesa_test_framebuffer_completeness(struct gl_context *ctx,
    }
 
       /* Check that all DrawBuffers are present */
-      for (j = 0; j < ctx->Const.MaxDrawBuffers; j++) {
-	 if (fb->ColorDrawBuffer[j] != GL_NONE) {
+	 if (fb->ColorDrawBuffer != GL_NONE) {
 	    const struct gl_renderbuffer_attachment *att
-	       = _mesa_get_attachment(ctx, fb, fb->ColorDrawBuffer[j]);
+	       = _mesa_get_attachment(ctx, fb, fb->ColorDrawBuffer);
 	    assert(att);
 	    if (att->Type == GL_NONE) {
 	       fb->_Status = GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT;
-	       fbo_incomplete("missing drawbuffer", j);
+	       fbo_incomplete("missing drawbuffer", 0);
 	       return;
 	    }
 	 }
-      }
 
       /* Check that the ReadBuffer is present */
       if (fb->ColorReadBuffer != GL_NONE) {
@@ -2361,7 +2358,7 @@ _mesa_BlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
    /* get color read/draw renderbuffers */
    if (mask & GL_COLOR_BUFFER_BIT) {
       colorReadRb = readFb->_ColorReadBuffer;
-      colorDrawRb = drawFb->_ColorDrawBuffers[0];
+      colorDrawRb = drawFb->_ColorDrawBuffer;
 
       /* From the EXT_framebuffer_object spec:
        *

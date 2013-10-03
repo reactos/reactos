@@ -617,17 +617,12 @@
 #define _gloffset_BindAttribLocationARB 568
 #define _gloffset_GetActiveAttribARB 569
 #define _gloffset_GetAttribLocationARB 570
-#define _gloffset_DrawBuffersARB 571
 #define _gloffset_ClampColorARB 572
 #define _gloffset_RenderbufferStorageMultisample 575
 #define _gloffset_FlushMappedBufferRange 580
 #define _gloffset_MapBufferRange 581
 #define _gloffset_BindVertexArray 583
 #define _gloffset_GenVertexArrays 584
-#define _gloffset_BlendEquationSeparateiARB 597
-#define _gloffset_BlendEquationiARB 598
-#define _gloffset_BlendFuncSeparateiARB 599
-#define _gloffset_BlendFunciARB 600
 #define _gloffset_GetGraphicsResetStatusARB 665
 #define _gloffset_GetnColorTableARB 666
 #define _gloffset_GetnConvolutionFilterARB 668
@@ -1047,7 +1042,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define BindAttribLocationARB_remap_index 160
 #define GetActiveAttribARB_remap_index 161
 #define GetAttribLocationARB_remap_index 162
-#define DrawBuffersARB_remap_index 163
 #define ClampColorARB_remap_index 164
 #define RenderbufferStorageMultisample_remap_index 167
 #define VertexAttribDivisorARB_remap_index 171
@@ -1055,10 +1049,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define MapBufferRange_remap_index 173
 #define BindVertexArray_remap_index 175
 #define GenVertexArrays_remap_index 176
-#define BlendEquationSeparateiARB_remap_index 189
-#define BlendEquationiARB_remap_index 190
-#define BlendFuncSeparateiARB_remap_index 191
-#define BlendFunciARB_remap_index 192
 #define GetGraphicsResetStatusARB_remap_index 257
 #define GetnColorTableARB_remap_index 258
 #define GetnConvolutionFilterARB_remap_index 260
@@ -1472,17 +1462,12 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_BindAttribLocationARB driDispatchRemapTable[BindAttribLocationARB_remap_index]
 #define _gloffset_GetActiveAttribARB driDispatchRemapTable[GetActiveAttribARB_remap_index]
 #define _gloffset_GetAttribLocationARB driDispatchRemapTable[GetAttribLocationARB_remap_index]
-#define _gloffset_DrawBuffersARB driDispatchRemapTable[DrawBuffersARB_remap_index]
 #define _gloffset_ClampColorARB driDispatchRemapTable[ClampColorARB_remap_index]
 #define _gloffset_RenderbufferStorageMultisample driDispatchRemapTable[RenderbufferStorageMultisample_remap_index]
 #define _gloffset_FlushMappedBufferRange driDispatchRemapTable[FlushMappedBufferRange_remap_index]
 #define _gloffset_MapBufferRange driDispatchRemapTable[MapBufferRange_remap_index]
 #define _gloffset_BindVertexArray driDispatchRemapTable[BindVertexArray_remap_index]
 #define _gloffset_GenVertexArrays driDispatchRemapTable[GenVertexArrays_remap_index]
-#define _gloffset_BlendEquationSeparateiARB driDispatchRemapTable[BlendEquationSeparateiARB_remap_index]
-#define _gloffset_BlendEquationiARB driDispatchRemapTable[BlendEquationiARB_remap_index]
-#define _gloffset_BlendFuncSeparateiARB driDispatchRemapTable[BlendFuncSeparateiARB_remap_index]
-#define _gloffset_BlendFunciARB driDispatchRemapTable[BlendFunciARB_remap_index]
 #define _gloffset_GetGraphicsResetStatusARB driDispatchRemapTable[GetGraphicsResetStatusARB_remap_index]
 #define _gloffset_GetnColorTableARB driDispatchRemapTable[GetnColorTableARB_remap_index]
 #define _gloffset_GetnConvolutionFilterARB driDispatchRemapTable[GetnConvolutionFilterARB_remap_index]
@@ -7795,17 +7780,6 @@ static inline void SET_GetAttribLocationARB(struct _glapi_table *disp, GLint (GL
    SET_by_offset(disp, _gloffset_GetAttribLocationARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_DrawBuffersARB)(GLsizei, const GLenum *);
-#define CALL_DrawBuffersARB(disp, parameters) \
-    (* GET_DrawBuffersARB(disp)) parameters
-static inline _glptr_DrawBuffersARB GET_DrawBuffersARB(struct _glapi_table *disp) {
-   return (_glptr_DrawBuffersARB) (GET_by_offset(disp, _gloffset_DrawBuffersARB));
-}
-
-static inline void SET_DrawBuffersARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, const GLenum *)) {
-   SET_by_offset(disp, _gloffset_DrawBuffersARB, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_ClampColorARB)(GLenum, GLenum);
 #define CALL_ClampColorARB(disp, parameters) \
     (* GET_ClampColorARB(disp)) parameters
@@ -7870,50 +7844,6 @@ static inline _glptr_GenVertexArrays GET_GenVertexArrays(struct _glapi_table *di
 
 static inline void SET_GenVertexArrays(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
    SET_by_offset(disp, _gloffset_GenVertexArrays, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_BlendEquationSeparateiARB)(GLuint, GLenum, GLenum);
-#define CALL_BlendEquationSeparateiARB(disp, parameters) \
-    (* GET_BlendEquationSeparateiARB(disp)) parameters
-static inline _glptr_BlendEquationSeparateiARB GET_BlendEquationSeparateiARB(struct _glapi_table *disp) {
-   return (_glptr_BlendEquationSeparateiARB) (GET_by_offset(disp, _gloffset_BlendEquationSeparateiARB));
-}
-
-static inline void SET_BlendEquationSeparateiARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLenum)) {
-   SET_by_offset(disp, _gloffset_BlendEquationSeparateiARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_BlendEquationiARB)(GLuint, GLenum);
-#define CALL_BlendEquationiARB(disp, parameters) \
-    (* GET_BlendEquationiARB(disp)) parameters
-static inline _glptr_BlendEquationiARB GET_BlendEquationiARB(struct _glapi_table *disp) {
-   return (_glptr_BlendEquationiARB) (GET_by_offset(disp, _gloffset_BlendEquationiARB));
-}
-
-static inline void SET_BlendEquationiARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum)) {
-   SET_by_offset(disp, _gloffset_BlendEquationiARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_BlendFuncSeparateiARB)(GLuint, GLenum, GLenum, GLenum, GLenum);
-#define CALL_BlendFuncSeparateiARB(disp, parameters) \
-    (* GET_BlendFuncSeparateiARB(disp)) parameters
-static inline _glptr_BlendFuncSeparateiARB GET_BlendFuncSeparateiARB(struct _glapi_table *disp) {
-   return (_glptr_BlendFuncSeparateiARB) (GET_by_offset(disp, _gloffset_BlendFuncSeparateiARB));
-}
-
-static inline void SET_BlendFuncSeparateiARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLenum, GLenum, GLenum)) {
-   SET_by_offset(disp, _gloffset_BlendFuncSeparateiARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_BlendFunciARB)(GLuint, GLenum, GLenum);
-#define CALL_BlendFunciARB(disp, parameters) \
-    (* GET_BlendFunciARB(disp)) parameters
-static inline _glptr_BlendFunciARB GET_BlendFunciARB(struct _glapi_table *disp) {
-   return (_glptr_BlendFunciARB) (GET_by_offset(disp, _gloffset_BlendFunciARB));
-}
-
-static inline void SET_BlendFunciARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLenum)) {
-   SET_by_offset(disp, _gloffset_BlendFunciARB, fn);
 }
 
 typedef GLenum (GLAPIENTRYP _glptr_GetGraphicsResetStatusARB)(void);

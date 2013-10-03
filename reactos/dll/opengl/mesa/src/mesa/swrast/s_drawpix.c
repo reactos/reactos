@@ -194,15 +194,14 @@ fast_draw_rgba_pixels(struct gl_context *ctx, GLint x, GLint y,
                       const struct gl_pixelstore_attrib *userUnpack,
                       const GLvoid *pixels)
 {
-   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0];
+   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffer;
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    struct gl_pixelstore_attrib unpack;
 
    if (!rb)
       return GL_TRUE; /* no-op */
 
-   if (ctx->DrawBuffer->_NumColorDrawBuffers > 1 ||
-       (swrast->_RasterMask & ~CLIP_BIT) ||
+   if ((swrast->_RasterMask & ~CLIP_BIT) ||
        ctx->Texture._EnabledCoordUnits ||
        userUnpack->SwapBytes ||
        ctx->Pixel.ZoomX != 1.0f ||
@@ -428,14 +427,10 @@ draw_rgba_pixels( struct gl_context *ctx, GLint x, GLint y,
    span.arrayMask = SPAN_RGBA;
    span.arrayAttribs = FRAG_BIT_COL0; /* we're fill in COL0 attrib values */
 
-   if (ctx->DrawBuffer->_NumColorDrawBuffers > 0) {
-      GLenum datatype = _mesa_get_format_datatype(
-                 ctx->DrawBuffer->_ColorDrawBuffers[0]->Format);
-      if (datatype != GL_FLOAT &&
-          ctx->Color.ClampFragmentColor != GL_FALSE) {
-         /* need to clamp colors before applying fragment ops */
-         transferOps |= IMAGE_CLAMP_BIT;
-      }
+   if (_mesa_get_format_datatype(ctx->DrawBuffer->_ColorDrawBuffer->Format) != GL_FLOAT &&
+       ctx->Color.ClampFragmentColor != GL_FALSE) {
+      /* need to clamp colors before applying fragment ops */
+      transferOps |= IMAGE_CLAMP_BIT;
    }
 
    /*

@@ -57,7 +57,7 @@ _mesa_DrawPixels( GLsizei width, GLsizei height,
                   _mesa_lookup_enum_by_nr(format),
                   _mesa_lookup_enum_by_nr(type),
                   pixels,
-                  _mesa_lookup_enum_by_nr(ctx->DrawBuffer->ColorDrawBuffer[0]),
+                  _mesa_lookup_enum_by_nr(ctx->DrawBuffer->ColorDrawBuffer),
                   IROUND(ctx->Current.RasterPos[0]),
                   IROUND(ctx->Current.RasterPos[1]));
 
@@ -164,7 +164,7 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
                   srcx, srcy, width, height,
                   _mesa_lookup_enum_by_nr(type),
                   _mesa_lookup_enum_by_nr(ctx->ReadBuffer->ColorReadBuffer),
-                  _mesa_lookup_enum_by_nr(ctx->DrawBuffer->ColorDrawBuffer[0]),
+                  _mesa_lookup_enum_by_nr(ctx->DrawBuffer->ColorDrawBuffer),
                   IROUND(ctx->Current.RasterPos[0]),
                   IROUND(ctx->Current.RasterPos[1]));
 

@@ -367,7 +367,7 @@ typedef enum
     * any are written, FRAG_RESULT_COLOR will not be written.
     */
    FRAG_RESULT_DATA0 = 3,
-   FRAG_RESULT_MAX = (FRAG_RESULT_DATA0 + MAX_DRAW_BUFFERS)
+   FRAG_RESULT_MAX = (FRAG_RESULT_DATA0)
 } gl_frag_result;
 
 
@@ -670,9 +670,9 @@ struct gl_colorbuffer_attrib
    GLuint ClearIndex;                      /**< Index for glClear */
    union gl_color_union ClearColor;        /**< Color for glClear, unclamped */
    GLuint IndexMask;                       /**< Color index write mask */
-   GLubyte ColorMask[MAX_DRAW_BUFFERS][4]; /**< Each flag is 0xff or 0x0 */
+   GLubyte ColorMask[4]; /**< Each flag is 0xff or 0x0 */
 
-   GLenum DrawBuffer[MAX_DRAW_BUFFERS];	/**< Which buffer to draw into */
+   GLenum DrawBuffer;	/**< Which buffer to draw into */
 
    /** 
     * \name alpha testing
@@ -697,19 +697,12 @@ struct gl_colorbuffer_attrib
    GLfloat BlendColorUnclamped[4];               /**< Blending color */
    GLfloat BlendColor[4];		/**< Blending color */
 
-   struct
-   {
-      GLenum SrcRGB;             /**< RGB blend source term */
-      GLenum DstRGB;             /**< RGB blend dest term */
-      GLenum SrcA;               /**< Alpha blend source term */
-      GLenum DstA;               /**< Alpha blend dest term */
-      GLenum EquationRGB;        /**< GL_ADD, GL_SUBTRACT, etc. */
-      GLenum EquationA;          /**< GL_ADD, GL_SUBTRACT, etc. */
-   } Blend[MAX_DRAW_BUFFERS];
-   /** Are the blend func terms currently different for each buffer/target? */
-   GLboolean _BlendFuncPerBuffer;
-   /** Are the blend equations currently different for each buffer/target? */
-   GLboolean _BlendEquationPerBuffer;
+   GLenum SrcRGB;             /**< RGB blend source term */
+   GLenum DstRGB;             /**< RGB blend dest term */
+   GLenum SrcA;               /**< Alpha blend source term */
+   GLenum DstA;               /**< Alpha blend dest term */
+   GLenum EquationRGB;        /**< GL_ADD, GL_SUBTRACT, etc. */
+   GLenum EquationA;          /**< GL_ADD, GL_SUBTRACT, etc. */
    /*@}*/
 
    /** 
@@ -2253,14 +2246,13 @@ struct gl_framebuffer
    /* In unextended OpenGL these vars are part of the GL_COLOR_BUFFER
     * attribute group and GL_PIXEL attribute group, respectively.
     */
-   GLenum ColorDrawBuffer[MAX_DRAW_BUFFERS];
+   GLenum ColorDrawBuffer;
    GLenum ColorReadBuffer;
 
    /** Computed from ColorDraw/ReadBuffer above */
-   GLuint _NumColorDrawBuffers;
-   GLint _ColorDrawBufferIndexes[MAX_DRAW_BUFFERS]; /**< BUFFER_x or -1 */
+   GLint _ColorDrawBufferIndex; /**< BUFFER_x or -1 */
    GLint _ColorReadBufferIndex; /* -1 = None */
-   struct gl_renderbuffer *_ColorDrawBuffers[MAX_DRAW_BUFFERS];
+   struct gl_renderbuffer *_ColorDrawBuffer;
    struct gl_renderbuffer *_ColorReadBuffer;
 
    /** Delete this framebuffer */
@@ -2356,8 +2348,6 @@ struct gl_constants
    /** vertex array / buffer object bounds checking */
    GLboolean CheckArrayBounds;
 
-   GLuint MaxDrawBuffers;    /**< GL_ARB_draw_buffers */
-
    GLuint MaxColorAttachments;   /**< GL_EXT_framebuffer_object */
    GLuint MaxRenderbufferSize;   /**< GL_EXT_framebuffer_object */
    GLuint MaxSamples;            /**< GL_ARB_framebuffer_object */
@@ -2436,8 +2426,6 @@ struct gl_extensions
    GLboolean dummy_false; /* Set false by _mesa_init_extensions(). */
    GLboolean ARB_color_buffer_float;
    GLboolean ARB_conservative_depth;
-   GLboolean ARB_depth_clamp;
-   GLboolean ARB_draw_buffers_blend;
    GLboolean ARB_fragment_program;
    GLboolean ARB_fragment_program_shadow;
    GLboolean ARB_fragment_shader;

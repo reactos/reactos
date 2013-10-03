@@ -1793,7 +1793,7 @@ link_shaders(struct gl_context *ctx, struct gl_shader_program *prog)
       goto done;
    }
 
-   if (!assign_attribute_or_color_locations(prog, MESA_SHADER_FRAGMENT, ctx->Const.MaxDrawBuffers)) {
+   if (!assign_attribute_or_color_locations(prog, MESA_SHADER_FRAGMENT, 1)) {
       goto done;
    }
 

@@ -174,20 +174,9 @@ clear_rgba_buffer(struct gl_context *ctx, struct gl_renderbuffer *rb,
 static void
 clear_color_buffers(struct gl_context *ctx)
 {
-   GLuint buf;
+   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffer;
 
-   for (buf = 0; buf < ctx->DrawBuffer->_NumColorDrawBuffers; buf++) {
-      struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[buf];
-
-      /* If this is an ES2 context or GL_ARB_ES2_compatibility is supported,
-       * the framebuffer can be complete with some attachments be missing.  In
-       * this case the _ColorDrawBuffers pointer will be NULL.
-       */
-      if (rb == NULL)
-	 continue;
-
-      clear_rgba_buffer(ctx, rb, ctx->Color.ColorMask[buf]);
-   }
+   clear_rgba_buffer(ctx, rb, ctx->Color.ColorMask);
 }
 
 
@@ -219,8 +208,7 @@ _swrast_Clear(struct gl_context *ctx, GLbitfield buffers)
    if (SWRAST_CONTEXT(ctx)->NewState)
       _swrast_validate_derived(ctx);
 
-   if ((buffers & BUFFER_BITS_COLOR)
-       && (ctx->DrawBuffer->_NumColorDrawBuffers > 0)) {
+   if (buffers & BUFFER_BITS_COLOR) {
       clear_color_buffers(ctx);
    }
 

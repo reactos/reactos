@@ -4740,7 +4740,7 @@ yyreduce:
 			 "`OPTION ARB_draw_buffers' or "
 			 "`OPTION ATI_draw_buffers'");
 		 YYERROR;
-	      } else if ((yyvsp[(2) - (3)].integer) >= state->MaxDrawBuffers) {
+	      } else if ((yyvsp[(2) - (3)].integer) > 0) {
 		 yyerror(& (yylsp[(1) - (3)]), state,
 			 "result.color[] exceeds MAX_DRAW_BUFFERS_ARB");
 		 YYERROR;
@@ -5700,7 +5700,7 @@ _mesa_parse_arb_program(struct gl_context *ctx, GLenum target, const GLubyte *st
    state->MaxClipPlanes = ctx->Const.MaxClipPlanes;
    state->MaxLights = ctx->Const.MaxLights;
    state->MaxProgramMatrices = ctx->Const.MaxProgramMatrices;
-   state->MaxDrawBuffers = ctx->Const.MaxDrawBuffers;
+   state->MaxDrawBuffers = 1;
 
    state->state_param_enum = (target == GL_VERTEX_PROGRAM_ARB)
       ? STATE_VERTEX_PROGRAM : STATE_FRAGMENT_PROGRAM;

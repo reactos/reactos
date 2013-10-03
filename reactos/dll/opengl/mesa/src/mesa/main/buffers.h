@@ -40,18 +40,14 @@ struct gl_context;
 extern void GLAPIENTRY
 _mesa_DrawBuffer( GLenum mode );
 
-extern void GLAPIENTRY
-_mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers);
-
 extern void
-_mesa_drawbuffers(struct gl_context *ctx, GLuint n, const GLenum *buffers,
-                  const GLbitfield *destMask);
+_mesa_drawbuffer(struct gl_context *ctx, const GLenum buffers, const GLbitfield destMask);
 
 extern void
 _mesa_readbuffer(struct gl_context *ctx, GLenum buffer, GLint bufferIndex);
 
 extern void
-_mesa_update_draw_buffers(struct gl_context *ctx);
+_mesa_update_draw_buffer(struct gl_context *ctx);
 
 
 extern void GLAPIENTRY

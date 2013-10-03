@@ -36,6 +36,6 @@ struct gl_renderbuffer;
 
 extern void
 _swrast_mask_rgba_span(struct gl_context *ctx, struct gl_renderbuffer *rb,
-                       SWspan *span, GLuint buf);
+                       SWspan *span);
 
 #endif
