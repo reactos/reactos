@@ -167,8 +167,8 @@ C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 #define WORD_MAX 0xffff
 #define INT_MAX 2147483647
 #define INT32_MAX 2147483647
-#define UINT_MAX 0xffffffff
-#define UINT32_MAX 0xffffffff
+#define UINT_MAX 0xffffffffU
+#define UINT32_MAX 0xffffffffU
 #define LONG_MAX 2147483647L
 #define ULONG_MAX 0xffffffffUL
 #define DWORD_MAX 0xffffffffUL
