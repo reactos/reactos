@@ -480,8 +480,7 @@ BOOL sw_SetPixelFormat(HDC hdc, struct wgl_dc_data* dc_data, INT format)
         pixel_formats[fb->format_index].accum_bits,
         pixel_formats[fb->format_index].accum_bits,
         pixel_formats[fb->format_index].alpha_bits ? 
-            pixel_formats[fb->format_index].accum_bits : 0,
-        1 /* One sampling level */);
+            pixel_formats[fb->format_index].accum_bits : 0);
     
     if(!fb->gl_visual)
     {
