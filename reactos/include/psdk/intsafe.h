@@ -719,7 +719,7 @@ DEFINE_SAFE_MULT_U32(SIZETMult, SIZE_T, ULongLongToSIZET)
 #endif
 
 #define DEFINE_SAFE_MULT_U16(_Name, _Type, _Convert) \
-__checkReturn \
+_Must_inspect_result_ \
 __forceinline \
 INTSAFE_RESULT \
 INTSAFE_NAME(_Name)( \
