@@ -88,7 +88,6 @@
 #include "bufferobj.h"
 #include "context.h"
 #include "cpuinfo.h"
-#include "debug.h"
 #include "depth.h"
 #include "dlist.h"
 #include "eval.h"
@@ -654,7 +653,6 @@ init_attrib_groups(struct gl_context *ctx)
    _mesa_init_color( ctx );
    _mesa_init_current( ctx );
    _mesa_init_depth( ctx );
-   _mesa_init_debug( ctx );
    _mesa_init_display_list( ctx );
    _mesa_init_eval( ctx );
    _mesa_init_feedback( ctx );
@@ -1322,15 +1320,6 @@ _mesa_make_current( struct gl_context *newCtx,
          newCtx->Extensions.String = _mesa_make_extension_string(newCtx);
 
          check_context_limits(newCtx);
-
-         /* We can use this to help debug user's problems.  Tell them to set
-          * the MESA_INFO env variable before running their app.  Then the
-          * first time each context is made current we'll print some useful
-          * information.
-          */
-	 if (_mesa_getenv("MESA_INFO")) {
-	    _mesa_print_info();
-	 }
 
 	 newCtx->FirstTimeCurrent = GL_FALSE;
       }

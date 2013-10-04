@@ -34,7 +34,6 @@
 #include "glheader.h"
 #include "mtypes.h"
 #include "context.h"
-#include "debug.h"
 #include "macros.h"
 #include "framebuffer.h"
 #include "light.h"
@@ -486,9 +485,6 @@ _mesa_update_state_locked( struct gl_context *ctx )
 
    if (new_state == _NEW_CURRENT_ATTRIB) 
       goto out;
-
-   if (MESA_VERBOSE & VERBOSE_STATE)
-      _mesa_print_state("_mesa_update_state", new_state);
 
    /*
     * Now update derived state info
