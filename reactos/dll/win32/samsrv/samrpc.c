@@ -6443,9 +6443,42 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
     if (!NT_SUCCESS(Status))
         goto done;
 
-    if (UserObject->Access & USER_READ_GENERAL)
+    /* Set the fields to be returned */
+    if (UserObject->Trusted)
     {
-        /* Get the Name string */
+        InfoBuffer->All.WhichFields = USER_ALL_READ_GENERAL_MASK |
+                                      USER_ALL_READ_LOGON_MASK |
+                                      USER_ALL_READ_ACCOUNT_MASK |
+                                      USER_ALL_READ_PREFERENCES_MASK |
+                                      USER_ALL_READ_TRUSTED_MASK;
+    }
+    else
+    {
+        InfoBuffer->All.WhichFields = 0;
+
+        if (UserObject->Access & USER_READ_GENERAL)
+            InfoBuffer->All.WhichFields |= USER_ALL_READ_GENERAL_MASK;
+
+        if (UserObject->Access & USER_READ_LOGON)
+            InfoBuffer->All.WhichFields |= USER_ALL_READ_LOGON_MASK;
+
+        if (UserObject->Access & USER_READ_ACCOUNT)
+            InfoBuffer->All.WhichFields |= USER_ALL_READ_ACCOUNT_MASK;
+
+        if (UserObject->Access & USER_READ_PREFERENCES)
+            InfoBuffer->All.WhichFields |= USER_ALL_READ_PREFERENCES_MASK;
+    }
+
+    /* Fail, if no fields are to be returned */
+    if (InfoBuffer->All.WhichFields == 0)
+    {
+        Status = STATUS_ACCESS_DENIED;
+        goto done;
+    }
+
+    /* Get the UserName attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_USERNAME)
+    {
         Status = SampGetObjectAttributeString(UserObject,
                                               L"Name",
                                               &InfoBuffer->All.UserName);
@@ -6454,8 +6487,11 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
+    }
 
-        /* Get the FullName string */
+    /* Get the FullName attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_FULLNAME)
+    {
         Status = SampGetObjectAttributeString(UserObject,
                                               L"FullName",
                                               &InfoBuffer->All.FullName);
@@ -6464,14 +6500,23 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
+    }
 
-        /* Get the user ID*/
+    /* Get the UserId attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_USERID)
+    {
         InfoBuffer->All.UserId = FixedData.UserId;
+    }
 
-        /* Get the primary group ID */
+    /* Get the PrimaryGroupId attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_PRIMARYGROUPID)
+    {
         InfoBuffer->All.PrimaryGroupId = FixedData.PrimaryGroupId;
+    }
 
-        /* Get the AdminComment string */
+    /* Get the AdminComment attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_ADMINCOMMENT)
+    {
         Status = SampGetObjectAttributeString(UserObject,
                                               L"AdminComment",
                                               &InfoBuffer->All.AdminComment);
@@ -6480,8 +6525,11 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
+    }
 
-        /* Get the UserComment string */
+    /* Get the UserComment attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_USERCOMMENT)
+    {
         Status = SampGetObjectAttributeString(UserObject,
                                               L"UserComment",
                                               &InfoBuffer->All.UserComment);
@@ -6490,19 +6538,11 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
-
-        InfoBuffer->All.WhichFields |= USER_ALL_READ_GENERAL_MASK;
-//            USER_ALL_USERNAME |
-//            USER_ALL_FULLNAME |
-//            USER_ALL_USERID |
-//            USER_ALL_PRIMARYGROUPID |
-//            USER_ALL_ADMINCOMMENT |
-//            USER_ALL_USERCOMMENT;
     }
 
-    if (UserObject->Access & USER_READ_LOGON)
+    /* Get the HomeDirectory attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_HOMEDIRECTORY)
     {
-        /* Get the HomeDirectory string */
         Status = SampGetObjectAttributeString(UserObject,
                                               L"HomeDirectory",
                                               &InfoBuffer->All.HomeDirectory);
@@ -6511,8 +6551,11 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
+    }
 
-        /* Get the HomeDirectoryDrive string */
+    /* Get the HomeDirectoryDrive attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_HOMEDIRECTORYDRIVE)
+    {
         Status = SampGetObjectAttributeString(UserObject,
                                               L"HomeDirectoryDrive",
                                               &InfoBuffer->Home.HomeDirectoryDrive);
@@ -6521,8 +6564,11 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
+    }
 
-        /* Get the ScriptPath string */
+    /* Get the ScriptPath attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_SCRIPTPATH)
+    {
         Status = SampGetObjectAttributeString(UserObject,
                                               L"ScriptPath",
                                               &InfoBuffer->All.ScriptPath);
@@ -6531,8 +6577,11 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
+    }
 
-        /* Get the ProfilePath string */
+    /* Get the ProfilePath attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_PROFILEPATH)
+    {
         Status = SampGetObjectAttributeString(UserObject,
                                               L"ProfilePath",
                                               &InfoBuffer->All.ProfilePath);
@@ -6541,8 +6590,11 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
+    }
 
-        /* Get the WorkStations string */
+    /* Get the WorkStations attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_WORKSTATIONS)
+    {
         Status = SampGetObjectAttributeString(UserObject,
                                               L"WorkStations",
                                               &InfoBuffer->All.WorkStations);
@@ -6551,8 +6603,25 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
+    }
 
-        /* Get the LogonHours attribute */
+    /* Get the LastLogon attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_LASTLOGON)
+    {
+        InfoBuffer->All.LastLogon.LowPart = FixedData.LastLogon.LowPart;
+        InfoBuffer->All.LastLogon.HighPart = FixedData.LastLogon.HighPart;
+    }
+
+    /* Get the LastLogoff attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_LASTLOGOFF)
+    {
+        InfoBuffer->All.LastLogoff.LowPart = FixedData.LastLogoff.LowPart;
+        InfoBuffer->All.LastLogoff.HighPart = FixedData.LastLogoff.HighPart;
+    }
+
+    /* Get the LogonHours attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_LOGONHOURS)
+    {
         Status = SampGetLogonHoursAttrbute(UserObject,
                                            &InfoBuffer->All.LogonHours);
         if (!NT_SUCCESS(Status))
@@ -6560,55 +6629,61 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
+    }
 
-        InfoBuffer->All.LastLogon.LowPart = FixedData.LastLogon.LowPart;
-        InfoBuffer->All.LastLogon.HighPart = FixedData.LastLogon.HighPart;
-
-        InfoBuffer->All.LastLogoff.LowPart = FixedData.LastLogoff.LowPart;
-        InfoBuffer->All.LastLogoff.HighPart = FixedData.LastLogoff.HighPart;
-
+    /* Get the BadPasswordCount attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_BADPASSWORDCOUNT)
+    {
         InfoBuffer->All.BadPasswordCount = FixedData.BadPasswordCount;
+    }
 
+    /* Get the LogonCount attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_LOGONCOUNT)
+    {
         InfoBuffer->All.LogonCount = FixedData.LogonCount;
+    }
 
+    /* Get the PasswordCanChange attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_PASSWORDCANCHANGE)
+    {
         PasswordCanChange = SampAddRelativeTimeToTime(FixedData.PasswordLastSet,
                                                       DomainFixedData.MinPasswordAge);
         InfoBuffer->All.PasswordCanChange.LowPart = PasswordCanChange.LowPart;
         InfoBuffer->All.PasswordCanChange.HighPart = PasswordCanChange.HighPart;
+    }
 
+    /* Get the PasswordMustChange attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_PASSWORDMUSTCHANGE)
+    {
         PasswordMustChange = SampAddRelativeTimeToTime(FixedData.PasswordLastSet,
                                                        DomainFixedData.MaxPasswordAge);
         InfoBuffer->All.PasswordMustChange.LowPart = PasswordMustChange.LowPart;
         InfoBuffer->All.PasswordMustChange.HighPart = PasswordMustChange.HighPart;
-
-        InfoBuffer->All. WhichFields |= USER_ALL_READ_LOGON_MASK;
-/*
-            USER_ALL_HOMEDIRECTORY |
-            USER_ALL_HOMEDIRECTORYDRIVE |
-            USER_ALL_SCRIPTPATH |
-            USER_ALL_PROFILEPATH |
-            USER_ALL_WORKSTATIONS |
-            USER_ALL_LASTLOGON |
-            USER_ALL_LASTLOGOFF |
-            USER_ALL_LOGONHOURS |
-            USER_ALL_BADPASSWORDCOUNT |
-            USER_ALL_LOGONCOUNT;
-            USER_ALL_PASSWORDCANCHANGE |
-            USER_ALL_PASSWORDMUSTCHANGE;
-*/
     }
 
-    if (UserObject->Access & USER_READ_ACCOUNT)
+    /* Get the PasswordLastSet attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_PASSWORDLASTSET)
     {
         InfoBuffer->All.PasswordLastSet.LowPart = FixedData.PasswordLastSet.LowPart;
         InfoBuffer->All.PasswordLastSet.HighPart = FixedData.PasswordLastSet.HighPart;
+    }
 
+    /* Get the AccountExpires attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_ACCOUNTEXPIRES)
+    {
         InfoBuffer->All.AccountExpires.LowPart = FixedData.AccountExpires.LowPart;
         InfoBuffer->All.AccountExpires.HighPart = FixedData.AccountExpires.HighPart;
+    }
 
+    /* Get the UserAccountControl attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_USERACCOUNTCONTROL)
+    {
         InfoBuffer->All.UserAccountControl = FixedData.UserAccountControl;
+    }
 
-        /* Get the Parameters string */
+    /* Get the Parameters attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_PARAMETERS)
+    {
         Status = SampGetObjectAttributeString(UserObject,
                                               L"Parameters",
                                               &InfoBuffer->All.Parameters);
@@ -6617,23 +6692,43 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
             TRACE("Status 0x%08lx\n", Status);
             goto done;
         }
-
-        InfoBuffer->All. WhichFields |= USER_ALL_READ_ACCOUNT_MASK;
-//            USER_ALL_PASSWORDLASTSET |
-//            USER_ALL_ACCOUNTEXPIRES |
-//            USER_ALL_USERACCOUNTCONTROL |
-//            USER_ALL_PARAMETERS;
     }
 
-    if (UserObject->Access & USER_READ_PREFERENCES)
+    /* Get the CountryCode attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_COUNTRYCODE)
     {
         InfoBuffer->All.CountryCode = FixedData.CountryCode;
+    }
 
+    /* Get the CodePage attribute */
+    if (InfoBuffer->All.WhichFields & USER_ALL_CODEPAGE)
+    {
         InfoBuffer->All.CodePage = FixedData.CodePage;
+    }
 
-        InfoBuffer->All. WhichFields |= USER_ALL_READ_PREFERENCES_MASK;
-//            USER_ALL_COUNTRYCODE |
-//            USER_ALL_CODEPAGE;
+    if (InfoBuffer->All.WhichFields & USER_ALL_NTPASSWORDPRESENT)
+    {
+        /* FIXME */
+    }
+
+    if (InfoBuffer->All.WhichFields & USER_ALL_LMPASSWORDPRESENT)
+    {
+        /* FIXME */
+    }
+
+    if (InfoBuffer->All.WhichFields & USER_ALL_PRIVATEDATA)
+    {
+        /* FIXME */
+    }
+
+    if (InfoBuffer->All.WhichFields & USER_ALL_PASSWORDEXPIRED)
+    {
+        /* FIXME */
+    }
+
+    if (InfoBuffer->All.WhichFields & USER_ALL_SECURITYDESCRIPTOR)
+    {
+        /* FIXME */
     }
 
     *Buffer = InfoBuffer;
