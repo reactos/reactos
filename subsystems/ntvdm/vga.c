@@ -488,12 +488,22 @@ static VOID VgaChangeMode(VOID)
     if (!(VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA))
     {
         /* Enter new text mode */
-        if (!VgaEnterTextMode(&Resolution)) return;
+        if (!VgaEnterTextMode(&Resolution))
+        {
+            DisplayMessage(L"An unexpected VGA error occurred while switching into text mode.");
+            VdmRunning = FALSE;
+            return;
+        }
     }
     else
     {
         /* Enter 8-bit graphics mode */
-        if (!VgaEnterGraphicsMode(&Resolution)) return;
+        if (!VgaEnterGraphicsMode(&Resolution))
+        {
+            DisplayMessage(L"An unexpected VGA error occurred while switching into graphics mode.");
+            VdmRunning = FALSE;
+            return;
+        }
     }
 
     /* Trigger a full update of the screen */
@@ -515,6 +525,12 @@ static VOID VgaUpdateFramebuffer(VOID)
     DWORD Address = (VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG] << 8)
                     + VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG];
     DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
+
+    /*
+     * If console framebuffer is NULL, that means something went wrong
+     * earlier and this is the final display refresh.
+     */
+    if (ConsoleFramebuffer == NULL) return;
 
     /* Check if this is text mode or graphics mode */
     if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
