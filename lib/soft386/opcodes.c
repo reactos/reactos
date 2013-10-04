@@ -5700,8 +5700,113 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeMovs)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeCmps)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    ULONG FirstValue = 0, SecondValue = 0, Result;
+    ULONG DataSize, DataMask, SignFlag;
+    BOOLEAN OperandSize, AddressSize;
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xA6);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
+        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
+    {
+        // TODO: The REP/REPZ/REPNZ prefixes need to be implemented!
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Calculate the size */
+    if (Opcode == 0xA6) DataSize = sizeof(UCHAR);
+    else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
+
+    /* Calculate the mask and sign flag */
+    DataMask = (1 << (DataSize * 8)) - 1;
+    SignFlag = 1 << ((DataSize * 8) - 1);
+
+    /* Read from the first source operand */
+    if (!Soft386ReadMemory(State,
+                           SOFT386_REG_DS,
+                           AddressSize ? State->GeneralRegs[SOFT386_REG_ESI].Long
+                                       : State->GeneralRegs[SOFT386_REG_ESI].LowWord,
+                           FALSE,
+                           &FirstValue,
+                           DataSize))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Read from the second source operand */
+    if (!Soft386ReadMemory(State,
+                           SOFT386_REG_ES,
+                           AddressSize ? State->GeneralRegs[SOFT386_REG_EDI].Long
+                                       : State->GeneralRegs[SOFT386_REG_EDI].LowWord,
+                           FALSE,
+                           &SecondValue,
+                           DataSize))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    FirstValue &= DataMask;
+    SecondValue &= DataMask;
+    Result = (FirstValue - SecondValue) & DataMask;
+
+    /* Update the flags */
+    State->Flags.Cf = FirstValue < SecondValue;
+    State->Flags.Of = ((FirstValue & SignFlag) != (SecondValue & SignFlag))
+                      && ((FirstValue & SignFlag) != (Result & SignFlag));
+    State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SignFlag) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* Increment/decrement ESI and EDI */
+    if (OperandSize)
+    {
+        if (State->Flags.Df)
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+        }
+        else
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
+        }
+    }
+    else
+    {
+        if (State->Flags.Df)
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+        }
+        else
+        {
+            State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
+            State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
+        }
+    }
+
+    /* Return success */
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeStos)
@@ -5750,32 +5855,16 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeStos)
         return FALSE;
     }
 
-    /* Increment/decrement ESI and EDI */
+    /* Increment/decrement EDI */
     if (OperandSize)
     {
-        if (State->Flags.Df)
-        {
-            State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
-        }
-        else
-        {
-            State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
-        }
+        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+        else State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
     }
     else
     {
-        if (State->Flags.Df)
-        {
-            State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
-        }
-        else
-        {
-            State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
-        }
+        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+        else State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
     }
 
     /* Return success */
@@ -5829,32 +5918,16 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLods)
         return FALSE;
     }
 
-    /* Increment/decrement ESI and EDI */
+    /* Increment/decrement ESI */
     if (OperandSize)
     {
-        if (State->Flags.Df)
-        {
-            State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
-        }
-        else
-        {
-            State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
-        }
+        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].Long += DataSize;
+        else State->GeneralRegs[SOFT386_REG_ESI].Long -= DataSize;
     }
     else
     {
-        if (State->Flags.Df)
-        {
-            State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
-        }
-        else
-        {
-            State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
-            State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
-        }
+        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_ESI].LowWord += DataSize;
+        else State->GeneralRegs[SOFT386_REG_ESI].LowWord -= DataSize;
     }
 
     /* Return success */
@@ -5863,6 +5936,84 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeLods)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeScas)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    ULONG FirstValue = State->GeneralRegs[SOFT386_REG_EAX].Long;
+    ULONG SecondValue = 0;
+    ULONG Result;
+    ULONG DataSize, DataMask, SignFlag;
+    BOOLEAN OperandSize, AddressSize;
+
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    /* Make sure this is the right instruction */
+    ASSERT((Opcode & 0xFE) == 0xAE);
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if ((State->PrefixFlags & SOFT386_PREFIX_REP)
+        || (State->PrefixFlags & SOFT386_PREFIX_REPNZ))
+    {
+        // TODO: The REP/REPZ/REPNZ prefixes need to be implemented!
+        Soft386Exception(State, SOFT386_EXCEPTION_UD);
+        return FALSE;
+    }
+
+    /* Calculate the size */
+    if (Opcode == 0xA6) DataSize = sizeof(UCHAR);
+    else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
+
+    /* Calculate the mask and sign flag */
+    DataMask = (1 << (DataSize * 8)) - 1;
+    SignFlag = 1 << ((DataSize * 8) - 1);
+
+    /* Read from the source operand */
+    if (!Soft386ReadMemory(State,
+                           SOFT386_REG_ES,
+                           AddressSize ? State->GeneralRegs[SOFT386_REG_EDI].Long
+                                       : State->GeneralRegs[SOFT386_REG_EDI].LowWord,
+                           FALSE,
+                           &SecondValue,
+                           DataSize))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Calculate the result */
+    FirstValue &= DataMask;
+    SecondValue &= DataMask;
+    Result = (FirstValue - SecondValue) & DataMask;
+
+    /* Update the flags */
+    State->Flags.Cf = FirstValue < SecondValue;
+    State->Flags.Of = ((FirstValue & SignFlag) != (SecondValue & SignFlag))
+                      && ((FirstValue & SignFlag) != (Result & SignFlag));
+    State->Flags.Af = (FirstValue & 0x0F) < (SecondValue & 0x0F);
+    State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+    State->Flags.Sf = (Result & SignFlag) ? TRUE : FALSE;
+    State->Flags.Pf = Soft386CalculateParity(Result);
+
+    /* Increment/decrement EDI */
+    if (OperandSize)
+    {
+        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].Long += DataSize;
+        else State->GeneralRegs[SOFT386_REG_EDI].Long -= DataSize;
+    }
+    else
+    {
+        if (State->Flags.Df) State->GeneralRegs[SOFT386_REG_EDI].LowWord += DataSize;
+        else State->GeneralRegs[SOFT386_REG_EDI].LowWord -= DataSize;
+    }
+
+    /* Return success */
+    return TRUE;
 }
