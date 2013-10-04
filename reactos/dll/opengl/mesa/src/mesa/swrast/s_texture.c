@@ -27,7 +27,6 @@
 
 
 #include "main/context.h"
-#include "main/fbobject.h"
 #include "main/teximage.h"
 #include "swrast/swrast.h"
 #include "swrast/s_context.h"

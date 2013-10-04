@@ -76,8 +76,7 @@ _mesa_create_visual( GLboolean dbFlag,
                      GLint accumRedBits,
                      GLint accumGreenBits,
                      GLint accumBlueBits,
-                     GLint accumAlphaBits,
-                     GLint numSamples );
+                     GLint accumAlphaBits);
 
 extern GLboolean
 _mesa_initialize_visual( struct gl_config *v,
@@ -92,8 +91,7 @@ _mesa_initialize_visual( struct gl_config *v,
                          GLint accumRedBits,
                          GLint accumGreenBits,
                          GLint accumBlueBits,
-                         GLint accumAlphaBits,
-                         GLint numSamples );
+                         GLint accumAlphaBits);
 
 extern void
 _mesa_destroy_visual( struct gl_config *vis );

@@ -121,15 +121,12 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.EXT_pixel_buffer_object);
    const GLboolean ver_3_0 = (ver_2_1 &&
                               ctx->Const.GLSLVersion >= 130 &&
-                              ctx->Const.MaxSamples >= 4 &&
-                              ctx->Extensions.ARB_color_buffer_float &&
                               ctx->Extensions.ARB_half_float_pixel &&
                               ctx->Extensions.ARB_half_float_vertex &&
                               ctx->Extensions.ARB_map_buffer_range &&
                               ctx->Extensions.ARB_shader_texture_lod &&
                               ctx->Extensions.ARB_texture_float &&
-                              ctx->Extensions.APPLE_vertex_array_object &&
-                              ctx->Extensions.ARB_framebuffer_object);
+                              ctx->Extensions.APPLE_vertex_array_object);
 
 
    if (ver_3_0) {

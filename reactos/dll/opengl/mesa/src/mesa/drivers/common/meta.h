@@ -50,10 +50,8 @@
 #define MESA_META_TEXTURE                0x1000
 #define MESA_META_VERTEX                 0x2000
 #define MESA_META_VIEWPORT               0x4000
-#define MESA_META_CLAMP_FRAGMENT_COLOR   0x8000
-#define MESA_META_CLAMP_VERTEX_COLOR    0x10000
-#define MESA_META_CLIP                  0x40000
-#define MESA_META_SELECT_FEEDBACK       0x80000
+#define MESA_META_CLIP                   0x8000
+#define MESA_META_SELECT_FEEDBACK       0x10000
 /**\}*/
 
 extern void
@@ -75,14 +73,6 @@ extern void
 _mesa_meta_CopyPixels(struct gl_context *ctx, GLint srcx, GLint srcy,
                       GLsizei width, GLsizei height,
                       GLint dstx, GLint dsty, GLenum type);
-
-extern GLboolean
-_mesa_meta_check_generate_mipmap_fallback(struct gl_context *ctx, GLenum target,
-                                          struct gl_texture_object *texObj);
-
-extern void
-_mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
-                          struct gl_texture_object *texObj);
 
 extern void
 _mesa_meta_CopyTexSubImage1D(struct gl_context *ctx,

@@ -736,12 +736,7 @@ pop_texture_group(struct gl_context *ctx, struct texture_state *texstate)
          _mesa_TexParameteri(target, GL_TEXTURE_WRAP_R, samp->WrapR);
          _mesa_TexParameteri(target, GL_TEXTURE_MIN_FILTER, samp->MinFilter);
          _mesa_TexParameteri(target, GL_TEXTURE_MAG_FILTER, samp->MagFilter);
-         _mesa_TexParameterf(target, GL_TEXTURE_MIN_LOD, samp->MinLod);
-         _mesa_TexParameterf(target, GL_TEXTURE_MAX_LOD, samp->MaxLod);
-         _mesa_TexParameterf(target, GL_TEXTURE_LOD_BIAS, samp->LodBias);
          _mesa_TexParameterf(target, GL_TEXTURE_PRIORITY, obj->Priority);
-         _mesa_TexParameteri(target, GL_TEXTURE_BASE_LEVEL, obj->BaseLevel);
-         _mesa_TexParameteri(target, GL_TEXTURE_MAX_LEVEL, obj->MaxLevel);
          if (ctx->Extensions.EXT_texture_filter_anisotropic) {
             _mesa_TexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT,
                                 samp->MaxAnisotropy);
@@ -822,7 +817,7 @@ _mesa_PopAttrib(void)
                                (GLboolean) (color->ColorMask[3] != 0));
                _mesa_DrawBuffer(color->DrawBuffer);
                _mesa_set_enable(ctx, GL_ALPHA_TEST, color->AlphaEnabled);
-               _mesa_AlphaFunc(color->AlphaFunc, color->AlphaRefUnclamped);
+               _mesa_AlphaFunc(color->AlphaFunc, color->AlphaRef);
                if (ctx->Color.BlendEnabled != color->BlendEnabled) {
                   _mesa_set_enable(ctx, GL_BLEND, (color->BlendEnabled & 1));
                }
@@ -842,18 +837,16 @@ _mesa_PopAttrib(void)
                                               color->EquationRGB,
                                               color->EquationA);
                }
-               _mesa_BlendColor(color->BlendColorUnclamped[0],
-                                color->BlendColorUnclamped[1],
-                                color->BlendColorUnclamped[2],
-                                color->BlendColorUnclamped[3]);
+               _mesa_BlendColor(color->BlendColor[0],
+                                color->BlendColor[1],
+                                color->BlendColor[2],
+                                color->BlendColor[3]);
                _mesa_LogicOp(color->LogicOp);
                _mesa_set_enable(ctx, GL_COLOR_LOGIC_OP,
                                 color->ColorLogicOpEnabled);
                _mesa_set_enable(ctx, GL_INDEX_LOGIC_OP,
                                 color->IndexLogicOpEnabled);
                _mesa_set_enable(ctx, GL_DITHER, color->DitherFlag);
-               _mesa_ClampColorARB(GL_CLAMP_FRAGMENT_COLOR_ARB, color->ClampFragmentColor);
-               _mesa_ClampColorARB(GL_CLAMP_READ_COLOR_ARB, color->ClampReadColor);
             }
             break;
          case GL_CURRENT_BIT:
@@ -908,8 +901,6 @@ _mesa_PopAttrib(void)
                _mesa_Hint(GL_FOG_HINT, hint->Fog);
                _mesa_Hint(GL_CLIP_VOLUME_CLIPPING_HINT_EXT,
                           hint->ClipVolumeClipping);
-	       _mesa_Hint(GL_TEXTURE_COMPRESSION_HINT_ARB,
-			  hint->TextureCompression);
             }
             break;
          case GL_LIGHTING_BIT:
@@ -976,7 +967,6 @@ _mesa_PopAttrib(void)
                /* materials */
                memcpy(&ctx->Light.Material, &light->Material,
                       sizeof(struct gl_material));
-               _mesa_ClampColorARB(GL_CLAMP_VERTEX_COLOR_ARB, light->ClampVertexColor);
             }
             break;
          case GL_LINE_BIT:

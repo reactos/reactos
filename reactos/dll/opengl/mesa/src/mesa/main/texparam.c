@@ -228,38 +228,6 @@ set_tex_parameteri(struct gl_context *ctx,
       }
       return GL_FALSE;
 
-   case GL_TEXTURE_BASE_LEVEL:
-      if (texObj->BaseLevel == params[0])
-         return GL_FALSE;
-      if (params[0] < 0) {
-         _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glTexParameter(param=%d)", params[0]);
-         return GL_FALSE;
-      }
-      incomplete(ctx, texObj);
-      texObj->BaseLevel = params[0];
-      return GL_TRUE;
-
-   case GL_TEXTURE_MAX_LEVEL:
-      if (texObj->MaxLevel == params[0])
-         return GL_FALSE;
-      if (params[0] < 0) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glTexParameter(param=%d)", params[0]);
-         return GL_FALSE;
-      }
-      incomplete(ctx, texObj);
-      texObj->MaxLevel = params[0];
-      return GL_TRUE;
-
-   case GL_GENERATE_MIPMAP_SGIS:
-      if (texObj->GenerateMipmap != params[0]) {
-         /* no flush() */
-	 texObj->GenerateMipmap = params[0] ? GL_TRUE : GL_FALSE;
-	 return GL_TRUE;
-      }
-      return GL_FALSE;
-
    default:
       goto invalid_pname;
    }
@@ -286,19 +254,6 @@ set_tex_parameterf(struct gl_context *ctx,
                    GLenum pname, const GLfloat *params)
 {
    switch (pname) {
-   case GL_TEXTURE_MIN_LOD:
-      if (texObj->Sampler.MinLod == params[0])
-         return GL_FALSE;
-      flush(ctx);
-      texObj->Sampler.MinLod = params[0];
-      return GL_TRUE;
-
-   case GL_TEXTURE_MAX_LOD:
-      if (texObj->Sampler.MaxLod == params[0])
-         return GL_FALSE;
-      flush(ctx);
-      texObj->Sampler.MaxLod = params[0];
-      return GL_TRUE;
 
    case GL_TEXTURE_PRIORITY:
       flush(ctx);
@@ -326,15 +281,6 @@ set_tex_parameterf(struct gl_context *ctx,
                         "glTexParameter(pname=GL_TEXTURE_MAX_ANISOTROPY_EXT)");
       }
       return GL_FALSE;
-
-   case GL_TEXTURE_LOD_BIAS:
-      /* NOTE: this is really part of OpenGL 1.4, not EXT_texture_lod_bias */
-      if (texObj->Sampler.LodBias != params[0]) {
-	 flush(ctx);
-	 texObj->Sampler.LodBias = params[0];
-	 return GL_TRUE;
-      }
-      break;
 
    case GL_TEXTURE_BORDER_COLOR:
       flush(ctx);
@@ -377,9 +323,6 @@ _mesa_TexParameterf(GLenum target, GLenum pname, GLfloat param)
    case GL_TEXTURE_WRAP_S:
    case GL_TEXTURE_WRAP_T:
    case GL_TEXTURE_WRAP_R:
-   case GL_TEXTURE_BASE_LEVEL:
-   case GL_TEXTURE_MAX_LEVEL:
-   case GL_GENERATE_MIPMAP_SGIS:
    case GL_TEXTURE_COMPARE_MODE_ARB:
    case GL_TEXTURE_COMPARE_FUNC_ARB:
    case GL_DEPTH_TEXTURE_MODE_ARB:
@@ -437,9 +380,6 @@ _mesa_TexParameterfv(GLenum target, GLenum pname, const GLfloat *params)
    case GL_TEXTURE_WRAP_S:
    case GL_TEXTURE_WRAP_T:
    case GL_TEXTURE_WRAP_R:
-   case GL_TEXTURE_BASE_LEVEL:
-   case GL_TEXTURE_MAX_LEVEL:
-   case GL_GENERATE_MIPMAP_SGIS:
    case GL_TEXTURE_COMPARE_MODE_ARB:
    case GL_TEXTURE_COMPARE_FUNC_ARB:
    case GL_DEPTH_TEXTURE_MODE_ARB:
@@ -800,20 +740,12 @@ _mesa_GetTexParameterfv( GLenum target, GLenum pname, GLfloat *params )
          *params = ENUM_TO_FLOAT(obj->Sampler.WrapR);
          break;
       case GL_TEXTURE_BORDER_COLOR:
-         if (ctx->NewState & (_NEW_BUFFERS | _NEW_FRAG_CLAMP))
+         if (ctx->NewState & _NEW_BUFFERS)
             _mesa_update_state_locked(ctx);
-         if (ctx->Color._ClampFragmentColor) {
-            params[0] = CLAMP(obj->Sampler.BorderColor.f[0], 0.0F, 1.0F);
-            params[1] = CLAMP(obj->Sampler.BorderColor.f[1], 0.0F, 1.0F);
-            params[2] = CLAMP(obj->Sampler.BorderColor.f[2], 0.0F, 1.0F);
-            params[3] = CLAMP(obj->Sampler.BorderColor.f[3], 0.0F, 1.0F);
-         }
-         else {
-            params[0] = obj->Sampler.BorderColor.f[0];
-            params[1] = obj->Sampler.BorderColor.f[1];
-            params[2] = obj->Sampler.BorderColor.f[2];
-            params[3] = obj->Sampler.BorderColor.f[3];
-         }
+         params[0] = obj->Sampler.BorderColor.f[0];
+         params[1] = obj->Sampler.BorderColor.f[1];
+         params[2] = obj->Sampler.BorderColor.f[2];
+         params[3] = obj->Sampler.BorderColor.f[3];
          break;
       case GL_TEXTURE_RESIDENT:
          *params = 1.0F;
@@ -821,28 +753,10 @@ _mesa_GetTexParameterfv( GLenum target, GLenum pname, GLfloat *params )
       case GL_TEXTURE_PRIORITY:
          *params = obj->Priority;
          break;
-      case GL_TEXTURE_MIN_LOD:
-         *params = obj->Sampler.MinLod;
-         break;
-      case GL_TEXTURE_MAX_LOD:
-         *params = obj->Sampler.MaxLod;
-         break;
-      case GL_TEXTURE_BASE_LEVEL:
-         *params = (GLfloat) obj->BaseLevel;
-         break;
-      case GL_TEXTURE_MAX_LEVEL:
-         *params = (GLfloat) obj->MaxLevel;
-         break;
       case GL_TEXTURE_MAX_ANISOTROPY_EXT:
          if (!ctx->Extensions.EXT_texture_filter_anisotropic)
             goto invalid_pname;
          *params = obj->Sampler.MaxAnisotropy;
-         break;
-      case GL_GENERATE_MIPMAP_SGIS:
-	 *params = (GLfloat) obj->GenerateMipmap;
-         break;
-      case GL_TEXTURE_LOD_BIAS:
-         *params = obj->Sampler.LodBias;
          break;
 
       case GL_TEXTURE_IMMUTABLE_FORMAT:
@@ -911,29 +825,11 @@ _mesa_GetTexParameteriv( GLenum target, GLenum pname, GLint *params )
          break;;
       case GL_TEXTURE_PRIORITY:
          *params = FLOAT_TO_INT(obj->Priority);
-         break;;
-      case GL_TEXTURE_MIN_LOD:
-         *params = (GLint) obj->Sampler.MinLod;
-         break;;
-      case GL_TEXTURE_MAX_LOD:
-         *params = (GLint) obj->Sampler.MaxLod;
-         break;;
-      case GL_TEXTURE_BASE_LEVEL:
-         *params = obj->BaseLevel;
-         break;;
-      case GL_TEXTURE_MAX_LEVEL:
-         *params = obj->MaxLevel;
-         break;;
+         break;
       case GL_TEXTURE_MAX_ANISOTROPY_EXT:
          if (!ctx->Extensions.EXT_texture_filter_anisotropic)
             goto invalid_pname;
          *params = (GLint) obj->Sampler.MaxAnisotropy;
-         break;
-      case GL_GENERATE_MIPMAP_SGIS:
-	 *params = (GLint) obj->GenerateMipmap;
-         break;
-      case GL_TEXTURE_LOD_BIAS:
-         *params = (GLint) obj->Sampler.LodBias;
          break;
 
       case GL_TEXTURE_IMMUTABLE_FORMAT:

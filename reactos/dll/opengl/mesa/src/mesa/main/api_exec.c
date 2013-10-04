@@ -57,9 +57,6 @@
 #include "get.h"
 #include "feedback.h"
 #include "fog.h"
-#if FEATURE_EXT_framebuffer_object
-#include "fbobject.h"
-#endif
 #include "framebuffer.h"
 #include "hint.h"
 #include "histogram.h"
@@ -372,11 +369,6 @@ _mesa_create_exec_table(void)
    SET_BlendFuncSeparateEXT(exec, _mesa_BlendFuncSeparateEXT);
 #endif
 
-   /* 196. GL_MESA_resize_buffers */
-#if _HAVE_FULL_GL
-   SET_ResizeBuffersMESA(exec, _mesa_ResizeBuffersMESA);
-#endif
-
    /* 197. GL_MESA_window_pos */
    /* part of _mesa_init_rastpos_dispatch(exec); */
 
@@ -566,30 +558,6 @@ _mesa_create_exec_table(void)
    SET_TexBumpParameterivATI(exec, _mesa_TexBumpParameterivATI);
    SET_TexBumpParameterfvATI(exec, _mesa_TexBumpParameterfvATI);
 
-#if FEATURE_EXT_framebuffer_object
-   SET_IsRenderbufferEXT(exec, _mesa_IsRenderbufferEXT);
-   SET_BindRenderbufferEXT(exec, _mesa_BindRenderbufferEXT);
-   SET_DeleteRenderbuffersEXT(exec, _mesa_DeleteRenderbuffersEXT);
-   SET_GenRenderbuffersEXT(exec, _mesa_GenRenderbuffersEXT);
-   SET_RenderbufferStorageEXT(exec, _mesa_RenderbufferStorageEXT);
-   SET_GetRenderbufferParameterivEXT(exec, _mesa_GetRenderbufferParameterivEXT);
-   SET_IsFramebufferEXT(exec, _mesa_IsFramebufferEXT);
-   SET_BindFramebufferEXT(exec, _mesa_BindFramebufferEXT);
-   SET_DeleteFramebuffersEXT(exec, _mesa_DeleteFramebuffersEXT);
-   SET_GenFramebuffersEXT(exec, _mesa_GenFramebuffersEXT);
-   SET_CheckFramebufferStatusEXT(exec, _mesa_CheckFramebufferStatusEXT);
-   SET_FramebufferTexture1DEXT(exec, _mesa_FramebufferTexture1DEXT);
-   SET_FramebufferTexture2DEXT(exec, _mesa_FramebufferTexture2DEXT);
-   SET_FramebufferTexture3DEXT(exec, _mesa_FramebufferTexture3DEXT);
-   SET_FramebufferRenderbufferEXT(exec, _mesa_FramebufferRenderbufferEXT);
-   SET_GetFramebufferAttachmentParameterivEXT(exec, _mesa_GetFramebufferAttachmentParameterivEXT);
-   SET_GenerateMipmapEXT(exec, _mesa_GenerateMipmapEXT);
-#endif
-
-#if FEATURE_EXT_framebuffer_blit
-   SET_BlitFramebufferEXT(exec, _mesa_BlitFramebufferEXT);
-#endif
-
    /* GL_EXT_gpu_program_parameters */
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
    SET_ProgramEnvParameters4fvEXT(exec, _mesa_ProgramEnvParameters4fvEXT);
@@ -598,13 +566,6 @@ _mesa_create_exec_table(void)
 
    /* GL_ATI_separate_stencil */
    SET_StencilFuncSeparateATI(exec, _mesa_StencilFuncSeparateATI);
-
-#if FEATURE_ARB_framebuffer_object
-   /* The ARB_fbo functions are the union of
-    * GL_EXT_fbo, GL_EXT_framebuffer_blit, GL_EXT_texture_array
-    */
-   SET_RenderbufferStorageMultisample(exec, _mesa_RenderbufferStorageMultisample);
-#endif
 
 #if FEATURE_ARB_map_buffer_range
    SET_MapBufferRange(exec, _mesa_MapBufferRange);
@@ -621,8 +582,6 @@ _mesa_create_exec_table(void)
    SET_GetObjectParameterivAPPLE(exec, _mesa_GetObjectParameterivAPPLE);
 #endif
 
-   SET_ClampColorARB(exec, _mesa_ClampColorARB);
-
    /* GL_EXT_texture_integer */
    SET_ClearColorIiEXT(exec, _mesa_ClearColorIiEXT);
    SET_ClearColorIuiEXT(exec, _mesa_ClearColorIuiEXT);
@@ -638,7 +597,6 @@ _mesa_create_exec_table(void)
 
    /* GL 3.0 (functions not covered by other extensions) */
    SET_GetStringi(exec, _mesa_GetStringi);
-   SET_ClampColor(exec, _mesa_ClampColorARB);
 
    /* GL_NV_texture_barrier */
    SET_TextureBarrierNV(exec, _mesa_TextureBarrierNV);

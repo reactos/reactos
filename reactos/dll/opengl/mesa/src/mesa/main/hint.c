@@ -89,22 +89,6 @@ _mesa_Hint( GLenum target, GLenum mode )
          ctx->Hint.ClipVolumeClipping = mode;
          break;
 
-      /* GL_ARB_texture_compression */
-      case GL_TEXTURE_COMPRESSION_HINT_ARB:
-	 if (ctx->Hint.TextureCompression == mode)
-	    return;
-	 FLUSH_VERTICES(ctx, _NEW_HINT);
-	 ctx->Hint.TextureCompression = mode;
-         break;
-
-      /* GL_SGIS_generate_mipmap */
-      case GL_GENERATE_MIPMAP_HINT_SGIS:
-         if (ctx->Hint.GenerateMipmap == mode)
-            return;
-	 FLUSH_VERTICES(ctx, _NEW_HINT);
-	 ctx->Hint.GenerateMipmap = mode;
-         break;
-
       /* GL_ARB_fragment_shader */
       case GL_FRAGMENT_SHADER_DERIVATIVE_HINT_ARB:
          if (!ctx->Extensions.ARB_fragment_shader) {
@@ -141,7 +125,5 @@ void _mesa_init_hint( struct gl_context * ctx )
    ctx->Hint.PolygonSmooth = GL_DONT_CARE;
    ctx->Hint.Fog = GL_DONT_CARE;
    ctx->Hint.ClipVolumeClipping = GL_DONT_CARE;
-   ctx->Hint.TextureCompression = GL_DONT_CARE;
-   ctx->Hint.GenerateMipmap = GL_DONT_CARE;
    ctx->Hint.FragmentShaderDerivative = GL_DONT_CARE;
 }

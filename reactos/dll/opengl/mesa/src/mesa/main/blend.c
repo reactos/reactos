@@ -323,16 +323,11 @@ _mesa_BlendColor( GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha )
    tmp[2] = blue;
    tmp[3] = alpha;
 
-   if (TEST_EQ_4V(tmp, ctx->Color.BlendColorUnclamped))
+   if (TEST_EQ_4V(tmp, ctx->Color.BlendColor))
       return;
 
    FLUSH_VERTICES(ctx, _NEW_COLOR);
-   COPY_4FV( ctx->Color.BlendColorUnclamped, tmp );
-
-   ctx->Color.BlendColor[0] = CLAMP(tmp[0], 0.0F, 1.0F);
-   ctx->Color.BlendColor[1] = CLAMP(tmp[1], 0.0F, 1.0F);
-   ctx->Color.BlendColor[2] = CLAMP(tmp[2], 0.0F, 1.0F);
-   ctx->Color.BlendColor[3] = CLAMP(tmp[3], 0.0F, 1.0F);
+   COPY_4FV( ctx->Color.BlendColor, tmp );
 
    if (ctx->Driver.BlendColor)
       (*ctx->Driver.BlendColor)(ctx, ctx->Color.BlendColor);
@@ -368,13 +363,12 @@ _mesa_AlphaFunc( GLenum func, GLclampf ref )
    case GL_NOTEQUAL:
    case GL_GEQUAL:
    case GL_ALWAYS:
-      if (ctx->Color.AlphaFunc == func && ctx->Color.AlphaRefUnclamped == ref)
+      if (ctx->Color.AlphaFunc == func && ctx->Color.AlphaRef == ref)
          return; /* no change */
 
       FLUSH_VERTICES(ctx, _NEW_COLOR);
       ctx->Color.AlphaFunc = func;
-      ctx->Color.AlphaRefUnclamped = ref;
-      ctx->Color.AlphaRef = CLAMP(ref, 0.0F, 1.0F);
+      ctx->Color.AlphaRef = ref;
 
       if (ctx->Driver.AlphaFunc)
          ctx->Driver.AlphaFunc(ctx, func, ctx->Color.AlphaRef);
@@ -498,39 +492,6 @@ _mesa_ColorMask( GLboolean red, GLboolean green,
       ctx->Driver.ColorMask( ctx, red, green, blue, alpha );
 }
 
-void GLAPIENTRY
-_mesa_ClampColorARB(GLenum target, GLenum clamp)
-{
-   GET_CURRENT_CONTEXT(ctx);
-
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   if (clamp != GL_TRUE && clamp != GL_FALSE && clamp != GL_FIXED_ONLY_ARB) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glClampColorARB(clamp)");
-      return;
-   }
-
-   switch (target) {
-   case GL_CLAMP_VERTEX_COLOR_ARB:
-      FLUSH_VERTICES(ctx, _NEW_LIGHT);
-      ctx->Light.ClampVertexColor = clamp;
-      break;
-   case GL_CLAMP_FRAGMENT_COLOR_ARB:
-      FLUSH_VERTICES(ctx, _NEW_FRAG_CLAMP);
-      ctx->Color.ClampFragmentColor = clamp;
-      break;
-   case GL_CLAMP_READ_COLOR_ARB:
-      FLUSH_VERTICES(ctx, _NEW_COLOR);
-      ctx->Color.ClampReadColor = clamp;
-      break;
-   default:
-      _mesa_error(ctx, GL_INVALID_ENUM, "glClampColorARB(target)");
-      return;
-   }
-}
-
-
-
 
 /**********************************************************************/
 /** \name Initialization */
@@ -562,7 +523,6 @@ void _mesa_init_color( struct gl_context * ctx )
    ctx->Color.EquationRGB = GL_FUNC_ADD;
    ctx->Color.EquationA = GL_FUNC_ADD;
    ASSIGN_4V( ctx->Color.BlendColor, 0.0, 0.0, 0.0, 0.0 );
-   ASSIGN_4V( ctx->Color.BlendColorUnclamped, 0.0, 0.0, 0.0, 0.0 );
    ctx->Color.IndexLogicOpEnabled = GL_FALSE;
    ctx->Color.ColorLogicOpEnabled = GL_FALSE;
    ctx->Color.LogicOp = GL_COPY;
@@ -574,11 +534,6 @@ void _mesa_init_color( struct gl_context * ctx )
    else {
       ctx->Color.DrawBuffer = GL_FRONT;
    }
-
-   ctx->Color.ClampFragmentColor = GL_FIXED_ONLY_ARB;
-   ctx->Color._ClampFragmentColor = GL_TRUE;
-   ctx->Color.ClampReadColor = GL_FIXED_ONLY_ARB;
-   ctx->Color._ClampReadColor = GL_TRUE;
 }
 
 /*@}*/

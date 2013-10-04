@@ -93,12 +93,6 @@ _mesa_Accum( GLenum op, GLfloat value )
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
-   if (ctx->DrawBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
-      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
-                  "glAccum(incomplete framebuffer)");
-      return;
-   }
-
    if (ctx->RasterDiscard)
       return;
 

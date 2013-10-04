@@ -17,7 +17,6 @@ list(APPEND SOURCE
     context.c
     convolve.c
     cpuinfo.c
-    debug.c
     depth.c
     dlist.c
     dlopen.c
@@ -27,7 +26,6 @@ list(APPEND SOURCE
     eval.c
     execmem.c
     extensions.c
-    fbobject.c
     feedback.c
     fog.c
     formats.c
@@ -44,7 +42,6 @@ list(APPEND SOURCE
     light.c
     lines.c
     matrix.c
-    mipmap.c
     mm.c
     multisample.c
     pack.c

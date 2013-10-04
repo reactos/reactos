@@ -124,12 +124,6 @@ _swrast_DrawPixels( struct gl_context *ctx,
 		    const GLvoid *pixels );
 
 extern void
-_swrast_BlitFramebuffer(struct gl_context *ctx,
-                        GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
-                        GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
-                        GLbitfield mask, GLenum filter);
-
-extern void
 _swrast_Clear(struct gl_context *ctx, GLbitfield buffers);
 
 
@@ -241,10 +235,6 @@ extern void
 _swrast_render_texture(struct gl_context *ctx,
                        struct gl_framebuffer *fb,
                        struct gl_renderbuffer_attachment *att);
-
-extern void
-_swrast_finish_render_texture(struct gl_context *ctx,
-                              struct gl_renderbuffer_attachment *att);
 
 
 

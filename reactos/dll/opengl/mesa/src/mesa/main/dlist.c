@@ -43,9 +43,6 @@
 #include "dlist.h"
 #include "enums.h"
 #include "eval.h"
-#if FEATURE_EXT_framebuffer_object
-#include "fbobject.h"
-#endif
 #include "framebuffer.h"
 #include "glapi/glapi.h"
 #include "hash.h"
@@ -360,12 +357,6 @@ typedef enum
    OPCODE_UNIFORM_2UIV,
    OPCODE_UNIFORM_3UIV,
    OPCODE_UNIFORM_4UIV,
-
-   /* GL_ARB_color_buffer_float */
-   OPCODE_CLAMP_COLOR,
-
-   /* GL_EXT_framebuffer_blit */
-   OPCODE_BLIT_FRAMEBUFFER,
 
    /* Vertex attributes -- fallback for when optimized display
     * list build isn't active.
@@ -5553,37 +5544,6 @@ exec_GetUniformLocationARB(GLuint program, const GLchar *name)
 /* XXX more shader functions needed here */
 
 
-#if FEATURE_EXT_framebuffer_blit
-static void GLAPIENTRY
-save_BlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
-                        GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
-                        GLbitfield mask, GLenum filter)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_BLIT_FRAMEBUFFER, 10);
-   if (n) {
-      n[1].i = srcX0;
-      n[2].i = srcY0;
-      n[3].i = srcX1;
-      n[4].i = srcY1;
-      n[5].i = dstX0;
-      n[6].i = dstY0;
-      n[7].i = dstX1;
-      n[8].i = dstY1;
-      n[9].i = mask;
-      n[10].e = filter;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_BlitFramebufferEXT(ctx->Exec, (srcX0, srcY0, srcX1, srcY1,
-                                          dstX0, dstY0, dstX1, dstY1,
-                                          mask, filter));
-   }
-}
-#endif
-
-
 /* aka UseProgram() */
 static void GLAPIENTRY
 save_UseProgramObjectARB(GLhandleARB program)
@@ -6210,22 +6170,6 @@ save_UniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose,
    }
    if (ctx->ExecuteFlag) {
       CALL_UniformMatrix4x3fv(ctx->Exec, (location, count, transpose, m));
-   }
-}
-
-static void GLAPIENTRY
-save_ClampColorARB(GLenum target, GLenum clamp)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_CLAMP_COLOR, 2);
-   if (n) {
-      n[1].e = target;
-      n[2].e = clamp;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ClampColorARB(ctx->Exec, (target, clamp));
    }
 }
 
@@ -7144,13 +7088,6 @@ execute_list(struct gl_context *ctx, GLuint list)
                                                       n[6].f));
             break;
 #endif
-#if FEATURE_EXT_framebuffer_blit
-	 case OPCODE_BLIT_FRAMEBUFFER:
-	    CALL_BlitFramebufferEXT(ctx->Exec, (n[1].i, n[2].i, n[3].i, n[4].i,
-                                                n[5].i, n[6].i, n[7].i, n[8].i,
-                                                n[9].i, n[10].e));
-	    break;
-#endif
 
 	 case OPCODE_USE_PROGRAM:
 	    CALL_UseProgramObjectARB(ctx->Exec, (n[1].ui));
@@ -7273,10 +7210,6 @@ execute_list(struct gl_context *ctx, GLuint list)
 	    CALL_UniformMatrix4x3fv(ctx->Exec,
                                     (n[1].i, n[2].i, n[3].b, n[4].data));
 	    break;
-
-         case OPCODE_CLAMP_COLOR:
-            CALL_ClampColorARB(ctx->Exec, (n[1].e, n[2].e));
-            break;
 
          case OPCODE_TEX_BUMP_PARAMETER_ATI:
             {
@@ -8757,9 +8690,6 @@ _mesa_create_save_table(void)
    /* 173. GL_EXT_blend_func_separate */
    SET_BlendFuncSeparateEXT(table, save_BlendFuncSeparateEXT);
 
-   /* 196. GL_MESA_resize_buffers */
-   SET_ResizeBuffersMESA(table, _mesa_ResizeBuffersMESA);
-
    /* 197. GL_MESA_window_pos */
    SET_WindowPos2dMESA(table, save_WindowPos2dMESA);
    SET_WindowPos2dvMESA(table, save_WindowPos2dvMESA);
@@ -8860,24 +8790,6 @@ _mesa_create_save_table(void)
    SET_GenVertexArraysAPPLE(table, _mesa_GenVertexArraysAPPLE);
    SET_IsVertexArrayAPPLE(table, _mesa_IsVertexArrayAPPLE);
 
-   /* 310. GL_EXT_framebuffer_object */
-   SET_GenFramebuffersEXT(table, _mesa_GenFramebuffersEXT);
-   SET_BindFramebufferEXT(table, _mesa_BindFramebufferEXT);
-   SET_DeleteFramebuffersEXT(table, _mesa_DeleteFramebuffersEXT);
-   SET_CheckFramebufferStatusEXT(table, _mesa_CheckFramebufferStatusEXT);
-   SET_GenRenderbuffersEXT(table, _mesa_GenRenderbuffersEXT);
-   SET_BindRenderbufferEXT(table, _mesa_BindRenderbufferEXT);
-   SET_DeleteRenderbuffersEXT(table, _mesa_DeleteRenderbuffersEXT);
-   SET_RenderbufferStorageEXT(table, _mesa_RenderbufferStorageEXT);
-   SET_FramebufferTexture1DEXT(table, _mesa_FramebufferTexture1DEXT);
-   SET_FramebufferTexture2DEXT(table, _mesa_FramebufferTexture2DEXT);
-   SET_FramebufferTexture3DEXT(table, _mesa_FramebufferTexture3DEXT);
-   SET_FramebufferRenderbufferEXT(table, _mesa_FramebufferRenderbufferEXT);
-   SET_GenerateMipmapEXT(table, _mesa_GenerateMipmapEXT);
-
-   /* 317. GL_EXT_framebuffer_multisample */
-   SET_RenderbufferStorageMultisample(table, _mesa_RenderbufferStorageMultisample);
-
    /* GL_ARB_vertex_array_object */
    SET_BindVertexArray(table, _mesa_BindVertexArray);
    SET_GenVertexArrays(table, _mesa_GenVertexArrays);
@@ -8954,10 +8866,6 @@ _mesa_create_save_table(void)
    SET_MapBufferARB(table, _mesa_MapBufferARB);
    SET_UnmapBufferARB(table, _mesa_UnmapBufferARB);
 
-#if FEATURE_EXT_framebuffer_blit
-   SET_BlitFramebufferEXT(table, save_BlitFramebufferEXT);
-#endif
-
    /* GL_ARB_shader_objects */
    _mesa_init_shader_dispatch(table); /* Plug in glCreate/Delete/Get, etc */
    SET_UseProgramObjectARB(table, save_UseProgramObjectARB);
@@ -9026,10 +8934,6 @@ _mesa_create_save_table(void)
    /* 377. GL_EXT_separate_shader_objects */
    SET_UseShaderProgramEXT(table, save_UseShaderProgramEXT);
    SET_ActiveProgramEXT(table, save_ActiveProgramEXT);
-
-   /* GL_ARB_color_buffer_float */
-   SET_ClampColorARB(table, save_ClampColorARB);
-   SET_ClampColor(table, save_ClampColorARB);
 
 #if 0
    SET_Uniform1ui(table, save_Uniform1ui);

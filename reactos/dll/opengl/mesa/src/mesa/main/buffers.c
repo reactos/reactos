@@ -55,31 +55,21 @@ supported_buffer_bitmask(const struct gl_context *ctx, const struct gl_framebuff
 {
    GLbitfield mask = 0x0;
 
-   if (fb->Name > 0) {
-      /* A user-created renderbuffer */
-      GLuint i;
-      ASSERT(ctx->Extensions.EXT_framebuffer_object);
-      for (i = 0; i < ctx->Const.MaxColorAttachments; i++) {
-         mask |= (BUFFER_BIT_COLOR0 << i);
+   /* A window system framebuffer */
+   GLint i;
+   mask = BUFFER_BIT_FRONT_LEFT; /* always have this */
+   if (fb->Visual.stereoMode) {
+      mask |= BUFFER_BIT_FRONT_RIGHT;
+      if (fb->Visual.doubleBufferMode) {
+         mask |= BUFFER_BIT_BACK_LEFT | BUFFER_BIT_BACK_RIGHT;
       }
    }
-   else {
-      /* A window system framebuffer */
-      GLint i;
-      mask = BUFFER_BIT_FRONT_LEFT; /* always have this */
-      if (fb->Visual.stereoMode) {
-         mask |= BUFFER_BIT_FRONT_RIGHT;
-         if (fb->Visual.doubleBufferMode) {
-            mask |= BUFFER_BIT_BACK_LEFT | BUFFER_BIT_BACK_RIGHT;
-         }
-      }
-      else if (fb->Visual.doubleBufferMode) {
-         mask |= BUFFER_BIT_BACK_LEFT;
-      }
+   else if (fb->Visual.doubleBufferMode) {
+      mask |= BUFFER_BIT_BACK_LEFT;
+   }
 
-      for (i = 0; i < fb->Visual.numAuxBuffers; i++) {
-         mask |= (BUFFER_BIT_AUX0 << i);
-      }
+   for (i = 0; i < fb->Visual.numAuxBuffers; i++) {
+      mask |= (BUFFER_BIT_AUX0 << i);
    }
 
    return mask;
@@ -122,22 +112,6 @@ draw_buffer_enum_to_bitmask(GLenum buffer)
       case GL_AUX2:
       case GL_AUX3:
          return 1 << BUFFER_COUNT; /* invalid, but not BAD_MASK */
-      case GL_COLOR_ATTACHMENT0_EXT:
-         return BUFFER_BIT_COLOR0;
-      case GL_COLOR_ATTACHMENT1_EXT:
-         return BUFFER_BIT_COLOR1;
-      case GL_COLOR_ATTACHMENT2_EXT:
-         return BUFFER_BIT_COLOR2;
-      case GL_COLOR_ATTACHMENT3_EXT:
-         return BUFFER_BIT_COLOR3;
-      case GL_COLOR_ATTACHMENT4_EXT:
-         return BUFFER_BIT_COLOR4;
-      case GL_COLOR_ATTACHMENT5_EXT:
-         return BUFFER_BIT_COLOR5;
-      case GL_COLOR_ATTACHMENT6_EXT:
-         return BUFFER_BIT_COLOR6;
-      case GL_COLOR_ATTACHMENT7_EXT:
-         return BUFFER_BIT_COLOR7;
       default:
          /* error */
          return BAD_MASK;
@@ -177,22 +151,6 @@ read_buffer_enum_to_index(GLenum buffer)
       case GL_AUX2:
       case GL_AUX3:
          return BUFFER_COUNT; /* invalid, but not -1 */
-      case GL_COLOR_ATTACHMENT0_EXT:
-         return BUFFER_COLOR0;
-      case GL_COLOR_ATTACHMENT1_EXT:
-         return BUFFER_COLOR1;
-      case GL_COLOR_ATTACHMENT2_EXT:
-         return BUFFER_COLOR2;
-      case GL_COLOR_ATTACHMENT3_EXT:
-         return BUFFER_COLOR3;
-      case GL_COLOR_ATTACHMENT4_EXT:
-         return BUFFER_COLOR4;
-      case GL_COLOR_ATTACHMENT5_EXT:
-         return BUFFER_COLOR5;
-      case GL_COLOR_ATTACHMENT6_EXT:
-         return BUFFER_COLOR6;
-      case GL_COLOR_ATTACHMENT7_EXT:
-         return BUFFER_COLOR7;
       default:
          /* error */
          return -1;
@@ -271,13 +229,7 @@ _mesa_DrawBuffer(GLenum buffer)
 static void
 updated_drawbuffers(struct gl_context *ctx)
 {
-   struct gl_framebuffer *fb = ctx->DrawBuffer;
    FLUSH_VERTICES(ctx, _NEW_BUFFERS);
-
-   /* Flag the FBO as requiring validation. */
-   if (fb->Name != 0) {
-      fb->_Status = 0;
-   }
 }
 
 /**
@@ -316,11 +268,9 @@ _mesa_drawbuffer(struct gl_context *ctx, const GLenum buffers, GLbitfield destMa
    }
    fb->ColorDrawBuffer = buffers;
 
-   if (fb->Name == 0) {
-      if (ctx->Color.DrawBuffer != fb->ColorDrawBuffer) {
-         updated_drawbuffers(ctx);
-         ctx->Color.DrawBuffer = fb->ColorDrawBuffer;
-      }
+   if (ctx->Color.DrawBuffer != fb->ColorDrawBuffer) {
+      updated_drawbuffers(ctx);
+      ctx->Color.DrawBuffer = fb->ColorDrawBuffer;
    }
 }
 
@@ -333,9 +283,6 @@ _mesa_drawbuffer(struct gl_context *ctx, const GLenum buffers, GLbitfield destMa
 void
 _mesa_update_draw_buffer(struct gl_context *ctx)
 {
-   /* should be a window system FBO */
-   assert(ctx->DrawBuffer->Name == 0);
-
    _mesa_drawbuffer(ctx, ctx->Color.DrawBuffer, 0);
 }
 
@@ -352,12 +299,7 @@ _mesa_readbuffer(struct gl_context *ctx, GLenum buffer, GLint bufferIndex)
 {
    struct gl_framebuffer *fb = ctx->ReadBuffer;
 
-   if (fb->Name == 0) {
-      /* Only update the per-context READ_BUFFER state if we're bound to
-       * a window-system framebuffer.
-       */
-      ctx->Pixel.ReadBuffer = buffer;
-   }
+   ctx->Pixel.ReadBuffer = buffer;
 
    fb->ColorReadBuffer = buffer;
    fb->_ColorReadBufferIndex = bufferIndex;
@@ -388,24 +330,18 @@ _mesa_ReadBuffer(GLenum buffer)
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glReadBuffer %s\n", _mesa_lookup_enum_by_nr(buffer));
 
-   if (fb->Name > 0 && buffer == GL_NONE) {
-      /* This is legal for user-created framebuffer objects */
-      srcBuffer = -1;
+   /* general case / window-system framebuffer */
+   srcBuffer = read_buffer_enum_to_index(buffer);
+   if (srcBuffer == -1) {
+      _mesa_error(ctx, GL_INVALID_ENUM,
+                  "glReadBuffer(buffer=0x%x)", buffer);
+      return;
    }
-   else {
-      /* general case / window-system framebuffer */
-      srcBuffer = read_buffer_enum_to_index(buffer);
-      if (srcBuffer == -1) {
-         _mesa_error(ctx, GL_INVALID_ENUM,
-                     "glReadBuffer(buffer=0x%x)", buffer);
-         return;
-      }
-      supportedMask = supported_buffer_bitmask(ctx, fb);
-      if (((1 << srcBuffer) & supportedMask) == 0) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glReadBuffer(buffer=0x%x)", buffer);
-         return;
-      }
+   supportedMask = supported_buffer_bitmask(ctx, fb);
+   if (((1 << srcBuffer) & supportedMask) == 0) {
+      _mesa_error(ctx, GL_INVALID_OPERATION,
+                  "glReadBuffer(buffer=0x%x)", buffer);
+      return;
    }
 
    /* OK, all error checking has been completed now */

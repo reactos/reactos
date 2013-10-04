@@ -33,7 +33,6 @@
 #include "colortab.h"
 #include "context.h"
 #include "enums.h"
-#include "fbobject.h"
 #include "formats.h"
 #include "hash.h"
 #include "imports.h"
@@ -122,9 +121,6 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
    obj->Sampler.MinFilter = GL_NEAREST_MIPMAP_LINEAR;
 
    obj->Sampler.MagFilter = GL_LINEAR;
-   obj->Sampler.MinLod = -1000.0;
-   obj->Sampler.MaxLod = 1000.0;
-   obj->Sampler.LodBias = 0.0;
    obj->Sampler.MaxAnisotropy = 1.0;
 }
 
@@ -189,15 +185,11 @@ _mesa_copy_texture_object( struct gl_texture_object *dest,
    dest->Sampler.WrapR = src->Sampler.WrapR;
    dest->Sampler.MinFilter = src->Sampler.MinFilter;
    dest->Sampler.MagFilter = src->Sampler.MagFilter;
-   dest->Sampler.MinLod = src->Sampler.MinLod;
-   dest->Sampler.MaxLod = src->Sampler.MaxLod;
-   dest->Sampler.LodBias = src->Sampler.LodBias;
    dest->BaseLevel = src->BaseLevel;
    dest->MaxLevel = src->MaxLevel;
    dest->Sampler.MaxAnisotropy = src->Sampler.MaxAnisotropy;
    dest->_MaxLevel = src->_MaxLevel;
    dest->_MaxLambda = src->_MaxLambda;
-   dest->GenerateMipmap = src->GenerateMipmap;
    dest->_Complete = src->_Complete;
 }
 
@@ -794,35 +786,6 @@ _mesa_GenTextures( GLsizei n, GLuint *textures )
    _glthread_UNLOCK_MUTEX(ctx->Shared->Mutex);
 }
 
-
-/**
- * Check if the given texture object is bound to the current draw or
- * read framebuffer.  If so, Unbind it.
- */
-static void
-unbind_texobj_from_fbo(struct gl_context *ctx,
-                       struct gl_texture_object *texObj)
-{
-   const GLuint n = (ctx->DrawBuffer == ctx->ReadBuffer) ? 1 : 2;
-   GLuint i;
-
-   for (i = 0; i < n; i++) {
-      struct gl_framebuffer *fb = (i == 0) ? ctx->DrawBuffer : ctx->ReadBuffer;
-      if (fb->Name) {
-         GLuint j;
-         for (j = 0; j < BUFFER_COUNT; j++) {
-            if (fb->Attachment[j].Type == GL_TEXTURE &&
-                fb->Attachment[j].Texture == texObj) {
-	       /* Vertices are already flushed by _mesa_DeleteTextures */
-	       ctx->NewState |= _NEW_BUFFERS;
-               _mesa_remove_attachment(ctx, fb->Attachment + j);         
-            }
-         }
-      }
-   }
-}
-
-
 /**
  * Check if the given texture object is bound to any texture image units and
  * unbind it if so (revert to default textures).
@@ -878,12 +841,6 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures)
 
          if (delObj) {
             _mesa_lock_texture(ctx, delObj);
-
-            /* Check if texture is bound to any framebuffer objects.
-             * If so, unbind.
-             * See section 4.4.2.3 of GL_EXT_framebuffer_object.
-             */
-            unbind_texobj_from_fbo(ctx, delObj);
 
             /* Check if this texture is currently bound to any texture units.
              * If so, unbind it.

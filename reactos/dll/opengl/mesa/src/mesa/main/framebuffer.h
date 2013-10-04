@@ -34,15 +34,9 @@ struct gl_context;
 extern struct gl_framebuffer *
 _mesa_create_framebuffer(const struct gl_config *visual);
 
-extern struct gl_framebuffer *
-_mesa_new_framebuffer(struct gl_context *ctx, GLuint name);
-
 extern void
 _mesa_initialize_window_framebuffer(struct gl_framebuffer *fb,
 				     const struct gl_config *visual);
-
-extern void
-_mesa_initialize_user_framebuffer(struct gl_framebuffer *fb, GLuint name);
 
 extern void
 _mesa_destroy_framebuffer(struct gl_framebuffer *buffer);
@@ -70,16 +64,9 @@ _mesa_resize_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb,
 extern void
 _mesa_resizebuffers( struct gl_context *ctx );
 
-extern void GLAPIENTRY
-_mesa_ResizeBuffersMESA( void );
-
 
 extern void 
 _mesa_update_draw_buffer_bounds(struct gl_context *ctx);
-
-extern void
-_mesa_update_framebuffer_visual(struct gl_context *ctx,
-				struct gl_framebuffer *fb);
 
 extern void
 _mesa_update_framebuffer(struct gl_context *ctx);
@@ -95,8 +82,5 @@ _mesa_get_color_read_type(struct gl_context *ctx);
 
 extern GLenum
 _mesa_get_color_read_format(struct gl_context *ctx);
-
-extern void
-_mesa_print_framebuffer(const struct gl_framebuffer *fb);
 
 #endif /* FRAMEBUFFER_H */

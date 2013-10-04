@@ -310,8 +310,8 @@ _mesa_write_renderbuffer_image(const struct gl_renderbuffer *rb)
                           format, type, &ctx->DefaultPacking, buffer);
 
    /* make filename */
-   _mesa_snprintf(s, sizeof(s), "/tmp/renderbuffer%u.ppm", rb->Name);
-   _mesa_snprintf(s, sizeof(s), "C:\\renderbuffer%u.ppm", rb->Name);
+   _mesa_snprintf(s, sizeof(s), "/tmp/renderbuffer.ppm");
+   _mesa_snprintf(s, sizeof(s), "C:\\renderbuffer.ppm");
 
    printf("  Writing renderbuffer image to %s\n", s);
 
@@ -398,8 +398,8 @@ _mesa_dump_textures(GLuint writeImages)
 static void
 dump_renderbuffer(const struct gl_renderbuffer *rb, GLboolean writeImage)
 {
-   printf("Renderbuffer %u: %u x %u  IntFormat = %s\n",
-	  rb->Name, rb->Width, rb->Height,
+   printf("Renderbuffer: %u x %u  IntFormat = %s\n",
+	  rb->Width, rb->Height,
 	  _mesa_lookup_enum_by_nr(rb->InternalFormat));
    if (writeImage) {
       _mesa_write_renderbuffer_image(rb);

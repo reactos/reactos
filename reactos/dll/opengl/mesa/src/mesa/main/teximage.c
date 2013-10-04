@@ -33,7 +33,6 @@
 #include "bufferobj.h"
 #include "context.h"
 #include "enums.h"
-#include "fbobject.h"
 #include "framebuffer.h"
 #include "hash.h"
 #include "image.h"
@@ -1388,25 +1387,6 @@ copytexture_error_check( struct gl_context *ctx, GLuint dimensions,
       return GL_TRUE;
    }
 
-   /* Check that the source buffer is complete */
-   if (ctx->ReadBuffer->Name) {
-      if (ctx->ReadBuffer->_Status == 0) {
-         _mesa_test_framebuffer_completeness(ctx, ctx->ReadBuffer);
-      }
-      if (ctx->ReadBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
-         _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
-                     "glCopyTexImage%dD(invalid readbuffer)", dimensions);
-         return GL_TRUE;
-      }
-
-      if (ctx->ReadBuffer->Visual.samples > 0) {
-	 _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION,
-		     "glCopyTexImage%dD(multisample FBO)",
-		     dimensions);
-	 return GL_TRUE;
-      }
-   }
-
    /* Check border */
    if (border < 0 || border > 1) {
       return GL_TRUE;
@@ -1492,25 +1472,6 @@ static GLboolean
 copytexsubimage_error_check1( struct gl_context *ctx, GLuint dimensions,
                               GLenum target, GLint level)
 {
-   /* Check that the source buffer is complete */
-   if (ctx->ReadBuffer->Name) {
-      if (ctx->ReadBuffer->_Status == 0) {
-         _mesa_test_framebuffer_completeness(ctx, ctx->ReadBuffer);
-      }
-      if (ctx->ReadBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
-         _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
-                     "glCopyTexImage%dD(invalid readbuffer)", dimensions);
-         return GL_TRUE;
-      }
-
-      if (ctx->ReadBuffer->Visual.samples > 0) {
-	 _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION,
-		     "glCopyTexSubImage%dD(multisample FBO)",
-		     dimensions);
-	 return GL_TRUE;
-      }
-   }
-
    /* check target (proxies not allowed) */
    if (!legal_texsubimage_target(ctx, dimensions, target)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glCopyTexSubImage%uD(target=%s)",
@@ -1645,82 +1606,6 @@ struct cb_info
    struct gl_texture_object *texObj;
    GLuint level, face;
 };
-
-
-/**
- * Check render to texture callback.  Called from _mesa_HashWalk().
- */
-static void
-check_rtt_cb(GLuint key, void *data, void *userData)
-{
-   struct gl_framebuffer *fb = (struct gl_framebuffer *) data;
-   const struct cb_info *info = (struct cb_info *) userData;
-   struct gl_context *ctx = info->ctx;
-   const struct gl_texture_object *texObj = info->texObj;
-   const GLuint level = info->level, face = info->face;
-
-   /* If this is a user-created FBO */
-   if (fb->Name) {
-      GLuint i;
-      /* check if any of the FBO's attachments point to 'texObj' */
-      for (i = 0; i < BUFFER_COUNT; i++) {
-         struct gl_renderbuffer_attachment *att = fb->Attachment + i;
-         if (att->Type == GL_TEXTURE &&
-             att->Texture == texObj &&
-             att->TextureLevel == level &&
-             att->CubeMapFace == face) {
-            ASSERT(_mesa_get_attachment_teximage(att));
-            /* Tell driver about the new renderbuffer texture */
-            ctx->Driver.RenderTexture(ctx, ctx->DrawBuffer, att);
-            /* Mark fb status as indeterminate to force re-validation */
-            fb->_Status = 0;
-         }
-      }
-   }
-}
-
-
-/**
- * When a texture image is specified we have to check if it's bound to
- * any framebuffer objects (render to texture) in order to detect changes
- * in size or format since that effects FBO completeness.
- * Any FBOs rendering into the texture must be re-validated.
- */
-void
-_mesa_update_fbo_texture(struct gl_context *ctx,
-                         struct gl_texture_object *texObj,
-                         GLuint face, GLuint level)
-{
-   /* Only check this texture if it's been marked as RenderToTexture */
-   if (texObj->_RenderToTexture) {
-      struct cb_info info;
-      info.ctx = ctx;
-      info.texObj = texObj;
-      info.level = level;
-      info.face = face;
-      _mesa_HashWalk(ctx->Shared->FrameBuffers, check_rtt_cb, &info);
-   }
-}
-
-
-/**
- * If the texture object's GenerateMipmap flag is set and we've
- * changed the texture base level image, regenerate the rest of the
- * mipmap levels now.
- */
-static inline void
-check_gen_mipmap(struct gl_context *ctx, GLenum target,
-                 struct gl_texture_object *texObj, GLint level)
-{
-   ASSERT(target != GL_TEXTURE_CUBE_MAP);
-   if (texObj->GenerateMipmap &&
-       level == texObj->BaseLevel &&
-       level < texObj->MaxLevel) {
-      ASSERT(ctx->Driver.GenerateMipmap);
-      ctx->Driver.GenerateMipmap(ctx, target, texObj);
-   }
-}
-
 
 /** Debug helper: override the user-requested internal format */
 static GLenum
@@ -1908,7 +1793,6 @@ teximage(struct gl_context *ctx, GLuint dims,
    }
    else {
       /* non-proxy target */
-      const GLuint face = _mesa_tex_target_to_face(target);
       struct gl_texture_object *texObj;
       struct gl_texture_image *texImage;
 
@@ -1973,10 +1857,6 @@ teximage(struct gl_context *ctx, GLuint dims,
                default:
                   _mesa_problem(ctx, "invalid dims=%u in teximage()", dims);
                }
-
-               check_gen_mipmap(ctx, target, texObj, level);
-
-               _mesa_update_fbo_texture(ctx, texObj, face, level);
 
                /* state update */
                texObj->_Complete = GL_FALSE;
@@ -2128,8 +2008,6 @@ texsubimage(struct gl_context *ctx, GLuint dims, GLenum target, GLint level,
             _mesa_problem(ctx, "unexpected dims in subteximage()");
          }
 
-         check_gen_mipmap(ctx, target, texObj, level);
-
          ctx->NewState |= _NEW_TEXTURE;
       }
    }
@@ -2212,7 +2090,6 @@ copyteximage(struct gl_context *ctx, GLuint dims,
 {
    struct gl_texture_object *texObj;
    struct gl_texture_image *texImage;
-   const GLuint face = _mesa_tex_target_to_face(target);
 
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
@@ -2290,10 +2167,6 @@ copyteximage(struct gl_context *ctx, GLuint dims,
                   ctx->Driver.CopyTexSubImage2D(ctx, texImage, dstX, dstY,
                                                 srcRb, srcX, srcY, width, height);
             }
-
-            check_gen_mipmap(ctx, target, texObj, level);
-
-            _mesa_update_fbo_texture(ctx, texObj, face, level);
 
             /* state update */
             texObj->_Complete = GL_FALSE;
@@ -2404,8 +2277,6 @@ copytexsubimage(struct gl_context *ctx, GLuint dims, GLenum target, GLint level,
             default:
                _mesa_problem(ctx, "bad dims in copytexsubimage()");
             }
-
-            check_gen_mipmap(ctx, target, texObj, level);
 
             ctx->NewState |= _NEW_TEXTURE;
          }

@@ -150,14 +150,10 @@ _mesa_Fogfv( GLenum pname, const GLfloat *params )
 	 if (TEST_EQ_4V(ctx->Fog.Color, params))
 	    return;
 	 FLUSH_VERTICES(ctx, _NEW_FOG);
-	 ctx->Fog.ColorUnclamped[0] = params[0];
-	 ctx->Fog.ColorUnclamped[1] = params[1];
-	 ctx->Fog.ColorUnclamped[2] = params[2];
-	 ctx->Fog.ColorUnclamped[3] = params[3];
-	 ctx->Fog.Color[0] = CLAMP(params[0], 0.0F, 1.0F);
-	 ctx->Fog.Color[1] = CLAMP(params[1], 0.0F, 1.0F);
-	 ctx->Fog.Color[2] = CLAMP(params[2], 0.0F, 1.0F);
-	 ctx->Fog.Color[3] = CLAMP(params[3], 0.0F, 1.0F);
+	 ctx->Fog.Color[0] = params[0];
+	 ctx->Fog.Color[1] = params[1];
+	 ctx->Fog.Color[2] = params[2];
+	 ctx->Fog.Color[3] = params[3];
          break;
       case GL_FOG_COORDINATE_SOURCE_EXT: {
 	 GLenum p = (GLenum) (GLint) *params;
@@ -206,7 +202,6 @@ void _mesa_init_fog( struct gl_context * ctx )
    ctx->Fog.Enabled = GL_FALSE;
    ctx->Fog.Mode = GL_EXP;
    ASSIGN_4V( ctx->Fog.Color, 0.0, 0.0, 0.0, 0.0 );
-   ASSIGN_4V( ctx->Fog.ColorUnclamped, 0.0, 0.0, 0.0, 0.0 );
    ctx->Fog.Index = 0.0;
    ctx->Fog.Density = 1.0;
    ctx->Fog.Start = 0.0;

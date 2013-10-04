@@ -312,12 +312,6 @@ struct dd_function_table {
                              GLsizei width, GLsizei height);
 
    /**
-    * Called by glGenerateMipmap() or when GL_GENERATE_MIPMAP_SGIS is enabled.
-    */
-   void (*GenerateMipmap)(struct gl_context *ctx, GLenum target,
-                          struct gl_texture_object *texObj);
-
-   /**
     * Called by glTexImage[123]D when user specifies a proxy texture
     * target.  
     *
@@ -688,44 +682,6 @@ struct dd_function_table {
    GLenum (*BufferObjectUnpurgeable)( struct gl_context *ctx, struct gl_buffer_object *obj, GLenum option );
    GLenum (*RenderObjectUnpurgeable)( struct gl_context *ctx, struct gl_renderbuffer *obj, GLenum option );
    GLenum (*TextureObjectUnpurgeable)( struct gl_context *ctx, struct gl_texture_object *obj, GLenum option );
-   /*@}*/
-
-   /**
-    * \name Functions for GL_EXT_framebuffer_{object,blit}.
-    */
-   /*@{*/
-   struct gl_framebuffer * (*NewFramebuffer)(struct gl_context *ctx, GLuint name);
-   struct gl_renderbuffer * (*NewRenderbuffer)(struct gl_context *ctx, GLuint name);
-   void (*BindFramebuffer)(struct gl_context *ctx, GLenum target,
-                           struct gl_framebuffer *drawFb,
-                           struct gl_framebuffer *readFb);
-   void (*FramebufferRenderbuffer)(struct gl_context *ctx, 
-                                   struct gl_framebuffer *fb,
-                                   GLenum attachment,
-                                   struct gl_renderbuffer *rb);
-   void (*RenderTexture)(struct gl_context *ctx,
-                         struct gl_framebuffer *fb,
-                         struct gl_renderbuffer_attachment *att);
-   void (*FinishRenderTexture)(struct gl_context *ctx,
-                               struct gl_renderbuffer_attachment *att);
-   void (*ValidateFramebuffer)(struct gl_context *ctx,
-                               struct gl_framebuffer *fb);
-   /*@}*/
-   void (*BlitFramebuffer)(struct gl_context *ctx,
-                           GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
-                           GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
-                           GLbitfield mask, GLenum filter);
-
-   /**
-    * \name Query objects
-    */
-   /*@{*/
-   struct gl_query_object * (*NewQueryObject)(struct gl_context *ctx, GLuint id);
-   void (*DeleteQuery)(struct gl_context *ctx, struct gl_query_object *q);
-   void (*BeginQuery)(struct gl_context *ctx, struct gl_query_object *q);
-   void (*EndQuery)(struct gl_context *ctx, struct gl_query_object *q);
-   void (*CheckQuery)(struct gl_context *ctx, struct gl_query_object *q);
-   void (*WaitQuery)(struct gl_context *ctx, struct gl_query_object *q);
    /*@}*/
 
 

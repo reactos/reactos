@@ -26,7 +26,6 @@
 #include "glheader.h"
 #include "imports.h"
 #include "context.h"
-#include "fbobject.h"
 #include "formats.h"
 #include "mtypes.h"
 #include "renderbuffer.h"
@@ -41,7 +40,6 @@ _mesa_init_renderbuffer(struct gl_renderbuffer *rb, GLuint name)
    _glthread_INIT_MUTEX(rb->Mutex);
 
    rb->ClassID = 0;
-   rb->Name = name;
    rb->RefCount = 0;
    rb->Delete = _mesa_delete_renderbuffer;
 
@@ -54,21 +52,6 @@ _mesa_init_renderbuffer(struct gl_renderbuffer *rb, GLuint name)
    rb->Height = 0;
    rb->InternalFormat = GL_RGBA;
    rb->Format = MESA_FORMAT_NONE;
-}
-
-
-/**
- * Allocate a new gl_renderbuffer object.  This can be used for user-created
- * renderbuffers or window-system renderbuffers.
- */
-struct gl_renderbuffer *
-_mesa_new_renderbuffer(struct gl_context *ctx, GLuint name)
-{
-   struct gl_renderbuffer *rb = CALLOC_STRUCT(gl_renderbuffer);
-   if (rb) {
-      _mesa_init_renderbuffer(rb, name);
-   }
-   return rb;
 }
 
 
@@ -103,16 +86,6 @@ _mesa_add_renderbuffer(struct gl_framebuffer *fb,
           bufferName == BUFFER_STENCIL ||
           fb->Attachment[bufferName].Renderbuffer == NULL);
 
-   /* winsys vs. user-created buffer cross check */
-   if (fb->Name) {
-      assert(rb->Name);
-   }
-   else {
-      assert(!rb->Name);
-   }
-
-   fb->Attachment[bufferName].Type = GL_RENDERBUFFER_EXT;
-   fb->Attachment[bufferName].Complete = GL_TRUE;
    _mesa_reference_renderbuffer(&fb->Attachment[bufferName].Renderbuffer, rb);
 }
 

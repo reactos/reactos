@@ -57,7 +57,6 @@
 #include "colormac.h"
 #include "image.h"
 #include "macros.h"
-#include "mipmap.h"
 #include "mfeatures.h"
 #include "mtypes.h"
 #include "pack.h"

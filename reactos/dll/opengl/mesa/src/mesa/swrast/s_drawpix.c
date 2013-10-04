@@ -427,8 +427,7 @@ draw_rgba_pixels( struct gl_context *ctx, GLint x, GLint y,
    span.arrayMask = SPAN_RGBA;
    span.arrayAttribs = FRAG_BIT_COL0; /* we're fill in COL0 attrib values */
 
-   if (_mesa_get_format_datatype(ctx->DrawBuffer->_ColorDrawBuffer->Format) != GL_FLOAT &&
-       ctx->Color.ClampFragmentColor != GL_FALSE) {
+   if (_mesa_get_format_datatype(ctx->DrawBuffer->_ColorDrawBuffer->Format) != GL_FLOAT) {
       /* need to clamp colors before applying fragment ops */
       transferOps |= IMAGE_CLAMP_BIT;
    }

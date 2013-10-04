@@ -38,7 +38,6 @@
 #include "image.h"
 #include "context.h"
 #include "bufferobj.h"
-#include "fbobject.h"
 #include "mfeatures.h"
 #include "mtypes.h"
 #include "texobj.h"
@@ -1386,36 +1385,6 @@ buffer_object_purgeable(struct gl_context *ctx, GLuint name, GLenum option)
    return retval;
 }
 
-
-static GLenum
-renderbuffer_purgeable(struct gl_context *ctx, GLuint name, GLenum option)
-{
-   struct gl_renderbuffer *bufObj;
-   GLenum retval;
-
-   bufObj = _mesa_lookup_renderbuffer(ctx, name);
-   if (!bufObj) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glObjectUnpurgeable(name = 0x%x)", name);
-      return 0;
-   }
-
-   if (bufObj->Purgeable) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glObjectPurgeable(name = 0x%x) is already purgeable", name);
-      return GL_VOLATILE_APPLE;
-   }
-
-   bufObj->Purgeable = GL_TRUE;
-
-   retval = GL_VOLATILE_APPLE;
-   if (ctx->Driver.RenderObjectPurgeable)
-      retval = ctx->Driver.RenderObjectPurgeable(ctx, bufObj, option);
-
-   return retval;
-}
-
-
 static GLenum
 texture_object_purgeable(struct gl_context *ctx, GLuint name, GLenum option)
 {
@@ -1475,9 +1444,6 @@ _mesa_ObjectPurgeableAPPLE(GLenum objectType, GLuint name, GLenum option)
    case GL_TEXTURE:
       retval = texture_object_purgeable(ctx, name, option);
       break;
-   case GL_RENDERBUFFER_EXT:
-      retval = renderbuffer_purgeable(ctx, name, option);
-      break;
    case GL_BUFFER_OBJECT_APPLE:
       retval = buffer_object_purgeable(ctx, name, option);
       break;
@@ -1525,37 +1491,6 @@ buffer_object_unpurgeable(struct gl_context *ctx, GLuint name, GLenum option)
 
    return retval;
 }
-
-
-static GLenum
-renderbuffer_unpurgeable(struct gl_context *ctx, GLuint name, GLenum option)
-{
-   struct gl_renderbuffer *bufObj;
-   GLenum retval;
-
-   bufObj = _mesa_lookup_renderbuffer(ctx, name);
-   if (!bufObj) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glObjectUnpurgeable(name = 0x%x)", name);
-      return 0;
-   }
-
-   if (! bufObj->Purgeable) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glObjectUnpurgeable(name = 0x%x) object is "
-                  " already \"unpurged\"", name);
-      return 0;
-   }
-
-   bufObj->Purgeable = GL_FALSE;
-
-   retval = option;
-   if (ctx->Driver.RenderObjectUnpurgeable)
-      retval = ctx->Driver.RenderObjectUnpurgeable(ctx, bufObj, option);
-
-   return retval;
-}
-
 
 static GLenum
 texture_object_unpurgeable(struct gl_context *ctx, GLuint name, GLenum option)
@@ -1616,8 +1551,6 @@ _mesa_ObjectUnpurgeableAPPLE(GLenum objectType, GLuint name, GLenum option)
       return buffer_object_unpurgeable(ctx, name, option);
    case GL_TEXTURE:
       return texture_object_unpurgeable(ctx, name, option);
-   case GL_RENDERBUFFER_EXT:
-      return renderbuffer_unpurgeable(ctx, name, option);
    default:
       _mesa_error(ctx, GL_INVALID_ENUM,
                   "glObjectUnpurgeable(name = 0x%x) invalid type: %d",
@@ -1649,31 +1582,6 @@ get_buffer_object_parameteriv(struct gl_context *ctx, GLuint name,
       break;
    }
 }
-
-
-static void
-get_renderbuffer_parameteriv(struct gl_context *ctx, GLuint name,
-                             GLenum pname, GLint *params)
-{
-   struct gl_renderbuffer *rb = _mesa_lookup_renderbuffer(ctx, name);
-   if (!rb) {
-      _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glObjectUnpurgeable(name = 0x%x)", name);
-      return;
-   }
-
-   switch (pname) {
-   case GL_PURGEABLE_APPLE:
-      *params = rb->Purgeable;
-      break;
-   default:
-      _mesa_error(ctx, GL_INVALID_ENUM,
-                  "glGetObjectParameteriv(name = 0x%x) invalid enum: %d",
-                  name, pname);
-      break;
-   }
-}
-
 
 static void
 get_texture_object_parameteriv(struct gl_context *ctx, GLuint name,
@@ -1717,9 +1625,6 @@ _mesa_GetObjectParameterivAPPLE(GLenum objectType, GLuint name, GLenum pname,
       break;
    case GL_BUFFER_OBJECT_APPLE:
       get_buffer_object_parameteriv(ctx, name, pname, params);
-      break;
-   case GL_RENDERBUFFER_EXT:
-      get_renderbuffer_parameteriv(ctx, name, pname, params);
       break;
    default:
       _mesa_error(ctx, GL_INVALID_ENUM,

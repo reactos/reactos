@@ -33,12 +33,55 @@
 #include "main/glheader.h"
 #include "main/imports.h"
 #include "main/context.h"
-#include "main/fbobject.h"
 #include "main/formats.h"
 #include "main/mtypes.h"
 #include "main/renderbuffer.h"
 #include "swrast/s_context.h"
 #include "swrast/s_renderbuffer.h"
+
+static
+GLenum
+_mesa_base_fb_format(struct gl_context *ctx, GLenum internalFormat)
+{
+   /*
+    * Notes: some formats such as alpha, luminance, etc. were added
+    * with GL_ARB_framebuffer_object.
+    */
+   switch (internalFormat) {
+   case GL_RGB:
+   case GL_R3_G3_B2:
+   case GL_RGB4:
+   case GL_RGB5:
+   case GL_RGB8:
+   case GL_RGB10:
+   case GL_RGB12:
+   case GL_RGB16:
+      return GL_RGB;
+   case GL_RGBA:
+   case GL_RGBA2:
+   case GL_RGBA4:
+   case GL_RGB5_A1:
+   case GL_RGBA8:
+   case GL_RGB10_A2:
+   case GL_RGBA12:
+   case GL_RGBA16:
+      return GL_RGBA;
+   case GL_STENCIL_INDEX:
+   case GL_STENCIL_INDEX1_EXT:
+   case GL_STENCIL_INDEX4_EXT:
+   case GL_STENCIL_INDEX8_EXT:
+   case GL_STENCIL_INDEX16_EXT:
+      return GL_STENCIL_INDEX;
+   case GL_DEPTH_COMPONENT:
+   case GL_DEPTH_COMPONENT16:
+   case GL_DEPTH_COMPONENT24:
+   case GL_DEPTH_COMPONENT32:
+      return GL_DEPTH_COMPONENT;
+
+   default:
+      return 0;
+   }
+}
 
 
 /**
@@ -138,7 +181,7 @@ soft_renderbuffer_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
 
    rb->Width = width;
    rb->Height = height;
-   rb->_BaseFormat = _mesa_base_fbo_format(ctx, internalFormat);
+   rb->_BaseFormat = _mesa_base_fb_format(ctx, internalFormat);
 
    /* the internalFormat should have been error checked long ago */
    ASSERT(rb->_BaseFormat);
@@ -203,6 +246,7 @@ _swrast_unmap_soft_renderbuffer(struct gl_context *ctx,
  * renderbuffer.
  * This would not be used for hardware-based renderbuffers.
  */
+static
 struct gl_renderbuffer *
 _swrast_new_soft_renderbuffer(struct gl_context *ctx, GLuint name)
 {
@@ -214,61 +258,6 @@ _swrast_new_soft_renderbuffer(struct gl_context *ctx, GLuint name)
    }
    return &srb->Base;
 }
-
-
-/**
- * Add software-based color renderbuffers to the given framebuffer.
- * This is a helper routine for device drivers when creating a
- * window system framebuffer (not a user-created render/framebuffer).
- * Once this function is called, you can basically forget about this
- * renderbuffer; core Mesa will handle all the buffer management and
- * rendering!
- */
-static GLboolean
-add_color_renderbuffers(struct gl_context *ctx, struct gl_framebuffer *fb,
-                        GLuint rgbBits, GLuint alphaBits,
-                        GLboolean frontLeft, GLboolean backLeft,
-                        GLboolean frontRight, GLboolean backRight)
-{
-   gl_buffer_index b;
-
-   if (rgbBits > 16 || alphaBits > 16) {
-      _mesa_problem(ctx,
-                    "Unsupported bit depth in add_color_renderbuffers");
-      return GL_FALSE;
-   }
-
-   assert(MAX_COLOR_ATTACHMENTS >= 4);
-
-   for (b = BUFFER_FRONT_LEFT; b <= BUFFER_BACK_RIGHT; b++) {
-      struct gl_renderbuffer *rb;
-
-      if (b == BUFFER_FRONT_LEFT && !frontLeft)
-         continue;
-      else if (b == BUFFER_BACK_LEFT && !backLeft)
-         continue;
-      else if (b == BUFFER_FRONT_RIGHT && !frontRight)
-         continue;
-      else if (b == BUFFER_BACK_RIGHT && !backRight)
-         continue;
-
-      assert(fb->Attachment[b].Renderbuffer == NULL);
-
-      rb = ctx->Driver.NewRenderbuffer(ctx, 0);
-      if (!rb) {
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "Allocating color buffer");
-         return GL_FALSE;
-      }
-
-      rb->InternalFormat = GL_RGBA;
-
-      rb->AllocStorage = soft_renderbuffer_storage;
-      _mesa_add_renderbuffer(fb, b, rb);
-   }
-
-   return GL_TRUE;
-}
-
 
 /**
  * Add a software-based depth renderbuffer to the given framebuffer.
@@ -449,20 +438,8 @@ _swrast_add_soft_renderbuffers(struct gl_framebuffer *fb,
                                GLboolean alpha,
                                GLboolean aux)
 {
-   GLboolean frontLeft = GL_TRUE;
-   GLboolean backLeft = fb->Visual.doubleBufferMode;
-   GLboolean frontRight = fb->Visual.stereoMode;
-   GLboolean backRight = fb->Visual.stereoMode && fb->Visual.doubleBufferMode;
-
-   if (color) {
-      assert(fb->Visual.redBits == fb->Visual.greenBits);
-      assert(fb->Visual.redBits == fb->Visual.blueBits);
-      add_color_renderbuffers(NULL, fb,
-                              fb->Visual.redBits,
-                              fb->Visual.alphaBits,
-                              frontLeft, backLeft,
-                              frontRight, backRight);
-   }
+   (void)color;
+   
    if (depth) {
       assert(fb->Visual.depthBits > 0);
       add_depth_renderbuffer(NULL, fb, fb->Visual.depthBits);
@@ -504,24 +481,10 @@ map_attachment(struct gl_context *ctx,
                  struct gl_framebuffer *fb,
                  gl_buffer_index buffer)
 {
-   struct gl_texture_object *texObj = fb->Attachment[buffer].Texture;
    struct gl_renderbuffer *rb = fb->Attachment[buffer].Renderbuffer;
    struct swrast_renderbuffer *srb = swrast_renderbuffer(rb);
 
-   if (texObj) {
-      /* map texture image (render to texture) */
-      const GLuint level = fb->Attachment[buffer].TextureLevel;
-      const GLuint face = fb->Attachment[buffer].CubeMapFace;
-      const GLuint slice = fb->Attachment[buffer].Zoffset;
-      struct gl_texture_image *texImage = texObj->Image[face][level];
-      if (texImage) {
-         ctx->Driver.MapTextureImage(ctx, texImage, slice,
-                                     0, 0, texImage->Width, texImage->Height,
-                                     GL_MAP_READ_BIT | GL_MAP_WRITE_BIT,
-                                     &srb->Map, &srb->RowStride);
-      }
-   }
-   else if (rb) {
+   if (rb) {
       /* Map ordinary renderbuffer */
       ctx->Driver.MapRenderbuffer(ctx, rb,
                                   0, 0, rb->Width, rb->Height,
@@ -538,21 +501,10 @@ unmap_attachment(struct gl_context *ctx,
                    struct gl_framebuffer *fb,
                    gl_buffer_index buffer)
 {
-   struct gl_texture_object *texObj = fb->Attachment[buffer].Texture;
    struct gl_renderbuffer *rb = fb->Attachment[buffer].Renderbuffer;
    struct swrast_renderbuffer *srb = swrast_renderbuffer(rb);
 
-   if (texObj) {
-      /* unmap texture image (render to texture) */
-      const GLuint level = fb->Attachment[buffer].TextureLevel;
-      const GLuint face = fb->Attachment[buffer].CubeMapFace;
-      const GLuint slice = fb->Attachment[buffer].Zoffset;
-      struct gl_texture_image *texImage = texObj->Image[face][level];
-      if (texImage) {
-         ctx->Driver.UnmapTextureImage(ctx, texImage, slice);
-      }
-   }
-   else if (rb) {
+   if (rb) {
       /* unmap ordinary renderbuffer */
       ctx->Driver.UnmapRenderbuffer(ctx, rb);
    }

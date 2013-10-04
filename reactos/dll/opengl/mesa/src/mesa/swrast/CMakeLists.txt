@@ -5,7 +5,6 @@ list(APPEND SOURCE
     s_alpha.c
     s_bitmap.c
     s_blend.c
-    s_blit.c
     s_clear.c
     s_context.c
     s_copypix.c
@@ -23,7 +22,6 @@ list(APPEND SOURCE
     s_texcombine.c
     s_texfetch.c
     s_texfilter.c
-    s_texrender.c
     s_texture.c
     s_triangle.c
     s_zoom.c

@@ -29,7 +29,6 @@
 #include "main/arrayobj.h"
 #include "main/context.h"
 #include "main/framebuffer.h"
-#include "main/mipmap.h"
 #include "main/readpix.h"
 #include "main/renderbuffer.h"
 #include "main/shaderobj.h"
@@ -39,7 +38,6 @@
 #include "main/texobj.h"
 #include "main/texstore.h"
 #include "main/bufferobj.h"
-#include "main/fbobject.h"
 #include "main/texturebarrier.h"
 
 #include "program/program.h"
@@ -96,7 +94,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->CopyTexSubImage1D = _mesa_meta_CopyTexSubImage1D;
    driver->CopyTexSubImage2D = _mesa_meta_CopyTexSubImage2D;
    driver->CopyTexSubImage3D = _mesa_meta_CopyTexSubImage3D;
-   driver->GenerateMipmap = _mesa_meta_GenerateMipmap;
    driver->TestProxyTexImage = _mesa_test_proxy_teximage;
    driver->BindTexture = NULL;
    driver->NewTextureObject = _mesa_new_texture_object;
@@ -158,16 +155,8 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    /* buffer objects */
    _mesa_init_buffer_object_functions(driver);
 
-   driver->NewFramebuffer = _mesa_new_framebuffer;
-   driver->NewRenderbuffer = _swrast_new_soft_renderbuffer;
    driver->MapRenderbuffer = _swrast_map_soft_renderbuffer;
    driver->UnmapRenderbuffer = _swrast_unmap_soft_renderbuffer;
-   driver->RenderTexture = _swrast_render_texture;
-   driver->FinishRenderTexture = _swrast_finish_render_texture;
-   driver->FramebufferRenderbuffer = _mesa_framebuffer_renderbuffer;
-   driver->ValidateFramebuffer = _mesa_validate_framebuffer;
-
-   driver->BlitFramebuffer = _swrast_BlitFramebuffer;
 
    _mesa_init_texture_barrier_functions(driver);
 

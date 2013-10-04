@@ -1792,12 +1792,6 @@ sample_lambda_2d_aniso(struct gl_context *ctx,
    GLfloat t = span->attrStart[attr][1] + span->leftClip * dtdx;
    GLfloat q = span->attrStart[attr][3] + span->leftClip * dqdx;
 
-   /* from swrast/s_texcombine.c _swrast_texture_span */
-   const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[u];
-   const GLboolean adjustLOD =
-      (texUnit->LodBias + tObj->Sampler.LodBias != 0.0F)
-      || (tObj->Sampler.MinLod != -1000.0 || tObj->Sampler.MaxLod != 1000.0);
-
    GLuint i;
    
    /* on first access create the lookup table containing the filter weights. */
@@ -1856,24 +1850,6 @@ sample_lambda_2d_aniso(struct gl_context *ctx,
        * this since 0.5*log(x) = log(sqrt(x))
        */
       lod = 0.5 * LOG2(Pmin2);
-      
-      if (adjustLOD) {
-         /* from swrast/s_texcombine.c _swrast_texture_span */
-         if (texUnit->LodBias + tObj->Sampler.LodBias != 0.0F) {
-            /* apply LOD bias, but don't clamp yet */
-            const GLfloat bias =
-               CLAMP(texUnit->LodBias + tObj->Sampler.LodBias,
-                     -ctx->Const.MaxTextureLodBias,
-                     ctx->Const.MaxTextureLodBias);
-            lod += bias;
-
-            if (tObj->Sampler.MinLod != -1000.0 ||
-                tObj->Sampler.MaxLod != 1000.0) {
-               /* apply LOD clamping to lambda */
-               lod = CLAMP(lod, tObj->Sampler.MinLod, tObj->Sampler.MaxLod);
-            }
-         }
-      }
       
       /* If the ellipse covers the whole image, we can
        * simply return the average of the whole image.

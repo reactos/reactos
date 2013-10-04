@@ -129,8 +129,7 @@ enum value_extra {
    EXTRA_VERSION_30,
    EXTRA_VERSION_31,
    EXTRA_VERSION_32,
-   EXTRA_NEW_BUFFERS, 
-   EXTRA_NEW_FRAG_CLAMP,
+   EXTRA_NEW_BUFFERS,
    EXTRA_VALID_TEXTURE_UNIT,
    EXTRA_VALID_CLIP_DISTANCE,
    EXTRA_FLUSH_CURRENT,
@@ -226,11 +225,6 @@ static const int extra_new_buffers[] = {
    EXTRA_END
 };
 
-static const int extra_new_frag_clamp[] = {
-   EXTRA_NEW_FRAG_CLAMP,
-   EXTRA_END
-};
-
 static const int extra_valid_texture_unit[] = {
    EXTRA_VALID_TEXTURE_UNIT,
    EXTRA_END
@@ -288,12 +282,9 @@ EXTRA_EXT(NV_fragment_program);
 EXTRA_EXT(EXT_stencil_two_side);
 EXTRA_EXT(NV_light_max_exponent);
 EXTRA_EXT(EXT_depth_bounds_test);
-EXTRA_EXT(EXT_framebuffer_blit);
 EXTRA_EXT(ARB_shader_objects);
 EXTRA_EXT(ARB_fragment_shader);
 EXTRA_EXT(ARB_fragment_program);
-EXTRA_EXT2(ARB_framebuffer_object, EXT_framebuffer_multisample);
-EXTRA_EXT(EXT_framebuffer_object);
 EXTRA_EXT(APPLE_vertex_array_object);
 EXTRA_EXT(EXT_compiled_vertex_array);
 EXTRA_EXT(ARB_vertex_shader);
@@ -303,7 +294,6 @@ EXTRA_EXT2(NV_point_sprite, ARB_point_sprite);
 EXTRA_EXT2(ARB_fragment_program, NV_fragment_program);
 EXTRA_EXT2(ARB_vertex_program, NV_vertex_program);
 EXTRA_EXT2(ARB_vertex_program, ARB_fragment_program);
-EXTRA_EXT(ARB_color_buffer_float);
 
 static const int
 extra_ARB_vertex_program_ARB_fragment_program_NV_vertex_program[] = {
@@ -343,7 +333,7 @@ static const struct value_desc values[] = {
    { GL_BLEND, CONTEXT_BIT0(Color.BlendEnabled), NO_EXTRA },
    { GL_BLEND_SRC, CONTEXT_ENUM(Color.SrcRGB), NO_EXTRA },
    { GL_BLUE_BITS, BUFFER_INT(Visual.blueBits), extra_new_buffers },
-   { GL_COLOR_CLEAR_VALUE, LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp },
+   { GL_COLOR_CLEAR_VALUE, LOC_CUSTOM, TYPE_FLOATN_4, 0, NO_EXTRA },
    { GL_COLOR_WRITEMASK, LOC_CUSTOM, TYPE_INT_4, 0, NO_EXTRA },
    { GL_CULL_FACE, CONTEXT_BOOL(Polygon.CullFlag), NO_EXTRA },
    { GL_CULL_FACE_MODE, CONTEXT_ENUM(Polygon.CullFaceMode), NO_EXTRA },
@@ -425,11 +415,6 @@ static const struct value_desc values[] = {
      CONTEXT_FLOAT(Multisample.SampleCoverageValue), NO_EXTRA },
    { GL_SAMPLE_COVERAGE_INVERT_ARB,
      CONTEXT_BOOL(Multisample.SampleCoverageInvert), NO_EXTRA },
-   { GL_SAMPLE_BUFFERS_ARB, BUFFER_INT(Visual.sampleBuffers), NO_EXTRA },
-   { GL_SAMPLES_ARB, BUFFER_INT(Visual.samples), NO_EXTRA },
-
-   /* GL_SGIS_generate_mipmap */
-   { GL_GENERATE_MIPMAP_HINT_SGIS, CONTEXT_ENUM(Hint.GenerateMipmap), NO_EXTRA },
 
    /* GL_ARB_vertex_buffer_object */
    { GL_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
@@ -438,24 +423,11 @@ static const struct value_desc values[] = {
    /* GL_WEIGHT_ARRAY_BUFFER_BINDING_ARB - not supported */
    { GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
 
-   /* GL_ARB_color_buffer_float */
-   { GL_CLAMP_VERTEX_COLOR, CONTEXT_ENUM(Light.ClampVertexColor), extra_ARB_color_buffer_float },
-   { GL_CLAMP_FRAGMENT_COLOR, CONTEXT_ENUM(Color.ClampFragmentColor), extra_ARB_color_buffer_float },
-   { GL_CLAMP_READ_COLOR, CONTEXT_ENUM(Color.ClampReadColor), extra_ARB_color_buffer_float },
-
    /* GL_OES_read_format */
    { GL_IMPLEMENTATION_COLOR_READ_TYPE_OES, LOC_CUSTOM, TYPE_INT, 0,
      extra_new_buffers },
    { GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES, LOC_CUSTOM, TYPE_INT, 0,
      extra_new_buffers },
-
-   /* GL_EXT_framebuffer_object */
-   { GL_FRAMEBUFFER_BINDING_EXT, BUFFER_INT(Name),
-     extra_EXT_framebuffer_object },
-   { GL_RENDERBUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_framebuffer_object },
-   { GL_MAX_RENDERBUFFER_SIZE_EXT, CONTEXT_INT(Const.MaxRenderbufferSize),
-     extra_EXT_framebuffer_object },
 
    /* This entry isn't spec'ed for GLES 2, but is needed for Mesa's
     * GLSL: */
@@ -476,7 +448,7 @@ static const struct value_desc values[] = {
    { GL_LIGHT_MODEL_TWO_SIDE, CONTEXT_BOOL(Light.Model.TwoSide), NO_EXTRA },
    { GL_ALPHA_TEST, CONTEXT_BOOL(Color.AlphaEnabled), NO_EXTRA },
    { GL_ALPHA_TEST_FUNC, CONTEXT_ENUM(Color.AlphaFunc), NO_EXTRA },
-   { GL_ALPHA_TEST_REF, LOC_CUSTOM, TYPE_FLOATN, 0, extra_new_frag_clamp },
+   { GL_ALPHA_TEST_REF, LOC_CUSTOM, TYPE_FLOATN, 0, NO_EXTRA },
    { GL_BLEND_DST, CONTEXT_ENUM(Color.DstRGB), NO_EXTRA },
    { GL_CLIP_DISTANCE0, CONTEXT_BIT0(Transform.ClipPlanesEnabled), extra_valid_clip_distance },
    { GL_CLIP_DISTANCE1, CONTEXT_BIT1(Transform.ClipPlanesEnabled), extra_valid_clip_distance },
@@ -497,7 +469,7 @@ static const struct value_desc values[] = {
      extra_flush_current_valid_texture_unit },
    { GL_DISTANCE_ATTENUATION_EXT, CONTEXT_FLOAT3(Point.Params[0]), NO_EXTRA },
    { GL_FOG, CONTEXT_BOOL(Fog.Enabled), NO_EXTRA },
-   { GL_FOG_COLOR, LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp },
+   { GL_FOG_COLOR, LOC_CUSTOM, TYPE_FLOATN_4, 0, NO_EXTRA },
    { GL_FOG_DENSITY, CONTEXT_FLOAT(Fog.Density), NO_EXTRA },
    { GL_FOG_END, CONTEXT_FLOAT(Fog.End), NO_EXTRA },
    { GL_FOG_HINT, CONTEXT_ENUM(Hint.Fog), NO_EXTRA },
@@ -595,10 +567,6 @@ static const struct value_desc values[] = {
    { GL_MAX_VARYING_FLOATS_ARB, LOC_CUSTOM, TYPE_INT, 0,
      extra_ARB_vertex_shader },
 
-   /* GL_EXT_texture_lod_bias */
-   { GL_MAX_TEXTURE_LOD_BIAS_EXT, CONTEXT_FLOAT(Const.MaxTextureLodBias),
-     NO_EXTRA },
-
    /* GL_EXT_texture_filter_anisotropic */
    { GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT,
      CONTEXT_FLOAT(Const.MaxTextureMaxAnisotropy),
@@ -608,11 +576,7 @@ static const struct value_desc values[] = {
      CONTEXT_INT(Const.MaxTextureCoordUnits),
      extra_ARB_fragment_program_NV_fragment_program },
 
-   /* GL_EXT_framebuffer_object / GL_NV_fbo_color_attachments */
-   { GL_MAX_COLOR_ATTACHMENTS, CONTEXT_INT(Const.MaxColorAttachments),
-     extra_EXT_framebuffer_object },
-
-   { GL_BLEND_COLOR_EXT, LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp },
+   { GL_BLEND_COLOR_EXT, LOC_CUSTOM, TYPE_FLOATN_4, 0, NO_EXTRA },
    /* GL_ARB_fragment_program */
    { GL_MAX_TEXTURE_IMAGE_UNITS_ARB, /* == GL_MAX_TEXTURE_IMAGE_UNITS_NV */
      CONTEXT_INT(Const.MaxTextureImageUnits),
@@ -801,9 +765,6 @@ static const struct value_desc values[] = {
    { GL_EDGE_FLAG_ARRAY, ARRAY_BOOL(VertexAttrib[VERT_ATTRIB_EDGEFLAG].Enabled), NO_EXTRA },
    { GL_EDGE_FLAG_ARRAY_STRIDE, ARRAY_INT(VertexAttrib[VERT_ATTRIB_EDGEFLAG].Stride), NO_EXTRA },
    { GL_EDGE_FLAG_ARRAY_COUNT_EXT, CONST(0), NO_EXTRA },
-
-   /* GL_ARB_texture_compression */
-   { GL_TEXTURE_COMPRESSION_HINT_ARB, CONTEXT_INT(Hint.TextureCompression), NO_EXTRA },
 
    /* GL_EXT_compiled_vertex_array */
    { GL_ARRAY_ELEMENT_LOCK_FIRST_EXT, CONTEXT_INT(Array.LockFirst),
@@ -1006,15 +967,6 @@ static const struct value_desc values[] = {
    { GL_DEPTH_BOUNDS_EXT, CONTEXT_FLOAT2(Depth.BoundsMin),
      extra_EXT_depth_bounds_test },
 
-   /* GL_EXT_framebuffer_blit
-    * NOTE: GL_DRAW_FRAMEBUFFER_BINDING_EXT == GL_FRAMEBUFFER_BINDING_EXT */
-   { GL_READ_FRAMEBUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_framebuffer_blit },
-
-   /* GL_ARB_framebuffer_object */
-   { GL_MAX_SAMPLES, CONTEXT_INT(Const.MaxSamples),
-     extra_ARB_framebuffer_object_EXT_framebuffer_multisample },
-
    /* GL_APPLE_vertex_array_object */
    { GL_VERTEX_ARRAY_BINDING_APPLE, ARRAY_INT(Name),
      extra_APPLE_vertex_array_object },
@@ -1022,9 +974,6 @@ static const struct value_desc values[] = {
    /* GL_EXT_texture_integer */
    { GL_RGBA_INTEGER_MODE_EXT, BUFFER_BOOL(_IntegerColor),
      extra_EXT_texture_integer },
-
-   /* GL_ARB_color_buffer_float */
-   { GL_RGBA_FLOAT_MODE_ARB, BUFFER_FIELD(Visual.floatMode, TYPE_BOOLEAN), 0 },
 
    /* GL_EXT_gpu_shader4 / GLSL 1.30 */
    { GL_MIN_PROGRAM_TEXEL_OFFSET,
@@ -1375,44 +1324,25 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       v->value_int =
 	 ctx->Shader.ActiveProgram ? ctx->Shader.ActiveProgram->Name : 0;
       break;
-   case GL_READ_FRAMEBUFFER_BINDING_EXT:
-      v->value_int = ctx->ReadBuffer->Name;
-      break;
-   case GL_RENDERBUFFER_BINDING_EXT:
-      v->value_int =
-	 ctx->CurrentRenderbuffer ? ctx->CurrentRenderbuffer->Name : 0;
-      break;
    case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES:
       v->value_int = ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POINT_SIZE].BufferObj->Name;
       break;
 
    case GL_FOG_COLOR:
-      if(ctx->Color._ClampFragmentColor)
-         COPY_4FV(v->value_float_4, ctx->Fog.Color);
-      else
-         COPY_4FV(v->value_float_4, ctx->Fog.ColorUnclamped);
+      COPY_4FV(v->value_float_4, ctx->Fog.Color);
       break;
    case GL_COLOR_CLEAR_VALUE:
-      if(ctx->Color._ClampFragmentColor) {
-         v->value_float_4[0] = CLAMP(ctx->Color.ClearColor.f[0], 0.0F, 1.0F);
-         v->value_float_4[1] = CLAMP(ctx->Color.ClearColor.f[1], 0.0F, 1.0F);
-         v->value_float_4[2] = CLAMP(ctx->Color.ClearColor.f[2], 0.0F, 1.0F);
-         v->value_float_4[3] = CLAMP(ctx->Color.ClearColor.f[3], 0.0F, 1.0F);
-      } else
-         COPY_4FV(v->value_float_4, ctx->Color.ClearColor.f);
+      v->value_float_4[0] = CLAMP(ctx->Color.ClearColor.f[0], 0.0F, 1.0F);
+      v->value_float_4[1] = CLAMP(ctx->Color.ClearColor.f[1], 0.0F, 1.0F);
+      v->value_float_4[2] = CLAMP(ctx->Color.ClearColor.f[2], 0.0F, 1.0F);
+      v->value_float_4[3] = CLAMP(ctx->Color.ClearColor.f[3], 0.0F, 1.0F);
       break;
    case GL_BLEND_COLOR_EXT:
-      if(ctx->Color._ClampFragmentColor)
-         COPY_4FV(v->value_float_4, ctx->Color.BlendColor);
-      else
-         COPY_4FV(v->value_float_4, ctx->Color.BlendColorUnclamped);
+      COPY_4FV(v->value_float_4, ctx->Color.BlendColor);
       break;
    case GL_ALPHA_TEST_REF:
-      if(ctx->Color._ClampFragmentColor)
          v->value_float = ctx->Color.AlphaRef;
-      else
-         v->value_float = ctx->Color.AlphaRefUnclamped;
-      break;
+         break;
    case GL_MAX_VERTEX_UNIFORM_VECTORS:
       v->value_int = ctx->Const.VertexProgram.MaxUniformComponents / 4;
       break;
@@ -1466,11 +1396,6 @@ check_extra(struct gl_context *ctx, const char *func, const struct value_desc *d
 	    total++;
 	    enabled++;
 	 }
-	 break;
-      case EXTRA_NEW_FRAG_CLAMP:
-         if (ctx->NewState & (_NEW_BUFFERS | _NEW_FRAG_CLAMP))
-            _mesa_update_state(ctx);
-         break;
 	 break;
       case EXTRA_NEW_BUFFERS:
 	 if (ctx->NewState & _NEW_BUFFERS)

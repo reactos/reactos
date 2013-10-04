@@ -36,9 +36,6 @@ struct gl_renderbuffer;
 extern void
 _mesa_init_renderbuffer(struct gl_renderbuffer *rb, GLuint name);
 
-extern struct gl_renderbuffer *
-_mesa_new_renderbuffer(struct gl_context *ctx, GLuint name);
-
 extern void
 _mesa_delete_renderbuffer(struct gl_renderbuffer *rb);
 

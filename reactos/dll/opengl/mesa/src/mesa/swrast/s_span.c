@@ -1191,12 +1191,6 @@ _swrast_write_rgba_span( struct gl_context *ctx, SWspan *span)
       apply_aa_coverage(span);
    }
 
-   /* Clamp color/alpha values over the range [0.0, 1.0] before storage */
-   if (ctx->Color.ClampFragmentColor == GL_TRUE &&
-       span->array->ChanType == GL_FLOAT) {
-      clamp_colors(span);
-   }
-
    /*
     * Write to renderbuffers.
     * Depending on glDrawBuffer() state and the which color outputs are

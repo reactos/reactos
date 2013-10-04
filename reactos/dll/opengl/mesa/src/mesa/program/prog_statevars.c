@@ -237,17 +237,11 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
       {
          /* state[1] is the texture unit */
          const GLuint unit = (GLuint) state[1];
-         if(ctx->Color._ClampFragmentColor)
-            COPY_4V(value, ctx->Texture.Unit[unit].EnvColor);
-         else
-            COPY_4V(value, ctx->Texture.Unit[unit].EnvColorUnclamped);
+         COPY_4V(value, ctx->Texture.Unit[unit].EnvColor);
       }
       return;
    case STATE_FOG_COLOR:
-      if(ctx->Color._ClampFragmentColor)
-         COPY_4V(value, ctx->Fog.Color);
-      else
-         COPY_4V(value, ctx->Fog.ColorUnclamped);
+      COPY_4V(value, ctx->Fog.Color);
       return;
    case STATE_FOG_PARAMS:
       value[0] = ctx->Fog.Density;
@@ -408,9 +402,8 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
       case STATE_CURRENT_ATTRIB_MAYBE_VP_CLAMPED:
          {
             const GLuint idx = (GLuint) state[2];
-            if(ctx->Light._ClampVertexColor &&
-               (idx == VERT_ATTRIB_COLOR0 ||
-                idx == VERT_ATTRIB_COLOR1)) {
+            if(idx == VERT_ATTRIB_COLOR0 ||
+                idx == VERT_ATTRIB_COLOR1) {
                value[0] = CLAMP(ctx->Current.Attrib[idx][0], 0.0f, 1.0f);
                value[1] = CLAMP(ctx->Current.Attrib[idx][1], 0.0f, 1.0f);
                value[2] = CLAMP(ctx->Current.Attrib[idx][2], 0.0f, 1.0f);
@@ -583,19 +576,11 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
       case STATE_FB_WPOS_Y_TRANSFORM:
          /* A driver may negate this conditional by using ZW swizzle
           * instead of XY (based on e.g. some other state). */
-         if (ctx->DrawBuffer->Name != 0) {
-            /* Identity (XY) followed by flipping Y upside down (ZW). */
-            value[0] = 1.0F;
-            value[1] = 0.0F;
-            value[2] = -1.0F;
-            value[3] = (GLfloat) ctx->DrawBuffer->Height;
-         } else {
-            /* Flipping Y upside down (XY) followed by identity (ZW). */
-            value[0] = -1.0F;
-            value[1] = (GLfloat) ctx->DrawBuffer->Height;
-            value[2] = 1.0F;
-            value[3] = 0.0F;
-         }
+         /* Flipping Y upside down (XY) followed by identity (ZW). */
+         value[0] = -1.0F;
+         value[1] = (GLfloat) ctx->DrawBuffer->Height;
+         value[2] = 1.0F;
+         value[3] = 0.0F;
          return;
 
       case STATE_ROT_MATRIX_0:
@@ -662,10 +647,10 @@ _mesa_program_state_flags(const gl_state_index state[STATE_LENGTH])
    case STATE_TEXGEN:
       return _NEW_TEXTURE;
    case STATE_TEXENV_COLOR:
-      return _NEW_TEXTURE | _NEW_BUFFERS | _NEW_FRAG_CLAMP;
+      return _NEW_TEXTURE | _NEW_BUFFERS;
 
    case STATE_FOG_COLOR:
-      return _NEW_FOG | _NEW_BUFFERS | _NEW_FRAG_CLAMP;
+      return _NEW_FOG | _NEW_BUFFERS;
    case STATE_FOG_PARAMS:
       return _NEW_FOG;
 
@@ -716,7 +701,7 @@ _mesa_program_state_flags(const gl_state_index state[STATE_LENGTH])
 	 return _NEW_FOG;
       case STATE_POINT_SIZE_CLAMPED:
       case STATE_POINT_SIZE_IMPL_CLAMP:
-         return _NEW_POINT | _NEW_MULTISAMPLE;
+         return _NEW_POINT;
       case STATE_LIGHT_SPOT_DIR_NORMALIZED:
       case STATE_LIGHT_POSITION:
       case STATE_LIGHT_POSITION_NORMALIZED:

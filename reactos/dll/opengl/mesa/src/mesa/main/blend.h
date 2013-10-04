@@ -76,10 +76,6 @@ _mesa_ColorMask( GLboolean red, GLboolean green,
                  GLboolean blue, GLboolean alpha );
 
 
-extern void GLAPIENTRY
-_mesa_ClampColorARB(GLenum target, GLenum clamp);
-
-
 extern void  
 _mesa_init_color( struct gl_context * ctx );
 

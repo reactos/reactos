@@ -621,7 +621,6 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
             span->array->attribs[FRAG_ATTRIB_TEX0 +
                ctx->Texture.Unit[unit].BumpTarget - GL_TEXTURE0];
 
-         const struct gl_texture_object *curObj = texUnit->_Current;
          GLfloat *lambda = span->array->lambda[unit];
          float4_array texels = get_texel_array(swrast, unit);
          GLuint i;
@@ -629,32 +628,6 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
          GLfloat rotMatrix01 = ctx->Texture.Unit[unit].RotMatrix[1];
          GLfloat rotMatrix10 = ctx->Texture.Unit[unit].RotMatrix[2];
          GLfloat rotMatrix11 = ctx->Texture.Unit[unit].RotMatrix[3];
-
-         /* adjust texture lod (lambda) */
-         if (span->arrayMask & SPAN_LAMBDA) {
-            if (texUnit->LodBias + curObj->Sampler.LodBias != 0.0F) {
-               /* apply LOD bias, but don't clamp yet */
-               const GLfloat bias = CLAMP(texUnit->LodBias + curObj->Sampler.LodBias,
-                                          -ctx->Const.MaxTextureLodBias,
-                                          ctx->Const.MaxTextureLodBias);
-               GLuint i;
-               for (i = 0; i < span->end; i++) {
-                  lambda[i] += bias;
-               }
-            }
-
-            if (curObj->Sampler.MinLod != -1000.0 ||
-                curObj->Sampler.MaxLod != 1000.0) {
-               /* apply LOD clamping to lambda */
-               const GLfloat min = curObj->Sampler.MinLod;
-               const GLfloat max = curObj->Sampler.MaxLod;
-               GLuint i;
-               for (i = 0; i < span->end; i++) {
-                  GLfloat l = lambda[i];
-                  lambda[i] = CLAMP(l, min, max);
-               }
-            }
-         }
 
          /* Sample the texture (span->end = number of fragments) */
          swrast->TextureSample[unit]( ctx, texUnit->_Current, span->end,
@@ -686,32 +659,7 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
          GLfloat *lambda = span->array->lambda[unit];
          float4_array texels = get_texel_array(swrast, unit);
 
-         /* adjust texture lod (lambda) */
-         if (span->arrayMask & SPAN_LAMBDA) {
-            if (texUnit->LodBias + curObj->Sampler.LodBias != 0.0F) {
-               /* apply LOD bias, but don't clamp yet */
-               const GLfloat bias = CLAMP(texUnit->LodBias + curObj->Sampler.LodBias,
-                                          -ctx->Const.MaxTextureLodBias,
-                                          ctx->Const.MaxTextureLodBias);
-               GLuint i;
-               for (i = 0; i < span->end; i++) {
-                  lambda[i] += bias;
-               }
-            }
-
-            if (curObj->Sampler.MinLod != -1000.0 ||
-                curObj->Sampler.MaxLod != 1000.0) {
-               /* apply LOD clamping to lambda */
-               const GLfloat min = curObj->Sampler.MinLod;
-               const GLfloat max = curObj->Sampler.MaxLod;
-               GLuint i;
-               for (i = 0; i < span->end; i++) {
-                  GLfloat l = lambda[i];
-                  lambda[i] = CLAMP(l, min, max);
-               }
-            }
-         }
-         else if (curObj->Sampler.MaxAnisotropy > 1.0 &&
+         if (curObj->Sampler.MaxAnisotropy > 1.0 &&
                   curObj->Sampler.MinFilter == GL_LINEAR_MIPMAP_LINEAR) {
             /* sample_lambda_2d_aniso is beeing used as texture_sample_func,
              * it requires the current SWspan *span as an additional parameter.

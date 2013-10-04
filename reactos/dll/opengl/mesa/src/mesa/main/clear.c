@@ -189,12 +189,6 @@ _mesa_Clear( GLbitfield mask )
       _mesa_update_state( ctx );	/* update _Xmin, etc */
    }
 
-   if (ctx->DrawBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
-      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
-                  "glClear(incomplete framebuffer)");
-      return;
-   }
-
    if (ctx->DrawBuffer->Width == 0 || ctx->DrawBuffer->Height == 0 ||
        ctx->DrawBuffer->_Xmin >= ctx->DrawBuffer->_Xmax ||
        ctx->DrawBuffer->_Ymin >= ctx->DrawBuffer->_Ymax)

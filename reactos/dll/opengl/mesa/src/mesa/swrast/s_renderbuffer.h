@@ -33,10 +33,6 @@ struct gl_context;
 struct gl_framebuffer;
 struct gl_renderbuffer;
 
-
-extern struct gl_renderbuffer *
-_swrast_new_soft_renderbuffer(struct gl_context *ctx, GLuint name);
-
 extern void
 _swrast_map_soft_renderbuffer(struct gl_context *ctx,
                               struct gl_renderbuffer *rb,

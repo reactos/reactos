@@ -93,7 +93,6 @@
 #include "dlist.h"
 #include "eval.h"
 #include "extensions.h"
-#include "fbobject.h"
 #include "feedback.h"
 #include "fog.h"
 #include "formats.h"
@@ -194,7 +193,6 @@ _mesa_notifySwapBuffers(struct gl_context *ctx)
  * \param greenBits same as above.
  * \param blueBits same as above.
  * \param alphaBits same as above.
- * \param numSamples not really used.
  * 
  * \return pointer to new struct gl_config or NULL if requested parameters
  * can't be met.
@@ -213,8 +211,7 @@ _mesa_create_visual( GLboolean dbFlag,
                      GLint accumRedBits,
                      GLint accumGreenBits,
                      GLint accumBlueBits,
-                     GLint accumAlphaBits,
-                     GLint numSamples )
+                     GLint accumAlphaBits)
 {
    struct gl_config *vis = CALLOC_STRUCT(gl_config);
    if (vis) {
@@ -222,8 +219,7 @@ _mesa_create_visual( GLboolean dbFlag,
                                    redBits, greenBits, blueBits, alphaBits,
                                    depthBits, stencilBits,
                                    accumRedBits, accumGreenBits,
-                                   accumBlueBits, accumAlphaBits,
-                                   numSamples)) {
+                                   accumBlueBits, accumAlphaBits)) {
          free(vis);
          return NULL;
       }
@@ -255,8 +251,7 @@ _mesa_initialize_visual( struct gl_config *vis,
                          GLint accumRedBits,
                          GLint accumGreenBits,
                          GLint accumBlueBits,
-                         GLint accumAlphaBits,
-                         GLint numSamples )
+                         GLint accumAlphaBits)
 {
    assert(vis);
 
@@ -296,8 +291,6 @@ _mesa_initialize_visual( struct gl_config *vis,
 
    vis->numAuxBuffers = 0;
    vis->level = 0;
-   vis->sampleBuffers = numSamples > 0 ? 1 : 0;
-   vis->samples = numSamples;
 
    return GL_TRUE;
 }
@@ -517,7 +510,6 @@ _mesa_init_constants(struct gl_context *ctx)
    ctx->Const.MaxTextureUnits = MIN2(ctx->Const.MaxTextureCoordUnits,
                                      ctx->Const.MaxTextureImageUnits);
    ctx->Const.MaxTextureMaxAnisotropy = MAX_TEXTURE_MAX_ANISOTROPY;
-   ctx->Const.MaxTextureLodBias = MAX_TEXTURE_LOD_BIAS;
    ctx->Const.MaxArrayLockSize = MAX_ARRAY_LOCK_SIZE;
    ctx->Const.SubPixelBits = SUB_PIXEL_BITS;
    ctx->Const.MinPointSize = MIN_POINT_SIZE;
@@ -549,11 +541,6 @@ _mesa_init_constants(struct gl_context *ctx)
    /* CheckArrayBounds is overriden by drivers/x11 for X server */
    ctx->Const.CheckArrayBounds = GL_FALSE;
 
-#if FEATURE_EXT_framebuffer_object
-   ctx->Const.MaxColorAttachments = MAX_COLOR_ATTACHMENTS;
-   ctx->Const.MaxRenderbufferSize = MAX_WIDTH;
-#endif
-
 #if FEATURE_ARB_vertex_shader
    ctx->Const.MaxVertexTextureImageUnits = MAX_VERTEX_TEXTURE_IMAGE_UNITS;
    ctx->Const.MaxCombinedTextureImageUnits = MAX_COMBINED_TEXTURE_IMAGE_UNITS;
@@ -562,9 +549,6 @@ _mesa_init_constants(struct gl_context *ctx)
 
    ctx->Const.GLSLVersion = 120;
    _mesa_override_glsl_version(ctx);
-
-   /* GL_ARB_framebuffer_object */
-   ctx->Const.MaxSamples = 0;
 
    /* GL_ATI_envmap_bumpmap */
    ctx->Const.SupportedBumpUnits = SUPPORTED_ATI_BUMP_UNITS;
@@ -641,11 +625,6 @@ check_context_limits(struct gl_context *ctx)
 
    assert(ctx->Const.MaxViewportWidth <= MAX_WIDTH);
    assert(ctx->Const.MaxViewportHeight <= MAX_WIDTH);
-
-   /* if this fails, add more enum values to gl_buffer_index */
-   assert(BUFFER_COLOR0 + 1 <= BUFFER_COUNT);
-
-   /* XXX probably add more tests */
 }
 
 
@@ -678,7 +657,6 @@ init_attrib_groups(struct gl_context *ctx)
    _mesa_init_debug( ctx );
    _mesa_init_display_list( ctx );
    _mesa_init_eval( ctx );
-   _mesa_init_fbobjects( ctx );
    _mesa_init_feedback( ctx );
    _mesa_init_fog( ctx );
    _mesa_init_hint( ctx );
@@ -1153,9 +1131,6 @@ check_compatible(const struct gl_context *ctx,
    const struct gl_config *ctxvis = &ctx->Visual;
    const struct gl_config *bufvis = &buffer->Visual;
 
-   if (buffer == _mesa_get_incomplete_framebuffer())
-      return GL_TRUE;
-
 #if 0
    /* disabling this fixes the fgl_glxgears pbuffer demo */
    if (ctxvis->doubleBufferMode && !bufvis->doubleBufferMode)
@@ -1291,17 +1266,14 @@ _mesa_make_current( struct gl_context *newCtx,
           * Only set the context's Draw/ReadBuffer fields if they're NULL
           * or not bound to a user-created FBO.
           */
-         if (!newCtx->DrawBuffer || newCtx->DrawBuffer->Name == 0) {
-            _mesa_reference_framebuffer(&newCtx->DrawBuffer, drawBuffer);
-            /* Update the FBO's list of drawbuffers/renderbuffers.
-             * For winsys FBOs this comes from the GL state (which may have
-             * changed since the last time this FBO was bound).
-             */
-            _mesa_update_draw_buffer(newCtx);
-         }
-         if (!newCtx->ReadBuffer || newCtx->ReadBuffer->Name == 0) {
-            _mesa_reference_framebuffer(&newCtx->ReadBuffer, readBuffer);
-         }
+         _mesa_reference_framebuffer(&newCtx->DrawBuffer, drawBuffer);
+         /* Update the FBO's list of drawbuffers/renderbuffers.
+          * For winsys FBOs this comes from the GL state (which may have
+          * changed since the last time this FBO was bound).
+          */
+         _mesa_update_draw_buffer(newCtx);
+
+         _mesa_reference_framebuffer(&newCtx->ReadBuffer, readBuffer);
 
          /* XXX only set this flag if we're really changing the draw/read
           * framebuffer bindings.
@@ -1624,12 +1596,6 @@ _mesa_valid_to_render(struct gl_context *ctx, const char *where)
                      "%s(integer format but no fragment shader)", where);
          return GL_FALSE;
       }
-   }
-
-   if (ctx->DrawBuffer->_Status != GL_FRAMEBUFFER_COMPLETE_EXT) {
-      _mesa_error(ctx, GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
-                  "%s(incomplete framebuffer)", where);
-      return GL_FALSE;
    }
 
 #ifdef DEBUG

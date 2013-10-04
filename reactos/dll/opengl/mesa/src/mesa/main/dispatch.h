@@ -498,7 +498,6 @@
 #define _gloffset_UniformMatrix3x4fv 427
 #define _gloffset_UniformMatrix4x2fv 428
 #define _gloffset_UniformMatrix4x3fv 429
-#define _gloffset_ClampColor 430
 #define _gloffset_GetStringi 435
 #define _gloffset_GetBufferParameteri64v 438
 #define _gloffset_GetInteger64i_v 439
@@ -617,8 +616,6 @@
 #define _gloffset_BindAttribLocationARB 568
 #define _gloffset_GetActiveAttribARB 569
 #define _gloffset_GetAttribLocationARB 570
-#define _gloffset_ClampColorARB 572
-#define _gloffset_RenderbufferStorageMultisample 575
 #define _gloffset_FlushMappedBufferRange 580
 #define _gloffset_MapBufferRange 581
 #define _gloffset_BindVertexArray 583
@@ -708,7 +705,6 @@
 #define _gloffset_GetCombinerOutputParameterivNV 748
 #define _gloffset_GetFinalCombinerInputParameterfvNV 749
 #define _gloffset_GetFinalCombinerInputParameterivNV 750
-#define _gloffset_ResizeBuffersMESA 751
 #define _gloffset_WindowPos2dMESA 752
 #define _gloffset_WindowPos2dvMESA 753
 #define _gloffset_WindowPos2fMESA 754
@@ -821,24 +817,6 @@
 #define _gloffset_ProgramNamedParameter4fvNV 875
 #define _gloffset_DepthBoundsEXT 878
 #define _gloffset_BlendEquationSeparateEXT 879
-#define _gloffset_BindFramebufferEXT 880
-#define _gloffset_BindRenderbufferEXT 881
-#define _gloffset_CheckFramebufferStatusEXT 882
-#define _gloffset_DeleteFramebuffersEXT 883
-#define _gloffset_DeleteRenderbuffersEXT 884
-#define _gloffset_FramebufferRenderbufferEXT 885
-#define _gloffset_FramebufferTexture1DEXT 886
-#define _gloffset_FramebufferTexture2DEXT 887
-#define _gloffset_FramebufferTexture3DEXT 888
-#define _gloffset_GenFramebuffersEXT 889
-#define _gloffset_GenRenderbuffersEXT 890
-#define _gloffset_GenerateMipmapEXT 891
-#define _gloffset_GetFramebufferAttachmentParameterivEXT 892
-#define _gloffset_GetRenderbufferParameterivEXT 893
-#define _gloffset_IsFramebufferEXT 894
-#define _gloffset_IsRenderbufferEXT 895
-#define _gloffset_RenderbufferStorageEXT 896
-#define _gloffset_BlitFramebufferEXT 897
 #define _gloffset_BufferParameteriAPPLE 898
 #define _gloffset_FlushMappedBufferRangeAPPLE 899
 #define _gloffset_BindFragDataLocationEXT 900
@@ -921,7 +899,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define UniformMatrix3x4fv_remap_index 19
 #define UniformMatrix4x2fv_remap_index 20
 #define UniformMatrix4x3fv_remap_index 21
-#define ClampColor_remap_index 22
 #define GetStringi_remap_index 27
 #define TexBuffer_remap_index 28
 #define GetBufferParameteri64v_remap_index 30
@@ -1042,8 +1019,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define BindAttribLocationARB_remap_index 160
 #define GetActiveAttribARB_remap_index 161
 #define GetAttribLocationARB_remap_index 162
-#define ClampColorARB_remap_index 164
-#define RenderbufferStorageMultisample_remap_index 167
 #define VertexAttribDivisorARB_remap_index 171
 #define FlushMappedBufferRange_remap_index 172
 #define MapBufferRange_remap_index 173
@@ -1134,7 +1109,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define GetCombinerOutputParameterivNV_remap_index 340
 #define GetFinalCombinerInputParameterfvNV_remap_index 341
 #define GetFinalCombinerInputParameterivNV_remap_index 342
-#define ResizeBuffersMESA_remap_index 343
 #define WindowPos2dMESA_remap_index 344
 #define WindowPos2dvMESA_remap_index 345
 #define WindowPos2fMESA_remap_index 346
@@ -1247,24 +1221,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define ProgramNamedParameter4fvNV_remap_index 467
 #define DepthBoundsEXT_remap_index 470
 #define BlendEquationSeparateEXT_remap_index 471
-#define BindFramebufferEXT_remap_index 472
-#define BindRenderbufferEXT_remap_index 473
-#define CheckFramebufferStatusEXT_remap_index 474
-#define DeleteFramebuffersEXT_remap_index 475
-#define DeleteRenderbuffersEXT_remap_index 476
-#define FramebufferRenderbufferEXT_remap_index 477
-#define FramebufferTexture1DEXT_remap_index 478
-#define FramebufferTexture2DEXT_remap_index 479
-#define FramebufferTexture3DEXT_remap_index 480
-#define GenFramebuffersEXT_remap_index 481
-#define GenRenderbuffersEXT_remap_index 482
-#define GenerateMipmapEXT_remap_index 483
-#define GetFramebufferAttachmentParameterivEXT_remap_index 484
-#define GetRenderbufferParameterivEXT_remap_index 485
-#define IsFramebufferEXT_remap_index 486
-#define IsRenderbufferEXT_remap_index 487
-#define RenderbufferStorageEXT_remap_index 488
-#define BlitFramebufferEXT_remap_index 489
 #define BufferParameteriAPPLE_remap_index 490
 #define FlushMappedBufferRangeAPPLE_remap_index 491
 #define BindFragDataLocationEXT_remap_index 492
@@ -1342,9 +1298,7 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_UniformMatrix3x4fv driDispatchRemapTable[UniformMatrix3x4fv_remap_index]
 #define _gloffset_UniformMatrix4x2fv driDispatchRemapTable[UniformMatrix4x2fv_remap_index]
 #define _gloffset_UniformMatrix4x3fv driDispatchRemapTable[UniformMatrix4x3fv_remap_index]
-#define _gloffset_ClampColor driDispatchRemapTable[ClampColor_remap_index]
 #define _gloffset_GetStringi driDispatchRemapTable[GetStringi_remap_index]
-#define _gloffset_FramebufferTexture driDispatchRemapTable[FramebufferTexture_remap_index]
 #define _gloffset_GetBufferParameteri64v driDispatchRemapTable[GetBufferParameteri64v_remap_index]
 #define _gloffset_GetInteger64i_v driDispatchRemapTable[GetInteger64i_v_remap_index]
 #define _gloffset_LoadTransposeMatrixdARB driDispatchRemapTable[LoadTransposeMatrixdARB_remap_index]
@@ -1462,8 +1416,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_BindAttribLocationARB driDispatchRemapTable[BindAttribLocationARB_remap_index]
 #define _gloffset_GetActiveAttribARB driDispatchRemapTable[GetActiveAttribARB_remap_index]
 #define _gloffset_GetAttribLocationARB driDispatchRemapTable[GetAttribLocationARB_remap_index]
-#define _gloffset_ClampColorARB driDispatchRemapTable[ClampColorARB_remap_index]
-#define _gloffset_RenderbufferStorageMultisample driDispatchRemapTable[RenderbufferStorageMultisample_remap_index]
 #define _gloffset_FlushMappedBufferRange driDispatchRemapTable[FlushMappedBufferRange_remap_index]
 #define _gloffset_MapBufferRange driDispatchRemapTable[MapBufferRange_remap_index]
 #define _gloffset_BindVertexArray driDispatchRemapTable[BindVertexArray_remap_index]
@@ -1553,7 +1505,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_GetCombinerOutputParameterivNV driDispatchRemapTable[GetCombinerOutputParameterivNV_remap_index]
 #define _gloffset_GetFinalCombinerInputParameterfvNV driDispatchRemapTable[GetFinalCombinerInputParameterfvNV_remap_index]
 #define _gloffset_GetFinalCombinerInputParameterivNV driDispatchRemapTable[GetFinalCombinerInputParameterivNV_remap_index]
-#define _gloffset_ResizeBuffersMESA driDispatchRemapTable[ResizeBuffersMESA_remap_index]
 #define _gloffset_WindowPos2dMESA driDispatchRemapTable[WindowPos2dMESA_remap_index]
 #define _gloffset_WindowPos2dvMESA driDispatchRemapTable[WindowPos2dvMESA_remap_index]
 #define _gloffset_WindowPos2fMESA driDispatchRemapTable[WindowPos2fMESA_remap_index]
@@ -1666,24 +1617,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_ProgramNamedParameter4fvNV driDispatchRemapTable[ProgramNamedParameter4fvNV_remap_index]
 #define _gloffset_DepthBoundsEXT driDispatchRemapTable[DepthBoundsEXT_remap_index]
 #define _gloffset_BlendEquationSeparateEXT driDispatchRemapTable[BlendEquationSeparateEXT_remap_index]
-#define _gloffset_BindFramebufferEXT driDispatchRemapTable[BindFramebufferEXT_remap_index]
-#define _gloffset_BindRenderbufferEXT driDispatchRemapTable[BindRenderbufferEXT_remap_index]
-#define _gloffset_CheckFramebufferStatusEXT driDispatchRemapTable[CheckFramebufferStatusEXT_remap_index]
-#define _gloffset_DeleteFramebuffersEXT driDispatchRemapTable[DeleteFramebuffersEXT_remap_index]
-#define _gloffset_DeleteRenderbuffersEXT driDispatchRemapTable[DeleteRenderbuffersEXT_remap_index]
-#define _gloffset_FramebufferRenderbufferEXT driDispatchRemapTable[FramebufferRenderbufferEXT_remap_index]
-#define _gloffset_FramebufferTexture1DEXT driDispatchRemapTable[FramebufferTexture1DEXT_remap_index]
-#define _gloffset_FramebufferTexture2DEXT driDispatchRemapTable[FramebufferTexture2DEXT_remap_index]
-#define _gloffset_FramebufferTexture3DEXT driDispatchRemapTable[FramebufferTexture3DEXT_remap_index]
-#define _gloffset_GenFramebuffersEXT driDispatchRemapTable[GenFramebuffersEXT_remap_index]
-#define _gloffset_GenRenderbuffersEXT driDispatchRemapTable[GenRenderbuffersEXT_remap_index]
-#define _gloffset_GenerateMipmapEXT driDispatchRemapTable[GenerateMipmapEXT_remap_index]
-#define _gloffset_GetFramebufferAttachmentParameterivEXT driDispatchRemapTable[GetFramebufferAttachmentParameterivEXT_remap_index]
-#define _gloffset_GetRenderbufferParameterivEXT driDispatchRemapTable[GetRenderbufferParameterivEXT_remap_index]
-#define _gloffset_IsFramebufferEXT driDispatchRemapTable[IsFramebufferEXT_remap_index]
-#define _gloffset_IsRenderbufferEXT driDispatchRemapTable[IsRenderbufferEXT_remap_index]
-#define _gloffset_RenderbufferStorageEXT driDispatchRemapTable[RenderbufferStorageEXT_remap_index]
-#define _gloffset_BlitFramebufferEXT driDispatchRemapTable[BlitFramebufferEXT_remap_index]
 #define _gloffset_BufferParameteriAPPLE driDispatchRemapTable[BufferParameteriAPPLE_remap_index]
 #define _gloffset_FlushMappedBufferRangeAPPLE driDispatchRemapTable[FlushMappedBufferRangeAPPLE_remap_index]
 #define _gloffset_BindFragDataLocationEXT driDispatchRemapTable[BindFragDataLocationEXT_remap_index]
@@ -6471,17 +6404,6 @@ static inline void SET_UniformMatrix4x3fv(struct _glapi_table *disp, void (GLAPI
    SET_by_offset(disp, _gloffset_UniformMatrix4x3fv, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_ClampColor)(GLenum, GLenum);
-#define CALL_ClampColor(disp, parameters) \
-    (* GET_ClampColor(disp)) parameters
-static inline _glptr_ClampColor GET_ClampColor(struct _glapi_table *disp) {
-   return (_glptr_ClampColor) (GET_by_offset(disp, _gloffset_ClampColor));
-}
-
-static inline void SET_ClampColor(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum)) {
-   SET_by_offset(disp, _gloffset_ClampColor, fn);
-}
-
 typedef const GLubyte * (GLAPIENTRYP _glptr_GetStringi)(GLenum, GLuint);
 #define CALL_GetStringi(disp, parameters) \
     (* GET_GetStringi(disp)) parameters
@@ -7780,28 +7702,6 @@ static inline void SET_GetAttribLocationARB(struct _glapi_table *disp, GLint (GL
    SET_by_offset(disp, _gloffset_GetAttribLocationARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_ClampColorARB)(GLenum, GLenum);
-#define CALL_ClampColorARB(disp, parameters) \
-    (* GET_ClampColorARB(disp)) parameters
-static inline _glptr_ClampColorARB GET_ClampColorARB(struct _glapi_table *disp) {
-   return (_glptr_ClampColorARB) (GET_by_offset(disp, _gloffset_ClampColorARB));
-}
-
-static inline void SET_ClampColorARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum)) {
-   SET_by_offset(disp, _gloffset_ClampColorARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_RenderbufferStorageMultisample)(GLenum, GLsizei, GLenum, GLsizei, GLsizei);
-#define CALL_RenderbufferStorageMultisample(disp, parameters) \
-    (* GET_RenderbufferStorageMultisample(disp)) parameters
-static inline _glptr_RenderbufferStorageMultisample GET_RenderbufferStorageMultisample(struct _glapi_table *disp) {
-   return (_glptr_RenderbufferStorageMultisample) (GET_by_offset(disp, _gloffset_RenderbufferStorageMultisample));
-}
-
-static inline void SET_RenderbufferStorageMultisample(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLenum, GLsizei, GLsizei)) {
-   SET_by_offset(disp, _gloffset_RenderbufferStorageMultisample, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_FlushMappedBufferRange)(GLenum, GLintptr, GLsizeiptr);
 #define CALL_FlushMappedBufferRange(disp, parameters) \
     (* GET_FlushMappedBufferRange(disp)) parameters
@@ -8779,17 +8679,6 @@ static inline _glptr_GetFinalCombinerInputParameterivNV GET_GetFinalCombinerInpu
 
 static inline void SET_GetFinalCombinerInputParameterivNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLint *)) {
    SET_by_offset(disp, _gloffset_GetFinalCombinerInputParameterivNV, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ResizeBuffersMESA)(void);
-#define CALL_ResizeBuffersMESA(disp, parameters) \
-    (* GET_ResizeBuffersMESA(disp)) parameters
-static inline _glptr_ResizeBuffersMESA GET_ResizeBuffersMESA(struct _glapi_table *disp) {
-   return (_glptr_ResizeBuffersMESA) (GET_by_offset(disp, _gloffset_ResizeBuffersMESA));
-}
-
-static inline void SET_ResizeBuffersMESA(struct _glapi_table *disp, void (GLAPIENTRYP fn)(void)) {
-   SET_by_offset(disp, _gloffset_ResizeBuffersMESA, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_WindowPos2dMESA)(GLdouble, GLdouble);
@@ -10022,204 +9911,6 @@ static inline _glptr_BlendEquationSeparateEXT GET_BlendEquationSeparateEXT(struc
 
 static inline void SET_BlendEquationSeparateEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum)) {
    SET_by_offset(disp, _gloffset_BlendEquationSeparateEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_BindFramebufferEXT)(GLenum, GLuint);
-#define CALL_BindFramebufferEXT(disp, parameters) \
-    (* GET_BindFramebufferEXT(disp)) parameters
-static inline _glptr_BindFramebufferEXT GET_BindFramebufferEXT(struct _glapi_table *disp) {
-   return (_glptr_BindFramebufferEXT) (GET_by_offset(disp, _gloffset_BindFramebufferEXT));
-}
-
-static inline void SET_BindFramebufferEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint)) {
-   SET_by_offset(disp, _gloffset_BindFramebufferEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_BindRenderbufferEXT)(GLenum, GLuint);
-#define CALL_BindRenderbufferEXT(disp, parameters) \
-    (* GET_BindRenderbufferEXT(disp)) parameters
-static inline _glptr_BindRenderbufferEXT GET_BindRenderbufferEXT(struct _glapi_table *disp) {
-   return (_glptr_BindRenderbufferEXT) (GET_by_offset(disp, _gloffset_BindRenderbufferEXT));
-}
-
-static inline void SET_BindRenderbufferEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint)) {
-   SET_by_offset(disp, _gloffset_BindRenderbufferEXT, fn);
-}
-
-typedef GLenum (GLAPIENTRYP _glptr_CheckFramebufferStatusEXT)(GLenum);
-#define CALL_CheckFramebufferStatusEXT(disp, parameters) \
-    (* GET_CheckFramebufferStatusEXT(disp)) parameters
-static inline _glptr_CheckFramebufferStatusEXT GET_CheckFramebufferStatusEXT(struct _glapi_table *disp) {
-   return (_glptr_CheckFramebufferStatusEXT) (GET_by_offset(disp, _gloffset_CheckFramebufferStatusEXT));
-}
-
-static inline void SET_CheckFramebufferStatusEXT(struct _glapi_table *disp, GLenum (GLAPIENTRYP fn)(GLenum)) {
-   SET_by_offset(disp, _gloffset_CheckFramebufferStatusEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_DeleteFramebuffersEXT)(GLsizei, const GLuint *);
-#define CALL_DeleteFramebuffersEXT(disp, parameters) \
-    (* GET_DeleteFramebuffersEXT(disp)) parameters
-static inline _glptr_DeleteFramebuffersEXT GET_DeleteFramebuffersEXT(struct _glapi_table *disp) {
-   return (_glptr_DeleteFramebuffersEXT) (GET_by_offset(disp, _gloffset_DeleteFramebuffersEXT));
-}
-
-static inline void SET_DeleteFramebuffersEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, const GLuint *)) {
-   SET_by_offset(disp, _gloffset_DeleteFramebuffersEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_DeleteRenderbuffersEXT)(GLsizei, const GLuint *);
-#define CALL_DeleteRenderbuffersEXT(disp, parameters) \
-    (* GET_DeleteRenderbuffersEXT(disp)) parameters
-static inline _glptr_DeleteRenderbuffersEXT GET_DeleteRenderbuffersEXT(struct _glapi_table *disp) {
-   return (_glptr_DeleteRenderbuffersEXT) (GET_by_offset(disp, _gloffset_DeleteRenderbuffersEXT));
-}
-
-static inline void SET_DeleteRenderbuffersEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, const GLuint *)) {
-   SET_by_offset(disp, _gloffset_DeleteRenderbuffersEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_FramebufferRenderbufferEXT)(GLenum, GLenum, GLenum, GLuint);
-#define CALL_FramebufferRenderbufferEXT(disp, parameters) \
-    (* GET_FramebufferRenderbufferEXT(disp)) parameters
-static inline _glptr_FramebufferRenderbufferEXT GET_FramebufferRenderbufferEXT(struct _glapi_table *disp) {
-   return (_glptr_FramebufferRenderbufferEXT) (GET_by_offset(disp, _gloffset_FramebufferRenderbufferEXT));
-}
-
-static inline void SET_FramebufferRenderbufferEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLuint)) {
-   SET_by_offset(disp, _gloffset_FramebufferRenderbufferEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_FramebufferTexture1DEXT)(GLenum, GLenum, GLenum, GLuint, GLint);
-#define CALL_FramebufferTexture1DEXT(disp, parameters) \
-    (* GET_FramebufferTexture1DEXT(disp)) parameters
-static inline _glptr_FramebufferTexture1DEXT GET_FramebufferTexture1DEXT(struct _glapi_table *disp) {
-   return (_glptr_FramebufferTexture1DEXT) (GET_by_offset(disp, _gloffset_FramebufferTexture1DEXT));
-}
-
-static inline void SET_FramebufferTexture1DEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLuint, GLint)) {
-   SET_by_offset(disp, _gloffset_FramebufferTexture1DEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_FramebufferTexture2DEXT)(GLenum, GLenum, GLenum, GLuint, GLint);
-#define CALL_FramebufferTexture2DEXT(disp, parameters) \
-    (* GET_FramebufferTexture2DEXT(disp)) parameters
-static inline _glptr_FramebufferTexture2DEXT GET_FramebufferTexture2DEXT(struct _glapi_table *disp) {
-   return (_glptr_FramebufferTexture2DEXT) (GET_by_offset(disp, _gloffset_FramebufferTexture2DEXT));
-}
-
-static inline void SET_FramebufferTexture2DEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLuint, GLint)) {
-   SET_by_offset(disp, _gloffset_FramebufferTexture2DEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_FramebufferTexture3DEXT)(GLenum, GLenum, GLenum, GLuint, GLint, GLint);
-#define CALL_FramebufferTexture3DEXT(disp, parameters) \
-    (* GET_FramebufferTexture3DEXT(disp)) parameters
-static inline _glptr_FramebufferTexture3DEXT GET_FramebufferTexture3DEXT(struct _glapi_table *disp) {
-   return (_glptr_FramebufferTexture3DEXT) (GET_by_offset(disp, _gloffset_FramebufferTexture3DEXT));
-}
-
-static inline void SET_FramebufferTexture3DEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLuint, GLint, GLint)) {
-   SET_by_offset(disp, _gloffset_FramebufferTexture3DEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GenFramebuffersEXT)(GLsizei, GLuint *);
-#define CALL_GenFramebuffersEXT(disp, parameters) \
-    (* GET_GenFramebuffersEXT(disp)) parameters
-static inline _glptr_GenFramebuffersEXT GET_GenFramebuffersEXT(struct _glapi_table *disp) {
-   return (_glptr_GenFramebuffersEXT) (GET_by_offset(disp, _gloffset_GenFramebuffersEXT));
-}
-
-static inline void SET_GenFramebuffersEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
-   SET_by_offset(disp, _gloffset_GenFramebuffersEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GenRenderbuffersEXT)(GLsizei, GLuint *);
-#define CALL_GenRenderbuffersEXT(disp, parameters) \
-    (* GET_GenRenderbuffersEXT(disp)) parameters
-static inline _glptr_GenRenderbuffersEXT GET_GenRenderbuffersEXT(struct _glapi_table *disp) {
-   return (_glptr_GenRenderbuffersEXT) (GET_by_offset(disp, _gloffset_GenRenderbuffersEXT));
-}
-
-static inline void SET_GenRenderbuffersEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
-   SET_by_offset(disp, _gloffset_GenRenderbuffersEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GenerateMipmapEXT)(GLenum);
-#define CALL_GenerateMipmapEXT(disp, parameters) \
-    (* GET_GenerateMipmapEXT(disp)) parameters
-static inline _glptr_GenerateMipmapEXT GET_GenerateMipmapEXT(struct _glapi_table *disp) {
-   return (_glptr_GenerateMipmapEXT) (GET_by_offset(disp, _gloffset_GenerateMipmapEXT));
-}
-
-static inline void SET_GenerateMipmapEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum)) {
-   SET_by_offset(disp, _gloffset_GenerateMipmapEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetFramebufferAttachmentParameterivEXT)(GLenum, GLenum, GLenum, GLint *);
-#define CALL_GetFramebufferAttachmentParameterivEXT(disp, parameters) \
-    (* GET_GetFramebufferAttachmentParameterivEXT(disp)) parameters
-static inline _glptr_GetFramebufferAttachmentParameterivEXT GET_GetFramebufferAttachmentParameterivEXT(struct _glapi_table *disp) {
-   return (_glptr_GetFramebufferAttachmentParameterivEXT) (GET_by_offset(disp, _gloffset_GetFramebufferAttachmentParameterivEXT));
-}
-
-static inline void SET_GetFramebufferAttachmentParameterivEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLint *)) {
-   SET_by_offset(disp, _gloffset_GetFramebufferAttachmentParameterivEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetRenderbufferParameterivEXT)(GLenum, GLenum, GLint *);
-#define CALL_GetRenderbufferParameterivEXT(disp, parameters) \
-    (* GET_GetRenderbufferParameterivEXT(disp)) parameters
-static inline _glptr_GetRenderbufferParameterivEXT GET_GetRenderbufferParameterivEXT(struct _glapi_table *disp) {
-   return (_glptr_GetRenderbufferParameterivEXT) (GET_by_offset(disp, _gloffset_GetRenderbufferParameterivEXT));
-}
-
-static inline void SET_GetRenderbufferParameterivEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLint *)) {
-   SET_by_offset(disp, _gloffset_GetRenderbufferParameterivEXT, fn);
-}
-
-typedef GLboolean (GLAPIENTRYP _glptr_IsFramebufferEXT)(GLuint);
-#define CALL_IsFramebufferEXT(disp, parameters) \
-    (* GET_IsFramebufferEXT(disp)) parameters
-static inline _glptr_IsFramebufferEXT GET_IsFramebufferEXT(struct _glapi_table *disp) {
-   return (_glptr_IsFramebufferEXT) (GET_by_offset(disp, _gloffset_IsFramebufferEXT));
-}
-
-static inline void SET_IsFramebufferEXT(struct _glapi_table *disp, GLboolean (GLAPIENTRYP fn)(GLuint)) {
-   SET_by_offset(disp, _gloffset_IsFramebufferEXT, fn);
-}
-
-typedef GLboolean (GLAPIENTRYP _glptr_IsRenderbufferEXT)(GLuint);
-#define CALL_IsRenderbufferEXT(disp, parameters) \
-    (* GET_IsRenderbufferEXT(disp)) parameters
-static inline _glptr_IsRenderbufferEXT GET_IsRenderbufferEXT(struct _glapi_table *disp) {
-   return (_glptr_IsRenderbufferEXT) (GET_by_offset(disp, _gloffset_IsRenderbufferEXT));
-}
-
-static inline void SET_IsRenderbufferEXT(struct _glapi_table *disp, GLboolean (GLAPIENTRYP fn)(GLuint)) {
-   SET_by_offset(disp, _gloffset_IsRenderbufferEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_RenderbufferStorageEXT)(GLenum, GLenum, GLsizei, GLsizei);
-#define CALL_RenderbufferStorageEXT(disp, parameters) \
-    (* GET_RenderbufferStorageEXT(disp)) parameters
-static inline _glptr_RenderbufferStorageEXT GET_RenderbufferStorageEXT(struct _glapi_table *disp) {
-   return (_glptr_RenderbufferStorageEXT) (GET_by_offset(disp, _gloffset_RenderbufferStorageEXT));
-}
-
-static inline void SET_RenderbufferStorageEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLsizei, GLsizei)) {
-   SET_by_offset(disp, _gloffset_RenderbufferStorageEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_BlitFramebufferEXT)(GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum);
-#define CALL_BlitFramebufferEXT(disp, parameters) \
-    (* GET_BlitFramebufferEXT(disp)) parameters
-static inline _glptr_BlitFramebufferEXT GET_BlitFramebufferEXT(struct _glapi_table *disp) {
-   return (_glptr_BlitFramebufferEXT) (GET_by_offset(disp, _gloffset_BlitFramebufferEXT));
-}
-
-static inline void SET_BlitFramebufferEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum)) {
-   SET_by_offset(disp, _gloffset_BlitFramebufferEXT, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_BufferParameteriAPPLE)(GLenum, GLenum, GLint);
