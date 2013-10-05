@@ -147,10 +147,10 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeImulModrmImm,
     Soft386OpcodePushByteImm,
     Soft386OpcodeImulModrmImm,
-    NULL, // TODO: OPCODE 0x6C NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x6D NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x6E NOT SUPPORTED
-    NULL, // TODO: OPCODE 0x6F NOT SUPPORTED
+    Soft386OpcodeIns,
+    Soft386OpcodeIns,
+    Soft386OpcodeOuts,
+    Soft386OpcodeOuts,
     Soft386OpcodeShortConditionalJmp,
     Soft386OpcodeShortConditionalJmp,
     Soft386OpcodeShortConditionalJmp,
