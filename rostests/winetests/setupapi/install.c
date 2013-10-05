@@ -322,6 +322,20 @@ static void test_install_svc_from(void)
     CloseServiceHandle(svc_handle);
     CloseServiceHandle(scm_handle);
 
+    strcpy(inf, "[Version]\nSignature=\"$Chicago$\"\n");
+    strcat(inf, "[XSP.InstallPerVer]\n");
+    strcat(inf, "AddReg=AspEventlogMsg.Reg,Perf.Reg,AspVersions.Reg,FreeADO.Reg,IndexServer.Reg\n");
+    create_inf_file(inffile, inf);
+    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    infhandle = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupInstallServicesFromInfSectionA(infhandle, "XSP.InstallPerVer", 0);
+    ok(ret, "Expected success\n");
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+    SetupCloseInfFile(infhandle);
+    DeleteFile(inffile);
+
     /* TODO: Test the Flags */
 }
 

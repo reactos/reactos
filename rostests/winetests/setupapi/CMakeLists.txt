@@ -1,7 +1,4 @@
 
-add_definitions(
-    -D__ROS_LONG64__)
-
 list(APPEND SOURCE
     devclass.c
     devinst.c
@@ -15,9 +12,8 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(setupapi_winetest ${SOURCE})
-target_link_libraries(setupapi_winetest wine)
 set_module_type(setupapi_winetest win32cui)
-add_importlibs(setupapi_winetest advapi32 setupapi user32 msvcrt kernel32 ntdll)
+add_importlibs(setupapi_winetest advapi32 setupapi user32 msvcrt kernel32)
 add_cd_file(TARGET setupapi_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)

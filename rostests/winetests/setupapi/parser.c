@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdarg.h>
 
 #include "windef.h"
@@ -424,7 +423,12 @@ static void test_key_names(void)
         if (hinf == INVALID_HANDLE_VALUE) continue;
 
         ret = SetupFindFirstLineA( hinf, "Test", 0, &context );
-        assert( ret );
+        ok(ret, "SetupFindFirstLineA failed: le=%u\n", GetLastError());
+        if (!ret)
+        {
+            SetupCloseInfFile( hinf );
+            continue;
+        }
 
         check_key( &context, key_names[i].key );
 
