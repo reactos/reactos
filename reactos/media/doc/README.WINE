@@ -242,7 +242,7 @@ In addition the following libs, dlls and source files are mostly based on code p
 from Winehq CVS. If you are looking to update something in these files
 check Wine current souces first as it may already be fixed.
 
-reactos/lib/3rdparty/strmbase             # Synced to Wine-1.5.26
+reactos/lib/3rdparty/strmbase             # Synced to Wine-1.7.11
 reactos/lib/sdk/uuid                      # Synced to Wine-1.1.42
 
 advapi32 -
