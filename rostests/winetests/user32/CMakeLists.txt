@@ -1,7 +1,4 @@
 
-add_definitions(
-    -D__ROS_LONG64__)
-
 list(APPEND SOURCE
     broadcast.c
     class.c
@@ -29,13 +26,9 @@ list(APPEND SOURCE
     wsprintf.c
     testlist.c)
 
-add_executable(user32_winetest
-    ${SOURCE}
-    resource.rc)
-
-target_link_libraries(user32_winetest wine)
+add_executable(user32_winetest ${SOURCE} resource.rc)
 set_module_type(user32_winetest win32cui)
-add_importlibs(user32_winetest user32 gdi32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(user32_winetest user32 gdi32 advapi32 msvcrt kernel32)
 add_cd_file(TARGET user32_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)

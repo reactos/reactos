@@ -1507,6 +1507,71 @@ static void test_MDI_create(HWND parent, HWND mdi_client, INT_PTR first_id)
     DestroyWindow(mdi_child);
 }
 
+static void test_MDI_child_stack(HWND mdi_client)
+{
+    HWND child_1, child_2, child_3, child_4;
+    HWND stack[4];
+    MDICREATESTRUCTA cs;
+
+    cs.szClass = "MDI_child_Class_1";
+    cs.szTitle = "MDI child";
+    cs.hOwner  = GetModuleHandleA(0);
+    cs.x       = CW_USEDEFAULT;
+    cs.y       = CW_USEDEFAULT;
+    cs.cx      = CW_USEDEFAULT;
+    cs.cy      = CW_USEDEFAULT;
+    cs.style   = 0;
+    cs.lParam  = (LPARAM)mdi_lParam_test_message;
+
+    child_1 = (HWND)SendMessageA(mdi_client, WM_MDICREATE, 0, (LPARAM)&cs);
+    ok(child_1 != 0, "expected child_1 to be non NULL\n");
+    child_2 = (HWND)SendMessageA(mdi_client, WM_MDICREATE, 0, (LPARAM)&cs);
+    ok(child_2 != 0, "expected child_2 to be non NULL\n");
+    child_3 = (HWND)SendMessageA(mdi_client, WM_MDICREATE, 0, (LPARAM)&cs);
+    ok(child_3 != 0, "expected child_3 to be non NULL\n");
+    child_4 = (HWND)SendMessageA(mdi_client, WM_MDICREATE, 0, (LPARAM)&cs);
+    ok(child_4 != 0, "expected child_4 to be non NULL\n");
+
+    stack[0] = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    stack[1] = GetWindow(stack[0], GW_HWNDNEXT);
+    stack[2] = GetWindow(stack[1], GW_HWNDNEXT);
+    stack[3] = GetWindow(stack[2], GW_HWNDNEXT);
+    trace("Initial MDI child stack: %p->%p->%p->%p\n", stack[0], stack[1], stack[2], stack[3]);
+    ok(stack[0] == child_4 && stack[1] == child_3 &&
+        stack[2] == child_2 && stack[3] == child_1,
+        "Unexpected initial order, should be: %p->%p->%p->%p\n",
+            child_4, child_3, child_2, child_1);
+
+    trace("Activate child next to %p\n", child_3);
+    SendMessage(mdi_client, WM_MDINEXT, (WPARAM)child_3, 0);
+
+    stack[0] = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    stack[1] = GetWindow(stack[0], GW_HWNDNEXT);
+    stack[2] = GetWindow(stack[1], GW_HWNDNEXT);
+    stack[3] = GetWindow(stack[2], GW_HWNDNEXT);
+    ok(stack[0] == child_2 && stack[1] == child_4 &&
+        stack[2] == child_1 && stack[3] == child_3,
+        "Broken MDI child stack:\nexpected: %p->%p->%p->%p, but got: %p->%p->%p->%p\n",
+            child_2, child_4, child_1, child_3, stack[0], stack[1], stack[2], stack[3]);
+
+    trace("Activate child previous to %p\n", child_1);
+    SendMessage(mdi_client, WM_MDINEXT, (WPARAM)child_1, 1);
+
+    stack[0] = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, 0);
+    stack[1] = GetWindow(stack[0], GW_HWNDNEXT);
+    stack[2] = GetWindow(stack[1], GW_HWNDNEXT);
+    stack[3] = GetWindow(stack[2], GW_HWNDNEXT);
+    ok(stack[0] == child_4 && stack[1] == child_2 &&
+        stack[2] == child_1 && stack[3] == child_3,
+        "Broken MDI child stack:\nexpected: %p->%p->%p->%p, but got: %p->%p->%p->%p\n",
+            child_4, child_2, child_1, child_3, stack[0], stack[1], stack[2], stack[3]);
+
+    DestroyWindow(child_1);
+    DestroyWindow(child_2);
+    DestroyWindow(child_3);
+    DestroyWindow(child_4);
+}
+
 /**********************************************************************
  * MDI_ChildGetMinMaxInfo (copied from windows/mdi.c)
  *
@@ -1787,6 +1852,17 @@ static LRESULT WINAPI mdi_main_wnd_procA(HWND hwnd, UINT msg, WPARAM wparam, LPA
                                          &client_cs);
             assert(mdi_client);
             test_MDI_create(hwnd, mdi_client, client_cs.idFirstChild);
+            DestroyWindow(mdi_client);
+
+            /* Test child window stack management */
+            mdi_client = CreateWindowExA(0, "mdiclient",
+                                         NULL,
+                                         WS_CHILD,
+                                         0, 0, rc.right, rc.bottom,
+                                         hwnd, 0, GetModuleHandle(0),
+                                         &client_cs);
+            assert(mdi_client);
+            test_MDI_child_stack(mdi_client);
             DestroyWindow(mdi_client);
             break;
         }
@@ -2637,7 +2713,7 @@ static void test_SetActiveWindow(HWND hwnd)
     SetActiveWindow(0);
     check_wnd_state(0, 0, 0, 0);
 
-    trace("testing SetActiveWindow %p\n", hwnd);
+    /*trace("testing SetActiveWindow %p\n", hwnd);*/
 
     ShowWindow(hwnd, SW_SHOW);
     check_wnd_state(hwnd, hwnd, hwnd, 0);
@@ -2657,11 +2733,11 @@ static void test_SetActiveWindow(HWND hwnd)
 
     SetWindowPos(hwnd,0,0,0,0,0,SWP_NOZORDER|SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);
     check_wnd_state(hwnd, hwnd, hwnd, 0);
-    trace("testing ShowWindow SW_HIDE window %p\n", hwnd);
+
     ShowWindow(hwnd, SW_HIDE);
     check_wnd_state(0, 0, 0, 0);
 
-    trace("testing SetActiveWindow on an invisible window %p\n", hwnd);
+    /*trace("testing SetActiveWindow on an invisible window %p\n", hwnd);*/
     SetActiveWindow(hwnd);
     check_wnd_state(hwnd, hwnd, hwnd, 0);
     
@@ -7326,6 +7402,73 @@ static void test_map_points(void)
     DestroyWindow(wnd0);
 }
 
+static void test_update_region(void)
+{
+    HWND hwnd, parent, child;
+    HRGN  rgn1, rgn2;
+    const RECT rc = {15, 15, 40, 40};
+    const POINT wnd_orig = {30, 20};
+    const POINT child_orig = {10, 5};
+
+    parent = CreateWindowExA(0, "MainWindowClass", NULL,
+                WS_VISIBLE | WS_CLIPCHILDREN,
+                0, 0, 300, 150, NULL, NULL, GetModuleHandleA(0), 0);
+    hwnd = CreateWindowExA(0, "MainWindowClass", NULL,
+                WS_VISIBLE | WS_CLIPCHILDREN | WS_CHILD,
+                0, 0, 200, 100, parent, NULL, GetModuleHandleA(0), 0);
+    child = CreateWindowExA(0, "MainWindowClass", NULL,
+                WS_VISIBLE | WS_CHILD,
+                child_orig.x, child_orig.y,  100, 50,
+                hwnd, NULL, GetModuleHandleA(0), 0);
+    assert(parent && hwnd && child);
+
+    ValidateRgn(parent, NULL);
+    ValidateRgn(hwnd, NULL);
+    InvalidateRect(hwnd, &rc, FALSE);
+    ValidateRgn(child, NULL);
+
+    rgn1 = CreateRectRgn(0, 0, 0, 0);
+    ok(GetUpdateRgn(parent, rgn1, FALSE) == NULLREGION,
+            "has invalid area after ValidateRgn(NULL)\n");
+    GetUpdateRgn(hwnd, rgn1, FALSE);
+    rgn2 = CreateRectRgnIndirect(&rc);
+    ok(EqualRgn(rgn1, rgn2), "assigned and retrieved update regions are different\n");
+    ok(GetUpdateRgn(child, rgn2, FALSE) == NULLREGION,
+            "has invalid area after ValidateRgn(NULL)\n");
+
+    SetWindowPos(hwnd, 0, wnd_orig.x, wnd_orig.y,  0, 0,
+            SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
+
+    /* parent now has non-simple update region, it consist of
+     * two rects, that was exposed after hwnd moving ... */
+    SetRectRgn(rgn1, 0, 0, 200, wnd_orig.y);
+    SetRectRgn(rgn2, 0, 0, wnd_orig.x, 100);
+    CombineRgn(rgn1, rgn1, rgn2, RGN_OR);
+    /* ... and mapped hwnd's invalid area, that hwnd has before moving */
+    SetRectRgn(rgn2, rc.left + wnd_orig.x, rc.top + wnd_orig.y,
+            rc.right + wnd_orig.x, rc.bottom + wnd_orig.y);
+    CombineRgn(rgn1, rgn1, rgn2, RGN_OR);
+    GetUpdateRgn(parent, rgn2, FALSE);
+todo_wine
+    ok(EqualRgn(rgn1, rgn2), "wrong update region\n");
+
+    /* hwnd has the same invalid region as before moving */
+    SetRectRgn(rgn1, rc.left, rc.top, rc.right, rc.bottom);
+    GetUpdateRgn(hwnd, rgn2, FALSE);
+    ok(EqualRgn(rgn1, rgn2), "wrong update region\n");
+
+    /* hwnd's invalid area maps to child during moving */
+    SetRectRgn(rgn1, rc.left - child_orig.x , rc.top - child_orig.y,
+            rc.right - child_orig.x, rc.bottom - child_orig.y);
+    GetUpdateRgn(child, rgn2, FALSE);
+todo_wine
+    ok(EqualRgn(rgn1, rgn2), "wrong update region\n");
+
+    DeleteObject(rgn1);
+    DeleteObject(rgn2);
+    DestroyWindow(parent);
+}
+
 START_TEST(win)
 {
     HMODULE user32 = GetModuleHandleA( "user32.dll" );
@@ -7438,6 +7581,7 @@ START_TEST(win)
     test_handles( hwndMain );
     test_winregion();
     test_map_points();
+    test_update_region();
 
     /* add the tests above this line */
     if (hhook) UnhookWindowsHookEx(hhook);

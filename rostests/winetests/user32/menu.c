@@ -3266,7 +3266,8 @@ static void test_menu_cancelmode(void)
 {
     DWORD ret;
     HWND hwnd, hwndchild;
-    HMENU menu;
+    HMENU menu, menubar;
+    MSG msg;
     if( !pEndMenu) { /* win95 */
         win_skip( "EndMenu is not available\n");
         return;
@@ -3287,7 +3288,8 @@ static void test_menu_cancelmode(void)
     ret = AppendMenuA( menu, MF_STRING, 1, "winetest");
     ok( ret, "Functie failed lasterror is %u\n", GetLastError());
     /* seems to be needed only on wine :( */
-    {MSG msg;   while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);}
+    while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+        DispatchMessage(&msg);
     /* test the effect of sending a WM_CANCELMODE message in the WM_INITMENULOOP
      * handler of the menu owner */
     /* test results is extracted from variable g_got_enteridle. Possible values:
@@ -3314,7 +3316,27 @@ static void test_menu_cancelmode(void)
     g_hwndtosend = hwnd;
     TrackPopupMenu( menu, TPM_RETURNCMD, 100,100, 0, hwndchild, NULL);
     ok( g_got_enteridle == 2, "received %d WM_ENTERIDLE messages, should be 2\n", g_got_enteridle);
+
+    /* test canceling tracking in a window's menu bar */
+    menubar = CreateMenu();
+    ok( menubar != NULL, "CreateMenu failed with error %d\n", GetLastError());
+    ret = AppendMenuA( menubar, MF_POPUP|MF_STRING, (UINT_PTR)menu, "winetest");
+    ok( ret, "AppendMenuA failed lasterror is %u\n", GetLastError());
+    ret = SetMenu( hwnd, menubar );
+    ok( ret, "SetMenu failed lasterror is %u\n", GetLastError());
+    /* initiate tracking */
+    g_hwndtosend = hwnd;
+    ret = SendMessage( hwnd, WM_SYSCOMMAND, SC_KEYMENU, 0 );
+    ok( ret == 0, "Sending WM_SYSCOMMAND/SC_KEYMENU failed lasterror is %u\n", GetLastError());
+    while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+        DispatchMessage(&msg);
+    todo_wine {
+        ok(g_got_enteridle == 0, "received %d WM_ENTERIDLE messages, none expected\n", g_got_enteridle);
+    }
+    ok(g_got_enteridle < 2, "received %d WM_ENTERIDLE messages, should be less than 2\n", g_got_enteridle);
+
     /* cleanup */
+    DestroyMenu( menubar );
     DestroyMenu( menu);
     DestroyWindow( hwndchild);
     DestroyWindow( hwnd);

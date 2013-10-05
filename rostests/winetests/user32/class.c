@@ -977,6 +977,58 @@ if (0) { /* crashes under XP */
     ok(wcx.lpfnWndProc != NULL, "got null proc\n");
 }
 
+static void test_icons(void)
+{
+    WNDCLASSEXW wcex, ret_wcex;
+    WCHAR cls_name[] = {'I','c','o','n','T','e','s','t','C','l','a','s','s',0};
+    HWND hwnd;
+    HINSTANCE hinst = GetModuleHandleW(0);
+    HICON hsmicon, hsmallnew;
+    ICONINFO icinf;
+
+    memset(&wcex, 0, sizeof wcex);
+    wcex.cbSize        = sizeof wcex;
+    wcex.lpfnWndProc   = ClassTest_WndProc;
+    wcex.hIcon         = LoadIconW(0, (LPCWSTR)IDI_APPLICATION);
+    wcex.hInstance     = hinst;
+    wcex.lpszClassName = cls_name;
+    ok(RegisterClassExW(&wcex), "RegisterClassExW returned 0\n");
+    hwnd = CreateWindowExW(0, cls_name, NULL, WS_OVERLAPPEDWINDOW,
+                        0, 0, 0, 0, NULL, NULL, hinst, 0);
+    ok(hwnd != NULL, "Window was not created\n");
+
+    ok(GetClassInfoExW(hinst, cls_name, &ret_wcex), "Class info was not retrieved\n");
+    ok(wcex.hIcon == ret_wcex.hIcon, "Icons don't match\n");
+    ok(ret_wcex.hIconSm != NULL, "hIconSm should be non-zero handle\n");
+
+    hsmicon = (HICON)GetClassLongPtrW(hwnd, GCLP_HICONSM);
+    ok(hsmicon != NULL, "GetClassLong should return non-zero handle\n");
+
+    hsmallnew = CopyImage(wcex.hIcon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                                GetSystemMetrics(SM_CYSMICON), 0);
+    ok(!SetClassLongPtrW(hwnd, GCLP_HICONSM, (LONG_PTR)hsmallnew),
+                    "Previous hIconSm should be zero\n");
+    ok(hsmallnew == (HICON)GetClassLongPtrW(hwnd, GCLP_HICONSM),
+                    "Should return explicitly assigned small icon\n");
+    ok(!GetIconInfo(hsmicon, &icinf), "Previous small icon should be destroyed\n");
+
+    SetClassLongPtrW(hwnd, GCLP_HICONSM, 0);
+    hsmicon = (HICON)GetClassLongPtrW(hwnd, GCLP_HICONSM);
+    ok( hsmicon != NULL, "GetClassLong should return non-zero handle\n");
+
+    SetClassLongPtrW(hwnd, GCLP_HICON, 0);
+    ok(!GetClassLongPtrW(hwnd, GCLP_HICONSM), "GetClassLong should return zero handle\n");
+
+    SetClassLongPtrW(hwnd, GCLP_HICON, (LONG_PTR)LoadIconW(NULL, (LPCWSTR)IDI_QUESTION));
+    hsmicon = (HICON)GetClassLongPtrW(hwnd, GCLP_HICONSM);
+    ok(hsmicon != NULL, "GetClassLong should return non-zero handle\n");
+    UnregisterClassW(cls_name, hinst);
+    ok(GetIconInfo(hsmicon, &icinf), "Icon should NOT be destroyed\n");
+
+    DestroyIcon(hsmallnew);
+    DestroyWindow(hwnd);
+}
+
 START_TEST(class)
 {
     HANDLE hInstance = GetModuleHandleA( NULL );
@@ -995,6 +1047,7 @@ START_TEST(class)
     CreateDialogParamTest(hInstance);
     test_styles();
     test_builtinproc();
+    test_icons();
 
     /* this test unregisters the Button class so it should be executed at the end */
     test_instances();

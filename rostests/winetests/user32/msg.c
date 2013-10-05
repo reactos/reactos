@@ -1722,6 +1722,8 @@ static BOOL (WINAPI *pUnhookWinEvent)(HWINEVENTHOOK);
 static BOOL (WINAPI *pGetMonitorInfoA)(HMONITOR,LPMONITORINFO);
 static HMONITOR (WINAPI *pMonitorFromPoint)(POINT,DWORD);
 static BOOL (WINAPI *pUpdateLayeredWindow)(HWND,HDC,POINT*,SIZE*,HDC,POINT*,COLORREF,BLENDFUNCTION*,DWORD);
+static UINT_PTR (WINAPI *pSetSystemTimer)(HWND, UINT_PTR, UINT, TIMERPROC);
+static UINT_PTR (WINAPI *pKillSystemTimer)(HWND, UINT_PTR);
 /* kernel32 functions */
 static BOOL (WINAPI *pGetCPInfoExA)(UINT, DWORD, LPCPINFOEXA);
 
@@ -1746,6 +1748,8 @@ static void init_procs(void)
     GET_PROC(user32, GetMonitorInfoA)
     GET_PROC(user32, MonitorFromPoint)
     GET_PROC(user32, UpdateLayeredWindow)
+    GET_PROC(user32, SetSystemTimer)
+    GET_PROC(user32, KillSystemTimer)
 
     GET_PROC(kernel32, GetCPInfoExA)
 
@@ -8156,7 +8160,15 @@ static VOID CALLBACK tfunc(HWND hwnd, UINT uMsg, UINT_PTR id, DWORD dwTime)
 {
 }
 
-#define TIMER_ID  0x19
+#define TIMER_ID               0x19
+#define TIMER_COUNT_EXPECTED   64
+#define TIMER_COUNT_TOLERANCE  9
+
+static int count = 0;
+static void CALLBACK callback_count(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+    count++;
+}
 
 static DWORD WINAPI timer_thread_proc(LPVOID x)
 {
@@ -8176,7 +8188,9 @@ static DWORD WINAPI timer_thread_proc(LPVOID x)
 static void test_timers(void)
 {
     struct timer_info info;
+    DWORD start;
     DWORD id;
+    MSG msg;
 
     info.hWnd = CreateWindow ("TestWindowClass", NULL,
        WS_OVERLAPPEDWINDOW ,
@@ -8198,23 +8212,53 @@ static void test_timers(void)
 
     ok( KillTimer(info.hWnd, TIMER_ID), "KillTimer failed\n");
 
-    ok(DestroyWindow(info.hWnd), "failed to destroy window\n");
-}
+    /* Check the minimum allowed timeout for a timer.  MSDN indicates that it should be 10.0 ms,
+     * but testing indicates that the minimum timeout is actually about 15.6 ms.  Since there is
+     * some measurement error between test runs we're allowing for ±8 counts (~2 ms).
+     */
+    count = 0;
+    id = SetTimer(info.hWnd, TIMER_ID, 0, callback_count);
+    ok(id != 0, "did not get id from SetTimer.\n");
+    ok(id==TIMER_ID, "SetTimer timer ID different\n");
+    start = GetTickCount();
+    while (GetTickCount()-start < 1001 && GetMessage(&msg, info.hWnd, 0, 0))
+        DispatchMessage(&msg);
+    ok(abs(count-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE
+       || broken(abs(count-43) < TIMER_COUNT_TOLERANCE) /* w2k3 */,
+       "did not get expected count for minimum timeout (%d != ~%d).\n",
+       count, TIMER_COUNT_EXPECTED);
+    ok(KillTimer(info.hWnd, id), "KillTimer failed\n");
+    /* Perform the same check on SetSystemTimer (only available on w2k3 and older) */
+    if (pSetSystemTimer)
+    {
+        int syscount = 0;
 
-static int count = 0;
-static VOID CALLBACK callback_count(
-    HWND hwnd,
-    UINT uMsg,
-    UINT_PTR idEvent,
-    DWORD dwTime
-)
-{
-    count++;
+        count = 0;
+        id = pSetSystemTimer(info.hWnd, TIMER_ID, 0, callback_count);
+        ok(id != 0, "did not get id from SetSystemTimer.\n");
+        ok(id==TIMER_ID, "SetTimer timer ID different\n");
+        start = GetTickCount();
+        while (GetTickCount()-start < 1001 && GetMessage(&msg, info.hWnd, 0, 0))
+        {
+            if (msg.message == WM_SYSTIMER)
+                syscount++;
+            DispatchMessage(&msg);
+        }
+        ok(abs(syscount-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE,
+           "did not get expected count for minimum timeout (%d != ~%d).\n",
+           syscount, TIMER_COUNT_EXPECTED);
+        todo_wine ok(count == 0, "did not get expected count for callback timeout (%d != 0).\n",
+                                 count);
+        ok(pKillSystemTimer(info.hWnd, id), "KillSystemTimer failed\n");
+    }
+
+    ok(DestroyWindow(info.hWnd), "failed to destroy window\n");
 }
 
 static void test_timers_no_wnd(void)
 {
     UINT_PTR id, id2;
+    DWORD start;
     MSG msg;
 
     count = 0;
@@ -8232,6 +8276,22 @@ static void test_timers_no_wnd(void)
     Sleep(250);
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
     ok(count == 1, "killing replaced timer did not work (%i).\n", count);
+
+    /* Check the minimum allowed timeout for a timer.  MSDN indicates that it should be 10.0 ms,
+     * but testing indicates that the minimum timeout is actually about 15.6 ms.  Since there is
+     * some measurement error between test runs we're allowing for ±8 counts (~2 ms).
+     */
+    count = 0;
+    id = SetTimer(NULL, 0, 0, callback_count);
+    ok(id != 0, "did not get id from SetTimer.\n");
+    start = GetTickCount();
+    while (GetTickCount()-start < 1001 && GetMessage(&msg, NULL, 0, 0))
+        DispatchMessage(&msg);
+    ok(abs(count-TIMER_COUNT_EXPECTED) < TIMER_COUNT_TOLERANCE,
+       "did not get expected count for minimum timeout (%d != ~%d).\n",
+       count, TIMER_COUNT_EXPECTED);
+    KillTimer(NULL, id);
+    /* Note: SetSystemTimer doesn't support a NULL window, see test_timers */
 }
 
 /* Various win events with arbitrary parameters */
@@ -9089,6 +9149,26 @@ static void test_DispatchMessage(void)
             DeleteObject( hrgn );
             GetClientRect( hwnd, &rect );
             ValidateRect( hwnd, &rect );  /* this will stop WM_PAINTs */
+            ok( !count, "Got multiple WM_PAINTs\n" );
+            if (++count > 10) break;
+        }
+    }
+
+    flush_sequence();
+    RedrawWindow( hwnd, &rect, 0, RDW_INVALIDATE|RDW_ERASE|RDW_FRAME );
+    count = 0;
+    while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
+    {
+        if (msg.message != WM_PAINT) DispatchMessage( &msg );
+        else
+        {
+            HDC hdc;
+
+            flush_sequence();
+            hdc = BeginPaint( hwnd, NULL );
+            ok( !hdc, "got valid hdc %p from BeginPaint\n", hdc );
+            ok( !EndPaint( hwnd, NULL ), "EndPaint succeeded\n" );
+            ok_sequence( WmDispatchPaint, "WmDispatchPaint", FALSE );
             ok( !count, "Got multiple WM_PAINTs\n" );
             if (++count > 10) break;
         }
@@ -11820,6 +11900,93 @@ static void test_dbcs_wm_char(void)
     DestroyWindow(hwnd2);
 }
 
+static void test_unicode_wm_char(void)
+{
+    HWND hwnd;
+    MSG msg;
+    struct message seq[2];
+    HKL hkl_orig, hkl_greek;
+    DWORD cp;
+    LCID thread_locale;
+
+    hkl_orig = GetKeyboardLayout( 0 );
+    GetLocaleInfoW( LOWORD( hkl_orig ), LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER, (WCHAR*)&cp, sizeof(cp) / sizeof(WCHAR) );
+    if (cp != 1252)
+    {
+        skip( "Default codepage %d\n", cp );
+        return;
+    }
+
+    hkl_greek = LoadKeyboardLayout( "00000408", 0 );
+    if (!hkl_greek || hkl_greek == hkl_orig /* win2k */)
+    {
+        skip( "Unable to load Greek keyboard layout\n" );
+        return;
+    }
+
+    hwnd = CreateWindowExW( 0, testWindowClassW, NULL, WS_OVERLAPPEDWINDOW,
+                            100, 100, 200, 200, 0, 0, 0, NULL );
+    flush_sequence();
+
+    PostMessageW( hwnd, WM_CHAR, 0x3b1, 0 );
+
+    ok( GetMessageW( &msg, hwnd, 0, 0 ), "no message\n" );
+    ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
+    ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
+    ok( msg.wParam == 0x3b1, "bad wparam %lx\n", msg.wParam );
+    ok( msg.lParam == 0, "bad lparam %lx\n", msg.lParam );
+
+    DispatchMessageW( &msg );
+
+    memset( seq, 0, sizeof(seq) );
+    seq[0].message = WM_CHAR;
+    seq[0].flags = sent|wparam;
+    seq[0].wParam = 0x3b1;
+
+    ok_sequence( seq, "unicode WM_CHAR", FALSE );
+
+    flush_sequence();
+
+    /* greek alpha -> 'a' in cp1252 */
+    PostMessageW( hwnd, WM_CHAR, 0x3b1, 0 );
+
+    ok( GetMessageA( &msg, hwnd, 0, 0 ), "no message\n" );
+    ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
+    ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
+    ok( msg.wParam == 0x61, "bad wparam %lx\n", msg.wParam );
+    ok( msg.lParam == 0, "bad lparam %lx\n", msg.lParam );
+
+    DispatchMessageA( &msg );
+
+    seq[0].wParam = 0x61;
+    ok_sequence( seq, "unicode WM_CHAR", FALSE );
+
+    thread_locale = GetThreadLocale();
+    ActivateKeyboardLayout( hkl_greek, 0 );
+    ok( GetThreadLocale() == thread_locale, "locale changed from %08x to %08x\n",
+        thread_locale, GetThreadLocale() );
+
+    flush_sequence();
+
+    /* greek alpha -> 0xe1 in cp1253 */
+    PostMessageW( hwnd, WM_CHAR, 0x3b1, 0 );
+
+    ok( GetMessageA( &msg, hwnd, 0, 0 ), "no message\n" );
+    ok( msg.hwnd == hwnd, "unexpected hwnd %p\n", msg.hwnd );
+    ok( msg.message == WM_CHAR, "unexpected message %x\n", msg.message );
+    ok( msg.wParam == 0xe1, "bad wparam %lx\n", msg.wParam );
+    ok( msg.lParam == 0, "bad lparam %lx\n", msg.lParam );
+
+    DispatchMessageA( &msg );
+
+    seq[0].wParam = 0x3b1;
+    ok_sequence( seq, "unicode WM_CHAR", FALSE );
+
+    DestroyWindow( hwnd );
+    ActivateKeyboardLayout( hkl_orig, 0 );
+    UnloadKeyboardLayout( hkl_greek );
+}
+
 #define ID_LISTBOX 0x000f
 
 static const struct message wm_lb_setcursel_0[] =
@@ -14044,6 +14211,7 @@ START_TEST(msg)
     test_EndDialog();
     test_nullCallback();
     test_dbcs_wm_char();
+    test_unicode_wm_char();
     test_menu_messages();
     test_paintingloop();
     test_defwinproc();

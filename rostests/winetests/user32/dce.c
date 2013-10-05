@@ -78,7 +78,7 @@ static void test_dc_attributes(void)
         old_hdc = hdcs[0];
         SetROP2( old_hdc, R2_WHITE );
     }
-    while (i >= 0) ReleaseDC( hwnd_cache, hdcs[--i] );
+    while (i > 0) ReleaseDC( hwnd_cache, hdcs[--i] );
 
     for (i = 0; i < 20; i++)
     {
@@ -91,7 +91,7 @@ static void test_dc_attributes(void)
         else
             ok( rop == def_rop, "wrong ROP2 %d after release %p/%p\n", rop, old_hdc, hdc );
     }
-    while (i >= 0) ReleaseDC( hwnd_cache, hdcs[--i] );
+    while (i > 0) ReleaseDC( hwnd_cache, hdcs[--i] );
 
     for (i = 0; i < 20; i++)
     {
@@ -107,7 +107,7 @@ static void test_dc_attributes(void)
         else
             ok( rop == def_rop, "wrong ROP2 %d after release %p/%p\n", rop, old_hdc, hdc );
     }
-    while (i >= 0) ReleaseDC( hwnd_cache, hdcs[--i] );
+    while (i > 0) ReleaseDC( hwnd_cache, hdcs[--i] );
 
     /* test own DC */
 

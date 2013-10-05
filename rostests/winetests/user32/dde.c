@@ -143,7 +143,7 @@ static LRESULT WINAPI dde_server_wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPA
         else
             lstrcpyA(str, "requested data\r\n");
 
-        size = sizeof(DDEDATA) + lstrlenA(str) + 1;
+        size = FIELD_OFFSET(DDEDATA, Value[lstrlenA(str) + 1]);
         hglobal = GlobalAlloc(GMEM_MOVEABLE, size);
         ok(hglobal != NULL, "Expected non-NULL hglobal\n");
 
@@ -314,8 +314,7 @@ static void test_ddeml_client(void)
     {
         str = (LPSTR)DdeAccessData(hdata, &size);
         ok(!lstrcmpA(str, "requested data\r\n"), "Expected 'requested data\\r\\n', got %s\n", str);
-        ok(size == 19 || broken(size == 28), /* sizes are rounded up on win9x */
-           "Expected 19, got %d\n", size);
+        ok(size == 17, "Expected 17, got %d\n", size);
 
         ret = DdeUnaccessData(hdata);
         ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
@@ -336,8 +335,7 @@ todo_wine
     {
         str = (LPSTR)DdeAccessData(hdata, &size);
         ok(!lstrcmpA(str, "requested data\r\n"), "Expected 'requested data\\r\\n', got %s\n", str);
-        ok(size == 19 || broken(size == 28), /* sizes are rounded up on win9x */
-           "Expected 19, got %d\n", size);
+        ok(size == 17, "Expected 17, got %d\n", size);
 
         ret = DdeUnaccessData(hdata);
         ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
@@ -357,8 +355,7 @@ todo_wine
     {
         str = (LPSTR)DdeAccessData(hdata, &size);
         ok(!lstrcmpA(str, "requested data\r\n"), "Expected 'requested data\\r\\n', got %s\n", str);
-        ok(size == 19 || broken(size == 28), /* sizes are rounded up on win9x */
-           "Expected 19, got %d\n", size);
+        ok(size == 17, "Expected 17, got %d\n", size);
 
         ret = DdeUnaccessData(hdata);
         ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
@@ -483,8 +480,7 @@ todo_wine
     {
         str = (LPSTR)DdeAccessData(hdata, &size);
         ok(!lstrcmpA(str, "command executed\r\n"), "Expected 'command executed\\r\\n', got %s\n", str);
-        ok(size == 21 || broken(size == 28), /* sizes are rounded up on win9x */
-           "Expected 21, got %d\n", size);
+        ok(size == 19, "Expected 19, got %d\n", size);
 
         ret = DdeUnaccessData(hdata);
         ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
