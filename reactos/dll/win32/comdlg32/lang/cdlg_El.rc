@@ -45,7 +45,7 @@ STRINGTABLE
     IDS_NEWFOLDER        "Δημιουργία νέου καταλόγου"
     IDS_LISTVIEW         "Λίστα"
     IDS_REPORTVIEW       "Λεπτομέρειες"
-    IDS_TODESKTOP        ""
+    IDS_TODESKTOP        "Browse to Desktop"
 }
 
 STRINGTABLE
@@ -53,51 +53,54 @@ STRINGTABLE
     PD32_PRINT_TITLE       "Εκτύπωση"
 
     PD32_VALUE_UREADABLE                  "Μη αναγνώσιμη εγγραφή"
-    PD32_INVALID_PAGE_RANGE ""
-    PD32_FROM_NOT_ABOVE_TO                ""
-    PD32_MARGINS_OVERLAP                  ""
-    PD32_NR_OF_COPIES_EMPTY               ""
-    PD32_TOO_LARGE_COPIES                 ""
+    PD32_INVALID_PAGE_RANGE "This value does not lie within the page range.\n\
+Please enter a value between %1!d! and %2!d!."
+    PD32_FROM_NOT_ABOVE_TO                "The 'from' entry cannot exceed the 'to' entry."
+    PD32_MARGINS_OVERLAP                  "Margins overlap or fall outside Paper boundaries.\n\
+Please reenter margins."
+    PD32_NR_OF_COPIES_EMPTY               "The 'Number of copies' field cannot be empty."
+    PD32_TOO_LARGE_COPIES                 "This large number of copies is not supported by your printer.\n\
+Please enter a value between 1 and %d."
     PD32_PRINT_ERROR                      "Προκλήθηκε σφάλμα εκτυπωτή."
     PD32_NO_DEFAULT_PRINTER               "Δεν έχει οριστεί προεπιλεγμένος εκτυπωτής."
     PD32_CANT_FIND_PRINTER                "Δεν ήταν δυνατή η εύρεση του εκτυπωτή."
-    PD32_OUT_OF_MEMORY                    ""
+    PD32_OUT_OF_MEMORY                    "Out of memory."
     PD32_GENERIC_ERROR                    "Προκλήθηκε σφάλμα."
     PD32_DRIVER_UNKNOWN                   "Άγνωστος οδηγός εκτυπωτή."
-    PD32_NO_DEVICES                       ""
+    PD32_NO_DEVICES                       "Before you can perform printer-related tasks such as page setup or printing a document, you need to install a printer. Please install one and retry."
 
     PD32_DEFAULT_PRINTER                  "Προεπιλεγμένος εκτυπωτής; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Υπάρχουν %d έγγραφα στην ουρά"
-    PD32_MARGINS_IN_INCHES                ""
-    PD32_MARGINS_IN_MILLIMETERS           ""
+    PD32_MARGINS_IN_INCHES                "Margins [inches]"
+    PD32_MARGINS_IN_MILLIMETERS           "Margins [mm]"
     PD32_MILLIMETERS                      "mm"
 
     PD32_PRINTER_STATUS_READY             "Έτοιμο"
     PD32_PRINTER_STATUS_PAUSED            "Σταματημένος; "
     PD32_PRINTER_STATUS_ERROR             "Σφάλμα; "
-    PD32_PRINTER_STATUS_PENDING_DELETION  ""
-    PD32_PRINTER_STATUS_PAPER_JAM         ""
+    PD32_PRINTER_STATUS_PENDING_DELETION  "Pending deletion; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Paper jam; "
     PD32_PRINTER_STATUS_PAPER_OUT         "Τέλος χαρτιού; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       ""
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Feed paper manual; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "Πρόβλημα χαρτιού; "
     PD32_PRINTER_STATUS_OFFLINE           "Εκτυπωτής αποσυνδεδεμένος; "
-    PD32_PRINTER_STATUS_IO_ACTIVE         ""
+    PD32_PRINTER_STATUS_IO_ACTIVE         "I/O Active; "
     PD32_PRINTER_STATUS_BUSY              "Απασχολημένος; "
     PD32_PRINTER_STATUS_PRINTING          "Γίνεται εκτύπωση; "
-    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   ""
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Output tray is full; "
     PD32_PRINTER_STATUS_NOT_AVAILABLE     "ΜΗ διαθέσιμος; "
     PD32_PRINTER_STATUS_WAITING           "Αναμονή; "
-    PD32_PRINTER_STATUS_PROCESSING        ""
+    PD32_PRINTER_STATUS_PROCESSING        "Processing; "
     PD32_PRINTER_STATUS_INITIALIZING      "Εκκίνηση; "
     PD32_PRINTER_STATUS_WARMING_UP        "Γίνεται προθέρμανση; "
     PD32_PRINTER_STATUS_TONER_LOW         "Τόνερ χαμηλό; "
     PD32_PRINTER_STATUS_NO_TONER          "Δεν υπάρχει τόνερ; "
-    PD32_PRINTER_STATUS_PAGE_PUNT         ""
-    PD32_PRINTER_STATUS_USER_INTERVENTION ""
-    PD32_PRINTER_STATUS_OUT_OF_MEMORY     ""
-    PD32_PRINTER_STATUS_DOOR_OPEN         ""
-    PD32_PRINTER_STATUS_SERVER_UNKNOWN    ""
-    PD32_PRINTER_STATUS_POWER_SAVE        ""
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Interrupted by user; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Out of memory; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "The printer door is open; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Print server unknown; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Power save mode; "
 }
 
 STRINGTABLE /* Font styles */
@@ -111,20 +114,20 @@ STRINGTABLE /* Font styles */
 STRINGTABLE /* Color names */
 {
     IDS_COLOR_BLACK     "Μαύρο"
-    IDS_COLOR_MAROON    ""
+    IDS_COLOR_MAROON    "Maroon"
     IDS_COLOR_GREEN     "Πράσινο"
-    IDS_COLOR_OLIVE     ""
-    IDS_COLOR_NAVY      ""
+    IDS_COLOR_OLIVE     "Olive"
+    IDS_COLOR_NAVY      "Navy"
     IDS_COLOR_PURPLE    "Μωβ"
-    IDS_COLOR_TEAL      ""
+    IDS_COLOR_TEAL      "Teal"
     IDS_COLOR_GRAY      "Γκρι"
     IDS_COLOR_SILVER    "Ασημί"
     IDS_COLOR_RED       "Κόκκινο"
-    IDS_COLOR_LIME      ""
+    IDS_COLOR_LIME      "Lime"
     IDS_COLOR_YELLOW    "Κίτρινο"
     IDS_COLOR_BLUE      "Μπλε"
-    IDS_COLOR_FUCHSIA   ""
-    IDS_COLOR_AQUA      ""
+    IDS_COLOR_FUCHSIA   "Fuchsia"
+    IDS_COLOR_AQUA      "Aqua"
     IDS_COLOR_WHITE     "Άσπρο"
 }
 
@@ -260,7 +263,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Δείγμα",grp2,98,72,120,36,WS_GROUP
-    CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    CTEXT           "",stc5,103,81,109,24,SS_NOPREFIX | NOT WS_VISIBLE
     LTEXT           "Σκρ&ιπτ:",stc7 ,98,114,40,9
     COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
@@ -276,28 +279,28 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Προσαρμοσμένα χρώματα:",  stc2, 4,   106, 140, 10
  LTEXT "Χρώμα |  Sol&id",  stc3, 150, 151,  48, 10
  LTEXT   "&Κόκκινο:", 726 /*1094*/,247,126,27,10
- EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&Πράσινο:",727/*1095*/,247,140,27,10
- EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&Μπλε:",728 /*1096*/,247,154,27,10
- EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Hue:" ,723 /*1091*/,200,126,24,10
- EDITTEXT 703, 224,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Sat:" ,724 /*1092*/,200,140,24,10
- EDITTEXT 704, 224,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Φωτεινότητα:" ,725 /*1093*/,200,154,24,10
- EDITTEXT 705, 224,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
- CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
- CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
- CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
- CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
+ EDITTEXT IDC_COLOR_EDIT_R, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Πράσινο:", IDC_COLOR_GL /*1095*/,247,140,27,10
+ EDITTEXT IDC_COLOR_EDIT_G, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Μπλε:", IDC_COLOR_BL /*1096*/,247,154,27,10
+ EDITTEXT IDC_COLOR_EDIT_B, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Hue:" , IDC_COLOR_HL /*1091*/,200,126,24,10
+ EDITTEXT IDC_COLOR_EDIT_H, 224,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Sat:", IDC_COLOR_SL /*1092*/,200,140,24,10
+ EDITTEXT IDC_COLOR_EDIT_S, 224,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Φωτεινότητα:", IDC_COLOR_LL /*1093*/,200,154,24,10
+ EDITTEXT IDC_COLOR_EDIT_L, 224,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ CONTROL "" , IDC_COLOR_PREDEF, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
+ CONTROL "" , IDC_COLOR_USRDEF, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
+ CONTROL "" , IDC_COLOR_GRAPH, "STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
+ CONTROL "" , IDC_COLOR_LUMBAR, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
+ CONTROL "" , IDC_COLOR_RESULT, "STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
  DEFPUSHBUTTON "OK",  IDOK,  4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Άκυρο", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Βοήθεια", pshHelp,100,166, 44, 14
- PUSHBUTTON "&Προσθήκη στα προσαρμοσμένα χρώματα",    712/*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Ορισμός προσαρμοσμένων χρωμάτων >>", 719/*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Χρώμα |  Sol&id",713,300,200,4,14   /* just a dummy */
+ PUSHBUTTON "&Προσθήκη στα προσαρμοσμένα χρώματα",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Ορισμός προσαρμοσμένων χρωμάτων >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Χρώμα |  Sol&id", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
 }
 
 
@@ -308,11 +311,11 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Εύ&ρεση του:", -1, 4, 8, 52, 8
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "Ταίριασμα &Ολόκληρης Λέξης Μόνο", chx1, 4, 26, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Ταίριασμα &Κεφαλαίων", chx2, 4, 42, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- GROUPBOX "Κατεύθυνση", grp1, 127, 26, 78, 28
- CONTROL "&Πάνω", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 131, 38, 35, 12
- CONTROL "&Κάτω", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 163, 38, 35, 12
+ CHECKBOX "Ταίριασμα &Ολόκληρης Λέξης Μόνο", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Ταίριασμα &Κεφαλαίων", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Κατεύθυνση", grp1, 147, 21, 58, 38
+ CONTROL "&Πάνω", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
+ CONTROL "&Κάτω", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
 
  DEFPUSHBUTTON "&Εύρεση Επόμενου", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Άκυρο", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -457,6 +460,7 @@ FONT 8, "MS Shell Dlg"
 
     LTEXT	"Όνομα &αρχείου:",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
     EDITTEXT	IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
+    CONTROL     "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 63,110,150,150
 
     LTEXT	"Αρχεία του &τύπου:",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
