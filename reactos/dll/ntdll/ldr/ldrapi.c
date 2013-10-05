@@ -1582,6 +1582,24 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
     return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
 }
 
+/* FIXME: Add to ntstatus.mc */
+#define STATUS_MUI_FILE_NOT_FOUND        ((NTSTATUS)0xC00B0001L)
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LdrLoadAlternateResourceModule(IN PVOID Module,
+                               IN PWSTR Buffer)
+{
+    /* Is MUI Support enabled? */
+    if (!LdrAlternateResourcesEnabled()) return STATUS_SUCCESS;
+
+    UNIMPLEMENTED;
+    return STATUS_MUI_FILE_NOT_FOUND;
+}
+
 /*
  * @implemented
  */
@@ -1607,22 +1625,15 @@ LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
     return TRUE;
 }
 
-/* FIXME: Add to ntstatus.mc */
-#define STATUS_MUI_FILE_NOT_FOUND        ((NTSTATUS)0xC00B0001L)
-
 /*
- * @implemented
+ * @unimplemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
-LdrLoadAlternateResourceModule(IN PVOID Module,
-                               IN PWSTR Buffer)
+LdrFlushAlternateResourceModules(VOID)
 {
-    /* Is MUI Support enabled? */
-    if (!LdrAlternateResourcesEnabled()) return STATUS_SUCCESS;
-
     UNIMPLEMENTED;
-    return STATUS_MUI_FILE_NOT_FOUND;
+    return FALSE;
 }
 
 /* EOF */

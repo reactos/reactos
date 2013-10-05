@@ -56,7 +56,7 @@
 @ stdcall LdrFindResourceDirectory_U(long ptr long ptr)
 ;@ stdcall LdrFindResourceEx_U ; 5.1 and higher
 @ stdcall LdrFindResource_U(long ptr long ptr)
-;@ stdcall LdrFlushAlternateResourceModules
+@ stdcall LdrFlushAlternateResourceModules()
 @ stdcall LdrGetDllHandle(wstr long ptr ptr)
 @ stdcall LdrGetDllHandleEx(long wstr long ptr ptr)
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
@@ -451,7 +451,7 @@
 @ stdcall RtlComputeCrc32(long ptr long)
 @ stdcall RtlComputeImportTableHash(ptr ptr long)
 @ stdcall RtlComputePrivatizedDllName_U(ptr ptr ptr)
-;@ stdcall RtlConsoleMultiByteToUnicodeN
+@ stdcall RtlConsoleMultiByteToUnicodeN(ptr long ptr ptr long ptr)
 @ stdcall RtlConvertExclusiveToShared(ptr)
 @ stdcall -arch=win32 -ret64 RtlConvertLongToLargeInteger(long)
 ;@ stdcall RtlConvertPropertyToVariant

@@ -288,6 +288,32 @@ RtlMultiByteToUnicodeN(
 }
 
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+RtlConsoleMultiByteToUnicodeN(
+    OUT PWCHAR UnicodeString,
+    IN ULONG UnicodeSize,
+    OUT PULONG ResultSize,
+    IN PCSTR MbString,
+    IN ULONG MbSize,
+    OUT PULONG Unknown)
+{
+    PAGED_CODE_RTL();
+
+    UNIMPLEMENTED;
+    DPRINT1("RtlConsoleMultiByteToUnicodeN calling RtlMultiByteToUnicodeN\n");
+    *Unknown = 1;
+    return RtlMultiByteToUnicodeN(UnicodeString,
+                                  UnicodeSize,
+                                  ResultSize,
+                                  MbString,
+                                  MbSize);
+}
+
+
 
 /*
  * @implemented
