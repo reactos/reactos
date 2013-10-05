@@ -17,26 +17,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#define COBJMACROS
 
-#include <initguid.h>
-#include <windows.h>
+#include <wine/test.h>
+
+//#include <stdarg.h>
+#include <winnls.h>
+//#include <initguid.h>
 #include <shlobj.h>
-#include <shldisp.h>
-#include <shlwapi.h>
-#include <shlguid.h>
+//#include <shldisp.h>
+//#include <shlwapi.h>
+//#include <shlguid.h>
 
-#include "wine/test.h"
 
-#define stop_on_error(exp) \
-{ \
-    HRESULT res = (exp); \
-    if (FAILED(res)) \
-    { \
-        ok(FALSE, #exp " failed: %x\n", res); \
-        return; \
-    } \
-}
 
 #define ole_ok(exp) \
 { \
@@ -123,7 +119,7 @@ static HRESULT STDMETHODCALLTYPE TestACL_QueryInterface(IEnumString *iface, REFI
 
     if (*ppvOut)
     {
-        iface->lpVtbl->AddRef(iface);
+        IEnumString_AddRef(iface);
         return S_OK;
     }
 
@@ -222,14 +218,14 @@ IACListVtbl TestACL_ACListVtbl =
 
 #define expect_str(obj, str)  \
 { \
-    ole_ok(obj->lpVtbl->Next(obj, 1, &wstr, &i)); \
+    ole_ok(IEnumString_Next(obj, 1, &wstr, &i)); \
     ok(i == 1, "Expected i == 1, got %d\n", i); \
     ok(str[0] == wstr[0], "String mismatch\n"); \
     CoTaskMemFree(wstr); \
 }
 
 #define expect_end(obj) \
-    ok(obj->lpVtbl->Next(obj, 1, &wstr, &i) == S_FALSE, "Unexpected return from Next\n");
+    ok(IEnumString_Next(obj, 1, &wstr, &i) == S_FALSE, "Unexpected return from Next\n");
 
 static void test_ACLMulti(void)
 {
@@ -245,36 +241,51 @@ static void test_ACLMulti(void)
     LPWSTR wstr;
     LPWSTR wstrtab[15];
     LPVOID tmp;
+    ULONG ref;
     UINT i;
 
-    stop_on_error(CoCreateInstance(&CLSID_ACLMulti, NULL, CLSCTX_INPROC, &IID_IEnumString, (LPVOID *)&obj));
-    stop_on_error(obj->lpVtbl->QueryInterface(obj, &IID_IACList, (LPVOID *)&acl));
-    ok(obj->lpVtbl->QueryInterface(obj, &IID_IACList2, &tmp) == E_NOINTERFACE,
-        "Unexpected interface IACList2 in ACLMulti\n");
-    stop_on_error(obj->lpVtbl->QueryInterface(obj, &IID_IObjMgr, (LPVOID *)&mgr));
+    hr = CoCreateInstance(&CLSID_ACLMulti, NULL, CLSCTX_INPROC, &IID_IEnumString, (void**)&obj);
+    ok(hr == S_OK, "failed to create ACLMulti instance, 0x%08x\n", hr);
+    if (hr != S_OK) return;
 
-    hr = obj->lpVtbl->QueryInterface(obj, &IID_IEnumACString, (LPVOID*)&unk);
+    hr = IEnumString_QueryInterface(obj, &IID_IACList, (void**)&acl);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IEnumString_QueryInterface(obj, &IID_IACList2, &tmp);
+    ok(hr == E_NOINTERFACE, "got 0x%08x\n", hr);
+    hr = IEnumString_QueryInterface(obj, &IID_IObjMgr, (void**)&mgr);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IEnumString_QueryInterface(obj, &IID_IEnumACString, (LPVOID*)&unk);
     if (hr == E_NOINTERFACE)
         todo_wine win_skip("IEnumACString is not supported, skipping tests\n");
     else
     {
         ok(hr == S_OK, "QueryInterface(IID_IEnumACString) failed: %x\n", hr);
         if (unk != NULL)
-            unk->lpVtbl->Release(unk);
+            IEnumACString_Release(unk);
     }
 
-    ok(obj->lpVtbl->Next(obj, 1, (LPOLESTR *)&tmp, &i) == S_FALSE, "Unexpected return from Next\n");
+    i = -1;
+    hr = IEnumString_Next(obj, 1, (LPOLESTR *)&tmp, &i);
+    ok(hr == S_FALSE, "got 0x%08x\n", hr);
     ok(i == 0, "Unexpected fetched value %d\n", i);
-    ok(obj->lpVtbl->Next(obj, 44, (LPOLESTR *)&tmp, &i) == S_FALSE, "Unexpected return from Next\n");
-    ok(obj->lpVtbl->Skip(obj, 1) == E_NOTIMPL, "Unexpected return from Skip\n");
-    ok(obj->lpVtbl->Clone(obj, (IEnumString **)&tmp) == E_OUTOFMEMORY, "Unexpected return from Clone\n");
-    ole_ok(acl->lpVtbl->Expand(acl, exp));
+    hr = IEnumString_Next(obj, 44, (LPOLESTR *)&tmp, &i);
+    ok(hr == S_FALSE, "got 0x%08x\n", hr);
+    hr = IEnumString_Skip(obj, 1);
+    ok(hr == E_NOTIMPL, "got 0x%08x\n", hr);
+    hr = IEnumString_Clone(obj, (IEnumString **)&tmp);
+    ok(hr == E_OUTOFMEMORY, "got 0x%08x\n", hr);
+    hr = IACList_Expand(acl, exp);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
 
     acl1 = TestACL_Constructor(3, strings1);
     acl2 = TestACL_Constructor(3, strings2);
-    stop_on_error(mgr->lpVtbl->Append(mgr, (IUnknown *)&acl1->IACList_iface));
-    stop_on_error(mgr->lpVtbl->Append(mgr, (IUnknown *)&acl2->IACList_iface));
-    ok(mgr->lpVtbl->Append(mgr, NULL) == E_FAIL, "Unexpected return from Append\n");
+    hr = IObjMgr_Append(mgr, (IUnknown *)&acl1->IACList_iface);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IObjMgr_Append(mgr, (IUnknown *)&acl2->IACList_iface);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    hr = IObjMgr_Append(mgr, NULL);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
     expect_str(obj, "a");
     expect_str(obj, "c");
     expect_str(obj, "e");
@@ -283,55 +294,73 @@ static void test_ACLMulti(void)
     expect_str(obj, "d");
     expect_end(obj);
 
-    ole_ok(obj->lpVtbl->Reset(obj));
+    hr = IEnumString_Reset(obj);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(acl1->pos == 0, "acl1 not reset\n");
     ok(acl2->pos == 0, "acl2 not reset\n");
 
-    ole_ok(acl->lpVtbl->Expand(acl, exp));
+    hr = IACList_Expand(acl, exp);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(acl1->expcount == 1, "expcount - expected 1, got %d\n", acl1->expcount);
     ok(acl2->expcount == 0 /* XP */ || acl2->expcount == 1 /* Vista */,
         "expcount - expected 0 or 1, got %d\n", acl2->expcount);
 
-    ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
+    hr = IEnumString_Next(obj, 15, wstrtab, &i);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(i == 1, "Expected i == 1, got %d\n", i);
     CoTaskMemFree(wstrtab[0]);
-    ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
+
+    hr = IEnumString_Next(obj, 15, wstrtab, &i);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     CoTaskMemFree(wstrtab[0]);
-    ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
+
+    hr = IEnumString_Next(obj, 15, wstrtab, &i);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     CoTaskMemFree(wstrtab[0]);
-    ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
+
+    hr = IEnumString_Next(obj, 15, wstrtab, &i);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     CoTaskMemFree(wstrtab[0]);
-    ole_ok(acl->lpVtbl->Expand(acl, exp));
+
+    hr = IACList_Expand(acl, exp);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(acl1->expcount == 2, "expcount - expected 1, got %d\n", acl1->expcount);
     ok(acl2->expcount == 0 /* XP */ || acl2->expcount == 2 /* Vista */,
         "expcount - expected 0 or 2, got %d\n", acl2->expcount);
     acl1->expret = S_FALSE;
-    ole_ok(acl->lpVtbl->Expand(acl, exp));
+    hr = IACList_Expand(acl, exp);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(acl1->expcount == 3, "expcount - expected 1, got %d\n", acl1->expcount);
     ok(acl2->expcount == 1 /* XP */ || acl2->expcount == 3 /* Vista */,
         "expcount - expected 0 or 3, got %d\n", acl2->expcount);
     acl1->expret = E_NOTIMPL;
-    ole_ok(acl->lpVtbl->Expand(acl, exp));
+    hr = IACList_Expand(acl, exp);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(acl1->expcount == 4, "expcount - expected 1, got %d\n", acl1->expcount);
     ok(acl2->expcount == 2 /* XP */ || acl2->expcount == 4 /* Vista */,
         "expcount - expected 0 or 4, got %d\n", acl2->expcount);
     acl2->expret = E_OUTOFMEMORY;
-    ok(acl->lpVtbl->Expand(acl, exp) == E_OUTOFMEMORY, "Unexpected Expand return\n");
+    hr = IACList_Expand(acl, exp);
+    ok(hr == E_OUTOFMEMORY, "got 0x%08x\n", hr);
     acl2->expret = E_FAIL;
-    ok(acl->lpVtbl->Expand(acl, exp) == E_FAIL, "Unexpected Expand return\n");
+    hr = IACList_Expand(acl, exp);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
 
-    stop_on_error(mgr->lpVtbl->Remove(mgr, (IUnknown *)&acl1->IACList_iface));
+    hr = IObjMgr_Remove(mgr, (IUnknown *)&acl1->IACList_iface);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
     ok(acl1->ref == 1, "acl1 not released\n");
     expect_end(obj);
-    obj->lpVtbl->Reset(obj);
+    IEnumString_Reset(obj);
     expect_str(obj, "a");
     expect_str(obj, "b");
     expect_str(obj, "d");
     expect_end(obj);
 
-    obj->lpVtbl->Release(obj);
-    acl->lpVtbl->Release(acl);
-    ok(mgr->lpVtbl->Release(mgr) == 0, "Unexpected references\n");
+    IEnumString_Release(obj);
+    IACList_Release(acl);
+    ref = IObjMgr_Release(mgr);
+    ok(ref == 0, "Unexpected references\n");
     ok(acl1->ref == 1, "acl1 not released\n");
     ok(acl2->ref == 1, "acl2 not released\n");
 
