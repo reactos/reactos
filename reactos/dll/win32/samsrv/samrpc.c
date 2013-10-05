@@ -6706,14 +6706,70 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
         InfoBuffer->All.CodePage = FixedData.CodePage;
     }
 
-    if (InfoBuffer->All.WhichFields & USER_ALL_NTPASSWORDPRESENT)
+    /* Get the LmPassword and NtPassword attributes */
+    if (InfoBuffer->All.WhichFields & (USER_ALL_NTPASSWORDPRESENT | USER_ALL_LMPASSWORDPRESENT))
     {
-        /* FIXME */
-    }
+        /* Get the NT password */
+        Length = 0;
+        SampGetObjectAttribute(UserObject,
+                               L"NTPwd",
+                               NULL,
+                               NULL,
+                               &Length);
 
-    if (InfoBuffer->All.WhichFields & USER_ALL_LMPASSWORDPRESENT)
-    {
-        /* FIXME */
+        InfoBuffer->All.NtPasswordPresent = (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+
+        if (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD))
+        {
+            InfoBuffer->All.NtOwfPassword.Buffer = midl_user_allocate(sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+            if (InfoBuffer->All.NtOwfPassword.Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            InfoBuffer->All.NtOwfPassword.Length = sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+            InfoBuffer->All.NtOwfPassword.MaximumLength = sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+
+            Status = SampGetObjectAttribute(UserObject,
+                                            L"NTPwd",
+                                            NULL,
+                                            (PVOID)InfoBuffer->All.NtOwfPassword.Buffer,
+                                            &Length);
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
+
+        /* Get the LM password */
+        Length = 0;
+        SampGetObjectAttribute(UserObject,
+                               L"LMPwd",
+                               NULL,
+                               NULL,
+                               &Length);
+
+        InfoBuffer->All.LmPasswordPresent = (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+
+        if (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD))
+        {
+            InfoBuffer->All.LmOwfPassword.Buffer = midl_user_allocate(sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+            if (InfoBuffer->All.LmOwfPassword.Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            InfoBuffer->All.LmOwfPassword.Length = sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+            InfoBuffer->All.LmOwfPassword.MaximumLength = sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+
+            Status = SampGetObjectAttribute(UserObject,
+                                            L"LMPwd",
+                                            NULL,
+                                            (PVOID)InfoBuffer->All.LmOwfPassword.Buffer,
+                                            &Length);
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
     }
 
     if (InfoBuffer->All.WhichFields & USER_ALL_PRIVATEDATA)
@@ -6770,6 +6826,12 @@ done:
 
             if (InfoBuffer->All.Parameters.Buffer != NULL)
                 midl_user_free(InfoBuffer->All.Parameters.Buffer);
+
+            if (InfoBuffer->All.LmOwfPassword.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.LmOwfPassword.Buffer);
+
+            if (InfoBuffer->All.NtOwfPassword.Buffer != NULL)
+                midl_user_free(InfoBuffer->All.NtOwfPassword.Buffer);
 
             midl_user_free(InfoBuffer);
         }
