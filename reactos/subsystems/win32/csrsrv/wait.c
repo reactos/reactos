@@ -367,7 +367,7 @@ CsrMoveSatisfiedWait(IN PLIST_ENTRY DestinationList,
  * @name CsrNotifyWait
  * @implemented NT4
  *
- * The CsrNotifyWait notifies CSR Wait Blocks.
+ * The CsrNotifyWait routine notifies CSR Wait Blocks.
  *
  * @param WaitList
  *        Pointer to the wait list whose wait blocks will be notified.
