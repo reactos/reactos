@@ -19,12 +19,23 @@
  *
  */
 
-#include <windows.h>
+//#include <windows.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <wine/test.h>
 
-#include "shlguid.h"
+#include <wingdi.h>
+#include <objbase.h>
+#include <cderr.h>
+#include <dlgs.h>
+#include <commdlg.h>
+
+#include <shlguid.h>
 #define COBJMACROS
-#include "shobjidl.h"
+#include <shobjidl.h>
 
 /* ##### */
 
@@ -93,7 +104,7 @@ static void test_DialogCancel(void)
 
     ZeroMemory(&ofn, sizeof(ofn));
 
-    ofn.lStructSize = sizeof(ofn);
+    ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400A;
     ofn.hwndOwner = NULL;
     ofn.lpstrFilter = "Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
     ofn.lpstrFile = szFileName;
@@ -239,7 +250,7 @@ cleanup:
     return 0;
 }
 
-static LONG_PTR WINAPI template_hook(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
+static UINT_PTR WINAPI template_hook(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (msg == WM_INITDIALOG)
     {
@@ -266,7 +277,7 @@ static void test_create_view_window2(void)
     char filename[1024] = {0};
     DWORD ret;
 
-    ofn.lStructSize = sizeof(ofn);
+    ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400A;
     ofn.lpstrFile = filename;
     ofn.nMaxFile = 1024;
     ofn.lpfnHook = create_view_window2_hook;
@@ -283,10 +294,10 @@ static void test_create_view_template(void)
     char filename[1024] = {0};
     DWORD ret;
 
-    ofn.lStructSize = sizeof(ofn);
+    ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400A;
     ofn.lpstrFile = filename;
     ofn.nMaxFile = 1024;
-    ofn.lpfnHook = (LPOFNHOOKPROC)template_hook;
+    ofn.lpfnHook = template_hook;
     ofn.Flags = OFN_ENABLEHOOK | OFN_EXPLORER| OFN_ENABLETEMPLATE;
     ofn.hInstance = GetModuleHandleA(NULL);
     ofn.lpTemplateName = "template1";
@@ -318,7 +329,7 @@ static const struct {
     { 0xffffffff }
 };
 
-static LONG_PTR WINAPI resize_template_hook(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
+static UINT_PTR WINAPI resize_template_hook(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static RECT initrc, rc;
     static int index, count;
@@ -531,14 +542,14 @@ todo_wine
 
 static void test_resize(void)
 {
-    OPENFILENAME ofn = { sizeof(OPENFILENAME)};
+    OPENFILENAME ofn = { OPENFILENAME_SIZE_VERSION_400 };
     char filename[1024] = {0};
     DWORD ret;
     int i;
 
     ofn.lpstrFile = filename;
     ofn.nMaxFile = 1024;
-    ofn.lpfnHook = (LPOFNHOOKPROC) resize_template_hook;
+    ofn.lpfnHook = resize_template_hook;
     ofn.hInstance = GetModuleHandle(NULL);
     ofn.lpTemplateName = "template_sz";
     for( i = 0; resize_testcases[i].flags != 0xffffffff; i++) {
@@ -581,7 +592,7 @@ static ok_wndproc_testcase ok_testcases[] = {
 
 /* test_ok_wndproc can be used as hook procedure or a subclass
  * window proc for the file dialog */
-static LONG_PTR WINAPI test_ok_wndproc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
+static UINT_PTR WINAPI test_ok_wndproc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     HWND parent = GetParent( dlg);
     static ok_wndproc_testcase *testcase = NULL;
@@ -624,7 +635,7 @@ static LONG_PTR WINAPI test_ok_wndproc(HWND dlg, UINT msg, WPARAM wParam, LPARAM
     return FALSE;
 }
 
-static LONG_PTR WINAPI ok_template_hook(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
+static UINT_PTR WINAPI ok_template_hook(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (msg == WM_SETFONT)
         SetWindowLongPtrA( dlg, GWLP_WNDPROC, (LONG_PTR) test_ok_wndproc);
@@ -633,7 +644,7 @@ static LONG_PTR WINAPI ok_template_hook(HWND dlg, UINT msg, WPARAM wParam, LPARA
 
 static void test_ok(void)
 {
-    OPENFILENAME ofn = { sizeof(OPENFILENAME)};
+    OPENFILENAME ofn = { OPENFILENAME_SIZE_VERSION_400 };
     char filename[1024] = {0};
     char tmpfilename[ MAX_PATH];
     char curdir[MAX_PATH];
@@ -655,9 +666,7 @@ static void test_ok(void)
     for( i = 0; ok_testcases[i].retval != -1; i++) {
         strcpy( filename, tmpfilename);
         ofn.lCustData = (LPARAM)(ok_testcases + i);
-        ofn.lpfnHook = ok_testcases[i].do_subclass
-            ? (LPOFNHOOKPROC) ok_template_hook
-            : (LPOFNHOOKPROC) test_ok_wndproc;
+        ofn.lpfnHook = ok_testcases[i].do_subclass ? ok_template_hook : test_ok_wndproc;
         ret = GetOpenFileNameA(&ofn);
         ok( ok_testcases[i].expclose == ok_testcases[i].actclose,
                 "testid %d: Open File dialog should %shave closed.\n", i,
@@ -706,7 +715,7 @@ static struct {
     { -1 }
 };
 
-static LONG_PTR WINAPI template_hook_arrange(HWND dlgChild, UINT msg, WPARAM wParam, LPARAM lParam)
+static UINT_PTR WINAPI template_hook_arrange(HWND dlgChild, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static int index, fixhelp;
     static posz posz0[2];
@@ -843,10 +852,10 @@ static void test_arrange(void)
         return;
     }
 
-    ofn.lStructSize = sizeof(ofn);
+    ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400A;
     ofn.lpstrFile = filename;
     ofn.nMaxFile = 1024;
-    ofn.lpfnHook = (LPOFNHOOKPROC)template_hook_arrange;
+    ofn.lpfnHook = template_hook_arrange;
     ofn.hInstance = hDlgTmpl;
     ofn.lpstrFilter="text\0*.txt\0All\0*\0\0";
     for( i = 0; arrange_tests[i].nrcontrols != -1; i++) {
@@ -916,7 +925,7 @@ static void test_getfolderpath(void)
 
     ZeroMemory(&ofn, sizeof(ofn));
 
-    ofn.lStructSize = sizeof(ofn);
+    ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400A;
     ofn.hwndOwner = NULL;
     ofn.lpstrFilter = "Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
     ofn.lpstrFile = szFileName;
@@ -948,7 +957,7 @@ static void test_resizable2(void)
         skip( "some interactive resizable dialog tests (set WINETEST_INTERACTIVE=1)\n");
         return;
     }
-    ofn.lStructSize = sizeof(ofn);
+    ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400A;
     ofn.lpstrFile = filename;
     ofn.nMaxFile = 1024;
     ofn.lpfnHook = NULL;
@@ -983,7 +992,7 @@ static void test_resizable2(void)
 static void test_mru(void)
 {
     ok_wndproc_testcase testcase = {0};
-    OPENFILENAME ofn = {sizeof(OPENFILENAME)};
+    OPENFILENAME ofn = { OPENFILENAME_SIZE_VERSION_400 };
     const char *test_dir_name = "C:\\mru_test";
     const char *test_file_name = "test.txt";
     const char *test_full_path = "C:\\mru_test\\test.txt";
@@ -996,7 +1005,7 @@ static void test_mru(void)
     ofn.hInstance = GetModuleHandle(NULL);
     ofn.Flags =  OFN_ENABLEHOOK | OFN_EXPLORER | OFN_ENABLETEMPLATE | OFN_NOCHANGEDIR;
     ofn.lCustData = (LPARAM)&testcase;
-    ofn.lpfnHook = (LPOFNHOOKPROC)test_ok_wndproc;
+    ofn.lpfnHook = test_ok_wndproc;
 
     SetLastError(0xdeadbeef);
     ret = CreateDirectoryA(test_dir_name, NULL);
@@ -1044,55 +1053,198 @@ static UINT_PTR WINAPI test_extension_wndproc(HWND dlg, UINT msg, WPARAM wParam,
     return FALSE;
 }
 
-static const char *defext_filters[] = {
-    "TestFilter (*.pt*)\0*.pt*\0",
-    "TestFilter (*.ab?)\0*.ab?\0",
-    "TestFilter (*.*)\0*.*\0",
-    NULL    /* is a test, not an endmark! */
-};
-
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+
+static void test_extension_helper(OPENFILENAME* ofn, const char *filter,
+                                  const char *expected_filename)
+{
+    char *filename_ptr;
+    DWORD ret;
+    BOOL boolret;
+
+    strcpy(ofn->lpstrFile, "deadbeef");
+    ofn->lpstrFilter = filter;
+
+    boolret = GetSaveFileNameA(ofn);
+    ok(boolret, "%s: expected TRUE\n", filter);
+
+    ret = CommDlgExtendedError();
+    ok(!ret, "%s: CommDlgExtendedError returned %#x\n", filter, ret);
+
+    filename_ptr = ofn->lpstrFile + ofn->nFileOffset;
+    ok(strcmp(filename_ptr, expected_filename) == 0,
+        "%s: Filename is %s, expected %s\n", filter, filename_ptr, expected_filename);
+}
 
 static void test_extension(void)
 {
-    OPENFILENAME ofn = { sizeof(OPENFILENAME)};
+    OPENFILENAME ofn = { OPENFILENAME_SIZE_VERSION_400 };
     char filename[1024] = {0};
     char curdir[MAX_PATH];
-    char *filename_ptr;
-    const char *test_file_name = "deadbeef";
     unsigned int i;
-    DWORD ret;
     BOOL boolret;
+
+    const char *defext_concrete_filters[] = {
+        "TestFilter (*.abc)\0*.abc\0",
+        "TestFilter (*.abc;)\0*.abc;\0",
+        "TestFilter (*.abc;*.def)\0*.abc;*.def\0",
+    };
+
+    const char *defext_wildcard_filters[] = {
+        "TestFilter (*.pt*)\0*.pt*\0",
+        "TestFilter (*.pt*;*.abc)\0*.pt*;*.abc\0",
+        "TestFilter (*.ab?)\0*.ab?\0",
+        "TestFilter (*.*)\0*.*\0",
+        "TestFilter (*sav)\0*sav\0",
+        NULL    /* is a test, not an endmark! */
+    };
 
     boolret = GetCurrentDirectoryA(sizeof(curdir), curdir);
     ok(boolret, "Failed to get current dir err %d\n", GetLastError());
 
-    /* Ignore .* extension */
-    ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = NULL;
     ofn.lpstrFile = filename;
     ofn.nMaxFile = MAX_PATH;
     ofn.Flags = OFN_EXPLORER | OFN_ENABLEHOOK;
-    ofn.lpstrDefExt = NULL;
     ofn.lpstrInitialDir = curdir;
     ofn.lpfnHook = test_extension_wndproc;
     ofn.nFileExtension = 0;
 
-    for (i = 0; i < ARRAY_SIZE(defext_filters); i++) {
-        ofn.lpstrFilter = defext_filters[i];
-        strcpy(filename, test_file_name);
-        boolret = GetSaveFileNameA(&ofn);
-        ok(boolret, "%u: expected true\n", i);
-        ret = CommDlgExtendedError();
-        ok(!ret, "%u: CommDlgExtendedError returned %#x\n", i, ret);
-        filename_ptr = ofn.lpstrFile + strlen( ofn.lpstrFile ) - strlen( test_file_name );
-        ok( strlen(ofn.lpstrFile) >= strlen(test_file_name), "Filename %s is too short\n", ofn.lpstrFile );
-        ok( strcmp(filename_ptr, test_file_name) == 0,
-            "Filename is %s, expected %s\n", filename_ptr, test_file_name );
+    ofn.lpstrDefExt = NULL;
+
+    /* Without lpstrDefExt, append no extension */
+    test_extension_helper(&ofn, "TestFilter (*.abc) lpstrDefExt=NULL\0*.abc\0", "deadbeef");
+    test_extension_helper(&ofn, "TestFilter (*.ab?) lpstrDefExt=NULL\0*.ab?\0", "deadbeef");
+
+    ofn.lpstrDefExt = "";
+
+    /* If lpstrDefExt="" and the filter has a concrete extension, append it */
+    test_extension_helper(&ofn, "TestFilter (*.abc) lpstrDefExt=\"\"\0*.abc\0", "deadbeef.abc");
+
+    /* If lpstrDefExt="" and the filter has a wildcard extension, do nothing */
+    test_extension_helper(&ofn, "TestFilter (*.ab?) lpstrDefExt=\"\"\0*.ab?\0", "deadbeef");
+
+    ofn.lpstrDefExt = "xyz";
+
+    /* Append concrete extensions from filters */
+    for (i = 0; i < ARRAY_SIZE(defext_concrete_filters); i++) {
+        test_extension_helper(&ofn, defext_concrete_filters[i], "deadbeef.abc");
+    }
+
+    /* Append nothing from this filter */
+    test_extension_helper(&ofn, "TestFilter (*.)\0*.\0", "deadbeef");
+
+    /* Ignore wildcard extensions in filters */
+    for (i = 0; i < ARRAY_SIZE(defext_wildcard_filters); i++) {
+        test_extension_helper(&ofn, defext_wildcard_filters[i], "deadbeef.xyz");
     }
 }
 
 #undef ARRAY_SIZE
+
+
+static BOOL WINAPI test_null_enum(HWND hwnd, LPARAM lParam)
+{
+    /* Find the textbox and send a filename so IDOK will work.
+       If the file textbox is empty IDOK will be ignored */
+    CHAR className[20];
+    if(GetClassNameA(hwnd, className, sizeof(className)) > 0 && !strcmp("Edit",className))
+    {
+        SetWindowText(hwnd, "testfile");
+        return FALSE; /* break window enumeration */
+    }
+    return TRUE;
+}
+
+static UINT_PTR WINAPI test_null_wndproc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    HWND parent = GetParent( dlg);
+    if( msg == WM_NOTIFY) {
+        SetTimer( dlg, 0, 100, 0);
+        SetTimer( dlg, 1, 1000, 0);
+        EnumChildWindows( parent, test_null_enum, 0);
+    }
+    if( msg == WM_TIMER) {
+        if(!wParam)
+            PostMessage( parent, WM_COMMAND, IDOK, 0);
+        else {
+            /* the dialog did not close automatically */
+            KillTimer( dlg, 0);
+            PostMessage( parent, WM_COMMAND, IDCANCEL, 0);
+        }
+    }
+    return FALSE;
+}
+
+static void test_null_filename(void)
+{
+    OPENFILENAMEA ofnA = {0};
+    OPENFILENAMEW ofnW = {0};
+    WCHAR filterW[] = {'t','e','x','t','\0','*','.','t','x','t','\0',
+                       'A','l','l','\0','*','\0','\0'};
+    DWORD ret;
+
+    ofnA.lStructSize = OPENFILENAME_SIZE_VERSION_400A;
+    ofnA.lpstrFile = NULL;
+    ofnA.nMaxFile = 0;
+    ofnA.nFileOffset = 0xdead;
+    ofnA.nFileExtension = 0xbeef;
+    ofnA.lpfnHook = test_null_wndproc;
+    ofnA.Flags = OFN_ENABLEHOOK | OFN_EXPLORER;
+    ofnA.hInstance = GetModuleHandleA(NULL);
+    ofnA.lpstrFilter = "text\0*.txt\0All\0*\0\0";
+    ofnA.lpstrDefExt = NULL;
+    ret = GetOpenFileNameA(&ofnA);
+    todo_wine ok(ret, "GetOpenFileNameA returned %#x\n", ret);
+    ret = CommDlgExtendedError();
+    todo_wine ok(!ret, "CommDlgExtendedError returned %#x, should be 0\n", ret);
+
+    todo_wine ok(ofnA.nFileOffset != 0xdead, "ofnA.nFileOffset is 0xdead\n");
+    todo_wine ok(ofnA.nFileExtension != 0xbeef, "ofnA.nFileExtension is 0xbeef\n");
+
+    ofnA.lpstrFile = NULL;
+    ofnA.nMaxFile = 1024; /* bogus input - lpstrFile = NULL but fake 1024 bytes available */
+    ofnA.nFileOffset = 0xdead;
+    ofnA.nFileExtension = 0xbeef;
+    ret = GetOpenFileNameA(&ofnA);
+    ok(ret, "GetOpenFileNameA returned %#x\n", ret);
+    ret = CommDlgExtendedError();
+    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+
+    ok(ofnA.nFileOffset != 0xdead, "ofnA.nFileOffset is 0xdead\n");
+    ok(ofnA.nFileExtension == 0, "ofnA.nFileExtension is 0x%x, should be 0\n", ofnA.nFileExtension);
+
+    /* unicode tests */
+    ofnW.lStructSize = OPENFILENAME_SIZE_VERSION_400W;
+    ofnW.lpstrFile = NULL;
+    ofnW.nMaxFile = 0;
+    ofnW.nFileOffset = 0xdead;
+    ofnW.nFileExtension = 0xbeef;
+    ofnW.lpfnHook = test_null_wndproc;
+    ofnW.Flags = OFN_ENABLEHOOK | OFN_EXPLORER;
+    ofnW.hInstance = GetModuleHandleW(NULL);
+    ofnW.lpstrFilter = filterW;
+    ofnW.lpstrDefExt = NULL;
+    ret = GetOpenFileNameW(&ofnW);
+    todo_wine ok(ret, "GetOpenFileNameW returned %#x\n", ret);
+    ret = CommDlgExtendedError();
+    todo_wine ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+
+    todo_wine ok(ofnW.nFileOffset != 0xdead, "ofnW.nFileOffset is 0xdead\n");
+    todo_wine ok(ofnW.nFileExtension != 0xbeef, "ofnW.nFileExtension is 0xbeef\n");
+
+    ofnW.lpstrFile = NULL;
+    ofnW.nMaxFile = 1024; /* bogus input - lpstrFile = NULL but fake 1024 bytes available */
+    ofnW.nFileOffset = 0xdead;
+    ofnW.nFileExtension = 0xbeef;
+    ret = GetOpenFileNameW(&ofnW);
+    ok(ret, "GetOpenFileNameA returned %#x\n", ret);
+    ret = CommDlgExtendedError();
+    ok(!ret, "CommDlgExtendedError returned %#x\n", ret);
+
+    ok(ofnW.nFileOffset != 0xdead, "ofnW.nFileOffset is 0xdead\n");
+    ok(ofnW.nFileExtension == 0, "ofnW.nFileExtension is 0x%x, should be 0\n", ofnW.nFileExtension);
+}
 
 START_TEST(filedlg)
 {
@@ -1106,4 +1258,5 @@ START_TEST(filedlg)
     test_mru();
     if( resizesupported) test_resizable2();
     test_extension();
+    test_null_filename();
 }

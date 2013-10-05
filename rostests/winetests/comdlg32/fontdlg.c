@@ -19,19 +19,21 @@
  *
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "winspool.h"
-#include "winuser.h"
-#include "objbase.h"
+#include <wine/test.h>
 
-#include "commdlg.h"
+//#include <stdarg.h>
 
-#include "wine/test.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winerror.h"
+#include <wingdi.h>
+#include <winspool.h>
+#include <winuser.h>
+//#include "objbase.h"
+
+#include <commdlg.h>
 
 static int get_dpiy(void)
 {

@@ -17,10 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winuser.h"
+#include <windef.h>
+#include <winuser.h>
 
-TEMPLATE1 DIALOG LOADONCALL MOVEABLE DISCARDABLE 5, 43, 227, 215
+TEMPLATE1 DIALOG 5, 43, 227, 215
 STYLE WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS
 FONT 8, "MS Shell Dlg"
 {
@@ -38,7 +38,7 @@ FONT 8, "MS Shell Dlg"
  * resizing on small desk tops.
  * This will work with 640x480 pixels
  */
-TEMPLATE_SZ DIALOG LOADONCALL MOVEABLE DISCARDABLE 5, 43, 300, 40
+TEMPLATE_SZ DIALOG 5, 43, 300, 40
 STYLE WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Shell Dlg"
 {
@@ -50,7 +50,7 @@ FONT 8, "MS Shell Dlg"
 }
 
 /* note: the test program will modify coordinates and nr of controls in this template */
-TEMPLATE_STC32 DIALOG LOADONCALL MOVEABLE DISCARDABLE 11111, 0, 316, 76
+TEMPLATE_STC32 DIALOG 11111, 0, 316, 76
 STYLE WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Shell Dlg"
 {

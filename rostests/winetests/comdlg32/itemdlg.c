@@ -19,11 +19,16 @@
  *
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <wine/test.h>
+
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include "shlobj.h"
-#include "wine/test.h"
+#include <shlobj.h>
 
 static HRESULT (WINAPI *pSHCreateShellItem)(LPCITEMIDLIST,IShellFolder*,LPCITEMIDLIST,IShellItem**);
 static HRESULT (WINAPI *pSHGetIDListFromObject)(IUnknown*, PIDLIST_ABSOLUTE*);
@@ -277,17 +282,26 @@ static BOOL test_instantiation(void)
         IExplorerBrowser *peb;
         IShellBrowser *psb;
 
-        hr = IServiceProvider_QueryService(psp, &SID_STopLevelBrowser, &IID_IExplorerBrowser, (void**)&peb);
-        ok(hr == E_FAIL, "got 0x%08x.\n", hr);
-        if(SUCCEEDED(hr)) IExplorerBrowser_Release(peb);
-        hr = IServiceProvider_QueryService(psp, &SID_STopLevelBrowser, &IID_IShellBrowser, (void**)&psb);
-        ok(hr == E_FAIL, "got 0x%08x.\n", hr);
-        if(SUCCEEDED(hr)) IShellBrowser_Release(psb);
-        hr = IServiceProvider_QueryService(psp, &SID_STopLevelBrowser, &IID_ICommDlgBrowser, (void**)&punk);
-        ok(hr == E_FAIL, "got 0x%08x.\n", hr);
-        if(SUCCEEDED(hr)) IUnknown_Release(punk);
         hr = IServiceProvider_QueryService(psp, &SID_SExplorerBrowserFrame, &IID_ICommDlgBrowser, (void**)&punk);
         ok(hr == S_OK, "got 0x%08x.\n", hr);
+        if(SUCCEEDED(hr)) IUnknown_Release(punk);
+
+        /* since win8, the result is E_NOTIMPL for all other services */
+        hr = IServiceProvider_QueryService(psp, &SID_STopLevelBrowser, &IID_IExplorerBrowser, (void**)&peb);
+        ok(hr == E_NOTIMPL || broken(hr == E_FAIL), "got 0x%08x (expected E_NOTIMPL)\n", hr);
+        if(SUCCEEDED(hr)) IExplorerBrowser_Release(peb);
+        hr = IServiceProvider_QueryService(psp, &SID_STopLevelBrowser, &IID_IShellBrowser, (void**)&psb);
+        ok(hr == E_NOTIMPL || broken(hr == E_FAIL), "got 0x%08x (expected E_NOTIMPL)\n", hr);
+        if(SUCCEEDED(hr)) IShellBrowser_Release(psb);
+        hr = IServiceProvider_QueryService(psp, &SID_STopLevelBrowser, &IID_ICommDlgBrowser, (void**)&punk);
+        ok(hr == E_NOTIMPL || broken(hr == E_FAIL), "got 0x%08x (expected E_NOTIMPL)\n", hr);
+        if(SUCCEEDED(hr)) IUnknown_Release(punk);
+
+        hr = IServiceProvider_QueryService(psp, &SID_STopLevelBrowser, &IID_IUnknown, (void**)&punk);
+        ok(hr == E_NOTIMPL || broken(hr == E_FAIL), "got 0x%08x (expected E_NOTIMPL)\n", hr);
+        if(SUCCEEDED(hr)) IUnknown_Release(punk);
+        hr = IServiceProvider_QueryService(psp, &IID_IUnknown, &IID_IUnknown, (void**)&punk);
+        ok(hr == E_NOTIMPL || broken(hr == E_FAIL), "got 0x%08x (expected E_NOTIMPL)\n", hr);
         if(SUCCEEDED(hr)) IUnknown_Release(punk);
 
         IServiceProvider_Release(psp);
@@ -369,7 +383,7 @@ static BOOL test_instantiation(void)
 
     hr = IFileSaveDialog_QueryInterface(pfsd, &IID_IFileDialogEvents, (void**)&punk);
     ok(hr == E_NOINTERFACE, "got 0x%08x.\n", hr);
-    if(SUCCEEDED(hr)) IUnknown_Release(pfd);
+    if(SUCCEEDED(hr)) IFileDialog_Release(pfd);
 
     hr = IFileSaveDialog_QueryInterface(pfsd, &IID_IExplorerBrowser, (void**)&punk);
     ok(hr == E_NOINTERFACE, "got 0x%08x.\n", hr);
@@ -379,7 +393,7 @@ static BOOL test_instantiation(void)
     ok(hr == S_OK, "got 0x%08x.\n", hr);
     if(SUCCEEDED(hr)) IUnknown_Release(punk);
 
-    hr = IFileOpenDialog_QueryInterface(pfsd, &IID_ICommDlgBrowser3, (void**)&punk);
+    hr = IFileSaveDialog_QueryInterface(pfsd, &IID_ICommDlgBrowser3, (void**)&punk);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
     if(SUCCEEDED(hr)) IUnknown_Release(punk);
 
@@ -1378,11 +1392,12 @@ static void test_customize(void)
                           &IID_IFileDialog, (void**)&pfod);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
 
-    hr = IFileOpenDialog_QueryInterface(pfod, &IID_IFileDialogCustomize, (void**)&pfdc);
+    hr = IFileDialog_QueryInterface(pfod, &IID_IFileDialogCustomize, (void**)&pfdc);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
     if(FAILED(hr))
     {
         skip("Skipping IFileDialogCustomize tests.\n");
+        IFileDialog_Release(pfod);
         return;
     }
 
@@ -1666,7 +1681,7 @@ static void test_customize(void)
 
     IFileDialogEvents_Release(pfde);
     IFileDialogCustomize_Release(pfdc);
-    ref = IFileOpenDialog_Release(pfod);
+    ref = IFileDialog_Release(pfod);
     ok(!ref, "Refcount not zero (%d).\n", ref);
 
 
@@ -1674,7 +1689,7 @@ static void test_customize(void)
                           &IID_IFileDialog, (void**)&pfod);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
 
-    hr = IFileDialogCustomize_QueryInterface(pfod, &IID_IFileDialogCustomize, (void**)&pfdc);
+    hr = IFileDialog_QueryInterface(pfod, &IID_IFileDialogCustomize, (void**)&pfdc);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
 
     i = 0;
@@ -1884,8 +1899,32 @@ static void test_customize(void)
     }
 
     IFileDialogCustomize_Release(pfdc);
-    ref = IFileOpenDialog_Release(pfod);
+    ref = IFileDialog_Release(pfod);
     ok(!ref, "Refcount not zero (%d).\n", ref);
+}
+
+static void test_persistent_state(void)
+{
+    IFileDialog *fd;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IFileDialog, (void**)&fd);
+    ok(hr == S_OK, "got 0x%08x.\n", hr);
+
+if (0)
+{
+    /* crashes at least on Win8 */
+    hr = IFileDialog_SetClientGuid(fd, NULL);
+}
+
+    hr = IFileDialog_SetClientGuid(fd, &IID_IUnknown);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IFileDialog_SetClientGuid(fd, &IID_NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    IFileDialog_Release(fd);
 }
 
 START_TEST(itemdlg)
@@ -1899,6 +1938,7 @@ START_TEST(itemdlg)
         test_advise();
         test_filename();
         test_customize();
+        test_persistent_state();
     }
     else
         skip("Skipping all Item Dialog tests.\n");
