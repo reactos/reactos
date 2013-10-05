@@ -94,7 +94,7 @@ reactos/dll/win32/itircl          # Synced to Wine-1.7.1
 reactos/dll/win32/itss            # Synced to Wine-1.7.1
 reactos/dll/win32/jscript         # Synced to Wine-1.7.1
 reactos/dll/win32/loadperf        # Synced to Wine-1.7.1
-reactos/dll/win32/localspl        # Synced to Wine-1.5.26
+reactos/dll/win32/localspl        # Synced to Wine-1.7.1
 reactos/dll/win32/localui         # Synced to Wine-1.7.1
 reactos/dll/win32/lz32            # Synced to Wine-1.5.19
 reactos/dll/win32/mapi32          # Synced to Wine-1.7.1
@@ -242,7 +242,7 @@ In addition the following libs, dlls and source files are mostly based on code p
 from Winehq CVS. If you are looking to update something in these files
 check Wine current souces first as it may already be fixed.
 
-reactos/lib/3rdparty/strmbase             # Synced to Wine-1.7.11
+reactos/lib/3rdparty/strmbase             # Synced to Wine-1.7.1
 reactos/lib/sdk/uuid                      # Synced to Wine-1.1.42
 
 advapi32 -
