@@ -71,11 +71,10 @@ CsrInitializeWait(IN CSR_WAIT_FUNCTION WaitFunction,
     }
 
     /* Initialize it */
-    WaitBlock->Size = Size;
-    WaitBlock->WaitThread = CsrWaitThread;
-    CsrWaitThread->WaitBlock = WaitBlock;
-    WaitBlock->WaitContext = WaitContext;
-    WaitBlock->WaitFunction = WaitFunction;
+    WaitBlock->Size           = Size;
+    WaitBlock->WaitThread     = CsrWaitThread;
+    WaitBlock->WaitContext    = WaitContext;
+    WaitBlock->WaitFunction   = WaitFunction;
     WaitBlock->WaitList.Flink = NULL;
     WaitBlock->WaitList.Blink = NULL;
 
@@ -96,7 +95,7 @@ CsrInitializeWait(IN CSR_WAIT_FUNCTION WaitFunction,
  * CSR Wait Block, and replies to the attached CSR API Message, if any.
  *
  * @param WaitBlock
- *        Pointer to the CSR Wait Block
+ *        Pointer to the CSR Wait Block.
  *
  * @param WaitList
  *        Pointer to the wait list for this wait.
@@ -146,7 +145,7 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
 
         /* Reply to the port */
         NtReplyPort(WaitBlock->WaitThread->Process->ClientPort,
-                    (PPORT_MESSAGE)&WaitBlock->WaitApiMessage);
+                    &WaitBlock->WaitApiMessage.Header);
 
         /* Check if we should dereference the thread */
         if (DereferenceThread)
@@ -186,7 +185,7 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
  * The CsrCreateWait routine creates a CSR Wait.
  *
  * @param WaitList
- *        Pointer to a list entry of the waits to associate.
+ *        Pointer to a wait list in which the wait will be added.
  *
  * @param WaitFunction
  *        Pointer to the function that will handle this wait.
@@ -232,11 +231,13 @@ CsrCreateWait(IN PLIST_ENTRY WaitList,
     if (CsrWaitThread->Flags & CsrThreadTerminated)
     {
         /* Fail the wait */
-        CsrWaitThread->WaitBlock = NULL;
         RtlFreeHeap(CsrHeap, 0, WaitBlock);
         CsrReleaseWaitLock();
         return FALSE;
     }
+
+    /* Associate the newly created wait to the waiting thread */
+    CsrWaitThread->WaitBlock = WaitBlock;
 
     /* Insert the wait in the queue */
     InsertTailList(WaitList, &WaitBlock->WaitList);
@@ -309,14 +310,15 @@ CsrDereferenceWait(IN PLIST_ENTRY WaitList)
  * @name CsrMoveSatisfiedWait
  * @implemented NT5
  *
- * The CsrMoveSatisfiedWait routine moves satisfied waits from a wait list
- * to another list entry.
+ * The CsrMoveSatisfiedWait routine moves satisfied waits from
+ * a wait list to another list.
  *
- * @param NewEntry
- *        Pointer to a list entry where the satisfied waits will be added.
+ * @param DestinationList
+ *        Pointer to a list in which the satisfied waits will be added.
  *
  * @param WaitList
- *        Pointer to a list entry to analyze for satisfied waits.
+ *        Pointer to the wait list whose satisfied wait blocks
+ *        will be moved away.
  *
  * @return None.
  *
@@ -325,7 +327,7 @@ CsrDereferenceWait(IN PLIST_ENTRY WaitList)
  *--*/
 VOID
 NTAPI
-CsrMoveSatisfiedWait(IN PLIST_ENTRY NewEntry,
+CsrMoveSatisfiedWait(IN PLIST_ENTRY DestinationList,
                      IN PLIST_ENTRY WaitList)
 {
     PLIST_ENTRY NextEntry;
@@ -352,8 +354,8 @@ CsrMoveSatisfiedWait(IN PLIST_ENTRY NewEntry,
             /* Remove it from the Wait Block Queue */
             RemoveEntryList(&WaitBlock->WaitList);
 
-            /* Insert the new entry */
-            InsertTailList(&WaitBlock->WaitList, NewEntry);
+            /* Insert the wait into the destination list */
+            InsertTailList(DestinationList, &WaitBlock->WaitList);
         }
     }
 
@@ -365,10 +367,10 @@ CsrMoveSatisfiedWait(IN PLIST_ENTRY NewEntry,
  * @name CsrNotifyWait
  * @implemented NT4
  *
- * The CsrNotifyWait notifies a CSR Wait Block.
+ * The CsrNotifyWait notifies CSR Wait Blocks.
  *
  * @param WaitList
- *        Pointer to the list entry for this wait.
+ *        Pointer to the wait list whose wait blocks will be notified.
  *
  * @param WaitType
  *        Type of the wait to perform, either WaitAny or WaitAll.

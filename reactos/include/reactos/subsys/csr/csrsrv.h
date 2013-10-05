@@ -343,7 +343,7 @@ CsrLockThreadByClientId(IN HANDLE Tid,
 
 VOID
 NTAPI
-CsrMoveSatisfiedWait(IN PLIST_ENTRY NewEntry,
+CsrMoveSatisfiedWait(IN PLIST_ENTRY DestinationList,
                      IN PLIST_ENTRY WaitList);
 
 BOOLEAN
