@@ -24,6 +24,7 @@
 
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -3007,10 +3008,15 @@ static void test_SetEntriesInAclA(void)
 
 static void test_GetNamedSecurityInfoA(void)
 {
-    char admin_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES], dacl[100], *user;
+    char admin_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES], *user;
+    char system_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES];
+    char users_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES];
+    PSID admin_sid = (PSID) admin_ptr, users_sid = (PSID) users_ptr;
+    PSID system_sid = (PSID) system_ptr, user_sid;
     DWORD sid_size = sizeof(admin_ptr), user_size;
     char invalid_path[] = "/an invalid file path";
-    PSID admin_sid = (PSID) admin_ptr, user_sid;
+    int users_ace_id = -1, admins_ace_id = -1, i;
+    char software_key[] = "MACHINE\\Software";
     char sd[SECURITY_DESCRIPTOR_MIN_LENGTH];
     SECURITY_DESCRIPTOR_CONTROL control;
     ACL_SIZE_INFORMATION acl_size;
@@ -3022,9 +3028,12 @@ static void test_GetNamedSecurityInfoA(void)
     DWORD error, revision;
     BOOL owner_defaulted;
     BOOL group_defaulted;
+    BOOL dacl_defaulted;
     HANDLE token, hTemp;
     PSID owner, group;
+    BOOL dacl_present;
     PACL pDacl;
+    BYTE flags;
 
     if (!pSetNamedSecurityInfoA || !pGetNamedSecurityInfoA || !pCreateWellKnownSid)
     {
@@ -3115,13 +3124,12 @@ static void test_GetNamedSecurityInfoA(void)
 
     /* Create security descriptor information and test that it comes back the same */
     pSD = &sd;
-    pDacl = (PACL)&dacl;
+    pDacl = HeapAlloc(GetProcessHeap(), 0, 100);
     InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
     pCreateWellKnownSid(WinBuiltinAdministratorsSid, NULL, admin_sid, &sid_size);
-    bret = InitializeAcl(pDacl, sizeof(dacl), ACL_REVISION);
+    bret = InitializeAcl(pDacl, 100, ACL_REVISION);
     ok(bret, "Failed to initialize ACL.\n");
     bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
-    HeapFree(GetProcessHeap(), 0, user);
     ok(bret, "Failed to add Current User to ACL.\n");
     bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, admin_sid);
     ok(bret, "Failed to add Administrator Group to ACL.\n");
@@ -3133,9 +3141,11 @@ static void test_GetNamedSecurityInfoA(void)
     SetLastError(0xdeadbeef);
     error = pSetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL,
                                    NULL, pDacl, NULL);
+    HeapFree(GetProcessHeap(), 0, pDacl);
     if (error != ERROR_SUCCESS && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
     {
         win_skip("SetNamedSecurityInfoA is not implemented\n");
+        HeapFree(GetProcessHeap(), 0, user);
         CloseHandle(hTemp);
         return;
     }
@@ -3146,6 +3156,8 @@ static void test_GetNamedSecurityInfoA(void)
     if (error != ERROR_SUCCESS && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
     {
         win_skip("GetNamedSecurityInfoA is not implemented\n");
+        HeapFree(GetProcessHeap(), 0, user);
+        CloseHandle(hTemp);
         return;
     }
     ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
@@ -3176,7 +3188,80 @@ static void test_GetNamedSecurityInfoA(void)
            "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n", ace->Mask);
     }
     LocalFree(pSD);
+    HeapFree(GetProcessHeap(), 0, user);
     CloseHandle(hTemp);
+
+    /* Test querying the ownership of a built-in registry key */
+    sid_size = sizeof(system_ptr);
+    pCreateWellKnownSid(WinLocalSystemSid, NULL, system_sid, &sid_size);
+    error = pGetNamedSecurityInfoA(software_key, SE_REGISTRY_KEY,
+                                   OWNER_SECURITY_INFORMATION|GROUP_SECURITY_INFORMATION,
+                                   NULL, NULL, NULL, NULL, &pSD);
+    ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
+
+    bret = GetSecurityDescriptorOwner(pSD, &owner, &owner_defaulted);
+    ok(bret, "GetSecurityDescriptorOwner failed with error %d\n", GetLastError());
+    ok(owner != NULL, "owner should not be NULL\n");
+    ok(EqualSid(owner, admin_sid), "MACHINE\\Software owner SID != Administrators SID.\n");
+
+    bret = GetSecurityDescriptorGroup(pSD, &group, &group_defaulted);
+    ok(bret, "GetSecurityDescriptorGroup failed with error %d\n", GetLastError());
+    ok(group != NULL, "group should not be NULL\n");
+    ok(EqualSid(group, admin_sid) || broken(EqualSid(group, system_sid)) /* before Win7 */
+       || broken(((SID*)group)->SubAuthority[0] == SECURITY_NT_NON_UNIQUE) /* Vista */,
+       "MACHINE\\Software group SID != Local System SID.\n");
+    LocalFree(pSD);
+
+    /* Test querying the DACL of a built-in registry key */
+    sid_size = sizeof(users_ptr);
+    pCreateWellKnownSid(WinBuiltinUsersSid, NULL, users_sid, &sid_size);
+    error = pGetNamedSecurityInfoA(software_key, SE_REGISTRY_KEY, DACL_SECURITY_INFORMATION,
+                                   NULL, NULL, NULL, NULL, &pSD);
+    ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
+
+    bret = GetSecurityDescriptorDacl(pSD, &dacl_present, &pDacl, &dacl_defaulted);
+    ok(bret, "GetSecurityDescriptorDacl failed with error %d\n", GetLastError());
+    ok(dacl_present, "DACL should be present\n");
+    ok(pDacl && IsValidAcl(pDacl), "GetSecurityDescriptorDacl returned invalid DACL.\n");
+    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok(bret, "GetAclInformation failed\n");
+    ok(acl_size.AceCount != 0, "GetAclInformation returned no ACLs\n");
+    for (i=0; i<acl_size.AceCount; i++)
+    {
+        bret = pGetAce(pDacl, i, (VOID **)&ace);
+        ok(bret, "Failed to get ACE %d.\n", i);
+        bret = EqualSid(&ace->SidStart, users_sid);
+        if (bret) users_ace_id = i;
+        bret = EqualSid(&ace->SidStart, admin_sid);
+        if (bret) admins_ace_id = i;
+    }
+    ok(users_ace_id != -1 || broken(users_ace_id == -1) /* win2k */,
+       "Bultin Users ACE not found.\n");
+    if (users_ace_id != -1)
+    {
+        bret = pGetAce(pDacl, users_ace_id, (VOID **)&ace);
+        ok(bret, "Failed to get Builtin Users ACE.\n");
+        flags = ((ACE_HEADER *)ace)->AceFlags;
+        ok(flags == (INHERIT_ONLY_ACE|CONTAINER_INHERIT_ACE)
+           || broken(flags == (INHERIT_ONLY_ACE|CONTAINER_INHERIT_ACE|INHERITED_ACE)) /* w2k8 */,
+           "Builtin Users ACE has unexpected flags (0x%x != 0x%x)\n", flags,
+           INHERIT_ONLY_ACE|CONTAINER_INHERIT_ACE);
+        ok(ace->Mask == GENERIC_READ, "Builtin Users ACE has unexpected mask (0x%x != 0x%x)\n",
+                                      ace->Mask, GENERIC_READ);
+    }
+    ok(admins_ace_id != -1, "Bultin Admins ACE not found.\n");
+    if (admins_ace_id != -1)
+    {
+        bret = pGetAce(pDacl, admins_ace_id, (VOID **)&ace);
+        ok(bret, "Failed to get Builtin Admins ACE.\n");
+        flags = ((ACE_HEADER *)ace)->AceFlags;
+        ok(flags == 0x0
+           || broken(flags == (INHERIT_ONLY_ACE|CONTAINER_INHERIT_ACE|INHERITED_ACE)) /* w2k8 */,
+           "Builtin Admins ACE has unexpected flags (0x%x != 0x0)\n", flags);
+        ok(ace->Mask == KEY_ALL_ACCESS || broken(ace->Mask == GENERIC_ALL) /* w2k8 */,
+           "Builtin Admins ACE has unexpected mask (0x%x != 0x%x)\n", ace->Mask, KEY_ALL_ACCESS);
+    }
+    LocalFree(pSD);
 }
 
 static void test_ConvertStringSecurityDescriptor(void)
@@ -4077,6 +4162,8 @@ static void test_CreateRestrictedToken(void)
     HANDLE process_token, token, r_token;
     PTOKEN_GROUPS token_groups, groups2;
     SID_AND_ATTRIBUTES sattr;
+    SECURITY_IMPERSONATION_LEVEL level;
+    TOKEN_TYPE type;
     BOOL is_member;
     DWORD size;
     BOOL ret;
@@ -4127,7 +4214,7 @@ static void test_CreateRestrictedToken(void)
     sattr.Attributes = 0;
     r_token = NULL;
     ret = pCreateRestrictedToken(token, 0, 1, &sattr, 0, NULL, 0, NULL, &r_token);
-    todo_wine ok(ret, "got error %d\n", GetLastError());
+    ok(ret, "got error %d\n", GetLastError());
 
     if (ret)
     {
@@ -4135,7 +4222,7 @@ static void test_CreateRestrictedToken(void)
         is_member = TRUE;
         ret = pCheckTokenMembership(r_token, token_groups->Groups[i].Sid, &is_member);
         ok(ret, "got error %d\n", GetLastError());
-        ok(!is_member, "not a member\n");
+        todo_wine ok(!is_member, "not a member\n");
 
         ret = GetTokenInformation(r_token, TokenGroups, NULL, 0, &size);
         ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "got %d with error %d\n",
@@ -4150,12 +4237,22 @@ static void test_CreateRestrictedToken(void)
                 break;
         }
 
-        ok(groups2->Groups[j].Attributes & SE_GROUP_USE_FOR_DENY_ONLY,
+        todo_wine ok(groups2->Groups[j].Attributes & SE_GROUP_USE_FOR_DENY_ONLY,
             "got wrong attributes\n");
-        ok((groups2->Groups[j].Attributes & SE_GROUP_ENABLED) == 0,
+        todo_wine ok((groups2->Groups[j].Attributes & SE_GROUP_ENABLED) == 0,
             "got wrong attributes\n");
 
         HeapFree(GetProcessHeap(), 0, groups2);
+
+        size = sizeof(type);
+        ret = GetTokenInformation(r_token, TokenType, &type, size, &size);
+        ok(ret, "got error %d\n", GetLastError());
+        ok(type == TokenImpersonation, "got type %u\n", type);
+
+        size = sizeof(level);
+        ret = GetTokenInformation(r_token, TokenImpersonationLevel, &level, size, &size);
+        ok(ret, "got error %d\n", GetLastError());
+        ok(level == SecurityImpersonation, "got level %u\n", type);
     }
 
     HeapFree(GetProcessHeap(), 0, token_groups);
@@ -4497,6 +4594,64 @@ static void test_TokenIntegrityLevel(void)
     CloseHandle(token);
 }
 
+static void test_default_dacl_owner_sid(void)
+{
+    HANDLE handle;
+    BOOL ret, defaulted, present, found;
+    DWORD size, index;
+    SECURITY_DESCRIPTOR *sd;
+    SECURITY_ATTRIBUTES sa;
+    PSID owner;
+    ACL *dacl;
+    ACCESS_ALLOWED_ACE *ace;
+
+    sd = HeapAlloc( GetProcessHeap(), 0, SECURITY_DESCRIPTOR_MIN_LENGTH );
+    ret = InitializeSecurityDescriptor( sd, SECURITY_DESCRIPTOR_REVISION );
+    ok( ret, "error %u\n", GetLastError() );
+
+    sa.nLength              = sizeof(SECURITY_ATTRIBUTES);
+    sa.lpSecurityDescriptor = sd;
+    sa.bInheritHandle       = FALSE;
+    handle = CreateEvent( &sa, TRUE, TRUE, "test_event" );
+    ok( handle != NULL, "error %u\n", GetLastError() );
+
+    size = 0;
+    ret = GetKernelObjectSecurity( handle, OWNER_SECURITY_INFORMATION|DACL_SECURITY_INFORMATION, NULL, 0, &size );
+    ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "error %u\n", GetLastError() );
+
+    sd = HeapAlloc( GetProcessHeap(), 0, size );
+    ret = GetKernelObjectSecurity( handle, OWNER_SECURITY_INFORMATION|DACL_SECURITY_INFORMATION, sd, size, &size );
+    ok( ret, "error %u\n", GetLastError() );
+
+    owner = (void *)0xdeadbeef;
+    defaulted = TRUE;
+    ret = GetSecurityDescriptorOwner( sd, &owner, &defaulted );
+    ok( ret, "error %u\n", GetLastError() );
+    ok( owner != (void *)0xdeadbeef, "owner not set\n" );
+    todo_wine ok( !defaulted, "owner defaulted\n" );
+
+    dacl = (void *)0xdeadbeef;
+    present = FALSE;
+    defaulted = TRUE;
+    ret = GetSecurityDescriptorDacl( sd, &present, &dacl, &defaulted );
+    ok( ret, "error %u\n", GetLastError() );
+    ok( present, "dacl not present\n" );
+    ok( dacl != (void *)0xdeadbeef, "dacl not set\n" );
+    todo_wine ok( !defaulted, "dacl defaulted\n" );
+
+    index = 0;
+    found = FALSE;
+    while (pGetAce( dacl, index++, (void **)&ace ))
+    {
+        if (EqualSid( &ace->SidStart, owner )) found = TRUE;
+    }
+    ok( found, "owner sid not found in dacl\n" );
+
+    HeapFree( GetProcessHeap(), 0, sa.lpSecurityDescriptor );
+    HeapFree( GetProcessHeap(), 0, sd );
+    CloseHandle( handle );
+}
+
 START_TEST(security)
 {
     init();
@@ -4535,4 +4690,5 @@ START_TEST(security)
     test_GetUserNameW();
     test_CreateRestrictedToken();
     test_TokenIntegrityLevel();
+    test_default_dacl_owner_sid();
 }

@@ -23,6 +23,8 @@
 
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
@@ -43,6 +45,7 @@ static NTSTATUS (WINAPI *pLsaOpenPolicy)(PLSA_UNICODE_STRING,PLSA_OBJECT_ATTRIBU
 static NTSTATUS (WINAPI *pLsaQueryInformationPolicy)(LSA_HANDLE,POLICY_INFORMATION_CLASS,PVOID*);
 static BOOL     (WINAPI *pConvertSidToStringSidA)(PSID,LPSTR*);
 static NTSTATUS (WINAPI *pLsaLookupNames2)(LSA_HANDLE,ULONG,ULONG,PLSA_UNICODE_STRING,PLSA_REFERENCED_DOMAIN_LIST*,PLSA_TRANSLATED_SID2*);
+static NTSTATUS (WINAPI *pLsaLookupSids)(LSA_HANDLE,ULONG,PSID*,LSA_REFERENCED_DOMAIN_LIST**,LSA_TRANSLATED_NAME**);
 
 static BOOL init(void)
 {
@@ -55,6 +58,7 @@ static BOOL init(void)
     pLsaQueryInformationPolicy = (void*)GetProcAddress(hadvapi32, "LsaQueryInformationPolicy");
     pConvertSidToStringSidA = (void*)GetProcAddress(hadvapi32, "ConvertSidToStringSidA");
     pLsaLookupNames2 = (void*)GetProcAddress(hadvapi32, "LsaLookupNames2");
+    pLsaLookupSids = (void*)GetProcAddress(hadvapi32, "LsaLookupSids");
 
     if (pLsaClose && pLsaEnumerateAccountRights && pLsaFreeMemory && pLsaOpenPolicy && pLsaQueryInformationPolicy && pConvertSidToStringSidA)
         return TRUE;
@@ -253,7 +257,8 @@ static void test_LsaLookupNames2(void)
         return;
     }
 
-    if (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH)
+    if ((PRIMARYLANGID(LANGIDFROMLCID(GetSystemDefaultLCID())) != LANG_ENGLISH) ||
+        (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH))
     {
         skip("Non-English locale (skipping LsaLookupNames2 tests)\n");
         return;
@@ -351,6 +356,57 @@ static void test_LsaLookupNames2(void)
     ok(status == STATUS_SUCCESS, "LsaClose() failed, returned 0x%08x\n", status);
 }
 
+static void test_LsaLookupSids(void)
+{
+    LSA_REFERENCED_DOMAIN_LIST *list;
+    LSA_OBJECT_ATTRIBUTES attrs;
+    LSA_TRANSLATED_NAME *names;
+    LSA_HANDLE policy;
+    TOKEN_USER *user;
+    NTSTATUS status;
+    HANDLE token;
+    DWORD size;
+    BOOL ret;
+
+    memset(&attrs, 0, sizeof(attrs));
+    attrs.Length = sizeof(attrs);
+
+    status = pLsaOpenPolicy(NULL, &attrs, POLICY_LOOKUP_NAMES, &policy);
+    ok(status == STATUS_SUCCESS, "got 0x%08x\n", status);
+
+    ret = OpenProcessToken(GetCurrentProcess(), MAXIMUM_ALLOWED, &token);
+    ok(ret, "got %d\n", ret);
+
+    ret = GetTokenInformation(token, TokenUser, NULL, 0, &size);
+    ok(!ret, "gotr %d\n", ret);
+
+    user = HeapAlloc(GetProcessHeap(), 0, size);
+    ret = GetTokenInformation(token, TokenUser, user, size, &size);
+    ok(ret, "got %d\n", ret);
+
+    status = pLsaLookupSids(policy, 1, &user->User.Sid, &list, &names);
+    ok(status == STATUS_SUCCESS, "got 0x%08x\n", status);
+
+    ok(list->Entries > 0, "got %d\n", list->Entries);
+    if (list->Entries)
+    {
+       ok((char*)list->Domains - (char*)list > 0, "%p, %p\n", list, list->Domains);
+       ok((char*)list->Domains[0].Sid - (char*)list->Domains > 0, "%p, %p\n", list->Domains, list->Domains[0].Sid);
+       ok(list->Domains[0].Name.MaximumLength > list->Domains[0].Name.Length, "got %d, %d\n", list->Domains[0].Name.MaximumLength,
+           list->Domains[0].Name.Length);
+    }
+
+    pLsaFreeMemory(names);
+    pLsaFreeMemory(list);
+
+    HeapFree(GetProcessHeap(), 0, user);
+
+    CloseHandle(token);
+
+    status = pLsaClose(policy);
+    ok(status == STATUS_SUCCESS, "got 0x%08x\n", status);
+}
+
 START_TEST(lsa)
 {
     if (!init()) {
@@ -360,4 +416,5 @@ START_TEST(lsa)
 
     test_lsa();
     test_LsaLookupNames2();
+    test_LsaLookupSids();
 }

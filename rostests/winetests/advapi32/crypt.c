@@ -146,6 +146,13 @@ static void clean_up_environment(void)
 		pCryptReleaseContext(hProv, 0);
 		pCryptAcquireContextA(&hProv, szKeySet, NULL, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
 	}
+
+        /* Remove container "wine_test_bad_keyset" */
+        if (pCryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, 0))
+        {
+                pCryptReleaseContext(hProv, 0);
+                pCryptAcquireContextA(&hProv, szBadKeySet, szRsaBaseProv, PROV_RSA_FULL, CRYPT_DELETEKEYSET);
+        }
 }
 
 static void test_acquire_context(void)
@@ -561,7 +568,16 @@ static void test_enum_providers(void)
 	if (!(provider = LocalAlloc(LMEM_ZEROINIT, providerLen)))
 		return;
 		
-	providerLen = 0xdeadbeef;
+	providerLen = -1;
+	result = pCryptEnumProvidersA(dwIndex, NULL, 0, &type, provider, &providerLen);
+	ok(result, "expected TRUE, got %d\n", result);
+	ok(type==dwType, "expected %d, got %d\n", dwType, type);
+	if (pszProvName)
+	    ok(!strcmp(pszProvName, provider), "expected %s, got %s\n", pszProvName, provider);
+	ok(cbName==providerLen, "expected %d, got %d\n", cbName, providerLen);
+
+	providerLen = -1000;
+	provider[0] = 0;
 	result = pCryptEnumProvidersA(dwIndex, NULL, 0, &type, provider, &providerLen);
 	ok(result, "expected TRUE, got %d\n", result);
 	ok(type==dwType, "expected %d, got %d\n", dwType, type);

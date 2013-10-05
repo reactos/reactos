@@ -637,7 +637,6 @@ static BOOL create_new_eventlog(void)
 
     /* First create our eventlog */
     lret = RegOpenKeyA(HKEY_LOCAL_MACHINE, eventlogsvc, &key);
-     /* FIXME: Wine stops here */
     if (lret != ERROR_SUCCESS)
     {
         skip("Could not open the EventLog service registry key\n");
@@ -832,11 +831,13 @@ static void test_readwrite(void)
         SetLastError(0xdeadbeef);
         ret = GetNumberOfEventLogRecords(handle, &count);
         ok(ret, "Expected GetNumberOfEventLogRecords success : %d\n", GetLastError());
+        todo_wine
         ok(count == (i + 1), "Expected %d records, got %d\n", i + 1, count);
 
         oldest = 0xdeadbeef;
         ret = GetOldestEventLogRecord(handle, &oldest);
         ok(ret, "Expected GetOldestEventLogRecord success : %d\n", GetLastError());
+        todo_wine
         ok(oldest == 1 ||
            (oldest > 1 && oldest != 0xdeadbeef), /* Vista SP1+, W2K8 and Win7 */
            "Expected oldest to be 1 or higher, got %d\n", oldest);
@@ -855,6 +856,7 @@ static void test_readwrite(void)
     count = 0xdeadbeef;
     ret = GetNumberOfEventLogRecords(handle, &count);
     ok(ret, "Expected success\n");
+    todo_wine
     ok(count == i, "Expected %d records, got %d\n", i, count);
     CloseEventLog(handle);
 
@@ -1083,6 +1085,7 @@ static void test_autocreation(void)
         lstrcatA(eventlogfile, ".evtx");
     }
 
+    todo_wine
     ok(GetFileAttributesA(eventlogfile) != INVALID_FILE_ATTRIBUTES,
        "Expected an eventlog file\n");
 
@@ -1109,14 +1112,12 @@ static void cleanup_eventlog(void)
     RegDeleteValueA(key, "Sources");
     RegCloseKey(key);
     lret = RegDeleteKeyA(HKEY_LOCAL_MACHINE, winesvc);
-    todo_wine
     ok(lret == ERROR_SUCCESS, "Could not delete the registry tree : %d\n", lret);
 
     /* A handle to the eventlog is locked by services.exe. We can only
      * delete the eventlog file after reboot.
      */
     bret = MoveFileExA(eventlogfile, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-    todo_wine
     ok(bret, "Expected MoveFileEx to succeed: %d\n", GetLastError());
 }
 

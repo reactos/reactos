@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
+
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -48,6 +51,8 @@ static BOOL (WINAPI *pQueryServiceConfig2A)(SC_HANDLE,DWORD,LPBYTE,DWORD,LPDWORD
 static BOOL (WINAPI *pQueryServiceConfig2W)(SC_HANDLE,DWORD,LPBYTE,DWORD,LPDWORD);
 static BOOL (WINAPI *pQueryServiceStatusEx)(SC_HANDLE, SC_STATUS_TYPE, LPBYTE,
                                             DWORD, LPDWORD);
+static BOOL (WINAPI *pQueryServiceObjectSecurity)(SC_HANDLE, SECURITY_INFORMATION,
+                                                  PSECURITY_DESCRIPTOR, DWORD, LPDWORD);
 
 static void init_function_pointers(void)
 {
@@ -60,6 +65,7 @@ static void init_function_pointers(void)
     pQueryServiceConfig2A= (void*)GetProcAddress(hadvapi32, "QueryServiceConfig2A");
     pQueryServiceConfig2W= (void*)GetProcAddress(hadvapi32, "QueryServiceConfig2W");
     pQueryServiceStatusEx= (void*)GetProcAddress(hadvapi32, "QueryServiceStatusEx");
+    pQueryServiceObjectSecurity = (void*)GetProcAddress(hadvapi32, "QueryServiceObjectSecurity");
 }
 
 static void test_open_scm(void)
@@ -1756,7 +1762,7 @@ static void test_close(void)
 static void test_sequence(void)
 {
     SC_HANDLE scm_handle, svc_handle;
-    BOOL ret;
+    BOOL ret, is_nt4;
     QUERY_SERVICE_CONFIGA *config;
     DWORD given, needed;
     static const CHAR servicename [] = "Winetest";
@@ -1780,6 +1786,9 @@ static void test_sequence(void)
         ok(scm_handle != NULL, "Could not get a handle to the manager: %d\n", GetLastError());
 
     if (!scm_handle) return;
+    svc_handle = OpenServiceA(scm_handle, NULL, GENERIC_READ);
+    is_nt4=(svc_handle == NULL && GetLastError() == ERROR_INVALID_PARAMETER);
+    CloseServiceHandle(svc_handle);
 
     /* Create a dummy service */
     SetLastError(0xdeadbeef);
@@ -1817,12 +1826,54 @@ static void test_sequence(void)
             PSID sidOwner, sidGroup;
             PACL dacl, sacl;
             PSECURITY_DESCRIPTOR pSD;
-            HRESULT retval = pGetSecurityInfo(svc_handle,SE_SERVICE,DACL_SECURITY_INFORMATION,&sidOwner,&sidGroup,&dacl,&sacl,&pSD);
-            todo_wine ok(ERROR_SUCCESS == retval, "Expected GetSecurityInfo to succeed: result %d\n",retval);
+            DWORD error, n1, n2;
+            HRESULT retval;
+            BOOL bret;
+
+            /* Test using GetSecurityInfo to obtain security information */
+            retval = pGetSecurityInfo(svc_handle, SE_SERVICE, DACL_SECURITY_INFORMATION, &sidOwner,
+                                      &sidGroup, &dacl, &sacl, &pSD);
+            LocalFree(pSD);
+            ok(retval == ERROR_SUCCESS, "Expected GetSecurityInfo to succeed: result %d\n", retval);
+            retval = pGetSecurityInfo(svc_handle, SE_SERVICE, DACL_SECURITY_INFORMATION, NULL,
+                                      NULL, NULL, NULL, &pSD);
+            LocalFree(pSD);
+            ok(retval == ERROR_SUCCESS, "Expected GetSecurityInfo to succeed: result %d\n", retval);
+            if (!is_nt4)
+            {
+                retval = pGetSecurityInfo(svc_handle, SE_SERVICE, DACL_SECURITY_INFORMATION, NULL,
+                                          NULL, &dacl, NULL, NULL);
+                ok(retval == ERROR_SUCCESS, "Expected GetSecurityInfo to succeed: result %d\n", retval);
+                SetLastError(0xdeadbeef);
+                retval = pGetSecurityInfo(svc_handle, SE_SERVICE, DACL_SECURITY_INFORMATION, NULL,
+                                          NULL, NULL, NULL, NULL);
+                error = GetLastError();
+                ok(retval == ERROR_INVALID_PARAMETER, "Expected GetSecurityInfo to fail: result %d\n", retval);
+                ok(error == 0xdeadbeef, "Unexpected last error %d\n", error);
+            }
+            else
+                win_skip("A NULL security descriptor in GetSecurityInfo results in an exception on NT4.\n");
+
+            /* Test using QueryServiceObjectSecurity to obtain security information */
+            SetLastError(0xdeadbeef);
+            bret = pQueryServiceObjectSecurity(svc_handle, DACL_SECURITY_INFORMATION, NULL, 0, &n1);
+            error = GetLastError();
+            ok(!bret, "Expected QueryServiceObjectSecurity to fail: result %d\n", bret);
+            ok(error == ERROR_INSUFFICIENT_BUFFER ||
+               broken(error == ERROR_INVALID_ADDRESS) || broken(error == ERROR_INVALID_PARAMETER),
+               "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", error);
+            if (error != ERROR_INSUFFICIENT_BUFFER) n1 = 1024;
+            pSD = LocalAlloc(0, n1);
+            bret = pQueryServiceObjectSecurity(svc_handle, DACL_SECURITY_INFORMATION, pSD, n1, &n2);
+            ok(bret, "Expected QueryServiceObjectSecurity to succeed: result %d\n", bret);
+            LocalFree(pSD);
         }
     }
 
-    if (!svc_handle) return;
+    if (!svc_handle) {
+        CloseServiceHandle(scm_handle);
+        return;
+    }
 
     /* TODO:
      * Before we do a QueryServiceConfig we should check the registry. This will make sure
