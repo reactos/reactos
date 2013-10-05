@@ -34,7 +34,7 @@ static void * (__cdecl *pMSVCRTD_operator_new_dbg)(size_t, int, const char *, in
 
 /* Some exports are only available in later versions */
 #define SETNOFAIL(x,y) x = (void*)GetProcAddress(hModule,y)
-#define SET(x,y) SETNOFAIL(x,y); ok(x != NULL, "Export '%s' not found\n", y)
+#define SET(x,y) do { SETNOFAIL(x,y); ok(x != NULL, "Export '%s' not found\n", y); } while(0)
 
 static int init_functions(void)
 {
@@ -45,7 +45,11 @@ static int init_functions(void)
     return FALSE;
   }
 
-  SET(pMSVCRTD_operator_new_dbg, "??2@YAPAXIHPBDH@Z");
+  if (sizeof(void *) > sizeof(int))  /* 64-bit has a different mangled name */
+      SET(pMSVCRTD_operator_new_dbg, "??2@YAPEAX_KHPEBDH@Z");
+  else
+      SET(pMSVCRTD_operator_new_dbg, "??2@YAPAXIHPBDH@Z");
+
   if (pMSVCRTD_operator_new_dbg == NULL)
     return FALSE;
 
