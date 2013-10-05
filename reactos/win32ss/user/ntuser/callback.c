@@ -448,6 +448,8 @@ co_IntCallHookProc(INT HookId,
                    WPARAM wParam,
                    LPARAM lParam,
                    HOOKPROC Proc,
+                   INT Mod,
+                   ULONG_PTR offPfn,
                    BOOLEAN Ansi,
                    PUNICODE_STRING ModuleName)
 {
@@ -575,7 +577,11 @@ co_IntCallHookProc(INT HookId,
    Common->wParam = wParam;
    Common->lParam = lParam;
    Common->Proc = Proc;
+   Common->Mod = Mod;
+   Common->offPfn = offPfn;
    Common->Ansi = Ansi;
+   RtlZeroMemory(&Common->ModuleName, sizeof(Common->ModuleName));
+   RtlCopyMemory(&Common->ModuleName, ModuleName->Buffer, ModuleName->Length);
    Extra = (PCHAR) Common + sizeof(HOOKPROC_CALLBACK_ARGUMENTS);
 
    switch(HookId)

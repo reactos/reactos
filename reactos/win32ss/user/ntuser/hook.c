@@ -349,6 +349,8 @@ co_CallHook( INT HookId,
                                  wParam,
                                  lParam,
                                  phk->Proc,
+                                 phk->ihmod,
+                                 phk->offPfn,
                                  phk->Ansi,
                                 &phk->ModuleName);
 
@@ -373,6 +375,8 @@ co_HOOK_CallHookNext( PHOOK Hook,
                                wParam,
                                lParam,
                                Hook->Proc,
+                               Hook->ihmod,
+                               Hook->offPfn,
                                Hook->Ansi,
                               &Hook->ModuleName);
 }
@@ -1233,6 +1237,8 @@ co_HOOK_CallHooks( INT HookId,
                                     wParam,
                                     lParam,
                                     Hook->Proc,
+                                    Hook->ihmod, 
+                                    Hook->offPfn,
                                     Hook->Ansi,
                                    &Hook->ModuleName);
        if (ClientInfo)
@@ -1309,6 +1315,8 @@ co_HOOK_CallHooks( INT HookId,
                                           wParam,
                                           lParam,
                                           Hook->Proc,
+                                          Hook->ihmod, 
+                                          Hook->offPfn,
                                           Hook->Ansi,
                                          &Hook->ModuleName);
           }

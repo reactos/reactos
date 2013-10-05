@@ -2698,6 +2698,8 @@ NtUserMessageCall( HWND hWnd,
                                               ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
                                               (LPARAM)&CWP,
                                               Hook->Proc,
+                                              Hook->ihmod, 
+                                              Hook->offPfn,
                                               Hook->Ansi,
                                               &Hook->ModuleName);
             }
@@ -2715,6 +2717,8 @@ NtUserMessageCall( HWND hWnd,
                                               ((ClientInfo->CI_flags & CI_CURTHPRHOOK) ? 1 : 0),
                                               (LPARAM)&CWPR,
                                               Hook->Proc,
+                                              Hook->ihmod, 
+                                              Hook->offPfn,
                                               Hook->Ansi,
                                               &Hook->ModuleName);
             }

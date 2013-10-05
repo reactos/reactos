@@ -29,6 +29,8 @@ co_IntCallHookProc(INT HookId,
                 WPARAM wParam,
                 LPARAM lParam,
                 HOOKPROC Proc,
+                INT Mod,
+                ULONG_PTR offPfn,
                 BOOLEAN Ansi,
                 PUNICODE_STRING ModuleName);
 
