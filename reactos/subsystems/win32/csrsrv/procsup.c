@@ -740,7 +740,7 @@ NTAPI
 CsrDebugProcess(IN PCSR_PROCESS CsrProcess)
 {
     /* CSR does not handle debugging anymore */
-    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    DPRINT("CSRSRV: %s(0x%p) called\n", __FUNCTION__, CsrProcess);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -764,7 +764,7 @@ NTAPI
 CsrDebugProcessStop(IN PCSR_PROCESS CsrProcess)
 {
     /* CSR does not handle debugging anymore */
-    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    DPRINT("CSRSRV: %s(0x%p) called\n", __FUNCTION__, CsrProcess);
     return STATUS_UNSUCCESSFUL;
 }
 
