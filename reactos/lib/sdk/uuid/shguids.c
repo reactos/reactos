@@ -88,7 +88,7 @@
 //IID_INamedPropertyBag
 //IID_IPersistFolder3
 //IID_IPersistQuery
-//IID_IPrintDialogCallback
+DEFINE_GUID(IID_IPrintDialogCallback, 0x5852a2c3,0x6530,0x11d1,0xb6,0xa3,0x00,0x00,0xf8,0x75,0x7b,0xf9);
 //IID_IPrintDialogServices
 //IID_IQueryForm
 //IID_IQueryFrame
