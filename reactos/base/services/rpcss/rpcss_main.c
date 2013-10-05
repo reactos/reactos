@@ -122,7 +122,7 @@ BOOL RPCSS_Shutdown(void)
   return TRUE;
 }
 
-#if 0
+#ifndef __REACTOS__
 int main( int argc, char **argv )
 {
   /* 
