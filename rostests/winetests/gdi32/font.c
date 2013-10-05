@@ -336,7 +336,7 @@ static void test_bitmap_font(void)
 
     if(!winetest_interactive)
     {
-	    skip("reactos bug 5401: Skipping bitmap font tests!\n");
+	    skip("reactos bug ROSTESTS-8: Skipping bitmap font tests!\n");
 	    return;
     }
 

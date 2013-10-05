@@ -7575,7 +7575,7 @@ START_TEST(win)
 
     test_SetForegroundWindow(hwndMain);
     if(!winetest_interactive)
-       skip("bug 5957: skipping test_shell_window, it crashes ros/win7 explorer\n");
+       skip("bug ROSTESTS-23: skipping test_shell_window, it crashes ros/win7 explorer\n");
     else
        test_shell_window();
     test_handles( hwndMain );

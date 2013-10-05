@@ -1737,7 +1737,7 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
 
     if(!winetest_interactive)
     {
-        skip("skipping match_emf_record(), bug 5393\n");
+        skip("skipping match_emf_record(), bug ROSTESTS-4\n");
         return 0;
     }
 
