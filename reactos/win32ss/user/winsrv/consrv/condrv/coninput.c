@@ -101,7 +101,7 @@ ConioProcessInputEvent(PCONSOLE Console,
 
     SetEvent(Console->InputBuffer.ActiveEvent);
     CsrNotifyWait(&Console->InputBuffer.ReadWaitQueue,
-                  WaitAny,
+                  FALSE,
                   NULL,
                   NULL);
     if (!IsListEmpty(&Console->InputBuffer.ReadWaitQueue))

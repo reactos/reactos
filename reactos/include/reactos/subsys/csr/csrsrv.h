@@ -349,7 +349,7 @@ CsrMoveSatisfiedWait(IN PLIST_ENTRY DestinationList,
 BOOLEAN
 NTAPI
 CsrNotifyWait(IN PLIST_ENTRY WaitList,
-              IN ULONG WaitType,
+              IN BOOLEAN NotifyAll,
               IN PVOID WaitArgument1,
               IN PVOID WaitArgument2);
 

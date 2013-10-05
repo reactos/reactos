@@ -282,7 +282,7 @@ ConioUnpause(PCONSOLE Console, UINT Flags)
         Console->UnpauseEvent = NULL;
 
         CsrNotifyWait(&Console->WriteWaitQueue,
-                      WaitAll,
+                      TRUE,
                       NULL,
                       NULL);
         if (!IsListEmpty(&Console->WriteWaitQueue))

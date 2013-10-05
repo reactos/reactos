@@ -89,7 +89,7 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
              * return.
              */
             CsrNotifyWait(&InputBuffer->ReadWaitQueue,
-                          WaitAll,
+                          TRUE,
                           NULL,
                           (PVOID)Entry);
             if (!IsListEmpty(&InputBuffer->ReadWaitQueue))

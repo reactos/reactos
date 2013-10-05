@@ -372,8 +372,8 @@ CsrMoveSatisfiedWait(IN PLIST_ENTRY DestinationList,
  * @param WaitList
  *        Pointer to the wait list whose wait blocks will be notified.
  *
- * @param WaitType
- *        Type of the wait to perform, either WaitAny or WaitAll.
+ * @param NotifyAll
+ *        Whether or not we must notify all the waits.
  *
  * @param WaitArgument[1-2]
  *        User-defined argument to pass on to the wait function.
@@ -386,7 +386,7 @@ CsrMoveSatisfiedWait(IN PLIST_ENTRY DestinationList,
 BOOLEAN
 NTAPI
 CsrNotifyWait(IN PLIST_ENTRY WaitList,
-              IN ULONG WaitType,
+              IN BOOLEAN NotifyAll,
               IN PVOID WaitArgument1,
               IN PVOID WaitArgument2)
 {
@@ -420,8 +420,11 @@ CsrNotifyWait(IN PLIST_ENTRY WaitList,
                                                 0,
                                                 FALSE);
             
-            /* We've already done a wait, so leave unless this is a Wait All */
-            if (WaitType != WaitAll) break;
+            /*
+             * We've already done a wait, so leave unless
+             * we want to notify all the waits...
+             */
+            if (!NotifyAll) break;
         }
     }
 
