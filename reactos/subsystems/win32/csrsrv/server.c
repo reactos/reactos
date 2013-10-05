@@ -69,7 +69,7 @@ HANDLE CsrSrvSharedSection = NULL;
 CSR_SERVER_DLL_INIT(CsrServerDllInitialization)
 {
     /* Setup the DLL Object */
-    LoadedServerDll->ApiBase = 0;
+    LoadedServerDll->ApiBase = CSRSRV_FIRST_API_NUMBER;
     LoadedServerDll->HighestApiSupported = CsrpMaxApiNumber;
     LoadedServerDll->DispatchTable = CsrServerApiDispatchTable;
     LoadedServerDll->ValidTable = CsrServerApiServerValidTable;
@@ -167,6 +167,7 @@ CsrLoadServerDll(IN PCHAR DllString,
 
     /* Set up the Object */
     ServerDll->Length = Size;
+    ServerDll->SizeOfProcessData = 0;
     ServerDll->SharedSection = CsrSrvSharedSectionHeap; // Send to the server dll our shared heap pointer.
     ServerDll->Name.Length = DllName.Length;
     ServerDll->Name.MaximumLength = DllName.MaximumLength;
