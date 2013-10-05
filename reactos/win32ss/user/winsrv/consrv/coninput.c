@@ -78,6 +78,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
 
 // Wait function CSR_WAIT_FUNCTION
 static BOOLEAN
+NTAPI
 ReadCharsThread(IN PLIST_ENTRY WaitList,
                 IN PCSR_THREAD WaitThread,
                 IN PCSR_API_MESSAGE WaitApiMessage,
@@ -193,6 +194,7 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
 
 // Wait function CSR_WAIT_FUNCTION
 static BOOLEAN
+NTAPI
 ReadInputBufferThread(IN PLIST_ENTRY WaitList,
                       IN PCSR_THREAD WaitThread,
                       IN PCSR_API_MESSAGE WaitApiMessage,

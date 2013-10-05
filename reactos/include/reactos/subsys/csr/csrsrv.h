@@ -134,7 +134,7 @@ typedef enum _CSR_REPLY_CODE
  */
 typedef
 BOOLEAN
-(*CSR_WAIT_FUNCTION)(
+(NTAPI *CSR_WAIT_FUNCTION)(
     IN PLIST_ENTRY WaitList,
     IN PCSR_THREAD WaitThread,
     IN PCSR_API_MESSAGE WaitApiMessage,

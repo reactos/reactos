@@ -308,6 +308,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
 
 // Wait function CSR_WAIT_FUNCTION
 static BOOLEAN
+NTAPI
 WriteConsoleThread(IN PLIST_ENTRY WaitList,
                    IN PCSR_THREAD WaitThread,
                    IN PCSR_API_MESSAGE WaitApiMessage,
