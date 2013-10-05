@@ -969,7 +969,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                                       NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: NtQuerySystemInformation failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: NtQuerySystemInformation failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -981,7 +981,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrSetProcessSecurity();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrSetProcessSecurity failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrSetProcessSecurity failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -990,7 +990,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrInitializeNtSessionList();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrInitializeSessions failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrInitializeSessions failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -999,7 +999,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrInitializeProcessStructure();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrInitializeProcessStructure failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrInitializeProcessStructure failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1008,7 +1008,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrParseServerCommandLine(ArgumentCount, Arguments);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrParseServerCommandLine failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrParseServerCommandLine failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1017,7 +1017,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrInitCsrRootProcess();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrInitCsrRootProcess failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrInitCsrRootProcess failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1026,7 +1026,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrApiPortInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrApiPortInitialize failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrApiPortInitialize failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1035,7 +1035,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = CsrSbApiPortInitialize();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: CsrSbApiPortInitialize failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: CsrSbApiPortInitialize failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1047,7 +1047,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                            &CsrSmApiPort);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: SmConnectToSm failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: SmConnectToSm failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1056,7 +1056,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     Status = NtSetDefaultHardErrorPort(CsrApiPort);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CSRSRV:%s: NtSetDefaultHardErrorPort failed (Status=%08lx)\n",
+        DPRINT1("CSRSRV:%s: NtSetDefaultHardErrorPort failed (Status=0x%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
