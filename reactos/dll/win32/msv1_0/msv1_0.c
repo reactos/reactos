@@ -764,6 +764,83 @@ ChangePassword(IN PLSA_CLIENT_REQUEST ClientRequest,
 }
 
 
+static
+NTSTATUS
+MsvpCheckPassword(PUNICODE_STRING UserPassword,
+                  PSAMPR_USER_INFO_BUFFER UserInfo)
+{
+    ENCRYPTED_NT_OWF_PASSWORD UserNtPassword;
+    ENCRYPTED_LM_OWF_PASSWORD UserLmPassword;
+    BOOLEAN UserLmPasswordPresent = FALSE;
+    BOOLEAN UserNtPasswordPresent = FALSE;
+    OEM_STRING LmPwdString;
+    CHAR LmPwdBuffer[15];
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", UserPassword, UserInfo);
+
+    /* Calculate the LM password and hash for the users password */
+    LmPwdString.Length = 15;
+    LmPwdString.MaximumLength = 15;
+    LmPwdString.Buffer = LmPwdBuffer;
+    ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
+
+    Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
+                                               UserPassword,
+                                               FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Calculate the LM hash value of the users password */
+        Status = SystemFunction006(LmPwdString.Buffer,
+                                   (LPSTR)&UserLmPassword);
+        if (NT_SUCCESS(Status))
+        {
+            UserLmPasswordPresent = TRUE;
+        }
+    }
+
+    /* Calculate the NT hash of the users password */
+    Status = SystemFunction007(UserPassword,
+                               (LPBYTE)&UserNtPassword);
+    if (NT_SUCCESS(Status))
+    {
+        UserNtPasswordPresent = TRUE;
+    }
+
+    Status = STATUS_SUCCESS;
+
+    if (UserNtPasswordPresent && UserInfo->All.NtPasswordPresent)
+    {
+        TRACE("Check NT password hashes:\n");
+        if (!RtlEqualMemory(&UserNtPassword,
+                            UserInfo->All.NtOwfPassword.Buffer,
+                            sizeof(ENCRYPTED_NT_OWF_PASSWORD)))
+        {
+            TRACE("  failed!\n");
+            Status = STATUS_WRONG_PASSWORD;
+        }
+    }
+    else if (UserLmPasswordPresent && UserInfo->All.LmPasswordPresent)
+    {
+        TRACE("Check LM password hashes:\n");
+        if (!RtlEqualMemory(&UserLmPassword,
+                            UserInfo->All.LmOwfPassword.Buffer,
+                            sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+        {
+            TRACE("  failed!\n");
+            Status = STATUS_WRONG_PASSWORD;
+        }
+    }
+    else
+    {
+        TRACE("No matching hashes available!\n");
+        Status = STATUS_WRONG_PASSWORD;
+    }
+
+    return Status;
+}
+
+
 /*
  * @unimplemented
  */
@@ -1077,11 +1154,16 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     /* FIXME: Check restrictions */
 
-    /* FIXME: Check the password */
+    /* Check the password */
     if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
     {
-        FIXME("Must check the password!\n");
-
+        Status = MsvpCheckPassword(&(LogonInfo->Password),
+                                   UserInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("MsvpCheckPassword failed (Status %08lx)\n", Status);
+            goto done;
+        }
     }
 
     /* Return logon information */
@@ -1130,8 +1212,6 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
         goto done;
     }
 
-    *SubStatus = STATUS_SUCCESS;
-
 done:
     /* Return the account name */
     *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
@@ -1176,6 +1256,13 @@ done:
 
     if (AccountDomainSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
+
+    if (Status == STATUS_NO_SUCH_USER ||
+        Status == STATUS_WRONG_PASSWORD)
+    {
+        *SubStatus = Status;
+        Status = STATUS_LOGON_FAILURE;
+    }
 
     TRACE("LsaApLogonUser done (Status %08lx)\n", Status);
 

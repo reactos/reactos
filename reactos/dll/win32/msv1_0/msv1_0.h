@@ -297,4 +297,14 @@ LsarQueryInformationPolicy(IN LSAPR_HANDLE PolicyHandle,
                            IN POLICY_INFORMATION_CLASS InformationClass,
                            OUT PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
+NTSTATUS
+WINAPI
+SystemFunction006(LPCSTR password,
+                  LPSTR hash);
+
+NTSTATUS
+WINAPI
+SystemFunction007(PUNICODE_STRING string,
+                  LPBYTE hash);
+
 /* EOF */
