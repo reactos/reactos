@@ -530,8 +530,8 @@
 @ stub SetupUninstallNewlyCopiedInfs
 @ stdcall SetupUninstallOEMInfA(str long ptr)
 @ stdcall SetupUninstallOEMInfW(wstr long ptr)
-@ stub SetupVerifyInfFileA
-@ stub SetupVerifyInfFileW
+@ stdcall SetupVerifyInfFileA(str ptr ptr)
+@ stdcall SetupVerifyInfFileW(wstr ptr ptr)
 @ stdcall UnicodeToMultiByte(wstr long) pSetupUnicodeToMultiByte
 @ stub VerifyCatalogFile
 @ stub pSetupAccessRunOnceNodeList
