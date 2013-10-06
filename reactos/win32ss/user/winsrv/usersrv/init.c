@@ -57,6 +57,11 @@ BOOLEAN UserServerApiServerValidTable[UserpMaxApiNumber - USERSRV_FIRST_API_NUMB
     // FALSE,   // SrvGetSetShutdownBlockReason
 };
 
+/*
+ * On Windows Server 2003, CSR Servers contain
+ * the API Names Table only in Debug Builds.
+ */
+#ifdef CSR_DBG
 PCHAR UserServerApiNameTable[UserpMaxApiNumber - USERSRV_FIRST_API_NUMBER] =
 {
     "SrvExitWindowsEx",
@@ -73,7 +78,7 @@ PCHAR UserServerApiNameTable[UserpMaxApiNumber - USERSRV_FIRST_API_NUMBER] =
     // "SrvConsoleHandleOperation",
     // "SrvGetSetShutdownBlockReason",
 };
-
+#endif
 
 /* FUNCTIONS ******************************************************************/
 
@@ -291,7 +296,9 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     LoadedServerDll->HighestApiSupported = UserpMaxApiNumber;
     LoadedServerDll->DispatchTable = UserServerApiDispatchTable;
     LoadedServerDll->ValidTable = UserServerApiServerValidTable;
+#ifdef CSR_DBG
     LoadedServerDll->NameTable = UserServerApiNameTable;
+#endif
     LoadedServerDll->SizeOfProcessData = 0;
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = NULL;

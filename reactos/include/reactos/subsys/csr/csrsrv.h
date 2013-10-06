@@ -10,6 +10,14 @@
 #ifndef _CSRSRV_H
 #define _CSRSRV_H
 
+/*
+ * The CSR_DBG macro is defined for building CSR Servers
+ * with extended debugging information.
+ */
+#if DBG
+#define CSR_DBG
+#endif
+
 #include "csrmsg.h"
 
 
@@ -215,7 +223,14 @@ typedef struct _CSR_SERVER_DLL
     ULONG HighestApiSupported;
     PCSR_API_ROUTINE *DispatchTable;
     PBOOLEAN ValidTable; // Table of booleans which describe whether or not a server function call is valid when it is called via CsrCallServerFromServer.
+/*
+ * On Windows Server 2003, CSR Servers contain
+ * the API Names Table only in Debug Builds.
+ */
+#ifdef CSR_DBG
     PCHAR *NameTable;
+#endif
+
     ULONG SizeOfProcessData;
     PCSR_CONNECT_CALLBACK ConnectCallback;
     PCSR_DISCONNECT_CALLBACK DisconnectCallback;
@@ -226,7 +241,11 @@ typedef struct _CSR_SERVER_DLL
     ULONG Unknown2[3];
 } CSR_SERVER_DLL, *PCSR_SERVER_DLL;
 #ifndef _WIN64
-C_ASSERT(FIELD_OFFSET(CSR_SERVER_DLL, SharedSection) == 0x3C);
+    #ifdef CSR_DBG
+        C_ASSERT(FIELD_OFFSET(CSR_SERVER_DLL, SharedSection) == 0x3C);
+    #else
+        C_ASSERT(FIELD_OFFSET(CSR_SERVER_DLL, SharedSection) == 0x38);
+    #endif
 #endif
 
 typedef

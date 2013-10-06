@@ -16,6 +16,9 @@
 
 /* DATA ***********************************************************************/
 
+// Debug Flag
+ULONG CsrDebug = 0; // 0xFFFFFFFF;
+
 HANDLE CsrHeap = NULL;
 HANDLE CsrObjectDirectory = NULL;
 UNICODE_STRING CsrDirectoryName;
@@ -25,7 +28,6 @@ PCSR_THREAD CsrSbApiRequestThreadPtr;
 HANDLE CsrSmApiPort = NULL;
 HANDLE hSbApiPort = NULL;
 HANDLE CsrApiPort = NULL;
-ULONG CsrDebug = 0; // 0xFFFFFFFF;
 ULONG CsrMaxApiRequestThreads;
 ULONG CsrTotalPerProcessDataLength;
 ULONG SessionId;

@@ -15,6 +15,13 @@
 
 /* DATA ***********************************************************************/
 
+PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
+PVOID CsrSrvSharedSectionHeap = NULL;
+PVOID CsrSrvSharedSectionBase = NULL;
+PVOID *CsrSrvSharedStaticServerData = NULL;
+ULONG CsrSrvSharedSectionSize = 0;
+HANDLE CsrSrvSharedSection = NULL;
+
 PCSR_API_ROUTINE CsrServerApiDispatchTable[CsrpMaxApiNumber] =
 {
     CsrSrvClientConnect,
@@ -33,6 +40,11 @@ BOOLEAN CsrServerApiServerValidTable[CsrpMaxApiNumber] =
     TRUE
 };
 
+/*
+ * On Windows Server 2003, CSR Servers contain
+ * the API Names Table only in Debug Builds.
+ */
+#ifdef CSR_DBG
 PCHAR CsrServerApiNameTable[CsrpMaxApiNumber] =
 {
     "ClientConnect",
@@ -41,13 +53,7 @@ PCHAR CsrServerApiNameTable[CsrpMaxApiNumber] =
     "IdentifyAlertableThread",
     "SetPriorityClass"
 };
-
-PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
-PVOID CsrSrvSharedSectionHeap = NULL;
-PVOID CsrSrvSharedSectionBase = NULL;
-PVOID *CsrSrvSharedStaticServerData = NULL;
-ULONG CsrSrvSharedSectionSize = 0;
-HANDLE CsrSrvSharedSection = NULL;
+#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -73,7 +79,9 @@ CSR_SERVER_DLL_INIT(CsrServerDllInitialization)
     LoadedServerDll->HighestApiSupported = CsrpMaxApiNumber;
     LoadedServerDll->DispatchTable = CsrServerApiDispatchTable;
     LoadedServerDll->ValidTable = CsrServerApiServerValidTable;
+#ifdef CSR_DBG
     LoadedServerDll->NameTable = CsrServerApiNameTable;
+#endif
     LoadedServerDll->SizeOfProcessData = 0;
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = NULL;

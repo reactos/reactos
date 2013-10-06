@@ -218,6 +218,11 @@ BOOLEAN ConsoleServerApiServerValidTable[ConsolepMaxApiNumber - CONSRV_FIRST_API
     // FALSE,   // SrvConsoleClientConnect,
 };
 
+/*
+ * On Windows Server 2003, CSR Servers contain
+ * the API Names Table only in Debug Builds.
+ */
+#ifdef CSR_DBG
 PCHAR ConsoleServerApiNameTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] =
 {
     "OpenConsole",
@@ -313,7 +318,7 @@ PCHAR ConsoleServerApiNameTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] 
     // "SetScreenBufferInfo",
     // "ConsoleClientConnect",
 };
-
+#endif
 
 /* FUNCTIONS ******************************************************************/
 
@@ -532,7 +537,9 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     LoadedServerDll->HighestApiSupported = ConsolepMaxApiNumber;
     LoadedServerDll->DispatchTable = ConsoleServerApiDispatchTable;
     LoadedServerDll->ValidTable = ConsoleServerApiServerValidTable;
+#ifdef CSR_DBG
     LoadedServerDll->NameTable = ConsoleServerApiNameTable;
+#endif
     LoadedServerDll->SizeOfProcessData = sizeof(CONSOLE_PROCESS_DATA);
     LoadedServerDll->ConnectCallback = ConSrvConnect;
     LoadedServerDll->DisconnectCallback = ConSrvDisconnect;

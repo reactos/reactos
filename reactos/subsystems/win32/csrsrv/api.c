@@ -77,23 +77,27 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
         {
             /* We are beyond the Maximum API ID, or it doesn't exist */
             DPRINT1("API: %d\n", ApiId);
+#ifdef CSR_DBG
             DPRINT1("CSRSS: %lx (%s) is invalid ApiTableIndex for %Z or is an "
                     "invalid API to call from the server.\n",
                     ApiId,
                     ((ServerDll->NameTable) && (ServerDll->NameTable[ApiId])) ?
                     ServerDll->NameTable[ApiId] : "*** UNKNOWN ***",
                     &ServerDll->Name);
+#endif
             // DbgBreakPoint();
             ReplyMsg->Status = STATUS_ILLEGAL_FUNCTION;
             return STATUS_ILLEGAL_FUNCTION;
         }
     }
 
+#ifdef CSR_DBG
     if (CsrDebug & 2)
     {
         DPRINT1("CSRSS: %s Api Request received from server process\n",
                 ServerDll->NameTable[ApiId]);
     }
+#endif
 
     /* Validation complete, start SEH */
     _SEH2_TRY
@@ -577,6 +581,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     continue;
                 }
 
+#ifdef CSR_DBG
                 if (CsrDebug & 2)
                 {
                     DPRINT1("[%02x] CSRSS: [%02x,%02x] - %s Api called from %08x\n",
@@ -586,6 +591,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                             ServerDll->NameTable[ApiId],
                             NULL);
                 }
+#endif
 
                 /* Assume success */
                 ReceiveMsg.Status = STATUS_SUCCESS;
@@ -781,6 +787,7 @@ CsrApiRequestThread(IN PVOID Parameter)
             continue;
         }
 
+#ifdef CSR_DBG
         if (CsrDebug & 2)
         {
             DPRINT1("[%02x] CSRSS: [%02x,%02x] - %s Api called from %08x, Process %08x - %08x\n",
@@ -792,6 +799,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     CsrThread->Process,
                     CsrProcess);
         }
+#endif
 
         /* Assume success */
         ReplyMsg = &ReceiveMsg;

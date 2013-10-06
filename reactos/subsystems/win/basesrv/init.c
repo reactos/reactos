@@ -97,6 +97,11 @@ BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMB
     TRUE,   // BaseSrvNlsGetUserInfo
 };
 
+/*
+ * On Windows Server 2003, CSR Servers contain
+ * the API Names Table only in Debug Builds.
+ */
+#ifdef CSR_DBG
 PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
 {
     "BaseCreateProcess",
@@ -131,6 +136,7 @@ PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
     "BaseRegisterThread",
     "BaseNlsGetUserInfo",
 };
+#endif
 
 /* FUNCTIONS ******************************************************************/
 
@@ -567,7 +573,9 @@ CSR_SERVER_DLL_INIT(ServerDllInitialization)
     LoadedServerDll->HighestApiSupported = BasepMaxApiNumber;
     LoadedServerDll->DispatchTable = BaseServerApiDispatchTable;
     LoadedServerDll->ValidTable = BaseServerApiServerValidTable;
+#ifdef CSR_DBG
     LoadedServerDll->NameTable = BaseServerApiNameTable;
+#endif
     LoadedServerDll->SizeOfProcessData = 0;
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = NULL;
