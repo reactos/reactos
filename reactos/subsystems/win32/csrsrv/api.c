@@ -1153,7 +1153,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         /* Check if the Length is valid */
         if ((FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
                 (LocalCaptureBuffer->PointerCount * sizeof(PVOID)) > Length) ||
-            (Length > MAXWORD))
+            (LocalCaptureBuffer->PointerCount > MAXUSHORT))
         {
             /* Return failure */
             DPRINT1("*** CSRSS: CaptureBuffer %p has bad length\n", LocalCaptureBuffer);
