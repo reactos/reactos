@@ -45,6 +45,9 @@ SETUPDATA SetupData;
 
 
 /* FUNCTIONS ****************************************************************/
+
+extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
+
 BOOL
 GetRosInstallCD(WCHAR *pwszPath, DWORD cchPathMax);
 
@@ -1902,7 +1905,6 @@ SetInstallationCompleted(VOID)
     }
 }
 
-
 static INT_PTR CALLBACK
 FinishDlgProc(HWND hwndDlg,
               UINT uMsg,
@@ -1914,10 +1916,11 @@ FinishDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            PSETUPDATA SetupData;
-
             /* Get pointer to the global setup data */
-            SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            PSETUPDATA SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+
+            /* Run the Wine Gecko prompt */
+            Control_RunDLLW(GetDesktopWindow(), 0, L"appwiz.cpl install_gecko", SW_SHOW);
 
             /* Set title font */
             SendDlgItemMessage(hwndDlg,

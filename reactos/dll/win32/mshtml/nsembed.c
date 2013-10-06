@@ -33,7 +33,6 @@
 #include <ole2.h>
 #include "shlobj.h"
 #include "shlwapi.h"
-#include "shellapi.h"
 
 #include <wine/debug.h>
 
@@ -396,14 +395,6 @@ static void register_nscontainer_class(void)
     nscontainer_class = RegisterClassExW(&wndclass);
 }
 
-extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
-
-static BOOL install_wine_gecko(void)
-{
-    Control_RunDLLW(GetDesktopWindow(), 0, L"appwiz.cpl install_gecko", SW_SHOW);
-    return TRUE;
-}
-
 static void set_environment(LPCWSTR gre_path)
 {
     WCHAR path_env[MAX_PATH], buf[20];
@@ -732,8 +723,7 @@ BOOL load_gecko(void)
     if(!loading_thread) {
         loading_thread = GetCurrentThreadId();
 
-        if(load_wine_gecko(gre_path)
-           || (install_wine_gecko() && load_wine_gecko(gre_path)))
+        if(load_wine_gecko(gre_path))
             ret = init_xpcom(gre_path);
         else
            MESSAGE("Could not load wine-gecko. HTML rendering will be disabled.\n");
