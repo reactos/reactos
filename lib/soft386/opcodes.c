@@ -32,6 +32,7 @@
 #include <soft386.h>
 #include "opcodes.h"
 #include "opgroups.h"
+#include "extraops.h"
 #include "common.h"
 
 /* PUBLIC VARIABLES ***********************************************************/
@@ -54,7 +55,7 @@ Soft386OpcodeHandlers[SOFT386_NUM_OPCODE_HANDLERS] =
     Soft386OpcodeOrAl,
     Soft386OpcodeOrEax,
     Soft386OpcodePushCs,
-    NULL, // TODO: OPCODE 0x0F NOT SUPPORTED
+    Soft386OpcodeExtended,
     Soft386OpcodeAdcByteModrm,
     Soft386OpcodeAdcModrm,
     Soft386OpcodeAdcByteModrm,

@@ -5,6 +5,7 @@ list(APPEND SOURCE
     soft386.c
     opcodes.c
     opgroups.c
+    extraops.c
     common.c)
 
 add_library(soft386 ${SOURCE})
