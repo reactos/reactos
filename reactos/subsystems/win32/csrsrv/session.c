@@ -443,7 +443,7 @@ CsrSbApiHandleConnectionRequest(IN PSB_API_MSG Message)
     /* Accept the connection */
     Status = NtAcceptConnectPort(&hPort,
                                  NULL,
-                                 (PPORT_MESSAGE)Message,
+                                 &Message->h,
                                  TRUE,
                                  NULL,
                                  &RemotePortView);
