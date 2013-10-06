@@ -6305,6 +6305,9 @@ SampQueryUserInternal1(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    InfoBuffer->Internal1.LmPasswordPresent = FALSE;
+    InfoBuffer->Internal1.NtPasswordPresent = FALSE;
+
     /* Get the NT password */
     Length = 0;
     SampGetObjectAttribute(UserObject,
@@ -6322,9 +6325,13 @@ SampQueryUserInternal1(PSAM_DB_OBJECT UserObject,
                                         &Length);
         if (!NT_SUCCESS(Status))
             goto done;
+
+        if (memcmp(&InfoBuffer->Internal1.EncryptedNtOwfPassword,
+                   &EmptyNtHash,
+                   sizeof(ENCRYPTED_NT_OWF_PASSWORD)))
+            InfoBuffer->Internal1.NtPasswordPresent = TRUE;
     }
 
-    InfoBuffer->Internal1.NtPasswordPresent = (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD));
 
     /* Get the LM password */
     Length = 0;
@@ -6343,9 +6350,12 @@ SampQueryUserInternal1(PSAM_DB_OBJECT UserObject,
                                         &Length);
         if (!NT_SUCCESS(Status))
             goto done;
-    }
 
-    InfoBuffer->Internal1.LmPasswordPresent = (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+        if (memcmp(&InfoBuffer->Internal1.EncryptedLmOwfPassword,
+                   &EmptyLmHash,
+                   sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+            InfoBuffer->Internal1.LmPasswordPresent = TRUE;
+    }
 
     InfoBuffer->Internal1.PasswordExpired = FALSE;
 
@@ -6709,6 +6719,9 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
     /* Get the LmPassword and NtPassword attributes */
     if (InfoBuffer->All.WhichFields & (USER_ALL_NTPASSWORDPRESENT | USER_ALL_LMPASSWORDPRESENT))
     {
+        InfoBuffer->All.LmPasswordPresent = FALSE;
+        InfoBuffer->All.NtPasswordPresent = FALSE;
+
         /* Get the NT password */
         Length = 0;
         SampGetObjectAttribute(UserObject,
@@ -6716,8 +6729,6 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
                                NULL,
                                NULL,
                                &Length);
-
-        InfoBuffer->All.NtPasswordPresent = (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD));
 
         if (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD))
         {
@@ -6738,6 +6749,11 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
                                             &Length);
             if (!NT_SUCCESS(Status))
                 goto done;
+
+            if (memcmp(InfoBuffer->All.NtOwfPassword.Buffer,
+                       &EmptyNtHash,
+                       sizeof(ENCRYPTED_NT_OWF_PASSWORD)))
+                InfoBuffer->All.NtPasswordPresent = TRUE;
         }
 
         /* Get the LM password */
@@ -6747,8 +6763,6 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
                                NULL,
                                NULL,
                                &Length);
-
-        InfoBuffer->All.LmPasswordPresent = (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD));
 
         if (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD))
         {
@@ -6769,6 +6783,11 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
                                             &Length);
             if (!NT_SUCCESS(Status))
                 goto done;
+
+            if (memcmp(InfoBuffer->All.LmOwfPassword.Buffer,
+                       &EmptyLmHash,
+                       sizeof(ENCRYPTED_LM_OWF_PASSWORD)))
+                InfoBuffer->All.LmPasswordPresent = TRUE;
         }
     }
 
