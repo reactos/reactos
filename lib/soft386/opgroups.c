@@ -988,8 +988,138 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupD3)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF6)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    UCHAR Dummy, Value;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Read the operands */
+    if (!Soft386ReadModrmByteOperands(State, &ModRegRm, &Dummy, &Value))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    switch (ModRegRm.Register)
+    {
+        /* TEST */
+        case 0:
+        case 1:
+        {
+            UCHAR Immediate, Result;
+
+            /* Fetch the immediate byte */
+            if (!Soft386FetchByte(State, &Immediate))
+            {
+                /* Exception occurred */
+                return FALSE;
+            }
+
+            /* Calculate the result */
+            Result = Value & Immediate;
+
+            /* Update the flags */
+            State->Flags.Cf = FALSE;
+            State->Flags.Of = FALSE;
+            State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+            State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+            State->Flags.Pf = Soft386CalculateParity(Result);
+
+            break;
+        }
+
+        /* NOT */
+        case 2:
+        {
+            /* Write back the result */
+            return Soft386WriteModrmByteOperands(State, &ModRegRm, FALSE, ~Value);
+        }
+
+        /* NEG */
+        case 3:
+        {
+            /* Calculate the result */
+            UCHAR Result = -Value;
+
+            /* Update the flags */
+            State->Flags.Cf = (Value != 0) ? TRUE : FALSE;
+            State->Flags.Of = (Value & SIGN_FLAG_BYTE) && (Result & SIGN_FLAG_BYTE);
+            State->Flags.Af = ((Value & 0x0F) != 0) ? TRUE : FALSE;
+            State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+            State->Flags.Sf = (Result & SIGN_FLAG_BYTE) ? TRUE : FALSE;
+            State->Flags.Pf = Soft386CalculateParity(Result);
+
+            /* Write back the result */
+            return Soft386WriteModrmByteOperands(State, &ModRegRm, FALSE, Result);
+        }
+
+        /* MUL */
+        case 4:
+        {
+            USHORT Result = (USHORT)Value * (USHORT)State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+
+            /* Update the flags */
+            State->Flags.Cf = State->Flags.Of = (Result & 0xFF00) ? TRUE : FALSE;
+
+            /* Write back the result */
+            State->GeneralRegs[SOFT386_REG_EAX].LowWord = Result;
+
+            break;
+        }
+
+        /* IMUL */
+        case 5:
+        {
+            SHORT Result = (SHORT)Value * (SHORT)State->GeneralRegs[SOFT386_REG_EAX].LowByte;
+
+            /* Update the flags */
+            State->Flags.Cf = State->Flags.Of = ((Result > 255) || (Result < 256)) ? TRUE : FALSE;
+
+            /* Write back the result */
+            State->GeneralRegs[SOFT386_REG_EAX].LowWord = (USHORT)Result;
+
+            break;
+        }
+
+        /* DIV */
+        case 6:
+        {
+            UCHAR Quotient = State->GeneralRegs[SOFT386_REG_EAX].LowWord / Value;
+            UCHAR Remainder = State->GeneralRegs[SOFT386_REG_EAX].LowWord % Value;
+
+            /* Write back the results */
+            State->GeneralRegs[SOFT386_REG_EAX].LowByte = Quotient;
+            State->GeneralRegs[SOFT386_REG_EAX].HighByte = Remainder;
+
+            break;
+        }
+
+        /* IDIV */
+        case 7:
+        {
+            CHAR Quotient = (SHORT)State->GeneralRegs[SOFT386_REG_EAX].LowWord / (CHAR)Value;
+            CHAR Remainder = (SHORT)State->GeneralRegs[SOFT386_REG_EAX].LowWord % (CHAR)Value;
+
+            /* Write back the results */
+            State->GeneralRegs[SOFT386_REG_EAX].LowByte = (UCHAR)Quotient;
+            State->GeneralRegs[SOFT386_REG_EAX].HighByte = (UCHAR)Remainder;
+
+            break;
+        }
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF7)
