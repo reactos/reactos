@@ -678,14 +678,47 @@ typedef struct _SP_INF_INFORMATION {
     DWORD InfCount;
     BYTE VersionData[ANYSIZE_ARRAY];
 } SP_INF_INFORMATION, *PSP_INF_INFORMATION;
-typedef struct _SP_ALTPLATFORM_INFO {
+typedef struct _SP_INF_SIGNER_INFO_A {
+  DWORD cbSize;
+  CHAR CatalogFile;
+  CHAR DigitalSigner;
+  CHAR DigitalSignerVersion;
+} SP_INF_SIGNER_INFO_A, *PSP_INF_SIGNER_INFO_A;
+typedef struct _SP_INF_SIGNER_INFO_W {
+  DWORD cbSize;
+  WCHAR CatalogFile;
+  WCHAR DigitalSigner;
+  WCHAR DigitalSignerVersion;
+} SP_INF_SIGNER_INFO_W, *PSP_INF_SIGNER_INFO_W;
+typedef struct _SP_ALTPLATFORM_INFO_V1 {
     DWORD cbSize;
     DWORD Platform;
     DWORD MajorVersion;
     DWORD MinorVersion;
     WORD  ProcessorArchitecture;
     WORD  Reserved;
-} SP_ALTPLATFORM_INFO, *PSP_ALTPLATFORM_INFO;
+} SP_ALTPLATFORM_INFO_V1, *PSP_ALTPLATFORM_INFO_V1;
+typedef struct _SP_ALTPLATFORM_INFO_V2 {
+  DWORD cbSize;
+  DWORD Platform;
+  DWORD MajorVersion;
+  DWORD MinorVersion;
+  WORD  ProcessorArchitecture;
+    union
+    {
+        WORD  Reserved;
+        WORD  Flags;
+    } DUMMYUNIONNAME;
+  DWORD FirstValidatedMajorVersion;
+  DWORD FirstValidatedMinorVersion;
+} SP_ALTPLATFORM_INFO_V2, *PSP_ALTPLATFORM_INFO_V2;
+#if _WIN32_WINNT <= 0x0500
+typedef SP_ALTPLATFORM_INFO_V1 SP_ALTPLATFORM_INFO;
+typedef PSP_ALTPLATFORM_INFO_V1 PSP_ALTPLATFORM_INFO;
+#else
+typedef SP_ALTPLATFORM_INFO_V2 SP_ALTPLATFORM_INFO;
+typedef PSP_ALTPLATFORM_INFO_V2 PSP_ALTPLATFORM_INFO;
+#endif
 typedef struct _SP_ORIGINAL_FILE_INFO_A {
     DWORD  cbSize;
     CHAR   OriginalInfName[MAX_PATH];
