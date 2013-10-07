@@ -1,18 +1,13 @@
 
 spec2def(opengl32.dll opengl32.spec ADD_IMPORTLIB)
 
-include_directories(
-    ../mesa/src/mesa
-    ../mesa/src/mapi)
+include_directories(../mesa)
 
 add_definitions(
     -D_GDI32_ # prevent gl* being declared __declspec(dllimport) in MS headers
     -DBUILD_GL32 # declare gl* as __declspec(dllexport) in Mesa headers
     -D_GLAPI_NO_EXPORTS # prevent _glapi_* from being declared __declspec(dllimport)
 )
-
-# useful to test under windows <> w2k3
-set(OPENGL32_USE_TLS TRUE)
 
 if(OPENGL32_USE_TLS)
     add_definitions(-DOPENGL32_USE_TLS)

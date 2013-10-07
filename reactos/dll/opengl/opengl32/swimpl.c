@@ -22,7 +22,6 @@
 #include <tnl/tnl.h>
 #include <drivers/common/driverfuncs.h>
 #include <drivers/common/meta.h>
-#include <glapi/glapitable.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(opengl32);
@@ -814,40 +813,4 @@ BOOL sw_SwapBuffers(HDC hdc, struct wgl_dc_data* dc_data)
         fb->backbuffer.Buffer,
         &fb->bmi,
         DIB_RGB_COLORS) != 0);
-}
-
-/* mesa threading glue */
-void* _glapi_Context = NULL;
-struct _glapi_table *_glapi_Dispatch = NULL;
-
-void* _glapi_get_context()
-{
-    return IntGetCurrentICDPrivate();
-}
-
-struct _glapi_table *
-_glapi_get_dispatch(void)
-{
-    return (struct _glapi_table *)IntGetCurrentDispatchTable();
-}
-
-void _glapi_set_dispatch(struct _glapi_table * table)
-{
-    IntSetCurrentDispatchTable((const GLDISPATCHTABLE*)table);
-}
-
-unsigned int
-_glapi_get_dispatch_table_size(void)
-{
-    return OPENGL_VERSION_110_ENTRIES;
-}
-
-void
-_glapi_set_context(void *context)
-{
-    /* 
-     * It happens that mesa changes the context, most notably on context deletion.
-     * Use the space reserved to the ICD for this.
-     */
-    IntSetCurrentICDPrivate(context);
 }
