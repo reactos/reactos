@@ -1064,8 +1064,11 @@ MiResolveImageReferences(IN PVOID ImageBase,
         if ((GdiLink) && (NormalLink))
         {
             /* It's not, it's importing stuff it shouldn't be! */
-            MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            if (LoadedImports)
+            {
+                MiDereferenceImports(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            }
             return STATUS_PROCEDURE_NOT_FOUND;
         }
 
@@ -1078,8 +1081,11 @@ MiResolveImageReferences(IN PVOID ImageBase,
             !(_strnicmp(ImportName, "gdi32", sizeof("gdi32") - 1)))
         {
             /* This is not kernel code */
-            MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            if (LoadedImports)
+            {
+                MiDereferenceImports(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            }
             return STATUS_PROCEDURE_NOT_FOUND;
         }
 
@@ -1103,8 +1109,11 @@ MiResolveImageReferences(IN PVOID ImageBase,
         if (!NT_SUCCESS(Status))
         {
             /* Failed */
-            MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            if (LoadedImports)
+            {
+                MiDereferenceImports(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            }
             return Status;
         }
 
@@ -1226,8 +1235,11 @@ CheckDllState:
             {
                 /* Cleanup and return */
                 RtlFreeUnicodeString(&NameString);
-                MiDereferenceImports(LoadedImports);
-                if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+                if (LoadedImports)
+                {
+                    MiDereferenceImports(LoadedImports);
+                    ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+                }
                 return Status;
             }
 
@@ -1259,8 +1271,11 @@ CheckDllState:
         if (!ExportDirectory)
         {
             /* Cleanup and return */
-            MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            if (LoadedImports)
+            {
+                MiDereferenceImports(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+            }
             DPRINT1("Warning: Driver failed to load, %S not found\n", *MissingDriver);
             return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
         }
@@ -1289,8 +1304,11 @@ CheckDllState:
                 if (!NT_SUCCESS(Status))
                 {
                     /* Cleanup and return */
-                    MiDereferenceImports(LoadedImports);
-                    if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+                    if (LoadedImports)
+                    {
+                        MiDereferenceImports(LoadedImports);
+                        ExFreePoolWithTag(LoadedImports, TAG_LDR_IMPORTS);
+                    }
                     return Status;
                 }
 
