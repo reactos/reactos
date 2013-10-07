@@ -1070,7 +1070,7 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF6)
             USHORT Result = (USHORT)Value * (USHORT)State->GeneralRegs[SOFT386_REG_EAX].LowByte;
 
             /* Update the flags */
-            State->Flags.Cf = State->Flags.Of = (Result & 0xFF00) ? TRUE : FALSE;
+            State->Flags.Cf = State->Flags.Of = HIBYTE(Result) ? TRUE : FALSE;
 
             /* Write back the result */
             State->GeneralRegs[SOFT386_REG_EAX].LowWord = Result;
@@ -1084,7 +1084,8 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF6)
             SHORT Result = (SHORT)Value * (SHORT)State->GeneralRegs[SOFT386_REG_EAX].LowByte;
 
             /* Update the flags */
-            State->Flags.Cf = State->Flags.Of = ((Result > 255) || (Result < 256)) ? TRUE : FALSE;
+            State->Flags.Cf = State->Flags.Of =
+            ((Result < -128) || (Result > 127)) ? TRUE : FALSE;
 
             /* Write back the result */
             State->GeneralRegs[SOFT386_REG_EAX].LowWord = (USHORT)Result;
@@ -1124,8 +1125,259 @@ SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF6)
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupF7)
 {
-    UNIMPLEMENTED;
-    return FALSE; // TODO: NOT IMPLEMENTED
+    ULONG Dummy, Value, SignFlag;
+    SOFT386_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+    
+    OperandSize = AddressSize = State->SegmentRegs[SOFT386_REG_CS].Size;
+
+    if (State->PrefixFlags & SOFT386_PREFIX_OPSIZE)
+    {
+        /* The OPSIZE prefix toggles the size */
+        OperandSize = !OperandSize;
+    }
+
+    if (State->PrefixFlags & SOFT386_PREFIX_ADSIZE)
+    {
+        /* The ADSIZE prefix toggles the size */
+        AddressSize = !AddressSize;
+    }
+
+    if (!Soft386ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Set the sign flag */
+    if (OperandSize) SignFlag = SIGN_FLAG_LONG;
+    else SignFlag = SIGN_FLAG_WORD;
+
+    /* Read the operand */
+    if (OperandSize)
+    {
+        /* 32-bit */
+        if (!Soft386ReadModrmDwordOperands(State, &ModRegRm, &Dummy, &Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* 16-bit */
+        if (!Soft386ReadModrmWordOperands(State, &ModRegRm, (PUSHORT)&Dummy, (PUSHORT)&Value))
+        {
+            /* Exception occurred */
+            return FALSE;
+        }
+    }
+
+    switch (ModRegRm.Register)
+    {
+        /* TEST */
+        case 0:
+        case 1:
+        {
+            ULONG Immediate = 0, Result = 0;
+
+            if (OperandSize)
+            {
+                /* Fetch the immediate dword */
+                if (!Soft386FetchDword(State, &Immediate))
+                {
+                    /* Exception occurred */
+                    return FALSE;
+                }
+            }
+            else
+            {
+                /* Fetch the immediate word */
+                if (!Soft386FetchWord(State, (PUSHORT)&Immediate))
+                {
+                    /* Exception occurred */
+                    return FALSE;
+                }
+            }
+
+            /* Calculate the result */
+            Result = Value & Immediate;
+
+            /* Update the flags */
+            State->Flags.Cf = FALSE;
+            State->Flags.Of = FALSE;
+            State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+            State->Flags.Sf = (Result & SignFlag) ? TRUE : FALSE;
+            State->Flags.Pf = Soft386CalculateParity(Result);
+
+            break;
+        }
+
+        /* NOT */
+        case 2:
+        {
+            /* Write back the result */
+            if (OperandSize)
+            {
+                /* 32-bit */
+                return Soft386WriteModrmDwordOperands(State, &ModRegRm, FALSE, ~Value);
+            }
+            else
+            {
+                /* 16-bit */
+                return Soft386WriteModrmWordOperands(State, &ModRegRm, FALSE, LOWORD(~Value));
+            }
+        }
+
+        /* NEG */
+        case 3:
+        {
+            /* Calculate the result */
+            ULONG Result = -Value;
+            if (!OperandSize) Result &= 0xFFFF;
+
+            /* Update the flags */
+            State->Flags.Cf = (Value != 0) ? TRUE : FALSE;
+            State->Flags.Of = (Value & SignFlag) && (Result & SignFlag);
+            State->Flags.Af = ((Value & 0x0F) != 0) ? TRUE : FALSE;
+            State->Flags.Zf = (Result == 0) ? TRUE : FALSE;
+            State->Flags.Sf = (Result & SignFlag) ? TRUE : FALSE;
+            State->Flags.Pf = Soft386CalculateParity(Result);
+
+            /* Write back the result */
+            if (OperandSize)
+            {
+                /* 32-bit */
+                return Soft386WriteModrmDwordOperands(State, &ModRegRm, FALSE, Result);
+            }
+            else
+            {
+                /* 16-bit */
+                return Soft386WriteModrmWordOperands(State, &ModRegRm, FALSE, LOWORD(Result));
+            }
+        }
+
+        /* MUL */
+        case 4:
+        {
+            if (OperandSize)
+            {
+                ULONGLONG Result = (ULONGLONG)Value * (ULONGLONG)State->GeneralRegs[SOFT386_REG_EAX].Long;
+
+                /* Update the flags */
+                State->Flags.Cf = State->Flags.Of =
+                (Result & 0xFFFFFFFF00000000ULL) ? TRUE : FALSE;
+
+                /* Write back the result */
+                State->GeneralRegs[SOFT386_REG_EAX].Long = Result & 0xFFFFFFFFULL;
+                State->GeneralRegs[SOFT386_REG_EDX].Long = Result >> 32;
+            }
+            else
+            {
+                ULONG Result = (ULONG)Value * (ULONG)State->GeneralRegs[SOFT386_REG_EAX].LowWord;
+
+                /* Update the flags */
+                State->Flags.Cf = State->Flags.Of = HIWORD(Result) ? TRUE : FALSE;
+
+                /* Write back the result */
+                State->GeneralRegs[SOFT386_REG_EAX].LowWord = LOWORD(Result);
+                State->GeneralRegs[SOFT386_REG_EDX].LowWord = HIWORD(Result);
+            }
+
+            break;
+        }
+
+        /* IMUL */
+        case 5:
+        {
+            if (OperandSize)
+            {
+                LONGLONG Result = (LONGLONG)Value * (LONGLONG)State->GeneralRegs[SOFT386_REG_EAX].Long;
+
+                /* Update the flags */
+                State->Flags.Cf = State->Flags.Of =
+                ((Result < -2147483648LL) || (Result > 2147483647LL)) ? TRUE : FALSE;
+
+                /* Write back the result */
+                State->GeneralRegs[SOFT386_REG_EAX].Long = Result & 0xFFFFFFFFULL;
+                State->GeneralRegs[SOFT386_REG_EDX].Long = Result >> 32;
+            }
+            else
+            {
+                LONG Result = (LONG)Value * (LONG)State->GeneralRegs[SOFT386_REG_EAX].LowWord;
+
+                /* Update the flags */
+                State->Flags.Cf = State->Flags.Of =
+                ((Result < -32768) || (Result > 32767)) ? TRUE : FALSE;
+
+                /* Write back the result */
+                State->GeneralRegs[SOFT386_REG_EAX].LowWord = LOWORD(Result);
+                State->GeneralRegs[SOFT386_REG_EDX].LowWord = HIWORD(Result);
+            }
+
+            break;
+        }
+
+        /* DIV */
+        case 6:
+        {
+            if (OperandSize)
+            {
+                ULONGLONG Dividend = (ULONGLONG)State->GeneralRegs[SOFT386_REG_EAX].Long
+                                     | ((ULONGLONG)State->GeneralRegs[SOFT386_REG_EDX].Long << 32);
+                ULONG Quotient = Dividend / Value;
+                ULONG Remainder = Dividend % Value;
+
+                /* Write back the results */
+                State->GeneralRegs[SOFT386_REG_EAX].Long = Quotient;
+                State->GeneralRegs[SOFT386_REG_EDX].Long = Remainder;
+            }
+            else
+            {
+                ULONG Dividend = (ULONG)State->GeneralRegs[SOFT386_REG_EAX].LowWord
+                                 | ((ULONG)State->GeneralRegs[SOFT386_REG_EDX].LowWord << 16);
+                USHORT Quotient = Dividend / Value;
+                USHORT Remainder = Dividend % Value;
+
+                /* Write back the results */
+                State->GeneralRegs[SOFT386_REG_EAX].LowWord = Quotient;
+                State->GeneralRegs[SOFT386_REG_EDX].LowWord = Remainder;
+            }
+
+            break;
+        }
+
+        /* IDIV */
+        case 7:
+        {
+            if (OperandSize)
+            {
+                LONGLONG Dividend = (LONGLONG)State->GeneralRegs[SOFT386_REG_EAX].Long
+                                     | ((LONGLONG)State->GeneralRegs[SOFT386_REG_EDX].Long << 32);
+                LONG Quotient = Dividend / (LONG)Value;
+                LONG Remainder = Dividend % (LONG)Value;
+
+                /* Write back the results */
+                State->GeneralRegs[SOFT386_REG_EAX].Long = (ULONG)Quotient;
+                State->GeneralRegs[SOFT386_REG_EDX].Long = (ULONG)Remainder;
+            }
+            else
+            {
+                LONG Dividend = (LONG)State->GeneralRegs[SOFT386_REG_EAX].LowWord
+                                 | ((LONG)State->GeneralRegs[SOFT386_REG_EDX].LowWord << 16);
+                SHORT Quotient = Dividend / (SHORT)Value;
+                SHORT Remainder = Dividend % (SHORT)Value;
+
+                /* Write back the results */
+                State->GeneralRegs[SOFT386_REG_EAX].LowWord = (USHORT)Quotient;
+                State->GeneralRegs[SOFT386_REG_EDX].LowWord = (USHORT)Remainder;
+            }
+
+            break;
+        }
+    }
+
+    return TRUE;
 }
 
 SOFT386_OPCODE_HANDLER(Soft386OpcodeGroupFE)
