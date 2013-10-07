@@ -125,4 +125,28 @@ START_TEST(GetDeviceDriverFileName)
     {
         skip("Couldn't find info about ntdll.dll\n");
     }
+
+    if (IntGetModuleInformation("msvcrt.dll", FALSE, TRUE, &ModInfo))
+    {
+        SetLastError(0xDEADBEEF);
+        Len = GetDeviceDriverFileNameA(ModInfo.ImageBase, FileName, 255);
+        ok(Len == 0, "Len: %lu\n", Len);
+        ok(GetLastError() == ERROR_INVALID_HANDLE, "Error: %lx\n", GetLastError());
+    }
+    else
+    {
+        skip("Couldn't find info about msvcrt.dll\n");
+    }
+
+    if (IntGetModuleInformation("psapi.dll", FALSE, TRUE, &ModInfo))
+    {
+        SetLastError(0xDEADBEEF);
+        Len = GetDeviceDriverFileNameA(ModInfo.ImageBase, FileName, 255);
+        ok(Len == 0, "Len: %lu\n", Len);
+        ok(GetLastError() == ERROR_INVALID_HANDLE, "Error: %lx\n", GetLastError());
+    }
+    else
+    {
+        skip("Couldn't find info about psapi.dll\n");
+    }
 }
