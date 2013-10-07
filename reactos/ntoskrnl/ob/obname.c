@@ -1198,9 +1198,7 @@ ObQueryNameString(IN PVOID Object,
                     ObjectName = (PWCH)((ULONG_PTR)ObjectName -
                                                    sizeof(L"...") +
                                                    sizeof(UNICODE_NULL));
-                    RtlCopyMemory(ObjectName,
-                                  L"...",
-                                  sizeof(L"...") + sizeof(UNICODE_NULL));
+                    RtlCopyMemory(ObjectName, L"...", sizeof(L"..."));
                     break;
                 }
             }
