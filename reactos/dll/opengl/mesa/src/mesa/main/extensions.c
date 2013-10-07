@@ -454,7 +454,7 @@ get_extension_override( struct gl_context *ctx )
    extra_exts = calloc(ALIGN(strlen(env_const) + 2, 4), sizeof(char));
 
    /* Copy env_const because strtok() is destructive. */
-   env = strdup(env_const);
+   env = _strdup(env_const);
    for (ext = strtok(env, " "); ext != NULL; ext = strtok(NULL, " ")) {
       int enable;
       int recognized;
