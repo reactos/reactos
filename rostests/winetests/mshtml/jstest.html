@@ -137,6 +137,8 @@ function test_getter_call() {
     e.onmousedown = function(x) { this.onmousedown_called = x; };
     e.onmousedown("test");
     ok(e.onmousedown_called === "test", "e.onmousedown_called = " + e.onmousedown_called);
+
+    ok(document.all("divid").tagName === "DIV", "document.all('divid').tagName = " + document.all("divid").tagName);
 }
 
 function test_arg_conv() {
@@ -177,6 +179,39 @@ function test_forin() {
     ok(cnt > 100, "cnt = " + cnt);
 }
 
+function test_customtag() {
+    document.body.innerHTML = 'test<unk><br>';
+
+    var children = document.body.childNodes;
+
+    ok(children.length === 3, "children.length = " + children.length);
+    ok(children[0].data === "test", "children[0].data = " + children[0].data);
+    ok(children[1].tagName === "UNK", "children[1].tagName = " + children[1].tagName);
+    ok(children[2].tagName === "BR", "children[2].tagName = " + children[2].tagName);
+}
+
+function test_whitespace_nodes() {
+    document.body.innerHTML = '<table id="tid"> <tr> \t<td>\n \t<div></div> </td>\n </tr> </table>';
+
+    var t = document.getElementById("tid");
+    ok(t.childNodes.length === 1, "t.childNodes.length = " + t.childNodes.length);
+    ok(t.childNodes[0].tagName === "TBODY", "t.childNodes[0].tagName = " + t.childNodes[0].tagName);
+
+    var row = t.rows[0];
+    ok(row.childNodes.length === 1, "row.childNodes.length = " + row.childNodes.length);
+    ok(row.childNodes[0].tagName === "TD", "row.childNodes[0].tagName = " + row.childNodes[0].tagName);
+
+    var cell = row.cells[0];
+    ok(cell.childNodes.length === 1, "cell.childNodes.length = " + cell.childNodes.length);
+
+
+    document.body.innerHTML = '<table id="tid"> x<tr> \tx<td>\n \tx<div></div> </td>\n </tr> </table>';
+
+    t = document.getElementById("tid");
+    ok(t.rows[0].cells[0].childNodes.length === 2,
+        "t.rows[0].cells[0].childNodes.length = " + t.rows[0].cells[0].childNodes.length);
+}
+
 var globalVar = false;
 
 function runTests() {
@@ -198,6 +233,8 @@ function runTests() {
     test_arg_conv();
     test_override_functions();
     test_forin();
+    test_customtag();
+    test_whitespace_nodes();
 
     var r = window.execScript("globalVar = true;");
     ok(r === undefined, "execScript returned " + r);

@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 add_idl_Headers(test_tlb_header test_tlb.idl)
 add_typelib(test_tlb.idl)
 

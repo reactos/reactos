@@ -33,3 +33,11 @@ externscr.js HTML "externscr.js"
 
 /* @makedep: test_tlb.tlb */
 1 TYPELIB test_tlb.tlb
+
+/* For res: protocol test: */
+
+/* @makedep: jstest.html */
+res.html test "jstest.html"
+
+/* @makedep: jstest.html */
+dir/dir2/res.html test "jstest.html"

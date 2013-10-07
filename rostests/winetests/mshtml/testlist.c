@@ -1,7 +1,7 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
 #define STANDALONE
-#include "wine/test.h"
+#include <wine/test.h>
 
 extern void func_activex(void);
 extern void func_dom(void);

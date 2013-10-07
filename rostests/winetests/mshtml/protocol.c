@@ -27,6 +27,7 @@
 //#include "ole2.h"
 //#include "urlmon.h"
 #include <shlwapi.h>
+#include <wininet.h>
 
 #include <initguid.h>
 
@@ -72,6 +73,9 @@ static const WCHAR about_blank_url[] = {'a','b','o','u','t',':','b','l','a','n',
 static const WCHAR about_test_url[] = {'a','b','o','u','t',':','t','e','s','t',0};
 static const WCHAR about_res_url[] = {'r','e','s',':','b','l','a','n','k',0};
 static const WCHAR javascript_test_url[] = {'j','a','v','a','s','c','r','i','p','t',':','t','e','s','t','(',')',0};
+
+static WCHAR res_url_base[INTERNET_MAX_URL_LENGTH] = {'r','e','s',':','/','/'};
+static unsigned res_url_base_len;
 
 static const char *debugstr_guid(REFIID riid)
 {
@@ -248,7 +252,7 @@ static void test_protocol_fail(IInternetProtocol *protocol, LPCWSTR url, HRESULT
     CHECK_CALLED(ReportResult);
 }
 
-static void protocol_start(IInternetProtocol *protocol, LPCWSTR url)
+static void protocol_start(IInternetProtocol *protocol, const WCHAR *url)
 {
     HRESULT hres;
 
@@ -266,6 +270,33 @@ static void protocol_start(IInternetProtocol *protocol, LPCWSTR url)
     CHECK_CALLED(ReportProgress);
     CHECK_CALLED(ReportData);
     CHECK_CALLED(ReportResult);
+}
+
+static void test_res_url(const char *url_suffix)
+{
+    WCHAR url[INTERNET_MAX_URL_LENGTH];
+    IInternetProtocol *protocol;
+    ULONG size, ref;
+    BYTE buf[100];
+    HRESULT hres;
+
+    memcpy(url, res_url_base, res_url_base_len*sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, url_suffix, -1, url+res_url_base_len, sizeof(url)/sizeof(WCHAR)-res_url_base_len);
+
+    hres = CoCreateInstance(&CLSID_ResProtocol, NULL, CLSCTX_INPROC_SERVER, &IID_IInternetProtocol, (void**)&protocol);
+    ok(hres == S_OK, "Could not create ResProtocol instance: %08x\n", hres);
+
+    protocol_start(protocol, url);
+
+    hres = IInternetProtocol_Read(protocol, buf, sizeof(buf), &size);
+    ok(hres == S_OK, "Read failed: %08x\n", hres);
+
+    hres = IInternetProtocol_Terminate(protocol, 0);
+    ok(hres == S_OK, "Terminate failed: %08x\n", hres);
+
+
+    ref = IInternetProtocol_Release(protocol);
+    ok(!ref, "ref=%u\n", ref);
 }
 
 static void res_sec_url_cmp(LPCWSTR url, DWORD size, LPCWSTR file)
@@ -578,6 +609,10 @@ static void test_res_protocol(void)
     }
 
     IUnknown_Release(unk);
+
+    test_res_url("/jstest.html");
+    test_res_url("/Test/res.html");
+    test_res_url("/test/dir/dir2/res.html");
 }
 
 static void do_test_about_protocol(IClassFactory *factory, DWORD bf)
@@ -908,6 +943,8 @@ static void test_javascript_protocol(void)
 
 START_TEST(protocol)
 {
+    res_url_base_len = 6 + GetModuleFileNameW(NULL, res_url_base + 6 /* strlen("res://") */, sizeof(res_url_base)/sizeof(WCHAR)-6);
+
     OleInitialize(NULL);
 
     test_res_protocol();

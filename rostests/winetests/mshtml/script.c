@@ -1768,6 +1768,8 @@ static HRESULT WINAPI ActiveScriptProperty_SetProperty(IActiveScriptProperty *if
         ok(V_VT(pvarValue) == VT_BOOL, "V_VT(pvarValue)=%d\n", V_VT(pvarValue));
         ok(V_BOOL(pvarValue) == VARIANT_TRUE, "V_BOOL(pvarValue)=%x\n", V_BOOL(pvarValue));
         break;
+    case 0x70000003: /* Undocumented property set by IE10 */
+        return E_NOTIMPL;
     default:
         ok(0, "unexpected property %x\n", dwProperty);
         return E_NOTIMPL;
