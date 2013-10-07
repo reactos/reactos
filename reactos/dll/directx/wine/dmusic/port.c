@@ -108,7 +108,7 @@ static inline IDirectMusicDownloadedInstrumentImpl* unsafe_impl_from_IDirectMusi
     return impl_from_IDirectMusicDownloadedInstrument(iface);
 }
 
-HRESULT DMUSIC_CreateDirectMusicDownloadedInstrumentImpl(IDirectMusicDownloadedInstrument **instrument)
+static HRESULT DMUSIC_CreateDirectMusicDownloadedInstrumentImpl(IDirectMusicDownloadedInstrument **instrument)
 {
     IDirectMusicDownloadedInstrumentImpl *object;
 
@@ -263,7 +263,7 @@ static HRESULT WINAPI SynthPortImpl_IDirectMusicPort_DownloadInstrument(LPDIRECT
     nb_regions = instrument_object->header.cRegions;
     size = sizeof(DMUS_DOWNLOADINFO) + sizeof(ULONG) * (1 + nb_regions) + sizeof(DMUS_INSTRUMENT) + sizeof(DMUS_REGION) * nb_regions;
 
-    data = (BYTE*)HeapAlloc(GetProcessHeap(), 0, size);
+    data = HeapAlloc(GetProcessHeap(), 0, size);
     if (!data)
         return E_OUTOFMEMORY;
 
