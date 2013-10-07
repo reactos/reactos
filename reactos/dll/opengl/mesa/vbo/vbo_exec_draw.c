@@ -213,8 +213,6 @@ vbo_exec_bind_arrays( struct gl_context *ctx )
          ctx->NewState |= _NEW_ARRAY;
       }
    }
-
-   _mesa_set_varying_vp_inputs( ctx, varying_inputs );
 }
 
 
@@ -346,10 +344,7 @@ vbo_exec_vtx_flush(struct vbo_exec_context *exec, GLboolean keepUnmapped)
 
       if (exec->vtx.copied.nr != exec->vtx.vert_count) {
 	 struct gl_context *ctx = exec->ctx;
-	 
-	 /* Before the update_state() as this may raise _NEW_ARRAY
-          * from _mesa_set_varying_vp_inputs().
-	  */
+
 	 vbo_exec_bind_arrays( ctx );
 
          if (ctx->NewState)

@@ -32,7 +32,6 @@
 #include "mfeatures.h"
 #include "mtypes.h"
 #include "pack.h"
-#include "pbo.h"
 #include "state.h"
 #include "teximage.h"
 #include "texstate.h"
@@ -83,17 +82,6 @@ _mesa_CopyColorSubTable(GLenum target, GLsizei start,
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
    _mesa_error(ctx, GL_INVALID_ENUM, "glCopyColorSubTable(target)");
-}
-
-
-
-static void GLAPIENTRY
-_mesa_GetnColorTableARB( GLenum target, GLenum format, GLenum type,
-                         GLsizei bufSize, GLvoid *data )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-   _mesa_error(ctx, GL_INVALID_ENUM, "glGetnColorTableARB(target)");
 }
 
 
@@ -160,9 +148,6 @@ _mesa_init_colortable_dispatch(struct _glapi_table *disp)
    SET_GetColorTable(disp, _mesa_GetColorTable);
    SET_GetColorTableParameterfv(disp, _mesa_GetColorTableParameterfv);
    SET_GetColorTableParameteriv(disp, _mesa_GetColorTableParameteriv);
-
-   /* GL_ARB_robustness */
-   SET_GetnColorTableARB(disp, _mesa_GetnColorTableARB);
 }
 
 

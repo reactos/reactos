@@ -122,9 +122,6 @@ typedef struct sw_span
    /** either GL_POLYGON, GL_LINE, GL_POLYGON, GL_BITMAP */
    GLenum primitive;
 
-   /** 0 = front-facing span, 1 = back-facing span (for two-sided stencil) */
-   GLuint facing;
-
    /**
     * This bitmask (of  \link SpanFlags SPAN_* flags\endlink) indicates
     * which of the attrStart/StepX/StepY variables are relevant.
@@ -177,7 +174,6 @@ do {						\
    (S).arrayAttribs = 0x0;			\
    (S).end = 0;					\
    (S).leftClip = 0;				\
-   (S).facing = 0;				\
    (S).array = SWRAST_CONTEXT(ctx)->SpanArrays;	\
 } while (0)
 

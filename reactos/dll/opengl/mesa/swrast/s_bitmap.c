@@ -32,7 +32,6 @@
 #include "main/bufferobj.h"
 #include "main/image.h"
 #include "main/macros.h"
-#include "main/pbo.h"
 
 #include "s_context.h"
 #include "s_span.h"
@@ -56,7 +55,6 @@ _swrast_Bitmap( struct gl_context *ctx, GLint px, GLint py,
 
    ASSERT(ctx->RenderMode == GL_RENDER);
 
-   bitmap = (const GLubyte *) _mesa_map_pbo_source(ctx, unpack, bitmap);
    if (!bitmap)
       return;
 
@@ -129,8 +127,6 @@ _swrast_Bitmap( struct gl_context *ctx, GLint px, GLint py,
    }
 
    swrast_render_finish(ctx);
-
-   _mesa_unmap_pbo_source(ctx, unpack);
 }
 
 

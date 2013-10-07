@@ -36,9 +36,6 @@
 
 struct gl_context;
 
-extern void GLAPIENTRY
-_mesa_GetnPolygonStippleARB( GLsizei bufSize, GLubyte *dest );
-
 extern void
 _mesa_polygon_stipple(struct gl_context *ctx, const GLubyte *pattern);
 

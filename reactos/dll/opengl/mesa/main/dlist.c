@@ -49,7 +49,6 @@
 #include "light.h"
 #include "macros.h"
 #include "pack.h"
-#include "pbo.h"
 #include "teximage.h"
 #include "texstorage.h"
 #include "mtypes.h"
@@ -287,14 +286,8 @@ typedef enum
    OPCODE_SAMPLE_COVERAGE,
    /* GL_ARB_window_pos */
    OPCODE_WINDOW_POS_ARB,
-   /* GL_EXT_stencil_two_side */
-   OPCODE_ACTIVE_STENCIL_FACE_EXT,
    /* GL_EXT_depth_bounds_test */
    OPCODE_DEPTH_BOUNDS_EXT,
-   /* OpenGL 2.0 */
-   OPCODE_STENCIL_FUNC_SEPARATE,
-   OPCODE_STENCIL_OP_SEPARATE,
-   OPCODE_STENCIL_MASK_SEPARATE,
 
    /* Vertex attributes -- fallback for when optimized display
     * list build isn't active.
@@ -671,6 +664,8 @@ unpack_image(struct gl_context *ctx, GLuint dimensions,
              GLenum format, GLenum type, const GLvoid * pixels,
              const struct gl_pixelstore_attrib *unpack)
 {
+   GLvoid *image;
+
    if (width <= 0 || height <= 0) {
       return NULL;
    }
@@ -680,52 +675,15 @@ unpack_image(struct gl_context *ctx, GLuint dimensions,
       return NULL;
    }
 
-   if (!_mesa_is_bufferobj(unpack->BufferObj)) {
-      /* no PBO */
-      GLvoid *image;
-
-      if (type == GL_BITMAP)
-         image = _mesa_unpack_bitmap(width, height, pixels, unpack);
-      else
-         image = _mesa_unpack_image(dimensions, width, height, depth,
-                                    format, type, pixels, unpack);
-      if (pixels && !image) {
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "display list construction");
-      }
-      return image;
+   if (type == GL_BITMAP)
+      image = _mesa_unpack_bitmap(width, height, pixels, unpack);
+   else
+      image = _mesa_unpack_image(dimensions, width, height, depth,
+                                 format, type, pixels, unpack);
+   if (pixels && !image) {
+      _mesa_error(ctx, GL_OUT_OF_MEMORY, "display list construction");
    }
-   else if (_mesa_validate_pbo_access(dimensions, unpack, width, height,
-                                      depth, format, type, INT_MAX, pixels)) {
-      const GLubyte *map, *src;
-      GLvoid *image;
-
-      map = (GLubyte *)
-         ctx->Driver.MapBufferRange(ctx, 0, unpack->BufferObj->Size,
-				    GL_MAP_READ_BIT, unpack->BufferObj);
-      if (!map) {
-         /* unable to map src buffer! */
-         _mesa_error(ctx, GL_INVALID_OPERATION, "unable to map PBO");
-         return NULL;
-      }
-
-      src = ADD_POINTERS(map, pixels);
-      if (type == GL_BITMAP)
-         image = _mesa_unpack_bitmap(width, height, src, unpack);
-      else
-         image = _mesa_unpack_image(dimensions, width, height, depth,
-                                    format, type, src, unpack);
-
-      ctx->Driver.UnmapBuffer(ctx, unpack->BufferObj);
-
-      if (!image) {
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "display list construction");
-      }
-      return image;
-   }
-
-   /* bad access! */
-   _mesa_error(ctx, GL_INVALID_OPERATION, "invalid PBO access");
-   return NULL;
+   return image;
 }
 
 /**
@@ -3327,91 +3285,6 @@ save_StencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 
 
 static void GLAPIENTRY
-save_StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
-   if (n) {
-      n[1].e = face;
-      n[2].e = func;
-      n[3].i = ref;
-      n[4].ui = mask;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_StencilFuncSeparate(ctx->Exec, (face, func, ref, mask));
-   }
-}
-
-
-static void GLAPIENTRY
-save_StencilFuncSeparateATI(GLenum frontfunc, GLenum backfunc, GLint ref,
-                            GLuint mask)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   /* GL_FRONT */
-   n = alloc_instruction(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
-   if (n) {
-      n[1].e = GL_FRONT;
-      n[2].e = frontfunc;
-      n[3].i = ref;
-      n[4].ui = mask;
-   }
-   /* GL_BACK */
-   n = alloc_instruction(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
-   if (n) {
-      n[1].e = GL_BACK;
-      n[2].e = backfunc;
-      n[3].i = ref;
-      n[4].ui = mask;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_StencilFuncSeparate(ctx->Exec, (GL_FRONT, frontfunc, ref, mask));
-      CALL_StencilFuncSeparate(ctx->Exec, (GL_BACK, backfunc, ref, mask));
-   }
-}
-
-
-static void GLAPIENTRY
-save_StencilMaskSeparate(GLenum face, GLuint mask)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_STENCIL_MASK_SEPARATE, 2);
-   if (n) {
-      n[1].e = face;
-      n[2].ui = mask;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_StencilMaskSeparate(ctx->Exec, (face, mask));
-   }
-}
-
-
-static void GLAPIENTRY
-save_StencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_STENCIL_OP_SEPARATE, 4);
-   if (n) {
-      n[1].e = face;
-      n[2].e = fail;
-      n[3].e = zfail;
-      n[4].e = zpass;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_StencilOpSeparate(ctx->Exec, (face, fail, zfail, zpass));
-   }
-}
-
-
-static void GLAPIENTRY
 save_TexEnvfv(GLenum target, GLenum pname, const GLfloat *params)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -4128,24 +4001,6 @@ save_ProgramNamedParameter4dvNV(GLuint id, GLsizei len, const GLubyte * name,
                                   (GLfloat) v[3]);
 }
 #endif
-
-
-
-/* GL_EXT_stencil_two_side */
-static void GLAPIENTRY
-save_ActiveStencilFaceEXT(GLenum face)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = alloc_instruction(ctx, OPCODE_ACTIVE_STENCIL_FACE_EXT, 1);
-   if (n) {
-      n[1].e = face;
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_ActiveStencilFaceEXT(ctx->Exec, (face));
-   }
-}
 
 
 /* GL_EXT_depth_bounds_test */
@@ -5425,17 +5280,6 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_STENCIL_OP:
             CALL_StencilOp(ctx->Exec, (n[1].e, n[2].e, n[3].e));
             break;
-         case OPCODE_STENCIL_FUNC_SEPARATE:
-            CALL_StencilFuncSeparate(ctx->Exec,
-                                     (n[1].e, n[2].e, n[3].i, n[4].ui));
-            break;
-         case OPCODE_STENCIL_MASK_SEPARATE:
-            CALL_StencilMaskSeparate(ctx->Exec, (n[1].e, n[2].ui));
-            break;
-         case OPCODE_STENCIL_OP_SEPARATE:
-            CALL_StencilOpSeparate(ctx->Exec,
-                                   (n[1].e, n[2].e, n[3].e, n[4].e));
-            break;
          case OPCODE_TEXENV:
             {
                GLfloat params[4];
@@ -5595,9 +5439,6 @@ execute_list(struct gl_context *ctx, GLuint list)
             break;
 #endif
 
-         case OPCODE_ACTIVE_STENCIL_FACE_EXT:
-            CALL_ActiveStencilFaceEXT(ctx->Exec, (n[1].e));
-            break;
          case OPCODE_DEPTH_BOUNDS_EXT:
             CALL_DepthBoundsEXT(ctx->Exec, (n[1].f, n[2].f));
             break;
@@ -6666,16 +6507,6 @@ exec_FogCoordPointerEXT(GLenum type, GLsizei stride, const GLvoid *ptr)
    CALL_FogCoordPointerEXT(ctx->Exec, (type, stride, ptr));
 }
 
-/* GL_EXT_multi_draw_arrays */
-static void GLAPIENTRY
-exec_MultiDrawArraysEXT(GLenum mode, const GLint *first,
-                        const GLsizei *count, GLsizei primcount)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_MultiDrawArraysEXT(ctx->Exec, (mode, first, count, primcount));
-}
-
 /* GL_IBM_multimode_draw_arrays */
 static void GLAPIENTRY
 exec_MultiModeDrawArraysIBM(const GLenum * mode, const GLint * first,
@@ -6930,14 +6761,6 @@ _mesa_create_save_table(void)
    SET_TexImage3D(table, save_TexImage3D);
    SET_TexSubImage3D(table, save_TexSubImage3D);
 
-   /* GL 2.0 */
-   SET_StencilFuncSeparate(table, save_StencilFuncSeparate);
-   SET_StencilMaskSeparate(table, save_StencilMaskSeparate);
-   SET_StencilOpSeparate(table, save_StencilOpSeparate);
-
-   /* ATI_separate_stencil */ 
-   SET_StencilFuncSeparateATI(table, save_StencilFuncSeparateATI);
-
    /* GL_ARB_imaging */
    /* Not all are supported */
    SET_BlendColor(table, save_BlendColor);
@@ -7023,9 +6846,6 @@ _mesa_create_save_table(void)
    /* 145. GL_EXT_secondary_color */
    SET_SecondaryColorPointerEXT(table, exec_SecondaryColorPointerEXT);
 
-   /* 148. GL_EXT_multi_draw_arrays */
-   SET_MultiDrawArraysEXT(table, exec_MultiDrawArraysEXT);
-
    /* 149. GL_EXT_fog_coord */
    SET_FogCoordPointerEXT(table, exec_FogCoordPointerEXT);
 
@@ -7095,9 +6915,6 @@ _mesa_create_save_table(void)
    /* 262. GL_NV_point_sprite */
    SET_PointParameteriNV(table, save_PointParameteriNV);
    SET_PointParameterivNV(table, save_PointParameterivNV);
-
-   /* 268. GL_EXT_stencil_two_side */
-   SET_ActiveStencilFaceEXT(table, save_ActiveStencilFaceEXT);
 
    /* 273. GL_APPLE_vertex_array_object */
    SET_BindVertexArrayAPPLE(table, _mesa_BindVertexArrayAPPLE);
@@ -7505,8 +7322,6 @@ _mesa_save_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->DrawArrays = 0;
    vfmt->DrawElements = 0;
    vfmt->DrawRangeElements = 0;
-   vfmt->MultiDrawElemementsEXT = 0;
-   vfmt->MultiDrawElemementsBaseVertex = 0;
 #endif
 }
 

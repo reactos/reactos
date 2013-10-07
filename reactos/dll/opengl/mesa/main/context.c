@@ -467,9 +467,6 @@ _mesa_init_constants(struct gl_context *ctx)
 
    /* GL 3.2: hard-coded for now: */
    ctx->Const.ProfileMask = GL_CONTEXT_COMPATIBILITY_PROFILE_BIT;
-
-   /* GL_ARB_robustness */
-   ctx->Const.ResetStrategy = GL_NO_RESET_NOTIFICATION_ARB;
 }
 
 
@@ -554,8 +551,6 @@ init_attrib_groups(struct gl_context *ctx)
    /* Miscellaneous */
    ctx->NewState = _NEW_ALL;
    ctx->ErrorValue = (GLenum) GL_NO_ERROR;
-   ctx->ResetStatus = (GLenum) GL_NO_ERROR;
-   ctx->varying_vp_inputs = VERT_BIT_ALL;
 
    return GL_TRUE;
 }
@@ -804,12 +799,6 @@ _mesa_free_context_data( struct gl_context *ctx )
    _mesa_free_varray_data(ctx);
 
    _mesa_delete_array_object(ctx, ctx->Array.DefaultArrayObj);
-
-#if FEATURE_ARB_pixel_buffer_object
-   _mesa_reference_buffer_object(ctx, &ctx->Pack.BufferObj, NULL);
-   _mesa_reference_buffer_object(ctx, &ctx->Unpack.BufferObj, NULL);
-   _mesa_reference_buffer_object(ctx, &ctx->DefaultPacking.BufferObj, NULL);
-#endif
 
    _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj, NULL);
 

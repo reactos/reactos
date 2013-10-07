@@ -235,10 +235,6 @@ _mesa_init_pixelstore( struct gl_context *ctx )
    ctx->Pack.SwapBytes = GL_FALSE;
    ctx->Pack.LsbFirst = GL_FALSE;
    ctx->Pack.Invert = GL_FALSE;
-#if FEATURE_EXT_pixel_buffer_object
-   _mesa_reference_buffer_object(ctx, &ctx->Pack.BufferObj,
-                                 ctx->Shared->NullBufferObj);
-#endif
    ctx->Unpack.Alignment = 4;
    ctx->Unpack.RowLength = 0;
    ctx->Unpack.ImageHeight = 0;
@@ -248,10 +244,6 @@ _mesa_init_pixelstore( struct gl_context *ctx )
    ctx->Unpack.SwapBytes = GL_FALSE;
    ctx->Unpack.LsbFirst = GL_FALSE;
    ctx->Unpack.Invert = GL_FALSE;
-#if FEATURE_EXT_pixel_buffer_object
-   _mesa_reference_buffer_object(ctx, &ctx->Unpack.BufferObj,
-                                 ctx->Shared->NullBufferObj);
-#endif
 
    /*
     * _mesa_unpack_image() returns image data in this format.  When we
@@ -268,8 +260,4 @@ _mesa_init_pixelstore( struct gl_context *ctx )
    ctx->DefaultPacking.SwapBytes = GL_FALSE;
    ctx->DefaultPacking.LsbFirst = GL_FALSE;
    ctx->DefaultPacking.Invert = GL_FALSE;
-#if FEATURE_EXT_pixel_buffer_object
-   _mesa_reference_buffer_object(ctx, &ctx->DefaultPacking.BufferObj,
-                                 ctx->Shared->NullBufferObj);
-#endif
 }

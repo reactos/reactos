@@ -146,7 +146,7 @@ lerp_rgba_3d(GLfloat result[4], GLfloat a, GLfloat b, GLfloat c,
 /**
  * Used to compute texel locations for linear sampling.
  * Input:
- *    wrapMode = GL_REPEAT, GL_CLAMP, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER
+ *    wrapMode = GL_REPEAT, GL_CLAMP
  *    s = texcoord in [0,1]
  *    size = width (or height or depth) of texture
  * Output:
@@ -173,36 +173,6 @@ linear_texel_locations(GLenum wrapMode,
          *i1 = REMAINDER(*i0 + 1, size);
       }
       break;
-   case GL_CLAMP_TO_EDGE:
-      if (s <= 0.0F)
-         u = 0.0F;
-      else if (s >= 1.0F)
-         u = (GLfloat) size;
-      else
-         u = s * size;
-      u -= 0.5F;
-      *i0 = IFLOOR(u);
-      *i1 = *i0 + 1;
-      if (*i0 < 0)
-         *i0 = 0;
-      if (*i1 >= (GLint) size)
-         *i1 = size - 1;
-      break;
-   case GL_CLAMP_TO_BORDER:
-      {
-         const GLfloat min = -1.0F / (2.0F * size);
-         const GLfloat max = 1.0F - min;
-         if (s <= min)
-            u = min * size;
-         else if (s >= max)
-            u = max * size;
-         else
-            u = s * size;
-         u -= 0.5F;
-         *i0 = IFLOOR(u);
-         *i1 = *i0 + 1;
-      }
-      break;
    case GL_MIRRORED_REPEAT:
       {
          const GLint flr = IFLOOR(s);
@@ -217,46 +187,6 @@ linear_texel_locations(GLenum wrapMode,
             *i0 = 0;
          if (*i1 >= (GLint) size)
             *i1 = size - 1;
-      }
-      break;
-   case GL_MIRROR_CLAMP_EXT:
-      u = FABSF(s);
-      if (u >= 1.0F)
-         u = (GLfloat) size;
-      else
-         u *= size;
-      u -= 0.5F;
-      *i0 = IFLOOR(u);
-      *i1 = *i0 + 1;
-      break;
-   case GL_MIRROR_CLAMP_TO_EDGE_EXT:
-      u = FABSF(s);
-      if (u >= 1.0F)
-         u = (GLfloat) size;
-      else
-         u *= size;
-      u -= 0.5F;
-      *i0 = IFLOOR(u);
-      *i1 = *i0 + 1;
-      if (*i0 < 0)
-         *i0 = 0;
-      if (*i1 >= (GLint) size)
-         *i1 = size - 1;
-      break;
-   case GL_MIRROR_CLAMP_TO_BORDER_EXT:
-      {
-         const GLfloat min = -1.0F / (2.0F * size);
-         const GLfloat max = 1.0F - min;
-         u = FABSF(s);
-         if (u <= min)
-            u = min * size;
-         else if (u >= max)
-            u = max * size;
-         else
-            u *= size;
-         u -= 0.5F;
-         *i0 = IFLOOR(u);
-         *i1 = *i0 + 1;
       }
       break;
    case GL_CLAMP:
@@ -300,34 +230,6 @@ nearest_texel_location(GLenum wrapMode,
       else
          i = REMAINDER(i, size);
       return i;
-   case GL_CLAMP_TO_EDGE:
-      {
-         /* s limited to [min,max] */
-         /* i limited to [0, size-1] */
-         const GLfloat min = 1.0F / (2.0F * size);
-         const GLfloat max = 1.0F - min;
-         if (s < min)
-            i = 0;
-         else if (s > max)
-            i = size - 1;
-         else
-            i = IFLOOR(s * size);
-      }
-      return i;
-   case GL_CLAMP_TO_BORDER:
-      {
-         /* s limited to [min,max] */
-         /* i limited to [-1, size] */
-         const GLfloat min = -1.0F / (2.0F * size);
-         const GLfloat max = 1.0F - min;
-         if (s <= min)
-            i = -1;
-         else if (s >= max)
-            i = size;
-         else
-            i = IFLOOR(s * size);
-      }
-      return i;
    case GL_MIRRORED_REPEAT:
       {
          const GLfloat min = 1.0F / (2.0F * size);
@@ -342,49 +244,6 @@ nearest_texel_location(GLenum wrapMode,
             i = 0;
          else if (u > max)
             i = size - 1;
-         else
-            i = IFLOOR(u * size);
-      }
-      return i;
-   case GL_MIRROR_CLAMP_EXT:
-      {
-         /* s limited to [0,1] */
-         /* i limited to [0,size-1] */
-         const GLfloat u = FABSF(s);
-         if (u <= 0.0F)
-            i = 0;
-         else if (u >= 1.0F)
-            i = size - 1;
-         else
-            i = IFLOOR(u * size);
-      }
-      return i;
-   case GL_MIRROR_CLAMP_TO_EDGE_EXT:
-      {
-         /* s limited to [min,max] */
-         /* i limited to [0, size-1] */
-         const GLfloat min = 1.0F / (2.0F * size);
-         const GLfloat max = 1.0F - min;
-         const GLfloat u = FABSF(s);
-         if (u < min)
-            i = 0;
-         else if (u > max)
-            i = size - 1;
-         else
-            i = IFLOOR(u * size);
-      }
-      return i;
-   case GL_MIRROR_CLAMP_TO_BORDER_EXT:
-      {
-         /* s limited to [min,max] */
-         /* i limited to [0, size-1] */
-         const GLfloat min = -1.0F / (2.0F * size);
-         const GLfloat max = 1.0F - min;
-         const GLfloat u = FABSF(s);
-         if (u < min)
-            i = -1;
-         else if (u > max)
-            i = size;
          else
             i = IFLOOR(u * size);
       }
@@ -424,17 +283,7 @@ linear_repeat_texel_location(GLuint size, GLfloat s,
 static inline GLint
 clamp_rect_coord_nearest(GLenum wrapMode, GLfloat coord, GLint max)
 {
-   switch (wrapMode) {
-   case GL_CLAMP:
-      return IFLOOR( CLAMP(coord, 0.0F, max - 1) );
-   case GL_CLAMP_TO_EDGE:
-      return IFLOOR( CLAMP(coord, 0.5F, max - 0.5F) );
-   case GL_CLAMP_TO_BORDER:
-      return IFLOOR( CLAMP(coord, -0.5F, max + 0.5F) );
-   default:
-      _mesa_problem(NULL, "bad wrapMode in clamp_rect_coord_nearest");
-      return 0;
-   }
+   return IFLOOR( CLAMP(coord, 0.0F, max - 1) );
 }
 
 
@@ -446,37 +295,11 @@ clamp_rect_coord_linear(GLenum wrapMode, GLfloat coord, GLint max,
                         GLint *i0out, GLint *i1out, GLfloat *weight)
 {
    GLfloat fcol;
-   GLint i0, i1;
-   switch (wrapMode) {
-   case GL_CLAMP:
-      /* Not exactly what the spec says, but it matches NVIDIA output */
-      fcol = CLAMP(coord - 0.5F, 0.0F, max - 1);
-      i0 = IFLOOR(fcol);
-      i1 = i0 + 1;
-      break;
-   case GL_CLAMP_TO_EDGE:
-      fcol = CLAMP(coord, 0.5F, max - 0.5F);
-      fcol -= 0.5F;
-      i0 = IFLOOR(fcol);
-      i1 = i0 + 1;
-      if (i1 > max - 1)
-         i1 = max - 1;
-      break;
-   case GL_CLAMP_TO_BORDER:
-      fcol = CLAMP(coord, -0.5F, max + 0.5F);
-      fcol -= 0.5F;
-      i0 = IFLOOR(fcol);
-      i1 = i0 + 1;
-      break;
-   default:
-      _mesa_problem(NULL, "bad wrapMode in clamp_rect_coord_linear");
-      i0 = i1 = 0;
-      fcol = 0.0F;
-      break;
-   }
-   *i0out = i0;
-   *i1out = i1;
+   /* Not exactly what the spec says, but it matches NVIDIA output */
+   fcol = CLAMP(coord - 0.5F, 0.0F, max - 1);
    *weight = FRAC(fcol);
+   *i0out = IFLOOR(fcol);
+   *i1out = *i0out + 1;
 }
 
 

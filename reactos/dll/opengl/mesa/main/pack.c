@@ -40,7 +40,6 @@
 #include "pixeltransfer.h"
 #include "imports.h"
 
-
 /**
  * Flip the 8 bits in each byte of the given array.
  *

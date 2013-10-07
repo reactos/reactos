@@ -61,8 +61,7 @@ compute_version(struct gl_context *ctx)
    GLuint major, minor;
    static const int max = 100;
 
-   const GLboolean ver_1_3 = (ctx->Extensions.ARB_texture_border_clamp &&
-                              ctx->Extensions.ARB_texture_cube_map &&
+   const GLboolean ver_1_3 = (ctx->Extensions.ARB_texture_cube_map &&
                               ctx->Extensions.ARB_texture_env_combine &&
                               ctx->Extensions.ARB_texture_env_dot3);
    const GLboolean ver_1_4 = (ver_1_3 &&
@@ -79,18 +78,8 @@ compute_version(struct gl_context *ctx)
    const GLboolean ver_2_0 = (ver_1_5 &&
                               ctx->Extensions.ARB_point_sprite &&
                               ctx->Extensions.ARB_texture_non_power_of_two &&
-                              ctx->Extensions.EXT_blend_equation_separate &&
-
-			      /* Technically, 2.0 requires the functionality
-			       * of the EXT version.  Enable 2.0 if either
-			       * extension is available, and assume that a
-			       * driver that only exposes the ATI extension
-			       * will fallback to software when necessary.
-			       */
-			      (ctx->Extensions.EXT_stencil_two_side
-			       || ctx->Extensions.ATI_separate_stencil));
-   const GLboolean ver_2_1 = (ver_2_0 &&
-                              ctx->Extensions.EXT_pixel_buffer_object);
+                              ctx->Extensions.EXT_blend_equation_separate);
+   const GLboolean ver_2_1 = (ver_2_0);
    const GLboolean ver_3_0 = (ver_2_1 &&
                               ctx->Extensions.ARB_half_float_pixel &&
                               ctx->Extensions.ARB_half_float_vertex &&

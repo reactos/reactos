@@ -577,12 +577,6 @@ _swrast_ResetLineStipple( struct gl_context *ctx )
 }
 
 void
-_swrast_SetFacing(struct gl_context *ctx, GLuint facing)
-{
-   SWRAST_CONTEXT(ctx)->PointLineFacing = facing;
-}
-
-void
 _swrast_allow_vertex_fog( struct gl_context *ctx, GLboolean value )
 {
    if (SWRAST_DEBUG) {
@@ -668,7 +662,6 @@ _swrast_CreateContext( struct gl_context *ctx )
    /* init point span buffer */
    swrast->PointSpan.primitive = GL_POINT;
    swrast->PointSpan.end = 0;
-   swrast->PointSpan.facing = 0;
    swrast->PointSpan.array = swrast->SpanArrays;
 
    ctx->swrast_context = swrast;

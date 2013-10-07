@@ -124,12 +124,12 @@ clamp(GLint val)
  * @param stride  stride between stencil values
  */
 static void
-apply_stencil_op(const struct gl_context *ctx, GLenum oper, GLuint face,
+apply_stencil_op(const struct gl_context *ctx, GLenum oper,
                  GLuint n, GLubyte stencil[], const GLubyte mask[],
                  GLint stride)
 {
-   const GLubyte ref = ctx->Stencil.Ref[face];
-   const GLubyte wrtmask = ctx->Stencil.WriteMask[face];
+   const GLubyte ref = ctx->Stencil.Ref;
+   const GLubyte wrtmask = ctx->Stencil.WriteMask;
    const GLubyte invmask = (GLubyte) (~wrtmask);
    GLuint i, j;
 
@@ -207,14 +207,14 @@ apply_stencil_op(const struct gl_context *ctx, GLenum oper, GLuint face,
  * @return GL_FALSE = all pixels failed, GL_TRUE = zero or more pixels passed.
  */
 static GLboolean
-do_stencil_test(struct gl_context *ctx, GLuint face, GLuint n,
+do_stencil_test(struct gl_context *ctx, GLuint n,
                 GLubyte stencil[], GLubyte mask[], GLint stride)
 {
    GLubyte fail[MAX_WIDTH];
    GLboolean allfail = GL_FALSE;
    GLuint i, j;
-   const GLuint valueMask = ctx->Stencil.ValueMask[face];
-   const GLubyte ref = (GLubyte) (ctx->Stencil.Ref[face] & valueMask);
+   const GLuint valueMask = ctx->Stencil.ValueMask;
+   const GLubyte ref = (GLubyte) (ctx->Stencil.Ref & valueMask);
    GLubyte s;
 
    /*
@@ -226,7 +226,7 @@ do_stencil_test(struct gl_context *ctx, GLuint face, GLuint n,
     *       the stencil fail operator is not to be applied
     *   ENDIF
     */
-   switch (ctx->Stencil.Function[face]) {
+   switch (ctx->Stencil.Function) {
    case GL_NEVER:
       STENCIL_TEST(0);
       allfail = GL_TRUE;
@@ -257,8 +257,8 @@ do_stencil_test(struct gl_context *ctx, GLuint face, GLuint n,
       return 0;
    }
 
-   if (ctx->Stencil.FailFunc[face] != GL_KEEP) {
-      apply_stencil_op(ctx, ctx->Stencil.FailFunc[face], face, n, stencil,
+   if (ctx->Stencil.FailFunc != GL_KEEP) {
+      apply_stencil_op(ctx, ctx->Stencil.FailFunc, n, stencil,
                        fail, stride);
    }
 
@@ -351,7 +351,6 @@ _swrast_stencil_and_ztest_span(struct gl_context *ctx, SWspan *span)
    struct gl_renderbuffer *rb = fb->Attachment[BUFFER_STENCIL].Renderbuffer;
    const GLint stencilOffset = get_stencil_offset(rb->Format);
    const GLint stencilStride = _mesa_get_format_bytes(rb->Format);
-   const GLuint face = (span->facing == 0) ? 0 : ctx->Stencil._BackFace;
    const GLuint count = span->end;
    GLubyte *mask = span->array->mask;
    GLubyte stencilTemp[MAX_WIDTH];
@@ -375,7 +374,7 @@ _swrast_stencil_and_ztest_span(struct gl_context *ctx, SWspan *span)
     * Apply the stencil test to the fragments.
     * failMask[i] is 1 if the stencil test failed.
     */
-   if (!do_stencil_test(ctx, face, count, stencilBuf, mask, stencilStride)) {
+   if (!do_stencil_test(ctx, count, stencilBuf, mask, stencilStride)) {
       /* all fragments failed the stencil test, we're done. */
       span->writeAll = GL_FALSE;
       if (span->arrayMask & SPAN_XY) {
@@ -395,7 +394,7 @@ _swrast_stencil_and_ztest_span(struct gl_context *ctx, SWspan *span)
       /*
        * No depth buffer, just apply zpass stencil function to active pixels.
        */
-      apply_stencil_op(ctx, ctx->Stencil.ZPassFunc[face], face, count,
+      apply_stencil_op(ctx, ctx->Stencil.ZPassFunc, count,
                        stencilBuf, mask, stencilStride);
    }
    else {
@@ -413,12 +412,12 @@ _swrast_stencil_and_ztest_span(struct gl_context *ctx, SWspan *span)
       compute_pass_fail_masks(count, origMask, mask, passMask, failMask);
 
       /* apply the pass and fail operations */
-      if (ctx->Stencil.ZFailFunc[face] != GL_KEEP) {
-         apply_stencil_op(ctx, ctx->Stencil.ZFailFunc[face], face,
+      if (ctx->Stencil.ZFailFunc != GL_KEEP) {
+         apply_stencil_op(ctx, ctx->Stencil.ZFailFunc,
                           count, stencilBuf, failMask, stencilStride);
       }
-      if (ctx->Stencil.ZPassFunc[face] != GL_KEEP) {
-         apply_stencil_op(ctx, ctx->Stencil.ZPassFunc[face], face,
+      if (ctx->Stencil.ZPassFunc != GL_KEEP) {
+         apply_stencil_op(ctx, ctx->Stencil.ZPassFunc,
                           count, stencilBuf, passMask, stencilStride);
       }
    }
@@ -491,7 +490,7 @@ _swrast_write_stencil_span(struct gl_context *ctx, GLint n, GLint x, GLint y,
    struct gl_framebuffer *fb = ctx->DrawBuffer;
    struct gl_renderbuffer *rb = fb->Attachment[BUFFER_STENCIL].Renderbuffer;
    const GLuint stencilMax = (1 << fb->Visual.stencilBits) - 1;
-   const GLuint stencilMask = ctx->Stencil.WriteMask[0];
+   const GLuint stencilMask = ctx->Stencil.WriteMask;
    GLubyte *stencilBuf;
 
    if (y < 0 || y >= (GLint) rb->Height ||
@@ -544,7 +543,7 @@ _swrast_clear_stencil_buffer(struct gl_context *ctx)
    struct gl_renderbuffer *rb =
       ctx->DrawBuffer->Attachment[BUFFER_STENCIL].Renderbuffer;
    const GLubyte stencilBits = ctx->DrawBuffer->Visual.stencilBits;
-   const GLuint writeMask = ctx->Stencil.WriteMask[0];
+   const GLuint writeMask = ctx->Stencil.WriteMask;
    const GLuint stencilMax = (1 << stencilBits) - 1;
    GLint x, y, width, height;
    GLubyte *map;

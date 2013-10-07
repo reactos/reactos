@@ -567,14 +567,6 @@ struct dd_function_table {
    void (*Scissor)(struct gl_context *ctx, GLint x, GLint y, GLsizei w, GLsizei h);
    /** Select flat or smooth shading */
    void (*ShadeModel)(struct gl_context *ctx, GLenum mode);
-   /** OpenGL 2.0 two-sided StencilFunc */
-   void (*StencilFuncSeparate)(struct gl_context *ctx, GLenum face, GLenum func,
-                               GLint ref, GLuint mask);
-   /** OpenGL 2.0 two-sided StencilMask */
-   void (*StencilMaskSeparate)(struct gl_context *ctx, GLenum face, GLuint mask);
-   /** OpenGL 2.0 two-sided StencilOp */
-   void (*StencilOpSeparate)(struct gl_context *ctx, GLenum face, GLenum fail,
-                             GLenum zfail, GLenum zpass);
    /** Control the generation of texture coordinates */
    void (*TexGen)(struct gl_context *ctx, GLenum coord, GLenum pname,
 		  const GLfloat *params);

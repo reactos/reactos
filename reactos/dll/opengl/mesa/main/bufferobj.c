@@ -70,10 +70,6 @@ get_buffer_target(struct gl_context *ctx, GLenum target)
       return &ctx->Array.ArrayBufferObj;
    case GL_ELEMENT_ARRAY_BUFFER_ARB:
       return &ctx->Array.ArrayObj->ElementArrayBufferObj;
-   case GL_PIXEL_PACK_BUFFER_EXT:
-      return &ctx->Pack.BufferObj;
-   case GL_PIXEL_UNPACK_BUFFER_EXT:
-      return &ctx->Unpack.BufferObj;
    default:
       return NULL;
    }
@@ -572,8 +568,6 @@ _mesa_update_default_objects_buffer_objects(struct gl_context *ctx)
     */
    bind_buffer_object( ctx, GL_ARRAY_BUFFER_ARB, 0);
    bind_buffer_object( ctx, GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-   bind_buffer_object( ctx, GL_PIXEL_PACK_BUFFER_ARB, 0);
-   bind_buffer_object( ctx, GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 }
 
 
@@ -697,14 +691,6 @@ _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
          }
          if (arrayObj->ElementArrayBufferObj == bufObj) {
             _mesa_BindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
-         }
-
-         /* unbind any pixel pack/unpack pointers bound to this buffer */
-         if (ctx->Pack.BufferObj == bufObj) {
-            _mesa_BindBufferARB( GL_PIXEL_PACK_BUFFER_EXT, 0 );
-         }
-         if (ctx->Unpack.BufferObj == bufObj) {
-            _mesa_BindBufferARB( GL_PIXEL_UNPACK_BUFFER_EXT, 0 );
          }
 
          /* The ID is immediately freed for re-use */

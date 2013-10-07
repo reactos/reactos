@@ -172,8 +172,6 @@ static void vbo_bind_vertex_list(struct gl_context *ctx,
          ctx->NewState |= _NEW_ARRAY;
       }
    }
-
-   _mesa_set_varying_vp_inputs( ctx, varying_inputs );
 }
 
 

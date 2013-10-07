@@ -224,7 +224,6 @@ typedef struct
    /* Working values:
     */
    GLuint StippleCounter;    /**< Line stipple counter */
-   GLuint PointLineFacing;
    GLbitfield NewState;
    GLuint StateChanges;
    GLenum Primitive;    /* current primitive being drawn (ala glBegin) */

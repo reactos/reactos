@@ -241,9 +241,6 @@ static void NAME(struct gl_context *ctx, const SWvertex *v0,
          return;
 
       oneOverArea = 1.0F / area;
-
-      /* 0 = front, 1 = back */
-      span.facing = oneOverArea * bf > 0.0F;
    }
 
    /* Edge setup.  For a triangle strip these could be reused... */

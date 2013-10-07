@@ -52,27 +52,11 @@
 static GLboolean 
 validate_texture_wrap_mode(struct gl_context * ctx, GLenum target, GLenum wrap)
 {
-   const struct gl_extensions * const e = & ctx->Extensions;
-
    switch (wrap) {
    case GL_CLAMP:
    case GL_REPEAT:
-   case GL_CLAMP_TO_EDGE:
    case GL_MIRRORED_REPEAT:
       return GL_TRUE;
-   case GL_CLAMP_TO_BORDER:
-      if (e->ARB_texture_border_clamp)
-         return GL_TRUE;
-      break;
-   case GL_MIRROR_CLAMP_EXT:
-   case GL_MIRROR_CLAMP_TO_EDGE_EXT:
-      if (e->ATI_texture_mirror_once || e->EXT_texture_mirror_clamp)
-         return GL_TRUE;
-      break;
-   case GL_MIRROR_CLAMP_TO_BORDER_EXT:
-      if (e->EXT_texture_mirror_clamp)
-         return GL_TRUE;
-      break;
    default:
       break;
    }

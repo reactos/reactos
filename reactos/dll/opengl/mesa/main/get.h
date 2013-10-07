@@ -68,8 +68,4 @@ _mesa_GetStringi(GLenum name, GLuint index);
 extern GLenum GLAPIENTRY
 _mesa_GetError( void );
 
-/* GL_ARB_robustness */
-extern GLenum GLAPIENTRY
-_mesa_GetGraphicsResetStatusARB( void );
-
 #endif

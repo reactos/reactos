@@ -140,11 +140,6 @@ _mesa_SecondaryColorPointerEXT(GLint size, GLenum type,
 extern void GLAPIENTRY
 _mesa_InterleavedArrays(GLenum format, GLsizei stride, const GLvoid *pointer);
 
-
-extern void GLAPIENTRY
-_mesa_MultiDrawArraysEXT( GLenum mode, const GLint *first,
-                          const GLsizei *count, GLsizei primcount );
-
 extern void GLAPIENTRY
 _mesa_MultiModeDrawArraysIBM( const GLenum * mode, const GLint * first,
 			      const GLsizei * count,

@@ -43,8 +43,5 @@ _mesa_get_teximage(struct gl_context *ctx,
 extern void GLAPIENTRY
 _mesa_GetTexImage( GLenum target, GLint level,
                    GLenum format, GLenum type, GLvoid *pixels );
-extern void GLAPIENTRY
-_mesa_GetnTexImageARB( GLenum target, GLint level, GLenum format,
-                       GLenum type, GLsizei bufSize, GLvoid *pixels );
 
 #endif /* TEXGETIMAGE_H */

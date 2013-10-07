@@ -809,34 +809,18 @@ struct gl_scissor_attrib
 /**
  * Stencil attribute group (GL_STENCIL_BUFFER_BIT).
  *
- * Three sets of stencil data are tracked so that OpenGL 2.0,
- * GL_EXT_stencil_two_side, and GL_ATI_separate_stencil can all be supported
- * simultaneously.  In each of the stencil state arrays, element 0 corresponds
- * to GL_FRONT.  Element 1 corresponds to the OpenGL 2.0 /
- * GL_ATI_separate_stencil GL_BACK state.  Element 2 corresponds to the
- * GL_EXT_stencil_two_side GL_BACK state.
- *
- * The derived value \c _BackFace is either 1 or 2 depending on whether or
- * not GL_STENCIL_TEST_TWO_SIDE_EXT is enabled.
- *
- * The derived value \c _TestTwoSide is set when the front-face and back-face
- * stencil state are different.
  */
 struct gl_stencil_attrib
 {
    GLboolean Enabled;		/**< Enabled flag */
-   GLboolean TestTwoSide;	/**< GL_EXT_stencil_two_side */
-   GLubyte ActiveFace;		/**< GL_EXT_stencil_two_side (0 or 2) */
    GLboolean _Enabled;          /**< Enabled and stencil buffer present */
-   GLboolean _TestTwoSide;
-   GLubyte _BackFace;           /**< Current back stencil state (1 or 2) */
-   GLenum Function[3];		/**< Stencil function */
-   GLenum FailFunc[3];		/**< Fail function */
-   GLenum ZPassFunc[3];		/**< Depth buffer pass function */
-   GLenum ZFailFunc[3];		/**< Depth buffer fail function */
-   GLint Ref[3];		/**< Reference value */
-   GLuint ValueMask[3];		/**< Value mask */
-   GLuint WriteMask[3];		/**< Write mask */
+   GLenum Function;		/**< Stencil function */
+   GLenum FailFunc;		/**< Fail function */
+   GLenum ZPassFunc;		/**< Depth buffer pass function */
+   GLenum ZFailFunc;		/**< Depth buffer fail function */
+   GLint Ref;		/**< Reference value */
+   GLuint ValueMask;		/**< Value mask */
+   GLuint WriteMask;		/**< Write mask */
    GLuint Clear;		/**< Clear value */
 };
 
@@ -1185,7 +1169,6 @@ struct gl_pixelstore_attrib
    GLboolean SwapBytes;
    GLboolean LsbFirst;
    GLboolean Invert;        /**< GL_MESA_pack_invert */
-   struct gl_buffer_object *BufferObj; /**< GL_ARB_pixel_buffer_object */
 };
 
 
@@ -1569,9 +1552,6 @@ struct gl_constants
    /** OpenGL version 3.2 */
    GLbitfield ProfileMask;   /**< Mask of CONTEXT_x_PROFILE_BIT */
 
-   /* GL_ARB_robustness */
-   GLenum ResetStrategy;
-
    /**
     * Whether the implementation strips out and ignores texture borders.
     *
@@ -1601,7 +1581,6 @@ struct gl_extensions
    GLboolean ARB_half_float_vertex;
    GLboolean ARB_map_buffer_range;
    GLboolean ARB_point_sprite;
-   GLboolean ARB_texture_border_clamp;
    GLboolean ARB_texture_cube_map;
    GLboolean ARB_texture_env_combine;
    GLboolean ARB_texture_env_crossbar;
@@ -1622,26 +1601,21 @@ struct gl_extensions
    GLboolean EXT_draw_range_elements;
    GLboolean EXT_fog_coord;
    GLboolean EXT_packed_pixels;
-   GLboolean EXT_pixel_buffer_object;
    GLboolean EXT_point_parameters;
    GLboolean EXT_rescale_normal;
    GLboolean EXT_shadow_funcs;
    GLboolean EXT_secondary_color;
    GLboolean EXT_separate_shader_objects;
    GLboolean EXT_separate_specular_color;
-   GLboolean EXT_stencil_two_side;
    GLboolean EXT_texture3D;
    GLboolean EXT_texture_env_dot3;
    GLboolean EXT_texture_filter_anisotropic;
    GLboolean EXT_texture_integer;
-   GLboolean EXT_texture_mirror_clamp;
    /* vendor extensions */
    GLboolean APPLE_packed_pixels;
    GLboolean APPLE_vertex_array_object;
    GLboolean APPLE_object_purgeable;
-   GLboolean ATI_texture_mirror_once;
    GLboolean ATI_texture_env_combine3;
-   GLboolean ATI_separate_stencil;
    GLboolean IBM_rasterpos_clip;
    GLboolean IBM_multimode_draw_arrays;
    GLboolean MESA_pack_invert;
@@ -1750,7 +1724,6 @@ struct gl_matrix_stack
 #define DD_LINE_STIPPLE             0x200
 #define DD_POINT_SMOOTH             0x400
 #define DD_POINT_ATTEN              0x800
-#define DD_TRI_TWOSTENCIL           0x1000
 /*@}*/
 
 
@@ -1979,9 +1952,6 @@ struct gl_context
 
    GLenum ErrorValue;        /**< Last error code */
 
-   /* GL_ARB_robustness */
-   GLenum ResetStatus;
-
    /**
     * Recognize and silence repeated error debug messages in buggy apps.
     */
@@ -1992,8 +1962,6 @@ struct gl_context
    GLbitfield NewState;      /**< bitwise-or of _NEW_* flags */
 
    GLboolean ViewportInitialized;  /**< has viewport size been initialized? */
-
-   GLbitfield64 varying_vp_inputs;  /**< mask of VERT_BIT_* flags */
 
    /** \name Derived state */
    /*@{*/

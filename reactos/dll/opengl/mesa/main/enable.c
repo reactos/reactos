@@ -694,22 +694,6 @@ _mesa_set_enable(struct gl_context *ctx, GLenum cap, GLboolean state)
          ctx->Point.PointSprite = state;
          break;
 
-      /* GL_EXT_stencil_two_side */
-      case GL_STENCIL_TEST_TWO_SIDE_EXT:
-         CHECK_EXTENSION(EXT_stencil_two_side, cap);
-         if (ctx->Stencil.TestTwoSide == state)
-            return;
-         FLUSH_VERTICES(ctx, _NEW_STENCIL);
-         ctx->Stencil.TestTwoSide = state;
-         if (state) {
-            ctx->Stencil._BackFace = 2;
-            ctx->_TriangleCaps |= DD_TRI_TWOSTENCIL;
-         } else {
-            ctx->Stencil._BackFace = 1;
-            ctx->_TriangleCaps &= ~DD_TRI_TWOSTENCIL;
-         }
-         break;
-
       /* GL_EXT_depth_bounds_test */
       case GL_DEPTH_BOUNDS_TEST_EXT:
          CHECK_EXTENSION(EXT_depth_bounds_test, cap);
@@ -990,11 +974,6 @@ _mesa_IsEnabled( GLenum cap )
       case GL_POINT_SPRITE_NV:
          CHECK_EXTENSION2(NV_point_sprite, ARB_point_sprite)
          return ctx->Point.PointSprite;
-
-      /* GL_EXT_stencil_two_side */
-      case GL_STENCIL_TEST_TWO_SIDE_EXT:
-         CHECK_EXTENSION(EXT_stencil_two_side);
-         return ctx->Stencil.TestTwoSide;
 
       /* GL_EXT_depth_bounds_test */
       case GL_DEPTH_BOUNDS_TEST_EXT:

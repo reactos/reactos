@@ -128,8 +128,6 @@ static void _swsetup_render_tri(struct gl_context *ctx,
          return;
    }
 
-   _swrast_SetFacing(ctx, facing);
-
    if (ctx->Light.ShadeModel == GL_FLAT) {
       GLchan c[2][4];
       GLfloat s[2][4];
@@ -253,8 +251,7 @@ void _swsetup_choose_trifuncs( struct gl_context *ctx )
     * unfilled triangle path.
     */
    if (ctx->Polygon.FrontMode != GL_FILL ||
-       ctx->Polygon.BackMode != GL_FILL ||
-       (ctx->Stencil.Enabled && ctx->Stencil._TestTwoSide))
+       ctx->Polygon.BackMode != GL_FILL)
       ind |= SS_UNFILLED_BIT;
 
    tnl->Driver.Render.Triangle = tri_tab[ind];

@@ -566,25 +566,6 @@ _mesa_UnlockArraysEXT( void )
    ctx->Array.NewState |= VERT_BIT_ALL;
 }
 
-
-/* GL_EXT_multi_draw_arrays */
-void GLAPIENTRY
-_mesa_MultiDrawArraysEXT( GLenum mode, const GLint *first,
-                          const GLsizei *count, GLsizei primcount )
-{
-   GET_CURRENT_CONTEXT(ctx);
-   GLint i;
-
-   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
-
-   for (i = 0; i < primcount; i++) {
-      if (count[i] > 0) {
-         CALL_DrawArrays(ctx->Exec, (mode, first[i], count[i]));
-      }
-   }
-}
-
-
 /* GL_IBM_multimode_draw_arrays */
 void GLAPIENTRY
 _mesa_MultiModeDrawArraysIBM( const GLenum * mode, const GLint * first,

@@ -38,10 +38,6 @@ extern void
 _mesa_update_state_locked(struct gl_context *ctx);
 
 
-extern void
-_mesa_set_varying_vp_inputs(struct gl_context *ctx, GLbitfield64 varying_inputs);
-
-
 /**
  * Is the secondary color needed?
  */

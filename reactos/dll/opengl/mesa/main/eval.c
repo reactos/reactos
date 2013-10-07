@@ -495,7 +495,7 @@ _mesa_Map2d( GLenum target,
 
 
 static void GLAPIENTRY
-_mesa_GetnMapdvARB( GLenum target, GLenum query, GLsizei bufSize, GLdouble *v )
+_mesa_GetMapdv( GLenum target, GLenum query, GLdouble *v )
 {
    GET_CURRENT_CONTEXT(ctx);
    struct gl_1d_map *map1d;
@@ -503,7 +503,6 @@ _mesa_GetnMapdvARB( GLenum target, GLenum query, GLsizei bufSize, GLdouble *v )
    GLint i, n;
    GLfloat *data;
    GLuint comps;
-   GLsizei numBytes;
 
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
@@ -528,9 +527,6 @@ _mesa_GetnMapdvARB( GLenum target, GLenum query, GLsizei bufSize, GLdouble *v )
             n = map2d->Uorder * map2d->Vorder * comps;
          }
 	 if (data) {
-            numBytes = n * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
 	    for (i=0;i<n;i++) {
 	       v[i] = data[i];
 	    }
@@ -538,31 +534,19 @@ _mesa_GetnMapdvARB( GLenum target, GLenum query, GLsizei bufSize, GLdouble *v )
          break;
       case GL_ORDER:
          if (map1d) {
-            numBytes = 1 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = (GLdouble) map1d->Order;
          }
          else {
-            numBytes = 2 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = (GLdouble) map2d->Uorder;
             v[1] = (GLdouble) map2d->Vorder;
          }
          break;
       case GL_DOMAIN:
          if (map1d) {
-            numBytes = 2 * sizeof *v;
-            if (bufSize < numBytes)
-              goto overflow;
             v[0] = (GLdouble) map1d->u1;
             v[1] = (GLdouble) map1d->u2;
          }
          else {
-            numBytes = 4 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = (GLdouble) map2d->u1;
             v[1] = (GLdouble) map2d->u2;
             v[2] = (GLdouble) map2d->v1;
@@ -573,21 +557,10 @@ _mesa_GetnMapdvARB( GLenum target, GLenum query, GLsizei bufSize, GLdouble *v )
          _mesa_error( ctx, GL_INVALID_ENUM, "glGetMapdv(query)" );
    }
    return;
-
-overflow:
-   _mesa_error( ctx, GL_INVALID_OPERATION,
-               "glGetnMapdvARB(out of bounds: bufSize is %d,"
-               " but %d bytes are required)", bufSize, numBytes );
 }
 
 static void GLAPIENTRY
-_mesa_GetMapdv( GLenum target, GLenum query, GLdouble *v )
-{
-   _mesa_GetnMapdvARB(target, query, INT_MAX, v);
-}
-
-static void GLAPIENTRY
-_mesa_GetnMapfvARB( GLenum target, GLenum query, GLsizei bufSize, GLfloat *v )
+_mesa_GetMapfv( GLenum target, GLenum query, GLfloat *v )
 {
    GET_CURRENT_CONTEXT(ctx);
    struct gl_1d_map *map1d;
@@ -595,7 +568,6 @@ _mesa_GetnMapfvARB( GLenum target, GLenum query, GLsizei bufSize, GLfloat *v )
    GLint i, n;
    GLfloat *data;
    GLuint comps;
-   GLsizei numBytes;
 
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
@@ -620,9 +592,6 @@ _mesa_GetnMapfvARB( GLenum target, GLenum query, GLsizei bufSize, GLfloat *v )
             n = map2d->Uorder * map2d->Vorder * comps;
          }
 	 if (data) {
-            numBytes = n * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
 	    for (i=0;i<n;i++) {
 	       v[i] = data[i];
 	    }
@@ -630,31 +599,19 @@ _mesa_GetnMapfvARB( GLenum target, GLenum query, GLsizei bufSize, GLfloat *v )
          break;
       case GL_ORDER:
          if (map1d) {
-            numBytes = 1 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = (GLfloat) map1d->Order;
          }
          else {
-            numBytes = 2 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = (GLfloat) map2d->Uorder;
             v[1] = (GLfloat) map2d->Vorder;
          }
          break;
       case GL_DOMAIN:
          if (map1d) {
-            numBytes = 2 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = map1d->u1;
             v[1] = map1d->u2;
          }
          else {
-            numBytes = 4 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = map2d->u1;
             v[1] = map2d->u2;
             v[2] = map2d->v1;
@@ -665,23 +622,11 @@ _mesa_GetnMapfvARB( GLenum target, GLenum query, GLsizei bufSize, GLfloat *v )
          _mesa_error( ctx, GL_INVALID_ENUM, "glGetMapfv(query)" );
    }
    return;
-
-overflow:
-   _mesa_error( ctx, GL_INVALID_OPERATION,
-               "glGetnMapfvARB(out of bounds: bufSize is %d,"
-               " but %d bytes are required)", bufSize, numBytes );
 }
 
 
 static void GLAPIENTRY
-_mesa_GetMapfv( GLenum target, GLenum query, GLfloat *v )
-{
-   _mesa_GetnMapfvARB(target, query, INT_MAX, v);
-}
-
-
-static void GLAPIENTRY
-_mesa_GetnMapivARB( GLenum target, GLenum query, GLsizei bufSize, GLint *v )
+_mesa_GetMapiv( GLenum target, GLenum query, GLint *v )
 {
    GET_CURRENT_CONTEXT(ctx);
    struct gl_1d_map *map1d;
@@ -689,7 +634,6 @@ _mesa_GetnMapivARB( GLenum target, GLenum query, GLsizei bufSize, GLint *v )
    GLuint i, n;
    GLfloat *data;
    GLuint comps;
-   GLsizei numBytes;
 
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
@@ -714,9 +658,6 @@ _mesa_GetnMapivARB( GLenum target, GLenum query, GLsizei bufSize, GLint *v )
             n = map2d->Uorder * map2d->Vorder * comps;
          }
 	 if (data) {
-            numBytes = n * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
 	    for (i=0;i<n;i++) {
 	       v[i] = IROUND(data[i]);
 	    }
@@ -724,31 +665,19 @@ _mesa_GetnMapivARB( GLenum target, GLenum query, GLsizei bufSize, GLint *v )
          break;
       case GL_ORDER:
          if (map1d) {
-            numBytes = 1 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = map1d->Order;
          }
          else {
-            numBytes = 2 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = map2d->Uorder;
             v[1] = map2d->Vorder;
          }
          break;
       case GL_DOMAIN:
          if (map1d) {
-            numBytes = 2 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = IROUND(map1d->u1);
             v[1] = IROUND(map1d->u2);
          }
          else {
-            numBytes = 4 * sizeof *v;
-            if (bufSize < numBytes)
-               goto overflow;
             v[0] = IROUND(map2d->u1);
             v[1] = IROUND(map2d->u2);
             v[2] = IROUND(map2d->v1);
@@ -759,18 +688,6 @@ _mesa_GetnMapivARB( GLenum target, GLenum query, GLsizei bufSize, GLint *v )
          _mesa_error( ctx, GL_INVALID_ENUM, "glGetMapiv(query)" );
    }
    return;
-
-overflow:
-   _mesa_error( ctx, GL_INVALID_OPERATION,
-               "glGetnMapivARB(out of bounds: bufSize is %d,"
-               " but %d bytes are required)", bufSize, numBytes );
-}
-
-
-static void GLAPIENTRY
-_mesa_GetMapiv( GLenum target, GLenum query, GLint *v )
-{
-   _mesa_GetnMapivARB(target, query, INT_MAX, v);
 }
 
 
@@ -866,11 +783,6 @@ _mesa_init_eval_dispatch(struct _glapi_table *disp)
    SET_MapGrid1f(disp, _mesa_MapGrid1f);
    SET_MapGrid2d(disp, _mesa_MapGrid2d);
    SET_MapGrid2f(disp, _mesa_MapGrid2f);
-
-   /* GL_ARB_robustness */
-   SET_GetnMapdvARB(disp, _mesa_GetnMapdvARB);
-   SET_GetnMapfvARB(disp, _mesa_GetnMapfvARB);
-   SET_GetnMapivARB(disp, _mesa_GetnMapivARB);
 }
 
 

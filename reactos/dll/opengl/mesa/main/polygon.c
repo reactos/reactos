@@ -34,7 +34,6 @@
 #include "image.h"
 #include "enums.h"
 #include "pack.h"
-#include "pbo.h"
 #include "polygon.h"
 #include "mtypes.h"
 
@@ -193,17 +192,10 @@ _mesa_PolygonMode( GLenum face, GLenum mode )
 void
 _mesa_polygon_stipple(struct gl_context *ctx, const GLubyte *pattern)
 {
-   pattern = _mesa_map_validate_pbo_source(ctx, 2,
-                                           &ctx->Unpack, 32, 32, 1,
-                                           GL_COLOR_INDEX, GL_BITMAP,
-                                           INT_MAX, pattern,
-                                           "glPolygonStipple");
    if (!pattern)
       return;
 
    _mesa_unpack_polygon_stipple(pattern, ctx->PolygonStipple, &ctx->Unpack);
-
-   _mesa_unmap_pbo_source(ctx, &ctx->Unpack);
 }
 
 
@@ -232,31 +224,17 @@ _mesa_PolygonStipple( const GLubyte *pattern )
  * Called by glPolygonStipple.
  */
 void GLAPIENTRY
-_mesa_GetnPolygonStippleARB( GLsizei bufSize, GLubyte *dest )
+_mesa_GetPolygonStipple( GLubyte *dest )
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE&VERBOSE_API)
       _mesa_debug(ctx, "glGetPolygonStipple\n");
-
-   dest = _mesa_map_validate_pbo_dest(ctx, 2,
-                                      &ctx->Pack, 32, 32, 1,
-                                      GL_COLOR_INDEX, GL_BITMAP,
-                                      bufSize, dest, "glGetPolygonStipple");
    if (!dest)
       return;
 
    _mesa_pack_polygon_stipple(ctx->PolygonStipple, dest, &ctx->Pack);
-
-   _mesa_unmap_pbo_dest(ctx, &ctx->Pack);
-}
-
-
-void GLAPIENTRY
-_mesa_GetPolygonStipple( GLubyte *dest )
-{
-   _mesa_GetnPolygonStippleARB(INT_MAX, dest);
 }
 
 

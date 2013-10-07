@@ -32,7 +32,6 @@
 #include "main/imports.h"
 #include "main/macros.h"
 #include "main/pack.h"
-#include "main/pbo.h"
 #include "main/pixeltransfer.h"
 #include "main/state.h"
 
@@ -511,7 +510,6 @@ _swrast_DrawPixels( struct gl_context *ctx,
    if (swrast->NewState)
       _swrast_validate_derived( ctx );
 
-   pixels = _mesa_map_pbo_source(ctx, unpack, pixels);
    if (!pixels) {
       return;
    }
@@ -534,6 +532,4 @@ _swrast_DrawPixels( struct gl_context *ctx,
       /* all other formats should be color formats */
       draw_rgba_pixels(ctx, x, y, width, height, format, type, unpack, pixels);
    }
-
-   _mesa_unmap_pbo_source(ctx, unpack);
 }

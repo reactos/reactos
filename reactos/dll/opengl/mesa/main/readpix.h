@@ -48,9 +48,4 @@ extern void GLAPIENTRY
 _mesa_ReadPixels( GLint x, GLint y, GLsizei width, GLsizei height,
                   GLenum format, GLenum type, GLvoid *pixels );
 
-extern void GLAPIENTRY
-_mesa_ReadnPixelsARB( GLint x, GLint y, GLsizei width, GLsizei height,
-		      GLenum format, GLenum type, GLsizei bufSize,
-                      GLvoid *pixels );
-
 #endif

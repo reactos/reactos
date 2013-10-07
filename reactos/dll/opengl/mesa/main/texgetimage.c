@@ -39,7 +39,6 @@
 #include "mfeatures.h"
 #include "mtypes.h"
 #include "pack.h"
-#include "pbo.h"
 #include "texgetimage.h"
 #include "teximage.h"
 
@@ -421,28 +420,6 @@ _mesa_get_teximage(struct gl_context *ctx,
       dimensions = 2;
    }
 
-   /* map dest buffer, if PBO */
-   if (_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
-      /* Packing texture image into a PBO.
-       * Map the (potentially) VRAM-based buffer into our process space so
-       * we can write into it with the code below.
-       * A hardware driver might use a sophisticated blit to move the
-       * texture data to the PBO if the PBO is in VRAM along with the texture.
-       */
-      GLubyte *buf = (GLubyte *)
-         ctx->Driver.MapBufferRange(ctx, 0, ctx->Pack.BufferObj->Size,
-				    GL_MAP_WRITE_BIT, ctx->Pack.BufferObj);
-      if (!buf) {
-         /* out of memory or other unexpected error */
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glGetTexImage(map PBO failed)");
-         return;
-      }
-      /* <pixels> was an offset into the PBO.
-       * Now make it a real, client-side pointer inside the mapped region.
-       */
-      pixels = ADD_POINTERS(buf, pixels);
-   }
-
    if (get_tex_memcpy(ctx, format, type, pixels, texImage)) {
       /* all done */
    }
@@ -455,10 +432,6 @@ _mesa_get_teximage(struct gl_context *ctx,
    else {
       get_tex_rgba(ctx, dimensions, format, type, pixels, texImage);
    }
-
-   if (_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
-      ctx->Driver.UnmapBuffer(ctx, ctx->Pack.BufferObj);
-   }
 }
 
 /**
@@ -467,13 +440,11 @@ _mesa_get_teximage(struct gl_context *ctx,
  */
 static GLboolean
 getteximage_error_check(struct gl_context *ctx, GLenum target, GLint level,
-                        GLenum format, GLenum type, GLsizei clientMemSize,
-                        GLvoid *pixels )
+                        GLenum format, GLenum type, GLvoid *pixels )
 {
    struct gl_texture_object *texObj;
    struct gl_texture_image *texImage;
    const GLint maxLevels = _mesa_max_texture_levels(ctx, target);
-   const GLuint dimensions = (target == GL_TEXTURE_3D) ? 3 : 2;
    GLenum baseFormat, err;
 
    if (maxLevels == 0) {
@@ -548,29 +519,6 @@ getteximage_error_check(struct gl_context *ctx, GLenum target, GLint level,
       return GL_TRUE;
    }
 
-   if (!_mesa_validate_pbo_access(dimensions, &ctx->Pack, texImage->Width,
-                                  texImage->Height, texImage->Depth,
-                                  format, type, clientMemSize, pixels)) {
-      if (_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glGetTexImage(out of bounds PBO access)");
-      } else {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glGetnTexImageARB(out of bounds access:"
-                     " bufSize (%d) is too small)", clientMemSize);
-      }
-      return GL_TRUE;
-   }
-
-   if (_mesa_is_bufferobj(ctx->Pack.BufferObj)) {
-      /* PBO should not be mapped */
-      if (_mesa_bufferobj_mapped(ctx->Pack.BufferObj)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glGetTexImage(PBO is mapped)");
-         return GL_TRUE;
-      }
-   }
-
    return GL_FALSE;
 }
 
@@ -587,20 +535,19 @@ getteximage_error_check(struct gl_context *ctx, GLenum target, GLint level,
  * \param pixels returned pixel data.
  */
 void GLAPIENTRY
-_mesa_GetnTexImageARB( GLenum target, GLint level, GLenum format,
-                       GLenum type, GLsizei bufSize, GLvoid *pixels )
+_mesa_GetTexImage( GLenum target, GLint level, GLenum format,
+                   GLenum type, GLvoid *pixels )
 {
    struct gl_texture_object *texObj;
    struct gl_texture_image *texImage;
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
-   if (getteximage_error_check(ctx, target, level, format, type,
-                               bufSize, pixels)) {
+   if (getteximage_error_check(ctx, target, level, format, type, pixels)) {
       return;
    }
 
-   if (!_mesa_is_bufferobj(ctx->Pack.BufferObj) && !pixels) {
+   if (!pixels) {
       /* not an error, do nothing */
       return;
    }
@@ -627,10 +574,3 @@ _mesa_GetnTexImageARB( GLenum target, GLint level, GLenum format,
    _mesa_unlock_texture(ctx, texObj);
 }
 
-
-void GLAPIENTRY
-_mesa_GetTexImage( GLenum target, GLint level, GLenum format,
-                   GLenum type, GLvoid *pixels )
-{
-   _mesa_GetnTexImageARB(target, level, format, type, INT_MAX, pixels);
-}

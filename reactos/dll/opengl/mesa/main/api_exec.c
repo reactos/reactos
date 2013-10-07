@@ -276,11 +276,6 @@ _mesa_create_exec_table(void)
    _mesa_init_convolve_dispatch(exec);
    _mesa_init_histogram_dispatch(exec);
 
-   /* OpenGL 2.0 */
-   SET_StencilFuncSeparate(exec, _mesa_StencilFuncSeparate);
-   SET_StencilMaskSeparate(exec, _mesa_StencilMaskSeparate);
-   SET_StencilOpSeparate(exec, _mesa_StencilOpSeparate);
-
    /* 2. GL_EXT_blend_color */
 #if 0
 /*    SET_BlendColorEXT(exec, _mesa_BlendColorEXT); */
@@ -344,11 +339,6 @@ _mesa_create_exec_table(void)
    SET_UnlockArraysEXT(exec, _mesa_UnlockArraysEXT);
 #endif
 
-   /* 148. GL_EXT_multi_draw_arrays */
-#if _HAVE_FULL_GL
-   SET_MultiDrawArraysEXT(exec, _mesa_MultiDrawArraysEXT);
-#endif
-
    /* 173. GL_INGR_blend_func_separate */
 #if _HAVE_FULL_GL
    SET_BlendFuncSeparateEXT(exec, _mesa_BlendFuncSeparateEXT);
@@ -406,11 +396,6 @@ _mesa_create_exec_table(void)
    SET_PointParameterivNV(exec, _mesa_PointParameteriv);
 #endif
 
-   /* 268. GL_EXT_stencil_two_side */
-#if _HAVE_FULL_GL
-   SET_ActiveStencilFaceEXT(exec, _mesa_ActiveStencilFaceEXT);
-#endif
-
    /* ???. GL_EXT_depth_bounds_test */
    SET_DepthBoundsEXT(exec, _mesa_DepthBoundsEXT);
 
@@ -442,15 +427,6 @@ _mesa_create_exec_table(void)
    SET_IsBufferARB(exec, _mesa_IsBufferARB);
    SET_MapBufferARB(exec, _mesa_MapBufferARB);
    SET_UnmapBufferARB(exec, _mesa_UnmapBufferARB);
-
-   /* ARB 104. GL_ARB_robustness */
-   SET_GetGraphicsResetStatusARB(exec, _mesa_GetGraphicsResetStatusARB);
-   SET_GetnPolygonStippleARB(exec, _mesa_GetnPolygonStippleARB);
-   SET_GetnTexImageARB(exec, _mesa_GetnTexImageARB);
-   SET_ReadnPixelsARB(exec, _mesa_ReadnPixelsARB);
-
-   /* GL_ATI_separate_stencil */
-   SET_StencilFuncSeparateATI(exec, _mesa_StencilFuncSeparateATI);
 
 #if FEATURE_ARB_map_buffer_range
    SET_MapBufferRange(exec, _mesa_MapBufferRange);

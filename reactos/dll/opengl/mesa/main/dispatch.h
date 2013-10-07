@@ -444,9 +444,6 @@ typedef PROC _glapi_proc;
 
 #if !FEATURE_remap_table
 
-#define _gloffset_StencilFuncSeparate 421
-#define _gloffset_StencilMaskSeparate 422
-#define _gloffset_StencilOpSeparate 423
 #define _gloffset_GetStringi 435
 #define _gloffset_GetBufferParameteri64v 438
 #define _gloffset_GetInteger64i_v 439
@@ -486,21 +483,6 @@ typedef PROC _glapi_proc;
 #define _gloffset_MapBufferRange 581
 #define _gloffset_BindVertexArray 583
 #define _gloffset_GenVertexArrays 584
-#define _gloffset_GetGraphicsResetStatusARB 665
-#define _gloffset_GetnColorTableARB 666
-#define _gloffset_GetnConvolutionFilterARB 668
-#define _gloffset_GetnHistogramARB 669
-#define _gloffset_GetnMapdvARB 670
-#define _gloffset_GetnMapfvARB 671
-#define _gloffset_GetnMapivARB 672
-#define _gloffset_GetnMinmaxARB 673
-#define _gloffset_GetnPixelMapfvARB 674
-#define _gloffset_GetnPixelMapuivARB 675
-#define _gloffset_GetnPixelMapusvARB 676
-#define _gloffset_GetnPolygonStippleARB 677
-#define _gloffset_GetnSeparableFilterARB 678
-#define _gloffset_GetnTexImageARB 679
-#define _gloffset_ReadnPixelsARB 684
 #define _gloffset_TexStorage1D 685
 #define _gloffset_TexStorage2D 686
 #define _gloffset_TexStorage3D 687
@@ -537,7 +519,6 @@ typedef PROC _glapi_proc;
 #define _gloffset_SecondaryColor3usEXT 724
 #define _gloffset_SecondaryColor3usvEXT 725
 #define _gloffset_SecondaryColorPointerEXT 726
-#define _gloffset_MultiDrawArraysEXT 727
 #define _gloffset_FogCoordPointerEXT 729
 #define _gloffset_FogCoorddEXT 730
 #define _gloffset_FogCoorddvEXT 731
@@ -674,16 +655,12 @@ typedef PROC _glapi_proc;
 #define _gloffset_ObjectUnpurgeableAPPLE 961
 #define _gloffset_CreateShaderProgramEXT 963
 #define _gloffset_TextureBarrierNV 965
-#define _gloffset_StencilFuncSeparateATI 966
 
 #else /* !FEATURE_remap_table */
 
 #define driDispatchRemapTable_size 565
 extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 
-#define StencilFuncSeparate_remap_index 13
-#define StencilMaskSeparate_remap_index 14
-#define StencilOpSeparate_remap_index 15
 #define GetStringi_remap_index 27
 #define TexBuffer_remap_index 28
 #define GetBufferParameteri64v_remap_index 30
@@ -726,21 +703,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define MapBufferRange_remap_index 173
 #define BindVertexArray_remap_index 175
 #define GenVertexArrays_remap_index 176
-#define GetGraphicsResetStatusARB_remap_index 257
-#define GetnColorTableARB_remap_index 258
-#define GetnConvolutionFilterARB_remap_index 260
-#define GetnHistogramARB_remap_index 261
-#define GetnMapdvARB_remap_index 262
-#define GetnMapfvARB_remap_index 263
-#define GetnMapivARB_remap_index 264
-#define GetnMinmaxARB_remap_index 265
-#define GetnPixelMapfvARB_remap_index 266
-#define GetnPixelMapuivARB_remap_index 267
-#define GetnPixelMapusvARB_remap_index 268
-#define GetnPolygonStippleARB_remap_index 269
-#define GetnSeparableFilterARB_remap_index 270
-#define GetnTexImageARB_remap_index 271
-#define ReadnPixelsARB_remap_index 276
 #define TexStorage1D_remap_index 277
 #define TexStorage2D_remap_index 278
 #define TexStorage3D_remap_index 279
@@ -914,11 +876,7 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define ObjectUnpurgeableAPPLE_remap_index 553
 #define CreateShaderProgramEXT_remap_index 555
 #define TextureBarrierNV_remap_index 557
-#define StencilFuncSeparateATI_remap_index 558
 
-#define _gloffset_StencilFuncSeparate driDispatchRemapTable[StencilFuncSeparate_remap_index]
-#define _gloffset_StencilMaskSeparate driDispatchRemapTable[StencilMaskSeparate_remap_index]
-#define _gloffset_StencilOpSeparate driDispatchRemapTable[StencilOpSeparate_remap_index]
 #define _gloffset_GetStringi driDispatchRemapTable[GetStringi_remap_index]
 #define _gloffset_GetBufferParameteri64v driDispatchRemapTable[GetBufferParameteri64v_remap_index]
 #define _gloffset_GetInteger64i_v driDispatchRemapTable[GetInteger64i_v_remap_index]
@@ -959,21 +917,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_MapBufferRange driDispatchRemapTable[MapBufferRange_remap_index]
 #define _gloffset_BindVertexArray driDispatchRemapTable[BindVertexArray_remap_index]
 #define _gloffset_GenVertexArrays driDispatchRemapTable[GenVertexArrays_remap_index]
-#define _gloffset_GetGraphicsResetStatusARB driDispatchRemapTable[GetGraphicsResetStatusARB_remap_index]
-#define _gloffset_GetnColorTableARB driDispatchRemapTable[GetnColorTableARB_remap_index]
-#define _gloffset_GetnConvolutionFilterARB driDispatchRemapTable[GetnConvolutionFilterARB_remap_index]
-#define _gloffset_GetnHistogramARB driDispatchRemapTable[GetnHistogramARB_remap_index]
-#define _gloffset_GetnMapdvARB driDispatchRemapTable[GetnMapdvARB_remap_index]
-#define _gloffset_GetnMapfvARB driDispatchRemapTable[GetnMapfvARB_remap_index]
-#define _gloffset_GetnMapivARB driDispatchRemapTable[GetnMapivARB_remap_index]
-#define _gloffset_GetnMinmaxARB driDispatchRemapTable[GetnMinmaxARB_remap_index]
-#define _gloffset_GetnPixelMapfvARB driDispatchRemapTable[GetnPixelMapfvARB_remap_index]
-#define _gloffset_GetnPixelMapuivARB driDispatchRemapTable[GetnPixelMapuivARB_remap_index]
-#define _gloffset_GetnPixelMapusvARB driDispatchRemapTable[GetnPixelMapusvARB_remap_index]
-#define _gloffset_GetnPolygonStippleARB driDispatchRemapTable[GetnPolygonStippleARB_remap_index]
-#define _gloffset_GetnSeparableFilterARB driDispatchRemapTable[GetnSeparableFilterARB_remap_index]
-#define _gloffset_GetnTexImageARB driDispatchRemapTable[GetnTexImageARB_remap_index]
-#define _gloffset_ReadnPixelsARB driDispatchRemapTable[ReadnPixelsARB_remap_index]
 #define _gloffset_TexStorage1D driDispatchRemapTable[TexStorage1D_remap_index]
 #define _gloffset_TexStorage2D driDispatchRemapTable[TexStorage2D_remap_index]
 #define _gloffset_TexStorage3D driDispatchRemapTable[TexStorage3D_remap_index]
@@ -1010,7 +953,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_SecondaryColor3usEXT driDispatchRemapTable[SecondaryColor3usEXT_remap_index]
 #define _gloffset_SecondaryColor3usvEXT driDispatchRemapTable[SecondaryColor3usvEXT_remap_index]
 #define _gloffset_SecondaryColorPointerEXT driDispatchRemapTable[SecondaryColorPointerEXT_remap_index]
-#define _gloffset_MultiDrawArraysEXT driDispatchRemapTable[MultiDrawArraysEXT_remap_index]
 #define _gloffset_FogCoordPointerEXT driDispatchRemapTable[FogCoordPointerEXT_remap_index]
 #define _gloffset_FogCoorddEXT driDispatchRemapTable[FogCoorddEXT_remap_index]
 #define _gloffset_FogCoorddvEXT driDispatchRemapTable[FogCoorddvEXT_remap_index]
@@ -1147,7 +1089,6 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_ObjectUnpurgeableAPPLE driDispatchRemapTable[ObjectUnpurgeableAPPLE_remap_index]
 #define _gloffset_CreateShaderProgramEXT driDispatchRemapTable[CreateShaderProgramEXT_remap_index]
 #define _gloffset_TextureBarrierNV driDispatchRemapTable[TextureBarrierNV_remap_index]
-#define _gloffset_StencilFuncSeparateATI driDispatchRemapTable[StencilFuncSeparateATI_remap_index]
 
 #endif /* !FEATURE_remap_table */
 
@@ -5265,39 +5206,6 @@ static inline void SET_CopyTexSubImage3D(struct _glapi_table *disp, void (GLAPIE
    SET_by_offset(disp, _gloffset_CopyTexSubImage3D, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_StencilFuncSeparate)(GLenum, GLenum, GLint, GLuint);
-#define CALL_StencilFuncSeparate(disp, parameters) \
-    (* GET_StencilFuncSeparate(disp)) parameters
-static inline _glptr_StencilFuncSeparate GET_StencilFuncSeparate(struct _glapi_table *disp) {
-   return (_glptr_StencilFuncSeparate) (GET_by_offset(disp, _gloffset_StencilFuncSeparate));
-}
-
-static inline void SET_StencilFuncSeparate(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLint, GLuint)) {
-   SET_by_offset(disp, _gloffset_StencilFuncSeparate, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_StencilMaskSeparate)(GLenum, GLuint);
-#define CALL_StencilMaskSeparate(disp, parameters) \
-    (* GET_StencilMaskSeparate(disp)) parameters
-static inline _glptr_StencilMaskSeparate GET_StencilMaskSeparate(struct _glapi_table *disp) {
-   return (_glptr_StencilMaskSeparate) (GET_by_offset(disp, _gloffset_StencilMaskSeparate));
-}
-
-static inline void SET_StencilMaskSeparate(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint)) {
-   SET_by_offset(disp, _gloffset_StencilMaskSeparate, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_StencilOpSeparate)(GLenum, GLenum, GLenum, GLenum);
-#define CALL_StencilOpSeparate(disp, parameters) \
-    (* GET_StencilOpSeparate(disp)) parameters
-static inline _glptr_StencilOpSeparate GET_StencilOpSeparate(struct _glapi_table *disp) {
-   return (_glptr_StencilOpSeparate) (GET_by_offset(disp, _gloffset_StencilOpSeparate));
-}
-
-static inline void SET_StencilOpSeparate(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLenum)) {
-   SET_by_offset(disp, _gloffset_StencilOpSeparate, fn);
-}
-
 typedef const GLubyte * (GLAPIENTRYP _glptr_GetStringi)(GLenum, GLuint);
 #define CALL_GetStringi(disp, parameters) \
     (* GET_GetStringi(disp)) parameters
@@ -5727,171 +5635,6 @@ static inline void SET_GenVertexArrays(struct _glapi_table *disp, void (GLAPIENT
    SET_by_offset(disp, _gloffset_GenVertexArrays, fn);
 }
 
-typedef GLenum (GLAPIENTRYP _glptr_GetGraphicsResetStatusARB)(void);
-#define CALL_GetGraphicsResetStatusARB(disp, parameters) \
-    (* GET_GetGraphicsResetStatusARB(disp)) parameters
-static inline _glptr_GetGraphicsResetStatusARB GET_GetGraphicsResetStatusARB(struct _glapi_table *disp) {
-   return (_glptr_GetGraphicsResetStatusARB) (GET_by_offset(disp, _gloffset_GetGraphicsResetStatusARB));
-}
-
-static inline void SET_GetGraphicsResetStatusARB(struct _glapi_table *disp, GLenum (GLAPIENTRYP fn)(void)) {
-   SET_by_offset(disp, _gloffset_GetGraphicsResetStatusARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnColorTableARB)(GLenum, GLenum, GLenum, GLsizei, GLvoid *);
-#define CALL_GetnColorTableARB(disp, parameters) \
-    (* GET_GetnColorTableARB(disp)) parameters
-static inline _glptr_GetnColorTableARB GET_GetnColorTableARB(struct _glapi_table *disp) {
-   return (_glptr_GetnColorTableARB) (GET_by_offset(disp, _gloffset_GetnColorTableARB));
-}
-
-static inline void SET_GetnColorTableARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLsizei, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_GetnColorTableARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnConvolutionFilterARB)(GLenum, GLenum, GLenum, GLsizei, GLvoid *);
-#define CALL_GetnConvolutionFilterARB(disp, parameters) \
-    (* GET_GetnConvolutionFilterARB(disp)) parameters
-static inline _glptr_GetnConvolutionFilterARB GET_GetnConvolutionFilterARB(struct _glapi_table *disp) {
-   return (_glptr_GetnConvolutionFilterARB) (GET_by_offset(disp, _gloffset_GetnConvolutionFilterARB));
-}
-
-static inline void SET_GetnConvolutionFilterARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLsizei, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_GetnConvolutionFilterARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnHistogramARB)(GLenum, GLboolean, GLenum, GLenum, GLsizei, GLvoid *);
-#define CALL_GetnHistogramARB(disp, parameters) \
-    (* GET_GetnHistogramARB(disp)) parameters
-static inline _glptr_GetnHistogramARB GET_GetnHistogramARB(struct _glapi_table *disp) {
-   return (_glptr_GetnHistogramARB) (GET_by_offset(disp, _gloffset_GetnHistogramARB));
-}
-
-static inline void SET_GetnHistogramARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLboolean, GLenum, GLenum, GLsizei, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_GetnHistogramARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnMapdvARB)(GLenum, GLenum, GLsizei, GLdouble *);
-#define CALL_GetnMapdvARB(disp, parameters) \
-    (* GET_GetnMapdvARB(disp)) parameters
-static inline _glptr_GetnMapdvARB GET_GetnMapdvARB(struct _glapi_table *disp) {
-   return (_glptr_GetnMapdvARB) (GET_by_offset(disp, _gloffset_GetnMapdvARB));
-}
-
-static inline void SET_GetnMapdvARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLsizei, GLdouble *)) {
-   SET_by_offset(disp, _gloffset_GetnMapdvARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnMapfvARB)(GLenum, GLenum, GLsizei, GLfloat *);
-#define CALL_GetnMapfvARB(disp, parameters) \
-    (* GET_GetnMapfvARB(disp)) parameters
-static inline _glptr_GetnMapfvARB GET_GetnMapfvARB(struct _glapi_table *disp) {
-   return (_glptr_GetnMapfvARB) (GET_by_offset(disp, _gloffset_GetnMapfvARB));
-}
-
-static inline void SET_GetnMapfvARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLsizei, GLfloat *)) {
-   SET_by_offset(disp, _gloffset_GetnMapfvARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnMapivARB)(GLenum, GLenum, GLsizei, GLint *);
-#define CALL_GetnMapivARB(disp, parameters) \
-    (* GET_GetnMapivARB(disp)) parameters
-static inline _glptr_GetnMapivARB GET_GetnMapivARB(struct _glapi_table *disp) {
-   return (_glptr_GetnMapivARB) (GET_by_offset(disp, _gloffset_GetnMapivARB));
-}
-
-static inline void SET_GetnMapivARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLsizei, GLint *)) {
-   SET_by_offset(disp, _gloffset_GetnMapivARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnMinmaxARB)(GLenum, GLboolean, GLenum, GLenum, GLsizei, GLvoid *);
-#define CALL_GetnMinmaxARB(disp, parameters) \
-    (* GET_GetnMinmaxARB(disp)) parameters
-static inline _glptr_GetnMinmaxARB GET_GetnMinmaxARB(struct _glapi_table *disp) {
-   return (_glptr_GetnMinmaxARB) (GET_by_offset(disp, _gloffset_GetnMinmaxARB));
-}
-
-static inline void SET_GetnMinmaxARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLboolean, GLenum, GLenum, GLsizei, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_GetnMinmaxARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnPixelMapfvARB)(GLenum, GLsizei, GLfloat *);
-#define CALL_GetnPixelMapfvARB(disp, parameters) \
-    (* GET_GetnPixelMapfvARB(disp)) parameters
-static inline _glptr_GetnPixelMapfvARB GET_GetnPixelMapfvARB(struct _glapi_table *disp) {
-   return (_glptr_GetnPixelMapfvARB) (GET_by_offset(disp, _gloffset_GetnPixelMapfvARB));
-}
-
-static inline void SET_GetnPixelMapfvARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLfloat *)) {
-   SET_by_offset(disp, _gloffset_GetnPixelMapfvARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnPixelMapuivARB)(GLenum, GLsizei, GLuint *);
-#define CALL_GetnPixelMapuivARB(disp, parameters) \
-    (* GET_GetnPixelMapuivARB(disp)) parameters
-static inline _glptr_GetnPixelMapuivARB GET_GetnPixelMapuivARB(struct _glapi_table *disp) {
-   return (_glptr_GetnPixelMapuivARB) (GET_by_offset(disp, _gloffset_GetnPixelMapuivARB));
-}
-
-static inline void SET_GetnPixelMapuivARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLuint *)) {
-   SET_by_offset(disp, _gloffset_GetnPixelMapuivARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnPixelMapusvARB)(GLenum, GLsizei, GLushort *);
-#define CALL_GetnPixelMapusvARB(disp, parameters) \
-    (* GET_GetnPixelMapusvARB(disp)) parameters
-static inline _glptr_GetnPixelMapusvARB GET_GetnPixelMapusvARB(struct _glapi_table *disp) {
-   return (_glptr_GetnPixelMapusvARB) (GET_by_offset(disp, _gloffset_GetnPixelMapusvARB));
-}
-
-static inline void SET_GetnPixelMapusvARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLushort *)) {
-   SET_by_offset(disp, _gloffset_GetnPixelMapusvARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnPolygonStippleARB)(GLsizei, GLubyte *);
-#define CALL_GetnPolygonStippleARB(disp, parameters) \
-    (* GET_GetnPolygonStippleARB(disp)) parameters
-static inline _glptr_GetnPolygonStippleARB GET_GetnPolygonStippleARB(struct _glapi_table *disp) {
-   return (_glptr_GetnPolygonStippleARB) (GET_by_offset(disp, _gloffset_GetnPolygonStippleARB));
-}
-
-static inline void SET_GetnPolygonStippleARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLubyte *)) {
-   SET_by_offset(disp, _gloffset_GetnPolygonStippleARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnSeparableFilterARB)(GLenum, GLenum, GLenum, GLsizei, GLvoid *, GLsizei, GLvoid *, GLvoid *);
-#define CALL_GetnSeparableFilterARB(disp, parameters) \
-    (* GET_GetnSeparableFilterARB(disp)) parameters
-static inline _glptr_GetnSeparableFilterARB GET_GetnSeparableFilterARB(struct _glapi_table *disp) {
-   return (_glptr_GetnSeparableFilterARB) (GET_by_offset(disp, _gloffset_GetnSeparableFilterARB));
-}
-
-static inline void SET_GetnSeparableFilterARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLsizei, GLvoid *, GLsizei, GLvoid *, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_GetnSeparableFilterARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_GetnTexImageARB)(GLenum, GLint, GLenum, GLenum, GLsizei, GLvoid *);
-#define CALL_GetnTexImageARB(disp, parameters) \
-    (* GET_GetnTexImageARB(disp)) parameters
-static inline _glptr_GetnTexImageARB GET_GetnTexImageARB(struct _glapi_table *disp) {
-   return (_glptr_GetnTexImageARB) (GET_by_offset(disp, _gloffset_GetnTexImageARB));
-}
-
-static inline void SET_GetnTexImageARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLint, GLenum, GLenum, GLsizei, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_GetnTexImageARB, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_ReadnPixelsARB)(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLsizei, GLvoid *);
-#define CALL_ReadnPixelsARB(disp, parameters) \
-    (* GET_ReadnPixelsARB(disp)) parameters
-static inline _glptr_ReadnPixelsARB GET_ReadnPixelsARB(struct _glapi_table *disp) {
-   return (_glptr_ReadnPixelsARB) (GET_by_offset(disp, _gloffset_ReadnPixelsARB));
-}
-
-static inline void SET_ReadnPixelsARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLsizei, GLvoid *)) {
-   SET_by_offset(disp, _gloffset_ReadnPixelsARB, fn);
-}
-
 typedef void (GLAPIENTRYP _glptr_TexStorage1D)(GLenum, GLsizei, GLenum, GLsizei);
 #define CALL_TexStorage1D(disp, parameters) \
     (* GET_TexStorage1D(disp)) parameters
@@ -6286,17 +6029,6 @@ static inline _glptr_SecondaryColorPointerEXT GET_SecondaryColorPointerEXT(struc
 
 static inline void SET_SecondaryColorPointerEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLint, GLenum, GLsizei, const GLvoid *)) {
    SET_by_offset(disp, _gloffset_SecondaryColorPointerEXT, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_MultiDrawArraysEXT)(GLenum, const GLint *, const GLsizei *, GLsizei);
-#define CALL_MultiDrawArraysEXT(disp, parameters) \
-    (* GET_MultiDrawArraysEXT(disp)) parameters
-static inline _glptr_MultiDrawArraysEXT GET_MultiDrawArraysEXT(struct _glapi_table *disp) {
-   return (_glptr_MultiDrawArraysEXT) (GET_by_offset(disp, _gloffset_MultiDrawArraysEXT));
-}
-
-static inline void SET_MultiDrawArraysEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, const GLint *, const GLsizei *, GLsizei)) {
-   SET_by_offset(disp, _gloffset_MultiDrawArraysEXT, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_FogCoordPointerEXT)(GLenum, GLsizei, const GLvoid *);
@@ -7793,17 +7525,6 @@ static inline _glptr_TextureBarrierNV GET_TextureBarrierNV(struct _glapi_table *
 
 static inline void SET_TextureBarrierNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(void)) {
    SET_by_offset(disp, _gloffset_TextureBarrierNV, fn);
-}
-
-typedef void (GLAPIENTRYP _glptr_StencilFuncSeparateATI)(GLenum, GLenum, GLint, GLuint);
-#define CALL_StencilFuncSeparateATI(disp, parameters) \
-    (* GET_StencilFuncSeparateATI(disp)) parameters
-static inline _glptr_StencilFuncSeparateATI GET_StencilFuncSeparateATI(struct _glapi_table *disp) {
-   return (_glptr_StencilFuncSeparateATI) (GET_by_offset(disp, _gloffset_StencilFuncSeparateATI));
-}
-
-static inline void SET_StencilFuncSeparateATI(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLint, GLuint)) {
-   SET_by_offset(disp, _gloffset_StencilFuncSeparateATI, fn);
 }
 
 

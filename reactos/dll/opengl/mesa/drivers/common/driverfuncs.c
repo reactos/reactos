@@ -137,9 +137,6 @@ _mesa_init_driver_functions(struct dd_function_table *driver)
    driver->RenderMode = NULL;
    driver->Scissor = NULL;
    driver->ShadeModel = NULL;
-   driver->StencilFuncSeparate = NULL;
-   driver->StencilOpSeparate = NULL;
-   driver->StencilMaskSeparate = NULL;
    driver->TexGen = NULL;
    driver->TexEnv = NULL;
    driver->TexParameter = NULL;

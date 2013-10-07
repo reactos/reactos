@@ -174,9 +174,6 @@ _swsetup_RenderStart( struct gl_context *ctx )
 
    swsetup->NewState = 0;
 
-   /* This will change if drawing unfilled tris */
-   _swrast_SetFacing(ctx, 0);
-
    _swrast_render_start(ctx);
 
    /* Important */

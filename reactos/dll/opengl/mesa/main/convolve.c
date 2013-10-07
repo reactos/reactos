@@ -115,20 +115,12 @@ _mesa_CopyConvolutionFilter2D(GLenum target, GLenum internalFormat, GLint x, GLi
 
 
 static void GLAPIENTRY
-_mesa_GetnConvolutionFilterARB(GLenum target, GLenum format, GLenum type,
-                               GLsizei bufSize, GLvoid *image)
+_mesa_GetConvolutionFilter(GLenum target, GLenum format, GLenum type,
+                           GLvoid *image)
 {
    GET_CURRENT_CONTEXT(ctx);
 
    _mesa_error(ctx, GL_INVALID_OPERATION, "glGetConvolutionFilter");
-}
-
-
-static void GLAPIENTRY
-_mesa_GetConvolutionFilter(GLenum target, GLenum format, GLenum type,
-                           GLvoid *image)
-{
-   _mesa_GetnConvolutionFilterARB(target, format, type, INT_MAX, image);
 }
 
 
@@ -151,23 +143,13 @@ _mesa_GetConvolutionParameteriv(GLenum target, GLenum pname, GLint *params)
 
 
 static void GLAPIENTRY
-_mesa_GetnSeparableFilterARB(GLenum target, GLenum format, GLenum type,
-                             GLsizei rowBufSize, GLvoid *row,
-                             GLsizei columnBufSize,  GLvoid *column,
-                             GLvoid *span)
+_mesa_GetSeparableFilter(GLenum target, GLenum format, GLenum type,
+                         GLvoid *row, GLvoid *column,
+                         GLvoid *span)
 {
    GET_CURRENT_CONTEXT(ctx);
 
    _mesa_error(ctx, GL_INVALID_ENUM, "glGetSeparableFilter");
-}
-
-
-static void GLAPIENTRY
-_mesa_GetSeparableFilter(GLenum target, GLenum format, GLenum type,
-                         GLvoid *row, GLvoid *column, GLvoid *span)
-{
-   _mesa_GetnSeparableFilterARB(target, format, type, INT_MAX, row,
-                                INT_MAX, column, span);
 }
 
 
@@ -195,10 +177,6 @@ _mesa_init_convolve_dispatch(struct _glapi_table *disp)
    SET_GetConvolutionParameteriv(disp, _mesa_GetConvolutionParameteriv);
    SET_SeparableFilter2D(disp, _mesa_SeparableFilter2D);
    SET_GetSeparableFilter(disp, _mesa_GetSeparableFilter);
-
-   /* GL_ARB_robustness */
-   SET_GetnConvolutionFilterARB(disp, _mesa_GetnConvolutionFilterARB);
-   SET_GetnSeparableFilterARB(disp, _mesa_GetnSeparableFilterARB);
 }
 
 

@@ -367,8 +367,6 @@ recalculate_input_bindings(struct gl_context *ctx)
    }
 
    ctx->NewState |= _NEW_ARRAY;
-
-   _mesa_set_varying_vp_inputs( ctx, VERT_BIT_ALL & (~const_inputs) );
 }
 
 

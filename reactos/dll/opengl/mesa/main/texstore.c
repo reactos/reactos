@@ -60,7 +60,6 @@
 #include "mfeatures.h"
 #include "mtypes.h"
 #include "pack.h"
-#include "pbo.h"
 #include "imports.h"
 #include "teximage.h"
 #include "texstore.h"
@@ -3340,9 +3339,7 @@ store_texsubimage(struct gl_context *ctx,
    }
 
    /* get pointer to src pixels (may be in a pbo which we'll map here) */
-   src = (const GLubyte *)
-      _mesa_validate_pbo_teximage(ctx, dims, width, height, depth,
-                                  format, type, pixels, packing, caller);
+   src = (const GLubyte *)pixels;
    if (!src)
       return;
 
@@ -3403,8 +3400,6 @@ store_texsubimage(struct gl_context *ctx,
 
    if (!success)
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "%s", caller);
-
-   _mesa_unmap_teximage_pbo(ctx, packing);
 }
 
 

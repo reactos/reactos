@@ -44,7 +44,6 @@ list(APPEND SOURCE
     mm.c
     multisample.c
     pack.c
-    pbo.c
     pixel.c
     pixelstore.c
     pixeltransfer.c

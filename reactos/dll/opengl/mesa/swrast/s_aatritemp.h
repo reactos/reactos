@@ -106,8 +106,6 @@
       if (area * bf < 0 || area == 0 || IS_INF_OR_NAN(area))
 	 return;
       ltor = (GLboolean) (area < 0.0F);
-
-      span.facing = area * swrast->_BackfaceSign > 0.0F;
    }
 
    /* Plane equation setup:

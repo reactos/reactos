@@ -44,8 +44,8 @@ static void GLAPIENTRY _mesa_ResetMinmax(GLenum target);
 
 
 static void GLAPIENTRY
-_mesa_GetnMinmaxARB(GLenum target, GLboolean reset, GLenum format,
-                    GLenum type, GLsizei bufSize, GLvoid *values)
+_mesa_GetMinmax(GLenum target, GLboolean reset, GLenum format,
+                    GLenum type, GLvoid *values)
 {
    GET_CURRENT_CONTEXT(ctx);
 
@@ -54,28 +54,12 @@ _mesa_GetnMinmaxARB(GLenum target, GLboolean reset, GLenum format,
 
 
 static void GLAPIENTRY
-_mesa_GetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type,
-                GLvoid *values)
-{
-   _mesa_GetnMinmaxARB(target, reset, format, type, INT_MAX, values);
-}
-
-
-static void GLAPIENTRY
-_mesa_GetnHistogramARB(GLenum target, GLboolean reset, GLenum format,
-                       GLenum type, GLsizei bufSize, GLvoid *values)
+_mesa_GetHistogram(GLenum target, GLboolean reset, GLenum format,
+                   GLenum type, GLvoid *values)
 {
    GET_CURRENT_CONTEXT(ctx);
 
    _mesa_error(ctx, GL_INVALID_OPERATION, "glGetHistogram");
-}
-
-
-static void GLAPIENTRY
-_mesa_GetHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type,
-                   GLvoid *values)
-{
-   _mesa_GetnHistogramARB(target, reset, format, type, INT_MAX, values);
 }
 
 
@@ -164,10 +148,6 @@ _mesa_init_histogram_dispatch(struct _glapi_table *disp)
    SET_Minmax(disp, _mesa_Minmax);
    SET_ResetHistogram(disp, _mesa_ResetHistogram);
    SET_ResetMinmax(disp, _mesa_ResetMinmax);
-
-   /* GL_ARB_robustness */
-   SET_GetnHistogramARB(disp, _mesa_GetnHistogramARB);
-   SET_GetnMinmaxARB(disp, _mesa_GetnMinmaxARB);
 }
 
 #endif /* FEATURE_histogram */

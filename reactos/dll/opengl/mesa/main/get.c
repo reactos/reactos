@@ -270,12 +270,10 @@ EXTRA_EXT(NV_fog_distance);
 EXTRA_EXT(EXT_texture_filter_anisotropic);
 EXTRA_EXT(IBM_rasterpos_clip);
 EXTRA_EXT(NV_point_sprite);
-EXTRA_EXT(EXT_stencil_two_side);
 EXTRA_EXT(NV_light_max_exponent);
 EXTRA_EXT(EXT_depth_bounds_test);
 EXTRA_EXT(APPLE_vertex_array_object);
 EXTRA_EXT(EXT_compiled_vertex_array);
-EXTRA_EXT(EXT_pixel_buffer_object);
 EXTRA_EXT2(NV_point_sprite, ARB_point_sprite);
 
 static const int extra_version_30[] = { EXTRA_VERSION_30, EXTRA_END };
@@ -524,15 +522,6 @@ static const struct value_desc values[] = {
 
    { GL_BLEND_COLOR_EXT, LOC_CUSTOM, TYPE_FLOATN_4, 0, NO_EXTRA },
 
-   /* OpenGL 2.0 */
-   { GL_STENCIL_BACK_FUNC, CONTEXT_ENUM(Stencil.Function[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_VALUE_MASK, CONTEXT_INT(Stencil.ValueMask[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_WRITEMASK, CONTEXT_INT(Stencil.WriteMask[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_REF, CONTEXT_INT(Stencil.Ref[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_FAIL, CONTEXT_ENUM(Stencil.FailFunc[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_PASS_DEPTH_FAIL, CONTEXT_ENUM(Stencil.ZFailFunc[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_PASS_DEPTH_PASS, CONTEXT_ENUM(Stencil.ZPassFunc[1]), NO_EXTRA },
-
    /* OES_texture_3D */
    { GL_TEXTURE_BINDING_3D, LOC_CUSTOM, TYPE_INT, TEXTURE_3D_INDEX, NO_EXTRA },
    { GL_MAX_3D_TEXTURE_SIZE, LOC_CUSTOM, TYPE_INT,
@@ -748,11 +737,6 @@ static const struct value_desc values[] = {
    { GL_POINT_SPRITE_COORD_ORIGIN, CONTEXT_ENUM(Point.SpriteOrigin),
      extra_NV_point_sprite_ARB_point_sprite },
 
-   /* GL_EXT_stencil_two_side */
-   { GL_STENCIL_TEST_TWO_SIDE_EXT, CONTEXT_BOOL(Stencil.TestTwoSide),
-	 extra_EXT_stencil_two_side },
-   { GL_ACTIVE_STENCIL_FACE_EXT, LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA },
-
    /* GL_NV_light_max_exponent */
    { GL_MAX_SHININESS_NV, CONTEXT_FLOAT(Const.MaxShininess),
      extra_NV_light_max_exponent },
@@ -768,12 +752,6 @@ static const struct value_desc values[] = {
      offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_COLOR1].BufferObj), NO_EXTRA },
    { GL_FOG_COORDINATE_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
      offsetof(struct gl_array_object, VertexAttrib[VERT_ATTRIB_FOG].BufferObj), NO_EXTRA },
-
-   /* GL_EXT_pixel_buffer_object */
-   { GL_PIXEL_PACK_BUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_pixel_buffer_object },
-   { GL_PIXEL_UNPACK_BUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_pixel_buffer_object },
 
    /* GL_EXT_depth_bounds_test */
    { GL_DEPTH_BOUNDS_TEST_EXT, CONTEXT_BOOL(Depth.BoundsTest),
@@ -799,9 +777,6 @@ static const struct value_desc values[] = {
    /* GL 3.2 */
    { GL_CONTEXT_PROFILE_MASK, CONTEXT_INT(Const.ProfileMask),
      extra_version_32 },
-
-   /* GL_ARB_robustness */
-   { GL_RESET_NOTIFICATION_STRATEGY_ARB, CONTEXT_ENUM(Const.ResetStrategy), NO_EXTRA },
 };
 
 /* All we need now is a way to look up the value struct from the enum.
@@ -1018,30 +993,26 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       v->value_int_4[3] = ctx->Viewport.Height;
       break;
 
-   case GL_ACTIVE_STENCIL_FACE_EXT:
-      v->value_enum = ctx->Stencil.ActiveFace ? GL_BACK : GL_FRONT;
-      break;
-
    case GL_STENCIL_FAIL:
-      v->value_enum = ctx->Stencil.FailFunc[ctx->Stencil.ActiveFace];
+      v->value_enum = ctx->Stencil.FailFunc;
       break;
    case GL_STENCIL_FUNC:
-      v->value_enum = ctx->Stencil.Function[ctx->Stencil.ActiveFace];
+      v->value_enum = ctx->Stencil.Function;
       break;
    case GL_STENCIL_PASS_DEPTH_FAIL:
-      v->value_enum = ctx->Stencil.ZFailFunc[ctx->Stencil.ActiveFace];
+      v->value_enum = ctx->Stencil.ZFailFunc;
       break;
    case GL_STENCIL_PASS_DEPTH_PASS:
-      v->value_enum = ctx->Stencil.ZPassFunc[ctx->Stencil.ActiveFace];
+      v->value_enum = ctx->Stencil.ZPassFunc;
       break;
    case GL_STENCIL_REF:
-      v->value_int = ctx->Stencil.Ref[ctx->Stencil.ActiveFace];
+      v->value_int = ctx->Stencil.Ref;
       break;
    case GL_STENCIL_VALUE_MASK:
-      v->value_int = ctx->Stencil.ValueMask[ctx->Stencil.ActiveFace];
+      v->value_int = ctx->Stencil.ValueMask;
       break;
    case GL_STENCIL_WRITEMASK:
-      v->value_int = ctx->Stencil.WriteMask[ctx->Stencil.ActiveFace];
+      v->value_int = ctx->Stencil.WriteMask;
       break;
 
    case GL_NUM_EXTENSIONS:
@@ -1094,16 +1065,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       break;
    case GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB:
       v->value_int = ctx->Array.ArrayObj->ElementArrayBufferObj->Name;
-      break;
-
-   case GL_PIXEL_PACK_BUFFER_BINDING_EXT:
-      v->value_int = ctx->Pack.BufferObj->Name;
-      break;
-   case GL_PIXEL_UNPACK_BUFFER_BINDING_EXT:
-      v->value_int = ctx->Unpack.BufferObj->Name;
-      break;
-   case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES:
-      v->value_int = ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POINT_SIZE].BufferObj->Name;
       break;
 
    case GL_FOG_COLOR:

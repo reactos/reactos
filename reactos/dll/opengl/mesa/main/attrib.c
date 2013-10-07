@@ -113,7 +113,6 @@ struct gl_enable_attrib
    GLboolean RescaleNormals;
    GLboolean Scissor;
    GLboolean Stencil;
-   GLboolean StencilTwoSide;          /* GL_EXT_stencil_two_side */
    GLboolean MultisampleEnabled;      /* GL_ARB_multisample */
    GLboolean SampleAlphaToCoverage;   /* GL_ARB_multisample */
    GLboolean SampleAlphaToOne;        /* GL_ARB_multisample */
@@ -293,7 +292,6 @@ _mesa_PushAttrib(GLbitfield mask)
       attr->RescaleNormals = ctx->Transform.RescaleNormals;
       attr->Scissor = ctx->Scissor.Enabled;
       attr->Stencil = ctx->Stencil.Enabled;
-      attr->StencilTwoSide = ctx->Stencil.TestTwoSide;
       attr->MultisampleEnabled = ctx->Multisample.Enabled;
       attr->SampleAlphaToCoverage = ctx->Multisample.SampleAlphaToCoverage;
       attr->SampleAlphaToOne = ctx->Multisample.SampleAlphaToOne;
@@ -548,9 +546,6 @@ pop_enable_group(struct gl_context *ctx, const struct gl_enable_attrib *enable)
                    GL_POLYGON_STIPPLE);
    TEST_AND_UPDATE(ctx->Scissor.Enabled, enable->Scissor, GL_SCISSOR_TEST);
    TEST_AND_UPDATE(ctx->Stencil.Enabled, enable->Stencil, GL_STENCIL_TEST);
-   if (ctx->Extensions.EXT_stencil_two_side) {
-      TEST_AND_UPDATE(ctx->Stencil.TestTwoSide, enable->StencilTwoSide, GL_STENCIL_TEST_TWO_SIDE_EXT);
-   }
    TEST_AND_UPDATE(ctx->Multisample.Enabled, enable->MultisampleEnabled,
                    GL_MULTISAMPLE_ARB);
    TEST_AND_UPDATE(ctx->Multisample.SampleAlphaToCoverage,
@@ -983,30 +978,13 @@ _mesa_PopAttrib(void)
                stencil = (const struct gl_stencil_attrib *) attr->data;
                _mesa_set_enable(ctx, GL_STENCIL_TEST, stencil->Enabled);
                _mesa_ClearStencil(stencil->Clear);
-               if (ctx->Extensions.EXT_stencil_two_side) {
-                  _mesa_set_enable(ctx, GL_STENCIL_TEST_TWO_SIDE_EXT,
-                                   stencil->TestTwoSide);
-                  _mesa_ActiveStencilFaceEXT(stencil->ActiveFace
-                                             ? GL_BACK : GL_FRONT);
-               }
-               /* front state */
-               _mesa_StencilFuncSeparate(GL_FRONT,
-                                         stencil->Function[0],
-                                         stencil->Ref[0],
-                                         stencil->ValueMask[0]);
-               _mesa_StencilMaskSeparate(GL_FRONT, stencil->WriteMask[0]);
-               _mesa_StencilOpSeparate(GL_FRONT, stencil->FailFunc[0],
-                                       stencil->ZFailFunc[0],
-                                       stencil->ZPassFunc[0]);
-               /* back state */
-               _mesa_StencilFuncSeparate(GL_BACK,
-                                         stencil->Function[1],
-                                         stencil->Ref[1],
-                                         stencil->ValueMask[1]);
-               _mesa_StencilMaskSeparate(GL_BACK, stencil->WriteMask[1]);
-               _mesa_StencilOpSeparate(GL_BACK, stencil->FailFunc[1],
-                                       stencil->ZFailFunc[1],
-                                       stencil->ZPassFunc[1]);
+               _mesa_StencilFunc(stencil->Function,
+                                 stencil->Ref,
+                                 stencil->ValueMask);
+               _mesa_StencilMask(stencil->WriteMask);
+               _mesa_StencilOp(stencil->FailFunc,
+                               stencil->ZFailFunc,
+                               stencil->ZPassFunc);
             }
             break;
          case GL_TRANSFORM_BIT:
@@ -1111,7 +1089,6 @@ copy_pixelstore(struct gl_context *ctx,
    dst->SwapBytes = src->SwapBytes;
    dst->LsbFirst = src->LsbFirst;
    dst->Invert = src->Invert;
-   _mesa_reference_buffer_object(ctx, &dst->BufferObj, src->BufferObj);
 }
 
 
@@ -1344,7 +1321,6 @@ _mesa_PopClientAttrib(void)
                struct gl_pixelstore_attrib *store =
                   (struct gl_pixelstore_attrib *) node->data;
                copy_pixelstore(ctx, &ctx->Pack, store);
-               _mesa_reference_buffer_object(ctx, &store->BufferObj, NULL);
             }
 	    ctx->NewState |= _NEW_PACKUNPACK;
             break;
@@ -1353,7 +1329,6 @@ _mesa_PopClientAttrib(void)
                struct gl_pixelstore_attrib *store =
                   (struct gl_pixelstore_attrib *) node->data;
                copy_pixelstore(ctx, &ctx->Unpack, store);
-               _mesa_reference_buffer_object(ctx, &store->BufferObj, NULL);
             }
 	    ctx->NewState |= _NEW_PACKUNPACK;
             break;
