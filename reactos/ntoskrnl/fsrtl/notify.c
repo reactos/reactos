@@ -503,7 +503,7 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
 {
     ULONG SavedLength;
     PIO_STACK_LOCATION Stack;
-    PNOTIFY_CHANGE NotifyChange;
+    PNOTIFY_CHANGE NotifyChange = NULL;
     PREAL_NOTIFY_SYNC RealNotifySync;
 
     PAGED_CODE();
