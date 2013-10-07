@@ -115,6 +115,9 @@ static PFN_COUNT MiReservedSwapPages;
 #define OFFSET_FROM_ENTRY(i) ((i) >> 11)
 #define ENTRY_FROM_FILE_OFFSET(i, j) ((i) | ((j) << 11) | 0x400)
 
+/* Make sure there can be only 16 paging files */
+C_ASSERT(FILE_FROM_ENTRY(0xffffffff) < MAX_PAGING_FILES);
+
 static BOOLEAN MmSwapSpaceMessage = FALSE;
 
 /* FUNCTIONS *****************************************************************/
@@ -239,11 +242,6 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
    i = FILE_FROM_ENTRY(SwapEntry);
    offset = OFFSET_FROM_ENTRY(SwapEntry);
 
-   if (i >= MAX_PAGING_FILES)
-   {
-      DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
@@ -301,11 +299,6 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
    i = FILE_FROM_ENTRY(SwapEntry);
    offset = OFFSET_FROM_ENTRY(SwapEntry);
 
-   if (i >= MAX_PAGING_FILES)
-   {
-      DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
    if (PagingFileList[i]->FileObject == NULL ||
          PagingFileList[i]->FileObject->DeviceObject == NULL)
    {
@@ -426,12 +419,6 @@ MmFreeSwapPage(SWAPENTRY Entry)
 
    i = FILE_FROM_ENTRY(Entry);
    off = OFFSET_FROM_ENTRY(Entry);
-
-   if (i >= MAX_PAGING_FILES)
-   {
-      DPRINT1("Bad swap entry 0x%.8X\n", Entry);
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
 
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    if (PagingFileList[i] == NULL)
